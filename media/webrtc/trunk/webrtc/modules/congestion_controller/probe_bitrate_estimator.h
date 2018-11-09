@@ -8,23 +8,27 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_CONGESTION_CONTROLLER_PROBE_BITRATE_ESTIMATOR_H_
-#define WEBRTC_MODULES_CONGESTION_CONTROLLER_PROBE_BITRATE_ESTIMATOR_H_
+#ifndef MODULES_CONGESTION_CONTROLLER_PROBE_BITRATE_ESTIMATOR_H_
+#define MODULES_CONGESTION_CONTROLLER_PROBE_BITRATE_ESTIMATOR_H_
 
 #include <map>
 #include <limits>
 
-#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
 namespace webrtc {
+class RtcEventLog;
 
 class ProbeBitrateEstimator {
  public:
-  ProbeBitrateEstimator();
+  explicit ProbeBitrateEstimator(RtcEventLog* event_log);
+  ~ProbeBitrateEstimator();
 
   // Should be called for every probe packet we receive feedback about.
   // Returns the estimated bitrate if the probe completes a valid cluster.
-  int HandleProbeAndEstimateBitrate(const PacketInfo& packet_info);
+  int HandleProbeAndEstimateBitrate(const PacketFeedback& packet_feedback);
+
+  rtc::Optional<int> FetchAndResetLastEstimatedBitrateBps();
 
  private:
   struct AggregatedCluster {
@@ -42,8 +46,10 @@ class ProbeBitrateEstimator {
   void EraseOldClusters(int64_t timestamp_ms);
 
   std::map<int, AggregatedCluster> clusters_;
+  RtcEventLog* const event_log_;
+  rtc::Optional<int> estimated_bitrate_bps_;
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_CONGESTION_CONTROLLER_PROBE_BITRATE_ESTIMATOR_H_
+#endif  // MODULES_CONGESTION_CONTROLLER_PROBE_BITRATE_ESTIMATOR_H_

@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_coding/session_info.h"
+#include "modules/video_coding/session_info.h"
 
-#include "webrtc/base/logging.h"
-#include "webrtc/modules/video_coding/packet.h"
+#include "modules/video_coding/packet.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
 
@@ -200,7 +200,7 @@ size_t VCMSessionInfo::InsertBuffer(uint8_t* frame_buffer,
         nalu_ptr += kLengthFieldLength + length;
       } else {
         // Something is very wrong!
-        LOG(LS_ERROR) << "Failed to insert packet due to corrupt H264 STAP-A";
+        RTC_LOG(LS_ERROR) << "Failed to insert packet due to corrupt H264 STAP-A";
         return 0;
       }
     }
@@ -447,7 +447,7 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
   }
 
   if (packets_.size() == kMaxPacketsInSession) {
-    LOG(LS_ERROR) << "Max number of packets per frame has been reached.";
+    RTC_LOG(LS_ERROR) << "Max number of packets per frame has been reached.";
     return -1;
   }
 
@@ -499,8 +499,9 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
       first_packet_seq_num_ = static_cast<int>(packet.seqNum);
     } else if (first_packet_seq_num_ != -1 &&
                IsNewerSequenceNumber(first_packet_seq_num_, packet.seqNum)) {
-      LOG(LS_WARNING) << "Received packet with a sequence number which is out "
-                         "of frame boundaries";
+      RTC_LOG(LS_WARNING)
+          << "Received packet with a sequence number which is out "
+             "of frame boundaries";
       return -3;
     } else if (frame_type_ == kEmptyFrame && packet.frameType != kEmptyFrame) {
       // Update the frame type with the type of the first media packet.
@@ -513,8 +514,9 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
       last_packet_seq_num_ = static_cast<int>(packet.seqNum);
     } else if (last_packet_seq_num_ != -1 &&
                IsNewerSequenceNumber(packet.seqNum, last_packet_seq_num_)) {
-      LOG(LS_WARNING) << "Received packet with a sequence number which is out "
-                         "of frame boundaries";
+      RTC_LOG(LS_WARNING)
+          << "Received packet with a sequence number which is out "
+             "of frame boundaries";
       return -3;
     }
   }

@@ -15,6 +15,7 @@ import {
 import { isWasm, renderWasmText } from "../utils/wasm";
 import { getMatches } from "../workers/search";
 import type { Action, FileTextSearchModifier, ThunkArgs } from "./types";
+import type { WasmSource } from "../types";
 
 import {
   getSelectedSource,
@@ -108,10 +109,11 @@ export function searchContents(query: string, editor: Object) {
     }
 
     const _modifiers = modifiers.toJS();
-    const sourceId = selectedSource.id;
-    const text = isWasm(sourceId)
-      ? renderWasmText(sourceId, selectedSource.text).join("\n")
-      : selectedSource.text;
+    let text = selectedSource.text;
+
+    if (isWasm(selectedSource.id)) {
+      text = renderWasmText(((selectedSource: any): WasmSource)).join("\n");
+    }
 
     const matches = await getMatches(query, text, _modifiers);
 

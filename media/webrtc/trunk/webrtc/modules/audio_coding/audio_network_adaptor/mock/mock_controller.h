@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_MOCK_MOCK_CONTROLLER_H_
-#define WEBRTC_MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_MOCK_MOCK_CONTROLLER_H_
+#ifndef MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_MOCK_MOCK_CONTROLLER_H_
+#define MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_MOCK_MOCK_CONTROLLER_H_
 
-#include "webrtc/modules/audio_coding/audio_network_adaptor/controller.h"
-#include "webrtc/test/gmock.h"
+#include "modules/audio_coding/audio_network_adaptor/controller.h"
+#include "test/gmock.h"
 
 namespace webrtc {
 
@@ -20,11 +20,11 @@ class MockController : public Controller {
  public:
   virtual ~MockController() { Die(); }
   MOCK_METHOD0(Die, void());
-  MOCK_METHOD2(MakeDecision,
-               void(const NetworkMetrics& metrics,
-                    AudioNetworkAdaptor::EncoderRuntimeConfig* config));
+  MOCK_METHOD1(UpdateNetworkMetrics,
+               void(const NetworkMetrics& network_metrics));
+  MOCK_METHOD1(MakeDecision, void(AudioEncoderRuntimeConfig* config));
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_MOCK_MOCK_CONTROLLER_H_
+#endif  // MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_MOCK_MOCK_CONTROLLER_H_

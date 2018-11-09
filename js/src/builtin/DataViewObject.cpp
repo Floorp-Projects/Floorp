@@ -903,7 +903,7 @@ static const ClassOps DataViewObjectClassOps = {
 };
 
 const ClassSpec DataViewObject::classSpec_ = {
-    GenericCreateConstructor<DataViewObject::construct, 3, gc::AllocKind::FUNCTION>,
+    GenericCreateConstructor<DataViewObject::construct, 1, gc::AllocKind::FUNCTION>,
     GenericCreatePrototype<DataViewObject>,
     nullptr,
     nullptr,

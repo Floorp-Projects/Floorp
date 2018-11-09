@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_estimator.h"
-#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
-#include "webrtc/system_wrappers/include/compile_assert_c.h"
+#include "modules/audio_coding/codecs/isac/fix/source/pitch_estimator.h"
+#include "common_audio/signal_processing/include/signal_processing_library.h"
+#include "rtc_base/compile_assert_c.h"
 
 extern int32_t WebRtcIsacfix_Log2Q8(uint32_t x);
 
@@ -33,7 +33,7 @@ void WebRtcIsacfix_PCorr2Q32(const int16_t* in, int32_t* logcorQ8) {
     const int16_t* tmp_in = in;
     int32_t tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
     n = PITCH_CORR_LEN2;
-    COMPILE_ASSERT(PITCH_CORR_LEN2 % 4 == 0);
+    RTC_COMPILE_ASSERT(PITCH_CORR_LEN2 % 4 == 0);
     __asm __volatile (
       ".set       push                                          \n\t"
       ".set       noreorder                                     \n\t"

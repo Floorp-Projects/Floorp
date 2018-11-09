@@ -6,7 +6,9 @@
 
 import { isOriginalId } from "devtools-source-map";
 import { getSource } from "../selectors";
-import type { Location, Source } from "../types";
+
+import type { Location, MappedLocation, Source } from "../types";
+import { isGenerated } from "../utils/source";
 
 export async function getGeneratedLocation(
   state: Object,
@@ -52,4 +54,13 @@ export async function getMappedLocation(
   }
 
   return sourceMaps.getOriginalLocation(location, source);
+}
+
+export function getSelectedLocation(
+  mappedLocation: MappedLocation,
+  selectedSource: ?Source
+) {
+  return selectedSource && isGenerated(selectedSource)
+    ? mappedLocation.generatedLocation
+    : mappedLocation.location;
 }

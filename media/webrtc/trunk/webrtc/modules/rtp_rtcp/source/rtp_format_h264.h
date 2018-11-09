@@ -8,17 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_FORMAT_H264_H_
-#define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_FORMAT_H264_H_
+#ifndef MODULES_RTP_RTCP_SOURCE_RTP_FORMAT_H264_H_
+#define MODULES_RTP_RTCP_SOURCE_RTP_FORMAT_H264_H_
 
 #include <deque>
 #include <memory>
 #include <queue>
 #include <string>
 
-#include "webrtc/base/buffer.h"
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/modules/rtp_rtcp/source/rtp_format.h"
+#include "modules/rtp_rtcp/source/rtp_format.h"
+#include "rtc_base/buffer.h"
+#include "rtc_base/constructormagic.h"
 
 namespace webrtc {
 
@@ -27,24 +27,19 @@ class RtpPacketizerH264 : public RtpPacketizer {
   // Initialize with payload from encoder.
   // The payload_data must be exactly one encoded H264 frame.
   RtpPacketizerH264(size_t max_payload_len,
+                    size_t last_packet_reduction_len,
                     H264PacketizationMode packetization_mode);
 
   virtual ~RtpPacketizerH264();
 
-  void SetPayloadData(const uint8_t* payload_data,
-                      size_t payload_size,
-                      const RTPFragmentationHeader* fragmentation) override;
+  size_t SetPayloadData(const uint8_t* payload_data,
+                        size_t payload_size,
+                        const RTPFragmentationHeader* fragmentation) override;
 
   // Get the next payload with H264 payload header.
   // Write payload and set marker bit of the |packet|.
-  // The parameter |last_packet| is true for the last packet of the frame, false
-  // otherwise (i.e., call the function again to get the next packet).
   // Returns true on success, false otherwise.
-  bool NextPacket(RtpPacketToSend* rtp_packet, bool* last_packet) override;
-
-  ProtectionType GetProtectionType() override;
-
-  StorageType GetStorageType(uint32_t retransmission_settings) override;
+  bool NextPacket(RtpPacketToSend* rtp_packet) override;
 
   std::string ToString() override;
 
@@ -88,10 +83,12 @@ class RtpPacketizerH264 : public RtpPacketizer {
   void PacketizeFuA(size_t fragment_index);
   size_t PacketizeStapA(size_t fragment_index);
   void PacketizeSingleNalu(size_t fragment_index);
-  void NextAggregatePacket(RtpPacketToSend* rtp_packet);
+  void NextAggregatePacket(RtpPacketToSend* rtp_packet, bool last);
   void NextFragmentPacket(RtpPacketToSend* rtp_packet);
 
   const size_t max_payload_len_;
+  const size_t last_packet_reduction_len_;
+  size_t num_packets_left_;
   const H264PacketizationMode packetization_mode_;
   std::deque<Fragment> input_fragments_;
   std::queue<PacketUnit> packets_;
@@ -120,4 +117,4 @@ class RtpDepacketizerH264 : public RtpDepacketizer {
   std::unique_ptr<rtc::Buffer> modified_buffer_;
 };
 }  // namespace webrtc
-#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_FORMAT_H264_H_
+#endif  // MODULES_RTP_RTCP_SOURCE_RTP_FORMAT_H264_H_

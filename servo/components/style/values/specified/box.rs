@@ -1032,8 +1032,10 @@ pub enum Appearance {
     #[parse(condition = "in_ua_or_chrome_sheet")]
     Menuimage,
     /// A horizontal meter bar.
-    Meterbar,
+    #[parse(aliases = "meterbar")]
+    Meter,
     /// The meter bar's meter indicator.
+    #[parse(condition = "in_ua_or_chrome_sheet")]
     Meterchunk,
     /// The "arrowed" part of the dropdown button that open up a dropdown list.
     #[parse(condition = "in_ua_or_chrome_sheet")]
@@ -1041,13 +1043,13 @@ pub enum Appearance {
     /// For HTML's <input type=number>
     NumberInput,
     /// A horizontal progress bar.
-    Progressbar,
+    #[parse(aliases = "progressbar")]
+    ProgressBar,
     /// The progress bar's progress indicator
+    #[parse(condition = "in_ua_or_chrome_sheet")]
     Progresschunk,
     /// A vertical progress bar.
     ProgressbarVertical,
-    /// A vertical progress chunk.
-    ProgresschunkVertical,
     /// A checkbox element.
     Checkbox,
     /// A radio element within a radio group.

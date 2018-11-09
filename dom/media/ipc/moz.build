@@ -6,25 +6,19 @@
 
 
 IPDL_SOURCES += [
-    'PMediaDecoderParams.ipdlh',
     'PVideoDecoder.ipdl',
     'PVideoDecoderManager.ipdl',
 ]
 
-EXPORTS.mozilla += [
-    'GpuDecoderModule.h',
-    'RemoteMediaDataDecoder.h',
-]
-
 EXPORTS.mozilla.dom += [
     'MediaIPCUtils.h',
+    'RemoteVideoDecoder.h',
     'VideoDecoderManagerChild.h',
     'VideoDecoderManagerParent.h',
 ]
 
 SOURCES += [
-    'GpuDecoderModule.cpp',
-    'RemoteMediaDataDecoder.cpp',
+    'RemoteVideoDecoder.cpp',
     'VideoDecoderChild.cpp',
     'VideoDecoderManagerChild.cpp',
     'VideoDecoderManagerParent.cpp',

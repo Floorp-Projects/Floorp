@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_GEOMETRY_H_
-#define WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_GEOMETRY_H_
+#ifndef MODULES_DESKTOP_CAPTURE_DESKTOP_GEOMETRY_H_
+#define MODULES_DESKTOP_CAPTURE_DESKTOP_GEOMETRY_H_
 
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/typedefs.h"
+#include "rtc_base/constructormagic.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
@@ -105,6 +105,9 @@ class DesktopRect {
   int32_t width() const { return right_ - left_; }
   int32_t height() const { return bottom_ - top_; }
 
+  void set_width(int32_t width) { right_ = left_ + width; }
+  void set_height(int32_t height) { bottom_ = top_ + height; }
+
   DesktopVector top_left() const { return DesktopVector(left_, top_); }
   DesktopSize size() const { return DesktopSize(width(), height()); }
 
@@ -124,6 +127,10 @@ class DesktopRect {
   // Finds intersection with |rect|.
   void IntersectWith(const DesktopRect& rect);
 
+  // Extends the rectangle to cover |rect|. If |this| is empty, replaces |this|
+  // with |rect|; if |rect| is empty, this function takes no effect.
+  void UnionWith(const DesktopRect& rect);
+
   // Adds (dx, dy) to the position of the rectangle.
   void Translate(int32_t dx, int32_t dy);
   void Translate(DesktopVector d) { Translate(d.x(), d.y()); };
@@ -138,6 +145,10 @@ class DesktopRect {
               int32_t right_offset,
               int32_t bottom_offset);
 
+  // Scales current DesktopRect. This function does not impact the |top_| and
+  // |left_|.
+  void Scale(double horizontal, double vertical);
+
  private:
   DesktopRect(int32_t left, int32_t top, int32_t right, int32_t bottom)
       : left_(left), top_(top), right_(right), bottom_(bottom) {
@@ -151,5 +162,5 @@ class DesktopRect {
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_GEOMETRY_H_
+#endif  // MODULES_DESKTOP_CAPTURE_DESKTOP_GEOMETRY_H_
 

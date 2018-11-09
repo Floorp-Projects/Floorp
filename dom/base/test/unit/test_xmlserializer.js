@@ -3,75 +3,62 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function xmlEncode(aFile, aFlags, aCharset) {
+async function xmlEncode(aFile, aFlags, aCharset) {
     if(aFlags == undefined) aFlags = 0;
     if(aCharset == undefined) aCharset = "UTF-8";
 
-    return do_parse_document(aFile, "text/xml").then(doc => {
-      var encoder = SpecialPowers.Cu.createDocumentEncoder("text/xml");
-      encoder.setCharset(aCharset);
-      encoder.init(doc, "text/xml", aFlags);
-      return encoder.encodeToString();
-    });
+    var doc = await do_parse_document(aFile, "text/xml");
+
+    var encoder = Cu.createDocumentEncoder("text/xml");
+    encoder.setCharset(aCharset);
+    encoder.init(doc, "text/xml", aFlags);
+    return encoder.encodeToString();
 }
 
-function run_test()
-{
+add_task(async function() {
     var result, expected;
     const de = Ci.nsIDocumentEncoder;
 
-    xmlEncode("1_original.xml", de.OutputLFLineBreak).then(result => {
-      expected = loadContentFile("1_result.xml");
-      Assert.equal(expected, result);
-    });
+    result = await xmlEncode("1_original.xml", de.OutputLFLineBreak);
+    expected = loadContentFile("1_result.xml");
+    Assert.equal(expected, result);
 
-    xmlEncode("2_original.xml", de.OutputLFLineBreak).then(result => {
-      expected = loadContentFile("2_result_1.xml");
-      Assert.equal(expected, result);
-    });
+    result = await xmlEncode("2_original.xml", de.OutputLFLineBreak);
+    expected = loadContentFile("2_result_1.xml");
+    Assert.equal(expected, result);
 
-    xmlEncode("2_original.xml", de.OutputCRLineBreak).then(result => {
-      expected = expected.replace(/\n/g, "\r");
-      Assert.equal(expected, result);
-    });
+    result = await xmlEncode("2_original.xml", de.OutputCRLineBreak);
+    expected = expected.replace(/\n/g, "\r");
+    Assert.equal(expected, result);
 
-    xmlEncode("2_original.xml", de.OutputLFLineBreak | de.OutputCRLineBreak).then(result => {
-      expected = expected.replace(/\r/mg, "\r\n");
-      Assert.equal(expected, result);
-    });
+    result = await xmlEncode("2_original.xml", de.OutputLFLineBreak | de.OutputCRLineBreak);
+    expected = expected.replace(/\r/mg, "\r\n");
+    Assert.equal(expected, result);
 
-    xmlEncode("2_original.xml", de.OutputLFLineBreak | de.OutputFormatted).then(result => {
-      expected = loadContentFile("2_result_2.xml");
-      Assert.equal(expected, result);
-    });
+    result = await xmlEncode("2_original.xml", de.OutputLFLineBreak | de.OutputFormatted);
+    expected = loadContentFile("2_result_2.xml");
+    Assert.equal(expected, result);
 
-    xmlEncode("2_original.xml", de.OutputLFLineBreak | de.OutputFormatted | de.OutputWrap).then(result => {
-      expected = loadContentFile("2_result_3.xml");
-      Assert.equal(expected, result);
-    });
+    result = await xmlEncode("2_original.xml", de.OutputLFLineBreak | de.OutputFormatted | de.OutputWrap);
+    expected = loadContentFile("2_result_3.xml");
+    Assert.equal(expected, result);
 
-    xmlEncode("2_original.xml", de.OutputLFLineBreak | de.OutputWrap).then(result => {
-      expected = loadContentFile("2_result_4.xml");
-      Assert.equal(expected, result);
-    });
+    result = await xmlEncode("2_original.xml", de.OutputLFLineBreak | de.OutputWrap);
+    expected = loadContentFile("2_result_4.xml");
+    Assert.equal(expected, result);
 
-    xmlEncode("3_original.xml", de.OutputLFLineBreak | de.OutputFormatted | de.OutputWrap).then(result => {
-      expected = loadContentFile("3_result.xml");
-      Assert.equal(expected, result);
-    });
+    result = await xmlEncode("3_original.xml", de.OutputLFLineBreak | de.OutputFormatted | de.OutputWrap);
+    expected = loadContentFile("3_result.xml");
+    Assert.equal(expected, result);
 
-    xmlEncode("3_original.xml", de.OutputLFLineBreak | de.OutputWrap).then(result => {
-      expected = loadContentFile("3_result_2.xml");
-      Assert.equal(expected, result);
-    });
+    result = await xmlEncode("3_original.xml", de.OutputLFLineBreak | de.OutputWrap);
+    expected = loadContentFile("3_result_2.xml");
+    Assert.equal(expected, result);
 
     // tests on namespaces
-    do_parse_document("4_original.xml", "text/xml").then(run_namespace_tests);
-}
+    var doc = await do_parse_document("4_original.xml", "text/xml");
 
-function run_namespace_tests(doc) {
-    const de = Ci.nsIDocumentEncoder;
-    var encoder = SpecialPowers.Cu.createDocumentEncoder("text/xml");
+    var encoder = Cu.createDocumentEncoder("text/xml");
     encoder.setCharset("UTF-8");
     encoder.init(doc, "text/xml", de.OutputLFLineBreak);
 
@@ -107,4 +94,4 @@ function run_namespace_tests(doc) {
     result = encoder.encodeToString();
     expected = loadContentFile("4_result_6.xml");
     Assert.equal(expected, result);
-}
+});

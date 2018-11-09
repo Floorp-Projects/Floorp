@@ -8,6 +8,7 @@
 
 #include "InfallibleVector.h"
 #include "MiddlemanCall.h"
+#include "ipc/ChildInternal.h"
 #include "ipc/ParentInternal.h"
 #include "mozilla/Sprintf.h"
 
@@ -100,9 +101,11 @@ RecordReplayInterceptCall(int aCallId, CallArguments* aArguments)
       }
     }
 
-    if (parent::InRepaintStressMode()) {
-      // We're about to crash, so print out the name of the call that failed.
-      Print("Could not perform middleman call: %s\n", redirection.mName);
+    if (child::CurrentRepaintCannotFail()) {
+      // EnsureNotDivergedFromRecording is going to force us to crash, so fail
+      // earlier with a more helpful error message.
+      child::ReportFatalError(Nothing(), "Could not perform middleman call: %s\n",
+                              redirection.mName);
     }
 
     // Calling any redirection which performs the standard steps will cause
@@ -425,6 +428,7 @@ MaybeInternalJumpTarget(uint8_t* aIpStart, uint8_t* aIpEnd)
          !strstr(startName, "CTRunGetPositionsPtr")) ||
         (strstr(startName, "CTRunGetStringIndices") &&
          !strstr(startName, "CTRunGetStringIndicesPtr")) ||
+        strstr(startName, "CGColorSpaceCreateDeviceGray") ||
         strstr(startName, "CGColorSpaceCreateDeviceRGB") ||
         // For these functions, there is a syscall near the beginning which
         // other system threads might be inside.

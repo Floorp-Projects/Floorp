@@ -8,23 +8,22 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_VIDEO_OVERUSE_FRAME_DETECTOR_H_
-#define WEBRTC_VIDEO_OVERUSE_FRAME_DETECTOR_H_
+#ifndef VIDEO_OVERUSE_FRAME_DETECTOR_H_
+#define VIDEO_OVERUSE_FRAME_DETECTOR_H_
 
 #include <list>
 #include <memory>
 
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/base/numerics/exp_filter.h"
-#include "webrtc/base/optional.h"
-#include "webrtc/base/sequenced_task_checker.h"
-#include "webrtc/base/task_queue.h"
-#include "webrtc/base/thread_annotations.h"
-#include "webrtc/modules/video_coding/utility/quality_scaler.h"
+#include "api/optional.h"
+#include "modules/video_coding/utility/quality_scaler.h"
+#include "rtc_base/constructormagic.h"
+#include "rtc_base/numerics/exp_filter.h"
+#include "rtc_base/sequenced_task_checker.h"
+#include "rtc_base/task_queue.h"
+#include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
 
-class Clock;
 class EncodedFrameObserver;
 class VideoFrame;
 
@@ -65,12 +64,11 @@ class CpuOveruseMetricsObserver {
 // check for overuse.
 class OveruseFrameDetector {
  public:
-  OveruseFrameDetector(Clock* clock,
-                       const CpuOveruseOptions& options,
-                       ScalingObserverInterface* overuse_observer,
+  OveruseFrameDetector(const CpuOveruseOptions& options,
+                       AdaptationObserverInterface* overuse_observer,
                        EncodedFrameObserver* encoder_timing_,
                        CpuOveruseMetricsObserver* metrics_observer);
-  ~OveruseFrameDetector();
+  virtual ~OveruseFrameDetector();
 
   // Start to periodically check for overuse.
   void StartCheckForOveruse();
@@ -79,28 +77,36 @@ class OveruseFrameDetector {
   // StartCheckForOveruse has been called.
   void StopCheckForOveruse();
 
+  // Defines the current maximum framerate targeted by the capturer. This is
+  // used to make sure the encode usage percent doesn't drop unduly if the
+  // capturer has quiet periods (for instance caused by screen capturers with
+  // variable capture rate depending on content updates), otherwise we might
+  // experience adaptation toggling.
+  virtual void OnTargetFramerateUpdated(int framerate_fps);
+
   // Called for each captured frame.
-  void FrameCaptured(const VideoFrame& frame, int64_t time_when_first_seen_ms);
+  void FrameCaptured(const VideoFrame& frame, int64_t time_when_first_seen_us);
 
   // Called for each sent frame.
-  void FrameSent(uint32_t timestamp, int64_t time_sent_in_ms);
+  void FrameSent(uint32_t timestamp, int64_t time_sent_in_us);
 
  protected:
   void CheckForOveruse();  // Protected for test purposes.
 
  private:
+  class OverdoseInjector;
   class SendProcessingUsage;
   class CheckOveruseTask;
   struct FrameTiming {
-    FrameTiming(int64_t capture_ntp_ms, uint32_t timestamp, int64_t now)
-        : capture_ntp_ms(capture_ntp_ms),
+    FrameTiming(int64_t capture_time_us, uint32_t timestamp, int64_t now)
+        : capture_time_us(capture_time_us),
           timestamp(timestamp),
-          capture_ms(now),
-          last_send_ms(-1) {}
-    int64_t capture_ntp_ms;
+          capture_us(now),
+          last_send_us(-1) {}
+    int64_t capture_time_us;
     uint32_t timestamp;
-    int64_t capture_ms;
-    int64_t last_send_ms;
+    int64_t capture_us;
+    int64_t last_send_us;
   };
 
   void EncodedFrameTimeMeasured(int encode_duration_ms);
@@ -112,6 +118,9 @@ class OveruseFrameDetector {
 
   void ResetAll(int num_pixels);
 
+  static std::unique_ptr<SendProcessingUsage> CreateSendProcessingUsage(
+      const CpuOveruseOptions& options);
+
   rtc::SequencedTaskChecker task_checker_;
   // Owned by the task queue from where StartCheckForOveruse is called.
   CheckOveruseTask* check_overuse_task_;
@@ -119,36 +128,37 @@ class OveruseFrameDetector {
   const CpuOveruseOptions options_;
 
   // Observer getting overuse reports.
-  ScalingObserverInterface* const observer_;
+  AdaptationObserverInterface* const observer_;
   EncodedFrameObserver* const encoder_timing_;
 
   // Stats metrics.
   CpuOveruseMetricsObserver* const metrics_observer_;
-  rtc::Optional<CpuOveruseMetrics> metrics_ GUARDED_BY(task_checker_);
-  Clock* const clock_;
+  rtc::Optional<CpuOveruseMetrics> metrics_ RTC_GUARDED_BY(task_checker_);
 
-  int64_t num_process_times_ GUARDED_BY(task_checker_);
+  int64_t num_process_times_ RTC_GUARDED_BY(task_checker_);
 
-  int64_t last_capture_time_ms_ GUARDED_BY(task_checker_);
-  int64_t last_processed_capture_time_ms_ GUARDED_BY(task_checker_);
+  int64_t last_capture_time_us_ RTC_GUARDED_BY(task_checker_);
+  int64_t last_processed_capture_time_us_ RTC_GUARDED_BY(task_checker_);
 
   // Number of pixels of last captured frame.
-  int num_pixels_ GUARDED_BY(task_checker_);
-  int64_t last_overuse_time_ms_ GUARDED_BY(task_checker_);
-  int checks_above_threshold_ GUARDED_BY(task_checker_);
-  int num_overuse_detections_ GUARDED_BY(task_checker_);
-  int64_t last_rampup_time_ms_ GUARDED_BY(task_checker_);
-  bool in_quick_rampup_ GUARDED_BY(task_checker_);
-  int current_rampup_delay_ms_ GUARDED_BY(task_checker_);
+  int num_pixels_ RTC_GUARDED_BY(task_checker_);
+  int max_framerate_ RTC_GUARDED_BY(task_checker_);
+  int64_t last_overuse_time_ms_ RTC_GUARDED_BY(task_checker_);
+  int checks_above_threshold_ RTC_GUARDED_BY(task_checker_);
+  int num_overuse_detections_ RTC_GUARDED_BY(task_checker_);
+  int64_t last_rampup_time_ms_ RTC_GUARDED_BY(task_checker_);
+  bool in_quick_rampup_ RTC_GUARDED_BY(task_checker_);
+  int current_rampup_delay_ms_ RTC_GUARDED_BY(task_checker_);
 
   // TODO(asapersson): Can these be regular members (avoid separate heap
   // allocs)?
-  const std::unique_ptr<SendProcessingUsage> usage_ GUARDED_BY(task_checker_);
-  std::list<FrameTiming> frame_timing_ GUARDED_BY(task_checker_);
+  const std::unique_ptr<SendProcessingUsage> usage_
+      RTC_GUARDED_BY(task_checker_);
+  std::list<FrameTiming> frame_timing_ RTC_GUARDED_BY(task_checker_);
 
   RTC_DISALLOW_COPY_AND_ASSIGN(OveruseFrameDetector);
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_VIDEO_OVERUSE_FRAME_DETECTOR_H_
+#endif  // VIDEO_OVERUSE_FRAME_DETECTOR_H_

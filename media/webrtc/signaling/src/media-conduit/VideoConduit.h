@@ -15,20 +15,22 @@
 #include "MediaConduitInterface.h"
 #include "MediaEngineWrapper.h"
 #include "RunningStat.h"
+#include "RtpPacketQueue.h"
 #include "runnable_utils.h"
 
 // conflicts with #include of scoped_ptr.h
 #undef FF
 // Video Engine Includes
-#include "webrtc/call.h"
+#include "api/video_codecs/video_encoder_factory.h"
+#include "webrtc/call/call.h"
 #include "webrtc/common_types.h"
 #ifdef FF
 #undef FF // Avoid name collision between scoped_ptr.h and nsCRTGlue.h.
 #endif
-#include "webrtc/video_decoder.h"
-#include "webrtc/video_encoder.h"
+#include "webrtc/api/video_codecs/video_decoder.h"
+#include "webrtc/api/video_codecs/video_encoder.h"
+#include "webrtc/api/video_codecs/sdp_video_format.h"
 #include "webrtc/common_video/include/i420_buffer_pool.h"
-#include "webrtc/config.h"
 #include "webrtc/media/base/videosinkinterface.h"
 #include "webrtc/media/base/videoadapter.h"
 #include "webrtc/media/base/videobroadcaster.h"
@@ -72,6 +74,7 @@ class WebrtcVideoDecoder : public VideoDecoder
  */
 class WebrtcVideoConduit : public VideoSessionConduit
                          , public webrtc::Transport
+                         , public webrtc::VideoEncoderFactory
                          , public rtc::VideoSinkInterface<webrtc::VideoFrame>
                          , public rtc::VideoSourceInterface<webrtc::VideoFrame>
 {
@@ -82,11 +85,6 @@ public:
   MediaConduitErrorCode
   SetLocalRTPExtensions(MediaSessionConduitLocalDirection aDirection,
                         const RtpExtList& aExtensions) override;
-
-  /**
-   * Set up A/V sync between this (incoming) VideoConduit and an audio conduit.
-   */
-  void SyncTo(WebrtcAudioConduit *aConduit);
 
   /**
    * Function to attach Renderer end-point for the Media-Video conduit.
@@ -250,6 +248,8 @@ public:
   bool SetLocalCNAME(const char* cname) override;
   bool SetLocalMID(const std::string& mid) override;
 
+  void SetSyncGroup(const std::string& group) override;
+
   bool GetRemoteSSRCLocked(unsigned int* ssrc);
   bool SetRemoteSSRCLocked(unsigned int ssrc);
 
@@ -374,7 +374,7 @@ private:
 
     bool SsrcFound() const;
     uint32_t JitterMs() const;
-    uint32_t CumulativeLost() const;
+    uint32_t PacketsLost() const;
     uint64_t BytesReceived() const;
     uint32_t PacketsReceived() const;
   private:
@@ -384,7 +384,7 @@ private:
 
     bool mSsrcFound = false;
     uint32_t mJitterMs = 0;
-    uint32_t mCumulativeLost = 0;
+    uint32_t mPacketsLost = 0;
     uint64_t mBytesReceived = 0;
     uint32_t mPacketsReceived = 0;
   };
@@ -406,14 +406,14 @@ private:
      */
     uint32_t FramesDecoded() const;
     uint32_t JitterMs() const;
-    uint32_t CumulativeLost() const;
+    uint32_t PacketsLost() const;
     uint32_t Ssrc() const;
     void Update(const webrtc::VideoReceiveStream::Stats& aStats);
   private:
     uint32_t mDiscardedPackets = 0;
     uint32_t mFramesDecoded = 0;
     uint32_t mJitterMs = 0;
-    uint32_t mCumulativeLost = 0;
+    uint32_t mPacketsLost = 0;
     uint32_t mSsrc = 0;
   };
 
@@ -435,7 +435,6 @@ private:
     void SetVideoStreamFactory(rtc::scoped_refptr<VideoStreamFactory> aFactory);
     void SetMinTransmitBitrateBps(int aXmitMinBps);
     void SetContentType(webrtc::VideoEncoderConfig::ContentType aContentType);
-    void SetResolutionDivisor(unsigned char aDivisor);
     void SetMaxEncodings(size_t aMaxStreams);
     void AddStream(webrtc::VideoStream aStream);
     void AddStream(webrtc::VideoStream aStream,const SimulcastStreamConfig& aSimulcastConfig);
@@ -462,11 +461,19 @@ private:
   MediaConduitErrorCode CreateRecvStream();
   void DeleteRecvStream();
 
-  webrtc::VideoDecoder* CreateDecoder(webrtc::VideoCodecType aType);
-  webrtc::VideoEncoder* CreateEncoder(webrtc::VideoCodecType aType,
-                                      bool enable_simulcast);
+  std::unique_ptr<webrtc::VideoDecoder> CreateDecoder(webrtc::VideoCodecType aType);
+  std::unique_ptr<webrtc::VideoEncoder> CreateEncoder(webrtc::VideoCodecType aType,
+                                                      bool enable_simulcast);
 
-  MediaConduitErrorCode DeliverPacket(const void *data, int len);
+  // webrtc::VideoEncoderFactory
+  std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override;
+
+  CodecInfo QueryVideoEncoder(const webrtc::SdpVideoFormat& format) const override;
+
+  std::unique_ptr<webrtc::VideoEncoder> CreateVideoEncoder(
+      const webrtc::SdpVideoFormat& format) override;
+
+  MediaConduitErrorCode DeliverPacket(const void *data, int len) override;
 
   bool RequiresNewSendStream(const VideoCodecConfig& newConfig) const;
 
@@ -584,6 +591,7 @@ private:
   RefPtr<WebrtcAudioConduit> mSyncedTo;
 
   // Main thread only.
+  webrtc::VideoCodecMode mActiveCodecMode;
   webrtc::VideoCodecMode mCodecMode;
 
   // WEBRTC.ORG Call API
@@ -611,30 +619,21 @@ private:
   // Accessed only on mStsThread.
   bool mWaitingForInitialSsrc = true;
 
-  // The runnable to set the SSRC is in-flight; queue packets until it's done.
-  // Accessed only on mStsThread.
-  bool mRecvSsrcSetInProgress = false;
-
   // Accessed during configuration/signaling (main),
   // and when receiving packets (sts).
   Atomic<uint32_t> mRecvSSRC; // this can change during a stream!
 
-  struct QueuedPacket {
-    int mLen;
-    uint8_t mData[1];
-  };
-  // Accessed only on mStsThread.
-  nsTArray<UniquePtr<QueuedPacket>> mQueuedPackets;
+  RtpPacketQueue mRtpPacketQueue;
 
   // The lifetime of these codecs are maintained by the VideoConduit instance.
   // They are passed to the webrtc::VideoSendStream or VideoReceiveStream,
   // on construction.
-  nsAutoPtr<webrtc::VideoEncoder> mEncoder; // only one encoder for now
+  std::unique_ptr<webrtc::VideoEncoder> mEncoder; // only one encoder for now
   std::vector<std::unique_ptr<webrtc::VideoDecoder>> mDecoders;
   // Main thread only
-  WebrtcVideoEncoder* mSendCodecPlugin = nullptr;
+  uint64_t mSendCodecPluginID = 0;
   // Main thread only
-  WebrtcVideoDecoder* mRecvCodecPlugin = nullptr;
+  uint64_t mRecvCodecPluginID = 0;
 
   // Timer that updates video stats periodically. Main thread only.
   nsCOMPtr<nsITimer> mVideoStatsTimer;

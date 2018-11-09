@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_coding/rtp_frame_reference_finder.h"
+#include "modules/video_coding/rtp_frame_reference_finder.h"
 
 #include <algorithm>
 #include <limits>
 
-#include "webrtc/base/checks.h"
-#include "webrtc/base/logging.h"
-#include "webrtc/modules/video_coding/frame_object.h"
-#include "webrtc/modules/video_coding/packet_buffer.h"
+#include "modules/video_coding/frame_object.h"
+#include "modules/video_coding/packet_buffer.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
 namespace video_coding {
@@ -39,6 +39,48 @@ void RtpFrameReferenceFinder::ManageFrame(
     return;
   }
 
+  FrameDecision decision = ManageFrameInternal(frame.get());
+
+  switch (decision) {
+    case kStash:
+      if (stashed_frames_.size() > kMaxStashedFrames)
+        stashed_frames_.pop_back();
+      stashed_frames_.push_front(std::move(frame));
+      break;
+    case kHandOff:
+      frame_callback_->OnCompleteFrame(std::move(frame));
+      RetryStashedFrames();
+      break;
+    case kDrop:
+      break;
+  }
+}
+
+void RtpFrameReferenceFinder::RetryStashedFrames() {
+  bool complete_frame = false;
+  do {
+    complete_frame = false;
+    for (auto frame_it = stashed_frames_.begin();
+         frame_it != stashed_frames_.end();) {
+      FrameDecision decision = ManageFrameInternal(frame_it->get());
+
+      switch (decision) {
+        case kStash:
+          ++frame_it;
+          break;
+        case kHandOff:
+          complete_frame = true;
+          frame_callback_->OnCompleteFrame(std::move(*frame_it));
+          FALLTHROUGH();
+        case kDrop:
+          frame_it = stashed_frames_.erase(frame_it);
+      }
+    }
+  } while (complete_frame);
+}
+
+RtpFrameReferenceFinder::FrameDecision
+RtpFrameReferenceFinder::ManageFrameInternal(RtpFrameObject* frame) {
   switch (frame->codec_type()) {
     case kVideoCodecFlexfec:
     case kVideoCodecULPFEC:
@@ -46,11 +88,9 @@ void RtpFrameReferenceFinder::ManageFrame(
       RTC_NOTREACHED();
       break;
     case kVideoCodecVP8:
-      ManageFrameVp8(std::move(frame));
-      break;
+      return ManageFrameVp8(frame);
     case kVideoCodecVP9:
-      ManageFrameVp9(std::move(frame));
-      break;
+      return ManageFrameVp9(frame);
     // Since the EndToEndTests use kVicdeoCodecUnknow we treat it the same as
     // kVideoCodecGeneric.
     // TODO(philipel): Take a look at the EndToEndTests and see if maybe they
@@ -59,9 +99,12 @@ void RtpFrameReferenceFinder::ManageFrame(
     case kVideoCodecH264:
     case kVideoCodecI420:
     case kVideoCodecGeneric:
-      ManageFrameGeneric(std::move(frame), kNoPictureId);
-      break;
+      return ManageFrameGeneric(frame, kNoPictureId);
   }
+
+  // If not all code paths return a value it makes the win compiler sad.
+  RTC_NOTREACHED();
+  return kDrop;
 }
 
 void RtpFrameReferenceFinder::PaddingReceived(uint16_t seq_num) {
@@ -112,41 +155,31 @@ void RtpFrameReferenceFinder::UpdateLastPictureIdWithPadding(uint16_t seq_num) {
     ++next_seq_num_with_padding;
     padding_seq_num_it = stashed_padding_.erase(padding_seq_num_it);
   }
-}
 
-void RtpFrameReferenceFinder::RetryStashedFrames() {
-  size_t num_stashed_frames = stashed_frames_.size();
-
-  // Clean up stashed frames if there are too many.
-  while (stashed_frames_.size() > kMaxStashedFrames)
-    stashed_frames_.pop_front();
-
-  // Since frames are stashed if there is not enough data to determine their
-  // frame references we should at most check |stashed_frames_.size()| in
-  // order to not pop and push frames in and endless loop.
-  // NOTE! This function may be called recursively, hence the
-  //       "!stashed_frames_.empty()" condition.
-  for (size_t i = 0; i < num_stashed_frames && !stashed_frames_.empty(); ++i) {
-    std::unique_ptr<RtpFrameObject> frame = std::move(stashed_frames_.front());
-    stashed_frames_.pop_front();
-    ManageFrame(std::move(frame));
+  // In the case where the stream has been continuous without any new keyframes
+  // for a while there is a risk that new frames will appear to be older than
+  // the keyframe they belong to due to wrapping sequence number. In order
+  // to prevent this we advance the picture id of the keyframe every so often.
+  if (ForwardDiff(gop_seq_num_it->first, seq_num) > 10000) {
+    RTC_DCHECK_EQ(1ul, last_seq_num_gop_.size());
+    last_seq_num_gop_[seq_num] = gop_seq_num_it->second;
+    last_seq_num_gop_.erase(gop_seq_num_it);
   }
 }
 
-void RtpFrameReferenceFinder::ManageFrameGeneric(
-    std::unique_ptr<RtpFrameObject> frame,
-    int picture_id) {
+RtpFrameReferenceFinder::FrameDecision
+RtpFrameReferenceFinder::ManageFrameGeneric(RtpFrameObject* frame,
+                                            int picture_id) {
   // If |picture_id| is specified then we use that to set the frame references,
   // otherwise we use sequence number.
   if (picture_id != kNoPictureId) {
     if (last_unwrap_ == -1)
       last_unwrap_ = picture_id;
 
-    frame->picture_id = UnwrapPictureId(picture_id % kPicIdLength);
+    frame->picture_id = unwrapper_.Unwrap(picture_id);
     frame->num_references = frame->frame_type() == kVideoFrameKey ? 0 : 1;
     frame->references[0] = frame->picture_id - 1;
-    frame_callback_->OnCompleteFrame(std::move(frame));
-    return;
+    return kHandOff;
   }
 
   if (frame->frame_type() == kVideoFrameKey) {
@@ -156,25 +189,26 @@ void RtpFrameReferenceFinder::ManageFrameGeneric(
   }
 
   // We have received a frame but not yet a keyframe, stash this frame.
-  if (last_seq_num_gop_.empty()) {
-    stashed_frames_.push_back(std::move(frame));
-    return;
-  }
+  if (last_seq_num_gop_.empty())
+    return kStash;
 
   // Clean up info for old keyframes but make sure to keep info
   // for the last keyframe.
   auto clean_to = last_seq_num_gop_.lower_bound(frame->last_seq_num() - 100);
-  if (clean_to != last_seq_num_gop_.end())
-    last_seq_num_gop_.erase(last_seq_num_gop_.begin(), clean_to);
+  for (auto it = last_seq_num_gop_.begin();
+       it != clean_to && last_seq_num_gop_.size() > 1;) {
+    it = last_seq_num_gop_.erase(it);
+  }
 
   // Find the last sequence number of the last frame for the keyframe
   // that this frame indirectly references.
   auto seq_num_it = last_seq_num_gop_.upper_bound(frame->last_seq_num());
   if (seq_num_it == last_seq_num_gop_.begin()) {
-    LOG(LS_WARNING) << "Generic frame with packet range ["
-                    << frame->first_seq_num() << ", " << frame->last_seq_num()
-                    << "] has no Gop, dropping frame.";
-    return;
+    RTC_LOG(LS_WARNING) << "Generic frame with packet range ["
+                        << frame->first_seq_num() << ", "
+                        << frame->last_seq_num()
+                        << "] has no GoP, dropping frame.";
+    return kDrop;
   }
   seq_num_it--;
 
@@ -184,10 +218,9 @@ void RtpFrameReferenceFinder::ManageFrameGeneric(
   uint16_t last_picture_id_with_padding_gop = seq_num_it->second.second;
   if (frame->frame_type() == kVideoFrameDelta) {
     uint16_t prev_seq_num = frame->first_seq_num() - 1;
-    if (prev_seq_num != last_picture_id_with_padding_gop) {
-      stashed_frames_.push_back(std::move(frame));
-      return;
-    }
+
+    if (prev_seq_num != last_picture_id_with_padding_gop)
+      return kStash;
   }
 
   RTC_DCHECK(AheadOrAt(frame->last_seq_num(), seq_num_it->first));
@@ -196,31 +229,33 @@ void RtpFrameReferenceFinder::ManageFrameGeneric(
   // picture id according to some incrementing counter.
   frame->picture_id = frame->last_seq_num();
   frame->num_references = frame->frame_type() == kVideoFrameDelta;
-  frame->references[0] = last_picture_id_gop;
-  if (AheadOf(frame->picture_id, last_picture_id_gop)) {
+  frame->references[0] = generic_unwrapper_.Unwrap(last_picture_id_gop);
+  if (AheadOf<uint16_t>(frame->picture_id, last_picture_id_gop)) {
     seq_num_it->second.first = frame->picture_id;
     seq_num_it->second.second = frame->picture_id;
   }
 
   last_picture_id_ = frame->picture_id;
   UpdateLastPictureIdWithPadding(frame->picture_id);
-  frame_callback_->OnCompleteFrame(std::move(frame));
-  RetryStashedFrames();
+  frame->picture_id = generic_unwrapper_.Unwrap(frame->picture_id);
+  return kHandOff;
 }
 
-void RtpFrameReferenceFinder::ManageFrameVp8(
-    std::unique_ptr<RtpFrameObject> frame) {
+RtpFrameReferenceFinder::FrameDecision RtpFrameReferenceFinder::ManageFrameVp8(
+    RtpFrameObject* frame) {
   rtc::Optional<RTPVideoTypeHeader> rtp_codec_header = frame->GetCodecHeader();
-  if (!rtp_codec_header)
-    return;
+  if (!rtp_codec_header) {
+    RTC_LOG(LS_WARNING)
+        << "Failed to get codec header from frame, dropping frame.";
+    return kDrop;
+  }
 
   const RTPVideoHeaderVP8& codec_header = rtp_codec_header->VP8;
 
   if (codec_header.pictureId == kNoPictureId ||
       codec_header.temporalIdx == kNoTemporalIdx ||
       codec_header.tl0PicIdx == kNoTl0PicIdx) {
-    ManageFrameGeneric(std::move(frame), codec_header.pictureId);
-    return;
+    return ManageFrameGeneric(std::move(frame), codec_header.pictureId);
   }
 
   frame->picture_id = codec_header.pictureId % kPicIdLength;
@@ -234,11 +269,10 @@ void RtpFrameReferenceFinder::ManageFrameVp8(
   // Find if there has been a gap in fully received frames and save the picture
   // id of those frames in |not_yet_received_frames_|.
   if (AheadOf<uint16_t, kPicIdLength>(frame->picture_id, last_picture_id_)) {
-    last_picture_id_ = Add<kPicIdLength>(last_picture_id_, 1);
-    while (last_picture_id_ != frame->picture_id) {
-      not_yet_received_frames_.insert(last_picture_id_);
+    do {
       last_picture_id_ = Add<kPicIdLength>(last_picture_id_, 1);
-    }
+      not_yet_received_frames_.insert(last_picture_id_);
+    } while (last_picture_id_ != frame->picture_id);
   }
 
   // Clean up info for base layers that are too old.
@@ -256,8 +290,8 @@ void RtpFrameReferenceFinder::ManageFrameVp8(
   if (frame->frame_type() == kVideoFrameKey) {
     frame->num_references = 0;
     layer_info_[codec_header.tl0PicIdx].fill(-1);
-    CompletedFrameVp8(std::move(frame));
-    return;
+    UpdateLayerInfoVp8(frame);
+    return kHandOff;
   }
 
   auto layer_info_it = layer_info_.find(codec_header.temporalIdx == 0
@@ -265,10 +299,8 @@ void RtpFrameReferenceFinder::ManageFrameVp8(
                                             : codec_header.tl0PicIdx);
 
   // If we don't have the base layer frame yet, stash this frame.
-  if (layer_info_it == layer_info_.end()) {
-    stashed_frames_.push_back(std::move(frame));
-    return;
-  }
+  if (layer_info_it == layer_info_.end())
+    return kStash;
 
   // A non keyframe base layer frame has been received, copy the layer info
   // from the previous base layer frame and set a reference to the previous
@@ -280,8 +312,8 @@ void RtpFrameReferenceFinder::ManageFrameVp8(
             .first;
     frame->num_references = 1;
     frame->references[0] = layer_info_it->second[0];
-    CompletedFrameVp8(std::move(frame));
-    return;
+    UpdateLayerInfoVp8(frame);
+    return kHandOff;
   }
 
   // Layer sync frame, this frame only references its base layer frame.
@@ -289,8 +321,8 @@ void RtpFrameReferenceFinder::ManageFrameVp8(
     frame->num_references = 1;
     frame->references[0] = layer_info_it->second[0];
 
-    CompletedFrameVp8(std::move(frame));
-    return;
+    UpdateLayerInfoVp8(frame);
+    return kHandOff;
   }
 
   // Find all references for this frame.
@@ -298,17 +330,15 @@ void RtpFrameReferenceFinder::ManageFrameVp8(
   for (uint8_t layer = 0; layer <= codec_header.temporalIdx; ++layer) {
     // If we have not yet received a previous frame on this temporal layer,
     // stash this frame.
-    if (layer_info_it->second[layer] == -1) {
-      stashed_frames_.push_back(std::move(frame));
-      return;
-    }
+    if (layer_info_it->second[layer] == -1)
+      return kStash;
 
     // If the last frame on this layer is ahead of this frame it means that
     // a layer sync frame has been received after this frame for the same
     // base layer frame, drop this frame.
     if (AheadOf<uint16_t, kPicIdLength>(layer_info_it->second[layer],
                                         frame->picture_id)) {
-      return;
+      return kDrop;
     }
 
     // If we have not yet received a frame between this frame and the referenced
@@ -318,27 +348,31 @@ void RtpFrameReferenceFinder::ManageFrameVp8(
     if (not_received_frame_it != not_yet_received_frames_.end() &&
         AheadOf<uint16_t, kPicIdLength>(frame->picture_id,
                                         *not_received_frame_it)) {
-      stashed_frames_.push_back(std::move(frame));
-      return;
+      return kStash;
     }
 
-    RTC_DCHECK((AheadOf<uint16_t, kPicIdLength>(frame->picture_id,
-                                               layer_info_it->second[layer])));
+    if (!(AheadOf<uint16_t, kPicIdLength>(frame->picture_id,
+                                          layer_info_it->second[layer]))) {
+      RTC_LOG(LS_WARNING) << "Frame with picture id " << frame->picture_id
+                          << " and packet range [" << frame->first_seq_num()
+                          << ", " << frame->last_seq_num()
+                          << "] already received, "
+                          << " dropping frame.";
+      return kDrop;
+    }
+
     ++frame->num_references;
     frame->references[layer] = layer_info_it->second[layer];
   }
 
-  CompletedFrameVp8(std::move(frame));
+  UpdateLayerInfoVp8(frame);
+  return kHandOff;
 }
 
-void RtpFrameReferenceFinder::CompletedFrameVp8(
-    std::unique_ptr<RtpFrameObject> frame) {
+void RtpFrameReferenceFinder::UpdateLayerInfoVp8(RtpFrameObject* frame) {
   rtc::Optional<RTPVideoTypeHeader> rtp_codec_header = frame->GetCodecHeader();
-  if (!rtp_codec_header)
-    return;
-
+  RTC_DCHECK(rtp_codec_header);
   const RTPVideoHeaderVP8& codec_header = rtp_codec_header->VP8;
-
   uint8_t tl0_pic_idx = codec_header.tl0PicIdx;
   uint8_t temporal_index = codec_header.temporalIdx;
   auto layer_info_it = layer_info_.find(tl0_pic_idx);
@@ -359,31 +393,23 @@ void RtpFrameReferenceFinder::CompletedFrameVp8(
   }
   not_yet_received_frames_.erase(frame->picture_id);
 
-  for (size_t i = 0; i < frame->num_references; ++i)
-    frame->references[i] = UnwrapPictureId(frame->references[i]);
-  frame->picture_id = UnwrapPictureId(frame->picture_id);
-
-  frame_callback_->OnCompleteFrame(std::move(frame));
-  RetryStashedFrames();
+  UnwrapPictureIds(frame);
 }
 
-void RtpFrameReferenceFinder::ManageFrameVp9(
-    std::unique_ptr<RtpFrameObject> frame) {
+RtpFrameReferenceFinder::FrameDecision RtpFrameReferenceFinder::ManageFrameVp9(
+    RtpFrameObject* frame) {
   rtc::Optional<RTPVideoTypeHeader> rtp_codec_header = frame->GetCodecHeader();
-  if (!rtp_codec_header)
-    return;
+  if (!rtp_codec_header) {
+    RTC_LOG(LS_WARNING)
+        << "Failed to get codec header from frame, dropping frame.";
+    return kDrop;
+  }
 
   const RTPVideoHeaderVP9& codec_header = rtp_codec_header->VP9;
 
-  bool old_frame = Vp9PidTl0Fix(*frame, &rtp_codec_header->VP9.picture_id,
-                                &rtp_codec_header->VP9.tl0_pic_idx);
-  if (old_frame)
-    return;
-
   if (codec_header.picture_id == kNoPictureId ||
       codec_header.temporal_idx == kNoTemporalIdx) {
-    ManageFrameGeneric(std::move(frame), codec_header.picture_id);
-    return;
+    return ManageFrameGeneric(std::move(frame), codec_header.picture_id);
   }
 
   frame->spatial_layer = codec_header.spatial_idx;
@@ -400,18 +426,19 @@ void RtpFrameReferenceFinder::ManageFrameVp9(
     frame->num_references = codec_header.num_ref_pics;
     for (size_t i = 0; i < frame->num_references; ++i) {
       frame->references[i] =
-          Subtract<1 << 16>(frame->picture_id, codec_header.pid_diff[i]);
+          Subtract<kPicIdLength>(frame->picture_id, codec_header.pid_diff[i]);
     }
 
-    CompletedFrameVp9(std::move(frame));
-    return;
+    UnwrapPictureIds(frame);
+    return kHandOff;
   }
 
   if (codec_header.ss_data_available) {
     // Scalability structures can only be sent with tl0 frames.
     if (codec_header.temporal_idx != 0) {
-      LOG(LS_WARNING) << "Received scalability structure on a non base layer"
-                         " frame. Scalability structure ignored.";
+      RTC_LOG(LS_WARNING)
+          << "Received scalability structure on a non base layer"
+             " frame. Scalability structure ignored.";
     } else {
       current_ss_idx_ = Add<kMaxGofSaved>(current_ss_idx_, 1);
       scalability_structures_[current_ss_idx_] = codec_header.gof;
@@ -431,16 +458,16 @@ void RtpFrameReferenceFinder::ManageFrameVp9(
   if (frame->frame_type() == kVideoFrameKey) {
     // When using GOF all keyframes must include the scalability structure.
     if (!codec_header.ss_data_available)
-      LOG(LS_WARNING) << "Received keyframe without scalability structure";
+      RTC_LOG(LS_WARNING) << "Received keyframe without scalability structure";
 
     frame->num_references = 0;
     auto gof_info_it = gof_info_.find(codec_header.tl0_pic_idx);
     if (gof_info_it == gof_info_.end())
-      return;
+      return kDrop;
 
     FrameReceivedVp9(frame->picture_id, &gof_info_it->second);
-    CompletedFrameVp9(std::move(frame));
-    return;
+    UnwrapPictureIds(frame);
+    return kHandOff;
   }
 
   auto gof_info_it = gof_info_.find(
@@ -449,20 +476,16 @@ void RtpFrameReferenceFinder::ManageFrameVp9(
           : codec_header.tl0_pic_idx);
 
   // Gof info for this frame is not available yet, stash this frame.
-  if (gof_info_it == gof_info_.end()) {
-    stashed_frames_.push_back(std::move(frame));
-    return;
-  }
+  if (gof_info_it == gof_info_.end())
+    return kStash;
 
   GofInfo* info = &gof_info_it->second;
   FrameReceivedVp9(frame->picture_id, info);
 
   // Make sure we don't miss any frame that could potentially have the
   // up switch flag set.
-  if (MissingRequiredFrameVp9(frame->picture_id, *info)) {
-    stashed_frames_.push_back(std::move(frame));
-    return;
-  }
+  if (MissingRequiredFrameVp9(frame->picture_id, *info))
+    return kStash;
 
   if (codec_header.temporal_up_switch) {
     auto pid_tidx =
@@ -501,7 +524,8 @@ void RtpFrameReferenceFinder::ManageFrameVp9(
     }
   }
 
-  CompletedFrameVp9(std::move(frame));
+  UnwrapPictureIds(frame);
+  return kHandOff;
 }
 
 bool RtpFrameReferenceFinder::MissingRequiredFrameVp9(uint16_t picture_id,
@@ -512,8 +536,8 @@ bool RtpFrameReferenceFinder::MissingRequiredFrameVp9(uint16_t picture_id,
   size_t temporal_idx = info.gof->temporal_idx[gof_idx];
 
   if (temporal_idx >= kMaxTemporalLayers) {
-    LOG(LS_WARNING) << "At most " << kMaxTemporalLayers << " temporal "
-                    << "layers are supported.";
+    RTC_LOG(LS_WARNING) << "At most " << kMaxTemporalLayers << " temporal "
+                        << "layers are supported.";
     return true;
   }
 
@@ -579,168 +603,10 @@ bool RtpFrameReferenceFinder::UpSwitchInIntervalVp9(uint16_t picture_id,
   return false;
 }
 
-void RtpFrameReferenceFinder::CompletedFrameVp9(
-    std::unique_ptr<RtpFrameObject> frame) {
+void RtpFrameReferenceFinder::UnwrapPictureIds(RtpFrameObject* frame) {
   for (size_t i = 0; i < frame->num_references; ++i)
-    frame->references[i] = UnwrapPictureId(frame->references[i]);
-  frame->picture_id = UnwrapPictureId(frame->picture_id);
-
-  frame_callback_->OnCompleteFrame(std::move(frame));
-  RetryStashedFrames();
-}
-
-uint16_t RtpFrameReferenceFinder::UnwrapPictureId(uint16_t picture_id) {
-  RTC_DCHECK_NE(-1, last_unwrap_);
-
-  uint16_t unwrap_truncated = last_unwrap_ % kPicIdLength;
-  uint16_t diff = MinDiff<uint16_t, kPicIdLength>(unwrap_truncated, picture_id);
-
-  if (AheadOf<uint16_t, kPicIdLength>(picture_id, unwrap_truncated))
-    last_unwrap_ = Add<1 << 16>(last_unwrap_, diff);
-  else
-    last_unwrap_ = Subtract<1 << 16>(last_unwrap_, diff);
-
-  return last_unwrap_;
-}
-
-bool RtpFrameReferenceFinder::Vp9PidTl0Fix(const RtpFrameObject& frame,
-                                           int16_t* picture_id,
-                                           int16_t* tl0_pic_idx) {
-  const int kTl0PicIdLength = 256;
-  const uint8_t kMaxPidDiff = 128;
-
-  // We are currently receiving VP9 without PID, nothing to fix.
-  if (*picture_id == kNoPictureId)
-    return false;
-
-  // If |vp9_fix_jump_timestamp_| != -1 then a jump has occurred recently.
-  if (vp9_fix_jump_timestamp_ != -1) {
-    // If this frame has a timestamp older than |vp9_fix_jump_timestamp_| then
-    // this frame is old (more previous than the frame where we detected the
-    // jump) and should be dropped.
-    if (AheadOf<uint32_t>(vp9_fix_jump_timestamp_, frame.timestamp))
-      return true;
-
-    // After 60 seconds, reset |vp9_fix_jump_timestamp_| in order to not
-    // discard old frames when the timestamp wraps.
-    int diff_ms =
-        ForwardDiff<uint32_t>(vp9_fix_jump_timestamp_, frame.timestamp) / 90;
-    if (diff_ms > 60 * 1000)
-      vp9_fix_jump_timestamp_ = -1;
-  }
-
-  // Update |vp9_fix_last_timestamp_| with the most recent timestamp.
-  if (vp9_fix_last_timestamp_ == -1)
-    vp9_fix_last_timestamp_ = frame.timestamp;
-  if (AheadOf<uint32_t>(frame.timestamp, vp9_fix_last_timestamp_))
-    vp9_fix_last_timestamp_ = frame.timestamp;
-
-  uint16_t fixed_pid = Add<kPicIdLength>(*picture_id, vp9_fix_pid_offset_);
-  if (vp9_fix_last_picture_id_ == -1)
-    vp9_fix_last_picture_id_ = *picture_id;
-
-  int16_t fixed_tl0 = kNoTl0PicIdx;
-  if (*tl0_pic_idx != kNoTl0PicIdx) {
-    fixed_tl0 = Add<kTl0PicIdLength>(*tl0_pic_idx, vp9_fix_tl0_pic_idx_offset_);
-    // Update |vp9_fix_last_tl0_pic_idx_| with the most recent tl0 pic index.
-    if (vp9_fix_last_tl0_pic_idx_ == -1)
-      vp9_fix_last_tl0_pic_idx_ = *tl0_pic_idx;
-    if (AheadOf<uint8_t>(fixed_tl0, vp9_fix_last_tl0_pic_idx_))
-      vp9_fix_last_tl0_pic_idx_ = fixed_tl0;
-  }
-
-  bool has_jumped = DetectVp9PicIdJump(fixed_pid, fixed_tl0, frame.timestamp);
-  if (!has_jumped)
-    has_jumped = DetectVp9Tl0PicIdxJump(fixed_tl0, frame.timestamp);
-
-  if (has_jumped) {
-    // First we calculate the offset to get to the previous picture id, and then
-    // we add kMaxPid to avoid accidently referencing any previous
-    // frames that was inserted into the FrameBuffer.
-    vp9_fix_pid_offset_ = ForwardDiff<uint16_t, kPicIdLength>(
-        *picture_id, vp9_fix_last_picture_id_);
-    vp9_fix_pid_offset_ += kMaxPidDiff;
-
-    fixed_pid = Add<kPicIdLength>(*picture_id, vp9_fix_pid_offset_);
-    vp9_fix_last_picture_id_ = fixed_pid;
-    vp9_fix_jump_timestamp_ = frame.timestamp;
-    gof_info_.clear();
-
-    vp9_fix_tl0_pic_idx_offset_ =
-        ForwardDiff<uint8_t>(*tl0_pic_idx, vp9_fix_last_tl0_pic_idx_);
-    vp9_fix_tl0_pic_idx_offset_ += kMaxGofSaved;
-    fixed_tl0 = Add<kTl0PicIdLength>(*tl0_pic_idx, vp9_fix_tl0_pic_idx_offset_);
-    vp9_fix_last_tl0_pic_idx_ = fixed_tl0;
-  }
-
-  // Update |vp9_fix_last_picture_id_| with the most recent picture id.
-  if (AheadOf<uint16_t, kPicIdLength>(fixed_pid, vp9_fix_last_picture_id_))
-    vp9_fix_last_picture_id_ = fixed_pid;
-
-  *picture_id = fixed_pid;
-  *tl0_pic_idx = fixed_tl0;
-
-  return false;
-}
-
-bool RtpFrameReferenceFinder::DetectVp9PicIdJump(int fixed_pid,
-                                                 int fixed_tl0,
-                                                 uint32_t timestamp) const {
-  // Test if there has been a jump backwards in the picture id.
-  if (AheadOrAt<uint32_t>(timestamp, vp9_fix_last_timestamp_) &&
-      AheadOf<uint16_t, kPicIdLength>(vp9_fix_last_picture_id_, fixed_pid)) {
-    return true;
-  }
-
-  // Test if we have jumped forward too much. The reason we have to do this
-  // is because the FrameBuffer holds history of old frames and inserting
-  // frames with a much advanced picture id can result in the frame buffer
-  // holding more than half of the interval of picture ids.
-  if (AheadOrAt<uint32_t>(timestamp, vp9_fix_last_timestamp_) &&
-      ForwardDiff<uint16_t, kPicIdLength>(vp9_fix_last_picture_id_, fixed_pid) >
-          128) {
-    return true;
-  }
-
-  // Special case where the picture id jump forward but not by much and the
-  // tl0 jumps to the id of an already saved gof for that id. In order to
-  // detect this we check if the picture id span over the length of the GOF.
-  if (fixed_tl0 != kNoTl0PicIdx) {
-    auto info_it = gof_info_.find(fixed_tl0);
-    if (info_it != gof_info_.end()) {
-      int last_pid_gof_idx_0 =
-          Subtract<kPicIdLength>(info_it->second.last_picture_id,
-                                 info_it->second.last_picture_id %
-                                     info_it->second.gof->num_frames_in_gof);
-      int pif_gof_end = Add<kPicIdLength>(
-          last_pid_gof_idx_0, info_it->second.gof->num_frames_in_gof);
-      if (AheadOf<uint16_t, kPicIdLength>(fixed_pid, pif_gof_end))
-        return true;
-    }
-  }
-
-  return false;
-}
-
-bool RtpFrameReferenceFinder::DetectVp9Tl0PicIdxJump(int fixed_tl0,
-                                                     uint32_t timestamp) const {
-  if (fixed_tl0 != kNoTl0PicIdx) {
-    // Test if there has been a jump backwards in tl0 pic index.
-    if (AheadOrAt<uint32_t>(timestamp, vp9_fix_last_timestamp_) &&
-        AheadOf<uint8_t>(vp9_fix_last_tl0_pic_idx_, fixed_tl0)) {
-      return true;
-    }
-
-    // Test if there has been a jump forward. If the jump forward results
-    // in the tl0 pic index for this frame to be considered smaller than the
-    // smallest item in |gof_info_| then we have jumped forward far enough to
-    // wrap.
-    if (!gof_info_.empty() &&
-        AheadOf<uint8_t>(gof_info_.begin()->first, fixed_tl0)) {
-      return true;
-    }
-  }
-  return false;
+    frame->references[i] = unwrapper_.Unwrap(frame->references[i]);
+  frame->picture_id = unwrapper_.Unwrap(frame->picture_id);
 }
 
 }  // namespace video_coding

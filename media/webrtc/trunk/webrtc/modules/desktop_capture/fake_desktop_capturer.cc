@@ -8,21 +8,25 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/desktop_capture/fake_desktop_capturer.h"
+#include "modules/desktop_capture/fake_desktop_capturer.h"
 
 #include <utility>
 
 namespace webrtc {
 
-FakeDesktopCapturer::FakeDesktopCapturer()
-    : callback_(nullptr),
-      result_(DesktopCapturer::Result::SUCCESS),
-      generator_(nullptr) {}
-
+FakeDesktopCapturer::FakeDesktopCapturer() = default;
 FakeDesktopCapturer::~FakeDesktopCapturer() = default;
 
 void FakeDesktopCapturer::set_result(DesktopCapturer::Result result) {
   result_ = result;
+}
+
+int FakeDesktopCapturer::num_frames_captured() const {
+  return num_frames_captured_;
+}
+
+int FakeDesktopCapturer::num_capture_attempts() const {
+  return num_capture_attempts_;
 }
 
 // Uses the |generator| provided as DesktopFrameGenerator, FakeDesktopCapturer
@@ -38,10 +42,17 @@ void FakeDesktopCapturer::Start(DesktopCapturer::Callback* callback) {
 }
 
 void FakeDesktopCapturer::CaptureFrame() {
+  num_capture_attempts_++;
   if (generator_) {
+    if (result_ != DesktopCapturer::Result::SUCCESS) {
+      callback_->OnCaptureResult(result_, nullptr);
+      return;
+    }
+
     std::unique_ptr<DesktopFrame> frame(
         generator_->GetNextFrame(shared_memory_factory_.get()));
     if (frame) {
+      num_frames_captured_++;
       callback_->OnCaptureResult(result_, std::move(frame));
     } else {
       callback_->OnCaptureResult(DesktopCapturer::Result::ERROR_TEMPORARY,

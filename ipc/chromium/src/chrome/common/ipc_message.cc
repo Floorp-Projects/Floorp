@@ -17,6 +17,7 @@
 #endif
 
 #include "mozilla/Move.h"
+#include "nsISupportsImpl.h"
 
 #ifdef MOZ_TASK_TRACER
 using namespace mozilla::tasktracer;

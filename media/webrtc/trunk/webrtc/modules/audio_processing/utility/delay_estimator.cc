@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_processing/utility/delay_estimator.h"
+#include "modules/audio_processing/utility/delay_estimator.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <algorithm>
 
-#include "webrtc/base/checks.h"
+#include "rtc_base/checks.h"
 
 // Number of right shifts for scaling is linearly depending on number of bits in
 // the far-end binary spectrum.
@@ -440,11 +440,11 @@ BinaryDelayEstimator* WebRtc_CreateBinaryDelayEstimator(
 
 int WebRtc_AllocateHistoryBufferMemory(BinaryDelayEstimator* self,
                                        int history_size) {
-  BinaryDelayEstimatorFarend* farend = self->farend;
+  BinaryDelayEstimatorFarend* far = self->farend;
   // (Re-)Allocate memory for spectrum and history buffers.
-  if (history_size != farend->history_size) {
+  if (history_size != far->history_size) {
     // Only update far-end buffers if we need.
-    history_size = WebRtc_AllocateFarendBufferMemory(farend, history_size);
+    history_size = WebRtc_AllocateFarendBufferMemory(far, history_size);
   }
   // The extra array element in |mean_bit_counts| and |histogram| is a dummy
   // element only used while |last_delay| == -2, i.e., before we have a valid

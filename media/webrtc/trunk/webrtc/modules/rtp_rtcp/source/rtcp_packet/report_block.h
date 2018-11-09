@@ -9,10 +9,10 @@
  *
  */
 
-#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_REPORT_BLOCK_H_
-#define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_REPORT_BLOCK_H_
+#ifndef MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_REPORT_BLOCK_H_
+#define MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_REPORT_BLOCK_H_
 
-#include "webrtc/base/basictypes.h"
+#include "rtc_base/basictypes.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -52,7 +52,7 @@ class ReportBlock {
   uint32_t last_sr() const { return last_sr_; }
   uint32_t delay_since_last_sr() const { return delay_since_last_sr_; }
 
-private:
+ private:
   uint32_t source_ssrc_;
   uint8_t fraction_lost_;
   uint32_t cumulative_lost_;
@@ -64,4 +64,4 @@ private:
 
 }  // namespace rtcp
 }  // namespace webrtc
-#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_REPORT_BLOCK_H_
+#endif  // MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_REPORT_BLOCK_H_

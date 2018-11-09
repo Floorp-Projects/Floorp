@@ -237,6 +237,9 @@ CPUInfo::SSEVersion CPUInfo::maxEnabledSSEVersion = UnknownSSE;
 bool CPUInfo::avxPresent = false;
 bool CPUInfo::avxEnabled = false;
 bool CPUInfo::popcntPresent = false;
+bool CPUInfo::bmi1Present = false;
+bool CPUInfo::bmi2Present = false;
+bool CPUInfo::lzcntPresent = false;
 bool CPUInfo::needAmdBugWorkaround = false;
 
 static uintptr_t
@@ -263,95 +266,119 @@ ReadXGETBV()
     return xcr0EAX;
 }
 
-void
-CPUInfo::SetSSEVersion()
+static void
+ReadCPUInfo(int* flagsEax, int* flagsEbx, int* flagsEcx, int* flagsEdx)
 {
-    int flagsEAX = 0;
-    int flagsECX = 0;
-    int flagsEDX = 0;
-
 #ifdef _MSC_VER
     int cpuinfo[4];
-    __cpuid(cpuinfo, 1);
-    flagsEAX = cpuinfo[0];
-    flagsECX = cpuinfo[2];
-    flagsEDX = cpuinfo[3];
+    __cpuid(cpuinfo, *flagsEax);
+    *flagsEax = cpuinfo[0];
+    *flagsEbx = cpuinfo[1];
+    *flagsEcx = cpuinfo[2];
+    *flagsEdx = cpuinfo[3];
 #elif defined(__GNUC__)
+    // Some older 32-bits processors don't fill the ecx register with cpuid, so
+    // clobber it before calling cpuid, so that there's no risk of picking
+    // random bits indicating SSE3/SSE4 are present. Also make sure that it's
+    // set to 0 as an input for BMI detection on all platforms.
+    *flagsEcx = 0;
 # ifdef JS_CODEGEN_X64
     asm (
-         "movl $0x1, %%eax;"
          "cpuid;"
-         : "=a" (flagsEAX), "=c" (flagsECX), "=d" (flagsEDX)
-         :
-         : "%ebx"
+         : "+a" (*flagsEax), "=b" (*flagsEbx), "+c" (*flagsEcx), "=d" (*flagsEdx)
          );
 # else
     // On x86, preserve ebx. The compiler needs it for PIC mode.
-    // Some older processors don't fill the ecx register with cpuid, so clobber
-    // it before calling cpuid, so that there's no risk of picking random bits
-    // indicating SSE3/SSE4 are present.
     asm (
-         "xor %%ecx, %%ecx;"
-         "movl $0x1, %%eax;"
-         "pushl %%ebx;"
+         "mov %%ebx, %%edi;"
          "cpuid;"
-         "popl %%ebx;"
-         : "=a" (flagsEAX), "=c" (flagsECX), "=d" (flagsEDX)
-         :
-         :
+         "xchg %%edi, %%ebx;"
+         : "+a" (*flagsEax), "=D" (*flagsEbx), "+c" (*flagsEcx), "=d" (*flagsEdx)
          );
 # endif
 #else
 # error "Unsupported compiler"
 #endif
+}
 
-    static const int SSEBit = 1 << 25;
-    static const int SSE2Bit = 1 << 26;
-    static const int SSE3Bit = 1 << 0;
-    static const int SSSE3Bit = 1 << 9;
-    static const int SSE41Bit = 1 << 19;
-    static const int SSE42Bit = 1 << 20;
+void
+CPUInfo::SetSSEVersion()
+{
+    int flagsEax = 1;
+    int flagsEbx = 0;
+    int flagsEcx = 0;
+    int flagsEdx = 0;
+    ReadCPUInfo(&flagsEax, &flagsEbx, &flagsEcx, &flagsEdx);
 
-    if (flagsECX & SSE42Bit)      maxSSEVersion = SSE4_2;
-    else if (flagsECX & SSE41Bit) maxSSEVersion = SSE4_1;
-    else if (flagsECX & SSSE3Bit) maxSSEVersion = SSSE3;
-    else if (flagsECX & SSE3Bit)  maxSSEVersion = SSE3;
-    else if (flagsEDX & SSE2Bit)  maxSSEVersion = SSE2;
-    else if (flagsEDX & SSEBit)   maxSSEVersion = SSE;
-    else                          maxSSEVersion = NoSSE;
+    static constexpr int SSEBit = 1 << 25;
+    static constexpr int SSE2Bit = 1 << 26;
+    static constexpr int SSE3Bit = 1 << 0;
+    static constexpr int SSSE3Bit = 1 << 9;
+    static constexpr int SSE41Bit = 1 << 19;
+    static constexpr int SSE42Bit = 1 << 20;
+
+    if (flagsEcx & SSE42Bit) {
+        maxSSEVersion = SSE4_2;
+    } else if (flagsEcx & SSE41Bit) {
+        maxSSEVersion = SSE4_1;
+    } else if (flagsEcx & SSSE3Bit) {
+        maxSSEVersion = SSSE3;
+    } else if (flagsEcx & SSE3Bit) {
+        maxSSEVersion = SSE3;
+    } else if (flagsEdx & SSE2Bit) {
+        maxSSEVersion = SSE2;
+    } else if (flagsEdx & SSEBit) {
+        maxSSEVersion = SSE;
+    } else {
+        maxSSEVersion = NoSSE;
+    }
 
     if (maxEnabledSSEVersion != UnknownSSE) {
         maxSSEVersion = Min(maxSSEVersion, maxEnabledSSEVersion);
     }
 
-    static const int AVXBit = 1 << 28;
-    static const int XSAVEBit = 1 << 27;
-    avxPresent = (flagsECX & AVXBit) && (flagsECX & XSAVEBit) && avxEnabled;
+    static constexpr int AVXBit = 1 << 28;
+    static constexpr int XSAVEBit = 1 << 27;
+    avxPresent = (flagsEcx & AVXBit) && (flagsEcx & XSAVEBit) && avxEnabled;
 
     // If the hardware supports AVX, check whether the OS supports it too.
     if (avxPresent) {
         size_t xcr0EAX = ReadXGETBV();
-        static const int xcr0SSEBit = 1 << 1;
-        static const int xcr0AVXBit = 1 << 2;
+        static constexpr int xcr0SSEBit = 1 << 1;
+        static constexpr int xcr0AVXBit = 1 << 2;
         avxPresent = (xcr0EAX & xcr0SSEBit) && (xcr0EAX & xcr0AVXBit);
     }
 
     // CMOV instruction are supposed to be supported by all CPU which have SSE2
     // enabled. While this might be true, this is not guaranteed by any
     // documentation, nor AMD, nor Intel.
-    static const int CMOVBit = 1 << 15;
-    MOZ_RELEASE_ASSERT(flagsEDX & CMOVBit,
+    static constexpr int CMOVBit = 1 << 15;
+    MOZ_RELEASE_ASSERT(flagsEdx & CMOVBit,
                        "CMOVcc instruction is not recognized by this CPU.");
 
-    static const int POPCNTBit = 1 << 23;
-    popcntPresent = (flagsECX & POPCNTBit);
+    static constexpr int POPCNTBit = 1 << 23;
+    popcntPresent = (flagsEcx & POPCNTBit);
 
     // Check if we need to work around an AMD CPU bug (see bug 1281759).
     // We check for family 20 models 0-2. Intel doesn't use family 20 at
     // this point, so this should only match AMD CPUs.
-    unsigned family = ((flagsEAX >> 20) & 0xff) + ((flagsEAX >> 8) & 0xf);
-    unsigned model = (((flagsEAX >> 16) & 0xf) << 4) + ((flagsEAX >> 4) & 0xf);
+    unsigned family = ((flagsEax >> 20) & 0xff) + ((flagsEax >> 8) & 0xf);
+    unsigned model = (((flagsEax >> 16) & 0xf) << 4) + ((flagsEax >> 4) & 0xf);
     needAmdBugWorkaround = (family == 20 && model <= 2);
+
+    flagsEax = 0x80000001;
+    ReadCPUInfo(&flagsEax, &flagsEbx, &flagsEcx, &flagsEdx);
+
+    static constexpr int LZCNTBit = 1 << 5;
+    lzcntPresent = (flagsEcx & LZCNTBit);
+
+    flagsEax = 0x7;
+    ReadCPUInfo(&flagsEax, &flagsEbx, &flagsEcx, &flagsEdx);
+
+    static constexpr int BMI1Bit = 1 << 3;
+    static constexpr int BMI2Bit = 1 << 8;
+    bmi1Present = (flagsEbx & BMI1Bit);
+    bmi2Present = bmi1Present && (flagsEbx & BMI2Bit);
 }
 
 volatile uintptr_t* blackbox = nullptr;
