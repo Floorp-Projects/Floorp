@@ -126,9 +126,10 @@ DataStruct::WriteCache(nsISupports* aData, uint32_t aDataLen)
 
   // write out the contents of the clipboard to the file
   void* buff = nullptr;
-  nsPrimitiveHelpers::CreateDataFromPrimitive(mFlavor, aData, &buff, aDataLen);
+  uint32_t dataLen = 0;
+  nsPrimitiveHelpers::CreateDataFromPrimitive(mFlavor, aData, &buff, &dataLen);
   if (buff) {
-    int32_t written = PR_Write(mCacheFD, buff, aDataLen);
+    int32_t written = PR_Write(mCacheFD, buff, dataLen);
     free(buff);
     if (written) {
       return NS_OK;

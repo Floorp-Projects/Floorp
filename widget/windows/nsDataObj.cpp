@@ -1339,7 +1339,7 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
   if ( !len )
     return E_FAIL;
   nsPrimitiveHelpers::CreateDataFromPrimitive(
-    nsDependentCString(flavorStr), genericDataWrapper, &data, len);
+    nsDependentCString(flavorStr), genericDataWrapper, &data, &len);
   if ( !data )
     return E_FAIL;
 
