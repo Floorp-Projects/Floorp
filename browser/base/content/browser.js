@@ -7740,18 +7740,6 @@ function duplicateTabIn(aTab, where, delta) {
   }
 }
 
-/* Duplicates tabs in the current window.
- * aTab may belongs to a multiselection of tabs.
- */
-function duplicateTabs(aTab) {
-  let tabsToDuplicate = aTab.multiselected ? gBrowser.selectedTabs : [aTab];
-  let newIndex = tabsToDuplicate[tabsToDuplicate.length - 1]._tPos + 1;
-  for (let tab of tabsToDuplicate) {
-    let newTab = SessionStore.duplicateTab(window, tab);
-    gBrowser.moveTabTo(newTab, newIndex++);
-  }
-}
-
 var MousePosTracker = {
   _listeners: new Set(),
   _x: 0,
