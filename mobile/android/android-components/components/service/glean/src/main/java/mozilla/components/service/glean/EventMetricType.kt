@@ -60,6 +60,11 @@ data class EventMetricType(
             return
         }
 
+        if (lifetime != Lifetime.Ping) {
+            logger.warn("$category.$name can only have a Ping lifetime")
+            return
+        }
+
         // We don't need to check that the objectId is short, since that
         // has already been determined at build time for each of the valid objectId values.
         if (!objects.contains(objectId)) {

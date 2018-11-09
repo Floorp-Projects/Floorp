@@ -1,0 +1,289 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package mozilla.components.service.glean.storages
+
+import android.content.Context
+import android.content.SharedPreferences
+import mozilla.components.service.glean.Lifetime
+import mozilla.components.support.base.log.logger.Logger
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.eq
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+
+@RunWith(RobolectricTestRunner::class)
+class GenericScalarStorageEngineTest {
+
+    private class MockScalarStorageEngine(
+        override val logger: Logger = Logger("test")
+    ) : GenericScalarStorageEngine<Int>() {
+        override fun singleMetricDeserializer(value: Any?): Int? {
+            if (value is String) {
+                return value.toIntOrNull()
+            }
+
+            return value as? Int?
+        }
+
+        fun record(
+            stores: List<String>,
+            category: String,
+            name: String,
+            lifetime: Lifetime,
+            value: Int
+        ) {
+            super.recordScalar(stores, category, name, lifetime, value)
+        }
+    }
+
+    @Test
+    fun `metrics with 'user' lifetime must not be cleared when snapshotting`() {
+        val dataUserLifetime = 37
+        val dataPingLifetime = 3
+
+        val storageEngine = MockScalarStorageEngine()
+        storageEngine.applicationContext = RuntimeEnvironment.application
+
+        // Record a value with User lifetime
+        storageEngine.record(
+            stores = listOf("store1"),
+            category = "telemetry",
+            name = "userLifetimeData",
+            lifetime = Lifetime.User,
+            value = dataUserLifetime
+        )
+
+        // Record a value with Ping lifetime
+        storageEngine.record(
+            stores = listOf("store1"),
+            category = "telemetry",
+            name = "pingLifetimeData",
+            lifetime = Lifetime.Ping,
+            value = dataPingLifetime
+        )
+
+        // Take a snapshot and clear the store: this snapshot must contain the data for
+        // both metrics.
+        val firstSnapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = true)
+        assertEquals(2, firstSnapshot!!.size)
+        assertEquals(dataUserLifetime, firstSnapshot["telemetry.userLifetimeData"])
+        assertEquals(dataPingLifetime, firstSnapshot["telemetry.pingLifetimeData"])
+
+        // Take a new snapshot. The ping lifetime data should have been cleared and not be
+        // available anymore, data with 'user' lifetime must still be around.
+        val secondSnapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = true)
+        assertEquals(1, secondSnapshot!!.size)
+        assertEquals(dataUserLifetime, secondSnapshot["telemetry.userLifetimeData"])
+        assertFalse(secondSnapshot.contains("telemetry.pingLifetimeData"))
+    }
+
+    @Test
+    fun `metric with 'user' lifetime must be correctly unpersisted when recording 'user' values`() {
+        // Make up the test data that we pretend to be unserialized.
+        val persistedSample = mapOf(
+            "store1#telemetry.value1" to 1,
+            "store1#telemetry.value2" to 2,
+            "store2#telemetry.value1" to 1
+        )
+
+        // Create a fake application context that will be used to load our data.
+        val context = mock(Context::class.java)
+        val sharedPreferences = mock(SharedPreferences::class.java)
+        `when`(sharedPreferences.all).thenAnswer { persistedSample }
+        `when`(context.getSharedPreferences(
+            eq(MockScalarStorageEngine::class.java.simpleName),
+            eq(Context.MODE_PRIVATE)
+        )).thenReturn(sharedPreferences)
+
+        // Instantiate our mock engine and check that it correctly unpersists the
+        // data and makes it available in the snapshot.
+        val storageEngine = MockScalarStorageEngine()
+        storageEngine.applicationContext = context
+
+        // Record a value with Ping lifetime
+        storageEngine.record(
+            stores = listOf("store1"),
+            category = "telemetry",
+            name = "pingLifetimeData",
+            lifetime = Lifetime.User,
+            value = 37
+        )
+
+        verify(sharedPreferences, times(1)).all
+    }
+
+    @Test
+    fun `unpersisting broken 'user' lifetime data should not break the API`() {
+        val brokenSample = mapOf(
+            "store1#telemetry.value1" to "test",
+            "store1#telemetry.value2" to false,
+            "store1#telemetry.value1" to null
+        )
+
+        // Create a fake application context that will be used to load our data.
+        val context = mock(Context::class.java)
+        val sharedPreferences = mock(SharedPreferences::class.java)
+        `when`(sharedPreferences.all).thenAnswer { brokenSample }
+        `when`(context.getSharedPreferences(
+            eq(MockScalarStorageEngine::class.java.simpleName),
+            eq(Context.MODE_PRIVATE)
+        )).thenReturn(sharedPreferences)
+
+        // Instantiate our mock engine and check that it correctly unpersists the
+        // data and makes it available in the snapshot.
+        val storageEngine = MockScalarStorageEngine()
+        storageEngine.applicationContext = context
+
+        // Record a value with Ping lifetime
+        storageEngine.record(
+            stores = listOf("store1"),
+            category = "telemetry",
+            name = "pingLifetimeData",
+            lifetime = Lifetime.Ping,
+            value = 37
+        )
+
+        val snapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = true)
+        assertEquals(1, snapshot!!.size)
+        assertEquals(37, snapshot["telemetry.pingLifetimeData"])
+    }
+
+    @Test
+    fun `metrics with 'user' lifetime must be correctly unpersisted before taking snapshots`() {
+        // Make up the test data that we pretend to be unserialized.
+        val persistedSample = mapOf(
+            "store1#telemetry.value1" to 1,
+            "store1#telemetry.value2" to 2,
+            "store2#telemetry.value1" to 1
+        )
+
+        // Create a fake application context that will be used to load our data.
+        val context = mock(Context::class.java)
+        val sharedPreferences = mock(SharedPreferences::class.java)
+        `when`(sharedPreferences.all).thenAnswer { persistedSample }
+        `when`(context.getSharedPreferences(
+            eq(MockScalarStorageEngine::class.java.simpleName),
+            eq(Context.MODE_PRIVATE)
+        )).thenReturn(sharedPreferences)
+
+        // Instantiate our mock engine and check that it correctly unpersists the
+        // data and makes it available in the snapshot.
+        val storageEngine = MockScalarStorageEngine()
+        storageEngine.applicationContext = context
+
+        val store1Snapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = true)
+        assertEquals(2, store1Snapshot!!.size)
+        assertEquals(1, store1Snapshot["telemetry.value1"])
+        assertEquals(2, store1Snapshot["telemetry.value2"])
+
+        val store2Snapshot = storageEngine.getSnapshot(storeName = "store2", clearStore = true)
+        assertEquals(1, store2Snapshot!!.size)
+        assertEquals(1, store2Snapshot["telemetry.value1"])
+    }
+
+    @Test
+    fun `snapshotting must only clear 'ping' lifetime`() {
+        val storageEngine = MockScalarStorageEngine()
+        storageEngine.applicationContext = RuntimeEnvironment.application
+
+        val stores = listOf("store1", "store2")
+
+        // Record a value with User lifetime
+        storageEngine.record(
+            stores = stores,
+            category = "telemetry",
+            name = "userLifetimeData",
+            lifetime = Lifetime.User,
+            value = 11
+        )
+
+        // Record a value with Application lifetime
+        storageEngine.record(
+            stores = stores,
+            category = "telemetry",
+            name = "applicationLifetimeData",
+            lifetime = Lifetime.Application,
+            value = 7
+        )
+
+        // Record a value with Ping lifetime
+        storageEngine.record(
+            stores = stores,
+            category = "telemetry",
+            name = "pingLifetimeData",
+            lifetime = Lifetime.Ping,
+            value = 2015
+        )
+
+        for (store in stores) {
+            // Get a first snapshot: it will clear the "ping" lifetime for the
+            // requested store.
+            val snapshot1 = storageEngine.getSnapshot(storeName = store, clearStore = true)
+            assertEquals(3, snapshot1!!.size)
+            assertEquals(11, snapshot1["telemetry.userLifetimeData"])
+            assertEquals(7, snapshot1["telemetry.applicationLifetimeData"])
+            assertEquals(2015, snapshot1["telemetry.pingLifetimeData"])
+
+            // A new snapshot should not contain data with "ping" lifetime, since it was
+            // previously cleared.
+            val snapshot2 = storageEngine.getSnapshot(storeName = store, clearStore = true)
+            assertEquals(2, snapshot2!!.size)
+            assertEquals(11, snapshot2["telemetry.userLifetimeData"])
+            assertEquals(7, snapshot2["telemetry.applicationLifetimeData"])
+        }
+    }
+
+    @Test
+    fun `metrics with 'application' lifetime must be cleared when the application is closed`() {
+        // We use block scopes to simulate restarting the application. We use the same
+        // context otherwise the test environment will use a different underlying file
+        // for the SharedPreferences.
+        run {
+            val storageEngine = MockScalarStorageEngine()
+            storageEngine.applicationContext = RuntimeEnvironment.application
+
+            // Record a value with User lifetime
+            storageEngine.record(
+                stores = listOf("store1"),
+                category = "telemetry",
+                name = "userLifetimeData",
+                lifetime = Lifetime.User,
+                value = 37
+            )
+
+            // Record a value with Application lifetime
+            storageEngine.record(
+                stores = listOf("store1"),
+                category = "telemetry",
+                name = "applicationLifetimeData",
+                lifetime = Lifetime.Application,
+                value = 85
+            )
+
+            // Make sure the data was recorded without clearing the storage.
+            val snapshot = storageEngine.getSnapshot("store1", false)
+            assertEquals(2, snapshot!!.size)
+            assertEquals(37, snapshot["telemetry.userLifetimeData"])
+            assertEquals(85, snapshot["telemetry.applicationLifetimeData"])
+        }
+
+        // Re-instantiate the engine: application lifetime probes should have been cleared.
+        run {
+            val storageEngine = MockScalarStorageEngine()
+            storageEngine.applicationContext = RuntimeEnvironment.application
+
+            val snapshot = storageEngine.getSnapshot("store1", true)
+            assertEquals(1, snapshot!!.size)
+            assertEquals(37, snapshot["telemetry.userLifetimeData"])
+        }
+    }
+}

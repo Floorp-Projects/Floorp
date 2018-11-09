@@ -3,6 +3,7 @@
 
 package mozilla.components.service.glean.storages
 
+import mozilla.components.service.glean.Lifetime
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.assertEquals
@@ -27,6 +28,7 @@ class StringsStorageEngineTest {
                 stores = storeNames,
                 category = "telemetry",
                 name = "string_metric",
+                lifetime = Lifetime.Ping,
                 value = "test_string_object"
         )
 
@@ -50,10 +52,11 @@ class StringsStorageEngineTest {
 
         // Record the string in the stores, without providing optional arguments.
         StringsStorageEngine.record(
-                stores = storeNames,
-                category = "telemetry",
-                name = "string_metric",
-                value = "test_string_value"
+            stores = storeNames,
+            category = "telemetry",
+            name = "string_metric",
+            lifetime = Lifetime.Ping,
+            value = "test_string_value"
         )
 
         // Get the snapshot from "store1" and clear it.
@@ -77,6 +80,7 @@ class StringsStorageEngineTest {
             stores = listOf("store1"),
             category = "telemetry",
             name = "string_metric",
+            lifetime = Lifetime.Ping,
             value = "test_string_value"
         )
 

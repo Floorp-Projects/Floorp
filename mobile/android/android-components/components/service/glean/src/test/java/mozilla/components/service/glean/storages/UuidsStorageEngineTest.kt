@@ -10,7 +10,6 @@ import java.util.UUID
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.runner.RunWith
@@ -138,60 +137,4 @@ class UuidsStorageEngineTest {
         assertEquals(sampleUUID, storedData.getValue("some_store#telemetry.uuidMetric"))
         assertEquals(sampleUUID, storedData.getValue("other_store#telemetry.uuidMetric"))
     }
-
-    @Test
-    fun `uuids with 'user' lifetime must not be cleared when snapshotting`() {
-        val uuidUserLifetime = UUID.randomUUID()
-        val uuidPingLifetime = UUID.randomUUID()
-
-        val storageEngine = UuidsStorageEngineImplementation()
-        storageEngine.applicationContext = RuntimeEnvironment.application
-
-        // Record a value with User lifetime
-        storageEngine.record(
-            stores = listOf("store1"),
-            category = "telemetry",
-            name = "userUUID",
-            lifetime = Lifetime.User,
-            value = uuidUserLifetime
-        )
-
-        // Record a value with Ping lifetime
-        storageEngine.record(
-            stores = listOf("store1"),
-            category = "telemetry",
-            name = "pingUUID",
-            lifetime = Lifetime.Ping,
-            value = uuidPingLifetime
-        )
-
-        // Take a snapshot and clear the store: this snapshot must contain the data for
-        // both metrics.
-        val firstSnapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = true)
-        assertEquals(2, firstSnapshot!!.size)
-        assertEquals(uuidUserLifetime, firstSnapshot["telemetry.userUUID"])
-        assertEquals(uuidPingLifetime, firstSnapshot["telemetry.pingUUID"])
-
-        // Take a new snapshot. The ping lifetime data should have been cleared and not be
-        // available anymore, data with 'user' lifetime must still be around.
-        val secondSnapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = true)
-        assertEquals(1, secondSnapshot!!.size)
-        assertEquals(uuidUserLifetime, secondSnapshot["telemetry.userUUID"])
-        assertFalse(secondSnapshot.contains("telemetry.pingUUID"))
-    }
-
-    @Test
-    fun `uuids with 'user' lifetime must be correctly unpersisted before setting new values`() {}
-
-    @Test
-    fun `uuids with 'user' lifetime must be correctly unpersisted before taking snapshots`() {}
-
-    @Test
-    fun `corrupted 'user' lifetime store must not break snapshotting or accumulation`() {}
-
-    @Test
-    fun `snapshotting must only clear 'ping' lifetime`() {}
-
-    @Test
-    fun `uuids with 'application' lifetime must be cleared when the application is closed`() {}
 }

@@ -43,7 +43,7 @@ class EventMetricTypeTest {
         val click = EventMetricType(
             disabled = false,
             category = "ui",
-            lifetime = Lifetime.Application,
+            lifetime = Lifetime.Ping,
             name = "click",
             sendInPings = listOf("store1"),
             objects = listOf("buttonA", "buttonB")
@@ -74,7 +74,27 @@ class EventMetricTypeTest {
     }
 
     @Test
-    fun `events with no lifetime must not record data`() {
+    fun `events with non 'ping' lifetime must not be recorded`() {
+        val testEvent = EventMetricType(
+            disabled = false,
+            category = "ui",
+            lifetime = Lifetime.Application,
+            name = "testEvent",
+            sendInPings = listOf("store1"),
+            allowedExtraKeys = listOf("extra1", "extra2"),
+            objects = listOf("buttonA")
+        )
+
+        testEvent.record("buttonA",
+            extra = mapOf("unknownExtra" to "someValue", "extra1" to "test"))
+
+        // Check that nothing was recorded.
+        val snapshot = EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
+        assertNull("Events must not be recorded if they use unknown extra keys", snapshot)
+    }
+
+    @Test
+    fun `disabled events must not record data`() {
         // Define a 'click' event, which will be stored in "store1". It's disabled
         // so it should not record anything.
         val click = EventMetricType(
@@ -95,32 +115,11 @@ class EventMetricTypeTest {
     }
 
     @Test
-    fun `disabled events must not record data`() {
-        // Define a 'click' event, which will be stored in "store1". It's disabled
-        // so it should not record anything.
-        val click = EventMetricType(
-            disabled = true,
-            category = "ui",
-            lifetime = Lifetime.Application,
-            name = "click",
-            sendInPings = listOf("store1"),
-            objects = listOf("buttonA")
-        )
-
-        // Attempt to store the event.
-        click.record("buttonA")
-
-        // Check that nothing was recorded.
-        val snapshot = EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
-        assertNull("Events must not be recorded if they are disabled", snapshot)
-    }
-
-    @Test
     fun `'objectId' is in the object set`() {
         val click = EventMetricType(
             disabled = false,
             category = "ui",
-            lifetime = Lifetime.Application,
+            lifetime = Lifetime.Ping,
             name = "click",
             sendInPings = listOf("store1"),
             objects = listOf("object1")
@@ -138,7 +137,7 @@ class EventMetricTypeTest {
         val click = EventMetricType(
             disabled = false,
             category = "ui",
-            lifetime = Lifetime.Application,
+            lifetime = Lifetime.Ping,
             name = "click",
             sendInPings = listOf("store1"),
             objects = listOf("buttonA", "buttonB")
@@ -166,7 +165,7 @@ class EventMetricTypeTest {
         val testEvent = EventMetricType(
             disabled = false,
             category = "ui",
-            lifetime = Lifetime.Application,
+            lifetime = Lifetime.Ping,
             name = "testEvent",
             sendInPings = listOf("store1"),
             objects = listOf("buttonA")
@@ -185,7 +184,7 @@ class EventMetricTypeTest {
         val testEvent = EventMetricType(
             disabled = false,
             category = "ui",
-            lifetime = Lifetime.Application,
+            lifetime = Lifetime.Ping,
             name = "testEvent",
             sendInPings = listOf("store1"),
             allowedExtraKeys = listOf("extra1", "extra2"),
@@ -205,7 +204,7 @@ class EventMetricTypeTest {
         val testEvent = EventMetricType(
             disabled = false,
             category = "ui",
-            lifetime = Lifetime.Application,
+            lifetime = Lifetime.Ping,
             name = "testEvent",
             sendInPings = listOf("store1"),
             allowedExtraKeys = listOf("extra1", "truncatedExtra"),

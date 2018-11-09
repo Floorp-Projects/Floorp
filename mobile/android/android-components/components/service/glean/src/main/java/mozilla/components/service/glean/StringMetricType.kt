@@ -59,6 +59,7 @@ data class StringMetricType(
             stores = getStorageNames(),
             category = category,
             name = name,
+            lifetime = lifetime,
             value = truncatedValue
         )
     }
