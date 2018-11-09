@@ -36,6 +36,11 @@ During development of the unprivileged custom elements, you can load the dialog 
 the url `resource://payments/paymentRequest.xhtml`.
 You can then use the debugging console to load sample data. Autofill add/edit form strings
 will not appear when developing this way until they are converted to FTL.
+You can force localization of Form Autofill strings using the following in the Browser Console when
+the `paymentRequest.xhtml` tab is selected then reloading::
+
+    gBrowser.selectedBrowser.messageManager.loadFrameScript("chrome://formautofill/content/l10n.js", true)
+
 
 Debugging Console
 -----------------
