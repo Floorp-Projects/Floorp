@@ -20,6 +20,8 @@
 // If you add an entry to this file, you should also add an impl_arc_ffi!()
 // call to servo/components/style/gecko/arc_types.rs.
 
+// clang-format off
+// Needs to be a on single line
 SERVO_ARC_TYPE(CssRules, ServoCssRules)
 SERVO_ARC_TYPE(StyleSheetContents, RawServoStyleSheetContents)
 SERVO_ARC_TYPE(DeclarationBlock, RawServoDeclarationBlock)
@@ -40,3 +42,4 @@ SERVO_ARC_TYPE(FontFaceRule, RawServoFontFaceRule)
 SERVO_ARC_TYPE(CounterStyleRule, RawServoCounterStyleRule)
 SERVO_ARC_TYPE(CssUrlData, RawServoCssUrlData)
 SERVO_ARC_TYPE(Quotes, RawServoQuotes)
+// clang-format on
