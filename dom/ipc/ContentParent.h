@@ -685,6 +685,10 @@ public:
     const BrowsingContextId& aContextId,
     const bool& aMoveToBFCache) override;
 
+  virtual mozilla::ipc::IPCResult RecvSetOpenerBrowsingContext(
+    const BrowsingContextId& aContextId,
+    const BrowsingContextId& aOpenerContextId) override;
+
 protected:
   void OnChannelConnected(int32_t pid) override;
 
