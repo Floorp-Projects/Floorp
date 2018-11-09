@@ -343,11 +343,21 @@ struct macos_arm_context {
 # define FP_sig(p) R01_sig(p)
 #endif
 
-static uint8_t**
+static void
+SetContextPC(CONTEXT* context, uint8_t* pc)
+{
+#ifdef PC_sig
+    *reinterpret_cast<uint8_t**>(&PC_sig(context)) = pc;
+#else
+    MOZ_CRASH();
+#endif
+}
+
+static uint8_t*
 ContextToPC(CONTEXT* context)
 {
 #ifdef PC_sig
-    return reinterpret_cast<uint8_t**>(&PC_sig(context));
+    return reinterpret_cast<uint8_t*>(PC_sig(context));
 #else
     MOZ_CRASH();
 #endif
@@ -390,7 +400,7 @@ ToRegisterState(CONTEXT* context)
 {
     JS::ProfilingFrameIterator::RegisterState state;
     state.fp = ContextToFP(context);
-    state.pc = *ContextToPC(context);
+    state.pc = ContextToPC(context);
     state.sp = ContextToSP(context);
 #if defined(__arm__) || defined(__aarch64__) || defined(__mips__)
     state.lr = ContextToLR(context);
@@ -434,11 +444,11 @@ struct AutoHandlingTrap
 };
 
 static MOZ_MUST_USE bool
-HandleTrap(CONTEXT* context, JSContext* cx)
+HandleTrap(CONTEXT* context, JSContext* assertCx = nullptr)
 {
     MOZ_ASSERT(sAlreadyHandlingTrap.get());
 
-    uint8_t* pc = *ContextToPC(context);
+    uint8_t* pc = ContextToPC(context);
     const CodeSegment* codeSegment = LookupCodeSegment(pc);
     if (!codeSegment || !codeSegment->isModule()) {
         return false;
@@ -452,12 +462,22 @@ HandleTrap(CONTEXT* context, JSContext* cx)
         return false;
     }
 
-    // We have a safe, expected wasm trap. Call startWasmTrap() to store enough
-    // register state at the point of the trap to allow stack unwinding or
-    // resumption, both of which will call finishWasmTrap().
+    // We have a safe, expected wasm trap, so fp is well-defined to be a Frame*.
+    // For the first sanity check, the Trap::IndirectCallBadSig special case is
+    // due to this trap occurring in the indirect call prologue, while fp points
+    // to the caller's Frame which can be in a different Module. In any case,
+    // though, the containing JSContext is the same.
+    Instance* instance = ((Frame*)ContextToFP(context))->tls->instance;
+    MOZ_RELEASE_ASSERT(&instance->code() == &segment.code() || trap == Trap::IndirectCallBadSig);
+    JSContext* cx = instance->realm()->runtimeFromAnyThread()->mainContextFromAnyThread();
+    MOZ_RELEASE_ASSERT(!assertCx || cx == assertCx);
+
+    // JitActivation::startWasmTrap() stores enough register state from the
+    // point of the trap to allow stack unwinding or resumption, both of which
+    // will call finishWasmTrap().
     jit::JitActivation* activation = cx->activation()->asJit();
     activation->startWasmTrap(trap, bytecode.offset(), ToRegisterState(context));
-    *ContextToPC(context) = segment.trapCode();
+    SetContextPC(context, segment.trapCode());
     return true;
 }
 
