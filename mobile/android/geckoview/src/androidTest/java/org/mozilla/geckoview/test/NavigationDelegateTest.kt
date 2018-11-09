@@ -244,13 +244,14 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.runtime.settings.blockPhishing = true
 
-        testLoadExpectError(phishingUri,
+        // Add query string to avoid bypassing classifier check because of cache.
+        testLoadExpectError(phishingUri + "?block=true",
                         GeckoSession.NavigationDelegate.ERROR_CATEGORY_SAFEBROWSING,
                         GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_PHISHING_URI)
 
         sessionRule.runtime.settings.blockPhishing = false
 
-        sessionRule.session.loadUri(phishingUri)
+        sessionRule.session.loadUri(phishingUri + "?block=false")
         sessionRule.session.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
@@ -268,13 +269,13 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.runtime.settings.blockMalware = true
 
-        testLoadExpectError(malwareUri,
+        testLoadExpectError(malwareUri + "?block=true",
                         GeckoSession.NavigationDelegate.ERROR_CATEGORY_SAFEBROWSING,
                         GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_MALWARE_URI)
 
         sessionRule.runtime.settings.blockMalware = false
 
-        sessionRule.session.loadUri(malwareUri)
+        sessionRule.session.loadUri(malwareUri + "?block=false")
         sessionRule.session.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
@@ -292,13 +293,13 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.runtime.settings.blockMalware = true
 
-        testLoadExpectError(unwantedUri,
+        testLoadExpectError(unwantedUri + "?block=true",
                         GeckoSession.NavigationDelegate.ERROR_CATEGORY_SAFEBROWSING,
                         GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_UNWANTED_URI)
 
         sessionRule.runtime.settings.blockMalware = false
 
-        sessionRule.session.loadUri(unwantedUri)
+        sessionRule.session.loadUri(unwantedUri + "?block=false")
         sessionRule.session.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
@@ -316,13 +317,13 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.runtime.settings.blockMalware = true
 
-        testLoadExpectError(harmfulUri,
+        testLoadExpectError(harmfulUri + "?block=true",
                         GeckoSession.NavigationDelegate.ERROR_CATEGORY_SAFEBROWSING,
                         GeckoSession.NavigationDelegate.ERROR_SAFEBROWSING_HARMFUL_URI)
 
         sessionRule.runtime.settings.blockMalware = false
 
-        sessionRule.session.loadUri(harmfulUri)
+        sessionRule.session.loadUri(harmfulUri + "?block=false")
         sessionRule.session.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
