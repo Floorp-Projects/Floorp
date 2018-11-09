@@ -2,6 +2,7 @@
   display: flex;
   align-items: center;
   white-space: nowrap;
+  line-height: 1.230769231; // (16 / 13) -> 16px computed
 
   &::after {
     background: url('#{$image-path}topic-show-more-12.svg') no-repeat center center;
