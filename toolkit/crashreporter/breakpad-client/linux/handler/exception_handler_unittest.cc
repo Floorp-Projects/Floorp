@@ -909,13 +909,16 @@ TEST(ExceptionHandlerTest, ModuleInfo) {
   const uintptr_t kMemoryAddress = reinterpret_cast<uintptr_t>(memory);
   ASSERT_TRUE(memory);
 
+  PageAllocator allocator;
+  auto_wasteful_vector<uint8_t, sizeof(MDGUID)> guid(&allocator);
+  guid.assign(std::begin(kModuleGUID), std::end(kModuleGUID));
   AutoTempDir temp_dir;
   ExceptionHandler handler(
       MinidumpDescriptor(temp_dir.path()), NULL, NULL, NULL, true, -1);
 
   // Add info about the anonymous memory mapping.
   handler.AddMappingInfo(kMemoryName,
-                         kModuleGUID,
+                         guid,
                          kMemoryAddress,
                          kMemorySize,
                          0);

@@ -112,6 +112,7 @@ using google_breakpad::MinidumpDescriptor;
 #if defined(MOZ_WIDGET_ANDROID)
 using google_breakpad::auto_wasteful_vector;
 using google_breakpad::FileID;
+using google_breakpad::kDefaultBuildIdSize;
 using google_breakpad::PageAllocator;
 #endif
 using namespace mozilla;
@@ -411,12 +412,27 @@ typedef struct {
   size_t      length;
   size_t      file_offset;
 } mapping_info;
-static std::vector<mapping_info> library_mappings;
-typedef std::map<uint32_t,google_breakpad::MappingList> MappingMap;
-#endif
+static std::vector<mapping_info> gLibraryMappings;
+
+static void
+AddMappingInfoToExceptionHandler(const mapping_info& aInfo)
+{
+  PageAllocator allocator;
+  auto_wasteful_vector<uint8_t, kDefaultBuildIdSize> guid(&allocator);
+  FileID::ElfFileIdentifierFromMappedFile(
+    reinterpret_cast<void const *>(aInfo.start_address), guid);
+  gExceptionHandler->AddMappingInfo(aInfo.name, guid, aInfo.start_address,
+                                    aInfo.length, aInfo.file_offset);
 }
 
-namespace CrashReporter {
+static void
+AddAndroidMappingInfo() {
+  for (auto info : gLibraryMappings) {
+    AddMappingInfoToExceptionHandler(info);
+  }
+}
+
+#endif // defined(MOZ_WIDGET_ANDROID)
 
 #ifdef XP_LINUX
 static inline void
@@ -1719,25 +1735,14 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 #endif
 
 #if defined(MOZ_WIDGET_ANDROID)
-  for (unsigned int i = 0; i < library_mappings.size(); i++) {
-    PageAllocator allocator;
-    auto_wasteful_vector<uint8_t, sizeof(MDGUID)> guid(&allocator);
-    FileID::ElfFileIdentifierFromMappedFile(
-      (void const *)library_mappings[i].start_address, guid);
-    gExceptionHandler->AddMappingInfo(library_mappings[i].name,
-                                      guid.data(),
-                                      library_mappings[i].start_address,
-                                      library_mappings[i].length,
-                                      library_mappings[i].file_offset);
-  }
-#endif
+  AddAndroidMappingInfo();
+#endif // defined(MOZ_WIDGET_ANDROID)
 
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
 
   oldTerminateHandler = std::set_terminate(&TerminateHandler);
 
   install_rust_panic_hook();
-
   install_rust_oom_hook();
 
   InitThreadAnnotation();
@@ -4028,23 +4033,15 @@ void AddLibraryMapping(const char* library_name,
                        size_t      mapping_length,
                        size_t      file_offset)
 {
+  mapping_info info;
   if (!gExceptionHandler) {
-    mapping_info info;
     info.name = library_name;
     info.start_address = start_address;
     info.length = mapping_length;
     info.file_offset = file_offset;
-    library_mappings.push_back(info);
-  }
-  else {
-    PageAllocator allocator;
-    auto_wasteful_vector<uint8_t, sizeof(MDGUID)> guid(&allocator);
-    FileID::ElfFileIdentifierFromMappedFile((void const *)start_address, guid);
-    gExceptionHandler->AddMappingInfo(library_name,
-                                      guid.data(),
-                                      start_address,
-                                      mapping_length,
-                                      file_offset);
+    gLibraryMappings.push_back(info);
+  } else {
+    AddMappingInfoToExceptionHandler(info);
   }
 }
 #endif

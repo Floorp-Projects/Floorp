@@ -33,6 +33,7 @@
 #include <limits.h>
 #include <list>
 #include <stdint.h>
+#include <vector>
 
 #include "google_breakpad/common/minidump_format.h"
 
@@ -63,7 +64,7 @@ struct MappingInfo {
 
 struct MappingEntry {
   MappingInfo first;
-  uint8_t second[sizeof(MDGUID)];
+  std::vector<uint8_t> second;
 };
 
 // A list of <MappingInfo, GUID>
