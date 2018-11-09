@@ -48,20 +48,7 @@ class TempAllocator
     MOZ_MUST_USE void* allocate(size_t bytes)
     {
         LifoAlloc::AutoFallibleScope fallibleAllocator(lifoAlloc());
-        void* p = lifoScope_.alloc().alloc(bytes);
-
-        // The above allocation will allocate memory out of the
-        // lifo alloc's ballast, so we call ensureBallast to
-        // replenish it. If we fail to replenish the ballast, then
-        // future "infallible" allocations could fail.  (Returning
-        // nullptr is insufficient because of cases like
-        // CompilerConstraintList::add, where we delay the OOM
-        // failure until later.)
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!ensureBallast()) {
-            oomUnsafe.crash("Failed to replenish ballast in TempAllocator::allocate");
-        }
-        return p;
+        return lifoScope_.alloc().allocEnsureUnused(bytes, BallastSize);
     }
 
     template <typename T>
@@ -72,12 +59,7 @@ class TempAllocator
         if (MOZ_UNLIKELY(!CalculateAllocSize<T>(n, &bytes))) {
             return nullptr;
         }
-        T* p = static_cast<T*>(lifoScope_.alloc().alloc(bytes));
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!ensureBallast()) {
-            oomUnsafe.crash("Failed to replenish ballast in TempAllocator::allocateArray");
-        }
-        return p;
+        return static_cast<T*>(lifoScope_.alloc().allocEnsureUnused(bytes, BallastSize));
     }
 
     // View this allocator as a fallible allocator.
