@@ -532,8 +532,6 @@ SharedModule
 wasm::CompileBuffer(const CompileArgs& args, const ShareableBytes& bytecode, UniqueChars* error,
                     UniqueCharsVector* warnings, UniqueLinkData* maybeLinkData)
 {
-    MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
-
     Decoder d(bytecode.bytes, 0, error, warnings);
 
     CompilerEnvironment compilerEnv(args);
@@ -576,8 +574,6 @@ void
 wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode, const Module& module,
                    Atomic<bool>* cancelled)
 {
-    MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
-
     UniqueChars error;
     Decoder d(bytecode, 0, &error);
 
@@ -714,8 +710,6 @@ wasm::CompileStreaming(const CompileArgs& args,
                        UniqueChars* error,
                        UniqueCharsVector* warnings)
 {
-    MOZ_ASSERT(wasm::HaveSignalHandlers());
-
     CompilerEnvironment compilerEnv(args);
     Maybe<ModuleEnvironment> env;
 
