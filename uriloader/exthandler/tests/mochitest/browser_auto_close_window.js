@@ -52,8 +52,7 @@ add_task(async function simple_navigation() {
     await BrowserTestUtils.synthesizeMouseAtCenter("#regular_load", {}, browser);
     let windowContext = await dialogAppeared;
 
-    is(windowContext.gBrowser.selectedBrowser.currentURI.spec, PAGE_URL,
-       "got the right windowContext");
+    is(windowContext, browser.ownerGlobal, "got the right windowContext");
   });
 });
 
@@ -70,8 +69,7 @@ async function testNewTab(browser) {
   await BrowserTestUtils.synthesizeMouseAtCenter("#target_blank", {}, browser);
 
   let windowContext = await dialogAppeared;
-  is(windowContext.gBrowser.selectedBrowser.currentURI.spec, targetURL,
-     "got the right windowContext");
+  is(windowContext, browser.ownerGlobal, "got the right windowContext");
   let [ tab, closingPromise ] = await tabOpened;
   await closingPromise;
   is(tab.linkedBrowser, null, "tab was opened and closed");
@@ -101,8 +99,7 @@ add_task(async function new_window() {
 
 
     let windowContext = await dialogAppeared;
-    is(windowContext.gBrowser.selectedBrowser.currentURI.spec, PAGE_URL,
-       "got the right windowContext");
+    is(windowContext, browser.ownerGlobal, "got the right windowContext");
 
     // The window should close on its own. If not, this test will time out.
     await BrowserTestUtils.domWindowClosed(win);
