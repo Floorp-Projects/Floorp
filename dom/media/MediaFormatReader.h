@@ -318,7 +318,7 @@ private:
   // Drain the current decoder.
   void DrainDecoder(TrackType aTrack);
   void NotifyNewOutput(TrackType aTrack,
-                       MediaDataDecoder::DecodedData&& aResults);
+                       const MediaDataDecoder::DecodedData& aResults);
   void NotifyError(TrackType aTrack, const MediaResult& aError);
   void NotifyWaitingForData(TrackType aTrack);
   void NotifyWaitingForKey(TrackType aTrack);
