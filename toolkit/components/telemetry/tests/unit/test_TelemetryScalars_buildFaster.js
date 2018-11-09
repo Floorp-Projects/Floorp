@@ -53,13 +53,19 @@ add_task({
     "telemetry.test": {
       "builtin_dynamic": {
         "kind": "nsITelemetry::SCALAR_TYPE_COUNT",
-        "expired": false,
+        "expires": "never",
         "record_on_release": false,
         "keyed": false,
       },
       "builtin_dynamic_other": {
         "kind": "nsITelemetry::SCALAR_TYPE_BOOLEAN",
-        "expired": false,
+        "expires": "never",
+        "record_on_release": false,
+        "keyed": false,
+      },
+      "builtin_dynamic_expired": {
+        "kind": "nsITelemetry::SCALAR_TYPE_BOOLEAN",
+        "expires": AppConstants.MOZ_APP_VERSION,
         "record_on_release": false,
         "keyed": false,
       },
@@ -80,8 +86,10 @@ add_task({
   // Store to that scalar.
   const TEST_SCALAR1 = "telemetry.test.builtin_dynamic";
   const TEST_SCALAR2 = "telemetry.test.builtin_dynamic_other";
+  const TEST_SCALAR3 = "telemetry.test.builtin_dynamic_expired";
   Telemetry.scalarSet(TEST_SCALAR1, 3785);
   Telemetry.scalarSet(TEST_SCALAR2, true);
+  Telemetry.scalarSet(TEST_SCALAR3, true);
 
   // Check the values we tried to store.
   const scalars = Telemetry.getSnapshotForScalars("main", false).parent;
