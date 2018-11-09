@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+
 /*
  * Ensures that data a request handler writes out in response is sent only as
  * quickly as the client can receive it, without racing ahead and being forced
@@ -323,10 +324,10 @@ function sinkAndSourceClosedWithPendingData(next) {
 
 /** Returns the sum of the elements in arr. */
 function sum(arr) {
-  var sum = 0;
+  var s = 0;
   for (var i = 0, sz = arr.length; i < sz; i++)
-    sum += arr[i];
-  return sum;
+    s += arr[i];
+  return s;
 }
 
 /**
@@ -1447,7 +1448,6 @@ CopyTest.prototype =
     }
 
     var task = this._tasks[this._currentTask++];
-    var self = this;
     var event =
       {
         run: function run() {
