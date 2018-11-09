@@ -54,7 +54,7 @@ var PaymentDialogUtils = {
   getFormFormat(country) {
     if (country == "DE") {
       return {
-        addressLevel3Label: "",
+        addressLevel3Label: "suburb",
         addressLevel2Label: "city",
         addressLevel1Label: "province",
         postalCodeLabel: "postalCode",
@@ -80,7 +80,7 @@ var PaymentDialogUtils = {
     }
 
     return {
-      addressLevel3Label: "",
+      addressLevel3Label: "suburb",
       addressLevel2Label: "city",
       addressLevel1Label: country == "US" ? "state" : "province",
       postalCodeLabel: country == "US" ? "zip" : "postalCode",
