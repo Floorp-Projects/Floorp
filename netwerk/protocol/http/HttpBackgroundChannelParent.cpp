@@ -380,35 +380,6 @@ HttpBackgroundChannelParent::OnNotifyTrackingProtectionDisabled()
 }
 
 bool
-HttpBackgroundChannelParent::OnNotifyCookieAllowed()
-{
-  LOG(("HttpBackgroundChannelParent::OnNotifyCookieAllowed [this=%p]\n", this));
-  AssertIsInMainProcess();
-
-  if (NS_WARN_IF(!mIPCOpened)) {
-    return false;
-  }
-
-  if (!IsOnBackgroundThread()) {
-    MutexAutoLock lock(mBgThreadMutex);
-    RefPtr<HttpBackgroundChannelParent> self = this;
-    nsresult rv = mBackgroundThread->Dispatch(
-      NS_NewRunnableFunction(
-        "net::HttpBackgroundChannelParent::OnNotifyCookieAllowed",
-        [self]() {
-          self->OnNotifyCookieAllowed();
-        }),
-      NS_DISPATCH_NORMAL);
-
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-
-    return NS_SUCCEEDED(rv);
-  }
-
-  return SendNotifyCookieAllowed();
-}
-
-bool
 HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked(uint32_t aRejectedReason)
 {
   LOG(("HttpBackgroundChannelParent::OnNotifyTrackingCookieBlocked [this=%p]\n", this));
