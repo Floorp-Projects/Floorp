@@ -110,7 +110,7 @@ asserts(8) load 420654-1.xhtml # bug 458238, bug 436123, bug 457397
 load 423514-1.xhtml
 load 430374.html
 load 444431-1.html
-asserts(1) load 444702-1.html # nscoord overflow.
+load 444702-1.html
 load 448988-1.xhtml
 load 450311-1.html
 load 451170.html
