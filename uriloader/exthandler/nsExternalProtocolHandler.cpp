@@ -422,6 +422,12 @@ NS_IMETHODIMP nsExtProtocolChannel::NotifyTrackingProtectionDisabled()
   return NS_OK;
 }
 
+NS_IMETHODIMP nsExtProtocolChannel::NotifyCookieAllowed()
+{
+  // nothing to do
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsExtProtocolChannel::NotifyTrackingCookieBlocked(uint32_t aRejectedReason)
 {
   // nothing to do

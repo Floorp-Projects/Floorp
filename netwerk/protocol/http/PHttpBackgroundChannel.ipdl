@@ -56,6 +56,9 @@ child:
   // Tell the child that tracking protection was disabled for this load.
   async NotifyTrackingProtectionDisabled();
 
+  // Tell the child that cookies are allowed for this load.
+  async NotifyCookieAllowed();
+
   // Tell the child that tracking cookies are blocked for this load.
   async NotifyTrackingCookieBlocked(uint32_t aRejectedReason);
 
