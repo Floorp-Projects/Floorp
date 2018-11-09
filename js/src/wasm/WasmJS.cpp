@@ -71,7 +71,7 @@ wasm::HasCompilerSupport(JSContext* cx)
         return false;
     }
 
-    if (!wasm::EnsureFullSignalHandlers(cx)) {
+    if (!wasm::HaveSignalHandlers()) {
         return false;
     }
 
