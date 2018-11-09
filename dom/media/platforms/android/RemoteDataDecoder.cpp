@@ -279,6 +279,11 @@ public:
     return mIsHardwareAccelerated;
   }
 
+  ConversionRequired NeedsConversion() const override
+  {
+    return ConversionRequired::kNeedAnnexB;
+  }
+
 private:
   const VideoInfo mConfig;
   GeckoSurface::GlobalRef mSurface;
@@ -337,11 +342,6 @@ public:
     }
 
     return InitPromise::CreateAndResolve(TrackInfo::kAudioTrack, __func__);
-  }
-
-  ConversionRequired NeedsConversion() const override
-  {
-    return ConversionRequired::kNeedAnnexB;
   }
 
 private:
