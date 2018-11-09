@@ -820,11 +820,6 @@ BaselineScript::copyICEntries(JSScript* script, const ICEntry* entries)
             ICTypeMonitor_Fallback* stub = realEntry.firstStub()->toTypeMonitor_Fallback();
             stub->fixupICEntry(&realEntry);
         }
-
-        if (realEntry.firstStub()->isTableSwitch()) {
-            ICTableSwitch* stub = realEntry.firstStub()->toTableSwitch();
-            stub->fixupJumpTable(script, this);
-        }
     }
 }
 
@@ -1150,7 +1145,7 @@ BaselineScript::purgeOptimizedStubs(Zone* zone)
         } else if (lastStub->isTypeMonitor_Fallback()) {
             lastStub->toTypeMonitor_Fallback()->resetMonitorStubChain(zone);
         } else {
-            MOZ_ASSERT(lastStub->isTableSwitch());
+            MOZ_CRASH("Unknown fallback stub");
         }
     }
 

@@ -705,7 +705,7 @@
      *   Stack: i =>
      *   len: len
      */ \
-    macro(JSOP_TABLESWITCH, 70, "tableswitch", NULL, 16, 1, 0, JOF_TABLESWITCH|JOF_DETECTING|JOF_IC) \
+    macro(JSOP_TABLESWITCH, 70, "tableswitch", NULL, 16, 1, 0, JOF_TABLESWITCH|JOF_DETECTING) \
     /*
      * Prologue emitted in scripts expected to run once, which deoptimizes code
      * if it executes multiple times.

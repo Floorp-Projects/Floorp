@@ -9008,6 +9008,23 @@ JitRuntime::generateInterpreterStub(MacroAssembler& masm)
     masm.ret();
 }
 
+void
+JitRuntime::generateDoubleToInt32ValueStub(MacroAssembler& masm)
+{
+    doubleToInt32ValueStubOffset_ = startTrampolineCode(masm);
+
+    Label done;
+    masm.branchTestDouble(Assembler::NotEqual, R0, &done);
+
+    masm.unboxDouble(R0, FloatReg0);
+    masm.convertDoubleToInt32(FloatReg0, R1.scratchReg(), &done,
+                              /* negativeZeroCheck = */ false);
+    masm.tagValue(JSVAL_TYPE_INT32, R1.scratchReg(), R0);
+
+    masm.bind(&done);
+    masm.abiret();
+}
+
 bool
 JitRuntime::generateTLEventVM(MacroAssembler& masm, const VMFunction& f, bool enter)
 {
