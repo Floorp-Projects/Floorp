@@ -127,6 +127,10 @@ class JitRuntime
     // Thunk to enter the interpreter from JIT code.
     WriteOnceData<uint32_t> interpreterStubOffset_;
 
+    // Thunk to convert the value in R0 to int32 if it's a double.
+    // Note: this stub treats -0 as +0 and may clobber R1.scratchReg().
+    WriteOnceData<uint32_t> doubleToInt32ValueStubOffset_;
+
     // Thunk used by the debugger for breakpoint and step mode.
     WriteOnceData<JitCode*> debugTrapHandler_;
 
@@ -169,6 +173,7 @@ class JitRuntime
   private:
     void generateLazyLinkStub(MacroAssembler& masm);
     void generateInterpreterStub(MacroAssembler& masm);
+    void generateDoubleToInt32ValueStub(MacroAssembler& masm);
     void generateProfilerExitFrameTailStub(MacroAssembler& masm, Label* profilerExitTail);
     void generateExceptionTailStub(MacroAssembler& masm, void* handler, Label* profilerExitTail);
     void generateBailoutTailStub(MacroAssembler& masm, Label* bailoutTail);
@@ -288,6 +293,10 @@ class JitRuntime
     }
     TrampolinePtr interpreterStub() const {
         return trampolineCode(interpreterStubOffset_);
+    }
+
+    TrampolinePtr getDoubleToInt32ValueStub() const {
+        return trampolineCode(doubleToInt32ValueStubOffset_);
     }
 
     bool hasJitcodeGlobalTable() const {
