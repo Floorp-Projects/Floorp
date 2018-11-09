@@ -1975,6 +1975,7 @@ VARIABLES = {
             'sandbox_vars': dict,
             'non_unified_sources': StrictOrderingOnAppendList,
             'mozilla_flags': list,
+            'gn_target': unicode,
         }), list,
         """List of dirs containing gn files describing targets to build. Attributes:
             - variables, a dictionary containing variables and values to pass
@@ -1986,6 +1987,7 @@ VARIABLES = {
               unification.
             - mozilla_flags, a set of flags that if present in the gn config
               will be mirrored to the resulting mozbuild configuration.
+            - gn_target, the name of the target to build.
         """),
 
     'SPHINX_TREES': (dict, dict,

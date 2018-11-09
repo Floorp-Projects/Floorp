@@ -121,7 +121,8 @@ add_old_configure_assignment('MOZ_DEBUG',
 
 js_option('--enable-rust-debug',
           default=depends(when='--enable-debug')(lambda: True),
-          help='Build Rust code with debug assertions turned on.')
+          help='{Build|Do not build} Rust code with debug assertions turned '
+               'on.')
 
 @depends(when='--enable-rust-debug')
 def debug_rust():

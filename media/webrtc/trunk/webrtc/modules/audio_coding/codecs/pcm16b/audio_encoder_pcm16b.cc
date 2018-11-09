@@ -8,11 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/codecs/pcm16b/audio_encoder_pcm16b.h"
+#include "modules/audio_coding/codecs/pcm16b/audio_encoder_pcm16b.h"
 
-#include "webrtc/base/checks.h"
-#include "webrtc/common_types.h"
-#include "webrtc/modules/audio_coding/codecs/pcm16b/pcm16b.h"
+#include <algorithm>
+
+#include "common_types.h"  // NOLINT(build/include)
+#include "modules/audio_coding/codecs/pcm16b/pcm16b.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/numerics/safe_conversions.h"
 
 namespace webrtc {
 
@@ -31,6 +34,7 @@ AudioEncoder::CodecType AudioEncoderPcm16B::GetCodecType() const {
 }
 
 namespace {
+
 AudioEncoderPcm16B::Config CreateConfig(const CodecInst& codec_inst) {
   AudioEncoderPcm16B::Config config;
   config.num_channels = codec_inst.channels;
@@ -40,6 +44,7 @@ AudioEncoderPcm16B::Config CreateConfig(const CodecInst& codec_inst) {
   config.payload_type = codec_inst.pltype;
   return config;
 }
+
 }  // namespace
 
 bool AudioEncoderPcm16B::Config::IsOk() const {

@@ -8,16 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_device/android/audio_record_jni.h"
+#include "modules/audio_device/android/audio_record_jni.h"
 
 #include <utility>
 
 #include <android/log.h>
 
-#include "webrtc/base/arraysize.h"
-#include "webrtc/base/checks.h"
-#include "webrtc/base/format_macros.h"
-#include "webrtc/modules/audio_device/android/audio_common.h"
+#include "modules/audio_device/android/audio_common.h"
+#include "rtc_base/arraysize.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/format_macros.h"
 
 #define TAG "AudioRecordJni"
 #define ALOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, TAG, __VA_ARGS__)
@@ -41,8 +41,8 @@ AudioRecordJni::JavaAudioRecord::JavaAudioRecord(
 
 AudioRecordJni::JavaAudioRecord::~JavaAudioRecord() {}
 
-int AudioRecordJni::JavaAudioRecord::InitRecording(
-    int sample_rate, size_t channels) {
+int AudioRecordJni::JavaAudioRecord::InitRecording(int sample_rate,
+                                                   size_t channels) {
   return audio_record_->CallIntMethod(init_recording_,
                                       static_cast<jint>(sample_rate),
                                       static_cast<jint>(channels));
@@ -81,9 +81,19 @@ AudioRecordJni::AudioRecordJni(AudioManager* audio_manager)
   ALOGD("ctor%s", GetThreadInfo().c_str());
   RTC_DCHECK(audio_parameters_.is_valid());
   RTC_CHECK(j_environment_);
-  // Defer creation of the j_audio_record object so we can defer native registration.
-  // See Mozilla bug 1349581
-
+  JNINativeMethod native_methods[] = {
+      {"nativeCacheDirectBufferAddress", "(Ljava/nio/ByteBuffer;J)V",
+       reinterpret_cast<void*>(
+           &webrtc::AudioRecordJni::CacheDirectBufferAddress)},
+      {"nativeDataIsRecorded", "(IJ)V",
+       reinterpret_cast<void*>(&webrtc::AudioRecordJni::DataIsRecorded)}};
+  j_native_registration_ = j_environment_->RegisterNatives(
+      "org/webrtc/voiceengine/WebRtcAudioRecord", native_methods,
+      arraysize(native_methods));
+  j_audio_record_.reset(
+      new JavaAudioRecord(j_native_registration_.get(),
+                          j_native_registration_->NewObject(
+                              "<init>", "(J)V", PointerTojlong(this))));
   // Detach from this thread since we want to use the checker to verify calls
   // from the Java based audio thread.
   thread_checker_java_.DetachFromThread();
@@ -93,28 +103,6 @@ AudioRecordJni::~AudioRecordJni() {
   ALOGD("~dtor%s", GetThreadInfo().c_str());
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
   Terminate();
-}
-
-void
-AudioRecordJni::EnsureRecordObject()
-{
-  if (!j_audio_record_.get()) {
-    RTC_DCHECK(!j_native_registration_.get());
-    JNINativeMethod native_methods[] = {
-      {"nativeCacheDirectBufferAddress", "(Ljava/nio/ByteBuffer;J)V",
-      reinterpret_cast<void*>(
-          &webrtc::AudioRecordJni::CacheDirectBufferAddress)},
-      {"nativeDataIsRecorded", "(IJ)V",
-      reinterpret_cast<void*>(&webrtc::AudioRecordJni::DataIsRecorded)}};
-    j_native_registration_ = j_environment_->RegisterNatives(
-      "org/webrtc/voiceengine/WebRtcAudioRecord",
-      native_methods, arraysize(native_methods));
-    j_audio_record_.reset(new JavaAudioRecord(
-      j_native_registration_.get(),
-      j_native_registration_->NewObject(
-      "<init>", "(Landroid/content/Context;J)V",
-      JVM::GetInstance()->context(), PointerTojlong(this))));
-  }
 }
 
 int32_t AudioRecordJni::Init() {
@@ -135,7 +123,6 @@ int32_t AudioRecordJni::InitRecording() {
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
   RTC_DCHECK(!initialized_);
   RTC_DCHECK(!recording_);
-  EnsureRecordObject();
   int frames_per_buffer = j_audio_record_->InitRecording(
       audio_parameters_.sample_rate(), audio_parameters_.channels());
   if (frames_per_buffer < 0) {
@@ -157,7 +144,6 @@ int32_t AudioRecordJni::StartRecording() {
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
   RTC_DCHECK(initialized_);
   RTC_DCHECK(!recording_);
-  RTC_DCHECK(j_audio_record_.get());
   if (!j_audio_record_->StartRecording()) {
     ALOGE("StartRecording failed!");
     return -1;
@@ -172,7 +158,6 @@ int32_t AudioRecordJni::StopRecording() {
   if (!initialized_ || !recording_) {
     return 0;
   }
-  RTC_DCHECK(j_audio_record_.get());
   if (!j_audio_record_->StopRecording()) {
     ALOGE("StopRecording failed!");
     return -1;
@@ -183,7 +168,7 @@ int32_t AudioRecordJni::StopRecording() {
   thread_checker_java_.DetachFromThread();
   initialized_ = false;
   recording_ = false;
-  direct_buffer_address_= nullptr;
+  direct_buffer_address_ = nullptr;
   return 0;
 }
 
@@ -206,13 +191,11 @@ void AudioRecordJni::AttachAudioBuffer(AudioDeviceBuffer* audioBuffer) {
 int32_t AudioRecordJni::EnableBuiltInAEC(bool enable) {
   ALOGD("EnableBuiltInAEC%s", GetThreadInfo().c_str());
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
-  RTC_DCHECK(j_audio_record_.get());
   return j_audio_record_->EnableBuiltInAEC(enable) ? 0 : -1;
 }
 
 int32_t AudioRecordJni::EnableBuiltInAGC(bool enable) {
   // TODO(henrika): possibly remove when no longer used by any client.
-  RTC_DCHECK(j_audio_record_.get());
   FATAL() << "Should never be called";
   return -1;
 }
@@ -220,33 +203,35 @@ int32_t AudioRecordJni::EnableBuiltInAGC(bool enable) {
 int32_t AudioRecordJni::EnableBuiltInNS(bool enable) {
   ALOGD("EnableBuiltInNS%s", GetThreadInfo().c_str());
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
-  RTC_DCHECK(j_audio_record_.get());
   return j_audio_record_->EnableBuiltInNS(enable) ? 0 : -1;
 }
 
-void JNICALL AudioRecordJni::CacheDirectBufferAddress(
-    JNIEnv* env, jobject obj, jobject byte_buffer, jlong nativeAudioRecord) {
+void JNICALL AudioRecordJni::CacheDirectBufferAddress(JNIEnv* env,
+                                                      jobject obj,
+                                                      jobject byte_buffer,
+                                                      jlong nativeAudioRecord) {
   webrtc::AudioRecordJni* this_object =
-      reinterpret_cast<webrtc::AudioRecordJni*> (nativeAudioRecord);
+      reinterpret_cast<webrtc::AudioRecordJni*>(nativeAudioRecord);
   this_object->OnCacheDirectBufferAddress(env, byte_buffer);
 }
 
-void AudioRecordJni::OnCacheDirectBufferAddress(
-    JNIEnv* env, jobject byte_buffer) {
+void AudioRecordJni::OnCacheDirectBufferAddress(JNIEnv* env,
+                                                jobject byte_buffer) {
   ALOGD("OnCacheDirectBufferAddress");
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
   RTC_DCHECK(!direct_buffer_address_);
-  direct_buffer_address_ =
-      env->GetDirectBufferAddress(byte_buffer);
+  direct_buffer_address_ = env->GetDirectBufferAddress(byte_buffer);
   jlong capacity = env->GetDirectBufferCapacity(byte_buffer);
   ALOGD("direct buffer capacity: %lld", capacity);
   direct_buffer_capacity_in_bytes_ = static_cast<size_t>(capacity);
 }
 
-void JNICALL AudioRecordJni::DataIsRecorded(
-  JNIEnv* env, jobject obj, jint length, jlong nativeAudioRecord) {
+void JNICALL AudioRecordJni::DataIsRecorded(JNIEnv* env,
+                                            jobject obj,
+                                            jint length,
+                                            jlong nativeAudioRecord) {
   webrtc::AudioRecordJni* this_object =
-      reinterpret_cast<webrtc::AudioRecordJni*> (nativeAudioRecord);
+      reinterpret_cast<webrtc::AudioRecordJni*>(nativeAudioRecord);
   this_object->OnDataIsRecorded(length);
 }
 
@@ -269,20 +254,6 @@ void AudioRecordJni::OnDataIsRecorded(int length) {
   if (audio_device_buffer_->DeliverRecordedData() == -1) {
     ALOGE("AudioDeviceBuffer::DeliverRecordedData failed!");
   }
-}
-
-int32_t AudioRecordJni::RecordingDeviceName(uint16_t index,
-                                            char name[kAdmMaxDeviceNameSize],
-                                            char guid[kAdmMaxGuidSize]) {
-  // Return empty string
-  memset(name, 0, kAdmMaxDeviceNameSize);
-
-  if (guid)
-  {
-    memset(guid, 0, kAdmMaxGuidSize);
-  }
-
-  return 0;
 }
 
 }  // namespace webrtc

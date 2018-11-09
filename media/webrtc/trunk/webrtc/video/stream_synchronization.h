@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_VIDEO_STREAM_SYNCHRONIZATION_H_
-#define WEBRTC_VIDEO_STREAM_SYNCHRONIZATION_H_
+#ifndef VIDEO_STREAM_SYNCHRONIZATION_H_
+#define VIDEO_STREAM_SYNCHRONIZATION_H_
 
 #include <list>
 
-#include "webrtc/system_wrappers/include/rtp_to_ntp_estimator.h"
-#include "webrtc/typedefs.h"
+#include "system_wrappers/include/rtp_to_ntp_estimator.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
@@ -27,7 +27,7 @@ class StreamSynchronization {
     uint32_t latest_timestamp;
   };
 
-  StreamSynchronization(uint32_t video_primary_ssrc, int audio_channel_id);
+  StreamSynchronization(int video_stream_id, int audio_stream_id);
 
   bool ComputeDelays(int relative_delay_ms,
                      int current_audio_delay_ms,
@@ -53,11 +53,11 @@ class StreamSynchronization {
   };
 
   SynchronizationDelays channel_delay_;
-  const uint32_t video_primary_ssrc_;
-  const int audio_channel_id_;
+  const int video_stream_id_;
+  const int audio_stream_id_;
   int base_target_delay_ms_;
   int avg_diff_ms_;
 };
 }  // namespace webrtc
 
-#endif  // WEBRTC_VIDEO_STREAM_SYNCHRONIZATION_H_
+#endif  // VIDEO_STREAM_SYNCHRONIZATION_H_

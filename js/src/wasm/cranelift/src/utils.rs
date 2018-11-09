@@ -14,7 +14,6 @@
  */
 
 /// Helpers common to other source files here.
-
 use std;
 use std::error;
 use std::fmt;
@@ -27,7 +26,7 @@ pub type DashResult<T> = Result<T, DashError>;
 
 #[derive(Debug)]
 pub struct BasicError {
-    msg: String
+    msg: String,
 }
 
 impl BasicError {

@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_processing/intelligibility/intelligibility_enhancer.h"
+#include "modules/audio_processing/intelligibility/intelligibility_enhancer.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -16,10 +16,11 @@
 #include <limits>
 #include <numeric>
 
-#include "webrtc/base/checks.h"
-#include "webrtc/base/logging.h"
-#include "webrtc/common_audio/include/audio_util.h"
-#include "webrtc/common_audio/window_generator.h"
+#include "common_audio/include/audio_util.h"
+#include "common_audio/window_generator.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/numerics/safe_minmax.h"
 
 namespace webrtc {
 
@@ -123,11 +124,12 @@ IntelligibilityEnhancer::~IntelligibilityEnhancer() {
   // Don't rely on this log, since the destructor isn't called when the
   // app/tab is killed.
   if (num_chunks_ > 0) {
-    LOG(LS_INFO) << "Intelligibility Enhancer was active for "
-                 << 100.f * static_cast<float>(num_active_chunks_) / num_chunks_
-                 << "% of the call.";
+    RTC_LOG(LS_INFO) << "Intelligibility Enhancer was active for "
+                     << 100.f * static_cast<float>(num_active_chunks_) /
+                            num_chunks_
+                     << "% of the call.";
   } else {
-    LOG(LS_INFO) << "Intelligibility Enhancer processed no chunk.";
+    RTC_LOG(LS_INFO) << "Intelligibility Enhancer processed no chunk.";
   }
 }
 
@@ -205,8 +207,8 @@ void IntelligibilityEnhancer::SnrBasedEffectActivation() {
       (noise_power + std::numeric_limits<float>::epsilon());
   if (is_active_) {
     if (snr_ > kMaxActiveSNR) {
-      LOG(LS_INFO) << "Intelligibility Enhancer was deactivated at chunk "
-                   << num_chunks_;
+      RTC_LOG(LS_INFO) << "Intelligibility Enhancer was deactivated at chunk "
+                       << num_chunks_;
       is_active_ = false;
       // Set the target gains to unity.
       float* gains = gain_applier_.target();
@@ -216,8 +218,8 @@ void IntelligibilityEnhancer::SnrBasedEffectActivation() {
     }
   } else {
     if (snr_ < kMinInactiveSNR) {
-      LOG(LS_INFO) << "Intelligibility Enhancer was activated at chunk "
-                   << num_chunks_;
+      RTC_LOG(LS_INFO) << "Intelligibility Enhancer was activated at chunk "
+                       << num_chunks_;
       is_active_ = true;
     }
   }
@@ -287,23 +289,23 @@ std::vector<std::vector<float>> IntelligibilityEnhancer::CreateErbBank(
   }
 
   for (size_t i = 1; i <= bank_size_; ++i) {
-    static const size_t kOne = 1;  // Avoids repeated static_cast<>s below.
-    size_t lll =
-        static_cast<size_t>(round(center_freqs_[std::max(kOne, i - lf) - 1] *
-                                  num_freqs / (0.5f * sample_rate_hz_)));
-    size_t ll = static_cast<size_t>(round(center_freqs_[std::max(kOne, i) - 1] *
-                                   num_freqs / (0.5f * sample_rate_hz_)));
-    lll = std::min(num_freqs, std::max(lll, kOne)) - 1;
-    ll = std::min(num_freqs, std::max(ll, kOne)) - 1;
+    size_t lll = static_cast<size_t>(
+        round(center_freqs_[rtc::SafeMax<size_t>(1, i - lf) - 1] * num_freqs /
+              (0.5f * sample_rate_hz_)));
+    size_t ll = static_cast<size_t>(
+        round(center_freqs_[rtc::SafeMax<size_t>(1, i) - 1] * num_freqs /
+              (0.5f * sample_rate_hz_)));
+    lll = rtc::SafeClamp<size_t>(lll, 1, num_freqs) - 1;
+    ll = rtc::SafeClamp<size_t>(ll, 1, num_freqs) - 1;
 
     size_t rrr = static_cast<size_t>(
-        round(center_freqs_[std::min(bank_size_, i + rf) - 1] * num_freqs /
-              (0.5f * sample_rate_hz_)));
+        round(center_freqs_[rtc::SafeMin<size_t>(bank_size_, i + rf) - 1] *
+              num_freqs / (0.5f * sample_rate_hz_)));
     size_t rr = static_cast<size_t>(
-        round(center_freqs_[std::min(bank_size_, i + 1) - 1] * num_freqs /
-              (0.5f * sample_rate_hz_)));
-    rrr = std::min(num_freqs, std::max(rrr, kOne)) - 1;
-    rr = std::min(num_freqs, std::max(rr, kOne)) - 1;
+        round(center_freqs_[rtc::SafeMin<size_t>(bank_size_, i + 1) - 1] *
+              num_freqs / (0.5f * sample_rate_hz_)));
+    rrr = rtc::SafeClamp<size_t>(rrr, 1, num_freqs) - 1;
+    rr = rtc::SafeClamp<size_t>(rr, 1, num_freqs) - 1;
 
     float step = ll == lll ? 0.f : 1.f / (ll - lll);
     float element = 0.f;

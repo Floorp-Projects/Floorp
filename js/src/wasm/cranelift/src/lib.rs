@@ -31,15 +31,22 @@ mod cpu;       // CPU detection and `TargetISA` configuration.
 mod utils;     // Helpers for other source files.
 mod wasm2clif; // WebAssembly to Cranelift translation callbacks.
 
-use baldrdash::{ CompiledFunc, FuncCompileInput, ModuleEnvironment, StaticEnvironment };
+use baldrdash::{CompiledFunc, FuncCompileInput, ModuleEnvironment, StaticEnvironment};
 use compile::BatchCompiler;
 use std::ptr;
 
 #[no_mangle]
 pub extern "C" fn cranelift_initialize() {
-    // Gecko might set a logger before we do, which is all fine; just try to
-    // initialize it, and silently ignore a re-initialization failure.
-    let _ = env_logger::try_init();
+    // Gecko might set a logger before we do, which is all fine; try to initialize ours, and reset
+    // the FilterLevel env_logger::try_init might have set to what it was in case of initialization
+    // failure
+    let filter = log::max_level();
+    match env_logger::try_init() {
+        Ok(_) => {}
+        Err(_) => {
+            log::set_max_level(filter);
+        }
+    }
 }
 
 /// Allocate a compiler for a module environment and return an opaque handle.
@@ -57,7 +64,7 @@ pub extern "C" fn cranelift_compiler_create<'a, 'b>(
         Err(err) => {
             error!("When constructing the batch compiler: {}", err);
             ptr::null_mut()
-        },
+        }
     }
 }
 

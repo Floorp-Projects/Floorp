@@ -23,8 +23,8 @@
 // ssrc_groups = {{SIM,{10,20,30}, {FEC,{10,11}, {FEC, {20,21}, {FEC {30,31}}}
 // Please see RFC 5576.
 
-#ifndef WEBRTC_MEDIA_BASE_STREAMPARAMS_H_
-#define WEBRTC_MEDIA_BASE_STREAMPARAMS_H_
+#ifndef MEDIA_BASE_STREAMPARAMS_H_
+#define MEDIA_BASE_STREAMPARAMS_H_
 
 #include <stdint.h>
 
@@ -33,7 +33,7 @@
 #include <string>
 #include <vector>
 
-#include "webrtc/base/constructormagic.h"
+#include "rtc_base/constructormagic.h"
 
 namespace cricket {
 
@@ -252,6 +252,13 @@ const StreamParams* GetStream(const StreamParamsVec& streams,
   return found == streams.end() ? nullptr : &(*found);
 }
 
+template <class Condition>
+StreamParams* GetStream(StreamParamsVec& streams, Condition condition) {
+  StreamParamsVec::iterator found =
+      std::find_if(streams.begin(), streams.end(), condition);
+  return found == streams.end() ? nullptr : &(*found);
+}
+
 inline const StreamParams* GetStreamBySsrc(const StreamParamsVec& streams,
                                            uint32_t ssrc) {
   return GetStream(streams,
@@ -261,6 +268,14 @@ inline const StreamParams* GetStreamBySsrc(const StreamParamsVec& streams,
 inline const StreamParams* GetStreamByIds(const StreamParamsVec& streams,
                                           const std::string& groupid,
                                           const std::string& id) {
+  return GetStream(streams, [&groupid, &id](const StreamParams& sp) {
+    return sp.groupid == groupid && sp.id == id;
+  });
+}
+
+inline StreamParams* GetStreamByIds(StreamParamsVec& streams,
+                                    const std::string& groupid,
+                                    const std::string& id) {
   return GetStream(streams,
       [&groupid, &id](const StreamParams& sp) {
         return sp.groupid == groupid && sp.id == id;
@@ -314,4 +329,4 @@ bool IsSimulcastStream(const StreamParams& sp);
 
 }  // namespace cricket
 
-#endif  // WEBRTC_MEDIA_BASE_STREAMPARAMS_H_
+#endif  // MEDIA_BASE_STREAMPARAMS_H_

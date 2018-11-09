@@ -1,4 +1,4 @@
-import("../build/webrtc.gni")
+import("../webrtc.gni")
 
 rtc_static_library("video_engine") {
   sources = [
@@ -8,5 +8,8 @@ rtc_static_library("video_engine") {
   ]
   deps = [
     "..:webrtc_common",
+  ]
+  include_dirs = [
+    "/media/libyuv/libyuv/include"
   ]
 }

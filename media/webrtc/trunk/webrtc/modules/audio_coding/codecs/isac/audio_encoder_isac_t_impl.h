@@ -8,13 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_AUDIO_ENCODER_ISAC_T_IMPL_H_
-#define WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_AUDIO_ENCODER_ISAC_T_IMPL_H_
+#ifndef MODULES_AUDIO_CODING_CODECS_ISAC_AUDIO_ENCODER_ISAC_T_IMPL_H_
+#define MODULES_AUDIO_CODING_CODECS_ISAC_AUDIO_ENCODER_ISAC_T_IMPL_H_
 
-#include "webrtc/modules/audio_coding/codecs/isac/main/include/audio_encoder_isac.h"
-
-#include "webrtc/base/checks.h"
-#include "webrtc/common_types.h"
+#include "common_types.h"  // NOLINT(build/include)
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 
@@ -188,4 +186,4 @@ void AudioEncoderIsacT<T>::RecreateEncoderInstance(const Config& config) {
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_AUDIO_CODING_CODECS_ISAC_AUDIO_ENCODER_ISAC_T_IMPL_H_
+#endif  // MODULES_AUDIO_CODING_CODECS_ISAC_AUDIO_ENCODER_ISAC_T_IMPL_H_

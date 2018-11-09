@@ -6,12 +6,12 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
-import("../build/webrtc.gni")
+import("../webrtc.gni")
 
 config("common_video_config") {
   include_dirs = [
     "include",
-    "libyuv/include",
+    "$rtc_libyuv_dir/include",
   ]
 }
 
@@ -24,7 +24,6 @@ rtc_static_library("common_video") {
     "h264/h264_common.h",
     "h264/pps_parser.cc",
     "h264/pps_parser.h",
-    "h264/profile_level_id.cc",
     "h264/profile_level_id.h",
     "h264/sps_parser.cc",
     "h264/sps_parser.h",
@@ -36,6 +35,7 @@ rtc_static_library("common_video") {
     "include/i420_buffer_pool.h",
     "include/incoming_video_stream.h",
     "include/video_bitrate_allocator.h",
+    "include/video_frame.h",
     "include/video_frame_buffer.h",
     "incoming_video_stream.cc",
     "libyuv/include/webrtc_libyuv.h",
@@ -57,7 +57,12 @@ rtc_static_library("common_video") {
 
   deps = [
     "..:webrtc_common",
-    "../base:rtc_task_queue",
+    "../api:optional",
+    "../api:video_frame_api_i420",
+    "../media:rtc_h264_profile_id",
+    "../modules:module_api",
+    "../rtc_base:rtc_base",
+    "../rtc_base:rtc_task_queue",
     "../system_wrappers",
   ]
   public_deps = [
@@ -71,18 +76,10 @@ rtc_static_library("common_video") {
     # Need to add a directory normally exported by libyuv.
     include_dirs += [ "$rtc_libyuv_dir/include" ]
   }
-
-  if (is_ios || is_mac) {
-    sources += [
-      "corevideo_frame_buffer.cc",
-      "include/corevideo_frame_buffer.h",
-    ]
-    libs = [ "CoreVideo.framework" ]
-  }
 }
 
 if (rtc_include_tests) {
-  common_video_resources = [ "//resources/foreman_cif.yuv" ]
+  common_video_resources = [ "../resources/foreman_cif.yuv" ]
 
   if (is_ios) {
     bundle_data("common_video_unittests_bundle_data") {
@@ -119,6 +116,10 @@ if (rtc_include_tests) {
 
     deps = [
       ":common_video",
+      "../api:video_frame_api_i420",
+      "../modules/video_capture:video_capture",
+      "../rtc_base:rtc_base",
+      "../rtc_base:rtc_base_approved",
       "../system_wrappers:system_wrappers",
       "../test:test_main",
       "../test:video_test_common",

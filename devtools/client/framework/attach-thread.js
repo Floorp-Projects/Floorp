@@ -21,6 +21,11 @@ function handleThreadState(toolbox, event, packet) {
   // threadClient now.
   toolbox.target.emit("thread-" + event);
 
+  const replayButton = toolbox.doc.getElementById("command-button-stop-replay");
+  if (replayButton) {
+    replayButton.classList.toggle("paused", event === "paused");
+  }
+
   if (event === "paused") {
     toolbox.highlightTool("jsdebugger");
 

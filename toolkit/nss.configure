@@ -11,6 +11,7 @@
 def dbm_default(build_project, _):
     return build_project != 'mobile/android'
 
-option('--enable-dbm', default=dbm_default, help='Enable building DBM')
+option('--enable-dbm', default=dbm_default,
+       help='{Enable|Disable} building DBM')
 
 set_config('NSS_DISABLE_DBM', depends('--enable-dbm')(lambda x: not x))

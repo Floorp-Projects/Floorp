@@ -104,7 +104,7 @@ class Breakpoints extends Component<Props> {
             <Breakpoint
               breakpoint={breakpoint}
               source={source}
-              key={makeLocationId(breakpoint.location)}
+              key={makeLocationId(breakpoint.selectedLocation)}
             />
           ))
         ];

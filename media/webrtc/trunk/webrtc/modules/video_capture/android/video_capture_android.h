@@ -13,8 +13,8 @@
 
 #include <jni.h>
 
-#include "webrtc/modules/video_capture/android/device_info_android.h"
-#include "webrtc/modules/video_capture/video_capture_impl.h"
+#include "modules/video_capture/android/device_info_android.h"
+#include "modules/video_capture/video_capture_impl.h"
 
 namespace webrtc {
 namespace videocapturemodule {

@@ -8,21 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.h"
+#include "modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.h"
 
 #include <math.h>
 
 #include <algorithm>
 
-#include "webrtc/base/checks.h"
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/base/logging.h"
-#include "webrtc/base/thread_annotations.h"
-#include "webrtc/modules/pacing/paced_sender.h"
-#include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/include/metrics.h"
-#include "webrtc/typedefs.h"
+#include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/constructormagic.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/thread_annotations.h"
+#include "system_wrappers/include/metrics.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
@@ -81,7 +79,7 @@ bool RemoteBitrateEstimatorAbsSendTime::IsWithinClusterBounds(
 
   RemoteBitrateEstimatorAbsSendTime::RemoteBitrateEstimatorAbsSendTime(
       RemoteBitrateObserver* observer,
-      Clock* clock)
+      const Clock* clock)
       : clock_(clock),
         observer_(observer),
         inter_arrival_(),
@@ -94,8 +92,7 @@ bool RemoteBitrateEstimatorAbsSendTime::IsWithinClusterBounds(
         last_update_ms_(-1),
         uma_recorded_(false) {
     RTC_DCHECK(observer_);
-    LOG(LS_INFO) << "RemoteBitrateEstimatorAbsSendTime: Instantiating.";
-    network_thread_.DetachFromThread();
+    RTC_LOG(LS_INFO) << "RemoteBitrateEstimatorAbsSendTime: Instantiating.";
 }
 
 void RemoteBitrateEstimatorAbsSendTime::ComputeClusters(
@@ -113,8 +110,11 @@ void RemoteBitrateEstimatorAbsSendTime::ComputeClusters(
         ++current.num_above_min_delta;
       }
       if (!IsWithinClusterBounds(send_delta_ms, current)) {
-        if (current.count >= kMinClusterSize)
+        if (current.count >= kMinClusterSize &&
+            current.send_mean_ms > 0.0f &&
+            current.recv_mean_ms > 0.0f) {
           AddCluster(clusters, &current);
+        }
         current = Cluster();
       }
       current.send_mean_ms += send_delta_ms;
@@ -125,8 +125,11 @@ void RemoteBitrateEstimatorAbsSendTime::ComputeClusters(
     prev_send_time = it->send_time_ms;
     prev_recv_time = it->recv_time_ms;
   }
-  if (current.count >= kMinClusterSize)
+  if (current.count >= kMinClusterSize &&
+      current.send_mean_ms > 0.0f &&
+      current.recv_mean_ms > 0.0f) {
     AddCluster(clusters, &current);
+  }
 }
 
 std::list<Cluster>::const_iterator
@@ -151,11 +154,11 @@ RemoteBitrateEstimatorAbsSendTime::FindBestProbe(
     } else {
       int send_bitrate_bps = it->mean_size * 8 * 1000 / it->send_mean_ms;
       int recv_bitrate_bps = it->mean_size * 8 * 1000 / it->recv_mean_ms;
-      LOG(LS_INFO) << "Probe failed, sent at " << send_bitrate_bps
-                   << " bps, received at " << recv_bitrate_bps
-                   << " bps. Mean send delta: " << it->send_mean_ms
-                   << " ms, mean recv delta: " << it->recv_mean_ms
-                   << " ms, num probes: " << it->count;
+      RTC_LOG(LS_INFO) << "Probe failed, sent at " << send_bitrate_bps
+                       << " bps, received at " << recv_bitrate_bps
+                       << " bps. Mean send delta: " << it->send_mean_ms
+                       << " ms, mean recv delta: " << it->recv_mean_ms
+                       << " ms, num probes: " << it->count;
       break;
     }
   }
@@ -181,12 +184,12 @@ RemoteBitrateEstimatorAbsSendTime::ProcessClusters(int64_t now_ms) {
     // Make sure that a probe sent on a lower bitrate than our estimate can't
     // reduce the estimate.
     if (IsBitrateImproving(probe_bitrate_bps)) {
-      LOG(LS_INFO) << "Probe successful, sent at "
-                   << best_it->GetSendBitrateBps() << " bps, received at "
-                   << best_it->GetRecvBitrateBps()
-                   << " bps. Mean send delta: " << best_it->send_mean_ms
-                   << " ms, mean recv delta: " << best_it->recv_mean_ms
-                   << " ms, num probes: " << best_it->count;
+      RTC_LOG(LS_INFO) << "Probe successful, sent at "
+                       << best_it->GetSendBitrateBps() << " bps, received at "
+                       << best_it->GetRecvBitrateBps()
+                       << " bps. Mean send delta: " << best_it->send_mean_ms
+                       << " ms, mean recv delta: " << best_it->recv_mean_ms
+                       << " ms, num probes: " << best_it->count;
       remote_rate_.SetEstimate(probe_bitrate_bps, now_ms);
       return ProbeResult::kBitrateUpdated;
     }
@@ -208,24 +211,15 @@ bool RemoteBitrateEstimatorAbsSendTime::IsBitrateImproving(
   return initial_probe || bitrate_above_estimate;
 }
 
-void RemoteBitrateEstimatorAbsSendTime::IncomingPacketFeedbackVector(
-    const std::vector<PacketInfo>& packet_feedback_vector) {
-  RTC_DCHECK(network_thread_.CalledOnValidThread());
-  for (const auto& packet_info : packet_feedback_vector) {
-    IncomingPacketInfo(packet_info.arrival_time_ms,
-                       ConvertMsTo24Bits(packet_info.send_time_ms),
-                       packet_info.payload_size, 0);
-  }
-}
-
 void RemoteBitrateEstimatorAbsSendTime::IncomingPacket(
     int64_t arrival_time_ms,
     size_t payload_size,
     const RTPHeader& header) {
-  RTC_DCHECK(network_thread_.CalledOnValidThread());
+  RTC_DCHECK_RUNS_SERIALIZED(&network_race_);
   if (!header.extension.hasAbsoluteSendTime) {
-    LOG(LS_WARNING) << "RemoteBitrateEstimatorAbsSendTimeImpl: Incoming packet "
-                       "is missing absolute send time extension!";
+    RTC_LOG(LS_WARNING)
+        << "RemoteBitrateEstimatorAbsSendTimeImpl: Incoming packet "
+           "is missing absolute send time extension!";
     return;
   }
   IncomingPacketInfo(arrival_time_ms, header.extension.absoluteSendTime,
@@ -286,7 +280,8 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
     // For now only try to detect probes while we don't have a valid estimate.
     // We currently assume that only packets larger than 200 bytes are paced by
     // the sender.
-    if (payload_size > PacedSender::kMinProbePacketSize &&
+    const size_t kMinProbePacketSize = 200;
+    if (payload_size > kMinProbePacketSize &&
         (!remote_rate_.ValidEstimate() ||
          now_ms - first_packet_time_ms_ < kInitialProbingIntervalMs)) {
       // TODO(holmer): Use a map instead to get correct order?
@@ -297,10 +292,10 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
           send_delta_ms = send_time_ms - probes_.back().send_time_ms;
           recv_delta_ms = arrival_time_ms - probes_.back().recv_time_ms;
         }
-        LOG(LS_INFO) << "Probe packet received: send time=" << send_time_ms
-                     << " ms, recv time=" << arrival_time_ms
-                     << " ms, send delta=" << send_delta_ms
-                     << " ms, recv delta=" << recv_delta_ms << " ms.";
+        RTC_LOG(LS_INFO) << "Probe packet received: send time=" << send_time_ms
+                         << " ms, recv time=" << arrival_time_ms
+                         << " ms, send delta=" << send_delta_ms
+                         << " ms, recv delta=" << recv_delta_ms << " ms.";
       }
       probes_.push_back(Probe(send_time_ms, arrival_time_ms, payload_size));
       ++total_probes_received_;
@@ -325,7 +320,7 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
       if (last_update_ms_ == -1 ||
           now_ms - last_update_ms_ > remote_rate_.GetFeedbackInterval()) {
         update_estimate = true;
-      } else if (detector_.State() == kBwOverusing) {
+      } else if (detector_.State() == BandwidthUsage::kBwOverusing) {
         rtc::Optional<uint32_t> incoming_rate =
             incoming_bitrate_.Rate(arrival_time_ms);
         if (incoming_rate &&
@@ -342,8 +337,7 @@ void RemoteBitrateEstimatorAbsSendTime::IncomingPacketInfo(
       const RateControlInput input(detector_.State(),
                                    incoming_bitrate_.Rate(arrival_time_ms),
                                    estimator_->var_noise());
-      remote_rate_.Update(&input, now_ms);
-      target_bitrate_bps = remote_rate_.UpdateBandwidthEstimate(now_ms);
+      target_bitrate_bps = remote_rate_.Update(&input, now_ms);
       update_estimate = remote_rate_.ValidEstimate();
       ssrcs = Keys(ssrcs_);
     }

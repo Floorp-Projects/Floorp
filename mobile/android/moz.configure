@@ -8,9 +8,8 @@ project_flag('MOZ_ANDROID_EXCLUDE_FONTS',
              help='Whether to exclude font files from the build',
              default=True)
 
-option('--with-google-play-services',
-       help='Enable features that depend on non-free Google Play Services',
-       default=True)
+option('--without-google-play-services',
+       help='Disable features that depend on non-free Google Play Services')
 
 @depends('--with-google-play-services')
 def google_play_services(value):

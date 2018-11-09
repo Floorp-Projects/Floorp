@@ -177,6 +177,9 @@ CraneliftStaticEnvironment::CraneliftStaticEnvironment()
     hasSse42(Assembler::HasSSE42()),
     hasPopcnt(Assembler::HasPOPCNT()),
     hasAvx(Assembler::HasAVX()),
+    hasBmi1(Assembler::HasBMI1()),
+    hasBmi2(Assembler::HasBMI2()),
+    hasLzcnt(Assembler::HasLZCNT()),
 #else
     hasSse2(false),
     hasSse3(false),
@@ -184,10 +187,10 @@ CraneliftStaticEnvironment::CraneliftStaticEnvironment()
     hasSse42(false),
     hasPopcnt(false),
     hasAvx(false),
+    hasBmi1(false),
+    hasBmi2(false),
+    hasLzcnt(false),
 #endif
-    hasBmi1(false), // TODO implement feature detection for bmi1
-    hasBmi2(false), // TODO implement feature detection for bmi2
-    hasLzcnt(false), // TODO implement feature detection for lzcnt
     staticMemoryBound(
 #ifdef WASM_HUGE_MEMORY
         // In the huge memory configuration, we always reserve the full 4 GB index

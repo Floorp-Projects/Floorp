@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_CAPTURE_TYPES_H_
-#define WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_CAPTURE_TYPES_H_
+#ifndef MODULES_DESKTOP_CAPTURE_DESKTOP_CAPTURE_TYPES_H_
+#define MODULES_DESKTOP_CAPTURE_DESKTOP_CAPTURE_TYPES_H_
 
 #ifndef XP_WIN
 #include <sys/types.h> // pid_t
 #endif
 #include <stdint.h>
 
-#include "webrtc/typedefs.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
@@ -32,13 +32,14 @@ const WindowId kNullWindowId = 0;
 //   - On Windows: integer display device index.
 //   - On OSX: CGDirectDisplayID cast to intptr_t.
 //   - On Linux (with X11): TBD.
+// On Windows, ScreenId is implementation dependent: sending a ScreenId from one
+// implementation to another usually won't work correctly.
 typedef intptr_t ScreenId;
 
 // The screen id corresponds to all screen combined together.
 const ScreenId kFullDesktopScreenId = -1;
 
 const ScreenId kInvalidScreenId = -2;
-
 
 typedef intptr_t ProcessId;
 const ProcessId DesktopProcessId = 0;
@@ -47,6 +48,22 @@ const ProcessId DesktopProcessId = 0;
 typedef int pid_t;
 #endif
 
+// An integer to attach to each DesktopFrame to differentiate the generator of
+// the frame.
+namespace DesktopCapturerId {
+  constexpr uint32_t CreateFourCC(char a, char b, char c, char d) {
+    return ((static_cast<uint32_t>(a)) |
+            (static_cast<uint32_t>(b) << 8) |
+            (static_cast<uint32_t>(c) << 16) |
+            (static_cast<uint32_t>(d) << 24));
+  }
+
+  constexpr uint32_t kUnknown = 0;
+  constexpr uint32_t kScreenCapturerWinGdi = CreateFourCC('G', 'D', 'I', ' ');
+  constexpr uint32_t kScreenCapturerWinDirectx =
+      CreateFourCC('D', 'X', 'G', 'I');
+}  // namespace DesktopCapturerId
+
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_DESKTOP_CAPTURE_TYPES_H_
+#endif  // MODULES_DESKTOP_CAPTURE_DESKTOP_CAPTURE_TYPES_H_

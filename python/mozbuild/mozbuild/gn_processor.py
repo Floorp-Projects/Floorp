@@ -138,7 +138,7 @@ def find_deps(all_targets, target):
     return all_deps
 
 
-def filter_gn_config(gn_result, config, sandbox_vars, input_vars):
+def filter_gn_config(gn_result, config, sandbox_vars, input_vars, gn_target):
     # Translates the raw output of gn into just what we'll need to generate a
     # mozbuild configuration.
     gn_out = {
@@ -156,7 +156,7 @@ def filter_gn_config(gn_result, config, sandbox_vars, input_vars):
 
     mozbuild_args = {k: config.substs.get(k) for k in gn_mozbuild_vars}
     gn_out['mozbuild_args'] = mozbuild_args
-    all_deps = find_deps(gn_result['targets'], "//:default")
+    all_deps = find_deps(gn_result['targets'], gn_target)
 
     for target_fullname in all_deps:
         raw_spec = gn_result['targets'][target_fullname]
@@ -502,7 +502,7 @@ def write_mozbuild(config, srcdir, output, non_unified_sources, gn_config_files,
 
 
 def generate_gn_config(config, srcdir, output, non_unified_sources, gn_binary,
-                       input_variables, sandbox_variables):
+                       input_variables, sandbox_variables, gn_target):
 
     def str_for_arg(v):
         if v in (True, False):
@@ -519,13 +519,12 @@ def generate_gn_config(config, srcdir, output, non_unified_sources, gn_binary,
     print("Running \"%s\"" % ' '.join(gen_args), file=sys.stderr)
     subprocess.check_call(gen_args, cwd=srcdir, stderr=subprocess.STDOUT)
 
-
     gn_config_file = mozpath.join(out_dir, 'project.json')
 
     with open(gn_config_file, 'r') as fh:
         gn_out = json.load(fh)
         gn_out = filter_gn_config(gn_out, config, sandbox_variables,
-                                  input_variables)
+                                  input_variables, gn_target)
 
     os.remove(gn_config_file)
 
@@ -546,7 +545,8 @@ class GnConfigGenBackend(BuildBackend):
             generate_gn_config(obj.config, mozpath.join(obj.srcdir, obj.target_dir),
                                mozpath.join(obj.objdir, obj.target_dir),
                                obj.non_unified_sources, gn_binary,
-                               obj.gn_input_variables, obj.gn_sandbox_variables)
+                               obj.gn_input_variables, obj.gn_sandbox_variables,
+                               obj.gn_target)
         return True
 
     def consume_finished(self):

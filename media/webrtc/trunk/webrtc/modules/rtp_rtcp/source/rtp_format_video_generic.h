@@ -7,15 +7,15 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_FORMAT_VIDEO_GENERIC_H_
-#define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_FORMAT_VIDEO_GENERIC_H_
+#ifndef MODULES_RTP_RTCP_SOURCE_RTP_FORMAT_VIDEO_GENERIC_H_
+#define MODULES_RTP_RTCP_SOURCE_RTP_FORMAT_VIDEO_GENERIC_H_
 
 #include <string>
 
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/common_types.h"
-#include "webrtc/modules/rtp_rtcp/source/rtp_format.h"
-#include "webrtc/typedefs.h"
+#include "common_types.h"  // NOLINT(build/include)
+#include "modules/rtp_rtcp/source/rtp_format.h"
+#include "rtc_base/constructormagic.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 namespace RtpFormatVideoGeneric {
@@ -27,24 +27,21 @@ class RtpPacketizerGeneric : public RtpPacketizer {
  public:
   // Initialize with payload from encoder.
   // The payload_data must be exactly one encoded generic frame.
-  RtpPacketizerGeneric(FrameType frametype, size_t max_payload_len);
+  RtpPacketizerGeneric(FrameType frametype,
+                       size_t max_payload_len,
+                       size_t last_packet_reduction_len);
 
   virtual ~RtpPacketizerGeneric();
 
-  void SetPayloadData(const uint8_t* payload_data,
-                      size_t payload_size,
-                      const RTPFragmentationHeader* fragmentation) override;
+  // Returns total number of packets to be generated.
+  size_t SetPayloadData(const uint8_t* payload_data,
+                        size_t payload_size,
+                        const RTPFragmentationHeader* fragmentation) override;
 
   // Get the next payload with generic payload header.
   // Write payload and set marker bit of the |packet|.
-  // The parameter |last_packet| is true for the last packet of the frame, false
-  // otherwise (i.e., call the function again to get the next packet).
   // Returns true on success, false otherwise.
-  bool NextPacket(RtpPacketToSend* packet, bool* last_packet) override;
-
-  ProtectionType GetProtectionType() override;
-
-  StorageType GetStorageType(uint32_t retransmission_settings) override;
+  bool NextPacket(RtpPacketToSend* packet) override;
 
   std::string ToString() override;
 
@@ -52,9 +49,14 @@ class RtpPacketizerGeneric : public RtpPacketizer {
   const uint8_t* payload_data_;
   size_t payload_size_;
   const size_t max_payload_len_;
+  const size_t last_packet_reduction_len_;
   FrameType frame_type_;
-  size_t payload_length_;
+  size_t payload_len_per_packet_;
   uint8_t generic_header_;
+  // Number of packets yet to be retrieved by NextPacket() call.
+  size_t num_packets_left_;
+  // Number of packets, which will be 1 byte more than the rest.
+  size_t num_larger_packets_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(RtpPacketizerGeneric);
 };
@@ -69,4 +71,4 @@ class RtpDepacketizerGeneric : public RtpDepacketizer {
              size_t payload_data_length) override;
 };
 }  // namespace webrtc
-#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_FORMAT_VIDEO_GENERIC_H_
+#endif  // MODULES_RTP_RTCP_SOURCE_RTP_FORMAT_VIDEO_GENERIC_H_

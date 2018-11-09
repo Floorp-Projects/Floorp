@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_CONTROLLER_H_
-#define WEBRTC_MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_CONTROLLER_H_
+#ifndef MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_CONTROLLER_H_
+#define MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_CONTROLLER_H_
 
-#include "webrtc/base/optional.h"
-#include "webrtc/modules/audio_coding/audio_network_adaptor/include/audio_network_adaptor.h"
+#include "api/optional.h"
+#include "modules/audio_coding/audio_network_adaptor/include/audio_network_adaptor.h"
 
 namespace webrtc {
 
@@ -23,6 +23,7 @@ class Controller {
     ~NetworkMetrics();
     rtc::Optional<int> uplink_bandwidth_bps;
     rtc::Optional<float> uplink_packet_loss_fraction;
+    rtc::Optional<float> uplink_recoverable_packet_loss_fraction;
     rtc::Optional<int> target_audio_bitrate_bps;
     rtc::Optional<int> rtt_ms;
     rtc::Optional<size_t> overhead_bytes_per_packet;
@@ -30,11 +31,13 @@ class Controller {
 
   virtual ~Controller() = default;
 
-  virtual void MakeDecision(
-      const NetworkMetrics& metrics,
-      AudioNetworkAdaptor::EncoderRuntimeConfig* config) = 0;
+  // Informs network metrics update to this controller. Any non-empty field
+  // indicates an update on the corresponding network metric.
+  virtual void UpdateNetworkMetrics(const NetworkMetrics& network_metrics) = 0;
+
+  virtual void MakeDecision(AudioEncoderRuntimeConfig* config) = 0;
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_CONTROLLER_H_
+#endif  // MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_CONTROLLER_H_

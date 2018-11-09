@@ -19,15 +19,21 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.Thread;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Random;
 import org.chromium.base.test.BaseJUnit4ClassRunner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(BaseJUnit4ClassRunner.class)
 public class VideoFileRendererTest {
+  @Before
+  public void setUp() {
+    NativeLibrary.initialize(new NativeLibrary.DefaultLoader());
+  }
+
   @Test
   @SmallTest
   public void testYuvRenderingToFile() throws InterruptedException, IOException {
@@ -46,7 +52,7 @@ public class VideoFileRendererTest {
       int[] planeSizes = {
           frameWidth * frameWidth, frameWidth * frameHeight / 4, frameWidth * frameHeight / 4};
 
-      byte[] frameBytes = frameStr.getBytes(StandardCharsets.US_ASCII);
+      byte[] frameBytes = frameStr.getBytes(Charset.forName("US-ASCII"));
       ByteBuffer[] yuvPlanes = new ByteBuffer[3];
       int pos = 0;
       for (int i = 0; i < 3; i++) {
@@ -69,7 +75,7 @@ public class VideoFileRendererTest {
       int length = (int) writtenFile.length();
       byte[] data = new byte[length];
       writtenFile.readFully(data);
-      String fileContent = new String(data, StandardCharsets.US_ASCII);
+      String fileContent = new String(data, Charset.forName("US-ASCII"));
       String expected = "YUV4MPEG2 C420 W4 H4 Ip F30:1 A1:1\n"
           + "FRAME\n"
           + "THIS IS JUST SOME TEXT xFRAME\n"

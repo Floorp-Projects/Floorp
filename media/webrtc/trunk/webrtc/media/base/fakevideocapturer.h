@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MEDIA_BASE_FAKEVIDEOCAPTURER_H_
-#define WEBRTC_MEDIA_BASE_FAKEVIDEOCAPTURER_H_
+#ifndef MEDIA_BASE_FAKEVIDEOCAPTURER_H_
+#define MEDIA_BASE_FAKEVIDEOCAPTURER_H_
 
 #include <string.h>
 
 #include <memory>
 #include <vector>
 
-#include "webrtc/api/video/i420_buffer.h"
-#include "webrtc/api/video/video_frame.h"
-#include "webrtc/base/timeutils.h"
-#include "webrtc/media/base/videocapturer.h"
-#include "webrtc/media/base/videocommon.h"
+#include "api/video/i420_buffer.h"
+#include "api/video/video_frame.h"
+#include "media/base/videocapturer.h"
+#include "media/base/videocommon.h"
+#include "rtc_base/timeutils.h"
 
 namespace cricket {
 
@@ -66,8 +66,9 @@ class FakeVideoCapturer : public cricket::VideoCapturer {
                               GetCaptureFormat()->fourcc);
   }
   bool CaptureCustomFrame(int width, int height, uint32_t fourcc) {
-    // default to 30fps
-    return CaptureCustomFrame(width, height, 33333333, fourcc);
+    // Default to 30fps.
+    return CaptureCustomFrame(width, height, rtc::kNumNanosecsPerSec / 30,
+                              fourcc);
   }
   bool CaptureCustomFrame(int width,
                           int height,
@@ -92,8 +93,11 @@ class FakeVideoCapturer : public cricket::VideoCapturer {
     // AdaptFrame, and the test case
     // VideoCapturerTest.SinkWantsMaxPixelAndMaxPixelCountStepUp
     // depends on this.
-    if (AdaptFrame(width, height, 0, 0, &adapted_width, &adapted_height,
-                   &crop_width, &crop_height, &crop_x, &crop_y, nullptr)) {
+    if (AdaptFrame(width, height,
+                   next_timestamp_ / rtc::kNumNanosecsPerMicrosec,
+                   next_timestamp_ / rtc::kNumNanosecsPerMicrosec,
+                   &adapted_width, &adapted_height, &crop_width, &crop_height,
+                   &crop_x, &crop_y, nullptr)) {
       rtc::scoped_refptr<webrtc::I420Buffer> buffer(
           webrtc::I420Buffer::Create(adapted_width, adapted_height));
       buffer->InitializeData();
@@ -145,4 +149,4 @@ class FakeVideoCapturer : public cricket::VideoCapturer {
 
 }  // namespace cricket
 
-#endif  // WEBRTC_MEDIA_BASE_FAKEVIDEOCAPTURER_H_
+#endif  // MEDIA_BASE_FAKEVIDEOCAPTURER_H_

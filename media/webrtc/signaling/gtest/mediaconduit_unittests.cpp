@@ -14,12 +14,15 @@ using namespace std;
 #include <VideoConduit.h>
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "mtransport_test_utils.h"
 #include "nss.h"
 #include "runnable_utils.h"
 #include "signaling/src/common/EncodingConstraints.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
+
+static MtransportTestUtils *test_utils;
 
 const uint32_t SSRC = 1;
 
@@ -378,12 +381,16 @@ class TransportConduitTest : public ::testing::Test
   {
     //get pointer to AudioSessionConduit
     int err=0;
-    mAudioSession = mozilla::AudioSessionConduit::Create();
+    mAudioSession = mozilla::AudioSessionConduit::Create(
+                      WebRtcCallWrapper::Create(),
+                      test_utils->sts_target());
     if( !mAudioSession ) {
       ASSERT_NE(mAudioSession, (void*)nullptr);
     }
 
-    mAudioSession2 = mozilla::AudioSessionConduit::Create();
+    mAudioSession2 = mozilla::AudioSessionConduit::Create(
+                       WebRtcCallWrapper::Create(),
+                       test_utils->sts_target());
     if( !mAudioSession2 ) {
       ASSERT_NE(mAudioSession2, (void*)nullptr);
     }

@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_estimator.h"
+#include "modules/audio_coding/codecs/isac/fix/source/pitch_estimator.h"
 
-#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
-#include "webrtc/modules/audio_coding/codecs/isac/fix/source/settings.h"
-#include "webrtc/modules/audio_coding/codecs/isac/fix/source/structs.h"
-#include "webrtc/system_wrappers/include/compile_assert_c.h"
+#include "common_audio/signal_processing/include/signal_processing_library.h"
+#include "modules/audio_coding/codecs/isac/fix/source/settings.h"
+#include "modules/audio_coding/codecs/isac/fix/source/structs.h"
+#include "rtc_base/compile_assert_c.h"
 
 // Number of segments in a pitch subframe.
 static const int kSegments = 5;
@@ -59,8 +59,8 @@ void WebRtcIsacfix_PitchFilter(int16_t* indatQQ, // Q10 if type is 1 or 4,
   const int16_t* fracoeffQQ = NULL;
 
   // Assumptions in ARM assembly for WebRtcIsacfix_PitchFilterCoreARM().
-  COMPILE_ASSERT(PITCH_FRACORDER == 9);
-  COMPILE_ASSERT(PITCH_DAMPORDER == 5);
+  RTC_COMPILE_ASSERT(PITCH_FRACORDER == 9);
+  RTC_COMPILE_ASSERT(PITCH_DAMPORDER == 5);
 
   // Set up buffer and states.
   memcpy(ubufQQ, pfp->ubufQQ, sizeof(pfp->ubufQQ));

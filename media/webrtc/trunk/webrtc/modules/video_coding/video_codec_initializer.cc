@@ -8,19 +8,29 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_coding/include/video_codec_initializer.h"
+#include "modules/video_coding/include/video_codec_initializer.h"
 
-#include "webrtc/base/basictypes.h"
-#include "webrtc/base/logging.h"
-#include "webrtc/common_video/include/video_bitrate_allocator.h"
-#include "webrtc/common_types.h"
-#include "webrtc/modules/video_coding/codecs/vp8/screenshare_layers.h"
-#include "webrtc/modules/video_coding/codecs/vp8/temporal_layers.h"
-#include "webrtc/modules/video_coding/utility/simulcast_rate_allocator.h"
-#include "webrtc/modules/video_coding/utility/default_video_bitrate_allocator.h"
-#include "webrtc/system_wrappers/include/clock.h"
+#include "common_types.h"  // NOLINT(build/include)
+#include "common_video/include/video_bitrate_allocator.h"
+#include "modules/video_coding/codecs/vp8/screenshare_layers.h"
+#include "modules/video_coding/codecs/vp8/simulcast_rate_allocator.h"
+#include "modules/video_coding/codecs/vp8/temporal_layers.h"
+#include "modules/video_coding/include/video_coding_defines.h"
+#include "modules/video_coding/utility/default_video_bitrate_allocator.h"
+#include "rtc_base/basictypes.h"
+#include "rtc_base/logging.h"
+#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
+namespace {
+bool TemporalLayersConfigured(const std::vector<VideoStream>& streams) {
+  for (const VideoStream& stream : streams) {
+    if (stream.temporal_layer_thresholds_bps.size() > 0)
+      return true;
+  }
+  return false;
+}
+}  // namespace
 
 bool VideoCodecInitializer::SetupCodec(
     const VideoEncoderConfig& config,
@@ -94,8 +104,7 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
 
   VideoCodec video_codec;
   memset(&video_codec, 0, sizeof(video_codec));
-  video_codec.codecType = PayloadNameToCodecType(payload_name)
-                              .value_or(VideoCodecType::kVideoCodecGeneric);
+  video_codec.codecType = PayloadStringToCodecType(payload_name);
 
   switch (config.content_type) {
     case VideoEncoderConfig::ContentType::kRealtimeVideo:
@@ -103,7 +112,7 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
       break;
     case VideoEncoderConfig::ContentType::kScreen:
       video_codec.mode = kScreensharing;
-      if (streams.size() >= 1 &&
+      if (!streams.empty() &&
           streams[0].temporal_layer_thresholds_bps.size() == 1) {
         video_codec.targetBitrate =
             streams[0].temporal_layer_thresholds_bps[0] / 1000;
@@ -120,13 +129,10 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
         *video_codec.VP8() = VideoEncoder::GetDefaultVp8Settings();
       video_codec.VP8()->numberOfTemporalLayers = static_cast<unsigned char>(
           streams.back().temporal_layer_thresholds_bps.size() + 1);
-      bool temporal_layers_configured = false;
-      for (const VideoStream& stream : streams) {
-        if (stream.temporal_layer_thresholds_bps.size() > 0)
-          temporal_layers_configured = true;
-      }
-      if (nack_enabled && !temporal_layers_configured) {
-        LOG(LS_INFO) << "No temporal layers and nack enabled -> resilience off";
+
+      if (nack_enabled && !TemporalLayersConfigured(streams)) {
+        RTC_LOG(LS_INFO)
+            << "No temporal layers and nack enabled -> resilience off";
         video_codec.VP8()->resilience = kResilienceOff;
       }
       break;
@@ -143,6 +149,13 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
       }
       video_codec.VP9()->numberOfTemporalLayers = static_cast<unsigned char>(
           streams.back().temporal_layer_thresholds_bps.size() + 1);
+
+      if (nack_enabled && !TemporalLayersConfigured(streams) &&
+          video_codec.VP9()->numberOfSpatialLayers == 1) {
+        RTC_LOG(LS_INFO) << "No temporal or spatial layers and nack enabled -> "
+                         << "resilience off";
+        video_codec.VP9()->resilienceOn = false;
+      }
       break;
     }
     case kVideoCodecH264: {
@@ -165,6 +178,8 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
   video_codec.minBitrate = streams[0].min_bitrate_bps / 1000;
   if (video_codec.minBitrate < kEncoderMinBitrateKbps)
     video_codec.minBitrate = kEncoderMinBitrateKbps;
+  video_codec.timing_frame_thresholds = {kDefaultTimingFramesDelayMs,
+                                         kDefaultOutlierFrameSizePercent};
   RTC_DCHECK_LE(streams.size(), kMaxSimulcastStreams);
   if (video_codec.codecType == kVideoCodecVP9) {
     // If the vector is empty, bitrates will be configured automatically.
