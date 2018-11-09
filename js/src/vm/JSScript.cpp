@@ -3298,7 +3298,7 @@ JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
     script->setFlag(ImmutableFlags::NoScriptRval, options.noScriptRval);
     script->setFlag(ImmutableFlags::SelfHosted, options.selfHostingMode);
     script->setFlag(ImmutableFlags::TreatAsRunOnce, options.isRunOnce);
-    script->setFlag(ImmutableFlags::HideScriptFromDebugger, options.hideScriptFromDebugger);
+    script->setFlag(MutableFlags::HideScriptFromDebugger, options.hideScriptFromDebugger);
 
     if (cx->runtime()->lcovOutput().isEnabled()) {
         if (!script->initScriptName(cx)) {
@@ -4011,8 +4011,6 @@ bool
 js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
                        MutableHandle<GCVector<Scope*>> scopes)
 {
-    using ImmutableFlags = JSScript::ImmutableFlags;
-
     if (src->treatAsRunOnce() && !src->functionNonDelazifying()) {
         JS_ReportErrorASCII(cx, "No cloning toplevel run-once scripts");
         return false;
@@ -4121,8 +4119,10 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     dst->nTypeSets_ = src->nTypeSets();
 
     dst->immutableFlags_ = src->immutableFlags_;
-    dst->setFlag(ImmutableFlags::HasNonSyntacticScope,
+    dst->setFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,
                  scopes[0]->hasOnChain(ScopeKind::NonSyntactic));
+
+    dst->setFlag(JSScript::MutableFlags::HideScriptFromDebugger, src->hideScriptFromDebugger());
 
     if (src->argumentsHasVarBinding()) {
         dst->setArgumentsHasVarBinding();
