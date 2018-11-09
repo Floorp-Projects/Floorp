@@ -19,7 +19,7 @@ fn fail_derive(s: synstructure::Structure) -> TokenStream {
 
     let cause_body = s.each_variant(|v| {
         if let Some(cause) = v.bindings().iter().find(is_cause) {
-            quote!(return Some(::failure::AsFail::as_fail(#cause)))
+            quote!(return Some(#cause))
         } else {
             quote!(return None)
         }

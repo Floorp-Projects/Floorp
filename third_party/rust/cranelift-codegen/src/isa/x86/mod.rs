@@ -7,9 +7,7 @@ mod registers;
 pub mod settings;
 
 use super::super::settings as shared_settings;
-#[cfg(feature = "testing_hooks")]
-use binemit::CodeSink;
-use binemit::{emit_function, MemoryCodeSink};
+use binemit::{emit_function, CodeSink, MemoryCodeSink};
 use ir;
 use isa::enc_tables::{self as shared_enc_tables, lookup_enclist, Encodings};
 use isa::Builder as IsaBuilder;
@@ -117,7 +115,6 @@ impl TargetIsa for Isa {
         abi::allocatable_registers(func, &self.triple)
     }
 
-    #[cfg(feature = "testing_hooks")]
     fn emit_inst(
         &self,
         func: &ir::Function,

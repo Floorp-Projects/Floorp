@@ -47,23 +47,20 @@ pub use ir::types::Type;
 pub use ir::valueloc::{ArgumentLoc, ValueLoc};
 
 use binemit;
-use entity::{PrimaryMap, SecondaryMap};
+use entity::{EntityMap, PrimaryMap};
 use isa;
 
 /// Map of value locations.
-pub type ValueLocations = SecondaryMap<Value, ValueLoc>;
+pub type ValueLocations = EntityMap<Value, ValueLoc>;
 
 /// Map of jump tables.
 pub type JumpTables = PrimaryMap<JumpTable, JumpTableData>;
 
 /// Map of instruction encodings.
-pub type InstEncodings = SecondaryMap<Inst, isa::Encoding>;
+pub type InstEncodings = EntityMap<Inst, isa::Encoding>;
 
 /// Code offsets for EBBs.
-pub type EbbOffsets = SecondaryMap<Ebb, binemit::CodeOffset>;
-
-/// Code offsets for Jump Tables.
-pub type JumpTableOffsets = SecondaryMap<JumpTable, binemit::CodeOffset>;
+pub type EbbOffsets = EntityMap<Ebb, binemit::CodeOffset>;
 
 /// Source locations for instructions.
-pub type SourceLocs = SecondaryMap<Inst, SourceLoc>;
+pub type SourceLocs = EntityMap<Inst, SourceLoc>;

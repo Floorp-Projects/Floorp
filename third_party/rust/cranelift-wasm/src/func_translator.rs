@@ -9,7 +9,7 @@ use cranelift_codegen::entity::EntityRef;
 use cranelift_codegen::ir::{self, Ebb, InstBuilder};
 use cranelift_codegen::timing;
 use cranelift_frontend::{FunctionBuilder, FunctionBuilderContext, Variable};
-use environ::{FuncEnvironment, ReturnMode, WasmResult};
+use environ::{FuncEnvironment, WasmError, WasmResult};
 use state::TranslationState;
 use wasmparser::{self, BinaryReader};
 
@@ -135,12 +135,16 @@ fn parse_local_decls(
     num_params: usize,
 ) -> WasmResult<()> {
     let mut next_local = num_params;
-    let local_count = reader.read_local_count()?;
+    let local_count = reader
+        .read_local_count()
+        .map_err(WasmError::from_binary_reader_error)?;
 
     let mut locals_total = 0;
     for _ in 0..local_count {
         builder.set_srcloc(cur_srcloc(reader));
-        let (count, ty) = reader.read_local_decl(&mut locals_total)?;
+        let (count, ty) = reader
+            .read_local_decl(&mut locals_total)
+            .map_err(WasmError::from_binary_reader_error)?;
         declare_locals(builder, count, ty, &mut next_local);
     }
 
@@ -191,7 +195,9 @@ fn parse_function_body<FE: FuncEnvironment + ?Sized>(
     // Keep going until the final `End` operator which pops the outermost block.
     while !state.control_stack.is_empty() {
         builder.set_srcloc(cur_srcloc(&reader));
-        let op = reader.read_operator()?;
+        let op = reader
+            .read_operator()
+            .map_err(WasmError::from_binary_reader_error)?;
         translate_operator(op, builder, state, environ)?;
     }
 
@@ -203,10 +209,7 @@ fn parse_function_body<FE: FuncEnvironment + ?Sized>(
     if state.reachable {
         debug_assert!(builder.is_pristine());
         if !builder.is_unreachable() {
-            match environ.return_mode() {
-                ReturnMode::NormalReturns => builder.ins().return_(&state.stack),
-                ReturnMode::FallthroughReturn => builder.ins().fallthrough_return(&state.stack),
-            };
+            builder.ins().return_(&state.stack);
         }
     }
 
@@ -230,11 +233,11 @@ fn cur_srcloc(reader: &BinaryReader) -> ir::SourceLoc {
 
 #[cfg(test)]
 mod tests {
-    use super::{FuncTranslator, ReturnMode};
+    use super::FuncTranslator;
     use cranelift_codegen::ir::types::I32;
-    use cranelift_codegen::{ir, isa, settings, Context};
-    use environ::DummyEnvironment;
-    use target_lexicon::PointerWidth;
+    use cranelift_codegen::{ir, Context};
+    use environ::{DummyEnvironment, FuncEnvironment};
+    use target_lexicon::Triple;
 
     #[test]
     fn small1() {
@@ -252,15 +255,7 @@ mod tests {
         ];
 
         let mut trans = FuncTranslator::new();
-        let flags = settings::Flags::new(settings::builder());
-        let runtime = DummyEnvironment::new(
-            isa::TargetFrontendConfig {
-                default_call_conv: isa::CallConv::Fast,
-                pointer_width: PointerWidth::U64,
-            },
-            ReturnMode::NormalReturns,
-        );
-
+        let runtime = DummyEnvironment::with_triple(Triple::default());
         let mut ctx = Context::new();
 
         ctx.func.name = ir::ExternalName::testcase("small1");
@@ -271,7 +266,7 @@ mod tests {
             .translate(&BODY, &mut ctx.func, &mut runtime.func_env())
             .unwrap();
         debug!("{}", ctx.func.display(None));
-        ctx.verify(&flags).unwrap();
+        ctx.verify(runtime.func_env().flags()).unwrap();
     }
 
     #[test]
@@ -291,14 +286,7 @@ mod tests {
         ];
 
         let mut trans = FuncTranslator::new();
-        let flags = settings::Flags::new(settings::builder());
-        let runtime = DummyEnvironment::new(
-            isa::TargetFrontendConfig {
-                default_call_conv: isa::CallConv::Fast,
-                pointer_width: PointerWidth::U64,
-            },
-            ReturnMode::NormalReturns,
-        );
+        let runtime = DummyEnvironment::with_triple(Triple::default());
         let mut ctx = Context::new();
 
         ctx.func.name = ir::ExternalName::testcase("small2");
@@ -309,7 +297,7 @@ mod tests {
             .translate(&BODY, &mut ctx.func, &mut runtime.func_env())
             .unwrap();
         debug!("{}", ctx.func.display(None));
-        ctx.verify(&flags).unwrap();
+        ctx.verify(runtime.func_env().flags()).unwrap();
     }
 
     #[test]
@@ -338,14 +326,7 @@ mod tests {
         ];
 
         let mut trans = FuncTranslator::new();
-        let flags = settings::Flags::new(settings::builder());
-        let runtime = DummyEnvironment::new(
-            isa::TargetFrontendConfig {
-                default_call_conv: isa::CallConv::Fast,
-                pointer_width: PointerWidth::U64,
-            },
-            ReturnMode::NormalReturns,
-        );
+        let runtime = DummyEnvironment::with_triple(Triple::default());
         let mut ctx = Context::new();
 
         ctx.func.name = ir::ExternalName::testcase("infloop");
@@ -355,6 +336,6 @@ mod tests {
             .translate(&BODY, &mut ctx.func, &mut runtime.func_env())
             .unwrap();
         debug!("{}", ctx.func.display(None));
-        ctx.verify(&flags).unwrap();
+        ctx.verify(runtime.func_env().flags()).unwrap();
     }
 }

@@ -8,7 +8,7 @@ been designed to support a number of operations:
 - It has both a `backtrace` and a `cause` method, allowing users to get
   information about how the error occurred.
 - It supports wrapping failures in additional contextual information.
-- Because it is bound by `Send` and `Sync`, failures can be moved and shared
+- Because it is bound by `Send` and `Sync`, failures can be moved and share
   between threads easily.
 - Because it is bound by `'static`, the abstract `Fail` trait object can be
   downcast into concrete types.

@@ -26,16 +26,6 @@ without_std! {
             &self.context
         }
 
-        /// Maps `Context<D>` to `Context<T>` by applying a function to the contained context.
-        pub fn map<F, T>(self, op: F) -> Context<T>
-            where F: FnOnce(D) -> T,
-                  T: Display + Send + Sync + 'static
-        {
-            Context {
-                context: op(self.context),
-            }
-        }
-
         pub(crate) fn with_err<E: Fail>(context: D, _: E) -> Context<D> {
             Context { context }
         }
@@ -53,12 +43,6 @@ without_std! {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             write!(f, "{}", self.context)
         }
-    }
-
-    #[test]
-    fn test_map() {
-        let ctx = Context::new("a string").map(|s| format!("{} with some more stuff", s));
-        assert_eq!(ctx.context, String::from("a string with some more stuff"));
     }
 }
 
@@ -88,17 +72,6 @@ with_std! {
         /// Returns a reference to the context provided with this error.
         pub fn get_context(&self) -> &D {
             &self.context
-        }
-
-        /// Maps `Context<D>` to `Context<T>` by applying a function to the contained context.
-        pub fn map<F, T>(self, op: F) -> Context<T>
-            where F: FnOnce(D) -> T,
-                  T: Display + Send + Sync + 'static
-        {
-            Context {
-                context: op(self.context),
-                failure: self.failure,
-            }
         }
 
         pub(crate) fn with_err<E: Into<Error>>(context: D, error: E) -> Context<D> {
@@ -157,12 +130,6 @@ with_std! {
                 Either::That(ref error)     => write!(f, "{:?}", error),
             }
         }
-    }
-
-    #[test]
-    fn test_map() {
-        let ctx = Context::new("a string").map(|s| format!("{} with some more stuff", s));
-        assert_eq!(ctx.context, String::from("a string with some more stuff"));
     }
 }
 

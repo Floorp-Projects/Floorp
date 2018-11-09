@@ -13,7 +13,7 @@ use srcgen;
 
 /// Emit a constant definition of a single value type.
 fn emit_type(ty: &cdsl_types::ValueType, fmt: &mut srcgen::Formatter) -> Result<(), error::Error> {
-    let name = ty.to_string().to_uppercase();
+    let name = ty.name().to_uppercase();
     let number = ty.number().ok_or_else(|| {
         error::Error::with_msg(format!(
             "Could not emit type `{}` which has no number.",
@@ -47,7 +47,8 @@ fn emit_vectors(bits: u64, fmt: &mut srcgen::Formatter) -> Result<(), error::Err
 /// Emit types using the given formatter object.
 fn emit_types(fmt: &mut srcgen::Formatter) -> Result<(), error::Error> {
     // Emit all of the special types, such as types for CPU flags.
-    for spec in cdsl_types::ValueType::all_special_types().map(cdsl_types::ValueType::from) {
+    for spec in cdsl_types::ValueType::all_special_types().map(|ty| cdsl_types::ValueType::from(ty))
+    {
         emit_type(&spec, fmt)?;
     }
 
