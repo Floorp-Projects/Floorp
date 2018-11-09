@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsapi.h"
-
+#include "jsfriendapi.h"
 #include "jsapi-tests/tests.h"
 
 using namespace JS;
@@ -39,6 +39,7 @@ static void
 DataRequestCB(JSContext* cx, HandleObject stream, void* underlyingSource, uint8_t flags,
               size_t desiredSize)
 {
+    js::AssertSameCompartment(cx, stream);
     MOZ_ASSERT(!dataRequestCBCalled, "Invalid test setup");
     dataRequestCBCalled = true;
 }
@@ -48,6 +49,7 @@ static void
 WriteIntoRequestBufferCB(JSContext* cx, HandleObject stream, void* underlyingSource, uint8_t flags,
                          void* buffer, size_t length, size_t* bytesWritten)
 {
+    js::AssertSameCompartment(cx, stream);
     MOZ_ASSERT(!writeIntoRequestBufferCBCalled, "Invalid test setup");
     writeIntoRequestBufferCBCalled = true;
 
@@ -64,6 +66,8 @@ static Value
 CancelStreamCB(JSContext* cx, HandleObject stream, void* underlyingSource, uint8_t flags,
                HandleValue reason)
 {
+    js::AssertSameCompartment(cx, stream);
+    js::AssertSameCompartment(cx, reason);
     MOZ_ASSERT(!cancelStreamCBCalled, "Invalid test setup");
     cancelStreamCBCalled = true;
     cancelStreamReason = reason;
@@ -75,6 +79,7 @@ static Value streamClosedReason;
 static void
 StreamClosedCB(JSContext* cx, HandleObject stream, void* underlyingSource, uint8_t flags)
 {
+    js::AssertSameCompartment(cx, stream);
     MOZ_ASSERT(!streamClosedCBCalled, "Invalid test setup");
     streamClosedCBCalled = true;
 }
@@ -85,6 +90,8 @@ static void
 StreamErroredCB(JSContext* cx, HandleObject stream, void* underlyingSource, uint8_t flags,
                 HandleValue reason)
 {
+    js::AssertSameCompartment(cx, stream);
+    js::AssertSameCompartment(cx, reason);
     MOZ_ASSERT(!streamErroredCBCalled, "Invalid test setup");
     streamErroredCBCalled = true;
     streamErroredReason = reason;
@@ -418,19 +425,65 @@ BEGIN_FIXTURE_TEST(StreamTestFixture,
 END_FIXTURE_TEST(StreamTestFixture,
                  testReadableStream_ExternalSourceGetReader)
 
+enum class CompartmentMode {
+    Same,
+    Cross,
+};
+
 struct ReadFromExternalSourceFixture : public StreamTestFixture
 {
     virtual ~ReadFromExternalSourceFixture() {}
 
-    bool readWithoutDataAvailable(const char* evalSrc, const char* evalSrc2,
+
+    // On success, streamGlobal is a global object (not a wrapper)
+    // and stream is in the same compartment as cx (it may be a CCW).
+    bool createExternalSourceStream(CompartmentMode compartmentMode,
+                                    MutableHandleObject streamGlobal,
+                                    MutableHandleObject stream)
+    {
+        if (compartmentMode == CompartmentMode::Same) {
+            streamGlobal.set(global);
+            stream.set(NewExternalSourceStream(cx));
+            if (!stream) {
+                return false;
+            }
+        } else {
+            RootedObject savedGlobal(cx, global);
+            streamGlobal.set(createGlobal());
+            if (!streamGlobal) {
+                return false;
+            }
+            global = savedGlobal;
+
+            {
+                JSAutoRealm ar(cx, streamGlobal);
+                stream.set(NewExternalSourceStream(cx));
+                if (!stream) {
+                    return false;
+                }
+            }
+            if (!JS_WrapObject(cx, stream)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool readWithoutDataAvailable(CompartmentMode compartmentMode,
+                                  const char* evalSrc,
+                                  const char* evalSrc2,
                                   uint32_t writtenLength)
     {
         ResetCallbacks();
         definePrint();
 
-        RootedObject stream(cx, NewExternalSourceStream(cx));
-        CHECK(stream);
+        // Create the stream.
+        RootedObject streamGlobal(cx);
+        RootedObject stream(cx);  // can be a wrapper
+        CHECK(createExternalSourceStream(compartmentMode, &streamGlobal, &stream));
         js::RunJobs(cx);
+
+        // GetExternalUnderlyingSource locks the stream.
         void* underlyingSource;
         CHECK(ReadableStreamGetExternalUnderlyingSource(cx, stream, &underlyingSource));
         CHECK(underlyingSource == &stubExternalUnderlyingSource);
@@ -439,31 +492,36 @@ struct ReadFromExternalSourceFixture : public StreamTestFixture
         CHECK(locked);
         CHECK(ReadableStreamReleaseExternalUnderlyingSource(cx, stream));
 
+        // Run caller-supplied JS code to read from the stream.
         RootedValue streamVal(cx, ObjectValue(*stream));
         CHECK(JS_SetProperty(cx, global, "stream", streamVal));
-
         RootedValue rval(cx);
         EVAL(evalSrc, &rval);
         CHECK(dataRequestCBCalled);
         CHECK(!writeIntoRequestBufferCBCalled);
         CHECK(rval.isObject());
-        RootedObject promise(cx, &rval.toObject());
-        CHECK(IsPromiseObject(promise));
-        CHECK(GetPromiseState(promise) == PromiseState::Pending);
+        RootedObject unwrappedPromise(cx, js::CheckedUnwrap(&rval.toObject()));
+        CHECK(unwrappedPromise);
+        CHECK(IsPromiseObject(unwrappedPromise));
+        CHECK(GetPromiseState(unwrappedPromise) == PromiseState::Pending);
 
+        // Stream in some data; this resolves the read() result promise.
         size_t length = sizeof(testBufferData);
-        ReadableStreamUpdateDataAvailableFromSource(cx, stream, length);
-
+        CHECK(ReadableStreamUpdateDataAvailableFromSource(cx, stream, length));
         CHECK(writeIntoRequestBufferCBCalled);
-        CHECK(GetPromiseState(promise) == PromiseState::Fulfilled);
-        RootedValue iterVal(cx);
-        bool done;
-        if (!GetIterResult(cx, promise, &iterVal, &done)) {
-            return false;
+        CHECK(GetPromiseState(unwrappedPromise) == PromiseState::Fulfilled);
+        RootedObject chunk(cx);
+        {
+            JSAutoRealm ar(cx, unwrappedPromise);
+            RootedValue iterVal(cx);
+            bool done;
+            if (!GetIterResult(cx, unwrappedPromise, &iterVal, &done)) {
+                return false;
+            }
+            CHECK(!done);
+            chunk = &iterVal.toObject();
         }
-
-        CHECK(!done);
-        RootedObject chunk(cx, &iterVal.toObject());
+        CHECK(JS_WrapObject(cx, &chunk));
         CHECK(JS_IsUint8Array(chunk));
 
         {
@@ -473,6 +531,7 @@ struct ReadFromExternalSourceFixture : public StreamTestFixture
             CHECK(!memcmp(buffer, testBufferData, writtenLength));
         }
 
+        // Check the callbacks fired by calling read() again.
         dataRequestCBCalled = false;
         writeIntoRequestBufferCBCalled = false;
         EVAL(evalSrc2, &rval);
@@ -482,12 +541,19 @@ struct ReadFromExternalSourceFixture : public StreamTestFixture
         return true;
     }
 
-    bool readWithDataAvailable(const char* evalSrc, uint32_t writtenLength) {
+    bool readWithDataAvailable(CompartmentMode compartmentMode,
+                               const char* evalSrc,
+                               uint32_t writtenLength)
+    {
         ResetCallbacks();
         definePrint();
 
-        RootedObject stream(cx, NewExternalSourceStream(cx));
-        CHECK(stream);
+        // Create a stream.
+        RootedObject streamGlobal(cx);
+        RootedObject stream(cx);
+        CHECK(createExternalSourceStream(compartmentMode, &streamGlobal, &stream));
+
+        // Getting the underlying source locks the stream.
         void* underlyingSource;
         CHECK(ReadableStreamGetExternalUnderlyingSource(cx, stream, &underlyingSource));
         CHECK(underlyingSource == &stubExternalUnderlyingSource);
@@ -496,27 +562,33 @@ struct ReadFromExternalSourceFixture : public StreamTestFixture
         CHECK(locked);
         CHECK(ReadableStreamReleaseExternalUnderlyingSource(cx, stream));
 
+        // Make some data available.
         size_t length = sizeof(testBufferData);
-        ReadableStreamUpdateDataAvailableFromSource(cx, stream, length);
+        CHECK(ReadableStreamUpdateDataAvailableFromSource(cx, stream, length));
 
+        // Read from the stream.
         RootedValue streamVal(cx, ObjectValue(*stream));
         CHECK(JS_SetProperty(cx, global, "stream", streamVal));
-
         RootedValue rval(cx);
         EVAL(evalSrc, &rval);
         CHECK(writeIntoRequestBufferCBCalled);
         CHECK(rval.isObject());
-        RootedObject promise(cx, &rval.toObject());
-        CHECK(IsPromiseObject(promise));
-        CHECK(GetPromiseState(promise) == PromiseState::Fulfilled);
-        RootedValue iterVal(cx);
-        bool done;
-        if (!GetIterResult(cx, promise, &iterVal, &done)) {
-            return false;
+        RootedObject unwrappedPromise(cx, js::CheckedUnwrap(&rval.toObject()));
+        CHECK(unwrappedPromise);
+        CHECK(IsPromiseObject(unwrappedPromise));
+        CHECK(GetPromiseState(unwrappedPromise) == PromiseState::Fulfilled);
+        RootedObject chunk(cx);
+        {
+            JSAutoRealm ar(cx, unwrappedPromise);
+            RootedValue iterVal(cx);
+            bool done;
+            if (!GetIterResult(cx, unwrappedPromise, &iterVal, &done)) {
+                return false;
+            }
+            CHECK(!done);
+            chunk = &iterVal.toObject();
         }
-
-        CHECK(!done);
-        RootedObject chunk(cx, &iterVal.toObject());
+        CHECK(JS_WrapObject(cx, &chunk));
         CHECK(JS_IsUint8Array(chunk));
 
         {
@@ -533,16 +605,59 @@ struct ReadFromExternalSourceFixture : public StreamTestFixture
 BEGIN_FIXTURE_TEST(ReadFromExternalSourceFixture,
                    testReadableStream_ExternalSourceReadDefaultWithoutDataAvailable)
 {
-    return readWithoutDataAvailable("r = stream.getReader(); r.read()", "r.read()", sizeof(testBufferData));
+    return readWithoutDataAvailable(CompartmentMode::Same,
+                                    "r = stream.getReader(); r.read()",
+                                    "r.read()",
+                                    sizeof(testBufferData));
 }
 END_FIXTURE_TEST(ReadFromExternalSourceFixture,
                  testReadableStream_ExternalSourceReadDefaultWithoutDataAvailable)
 
 BEGIN_FIXTURE_TEST(ReadFromExternalSourceFixture,
+                   testReadableStream_ExternalSourceReadDefaultWithoutDataAvailable_CrossCompartment1)
+{
+    // Scenario 1: The stream and reader are both in the same compartment, but
+    // ReadableStreamUpdateDataAvailableFromSource is applied to a wrapper.
+    return readWithoutDataAvailable(CompartmentMode::Cross,
+                                    "r = stream.getReader(); r.read()",
+                                    "r.read()",
+                                    sizeof(testBufferData));
+}
+END_FIXTURE_TEST(ReadFromExternalSourceFixture,
+                 testReadableStream_ExternalSourceReadDefaultWithoutDataAvailable_CrossCompartment1)
+
+BEGIN_FIXTURE_TEST(ReadFromExternalSourceFixture,
+                   testReadableStream_ExternalSourceReadDefaultWithoutDataAvailable_CrossCompartment2)
+{
+    // Scenario 2: The stream and reader are in the same compartment, but a
+    // `read` method from another compartment is used on the reader.
+    return readWithoutDataAvailable(CompartmentMode::Cross,
+                                    "r = stream.getReader(); read = new ReadableStream({start(){}}).getReader().read; read.call(r)",
+                                    "read.call(r)",
+                                    sizeof(testBufferData));
+}
+END_FIXTURE_TEST(ReadFromExternalSourceFixture,
+                 testReadableStream_ExternalSourceReadDefaultWithoutDataAvailable_CrossCompartment2)
+
+BEGIN_FIXTURE_TEST(ReadFromExternalSourceFixture,
+                   testReadableStream_ExternalSourceReadDefaultWithoutDataAvailable_CrossCompartment3)
+{
+    // Scenario 3: The stream and reader are in different compartments.
+    return readWithoutDataAvailable(CompartmentMode::Cross,
+                                    "r = ReadableStream.prototype.getReader.call(stream); r.read()",
+                                    "r.read()",
+                                    sizeof(testBufferData));
+}
+END_FIXTURE_TEST(ReadFromExternalSourceFixture,
+                 testReadableStream_ExternalSourceReadDefaultWithoutDataAvailable_CrossCompartment3)
+
+BEGIN_FIXTURE_TEST(ReadFromExternalSourceFixture,
                    testReadableStream_ExternalSourceCloseWithPendingRead)
 {
-    CHECK(readWithoutDataAvailable("r = stream.getReader(); request0 = r.read(); "
-                                   "request1 = r.read(); request0", "r.read()",
+    CHECK(readWithoutDataAvailable(CompartmentMode::Same,
+                                   "r = stream.getReader(); request0 = r.read(); "
+                                   "request1 = r.read(); request0",
+                                   "r.read()",
                                    sizeof(testBufferData)));
 
     RootedValue val(cx);
@@ -574,10 +689,47 @@ END_FIXTURE_TEST(ReadFromExternalSourceFixture,
 BEGIN_FIXTURE_TEST(ReadFromExternalSourceFixture,
                    testReadableStream_ExternalSourceReadDefaultWithDataAvailable)
 {
-    return readWithDataAvailable("r = stream.getReader(); r.read()", sizeof(testBufferData));
+    return readWithDataAvailable(CompartmentMode::Same,
+                                 "r = stream.getReader(); r.read()",
+                                 sizeof(testBufferData));
 }
 END_FIXTURE_TEST(ReadFromExternalSourceFixture,
                  testReadableStream_ExternalSourceReadDefaultWithDataAvailable)
+
+BEGIN_FIXTURE_TEST(ReadFromExternalSourceFixture,
+                   testReadableStream_ExternalSourceReadDefaultWithDataAvailable_CrossCompartment1)
+{
+    // Scenario 1: The stream and reader are both in the same compartment, but
+    // ReadableStreamUpdateDataAvailableFromSource is applied to a wrapper.
+    return readWithDataAvailable(CompartmentMode::Cross,
+                                 "r = stream.getReader(); r.read()",
+                                 sizeof(testBufferData));
+}
+END_FIXTURE_TEST(ReadFromExternalSourceFixture,
+                 testReadableStream_ExternalSourceReadDefaultWithDataAvailable_CrossCompartment1)
+
+BEGIN_FIXTURE_TEST(ReadFromExternalSourceFixture,
+                   testReadableStream_ExternalSourceReadDefaultWithDataAvailable_CrossCompartment2)
+{
+    // Scenario 2: The stream and reader are in the same compartment, but a
+    // `read` method from another compartment is used on the reader.
+    return readWithDataAvailable(CompartmentMode::Cross,
+                                 "r = stream.getReader(); read = new ReadableStream({start(){}}).getReader().read; read.call(r)",
+                                 sizeof(testBufferData));
+}
+END_FIXTURE_TEST(ReadFromExternalSourceFixture,
+                 testReadableStream_ExternalSourceReadDefaultWithDataAvailable_CrossCompartment2)
+
+BEGIN_FIXTURE_TEST(ReadFromExternalSourceFixture,
+                   testReadableStream_ExternalSourceReadDefaultWithDataAvailable_CrossCompartment3)
+{
+    // Scenario 3: The stream and reader are in different compartments.
+    return readWithDataAvailable(CompartmentMode::Cross,
+                                 "r = ReadableStream.prototype.getReader.call(stream); r.read()",
+                                 sizeof(testBufferData));
+}
+END_FIXTURE_TEST(ReadFromExternalSourceFixture,
+                 testReadableStream_ExternalSourceReadDefaultWithDataAvailable_CrossCompartment3)
 
 // Cross-global tests:
 BEGIN_FIXTURE_TEST(StreamTestFixture,
