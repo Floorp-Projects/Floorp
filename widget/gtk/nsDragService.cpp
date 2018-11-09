@@ -1675,14 +1675,12 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
         } else {
             actualFlavor = mimeFlavor.get();
         }
-
-        uint32_t tmpDataLen = 0;
-        void    *tmpData = nullptr;
         nsresult rv;
         nsCOMPtr<nsISupports> data;
+        uint32_t len;
         rv = item->GetTransferData(actualFlavor,
                                    getter_AddRefs(data),
-                                   &tmpDataLen);
+                                   &len);
 
         if (strcmp(actualFlavor, kFilePromiseMime) == 0) {
             if (NS_SUCCEEDED(rv)) {
@@ -1694,8 +1692,10 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
         }
 
         if (NS_SUCCEEDED(rv)) {
+            void *tmpData = nullptr;
+            uint32_t tmpDataLen = 0;
             nsPrimitiveHelpers::CreateDataFromPrimitive(
-                nsDependentCString(actualFlavor), data, &tmpData, tmpDataLen);
+                nsDependentCString(actualFlavor), data, &tmpData, &tmpDataLen);
             // if required, do the extra work to convert unicode to plain
             // text and replace the output values with the plain text.
             if (needToDoConversionToPlainText) {
