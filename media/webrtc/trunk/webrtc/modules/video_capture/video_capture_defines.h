@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_VIDEO_CAPTURE_VIDEO_CAPTURE_DEFINES_H_
-#define WEBRTC_MODULES_VIDEO_CAPTURE_VIDEO_CAPTURE_DEFINES_H_
+#ifndef MODULES_VIDEO_CAPTURE_VIDEO_CAPTURE_DEFINES_H_
+#define MODULES_VIDEO_CAPTURE_VIDEO_CAPTURE_DEFINES_H_
 
-#include "webrtc/api/video/video_frame.h"
-#include "webrtc/modules/include/module_common_types.h"
-#include "webrtc/typedefs.h"
+#include "api/video/video_frame.h"
+#include "modules/include/module_common_types.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 #ifdef XP_WIN
 typedef int pid_t;
@@ -35,9 +35,7 @@ struct VideoCaptureCapability
     int32_t width;
     int32_t height;
     int32_t maxFPS;
-    int32_t expectedCaptureDelay;
-    RawVideoType rawType;
-    VideoCodecType codecType;
+    VideoType videoType;
     bool interlaced;
 
     VideoCaptureCapability()
@@ -45,9 +43,7 @@ struct VideoCaptureCapability
         width = 0;
         height = 0;
         maxFPS = 0;
-        expectedCaptureDelay = 0;
-        rawType = kVideoUnknown;
-        codecType = kVideoCodecUnknown;
+        videoType = VideoType::kUnknown;
         interlaced = false;
     }
     ;
@@ -59,10 +55,8 @@ struct VideoCaptureCapability
             return true;
         if (maxFPS != other.maxFPS)
             return true;
-        if (rawType != other.rawType)
-            return true;
-        if (codecType != other.codecType)
-            return true;
+        if (videoType != other.videoType)
+          return true;
         if (interlaced != other.interlaced)
             return true;
         return false;
@@ -103,4 +97,4 @@ protected:
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_VIDEO_CAPTURE_VIDEO_CAPTURE_DEFINES_H_
+#endif  // MODULES_VIDEO_CAPTURE_VIDEO_CAPTURE_DEFINES_H_

@@ -14,6 +14,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraDevice;
@@ -24,6 +25,7 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.LargeTest;
 import android.support.test.filters.MediumTest;
 import android.support.test.filters.SmallTest;
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import org.chromium.base.test.BaseJUnit4ClassRunner;
 import org.junit.After;
@@ -31,6 +33,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+@TargetApi(21)
 @RunWith(BaseJUnit4ClassRunner.class)
 public class Camera2CapturerTest {
   static final String TAG = "Camera2CapturerTest";
@@ -240,6 +243,12 @@ public class Camera2CapturerTest {
   @MediumTest
   public void testCameraEvents() throws InterruptedException {
     fixtures.cameraEventsInvoked();
+  }
+
+  @Test
+  @MediumTest
+  public void testUpdateMediaRecorder() throws InterruptedException, IOException {
+    fixtures.updateMediaRecorder(true /* useSurfaceCapture */);
   }
 
   // Test what happens when attempting to call e.g. switchCamera() after camera has been stopped.

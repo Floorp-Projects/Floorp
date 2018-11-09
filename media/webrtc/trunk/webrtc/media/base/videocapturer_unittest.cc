@@ -13,13 +13,13 @@
 #include <memory>
 #include <vector>
 
-#include "webrtc/base/gunit.h"
-#include "webrtc/base/logging.h"
-#include "webrtc/base/thread.h"
-#include "webrtc/media/base/fakevideocapturer.h"
-#include "webrtc/media/base/fakevideorenderer.h"
-#include "webrtc/media/base/testutils.h"
-#include "webrtc/media/base/videocapturer.h"
+#include "media/base/fakevideocapturer.h"
+#include "media/base/fakevideorenderer.h"
+#include "media/base/testutils.h"
+#include "media/base/videocapturer.h"
+#include "rtc_base/gunit.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/thread.h"
 
 using cricket::FakeVideoCapturer;
 
@@ -266,7 +266,7 @@ TEST_F(VideoCapturerTest, SinkWantsMaxPixelAndMaxPixelCountStepUp) {
   // with less than or equal to |wants.max_pixel_count| depending on how the
   // capturer can scale the input frame size.
   rtc::VideoSinkWants wants;
-  wants.max_pixel_count = rtc::Optional<int>(1280 * 720 * 3 / 5);
+  wants.max_pixel_count = 1280 * 720 * 3 / 5;
   capturer_->AddOrUpdateSink(&renderer_, wants);
   EXPECT_TRUE(capturer_->CaptureFrame());
   EXPECT_EQ(2, renderer_.num_rendered_frames());
@@ -274,8 +274,7 @@ TEST_F(VideoCapturerTest, SinkWantsMaxPixelAndMaxPixelCountStepUp) {
   EXPECT_EQ(540, renderer_.height());
 
   // Request a lower resolution.
-  wants.max_pixel_count =
-      rtc::Optional<int>(renderer_.width() * renderer_.height() * 3 / 5);
+  wants.max_pixel_count = (renderer_.width() * renderer_.height() * 3) / 5;
   capturer_->AddOrUpdateSink(&renderer_, wants);
   EXPECT_TRUE(capturer_->CaptureFrame());
   EXPECT_EQ(3, renderer_.num_rendered_frames());
@@ -294,8 +293,8 @@ TEST_F(VideoCapturerTest, SinkWantsMaxPixelAndMaxPixelCountStepUp) {
   EXPECT_EQ(360, renderer2.height());
 
   // Request higher resolution.
-  wants.max_pixel_count_step_up = wants.max_pixel_count;
-  wants.max_pixel_count = rtc::Optional<int>();
+  wants.target_pixel_count.emplace((wants.max_pixel_count * 5) / 3);
+  wants.max_pixel_count = wants.max_pixel_count * 4;
   capturer_->AddOrUpdateSink(&renderer_, wants);
   EXPECT_TRUE(capturer_->CaptureFrame());
   EXPECT_EQ(5, renderer_.num_rendered_frames());

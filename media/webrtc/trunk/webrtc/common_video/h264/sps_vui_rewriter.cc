@@ -9,17 +9,19 @@
  *
  */
 
-#include "webrtc/common_video/h264/sps_vui_rewriter.h"
+#include "common_video/h264/sps_vui_rewriter.h"
 
 #include <algorithm>
 #include <memory>
+#include <vector>
 
-#include "webrtc/base/bitbuffer.h"
-#include "webrtc/base/checks.h"
-#include "webrtc/base/logging.h"
+#include "rtc_base/bitbuffer.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/numerics/safe_minmax.h"
 
-#include "webrtc/common_video/h264/h264_common.h"
-#include "webrtc/common_video/h264/sps_parser.h"
+#include "common_video/h264/h264_common.h"
+#include "common_video/h264/sps_parser.h"
 
 namespace webrtc {
 
@@ -27,10 +29,10 @@ namespace webrtc {
 // closer to 24 or so, but better safe than sorry.
 const size_t kMaxVuiSpsIncrease = 64;
 
-#define RETURN_FALSE_ON_FAIL(x)                                  \
-  if (!(x)) {                                                    \
-    LOG_F(LS_ERROR) << " (line:" << __LINE__ << ") FAILED: " #x; \
-    return false;                                                \
+#define RETURN_FALSE_ON_FAIL(x)                                      \
+  if (!(x)) {                                                        \
+    RTC_LOG_F(LS_ERROR) << " (line:" << __LINE__ << ") FAILED: " #x; \
+    return false;                                                    \
   }
 
 #define COPY_UINT8(src, dest, tmp)                   \
@@ -74,8 +76,8 @@ SpsVuiRewriter::ParseResult SpsVuiRewriter::ParseAndRewriteSps(
     rtc::Buffer* destination) {
   // Create temporary RBSP decoded buffer of the payload (exlcuding the
   // leading nalu type header byte (the SpsParser uses only the payload).
-  std::unique_ptr<rtc::Buffer> rbsp_buffer = H264::ParseRbsp(buffer, length);
-  rtc::BitBuffer source_buffer(rbsp_buffer->data(), rbsp_buffer->size());
+  std::vector<uint8_t> rbsp_buffer = H264::ParseRbsp(buffer, length);
+  rtc::BitBuffer source_buffer(rbsp_buffer.data(), rbsp_buffer.size());
   rtc::Optional<SpsParser::SpsState> sps_state =
       SpsParser::ParseSpsUpToVui(&source_buffer);
   if (!sps_state)
@@ -97,7 +99,7 @@ SpsVuiRewriter::ParseResult SpsVuiRewriter::ParseAndRewriteSps(
   size_t byte_offset;
   size_t bit_offset;
   source_buffer.GetCurrentOffset(&byte_offset, &bit_offset);
-  memcpy(out_buffer.data(), rbsp_buffer->data(),
+  memcpy(out_buffer.data(), rbsp_buffer.data(),
          byte_offset + (bit_offset > 0 ? 1 : 0));  // OK to copy the last bits.
 
   // SpsParser will have read the vui_params_present flag, which we want to
@@ -113,7 +115,7 @@ SpsVuiRewriter::ParseResult SpsVuiRewriter::ParseAndRewriteSps(
   ParseResult vui_updated;
   if (!CopyAndRewriteVui(*sps_state, &source_buffer, &sps_writer,
                          &vui_updated)) {
-    LOG(LS_ERROR) << "Failed to parse/copy SPS VUI.";
+    RTC_LOG(LS_ERROR) << "Failed to parse/copy SPS VUI.";
     return ParseResult::kFailure;
   }
 
@@ -123,7 +125,7 @@ SpsVuiRewriter::ParseResult SpsVuiRewriter::ParseAndRewriteSps(
   }
 
   if (!CopyRemainingBits(&source_buffer, &sps_writer)) {
-    LOG(LS_ERROR) << "Failed to parse/copy SPS VUI.";
+    RTC_LOG(LS_ERROR) << "Failed to parse/copy SPS VUI.";
     return ParseResult::kFailure;
   }
 
@@ -269,7 +271,7 @@ bool CopyAndRewriteVui(Sps sps,
           source->ReadExponentialGolomb(&max_dec_frame_buffering));
       if (max_num_reorder_frames == 0 &&
           max_dec_frame_buffering <= sps.max_num_ref_frames) {
-        LOG(LS_INFO) << "VUI bitstream already contains an optimal VUI.";
+        RTC_LOG(LS_INFO) << "VUI bitstream already contains an optimal VUI.";
         *out_vui_rewritten = SpsVuiRewriter::ParseResult::kVuiOk;
         return true;
       }
@@ -350,8 +352,7 @@ bool CopyRemainingBits(rtc::BitBuffer* source,
     COPY_BITS(source, destination, bits_tmp, misaligned_bits);
   }
   while (source->RemainingBitCount() > 0) {
-    size_t count = std::min(static_cast<size_t>(32u),
-                            static_cast<size_t>(source->RemainingBitCount()));
+    auto count = rtc::SafeMin<size_t>(32u, source->RemainingBitCount());
     COPY_BITS(source, destination, bits_tmp, count);
   }
   // TODO(noahric): The last byte could be all zeroes now, which we should just

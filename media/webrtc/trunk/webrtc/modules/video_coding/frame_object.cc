@@ -8,9 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/base/checks.h"
-#include "webrtc/modules/video_coding/frame_object.h"
-#include "webrtc/modules/video_coding/packet_buffer.h"
+#include "modules/video_coding/frame_object.h"
+
+#include "common_video/h264/h264_common.h"
+#include "modules/video_coding/packet_buffer.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 namespace video_coding {
@@ -31,10 +33,11 @@ RtpFrameObject::RtpFrameObject(PacketBuffer* packet_buffer,
     : packet_buffer_(packet_buffer),
       first_seq_num_(first_seq_num),
       last_seq_num_(last_seq_num),
+      timestamp_(0),
       received_time_(received_time),
       times_nacked_(times_nacked) {
   VCMPacket* first_packet = packet_buffer_->GetPacket(first_seq_num);
-  RTC_DCHECK(first_packet);
+  RTC_CHECK(first_packet);
 
   // RtpFrameObject members
   frame_type_ = first_packet->frameType;
@@ -47,6 +50,11 @@ RtpFrameObject::RtpFrameObject(PacketBuffer* packet_buffer,
   _payloadType = first_packet->payloadType;
   _timeStamp = first_packet->timestamp;
   ntp_time_ms_ = first_packet->ntp_time_ms_;
+  _frameType = first_packet->frameType;
+
+  // Setting frame's playout delays to the same values
+  // as of the first packet's.
+  SetPlayoutDelay(first_packet->video_header.playout_delay);
 
   // Since FFmpeg use an optimized bitstream reader that reads in chunks of
   // 32/64 bits we have to add at least that much padding to the buffer
@@ -61,8 +69,9 @@ RtpFrameObject::RtpFrameObject(PacketBuffer* packet_buffer,
 
   _buffer = new uint8_t[_size];
   _length = frame_size;
-  _frameType = first_packet->frameType;
-  GetBitstream(_buffer);
+
+  bool bitstream_copied = GetBitstream(_buffer);
+  RTC_DCHECK(bitstream_copied);
   _encodedWidth = first_packet->width;
   _encodedHeight = first_packet->height;
 
@@ -70,7 +79,8 @@ RtpFrameObject::RtpFrameObject(PacketBuffer* packet_buffer,
   timestamp = first_packet->timestamp;
 
   VCMPacket* last_packet = packet_buffer_->GetPacket(last_seq_num);
-  RTC_DCHECK(last_packet && last_packet->markerBit);
+  RTC_CHECK(last_packet);
+  RTC_CHECK(last_packet->markerBit);
   // http://www.etsi.org/deliver/etsi_ts/126100_126199/126114/12.07.00_60/
   // ts_126114v120700p.pdf Section 7.4.5.
   // The MTSI client shall add the payload bytes as defined in this clause
@@ -79,6 +89,34 @@ RtpFrameObject::RtpFrameObject(PacketBuffer* packet_buffer,
   // (HEVC)).
   rotation_ = last_packet->video_header.rotation;
   _rotation_set = true;
+  content_type_ = last_packet->video_header.content_type;
+  if (last_packet->video_header.video_timing.flags !=
+      TimingFrameFlags::kInvalid) {
+    // ntp_time_ms_ may be -1 if not estimated yet. This is not a problem,
+    // as this will be dealt with at the time of reporting.
+    timing_.encode_start_ms =
+        ntp_time_ms_ +
+        last_packet->video_header.video_timing.encode_start_delta_ms;
+    timing_.encode_finish_ms =
+        ntp_time_ms_ +
+        last_packet->video_header.video_timing.encode_finish_delta_ms;
+    timing_.packetization_finish_ms =
+        ntp_time_ms_ +
+        last_packet->video_header.video_timing.packetization_finish_delta_ms;
+    timing_.pacer_exit_ms =
+        ntp_time_ms_ +
+        last_packet->video_header.video_timing.pacer_exit_delta_ms;
+    timing_.network_timestamp_ms =
+        ntp_time_ms_ +
+        last_packet->video_header.video_timing.network_timestamp_delta_ms;
+    timing_.network2_timestamp_ms =
+        ntp_time_ms_ +
+        last_packet->video_header.video_timing.network2_timestamp_delta_ms;
+
+    timing_.receive_start_ms = first_packet->receive_time_ms;
+    timing_.receive_finish_ms = last_packet->receive_time_ms;
+  }
+  timing_.flags = last_packet->video_header.video_timing.flags;
 }
 
 RtpFrameObject::~RtpFrameObject() {
@@ -121,12 +159,16 @@ int64_t RtpFrameObject::RenderTime() const {
   return _renderTimeMs;
 }
 
+bool RtpFrameObject::delayed_by_retransmission() const {
+  return times_nacked() > 0;
+}
+
 rtc::Optional<RTPVideoTypeHeader> RtpFrameObject::GetCodecHeader() const {
   rtc::CritScope lock(&packet_buffer_->crit_);
   VCMPacket* packet = packet_buffer_->GetPacket(first_seq_num_);
   if (!packet)
-    return rtc::Optional<RTPVideoTypeHeader>();
-  return rtc::Optional<RTPVideoTypeHeader>(packet->video_header.codecHeader);
+    return rtc::nullopt;
+  return packet->video_header.codecHeader;
 }
 
 }  // namespace video_coding

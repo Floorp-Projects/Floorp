@@ -8,16 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_PACKET_H_
-#define WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_PACKET_H_
+#ifndef MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_PACKET_H_
+#define MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_PACKET_H_
 
 #include <list>
 #include <map>
+#include <utility>
 #include <vector>
 
-#include "webrtc/common_types.h"
-#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
+#include "common_types.h"  // NOLINT(build/include)
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 
 namespace webrtc {
 namespace testing {
@@ -108,6 +109,22 @@ class FeedbackPacket : public Packet {
   int64_t latest_send_time_ms_;  // Time stamp for the latest sent FbPacket.
 };
 
+class BbrBweFeedback : public FeedbackPacket {
+ public:
+  BbrBweFeedback(int flow_id,
+                 int64_t send_time_us,
+                 int64_t latest_send_time_ms,
+                 const std::vector<uint16_t>& packet_feedback_vector);
+  virtual ~BbrBweFeedback() {}
+
+  const std::vector<uint16_t>& packet_feedback_vector() const {
+    return packet_feedback_vector_;
+  }
+
+ private:
+  const std::vector<uint16_t> packet_feedback_vector_;
+};
+
 class RembFeedback : public FeedbackPacket {
  public:
   RembFeedback(int flow_id,
@@ -128,18 +145,19 @@ class RembFeedback : public FeedbackPacket {
 class SendSideBweFeedback : public FeedbackPacket {
  public:
   typedef std::map<uint16_t, int64_t> ArrivalTimesMap;
-  SendSideBweFeedback(int flow_id,
-                      int64_t send_time_us,
-                      int64_t latest_send_time_ms,
-                      const std::vector<PacketInfo>& packet_feedback_vector);
+  SendSideBweFeedback(
+      int flow_id,
+      int64_t send_time_us,
+      int64_t latest_send_time_ms,
+      const std::vector<PacketFeedback>& packet_feedback_vector);
   virtual ~SendSideBweFeedback() {}
 
-  const std::vector<PacketInfo>& packet_feedback_vector() const {
+  const std::vector<PacketFeedback>& packet_feedback_vector() const {
     return packet_feedback_vector_;
   }
 
  private:
-  const std::vector<PacketInfo> packet_feedback_vector_;
+  const std::vector<PacketFeedback> packet_feedback_vector_;
 };
 
 class NadaFeedback : public FeedbackPacket {
@@ -199,4 +217,4 @@ typedef std::list<Packet*>::const_iterator PacketsConstIt;
 }  // namespace bwe
 }  // namespace testing
 }  // namespace webrtc
-#endif  // WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_PACKET_H_
+#endif  // MODULES_REMOTE_BITRATE_ESTIMATOR_TEST_PACKET_H_

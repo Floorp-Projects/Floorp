@@ -8,18 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/acm2/acm_send_test.h"
+#include "modules/audio_coding/acm2/acm_send_test.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "webrtc/base/checks.h"
-#include "webrtc/modules/audio_coding/codecs/audio_encoder.h"
-#include "webrtc/modules/audio_coding/include/audio_coding_module.h"
-#include "webrtc/modules/audio_coding/neteq/tools/input_audio_file.h"
-#include "webrtc/modules/audio_coding/neteq/tools/packet.h"
-#include "webrtc/test/gtest.h"
+#include "api/audio_codecs/audio_encoder.h"
+#include "modules/audio_coding/include/audio_coding_module.h"
+#include "modules/audio_coding/neteq/tools/input_audio_file.h"
+#include "modules/audio_coding/neteq/tools/packet.h"
+#include "rtc_base/checks.h"
+#include "test/gtest.h"
 
 namespace webrtc {
 namespace test {
@@ -28,7 +28,7 @@ AcmSendTestOldApi::AcmSendTestOldApi(InputAudioFile* audio_source,
                                      int source_rate_hz,
                                      int test_duration_ms)
     : clock_(0),
-      acm_(webrtc::AudioCodingModule::Create(0, &clock_)),
+      acm_(webrtc::AudioCodingModule::Create(&clock_)),
       audio_source_(audio_source),
       source_rate_hz_(source_rate_hz),
       input_block_size_samples_(
@@ -86,13 +86,13 @@ std::unique_ptr<Packet> AcmSendTestOldApi::NextPacket() {
   // Insert audio and process until one packet is produced.
   while (clock_.TimeInMilliseconds() < test_duration_ms_) {
     clock_.AdvanceTimeMilliseconds(kBlockSizeMs);
-    RTC_CHECK(
-        audio_source_->Read(input_block_size_samples_, input_frame_.data_));
+    RTC_CHECK(audio_source_->Read(input_block_size_samples_,
+                                  input_frame_.mutable_data()));
     if (input_frame_.num_channels_ > 1) {
-      InputAudioFile::DuplicateInterleaved(input_frame_.data_,
+      InputAudioFile::DuplicateInterleaved(input_frame_.data(),
                                            input_block_size_samples_,
                                            input_frame_.num_channels_,
-                                           input_frame_.data_);
+                                           input_frame_.mutable_data());
     }
     data_to_send_ = false;
     RTC_CHECK_GE(acm_->Add10MsData(input_frame_), 0);

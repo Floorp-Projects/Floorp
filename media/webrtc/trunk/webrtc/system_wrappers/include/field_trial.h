@@ -8,8 +8,8 @@
 // be found in the AUTHORS file in the root of the source tree.
 //
 
-#ifndef WEBRTC_SYSTEM_WRAPPERS_INCLUDE_FIELD_TRIAL_H_
-#define WEBRTC_SYSTEM_WRAPPERS_INCLUDE_FIELD_TRIAL_H_
+#ifndef SYSTEM_WRAPPERS_INCLUDE_FIELD_TRIAL_H_
+#define SYSTEM_WRAPPERS_INCLUDE_FIELD_TRIAL_H_
 
 #include <string>
 
@@ -62,7 +62,14 @@ namespace field_trial {
 // Note: To keep things tidy append all the trial names with WebRTC.
 std::string FindFullName(const std::string& name);
 
+// Convenience method, returns true iff FindFullName(name) return a string that
+// starts with "Enabled".
+// TODO(tommi): Make sure all implementations support this.
+inline bool IsEnabled(const char* name) {
+  return FindFullName(name).find("Enabled") == 0;
+}
+
 }  // namespace field_trial
 }  // namespace webrtc
 
-#endif  // WEBRTC_SYSTEM_WRAPPERS_INCLUDE_FIELD_TRIAL_H_
+#endif  // SYSTEM_WRAPPERS_INCLUDE_FIELD_TRIAL_H_

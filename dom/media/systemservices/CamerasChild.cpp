@@ -379,9 +379,7 @@ CamerasChild::RecvReplyGetCaptureCapability(const VideoCaptureCapability& ipcCap
   mReplyCapability.width = ipcCapability.width();
   mReplyCapability.height = ipcCapability.height();
   mReplyCapability.maxFPS = ipcCapability.maxFPS();
-  mReplyCapability.expectedCaptureDelay = ipcCapability.expectedCaptureDelay();
-  mReplyCapability.rawType = static_cast<webrtc::RawVideoType>(ipcCapability.rawType());
-  mReplyCapability.codecType = static_cast<webrtc::VideoCodecType>(ipcCapability.codecType());
+  mReplyCapability.videoType = static_cast<webrtc::VideoType>(ipcCapability.videoType());
   mReplyCapability.interlaced = ipcCapability.interlaced();
   monitor.Notify();
   return IPC_OK();
@@ -521,12 +519,10 @@ CamerasChild::StartCapture(CaptureEngine aCapEngine,
   LOG((__PRETTY_FUNCTION__));
   AddCallback(aCapEngine, capture_id, cb);
   VideoCaptureCapability capCap(webrtcCaps.width,
-                           webrtcCaps.height,
-                           webrtcCaps.maxFPS,
-                           webrtcCaps.expectedCaptureDelay,
-                           webrtcCaps.rawType,
-                           webrtcCaps.codecType,
-                           webrtcCaps.interlaced);
+                                webrtcCaps.height,
+                                webrtcCaps.maxFPS,
+                                static_cast<int>(webrtcCaps.videoType),
+                                webrtcCaps.interlaced);
   nsCOMPtr<nsIRunnable> runnable = mozilla::
     NewRunnableMethod<CaptureEngine, int, VideoCaptureCapability>(
       "camera::PCamerasChild::SendStartCapture",

@@ -8,18 +8,20 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
+#include "modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
 
 #include <limits>
 #include <memory>
 
-#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
-#include "webrtc/test/gtest.h"
-
-using webrtc::rtcp::TransportFeedback;
+#include "modules/rtp_rtcp/source/byte_io.h"
+#include "test/gmock.h"
+#include "test/gtest.h"
 
 namespace webrtc {
 namespace {
+
+using ::testing::ElementsAreArray;
+using rtcp::TransportFeedback;
 
 static const int kHeaderSize = 20;
 static const int kStatusChunkSize = 2;
@@ -94,31 +96,14 @@ class FeedbackTester {
       EXPECT_EQ(expected_size_bytes, serialized_.size());
     }
 
-    std::vector<TransportFeedback::StatusSymbol> symbols =
-        feedback_->GetStatusVector();
-    uint16_t seq = feedback_->GetBaseSequence();
-    auto seq_it = expected_seq_.begin();
-    for (TransportFeedback::StatusSymbol symbol : symbols) {
-      bool received =
-          (symbol == TransportFeedback::StatusSymbol::kReceivedSmallDelta ||
-           symbol == TransportFeedback::StatusSymbol::kReceivedLargeDelta);
-      if (seq_it != expected_seq_.end()) {
-        if (seq == *seq_it) {
-          ASSERT_NE(expected_seq_.end(), seq_it);
-          ASSERT_TRUE(received) << "Expected received packet @ " << seq;
-          ++seq_it;
-        } else {
-          ASSERT_FALSE(received) << "Did not expect received packet @ " << seq;
-        }
-      }
-      ++seq;
+    std::vector<uint16_t> actual_seq_nos;
+    std::vector<int64_t> actual_deltas_us;
+    for (const auto& packet : feedback_->GetReceivedPackets()) {
+      actual_seq_nos.push_back(packet.sequence_number());
+      actual_deltas_us.push_back(packet.delta_us());
     }
-    ASSERT_EQ(expected_seq_.end(), seq_it);
-
-    std::vector<int64_t> deltas = feedback_->GetReceiveDeltasUs();
-    ASSERT_EQ(expected_deltas_.size(), deltas.size());
-    for (size_t i = 0; i < expected_deltas_.size(); ++i)
-      EXPECT_EQ(expected_deltas_[i], deltas[i]) << "Delta mismatch @ " << i;
+    EXPECT_THAT(actual_seq_nos, ElementsAreArray(expected_seq_));
+    EXPECT_THAT(actual_deltas_us, ElementsAreArray(expected_deltas_));
   }
 
   void GenerateDeltas(const uint16_t seq[],
@@ -344,12 +329,11 @@ TEST(RtcpPacketTest, TransportFeedback_Aliasing) {
     feedback.AddReceivedPacket(i, i * kTooSmallDelta);
 
   feedback.Build();
-  std::vector<int64_t> deltas = feedback.GetReceiveDeltasUs();
 
   int64_t accumulated_delta = 0;
   int num_samples = 0;
-  for (int64_t delta : deltas) {
-    accumulated_delta += delta;
+  for (const auto& packet : feedback.GetReceivedPackets()) {
+    accumulated_delta += packet.delta_us();
     int64_t expected_time = num_samples * kTooSmallDelta;
     ++num_samples;
 

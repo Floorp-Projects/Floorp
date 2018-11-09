@@ -81,7 +81,7 @@ NS_IMPL_ISUPPORTS0(TransceiverImpl)
 void
 TransceiverImpl::InitAudio()
 {
-  mConduit = AudioSessionConduit::Create();
+  mConduit = AudioSessionConduit::Create(mCallWrapper, mStsThread);
 
   if (!mConduit) {
     MOZ_MTLOG(ML_ERROR, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<
@@ -287,6 +287,12 @@ TransceiverImpl::UpdatePrincipal(nsIPrincipal* aPrincipal)
   return NS_OK;
 }
 
+void
+TransceiverImpl::ResetSync()
+{
+  mConduit->SetSyncGroup("");
+}
+
 nsresult
 TransceiverImpl::SyncWithMatchingVideoConduits(
     std::vector<RefPtr<TransceiverImpl>>& transceivers)
@@ -319,15 +325,18 @@ TransceiverImpl::SyncWithMatchingVideoConduits(
          transceiver->mJsepTransceiver->mRecvTrack.GetStreamIds()) {
       if (myReceiveStreamIds.count(streamId)) {
         // Ok, we have one video, one non-video - cross the streams!
-        WebrtcAudioConduit *audio_conduit =
-          static_cast<WebrtcAudioConduit*>(mConduit.get());
-        WebrtcVideoConduit *video_conduit =
-          static_cast<WebrtcVideoConduit*>(transceiver->mConduit.get());
+        mConduit->SetSyncGroup(streamId);
+        transceiver->mConduit->SetSyncGroup(streamId);
 
-        video_conduit->SyncTo(audio_conduit);
         MOZ_MTLOG(ML_DEBUG, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<
-                            " Syncing " << video_conduit << " to "
-                            << audio_conduit);
+                            " Syncing " << mConduit.get() << " to "
+                            << transceiver->mConduit.get());
+
+        // The sync code in call.cc only permits sync between audio stream and
+        // one video stream. They take the first match, so there's no point in
+        // continuing here. If we want to change the default, we should sort
+        // video streams here and only call SetSyncGroup on the chosen stream.
+        break;
       }
     }
   }
@@ -711,6 +720,13 @@ TransceiverImpl::UpdateAudioConduit()
   RefPtr<AudioSessionConduit> conduit = static_cast<AudioSessionConduit*>(
       mConduit.get());
 
+  if (!mJsepTransceiver->mRecvTrack.GetSsrcs().empty()) {
+    MOZ_MTLOG(ML_DEBUG, mPCHandle << "[" << mMid << "]: " << __FUNCTION__ <<
+              " Setting remote SSRC " <<
+              mJsepTransceiver->mRecvTrack.GetSsrcs().front());
+    conduit->SetRemoteSSRC(mJsepTransceiver->mRecvTrack.GetSsrcs().front());
+  }
+
   if (mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() &&
       mJsepTransceiver->mRecvTrack.GetActive()) {
     const auto& details(*mJsepTransceiver->mRecvTrack.GetNegotiatedDetails());
@@ -724,6 +740,9 @@ TransceiverImpl::UpdateAudioConduit()
       return rv;
     }
 
+    // Ensure conduit knows about extensions prior to creating streams
+    UpdateConduitRtpExtmap(details, LocalDirection::kRecv);
+
     auto error = conduit->ConfigureRecvMediaCodecs(configs);
 
     if (error) {
@@ -731,7 +750,6 @@ TransceiverImpl::UpdateAudioConduit()
                           " ConfigureRecvMediaCodecs failed: " << error);
       return NS_ERROR_FAILURE;
     }
-    UpdateConduitRtpExtmap(details, LocalDirection::kRecv);
   }
 
   if (mJsepTransceiver->mSendTrack.GetNegotiatedDetails() &&

@@ -8,17 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/common_audio/wav_file.h"
+#include "common_audio/wav_file.h"
 
 #include <algorithm>
 #include <cstdio>
 #include <limits>
 #include <sstream>
 
-#include "webrtc/base/checks.h"
-#include "webrtc/base/safe_conversions.h"
-#include "webrtc/common_audio/include/audio_util.h"
-#include "webrtc/common_audio/wav_header.h"
+#include "common_audio/include/audio_util.h"
+#include "common_audio/wav_header.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/numerics/safe_conversions.h"
 
 namespace webrtc {
 
@@ -110,7 +110,7 @@ size_t WavReader::ReadSamples(size_t num_samples, float* samples) {
 
 void WavReader::Close() {
   RTC_CHECK_EQ(0, fclose(file_handle_));
-  file_handle_ = NULL;
+  file_handle_ = nullptr;
 }
 
 WavWriter::WavWriter(const std::string& filename, int sample_rate,
@@ -187,7 +187,7 @@ void WavWriter::Close() {
                  kBytesPerSample, num_samples_);
   RTC_CHECK_EQ(1, fwrite(header, kWavHeaderSize, 1, file_handle_));
   RTC_CHECK_EQ(0, fclose(file_handle_));
-  file_handle_ = NULL;
+  file_handle_ = nullptr;
 }
 
 }  // namespace webrtc

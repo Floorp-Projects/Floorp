@@ -6,7 +6,7 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
-import("../build/webrtc.gni")
+import("../webrtc.gni")
 
 rtc_static_library("video") {
   sources = [
@@ -24,10 +24,10 @@ rtc_static_library("video") {
     "receive_statistics_proxy.h",
     "report_block_stats.cc",
     "report_block_stats.h",
-    "rtp_stream_receiver.cc",
-    "rtp_stream_receiver.h",
     "rtp_streams_synchronizer.cc",
     "rtp_streams_synchronizer.h",
+    "rtp_video_stream_receiver.cc",
+    "rtp_video_stream_receiver.h",
     "send_delay_stats.cc",
     "send_delay_stats.h",
     "send_statistics_proxy.cc",
@@ -44,10 +44,8 @@ rtc_static_library("video") {
     "video_send_stream.h",
     "video_stream_decoder.cc",
     "video_stream_decoder.h",
-    "vie_encoder.cc",
-    "vie_encoder.h",
-    "vie_remb.cc",
-    "vie_remb.h",
+    "video_stream_encoder.cc",
+    "video_stream_encoder.h",
   ]
 
   if (!build_with_chromium && is_clang) {
@@ -57,12 +55,20 @@ rtc_static_library("video") {
 
   deps = [
     "..:webrtc_common",
+    "../api:optional",
     "../api:transport_api",
-    "../base:rtc_base_approved",
-    "../base:rtc_numerics",
-    "../base:rtc_task_queue",
+    "../api:video_frame_api_i420",
+    "../api/video_codecs:video_codecs_api",
+    "../call:bitrate_allocator",
+    "../call:call_interfaces",
+    "../call:rtp_interfaces",
+    "../call:video_stream_api",
+
+    # For RtxReceiveStream.
+    "../call:rtp_receiver",
     "../common_video",
     "../logging:rtc_event_log_api",
+    "../modules:module_api",
     "../modules/bitrate_controller",
     "../modules/congestion_controller",
     "../modules/pacing",
@@ -70,54 +76,78 @@ rtc_static_library("video") {
     "../modules/rtp_rtcp",
     "../modules/utility",
     "../modules/video_coding",
+    "../modules/video_coding:video_coding_utility",
+    "../modules/video_coding:webrtc_vp8",
     "../modules/video_processing",
+    "../rtc_base:rtc_base_approved",
+    "../rtc_base:rtc_numerics",
+    "../rtc_base:rtc_task_queue",
+    "../rtc_base:sequenced_task_checker",
+    "../rtc_base:weak_ptr",
     "../system_wrappers",
     "../voice_engine",
   ]
 
   if (!build_with_mozilla) {
-    deps += [
-      "../media:rtc_media_base",
-    ]
+    deps += [ "../media:rtc_media_base" ]
   }
 }
 
 if (rtc_include_tests) {
   rtc_source_set("video_quality_test") {
     testonly = true
+    visibility = [ ":*" ]  # Only targets in this file can depend on this.
     sources = [
       "video_quality_test.cc",
       "video_quality_test.h",
     ]
     deps = [
-      "../base:rtc_task_queue",
+      "../api:optional",
+      "../call:call_interfaces",
+      "../common_video",
+      "../logging:rtc_event_log_api",
+      "../media:rtc_media",
+      "../media:rtc_media_base",
+      "../modules/audio_mixer:audio_mixer_impl",
+      "../modules/rtp_rtcp",
+      "../modules/video_coding:webrtc_h264",
+      "../modules/video_coding:webrtc_vp8",
+      "../modules/video_coding:webrtc_vp9",
+      "../rtc_base:rtc_base_approved",
+      "../rtc_base:rtc_base_tests_utils",
+      "../rtc_base:rtc_task_queue",
       "../system_wrappers",
+      "../test:rtp_test_utils",
+      "../test:test_common",
+      "../test:test_renderer",
+      "../test:test_renderer",
+      "../test:test_support",
+      "../test:test_support_test_artifacts",
+      "../test:video_test_common",
+      "../test:video_test_common",
+      "../test:video_test_support",
+      "../voice_engine",
       "//testing/gtest",
-      "//webrtc/test:test_renderer",
     ]
-    if (!is_android) {
-      deps += [ "../modules/video_capture:video_capture_internal_impl" ]
-    }
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
       suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
-    }
-    if (!build_with_mozilla) {
-      deps += [
-        "../media:rtc_media_base",
-      ]
     }
   }
 
   rtc_source_set("video_full_stack_tests") {
     testonly = true
+
     sources = [
       "full_stack_tests.cc",
     ]
     deps = [
       ":video_quality_test",
+      "../modules/pacing:pacing",
+      "../test:field_trial",
+      "../test:test_common",
+      "../test:test_support",
       "//testing/gtest",
-      "//webrtc/test:test_common",
     ]
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
@@ -135,14 +165,16 @@ if (rtc_include_tests) {
     ]
     deps = [
       ":video_quality_test",
+      "../rtc_base:rtc_base_approved",
       "../system_wrappers:metrics_default",
       "../test:field_trial",
       "../test:run_test",
+      "../test:run_test_interface",
       "../test:test_common",
       "../test:test_renderer",
+      "../test:test_support",
       "//testing/gmock",
       "//testing/gtest",
-      "//third_party/gflags",
     ]
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
@@ -158,12 +190,14 @@ if (rtc_include_tests) {
 
     deps = [
       ":video_quality_test",
+      "../rtc_base:rtc_base_approved",
       "../system_wrappers:metrics_default",
       "../test:field_trial",
       "../test:run_test",
+      "../test:run_test_interface",
       "../test:test_common",
       "../test:test_renderer",
-      "//third_party/gflags",
+      "../test:test_support",
     ]
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from Chrome's Clang plugins.
@@ -178,16 +212,25 @@ if (rtc_include_tests) {
       "replay.cc",
     ]
     deps = [
+      "..:webrtc_common",
+      "../api/video_codecs:video_codecs_api",
+      "../call:call_interfaces",
+      "../common_video",
+      "../logging:rtc_event_log_api",
+      "../modules/rtp_rtcp",
+      "../rtc_base:rtc_base_approved",
+      "../system_wrappers",
       "../system_wrappers:metrics_default",
       "../test:field_trial",
+      "../test:rtp_test_utils",
       "../test:run_test",
+      "../test:run_test_interface",
       "../test:test_common",
       "../test:test_renderer",
-      "//third_party/gflags",
+      "../test:test_support",
+      "../test:video_test_common",
+      "../test:video_test_support",
     ]
-    if (!is_android) {
-      deps += [ "../modules/video_capture:video_capture_internal_impl" ]
-    }
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
       suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
@@ -197,6 +240,7 @@ if (rtc_include_tests) {
   # TODO(pbos): Rename test suite.
   rtc_source_set("video_tests") {
     testonly = true
+
     defines = []
     sources = [
       "call_stats_unittest.cc",
@@ -204,19 +248,58 @@ if (rtc_include_tests) {
       "end_to_end_tests.cc",
       "overuse_frame_detector_unittest.cc",
       "payload_router_unittest.cc",
+      "picture_id_tests.cc",
       "quality_threshold_unittest.cc",
       "receive_statistics_proxy_unittest.cc",
       "report_block_stats_unittest.cc",
+      "rtp_video_stream_receiver_unittest.cc",
       "send_delay_stats_unittest.cc",
       "send_statistics_proxy_unittest.cc",
       "stats_counter_unittest.cc",
       "stream_synchronization_unittest.cc",
+      "video_receive_stream_unittest.cc",
       "video_send_stream_tests.cc",
-      "vie_encoder_unittest.cc",
-      "vie_remb_unittest.cc",
+      "video_stream_encoder_unittest.cc",
     ]
     deps = [
       ":video",
+      "../api:optional",
+      "../api:video_frame_api",
+      "../api:video_frame_api_i420",
+      "../api/video_codecs:video_codecs_api",
+      "../call:call_interfaces",
+      "../call:mock_rtp_interfaces",
+      "../call:rtp_receiver",
+      "../call:rtp_sender",
+      "../call:video_stream_api",
+      "../common_video",
+      "../logging:rtc_event_log_api",
+      "../media:rtc_media",
+      "../media:rtc_media_base",
+      "../media:rtc_media_tests_utils",
+      "../modules:module_api",
+      "../modules/pacing",
+      "../modules/rtp_rtcp",
+      "../modules/rtp_rtcp:mock_rtp_rtcp",
+      "../modules/utility",
+      "../modules/video_coding",
+      "../modules/video_coding:video_coding_utility",
+      "../modules/video_coding:webrtc_h264",
+      "../modules/video_coding:webrtc_vp8",
+      "../modules/video_coding:webrtc_vp9",
+      "../rtc_base:rtc_base_approved",
+      "../rtc_base:rtc_base_tests_utils",
+      "../rtc_base:rtc_numerics",
+      "../system_wrappers",
+      "../system_wrappers:field_trial_default",
+      "../system_wrappers:metrics_api",
+      "../system_wrappers:metrics_default",
+      "../test:direct_transport",
+      "../test:field_trial",
+      "../test:rtp_test_utils",
+      "../test:test_common",
+      "../test:test_support",
+      "../test:video_test_common",
       "//testing/gmock",
       "//testing/gtest",
     ]
@@ -228,9 +311,7 @@ if (rtc_include_tests) {
       defines += [ "WEBRTC_USE_H264" ]
     }
     if (!build_with_mozilla) {
-      deps += [
-        "../media:rtc_media_base",
-      ]
+      deps += [ "../media:rtc_media_base" ]
     }
   }
 }

@@ -8,17 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_AUDIO_NETWORK_ADAPTOR_IMPL_H_
-#define WEBRTC_MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_AUDIO_NETWORK_ADAPTOR_IMPL_H_
+#ifndef MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_AUDIO_NETWORK_ADAPTOR_IMPL_H_
+#define MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_AUDIO_NETWORK_ADAPTOR_IMPL_H_
 
 #include <memory>
 
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/modules/audio_coding/audio_network_adaptor/controller.h"
-#include "webrtc/modules/audio_coding/audio_network_adaptor/controller_manager.h"
-#include "webrtc/modules/audio_coding/audio_network_adaptor/debug_dump_writer.h"
-#include "webrtc/modules/audio_coding/audio_network_adaptor/include/audio_network_adaptor.h"
-#include "webrtc/system_wrappers/include/clock.h"
+#include "modules/audio_coding/audio_network_adaptor/controller.h"
+#include "modules/audio_coding/audio_network_adaptor/controller_manager.h"
+#include "modules/audio_coding/audio_network_adaptor/debug_dump_writer.h"
+#include "modules/audio_coding/audio_network_adaptor/event_log_writer.h"
+#include "modules/audio_coding/audio_network_adaptor/include/audio_network_adaptor.h"
+#include "rtc_base/constructormagic.h"
 
 namespace webrtc {
 
@@ -30,7 +30,6 @@ class AudioNetworkAdaptorImpl final : public AudioNetworkAdaptor {
     Config();
     ~Config();
     RtcEventLog* event_log;
-    const Clock* clock;
   };
 
   AudioNetworkAdaptorImpl(
@@ -44,20 +43,27 @@ class AudioNetworkAdaptorImpl final : public AudioNetworkAdaptor {
 
   void SetUplinkPacketLossFraction(float uplink_packet_loss_fraction) override;
 
+  void SetUplinkRecoverablePacketLossFraction(
+      float uplink_recoverable_packet_loss_fraction) override;
+
   void SetRtt(int rtt_ms) override;
 
   void SetTargetAudioBitrate(int target_audio_bitrate_bps) override;
 
   void SetOverhead(size_t overhead_bytes_per_packet) override;
 
-  EncoderRuntimeConfig GetEncoderRuntimeConfig() override;
+  AudioEncoderRuntimeConfig GetEncoderRuntimeConfig() override;
 
   void StartDebugDump(FILE* file_handle) override;
 
   void StopDebugDump() override;
 
+  ANAStats GetStats() const override;
+
  private:
   void DumpNetworkMetrics();
+
+  void UpdateNetworkMetrics(const Controller::NetworkMetrics& network_metrics);
 
   const Config config_;
 
@@ -65,11 +71,23 @@ class AudioNetworkAdaptorImpl final : public AudioNetworkAdaptor {
 
   std::unique_ptr<DebugDumpWriter> debug_dump_writer_;
 
+  const std::unique_ptr<EventLogWriter> event_log_writer_;
+
   Controller::NetworkMetrics last_metrics_;
+
+  rtc::Optional<AudioEncoderRuntimeConfig> prev_config_;
+
+  ANAStats stats_;
+
+  const bool enable_bitrate_adaptation_;
+  const bool enable_dtx_adaptation_;
+  const bool enable_fec_adaptation_;
+  const bool enable_channel_adaptation_;
+  const bool enable_frame_length_adaptation_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(AudioNetworkAdaptorImpl);
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_AUDIO_NETWORK_ADAPTOR_IMPL_H_
+#endif  // MODULES_AUDIO_CODING_AUDIO_NETWORK_ADAPTOR_AUDIO_NETWORK_ADAPTOR_IMPL_H_

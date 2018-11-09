@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/congestion_controller/median_slope_estimator.h"
+#include "modules/congestion_controller/median_slope_estimator.h"
 
 #include <algorithm>
 #include <vector>
 
-#include "webrtc/base/logging.h"
-#include "webrtc/modules/remote_bitrate_estimator/include/bwe_defines.h"
-#include "webrtc/modules/remote_bitrate_estimator/test/bwe_test_logging.h"
+#include "modules/remote_bitrate_estimator/include/bwe_defines.h"
+#include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
 
@@ -32,6 +32,15 @@ MedianSlopeEstimator::MedianSlopeEstimator(size_t window_size,
       trendline_(0) {}
 
 MedianSlopeEstimator::~MedianSlopeEstimator() {}
+
+MedianSlopeEstimator::DelayInfo::DelayInfo(int64_t time,
+                                           double delay,
+                                           size_t slope_count)
+    : time(time), delay(delay) {
+  slopes.reserve(slope_count);
+}
+
+MedianSlopeEstimator::DelayInfo::~DelayInfo() = default;
 
 void MedianSlopeEstimator::Update(double recv_delta_ms,
                                   double send_delta_ms,

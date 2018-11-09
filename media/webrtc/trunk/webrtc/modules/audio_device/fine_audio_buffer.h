@@ -8,12 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_DEVICE_FINE_AUDIO_BUFFER_H_
-#define WEBRTC_MODULES_AUDIO_DEVICE_FINE_AUDIO_BUFFER_H_
+#ifndef MODULES_AUDIO_DEVICE_FINE_AUDIO_BUFFER_H_
+#define MODULES_AUDIO_DEVICE_FINE_AUDIO_BUFFER_H_
 
 #include <memory>
 
-#include "webrtc/typedefs.h"
+#include "api/array_view.h"
+#include "rtc_base/buffer.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
@@ -27,45 +29,38 @@ class AudioDeviceBuffer;
 // in 10ms chunks when the size of the provided audio buffers differs from 10ms.
 // As an example: calling DeliverRecordedData() with 5ms buffers will deliver
 // accumulated 10ms worth of data to the ADB every second call.
+// TODO(henrika): add support for stereo when mobile platforms need it.
 class FineAudioBuffer {
  public:
   // |device_buffer| is a buffer that provides 10ms of audio data.
-  // |desired_frame_size_bytes| is the number of bytes of audio data
-  // GetPlayoutData() should return on success. It is also the required size of
-  // each recorded buffer used in DeliverRecordedData() calls.
   // |sample_rate| is the sample rate of the audio data. This is needed because
   // |device_buffer| delivers 10ms of data. Given the sample rate the number
-  // of samples can be calculated.
+  // of samples can be calculated. The |capacity| ensures that the buffer size
+  // can be increased to at least capacity without further reallocation.
   FineAudioBuffer(AudioDeviceBuffer* device_buffer,
-                  size_t desired_frame_size_bytes,
-                  int sample_rate);
+                  int sample_rate,
+                  size_t capacity);
   ~FineAudioBuffer();
-
-  // Returns the required size of |buffer| when calling GetPlayoutData(). If
-  // the buffer is smaller memory trampling will happen.
-  size_t RequiredPlayoutBufferSizeBytes();
 
   // Clears buffers and counters dealing with playour and/or recording.
   void ResetPlayout();
   void ResetRecord();
 
-  // |buffer| must be of equal or greater size than what is returned by
-  // RequiredBufferSize(). This is to avoid unnecessary memcpy.
-  void GetPlayoutData(int8_t* buffer);
+  // Copies audio samples into |audio_buffer| where number of requested
+  // elements is specified by |audio_buffer.size()|. The producer will always
+  // fill up the audio buffer and if no audio exists, the buffer will contain
+  // silence instead.
+  void GetPlayoutData(rtc::ArrayView<int8_t> audio_buffer);
 
-  // Consumes the audio data in |buffer| and sends it to the WebRTC layer in
-  // chunks of 10ms. The provided delay estimates in |playout_delay_ms| and
+  // Consumes the audio data in |audio_buffer| and sends it to the WebRTC layer
+  // in chunks of 10ms. The provided delay estimates in |playout_delay_ms| and
   // |record_delay_ms| are given to the AEC in the audio processing module.
   // They can be fixed values on most platforms and they are ignored if an
   // external (hardware/built-in) AEC is used.
-  // The size of |buffer| is given by |size_in_bytes| and must be equal to
-  // |desired_frame_size_bytes_|. A RTC_CHECK will be hit if this is not the
-  // case.
   // Example: buffer size is 5ms => call #1 stores 5ms of data, call #2 stores
   // 5ms of data and sends a total of 10ms to WebRTC and clears the intenal
   // cache. Call #3 restarts the scheme above.
-  void DeliverRecordedData(const int8_t* buffer,
-                           size_t size_in_bytes,
+  void DeliverRecordedData(rtc::ArrayView<const int8_t> audio_buffer,
                            int playout_delay_ms,
                            int record_delay_ms);
 
@@ -77,33 +72,20 @@ class FineAudioBuffer {
   // class and the owner must ensure that the pointer is valid during the life-
   // time of this object.
   AudioDeviceBuffer* const device_buffer_;
-  // Number of bytes delivered by GetPlayoutData() call and provided to
-  // DeliverRecordedData().
-  const size_t desired_frame_size_bytes_;
   // Sample rate in Hertz.
   const int sample_rate_;
   // Number of audio samples per 10ms.
   const size_t samples_per_10_ms_;
   // Number of audio bytes per 10ms.
   const size_t bytes_per_10_ms_;
-  // Storage for output samples that are not yet asked for.
-  std::unique_ptr<int8_t[]> playout_cache_buffer_;
-  // Location of first unread output sample.
-  size_t playout_cached_buffer_start_;
-  // Number of bytes stored in output (contain samples to be played out) cache.
-  size_t playout_cached_bytes_;
+  // Storage for output samples from which a consumer can read audio buffers
+  // in any size using GetPlayoutData().
+  rtc::BufferT<int8_t> playout_buffer_;
   // Storage for input samples that are about to be delivered to the WebRTC
   // ADB or remains from the last successful delivery of a 10ms audio buffer.
-  std::unique_ptr<int8_t[]> record_cache_buffer_;
-  // Required (max) size in bytes of the |record_cache_buffer_|.
-  const size_t required_record_buffer_size_bytes_;
-  // Number of bytes in input (contains recorded samples) cache.
-  size_t record_cached_bytes_;
-  // Read and write pointers used in the buffering scheme on the recording side.
-  size_t record_read_pos_;
-  size_t record_write_pos_;
+  rtc::BufferT<int8_t> record_buffer_;
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_AUDIO_DEVICE_FINE_AUDIO_BUFFER_H_
+#endif  // MODULES_AUDIO_DEVICE_FINE_AUDIO_BUFFER_H_

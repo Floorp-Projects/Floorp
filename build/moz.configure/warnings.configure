@@ -6,7 +6,7 @@
 
 js_option('--enable-warnings-as-errors', env='MOZ_ENABLE_WARNINGS_AS_ERRORS',
           default=depends('MOZ_AUTOMATION', '--help')(lambda x, _: bool(x)),
-          help='Enable treating warnings as errors')
+          help='{Enable|Disable} treating warnings as errors')
 
 add_old_configure_assignment(
     'MOZ_ENABLE_WARNINGS_AS_ERRORS',

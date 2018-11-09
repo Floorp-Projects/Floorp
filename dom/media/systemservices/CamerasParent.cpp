@@ -625,17 +625,14 @@ CamerasParent::RecvGetCaptureCapability(const CaptureEngine& aCapEngine,
           VideoCaptureCapability capCap(webrtcCaps.width,
                                    webrtcCaps.height,
                                    webrtcCaps.maxFPS,
-                                   webrtcCaps.expectedCaptureDelay,
-                                   webrtcCaps.rawType,
-                                   webrtcCaps.codecType,
+                                   static_cast<int>(webrtcCaps.videoType),
                                    webrtcCaps.interlaced);
-          LOG(("Capability: %u %u %u %u %d %d",
+          LOG(("Capability: %u %u %u %d %d",
                webrtcCaps.width,
                webrtcCaps.height,
                webrtcCaps.maxFPS,
-               webrtcCaps.expectedCaptureDelay,
-               webrtcCaps.rawType,
-               webrtcCaps.codecType));
+               static_cast<int>(webrtcCaps.videoType),
+               webrtcCaps.interlaced));
           if (error) {
             Unused << self->SendReplyFailure();
             return NS_ERROR_FAILURE;
@@ -882,9 +879,7 @@ CamerasParent::RecvStartCapture(const CaptureEngine& aCapEngine,
           capability.width = ipcCaps.width();
           capability.height = ipcCaps.height();
           capability.maxFPS = ipcCaps.maxFPS();
-          capability.expectedCaptureDelay = ipcCaps.expectedCaptureDelay();
-          capability.rawType = static_cast<webrtc::RawVideoType>(ipcCaps.rawType());
-          capability.codecType = static_cast<webrtc::VideoCodecType>(ipcCaps.codecType());
+          capability.videoType = static_cast<webrtc::VideoType>(ipcCaps.videoType());
           capability.interlaced = ipcCaps.interlaced();
 
           MOZ_DIAGNOSTIC_ASSERT(sDeviceUniqueIDs.find(capnum) ==
@@ -915,7 +910,7 @@ CamerasParent::RecvStartCapture(const CaptureEngine& aCapEngine,
               uint64_t minDistance = UINT64_MAX;
 
               for (auto & candidateCapability : candidateCapabilities->second) {
-                if (candidateCapability.second.rawType != capability.rawType) {
+                if (candidateCapability.second.videoType != capability.videoType) {
                   continue;
                 }
                 // The first priority is finding a suitable resolution.

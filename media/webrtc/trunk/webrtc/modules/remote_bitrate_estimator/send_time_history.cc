@@ -8,26 +8,21 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/remote_bitrate_estimator/include/send_time_history.h"
+#include "modules/remote_bitrate_estimator/include/send_time_history.h"
 
-#include "webrtc/base/checks.h"
-#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "webrtc/system_wrappers/include/clock.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "rtc_base/checks.h"
+#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 
-SendTimeHistory::SendTimeHistory(Clock* clock, int64_t packet_age_limit_ms)
+SendTimeHistory::SendTimeHistory(const Clock* clock,
+                                 int64_t packet_age_limit_ms)
     : clock_(clock), packet_age_limit_ms_(packet_age_limit_ms) {}
 
 SendTimeHistory::~SendTimeHistory() {}
 
-void SendTimeHistory::Clear() {
-  history_.clear();
-}
-
-void SendTimeHistory::AddAndRemoveOld(uint16_t sequence_number,
-                                      size_t payload_size,
-                                      int probe_cluster_id) {
+void SendTimeHistory::AddAndRemoveOld(const PacketFeedback& packet) {
   int64_t now_ms = clock_->TimeInMilliseconds();
   // Remove old.
   while (!history_.empty() &&
@@ -38,14 +33,8 @@ void SendTimeHistory::AddAndRemoveOld(uint16_t sequence_number,
   }
 
   // Add new.
-  int64_t unwrapped_seq_num = seq_num_unwrapper_.Unwrap(sequence_number);
-  int64_t creation_time_ms = now_ms;
-  constexpr int64_t kNoArrivalTimeMs = -1;  // Arrival time is ignored.
-  constexpr int64_t kNoSendTimeMs = -1;     // Send time is set by OnSentPacket.
-  history_.insert(std::make_pair(
-      unwrapped_seq_num,
-      PacketInfo(creation_time_ms, kNoArrivalTimeMs, kNoSendTimeMs,
-                 sequence_number, payload_size, probe_cluster_id)));
+  int64_t unwrapped_seq_num = seq_num_unwrapper_.Unwrap(packet.sequence_number);
+  history_.insert(std::make_pair(unwrapped_seq_num, packet));
 }
 
 bool SendTimeHistory::OnSentPacket(uint16_t sequence_number,
@@ -58,22 +47,43 @@ bool SendTimeHistory::OnSentPacket(uint16_t sequence_number,
   return true;
 }
 
-bool SendTimeHistory::GetInfo(PacketInfo* packet_info, bool remove) {
-  RTC_DCHECK(packet_info);
+bool SendTimeHistory::GetFeedback(PacketFeedback* packet_feedback,
+                                  bool remove) {
+  RTC_DCHECK(packet_feedback);
   int64_t unwrapped_seq_num =
-      seq_num_unwrapper_.Unwrap(packet_info->sequence_number);
+      seq_num_unwrapper_.Unwrap(packet_feedback->sequence_number);
+  latest_acked_seq_num_.emplace(
+      std::max(unwrapped_seq_num, latest_acked_seq_num_.value_or(0)));
+  RTC_DCHECK_GE(*latest_acked_seq_num_, 0);
   auto it = history_.find(unwrapped_seq_num);
   if (it == history_.end())
     return false;
 
   // Save arrival_time not to overwrite it.
-  int64_t arrival_time_ms = packet_info->arrival_time_ms;
-  *packet_info = it->second;
-  packet_info->arrival_time_ms = arrival_time_ms;
+  int64_t arrival_time_ms = packet_feedback->arrival_time_ms;
+  *packet_feedback = it->second;
+  packet_feedback->arrival_time_ms = arrival_time_ms;
 
   if (remove)
     history_.erase(it);
   return true;
+}
+
+size_t SendTimeHistory::GetOutstandingBytes(uint16_t local_net_id,
+                                            uint16_t remote_net_id) const {
+  size_t outstanding_bytes = 0;
+  auto unacked_it = history_.begin();
+  if (latest_acked_seq_num_) {
+    unacked_it = history_.lower_bound(*latest_acked_seq_num_);
+  }
+  for (; unacked_it != history_.end(); ++unacked_it) {
+    if (unacked_it->second.local_net_id == local_net_id &&
+        unacked_it->second.remote_net_id == remote_net_id &&
+        unacked_it->second.send_time_ms >= 0) {
+      outstanding_bytes += unacked_it->second.payload_size;
+    }
+  }
+  return outstanding_bytes;
 }
 
 }  // namespace webrtc

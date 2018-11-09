@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "webrtc/modules/desktop_capture/win/desktop_device_info_win.h"
-#include "webrtc/modules/desktop_capture/win/screen_capture_utils.h"
-#include "webrtc/modules/desktop_capture/win/win_shared.h"
+#include "modules/desktop_capture/win/desktop_device_info_win.h"
+#include "modules/desktop_capture/win/screen_capture_utils.h"
+#include "modules/desktop_capture/win/win_shared.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <VersionHelpers.h>

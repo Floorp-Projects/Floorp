@@ -8,18 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_device/android/audio_manager.h"
+#include "modules/audio_device/android/audio_manager.h"
 
 #include <utility>
 
 #include <android/log.h>
 
-#include "webrtc/base/arraysize.h"
-#include "webrtc/base/checks.h"
-#include "webrtc/modules/audio_device/android/audio_common.h"
-#include "webrtc/modules/utility/include/helpers_android.h"
-
-#include "OpenSLESProvider.h"
+#include "modules/audio_device/android/audio_common.h"
+#include "modules/utility/include/helpers_android.h"
+#include "rtc_base/arraysize.h"
+#include "rtc_base/checks.h"
 
 #define TAG "AudioManager"
 #define ALOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, TAG, __VA_ARGS__)
@@ -85,11 +83,10 @@ AudioManager::AudioManager()
   j_native_registration_ = j_environment_->RegisterNatives(
       "org/webrtc/voiceengine/WebRtcAudioManager", native_methods,
       arraysize(native_methods));
-  j_audio_manager_.reset(new JavaAudioManager(
-      j_native_registration_.get(),
-      j_native_registration_->NewObject(
-          "<init>", "(Landroid/content/Context;J)V",
-          JVM::GetInstance()->context(), PointerTojlong(this))));
+  j_audio_manager_.reset(
+      new JavaAudioManager(j_native_registration_.get(),
+                           j_native_registration_->NewObject(
+                               "<init>", "(J)V", PointerTojlong(this))));
 }
 
 AudioManager::~AudioManager() {
@@ -110,14 +107,13 @@ void AudioManager::SetActiveAudioLayer(
   // that the user explicitly selects the high-latency audio path, hence we use
   // the selected |audio_layer| here to set the delay estimate.
   delay_estimate_in_milliseconds_ =
-      (audio_layer == AudioDeviceModule::kAndroidJavaAudio) ?
-      kHighLatencyModeDelayEstimateInMilliseconds :
-      kLowLatencyModeDelayEstimateInMilliseconds;
+      (audio_layer == AudioDeviceModule::kAndroidJavaAudio)
+          ? kHighLatencyModeDelayEstimateInMilliseconds
+          : kLowLatencyModeDelayEstimateInMilliseconds;
   ALOGD("delay_estimate_in_milliseconds: %d", delay_estimate_in_milliseconds_);
 }
 
 SLObjectItf AudioManager::GetOpenSLEngine() {
-  __android_log_print(ANDROID_LOG_ERROR, "WebRTC", ">>>> Initializing SLES\n");
   ALOGD("GetOpenSLEngine%s", GetThreadInfo().c_str());
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
   // Only allow usage of OpenSL ES if such an audio layer has been specified.
@@ -138,39 +134,20 @@ SLObjectItf AudioManager::GetOpenSLEngine() {
   // Create the engine object in thread safe mode.
   const SLEngineOption option[] = {
       {SL_ENGINEOPTION_THREADSAFE, static_cast<SLuint32>(SL_BOOLEAN_TRUE)}};
-
-  SLresult result;
-#ifndef MOZILLA_INTERNAL_API
-  result = slCreateEngine_(&engine_object_, 1, option, 0, NULL, NULL);
+  SLresult result =
+      slCreateEngine(engine_object_.Receive(), 1, option, 0, NULL, NULL);
   if (result != SL_RESULT_SUCCESS) {
     ALOGE("slCreateEngine() failed: %s", GetSLErrorString(result));
     engine_object_.Reset();
     return nullptr;
   }
   // Realize the SL Engine in synchronous mode.
-  result = (*engine_object_)->Realize(engine_object_, SL_BOOLEAN_FALSE);
+  result = engine_object_->Realize(engine_object_.Get(), SL_BOOLEAN_FALSE);
   if (result != SL_RESULT_SUCCESS) {
-    ALOGE("slCreateEngine() failed: %s", GetSLErrorString(result));
+    ALOGE("Realize() failed: %s", GetSLErrorString(result));
     engine_object_.Reset();
     return nullptr;
   }
-#else
-  result = mozilla_get_sles_engine(engine_object_.Receive(), 1, option);
-  if (result != SL_RESULT_SUCCESS) {
-    ALOGE("slCreateEngine() failed: %s", GetSLErrorString(result));
-    engine_object_.Reset();
-    return nullptr;
-  }
-  result = mozilla_realize_sles_engine(engine_object_.Get());
-  if (result != SL_RESULT_SUCCESS) {
-    ALOGE("slCreateEngine() failed: %s", GetSLErrorString(result));
-    engine_object_.Reset();
-    return nullptr;
-  }
-#endif
-
-  __android_log_print(ANDROID_LOG_ERROR, "WebRTC", ">>>> Initialized SLES\n");
-
   // Finally return the SLObjectItf interface of the engine object.
   return engine_object_.Get();
 }
@@ -224,8 +201,9 @@ bool AudioManager::IsLowLatencyPlayoutSupported() const {
   ALOGD("IsLowLatencyPlayoutSupported()");
   // Some devices are blacklisted for usage of OpenSL ES even if they report
   // that low-latency playout is supported. See b/21485703 for details.
-  return j_audio_manager_->IsDeviceBlacklistedForOpenSLESUsage() ?
-      false : low_latency_playout_;
+  return j_audio_manager_->IsDeviceBlacklistedForOpenSLESUsage()
+             ? false
+             : low_latency_playout_;
 }
 
 bool AudioManager::IsLowLatencyRecordSupported() const {
@@ -241,6 +219,18 @@ bool AudioManager::IsProAudioSupported() const {
   // blacklisted or not for now. We could use the same approach as in
   // IsLowLatencyPlayoutSupported() but I can't see the need for it yet.
   return pro_audio_;
+}
+
+bool AudioManager::IsStereoPlayoutSupported() const {
+  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  ALOGD("IsStereoPlayoutSupported()");
+  return (playout_parameters_.channels() == 2);
+}
+
+bool AudioManager::IsStereoRecordSupported() const {
+  RTC_DCHECK(thread_checker_.CalledOnValidThread());
+  ALOGD("IsStereoRecordSupported()");
+  return (record_parameters_.channels() == 2);
 }
 
 int AudioManager::GetDelayEstimateInMilliseconds() const {

@@ -5,7 +5,7 @@
 # tree. An additional intellectual property rights grant can be found
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
-import("../../build/webrtc.gni")
+import("../../webrtc.gni")
 
 group("utility") {
   public_deps = [
@@ -21,8 +21,9 @@ rtc_static_library("audio_frame_operations") {
 
   deps = [
     "../..:webrtc_common",
-    "../../base:rtc_base_approved",
+    "../../modules:module_api",
     "../../modules/audio_coding:audio_format_conversion",
+    "../../rtc_base:rtc_base_approved",
   ]
 }
 
@@ -34,7 +35,8 @@ if (rtc_include_tests) {
     ]
     deps = [
       ":audio_frame_operations",
-      "../../base:rtc_base_approved",
+      "../../modules:module_api",
+      "../../rtc_base:rtc_base_approved",
       "../../test:test_support",
       "//testing/gtest",
     ]

@@ -7,9 +7,9 @@
 *  in the file PATENTS.  All contributing project authors may
 *  be found in the AUTHORS file in the root of the source tree.
 */
-#include "webrtc/modules/desktop_capture/app_capturer.h"
-#include "webrtc/modules/desktop_capture/shared_desktop_frame.h"
-#include "webrtc/modules/desktop_capture/x11/shared_x_util.h"
+#include "modules/desktop_capture/app_capturer.h"
+#include "modules/desktop_capture/shared_desktop_frame.h"
+#include "modules/desktop_capture/x11/shared_x_util.h"
 
 #include <assert.h>
 #include <string.h>
@@ -21,12 +21,12 @@
 
 #include <algorithm>
 
-#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
-#include "webrtc/modules/desktop_capture/desktop_frame.h"
-#include "webrtc/modules/desktop_capture/x11/shared_x_display.h"
-#include "webrtc/modules/desktop_capture/x11/x_error_trap.h"
-#include "webrtc/modules/desktop_capture/x11/x_server_pixel_buffer.h"
-#include "webrtc/system_wrappers/include/logging.h"
+#include "modules/desktop_capture/desktop_capture_options.h"
+#include "modules/desktop_capture/desktop_frame.h"
+#include "modules/desktop_capture/x11/shared_x_display.h"
+#include "modules/desktop_capture/x11/x_error_trap.h"
+#include "modules/desktop_capture/x11/x_server_pixel_buffer.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
 
@@ -220,7 +220,7 @@ bool AppCapturerLinux::UpdateRegions() {
     unsigned int num_children;
     int status = XQueryTree(GetDisplay(), root_window, &root_return, &parent, &children, &num_children);
     if (status == 0) {
-      LOG(LS_ERROR) << "Failed to query for child windows for screen " << screen;
+      RTC_LOG(LS_ERROR) << "Failed to query for child windows for screen " << screen;
       continue;
     }
     for (unsigned int i = 0; i < num_children; ++i) {

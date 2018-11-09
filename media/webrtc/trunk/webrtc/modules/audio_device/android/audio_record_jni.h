@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_AUDIO_RECORD_JNI_H_
-#define WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_AUDIO_RECORD_JNI_H_
+#ifndef MODULES_AUDIO_DEVICE_ANDROID_AUDIO_RECORD_JNI_H_
+#define MODULES_AUDIO_DEVICE_ANDROID_AUDIO_RECORD_JNI_H_
 
 #include <memory>
 
 #include <jni.h>
 
-#include "webrtc/base/thread_checker.h"
-#include "webrtc/modules/audio_device/android/audio_manager.h"
-#include "webrtc/modules/audio_device/include/audio_device_defines.h"
-#include "webrtc/modules/audio_device/audio_device_generic.h"
-#include "webrtc/modules/utility/include/helpers_android.h"
-#include "webrtc/modules/utility/include/jvm_android.h"
+#include "modules/audio_device/android/audio_manager.h"
+#include "modules/audio_device/audio_device_generic.h"
+#include "modules/audio_device/include/audio_device_defines.h"
+#include "modules/utility/include/helpers_android.h"
+#include "modules/utility/include/jvm_android.h"
+#include "rtc_base/thread_checker.h"
 
 namespace webrtc {
 
@@ -69,8 +69,6 @@ class AudioRecordJni {
   explicit AudioRecordJni(AudioManager* audio_manager);
   ~AudioRecordJni();
 
-  void EnsureRecordObject();
-
   int32_t Init();
   int32_t Terminate();
 
@@ -86,9 +84,6 @@ class AudioRecordJni {
   int32_t EnableBuiltInAEC(bool enable);
   int32_t EnableBuiltInAGC(bool enable);
   int32_t EnableBuiltInNS(bool enable);
-  int32_t RecordingDeviceName(uint16_t index,
-                              char name[kAdmMaxDeviceNameSize],
-                              char guid[kAdmMaxGuidSize]);
 
  private:
   // Called from Java side so we can cache the address of the Java-manged
@@ -165,4 +160,4 @@ class AudioRecordJni {
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_AUDIO_RECORD_JNI_H_
+#endif  // MODULES_AUDIO_DEVICE_ANDROID_AUDIO_RECORD_JNI_H_

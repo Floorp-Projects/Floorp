@@ -103,14 +103,13 @@ export function showErrorMessage(editor: Object, msg: string) {
 }
 
 function setEditorText(editor: Object, source: Source) {
-  const { text, id: sourceId } = source;
   if (source.isWasm) {
-    const wasmLines = renderWasmText(sourceId, (text: any));
+    const wasmLines = renderWasmText(source);
     // cm will try to split into lines anyway, saving memory
     const wasmText = { split: () => wasmLines, match: () => false };
     editor.setText(wasmText);
   } else {
-    editor.setText(text);
+    editor.setText(source.text);
   }
 }
 

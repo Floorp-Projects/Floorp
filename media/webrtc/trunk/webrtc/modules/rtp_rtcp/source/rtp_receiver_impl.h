@@ -8,16 +8,20 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_RECEIVER_IMPL_H_
-#define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_RECEIVER_IMPL_H_
+#ifndef MODULES_RTP_RTCP_SOURCE_RTP_RECEIVER_IMPL_H_
+#define MODULES_RTP_RTCP_SOURCE_RTP_RECEIVER_IMPL_H_
 
+#include <list>
 #include <memory>
+#include <unordered_map>
+#include <vector>
 
-#include "webrtc/base/criticalsection.h"
-#include "webrtc/modules/rtp_rtcp/include/rtp_receiver.h"
-#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "webrtc/modules/rtp_rtcp/source/rtp_receiver_strategy.h"
-#include "webrtc/typedefs.h"
+#include "api/optional.h"
+#include "modules/rtp_rtcp/include/rtp_receiver.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "modules/rtp_rtcp/source/rtp_receiver_strategy.h"
+#include "rtc_base/criticalsection.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
@@ -33,7 +37,8 @@ class RtpReceiverImpl : public RtpReceiver {
 
   virtual ~RtpReceiverImpl();
 
-  int32_t RegisterReceivePayload(const CodecInst& audio_codec) override;
+  int32_t RegisterReceivePayload(int payload_type,
+                                 const SdpAudioFormat& audio_format) override;
   int32_t RegisterReceivePayload(const VideoCodec& video_codec) override;
 
   int32_t DeRegisterReceivePayload(const int8_t payload_type) override;
@@ -41,12 +46,10 @@ class RtpReceiverImpl : public RtpReceiver {
   bool IncomingRtpPacket(const RTPHeader& rtp_header,
                          const uint8_t* payload,
                          size_t payload_length,
-                         PayloadUnion payload_specific,
-                         bool in_order) override;
+                         PayloadUnion payload_specific) override;
 
-  // Returns the last received timestamp.
-  bool Timestamp(uint32_t* timestamp) const override;
-  bool LastReceivedTimeMs(int64_t* receive_time_ms) const override;
+  bool GetLatestTimestamps(uint32_t* timestamp,
+                           int64_t* receive_time_ms) const override;
 
   uint32_t SSRC() const override;
 
@@ -58,9 +61,17 @@ class RtpReceiverImpl : public RtpReceiver {
 
   TelephoneEventHandler* GetTelephoneEventHandler() override;
 
- private:
-  bool HaveReceivedFrame() const;
+  std::vector<RtpSource> GetSources() const override;
 
+  const std::vector<RtpSource>& ssrc_sources_for_testing() const {
+    return ssrc_sources_;
+  }
+
+  const std::list<RtpSource>& csrc_sources_for_testing() const {
+    return csrc_sources_;
+  }
+
+ private:
   void CheckSSRCChanged(const RTPHeader& rtp_header);
   void CheckCSRC(const WebRtcRTPHeader& rtp_header);
   int32_t CheckPayloadChanged(const RTPHeader& rtp_header,
@@ -68,25 +79,39 @@ class RtpReceiverImpl : public RtpReceiver {
                               bool* is_red,
                               PayloadUnion* payload);
 
+  void UpdateSources(const rtc::Optional<uint8_t>& ssrc_audio_level);
+  void RemoveOutdatedSources(int64_t now_ms);
+
   Clock* clock_;
-  RTPPayloadRegistry* rtp_payload_registry_;
-  std::unique_ptr<RTPReceiverStrategy> rtp_media_receiver_;
-
-  RtpFeedback* cb_rtp_feedback_;
-
   rtc::CriticalSection critical_section_rtp_receiver_;
-  int64_t last_receive_time_;
-  size_t last_received_payload_length_;
+
+  RTPPayloadRegistry* const rtp_payload_registry_
+      RTC_PT_GUARDED_BY(critical_section_rtp_receiver_);
+  const std::unique_ptr<RTPReceiverStrategy> rtp_media_receiver_;
+
+  RtpFeedback* const cb_rtp_feedback_;
 
   // SSRCs.
-  uint32_t ssrc_;
-  uint8_t num_csrcs_;
-  uint32_t current_remote_csrc_[kRtpCsrcSize];
+  uint32_t ssrc_ RTC_GUARDED_BY(critical_section_rtp_receiver_);
+  uint8_t num_csrcs_ RTC_GUARDED_BY(critical_section_rtp_receiver_);
+  uint32_t current_remote_csrc_[kRtpCsrcSize] RTC_GUARDED_BY(
+      critical_section_rtp_receiver_);
 
-  uint32_t last_received_timestamp_;
-  int64_t last_received_frame_time_ms_;
-  uint16_t last_received_sequence_number_;
-  StreamId rtp_stream_id_;
+  // Sequence number and timestamps for the latest in-order packet.
+  rtc::Optional<uint16_t> last_received_sequence_number_
+      RTC_GUARDED_BY(critical_section_rtp_receiver_);
+  uint32_t last_received_timestamp_
+      RTC_GUARDED_BY(critical_section_rtp_receiver_);
+  int64_t last_received_frame_time_ms_
+      RTC_GUARDED_BY(critical_section_rtp_receiver_);
+  StreamId rtp_stream_id_
+      RTC_GUARDED_BY(critical_section_rtp_receiver_);
+
+  std::unordered_map<uint32_t, std::list<RtpSource>::iterator>
+      iterator_by_csrc_;
+  // The RtpSource objects are sorted chronologically.
+  std::list<RtpSource> csrc_sources_;
+  std::vector<RtpSource> ssrc_sources_;
 };
 }  // namespace webrtc
-#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_RECEIVER_IMPL_H_
+#endif  // MODULES_RTP_RTCP_SOURCE_RTP_RECEIVER_IMPL_H_

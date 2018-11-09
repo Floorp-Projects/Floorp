@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-package org.appspot.apprtc.test;
+package org.webrtc;
 
 import android.support.test.InstrumentationRegistry;
 import android.support.test.filters.SmallTest;
@@ -25,9 +25,9 @@ public class WebRtcJniBootTest {
   @Test
   @SmallTest
   public void testJniLoadsWithoutError() throws InterruptedException {
-    PeerConnectionFactory.initializeAndroidGlobals(InstrumentationRegistry.getTargetContext(),
-        true /* initializeAudio */, true /* initializeVideo */,
-        false /* videoCodecHwAcceleration */);
+    PeerConnectionFactory.initialize(PeerConnectionFactory.InitializationOptions
+                                         .builder(InstrumentationRegistry.getTargetContext())
+                                         .createInitializationOptions());
 
     PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
     new PeerConnectionFactory(options);

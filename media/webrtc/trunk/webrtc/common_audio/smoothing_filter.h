@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_COMMON_AUDIO_SMOOTHING_FILTER_H_
-#define WEBRTC_COMMON_AUDIO_SMOOTHING_FILTER_H_
+#ifndef COMMON_AUDIO_SMOOTHING_FILTER_H_
+#define COMMON_AUDIO_SMOOTHING_FILTER_H_
 
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/base/optional.h"
-#include "webrtc/system_wrappers/include/clock.h"
+#include "api/optional.h"
+#include "rtc_base/constructormagic.h"
+#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 
@@ -40,7 +40,7 @@ class SmoothingFilterImpl final : public SmoothingFilter {
   // earlier samples quickly. After the initialization period, the time constant
   // will be set to |init_time_ms| first and can be changed through
   // |SetTimeConstantMs|.
-  SmoothingFilterImpl(int init_time_ms, const Clock* clock);
+  explicit SmoothingFilterImpl(int init_time_ms);
   ~SmoothingFilterImpl() override;
 
   void AddSample(float sample) override;
@@ -57,7 +57,6 @@ class SmoothingFilterImpl final : public SmoothingFilter {
   const int init_time_ms_;
   const float init_factor_;
   const float init_const_;
-  const Clock* const clock_;
 
   rtc::Optional<int64_t> init_end_time_ms_;
   float last_sample_;
@@ -70,4 +69,4 @@ class SmoothingFilterImpl final : public SmoothingFilter {
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_COMMON_AUDIO_SMOOTHING_FILTER_H_
+#endif  // COMMON_AUDIO_SMOOTHING_FILTER_H_
