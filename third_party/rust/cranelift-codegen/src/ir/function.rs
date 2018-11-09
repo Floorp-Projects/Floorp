@@ -4,16 +4,17 @@
 //! instructions.
 
 use binemit::CodeOffset;
-use entity::{EntityMap, PrimaryMap};
+use entity::{PrimaryMap, SecondaryMap};
 use ir;
 use ir::{DataFlowGraph, ExternalName, Layout, Signature};
 use ir::{
     Ebb, ExtFuncData, FuncRef, GlobalValue, GlobalValueData, Heap, HeapData, JumpTable,
     JumpTableData, SigRef, StackSlot, StackSlotData, Table, TableData,
 };
-use ir::{EbbOffsets, InstEncodings, JumpTables, SourceLocs, StackSlots, ValueLocations};
-use isa::{EncInfo, Encoding, Legalize, TargetIsa};
-use settings::CallConv;
+use ir::{EbbOffsets, InstEncodings, SourceLocs, StackSlots, ValueLocations};
+use ir::{JumpTableOffsets, JumpTables};
+use isa::{CallConv, EncInfo, Encoding, Legalize, TargetIsa};
+use regalloc::RegDiversions;
 use std::fmt;
 use write::write_function;
 
@@ -64,6 +65,9 @@ pub struct Function {
     /// in the textual IR format.
     pub offsets: EbbOffsets,
 
+    /// Code offsets of Jump Table headers.
+    pub jt_offsets: JumpTableOffsets,
+
     /// Source locations.
     ///
     /// Track the original source location for each instruction. The source locations are not
@@ -84,10 +88,11 @@ impl Function {
             jump_tables: PrimaryMap::new(),
             dfg: DataFlowGraph::new(),
             layout: Layout::new(),
-            encodings: EntityMap::new(),
-            locations: EntityMap::new(),
-            offsets: EntityMap::new(),
-            srclocs: EntityMap::new(),
+            encodings: SecondaryMap::new(),
+            locations: SecondaryMap::new(),
+            offsets: SecondaryMap::new(),
+            jt_offsets: SecondaryMap::new(),
+            srclocs: SecondaryMap::new(),
         }
     }
 
@@ -115,11 +120,6 @@ impl Function {
     /// Creates a jump table in the function, to be used by `br_table` instructions.
     pub fn create_jump_table(&mut self, data: JumpTableData) -> JumpTable {
         self.jump_tables.push(data)
-    }
-
-    /// Inserts an entry in a previously declared jump table.
-    pub fn insert_jump_table_entry(&mut self, jt: JumpTable, index: usize, ebb: Ebb) {
-        self.jump_tables[jt].set_entry(index, ebb);
     }
 
     /// Creates a stack slot in the function, to be used by `stack_load`, `stack_store` and
@@ -184,6 +184,8 @@ impl Function {
         );
         InstOffsetIter {
             encinfo: encinfo.clone(),
+            func: self,
+            divert: RegDiversions::new(),
             encodings: &self.encodings,
             offset: self.offsets[ebb],
             iter: self.layout.ebb_insts(ebb),
@@ -226,6 +228,8 @@ impl fmt::Debug for Function {
 /// Iterator returning instruction offsets and sizes: `(offset, inst, size)`.
 pub struct InstOffsetIter<'a> {
     encinfo: EncInfo,
+    divert: RegDiversions,
+    func: &'a Function,
     encodings: &'a InstEncodings,
     offset: CodeOffset,
     iter: ir::layout::Insts<'a>,
@@ -236,10 +240,13 @@ impl<'a> Iterator for InstOffsetIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|inst| {
-            let size = self.encinfo.bytes(self.encodings[inst]);
+            self.divert.apply(&self.func.dfg[inst]);
+            let byte_size =
+                self.encinfo
+                    .byte_size(self.encodings[inst], inst, &self.divert, self.func);
             let offset = self.offset;
-            self.offset += size;
-            (offset, inst, size)
+            self.offset += byte_size;
+            (offset, inst, byte_size)
         })
     }
 }
