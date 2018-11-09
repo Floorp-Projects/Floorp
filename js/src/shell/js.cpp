@@ -5166,6 +5166,7 @@ Parse(JSContext* cx, unsigned argc, Value* vp)
     }
 
     bool allowSyntaxParser = true;
+    frontend::ParseGoal goal = frontend::ParseGoal::Script;
 
     if (args.length() >= 2) {
         if (!args[1].isObject()) {
@@ -5187,6 +5188,21 @@ Parse(JSContext* cx, unsigned argc, Value* vp)
             JS_ReportErrorASCII(cx, "option `allowSyntaxParser` should be a boolean, got %s", typeName);
             return false;
         }
+
+        RootedValue optionModule(cx);
+        if (!JS_GetProperty(cx, objOptions, "module", &optionModule)) {
+            return false;
+        }
+
+        if (optionModule.isBoolean()) {
+            if (optionModule.toBoolean()) {
+                goal = frontend::ParseGoal::Module;
+            }
+        } else if (!optionModule.isUndefined()) {
+            const char* typeName = InformalValueTypeName(optionModule);
+            JS_ReportErrorASCII(cx, "option `module` should be a boolean, got %s", typeName);
+            return false;
+        }
     }
 
     JSFlatString* scriptContents = args[0].toString()->ensureFlat(cx);
@@ -5206,6 +5222,11 @@ Parse(JSContext* cx, unsigned argc, Value* vp)
     options.setIntroductionType("js shell parse")
            .setFileAndLine("<string>", 1)
            .setAllowSyntaxParser(allowSyntaxParser);
+    if (goal == frontend::ParseGoal::Module) {
+        // See frontend::CompileModule.
+        options.maybeMakeStrictMode(true);
+        options.allowHTMLComments = false;
+    }
 
     UsedNameTracker usedNames(cx);
 
@@ -5217,12 +5238,29 @@ Parse(JSContext* cx, unsigned argc, Value* vp)
 
     Parser<FullParseHandler, char16_t> parser(cx, cx->tempLifoAlloc(), options, chars, length,
                                               /* foldConstants = */ false, usedNames, nullptr,
-                                              nullptr, sourceObject, ParseGoal::Script);
+                                              nullptr, sourceObject, goal);
     if (!parser.checkOptions()) {
         return false;
     }
 
-    ParseNode* pn = parser.parse(); // Deallocated once `parser` goes out of scope.
+    ParseNode* pn; // Deallocated once `parser` goes out of scope.
+    if (goal == frontend::ParseGoal::Script) {
+        pn = parser.parse();
+    } else {
+        if (!GlobalObject::ensureModulePrototypesCreated(cx, cx->global())) {
+            return false;
+        }
+
+        Rooted<ModuleObject*> module(cx, ModuleObject::create(cx));
+        if (!module) {
+            return false;
+        }
+
+        ModuleBuilder builder(cx, module, parser.anyChars);
+
+        ModuleSharedContext modulesc(cx, module, nullptr, builder);
+        pn = parser.moduleBody(&modulesc);
+    }
     if (!pn) {
         return false;
     }
