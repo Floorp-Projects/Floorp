@@ -28,18 +28,17 @@ add_task(async function() {
   // await SpecialPowers.pushPrefEnv({set: [["privacy.reduceTimerPrecision", false]]});
 
   await notifyStoragePressure();
-  let notificationbox = document.getElementById("high-priority-global-notificationbox");
-  let notification = notificationbox.getNotificationWithValue("storage-pressure-notification");
+  let notification = gHighPriorityNotificationBox.getNotificationWithValue("storage-pressure-notification");
   ok(notification instanceof XULElement, "Should display storage pressure notification");
   notification.close();
 
   await notifyStoragePressure();
-  notification = notificationbox.getNotificationWithValue("storage-pressure-notification");
+  notification = gHighPriorityNotificationBox.getNotificationWithValue("storage-pressure-notification");
   is(notification, null, "Should not display storage pressure notification more than once within the given interval");
 
   await new Promise(resolve => setTimeout(resolve, TEST_NOTIFICATION_INTERVAL_MS + 1));
   await notifyStoragePressure();
-  notification = notificationbox.getNotificationWithValue("storage-pressure-notification");
+  notification = gHighPriorityNotificationBox.getNotificationWithValue("storage-pressure-notification");
   ok(notification instanceof XULElement, "Should display storage pressure notification after the given interval");
   notification.close();
 });
@@ -53,8 +52,7 @@ add_task(async function() {
   const USAGE_THRESHOLD_BYTES = BYTES_IN_GIGABYTE *
     Services.prefs.getIntPref("browser.storageManager.pressureNotification.usageThresholdGB");
   await notifyStoragePressure(USAGE_THRESHOLD_BYTES);
-  let notificationbox = document.getElementById("high-priority-global-notificationbox");
-  let notification = notificationbox.getNotificationWithValue("storage-pressure-notification");
+  let notification = gHighPriorityNotificationBox.getNotificationWithValue("storage-pressure-notification");
   ok(notification instanceof XULElement, "Should display storage pressure notification");
 
   let prefBtn = notification.getElementsByTagName("button")[1];
@@ -76,8 +74,7 @@ add_task(async function() {
 
   await notifyStoragePressure();
   await notifyStoragePressure();
-  let notificationbox = document.getElementById("high-priority-global-notificationbox");
-  let allNotifications = notificationbox.allNotifications;
+  let allNotifications = gHighPriorityNotificationBox.allNotifications;
   let pressureNotificationCount = 0;
   allNotifications.forEach(notification => {
     if (notification.getAttribute("value") == "storage-pressure-notification") {
@@ -85,5 +82,5 @@ add_task(async function() {
     }
   });
   is(pressureNotificationCount, 1, "Should not display the 2nd notification when there is already one");
-  notificationbox.removeAllNotifications();
+  gHighPriorityNotificationBox.removeAllNotifications();
 });
