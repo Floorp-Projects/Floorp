@@ -769,7 +769,7 @@ bool ExceptionHandler::WriteMinidump() {
 }
 
 void ExceptionHandler::AddMappingInfo(const string& name,
-                                      const uint8_t identifier[sizeof(MDGUID)],
+                                      const wasteful_vector<uint8_t>& identifier,
                                       uintptr_t start_address,
                                       size_t mapping_size,
                                       size_t file_offset) {
@@ -782,7 +782,7 @@ void ExceptionHandler::AddMappingInfo(const string& name,
 
   MappingEntry mapping;
   mapping.first = info;
-  memcpy(mapping.second, identifier, sizeof(MDGUID));
+  mapping.second.assign(identifier.begin(), identifier.end());
   mapping_list_.push_back(mapping);
 }
 

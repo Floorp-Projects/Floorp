@@ -610,8 +610,9 @@ class MinidumpWriter {
          iter != mapping_list_.end();
          ++iter) {
       MDRawModule mod;
-      if (!FillRawModule(iter->first, false, 0, &mod, iter->second))
+      if (!FillRawModule(iter->first, false, 0, &mod, &iter->second)) {
         return false;
+      }
       list.CopyIndexAfterObject(j++, &mod, MD_MODULE_SIZE);
     }
 
@@ -625,7 +626,7 @@ class MinidumpWriter {
                      bool member,
                      unsigned int mapping_id,
                      MDRawModule* mod,
-                     const uint8_t* identifier) {
+                     const std::vector<uint8_t>* identifier) {
     my_memset(mod, 0, MD_MODULE_SIZE);
 
     mod->base_of_image = mapping.start_addr;
@@ -637,8 +638,8 @@ class MinidumpWriter {
     if (identifier) {
       // GUID was provided by caller.
       identifier_bytes.insert(identifier_bytes.end(),
-                              identifier,
-                              identifier + sizeof(MDGUID));
+                              identifier->begin(),
+                              identifier->end());
     } else {
       // Note: ElfFileIdentifierForMapping() can manipulate the |mapping.name|.
       dumper_->ElfFileIdentifierForMapping(mapping,

@@ -209,7 +209,7 @@ class ExceptionHandler {
   // a custom library loader is used that maps things in a way
   // that the linux dumper can't handle by reading the maps file.
   void AddMappingInfo(const string& name,
-                      const uint8_t identifier[sizeof(MDGUID)],
+                      const wasteful_vector<uint8_t>& identifier,
                       uintptr_t start_address,
                       size_t mapping_size,
                       size_t file_offset);
