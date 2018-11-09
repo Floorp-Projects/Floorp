@@ -54,6 +54,10 @@ class ReleaseParser(BaseTryParser):
     ]
     common_groups = ['push']
 
+    def __init__(self, *args, **kwargs):
+        super(ReleaseParser, self).__init__(*args, **kwargs)
+        self.set_defaults(migrations=[])
+
 
 def run_try_release(
     version, migrations, limit_locales, tasks,
