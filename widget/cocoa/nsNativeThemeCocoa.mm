@@ -3383,7 +3383,7 @@ nsNativeThemeCocoa::ComputeWidgetInfo(nsIFrame* aFrame,
       return Some(WidgetInfo::ProgressBar(
         ComputeProgressParams(aFrame, eventState, false)));
 
-    case StyleAppearance::Meterbar:
+    case StyleAppearance::Meter:
       return Some(WidgetInfo::Meter(ComputeMeterParams(aFrame)));
 
     case StyleAppearance::Progresschunk:
@@ -3889,7 +3889,7 @@ nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
     case StyleAppearance::Searchfield:
     case StyleAppearance::Progressbar:
     case StyleAppearance::ProgressbarVertical:
-    case StyleAppearance::Meterbar:
+    case StyleAppearance::Meter:
     case StyleAppearance::Treetwisty:
     case StyleAppearance::Treetwistyopen:
     case StyleAppearance::Treeheadercell:
@@ -4198,7 +4198,7 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext,
       overflow.bottom = 2;
       break;
     }
-    case StyleAppearance::Meterbar:
+    case StyleAppearance::Meter:
     {
       // Meter bars overflow their boxes by about 2 pixels.
       overflow.SizeTo(2, 2, 2, 2);
@@ -4569,7 +4569,7 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame,
     case StyleAppearance::ProgresschunkVertical:
     case StyleAppearance::Progressbar:
     case StyleAppearance::ProgressbarVertical:
-    case StyleAppearance::Meterbar:
+    case StyleAppearance::Meter:
     case StyleAppearance::Meterchunk:
     case StyleAppearance::MozMacVibrancyLight:
     case StyleAppearance::MozMacVibrancyDark:
@@ -4687,7 +4687,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case StyleAppearance::ProgressbarVertical:
     case StyleAppearance::Progresschunk:
     case StyleAppearance::ProgresschunkVertical:
-    case StyleAppearance::Meterbar:
+    case StyleAppearance::Meter:
     case StyleAppearance::Meterchunk:
     case StyleAppearance::Separator:
 
@@ -4776,7 +4776,7 @@ nsNativeThemeCocoa::WidgetIsContainer(StyleAppearance aAppearance)
    case StyleAppearance::Radio:
    case StyleAppearance::Checkbox:
    case StyleAppearance::Progressbar:
-   case StyleAppearance::Meterbar:
+   case StyleAppearance::Meter:
    case StyleAppearance::Range:
    case StyleAppearance::MozMacHelpButton:
    case StyleAppearance::MozMacDisclosureButtonOpen:

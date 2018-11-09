@@ -842,7 +842,7 @@ progress {
 }
 
 meter {
-  -moz-appearance: meterbar;
+  -moz-appearance: meter;
   display: inline-block;
   vertical-align: -0.2em;
 
