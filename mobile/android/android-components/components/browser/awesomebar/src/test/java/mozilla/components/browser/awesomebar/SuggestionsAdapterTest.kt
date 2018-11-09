@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.awesomebar
 
+import android.content.Context
 import android.widget.LinearLayout
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.support.test.any
@@ -22,6 +23,9 @@ import java.lang.IllegalArgumentException
 
 @RunWith(RobolectricTestRunner::class)
 class SuggestionsAdapterTest {
+    private val context: Context
+        get() = RuntimeEnvironment.application
+
     @Test
     fun `addSuggestions() should add suggestions of provider`() {
         val adapter = SuggestionsAdapter(mock())
@@ -123,9 +127,9 @@ class SuggestionsAdapterTest {
 
     @Test
     fun `onCreateViewHolder() will create view holder matching layout id`() {
-        val adapter = SuggestionsAdapter(mock())
+        val adapter = SuggestionsAdapter(BrowserAwesomeBar(context))
 
-        val parent = LinearLayout(RuntimeEnvironment.application)
+        val parent = LinearLayout(context)
 
         assertTrue(adapter.createViewHolder(parent, SuggestionViewHolder.DefaultSuggestionViewHolder.LAYOUT_ID)
             is SuggestionViewHolder.DefaultSuggestionViewHolder)
@@ -138,7 +142,7 @@ class SuggestionsAdapterTest {
     fun `onCreateViewHolder() will throw for unknown id`() {
         val adapter = SuggestionsAdapter(mock())
 
-        val parent = LinearLayout(RuntimeEnvironment.application)
+        val parent = LinearLayout(context)
 
         adapter.onCreateViewHolder(parent, 0)
     }

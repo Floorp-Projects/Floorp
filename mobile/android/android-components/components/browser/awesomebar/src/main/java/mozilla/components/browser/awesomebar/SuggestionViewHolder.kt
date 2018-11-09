@@ -31,8 +31,12 @@ internal sealed class SuggestionViewHolder(
         private val awesomeBar: BrowserAwesomeBar,
         itemView: View
     ) : SuggestionViewHolder(itemView) {
-        private val titleView = itemView.findViewById<TextView>(R.id.mozac_browser_awesomebar_title)
-        private val descriptionView = itemView.findViewById<TextView>(R.id.mozac_browser_awesomebar_description)
+        private val titleView = itemView.findViewById<TextView>(R.id.mozac_browser_awesomebar_title).apply {
+            setTextColor(awesomeBar.styling.titleTextColor)
+        }
+        private val descriptionView = itemView.findViewById<TextView>(R.id.mozac_browser_awesomebar_description).apply {
+            setTextColor(awesomeBar.styling.descriptionTextColor)
+        }
 
         override fun bind(suggestion: AwesomeBar.Suggestion) {
             val title = if (suggestion.title.isNullOrEmpty()) suggestion.description else suggestion.title
@@ -79,6 +83,8 @@ internal sealed class SuggestionViewHolder(
                         false
                     ) as TextView
 
+                    view.setTextColor(awesomeBar.styling.chipTextColor)
+                    view.setBackgroundColor(awesomeBar.styling.chipBackgroundColor)
                     view.text = chip.title
                     view.setOnClickListener {
                         suggestion.onChipClicked?.invoke(chip)

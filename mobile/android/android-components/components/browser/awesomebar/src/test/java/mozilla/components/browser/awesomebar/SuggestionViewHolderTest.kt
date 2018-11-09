@@ -4,11 +4,11 @@
 
 package mozilla.components.browser.awesomebar
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
 import mozilla.components.concept.awesomebar.AwesomeBar
-import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -19,12 +19,16 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class SuggestionViewHolderTest {
+    private val context: Context
+        get() = RuntimeEnvironment.application
+
     @Test
     fun `DefaultViewHolder sets title and description`() {
-        val view = LayoutInflater.from(RuntimeEnvironment.application).inflate(
+        val view = LayoutInflater.from(context).inflate(
             R.layout.mozac_browser_awesomebar_item_generic, null, false)
 
-        val viewHolder = SuggestionViewHolder.DefaultSuggestionViewHolder(mock(), view)
+        val viewHolder = SuggestionViewHolder.DefaultSuggestionViewHolder(
+            BrowserAwesomeBar(context), view)
 
         val suggestion = AwesomeBar.Suggestion(
             title = "Hello World",
@@ -41,10 +45,11 @@ class SuggestionViewHolderTest {
 
     @Test
     fun `Clicking on default suggestion view invokes callback`() {
-        val view = LayoutInflater.from(RuntimeEnvironment.application).inflate(
+        val view = LayoutInflater.from(context).inflate(
             R.layout.mozac_browser_awesomebar_item_generic, null, false)
 
-        val viewHolder = SuggestionViewHolder.DefaultSuggestionViewHolder(mock(), view)
+        val viewHolder = SuggestionViewHolder.DefaultSuggestionViewHolder(
+            BrowserAwesomeBar(context), view)
 
         var callbackExecuted = false
         val suggestion = AwesomeBar.Suggestion(
@@ -62,10 +67,11 @@ class SuggestionViewHolderTest {
 
     @Test
     fun `ChipsSuggestionViewHolder adds views for chips`() {
-        val view = LayoutInflater.from(RuntimeEnvironment.application).inflate(
+        val view = LayoutInflater.from(context).inflate(
             R.layout.mozac_browser_awesomebar_item_chips, null, false)
 
-        val viewHolder = SuggestionViewHolder.ChipsSuggestionViewHolder(mock(), view)
+        val viewHolder = SuggestionViewHolder.ChipsSuggestionViewHolder(
+            BrowserAwesomeBar(context), view)
 
         val suggestion = AwesomeBar.Suggestion(
             chips = listOf(
@@ -88,10 +94,11 @@ class SuggestionViewHolderTest {
 
     @Test
     fun `Clicking on a chip invokes callback`() {
-        val view = LayoutInflater.from(RuntimeEnvironment.application).inflate(
+        val view = LayoutInflater.from(context).inflate(
             R.layout.mozac_browser_awesomebar_item_chips, null, false)
 
-        val viewHolder = SuggestionViewHolder.ChipsSuggestionViewHolder(mock(), view)
+        val viewHolder = SuggestionViewHolder.ChipsSuggestionViewHolder(
+            BrowserAwesomeBar(context), view)
 
         var chipClicked: String? = null
 

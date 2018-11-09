@@ -34,7 +34,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/iconView"
         app:layout_constraintTop_toTopOf="parent"
-        android:textColor="#272727"
         tools:text="Android Components" />
 
     <TextView
@@ -47,7 +46,6 @@
         android:layout_marginBottom="8dp"
         android:ellipsize="end"
         android:lines="1"
-        android:textColor="#737373"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

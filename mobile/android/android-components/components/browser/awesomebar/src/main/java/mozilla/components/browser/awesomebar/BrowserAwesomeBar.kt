@@ -18,6 +18,11 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 
 private const val PROVIDER_QUERY_THREADS = 3
 
+private const val DEFAULT_TITLE_TEXT_COLOR = 0xFF272727.toInt()
+private const val DEFAULT_DESCRIPTION_TEXT_COLOR = 0xFF737373.toInt()
+private const val DEFAULT_CHIP_TEXT_COLOR = 0xFF272727.toInt()
+private const val DEFAULT_CHIP_BACKGROUND_COLOR = 0xFFFFEEEE.toInt()
+
 /**
  * A customizable [AwesomeBar] implementation.
  */
@@ -32,10 +37,20 @@ class BrowserAwesomeBar @JvmOverloads constructor(
     internal var scope = CoroutineScope(Dispatchers.Main)
     internal var job: Job? = null
     internal var listener: (() -> Unit)? = null
+    internal val styling: BrowserAwesomeBarStyling
 
     init {
         layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
         adapter = suggestionsAdapter
+
+        val attr = context.obtainStyledAttributes(attrs, R.styleable.BrowserAwesomeBar, defStyleAttr, 0)
+        this@BrowserAwesomeBar.styling = BrowserAwesomeBarStyling(
+            attr.getColor(R.styleable.BrowserAwesomeBar_awesomeBarTitleTextColor, DEFAULT_TITLE_TEXT_COLOR),
+            attr.getColor(R.styleable.BrowserAwesomeBar_awesomeBarDescriptionTextColor, DEFAULT_DESCRIPTION_TEXT_COLOR),
+            attr.getColor(R.styleable.BrowserAwesomeBar_awesomeBarChipTextColor, DEFAULT_CHIP_TEXT_COLOR),
+            attr.getColor(R.styleable.BrowserAwesomeBar_awesomeBarChipBackgroundColor, DEFAULT_CHIP_BACKGROUND_COLOR)
+        )
+        attr.recycle()
     }
 
     @Synchronized
@@ -82,3 +97,10 @@ class BrowserAwesomeBar @JvmOverloads constructor(
         this.listener = listener
     }
 }
+
+internal data class BrowserAwesomeBarStyling(
+    val titleTextColor: Int,
+    val descriptionTextColor: Int,
+    val chipTextColor: Int,
+    val chipBackgroundColor: Int
+)

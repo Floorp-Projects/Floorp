@@ -15,7 +15,6 @@
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_marginStart="16dp"
-        android:background="#ffcccccc"
         android:importantForAccessibility="no"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -29,7 +28,7 @@
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/mozac_browser_awesomebar_icon"
-        app:layout_constraintTop_toBottomOf="@id/mozac_browser_awesomebar_title"
+        app:layout_constraintTop_toTopOf="parent"
         tools:layout_height="50dp" />
 
 </android.support.constraint.ConstraintLayout>
