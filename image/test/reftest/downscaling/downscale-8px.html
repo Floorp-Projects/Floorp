@@ -14,13 +14,13 @@
 </script>
 </head>
 <body>
-<!-- non-empty alt to avoid the broken image icon -->
-<img width="8px" id="image1" alt=" ">
+<img width="8px" id="image1">
 <script>
   // Use as "wrapper.html?image.png"
   var imgURL = document.location.search.substr(1);
   document.images[0].onload = onImageLoad;
   document.images[0].onerror = onImageLoad;
+  document.images[0].alt = "";
   document.images[0].src = imgURL;
 </script>
 </body>
