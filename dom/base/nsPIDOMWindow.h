@@ -48,6 +48,7 @@ namespace mozilla {
 class AutoplayPermissionManager;
 namespace dom {
 class AudioContext;
+class BrowsingContext;
 class ClientInfo;
 class ClientState;
 class ContentFrameMessageManager;
@@ -928,6 +929,8 @@ public:
    * Get the docshell in this window.
    */
   inline nsIDocShell *GetDocShell() const;
+
+  mozilla::dom::BrowsingContext* GetBrowsingContext() const;
 
   /**
    * Set a new document in the window. Calling this method will in most cases
