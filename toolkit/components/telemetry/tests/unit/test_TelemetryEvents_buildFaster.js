@@ -51,7 +51,7 @@ add_task({
           "object1",
           "object2",
         ],
-        "expired": false,
+        "expires": "never",
         "methods": [
           "test1",
           "test2",
@@ -61,6 +61,30 @@ add_task({
           "key1",
         ],
         "record_on_release": false,
+      },
+    },
+    // Test a new, expired event
+    "telemetry.test.expired": {
+      "expired": {
+        "objects": ["object1"],
+        "methods": ["method1"],
+        "expires": AppConstants.MOZ_APP_VERSION,
+        "record_on_release": false,
+      },
+    },
+    // Test overwriting static expiries
+    "telemetry.test": {
+      "expired_version": {
+        "objects": ["object1"],
+        "methods": ["expired_version"],
+        "expires": "never",
+        "record_on_release": false,
+      },
+      "not_expired_optout": {
+        "objects": ["object1"],
+        "methods": ["not_expired_optout"],
+        "expires": AppConstants.MOZ_APP_VERSION,
+        "record_on_release": true,
       },
     },
   };
@@ -78,12 +102,19 @@ add_task({
 
   // Record the events
   const TEST_EVENT_NAME = "telemetry.test.builtin";
+  const DYNAMIC_EVENT_CATEGORY = "telemetry.test.expired";
+  const STATIC_EVENT_CATEGORY = "telemetry.test";
   Telemetry.setEventRecordingEnabled(TEST_EVENT_NAME, true);
+  Telemetry.setEventRecordingEnabled(DYNAMIC_EVENT_CATEGORY, true);
+  Telemetry.setEventRecordingEnabled(STATIC_EVENT_CATEGORY, true);
   Telemetry.recordEvent(TEST_EVENT_NAME, "test1", "object1");
   Telemetry.recordEvent(TEST_EVENT_NAME, "test2", "object1", null,
                         {"key1": "foo", "key2": "bar"});
   Telemetry.recordEvent(TEST_EVENT_NAME, "test2", "object2", null,
                         {"key2": "bar"});
+  Telemetry.recordEvent(DYNAMIC_EVENT_CATEGORY, "method1", "object1");
+  Telemetry.recordEvent(STATIC_EVENT_CATEGORY, "expired_version", "object1");
+  Telemetry.recordEvent(STATIC_EVENT_CATEGORY, "not_expired_optout", "object1");
 
   // Check the values we tried to store.
   const snapshot =
@@ -94,6 +125,7 @@ add_task({
     [TEST_EVENT_NAME, "test1", "object1"],
     [TEST_EVENT_NAME, "test2", "object1", null, {key1: "foo", key2: "bar"}],
     [TEST_EVENT_NAME, "test2", "object2", null, {key2: "bar"}],
+    [STATIC_EVENT_CATEGORY, "expired_version", "object1"],
   ];
   let events = snapshot.parent;
   Assert.equal(events.length, expected.length, "Should have recorded the right amount of events.");
