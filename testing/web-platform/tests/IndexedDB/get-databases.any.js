@@ -1,50 +1,62 @@
-// META: script=support.js
+// META: script=support-promises.js
 
-async_test( async function(t) {
-  let made_database_check = t.step_func(async function() {
-    let idb_databases_promise = await indexedDB.databases();
-    assert_true(
-      idb_databases_promise.some(
-          e => e.name == "TestDatabase" && e.version == 1),
-      "Call to databases() did not find database.");
-    t.done();
-  });
-  delete_then_open(t, "TestDatabase", ()=>{}, made_database_check);
-}, "Report one database test.");
+promise_test(async testCase => {
+  // Delete any databases that may not have been cleaned up after
+  // previous test runs.
+  await deleteAllDatabases(testCase);
 
-async_test( function(t) {
-  let done_making_databases_callback = t.step_func(async function() {
-    let idb_databases_promise = await indexedDB.databases();
-    assert_true(
-      idb_databases_promise.some(
-          e => e.name == "TestDatabase1" && e.version == 1),
-      "Call to databases() did not find database.");
-    assert_true(
-      idb_databases_promise.some(
-          e => e.name == "TestDatabase2" && e.version == 1),
-      "Call to databases() did not find database.");
-    assert_true(
-      idb_databases_promise.some(
-          e => e.name == "TestDatabase3" && e.version == 1),
-      "Call to databases() did not find database.");
-    t.done();
-  });
-  let make_databases_barrier = create_barrier(done_making_databases_callback);
-  delete_then_open(t, "TestDatabase1", ()=>{}, make_databases_barrier(t));
-  delete_then_open(t, "TestDatabase2", ()=>{}, make_databases_barrier(t));
-  delete_then_open(t, "TestDatabase3", ()=>{}, make_databases_barrier(t));
-}, "Report multiple databases test.");
+  const db_name = "TestDatabase";
+  const db = await createNamedDatabase(testCase, db_name, ()=>{});
+  const databases_promise = await indexedDB.databases();
+  const expected_result = [
+    {"name": db_name, "version": 1},
+  ];
+  assert_object_equals(
+      databases_promise,
+      expected_result,
+      "Call to databases() did not retrieve the single expected result.");
+}, "Enumerate one database.");
 
-async_test( function(t) {
-  let delete_request = indexedDB.deleteDatabase("NonExistentDatabase");
-  delete_request.onsuccess = t.step_func(async function() {
-    let idb_databases_promise = await indexedDB.databases();
-    assert_false(
-      idb_databases_promise.some(
-          e => e.name == "NonExistentDatabase"),
-      "Call to databases() found excluded database.");
-    t.done();
-  });
-}, "Don't report nonexistant databases test.");
+promise_test(async testCase => {
+  // Delete any databases that may not have been cleaned up after previous test
+  // runs.
+  await deleteAllDatabases(testCase);
+
+  const db_name1 = "TestDatabase1";
+  const db_name2 = "TestDatabase2";
+  const db_name3 = "TestDatabase3";
+  const db1 = await createNamedDatabase(testCase, db_name1, ()=>{});
+  const db2 = await createNamedDatabase(testCase, db_name2, ()=>{});
+  const db3 = await createNamedDatabase(testCase, db_name3, ()=>{});
+  const databases_promise = await indexedDB.databases();
+  const expected_result = [
+    {"name": db_name1, "version": 1},
+    {"name": db_name2, "version": 1},
+    {"name": db_name3, "version": 1},
+  ];
+  assert_object_equals(
+    databases_promise,
+    expected_result,
+    "Call to databases() did not retrieve the multiple expected results");
+}, "Enumerate multiple databases.");
+
+promise_test(async testCase => {
+  // Add some databases and close their connections.
+  const db1 = await createNamedDatabase(testCase, "DB1", ()=>{});
+  const db2 = await createNamedDatabase(testCase, "DB2", ()=>{});
+  db1.onversionchange = () => { db1.close() };
+  db2.onversionchange = () => { db2.close() };
+
+  // Delete any databases that may not have been cleaned up after previous test
+  // runs as well as the two databases made above.
+  await deleteAllDatabases(testCase);
+
+  // Make sure the databases are no longer returned.
+  const databases_promise = await indexedDB.databases();
+  assert_object_equals(
+    databases_promise,
+    [],
+    "Call to databases() found database it should not have.")
+}, "Make sure an empty list is returned for the case of no databases.");
 
 done();
