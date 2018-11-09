@@ -765,7 +765,7 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
                                        availSize, &kidCBSize);
       kidReflowInput.mFlags.mIsTopOfPage = true;
       kidReflowInput.mFlags.mTableIsSplittable = false;
-      kidReflowInput.mFlags.mIsColumnBalancing = aConfig.mBalanceColCount < INT32_MAX;
+      kidReflowInput.mFlags.mIsColumnBalancing = aConfig.mIsBalancing;
 
       // We need to reflow any float placeholders, even if our column height
       // hasn't changed.
@@ -878,7 +878,7 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
 
       if ((contentBEnd > aReflowInput.ComputedMaxBSize() ||
            contentBEnd > aReflowInput.ComputedBSize()) &&
-           aConfig.mBalanceColCount < INT32_MAX) {
+          aConfig.mIsBalancing) {
         // We overflowed vertically, but have not exceeded the number of
         // columns. We're going to go into overflow columns now, so balancing
         // no longer applies.

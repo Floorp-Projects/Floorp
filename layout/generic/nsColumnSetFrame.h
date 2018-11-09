@@ -120,7 +120,7 @@ protected:
     nscoord mColMaxBSize = NS_INTRINSICSIZE;
 
     // A boolean controlling whether or not we are balancing. This should be
-    // equivalent to mBalanceColCount == INT32_MAX.
+    // equivalent to mBalanceColCount != INT32_MAX.
     bool mIsBalancing = false;
 
     // The last known column block-size that was 'feasible'. A column bSize is
