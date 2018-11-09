@@ -63,8 +63,6 @@ public:
 
   TaskDispatcher& TailDispatcher() override;
 
-  TaskQueue* AsTaskQueue() override { return this; }
-
   MOZ_MUST_USE nsresult
   Dispatch(already_AddRefed<nsIRunnable> aRunnable,
            DispatchReason aReason = NormalDispatch) override
