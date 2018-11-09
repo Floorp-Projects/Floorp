@@ -301,10 +301,11 @@ Object.defineProperty(this, "gHighPriorityNotificationBox", {
   get() {
     delete this.gHighPriorityNotificationBox;
 
-    let notificationbox = document.createXULElement("notificationbox");
-    notificationbox.className = "global-notificationbox";
-    notificationbox.setAttribute("notificationside", "top");
-    document.getElementById("appcontent").prepend(notificationbox);
+    let notificationbox = new MozElements.NotificationBox(element => {
+      element.classList.add("global-notificationbox");
+      element.setAttribute("notificationside", "top");
+      document.getElementById("appcontent").append(element);
+    });
 
     return this.gHighPriorityNotificationBox = notificationbox;
   },
@@ -317,10 +318,11 @@ Object.defineProperty(this, "gNotificationBox", {
   get() {
     delete this.gNotificationBox;
 
-    let notificationbox = document.createXULElement("notificationbox");
-    notificationbox.className = "global-notificationbox";
-    notificationbox.setAttribute("notificationside", "bottom");
-    document.getElementById("browser-bottombox").appendChild(notificationbox);
+    let notificationbox = new MozElements.NotificationBox(element => {
+      element.classList.add("global-notificationbox");
+      element.setAttribute("notificationside", "bottom");
+      document.getElementById("browser-bottombox").appendChild(element);
+    });
 
     return this.gNotificationBox = notificationbox;
   },
@@ -3534,12 +3536,12 @@ var PrintPreviewListener = {
     if (gFindBarInitialized)
       gFindBar.close();
 
-    gBrowser.getNotificationBox().hidden = true;
-    gNotificationBox.hidden = true;
+    gBrowser.getNotificationBox().stack.hidden = true;
+    gNotificationBox.stack.hidden = true;
   },
   _showChrome() {
-    gNotificationBox.hidden = false;
-    gBrowser.getNotificationBox().hidden = false;
+    gNotificationBox.stack.hidden = false;
+    gBrowser.getNotificationBox().stack.hidden = false;
 
     if (this._chromeState.findOpen) {
       gLazyFindCommand("open");

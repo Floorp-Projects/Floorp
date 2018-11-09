@@ -43,7 +43,7 @@ function closeAllNotifications(targetWindow, notificationBox) {
       }
     });
 
-    observer.observe(notificationBox, {childList: true});
+    observer.observe(notificationBox.stack, {childList: true});
 
     for (const notification of notificationBox.allNotifications) {
       notification.close();
@@ -81,7 +81,7 @@ add_task(async function() {
   const targetWindow = Services.wm.getMostRecentWindow("navigator:browser");
   const notificationBox = targetWindow.gHighPriorityNotificationBox;
 
-  const preCount = notificationBox.childElementCount;
+  const preCount = notificationBox.allNotifications.length;
   const hb = new Heartbeat(targetWindow, sandboxManager, {
     testing: true,
     flowId: "test",
@@ -94,7 +94,7 @@ add_task(async function() {
   // Check UI
   const learnMoreEl = hb.notice.querySelector(".text-link");
   const messageEl = targetWindow.document.getAnonymousElementByAttribute(hb.notice, "anonid", "messageText");
-  Assert.equal(notificationBox.childElementCount, preCount + 1, "Correct number of notifications open");
+  Assert.equal(notificationBox.allNotifications.length, preCount + 1, "Correct number of notifications open");
   Assert.equal(hb.notice.querySelectorAll(".star-x").length, 5, "Correct number of stars");
   Assert.equal(hb.notice.querySelectorAll(".notification-button").length, 0, "Engagement button not shown");
   Assert.equal(learnMoreEl.href, "https://example.org/learnmore", "Learn more url correct");
