@@ -31,8 +31,7 @@ jobs:
 
   # Installig Ahem in /Library/Fonts instead of using --install-fonts is a
   # workaround for https://github.com/web-platform-tests/wpt/issues/13803.
-  - script: |
-      sudo cp fonts/Ahem.ttf /Library/Fonts
+  - script: sudo cp fonts/Ahem.ttf /Library/Fonts
     displayName: 'Install Ahem font'
     condition: variables.run_wptrunner_infrastructure
 
@@ -52,12 +51,14 @@ jobs:
     displayName: 'Install Safari Technology Preview'
     condition: variables.run_wptrunner_infrastructure
 
-  - script: |
-      ./wpt make-hosts-file | sudo tee -a /etc/hosts
+  - script: ./wpt make-hosts-file | sudo tee -a /etc/hosts
     displayName: 'Update /etc/hosts'
     condition: variables.run_wptrunner_infrastructure
 
-  - script: |
-      no_proxy='*' ./wpt run --yes --manifest MANIFEST.json --metadata infrastructure/metadata/ --channel=preview safari_webdriver infrastructure/
+  - script: ./wpt manifest
+    displayName: 'Update manifest'
+    condition: variables.run_wptrunner_infrastructure
+
+  - script: no_proxy='*' ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --channel=preview safari_webdriver infrastructure/
     displayName: 'Run infrastructure/ tests'
     condition: variables.run_wptrunner_infrastructure
