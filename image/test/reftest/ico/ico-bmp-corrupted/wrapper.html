@@ -51,6 +51,7 @@
     // code.
 
     var finalImg = document.getElementById('image1');
+    finalImg.alt = "";
     finalImg.onload = finalImg.onerror = step3;
     finalImg.src = gImg.src;
   }
@@ -67,8 +68,7 @@
 </script>
 </head>
 <body>
-<!-- non-empty alt to avoid the broken image icon -->
-<img id="image1" alt=" ">
+<img id="image1">
 <script>
   // Use as "wrapper.html?image.png
   gImg = document.createElement('img');
