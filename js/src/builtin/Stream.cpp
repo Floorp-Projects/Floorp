@@ -174,9 +174,12 @@ PromiseInvokeOrNoop(JSContext* cx, HandleValue O, HandlePropertyName P, HandleVa
 
 static MOZ_MUST_USE JSObject*
 PromiseRejectedWithPendingError(JSContext* cx) {
-    // Not much we can do about uncatchable exceptions, just bail.
     RootedValue exn(cx);
-    if (!GetAndClearException(cx, &exn)) {
+    if (!cx->isExceptionPending() || !GetAndClearException(cx, &exn)) {
+        // Uncatchable error. This happens when a slow script is killed or a
+        // worker is terminated. Propagate the uncatchable error. This will
+        // typically kill off the calling asynchronous process: the caller
+        // can't hook its continuation to the new rejected promise.
         return nullptr;
     }
     return PromiseObject::unforgeableReject(cx, exn);
@@ -2048,8 +2051,9 @@ ReadableStreamReaderGenericRelease(JSContext* cx, Handle<ReadableStreamReader*> 
     // clean way to do this, unfortunately.
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_READABLESTREAMREADER_RELEASED);
     RootedValue exn(cx);
-    // Not much we can do about uncatchable exceptions, just bail.
-    if (!GetAndClearException(cx, &exn)) {
+    if (!cx->isExceptionPending() || !GetAndClearException(cx, &exn)) {
+        // Uncatchable error. Die immediately without resolving
+        // reader.[[closedPromise]].
         return false;
     }
 
@@ -3016,7 +3020,9 @@ ReadableStreamDefaultControllerEnqueue(JSContext* cx,
             // and
             // Step d: If enqueueResult is an abrupt completion,
             RootedValue exn(cx);
-            if (!cx->getPendingException(&exn)) {
+            if (!cx->isExceptionPending() || !cx->getPendingException(&exn)) {
+                // Uncatchable error. Die immediately without erroring the
+                // stream.
                 return false;
             }
 
@@ -3664,8 +3670,9 @@ ReadableByteStreamControllerClose(JSContext* cx, Handle<ReadableByteStreamContro
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                       JSMSG_READABLEBYTESTREAMCONTROLLER_CLOSE_PENDING_PULL);
             RootedValue e(cx);
-            // Not much we can do about uncatchable exceptions, just bail.
-            if (!cx->getPendingException(&e)) {
+            if (!cx->isExceptionPending() || !cx->getPendingException(&e)) {
+                // Uncatchable error. Die immediately without erroring the
+                // stream.
                 return false;
             }
 
