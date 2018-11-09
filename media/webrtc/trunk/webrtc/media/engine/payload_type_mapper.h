@@ -8,17 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MEDIA_ENGINE_PAYLOAD_TYPE_MAPPER_H_
-#define WEBRTC_MEDIA_ENGINE_PAYLOAD_TYPE_MAPPER_H_
+#ifndef MEDIA_ENGINE_PAYLOAD_TYPE_MAPPER_H_
+#define MEDIA_ENGINE_PAYLOAD_TYPE_MAPPER_H_
 
 #include <map>
 #include <set>
 
-#include "webrtc/base/optional.h"
-#include "webrtc/media/base/codec.h"
-#include "webrtc/modules/audio_coding/codecs/audio_format.h"
+#include "api/audio_codecs/audio_format.h"
+#include "api/optional.h"
+#include "media/base/codec.h"
 
 namespace cricket {
+
+webrtc::SdpAudioFormat AudioCodecToSdpAudioFormat(const AudioCodec& ac);
 
 class PayloadTypeMapper {
  public:
@@ -51,4 +53,4 @@ class PayloadTypeMapper {
 };
 
 }  // namespace cricket
-#endif  // WEBRTC_MEDIA_ENGINE_PAYLOAD_TYPE_MAPPER_H_
+#endif  // MEDIA_ENGINE_PAYLOAD_TYPE_MAPPER_H_

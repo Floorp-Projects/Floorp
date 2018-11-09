@@ -8,50 +8,35 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_coding/codecs/test/stats.h"
+#include "modules/video_coding/codecs/test/stats.h"
 
-#include "webrtc/test/gtest.h"
-#include "webrtc/typedefs.h"
+#include "test/gtest.h"
 
 namespace webrtc {
 namespace test {
 
-class StatsTest : public testing::Test {
- protected:
-  StatsTest() {}
-
-  virtual ~StatsTest() {}
-
-  void SetUp() { stats_ = new Stats(); }
-
-  void TearDown() { delete stats_; }
-
-  Stats* stats_;
-};
-
-// Test empty object
-TEST_F(StatsTest, Uninitialized) {
-  EXPECT_EQ(0u, stats_->stats_.size());
-  stats_->PrintSummary();  // should not crash
+TEST(StatsTest, TestEmptyObject) {
+  Stats stats;
+  stats.PrintSummary();  // Should not crash.
 }
 
-// Add single frame stats and verify
-TEST_F(StatsTest, AddOne) {
-  stats_->NewFrame(0u);
-  FrameStatistic* frameStat = &stats_->stats_[0];
-  EXPECT_EQ(0, frameStat->frame_number);
+TEST(StatsTest, AddSingleFrame) {
+  Stats stats;
+  FrameStatistic* frame_stat = stats.AddFrame();
+  EXPECT_EQ(0, frame_stat->frame_number);
+  EXPECT_EQ(1u, stats.size());
 }
 
-// Add multiple frame stats and verify
-TEST_F(StatsTest, AddMany) {
-  int nbr_of_frames = 1000;
-  for (int i = 0; i < nbr_of_frames; ++i) {
-    FrameStatistic& frameStat = stats_->NewFrame(i);
-    EXPECT_EQ(i, frameStat.frame_number);
+TEST(StatsTest, AddMultipleFrames) {
+  Stats stats;
+  const int kNumFrames = 1000;
+  for (int i = 0; i < kNumFrames; ++i) {
+    FrameStatistic* frame_stat = stats.AddFrame();
+    EXPECT_EQ(i, frame_stat->frame_number);
   }
-  EXPECT_EQ(nbr_of_frames, static_cast<int>(stats_->stats_.size()));
+  EXPECT_EQ(kNumFrames, static_cast<int>(stats.size()));
 
-  stats_->PrintSummary();  // should not crash
+  stats.PrintSummary();  // Should not crash.
 }
 
 }  // namespace test

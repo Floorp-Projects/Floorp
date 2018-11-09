@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_API_CALL_AUDIO_SINK_H_
-#define WEBRTC_API_CALL_AUDIO_SINK_H_
+#ifndef API_CALL_AUDIO_SINK_H_
+#define API_CALL_AUDIO_SINK_H_
 
 #if defined(WEBRTC_POSIX) && !defined(__STDC_FORMAT_MACROS)
 // Avoid conflict with format_macros.h.
@@ -27,7 +27,7 @@ class AudioSinkInterface {
   virtual ~AudioSinkInterface() {}
 
   struct Data {
-    Data(int16_t* data,
+    Data(const int16_t* data,
          size_t samples_per_channel,
          int sample_rate,
          size_t channels,
@@ -38,7 +38,7 @@ class AudioSinkInterface {
           channels(channels),
           timestamp(timestamp) {}
 
-    int16_t* data;               // The actual 16bit audio data.
+    const int16_t* data;         // The actual 16bit audio data.
     size_t samples_per_channel;  // Number of frames in the buffer.
     int sample_rate;             // Sample rate in Hz.
     size_t channels;             // Number of channels in the audio data.
@@ -50,4 +50,4 @@ class AudioSinkInterface {
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_API_CALL_AUDIO_SINK_H_
+#endif  // API_CALL_AUDIO_SINK_H_

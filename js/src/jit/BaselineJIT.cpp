@@ -1171,11 +1171,19 @@ BaselineScript::purgeOptimizedStubs(Zone* zone)
 static bool
 GetStubEnteredCount(ICStub* stub, uint32_t* count)
 {
-    if (stub->isCacheIR_Regular()) {
+    switch (stub->kind()) {
+      case ICStub::CacheIR_Regular:
         *count = stub->toCacheIR_Regular()->enteredCount();
         return true;
+      case ICStub::CacheIR_Updated:
+        *count = stub->toCacheIR_Updated()->enteredCount();
+        return true;
+      case ICStub::CacheIR_Monitored:
+        *count = stub->toCacheIR_Monitored()->enteredCount();
+        return true;
+      default:
+        return false;
     }
-    return false;
 }
 
 void

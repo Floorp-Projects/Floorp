@@ -11,8 +11,8 @@
 #ifndef WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_SINGLE_RW_FIFO_H_
 #define WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_SINGLE_RW_FIFO_H_
 
-#include "webrtc/system_wrappers/include/atomic32.h"
-#include "webrtc/typedefs.h"
+#include "system_wrappers/include/atomic32.h"
+#include "typedefs.h"
 
 namespace webrtc {
 

@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_MEDIA_FILE_MEDIA_FILE_IMPL_H_
-#define WEBRTC_MODULES_MEDIA_FILE_MEDIA_FILE_IMPL_H_
+#ifndef MODULES_MEDIA_FILE_MEDIA_FILE_IMPL_H_
+#define MODULES_MEDIA_FILE_MEDIA_FILE_IMPL_H_
 
-#include "webrtc/common_types.h"
-#include "webrtc/modules/include/module_common_types.h"
-#include "webrtc/modules/media_file/media_file.h"
-#include "webrtc/modules/media_file/media_file_defines.h"
-#include "webrtc/modules/media_file/media_file_utility.h"
-#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "common_types.h"  // NOLINT(build/include)
+#include "modules/include/module_common_types.h"
+#include "modules/media_file/media_file.h"
+#include "modules/media_file/media_file_defines.h"
+#include "modules/media_file/media_file_utility.h"
+#include "rtc_base/criticalsection.h"
 
 namespace webrtc {
 class MediaFileImpl : public MediaFile
@@ -120,8 +120,8 @@ private:
         const uint32_t stopPointMs);
 
     int32_t _id;
-    CriticalSectionWrapper* _crit;
-    CriticalSectionWrapper* _callbackCrit;
+    rtc::CriticalSection _crit;
+    rtc::CriticalSection _callbackCrit;
 
     ModuleFileUtility* _ptrFileUtilityObj;
     CodecInst codec_info_;
@@ -145,4 +145,4 @@ private:
 };
 }  // namespace webrtc
 
-#endif // WEBRTC_MODULES_MEDIA_FILE_MEDIA_FILE_IMPL_H_
+#endif // MODULES_MEDIA_FILE_MEDIA_FILE_IMPL_H_

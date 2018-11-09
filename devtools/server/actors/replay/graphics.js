@@ -71,9 +71,6 @@ function updateWindowCanvas(window, buffer, width, height, hadFailure) {
     cx.font = "48px serif";
     cx.fillText("PAINT FAILURE", 10, 50);
   }
-
-  // Make recording/replaying tabs easier to differentiate from other tabs.
-  window.document.title = "RECORD/REPLAY";
 }
 
 // Entry point for when we have some new graphics data from the child process

@@ -3,9 +3,10 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // @flow
-import PropTypes from "prop-types";
 import React, { Component } from "react";
 import { connect } from "react-redux";
+import PropTypes from "prop-types";
+
 import { features } from "../utils/prefs";
 import actions from "../actions";
 import A11yIntention from "./A11yIntention";
@@ -93,7 +94,7 @@ class App extends Component<Props, State> {
   }
 
   getChildContext = () => {
-    return { shortcuts };
+    return { shortcuts, l10n: L10N };
   };
 
   componentDidMount() {
@@ -316,7 +317,10 @@ class App extends Component<Props, State> {
   }
 }
 
-App.childContextTypes = { shortcuts: PropTypes.object };
+App.childContextTypes = {
+  shortcuts: PropTypes.object,
+  l10n: PropTypes.object
+};
 
 const mapStateToProps = state => ({
   selectedSource: getSelectedSource(state),

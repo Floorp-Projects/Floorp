@@ -590,6 +590,14 @@ Preamble_PassThrough(CallArguments* aArguments)
   return PreambleResult::PassThrough;
 }
 
+static inline PreambleResult
+Preamble_WaitForever(CallArguments* aArguments)
+{
+  Thread::WaitForever();
+  Unreachable();
+  return PreambleResult::PassThrough;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Other Redirection Interfaces
 ///////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Test: SELECT size with display:none OPTION</title>
+  <style>
+
+.none { display: none; }
+
+  </style>
+</head>
+<body>
+
+<select><option class="none">option</select>
+<select style="-webkit-appearance: none"><option class="none">option</select>
+<select style="-webkit-appearance: none; border: 1px solid black"><option class="none">option</select>
+<select style="border: 1px solid black"><option class="none">option</select>
+
+</body>
+</html>

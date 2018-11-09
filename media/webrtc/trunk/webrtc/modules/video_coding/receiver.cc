@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/video_coding/receiver.h"
+#include "modules/video_coding/receiver.h"
 
 #include <assert.h>
 
@@ -16,12 +16,12 @@
 #include <utility>
 #include <vector>
 
-#include "webrtc/base/logging.h"
-#include "webrtc/base/trace_event.h"
-#include "webrtc/modules/video_coding/encoded_frame.h"
-#include "webrtc/modules/video_coding/internal_defines.h"
-#include "webrtc/modules/video_coding/media_opt_util.h"
-#include "webrtc/system_wrappers/include/clock.h"
+#include "modules/video_coding/encoded_frame.h"
+#include "modules/video_coding/internal_defines.h"
+#include "modules/video_coding/media_opt_util.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/trace_event.h"
+#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 
@@ -72,32 +72,28 @@ VCMReceiver::VCMReceiver(VCMTiming* timing,
                          std::unique_ptr<EventWrapper> jitter_buffer_event,
                          NackSender* nack_sender,
                          KeyFrameRequestSender* keyframe_request_sender)
-    : crit_sect_(CriticalSectionWrapper::CreateCriticalSection()),
-      clock_(clock),
+    : clock_(clock),
       jitter_buffer_(clock_,
                      std::move(jitter_buffer_event),
                      nack_sender,
                      keyframe_request_sender),
       timing_(timing),
       render_wait_event_(std::move(receiver_event)),
-      receiveState_(kReceiveStateInitial),
       max_video_delay_ms_(kMaxVideoDelayMs) {
   Reset();
 }
 
 VCMReceiver::~VCMReceiver() {
   render_wait_event_->Set();
-  delete crit_sect_;
 }
 
 void VCMReceiver::Reset() {
-  CriticalSectionScoped cs(crit_sect_);
+  rtc::CritScope cs(&crit_sect_);
   if (!jitter_buffer_.Running()) {
     jitter_buffer_.Start();
   } else {
     jitter_buffer_.Flush();
   }
-  receiveState_ = kReceiveStateInitial;
 }
 
 void VCMReceiver::UpdateRtt(int64_t rtt) {
@@ -168,16 +164,17 @@ VCMEncodedFrame* VCMReceiver::FrameForDecoding(uint16_t max_wait_time_ms,
   if (render_time_ms < 0) {
     timing_error = true;
   } else if (std::abs(render_time_ms - now_ms) > max_video_delay_ms_) {
-    int frame_delay = std::abs(render_time_ms - now_ms);
-    LOG(LS_WARNING) << "A frame about to be decoded is out of the configured "
-                    << "delay bounds (" << frame_delay << " > "
-                    << max_video_delay_ms_
-                    << "). Resetting the video jitter buffer.";
+    int frame_delay = static_cast<int>(std::abs(render_time_ms - now_ms));
+    RTC_LOG(LS_WARNING)
+        << "A frame about to be decoded is out of the configured "
+        << "delay bounds (" << frame_delay << " > " << max_video_delay_ms_
+        << "). Resetting the video jitter buffer.";
     timing_error = true;
   } else if (static_cast<int>(timing_->TargetVideoDelay()) >
              max_video_delay_ms_) {
-    LOG(LS_WARNING) << "The video target delay has grown larger than "
-                    << max_video_delay_ms_ << " ms. Resetting jitter buffer.";
+    RTC_LOG(LS_WARNING) << "The video target delay has grown larger than "
+                        << max_video_delay_ms_
+                        << " ms. Resetting jitter buffer.";
     timing_error = true;
   }
 
@@ -216,7 +213,6 @@ VCMEncodedFrame* VCMReceiver::FrameForDecoding(uint16_t max_wait_time_ms,
   frame->SetRenderTime(render_time_ms);
   TRACE_EVENT_ASYNC_STEP1("webrtc", "Video", frame->TimeStamp(), "SetRenderTS",
                           "render_time", frame->RenderTimeMs());
-  UpdateReceiveState(*frame);
   if (!frame->Complete()) {
     // Update stats for incomplete frames.
     bool retransmitted = false;
@@ -242,14 +238,10 @@ void VCMReceiver::ReceiveStatistics(uint32_t* bitrate, uint32_t* framerate) {
   jitter_buffer_.IncomingRateStatistics(framerate, bitrate);
 }
 
-uint32_t VCMReceiver::DiscardedPackets() const {
-  return jitter_buffer_.num_discarded_packets();
-}
-
 void VCMReceiver::SetNackMode(VCMNackMode nackMode,
                               int64_t low_rtt_nack_threshold_ms,
                               int64_t high_rtt_nack_threshold_ms) {
-  CriticalSectionScoped cs(crit_sect_);
+  rtc::CritScope cs(&crit_sect_);
   // Default to always having NACK enabled in hybrid mode.
   jitter_buffer_.SetNackMode(nackMode, low_rtt_nack_threshold_ms,
                              high_rtt_nack_threshold_ms);
@@ -263,17 +255,12 @@ void VCMReceiver::SetNackSettings(size_t max_nack_list_size,
 }
 
 VCMNackMode VCMReceiver::NackMode() const {
-  CriticalSectionScoped cs(crit_sect_);
+  rtc::CritScope cs(&crit_sect_);
   return jitter_buffer_.nack_mode();
 }
 
 std::vector<uint16_t> VCMReceiver::NackList(bool* request_key_frame) {
   return jitter_buffer_.GetNackList(request_key_frame);
-}
-
-VideoReceiveState VCMReceiver::ReceiveState() const {
-  CriticalSectionScoped cs(crit_sect_);
-  return receiveState_;
 }
 
 void VCMReceiver::SetDecodeErrorMode(VCMDecodeErrorMode decode_error_mode) {
@@ -285,7 +272,7 @@ VCMDecodeErrorMode VCMReceiver::DecodeErrorMode() const {
 }
 
 int VCMReceiver::SetMinReceiverDelay(int desired_delay_ms) {
-  CriticalSectionScoped cs(crit_sect_);
+  rtc::CritScope cs(&crit_sect_);
   if (desired_delay_ms < 0 || desired_delay_ms > kMaxReceiverDelayMs) {
     return -1;
   }
@@ -293,18 +280,6 @@ int VCMReceiver::SetMinReceiverDelay(int desired_delay_ms) {
   // Initializing timing to the desired delay.
   timing_->set_min_playout_delay(desired_delay_ms);
   return 0;
-}
-
-void VCMReceiver::UpdateReceiveState(const VCMEncodedFrame& frame) {
-  if (frame.Complete() && frame.FrameType() == kVideoFrameKey) {
-    receiveState_ = kReceiveStateNormal;
-    return;
-  }
-  if (frame.MissingFrame() || !frame.Complete()) {
-    // State is corrupted
-    receiveState_ = kReceiveStateWaitingKey;
-  }
-  // state continues
 }
 
 void VCMReceiver::RegisterStatsCallback(

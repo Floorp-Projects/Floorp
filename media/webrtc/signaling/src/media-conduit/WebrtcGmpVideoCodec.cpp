@@ -24,7 +24,7 @@
 #include "gmp-video-frame-i420.h"
 #include "gmp-video-frame-encoded.h"
 #include "webrtc/common_video/include/video_frame_buffer.h"
-#include "webrtc/base/bind.h"
+#include "webrtc/rtc_base/bind.h"
 
 namespace mozilla {
 
@@ -407,7 +407,7 @@ WebrtcGmpVideoEncoder::Encode_g(RefPtr<WebrtcGmpVideoEncoder>& aEncoder,
     return;
   }
   GMPUniquePtr<GMPVideoi420Frame> frame(static_cast<GMPVideoi420Frame*>(ftmp));
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> input_image = aInputImage.video_frame_buffer();
+  rtc::scoped_refptr<webrtc::I420BufferInterface> input_image = aInputImage.video_frame_buffer()->GetI420();
   // check for overflow of stride * height
   CheckedInt32 ysize = CheckedInt32(input_image->StrideY()) * input_image->height();
   MOZ_RELEASE_ASSERT(ysize.isValid());
@@ -1032,7 +1032,6 @@ WebrtcGmpVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame)
       webrtc::VideoFrame image(video_frame_buffer, 0, 0,
                                webrtc::kVideoRotation_0);
       image.set_timestamp((aDecodedFrame->Timestamp() * 90ll + 999)/1000); // round up
-      image.set_render_time_ms(0);
 
       LOGD(("GMP Decoded: %" PRIu64, aDecodedFrame->Timestamp()));
       mCallback->Decoded(image);

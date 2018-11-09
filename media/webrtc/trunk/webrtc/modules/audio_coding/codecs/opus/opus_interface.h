@@ -8,12 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_OPUS_OPUS_INTERFACE_H_
-#define WEBRTC_MODULES_AUDIO_CODING_CODECS_OPUS_OPUS_INTERFACE_H_
+#ifndef MODULES_AUDIO_CODING_CODECS_OPUS_OPUS_INTERFACE_H_
+#define MODULES_AUDIO_CODING_CODECS_OPUS_OPUS_INTERFACE_H_
 
 #include <stddef.h>
 
-#include "webrtc/typedefs.h"
+#include "modules/audio_coding/codecs/opus/opus_inst.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 #ifdef __cplusplus
 extern "C" {
@@ -180,6 +181,32 @@ int16_t WebRtcOpus_EnableDtx(OpusEncInst* inst);
  */
 int16_t WebRtcOpus_DisableDtx(OpusEncInst* inst);
 
+/****************************************************************************
+ * WebRtcOpus_EnableCbr()
+ *
+ * This function enables CBR for encoding.
+ *
+ * Input:
+ *      - inst               : Encoder context
+ *
+ * Return value              :  0 - Success
+ *                             -1 - Error
+ */
+int16_t WebRtcOpus_EnableCbr(OpusEncInst* inst);
+
+/****************************************************************************
+ * WebRtcOpus_DisableCbr()
+ *
+ * This function disables CBR for encoding.
+ *
+ * Input:
+ *      - inst               : Encoder context
+ *
+ * Return value              :  0 - Success
+ *                             -1 - Error
+ */
+int16_t WebRtcOpus_DisableCbr(OpusEncInst* inst);
+
 /*
  * WebRtcOpus_SetComplexity(...)
  *
@@ -194,6 +221,40 @@ int16_t WebRtcOpus_DisableDtx(OpusEncInst* inst);
  *                             -1 - Error
  */
 int16_t WebRtcOpus_SetComplexity(OpusEncInst* inst, int32_t complexity);
+
+/*
+ * WebRtcOpus_GetBandwidth(...)
+ *
+ * This function returns the current bandwidth.
+ *
+ * Input:
+ *      - inst               : Encoder context
+ *
+ * Return value              :  Bandwidth - Success
+ *                             -1 - Error
+ */
+int32_t WebRtcOpus_GetBandwidth(OpusEncInst* inst);
+
+/*
+ * WebRtcOpus_SetBandwidth(...)
+ *
+ * By default Opus decides which bandwidth to encode the signal in depending on
+ * the the bitrate. This function overrules the previous setting and forces the
+ * encoder to encode in narrowband/wideband/fullband/etc.
+ *
+ * Input:
+ *      - inst               : Encoder context
+ *      - bandwidth          : New target bandwidth. Valid values are:
+ *                             OPUS_BANDWIDTH_NARROWBAND
+ *                             OPUS_BANDWIDTH_MEDIUMBAND
+ *                             OPUS_BANDWIDTH_WIDEBAND
+ *                             OPUS_BANDWIDTH_SUPERWIDEBAND
+ *                             OPUS_BANDWIDTH_FULLBAND
+ *
+ * Return value              :  0 - Success
+ *                             -1 - Error
+ */
+int16_t WebRtcOpus_SetBandwidth(OpusEncInst* inst, int32_t bandwidth);
 
 /*
  * WebRtcOpus_SetForceChannels(...)
@@ -368,4 +429,4 @@ int WebRtcOpus_PacketHasFec(const uint8_t* payload,
 }  // extern "C"
 #endif
 
-#endif  // WEBRTC_MODULES_AUDIO_CODING_CODECS_OPUS_OPUS_INTERFACE_H_
+#endif  // MODULES_AUDIO_CODING_CODECS_OPUS_OPUS_INTERFACE_H_

@@ -9,7 +9,7 @@
 #include "VideoUtils.h"
 #include "mozilla/media/MediaUtils.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "webrtc/base/keep_ref_until_done.h"
+#include "webrtc/rtc_base/keep_ref_until_done.h"
 
 namespace mozilla {
 
@@ -170,38 +170,6 @@ bool
 WebrtcMediaDataDecoder::OnTaskQueue() const
 {
   return OwnerThread()->IsCurrentThreadIn();
-}
-
-ImageBuffer::ImageBuffer(RefPtr<layers::Image>&& aImage)
-  : webrtc::NativeHandleBuffer(aImage,
-                               aImage->GetSize().width,
-                               aImage->GetSize().height)
-  , mImage(std::move(aImage))
-{
-}
-
-rtc::scoped_refptr<webrtc::VideoFrameBuffer>
-ImageBuffer::NativeToI420Buffer()
-{
-  RefPtr<layers::PlanarYCbCrImage> image = mImage->AsPlanarYCbCrImage();
-  if (!image) {
-    // TODO. YUV420 ReadBack, Image only provides a RGB readback.
-    return nullptr;
-  }
-  rtc::scoped_refptr<layers::PlanarYCbCrImage> refImage(image);
-  const layers::PlanarYCbCrData* data = image->GetData();
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> buf(
-    new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
-      data->mPicSize.width,
-      data->mPicSize.height,
-      data->mYChannel,
-      data->mYStride,
-      data->mCbChannel,
-      data->mCbCrStride,
-      data->mCrChannel,
-      data->mCbCrStride,
-      rtc::KeepRefUntilDone(refImage)));
-  return buf;
 }
 
 } // namespace mozilla

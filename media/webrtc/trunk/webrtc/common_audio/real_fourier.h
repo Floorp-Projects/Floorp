@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_COMMON_AUDIO_REAL_FOURIER_H_
-#define WEBRTC_COMMON_AUDIO_REAL_FOURIER_H_
+#ifndef COMMON_AUDIO_REAL_FOURIER_H_
+#define COMMON_AUDIO_REAL_FOURIER_H_
 
 #include <complex>
 #include <memory>
 
-#include "webrtc/system_wrappers/include/aligned_malloc.h"
+#include "system_wrappers/include/aligned_malloc.h"
 
 // Uniform interface class for the real DFT and its inverse, for power-of-2
 // input lengths. Also contains helper functions for buffer allocation, taking
@@ -35,7 +35,7 @@ class RealFourier {
   // Construct a wrapper instance for the given input order, which must be
   // between 1 and kMaxFftOrder, inclusively.
   static std::unique_ptr<RealFourier> Create(int fft_order);
-  virtual ~RealFourier() {};
+  virtual ~RealFourier() {}
 
   // Helper to compute the smallest FFT order (a power of 2) which will contain
   // the given input length.
@@ -71,5 +71,5 @@ class RealFourier {
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_COMMON_AUDIO_REAL_FOURIER_H_
+#endif  // COMMON_AUDIO_REAL_FOURIER_H_
 

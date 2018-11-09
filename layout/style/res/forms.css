@@ -317,7 +317,7 @@ select > button[orientation="right"]:active {
   padding-block-start: 1px;
   padding-block-end: 1px;
   padding-inline-start: 4px;
-  padding-inline-end: 0;
+  padding-inline-end: 4px;
   color: unset;
   white-space: nowrap;
   text-align: unset;
@@ -813,7 +813,7 @@ output:-moz-ui-invalid {
 }
 
 progress {
-  -moz-appearance: progressbar;
+  -moz-appearance: progress-bar;
   display: inline-block;
   vertical-align: -0.2em;
 
@@ -842,7 +842,7 @@ progress {
 }
 
 meter {
-  -moz-appearance: meterbar;
+  -moz-appearance: meter;
   display: inline-block;
   vertical-align: -0.2em;
 

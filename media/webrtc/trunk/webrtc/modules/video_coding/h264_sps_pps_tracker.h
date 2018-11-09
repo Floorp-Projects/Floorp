@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_VIDEO_CODING_H264_SPS_PPS_TRACKER_H_
-#define WEBRTC_MODULES_VIDEO_CODING_H264_SPS_PPS_TRACKER_H_
+#ifndef MODULES_VIDEO_CODING_H264_SPS_PPS_TRACKER_H_
+#define MODULES_VIDEO_CODING_H264_SPS_PPS_TRACKER_H_
 
 #include <cstdint>
 #include <map>
 #include <memory>
 #include <vector>
 
-#include "webrtc/modules/include/module_common_types.h"
+#include "modules/include/module_common_types.h"
 
 namespace webrtc {
 
@@ -29,8 +29,9 @@ class H264SpsPpsTracker {
   enum PacketAction { kInsert, kDrop, kRequestKeyframe };
 
   PacketAction CopyAndFixBitstream(VCMPacket* packet);
-  void InsertSpsPps(const std::vector<uint8_t>& sps,
-                    const std::vector<uint8_t>& pps);
+
+  void InsertSpsPpsNalus(const std::vector<uint8_t>& sps,
+                         const std::vector<uint8_t>& pps);
 
  private:
   struct PpsInfo {
@@ -41,6 +42,8 @@ class H264SpsPpsTracker {
 
   struct SpsInfo {
     size_t size = 0;
+    int width = -1;
+    int height = -1;
     std::unique_ptr<uint8_t[]> data;
   };
 
@@ -51,4 +54,4 @@ class H264SpsPpsTracker {
 }  // namespace video_coding
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_VIDEO_CODING_H264_SPS_PPS_TRACKER_H_
+#endif  // MODULES_VIDEO_CODING_H264_SPS_PPS_TRACKER_H_

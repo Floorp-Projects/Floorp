@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/api/video/video_frame.h"
+#include "api/video/video_frame.h"
 
-#include "webrtc/base/checks.h"
-#include "webrtc/base/timeutils.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/timeutils.h"
 
 namespace webrtc {
 
@@ -51,12 +51,12 @@ int VideoFrame::height() const {
   return video_frame_buffer_ ? video_frame_buffer_->height() : 0;
 }
 
-rtc::scoped_refptr<VideoFrameBuffer> VideoFrame::video_frame_buffer() const {
-  return video_frame_buffer_;
+uint32_t VideoFrame::size() const {
+  return width() * height();
 }
 
-void VideoFrame::set_render_time_ms(int64_t render_time_ms) {
-  set_timestamp_us(render_time_ms * rtc::kNumMicrosecsPerMillisec);
+rtc::scoped_refptr<VideoFrameBuffer> VideoFrame::video_frame_buffer() const {
+  return video_frame_buffer_;
 }
 
 int64_t VideoFrame::render_time_ms() const {

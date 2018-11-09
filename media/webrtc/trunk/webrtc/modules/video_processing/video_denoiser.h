@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_VIDEO_PROCESSING_VIDEO_DENOISER_H_
-#define WEBRTC_MODULES_VIDEO_PROCESSING_VIDEO_DENOISER_H_
+#ifndef MODULES_VIDEO_PROCESSING_VIDEO_DENOISER_H_
+#define MODULES_VIDEO_PROCESSING_VIDEO_DENOISER_H_
 
 #include <memory>
 
-#include "webrtc/common_video/include/i420_buffer_pool.h"
-#include "webrtc/modules/video_processing/util/denoiser_filter.h"
-#include "webrtc/modules/video_processing/util/noise_estimation.h"
-#include "webrtc/modules/video_processing/util/skin_detection.h"
+#include "common_video/include/i420_buffer_pool.h"
+#include "modules/video_processing/util/denoiser_filter.h"
+#include "modules/video_processing/util/noise_estimation.h"
+#include "modules/video_processing/util/skin_detection.h"
 
 namespace webrtc {
 
@@ -24,12 +24,12 @@ class VideoDenoiser {
  public:
   explicit VideoDenoiser(bool runtime_cpu_detection);
 
-  rtc::scoped_refptr<VideoFrameBuffer> DenoiseFrame(
-      rtc::scoped_refptr<VideoFrameBuffer> frame,
+  rtc::scoped_refptr<I420BufferInterface> DenoiseFrame(
+      rtc::scoped_refptr<I420BufferInterface> frame,
       bool noise_estimation_enabled);
 
  private:
-  void DenoiserReset(rtc::scoped_refptr<VideoFrameBuffer> frame);
+  void DenoiserReset(rtc::scoped_refptr<I420BufferInterface> frame);
 
   // Check the mb position, return 1: close to the frame center (between 1/8
   // and 7/8 of width/height), 3: close to the border (out of 1/16 and 15/16
@@ -76,9 +76,9 @@ class VideoDenoiser {
   // Save the return values by MbDenoise for each block.
   std::unique_ptr<DenoiserDecision[]> mb_filter_decision_;
   I420BufferPool buffer_pool_;
-  rtc::scoped_refptr<VideoFrameBuffer> prev_buffer_;
+  rtc::scoped_refptr<I420BufferInterface> prev_buffer_;
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_VIDEO_PROCESSING_VIDEO_DENOISER_H_
+#endif  // MODULES_VIDEO_PROCESSING_VIDEO_DENOISER_H_

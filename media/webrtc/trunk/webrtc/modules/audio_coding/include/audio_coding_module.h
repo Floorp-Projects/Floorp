@@ -8,23 +8,24 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_CODING_INCLUDE_AUDIO_CODING_MODULE_H_
-#define WEBRTC_MODULES_AUDIO_CODING_INCLUDE_AUDIO_CODING_MODULE_H_
+#ifndef MODULES_AUDIO_CODING_INCLUDE_AUDIO_CODING_MODULE_H_
+#define MODULES_AUDIO_CODING_INCLUDE_AUDIO_CODING_MODULE_H_
 
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "webrtc/base/deprecation.h"
-#include "webrtc/base/function_view.h"
-#include "webrtc/base/optional.h"
-#include "webrtc/common_types.h"
-#include "webrtc/modules/audio_coding/codecs/audio_decoder_factory.h"
-#include "webrtc/modules/audio_coding/include/audio_coding_module_typedefs.h"
-#include "webrtc/modules/audio_coding/neteq/include/neteq.h"
-#include "webrtc/modules/include/module.h"
-#include "webrtc/system_wrappers/include/clock.h"
-#include "webrtc/typedefs.h"
+#include "api/audio_codecs/audio_decoder_factory.h"
+#include "api/audio_codecs/audio_encoder.h"
+#include "api/optional.h"
+#include "common_types.h"  // NOLINT(build/include)
+#include "modules/audio_coding/include/audio_coding_module_typedefs.h"
+#include "modules/audio_coding/neteq/include/neteq.h"
+#include "modules/include/module.h"
+#include "rtc_base/deprecation.h"
+#include "rtc_base/function_view.h"
+#include "system_wrappers/include/clock.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
@@ -69,7 +70,6 @@ class AudioCodingModule {
     Config(const Config&);
     ~Config();
 
-    int id;
     NetEq::Config neteq_config;
     Clock* clock;
     rtc::scoped_refptr<AudioDecoderFactory> decoder_factory;
@@ -82,8 +82,10 @@ class AudioCodingModule {
   // injected into ACM. ACM will take the ownership of the object clock and
   // delete it when destroyed.
   //
-  static AudioCodingModule* Create(int id);
-  static AudioCodingModule* Create(int id, Clock* clock);
+  // TODO(solenberg): Remove once downstream projects are updated.
+  RTC_DEPRECATED static AudioCodingModule* Create(int id);
+  static AudioCodingModule* Create();
+  static AudioCodingModule* Create(Clock* clock);
   static AudioCodingModule* Create(const Config& config);
   virtual ~AudioCodingModule() = default;
 
@@ -484,6 +486,10 @@ class AudioCodingModule {
   //
   virtual int32_t PlayoutFrequency() const = 0;
 
+  // Replace any existing decoders with the given payload type -> decoder map.
+  virtual void SetReceiveCodecs(
+      const std::map<int, SdpAudioFormat>& codecs) = 0;
+
   // Registers a decoder for the given payload type. Returns true iff
   // successful.
   virtual bool RegisterReceiveCodec(int rtp_payload_type,
@@ -593,35 +599,6 @@ class AudioCodingModule {
                                  const WebRtcRTPHeader& rtp_info) = 0;
 
   ///////////////////////////////////////////////////////////////////////////
-  // int32_t IncomingPayload()
-  // Call this API to push incoming payloads when there is no rtp-info.
-  // The rtp-info will be created in ACM. One usage for this API is when
-  // pre-encoded files are pushed in ACM
-  //
-  // Inputs:
-  //   -incoming_payload   : received payload.
-  //   -payload_len_byte   : the length, in bytes, of the received payload.
-  //   -payload_type       : the payload-type. This specifies which codec has
-  //                         to be used to decode the payload.
-  //   -timestamp          : send timestamp of the payload. ACM starts with
-  //                         a random value and increment it by the
-  //                         packet-size, which is given when the codec in
-  //                         question is registered by RegisterReceiveCodec().
-  //                         Therefore, it is essential to have the timestamp
-  //                         if the frame-size differ from the registered
-  //                         value or if the incoming payload contains DTX
-  //                         packets.
-  //
-  // Return value:
-  //   -1 if failed to push in the payload
-  //    0 if payload is successfully pushed in.
-  //
-  virtual int32_t IncomingPayload(const uint8_t* incoming_payload,
-                                  const size_t payload_len_byte,
-                                  const uint8_t payload_type,
-                                  const uint32_t timestamp = 0) = 0;
-
-  ///////////////////////////////////////////////////////////////////////////
   // int SetMinimumPlayoutDelay()
   // Set a minimum for the playout delay, used for lip-sync. NetEq maintains
   // such a delay unless channel condition yields to a higher delay.
@@ -648,7 +625,8 @@ class AudioCodingModule {
   //
   virtual int SetMaximumPlayoutDelay(int time_ms) = 0;
 
-  //
+  // TODO(kwiberg): Consider if this is needed anymore, now that voe::Channel
+  //                doesn't use it.
   // The shortest latency, in milliseconds, required by jitter buffer. This
   // is computed based on inter-arrival times and playout mode of NetEq. The
   // actual delay is the maximum of least-required-delay and the minimum-delay
@@ -687,6 +665,12 @@ class AudioCodingModule {
   // periods.
   //
   virtual int FilteredCurrentDelayMs() const = 0;
+
+  ///////////////////////////////////////////////////////////////////////////
+  // int FilteredCurrentDelayMs()
+  // Returns the current target delay for NetEq in ms.
+  //
+  virtual int TargetDelayMs() const = 0;
 
   ///////////////////////////////////////////////////////////////////////////
   // int32_t PlayoutData10Ms(
@@ -828,8 +812,10 @@ class AudioCodingModule {
 
   virtual void GetDecodingCallStatistics(
       AudioDecodingCallStats* call_stats) const = 0;
+
+  virtual ANAStats GetANAStats() const = 0;
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_AUDIO_CODING_INCLUDE_AUDIO_CODING_MODULE_H_
+#endif  // MODULES_AUDIO_CODING_INCLUDE_AUDIO_CODING_MODULE_H_

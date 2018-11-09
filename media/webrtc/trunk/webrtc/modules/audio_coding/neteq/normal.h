@@ -8,17 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ_NORMAL_H_
-#define WEBRTC_MODULES_AUDIO_CODING_NETEQ_NORMAL_H_
+#ifndef MODULES_AUDIO_CODING_NETEQ_NORMAL_H_
+#define MODULES_AUDIO_CODING_NETEQ_NORMAL_H_
 
 #include <string.h>  // Access to size_t.
 
 #include <vector>
 
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/modules/audio_coding/neteq/audio_multi_vector.h"
-#include "webrtc/modules/audio_coding/neteq/defines.h"
-#include "webrtc/typedefs.h"
+#include "modules/audio_coding/neteq/audio_multi_vector.h"
+#include "modules/audio_coding/neteq/defines.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/constructormagic.h"
+#include "rtc_base/numerics/safe_conversions.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
@@ -32,14 +34,17 @@ class Expand;
 // no other "special circumstances" are at hand.
 class Normal {
  public:
-  Normal(int fs_hz, DecoderDatabase* decoder_database,
+  Normal(int fs_hz,
+         DecoderDatabase* decoder_database,
          const BackgroundNoise& background_noise,
          Expand* expand)
       : fs_hz_(fs_hz),
         decoder_database_(decoder_database),
         background_noise_(background_noise),
-        expand_(expand) {
-  }
+        expand_(expand),
+        samples_per_ms_(rtc::CheckedDivExact(fs_hz_, 1000)),
+        default_win_slope_Q14_(
+            rtc::dchecked_cast<uint16_t>((1 << 14) / samples_per_ms_)) {}
 
   virtual ~Normal() {}
 
@@ -60,9 +65,11 @@ class Normal {
   DecoderDatabase* decoder_database_;
   const BackgroundNoise& background_noise_;
   Expand* expand_;
+  const size_t samples_per_ms_;
+  const int16_t default_win_slope_Q14_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(Normal);
 };
 
 }  // namespace webrtc
-#endif  // WEBRTC_MODULES_AUDIO_CODING_NETEQ_NORMAL_H_
+#endif  // MODULES_AUDIO_CODING_NETEQ_NORMAL_H_

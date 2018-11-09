@@ -3256,6 +3256,12 @@ function BrowserReloadWithFlags(reloadFlags) {
                              { once: true });
         gBrowser._insertBrowser(tab);
       }
+    } else if (browser.hasAttribute("recordExecution")) {
+      // Recording tabs always use new content processes when reloading, to get
+      // a fresh recording.
+      gBrowser.updateBrowserRemoteness(browser, true,
+                                       { recordExecution: "*", newFrameloader: true });
+      loadBrowserURI(browser, url);
     } else {
       unchangedRemoteness.push(tab);
     }

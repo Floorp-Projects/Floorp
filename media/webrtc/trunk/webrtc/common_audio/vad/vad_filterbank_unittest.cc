@@ -10,16 +10,17 @@
 
 #include <stdlib.h>
 
-#include "webrtc/common_audio/vad/vad_unittest.h"
-#include "webrtc/test/gtest.h"
-#include "webrtc/typedefs.h"
+#include "common_audio/vad/vad_unittest.h"
+#include "test/gtest.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 extern "C" {
-#include "webrtc/common_audio/vad/vad_core.h"
-#include "webrtc/common_audio/vad/vad_filterbank.h"
+#include "common_audio/vad/vad_core.h"
+#include "common_audio/vad/vad_filterbank.h"
 }
 
-namespace {
+namespace webrtc {
+namespace test {
 
 const int kNumValidFrameLengths = 3;
 
@@ -89,4 +90,5 @@ TEST_F(VadTest, vad_filterbank) {
 
   free(self);
 }
-}  // namespace
+}  // namespace test
+}  // namespace webrtc

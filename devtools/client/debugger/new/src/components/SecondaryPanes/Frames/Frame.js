@@ -4,6 +4,8 @@
 
 // @flow
 import React, { Component } from "react";
+import PropTypes from "prop-types";
+
 import classNames from "classnames";
 import Svg from "../../shared/Svg";
 
@@ -16,11 +18,12 @@ import type { LocalFrame } from "./types";
 
 type FrameTitleProps = {
   frame: Frame,
-  options: Object
+  options: Object,
+  l10n: Object
 };
 
-function FrameTitle({ frame, options = {} }: FrameTitleProps) {
-  const displayName = formatDisplayName(frame, options);
+function FrameTitle({ frame, options = {}, l10n }: FrameTitleProps) {
+  const displayName = formatDisplayName(frame, options, l10n);
   return <div className="title">{displayName}</div>;
 }
 
@@ -61,16 +64,18 @@ type FrameComponentProps = {
   shouldMapDisplayName: boolean,
   toggleBlackBox: Function,
   displayFullUrl: boolean,
-  getFrameTitle?: string => string
+  getFrameTitle?: string => string,
+  disableContextMenu: boolean
 };
 
 export default class FrameComponent extends Component<FrameComponentProps> {
   static defaultProps = {
     hideLocation: false,
-    shouldMapDisplayName: true
+    shouldMapDisplayName: true,
+    disableContextMenu: false
   };
 
-  onContextMenu(event: SyntheticKeyboardEvent<HTMLElement>) {
+  onContextMenu(event: SyntheticMouseEvent<HTMLElement>) {
     const {
       frame,
       copyStackTrace,
@@ -87,11 +92,11 @@ export default class FrameComponent extends Component<FrameComponentProps> {
   }
 
   onMouseDown(
-    e: SyntheticKeyboardEvent<HTMLElement>,
+    e: SyntheticMouseEvent<HTMLElement>,
     frame: Frame,
     selectedFrame: Frame
   ) {
-    if (e.which == 3) {
+    if (e.button !== 0) {
       return;
     }
     this.props.selectFrame(frame);
@@ -115,8 +120,10 @@ export default class FrameComponent extends Component<FrameComponentProps> {
       hideLocation,
       shouldMapDisplayName,
       displayFullUrl,
-      getFrameTitle
+      getFrameTitle,
+      disableContextMenu
     } = this.props;
+    const { l10n } = this.context;
 
     const className = classNames("frame", {
       selected: selectedFrame && selectedFrame.id === frame.id
@@ -134,11 +141,15 @@ export default class FrameComponent extends Component<FrameComponentProps> {
         className={className}
         onMouseDown={e => this.onMouseDown(e, frame, selectedFrame)}
         onKeyUp={e => this.onKeyUp(e, frame, selectedFrame)}
-        onContextMenu={e => this.onContextMenu(e)}
+        onContextMenu={disableContextMenu ? null : e => this.onContextMenu(e)}
         tabIndex={0}
         title={title}
       >
-        <FrameTitle frame={frame} options={{ shouldMapDisplayName }} />
+        <FrameTitle
+          frame={frame}
+          options={{ shouldMapDisplayName }}
+          l10n={l10n}
+        />
         {!hideLocation && (
           <FrameLocation frame={frame} displayFullUrl={displayFullUrl} />
         )}
@@ -148,3 +159,4 @@ export default class FrameComponent extends Component<FrameComponentProps> {
 }
 
 FrameComponent.displayName = "Frame";
+FrameComponent.contextTypes = { l10n: PropTypes.object };

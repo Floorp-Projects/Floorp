@@ -21,7 +21,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 
-#include "webrtc/config.h"
+#include "webrtc/api/rtpparameters.h"
 
 #include "signaling/src/jsep/JsepTrack.h"
 #include "signaling/src/jsep/JsepTransport.h"
