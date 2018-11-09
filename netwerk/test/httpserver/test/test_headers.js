@@ -100,7 +100,7 @@ function testGetHeader() {
   Assert.equal(c, "text/html");
 
   headers.setHeader("test", "FOO", false);
-  var c = headers.getHeader("test");
+  c = headers.getHeader("test");
   Assert.equal(c, "FOO");
 
   try {
@@ -140,9 +140,9 @@ function testHeaderEnumerator() {
     delete heads[it.toLowerCase()];
   }
 
-  for (var i in heads)
+  if (Object.keys(heads).length != 0) {
     do_throw("still have properties in heads!?!?");
-
+  }
 }
 
 function testHasHeader() {

@@ -3,6 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* eslint-disable no-control-regex */
 
 /*
  * Verify the presence of explicit QueryInterface methods on XPCOM objects
@@ -24,9 +25,8 @@ var srv;
 function run_test() {
   srv = createServer();
 
-  var qi;
   try {
-    qi = srv.identity.QueryInterface(Ci.nsIHttpServerIdentity);
+    srv.identity.QueryInterface(Ci.nsIHttpServerIdentity);
   } catch (e) {
     var exstr = ("" + e).split(/[\x09\x20-\x7f\x81-\xff]+/)[0];
     do_throw("server identity didn't QI: " + exstr);

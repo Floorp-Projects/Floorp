@@ -8,7 +8,9 @@
 // escaping checks -- highly dependent on the default index handler output
 // format
 
-var srv, dir, dirEntries;
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+var srv, dir, gDirEntries;
 
 XPCOMUtils.defineLazyGetter(this, "BASE_URL", function() {
   return "http://localhost:" + srv.identity.primaryPort + "/";
@@ -37,9 +39,7 @@ function run_test() {
 }
 
 function createTestDirectory() {
-  dir = Cc["@mozilla.org/file/directory_service;1"]
-          .getService(Ci.nsIProperties)
-          .get("TmpD", Ci.nsIFile);
+  dir = Services.dirsvc.get("TmpD", Ci.nsIFile);
   dir.append("index_handler_test_" + Math.random());
   dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o744);
 
@@ -62,7 +62,7 @@ function createTestDirectory() {
   makeFile("zf%200h", false, dir, files);
   makeFile("zg>m", false, dir, files);
 
-  dirEntries = [files];
+  gDirEntries = [files];
 
   var subdir = dir.clone();
   subdir.append("foo");
@@ -74,7 +74,7 @@ function createTestDirectory() {
   makeFile("AA_file.txt", false, subdir, files);
   makeFile("test.txt", false, subdir, files);
 
-  dirEntries.push(files);
+  gDirEntries.push(files);
 }
 
 function destroyTestDirectory() {
@@ -116,10 +116,7 @@ function hiddenDataCheck(bytes, uri, path) {
   Assert.equal(lst.length, 1);
   var items = lst[0].getElementsByTagName("li");
 
-  var ios = Cc["@mozilla.org/network/io-service;1"]
-              .getService(Ci.nsIIOService);
-
-  var top = ios.newURI(uri);
+  var top = Services.io.newURI(uri);
 
   // N.B. No ERROR_IF_SEE_THIS.txt^ file!
   var dirEntries = [{name: "file.txt", isDirectory: false},
@@ -133,7 +130,7 @@ function hiddenDataCheck(bytes, uri, path) {
 
     Assert.equal(link.textContent, f.name + sep);
 
-    uri = ios.newURI(link.getAttribute("href"), null, top);
+    uri = Services.io.newURI(link.getAttribute("href"), null, top);
     Assert.equal(decodeURIComponent(uri.pathQueryRef), path + f.name + sep);
   }
 }
@@ -184,11 +181,6 @@ function dataCheck(bytes, uri, path, dirEntries) {
   Assert.equal(lst.length, 1);
   var items = lst[0].getElementsByTagName("li");
 
-  var ios = Cc["@mozilla.org/network/io-service;1"]
-              .getService(Ci.nsIIOService);
-
-  var dirURI = ios.newURI(uri);
-
   for (var i = 0; i < items.length; i++) {
     var link = items[i].childNodes[0];
     var f = dirEntries[i];
@@ -197,7 +189,7 @@ function dataCheck(bytes, uri, path, dirEntries) {
 
     Assert.equal(link.textContent, f.name + sep);
 
-    uri = ios.newURI(link.getAttribute("href"), null, top);
+    uri = Services.io.newURI(link.getAttribute("href"), null, top);
     Assert.equal(decodeURIComponent(uri.pathQueryRef), path + f.name + sep);
   }
 }
@@ -235,12 +227,12 @@ function start(ch) {
   Assert.equal(ch.getResponseHeader("Content-Type"), "text/html;charset=utf-8");
 }
 function stopRootDirectory(ch, cx, status, data) {
-  dataCheck(data, BASE_URL, "/", dirEntries[0]);
+  dataCheck(data, BASE_URL, "/", gDirEntries[0]);
 }
 
 // check non-top-level, too
 function stopFooDirectory(ch, cx, status, data) {
-  dataCheck(data, BASE_URL + "foo/", "/foo/", dirEntries[1]);
+  dataCheck(data, BASE_URL + "foo/", "/foo/", gDirEntries[1]);
 }
 
 // trailing-caret leaf with hidden files

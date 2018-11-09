@@ -28,7 +28,7 @@ function run_test() {
  * BEGIN TESTS *
  ***************/
 
-var test, data, str;
+var test, gData, str;
 var tests = [];
 
 
@@ -51,9 +51,9 @@ if (reallyLong.length !== 524288)
 str = "GET /very-long-request-line?" + reallyLong + " HTTP/1.1\r\n" +
       "Host: localhost:" + PORT + "\r\n" +
       "\r\n";
-data = [];
-for (var i = 0; i < str.length; i += 16384)
-  data.push(str.substr(i, 16384));
+gData = [];
+for (let i = 0; i < str.length; i += 16384)
+  gData.push(str.substr(i, 16384));
 
 function checkVeryLongRequestLine(data) {
   var iter = LineIterator(data);
@@ -80,7 +80,7 @@ function checkVeryLongRequestLine(data) {
 
   expectLines(iter, body);
 }
-test = new RawTest("localhost", PORT, data, checkVeryLongRequestLine),
+test = new RawTest("localhost", PORT, gData, checkVeryLongRequestLine);
 tests.push(test);
 
 
@@ -90,15 +90,15 @@ function lotsOfLeadingBlankLines(request, response) {
 }
 
 var blankLines = "\r\n";
-for (var i = 0; i < 14; i++)
+for (let i = 0; i < 14; i++)
   blankLines += blankLines;
 str = blankLines +
       "GET /lots-of-leading-blank-lines HTTP/1.1\r\n" +
       "Host: localhost:" + PORT + "\r\n" +
       "\r\n";
-data = [];
-for (var i = 0; i < str.length; i += 100)
-  data.push(str.substr(i, 100));
+gData = [];
+for (let i = 0; i < str.length; i += 100)
+  gData.push(str.substr(i, 100));
 
 function checkLotsOfLeadingBlankLines(data) {
   var iter = LineIterator(data);
@@ -126,5 +126,5 @@ function checkLotsOfLeadingBlankLines(data) {
   expectLines(iter, body);
 }
 
-test = new RawTest("localhost", PORT, data, checkLotsOfLeadingBlankLines),
+test = new RawTest("localhost", PORT, gData, checkLotsOfLeadingBlankLines);
 tests.push(test);
