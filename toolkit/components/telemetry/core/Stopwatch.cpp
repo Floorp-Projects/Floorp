@@ -230,6 +230,12 @@ Timers::Timers()
 
   mTimers = JS::NewMapObject(jsapi.cx());
   MOZ_RELEASE_ASSERT(mTimers);
+
+  // Telemetry is disabled when recording/replaying, so don't report errors
+  // when it is used.
+  if (recordreplay::IsRecordingOrReplaying()) {
+    mSuppressErrors = true;
+  }
 }
 
 JSObject*
