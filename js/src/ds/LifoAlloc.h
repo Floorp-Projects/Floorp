@@ -664,6 +664,25 @@ class LifoAlloc
         return allocImpl(n);
     }
 
+    // Allocates |n| bytes if we can guarantee that we will have
+    // |needed| unused bytes remaining. Returns nullptr if we can't.
+    // This is useful for maintaining our ballast invariants while
+    // attempting fallible allocations.
+    MOZ_ALWAYS_INLINE
+    void* allocEnsureUnused(size_t n, size_t needed) {
+        JS_OOM_POSSIBLY_FAIL();
+        MOZ_ASSERT(fallibleScope_);
+
+        detail::BumpChunk::Mark m = mark();
+        void *result = allocImpl(n);
+        if (!ensureUnusedApproximate(needed)) {
+            release(m);
+            return nullptr;
+        }
+        cancelMark(m);
+        return result;
+    }
+
     template<typename T, typename... Args>
     MOZ_ALWAYS_INLINE T*
     allocInSize(size_t n, Args&&... args)
@@ -802,6 +821,12 @@ class LifoAlloc
         }
     }
 
+  private:
+    void cancelMark(Mark mark) {
+        markCount--;
+    }
+
+  public:
     void releaseAll() {
         MOZ_ASSERT(!markCount);
         for (detail::BumpChunk& bc : chunks_) {
