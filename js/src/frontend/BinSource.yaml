@@ -747,15 +747,15 @@ EagerFunctionExpression:
                 ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
                 BINJS_TRY(lexicalScope.init(parseContext_));
                 ListNode* params;
-                ListNode* tmpBody;
+                ListNode* body;
             extra-args: |
-                length, &params, &tmpBody
+                length, &params, &body
             after: |
-                BINJS_MOZ_TRY_DECL(body, appendDirectivesToBody(tmpBody, directives));
+                MOZ_TRY(prependDirectivesToBody(body, directives));
     build: |
         BINJS_TRY_DECL(lexicalScopeData, NewLexicalScopeData(cx_, lexicalScope, alloc_, parseContext_));
-        BINJS_TRY_VAR(body, factory_.newLexicalScope(*lexicalScopeData, body));
-        BINJS_MOZ_TRY_DECL(result, buildFunction(start, kind, name, params, body, funbox));
+        BINJS_TRY_DECL(bodyScope, factory_.newLexicalScope(*lexicalScopeData, body));
+        BINJS_MOZ_TRY_DECL(result, buildFunction(start, kind, name, params, bodyScope, funbox));
 
 LazyFunctionExpression:
     init: |
@@ -1130,7 +1130,8 @@ Script:
                 forceStrictIfNecessary(parseContext_->sc(), directives);
     build:
         MOZ_TRY(checkClosedVars(parseContext_->varScope()));
-        BINJS_MOZ_TRY_DECL(result, appendDirectivesToBody(/* body = */ statements, /* directives = */ directives));
+        MOZ_TRY(prependDirectivesToBody(/* body = */ statements, directives));
+        auto result = statements;
 
 ShorthandProperty:
     build: |

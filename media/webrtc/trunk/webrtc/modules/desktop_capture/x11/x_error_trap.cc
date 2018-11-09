@@ -8,26 +8,28 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/desktop_capture/x11/x_error_trap.h"
+#include "modules/desktop_capture/x11/x_error_trap.h"
 
 #include <assert.h>
+
 #include <limits>
 
 namespace webrtc {
 
-// static
+// TODO(sergeyu): This code is not thread safe. Fix it. Bug 2202.
+static bool g_xserver_error_trap_enabled = false;
+static int g_last_xserver_error_code = 0;
+
 Bool XErrorTrap::XServerErrorHandler(Display* display, xReply* rep,
                                      char* /* buf */, int /* len */,
                                      XPointer data) {
   XErrorTrap* self = reinterpret_cast<XErrorTrap*>(data);
-
   if (rep->generic.type != X_Error ||
       // Overflow-safe last_request_read <= last_ignored_request_ for skipping
       // async replies from requests before XErrorTrap was created.
       self->last_ignored_request_ - display->last_request_read <
       std::numeric_limits<unsigned long>::max() >> 1)
     return False;
-
   self->last_xserver_error_code_ = rep->error.errorCode;
   return True;
 }

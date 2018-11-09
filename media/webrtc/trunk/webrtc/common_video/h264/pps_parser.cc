@@ -8,18 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/common_video/h264/pps_parser.h"
+#include "common_video/h264/pps_parser.h"
 
 #include <memory>
+#include <vector>
 
-#include "webrtc/common_video/h264/h264_common.h"
-#include "webrtc/base/bitbuffer.h"
-#include "webrtc/base/buffer.h"
-#include "webrtc/base/logging.h"
+#include "common_video/h264/h264_common.h"
+#include "rtc_base/bitbuffer.h"
+#include "rtc_base/logging.h"
 
-#define RETURN_EMPTY_ON_FAIL(x)                  \
-  if (!(x)) {                                    \
-    return rtc::Optional<PpsParser::PpsState>(); \
+#define RETURN_EMPTY_ON_FAIL(x) \
+  if (!(x)) {                   \
+    return rtc::nullopt;        \
   }
 
 namespace {
@@ -38,8 +38,8 @@ rtc::Optional<PpsParser::PpsState> PpsParser::ParsePps(const uint8_t* data,
   // First, parse out rbsp, which is basically the source buffer minus emulation
   // bytes (the last byte of a 0x00 0x00 0x03 sequence). RBSP is defined in
   // section 7.3.1 of the H.264 standard.
-  std::unique_ptr<rtc::Buffer> unpacked_buffer = H264::ParseRbsp(data, length);
-  rtc::BitBuffer bit_buffer(unpacked_buffer->data(), unpacked_buffer->size());
+  std::vector<uint8_t> unpacked_buffer = H264::ParseRbsp(data, length);
+  rtc::BitBuffer bit_buffer(unpacked_buffer.data(), unpacked_buffer.size());
   return ParseInternal(&bit_buffer);
 }
 
@@ -52,28 +52,28 @@ bool PpsParser::ParsePpsIds(const uint8_t* data,
   // First, parse out rbsp, which is basically the source buffer minus emulation
   // bytes (the last byte of a 0x00 0x00 0x03 sequence). RBSP is defined in
   // section 7.3.1 of the H.264 standard.
-  std::unique_ptr<rtc::Buffer> unpacked_buffer = H264::ParseRbsp(data, length);
-  rtc::BitBuffer bit_buffer(unpacked_buffer->data(), unpacked_buffer->size());
+  std::vector<uint8_t> unpacked_buffer = H264::ParseRbsp(data, length);
+  rtc::BitBuffer bit_buffer(unpacked_buffer.data(), unpacked_buffer.size());
   return ParsePpsIdsInternal(&bit_buffer, pps_id, sps_id);
 }
 
 rtc::Optional<uint32_t> PpsParser::ParsePpsIdFromSlice(const uint8_t* data,
                                                        size_t length) {
-  std::unique_ptr<rtc::Buffer> slice_rbsp(H264::ParseRbsp(data, length));
-  rtc::BitBuffer slice_reader(slice_rbsp->data(), slice_rbsp->size());
+  std::vector<uint8_t> unpacked_buffer = H264::ParseRbsp(data, length);
+  rtc::BitBuffer slice_reader(unpacked_buffer.data(), unpacked_buffer.size());
 
   uint32_t golomb_tmp;
   // first_mb_in_slice: ue(v)
   if (!slice_reader.ReadExponentialGolomb(&golomb_tmp))
-    return rtc::Optional<uint32_t>();
+    return rtc::nullopt;
   // slice_type: ue(v)
   if (!slice_reader.ReadExponentialGolomb(&golomb_tmp))
-    return rtc::Optional<uint32_t>();
+    return rtc::nullopt;
   // pic_parameter_set_id: ue(v)
   uint32_t slice_pps_id;
   if (!slice_reader.ReadExponentialGolomb(&slice_pps_id))
-    return rtc::Optional<uint32_t>();
-  return rtc::Optional<uint32_t>(slice_pps_id);
+    return rtc::nullopt;
+  return slice_pps_id;
 }
 
 rtc::Optional<PpsParser::PpsState> PpsParser::ParseInternal(
@@ -183,7 +183,7 @@ rtc::Optional<PpsParser::PpsState> PpsParser::ParseInternal(
   RETURN_EMPTY_ON_FAIL(
       bit_buffer->ReadBits(&pps.redundant_pic_cnt_present_flag, 1));
 
-  return rtc::Optional<PpsParser::PpsState>(pps);
+  return pps;
 }
 
 bool PpsParser::ParsePpsIdsInternal(rtc::BitBuffer* bit_buffer,

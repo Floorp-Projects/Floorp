@@ -2355,13 +2355,13 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(const size_t start, co
     ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
     BINJS_TRY(lexicalScope.init(parseContext_));
     ListNode* params;
-    ListNode* tmpBody;
+    ListNode* body;
     MOZ_TRY(parseFunctionOrMethodContents(
-        length, &params, &tmpBody));
-    BINJS_MOZ_TRY_DECL(body, appendDirectivesToBody(tmpBody, directives));
+        length, &params, &body));
+    MOZ_TRY(prependDirectivesToBody(body, directives));
     BINJS_TRY_DECL(lexicalScopeData, NewLexicalScopeData(cx_, lexicalScope, alloc_, parseContext_));
-    BINJS_TRY_VAR(body, factory_.newLexicalScope(*lexicalScopeData, body));
-    BINJS_MOZ_TRY_DECL(result, buildFunction(start, kind, name, params, body, funbox));
+    BINJS_TRY_DECL(bodyScope, factory_.newLexicalScope(*lexicalScopeData, body));
+    BINJS_MOZ_TRY_DECL(result, buildFunction(start, kind, name, params, bodyScope, funbox));
     return result;
 }
 
@@ -2411,13 +2411,13 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(const size_t start, con
     ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
     BINJS_TRY(lexicalScope.init(parseContext_));
     ListNode* params;
-    ListNode* tmpBody;
+    ListNode* body;
     MOZ_TRY(parseFunctionExpressionContents(
-        length, &params, &tmpBody));
-    BINJS_MOZ_TRY_DECL(body, appendDirectivesToBody(tmpBody, directives));
+        length, &params, &body));
+    MOZ_TRY(prependDirectivesToBody(body, directives));
     BINJS_TRY_DECL(lexicalScopeData, NewLexicalScopeData(cx_, lexicalScope, alloc_, parseContext_));
-    BINJS_TRY_VAR(body, factory_.newLexicalScope(*lexicalScopeData, body));
-    BINJS_MOZ_TRY_DECL(result, buildFunction(start, kind, name, params, body, funbox));
+    BINJS_TRY_DECL(bodyScope, factory_.newLexicalScope(*lexicalScopeData, body));
+    BINJS_MOZ_TRY_DECL(result, buildFunction(start, kind, name, params, bodyScope, funbox));
     return result;
 }
 
@@ -2461,10 +2461,10 @@ BinASTParser<Tok>::parseInterfaceEagerGetter(const size_t start, const BinKind k
     ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
     BINJS_TRY(lexicalScope.init(parseContext_));
     ListNode* params;
-    ListNode* tmpBody;
+    ListNode* body;
     MOZ_TRY(parseGetterContents(
-        length, &params, &tmpBody));
-    BINJS_MOZ_TRY_DECL(body, appendDirectivesToBody(tmpBody, directives));
+        length, &params, &body));
+    MOZ_TRY(prependDirectivesToBody(body, directives));
     BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
     BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, accessorType));
     return result;
@@ -2517,10 +2517,10 @@ BinASTParser<Tok>::parseInterfaceEagerMethod(const size_t start, const BinKind k
     ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
     BINJS_TRY(lexicalScope.init(parseContext_));
     ListNode* params;
-    ListNode* tmpBody;
+    ListNode* body;
     MOZ_TRY(parseFunctionOrMethodContents(
-        length, &params, &tmpBody));
-    BINJS_MOZ_TRY_DECL(body, appendDirectivesToBody(tmpBody, directives));
+        length, &params, &body));
+    MOZ_TRY(prependDirectivesToBody(body, directives));
     BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
     BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, accessorType));
     return result;
@@ -2567,10 +2567,10 @@ BinASTParser<Tok>::parseInterfaceEagerSetter(const size_t start, const BinKind k
     ParseContext::Scope lexicalScope(cx_, parseContext_, usedNames_);
     BINJS_TRY(lexicalScope.init(parseContext_));
     ListNode* params;
-    ListNode* tmpBody;
+    ListNode* body;
     MOZ_TRY(parseSetterContents(
-        length, &params, &tmpBody));
-    BINJS_MOZ_TRY_DECL(body, appendDirectivesToBody(tmpBody, directives));
+        length, &params, &body));
+    MOZ_TRY(prependDirectivesToBody(body, directives));
     BINJS_MOZ_TRY_DECL(method, buildFunction(start, kind, name, params, body, funbox));
     BINJS_TRY_DECL(result, factory_.newObjectMethodOrPropertyDefinition(name, method, accessorType));
     return result;
@@ -3430,7 +3430,7 @@ BinASTParser<Tok>::parseInterfaceScript(const size_t start, const BinKind kind, 
     forceStrictIfNecessary(parseContext_->sc(), directives);
     BINJS_MOZ_TRY_DECL(statements, parseListOfStatement());
 
-    MOZ_TRY(checkClosedVars(parseContext_->varScope())); BINJS_MOZ_TRY_DECL(result, appendDirectivesToBody(/* body = */ statements, /* directives = */ directives));
+    MOZ_TRY(checkClosedVars(parseContext_->varScope())); MOZ_TRY(prependDirectivesToBody(/* body = */ statements, directives)); auto result = statements;
     return result;
 }
 

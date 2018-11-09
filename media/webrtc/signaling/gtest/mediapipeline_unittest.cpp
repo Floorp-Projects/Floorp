@@ -236,7 +236,9 @@ class TestAgent {
  public:
   TestAgent() :
       audio_config_(109, "opus", 48000, 960, 2, 64000, false),
-      audio_conduit_(mozilla::AudioSessionConduit::Create()),
+      audio_conduit_(mozilla::AudioSessionConduit::Create(
+        WebRtcCallWrapper::Create(),
+        test_utils->sts_target())),
       audio_pipeline_(),
       transport_(new LoopbackTransport) {
   }

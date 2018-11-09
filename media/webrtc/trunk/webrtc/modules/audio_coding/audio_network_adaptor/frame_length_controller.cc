@@ -8,28 +8,42 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/audio_network_adaptor/frame_length_controller.h"
+#include "modules/audio_coding/audio_network_adaptor/frame_length_controller.h"
 
+#include <algorithm>
 #include <utility>
 
-#include "webrtc/base/checks.h"
-#include "webrtc/base/logging.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
+
+namespace {
+constexpr int kPreventOveruseMarginBps = 5000;
+
+int OverheadRateBps(size_t overhead_bytes_per_packet, int frame_length_ms) {
+  return static_cast<int>(overhead_bytes_per_packet * 8 * 1000 /
+                          frame_length_ms);
+}
+}
 
 FrameLengthController::Config::Config(
     const std::vector<int>& encoder_frame_lengths_ms,
     int initial_frame_length_ms,
+    int min_encoder_bitrate_bps,
     float fl_increasing_packet_loss_fraction,
     float fl_decreasing_packet_loss_fraction,
-    int fl_20ms_to_60ms_bandwidth_bps,
-    int fl_60ms_to_20ms_bandwidth_bps)
+    int fl_increase_overhead_offset,
+    int fl_decrease_overhead_offset,
+    std::map<FrameLengthChange, int> fl_changing_bandwidths_bps)
     : encoder_frame_lengths_ms(encoder_frame_lengths_ms),
       initial_frame_length_ms(initial_frame_length_ms),
+      min_encoder_bitrate_bps(min_encoder_bitrate_bps),
       fl_increasing_packet_loss_fraction(fl_increasing_packet_loss_fraction),
       fl_decreasing_packet_loss_fraction(fl_decreasing_packet_loss_fraction),
-      fl_20ms_to_60ms_bandwidth_bps(fl_20ms_to_60ms_bandwidth_bps),
-      fl_60ms_to_20ms_bandwidth_bps(fl_60ms_to_20ms_bandwidth_bps) {}
+      fl_increase_overhead_offset(fl_increase_overhead_offset),
+      fl_decrease_overhead_offset(fl_decrease_overhead_offset),
+      fl_changing_bandwidths_bps(std::move(fl_changing_bandwidths_bps)) {}
 
 FrameLengthController::Config::Config(const Config& other) = default;
 
@@ -42,38 +56,42 @@ FrameLengthController::FrameLengthController(const Config& config)
                                config_.initial_frame_length_ms);
   // |encoder_frame_lengths_ms| must contain |initial_frame_length_ms|.
   RTC_DCHECK(frame_length_ms_ != config_.encoder_frame_lengths_ms.end());
-
-  frame_length_change_criteria_.insert(std::make_pair(
-      FrameLengthChange(20, 60), config_.fl_20ms_to_60ms_bandwidth_bps));
-  frame_length_change_criteria_.insert(std::make_pair(
-      FrameLengthChange(60, 20), config_.fl_60ms_to_20ms_bandwidth_bps));
 }
 
 FrameLengthController::~FrameLengthController() = default;
 
-void FrameLengthController::MakeDecision(
-    const NetworkMetrics& metrics,
-    AudioNetworkAdaptor::EncoderRuntimeConfig* config) {
+void FrameLengthController::UpdateNetworkMetrics(
+    const NetworkMetrics& network_metrics) {
+  if (network_metrics.uplink_bandwidth_bps)
+    uplink_bandwidth_bps_ = network_metrics.uplink_bandwidth_bps;
+  if (network_metrics.uplink_packet_loss_fraction)
+    uplink_packet_loss_fraction_ = network_metrics.uplink_packet_loss_fraction;
+  if (network_metrics.overhead_bytes_per_packet)
+    overhead_bytes_per_packet_ = network_metrics.overhead_bytes_per_packet;
+}
+
+void FrameLengthController::MakeDecision(AudioEncoderRuntimeConfig* config) {
   // Decision on |frame_length_ms| should not have been made.
   RTC_DCHECK(!config->frame_length_ms);
 
-  if (FrameLengthIncreasingDecision(metrics, *config)) {
+  if (FrameLengthIncreasingDecision(*config)) {
     ++frame_length_ms_;
-  } else if (FrameLengthDecreasingDecision(metrics, *config)) {
+    prev_decision_increase_ = true;
+  } else if (FrameLengthDecreasingDecision(*config)) {
     --frame_length_ms_;
+    prev_decision_increase_ = false;
   }
-  config->frame_length_ms = rtc::Optional<int>(*frame_length_ms_);
+  config->last_fl_change_increase = prev_decision_increase_;
+  config->frame_length_ms = *frame_length_ms_;
 }
 
-FrameLengthController::FrameLengthChange::FrameLengthChange(
+FrameLengthController::Config::FrameLengthChange::FrameLengthChange(
     int from_frame_length_ms,
     int to_frame_length_ms)
     : from_frame_length_ms(from_frame_length_ms),
       to_frame_length_ms(to_frame_length_ms) {}
 
-FrameLengthController::FrameLengthChange::~FrameLengthChange() = default;
-
-bool FrameLengthController::FrameLengthChange::operator<(
+bool FrameLengthController::Config::FrameLengthChange::operator<(
     const FrameLengthChange& rhs) const {
   return from_frame_length_ms < rhs.from_frame_length_ms ||
          (from_frame_length_ms == rhs.from_frame_length_ms &&
@@ -81,56 +99,85 @@ bool FrameLengthController::FrameLengthChange::operator<(
 }
 
 bool FrameLengthController::FrameLengthIncreasingDecision(
-    const NetworkMetrics& metrics,
-    const AudioNetworkAdaptor::EncoderRuntimeConfig& config) const {
+    const AudioEncoderRuntimeConfig& config) const {
   // Increase frame length if
-  // 1. longer frame length is available AND
-  // 2. |uplink_bandwidth_bps| is known to be smaller than a threshold AND
-  // 3. |uplink_packet_loss_fraction| is known to be smaller than a threshold
-  //    AND
-  // 4. FEC is not decided or is OFF.
+  // 1. |uplink_bandwidth_bps| is known to be smaller or equal than
+  //    |min_encoder_bitrate_bps| plus |prevent_overuse_margin_bps| plus the
+  //    current overhead rate OR all the following:
+  // 2. longer frame length is available AND
+  // 3. |uplink_bandwidth_bps| is known to be smaller than a threshold AND
+  // 4. |uplink_packet_loss_fraction| is known to be smaller than a threshold.
+
   auto longer_frame_length_ms = std::next(frame_length_ms_);
   if (longer_frame_length_ms == config_.encoder_frame_lengths_ms.end())
     return false;
 
-  auto increase_threshold = frame_length_change_criteria_.find(
-      FrameLengthChange(*frame_length_ms_, *longer_frame_length_ms));
+  auto increase_threshold = config_.fl_changing_bandwidths_bps.find(
+      Config::FrameLengthChange(*frame_length_ms_, *longer_frame_length_ms));
 
-  if (increase_threshold == frame_length_change_criteria_.end())
+  if (increase_threshold == config_.fl_changing_bandwidths_bps.end())
     return false;
 
-  return (metrics.uplink_bandwidth_bps &&
-          *metrics.uplink_bandwidth_bps <= increase_threshold->second) &&
-         (metrics.uplink_packet_loss_fraction &&
-          *metrics.uplink_packet_loss_fraction <=
-              config_.fl_increasing_packet_loss_fraction) &&
-         !config.enable_fec.value_or(false);
+  // Check that
+  // -(*overhead_bytes_per_packet_) <= offset <= (*overhead_bytes_per_packet_)
+  RTC_DCHECK(
+      !overhead_bytes_per_packet_ ||
+      (overhead_bytes_per_packet_ &&
+       static_cast<size_t>(std::max(0, -config_.fl_increase_overhead_offset)) <=
+           *overhead_bytes_per_packet_ &&
+       static_cast<size_t>(std::max(0, config_.fl_increase_overhead_offset)) <=
+           *overhead_bytes_per_packet_));
+
+  if (uplink_bandwidth_bps_ && overhead_bytes_per_packet_ &&
+      *uplink_bandwidth_bps_ <=
+          config_.min_encoder_bitrate_bps + kPreventOveruseMarginBps +
+              OverheadRateBps(*overhead_bytes_per_packet_ +
+                                  config_.fl_increase_overhead_offset,
+                              *frame_length_ms_)) {
+    return true;
+  }
+
+  return (uplink_bandwidth_bps_ &&
+          *uplink_bandwidth_bps_ <= increase_threshold->second) &&
+         (uplink_packet_loss_fraction_ &&
+          *uplink_packet_loss_fraction_ <=
+              config_.fl_increasing_packet_loss_fraction);
 }
 
 bool FrameLengthController::FrameLengthDecreasingDecision(
-    const NetworkMetrics& metrics,
-    const AudioNetworkAdaptor::EncoderRuntimeConfig& config) const {
+    const AudioEncoderRuntimeConfig& config) const {
   // Decrease frame length if
-  // 1. shorter frame length is available AND one or more of the followings:
-  // 2. |uplink_bandwidth_bps| is known to be larger than a threshold,
-  // 3. |uplink_packet_loss_fraction| is known to be larger than a threshold,
-  // 4. FEC is decided ON.
+  // 1. shorter frame length is available AND
+  // 2. |uplink_bandwidth_bps| is known to be bigger than
+  // |min_encoder_bitrate_bps| plus |prevent_overuse_margin_bps| plus the
+  // overhead which would be produced with the shorter frame length AND
+  // one or more of the followings:
+  // 3. |uplink_bandwidth_bps| is known to be larger than a threshold,
+  // 4. |uplink_packet_loss_fraction| is known to be larger than a threshold,
   if (frame_length_ms_ == config_.encoder_frame_lengths_ms.begin())
     return false;
 
   auto shorter_frame_length_ms = std::prev(frame_length_ms_);
-  auto decrease_threshold = frame_length_change_criteria_.find(
-      FrameLengthChange(*frame_length_ms_, *shorter_frame_length_ms));
+  auto decrease_threshold = config_.fl_changing_bandwidths_bps.find(
+      Config::FrameLengthChange(*frame_length_ms_, *shorter_frame_length_ms));
 
-  if (decrease_threshold == frame_length_change_criteria_.end())
+  if (decrease_threshold == config_.fl_changing_bandwidths_bps.end())
     return false;
 
-  return (metrics.uplink_bandwidth_bps &&
-          *metrics.uplink_bandwidth_bps >= decrease_threshold->second) ||
-         (metrics.uplink_packet_loss_fraction &&
-          *metrics.uplink_packet_loss_fraction >=
-              config_.fl_decreasing_packet_loss_fraction) ||
-         config.enable_fec.value_or(false);
+  if (uplink_bandwidth_bps_ && overhead_bytes_per_packet_ &&
+      *uplink_bandwidth_bps_ <=
+          config_.min_encoder_bitrate_bps + kPreventOveruseMarginBps +
+              OverheadRateBps(*overhead_bytes_per_packet_ +
+                                  config_.fl_decrease_overhead_offset,
+                              *shorter_frame_length_ms)) {
+    return false;
+  }
+
+  return (uplink_bandwidth_bps_ &&
+          *uplink_bandwidth_bps_ >= decrease_threshold->second) ||
+         (uplink_packet_loss_fraction_ &&
+          *uplink_packet_loss_fraction_ >=
+              config_.fl_decreasing_packet_loss_fraction);
 }
 
 }  // namespace webrtc

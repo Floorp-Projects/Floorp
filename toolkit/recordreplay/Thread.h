@@ -47,9 +47,10 @@ namespace recordreplay {
 //    state, under Thread::Wait, when requested by the main thread calling
 //    WaitForIdleThreads. For most recorded threads this happens when the
 //    thread attempts to take a recorded lock and blocks in Lock::Wait.
-//    The only exception is for JS helper threads, which never take recorded
-//    locks. For these threads, NotifyUnrecordedWait and
-//    MaybeWaitForCheckpointSave must be used to enter this state.
+//    For other threads (any thread which has diverged from the recording,
+//    or JS helper threads even when no recording divergence has occurred),
+//    NotifyUnrecordedWait and MaybeWaitForCheckpointSave are used to enter
+//    this state when the thread performs a blocking operation.
 //
 // 4. Once all recorded threads are idle, the main thread is able to record
 //    memory snapshots and thread stacks for later rewinding. Additional
@@ -137,7 +138,6 @@ private:
   // and whether the callback has been invoked yet while the main thread is
   // waiting for threads to become idle. Protected by the thread monitor.
   std::function<void()> mUnrecordedWaitCallback;
-  bool mUnrecordedWaitOnlyWhenDiverged;
   bool mUnrecordedWaitNotified;
 
   // Identifier of any atomic which this thread currently holds.
@@ -198,10 +198,6 @@ public:
     MOZ_RELEASE_ASSERT(CurrentIsMainThread());
     mShouldDivergeFromRecording = true;
     Notify(mId);
-  }
-  bool WillDivergeFromRecordingSoon() {
-    MOZ_RELEASE_ASSERT(CurrentIsMainThread());
-    return mShouldDivergeFromRecording;
   }
   bool MaybeDivergeFromRecording() {
     if (mShouldDivergeFromRecording) {
@@ -286,10 +282,22 @@ public:
   // Wait indefinitely, without allowing this thread to be rewound.
   static void WaitForeverNoIdle();
 
-  // See RecordReplay.h.
-  void NotifyUnrecordedWait(const std::function<void()>& aCallback,
-                            bool aOnlyWhenDiverged);
-  static void MaybeWaitForCheckpointSave();
+  // API for handling unrecorded waits in replaying threads.
+  //
+  // The callback passed to NotifyUnrecordedWait will be invoked at most once
+  // by the main thread whenever the main thread is waiting for other threads to
+  // become idle, and at most once after the call to NotifyUnrecordedWait if the
+  // main thread is already waiting for other threads to become idle.
+  //
+  // The callback should poke the thread so that it is no longer blocked on the
+  // resource. The thread must call MaybeWaitForCheckpointSave before blocking
+  // again.
+  //
+  // MaybeWaitForCheckpointSave takes a callback to release any resources
+  // before the thread begins idling. The return value is whether this callback
+  // was invoked.
+  void NotifyUnrecordedWait(const std::function<void()>& aNotifyCallback);
+  bool MaybeWaitForCheckpointSave(const std::function<void()>& aReleaseCallback);
 
   // Wait for all other threads to enter the idle state necessary for saving
   // or restoring a checkpoint. This may only be called on the main thread.

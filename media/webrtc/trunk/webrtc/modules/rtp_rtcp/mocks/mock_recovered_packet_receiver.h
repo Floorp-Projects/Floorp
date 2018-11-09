@@ -8,20 +8,20 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_RTP_RTCP_MOCKS_MOCK_RECOVERED_PACKET_RECEIVER_H_
-#define WEBRTC_MODULES_RTP_RTCP_MOCKS_MOCK_RECOVERED_PACKET_RECEIVER_H_
+#ifndef MODULES_RTP_RTCP_MOCKS_MOCK_RECOVERED_PACKET_RECEIVER_H_
+#define MODULES_RTP_RTCP_MOCKS_MOCK_RECOVERED_PACKET_RECEIVER_H_
 
-#include "webrtc/base/basictypes.h"
-#include "webrtc/modules/rtp_rtcp/include/flexfec_receiver.h"
-#include "webrtc/test/gmock.h"
+#include "modules/rtp_rtcp/include/flexfec_receiver.h"
+#include "rtc_base/basictypes.h"
+#include "test/gmock.h"
 
 namespace webrtc {
 
 class MockRecoveredPacketReceiver : public RecoveredPacketReceiver {
  public:
-  MOCK_METHOD2(OnRecoveredPacket, bool(const uint8_t* packet, size_t length));
+  MOCK_METHOD2(OnRecoveredPacket, void(const uint8_t* packet, size_t length));
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_RTP_RTCP_MOCKS_MOCK_RECOVERED_PACKET_RECEIVER_H_
+#endif  // MODULES_RTP_RTCP_MOCKS_MOCK_RECOVERED_PACKET_RECEIVER_H_

@@ -8,31 +8,29 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_VIDEO_VIDEO_STREAM_DECODER_H_
-#define WEBRTC_VIDEO_VIDEO_STREAM_DECODER_H_
+#ifndef VIDEO_VIDEO_STREAM_DECODER_H_
+#define VIDEO_VIDEO_STREAM_DECODER_H_
 
 #include <list>
 #include <map>
 #include <memory>
 #include <vector>
 
-#include "webrtc/base/criticalsection.h"
-#include "webrtc/base/platform_thread.h"
-#include "webrtc/base/scoped_ref_ptr.h"
-#include "webrtc/media/base/videosinkinterface.h"
-#include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
-#include "webrtc/modules/video_coding/include/video_coding_defines.h"
-#include "webrtc/typedefs.h"
+#include "media/base/videosinkinterface.h"
+#include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
+#include "modules/video_coding/include/video_coding_defines.h"
+#include "rtc_base/criticalsection.h"
+#include "rtc_base/platform_thread.h"
+#include "rtc_base/scoped_ref_ptr.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 namespace webrtc {
 
 class CallStatsObserver;
 class ChannelStatsObserver;
 class EncodedImageCallback;
-class I420FrameCallback;
 class ReceiveStatisticsProxy;
 class VideoRenderCallback;
-class VCMReceiveStateCallback;
 
 namespace vcm {
 class VideoReceiver;
@@ -45,23 +43,24 @@ enum StreamType {
 
 class VideoStreamDecoder : public VCMReceiveCallback,
                            public VCMReceiveStatisticsCallback,
-                           public VCMDecoderTimingCallback,
                            public CallStatsObserver {
  public:
   friend class ChannelStatsObserver;
 
-  VideoStreamDecoder(vcm::VideoReceiver* video_receiver,
-                     VCMFrameTypeCallback* vcm_frame_type_callback,
-                     VCMPacketRequestCallback* vcm_packet_request_callback,
-                     bool enable_nack,
-                     bool enable_fec,
-                     ReceiveStatisticsProxy* receive_statistics_proxy,
-                     rtc::VideoSinkInterface<VideoFrame>* incoming_video_stream,
-                     I420FrameCallback* pre_render_callback);
+  VideoStreamDecoder(
+      vcm::VideoReceiver* video_receiver,
+      VCMFrameTypeCallback* vcm_frame_type_callback,
+      VCMPacketRequestCallback* vcm_packet_request_callback,
+      bool enable_nack,
+      bool enable_fec,
+      ReceiveStatisticsProxy* receive_statistics_proxy,
+      rtc::VideoSinkInterface<VideoFrame>* incoming_video_stream);
   ~VideoStreamDecoder();
 
   // Implements VCMReceiveCallback.
-  int32_t FrameToRender(VideoFrame& video_frame) override;  // NOLINT
+  int32_t FrameToRender(VideoFrame& video_frame,
+                        rtc::Optional<uint8_t> qp,
+                        VideoContentType content_type) override;
   int32_t ReceivedDecodedReferenceFrame(const uint64_t picture_id) override;
   void OnIncomingPayloadType(int payload_type) override;
   void OnDecoderImplementationName(const char* implementation_name) override;
@@ -70,15 +69,18 @@ class VideoStreamDecoder : public VCMReceiveCallback,
   void OnReceiveRatesUpdated(uint32_t bit_rate, uint32_t frame_rate) override;
   void OnDiscardedPacketsUpdated(int discarded_packets) override;
   void OnFrameCountsUpdated(const FrameCounts& frame_counts) override;
+  void OnCompleteFrame(bool is_keyframe,
+                       size_t size_bytes,
+                       VideoContentType content_type) override;
+  void OnFrameBufferTimingsUpdated(int decode_ms,
+                                   int max_decode_ms,
+                                   int current_delay_ms,
+                                   int target_delay_ms,
+                                   int jitter_buffer_ms,
+                                   int min_playout_delay_ms,
+                                   int render_delay_ms) override;
 
-  // Implements VCMDecoderTimingCallback.
-  void OnDecoderTiming(int decode_ms,
-                       int max_decode_ms,
-                       int current_delay_ms,
-                       int target_delay_ms,
-                       int jitter_buffer_ms,
-                       int min_playout_delay_ms,
-                       int render_delay_ms) override;
+  void OnTimingFrameInfoUpdated(const TimingFrameInfo& info) override;
 
   void RegisterReceiveStatisticsProxy(
       ReceiveStatisticsProxy* receive_statistics_proxy);
@@ -95,13 +97,9 @@ class VideoStreamDecoder : public VCMReceiveCallback,
   ReceiveStatisticsProxy* const receive_stats_callback_;
   rtc::VideoSinkInterface<VideoFrame>* const incoming_video_stream_;
 
-  // TODO(tommi): This callback is basically the same thing as the one above.
-  // We shouldn't need to support both.
-  I420FrameCallback* const pre_render_callback_;
-
-  int64_t last_rtt_ms_ GUARDED_BY(crit_);
+  int64_t last_rtt_ms_ RTC_GUARDED_BY(crit_);
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_VIDEO_VIDEO_STREAM_DECODER_H_
+#endif  // VIDEO_VIDEO_STREAM_DECODER_H_

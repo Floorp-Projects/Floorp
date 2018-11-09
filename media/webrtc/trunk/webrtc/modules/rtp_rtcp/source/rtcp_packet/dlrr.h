@@ -9,12 +9,12 @@
  *
  */
 
-#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_DLRR_H_
-#define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_DLRR_H_
+#ifndef MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_DLRR_H_
+#define MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_DLRR_H_
 
 #include <vector>
 
-#include "webrtc/base/basictypes.h"
+#include "rtc_base/basictypes.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -33,9 +33,9 @@ class Dlrr {
  public:
   static const uint8_t kBlockType = 5;
 
-  Dlrr() {}
-  Dlrr(const Dlrr& other) = default;
-  ~Dlrr() {}
+  Dlrr();
+  Dlrr(const Dlrr& other);
+  ~Dlrr();
 
   Dlrr& operator=(const Dlrr& other) = default;
 
@@ -66,4 +66,4 @@ class Dlrr {
 };
 }  // namespace rtcp
 }  // namespace webrtc
-#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_DLRR_H_
+#endif  // MODULES_RTP_RTCP_SOURCE_RTCP_PACKET_DLRR_H_

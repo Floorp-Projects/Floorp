@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_RGBA_COLOR_H_
-#define WEBRTC_MODULES_DESKTOP_CAPTURE_RGBA_COLOR_H_
+#ifndef MODULES_DESKTOP_CAPTURE_RGBA_COLOR_H_
+#define MODULES_DESKTOP_CAPTURE_RGBA_COLOR_H_
 
 #include <stdint.h>
 
-#include "webrtc/modules/desktop_capture/desktop_frame.h"
+#include "modules/desktop_capture/desktop_frame.h"
 
 namespace webrtc {
 
@@ -21,9 +21,6 @@ namespace webrtc {
 // provides functions to be created from uint8_t array, say,
 // DesktopFrame::data(). It always uses BGRA order for internal storage to match
 // DesktopFrame::data().
-//
-// This struct is for testing purpose only, and should not be used in production
-// logic.
 struct RgbaColor final {
   // Creates a color with BGRA channels.
   RgbaColor(uint8_t blue, uint8_t green, uint8_t red, uint8_t alpha);
@@ -59,4 +56,4 @@ static_assert(
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_DESKTOP_CAPTURE_RGBA_COLOR_H_
+#endif  // MODULES_DESKTOP_CAPTURE_RGBA_COLOR_H_

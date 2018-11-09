@@ -11,12 +11,13 @@
 #include <math.h>
 #include <string.h>
 
-#include "webrtc/api/video/video_frame.h"
-#include "webrtc/base/bind.h"
-#include "webrtc/base/timeutils.h"
-#include "webrtc/test/fake_texture_frame.h"
-#include "webrtc/test/frame_utils.h"
-#include "webrtc/test/gtest.h"
+#include "api/video/i420_buffer.h"
+#include "api/video/video_frame.h"
+#include "rtc_base/bind.h"
+#include "rtc_base/timeutils.h"
+#include "test/fake_texture_frame.h"
+#include "test/frame_utils.h"
+#include "test/gtest.h"
 
 namespace webrtc {
 
@@ -32,8 +33,8 @@ rtc::scoped_refptr<I420Buffer> CreateGradient(int width, int height) {
           128 * (x * height + y * width) / (width * height);
     }
   }
-  int chroma_width = (width + 1) / 2;
-  int chroma_height = (height + 1) / 2;
+  int chroma_width = buffer->ChromaWidth();
+  int chroma_height = buffer->ChromaHeight();
   for (int x = 0; x < chroma_width; x++) {
     for (int y = 0; y < chroma_height; y++) {
       buffer->MutableDataU()[x + y * chroma_width] =
@@ -48,7 +49,7 @@ rtc::scoped_refptr<I420Buffer> CreateGradient(int width, int height) {
 // The offsets and sizes describe the rectangle extracted from the
 // original (gradient) frame, in relative coordinates where the
 // original frame correspond to the unit square, 0.0 <= x, y < 1.0.
-void CheckCrop(const webrtc::VideoFrameBuffer& frame,
+void CheckCrop(const webrtc::I420BufferInterface& frame,
                double offset_x,
                double offset_y,
                double rel_width,
@@ -77,8 +78,10 @@ void CheckCrop(const webrtc::VideoFrameBuffer& frame,
   }
 }
 
-void CheckRotate(int width, int height, webrtc::VideoRotation rotation,
-                 const webrtc::VideoFrameBuffer& rotated) {
+void CheckRotate(int width,
+                 int height,
+                 webrtc::VideoRotation rotation,
+                 const webrtc::I420BufferInterface& rotated) {
   int rotated_width = width;
   int rotated_height = height;
 
@@ -129,7 +132,7 @@ TEST(TestVideoFrame, WidthHeightValues) {
 TEST(TestVideoFrame, ShallowCopy) {
   uint32_t timestamp = 1;
   int64_t ntp_time_ms = 2;
-  int64_t render_time_ms = 3;
+  int64_t timestamp_us = 3;
   int stride_y = 15;
   int stride_u = 10;
   int stride_v = 10;
@@ -155,48 +158,49 @@ TEST(TestVideoFrame, ShallowCopy) {
       kRotation, 0);
   frame1.set_timestamp(timestamp);
   frame1.set_ntp_time_ms(ntp_time_ms);
-  frame1.set_render_time_ms(render_time_ms);
+  frame1.set_timestamp_us(timestamp_us);
   VideoFrame frame2(frame1);
 
   EXPECT_EQ(frame1.video_frame_buffer(), frame2.video_frame_buffer());
-  EXPECT_EQ(frame1.video_frame_buffer()->DataY(),
-            frame2.video_frame_buffer()->DataY());
-  EXPECT_EQ(frame1.video_frame_buffer()->DataU(),
-            frame2.video_frame_buffer()->DataU());
-  EXPECT_EQ(frame1.video_frame_buffer()->DataV(),
-            frame2.video_frame_buffer()->DataV());
+  rtc::scoped_refptr<I420BufferInterface> yuv1 =
+      frame1.video_frame_buffer()->GetI420();
+  rtc::scoped_refptr<I420BufferInterface> yuv2 =
+      frame2.video_frame_buffer()->GetI420();
+  EXPECT_EQ(yuv1->DataY(), yuv2->DataY());
+  EXPECT_EQ(yuv1->DataU(), yuv2->DataU());
+  EXPECT_EQ(yuv1->DataV(), yuv2->DataV());
 
   EXPECT_EQ(frame2.timestamp(), frame1.timestamp());
   EXPECT_EQ(frame2.ntp_time_ms(), frame1.ntp_time_ms());
-  EXPECT_EQ(frame2.render_time_ms(), frame1.render_time_ms());
+  EXPECT_EQ(frame2.timestamp_us(), frame1.timestamp_us());
   EXPECT_EQ(frame2.rotation(), frame1.rotation());
 
   frame2.set_timestamp(timestamp + 1);
   frame2.set_ntp_time_ms(ntp_time_ms + 1);
-  frame2.set_render_time_ms(render_time_ms + 1);
+  frame2.set_timestamp_us(timestamp_us + 1);
   frame2.set_rotation(kVideoRotation_90);
 
   EXPECT_NE(frame2.timestamp(), frame1.timestamp());
   EXPECT_NE(frame2.ntp_time_ms(), frame1.ntp_time_ms());
-  EXPECT_NE(frame2.render_time_ms(), frame1.render_time_ms());
+  EXPECT_NE(frame2.timestamp_us(), frame1.timestamp_us());
   EXPECT_NE(frame2.rotation(), frame1.rotation());
 }
 
 TEST(TestVideoFrame, TextureInitialValues) {
-  test::FakeNativeHandle* handle = new test::FakeNativeHandle();
-  VideoFrame frame = test::FakeNativeHandle::CreateFrame(
-      handle, 640, 480, 100, 10, webrtc::kVideoRotation_0);
+  VideoFrame frame = test::FakeNativeBuffer::CreateFrame(
+      640, 480, 100, 10, webrtc::kVideoRotation_0);
   EXPECT_EQ(640, frame.width());
   EXPECT_EQ(480, frame.height());
   EXPECT_EQ(100u, frame.timestamp());
   EXPECT_EQ(10, frame.render_time_ms());
   ASSERT_TRUE(frame.video_frame_buffer() != nullptr);
-  EXPECT_EQ(handle, frame.video_frame_buffer()->native_handle());
+  EXPECT_TRUE(frame.video_frame_buffer()->type() ==
+              VideoFrameBuffer::Type::kNative);
 
   frame.set_timestamp(200);
   EXPECT_EQ(200u, frame.timestamp());
-  frame.set_render_time_ms(20);
-  EXPECT_EQ(20, frame.render_time_ms());
+  frame.set_timestamp_us(20);
+  EXPECT_EQ(20, frame.timestamp_us());
 }
 
 TEST(TestI420FrameBuffer, Copy) {
@@ -279,29 +283,13 @@ class TestI420BufferRotate
     : public ::testing::TestWithParam<webrtc::VideoRotation> {};
 
 TEST_P(TestI420BufferRotate, Rotates) {
-  rtc::scoped_refptr<VideoFrameBuffer> buffer = CreateGradient(640, 480);
-  rtc::scoped_refptr<VideoFrameBuffer> rotated_buffer =
+  rtc::scoped_refptr<I420BufferInterface> buffer = CreateGradient(640, 480);
+  rtc::scoped_refptr<I420BufferInterface> rotated_buffer =
       I420Buffer::Rotate(*buffer, GetParam());
   CheckRotate(640, 480, GetParam(), *rotated_buffer);
 }
 
 INSTANTIATE_TEST_CASE_P(Rotate, TestI420BufferRotate,
-                        ::testing::Values(kVideoRotation_0,
-                                          kVideoRotation_90,
-                                          kVideoRotation_180,
-                                          kVideoRotation_270));
-
-class TestI420BufferRotateOld
-    : public ::testing::TestWithParam<webrtc::VideoRotation> {};
-
-TEST_P(TestI420BufferRotateOld, Rotates) {
-  rtc::scoped_refptr<VideoFrameBuffer> buffer = CreateGradient(640, 480);
-  rtc::scoped_refptr<VideoFrameBuffer> rotated_buffer =
-      I420Buffer::Rotate(buffer, GetParam());
-  CheckRotate(640, 480, GetParam(), *rotated_buffer);
-}
-
-INSTANTIATE_TEST_CASE_P(Rotate, TestI420BufferRotateOld,
                         ::testing::Values(kVideoRotation_0,
                                           kVideoRotation_90,
                                           kVideoRotation_180,

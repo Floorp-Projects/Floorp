@@ -25,7 +25,7 @@ def min_android_version(target):
 
 js_option('--with-android-version',
           nargs=1,
-          help='android platform version',
+          help='android platform version{|}',
           default=min_android_version)
 
 

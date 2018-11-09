@@ -6,7 +6,7 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
-import("../../build/webrtc.gni")
+import("../../webrtc.gni")
 
 rtc_static_library("bitrate_controller") {
   # TODO(mbonadei): Remove (bugs.webrtc.org/6828)
@@ -37,8 +37,32 @@ rtc_static_library("bitrate_controller") {
   }
 
   deps = [
-    "../../base:rtc_base_approved",
+    "../../rtc_base:rtc_base_approved",
     "../../system_wrappers",
     "../rtp_rtcp",
   ]
+}
+
+if (rtc_include_tests) {
+  rtc_source_set("bitrate_controller_unittests") {
+    testonly = true
+
+    sources = [
+      "bitrate_controller_unittest.cc",
+      "send_side_bandwidth_estimation_unittest.cc",
+    ]
+    deps = [
+      ":bitrate_controller",
+      "../../logging:rtc_event_log_api",
+      "../../test:field_trial",
+      "../../test:test_support",
+      "../pacing:mock_paced_sender",
+      "../remote_bitrate_estimator:remote_bitrate_estimator",
+      "//testing/gmock",
+    ]
+    if (!build_with_chromium && is_clang) {
+      # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
+      suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+  }
 }

@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/test/fake_network_pipe.h"
+#include "test/fake_network_pipe.h"
 
 #include <assert.h>
 #include <math.h>
@@ -17,27 +17,87 @@
 #include <algorithm>
 #include <cmath>
 
-#include "webrtc/call/call.h"
-#include "webrtc/system_wrappers/include/clock.h"
+#include "call/call.h"
+#include "modules/rtp_rtcp/include/rtp_header_parser.h"
+#include "rtc_base/logging.h"
+#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 
-FakeNetworkPipe::FakeNetworkPipe(Clock* clock,
-                                 const FakeNetworkPipe::Config& config)
-    : FakeNetworkPipe(clock, config, 1) {}
+namespace {
+constexpr int64_t kDefaultProcessIntervalMs = 5;
+}
+
+DemuxerImpl::DemuxerImpl(const std::map<uint8_t, MediaType>& payload_type_map)
+    : packet_receiver_(nullptr), payload_type_map_(payload_type_map) {}
+
+void DemuxerImpl::SetReceiver(PacketReceiver* receiver) {
+  packet_receiver_ = receiver;
+}
+
+void DemuxerImpl::DeliverPacket(const NetworkPacket* packet,
+                                const PacketTime& packet_time) {
+  // No packet receiver means that this demuxer will terminate the flow of
+  // packets.
+  if (!packet_receiver_)
+    return;
+  const uint8_t* const packet_data = packet->data();
+  const size_t packet_length = packet->data_length();
+  MediaType media_type = MediaType::ANY;
+  if (!RtpHeaderParser::IsRtcp(packet_data, packet_length)) {
+    RTC_CHECK_GE(packet_length, 2);
+    const uint8_t payload_type = packet_data[1] & 0x7f;
+    std::map<uint8_t, MediaType>::const_iterator it =
+        payload_type_map_.find(payload_type);
+    RTC_CHECK(it != payload_type_map_.end())
+        << "payload type " << static_cast<int>(payload_type) << " unknown.";
+    media_type = it->second;
+  }
+  packet_receiver_->DeliverPacket(media_type, packet_data, packet_length,
+                                  packet_time);
+}
 
 FakeNetworkPipe::FakeNetworkPipe(Clock* clock,
                                  const FakeNetworkPipe::Config& config,
+                                 std::unique_ptr<Demuxer> demuxer)
+    : FakeNetworkPipe(clock, config, std::move(demuxer), 1) {}
+
+FakeNetworkPipe::FakeNetworkPipe(Clock* clock,
+                                 const FakeNetworkPipe::Config& config,
+                                 std::unique_ptr<Demuxer> demuxer,
                                  uint64_t seed)
     : clock_(clock),
-      packet_receiver_(NULL),
+      demuxer_(std::move(demuxer)),
       random_(seed),
-      config_(config),
+      config_(),
       dropped_packets_(0),
       sent_packets_(0),
       total_packet_delay_(0),
       bursting_(false),
-      next_process_time_(clock_->TimeInMilliseconds()) {
+      next_process_time_(clock_->TimeInMilliseconds()),
+      last_log_time_(clock_->TimeInMilliseconds()) {
+  SetConfig(config);
+}
+
+FakeNetworkPipe::~FakeNetworkPipe() {
+  while (!capacity_link_.empty()) {
+    delete capacity_link_.front();
+    capacity_link_.pop();
+  }
+  while (!delay_link_.empty()) {
+    delete *delay_link_.begin();
+    delay_link_.erase(delay_link_.begin());
+  }
+}
+
+void FakeNetworkPipe::SetReceiver(PacketReceiver* receiver) {
+  RTC_CHECK(demuxer_);
+  demuxer_->SetReceiver(receiver);
+}
+
+void FakeNetworkPipe::SetConfig(const FakeNetworkPipe::Config& config) {
+  rtc::CritScope crit(&lock_);
+  config_ = config;  // Shallow copy of the struct.
   double prob_loss = config.loss_percent / 100.0;
   if (config_.avg_burst_loss_length == -1) {
     // Uniform loss
@@ -58,31 +118,8 @@ FakeNetworkPipe::FakeNetworkPipe(Clock* clock,
   }
 }
 
-FakeNetworkPipe::~FakeNetworkPipe() {
-  while (!capacity_link_.empty()) {
-    delete capacity_link_.front();
-    capacity_link_.pop();
-  }
-  while (!delay_link_.empty()) {
-    delete *delay_link_.begin();
-    delay_link_.erase(delay_link_.begin());
-  }
-}
-
-void FakeNetworkPipe::SetReceiver(PacketReceiver* receiver) {
-  packet_receiver_ = receiver;
-}
-
-void FakeNetworkPipe::SetConfig(const FakeNetworkPipe::Config& config) {
-  rtc::CritScope crit(&lock_);
-  config_ = config;  // Shallow copy of the struct.
-}
-
 void FakeNetworkPipe::SendPacket(const uint8_t* data, size_t data_length) {
-  // A NULL packet_receiver_ means that this pipe will terminate the flow of
-  // packets.
-  if (packet_receiver_ == NULL)
-    return;
+  RTC_CHECK(demuxer_);
   rtc::CritScope crit(&lock_);
   if (config_.queue_length_packets > 0 &&
       capacity_link_.size() >= config_.queue_length_packets) {
@@ -95,8 +132,16 @@ void FakeNetworkPipe::SendPacket(const uint8_t* data, size_t data_length) {
 
   // Delay introduced by the link capacity.
   int64_t capacity_delay_ms = 0;
-  if (config_.link_capacity_kbps > 0)
-    capacity_delay_ms = data_length / (config_.link_capacity_kbps / 8);
+  if (config_.link_capacity_kbps > 0) {
+    const int bytes_per_millisecond = config_.link_capacity_kbps / 8;
+    // To round to the closest millisecond we add half a milliseconds worth of
+    // bytes to the delay calculation.
+    capacity_delay_ms = (data_length + capacity_delay_error_bytes_ +
+                         bytes_per_millisecond / 2) /
+                        bytes_per_millisecond;
+    capacity_delay_error_bytes_ +=
+        data_length - capacity_delay_ms * bytes_per_millisecond;
+  }
   int64_t network_start_time = time_now;
 
   // Check if there already are packets on the link and change network start
@@ -134,6 +179,14 @@ void FakeNetworkPipe::Process() {
   std::queue<NetworkPacket*> packets_to_deliver;
   {
     rtc::CritScope crit(&lock_);
+    if (time_now - last_log_time_ > 5000) {
+      int64_t queueing_delay_ms = 0;
+      if (!capacity_link_.empty()) {
+        queueing_delay_ms = time_now - capacity_link_.front()->send_time();
+      }
+      RTC_LOG(LS_INFO) << "Network queue: " << queueing_delay_ms << " ms.";
+      last_log_time_ = time_now;
+    }
     // Check the capacity link first.
     while (!capacity_link_.empty() &&
            time_now >= capacity_link_.front()->arrival_time()) {
@@ -164,8 +217,6 @@ void FakeNetworkPipe::Process() {
             (*delay_link_.rbegin())->arrival_time() - packet->arrival_time();
       }
       packet->IncrementArrivalTime(arrival_time_jitter);
-      if (packet->arrival_time() < next_process_time_)
-        next_process_time_ = packet->arrival_time();
       delay_link_.insert(packet);
     }
 
@@ -186,17 +237,17 @@ void FakeNetworkPipe::Process() {
   while (!packets_to_deliver.empty()) {
     NetworkPacket* packet = packets_to_deliver.front();
     packets_to_deliver.pop();
-    packet_receiver_->DeliverPacket(MediaType::ANY, packet->data(),
-                                    packet->data_length(), PacketTime());
+    demuxer_->DeliverPacket(packet, PacketTime());
     delete packet;
   }
+
+  next_process_time_ = !delay_link_.empty()
+                           ? (*delay_link_.begin())->arrival_time()
+                           : time_now + kDefaultProcessIntervalMs;
 }
 
 int64_t FakeNetworkPipe::TimeUntilNextProcess() const {
   rtc::CritScope crit(&lock_);
-  const int64_t kDefaultProcessIntervalMs = 5;
-  if (capacity_link_.empty() || delay_link_.empty())
-    return kDefaultProcessIntervalMs;
   return std::max<int64_t>(next_process_time_ - clock_->TimeInMilliseconds(),
                            0);
 }

@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_processing/logging/apm_data_dumper.h"
+#include "modules/audio_processing/logging/apm_data_dumper.h"
 
 #include <sstream>
 
-#include "webrtc/base/stringutils.h"
+#include "rtc_base/stringutils.h"
 
 // Check to verify that the define is properly set.
 #if !defined(WEBRTC_APM_DEBUG_DUMP) || \
@@ -36,7 +36,7 @@ std::string FormFileName(const char* name,
 #endif
 
   std::stringstream ss;
-  std::string base = webrtc::Trace::aec_debug_filename();
+  std::string base = rtc::LogMessage::aec_debug_filename();
   ss << base;
 
   if (base.length() && base.back() != sep) {

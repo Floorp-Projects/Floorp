@@ -196,6 +196,7 @@ LOCAL_INCLUDES += [
     '/dom/indexedDB',
     '/dom/storage',
     '/media/webrtc/trunk',
+    '/media/webrtc/trunk/webrtc',
     '/xpcom/build',
 ]
 

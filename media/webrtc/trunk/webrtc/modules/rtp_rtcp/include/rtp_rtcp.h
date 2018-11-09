@@ -8,27 +8,28 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_RTP_RTCP_INCLUDE_RTP_RTCP_H_
-#define WEBRTC_MODULES_RTP_RTCP_INCLUDE_RTP_RTCP_H_
+#ifndef MODULES_RTP_RTCP_INCLUDE_RTP_RTCP_H_
+#define MODULES_RTP_RTCP_INCLUDE_RTP_RTCP_H_
 
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "webrtc/base/constructormagic.h"
-#include "webrtc/base/deprecation.h"
-#include "webrtc/base/optional.h"
-#include "webrtc/modules/include/module.h"
-#include "webrtc/modules/rtp_rtcp/include/flexfec_sender.h"
-#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "api/optional.h"
+#include "common_types.h"  // NOLINT(build/include)
+#include "modules/include/module.h"
+#include "modules/rtp_rtcp/include/flexfec_sender.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "rtc_base/constructormagic.h"
+#include "rtc_base/deprecation.h"
 
 namespace webrtc {
 
 // Forward declarations.
 class OverheadObserver;
 class RateLimiter;
-class ReceiveStatistics;
+class ReceiveStatisticsProvider;
 class RemoteBitrateEstimator;
 class RtcEventLog;
 class RtpReceiver;
@@ -54,7 +55,7 @@ class RtpRtcp : public Module {
     // The clock to use to read time. If nullptr then system clock will be used.
     Clock* clock = nullptr;
 
-    ReceiveStatistics* receive_statistics;
+    ReceiveStatisticsProvider* receive_statistics = nullptr;
 
     // Transport object that will be called when packets are ready to be sent
     // out on the network.
@@ -92,6 +93,7 @@ class RtpRtcp : public Module {
     SendPacketObserver* send_packet_observer = nullptr;
     RateLimiter* retransmission_rate_limiter = nullptr;
     OverheadObserver* overhead_observer = nullptr;
+    RtpKeepAliveConfig keepalive_config;
 
    private:
     RTC_DISALLOW_COPY_AND_ASSIGN(Configuration);
@@ -105,8 +107,8 @@ class RtpRtcp : public Module {
   // Receiver functions
   // **************************************************************************
 
-  virtual int32_t IncomingRtcpPacket(const uint8_t* incoming_packet,
-                                     size_t incoming_packet_length) = 0;
+  virtual void IncomingRtcpPacket(const uint8_t* incoming_packet,
+                                  size_t incoming_packet_length) = 0;
 
   virtual void SetRemoteSSRC(uint32_t ssrc) = 0;
 
@@ -114,21 +116,8 @@ class RtpRtcp : public Module {
   // Sender
   // **************************************************************************
 
-  // TODO(nisse): Deprecated. Kept temporarily, as an alias for the
-  // new function which has slighly different semantics. Delete as
-  // soon as known applications are updated.
-  virtual int32_t SetMaxTransferUnit(uint16_t size) {
-    SetMaxRtpPacketSize(size);
-    return 0;
-  }
-
   // Sets the maximum size of an RTP packet, including RTP headers.
   virtual void SetMaxRtpPacketSize(size_t size) = 0;
-
-  // Returns max payload length.
-  // Does not account for RTP headers and FEC/ULP/RED overhead (when FEC is
-  // enabled).
-  virtual size_t MaxPayloadSize() const = 0;
 
   // Returns max RTP packet size. Takes into account RTP headers and
   // FEC/ULP/RED overhead (when FEC is enabled).
@@ -154,6 +143,8 @@ class RtpRtcp : public Module {
                                                  uint8_t id) = 0;
 
   virtual int32_t DeregisterSendRtpHeaderExtension(RTPExtensionType type) = 0;
+
+  virtual bool HasBweExtensions() const = 0;
 
   // Returns start timestamp.
   virtual uint32_t StartTimestamp() const = 0;
@@ -252,9 +243,10 @@ class RtpRtcp : public Module {
                                 uint16_t sequence_number,
                                 int64_t capture_time_ms,
                                 bool retransmission,
-                                int probe_cluster_id) = 0;
+                                const PacedPacketInfo& pacing_info) = 0;
 
-  virtual size_t TimeToSendPadding(size_t bytes, int probe_cluster_id) = 0;
+  virtual size_t TimeToSendPadding(size_t bytes,
+                                   const PacedPacketInfo& pacing_info) = 0;
 
   // Called on generation of new statistics after an RTP send.
   virtual void RegisterSendChannelRtpStatisticsCallback(
@@ -315,13 +307,6 @@ class RtpRtcp : public Module {
   virtual int32_t SendCompoundRTCP(
       const std::set<RTCPPacketType>& rtcp_packet_types) = 0;
 
-  // Notifies the sender about good state of the RTP receiver.
-  virtual int32_t SendRTCPReferencePictureSelection(uint64_t picture_id) = 0;
-
-  // Send a RTCP Slice Loss Indication (SLI).
-  //   |picture_id| - 6 least significant bits of picture_id.
-  virtual int32_t SendRTCPSliceLossIndication(uint8_t picture_id) = 0;
-
   // Returns statistics of the amount of data sent.
   // Returns -1 on failure else 0.
   virtual int32_t DataCountersRTP(size_t* bytes_sent,
@@ -338,9 +323,9 @@ class RtpRtcp : public Module {
       uint32_t ssrc,
       struct RtpPacketLossStats* loss_stats) const = 0;
 
-  // Returns received RTCP sender info.
-  // Returns -1 on failure else 0.
-  virtual int32_t RemoteRTCPStat(RTCPSenderInfo* sender_info) = 0;
+  // Returns packet count and octet count from RTCP sender report.
+  virtual void RemoteRTCPSenderInfo(uint32_t* packet_count,
+                                    uint32_t* octet_count) const = 0;
 
   // Returns received RTCP report block.
   // Returns -1 on failure else 0.
@@ -364,12 +349,11 @@ class RtpRtcp : public Module {
   virtual bool RtcpXrRrtrStatus() const = 0;
 
   // (REMB) Receiver Estimated Max Bitrate.
-  virtual bool REMB() const = 0;
-
-  virtual void SetREMBStatus(bool enable) = 0;
-
-  virtual void SetREMBData(uint32_t bitrate,
-                           const std::vector<uint32_t>& ssrcs) = 0;
+  // Schedules sending REMB on next and following sender/receiver reports.
+  virtual void SetRemb(uint32_t bitrate_bps,
+                       const std::vector<uint32_t>& ssrcs) = 0;
+  // Stops sending REMB on next and following sender/receiver reports.
+  virtual void UnsetRemb() = 0;
 
   // (TMMBR) Temporary Max Media Bit Rate
   virtual bool TMMBR() const = 0;
@@ -425,12 +409,6 @@ class RtpRtcp : public Module {
   // Audio
   // **************************************************************************
 
-  // This function is deprecated. It was previously used to determine when it
-  // was time to send a DTMF packet in silence (CNG).
-  // Returns -1 on failure else 0.
-  RTC_DEPRECATED virtual int32_t SetAudioPacketSize(
-      uint16_t packet_size_samples) = 0;
-
   // Sends a TelephoneEvent tone using RFC 2833 (4733).
   // Returns -1 on failure else 0.
   virtual int32_t SendTelephoneEventOutband(uint8_t key,
@@ -481,4 +459,4 @@ class RtpRtcp : public Module {
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_RTP_RTCP_INCLUDE_RTP_RTCP_H_
+#endif  // MODULES_RTP_RTCP_INCLUDE_RTP_RTCP_H_

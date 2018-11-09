@@ -10,7 +10,6 @@
 #include "CodecConfig.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/UniquePtr.h"
-#include "webrtc/config.h"
 #include "webrtc/media/base/videoadapter.h"
 
 namespace mozilla {

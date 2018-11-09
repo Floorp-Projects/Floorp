@@ -13,20 +13,18 @@
  * This header file includes the descriptions of the core VAD calls.
  */
 
-#ifndef WEBRTC_COMMON_AUDIO_VAD_VAD_CORE_H_
-#define WEBRTC_COMMON_AUDIO_VAD_VAD_CORE_H_
+#ifndef COMMON_AUDIO_VAD_VAD_CORE_H_
+#define COMMON_AUDIO_VAD_VAD_CORE_H_
 
-#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
-#include "webrtc/typedefs.h"
+#include "common_audio/signal_processing/include/signal_processing_library.h"
+#include "typedefs.h"  // NOLINT(build/include)
 
 enum { kNumChannels = 6 };  // Number of frequency bands (named channels).
 enum { kNumGaussians = 2 };  // Number of Gaussians per channel in the GMM.
 enum { kTableSize = kNumChannels * kNumGaussians };
 enum { kMinEnergy = 10 };  // Minimum energy required to trigger audio signal.
 
-typedef struct VadInstT_
-{
-
+typedef struct VadInstT_ {
     int vad;
     int32_t downsampling_filter_states[4];
     WebRtcSpl_State48khzTo8khz state_48_to_8;
@@ -36,7 +34,7 @@ typedef struct VadInstT_
     int16_t speech_stds[kTableSize];
     // TODO(bjornv): Change to |frame_count|.
     int32_t frame_counter;
-    int16_t over_hang; // Over Hang
+    int16_t over_hang;  // Over Hang
     int16_t num_of_speech;
     // TODO(bjornv): Change to |age_vector|.
     int16_t index_vector[16 * kNumChannels];
@@ -52,7 +50,6 @@ typedef struct VadInstT_
     int16_t total[3];
 
     int init_flag;
-
 } VadInstT;
 
 // Initializes the core VAD component. The default aggressiveness mode is
@@ -60,7 +57,7 @@ typedef struct VadInstT_
 //
 // - self [i/o] : Instance that should be initialized
 //
-// returns      : 0 (OK), -1 (NULL pointer in or if the default mode can't be
+// returns      : 0 (OK), -1 (null pointer in or if the default mode can't be
 //                set)
 int WebRtcVad_InitCore(VadInstT* self);
 
@@ -112,4 +109,4 @@ int WebRtcVad_CalcVad16khz(VadInstT* inst, const int16_t* speech_frame,
 int WebRtcVad_CalcVad8khz(VadInstT* inst, const int16_t* speech_frame,
                           size_t frame_length);
 
-#endif  // WEBRTC_COMMON_AUDIO_VAD_VAD_CORE_H_
+#endif  // COMMON_AUDIO_VAD_VAD_CORE_H_

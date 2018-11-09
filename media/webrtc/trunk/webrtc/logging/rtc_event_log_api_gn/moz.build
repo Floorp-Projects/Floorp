@@ -10,9 +10,10 @@ COMPILE_FLAGS["OS_INCLUDES"] = []
 AllowCompilerWarnings()
 
 DEFINES["CHROMIUM_BUILD"] = True
-DEFINES["EXPAT_RELATIVE_PATH"] = True
 DEFINES["V8_DEPRECATION_WARNINGS"] = True
+DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
 DEFINES["WEBRTC_MOZILLA_BUILD"] = True
+DEFINES["WEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS"] = "0"
 DEFINES["WEBRTC_RESTRICT_LOGGING"] = True
 
 FINAL_LIBRARY = "webrtc"
@@ -22,7 +23,29 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/media/webrtc/trunk/"
+    "/media/webrtc/trunk/webrtc/"
+]
+
+UNIFIED_SOURCES += [
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/events/rtc_event_audio_network_adaptation.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/events/rtc_event_audio_playout.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/events/rtc_event_audio_receive_stream_config.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/events/rtc_event_audio_send_stream_config.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/events/rtc_event_bwe_update_delay_based.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/events/rtc_event_bwe_update_loss_based.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/events/rtc_event_logging_started.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/events/rtc_event_logging_stopped.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/events/rtc_event_probe_cluster_created.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/events/rtc_event_probe_result_failure.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/events/rtc_event_probe_result_success.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/events/rtc_event_rtcp_packet_incoming.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/events/rtc_event_rtcp_packet_outgoing.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/events/rtc_event_rtp_packet_incoming.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/events/rtc_event_rtp_packet_outgoing.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/events/rtc_event_video_receive_stream_config.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/events/rtc_event_video_send_stream_config.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/output/rtc_event_log_output_file.cc",
+    "/media/webrtc/trunk/webrtc/logging/rtc_event_log/rtc_stream_config.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -51,6 +74,10 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["_FILE_OFFSET_BITS"] = "64"
     DEFINES["__GNU_SOURCE"] = "1"
 
+    OS_LIBS += [
+        "log"
+    ]
+
 if CONFIG["OS_TARGET"] == "Darwin":
 
     DEFINES["CR_XCODE_VERSION"] = "0920"
@@ -58,6 +85,10 @@ if CONFIG["OS_TARGET"] == "Darwin":
     DEFINES["WEBRTC_MAC"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE"] = "0"
+
+    OS_LIBS += [
+        "-framework Foundation"
+    ]
 
 if CONFIG["OS_TARGET"] == "DragonFly":
 
@@ -80,6 +111,10 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
+
+    OS_LIBS += [
+        "rt"
+    ]
 
 if CONFIG["OS_TARGET"] == "NetBSD":
 
@@ -120,12 +155,20 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["_WINDOWS"] = True
     DEFINES["__STD_C"] = True
 
+    OS_LIBS += [
+        "winmm"
+    ]
+
 if CONFIG["CPU_ARCH"] == "aarch64":
 
     DEFINES["WEBRTC_ARCH_ARM64"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
 if CONFIG["CPU_ARCH"] == "arm":
+
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
 
     DEFINES["WEBRTC_ARCH_ARM"] = True
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
@@ -155,9 +198,28 @@ if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
-    DEFINES["DISABLE_NACL"] = True
-    DEFINES["NO_TCMALLOC"] = True
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
 
 Library("rtc_event_log_api_gn")

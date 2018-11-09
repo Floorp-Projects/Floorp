@@ -47,25 +47,31 @@ namespace recordreplay {
 // saving its output or adding a preamble.
 #define FOR_EACH_REDIRECTION(MACRO)                              \
   /* System call wrappers */                                     \
-  MACRO(kevent, RR_SaveRvalHadErrorNegative<RR_WriteBuffer<3, 4, struct kevent>>) \
+  MACRO(kevent, RR_SaveRvalHadErrorNegative<RR_WriteBuffer<3, 4, struct kevent>>, \
+        nullptr, nullptr, Preamble_WaitForever)                  \
   MACRO(kevent64, RR_SaveRvalHadErrorNegative<RR_WriteBuffer<3, 4, struct kevent64_s>>) \
   MACRO(mprotect, nullptr, Preamble_mprotect)                    \
   MACRO(mmap, nullptr, Preamble_mmap)                            \
   MACRO(munmap, nullptr, Preamble_munmap)                        \
-  MACRO(read, RR_SaveRvalHadErrorNegative<RR_WriteBufferViaRval<1, 2>>) \
+  MACRO(read, RR_SaveRvalHadErrorNegative<RR_WriteBufferViaRval<1, 2>>, \
+        nullptr, nullptr, Preamble_SetError<EIO>)                \
   MACRO(__read_nocancel, RR_SaveRvalHadErrorNegative<RR_WriteBufferViaRval<1, 2>>) \
   MACRO(pread, RR_SaveRvalHadErrorNegative<RR_WriteBufferViaRval<1, 2>>) \
-  MACRO(write, RR_SaveRvalHadErrorNegative)                      \
+  MACRO(write, RR_SaveRvalHadErrorNegative,                      \
+        nullptr, nullptr, MiddlemanPreamble_write)               \
   MACRO(__write_nocancel, RR_SaveRvalHadErrorNegative)           \
   MACRO(open, RR_SaveRvalHadErrorNegative)                       \
   MACRO(__open_nocancel, RR_SaveRvalHadErrorNegative)            \
   MACRO(recv, RR_SaveRvalHadErrorNegative<RR_WriteBufferViaRval<1, 2>>) \
-  MACRO(recvmsg, RR_SaveRvalHadErrorNegative<RR_recvmsg>)        \
-  MACRO(sendmsg, RR_SaveRvalHadErrorNegative)                    \
+  MACRO(recvmsg, RR_SaveRvalHadErrorNegative<RR_recvmsg>,        \
+        nullptr, nullptr, Preamble_WaitForever)                  \
+  MACRO(sendmsg, RR_SaveRvalHadErrorNegative,                    \
+        nullptr, nullptr, MiddlemanPreamble_sendmsg)             \
   MACRO(shm_open, RR_SaveRvalHadErrorNegative)                   \
   MACRO(socket, RR_SaveRvalHadErrorNegative)                     \
   MACRO(kqueue, RR_SaveRvalHadErrorNegative)                     \
-  MACRO(pipe, RR_SaveRvalHadErrorNegative<RR_WriteBufferFixedSize<0, 2 * sizeof(int)>>) \
+  MACRO(pipe, RR_SaveRvalHadErrorNegative<RR_WriteBufferFixedSize<0, 2 * sizeof(int)>>, \
+        nullptr, nullptr, Preamble_SetError)                     \
   MACRO(close, RR_SaveRvalHadErrorNegative)                      \
   MACRO(__close_nocancel, RR_SaveRvalHadErrorNegative)           \
   MACRO(mkdir, RR_SaveRvalHadErrorNegative)                      \
@@ -87,7 +93,7 @@ namespace recordreplay {
   MACRO(issetugid, RR_ScalarRval)                                \
   MACRO(__gettid, RR_ScalarRval)                                 \
   MACRO(getpid, nullptr, Preamble_getpid)                        \
-  MACRO(fcntl, RR_SaveRvalHadErrorNegative, Preamble_fcntl)      \
+  MACRO(fcntl, RR_SaveRvalHadErrorNegative, Preamble_fcntl, nullptr, MiddlemanPreamble_fcntl) \
   MACRO(getattrlist, RR_SaveRvalHadErrorNegative<RR_WriteBuffer<2, 3>>) \
   MACRO(fstat$INODE64,                                           \
         RR_SaveRvalHadErrorNegative<RR_WriteBufferFixedSize<1, sizeof(struct stat)>>, \
@@ -115,7 +121,8 @@ namespace recordreplay {
                              RR_WriteBufferFixedSize<5, sizeof(size_t)>, \
                              RR_WriteBufferFixedSize<6, sizeof(size_t)>>>) \
   MACRO(getrusage,                                               \
-        RR_SaveRvalHadErrorNegative<RR_WriteBufferFixedSize<1, sizeof(struct rusage)>>) \
+        RR_SaveRvalHadErrorNegative<RR_WriteBufferFixedSize<1, sizeof(struct rusage)>>, \
+        nullptr, nullptr, Preamble_PassThrough)                  \
   MACRO(__getrlimit,                                             \
         RR_SaveRvalHadErrorNegative<RR_WriteBufferFixedSize<1, sizeof(struct rlimit)>>) \
   MACRO(__setrlimit, RR_SaveRvalHadErrorNegative)                \
@@ -139,7 +146,8 @@ namespace recordreplay {
                     RR_WriteBufferFixedSize<1, sizeof(fd_set)>,  \
                     RR_WriteBufferFixedSize<2, sizeof(fd_set)>,  \
                     RR_WriteBufferFixedSize<3, sizeof(fd_set)>,  \
-                    RR_WriteOptionalBufferFixedSize<4, sizeof(timeval)>>>) \
+                    RR_WriteOptionalBufferFixedSize<4, sizeof(timeval)>>>, \
+        nullptr, nullptr, Preamble_WaitForever)                  \
   MACRO(__process_policy, RR_SaveRvalHadErrorNegative)           \
   MACRO(__kdebug_trace, RR_SaveRvalHadErrorNegative)             \
   MACRO(guarded_kqueue_np,                                       \
@@ -184,12 +192,14 @@ namespace recordreplay {
   MACRO(arc4random, RR_ScalarRval)                               \
   MACRO(mach_absolute_time, RR_ScalarRval, Preamble_mach_absolute_time, \
         nullptr, Preamble_PassThrough)                           \
-  MACRO(mach_msg, RR_Compose<RR_ScalarRval, RR_WriteBuffer<0, 3>>) \
+  MACRO(mach_msg, RR_Compose<RR_ScalarRval, RR_WriteBuffer<0, 3>>, \
+        nullptr, nullptr, Preamble_WaitForever)                  \
   MACRO(mach_timebase_info,                                      \
         RR_Compose<RR_ScalarRval, RR_WriteBufferFixedSize<0, sizeof(mach_timebase_info_data_t)>>) \
   MACRO(mach_vm_allocate, nullptr, Preamble_mach_vm_allocate)    \
   MACRO(mach_vm_deallocate, nullptr, Preamble_mach_vm_deallocate) \
   MACRO(mach_vm_protect, nullptr, Preamble_mach_vm_protect)      \
+  MACRO(rand, RR_ScalarRval)                                     \
   MACRO(realpath,                                                \
         RR_SaveRvalHadErrorZero<RR_Compose<RR_CStringRval,       \
                                            RR_WriteOptionalBufferFixedSize<1, PATH_MAX>>>) \
@@ -299,7 +309,8 @@ namespace recordreplay {
         Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_CFTypeArg<1>>) \
   MACRO(CFStringCreateArrayBySeparatingStrings, RR_ScalarRval)   \
   MACRO(CFStringCreateMutable, RR_ScalarRval)                    \
-  MACRO(CFStringCreateWithBytes, RR_ScalarRval)                  \
+  MACRO(CFStringCreateWithBytes, RR_ScalarRval, nullptr,         \
+        Middleman_Compose<Middleman_Buffer<1, 2>, Middleman_CreateCFTypeRval>) \
   MACRO(CFStringCreateWithBytesNoCopy, RR_ScalarRval)            \
   MACRO(CFStringCreateWithCharactersNoCopy, RR_ScalarRval, nullptr, \
         Middleman_Compose<Middleman_Buffer<1, 2, UniChar>, Middleman_CreateCFTypeRval>) \
@@ -342,6 +353,7 @@ namespace recordreplay {
   MACRO(CGBitmapContextGetWidth, RR_ScalarRval)                  \
   MACRO(CGColorRelease, RR_ScalarRval)                           \
   MACRO(CGColorSpaceCopyICCProfile, RR_ScalarRval)               \
+  MACRO(CGColorSpaceCreateDeviceGray, RR_ScalarRval, nullptr, Middleman_CreateCFTypeRval) \
   MACRO(CGColorSpaceCreateDeviceRGB, RR_ScalarRval, nullptr, Middleman_CreateCFTypeRval) \
   MACRO(CGColorSpaceCreatePattern, RR_ScalarRval)                \
   MACRO(CGColorSpaceRelease, RR_ScalarRval)                      \
@@ -881,11 +893,12 @@ Middleman_UpdateCFTypeArg(MiddlemanCallContext& aCx)
   Middleman_SystemOutput(aCx, &arg, /* aUpdating = */ true);
 }
 
+template <int Error = EAGAIN>
 static PreambleResult
 Preamble_SetError(CallArguments* aArguments)
 {
   aArguments->Rval<ssize_t>() = -1;
-  errno = EAGAIN;
+  errno = Error;
   return PreambleResult::Veto;
 }
 
@@ -915,6 +928,19 @@ RR_recvmsg(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
     nbytes -= iovbytes;
   }
   MOZ_RELEASE_ASSERT(nbytes == 0);
+}
+
+static PreambleResult
+MiddlemanPreamble_sendmsg(CallArguments* aArguments)
+{
+  // Silently pretend that sends succeed after diverging from the recording.
+  size_t totalSize = 0;
+  auto msg = aArguments->Arg<1, msghdr*>();
+  for (int i = 0; i < msg->msg_iovlen; i++) {
+    totalSize += msg->msg_iov[i].iov_len;
+  }
+  aArguments->Rval<size_t>() = totalSize;
+  return PreambleResult::Veto;
 }
 
 static PreambleResult
@@ -997,6 +1023,14 @@ Preamble_munmap(CallArguments* aArguments)
   return PreambleResult::Veto;
 }
 
+static PreambleResult
+MiddlemanPreamble_write(CallArguments* aArguments)
+{
+  // Silently pretend that writes succeed after diverging from the recording.
+  aArguments->Rval<size_t>() = aArguments->Arg<2, size_t>();
+  return PreambleResult::Veto;
+}
+
 static void
 RR_getsockopt(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
 {
@@ -1049,6 +1083,23 @@ Preamble_fcntl(CallArguments* aArguments)
     MOZ_CRASH();
   }
   return PreambleResult::Redirect;
+}
+
+static PreambleResult
+MiddlemanPreamble_fcntl(CallArguments* aArguments)
+{
+  auto& cmd = aArguments->Arg<1, size_t>();
+  switch (cmd) {
+  case F_SETFL:
+  case F_SETFD:
+  case F_SETLK:
+  case F_SETLKW:
+    break;
+  default:
+    MOZ_CRASH();
+  }
+  aArguments->Rval<ssize_t>() = 0;
+  return PreambleResult::Veto;
 }
 
 static PreambleResult
@@ -1137,11 +1188,29 @@ DirectUnlockMutex(pthread_mutex_t* aMutex)
 // Handle a redirection which releases a mutex, waits in some way for a cvar,
 // and reacquires the mutex before returning.
 static ssize_t
-WaitForCvar(pthread_mutex_t* aMutex, bool aRecordReturnValue,
+WaitForCvar(pthread_mutex_t* aMutex, pthread_cond_t* aCond, bool aRecordReturnValue,
             const std::function<ssize_t()>& aCallback)
 {
   Lock* lock = Lock::Find(aMutex);
   if (!lock) {
+    if (IsReplaying() && !AreThreadEventsPassedThrough()) {
+      Thread* thread = Thread::Current();
+      if (thread->MaybeWaitForCheckpointSave([=]() { pthread_mutex_unlock(aMutex); })) {
+        // We unlocked the mutex while the thread idled, so don't wait on the
+        // condvar: the state the thread is waiting on may have changed and it
+        // might not want to continue waiting. Returning immediately means this
+        // this is a spurious wakeup, which is allowed by the pthreads API and
+        // should be handled correctly by callers.
+        pthread_mutex_lock(aMutex);
+        return 0;
+      }
+      thread->NotifyUnrecordedWait([=]() {
+          pthread_mutex_lock(aMutex);
+          pthread_cond_broadcast(aCond);
+          pthread_mutex_unlock(aMutex);
+        });
+    }
+
     AutoEnsurePassThroughThreadEvents pt;
     return aCallback();
   }
@@ -1170,7 +1239,7 @@ Preamble_pthread_cond_wait(CallArguments* aArguments)
   auto& cond = aArguments->Arg<0, pthread_cond_t*>();
   auto& mutex = aArguments->Arg<1, pthread_mutex_t*>();
   aArguments->Rval<ssize_t>() =
-    WaitForCvar(mutex, false,
+    WaitForCvar(mutex, cond, false,
                 [=]() { return OriginalCall(pthread_cond_wait, ssize_t, cond, mutex); });
   return PreambleResult::Veto;
 }
@@ -1182,7 +1251,7 @@ Preamble_pthread_cond_timedwait(CallArguments* aArguments)
   auto& mutex = aArguments->Arg<1, pthread_mutex_t*>();
   auto& timeout = aArguments->Arg<2, timespec*>();
   aArguments->Rval<ssize_t>() =
-    WaitForCvar(mutex, true,
+    WaitForCvar(mutex, cond, true,
                 [=]() { return OriginalCall(pthread_cond_timedwait, ssize_t,
                                             cond, mutex, timeout); });
   return PreambleResult::Veto;
@@ -1195,7 +1264,7 @@ Preamble_pthread_cond_timedwait_relative_np(CallArguments* aArguments)
   auto& mutex = aArguments->Arg<1, pthread_mutex_t*>();
   auto& timeout = aArguments->Arg<2, timespec*>();
   aArguments->Rval<ssize_t>() =
-    WaitForCvar(mutex, true,
+    WaitForCvar(mutex, cond, true,
                 [=]() { return OriginalCall(pthread_cond_timedwait_relative_np, ssize_t,
                                             cond, mutex, timeout); });
   return PreambleResult::Veto;
