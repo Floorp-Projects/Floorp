@@ -1277,6 +1277,11 @@ class ListNode : public ParseNode
         pn_u.list.count++;
     }
 
+    void prependAndUpdatePos(ParseNode* item) {
+        prepend(item);
+        pn_pos.begin = item->pn_pos.begin;
+    }
+
     // Methods used by FoldConstants.cpp.
     // Caller is responsible for keeping the list consistent.
     ParseNode** unsafeHeadReference() {

@@ -225,8 +225,11 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
 
     // --- Utilities.
 
-    MOZ_MUST_USE JS::Result<ParseNode*> appendDirectivesToBody(ListNode* body,
+    MOZ_MUST_USE JS::Result<Ok> prependDirectivesToBody(ListNode* body,
         ListNode* directives);
+
+    MOZ_MUST_USE JS::Result<Ok> prependDirectivesImpl(ListNode* body,
+        ParseNode* directive);
 
     // Optionally force a strict context without restarting the parse when we see a strict
     // directive.
