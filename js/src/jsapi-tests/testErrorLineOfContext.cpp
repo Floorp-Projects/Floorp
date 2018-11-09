@@ -5,7 +5,7 @@
 #include "jsfriendapi.h"
 
 #include "js/CompilationAndEvaluation.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "jsapi-tests/tests.h"
 #include "vm/ErrorReporting.h"
 
@@ -43,8 +43,8 @@ eval(const char16_t* chars, size_t len, JS::MutableHandleValue rval)
 
     JSAutoRealm ar(cx, global);
 
-    JS::SourceBufferHolder srcBuf;
-    CHECK(srcBuf.init(cx, chars, len, JS::SourceBufferHolder::NoOwnership));
+    JS::SourceText<char16_t> srcBuf;
+    CHECK(srcBuf.init(cx, chars, len, JS::SourceOwnership::Borrowed));
 
     JS::CompileOptions options(cx);
     return JS::Evaluate(cx, options, srcBuf, rval);

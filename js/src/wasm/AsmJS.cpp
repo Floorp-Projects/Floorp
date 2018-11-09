@@ -36,7 +36,7 @@
 #include "gc/Policy.h"
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
@@ -76,7 +76,8 @@ using mozilla::Unused;
 using JS::AsmJSOption;
 using JS::AutoStableStringChars;
 using JS::GenericNaN;
-using JS::SourceBufferHolder;
+using JS::SourceOwnership;
+using JS::SourceText;
 
 /*****************************************************************************/
 
@@ -6716,12 +6717,12 @@ HandleInstantiationFailure(JSContext* cx, CallArgs args, const AsmJSMetadata& me
         return false;
     }
 
-    SourceBufferHolder srcBuf;
+    SourceText<char16_t> srcBuf;
 
     const char16_t* chars = stableChars.twoByteRange().begin().get();
-    SourceBufferHolder::Ownership ownership = stableChars.maybeGiveOwnershipToCaller()
-                                              ? SourceBufferHolder::GiveOwnership
-                                              : SourceBufferHolder::NoOwnership;
+    SourceOwnership ownership = stableChars.maybeGiveOwnershipToCaller()
+                                ? SourceOwnership::TakeOwnership
+                                : SourceOwnership::Borrowed;
     if (!srcBuf.init(cx, chars, end - begin, ownership)) {
         return false;
     }

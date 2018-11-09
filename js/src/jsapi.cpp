@@ -62,7 +62,7 @@
 #include "js/LocaleSensitive.h"
 #include "js/Proxy.h"
 #include "js/SliceBudget.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
 #include "js/Utility.h"
@@ -114,7 +114,7 @@ using mozilla::Some;
 using JS::AutoStableStringChars;
 using JS::CompileOptions;
 using JS::ReadOnlyCompileOptions;
-using JS::SourceBufferHolder;
+using JS::SourceText;
 
 #ifdef HAVE_VA_LIST_AS_ARRAY
 #define JS_ADDRESSOF_VA_LIST(ap) ((va_list*)(ap))
@@ -4162,7 +4162,7 @@ JS::FinishDynamicModuleImport(JSContext* cx, HandleValue referencingPrivate, Han
 
 JS_PUBLIC_API(bool)
 JS::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-                  SourceBufferHolder& srcBuf, JS::MutableHandleObject module)
+                  SourceText<char16_t>& srcBuf, JS::MutableHandleObject module)
 {
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
     AssertHeapIsIdle();

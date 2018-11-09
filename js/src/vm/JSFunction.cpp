@@ -35,8 +35,7 @@
 #include "js/CallNonGenericMethod.h"
 #include "js/CompileOptions.h"
 #include "js/Proxy.h"
-
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
@@ -70,7 +69,8 @@ using mozilla::Utf8Unit;
 
 using JS::AutoStableStringChars;
 using JS::CompileOptions;
-using JS::SourceBufferHolder;
+using JS::SourceOwnership;
+using JS::SourceText;
 
 static bool
 fun_enumerate(JSContext* cx, HandleObject obj)
@@ -2115,10 +2115,10 @@ CreateDynamicFunction(JSContext* cx, const CallArgs& args, GeneratorKind generat
     }
 
     mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
-    SourceBufferHolder::Ownership ownership = stableChars.maybeGiveOwnershipToCaller()
-                                              ? SourceBufferHolder::GiveOwnership
-                                              : SourceBufferHolder::NoOwnership;
-    SourceBufferHolder srcBuf;
+    SourceOwnership ownership = stableChars.maybeGiveOwnershipToCaller()
+                                ? SourceOwnership::TakeOwnership
+                                : SourceOwnership::Borrowed;
+    SourceText<char16_t> srcBuf;
     if (!srcBuf.init(cx, chars.begin().get(), chars.length(), ownership)) {
         return false;
     }

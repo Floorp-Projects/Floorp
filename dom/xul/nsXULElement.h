@@ -12,7 +12,7 @@
 #ifndef nsXULElement_h__
 #define nsXULElement_h__
 
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "js/TracingAPI.h"
 #include "mozilla/Attributes.h"
 #include "nsIServiceManager.h"
@@ -216,7 +216,7 @@ public:
                                   nsXULPrototypeDocument* aProtoDoc);
 
     nsresult Compile(const char16_t* aText, size_t aTextLength,
-                     JS::SourceBufferHolder::Ownership aOwnership,
+                     JS::SourceOwnership aOwnership,
                      nsIURI* aURI, uint32_t aLineNo,
                      nsIDocument* aDocument,
                      nsIOffThreadScriptReceiver *aOffThreadReceiver = nullptr);

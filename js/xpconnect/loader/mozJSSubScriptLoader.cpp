@@ -20,7 +20,7 @@
 #include "jsfriendapi.h"
 #include "xpcprivate.h" // For xpc::OptionsBase
 #include "js/CompilationAndEvaluation.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "js/Wrapper.h"
 
 #include "mozilla/ContentPrincipal.h"
@@ -165,7 +165,7 @@ PrepareScript(nsIURI* uri,
             return false;
         }
 
-        JS::SourceBufferHolder srcBuf;
+        JS::SourceText<char16_t> srcBuf;
         if (!srcBuf.init(cx, JS::UniqueTwoByteChars(scriptBuf), scriptLength)) {
             return false;
         }

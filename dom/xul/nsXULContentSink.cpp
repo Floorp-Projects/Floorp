@@ -507,7 +507,7 @@ XULContentSinkImpl::HandleEndElement(const char16_t *aName)
             script->mOutOfLine = false;
             if (doc) {
                 script->Compile(mText, mTextLength,
-                                JS::SourceBufferHolder::NoOwnership, mDocumentURL,
+                                JS::SourceOwnership::Borrowed, mDocumentURL,
                                 script->mLineNo, doc);
             }
         }

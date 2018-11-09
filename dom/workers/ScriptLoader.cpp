@@ -28,7 +28,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/CompilationAndEvaluation.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "nsError.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
@@ -2134,7 +2134,7 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     std::swap(dataLength, loadInfo.mScriptTextLength);
     std::swap(data, loadInfo.mScriptTextBuf);
 
-    JS::SourceBufferHolder srcBuf;
+    JS::SourceText<char16_t> srcBuf;
     if (!srcBuf.init(aCx, JS::UniqueTwoByteChars(data), dataLength)) {
       mScriptLoader.mRv.StealExceptionFromJSContext(aCx);
       return true;

@@ -19,7 +19,7 @@
 #include "frontend/ErrorReporter.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/Parser.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"
@@ -38,7 +38,7 @@ using mozilla::Nothing;
 
 using JS::CompileOptions;
 using JS::ReadOnlyCompileOptions;
-using JS::SourceBufferHolder;
+using JS::SourceText;
 
 template<typename Unit> class SourceAwareCompiler;
 template<typename Unit> class ScriptCompiler;
@@ -97,10 +97,10 @@ class MOZ_STACK_CLASS BytecodeCompiler
     MOZ_MUST_USE bool emplaceEmitter(Maybe<BytecodeEmitter>& emitter,
                                      const EitherParser& parser, SharedContext* sharedContext);
 
-    // This function will eventually be templated on source-units type.  It
-    // lives here, not in SourceAwareCompiler, because it mostly uses fields in
-    // *this* class.
-    MOZ_MUST_USE bool assignSource(SourceBufferHolder& sourceBuffer);
+    // This function lives here, not in SourceAwareCompiler, because it mostly
+    // uses fields in *this* class.
+    template<typename Unit>
+    MOZ_MUST_USE bool assignSource(SourceText<Unit>& sourceBuffer);
 
     bool canLazilyParse() const;
 
@@ -112,7 +112,7 @@ template<typename Unit>
 class MOZ_STACK_CLASS SourceAwareCompiler
 {
   protected:
-    SourceBufferHolder& sourceBuffer_;
+    SourceText<Unit>& sourceBuffer_;
 
     Maybe<Parser<SyntaxParseHandler, Unit>> syntaxParser;
     Maybe<Parser<FullParseHandler, Unit>> parser;
@@ -120,7 +120,7 @@ class MOZ_STACK_CLASS SourceAwareCompiler
     using TokenStreamPosition = frontend::TokenStreamPosition<Unit>;
 
   protected:
-    explicit SourceAwareCompiler(SourceBufferHolder& sourceBuffer)
+    explicit SourceAwareCompiler(SourceText<Unit>& sourceBuffer)
       : sourceBuffer_(sourceBuffer)
     {
         MOZ_ASSERT(sourceBuffer_.get() != nullptr);
@@ -217,7 +217,7 @@ class MOZ_STACK_CLASS GlobalScriptCompiler final
     using Base::prepareScriptParse;
 
   public:
-    explicit GlobalScriptCompiler(SourceBufferHolder& srcBuf)
+    explicit GlobalScriptCompiler(SourceText<Unit>& srcBuf)
       : Base(srcBuf)
     {}
 
@@ -262,7 +262,7 @@ class MOZ_STACK_CLASS EvalScriptCompiler final
     using Base::prepareScriptParse;
 
   public:
-    explicit EvalScriptCompiler(SourceBufferHolder& srcBuf)
+    explicit EvalScriptCompiler(SourceText<Unit>& srcBuf)
       : Base(srcBuf)
     {}
 
@@ -296,7 +296,7 @@ class MOZ_STACK_CLASS ModuleCompiler final
     using Base::parser;
 
   public:
-    explicit ModuleCompiler(SourceBufferHolder& srcBuf)
+    explicit ModuleCompiler(SourceText<Unit>& srcBuf)
       : Base(srcBuf)
     {}
 
@@ -328,7 +328,7 @@ class MOZ_STACK_CLASS StandaloneFunctionCompiler final
     using typename Base::TokenStreamPosition;
 
   public:
-    explicit StandaloneFunctionCompiler(SourceBufferHolder& srcBuf)
+    explicit StandaloneFunctionCompiler(SourceText<Unit>& srcBuf)
       : Base(srcBuf)
     {}
 
@@ -428,8 +428,9 @@ BytecodeCompiler::createScriptSource(const Maybe<uint32_t>& parameterListEnd)
     return true;
 }
 
+template<typename Unit>
 bool
-BytecodeCompiler::assignSource(SourceBufferHolder& sourceBuffer)
+BytecodeCompiler::assignSource(SourceText<Unit>& sourceBuffer)
 {
     if (!cx->realm()->behaviors().discardSource()) {
         if (options.sourceIsLazy) {
@@ -854,7 +855,7 @@ class MOZ_RAII AutoAssertReportedException
 JSScript*
 frontend::CompileGlobalScript(JSContext* cx, ScopeKind scopeKind,
                               const ReadOnlyCompileOptions& options,
-                              SourceBufferHolder& srcBuf,
+                              SourceText<char16_t>& srcBuf,
                               ScriptSourceObject** sourceObjectOut)
 {
     MOZ_ASSERT(scopeKind == ScopeKind::Global || scopeKind == ScopeKind::NonSyntactic);
@@ -941,7 +942,7 @@ JSScript*
 frontend::CompileEvalScript(JSContext* cx, HandleObject environment,
                             HandleScope enclosingScope,
                             const ReadOnlyCompileOptions& options,
-                            SourceBufferHolder& srcBuf,
+                            SourceText<char16_t>& srcBuf,
                             ScriptSourceObject** sourceObjectOut)
 {
     AutoAssertReportedException assertException(cx);
@@ -962,7 +963,7 @@ frontend::CompileEvalScript(JSContext* cx, HandleObject environment,
 
 ModuleObject*
 frontend::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& optionsInput,
-                        SourceBufferHolder& srcBuf,
+                        SourceText<char16_t>& srcBuf,
                         ScriptSourceObject** sourceObjectOut)
 {
     MOZ_ASSERT(srcBuf.get());
@@ -990,7 +991,7 @@ frontend::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& optionsInpu
 
 ModuleObject*
 frontend::CompileModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-                        SourceBufferHolder& srcBuf)
+                        SourceText<char16_t>& srcBuf)
 {
     AutoAssertReportedException assertException(cx);
 
@@ -1218,7 +1219,7 @@ frontend::CompileLazyBinASTFunction(JSContext* cx, Handle<LazyScript*> lazy, con
 bool
 frontend::CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
                                     const JS::ReadOnlyCompileOptions& options,
-                                    JS::SourceBufferHolder& srcBuf,
+                                    JS::SourceText<char16_t>& srcBuf,
                                     const Maybe<uint32_t>& parameterListEnd,
                                     HandleScope enclosingScope /* = nullptr */)
 {
@@ -1249,7 +1250,7 @@ frontend::CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
 bool
 frontend::CompileStandaloneGenerator(JSContext* cx, MutableHandleFunction fun,
                                      const JS::ReadOnlyCompileOptions& options,
-                                     JS::SourceBufferHolder& srcBuf,
+                                     JS::SourceText<char16_t>& srcBuf,
                                      const Maybe<uint32_t>& parameterListEnd)
 {
     AutoAssertReportedException assertException(cx);
@@ -1276,7 +1277,7 @@ frontend::CompileStandaloneGenerator(JSContext* cx, MutableHandleFunction fun,
 bool
 frontend::CompileStandaloneAsyncFunction(JSContext* cx, MutableHandleFunction fun,
                                          const ReadOnlyCompileOptions& options,
-                                         JS::SourceBufferHolder& srcBuf,
+                                         JS::SourceText<char16_t>& srcBuf,
                                          const Maybe<uint32_t>& parameterListEnd)
 {
     AutoAssertReportedException assertException(cx);
@@ -1303,7 +1304,7 @@ frontend::CompileStandaloneAsyncFunction(JSContext* cx, MutableHandleFunction fu
 bool
 frontend::CompileStandaloneAsyncGenerator(JSContext* cx, MutableHandleFunction fun,
                                           const ReadOnlyCompileOptions& options,
-                                          JS::SourceBufferHolder& srcBuf,
+                                          JS::SourceText<char16_t>& srcBuf,
                                           const Maybe<uint32_t>& parameterListEnd)
 {
     AutoAssertReportedException assertException(cx);

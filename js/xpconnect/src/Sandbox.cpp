@@ -13,7 +13,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/Proxy.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "js/StructuredClone.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
@@ -1927,8 +1927,8 @@ xpc::EvalInSandbox(JSContext* cx, HandleObject sandboxArg, const nsAString& sour
 
         const nsPromiseFlatString& flat = PromiseFlatString(source);
 
-        JS::SourceBufferHolder buffer;
-        ok = buffer.init(sandcx, flat.get(), flat.Length(), JS::SourceBufferHolder::NoOwnership) &&
+        JS::SourceText<char16_t> buffer;
+        ok = buffer.init(sandcx, flat.get(), flat.Length(), JS::SourceOwnership::Borrowed) &&
              JS::Evaluate(sandcx, options, buffer, &v);
 
         // If the sandbox threw an exception, grab it off the context.
