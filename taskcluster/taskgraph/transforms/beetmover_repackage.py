@@ -132,6 +132,10 @@ UPSTREAM_ARTIFACT_SIGNED_REPACKAGE_PATHS = [
     'target.stub-installer.exe',
 ]
 
+UPSTREAM_ARTIFACT_SIGNED_MSI_PATHS = [
+    'target.installer.msi',
+]
+
 # Compile every regex once at import time
 for dict_ in (
     UPSTREAM_ARTIFACT_UNSIGNED_PATHS, UPSTREAM_ARTIFACT_SIGNED_PATHS,
@@ -213,6 +217,7 @@ def make_task_description(config, jobs):
         build_name = "build"
         repackage_name = "repackage"
         repackage_signing_name = "repackage-signing"
+        msi_signing_name = "repackage-signing-msi"
         if job.get('locale'):
             signing_name = "nightly-l10n-signing"
             build_name = "nightly-l10n"
@@ -226,6 +231,8 @@ def make_task_description(config, jobs):
         }
         if 'partials-signing' in upstream_deps:
             dependencies['partials-signing'] = upstream_deps['partials-signing']
+        if msi_signing_name in upstream_deps:
+            dependencies[msi_signing_name] = upstream_deps[msi_signing_name]
 
         attributes = copy_attributes_from_dependent_job(dep_job)
         if job.get('locale'):
@@ -256,6 +263,7 @@ def generate_upstream_artifacts(job, dependencies, platform, locale=None, projec
     build_signing_mapping = UPSTREAM_ARTIFACT_SIGNED_PATHS
     repackage_mapping = UPSTREAM_ARTIFACT_REPACKAGE_PATHS
     repackage_signing_mapping = UPSTREAM_ARTIFACT_SIGNED_REPACKAGE_PATHS
+    msi_signing_mapping = UPSTREAM_ARTIFACT_SIGNED_MSI_PATHS
 
     artifact_prefix = get_artifact_prefix(job)
     if locale:
@@ -298,7 +306,11 @@ def generate_upstream_artifacts(job, dependencies, platform, locale=None, projec
     for task_type, cot_type, paths in [
         ('repackage', 'repackage', repackage_mapping),
         ('repackage-signing', 'repackage', repackage_signing_mapping),
+        ('repackage-signing-msi', 'repackage', msi_signing_mapping),
     ]:
+        if task_type not in dependencies:
+            continue
+
         paths = ["{}/{}".format(artifact_prefix, path) for path in paths]
         paths = [
             path for path in paths
