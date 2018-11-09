@@ -69,7 +69,6 @@ typedef struct _MacSandboxInfo {
   std::string testingReadPath3;
   std::string testingReadPath4;
 
-  std::string parentPort;
   std::string crashServerPort;
 
   bool shouldLog;

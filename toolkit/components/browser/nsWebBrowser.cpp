@@ -56,9 +56,9 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-nsWebBrowser::nsWebBrowser()
+nsWebBrowser::nsWebBrowser(int aItemType)
   : mInitInfo(new nsWebBrowserInitInfo())
-  , mContentType(typeContentWrapper)
+  , mContentType(aItemType)
   , mActivating(false)
   , mShouldEnableHistory(true)
   , mIsActive(true)
@@ -297,22 +297,6 @@ nsWebBrowser::GetItemType(int32_t* aItemType)
   NS_ENSURE_ARG_POINTER(aItemType);
 
   *aItemType = ItemType();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebBrowser::SetItemType(int32_t aItemType)
-{
-  NS_ENSURE_TRUE(
-    aItemType == typeContentWrapper || aItemType == typeChromeWrapper,
-    NS_ERROR_FAILURE);
-  mContentType = aItemType;
-  if (mDocShell) {
-    mDocShell->SetItemType(mContentType == typeChromeWrapper ?
-                             static_cast<int32_t>(typeChrome) :
-                             static_cast<int32_t>(typeContent));
-  }
-
   return NS_OK;
 }
 

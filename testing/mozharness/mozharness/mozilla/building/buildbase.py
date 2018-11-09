@@ -1088,10 +1088,18 @@ or run without that action (ie: --no-{action})"
     def build(self):
         """builds application."""
 
-        # This will error on non-0 exit code.
-        self._run_mach_command_in_build_env(['build', '-v'])
+        args = ['build', '-v']
 
-        self.generate_build_props(console_output=True, halt_on_failure=True)
+        custom_build_targets = self.config.get('build_targets')
+        if custom_build_targets:
+            args += custom_build_targets
+
+        # This will error on non-0 exit code.
+        self._run_mach_command_in_build_env(args)
+
+        if not custom_build_targets:
+            self.generate_build_props(console_output=True, halt_on_failure=True)
+
         self._generate_build_stats()
 
     def static_analysis_autotest(self):

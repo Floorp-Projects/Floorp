@@ -47,7 +47,7 @@ treeherder:
         'W-e10s': 'Web platform tests with e10s'
         'W-sw-e10s': 'Web platform tests with serviceworker redesign and e10s'
         'X': 'Xpcshell tests'
-        'X-e10s': 'Xpcshell tests with e10s'
+        'X-sw': 'Xpcshell tests with serviceworker redesign'
         'L10n': 'Localised Repacks'
         'L10n-Rpk': 'Localized Repackaged Repacks'
         'BM-L10n': 'Beetmover for locales'

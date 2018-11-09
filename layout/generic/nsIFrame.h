@@ -1231,6 +1231,13 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(PlaceholderFrameProperty, nsPlaceholderFrame)
 
+  // HasColumnSpanSiblings property stores whether the frame has any
+  // column-span siblings under the same multi-column ancestor. That is, the
+  // frame's element has column-span descendants without an intervening
+  // multi-column container element in between them. If the frame having
+  // this bit set is removed, we need to reframe the multi-column container
+  NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(HasColumnSpanSiblings, bool)
+
   mozilla::FrameBidiData GetBidiData() const
   {
     bool exists;
@@ -3884,6 +3891,19 @@ public:
   inline bool IsFixedPosContainingBlock() const;
   inline bool IsRelativelyPositioned() const;
   inline bool IsAbsolutelyPositioned(const nsStyleDisplay* aStyleDisplay = nullptr) const;
+
+  // Does this frame have "column-span: all" style.
+  //
+  // Note this only checks computed style, but not testing whether the
+  // containing block formatting context was established by a multicol.
+  // Callers need to consider NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR to check
+  // whether multi-column effects apply or not, or use
+  // IsColumnSpanInMulticolSubtree().
+  inline bool IsColumnSpan() const;
+
+  // Like IsColumnSpan(), but this also checks whether the frame has a
+  // multi-column ancestor or not.
+  inline bool IsColumnSpanInMulticolSubtree() const;
 
   /**
    * Returns the vertical-align value to be used for layout, if it is one

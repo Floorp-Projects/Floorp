@@ -395,6 +395,7 @@ cbindgen-types = [
     { gecko = "StyleFontLanguageOverride", servo = "values::computed::font::FontLanguageOverride" },
     { gecko = "StylePathCommand", servo = "values::specified::svg_path::PathCommand" },
     { gecko = "StyleUnicodeRange", servo = "cssparser::UnicodeRange" },
+    { gecko = "StyleOverflowWrap", servo = "values::computed::OverflowWrap" },
 ]
 
 mapped-generic-types = [

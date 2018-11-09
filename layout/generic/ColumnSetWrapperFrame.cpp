@@ -6,6 +6,8 @@
 
 #include "ColumnSetWrapperFrame.h"
 
+#include "nsContentUtils.h"
+
 using namespace mozilla;
 
 nsBlockFrame*
@@ -33,6 +35,45 @@ ColumnSetWrapperFrame::ColumnSetWrapperFrame(ComputedStyle* aStyle)
 {
 }
 
+nsContainerFrame*
+ColumnSetWrapperFrame::GetContentInsertionFrame()
+{
+  nsIFrame* columnSet = PrincipalChildList().OnlyChild();
+  if (columnSet) {
+    // We have only one child, which means we don't have any column-span
+    // descendants. Thus we can safely return our only ColumnSet child's
+    // insertion frame as ours.
+    MOZ_ASSERT(columnSet->IsColumnSetFrame());
+    return columnSet->GetContentInsertionFrame();
+  }
+
+  // We have column-span descendants. Return ourselves as the insertion
+  // frame to let nsCSSFrameConstructor::WipeContainingBlock() figure out
+  // what to do.
+  return this;
+}
+
+void
+ColumnSetWrapperFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
+{
+  MOZ_ASSERT(!GetPrevContinuation(),
+             "Who set NS_FRAME_OWNS_ANON_BOXES on our continuations?");
+
+  // It's sufficient to append the first ColumnSet child, which is the first
+  // continuation of all the other ColumnSets.
+  //
+  // We don't need to append -moz-column-span-wrapper children because
+  // they're non-inheriting anon boxes, and they cannot have any directly
+  // owned anon boxes nor generate any native anonymous content themselves.
+  // Thus, no need to restyle them. AssertColumnSpanWrapperSubtreeIsSane()
+  // asserts all the conditions above which allow us to skip appending
+  // -moz-column-span-wrappers.
+  nsIFrame* columnSet = PrincipalChildList().FirstChild();
+  MOZ_ASSERT(columnSet && columnSet->IsColumnSetFrame(),
+             "The first child should always be ColumnSet!");
+  aResult.AppendElement(OwnedAnonBox(columnSet));
+}
+
 #ifdef DEBUG_FRAME_DUMP
 nsresult
 ColumnSetWrapperFrame::GetFrameName(nsAString& aResult) const
@@ -48,8 +89,25 @@ void
 ColumnSetWrapperFrame::AppendFrames(ChildListID aListID,
                                     nsFrameList& aFrameList)
 {
-  MOZ_ASSERT_UNREACHABLE("Unsupported operation!");
+#ifdef DEBUG
+  MOZ_ASSERT(!mFinishedBuildingColumns, "Should only call once!");
+  mFinishedBuildingColumns = true;
+#endif
+
   nsBlockFrame::AppendFrames(aListID, aFrameList);
+
+#ifdef DEBUG
+  nsIFrame* firstColumnSet = PrincipalChildList().FirstChild();
+  for (nsIFrame* child : PrincipalChildList()) {
+    if (child->IsColumnSpan()) {
+      AssertColumnSpanWrapperSubtreeIsSane(child);
+    } else if (child != firstColumnSet) {
+      // All the other ColumnSets are the continuation of the first ColumnSet.
+      MOZ_ASSERT(child->IsColumnSetFrame() && child->GetPrevContinuation(),
+                 "ColumnSet's prev-continuation is not set properly?");
+    }
+  }
+#endif
 }
 
 void
@@ -67,3 +125,37 @@ ColumnSetWrapperFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame)
   MOZ_ASSERT_UNREACHABLE("Unsupported operation!");
   nsBlockFrame::RemoveFrame(aListID, aOldFrame);
 }
+
+#ifdef DEBUG
+
+/* static */ void
+ColumnSetWrapperFrame::AssertColumnSpanWrapperSubtreeIsSane(
+  const nsIFrame* aFrame) {
+  MOZ_ASSERT(aFrame->IsColumnSpan(), "aFrame is not column-span?");
+
+  if (!aFrame->Style()->IsAnonBox()) {
+    // aFrame is the primary frame of the element having "column-span: all".
+    // Traverse no further.
+    return;
+  }
+
+  MOZ_ASSERT(aFrame->Style()->GetPseudo() == nsCSSAnonBoxes::columnSpanWrapper(),
+             "aFrame should be ::-moz-column-span-wrapper");
+
+  MOZ_ASSERT(!aFrame->HasAnyStateBits(NS_FRAME_OWNS_ANON_BOXES),
+             "::-moz-column-span-wrapper anonymous blocks cannot own "
+             "other types of anonymous blocks!");
+
+  nsTArray<nsIContent*> anonKids;
+  nsContentUtils::AppendNativeAnonymousChildren(
+    aFrame->GetContent(), anonKids, 0);
+  MOZ_ASSERT(anonKids.IsEmpty(),
+             "We support only column-span on block and inline frame. They "
+             "should not create any native anonymous children.");
+
+  for (const nsIFrame* child : aFrame->PrincipalChildList()) {
+    AssertColumnSpanWrapperSubtreeIsSane(child);
+  }
+}
+
+#endif

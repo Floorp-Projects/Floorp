@@ -7998,7 +7998,9 @@
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
-    "description": "Records search counts for search access points and in content searches. For search access points, the format is: <engine-name>.<search-access-point> For in content searches, the format is <provider>.in-content:[sap|sap-follow-on|organic]:[code|none]"
+    "alert_emails": ["adw@mozilla.com"],
+    "bug_numbers": [1089670, 1482158, 1499193],
+    "description": "Records search counts for search access points and in content searches. For search access points in general and for the urlbar when an internal @engine shorcut is not used, the format is: <engine-name>.<search-access-point> For the urlbar when an internal @engine shortcut is used, the format is: <engine-name>.<@engine>.urlbar For in content searches, the format is <provider>.in-content:[sap|sap-follow-on|organic]:[code|none]"
   },
   "SEARCH_RESET_RESULT": {
     "record_in_processes": ["main", "content"],

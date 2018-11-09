@@ -2638,11 +2638,12 @@ class ICTableSwitch : public ICStub
     class Compiler : public ICStubCompiler {
         MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
 
+        JSScript* script_;
         jsbytecode* pc_;
 
       public:
-        Compiler(JSContext* cx, jsbytecode* pc)
-          : ICStubCompiler(cx, ICStub::TableSwitch), pc_(pc)
+        Compiler(JSContext* cx, JSScript* script, jsbytecode* pc)
+          : ICStubCompiler(cx, ICStub::TableSwitch), script_(script), pc_(pc)
         {}
 
         ICStub* getStub(ICStubSpace* space) override;

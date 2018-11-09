@@ -975,9 +975,6 @@ nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
                nsCSSAnonBoxes::mozBlockInsideInlineWrapper(),
                "Unexpected kind of ComputedStyle");
 
-    // We don't want to just walk through using GetNextContinuationWithSameStyle
-    // here, because we want to set updated ComputedStyles on both our
-    // ib-sibling blocks and inlines.
     for (nsIFrame* cont = blockFrame; cont; cont = cont->GetNextContinuation()) {
       cont->SetComputedStyle(newContext);
     }
