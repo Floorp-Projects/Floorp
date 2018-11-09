@@ -20,7 +20,7 @@ public:
                            , mChunkRemaining(0)
                            , mReachedEOF(false)
                            , mWaitEOF(false) {}
-   ~nsHttpChunkedDecoder() { delete mTrailers; }
+   ~nsHttpChunkedDecoder() = default;
 
     bool ReachedEOF() { return mReachedEOF; }
 
