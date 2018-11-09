@@ -458,6 +458,10 @@ class TabTracker extends TabTrackerBase {
           // tab could have been created with a lazy browser but still not have
           // been assigned a SessionStore tab state with the URL and title.
           Promise.resolve().then(() => {
+            if (!event.originalTarget.parentNode) {
+              // If the tab is already be destroyed, do nothing.
+              return;
+            }
             this.emitCreated(event.originalTarget, currentTabSize);
           });
         }
@@ -480,6 +484,10 @@ class TabTracker extends TabTrackerBase {
         // Because we are delaying calling emitCreated above, we also need to
         // delay sending this event because it shouldn't fire before onCreated.
         Promise.resolve().then(() => {
+          if (!nativeTab.parentNode) {
+            // If the tab is already be destroyed, do nothing.
+            return;
+          }
           this.emitActivated(nativeTab);
         });
         break;
