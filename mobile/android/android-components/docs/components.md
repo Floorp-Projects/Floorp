@@ -21,7 +21,7 @@ The following components offer customizable building blocks for browser apps:
 
 * [browser-toolbar](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/toolbar) - A customizable browser toolbar for displaying and editing URLs, actions buttons and menus.
 * [browser-domains](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/domains) - Localized and customizable domain lists for auto-completion in browsers.
-* [browser-erropages](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/errorpages) - Localized and responsive error pages for mobile browsers.
+* [browser-errorpages](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/errorpages) - Localized and responsive error pages for mobile browsers.
 * [browser-search](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/search) - Localized search plugins and code for loading and parsing them as well as querying search engines for search suggestions.
 * [browser-tabstray](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/tabstray) - A customizable tabs tray component for mobile browsers.
 * [browser-menu](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/menu) - A customizable overflow menu. Can be used with _browser-toolbar_.
