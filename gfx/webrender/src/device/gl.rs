@@ -818,6 +818,7 @@ pub struct Device {
     resource_override_path: Option<PathBuf>,
 
     max_texture_size: u32,
+    max_texture_layers: u32,
     renderer_name: String,
     cached_programs: Option<Rc<ProgramCache>>,
 
@@ -903,10 +904,13 @@ impl Device {
         cached_programs: Option<Rc<ProgramCache>>,
     ) -> Device {
         let mut max_texture_size = [0];
+        let mut max_texture_layers = [0];
         unsafe {
             gl.get_integer_v(gl::MAX_TEXTURE_SIZE, &mut max_texture_size);
+            gl.get_integer_v(gl::MAX_ARRAY_TEXTURE_LAYERS, &mut max_texture_layers);
         }
         let max_texture_size = max_texture_size[0] as u32;
+        let max_texture_layers = max_texture_layers[0] as u32;
         let renderer_name = gl.get_string(gl::RENDERER);
 
         let mut extension_count = [0];
@@ -1022,6 +1026,7 @@ impl Device {
             depth_available: true,
 
             max_texture_size,
+            max_texture_layers,
             renderer_name,
             cached_programs,
             frame_id: GpuFrameId(0),
@@ -1046,8 +1051,21 @@ impl Device {
         self.cached_programs = Some(cached_programs);
     }
 
+    /// Ensures that the maximum texture size is less than or equal to the
+    /// provided value. If the provided value is less than the value supported
+    /// by the driver, the latter is used.
+    pub fn clamp_max_texture_size(&mut self, size: u32) {
+        self.max_texture_size = self.max_texture_size.min(size);
+    }
+
+    /// Returns the limit on texture dimensions (width or height).
     pub fn max_texture_size(&self) -> u32 {
         self.max_texture_size
+    }
+
+    /// Returns the limit on texture array layers.
+    pub fn max_texture_layers(&self) -> usize {
+        self.max_texture_layers as usize
     }
 
     #[cfg(feature = "debug_renderer")]
