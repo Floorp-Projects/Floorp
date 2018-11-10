@@ -7,6 +7,7 @@ package mozilla.components.browser.storage.memory
 import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
+import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult
@@ -14,6 +15,8 @@ import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.utils.segmentAwareDomainMatch
 
 data class Visit(val timestamp: Long, val type: VisitType)
+
+const val AUTOCOMPLETE_SOURCE_NAME = "memoryHistory"
 
 private const val URL_MATCH_WEIGHT = 10
 private const val TITLE_MATCH_WEIGHT = 5
@@ -90,8 +93,11 @@ class InMemoryHistoryStorage : HistoryStorage {
         }.take(limit).toList()
     }
 
-    override fun getDomainSuggestion(query: String): String? {
-        return segmentAwareDomainMatch(query, pages.keys)
+    override fun getAutocompleteSuggestion(query: String): HistoryAutocompleteResult? = synchronized(pages) {
+        segmentAwareDomainMatch(query, pages.keys)?.let { urlMatch ->
+            return HistoryAutocompleteResult(
+                urlMatch.matchedSegment, urlMatch.url, AUTOCOMPLETE_SOURCE_NAME, pages.size)
+        }
     }
 
     // Borrowed from https://gist.github.com/ademar111190/34d3de41308389a0d0d8

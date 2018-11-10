@@ -9,6 +9,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult
@@ -105,7 +106,7 @@ class HistoryTrackingFeatureTest {
                 return listOf()
             }
 
-            override fun getDomainSuggestion(query: String): String? {
+            override fun getAutocompleteSuggestion(query: String): HistoryAutocompleteResult? {
                 fail()
                 return null
             }

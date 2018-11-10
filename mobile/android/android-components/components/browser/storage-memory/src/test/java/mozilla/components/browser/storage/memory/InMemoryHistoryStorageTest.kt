@@ -180,18 +180,32 @@ class InMemoryHistoryStorageTest {
     }
 
     @Test
-    fun `store can provide domain suggestions`() = runBlocking {
+    fun `store can provide autocomplete suggestions`() = runBlocking {
         val history = InMemoryHistoryStorage()
 
-        assertNull(history.getDomainSuggestion("moz"))
+        assertNull(history.getAutocompleteSuggestion("moz"))
 
         history.recordVisit("http://www.mozilla.org", VisitType.LINK)
-        assertEquals("mozilla.org", history.getDomainSuggestion("moz"))
+        var res = history.getAutocompleteSuggestion("moz")!!
+        assertEquals("mozilla.org", res.text)
+        assertEquals("http://www.mozilla.org", res.url)
+        assertEquals("memoryHistory", res.source)
+        assertEquals(1, res.totalItems)
 
         history.recordVisit("http://firefox.com", VisitType.LINK)
-        assertEquals("firefox.com", history.getDomainSuggestion("firefox"))
+        res = history.getAutocompleteSuggestion("firefox")!!
+        assertEquals("firefox.com", res.text)
+        assertEquals("http://firefox.com", res.url)
+        assertEquals("memoryHistory", res.source)
+        assertEquals(2, res.totalItems)
 
         history.recordVisit("https://en.wikipedia.org/wiki/Mozilla", VisitType.LINK)
-        assertEquals("en.wikipedia.org/wiki/Mozilla", history.getDomainSuggestion("en"))
+        res = history.getAutocompleteSuggestion("en")!!
+        assertEquals("en.wikipedia.org/wiki/Mozilla", res.text)
+        assertEquals("https://en.wikipedia.org/wiki/Mozilla", res.url)
+        assertEquals("memoryHistory", res.source)
+        assertEquals(3, res.totalItems)
+
+        assertNull(history.getAutocompleteSuggestion("hello"))
     }
 }

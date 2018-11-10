@@ -12,6 +12,7 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult
@@ -19,6 +20,8 @@ import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.utils.segmentAwareDomainMatch
 import org.mozilla.places.PlacesConnection
 import org.mozilla.places.VisitObservation
+
+const val AUTOCOMPLETE_SOURCE_NAME = "placesHistory"
 
 /**
  * Implementation of the [HistoryStorage] which is backed by a Rust Places lib via [PlacesConnection].
@@ -77,9 +80,12 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage {
         }
     }
 
-    override fun getDomainSuggestion(query: String): String? {
+    override fun getAutocompleteSuggestion(query: String): HistoryAutocompleteResult? {
         val urls = places.api().queryAutocomplete(query, limit = 100)
-        return segmentAwareDomainMatch(query, urls.map { it.url })
+        val resultText = segmentAwareDomainMatch(query, urls.map { it.url })
+        resultText?.let {
+            return HistoryAutocompleteResult(it.matchedSegment, it.url, AUTOCOMPLETE_SOURCE_NAME, urls.size)
+        }
     }
 
     /**
