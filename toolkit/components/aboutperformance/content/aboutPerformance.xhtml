@@ -148,27 +148,19 @@
       /* Show action icons on selected or hovered rows */
       tr:-moz-any([selected], :hover) > td > .action-icon {
         padding: 1px 10px;
-        -moz-context-properties: fill, fill-opacity;
-        fill-opacity: 0;
-        background-repeat: no-repeat;
-        background-position: center;
-        fill: currentColor;
+        opacity: 1;
       }
-      .addon-icon {
-        background-image: url("chrome://global/skin/icons/shortcut.svg");
-        background-size: 16px;
-      }
-      .close-icon {
-        background-image: url("chrome://global/skin/icons/close.svg");
-        background-size: 24px;
-      }
+      /* The action icons have a relative position, so that we can use
+       * absolutely positioned ::before and ::after pseudo elements.
+       * ::before is used to display the square background on hover/active
+       * ::after is used to display the icons as a background that can be
+       * flipped using a CSS transform in RTL mode. */
       .action-icon {
         position: relative;
-      }
-      /* action icon background */
-      .action-icon::before {
-        background-color: currentColor;
         opacity: 0;
+      }
+      /* Ensure both pseudo elements have the same size and position. */
+      .action-icon::before, .action-icon::after {
         height: 200%;
         position: absolute;
         top: -50%;
@@ -176,11 +168,39 @@
         padding-left: 13px;
         padding-right: 13px;
       }
+
+      /* square background */
+      .action-icon::before {
+        background-color: currentColor;
+        opacity: 0;
+      }
       .action-icon:hover::before {
         opacity: 0.1;
       }
       .action-icon:hover:active::before {
         opacity: 0.2;
+      }
+
+      /* icons */
+      .action-icon::after {
+        content: ""; /* The ::after pseudo element isn't generated without
+                        specifying a value for this attribute. */
+        -moz-context-properties: fill, fill-opacity;
+        fill-opacity: 0;
+        background-repeat: no-repeat;
+        background-position: center;
+        fill: currentColor;
+      }
+      .addon-icon::after {
+        background-image: url("chrome://global/skin/icons/shortcut.svg");
+        background-size: 16px;
+      }
+      .addon-icon:dir(rtl)::after {
+        transform: scaleX(-1);
+      }
+      .close-icon::after {
+        background-image: url("chrome://global/skin/icons/close.svg");
+        background-size: 24px;
       }
 
       #dispatch-table > tbody {
@@ -210,28 +230,47 @@
         padding-inline-start: 32px;
         background-repeat: no-repeat;
         background-size: 16px 16px;
+        background-position-y: center;
       }
       #dispatch-tbody > tr > td.root{
-        background-position: 36px;
+        background-position-x: left 36px;
         padding-inline-start: 62px;
+      }
+      #dispatch-tbody > tr > td.root:dir(rtl) {
+        background-position-x: right 36px;
       }
       .twisty {
         margin-inline-start: -62px;
         margin-inline-end: 26px;
         padding-inline-end: 18px;
         padding-inline-start: 18px;
+        position: relative;
+      }
+      /* Putting the background image in a positioned pseudo element lets us
+       * use CSS transforms on the background image, which we need for rtl. */
+      .twisty::before {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        left: 0;
         background-repeat: no-repeat;
         background-position: center;
         background-image: url("chrome://global/skin/icons/twisty-collapsed.svg");
         -moz-context-properties: fill;
         fill: currentColor;
       }
-      .twisty.open {
+      .twisty:dir(rtl)::before {
+        transform: scaleX(-1);
+      }
+      .twisty.open::before {
         background-image: url("chrome://global/skin/icons/twisty-expanded.svg");
       }
       #dispatch-tbody > tr > td.indent {
         padding-inline-start: 88px;
-        background-position: 62px;
+        background-position-x: left 62px;
+      }
+      #dispatch-tbody > tr > td.indent:dir(rtl) {
+        background-position-x: right 62px;
       }
       #dispatch-tbody > tr > td.tracker {
         background-image: url("chrome://browser/skin/controlcenter/trackers.svg");
