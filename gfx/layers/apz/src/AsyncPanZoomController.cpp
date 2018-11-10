@@ -5038,5 +5038,15 @@ bool AsyncPanZoomController::MaybeAdjustDestinationForScrollSnapping(
   return false;
 }
 
+void AsyncPanZoomController::SetZoomAnimationId(const Maybe<uint64_t>& aZoomAnimationId)
+{
+  mZoomAnimationId = aZoomAnimationId;
+}
+
+Maybe<uint64_t> AsyncPanZoomController::GetZoomAnimationId() const
+{
+  return mZoomAnimationId;
+}
+
 } // namespace layers
 } // namespace mozilla

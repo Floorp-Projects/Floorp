@@ -174,9 +174,12 @@ PromiseInvokeOrNoop(JSContext* cx, HandleValue O, HandlePropertyName P, HandleVa
 
 static MOZ_MUST_USE JSObject*
 PromiseRejectedWithPendingError(JSContext* cx) {
-    // Not much we can do about uncatchable exceptions, just bail.
     RootedValue exn(cx);
-    if (!GetAndClearException(cx, &exn)) {
+    if (!cx->isExceptionPending() || !GetAndClearException(cx, &exn)) {
+        // Uncatchable error. This happens when a slow script is killed or a
+        // worker is terminated. Propagate the uncatchable error. This will
+        // typically kill off the calling asynchronous process: the caller
+        // can't hook its continuation to the new rejected promise.
         return nullptr;
     }
     return PromiseObject::unforgeableReject(cx, exn);
@@ -1640,13 +1643,6 @@ ReadableStreamGetNumReadRequests(ReadableStream* stream)
     return reader->requests()->getDenseInitializedLength();
 }
 
-enum class ReaderMode
-{
-    None,
-    Default,
-};
-
-#if DEBUG
 // Streams spec 3.4.12. ReadableStreamHasDefaultReader ( stream )
 static MOZ_MUST_USE bool
 ReadableStreamHasDefaultReader(JSContext* cx, Handle<ReadableStream*> stream, bool* result)
@@ -1666,25 +1662,6 @@ ReadableStreamHasDefaultReader(JSContext* cx, Handle<ReadableStream*> stream, bo
     }
 
     *result = reader->is<ReadableStreamDefaultReader>();
-    return true;
-}
-#endif // DEBUG
-
-static MOZ_MUST_USE bool
-ReadableStreamGetReaderMode(JSContext* cx, Handle<ReadableStream*> stream, ReaderMode* mode)
-{
-    if (!stream->hasReader()) {
-        *mode = ReaderMode::None;
-        return true;
-    }
-
-    Rooted<ReadableStreamReader*> reader(cx);
-    if (!UnwrapReaderFromStream(cx, stream, &reader)) {
-        return false;
-    }
-
-    *mode = ReaderMode::Default;
-
     return true;
 }
 
@@ -2048,8 +2025,9 @@ ReadableStreamReaderGenericRelease(JSContext* cx, Handle<ReadableStreamReader*> 
     // clean way to do this, unfortunately.
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_READABLESTREAMREADER_RELEASED);
     RootedValue exn(cx);
-    // Not much we can do about uncatchable exceptions, just bail.
-    if (!GetAndClearException(cx, &exn)) {
+    if (!cx->isExceptionPending() || !GetAndClearException(cx, &exn)) {
+        // Uncatchable error. Die immediately without resolving
+        // reader.[[closedPromise]].
         return false;
     }
 
@@ -2621,16 +2599,13 @@ ReadableStreamControllerCancelSteps(JSContext* cx,
     if (unwrappedController->hasExternalSource()) {
         RootedValue rval(cx);
         {
-            RootedValue wrappedReason(cx, reason);
             AutoRealm ar(cx, unwrappedController);
+            Rooted<ReadableStream*> stream(cx, unwrappedController->stream());
+            void* source = unwrappedUnderlyingSource.toPrivate();
+            RootedValue wrappedReason(cx, reason);
             if (!cx->compartment()->wrap(cx, &wrappedReason)) {
                 return nullptr;
             }
-            void* source = unwrappedUnderlyingSource.toPrivate();
-
-            // Thanks to `ar`, `unwrappedController` is now same-compartment with `cx`.
-            // That's why this variable `stream` does not get the `unwrapped` prefix.
-            Rooted<ReadableStream*> stream(cx, unwrappedController->stream());
 
             cx->check(stream, wrappedReason);
             rval = cx->runtime()->readableStreamCancelCallback(cx, stream, source,
@@ -2850,11 +2825,17 @@ ReadableStreamControllerCallPullIfNeeded(JSContext* cx,
         Rooted<ReadableStream*> stream(cx, controller->stream());
         pullPromise = ReadableStreamTee_Pull(cx, teeState);
     } else if (controller->hasExternalSource()) {
-        void* source = underlyingSource.toPrivate();
-        Rooted<ReadableStream*> stream(cx, controller->stream());
-        double desiredSize = ReadableStreamControllerGetDesiredSizeUnchecked(controller);
-        cx->runtime()->readableStreamDataRequestCallback(cx, stream, source,
-                                                         stream->embeddingFlags(), desiredSize);
+        {
+            AutoRealm ar(cx, controller);
+            Rooted<ReadableStream*> stream(cx, controller->stream());
+            void* source = underlyingSource.toPrivate();
+            double desiredSize = ReadableStreamControllerGetDesiredSizeUnchecked(controller);
+            cx->runtime()->readableStreamDataRequestCallback(cx,
+                                                             stream,
+                                                             source,
+                                                             stream->embeddingFlags(),
+                                                             desiredSize);
+        }
         pullPromise = PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
     } else {
         pullPromise = PromiseInvokeOrNoop(cx, underlyingSource, cx->names().pull, controllerVal);
@@ -3016,7 +2997,9 @@ ReadableStreamDefaultControllerEnqueue(JSContext* cx,
             // and
             // Step d: If enqueueResult is an abrupt completion,
             RootedValue exn(cx);
-            if (!cx->getPendingException(&exn)) {
+            if (!cx->isExceptionPending() || !GetAndClearException(cx, &exn)) {
+                // Uncatchable error. Die immediately without erroring the
+                // stream.
                 return false;
             }
 
@@ -3028,6 +3011,7 @@ ReadableStreamDefaultControllerEnqueue(JSContext* cx,
             }
 
             // Step b.ii.2: Return chunkSize.
+            cx->setPendingException(exn);
             return false;
         }
     }
@@ -3052,6 +3036,7 @@ static MOZ_MUST_USE bool
 ReadableStreamControllerError(JSContext* cx, Handle<ReadableStreamController*> controller,
                               HandleValue e)
 {
+    MOZ_ASSERT(!cx->isExceptionPending());
     AssertSameCompartment(cx, e);
 
     // Step 1: Let stream be controller.[[controlledReadableStream]].
@@ -3090,6 +3075,8 @@ ReadableStreamDefaultControllerErrorIfNeeded(JSContext* cx,
                                              Handle<ReadableStreamDefaultController*> controller,
                                              HandleValue e)
 {
+    MOZ_ASSERT(!cx->isExceptionPending());
+
     // Step 1: If controller.[[controlledReadableStream]].[[state]] is "readable",
     //         perform ! ReadableStreamDefaultControllerError(controller, e).
     Rooted<ReadableStream*> stream(cx, controller->stream());
@@ -3386,9 +3373,6 @@ static const ClassOps ReadableByteStreamControllerClassOps = {
 CLASS_SPEC(ReadableByteStreamController, 3, SlotCount, ClassSpec::DontDefineConstructor,
            JSCLASS_BACKGROUND_FINALIZE, &ReadableByteStreamControllerClassOps);
 
-
-/***  */
-
 // Streams spec, 3.10.5.1. [[CancelSteps]] ()
 // Unified with 3.8.5.1 above.
 
@@ -3438,14 +3422,15 @@ ReadableByteStreamControllerPullSteps(JSContext* cx,
 
             size_t bytesWritten;
             {
+                AutoRealm ar(cx, stream);
                 JS::AutoSuppressGCAnalysis suppressGC(cx);
                 JS::AutoCheckCannotGC noGC;
                 bool dummy;
                 void* buffer = JS_GetArrayBufferViewData(view, &dummy, noGC);
+
                 auto cb = cx->runtime()->readableStreamWriteIntoReadRequestCallback;
                 MOZ_ASSERT(cb);
                 // TODO: use bytesWritten to correctly update the request's state.
-                // TODO: make this compartment-safe.
                 cb(cx, stream, underlyingSource, stream->embeddingFlags(), buffer,
                    queueTotalSize, &bytesWritten);
             }
@@ -3664,8 +3649,9 @@ ReadableByteStreamControllerClose(JSContext* cx, Handle<ReadableByteStreamContro
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                       JSMSG_READABLEBYTESTREAMCONTROLLER_CLOSE_PENDING_PULL);
             RootedValue e(cx);
-            // Not much we can do about uncatchable exceptions, just bail.
-            if (!cx->getPendingException(&e)) {
+            if (!cx->isExceptionPending() || !GetAndClearException(cx, &e)) {
+                // Uncatchable error. Die immediately without erroring the
+                // stream.
                 return false;
             }
 
@@ -3675,6 +3661,7 @@ ReadableByteStreamControllerClose(JSContext* cx, Handle<ReadableByteStreamContro
             }
 
             // Step iii: Throw e.
+            cx->setPendingException(e);
             return false;
         }
     }
@@ -4172,8 +4159,9 @@ JS::NewReadableDefaultStreamObject(JSContext* cx,
     RootedObject source(cx, underlyingSource);
     if (!source) {
         source = NewBuiltinClassInstance<PlainObject>(cx);
-        if (!source)
+        if (!source) {
             return nullptr;
+        }
     }
     RootedValue sourceVal(cx, ObjectValue(*source));
     RootedValue sizeVal(cx, size ? ObjectValue(*size) : UndefinedValue());
@@ -4234,8 +4222,9 @@ JS_PUBLIC_API(bool)
 JS::ReadableStreamIsReadable(JSContext* cx, HandleObject streamObj, bool* result)
 {
     ReadableStream* stream = APIToUnwrapped<ReadableStream>(cx, streamObj);
-    if (!stream)
+    if (!stream) {
         return false;
+    }
 
     *result = stream->readable();
     return true;
@@ -4245,8 +4234,9 @@ JS_PUBLIC_API(bool)
 JS::ReadableStreamIsLocked(JSContext* cx, HandleObject streamObj, bool* result)
 {
     ReadableStream* stream = APIToUnwrapped<ReadableStream>(cx, streamObj);
-    if (!stream)
+    if (!stream) {
         return false;
+    }
 
     *result = stream->locked();
     return true;
@@ -4256,8 +4246,9 @@ JS_PUBLIC_API(bool)
 JS::ReadableStreamIsDisturbed(JSContext* cx, HandleObject streamObj, bool* result)
 {
     ReadableStream* stream = APIToUnwrapped<ReadableStream>(cx, streamObj);
-    if (!stream)
+    if (!stream) {
         return false;
+    }
 
     *result = stream->disturbed();
     return true;
@@ -4267,8 +4258,9 @@ JS_PUBLIC_API(bool)
 JS::ReadableStreamGetEmbeddingFlags(JSContext* cx, HandleObject streamObj, uint8_t* flags)
 {
     ReadableStream* stream = APIToUnwrapped<ReadableStream>(cx, streamObj);
-    if (!stream)
+    if (!stream) {
         return false;
+    }
 
     *flags = stream->embeddingFlags();
     return true;
@@ -4282,8 +4274,9 @@ JS::ReadableStreamCancel(JSContext* cx, HandleObject streamObj, HandleValue reas
     cx->check(reason);
 
     Rooted<ReadableStream*> stream(cx, APIToUnwrapped<ReadableStream>(cx, streamObj));
-    if (!stream)
+    if (!stream) {
         return nullptr;
+    }
 
     return ::ReadableStreamCancel(cx, stream, reason);
 }
@@ -4292,8 +4285,9 @@ JS_PUBLIC_API(bool)
 JS::ReadableStreamGetMode(JSContext* cx, HandleObject streamObj, JS::ReadableStreamMode* mode)
 {
     ReadableStream* stream = APIToUnwrapped<ReadableStream>(cx, streamObj);
-    if (!stream)
+    if (!stream) {
         return false;
+    }
 
     *mode = stream->mode();
     return true;
@@ -4306,8 +4300,9 @@ JS::ReadableStreamGetReader(JSContext* cx, HandleObject streamObj, ReadableStrea
     CHECK_THREAD(cx);
 
     Rooted<ReadableStream*> stream(cx, APIToUnwrapped<ReadableStream>(cx, streamObj));
-    if (!stream)
+    if (!stream) {
         return nullptr;
+    }
 
     JSObject* result = CreateReadableStreamDefaultReader(cx, stream);
     MOZ_ASSERT_IF(result, IsObjectInContextCompartment(result, cx));
@@ -4321,8 +4316,9 @@ JS::ReadableStreamGetExternalUnderlyingSource(JSContext* cx, HandleObject stream
     CHECK_THREAD(cx);
 
     Rooted<ReadableStream*> stream(cx, APIToUnwrapped<ReadableStream>(cx, streamObj));
-    if (!stream)
+    if (!stream) {
         return false;
+    }
 
     MOZ_ASSERT(stream->mode() == JS::ReadableStreamMode::ExternalSource);
     if (stream->locked()) {
@@ -4346,8 +4342,9 @@ JS_PUBLIC_API(bool)
 JS::ReadableStreamReleaseExternalUnderlyingSource(JSContext* cx, HandleObject streamObj)
 {
     ReadableStream* stream = APIToUnwrapped<ReadableStream>(cx, streamObj);
-    if (!stream)
+    if (!stream) {
         return false;
+    }
 
     MOZ_ASSERT(stream->mode() == JS::ReadableStreamMode::ExternalSource);
     MOZ_ASSERT(stream->locked());
@@ -4364,8 +4361,9 @@ JS::ReadableStreamUpdateDataAvailableFromSource(JSContext* cx, JS::HandleObject 
     CHECK_THREAD(cx);
 
     Rooted<ReadableStream*> stream(cx, APIToUnwrapped<ReadableStream>(cx, streamObj));
-    if (!stream)
+    if (!stream) {
         return false;
+    }
 
     // This is based on Streams spec 3.10.4.4. enqueue(chunk) steps 1-3 and
     // 3.12.9. ReadableByteStreamControllerEnqueue(controller, chunk) steps
@@ -4412,12 +4410,11 @@ JS::ReadableStreamUpdateDataAvailableFromSource(JSContext* cx, JS::HandleObject 
     }
 
     // Step 8: If ! ReadableStreamHasDefaultReader(stream) is true
-    ReaderMode readerMode;
-    if (!ReadableStreamGetReaderMode(cx, stream, &readerMode)) {
+    bool hasDefaultReader;
+    if (!ReadableStreamHasDefaultReader(cx, stream, &hasDefaultReader)) {
         return false;
     }
-
-    if (readerMode == ReaderMode::Default) {
+    if (hasDefaultReader) {
         // Step b: Otherwise,
         // Step i: Assert: controller.[[queue]] is empty.
         MOZ_ASSERT(oldAvailableData == 0);
@@ -4434,6 +4431,7 @@ JS::ReadableStreamUpdateDataAvailableFromSource(JSContext* cx, JS::HandleObject 
 
         size_t bytesWritten;
         {
+            AutoRealm ar(cx, stream);
             JS::AutoSuppressGCAnalysis suppressGC(cx);
             JS::AutoCheckCannotGC noGC;
             bool dummy;
@@ -4441,7 +4439,6 @@ JS::ReadableStreamUpdateDataAvailableFromSource(JSContext* cx, JS::HandleObject 
             auto cb = cx->runtime()->readableStreamWriteIntoReadRequestCallback;
             MOZ_ASSERT(cb);
             // TODO: use bytesWritten to correctly update the request's state.
-            // TODO: make cross-compartment safe.
             cb(cx, stream, underlyingSource, stream->embeddingFlags(), buffer,
                availableData, &bytesWritten);
         }
@@ -4477,12 +4474,12 @@ JS::ReadableStreamTee(JSContext* cx, HandleObject streamObj,
     CHECK_THREAD(cx);
 
     Rooted<ReadableStream*> stream(cx, APIToUnwrapped<ReadableStream>(cx, streamObj));
-    if (!stream)
+    if (!stream) {
         return false;
+    }
 
     Rooted<ReadableStream*> branch1Stream(cx);
     Rooted<ReadableStream*> branch2Stream(cx);
-
     if (!ReadableStreamTee(cx, stream, false, &branch1Stream, &branch2Stream)) {
         return false;
     }
@@ -4497,8 +4494,9 @@ JS_PUBLIC_API(bool)
 JS::ReadableStreamGetDesiredSize(JSContext* cx, JSObject* streamObj, bool* hasValue, double* value)
 {
     ReadableStream* stream = APIToUnwrapped<ReadableStream>(cx, streamObj);
-    if (!stream)
+    if (!stream) {
         return false;
+    }
 
     if (stream->errored()) {
         *hasValue = false;
@@ -4523,8 +4521,9 @@ JS::ReadableStreamClose(JSContext* cx, HandleObject streamObj)
     CHECK_THREAD(cx);
 
     Rooted<ReadableStream*> stream(cx, APIToUnwrapped<ReadableStream>(cx, streamObj));
-    if (!stream)
+    if (!stream) {
         return false;
+    }
 
     Rooted<ReadableStreamController*> controllerObj(cx, stream->controller());
     if (!VerifyControllerStateForClosing(cx, controllerObj)) {
@@ -4550,8 +4549,9 @@ JS::ReadableStreamEnqueue(JSContext* cx, HandleObject streamObj, HandleValue chu
     cx->check(chunk);
 
     Rooted<ReadableStream*> stream(cx, APIToUnwrapped<ReadableStream>(cx, streamObj));
-    if (!stream)
+    if (!stream) {
         return false;
+    }
 
     if (stream->mode() != JS::ReadableStreamMode::Default) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -4577,8 +4577,9 @@ JS::ReadableStreamError(JSContext* cx, HandleObject streamObj, HandleValue error
     cx->check(error);
 
     Rooted<ReadableStream*> stream(cx, APIToUnwrapped<ReadableStream>(cx, streamObj));
-    if (!stream)
+    if (!stream) {
         return false;
+    }
 
     // Step 3: If stream.[[state]] is not "readable", throw a TypeError exception.
     if (!stream->readable()) {
@@ -4596,8 +4597,9 @@ JS_PUBLIC_API(bool)
 JS::ReadableStreamReaderIsClosed(JSContext* cx, HandleObject readerObj, bool* result)
 {
     Rooted<ReadableStreamReader*> reader(cx, APIToUnwrapped<ReadableStreamReader>(cx, readerObj));
-    if (!reader)
+    if (!reader) {
         return false;
+    }
 
     *result = reader->isClosed();
     return true;
@@ -4611,8 +4613,9 @@ JS::ReadableStreamReaderCancel(JSContext* cx, HandleObject readerObj, HandleValu
     cx->check(reason);
 
     Rooted<ReadableStreamReader*> reader(cx, APIToUnwrapped<ReadableStreamReader>(cx, readerObj));
-    if (!reader)
+    if (!reader) {
         return false;
+    }
 
     return ReadableStreamReaderGenericCancel(cx, reader, reason);
 }
@@ -4624,8 +4627,9 @@ JS::ReadableStreamReaderReleaseLock(JSContext* cx, HandleObject readerObj)
     CHECK_THREAD(cx);
 
     Rooted<ReadableStreamReader*> reader(cx, APIToUnwrapped<ReadableStreamReader>(cx, readerObj));
-    if (!reader)
+    if (!reader) {
         return false;
+    }
 
 #ifdef DEBUG
     Rooted<ReadableStream*> stream(cx);
@@ -4646,8 +4650,9 @@ JS::ReadableStreamDefaultReaderRead(JSContext* cx, HandleObject readerObj)
 
     Rooted<ReadableStreamDefaultReader*> reader(cx);
     reader = APIToUnwrapped<ReadableStreamDefaultReader>(cx, readerObj);
-    if (!reader)
+    if (!reader) {
         return nullptr;
+    }
 
     return ::ReadableStreamDefaultReaderRead(cx, reader);
 }

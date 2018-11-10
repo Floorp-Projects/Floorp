@@ -840,7 +840,9 @@ js::DumpScript(JSContext* cx, JSScript* scriptArg)
 static const char*
 FormatValue(JSContext* cx, HandleValue v, UniqueChars& bytes)
 {
-    if (v.isMagic(JS_OPTIMIZED_OUT)) {
+    if (v.isMagic()) {
+        MOZ_ASSERT(v.whyMagic() == JS_OPTIMIZED_OUT ||
+                   v.whyMagic() == JS_UNINITIALIZED_LEXICAL);
         return "[unavailable]";
     }
 

@@ -102,13 +102,13 @@ ParseNode::appendOrCreateList(ParseNodeKind kind, ParseNode* left, ParseNode* ri
     return list;
 }
 
-#ifdef DEBUG
-
 const ParseNodeArity js::frontend::ParseNodeKindArity[] = {
 #define ARITY(_name, arity) arity,
     FOR_EACH_PARSE_NODE_KIND(ARITY)
 #undef ARITY
 };
+
+#ifdef DEBUG
 
 static const char * const parseNodeNames[] = {
 #define STRINGIFY(name, _arity) #name,
@@ -152,7 +152,7 @@ ParseNode::dump()
 void
 ParseNode::dump(GenericPrinter& out, int indent)
 {
-    switch (ParseNodeArity(pn_arity)) {
+    switch (getArity()) {
       case PN_NULLARY:
         as<NullaryNode>().dump(out);
         return;
@@ -190,8 +190,8 @@ ParseNode::dump(GenericPrinter& out, int indent)
         as<LexicalScopeNode>().dump(out, indent);
         return;
     }
-    out.printf("#<BAD NODE %p, kind=%u, arity=%u>",
-               (void*) this, unsigned(getKind()), unsigned(pn_arity));
+    out.printf("#<BAD NODE %p, kind=%u>",
+               (void*) this, unsigned(getKind()));
 }
 
 void

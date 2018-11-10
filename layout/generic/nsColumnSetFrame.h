@@ -120,7 +120,7 @@ protected:
     nscoord mColMaxBSize = NS_INTRINSICSIZE;
 
     // A boolean controlling whether or not we are balancing. This should be
-    // equivalent to mBalanceColCount == INT32_MAX.
+    // equivalent to mBalanceColCount != INT32_MAX.
     bool mIsBalancing = false;
 
     // The last known column block-size that was 'feasible'. A column bSize is
@@ -173,7 +173,6 @@ protected:
                      nsReflowStatus& aReflowStatus,
                      ReflowConfig& aConfig,
                      bool aLastColumnUnbounded,
-                     nsCollapsingMargin* aCarriedOutBEndMargin,
                      ColumnBalanceData& aColData);
 
   /**
@@ -198,8 +197,6 @@ protected:
    *        successive iterations of the balancing process.
    * @param aDesiredSize The final output size of the column set frame (output
    *        of reflow procedure).
-   * @param aOutMargin The bottom margin of the column set frame that may be
-   *        carried out from reflow (and thus collapsed).
    * @param aUnboundedLastColumn A boolean value indicating that the last column
    *        can be of any height. Used during the first iteration of the
    *        balancing procedure to measure the height of all content in
@@ -215,7 +212,6 @@ protected:
                             ReflowConfig& aConfig,
                             ColumnBalanceData& aColData,
                             ReflowOutput& aDesiredSize,
-                            nsCollapsingMargin& aOutMargin,
                             bool& aUnboundedLastColumn,
                             bool& aRunWasFeasible,
                             nsReflowStatus& aStatus);
@@ -228,7 +224,6 @@ protected:
                         nsReflowStatus& aStatus,
                         const ReflowConfig& aConfig,
                         bool aLastColumnUnbounded,
-                        nsCollapsingMargin* aCarriedOutBEndMargin,
                         ColumnBalanceData& aColData);
 
   void ForEachColumnRule(const std::function<void(const nsRect& lineRect)>& aSetLineRect,

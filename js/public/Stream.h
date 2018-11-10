@@ -77,6 +77,15 @@
 namespace JS {
 
 /**
+ * ## Readable stream callbacks
+ *
+ * Compartment safety: All callbacks (except Finalize) receive `cx` and
+ * `stream` arguments. SpiderMonkey enters the realm of the stream object
+ * before invoking these callbacks, so `stream` is never a wrapper. Other
+ * arguments may be wrappers.
+ */
+
+/**
  * Invoked whenever a reader desires more data from a ReadableStream's
  * embedding-provided underlying source.
  *
