@@ -222,6 +222,9 @@ def filter_args(command, argv, paths):
     '''
     Given the full list of command-line arguments, remove anything up to and including `command`,
     and attempt to filter absolute pathnames out of any arguments after that.
+
+    `paths` is a dict whose keys are pathnames and values are sigils that should be used to
+    replace those pathnames.
     '''
     args = list(argv)
     while args:
@@ -231,19 +234,22 @@ def filter_args(command, argv, paths):
 
     def filter_path(p):
         p = mozpath.abspath(p)
-        base = mozpath.basedir(p, paths)
+        base = mozpath.basedir(p, paths.keys())
         if base:
-            return mozpath.relpath(p, base)
+            return paths[base] + mozpath.relpath(p, base)
         # Best-effort.
         return '<path omitted>'
     return [filter_path(arg) for arg in args]
 
 
 def gather_telemetry(command='', success=False, start_time=None, end_time=None,
-                     mach_context=None, substs={}, paths=[]):
+                     mach_context=None, substs={}, paths={}):
     '''
     Gather telemetry about the build and the user's system and pass it to the telemetry
     handler to be stored for later submission.
+
+    `paths` is a dict whose keys are pathnames and values are sigils that should be used to
+    replace those pathnames.
 
     Any absolute paths on the command line will be made relative to `paths` or replaced
     with a placeholder to avoid including paths from developer's machines.

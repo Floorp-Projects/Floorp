@@ -228,6 +228,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
         from mozbuild.telemetry import gather_telemetry
         from mozbuild.base import MozbuildObject
+        import mozpack.path as mozpath
 
         if not isinstance(instance, MozbuildObject):
             instance = MozbuildObject.from_environment()
@@ -237,11 +238,20 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         except Exception:
             substs = {}
 
-        # We gather telemetry for every operation...
+        # We gather telemetry for every operation.
+        paths = {
+            instance.topsrcdir: '$topsrcdir/',
+            instance.topobjdir: '$topobjdir/',
+            mozpath.normpath(os.path.expanduser('~')): '$HOME/',
+        }
+        # This might override one of the existing entries, that's OK.
+        # We don't use a sigil here because we treat all arguments as potentially relative
+        # paths, so we'd like to get them back as they were specified.
+        paths[mozpath.normpath(os.getcwd())] = ''
         data = gather_telemetry(command=handler.name, success=(result == 0),
                                 start_time=start_time, end_time=end_time,
                                 mach_context=context, substs=substs,
-                                paths=[instance.topsrcdir, instance.topobjdir])
+                                paths=paths)
         if data:
             telemetry_dir = os.path.join(get_state_dir()[0], 'telemetry')
             try:

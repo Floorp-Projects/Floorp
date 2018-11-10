@@ -1,13 +1,14 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import json
 import os
 import subprocess
 import sys
 
+import buildconfig
 import mozunit
 import pytest
 
@@ -24,8 +25,7 @@ def run_mach(tmpdir):
     update_or_create_build_telemetry_config(unicode(tmpdir.join('machrc')))
     env = dict(os.environ)
     env['MOZBUILD_STATE_PATH'] = str(tmpdir)
-    mach = os.path.normpath(os.path.join(os.path.dirname(__file__),
-                                         '../../../../mach'))
+    mach = os.path.join(buildconfig.topsrcdir, 'mach')
 
     def run(*args, **kwargs):
         # Run mach with the provided arguments
@@ -51,6 +51,73 @@ def test_simple(run_mach, tmpdir):
     client_id_data = json.load(tmpdir.join('telemetry_client_id.json').open('rb'))
     assert 'client_id' in client_id_data
     assert client_id_data['client_id'] == d['client_id']
+
+
+def test_path_filtering(run_mach, tmpdir):
+    srcdir_path = os.path.join(buildconfig.topsrcdir, 'a')
+    srcdir_path_2 = os.path.join(buildconfig.topsrcdir, 'a/b/c')
+    objdir_path = os.path.join(buildconfig.topobjdir, 'x')
+    objdir_path_2 = os.path.join(buildconfig.topobjdir, 'x/y/z')
+    home_path = os.path.join(os.path.expanduser('~'), 'something_in_home')
+    other_path = str(tmpdir.join('other'))
+    data = run_mach('python', '-c', 'pass',
+                    srcdir_path, srcdir_path_2,
+                    objdir_path, objdir_path_2,
+                    home_path,
+                    other_path,
+                    cwd=buildconfig.topsrcdir)
+    assert len(data) == 1
+    d = data[0]
+    expected = [
+        '-c', 'pass',
+        'a', 'a/b/c',
+        '$topobjdir/x', '$topobjdir/x/y/z',
+        '$HOME/something_in_home',
+        '<path omitted>',
+    ]
+    assert d['argv'] == expected
+
+
+def test_path_filtering_in_objdir(run_mach, tmpdir):
+    srcdir_path = os.path.join(buildconfig.topsrcdir, 'a')
+    srcdir_path_2 = os.path.join(buildconfig.topsrcdir, 'a/b/c')
+    objdir_path = os.path.join(buildconfig.topobjdir, 'x')
+    objdir_path_2 = os.path.join(buildconfig.topobjdir, 'x/y/z')
+    other_path = str(tmpdir.join('other'))
+    data = run_mach('python', '-c', 'pass',
+                    srcdir_path, srcdir_path_2,
+                    objdir_path, objdir_path_2,
+                    other_path,
+                    cwd=buildconfig.topobjdir)
+    assert len(data) == 1
+    d = data[0]
+    expected = [
+        '-c', 'pass',
+        '$topsrcdir/a', '$topsrcdir/a/b/c',
+        'x', 'x/y/z',
+        '<path omitted>',
+    ]
+    assert d['argv'] == expected
+
+
+def test_path_filtering_other_cwd(run_mach, tmpdir):
+    srcdir_path = os.path.join(buildconfig.topsrcdir, 'a')
+    srcdir_path_2 = os.path.join(buildconfig.topsrcdir, 'a/b/c')
+    other_path = str(tmpdir.join('other'))
+    data = run_mach('python', '-c', 'pass',
+                    srcdir_path,
+                    srcdir_path_2,
+                    other_path, cwd=str(tmpdir))
+    assert len(data) == 1
+    d = data[0]
+    expected = [
+        # non-path arguments should escape unscathed
+        '-c', 'pass',
+        '$topsrcdir/a', '$topsrcdir/a/b/c',
+        # cwd-relative paths should be relativized
+        'other',
+    ]
+    assert d['argv'] == expected
 
 
 if __name__ == '__main__':
