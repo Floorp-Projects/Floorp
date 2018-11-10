@@ -3,12 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 ChromeUtils.import("resource://gre/modules/Localization.jsm");
+ChromeUtils.import("resource://gre/modules/FxAccountsConfig.jsm");
+
 const L10N = new Localization([
   "branding/brand.ftl",
+  "browser/branding/sync-brand.ftl",
   "browser/newtab/onboarding.ftl",
 ]);
 
-const ONBOARDING_MESSAGES = () => ([
+const ONBOARDING_MESSAGES = async () => ([
   {
     id: "ONBOARDING_1",
     template: "onboarding",
@@ -55,6 +58,7 @@ const ONBOARDING_MESSAGES = () => ([
         data: {args: "addons"},
       },
     },
+    targeting: "attributionData.campaign != 'non-fx-button' && attributionData.source != 'addons.mozilla.org'",
     trigger: {id: "firstRun"},
   },
   {
@@ -75,6 +79,24 @@ const ONBOARDING_MESSAGES = () => ([
     targeting: "providerCohorts.onboarding == 'ghostery'",
     trigger: {id: "firstRun"},
   },
+  {
+    id: "ONBOARDING_5",
+    template: "onboarding",
+    bundled: 3,
+    order: 4,
+    content: {
+      title: {string_id: "onboarding-fxa-title"},
+      text: {string_id: "onboarding-fxa-text"},
+      icon: "sync",
+      button_label: {string_id: "onboarding-button-label-get-started"},
+      button_action: {
+        type: "OPEN_URL",
+        data: {args: await FxAccountsConfig.promiseEmailFirstURI("onboarding")},
+      },
+    },
+    targeting: "attributionData.campaign == 'non-fx-button' && attributionData.source == 'addons.mozilla.org'",
+    trigger: {id: "firstRun"},
+  },
 ]);
 
 const OnboardingMessageProvider = {
@@ -86,12 +108,13 @@ const OnboardingMessageProvider = {
     return {header: header.value, button_label: button_label.value};
   },
   async getMessages() {
-    const messages = await this.translateMessages(ONBOARDING_MESSAGES());
+    const messages = await this.translateMessages(await ONBOARDING_MESSAGES());
     return messages;
   },
-  getUntranslatedMessages() {
+  async getUntranslatedMessages() {
     // This is helpful for jsonSchema testing - since we are localizing in the provider
-    return ONBOARDING_MESSAGES();
+    const messages = await ONBOARDING_MESSAGES();
+    return messages;
   },
   async translateMessages(messages) {
     let translatedMessages = [];

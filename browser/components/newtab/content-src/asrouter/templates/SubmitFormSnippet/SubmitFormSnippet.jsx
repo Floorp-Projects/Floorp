@@ -150,7 +150,7 @@ export class SubmitFormSnippet extends React.PureComponent {
     return (<SnippetBase {...this.props} className={containerClass} footerDismiss={true}>
         {content.scene2_icon ? <div className="scene2Icon"><img src={content.scene2_icon} /></div> : null}
         <div className="message">
-          <p>{content.scene2_text}</p>
+          <p>{content.scene2_title ? <h3 className="scene2Title">{content.scene2_title}</h3> : null} {content.scene2_text}</p>
         </div>
         <form action={content.form_action} method={this.props.form_method} onSubmit={this.handleSubmit} ref="form">
           {this.renderHiddenFormInputs()}

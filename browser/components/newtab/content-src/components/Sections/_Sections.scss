@@ -84,11 +84,6 @@
       font-size: 13px;
     }
   }
-
-  @media (min-width: $break-point-large) {
-    line-height: 16px;
-    height: 16px;
-  }
 }
 
 @media (min-width: $break-point-widest) {

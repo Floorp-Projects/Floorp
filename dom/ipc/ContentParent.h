@@ -718,6 +718,11 @@ private:
                                                         const TabId& aOpenerTabId,
                                                         const TabId& aTabId);
 
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+  // Cached Mac sandbox params used when launching content processes.
+  static StaticAutoPtr<std::vector<std::string>> sMacSandboxParams;
+#endif
+
   // Hide the raw constructor methods since we don't want client code
   // using them.
   virtual PBrowserParent* SendPBrowserConstructor(
@@ -1245,7 +1250,10 @@ public:
   // initializing.
   void MaybeEnableRemoteInputEventQueue();
 
+#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
   void AppendSandboxParams(std::vector<std::string>& aArgs);
+  void AppendDynamicSandboxParams(std::vector<std::string>& aArgs);
+#endif
 
 public:
   void SendGetFilesResponseAndForget(const nsID& aID,

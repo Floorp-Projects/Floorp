@@ -654,7 +654,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 372063-1.html 372063-1-r
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 372553-1.html 372553-1-ref.html # Bug 1392106
 == 372632-1.html 372632-1-ref.html
 == 372768-1.html 372768-1-ref.html
-fuzzy-if(webrender&&winWidget,83-83,2-2) == 373295-1.html 373295-1-ref.html
+fuzzy-if(webrender&&winWidget,83-92,1-2) == 373295-1.html 373295-1-ref.html
 == 373298-1.html 373298-1-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 373381-1.html 373381-1-ref.html # Bug 1392106
 fuzzy-if(skiaContent&&!Android,0-2,0-40) == 373381-2.html 373381-2-ref.html

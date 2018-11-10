@@ -8,6 +8,38 @@
 
 {
 
+let sharedFragment;
+function getFragment() {
+  if (!sharedFragment) {
+    sharedFragment = MozXULElement.parseXULToFragment(`
+    <deck class="search-panel-one-offs-header search-panel-header search-panel-current-input">
+      <label class="searchbar-oneoffheader-search" value="&searchWithHeader.label;"></label>
+      <hbox class="search-panel-searchforwith search-panel-current-input">
+        <label value="&searchFor.label;"></label>
+        <label class="searchbar-oneoffheader-searchtext search-panel-input-value" flex="1" crop="end"></label>
+        <label flex="10000" value="&searchWith.label;"></label>
+      </hbox>
+      <hbox class="search-panel-searchonengine search-panel-current-input">
+        <label value="&search.label;"></label>
+        <label class="searchbar-oneoffheader-engine search-panel-input-value" flex="1" crop="end"></label>
+        <label flex="10000" value="&searchAfter.label;"></label>
+      </hbox>
+    </deck>
+    <description role="group" class="search-panel-one-offs">
+      <button oncommand="showSettings();" class="searchbar-engine-one-off-item search-setting-button-compact" tooltiptext="&changeSearchSettings.tooltip;"></button>
+    </description>
+    <vbox class="search-add-engines"></vbox>
+    <button oncommand="showSettings();" class="search-setting-button search-panel-header" label="&changeSearchSettings.button;"></button>
+    <menupopup class="search-one-offs-context-menu">
+      <menuitem class="search-one-offs-context-open-in-new-tab" label="&searchInNewTab.label;" accesskey="&searchInNewTab.accesskey;"></menuitem>
+      <menuitem class="search-one-offs-context-set-default" label="&searchSetAsDefault.label;" accesskey="&searchSetAsDefault.accesskey;"></menuitem>
+    </menupopup>
+    `, ["chrome://browser/locale/browser.dtd"]);
+  }
+
+  return document.importNode(sharedFragment, true);
+}
+
 class MozSearchOneOffs extends MozXULElement {
   constructor() {
     super();
@@ -183,32 +215,11 @@ class MozSearchOneOffs extends MozXULElement {
   }
 
   connectedCallback() {
-    this.appendChild(
-      MozXULElement.parseXULToFragment(`
-      <deck class="search-panel-one-offs-header search-panel-header search-panel-current-input">
-        <label class="searchbar-oneoffheader-search" value="&searchWithHeader.label;"></label>
-        <hbox class="search-panel-searchforwith search-panel-current-input">
-          <label value="&searchFor.label;"></label>
-          <label class="searchbar-oneoffheader-searchtext search-panel-input-value" flex="1" crop="end"></label>
-          <label flex="10000" value="&searchWith.label;"></label>
-        </hbox>
-        <hbox class="search-panel-searchonengine search-panel-current-input">
-          <label value="&search.label;"></label>
-          <label class="searchbar-oneoffheader-engine search-panel-input-value" flex="1" crop="end"></label>
-          <label flex="10000" value="&searchAfter.label;"></label>
-        </hbox>
-      </deck>
-      <description role="group" class="search-panel-one-offs">
-        <button oncommand="showSettings();" class="searchbar-engine-one-off-item search-setting-button-compact" tooltiptext="&changeSearchSettings.tooltip;"></button>
-      </description>
-      <vbox class="search-add-engines"></vbox>
-      <button oncommand="showSettings();" class="search-setting-button search-panel-header" label="&changeSearchSettings.button;"></button>
-      <menupopup class="search-one-offs-context-menu">
-        <menuitem class="search-one-offs-context-open-in-new-tab" label="&searchInNewTab.label;" accesskey="&searchInNewTab.accesskey;"></menuitem>
-        <menuitem class="search-one-offs-context-set-default" label="&searchSetAsDefault.label;" accesskey="&searchSetAsDefault.accesskey;"></menuitem>
-      </menupopup>
-      `, ["chrome://browser/locale/browser.dtd"])
-    );
+    if (this.delayConnectedCallback()) {
+      return;
+    }
+
+    this.appendChild(getFragment());
 
     this._popup = null;
 
