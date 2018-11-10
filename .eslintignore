@@ -33,8 +33,6 @@ netwerk/test/browser/**
 netwerk/test/httpserver/**
 netwerk/test/mochitests/**
 netwerk/test/unit*/**
-# Bug 1501445.
-netwerk/wifi/tests/wifi_access_point_test.html
 parser/**
 tools/update-packaging/**
 uriloader/exthandler/**

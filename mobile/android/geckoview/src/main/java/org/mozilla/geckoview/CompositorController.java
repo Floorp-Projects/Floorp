@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.gfx;
+package org.mozilla.geckoview;
 
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class CompositorController {
-    private final LayerSession.Compositor mCompositor;
+    private final GeckoSession.Compositor mCompositor;
 
     public interface GetPixelsCallback {
         void onPixelsResult(int width, int height, IntBuffer pixels);
@@ -27,7 +27,7 @@ public final class CompositorController {
     private int mDefaultClearColor = Color.WHITE;
     private Runnable mFirstPaintCallback;
 
-    /* package */ CompositorController(final LayerSession session) {
+    /* package */ CompositorController(final GeckoSession session) {
         mCompositor = session.mCompositor;
     }
 

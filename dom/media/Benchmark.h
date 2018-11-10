@@ -29,7 +29,7 @@ class BenchmarkPlayback : public QueueObject
   void GlobalShutdown();
   void InitDecoder(TrackInfo&& aInfo);
 
-  void Output(const MediaDataDecoder::DecodedData& aResults);
+  void Output(MediaDataDecoder::DecodedData&& aResults);
   void Error(const MediaResult& aError);
   void InputExhausted();
 

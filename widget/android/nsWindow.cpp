@@ -839,12 +839,12 @@ nsWindow::AndroidView::GetInitData(JSContext* aCx, JS::MutableHandleValue aOut)
  * separate from GeckoViewSupport.
  */
 class nsWindow::LayerViewSupport final
-    : public LayerSession::Compositor::Natives<LayerViewSupport>
+    : public GeckoSession::Compositor::Natives<LayerViewSupport>
 {
     using LockedWindowPtr = WindowPtr<LayerViewSupport>::Locked;
 
     WindowPtr<LayerViewSupport> mWindow;
-    LayerSession::Compositor::WeakRef mCompositor;
+    GeckoSession::Compositor::WeakRef mCompositor;
     Atomic<bool, ReleaseAcquire> mCompositorPaused;
     jni::Object::GlobalRef mSurface;
 
@@ -882,16 +882,16 @@ class nsWindow::LayerViewSupport final
     };
 
 public:
-    typedef LayerSession::Compositor::Natives<LayerViewSupport> Base;
+    typedef GeckoSession::Compositor::Natives<LayerViewSupport> Base;
 
     static LayerViewSupport*
-    FromNative(const LayerSession::Compositor::LocalRef& instance)
+    FromNative(const GeckoSession::Compositor::LocalRef& instance)
     {
         return GetNative(instance);
     }
 
     LayerViewSupport(NativePtr<LayerViewSupport>* aPtr, nsWindow* aWindow,
-                     const LayerSession::Compositor::LocalRef& aInstance)
+                     const GeckoSession::Compositor::LocalRef& aInstance)
         : mWindow(aPtr, aWindow)
         , mCompositor(aInstance)
         , mCompositorPaused(true)
@@ -908,7 +908,7 @@ public:
     void OnDetach(already_AddRefed<Runnable> aDisposer)
     {
         if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
-            LayerSession::Compositor::GlobalRef compositor(mCompositor);
+            GeckoSession::Compositor::GlobalRef compositor(mCompositor);
             if (!compositor) {
                 return;
             }
@@ -923,7 +923,7 @@ public:
         }
     }
 
-    const LayerSession::Compositor::Ref& GetJavaCompositor() const
+    const GeckoSession::Compositor::Ref& GetJavaCompositor() const
     {
         return mCompositor;
     }
@@ -1004,7 +1004,7 @@ public:
         }
     }
 
-    void SyncResumeResizeCompositor(const LayerSession::Compositor::LocalRef& aObj,
+    void SyncResumeResizeCompositor(const GeckoSession::Compositor::LocalRef& aObj,
                                     int32_t aWidth, int32_t aHeight,
                                     jni::Object::Param aSurface)
     {
@@ -1020,10 +1020,10 @@ public:
 
         class OnResumedEvent : public nsAppShell::Event
         {
-            LayerSession::Compositor::GlobalRef mCompositor;
+            GeckoSession::Compositor::GlobalRef mCompositor;
 
         public:
-            explicit OnResumedEvent(LayerSession::Compositor::GlobalRef&& aCompositor)
+            explicit OnResumedEvent(GeckoSession::Compositor::GlobalRef&& aCompositor)
                 : mCompositor(std::move(aCompositor))
             {}
 
@@ -1033,7 +1033,7 @@ public:
 
                 JNIEnv* const env = jni::GetGeckoThreadEnv();
                 LayerViewSupport* const lvs = GetNative(
-                        LayerSession::Compositor::LocalRef(env, mCompositor));
+                        GeckoSession::Compositor::LocalRef(env, mCompositor));
 
                 if (!lvs || !lvs->mWindow) {
                     env->ExceptionClear();
@@ -1128,7 +1128,7 @@ public:
 
     void RecvToolbarAnimatorMessage(int32_t aMessage)
     {
-        auto compositor = LayerSession::Compositor::LocalRef(mCompositor);
+        auto compositor = GeckoSession::Compositor::LocalRef(mCompositor);
         if (compositor) {
             compositor->RecvToolbarAnimatorMessage(aMessage);
         }
@@ -1155,7 +1155,7 @@ public:
         MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
         auto pixels = mozilla::jni::IntArray::New(aMem.get<int>(), aMem.Size<int>());
-        auto compositor = LayerSession::Compositor::LocalRef(mCompositor);
+        auto compositor = GeckoSession::Compositor::LocalRef(mCompositor);
         if (compositor) {
             compositor->RecvScreenPixels(aSize.width, aSize.height, pixels);
         }
@@ -1320,8 +1320,8 @@ nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
         window.mNPZCSupport.Detach(window.mNPZCSupport->GetJavaNPZC());
     }
 
-    auto compositor = LayerSession::Compositor::LocalRef(
-            inst.Env(), LayerSession::Compositor::Ref::From(aCompositor));
+    auto compositor = GeckoSession::Compositor::LocalRef(
+            inst.Env(), GeckoSession::Compositor::Ref::From(aCompositor));
     if (window.mLayerViewSupport &&
             window.mLayerViewSupport->GetJavaCompositor() != compositor) {
         window.mLayerViewSupport.Detach(
@@ -1354,7 +1354,7 @@ nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
 
     DispatchToUiThread(
             "GeckoViewSupport::Transfer",
-            [compositor = LayerSession::Compositor::GlobalRef(compositor)] {
+            [compositor = GeckoSession::Compositor::GlobalRef(compositor)] {
                 compositor->OnCompositorAttached();
             });
 }
@@ -2028,7 +2028,7 @@ nsWindow::UpdateOverscrollVelocity(const float aX, const float aY)
 
         DispatchToUiThread(
                 "nsWindow::UpdateOverscrollVelocity",
-                [compositor = LayerSession::Compositor::GlobalRef(compositor),
+                [compositor = GeckoSession::Compositor::GlobalRef(compositor),
                  aX, aY] {
                     compositor->UpdateOverscrollVelocity(aX, aY);
                 });
@@ -2047,7 +2047,7 @@ nsWindow::UpdateOverscrollOffset(const float aX, const float aY)
 
         DispatchToUiThread(
                 "nsWindow::UpdateOverscrollOffset",
-                [compositor = LayerSession::Compositor::GlobalRef(compositor),
+                [compositor = GeckoSession::Compositor::GlobalRef(compositor),
                  aX, aY] {
                     compositor->UpdateOverscrollOffset(aX, aY);
                 });

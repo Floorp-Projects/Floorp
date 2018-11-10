@@ -146,6 +146,10 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, enum SpdyVersio
     gHttpHandler->ConnMgr()->CurrentTopLevelOuterContentWindowId();
 
   mEnableWebsockets = gHttpHandler->IsH2WebsocketsEnabled();
+
+  bool dumpHpackTables = gHttpHandler->DumpHpackTables();
+  mCompressor.SetDumpTables(dumpHpackTables);
+  mDecompressor.SetDumpTables(dumpHpackTables);
 }
 
 void

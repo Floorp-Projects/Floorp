@@ -738,14 +738,14 @@ button.translate-infobar-element {
   transition-duration: 150ms;
   min-height: 22px;
   min-width: 0;
-  padding: 0 0.8em !important;
+  padding: 0 0.8em;
   margin-left: 0.25em;
   margin-right: 0.25em;
 }
 
 button.translate-infobar-element .button-text {
-  margin-left: 0 !important;
-  margin-right: 0 !important;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 label.translate-infobar-element {
@@ -767,7 +767,7 @@ button.translate-infobar-element[anonid="translate"] {
   background: linear-gradient(#4cb1ff, #1793e5);
   box-shadow: 0 1px 0 hsla(0,0%,100%,.2) inset,  0 0 0 1px hsla(0,0%,100%,.1) inset,  0 1px 0 hsla(210,54%,20%,.03);
   border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.17) hsla(210,54%,20%,.2);
-  padding: 0 1.1em  !important;;
+  padding: 0 1.1em;
 }
 
 button.translate-infobar-element[anonid="translate"]:hover {
@@ -776,15 +776,15 @@ button.translate-infobar-element[anonid="translate"]:hover {
 }
 
 button.translate-infobar-element.options-menu-button {
-  padding-inline-start: 0.5em !important;
-  padding-inline-end: 0em !important;
+  padding-inline-start: 0.5em;
+  padding-inline-end: 0;
 }
 
 button.translate-infobar-element.options-menu-button > .button-box > .button-menu-dropmarker {
   display: -moz-box;
   list-style-image: url("chrome://global/skin/icons/glyph-dropdown.png");
-  padding: 0 !important;
-  margin: 0 !important;
+  padding: 0;
+  margin: 0;
 }
 
 @media (min-resolution: 2dppx) {
