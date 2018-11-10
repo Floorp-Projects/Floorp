@@ -183,7 +183,7 @@ export class TopSiteLink extends React.PureComponent {
     }
     return (<li className={topSiteOuterClassName} onDrop={this.onDragEvent} onDragOver={this.onDragEvent} onDragEnter={this.onDragEvent} onDragLeave={this.onDragEvent} {...draggableProps}>
       <div className="top-site-inner">
-         <a href={!link.searchTopSite && link.url} tabIndex="0" onKeyPress={this.onKeyPress} onClick={onClick} draggable={true}>
+         <a href={link.searchTopSite ? undefined : link.url} tabIndex="0" onKeyPress={this.onKeyPress} onClick={onClick} draggable={true}>
             <div className="tile" aria-hidden={true} data-fallback={letterFallback}>
               <div className={imageClassName} style={imageStyle} />
               {link.searchTopSite && <div className="top-site-icon search-topsite" />}
