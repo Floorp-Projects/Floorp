@@ -7,64 +7,46 @@
 /*
  * JSAPI functions and callbacks related to WHATWG Stream objects.
  *
- * Much of the API here mirrors the JS API of ReadableStream and associated
- * classes, e.g. ReadableStreamDefaultReader, ReadableStreamBYOBReader,
- * ReadableStreamDefaultController, ReadableByteStreamController, and
- * ReadableStreamBYOBRequest.
+ * Much of the API here mirrors the standard algorithms and standard JS methods
+ * of the objects defined in the Streams standard. One difference is that the
+ * functionality of the JS controller object is exposed to C++ as functions
+ * taking ReadableStream instances instead, for convenience.
  *
- * There are some crucial differences, though: Functionality that's exposed
- * as methods/accessors on controllers in JS is exposed as functions taking
- * ReadableStream instances instead. This is because an analysis of how
- * the API would be used showed that all functions that'd take controllers
- * would do so by first getting the controller from the stream instance it's
- * associated with and then call the function taking it. I.e., it would purely
- * add boilerplate without any gains in ease of use of the API.
+ * ## External streams
  *
- * It would probably still make sense to factor the API the same as the JS API
- * if we had to keep any API stability guarantees: the JS API won't change, so
- * we could be sure that the C++ API could stay the same, too. Given that we
- * don't guarantee API stability, this concern isn't too pressing.
- *
- * Some functions exposed here deal with ReadableStream instances that have an
- * embedding-provided underlying source. These instances are largely similar
- * to byte streams as created using |new ReadableStream({type: "bytes"})|:
- * They enable users to acquire ReadableStreamBYOBReaders and only vend chunks
- * that're typed array instances.
+ * Embeddings can create ReadableStreams that read from custom C++ data
+ * sources. Such streams are always byte streams: the chunks they produce are
+ * typed arrays (and they will support ReadableStreamBYOBReader once we have
+ * it).
  *
  * When creating an "external readable stream" using
- * JS::NewReadableExternalSourceStreamObject, an underlying source and a set
- * of flags can be passed to be stored on the stream. The underlying source is
- * treated as an opaque void* pointer by the JS engine: it's purely meant as
- * a reference to be used by the embedding to identify whatever actual source
- * it uses to supply data for the stream. Similarly, the flags aren't
- * interpreted by the JS engine, but are passed to some of the callbacks below
- * and can be retrieved using JS::ReadableStreamGetEmbeddingFlags.
+ * JS::NewReadableExternalSourceStreamObject, an underlying source and a set of
+ * flags can be passed to be stored on the stream. The underlying source is
+ * treated as an opaque void* pointer by the JS engine: it's purely meant as a
+ * reference to be used by the embedding to identify whatever actual source it
+ * uses to supply data for the stream. Similarly, the flags aren't interpreted
+ * by the JS engine, but are passed to some of the callbacks below and can be
+ * retrieved using JS::ReadableStreamGetEmbeddingFlags.
  *
  * External readable streams are optimized to allow the embedding to interact
  * with them with a minimum of overhead: chunks aren't enqueued as individual
- * typed array instances; instead, the embedding only updates the amount of
- * data available using ReadableStreamUpdateDataAvailableFromSource.
- * When content requests data by reading from a reader,
- * WriteIntoReadRequestBufferCallback is invoked, asking the embedding to
- * write data directly into the buffer we're about to hand to content.
+ * typed arrays; instead, the embedding only updates the amount of data
+ * available using ReadableStreamUpdateDataAvailableFromSource. When JS
+ * requests data from a reader, WriteIntoReadRequestBufferCallback is invoked,
+ * asking the embedding to write data directly into the buffer we're about to
+ * hand to JS.
  *
- * Additionally, ReadableStreamGetExternalUnderlyingSource can be used to
- * get the void* pointer to the underlying source. This is equivalent to
- * acquiring a reader for the stream in that it locks the stream until it
+ * Additionally, ReadableStreamGetExternalUnderlyingSource can be used to get
+ * the void* pointer to the underlying source. This locks the stream until it
  * is released again using JS::ReadableStreamReleaseExternalUnderlyingSource.
  *
- * Embeddings are expected to detect situations where an API exposed to JS
- * takes a ReadableStream to read from that has an external underlying source.
- * In those situations, it might be preferable to directly perform data
- * transfers from the stream's underlying source to whatever sink the
- * embedding uses, assuming that such direct transfers can be performed
- * more efficiently.
- *
- * An example of such an optimized operation might be a ServiceWorker piping a
- * fetch Response body to a TextDecoder: instead of writing chunks of data
- * into JS typed array buffers only to immediately read from them again, the
- * embedding can presumably directly feed the incoming data to the
- * TextDecoder's underlying implementation.
+ * Embeddings can use this to optimize away the JS `ReadableStream` overhead
+ * when an embedding-defined C++ stream is passed to an embedding-defined C++
+ * consumer. For example, consider a ServiceWorker piping a `fetch` Response
+ * body to a TextDecoder. Instead of copying chunks of data into JS typed array
+ * buffers and creating a Promise per chunk, only to immediately resolve the
+ * Promises and read the data out again, the embedding can directly feed the
+ * incoming data to the TextDecoder.
  */
 
 #ifndef js_Stream_h

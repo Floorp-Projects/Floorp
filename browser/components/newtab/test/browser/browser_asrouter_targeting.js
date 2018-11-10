@@ -344,15 +344,9 @@ add_task(async function check_pinned_sites() {
   const originalPin = JSON.stringify(NewTabUtils.pinnedLinks.links);
   const sitesToPin = [
     {url: "https://foo.com"},
-    {url: "https://bloo.com"},
     {url: "https://floogle.com", searchTopSite: true},
   ];
   sitesToPin.forEach((site => NewTabUtils.pinnedLinks.pin(site, NewTabUtils.pinnedLinks.links.length)));
-
-  // Unpinning adds null to the list of pinned sites, which we should test that we handle gracefully for our targeting
-  NewTabUtils.pinnedLinks.unpin(sitesToPin[1]);
-  ok(NewTabUtils.pinnedLinks.links.includes(null),
-    "should have set an item in pinned links to null via unpinning for testing");
 
   let message;
 
@@ -391,6 +385,9 @@ add_task(async function check_region() {
 });
 
 add_task(async function check_browserSettings() {
+  is(await ASRouterTargeting.Environment.browserSettings.attribution, TelemetryEnvironment.currentEnvironment.settings.attribution,
+    "should return correct attribution info");
+
   is(await JSON.stringify(ASRouterTargeting.Environment.browserSettings.update), JSON.stringify(TelemetryEnvironment.currentEnvironment.settings.update),
       "should return correct update info");
 });
@@ -405,12 +402,9 @@ add_task(async function check_sync() {
 });
 
 add_task(async function check_provider_cohorts() {
-  await pushPrefs(["browser.newtabpage.activity-stream.asrouter.providers.onboarding", JSON.stringify({id: "onboarding", messages: [], enabled: true, cohort: "foo"})]);
-  await pushPrefs(["browser.newtabpage.activity-stream.asrouter.providers.cfr", JSON.stringify({id: "cfr", enabled: true, cohort: "bar"})]);
-  is(await ASRouterTargeting.Environment.providerCohorts.onboarding, "foo",
-    "should have cohort foo for onboarding");
-  is(await ASRouterTargeting.Environment.providerCohorts.cfr, "bar",
-    "should have cohort bar for cfr");
+  await pushPrefs(["browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", messages: [], enabled: true, cohort: "foo"}, {id: "cfr", messages: [], cohort: "bar"}])]);
+  is(await ASRouterTargeting.Environment.providerCohorts.onboarding, "foo");
+  is(await ASRouterTargeting.Environment.providerCohorts.cfr, "bar");
 });
 
 add_task(async function check_xpinstall_enabled() {

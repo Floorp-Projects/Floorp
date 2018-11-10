@@ -115,7 +115,7 @@ nsSound::GetInstance()
 #define SND_PURGE 0
 #endif
 
-NS_IMPL_ISUPPORTS(nsSound, nsISound, nsIStreamLoaderObserver)
+NS_IMPL_ISUPPORTS(nsSound, nsISound, nsIStreamLoaderObserver, nsIObserver)
 
 
 nsSound::nsSound()
