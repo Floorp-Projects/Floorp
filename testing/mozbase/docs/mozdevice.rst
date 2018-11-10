@@ -1,7 +1,7 @@
-:mod:`mozdevice` --- Interact with Android or B2G devices
-=========================================================
+:mod:`mozdevice` --- Interact with Android devices
+==================================================
 
-Mozdevice provides several interfaces to interact with an Android or B2G
+Mozdevice provides several interfaces to interact with an Android
 device such as a phone, tablet, or emulator. It allows you to push
 files to these types of devices, launch processes, and more. There are
 currently two available interfaces:
@@ -115,16 +115,6 @@ Application management methods
 .. automethod:: ADBAndroid.stop_application
 .. automethod:: ADBAndroid.uninstall_app
 .. automethod:: ADBAndroid.update_app
-
-ADBB2G
-``````
-.. autoclass:: ADBB2G
-
-Informational methods
-+++++++++++++++++++++
-.. automethod:: ADBB2G.get_battery_percentage
-.. automethod:: ADBB2G.get_info
-.. automethod:: ADBB2G.get_memory_total
 
 ADBProcess
 ``````````

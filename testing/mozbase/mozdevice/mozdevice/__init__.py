@@ -7,7 +7,6 @@ from __future__ import absolute_import
 from .adb import ADBError, ADBProcessError, ADBRootError, ADBTimeoutError
 from .adb import ADBProcess, ADBCommand, ADBHost, ADBDevice
 from .adb_android import ADBAndroid
-from .adb_b2g import ADBB2G
 
 __all__ = ['ADBError', 'ADBProcessError', 'ADBRootError', 'ADBTimeoutError',
-           'ADBProcess', 'ADBCommand', 'ADBHost', 'ADBDevice', 'ADBAndroid', 'ADBB2G']
+           'ADBProcess', 'ADBCommand', 'ADBHost', 'ADBDevice', 'ADBAndroid']
