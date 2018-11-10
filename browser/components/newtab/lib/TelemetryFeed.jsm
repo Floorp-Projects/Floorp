@@ -24,8 +24,6 @@ ChromeUtils.defineModuleGetter(this, "UpdateUtils",
   "resource://gre/modules/UpdateUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "HomePage",
   "resource:///modules/HomePage.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
-  "resource://gre/modules/ExtensionSettingsStore.jsm");
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   gUUIDGenerator: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
@@ -494,8 +492,7 @@ this.TelemetryFeed = class TelemetryFeed {
   async sendPageTakeoverData() {
     if (this.telemetryEnabled) {
       const value = {};
-      let newtabAffected = false;
-      let homeAffected = false;
+      let page;
 
       // Check whether or not about:home and about:newtab are set to a custom URL.
       // If so, classify them.
@@ -503,35 +500,14 @@ this.TelemetryFeed = class TelemetryFeed {
           aboutNewTabService.overridden &&
           !aboutNewTabService.newTabURL.startsWith("moz-extension://")) {
         value.newtab_url_category = await this._classifySite(aboutNewTabService.newTabURL);
-        newtabAffected = true;
-      }
-      // Check if the newtab page setting is controlled by an extension.
-      await ExtensionSettingsStore.initialize();
-      const newtabExtensionInfo = ExtensionSettingsStore.getSetting("url_overrides", "newTabURL");
-      if (newtabExtensionInfo && newtabExtensionInfo.id) {
-        value.newtab_extension_id = newtabExtensionInfo.id;
-        newtabAffected = true;
+        page = "about:newtab";
       }
 
       const homePageURL = HomePage.get();
       if (!["about:home", "about:blank"].includes(homePageURL) &&
           !homePageURL.startsWith("moz-extension://")) {
         value.home_url_category = await this._classifySite(homePageURL);
-        homeAffected = true;
-      }
-      const homeExtensionInfo = ExtensionSettingsStore.getSetting("prefs", "homepage_override");
-      if (homeExtensionInfo && homeExtensionInfo.id) {
-        value.home_extension_id = homeExtensionInfo.id;
-        homeAffected = true;
-      }
-
-      let page;
-      if (newtabAffected && homeAffected) {
-        page = "both";
-      } else if (newtabAffected) {
-        page = "about:newtab";
-      } else if (homeAffected) {
-        page = "about:home";
+        page = page ? "both" : "about:home";
       }
 
       if (page) {

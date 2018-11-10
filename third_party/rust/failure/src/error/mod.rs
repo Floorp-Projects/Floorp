@@ -225,4 +225,19 @@ mod test {
         drop(error);
         assert!(true);
     }
+
+    #[test]
+    fn downcast_can_be_used() {
+        let mut error: Error = io::Error::new(io::ErrorKind::NotFound, "test").into();
+        {
+            let real_io_error_ref = error.downcast_ref::<io::Error>().unwrap();
+            assert_eq!(real_io_error_ref.to_string(), "test");
+        }
+        {
+            let real_io_error_mut = error.downcast_mut::<io::Error>().unwrap();
+            assert_eq!(real_io_error_mut.to_string(), "test");
+        }
+        let real_io_error = error.downcast::<io::Error>().unwrap();
+        assert_eq!(real_io_error.to_string(), "test");
+    }
 }

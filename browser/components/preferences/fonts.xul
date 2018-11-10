@@ -29,9 +29,6 @@
     <key data-l10n-id="fonts-window-close" modifiers="accel" oncommand="Preferences.close(event)"/>
   </keyset>
 
-  <script type="application/javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
-  <script type="application/javascript" src="chrome://browser/content/preferences/fonts.js"/>
-
   <!-- Fonts for: [ Language ] -->
   <groupbox>
     <caption>
@@ -288,4 +285,8 @@
       </hbox>
     </hbox>
   </groupbox>
+
+  <!-- Load the script after the elements for layout issues (bug 1501755). -->
+  <script type="application/javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
+  <script type="application/javascript" src="chrome://browser/content/preferences/fonts.js"/>
 </dialog>

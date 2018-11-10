@@ -153,7 +153,7 @@ _Timer.prototype = {
 };
 
 function _do_quit() {
-  _dump("TEST-INFO | (xpcshell/head.js) | exiting test\n");
+  _dump("TEST-INFO | (robocop_head.js) | exiting test\n");
 
   _quit = true;
 }
@@ -213,7 +213,7 @@ function do_execute_soon(callback) {
         // possible that this will mask an NS_ERROR_ABORT that happens after a
         // do_check failure though.
         if (!_quit || e != Components.results.NS_ERROR_ABORT) {
-          _dump("TEST-UNEXPECTED-FAIL | (xpcshell/head.js) | " + e);
+          _dump("TEST-UNEXPECTED-FAIL | (robocop_head.js) | " + e);
           if (e.stack) {
             dump(" - See following stack:\n");
             _dump_exception_stack(e.stack);
@@ -264,8 +264,9 @@ function do_throw_todo(text, stack) {
 function do_report_unexpected_exception(ex, text) {
   var caller_stack = Components.stack.caller;
   text = text ? text + " - " : "";
+  var caller_filename = caller_stack ? caller_stack.filename : "unknown file";
 
-  _dump("TEST-UNEXPECTED-FAIL | " + caller_stack.filename + " | " + text +
+  _dump("TEST-UNEXPECTED-FAIL | " + caller_filename + " | " + text +
         "Unexpected exception " + ex + ", see following stack:\n" + ex.stack +
         "\n");
 
@@ -562,12 +563,12 @@ function format_pattern_match_failure(diagnosis, indent = "") {
 function do_test_pending() {
   ++_tests_pending;
 
-  _dump("TEST-INFO | (xpcshell/head.js) | test " + _tests_pending +
+  _dump("TEST-INFO | (robocop_head.js) | test " + _tests_pending +
          " pending\n");
 }
 
 function do_test_finished() {
-  _dump("TEST-INFO | (xpcshell/head.js) | test " + _tests_pending +
+  _dump("TEST-INFO | (robocop_head.js) | test " + _tests_pending +
          " finished\n");
 
   if (--_tests_pending == 0) {

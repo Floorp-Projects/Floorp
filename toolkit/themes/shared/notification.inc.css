@@ -4,6 +4,10 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+.notificationbox-stack {
+  overflow: -moz-hidden-unscrollable;
+}
+
 notification {
   padding: 2px 0 3px;
   padding-inline-start: 12px;
@@ -15,11 +19,15 @@ notification {
   text-shadow: none;
 }
 
-notificationbox[notificationside="top"] > notification {
+notification.animated {
+  transition: margin-top 300ms var(--animation-easing-function), opacity 300ms var(--animation-easing-function);
+}
+
+.notificationbox-stack[notificationside="top"] > notification {
   border-top-style: none;
 }
 
-notificationbox[notificationside="bottom"] > notification {
+.notificationbox-stack[notificationside="bottom"] > notification {
   border-bottom-style: none;
 }
 

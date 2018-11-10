@@ -15,7 +15,7 @@
 //!
 //! - [`PrimaryMap`](struct.PrimaryMap.html) is used to keep track of a vector of entities,
 //!   assigning a unique entity reference to each.
-//! - [`EntityMap`](struct.EntityMap.html) is used to associate secondary information to an entity.
+//! - [`SecondaryMap`](struct.SecondaryMap.html) is used to associate secondary information to an entity.
 //!   The map is implemented as a simple vector, so it does not keep track of which entities have
 //!   been inserted. Instead, any unknown entities map to the default value.
 //! - [`SparseMap`](struct.SparseMap.html) is used to associate secondary information to a small
@@ -32,13 +32,25 @@
 #![deny(missing_docs, trivial_numeric_casts, unused_extern_crates)]
 #![warn(unused_import_braces)]
 #![cfg_attr(feature = "std", deny(unstable_features))]
-#![cfg_attr(feature = "clippy", plugin(clippy(conf_file = "../../clippy.toml")))]
-#![cfg_attr(feature = "cargo-clippy", allow(new_without_default, new_without_default_derive))]
+#![cfg_attr(
+    feature = "clippy",
+    plugin(clippy(conf_file = "../../clippy.toml"))
+)]
+#![cfg_attr(
+    feature = "cargo-clippy",
+    allow(new_without_default, new_without_default_derive)
+)]
 #![cfg_attr(
     feature = "cargo-clippy",
     warn(
-        float_arithmetic, mut_mut, nonminimal_bool, option_map_unwrap_or, option_map_unwrap_or_else,
-        print_stdout, unicode_not_nfc, use_self
+        float_arithmetic,
+        mut_mut,
+        nonminimal_bool,
+        option_map_unwrap_or,
+        option_map_unwrap_or_else,
+        print_stdout,
+        unicode_not_nfc,
+        use_self
     )
 )]
 // Turns on no_std and alloc features if std is not available.
@@ -58,7 +70,7 @@ mod std {
 pub extern crate core as __core;
 
 /// A type wrapping a small integer index should implement `EntityRef` so it can be used as the key
-/// of an `EntityMap` or `SparseMap`.
+/// of an `SecondaryMap` or `SparseMap`.
 pub trait EntityRef: Copy + Eq {
     /// Create a new entity reference from a small integer.
     /// This should crash if the requested index is not representable.
@@ -123,7 +135,7 @@ mod sparse;
 pub use self::iter::{Iter, IterMut};
 pub use self::keys::Keys;
 pub use self::list::{EntityList, ListPool};
-pub use self::map::EntityMap;
+pub use self::map::SecondaryMap;
 pub use self::primary::PrimaryMap;
 pub use self::set::EntitySet;
 pub use self::sparse::{SparseMap, SparseMapValue, SparseSet};

@@ -451,6 +451,11 @@ notification[value="translation"] menulist > .menulist-dropmarker {
 .browserContainer > findbar {
   background-color: var(--toolbar-bgcolor);
   color: var(--toolbar-color);
+}
+
+.browserContainer > findbar:-moz-lwtheme {
+  background-color: var(--lwt-accent-color);
+  background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor));
   text-shadow: none;
 }
 

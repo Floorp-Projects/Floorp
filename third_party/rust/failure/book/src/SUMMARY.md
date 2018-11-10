@@ -11,3 +11,4 @@
     - [A Custom Fail type](./custom-fail.md)
     - [Using the Error type](./use-error.md)
     - [An Error and ErrorKind pair](./error-errorkind.md)
+    - [Strings and custom fail type](./string-custom-error.md)

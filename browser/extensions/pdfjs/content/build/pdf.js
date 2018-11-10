@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.1.26';
-var pdfjsBuild = 'f6bc9340';
+var pdfjsVersion = '2.1.42';
+var pdfjsBuild = '2194aef0';
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 var pdfjsDisplayAPI = __w_pdfjs_require__(7);
 var pdfjsDisplayTextLayer = __w_pdfjs_require__(19);
@@ -4226,7 +4226,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.1.26',
+    apiVersion: '2.1.42',
     source: {
       data: source.data,
       url: source.url,
@@ -5099,7 +5099,7 @@ class WorkerTransport {
         return;
       }
       const [id, type, exportedData] = data;
-      if (this.commonObjs.hasData(id)) {
+      if (this.commonObjs.has(id)) {
         return;
       }
       switch (type) {
@@ -5144,7 +5144,7 @@ class WorkerTransport {
       }
       const [id, pageIndex, type, imageData] = data;
       const pageProxy = this.pageCache[pageIndex];
-      if (pageProxy.objs.hasData(id)) {
+      if (pageProxy.objs.has(id)) {
         return;
       }
       switch (type) {
@@ -5359,63 +5359,45 @@ class WorkerTransport {
     });
   }
 }
-var PDFObjects = function PDFObjectsClosure() {
-  function PDFObjects() {
-    this.objs = Object.create(null);
+class PDFObjects {
+  constructor() {
+    this._objs = Object.create(null);
   }
-  PDFObjects.prototype = {
-    ensureObj: function PDFObjects_ensureObj(objId) {
-      if (this.objs[objId]) {
-        return this.objs[objId];
-      }
-      var obj = {
-        capability: (0, _util.createPromiseCapability)(),
-        data: null,
-        resolved: false
-      };
-      this.objs[objId] = obj;
-      return obj;
-    },
-    get: function PDFObjects_get(objId, callback) {
-      if (callback) {
-        this.ensureObj(objId).capability.promise.then(callback);
-        return null;
-      }
-      var obj = this.objs[objId];
-      if (!obj || !obj.resolved) {
-        throw new Error(`Requesting object that isn't resolved yet ${objId}`);
-      }
-      return obj.data;
-    },
-    resolve: function PDFObjects_resolve(objId, data) {
-      var obj = this.ensureObj(objId);
-      obj.resolved = true;
-      obj.data = data;
-      obj.capability.resolve(data);
-    },
-    isResolved: function PDFObjects_isResolved(objId) {
-      var objs = this.objs;
-      if (!objs[objId]) {
-        return false;
-      }
-      return objs[objId].resolved;
-    },
-    hasData: function PDFObjects_hasData(objId) {
-      return this.isResolved(objId);
-    },
-    getData: function PDFObjects_getData(objId) {
-      var objs = this.objs;
-      if (!objs[objId] || !objs[objId].resolved) {
-        return null;
-      }
-      return objs[objId].data;
-    },
-    clear: function PDFObjects_clear() {
-      this.objs = Object.create(null);
+  _ensureObj(objId) {
+    if (this._objs[objId]) {
+      return this._objs[objId];
     }
-  };
-  return PDFObjects;
-}();
+    return this._objs[objId] = {
+      capability: (0, _util.createPromiseCapability)(),
+      data: null,
+      resolved: false
+    };
+  }
+  get(objId, callback = null) {
+    if (callback) {
+      this._ensureObj(objId).capability.promise.then(callback);
+      return null;
+    }
+    const obj = this._objs[objId];
+    if (!obj || !obj.resolved) {
+      throw new Error(`Requesting object that isn't resolved yet ${objId}.`);
+    }
+    return obj.data;
+  }
+  has(objId) {
+    const obj = this._objs[objId];
+    return obj ? obj.resolved : false;
+  }
+  resolve(objId, data) {
+    const obj = this._ensureObj(objId);
+    obj.resolved = true;
+    obj.data = data;
+    obj.capability.resolve(data);
+  }
+  clear() {
+    this._objs = Object.create(null);
+  }
+}
 var RenderTask = function RenderTaskClosure() {
   function RenderTask(internalRenderTask) {
     this._internalRenderTask = internalRenderTask;
@@ -5492,6 +5474,9 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
     cancel: function InternalRenderTask_cancel() {
       this.running = false;
       this.cancelled = true;
+      if (this.gfx) {
+        this.gfx.endDrawing();
+      }
       if (this._canvas) {
         canvasInRendering.delete(this._canvas);
       }
@@ -5555,8 +5540,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.1.26';
-  exports.build = build = 'f6bc9340';
+  exports.version = version = '2.1.42';
+  exports.build = build = '2194aef0';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -6724,7 +6709,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
             var depObjId = deps[n];
             var common = depObjId[0] === 'g' && depObjId[1] === '_';
             var objsPool = common ? commonObjs : objs;
-            if (!objsPool.isResolved(depObjId)) {
+            if (!objsPool.has(depObjId)) {
               objsPool.get(depObjId, continueCallback);
               return i;
             }
@@ -10491,8 +10476,8 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
       element.style.verticalAlign = 'middle';
       element.style.display = 'table-cell';
       let font = null;
-      if (this.data.fontRefName) {
-        font = this.page.commonObjs.getData(this.data.fontRefName);
+      if (this.data.fontRefName && this.page.commonObjs.has(this.data.fontRefName)) {
+        font = this.page.commonObjs.get(this.data.fontRefName);
       }
       this._setTextStyle(element, font);
     }
@@ -11014,7 +10999,7 @@ exports.SVGGraphics = SVGGraphics;
 
 
 module.exports = function isNodeJS() {
-  return typeof process === 'object' && process + '' === '[object process]';
+  return typeof process === 'object' && process + '' === '[object process]' && !process.versions['nw'];
 };
 
 /***/ })
