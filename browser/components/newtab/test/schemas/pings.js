@@ -32,9 +32,7 @@ export const UserEventPing = Joi.object().keys(Object.assign({}, baseKeys, {
   recommender_type: Joi.string(),
   value: Joi.object().keys({
     newtab_url_category: Joi.string(),
-    newtab_extension_id: Joi.string(),
     home_url_category: Joi.string(),
-    home_extension_id: Joi.string(),
   }),
 }));
 
