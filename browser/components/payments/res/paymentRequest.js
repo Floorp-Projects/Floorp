@@ -250,7 +250,7 @@ var paymentRequest = {
     }
     let modifier = modifiers.find(m => {
       // take the first matching modifier
-      // TODO (bug 1429198): match on supportedTypes and supportedNetworks
+      // TODO (bug 1429198): match on supportedNetworks
       return m.supportedMethods == "basic-card";
     });
     return modifier || null;

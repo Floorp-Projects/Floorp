@@ -421,9 +421,7 @@ var PaymentTestUtils = {
             label: "Total due",
             amount: { currency: "USD", value: "2.50" },
           },
-          data: {
-            supportedTypes: "credit",
-          },
+          data: {},
         },
         {
           additionalDisplayItems: [

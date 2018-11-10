@@ -108,20 +108,6 @@ function checkComplexRequest(payRequest) {
                    supportedNetworks[idx] + "'.");
     }
   }
-  const supportedTypes = data.supportedTypes;
-  const expectedSupportedTypes = ["prepaid", "debit", "credit"];
-  if (supportedTypes.length != expectedSupportedTypes.length) {
-    emitTestFail("supportedTypes.length should be '" +
-                 expectedSupportedTypes.length + "', but got '" +
-                 supportedTypes.length + "'.");
-  }
-  for (let idx = 0; idx < supportedTypes.length; idx++) {
-    if (supportedTypes[idx] != expectedSupportedTypes[idx]) {
-      emitTestFail("supportedTypes[" + idx + "] should be '" +
-                   expectedSupportedTypes[idx] + "', but got '" +
-                   supportedTypes[idx] + "'.");
-    }
-  }
   // checking the passed PaymentDetails parameter
   const details = payRequest.paymentDetails;
   if (details.id != "payment details" ) {
