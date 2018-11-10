@@ -24,6 +24,7 @@ class MachRegistrar(object):
         self.settings_providers = set()
         self.categories = {}
         self.require_conditions = False
+        self.command_depth = 0
 
     def register_command_handler(self, handler):
         name = handler.name
@@ -82,6 +83,7 @@ class MachRegistrar(object):
                 print(self._condition_failed_message(handler.name, fail_conditions))
                 return 1
 
+        self.command_depth += 1
         fn = getattr(instance, handler.method)
 
         start_time = time.time()
@@ -101,7 +103,8 @@ class MachRegistrar(object):
             postrun = getattr(context, 'post_dispatch_handler', None)
             if postrun:
                 postrun(context, handler, instance, result,
-                        start_time, end_time, args=kwargs)
+                        start_time, end_time, self.command_depth, args=kwargs)
+        self.command_depth -= 1
 
         return result
 
