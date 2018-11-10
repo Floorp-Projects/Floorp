@@ -523,9 +523,9 @@ class ADBHost(ADBCommand):
 
 class ADBDevice(ADBCommand):
     """ADBDevice is an abstract base class which provides methods which
-    can be used to interact with the associated Android or B2G based
-    device. It must be used via one of the concrete implementations in
-    :class:`ADBAndroid` or :class:`ADBB2G`.
+    can be used to interact with the associated Android-based
+    device. It must be used via the concrete implementation in
+    :class:`ADBAndroid`.
     """
     __metaclass__ = ABCMeta
 
