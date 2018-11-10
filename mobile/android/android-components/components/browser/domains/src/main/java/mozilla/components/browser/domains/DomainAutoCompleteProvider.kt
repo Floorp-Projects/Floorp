@@ -16,6 +16,8 @@ import java.util.Locale
  * of assets (see [Domains]) and/or a custom domain list managed by
  * [CustomDomains].
  */
+// FIXME delete this https://github.com/mozilla-mobile/android-components/issues/1358
+@Deprecated("Use [Providers.ShippedDomainsProvider] or [Providers.CustomDomainsProvider]")
 class DomainAutoCompleteProvider {
     object AutocompleteSource {
         const val DEFAULT_LIST = "default"
@@ -34,33 +36,6 @@ class DomainAutoCompleteProvider {
      * in this source
      */
     data class Result(val text: String, val url: String, val source: String, val size: Int)
-
-    internal data class Domain(val protocol: String, val hasWww: Boolean, val host: String) {
-        internal val url: String
-            get() = "$protocol${if (hasWww) "www." else "" }$host"
-
-        companion object {
-            private const val PROTOCOL_INDEX = 1
-            private const val WWW_INDEX = 2
-            private const val HOST_INDEX = 3
-
-            private const val DEFAULT_PROTOCOL = "http://"
-
-            private val urlMatcher = Regex("""(https?://)?(www.)?(.+)?""")
-
-            internal fun create(url: String): Domain {
-                val result = urlMatcher.find(url)
-
-                return result?.let {
-                    val protocol = it.groups[PROTOCOL_INDEX]?.value ?: DEFAULT_PROTOCOL
-                    val hasWww = it.groups[WWW_INDEX]?.value == "www."
-                    val host = it.groups[HOST_INDEX]?.value ?: throw IllegalStateException()
-
-                    return Domain(protocol, hasWww, host)
-                } ?: throw IllegalStateException()
-            }
-        }
-    }
 
     // We compute these on worker threads; make sure results are immediately visible on the UI thread.
     @Volatile
@@ -164,8 +139,4 @@ class DomainAutoCompleteProvider {
      */
     private fun getResultText(rawSearchText: String, autocomplete: String) =
             rawSearchText + autocomplete.substring(rawSearchText.length)
-}
-
-internal fun Iterable<String>.into(): List<DomainAutoCompleteProvider.Domain> {
-    return this.map { DomainAutoCompleteProvider.Domain.create(it) }
 }
