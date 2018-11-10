@@ -23,7 +23,7 @@ use gpu_types::BrushFlags;
 use hit_test::{HitTestingItem, HitTestingRun};
 use image::simplify_repeated_primitive;
 use internal_types::{FastHashMap, FastHashSet};
-use picture::{Picture3DContext, PictureCompositeMode, PictureIdGenerator, PicturePrimitive, PrimitiveList};
+use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PrimitiveList};
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentDescriptor, PrimitiveInstance, PrimitiveDataInterner, PrimitiveKeyKind};
 use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveOpacity, PrimitiveKey, PrimitiveSceneData, PrimitiveInstanceKind};
 use prim_store::{BorderSource, BrushSegment, BrushSegmentVec, PrimitiveContainer, PrimitiveDataHandle, PrimitiveStore};
@@ -116,9 +116,6 @@ pub struct DisplayListFlattener<'a> {
     /// The ClipScrollTree that we are currently building during flattening.
     clip_scroll_tree: &'a mut ClipScrollTree,
 
-    /// A counter for generating unique picture ids.
-    picture_id_generator: &'a mut PictureIdGenerator,
-
     /// The map of all font instances.
     font_instances: FontInstanceMap,
 
@@ -173,7 +170,6 @@ impl<'a> DisplayListFlattener<'a> {
         output_pipelines: &FastHashSet<PipelineId>,
         frame_builder_config: &FrameBuilderConfig,
         new_scene: &mut Scene,
-        picture_id_generator: &mut PictureIdGenerator,
         resources: &mut DocumentResources,
     ) -> FrameBuilder {
         // We checked that the root pipeline is available on the render backend.
@@ -197,7 +193,6 @@ impl<'a> DisplayListFlattener<'a> {
             pipeline_clip_chain_stack: vec![ClipChainId::NONE],
             prim_store: PrimitiveStore::new(),
             clip_store: ClipStore::new(),
-            picture_id_generator,
             resources,
             prim_count_estimate: 0,
             root_pic_index: PictureIndex(0),
@@ -1002,7 +997,6 @@ impl<'a> DisplayListFlattener<'a> {
                 // Cut the sequence of flat children before starting a child stacking context,
                 // so that the relative order between them and our current SC is preserved.
                 let extra_instance = sc.cut_flat_item_sequence(
-                    &mut self.picture_id_generator,
                     &mut self.prim_store,
                     &self.resources.prim_interner,
                     &self.clip_store,
@@ -1130,7 +1124,6 @@ impl<'a> DisplayListFlattener<'a> {
             &self.resources.prim_interner,
         );
         let leaf_picture = PicturePrimitive::new_image(
-            self.picture_id_generator.next(),
             leaf_composite_mode,
             leaf_context_3d,
             stacking_context.pipeline_id,
@@ -1172,7 +1165,6 @@ impl<'a> DisplayListFlattener<'a> {
 
             // This is the acttual picture representing our 3D hierarchy root.
             let container_picture = PicturePrimitive::new_image(
-                self.picture_id_generator.next(),
                 None,
                 Picture3DContext::In {
                     root_data: Some(Vec::new()),
@@ -1202,7 +1194,6 @@ impl<'a> DisplayListFlattener<'a> {
             );
 
             let filter_picture = PicturePrimitive::new_image(
-                self.picture_id_generator.next(),
                 Some(PictureCompositeMode::Filter(filter)),
                 Picture3DContext::Out,
                 stacking_context.pipeline_id,
@@ -1236,7 +1227,6 @@ impl<'a> DisplayListFlattener<'a> {
             );
 
             let blend_picture = PicturePrimitive::new_image(
-                self.picture_id_generator.next(),
                 Some(PictureCompositeMode::MixBlend(mix_blend_mode)),
                 Picture3DContext::Out,
                 stacking_context.pipeline_id,
@@ -1578,7 +1568,6 @@ impl<'a> DisplayListFlattener<'a> {
                         // parent picture, which avoids an intermediate surface and blur.
                         let blur_filter = FilterOp::Blur(std_deviation).sanitize();
                         let mut shadow_pic = PicturePrimitive::new_image(
-                            self.picture_id_generator.next(),
                             Some(PictureCompositeMode::Filter(blur_filter)),
                             Picture3DContext::Out,
                             pipeline_id,
@@ -2308,7 +2297,6 @@ impl FlattenedStackingContext {
     /// recorded so far and generate a picture from them.
     pub fn cut_flat_item_sequence(
         &mut self,
-        picture_id_generator: &mut PictureIdGenerator,
         prim_store: &mut PrimitiveStore,
         prim_interner: &PrimitiveDataInterner,
         clip_store: &ClipStore,
@@ -2330,7 +2318,6 @@ impl FlattenedStackingContext {
         );
 
         let container_picture = PicturePrimitive::new_image(
-            picture_id_generator.next(),
             Some(PictureCompositeMode::Blit),
             flat_items_context_3d,
             self.pipeline_id,

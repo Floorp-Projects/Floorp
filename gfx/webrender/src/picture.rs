@@ -163,38 +163,6 @@ pub enum PictureSurface {
     TextureCache(RenderTaskCacheEntryHandle),
 }
 
-// A unique identifier for a Picture. Once we start
-// doing deep compares of picture content, these
-// may be the same across display lists, but that's
-// not currently supported.
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct PictureId(pub u64);
-
-// TODO(gw): Having to generate globally unique picture
-//           ids for caching is not ideal. We should be
-//           able to completely remove this once we cache
-//           pictures based on their content, rather than
-//           the current cache key structure.
-pub struct PictureIdGenerator {
-    next: u64,
-}
-
-impl PictureIdGenerator {
-    pub fn new() -> Self {
-        PictureIdGenerator {
-            next: 0,
-        }
-    }
-
-    pub fn next(&mut self) -> PictureId {
-        let id = PictureId(self.next);
-        self.next += 1;
-        id
-    }
-}
-
 /// Enum value describing the place of a picture in a 3D context.
 #[derive(Clone, Debug)]
 pub enum Picture3DContext<C> {
@@ -426,9 +394,6 @@ pub struct PicturePrimitive {
     // picture.
     pub extra_gpu_data_handle: GpuCacheHandle,
 
-    // Unique identifier for this picture.
-    pub id: PictureId,
-
     /// The spatial node index of this picture when it is
     /// composited into the parent picture.
     pub spatial_node_index: SpatialNodeIndex,
@@ -471,7 +436,6 @@ impl PicturePrimitive {
     }
 
     pub fn new_image(
-        id: PictureId,
         requested_composite_mode: Option<PictureCompositeMode>,
         context_3d: Picture3DContext<OrderedPictureChild>,
         pipeline_id: PipelineId,
@@ -517,7 +481,6 @@ impl PicturePrimitive {
             extra_gpu_data_handle: GpuCacheHandle::new(),
             apply_local_clip_rect,
             pipeline_id,
-            id,
             requested_raster_space,
             spatial_node_index,
             local_rect: LayoutRect::zero(),
