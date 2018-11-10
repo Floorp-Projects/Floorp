@@ -33,14 +33,16 @@ Two encoded integers for about:newtab and about:home are combined in a bitwise f
 
 ## Page takeover ping
 
-This ping is submitted once upon Activity Stream initialization if either about:home or about:newtab are set to a custom URL. It sends the category of the custom URL.
+This ping is submitted once upon Activity Stream initialization if either about:home or about:newtab are set to a custom URL. It sends the category of the custom URL. It also includes the web extension id of the extension controlling the home and/or newtab page.
 
 ```js
 {
   "event": "PAGE_TAKEOVER_DATA",
   "value": {
     "home_url_category": ["search-engine" | "search-engine-mozilla-tag" | "search-engine-other-tag" | "news-portal" | "ecommerce" | "social-media" | "known-hijacker" | "other"],
+    "home_extension_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
     "newtab_url_category": ["search-engine" | "search-engine-mozilla-tag" | "search-engine-other-tag" | "news-portal" | "ecommerce" | "social-media" | "known-hijacker" | "other"],
+    "newtab_extension_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
   },
 
   // Basic metadata
@@ -838,7 +840,7 @@ This reports the user's interaction with Activity Stream Router.
   "source": "CFR",
   // message_id could be the ID of the recommendation, such as "wikipedia_addon"
   "message_id": "wikipedia_addon",
-  "event": "[INSTALL | BLOCK | DISMISS | RATIONALE | LEARN_MORE | CLICK_DOORHANGER]"
+  "event": "[INSTALL | BLOCK | DISMISS | RATIONALE | LEARN_MORE | CLICK_DOORHANGER | MANAGE]"
 }
 ```
 
@@ -854,7 +856,7 @@ This reports the user's interaction with Activity Stream Router.
   // message_id should be a bucket ID in the release channel, we may not use the
   // individual ID, such as addon ID, per legal's request
   "message_id": "bucket_id",
-  "event": "[INSTALL | BLOCK | DISMISS | RATIONALE | LEARN_MORE | CLICK_DOORHANGER]"
+  "event": "[INSTALL | BLOCK | DISMISS | RATIONALE | LEARN_MORE | CLICK_DOORHANGER | MANAGE]"
 }
 ```
 

@@ -1321,7 +1321,14 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
   mClipManager.BeginBuild(mManager, aBuilder);
 
   {
-    StackingContextHelper pageRootSc(sc, nullptr, aBuilder, aFilters);
+    if (!mZoomProp && gfxPrefs::APZAllowZooming() && XRE_IsContentProcess()) {
+      mZoomProp.emplace();
+      mZoomProp->effect_type = wr::WrAnimationType::Transform;
+      mZoomProp->id = AnimationHelper::GetNextCompositorAnimationsId();
+    }
+
+    StackingContextHelper pageRootSc(sc, nullptr, aBuilder, aFilters,
+        LayoutDeviceRect(), nullptr, mZoomProp.ptrOr(nullptr));
     if (ShouldDumpDisplayList(aDisplayListBuilder)) {
       mBuilderDumpIndex = aBuilder.Dump(mDumpIndent + 1, Some(mBuilderDumpIndex), Nothing());
     }
@@ -1332,6 +1339,9 @@ WebRenderCommandBuilder::BuildWebRenderCommands(wr::DisplayListBuilder& aBuilder
   // Make a "root" layer data that has everything else as descendants
   mLayerScrollData.emplace_back();
   mLayerScrollData.back().InitializeRoot(mLayerScrollData.size() - 1);
+  if (mZoomProp) {
+    mLayerScrollData.back().SetZoomAnimationId(mZoomProp->id);
+  }
   auto callback = [&aScrollData](ScrollableLayerGuid::ViewID aScrollId) -> bool {
     return aScrollData.HasMetadataFor(aScrollId).isSome();
   };

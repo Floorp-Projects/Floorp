@@ -41,13 +41,30 @@ function nativeHorizontalWheelEventMsg() {
   throw "Native wheel events not supported on platform " + getPlatform();
 }
 
+// Given an event target which may be a window or an element, get the associated window.
+function windowForTarget(aTarget) {
+  if (aTarget instanceof Window) {
+    return aTarget;
+  }
+  return aTarget.ownerDocument.defaultView;
+}
+
+// Given an event target which may be a window or an element, get the associated element.
+function elementForTarget(aTarget) {
+  if (aTarget instanceof Window) {
+    return aTarget.document.documentElement;
+  }
+  return aTarget;
+}
+
 // Given a pixel scrolling delta, converts it to the platform's native units.
-function nativeScrollUnits(aElement, aDimen) {
+function nativeScrollUnits(aTarget, aDimen) {
   switch (getPlatform()) {
     case "linux": {
       // GTK deltas are treated as line height divided by 3 by gecko.
-      var targetWindow = aElement.ownerDocument.defaultView;
-      var lineHeight = targetWindow.getComputedStyle(aElement)["font-size"];
+      var targetWindow = windowForTarget(aTarget);
+      var targetElement = elementForTarget(aTarget);
+      var lineHeight = targetWindow.getComputedStyle(targetElement)["font-size"];
       return aDimen / (parseInt(lineHeight) * 3);
     }
   }
@@ -82,14 +99,6 @@ function nativeMouseUpEventMsg() {
     case "android": return 6; // ACTION_POINTER_UP
   }
   throw "Native mouse-up events not supported on platform " + getPlatform();
-}
-
-// Given an event target which may be a window or an element, get the associated window.
-function windowForTarget(aTarget) {
-  if (aTarget instanceof Window) {
-    return aTarget;
-  }
-  return aTarget.ownerDocument.defaultView;
 }
 
 function getBoundingClientRectRelativeToVisualViewport(aElement) {
@@ -143,19 +152,20 @@ function rectRelativeToScreen(aElement) {
 // Synthesizes a native mousewheel event and returns immediately. This does not
 // guarantee anything; you probably want to use one of the other functions below
 // which actually wait for results.
-// aX and aY are relative to the top-left of |aElement|'s containing window.
+// aX and aY are relative to the top-left of |aTarget|'s bounding rect.
 // aDeltaX and aDeltaY are pixel deltas, and aObserver can be left undefined
 // if not needed.
-function synthesizeNativeWheel(aElement, aX, aY, aDeltaX, aDeltaY, aObserver) {
-  var pt = coordinatesRelativeToScreen(aX, aY, aElement);
+function synthesizeNativeWheel(aTarget, aX, aY, aDeltaX, aDeltaY, aObserver) {
+  var pt = coordinatesRelativeToScreen(aX, aY, aTarget);
   if (aDeltaX && aDeltaY) {
     throw "Simultaneous wheeling of horizontal and vertical is not supported on all platforms.";
   }
-  aDeltaX = nativeScrollUnits(aElement, aDeltaX);
-  aDeltaY = nativeScrollUnits(aElement, aDeltaY);
+  aDeltaX = nativeScrollUnits(aTarget, aDeltaX);
+  aDeltaY = nativeScrollUnits(aTarget, aDeltaY);
   var msg = aDeltaX ? nativeHorizontalWheelEventMsg() : nativeVerticalWheelEventMsg();
-  var utils = SpecialPowers.getDOMWindowUtils(aElement.ownerDocument.defaultView);
-  utils.sendNativeMouseScrollEvent(pt.x, pt.y, msg, aDeltaX, aDeltaY, 0, 0, 0, aElement, aObserver);
+  var utils = SpecialPowers.getDOMWindowUtils(windowForTarget(aTarget));
+  var element = elementForTarget(aTarget);
+  utils.sendNativeMouseScrollEvent(pt.x, pt.y, msg, aDeltaX, aDeltaY, 0, 0, 0, element, aObserver);
   return true;
 }
 
@@ -175,50 +185,52 @@ function synthesizeNativeWheelAndWaitForObserver(aElement, aX, aY, aDeltaX, aDel
 }
 
 // Synthesizes a native mousewheel event and invokes the callback once the
-// wheel event is dispatched to |aElement|'s containing window. If the event
-// targets content in a subdocument, |aElement| should be inside the
-// subdocument. See synthesizeNativeWheel for details on the other parameters.
-function synthesizeNativeWheelAndWaitForWheelEvent(aElement, aX, aY, aDeltaX, aDeltaY, aCallback) {
-  var targetWindow = aElement.ownerDocument.defaultView;
+// wheel event is dispatched to |aTarget|'s containing window. If the event
+// targets content in a subdocument, |aTarget| should be inside the
+// subdocument (or the subdocument's window). See synthesizeNativeWheel for 
+// details on the other parameters.
+function synthesizeNativeWheelAndWaitForWheelEvent(aTarget, aX, aY, aDeltaX, aDeltaY, aCallback) {
+  var targetWindow = windowForTarget(aTarget);
   targetWindow.addEventListener("wheel", function(e) {
     setTimeout(aCallback, 0);
   }, {once: true});
-  return synthesizeNativeWheel(aElement, aX, aY, aDeltaX, aDeltaY);
+  return synthesizeNativeWheel(aTarget, aX, aY, aDeltaX, aDeltaY);
 }
 
 // Synthesizes a native mousewheel event and invokes the callback once the
-// first resulting scroll event is dispatched to |aElement|'s containing window.
-// If the event targets content in a subdocument, |aElement| should be inside
-// the subdocument.  See synthesizeNativeWheel for details on the other
-// parameters.
-function synthesizeNativeWheelAndWaitForScrollEvent(aElement, aX, aY, aDeltaX, aDeltaY, aCallback) {
-  var targetWindow = aElement.ownerDocument.defaultView;
+// first resulting scroll event is dispatched to |aTarget|'s containing window.
+// If the event targets content in a subdocument, |aTarget| should be inside
+// the subdocument (or the subdocument's window).  See synthesizeNativeWheel 
+// for details on the other parameters.
+function synthesizeNativeWheelAndWaitForScrollEvent(aTarget, aX, aY, aDeltaX, aDeltaY, aCallback) {
+  var targetWindow = windowForTarget(aTarget);
   targetWindow.addEventListener("scroll", function() {
     setTimeout(aCallback, 0);
   }, {capture: true, once: true}); // scroll events don't always bubble
-  return synthesizeNativeWheel(aElement, aX, aY, aDeltaX, aDeltaY);
+  return synthesizeNativeWheel(aTarget, aX, aY, aDeltaX, aDeltaY);
 }
 
 // Synthesizes a native mouse move event and returns immediately.
-// aX and aY are relative to the top-left of |aElement|'s containing window.
-function synthesizeNativeMouseMove(aElement, aX, aY) {
-  var pt = coordinatesRelativeToScreen(aX, aY, aElement);
-  var utils = SpecialPowers.getDOMWindowUtils(aElement.ownerDocument.defaultView);
-  utils.sendNativeMouseEvent(pt.x, pt.y, nativeMouseMoveEventMsg(), 0, aElement);
+// aX and aY are relative to the top-left of |aTarget|'s bounding rect.
+function synthesizeNativeMouseMove(aTarget, aX, aY) {
+  var pt = coordinatesRelativeToScreen(aX, aY, aTarget);
+  var utils = SpecialPowers.getDOMWindowUtils(windowForTarget(aTarget));
+  var element = elementForTarget(aTarget);
+  utils.sendNativeMouseEvent(pt.x, pt.y, nativeMouseMoveEventMsg(), 0, element);
   return true;
 }
 
 // Synthesizes a native mouse move event and invokes the callback once the
-// mouse move event is dispatched to |aElement|'s containing window. If the event
-// targets content in a subdocument, |aElement| should be inside the
-// subdocument. See synthesizeNativeMouseMove for details on the other
-// parameters.
-function synthesizeNativeMouseMoveAndWaitForMoveEvent(aElement, aX, aY, aCallback) {
-  var targetWindow = aElement.ownerDocument.defaultView;
+// mouse move event is dispatched to |aTarget|'s containing window. If the event
+// targets content in a subdocument, |aTarget| should be inside the
+// subdocument (or the subdocument window). See synthesizeNativeMouseMove for 
+// details on the other parameters.
+function synthesizeNativeMouseMoveAndWaitForMoveEvent(aTarget, aX, aY, aCallback) {
+  var targetWindow = windowForTarget(aTarget);
   targetWindow.addEventListener("mousemove", function(e) {
     setTimeout(aCallback, 0);
   }, {once: true});
-  return synthesizeNativeMouseMove(aElement, aX, aY);
+  return synthesizeNativeMouseMove(aTarget, aX, aY);
 }
 
 // Synthesizes a native touch event and dispatches it. aX and aY in CSS pixels
@@ -361,7 +373,7 @@ function synthesizeNativeClick(aElement, aX, aY, aObserver = null) {
   return true;
 }
 
-// Move the mouse to (dx, dy) relative to |element|, and scroll the wheel
+// Move the mouse to (dx, dy) relative to |target|, and scroll the wheel
 // at that location.
 // Moving the mouse is necessary to avoid wheel events from two consecutive
 // moveMouseAndScrollWheelOver() calls on different elements being incorrectly
@@ -369,12 +381,12 @@ function synthesizeNativeClick(aElement, aX, aY, aObserver = null) {
 // We also wait for the mouse move event to be processed before sending the
 // wheel event, otherwise there is a chance they might get reordered, and
 // we have the transaction problem again.
-function moveMouseAndScrollWheelOver(element, dx, dy, testDriver, waitForScroll = true) {
-  return synthesizeNativeMouseMoveAndWaitForMoveEvent(element, dx, dy, function() {
+function moveMouseAndScrollWheelOver(target, dx, dy, testDriver, waitForScroll = true) {
+  return synthesizeNativeMouseMoveAndWaitForMoveEvent(target, dx, dy, function() {
     if (waitForScroll) {
-      synthesizeNativeWheelAndWaitForScrollEvent(element, dx, dy, 0, -10, testDriver);
+      synthesizeNativeWheelAndWaitForScrollEvent(target, dx, dy, 0, -10, testDriver);
     } else {
-      synthesizeNativeWheelAndWaitForWheelEvent(element, dx, dy, 0, -10, testDriver);
+      synthesizeNativeWheelAndWaitForWheelEvent(target, dx, dy, 0, -10, testDriver);
     }
   });
 }

@@ -982,6 +982,15 @@ private:
 
   UniquePtr<OverscrollEffectBase> mOverscrollEffect;
 
+  // Zoom animation id, used for zooming in WebRender. This should only be
+  // set on the APZC instance for the root content document (i.e. the one we
+  // support zooming on), and is only used if WebRender is enabled. The
+  // animation id itself refers to the transform animation id that was set on
+  // the stacking context in the WR display list. By changing the transform
+  // associated with this id, we can adjust the scaling that WebRender applies,
+  // thereby controlling the zoom.
+  Maybe<uint64_t> mZoomAnimationId;
+
   friend class Axis;
 
 public:
@@ -998,6 +1007,9 @@ public:
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     return callable(mLastContentPaintMetrics);
   }
+
+  void SetZoomAnimationId(const Maybe<uint64_t>& aZoomAnimationId);
+  Maybe<uint64_t> GetZoomAnimationId() const;
 
   /* ===================================================================
    * The functions and members in this section are used to expose
