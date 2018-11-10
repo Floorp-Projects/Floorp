@@ -165,7 +165,7 @@ class TransportLayerDtls final : public TransportLayer {
                         UniqueCERTCertificate& cert) const;
 
   void RecordHandshakeCompletionTelemetry(TransportLayer::State endState);
-  void RecordCipherTelemetry();
+  void RecordTlsTelemetry();
 
   static PRBool WriteSrtpXtn(PRFileDesc* fd, SSLHandshakeType message,
                              uint8_t* data, unsigned int* len,
