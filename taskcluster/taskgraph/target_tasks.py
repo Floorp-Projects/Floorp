@@ -614,10 +614,10 @@ def target_tasks_staging_release(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
-@_target_task('beta_simulation')
-def target_tasks_beta_simulation(full_task_graph, parameters, graph_config):
+@_target_task('release_simulation')
+def target_tasks_release_simulation(full_task_graph, parameters, graph_config):
     """
-    Select builds that would run on mozilla-beta.
+    Select builds that would run on push on a release branch.
     """
     project_by_release = {
         'nightly': 'mozilla-central',
