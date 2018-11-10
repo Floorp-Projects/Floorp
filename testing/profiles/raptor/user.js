@@ -6,3 +6,6 @@ user_pref("dom.performance.time_to_first_interactive.enabled", true);
 
 // required for geckoview logging
 user_pref("geckoview.console.enabled", true);
+
+// required to prevent non-local access to push.services.mozilla.com
+user_pref("dom.push.connection.enabled", false);
