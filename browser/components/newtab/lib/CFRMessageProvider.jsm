@@ -40,58 +40,6 @@ const REDDIT_ENHANCEMENT_PARAMS = {
 
 const CFR_MESSAGES = [
   {
-    id: "FACEBOOK_CONTAINER_1",
-    template: "cfr_doorhanger",
-    content: {
-      bucket_id: "CFR_M1",
-      notification_text: {string_id: "cfr-doorhanger-extension-notification"},
-      heading_text: {string_id: "cfr-doorhanger-extension-heading"},
-      info_icon: {
-        label: {string_id: "cfr-doorhanger-extension-sumo-link"},
-        sumo_path: FACEBOOK_CONTAINER_PARAMS.sumo_path,
-      },
-      addon: {
-        id: "954390",
-        title: "Facebook Container",
-        icon: "resource://activity-stream/data/content/assets/cfr_fb_container.png",
-        rating: 4.6,
-        users: 299019,
-        author: "Mozilla",
-        amo_url: "https://addons.mozilla.org/en-US/firefox/addon/facebook-container/",
-      },
-      text: "Stop Facebook from tracking your activity across the web. Use Facebook the way you normally do without annoying ads following you around.",
-      buttons: {
-        primary: {
-          label: {string_id: "cfr-doorhanger-extension-ok-button"},
-          action: {
-            type: "INSTALL_ADDON_FROM_URL",
-            data: {url: null},
-          },
-        },
-        secondary: [{
-          label: {string_id: "cfr-doorhanger-extension-cancel-button"},
-          action: {type: "CANCEL"},
-        }, {
-          label: {string_id: "cfr-doorhanger-extension-never-show-recommendation"},
-        }, {
-          label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
-          action: {
-            type: "OPEN_PREFERENCES_PAGE",
-            data: {category: "general-cfr", origin: "CFR"},
-          },
-        }],
-      },
-    },
-    frequency: {lifetime: 1},
-    targeting: `
-      localeLanguageCode == "en" &&
-      (providerCohorts.cfr in ["one_per_day", "nightly"]) &&
-      (xpinstallEnabled == true) &&
-      (${JSON.stringify(FACEBOOK_CONTAINER_PARAMS.existing_addons)} intersect addonsInfo.addons|keys)|length == 0 &&
-      (${JSON.stringify(FACEBOOK_CONTAINER_PARAMS.open_urls)} intersect topFrecentSites[.frecency >= ${FACEBOOK_CONTAINER_PARAMS.min_frecency}]|mapToProperty('host'))|length > 0`,
-    trigger: {id: "openURL", params: FACEBOOK_CONTAINER_PARAMS.open_urls},
-  },
-  {
     id: "FACEBOOK_CONTAINER_3",
     template: "cfr_doorhanger",
     content: {
@@ -137,63 +85,10 @@ const CFR_MESSAGES = [
     frequency: {lifetime: 3},
     targeting: `
       localeLanguageCode == "en" &&
-      (providerCohorts.cfr == "three_per_day") &&
       (xpinstallEnabled == true) &&
       (${JSON.stringify(FACEBOOK_CONTAINER_PARAMS.existing_addons)} intersect addonsInfo.addons|keys)|length == 0 &&
       (${JSON.stringify(FACEBOOK_CONTAINER_PARAMS.open_urls)} intersect topFrecentSites[.frecency >= ${FACEBOOK_CONTAINER_PARAMS.min_frecency}]|mapToProperty('host'))|length > 0`,
     trigger: {id: "openURL", params: FACEBOOK_CONTAINER_PARAMS.open_urls},
-  },
-  {
-    id: "GOOGLE_TRANSLATE_1",
-    template: "cfr_doorhanger",
-    content: {
-      bucket_id: "CFR_M1",
-      notification_text: {string_id: "cfr-doorhanger-extension-notification"},
-      heading_text: {string_id: "cfr-doorhanger-extension-heading"},
-      info_icon: {
-        label: {string_id: "cfr-doorhanger-extension-sumo-link"},
-        sumo_path: GOOGLE_TRANSLATE_PARAMS.sumo_path,
-      },
-      addon: {
-        id: "445852",
-        title: "To Google Translate",
-        icon: "resource://activity-stream/data/content/assets/cfr_google_translate.png",
-        rating: 4.1,
-        users: 313474,
-        author: "Juan Escobar",
-        amo_url: "https://addons.mozilla.org/en-US/firefox/addon/to-google-translate/",
-      },
-      text: "Instantly translate any webpage text. Simply highlight the text, right-click to open the context menu, and choose a text or aural translation.",
-      buttons: {
-        primary: {
-          label: {string_id: "cfr-doorhanger-extension-ok-button"},
-          action: {
-            type: "INSTALL_ADDON_FROM_URL",
-            data: {url: null},
-          },
-        },
-        secondary: [{
-          label: {string_id: "cfr-doorhanger-extension-cancel-button"},
-          action: {type: "CANCEL"},
-        }, {
-          label: {string_id: "cfr-doorhanger-extension-never-show-recommendation"},
-        }, {
-          label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
-          action: {
-            type: "OPEN_PREFERENCES_PAGE",
-            data: {category: "general-cfr", origin: "CFR"},
-          },
-        }],
-      },
-    },
-    frequency: {lifetime: 1},
-    targeting: `
-      localeLanguageCode == "en" &&
-      (providerCohorts.cfr in ["one_per_day", "nightly"]) &&
-      (xpinstallEnabled == true) &&
-      (${JSON.stringify(GOOGLE_TRANSLATE_PARAMS.existing_addons)} intersect addonsInfo.addons|keys)|length == 0 &&
-      (${JSON.stringify(GOOGLE_TRANSLATE_PARAMS.open_urls)} intersect topFrecentSites[.frecency >= ${GOOGLE_TRANSLATE_PARAMS.min_frecency}]|mapToProperty('host'))|length > 0`,
-    trigger: {id: "openURL", params: GOOGLE_TRANSLATE_PARAMS.open_urls},
   },
   {
     id: "GOOGLE_TRANSLATE_3",
@@ -241,63 +136,10 @@ const CFR_MESSAGES = [
     frequency: {lifetime: 3},
     targeting: `
       localeLanguageCode == "en" &&
-      (providerCohorts.cfr == "three_per_day") &&
       (xpinstallEnabled == true) &&
       (${JSON.stringify(GOOGLE_TRANSLATE_PARAMS.existing_addons)} intersect addonsInfo.addons|keys)|length == 0 &&
       (${JSON.stringify(GOOGLE_TRANSLATE_PARAMS.open_urls)} intersect topFrecentSites[.frecency >= ${GOOGLE_TRANSLATE_PARAMS.min_frecency}]|mapToProperty('host'))|length > 0`,
     trigger: {id: "openURL", params: GOOGLE_TRANSLATE_PARAMS.open_urls},
-  },
-  {
-    id: "YOUTUBE_ENHANCE_1",
-    template: "cfr_doorhanger",
-    content: {
-      bucket_id: "CFR_M1",
-      notification_text: {string_id: "cfr-doorhanger-extension-notification"},
-      heading_text: {string_id: "cfr-doorhanger-extension-heading"},
-      info_icon: {
-        label: {string_id: "cfr-doorhanger-extension-sumo-link"},
-        sumo_path: YOUTUBE_ENHANCE_PARAMS.sumo_path,
-      },
-      addon: {
-        id: "700308",
-        title: "Enhancer for YouTube\u2122",
-        icon: "resource://activity-stream/data/content/assets/cfr_enhancer_youtube.png",
-        rating: 4.8,
-        users: 357328,
-        author: "Maxime RF",
-        amo_url: "https://addons.mozilla.org/en-US/firefox/addon/enhancer-for-youtube/",
-      },
-      text: "Take control of your YouTube experience. Automatically block annoying ads, set playback speed and volume, remove annotations, and more.",
-      buttons: {
-        primary: {
-          label: {string_id: "cfr-doorhanger-extension-ok-button"},
-          action: {
-            type: "INSTALL_ADDON_FROM_URL",
-            data: {url: null},
-          },
-        },
-        secondary: [{
-          label: {string_id: "cfr-doorhanger-extension-cancel-button"},
-          action: {type: "CANCEL"},
-        }, {
-          label: {string_id: "cfr-doorhanger-extension-never-show-recommendation"},
-        }, {
-          label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
-          action: {
-            type: "OPEN_PREFERENCES_PAGE",
-            data: {category: "general-cfr", origin: "CFR"},
-          },
-        }],
-      },
-    },
-    frequency: {lifetime: 1},
-    targeting: `
-      localeLanguageCode == "en" &&
-      (providerCohorts.cfr in ["one_per_day", "nightly"]) &&
-      (xpinstallEnabled == true) &&
-      (${JSON.stringify(YOUTUBE_ENHANCE_PARAMS.existing_addons)} intersect addonsInfo.addons|keys)|length == 0 &&
-      (${JSON.stringify(YOUTUBE_ENHANCE_PARAMS.open_urls)} intersect topFrecentSites[.frecency >= ${YOUTUBE_ENHANCE_PARAMS.min_frecency}]|mapToProperty('host'))|length > 0`,
-    trigger: {id: "openURL", params: YOUTUBE_ENHANCE_PARAMS.open_urls},
   },
   {
     id: "YOUTUBE_ENHANCE_3",
@@ -345,63 +187,10 @@ const CFR_MESSAGES = [
     frequency: {lifetime: 3},
     targeting: `
       localeLanguageCode == "en" &&
-      (providerCohorts.cfr == "three_per_day") &&
       (xpinstallEnabled == true) &&
       (${JSON.stringify(YOUTUBE_ENHANCE_PARAMS.existing_addons)} intersect addonsInfo.addons|keys)|length == 0 &&
       (${JSON.stringify(YOUTUBE_ENHANCE_PARAMS.open_urls)} intersect topFrecentSites[.frecency >= ${YOUTUBE_ENHANCE_PARAMS.min_frecency}]|mapToProperty('host'))|length > 0`,
     trigger: {id: "openURL", params: YOUTUBE_ENHANCE_PARAMS.open_urls},
-  },
-  {
-    id: "WIKIPEDIA_CONTEXT_MENU_SEARCH_1",
-    template: "cfr_doorhanger",
-    content: {
-      bucket_id: "CFR_M1",
-      notification_text: {string_id: "cfr-doorhanger-extension-notification"},
-      heading_text: {string_id: "cfr-doorhanger-extension-heading"},
-      info_icon: {
-        label: {string_id: "cfr-doorhanger-extension-sumo-link"},
-        sumo_path: WIKIPEDIA_CONTEXT_MENU_SEARCH_PARAMS.sumo_path,
-      },
-      addon: {
-        id: "659026",
-        title: "Wikipedia Context Menu Search",
-        icon: "resource://activity-stream/data/content/assets/cfr_wiki_search.png",
-        rating: 4.9,
-        users: 3095,
-        author: "Nick Diedrich",
-        amo_url: "https://addons.mozilla.org/en-US/firefox/addon/wikipedia-context-menu-search/",
-      },
-      text: "Get to a Wikipedia page fast, from anywhere on the web. Just highlight any webpage text and right-click to open the context menu to start a Wikipedia search.",
-      buttons: {
-        primary: {
-          label: {string_id: "cfr-doorhanger-extension-ok-button"},
-          action: {
-            type: "INSTALL_ADDON_FROM_URL",
-            data: {url: null},
-          },
-        },
-        secondary: [{
-          label: {string_id: "cfr-doorhanger-extension-cancel-button"},
-          action: {type: "CANCEL"},
-        }, {
-          label: {string_id: "cfr-doorhanger-extension-never-show-recommendation"},
-        }, {
-          label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
-          action: {
-            type: "OPEN_PREFERENCES_PAGE",
-            data: {category: "general-cfr", origin: "CFR"},
-          },
-        }],
-      },
-    },
-    frequency: {lifetime: 1},
-    targeting: `
-      localeLanguageCode == "en" &&
-      (providerCohorts.cfr in ["one_per_day", "nightly"]) &&
-      (xpinstallEnabled == true) &&
-      (${JSON.stringify(WIKIPEDIA_CONTEXT_MENU_SEARCH_PARAMS.existing_addons)} intersect addonsInfo.addons|keys)|length == 0 &&
-      (${JSON.stringify(WIKIPEDIA_CONTEXT_MENU_SEARCH_PARAMS.open_urls)} intersect topFrecentSites[.frecency >= ${WIKIPEDIA_CONTEXT_MENU_SEARCH_PARAMS.min_frecency}]|mapToProperty('host'))|length > 0`,
-    trigger: {id: "openURL", params: WIKIPEDIA_CONTEXT_MENU_SEARCH_PARAMS.open_urls},
   },
   {
     id: "WIKIPEDIA_CONTEXT_MENU_SEARCH_3",
@@ -449,63 +238,10 @@ const CFR_MESSAGES = [
     frequency: {lifetime: 3},
     targeting: `
       localeLanguageCode == "en" &&
-      (providerCohorts.cfr == "three_per_day") &&
       (xpinstallEnabled == true) &&
       (${JSON.stringify(WIKIPEDIA_CONTEXT_MENU_SEARCH_PARAMS.existing_addons)} intersect addonsInfo.addons|keys)|length == 0 &&
       (${JSON.stringify(WIKIPEDIA_CONTEXT_MENU_SEARCH_PARAMS.open_urls)} intersect topFrecentSites[.frecency >= ${WIKIPEDIA_CONTEXT_MENU_SEARCH_PARAMS.min_frecency}]|mapToProperty('host'))|length > 0`,
     trigger: {id: "openURL", params: WIKIPEDIA_CONTEXT_MENU_SEARCH_PARAMS.open_urls},
-  },
-  {
-    id: "REDDIT_ENHANCEMENT_1",
-    template: "cfr_doorhanger",
-    content: {
-      bucket_id: "CFR_M1",
-      notification_text: {string_id: "cfr-doorhanger-extension-notification"},
-      heading_text: {string_id: "cfr-doorhanger-extension-heading"},
-      info_icon: {
-        label: {string_id: "cfr-doorhanger-extension-sumo-link"},
-        sumo_path: REDDIT_ENHANCEMENT_PARAMS.sumo_path,
-      },
-      addon: {
-        id: "387429",
-        title: "Reddit Enhancement Suite",
-        icon: "resource://activity-stream/data/content/assets/cfr_reddit_enhancement.png",
-        rating: 4.6,
-        users: 258129,
-        author: "honestbleeps",
-        amo_url: "https://addons.mozilla.org/en-US/firefox/addon/reddit-enhancement-suite/",
-      },
-      text: "New features include Inline Image Viewer, Never Ending Reddit (never click 'next page' again), Keyboard Navigation, Account Switcher, and User Tagger.",
-      buttons: {
-        primary: {
-          label: {string_id: "cfr-doorhanger-extension-ok-button"},
-          action: {
-            type: "INSTALL_ADDON_FROM_URL",
-            data: {url: null},
-          },
-        },
-        secondary: [{
-          label: {string_id: "cfr-doorhanger-extension-cancel-button"},
-          action: {type: "CANCEL"},
-        }, {
-          label: {string_id: "cfr-doorhanger-extension-never-show-recommendation"},
-        }, {
-          label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
-          action: {
-            type: "OPEN_PREFERENCES_PAGE",
-            data: {category: "general-cfr", origin: "CFR"},
-          },
-        }],
-      },
-    },
-    frequency: {lifetime: 1},
-    targeting: `
-      localeLanguageCode == "en" &&
-      (providerCohorts.cfr in ["one_per_day", "nightly"]) &&
-      (xpinstallEnabled == true) &&
-      (${JSON.stringify(REDDIT_ENHANCEMENT_PARAMS.existing_addons)} intersect addonsInfo.addons|keys)|length == 0 &&
-      (${JSON.stringify(REDDIT_ENHANCEMENT_PARAMS.open_urls)} intersect topFrecentSites[.frecency >= ${REDDIT_ENHANCEMENT_PARAMS.min_frecency}]|mapToProperty('host'))|length > 0`,
-    trigger: {id: "openURL", params: REDDIT_ENHANCEMENT_PARAMS.open_urls},
   },
   {
     id: "REDDIT_ENHANCEMENT_3",
@@ -553,7 +289,6 @@ const CFR_MESSAGES = [
     frequency: {lifetime: 3},
     targeting: `
       localeLanguageCode == "en" &&
-      (providerCohorts.cfr == "three_per_day") &&
       (xpinstallEnabled == true) &&
       (${JSON.stringify(REDDIT_ENHANCEMENT_PARAMS.existing_addons)} intersect addonsInfo.addons|keys)|length == 0 &&
       (${JSON.stringify(REDDIT_ENHANCEMENT_PARAMS.open_urls)} intersect topFrecentSites[.frecency >= ${REDDIT_ENHANCEMENT_PARAMS.min_frecency}]|mapToProperty('host'))|length > 0`,
