@@ -85,5 +85,5 @@ jittest:
                 default: true
     tier:
         by-test-platform:
-            android-hw.*: 3
+            android-hw.*: 2
             default: default
