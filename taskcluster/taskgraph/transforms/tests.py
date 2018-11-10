@@ -520,6 +520,10 @@ def setup_raptor(config, tests):
             extra_options.append('--branch-name')
             extra_options.append('try')
 
+        if config.params['project'] in ('mozilla-beta', 'mozilla-release') or \
+           config.params['project'].startswith('mozilla-esr'):
+            extra_options.append('--is-release-build')
+
         yield test
 
 
