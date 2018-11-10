@@ -1845,7 +1845,7 @@ MediaFormatReader::OnAudioDemuxCompleted(
 
 void
 MediaFormatReader::NotifyNewOutput(
-  TrackType aTrack, const MediaDataDecoder::DecodedData& aResults)
+  TrackType aTrack, MediaDataDecoder::DecodedData&& aResults)
 {
   MOZ_ASSERT(OnTaskQueue());
   auto& decoder = GetDecoderData(aTrack);
@@ -1854,7 +1854,7 @@ MediaFormatReader::NotifyNewOutput(
           aTrack == TrackInfo::kAudioTrack ? "decoded_audio" : "decoded_video",
           "no output samples");
   } else
-    for (auto& sample : aResults) {
+    for (auto&& sample : aResults) {
       if (DecoderDoctorLogger::IsDDLoggingEnabled()) {
         switch (sample->mType) {
           case MediaData::AUDIO_DATA:
@@ -2180,9 +2180,9 @@ MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
   decoder.mDecoder->Decode(aSample)
     ->Then(mTaskQueue, __func__,
            [self, aTrack, &decoder]
-           (const MediaDataDecoder::DecodedData& aResults) {
+           (MediaDataDecoder::DecodedData&& aResults) {
              decoder.mDecodeRequest.Complete();
-             self->NotifyNewOutput(aTrack, aResults);
+             self->NotifyNewOutput(aTrack, std::move(aResults));
 
              // When we recovered from a GPU crash and get the first decoded
              // frame, report the recovery time telemetry.
@@ -2395,13 +2395,13 @@ MediaFormatReader::DrainDecoder(TrackType aTrack)
   decoder.mDecoder->Drain()
     ->Then(mTaskQueue, __func__,
            [self, aTrack, &decoder]
-           (const MediaDataDecoder::DecodedData& aResults) {
+           (MediaDataDecoder::DecodedData&& aResults) {
              decoder.mDrainRequest.Complete();
              DDLOGEX(self.get(), DDLogCategory::Log, "drained", DDNoValue{});
              if (aResults.IsEmpty()) {
                decoder.mDrainState = DrainState::DrainCompleted;
              } else {
-               self->NotifyNewOutput(aTrack, aResults);
+               self->NotifyNewOutput(aTrack, std::move(aResults));
                // Let's see if we have any more data available to drain.
                decoder.mDrainState = DrainState::PartialDrainPending;
              }

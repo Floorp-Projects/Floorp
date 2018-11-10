@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.gfx;
+package org.mozilla.geckoview;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
@@ -24,7 +24,7 @@ public class PanZoomController extends JNIObject {
     private static final int EVENT_SOURCE_MOTION = 1;
     private static final int EVENT_SOURCE_MOUSE = 2;
 
-    private final LayerSession mSession;
+    private final GeckoSession mSession;
     private final Rect mTempRect = new Rect();
     private boolean mAttached;
     private float mPointerScrollFactor = 64.0f;
@@ -149,7 +149,7 @@ public class PanZoomController extends JNIObject {
                                 event.getMetaState(), x, y, event.getButtonState());
     }
 
-    protected PanZoomController(final LayerSession session) {
+    protected PanZoomController(final GeckoSession session) {
         mSession = session;
         enableEventQueue();
     }

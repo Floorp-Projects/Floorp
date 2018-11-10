@@ -261,6 +261,7 @@ nsHttpHandler::nsHttpHandler()
     , mEnableAltSvcOE(false)
     , mEnableOriginExtension(false)
     , mEnableH2Websockets(true)
+    , mDumpHpackTables(false)
     , mSpdySendingChunkSize(ASpdySession::kSendingChunkSize)
     , mSpdySendBufferSize(ASpdySession::kTCPSendBufferSize)
     , mSpdyPushAllowance(131072) // match default pref
@@ -1622,6 +1623,13 @@ nsHttpHandler::PrefsChanged(const char *pref)
         rv = Preferences::GetInt(HTTP_PREF("spdy.send-buffer-size"), &val);
         if (NS_SUCCEEDED(rv))
             mSpdySendBufferSize = (uint32_t) clamped(val, 1500, 0x7fffffff);
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("spdy.enable-hpack-dump"))) {
+        rv = Preferences::GetBool(HTTP_PREF("spdy.enable-hpack-dump"), &cVar);
+        if (NS_SUCCEEDED(rv)) {
+            mDumpHpackTables = cVar;
+        }
     }
 
     // The maximum amount of time to wait for socket transport to be

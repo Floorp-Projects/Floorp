@@ -214,14 +214,12 @@ public:
       writer->mCrypto = CryptoSample();
       RefPtr<EMEDecryptor> self = this;
       mDecoder->Decode(aDecrypted.mSample)
-        ->Then(mTaskQueue, __func__,
-               [self](const DecodedData& aResults) {
+        ->Then(mTaskQueue,
+               __func__,
+               [self](DecodePromise::ResolveOrRejectValue&& aValue) {
                  self->mDecodeRequest.Complete();
-                 self->mDecodePromise.ResolveIfExists(aResults, __func__);
-               },
-               [self](const MediaResult& aError) {
-                 self->mDecodeRequest.Complete();
-                 self->mDecodePromise.RejectIfExists(aError, __func__);
+                 self->mDecodePromise.ResolveOrReject(std::move(aValue),
+                                                      __func__);
                })
         ->Track(mDecodeRequest);
     }
@@ -350,16 +348,14 @@ EMEMediaDataDecoderProxy::Decode(MediaRawData* aSample)
                mKeyRequest.Complete();
 
                MediaDataDecoderProxy::Decode(aSample)
-                 ->Then(mTaskQueue,
-                        __func__,
-                        [self, this](const DecodedData& aResults) {
-                          mDecodeRequest.Complete();
-                          mDecodePromise.Resolve(aResults, __func__);
-                        },
-                        [self, this](const MediaResult& aError) {
-                          mDecodeRequest.Complete();
-                          mDecodePromise.Reject(aError, __func__);
-                        })
+                 ->Then(
+                   mTaskQueue,
+                   __func__,
+                   [self, this](DecodePromise::ResolveOrRejectValue&& aValue) {
+                     mDecodeRequest.Complete();
+                     mDecodePromise.ResolveOrReject(std::move(aValue),
+                                                    __func__);
+                   })
                  ->Track(mDecodeRequest);
              },
              [self]() {

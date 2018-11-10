@@ -153,7 +153,8 @@ html|*.numberbox-input::-moz-number-spin-up,
 html|*.numberbox-input::-moz-number-spin-down {
   -moz-appearance: none;
   min-height: 30px;
-  color: var(--in-content-text-color);
+  /* !important overrides button.css for disabled and default XUL buttons: */
+  color: var(--in-content-text-color) !important;
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
   background-color: var(--in-content-page-background);
