@@ -1,13 +1,13 @@
 import {_ASRouterPreferences, ASRouterPreferences as ASRouterPreferencesSingleton, TEST_PROVIDER} from "lib/ASRouterPreferences.jsm";
 const FAKE_PROVIDERS = [{id: "foo"}, {id: "bar"}];
 
-const PROVIDER_PREF_BRANCH = "browser.newtabpage.activity-stream.asrouter.providers.";
+const PROVIDER_PREF = "browser.newtabpage.activity-stream.asrouter.messageProviders";
 const DEVTOOLS_PREF = "browser.newtabpage.activity-stream.asrouter.devtoolsEnabled";
 const SNIPPETS_USER_PREF = "browser.newtabpage.activity-stream.feeds.snippets";
 const CFR_USER_PREF = "browser.newtabpage.activity-stream.asrouter.userprefs.cfr";
 
 /** NUMBER_OF_PREFS_TO_OBSERVE includes:
- *  1. asrouter.providers. pref branch
+ *  1. asrouter.messageProvider
  *  2. asrouter.devtoolsEnabled
  *  3. browser.newtabpage.activity-stream.feeds.snippets (user preference - snippets)
  *  4. browser.newtabpage.activity-stream.asrouter.userprefs.cfr (user preference - cfr)
@@ -20,34 +20,17 @@ describe("ASRouterPreferences", () => {
   let addObserverStub;
   let stringPrefStub;
   let boolPrefStub;
-
   beforeEach(() => {
     ASRouterPreferences = new _ASRouterPreferences();
 
     sandbox = sinon.sandbox.create();
     addObserverStub = sandbox.stub(global.Services.prefs, "addObserver");
-    stringPrefStub =  sandbox.stub(global.Services.prefs, "getStringPref");
-    FAKE_PROVIDERS.forEach(provider => {
-      stringPrefStub.withArgs(`${PROVIDER_PREF_BRANCH}${provider.id}`).returns(JSON.stringify(provider));
-    });
-    sandbox.stub(global.Services.prefs, "getChildList")
-      .withArgs(PROVIDER_PREF_BRANCH).returns(FAKE_PROVIDERS.map(provider => `${PROVIDER_PREF_BRANCH}${provider.id}`));
-
+    stringPrefStub =  sandbox.stub(global.Services.prefs, "getStringPref").withArgs(PROVIDER_PREF).returns(JSON.stringify(FAKE_PROVIDERS));
     boolPrefStub = sandbox.stub(global.Services.prefs, "getBoolPref").returns(false);
   });
-
   afterEach(() => {
     sandbox.restore();
   });
-
-  function getPrefNameForProvider(providerId) {
-    return `${PROVIDER_PREF_BRANCH}${providerId}`;
-  }
-
-  function setPrefForProvider(providerId, value) {
-    stringPrefStub.withArgs(getPrefNameForProvider(providerId)).returns(JSON.stringify(value));
-  }
-
   it("ASRouterPreferences should be an instance of _ASRouterPreferences", () => {
     assert.instanceOf(ASRouterPreferencesSingleton, _ASRouterPreferences);
   });
@@ -92,7 +75,7 @@ describe("ASRouterPreferences", () => {
       ASRouterPreferences.uninit();
 
       assert.callCount(removeStub, NUMBER_OF_PREFS_TO_OBSERVE);
-      assert.calledWith(removeStub, PROVIDER_PREF_BRANCH);
+      assert.calledWith(removeStub, PROVIDER_PREF);
       assert.calledWith(removeStub, DEVTOOLS_PREF);
       assert.isEmpty(ASRouterPreferences._callbacks);
     });
@@ -103,16 +86,14 @@ describe("ASRouterPreferences", () => {
 
       const result = ASRouterPreferences.providers;
       assert.deepEqual(result, FAKE_PROVIDERS);
-      // once per pref
-      assert.calledTwice(stringPrefStub);
+      assert.calledOnce(stringPrefStub);
     });
     it("should return the cached value the second time .providers is accessed", () => {
       ASRouterPreferences.init();
       const [, secondCall] = [ASRouterPreferences.providers, ASRouterPreferences.providers];
 
       assert.deepEqual(secondCall, FAKE_PROVIDERS);
-      // once per pref
-      assert.calledTwice(stringPrefStub);
+      assert.calledOnce(stringPrefStub);
     });
     it("should just parse the pref each time if ASRouterPreferences hasn't been initialized yet", () => {
       // Intentionally not initialized
@@ -120,13 +101,13 @@ describe("ASRouterPreferences", () => {
 
       assert.deepEqual(firstCall, FAKE_PROVIDERS);
       assert.deepEqual(secondCall, FAKE_PROVIDERS);
-      assert.callCount(stringPrefStub, 4);
+      assert.calledTwice(stringPrefStub);
     });
-    it("should skip the pref without throwing if a pref is not parsable", () => {
-      stringPrefStub.withArgs(`${PROVIDER_PREF_BRANCH}foo`).returns("not json");
+    it("should return [] if the pref was not parsable", () => {
+      stringPrefStub.withArgs(PROVIDER_PREF).returns("not json");
       ASRouterPreferences.init();
 
-      assert.deepEqual(ASRouterPreferences.providers, [{id: "bar"}]);
+      assert.deepEqual(ASRouterPreferences.providers, []);
     });
     it("should include TEST_PROVIDER if devtools is turned on", () => {
       boolPrefStub.withArgs(DEVTOOLS_PREF).returns(true);
@@ -195,21 +176,21 @@ describe("ASRouterPreferences", () => {
   describe("#enableOrDisableProvider", () => {
     it("should enable an existing provider if second param is true", () => {
       const setStub = sandbox.stub(global.Services.prefs, "setStringPref");
-      setPrefForProvider("foo", {id: "foo", enabled: false});
+      stringPrefStub.withArgs(PROVIDER_PREF).returns(JSON.stringify([{id: "foo", enabled: false}, {id: "bar", enabled: false}]));
       assert.isFalse(ASRouterPreferences.providers[0].enabled);
 
       ASRouterPreferences.enableOrDisableProvider("foo", true);
 
-      assert.calledWith(setStub, getPrefNameForProvider("foo"), JSON.stringify({id: "foo", enabled: true}));
+      assert.calledWith(setStub, PROVIDER_PREF, JSON.stringify([{id: "foo", enabled: true}, {id: "bar", enabled: false}]));
     });
     it("should disable an existing provider if second param is false", () => {
       const setStub = sandbox.stub(global.Services.prefs, "setStringPref");
-      setPrefForProvider("foo", {id: "foo", enabled: true});
+      stringPrefStub.withArgs(PROVIDER_PREF).returns(JSON.stringify([{id: "foo", enabled: true}, {id: "bar", enabled: true}]));
       assert.isTrue(ASRouterPreferences.providers[0].enabled);
 
       ASRouterPreferences.enableOrDisableProvider("foo", false);
 
-      assert.calledWith(setStub, getPrefNameForProvider("foo"), JSON.stringify({id: "foo", enabled: false}));
+      assert.calledWith(setStub, PROVIDER_PREF, JSON.stringify([{id: "foo", enabled: false}, {id: "bar", enabled: true}]));
     });
     it("should not throw if the id does not exist", () => {
       assert.doesNotThrow(() => {
@@ -217,7 +198,7 @@ describe("ASRouterPreferences", () => {
       });
     });
     it("should not throw if pref is not parseable", () => {
-      stringPrefStub.withArgs(getPrefNameForProvider("foo")).returns("not valid");
+      stringPrefStub.withArgs(PROVIDER_PREF).returns("not valid");
       assert.doesNotThrow(() => {
         ASRouterPreferences.enableOrDisableProvider("foo", true);
       });
@@ -238,36 +219,29 @@ describe("ASRouterPreferences", () => {
     it("should reset the pref and user prefs", () => {
       const resetStub = sandbox.stub(global.Services.prefs, "clearUserPref");
       ASRouterPreferences.resetProviderPref();
-      FAKE_PROVIDERS.forEach(provider => {
-        assert.calledWith(resetStub, getPrefNameForProvider(provider.id));
-      });
+      assert.calledWith(resetStub, PROVIDER_PREF);
       assert.calledWith(resetStub, SNIPPETS_USER_PREF);
-      assert.calledWith(resetStub, CFR_USER_PREF);
     });
   });
   describe("observer, listeners", () => {
     it("should invalidate .providers when the pref is changed", () => {
-      const testProvider = {id: "newstuff"};
-      const newProviders = [...FAKE_PROVIDERS, testProvider];
+      const testProviders = [{id: "newstuff"}];
 
       ASRouterPreferences.init();
 
       assert.deepEqual(ASRouterPreferences.providers, FAKE_PROVIDERS);
-      stringPrefStub.withArgs(getPrefNameForProvider(testProvider.id)).returns(JSON.stringify(testProvider));
-      global.Services.prefs.getChildList
-        .withArgs(PROVIDER_PREF_BRANCH).returns(newProviders.map(provider => getPrefNameForProvider(provider.id)));
-      ASRouterPreferences.observe(null, null, getPrefNameForProvider(testProvider.id));
+      stringPrefStub.withArgs(PROVIDER_PREF).returns(JSON.stringify(testProviders));
+      ASRouterPreferences.observe(null, null, PROVIDER_PREF);
 
       // Cache should be invalidated so we access the new value of the pref now
-      assert.deepEqual(ASRouterPreferences.providers, newProviders);
+      assert.deepEqual(ASRouterPreferences.providers, testProviders);
     });
     it("should invalidate .devtoolsEnabled and .providers when the pref is changed", () => {
       ASRouterPreferences.init();
 
       assert.isFalse(ASRouterPreferences.devtoolsEnabled);
       boolPrefStub.withArgs(DEVTOOLS_PREF).returns(true);
-      global.Services.prefs.getChildList
-        .withArgs(PROVIDER_PREF_BRANCH).returns([]);
+      stringPrefStub.withArgs(PROVIDER_PREF).returns("[]");
       ASRouterPreferences.observe(null, null, DEVTOOLS_PREF);
 
       // Cache should be invalidated so we access the new value of the pref now
@@ -282,8 +256,8 @@ describe("ASRouterPreferences", () => {
       ASRouterPreferences.addListener(callback1);
       ASRouterPreferences.addListener(callback2);
 
-      ASRouterPreferences.observe(null, null, getPrefNameForProvider("foo"));
-      assert.calledWith(callback1, getPrefNameForProvider("foo"));
+      ASRouterPreferences.observe(null, null, PROVIDER_PREF);
+      assert.calledWith(callback1, PROVIDER_PREF);
 
       ASRouterPreferences.observe(null, null, DEVTOOLS_PREF);
       assert.calledWith(callback2, DEVTOOLS_PREF);
@@ -293,8 +267,8 @@ describe("ASRouterPreferences", () => {
       ASRouterPreferences.init();
       ASRouterPreferences.addListener(callback);
 
-      ASRouterPreferences.observe(null, null, getPrefNameForProvider("foo"));
-      assert.calledWith(callback, getPrefNameForProvider("foo"));
+      ASRouterPreferences.observe(null, null, PROVIDER_PREF);
+      assert.calledWith(callback, PROVIDER_PREF);
 
       callback.reset();
       ASRouterPreferences.removeListener(callback);
