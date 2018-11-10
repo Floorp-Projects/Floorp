@@ -17,6 +17,14 @@ nsHtml5Portability::newLocalNameFromBuffer(char16_t* buf,
   return interner->GetAtom(nsDependentSubstring(buf, buf + length));
 }
 
+nsAtom*
+nsHtml5Portability::newLocalFromLocal(nsAtom* local,
+                                      nsHtml5AtomTable* interner)
+{
+  // FIXME(emilio): This function should be removed.
+  return local;
+}
+
 static bool
 ContainsWhiteSpace(mozilla::Span<char16_t> aSpan)
 {
@@ -84,19 +92,6 @@ nsHtml5Portability::newCharArrayFromString(nsHtml5String string)
   jArray<char16_t, int32_t> arr = jArray<char16_t, int32_t>::newJArray(len);
   string.CopyToBuffer(arr);
   return arr;
-}
-
-nsAtom*
-nsHtml5Portability::newLocalFromLocal(nsAtom* local, nsHtml5AtomTable* interner)
-{
-  MOZ_ASSERT(local, "Atom was null.");
-  MOZ_ASSERT(interner, "Atom table was null");
-  if (!local->IsStatic()) {
-    nsAutoString str;
-    local->ToString(str);
-    local = interner->GetAtom(str);
-  }
-  return local;
 }
 
 bool

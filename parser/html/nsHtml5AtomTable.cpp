@@ -5,24 +5,6 @@
 #include "nsHtml5AtomTable.h"
 #include "nsThreadUtils.h"
 
-nsHtml5AtomEntry::nsHtml5AtomEntry(KeyTypePointer aStr)
-  : nsStringHashKey(aStr)
-  , mAtom(nsDynamicAtom::Create(*aStr))
-{
-}
-
-nsHtml5AtomEntry::nsHtml5AtomEntry(nsHtml5AtomEntry&& aOther)
-  : nsStringHashKey(std::move(aOther))
-  , mAtom(nullptr)
-{
-  MOZ_ASSERT_UNREACHABLE("nsHtml5AtomTable is broken; tried to copy an entry");
-}
-
-nsHtml5AtomEntry::~nsHtml5AtomEntry()
-{
-  nsDynamicAtom::Destroy(mAtom);
-}
-
 nsHtml5AtomTable::nsHtml5AtomTable()
   : mRecentlyUsedParserAtoms{}
 {
@@ -37,27 +19,18 @@ nsAtom*
 nsHtml5AtomTable::GetAtom(const nsAString& aKey)
 {
 #ifdef DEBUG
-  {
-    MOZ_ASSERT(mPermittedLookupEventTarget->IsOnCurrentThread());
-  }
+  MOZ_ASSERT(mPermittedLookupEventTarget->IsOnCurrentThread());
 #endif
 
   uint32_t index = mozilla::HashString(aKey) % RECENTLY_USED_PARSER_ATOMS_SIZE;
-  nsAtom* cachedAtom = mRecentlyUsedParserAtoms[index];
-  if (cachedAtom && cachedAtom->Equals(aKey)) {
-    return cachedAtom;
+  if (nsAtom* atom = mRecentlyUsedParserAtoms[index]) {
+    if (atom->Equals(aKey)) {
+      return atom;
+    }
   }
 
-  nsStaticAtom* atom = NS_GetStaticAtom(aKey);
-  if (atom) {
-    mRecentlyUsedParserAtoms[index] = atom;
-    return atom;
-  }
-  nsHtml5AtomEntry* entry = mTable.PutEntry(aKey);
-  if (!entry) {
-    return nullptr;
-  }
-
-  mRecentlyUsedParserAtoms[index] = entry->GetAtom();
-  return entry->GetAtom();
+  RefPtr<nsAtom> atom = NS_Atomize(aKey);
+  nsAtom* ret = atom.get();
+  mRecentlyUsedParserAtoms[index] = atom.forget();
+  return ret;
 }

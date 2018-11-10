@@ -264,6 +264,8 @@ class Chrome(BrowserSetup):
         if kwargs["browser_channel"] == "dev":
             logger.info("Automatically turning on experimental features for Chrome Dev")
             kwargs["binary_args"].append("--enable-experimental-web-platform-features")
+            # TODO(foolip): remove after unified plan is enabled on Chrome stable
+            kwargs["binary_args"].append("--enable-features=RTCUnifiedPlanByDefault")
 
         # Allow audio autoplay without a user gesture.
         kwargs["binary_args"].append("--autoplay-policy=no-user-gesture-required")
@@ -507,7 +509,8 @@ def setup_wptrunner(venv, prompt=True, install_browser=False, **kwargs):
 
     venv.install_requirements(os.path.join(wptrunner_path, "requirements.txt"))
 
-    kwargs['browser_version'] = setup_cls.browser.version(kwargs.get("binary"))
+    kwargs['browser_version'] = setup_cls.browser.version(binary=kwargs.get("binary"),
+                                                          webdriver_binary=kwargs.get("webdriver_binary"))
     return kwargs
 
 

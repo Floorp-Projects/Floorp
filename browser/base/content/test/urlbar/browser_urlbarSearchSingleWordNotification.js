@@ -26,7 +26,7 @@ function promiseNotification(aBrowser, value, expected, input) {
         notificationObserver.disconnect();
       }
       notificationObserver = new MutationObserver(checkForNotification);
-      notificationObserver.observe(notificationBox, {childList: true});
+      notificationObserver.observe(notificationBox.stack, {childList: true});
     } else {
       setTimeout(() => {
         is(notificationBox.getNotificationWithValue(value), null,

@@ -13,18 +13,22 @@
  * limitations under the License.
  */
 
+#[cfg(feature = "std")]
 #[cfg(test)]
 mod simple_tests {
+    use parser::{Parser, ParserInput, ParserState, WasmDecoder};
+    use primitives::{Operator, SectionCode};
+    use std::fs::{read_dir, File};
     use std::io::prelude::*;
-    use std::fs::{File, read_dir};
     use std::path::PathBuf;
-    use parser::{WasmDecoder, Parser, ParserState, ParserInput, SectionCode, Operator};
-    use validator::{ValidatingParser, ValidatingParserConfig, OperatorValidatorConfig};
+    use validator::{OperatorValidatorConfig, ValidatingParser, ValidatingParserConfig};
 
-    const VALIDATOR_CONFIG: Option<ValidatingParserConfig> =
-        Some(ValidatingParserConfig {
-                 operator_config: OperatorValidatorConfig { enable_threads: true },
-             });
+    const VALIDATOR_CONFIG: Option<ValidatingParserConfig> = Some(ValidatingParserConfig {
+        operator_config: OperatorValidatorConfig {
+            enable_threads: true,
+            enable_reference_types: true,
+        },
+    });
 
     fn read_file_data(path: &PathBuf) -> Vec<u8> {
         println!("Parsing {:?}", path);
@@ -116,13 +120,15 @@ mod simple_tests {
     }
 
     macro_rules! expect_state {
-        ($state:expr, $expected:pat) => ({{
-            let state: &ParserState = $state;
-            match *state {
-                $expected => (),
-                _ => panic!("Unexpected state during testing: {:?}", state)
+        ($state:expr, $expected:pat) => {{
+            {
+                let state: &ParserState = $state;
+                match *state {
+                    $expected => (),
+                    _ => panic!("Unexpected state during testing: {:?}", state),
+                }
             }
-        }});
+        }};
     }
 
     #[test]
@@ -158,13 +164,17 @@ mod simple_tests {
         expect_state!(parser.read(), ParserState::TypeSectionEntry(_));
         expect_state!(parser.read(), ParserState::EndSection);
         expect_state!(parser.read(), ParserState::BeginSection { code: SectionCode::Function, ..});
-        expect_state!(parser.read_with_input(ParserInput::ReadSectionRawData),
-            ParserState::SectionRawData(_));
+        expect_state!(
+            parser.read_with_input(ParserInput::ReadSectionRawData),
+            ParserState::SectionRawData(_)
+        );
         expect_state!(parser.read(), ParserState::EndSection);
         expect_state!(parser.read(), ParserState::BeginSection { code: SectionCode::Code, .. });
         expect_state!(parser.read(), ParserState::BeginFunctionBody { .. });
-        expect_state!(parser.read_with_input(ParserInput::SkipFunctionBody),
-            ParserState::EndSection);
+        expect_state!(
+            parser.read_with_input(ParserInput::SkipFunctionBody),
+            ParserState::EndSection
+        );
         expect_state!(parser.read(), ParserState::EndWasm);
     }
 
@@ -203,13 +213,17 @@ mod simple_tests {
             ParserState::BeginFunctionBody { .. });
         expect_state!(parser.read_with_input(ParserInput::SkipFunctionBody),
             ParserState::BeginFunctionBody { .. });
-        expect_state!(parser.read_with_input(ParserInput::SkipFunctionBody),
-            ParserState::EndSection);
+        expect_state!(
+            parser.read_with_input(ParserInput::SkipFunctionBody),
+            ParserState::EndSection
+        );
         expect_state!(parser.read(),
             ParserState::BeginSection { code: SectionCode::Custom { .. }, ..});
         expect_state!(parser.read_with_input(ParserInput::SkipSection),
             ParserState::BeginSection { code: SectionCode::Custom { .. }, .. });
-        expect_state!(parser.read_with_input(ParserInput::SkipSection),
-            ParserState::EndWasm);
+        expect_state!(
+            parser.read_with_input(ParserInput::SkipSection),
+            ParserState::EndWasm
+        );
     }
 }

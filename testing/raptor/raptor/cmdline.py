@@ -20,6 +20,14 @@ def create_parser(mach_interface=False):
             choices=['firefox', 'chrome', 'geckoview'])
     add_arg('-b', '--binary', dest='binary',
             help="path to the browser executable that we are testing")
+    add_arg('--host', dest='host',
+            help="Hostname from which to serve urls, defaults to 127.0.0.1.",
+            default='127.0.0.1')
+    add_arg('--is-release-build', dest="is_release_build", default=False,
+            action='store_true',
+            help="Whether the build is a release build which requires work arounds "
+            "using MOZ_DISABLE_NONLOCAL_CONNECTIONS to support installing unsigned "
+            "webextensions. Defaults to False.")
     add_arg('--geckoProfile', action="store_true", dest="gecko_profile",
             help=argparse.SUPPRESS)
     add_arg('--geckoProfileInterval', dest='gecko_profile_interval', type=float,
@@ -43,8 +51,6 @@ def create_parser(mach_interface=False):
     add_arg('--page-timeout', dest="page_timeout", type=int,
             help="How long to wait (ms) for one page_cycle to complete, before timing out")
     if not mach_interface:
-        add_arg('--branchName', dest="branch_name", default='',
-                help="Name of the branch we are testing on")
         add_arg('--run-local', dest="run_local", default=False, action="store_true",
                 help="Flag that indicates if raptor is running locally or in production")
         add_arg('--obj-path', dest="obj_path", default=None,

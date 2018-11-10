@@ -912,15 +912,21 @@ ifdef MOZ_USING_SCCACHE
 sccache_wrap := RUSTC_WRAPPER='$(CCACHE)'
 endif
 
+ifdef MOZ_CODE_COVERAGE
+ifeq (gcc,$(CC_TYPE))
+CODE_COVERAGE_GCC=1
+endif
+endif
+
 ifndef MOZ_ASAN
 ifndef MOZ_TSAN
 ifndef MOZ_UBSAN
-ifndef MOZ_CODE_COVERAGE
+ifneq (1,$(CODE_COVERAGE_GCC))
 ifndef FUZZING_INTERFACES
 # Pass the compilers and flags in use to cargo for use in build scripts.
 # * Don't do this for ASAN/TSAN builds because we don't pass our custom linker (see below)
 #   which will muck things up.
-# * Don't do this for code coverage builds because the way rustc invokes the linker doesn't
+# * Don't do this for GCC code coverage builds because the way rustc invokes the linker doesn't
 #   work with GCC 6: https://bugzilla.mozilla.org/show_bug.cgi?id=1477305
 #
 # We don't pass HOST_{CC,CXX} down in any form because our host value might not match

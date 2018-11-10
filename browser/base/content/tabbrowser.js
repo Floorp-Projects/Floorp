@@ -654,7 +654,14 @@ window._gBrowser = {
   },
 
   getNotificationBox(aBrowser) {
-    return this.getBrowserContainer(aBrowser).firstElementChild;
+    let browser = aBrowser || this.selectedBrowser;
+    if (!browser._notificationBox) {
+      browser._notificationBox = new MozElements.NotificationBox(element => {
+        element.setAttribute("notificationside", "top");
+        this.getBrowserContainer(browser).prepend(element);
+      });
+    }
+    return browser._notificationBox;
   },
 
   getTabModalPromptBox(aBrowser) {

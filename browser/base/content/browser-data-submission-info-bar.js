@@ -15,11 +15,6 @@ var gDataNotificationInfoBar = {
 
   _DATA_REPORTING_NOTIFICATION: "data-reporting",
 
-  get _notificationBox() {
-    delete this._notificationBox;
-    return this._notificationBox = document.getElementById("global-notificationbox");
-  },
-
   get _log() {
     let Log = ChromeUtils.import("resource://gre/modules/Log.jsm", {}).Log;
     delete this._log;
@@ -39,7 +34,7 @@ var gDataNotificationInfoBar = {
   },
 
   _getDataReportingNotification(name = this._DATA_REPORTING_NOTIFICATION) {
-    return this._notificationBox.getNotificationWithValue(name);
+    return gNotificationBox.getNotificationWithValue(name);
   },
 
   _displayDataPolicyInfoBar(request) {
@@ -68,11 +63,11 @@ var gDataNotificationInfoBar = {
     }];
 
     this._log.info("Creating data reporting policy notification.");
-    this._notificationBox.appendNotification(
+    gNotificationBox.appendNotification(
       message,
       this._DATA_REPORTING_NOTIFICATION,
       null,
-      this._notificationBox.PRIORITY_INFO_HIGH,
+      gNotificationBox.PRIORITY_INFO_HIGH,
       buttons,
       event => {
         if (event == "removed") {

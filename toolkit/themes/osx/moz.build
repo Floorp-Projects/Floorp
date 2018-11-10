@@ -6,4 +6,3 @@
 
 DIRS += ['global', 'mozapps']
 
-MOCHITEST_CHROME_MANIFESTS += ['mochitests/chrome.ini']

@@ -98,9 +98,8 @@ function ensurePortalTab(win) {
 }
 
 function ensurePortalNotification(win) {
-  let notificationBox =
-    win.document.getElementById("high-priority-global-notificationbox");
-  let notification = notificationBox.getNotificationWithValue(PORTAL_NOTIFICATION_VALUE);
+  let notification = win.gHighPriorityNotificationBox.getNotificationWithValue(
+                                                  PORTAL_NOTIFICATION_VALUE);
   isnot(notification, null,
     "There should be a captive portal notification in the window.");
   return notification;
@@ -122,9 +121,8 @@ function ensureNoPortalTab(win) {
 }
 
 function ensureNoPortalNotification(win) {
-  let notificationBox =
-    win.document.getElementById("high-priority-global-notificationbox");
-  is(notificationBox.getNotificationWithValue(PORTAL_NOTIFICATION_VALUE), null,
+  is(win.gHighPriorityNotificationBox
+    .getNotificationWithValue(PORTAL_NOTIFICATION_VALUE), null,
     "There should be no captive portal notification in the window.");
 }
 
