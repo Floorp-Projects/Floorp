@@ -201,28 +201,6 @@ def bootstrap(topsrcdir, mozilla_dir=None):
                 mozversioncontrol.MissingVCSTool):
             return None
 
-    def telemetry_handler(context, data):
-        # We have not opted-in to telemetry
-        if not context.settings.build.telemetry:
-            return
-
-        telemetry_dir = os.path.join(get_state_dir()[0], 'telemetry')
-        try:
-            os.mkdir(telemetry_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-        outgoing_dir = os.path.join(telemetry_dir, 'outgoing')
-        try:
-            os.mkdir(outgoing_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-
-        with open(os.path.join(outgoing_dir, str(uuid.uuid4()) + '.json'),
-                  'w') as f:
-            json.dump(data, f, sort_keys=True)
-
     def should_skip_dispatch(context, handler):
         # The user is performing a maintenance command.
         if handler.name in ('bootstrap', 'doctor', 'mach-commands', 'vcs-setup',
@@ -260,10 +238,27 @@ def bootstrap(topsrcdir, mozilla_dir=None):
             substs = {}
 
         # We gather telemetry for every operation...
-        gather_telemetry(command=handler.name, success=(result == 0),
-                         start_time=start_time, end_time=end_time,
-                         mach_context=context, substs=substs,
-                         paths=[instance.topsrcdir, instance.topobjdir])
+        data = gather_telemetry(command=handler.name, success=(result == 0),
+                                start_time=start_time, end_time=end_time,
+                                mach_context=context, substs=substs,
+                                paths=[instance.topsrcdir, instance.topobjdir])
+        if data:
+            telemetry_dir = os.path.join(get_state_dir()[0], 'telemetry')
+            try:
+                os.mkdir(telemetry_dir)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
+            outgoing_dir = os.path.join(telemetry_dir, 'outgoing')
+            try:
+                os.mkdir(outgoing_dir)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
+
+            with open(os.path.join(outgoing_dir, str(uuid.uuid4()) + '.json'),
+                      'w') as f:
+                json.dump(data, f, sort_keys=True)
 
         # Never submit data when running in automation.
         if 'MOZ_AUTOMATION' in os.environ or 'TASK_ID' in os.environ:
@@ -306,9 +301,6 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
         if key == 'topdir':
             return topsrcdir
-
-        if key == 'telemetry_handler':
-            return telemetry_handler
 
         if key == 'post_dispatch_handler':
             return post_dispatch_handler
