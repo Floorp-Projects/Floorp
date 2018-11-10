@@ -27,7 +27,7 @@ BENCHMARK_REVISION = '2720cdc790828952964524bb44ce8b4c14670e90'
 
 
 class RaptorRunner(MozbuildObject):
-    def run_test(self, raptor_args, app=None):
+    def run_test(self, raptor_args, kwargs):
         """
         We want to do couple of things before running raptor
         1. Clone mozharness
@@ -35,26 +35,28 @@ class RaptorRunner(MozbuildObject):
         3. Run mozharness
         """
 
-        self.init_variables(raptor_args, app=app)
+        self.init_variables(raptor_args, kwargs)
         self.setup_benchmarks()
         self.make_config()
         self.write_config()
         self.make_args()
         return self.run_mozharness()
 
-    def init_variables(self, raptor_args, app=None):
+    def init_variables(self, raptor_args, kwargs):
         self.raptor_dir = os.path.join(self.topsrcdir, 'testing', 'raptor')
         self.mozharness_dir = os.path.join(self.topsrcdir, 'testing',
                                            'mozharness')
         self.config_file_path = os.path.join(self._topobjdir, 'testing',
                                              'raptor-in_tree_conf.json')
-        self.binary_path = self.get_binary_path() if app != 'geckoview' else None
+        self.binary_path = self.get_binary_path() if kwargs['app'] != 'geckoview' else None
         self.virtualenv_script = os.path.join(self.topsrcdir, 'third_party', 'python',
                                               'virtualenv', 'virtualenv.py')
         self.virtualenv_path = os.path.join(self._topobjdir, 'testing',
                                             'raptor-venv')
         self.python_interp = sys.executable
         self.raptor_args = raptor_args
+        self.host = kwargs['host']
+        self.is_release_build = kwargs['is_release_build']
 
     def setup_benchmarks(self):
         """Make sure benchmarks are linked to the proper location in the objdir.
@@ -129,7 +131,9 @@ class RaptorRunner(MozbuildObject):
             'python3_manifest': {
                 'win32': 'python3.manifest',
                 'win64': 'python3_x64.manifest',
-            }
+            },
+            'host': self.host,
+            'is_release_build': self.is_release_build,
         }
 
     def make_args(self):
@@ -183,7 +187,7 @@ class MachRaptor(MachCommandBase):
         raptor = self._spawn(RaptorRunner)
 
         try:
-            return raptor.run_test(sys.argv[2:], app=kwargs['app'])
+            return raptor.run_test(sys.argv[2:], kwargs)
         except Exception as e:
             print(str(e))
             return 1
