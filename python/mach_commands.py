@@ -40,8 +40,11 @@ class MachCommands(MachCommandBase):
              description='Run Python.')
     @CommandArgument('--no-virtualenv', action='store_true',
                      help='Do not set up a virtualenv')
+    @CommandArgument('--exec-file',
+                     default=None,
+                     help='Execute this Python file using `execfile`')
     @CommandArgument('args', nargs=argparse.REMAINDER)
-    def python(self, no_virtualenv, args):
+    def python(self, no_virtualenv, exec_file, args):
         # Avoid logging the command
         self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
 
@@ -56,6 +59,10 @@ class MachCommands(MachCommandBase):
         else:
             self._activate_virtualenv()
             python_path = self.virtualenv_manager.python_path
+
+        if exec_file:
+            execfile(exec_file)
+            return 0
 
         return self.run_process([python_path] + args,
                                 pass_thru=True,  # Allow user to run Python interactively.

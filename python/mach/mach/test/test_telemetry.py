@@ -24,7 +24,10 @@ def run_mach(tmpdir):
     # a machrc there.
     update_or_create_build_telemetry_config(unicode(tmpdir.join('machrc')))
     env = dict(os.environ)
-    env['MOZBUILD_STATE_PATH'] = str(tmpdir)
+    env[b'MOZBUILD_STATE_PATH'] = str(tmpdir)
+    env[b'MACH_TELEMETRY_NO_SUBMIT'] = b'1'
+    # Let whatever mach command we invoke from tests believe it's the main command.
+    del env['MACH_MAIN_PID']
     mach = os.path.join(buildconfig.topsrcdir, 'mach')
 
     def run(*args, **kwargs):
@@ -118,6 +121,26 @@ def test_path_filtering_other_cwd(run_mach, tmpdir):
         'other',
     ]
     assert d['argv'] == expected
+
+
+def test_mach_invoke_recursive(run_mach):
+    data = run_mach('python',
+                    os.path.join(os.path.dirname(__file__), 'invoke_mach_command.py'),
+                    os.path.join(buildconfig.topsrcdir, 'mach'),
+                    'uuid')
+    assert len(data) == 1
+    d = data[0]
+    assert d['command'] == 'python'
+
+
+def test_registrar_dispatch(run_mach):
+    # Use --exec-file so this script can use Registrar.dispatch to dispatch a mach command
+    # from within the same interpreter as the `mach python` command.
+    data = run_mach('python', '--exec-file',
+                    os.path.join(os.path.dirname(__file__), 'registrar_dispatch.py'))
+    assert len(data) == 1
+    d = data[0]
+    assert d['command'] == 'python'
 
 
 if __name__ == '__main__':
