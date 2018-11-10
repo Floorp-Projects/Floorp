@@ -586,6 +586,12 @@ def target_tasks_staging_release(full_task_graph, parameters, graph_config):
     def filter(task):
         if not task.attributes.get('shipping_product'):
             return False
+        if (parameters['release_type'].startswith('esr')
+                and 'android' in task.attributes.get('build_platform', '')):
+            return False
+        if (parameters['release_type'] != 'beta'
+                and 'devedition' in task.attributes.get('build_platform', '')):
+            return False
         if task.attributes.get('shipping_phase') == 'build':
             return True
         return False
@@ -598,13 +604,29 @@ def target_tasks_beta_simulation(full_task_graph, parameters, graph_config):
     """
     Select builds that would run on mozilla-beta.
     """
+    project_by_release = {
+        'nightly': 'mozilla-central',
+        'beta': 'mozilla-beta',
+        'release': 'mozilla-release',
+        'esr60': 'mozilla-esr60',
+    }
+    target_project = project_by_release.get(parameters['release_type'])
+    if target_project is None:
+        raise Exception('Unknown or unspecified release type in simulation run.')
 
-    def filter_for_beta(task):
+    def filter_for_target_project(task):
         """Filter tasks by project.  Optionally enable nightlies."""
         run_on_projects = set(task.attributes.get('run_on_projects', []))
-        return match_run_on_projects('mozilla-beta', run_on_projects)
+        return match_run_on_projects(target_project, run_on_projects)
+
+    def filter_out_android_on_esr(task):
+        if (parameters['release_type'].startswith('esr')
+                and 'android' in task.attributes.get('build_platform', '')):
+            return False
+        return True
 
     return [l for l, t in full_task_graph.tasks.iteritems()
             if filter_release_tasks(t, parameters)
             and filter_out_cron(t, parameters)
-            and filter_for_beta(t)]
+            and filter_for_target_project(t)
+            and filter_out_android_on_esr(t)]

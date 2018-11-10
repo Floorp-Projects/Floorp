@@ -6,15 +6,9 @@
  * The origin of this WebIDL file is
  *   https://www.w3.org/TR/payment-request/#paymentrequest-interface
  */
-enum BasicCardType {
-  "credit",
-  "debit",
-  "prepaid"
-};
 
 dictionary BasicCardRequest {
   sequence<DOMString> supportedNetworks;
-  sequence<BasicCardType> supportedTypes;
 };
 
 dictionary BasicCardResponse {

@@ -1525,7 +1525,6 @@ pub struct Renderer {
 
     pub gpu_glyph_renderer: GpuGlyphRenderer,
 
-    max_texture_size: u32,
     max_recorded_profiles: usize,
 
     clear_color: Option<ColorF>,
@@ -1669,25 +1668,23 @@ impl Renderer {
             device.supports_extension("GL_ARB_blend_func_extended") &&
             device.supports_extension("GL_ARB_explicit_attrib_location");
 
-        let device_max_size = device.max_texture_size();
         // 512 is the minimum that the texture cache can work with.
-        // Broken GL contexts can return a max texture size of zero (See #1260). Better to
-        // gracefully fail now than panic as soon as a texture is allocated.
-        let min_texture_size = 512;
-        if device_max_size < min_texture_size {
+        const MIN_TEXTURE_SIZE: u32 = 512;
+        if let Some(user_limit) = options.max_texture_size {
+            assert!(user_limit >= MIN_TEXTURE_SIZE);
+            device.clamp_max_texture_size(user_limit);
+        }
+        if device.max_texture_size() < MIN_TEXTURE_SIZE {
+            // Broken GL contexts can return a max texture size of zero (See #1260).
+            // Better to gracefully fail now than panic as soon as a texture is allocated.
             error!(
                 "Device reporting insufficient max texture size ({})",
-                device_max_size
+                device.max_texture_size()
             );
             return Err(RendererError::MaxTextureSize);
         }
-        let max_device_size = cmp::max(
-            cmp::min(
-                device_max_size,
-                options.max_texture_size.unwrap_or(device_max_size),
-            ),
-            min_texture_size,
-        );
+        let max_texture_size = device.max_texture_size();
+        let max_texture_layers = device.max_texture_layers();
 
         register_thread_with_profiler("Compositor".to_owned());
 
@@ -1936,7 +1933,11 @@ impl Renderer {
                 thread_listener.thread_started(&rb_thread_name);
             }
 
-            let texture_cache = TextureCache::new(max_device_size);
+            let texture_cache = TextureCache::new(
+                max_texture_size,
+                max_texture_layers,
+            );
+
             let resource_cache = ResourceCache::new(
                 texture_cache,
                 glyph_rasterizer,
@@ -1992,7 +1993,6 @@ impl Renderer {
             new_scene_indicator: ChangeIndicator::new(),
             #[cfg(feature = "debug_renderer")]
             slow_frame_indicator: ChangeIndicator::new(),
-            max_texture_size: max_device_size,
             max_recorded_profiles: options.max_recorded_profiles,
             clear_color: options.clear_color,
             enable_clear_scissor: options.enable_clear_scissor,
@@ -2041,7 +2041,7 @@ impl Renderer {
     }
 
     pub fn get_max_texture_size(&self) -> u32 {
-        self.max_texture_size
+        self.device.max_texture_size()
     }
 
     pub fn get_graphics_api_info(&self) -> GraphicsApiInfo {
@@ -2751,7 +2751,7 @@ impl Renderer {
                 (count + list.blocks.len(), cmp::max(height, list.height))
             });
 
-        if max_requested_height > self.max_texture_size && !self.gpu_cache_overflow {
+        if max_requested_height > self.get_max_texture_size() && !self.gpu_cache_overflow {
             self.gpu_cache_overflow = true;
             self.renderer_errors.push(RendererError::MaxTextureSize);
         }

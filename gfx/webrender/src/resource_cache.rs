@@ -2037,8 +2037,10 @@ impl ResourceCache {
                 self.cached_glyph_dimensions.clear();
                 self.cached_images.clear();
                 self.cached_render_tasks.clear();
-                let max_texture_size = self.texture_cache.max_texture_size();
-                self.texture_cache = TextureCache::new(max_texture_size);
+                self.texture_cache = TextureCache::new(
+                    self.texture_cache.max_texture_size(),
+                    self.texture_cache.max_texture_layers(),
+                );
             }
         }
 
