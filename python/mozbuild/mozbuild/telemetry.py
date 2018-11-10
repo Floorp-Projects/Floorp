@@ -265,13 +265,10 @@ def gather_telemetry(command='', success=False, start_time=None, end_time=None,
     try:
         # Validate against the schema.
         schema(data)
+        return data
     except MultipleInvalid as exc:
         msg = ['Build telemetry is invalid:']
         for error in exc.errors:
             msg.append(str(error))
         print('\n'.join(msg) + '\n' + pprint.pformat(data))
-
-    telemetry_handler = getattr(mach_context,
-                                'telemetry_handler', None)
-    if telemetry_handler:
-        telemetry_handler(mach_context, data)
+    return None
