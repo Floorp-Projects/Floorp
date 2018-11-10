@@ -371,6 +371,18 @@ public:
     mNHooks = aNumHooks;
   }
 
+  /** Force a specific configuration for testing purposes. NOT to be used in
+      production code! **/
+  void TestOnlyDetourInit(const wchar_t* aModuleName, DetourFlags aFlags,
+                          int aNumHooks = 0)
+  {
+    Init(aModuleName, aNumHooks);
+
+    if (!mDetourPatcher.Initialized()) {
+      mDetourPatcher.Init(aFlags, mNHooks);
+    }
+  }
+
   void Clear()
   {
     if (!mModule) {
@@ -455,7 +467,16 @@ private:
 #endif
 
     if (!mDetourPatcher.Initialized()) {
-      mDetourPatcher.Init(mNHooks);
+      DetourFlags flags = DetourFlags::eDefault;
+#if defined(_M_X64)
+      if (mModule == ::GetModuleHandleW(L"ntdll.dll")) {
+        // NTDLL hooks should attempt to use a 10-byte patch because some
+        // injected DLLs do the same and interfere with our stuff.
+        flags |= DetourFlags::eEnable10BytePatch;
+      }
+#endif // defined(_M_X64)
+
+      mDetourPatcher.Init(flags, mNHooks);
     }
 
     return mDetourPatcher.AddHook(aProc, aHookDest, aOrigFunc);

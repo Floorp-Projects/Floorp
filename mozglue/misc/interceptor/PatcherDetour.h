@@ -11,6 +11,7 @@
 #include "mozilla/interceptor/Trampoline.h"
 
 #include "mozilla/ScopeExit.h"
+#include "mozilla/TypedEnumBits.h"
 
 #define COPY_CODES(NBYTES)  do {    \
   tramp.CopyFrom(origBytes.GetAddress(), NBYTES); \
@@ -20,15 +21,26 @@
 namespace mozilla {
 namespace interceptor {
 
+enum class DetourFlags : uint32_t
+{
+  eDefault = 0,
+  eEnable10BytePatch = 1, // Allow 10-byte patches when conditions allow
+  eTestOnlyForce10BytePatch = 3, // Force 10-byte patches at all times (testing only)
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DetourFlags)
+
 template <typename VMPolicy>
 class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy>
 {
   typedef typename VMPolicy::MMPolicyT MMPolicyT;
+  DetourFlags mFlags;
 
 public:
   template <typename... Args>
   explicit WindowsDllDetourPatcher(Args... aArgs)
     : WindowsDllPatcherBase<VMPolicy>(std::forward<Args>(aArgs)...)
+    , mFlags(DetourFlags::eDefault)
   {
   }
 
@@ -116,25 +128,19 @@ public:
       if (!origBytes) {
         continue;
       }
+
+      origBytes.Commit();
 #elif defined(_M_X64)
-      // Ensure the MOV R11 from CreateTrampoline is where we expect it to be.
-      MOZ_ASSERT(opcode1 == 0x49);
-      if (opcode1 != 0x49) {
-        continue;
-      }
-
-      Maybe<uint8_t> maybeOpcode2 = origBytes.ReadByte();
-      if (!maybeOpcode2) {
-        continue;
-      }
-
-      uint8_t opcode2 = maybeOpcode2.value();
-      if (opcode2 != 0xBB) {
-        continue;
-      }
-
-      origBytes.WritePointer(tramp.GetCurrentRemoteAddress());
-      if (!origBytes) {
+      if (opcode1 == 0x49) {
+        if (!Clear13BytePatch(origBytes, tramp.GetCurrentRemoteAddress())) {
+          continue;
+        }
+      } else if (opcode1 == 0xB8) {
+        if (!Clear10BytePatch(origBytes)) {
+          continue;
+        }
+      } else {
+        MOZ_ASSERT_UNREACHABLE("Unrecognized patch!");
         continue;
       }
 #elif defined(_M_ARM64)
@@ -142,18 +148,84 @@ public:
 #else
 #error "Unknown processor type"
 #endif
-
-      origBytes.Commit();
     }
 
     this->mVMPolicy.Clear();
   }
 
-  void Init(int aNumHooks = 0)
+  bool Clear13BytePatch(WritableTargetFunction<MMPolicyT>& aOrigBytes,
+                        const uintptr_t aResetToAddress)
+  {
+    Maybe<uint8_t> maybeOpcode2 = aOrigBytes.ReadByte();
+    if (!maybeOpcode2) {
+      return false;
+    }
+
+    uint8_t opcode2 = maybeOpcode2.value();
+    if (opcode2 != 0xBB) {
+      return false;
+    }
+
+    aOrigBytes.WritePointer(aResetToAddress);
+    if (!aOrigBytes) {
+      return false;
+    }
+
+    return aOrigBytes.Commit();
+  }
+
+  bool Clear10BytePatch(WritableTargetFunction<MMPolicyT>& aOrigBytes)
+  {
+    Maybe<uint32_t> maybePtr32 = aOrigBytes.ReadLong();
+    if (!maybePtr32) {
+      return false;
+    }
+
+    uint32_t ptr32 = maybePtr32.value();
+    // We expect the high bit to be clear
+    if (ptr32 & 0x80000000) {
+      return false;
+    }
+
+    uintptr_t trampPtr = ptr32;
+
+    // trampPtr points to an intermediate trampoline that contains a 13-byte
+    // patch. We back up by sizeof(uintptr_t) so that we can access the pointer
+    // to the stub trampoline.
+    WritableTargetFunction<MMPolicyT> writableIntermediate(this->mVMPolicy,
+        trampPtr - sizeof(uintptr_t), 13 + sizeof(uintptr_t));
+    if (!writableIntermediate) {
+      return false;
+    }
+
+    Maybe<uintptr_t> stubTramp = writableIntermediate.ReadEncodedPtr();
+    if (!stubTramp || !stubTramp.value()) {
+      return false;
+    }
+
+    Maybe<uint8_t> maybeOpcode1 = writableIntermediate.ReadByte();
+    if (!maybeOpcode1) {
+      return false;
+    }
+
+    // We expect this opcode to be the beginning of our normal mov r11, ptr
+    // patch sequence.
+    uint8_t opcode1 = maybeOpcode1.value();
+    if (opcode1 != 0x49) {
+      return false;
+    }
+
+    // Now we can just delegate the rest to our normal 13-byte patch clearing.
+    return Clear13BytePatch(writableIntermediate, stubTramp.value());
+  }
+
+  void Init(DetourFlags aFlags = DetourFlags::eDefault, int aNumHooks = 0)
   {
     if (Initialized()) {
       return;
     }
+
+    mFlags = aFlags;
 
     if (aNumHooks == 0) {
       // Win32 allocates VM addresses at a 64KiB granularity, so by default we
@@ -162,7 +234,12 @@ public:
       aNumHooks = this->mVMPolicy.GetAllocGranularity() / kHookSize;
     }
 
-    this->mVMPolicy.Reserve(aNumHooks);
+    ReservationFlags resFlags = ReservationFlags::eDefault;
+    if (aFlags & DetourFlags::eEnable10BytePatch) {
+      resFlags |= ReservationFlags::eForceFirst2GB;
+    }
+
+    this->mVMPolicy.Reserve(aNumHooks, resFlags);
   }
 
   bool Initialized() const
@@ -545,8 +622,15 @@ protected:
     }
 #elif defined(_M_X64)
     bool foundJmp = false;
+    // |use10BytePatch| should always default to |false| in production. It is
+    // not set to true unless we detect that a 10-byte patch is necessary.
+    // OTOH, for testing purposes, if we want to force a 10-byte patch, we
+    // always initialize |use10BytePatch| to |true|.
+    bool use10BytePatch = (mFlags & DetourFlags::eTestOnlyForce10BytePatch) ==
+                          DetourFlags::eTestOnlyForce10BytePatch;
+    const uint32_t bytesRequired = use10BytePatch ? 10 : 13;
 
-    while (origBytes.GetOffset() < 13) {
+    while (origBytes.GetOffset() < bytesRequired) {
       // If we found JMP 32bit offset, we require that the next bytes must
       // be NOP or INT3.  There is no reason to copy them.
       // TODO: This used to trigger for Je as well.  Now that I allow
@@ -560,6 +644,15 @@ protected:
           ++origBytes;
           continue;
         }
+
+        // If our trampoline space is located in the lowest 2GB, we can do a ten
+        // byte patch instead of a thirteen byte patch.
+        if (this->mVMPolicy.IsTrampolineSpaceInLowest2GB() &&
+            origBytes.GetOffset() >= 10) {
+          use10BytePatch = true;
+          break;
+        }
+
         MOZ_ASSERT_UNREACHABLE("Opcode sequence includes commands after JMP");
         return;
       }
@@ -950,6 +1043,18 @@ protected:
         } else if ((origBytes[1] & (kMaskMod|kMaskReg)) == BuildModRmByte(kModReg, 2, 0)) {
           // CALL reg (ff nn)
           COPY_CODES(2);
+        } else if (((origBytes[1] & kMaskReg) >> kRegFieldShift) == 4) {
+          // JMP r/m
+          int len = CountModRmSib(origBytes + 1);
+          if (len < 0) {
+            // RIP-relative not yet supported
+            MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
+            return;
+          }
+
+          COPY_CODES(len + 1);
+
+          foundJmp = true;
         } else {
           MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
@@ -1005,8 +1110,8 @@ protected:
 #endif
 
     // The trampoline is now complete.
-    *aOutTramp = tramp.EndExecutableCode();
-    if (!(*aOutTramp)) {
+    void* trampPtr = tramp.EndExecutableCode();
+    if (!trampPtr) {
       return;
     }
 
@@ -1020,18 +1125,69 @@ protected:
     target.WriteByte(0xe9); //jmp
     target.WriteDisp32(aDest); // hook displacement
 #elif defined(_M_X64)
-    // mov r11, address
-    target.WriteByte(0x49);
-    target.WriteByte(0xbb);
-    target.WritePointer(aDest);
+    if (use10BytePatch) {
+      // Okay, now we can write the actual tramp.
+      // Note: Even if the target function is also below 2GB, we still use an
+      // intermediary trampoline so that we consistently have a 64-bit pointer
+      // that we can use to reset the trampoline upon interceptor shutdown.
+      Trampoline<MMPolicyT> callTramp(this->mVMPolicy.GetNextTrampoline());
+      if (!callTramp) {
+        return;
+      }
 
-    // jmp r11
-    target.WriteByte(0x41);
-    target.WriteByte(0xff);
-    target.WriteByte(0xe3);
+      // Write a null instance so that Clear() does not consider this tramp to
+      // be a normal tramp to be torn down.
+      callTramp.WriteEncodedPointer(nullptr);
+      // Use the second pointer slot to store a pointer to the primary tramp
+      callTramp.WriteEncodedPointer(trampPtr);
+      callTramp.StartExecutableCode();
+
+      // mov r11, address
+      callTramp.WriteByte(0x49);
+      callTramp.WriteByte(0xbb);
+      callTramp.WritePointer(aDest);
+
+      // jmp r11
+      callTramp.WriteByte(0x41);
+      callTramp.WriteByte(0xff);
+      callTramp.WriteByte(0xe3);
+
+      void* callTrampStart = callTramp.EndExecutableCode();
+      if (!callTrampStart) {
+        return;
+      }
+
+      target.WriteByte(0xB8); // MOV EAX, IMM32
+
+      // Assert that the topmost 33 bits are 0
+      MOZ_ASSERT(!(reinterpret_cast<uintptr_t>(callTrampStart) & (~0x7FFFFFFFULL)));
+
+      target.WriteLong(static_cast<uint32_t>(reinterpret_cast<uintptr_t>(callTrampStart) & 0x7FFFFFFFU));
+      target.WriteByte(0x48); // REX.W
+      target.WriteByte(0x63); // MOVSXD r64, r/m32
+      // dest: rax, src: eax
+      target.WriteByte(BuildModRmByte(kModReg, kRegAx, kRegAx));
+      target.WriteByte(0xFF); // JMP /4
+      target.WriteByte(BuildModRmByte(kModReg, 4, kRegAx)); // rax
+    } else {
+      // mov r11, address
+      target.WriteByte(0x49);
+      target.WriteByte(0xbb);
+      target.WritePointer(aDest);
+
+      // jmp r11
+      target.WriteByte(0x41);
+      target.WriteByte(0xff);
+      target.WriteByte(0xe3);
+    }
 #endif
 
-    target.Commit();
+    if (!target.Commit()) {
+      return;
+    }
+
+    // Output the trampoline, thus signalling that this call was a success
+    *aOutTramp = trampPtr;
   }
 };
 
