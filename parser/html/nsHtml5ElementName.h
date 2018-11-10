@@ -76,8 +76,8 @@ public:
   static const int32_t OPTIONAL_END_TAG = (1 << 23);
 
 private:
-  nsAtom* name;
-  nsAtom* camelCaseName;
+  RefPtr<nsAtom> name;
+  RefPtr<nsAtom> camelCaseName;
   mozilla::dom::HTMLContentCreatorFunction htmlCreator;
   mozilla::dom::SVGContentCreatorFunction svgCreator;
 public:

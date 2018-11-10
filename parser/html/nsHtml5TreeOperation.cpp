@@ -102,9 +102,19 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation()
     case eTreeOpCreateSVGElementNetwork:
     case eTreeOpCreateSVGElementNotNetwork:
     case eTreeOpCreateMathMLElement:
+      mTwo.atom->Release();
       delete mThree.attributes;
       break;
+    case eTreeOpAddError:
+      if (mThree.atom) {
+        mThree.atom->Release();
+      }
+      if (mFour.atom) {
+        mFour.atom->Release();
+      }
+      break;
     case eTreeOpAppendDoctypeToDocument:
+      mOne.atom->Release();
       delete mTwo.stringPair;
       break;
     case eTreeOpFosterParentText:
@@ -303,13 +313,9 @@ nsHtml5TreeOperation::AddAttributes(nsIContent* aNode,
   int32_t len = aAttributes->getLength();
   for (int32_t i = len; i > 0;) {
     --i;
-    // prefix doesn't need regetting. it is always null or a static atom
-    // local name is never null
-    RefPtr<nsAtom> localName = Reget(aAttributes->getLocalNameNoBoundsCheck(i));
+    nsAtom* localName = aAttributes->getLocalNameNoBoundsCheck(i);
     int32_t nsuri = aAttributes->getURINoBoundsCheck(i);
     if (!node->HasAttr(nsuri, localName)) {
-      // prefix doesn't need regetting. it is always null or a static atom
-      // local name is never null
       nsString value; // Not Auto, because using it to hold nsStringBuffer*
       aAttributes->getValueNoBoundsCheck(i).ToString(value);
       node->SetAttr(
@@ -333,11 +339,8 @@ nsHtml5TreeOperation::SetHTMLElementAttributes(
     if (klass) {
       aElement->SetSingleClassFromParser(klass);
     } else {
-      // prefix doesn't need regetting. it is always null or a static atom
-      // local name is never null
-      RefPtr<nsAtom> localName =
-        Reget(aAttributes->getLocalNameNoBoundsCheck(i));
-      RefPtr<nsAtom> prefix = aAttributes->getPrefixNoBoundsCheck(i);
+      nsAtom* localName = aAttributes->getLocalNameNoBoundsCheck(i);
+      nsAtom* prefix = aAttributes->getPrefixNoBoundsCheck(i);
       int32_t nsuri = aAttributes->getURINoBoundsCheck(i);
 
       nsString value; // Not Auto, because using it to hold nsStringBuffer*
@@ -563,11 +566,8 @@ nsHtml5TreeOperation::CreateSVGElement(
     if (klass) {
       newContent->SetSingleClassFromParser(klass);
     } else {
-      // prefix doesn't need regetting. it is always null or a static atom
-      // local name is never null
-      RefPtr<nsAtom> localName =
-        Reget(aAttributes->getLocalNameNoBoundsCheck(i));
-      RefPtr<nsAtom> prefix = aAttributes->getPrefixNoBoundsCheck(i);
+      nsAtom* localName = aAttributes->getLocalNameNoBoundsCheck(i);
+      nsAtom* prefix = aAttributes->getPrefixNoBoundsCheck(i);
       int32_t nsuri = aAttributes->getURINoBoundsCheck(i);
 
       nsString value; // Not Auto, because using it to hold nsStringBuffer*
@@ -617,11 +617,8 @@ nsHtml5TreeOperation::CreateMathMLElement(nsAtom* aName,
     if (klass) {
       newContent->SetSingleClassFromParser(klass);
     } else {
-      // prefix doesn't need regetting. it is always null or a static atom
-      // local name is never null
-      RefPtr<nsAtom> localName =
-        Reget(aAttributes->getLocalNameNoBoundsCheck(i));
-      RefPtr<nsAtom> prefix = aAttributes->getPrefixNoBoundsCheck(i);
+      nsAtom* localName = aAttributes->getLocalNameNoBoundsCheck(i);
+      nsAtom* prefix = aAttributes->getPrefixNoBoundsCheck(i);
       int32_t nsuri = aAttributes->getURINoBoundsCheck(i);
 
       nsString value; // Not Auto, because using it to hold nsStringBuffer*
@@ -846,7 +843,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     case eTreeOpCreateHTMLElementNotNetwork: {
       nsIContent** target = mOne.node;
       mozilla::dom::HTMLContentCreatorFunction creator = mFour.htmlCreator;
-      RefPtr<nsAtom> name = Reget(mTwo.atom);
+      nsAtom* name = mTwo.atom;
       nsHtml5HtmlAttributes* attributes = mThree.attributes;
       nsIContent* intendedParent = mFive.node ? *(mFive.node) : nullptr;
 
@@ -870,7 +867,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     case eTreeOpCreateSVGElementNotNetwork: {
       nsIContent** target = mOne.node;
       mozilla::dom::SVGContentCreatorFunction creator = mFour.svgCreator;
-      RefPtr<nsAtom> name = Reget(mTwo.atom);
+      nsAtom* name = mTwo.atom;
       nsHtml5HtmlAttributes* attributes = mThree.attributes;
       nsIContent* intendedParent = mFive.node ? *(mFive.node) : nullptr;
 
@@ -892,7 +889,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     }
     case eTreeOpCreateMathMLElement: {
       nsIContent** target = mOne.node;
-      RefPtr<nsAtom> name = Reget(mTwo.atom);
+      nsAtom* name = mTwo.atom;
       nsHtml5HtmlAttributes* attributes = mThree.attributes;
       nsIContent* intendedParent = mFive.node ? *(mFive.node) : nullptr;
 
@@ -937,7 +934,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       return AppendCommentToDocument(buffer, length, aBuilder);
     }
     case eTreeOpAppendDoctypeToDocument: {
-      RefPtr<nsAtom> name = Reget(mOne.atom);
+      nsAtom* name = mOne.atom;
       nsHtml5TreeOperationStringPair* pair = mTwo.stringPair;
       nsString publicId;
       nsString systemId;
@@ -1147,8 +1144,8 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     case eTreeOpAddError: {
       Element* element = (*(mOne.node))->AsElement();
       char* msgId = mTwo.charPtr;
-      RefPtr<nsAtom> atom = Reget(mThree.atom);
-      RefPtr<nsAtom> otherAtom = Reget(mFour.atom);
+      nsAtom* atom = mThree.atom;
+      nsAtom* otherAtom = mFour.atom;
       // See viewsource.css for the possible classes in addition to "error".
       nsAutoString klass;
       element->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, klass);

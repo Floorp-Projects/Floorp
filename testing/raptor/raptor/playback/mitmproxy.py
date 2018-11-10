@@ -76,10 +76,11 @@ certdb2.addCertFromBase64(cert, "C,C,C", "");
 // Use mitmdump as the proxy
 // Manual proxy configuration
 pref("network.proxy.type", 1);
-pref("network.proxy.http", "127.0.0.1");
+pref("network.proxy.http", "%(host)s");
 pref("network.proxy.http_port", 8080);
-pref("network.proxy.ssl", "127.0.0.1");
+pref("network.proxy.ssl", "%(host)s");
 pref("network.proxy.ssl_port", 8080);
+pref("network.proxy.no_proxies_on", "localhost, 127.0.0.1, %(host)s");
 '''
 
 MITMPROXY_OFF_SETTINGS = '''// Start with a comment
@@ -229,7 +230,8 @@ class Mitmproxy(Playback, Python3Virtualenv, TestingMixin, MercurialScript):
         certificate = self._read_certificate(certificate_path)
         write_autoconfig_files(fx_install_dir=fx_install_dir,
                                cfg_contents=MITMPROXY_ON_SETTINGS % {
-                                  'cert': certificate})
+                                   'cert': certificate,
+                                   'host': self.config['host']})
 
     def _read_certificate(self, certificate_path):
         ''' Return the certificate's hash from the certificate file.'''
@@ -246,7 +248,9 @@ class Mitmproxy(Playback, Python3Virtualenv, TestingMixin, MercurialScript):
             # read autoconfig file, confirm mitmproxy cert is in there
             certificate = self._read_certificate(DEFAULT_CERT_PATH)
             contents = read_autoconfig_file(browser_install)
-            if (MITMPROXY_ON_SETTINGS % {'cert': certificate}) in contents:
+            if (MITMPROXY_ON_SETTINGS % {
+                    'cert': certificate,
+                    'host': self.config['host']}) in contents:
                 LOG.info("Verified mitmproxy CA certificate is installed in Firefox")
             else:
                 LOG.info("Firefox autoconfig file contents:")
@@ -271,7 +275,7 @@ class Mitmproxy(Playback, Python3Virtualenv, TestingMixin, MercurialScript):
         # cannot continue if failed to add CA cert to Firefox, need to check
         if not self.is_mitmproxy_cert_installed(self.browser_install):
             LOG.error('Aborting: failed to install mitmproxy CA cert into Firefox')
-            self.stop_mitmproxy_playback(mitmproxy_proc)
+            self.stop_mitmproxy_playback()
             sys.exit()
 
     def start_mitmproxy_playback(self,

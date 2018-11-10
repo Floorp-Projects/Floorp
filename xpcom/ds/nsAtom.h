@@ -38,16 +38,6 @@ public:
   void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                               mozilla::AtomsSizes& aSizes) const;
 
-  // Dynamic HTML5 atoms are just like vanilla dynamic atoms, but we disallow
-  // various operations, the most important of which is AddRef/Release.
-  // XXX: we'd like to get rid of dynamic HTML5 atoms. See bug 1392185 for
-  // details.
-  enum class AtomKind : uint8_t {
-    Static = 0,
-    DynamicNormal = 1,
-    DynamicHTML5 = 2,
-  };
-
   bool Equals(char16ptr_t aString, uint32_t aLength) const
   {
     return mLength == aLength &&
@@ -59,18 +49,8 @@ public:
     return Equals(aString.BeginReading(), aString.Length());
   }
 
-  AtomKind Kind() const { return static_cast<AtomKind>(mKind); }
-
-  bool IsStatic() const { return Kind() == AtomKind::Static; }
-  bool IsDynamic() const
-  {
-    return Kind() == AtomKind::DynamicNormal ||
-           Kind() == AtomKind::DynamicHTML5;
-  }
-  bool IsDynamicHTML5() const
-  {
-    return Kind() == AtomKind::DynamicHTML5;
-  }
+  bool IsStatic() const { return mIsStatic; }
+  bool IsDynamic() const { return !IsStatic(); }
 
   const nsStaticAtom* AsStatic() const;
   const nsDynamicAtom* AsDynamic() const;
@@ -93,11 +73,7 @@ public:
   // rather than Hash() so we can use mozilla::BloomFilter<N, nsAtom>, because
   // BloomFilter requires elements to implement a function called hash().
   //
-  uint32_t hash() const
-  {
-    MOZ_ASSERT(!IsDynamicHTML5());
-    return mHash;
-  }
+  uint32_t hash() const { return mHash; }
 
   // We can't use NS_INLINE_DECL_THREADSAFE_REFCOUNTING because the refcounting
   // of this type is special.
@@ -110,24 +86,23 @@ protected:
   // Used by nsStaticAtom.
   constexpr nsAtom(uint32_t aLength, uint32_t aHash)
     : mLength(aLength)
-    , mKind(static_cast<uint32_t>(nsAtom::AtomKind::Static))
+    , mIsStatic(true)
     , mHash(aHash)
   {}
 
   // Used by nsDynamicAtom.
-  nsAtom(AtomKind aKind, const nsAString& aString, uint32_t aHash)
+  nsAtom(const nsAString& aString, uint32_t aHash)
     : mLength(aString.Length())
-    , mKind(static_cast<uint32_t>(aKind))
+    , mIsStatic(false)
     , mHash(aHash)
   {
-    MOZ_ASSERT(aKind == AtomKind::DynamicNormal ||
-               aKind == AtomKind::DynamicHTML5);
   }
 
   ~nsAtom() = default;
 
   const uint32_t mLength:30;
-  const uint32_t mKind:2; // nsAtom::AtomKind
+  // NOTE: There's one free bit here.
+  const uint32_t mIsStatic:1;
   const uint32_t mHash;
 };
 
@@ -189,8 +164,6 @@ public:
 private:
   friend class nsAtomTable;
   friend class nsAtomSubTable;
-  // XXX: we'd like to remove nsHtml5AtomEntry. See bug 1392185.
-  friend class nsHtml5AtomEntry;
 
   // These shouldn't be used directly, even by friend classes. The
   // Create()/Destroy() methods use them.

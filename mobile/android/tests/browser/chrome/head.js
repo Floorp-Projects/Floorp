@@ -17,7 +17,7 @@ function promiseBrowserEvent(browserOrFrame, eventType, options) {
       info("Received event " + eventType + " from browser");
       browserOrFrame.removeEventListener(eventType, handle, true);
       if (options && options.resolveAtNextTick) {
-        setTimeout(() => resolve(event), 0);
+        Services.tm.dispatchToMainThread(() => resolve(event));
       } else {
         resolve(event);
       }

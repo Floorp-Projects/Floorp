@@ -160,6 +160,16 @@ function generateOffer(options={}) {
   });
 }
 
+async function generateVideoReceiveOnlyOffer(pc)
+{
+    try {
+        pc.addTransceiver('video', { direction: 'recvonly' });
+        return pc.createOffer();
+    } catch(e) {
+        return pc.createOffer({ offerToReceiveVideo: true });
+    }
+}
+
 // Helper function to generate answer based on given offer using a freshly
 // created RTCPeerConnection object
 function generateAnswer(offer) {
@@ -371,7 +381,7 @@ const trackFactories = {
    */
   canCreate(requested) {
     const supported = {
-      audio: !!window.MediaStreamAudioDestinationNode,
+      audio: !!window.AudioContext && !!window.MediaStreamAudioDestinationNode,
       video: !!HTMLCanvasElement.prototype.captureStream
     };
 

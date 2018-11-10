@@ -63,6 +63,10 @@ var UI = {
     // toolbox session id.
     this._telemetry.toolOpened("webide", -1, this);
 
+    this.notificationBox = new window.MozElements.NotificationBox(element => {
+      document.getElementById("containerbox")
+              .insertAdjacentElement("afterbegin", element);
+    });
     AppManager.init();
 
     this.appManagerUpdate = this.appManagerUpdate.bind(this);
@@ -288,15 +292,14 @@ var UI = {
       },
     }];
 
-    const nbox = document.querySelector("#notificationbox");
+    const nbox = this.notificationBox;
     nbox.removeAllNotifications(true);
     nbox.appendNotification(text, "webide:errornotification", null,
                             nbox.PRIORITY_WARNING_LOW, buttons);
   },
 
   dismissErrorNotification: function() {
-    const nbox = document.querySelector("#notificationbox");
-    nbox.removeAllNotifications(true);
+    this.notificationBox.removeAllNotifications(true);
   },
 
   /** ******** COMMANDS **********/
@@ -819,7 +822,7 @@ var UI = {
     const splitter = document.querySelector(".devtools-horizontal-splitter");
     splitter.removeAttribute("hidden");
 
-    document.querySelector("notificationbox").insertBefore(iframe, splitter.nextSibling);
+    document.getElementById("containerbox").insertBefore(iframe, splitter.nextSibling);
     const host = Toolbox.HostType.CUSTOM;
     const options = { customIframe: iframe, zoom: false, uid: iframe.uid };
 

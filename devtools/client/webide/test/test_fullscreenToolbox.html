@@ -49,7 +49,7 @@
           ok(win.UI.toolboxPromise, "Toolbox promise exists");
           await win.UI.toolboxPromise;
 
-          const nbox = win.document.querySelector("#notificationbox");
+          const nbox = win.document.getElementById("containerbox");
           ok(!nbox.hasAttribute("toolboxfullscreen"), "Toolbox is not fullscreen");
 
           win.Cmds.showRuntimeDetails();

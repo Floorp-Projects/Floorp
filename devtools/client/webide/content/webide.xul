@@ -139,7 +139,7 @@
     </vbox>
   </toolbar>
 
-  <notificationbox flex="1" id="notificationbox">
+  <vbox flex="1" id="containerbox">
     <div flex="1" id="deck-panels">
       <vbox id="project-listing-panel" class="project-listing panel-list" flex="1">
         <div id="project-listing-wrapper" class="panel-list-wrapper">
@@ -164,6 +164,6 @@
     </div>
     <splitter hidden="true" class="devtools-horizontal-splitter" orient="vertical"/>
     <!-- toolbox iframe will be inserted here -->
-  </notificationbox>
+  </vbox>
 
 </window>

@@ -48,9 +48,17 @@ struct staticJArray
 };
 
 template<class T, class L>
-struct jArray
+class autoJArray;
+
+template<class T, class L>
+class jArray
 {
+  friend class autoJArray<T, L>;
+
+private:
   T* arr;
+
+public:
   L length;
   static jArray<T, L> newJArray(L const len)
   {
@@ -76,6 +84,23 @@ struct jArray
   {
     arr = (T*)other.arr;
     length = other.length;
+  }
+  MOZ_IMPLICIT jArray(decltype(nullptr))
+    : arr(nullptr)
+    , length(0)
+  {
+  }
+  jArray()
+    : arr(nullptr)
+    , length(0)
+  {
+  }
+
+private:
+  jArray(T* aArr, L aLength)
+    : arr(aArr)
+    , length(aLength)
+  {
   }
 };
 
