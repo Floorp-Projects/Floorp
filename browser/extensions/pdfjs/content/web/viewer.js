@@ -4115,7 +4115,7 @@ class PDFFindController {
   }
   executeCommand(cmd, state) {
     const pdfDocument = this._pdfDocument;
-    if (this._state === null || cmd !== 'findagain') {
+    if (this._state === null || this._shouldDirtyMatch(cmd)) {
       this._dirtyMatch = true;
     }
     this._state = state;
@@ -4125,6 +4125,7 @@ class PDFFindController {
         return;
       }
       this._extractText();
+      const findbarClosed = !this._highlightMatches;
       if (this._findTimeout) {
         clearTimeout(this._findTimeout);
         this._findTimeout = null;
@@ -4134,10 +4135,11 @@ class PDFFindController {
           this._nextMatch();
           this._findTimeout = null;
         }, FIND_TIMEOUT);
-      } else if (cmd === 'findagain' && !this._dirtyMatch) {
-        const updateHighlightAll = !this._highlightMatches && this._state.highlightAll;
+      } else if (this._dirtyMatch) {
         this._nextMatch();
-        if (updateHighlightAll) {
+      } else if (cmd === 'findagain') {
+        this._nextMatch();
+        if (findbarClosed && this._state.highlightAll) {
           this._updateAllPages();
         }
       } else {
@@ -4177,6 +4179,18 @@ class PDFFindController {
       this._normalizedQuery = normalize(this._state.query);
     }
     return this._normalizedQuery;
+  }
+  _shouldDirtyMatch(cmd) {
+    switch (cmd) {
+      case 'findagain':
+        const pageNumber = this._selected.pageIdx + 1;
+        const linkService = this._linkService;
+        if (pageNumber >= 1 && pageNumber <= linkService.pagesCount && linkService.page !== pageNumber && linkService.isPageVisible && !linkService.isPageVisible(pageNumber)) {
+          break;
+        }
+        return false;
+    }
+    return true;
   }
   _prepareMatches(matchesWithLength, matches, matchesLength) {
     function isSubTerm(matchesWithLength, currentIndex) {
@@ -5206,6 +5220,9 @@ class PDFLinkService {
     let refStr = pageRef.num + ' ' + pageRef.gen + ' R';
     return this._pagesRefCache && this._pagesRefCache[refStr] || null;
   }
+  isPageVisible(pageNumber) {
+    return this.pdfViewer.isPageVisible(pageNumber);
+  }
 }
 function isValidExplicitDestination(dest) {
   if (!Array.isArray(dest)) {
@@ -5284,6 +5301,9 @@ class SimpleLinkService {
   setHash(hash) {}
   executeNamedAction(action) {}
   cachePageRef(pageNum, pageRef) {}
+  isPageVisible(pageNumber) {
+    return true;
+  }
 }
 exports.PDFLinkService = PDFLinkService;
 exports.SimpleLinkService = SimpleLinkService;
@@ -7069,6 +7089,18 @@ class BaseViewer {
   }
   _getVisiblePages() {
     throw new Error('Not implemented: _getVisiblePages');
+  }
+  isPageVisible(pageNumber) {
+    if (!this.pdfDocument) {
+      return false;
+    }
+    if (this.pageNumber < 1 || pageNumber > this.pagesCount) {
+      console.error(`${this._name}.isPageVisible: "${pageNumber}" is out of bounds.`);
+      return false;
+    }
+    return this._getVisiblePages().views.some(function (view) {
+      return view.id === pageNumber;
+    });
   }
   cleanup() {
     for (let i = 0, ii = this._pages.length; i < ii; i++) {

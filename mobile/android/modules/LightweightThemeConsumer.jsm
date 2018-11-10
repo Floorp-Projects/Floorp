@@ -9,6 +9,8 @@ ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
 
 ChromeUtils.defineModuleGetter(this, "EventDispatcher",
                                "resource://gre/modules/Messaging.jsm");
+ChromeUtils.defineModuleGetter(this, "LightweightThemePersister",
+  "resource://gre/modules/addons/LightweightThemePersister.jsm");
 
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 
@@ -17,7 +19,7 @@ function LightweightThemeConsumer(aDocument) {
   Services.obs.addObserver(this, "lightweight-theme-styling-update");
   Services.obs.addObserver(this, "lightweight-theme-apply");
 
-  this._update(LightweightThemeManager.currentThemeForDisplay);
+  this._update(LightweightThemeManager.currentThemeWithFallback);
 }
 
 LightweightThemeConsumer.prototype = {
@@ -29,7 +31,7 @@ LightweightThemeConsumer.prototype = {
       }
       this._update(parsedData.theme);
     } else if (aTopic == "lightweight-theme-apply") {
-      this._update(LightweightThemeManager.currentThemeForDisplay);
+      this._update(LightweightThemeManager.currentThemeWithFallback);
     }
   },
 
@@ -41,12 +43,16 @@ LightweightThemeConsumer.prototype = {
 
   _update: function(aData) {
     let active = aData && aData.id !== DEFAULT_THEME_ID;
-    if (!aData) {
-      aData = {};
-    }
-
-    let msg = active ? { type: "LightweightTheme:Update", data: aData } :
+    let msg = active ? { type: "LightweightTheme:Update" } :
                        { type: "LightweightTheme:Disable" };
-    EventDispatcher.instance.sendRequest(msg);
+
+    if (active) {
+      LightweightThemePersister.persistImages(aData, () => {
+        msg.data = LightweightThemePersister.getPersistedData(aData);
+        EventDispatcher.instance.sendRequest(msg);
+      });
+    } else {
+      EventDispatcher.instance.sendRequest(msg);
+    }
   },
 };

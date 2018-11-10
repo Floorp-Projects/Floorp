@@ -152,7 +152,7 @@ var Heartbeat = class {
       }];
     }
 
-    this.notificationBox = this.chromeWindow.document.querySelector("#high-priority-global-notificationbox");
+    this.notificationBox = this.chromeWindow.gHighPriorityNotificationBox;
     this.notice = this.notificationBox.appendNotification(
       this.options.message,
       "heartbeat-" + this.options.flowId,

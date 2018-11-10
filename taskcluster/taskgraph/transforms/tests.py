@@ -520,6 +520,10 @@ def setup_raptor(config, tests):
             extra_options.append('--branch-name')
             extra_options.append('try')
 
+        if config.params['project'] in ('mozilla-beta', 'mozilla-release') or \
+           config.params['project'].startswith('mozilla-esr'):
+            extra_options.append('--is-release-build')
+
         yield test
 
 
@@ -758,6 +762,11 @@ def enable_code_coverage(config, tests):
                 continue
             test['mozharness'].setdefault('extra-options', []).append('--code-coverage')
             test['instance-size'] = 'xlarge'
+
+            # Temporarily disable Mac tests on mozilla-central
+            if 'mac' in test['build-platform']:
+                test['run-on-projects'] = ['try']
+
             # Ensure we always run on the projects defined by the build, unless the test
             # is try only or shouldn't run at all.
             if test['run-on-projects'] not in [[], ['try']]:

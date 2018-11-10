@@ -106,28 +106,6 @@ class nsHtml5TreeOperation final
   using Encoding = mozilla::Encoding;
 
 public:
-  /**
-   * Atom is used inside the parser core are either static atoms that are
-   * the same as Gecko-wide static atoms or they are dynamic atoms scoped by
-   * both thread and parser to a particular nsHtml5AtomTable. In order to
-   * such scoped atoms coming into contact with the rest of Gecko, atoms
-   * that are about to exit the parser must go through this method which
-   * reobtains dynamic atoms from the Gecko-global atom table.
-   *
-   * @param aAtom a potentially parser-scoped atom
-   * @return an nsAtom that's pointer comparable on the main thread with
-   *         other not-parser atoms.
-   */
-  static inline already_AddRefed<nsAtom> Reget(nsAtom* aAtom)
-  {
-    if (!aAtom || aAtom->IsStatic()) {
-      return dont_AddRef(aAtom);
-    }
-    nsAutoString str;
-    aAtom->ToString(str);
-    return NS_AtomizeMainThread(str);
-  }
-
   static nsresult AppendTextToTextNode(const char16_t* aBuffer,
                                        uint32_t aLength,
                                        mozilla::dom::Text* aTextNode,
@@ -370,6 +348,7 @@ public:
     mFive.node = static_cast<nsIContent**>(aIntendedParent);
     mOne.node = static_cast<nsIContent**>(aTarget);
     mTwo.atom = aName;
+    aName->AddRef();
     if (aAttributes == nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES) {
       mThree.attributes = nullptr;
     } else {
@@ -434,10 +413,12 @@ public:
                    const nsAString& aPublicId,
                    const nsAString& aSystemId)
   {
+    MOZ_ASSERT(aName);
     MOZ_ASSERT(mOpCode == eTreeOpUninitialized,
                "Op code must be uninitialized when initializing.");
     mOpCode = eTreeOpAppendDoctypeToDocument;
     mOne.atom = aName;
+    aName->AddRef();
     mTwo.stringPair = new nsHtml5TreeOperationStringPair(aPublicId, aSystemId);
   }
 
@@ -453,6 +434,12 @@ public:
     mTwo.charPtr = (char*)aMsgId;
     mThree.atom = aAtom;
     mFour.atom = aOtherAtom;
+    if (aAtom) {
+      aAtom->AddRef();
+    }
+    if (aOtherAtom) {
+      aOtherAtom->AddRef();
+    }
   }
 
   inline void Init(nsIContentHandle* aElement,

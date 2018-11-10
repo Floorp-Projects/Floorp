@@ -9,7 +9,7 @@ job-defaults:
         by-test-platform:
             windows10-64-ccov/.*: 3
             linux64-ccov/.*: 3
-            android-hw-g5.*: 3
+            android-hw-g5.*: 2
             default: 1
     virtualization:
         by-test-platform:

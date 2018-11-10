@@ -15,8 +15,8 @@ ChromeUtils.defineModuleGetter(this, "TelemetryEnvironment",
   "resource://gre/modules/TelemetryEnvironment.jsm");
 ChromeUtils.defineModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "AttributionCode",
-  "resource:///modules/AttributionCode.jsm");
+ChromeUtils.defineModuleGetter(this, "NewTabUtils",
+  "resource://gre/modules/NewTabUtils.jsm");
 
 const FXA_USERNAME_PREF = "services.sync.username";
 const SEARCH_REGION_PREF = "browser.search.region";
@@ -163,14 +163,9 @@ const TargetingGetters = {
   get browserSettings() {
     const {settings} = TelemetryEnvironment.currentEnvironment;
     return {
-      // This way of getting attribution is deprecated - use atttributionData instead
       attribution: settings.attribution,
       update: settings.update,
     };
-  },
-  get attributionData() {
-    // Attribution is determined at startup - so we can use the cached attribution at this point
-    return AttributionCode.getCachedAttributionData();
   },
   get currentDate() {
     return new Date();
@@ -255,11 +250,11 @@ const TargetingGetters = {
     )));
   },
   get pinnedSites() {
-    return NewTabUtils.pinnedLinks.links.map(site => (site ? {
+    return NewTabUtils.pinnedLinks.links.map(site => ({
       url: site.url,
       host: (new URL(site.url)).hostname,
       searchTopSite: site.searchTopSite,
-    } : {}));
+    }));
   },
   get providerCohorts() {
     return ASRouterPreferences.providers.reduce((prev, current) => {

@@ -30,6 +30,7 @@ var ext;
 var testName = null;
 var settingsURL = null;
 var csPort = null;
+var host = null;
 var benchmarkPort = null;
 var testType;
 var pageCycles = 0;
@@ -84,6 +85,13 @@ function getTestSettings() {
           // just replace the '<port>' keyword in the URL with actual benchmarkPort
           testURL = testURL.replace("<port>", benchmarkPort);
         }
+
+        if (host) {
+          // just replace the '<host>' keyword in the URL with actual host
+          testURL = testURL.replace("<host>", host);
+        }
+
+        console.log("testURL: " + testURL);
 
         results.page = testURL;
         results.type = testType;
@@ -439,7 +447,7 @@ function postToControlServer(msgType, msgData) {
     console.log("\n" + msgData);
   }
   // requires 'control server' running at port 8000 to receive results
-  var url = "http://127.0.0.1:" + csPort + "/";
+  var url = "http://" + host + ":" + csPort + "/";
   var client = new XMLHttpRequest();
   client.onreadystatechange = function() {
     if (client.readyState == XMLHttpRequest.DONE && client.status == 200) {
@@ -495,6 +503,7 @@ function runner() {
   browserName = config.browser;
   benchmarkPort = config.benchmark_port;
   postStartupDelay = config.post_startup_delay;
+  host = config.host;
 
   postToControlServer("status", "raptor runner.js is loaded!");
 

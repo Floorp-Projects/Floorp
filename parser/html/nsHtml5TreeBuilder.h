@@ -293,7 +293,7 @@ private:
   bool scriptingEnabled;
   bool needToDropLF;
   bool fragment;
-  nsAtom* contextName;
+  RefPtr<nsAtom> contextName;
   int32_t contextNamespace;
   nsIContentHandle* contextNode;
   autoJArray<int32_t, int32_t> templateModeStack;

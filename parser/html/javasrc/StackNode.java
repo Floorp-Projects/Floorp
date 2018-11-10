@@ -97,7 +97,14 @@ final class StackNode<T> {
 
     StackNode(int idxInTreeBuilder) {
         this.idxInTreeBuilder = idxInTreeBuilder;
+        this.flags = 0;
+        this.name = null;
+        this.popName = null;
+        // CPPONLY: this.ns = 0;
+        this.node = null;
+        this.attributes = null;
         this.refcount = 0;
+        // CPPONLY: this.htmlCreator = null;
     }
 
     // CPPONLY: public @HtmlCreator Object getHtmlCreator() {
