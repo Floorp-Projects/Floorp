@@ -29,7 +29,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 
 typealias OnCommitListener = () -> Unit
-typealias OnFilterListener = (String, InlineAutocompleteEditText?) -> Unit
+typealias OnFilterListener = (String) -> Unit
 typealias OnSearchStateChangeListener = (Boolean) -> Unit
 typealias OnTextChangeListener = (String, String) -> Unit
 typealias OnKeyPreImeListener = (View, Int, KeyEvent) -> Boolean
@@ -59,6 +59,7 @@ typealias TextFormatter = (String) -> String
  * respectively (see also [setOnTextChangeListener],
  * [setOnSelectionChangedListener], and [setOnWindowsFocusChangeListener]).
  */
+@Suppress("LargeClass", "TooManyFunctions")
 open class InlineAutocompleteEditText @JvmOverloads constructor(
     val ctx: Context,
     attrs: AttributeSet? = null,
@@ -71,16 +72,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         val totalItems: Int,
         private val textFormatter: TextFormatter? = null
     ) {
-        val isEmpty: Boolean = this.text.isEmpty()
-        val length: Int = this.text.length
-        val formattedText: String
-            get() = textFormatter?.invoke(text) ?: text
-
         fun startsWith(text: String): Boolean = this.text.startsWith(text)
-
-        companion object {
-            fun emptyResult(): AutocompleteResult = AutocompleteResult("", "", 0)
-        }
     }
 
     private var commitListener: OnCommitListener? = null
@@ -105,7 +97,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     fun setOnWindowsFocusChangeListener(l: OnWindowsFocusChangeListener) { windowFocusChangeListener = l }
 
     // The previous autocomplete result returned to us
-    var autocompleteResult = AutocompleteResult.emptyResult()
+    var autocompleteResult: AutocompleteResult? = null
         private set
 
     // Length of the user-typed portion of the result
@@ -275,7 +267,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
      */
     private fun resetAutocompleteState() {
         autoCompleteSpans = arrayOf(AUTOCOMPLETE_SPAN, BackgroundColorSpan(autoCompleteBackgroundColor))
-        autocompleteResult = AutocompleteResult.emptyResult()
+        autocompleteResult = null
         // Pretend we already autocompleted the existing text,
         // so that actions like backspacing don't trigger autocompletion.
         autoCompletePrefixLength = text.length
@@ -301,7 +293,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
 
         // Keep autoCompletePrefixLength the same because the prefix has not changed.
         // Clear mAutoCompleteResult to make sure we get fresh autocomplete text next time.
-        autocompleteResult = AutocompleteResult.emptyResult()
+        autocompleteResult = null
 
         // Reshow the cursor.
         isCursorVisible = true
@@ -339,7 +331,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         endSettingAutocomplete()
 
         // Filter on the new text
-        filterListener?.invoke(text.toString(), null)
+        filterListener?.invoke(text.toString())
         return true
     }
 
@@ -347,8 +339,9 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
      * Applies the provided result by updating the current autocomplete
      * text and selection, if any.
      *
-     * @param result the [AutocompleteResult] to apply
+     * @param result the [AutocompleteProvider.AutocompleteResult] to apply
      */
+    @Suppress("ComplexMethod", "ReturnCount")
     fun applyAutocompleteResult(result: AutocompleteResult) {
         // If discardAutoCompleteResult is true, we temporarily disabled
         // autocomplete (due to backspacing, etc.) and we should bail early.
@@ -356,14 +349,14 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
             return
         }
 
-        if (!isEnabled || result.isEmpty) {
-            autocompleteResult = AutocompleteResult.emptyResult()
+        if (!isEnabled) {
+            autocompleteResult = null
             return
         }
 
         val text = text
         val textLength = text.length
-        val resultLength = result.length
+        val resultLength = result.text.length
         val autoCompleteStart = text.getSpanStart(AUTOCOMPLETE_SPAN)
         autocompleteResult = result
 
@@ -455,6 +448,10 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         announceForAccessibility(text.toString())
     }
 
+    fun noAutocompleteResult() {
+        removeAutocomplete(text)
+    }
+
     /**
      * Code to handle deleting autocomplete first when backspacing.
      * If there is no autocomplete text, both removeAutocomplete() and commitAutocomplete()
@@ -524,15 +521,14 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
 
             val text = getNonAutocompleteText(editable)
             val textLength = text.length
-            var doAutocomplete = true
+            var doAutocomplete = !
+            (
+                // Don't autocomplete if search query
+                text.contains(" ") ||
 
-            // Check if search query
-            if (text.contains(" ")) {
-                doAutocomplete = false
-            } else if (textLength == textLengthBeforeChange - 1 || textLength == 0) {
-                // If you're hitting backspace (the string is getting smaller), don't autocomplete
-                doAutocomplete = false
-            }
+                // ... or if user is hitting a backspace (the string is getting smaller)
+                (textLength == textLengthBeforeChange - 1 || textLength == 0)
+            )
 
             autoCompletePrefixLength = textLength
 
@@ -540,21 +536,24 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
             // to discard any autocomplete results that are in-flight, and vice versa.
             discardAutoCompleteResult = !doAutocomplete
 
-            if (doAutocomplete && autocompleteResult.startsWith(text)) {
+            if (!doAutocomplete) {
+                // Remove the old autocomplete text until any new autocomplete text gets added.
+                removeAutocomplete(editable)
+            } else {
                 // If this text already matches our autocomplete text, autocomplete likely
                 // won't change. Just reuse the old autocomplete value.
-                applyAutocompleteResult(autocompleteResult)
-                doAutocomplete = false
-            } else {
-                // Otherwise, remove the old autocomplete text
-                // until any new autocomplete text gets added.
-                removeAutocomplete(editable)
+                autocompleteResult?.takeIf { it.startsWith(text) }?.let {
+                    applyAutocompleteResult(it)
+                    doAutocomplete = false
+                }
             }
 
             // Update search icon with an active state since user is typing
             searchStateChangeListener?.invoke(textLength > 0)
 
-            filterListener?.invoke(text, if (doAutocomplete) this@InlineAutocompleteEditText else null)
+            if (doAutocomplete) {
+                filterListener?.invoke(text)
+            }
 
             textChangeListener?.invoke(text, getText().toString())
         }

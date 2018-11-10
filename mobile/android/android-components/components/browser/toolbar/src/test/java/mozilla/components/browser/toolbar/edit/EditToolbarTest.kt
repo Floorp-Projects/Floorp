@@ -5,6 +5,7 @@
 package mozilla.components.browser.toolbar.edit
 
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.concept.toolbar.AutocompleteDelegate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -21,13 +22,14 @@ class EditToolbarTest {
         toolbar.editToolbar.urlView.onAttachedToWindow()
 
         var invokedWithParams: List<Any?>? = null
-        toolbar.setAutocompleteFilter { p1, p2 ->
+        toolbar.setAutocompleteListener { p1, p2 ->
             invokedWithParams = listOf(p1, p2)
         }
 
-        toolbar.editToolbar.urlView.setText("Hello World")
+        toolbar.editToolbar.urlView.setText("Hello")
 
-        assertEquals(listOf("Hello World", null), invokedWithParams)
+        assertEquals("Hello", invokedWithParams!![0])
+        assertTrue(invokedWithParams!![1] is AutocompleteDelegate)
     }
 
     @Test

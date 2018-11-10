@@ -25,8 +25,9 @@ import org.mockito.Mockito.doReturn
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
-import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.Companion.AUTOCOMPLETE_SPAN
+import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
+import org.junit.Assert.assertNull
 
 @RunWith(RobolectricTestRunner::class)
 class InlineAutocompleteEditTextTest {
@@ -35,18 +36,10 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun autoCompleteResult() {
-        val empty = AutocompleteResult.emptyResult()
-        assertTrue(empty.isEmpty)
-        assertEquals(0, empty.length)
-        assertFalse(empty.startsWith("test"))
-
-        val nonEmpty = AutocompleteResult("testText", "testSource", 1, { it.toUpperCase() })
-        assertFalse(nonEmpty.isEmpty)
-        assertEquals(8, nonEmpty.length)
-        assertTrue(nonEmpty.startsWith("test"))
-        assertEquals("testSource", nonEmpty.source)
-        assertEquals(1, nonEmpty.totalItems)
-        assertEquals("TESTTEXT", nonEmpty.formattedText)
+        val result = AutocompleteResult("testText", "testSource", 1)
+        assertEquals("testText", result.text)
+        assertEquals("testSource", result.source)
+        assertEquals(1, result.totalItems)
     }
 
     @Test
@@ -116,11 +109,7 @@ class InlineAutocompleteEditTextTest {
 
         doReturn(false).`when`(et).isEnabled
         et.applyAutocompleteResult(AutocompleteResult("text", "source", 1))
-        assertEquals(AutocompleteResult.emptyResult(), et.autocompleteResult)
-
-        doReturn(true).`when`(et).isEnabled
-        et.applyAutocompleteResult(AutocompleteResult.emptyResult())
-        assertEquals(AutocompleteResult.emptyResult(), et.autocompleteResult)
+        assertNull(et.autocompleteResult)
     }
 
     @Test
@@ -265,28 +254,34 @@ class InlineAutocompleteEditTextTest {
         val et = InlineAutocompleteEditText(context, attributes)
         et.onAttachedToWindow()
 
-        var invokedWithParams: List<Any?>? = null
-        et.setOnFilterListener { p1, p2 ->
-            invokedWithParams = listOf(p1, p2)
+        var lastInvokedWithText: String? = null
+        var invokedCounter = 0
+        et.setOnFilterListener { p1 ->
+            lastInvokedWithText = p1
+            invokedCounter++
         }
 
-        // Text existing autocomplete result
+        // Already have an autocomplete result, and setting a text to the same value as the result.
         et.applyAutocompleteResult(AutocompleteResult("text", "source", 1))
         et.setText("text")
-        assertEquals(listOf("text", null), invokedWithParams)
+        // Autocomplete filter shouldn't have been called, because we already have a matching result.
+        assertEquals(0, invokedCounter)
 
         et.setText("text")
-        assertEquals(listOf("text", et), invokedWithParams)
+        assertEquals(1, invokedCounter)
+        assertEquals("text", lastInvokedWithText)
 
-        // Test backspace
+        // Test backspace. We don't expect autocomplete to have been called.
         et.setText("tex")
-        assertEquals(listOf("tex", null), invokedWithParams)
+        assertEquals(1, invokedCounter)
 
+        // Presence of a space is counted as a 'search query', we don't autocomplete those.
         et.setText("search term")
-        assertEquals(listOf("search term", null), invokedWithParams)
+        assertEquals(1, invokedCounter)
 
+        // Empty text isn't autocompleted either.
         et.setText("")
-        assertEquals(listOf("", null), invokedWithParams)
+        assertEquals(1, invokedCounter)
     }
 
     @Test
@@ -300,7 +295,7 @@ class InlineAutocompleteEditTextTest {
         assertEquals("text completed", et.text.toString())
 
         icw?.deleteSurroundingText(0, 1)
-        assertEquals(AutocompleteResult.emptyResult(), et.autocompleteResult)
+        assertNull(et.autocompleteResult)
         assertEquals("text", et.text.toString())
 
         et.applyAutocompleteResult(AutocompleteResult("text completed", "source", 1))
@@ -308,7 +303,7 @@ class InlineAutocompleteEditTextTest {
 
         BaseInputConnection.setComposingSpans(et.text)
         icw?.commitText("text", 4)
-        assertEquals(AutocompleteResult.emptyResult(), et.autocompleteResult)
+        assertNull(et.autocompleteResult)
         assertEquals("text", et.text.toString())
 
         et.applyAutocompleteResult(AutocompleteResult("text completed", "source", 1))
@@ -316,7 +311,7 @@ class InlineAutocompleteEditTextTest {
 
         BaseInputConnection.setComposingSpans(et.text)
         icw?.setComposingText("text", 4)
-        assertEquals(AutocompleteResult.emptyResult(), et.autocompleteResult)
+        assertNull(et.autocompleteResult)
         assertEquals("text", et.text.toString())
     }
 

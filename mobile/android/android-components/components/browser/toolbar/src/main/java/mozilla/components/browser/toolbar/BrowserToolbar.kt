@@ -17,6 +17,8 @@ import android.widget.ImageButton
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.browser.toolbar.edit.EditToolbar
+import mozilla.components.concept.toolbar.AutocompleteDelegate
+import mozilla.components.concept.toolbar.AutocompleteResult
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.ktx.android.content.res.pxToDp
@@ -156,11 +158,24 @@ class BrowserToolbar @JvmOverloads constructor(
         editToolbar.editListener = listener
     }
 
-    /**
-     * Sets autocomplete filter to be used in edit mode.
-     */
-    fun setAutocompleteFilter(filter: (String, InlineAutocompleteEditText?) -> Unit) {
-        editToolbar.urlView.setOnFilterListener(filter)
+    override fun setAutocompleteListener(filter: (String, AutocompleteDelegate) -> Unit) {
+        // Our 'filter' knows how to autocomplete, and the 'urlView' knows how to apply results of
+        // autocompletion. Which gives us a lovely delegate chain!
+        // urlView decides when it's appropriate to ask for autocompletion, and in turn we invoke
+        // our 'filter' and send results back to 'urlView'.
+        editToolbar.urlView.setOnFilterListener { text ->
+            filter.invoke(text, object : AutocompleteDelegate {
+                override fun applyAutocompleteResult(result: AutocompleteResult) {
+                    editToolbar.urlView.applyAutocompleteResult(InlineAutocompleteEditText.AutocompleteResult(
+                        text = result.text, source = result.source, totalItems = result.totalItems
+                    ))
+                }
+
+                override fun noAutocompleteResult() {
+                    editToolbar.urlView.noAutocompleteResult()
+                }
+            })
+        }
     }
 
     /**
