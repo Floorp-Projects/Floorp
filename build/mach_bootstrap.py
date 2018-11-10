@@ -231,14 +231,6 @@ def bootstrap(topsrcdir, mozilla_dir=None):
                             'environment'):
             return True
 
-        # We are running in automation.
-        if 'MOZ_AUTOMATION' in os.environ or 'TASK_ID' in os.environ:
-            return True
-
-        # The environment is likely a machine invocation.
-        if sys.stdin.closed or not sys.stdin.isatty():
-            return True
-
         return False
 
     def post_dispatch_handler(context, handler, instance, result,
@@ -272,6 +264,10 @@ def bootstrap(topsrcdir, mozilla_dir=None):
                          start_time=start_time, end_time=end_time,
                          mach_context=context, substs=substs,
                          paths=[instance.topsrcdir, instance.topobjdir])
+
+        # Never submit data when running in automation.
+        if 'MOZ_AUTOMATION' in os.environ or 'TASK_ID' in os.environ:
+            return True
 
         # But only submit about every n-th operation
         if random.randint(1, TELEMETRY_SUBMISSION_FREQUENCY) != 1:
