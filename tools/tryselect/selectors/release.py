@@ -14,7 +14,7 @@ from ..push import push_to_try, vcs
 
 TARGET_TASKS = {
     'staging': 'staging_release_builds',
-    'beta-sim': 'beta_simulation',
+    'release-sim': 'release_simulation',
 }
 
 
