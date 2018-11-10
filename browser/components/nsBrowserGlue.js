@@ -1449,7 +1449,7 @@ BrowserGlue.prototype = {
   _monitorScreenshotsPref() {
     const PREF = "extensions.screenshots.disabled";
     const ID = "screenshots@mozilla.org";
-    Services.prefs.addObserver(PREF, async () => {
+    const _checkScreenshotsPref = async () => {
       let addon = await AddonManager.getAddonByID(ID);
       let disabled = Services.prefs.getBoolPref(PREF, false);
       if (disabled) {
@@ -1457,7 +1457,9 @@ BrowserGlue.prototype = {
       } else {
         await addon.enable({allowSystemAddons: true});
       }
-    });
+    };
+    Services.prefs.addObserver(PREF, _checkScreenshotsPref);
+    _checkScreenshotsPref();
   },
 
   _monitorWebcompatReporterPref() {
