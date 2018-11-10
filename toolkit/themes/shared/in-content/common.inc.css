@@ -217,7 +217,7 @@ xul|menulist[disabled="true"] {
 *|button.primary {
   background-color: var(--in-content-primary-button-background);
   border-color: transparent;
-  color: var(--in-content-selected-text);
+  color: var(--in-content-selected-text) !important;
 }
 
 html|button.primary:enabled:hover,
