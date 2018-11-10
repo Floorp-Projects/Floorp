@@ -31,6 +31,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.autocomplete.AutocompleteDomainFormatter
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.settings.PrivacySecuritySettingsFragment
+import org.mozilla.focus.telemetry.TelemetryWrapper
 import java.util.Collections
 import org.mozilla.focus.utils.ViewUtils
 
@@ -108,7 +109,9 @@ open class ExceptionsListFragment : Fragment() {
         }
 
         removeAllExceptions.setOnClickListener {
-            ExceptionDomains.remove(context!!, ExceptionDomains.load(context!!))
+            val domains = ExceptionDomains.load(context!!)
+            TelemetryWrapper.removeAllExceptionDomains(domains.size)
+            ExceptionDomains.remove(context!!, domains)
             fragmentManager!!.beginTransaction()
                 .replace(R.id.container, PrivacySecuritySettingsFragment())
                 .addToBackStack(null)

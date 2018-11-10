@@ -14,6 +14,7 @@ import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.BaseSettingsFragment
+import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class ExceptionsRemoveFragment : ExceptionsListFragment() {
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
@@ -30,6 +31,7 @@ class ExceptionsRemoveFragment : ExceptionsListFragment() {
 
     private fun removeSelectedDomains(context: Context) {
         val domains = (exceptionList.adapter as DomainListAdapter).selection()
+        TelemetryWrapper.removeExceptionDomains(domains.size)
         if (domains.isNotEmpty()) {
             launch(UI) {
                 async {

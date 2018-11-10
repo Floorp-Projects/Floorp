@@ -100,8 +100,10 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
         when (preference.key) {
-            resources.getString(R.string.pref_key_screen_exceptions) ->
+            resources.getString(R.string.pref_key_screen_exceptions) -> {
+                TelemetryWrapper.openExceptionsListSetting()
                 navigateToFragment(ExceptionsListFragment())
+            }
         }
         return super.onPreferenceTreeClick(preference)
     }
