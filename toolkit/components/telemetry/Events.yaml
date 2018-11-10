@@ -652,3 +652,34 @@ security.ui.identitypopup:
       cr: Whether Cookie Restrictions was active while the user interacted with the UI
     products:
       - firefox
+
+intl.ui.browserLanguage:
+  action:
+    description: >
+      User interactions for the browser language within about-preferences in the main pane and in
+      the browser language dialog. Each dialog event (on the dialog object, and the manage and
+      search methods of the main object) has a value which is a monotonically increasing number
+      that links it with other events related to the same dialog instance.
+    objects:
+      - dialog
+      - main
+    methods:
+      - manage
+      - search
+      - add
+      - remove
+      - reorder
+      - apply
+      - accept
+      - cancel
+    extra_keys:
+      installId: The id for an install.
+    products:
+      - firefox
+    expiry_version: "70"
+    notification_emails:
+      - flod@mozilla.com
+      - mstriemer@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes: ["main"]
+    bug_numbers: [1486507]
