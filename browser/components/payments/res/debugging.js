@@ -178,9 +178,7 @@ let REQUEST_2 = {
             },
           },
         ],
-        data: {
-          supportedTypes: "credit",
-        },
+        data: {},
       },
     ],
     error: "",
