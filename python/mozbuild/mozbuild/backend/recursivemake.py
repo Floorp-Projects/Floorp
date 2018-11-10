@@ -1186,7 +1186,11 @@ class RecursiveMakeBackend(CommonBackend):
                                         'HOST_RUST_CARGO_PROGRAMS')
 
     def _process_rust_tests(self, obj, backend_file):
-        self._no_skip['check'].add(backend_file.relobjdir)
+        if obj.config.substs.get('MOZ_RUST_TESTS'):
+            # If --enable-rust-tests has been set, run these as a part of
+            # make check.
+            self._no_skip['check'].add(backend_file.relobjdir)
+            backend_file.write('check:: force-cargo-test-run\n')
         build_target = self._build_target_for_obj(obj)
         self._compile_graph[build_target]
         self._process_non_default_target(obj, 'force-cargo-test-run',
