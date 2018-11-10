@@ -908,7 +908,7 @@ void TransportLayerDtls::Handshake() {
 
     TL_SET_STATE(TS_OPEN);
 
-    RecordCipherTelemetry();
+    RecordTlsTelemetry();
   } else {
     int32_t err = PR_GetError();
     switch(err) {
@@ -1539,92 +1539,108 @@ TransportLayerDtls::RecordHandshakeCompletionTelemetry(
 }
 
 void
-TransportLayerDtls::RecordCipherTelemetry() {
-  uint16_t cipher;
+TransportLayerDtls::RecordTlsTelemetry() {
 
-  nsresult rv = GetCipherSuite(&cipher);
-
-  if (NS_FAILED(rv)) {
-    MOZ_MTLOG(ML_ERROR, "Failed to get DTLS cipher suite");
+  MOZ_ASSERT(state_ == TS_OPEN);
+  SSLChannelInfo info;
+  SECStatus ss = SSL_GetChannelInfo(ssl_fd_.get(), &info, sizeof(info));
+  if (ss != SECSuccess) {
+    MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "RecordTlsTelemetry failed to get channel info");
     return;
   }
 
-  uint16_t t_cipher = 0;
+  auto protocol_label =
+    mozilla::Telemetry::LABELS_WEBRTC_DTLS_PROTOCOL_VERSION::Unknown;
 
-  switch (cipher) {
-    /* Old DHE ciphers: candidates for removal, see bug 1227519 */
-    case TLS_DHE_RSA_WITH_AES_128_CBC_SHA:
-      t_cipher = 1;
+  switch (info.protocolVersion) {
+    case SSL_LIBRARY_VERSION_TLS_1_1:
+      protocol_label = Telemetry::LABELS_WEBRTC_DTLS_PROTOCOL_VERSION::Dtls_version_1_0;
       break;
-    case TLS_DHE_RSA_WITH_AES_256_CBC_SHA:
-      t_cipher = 2;
+    case SSL_LIBRARY_VERSION_TLS_1_2:
+      protocol_label = Telemetry::LABELS_WEBRTC_DTLS_PROTOCOL_VERSION::Dtls_version_1_2;
       break;
-    /* Current ciphers */
-    case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:
-      t_cipher = 3;
-      break;
-    case TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA:
-      t_cipher = 4;
-      break;
-    case TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA:
-      t_cipher = 5;
-      break;
-    case TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA:
-      t_cipher = 6;
-      break;
-    case TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:
-      t_cipher = 7;
-      break;
-    case TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:
-      t_cipher = 8;
-      break;
-    case TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:
-      t_cipher = 9;
-      break;
-    case TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:
-      t_cipher = 10;
-      break;
-    /* TLS 1.3 ciphers */
-    case TLS_AES_128_GCM_SHA256:
-      t_cipher = 11;
-      break;
-    case TLS_CHACHA20_POLY1305_SHA256:
-      t_cipher = 12;
-      break;
-    case TLS_AES_256_GCM_SHA384:
-      t_cipher = 13;
+    case SSL_LIBRARY_VERSION_TLS_1_3:
+      protocol_label = Telemetry::LABELS_WEBRTC_DTLS_PROTOCOL_VERSION::Dtls_version_1_3;
       break;
   }
 
-  Telemetry::Accumulate(Telemetry::WEBRTC_DTLS_CIPHER, t_cipher);
+  Telemetry::AccumulateCategorical(protocol_label);
 
-  rv = GetSrtpCipher(&cipher);
+  uint16_t telemetry_cipher = 0;
+
+  switch (info.cipherSuite) {
+    /* Old DHE ciphers: candidates for removal, see bug 1227519 */
+    case TLS_DHE_RSA_WITH_AES_128_CBC_SHA:
+      telemetry_cipher = 1;
+      break;
+    case TLS_DHE_RSA_WITH_AES_256_CBC_SHA:
+      telemetry_cipher = 2;
+      break;
+    /* Current ciphers */
+    case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:
+      telemetry_cipher = 3;
+      break;
+    case TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA:
+      telemetry_cipher = 4;
+      break;
+    case TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA:
+      telemetry_cipher = 5;
+      break;
+    case TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA:
+      telemetry_cipher = 6;
+      break;
+    case TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:
+      telemetry_cipher = 7;
+      break;
+    case TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:
+      telemetry_cipher = 8;
+      break;
+    case TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:
+      telemetry_cipher = 9;
+      break;
+    case TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:
+      telemetry_cipher = 10;
+      break;
+    /* TLS 1.3 ciphers */
+    case TLS_AES_128_GCM_SHA256:
+      telemetry_cipher = 11;
+      break;
+    case TLS_CHACHA20_POLY1305_SHA256:
+      telemetry_cipher = 12;
+      break;
+    case TLS_AES_256_GCM_SHA384:
+      telemetry_cipher = 13;
+      break;
+  }
+
+  Telemetry::Accumulate(Telemetry::WEBRTC_DTLS_CIPHER, telemetry_cipher);
+
+  uint16_t cipher;
+  nsresult rv = GetSrtpCipher(&cipher);
 
   if (NS_FAILED(rv)) {
     MOZ_MTLOG(ML_ERROR, "Failed to get SRTP cipher suite");
     return;
   }
 
-  mozilla::Telemetry::LABELS_WEBRTC_SRTP_CIPHER label =
-    mozilla::Telemetry::LABELS_WEBRTC_SRTP_CIPHER::Unknown;
+  auto cipher_label = mozilla::Telemetry::LABELS_WEBRTC_SRTP_CIPHER::Unknown;
 
   switch (cipher) {
     case kDtlsSrtpAes128CmHmacSha1_80:
-      label = Telemetry::LABELS_WEBRTC_SRTP_CIPHER::Aes128CmHmacSha1_80;
+      cipher_label = Telemetry::LABELS_WEBRTC_SRTP_CIPHER::Aes128CmHmacSha1_80;
       break;
     case kDtlsSrtpAes128CmHmacSha1_32:
-      label = Telemetry::LABELS_WEBRTC_SRTP_CIPHER::Aes128CmHmacSha1_32;
+      cipher_label = Telemetry::LABELS_WEBRTC_SRTP_CIPHER::Aes128CmHmacSha1_32;
       break;
     case kDtlsSrtpAeadAes128Gcm:
-      label = Telemetry::LABELS_WEBRTC_SRTP_CIPHER::AeadAes128Gcm;
+      cipher_label = Telemetry::LABELS_WEBRTC_SRTP_CIPHER::AeadAes128Gcm;
       break;
     case kDtlsSrtpAeadAes256Gcm:
-      label = Telemetry::LABELS_WEBRTC_SRTP_CIPHER::AeadAes256Gcm;
+      cipher_label = Telemetry::LABELS_WEBRTC_SRTP_CIPHER::AeadAes256Gcm;
       break;
   }
 
-  Telemetry::AccumulateCategorical(label);
-
+  Telemetry::AccumulateCategorical(cipher_label);
 }
 
 }  // close namespace
