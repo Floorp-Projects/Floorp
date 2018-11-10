@@ -21,6 +21,12 @@
   text-shadow: 0 0 1px hsl(0,0%,12%), 0 0 2px hsl(0,0%,12%);
 }
 
+.ctrlTab-preview {
+  -moz-appearance: none;
+  color: inherit;
+  margin: 0;
+}
+
 .ctrlTab-canvas > html|img,
 .ctrlTab-canvas > html|canvas {
   min-width: inherit;
