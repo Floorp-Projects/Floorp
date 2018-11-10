@@ -2,16 +2,15 @@
 //! wasm translation.
 
 use cranelift_codegen::cursor::FuncCursor;
-use cranelift_codegen::ir::immediates::Imm64;
+use cranelift_codegen::ir::immediates::{Imm64, Offset32};
 use cranelift_codegen::ir::types::*;
 use cranelift_codegen::ir::{self, InstBuilder};
-use cranelift_codegen::settings;
+use cranelift_codegen::isa::TargetFrontendConfig;
 use cranelift_entity::{EntityRef, PrimaryMap};
-use environ::{FuncEnvironment, GlobalVariable, ModuleEnvironment, WasmResult};
+use environ::{FuncEnvironment, GlobalVariable, ModuleEnvironment, ReturnMode, WasmResult};
 use func_translator::FuncTranslator;
 use std::string::String;
 use std::vec::Vec;
-use target_lexicon::Triple;
 use translation_utils::{
     DefinedFuncIndex, FuncIndex, Global, GlobalIndex, Memory, MemoryIndex, SignatureIndex, Table,
     TableIndex,
@@ -44,14 +43,11 @@ impl<T> Exportable<T> {
 /// `DummyEnvironment` to allow it to be borrowed separately from the
 /// `FuncTranslator` field.
 pub struct DummyModuleInfo {
-    /// Target description.
-    pub triple: Triple,
-
-    /// Compilation setting flags.
-    pub flags: settings::Flags,
+    /// Target description relevant to frontends producing Cranelift IR.
+    config: TargetFrontendConfig,
 
     /// Signatures as provided by `declare_signature`.
-    pub signatures: Vec<ir::Signature>,
+    pub signatures: PrimaryMap<SignatureIndex, ir::Signature>,
 
     /// Module and field names of imported functions as provided by `declare_func_import`.
     pub imported_funcs: Vec<(String, String)>,
@@ -63,31 +59,30 @@ pub struct DummyModuleInfo {
     pub function_bodies: PrimaryMap<DefinedFuncIndex, ir::Function>,
 
     /// Tables as provided by `declare_table`.
-    pub tables: Vec<Exportable<Table>>,
+    pub tables: PrimaryMap<TableIndex, Exportable<Table>>,
 
     /// Memories as provided by `declare_memory`.
-    pub memories: Vec<Exportable<Memory>>,
+    pub memories: PrimaryMap<MemoryIndex, Exportable<Memory>>,
 
     /// Globals as provided by `declare_global`.
-    pub globals: Vec<Exportable<Global>>,
+    pub globals: PrimaryMap<GlobalIndex, Exportable<Global>>,
 
     /// The start function.
     pub start_func: Option<FuncIndex>,
 }
 
 impl DummyModuleInfo {
-    /// Allocates the data structures with the given flags.
-    pub fn with_triple_flags(triple: Triple, flags: settings::Flags) -> Self {
+    /// Creates a new `DummyModuleInfo` instance.
+    pub fn new(config: TargetFrontendConfig) -> Self {
         Self {
-            triple,
-            flags,
-            signatures: Vec::new(),
+            config,
+            signatures: PrimaryMap::new(),
             imported_funcs: Vec::new(),
             functions: PrimaryMap::new(),
             function_bodies: PrimaryMap::new(),
-            tables: Vec::new(),
-            memories: Vec::new(),
-            globals: Vec::new(),
+            tables: PrimaryMap::new(),
+            memories: PrimaryMap::new(),
+            globals: PrimaryMap::new(),
             start_func: None,
         }
     }
@@ -105,38 +100,42 @@ pub struct DummyEnvironment {
 
     /// Vector of wasm bytecode size for each function.
     pub func_bytecode_sizes: Vec<usize>,
+
+    /// How to return from functions.
+    return_mode: ReturnMode,
 }
 
 impl DummyEnvironment {
-    /// Allocates the data structures with default flags.
-    pub fn with_triple(triple: Triple) -> Self {
-        Self::with_triple_flags(triple, settings::Flags::new(settings::builder()))
-    }
-
-    /// Allocates the data structures with the given flags.
-    pub fn with_triple_flags(triple: Triple, flags: settings::Flags) -> Self {
+    /// Creates a new `DummyEnvironment` instance.
+    pub fn new(config: TargetFrontendConfig, return_mode: ReturnMode) -> Self {
         Self {
-            info: DummyModuleInfo::with_triple_flags(triple, flags),
+            info: DummyModuleInfo::new(config),
             trans: FuncTranslator::new(),
             func_bytecode_sizes: Vec::new(),
+            return_mode,
         }
     }
 
     /// Return a `DummyFuncEnvironment` for translating functions within this
     /// `DummyEnvironment`.
     pub fn func_env(&self) -> DummyFuncEnvironment {
-        DummyFuncEnvironment::new(&self.info)
+        DummyFuncEnvironment::new(&self.info, self.return_mode)
     }
 }
 
 /// The `FuncEnvironment` implementation for use by the `DummyEnvironment`.
 pub struct DummyFuncEnvironment<'dummy_environment> {
     pub mod_info: &'dummy_environment DummyModuleInfo,
+
+    return_mode: ReturnMode,
 }
 
 impl<'dummy_environment> DummyFuncEnvironment<'dummy_environment> {
-    pub fn new(mod_info: &'dummy_environment DummyModuleInfo) -> Self {
-        Self { mod_info }
+    pub fn new(mod_info: &'dummy_environment DummyModuleInfo, return_mode: ReturnMode) -> Self {
+        Self {
+            mod_info,
+            return_mode,
+        }
     }
 
     // Create a signature for `sigidx` amended with a `vmctx` argument after the standard wasm
@@ -152,31 +151,33 @@ impl<'dummy_environment> DummyFuncEnvironment<'dummy_environment> {
 }
 
 impl<'dummy_environment> FuncEnvironment for DummyFuncEnvironment<'dummy_environment> {
-    fn triple(&self) -> &Triple {
-        &self.mod_info.triple
-    }
-
-    fn flags(&self) -> &settings::Flags {
-        &self.mod_info.flags
+    fn target_config(&self) -> TargetFrontendConfig {
+        self.mod_info.config
     }
 
     fn make_global(&mut self, func: &mut ir::Function, index: GlobalIndex) -> GlobalVariable {
         // Just create a dummy `vmctx` global.
-        let offset = ((index * 8) as i32 + 8).into();
-        let gv = func.create_global_value(ir::GlobalValueData::VMContext { offset });
+        let offset = ((index.index() * 8) as i64 + 8).into();
+        let vmctx = func.create_global_value(ir::GlobalValueData::VMContext {});
+        let iadd = func.create_global_value(ir::GlobalValueData::IAddImm {
+            base: vmctx,
+            offset,
+            global_type: self.pointer_type(),
+        });
         GlobalVariable::Memory {
-            gv,
+            gv: iadd,
             ty: self.mod_info.globals[index].entity.ty,
         }
     }
 
     fn make_heap(&mut self, func: &mut ir::Function, _index: MemoryIndex) -> ir::Heap {
         // Create a static heap whose base address is stored at `vmctx+0`.
-        let addr = func.create_global_value(ir::GlobalValueData::VMContext { offset: 0.into() });
-        let gv = func.create_global_value(ir::GlobalValueData::Deref {
+        let addr = func.create_global_value(ir::GlobalValueData::VMContext);
+        let gv = func.create_global_value(ir::GlobalValueData::Load {
             base: addr,
-            offset: 0.into(),
-            memory_type: self.pointer_type(),
+            offset: Offset32::new(0),
+            global_type: self.pointer_type(),
+            readonly: true,
         });
 
         func.create_heap(ir::HeapData {
@@ -192,19 +193,18 @@ impl<'dummy_environment> FuncEnvironment for DummyFuncEnvironment<'dummy_environ
 
     fn make_table(&mut self, func: &mut ir::Function, _index: TableIndex) -> ir::Table {
         // Create a table whose base address is stored at `vmctx+0`.
-        let base_gv_addr =
-            func.create_global_value(ir::GlobalValueData::VMContext { offset: 0.into() });
-        let base_gv = func.create_global_value(ir::GlobalValueData::Deref {
-            base: base_gv_addr,
-            offset: 0.into(),
-            memory_type: self.pointer_type(),
+        let vmctx = func.create_global_value(ir::GlobalValueData::VMContext);
+        let base_gv = func.create_global_value(ir::GlobalValueData::Load {
+            base: vmctx,
+            offset: Offset32::new(0),
+            global_type: self.pointer_type(),
+            readonly: true, // when tables in wasm become "growable", revisit whether this can be readonly or not.
         });
-        let bound_gv_addr =
-            func.create_global_value(ir::GlobalValueData::VMContext { offset: 0.into() });
-        let bound_gv = func.create_global_value(ir::GlobalValueData::Deref {
-            base: bound_gv_addr,
-            offset: 0.into(),
-            memory_type: self.pointer_type(),
+        let bound_gv = func.create_global_value(ir::GlobalValueData::Load {
+            base: vmctx,
+            offset: Offset32::new(0),
+            global_type: I32,
+            readonly: true,
         });
 
         func.create_table(ir::TableData {
@@ -275,7 +275,7 @@ impl<'dummy_environment> FuncEnvironment for DummyFuncEnvironment<'dummy_environ
 
         Ok(pos
             .ins()
-            .CallIndirect(ir::Opcode::CallIndirect, VOID, sig_ref, args)
+            .CallIndirect(ir::Opcode::CallIndirect, INVALID, sig_ref, args)
             .0)
     }
 
@@ -298,7 +298,7 @@ impl<'dummy_environment> FuncEnvironment for DummyFuncEnvironment<'dummy_environ
         args.extend(call_args.iter().cloned(), &mut pos.func.dfg.value_lists);
         args.push(vmctx, &mut pos.func.dfg.value_lists);
 
-        Ok(pos.ins().Call(ir::Opcode::Call, VOID, callee, args).0)
+        Ok(pos.ins().Call(ir::Opcode::Call, INVALID, callee, args).0)
     }
 
     fn translate_memory_grow(
@@ -319,11 +319,15 @@ impl<'dummy_environment> FuncEnvironment for DummyFuncEnvironment<'dummy_environ
     ) -> WasmResult<ir::Value> {
         Ok(pos.ins().iconst(I32, -1))
     }
+
+    fn return_mode(&self) -> ReturnMode {
+        self.return_mode
+    }
 }
 
 impl<'data> ModuleEnvironment<'data> for DummyEnvironment {
-    fn flags(&self) -> &settings::Flags {
-        &self.info.flags
+    fn target_config(&self) -> &TargetFrontendConfig {
+        &self.info.config
     }
 
     fn get_func_name(&self, func_index: FuncIndex) -> ir::ExternalName {
@@ -431,7 +435,7 @@ impl<'data> ModuleEnvironment<'data> for DummyEnvironment {
 
     fn define_function_body(&mut self, body_bytes: &'data [u8]) -> WasmResult<()> {
         let func = {
-            let mut func_environ = DummyFuncEnvironment::new(&self.info);
+            let mut func_environ = DummyFuncEnvironment::new(&self.info, self.return_mode);
             let func_index =
                 FuncIndex::new(self.get_num_func_imports() + self.info.function_bodies.len());
             let name = get_func_name(func_index);

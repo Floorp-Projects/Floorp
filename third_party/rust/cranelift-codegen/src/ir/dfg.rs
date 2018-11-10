@@ -1,6 +1,6 @@
 //! Data flow graph tracking Instructions, Values, and EBBs.
 
-use entity::{EntityMap, PrimaryMap};
+use entity::{self, PrimaryMap, SecondaryMap};
 use ir;
 use ir::builder::ReplaceBuilder;
 use ir::extfunc::ExtFuncData;
@@ -34,7 +34,7 @@ pub struct DataFlowGraph {
     ///
     /// This map gets resized automatically by `make_inst()` so it is always in sync with the
     /// primary `insts` map.
-    results: EntityMap<Inst, ValueList>,
+    results: SecondaryMap<Inst, ValueList>,
 
     /// Extended basic blocks in the function and their parameters.
     ///
@@ -67,7 +67,7 @@ impl DataFlowGraph {
     pub fn new() -> Self {
         Self {
             insts: PrimaryMap::new(),
-            results: EntityMap::new(),
+            results: SecondaryMap::new(),
             ebbs: PrimaryMap::new(),
             value_lists: ValueListPool::new(),
             values: PrimaryMap::new(),
@@ -90,7 +90,7 @@ impl DataFlowGraph {
     /// Get the total number of instructions created in this function, whether they are currently
     /// inserted in the layout or not.
     ///
-    /// This is intended for use with `EntityMap::with_capacity`.
+    /// This is intended for use with `SecondaryMap::with_capacity`.
     pub fn num_insts(&self) -> usize {
         self.insts.len()
     }
@@ -103,7 +103,7 @@ impl DataFlowGraph {
     /// Get the total number of extended basic blocks created in this function, whether they are
     /// currently inserted in the layout or not.
     ///
-    /// This is intended for use with `EntityMap::with_capacity`.
+    /// This is intended for use with `SecondaryMap::with_capacity`.
     pub fn num_ebbs(&self) -> usize {
         self.ebbs.len()
     }
@@ -127,7 +127,7 @@ fn maybe_resolve_aliases(values: &PrimaryMap<Value, ValueData>, value: Value) ->
     let mut v = value;
 
     // Note that values may be empty here.
-    for _ in 0..1 + values.len() {
+    for _ in 0..=values.len() {
         if let ValueData::Alias { original, .. } = values[v] {
             v = original;
         } else {
@@ -149,6 +149,36 @@ fn resolve_aliases(values: &PrimaryMap<Value, ValueData>, value: Value) -> Value
     }
 }
 
+/// Iterator over all Values in a DFG
+pub struct Values<'a> {
+    inner: entity::Iter<'a, Value, ValueData>,
+}
+
+/// Check for non-values
+fn valid_valuedata(data: &ValueData) -> bool {
+    if let ValueData::Alias {
+        ty: types::INVALID,
+        original,
+    } = *data
+    {
+        if original == Value::reserved_value() {
+            return false;
+        }
+    }
+    true
+}
+
+impl<'a> Iterator for Values<'a> {
+    type Item = Value;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner
+            .by_ref()
+            .find(|kv| valid_valuedata(kv.1))
+            .map(|kv| kv.0)
+    }
+}
+
 /// Handling values.
 ///
 /// Values are either EBB parameters or instruction results.
@@ -156,6 +186,13 @@ impl DataFlowGraph {
     /// Allocate an extended value entry.
     fn make_value(&mut self, data: ValueData) -> Value {
         self.values.push(data)
+    }
+
+    /// Get an iterator over all values.
+    pub fn values<'a>(&'a self) -> Values {
+        Values {
+            inner: self.values.iter(),
+        }
     }
 
     /// Check if a value reference is valid.
@@ -249,7 +286,7 @@ impl DataFlowGraph {
             self.value_type(dest),
             ty
         );
-        debug_assert_ne!(ty, types::VOID);
+        debug_assert_ne!(ty, types::INVALID);
 
         self.values[dest] = ValueData::Alias { ty, original };
     }
@@ -293,7 +330,7 @@ impl DataFlowGraph {
                 self.value_type(dest),
                 ty
             );
-            debug_assert_ne!(ty, types::VOID);
+            debug_assert_ne!(ty, types::INVALID);
 
             self.values[dest] = ValueData::Alias { ty, original };
         }
@@ -422,7 +459,7 @@ impl DataFlowGraph {
     ///
     /// The result value types are determined from the instruction's value type constraints and the
     /// provided `ctrl_typevar` type for polymorphic instructions. For non-polymorphic
-    /// instructions, `ctrl_typevar` is ignored, and `VOID` can be used.
+    /// instructions, `ctrl_typevar` is ignored, and `INVALID` can be used.
     ///
     /// The type of the first result value is also set, even if it was already set in the
     /// `InstructionData` passed to `make_inst`. If this function is called with a single-result
@@ -640,12 +677,12 @@ impl DataFlowGraph {
         })
     }
 
-    /// Get the controlling type variable, or `VOID` if `inst` isn't polymorphic.
+    /// Get the controlling type variable, or `INVALID` if `inst` isn't polymorphic.
     pub fn ctrl_typevar(&self, inst: Inst) -> Type {
         let constraints = self[inst].opcode().constraints();
 
         if !constraints.is_polymorphic() {
-            types::VOID
+            types::INVALID
         } else if constraints.requires_typevar_operand() {
             // Not all instruction formats have a designated operand, but in that case
             // `requires_typevar_operand()` should never be true.
@@ -858,7 +895,7 @@ impl<'a> fmt::Display for DisplayInst<'a> {
         }
 
         let typevar = dfg.ctrl_typevar(inst);
-        if typevar.is_void() {
+        if typevar.is_invalid() {
             write!(f, "{}", dfg[inst].opcode())?;
         } else {
             write!(f, "{}.{}", dfg[inst].opcode(), typevar)?;
@@ -875,7 +912,7 @@ impl DataFlowGraph {
     fn set_value_type_for_parser(&mut self, v: Value, t: Type) {
         assert_eq!(
             self.value_type(v),
-            types::VOID,
+            types::INVALID,
             "this function is only for assigning types to previously invalid values"
         );
         match self.values[v] {
@@ -932,18 +969,18 @@ impl DataFlowGraph {
     }
 
     /// Create a new value alias. This is only for use by the parser to create
-    /// aliases with specific values.
+    /// aliases with specific values, and the printer for testing.
     #[cold]
-    pub fn make_value_alias_for_parser(&mut self, src: Value, dest: Value) {
+    pub fn make_value_alias_for_serialization(&mut self, src: Value, dest: Value) {
         assert_ne!(src, Value::reserved_value());
         assert_ne!(dest, Value::reserved_value());
 
         let ty = if self.values.is_valid(src) {
             self.value_type(src)
         } else {
-            // As a special case, if we can't resolve the aliasee yet, use VOID
+            // As a special case, if we can't resolve the aliasee yet, use INVALID
             // temporarily. It will be resolved later in parsing.
-            types::VOID
+            types::INVALID
         };
         let data = ValueData::Alias { ty, original: src };
         self.values[dest] = data;
@@ -951,9 +988,9 @@ impl DataFlowGraph {
 
     /// If `v` is already defined as an alias, return its destination value.
     /// Otherwise return None. This allows the parser to coalesce identical
-    /// alias definitions.
+    /// alias definitions, and the printer to identify an alias's immediate target.
     #[cold]
-    pub fn value_alias_dest_for_parser(&self, v: Value) -> Option<Value> {
+    pub fn value_alias_dest_for_serialization(&self, v: Value) -> Option<Value> {
         if let ValueData::Alias { original, .. } = self.values[v] {
             Some(original)
         } else {
@@ -968,7 +1005,7 @@ impl DataFlowGraph {
         if let Some(resolved) = maybe_resolve_aliases(&self.values, v) {
             let old_ty = self.value_type(v);
             let new_ty = self.value_type(resolved);
-            if old_ty == types::VOID {
+            if old_ty == types::INVALID {
                 self.set_value_type_for_parser(v, new_ty);
             } else {
                 assert_eq!(old_ty, new_ty);
@@ -984,7 +1021,7 @@ impl DataFlowGraph {
     #[cold]
     pub fn make_invalid_value_for_parser(&mut self) {
         let data = ValueData::Alias {
-            ty: types::VOID,
+            ty: types::INVALID,
             original: Value::reserved_value(),
         };
         self.make_value(data);
@@ -998,7 +1035,7 @@ impl DataFlowGraph {
             return false;
         }
         if let ValueData::Alias { ty, .. } = self.values[v] {
-            ty != types::VOID
+            ty != types::INVALID
         } else {
             true
         }

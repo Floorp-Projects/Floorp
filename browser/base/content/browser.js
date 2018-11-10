@@ -294,6 +294,40 @@ Object.defineProperty(this, "gNavToolbox", {
   },
 });
 
+// High priority notification bars shown at the top of the window.
+Object.defineProperty(this, "gHighPriorityNotificationBox", {
+  configurable: true,
+  enumerable: true,
+  get() {
+    delete this.gHighPriorityNotificationBox;
+
+    let notificationbox = new MozElements.NotificationBox(element => {
+      element.classList.add("global-notificationbox");
+      element.setAttribute("notificationside", "top");
+      document.getElementById("appcontent").append(element);
+    });
+
+    return this.gHighPriorityNotificationBox = notificationbox;
+  },
+});
+
+// Regular notification bars shown at the bottom of the window.
+Object.defineProperty(this, "gNotificationBox", {
+  configurable: true,
+  enumerable: true,
+  get() {
+    delete this.gNotificationBox;
+
+    let notificationbox = new MozElements.NotificationBox(element => {
+      element.classList.add("global-notificationbox");
+      element.setAttribute("notificationside", "bottom");
+      document.getElementById("browser-bottombox").appendChild(element);
+    });
+
+    return this.gNotificationBox = notificationbox;
+  },
+});
+
 // Smart getter for the findbar.  If you don't wish to force the creation of
 // the findbar, check gFindBarInitialized first.
 
@@ -527,8 +561,7 @@ const gStoragePressureObserver = {
     }
 
     const NOTIFICATION_VALUE = "storage-pressure-notification";
-    let notificationBox = document.getElementById("high-priority-global-notificationbox");
-    if (notificationBox.getNotificationWithValue(NOTIFICATION_VALUE)) {
+    if (gHighPriorityNotificationBox.getNotificationWithValue(NOTIFICATION_VALUE)) {
       // Do not display the 2nd notification when there is already one
       return;
     }
@@ -597,8 +630,9 @@ const gStoragePressureObserver = {
       });
     }
 
-    notificationBox.appendNotification(
-      msg, NOTIFICATION_VALUE, null, notificationBox.PRIORITY_WARNING_HIGH, buttons, null);
+    gHighPriorityNotificationBox.appendNotification(
+      msg, NOTIFICATION_VALUE, null,
+      gHighPriorityNotificationBox.PRIORITY_WARNING_HIGH, buttons, null);
   },
 };
 
@@ -3498,40 +3532,24 @@ var PrintPreviewListener = {
     this._sidebarCommand = SidebarUI.currentID;
     SidebarUI.hide();
 
-    var notificationBox = gBrowser.getNotificationBox();
-    this._chromeState.notificationsOpen = !notificationBox.notificationsHidden;
-    notificationBox.notificationsHidden = true;
-
     this._chromeState.findOpen = gFindBarInitialized && !gFindBar.hidden;
     if (gFindBarInitialized)
       gFindBar.close();
 
-    var globalNotificationBox = document.getElementById("global-notificationbox");
-    this._chromeState.globalNotificationsOpen = !globalNotificationBox.notificationsHidden;
-    globalNotificationBox.notificationsHidden = true;
-
-    this._chromeState.syncNotificationsOpen = false;
-    var syncNotifications = document.getElementById("sync-notifications");
-    if (syncNotifications) {
-      this._chromeState.syncNotificationsOpen = !syncNotifications.notificationsHidden;
-      syncNotifications.notificationsHidden = true;
-    }
+    gBrowser.getNotificationBox().stack.hidden = true;
+    gNotificationBox.stack.hidden = true;
   },
   _showChrome() {
-    if (this._chromeState.notificationsOpen)
-      gBrowser.getNotificationBox().notificationsHidden = false;
+    gNotificationBox.stack.hidden = false;
+    gBrowser.getNotificationBox().stack.hidden = false;
 
-    if (this._chromeState.findOpen)
+    if (this._chromeState.findOpen) {
       gLazyFindCommand("open");
+    }
 
-    if (this._chromeState.globalNotificationsOpen)
-      document.getElementById("global-notificationbox").notificationsHidden = false;
-
-    if (this._chromeState.syncNotificationsOpen)
-      document.getElementById("sync-notifications").notificationsHidden = false;
-
-    if (this._chromeState.sidebarOpen)
+    if (this._chromeState.sidebarOpen) {
       SidebarUI.show(this._sidebarCommand);
+    }
   },
 
   activateBrowser(browser) {

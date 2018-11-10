@@ -74,7 +74,7 @@ matrix:
       os: linux
       python: "3.6"
       env: JOB=tools_unittest TOXENV=py36 HYPOTHESIS_PROFILE=ci SCRIPT=tools/ci/ci_tools_unittest.sh
-    - name: "tools/wpt/ unittests"
+    - name: "tools/wpt/ tests"
       if: type = pull_request
       os: linux
       python: "2.7"
@@ -82,7 +82,7 @@ matrix:
         apt:
           packages:
             - libnss3-tools
-      env: JOB=wpt_integration TOXENV=py27,py27-flake8 SCRIPT=tools/ci/ci_wpt.sh
+      env: JOB=wpt_integration TOXENV=py27 SCRIPT=tools/ci/ci_wpt.sh
     - name: "resources/ tests"
       if: type = pull_request
       os: linux

@@ -81,8 +81,11 @@ using namespace JS;
 using mozilla::dom::AutoEntryScript;
 
 // The watchdog thread loop is pretty trivial, and should not require much stack
-// space to do its job. So only give it 32KiB.
-static constexpr size_t kWatchdogStackSize = 32 * 1024;
+// space to do its job. So only give it 32KiB or the platform minimum.
+#if ! defined(PTHREAD_STACK_MIN)
+#define PTHREAD_STACK_MIN 0
+#endif
+static constexpr size_t kWatchdogStackSize = PTHREAD_STACK_MIN < 32 * 1024 ? 32 * 1024 : PTHREAD_STACK_MIN;
 
 static void WatchdogMain(void* arg);
 class Watchdog;

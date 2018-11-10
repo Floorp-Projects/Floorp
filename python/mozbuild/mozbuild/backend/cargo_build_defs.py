@@ -131,7 +131,6 @@ cargo_extra_outputs = {
         'legalize-riscv.rs',
         'legalize-x86.rs',
         'legalizer.rs',
-        'new_types.rs',
         'opcodes.rs',
         'registers-arm32.rs',
         'registers-arm64.rs',

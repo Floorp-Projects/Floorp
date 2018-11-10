@@ -923,6 +923,8 @@ nsXULPopupManager::ShowPopupCallback(nsIContent* aPopup,
   aPopupFrame->ShowPopup(aIsContextMenu);
   NS_ENSURE_TRUE_VOID(weakFrame.IsAlive());
 
+  item->UpdateFollowAnchor();
+
   // popups normally hide when an outside click occurs. Panels may use
   // the noautohide attribute to disable this behaviour. It is expected
   // that the application will hide these popups manually. The tooltip
@@ -935,8 +937,6 @@ nsXULPopupManager::ShowPopupCallback(nsIContent* aPopup,
   mPopups = item;
   SetCaptureState(oldmenu);
   NS_ENSURE_TRUE_VOID(weakFrame.IsAlive());
-
-  item->UpdateFollowAnchor();
 
   if (aSelectFirstItem) {
     nsMenuFrame* next = GetNextMenuItem(aPopupFrame, nullptr, true, false);
