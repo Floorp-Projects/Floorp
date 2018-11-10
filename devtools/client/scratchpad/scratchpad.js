@@ -330,14 +330,6 @@ var Scratchpad = {
   },
 
   /**
-   * Retrieve the xul:notificationbox DOM element. It notifies the user when
-   * the current code execution context is SCRATCHPAD_CONTEXT_BROWSER.
-   */
-  get notificationBox() {
-    return document.getElementById("scratchpad-notificationbox");
-  },
-
-  /**
    * Hide the menu bar.
    */
   hideMenu: function SP_hideMenu() {
@@ -1571,6 +1563,10 @@ var Scratchpad = {
       return;
     }
 
+    this.notificationBox = new window.MozElements.NotificationBox(element => {
+      document.getElementById("scratchpad-container").prepend(element);
+    });
+
     const chrome = Services.prefs.getBoolPref(DEVTOOLS_CHROME_ENABLED);
     if (chrome) {
       const environmentMenu = document.getElementById("sp-environment-menu");
@@ -1631,7 +1627,7 @@ var Scratchpad = {
       const okstring = this.strings.GetStringFromName("selfxss.okstring");
       const msg = this.strings.formatStringFromName("selfxss.msg", [okstring], 1);
       this._onPaste = WebConsoleUtils.pasteHandlerGen(this.editor.container.contentDocument.body,
-                                                      document.querySelector("#scratchpad-notificationbox"),
+                                                      this.notificationBox,
                                                       msg, okstring);
       editorElement.addEventListener("paste", this._onPaste, true);
       editorElement.addEventListener("drop", this._onPaste);

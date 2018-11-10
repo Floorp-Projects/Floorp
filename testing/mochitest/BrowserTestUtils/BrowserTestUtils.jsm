@@ -1584,10 +1584,8 @@ var BrowserTestUtils = {
    *        Resolves to the <xul:notification> that is being shown.
    */
   waitForGlobalNotificationBar(win, notificationValue) {
-    let notificationBox =
-      win.document.getElementById("high-priority-global-notificationbox");
-    return this.waitForNotificationInNotificationBox(notificationBox,
-                                                     notificationValue);
+    return this.waitForNotificationInNotificationBox(
+                       win.gHighPriorityNotificationBox, notificationValue);
   },
 
   waitForNotificationInNotificationBox(notificationBox, notificationValue) {
@@ -1596,7 +1594,7 @@ var BrowserTestUtils = {
         return event.target.value == notificationValue;
       };
 
-      BrowserTestUtils.waitForEvent(notificationBox, "AlertActive",
+      BrowserTestUtils.waitForEvent(notificationBox.stack, "AlertActive",
                                     false, check).then((event) => {
         // The originalTarget of the AlertActive on a notificationbox
         // will be the notification itself.

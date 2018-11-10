@@ -72,7 +72,7 @@ namespace recordreplay {
   MACRO(kqueue, RR_SaveRvalHadErrorNegative)                     \
   MACRO(pipe, RR_SaveRvalHadErrorNegative<RR_WriteBufferFixedSize<0, 2 * sizeof(int)>>, \
         nullptr, nullptr, Preamble_SetError)                     \
-  MACRO(close, RR_SaveRvalHadErrorNegative)                      \
+  MACRO(close, RR_SaveRvalHadErrorNegative, nullptr, nullptr, Preamble_Veto<0>) \
   MACRO(__close_nocancel, RR_SaveRvalHadErrorNegative)           \
   MACRO(mkdir, RR_SaveRvalHadErrorNegative)                      \
   MACRO(dup, RR_SaveRvalHadErrorNegative)                        \
@@ -199,7 +199,6 @@ namespace recordreplay {
   MACRO(mach_vm_allocate, nullptr, Preamble_mach_vm_allocate)    \
   MACRO(mach_vm_deallocate, nullptr, Preamble_mach_vm_deallocate) \
   MACRO(mach_vm_protect, nullptr, Preamble_mach_vm_protect)      \
-  MACRO(rand, RR_ScalarRval)                                     \
   MACRO(realpath,                                                \
         RR_SaveRvalHadErrorZero<RR_Compose<RR_CStringRval,       \
                                            RR_WriteOptionalBufferFixedSize<1, PATH_MAX>>>) \

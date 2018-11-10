@@ -62,7 +62,7 @@ def validate_test_ini(test_details):
     return valid_settings
 
 
-def write_test_settings_json(test_details, oskey):
+def write_test_settings_json(args, test_details, oskey):
     # write test settings json file with test details that the control
     # server will provide for the web ext
     test_url = transform_platform(test_details['test_url'], oskey)
@@ -71,7 +71,8 @@ def write_test_settings_json(test_details, oskey):
         "raptor-options": {
             "type": test_details['type'],
             "test_url": test_url,
-            "page_cycles": int(test_details['page_cycles'])
+            "page_cycles": int(test_details['page_cycles']),
+            "host": args.host,
         }
     }
 
@@ -200,7 +201,7 @@ def get_raptor_test_list(args, oskey):
     if len(tests_to_run) != 0:
         for test in tests_to_run:
             if validate_test_ini(test):
-                write_test_settings_json(test, oskey)
+                write_test_settings_json(args, test, oskey)
             else:
                 # test doesn't have valid settings, remove it from available list
                 LOG.info("test %s is not valid due to missing settings" % test['name'])

@@ -23,6 +23,13 @@ def test_verify_options(filedir):
     args.binary = os.path.join(filedir, 'fake_binary.exe')
     verify_options(parser, args)  # assert no exception
 
+    args = Namespace(app='geckoview',
+                     binary='org.mozilla.geckoview_example',
+                     gecko_profile='False',
+                     is_release_build=False,
+                     host='sophie')
+    verify_options(parser, args)  # assert no exception
+
 
 if __name__ == '__main__':
     mozunit.main()

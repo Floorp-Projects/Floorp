@@ -23,10 +23,7 @@
 #ifndef nsHtml5ArrayCopy_h
 #define nsHtml5ArrayCopy_h
 
-#include "nsStringFwd.h"
-
 class nsHtml5StackNode;
-class nsHtml5AttributeName;
 
 // Unfortunately, these don't work as template functions because the arguments
 // would need coercion from a template class, which complicates things.
@@ -54,20 +51,6 @@ public:
   static inline void arraycopy(int32_t* source, int32_t* target, int32_t length)
   {
     memcpy(target, source, size_t(length) * sizeof(int32_t));
-  }
-
-  static inline void arraycopy(nsHtml5String* source,
-                               nsHtml5String* target,
-                               int32_t length)
-  {
-    memcpy(target, source, size_t(length) * sizeof(nsHtml5String));
-  }
-
-  static inline void arraycopy(nsHtml5AttributeName** source,
-                               nsHtml5AttributeName** target,
-                               int32_t length)
-  {
-    memcpy(target, source, size_t(length) * sizeof(nsHtml5AttributeName*));
   }
 
   static inline void arraycopy(nsHtml5StackNode** source,

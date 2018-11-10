@@ -874,6 +874,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     }
     rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES, sizeOfHeapCommitted());
     rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT, pretenureCount);
+    rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_PROMOTION_RATE, promotionRate * 100);
 
     stats().endNurseryCollection(reason);
     gcTracer.traceMinorGCEnd();

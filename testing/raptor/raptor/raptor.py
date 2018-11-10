@@ -20,6 +20,16 @@ from mozrunner import runners
 
 # need this so raptor imports work both from /raptor and via mach
 here = os.path.abspath(os.path.dirname(__file__))
+if os.environ.get('SCRIPTSPATH', None) is not None:
+    # in production it is env SCRIPTS_PATH
+    mozharness_dir = os.environ['SCRIPTSPATH']
+else:
+    # locally it's in source tree
+    mozharness_dir = os.path.join(here, '../../../mozharness')
+sys.path.insert(0, mozharness_dir)
+
+from mozharness.mozilla.firefox.autoconfig import _cfg_file_path, _autoconfig_path
+
 webext_dir = os.path.join(os.path.dirname(here), 'webext')
 sys.path.insert(0, here)
 
@@ -40,12 +50,22 @@ from results import RaptorResultsHandler
 from gecko_profile import GeckoProfile
 
 
+def remove_autoconfig(binary):
+    bindir = os.path.dirname(binary)
+    mozillacfg = _cfg_file_path(bindir)
+    if os.path.isfile(mozillacfg):
+        os.unlink(mozillacfg)
+    autoconfig = _autoconfig_path(bindir)
+    if os.path.isfile(autoconfig):
+        os.unlink(autoconfig)
+
+
 class Raptor(object):
     """Container class for Raptor"""
 
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
-                 symbols_path=None):
+                 symbols_path=None, host=None, is_release_build=False):
         self.config = {}
         self.config['app'] = app
         self.config['binary'] = binary
@@ -57,6 +77,8 @@ class Raptor(object):
         self.config['gecko_profile_interval'] = gecko_profile_interval
         self.config['gecko_profile_entries'] = gecko_profile_entries
         self.config['symbols_path'] = symbols_path
+        self.config['host'] = host
+        self.config['is_release_build'] = is_release_build
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
         self.log = get_default_logger(component='raptor-main')
         self.control_server = None
@@ -70,6 +92,9 @@ class Raptor(object):
             self.profile = create_profile('firefox')
         else:
             self.profile = create_profile(self.config['app'])
+            # Clear any existing mozilla.cfg file to prevent earlier
+            # runs using mitmproxy from interfering with settings.
+            remove_autoconfig(binary)
 
         # Merge in base profiles
         with open(os.path.join(self.profile_data_dir, 'profiles.json'), 'r') as fh:
@@ -117,7 +142,7 @@ class Raptor(object):
         self.control_server.start()
 
         # for android we must make the control server available to the device
-        if self.config['app'] == "geckoview":
+        if self.config['app'] == "geckoview" and self.config['host'] in ('localhost', '127.0.0.1'):
             self.log.info("making the raptor control server port available to device")
             _tcp_port = "tcp:%s" % self.control_server.port
             self.device.create_socket_connection('reverse', _tcp_port, _tcp_port)
@@ -150,10 +175,11 @@ class Raptor(object):
                         test['name'],
                         self.control_server.port,
                         self.post_startup_delay,
-                        benchmark_port)
+                        host=self.config['host'],
+                        b_port=benchmark_port)
 
         # for android we must make the benchmarks server available to the device
-        if self.config['app'] == "geckoview":
+        if self.config['app'] == "geckoview" and self.config['host'] in ('localhost', '127.0.0.1'):
             self.log.info("making the raptor benchmarks server port available to device")
             _tcp_port = "tcp:%s" % benchmark_port
             self.device.create_socket_connection('reverse', _tcp_port, _tcp_port)
@@ -183,6 +209,17 @@ class Raptor(object):
             # startup the playback tool
             self.playback = get_playback(self.config)
 
+        if self.config['app'] in ("geckoview", "firefox") and \
+           self.config['host'] not in ('localhost', '127.0.0.1'):
+            # Must delete the proxy settings from the profile if running
+            # the test with a host different from localhost.
+            userjspath = os.path.join(self.profile.profile, 'user.js')
+            with open(userjspath) as userjsfile:
+                prefs = userjsfile.readlines()
+            prefs = [pref for pref in prefs if 'network.proxy' not in pref]
+            with open(userjspath, 'w') as userjsfile:
+                userjsfile.writelines(prefs)
+
         # for geckoview we must copy the profile onto the device and set perms
         if self.config['app'] == "geckoview":
             if not self.device.is_app_installed(self.config['binary']):
@@ -192,7 +229,6 @@ class Raptor(object):
             self.device_profile = "/sdcard/raptor-profile"
             if self.device.is_dir(self.device_profile):
                 self.device.rm(self.device_profile, recursive=True)
-
             self.device.mkdir(self.device_profile)
             self.device.push(self.profile.profile, self.device_profile)
 
@@ -223,10 +259,13 @@ class Raptor(object):
             self.control_server.app_name = self.config['binary']
 
         else:
-            # For Firefox we need to set MOZ_MOZ_DISABLE_NONLOCAL_CONNECTIONS=1 env var before
-            # startup. This is because of restrictions on moz-beta that require webext to be
-            # signed unless disable non-local connections
-            if self.config['app'] == "firefox":
+            # For Firefox we need to set
+            # MOZ_DISABLE_NONLOCAL_CONNECTIONS=1 env var before
+            # startup when testing release builds from mozilla-beta or
+            # mozilla-release. This is because of restrictions on
+            # release builds that require webextensions to be signed
+            # unless MOZ_DISABLE_NONLOCAL_CONNECTIONS is set to '1'.
+            if self.config['app'] == "firefox" and self.config['is_release_build']:
                 self.log.info("setting MOZ_DISABLE_NONLOCAL_CONNECTIONS=1")
                 os.environ['MOZ_DISABLE_NONLOCAL_CONNECTIONS'] = "1"
 
@@ -235,12 +274,15 @@ class Raptor(object):
 
             # if running a pageload test on google chrome, add the cmd line options
             # to turn on the proxy and ignore security certificate errors
+            # if using host localhost, 127.0.0.1.
             if self.config['app'] == "chrome" and test.get('playback', None) is not None:
                 chrome_args = [
-                    '--proxy-server="http=127.0.0.1:8080;https=127.0.0.1:8080;ssl=127.0.0.1:8080"',
+                    '--proxy-server="http=127.0.0.1:8080;' +
+                    'https=127.0.0.1:8080;ssl=127.0.0.1:8080"',
                     '--ignore-certificate-errors'
                 ]
-                self.runner.cmdargs.extend(chrome_args)
+                if self.config['host'] not in ('localhost', '127.0.0.1'):
+                    chrome_args[0].replace('127.0.0.1', self.config['host'])
 
             self.runner.start()
             proc = self.runner.process_handler
@@ -249,7 +291,8 @@ class Raptor(object):
             self.control_server.browser_proc = proc
 
             # pageload tests need to be able to access non-local connections via mitmproxy
-            if self.config['app'] == "firefox" and test.get('playback', None) is not None:
+            if self.config['app'] == "firefox" and self.config['is_release_build'] and \
+               test.get('playback', None) is not None:
                 self.log.info("setting MOZ_DISABLE_NONLOCAL_CONNECTIONS=0")
                 os.environ['MOZ_DISABLE_NONLOCAL_CONNECTIONS'] = "0"
 
@@ -352,6 +395,7 @@ class Raptor(object):
             self.device.remove_socket_connections('reverse')
         else:
             pass
+        remove_autoconfig(self.config['binary'])
         self.log.info("finished")
 
 
@@ -433,12 +477,14 @@ def main(args=sys.argv[1:]):
 
     raptor = Raptor(args.app,
                     args.binary,
-                    args.run_local,
-                    args.obj_path,
-                    args.gecko_profile,
-                    args.gecko_profile_interval,
-                    args.gecko_profile_entries,
-                    args.symbols_path)
+                    run_local=args.run_local,
+                    obj_path=args.obj_path,
+                    gecko_profile=args.gecko_profile,
+                    gecko_profile_interval=args.gecko_profile_interval,
+                    gecko_profile_entries=args.gecko_profile_entries,
+                    symbols_path=args.symbols_path,
+                    host=args.host,
+                    is_release_build=args.is_release_build)
 
     raptor.start_control_server()
 

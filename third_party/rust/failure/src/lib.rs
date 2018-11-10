@@ -23,7 +23,10 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(missing_docs)]
 #![deny(warnings)]
-#![cfg_attr(feature = "small-error", feature(extern_types, allocator_api))]
+#![cfg_attr(
+    feature = "small-error",
+    feature(extern_types, allocator_api)
+)]
 
 macro_rules! with_std { ($($i:item)*) => ($(#[cfg(feature = "std")]$i)*) }
 macro_rules! without_std { ($($i:item)*) => ($(#[cfg(not(feature = "std"))]$i)*) }
@@ -33,6 +36,7 @@ macro_rules! without_std { ($($i:item)*) => ($(#[cfg(not(feature = "std"))]$i)*)
 #[doc(hidden)]
 pub extern crate core as _core;
 
+mod as_fail;
 mod backtrace;
 #[cfg(feature = "std")]
 mod box_std;
@@ -43,6 +47,7 @@ mod result_ext;
 use core::any::TypeId;
 use core::fmt::{Debug, Display};
 
+pub use as_fail::AsFail;
 pub use backtrace::Backtrace;
 pub use compat::Compat;
 pub use context::Context;
@@ -161,7 +166,10 @@ pub trait Fail: Display + Debug + Send + Sync + 'static {
     }
 
     #[doc(hidden)]
-    #[deprecated(since = "0.1.2", note = "please use the 'iter_causes()' method instead")]
+    #[deprecated(
+        since = "0.1.2",
+        note = "please use the 'iter_chain()' method instead"
+    )]
     fn causes(&self) -> Causes
     where
         Self: Sized,
@@ -170,7 +178,10 @@ pub trait Fail: Display + Debug + Send + Sync + 'static {
     }
 
     #[doc(hidden)]
-    #[deprecated(since = "0.1.2", note = "please use the 'find_root_cause()' method instead")]
+    #[deprecated(
+        since = "0.1.2",
+        note = "please use the 'find_root_cause()' method instead"
+    )]
     fn root_cause(&self) -> &Fail
     where
         Self: Sized,
@@ -239,13 +250,19 @@ impl Fail {
     }
 
     /// Deprecated alias to `find_root_cause`.
-    #[deprecated(since = "0.1.2", note = "please use the 'find_root_cause()' method instead")]
+    #[deprecated(
+        since = "0.1.2",
+        note = "please use the 'find_root_cause()' method instead"
+    )]
     pub fn root_cause(&self) -> &Fail {
         find_root_cause(self)
     }
 
-    /// Deprecated alias to `iter_causes`.
-    #[deprecated(since = "0.1.2", note = "please use the 'iter_chain()' method instead")]
+    /// Deprecated alias to `iter_chain`.
+    #[deprecated(
+        since = "0.1.2",
+        note = "please use the 'iter_chain()' method instead"
+    )]
     pub fn causes(&self) -> Causes {
         Causes { fail: Some(self) }
     }

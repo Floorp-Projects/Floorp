@@ -33,51 +33,91 @@ extern crate hashmap_core;
 #[macro_use]
 extern crate alloc;
 
-pub use parser::WasmDecoder;
-pub use parser::Parser;
-pub use parser::ParserState;
-pub use parser::ParserInput;
-pub use parser::BinaryReaderError;
-pub use parser::BinaryReader;
-pub use parser::Result;
-pub use parser::Range;
-pub use parser::SectionCode;
-pub use parser::Operator;
-pub use parser::Type;
-pub use parser::CustomSectionKind;
-pub use parser::NameType;
-pub use parser::Naming;
+pub use binary_reader::BinaryReader;
+use binary_reader::SectionHeader;
+
 pub use parser::LocalName;
 pub use parser::NameEntry;
-pub use parser::ExternalKind;
-pub use parser::FuncType;
-pub use parser::ResizableLimits;
-pub use parser::TableType;
-pub use parser::MemoryType;
-pub use parser::GlobalType;
-pub use parser::MemoryImmediate;
-pub use parser::BrTable;
-pub use parser::ImportSectionEntryType;
-pub use parser::RelocType;
+pub use parser::Parser;
+pub use parser::ParserInput;
+pub use parser::ParserState;
+pub use parser::Range;
 pub use parser::RelocEntry;
-pub use parser::LinkingType;
-pub use parser::Ieee32;
-pub use parser::Ieee64;
+pub use parser::WasmDecoder;
 
-pub use validator::ValidatingParser;
-pub use validator::ValidatingOperatorParser;
-pub use validator::WasmModuleResources;
+pub use primitives::BinaryReaderError;
+pub use primitives::BrTable;
+pub use primitives::CustomSectionKind;
+pub use primitives::ExternalKind;
+pub use primitives::FuncType;
+pub use primitives::GlobalType;
+pub use primitives::Ieee32;
+pub use primitives::Ieee64;
+pub use primitives::ImportSectionEntryType;
+pub use primitives::LinkingType;
+pub use primitives::MemoryImmediate;
+pub use primitives::MemoryType;
+pub use primitives::NameType;
+pub use primitives::Naming;
+pub use primitives::Operator;
+pub use primitives::RelocType;
+pub use primitives::ResizableLimits;
+pub use primitives::Result;
+pub use primitives::SectionCode;
+pub use primitives::TableType;
+pub use primitives::Type;
+
 pub use validator::validate;
+pub use validator::ValidatingOperatorParser;
+pub use validator::ValidatingParser;
+pub use validator::WasmModuleResources;
 
-mod parser;
-mod validator;
+pub use readers::CodeSectionReader;
+pub use readers::Data;
+pub use readers::DataSectionReader;
+pub use readers::Element;
+pub use readers::ElementItems;
+pub use readers::ElementItemsReader;
+pub use readers::ElementSectionReader;
+pub use readers::Export;
+pub use readers::ExportSectionReader;
+pub use readers::FunctionBody;
+pub use readers::FunctionSectionReader;
+pub use readers::Global;
+pub use readers::GlobalSectionReader;
+pub use readers::Import;
+pub use readers::ImportSectionReader;
+pub use readers::InitExpr;
+pub use readers::LinkingSectionReader;
+pub use readers::LocalsReader;
+pub use readers::MemorySectionReader;
+pub use readers::ModuleReader;
+pub use readers::Name;
+pub use readers::NameSectionReader;
+pub use readers::NamingReader;
+pub use readers::OperatorsReader;
+pub use readers::Reloc;
+pub use readers::RelocSectionReader;
+pub use readers::Section;
+pub use readers::SectionIterator;
+pub use readers::SectionIteratorLimited;
+pub use readers::SectionReader;
+pub use readers::SectionWithLimitedItems;
+pub use readers::TableSectionReader;
+pub use readers::TypeSectionReader;
+
+mod binary_reader;
 mod limits;
+mod parser;
+mod primitives;
+mod readers;
 mod tests;
+mod validator;
 
 #[cfg(not(feature = "std"))]
 mod std {
+    pub use alloc::{boxed, vec};
     pub use core::*;
-    pub use alloc::vec;
     pub mod collections {
         pub use hashmap_core::HashSet;
     }
