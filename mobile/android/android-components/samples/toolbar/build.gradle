@@ -36,6 +36,8 @@ dependencies {
     implementation project(':ui-colors')
     implementation project(':ui-icons')
 
+    implementation project(':feature-toolbar')
+
     implementation project(':support-ktx')
 
     implementation Dependencies.kotlin_stdlib

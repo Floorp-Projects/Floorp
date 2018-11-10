@@ -20,6 +20,7 @@ import mozilla.components.feature.session.CoordinateScrollingFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.storage.HistoryTrackingFeature
 import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
+import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import org.mozilla.samples.browser.ext.components
@@ -27,6 +28,7 @@ import org.mozilla.samples.browser.ext.components
 class BrowserFragment : Fragment(), BackHandler, DownloadDialogListener {
     private lateinit var sessionFeature: SessionFeature
     private lateinit var toolbarFeature: ToolbarFeature
+    private lateinit var toolbarAutocompleteFeature: ToolbarAutocompleteFeature
     private lateinit var tabsToolbarFeature: TabsToolbarFeature
     private lateinit var downloadsFeature: DownloadsFeature
     private lateinit var historyTrackingFeature: HistoryTrackingFeature
@@ -61,6 +63,11 @@ class BrowserFragment : Fragment(), BackHandler, DownloadDialogListener {
                 components.sessionUseCases.loadUrl,
                 components.defaultSearchUseCase,
                 sessionId)
+
+        toolbarAutocompleteFeature = ToolbarAutocompleteFeature(toolbar).apply {
+            this.addHistoryStorageProvider(components.historyStorage)
+            this.addDomainProvider(components.shippedDomainsProvider)
+        }
 
         tabsToolbarFeature = TabsToolbarFeature(toolbar, components.sessionManager, ::showTabs)
 

@@ -18,7 +18,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
-import mozilla.components.browser.domains.DomainAutoCompleteProvider
+import mozilla.components.browser.domains.CustomDomainsProvider
+import mozilla.components.browser.domains.ShippedDomainsProvider
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.BrowserMenuItem
@@ -26,21 +27,23 @@ import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.view.hideKeyboard
-import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 
 /**
  * This sample application shows how to use and customize the browser-toolbar component.
  */
 @Suppress("TooManyFunctions", "MagicNumber")
 class ToolbarActivity : AppCompatActivity() {
-    private val autoCompleteProvider: DomainAutoCompleteProvider = DomainAutoCompleteProvider()
+    private val shippedDomainsProvider = ShippedDomainsProvider()
+    private val customDomainsProvider = CustomDomainsProvider()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        autoCompleteProvider.initialize(this)
+        shippedDomainsProvider.initialize(this)
+        customDomainsProvider.initialize(this)
 
         setContentView(R.layout.activity_toolbar)
 
@@ -56,16 +59,9 @@ class ToolbarActivity : AppCompatActivity() {
         recyclerView.adapter = ConfigurationAdapter(configuration)
         recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
 
-        toolbar.setAutocompleteFilter { value, view ->
-            view?.let {
-                val result = autoCompleteProvider.autocomplete(value)
-                view.applyAutocompleteResult(
-                    InlineAutocompleteEditText.AutocompleteResult(
-                        result.text,
-                        result.source,
-                        result.size
-                    ) { result.url })
-            }
+        ToolbarAutocompleteFeature(toolbar).apply {
+            this.addDomainProvider(shippedDomainsProvider)
+            this.addDomainProvider(customDomainsProvider)
         }
     }
 
