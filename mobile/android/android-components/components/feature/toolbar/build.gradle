@@ -24,11 +24,18 @@ android {
 dependencies {
     implementation project(':feature-session')
     implementation project(':browser-session')
+    implementation project(':browser-domains')
     implementation project(':concept-toolbar')
+    implementation project(':concept-storage')
 
     implementation project(':support-ktx')
+    testImplementation project(':support-test')
+    testImplementation project(':browser-storage-memory')
 
     implementation Dependencies.kotlin_stdlib
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.kotlin_coroutines
 }
 
 apply from: '../../../publish.gradle'

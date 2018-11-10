@@ -1,0 +1,183 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package mozilla.components.feature.toolbar
+
+import android.content.Context
+import mozilla.components.concept.storage.HistoryStorage
+import mozilla.components.concept.toolbar.AutocompleteDelegate
+import mozilla.components.concept.toolbar.Toolbar
+import org.junit.Test
+import org.junit.Assert.assertNotNull
+import mozilla.components.browser.domains.BaseDomainAutocompleteProvider
+import mozilla.components.browser.domains.Domain
+import mozilla.components.browser.domains.DomainList
+import mozilla.components.browser.storage.memory.InMemoryHistoryStorage
+import mozilla.components.concept.storage.VisitType
+import mozilla.components.concept.toolbar.AutocompleteResult
+import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
+import org.junit.Assert.fail
+import org.mockito.Mockito.never
+import org.mockito.Mockito.reset
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
+import kotlinx.coroutines.runBlocking
+
+class ToolbarAutocompleteFeatureTest {
+    class TestToolbar : Toolbar {
+        override var url: String = ""
+        override var siteSecure: Toolbar.SiteSecurity = Toolbar.SiteSecurity.INSECURE
+
+        var autocompleteFilter: ((String, AutocompleteDelegate) -> Unit)? = null
+
+        override fun setSearchTerms(searchTerms: String) {
+            fail()
+        }
+
+        override fun displayProgress(progress: Int) {
+            fail()
+        }
+
+        override fun onBackPressed(): Boolean {
+            fail()
+            return false
+        }
+
+        override fun setOnUrlCommitListener(listener: (String) -> Unit) {
+            fail()
+        }
+
+        override fun setAutocompleteListener(filter: (String, AutocompleteDelegate) -> Unit) {
+            autocompleteFilter = filter
+        }
+
+        override fun addBrowserAction(action: Toolbar.Action) {
+            fail()
+        }
+
+        override fun addPageAction(action: Toolbar.Action) {
+            fail()
+        }
+
+        override fun addNavigationAction(action: Toolbar.Action) {
+            fail()
+        }
+
+        override fun setOnEditListener(listener: Toolbar.OnEditListener) {
+            fail()
+        }
+
+        override fun displayMode() {
+            fail()
+        }
+
+        override fun editMode() {
+            fail()
+        }
+    }
+
+    @Test
+    fun `feature can be used without providers`() {
+        val toolbar = TestToolbar()
+
+        ToolbarAutocompleteFeature(toolbar)
+
+        assertNotNull(toolbar.autocompleteFilter)
+
+        val autocompleteDelegate: AutocompleteDelegate = mock()
+        toolbar.autocompleteFilter!!.invoke("moz", autocompleteDelegate)
+        verify(autocompleteDelegate, never()).applyAutocompleteResult(any())
+        verify(autocompleteDelegate, times(1)).noAutocompleteResult()
+    }
+
+    @Test
+    fun `feature can be configured with providers`() {
+        val toolbar = TestToolbar()
+        var feature = ToolbarAutocompleteFeature(toolbar)
+        val autocompleteDelegate: AutocompleteDelegate = mock()
+
+        var history: HistoryStorage = InMemoryHistoryStorage()
+        val domains = object : BaseDomainAutocompleteProvider(DomainList.CUSTOM) {
+            override fun initialize(context: Context) {}
+            fun testDomains(list: List<Domain>) {
+                domains = list
+            }
+        }
+
+        // Can autocomplete with just an empty history provider.
+        feature.addHistoryStorageProvider(history)
+        verifyNoAutocompleteResult(toolbar, autocompleteDelegate, "hi")
+
+        // Can autocomplete with a non-empty history provider.
+        runBlocking {
+            history.recordVisit("https://www.mozilla.org", VisitType.TYPED)
+        }
+
+        verifyNoAutocompleteResult(toolbar, autocompleteDelegate, "hi")
+        verifyAutocompleteResult(toolbar, autocompleteDelegate, "mo",
+            AutocompleteResult(text = "mozilla.org", url = "https://www.mozilla.org", source = "memoryHistory", totalItems = 1)
+        )
+
+        // Can autocomplete with just an empty domain provider.
+        feature = ToolbarAutocompleteFeature(toolbar)
+        feature.addDomainProvider(domains)
+
+        verifyNoAutocompleteResult(toolbar, autocompleteDelegate, "hi")
+
+        // Can autocomplete with a non-empty domain provider.
+        domains.testDomains(listOf(
+            Domain.create("https://www.mozilla.org")
+        ))
+
+        verifyNoAutocompleteResult(toolbar, autocompleteDelegate, "hi")
+        verifyAutocompleteResult(toolbar, autocompleteDelegate, "mo",
+            AutocompleteResult(text = "mozilla.org", url = "https://www.mozilla.org", source = "custom", totalItems = 1)
+        )
+
+        // Can autocomplete with empty history and domain providers.
+        history = InMemoryHistoryStorage()
+        domains.testDomains(listOf())
+        feature.addHistoryStorageProvider(history)
+
+        verifyNoAutocompleteResult(toolbar, autocompleteDelegate, "hi")
+
+        // Can autocomplete with both domains providing data; test that history is prioritized,
+        // falling back to domains.
+        domains.testDomains(listOf(
+            Domain.create("https://www.mozilla.org"),
+            Domain.create("https://moscow.ru")
+        ))
+
+        verifyAutocompleteResult(toolbar, autocompleteDelegate, "mo",
+            AutocompleteResult(text = "mozilla.org", url = "https://www.mozilla.org", source = "custom", totalItems = 2)
+        )
+
+        runBlocking {
+            history.recordVisit("https://www.mozilla.org", VisitType.TYPED)
+        }
+
+        verifyAutocompleteResult(toolbar, autocompleteDelegate, "mo",
+            AutocompleteResult(text = "mozilla.org", url = "https://www.mozilla.org", source = "memoryHistory", totalItems = 1)
+        )
+
+        verifyAutocompleteResult(toolbar, autocompleteDelegate, "mos",
+            AutocompleteResult(text = "moscow.ru", url = "https://moscow.ru", source = "custom", totalItems = 2)
+        )
+    }
+
+    private fun verifyNoAutocompleteResult(toolbar: TestToolbar, autocompleteDelegate: AutocompleteDelegate, query: String) {
+        toolbar.autocompleteFilter!!.invoke(query, autocompleteDelegate)
+        verify(autocompleteDelegate, never()).applyAutocompleteResult(any())
+        verify(autocompleteDelegate, times(1)).noAutocompleteResult()
+        reset(autocompleteDelegate)
+    }
+
+    private fun verifyAutocompleteResult(toolbar: TestToolbar, autocompleteDelegate: AutocompleteDelegate, query: String, result: AutocompleteResult) {
+        toolbar.autocompleteFilter!!.invoke(query, autocompleteDelegate)
+        verify(autocompleteDelegate, times(1)).applyAutocompleteResult(result)
+        verify(autocompleteDelegate, never()).noAutocompleteResult()
+        reset(autocompleteDelegate)
+    }
+}
