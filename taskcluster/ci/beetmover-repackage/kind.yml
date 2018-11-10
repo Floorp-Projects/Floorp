@@ -23,6 +23,7 @@ kind-dependencies:
     - repackage-signing-l10n
     - partials
     - partials-signing
+    - repackage-signing-msi
 
 primary-dependency:
     - repackage-signing-l10n

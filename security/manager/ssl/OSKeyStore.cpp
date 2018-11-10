@@ -22,7 +22,7 @@
 #include "NSSKeyStore.h"
 #endif
 
-NS_IMPL_ISUPPORTS(OSKeyStore, nsIOSKeyStore)
+NS_IMPL_ISUPPORTS(OSKeyStore, nsIOSKeyStore, nsIObserver)
 
 using namespace mozilla;
 using dom::Promise;

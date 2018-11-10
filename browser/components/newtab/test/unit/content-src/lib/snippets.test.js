@@ -210,6 +210,7 @@ describe("SnippetsProvider", () => {
       snippets = new SnippetsProvider(dispatch);
       sandbox.stub(snippets, "_refreshSnippets").returns(Promise.resolve());
       sandbox.stub(snippets, "_showRemoteSnippets");
+      sandbox.stub(snippets, "_noSnippetFallback");
     });
     it("should connect to the database by default", () => {
       sandbox.stub(global.gSnippetsMap, "connect").returns(Promise.resolve());
@@ -238,9 +239,11 @@ describe("SnippetsProvider", () => {
       assert.calledOnce(snippets._refreshSnippets);
       assert.calledOnce(snippets._showRemoteSnippets);
     });
-    it("should not throw if _showRemoteSnippets throws an error", async () => {
+    it("should call _noSnippetFallback if _showRemoteSnippets throws an error", async () => {
       snippets._showRemoteSnippets.callsFake(() => { throw new Error("error"); });
       await snippets.init({connect: false});
+
+      assert.calledOnce(snippets._noSnippetFallback);
     });
     it("should set each item in .appData in gSnippetsMap as appData.{item}", async () => {
       await snippets.init({connect: false, appData: {foo: 123, bar: "hello"}});
@@ -342,46 +345,49 @@ describe("SnippetsProvider", () => {
       assert.equal(global.gSnippetsMap.get("snippets-cached-version"), 5);
     });
     it("should catch fetch errors gracefully", async () => {
-      const testError = new Error({status: 400});
       sandbox.stub(global.console, "error");
-      global.fetch.returns(Promise.reject(testError));
+      global.fetch.returns(Promise.reject(new Error({status: 400})));
 
       await snippets.init({connect: false, appData: {version: 5, snippetsURL: "foo.com"}});
 
-      assert.calledWith(global.console.error, testError);
+      assert.calledOnce(global.console.error);
     });
   });
   describe("#_showRemoteSnippets", () => {
     beforeEach(() => {
       snippets = new SnippetsProvider(dispatch);
       sandbox.stub(snippets, "_refreshSnippets").returns(Promise.resolve());
+      sandbox.stub(snippets, "_noSnippetFallback");
       let fakeEl = {style: {}, getElementsByTagName() { return [{parentNode: {replaceChild() {}}}]; }};
       sandbox.stub(global.document, "getElementById").returns(fakeEl);
     });
-    it("should log error if no snippets element exists", async () => {
+    it("should call _noSnippetFallback if no snippets element exists", async () => {
       global.gSnippetsMap.set("snippets", "foo123");
       global.document.getElementById.returns(null);
-      sandbox.stub(global.console, "error");
       await snippets.init({connect: false});
 
-      const [error] = global.console.error.firstCall.args;
+      assert.calledOnce(snippets._noSnippetFallback);
+      const [error] = snippets._noSnippetFallback.firstCall.args;
       assert.match(error.message, "No element was found");
     });
-    it("should log error if no payload is found", async () => {
-      sandbox.stub(global.console, "error");
+    it("should call _noSnippetFallback if no payload is found", async () => {
       global.gSnippetsMap.set("snippets", "");
       await snippets.init({connect: false});
 
-      const [error] = global.console.error.firstCall.args;
+      const [error] = snippets._noSnippetFallback.firstCall.args;
       assert.match(error.message, "No remote snippets were found");
     });
-    it("should log error if the payload is not a string", async () => {
-      sandbox.stub(global.console, "error");
+    it("should call _noSnippetFallback if the payload is not a string", async () => {
       global.gSnippetsMap.set("snippets", true);
       await snippets.init({connect: false});
 
-      const [error] = global.console.error.firstCall.args;
+      const [error] = snippets._noSnippetFallback.firstCall.args;
       assert.match(error.message, "Snippet payload was incorrectly formatted");
+    });
+    it("should not call _noSnippetFallback if the payload and element are ok", async () => {
+      global.gSnippetsMap.set("snippets", "foo123");
+      await snippets.init({connect: false});
+      assert.notCalled(snippets._noSnippetFallback);
     });
   });
   describe("blocking", () => {
