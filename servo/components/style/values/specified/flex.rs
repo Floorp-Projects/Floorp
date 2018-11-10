@@ -4,18 +4,18 @@
 
 //! Specified types for CSS values related to flexbox.
 
-use crate::parser::{Parse, ParserContext};
-use crate::values::generics::flex::FlexBasis as GenericFlexBasis;
 use cssparser::Parser;
+use parser::{Parse, ParserContext};
 use style_traits::ParseError;
+use values::generics::flex::FlexBasis as GenericFlexBasis;
 
 /// The `width` value type.
 #[cfg(feature = "servo")]
-pub type Width = crate::values::specified::NonNegativeLengthOrPercentageOrAuto;
+pub type Width = ::values::specified::NonNegativeLengthOrPercentageOrAuto;
 
 /// The `width` value type.
 #[cfg(feature = "gecko")]
-pub type Width = crate::values::specified::MozLength;
+pub type Width = ::values::specified::MozLength;
 
 /// A specified value for the `flex-basis` property.
 pub type FlexBasis = GenericFlexBasis<Width>;

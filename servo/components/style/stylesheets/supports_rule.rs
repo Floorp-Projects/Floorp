@@ -4,24 +4,24 @@
 
 //! [@supports rules](https://drafts.csswg.org/css-conditional-3/#at-supports)
 
-use crate::parser::ParserContext;
-use crate::properties::{PropertyDeclaration, PropertyId, SourcePropertyDeclaration};
-use crate::selector_parser::{SelectorImpl, SelectorParser};
-use crate::shared_lock::{DeepCloneParams, DeepCloneWithLock, Locked};
-use crate::shared_lock::{SharedRwLock, SharedRwLockReadGuard, ToCssWithGuard};
-use crate::str::CssStringWriter;
-use crate::stylesheets::{CssRuleType, CssRules, Namespaces};
 use cssparser::parse_important;
 use cssparser::{Delimiter, Parser, SourceLocation, Token};
 use cssparser::{ParseError as CssParseError, ParserInput};
 #[cfg(feature = "gecko")]
 use malloc_size_of::{MallocSizeOfOps, MallocUnconditionalShallowSizeOf};
+use parser::ParserContext;
+use properties::{PropertyDeclaration, PropertyId, SourcePropertyDeclaration};
+use selector_parser::{SelectorImpl, SelectorParser};
 use selectors::parser::{Selector, SelectorParseErrorKind};
 use servo_arc::Arc;
+use shared_lock::{DeepCloneParams, DeepCloneWithLock, Locked};
+use shared_lock::{SharedRwLock, SharedRwLockReadGuard, ToCssWithGuard};
 use std::ffi::{CStr, CString};
 use std::fmt::{self, Write};
 use std::str;
+use str::CssStringWriter;
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
+use stylesheets::{CssRuleType, CssRules, Namespaces};
 
 /// An [`@supports`][supports] rule.
 ///
@@ -222,8 +222,8 @@ impl SupportsCondition {
 
 #[cfg(feature = "gecko")]
 fn eval_moz_bool_pref(name: &CStr, cx: &ParserContext) -> bool {
-    use crate::gecko_bindings::bindings;
-    use crate::stylesheets::Origin;
+    use gecko_bindings::bindings;
+    use stylesheets::Origin;
     if cx.stylesheet_origin != Origin::UserAgent && !cx.chrome_rules_enabled() {
         return false;
     }
@@ -325,7 +325,7 @@ impl RawSelector {
         #[cfg(feature = "gecko")]
         {
             if unsafe {
-                !crate::gecko_bindings::structs::StaticPrefs_sVarCache_layout_css_supports_selector_enabled
+                !::gecko_bindings::structs::StaticPrefs_sVarCache_layout_css_supports_selector_enabled
             } {
                 return false;
             }
@@ -347,7 +347,7 @@ impl RawSelector {
 
                 #[cfg(feature = "gecko")]
                 {
-                    use crate::selector_parser::PseudoElement;
+                    use selector_parser::PseudoElement;
                     use selectors::parser::Component;
 
                     let has_any_unknown_webkit_pseudo = selector.has_pseudo_element() && selector

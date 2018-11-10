@@ -4,18 +4,17 @@
 
 //! Specified types for SVG properties.
 
-use crate::parser::{Parse, ParserContext};
-use crate::values::generics::svg as generic;
-use crate::values::specified::color::Color;
-use crate::values::specified::url::SpecifiedUrl;
-use crate::values::specified::LengthOrPercentage;
-use crate::values::specified::{NonNegativeLengthOrPercentage, NonNegativeNumber};
-use crate::values::specified::{Number, Opacity};
-use crate::values::CustomIdent;
 use cssparser::Parser;
+use parser::{Parse, ParserContext};
 use std::fmt::{self, Write};
 use style_traits::{CommaWithSpace, CssWriter, ParseError, Separator};
 use style_traits::{StyleParseErrorKind, ToCss};
+use values::generics::svg as generic;
+use values::specified::color::Color;
+use values::specified::url::SpecifiedUrl;
+use values::specified::{LengthOrPercentage, NonNegativeLengthOrPercentage, NonNegativeNumber};
+use values::specified::{Number, Opacity};
+use values::CustomIdent;
 
 /// Specified SVG Paint value
 pub type SVGPaint = generic::SVGPaint<Color, SpecifiedUrl>;
@@ -28,7 +27,7 @@ fn is_context_value_enabled() -> bool {
     // The prefs can only be mutated on the main thread, so it is safe
     // to read whenever we are on the main thread or the main thread is
     // blocked.
-    use crate::gecko_bindings::structs::mozilla;
+    use gecko_bindings::structs::mozilla;
     unsafe { mozilla::StaticPrefs_sVarCache_gfx_font_rendering_opentype_svg_enabled }
 }
 #[cfg(not(feature = "gecko"))]

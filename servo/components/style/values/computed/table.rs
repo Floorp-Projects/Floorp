@@ -4,4 +4,4 @@
 
 //! Computed types for table properties.
 
-pub use crate::values::specified::table::XSpan;
+pub use values::specified::table::XSpan;

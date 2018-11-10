@@ -8,7 +8,7 @@
 #![deny(missing_docs)]
 
 use atomic_refcell::{AtomicRefCell, AtomicRefMut};
-use crate::dom::{SendElement, TElement};
+use dom::{SendElement, TElement};
 use owning_ref::OwningHandle;
 use selectors::bloom::BloomFilter;
 use servo_arc::Arc;

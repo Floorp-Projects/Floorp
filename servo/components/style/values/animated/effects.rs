@@ -4,16 +4,16 @@
 
 //! Animated types for CSS values related to effects.
 
-use crate::values::animated::color::Color;
-use crate::values::computed::length::Length;
+use values::animated::color::Color;
+use values::computed::length::Length;
 #[cfg(feature = "gecko")]
-use crate::values::computed::url::ComputedUrl;
-use crate::values::computed::{Angle, Number};
-use crate::values::generics::effects::BoxShadow as GenericBoxShadow;
-use crate::values::generics::effects::Filter as GenericFilter;
-use crate::values::generics::effects::SimpleShadow as GenericSimpleShadow;
+use values::computed::url::ComputedUrl;
+use values::computed::{Angle, Number};
+use values::generics::effects::BoxShadow as GenericBoxShadow;
+use values::generics::effects::Filter as GenericFilter;
+use values::generics::effects::SimpleShadow as GenericSimpleShadow;
 #[cfg(not(feature = "gecko"))]
-use crate::values::Impossible;
+use values::Impossible;
 
 /// An animated value for a single `box-shadow`.
 pub type BoxShadow = GenericBoxShadow<Color, Length, Length, Length>;

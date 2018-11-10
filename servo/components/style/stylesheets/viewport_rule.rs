@@ -8,29 +8,29 @@
 //! [meta]: https://drafts.csswg.org/css-device-adapt/#viewport-meta
 
 use app_units::Au;
-use crate::context::QuirksMode;
-use crate::error_reporting::ContextualParseError;
-use crate::font_metrics::get_metrics_provider_for_product;
-use crate::media_queries::Device;
-use crate::parser::ParserContext;
-use crate::properties::StyleBuilder;
-use crate::rule_cache::RuleCacheConditions;
-use crate::shared_lock::{SharedRwLockReadGuard, StylesheetGuards, ToCssWithGuard};
-use crate::str::CssStringWriter;
-use crate::stylesheets::{Origin, StylesheetInDocument};
-use crate::values::computed::{Context, ToComputedValue};
-use crate::values::specified::{LengthOrPercentageOrAuto, NoCalcLength, ViewportPercentageLength};
+use context::QuirksMode;
 use cssparser::CowRcStr;
 use cssparser::{parse_important, AtRuleParser, DeclarationListParser, DeclarationParser, Parser};
+use error_reporting::ContextualParseError;
 use euclid::TypedSize2D;
+use font_metrics::get_metrics_provider_for_product;
+use media_queries::Device;
+use parser::ParserContext;
+use properties::StyleBuilder;
+use rule_cache::RuleCacheConditions;
 use selectors::parser::SelectorParseErrorKind;
+use shared_lock::{SharedRwLockReadGuard, StylesheetGuards, ToCssWithGuard};
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::fmt::{self, Write};
 use std::iter::Enumerate;
 use std::str::Chars;
+use str::CssStringWriter;
 use style_traits::viewport::{Orientation, UserZoom, ViewportConstraints, Zoom};
 use style_traits::{CssWriter, ParseError, PinchZoomFactor, StyleParseErrorKind, ToCss};
+use stylesheets::{Origin, StylesheetInDocument};
+use values::computed::{Context, ToComputedValue};
+use values::specified::{LengthOrPercentageOrAuto, NoCalcLength, ViewportPercentageLength};
 
 /// Whether parsing and processing of `@viewport` rules is enabled.
 #[cfg(feature = "servo")]

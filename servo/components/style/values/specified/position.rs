@@ -7,23 +7,22 @@
 //!
 //! [position]: https://drafts.csswg.org/css-backgrounds-3/#position
 
-use crate::hash::FxHashMap;
-use crate::parser::{Parse, ParserContext};
-use crate::str::HTML_SPACE_CHARACTERS;
-use crate::values::computed::CalcLengthOrPercentage;
-use crate::values::computed::LengthOrPercentage as ComputedLengthOrPercentage;
-use crate::values::computed::{Context, Percentage, ToComputedValue};
-use crate::values::generics::position::Position as GenericPosition;
-use crate::values::generics::position::ZIndex as GenericZIndex;
-use crate::values::specified::transform::OriginComponent;
-use crate::values::specified::{AllowQuirks, Integer, LengthOrPercentage};
-use crate::values::{Either, None_};
 use cssparser::Parser;
+use hash::FxHashMap;
+use parser::{Parse, ParserContext};
 use selectors::parser::SelectorParseErrorKind;
 use servo_arc::Arc;
 use std::fmt::{self, Write};
 use std::ops::Range;
+use str::HTML_SPACE_CHARACTERS;
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
+use values::computed::{CalcLengthOrPercentage, LengthOrPercentage as ComputedLengthOrPercentage};
+use values::computed::{Context, Percentage, ToComputedValue};
+use values::generics::position::Position as GenericPosition;
+use values::generics::position::ZIndex as GenericZIndex;
+use values::specified::transform::OriginComponent;
+use values::specified::{AllowQuirks, Integer, LengthOrPercentage};
+use values::{Either, None_};
 
 /// The specified value of a CSS `<position>`
 pub type Position = GenericPosition<HorizontalPosition, VerticalPosition>;
@@ -520,7 +519,7 @@ impl Parse for GridAutoFlow {
 #[cfg(feature = "gecko")]
 impl From<u8> for GridAutoFlow {
     fn from(bits: u8) -> GridAutoFlow {
-        use crate::gecko_bindings::structs;
+        use gecko_bindings::structs;
 
         GridAutoFlow {
             autoflow: if bits & structs::NS_STYLE_GRID_AUTO_FLOW_ROW as u8 != 0 {
@@ -536,7 +535,7 @@ impl From<u8> for GridAutoFlow {
 #[cfg(feature = "gecko")]
 impl From<GridAutoFlow> for u8 {
     fn from(v: GridAutoFlow) -> u8 {
-        use crate::gecko_bindings::structs;
+        use gecko_bindings::structs;
 
         let mut result: u8 = match v.autoflow {
             AutoFlow::Row => structs::NS_STYLE_GRID_AUTO_FLOW_ROW as u8,

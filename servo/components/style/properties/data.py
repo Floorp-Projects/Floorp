@@ -270,12 +270,12 @@ class Longhand(object):
 
     def base_type(self):
         if self.predefined_type and not self.is_vector:
-            return "crate::values::specified::{}".format(self.predefined_type)
+            return "::values::specified::{}".format(self.predefined_type)
         return "longhands::{}::SpecifiedValue".format(self.ident)
 
     def specified_type(self):
         if self.predefined_type and not self.is_vector:
-            ty = "crate::values::specified::{}".format(self.predefined_type)
+            ty = "::values::specified::{}".format(self.predefined_type)
         else:
             ty = "longhands::{}::SpecifiedValue".format(self.ident)
         if self.boxed:

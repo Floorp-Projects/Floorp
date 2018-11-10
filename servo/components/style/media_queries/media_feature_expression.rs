@@ -8,21 +8,21 @@
 use super::media_feature::{Evaluator, MediaFeatureDescription};
 use super::media_feature::{KeywordDiscriminant, ParsingRequirements};
 use super::Device;
-use crate::context::QuirksMode;
-#[cfg(feature = "gecko")]
-use crate::gecko_bindings::structs;
-use crate::parser::{Parse, ParserContext};
-use crate::str::{starts_with_ignore_ascii_case, string_as_ascii_lowercase};
-use crate::stylesheets::Origin;
-use crate::values::computed::{self, ToComputedValue};
-use crate::values::specified::{Integer, Length, Number, Resolution};
-use crate::values::{serialize_atom_identifier, CSSFloat};
-use crate::Atom;
+use context::QuirksMode;
 use cssparser::{Parser, Token};
+#[cfg(feature = "gecko")]
+use gecko_bindings::structs;
 use num_traits::Zero;
+use parser::{Parse, ParserContext};
 use std::cmp::{Ordering, PartialOrd};
 use std::fmt::{self, Write};
+use str::{starts_with_ignore_ascii_case, string_as_ascii_lowercase};
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
+use stylesheets::Origin;
+use values::computed::{self, ToComputedValue};
+use values::specified::{Integer, Length, Number, Resolution};
+use values::{serialize_atom_identifier, CSSFloat};
+use Atom;
 
 /// An aspect ratio, with a numerator and denominator.
 #[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq)]
@@ -271,9 +271,9 @@ impl MediaFeatureExpression {
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
         #[cfg(feature = "gecko")]
-        use crate::gecko::media_features::MEDIA_FEATURES;
+        use gecko::media_features::MEDIA_FEATURES;
         #[cfg(feature = "servo")]
-        use crate::servo::media_queries::MEDIA_FEATURES;
+        use servo::media_queries::MEDIA_FEATURES;
 
         // FIXME: remove extra indented block when lifetimes are non-lexical
         let feature;

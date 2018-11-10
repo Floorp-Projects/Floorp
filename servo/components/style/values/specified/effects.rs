@@ -4,24 +4,23 @@
 
 //! Specified types for CSS values related to effects.
 
-use crate::parser::{Parse, ParserContext};
-use crate::values::computed::effects::BoxShadow as ComputedBoxShadow;
-use crate::values::computed::effects::SimpleShadow as ComputedSimpleShadow;
-use crate::values::computed::NonNegativeNumber as ComputedNonNegativeNumber;
-use crate::values::computed::{Context, ToComputedValue};
-use crate::values::generics::effects::BoxShadow as GenericBoxShadow;
-use crate::values::generics::effects::Filter as GenericFilter;
-use crate::values::generics::effects::SimpleShadow as GenericSimpleShadow;
-use crate::values::generics::NonNegative;
-use crate::values::specified::color::Color;
-use crate::values::specified::length::{Length, NonNegativeLength};
-#[cfg(feature = "gecko")]
-use crate::values::specified::url::SpecifiedUrl;
-use crate::values::specified::{Angle, NumberOrPercentage};
-#[cfg(not(feature = "gecko"))]
-use crate::values::Impossible;
 use cssparser::{self, BasicParseErrorKind, Parser, Token};
+use parser::{Parse, ParserContext};
 use style_traits::{ParseError, StyleParseErrorKind, ValueParseErrorKind};
+use values::computed::effects::BoxShadow as ComputedBoxShadow;
+use values::computed::effects::SimpleShadow as ComputedSimpleShadow;
+use values::computed::{Context, NonNegativeNumber as ComputedNonNegativeNumber, ToComputedValue};
+use values::generics::effects::BoxShadow as GenericBoxShadow;
+use values::generics::effects::Filter as GenericFilter;
+use values::generics::effects::SimpleShadow as GenericSimpleShadow;
+use values::generics::NonNegative;
+use values::specified::color::Color;
+use values::specified::length::{Length, NonNegativeLength};
+#[cfg(feature = "gecko")]
+use values::specified::url::SpecifiedUrl;
+use values::specified::{Angle, NumberOrPercentage};
+#[cfg(not(feature = "gecko"))]
+use values::Impossible;
 
 /// A specified value for a single shadow of the `box-shadow` property.
 pub type BoxShadow =
@@ -78,7 +77,7 @@ impl ToComputedValue for Factor {
 
     #[inline]
     fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
-        use crate::values::computed::NumberOrPercentage;
+        use values::computed::NumberOrPercentage;
         match self.0.to_computed_value(context) {
             NumberOrPercentage::Number(n) => n.into(),
             NumberOrPercentage::Percentage(p) => p.0.into(),

@@ -17,15 +17,15 @@
         #[allow(unused_imports)]
         use cssparser::{Color as CSSParserColor, RGBA};
         #[allow(unused_imports)]
-        use crate::values::specified::AllowQuirks;
+        use values::specified::AllowQuirks;
         #[allow(unused_imports)]
         use smallvec::SmallVec;
-        pub use crate::values::specified::${type} as SpecifiedValue;
+        pub use values::specified::${type} as SpecifiedValue;
         pub mod computed_value {
             % if computed_type:
             pub use ${computed_type} as T;
             % else:
-            pub use crate::values::computed::${type} as T;
+            pub use values::computed::${type} as T;
             % endif
         }
         % if initial_value:
@@ -91,19 +91,19 @@
             #[allow(unused_imports)]
             use cssparser::{Parser, BasicParseError};
             #[allow(unused_imports)]
-            use crate::parser::{Parse, ParserContext};
+            use parser::{Parse, ParserContext};
             #[allow(unused_imports)]
-            use crate::properties::ShorthandId;
+            use properties::ShorthandId;
             #[allow(unused_imports)]
             use selectors::parser::SelectorParseErrorKind;
             #[allow(unused_imports)]
             use style_traits::{ParseError, StyleParseErrorKind};
             #[allow(unused_imports)]
-            use crate::values::computed::{Context, ToComputedValue};
+            use values::computed::{Context, ToComputedValue};
             #[allow(unused_imports)]
-            use crate::values::{computed, specified};
+            use values::{computed, specified};
             #[allow(unused_imports)]
-            use crate::values::{Auto, Either, None_, Normal};
+            use values::{Auto, Either, None_, Normal};
             ${caller.body()}
         }
 
@@ -116,7 +116,7 @@
             % else:
             use smallvec::{IntoIter, SmallVec};
             % endif
-            use crate::values::computed::ComputedVecIter;
+            use values::computed::ComputedVecIter;
 
             /// The generic type defining the value for this property.
             ///
@@ -148,9 +148,9 @@
                 Sorry, this is stupid but needed for now.
             % endif
 
-            use crate::properties::animated_properties::ListAnimation;
-            use crate::values::animated::{Animate, ToAnimatedValue, ToAnimatedZero, Procedure};
-            use crate::values::distance::{SquaredDistance, ComputeSquaredDistance};
+            use properties::animated_properties::ListAnimation;
+            use values::animated::{Animate, ToAnimatedValue, ToAnimatedZero, Procedure};
+            use values::distance::{SquaredDistance, ComputeSquaredDistance};
 
             // FIXME(emilio): For some reason rust thinks that this alias is
             // unused, even though it's clearly used below?
@@ -235,7 +235,7 @@
                 }
             % endif
 
-            style_traits::${separator}::parse(input, |parser| {
+            ::style_traits::${separator}::parse(input, |parser| {
                 single_value::parse(context, parser)
             }).map(SpecifiedValue)
         }
@@ -279,21 +279,21 @@
         #[allow(unused_imports)]
         use cssparser::{Parser, BasicParseError, Token};
         #[allow(unused_imports)]
-        use crate::parser::{Parse, ParserContext};
+        use parser::{Parse, ParserContext};
         #[allow(unused_imports)]
-        use crate::properties::{UnparsedValue, ShorthandId};
+        use properties::{UnparsedValue, ShorthandId};
         #[allow(unused_imports)]
-        use crate::values::{Auto, Either, None_, Normal};
+        use values::{Auto, Either, None_, Normal};
         #[allow(unused_imports)]
-        use crate::error_reporting::ParseErrorReporter;
+        use error_reporting::ParseErrorReporter;
         #[allow(unused_imports)]
-        use crate::properties::longhands;
+        use properties::longhands;
         #[allow(unused_imports)]
-        use crate::properties::{LonghandId, LonghandIdSet};
+        use properties::{LonghandId, LonghandIdSet};
         #[allow(unused_imports)]
-        use crate::properties::{CSSWideKeyword, ComputedValues, PropertyDeclaration};
+        use properties::{CSSWideKeyword, ComputedValues, PropertyDeclaration};
         #[allow(unused_imports)]
-        use crate::properties::style_structs;
+        use properties::style_structs;
         #[allow(unused_imports)]
         use selectors::parser::SelectorParseErrorKind;
         #[allow(unused_imports)]
@@ -301,11 +301,11 @@
         #[allow(unused_imports)]
         use style_traits::{ParseError, StyleParseErrorKind};
         #[allow(unused_imports)]
-        use crate::values::computed::{Context, ToComputedValue};
+        use values::computed::{Context, ToComputedValue};
         #[allow(unused_imports)]
-        use crate::values::{computed, generics, specified};
+        use values::{computed, generics, specified};
         #[allow(unused_imports)]
-        use crate::Atom;
+        use Atom;
         ${caller.body()}
         #[allow(unused_variables)]
         pub fn cascade_property(
@@ -428,7 +428,7 @@
         keyword = keyword=Keyword(name, values, **keyword_kwargs)
     %>
     <%call expr="longhand(name, keyword=Keyword(name, values, **keyword_kwargs), **kwargs)">
-        use crate::properties::longhands::system_font::SystemFont;
+        use properties::longhands::system_font::SystemFont;
 
         pub mod computed_value {
             #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
@@ -511,7 +511,7 @@
         ///
         /// Intended for use with presentation attributes, not style structs
         pub fn from_gecko_keyword(kw: u32) -> Self {
-            use crate::gecko_bindings::structs;
+            use gecko_bindings::structs;
             % for value in values:
                 // We can't match on enum values if we're matching on a u32
                 const ${to_rust_ident(value).upper()}: ${const_type}
@@ -535,7 +535,7 @@
         /// Intended for use with presentation attributes, not style structs
         pub fn from_gecko_keyword(kw: ${kw_type}) -> Self {
             % for gecko_bit in bit_map.values():
-            use crate::gecko_bindings::structs::${gecko_bit_prefix}${gecko_bit};
+            use gecko_bindings::structs::${gecko_bit_prefix}${gecko_bit};
             % endfor
 
             let mut bits = ${type}::empty();
@@ -549,7 +549,7 @@
 
         pub fn to_gecko_keyword(self) -> ${kw_type} {
             % for gecko_bit in bit_map.values():
-            use crate::gecko_bindings::structs::${gecko_bit_prefix}${gecko_bit};
+            use gecko_bindings::structs::${gecko_bit_prefix}${gecko_bit};
             % endfor
 
             let mut bits: ${kw_type} = 0;
@@ -668,8 +668,8 @@
     /// ${shorthand.spec}
     pub mod ${shorthand.ident} {
         use cssparser::Parser;
-        use crate::parser::ParserContext;
-        use crate::properties::{PropertyDeclaration, SourcePropertyDeclaration, MaybeBoxed, longhands};
+        use parser::ParserContext;
+        use properties::{PropertyDeclaration, SourcePropertyDeclaration, MaybeBoxed, longhands};
         #[allow(unused_imports)]
         use selectors::parser::SelectorParseErrorKind;
         #[allow(unused_imports)]
@@ -772,7 +772,7 @@
             input: &mut Parser<'i, 't>,
         ) -> Result<(), ParseError<'i>> {
             #[allow(unused_imports)]
-            use crate::properties::{NonCustomPropertyId, LonghandId};
+            use properties::{NonCustomPropertyId, LonghandId};
             input.parse_entirely(|input| parse_value(context, input)).map(|longhands| {
                 % for sub_property in shorthand.sub_properties:
                 % if sub_property.may_be_disabled_in(shorthand, product):
@@ -798,9 +798,9 @@
     <% sub_properties=' '.join(sub_property_pattern % side for side in PHYSICAL_SIDES) %>
     <%call expr="self.shorthand(name, sub_properties=sub_properties, **kwargs)">
         #[allow(unused_imports)]
-        use crate::parser::Parse;
-        use crate::values::generics::rect::Rect;
-        use crate::values::specified;
+        use parser::Parse;
+        use values::generics::rect::Rect;
+        use values::specified;
 
         pub fn parse_value<'i, 't>(
             context: &ParserContext,
@@ -852,7 +852,7 @@
             return to_rust_ident(name.replace(side, phy_side).replace("inset-", ""))
     %>
     % if side is not None:
-        use crate::logical_geometry::PhysicalSide;
+        use logical_geometry::PhysicalSide;
         match wm.${to_rust_ident(side)}_physical_side() {
             % for phy_side in PHYSICAL_SIDES:
                 PhysicalSide::${phy_side.title()} => {
