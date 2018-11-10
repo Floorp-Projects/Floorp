@@ -59,6 +59,7 @@
       }
       body {
         margin-left: 1cm;
+        overflow-x: hidden;
       }
       div.measuring {
          background: url(chrome://global/skin/media/throbber.png) no-repeat center;
@@ -118,17 +119,21 @@
         top: 0;
         left: 0;
         width: 100%;
+        height: 100%;
+        min-width: 40em;
       }
 
       /* Avoid scrolling the header */
       #dispatch-tbody {
         display: block;
-        overflow-y: auto;
-        /* 2em is the height of the header, 1px is its border */
-        height: calc(100vh - 2em - 1px);
+        margin-top: 2em;
       }
       #dispatch-thead {
+        position: fixed;
+        z-index: 1;
         height: 2em;
+        border-bottom: 1px solid var(--in-content-border-color);
+        min-width: 40em;
       }
       #dispatch-thead, #dispatch-tbody tr {
         display: table;
@@ -203,9 +208,6 @@
         background-size: 24px;
       }
 
-      #dispatch-table > tbody {
-        border-top: 1px solid var(--in-content-border-color);
-      }
       #dispatch-table > thead > tr > td {
         border: none;
         background-color: var(--in-content-box-background-hover);
