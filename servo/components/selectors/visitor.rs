@@ -6,8 +6,8 @@
 
 #![deny(missing_docs)]
 
-use crate::attr::NamespaceConstraint;
-use crate::parser::{Combinator, Component, SelectorImpl};
+use attr::NamespaceConstraint;
+use parser::{Combinator, Component, SelectorImpl};
 
 /// A trait to visit selector properties.
 ///

@@ -11,17 +11,17 @@ use super::generics::grid::{GridLine as GenericGridLine, TrackBreadth as Generic
 use super::generics::grid::{TrackList as GenericTrackList, TrackSize as GenericTrackSize};
 use super::generics::{GreaterThanOrEqualToOne, NonNegative};
 use super::{Auto, CSSFloat, CSSInteger, Either};
-use crate::context::QuirksMode;
-use crate::parser::{Parse, ParserContext};
-use crate::values::serialize_atom_identifier;
-use crate::values::specified::calc::CalcNode;
-use crate::{Atom, Namespace, Prefix};
+use context::QuirksMode;
 use cssparser::{Parser, Token};
 use num_traits::One;
+use parser::{Parse, ParserContext};
 use std::f32;
 use std::fmt::{self, Write};
 use style_traits::values::specified::AllowedNumericType;
 use style_traits::{CssWriter, ParseError, SpecifiedValueInfo, StyleParseErrorKind, ToCss};
+use values::serialize_atom_identifier;
+use values::specified::calc::CalcNode;
+use {Atom, Namespace, Prefix};
 
 #[cfg(feature = "gecko")]
 pub use self::align::{AlignContent, AlignItems, AlignSelf, ContentDistribution};
@@ -75,8 +75,8 @@ pub use self::svg::{SVGPaintOrder, SVGStrokeDashArray, SVGWidth};
 pub use self::svg_path::SVGPathData;
 pub use self::table::XSpan;
 pub use self::text::{InitialLetter, LetterSpacing, LineHeight, MozTabSize, TextAlign};
-pub use self::text::{OverflowWrap, TextEmphasisPosition, TextEmphasisStyle};
 pub use self::text::{TextAlignKeyword, TextDecorationLine, TextOverflow, WordSpacing};
+pub use self::text::{TextEmphasisPosition, TextEmphasisStyle, OverflowWrap};
 pub use self::time::Time;
 pub use self::transform::{Rotate, Scale, Transform};
 pub use self::transform::{TransformOrigin, TransformStyle, Translate};
@@ -695,7 +695,7 @@ impl ClipRect {
         input: &mut Parser<'i, 't>,
         allow_quirks: AllowQuirks,
     ) -> Result<Self, ParseError<'i>> {
-        use crate::values::specified::Length;
+        use values::specified::Length;
 
         fn parse_argument<'i, 't>(
             context: &ParserContext,

@@ -48,8 +48,8 @@
     ${helpers.predefined_type(
         "border-%s-width" % side_name,
         "BorderSideWidth",
-        "crate::values::computed::NonNegativeLength::new(3.)",
-        computed_type="crate::values::computed::NonNegativeLength",
+        "::values::computed::NonNegativeLength::new(3.)",
+        computed_type="::values::computed::NonNegativeLength",
         alias=maybe_moz_logical_alias(product, side, "-moz-border-%s-width"),
         spec=maybe_logical_spec(side, "width"),
         animation_value_type="NonNegativeLength",
@@ -64,7 +64,7 @@
 ${helpers.gecko_keyword_conversion(
     Keyword('border-style',
     "none solid double dotted dashed hidden groove ridge inset outset"),
-    type="crate::values::specified::BorderStyle",
+    type="::values::specified::BorderStyle",
 )}
 
 // FIXME(#4126): when gfx supports painting it, make this Size2D<LengthOrPercentage>
@@ -160,11 +160,11 @@ ${helpers.predefined_type(
 )}
 
 #[cfg(feature = "gecko")]
-impl crate::values::computed::BorderImageWidth {
-    pub fn to_gecko_rect(&self, sides: &mut crate::gecko_bindings::structs::nsStyleSides) {
-        use crate::gecko_bindings::sugar::ns_style_coord::{CoordDataMut, CoordDataValue};
-        use crate::gecko::values::GeckoStyleCoordConvertible;
-        use crate::values::generics::border::BorderImageSideWidth;
+impl ::values::computed::BorderImageWidth {
+    pub fn to_gecko_rect(&self, sides: &mut ::gecko_bindings::structs::nsStyleSides) {
+        use gecko_bindings::sugar::ns_style_coord::{CoordDataMut, CoordDataValue};
+        use gecko::values::GeckoStyleCoordConvertible;
+        use values::generics::border::BorderImageSideWidth;
 
         % for i in range(0, 4):
         match self.${i} {
@@ -182,16 +182,16 @@ impl crate::values::computed::BorderImageWidth {
     }
 
     pub fn from_gecko_rect(
-        sides: &crate::gecko_bindings::structs::nsStyleSides,
-    ) -> Option<crate::values::computed::BorderImageWidth> {
-        use crate::gecko_bindings::structs::nsStyleUnit::{eStyleUnit_Factor, eStyleUnit_Auto};
-        use crate::gecko_bindings::sugar::ns_style_coord::CoordData;
-        use crate::gecko::values::GeckoStyleCoordConvertible;
-        use crate::values::computed::{LengthOrPercentage, Number};
-        use crate::values::generics::border::BorderImageSideWidth;
+        sides: &::gecko_bindings::structs::nsStyleSides,
+    ) -> Option<::values::computed::BorderImageWidth> {
+        use gecko_bindings::structs::nsStyleUnit::{eStyleUnit_Factor, eStyleUnit_Auto};
+        use gecko_bindings::sugar::ns_style_coord::CoordData;
+        use gecko::values::GeckoStyleCoordConvertible;
+        use values::computed::{LengthOrPercentage, Number};
+        use values::generics::border::BorderImageSideWidth;
 
         Some(
-            crate::values::computed::BorderImageWidth::new(
+            ::values::computed::BorderImageWidth::new(
                 % for i in range(0, 4):
                 match sides.data_at(${i}).unit() {
                     eStyleUnit_Auto => {

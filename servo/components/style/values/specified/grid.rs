@@ -5,16 +5,16 @@
 //! CSS handling for the computed value of
 //! [grids](https://drafts.csswg.org/css-grid/)
 
-use crate::parser::{Parse, ParserContext};
-use crate::values::computed::{self, Context, ToComputedValue};
-use crate::values::generics::grid::{GridTemplateComponent, RepeatCount, TrackBreadth};
-use crate::values::generics::grid::{LineNameList, TrackKeyword, TrackRepeat, TrackSize};
-use crate::values::generics::grid::{TrackList, TrackListType, TrackListValue};
-use crate::values::specified::{Integer, LengthOrPercentage};
-use crate::values::{CSSFloat, CustomIdent};
 use cssparser::{ParseError as CssParseError, Parser, Token};
+use parser::{Parse, ParserContext};
 use std::mem;
 use style_traits::{ParseError, StyleParseErrorKind};
+use values::computed::{self, Context, ToComputedValue};
+use values::generics::grid::{GridTemplateComponent, RepeatCount, TrackBreadth};
+use values::generics::grid::{LineNameList, TrackKeyword, TrackRepeat, TrackSize};
+use values::generics::grid::{TrackList, TrackListType, TrackListValue};
+use values::specified::{Integer, LengthOrPercentage};
+use values::{CSSFloat, CustomIdent};
 
 /// Parse a single flexible length.
 pub fn parse_flex<'i, 't>(input: &mut Parser<'i, 't>) -> Result<CSSFloat, ParseError<'i>> {
@@ -385,7 +385,7 @@ impl ToComputedValue for TrackList<LengthOrPercentage, Integer> {
 #[cfg(feature = "gecko")]
 #[inline]
 fn allow_grid_template_subgrids() -> bool {
-    use crate::gecko_bindings::structs::mozilla;
+    use gecko_bindings::structs::mozilla;
     unsafe { mozilla::StaticPrefs_sVarCache_layout_css_grid_template_subgrid_value_enabled }
 }
 

@@ -63,11 +63,11 @@ pub mod system_colors {
                           IMESelectedConvertedTextBackground IMESelectedConvertedTextForeground
                           IMESelectedConvertedTextUnderline SpellCheckerUnderline""".split()
     %>
-    use crate::gecko_bindings::bindings::Gecko_GetLookAndFeelSystemColor;
-    use crate::gecko_bindings::structs::root::mozilla::LookAndFeel_ColorID;
+    use gecko_bindings::bindings::Gecko_GetLookAndFeelSystemColor;
+    use gecko_bindings::structs::root::mozilla::LookAndFeel_ColorID;
     use std::fmt::{self, Write};
     use style_traits::{CssWriter, ToCss};
-    use crate::values::computed::{Context, ToComputedValue};
+    use values::computed::{Context, ToComputedValue};
 
     pub type SystemColor = LookAndFeel_ColorID;
 

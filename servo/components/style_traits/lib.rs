@@ -91,10 +91,8 @@ pub mod values;
 #[macro_use]
 pub mod viewport;
 
-pub use crate::specified_value_info::{CssType, KeywordsCollectFn, SpecifiedValueInfo};
-pub use crate::values::{
-    Comma, CommaWithSpace, CssWriter, OneOrMoreSeparated, Separator, Space, ToCss,
-};
+pub use specified_value_info::{CssType, KeywordsCollectFn, SpecifiedValueInfo};
+pub use values::{Comma, CommaWithSpace, CssWriter, OneOrMoreSeparated, Separator, Space, ToCss};
 
 /// The error type for all CSS parsing routines.
 pub type ParseError<'i> = cssparser::ParseError<'i, StyleParseErrorKind<'i>>;

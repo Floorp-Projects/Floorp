@@ -4,28 +4,27 @@
 
 //! Specified types for text properties.
 
-use crate::parser::{Parse, ParserContext};
-use crate::properties::longhands::writing_mode::computed_value::T as SpecifiedWritingMode;
-use crate::values::computed::text::LineHeight as ComputedLineHeight;
-use crate::values::computed::text::TextEmphasisKeywordValue as ComputedTextEmphasisKeywordValue;
-use crate::values::computed::text::TextEmphasisStyle as ComputedTextEmphasisStyle;
-use crate::values::computed::text::TextOverflow as ComputedTextOverflow;
-use crate::values::computed::{Context, ToComputedValue};
-use crate::values::generics::text::InitialLetter as GenericInitialLetter;
-use crate::values::generics::text::LineHeight as GenericLineHeight;
-use crate::values::generics::text::MozTabSize as GenericMozTabSize;
-use crate::values::generics::text::Spacing;
-use crate::values::specified::length::{FontRelativeLength, Length};
-use crate::values::specified::length::{LengthOrPercentage, NoCalcLength};
-use crate::values::specified::length::{NonNegativeLength, NonNegativeLengthOrPercentage};
-use crate::values::specified::{AllowQuirks, Integer, NonNegativeNumber, Number};
 use cssparser::{Parser, Token};
+use parser::{Parse, ParserContext};
+use properties::longhands::writing_mode::computed_value::T as SpecifiedWritingMode;
 use selectors::parser::SelectorParseErrorKind;
 use std::fmt::{self, Write};
 use style_traits::values::SequenceWriter;
 use style_traits::{CssWriter, KeywordsCollectFn, ParseError};
 use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
 use unicode_segmentation::UnicodeSegmentation;
+use values::computed::text::LineHeight as ComputedLineHeight;
+use values::computed::text::TextEmphasisKeywordValue as ComputedTextEmphasisKeywordValue;
+use values::computed::text::TextEmphasisStyle as ComputedTextEmphasisStyle;
+use values::computed::text::TextOverflow as ComputedTextOverflow;
+use values::computed::{Context, ToComputedValue};
+use values::generics::text::InitialLetter as GenericInitialLetter;
+use values::generics::text::LineHeight as GenericLineHeight;
+use values::generics::text::MozTabSize as GenericMozTabSize;
+use values::generics::text::Spacing;
+use values::specified::length::{FontRelativeLength, Length, LengthOrPercentage, NoCalcLength};
+use values::specified::length::{NonNegativeLength, NonNegativeLengthOrPercentage};
+use values::specified::{AllowQuirks, Integer, NonNegativeNumber, Number};
 
 /// A specified type for the `initial-letter` property.
 pub type InitialLetter = GenericInitialLetter<Number, Integer>;
@@ -108,8 +107,8 @@ impl ToComputedValue for LineHeight {
 
     #[inline]
     fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
-        use crate::values::computed::Length as ComputedLength;
-        use crate::values::specified::length::FontBaseSize;
+        use values::computed::Length as ComputedLength;
+        use values::specified::length::FontBaseSize;
         match *self {
             GenericLineHeight::Normal => GenericLineHeight::Normal,
             #[cfg(feature = "gecko")]
@@ -768,7 +767,7 @@ impl TextEmphasisPosition {
     #[cfg(feature = "gecko")]
     /// Converts an enumerated value coming from Gecko to a `TextEmphasisPosition`.
     pub fn from_gecko_keyword(kw: u32) -> Self {
-        use crate::gecko_bindings::structs;
+        use gecko_bindings::structs;
 
         let vert = if kw & structs::NS_STYLE_TEXT_EMPHASIS_POSITION_RIGHT != 0 {
             TextEmphasisVerticalWritingModeValue::Right
@@ -814,7 +813,7 @@ impl From<u8> for TextEmphasisPosition {
 #[cfg(feature = "gecko")]
 impl From<TextEmphasisPosition> for u8 {
     fn from(v: TextEmphasisPosition) -> u8 {
-        use crate::gecko_bindings::structs;
+        use gecko_bindings::structs;
 
         let mut result = match v.0 {
             TextEmphasisHorizontalWritingModeValue::Over => {

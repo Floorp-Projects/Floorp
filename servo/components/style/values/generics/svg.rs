@@ -4,10 +4,10 @@
 
 //! Generic types for CSS values in SVG
 
-use crate::parser::{Parse, ParserContext};
-use crate::values::{Either, None_};
 use cssparser::Parser;
+use parser::{Parse, ParserContext};
 use style_traits::{ParseError, StyleParseErrorKind};
+use values::{Either, None_};
 
 /// An SVG paint value
 ///

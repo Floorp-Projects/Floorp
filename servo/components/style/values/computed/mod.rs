@@ -11,23 +11,23 @@ use super::generics::grid::{TrackList as GenericTrackList, TrackSize as GenericT
 use super::generics::{GreaterThanOrEqualToOne, NonNegative};
 use super::specified;
 use super::{CSSFloat, CSSInteger};
-use crate::context::QuirksMode;
-use crate::font_metrics::{get_metrics_provider_for_product, FontMetricsProvider};
-use crate::media_queries::Device;
-#[cfg(feature = "gecko")]
-use crate::properties;
-use crate::properties::{ComputedValues, LonghandId, StyleBuilder};
-use crate::rule_cache::RuleCacheConditions;
-use crate::Atom;
-#[cfg(feature = "servo")]
-use crate::Prefix;
+use context::QuirksMode;
 use euclid::Size2D;
+use font_metrics::{get_metrics_provider_for_product, FontMetricsProvider};
+use media_queries::Device;
+#[cfg(feature = "gecko")]
+use properties;
+use properties::{ComputedValues, LonghandId, StyleBuilder};
+use rule_cache::RuleCacheConditions;
 use std::cell::RefCell;
 use std::cmp;
 use std::f32;
 use std::fmt::{self, Write};
 use style_traits::cursor::CursorKind;
 use style_traits::{CssWriter, ToCss};
+use Atom;
+#[cfg(feature = "servo")]
+use Prefix;
 
 #[cfg(feature = "gecko")]
 pub use self::align::{AlignContent, AlignItems, JustifyContent, JustifyItems, SelfAlignment};
@@ -77,8 +77,8 @@ pub use self::svg::{SVGLength, SVGOpacity, SVGPaint, SVGPaintKind};
 pub use self::svg::{SVGPaintOrder, SVGStrokeDashArray, SVGWidth};
 pub use self::table::XSpan;
 pub use self::text::{InitialLetter, LetterSpacing, LineHeight, MozTabSize};
-pub use self::text::{OverflowWrap, TextOverflow, WordSpacing};
 pub use self::text::{TextAlign, TextEmphasisPosition, TextEmphasisStyle};
+pub use self::text::{TextOverflow, WordSpacing, OverflowWrap};
 pub use self::time::Time;
 pub use self::transform::{Rotate, Scale, Transform, TransformOperation};
 pub use self::transform::{TransformOrigin, TransformStyle, Translate};

@@ -4,20 +4,20 @@
 
 //! Specified types for CSS values related to borders.
 
-use crate::parser::{Parse, ParserContext};
-use crate::values::computed::{self, Context, ToComputedValue};
-use crate::values::generics::border::BorderCornerRadius as GenericBorderCornerRadius;
-use crate::values::generics::border::BorderImageSideWidth as GenericBorderImageSideWidth;
-use crate::values::generics::border::BorderImageSlice as GenericBorderImageSlice;
-use crate::values::generics::border::BorderRadius as GenericBorderRadius;
-use crate::values::generics::border::BorderSpacing as GenericBorderSpacing;
-use crate::values::generics::rect::Rect;
-use crate::values::generics::size::Size;
-use crate::values::specified::length::{Length, LengthOrPercentage, NonNegativeLength};
-use crate::values::specified::{AllowQuirks, Number, NumberOrPercentage};
 use cssparser::Parser;
+use parser::{Parse, ParserContext};
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ParseError, ToCss};
+use values::computed::{self, Context, ToComputedValue};
+use values::generics::border::BorderCornerRadius as GenericBorderCornerRadius;
+use values::generics::border::BorderImageSideWidth as GenericBorderImageSideWidth;
+use values::generics::border::BorderImageSlice as GenericBorderImageSlice;
+use values::generics::border::BorderRadius as GenericBorderRadius;
+use values::generics::border::BorderSpacing as GenericBorderSpacing;
+use values::generics::rect::Rect;
+use values::generics::size::Size;
+use values::specified::length::{Length, LengthOrPercentage, NonNegativeLength};
+use values::specified::{AllowQuirks, Number, NumberOrPercentage};
 
 /// A specified value for a single side of the `border-width` property.
 #[derive(Clone, Debug, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToCss)]

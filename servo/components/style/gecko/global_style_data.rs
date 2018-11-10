@@ -4,16 +4,17 @@
 
 //! Global style data
 
-use crate::context::StyleSystemOptions;
-use crate::gecko_bindings::bindings;
-use crate::parallel::STYLE_THREAD_STACK_SIZE_KB;
-use crate::shared_lock::SharedRwLock;
-use crate::thread_state;
+use context::StyleSystemOptions;
+use gecko_bindings::bindings::Gecko_SetJemallocThreadLocalArena;
+use gecko_bindings::bindings::{Gecko_RegisterProfilerThread, Gecko_UnregisterProfilerThread};
 use num_cpus;
+use parallel::STYLE_THREAD_STACK_SIZE_KB;
 use rayon;
+use shared_lock::SharedRwLock;
 use std::cmp;
 use std::env;
 use std::ffi::CString;
+use thread_state;
 
 /// Global style data
 pub struct GlobalStyleData {
@@ -40,20 +41,20 @@ fn thread_name(index: usize) -> String {
 fn thread_startup(index: usize) {
     thread_state::initialize_layout_worker_thread();
     unsafe {
-        bindings::Gecko_SetJemallocThreadLocalArena(true);
+        Gecko_SetJemallocThreadLocalArena(true);
     }
     let name = thread_name(index);
     let name = CString::new(name).unwrap();
     unsafe {
         // Gecko_RegisterProfilerThread copies the passed name here.
-        bindings::Gecko_RegisterProfilerThread(name.as_ptr());
+        Gecko_RegisterProfilerThread(name.as_ptr());
     }
 }
 
 fn thread_shutdown(_: usize) {
     unsafe {
-        bindings::Gecko_UnregisterProfilerThread();
-        bindings::Gecko_SetJemallocThreadLocalArena(false);
+        Gecko_UnregisterProfilerThread();
+        Gecko_SetJemallocThreadLocalArena(false);
     }
 }
 

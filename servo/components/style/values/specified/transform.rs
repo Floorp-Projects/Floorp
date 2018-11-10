@@ -4,17 +4,17 @@
 
 //! Specified types for CSS values that are related to transformations.
 
-use crate::parser::{Parse, ParserContext};
-use crate::values::computed::{Context, LengthOrPercentage as ComputedLengthOrPercentage};
-use crate::values::computed::{Percentage as ComputedPercentage, ToComputedValue};
-use crate::values::generics::transform as generic;
-use crate::values::generics::transform::{Matrix, Matrix3D};
-use crate::values::specified::position::{Side, X, Y};
-use crate::values::specified::{self, Angle, Integer, Length, LengthOrPercentage, Number};
 use cssparser::Parser;
+use parser::{Parse, ParserContext};
 use style_traits::{ParseError, StyleParseErrorKind};
+use values::computed::{Context, LengthOrPercentage as ComputedLengthOrPercentage};
+use values::computed::{Percentage as ComputedPercentage, ToComputedValue};
+use values::generics::transform as generic;
+use values::generics::transform::{Matrix, Matrix3D};
+use values::specified::position::{Side, X, Y};
+use values::specified::{self, Angle, Integer, Length, LengthOrPercentage, Number};
 
-pub use crate::values::generics::transform::TransformStyle;
+pub use values::generics::transform::TransformStyle;
 
 /// A single operation in a specified CSS `transform`
 pub type TransformOperation =
@@ -395,10 +395,7 @@ impl Parse for Translate {
         }
 
         // 'translate: <length-percentage> '
-        Ok(generic::Translate::Translate(
-            tx,
-            specified::LengthOrPercentage::zero(),
-        ))
+        Ok(generic::Translate::Translate(tx, specified::LengthOrPercentage::zero()))
     }
 }
 

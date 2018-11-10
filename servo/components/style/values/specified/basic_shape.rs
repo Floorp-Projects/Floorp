@@ -7,26 +7,26 @@
 //!
 //! [basic-shape]: https://drafts.csswg.org/css-shapes/#typedef-basic-shape
 
-use crate::parser::{Parse, ParserContext};
-use crate::values::computed::Percentage;
-use crate::values::generics::basic_shape as generic;
-use crate::values::generics::basic_shape::{GeometryBox, Path, PolygonCoord};
-use crate::values::generics::basic_shape::{ShapeBox, ShapeSource};
-use crate::values::generics::rect::Rect;
-use crate::values::specified::border::BorderRadius;
-use crate::values::specified::image::Image;
-use crate::values::specified::position::{HorizontalPosition, Position, PositionComponent};
-use crate::values::specified::position::{Side, VerticalPosition};
-use crate::values::specified::url::SpecifiedUrl;
-use crate::values::specified::LengthOrPercentage;
-use crate::values::specified::SVGPathData;
 use cssparser::Parser;
+use parser::{Parse, ParserContext};
 use std::borrow::Cow;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
+use values::computed::Percentage;
+use values::generics::basic_shape as generic;
+use values::generics::basic_shape::{GeometryBox, Path, PolygonCoord};
+use values::generics::basic_shape::{ShapeBox, ShapeSource};
+use values::generics::rect::Rect;
+use values::specified::border::BorderRadius;
+use values::specified::image::Image;
+use values::specified::position::{HorizontalPosition, Position, PositionComponent};
+use values::specified::position::{Side, VerticalPosition};
+use values::specified::url::SpecifiedUrl;
+use values::specified::LengthOrPercentage;
+use values::specified::SVGPathData;
 
 /// A specified alias for FillRule.
-pub use crate::values::generics::basic_shape::FillRule;
+pub use values::generics::basic_shape::FillRule;
 
 /// A specified clipping shape.
 pub type ClippingShape = generic::ClippingShape<BasicShape, SpecifiedUrl>;
@@ -54,7 +54,7 @@ pub type Polygon = generic::Polygon<LengthOrPercentage>;
 
 #[cfg(feature = "gecko")]
 fn is_clip_path_path_enabled(context: &ParserContext) -> bool {
-    use crate::gecko_bindings::structs::mozilla;
+    use gecko_bindings::structs::mozilla;
     context.chrome_rules_enabled() ||
         unsafe { mozilla::StaticPrefs_sVarCache_layout_css_clip_path_path_enabled }
 }
