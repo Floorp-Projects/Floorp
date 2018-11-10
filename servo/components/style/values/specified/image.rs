@@ -7,20 +7,9 @@
 //!
 //! [image]: https://drafts.csswg.org/css-images/#image-values
 
-use crate::custom_properties::SpecifiedValue;
-use crate::parser::{Parse, ParserContext};
-#[cfg(feature = "gecko")]
-use crate::values::computed::{Context, Position as ComputedPosition, ToComputedValue};
-use crate::values::generics::image::PaintWorklet;
-use crate::values::generics::image::{self as generic, Circle, CompatMode, Ellipse, ShapeExtent};
-use crate::values::generics::position::Position as GenericPosition;
-use crate::values::specified::position::{LegacyPosition, Position, PositionComponent, Side, X, Y};
-use crate::values::specified::url::SpecifiedImageUrl;
-use crate::values::specified::{Angle, Color, Length, LengthOrPercentage};
-use crate::values::specified::{Number, NumberOrPercentage, Percentage};
-use crate::values::{Either, None_};
-use crate::Atom;
 use cssparser::{Delimiter, Parser, Token};
+use custom_properties::SpecifiedValue;
+use parser::{Parse, ParserContext};
 use selectors::parser::SelectorParseErrorKind;
 #[cfg(feature = "servo")]
 use servo_url::ServoUrl;
@@ -28,6 +17,17 @@ use std::cmp::Ordering;
 use std::fmt::{self, Write};
 use style_traits::{CssType, CssWriter, KeywordsCollectFn, ParseError};
 use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
+#[cfg(feature = "gecko")]
+use values::computed::{Context, Position as ComputedPosition, ToComputedValue};
+use values::generics::image::PaintWorklet;
+use values::generics::image::{self as generic, Circle, CompatMode, Ellipse, ShapeExtent};
+use values::generics::position::Position as GenericPosition;
+use values::specified::position::{LegacyPosition, Position, PositionComponent, Side, X, Y};
+use values::specified::url::SpecifiedImageUrl;
+use values::specified::{Angle, Color, Length, LengthOrPercentage};
+use values::specified::{Number, NumberOrPercentage, Percentage};
+use values::{Either, None_};
+use Atom;
 
 /// A specified image layer.
 pub type ImageLayer = Either<None_, Image>;
@@ -166,7 +166,7 @@ impl Image {
     /// for insertion in the cascade.
     #[cfg(feature = "servo")]
     pub fn for_cascade(url: ServoUrl) -> Self {
-        use crate::values::CssUrl;
+        use values::CssUrl;
         generic::Image::Url(CssUrl::for_cascade(url))
     }
 
@@ -268,7 +268,7 @@ impl Parse for Gradient {
 
         #[cfg(feature = "gecko")]
         {
-            use crate::gecko_bindings::structs;
+            use gecko_bindings::structs;
             if compat_mode == CompatMode::Moz &&
                 !unsafe { structs::StaticPrefs_sVarCache_layout_css_prefixes_gradients }
             {
@@ -691,8 +691,8 @@ impl generic::LineDirection for LineDirection {
                 }),
                 None,
             ) => {
-                use crate::values::computed::Percentage as ComputedPercentage;
-                use crate::values::specified::transform::OriginComponent;
+                use values::computed::Percentage as ComputedPercentage;
+                use values::specified::transform::OriginComponent;
 
                 // `50% 0%` is the default value for line direction.
                 // These percentage values can also be keywords.

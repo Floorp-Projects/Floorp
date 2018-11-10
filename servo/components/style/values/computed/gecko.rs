@@ -4,8 +4,8 @@
 
 //! Computed types for legacy Gecko-only properties.
 
-use crate::values::computed::length::LengthOrPercentage;
-use crate::values::generics::gecko::ScrollSnapPoint as GenericScrollSnapPoint;
+use values::computed::length::LengthOrPercentage;
+use values::generics::gecko::ScrollSnapPoint as GenericScrollSnapPoint;
 
 /// A computed type for scroll snap points.
 pub type ScrollSnapPoint = GenericScrollSnapPoint<LengthOrPercentage>;

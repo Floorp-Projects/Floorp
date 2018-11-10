@@ -5,22 +5,21 @@
 //! Computed types for text properties.
 
 #[cfg(feature = "servo")]
-use crate::properties::StyleBuilder;
-use crate::values::computed::length::{Length, LengthOrPercentage};
-use crate::values::computed::{NonNegativeLength, NonNegativeNumber};
-use crate::values::generics::text::InitialLetter as GenericInitialLetter;
-use crate::values::generics::text::LineHeight as GenericLineHeight;
-use crate::values::generics::text::MozTabSize as GenericMozTabSize;
-use crate::values::generics::text::Spacing;
-use crate::values::specified::text::TextOverflowSide;
-use crate::values::specified::text::{TextEmphasisFillMode, TextEmphasisShapeKeyword};
-use crate::values::{CSSFloat, CSSInteger};
+use properties::StyleBuilder;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
+use values::computed::length::{Length, LengthOrPercentage};
+use values::computed::{NonNegativeLength, NonNegativeNumber};
+use values::generics::text::InitialLetter as GenericInitialLetter;
+use values::generics::text::LineHeight as GenericLineHeight;
+use values::generics::text::MozTabSize as GenericMozTabSize;
+use values::generics::text::Spacing;
+use values::specified::text::{TextEmphasisFillMode, TextEmphasisShapeKeyword, TextOverflowSide};
+use values::{CSSFloat, CSSInteger};
 
-pub use crate::values::specified::OverflowWrap;
-pub use crate::values::specified::TextAlignKeyword as TextAlign;
-pub use crate::values::specified::TextEmphasisPosition;
+pub use values::specified::TextAlignKeyword as TextAlign;
+pub use values::specified::TextEmphasisPosition;
+pub use values::specified::OverflowWrap;
 
 /// A computed value for the `initial-letter` property.
 pub type InitialLetter = GenericInitialLetter<CSSFloat, CSSInteger>;
@@ -101,7 +100,7 @@ impl TextDecorationsInEffect {
     /// Computes the text-decorations in effect for a given style.
     #[cfg(feature = "servo")]
     pub fn from_style(style: &StyleBuilder) -> Self {
-        use crate::values::computed::Display;
+        use values::computed::Display;
 
         // Start with no declarations if this is an atomic inline-level box;
         // otherwise, start with the declarations in effect and add in the text

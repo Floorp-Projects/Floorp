@@ -4,4 +4,4 @@
 
 #![allow(missing_docs)]
 
-pub use crate::counter_style::CounterStyleRuleData as CounterStyleRule;
+pub use counter_style::CounterStyleRuleData as CounterStyleRule;

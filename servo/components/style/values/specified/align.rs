@@ -6,9 +6,9 @@
 //!
 //! https://drafts.csswg.org/css-align/
 
-use crate::gecko_bindings::structs;
-use crate::parser::{Parse, ParserContext};
 use cssparser::Parser;
+use gecko_bindings::structs;
+use parser::{Parse, ParserContext};
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, KeywordsCollectFn, ParseError, SpecifiedValueInfo, ToCss};
 

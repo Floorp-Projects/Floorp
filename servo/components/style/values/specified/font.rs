@@ -6,29 +6,28 @@
 
 use app_units::Au;
 use byteorder::{BigEndian, ByteOrder};
-#[cfg(feature = "gecko")]
-use crate::gecko_bindings::bindings;
-use crate::parser::{Parse, ParserContext};
-use crate::properties::longhands::system_font::SystemFont;
-use crate::values::computed::font::{FamilyName, FontFamilyList, FontStyleAngle, SingleFontFamily};
-use crate::values::computed::{font as computed, Length, NonNegativeLength};
-use crate::values::computed::{Angle as ComputedAngle, Percentage as ComputedPercentage};
-use crate::values::computed::{Context, ToComputedValue};
-use crate::values::generics::font::{self as generics, FeatureTagValue, FontSettings, FontTag};
-use crate::values::generics::font::{KeywordSize, VariationValue};
-use crate::values::generics::NonNegative;
-use crate::values::specified::length::{FontBaseSize, AU_PER_PT, AU_PER_PX};
-use crate::values::specified::{AllowQuirks, Angle, Integer, LengthOrPercentage};
-use crate::values::specified::{NoCalcLength, Number, Percentage};
-use crate::values::CustomIdent;
-use crate::Atom;
 use cssparser::{Parser, Token};
 #[cfg(feature = "gecko")]
+use gecko_bindings::bindings;
+#[cfg(feature = "gecko")]
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
+use parser::{Parse, ParserContext};
+use properties::longhands::system_font::SystemFont;
 use std::fmt::{self, Write};
 use style_traits::values::SequenceWriter;
 use style_traits::{CssWriter, KeywordsCollectFn, ParseError};
 use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
+use values::computed::font::{FamilyName, FontFamilyList, FontStyleAngle, SingleFontFamily};
+use values::computed::{font as computed, Context, Length, NonNegativeLength, ToComputedValue};
+use values::computed::{Angle as ComputedAngle, Percentage as ComputedPercentage};
+use values::generics::font::{self as generics, FeatureTagValue, FontSettings, FontTag};
+use values::generics::font::{KeywordSize, VariationValue};
+use values::generics::NonNegative;
+use values::specified::length::{FontBaseSize, AU_PER_PT, AU_PER_PX};
+use values::specified::{AllowQuirks, Angle, Integer, LengthOrPercentage};
+use values::specified::{NoCalcLength, Number, Percentage};
+use values::CustomIdent;
+use Atom;
 
 // FIXME(emilio): The system font code is copy-pasta, and should be cleaned up.
 macro_rules! system_font_methods {
@@ -750,8 +749,8 @@ impl ToComputedValue for KeywordSize {
     type ComputedValue = NonNegativeLength;
     #[inline]
     fn to_computed_value(&self, cx: &Context) -> NonNegativeLength {
-        use crate::context::QuirksMode;
-        use crate::values::specified::length::au_to_int_px;
+        use context::QuirksMode;
+        use values::specified::length::au_to_int_px;
 
         // The tables in this function are originally from
         // nsRuleNode::CalcFontPointSize in Gecko:
@@ -851,7 +850,7 @@ impl FontSize {
         context: &Context,
         base_size: FontBaseSize,
     ) -> computed::FontSize {
-        use crate::values::specified::length::FontRelativeLength;
+        use values::specified::length::FontRelativeLength;
 
         let compose_keyword = |factor| {
             context
@@ -1307,7 +1306,7 @@ macro_rules! impl_variant_east_asian {
         #[cfg(feature = "gecko")]
         #[inline]
         pub fn assert_variant_east_asian_matches() {
-            use crate::gecko_bindings::structs;
+            use gecko_bindings::structs;
             $(
                 debug_assert_eq!(structs::$gecko as u16, VariantEastAsian::$ident.bits());
             )+
@@ -1517,7 +1516,7 @@ macro_rules! impl_variant_ligatures {
         #[cfg(feature = "gecko")]
         #[inline]
         pub fn assert_variant_ligatures_matches() {
-            use crate::gecko_bindings::structs;
+            use gecko_bindings::structs;
             $(
                 debug_assert_eq!(structs::$gecko as u16, VariantLigatures::$ident.bits());
             )+
@@ -1736,7 +1735,7 @@ macro_rules! impl_variant_numeric {
         #[cfg(feature = "gecko")]
         #[inline]
         pub fn assert_variant_numeric_matches() {
-            use crate::gecko_bindings::structs;
+            use gecko_bindings::structs;
             $(
                 debug_assert_eq!(structs::$gecko as u8, VariantNumeric::$ident.bits());
             )+
@@ -2016,7 +2015,7 @@ impl ToCss for FontSynthesis {
 #[cfg(feature = "gecko")]
 impl From<u8> for FontSynthesis {
     fn from(bits: u8) -> FontSynthesis {
-        use crate::gecko_bindings::structs;
+        use gecko_bindings::structs;
 
         FontSynthesis {
             weight: bits & structs::NS_FONT_SYNTHESIS_WEIGHT as u8 != 0,
@@ -2028,7 +2027,7 @@ impl From<u8> for FontSynthesis {
 #[cfg(feature = "gecko")]
 impl From<FontSynthesis> for u8 {
     fn from(v: FontSynthesis) -> u8 {
-        use crate::gecko_bindings::structs;
+        use gecko_bindings::structs;
 
         let mut bits: u8 = 0;
         if v.weight {

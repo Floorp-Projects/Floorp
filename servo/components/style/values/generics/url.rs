@@ -4,8 +4,8 @@
 
 //! Generic types for url properties.
 
-use crate::parser::{Parse, ParserContext};
 use cssparser::Parser;
+use parser::{Parse, ParserContext};
 use style_traits::ParseError;
 
 /// An image url or none, used for example in list-style-image

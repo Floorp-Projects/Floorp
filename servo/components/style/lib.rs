@@ -166,15 +166,15 @@ pub mod use_counters;
 pub mod values;
 
 #[cfg(feature = "gecko")]
-pub use crate::gecko_string_cache as string_cache;
+pub use gecko_string_cache as string_cache;
 #[cfg(feature = "gecko")]
-pub use crate::gecko_string_cache::Atom;
+pub use gecko_string_cache::Atom;
 #[cfg(feature = "gecko")]
-pub use crate::gecko_string_cache::Atom as Prefix;
+pub use gecko_string_cache::Atom as Prefix;
 #[cfg(feature = "gecko")]
-pub use crate::gecko_string_cache::Atom as LocalName;
+pub use gecko_string_cache::Atom as LocalName;
 #[cfg(feature = "gecko")]
-pub use crate::gecko_string_cache::Namespace;
+pub use gecko_string_cache::Namespace;
 
 #[cfg(feature = "servo")]
 pub use html5ever::LocalName;
@@ -216,17 +216,17 @@ macro_rules! reexport_computed_values {
         /// [computed]: https://drafts.csswg.org/css-cascade/#computed
         pub mod computed_values {
             $(
-                pub use crate::properties::longhands::$name::computed_value as $name;
+                pub use properties::longhands::$name::computed_value as $name;
             )+
             // Don't use a side-specific name needlessly:
-            pub use crate::properties::longhands::border_top_style::computed_value as border_style;
+            pub use properties::longhands::border_top_style::computed_value as border_style;
         }
     }
 }
 longhand_properties_idents!(reexport_computed_values);
 
 #[cfg(feature = "gecko")]
-use crate::gecko_string_cache::WeakAtom;
+use gecko_string_cache::WeakAtom;
 #[cfg(feature = "servo")]
 use servo_atoms::Atom as WeakAtom;
 

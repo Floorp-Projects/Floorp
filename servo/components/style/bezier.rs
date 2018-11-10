@@ -8,7 +8,7 @@
 
 #![deny(missing_docs)]
 
-use crate::values::CSSFloat;
+use values::CSSFloat;
 
 const NEWTON_METHOD_ITERATIONS: u8 = 8;
 

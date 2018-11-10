@@ -4,16 +4,16 @@
 
 //! Specified types for UI properties.
 
-use crate::parser::{Parse, ParserContext};
-use crate::values::generics::ui as generics;
-use crate::values::specified::color::Color;
-use crate::values::specified::url::SpecifiedImageUrl;
-use crate::values::specified::Number;
-use crate::values::{Auto, Either};
 use cssparser::Parser;
+use parser::{Parse, ParserContext};
 use std::fmt::{self, Write};
 use style_traits::cursor::CursorKind;
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
+use values::generics::ui as generics;
+use values::specified::color::Color;
+use values::specified::url::SpecifiedImageUrl;
+use values::specified::Number;
+use values::{Auto, Either};
 
 /// auto | <color>
 pub type ColorOrAuto = Either<Color, Auto>;

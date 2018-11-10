@@ -21,14 +21,14 @@
                                     ${'font-variation-settings' if product == 'gecko' else ''}"
                     derive_value_info="False"
                     spec="https://drafts.csswg.org/css-fonts-3/#propdef-font">
-    use crate::parser::Parse;
-    use crate::properties::longhands::{font_family, font_style, font_weight, font_stretch};
-    use crate::properties::longhands::font_variant_caps;
+    use parser::Parse;
+    use properties::longhands::{font_family, font_style, font_weight, font_stretch};
+    use properties::longhands::font_variant_caps;
     #[cfg(feature = "gecko")]
-    use crate::properties::longhands::system_font::SystemFont;
-    use crate::values::specified::text::LineHeight;
-    use crate::values::specified::FontSize;
-    use crate::values::specified::font::{FontStretch, FontStretchKeyword};
+    use properties::longhands::system_font::SystemFont;
+    use values::specified::text::LineHeight;
+    use values::specified::FontSize;
+    use values::specified::font::{FontStretch, FontStretchKeyword};
 
     <%
         gecko_sub_properties = "kerning language_override size_adjust \
@@ -39,7 +39,7 @@
     %>
     % if product == "gecko":
         % for prop in gecko_sub_properties:
-            use crate::properties::longhands::font_${prop};
+            use properties::longhands::font_${prop};
         % endfor
     % endif
     use self::font_family::SpecifiedValue as FontFamily;
@@ -301,10 +301,10 @@
     %>
 
 % for prop in sub_properties:
-    use crate::properties::longhands::font_variant_${prop};
+    use properties::longhands::font_variant_${prop};
 % endfor
     #[allow(unused_imports)]
-    use crate::values::specified::FontVariantLigatures;
+    use values::specified::FontVariantLigatures;
 
     pub fn parse_value<'i, 't>(
         context: &ParserContext,
