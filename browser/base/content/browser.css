@@ -978,13 +978,6 @@ html|*#fullscreen-exit-button {
   pointer-events: auto;
 }
 
-/* ::::: Ctrl-Tab Panel ::::: */
-
-.ctrlTab-preview {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#button-base");
-}
-
-
 /* notification anchors should only be visible when their associated
    notifications are */
 .notification-anchor-icon {
