@@ -192,10 +192,6 @@
 
   <binding id="button" display="xul:button"
            extends="chrome://global/content/bindings/button.xml#button-base">
-    <resources>
-      <stylesheet src="chrome://global/skin/button.css"/>
-    </resources>
-
     <content>
       <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:hbox class="box-inherit button-box" xbl:inherits="align,dir,pack,orient"

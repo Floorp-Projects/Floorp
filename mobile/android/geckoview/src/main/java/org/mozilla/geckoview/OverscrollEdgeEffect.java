@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.gfx;
+package org.mozilla.geckoview;
 
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -32,12 +32,12 @@ public final class OverscrollEdgeEffect {
     // All four edges of the screen
     private final EdgeEffect[] mEdges = new EdgeEffect[4];
 
-    private final LayerSession mSession;
+    private final GeckoSession mSession;
     private Runnable mInvalidationCallback;
     private int mWidth;
     private int mHeight;
 
-    /* package */ OverscrollEdgeEffect(final LayerSession session) {
+    /* package */ OverscrollEdgeEffect(final GeckoSession session) {
         mSession = session;
     }
 

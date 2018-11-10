@@ -424,6 +424,8 @@ public:
     void SetLastActiveTabLoadOptimizationHit(TimeStamp const &when);
     bool IsBeforeLastActiveTabLoadOptimization(TimeStamp const &when);
 
+    bool DumpHpackTables() { return mDumpHpackTables; }
+
 private:
     nsHttpHandler();
 
@@ -593,6 +595,7 @@ private:
     uint32_t           mEnableAltSvcOE : 1;
     uint32_t           mEnableOriginExtension : 1;
     uint32_t           mEnableH2Websockets : 1;
+    uint32_t           mDumpHpackTables : 1;
 
     // Try to use SPDY features instead of HTTP/1.1 over SSL
     SpdyInformation    mSpdyInfo;

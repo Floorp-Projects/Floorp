@@ -27,7 +27,7 @@ import android.view.animation.LinearInterpolator;
 import org.mozilla.gecko.DynamicToolbar;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.drawable.ShiftDrawable;
-import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
+import org.mozilla.geckoview.DynamicToolbarAnimator;
 import org.mozilla.gecko.widget.themed.ThemedProgressBar;
 
 /**

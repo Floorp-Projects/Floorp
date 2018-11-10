@@ -145,8 +145,7 @@
 
 #customization-uidensity-button > .box-inherit > .box-inherit > .button-text,
 #customization-lwtheme-button > .box-inherit > .box-inherit > .button-text {
-  /* Sadly, button.css thinks its margins are perfect for everyone. */
-  margin-inline-start: 6px !important;
+  margin-inline-start: 6px;
 }
 
 #customization-uidensity-button > .box-inherit > .box-inherit > .button-icon,

@@ -1219,6 +1219,11 @@ public:
   template<typename ResolveValueType_>
   void Resolve(ResolveValueType_&& aResolveValue, const char* aMethodName)
   {
+    static_assert(
+      IsConvertible<ResolveValueType_,
+                    typename PromiseType::ResolveValueType>::value,
+      "Resolve() argument must be convertible to MozPromise's ResolveValueT");
+
     if (mMonitor) {
       mMonitor->AssertCurrentThreadOwns();
     }
@@ -1240,6 +1245,11 @@ public:
   template<typename RejectValueType_>
   void Reject(RejectValueType_&& aRejectValue, const char* aMethodName)
   {
+    static_assert(
+      IsConvertible<RejectValueType_,
+                    typename PromiseType::RejectValueType>::value,
+      "Reject() argument must be convertible to MozPromise's RejectValueT");
+
     if (mMonitor) {
       mMonitor->AssertCurrentThreadOwns();
     }
