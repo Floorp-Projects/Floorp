@@ -6,8 +6,7 @@
 
 // test that the LineData internal data structure works correctly
 
-function run_test()
-{
+function run_test() {
   var data = new LineData();
   data.appendBytes(["a".charCodeAt(0), CR]);
 

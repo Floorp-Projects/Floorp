@@ -12,8 +12,7 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 
 var srv;
 
-function run_test()
-{
+function run_test() {
   srv = createServer();
   var sjsDir = do_get_file("data/sjs/");
   srv.registerDirectory("/", sjsDir);
@@ -21,8 +20,7 @@ function run_test()
   srv.registerPathHandler("/path-handler", pathHandler);
   srv.start(-1);
 
-  function done()
-  {
+  function done() {
     Assert.equal(srv.getSharedState("shared-value"), "done!");
     Assert.equal(srv.getState("/path-handler", "private-value"),
                  "pathHandlerPrivate2");
@@ -38,14 +36,13 @@ function run_test()
 }
 
 
-/************
+/** **********
  * HANDLERS *
  ************/
 
 var firstTime = true;
 
-function pathHandler(request, response)
-{
+function pathHandler(request, response) {
   response.setHeader("Cache-Control", "no-cache", false);
 
   response.setHeader("X-Old-Shared-Value", srv.getSharedState("shared-value"),
@@ -54,14 +51,11 @@ function pathHandler(request, response)
                      false);
 
   var privateValue, sharedValue;
-  if (firstTime)
-  {
+  if (firstTime) {
     firstTime = false;
     privateValue = "pathHandlerPrivate";
     sharedValue = "pathHandlerShared";
-  }
-  else
-  {
+  } else {
     privateValue = "pathHandlerPrivate2";
     sharedValue = "";
   }
@@ -74,7 +68,7 @@ function pathHandler(request, response)
 }
 
 
-/***************
+/** *************
  * BEGIN TESTS *
  ***************/
 
@@ -104,21 +98,16 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
                     null, start_other_set_new, null),
     new Test(URL + "/state1.sjs?" +
                     "newShared=done!&newPrivate=",
-                    null, start_set_remove_original, null)
+                    null, start_set_remove_original, null),
   ];
 });
 
 /* Hack around bug 474845 for now. */
-function getHeaderFunction(ch)
-{
-  function getHeader(name)
-  {
-    try
-    {
+function getHeaderFunction(ch) {
+  function getHeader(name) {
+    try {
       return ch.getResponseHeader(name);
-    }
-    catch (e)
-    {
+    } catch (e) {
       if (e.result !== Cr.NS_ERROR_NOT_AVAILABLE)
         throw e;
     }
@@ -127,8 +116,7 @@ function getHeaderFunction(ch)
   return getHeader;
 }
 
-function expectValues(ch, oldShared, newShared, oldPrivate, newPrivate)
-{
+function expectValues(ch, oldShared, newShared, oldPrivate, newPrivate) {
   var getHeader = getHeaderFunction(ch);
 
   Assert.equal(ch.responseStatus, 200);
@@ -138,49 +126,40 @@ function expectValues(ch, oldShared, newShared, oldPrivate, newPrivate)
   Assert.equal(getHeader("X-New-Private-Value"), newPrivate);
 }
 
-function start_initial(ch, cx)
-{
+function start_initial(ch, cx) {
 dumpn("XXX start_initial");
   expectValues(ch, "", "newShared", "", "newPrivate");
 }
 
-function start_overwrite(ch, cx)
-{
+function start_overwrite(ch, cx) {
   expectValues(ch, "newShared", "newShared2", "newPrivate", "newPrivate2");
 }
 
-function start_remove(ch, cx)
-{
+function start_remove(ch, cx) {
   expectValues(ch, "newShared2", "", "newPrivate2", "newPrivate3");
 }
 
-function start_handler(ch, cx)
-{
+function start_handler(ch, cx) {
   expectValues(ch, "", "pathHandlerShared", "", "pathHandlerPrivate");
 }
 
-function start_handler_again(ch, cx)
-{
+function start_handler_again(ch, cx) {
   expectValues(ch, "pathHandlerShared", "",
                "pathHandlerPrivate", "pathHandlerPrivate2");
 }
 
-function start_other_initial(ch, cx)
-{
+function start_other_initial(ch, cx) {
   expectValues(ch, "", "newShared4", "", "newPrivate4");
 }
 
-function start_other_remove_ignore(ch, cx)
-{
+function start_other_remove_ignore(ch, cx) {
   expectValues(ch, "newShared4", "", "newPrivate4", "");
 }
 
-function start_other_set_new(ch, cx)
-{
+function start_other_set_new(ch, cx) {
   expectValues(ch, "", "newShared5", "newPrivate4", "newPrivate5");
 }
 
-function start_set_remove_original(ch, cx)
-{
+function start_set_remove_original(ch, cx) {
   expectValues(ch, "newShared5", "done!", "newPrivate3", "");
 }
