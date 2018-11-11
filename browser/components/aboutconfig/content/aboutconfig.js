@@ -30,13 +30,28 @@ function onLoad() {
   gPrefArray.sort((a, b) => a.name > b.name);
 
   let fragment = document.createDocumentFragment();
-
   for (let pref of gPrefArray) {
-    let listItem = document.createElement("li");
-    listItem.textContent = pref.name + " || " +
-      (pref.hasUserValue ? "Modified" : "Default") + " || " +
-      pref.value.constructor.name + " || " + pref.value;
-    fragment.appendChild(listItem);
+    let row = document.createElement("tr");
+    if (pref.hasUserValue) {
+      row.classList.add("has-user-value");
+    }
+    row.setAttribute("aria-label", pref.name);
+
+    let nameCell = document.createElement("td");
+    // Add <wbr> behind dots to prevent line breaking in random mid-word places.
+    let parts = pref.name.split(".");
+    for (let i = 0; i < parts.length - 1; i++) {
+      nameCell.append(parts[i] + ".", document.createElement("wbr"));
+    }
+    nameCell.append(parts[parts.length - 1]);
+    row.appendChild(nameCell);
+
+    let valueCell = document.createElement("td");
+    valueCell.classList.add("cell-value");
+    valueCell.textContent = pref.value;
+    row.appendChild(valueCell);
+
+    fragment.appendChild(row);
   }
-  document.getElementById("list").appendChild(fragment);
+  document.getElementById("prefs").appendChild(fragment);
 }
