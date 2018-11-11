@@ -70,6 +70,7 @@
 #if defined(JS_BUILD_BINAST)
 # include "frontend/BinSource.h"
 #endif // defined(JS_BUILD_BINAST)
+#include "frontend/ModuleSharedContext.h"
 #include "frontend/Parser.h"
 #include "gc/PublicIterators.h"
 #include "jit/arm/Simulator-arm.h"

@@ -11,6 +11,7 @@
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/ErrorReporter.h"
+#include "frontend/NameCollections.h"
 #include "frontend/SharedContext.h"
 
 namespace js {
