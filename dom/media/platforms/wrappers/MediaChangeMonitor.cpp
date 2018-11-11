@@ -34,7 +34,6 @@ public:
   {
     if (CanBeInstantiated()) {
       UpdateConfigFromExtraData(aInfo.mExtraData);
-      mPreviousExtraData = aInfo.mExtraData;
     }
   }
 
@@ -72,8 +71,14 @@ public:
       // We now check if the out of band one has changed.
       // This scenario can currently only occur on Android with devices that can
       // recycle a decoder.
-      if (!H264::HasSPS(aSample->mExtraData) ||
+      bool hasOutOfBandExtraData = H264::HasSPS(aSample->mExtraData);
+      if (!hasOutOfBandExtraData || !mPreviousExtraData ||
           H264::CompareExtraData(aSample->mExtraData, mPreviousExtraData)) {
+        if (hasOutOfBandExtraData && !mPreviousExtraData) {
+          // We are decoding the first sample, store the out of band sample's
+          // extradata so that we can check for future change.
+          mPreviousExtraData = aSample->mExtraData;
+        }
         return NS_OK;
       }
       extra_data = aSample->mExtraData;
