@@ -349,7 +349,7 @@ var gSitePermissionsManager = {
 
     // If any item is selected, it should be the only item tabable
     // in the richlistbox for accessibility reasons.
-    this._list.children.forEach((item) => {
+    this._list.itemChildren.forEach((item) => {
       let menulist = item.getElementsByTagName("menulist")[0];
       if (!item.selected) {
         menulist.setAttribute("tabindex", -1);

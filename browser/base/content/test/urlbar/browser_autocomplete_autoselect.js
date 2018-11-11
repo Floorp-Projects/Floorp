@@ -50,7 +50,7 @@ add_task(async function() {
   await waitForAutocompleteResultAt(maxResults - 1);
 
   let popup = gURLBar.popup;
-  let results = popup.richlistbox.children;
+  let results = popup.richlistbox.itemChildren;
   is(results.length, maxResults,
      "Should get maxResults=" + maxResults + " results");
   is_selected(0);

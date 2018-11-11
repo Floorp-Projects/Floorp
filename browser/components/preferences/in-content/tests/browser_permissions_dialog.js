@@ -363,7 +363,7 @@ add_task(async function testTabBehaviour() {
 
   EventUtils.synthesizeKey("KEY_ArrowDown", {}, sitePermissionsDialog);
   EventUtils.synthesizeKey("KEY_Tab", {}, sitePermissionsDialog);
-  let menulist = doc.getElementById("permissionsBox").children[1].getElementsByTagName("menulist")[0];
+  let menulist = doc.getElementById("permissionsBox").itemChildren[1].getElementsByTagName("menulist")[0];
   is(menulist, doc.activeElement, "The menulist inside the selected richlistitem is focused now");
 
   EventUtils.synthesizeKey("KEY_Tab", {}, sitePermissionsDialog);

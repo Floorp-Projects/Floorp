@@ -47,12 +47,12 @@ async function promiseAutocompleteResultPopup(inputText) {
 async function waitForAutocompleteResultAt(index) {
   let searchString = gURLBar.controller.searchString;
   await BrowserTestUtils.waitForCondition(
-    () => gURLBar.popup.richlistbox.children.length > index &&
-          gURLBar.popup.richlistbox.children[index].getAttribute("ac-text") == searchString,
+    () => gURLBar.popup.richlistbox.itemChildren.length > index &&
+          gURLBar.popup.richlistbox.itemChildren[index].getAttribute("ac-text") == searchString,
     `Waiting for the autocomplete result for "${searchString}" at [${index}] to appear`);
   // Ensure the addition is complete, for proper mouse events on the entries.
   await new Promise(resolve => window.requestIdleCallback(resolve, {timeout: 1000}));
-  return gURLBar.popup.richlistbox.children[index];
+  return gURLBar.popup.richlistbox.itemChildren[index];
 }
 
 add_task(async function setup() {
@@ -120,7 +120,7 @@ add_task(async function test_popup_url() {
   await waitForAutocompleteResultAt(maxResults - 1);
 
   let popup = gURLBar.popup;
-  let results = popup.richlistbox.children;
+  let results = popup.richlistbox.itemChildren;
   is(results.length, maxResults,
      "Should get maxResults=" + maxResults + " results");
 
