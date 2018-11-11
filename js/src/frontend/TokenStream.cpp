@@ -680,8 +680,8 @@ SourceUnits<Utf8Unit>::assertNextCodePoint(const PeekedCodePoint<Utf8Unit>& peek
         expectedUnits[1] = 0b1000'0000 | ((c >> 6) & 0b11'1111);
         expectedUnits[2] = 0b1000'0000 | (c & 0b11'1111);
     } else {
-        expectedUnits[0] = 0b1110'0000 | (c >> 18);
-        expectedUnits[2] = 0b1000'0000 | ((c >> 12) & 0b11'1111);
+        expectedUnits[0] = 0b1111'0000 | (c >> 18);
+        expectedUnits[1] = 0b1000'0000 | ((c >> 12) & 0b11'1111);
         expectedUnits[2] = 0b1000'0000 | ((c >> 6) & 0b11'1111);
         expectedUnits[3] = 0b1000'0000 | (c & 0b11'1111);
     }
