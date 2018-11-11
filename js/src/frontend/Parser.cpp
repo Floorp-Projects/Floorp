@@ -617,7 +617,7 @@ void GeneralParser<ParseHandler, Unit>::reportMissingClosing(
   }
 
   uint32_t line, column;
-  anyChars.srcCoords.lineNumAndColumnIndex(openedPos, &line, &column);
+  tokenStream.computeLineAndColumn(openedPos, &line, &column);
 
   const size_t MaxWidth = sizeof("4294967295");
   char columnNumber[MaxWidth];
@@ -656,7 +656,7 @@ void GeneralParser<ParseHandler, Unit>::reportRedeclaration(
   }
 
   uint32_t line, column;
-  anyChars.srcCoords.lineNumAndColumnIndex(prevPos, &line, &column);
+  tokenStream.computeLineAndColumn(prevPos, &line, &column);
 
   const size_t MaxWidth = sizeof("4294967295");
   char columnNumber[MaxWidth];

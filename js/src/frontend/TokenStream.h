@@ -1858,6 +1858,11 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
     return static_cast<TokenStreamSpecific*>(this);
   }
 
+  void computeLineAndColumn(uint32_t offset, uint32_t* line,
+                            uint32_t* column) const {
+    anyCharsAccess().srcCoords.lineNumAndColumnIndex(offset, line, column);
+  }
+
   void newSimpleToken(TokenKind kind, TokenStart start,
                       TokenStreamShared::Modifier modifier, TokenKind* out) {
     newToken(kind, start, modifier, out);
@@ -2293,6 +2298,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   // cost of this ever-changing laundry list of |using|s.  So it goes.
  public:
   using GeneralCharsBase::anyCharsAccess;
+  using GeneralCharsBase::computeLineAndColumn;
 
  private:
   using typename CharsBase::SourceUnits;
