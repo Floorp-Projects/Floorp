@@ -731,7 +731,8 @@ class TokenStreamAnyChars : public TokenStreamShared {
   char16_t* sourceMapURL() { return sourceMapURL_.get(); }
 
   // This class maps a sourceUnits offset (which is 0-indexed) to a line
-  // number (which is 1-indexed) and a column index (which is 0-indexed).
+  // number (which is 1-indexed) and an offset (which is 0-indexed) in
+  // code *units* (not code points, not bytes) into the line.
   class SourceCoords {
     // For a given buffer holding source code, |lineStartOffsets_| has one
     // element per line of source code, plus one sentinel element.  Each
@@ -748,68 +749,86 @@ class TokenStreamAnyChars : public TokenStreamShared {
     //
     //   [0, 7, 14, 15, MAX_PTR]
     //
-    // To convert a "line number" to a "line index" (i.e. an index into
-    // |lineStartOffsets_|), subtract |initialLineNum_|.  E.g. line 3's
-    // line index is (3 - initialLineNum_), which is 2.  Therefore
-    // lineStartOffsets_[2] holds the buffer offset for the start of line 3,
-    // which is 14.  (Note that |initialLineNum_| is often 1, but not
-    // always.)
+    // To convert a "line number" to an "index" into |lineStartOffsets_|,
+    // subtract |initialLineNum_|.  E.g. line 3's index is
+    // (3 - initialLineNum_), which is 2.  Therefore lineStartOffsets_[2]
+    // holds the buffer offset for the start of line 3, which is 14.  (Note
+    // that |initialLineNum_| is often 1, but not always.
     //
     // The first element is always initialLineOffset, passed to the
     // constructor, and the last element is always the MAX_PTR sentinel.
     //
-    // offset-to-line/column lookups are O(log n) in the worst case (binary
-    // search), but in practice they're heavily clustered and we do better
-    // than that by using the previous lookup's result (lastLineIndex_) as
-    // a starting point.
+    // Offset-to-{line,offset-into-line} lookups are O(log n) in the worst
+    // case (binary search), but in practice they're heavily clustered and
+    // we do better than that by using the previous lookup's result
+    // (lastIndex_) as a starting point.
     //
     // Checking if an offset lies within a particular line number
     // (isOnThisLine()) is O(1).
     //
     Vector<uint32_t, 128> lineStartOffsets_;
+
+    /** The line number on which the source text begins. */
     uint32_t initialLineNum_;
+
+    /** The column number at which the source text begins. */
     uint32_t initialColumn_;
 
-    // This is mutable because it's modified on every search, but that fact
-    // isn't visible outside this class.
-    mutable uint32_t lastLineIndex_;
+    /**
+     * The index corresponding to the last offset lookup -- used so that if
+     * offset lookups proceed in increasing order, and and the offset appears
+     * in the next couple lines from the last offset, we can avoid a full
+     * binary-search.
+     *
+     * This is mutable because it's modified on every search, but that fact
+     * isn't visible outside this class.
+     */
+    mutable uint32_t lastIndex_;
 
-    uint32_t lineIndexOf(uint32_t offset) const;
+    uint32_t indexFromOffset(uint32_t offset) const;
 
     static const uint32_t MAX_PTR = UINT32_MAX;
 
-    uint32_t lineIndexToNum(uint32_t lineIndex) const {
-      return lineIndex + initialLineNum_;
+    uint32_t lineNumberFromIndex(uint32_t index) const {
+      return index + initialLineNum_;
     }
-    uint32_t lineNumToIndex(uint32_t lineNum) const {
+
+    uint32_t indexFromLineNumber(uint32_t lineNum) const {
       return lineNum - initialLineNum_;
     }
-    uint32_t lineIndexAndOffsetToColumn(uint32_t lineIndex,
-                                        uint32_t offset) const {
-      uint32_t lineStartOffset = lineStartOffsets_[lineIndex];
+
+    uint32_t lineOffsetFromIndexAndOffset(uint32_t index,
+                                          uint32_t offset) const {
+      uint32_t lineStartOffset = lineStartOffsets_[index];
       MOZ_RELEASE_ASSERT(offset >= lineStartOffset);
-      uint32_t column = offset - lineStartOffset;
-      if (lineIndex == 0) {
-        return column + initialColumn_;
-      }
-      return column;
+      return offset - lineStartOffset;
+    }
+
+    // This function is BAD because it's lies in the presence of multi-unit
+    // code points -- unlike lineOffsetFromIndexAndOffset that doesn't
+    // promise a column number.  This name segregates the initial-line
+    // column adjustment and the false "column" sense to a function that
+    // will be removed later in this patch stack.
+    uint32_t columnFromIndexAndOffset(uint32_t index, uint32_t offset) const {
+      uint32_t lineOffset = lineOffsetFromIndexAndOffset(index, offset);
+      return (index == 0 ? initialColumn_ : 0) + lineOffset;
     }
 
    public:
-    SourceCoords(JSContext* cx, uint32_t ln, uint32_t col,
-                 uint32_t initialLineOffset);
+    SourceCoords(JSContext* cx, uint32_t initialLineNumber,
+                 uint32_t initialColumnNumber, uint32_t initialOffset);
 
     MOZ_MUST_USE bool add(uint32_t lineNum, uint32_t lineStartOffset);
     MOZ_MUST_USE bool fill(const SourceCoords& other);
 
     bool isOnThisLine(uint32_t offset, uint32_t lineNum,
                       bool* onThisLine) const {
-      uint32_t lineIndex = lineNumToIndex(lineNum);
-      if (lineIndex + 1 >= lineStartOffsets_.length()) {  // +1 due to sentinel
+      uint32_t index = indexFromLineNumber(lineNum);
+      if (index + 1 >= lineStartOffsets_.length()) {  // +1 due to sentinel
         return false;
       }
-      *onThisLine = lineStartOffsets_[lineIndex] <= offset &&
-                    offset < lineStartOffsets_[lineIndex + 1];
+      *onThisLine = lineStartOffsets_[index] <= offset &&
+                    offset < lineStartOffsets_[index + 1];
       return true;
     }
 
