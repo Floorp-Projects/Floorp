@@ -777,6 +777,35 @@ RecordReplay_AdvanceProgressCounter(JSContext* aCx, unsigned aArgc, Value* aVp)
 }
 
 static bool
+RecordReplay_ShouldUpdateProgressCounter(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  if (args.get(0).isNull()) {
+    args.rval().setBoolean(ShouldUpdateProgressCounter(nullptr));
+  } else {
+    if (!args.get(0).isString()) {
+      JS_ReportErrorASCII(aCx, "Expected string or null as first argument");
+      return false;
+    }
+
+    JSString* str = args.get(0).toString();
+    size_t len = JS_GetStringLength(str);
+
+    nsAutoString chars;
+    chars.SetLength(len);
+    if (!JS_CopyStringChars(aCx, Range<char16_t>(chars.BeginWriting(), len), str)) {
+      return false;
+    }
+
+    NS_ConvertUTF16toUTF8 utf8(chars);
+    args.rval().setBoolean(ShouldUpdateProgressCounter(utf8.get()));
+  }
+
+  return true;
+}
+
+static bool
 RecordReplay_PositionHit(JSContext* aCx, unsigned aArgc, Value* aVp)
 {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
@@ -947,6 +976,7 @@ static const JSFunctionSpec gRecordReplayMethods[] = {
   JS_FN("areThreadEventsDisallowed", RecordReplay_AreThreadEventsDisallowed, 0, 0),
   JS_FN("maybeDivergeFromRecording", RecordReplay_MaybeDivergeFromRecording, 0, 0),
   JS_FN("advanceProgressCounter", RecordReplay_AdvanceProgressCounter, 0, 0),
+  JS_FN("shouldUpdateProgressCounter", RecordReplay_ShouldUpdateProgressCounter, 1, 0),
   JS_FN("positionHit", RecordReplay_PositionHit, 1, 0),
   JS_FN("getContent", RecordReplay_GetContent, 1, 0),
   JS_FN("currentExecutionPoint", RecordReplay_CurrentExecutionPoint, 1, 0),
