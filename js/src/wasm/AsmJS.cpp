@@ -2559,23 +2559,24 @@ class MOZ_STACK_CLASS FunctionValidator {
       return false;
     }
 
-    TokenStreamAnyChars& anyChars = m().tokenStream().anyCharsAccess();
-    return callSiteLineNums_.append(
-        anyChars.srcCoords.lineNum(pn->pn_pos.begin));
+    return appendCallSiteLineNumber(pn);
   }
   MOZ_MUST_USE bool writeCall(ParseNode* pn, MozOp op) {
     if (!encoder().writeOp(op)) {
       return false;
     }
 
-    TokenStreamAnyChars& anyChars = m().tokenStream().anyCharsAccess();
-    return callSiteLineNums_.append(
-        anyChars.srcCoords.lineNum(pn->pn_pos.begin));
+    return appendCallSiteLineNumber(pn);
   }
   MOZ_MUST_USE bool prepareCall(ParseNode* pn) {
-    TokenStreamAnyChars& anyChars = m().tokenStream().anyCharsAccess();
+    return appendCallSiteLineNumber(pn);
+  }
+
+ private:
+  MOZ_MUST_USE bool appendCallSiteLineNumber(ParseNode* node) {
+    const TokenStreamAnyChars& anyChars = m().tokenStream().anyCharsAccess();
     return callSiteLineNums_.append(
-        anyChars.srcCoords.lineNum(pn->pn_pos.begin));
+        anyChars.srcCoords.lineNum(node->pn_pos.begin));
   }
 };
 
