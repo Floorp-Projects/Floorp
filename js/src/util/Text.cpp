@@ -6,17 +6,29 @@
 
 #include "util/Text.h"
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Utf8.h"
+
+#include <stddef.h>
+#include <stdint.h>
 
 #include "gc/GC.h"
 #include "js/GCAPI.h"
+#include "util/Unicode.h"
 #include "vm/JSContext.h"
 #include "vm/StringType.h"
 
 using namespace JS;
 using namespace js;
+
 using js::gc::AutoSuppressGC;
+using mozilla::DecodeOneUtf8CodePoint;
+using mozilla::IsAscii;
+using mozilla::Maybe;
 using mozilla::PodCopy;
+using mozilla::Utf8Unit;
 
 template <typename CharT>
 const CharT* js_strchr_limit(const CharT* s, char16_t c, const CharT* limit) {
@@ -307,3 +319,51 @@ template size_t js::PutEscapedString(char* buffer, size_t bufferSize,
 template size_t js::PutEscapedString(char* buffer, size_t bufferSize,
                                      const char16_t* chars, size_t length,
                                      uint32_t quote);
+
+size_t js::unicode::CountCodePoints(const Utf8Unit* begin,
+                                    const Utf8Unit* end) {
+  MOZ_ASSERT(begin <= end);
+
+  size_t count = 0;
+  const Utf8Unit* ptr = begin;
+  while (ptr < end) {
+    count++;
+
+    Utf8Unit lead = *ptr++;
+    if (IsAscii(lead)) {
+      continue;
+    }
+
+#ifdef DEBUG
+    Maybe<char32_t> cp =
+#endif
+        DecodeOneUtf8CodePoint(lead, &ptr, end);
+    MOZ_ASSERT(cp.isSome());
+  }
+  MOZ_ASSERT(ptr == end, "bad code unit count in line?");
+
+  return count;
+}
+
+size_t js::unicode::CountCodePoints(const char16_t* begin,
+                                    const char16_t* end) {
+  MOZ_ASSERT(begin <= end);
+
+  size_t count = 0;
+
+  const char16_t* ptr = begin;
+  while (ptr < end) {
+    count++;
+
+    if (!IsLeadSurrogate(*ptr++)) {
+      continue;
+    }
+
+    if (ptr < end && IsTrailSurrogate(*ptr)) {
+      ptr++;
+    }
+  }
+  MOZ_ASSERT(ptr == end, "should have consumed the full range");
+
+  return count;
+}
