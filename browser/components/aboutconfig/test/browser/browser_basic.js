@@ -30,29 +30,43 @@ add_task(async function test_load_settings() {
     url: PAGE_URL,
   }, browser => {
     return ContentTask.spawn(browser, null, () => {
-      let list = [...content.document.getElementById("list")
-                                     .getElementsByTagName("li")];
-      function findPref(name) {
-        return list.some(e => e.textContent.trim().startsWith(name + " "));
+      ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+      let list = [...content.document.getElementById("prefs")
+        .getElementsByTagName("tr")];
+      function getRow(name) {
+        return list.find(row => row.querySelector("td").textContent == name);
+      }
+      function getValue(name) {
+        return getRow(name).querySelector("td.cell-value").textContent;
       }
 
       // Test if page contains elements.
-      Assert.ok(findPref("plugins.testmode"));
-      Assert.ok(findPref("dom.vr.enabled"));
-      Assert.ok(findPref("accessibility.AOM.enabled"));
+      Assert.ok(getRow("plugins.testmode"));
+      Assert.ok(getRow("dom.vr.enabled"));
+      Assert.ok(getRow("accessibility.AOM.enabled"));
 
-      function containsLocalizedValue(value) {
-        return list.some(e => e.textContent.trim() == value);
-      }
+      // Test if the modified state is displayed for the right prefs.
+      let prefArray = Services.prefs.getChildList("");
+      let nameOfEdited = prefArray.find(
+        name => Services.prefs.prefHasUserValue(name));
+      let nameOfDefault = prefArray.find(
+        name => !Services.prefs.prefHasUserValue(name));
+      Assert.ok(!getRow(nameOfDefault).classList.contains("has-user-value"));
+      Assert.ok(getRow(nameOfEdited).classList.contains("has-user-value"));
+
       // Test to see if values are localized.
-      Assert.ok(containsLocalizedValue("font.language.group || Default || String || x-western"));
-      Assert.ok(containsLocalizedValue("intl.ellipsis || Default || String || \u2026"));
-      Assert.ok(containsLocalizedValue("gecko.handlerService.schemes.mailto.1.uriTemplate || Default || String || https://mail.google.com/mail/?extsrc=mailto&url=%s"));
+      Assert.equal(getValue("font.language.group"), "x-western");
+      Assert.equal(getValue("intl.ellipsis"), "\u2026");
+      Assert.equal(
+        getValue("gecko.handlerService.schemes.mailto.1.uriTemplate"),
+        "https://mail.google.com/mail/?extsrc=mailto&url=%s");
 
       // Test to see if user created value is not empty string when it matches /^chrome:\/\/.+\/locale\/.+\.properties/.
-      Assert.ok(containsLocalizedValue("random.user.pref || Modified || String || chrome://test/locale/testing.properties"));
+      Assert.equal(getValue("random.user.pref"),
+        "chrome://test/locale/testing.properties");
       // Test to see if empty string when value matches /^chrome:\/\/.+\/locale\/.+\.properties/ and an exception is thrown.
-      Assert.ok(containsLocalizedValue("gecko.handlerService.schemes.irc.1.name || Default || String ||"));
+      Assert.equal(getValue("gecko.handlerService.schemes.irc.1.name"), "");
     });
   });
 });
