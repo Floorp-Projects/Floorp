@@ -75,7 +75,8 @@ public:
     virtual const TrackInfo& Config() const = 0;
     virtual MediaResult PrepareSample(
       MediaDataDecoder::ConversionRequired aConversion,
-      MediaRawData* aSample) = 0;
+      MediaRawData* aSample,
+      bool aNeedKeyFrame) = 0;
     virtual ~CodecChangeMonitor() = default;
   };
 
