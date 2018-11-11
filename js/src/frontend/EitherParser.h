@@ -100,8 +100,16 @@ struct ParserNewObjectBox
 struct ParseHandlerMatcher
 {
     template<class Parser>
-    frontend::FullParseHandler& match(Parser *parser) {
+    frontend::FullParseHandler& match(Parser* parser) {
         return parser->handler;
+    }
+};
+
+struct AnyCharsMatcher
+{
+    template<class Parser>
+    frontend::TokenStreamAnyChars& match(Parser* parser) {
+        return parser->anyChars;
     }
 };
 
@@ -166,6 +174,9 @@ class EitherParser : public BCEParserHandle
         return parser.match(std::move(matcher));
     }
 
+    const TokenStreamAnyChars& anyChars() const {
+        return parser.match(detail::AnyCharsMatcher());
+    }
 };
 
 } /* namespace frontend */
