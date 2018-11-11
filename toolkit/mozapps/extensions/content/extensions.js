@@ -1767,7 +1767,7 @@ var gCategories = {
     category.setAttribute("hidden", aStartHidden);
 
     var node;
-    for (node of this.node.children) {
+    for (node of this.node.itemChildren) {
       var nodePriority = parseInt(node.getAttribute("priority"));
       // If the new type's priority is higher than this one then this is the
       // insertion point

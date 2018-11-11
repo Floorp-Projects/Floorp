@@ -84,12 +84,12 @@ add_task(async function() {
   async function waitForAutocompleteResultAt(index) {
     let searchString = gURLBar.controller.searchString;
     await BrowserTestUtils.waitForCondition(
-      () => gURLBar.popup.richlistbox.children.length > index &&
-            gURLBar.popup.richlistbox.children[index].getAttribute("ac-text") == searchString,
+      () => gURLBar.popup.richlistbox.itemChildren.length > index &&
+            gURLBar.popup.richlistbox.itemChildren[index].getAttribute("ac-text") == searchString,
       `Waiting for the autocomplete result for "${searchString}" at [${index}] to appear`);
     // Ensure the addition is complete, for proper mouse events on the entries.
     await new Promise(resolve => window.requestIdleCallback(resolve, {timeout: 1000}));
-    return gURLBar.popup.richlistbox.children[index];
+    return gURLBar.popup.richlistbox.itemChildren[index];
   }
 
   async function promiseClickOnItem(item, details) {
@@ -189,7 +189,7 @@ add_task(async function() {
     let text = await startInputSession();
     await waitForAutocompleteResultAt(0);
 
-    let item = gURLBar.popup.richlistbox.children[0];
+    let item = gURLBar.popup.richlistbox.itemChildren[0];
 
     is(item.getAttribute("title"), expectedText,
        `Expected heuristic result to have title: "${expectedText}".`);
@@ -217,7 +217,7 @@ add_task(async function() {
       disposition: expectedDisposition,
     });
 
-    let item = gURLBar.popup.richlistbox.children[suggestionIndex];
+    let item = gURLBar.popup.richlistbox.itemChildren[suggestionIndex];
     if (expectedDisposition == "currentTab") {
       await promiseClickOnItem(item, {});
     } else if (expectedDisposition == "newForegroundTab") {
@@ -233,7 +233,7 @@ add_task(async function() {
     await extension.awaitMessage("set-synchronous-set");
 
     function expectSuggestion({content, description}, index) {
-      let item = gURLBar.popup.richlistbox.children[index + 1]; // Skip the heuristic result.
+      let item = gURLBar.popup.richlistbox.itemChildren[index + 1]; // Skip the heuristic result.
 
       ok(!!item, "Expected item to exist");
       is(item.getAttribute("title"), description,
@@ -258,7 +258,7 @@ add_task(async function() {
       text,
       disposition: "currentTab",
     });
-    await promiseClickOnItem(gURLBar.popup.richlistbox.children[0], {});
+    await promiseClickOnItem(gURLBar.popup.richlistbox.itemChildren[0], {});
     await promiseEvent;
   }
 

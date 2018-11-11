@@ -38,7 +38,7 @@ add_task(async function() {
   await promiseAutoComplete("http://example.com/autocomplete/");
 
   let popup = gURLBar.popup;
-  let results = popup.richlistbox.children;
+  let results = popup.richlistbox.itemChildren;
   is(results.length, gMaxResults,
      "Should get gMaxResults=" + gMaxResults + " results");
 
