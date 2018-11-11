@@ -559,6 +559,29 @@ linux64-rust-macos-1.30:
         toolchain-alias: linux64-rust-macos
         toolchain-artifact: public/build/rustc.tar.xz
 
+linux64-rust-nightly-macos:
+    description: "rust nightly repack with macos-cross support"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(rust-nightly-macos)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 7200
+        env:
+            UPLOAD_DIR: artifacts
+    run:
+        using: toolchain-script
+        script: repack_rust.py
+        arguments: [
+            '--channel', 'nightly-2018-09-16',
+            '--host', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-unknown-linux-gnu',
+            '--target', 'x86_64-apple-darwin',
+        ]
+        toolchain-artifact: public/build/rustc.tar.xz
+
 linux64-rust-android-1.30:
     description: "rust repack with android-cross support"
     treeherder:
