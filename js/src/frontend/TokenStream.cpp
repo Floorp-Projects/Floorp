@@ -720,7 +720,7 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
     ptr[-1] = '\0';
 
     uint32_t line, column;
-    anyChars.srcCoords.lineNumAndColumnIndex(offset, &line, &column);
+    computeLineAndColumn(offset, &line, &column);
 
     if (!notes->addNoteASCII(anyChars.cx, anyChars.getFilename(), line, column,
                              GetErrorMessage, nullptr, JSMSG_BAD_CODE_UNITS,
@@ -1352,14 +1352,6 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::hasTokenizationStarted() const {
 void TokenStreamAnyChars::lineAndColumnAt(size_t offset, uint32_t* line,
                                           uint32_t* column) const {
   srcCoords.lineNumAndColumnIndex(offset, line, column);
-}
-
-template <typename Unit, class AnyCharsAccess>
-void TokenStreamSpecific<Unit, AnyCharsAccess>::currentLineAndColumn(
-    uint32_t* line, uint32_t* column) const {
-  const TokenStreamAnyChars& anyChars = anyCharsAccess();
-  uint32_t offset = anyChars.currentToken().pos.begin;
-  anyChars.srcCoords.lineNumAndColumnIndex(offset, line, column);
 }
 
 template <>
@@ -3512,8 +3504,20 @@ const char* TokenKindToString(TokenKind tt) {
 template class TokenStreamCharsBase<Utf8Unit>;
 template class TokenStreamCharsBase<char16_t>;
 
+template class GeneralTokenStreamChars<char16_t, TokenStreamAnyCharsAccess>;
 template class TokenStreamChars<char16_t, TokenStreamAnyCharsAccess>;
 template class TokenStreamSpecific<char16_t, TokenStreamAnyCharsAccess>;
+
+template class GeneralTokenStreamChars<
+    Utf8Unit, ParserAnyCharsAccess<GeneralParser<FullParseHandler, Utf8Unit>>>;
+template class GeneralTokenStreamChars<
+    Utf8Unit,
+    ParserAnyCharsAccess<GeneralParser<SyntaxParseHandler, Utf8Unit>>>;
+template class GeneralTokenStreamChars<
+    char16_t, ParserAnyCharsAccess<GeneralParser<FullParseHandler, char16_t>>>;
+template class GeneralTokenStreamChars<
+    char16_t,
+    ParserAnyCharsAccess<GeneralParser<SyntaxParseHandler, char16_t>>>;
 
 template class TokenStreamChars<
     Utf8Unit, ParserAnyCharsAccess<GeneralParser<FullParseHandler, Utf8Unit>>>;
