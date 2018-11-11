@@ -655,6 +655,11 @@ struct ContentInfo
     free(mURL);
     free(mContentType);
   }
+
+  size_t Length() {
+    MOZ_RELEASE_ASSERT(!mContent8.length() || !mContent16.length());
+    return mContent8.length() ? mContent8.length() : mContent16.length();
+  }
 };
 
 // All content that has been parsed so far. Protected by child::gMonitor.
@@ -739,26 +744,35 @@ FetchContent(JSContext* aCx, HandleString aURL,
              MutableHandleString aContentType, MutableHandleString aContent)
 {
   MonitorAutoLock lock(*child::gMonitor);
+
+  // Find the longest content parse data with this URL. This is to handle inline
+  // script elements in HTML pages, where we will see content parses for both
+  // the HTML itself and for each inline script.
+  ContentInfo* best = nullptr;
   for (ContentInfo& info : gContent) {
     if (JS_FlatStringEqualsAscii(JS_ASSERT_STRING_IS_FLAT(aURL), info.mURL)) {
-      aContentType.set(JS_NewStringCopyZ(aCx, info.mContentType));
-      if (!aContentType) {
-        return false;
+      if (!best || info.Length() > best->Length()) {
+        best = &info;
       }
-
-      MOZ_ASSERT(info.mContent8.length() == 0 ||
-                 info.mContent16.length() == 0,
-                 "should have content data of only one type");
-
-      aContent.set(info.mContent8.length() > 0
-                   ? JS_NewStringCopyUTF8N(aCx, JS::UTF8Chars(info.mContent8.begin(),
-                                                              info.mContent8.length()))
-                   : JS_NewUCStringCopyN(aCx, info.mContent16.begin(), info.mContent16.length()));
-      return aContent != nullptr;
     }
   }
-  aContentType.set(JS_NewStringCopyZ(aCx, "text/plain"));
-  aContent.set(JS_NewStringCopyZ(aCx, "Could not find record/replay content"));
+
+  if (best) {
+    aContentType.set(JS_NewStringCopyZ(aCx, best->mContentType));
+
+    MOZ_ASSERT(best->mContent8.length() == 0 ||
+               best->mContent16.length() == 0,
+               "should have content data of only one type");
+
+    aContent.set(best->mContent8.length() > 0
+                 ? JS_NewStringCopyUTF8N(aCx, JS::UTF8Chars(best->mContent8.begin(),
+                                                            best->mContent8.length()))
+                 : JS_NewUCStringCopyN(aCx, best->mContent16.begin(), best->mContent16.length()));
+  } else {
+    aContentType.set(JS_NewStringCopyZ(aCx, "text/plain"));
+    aContent.set(JS_NewStringCopyZ(aCx, "Could not find record/replay content"));
+  }
+
   return aContentType && aContent;
 }
 
