@@ -26,6 +26,25 @@ const {
   getInitialMessageCountForViewport,
 } = require("devtools/client/webconsole/utils/messages.js");
 
+// Finds the message that comes right after the current paused execution point.
+// NOTE: visibleMessages are not guaranteed to be ordered.
+function getPausedMessage(visibleMessages, messages, executionPoint) {
+  if (!executionPoint || !visibleMessages) {
+    return null;
+  }
+
+  let pausedMessage = messages.get(visibleMessages[0]);
+  for (const messageId of visibleMessages) {
+    const message = messages.get(messageId);
+    if (executionPoint.progress >= message.executionPoint.progress &&
+        message.executionPoint.progress > pausedMessage.executionPoint.progress) {
+      pausedMessage = message;
+    }
+  }
+
+  return pausedMessage;
+}
+
 class ConsoleOutput extends Component {
   static get propTypes() {
     return {
@@ -145,6 +164,9 @@ class ConsoleOutput extends Component {
       }
     }
 
+    const pausedMessage = getPausedMessage(
+      visibleMessages, messages, pausedExecutionPoint);
+
     const messageNodes = visibleMessages.map((messageId) => MessageContainer({
       dispatch,
       key: messageId,
@@ -158,6 +180,7 @@ class ConsoleOutput extends Component {
       networkMessageActiveTabId,
       pausedExecutionPoint,
       getMessage: () => messages.get(messageId),
+      isPaused: pausedMessage && pausedMessage.id == messageId,
     }));
 
     return (

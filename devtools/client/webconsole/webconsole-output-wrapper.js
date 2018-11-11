@@ -175,7 +175,8 @@ WebConsoleOutputWrapper.prototype = {
 
       if (this.toolbox) {
         this.toolbox.threadClient.addListener("paused", this.dispatchPaused.bind(this));
-        this.toolbox.threadClient.addListener("resumed", this.dispatchResumed.bind(this));
+        this.toolbox.threadClient.addListener(
+          "progress", this.dispatchProgress.bind(this));
 
         Object.assign(serviceContainer, {
           onViewSourceInDebugger: frame => {
@@ -365,8 +366,10 @@ WebConsoleOutputWrapper.prototype = {
     }
   },
 
-  dispatchResumed: function(_, packet) {
-    store.dispatch(actions.setPauseExecutionPoint(null));
+  dispatchProgress: function(_, packet) {
+    const {executionPoint, recording} = packet;
+    const point = recording ? null : executionPoint;
+    store.dispatch(actions.setPauseExecutionPoint(point));
   },
 
   dispatchMessageUpdate: function(message, res) {

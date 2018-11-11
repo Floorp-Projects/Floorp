@@ -754,7 +754,7 @@ ThreadClient.prototype = {
     actors: arg(0),
   }),
 
-  events: ["newSource"],
+  events: ["newSource", "progress"],
 };
 
 eventSource(ThreadClient.prototype);
