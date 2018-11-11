@@ -333,11 +333,11 @@
 }
 
 #command-button-stop-replay::before {
-  fill: var(--red-60);
+  fill: currentColor;
 }
 
-#command-button-stop-replay.paused::before{
-  fill: currentColor;
+#command-button-stop-replay.recording::before{
+  fill: var(--red-60);
 }
 
 #command-button-scratchpad::before {
@@ -490,6 +490,10 @@
   background: #6A6A6A;
   mask-size: 15px 19px;
   align-self: center;
+}
+
+.webreplay-player .command-button.active:hover {
+  background: none;
 }
 
 .webreplay-player .play-button {
