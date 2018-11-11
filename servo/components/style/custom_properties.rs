@@ -6,11 +6,12 @@
 //!
 //! [custom]: https://drafts.csswg.org/css-variables/
 
+use crate::hash::map::Entry;
+use crate::properties::{CSSWideKeyword, CustomDeclarationValue};
+use crate::selector_map::{PrecomputedHashMap, PrecomputedHashSet};
+use crate::Atom;
 use cssparser::{Delimiter, Parser, ParserInput, SourcePosition, Token, TokenSerializationType};
-use hash::map::Entry;
 use precomputed_hash::PrecomputedHash;
-use properties::{CSSWideKeyword, CustomDeclarationValue};
-use selector_map::{PrecomputedHashMap, PrecomputedHashSet};
 use selectors::parser::SelectorParseErrorKind;
 use servo_arc::Arc;
 use smallvec::SmallVec;
@@ -19,7 +20,6 @@ use std::cmp;
 use std::fmt::{self, Write};
 use std::hash::Hash;
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
-use Atom;
 
 /// The environment from which to get `env` function values.
 ///
