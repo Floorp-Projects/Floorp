@@ -423,7 +423,7 @@ async function interactiveUpdateTest(autoUpdate, checkFn) {
       // Make sure we have XBL bindings
       list.clientHeight;
 
-      let item = list.children.find(_item => _item.value == ID);
+      let item = list.itemChildren.find(_item => _item.value == ID);
       EventUtils.synthesizeMouseAtCenter(item._updateBtn, {}, win);
     }
 

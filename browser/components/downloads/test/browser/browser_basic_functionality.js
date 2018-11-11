@@ -43,12 +43,12 @@ add_task(async function test_basic_functionality() {
   // Test item data and count.  This also tests the ordering of the display.
   let richlistbox = document.getElementById("downloadsListBox");
   /* disabled for failing intermittently (bug 767828)
-    is(richlistbox.children.length, DownloadData.length,
+    is(richlistbox.itemChildren.length, DownloadData.length,
        "There is the correct number of richlistitems");
   */
-  let itemCount = richlistbox.children.length;
+  let itemCount = richlistbox.itemChildren.length;
   for (let i = 0; i < itemCount; i++) {
-    let element = richlistbox.children[itemCount - i - 1];
+    let element = richlistbox.itemChildren[itemCount - i - 1];
     let download = DownloadsView.itemForElement(element).download;
     is(DownloadsCommon.stateOfDownload(download), DownloadData[i].state,
        "Download states match up");

@@ -88,12 +88,12 @@ add_task(async function test_clear_downloads_toolbar() {
 add_task(async function test_clear_downloads_context_menu() {
   await testClearingDownloads(async listbox => {
     // Select one of the downloads.
-    listbox.children[0].click();
+    listbox.itemChildren[0].click();
 
     let contextMenu = win.document.getElementById("downloadsContextMenu");
 
     let popupShownPromise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
-    EventUtils.synthesizeMouseAtCenter(listbox.children[0], {type: "contextmenu", button: 2}, win);
+    EventUtils.synthesizeMouseAtCenter(listbox.itemChildren[0], {type: "contextmenu", button: 2}, win);
     await popupShownPromise;
 
     // Find the clear context item.

@@ -17,8 +17,8 @@ async function test_autocomplete(data) {
 
   await promiseSearchComplete();
 
-  ok(gURLBar.popup.richlistbox.children.length > 0, "Should get at least 1 result");
-  let result = gURLBar.popup.richlistbox.children[0];
+  ok(gURLBar.popup.richlistbox.itemChildren.length > 0, "Should get at least 1 result");
+  let result = gURLBar.popup.richlistbox.itemChildren[0];
   let type = result.getAttribute("type");
   let types = type.split(/\s+/);
   ok(types.includes(action), `The type attribute "${type}" includes the expected action "${action}"`);

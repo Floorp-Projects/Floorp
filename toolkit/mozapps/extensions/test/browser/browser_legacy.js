@@ -78,7 +78,7 @@ add_task(async function() {
   // in the expected list.
   async function checkList(listId, expectIds) {
     let ids = new Set(expectIds);
-    for (let item of mgrWin.document.getElementById(listId).children) {
+    for (let item of mgrWin.document.getElementById(listId).itemChildren) {
       if (!item.mAddon.id.endsWith("@tests.mozilla.org")) {
         continue;
       }
