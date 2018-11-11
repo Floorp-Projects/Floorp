@@ -614,7 +614,7 @@ frontend::ModuleCompiler<Unit>::compile(ModuleInfo& info)
 
     module->init(info.script);
 
-    ModuleBuilder builder(cx, module, parser->anyChars);
+    ModuleBuilder builder(cx, module, parser.ptr());
 
     RootedScope enclosingScope(cx, &cx->global()->emptyGlobalScope());
     ModuleSharedContext modulesc(cx, module, enclosingScope, builder);

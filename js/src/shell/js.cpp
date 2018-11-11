@@ -5314,7 +5314,7 @@ Parse(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
 
-        ModuleBuilder builder(cx, module, parser.anyChars);
+        ModuleBuilder builder(cx, module, &parser);
 
         ModuleSharedContext modulesc(cx, module, nullptr, builder);
         pn = parser.moduleBody(&modulesc);
