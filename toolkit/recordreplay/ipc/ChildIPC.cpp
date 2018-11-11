@@ -432,11 +432,9 @@ NotifyVsyncObserver()
   }
 }
 
-// Whether an update has been sent to the compositor for a normal paint, and we
-// haven't reached PaintFromMainThread yet. This is used to preserve the
-// invariant that there can be at most one paint performed between two
-// checkpoints, other than repaints triggered by the debugger.
-static bool gHasActivePaint;
+// How many paints have been started and haven't reached PaintFromMainThread
+// yet. Only accessed on the main thread.
+static int32_t gNumPendingMainThreadPaints;
 
 bool
 OnVsync()
@@ -450,7 +448,7 @@ OnVsync()
   }
 
   // After a paint starts, ignore incoming vsyncs until the paint completes.
-  return !gHasActivePaint;
+  return gNumPendingMainThreadPaints == 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -536,12 +534,8 @@ NotifyPaintStart()
       !parent::InRepaintStressMode();
   }
 
-  // A new paint cannot be triggered until the last one finishes and has been
-  // sent to the middleman.
-  MOZ_RELEASE_ASSERT(HasDivergedFromRecording() || !gHasActivePaint);
-
   gNumPendingPaints++;
-  gHasActivePaint = true;
+  gNumPendingMainThreadPaints++;
 
   CreateCheckpoint();
 }
@@ -551,12 +545,18 @@ PaintFromMainThread()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  // There cannot not be any other in flight paints.
-  MOZ_RELEASE_ASSERT(!gNumPendingPaints);
+  gNumPendingMainThreadPaints--;
 
-  // Clear the active flag now that we have completed the paint.
-  MOZ_RELEASE_ASSERT(gHasActivePaint);
-  gHasActivePaint = false;
+  if (gNumPendingMainThreadPaints) {
+    // Another paint started before we were able to finish it here. The draw
+    // target buffer no longer reflects program state at the last checkpoint,
+    // so don't send a Paint message.
+    return;
+  }
+
+  // If all paints have completed, the compositor cannot be simultaneously
+  // operating on the draw target buffer.
+  MOZ_RELEASE_ASSERT(!gNumPendingPaints);
 
   if (IsActiveChild() && gDrawTargetBuffer) {
     memcpy(gGraphicsShmem, gDrawTargetBuffer, gDrawTargetBufferSize);
