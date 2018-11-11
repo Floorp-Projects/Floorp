@@ -3188,7 +3188,7 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(char untilCh
                 // LineContinuation represents no code points, so don't append
                 // in this case.
                 if (codePoint != '\n') {
-                    if (!this->charBuffer.append(unit)) {
+                    if (!appendCodePointToCharBuffer(AssertedCast<char32_t>(codePoint))) {
                         return false;
                     }
                 }
