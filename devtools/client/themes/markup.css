@@ -132,21 +132,18 @@ body.dragging .tag-line {
  * dropped here */
 .tag-line.drop-target::before,
 .tag-line.drag-target::before {
-  content: '';
+  content: "";
   position: absolute;
-  top: 0;
-  width: 100%;
+  top: -1px;
+  height: 2px;
   /* Offset these by 1000px to make sure they cover the full width of the view */
-  padding-left: 1000px;
+  width: calc(100% + 1000px);
   left: -1000px;
-}
-
-.tag-line.drag-target::before {
-  border-top: 2px solid var(--theme-content-color2);
+  background-color: var(--theme-content-color2);
 }
 
 .tag-line.drop-target::before {
-  border-top: 2px solid var(--theme-contrast-background);
+  background-color: var(--theme-contrast-background);
 }
 
 /* In case the indicator is put on the closing .tag-line, the indentation level
@@ -155,12 +152,15 @@ ul.children + .tag-line::before {
   margin-left: 14px;
 }
 
+/* A tag line should have a height of 16px, with a line-height of 14px,
+ * (assuming a font-size of 11px). */
 .tag-line {
-  min-height: 1.4em;
-  line-height: 1.4em;
+  font-size: var(--theme-code-font-size);
+  min-height: 1.2727em;
+  line-height: 1.2727em;
   position: relative;
   cursor: default;
-  padding-left: 2px;
+  padding: 1px 0 1px 2px;
 }
 
 .tag-line[selected] + .children,
@@ -195,6 +195,7 @@ ul.children + .tag-line::before {
   position: absolute;
   left: -1000em;
   right: 0;
+  top: 0;
   height: 100%;
   z-index: 0;
 }
@@ -208,8 +209,8 @@ ul.children + .tag-line::before {
   display: inline-block;
   vertical-align: top;
   margin-left: -14px;
-  margin-top: 1px;
-  margin-bottom: 1px;
+  margin-top: 0;
+  margin-bottom: 0;
   /* Make sure the expander still appears above the tag-state */
   position: relative;
   z-index: 1;
@@ -238,8 +239,11 @@ ul.children + .tag-line::before {
 .expandable.collapsed .markup-expand-badge {
   cursor: pointer;
   display: inline-block;
-  vertical-align: -3px;
-  padding: 2px;
+  vertical-align: top;
+  box-sizing: border-box;
+  height: 16px;
+  margin: -1px 0;
+  padding: 3px 2px;
 }
 
 .expandable.collapsed .markup-expand-badge::before {
@@ -255,7 +259,7 @@ ul.children + .tag-line::before {
   display: block;
   width: 12px;
   height: 8px;
-  line-height: 3px;
+  line-height: 8px;
   border-radius: 3px;
   -moz-context-properties: fill;
 }
@@ -345,6 +349,8 @@ ul.children + .tag-line::before {
 }
 
 .styleinspector-propertyeditor {
+  vertical-align: top;
+  margin: -1px 0;
   border: 1px solid #CCC;
 }
 
@@ -413,8 +419,10 @@ ul.children + .tag-line::before {
   /* 9px text is too blurry on low-resolution screens */
   font-size: 10px;
   font-weight: normal;
-  line-height: 11px;
-  vertical-align: 0.5px;
+  line-height: 10px;
+  height: 10px;
+  margin-top: 1px;
+  vertical-align: top;
   border: 1px solid var(--markup-badge-border-color);
   border-radius: 3px;
   padding: 0px 2px;
@@ -427,7 +435,6 @@ ul.children + .tag-line::before {
 @media (min-resolution: 1.1dppx) {
   .markup-badge {
     font-size: 9px;
-    vertical-align: 1px;
   }
 }
 
