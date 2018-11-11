@@ -2437,7 +2437,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
 
     // Record the start of function source (for FunctionToString). If we
     // are parenFreeArrow, we will set this below, after consuming the NAME.
-    funbox->setStart(anyChars);
+    tokenStream.setFunctionStart(funbox);
   } else {
     // When delazifying, we may not have a current token and pos() is
     // garbage. In that case, substitute the first token's position.
@@ -2552,7 +2552,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
           }
 
           if (parenFreeArrow) {
-            funbox->setStart(anyChars);
+            tokenStream.setFunctionStart(funbox);
           }
 
           RootedPropertyName name(context, bindingIdentifier(yieldHandling));
@@ -3302,6 +3302,7 @@ bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
                            openedPos);
       return false;
     }
+
     funbox->setEnd(anyChars);
   } else {
     MOZ_ASSERT(kind == FunctionSyntaxKind::Arrow);
@@ -3309,9 +3310,13 @@ bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
     if (anyChars.hadError()) {
       return false;
     }
+
     funbox->setEnd(anyChars);
-    if (kind == FunctionSyntaxKind::Statement && !matchOrInsertSemicolon()) {
-      return false;
+
+    if (kind == FunctionSyntaxKind::Statement) {
+      if (!matchOrInsertSemicolon()) {
+        return false;
+      }
     }
   }
 

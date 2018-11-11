@@ -223,6 +223,8 @@ class AutoKeepAtoms;
 
 namespace frontend {
 
+class FunctionBox;
+
 struct TokenPos {
   uint32_t begin;  // Offset of the token's first code unit.
   uint32_t end;    // Offset of 1 past the token's last code unit.
@@ -2028,6 +2030,8 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
 
     return drainCharBufferIntoAtom(anyChars.cx);
   }
+
+  inline void setFunctionStart(FunctionBox* funbox) const;
 };
 
 template <typename Unit, class AnyCharsAccess>
