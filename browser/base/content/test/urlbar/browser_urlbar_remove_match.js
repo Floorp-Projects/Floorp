@@ -23,7 +23,7 @@ add_task(async function test_remove_history() {
   EventUtils.synthesizeKey("KEY_Delete", options);
   await promiseVisitRemoved;
   await BrowserTestUtils.waitForCondition(
-    () => !gURLBar.popup.richlistbox.children.some(c => !c.collapsed && c.getAttribute("ac-value") == TEST_URL),
+    () => !gURLBar.popup.richlistbox.itemChildren.some(c => !c.collapsed && c.getAttribute("ac-value") == TEST_URL),
     "Waiting for the result to disappear");
 
   gURLBar.popup.hidePopup();
