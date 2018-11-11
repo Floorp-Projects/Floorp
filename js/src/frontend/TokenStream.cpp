@@ -464,9 +464,9 @@ TokenStreamAnyChars::SourceCoords::indexFromOffset(uint32_t offset) const {
   return iMin;
 }
 
-uint32_t TokenStreamAnyChars::SourceCoords::lineNum(uint32_t offset) const {
-  uint32_t index = indexFromOffset(offset);
-  return lineNumberFromIndex(index);
+TokenStreamAnyChars::SourceCoords::LineToken
+TokenStreamAnyChars::SourceCoords::lineToken(uint32_t offset) const {
+  return LineToken(indexFromOffset(offset), offset);
 }
 
 uint32_t TokenStreamAnyChars::SourceCoords::columnIndex(uint32_t offset) const {
@@ -475,7 +475,8 @@ uint32_t TokenStreamAnyChars::SourceCoords::columnIndex(uint32_t offset) const {
 
 void TokenStreamAnyChars::SourceCoords::lineNumAndColumnIndex(
     uint32_t offset, uint32_t* lineNum, uint32_t* column) const {
-  uint32_t index = indexFromOffset(offset);
+  LineToken token = lineToken(offset);
+  uint32_t index = token.index;
   *lineNum = lineNumberFromIndex(index);
   *column = columnFromIndexAndOffset(index, offset);
 }

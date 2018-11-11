@@ -1869,8 +1869,9 @@ bool ASTSerializer::blockStatement(ListNode* node, MutableHandleValue dst) {
 bool ASTSerializer::program(ListNode* node, MutableHandleValue dst) {
 #ifdef DEBUG
   {
-    const auto& srcCoords = parser->anyChars.srcCoords;
-    MOZ_ASSERT(srcCoords.lineNum(node->pn_pos.begin) == lineno);
+    const TokenStreamAnyChars& anyChars = parser->anyChars;
+    auto lineToken = anyChars.lineToken(node->pn_pos.begin);
+    MOZ_ASSERT(anyChars.lineNumber(lineToken) == lineno);
   }
 #endif
 
