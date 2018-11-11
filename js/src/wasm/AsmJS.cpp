@@ -2575,8 +2575,9 @@ class MOZ_STACK_CLASS FunctionValidator {
  private:
   MOZ_MUST_USE bool appendCallSiteLineNumber(ParseNode* node) {
     const TokenStreamAnyChars& anyChars = m().tokenStream().anyCharsAccess();
-    return callSiteLineNums_.append(
-        anyChars.srcCoords.lineNum(node->pn_pos.begin));
+
+    auto lineToken = anyChars.lineToken(node->pn_pos.begin);
+    return callSiteLineNums_.append(anyChars.lineNumber(lineToken));
   }
 };
 
@@ -5839,7 +5840,7 @@ static bool ParseFunction(ModuleValidator& m, CodeNode** funNodeOut,
 
   auto& anyChars = tokenStream.anyCharsAccess();
   uint32_t toStringStart = anyChars.currentToken().pos.begin;
-  *line = anyChars.srcCoords.lineNum(anyChars.currentToken().pos.end);
+  *line = anyChars.lineNumber(anyChars.lineToken(toStringStart));
 
   TokenKind tk;
   if (!tokenStream.getToken(&tk, TokenStreamShared::Operand)) {
