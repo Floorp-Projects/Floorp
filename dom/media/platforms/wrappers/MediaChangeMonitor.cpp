@@ -86,8 +86,6 @@ public:
     mPreviousExtraData = aSample->mExtraData;
     UpdateConfigFromExtraData(extra_data);
 
-    mNeedKeyframe = true;
-
     return NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
   }
 
@@ -97,19 +95,16 @@ public:
   }
 
   MediaResult PrepareSample(MediaDataDecoder::ConversionRequired aConversion,
-                            MediaRawData* aSample) override
+                            MediaRawData* aSample,
+                            bool aNeedKeyFrame) override
   {
     if (aConversion == MediaDataDecoder::ConversionRequired::kNeedAnnexB) {
-      auto res = AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe);
+      auto res = AnnexB::ConvertSampleToAnnexB(aSample, aNeedKeyFrame);
       if (res.isErr()) {
         return MediaResult(res.unwrapErr(),
                            RESULT_DETAIL("ConvertSampleToAnnexB"));
       }
     }
-    if (aSample->mKeyframe && mNeedKeyframe) {
-      mNeedKeyframe = false;
-    }
-
     aSample->mExtraData = mCurrentConfig.mExtraData;
     aSample->mTrackInfo = mTrackInfo;
 
@@ -133,7 +128,6 @@ public:
     }
 
     VideoInfo mCurrentConfig;
-    bool mNeedKeyframe = true;
     uint32_t mStreamID = 0;
     RefPtr<TrackInfoSharedPtr> mTrackInfo;
     RefPtr<MediaByteBuffer> mPreviousExtraData;
@@ -193,7 +187,8 @@ public:
   }
 
   MediaResult PrepareSample(MediaDataDecoder::ConversionRequired aConversion,
-                            MediaRawData* aSample) override
+                            MediaRawData* aSample,
+                            bool aNeedKeyFrame) override
   {
     return NS_OK;
   }
@@ -299,7 +294,8 @@ MediaChangeMonitor::Decode(MediaRawData* aSample)
       return DecodePromise::CreateAndResolve(DecodedData(), __func__);
     }
 
-    rv = mChangeMonitor->PrepareSample(*mConversionRequired, sample);
+    rv = mChangeMonitor->PrepareSample(
+      *mConversionRequired, sample, mNeedKeyframe);
     if (NS_FAILED(rv)) {
       return DecodePromise::CreateAndReject(rv, __func__);
     }
@@ -557,7 +553,8 @@ MediaChangeMonitor::DecodeFirstSample(MediaRawData* aSample)
     return;
   }
 
-  MediaResult rv = mChangeMonitor->PrepareSample(*mConversionRequired, aSample);
+  MediaResult rv =
+    mChangeMonitor->PrepareSample(*mConversionRequired, aSample, mNeedKeyframe);
 
   if (NS_FAILED(rv)) {
     mDecodePromise.Reject(rv, __func__);
