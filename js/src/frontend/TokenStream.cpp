@@ -329,12 +329,8 @@ PropertyName* TokenStreamAnyChars::reservedWordToPropertyName(
 
 TokenStreamAnyChars::SourceCoords::SourceCoords(JSContext* cx,
                                                 uint32_t initialLineNumber,
-                                                uint32_t initialColumnNumber,
                                                 uint32_t initialOffset)
-    : lineStartOffsets_(cx),
-      initialLineNum_(initialLineNumber),
-      initialColumn_(initialColumnNumber),
-      lastIndex_(0) {
+    : lineStartOffsets_(cx), initialLineNum_(initialLineNumber), lastIndex_(0) {
   // This is actually necessary!  Removing it causes compile errors on
   // GCC and clang.  You could try declaring this:
   //
@@ -472,7 +468,7 @@ TokenStreamAnyChars::SourceCoords::lineToken(uint32_t offset) const {
 TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx,
                                          const ReadOnlyCompileOptions& options,
                                          StrictModeGetter* smg)
-    : srcCoords(cx, options.lineno, options.column, options.scriptSourceOffset),
+    : srcCoords(cx, options.lineno, options.scriptSourceOffset),
       options_(options),
       tokens(),
       cursor_(0),
@@ -656,6 +652,40 @@ inline void SourceUnits<Utf8Unit>::assertNextCodePoint(
 }
 
 #endif  // DEBUG
+
+template <typename Unit>
+static size_t ComputeColumn(const Unit* begin, const Unit* end) {
+#if JS_COLUMN_DIMENSION_IS_CODE_POINTS
+  return unicode::CountCodePoints(begin, end);
+#else
+  return PointerRangeSize(begin, end);
+#endif
+}
+
+template <typename Unit, class AnyCharsAccess>
+uint32_t GeneralTokenStreamChars<Unit, AnyCharsAccess>::computeColumn(
+    LineToken lineToken, uint32_t offset) const {
+  lineToken.assertConsistentOffset(offset);
+
+  const TokenStreamAnyChars& anyChars = anyCharsAccess();
+
+  const Unit* begin =
+      this->sourceUnits.codeUnitPtrAt(anyChars.lineStart(lineToken));
+  const Unit* end = this->sourceUnits.codeUnitPtrAt(offset);
+
+  auto partialCols = AssertedCast<uint32_t>(ComputeColumn(begin, end));
+  return (lineToken.isFirstLine() ? anyChars.options_.column : 0) + partialCols;
+}
+
+template <typename Unit, class AnyCharsAccess>
+void GeneralTokenStreamChars<Unit, AnyCharsAccess>::computeLineAndColumn(
+    uint32_t offset, uint32_t* line, uint32_t* column) const {
+  const TokenStreamAnyChars& anyChars = anyCharsAccess();
+
+  auto lineToken = anyChars.lineToken(offset);
+  *line = anyChars.lineNumber(lineToken);
+  *column = computeColumn(lineToken, offset);
+}
 
 template <class AnyCharsAccess>
 MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
