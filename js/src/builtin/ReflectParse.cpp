@@ -774,10 +774,10 @@ bool NodeBuilder::newNodeLoc(TokenPos* pos, MutableHandleValue dst) {
 
   uint32_t startLineNum, startColumnIndex;
   uint32_t endLineNum, endColumnIndex;
-  parser->anyChars.srcCoords.lineNumAndColumnIndex(pos->begin, &startLineNum,
-                                                   &startColumnIndex);
-  parser->anyChars.srcCoords.lineNumAndColumnIndex(pos->end, &endLineNum,
-                                                   &endColumnIndex);
+  parser->tokenStream.computeLineAndColumn(pos->begin, &startLineNum,
+                                           &startColumnIndex);
+  parser->tokenStream.computeLineAndColumn(pos->end, &endLineNum,
+                                           &endColumnIndex);
 
   if (!newObject(&to)) {
     return false;
