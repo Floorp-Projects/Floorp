@@ -33,7 +33,7 @@ function checkMenuEntries(expectedValues) {
 function getMenuEntries() {
   // Could perhaps pull values directly from the controller, but it seems
   // more reliable to test the values that are actually in the richlistbox?
-  return Array.map(searchBar.textbox.popup.richlistbox.children,
+  return Array.map(searchBar.textbox.popup.richlistbox.itemChildren,
                    item => item.getAttribute("ac-value"));
 }
 

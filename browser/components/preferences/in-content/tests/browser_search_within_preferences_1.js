@@ -38,7 +38,7 @@ add_task(async function show_search_results_pane_only_then_revert_to_general() {
   let categoriesList = gBrowser.contentDocument.getElementById("categories");
 
   for (let i = 0; i < categoriesList.childElementCount; i++) {
-    let child = categoriesList.children[i];
+    let child = categoriesList.itemChildren[i];
     is(child.selected, false, "No other panel should be selected");
   }
   // Takes search off
@@ -52,7 +52,7 @@ add_task(async function show_search_results_pane_only_then_revert_to_general() {
 
   // Checks if back to generalPane
   for (let i = 0; i < categoriesList.childElementCount; i++) {
-    let child = categoriesList.children[i];
+    let child = categoriesList.itemChildren[i];
     if (child.id == "category-general") {
       is(child.selected, true, "General panel should be selected");
     } else if (child.id) {
@@ -233,7 +233,7 @@ add_task(async function changing_tabs_after_searching() {
   is(searchInput.value, "", "search input should be empty");
   let categoriesList = gBrowser.contentDocument.getElementById("categories");
   for (let i = 0; i < categoriesList.childElementCount; i++) {
-    let child = categoriesList.children[i];
+    let child = categoriesList.itemChildren[i];
     if (child.id == "category-privacy") {
       is(child.selected, true, "Privacy panel should be selected");
     } else if (child.id) {
