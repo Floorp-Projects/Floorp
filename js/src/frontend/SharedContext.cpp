@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "frontend/SharedContext.h"
+
+#include "frontend/ModuleSharedContext.h"
+
 #include "frontend/ParseContext-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 
