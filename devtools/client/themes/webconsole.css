@@ -115,7 +115,7 @@ a {
   opacity: 0.6;
   width: 100vw;
   height: 1px;
-  bottom: 0px;
+  top: 0px;
   left: -3px;
   display: block;
   content: "";
