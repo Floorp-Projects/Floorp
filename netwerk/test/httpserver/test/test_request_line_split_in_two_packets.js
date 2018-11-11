@@ -14,8 +14,7 @@ var srv = createServer();
 srv.start(-1);
 const PORT = srv.identity.primaryPort;
 
-function run_test()
-{
+function run_test() {
   srv.registerPathHandler("/lots-of-leading-blank-lines",
                           lotsOfLeadingBlankLines);
   srv.registerPathHandler("/very-long-request-line",
@@ -25,7 +24,7 @@ function run_test()
 }
 
 
-/***************
+/** *************
  * BEGIN TESTS *
  ***************/
 
@@ -33,8 +32,7 @@ var test, data, str;
 var tests = [];
 
 
-function veryLongRequestLine(request, response)
-{
+function veryLongRequestLine(request, response) {
   writeDetails(request, response);
   response.setStatusLine(request.httpVersion, 200, "TEST PASSED");
 }
@@ -57,8 +55,7 @@ data = [];
 for (var i = 0; i < str.length; i += 16384)
   data.push(str.substr(i, 16384));
 
-function checkVeryLongRequestLine(data)
-{
+function checkVeryLongRequestLine(data) {
   var iter = LineIterator(data);
 
   print("data length: " + data.length);
@@ -87,8 +84,7 @@ test = new RawTest("localhost", PORT, data, checkVeryLongRequestLine),
 tests.push(test);
 
 
-function lotsOfLeadingBlankLines(request, response)
-{
+function lotsOfLeadingBlankLines(request, response) {
   writeDetails(request, response);
   response.setStatusLine(request.httpVersion, 200, "TEST PASSED");
 }
@@ -104,8 +100,7 @@ data = [];
 for (var i = 0; i < str.length; i += 100)
   data.push(str.substr(i, 100));
 
-function checkLotsOfLeadingBlankLines(data)
-{
+function checkLotsOfLeadingBlankLines(data) {
   var iter = LineIterator(data);
 
   // Status-Line

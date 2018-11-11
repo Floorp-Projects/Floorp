@@ -15,8 +15,7 @@ const FAKE_PORT_TWO = 8889;
 
 var srv, id;
 
-function run_test()
-{
+function run_test() {
   dumpn("*** run_test");
 
   srv = createServer();
@@ -78,22 +77,17 @@ function run_test()
   // restart it on the correct port, to exercise port-changing behaviors at
   // server start and stop.
   do_test_pending();
-  srv.stop(function()
-  {
-    try
-    {
+  srv.stop(function() {
+    try {
       do_test_pending();
       run_test_2();
-    }
-    finally
-    {
+    } finally {
       do_test_finished();
     }
   });
 }
 
-function run_test_2()
-{
+function run_test_2() {
   dumpn("*** run_test_2");
 
   do_test_finished();
@@ -141,22 +135,17 @@ function run_test_2()
   Assert.ok(!id.has("http", "127.0.0.1", FAKE_PORT_ONE));
 
   do_test_pending();
-  srv.stop(function()
-  {
-    try
-    {
+  srv.stop(function() {
+    try {
       do_test_pending();
       run_test_3();
-    }
-    finally
-    {
+    } finally {
       do_test_finished();
     }
   });
 }
 
-function run_test_3()
-{
+function run_test_3() {
   dumpn("*** run_test_3");
 
   do_test_finished();
@@ -212,7 +201,7 @@ function run_test_3()
 }
 
 
-/*********************
+/** *******************
  * UTILITY FUNCTIONS *
  *********************/
 
@@ -223,37 +212,27 @@ function run_test_3()
  * @param id : nsIHttpServerIdentity
  *   the server identity to test
  */
-function checkPrimariesThrow(id)
-{
+function checkPrimariesThrow(id) {
   var threw = false;
-  try
-  {
+  try {
     id.primaryScheme;
-  }
-  catch (e)
-  {
+  } catch (e) {
     threw = e.result === Cr.NS_ERROR_NOT_INITIALIZED;
   }
   Assert.ok(threw);
 
   threw = false;
-  try
-  {
+  try {
     id.primaryHost;
-  }
-  catch (e)
-  {
+  } catch (e) {
     threw = e.result === Cr.NS_ERROR_NOT_INITIALIZED;
   }
   Assert.ok(threw);
 
   threw = false;
-  try
-  {
+  try {
     id.primaryPort;
-  }
-  catch (e)
-  {
+  } catch (e) {
     threw = e.result === Cr.NS_ERROR_NOT_INITIALIZED;
   }
   Assert.ok(threw);
@@ -262,8 +241,7 @@ function checkPrimariesThrow(id)
 /**
  * Utility function to check for a 400 response.
  */
-function check400(data)
-{
+function check400(data) {
   var iter = LineIterator(data);
 
   // Status-Line
@@ -272,7 +250,7 @@ function check400(data)
 }
 
 
-/***************
+/** *************
  * BEGIN TESTS *
  ***************/
 
@@ -284,15 +262,13 @@ var tests = [];
 
 // HTTP/1.0 request, to ensure we see our default scheme/host/port
 
-function http10Request(request, response)
-{
+function http10Request(request, response) {
   writeDetails(request, response);
   response.setStatusLine("1.0", 200, "TEST PASSED");
 }
 data = "GET /http/1.0-request HTTP/1.0\r\n" +
        "\r\n";
-function check10(data)
-{
+function check10(data) {
   var iter = LineIterator(data);
 
   // Status-Line
@@ -382,16 +358,14 @@ tests.push(test);
 
 // HTTP/1.1 request, correct Host header, expect handler's response
 
-function http11goodHost(request, response)
-{
+function http11goodHost(request, response) {
   writeDetails(request, response);
   response.setStatusLine("1.1", 200, "TEST PASSED");
 }
 data = "GET /http/1.1-good-host HTTP/1.1\r\n" +
        "Host: localhost:4444\r\n" +
        "\r\n";
-function check11goodHost(data)
-{
+function check11goodHost(data) {
   var iter = LineIterator(data);
 
   // Status-Line
@@ -419,16 +393,14 @@ tests.push(test);
 
 // HTTP/1.1 request, Host header is secondary identity
 
-function http11ipHost(request, response)
-{
+function http11ipHost(request, response) {
   writeDetails(request, response);
   response.setStatusLine("1.1", 200, "TEST PASSED");
 }
 data = "GET /http/1.1-ip-host HTTP/1.1\r\n" +
        "Host: 127.0.0.1:4444\r\n" +
        "\r\n";
-function check11ipHost(data)
-{
+function check11ipHost(data) {
   var iter = LineIterator(data);
 
   // Status-Line
@@ -494,8 +466,7 @@ tests.push(test);
 data = "GET http://localhost:4444/http/1.1-good-host HTTP/1.1\r\n" +
        "Host: yippity-skippity\r\n" +
        "\r\n";
-function checkInaccurate(data)
-{
+function checkInaccurate(data) {
   check11goodHost(data);
 
   // dynamism setup
@@ -512,8 +483,7 @@ tests.push(test);
 data = "GET /http/1.0-request HTTP/1.0\r\n" +
        "Host: not-localhost:4444\r\n" +
        "\r\n";
-function check10ip(data)
-{
+function check10ip(data) {
   var iter = LineIterator(data);
 
   // Status-Line
@@ -541,16 +511,14 @@ tests.push(test);
 
 // HTTP/1.1 request, Host header with implied port
 
-function http11goodHostWackyPort(request, response)
-{
+function http11goodHostWackyPort(request, response) {
   writeDetails(request, response);
   response.setStatusLine("1.1", 200, "TEST PASSED");
 }
 data = "GET /http/1.1-good-host-wacky-port HTTP/1.1\r\n" +
        "Host: localhost\r\n" +
        "\r\n";
-function check11goodHostWackyPort(data)
-{
+function check11goodHostWackyPort(data) {
   var iter = LineIterator(data);
 
   // Status-Line
