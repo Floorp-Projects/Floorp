@@ -35,6 +35,7 @@
 #include "frontend/ForOfEmitter.h"
 #include "frontend/ForOfLoopControl.h"
 #include "frontend/IfEmitter.h"
+#include "frontend/ModuleSharedContext.h"
 #include "frontend/NameOpEmitter.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
