@@ -94,10 +94,7 @@ public:
     return NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
   }
 
-  const TrackInfo& Config() const override
-  {
-    return mCurrentConfig;
-  }
+  const TrackInfo& Config() const override { return mCurrentConfig; }
 
   MediaResult PrepareSample(MediaDataDecoder::ConversionRequired aConversion,
                             MediaRawData* aSample,
@@ -121,26 +118,26 @@ public:
     return NS_OK;
   }
 
-  private:
-    void UpdateConfigFromExtraData(MediaByteBuffer* aExtraData)
-    {
-      SPSData spsdata;
-      if (H264::DecodeSPSFromExtraData(aExtraData, spsdata) &&
-          spsdata.pic_width > 0 && spsdata.pic_height > 0) {
-        H264::EnsureSPSIsSane(spsdata);
-        mCurrentConfig.mImage.width = spsdata.pic_width;
-        mCurrentConfig.mImage.height = spsdata.pic_height;
-        mCurrentConfig.mDisplay.width = spsdata.display_width;
-        mCurrentConfig.mDisplay.height = spsdata.display_height;
-      }
-      mCurrentConfig.mExtraData = aExtraData;
-      mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
+private:
+  void UpdateConfigFromExtraData(MediaByteBuffer* aExtraData)
+  {
+    SPSData spsdata;
+    if (H264::DecodeSPSFromExtraData(aExtraData, spsdata) &&
+        spsdata.pic_width > 0 && spsdata.pic_height > 0) {
+      H264::EnsureSPSIsSane(spsdata);
+      mCurrentConfig.mImage.width = spsdata.pic_width;
+      mCurrentConfig.mImage.height = spsdata.pic_height;
+      mCurrentConfig.mDisplay.width = spsdata.display_width;
+      mCurrentConfig.mDisplay.height = spsdata.display_height;
     }
+    mCurrentConfig.mExtraData = aExtraData;
+    mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
+  }
 
-    VideoInfo mCurrentConfig;
-    uint32_t mStreamID = 0;
-    RefPtr<TrackInfoSharedPtr> mTrackInfo;
-    RefPtr<MediaByteBuffer> mPreviousExtraData;
+  VideoInfo mCurrentConfig;
+  uint32_t mStreamID = 0;
+  RefPtr<TrackInfoSharedPtr> mTrackInfo;
+  RefPtr<MediaByteBuffer> mPreviousExtraData;
 };
 
 class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor
@@ -153,10 +150,7 @@ public:
   {
   }
 
-  bool CanBeInstantiated() const override
-  {
-    return true;
-  }
+  bool CanBeInstantiated() const override { return true; }
 
   MediaResult CheckForChange(MediaRawData* aSample) override
   {
@@ -191,10 +185,7 @@ public:
     return NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
   }
 
-  const TrackInfo& Config() const override
-  {
-    return mCurrentConfig;
-  }
+  const TrackInfo& Config() const override { return mCurrentConfig; }
 
   MediaResult PrepareSample(MediaDataDecoder::ConversionRequired aConversion,
                             MediaRawData* aSample,
@@ -203,11 +194,11 @@ public:
     return NS_OK;
   }
 
-  private:
-    VideoInfo mCurrentConfig;
-    const VPXDecoder::Codec mCodec;
-    Maybe<gfx::IntSize> mSize;
-    Maybe<int> mProfile;
+private:
+  VideoInfo mCurrentConfig;
+  const VPXDecoder::Codec mCodec;
+  Maybe<gfx::IntSize> mSize;
+  Maybe<int> mProfile;
 };
 
 MediaChangeMonitor::MediaChangeMonitor(PlatformDecoderModule* aPDM,
