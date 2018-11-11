@@ -2625,7 +2625,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "auto" ],
-    other_values: [ "none", "text", "all", "-moz-all", "-moz-none" ],
+    other_values: [ "none", "text", "all", "-moz-none" ],
     invalid_values: []
   },
   "background": {
