@@ -48,6 +48,10 @@ let whitelist = [
   {sourceName: /(?:res|gre-resources)\/forms\.css$/i,
    errorMessage: /Error in parsing value for \u2018-moz-appearance\u2019/iu,
    isFromDevTools: false},
+  // -moz-user-select: -moz-text is only enabled to user-agent stylesheets.
+  {sourceName: /contenteditable.css$/i,
+   errorMessage: /Error in parsing value for \u2018-moz-user-select\u2019/iu,
+   isFromDevTools: false},
   // These variables are declared somewhere else, and error when we load the
   // files directly. They're all marked intermittent because their appearance
   // in the error console seems to not be consistent.
