@@ -4268,8 +4268,6 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  // When implementing StyleUserSelect::Element, StyleUserSelect::Elements and
-  // StyleUserSelect::Toggle, need to change this logic
   bool useFrameSelection = (selectStyle == StyleUserSelect::Text);
 
   // If the mouse is dragged outside the nearest enclosing scrollable area
