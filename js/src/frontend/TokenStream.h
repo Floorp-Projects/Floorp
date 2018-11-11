@@ -928,11 +928,17 @@ class TokenStreamAnyChars : public TokenStreamShared {
   }
 
   /**
-   * Fill in |err|, excepting line-of-context-related fields.  If the token
-   * stream has location information, use that and return true.  If it does
-   * not, use the caller's location information and return false.
+   * Fill in |err|.
+   *
+   * If the token stream doesn't have location info for this error, use the
+   * caller's location (including line/column number) and return false.  (No
+   * line of context is set.)
+   *
+   * Otherwise fill in everything in |err| except 1) line/column numbers and
+   * 2) line-of-context-related fields and return true.  The caller *must*
+   * fill in the line/column number; filling the line of context is optional.
    */
-  bool fillExcludingContext(ErrorMetadata* err, uint32_t offset);
+  bool fillExceptingContext(ErrorMetadata* err, uint32_t offset);
 
   MOZ_ALWAYS_INLINE void updateFlagsForEOL() { flags.isDirtyLine = false; }
 
@@ -1967,6 +1973,20 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
     anyCharsAccess().lineAndColumnAt(offset, line, column);
   }
 
+  /**
+   * Fill in |err| completely, except for line-of-context information.
+   *
+   * Return true if the caller can compute a line of context from the token
+   * stream.  Otherwise return false.
+   */
+  MOZ_MUST_USE bool fillExceptingContext(ErrorMetadata* err, uint32_t offset) {
+    if (anyCharsAccess().fillExceptingContext(err, offset)) {
+      computeLineAndColumn(offset, &err->lineNumber, &err->columnNumber);
+      return true;
+    }
+    return false;
+  }
+
   void newSimpleToken(TokenKind kind, TokenStart start,
                       TokenStreamShared::Modifier modifier, TokenKind* out) {
     newToken(kind, start, modifier, out);
@@ -2207,6 +2227,7 @@ class TokenStreamChars<mozilla::Utf8Unit, AnyCharsAccess>
  protected:
   using GeneralCharsBase::anyCharsAccess;
   using GeneralCharsBase::computeLineAndColumn;
+  using GeneralCharsBase::fillExceptingContext;
   using GeneralCharsBase::internalComputeLineOfContext;
   using TokenStreamCharsShared::isAsciiCodePoint;
   // Deliberately don't |using| |sourceUnits| because of bug 1472569.  :-(
@@ -2419,6 +2440,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   using CharsBase::fillCharBufferFromSourceNormalizingAsciiLineBreaks;
   using CharsBase::matchCodeUnit;
   using CharsBase::matchLineTerminator;
+  using GeneralCharsBase::fillExceptingContext;
   using GeneralCharsBase::getCodeUnit;
   using GeneralCharsBase::getFullAsciiCodePoint;
   using GeneralCharsBase::internalComputeLineOfContext;

@@ -670,8 +670,8 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
 
     TokenStreamAnyChars& anyChars = anyCharsAccess();
 
-    bool hasLineOfContext = anyChars.fillExcludingContext(&err, offset);
-    if (hasLineOfContext) {
+    bool canAddLineOfContext = fillExceptingContext(&err, offset);
+    if (canAddLineOfContext) {
       if (!internalComputeLineOfContext(&err, offset)) {
         break;
       }
@@ -1310,7 +1310,7 @@ void TokenStreamAnyChars::computeErrorMetadataNoOffset(ErrorMetadata* err) {
   MOZ_ASSERT(err->lineOfContext == nullptr);
 }
 
-bool TokenStreamAnyChars::fillExcludingContext(ErrorMetadata* err,
+bool TokenStreamAnyChars::fillExceptingContext(ErrorMetadata* err,
                                                uint32_t offset) {
   err->isMuted = mutedErrors;
 
@@ -1328,7 +1328,6 @@ bool TokenStreamAnyChars::fillExcludingContext(ErrorMetadata* err,
 
   // Otherwise use this TokenStreamAnyChars's location information.
   err->filename = filename_;
-  lineAndColumnAt(offset, &err->lineNumber, &err->columnNumber);
   return true;
 }
 
@@ -1486,15 +1485,15 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::computeErrorMetadata(
   }
 
   // This function's return value isn't a success/failure indication: it
-  // returns true if this TokenStream's location information could be used,
-  // and it returns false when that information can't be used (and so we
-  // can't provide a line of context).
-  if (!anyCharsAccess().fillExcludingContext(err, offset)) {
-    return true;
+  // returns true if this TokenStream can be used to provide a line of
+  // context.
+  if (fillExceptingContext(err, offset)) {
+    // Add a line of context from this TokenStream to help with debugging.
+    return internalComputeLineOfContext(err, offset);
   }
 
-  // Add a line of context from this TokenStream to help with debugging.
-  return internalComputeLineOfContext(err, offset);
+  // We can't fill in any more here.
+  return true;
 }
 
 template <typename Unit, class AnyCharsAccess>
