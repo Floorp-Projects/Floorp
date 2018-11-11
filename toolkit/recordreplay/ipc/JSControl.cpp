@@ -449,6 +449,9 @@ static PersistentRootedObject* gDevtoolsSandbox;
 // URL of the root script that runs when recording/replaying.
 #define ReplayScriptURL "resource://devtools/server/actors/replay/replay.js"
 
+// Whether to expose chrome:// and resource:// scripts to the debugger.
+static bool gIncludeSystemScripts;
+
 void
 SetupDevtoolsSandbox()
 {
@@ -479,14 +482,26 @@ SetupDevtoolsSandbox()
   dom::ChromeUtils::Import(global, NS_LITERAL_STRING(ReplayScriptURL),
                            dom::Optional<HandleObject>(), &obj, er);
   MOZ_RELEASE_ASSERT(!er.Failed());
+
+  gIncludeSystemScripts = Preferences::GetBool("devtools.recordreplay.includeSystemScripts");
 }
 
 extern "C" {
 
 MOZ_EXPORT bool
-RecordReplayInterface_IsInternalScript(const char* aURL)
+RecordReplayInterface_ShouldUpdateProgressCounter(const char* aURL)
 {
-  return !strcmp(aURL, ReplayScriptURL);
+  // Progress counters are only updated for scripts which are exposed to the
+  // debugger. The devtools timeline is based on progress values and we don't
+  // want gaps on the timeline which users can't seek to.
+  if (gIncludeSystemScripts) {
+    // Always exclude ReplayScriptURL. Scripts in this file are internal to the
+    // record/replay infrastructure and run non-deterministically between
+    // recording and replaying.
+    return aURL && strcmp(aURL, ReplayScriptURL);
+  } else {
+    return aURL && strncmp(aURL, "resource:", 9) && strncmp(aURL, "chrome:", 7);
+  }
 }
 
 } // extern "C"

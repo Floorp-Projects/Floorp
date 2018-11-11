@@ -1112,6 +1112,7 @@ pref("devtools.recordreplay.enableRewinding", true);
 pref("devtools.recordreplay.mvp.enabled", false);
 pref("devtools.recordreplay.timeline.enabled", false);
 pref("devtools.recordreplay.allowRepaintFailures", true);
+pref("devtools.recordreplay.includeSystemScripts", false);
 
 // view source
 pref("view_source.syntax_highlight", true);
