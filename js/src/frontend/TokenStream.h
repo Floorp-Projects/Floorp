@@ -843,11 +843,21 @@ class TokenStreamAnyChars : public TokenStreamShared {
      */
     class LineToken {
       uint32_t index;
+#ifdef DEBUG
+      uint32_t offset_;  // stored for consistency-of-use assertions
+#endif
 
       friend class SourceCoords;
 
      public:
-      explicit LineToken(uint32_t index, uint32_t offset) : index(index) {}
+      explicit LineToken(uint32_t index, uint32_t offset)
+          : index(index)
+#ifdef DEBUG
+            ,
+            offset_(offset)
+#endif
+      {
+      }
 
       bool isFirstLine() const { return index == 0; }
 
@@ -871,9 +881,24 @@ class TokenStreamAnyChars : public TokenStreamShared {
       return lineNumberFromIndex(lineToken.index);
     }
 
-    uint32_t columnIndex(uint32_t offset) const;
-    void lineNumAndColumnIndex(uint32_t offset, uint32_t* lineNum,
-                               uint32_t* column) const;
+    /**
+     * Compute the offset *in code units* of |offset| from the start of the
+     * line containing it, plus any contribution from |initialColumnNumber|
+     * passed to the |SourceCoords| constructor.
+     *
+     * This is only really a "column".  A subsequent patch in this stack
+     * removes it, computing a multi-unit-aware column number elsewhere in
+     * Unit-sensitive manner.
+     */
+    uint32_t columnIndex(LineToken lineToken, uint32_t offset) const {
+      MOZ_ASSERT(lineToken.offset_ == offset, "use a consistent token");
+
+      uint32_t lineStartOffset = lineStartOffsets_[lineToken.index];
+      MOZ_RELEASE_ASSERT(offset >= lineStartOffset);
+
+      uint32_t relative = offset - lineStartOffset;
+      return (lineToken.isFirstLine() ? initialColumn_ : 0) + relative;
+    }
   };
 
   SourceCoords srcCoords;
@@ -888,6 +913,18 @@ class TokenStreamAnyChars : public TokenStreamShared {
 
   uint32_t lineNumber(LineToken lineToken) const {
     return srcCoords.lineNumber(lineToken);
+  }
+
+  uint32_t columnIndex(LineToken lineToken, uint32_t offset) const {
+    return srcCoords.columnIndex(lineToken, offset);
+  }
+
+  // A helper function if you want an offset's line *and* "column" info.
+  void lineAndColumnAt(uint32_t offset, uint32_t* lineNum,
+                       uint32_t* column) const {
+    LineToken token = srcCoords.lineToken(offset);
+    *lineNum = srcCoords.lineNumber(token);
+    *column = srcCoords.columnIndex(token, offset);
   }
 
   /**
@@ -943,8 +980,6 @@ class TokenStreamAnyChars : public TokenStreamShared {
   void computeErrorMetadataNoOffset(ErrorMetadata* err);
 
   // ErrorReporter API Helpers
-
-  void lineAndColumnAt(size_t offset, uint32_t* line, uint32_t* column) const;
 
   // This is just straight up duplicated from TokenStreamSpecific's inheritance
   // of ErrorReporter's reportErrorNoOffset. varargs delenda est.
@@ -1929,12 +1964,7 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
 
   void computeLineAndColumn(uint32_t offset, uint32_t* line,
                             uint32_t* column) const {
-    const TokenStreamAnyChars& anyChars = anyCharsAccess();
-
-    auto lineToken = anyChars.lineToken(offset);
-    *line = anyChars.lineNumber(lineToken);
-
-    anyCharsAccess().srcCoords.lineNumAndColumnIndex(offset, line, column);
+    anyCharsAccess().lineAndColumnAt(offset, line, column);
   }
 
   void newSimpleToken(TokenKind kind, TokenStart start,
@@ -2469,7 +2499,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   }
 
   uint32_t columnAt(size_t offset) const final {
-    return anyCharsAccess().srcCoords.columnIndex(offset);
+    const TokenStreamAnyChars& anyChars = anyCharsAccess();
+    auto lineToken = anyChars.lineToken(offset);
+    return anyChars.columnIndex(lineToken, offset);
   }
 
   bool hasTokenizationStarted() const final;

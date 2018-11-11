@@ -469,18 +469,6 @@ TokenStreamAnyChars::SourceCoords::lineToken(uint32_t offset) const {
   return LineToken(indexFromOffset(offset), offset);
 }
 
-uint32_t TokenStreamAnyChars::SourceCoords::columnIndex(uint32_t offset) const {
-  return columnFromIndexAndOffset(indexFromOffset(offset), offset);
-}
-
-void TokenStreamAnyChars::SourceCoords::lineNumAndColumnIndex(
-    uint32_t offset, uint32_t* lineNum, uint32_t* column) const {
-  LineToken token = lineToken(offset);
-  uint32_t index = token.index;
-  *lineNum = lineNumberFromIndex(index);
-  *column = columnFromIndexAndOffset(index, offset);
-}
-
 TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx,
                                          const ReadOnlyCompileOptions& options,
                                          StrictModeGetter* smg)
@@ -1340,7 +1328,7 @@ bool TokenStreamAnyChars::fillExcludingContext(ErrorMetadata* err,
 
   // Otherwise use this TokenStreamAnyChars's location information.
   err->filename = filename_;
-  srcCoords.lineNumAndColumnIndex(offset, &err->lineNumber, &err->columnNumber);
+  lineAndColumnAt(offset, &err->lineNumber, &err->columnNumber);
   return true;
 }
 
@@ -1348,11 +1336,6 @@ template <typename Unit, class AnyCharsAccess>
 bool TokenStreamSpecific<Unit, AnyCharsAccess>::hasTokenizationStarted() const {
   const TokenStreamAnyChars& anyChars = anyCharsAccess();
   return anyChars.isCurrentTokenType(TokenKind::Eof) && !anyChars.isEOF();
-}
-
-void TokenStreamAnyChars::lineAndColumnAt(size_t offset, uint32_t* line,
-                                          uint32_t* column) const {
-  srcCoords.lineNumAndColumnIndex(offset, line, column);
 }
 
 template <>
