@@ -2,21 +2,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#list {
-  margin: 0;
-  padding: 2em;
-  overflow-wrap: break-word;
+#prefs {
+  background-color: var(--in-content-box-background);
+  color: var(--in-content-text-color);
+  margin: 10px;
+  min-width: 644px;
+  /* To stay consistent with about:preferences (664px - 20px margin). */
+  border: 1px solid var(--in-content-box-border-color);
+  border-radius: 2px;
+  border-spacing: 0;
 }
 
-#list > li {
-  padding: 5px;
-  list-style: none;
+#prefs > tr:nth-child(odd) {
+  background-color: var(--in-content-box-background-odd);
 }
 
-#list > li:nth-child(even) {
-  background-color: rgba(0, 0, 0, .06);
+#prefs > tr:hover {
+  background-color: var(--in-content-box-background-hover);
 }
 
-#list > li:nth-child(odd) {
-  background-color: rgba(0, 0, 0, .03);
+#prefs > tr.has-user-value {
+  font-weight: bold;
+}
+
+#prefs > tr > td {
+  padding: 4px;
+  width: 50%;
+}
+
+.cell-value {
+  word-break: break-all;
 }
