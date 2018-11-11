@@ -832,7 +832,45 @@ class TokenStreamAnyChars : public TokenStreamShared {
       return true;
     }
 
-    uint32_t lineNum(uint32_t offset) const;
+    /**
+     * A token, computed for an offset in source text, that can be used to
+     * access line number and line-offset information for that offset.
+     *
+     * LineToken *alone* exposes whether the corresponding offset is in the
+     * the first line of source (which may not be 1, depending on
+     * |initialLineNumber|), and whether it's in the same line as
+     * another LineToken.
+     */
+    class LineToken {
+      uint32_t index;
+
+      friend class SourceCoords;
+
+     public:
+      explicit LineToken(uint32_t index, uint32_t offset) : index(index) {}
+
+      bool isFirstLine() const { return index == 0; }
+
+      bool isSameLine(LineToken other) const { return index == other.index; }
+    };
+
+    /**
+     * Compute a token usable to access information about the line at the
+     * given offset.
+     *
+     * The only information directly accessible in a token is whether it
+     * corresponds to the first line of source text (which may not be line
+     * 1, depending on the |initialLineNumber| value used to construct
+     * this).  Use |lineNumber(LineToken)| to compute the actual line
+     * number (incorporating the contribution of |initialLineNumber|).
+     */
+    LineToken lineToken(uint32_t offset) const;
+
+    /** Compute the line number for the given token. */
+    uint32_t lineNumber(LineToken lineToken) const {
+      return lineNumberFromIndex(lineToken.index);
+    }
+
     uint32_t columnIndex(uint32_t offset) const;
     void lineNumAndColumnIndex(uint32_t offset, uint32_t* lineNum,
                                uint32_t* column) const;
@@ -841,6 +879,16 @@ class TokenStreamAnyChars : public TokenStreamShared {
   SourceCoords srcCoords;
 
   JSContext* context() const { return cx; }
+
+  using LineToken = SourceCoords::LineToken;
+
+  LineToken lineToken(uint32_t offset) const {
+    return srcCoords.lineToken(offset);
+  }
+
+  uint32_t lineNumber(LineToken lineToken) const {
+    return srcCoords.lineNumber(lineToken);
+  }
 
   /**
    * Fill in |err|, excepting line-of-context-related fields.  If the token
@@ -1881,6 +1929,11 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
 
   void computeLineAndColumn(uint32_t offset, uint32_t* line,
                             uint32_t* column) const {
+    const TokenStreamAnyChars& anyChars = anyCharsAccess();
+
+    auto lineToken = anyChars.lineToken(offset);
+    *line = anyChars.lineNumber(lineToken);
+
     anyCharsAccess().srcCoords.lineNumAndColumnIndex(offset, line, column);
   }
 
@@ -2408,9 +2461,13 @@ class MOZ_STACK_CLASS TokenStreamSpecific
                     bool* onThisLine) const final {
     return anyCharsAccess().srcCoords.isOnThisLine(offset, lineNum, onThisLine);
   }
+
   uint32_t lineAt(size_t offset) const final {
-    return anyCharsAccess().srcCoords.lineNum(offset);
+    const auto& anyChars = anyCharsAccess();
+    auto lineToken = anyChars.lineToken(offset);
+    return anyChars.lineNumber(lineToken);
   }
+
   uint32_t columnAt(size_t offset) const final {
     return anyCharsAccess().srcCoords.columnIndex(offset);
   }
@@ -2639,13 +2696,18 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     if (!getToken(&tmp, modifier)) {
       return false;
     }
+
     const Token& next = anyChars.currentToken();
     anyChars.ungetToken();
 
-    const auto& srcCoords = anyChars.srcCoords;
-    *ttp = srcCoords.lineNum(curr.pos.end) == srcCoords.lineNum(next.pos.begin)
-               ? next.type
-               : TokenKind::Eol;
+    // Careful, |next| points to an initialized-but-not-allocated Token!
+    // This is safe because we don't modify token data below.
+
+    auto currentEndToken = anyChars.lineToken(curr.pos.end);
+    auto nextBeginToken = anyChars.lineToken(next.pos.begin);
+
+    *ttp =
+        currentEndToken.isSameLine(nextBeginToken) ? next.type : TokenKind::Eol;
     return true;
   }
 
