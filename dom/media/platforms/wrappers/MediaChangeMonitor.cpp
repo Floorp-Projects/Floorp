@@ -98,6 +98,11 @@ public:
                             MediaRawData* aSample,
                             bool aNeedKeyFrame) override
   {
+    MOZ_DIAGNOSTIC_ASSERT(
+      aConversion == MediaDataDecoder::ConversionRequired::kNeedAnnexB ||
+        aConversion == MediaDataDecoder::ConversionRequired::kNeedAVCC,
+      "Conversion must be either AVCC or AnnexB");
+
     if (aConversion == MediaDataDecoder::ConversionRequired::kNeedAnnexB) {
       auto res = AnnexB::ConvertSampleToAnnexB(aSample, aNeedKeyFrame);
       if (res.isErr()) {
