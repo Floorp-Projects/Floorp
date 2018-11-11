@@ -105,6 +105,9 @@ public:
         aConversion == MediaDataDecoder::ConversionRequired::kNeedAVCC,
       "Conversion must be either AVCC or AnnexB");
 
+    aSample->mExtraData = mCurrentConfig.mExtraData;
+    aSample->mTrackInfo = mTrackInfo;
+
     if (aConversion == MediaDataDecoder::ConversionRequired::kNeedAnnexB) {
       auto res = AnnexB::ConvertSampleToAnnexB(aSample, aNeedKeyFrame);
       if (res.isErr()) {
@@ -112,8 +115,6 @@ public:
                            RESULT_DETAIL("ConvertSampleToAnnexB"));
       }
     }
-    aSample->mExtraData = mCurrentConfig.mExtraData;
-    aSample->mTrackInfo = mTrackInfo;
 
     return NS_OK;
   }
