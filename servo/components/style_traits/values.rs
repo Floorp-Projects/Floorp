@@ -507,7 +507,7 @@ macro_rules! define_css_keyword_enum {
 
 /// Helper types for the handling of specified values.
 pub mod specified {
-    use ParsingMode;
+    use crate::ParsingMode;
 
     /// Whether to allow negative lengths or not.
     #[repr(u8)]
