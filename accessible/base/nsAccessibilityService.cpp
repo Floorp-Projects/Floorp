@@ -169,55 +169,8 @@ CreateMenupopupAccessible(Element* aElement, Accessible* aContext)
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible constructors
 
-static Accessible*
-New_HTMLLink(Element* aElement, Accessible* aContext)
-{
-  // Only some roles truly enjoy life as HTMLLinkAccessibles, for details
-  // see closed bug 494807.
-  const nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(aElement);
-  if (roleMapEntry && roleMapEntry->role != roles::NOTHING &&
-      roleMapEntry->role != roles::LINK) {
-    return new HyperTextAccessibleWrap(aElement, aContext->Document());
-  }
-
-  return new HTMLLinkAccessible(aElement, aContext->Document());
-}
-
 static Accessible* New_HyperText(Element* aElement, Accessible* aContext)
   { return new HyperTextAccessibleWrap(aElement, aContext->Document()); }
-
-static Accessible* New_HTMLFigcaption(Element* aElement, Accessible* aContext)
-  { return new HTMLFigcaptionAccessible(aElement, aContext->Document()); }
-
-static Accessible* New_HTMLFigure(Element* aElement, Accessible* aContext)
-  { return new HTMLFigureAccessible(aElement, aContext->Document()); }
-
-static Accessible* New_HTMLHeaderOrFooter(Element* aElement, Accessible* aContext)
-  { return new HTMLHeaderOrFooterAccessible(aElement, aContext->Document()); }
-
-static Accessible* New_HTMLLegend(Element* aElement, Accessible* aContext)
-  { return new HTMLLegendAccessible(aElement, aContext->Document()); }
-
-static Accessible* New_HTMLOption(Element* aElement, Accessible* aContext)
-  { return new HTMLSelectOptionAccessible(aElement, aContext->Document()); }
-
-static Accessible* New_HTMLOptgroup(Element* aElement, Accessible* aContext)
-  { return new HTMLSelectOptGroupAccessible(aElement, aContext->Document()); }
-
-static Accessible* New_HTMLList(Element* aElement, Accessible* aContext)
-  { return new HTMLListAccessible(aElement, aContext->Document()); }
-
-static Accessible*
-New_HTMLListitem(Element* aElement, Accessible* aContext)
-{
-  // If list item is a child of accessible list then create an accessible for
-  // it unconditionally by tag name. nsBlockFrame creates the list item
-  // accessible for other elements styled as list items.
-  if (aContext->IsList() && aContext->GetContent() == aElement->GetParent())
-    return new HTMLLIAccessible(aElement, aContext->Document());
-
-  return nullptr;
-}
 
 template<typename AccClass>
 static Accessible*
@@ -235,51 +188,6 @@ New_HTMLDtOrDd(Element* aElement, Accessible* aContext)
 
   return nullptr;
 }
-
-static Accessible* New_HTMLLabel(Element* aElement, Accessible* aContext)
-  { return new HTMLLabelAccessible(aElement, aContext->Document()); }
-
-static Accessible* New_HTMLInput(Element* aElement, Accessible* aContext)
-{
-  if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                           nsGkAtoms::checkbox, eIgnoreCase)) {
-    return new CheckboxAccessible(aElement, aContext->Document());
-  }
-  if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                           nsGkAtoms::radio, eIgnoreCase)) {
-    return new HTMLRadioButtonAccessible(aElement, aContext->Document());
-  }
-  if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                           nsGkAtoms::time, eIgnoreCase)) {
-    return new EnumRoleAccessible<roles::GROUPING>(aElement, aContext->Document());
-  }
-  if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                           nsGkAtoms::date, eIgnoreCase)) {
-    return new EnumRoleAccessible<roles::DATE_EDITOR>(aElement, aContext->Document());
-  }
-  return nullptr;
-}
-
-static Accessible* New_HTMLOutput(Element* aElement, Accessible* aContext)
-  { return new HTMLOutputAccessible(aElement, aContext->Document()); }
-
-static Accessible* New_HTMLProgress(Element* aElement, Accessible* aContext)
-  { return new HTMLProgressMeterAccessible(aElement, aContext->Document()); }
-
-static Accessible* New_HTMLSummary(Element* aElement, Accessible* aContext)
-  { return new HTMLSummaryAccessible(aElement, aContext->Document()); }
-
-static Accessible*
-New_HTMLTableAccessible(Element* aElement, Accessible* aContext)
-  { return new HTMLTableAccessible(aElement, aContext->Document()); }
-
-static Accessible*
-New_HTMLTableRowAccessible(Element* aElement, Accessible* aContext)
-  { return new HTMLTableRowAccessible(aElement, aContext->Document()); }
-
-static Accessible*
-New_HTMLTableCellAccessible(Element* aElement, Accessible* aContext)
-  { return new HTMLTableCellAccessible(aElement, aContext->Document()); }
 
 /**
  * Cached value of the PREF_ACCESSIBILITY_FORCE_DISABLED preference.
