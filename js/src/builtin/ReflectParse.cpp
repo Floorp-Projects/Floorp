@@ -19,7 +19,6 @@
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
-#include "frontend/TokenStream.h"
 #include "js/CharacterEncoding.h"
 #include "js/StableStringChars.h"
 #include "vm/JSAtom.h"
@@ -239,7 +238,7 @@ class NodeBuilder
     typedef AutoValueArray<AST_LIMIT> CallbackArray;
 
     JSContext*  cx;
-    TokenStreamAnyChars* tokenStream;
+    frontend::Parser<frontend::FullParseHandler, char16_t>* parser;
     bool        saveLoc;               /* save source location information?     */
     char const* src;                  /* source filename or null               */
     RootedValue srcval;                /* source filename JS value or null      */
@@ -248,8 +247,13 @@ class NodeBuilder
 
   public:
     NodeBuilder(JSContext* c, bool l, char const* s)
-      : cx(c), tokenStream(nullptr), saveLoc(l), src(s), srcval(c), callbacks(cx),
-          userv(c)
+      : cx(c),
+        parser(nullptr),
+        saveLoc(l),
+        src(s),
+        srcval(c),
+        callbacks(cx),
+        userv(c)
     {}
 
     MOZ_MUST_USE bool init(HandleObject userobj = nullptr) {
@@ -300,8 +304,8 @@ class NodeBuilder
         return true;
     }
 
-    void setTokenStream(TokenStreamAnyChars* ts) {
-        tokenStream = ts;
+    void setParser(frontend::Parser<frontend::FullParseHandler, char16_t>* p) {
+        parser = p;
     }
 
   private:
@@ -707,8 +711,8 @@ NodeBuilder::newNodeLoc(TokenPos* pos, MutableHandleValue dst)
 
     uint32_t startLineNum, startColumnIndex;
     uint32_t endLineNum, endColumnIndex;
-    tokenStream->srcCoords.lineNumAndColumnIndex(pos->begin, &startLineNum, &startColumnIndex);
-    tokenStream->srcCoords.lineNumAndColumnIndex(pos->end, &endLineNum, &endColumnIndex);
+    parser->anyChars.srcCoords.lineNumAndColumnIndex(pos->begin, &startLineNum, &startColumnIndex);
+    parser->anyChars.srcCoords.lineNumAndColumnIndex(pos->end, &endLineNum, &endColumnIndex);
 
     if (!newObject(&to)) {
         return false;
@@ -1834,9 +1838,9 @@ class ASTSerializer
         return builder.init(userobj);
     }
 
-    void setParser(Parser<FullParseHandler, char16_t>* p) {
+    void setParser(frontend::Parser<frontend::FullParseHandler, char16_t>* p) {
         parser = p;
-        builder.setTokenStream(&p->anyChars);
+        builder.setParser(p);
     }
 
     bool program(ListNode* node, MutableHandleValue dst);
@@ -2018,7 +2022,12 @@ ASTSerializer::blockStatement(ListNode* node, MutableHandleValue dst)
 bool
 ASTSerializer::program(ListNode* node, MutableHandleValue dst)
 {
-    MOZ_ASSERT(parser->anyChars.srcCoords.lineNum(node->pn_pos.begin) == lineno);
+#ifdef DEBUG
+    {
+        const auto& srcCoords = parser->anyChars.srcCoords;
+        MOZ_ASSERT(srcCoords.lineNum(node->pn_pos.begin) == lineno);
+    }
+#endif
 
     NodeVector stmts(cx);
     return statements(node, stmts) &&
