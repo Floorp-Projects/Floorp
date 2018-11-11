@@ -108,7 +108,7 @@ add_task(async function() {
     isnot(listItem, null, "Valid listItem found");
 
     tagsSelector.ensureElementIsVisible(listItem);
-    let items = [...tagsSelector.children];
+    let items = [...tagsSelector.itemChildren];
     let topTag = items.find(e => scrolledIntoView(e, tagsSelector)).label;
 
     ok(listItem.hasAttribute("checked"), "Item is checked " + i);
@@ -120,7 +120,7 @@ add_task(async function() {
     await promise;
 
     // The listbox is rebuilt, so we have to get the new element.
-    let topItem = [...tagsSelector.children].find(e => e.label == topTag);
+    let topItem = [...tagsSelector.itemChildren].find(e => e.label == topTag);
     ok(scrolledIntoView(topItem, tagsSelector), "Scroll position is correct");
 
     let newItem = tagsSelector.selectedItem;

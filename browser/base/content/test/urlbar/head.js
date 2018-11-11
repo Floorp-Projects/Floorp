@@ -303,12 +303,12 @@ function promiseSpeculativeConnection(httpserver) {
 async function waitForAutocompleteResultAt(index) {
   let searchString = gURLBar.controller.searchString;
   await BrowserTestUtils.waitForCondition(
-    () => gURLBar.popup.richlistbox.children.length > index &&
-          gURLBar.popup.richlistbox.children[index].getAttribute("ac-text") == searchString.trim(),
+    () => gURLBar.popup.richlistbox.itemChildren.length > index &&
+          gURLBar.popup.richlistbox.itemChildren[index].getAttribute("ac-text") == searchString.trim(),
     `Waiting for the autocomplete result for "${searchString}" at [${index}] to appear`);
   // Ensure the addition is complete, for proper mouse events on the entries.
   await new Promise(resolve => window.requestIdleCallback(resolve, {timeout: 1000}));
-  return gURLBar.popup.richlistbox.children[index];
+  return gURLBar.popup.richlistbox.itemChildren[index];
 }
 
 function promiseSuggestionsPresent(msg = "") {

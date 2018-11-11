@@ -95,12 +95,12 @@ add_task(async function overridden_engine_not_reused() {
     EventUtils.synthesizeKey("KEY_ArrowDown", {altKey: true});
     assertState(1, 1, "foofoo");
 
-    let label = gURLBar.popup.richlistbox.children[gURLBar.popup.richlistbox.selectedIndex].label;
+    let label = gURLBar.popup.richlistbox.itemChildren[gURLBar.popup.richlistbox.selectedIndex].label;
     // Run again the query, check the label has been replaced.
     await promiseAutocompleteResultPopup(typedValue, window, true);
     await promiseSuggestionsPresent();
     assertState(0, -1, "foo");
-    let newLabel = gURLBar.popup.richlistbox.children[1].label;
+    let newLabel = gURLBar.popup.richlistbox.itemChildren[1].label;
     Assert.notEqual(newLabel, label, "The label should have been updated");
 
     BrowserTestUtils.removeTab(tab);
