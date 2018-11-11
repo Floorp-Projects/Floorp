@@ -177,6 +177,10 @@ class EitherParser : public BCEParserHandle
     const TokenStreamAnyChars& anyChars() const {
         return parser.match(detail::AnyCharsMatcher());
     }
+
+    void computeLineAndColumn(uint32_t offset, uint32_t* line, uint32_t* column) const {
+        return anyChars().lineAndColumnAt(offset, line, column);
+    }
 };
 
 } /* namespace frontend */
