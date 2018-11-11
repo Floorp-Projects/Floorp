@@ -21,22 +21,20 @@ var test;
 var tests = [];
 
 
-/*********************
+/** *******************
  * UTILITY FUNCTIONS *
  *********************/
 
-function bytesToString(bytes)
-{
+function bytesToString(bytes) {
   return bytes.map(function(v) { return String.fromCharCode(v); }).join("");
 }
 
-function skipCache(ch)
-{
+function skipCache(ch) {
   ch.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
 }
 
 
-/********************
+/** ******************
  * DEFINE THE TESTS *
  ********************/
 
@@ -45,20 +43,17 @@ function skipCache(ch)
  * SJS which throws an exception and creates a server error and tests with a
  * normal, successful SJS.
  */
-function setupTests(throwing)
-{
+function setupTests(throwing) {
   const TEST_URL = BASE + "/cgi.sjs" + (throwing ? "?throw" : "");
 
   //   registerFile with SJS => raw text
 
-  function setupFile(ch)
-  {
+  function setupFile(ch) {
     srv.registerFile("/cgi.sjs", sjs);
     skipCache(ch);
   }
 
-  function verifyRawText(channel, cx, status, bytes)
-  {
+  function verifyRawText(channel, cx, status, bytes) {
     dumpn(channel.originalURI.spec);
     Assert.equal(bytesToString(bytes), fileContents(sjs));
   }
@@ -69,27 +64,21 @@ function setupTests(throwing)
 
   //   add mapping, => interpreted
 
-  function addTypeMapping(ch)
-  {
+  function addTypeMapping(ch) {
     srv.registerContentType("sjs", "sjs");
     skipCache(ch);
   }
 
-  function checkType(ch, cx)
-  {
-    if (throwing)
-    {
+  function checkType(ch, cx) {
+    if (throwing) {
       Assert.ok(!ch.requestSucceeded);
       Assert.equal(ch.responseStatus, 500);
-    }
-    else
-    {
+    } else {
       Assert.equal(ch.contentType, "text/plain");
     }
   }
 
-  function checkContents(ch, cx, status, data)
-  {
+  function checkContents(ch, cx, status, data) {
     if (!throwing)
       Assert.equal("PASS", bytesToString(data));
   }
@@ -100,8 +89,7 @@ function setupTests(throwing)
 
   //   remove file/type mapping, map containing directory => raw text
 
-  function setupDirectoryAndRemoveType(ch)
-  {
+  function setupDirectoryAndRemoveType(ch) {
     dumpn("removing type mapping");
     srv.registerContentType("sjs", null);
     srv.registerFile("/cgi.sjs", null);
@@ -114,9 +102,8 @@ function setupTests(throwing)
 
 
   //   add mapping, => interpreted
-  
-  function contentAndCleanup(ch, cx, status, data)
-  {
+
+  function contentAndCleanup(ch, cx, status, data) {
     checkContents(ch, cx, status, data);
 
     // clean up state we've set up
@@ -133,7 +120,7 @@ function setupTests(throwing)
 }
 
 
-/*****************
+/** ***************
  * ADD THE TESTS *
  *****************/
 
@@ -144,16 +131,14 @@ setupTests(false);
 // treated as an extension -- there must be at least one dot for a filename to
 // match an extension.
 
-function init(ch)
-{
+function init(ch) {
   // clean up state we've set up
   srv.registerDirectory("/", sjs.parent);
   srv.registerContentType("sjs", "sjs");
   skipCache(ch);
 }
 
-function checkNotSJS(ch, cx, status, data)
-{
+function checkNotSJS(ch, cx, status, data) {
   Assert.notEqual("FAIL", bytesToString(data));
 }
 
@@ -163,23 +148,17 @@ tests.push(test);
 // Test that Range requests are passed through to the SJS file without
 // bounds checking.
 
-function rangeInit(expectedRangeHeader)
-{
-  return function setupRangeRequest(ch)
-  {
+function rangeInit(expectedRangeHeader) {
+  return function setupRangeRequest(ch) {
     ch.setRequestHeader("Range", expectedRangeHeader, false);
   };
 }
 
-function checkRangeResult(ch, cx)
-{
-  try
-  {
+function checkRangeResult(ch, cx) {
+  try {
     var val = ch.getResponseHeader("Content-Range");
-  }
-  catch (e) { /* IDL doesn't specify a particular exception to require */ }
-  if (val !== undefined)
-  {
+  } catch (e) { /* IDL doesn't specify a particular exception to require */ }
+  if (val !== undefined) {
     do_throw("should not have gotten a Content-Range header, but got one " +
              "with this value: " + val);
   }
@@ -212,18 +191,15 @@ tests.push(test);
 // extension of the file on the server, not by the extension of the requested
 // path.
 
-function setupFileMapping(ch)
-{
+function setupFileMapping(ch) {
   srv.registerFile("/script.html", sjs);
 }
 
-function onStart(ch, cx)
-{
+function onStart(ch, cx) {
   Assert.equal(ch.contentType, "text/plain");
 }
 
-function onStop(ch, cx, status, data)
-{
+function onStop(ch, cx, status, data) {
   Assert.equal("PASS", bytesToString(data));
 }
 
@@ -231,20 +207,16 @@ test = new Test(BASE + "/script.html", setupFileMapping, onStart, onStop);
 tests.push(test);
 
 
-/*****************
+/** ***************
  * RUN THE TESTS *
  *****************/
 
-function run_test()
-{
+function run_test() {
   // Test for a content-type which isn't a field-value
-  try
-  {
+  try {
     srv.registerContentType("foo", "bar\nbaz");
     throw "this server throws on content-types which aren't field-values";
-  }
-  catch (e)
-  {
+  } catch (e) {
     isException(e, Cr.NS_ERROR_INVALID_ARG);
   }
   runHttpTests(tests, testComplete(srv));

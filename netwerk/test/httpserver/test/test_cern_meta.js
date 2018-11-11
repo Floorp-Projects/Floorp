@@ -7,11 +7,11 @@
 // exercises support for mod_cern_meta-style header/status line modification
 var srv;
 
-XPCOMUtils.defineLazyGetter(this, 'PREFIX', function() {
+XPCOMUtils.defineLazyGetter(this, "PREFIX", function() {
   return "http://localhost:" + srv.identity.primaryPort;
 });
 
-XPCOMUtils.defineLazyGetter(this, 'tests', function() {
+XPCOMUtils.defineLazyGetter(this, "tests", function() {
   return [
      new Test(PREFIX + "/test_both.html",
               null, start_testBoth, null),
@@ -22,12 +22,11 @@ XPCOMUtils.defineLazyGetter(this, 'tests', function() {
      new Test(PREFIX + "/test_status_override_nodesc.txt",
               null, start_test_status_override_nodesc_txt, null),
      new Test(PREFIX + "/caret_test.txt^",
-              null, start_caret_test_txt_, null)
+              null, start_caret_test_txt_, null),
   ];
 });
 
-function run_test()
-{
+function run_test() {
   srv = createServer();
 
   var cernDir = do_get_file("data/cern_meta/");
@@ -41,33 +40,28 @@ function run_test()
 
 // TEST DATA
 
-function start_testBoth(ch, cx)
-{
+function start_testBoth(ch, cx) {
   Assert.equal(ch.responseStatus, 501);
   Assert.equal(ch.responseStatusText, "Unimplemented");
 
   Assert.equal(ch.getResponseHeader("Content-Type"), "text/plain");
 }
 
-function start_test_ctype_override_txt(ch, cx)
-{
+function start_test_ctype_override_txt(ch, cx) {
   Assert.equal(ch.getResponseHeader("Content-Type"), "text/html");
 }
 
-function start_test_status_override_html(ch, cx)
-{
+function start_test_status_override_html(ch, cx) {
   Assert.equal(ch.responseStatus, 404);
   Assert.equal(ch.responseStatusText, "Can't Find This");
 }
 
-function start_test_status_override_nodesc_txt(ch, cx)
-{
+function start_test_status_override_nodesc_txt(ch, cx) {
   Assert.equal(ch.responseStatus, 732);
   Assert.equal(ch.responseStatusText, "");
 }
 
-function start_caret_test_txt_(ch, cx)
-{
+function start_caret_test_txt_(ch, cx) {
   Assert.equal(ch.responseStatus, 500);
   Assert.equal(ch.responseStatusText, "This Isn't A Server Error");
 

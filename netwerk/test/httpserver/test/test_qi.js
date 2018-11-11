@@ -21,17 +21,13 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
 
 var srv;
 
-function run_test()
-{
+function run_test() {
   srv = createServer();
 
   var qi;
-  try
-  {
+  try {
     qi = srv.identity.QueryInterface(Ci.nsIHttpServerIdentity);
-  }
-  catch (e)
-  {
+  } catch (e) {
     var exstr = ("" + e).split(/[\x09\x20-\x7f\x81-\xff]+/)[0];
     do_throw("server identity didn't QI: " + exstr);
     return;
@@ -48,60 +44,49 @@ function run_test()
 
 // TEST DATA
 
-function start_test(ch, cx)
-{
+function start_test(ch, cx) {
   Assert.equal(ch.responseStatusText, "QI Tests Passed");
   Assert.equal(ch.responseStatus, 200);
 }
 
-function start_sjs_qi(ch, cx)
-{
+function start_sjs_qi(ch, cx) {
   Assert.equal(ch.responseStatusText, "SJS QI Tests Passed");
   Assert.equal(ch.responseStatus, 200);
 }
 
 
-function testHandler(request, response)
-{
+function testHandler(request, response) {
   var exstr;
   var qid;
 
   response.setStatusLine(request.httpVersion, 500, "FAIL");
 
   var passed = false;
-  try
-  {
+  try {
     qid = request.QueryInterface(Ci.nsIHttpRequest);
     passed = qid === request;
-  }
-  catch (e)
-  {
+  } catch (e) {
     exstr = ("" + e).split(/[\x09\x20-\x7f\x81-\xff]+/)[0];
     response.setStatusLine(request.httpVersion, 500,
                            "request doesn't QI: " + exstr);
     return;
   }
-  if (!passed)
-  {
+  if (!passed) {
     response.setStatusLine(request.httpVersion, 500, "request QI'd wrongly?");
     return;
   }
 
   passed = false;
-  try
-  {
+  try {
     qid = response.QueryInterface(Ci.nsIHttpResponse);
     passed = qid === response;
-  }
-  catch (e)
-  {
+  } catch (e) {
     exstr = ("" + e).split(/[\x09\x20-\x7f\x81-\xff]+/)[0];
     response.setStatusLine(request.httpVersion, 500,
                            "response doesn't QI: " + exstr);
     return;
   }
-  if (!passed)
-  {
+  if (!passed) {
     response.setStatusLine(request.httpVersion, 500, "response QI'd wrongly?");
     return;
   }
