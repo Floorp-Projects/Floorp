@@ -149,9 +149,9 @@ function addScriptSource(source) {
 }
 
 function considerScript(script) {
-  return script.url
-      && !script.url.startsWith("resource:")
-      && !script.url.startsWith("chrome:");
+  // The set of scripts which is exposed to the debugger server is the same as
+  // the scripts for which the progress counter is updated.
+  return RecordReplayControl.shouldUpdateProgressCounter(script.url);
 }
 
 dbg.onNewScript = function(script) {
