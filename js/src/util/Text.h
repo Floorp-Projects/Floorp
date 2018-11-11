@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/TextUtils.h"
+#include "mozilla/Utf8.h"
 
 #include <ctype.h>
 #include <stddef.h>
@@ -207,6 +208,23 @@ JSString* EncodeURI(JSContext* cx, const char* chars, size_t length);
 
 // Return true if input string contains a given flag in a comma separated list.
 bool ContainsFlag(const char* str, const char* flag);
+
+namespace unicode {
+
+/** Compute the number of code points in the valid UTF-8 range [begin, end). */
+extern size_t CountCodePoints(const mozilla::Utf8Unit* begin,
+                              const mozilla::Utf8Unit* end);
+
+/**
+ * Count the number of code points in [begin, end).
+ *
+ * Unlike the UTF-8 case above, consistent with legacy ECMAScript practice,
+ * every sequence of 16-bit units is considered valid.  Lone surrogates are
+ * treated as if they represented a code point of the same value.
+ */
+extern size_t CountCodePoints(const char16_t* begin, const char16_t* end);
+
+}  // namespace unicode
 
 }  // namespace js
 
