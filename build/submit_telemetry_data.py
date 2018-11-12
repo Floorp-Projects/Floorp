@@ -10,14 +10,6 @@ import logging
 import os
 import sys
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-PYTHIRDPARTY = os.path.join(HERE, '..', 'third_party', 'python')
-
-# Add some required files to $PATH to ensure they are available
-sys.path.append(os.path.join(HERE, '..', 'python', 'mozbuild', 'mozbuild'))
-sys.path.append(os.path.join(PYTHIRDPARTY, 'requests'))
-sys.path.append(os.path.join(PYTHIRDPARTY, 'voluptuous'))
-
 import requests
 import voluptuous
 import voluptuous.humanize
