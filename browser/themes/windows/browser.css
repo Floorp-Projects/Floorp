@@ -597,6 +597,7 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
   color: GrayText;
 }
 
+#pageAction-urlbar-shareURL,
 #pageAction-panel-shareURL {
   list-style-image: url("chrome://browser/skin/share.svg");
 }
