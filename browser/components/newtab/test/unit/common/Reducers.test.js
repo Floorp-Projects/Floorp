@@ -338,7 +338,12 @@ describe("Reducers", () => {
       let updatedSection = newState.find(section => section.id === "foo_bar_2");
       assert.deepEqual(updatedSection.rows, [ROW]);
 
-      const PINNED_ROW = {id: "pinned", pinned: true};
+      const PINNED_ROW = {id: "pinned", pinned: true, guid: "pinned"};
+      newState = Sections(newState, {type: at.SECTION_UPDATE, data: Object.assign({rows: [PINNED_ROW]}, {id: "foo_bar_2"})});
+      updatedSection = newState.find(section => section.id === "foo_bar_2");
+      assert.deepEqual(updatedSection.rows, [PINNED_ROW]);
+
+      // Updating the section again should not duplicate pinned cards
       newState = Sections(newState, {type: at.SECTION_UPDATE, data: Object.assign({rows: [PINNED_ROW]}, {id: "foo_bar_2"})});
       updatedSection = newState.find(section => section.id === "foo_bar_2");
       assert.deepEqual(updatedSection.rows, [PINNED_ROW]);
