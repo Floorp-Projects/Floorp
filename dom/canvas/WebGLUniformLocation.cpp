@@ -62,7 +62,7 @@ WebGLUniformLocation::ValidateSizeAndType(const uint8_t setterElemSize,
 
     const auto& uniformType = mInfo->mActiveInfo->mBaseType;
     if (setterType != uniformType &&
-        uniformType != webgl::AttribBaseType::Bool)
+        uniformType != webgl::AttribBaseType::Boolean)
     {
         const auto& uniformStr = EnumString(mInfo->mActiveInfo->mElemType);
         mContext->ErrorInvalidOperation("Function used is incompatible with uniform"

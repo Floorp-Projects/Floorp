@@ -7,6 +7,7 @@
 "use strict";
 
 const actionModules = [
+  require("./autocomplete"),
   require("./filters"),
   require("./messages"),
   require("./ui"),

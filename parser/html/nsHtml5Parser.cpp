@@ -478,7 +478,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
         mDocWriteSpeculativeTokenizer->start();
       }
       mDocWriteSpeculativeTokenizer->resetToDataState();
-      mDocWriteSpeculativeTreeBuilder->loadState(mTreeBuilder, &mAtomTable);
+      mDocWriteSpeculativeTreeBuilder->loadState(mTreeBuilder);
       mDocWriteSpeculativeLastWasCR = false;
     }
 
@@ -752,7 +752,7 @@ nsHtml5Parser::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState,
 {
   mTokenizer->resetToDataState();
   mTokenizer->setLineNumber(aLine);
-  mTreeBuilder->loadState(aState, &mAtomTable);
+  mTreeBuilder->loadState(aState);
   mLastWasCR = false;
   mReturnToStreamParserPermitted = true;
 }

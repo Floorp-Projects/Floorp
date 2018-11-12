@@ -8,7 +8,6 @@ import errno
 import json
 import os
 import platform
-import random
 import subprocess
 import sys
 import uuid
@@ -120,10 +119,6 @@ CATEGORIES = {
         'priority': 0,
     },
 }
-
-
-# We submit data to telemetry approximately every this many mach invocations
-TELEMETRY_SUBMISSION_FREQUENCY = 10
 
 
 def search_path(mozilla_dir, packages_txt):
@@ -278,15 +273,15 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         if should_skip_telemetry_submission(handler):
             return True
 
-        # But only submit about every n-th operation
-        if random.randint(1, TELEMETRY_SUBMISSION_FREQUENCY) != 1:
-            return
+        state_dir, _ = get_state_dir()
 
+        machpath = os.path.join(instance.topsrcdir, 'mach')
         with open(os.devnull, 'wb') as devnull:
-            subprocess.Popen([sys.executable,
+            subprocess.Popen([machpath, 'python',
+                              '--no-virtualenv',
                               os.path.join(topsrcdir, 'build',
                                            'submit_telemetry_data.py'),
-                              get_state_dir()[0]],
+                              state_dir],
                              stdout=devnull, stderr=devnull)
 
     def populate_context(context, key=None):

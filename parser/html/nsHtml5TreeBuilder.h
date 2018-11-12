@@ -592,9 +592,7 @@ private:
 public:
   nsAHtml5TreeBuilderState* newSnapshot();
   bool snapshotMatches(nsAHtml5TreeBuilderState* snapshot);
-  void loadState(nsAHtml5TreeBuilderState* snapshot,
-                 nsHtml5AtomTable* interner);
-
+  void loadState(nsAHtml5TreeBuilderState* snapshot);
 private:
   int32_t findInArray(nsHtml5StackNode* node,
                       jArray<nsHtml5StackNode*, int32_t> arr);

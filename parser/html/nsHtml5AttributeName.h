@@ -64,7 +64,6 @@ private:
   static int32_t* XLINK_NS;
 public:
   static nsStaticAtom** ALL_NO_PREFIX;
-
 private:
   static nsStaticAtom** XMLNS_PREFIX;
   static nsStaticAtom** XLINK_PREFIX;
@@ -72,7 +71,6 @@ private:
   static RefPtr<nsAtom>* SVG_DIFFERENT(nsAtom* name, nsAtom* camel);
   static RefPtr<nsAtom>* MATH_DIFFERENT(nsAtom* name, nsAtom* camel);
   static RefPtr<nsAtom>* COLONIFIED_LOCAL(nsAtom* name, nsAtom* suffix);
-
 public:
   static RefPtr<nsAtom>* SAME_LOCAL(nsAtom* name);
   inline static int32_t levelOrderBinarySearch(jArray<int32_t, int32_t> data,

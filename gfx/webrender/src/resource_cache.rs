@@ -1018,6 +1018,8 @@ impl ResourceCache {
                     }
                 };
 
+                assert!(descriptor.size.width != 0 && descriptor.size.height != 0);
+
                 self.missing_blob_images.push(
                     BlobImageParams {
                         request,
