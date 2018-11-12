@@ -41,6 +41,7 @@ jobs:
          firefox-devedition-latest-ssl: installer-ssl
          firefox-devedition-latest: installer
          firefox-devedition-stub: stub-installer
+         firefox-devedition-msi-latest-ssl: msi
       shipping-product: devedition
       treeherder:
          platform: devedition-release/opt
@@ -68,13 +69,16 @@ jobs:
                firefox-beta-latest-ssl: installer-ssl
                firefox-beta-latest: installer
                firefox-beta-stub: stub-installer
+               firefox-beta-msi-latest-ssl: msi
             mozilla-release:
                firefox-latest-ssl: installer-ssl
                firefox-latest: installer
                firefox-stub: stub-installer
+               firefox-msi-latest-ssl: msi
             mozilla-esr60:
                firefox-esr-latest-ssl: installer-ssl
                firefox-esr-latest: installer
+               firefox-esr-msi-latest-ssl: msi
             birch:
                firefox-latest-ssl: installer-ssl
                firefox-latest: installer

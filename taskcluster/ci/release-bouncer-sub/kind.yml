@@ -36,7 +36,7 @@ job-defaults:
 jobs:
    devedition:
       bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64']
-      bouncer-products: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer']
+      bouncer-products: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer', 'msi']
       shipping-product: devedition
       treeherder:
          platform: devedition-release/opt
@@ -53,7 +53,7 @@ jobs:
       bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64']
       bouncer-products:
          by-project:
-            default: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer']
+            default: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer', 'msi']
             # No stub installer in esr60
             mozilla-esr60: ['complete-mar', 'complete-mar-bz2', 'installer', 'installer-ssl', 'partial-mar']
             jamun: ['complete-mar', 'complete-mar-bz2', 'installer', 'installer-ssl', 'partial-mar']
