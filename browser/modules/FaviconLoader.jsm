@@ -78,9 +78,7 @@ class FaviconLoad {
        Ci.nsILoadInfo.SEC_DISALLOW_SCRIPT),
       Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON);
 
-    this.channel.loadFlags |= Ci.nsIRequest.LOAD_BACKGROUND |
-                              Ci.nsIRequest.VALIDATE_NEVER |
-                              Ci.nsIRequest.LOAD_FROM_CACHE;
+    this.channel.loadFlags |= Ci.nsIRequest.LOAD_BACKGROUND;
     // Sometimes node is a document and sometimes it is an element. This is
     // the easiest single way to get to the load group in both those cases.
     this.channel.loadGroup = iconInfo.node.ownerGlobal.document.documentLoadGroup;
