@@ -874,11 +874,10 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
 bool
 nsSVGUtils::HitTestClip(nsIFrame *aFrame, const gfxPoint &aPoint)
 {
+  // If the clip-path property references non-existent or invalid clipPath
+  // element(s) we ignore it.
   nsSVGClipPathFrame* clipPathFrame;
-  if (SVGObserverUtils::GetAndObserveClipPath(aFrame, &clipPathFrame) ==
-        SVGObserverUtils::eHasRefsSomeInvalid) {
-    return false; // everything clipped away if clip path is invalid
-  }
+  SVGObserverUtils::GetAndObserveClipPath(aFrame, &clipPathFrame);
   if (clipPathFrame) {
     return clipPathFrame->PointIsInsideClipPath(aFrame, aPoint);
   }
