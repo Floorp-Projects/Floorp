@@ -9,6 +9,7 @@
 #include "mozilla/gfx/2D.h"
 #include <algorithm>
 
+using namespace mozilla;
 
 //
 // <mspace> -- space - implementation

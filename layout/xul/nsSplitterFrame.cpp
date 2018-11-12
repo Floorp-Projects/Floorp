@@ -40,6 +40,8 @@
 
 using namespace mozilla;
 
+using mozilla::dom::Event;
+
 class nsSplitterInfo {
 public:
   nscoord min;

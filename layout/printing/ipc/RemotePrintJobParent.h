@@ -19,10 +19,11 @@
 class nsDeviceContext;
 class nsIPrintSettings;
 class nsIWebProgressListener;
-class PrintTranslator;
 
 namespace mozilla {
 namespace layout {
+
+class PrintTranslator;
 
 class RemotePrintJobParent final : public PRemotePrintJobParent
 {

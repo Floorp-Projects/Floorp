@@ -11,6 +11,8 @@
 #include "mozilla/TextUtils.h"
 #include <algorithm>
 
+using namespace mozilla;
+
 //
 // <mpadded> -- adjust space around content - implementation
 //

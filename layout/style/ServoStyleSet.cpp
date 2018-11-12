@@ -10,6 +10,7 @@
 #include "gfxPlatformFontList.h"
 #include "mozilla/AutoRestyleTimelineMarker.h"
 #include "mozilla/DocumentStyleRootIterator.h"
+#include "mozilla/EffectCompositor.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/ServoBindings.h"

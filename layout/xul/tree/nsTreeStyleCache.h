@@ -11,8 +11,11 @@
 #include "mozilla/Attributes.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
+#include "nsDataHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "mozilla/ComputedStyle.h"
+
+class nsIContent;
 
 class nsTreeStyleCache
 {

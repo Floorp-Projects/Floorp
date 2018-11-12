@@ -11,6 +11,7 @@
 #include "mozilla/dom/SVGSwitchElement.h"
 #include "nsSVGUtils.h"
 
+using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 

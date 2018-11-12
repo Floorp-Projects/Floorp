@@ -13,6 +13,7 @@
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/gfx/CompositorHitTestInfo.h"
+#include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
 #include "mozilla/layers/SyncObject.h"
 #include "mozilla/Range.h"

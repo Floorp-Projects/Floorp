@@ -10,11 +10,15 @@
 #include "mozilla/dom/CSSImportRule.h"
 #include "mozilla/dom/CSSRuleBinding.h"
 #include "mozilla/dom/CSSStyleRule.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "nsDocument.h"
 #include "nsStyleSheetService.h"
+#include "nsXBLPrototypeResources.h"
+
+using namespace mozilla::dom;
 
 namespace mozilla {
 
