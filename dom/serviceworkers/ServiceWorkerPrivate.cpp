@@ -1309,7 +1309,6 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable
   nsCString mFragment;
   nsCString mMethod;
   nsString mClientId;
-  nsString mResultingClientId;
   bool mIsReload;
   bool mMarkLaunchServiceWorkerEnd;
   RequestCache mCacheMode;
@@ -1331,7 +1330,6 @@ public:
                      const nsACString& aScriptSpec,
                      nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
                      const nsAString& aClientId,
-                     const nsAString& aResultingClientId,
                      bool aIsReload,
                      bool aMarkLaunchServiceWorkerEnd)
     : ExtendableFunctionalEventWorkerRunnable(
@@ -1339,7 +1337,6 @@ public:
     , mInterceptedChannel(aChannel)
     , mScriptSpec(aScriptSpec)
     , mClientId(aClientId)
-    , mResultingClientId(aResultingClientId)
     , mIsReload(aIsReload)
     , mMarkLaunchServiceWorkerEnd(aMarkLaunchServiceWorkerEnd)
     , mCacheMode(RequestCache::Default)
@@ -1627,26 +1624,12 @@ private:
     init.mBubbles = false;
     init.mCancelable = true;
     // Only expose the FetchEvent.clientId on subresource requests for now.
-    // Once we implement .targetClientId we can then start exposing .clientId
-    // on non-subresource requests as well.  See bug 1487534.
+    // Once we implement .resultingClientId and .targetClientId we can then
+    // start exposing .clientId on non-subresource requests as well.  See
+    // bug 1264177.
     if (!mClientId.IsEmpty() && !internalReq->IsNavigationRequest()) {
       init.mClientId = mClientId;
     }
-
-    /*
-     * https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm
-     *
-     * "If request is a non-subresource request and request’s
-     * destination is not "report", initialize e’s resultingClientId attribute
-     * to reservedClient’s [resultingClient's] id, and to the empty string
-     * otherwise." (Step 18.8)
-     */
-    if (!mResultingClientId.IsEmpty() &&
-        nsContentUtils::IsNonSubresourceRequest(channel) &&
-        internalReq->Destination() != RequestDestination::Report) {
-      init.mResultingClientId = mResultingClientId;
-    }
-
     init.mIsReload = mIsReload;
     RefPtr<FetchEvent> event =
       FetchEvent::Constructor(globalObj, NS_LITERAL_STRING("fetch"), init, result);
@@ -1690,9 +1673,7 @@ NS_IMPL_ISUPPORTS_INHERITED(FetchEventRunnable, WorkerRunnable, nsIHttpHeaderVis
 nsresult
 ServiceWorkerPrivate::SendFetchEvent(nsIInterceptedChannel* aChannel,
                                      nsILoadGroup* aLoadGroup,
-                                     const nsAString& aClientId,
-                                     const nsAString& aResultingClientId,
-                                     bool aIsReload)
+                                     const nsAString& aClientId, bool aIsReload)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1761,8 +1742,7 @@ ServiceWorkerPrivate::SendFetchEvent(nsIInterceptedChannel* aChannel,
   RefPtr<FetchEventRunnable> r =
     new FetchEventRunnable(mWorkerPrivate, token, handle,
                            mInfo->ScriptSpec(), regInfo,
-                           aClientId, aResultingClientId,
-                           aIsReload, newWorkerCreated);
+                           aClientId, aIsReload, newWorkerCreated);
   rv = r->Init();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

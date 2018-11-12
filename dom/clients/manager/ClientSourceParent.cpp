@@ -118,8 +118,6 @@ ClientSourceParent::RecvExecutionReady(const ClientSourceExecutionReadyArgs& aAr
     Unused << handle->SendExecutionReady(mClientInfo.ToIPC());
   }
 
-  mExecutionReadyPromise.ResolveIfExists(true, __func__);
-
   return IPC_OK();
 };
 
@@ -230,8 +228,6 @@ ClientSourceParent::ClientSourceParent(const ClientSourceConstructorArgs& aArgs)
 ClientSourceParent::~ClientSourceParent()
 {
   MOZ_DIAGNOSTIC_ASSERT(mHandleList.IsEmpty());
-
-  mExecutionReadyPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
 }
 
 void
@@ -270,15 +266,6 @@ bool
 ClientSourceParent::ExecutionReady() const
 {
   return mExecutionReady;
-}
-
-RefPtr<GenericPromise>
-ClientSourceParent::ExecutionReadyPromise()
-{
-  // Only call if ClientSourceParent::ExecutionReady() is false; otherwise,
-  // the promise will never resolve
-  MOZ_ASSERT(!mExecutionReady);
-  return mExecutionReadyPromise.Ensure(__func__);
 }
 
 const Maybe<ServiceWorkerDescriptor>&
