@@ -38,6 +38,7 @@ public:
 
   bool BeginFrame() override;
   void EndFrame() override;
+  void WaitForGPU() override;
   void Pause() override;
   bool Resume() override;
 

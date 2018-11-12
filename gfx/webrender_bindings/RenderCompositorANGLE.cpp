@@ -341,7 +341,11 @@ RenderCompositorANGLE::EndFrame()
   if (mCompositionDevice) {
     mCompositionDevice->Commit();
   }
+}
 
+void
+RenderCompositorANGLE::WaitForGPU()
+{
   // Note: this waits on the query we inserted in the previous frame,
   // not the one we just inserted now. Example:
   //   Insert query #1
