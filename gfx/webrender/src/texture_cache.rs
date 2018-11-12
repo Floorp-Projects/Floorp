@@ -373,8 +373,8 @@ impl TextureCache {
             max_texture_layers,
             next_id: CacheTextureId(1),
             pending_updates: TextureUpdateList::new(),
-            frame_id: FrameId::invalid(),
-            last_shared_cache_expiration: FrameId::invalid(),
+            frame_id: FrameId::INVALID,
+            last_shared_cache_expiration: FrameId::INVALID,
             entries: FreeList::new(),
             handles: EntryHandles::default(),
         }
@@ -621,7 +621,7 @@ impl TextureCache {
         if let Some(entry) = self.entries.get_opt_mut(handle) {
             // Set last accessed frame to invalid to ensure it gets cleaned up
             // next time we expire entries.
-            entry.last_access = FrameId::invalid();
+            entry.last_access = FrameId::INVALID;
             entry.eviction = Eviction::Auto;
         }
     }
