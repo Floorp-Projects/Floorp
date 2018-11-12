@@ -190,34 +190,38 @@ const SEARCH_DEFAULT_UPDATE_INTERVAL = 7;
 // from the server doesn't specify an interval.
 const SEARCH_GEO_DEFAULT_UPDATE_INTERVAL = 2592000; // 30 days.
 
+// Regular expressions used to identify common search URLS.
+const SEARCH_URL_REGEX = new RegExp([
+  /^https:\/\/www\.(google)\.(?:.+)\/search/,
+  /^https:\/\/(?:.*)search\.(yahoo)\.com\/search/,
+  /^https:\/\/www\.(bing)\.com\/search/,
+  /^https:\/\/(duckduckgo)\.com\//,
+  /^https:\/\/www\.(baidu)\.com\/(?:s|baidu)/,
+].map(regex => regex.source).join("|"));
+
 // Used to identify various parameters (query, code, etc.) in search URLS.
 const SEARCH_PROVIDER_INFO = {
   "google": {
-    "regexp": /^https:\/\/www\.(google)\.(?:.+)\/search/,
     "queryParam": "q",
     "codeParam": "client",
     "codePrefixes": ["firefox"],
     "followonParams": ["oq", "ved", "ei"],
   },
   "duckduckgo": {
-    "regexp": /^https:\/\/(duckduckgo)\.com\//,
     "queryParam": "q",
     "codeParam": "t",
     "codePrefixes": ["ff"],
   },
   "yahoo": {
-    "regexp": /^https:\/\/(?:.*)search\.(yahoo)\.com\/search/,
     "queryParam": "p",
   },
   "baidu": {
-    "regexp": /^https:\/\/www\.(baidu)\.com\/(?:s|baidu)/,
     "queryParam": "wd",
     "codeParam": "tn",
     "codePrefixes": ["monline_dg"],
     "followonParams": ["oq"],
   },
   "bing": {
-    "regexp": /^https:\/\/www\.(bing)\.com\/search/,
     "queryParam": "q",
     "codeParam": "pc",
     "codePrefixes": ["MOZ", "MZ"],
@@ -4563,22 +4567,13 @@ SearchService.prototype = {
     return new ParseSubmissionResult(mapEntry.engine, terms, offset, length);
   },
 
-  __searchProviderInfo: null,
-  get _searchProviderInfo() {
-    if (!this.__searchProviderInfo) {
-      this.__searchProviderInfo = SEARCH_PROVIDER_INFO;
-    }
-    return this.__searchProviderInfo;
-  },
-
   recordSearchURLTelemetry(url) {
-    let entry = Object.entries(this._searchProviderInfo).find(
-      ([_, info]) => info.regexp.test(url)
-    );
-    if (!entry) {
+    let matches = url.match(SEARCH_URL_REGEX);
+    if (!matches) {
       return;
     }
-    let [provider, searchProviderInfo] = entry;
+    let provider = matches.filter((e, i) => e && i != 0)[0];
+    let searchProviderInfo = SEARCH_PROVIDER_INFO[provider];
     let queries = new URLSearchParams(url.split("#")[0].split("?")[1]);
     if (!queries.get(searchProviderInfo.queryParam)) {
       return;
@@ -4663,18 +4658,6 @@ SearchService.prototype = {
         // Locales are removed during shutdown, so ignore this message
         if (!Services.startup.shuttingDown) {
           this._asyncReInit();
-        }
-        break;
-
-      case "test:setSearchProviderInfo":
-        if (aVerb) {
-          let infoByProvider = JSON.parse(aVerb);
-          for (let info of Object.values(infoByProvider)) {
-            info.regexp = new RegExp(info.regexp);
-          }
-          this.__searchProviderInfo = infoByProvider;
-        } else {
-          this.__searchProviderInfo = SEARCH_PROVIDER_INFO;
         }
         break;
     }
