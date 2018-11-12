@@ -43,10 +43,8 @@ module.exports = async function() {
   for (const char of Array.from(input)) {
     const onPopupOpened = jsterm.autocompletePopup.once("popup-opened");
     jsterm.insertStringAtCursor(char);
-    // We need to remove the lastInputValue set by setInputValue(called by
-    // insertStringAtCursor), and trigger autocompletion update to show the popup.
-    jsterm.lastInputValue = null;
-    jsterm.updateAutocompletion();
+    // We need to trigger autocompletion update to show the popup.
+    jsterm.fetchAutocompletionProperties();
     await onPopupOpened;
   }
 
