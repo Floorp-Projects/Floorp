@@ -91,6 +91,10 @@ IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow)
   }
 
   nsIDocument* approver = ApproverDocOf(*aWindow->GetExtantDoc());
+  if (!approver) {
+    return false;
+  }
+
   if (nsContentUtils::IsExactSitePermAllow(approver->NodePrincipal(),
                                            "autoplay-media")) {
     AUTOPLAY_LOG("Allow autoplay as document has autoplay permission.");
@@ -160,12 +164,6 @@ IsMediaElementAllowedToPlay(const HTMLMediaElement& aElement)
   if (!aElement.HasAudio() &&
       aElement.ReadyState() >= HTMLMediaElement_Binding::HAVE_METADATA) {
     AUTOPLAY_LOG("Allow media %p without audio track to autoplay", &aElement);
-    return true;
-  }
-
-  if (!aElement.HasAudio() &&
-      aElement.ReadyState() >= HTMLMediaElement_Binding::HAVE_METADATA) {
-    AUTOPLAY_LOG("Allow media without audio track %p to autoplay\n", &aElement);
     return true;
   }
 

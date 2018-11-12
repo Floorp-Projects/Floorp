@@ -200,13 +200,13 @@ nsHtml5HtmlAttributes::adjustForSvg()
 }
 
 nsHtml5HtmlAttributes*
-nsHtml5HtmlAttributes::cloneAttributes(nsHtml5AtomTable* aInterner)
+nsHtml5HtmlAttributes::cloneAttributes()
 {
   MOZ_ASSERT(mStorage.IsEmpty() || !mMode);
   nsHtml5HtmlAttributes* clone =
     new nsHtml5HtmlAttributes(nsHtml5AttributeName::HTML);
   for (nsHtml5AttributeEntry& entry : mStorage) {
-    clone->AddEntry(entry.Clone(aInterner));
+    clone->AddEntry(entry.Clone());
   }
   return clone;
 }

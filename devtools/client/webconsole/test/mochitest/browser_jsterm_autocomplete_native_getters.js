@@ -20,7 +20,7 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const { jsterm } = await openNewTabAndConsole(TEST_URI);
+  const { jsterm, ui } = await openNewTabAndConsole(TEST_URI);
 
   const { autocompletePopup: popup } = jsterm;
 
@@ -33,7 +33,7 @@ async function performTests() {
   await onPopupOpen;
 
   ok(popup.isOpen, "popup is open");
-  const cacheMatches = jsterm._autocompleteCache.matches;
+  const cacheMatches = ui.consoleOutput.getStore().getState().autocomplete.cache.matches;
   is(popup.itemCount, cacheMatches.length, "popup.itemCount is correct");
   ok(cacheMatches.includes("addEventListener"),
     "addEventListener is in the list of suggestions");

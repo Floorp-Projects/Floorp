@@ -193,7 +193,7 @@ enum class AttribBaseType : uint8_t {
     Int,
     UInt,
     Float, // Also includes NormU?Int
-    Bool, // Can convert from anything.
+    Boolean, // Can convert from anything.
 };
 const char* ToString(AttribBaseType);
 

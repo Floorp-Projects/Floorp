@@ -4793,12 +4793,7 @@ nsHtml5Tokenizer::loadState(nsHtml5Tokenizer* other)
   seenDigits = other->seenDigits;
   endTag = other->endTag;
   shouldSuspend = false;
-  if (!other->doctypeName) {
-    doctypeName = nullptr;
-  } else {
-    doctypeName =
-      nsHtml5Portability::newLocalFromLocal(other->doctypeName, interner);
-  }
+  doctypeName = other->doctypeName;
   systemIdentifier.Release();
   if (!other->systemIdentifier) {
     systemIdentifier = nullptr;
@@ -4819,10 +4814,8 @@ nsHtml5Tokenizer::loadState(nsHtml5Tokenizer* other)
   } else if (other->tagName->isInterned()) {
     tagName = other->tagName;
   } else {
-    nonInternedTagName->setNameForNonInterned(
-      nsHtml5Portability::newLocalFromLocal(other->tagName->getName(),
-                                            interner),
-      other->tagName->isCustom());
+    nonInternedTagName->setNameForNonInterned(other->tagName->getName(),
+                                              other->tagName->isCustom());
     tagName = nonInternedTagName;
   }
   if (!other->attributeName) {
@@ -4831,15 +4824,14 @@ nsHtml5Tokenizer::loadState(nsHtml5Tokenizer* other)
     attributeName = other->attributeName;
   } else {
     nonInternedAttributeName->setNameForNonInterned(
-      nsHtml5Portability::newLocalFromLocal(
-        other->attributeName->getLocal(nsHtml5AttributeName::HTML), interner));
+      other->attributeName->getLocal(nsHtml5AttributeName::HTML));
     attributeName = nonInternedAttributeName;
   }
   delete attributes;
   if (!other->attributes) {
     attributes = nullptr;
   } else {
-    attributes = other->attributes->cloneAttributes(interner);
+    attributes = other->attributes->cloneAttributes();
   }
 }
 
@@ -4864,8 +4856,9 @@ nsHtml5Tokenizer::~nsHtml5Tokenizer()
 {
   MOZ_COUNT_DTOR(nsHtml5Tokenizer);
   delete nonInternedTagName;
-  delete nonInternedAttributeName;
   nonInternedTagName = nullptr;
+  delete nonInternedAttributeName;
+  nonInternedAttributeName = nullptr;
   delete attributes;
   attributes = nullptr;
 }

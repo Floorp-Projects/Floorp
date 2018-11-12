@@ -323,16 +323,16 @@ pub fn tiles(
     // Since we're working in layer space, we can end up computing leftover tiles with an empty
     // size due to floating point precision issues. Detect this case so that we don't return
     // tiles with an empty size.
-    let x_count = {
-        let result = f32::ceil((visible_rect.max_x() - prim_rect.origin.x) / layer_tile_size.width) as u32 - t0.x;
+    let x_max = {
+        let result = f32::ceil((visible_rect.max_x() - prim_rect.origin.x) / layer_tile_size.width) as u32;
         if result == leftover_offset.x + 1 && leftover_layer_size.width == 0.0f32 {
             leftover_offset.x
         } else {
             result
         }
     };
-    let y_count = {
-        let result = f32::ceil((visible_rect.max_y() - prim_rect.origin.y) / layer_tile_size.height) as u32 - t0.y;
+    let y_max = {
+        let result = f32::ceil((visible_rect.max_y() - prim_rect.origin.y) / layer_tile_size.height) as u32;
         if result == leftover_offset.y + 1 && leftover_layer_size.height == 0.0f32 {
             leftover_offset.y
         } else {
@@ -341,14 +341,14 @@ pub fn tiles(
     };
 
     let mut row_flags = EdgeAaSegmentMask::TOP;
-    if y_count == 1 {
+    if y_max - t0.y == 1 {
         row_flags |= EdgeAaSegmentMask::BOTTOM;
     }
     TileIterator {
         current_x: 0,
         current_y: 0,
-        x_count,
-        y_count,
+        x_count: x_max - t0.x,
+        y_count: y_max - t0.y,
         row_flags,
         origin: t0,
         tile_size: layer_tile_size,
