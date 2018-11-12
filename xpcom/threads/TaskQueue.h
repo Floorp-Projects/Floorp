@@ -102,7 +102,7 @@ public:
 
   // Returns true if the current thread is currently running a Runnable in
   // the task queue.
-  bool IsCurrentThreadIn() override;
+  bool IsCurrentThreadIn() const override;
 
   // Create a new nsIEventTarget wrapper object that dispatches to this
   // TaskQueue.
