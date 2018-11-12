@@ -1,11 +1,12 @@
 package org.mozilla.samples.sync.logins
 
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
+import mozilla.appservices.logins.ServerPassword
+import mozilla.appservices.logins.SyncUnlockInfo
 import mozilla.components.service.fxa.OAuthInfo
-import org.mozilla.sync15.logins.DatabaseLoginsStorage
-import org.mozilla.sync15.logins.LoginsStorage
-import org.mozilla.sync15.logins.SyncUnlockInfo
-import org.mozilla.sync15.logins.ServerPassword
-import org.mozilla.sync15.logins.SyncResult
+import mozilla.components.service.sync.logins.AsyncLoginsStorage
+import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
 
 /**
  * A minimal login example.
@@ -13,9 +14,14 @@ import org.mozilla.sync15.logins.SyncResult
  * Note that this code likely has issues if accessed by multiple threads (especially around
  * initialization and lock/unlock).
  */
-class SyncLoginsClient(private val databasePath: String) {
+class SyncLoginsClient(databasePath: String) : AutoCloseable {
     // Cached unlocked instance of LoginsStorage.
-    private var unlockedStore: LoginsStorage? = null
+    private var store: AsyncLoginsStorage =
+            AsyncLoginsStorageAdapter.forDatabase(databasePath)
+
+    override fun close() {
+        store.close()
+    }
 
     /**
      * Perform a sync, and then get the local password list. Unlocks the store if necessary. Note
@@ -28,57 +34,26 @@ class SyncLoginsClient(private val databasePath: String) {
      *
      * @param tokenServerURL This should be the result of [FirefoxAccount.getTokenServerEndpointURL]
      */
-    fun syncAndGetPasswords(oauthInfo: OAuthInfo, tokenServerURL: String): SyncResult<List<ServerPassword>> {
-        return this.getUnlockedStore().then { store ->
-            val unlockInfo = this.getUnlockInfo(oauthInfo, tokenServerURL)
-            store.sync(unlockInfo)
-        }.then {
-            this.getLocalPasswordList()
-        }
+    suspend fun syncAndGetPasswords(oauthInfo: OAuthInfo, tokenServerURL: String): List<ServerPassword> {
+        val store = this.getUnlockedStore()
+        val unlockInfo = this.getUnlockInfo(oauthInfo, tokenServerURL)
+        store.sync(unlockInfo).await()
+        return getLocalPasswordList()
     }
 
     /**
      * Get the local password list (without syncing). Unlocks the store if necessary.
      */
-    fun getLocalPasswordList(): SyncResult<List<ServerPassword>> {
-        return this.getUnlockedStore().then { it.list() }
+    private suspend fun getLocalPasswordList(): List<ServerPassword> {
+        val store = getUnlockedStore()
+        return store.list().await()
     }
 
-    /**
-     * Lock the local store. Returns whether or not the store was previously locked.
-     */
-    fun lockStore(): SyncResult<Boolean> {
-        // Note: this isn't thread safe.
-        val store = this.unlockedStore
-        this.unlockedStore = null
-        if (store == null) {
-            return SyncResult.fromValue(false)
+    private suspend fun getUnlockedStore(): AsyncLoginsStorage {
+        if (this.store.isLocked()) {
+            this.store.unlock(getSecretKey().await()).await()
         }
-        return store.isLocked().then { wasLocked ->
-            if (wasLocked) {
-                // This shouldn't happen given how we've structured this example, but it's simple
-                // to handle, and worth handling in the case that some of this is copy-pasted into
-                // situations where this is possible.
-                SyncResult.fromValue(false)
-            } else {
-                store.lock().then { SyncResult.fromValue(true) }
-            }
-        }
-    }
-
-    private fun getUnlockedStore(): SyncResult<LoginsStorage> {
-        return if (this.unlockedStore != null) {
-            SyncResult.fromValue(this.unlockedStore!!)
-        } else {
-            // Initialize and unlock the store.
-            val store = DatabaseLoginsStorage(this.databasePath)
-            return getSecretKey().then { key ->
-                store.unlock(key)
-            }.then {
-                this.unlockedStore = store
-                SyncResult.fromValue(store as LoginsStorage)
-            }
-        }
+        return this.store
     }
 
     // Helper to convert FxA OAuthInfo + TokenServer URL to `SyncUnlockInfo`.
@@ -98,7 +73,7 @@ class SyncLoginsClient(private val databasePath: String) {
     // In reality you'd do some (probably asynchronous) thing where you fetch
     // this from some secure storage (or from the user) or whatever, but we just
     // hard-code a key to keep the example simple.
-    private fun getSecretKey(): SyncResult<String> {
-        return SyncResult.fromValue("my_cool_secret_key")
+    private fun getSecretKey(): Deferred<String> {
+        return CompletableDeferred("my_cool_secret_key")
     }
 }

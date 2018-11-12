@@ -27,7 +27,6 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaException
-import org.mozilla.sync15.logins.SyncResult
 import kotlin.coroutines.CoroutineContext
 
 open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener, CoroutineScope {
@@ -130,17 +129,13 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
             }
 
             val appFiles = this@MainActivity.applicationContext.getExternalFilesDir(null)
-            val logins = SyncLoginsClient(appFiles.absolutePath + "/logins.sqlite")
-            val tokenServer = account.getTokenServerEndpointURL()
-            logins.syncAndGetPasswords(oauthInfo, tokenServer).thenCatch { e ->
-                SyncResult.fromException(e)
-            }.whenComplete { syncLogins ->
-                runOnUiThread {
-                    Toast.makeText(this@MainActivity, "Logins success", Toast.LENGTH_SHORT).show()
-                    for (i in 0 until syncLogins.size) {
-                        adapter.addAll("Login: " + syncLogins[i].hostname)
-                        adapter.notifyDataSetChanged()
-                    }
+            SyncLoginsClient(appFiles.absolutePath + "/logins.sqlite").use { logins ->
+                val tokenServer = account.getTokenServerEndpointURL()
+                val syncLogins = logins.syncAndGetPasswords(oauthInfo, tokenServer)
+                Toast.makeText(this@MainActivity, "Logins success", Toast.LENGTH_SHORT).show()
+                for (i in 0 until syncLogins.size) {
+                    adapter.addAll("Login: " + syncLogins[i].hostname)
+                    adapter.notifyDataSetChanged()
                 }
             }
         }
