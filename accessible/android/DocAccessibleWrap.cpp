@@ -226,7 +226,13 @@ DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible)
     }
 
     ipcDoc->SendBatch(eBatch_FocusPath, cacheData);
-  } else {
-    // XXX: Local codepath, next patch
+  } else if (SessionAccessibility* sessionAcc = SessionAccessibility::GetInstanceFor(this)) {
+    nsTArray<AccessibleWrap*> accessibles;
+    for (AccessibleWrap* acc = aAccessible; acc && acc != this->Parent();
+         acc = static_cast<AccessibleWrap*>(acc->Parent())) {
+      accessibles.AppendElement(acc);
+    }
+
+    sessionAcc->ReplaceFocusPathCache(accessibles);
   }
 }
