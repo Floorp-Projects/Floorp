@@ -185,9 +185,19 @@ HTMLEditor::InsertHTML(const nsAString& aInString)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return DoInsertHTMLWithContext(aInString, EmptyString(), EmptyString(),
-                                 EmptyString(), nullptr,  EditorDOMPoint(),
-                                 true, true, false);
+  nsresult rv =
+    DoInsertHTMLWithContext(aInString, EmptyString(), EmptyString(),
+                            EmptyString(), nullptr,  EditorDOMPoint(),
+                            true, true, false);
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    // Return NS_OK when editor is destroyed since it's expected by the
+    // web app.
+    return NS_OK;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -197,7 +207,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
                                     const nsAString& aFlavor,
                                     nsIDocument* aSourceDoc,
                                     const EditorDOMPoint& aPointToInsert,
-                                    bool aDeleteSelection,
+                                    bool aDoDeleteSelection,
                                     bool aTrustedInput,
                                     bool aClearStyle)
 {
@@ -232,38 +242,16 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     return rv;
   }
 
-  EditorDOMPoint targetPoint(aPointToInsert);
-  if (!targetPoint.IsSet()) {
-    // if caller didn't provide the destination/target node,
-    // fetch the paste insertion point from our selection
-    targetPoint = EditorBase::GetStartPoint(*SelectionRefPtr());
-    if (NS_WARN_IF(!targetPoint.IsSet()) ||
-        !IsEditable(targetPoint.GetContainer())) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
   // if we have a destination / target node, we want to insert there
   // rather than in place of the selection
-  // ignore aDeleteSelection here if no aDestNode since deletion will
-  // also occur later; this block is intended to cover the various
+  // ignore aDoDeleteSelection here if aPointToInsert is not set since deletion
+  // will also occur later; this block is intended to cover the various
   // scenarios where we are dropping in an editor (and may want to delete
   // the selection before collapsing the selection in the new destination)
   if (aPointToInsert.IsSet()) {
-    if (aDeleteSelection) {
-      // Use an auto tracker so that our drop point is correctly
-      // positioned after the delete.
-      AutoTrackDOMPoint tracker(mRangeUpdater, &targetPoint);
-      rv = DeleteSelectionAsSubAction(eNone, eStrip);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
-
-    ErrorResult error;
-    SelectionRefPtr()->Collapse(targetPoint, error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
+    rv = PrepareToInsertContent(aPointToInsert, aDoDeleteSelection);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
 
@@ -280,11 +268,11 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
                            streamEndOffset);
 
   if (nodeList.IsEmpty()) {
-    // We aren't inserting anything, but if aDeleteSelection is set, we do want
-    // to delete everything.
+    // We aren't inserting anything, but if aDoDeleteSelection is set, we do
+    // want to delete everything.
     // XXX What will this do? We've already called DeleteSelectionAsSubAtion()
     //     above if insertion point is specified.
-    if (aDeleteSelection) {
+    if (aDoDeleteSelection) {
       nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -1051,7 +1039,14 @@ HTMLEditor::BlobReader::OnResult(const nsACString& aResult)
                                             mSourceDoc, mPointToInsert,
                                             mDoDeleteSelection,
                                             mIsSafe, false);
-  return rv;
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    // Return NS_OK if the editor is destroyed since the web app expects it.
+    return NS_OK;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -1514,7 +1509,11 @@ HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
         type.EqualsLiteral(kMozTextInternal)) {
       nsAutoString text;
       GetStringFromDataTransfer(aDataTransfer, type, aIndex, text);
-      return InsertTextAt(text, aDroppedAt, aDoDeleteSelection);
+      nsresult rv = InsertTextAt(text, aDroppedAt, aDoDeleteSelection);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      return NS_OK;
     }
   }
 
@@ -1656,8 +1655,13 @@ HTMLEditor::PasteTransferable(nsITransferable* aTransferable)
   }
 
   nsAutoString contextStr, infoStr;
-  return InsertFromTransferable(aTransferable, nullptr, contextStr, infoStr,
-                                false, true);
+  nsresult rv =
+    InsertFromTransferable(aTransferable, nullptr, contextStr, infoStr,
+                           false, true);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 /**
@@ -1686,16 +1690,34 @@ HTMLEditor::PasteNoFormatting(int32_t aSelectionType)
   // use TextEditor::PrepareTransferable() to force unicode plaintext data.
   nsCOMPtr<nsITransferable> trans;
   rv = TextEditor::PrepareTransferable(getter_AddRefs(trans));
-  if (NS_SUCCEEDED(rv) && trans) {
-    // Get the Data from the clipboard
-    if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) &&
-        IsModifiable()) {
-      const nsString& empty = EmptyString();
-      rv = InsertFromTransferable(trans, nullptr, empty, empty, false, true);
-    }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (!trans) {
+    return NS_OK;
   }
 
-  return rv;
+  if (!IsModifiable()) {
+    return NS_OK;
+  }
+
+  // Get the Data from the clipboard
+  rv = clipboard->GetData(trans, aSelectionType);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  const nsString& empty = EmptyString();
+  rv = InsertFromTransferable(trans, nullptr, empty, empty, false, true);
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    // Return NS_OK when editor is destroyed since it's expected by the
+    // web app.
+    return NS_OK;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 // The following arrays contain the MIME types that we can paste. The arrays
