@@ -11,13 +11,11 @@ import android.widget.Switch
 import android.widget.TextView
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
-
+import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.R
 import org.mozilla.focus.exceptions.ExceptionDomains
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
-
-import mozilla.components.support.utils.ThreadUtils
 import java.net.URI
 
 internal class BlockingItemViewHolder(itemView: View, private val fragment: BrowserFragment) :
@@ -63,6 +61,8 @@ internal class BlockingItemViewHolder(itemView: View, private val fragment: Brow
 
         if (!isChecked) {
             addUrlToExceptionsList(url = fragment.url)
+        } else {
+            removeUrlFromExceptionsList(url = fragment.url)
         }
 
         TelemetryWrapper.blockingSwitchEvent(isChecked)
@@ -83,6 +83,16 @@ internal class BlockingItemViewHolder(itemView: View, private val fragment: Brow
 
             if (duplicateURL) return@launch
             ExceptionDomains.add(fragment.requireContext(), host)
+        }
+    }
+
+    private fun removeUrlFromExceptionsList(url: String) {
+        fragment.launch(IO) {
+            val host = URI(url).host
+            if (ExceptionDomains.load(fragment.requireContext()).contains(host)) {
+                TelemetryWrapper.removeExceptionDomains(1)
+                ExceptionDomains.remove(fragment.requireContext(), listOf(host))
+            }
         }
     }
 
