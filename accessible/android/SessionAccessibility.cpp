@@ -318,11 +318,16 @@ SessionAccessibility::SendClickedEvent(AccessibleWrap* aAccessible, bool aChecke
 }
 
 void
-SessionAccessibility::SendSelectedEvent(AccessibleWrap* aAccessible)
+SessionAccessibility::SendSelectedEvent(AccessibleWrap* aAccessible, bool aSelected)
 {
+  GECKOBUNDLE_START(eventInfo);
+  // Boolean::FALSE/TRUE gets clobbered by a macro, so ugh.
+  GECKOBUNDLE_PUT(eventInfo, "selected", java::sdk::Integer::ValueOf(aSelected ? 1 : 0));
+  GECKOBUNDLE_FINISH(eventInfo);
+
   mSessionAccessibility->SendEvent(
     java::sdk::AccessibilityEvent::TYPE_VIEW_SELECTED,
-    aAccessible->VirtualViewID(), aAccessible->AndroidClass(), nullptr);
+    aAccessible->VirtualViewID(), aAccessible->AndroidClass(), eventInfo);
 }
 
 void

@@ -90,7 +90,7 @@ a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget,
   }
 
   if (aState & states::SELECTED) {
-    sessionAcc->SendSelectedEvent(WrapperFor(aTarget));
+    sessionAcc->SendSelectedEvent(WrapperFor(aTarget), aEnabled);
   }
 
   if (aState & states::BUSY) {

@@ -100,7 +100,7 @@ public:
                             uint32_t aLen,
                             bool aIsInsert,
                             bool aFromUser);
-  void SendSelectedEvent(AccessibleWrap* aAccessible);
+  void SendSelectedEvent(AccessibleWrap* aAccessible, bool aSelected);
   void SendClickedEvent(AccessibleWrap* aAccessible, bool aChecked);
   void SendWindowContentChangedEvent(AccessibleWrap* aAccessible);
   void SendWindowStateChangedEvent(AccessibleWrap* aAccessible);

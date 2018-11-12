@@ -145,7 +145,7 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
       }
 
       if (state & states::SELECTED) {
-        sessionAcc->SendSelectedEvent(accessible);
+        sessionAcc->SendSelectedEvent(accessible, event->IsStateEnabled());
       }
 
       if (state & states::BUSY) {
