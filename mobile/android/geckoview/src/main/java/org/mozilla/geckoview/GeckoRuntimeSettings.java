@@ -119,7 +119,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
          * @return This Builder instance.
          */
         public @NonNull Builder webFontsEnabled(final boolean flag) {
-            mSettings.mWebFonts.set(flag ? 1 : 0);
+            mSettings.mWebFonts.set(flag);
             return this;
         }
 
@@ -347,8 +347,8 @@ public final class GeckoRuntimeSettings implements Parcelable {
         "javascript.enabled", true);
     /* package */ Pref<Boolean> mRemoteDebugging = new Pref<Boolean>(
         "devtools.debugger.remote-enabled", false);
-    /* package */ Pref<Integer> mWebFonts = new Pref<Integer>(
-        "browser.display.use_document_fonts", 1);
+    /* package */ Pref<Boolean> mWebFonts = new Pref<Boolean>(
+        "browser.display.use_document_fonts", true);
     /* package */ Pref<Integer> mCookieBehavior = new Pref<Integer>(
         "network.cookie.cookieBehavior", COOKIE_ACCEPT_ALL);
     /* package */ Pref<Integer> mCookieLifetime = new Pref<Integer>(
@@ -499,7 +499,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      * @return Whether web fonts support is enabled.
      */
     public boolean getWebFontsEnabled() {
-        return mWebFonts.get() != 0 ? true : false;
+        return mWebFonts.get();
     }
 
     /**
@@ -509,7 +509,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
      * @return This GeckoRuntimeSettings instance.
      */
     public @NonNull GeckoRuntimeSettings setWebFontsEnabled(final boolean flag) {
-        mWebFonts.set(flag ? 1 : 0);
+        mWebFonts.set(flag);
         return this;
     }
 
