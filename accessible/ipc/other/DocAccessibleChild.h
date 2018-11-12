@@ -486,9 +486,6 @@ private:
   ImageAccessible* IdToImageAccessible(const uint64_t& aID) const;
   TableCellAccessible* IdToTableCellAccessible(const uint64_t& aID) const;
   TableAccessible* IdToTableAccessible(const uint64_t& aID) const;
-
-  bool PersistentPropertiesToArray(nsIPersistentProperties* aProps,
-                                   nsTArray<Attribute>* aAttributes);
 };
 
 }

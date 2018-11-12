@@ -168,44 +168,10 @@ DocAccessibleChild::RecvAttributes(const uint64_t& aID, nsTArray<Attribute>* aAt
     return IPC_OK();
 
   nsCOMPtr<nsIPersistentProperties> props = acc->Attributes();
-  if (!PersistentPropertiesToArray(props, aAttributes)) {
+  if (!nsAccUtils::PersistentPropertiesToArray(props, aAttributes)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
-}
-
-bool
-DocAccessibleChild::PersistentPropertiesToArray(nsIPersistentProperties* aProps,
-                                                nsTArray<Attribute>* aAttributes)
-{
-  if (!aProps) {
-    return true;
-  }
-  nsCOMPtr<nsISimpleEnumerator> propEnum;
-  nsresult rv = aProps->Enumerate(getter_AddRefs(propEnum));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  bool hasMore;
-  while (NS_SUCCEEDED(propEnum->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> sup;
-    rv = propEnum->GetNext(getter_AddRefs(sup));
-    NS_ENSURE_SUCCESS(rv, false);
-
-    nsCOMPtr<nsIPropertyElement> propElem(do_QueryInterface(sup));
-    NS_ENSURE_TRUE(propElem, false);
-
-    nsAutoCString name;
-    rv = propElem->GetKey(name);
-    NS_ENSURE_SUCCESS(rv, false);
-
-    nsAutoString value;
-    rv = propElem->GetValue(value);
-    NS_ENSURE_SUCCESS(rv, false);
-
-    aAttributes->AppendElement(Attribute(name, value));
-    }
-
-  return true;
 }
 
 mozilla::ipc::IPCResult
@@ -474,7 +440,7 @@ DocAccessibleChild::RecvTextAttributes(const uint64_t& aID,
 
   nsCOMPtr<nsIPersistentProperties> props =
     acc->TextAttributes(aIncludeDefAttrs, aOffset, aStartOffset, aEndOffset);
-  if (!PersistentPropertiesToArray(props, aAttributes)) {
+  if (!nsAccUtils::PersistentPropertiesToArray(props, aAttributes)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
@@ -490,7 +456,7 @@ DocAccessibleChild::RecvDefaultTextAttributes(const uint64_t& aID,
   }
 
   nsCOMPtr<nsIPersistentProperties> props = acc->DefaultTextAttributes();
-  if (!PersistentPropertiesToArray(props, aAttributes)) {
+  if (!nsAccUtils::PersistentPropertiesToArray(props, aAttributes)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();

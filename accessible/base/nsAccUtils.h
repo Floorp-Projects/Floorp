@@ -25,6 +25,7 @@ namespace a11y {
 
 class HyperTextAccessible;
 class DocAccessible;
+class Attribute;
 
 class nsAccUtils
 {
@@ -253,6 +254,10 @@ public:
    * to platform accessibility APIs, should the children be pruned off?
    */
   static bool MustPrune(Accessible* aAccessible);
+
+  static bool PersistentPropertiesToArray(nsIPersistentProperties* aProps,
+                                          nsTArray<Attribute>* aAttributes);
+
 };
 
 } // namespace a11y
