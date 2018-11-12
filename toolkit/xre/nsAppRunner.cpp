@@ -1711,8 +1711,6 @@ StartRemoteClient(const char* aDesktopStartupID,
     client = new XRemoteClient();
   }
 
-  // There are people who build Wayland without DBus...well
-  // don't judge others for personal taste.
   nsresult rv = client ? client->Init() : NS_ERROR_FAILURE;
   if (NS_FAILED(rv))
     return REMOTE_NOT_FOUND;
