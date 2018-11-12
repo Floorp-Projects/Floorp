@@ -6359,7 +6359,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.individual-transform.enabled")) {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "none" ],
     other_values: [ "45deg", "45grad", "72rad", "0.25turn", ".57rad",
-                    "0 0 0 0rad", "0 0 1 45deg", "0 0 1 0rad",
+                    "0 0 0 0rad", "0 0 1 45deg", "0 0 1 0rad", "0rad 0 0 1",
                     /* valid calc() values */
                     "calc(1) 0 0 calc(45deg + 5rad)",
                     "0 1 0 calc(400grad + 1rad)",
