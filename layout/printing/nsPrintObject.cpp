@@ -5,10 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsPrintObject.h"
+
 #include "nsIContentViewer.h"
 #include "nsContentUtils.h" // for nsAutoScriptBlocker
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsPIDOMWindow.h"
+#include "nsPresContext.h"
 #include "nsGkAtoms.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIDocShellTreeItem.h"
@@ -17,6 +19,10 @@
 #include "nsDocShell.h"
 
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/Element.h"
+
+using mozilla::dom::BrowsingContext;
+using mozilla::dom::Element;
 
 //---------------------------------------------------
 //-- nsPrintObject Class Impl

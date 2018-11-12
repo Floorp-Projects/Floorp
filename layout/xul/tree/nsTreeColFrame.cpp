@@ -18,6 +18,8 @@
 #include "nsTreeBodyFrame.h"
 #include "nsXULElement.h"
 
+using namespace mozilla;
+
 //
 // NS_NewTreeColFrame
 //

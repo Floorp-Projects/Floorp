@@ -16,11 +16,13 @@
 #include "nsTreeColumns.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/TreeBoxObject.h"
 #include "mozilla/dom/TreeContentViewBinding.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIDocument.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // A content model view implementation for the tree.
 

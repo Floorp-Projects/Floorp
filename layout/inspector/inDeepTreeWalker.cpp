@@ -7,6 +7,8 @@
 #include "inDeepTreeWalker.h"
 #include "inLayoutUtils.h"
 
+#include "BindingStyleRule.h"
+#include "InspectorUtils.h"
 #include "nsString.h"
 #include "nsIDocument.h"
 #include "nsServiceManagerUtils.h"
@@ -15,6 +17,8 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/InspectorUtils.h"
 #include "mozilla/dom/NodeFilterBinding.h"
+
+using mozilla::dom::InspectorUtils;
 
 /*****************************************************************************
  * This implementation does not currently operaate according to the W3C spec.

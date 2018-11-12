@@ -13,6 +13,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleSheetInlines.h"
+#include "nsPresContext.h"
 
 namespace mozilla {
 namespace dom {

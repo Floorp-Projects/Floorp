@@ -15,6 +15,7 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsIDocument.h"
 
+using namespace mozilla;
 using mozilla::dom::Element;
 using mozilla::dom::HTMLInputElement;
 using mozilla::dom::CallerType;

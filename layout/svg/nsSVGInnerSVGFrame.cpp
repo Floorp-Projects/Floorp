@@ -7,6 +7,8 @@
 // Main header first:
 #include "nsSVGInnerSVGFrame.h"
 
+using namespace mozilla;
+
 nsIFrame*
 NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
