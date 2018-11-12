@@ -93,9 +93,6 @@ TextEditor::PrepareToInsertContent(const EditorDOMPoint& aPointToInsert,
     return error.StealNSResult();
   }
 
-  // TODO: We need to dispatch "input" event only when EditAction is
-  //       eDrop.
-
   return NS_OK;
 }
 
@@ -297,15 +294,44 @@ TextEditor::OnDrop(DragEvent* aDropEvent)
   // Don't dispatch "selectionchange" event until inserting all contents.
   SelectionBatcher selectionBatcher(SelectionRefPtr());
 
+  // Remove selected contents first here because we need to fire a pair of
+  // "beforeinput" and "input" for deletion and web apps can cancel only
+  // this deletion.  Note that callee may handle insertion asynchronously.
+  // Therefore, it is the best to remove selected content here.
+  if (deleteSelection && !SelectionRefPtr()->IsCollapsed()) {
+    nsresult rv = PrepareToInsertContent(droppedAt, true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    // Now, Selection should be collapsed at dropped point.  If somebody
+    // changed Selection, we should think what should do it in such case
+    // later.
+    if (NS_WARN_IF(!SelectionRefPtr()->IsCollapsed()) ||
+        NS_WARN_IF(!SelectionRefPtr()->RangeCount())) {
+      return NS_ERROR_FAILURE;
+    }
+    droppedAt = SelectionRefPtr()->FocusRef();
+    if (NS_WARN_IF(!droppedAt.IsSet())) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Let's fire "input" event for the deletion now.
+    if (mDispatchInputEvent) {
+      FireInputEvent();
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+    }
+
+    // XXX Now, Selection may be changed by input event listeners.  If so,
+    //     should we update |droppedAt|?
+  }
+
   for (uint32_t i = 0; i < numItems; ++i) {
-    InsertFromDataTransfer(dataTransfer, i, srcdoc, droppedAt, deleteSelection);
+    InsertFromDataTransfer(dataTransfer, i, srcdoc, droppedAt, false);
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
-    // We need to remove selected content only once even if Selection is
-    // modified by mutation event listeners, that's not specified by the
-    // user.
-    deleteSelection = false;
   }
 
   ScrollSelectionIntoView(false);
