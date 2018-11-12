@@ -1,0 +1,25 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: "Core"
+  component: "Audio/Video"
+
+origin:
+  name: "libMKV"
+  description: "WebM container writer"
+
+  # Upstream have abandoned this library.
+  url: "https://chromium.googlesource.com/webm/libvpx/+/c5aaf923d80e9f71e0c93d7d99dc1e2f83d7acbf/third_party/libmkv/"
+  license: "BSD-3-Clause-Clear"
+
+  release: "c5aaf923d80e9f71e0c93d7d99dc1e2f83d7acbf"
+
+  # The following patches have been applied after vendoring:
+  #   patch -p1 < source_fix.patch
+  #   patch -p1 < gecko_fix.patch
+  #   patch -p1 < const_fix.patch
+  #   patch -p3 < bock_fix.patch
+  #   patch -p3 < bug970774.patch
+  #   patch -p3 < cleanup.patch

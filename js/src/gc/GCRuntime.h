@@ -860,9 +860,6 @@ class GCRuntime
     /* Whether any sweeping will take place in the separate GC helper thread. */
     MainThreadData<bool> sweepOnBackgroundThread;
 
-    /* Whether observed type information is being released in the current GC. */
-    MainThreadData<bool> releaseObservedTypes;
-
     /* Singly linked list of zones to be swept in the background. */
     HelperThreadLockData<ZoneList> backgroundSweepZones;
 

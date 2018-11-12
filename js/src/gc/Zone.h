@@ -195,7 +195,8 @@ class Zone : public JS::shadow::Zone,
 
     void findOutgoingEdges(js::gc::ZoneComponentFinder& finder);
 
-    void discardJitCode(js::FreeOp* fop, bool discardBaselineCode = true);
+    void discardJitCode(js::FreeOp* fop, bool discardBaselineCode = true,
+                        bool releaseTypes = false);
 
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 size_t* typePool,
@@ -221,7 +222,7 @@ class Zone : public JS::shadow::Zone,
                                      void* reallocPtr = nullptr);
     void reportAllocationOverflow();
 
-    void beginSweepTypes(bool releaseTypes);
+    void beginSweepTypes();
 
     bool hasMarkedRealms();
 

@@ -193,7 +193,7 @@
 
       <!-- nsIDOMXULSelectControlElement -->
       <property name="itemCount" readonly="true"
-                onget="return this.children.length"/>
+                onget="return this.itemChildren.length"/>
 
       <!-- nsIDOMXULSelectControlElement -->
       <method name="getIndexOfItem">
@@ -205,7 +205,7 @@
               return -1;
             if (this._selecting && this._selecting.item == aItem)
               return this._selecting.index;
-            return this.children.indexOf(aItem);
+            return this.itemChildren.indexOf(aItem);
           ]]>
         </body>
       </method>
@@ -217,7 +217,7 @@
           <![CDATA[
             if (this._selecting && this._selecting.index == aIndex)
               return this._selecting.item;
-            return this.children[aIndex] || null;
+            return this.itemChildren[aIndex] || null;
           ]]>
         </body>
       </method>
@@ -515,7 +515,7 @@
       <method name="getIndexOfFirstVisibleRow">
         <body>
           <![CDATA[
-            var children = this.children;
+            var children = this.itemChildren;
 
             for (var ix = 0; ix < children.length; ix++)
               if (this._isItemVisible(children[ix]))
@@ -529,7 +529,7 @@
       <method name="getRowCount">
         <body>
           <![CDATA[
-            return this.children.length;
+            return this.itemChildren.length;
           ]]>
         </body>
       </method>
@@ -538,7 +538,7 @@
         <parameter name="aDirection"/> <!-- Must be -1 or 1 -->
         <body>
           <![CDATA[
-            var children = this.children;
+            var children = this.itemChildren;
 
             if (children.length == 0)
               return 0;
@@ -578,12 +578,12 @@
         </body>
       </method>
 
-      <property name="children" readonly="true">
+      <property name="itemChildren" readonly="true">
         <getter>
           <![CDATA[
             let iface = Ci.nsIDOMXULSelectControlItemElement;
-            let children = Array.from(this.childNodes)
-                                .filter(node => node.nodeType == 1 && node instanceof iface);
+            let children = Array.from(this.children)
+                                .filter(node => node instanceof iface);
             if (this.dir == "reverse" && this._mayReverse) {
               children.reverse();
             }
@@ -667,7 +667,7 @@
 
               // cf. listbox constructor:
               // select items according to their attributes
-              var children = this.children;
+              var children = this.itemChildren;
               for (let i = 0; i < children.length; ++i) {
                 if (children[i].getAttribute("selected") == "true")
                   this.selectedItems.append(children[i]);
