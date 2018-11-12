@@ -774,7 +774,7 @@ GLLibraryEGL::CreateDisplay(bool forceAccel, const nsCOMPtr<nsIGfxInfo>& gfxInfo
 #ifdef MOZ_WAYLAND
         // Some drivers doesn't support EGL_DEFAULT_DISPLAY
         GdkDisplay *gdkDisplay = gdk_display_get_default();
-        if (GDK_IS_WAYLAND_DISPLAY(gdkDisplay)) {
+        if (!GDK_IS_X11_DISPLAY(gdkDisplay)) {
             static auto sGdkWaylandDisplayGetWlDisplay =
                 (wl_display *(*)(GdkDisplay *))
                 dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_display");

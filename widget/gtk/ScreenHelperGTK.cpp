@@ -155,7 +155,7 @@ MakeScreen(GdkScreen* aScreen, gint aMonitorNum)
   DesktopToLayoutDeviceScale contentsScale(1.0);
 #ifdef MOZ_WAYLAND
     GdkDisplay* gdkDisplay = gdk_display_get_default();
-    if (GDK_IS_WAYLAND_DISPLAY(gdkDisplay)) {
+    if (!GDK_IS_X11_DISPLAY(gdkDisplay)) {
       contentsScale.scale = gdkScaleFactor;
     }
 #endif
