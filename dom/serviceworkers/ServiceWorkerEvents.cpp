@@ -161,7 +161,6 @@ FetchEvent::Constructor(const GlobalObject& aGlobal,
   e->SetComposed(aOptions.mComposed);
   e->mRequest = aOptions.mRequest;
   e->mClientId = aOptions.mClientId;
-  e->mResultingClientId = aOptions.mResultingClientId;
   e->mIsReload = aOptions.mIsReload;
   return e.forget();
 }
