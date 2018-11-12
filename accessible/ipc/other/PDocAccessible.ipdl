@@ -36,6 +36,14 @@ struct BatchData
   uint64_t ID;
   uint64_t State;
   nsIntRect Bounds;
+  nsString Name;
+  nsString TextValue;
+  nsString DOMNodeID;
+  double CurValue;
+  double MinValue;
+  double MaxValue;
+  double Step;
+  Attribute[] Attributes;
 };
 
 struct ShowEventData
