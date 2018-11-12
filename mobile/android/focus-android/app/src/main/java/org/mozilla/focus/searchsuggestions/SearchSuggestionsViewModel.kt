@@ -71,6 +71,7 @@ class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(ap
     }
 
     fun disableSearchSuggestions() {
+        fetcher.cancelJobs()
         preferences.disableSearchSuggestions()
         updateState()
     }

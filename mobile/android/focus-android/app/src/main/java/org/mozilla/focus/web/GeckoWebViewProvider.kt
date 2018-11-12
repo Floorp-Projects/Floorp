@@ -18,14 +18,17 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.View
 import android.webkit.WebSettings
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.browser.session.Session
 import mozilla.components.lib.crash.handler.CrashHandlerService
 import mozilla.components.support.ktx.android.util.Base64
 import org.json.JSONException
-import org.mozilla.focus.IO
 import org.mozilla.focus.R
 import org.mozilla.focus.browser.LocalizedContent
 import org.mozilla.focus.ext.savedWebViewState
@@ -46,6 +49,7 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.SessionFinder
+import kotlin.coroutines.CoroutineContext
 
 /**
  * WebViewProvider implementation for creating a Gecko based implementation of IWebView.
@@ -61,7 +65,7 @@ class GeckoWebViewProvider : IWebViewProvider {
         val settings = Settings.getInstance(context)
         if (!settings.shouldShowFirstrun() && settings.isFirstGeckoRun()) {
             PreferenceManager.getDefaultSharedPreferences(context)
-                    .edit().putBoolean(PREF_FIRST_GECKO_RUN, false).apply()
+                .edit().putBoolean(PREF_FIRST_GECKO_RUN, false).apply()
             Log.d(javaClass.simpleName, "Sending change to Gecko ping")
             TelemetryWrapper.changeToGeckoEngineEvent()
         }
@@ -116,7 +120,8 @@ class GeckoWebViewProvider : IWebViewProvider {
     class GeckoWebView(context: Context, attrs: AttributeSet?) :
         NestedGeckoView(context, attrs),
         IWebView,
-        SharedPreferences.OnSharedPreferenceChangeListener {
+        SharedPreferences.OnSharedPreferenceChangeListener,
+        CoroutineScope {
         private var callback: IWebView.Callback? = null
         private var findListener: IFindListener? = null
         private var currentUrl: String = ABOUT_BLANK
@@ -128,6 +133,9 @@ class GeckoWebViewProvider : IWebViewProvider {
         private var isLoadingInternalUrl = false
         private lateinit var finder: SessionFinder
         private var restored = false
+        private val job = Job()
+        override val coroutineContext: CoroutineContext
+            get() = job + Dispatchers.Main
 
         init {
             PreferenceManager.getDefaultSharedPreferences(context)
@@ -164,6 +172,7 @@ class GeckoWebViewProvider : IWebViewProvider {
         }
 
         override fun onPause() {
+            job.cancel()
         }
 
         override fun goBack() {
@@ -220,9 +229,9 @@ class GeckoWebViewProvider : IWebViewProvider {
 
         override fun setRequestDesktop(shouldRequestDesktop: Boolean) {
             geckoSession.settings.setInt(
-                    GeckoSessionSettings.USER_AGENT_MODE,
-                    if (shouldRequestDesktop) GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
-                    else GeckoSessionSettings.USER_AGENT_MODE_MOBILE
+                GeckoSessionSettings.USER_AGENT_MODE,
+                if (shouldRequestDesktop) GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
+                else GeckoSessionSettings.USER_AGENT_MODE_MOBILE
             )
             callback?.onRequestDesktopStateChanged(shouldRequestDesktop)
         }
@@ -452,15 +461,19 @@ class GeckoWebViewProvider : IWebViewProvider {
                             geckoSession.loadUri(request.uri)
                             AllowOrDeny.DENY
                         }
-                        LocalizedContent.handleInternalContent(request.uri,
-                                this@GeckoWebView,
-                                context) -> {
+                        LocalizedContent.handleInternalContent(
+                            request.uri,
+                            this@GeckoWebView,
+                            context
+                        ) -> {
                             AllowOrDeny.DENY
                         }
                         !UrlUtils.isSupportedProtocol(uri.scheme) && callback != null &&
-                                IntentUtils.handleExternalUri(context,
-                                        this@GeckoWebView,
-                                        request.uri) -> {
+                                IntentUtils.handleExternalUri(
+                                    context,
+                                    this@GeckoWebView,
+                                    request.uri
+                                ) -> {
                             AllowOrDeny.DENY
                         }
                         else -> {
@@ -485,7 +498,6 @@ class GeckoWebViewProvider : IWebViewProvider {
                     ).apply {
                         return GeckoResult.fromValue(Base64.encodeToUriString(this))
                     }
-                    return GeckoResult.fromValue(null)
                 }
 
                 override fun onNewSession(
@@ -664,7 +676,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                 }
 
                 GeckoResult<Void>()
-            }, { _ ->
+            }, {
                 GeckoResult<Void>()
             })
         }

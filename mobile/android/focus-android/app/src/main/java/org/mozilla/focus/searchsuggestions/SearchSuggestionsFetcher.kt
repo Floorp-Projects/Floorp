@@ -6,18 +6,28 @@ package org.mozilla.focus.searchsuggestions
 
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.channels.Channel
-import kotlinx.coroutines.experimental.channels.consumeEach
-import mozilla.components.browser.search.suggestions.SearchSuggestionClient
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.search.suggestions.SearchSuggestionClient
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.mozilla.focus.utils.debounce
+import kotlin.coroutines.CoroutineContext
 
-class SearchSuggestionsFetcher(searchEngine: SearchEngine) {
+class SearchSuggestionsFetcher(searchEngine: SearchEngine) : CoroutineScope {
+    private val job = Job()
+    override val coroutineContext: CoroutineContext
+        get() = job + Dispatchers.Main
+    // TODO When should we cancel the job?
+
     data class SuggestionResult(val query: String, val suggestions: List<String>)
 
     private var client: SearchSuggestionClient? = null
@@ -33,10 +43,9 @@ class SearchSuggestionsFetcher(searchEngine: SearchEngine) {
 
     init {
         updateSearchEngine(searchEngine)
-        launch(CommonPool) {
-            fetchChannel
-                    .debounce(THROTTLE_AMOUNT)
-                    .consumeEach { getSuggestions(it) }
+        launch(IO) {
+            debounce(THROTTLE_AMOUNT, fetchChannel)
+                .consumeEach { getSuggestions(it) }
         }
     }
 
@@ -50,7 +59,7 @@ class SearchSuggestionsFetcher(searchEngine: SearchEngine) {
         client = if (canProvideSearchSuggestions) SearchSuggestionClient(searchEngine, { fetch(it) }) else null
     }
 
-    private suspend fun getSuggestions(query: String) {
+    private suspend fun getSuggestions(query: String) = coroutineScope {
         val suggestions = try {
             client?.getSuggestions(query) ?: listOf()
         } catch (ex: SearchSuggestionClient.ResponseParserException) {
@@ -59,7 +68,7 @@ class SearchSuggestionsFetcher(searchEngine: SearchEngine) {
             listOf<String>()
         }
 
-        launch(UI) {
+        launch(Main) {
             _results.value = SuggestionResult(query, suggestions)
         }
     }
@@ -75,6 +84,10 @@ class SearchSuggestionsFetcher(searchEngine: SearchEngine) {
                 .build()
 
         return httpClient.newCall(request).execute().body()?.string() ?: ""
+    }
+
+    fun cancelJobs() {
+        job.cancel()
     }
 
     companion object {

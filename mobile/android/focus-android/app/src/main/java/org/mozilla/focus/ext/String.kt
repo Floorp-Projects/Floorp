@@ -44,7 +44,7 @@ fun String.beautifyUrl(): String {
     val query = uri.query
     if (!query.isNullOrEmpty()) {
         beautifulUrl.append("?")
-        beautifulUrl.append(query!!.split("&").first())
+        beautifulUrl.append(query.split("&").first())
     }
 
     // We always append a fragment if there's one

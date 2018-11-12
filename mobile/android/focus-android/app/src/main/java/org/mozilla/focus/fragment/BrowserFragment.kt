@@ -51,6 +51,9 @@ import android.widget.TextView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.browser_display_toolbar.*
 import kotlinx.android.synthetic.main.fragment_browser.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.lib.crash.Crash
@@ -98,6 +101,7 @@ import org.mozilla.focus.widget.FloatingEraseButton
 import org.mozilla.focus.widget.FloatingSessionsButton
 import java.lang.ref.WeakReference
 import java.net.URI
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Fragment for displaying the browser UI.
@@ -105,7 +109,8 @@ import java.net.URI
 @Suppress("LargeClass", "TooManyFunctions")
 class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
     DownloadDialogFragment.DownloadDialogListener, View.OnLongClickListener,
-    BiometricAuthenticationDialogFragment.BiometricAuthenticationListener {
+    BiometricAuthenticationDialogFragment.BiometricAuthenticationListener,
+    CoroutineScope {
 
     private var pendingDownload: Download? = null
     private var backgroundTransitionGroup: TransitionDrawableGroup? = null
@@ -155,6 +160,10 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
     private var biometricController: BiometricAuthenticationHandler? = null
 
+    private val job = Job()
+    override val coroutineContext: CoroutineContext
+        get() = job + Dispatchers.Main
+
     // The url property is used for things like sharing the current URL. We could try to use the webview,
     // but sometimes it's null, and sometimes it returns a null URL. Sometimes it returns a data:
     // URL for error pages. The URL we show in the toolbar is (A) always correct and (B) what the
@@ -201,6 +210,11 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
             menuWeakReference!!.clear()
         }
+    }
+
+    override fun onStop() {
+        job.cancel()
+        super.onStop()
     }
 
     @Suppress("LongMethod", "ComplexMethod")

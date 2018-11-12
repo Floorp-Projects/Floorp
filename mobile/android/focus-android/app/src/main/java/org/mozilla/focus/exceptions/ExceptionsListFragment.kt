@@ -23,10 +23,13 @@ import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.TextView
 import kotlinx.android.synthetic.main.fragment_exceptions_domains.*
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.launch
-import org.mozilla.focus.IO
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import org.mozilla.focus.R
 import org.mozilla.focus.autocomplete.AutocompleteDomainFormatter
 import org.mozilla.focus.settings.BaseSettingsFragment
@@ -34,13 +37,17 @@ import org.mozilla.focus.settings.PrivacySecuritySettingsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import java.util.Collections
 import org.mozilla.focus.utils.ViewUtils
+import kotlin.coroutines.CoroutineContext
 
 typealias DomainFormatter = (String) -> String
 
 /**
  * Fragment showing settings UI listing all exception domains.
  */
-open class ExceptionsListFragment : Fragment() {
+open class ExceptionsListFragment : Fragment(), CoroutineScope {
+    val job = Job()
+    override val coroutineContext: CoroutineContext
+        get() = job + Dispatchers.Main
     /**
      * ItemTouchHelper for reordering items in the domain list.
      */
@@ -138,6 +145,11 @@ open class ExceptionsListFragment : Fragment() {
         }
     }
 
+    override fun onStop() {
+        job.cancel()
+        super.onStop()
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
         inflater?.inflate(R.menu.menu_exceptions_list, menu)
     }
@@ -173,7 +185,7 @@ open class ExceptionsListFragment : Fragment() {
         private val selectedDomains: MutableList<String> = mutableListOf()
 
         fun refresh(context: Context, body: (() -> Unit)? = null) {
-            launch(UI) {
+            this@ExceptionsListFragment.launch(Main) {
                 val updatedDomains = async { ExceptionDomains.load(context) }.await()
 
                 domains.clear()

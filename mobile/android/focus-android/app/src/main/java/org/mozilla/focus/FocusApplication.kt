@@ -7,11 +7,11 @@ package org.mozilla.focus
 
 import android.os.StrictMode
 import android.support.v7.preference.PreferenceManager
-import kotlinx.coroutines.experimental.CoroutineDispatcher
-import kotlinx.coroutines.experimental.asCoroutineDispatcher
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.runBlocking
-import kotlinx.coroutines.experimental.withTimeoutOrNull
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import mozilla.components.service.fretboard.Fretboard
 import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
 import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
@@ -33,17 +33,12 @@ import org.mozilla.focus.utils.StethoWrapper
 import org.mozilla.focus.web.CleanupSessionObserver
 import org.mozilla.focus.web.WebViewProvider
 import java.io.File
-import java.util.concurrent.Executors
-
-val IO: CoroutineDispatcher by lazy {
-    Executors.newCachedThreadPool().asCoroutineDispatcher()
-}
 
 class FocusApplication : LocaleAwareApplication() {
     lateinit var fretboard: Fretboard
 
     companion object {
-        private const val FRETBOARD_BLOCKING_NETWORK_READ_TIMEOUT = 10000
+        private const val FRETBOARD_BLOCKING_NETWORK_READ_TIMEOUT = 10000L
     }
 
     val components: Components by lazy { Components() }
@@ -88,7 +83,7 @@ class FocusApplication : LocaleAwareApplication() {
         }
     }
 
-    private suspend fun loadExperiments() {
+    private suspend fun loadExperiments() = coroutineScope {
         val experimentsFile = File(filesDir, EXPERIMENTS_JSON_FILENAME)
         val experimentSource = KintoExperimentSource(
                 EXPERIMENTS_BASE_URL, EXPERIMENTS_BUCKET_NAME, EXPERIMENTS_COLLECTION_NAME)

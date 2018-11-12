@@ -9,7 +9,8 @@ import android.view.View
 import android.widget.CompoundButton
 import android.widget.Switch
 import android.widget.TextView
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.launch
 
 import org.mozilla.focus.R
 import org.mozilla.focus.exceptions.ExceptionDomains
@@ -76,7 +77,7 @@ internal class BlockingItemViewHolder(itemView: View, private val fragment: Brow
     }
 
     private fun addUrlToExceptionsList(url: String) {
-        launch {
+        fragment.launch(IO) {
             val host = URI(url).host
             val duplicateURL = ExceptionDomains.load(fragment.requireContext()).contains(host)
 

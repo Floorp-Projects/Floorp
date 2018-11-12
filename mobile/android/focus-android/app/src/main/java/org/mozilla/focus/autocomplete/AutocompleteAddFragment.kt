@@ -4,9 +4,9 @@
 
 package org.mozilla.focus.autocomplete
 
-import android.support.v4.app.Fragment
 import android.content.Context
 import android.os.Bundle
+import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -14,19 +14,27 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_autocomplete_add_domain.*
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.CustomDomains
-import org.mozilla.focus.IO
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.ViewUtils
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Fragment showing settings UI to add custom autocomplete domains.
  */
-class AutocompleteAddFragment : Fragment() {
+class AutocompleteAddFragment : Fragment(), CoroutineScope {
+    private val job = Job()
+    override val coroutineContext: CoroutineContext
+        get() = job + Dispatchers.Main
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
@@ -48,8 +56,9 @@ class AutocompleteAddFragment : Fragment() {
     }
 
     override fun onPause() {
-        super.onPause()
+        job.cancel()
         ViewUtils.hideKeyboard(activity?.currentFocus)
+        super.onPause()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
@@ -71,7 +80,7 @@ class AutocompleteAddFragment : Fragment() {
                     else -> null
                 }
 
-                launch(UI) {
+                launch(Main) {
                     if (error != null) {
                         domainView.error = error
                     } else {

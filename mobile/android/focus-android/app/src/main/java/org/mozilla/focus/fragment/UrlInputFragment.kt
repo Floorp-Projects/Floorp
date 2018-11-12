@@ -26,7 +26,11 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import kotlinx.android.synthetic.main.fragment_urlinput.*
 import kotlinx.android.synthetic.main.fragment_urlinput.view.*
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.CustomDomains
 import mozilla.components.browser.domains.DomainAutoCompleteProvider
 import mozilla.components.browser.session.Session
@@ -48,15 +52,16 @@ import org.mozilla.focus.tips.Tip
 import org.mozilla.focus.tips.TipManager
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Features
+import org.mozilla.focus.utils.OneShotOnPreDrawListener
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
-import org.mozilla.focus.utils.OneShotOnPreDrawListener
 import org.mozilla.focus.viewmodel.MainViewModel
 import org.mozilla.focus.whatsnew.WhatsNew
 import java.util.Objects
+import kotlin.coroutines.CoroutineContext
 
 class FocusCrashException : Exception()
 
@@ -69,7 +74,8 @@ class FocusCrashException : Exception()
 class UrlInputFragment :
     LocaleAwareFragment(),
     View.OnClickListener,
-    SharedPreferences.OnSharedPreferenceChangeListener {
+    SharedPreferences.OnSharedPreferenceChangeListener,
+    CoroutineScope {
     companion object {
         @JvmField
         val FRAGMENT_TAG = "url_input"
@@ -137,6 +143,9 @@ class UrlInputFragment :
         }
     }
 
+    private val job = Job()
+    override val coroutineContext: CoroutineContext
+        get() = job + Dispatchers.Main
     private val autoCompleteProvider: DomainAutoCompleteProvider = DomainAutoCompleteProvider()
     private var displayedPopupMenu: HomeMenu? = null
 
@@ -197,6 +206,11 @@ class UrlInputFragment :
         StatusBarUtils.getStatusBarHeight(keyboardLinearLayout) {
             adjustViewToStatusBarHeight(it)
         }
+    }
+
+    override fun onPause() {
+        job.cancel()
+        super.onPause()
     }
 
     private fun updateTipsLabel() {
@@ -444,7 +458,7 @@ class UrlInputFragment :
 
     private fun addUrlToAutocomplete(url: String) {
         var duplicateURL = false
-        val job = launch {
+        val job = launch(IO) {
             duplicateURL = CustomDomains.load(requireContext()).contains(url)
 
             if (duplicateURL) return@launch
@@ -724,7 +738,7 @@ class UrlInputFragment :
 
     private fun openUrl(url: String, searchTerms: String?) {
         if (!searchTerms.isNullOrEmpty()) {
-            session?.searchTerms = searchTerms!!
+            session?.searchTerms = searchTerms
         }
 
         val fragmentManager = requireActivity().supportFragmentManager
@@ -747,7 +761,7 @@ class UrlInputFragment :
         } else {
             val session = Session(url, source = Session.Source.USER_ENTERED)
             if (!searchTerms.isNullOrEmpty()) {
-                session.searchTerms = searchTerms!!
+                session.searchTerms = searchTerms
             }
 
             requireComponents.sessionManager.add(session, selected = true)

@@ -9,15 +9,23 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.fragment_autocomplete_customdomains.*
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.CustomDomains
 import org.mozilla.focus.R
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import kotlin.coroutines.CoroutineContext
 
-class AutocompleteRemoveFragment : AutocompleteListFragment() {
+class AutocompleteRemoveFragment : AutocompleteListFragment(), CoroutineScope {
+    private val job = Job()
+    override val coroutineContext: CoroutineContext
+        get() = job + Dispatchers.Main
+
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
         inflater?.inflate(R.menu.menu_autocomplete_remove, menu)
     }
@@ -33,7 +41,7 @@ class AutocompleteRemoveFragment : AutocompleteListFragment() {
     private fun removeSelectedDomains(context: Context) {
         val domains = (domainList.adapter as DomainListAdapter).selection()
         if (domains.isNotEmpty()) {
-            launch(UI) {
+            launch(Main) {
                 async {
                     CustomDomains.remove(context, domains)
 
@@ -53,5 +61,10 @@ class AutocompleteRemoveFragment : AutocompleteListFragment() {
         val updater = activity as BaseSettingsFragment.ActionBarUpdater
         updater.updateTitle(R.string.preference_autocomplete_title_remove)
         updater.updateIcon(R.drawable.ic_back)
+    }
+
+    override fun onPause() {
+        job.cancel()
+        super.onPause()
     }
 }

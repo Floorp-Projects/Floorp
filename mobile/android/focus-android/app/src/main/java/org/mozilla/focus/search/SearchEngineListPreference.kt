@@ -15,14 +15,21 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import android.widget.RadioGroup
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngine
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.utils.Settings
+import kotlin.coroutines.CoroutineContext
 
-abstract class SearchEngineListPreference : Preference {
+abstract class SearchEngineListPreference : Preference, CoroutineScope {
+    private val job = Job()
+    override val coroutineContext: CoroutineContext
+        get() = job + Dispatchers.Main
     protected var searchEngines: List<SearchEngine> = emptyList()
     protected var searchEngineGroup: RadioGroup? = null
 
@@ -47,10 +54,15 @@ abstract class SearchEngineListPreference : Preference {
         refreshSearchEngineViews(context)
     }
 
+    override fun onDetached() {
+        job.cancel()
+        super.onDetached()
+    }
+
     protected abstract fun updateDefaultItem(defaultButton: CompoundButton)
 
     fun refetchSearchEngines() {
-        launch (UI) {
+        launch(Main) {
             searchEngines = context.components.searchEngineManager
                     .load(this@SearchEngineListPreference.context)
                     .await()

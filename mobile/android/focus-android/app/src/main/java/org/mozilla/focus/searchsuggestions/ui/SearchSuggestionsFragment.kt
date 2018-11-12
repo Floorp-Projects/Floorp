@@ -25,9 +25,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import kotlinx.android.synthetic.main.fragment_search_suggestions.*
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
@@ -35,8 +39,13 @@ import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 import org.mozilla.focus.searchsuggestions.State
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
+import kotlin.coroutines.CoroutineContext
 
-class SearchSuggestionsFragment : Fragment() {
+class SearchSuggestionsFragment : Fragment(), CoroutineScope {
+    private val job = Job()
+    override val coroutineContext: CoroutineContext
+        get() = job + Dispatchers.Main
+
     lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,6 +60,11 @@ class SearchSuggestionsFragment : Fragment() {
         searchSuggestionsViewModel.refresh()
     }
 
+    override fun onPause() {
+        job.cancel()
+        super.onPause()
+    }
+
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
@@ -60,7 +74,9 @@ class SearchSuggestionsFragment : Fragment() {
         })
 
         searchSuggestionsViewModel.suggestions.observe(this, Observer { suggestions ->
-            suggestions?.apply { (suggestionList.adapter as SuggestionsAdapter).refresh(this) }
+            launch(IO) {
+                suggestions?.apply { (suggestionList.adapter as SuggestionsAdapter).refresh(this) }
+            }
         })
 
         searchSuggestionsViewModel.state.observe(this, Observer { state ->
@@ -177,11 +193,11 @@ class SearchSuggestionsFragment : Fragment() {
 
         private var suggestions: List<SpannableStringBuilder> = listOf()
 
-        fun refresh(suggestions: List<SpannableStringBuilder>) {
-            launch(CommonPool) {
+        suspend fun refresh(suggestions: List<SpannableStringBuilder>) = coroutineScope {
+            launch(IO) {
                 val result = DiffUtil.calculateDiff(DiffCallback(this@SuggestionsAdapter.suggestions, suggestions))
 
-                launch(UI) {
+                launch(Main) {
                     result.dispatchUpdatesTo(this@SuggestionsAdapter)
                     this@SuggestionsAdapter.suggestions = suggestions
                 }

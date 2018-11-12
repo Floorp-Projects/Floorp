@@ -9,21 +9,29 @@ import android.os.Bundle
 import android.support.v7.preference.PreferenceFragmentCompat
 import android.support.v7.preference.SwitchPreferenceCompat
 import com.jakewharton.processphoenix.ProcessPhoenix
-import kotlinx.coroutines.experimental.launch
-import org.mozilla.focus.IO
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import org.mozilla.focus.R
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.app
 import org.mozilla.focus.utils.geckoEngineExperimentDescriptor
 import org.mozilla.focus.web.Config
 import org.mozilla.focus.web.ENGINE_PREF_STRING_KEY
+import kotlin.coroutines.CoroutineContext
 
 class ExperimentsSettingsFragment : PreferenceFragmentCompat(),
-        SharedPreferences.OnSharedPreferenceChangeListener {
+        SharedPreferences.OnSharedPreferenceChangeListener,
+        CoroutineScope {
     companion object {
         const val FRAGMENT_TAG = "ExperimentSettings"
     }
 
+    private val job = Job()
+    override val coroutineContext: CoroutineContext
+        get() = job + Dispatchers.Main
     private var enginePref: SwitchPreferenceCompat? = null
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -38,8 +46,9 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(),
     }
 
     override fun onPause() {
-        super.onPause()
         preferenceScreen?.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(this)
+        job.cancel()
+        super.onPause()
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
