@@ -30,8 +30,13 @@ public:
   void RemoveID(uint32_t aID) { mIDToAccessibleMap.Remove(aID); }
   AccessibleWrap* GetAccessibleByID(int32_t aID) const;
 
+  DocAccessibleWrap* GetTopLevelContentDoc(AccessibleWrap* aAccessible);
+
+  void CacheFocusPath(AccessibleWrap* aAccessible);
+
   enum {
-    eBatch_Viewport = 0
+    eBatch_Viewport = 0,
+    eBatch_FocusPath = 1,
   };
 
 protected:

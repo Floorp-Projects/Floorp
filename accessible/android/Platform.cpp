@@ -221,6 +221,9 @@ a11y::ProxyBatch(ProxyAccessible* aDocument,
     case DocAccessibleWrap::eBatch_Viewport:
       sessionAcc->ReplaceViewportCache(accWraps, aData);
       break;
+    case DocAccessibleWrap::eBatch_FocusPath:
+      // XXX: Next patch
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown batch type.");
       break;
