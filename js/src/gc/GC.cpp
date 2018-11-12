@@ -2649,7 +2649,7 @@ Zone::prepareForCompacting()
 void
 GCRuntime::sweepTypesAfterCompacting(Zone* zone)
 {
-    zone->beginSweepTypes(releaseObservedTypes && !zone->isPreservingCode());
+    zone->beginSweepTypes();
 
     AutoClearTypeInferenceStateOnOOM oom(zone);
 
@@ -3966,6 +3966,10 @@ GCRuntime::shouldReleaseObservedTypes()
 {
     bool releaseTypes = false;
 
+    if (cleanUpEverything) {
+        releaseTypes = true;
+    }
+
 #ifdef JS_GC_ZEAL
     if (zealModeBits != 0) {
         releaseTypes = true;
@@ -4555,12 +4559,12 @@ GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOu
 }
 
 static void
-DiscardJITCodeForGC(JSRuntime* rt)
+DiscardJITCodeForGC(JSRuntime* rt, bool releaseTypes)
 {
     js::CancelOffThreadIonCompile(rt, JS::Zone::Mark);
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
         gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::MARK_DISCARD_CODE);
-        zone->discardJitCode(rt->defaultFreeOp());
+        zone->discardJitCode(rt->defaultFreeOp(), /* discardBaselineCode = */ true, releaseTypes);
     }
 }
 
@@ -4667,7 +4671,7 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoGCSession& session)
 
         // Discard JIT code. For incremental collections, the sweep phase will
         // also discard JIT code.
-        DiscardJITCodeForGC(rt);
+        DiscardJITCodeForGC(rt, shouldReleaseObservedTypes());
 
         /*
          * Relazify functions after discarding JIT code (we can't relazify
@@ -5919,7 +5923,7 @@ GCRuntime::sweepJitDataOnMainThread(FreeOp* fop)
         gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP_TYPES);
         gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::SWEEP_TYPES_BEGIN);
         for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
-            zone->beginSweepTypes(releaseObservedTypes && !zone->isPreservingCode());
+            zone->beginSweepTypes();
         }
     }
 }
@@ -6200,8 +6204,6 @@ GCRuntime::beginSweepPhase(JS::gcreason::Reason reason, AutoGCSession& session)
         reason != JS::gcreason::DESTROY_RUNTIME &&
         !gcTracer.traceEnabled() &&
         CanUseExtraThreads();
-
-    releaseObservedTypes = shouldReleaseObservedTypes();
 
     AssertNoWrappersInGrayList(rt);
     DropStringWrappers(rt);
