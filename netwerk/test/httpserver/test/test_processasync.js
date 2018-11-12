@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+
 /*
  * Tests for correct behavior of asynchronous responses.
  */
@@ -14,8 +15,7 @@ XPCOMUtils.defineLazyGetter(this, "PREPATH", function() {
 
 var srv;
 
-function run_test()
-{
+function run_test() {
   srv = createServer();
   for (var path in handlers)
     srv.registerPathHandler(path, handlers[path]);
@@ -25,7 +25,7 @@ function run_test()
 }
 
 
-/***************
+/** *************
  * BEGIN TESTS *
  ***************/
 
@@ -37,23 +37,19 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
     new Test(PREPATH + "/handleAsync2", init_handleAsync2, start_handleAsync2,
              stop_handleAsync2),
     new Test(PREPATH + "/handleAsyncOrdering", null, null,
-             stop_handleAsyncOrdering)
+             stop_handleAsyncOrdering),
   ];
 });
 
 var handlers = {};
 
-function handleSync(request, response)
-{
+function handleSync(request, response) {
   response.setStatusLine(request.httpVersion, 500, "handleSync fail");
 
-  try
-  {
+  try {
     response.finish();
     do_throw("finish called on sync response");
-  }
-  catch (e)
-  {
+  } catch (e) {
     isException(e, Cr.NS_ERROR_UNEXPECTED);
   }
 
@@ -61,14 +57,12 @@ function handleSync(request, response)
 }
 handlers["/handleSync"] = handleSync;
 
-function start_handleSync(ch, cx)
-{
+function start_handleSync(ch, cx) {
   Assert.equal(ch.responseStatus, 200);
   Assert.equal(ch.responseStatusText, "handleSync pass");
 }
 
-function handleAsync1(request, response)
-{
+function handleAsync1(request, response) {
   response.setStatusLine(request.httpVersion, 500, "Old status line!");
   response.setHeader("X-Foo", "old value", false);
 
@@ -79,126 +73,94 @@ function handleAsync1(request, response)
 
   response.finish();
 
-  try
-  {
+  try {
     response.setStatusLine(request.httpVersion, 500, "Too late!");
     do_throw("late setStatusLine didn't throw");
-  }
-  catch (e)
-  {
+  } catch (e) {
     isException(e, Cr.NS_ERROR_NOT_AVAILABLE);
   }
 
-  try
-  {
+  try {
     response.setHeader("X-Foo", "late value", false);
     do_throw("late setHeader didn't throw");
-  }
-  catch (e)
-  {
+  } catch (e) {
     isException(e, Cr.NS_ERROR_NOT_AVAILABLE);
   }
 
-  try
-  {
+  try {
     response.bodyOutputStream;
     do_throw("late bodyOutputStream get didn't throw");
-  }
-  catch (e)
-  {
+  } catch (e) {
     isException(e, Cr.NS_ERROR_NOT_AVAILABLE);
   }
 
-  try
-  {
+  try {
     response.write("fugly");
     do_throw("late write() didn't throw");
-  }
-  catch (e)
-  {
+  } catch (e) {
     isException(e, Cr.NS_ERROR_NOT_AVAILABLE);
   }
 }
 handlers["/handleAsync1"] = handleAsync1;
 
-function start_handleAsync1(ch, cx)
-{
+function start_handleAsync1(ch, cx) {
   Assert.equal(ch.responseStatus, 200);
   Assert.equal(ch.responseStatusText, "New status line!");
   Assert.equal(ch.getResponseHeader("X-Foo"), "new value");
 }
 
-function stop_handleAsync1(ch, cx, status, data)
-{
+function stop_handleAsync1(ch, cx, status, data) {
   Assert.equal(data.length, 0);
 }
 
 const startToHeaderDelay = 500;
 const startToFinishedDelay = 750;
 
-function handleAsync2(request, response)
-{
+function handleAsync2(request, response) {
   response.processAsync();
 
   response.setStatusLine(request.httpVersion, 200, "Status line");
   response.setHeader("X-Custom-Header", "value", false);
 
-  callLater(startToHeaderDelay, function()
-  {
-    var body = "BO";
-    response.bodyOutputStream.write(body, body.length);
+  callLater(startToHeaderDelay, function() {
+    var preBody = "BO";
+    response.bodyOutputStream.write(preBody, preBody.length);
 
-    try
-    {
+    try {
       response.setStatusLine(request.httpVersion, 500, "after body write");
       do_throw("setStatusLine succeeded");
-    }
-    catch (e)
-    {
+    } catch (e) {
       isException(e, Cr.NS_ERROR_NOT_AVAILABLE);
     }
 
-    try
-    {
+    try {
       response.setHeader("X-Custom-Header", "new 1", false);
-    }
-    catch (e)
-    {
+    } catch (e) {
       isException(e, Cr.NS_ERROR_NOT_AVAILABLE);
     }
 
-    callLater(startToFinishedDelay - startToHeaderDelay, function()
-    {
-      var body = "DY";
-      response.bodyOutputStream.write(body, body.length);
+    callLater(startToFinishedDelay - startToHeaderDelay, function() {
+      var postBody = "DY";
+      response.bodyOutputStream.write(postBody, postBody.length);
 
       response.finish();
       response.finish(); // idempotency
 
-      try
-      {
+      try {
         response.setStatusLine(request.httpVersion, 500, "after finish");
-      }
-      catch (e)
-      {
+      } catch (e) {
         isException(e, Cr.NS_ERROR_NOT_AVAILABLE);
       }
 
-      try
-      {
+      try {
         response.setHeader("X-Custom-Header", "new 2", false);
-      }
-      catch (e)
-      {
+      } catch (e) {
         isException(e, Cr.NS_ERROR_NOT_AVAILABLE);
       }
 
-      try
-      {
+      try {
         response.write("EVIL");
-      }
-      catch (e)
-      {
+      } catch (e) {
         isException(e, Cr.NS_ERROR_NOT_AVAILABLE);
       }
     });
@@ -208,14 +170,12 @@ handlers["/handleAsync2"] = handleAsync2;
 
 var startTime_handleAsync2;
 
-function init_handleAsync2(ch)
-{
+function init_handleAsync2(ch) {
   var now = startTime_handleAsync2 = Date.now();
   dumpn("*** init_HandleAsync2: start time " + now);
 }
 
-function start_handleAsync2(ch, cx)
-{
+function start_handleAsync2(ch, cx) {
   var now = Date.now();
   dumpn("*** start_handleAsync2: onStartRequest time " + now + ", " +
         (now - startTime_handleAsync2) + "ms after start time");
@@ -226,8 +186,7 @@ function start_handleAsync2(ch, cx)
   Assert.equal(ch.getResponseHeader("X-Custom-Header"), "value");
 }
 
-function stop_handleAsync2(ch, cx, status, data)
-{
+function stop_handleAsync2(ch, cx, status, data) {
   var now = Date.now();
   dumpn("*** stop_handleAsync2: onStopRequest time " + now + ", " +
         (now - startTime_handleAsync2) + "ms after header time");
@@ -243,8 +202,7 @@ function stop_handleAsync2(ch, cx, status, data)
  * but certainly deadlock, since we're trying to read/write all this data in one
  * process on a single thread.
  */
-function handleAsyncOrdering(request, response)
-{
+function handleAsyncOrdering(request, response) {
   var out = new BinaryOutputStream(response.bodyOutputStream);
 
   var data = [];
@@ -254,34 +212,25 @@ function handleAsyncOrdering(request, response)
 
   var writeData =
     {
-      run: function()
-      {
-        if (count-- === 0)
-        {
+      run() {
+        if (count-- === 0) {
           response.finish();
           return;
         }
 
-        try
-        {
+        try {
           out.writeByteArray(data, data.length);
           step();
-        }
-        catch (e)
-        {
-          try
-          {
+        } catch (e) {
+          try {
             do_throw("error writing data: " + e);
-          }
-          finally
-          {
+          } finally {
             response.finish();
           }
         }
-      }
+      },
     };
-  function step()
-  {
+  function step() {
     // Use gThreadManager here because it's expedient, *not* because it's
     // intended for public use!  If you do this in client code, expect me to
     // knowingly break your code by changing the variable name.  :-P
@@ -292,11 +241,9 @@ function handleAsyncOrdering(request, response)
 }
 handlers["/handleAsyncOrdering"] = handleAsyncOrdering;
 
-function stop_handleAsyncOrdering(ch, cx, status, data)
-{
+function stop_handleAsyncOrdering(ch, cx, status, data) {
   Assert.equal(data.length, 20 * 65536);
-  data.forEach(function(v, index)
-  {
+  data.forEach(function(v, index) {
     if (v !== 0)
       do_throw("value " + v + " at index " + index + " should be zero");
   });

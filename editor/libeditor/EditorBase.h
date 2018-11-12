@@ -1944,18 +1944,6 @@ protected: // Shouldn't be used by friend classes
    */
   nsresult InitializeSelection(dom::EventTarget* aFocusEventTarget);
 
-  /**
-   * Used to insert content from a data transfer into the editable area.
-   * This is called for each item in the data transfer, with the index of
-   * each item passed as aIndex.
-   */
-  virtual nsresult InsertFromDataTransfer(dom::DataTransfer* aDataTransfer,
-                                          int32_t aIndex,
-                                          nsIDocument* aSourceDoc,
-                                          nsINode* aDestinationNode,
-                                          int32_t aDestOffset,
-                                          bool aDoDeleteSelection) = 0;
-
   enum NotificationForEditorObservers
   {
     eNotifyEditorObserversOfEnd,

@@ -22,8 +22,7 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
 
 var srv;
 
-function run_test()
-{
+function run_test() {
   srv = createServer();
 
   srv.registerErrorHandler(404, throwsException);
@@ -37,8 +36,7 @@ function run_test()
 
 // TEST DATA
 
-function checkStatusLine(channel, httpMaxVer, httpMinVer, httpCode, statusText)
-{
+function checkStatusLine(channel, httpMaxVer, httpMinVer, httpCode, statusText) {
   Assert.equal(channel.responseStatus, httpCode);
   Assert.equal(channel.responseStatusText, statusText);
 
@@ -48,28 +46,23 @@ function checkStatusLine(channel, httpMaxVer, httpMinVer, httpCode, statusText)
   Assert.equal(respMin.value, httpMinVer);
 }
 
-function start_throws_exception(ch, cx)
-{
+function start_throws_exception(ch, cx) {
   checkStatusLine(ch, 1, 1, 500, "Internal Server Error");
 }
 
-function start_nonexistent_404_fails_so_400(ch, cx)
-{
+function start_nonexistent_404_fails_so_400(ch, cx) {
   checkStatusLine(ch, 1, 1, 400, "Bad Request");
 }
 
-function start_multiple_exceptions_500(ch, cx)
-{
+function start_multiple_exceptions_500(ch, cx) {
   checkStatusLine(ch, 1, 1, 500, "Internal Server Error");
 }
 
-function succeeded(ch, cx, status, data)
-{
+function succeeded(ch, cx, status, data) {
   Assert.ok(Components.isSuccessCode(status));
 }
 
-function register400Handler(ch)
-{
+function register400Handler(ch) {
   srv.registerErrorHandler(400, throwsException);
 }
 
@@ -77,8 +70,7 @@ function register400Handler(ch)
 // PATH HANDLERS
 
 // /throws/exception (and also a 404 and 400 error handler)
-function throwsException(metadata, response)
-{
+function throwsException(metadata, response) {
   throw "this shouldn't cause an exit...";
-  do_throw("Not reached!");
+  do_throw("Not reached!"); // eslint-disable-line no-unreachable
 }

@@ -34,7 +34,9 @@ const rootSpecPrototype = {
     },
 
     listTabs: {
-      request: {},
+      request: {
+        favicons: Option(0, "boolean"),
+      },
       response: RetVal("json"),
     },
 

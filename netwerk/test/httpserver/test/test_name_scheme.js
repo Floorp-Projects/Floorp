@@ -41,13 +41,12 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
     new Test(PREFIX + "/end-caret^/normal-file.txt",
             null, start_normal_file_txt, null),
     new Test(PREFIX + "/end-caret^/folder^/file.txt",
-            null, start_folder__file_txt, null)
+            null, start_folder__file_txt, null),
     ];
 });
 
 
-function run_test()
-{
+function run_test() {
   srv = createServer();
 
   // make sure underscores work in directories "mounted" in directories with
@@ -65,26 +64,22 @@ function run_test()
 
 // TEST DATA
 
-function start_bar_html_(ch, cx)
-{
+function start_bar_html_(ch, cx) {
   Assert.equal(ch.responseStatus, 200);
 
   Assert.equal(ch.getResponseHeader("Content-Type"), "text/html");
 }
 
-function start_foo_html_(ch, cx)
-{
+function start_foo_html_(ch, cx) {
   Assert.equal(ch.responseStatus, 404);
 }
 
-function start_normal_file_txt(ch, cx)
-{
+function start_normal_file_txt(ch, cx) {
   Assert.equal(ch.responseStatus, 200);
   Assert.equal(ch.getResponseHeader("Content-Type"), "text/plain");
 }
 
-function start_folder__file_txt(ch, cx)
-{
+function start_folder__file_txt(ch, cx) {
   Assert.equal(ch.responseStatus, 200);
   Assert.equal(ch.getResponseHeader("Content-Type"), "text/plain");
 }

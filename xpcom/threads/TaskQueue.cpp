@@ -194,7 +194,7 @@ TaskQueue::IsEmpty()
 }
 
 bool
-TaskQueue::IsCurrentThreadIn()
+TaskQueue::IsCurrentThreadIn() const
 {
   bool in = mRunningThread == GetCurrentPhysicalThread();
   return in;

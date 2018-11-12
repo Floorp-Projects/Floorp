@@ -381,17 +381,52 @@ protected: // Shouldn't be used by friend classes
    */
   nsresult InsertLineBreakAsSubAction();
 
+  /**
+   * PrepareInsertContent() is a helper method of InsertTextAt(),
+   * HTMLEditor::DoInsertHTMLWithContext().  They insert content coming from
+   * clipboard or drag and drop.  Before that, they may need to remove selected
+   * contents and adjust selection.  This does them instead.
+   *
+   * @param aPointToInsert      Point to insert.  Must be set.  Callers
+   *                            shouldn't use this instance after calling this
+   *                            method because this method may cause changing
+   *                            the DOM tree and Selection.
+   * @param aDoDeleteSelection  true if selected content should be removed.
+   */
+  MOZ_CAN_RUN_SCRIPT
+  nsresult PrepareToInsertContent(const EditorDOMPoint& aPointToInsert,
+                                  bool aDoDeleteSelection);
+
+  /**
+   * InsertTextAt() inserts aStringToInsert at aPointToInsert.
+   *
+   * @param aStringToInsert     The string which you want to insert.
+   * @param aPointToInsert      The insertion point.
+   * @param aDoDeleteSelection  true if you want this to delete selected
+   *                            content.  Otherwise, false.
+   */
+  MOZ_CAN_RUN_SCRIPT
   nsresult InsertTextAt(const nsAString& aStringToInsert,
-                        nsINode* aDestinationNode,
-                        int32_t aDestOffset,
+                        const EditorDOMPoint& aPointToInsert,
                         bool aDoDeleteSelection);
 
+  /**
+   * InsertFromDataTransfer() inserts the data in aDataTransfer at aIndex.
+   * This is intended to handle "drop" event.
+   *
+   * @param aDataTransfer       Dropped data transfer.
+   * @param aIndex              Index of the data which should be inserted.
+   * @param aSourceDoc          The document which the source comes from.
+   * @param aDroppedAt          The dropped position.
+   * @param aDoDeleteSelection  true if this should delete selected content.
+   *                            false otherwise.
+   */
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult InsertFromDataTransfer(dom::DataTransfer* aDataTransfer,
                                           int32_t aIndex,
                                           nsIDocument* aSourceDoc,
-                                          nsINode* aDestinationNode,
-                                          int32_t aDestOffset,
-                                          bool aDoDeleteSelection) override;
+                                          const EditorDOMPoint& aDroppedAt,
+                                          bool aDoDeleteSelection);
 
   /**
    * InsertWithQuotationsAsSubAction() inserts aQuotedText with appending ">"
