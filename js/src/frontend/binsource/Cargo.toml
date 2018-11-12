@@ -11,3 +11,6 @@ itertools = "^0.7.6"
 log = "0.4"
 yaml-rust = "^0.4"
 webidl = "^0.8"
+
+[[bin]]
+name = "binsource"
