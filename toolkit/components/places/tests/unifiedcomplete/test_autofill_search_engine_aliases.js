@@ -24,6 +24,14 @@ add_task(async function init() {
 
 // Searching for @autofi should autofill to @autofilltest.
 add_task(async function basic() {
+  // Add a history visit that should normally match but for the fact that the
+  // search uses an @ alias.  When an @ alias is autofilled, there should be no
+  // other matches except the autofill heuristic match.
+  await PlacesTestUtils.addVisits({
+    uri: "http://example.com/",
+    title: TEST_ENGINE_ALIAS,
+  });
+
   let autofilledValue = TEST_ENGINE_ALIAS + " ";
   let completedURL = PlacesUtils.mozActionURI("searchengine", {
     engineName: TEST_ENGINE_NAME,
@@ -49,6 +57,14 @@ add_task(async function basic() {
 // Searching for @AUTOFI should autofill to @AUTOFIlltest, preserving the case
 // in the search string.
 add_task(async function preserveCase() {
+  // Add a history visit that should normally match but for the fact that the
+  // search uses an @ alias.  When an @ alias is autofilled, there should be no
+  // other matches except the autofill heuristic match.
+  await PlacesTestUtils.addVisits({
+    uri: "http://example.com/",
+    title: TEST_ENGINE_ALIAS,
+  });
+
   let search =
     TEST_ENGINE_ALIAS.toUpperCase()
     .substr(0, Math.round(TEST_ENGINE_ALIAS.length / 2));
