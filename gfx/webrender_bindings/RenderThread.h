@@ -72,6 +72,19 @@ protected:
   wr::WrShaders* mShaders;
 };
 
+class WebRenderPipelineInfo {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderPipelineInfo);
+public:
+  explicit WebRenderPipelineInfo(wr::WrPipelineInfo aPipelineInfo);
+
+  const wr::WrPipelineInfo& Raw() { return mPipelineInfo; }
+
+protected:
+  ~WebRenderPipelineInfo();
+
+  const wr::WrPipelineInfo mPipelineInfo;
+};
+
 /// Base class for an event that can be scheduled to run on the render thread.
 ///
 /// The event can be passed through the same channels as regular WebRender messages

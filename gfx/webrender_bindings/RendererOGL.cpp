@@ -195,6 +195,12 @@ RendererOGL::CheckGraphicsResetStatus()
 }
 
 void
+RendererOGL::WaitForGPU()
+{
+  mCompositor->WaitForGPU();
+}
+
+void
 RendererOGL::Pause()
 {
   mCompositor->Pause();
@@ -229,10 +235,11 @@ RendererOGL::SetFrameStartTime(const TimeStamp& aTime)
   mFrameStartTime = aTime;
 }
 
-wr::WrPipelineInfo
+RefPtr<WebRenderPipelineInfo>
 RendererOGL::FlushPipelineInfo()
 {
-  return wr_renderer_flush_pipeline_info(mRenderer);
+  auto info = wr_renderer_flush_pipeline_info(mRenderer);
+  return new WebRenderPipelineInfo(info);
 }
 
 RenderTextureHost*

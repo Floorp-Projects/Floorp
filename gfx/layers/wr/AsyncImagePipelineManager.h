@@ -56,7 +56,7 @@ public:
   // This is called from the Renderer thread to notify this class about the
   // pipelines in the most recently completed render. A copy of the update
   // information is put into mUpdatesQueue.
-  void NotifyPipelinesUpdated(wr::WrPipelineInfo aInfo, bool aRender);
+  void NotifyPipelinesUpdated(const wr::WrPipelineInfo& aInfo, bool aRender);
 
   // This is run on the compositor thread to process mUpdatesQueue. We make
   // this a public entry point because we need to invoke it from other places.

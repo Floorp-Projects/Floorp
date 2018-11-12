@@ -60,7 +60,7 @@ public:
   bool UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize, const Maybe<Range<uint8_t>>& aReadbackBuffer, bool aHadSlowFrame);
 
   /// This can be called on the render thread only.
-  bool RenderToTarget(gfx::DrawTarget& aTarget);
+  void WaitForGPU();
 
   /// This can be called on the render thread only.
   void SetProfilerEnabled(bool aEnabled);
@@ -91,7 +91,7 @@ public:
 
   layers::CompositorBridgeParent* GetCompositorBridge() { return mBridge; }
 
-  wr::WrPipelineInfo FlushPipelineInfo();
+  RefPtr<WebRenderPipelineInfo> FlushPipelineInfo();
 
   RenderTextureHost* GetRenderTexture(wr::WrExternalImageId aExternalImageId);
 
