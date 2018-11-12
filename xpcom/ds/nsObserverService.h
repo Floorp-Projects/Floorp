@@ -44,6 +44,8 @@ public:
 private:
   ~nsObserverService(void);
   void RegisterReporter();
+  nsresult EnsureValidCall() const;
+  nsresult FilterHttpOnTopics(const char* aTopic);
 
   static const size_t kSuspectReferentCount = 100;
   bool mShuttingDown;
