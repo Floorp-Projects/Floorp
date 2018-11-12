@@ -167,12 +167,6 @@ IsMediaElementAllowedToPlay(const HTMLMediaElement& aElement)
     return true;
   }
 
-  if (!aElement.HasAudio() &&
-      aElement.ReadyState() >= HTMLMediaElement_Binding::HAVE_METADATA) {
-    AUTOPLAY_LOG("Allow media without audio track %p to autoplay\n", &aElement);
-    return true;
-  }
-
   return false;
 }
 
