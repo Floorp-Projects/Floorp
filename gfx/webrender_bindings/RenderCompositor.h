@@ -37,6 +37,7 @@ public:
 
   virtual bool BeginFrame() = 0;
   virtual void EndFrame() = 0;
+  virtual void WaitForGPU() = 0;
   virtual void Pause() = 0;
   virtual bool Resume() = 0;
 

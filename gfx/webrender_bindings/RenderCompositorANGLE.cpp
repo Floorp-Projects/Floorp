@@ -341,7 +341,11 @@ RenderCompositorANGLE::EndFrame()
   if (mCompositionDevice) {
     mCompositionDevice->Commit();
   }
+}
 
+void
+RenderCompositorANGLE::WaitForGPU()
+{
   // Note: this waits on the query we inserted in the previous frame,
   // not the one we just inserted now. Example:
   //   Insert query #1
@@ -473,14 +477,31 @@ RenderCompositorANGLE::GetBufferSize()
   return mBufferSize.ref();
 }
 
-void
-RenderCompositorANGLE::InsertPresentWaitQuery()
+RefPtr<ID3D11Query>
+RenderCompositorANGLE::GetD3D11Query()
 {
   RefPtr<ID3D11Query> query;
+
+  if (mRecycledQuery) {
+    query = mRecycledQuery.forget();
+    return query;
+  }
+
   CD3D11_QUERY_DESC desc(D3D11_QUERY_EVENT);
   HRESULT hr = mDevice->CreateQuery(&desc, getter_AddRefs(query));
   if (FAILED(hr) || !query) {
     gfxWarning() << "Could not create D3D11_QUERY_EVENT: " << gfx::hexa(hr);
+    return nullptr;
+  }
+  return query;
+}
+
+void
+RenderCompositorANGLE::InsertPresentWaitQuery()
+{
+  RefPtr<ID3D11Query> query;
+  query = GetD3D11Query();
+  if (!query) {
     return;
   }
 
@@ -498,6 +519,8 @@ RenderCompositorANGLE::WaitForPreviousPresentQuery()
     BOOL result;
     layers::WaitForGPUQuery(mDevice, mCtx, query, &result);
 
+    // Recycle query for later use.
+    mRecycledQuery = query;
     mWaitForPresentQueries.pop();
   }
 }
