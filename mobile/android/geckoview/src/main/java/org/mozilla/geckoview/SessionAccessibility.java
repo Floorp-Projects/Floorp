@@ -116,6 +116,7 @@ public class SessionAccessibility {
                         getNodeFromGecko(virtualDescendantId) : getNodeFromCache(virtualDescendantId);
                 if (node != null) {
                     node.setAccessibilityFocused(mAccessibilityFocusedNode == virtualDescendantId);
+                    node.setFocused(mFocusedNode == virtualDescendantId);
                 }
             } else {
                 node = AccessibilityNodeInfo.obtain(mView, virtualDescendantId);
@@ -237,10 +238,18 @@ public class SessionAccessibility {
 
         @Override
         public AccessibilityNodeInfo findFocus(int focus) {
-          if (focus == AccessibilityNodeInfo.FOCUS_ACCESSIBILITY &&
-              mAccessibilityFocusedNode != 0) {
-            return createAccessibilityNodeInfo(mAccessibilityFocusedNode);
-          }
+            switch (focus) {
+                case AccessibilityNodeInfo.FOCUS_ACCESSIBILITY:
+                    if (mAccessibilityFocusedNode != 0) {
+                        return createAccessibilityNodeInfo(mAccessibilityFocusedNode);
+                    }
+                    break;
+                case AccessibilityNodeInfo.FOCUS_INPUT:
+                    if (mFocusedNode != 0) {
+                        return createAccessibilityNodeInfo(mFocusedNode);
+                    }
+                    break;
+            }
 
           return super.findFocus(focus);
         }
@@ -316,13 +325,11 @@ public class SessionAccessibility {
 
 
             // Set boolean properties
-            node.setAccessibilityFocused((flags & FLAG_ACCESSIBILITY_FOCUSED) != 0);
             node.setCheckable((flags & FLAG_CHECKABLE) != 0);
             node.setChecked((flags & FLAG_CHECKED) != 0);
             node.setClickable((flags & FLAG_CLICKABLE) != 0);
             node.setEnabled((flags & FLAG_ENABLED) != 0);
             node.setFocusable((flags & FLAG_FOCUSABLE) != 0);
-            node.setFocused((flags & FLAG_FOCUSED) != 0);
             node.setLongClickable((flags & FLAG_LONG_CLICKABLE) != 0);
             node.setPassword((flags & FLAG_PASSWORD) != 0);
             node.setScrollable((flags & FLAG_SCROLLABLE) != 0);
@@ -458,6 +465,8 @@ public class SessionAccessibility {
     private boolean mAttached = false;
     // The current node with accessibility focus
     private int mAccessibilityFocusedNode = 0;
+    // The current node with focus
+    private int mFocusedNode = 0;
     // Viewport cache
     final SparseArray<GeckoBundle> mViewportCache = new SparseArray<>();
     // Focus cache
@@ -629,8 +638,14 @@ public class SessionAccessibility {
             // display is attached and we must be in a junit test.
             return;
         }
-        if (eventType == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED) {
-            mAccessibilityFocusedNode = sourceId;
+
+        GeckoBundle cachedBundle = null;
+        if (!mSession.getSettings().getBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE)) {
+            cachedBundle = getMostRecentBundle(sourceId);
+            // Suppress events from non cached nodes if cache is enabled.
+            if (cachedBundle == null) {
+                return;
+            }
         }
 
         final AccessibilityEvent event = AccessibilityEvent.obtain(eventType);
@@ -656,6 +671,34 @@ public class SessionAccessibility {
             event.setMaxScrollX(eventData.getInt("maxScrollX", -1));
             event.setMaxScrollY(eventData.getInt("maxScrollY", -1));
             event.setChecked(eventData.getInt("checked") != 0);
+        }
+
+        // Update cache and stored state from this event.
+        switch (eventType) {
+            case AccessibilityEvent.TYPE_VIEW_CLICKED:
+                if (cachedBundle != null && eventData != null && eventData.containsKey("checked")) {
+                    if (eventData.getInt("checked") != 0) {
+                        cachedBundle.putInt("flags", cachedBundle.getInt("flags") | FLAG_CHECKED);
+                    } else {
+                        cachedBundle.putInt("flags", cachedBundle.getInt("flags") & ~FLAG_CHECKED);
+                    }
+                }
+                break;
+            case AccessibilityEvent.TYPE_VIEW_SELECTED:
+                if (cachedBundle != null && eventData != null && eventData.containsKey("selected")) {
+                    if (eventData.getInt("selected") != 0) {
+                        cachedBundle.putInt("flags", cachedBundle.getInt("flags") | FLAG_SELECTED);
+                    } else {
+                        cachedBundle.putInt("flags", cachedBundle.getInt("flags") & ~FLAG_SELECTED);
+                    }
+                }
+                break;
+            case AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED:
+                mAccessibilityFocusedNode = sourceId;
+                break;
+            case AccessibilityEvent.TYPE_VIEW_FOCUSED:
+                mFocusedNode = sourceId;
+                break;
         }
 
         ((ViewParent) mView).requestSendAccessibilityEvent(mView, event);
