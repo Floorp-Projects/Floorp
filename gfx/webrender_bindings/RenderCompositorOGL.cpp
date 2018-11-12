@@ -54,6 +54,11 @@ RenderCompositorOGL::EndFrame()
 }
 
 void
+RenderCompositorOGL::WaitForGPU()
+{
+}
+
+void
 RenderCompositorOGL::Pause()
 {
 #ifdef MOZ_WIDGET_ANDROID

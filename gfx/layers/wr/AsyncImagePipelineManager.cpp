@@ -544,7 +544,7 @@ AsyncImagePipelineManager::HoldExternalImage(const wr::PipelineId& aPipelineId, 
 }
 
 void
-AsyncImagePipelineManager::NotifyPipelinesUpdated(wr::WrPipelineInfo aInfo, bool aRender)
+AsyncImagePipelineManager::NotifyPipelinesUpdated(const wr::WrPipelineInfo& aInfo, bool aRender)
 {
   // This is called on the render thread, so we just stash the data into
   // UpdatesQueue and process it later on the compositor thread.
