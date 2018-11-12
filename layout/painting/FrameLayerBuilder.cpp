@@ -575,6 +575,16 @@ public:
 #endif
 
   /**
+   * Disables component alpha for |aItem| if the component alpha bounds are not
+   * contained in |mOpaqueRegion|. Alternatively if possible, sets
+   * |mNeedComponentAlpha| to true for this PaintedLayerData.
+   */
+  bool SetupComponentAlpha(ContainerState* aState,
+                           nsDisplayItem* aItem,
+                           const nsIntRect& aVisibleRect,
+                           const TransformClipNode* aTransform);
+
+  /**
    * Record that an item has been added to the PaintedLayer, so we
    * need to update our regions.
    * @param aVisibleRect the area of the item that's visible
@@ -4012,6 +4022,54 @@ PaintedLayerData::UpdateEffectStatus(DisplayItemEntryType aType,
   }
 }
 
+
+bool
+PaintedLayerData::SetupComponentAlpha(ContainerState* aState,
+                                      nsDisplayItem* aItem,
+                                      const nsIntRect& aVisibleRect,
+                                      const TransformClipNode* aTransform)
+{
+  nsRect componentAlphaBounds =
+    aItem->GetComponentAlphaBounds(aState->mBuilder);
+
+  if (componentAlphaBounds.IsEmpty()) {
+    // The item does not require component alpha, nothing do do here.
+    return false;
+  }
+
+  if (aTransform) {
+    componentAlphaBounds = aTransform->TransformRect(
+      componentAlphaBounds, aState->mAppUnitsPerDevPixel);
+  }
+
+  const nsIntRect pixelBounds =
+    aState->ScaleToOutsidePixels(componentAlphaBounds, false);
+
+  const nsIntRect visibleRect =
+    pixelBounds.Intersect(aVisibleRect);
+
+  if (!mOpaqueRegion.Contains(visibleRect)) {
+    nsRect buildingRect = aItem->GetBuildingRect();
+
+    if (aTransform) {
+      buildingRect =
+        aTransform->TransformRect(buildingRect, aState->mAppUnitsPerDevPixel);
+    }
+
+    const nsRect tightBounds = componentAlphaBounds.Intersect(buildingRect);
+
+    if (IsItemAreaInWindowOpaqueRegion(aState->mBuilder, aItem, tightBounds)) {
+      mNeedComponentAlpha = true;
+    } else {
+      // There is no opaque background below the item, disable component alpha.
+      aItem->DisableComponentAlpha();
+      return false;
+    }
+  }
+
+  return true;
+}
+
 void
 PaintedLayerData::Accumulate(ContainerState* aState,
                              nsDisplayItem* aItem,
@@ -4067,16 +4125,16 @@ PaintedLayerData::Accumulate(ContainerState* aState,
     mForceTransparentSurface = true;
   }
 
-  nsRect componentAlphaBounds;
   if (aState->mParameters.mDisableSubpixelAntialiasingInDescendants) {
     // Disable component alpha.
     // Note that the transform (if any) on the PaintedLayer is always an integer
     // translation so we don't have to factor that in here.
     aItem->DisableComponentAlpha();
   } else {
-    componentAlphaBounds = aItem->GetComponentAlphaBounds(aState->mBuilder);
+    const bool needsComponentAlpha =
+      SetupComponentAlpha(aState, aItem, aVisibleRect, aTransform);
 
-    if (!componentAlphaBounds.IsEmpty()) {
+    if (needsComponentAlpha) {
       // This display item needs background copy when pushing opacity group.
       for (size_t i : aOpacityIndices) {
         AssignedDisplayItem& item = mAssignedDisplayItems[i];
@@ -4203,24 +4261,6 @@ PaintedLayerData::Accumulate(ContainerState* aState,
       // that we get as much subpixel-AA as possible in the chrome.
       if (tmp.GetNumRects() <= 4 || aItem->Frame()->PresContext()->IsChrome()) {
         mOpaqueRegion = std::move(tmp);
-      }
-    }
-  }
-
-  if (!aState->mParameters.mDisableSubpixelAntialiasingInDescendants &&
-      !componentAlphaBounds.IsEmpty()) {
-    nsIntRect componentAlphaRect =
-      aState->ScaleToOutsidePixels(componentAlphaBounds, false)
-        .Intersect(aVisibleRect);
-
-    if (!mOpaqueRegion.Contains(componentAlphaRect)) {
-      if (IsItemAreaInWindowOpaqueRegion(
-            aState->mBuilder,
-            aItem,
-            componentAlphaBounds.Intersect(aItem->GetBuildingRect()))) {
-        mNeedComponentAlpha = true;
-      } else {
-        aItem->DisableComponentAlpha();
       }
     }
   }
