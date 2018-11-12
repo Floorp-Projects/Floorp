@@ -8,6 +8,8 @@
  * Basic functionality test, from the client programmer's POV.
  */
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "port", function() {
   return srv.identity.primaryPort;
 });
@@ -27,15 +29,12 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
 
 var srv;
 
-function run_test()
-{
+function run_test() {
   srv = createServer();
 
   // base path
   // XXX should actually test this works with a file by comparing streams!
-  var dirServ = Cc["@mozilla.org/file/directory_service;1"]
-                  .getService(Ci.nsIProperties);
-  var path = dirServ.get("CurWorkD", Ci.nsIFile);
+  var path = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
   srv.registerDirectory("/", path);
 
   // register a few test paths
@@ -54,16 +53,14 @@ const HEADER_COUNT = 1000;
 
 // common properties *always* appended by server
 // or invariants for every URL in paths
-function commonCheck(ch)
-{
+function commonCheck(ch) {
   Assert.ok(ch.contentLength > -1);
   Assert.equal(ch.getResponseHeader("connection"), "close");
   Assert.ok(!ch.isNoStoreResponse());
   Assert.ok(!ch.isPrivateResponse());
 }
 
-function start_objHandler(ch, cx)
-{
+function start_objHandler(ch, cx) {
   commonCheck(ch);
 
   Assert.equal(ch.responseStatus, 200);
@@ -78,8 +75,7 @@ function start_objHandler(ch, cx)
             reqMin.value == respMin.value);
 }
 
-function start_functionHandler(ch, cx)
-{
+function start_functionHandler(ch, cx) {
   commonCheck(ch);
 
   Assert.equal(ch.responseStatus, 404);
@@ -94,16 +90,14 @@ function start_functionHandler(ch, cx)
   Assert.ok(respMaj.value == 1 && respMin.value == 1);
 }
 
-function start_non_existent_path(ch, cx)
-{
+function start_non_existent_path(ch, cx) {
   commonCheck(ch);
 
   Assert.equal(ch.responseStatus, 404);
   Assert.ok(!ch.requestSucceeded);
 }
 
-function start_lots_of_headers(ch, cx)
-{
+function start_lots_of_headers(ch, cx) {
   commonCheck(ch);
 
   Assert.equal(ch.responseStatus, 200);
@@ -118,8 +112,7 @@ function start_lots_of_headers(ch, cx)
 // /objHandler
 var objHandler =
   {
-    handle: function(metadata, response)
-    {
+    handle(metadata, response) {
       response.setStatusLine(metadata.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "text/plain", false);
 
@@ -134,8 +127,7 @@ var objHandler =
       body += " HTTP/" + metadata.httpVersion + "\n";
 
       var headEnum = metadata.headers;
-      while (headEnum.hasMoreElements())
-      {
+      while (headEnum.hasMoreElements()) {
         var fieldName = headEnum.getNext()
                                 .QueryInterface(Ci.nsISupportsString)
                                 .data;
@@ -144,17 +136,11 @@ var objHandler =
 
       response.bodyOutputStream.write(body, body.length);
     },
-    QueryInterface: function(id)
-    {
-      if (id.equals(Ci.nsISupports) || id.equals(Ci.nsIHttpRequestHandler))
-        return this;
-      throw Cr.NS_ERROR_NOINTERFACE;
-    }
+    QueryInterface: ChromeUtils.generateQI(["nsIHttpRequestHandler"]),
   };
 
 // /functionHandler
-function functionHandler(metadata, response)
-{
+function functionHandler(metadata, response) {
   response.setStatusLine("1.1", 404, "Page Not Found");
   response.setHeader("foopy", "quux-baz", false);
 
@@ -167,8 +153,7 @@ function functionHandler(metadata, response)
 }
 
 // /lotsOfHeaders
-function lotsOfHeadersHandler(request, response)
-{
+function lotsOfHeadersHandler(request, response) {
   response.setHeader("Content-Type", "text/plain", false);
 
   for (var i = 0; i < HEADER_COUNT; i++)

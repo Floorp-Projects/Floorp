@@ -15,8 +15,7 @@ const FAKE_PORT_TWO = 8889;
 
 var srv, id;
 
-function run_test()
-{
+function run_test() {
   dumpn("*** run_test");
 
   srv = createServer();
@@ -78,22 +77,17 @@ function run_test()
   // restart it on the correct port, to exercise port-changing behaviors at
   // server start and stop.
   do_test_pending();
-  srv.stop(function()
-  {
-    try
-    {
+  srv.stop(function() {
+    try {
       do_test_pending();
       run_test_2();
-    }
-    finally
-    {
+    } finally {
       do_test_finished();
     }
   });
 }
 
-function run_test_2()
-{
+function run_test_2() {
   dumpn("*** run_test_2");
 
   do_test_finished();
@@ -141,22 +135,17 @@ function run_test_2()
   Assert.ok(!id.has("http", "127.0.0.1", FAKE_PORT_ONE));
 
   do_test_pending();
-  srv.stop(function()
-  {
-    try
-    {
+  srv.stop(function() {
+    try {
       do_test_pending();
       run_test_3();
-    }
-    finally
-    {
+    } finally {
       do_test_finished();
     }
   });
 }
 
-function run_test_3()
-{
+function run_test_3() {
   dumpn("*** run_test_3");
 
   do_test_finished();
@@ -212,7 +201,7 @@ function run_test_3()
 }
 
 
-/*********************
+/** *******************
  * UTILITY FUNCTIONS *
  *********************/
 
@@ -220,40 +209,30 @@ function run_test_3()
  * Verifies that all .primary* getters on a server identity correctly throw
  * NS_ERROR_NOT_INITIALIZED.
  *
- * @param id : nsIHttpServerIdentity
+ * @param aId : nsIHttpServerIdentity
  *   the server identity to test
  */
-function checkPrimariesThrow(id)
-{
+function checkPrimariesThrow(aId) {
   var threw = false;
-  try
-  {
-    id.primaryScheme;
-  }
-  catch (e)
-  {
+  try {
+    aId.primaryScheme;
+  } catch (e) {
     threw = e.result === Cr.NS_ERROR_NOT_INITIALIZED;
   }
   Assert.ok(threw);
 
   threw = false;
-  try
-  {
-    id.primaryHost;
-  }
-  catch (e)
-  {
+  try {
+    aId.primaryHost;
+  } catch (e) {
     threw = e.result === Cr.NS_ERROR_NOT_INITIALIZED;
   }
   Assert.ok(threw);
 
   threw = false;
-  try
-  {
-    id.primaryPort;
-  }
-  catch (e)
-  {
+  try {
+    aId.primaryPort;
+  } catch (e) {
     threw = e.result === Cr.NS_ERROR_NOT_INITIALIZED;
   }
   Assert.ok(threw);
@@ -262,9 +241,8 @@ function checkPrimariesThrow(id)
 /**
  * Utility function to check for a 400 response.
  */
-function check400(data)
-{
-  var iter = LineIterator(data);
+function check400(aData) {
+  var iter = LineIterator(aData);
 
   // Status-Line
   var { value: firstLine } = iter.next();
@@ -272,7 +250,7 @@ function check400(data)
 }
 
 
-/***************
+/** *************
  * BEGIN TESTS *
  ***************/
 
@@ -284,16 +262,14 @@ var tests = [];
 
 // HTTP/1.0 request, to ensure we see our default scheme/host/port
 
-function http10Request(request, response)
-{
+function http10Request(request, response) {
   writeDetails(request, response);
   response.setStatusLine("1.0", 200, "TEST PASSED");
 }
 data = "GET /http/1.0-request HTTP/1.0\r\n" +
        "\r\n";
-function check10(data)
-{
-  var iter = LineIterator(data);
+function check10(aData) {
+  var iter = LineIterator(aData);
 
   // Status-Line
   Assert.equal(iter.next().value, "HTTP/1.0 200 TEST PASSED");
@@ -314,7 +290,7 @@ function check10(data)
 
   expectLines(iter, body);
 }
-test = new RawTest("localhost", PORT, data, check10),
+test = new RawTest("localhost", PORT, data, check10);
 tests.push(test);
 
 
@@ -322,7 +298,7 @@ tests.push(test);
 
 data = "GET /http/1.1-request HTTP/1.1\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check400),
+test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
 
 
@@ -331,7 +307,7 @@ tests.push(test);
 data = "GET /http/1.1-request HTTP/1.1\r\n" +
        "Host: not-localhost\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check400),
+test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
 
 
@@ -340,7 +316,7 @@ tests.push(test);
 data = "GET /http/1.1-request HTTP/1.1\r\n" +
        "Host: not-localhost:4444\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check400),
+test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
 
 
@@ -349,7 +325,7 @@ tests.push(test);
 data = "GET /http/1.1-request HTTP/1.1\r\n" +
        "Host: 127.0.0.1\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check400),
+test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
 
 
@@ -358,7 +334,7 @@ tests.push(test);
 data = "GET http://127.0.0.1/http/1.1-request HTTP/1.1\r\n" +
        "Host: 127.0.0.1\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check400),
+test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
 
 
@@ -367,7 +343,7 @@ tests.push(test);
 data = "GET http://localhost:31337/http/1.1-request HTTP/1.1\r\n" +
        "Host: localhost:31337\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check400),
+test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
 
 
@@ -376,23 +352,21 @@ tests.push(test);
 data = "GET https://localhost:4444/http/1.1-request HTTP/1.1\r\n" +
        "Host: localhost:4444\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check400),
+test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
 
 
 // HTTP/1.1 request, correct Host header, expect handler's response
 
-function http11goodHost(request, response)
-{
+function http11goodHost(request, response) {
   writeDetails(request, response);
   response.setStatusLine("1.1", 200, "TEST PASSED");
 }
 data = "GET /http/1.1-good-host HTTP/1.1\r\n" +
        "Host: localhost:4444\r\n" +
        "\r\n";
-function check11goodHost(data)
-{
-  var iter = LineIterator(data);
+function check11goodHost(aData) {
+  var iter = LineIterator(aData);
 
   // Status-Line
   Assert.equal(iter.next().value, "HTTP/1.1 200 TEST PASSED");
@@ -413,23 +387,21 @@ function check11goodHost(data)
 
   expectLines(iter, body);
 }
-test = new RawTest("localhost", PORT, data, check11goodHost),
+test = new RawTest("localhost", PORT, data, check11goodHost);
 tests.push(test);
 
 
 // HTTP/1.1 request, Host header is secondary identity
 
-function http11ipHost(request, response)
-{
+function http11ipHost(request, response) {
   writeDetails(request, response);
   response.setStatusLine("1.1", 200, "TEST PASSED");
 }
 data = "GET /http/1.1-ip-host HTTP/1.1\r\n" +
        "Host: 127.0.0.1:4444\r\n" +
        "\r\n";
-function check11ipHost(data)
-{
-  var iter = LineIterator(data);
+function check11ipHost(aData) {
+  var iter = LineIterator(aData);
 
   // Status-Line
   Assert.equal(iter.next().value, "HTTP/1.1 200 TEST PASSED");
@@ -450,7 +422,7 @@ function check11ipHost(data)
 
   expectLines(iter, body);
 }
-test = new RawTest("localhost", PORT, data, check11ipHost),
+test = new RawTest("localhost", PORT, data, check11ipHost);
 tests.push(test);
 
 
@@ -461,7 +433,7 @@ tests.push(test);
 data = "GET http://localhost:4444/http/1.1-good-host HTTP/1.1\r\n" +
        "Host: localhost:4444\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check11goodHost),
+test = new RawTest("localhost", PORT, data, check11goodHost);
 tests.push(test);
 
 
@@ -472,7 +444,7 @@ tests.push(test);
 data = "GET http://localhost:4444/http/1.1-good-host HTTP/1.1\r\n" +
        "Host: localhost:1234\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check11goodHost),
+test = new RawTest("localhost", PORT, data, check11goodHost);
 tests.push(test);
 
 
@@ -483,7 +455,7 @@ tests.push(test);
 data = "GET http://localhost:4444/http/1.1-good-host HTTP/1.1\r\n" +
        "Host: not-localhost:4444\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check11goodHost),
+test = new RawTest("localhost", PORT, data, check11goodHost);
 tests.push(test);
 
 
@@ -494,14 +466,13 @@ tests.push(test);
 data = "GET http://localhost:4444/http/1.1-good-host HTTP/1.1\r\n" +
        "Host: yippity-skippity\r\n" +
        "\r\n";
-function checkInaccurate(data)
-{
-  check11goodHost(data);
+function checkInaccurate(aData) {
+  check11goodHost(aData);
 
   // dynamism setup
   srv.identity.setPrimary("http", "127.0.0.1", 4444);
 }
-test = new RawTest("localhost", PORT, data, checkInaccurate),
+test = new RawTest("localhost", PORT, data, checkInaccurate);
 tests.push(test);
 
 
@@ -512,9 +483,8 @@ tests.push(test);
 data = "GET /http/1.0-request HTTP/1.0\r\n" +
        "Host: not-localhost:4444\r\n" +
        "\r\n";
-function check10ip(data)
-{
-  var iter = LineIterator(data);
+function check10ip(aData) {
+  var iter = LineIterator(aData);
 
   // Status-Line
   Assert.equal(iter.next().value, "HTTP/1.0 200 TEST PASSED");
@@ -535,23 +505,21 @@ function check10ip(data)
 
   expectLines(iter, body);
 }
-test = new RawTest("localhost", PORT, data, check10ip),
+test = new RawTest("localhost", PORT, data, check10ip);
 tests.push(test);
 
 
 // HTTP/1.1 request, Host header with implied port
 
-function http11goodHostWackyPort(request, response)
-{
+function http11goodHostWackyPort(request, response) {
   writeDetails(request, response);
   response.setStatusLine("1.1", 200, "TEST PASSED");
 }
 data = "GET /http/1.1-good-host-wacky-port HTTP/1.1\r\n" +
        "Host: localhost\r\n" +
        "\r\n";
-function check11goodHostWackyPort(data)
-{
-  var iter = LineIterator(data);
+function check11goodHostWackyPort(aData) {
+  var iter = LineIterator(aData);
 
   // Status-Line
   Assert.equal(iter.next().value, "HTTP/1.1 200 TEST PASSED");
@@ -572,7 +540,7 @@ function check11goodHostWackyPort(data)
 
   expectLines(iter, body);
 }
-test = new RawTest("localhost", PORT, data, check11goodHostWackyPort),
+test = new RawTest("localhost", PORT, data, check11goodHostWackyPort);
 tests.push(test);
 
 
@@ -581,7 +549,7 @@ tests.push(test);
 data = "GET /http/1.1-good-host-wacky-port HTTP/1.1\r\n" +
        "Host: localhost:\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check11goodHostWackyPort),
+test = new RawTest("localhost", PORT, data, check11goodHostWackyPort);
 tests.push(test);
 
 
@@ -590,7 +558,7 @@ tests.push(test);
 data = "GET http://localhost/http/1.1-good-host-wacky-port HTTP/1.1\r\n" +
        "Host: localhost\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check11goodHostWackyPort),
+test = new RawTest("localhost", PORT, data, check11goodHostWackyPort);
 tests.push(test);
 
 
@@ -599,7 +567,7 @@ tests.push(test);
 data = "GET http://localhost:/http/1.1-good-host-wacky-port HTTP/1.1\r\n" +
        "Host: localhost\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check11goodHostWackyPort),
+test = new RawTest("localhost", PORT, data, check11goodHostWackyPort);
 tests.push(test);
 
 
@@ -608,7 +576,7 @@ tests.push(test);
 data = "GET http://localhost:80/http/1.1-good-host-wacky-port HTTP/1.1\r\n" +
        "Host: who-cares\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check11goodHostWackyPort),
+test = new RawTest("localhost", PORT, data, check11goodHostWackyPort);
 tests.push(test);
 
 
@@ -617,7 +585,7 @@ tests.push(test);
 data = "GET is-this-the-real-life-is-this-just-fantasy HTTP/1.1\r\n" +
        "Host: localhost:4444\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check400),
+test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
 
 
@@ -626,7 +594,7 @@ tests.push(test);
 data = "GET /http/1.1-request HTTP/1.1\r\n" +
        "Host: la la la\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check400),
+test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
 
 
@@ -635,7 +603,7 @@ tests.push(test);
 data = "GET http://localhost:4444/http/1.1-good-host HTTP/1.1\r\n" +
        "Host: la la la\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check11goodHost),
+test = new RawTest("localhost", PORT, data, check11goodHost);
 tests.push(test);
 
 
@@ -644,7 +612,7 @@ tests.push(test);
 data = "GET http://localhost:4444/http/1.1-request HTTP/1.0\r\n" +
        "Host: localhost:4444\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check400),
+test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
 
 
@@ -653,7 +621,7 @@ tests.push(test);
 data = "GET http://not-localhost:4444/http/1.1-request HTTP/1.1\r\n" +
        "Host: not-localhost:4444\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check400),
+test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);
 
 
@@ -662,5 +630,5 @@ tests.push(test);
 data = "GET http://not-localhost:4444/http/1.1-request HTTP/1.1\r\n" +
        "Host: localhost:4444\r\n" +
        "\r\n";
-test = new RawTest("localhost", PORT, data, check400),
+test = new RawTest("localhost", PORT, data, check400);
 tests.push(test);

@@ -22,10 +22,11 @@ WebBrowserPersistResourcesChild::~WebBrowserPersistResourcesChild() = default;
 
 NS_IMETHODIMP
 WebBrowserPersistResourcesChild::VisitResource(nsIWebBrowserPersistDocument *aDocument,
-                                               const nsACString& aURI)
+                                               const nsACString& aURI,
+                                               nsContentPolicyType aContentPolicyType)
 {
     nsCString copiedURI(aURI); // Yay, XPIDL/IPDL mismatch.
-    SendVisitResource(copiedURI);
+    SendVisitResource(copiedURI, aContentPolicyType);
     return NS_OK;
 }
 

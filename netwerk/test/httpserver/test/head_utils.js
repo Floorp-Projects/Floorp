@@ -3,13 +3,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* global __LOCATION__ */
+/* import-globals-from ../httpd.js */
 
 var _HTTPD_JS_PATH = __LOCATION__.parent;
 _HTTPD_JS_PATH.append("httpd.js");
 load(_HTTPD_JS_PATH.path);
 
 // if these tests fail, we'll want the debug output
-DEBUG = true;
+var linDEBUG = true;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
@@ -20,8 +22,7 @@ ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
  * is possible to run these tests (with at most slight modifications) against
  * the server when used as an XPCOM component (not as an inline script).
  */
-function createServer()
-{
+function createServer() {
   return new nsHttpServer();
 }
 
@@ -31,8 +32,7 @@ function createServer()
  * @param url
  *   the URL of the channel to create
  */
-function makeChannel(url)
-{
+function makeChannel(url) {
   return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
                 .QueryInterface(Ci.nsIHttpChannel);
 }
@@ -43,8 +43,7 @@ function makeChannel(url)
  * @param stream
  *   the nsIInputStream to wrap
  */
-function makeBIS(stream)
-{
+function makeBIS(stream) {
   return new BinaryInputStream(stream);
 }
 
@@ -57,8 +56,7 @@ function makeBIS(stream)
  * @returns string
  *   the contents of the file
  */
-function fileContents(file)
-{
+function fileContents(file) {
   const PR_RDONLY = 0x01;
   var fis = new FileInputStream(file, PR_RDONLY, 0o444,
                                 Ci.nsIFileInputStream.CLOSE_ON_EOF);
@@ -78,11 +76,9 @@ function fileContents(file)
  *   an Iterator which returns each line from data in turn; note that this
  *   includes a final empty line if data ended with a CRLF
  */
-function* LineIterator(data)
-{
-  var start = 0, index = 0;
-  do
-  {
+function* LineIterator(data) {
+  var index = 0;
+  do {
     index = data.indexOf("\r\n");
     if (index >= 0)
       yield data.substring(0, index);
@@ -105,11 +101,9 @@ function* LineIterator(data)
  * @throws string
  *   an error message if iter doesn't agree with expectedLines
  */
-function expectLines(iter, expectedLines)
-{
+function expectLines(iter, expectedLines) {
   var index = 0;
-  for (var line of iter)
-  {
+  for (var line of iter) {
     if (expectedLines.length == index)
       throw "Error: got more than " + expectedLines.length + " expected lines!";
 
@@ -120,8 +114,7 @@ function expectLines(iter, expectedLines)
             "  expect: '" + expected + "'";
   }
 
-  if (expectedLines.length !== index)
-  {
+  if (expectedLines.length !== index) {
     throw "Expected more lines!  Got " + index +
           ", expected " + expectedLines.length;
   }
@@ -135,8 +128,7 @@ function expectLines(iter, expectedLines)
  * @param response : nsIHttpResponse
  *   the response to which the metadata is written
  */
-function writeDetails(request, response)
-{
+function writeDetails(request, response) {
   response.write("Method:  " + request.method + "\r\n");
   response.write("Path:    " + request.path + "\r\n");
   response.write("Query:   " + request.queryString + "\r\n");
@@ -154,8 +146,7 @@ function writeDetails(request, response)
  *   an iterator over the CRLF-delimited lines in an HTTP response, currently
  *   just after the Request-Line
  */
-function skipHeaders(iter)
-{
+function skipHeaders(iter) {
   var line = iter.next().value;
   while (line !== "")
     line = iter.next().value;
@@ -170,8 +161,7 @@ function skipHeaders(iter)
  * @param code : nsresult
  *   the expected exception
  */
-function isException(e, code)
-{
+function isException(e, code) {
   if (e !== code && e.result !== code)
     do_throw("unexpected error: " + e);
 }
@@ -186,13 +176,12 @@ function isException(e, code)
  * @param callback : function() : void
  *   the function to call
  */
-function callLater(msecs, callback)
-{
+function callLater(msecs, callback) {
   do_timeout(msecs, callback);
 }
 
 
-/*******************************************************
+/** *****************************************************
  * SIMPLE SUPPORT FOR LOADING/TESTING A SERIES OF URLS *
  *******************************************************/
 
@@ -200,10 +189,8 @@ function callLater(msecs, callback)
  * Create a completion callback which will stop the given server and end the
  * test, assuming nothing else remains to be done at that point.
  */
-function testComplete(srv)
-{
-  return function complete()
-  {
+function testComplete(srv) {
+  return function complete() {
     do_test_pending();
     srv.stop(function quit() { do_test_finished(); });
   };
@@ -230,8 +217,7 @@ function testComplete(srv)
  *   nsIHttpChannel and nsIHttpChannelInternal for convenience; may be null if
  *   nothing needs to be done
  */
-function Test(path, initChannel, onStartRequest, onStopRequest)
-{
+function Test(path, initChannel, onStartRequest, onStopRequest) {
   function nil() { }
 
   this.path = path;
@@ -248,19 +234,13 @@ function Test(path, initChannel, onStartRequest, onStopRequest)
  * @param done
  *   function to call when all tests have run (e.g. to shut down the server)
  */
-function runHttpTests(testArray, done)
-{
+function runHttpTests(testArray, done) {
   /** Kicks off running the next test in the array. */
-  function performNextTest()
-  {
-    if (++testIndex == testArray.length)
-    {
-      try
-      {
+  function performNextTest() {
+    if (++testIndex == testArray.length) {
+      try {
         done();
-      }
-      catch (e)
-      {
+      } catch (e) {
         do_report_unexpected_exception(e, "running test-completion callback");
       }
       return;
@@ -270,18 +250,12 @@ function runHttpTests(testArray, done)
 
     var test = testArray[testIndex];
     var ch = makeChannel(test.path);
-    try
-    {
+    try {
       test.initChannel(ch);
-    }
-    catch (e)
-    {
-      try
-      {
+    } catch (e) {
+      try {
         do_report_unexpected_exception(e, "testArray[" + testIndex + "].initChannel(ch)");
-      }
-      catch (e)
-      {
+      } catch (x) {
         /* swallow and let tests continue */
       }
     }
@@ -301,42 +275,32 @@ function runHttpTests(testArray, done)
       /** Array of bytes of data in body of response. */
       _data: [],
 
-      onStartRequest: function(request, cx)
-      {
+      onStartRequest(request, cx) {
         Assert.ok(request === this._channel);
         var ch = request.QueryInterface(Ci.nsIHttpChannel)
                         .QueryInterface(Ci.nsIHttpChannelInternal);
 
         this._data.length = 0;
-        try
-        {
-          try
-          {
+        try {
+          try {
             testArray[testIndex].onStartRequest(ch, cx);
-          }
-          catch (e)
-          {
+          } catch (e) {
             do_report_unexpected_exception(e, "testArray[" + testIndex + "].onStartRequest");
           }
-        }
-        catch (e)
-        {
+        } catch (e) {
           do_note_exception(e, "!!! swallowing onStartRequest exception so onStopRequest is " +
                 "called...");
         }
       },
-      onDataAvailable: function(request, cx, inputStream, offset, count)
-      {
+      onDataAvailable(request, cx, inputStream, offset, count) {
         var quantum = 262144; // just above half the argument-count limit
         var bis = makeBIS(inputStream);
-        for (var start = 0; start < count; start += quantum)
-        {
+        for (var start = 0; start < count; start += quantum) {
           var newData = bis.readByteArray(Math.min(quantum, count - start));
           Array.prototype.push.apply(this._data, newData);
         }
       },
-      onStopRequest: function(request, cx, status)
-      {
+      onStopRequest(request, cx, status) {
         this._channel = null;
 
         var ch = request.QueryInterface(Ci.nsIHttpChannel)
@@ -346,37 +310,24 @@ function runHttpTests(testArray, done)
         //     because the latter runs the next test's initChannel callback, and
         //     we want one test to be sequentially processed before the next
         //     one.
-        try
-        {
+        try {
           testArray[testIndex].onStopRequest(ch, cx, status, this._data);
-        }
-        finally
-        {
-          try
-          {
+        } finally {
+          try {
             performNextTest();
-          }
-          finally
-          {
+          } finally {
             do_test_finished();
           }
         }
       },
-      QueryInterface: function(aIID)
-      {
-        if (aIID.equals(Ci.nsIStreamListener) ||
-            aIID.equals(Ci.nsIRequestObserver) ||
-            aIID.equals(Ci.nsISupports))
-          return this;
-        throw Cr.NS_ERROR_NO_INTERFACE;
-      }
+      QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
     };
 
   performNextTest();
 }
 
 
-/****************************************
+/** **************************************
  * RAW REQUEST FORMAT TESTING FUNCTIONS *
  ****************************************/
 
@@ -398,14 +349,15 @@ function runHttpTests(testArray, done)
  *   conducts whatever tests it wants on that data; useful for tweaking the test
  *   environment between tests
  */
-function RawTest(host, port, data, responseCheck)
-{
+function RawTest(host, port, data, responseCheck) {
   if (0 > port || 65535 < port || port % 1 !== 0)
     throw "bad port";
   if (!(data instanceof Array))
     data = [data];
   if (data.length <= 0)
     throw "bad data length";
+
+  // eslint-disable-next-line no-control-regex
   if (!data.every(function(v) { return /^[\x00-\xff]*$/.test(v); }))
     throw "bad data contained non-byte-valued character";
 
@@ -423,8 +375,7 @@ function RawTest(host, port, data, responseCheck)
  * @param done
  *   function to call when all tests have run (e.g. to shut down the server)
  */
-function runRawTests(testArray, done)
-{
+function runRawTests(testArray, done) {
   do_test_pending();
 
   var sts = Cc["@mozilla.org/network/socket-transport-service;1"]
@@ -433,19 +384,14 @@ function runRawTests(testArray, done)
   var currentThread = Cc["@mozilla.org/thread-manager;1"]
                         .getService()
                         .currentThread;
-  
+
   /** Kicks off running the next test in the array. */
-  function performNextTest()
-  {
-    if (++testIndex == testArray.length)
-    {
+  function performNextTest() {
+    if (++testIndex == testArray.length) {
       do_test_finished();
-      try
-      {
+      try {
         done();
-      }
-      catch (e)
-      {
+      } catch (e) {
         do_report_unexpected_exception(e, "running test-completion callback");
       }
       return;
@@ -468,15 +414,13 @@ function runRawTests(testArray, done)
     waitToWriteOutput(outStream);
   }
 
-  function waitForMoreInput(stream)
-  {
+  function waitForMoreInput(stream) {
     reader.stream = stream;
     stream = stream.QueryInterface(Ci.nsIAsyncInputStream);
     stream.asyncWait(reader, 0, 0, currentThread);
   }
 
-  function waitToWriteOutput(stream)
-  {
+  function waitToWriteOutput(stream) {
     // Do the QueryInterface here, not earlier, because there is no
     // guarantee that 'stream' passed in here been QIed to nsIAsyncOutputStream
     // since the last GC.
@@ -500,101 +444,77 @@ function runRawTests(testArray, done)
   /** Reads data from the socket. */
   var reader =
     {
-      onInputStreamReady: function(stream)
-      {
+      onInputStreamReady(stream) {
         Assert.ok(stream === this.stream);
-        try
-        {
+        try {
           var bis = new BinaryInputStream(stream);
 
           var av = 0;
-          try
-          {
+          try {
             av = bis.available();
-          }
-          catch (e)
-          {
+          } catch (e) {
             /* default to 0 */
             do_note_exception(e);
           }
 
-          if (av > 0)
-          {
+          if (av > 0) {
             var quantum = 262144;
-            for (var start = 0; start < av; start += quantum)
-            {
+            for (var start = 0; start < av; start += quantum) {
               var bytes = bis.readByteArray(Math.min(quantum, av - start));
               received += String.fromCharCode.apply(null, bytes);
             }
             waitForMoreInput(stream);
             return;
           }
-        }
-        catch(e)
-        {
+        } catch (e) {
           do_report_unexpected_exception(e);
         }
 
         var rawTest = testArray[testIndex];
-        try
-        {
+        try {
           rawTest.responseCheck(received);
-        }
-        catch (e)
-        {
+        } catch (e) {
           do_report_unexpected_exception(e);
-        }
-        finally
-        {
-          try
-          {
+        } finally {
+          try {
             stream.close();
             performNextTest();
-          }
-          catch (e)
-          {
+          } catch (e) {
             do_report_unexpected_exception(e);
           }
         }
-      }
+      },
     };
 
   /** Writes data to the socket. */
-  var writer = 
+  var writer =
     {
-      onOutputStreamReady: function(stream)
-      {
+      onOutputStreamReady(stream) {
         var str = testArray[testIndex].data[dataIndex];
 
         var written = 0;
-        try
-        {
+        try {
           written = stream.write(str, str.length);
           if (written == str.length)
             dataIndex++;
           else
             testArray[testIndex].data[dataIndex] = str.substring(written);
-        }
-        catch (e)
-        {
+        } catch (e) {
           do_note_exception(e);
           /* stream could have been closed, just ignore */
         }
 
-        try
-        {
-          // Keep writing data while we can write and 
+        try {
+          // Keep writing data while we can write and
           // until there's no more data to read
           if (written > 0 && dataIndex < testArray[testIndex].data.length)
             waitToWriteOutput(stream);
           else
             stream.close();
-        }
-        catch (e)
-        {
+        } catch (e) {
           do_report_unexpected_exception(e);
         }
-      }
+      },
     };
 
   performNextTest();

@@ -792,6 +792,7 @@ pub struct MemoryReport {
     pub render_target_textures: usize,
     pub texture_cache_textures: usize,
     pub depth_target_textures: usize,
+    pub swap_chain: usize,
     //
     // GPU memory total (tracked separately, should equal the sum of the above).
     //
@@ -814,6 +815,7 @@ impl ::std::ops::AddAssign for MemoryReport {
         self.render_target_textures += other.render_target_textures;
         self.texture_cache_textures += other.texture_cache_textures;
         self.depth_target_textures += other.depth_target_textures;
+        self.swap_chain += other.swap_chain;
 
         // The total_gpu_memory value accounts for all WebRender instances, and
         // thus can't be aggregated. It should really be reported out of band,

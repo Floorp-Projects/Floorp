@@ -28,7 +28,7 @@ Transform fetch_transform(int id) {
     // Create a UV base coord for each 8 texels.
     // This is required because trying to use an offset
     // of more than 8 texels doesn't work on some versions
-    // of OSX.
+    // of macOS.
     ivec2 uv = get_fetch_uv(index, VECS_PER_TRANSFORM);
     ivec2 uv0 = ivec2(uv.x + 0, uv.y);
 

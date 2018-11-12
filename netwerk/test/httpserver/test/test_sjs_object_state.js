@@ -15,8 +15,7 @@ XPCOMUtils.defineLazyGetter(this, "PATH", function() {
 
 var srv;
 
-function run_test()
-{
+function run_test() {
   srv = createServer();
   var sjsDir = do_get_file("data/sjs/");
   srv.registerDirectory("/", sjsDir);
@@ -28,7 +27,7 @@ function run_test()
   new HTTPTestLoader(PATH + "?state=initial", initialStart, initialStop);
 }
 
-/********************
+/** ******************
  * OBSERVER METHODS *
  ********************/
 
@@ -58,8 +57,7 @@ function run_test()
  */
 
 var initialStarted = false;
-function initialStart(ch, cx)
-{
+function initialStart(ch, cx) {
   dumpn("*** initialStart");
 
   if (initialStarted)
@@ -72,8 +70,7 @@ function initialStart(ch, cx)
 }
 
 var initialStopped = false;
-function initialStop(ch, cx, status, data)
-{
+function initialStop(ch, cx, status, data) {
   dumpn("*** initialStop");
 
   Assert.equal(data.map(function(v) { return String.fromCharCode(v); }).join(""),
@@ -96,8 +93,7 @@ function initialStop(ch, cx, status, data)
 }
 
 var intermediateStarted = false;
-function intermediateStart(ch, cx)
-{
+function intermediateStart(ch, cx) {
   dumpn("*** intermediateStart");
 
   Assert.notEqual(srv.getObjectState("object-state-test"), null);
@@ -111,8 +107,7 @@ function intermediateStart(ch, cx)
 }
 
 var intermediateStopped = false;
-function intermediateStop(ch, cx, status, data)
-{
+function intermediateStop(ch, cx, status, data) {
   dumpn("*** intermediateStop");
 
   Assert.equal(data.map(function(v) { return String.fromCharCode(v); }).join(""),
@@ -134,8 +129,7 @@ function intermediateStop(ch, cx, status, data)
 }
 
 var triggerStarted = false;
-function triggerStart(ch, cx)
-{
+function triggerStart(ch, cx) {
   dumpn("*** triggerStart");
 
   if (!initialStarted)
@@ -151,8 +145,7 @@ function triggerStart(ch, cx)
 }
 
 var triggerStopped = false;
-function triggerStop(ch, cx, status, data)
-{
+function triggerStop(ch, cx, status, data) {
   dumpn("*** triggerStop");
 
   Assert.equal(data.map(function(v) { return String.fromCharCode(v); }).join(""),
@@ -175,25 +168,19 @@ function triggerStop(ch, cx, status, data)
 }
 
 var finished = false;
-function checkForFinish()
-{
-  if (finished)
-  {
-    try
-    {
+function checkForFinish() {
+  if (finished) {
+    try {
       do_throw("uh-oh, how are we being finished twice?!?!");
-    }
-    finally
-    {
+    } finally {
+      // eslint-disable-next-line no-undef
       quit(1);
     }
   }
 
-  if (triggerStopped && initialStopped)
-  {
+  if (triggerStopped && initialStopped) {
     finished = true;
-    try
-    {
+    try {
       Assert.equal(srv.getObjectState("object-state-test"), null);
 
       if (!initialStarted)
@@ -204,22 +191,19 @@ function checkForFinish()
         do_throw("checkForFinish: intermediateStopped is false?!?!");
       if (!triggerStarted)
         do_throw("checkForFinish: triggerStarted is false?!?!");
-    }
-    finally
-    {
+    } finally {
       srv.stop(do_test_finished);
     }
   }
 }
 
 
-/*********************************
+/** *******************************
  * UTILITY OBSERVABLE URL LOADER *
  *********************************/
 
 /** Stream listener for the channels. */
-function HTTPTestLoader(path, start, stop)
-{
+function HTTPTestLoader(path, start, stop) {
   /** Path to load. */
   this._path = path;
 
@@ -237,39 +221,30 @@ function HTTPTestLoader(path, start, stop)
 }
 HTTPTestLoader.prototype =
   {
-    onStartRequest: function(request, cx)
-    {
+    onStartRequest(request, cx) {
       dumpn("*** HTTPTestLoader.onStartRequest for " + this._path);
 
       var ch = request.QueryInterface(Ci.nsIHttpChannel)
                       .QueryInterface(Ci.nsIHttpChannelInternal);
 
-      try
-      {
-        try
-        {
+      try {
+        try {
           this._start(ch, cx);
-        }
-        catch (e)
-        {
+        } catch (e) {
           do_throw(this._path + ": error in onStartRequest: " + e);
         }
-      }
-      catch (e)
-      {
+      } catch (e) {
         dumpn("!!! swallowing onStartRequest exception so onStopRequest is " +
               "called...");
       }
     },
-    onDataAvailable: function(request, cx, inputStream, offset, count)
-    {
+    onDataAvailable(request, cx, inputStream, offset, count) {
       dumpn("*** HTTPTestLoader.onDataAvailable for " + this._path);
 
       Array.prototype.push.apply(this._data,
                                  makeBIS(inputStream).readByteArray(count));
     },
-    onStopRequest: function(request, cx, status)
-    {
+    onStopRequest(request, cx, status) {
       dumpn("*** HTTPTestLoader.onStopRequest for " + this._path);
 
       var ch = request.QueryInterface(Ci.nsIHttpChannel)
@@ -277,14 +252,5 @@ HTTPTestLoader.prototype =
 
       this._stop(ch, cx, status, this._data);
     },
-    QueryInterface: function(aIID)
-    {
-      dumpn("*** QueryInterface: " + aIID);
-
-      if (aIID.equals(Ci.nsIStreamListener) ||
-          aIID.equals(Ci.nsIRequestObserver) ||
-          aIID.equals(Ci.nsISupports))
-        return this;
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
+    QueryInterface: ChromeUtils.generateQI(["nsIStreamListener", "nsIRequestObserver"]),
   };

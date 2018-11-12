@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+
 /*
  * Ensures that data a request handler writes out in response is sent only as
  * quickly as the client can receive it, without racing ahead and being forced
@@ -18,11 +19,9 @@
 
 gThreadManager = Cc["@mozilla.org/thread-manager;1"].createInstance();
 
-function run_test()
-{
+function run_test() {
   do_test_pending();
-  tests.push(function testsComplete(_)
-  {
+  tests.push(function testsComplete(_) {
     dumpn("******************\n" +
           "* TESTS COMPLETE *\n" +
           "******************");
@@ -32,18 +31,14 @@ function run_test()
   runNextTest();
 }
 
-function runNextTest()
-{
+function runNextTest() {
   testIndex++;
   dumpn("*** runNextTest(), testIndex: " + testIndex);
 
-  try
-  {
+  try {
     var test = tests[testIndex];
     test(runNextTest);
-  }
-  catch (e)
-  {
+  } catch (e) {
     var msg = "exception running test " + testIndex + ": " + e;
     if (e && "stack" in e)
       msg += "\nstack follows:\n" + e.stack;
@@ -52,7 +47,7 @@ function runNextTest()
 }
 
 
-/*************
+/** ***********
  * TEST DATA *
  *************/
 
@@ -82,7 +77,7 @@ const LATTER_HALF_THIRD_SEGMENT = [11, 12];
 const TWO_HALF_SEGMENTS = [1, 2, 1, 2];
 
 
-/*********
+/** *******
  * TESTS *
  *********/
 
@@ -109,16 +104,14 @@ var tests =
   ];
 var testIndex = -1;
 
-function sourceClosedWithoutWrite(next)
-{
+function sourceClosedWithoutWrite(next) {
   var t = new CopyTest("sourceClosedWithoutWrite", next);
 
   t.closeSource(Cr.NS_OK);
   t.expect(Cr.NS_OK, [NOTHING]);
 }
 
-function writeOneSegmentThenClose(next)
-{
+function writeOneSegmentThenClose(next) {
   var t = new CopyTest("writeLittleBeforeReading", next);
 
   t.addToSource(SEGMENT);
@@ -128,8 +121,7 @@ function writeOneSegmentThenClose(next)
   t.expect(Cr.NS_OK, [SEGMENT]);
 }
 
-function simpleWriteThenRead(next)
-{
+function simpleWriteThenRead(next) {
   var t = new CopyTest("simpleWriteThenRead", next);
 
   t.addToSource(SEGMENT);
@@ -139,8 +131,7 @@ function simpleWriteThenRead(next)
   t.expect(Cr.NS_OK, [SEGMENT]);
 }
 
-function writeLittleBeforeReading(next)
-{
+function writeLittleBeforeReading(next) {
   var t = new CopyTest("writeLittleBeforeReading", next);
 
   t.addToSource(SEGMENT);
@@ -153,8 +144,7 @@ function writeLittleBeforeReading(next)
   t.expect(Cr.NS_OK, [SEGMENT, SEGMENT]);
 }
 
-function writeMultipleSegmentsThenRead(next)
-{
+function writeMultipleSegmentsThenRead(next) {
   var t = new CopyTest("writeMultipleSegmentsThenRead", next);
 
   t.addToSource(TWO_SEGMENTS);
@@ -165,8 +155,7 @@ function writeMultipleSegmentsThenRead(next)
   t.expect(Cr.NS_OK, [TWO_SEGMENTS]);
 }
 
-function writeLotsBeforeReading(next)
-{
+function writeLotsBeforeReading(next) {
   var t = new CopyTest("writeLotsBeforeReading", next);
 
   t.addToSource(TWO_SEGMENTS);
@@ -182,8 +171,7 @@ function writeLotsBeforeReading(next)
   t.expect(Cr.NS_OK, [TWO_SEGMENTS, SEGMENT, SEGMENT]);
 }
 
-function writeLotsBeforeReading2(next)
-{
+function writeLotsBeforeReading2(next) {
   var t = new CopyTest("writeLotsBeforeReading", next);
 
   t.addToSource(THREE_SEGMENTS);
@@ -200,8 +188,7 @@ function writeLotsBeforeReading2(next)
   t.expect(Cr.NS_OK, [THREE_SEGMENTS, SEGMENT, SEGMENT]);
 }
 
-function writeThenReadPartial(next)
-{
+function writeThenReadPartial(next) {
   var t = new CopyTest("writeThenReadPartial", next);
 
   t.addToSource(SEGMENT_AND_HALF);
@@ -212,8 +199,7 @@ function writeThenReadPartial(next)
   t.expect(Cr.NS_OK, [SEGMENT_AND_HALF]);
 }
 
-function manyPartialWrites(next)
-{
+function manyPartialWrites(next) {
   var t = new CopyTest("manyPartialWrites", next);
 
   t.addToSource(HALF_SEGMENT);
@@ -226,8 +212,7 @@ function manyPartialWrites(next)
   t.expect(Cr.NS_OK, [TWO_HALF_SEGMENTS]);
 }
 
-function partialRead(next)
-{
+function partialRead(next) {
   var t = new CopyTest("partialRead", next);
 
   t.addToSource(SEGMENT);
@@ -239,8 +224,7 @@ function partialRead(next)
   t.expect(Cr.NS_OK, [SEGMENT, HALF_SEGMENT]);
 }
 
-function partialWrite(next)
-{
+function partialWrite(next) {
   var t = new CopyTest("partialWrite", next);
 
   t.addToSource(SEGMENT);
@@ -267,16 +251,14 @@ function partialWrite(next)
   t.expect(Cr.NS_OK, [SEGMENT, SEGMENT, THREE_SEGMENTS]);
 }
 
-function sinkClosedImmediately(next)
-{
+function sinkClosedImmediately(next) {
   var t = new CopyTest("sinkClosedImmediately", next);
 
   t.closeSink(Cr.NS_OK);
   t.expect(Cr.NS_ERROR_UNEXPECTED, [NOTHING]);
 }
 
-function sinkClosedWithReadableData(next)
-{
+function sinkClosedWithReadableData(next) {
   var t = new CopyTest("sinkClosedWithReadableData", next);
 
   t.addToSource(SEGMENT);
@@ -285,8 +267,7 @@ function sinkClosedWithReadableData(next)
   t.expect(Cr.NS_ERROR_UNEXPECTED, [NOTHING]);
 }
 
-function sinkClosedAfterWrite(next)
-{
+function sinkClosedAfterWrite(next) {
   var t = new CopyTest("sinkClosedAfterWrite", next);
 
   t.addToSource(TWO_SEGMENTS);
@@ -296,16 +277,14 @@ function sinkClosedAfterWrite(next)
   t.expect(Cr.NS_ERROR_UNEXPECTED, [FIRST_SEGMENT]);
 }
 
-function sourceAndSinkClosed(next)
-{
+function sourceAndSinkClosed(next) {
   var t = new CopyTest("sourceAndSinkClosed", next);
 
   t.closeSourceThenSink(Cr.NS_OK, Cr.NS_OK);
   t.expect(Cr.NS_OK, []);
 }
 
-function sinkAndSourceClosed(next)
-{
+function sinkAndSourceClosed(next) {
   var t = new CopyTest("sinkAndSourceClosed", next);
 
   t.closeSinkThenSource(Cr.NS_OK, Cr.NS_OK);
@@ -314,8 +293,7 @@ function sinkAndSourceClosed(next)
   t.expect(Cr.NS_ERROR_UNEXPECTED, []);
 }
 
-function sourceAndSinkClosedWithPendingData(next)
-{
+function sourceAndSinkClosedWithPendingData(next) {
   var t = new CopyTest("sourceAndSinkClosedWithPendingData", next);
 
   t.addToSource(SEGMENT);
@@ -327,8 +305,7 @@ function sourceAndSinkClosedWithPendingData(next)
   t.expect(Cr.NS_ERROR_UNEXPECTED, []);
 }
 
-function sinkAndSourceClosedWithPendingData(next)
-{
+function sinkAndSourceClosedWithPendingData(next) {
   var t = new CopyTest("sinkAndSourceClosedWithPendingData", next);
 
   t.addToSource(SEGMENT);
@@ -341,17 +318,16 @@ function sinkAndSourceClosedWithPendingData(next)
 }
 
 
-/*************
+/** ***********
  * UTILITIES *
  *************/
 
 /** Returns the sum of the elements in arr. */
-function sum(arr)
-{
-  var sum = 0;
+function sum(arr) {
+  var s = 0;
   for (var i = 0, sz = arr.length; i < sz; i++)
-    sum += arr[i];
-  return sum;
+    s += arr[i];
+  return s;
 }
 
 /**
@@ -368,31 +344,23 @@ function sum(arr)
  *   which, when called, first calls the original callback provided to it and
  *   then calls wrapperCallback
  */
-function createStreamReadyInterceptor(wrapperCallback, name)
-{
-  return function StreamReadyInterceptor(callback)
-  {
+function createStreamReadyInterceptor(wrapperCallback, name) {
+  return function StreamReadyInterceptor(callback) {
     this.wrappedCallback = callback;
-    this[name] = function streamReadyInterceptor(stream)
-    {
+    this[name] = function streamReadyInterceptor(stream) {
       dumpn("*** StreamReadyInterceptor." + name);
 
-      try
-      {
+      try {
         dumpn("*** calling original " + name + "...");
         callback[name](stream);
-      }
-      catch (e)
-      {
+      } catch (e) {
         dumpn("!!! error running inner callback: " + e);
         throw e;
-      }
-      finally
-      {
+      } finally {
         dumpn("*** calling wrapper " + name + "...");
         wrapperCallback[name](stream);
       }
-    }
+    };
   };
 }
 
@@ -400,15 +368,14 @@ function createStreamReadyInterceptor(wrapperCallback, name)
  * Print out a banner with the given message, uppercased, for debugging
  * purposes.
  */
-function note(m)
-{
+function note(m) {
   m = m.toUpperCase();
   var asterisks = Array(m.length + 1 + 4).join("*");
   dumpn(asterisks + "\n* " + m + " *\n" + asterisks);
 }
 
 
-/***********
+/** *********
  * MOCKERY *
  ***********/
 
@@ -431,8 +398,7 @@ Response.SEGMENT_SIZE = SEGMENT.length;
  * @param name : string
  *   a name for this pipe, used in debugging output
  */
-function CustomPipe(name)
-{
+function CustomPipe(name) {
   var self = this;
 
   /** Data read from input that's buffered until it can be written to output. */
@@ -483,15 +449,13 @@ function CustomPipe(name)
        * Registers a stream-ready wrapper creator function so that a
        * stream-ready callback made in the future can be wrapped.
        */
-      interceptStreamReadyCallbacks: function(streamReadyInterceptCreator)
-      {
+      interceptStreamReadyCallbacks(streamReadyInterceptCreator) {
         dumpn("*** [" + this.name + "].interceptStreamReadyCallbacks");
 
         Assert.ok(this._streamReadyInterceptCreator === null,
                   "intercepting twice");
         this._streamReadyInterceptCreator = streamReadyInterceptCreator;
-        if (this._waiter)
-        {
+        if (this._waiter) {
           this._waiter.callback =
             new streamReadyInterceptCreator(this._waiter.callback);
         }
@@ -501,8 +465,7 @@ function CustomPipe(name)
        * Removes a previously-registered stream-ready wrapper creator function,
        * also clearing any current wrapping.
        */
-      removeStreamReadyInterceptor: function()
-      {
+      removeStreamReadyInterceptor() {
         dumpn("*** [" + this.name + "].removeStreamReadyInterceptor()");
 
         Assert.ok(this._streamReadyInterceptCreator !== null,
@@ -515,8 +478,7 @@ function CustomPipe(name)
       //
       // see nsIAsyncInputStream.asyncWait
       //
-      asyncWait: function asyncWait(callback, flags, requestedCount, target)
-      {
+      asyncWait: function asyncWait(callback, flags, requestedCount, target) {
         dumpn("*** [" + this.name + "].asyncWait");
 
         Assert.ok(callback && typeof callback !== "function");
@@ -535,15 +497,14 @@ function CustomPipe(name)
               this._streamReadyInterceptCreator
               ? new this._streamReadyInterceptCreator(callback)
               : callback,
-            closureOnly: closureOnly,
-            requestedCount: requestedCount,
-            eventTarget: target
+            closureOnly,
+            requestedCount,
+            eventTarget: target,
           };
 
         if (!Components.isSuccessCode(self._status) ||
             (!closureOnly && this._readable >= requestedCount &&
-             self._data.length >= requestedCount))
-        {
+             self._data.length >= requestedCount)) {
           this._notify();
         }
       },
@@ -551,13 +512,11 @@ function CustomPipe(name)
       //
       // see nsIAsyncInputStream.closeWithStatus
       //
-      closeWithStatus: function closeWithStatus(status)
-      {
+      closeWithStatus: function closeWithStatus(status) {
         dumpn("*** [" + this.name + "].closeWithStatus" +
               "(" + status + ")");
 
-        if (!Components.isSuccessCode(self._status))
-        {
+        if (!Components.isSuccessCode(self._status)) {
           dumpn("*** ignoring second closure of [input " + this.name + "] " +
                 "(status " + self._status + ")");
           return;
@@ -577,12 +536,10 @@ function CustomPipe(name)
       //
       // see nsIBinaryInputStream.readByteArray
       //
-      readByteArray: function readByteArray(count)
-      {
+      readByteArray: function readByteArray(count) {
         dumpn("*** [" + this.name + "].readByteArray(" + count + ")");
 
-        if (self._data.length === 0)
-        {
+        if (self._data.length === 0) {
           throw Components.isSuccessCode(self._status)
               ? Cr.NS_BASE_STREAM_WOULD_BLOCK
               : self._status;
@@ -608,8 +565,7 @@ function CustomPipe(name)
        *   greater than the number of bytes already buffered but not made
        *   available by previous makeReadable calls
        */
-      makeReadable: function makeReadable(count)
-      {
+      makeReadable: function makeReadable(count) {
         dumpn("*** [" + this.name + "].makeReadable(" + count + ")");
 
         Assert.ok(Components.isSuccessCode(self._status), "errant call");
@@ -622,8 +578,7 @@ function CustomPipe(name)
         dumpn("readable: " + this._readable + ", data: " + self._data);
 
         var waiter = this._waiter;
-        if (waiter !== null)
-        {
+        if (waiter !== null) {
           if (waiter.requestedCount <= this._readable && !waiter.closureOnly)
             this._notify();
         }
@@ -635,8 +590,7 @@ function CustomPipe(name)
        * this stream and a stream-ready event is dispatched (if any stream-ready
        * callback is currently set).
        */
-      disableReadabilityLimit: function disableReadabilityLimit()
-      {
+      disableReadabilityLimit: function disableReadabilityLimit() {
         dumpn("*** [" + this.name + "].disableReadabilityLimit()");
 
         this._readable = Infinity;
@@ -645,8 +599,7 @@ function CustomPipe(name)
       //
       // see nsIInputStream.available
       //
-      available: function available()
-      {
+      available: function available() {
         dumpn("*** [" + this.name + "].available()");
 
         if (self._data.length === 0 && !Components.isSuccessCode(self._status))
@@ -666,14 +619,12 @@ function CustomPipe(name)
        * in some cases it's not desirable to close output, so this supplies an
        * alternative method to get notified when the last write has occurred.
        */
-      maybeNotifyFinally: function maybeNotifyFinally()
-      {
+      maybeNotifyFinally: function maybeNotifyFinally() {
         dumpn("*** [" + this.name + "].maybeNotifyFinally()");
 
         Assert.ok(this._waiter !== null, "must be waiting now");
 
-        if (self._data.length > 0)
-        {
+        if (self._data.length > 0) {
           dumpn("*** data still pending, normal notifications will signal " +
                 "completion");
           return;
@@ -693,48 +644,32 @@ function CustomPipe(name)
        * Dispatches an event to call a previously-registered stream-ready
        * callback.
        */
-      _notify: function _notify()
-      {
+      _notify: function _notify() {
         dumpn("*** [" + this.name + "]._notify()");
 
         var waiter = this._waiter;
         Assert.ok(waiter !== null, "no waiter?");
 
-        if (this._event === null)
-        {
+        if (this._event === null) {
           var event = this._event =
             {
-              run: function run()
-              {
+              run: function run() {
                 input._waiter = null;
                 input._event = null;
-                try
-                {
+                try {
                   Assert.ok(!Components.isSuccessCode(self._status) ||
                             input._readable >= waiter.requestedCount);
                   waiter.callback.onInputStreamReady(input);
-                }
-                catch (e)
-                {
+                } catch (e) {
                   do_throw("error calling onInputStreamReady: " + e);
                 }
-              }
+              },
             };
           waiter.eventTarget.dispatch(event, Ci.nsIThread.DISPATCH_NORMAL);
         }
       },
 
-      QueryInterface: function QueryInterface(iid)
-      {
-        if (iid.equals(Ci.nsIAsyncInputStream) ||
-            iid.equals(Ci.nsIInputStream) ||
-            iid.equals(Ci.nsISupports))
-        {
-          return this;
-        }
-
-        throw Cr.NS_ERROR_NO_INTERFACE;
-      }
+      QueryInterface: ChromeUtils.generateQI(["nsIAsyncInputStream", "nsIInputStream"]),
     };
 
   /** The output end of this pipe. */
@@ -785,15 +720,13 @@ function CustomPipe(name)
        * Registers a stream-ready wrapper creator function so that a
        * stream-ready callback made in the future can be wrapped.
        */
-      interceptStreamReadyCallbacks: function(streamReadyInterceptCreator)
-      {
+      interceptStreamReadyCallbacks(streamReadyInterceptCreator) {
         dumpn("*** [" + this.name + "].interceptStreamReadyCallbacks");
 
         Assert.ok(this._streamReadyInterceptCreator !== null,
                   "intercepting onOutputStreamReady twice");
         this._streamReadyInterceptCreator = streamReadyInterceptCreator;
-        if (this._waiter)
-        {
+        if (this._waiter) {
           this._waiter.callback =
             new streamReadyInterceptCreator(this._waiter.callback);
         }
@@ -803,8 +736,7 @@ function CustomPipe(name)
        * Removes a previously-registered stream-ready wrapper creator function,
        * also clearing any current wrapping.
        */
-      removeStreamReadyInterceptor: function()
-      {
+      removeStreamReadyInterceptor() {
         dumpn("*** [" + this.name + "].removeStreamReadyInterceptor()");
 
         Assert.ok(this._streamReadyInterceptCreator !== null,
@@ -817,8 +749,7 @@ function CustomPipe(name)
       //
       // see nsIAsyncOutputStream.asyncWait
       //
-      asyncWait: function asyncWait(callback, flags, requestedCount, target)
-      {
+      asyncWait: function asyncWait(callback, flags, requestedCount, target) {
         dumpn("*** [" + this.name + "].asyncWait");
 
         Assert.ok(callback && typeof callback !== "function");
@@ -837,20 +768,18 @@ function CustomPipe(name)
               this._streamReadyInterceptCreator
               ? new this._streamReadyInterceptCreator(callback)
               : callback,
-            closureOnly: closureOnly,
-            requestedCount: requestedCount,
+            closureOnly,
+            requestedCount,
             eventTarget: target,
-            toString: function toString()
-            {
+            toString: function toString() {
               return "waiter(" + (closureOnly ? "closure only, " : "") +
                       "requestedCount: " + requestedCount + ", target: " +
                       target + ")";
-            }
+            },
           };
 
         if ((!closureOnly && this._writable >= requestedCount) ||
-            !Components.isSuccessCode(this.status))
-        {
+            !Components.isSuccessCode(this.status)) {
           this._notify();
         }
       },
@@ -858,12 +787,10 @@ function CustomPipe(name)
       //
       // see nsIAsyncOutputStream.closeWithStatus
       //
-      closeWithStatus: function closeWithStatus(status)
-      {
+      closeWithStatus: function closeWithStatus(status) {
         dumpn("*** [" + this.name + "].closeWithStatus(" + status + ")");
 
-        if (!Components.isSuccessCode(self._status))
-        {
+        if (!Components.isSuccessCode(self._status)) {
           dumpn("*** ignoring redundant closure of [input " + this.name + "] " +
                 "because it's already closed (status " + self._status + ")");
           return;
@@ -883,8 +810,7 @@ function CustomPipe(name)
       //
       // see nsIBinaryOutputStream.writeByteArray
       //
-      writeByteArray: function writeByteArray(bytes, length)
-      {
+      writeByteArray: function writeByteArray(bytes, length) {
         dumpn("*** [" + this.name + "].writeByteArray" +
               "([" + bytes + "], " + length + ")");
 
@@ -902,8 +828,7 @@ function CustomPipe(name)
         this._writable -= length;
 
         if (input._readable === Infinity && input._waiter &&
-            !input._waiter.closureOnly)
-        {
+            !input._waiter.closureOnly) {
           input._notify();
         }
       },
@@ -911,8 +836,7 @@ function CustomPipe(name)
       //
       // see nsIOutputStream.write
       //
-      write: function write(str, length)
-      {
+      write: function write(str, length) {
         dumpn("*** [" + this.name + "].write");
 
         Assert.equal(str.length, length, "sanity");
@@ -922,12 +846,9 @@ function CustomPipe(name)
           throw Cr.NS_BASE_STREAM_WOULD_BLOCK;
 
         var actualWritten;
-        if (this._writableAmounts.length === 0)
-        {
+        if (this._writableAmounts.length === 0) {
           actualWritten = Math.min(this._writable, length);
-        }
-        else
-        {
+        } else {
           Assert.ok(this._writable >= this._writableAmounts[0],
                     "writable amounts value greater than writable data?");
           Assert.equal(this._writable, sum(this._writableAmounts),
@@ -944,8 +865,7 @@ function CustomPipe(name)
         this._writable -= actualWritten;
 
         if (input._readable === Infinity && input._waiter &&
-            !input._waiter.closureOnly)
-        {
+            !input._waiter.closureOnly) {
           input._notify();
         }
 
@@ -959,8 +879,7 @@ function CustomPipe(name)
        * @param count : uint
        *   the number of bytes of additional data to make writable
        */
-      makeWritable: function makeWritable(count)
-      {
+      makeWritable: function makeWritable(count) {
         dumpn("*** [" + this.name + "].makeWritable(" + count + ")");
 
         Assert.ok(Components.isSuccessCode(self._status));
@@ -969,8 +888,7 @@ function CustomPipe(name)
 
         var waiter = this._waiter;
         if (waiter && !waiter.closureOnly &&
-            waiter.requestedCount <= this._writable)
-        {
+            waiter.requestedCount <= this._writable) {
           this._notify();
         }
       },
@@ -995,8 +913,7 @@ function CustomPipe(name)
        *   the total amount of writable space specified by the sum of all
        *   increments
        */
-      makeWritableByIncrements: function makeWritableByIncrements(increments)
-      {
+      makeWritableByIncrements: function makeWritableByIncrements(increments) {
         dumpn("*** [" + this.name + "].makeWritableByIncrements" +
               "([" + increments.join(", ") + "])");
 
@@ -1011,8 +928,7 @@ function CustomPipe(name)
 
         var waiter = this._waiter;
         if (waiter && !waiter.closureOnly &&
-            waiter.requestedCount <= this._writable)
-        {
+            waiter.requestedCount <= this._writable) {
           this._notify();
         }
       },
@@ -1021,47 +937,31 @@ function CustomPipe(name)
        * Dispatches an event to call a previously-registered stream-ready
        * callback.
        */
-      _notify: function _notify()
-      {
+      _notify: function _notify() {
         dumpn("*** [" + this.name + "]._notify()");
 
         var waiter = this._waiter;
         Assert.ok(waiter !== null, "no waiter?");
 
-        if (this._event === null)
-        {
+        if (this._event === null) {
           var event = this._event =
             {
-              run: function run()
-              {
+              run: function run() {
                 output._waiter = null;
                 output._event = null;
 
-                try
-                {
+                try {
                   waiter.callback.onOutputStreamReady(output);
-                }
-                catch (e)
-                {
+                } catch (e) {
                   do_throw("error calling onOutputStreamReady: " + e);
                 }
-              }
+              },
             };
           waiter.eventTarget.dispatch(event, Ci.nsIThread.DISPATCH_NORMAL);
         }
       },
 
-      QueryInterface: function QueryInterface(iid)
-      {
-        if (iid.equals(Ci.nsIAsyncOutputStream) ||
-            iid.equals(Ci.nsIOutputStream) ||
-            iid.equals(Ci.nsISupports))
-        {
-          return this;
-        }
-
-        throw Cr.NS_ERROR_NO_INTERFACE;
-      }
+      QueryInterface: ChromeUtils.generateQI(["nsIAsyncOutputStream", "nsIOutputStream"]),
     };
 }
 
@@ -1072,8 +972,7 @@ function CustomPipe(name)
  * @param name : string
  *   test name, used in debugging output
  */
-function CopyTest(name, next)
-{
+function CopyTest(name, next) {
   /** Name used in debugging output. */
   this.name = name;
 
@@ -1157,20 +1056,15 @@ CopyTest.prototype =
    * @param bytes : [uint]
    *   array of bytes of data to add to the source for the copier
    */
-  addToSource: function addToSource(bytes)
-  {
+  addToSource: function addToSource(bytes) {
     var self = this;
-    this._addToTasks(function addToSourceTask()
-    {
+    this._addToTasks(function addToSourceTask() {
       note("addToSourceTask");
 
-      try
-      {
+      try {
         self._copyableDataStream.makeWritable(bytes.length);
         self._copyableDataStream.writeByteArray(bytes, bytes.length);
-      }
-      finally
-      {
+      } finally {
         self._stageNextTask();
       }
     });
@@ -1183,11 +1077,9 @@ CopyTest.prototype =
    * @param count : uint
    *   number of bytes to make available for reading
    */
-  makeSourceReadable: function makeSourceReadable(count)
-  {
+  makeSourceReadable: function makeSourceReadable(count) {
     var self = this;
-    this._addToTasks(function makeSourceReadableTask()
-    {
+    this._addToTasks(function makeSourceReadableTask() {
       note("makeSourceReadableTask");
 
       self._source.makeReadable(count);
@@ -1207,19 +1099,16 @@ CopyTest.prototype =
    *   array of byte arrays to expect to be written in sequence to the sink
    */
   makeSinkWritableAndWaitFor:
-  function makeSinkWritableAndWaitFor(bytes, dataQuantums)
-  {
+  function makeSinkWritableAndWaitFor(bytes, dataQuantums) {
     var self = this;
 
     Assert.equal(bytes,
-                 dataQuantums.reduce(function(partial, current)
-                 {
+                 dataQuantums.reduce(function(partial, current) {
                    return partial + current.length;
                  }, 0),
                  "bytes/quantums mismatch");
 
-    function increaseSinkSpaceTask()
-    {
+    function increaseSinkSpaceTask() {
       /* Now do the actual work to trigger the interceptor. */
       self._sink.makeWritable(bytes);
     }
@@ -1240,15 +1129,13 @@ CopyTest.prototype =
    *   array of byte arrays to expect to be written in sequence to the sink
    */
   makeSinkWritableByIncrementsAndWaitFor:
-  function makeSinkWritableByIncrementsAndWaitFor(bytes, dataQuantums)
-  {
+  function makeSinkWritableByIncrementsAndWaitFor(bytes, dataQuantums) {
     var self = this;
 
     var desiredAmounts = dataQuantums.map(function(v) { return v.length; });
     Assert.equal(bytes, sum(desiredAmounts), "bytes/quantums mismatch");
 
-    function increaseSinkSpaceByIncrementsTask()
-    {
+    function increaseSinkSpaceByIncrementsTask() {
       /* Now do the actual work to trigger the interceptor incrementally. */
       self._sink.makeWritableByIncrements(desiredAmounts);
     }
@@ -1264,12 +1151,10 @@ CopyTest.prototype =
    * @param status : nsresult
    *   the status to provide when closing the copier's source stream
    */
-  closeSource: function closeSource(status)
-  {
+  closeSource: function closeSource(status) {
     var self = this;
 
-    this._addToTasks(function closeSourceTask()
-    {
+    this._addToTasks(function closeSourceTask() {
       note("closeSourceTask");
 
       self._source.closeWithStatus(status);
@@ -1290,15 +1175,13 @@ CopyTest.prototype =
    *   array of byte arrays to expect to be written in sequence to the sink
    */
   closeSourceAndWaitFor:
-  function closeSourceAndWaitFor(status, bytes, dataQuantums)
-  {
+  function closeSourceAndWaitFor(status, bytes, dataQuantums) {
     var self = this;
 
     Assert.equal(bytes, sum(dataQuantums.map(function(v) { return v.length; })),
                  "bytes/quantums mismatch");
 
-    function closeSourceAndWaitForTask()
-    {
+    function closeSourceAndWaitForTask() {
       self._sink.makeWritable(bytes);
       self._copyableDataStream.closeWithStatus(status);
     }
@@ -1314,11 +1197,9 @@ CopyTest.prototype =
    * @param status : nsresult
    *   the status to provide when closing the copier's sink stream
    */
-  closeSink: function closeSink(status)
-  {
+  closeSink: function closeSink(status) {
     var self = this;
-    this._addToTasks(function closeSinkTask()
-    {
+    this._addToTasks(function closeSinkTask() {
       note("closeSinkTask");
 
       self._sink.closeWithStatus(status);
@@ -1335,11 +1216,9 @@ CopyTest.prototype =
    * @param sinkStatus : nsresult
    *   the status to provide when closing the copier's sink stream
    */
-  closeSourceThenSink: function closeSourceThenSink(sourceStatus, sinkStatus)
-  {
+  closeSourceThenSink: function closeSourceThenSink(sourceStatus, sinkStatus) {
     var self = this;
-    this._addToTasks(function closeSourceThenSinkTask()
-    {
+    this._addToTasks(function closeSourceThenSinkTask() {
       note("closeSourceThenSinkTask");
 
       self._source.closeWithStatus(sourceStatus);
@@ -1357,11 +1236,9 @@ CopyTest.prototype =
    * @param sourceStatus : nsresult
    *   the status to provide when closing the copier's source stream
    */
-  closeSinkThenSource: function closeSinkThenSource(sinkStatus, sourceStatus)
-  {
+  closeSinkThenSource: function closeSinkThenSource(sinkStatus, sourceStatus) {
     var self = this;
-    this._addToTasks(function closeSinkThenSourceTask()
-    {
+    this._addToTasks(function closeSinkThenSourceTask() {
       note("closeSinkThenSource");
 
       self._sink.closeWithStatus(sinkStatus);
@@ -1382,8 +1259,7 @@ CopyTest.prototype =
    *   an array containing arrays of bytes whose concatenation constitutes the
    *   expected copied data
    */
-  expect: function expect(expectedStatus, receivedData)
-  {
+  expect: function expect(expectedStatus, receivedData) {
     this._expectedStatus = expectedStatus;
     this._expectedData = [];
     for (var i = 0, sz = receivedData.length; i < sz; i++)
@@ -1408,11 +1284,9 @@ CopyTest.prototype =
    *   notifications (which will be generated as a result of this function's
    *   actions)
    */
-  _waitForHelper: function _waitForHelper(name, dataQuantums, trigger)
-  {
+  _waitForHelper: function _waitForHelper(name, dataQuantums, trigger) {
     var self = this;
-    this._addToTasks(function waitForHelperTask()
-    {
+    this._addToTasks(function waitForHelperTask() {
       note(name);
 
       var quantumIndex = 0;
@@ -1423,23 +1297,19 @@ CopyTest.prototype =
        */
       var streamReadyCallback =
         {
-          onInputStreamReady: function wrapperOnInputStreamReady(input)
-          {
+          onInputStreamReady: function wrapperOnInputStreamReady(input) {
             dumpn("*** streamReadyCallback.onInputStreamReady" +
                   "(" + input.name + ")");
 
             Assert.equal(this, streamReadyCallback, "sanity");
 
-            try
-            {
-              if (quantumIndex < dataQuantums.length)
-              {
+            try {
+              if (quantumIndex < dataQuantums.length) {
                 var quantum = dataQuantums[quantumIndex++];
                 var sz = quantum.length;
                 Assert.equal(self._lastQuantum.length, sz,
                              "different quantum lengths");
-                for (var i = 0; i < sz; i++)
-                {
+                for (var i = 0; i < sz; i++) {
                   Assert.equal(self._lastQuantum[i], quantum[i],
                                "bad data at " + i);
                 }
@@ -1447,17 +1317,14 @@ CopyTest.prototype =
                 dumpn("*** waiting to check remaining " +
                       (dataQuantums.length - quantumIndex) + " quantums...");
               }
-            }
-            finally
-            {
-              if (quantumIndex === dataQuantums.length)
-              {
+            } finally {
+              if (quantumIndex === dataQuantums.length) {
                 dumpn("*** data checks completed!  next task...");
                 self._copiedDataStream.removeStreamReadyInterceptor();
                 self._stageNextTask();
               }
             }
-          }
+          },
         };
 
       var interceptor =
@@ -1478,35 +1345,28 @@ CopyTest.prototype =
    * that it is finished; otherwise allows execution to continue until that has
    * occurred).
    */
-  _waitForWrittenData: function _waitForWrittenData()
-  {
+  _waitForWrittenData: function _waitForWrittenData() {
     dumpn("*** _waitForWrittenData (" + this.name + ")");
 
     var self = this;
     var outputWrittenWatcher =
       {
-        onInputStreamReady: function onInputStreamReady(input)
-        {
+        onInputStreamReady: function onInputStreamReady(input) {
           dumpn("*** outputWrittenWatcher.onInputStreamReady" +
                 "(" + input.name + ")");
 
-          if (self._allDataWritten)
-          {
+          if (self._allDataWritten) {
             do_throw("ruh-roh!  why are we getting notified of more data " +
                      "after we should have received all of it?");
           }
 
           self._waitingForData = false;
 
-          try
-          {
+          try {
             var avail = input.available();
-          }
-          catch (e)
-          {
+          } catch (e) {
             dumpn("*** available() threw!  error: " + e);
-            if (self._completed)
-            {
+            if (self._completed) {
               dumpn("*** NB: this isn't a problem, because we've copied " +
                     "completely now, and this notify may have been expedited " +
                     "by maybeNotifyFinally such that we're being called when " +
@@ -1515,8 +1375,7 @@ CopyTest.prototype =
             avail = 0;
           }
 
-          if (avail > 0)
-          {
+          if (avail > 0) {
             var data = input.readByteArray(avail);
             Assert.equal(data.length, avail,
                          "readByteArray returned wrong number of bytes?");
@@ -1524,19 +1383,15 @@ CopyTest.prototype =
             self._receivedData.push.apply(self._receivedData, data);
           }
 
-          if (avail === 0)
-          {
+          if (avail === 0) {
             dumpn("*** all data received!");
 
             self._allDataWritten = true;
 
-            if (self._copyingFinished)
-            {
+            if (self._copyingFinished) {
               dumpn("*** copying already finished, continuing to next test");
               self._testComplete();
-            }
-            else
-            {
+            } else {
               dumpn("*** copying not finished, waiting for that to happen");
             }
 
@@ -1544,7 +1399,7 @@ CopyTest.prototype =
           }
 
           self._waitForWrittenData();
-        }
+        },
       };
 
     this._copiedDataStream.asyncWait(outputWrittenWatcher, 0, 1,
@@ -1557,13 +1412,11 @@ CopyTest.prototype =
    * status comparisons, and calls the test-completion function provided when
    * this test was first created.
    */
-  _testComplete: function _testComplete()
-  {
+  _testComplete: function _testComplete() {
     dumpn("*** CopyTest(" + this.name + ") complete!  " +
           "On to the next test...");
 
-    try
-    {
+    try {
       Assert.ok(this._allDataWritten, "expect all data written now!");
       Assert.ok(this._copyingFinished, "expect copying finished now!");
 
@@ -1575,14 +1428,10 @@ CopyTest.prototype =
       Assert.equal(received.length, expected.length, "wrong data");
       for (var i = 0, sz = expected.length; i < sz; i++)
         Assert.equal(received[i], expected[i], "bad data at " + i);
-    }
-    catch (e)
-    {
+    } catch (e) {
       dumpn("!!! ERROR PERFORMING FINAL " + this.name + " CHECKS!  " + e);
       throw e;
-    }
-    finally
-    {
+    } finally {
       dumpn("*** CopyTest(" + this.name + ") complete!  " +
             "Invoking test-completion callback...");
       this._done();
@@ -1590,31 +1439,24 @@ CopyTest.prototype =
   },
 
   /** Dispatches an event at this thread which will run the next task. */
-  _stageNextTask: function _stageNextTask()
-  {
+  _stageNextTask: function _stageNextTask() {
     dumpn("*** CopyTest(" + this.name + ")._stageNextTask()");
 
-    if (this._currentTask === this._tasks.length)
-    {
+    if (this._currentTask === this._tasks.length) {
       dumpn("*** CopyTest(" + this.name + ") tasks complete!");
       return;
     }
 
     var task = this._tasks[this._currentTask++];
-    var self = this;
     var event =
       {
-        run: function run()
-        {
-          try
-          {
+        run: function run() {
+          try {
             task();
-          }
-          catch (e)
-          {
+          } catch (e) {
             do_throw("exception thrown running task: " + e);
           }
-        }
+        },
       };
     gThreadManager.dispatchToMainThread(event);
   },
@@ -1625,16 +1467,14 @@ CopyTest.prototype =
    * @param task : function() : void
    *   the function to call as a task
    */
-  _addToTasks: function _addToTasks(task)
-  {
+  _addToTasks: function _addToTasks(task) {
     this._tasks.push(task);
   },
 
   //
   // see nsIRequestObserver.onStartRequest
   //
-  onStartRequest: function onStartRequest(self, _)
-  {
+  onStartRequest: function onStartRequest(self, _) {
     dumpn("*** CopyTest.onStartRequest (" + self.name + ")");
 
     Assert.ok(_ === null);
@@ -1645,8 +1485,7 @@ CopyTest.prototype =
   //
   // see nsIRequestObserver.onStopRequest
   //
-  onStopRequest: function onStopRequest(self, _, status)
-  {
+  onStopRequest: function onStopRequest(self, _, status) {
     dumpn("*** CopyTest.onStopRequest (" + self.name + ", " + status + ")");
 
     Assert.ok(_ === null);
@@ -1654,13 +1493,10 @@ CopyTest.prototype =
 
     this._copyingFinished = true;
 
-    if (this._allDataWritten)
-    {
+    if (this._allDataWritten) {
       dumpn("*** all data written, continuing with remaining tests...");
       this._testComplete();
-    }
-    else
-    {
+    } else {
       /*
        * Everything's copied as far as the copier is concerned.  However, there
        * may be a backup transferring from the output end of the copy sink to
@@ -1679,5 +1515,5 @@ CopyTest.prototype =
 
       this._copiedDataStream.maybeNotifyFinally();
     }
-  }
+  },
 };

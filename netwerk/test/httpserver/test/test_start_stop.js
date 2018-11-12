@@ -18,10 +18,8 @@ XPCOMUtils.defineLazyGetter(this, "PREPATH", function() {
 
 var srv, srv2;
 
-function run_test()
-{
-  if (mozinfo.os == "win")
-  {
+function run_test() {
+  if (mozinfo.os == "win") {
     dumpn("*** not running test_start_stop.js on Windows for now, because " +
           "Windows is dumb");
     return;
@@ -32,33 +30,25 @@ function run_test()
   srv = createServer();
   srv.start(-1);
 
-  try
-  {
+  try {
     srv.start(PORT);
     do_throw("starting a started server");
-  }
-  catch (e)
-  {
+  } catch (e) {
     isException(e, Cr.NS_ERROR_ALREADY_INITIALIZED);
   }
 
   do_test_pending();
-  srv.stop(function()
-  {
-    try
-    {
+  srv.stop(function() {
+    try {
       do_test_pending();
       run_test_2();
-    }
-    finally
-    {
+    } finally {
       do_test_finished();
     }
   });
 }
 
-function run_test_2()
-{
+function run_test_2() {
   dumpn("*** run_test_2");
 
   do_test_finished();
@@ -66,41 +56,30 @@ function run_test_2()
   srv.start(PORT);
   srv2 = createServer();
 
-  try
-  {
+  try {
     srv2.start(PORT);
     do_throw("two servers on one port?");
-  }
-  catch (e)
-  {
+  } catch (e) {
     isException(e, Cr.NS_ERROR_NOT_AVAILABLE);
   }
 
   do_test_pending();
-  try
-  {
-    srv.stop({onStopped: function()
-              {
-                try
-                {
+  try {
+    srv.stop({onStopped() {
+                try {
                   do_test_pending();
                   run_test_3();
-                }
-                finally
-                {
+                } finally {
                   do_test_finished();
                 }
-              }
+              },
              });
-  }
-  catch (e)
-  {
+  } catch (e) {
     do_throw("error stopping with an object: " + e);
   }
 }
 
-function run_test_3()
-{
+function run_test_3() {
   dumpn("*** run_test_3");
 
   do_test_finished();
@@ -108,10 +87,8 @@ function run_test_3()
   srv.start(PORT);
 
   do_test_pending();
-  try
-  {
-    srv.stop().then(function()
-    {
+  try {
+    srv.stop().then(function() {
       try {
         do_test_pending();
         run_test_4();
@@ -119,15 +96,12 @@ function run_test_3()
         do_test_finished();
       }
     });
-  }
-  catch (e)
-  {
+  } catch (e) {
     do_throw("error stopping with an object: " + e);
   }
 }
 
-function run_test_4()
-{
+function run_test_4() {
   dumpn("*** run_test_4");
 
   do_test_finished();
@@ -145,8 +119,7 @@ function run_test_4()
 
 var testsComplete = false;
 
-function run_test_5()
-{
+function run_test_5() {
   dumpn("*** run_test_5");
 
   testsComplete = true;
@@ -157,29 +130,23 @@ function run_test_5()
 
 const INTERVAL = 500;
 
-function handle(request, response)
-{
+function handle(request, response) {
   response.processAsync();
 
   dumpn("*** stopping server...");
   srv.stop(serverStopped);
 
-  callLater(INTERVAL, function()
-  {
+  callLater(INTERVAL, function() {
     Assert.ok(!stopped);
 
-    callLater(INTERVAL, function()
-    {
+    callLater(INTERVAL, function() {
       Assert.ok(!stopped);
       response.finish();
 
-      try
-      {
+      try {
         response.processAsync();
         do_throw("late processAsync didn't throw?");
-      }
-      catch (e)
-      {
+      } catch (e) {
         isException(e, Cr.NS_ERROR_UNEXPECTED);
       }
     });
@@ -187,8 +154,7 @@ function handle(request, response)
 }
 
 var stopped = false;
-function serverStopped()
-{
+function serverStopped() {
   dumpn("*** server really, fully shut down now");
   stopped = true;
   if (testsComplete)
