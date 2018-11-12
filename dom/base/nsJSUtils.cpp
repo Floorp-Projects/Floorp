@@ -97,7 +97,8 @@ nsJSUtils::CompileFunction(AutoJSAPI& jsapi,
 
   // Compile.
   JS::Rooted<JSFunction*> fun(cx);
-  JS::SourceBufferHolder source(PromiseFlatString(aBody).get(), aBody.Length(),
+  const nsString& bodyString = PromiseFlatString(aBody);
+  JS::SourceBufferHolder source(bodyString.get(), aBody.Length(),
                                 JS::SourceBufferHolder::NoOwnership);
   if (!JS::CompileFunction(cx, aScopeChain, aOptions,
                            PromiseFlatCString(aName).get(),
