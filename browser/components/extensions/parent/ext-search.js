@@ -76,20 +76,17 @@ this.search = class extends ExtensionAPI {
             postData: submission.postData,
             triggeringPrincipal: context.principal,
           };
-          let tabbrowser;
           if (searchProperties.tabId === null) {
             let {gBrowser} = windowTracker.topWindow;
             let nativeTab = gBrowser.addTab(submission.uri.spec, options);
             if (!searchLoadInBackground) {
               gBrowser.selectedTab = nativeTab;
             }
-            tabbrowser = gBrowser;
           } else {
             let tab = tabTracker.getTab(searchProperties.tabId);
             tab.linkedBrowser.loadURI(submission.uri.spec, options);
-            tabbrowser = tab.linkedBrowser.getTabBrowser();
           }
-          BrowserUsageTelemetry.recordSearch(tabbrowser, engine, "webextension");
+          BrowserUsageTelemetry.recordSearch(engine, "webextension");
         },
       },
     };
