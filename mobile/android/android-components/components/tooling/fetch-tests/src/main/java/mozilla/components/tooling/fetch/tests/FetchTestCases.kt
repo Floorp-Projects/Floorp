@@ -19,8 +19,6 @@ import org.junit.Assert.fail
 import org.junit.Test
 import java.io.File
 import java.io.IOException
-import java.net.ServerSocket
-import java.net.Socket
 import java.net.SocketTimeoutException
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -232,7 +230,7 @@ abstract class FetchTestCases {
         withServerResponding(
             MockResponse()
                 .setBody("Yep!")
-                .setBodyDelay(1, TimeUnit.SECONDS)
+                .setBodyDelay(10, TimeUnit.SECONDS)
         ) { client ->
             val response = client.fetch(
                 Request(
@@ -240,32 +238,6 @@ abstract class FetchTestCases {
                     readTimeout = Pair(1, TimeUnit.SECONDS)))
 
             fail("Expected read timeout, but got response: ${response.status}")
-        }
-    }
-
-    @Test(expected = SocketTimeoutException::class)
-    fun `GET (?) with connect timeout`() {
-        var serverSocket: ServerSocket? = null
-        var socket: Socket? = null
-
-        try {
-            // Create a local server that only accepts one connection, then connect a socket to it so that it cannot
-            // accept any more.
-            serverSocket = ServerSocket(0, 1)
-            socket = Socket().apply { connect(serverSocket.localSocketAddress) }
-
-            val client = createNewClient()
-            val response = client.fetch(
-                Request(
-                    url = "http://127.0.0.1:${serverSocket.localPort}",
-                    connectTimeout = Pair(1, TimeUnit.SECONDS)
-                )
-            )
-
-            fail("Expected connect timeout, but got response: ${response.status}")
-        } finally {
-            try { socket?.close() } catch (e: IOException) {}
-            try { serverSocket?.close() } catch (e: IOException) {}
         }
     }
 
@@ -402,7 +374,7 @@ abstract class FetchTestCases {
             server.start()
             server.block(createNewClient())
         } finally {
-            server.shutdown()
+            try { server.shutdown() } catch (e: IOException) {}
         }
     }
 
