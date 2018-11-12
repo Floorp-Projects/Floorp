@@ -1685,7 +1685,7 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
       // Copy state over
       mLastWasCR = aLastWasCR;
       mTokenizer->loadState(aTokenizer);
-      mTreeBuilder->loadState(aTreeBuilder, &mAtomTable);
+      mTreeBuilder->loadState(aTreeBuilder);
     } else {
       // We've got a successful speculation and at least a moment ago it was
       // the current speculation

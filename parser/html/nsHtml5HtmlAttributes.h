@@ -87,7 +87,7 @@ public:
   bool contains(nsHtml5AttributeName* aName);
   void adjustForMath();
   void adjustForSvg();
-  nsHtml5HtmlAttributes* cloneAttributes(nsHtml5AtomTable* aInterner);
+  nsHtml5HtmlAttributes* cloneAttributes();
   bool equalsAnother(nsHtml5HtmlAttributes* aOther);
   static void initializeStatics();
   static void releaseStatics();

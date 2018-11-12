@@ -69,7 +69,6 @@ public:
   static nsHtml5String newStringFromString(nsHtml5String string);
   static jArray<char16_t, int32_t> newCharArrayFromLocal(nsAtom* local);
   static jArray<char16_t, int32_t> newCharArrayFromString(nsHtml5String string);
-  static nsAtom* newLocalFromLocal(nsAtom* local, nsHtml5AtomTable* interner);
   static bool localEqualsBuffer(nsAtom* local, char16_t* buf, int32_t length);
   static bool lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(
     const char* lowerCaseLiteral,
