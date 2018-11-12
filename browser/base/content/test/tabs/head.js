@@ -21,8 +21,9 @@ function triggerClickOn(target, options) {
   return promise;
 }
 
-async function addTab(url = "http://mochi.test:8888/") {
-  const tab = BrowserTestUtils.addTab(gBrowser, url, { skipAnimation: true });
+async function addTab(url = "http://mochi.test:8888/", params = {}) {
+  params.skipAnimation = true;
+  const tab = BrowserTestUtils.addTab(gBrowser, url, params);
   const browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
   return tab;
