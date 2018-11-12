@@ -153,6 +153,10 @@ let gWhitelist = [{
     key: "tos",
     type: "double-quote",
   }, {
+    file: "aboutNetworking.dtd",
+    key: "aboutNetworking.logTutorial",
+    type: "single-quote",
+  }, {
     file: "browser.dtd",
     key: "addonPostInstallMessage.label",
     type: "single-quote",
