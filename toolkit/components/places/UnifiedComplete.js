@@ -1136,7 +1136,7 @@ Search.prototype = {
     return true;
   },
 
-  async _matchSearchEngineTokenAlias() {
+  async _matchSearchEngineTokenAliasForAutofill() {
     // We need a single "@engine" search token.
     if (this._searchTokens.length != 1) {
       return false;
@@ -1174,6 +1174,17 @@ Search.prototype = {
             icon: engine.iconURI ? engine.iconURI.spec : null,
           });
           this._result.setDefaultIndex(0);
+
+          // Set _searchEngineAliasMatch with an empty query so that we don't
+          // attempt to add any more matches.  When a token alias is autofilled,
+          // the only match should be the one we just added.
+          this._searchEngineAliasMatch = {
+            engine,
+            alias: aliasPreservingUserCase,
+            query: "",
+            isTokenAlias: true,
+          };
+
           return true;
         }
       }
@@ -1246,7 +1257,7 @@ Search.prototype = {
     }
 
     if (this.pending && shouldAutofill) {
-      let matched = await this._matchSearchEngineTokenAlias();
+      let matched = await this._matchSearchEngineTokenAliasForAutofill();
       if (matched) {
         return true;
       }
