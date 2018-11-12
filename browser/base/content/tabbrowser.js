@@ -5524,29 +5524,53 @@ var TabContextMenu = {
   },
   reopenInContainer(event) {
     let userContextId = parseInt(event.target.getAttribute("data-usercontextid"));
-    /* Create a triggering principal that is able to load the new tab
-       For codebase principals that are about: chrome: or resource: we need system to load them.
-       Anything other than system principal needs to have the new userContextId.
-    */
-    let triggeringPrincipal = this.contextTab.linkedBrowser.contentPrincipal;
-    if (triggeringPrincipal.isNullPrincipal) {
-      triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal({ userContextId });
-    } else if (triggeringPrincipal.isCodebasePrincipal) {
-      triggeringPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(triggeringPrincipal.URI, { userContextId });
-    }
-    let newTab = gBrowser.addTab(this.contextTab.linkedBrowser.currentURI.spec, {
-      userContextId,
-      pinned: this.contextTab.pinned,
-      index: this.contextTab._tPos + 1,
-      triggeringPrincipal,
-    });
+    let reopenedTabs = this.contextTab.multiselected ? gBrowser.selectedTabs : [this.contextTab];
 
-    if (gBrowser.selectedTab == this.contextTab) {
-      gBrowser.selectedTab = newTab;
-    }
-    if (this.contextTab.muted) {
-      if (!newTab.muted) {
-        newTab.toggleMuteAudio(this.contextTab.muteReason);
+    for (let tab of reopenedTabs) {
+      if (tab.getAttribute("usercontextid") == userContextId) {
+        continue;
+      }
+
+      /* Create a triggering principal that is able to load the new tab
+         For codebase principals that are about: chrome: or resource: we need system to load them.
+         Anything other than system principal needs to have the new userContextId.
+      */
+      let triggeringPrincipal;
+
+      if (tab.linkedPanel) {
+        triggeringPrincipal = tab.linkedBrowser.contentPrincipal;
+      } else {
+        // For lazy tab browsers, get the original principal
+        // from SessionStore
+        let tabState = JSON.parse(SessionStore.getTabState(tab));
+        try {
+          triggeringPrincipal = Utils.deserializePrincipal(tabState.triggeringPrincipal_base64);
+        } catch (ex) {
+          continue;
+        }
+      }
+
+      if (!triggeringPrincipal || triggeringPrincipal.isNullPrincipal) {
+        // Ensure that we have a null principal if we couldn't
+        // deserialize it (for lazy tab browsers) ...
+        // This won't always work however is safe to use.
+        triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal({ userContextId });
+      } else if (triggeringPrincipal.isCodebasePrincipal) {
+        triggeringPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(triggeringPrincipal.URI, { userContextId });
+      }
+
+      let newTab = gBrowser.addTab(tab.linkedBrowser.currentURI.spec, {
+        userContextId,
+        pinned: tab.pinned,
+        index: tab._tPos + 1,
+        triggeringPrincipal,
+      });
+
+      if (gBrowser.selectedTab == tab) {
+        gBrowser.selectedTab = newTab;
+      }
+      if (tab.muted && !newTab.muted) {
+        newTab.toggleMuteAudio(tab.muteReason);
       }
     }
   },
