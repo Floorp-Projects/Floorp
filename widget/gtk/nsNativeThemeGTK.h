@@ -98,7 +98,6 @@ private:
   bool GetExtraSizeForWidget(nsIFrame* aFrame,
                              StyleAppearance aAppearance,
                              nsIntMargin* aExtra);
-  bool IsWidgetVisible(StyleAppearance aAppearance);
 
   void RefreshWidgetWindow(nsIFrame* aFrame);
   WidgetNodeType NativeThemeToGtkTheme(StyleAppearance aAppearance,
