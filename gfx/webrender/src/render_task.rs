@@ -27,7 +27,7 @@ use print_tree::{PrintTreePrinter};
 use render_backend::FrameId;
 use resource_cache::{CacheItem, ResourceCache};
 use surface::SurfaceCacheKey;
-use std::{cmp, ops, mem, usize, f32, i32};
+use std::{cmp, ops, mem, usize, f32, i32, u32};
 use texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 use tiling::{RenderPass, RenderTargetIndex};
 use tiling::{RenderTargetKind};
@@ -50,7 +50,20 @@ fn render_task_sanity_check(size: &DeviceIntSize) {
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct RenderTaskId(pub u32, FrameId); // TODO(gw): Make private when using GPU cache!
+pub struct RenderTaskId {
+    pub index: u32,
+
+    #[cfg(debug_assertions)]
+    frame_id: FrameId,
+}
+
+impl RenderTaskId {
+    pub const INVALID: RenderTaskId = RenderTaskId {
+        index: u32::MAX,
+        #[cfg(debug_assertions)]
+        frame_id: FrameId::INVALID,
+    };
+}
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[repr(C)]
@@ -79,16 +92,21 @@ impl RenderTaskTree {
     }
 
     pub fn add(&mut self, task: RenderTask) -> RenderTaskId {
-        let id = self.tasks.len();
+        let index = self.tasks.len() as _;
         self.tasks.push(task);
-        RenderTaskId(id as _, self.frame_id)
+        RenderTaskId {
+            index,
+            #[cfg(debug_assertions)]
+            frame_id: self.frame_id,
+        }
     }
 
     pub fn max_depth(&self, id: RenderTaskId, depth: usize, max_depth: &mut usize) {
-        debug_assert_eq!(self.frame_id, id.1);
+        #[cfg(debug_assertions)]
+        debug_assert_eq!(self.frame_id, id.frame_id);
         let depth = depth + 1;
         *max_depth = cmp::max(*max_depth, depth);
-        let task = &self.tasks[id.0 as usize];
+        let task = &self.tasks[id.index as usize];
         for child in &task.children {
             self.max_depth(*child, depth, max_depth);
         }
@@ -100,8 +118,9 @@ impl RenderTaskTree {
         pass_index: usize,
         passes: &mut [RenderPass],
     ) {
-        debug_assert_eq!(self.frame_id, id.1);
-        let task = &self.tasks[id.0 as usize];
+        #[cfg(debug_assertions)]
+        debug_assert_eq!(self.frame_id, id.frame_id);
+        let task = &self.tasks[id.index as usize];
 
         for child in &task.children {
             self.assign_to_passes(*child, pass_index - 1, passes);
@@ -135,8 +154,9 @@ impl RenderTaskTree {
     }
 
     pub fn get_task_address(&self, id: RenderTaskId) -> RenderTaskAddress {
-        debug_assert_eq!(self.frame_id, id.1);
-        RenderTaskAddress(id.0)
+        #[cfg(debug_assertions)]
+        debug_assert_eq!(self.frame_id, id.frame_id);
+        RenderTaskAddress(id.index)
     }
 
     pub fn write_task_data(&mut self, device_pixel_scale: DevicePixelScale) {
@@ -160,15 +180,17 @@ impl RenderTaskTree {
 impl ops::Index<RenderTaskId> for RenderTaskTree {
     type Output = RenderTask;
     fn index(&self, id: RenderTaskId) -> &RenderTask {
-        debug_assert_eq!(self.frame_id, id.1);
-        &self.tasks[id.0 as usize]
+        #[cfg(debug_assertions)]
+        debug_assert_eq!(self.frame_id, id.frame_id);
+        &self.tasks[id.index as usize]
     }
 }
 
 impl ops::IndexMut<RenderTaskId> for RenderTaskTree {
     fn index_mut(&mut self, id: RenderTaskId) -> &mut RenderTask {
-        debug_assert_eq!(self.frame_id, id.1);
-        &mut self.tasks[id.0 as usize]
+        #[cfg(debug_assertions)]
+        debug_assert_eq!(self.frame_id, id.frame_id);
+        &mut self.tasks[id.index as usize]
     }
 }
 
