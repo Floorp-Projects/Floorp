@@ -127,10 +127,6 @@ function getAndClearKeyedHistogram(name) {
  */
 function checkKeyedHistogram(h, key, expectedValue) {
   const snapshot = h.snapshot();
-  if (expectedValue === undefined) {
-    Assert.ok(!(key in snapshot), `The histogram must not contain ${key}.`);
-    return;
-  }
   Assert.ok(key in snapshot, `The histogram must contain ${key}.`);
   Assert.equal(snapshot[key].sum, expectedValue, `The key ${key} must contain ${expectedValue}.`);
 }
