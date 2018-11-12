@@ -542,6 +542,7 @@ struct MemoryReport {
   uintptr_t render_target_textures;
   uintptr_t texture_cache_textures;
   uintptr_t depth_target_textures;
+  uintptr_t swap_chain;
   uintptr_t total_gpu_bytes_allocated;
 
   bool operator==(const MemoryReport& aOther) const {
@@ -559,6 +560,7 @@ struct MemoryReport {
            render_target_textures == aOther.render_target_textures &&
            texture_cache_textures == aOther.texture_cache_textures &&
            depth_target_textures == aOther.depth_target_textures &&
+           swap_chain == aOther.swap_chain &&
            total_gpu_bytes_allocated == aOther.total_gpu_bytes_allocated;
   }
 };
