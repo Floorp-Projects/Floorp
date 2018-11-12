@@ -91,6 +91,10 @@ IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow)
   }
 
   nsIDocument* approver = ApproverDocOf(*aWindow->GetExtantDoc());
+  if (!approver) {
+    return false;
+  }
+
   if (nsContentUtils::IsExactSitePermAllow(approver->NodePrincipal(),
                                            "autoplay-media")) {
     AUTOPLAY_LOG("Allow autoplay as document has autoplay permission.");
