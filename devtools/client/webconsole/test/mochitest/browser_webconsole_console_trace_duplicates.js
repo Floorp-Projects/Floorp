@@ -29,22 +29,18 @@ add_task(async function testTraceMessages() {
       functionName: "foo3",
       filename: TEST_URI,
       line: 24,
-      column: 3,
     }, {
       functionName: "foo2",
       filename: TEST_URI,
       line: 20,
-      column: 3,
     }, {
       functionName: "foo1",
       filename: TEST_URI,
       line: 12,
-      column: 3,
     }, {
       functionName: "<anonymous>",
       filename: TEST_URI,
       line: 27,
-      column: 1,
     }],
   });
 });
@@ -67,15 +63,14 @@ add_task(async function testTraceMessages() {
  *                  "functionName": "foo3",
  *                  "filename": "http://example.com/some-filename.html",
  *                  "line":"23",
- *                  "column":"3"
  *                },
  *                ...
  *              ]
  *            }
  */
 function getStackInfo(message) {
-  const lineNode = message.querySelector(".frame-link-line");
-  const lc = getLineAndColumn(lineNode);
+  const frameNode = message.querySelector(".frame-link-line");
+  const lc = getLineAndColumn(frameNode);
   const result = {
     variable: message.querySelector(".cm-variable").textContent,
     repeats: message.querySelector(".message-repeats").textContent,
@@ -85,24 +80,21 @@ function getStackInfo(message) {
     stack: [],
   };
 
-  const stack = message.querySelector(".stack-trace");
+  const stack = message.querySelector(".stacktrace");
   if (stack) {
-    const filenameNodes = stack.querySelectorAll(".frame-link-filename");
-    const lineNodes = stack.querySelectorAll(".frame-link-line");
-    const funcNodes = stack.querySelectorAll(".frame-link-function-display-name");
+    const frames = Array.from(stack.querySelectorAll(".frame"));
 
-    for (let i = 0; i < filenameNodes.length; i++) {
-      const filename = filenameNodes[i].textContent;
-      const functionName = funcNodes[i].textContent;
-      const { line, column } = getLineAndColumn(lineNodes[i]);
+    result.stack = frames.map(frameEl => {
+      const title = frameEl.querySelector(".title");
+      const filename = frameEl.querySelector(".location .filename");
+      const line = frameEl.querySelector(".location .line");
 
-      result.stack.push({
-        functionName,
-        filename,
-        line: line,
-        column: column,
-      });
-    }
+      return {
+        functionName: getElementTextContent(title),
+        filename: getElementTextContent(filename),
+        line: getElementTextContent(line),
+      };
+    });
   }
 
   return result;
@@ -136,8 +128,6 @@ function checkStackInfo(stackInfo, expected) {
       `expected filename is displayed for index ${i}`);
     is(actual.line, stackExpected.line,
       `expected line is displayed for index ${i}`);
-    is(actual.column, stackExpected.column,
-      `expected column is displayed for index ${i}`);
   }
 }
 
@@ -149,12 +139,12 @@ function checkStackInfo(stackInfo, expected) {
  *        The HTML node containing the line and column to be split.
  */
 function getLineAndColumn(node) {
-  let lineAndColumn = node.textContent;
+  let lineAndColumn = getElementTextContent(node);
   let line = 0;
   let column = 0;
 
   // LineAndColumn should look something like ":10:15"
-  if (lineAndColumn.startsWith(":")) {
+  if (lineAndColumn && lineAndColumn.startsWith(":")) {
     // Trim the first colon leaving e.g. "10:15"
     lineAndColumn = lineAndColumn.substr(1);
 
@@ -166,4 +156,8 @@ function getLineAndColumn(node) {
     line: line * 1,
     column: column * 1,
   };
+}
+
+function getElementTextContent(el) {
+  return el ? el.textContent : null;
 }
