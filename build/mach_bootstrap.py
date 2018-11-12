@@ -282,8 +282,10 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         if random.randint(1, TELEMETRY_SUBMISSION_FREQUENCY) != 1:
             return
 
+        machpath = os.path.join(instance.topsrcdir, 'mach')
         with open(os.devnull, 'wb') as devnull:
-            subprocess.Popen([sys.executable,
+            subprocess.Popen([machpath, 'python',
+                              '--no-virtualenv',
                               os.path.join(topsrcdir, 'build',
                                            'submit_telemetry_data.py'),
                               get_state_dir()[0]],
