@@ -46,6 +46,30 @@ AccessibleWrap::~AccessibleWrap() {}
 nsresult
 AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
 {
+  auto accessible = static_cast<AccessibleWrap*>(aEvent->GetAccessible());
+  NS_ENSURE_TRUE(accessible, NS_ERROR_FAILURE);
+  DocAccessibleWrap* doc = static_cast<DocAccessibleWrap*>(accessible->Document());
+  if (doc) {
+    switch (aEvent->GetEventType()) {
+      case nsIAccessibleEvent::EVENT_FOCUS: {
+        if (DocAccessibleWrap* topContentDoc = doc->GetTopLevelContentDoc(accessible)) {
+          topContentDoc->CacheFocusPath(accessible);
+        }
+        break;
+      }
+      case nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED: {
+        AccVCChangeEvent* vcEvent = downcast_accEvent(aEvent);
+        auto newPosition = static_cast<AccessibleWrap*>(vcEvent->NewAccessible());
+        if (newPosition) {
+          if (DocAccessibleWrap* topContentDoc = doc->GetTopLevelContentDoc(accessible)) {
+            topContentDoc->CacheFocusPath(newPosition);
+          }
+        }
+        break;
+      }
+    }
+  }
+
   nsresult rv = Accessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -53,16 +77,13 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
     return NS_OK;
   }
 
-  auto accessible = static_cast<AccessibleWrap*>(aEvent->GetAccessible());
-  NS_ENSURE_TRUE(accessible, NS_ERROR_FAILURE);
-
   // The accessible can become defunct if we have an xpcom event listener
   // which decides it would be fun to change the DOM and flush layout.
   if (accessible->IsDefunct() || !accessible->IsBoundToParent()) {
     return NS_OK;
   }
 
-  if (DocAccessible* doc = accessible->Document()) {
+  if (doc) {
     if (!nsCoreUtils::IsContentDocument(doc->DocumentNode())) {
       return NS_OK;
     }

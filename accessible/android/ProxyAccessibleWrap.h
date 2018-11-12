@@ -54,15 +54,14 @@ public:
 
   virtual bool GetSelectionBounds(int32_t* aStartOffset, int32_t* aEndOffset) override;
 
+  virtual void WrapperDOMNodeID(nsString& aDOMNodeID) override;
+
 private:
   virtual role WrapperRole() override;
 
   virtual AccessibleWrap* WrapperParent() override;
 
   virtual bool WrapperRangeInfo(double* aCurVal, double* aMinVal, double* aMaxVal, double* aStep) override;
-
-  virtual void WrapperDOMNodeID(nsString& aDOMNodeID) override;
-
 };
 
 class DocProxyAccessibleWrap : public ProxyAccessibleWrap
