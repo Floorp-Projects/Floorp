@@ -243,7 +243,7 @@
 
 button.open-accessibility-inspector,
 button.open-inspector {
-  mask: url("../../../shared/components/reps/images/open-inspector.svg") no-repeat;
+  mask: url("resource://devtools/client/shared/components/reps/images/open-inspector.svg") no-repeat;
   display: inline-block;
   background-color: var(--comment-node-color);
   height: 16px;
@@ -264,7 +264,7 @@ button.open-inspector {
 /* Jump to definition button */
 
 button.jump-definition {
-  mask: url("../../../shared/components/reps/images/jump-definition.svg") no-repeat;
+  mask: url("resource://devtools/client/shared/components/reps/images/jump-definition.svg") no-repeat;
   display: inline-block;
   background-color: var(--comment-node-color);
   height: 16px;
@@ -338,7 +338,7 @@ button.jump-definition {
 }
 
 .tree-node img.arrow {
-  mask: url("../images/arrow.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/arrow.svg") no-repeat;
   mask-size: 100%;
   width: 9px;
   height: 9px;
@@ -951,7 +951,6 @@ menuseparator {
 .split-box.horz > .splitter {
   min-height: calc(var(--devtools-splitter-top-width) +
     var(--devtools-splitter-bottom-width) + 1px);
-
   border-top-width: var(--devtools-splitter-top-width);
   border-bottom-width: var(--devtools-splitter-bottom-width);
 
@@ -1035,39 +1034,39 @@ img.result-item-icon {
 }
 
 img.domain {
-  mask: url("../images/domain.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/domain.svg") no-repeat;
 }
 
 img.folder {
-  mask: url("../images/folder.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/folder.svg") no-repeat;
 }
 
 img.coffeescript {
-  mask: url("../images/coffeescript.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/coffeescript.svg") no-repeat;
 }
 
 img.javascript {
-  mask: url("../images/javascript.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/javascript.svg") no-repeat;
 }
 
 img.tab {
-  mask: url("../images/tab.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/tab.svg") no-repeat;
 }
 
 img.react {
-  mask: url("../images/react.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/react.svg") no-repeat;
 }
 
 img.typescript {
-  mask: url("../images/typescript.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/typescript.svg") no-repeat;
 }
 
 img.extension {
-  mask: url("../images/extension.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/extension.svg") no-repeat;
 }
 
 img.file {
-  mask: url("../images/file.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/file.svg") no-repeat;
   width: 13px;
   height: 13px;
 }
@@ -1096,7 +1095,7 @@ img.result-item-icon {
 }
 
 img.arrow {
-  mask: url("../images/arrow.svg");
+  mask: url("resource://devtools/client/debugger/new/images/arrow.svg");
   margin-inline-end: 5px;
   margin-top: 3px;
   width: 9px;
@@ -1244,7 +1243,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 }
 
 .close-btn .close {
-  mask: url("../images/close.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/close.svg") no-repeat;
   mask-size: 100%;
   background-color: var(--theme-comment);
   width: 8px;
@@ -1862,7 +1861,7 @@ html .toggle-button.end.vertical svg {
 }
 
 .sources-list .managed-tree .tree .node img.blackBox {
-  mask: url("../images/blackBox.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/blackBox.svg") no-repeat;
   mask-size: 100%;
   background-color: var(--theme-highlight-blue);
   width: 13px;
@@ -2182,24 +2181,24 @@ menuseparator {
 }
 
 .source-icon.prettyPrint {
-  mask: url("../images/prettyPrint.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/prettyPrint.svg") no-repeat;
   mask-size: 100%;
   background: var(--theme-highlight-blue);
   fill: var(--theme-textbox-box-shadow);
 }
 
 .source-icon.vue {
-  background: url("../images/vuejs.svg") 1px 1px no-repeat;
+  background: url("resource://devtools/client/debugger/new/images/vuejs.svg") 1px 1px no-repeat;
   background-size: 15px;
 }
 
 .source-icon.angular {
-  background: url("../images/angular.svg") 1px 1px no-repeat;
+  background: url("resource://devtools/client/debugger/new/images/angular.svg") 1px 1px no-repeat;
   background-size: 13px 13px;
 }
 
 .source-icon.blackBox {
-  mask: url("../images/blackBox.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/blackBox.svg") no-repeat;
   mask-size: 100%;
   background: var(--theme-highlight-blue);
 }
@@ -2274,14 +2273,14 @@ menuseparator {
 }
 
 .source-footer > .commands > .action > img.prettyPrint {
-  mask: url("../images/prettyPrint.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/prettyPrint.svg") no-repeat;
   height: 16px;
   width: 16px;
   background: var(--theme-body-color);
 }
 
 .source-footer > .commands > .action > img.blackBox {
-  mask: url("../images/blackBox.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/blackBox.svg") no-repeat;
   height: 16px;
   width: 16px;
   background: var(--theme-body-color);
@@ -2682,7 +2681,7 @@ menuseparator {
 
 .call-site::before {
   content: "";
-  mask: url("../images/column-marker.svg") no-repeat 100% 100%;
+  mask: url("resource://devtools/client/debugger/new/images/column-marker.svg") no-repeat 100% 100%;
   mask-size: contain;
   display: inline-block;
   background-color: var(--blue-55);
@@ -2699,7 +2698,7 @@ menuseparator {
 
 .call-site-bp::before {
   content: "";
-  mask: url("../images/column-marker.svg") no-repeat 100% 100%;
+  mask: url("resource://devtools/client/debugger/new/images/column-marker.svg") no-repeat 100% 100%;
   mask-size: contain;
   display: inline-block;
   background-color: var(--blue-55);
@@ -2845,7 +2844,7 @@ html[dir="rtl"] .editor-mount {
   height: 12px;
   width: 9px;
   background-color: var(--gutter-hover-background-color);
-  mask: url("../images/breakpoint.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/breakpoint.svg") no-repeat;
   mask-size: auto 12px;
   mask-position: right;
 }
@@ -3819,42 +3818,42 @@ img.skipPausing {
 }
 
 .command-bar img.pause {
-  mask: url("../images/pause.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/pause.svg") no-repeat;
 }
 
 .command-bar img.stepOver {
-  mask: url("../images/stepOver.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/stepOver.svg") no-repeat;
 }
 
 .command-bar img.stepIn {
-  mask: url("../images/stepIn.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/stepIn.svg") no-repeat;
 }
 
 .command-bar img.stepOut {
-  mask: url("../images/stepOut.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/stepOut.svg") no-repeat;
 }
 
 .command-bar img.resume {
-  mask: url("../images/resume.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/resume.svg") no-repeat;
 }
 
 .command-bar img.rewind {
-  mask: url("../images/resume.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/resume.svg") no-repeat;
   transform: scaleX(-1);
 }
 
 .command-bar img.reverseStepOver {
-  mask: url("../images/stepOver.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/stepOver.svg") no-repeat;
   transform: scaleX(-1);
 }
 
 .command-bar img.reverseStepIn {
-  mask: url("../images/stepIn.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/stepIn.svg") no-repeat;
   transform: scaleX(-1);
 }
 
 .command-bar img.reverseStepOut {
-  mask: url("../images/stepOut.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/stepOut.svg") no-repeat;
   transform: scaleX(-1);
 }
 
@@ -3863,7 +3862,7 @@ img.skipPausing {
 }
 
 .command-bar img.shortcuts {
-  mask: url("../images/help.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/help.svg") no-repeat;
   mask-size: contain;
 }
 
@@ -3886,7 +3885,7 @@ img.skipPausing {
 }
 
 .command-bar .skipPausing {
-  mask: url("../images/disable-pausing.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/disable-pausing.svg") no-repeat;
   mask-size: 100%;
 }
 
@@ -4316,7 +4315,7 @@ html .welcomebox .toggle-button-end.collapsed {
 }
 
 .source-tab img.react {
-  mask: url("../images/react.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/react.svg") no-repeat;
   mask-size: 100%;
   height: 14px;
   width: 14px;
@@ -4333,7 +4332,7 @@ html .welcomebox .toggle-button-end.collapsed {
 }
 
 img.moreTabs {
-  mask: url("../images/command-chevron.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/command-chevron.svg") no-repeat;
   mask-size: 100%;
   width: 12px;
   height: 12px;
@@ -4461,19 +4460,19 @@ html[dir="rtl"] .dropdown {
 }
 
 .dropdown-icon.prettyPrint {
-  mask: url("../images/prettyPrint.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/prettyPrint.svg") no-repeat;
   mask-size: 100%;
   background: var(--theme-highlight-blue);
 }
 
 .dropdown-icon.blackBox {
-  mask: url("../images/blackBox.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/blackBox.svg") no-repeat;
   mask-size: 100%;
   background: var(--theme-highlight-blue);
 }
 
 .dropdown-icon.file {
-  mask: url("../images/file.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/file.svg") no-repeat;
   mask-size: 100%;
   margin-bottom: 7px;
 }
