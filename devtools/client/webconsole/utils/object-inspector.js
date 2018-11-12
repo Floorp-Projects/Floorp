@@ -10,7 +10,7 @@ const reps = require("devtools/client/shared/components/reps/reps");
 const { REPS, MODE, objectInspector } = reps;
 const ObjectInspector = createFactory(objectInspector.ObjectInspector);
 const { Grip } = REPS;
-const StackTrace = createFactory(require("devtools/client/shared/components/StackTrace"));
+const SmartTrace = createFactory(require("devtools/client/shared/components/SmartTrace"));
 
 /**
  * Create and return an ObjectInspector for the given grip.
@@ -53,7 +53,7 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
     onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger,
     recordTelemetryEvent: serviceContainer.recordTelemetryEvent,
     openLink: serviceContainer.openLink,
-    renderStacktrace: stacktrace => StackTrace({
+    renderStacktrace: stacktrace => SmartTrace({
       stacktrace,
       onViewSourceInDebugger: serviceContainer
         ? serviceContainer.onViewSourceInDebugger || serviceContainer.onViewSource
