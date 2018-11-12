@@ -258,9 +258,11 @@ public:
 
   // These two are non-const because this is where ssrcs are chosen.
   virtual void AddToOffer(SsrcGenerator& ssrcGenerator,
+                          bool encodeTrackId,
                           SdpMediaSection* offer);
   virtual void AddToAnswer(const SdpMediaSection& offer,
                            SsrcGenerator& ssrcGenerator,
+                           bool encodeTrackId,
                            SdpMediaSection* answer);
 
   virtual void Negotiate(const SdpMediaSection& answer,
@@ -329,6 +331,7 @@ private:
   static void EnsurePayloadTypeIsUnique(std::set<uint16_t>* uniquePayloadTypes,
                                         JsepCodecDescription* codec);
   void AddToMsection(const std::vector<UniquePtr<JsepCodecDescription>>& codecs,
+                     bool encodeTrackId,
                      SdpMediaSection* msection);
   void GetRids(const SdpMediaSection& msection,
                sdp::Direction direction,
