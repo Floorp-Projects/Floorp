@@ -549,7 +549,7 @@ pub struct GpuCache {
 impl GpuCache {
     pub fn new() -> Self {
         GpuCache {
-            frame_id: FrameId::invalid(),
+            frame_id: FrameId::INVALID,
             texture: Texture::new(),
             saved_block_count: 0,
             in_debug: false,
