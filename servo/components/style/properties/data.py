@@ -336,7 +336,6 @@ class Longhand(object):
                 "TextEmphasisPosition",
                 "TouchAction",
                 "TransformStyle",
-                "UserSelect",
                 "XSpan",
                 "XTextZoom",
                 "ZIndex",

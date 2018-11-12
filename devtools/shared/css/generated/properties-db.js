@@ -1356,14 +1356,19 @@ exports.CSS_PROPERTIES = {
     ],
     "supports": [],
     "values": [
+      "-moz-all",
       "-moz-none",
       "-moz-text",
       "all",
       "auto",
+      "element",
+      "elements",
       "inherit",
       "initial",
       "none",
       "text",
+      "toggle",
+      "tri-state",
       "unset"
     ]
   },
@@ -2747,14 +2752,19 @@ exports.CSS_PROPERTIES = {
     ],
     "supports": [],
     "values": [
+      "-moz-all",
       "-moz-none",
       "-moz-text",
       "all",
       "auto",
+      "element",
+      "elements",
       "inherit",
       "initial",
       "none",
       "text",
+      "toggle",
+      "tri-state",
       "unset"
     ]
   },

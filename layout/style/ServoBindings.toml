@@ -396,7 +396,6 @@ cbindgen-types = [
     { gecko = "StylePathCommand", servo = "values::specified::svg_path::PathCommand" },
     { gecko = "StyleUnicodeRange", servo = "cssparser::UnicodeRange" },
     { gecko = "StyleOverflowWrap", servo = "values::computed::OverflowWrap" },
-    { gecko = "StyleUserSelect", servo = "values::computed::UserSelect" },
 ]
 
 mapped-generic-types = [

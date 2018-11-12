@@ -31,13 +31,15 @@ ${helpers.single_keyword(
     spec="https://drafts.csswg.org/css-scrollbars-1/#scrollbar-width"
 )}
 
-${helpers.predefined_type(
+${helpers.single_keyword(
     "-moz-user-select",
-    "UserSelect",
-    "computed::UserSelect::Auto",
+    "auto text none all element elements toggle tri-state -moz-all -moz-text",
     products="gecko",
-    gecko_ffi_name="mUserSelect",
     alias="-webkit-user-select",
+    gecko_ffi_name="mUserSelect",
+    gecko_enum_prefix="StyleUserSelect",
+    gecko_strip_moz_prefix=False,
+    aliases="-moz-none=none",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-ui-4/#propdef-user-select",
 )}

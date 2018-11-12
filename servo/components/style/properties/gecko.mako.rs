@@ -1429,7 +1429,6 @@ impl Clone for ${style_struct.gecko_struct_name} {
         "SVGWidth": impl_svg_length,
         "Transform": impl_transform,
         "TransformOrigin": impl_transform_origin,
-        "UserSelect": impl_simple,
         "url::UrlOrNone": impl_css_url,
     }
 
