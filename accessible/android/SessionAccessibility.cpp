@@ -13,6 +13,7 @@
 #include "RootAccessibleWrap.h"
 #include "nsAccessibilityService.h"
 #include "nsViewManager.h"
+#include "nsIPersistentProperties2.h"
 
 #ifdef DEBUG
 #include <android/log.h>
@@ -333,11 +334,42 @@ SessionAccessibility::ReplaceViewportCache(const nsTArray<AccessibleWrap*>& aAcc
     AccessibleWrap* acc = aAccessibles.ElementAt(i);
     if (aData.Length() == aAccessibles.Length()) {
       const BatchData& data = aData.ElementAt(i);
-      infos->SetElement(i, acc->ToSmallBundle(data.State(), data.Bounds()));
+      auto bundle = acc->ToSmallBundle(data.State(), data.Bounds());
+      infos->SetElement(i, bundle);
     } else {
       infos->SetElement(i, acc->ToSmallBundle());
     }
   }
 
   mSessionAccessibility->ReplaceViewportCache(infos);
+}
+
+void
+SessionAccessibility::ReplaceFocusPathCache(const nsTArray<AccessibleWrap*>& aAccessibles,
+                                            const nsTArray<BatchData>& aData)
+{
+  auto infos = jni::ObjectArray::New<java::GeckoBundle>(aAccessibles.Length());
+  for (size_t i = 0; i < aAccessibles.Length(); i++) {
+    AccessibleWrap* acc = aAccessibles.ElementAt(i);
+    if (aData.Length() == aAccessibles.Length()) {
+      const BatchData& data = aData.ElementAt(i);
+      nsCOMPtr<nsIPersistentProperties> props =
+        AccessibleWrap::AttributeArrayToProperties(data.Attributes());
+      auto bundle = acc->ToBundle(data.State(),
+                                  data.Bounds(),
+                                  data.Name(),
+                                  data.TextValue(),
+                                  data.DOMNodeID(),
+                                  data.CurValue(),
+                                  data.MinValue(),
+                                  data.MaxValue(),
+                                  data.Step(),
+                                  props);
+      infos->SetElement(i, bundle);
+    } else {
+      infos->SetElement(i, acc->ToBundle());
+    }
+  }
+
+  mSessionAccessibility->ReplaceFocusPathCache(infos);
 }
