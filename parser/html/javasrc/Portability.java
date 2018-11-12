@@ -66,10 +66,6 @@ public final class Portability {
         return string.toCharArray();
     }
 
-    public static @Local String newLocalFromLocal(@Local String local, Interner interner) {
-        return local;
-    }
-
     // Deallocation methods
 
     public static void releaseString(String str) {

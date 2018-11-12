@@ -3883,7 +3883,7 @@ nsHtml5TreeBuilder::adoptionAgencyEndTag(nsAtom* name)
       nsIContentHandle* clone =
         createElement(kNameSpaceID_XHTML,
                       node->name,
-                      node->attributes->cloneAttributes(nullptr),
+                      node->attributes->cloneAttributes(),
                       commonAncestor->node,
                       htmlCreator(node->getHtmlCreator()));
       nsHtml5StackNode* newNode = createStackNode(node->getFlags(),
@@ -3915,7 +3915,7 @@ nsHtml5TreeBuilder::adoptionAgencyEndTag(nsAtom* name)
     nsIContentHandle* clone =
       createElement(kNameSpaceID_XHTML,
                     formattingElt->name,
-                    formattingElt->attributes->cloneAttributes(nullptr),
+                    formattingElt->attributes->cloneAttributes(),
                     furthestBlock->node,
                     htmlCreator(formattingElt->getHtmlCreator()));
     nsHtml5StackNode* formattingClone =
@@ -4101,12 +4101,12 @@ nsHtml5TreeBuilder::reconstructTheActiveFormattingElements()
       clone = createAndInsertFosterParentedElement(
         kNameSpaceID_XHTML,
         entry->name,
-        entry->attributes->cloneAttributes(nullptr),
+        entry->attributes->cloneAttributes(),
         htmlCreator(entry->getHtmlCreator()));
     } else {
       clone = createElement(kNameSpaceID_XHTML,
                             entry->name,
-                            entry->attributes->cloneAttributes(nullptr),
+                            entry->attributes->cloneAttributes(),
                             currentNode->node,
                             htmlCreator(entry->getHtmlCreator()));
       appendElement(clone, currentNode->node);
@@ -4391,7 +4391,7 @@ nsHtml5TreeBuilder::appendToCurrentNodeAndPushFormattingElementMayFoster(
   nsHtml5ElementName* elementName,
   nsHtml5HtmlAttributes* attributes)
 {
-  nsHtml5HtmlAttributes* clone = attributes->cloneAttributes(nullptr);
+  nsHtml5HtmlAttributes* clone = attributes->cloneAttributes();
   nsIContentHandle* elt;
   nsHtml5StackNode* current = stack[currentPtr];
   if (current->isFosterParenting()) {
@@ -4835,7 +4835,7 @@ nsHtml5TreeBuilder::newSnapshot()
                          node->name,
                          node->node,
                          node->popName,
-                         node->attributes->cloneAttributes(nullptr),
+                         node->attributes->cloneAttributes(),
                          node->getHtmlCreator());
       listCopy[i] = newNode;
     } else {
@@ -4926,8 +4926,7 @@ nsHtml5TreeBuilder::snapshotMatches(nsAHtml5TreeBuilderState* snapshot)
 }
 
 void
-nsHtml5TreeBuilder::loadState(nsAHtml5TreeBuilderState* snapshot,
-                              nsHtml5AtomTable* interner)
+nsHtml5TreeBuilder::loadState(nsAHtml5TreeBuilderState* snapshot)
 {
   mCurrentHtmlScriptIsAsyncOrDefer = false;
   jArray<nsHtml5StackNode*, int32_t> stackCopy = snapshot->getStack();
@@ -4963,14 +4962,14 @@ nsHtml5TreeBuilder::loadState(nsAHtml5TreeBuilderState* snapshot,
   for (int32_t i = 0; i < listLen; i++) {
     nsHtml5StackNode* node = listCopy[i];
     if (node) {
-      nsHtml5StackNode* newNode = createStackNode(
-        node->getFlags(),
-        node->ns,
-        nsHtml5Portability::newLocalFromLocal(node->name, interner),
-        node->node,
-        nsHtml5Portability::newLocalFromLocal(node->popName, interner),
-        node->attributes->cloneAttributes(nullptr),
-        node->getHtmlCreator());
+      nsHtml5StackNode* newNode =
+        createStackNode(node->getFlags(),
+                        node->ns,
+                        node->name,
+                        node->node,
+                        node->popName,
+                        node->attributes->cloneAttributes(),
+                        node->getHtmlCreator());
       listOfActiveFormattingElements[i] = newNode;
     } else {
       listOfActiveFormattingElements[i] = nullptr;
@@ -4980,14 +4979,13 @@ nsHtml5TreeBuilder::loadState(nsAHtml5TreeBuilderState* snapshot,
     nsHtml5StackNode* node = stackCopy[i];
     int32_t listIndex = findInArray(node, listCopy);
     if (listIndex == -1) {
-      nsHtml5StackNode* newNode = createStackNode(
-        node->getFlags(),
-        node->ns,
-        nsHtml5Portability::newLocalFromLocal(node->name, interner),
-        node->node,
-        nsHtml5Portability::newLocalFromLocal(node->popName, interner),
-        nullptr,
-        node->getHtmlCreator());
+      nsHtml5StackNode* newNode = createStackNode(node->getFlags(),
+                                                  node->ns,
+                                                  node->name,
+                                                  node->node,
+                                                  node->popName,
+                                                  nullptr,
+                                                  node->getHtmlCreator());
       stack[i] = newNode;
     } else {
       stack[i] = listOfActiveFormattingElements[listIndex];
