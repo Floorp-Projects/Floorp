@@ -256,6 +256,64 @@ function runChecks(dbgObject, dbgEnv, sandbox) {
   info("Test that children getters are executed if invokeUnsafeGetter is true");
   results = propertyProvider("testGetters.y.y.", undefined, true);
   test_has_result(results, "trim");
+
+  info("Test with number literals");
+  results = propertyProvider("1.");
+  Assert.ok(results === null, "Does not complete on possible floating number");
+
+  results = propertyProvider("(1)..");
+  Assert.ok(results === null, "Does not complete on invalid syntax");
+
+  results = propertyProvider("(1.1.).");
+  Assert.ok(results === null, "Does not complete on invalid syntax");
+
+  results = propertyProvider("1..");
+  test_has_result(results, "toFixed");
+
+  results = propertyProvider("1 .");
+  test_has_result(results, "toFixed");
+
+  results = propertyProvider("1\n.");
+  test_has_result(results, "toFixed");
+
+  results = propertyProvider(".1.");
+  test_has_result(results, "toFixed");
+
+  results = propertyProvider("1[");
+  test_has_result(results, `"toFixed"`);
+
+  results = propertyProvider("1[toFixed");
+  test_has_exact_results(results, [`"toFixed"`]);
+
+  results = propertyProvider("1['toFixed");
+  test_has_exact_results(results, ["'toFixed'"]);
+
+  results = propertyProvider("1.1[");
+  test_has_result(results, `"toFixed"`);
+
+  results = propertyProvider("(1).");
+  test_has_result(results, "toFixed");
+
+  results = propertyProvider("(.1).");
+  test_has_result(results, "toFixed");
+
+  results = propertyProvider("(1.1).");
+  test_has_result(results, "toFixed");
+
+  results = propertyProvider("(1).toFixed");
+  test_has_exact_results(results, ["toFixed"]);
+
+  results = propertyProvider("(1)[");
+  test_has_result(results, `"toFixed"`);
+
+  results = propertyProvider("(1.1)[");
+  test_has_result(results, `"toFixed"`);
+
+  results = propertyProvider("(1)[toFixed");
+  test_has_exact_results(results, [`"toFixed"`]);
+
+  results = propertyProvider("(1)['toFixed");
+  test_has_exact_results(results, ["'toFixed'"]);
 }
 
 /**
