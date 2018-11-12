@@ -222,7 +222,7 @@ a11y::ProxyBatch(ProxyAccessible* aDocument,
       sessionAcc->ReplaceViewportCache(accWraps, aData);
       break;
     case DocAccessibleWrap::eBatch_FocusPath:
-      // XXX: Next patch
+      sessionAcc->ReplaceFocusPathCache(accWraps, aData);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown batch type.");
