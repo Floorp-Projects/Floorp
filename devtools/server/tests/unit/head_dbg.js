@@ -36,7 +36,7 @@ const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerServer: WorkerDebuggerServer } = worker.require("devtools/server/main");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const ObjectClient = require("devtools/shared/client/object-client");
-const { MemoryFront } = require("devtools/shared/fronts/memory");
+const {TargetFactory} = require("devtools/client/framework/target");
 
 const { addDebuggerToGlobal } = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm", {});
 
@@ -61,89 +61,58 @@ function startupAddonsManager() {
 }
 
 /**
- * Create a `run_test` function that runs the given generator in a task after
- * having attached to a memory actor. When done, the memory actor is detached
- * from, the client is finished, and the test is finished.
+ * Create a MemoryFront for a fake test tab.
  *
- * @param {GeneratorFunction} testGeneratorFunction
- *        The generator function is passed (DebuggerClient, MemoryFront)
- *        arguments.
- *
- * @returns `run_test` function
+ * When the test ends, the front should be detached and we should call
+ * `finishClient(client)`.
  */
-function makeMemoryActorTest(testGeneratorFunction) {
-  const TEST_GLOBAL_NAME = "test_MemoryActor";
+async function createTabMemoryFront() {
+  const client = await startTestDebuggerServer("test_MemoryActor");
 
-  return function run_test() {
-    do_test_pending();
-    startTestDebuggerServer(TEST_GLOBAL_NAME).then(client => {
-      ActorRegistry.registerModule("devtools/server/actors/heap-snapshot-file", {
-        prefix: "heapSnapshotFile",
-        constructor: "HeapSnapshotFileActor",
-        type: { global: true },
-      });
+  // MemoryFront requires the HeadSnapshotActor actor to be available
+  // as a global actor. This isn't registered by startTestDebuggerServer which
+  // only register the target actors and not the browser ones.
+  DebuggerServer.registerActors({ browser: true });
 
-      getTestTab(client, TEST_GLOBAL_NAME, function(tabForm, rootForm) {
-        if (!tabForm || !rootForm) {
-          ok(false, "Could not attach to test tab: " + TEST_GLOBAL_NAME);
-          return;
-        }
-
-        (async function() {
-          try {
-            const memoryFront = new MemoryFront(client, tabForm, rootForm);
-            await memoryFront.attach();
-            await testGeneratorFunction(client, memoryFront);
-            await memoryFront.detach();
-          } catch (err) {
-            DevToolsUtils.reportException("makeMemoryActorTest", err);
-            ok(false, "Got an error: " + err);
-          }
-
-          finishClient(client);
-        })();
-      });
-    });
+  const { tabs } = await listTabs(client);
+  const tab = findTab(tabs, "test_MemoryActor");
+  const options = {
+    form: tab,
+    client,
+    chrome: false,
   };
+  const target = await TargetFactory.forRemoteTab(options);
+
+  const memoryFront = target.getFront("memory");
+  await memoryFront.attach();
+
+  return { client, memoryFront };
 }
 
 /**
- * Save as makeMemoryActorTest but attaches the MemoryFront to the MemoryActor
+ * Same as createTabMemoryFront but attaches the MemoryFront to the MemoryActor
  * scoped to the full runtime rather than to a tab.
  */
-function makeFullRuntimeMemoryActorTest(testGeneratorFunction) {
-  return function run_test() {
-    do_test_pending();
-    startTestDebuggerServer("test_MemoryActor").then(client => {
-      ActorRegistry.registerModule("devtools/server/actors/heap-snapshot-file", {
-        prefix: "heapSnapshotFile",
-        constructor: "HeapSnapshotFileActor",
-        type: { global: true },
-      });
+async function createFullRuntimeMemoryFront() {
+  DebuggerServer.init();
+  DebuggerServer.registerAllActors();
+  DebuggerServer.allowChromeProcess = true;
 
-      getParentProcessActors(client).then(function(form) {
-        if (!form) {
-          ok(false, "Could not attach to chrome actors");
-          return;
-        }
+  const client = new DebuggerClient(DebuggerServer.connectPipe());
+  await client.connect();
 
-        (async function() {
-          try {
-            const rootForm = await listTabs(client);
-            const memoryFront = new MemoryFront(client, form, rootForm);
-            await memoryFront.attach();
-            await testGeneratorFunction(client, memoryFront);
-            await memoryFront.detach();
-          } catch (err) {
-            DevToolsUtils.reportException("makeMemoryActorTest", err);
-            ok(false, "Got an error: " + err);
-          }
-
-          finishClient(client);
-        })();
-      });
-    });
+  const { form } = await client.mainRoot.getProcess(0);
+  const options = {
+    form,
+    client,
+    chrome: true,
   };
+  const target = await TargetFactory.forRemoteTab(options);
+
+  const memoryFront = target.getFront("memory");
+  await memoryFront.attach();
+
+  return { client, memoryFront };
 }
 
 function createTestGlobal(name) {
@@ -346,7 +315,7 @@ function getTestTab(client, title, callback) {
   client.listTabs().then(function(response) {
     for (const tab of response.tabs) {
       if (tab.title === title) {
-        callback(tab, response);
+        callback(tab);
         return;
       }
     }
@@ -416,7 +385,7 @@ function initTestDebuggerServer(server = DebuggerServer) {
 /**
  * Initialize the testing debugger server with a tab whose title is |title|.
  */
-function startTestDebuggerServer(title, server = DebuggerServer) {
+async function startTestDebuggerServer(title, server = DebuggerServer) {
   initTestDebuggerServer(server);
   addTestGlobal(title);
   DebuggerServer.registerActors({ target: true });
@@ -424,29 +393,14 @@ function startTestDebuggerServer(title, server = DebuggerServer) {
   const transport = DebuggerServer.connectPipe();
   const client = new DebuggerClient(transport);
 
-  return connect(client).then(() => client);
+  await connect(client);
+  return client;
 }
 
-function finishClient(client) {
-  client.close(function() {
-    DebuggerServer.destroy();
-    do_test_finished();
-  });
-}
-
-// Create a server, connect to it and fetch actors targeting the parent process;
-// pass |callback| the debugger client and target actor form with all actor IDs.
-function get_parent_process_actors(callback) {
-  DebuggerServer.init();
-  DebuggerServer.registerAllActors();
-  DebuggerServer.allowChromeProcess = true;
-
-  const client = new DebuggerClient(DebuggerServer.connectPipe());
-  client.connect()
-    .then(() => client.mainRoot.getProcess(0))
-    .then(response => {
-      callback(client, response.form);
-    });
+async function finishClient(client) {
+  await client.close();
+  DebuggerServer.destroy();
+  do_test_finished();
 }
 
 function getParentProcessActors(client, server = DebuggerServer) {

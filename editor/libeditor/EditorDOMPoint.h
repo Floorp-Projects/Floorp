@@ -82,7 +82,8 @@ public:
   {
   }
 
-  EditorDOMPointBase(nsINode* aContainer,
+  template<typename ContainerType>
+  EditorDOMPointBase(ContainerType aContainer,
                      int32_t aOffset)
     : mParent(aContainer)
     , mChild(nullptr)

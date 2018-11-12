@@ -34,7 +34,7 @@ namespace mozilla {
 nsresult
 SourceBufferResource::Close()
 {
-  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(OnThread());
   SBR_DEBUG("Close");
   mClosed = true;
   return NS_OK;
@@ -57,7 +57,7 @@ SourceBufferResource::ReadAtInternal(int64_t aOffset,
                                      uint32_t aCount,
                                      uint32_t* aBytes)
 {
-  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(OnThread());
 
   if (mClosed ||
       aOffset < 0 ||
@@ -108,7 +108,7 @@ SourceBufferResource::EvictData(uint64_t aPlaybackOffset,
                                 int64_t aThreshold,
                                 ErrorResult& aRv)
 {
-  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(OnThread());
   SBR_DEBUG("EvictData(aPlaybackOffset=%" PRIu64 ","
             "aThreshold=%" PRId64 ")", aPlaybackOffset, aThreshold);
   uint32_t result = mInputBuffer.Evict(aPlaybackOffset, aThreshold, aRv);
@@ -118,7 +118,7 @@ SourceBufferResource::EvictData(uint64_t aPlaybackOffset,
 void
 SourceBufferResource::EvictBefore(uint64_t aOffset, ErrorResult& aRv)
 {
-  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(OnThread());
   SBR_DEBUG("EvictBefore(aOffset=%" PRIu64 ")", aOffset);
 
   mInputBuffer.EvictBefore(aOffset, aRv);
@@ -127,7 +127,7 @@ SourceBufferResource::EvictBefore(uint64_t aOffset, ErrorResult& aRv)
 uint32_t
 SourceBufferResource::EvictAll()
 {
-  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(OnThread());
   SBR_DEBUG("EvictAll()");
   return mInputBuffer.EvictAll();
 }
@@ -135,7 +135,7 @@ SourceBufferResource::EvictAll()
 void
 SourceBufferResource::AppendData(MediaByteBuffer* aData)
 {
-  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(OnThread());
   SBR_DEBUG("AppendData(aData=%p, aLength=%zu)",
             aData->Elements(), aData->Length());
   mInputBuffer.AppendItem(aData);
@@ -145,7 +145,7 @@ SourceBufferResource::AppendData(MediaByteBuffer* aData)
 void
 SourceBufferResource::Ended()
 {
-  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(OnThread());
   SBR_DEBUG("");
   mEnded = true;
 }
@@ -157,22 +157,22 @@ SourceBufferResource::~SourceBufferResource()
 
 SourceBufferResource::SourceBufferResource()
 #if defined(DEBUG)
-  : mTaskQueue(AbstractThread::GetCurrent()->AsTaskQueue())
+  : mThread(AbstractThread::GetCurrent())
 #endif
 {
   SBR_DEBUG("");
 }
 
 #if defined(DEBUG)
-AbstractThread*
-SourceBufferResource::GetTaskQueue() const
+const AbstractThread*
+SourceBufferResource::GetThread() const
 {
-  return mTaskQueue;
+  return mThread;
 }
 bool
-SourceBufferResource::OnTaskQueue() const
+SourceBufferResource::OnThread() const
 {
-  return !GetTaskQueue() || GetTaskQueue()->IsCurrentThreadIn();
+  return !GetThread() || GetThread()->IsCurrentThreadIn();
 }
 #endif
 

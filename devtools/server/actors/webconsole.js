@@ -311,7 +311,11 @@ WebConsoleActor.prototype =
       // We are very explicitly examining the "console" property of
       // the non-Xrayed object here.
       const console = window.wrappedJSObject.console;
-      isNative = new XPCNativeWrapper(console).IS_NATIVE_CONSOLE;
+      // In xpcshell tests, console ends up being undefined and XPCNativeWrapper
+      // crashes in debug builds.
+      if (console) {
+        isNative = new XPCNativeWrapper(console).IS_NATIVE_CONSOLE;
+      }
     } catch (ex) {
       // ignored
     }

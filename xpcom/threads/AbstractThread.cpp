@@ -61,7 +61,7 @@ public:
   // Prevent a GCC warning about the other overload of Dispatch being hidden.
   using AbstractThread::Dispatch;
 
-  virtual bool IsCurrentThreadIn() override
+  virtual bool IsCurrentThreadIn() const override
   {
     return mTarget->IsOnCurrentThread();
   }

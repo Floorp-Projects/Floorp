@@ -18,8 +18,7 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
   ];
 });
 
-function run_test()
-{
+function run_test() {
   srv = createServer();
 
   // register a few test paths
@@ -33,22 +32,19 @@ function run_test()
 
 // TEST DATA
 
-function ensureEmpty(ch, cx)
-{
+function ensureEmpty(ch, cx) {
   Assert.ok(ch.contentLength == 0);
 }
 
 // PATH HANDLERS
 
 // /empty-body-unwritten
-function emptyBodyUnwritten(metadata, response)
-{
+function emptyBodyUnwritten(metadata, response) {
   response.setStatusLine("1.1", 200, "OK");
 }
 
 // /empty-body-written
-function emptyBodyWritten(metadata, response)
-{
+function emptyBodyWritten(metadata, response) {
   response.setStatusLine("1.1", 200, "OK");
   var body = "";
   response.bodyOutputStream.write(body, body.length);

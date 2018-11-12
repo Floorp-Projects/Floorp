@@ -74,7 +74,7 @@ public:
   virtual nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable,
                             DispatchReason aReason = NormalDispatch) = 0;
 
-  virtual bool IsCurrentThreadIn() = 0;
+  virtual bool IsCurrentThreadIn() const = 0;
 
   // Returns a TaskDispatcher that will dispatch its tasks when the currently-
   // running tasks pops off the stack.
@@ -101,7 +101,6 @@ public:
   bool RequiresTailDispatch(AbstractThread* aThread) const;
   bool RequiresTailDispatchFromCurrentThread() const;
 
-  virtual TaskQueue* AsTaskQueue() { MOZ_CRASH("Not a task queue!"); }
   virtual nsIEventTarget* AsEventTarget() { MOZ_CRASH("Not an event target!"); }
 
   // Returns the non-DocGroup version of AbstractThread on the main thread.

@@ -224,7 +224,7 @@ impl<T> GpuProfiler<T> {
     pub fn enable_samplers(&mut self) {
         const MAX_SAMPLERS_PER_FRAME: i32 = 16;
         if cfg!(target_os = "macos") {
-            warn!("Expect OSX driver bugs related to sample queries")
+            warn!("Expect macOS driver bugs related to sample queries")
         }
 
         for frame in &mut self.frames {

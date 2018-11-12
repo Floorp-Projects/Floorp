@@ -567,7 +567,7 @@ MediaChangeMonitor::DecodeFirstSample(MediaRawData* aSample)
 
   RefPtr<MediaChangeMonitor> self = this;
   mDecoder->Decode(aSample)
-    ->Then(AbstractThread::GetCurrent()->AsTaskQueue(), __func__,
+    ->Then(mTaskQueue, __func__,
            [self, this](MediaDataDecoder::DecodedData&& aResults) {
              mDecodePromiseRequest.Complete();
              mPendingFrames.AppendElements(std::move(aResults));
@@ -616,7 +616,7 @@ MediaChangeMonitor::DrainThenFlushDecoder(MediaRawData* aPendingSample)
   RefPtr<MediaRawData> sample = aPendingSample;
   RefPtr<MediaChangeMonitor> self = this;
   mDecoder->Drain()
-    ->Then(AbstractThread::GetCurrent()->AsTaskQueue(),
+    ->Then(mTaskQueue,
            __func__,
            [self, sample, this](MediaDataDecoder::DecodedData&& aResults) {
              mDrainRequest.Complete();
