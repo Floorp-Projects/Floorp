@@ -112,6 +112,7 @@ setupProject(':lib-jexl', 'components/lib/jexl', 'Javascript Expression Language
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 setupProject(':tooling-lint', 'components/tooling/lint', 'Custom Lint checks for using and writing components.', false)
+setupProject(':tooling-fetch-tests', 'components/tooling/fetch-tests', 'Test cases for concept-fetch implementations.', false)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Samples
