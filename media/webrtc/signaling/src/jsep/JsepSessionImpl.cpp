@@ -91,6 +91,9 @@ JsepSessionImpl::Init()
   mRunSdpComparer = Preferences::GetBool("media.peerconnection.sdp.rust.compare",
                                          false);
 
+  mEncodeTrackId =
+    Preferences::GetBool("media.peerconnection.sdp.encode_track_id", true);
+
   mIceUfrag = GetRandomHex(1);
   mIcePwd = GetRandomHex(4);
   return NS_OK;
@@ -281,8 +284,8 @@ JsepSessionImpl::CreateOfferMsection(const JsepOfferOptions& options,
   nsresult rv = AddTransportAttributes(msection, SdpSetupAttribute::kActpass);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  transceiver.mSendTrack.AddToOffer(mSsrcGenerator, msection);
-  transceiver.mRecvTrack.AddToOffer(mSsrcGenerator, msection);
+  transceiver.mSendTrack.AddToOffer(mSsrcGenerator, mEncodeTrackId, msection);
+  transceiver.mRecvTrack.AddToOffer(mSsrcGenerator, mEncodeTrackId, msection);
 
   AddExtmap(msection);
 
@@ -672,8 +675,8 @@ JsepSessionImpl::CreateAnswerMsection(const JsepAnswerOptions& options,
   rv = AddTransportAttributes(&msection, role);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  transceiver.mSendTrack.AddToAnswer(remoteMsection, mSsrcGenerator, &msection);
-  transceiver.mRecvTrack.AddToAnswer(remoteMsection, mSsrcGenerator, &msection);
+  transceiver.mSendTrack.AddToAnswer(remoteMsection, mSsrcGenerator, mEncodeTrackId, &msection);
+  transceiver.mRecvTrack.AddToAnswer(remoteMsection, mSsrcGenerator, mEncodeTrackId, &msection);
 
   // Add extmap attributes. This logic will probably be moved to the track,
   // since it can be specified on a per-sender basis in JS.

@@ -400,11 +400,6 @@ SdpHelper::GetIdsFromMsid(const Sdp& sdp,
 
   for (auto i = allMsids.begin(); i != allMsids.end(); ++i) {
     if (allMsidsAreWebrtc || webrtcMsids.count(i->identifier)) {
-      if (i->appdata.empty()) {
-        SDP_SET_ERROR("Invalid webrtc msid at level " << msection.GetLevel()
-                       << ": Missing track id.");
-        return NS_ERROR_INVALID_ARG;
-      }
       if (!found) {
         *trackId = i->appdata;
         streamIds->clear();
