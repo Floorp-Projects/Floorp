@@ -1110,7 +1110,7 @@ MessageManagerReporter::CountReferents(nsFrameMessageManager* aMessageManager,
 
     // Keep track of messages that have a suspiciously large
     // number of referents (symptom of leak).
-    if (currentCount == MessageManagerReporter::kSuspectReferentCount) {
+    if (currentCount >= MessageManagerReporter::kSuspectReferentCount) {
       aReferentCount->mSuspectMessages.AppendElement(key);
     }
 

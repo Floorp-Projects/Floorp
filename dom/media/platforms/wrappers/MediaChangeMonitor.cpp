@@ -34,7 +34,6 @@ public:
   {
     if (CanBeInstantiated()) {
       UpdateConfigFromExtraData(aInfo.mExtraData);
-      mPreviousExtraData = aInfo.mExtraData;
     }
   }
 
@@ -72,8 +71,14 @@ public:
       // We now check if the out of band one has changed.
       // This scenario can currently only occur on Android with devices that can
       // recycle a decoder.
-      if (!H264::HasSPS(aSample->mExtraData) ||
+      bool hasOutOfBandExtraData = H264::HasSPS(aSample->mExtraData);
+      if (!hasOutOfBandExtraData || !mPreviousExtraData ||
           H264::CompareExtraData(aSample->mExtraData, mPreviousExtraData)) {
+        if (hasOutOfBandExtraData && !mPreviousExtraData) {
+          // We are decoding the first sample, store the out of band sample's
+          // extradata so that we can check for future change.
+          mPreviousExtraData = aSample->mExtraData;
+        }
         return NS_OK;
       }
       extra_data = aSample->mExtraData;
@@ -86,57 +91,54 @@ public:
     mPreviousExtraData = aSample->mExtraData;
     UpdateConfigFromExtraData(extra_data);
 
-    mNeedKeyframe = true;
-
     return NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
   }
 
-  const TrackInfo& Config() const override
-  {
-    return mCurrentConfig;
-  }
+  const TrackInfo& Config() const override { return mCurrentConfig; }
 
   MediaResult PrepareSample(MediaDataDecoder::ConversionRequired aConversion,
-                            MediaRawData* aSample) override
+                            MediaRawData* aSample,
+                            bool aNeedKeyFrame) override
   {
+    MOZ_DIAGNOSTIC_ASSERT(
+      aConversion == MediaDataDecoder::ConversionRequired::kNeedAnnexB ||
+        aConversion == MediaDataDecoder::ConversionRequired::kNeedAVCC,
+      "Conversion must be either AVCC or AnnexB");
+
+    aSample->mExtraData = mCurrentConfig.mExtraData;
+    aSample->mTrackInfo = mTrackInfo;
+
     if (aConversion == MediaDataDecoder::ConversionRequired::kNeedAnnexB) {
-      auto res = AnnexB::ConvertSampleToAnnexB(aSample, mNeedKeyframe);
+      auto res = AnnexB::ConvertSampleToAnnexB(aSample, aNeedKeyFrame);
       if (res.isErr()) {
         return MediaResult(res.unwrapErr(),
                            RESULT_DETAIL("ConvertSampleToAnnexB"));
       }
     }
-    if (aSample->mKeyframe && mNeedKeyframe) {
-      mNeedKeyframe = false;
-    }
-
-    aSample->mExtraData = mCurrentConfig.mExtraData;
-    aSample->mTrackInfo = mTrackInfo;
 
     return NS_OK;
   }
 
-  private:
-    void UpdateConfigFromExtraData(MediaByteBuffer* aExtraData)
-    {
-      SPSData spsdata;
-      if (H264::DecodeSPSFromExtraData(aExtraData, spsdata) &&
-          spsdata.pic_width > 0 && spsdata.pic_height > 0) {
-        H264::EnsureSPSIsSane(spsdata);
-        mCurrentConfig.mImage.width = spsdata.pic_width;
-        mCurrentConfig.mImage.height = spsdata.pic_height;
-        mCurrentConfig.mDisplay.width = spsdata.display_width;
-        mCurrentConfig.mDisplay.height = spsdata.display_height;
-      }
-      mCurrentConfig.mExtraData = aExtraData;
-      mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
+private:
+  void UpdateConfigFromExtraData(MediaByteBuffer* aExtraData)
+  {
+    SPSData spsdata;
+    if (H264::DecodeSPSFromExtraData(aExtraData, spsdata) &&
+        spsdata.pic_width > 0 && spsdata.pic_height > 0) {
+      H264::EnsureSPSIsSane(spsdata);
+      mCurrentConfig.mImage.width = spsdata.pic_width;
+      mCurrentConfig.mImage.height = spsdata.pic_height;
+      mCurrentConfig.mDisplay.width = spsdata.display_width;
+      mCurrentConfig.mDisplay.height = spsdata.display_height;
     }
+    mCurrentConfig.mExtraData = aExtraData;
+    mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
+  }
 
-    VideoInfo mCurrentConfig;
-    bool mNeedKeyframe = true;
-    uint32_t mStreamID = 0;
-    RefPtr<TrackInfoSharedPtr> mTrackInfo;
-    RefPtr<MediaByteBuffer> mPreviousExtraData;
+  VideoInfo mCurrentConfig;
+  uint32_t mStreamID = 0;
+  RefPtr<TrackInfoSharedPtr> mTrackInfo;
+  RefPtr<MediaByteBuffer> mPreviousExtraData;
 };
 
 class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor
@@ -149,10 +151,7 @@ public:
   {
   }
 
-  bool CanBeInstantiated() const override
-  {
-    return true;
-  }
+  bool CanBeInstantiated() const override { return true; }
 
   MediaResult CheckForChange(MediaRawData* aSample) override
   {
@@ -187,22 +186,20 @@ public:
     return NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
   }
 
-  const TrackInfo& Config() const override
-  {
-    return mCurrentConfig;
-  }
+  const TrackInfo& Config() const override { return mCurrentConfig; }
 
   MediaResult PrepareSample(MediaDataDecoder::ConversionRequired aConversion,
-                            MediaRawData* aSample) override
+                            MediaRawData* aSample,
+                            bool aNeedKeyFrame) override
   {
     return NS_OK;
   }
 
-  private:
-    VideoInfo mCurrentConfig;
-    const VPXDecoder::Codec mCodec;
-    Maybe<gfx::IntSize> mSize;
-    Maybe<int> mProfile;
+private:
+  VideoInfo mCurrentConfig;
+  const VPXDecoder::Codec mCodec;
+  Maybe<gfx::IntSize> mSize;
+  Maybe<int> mProfile;
 };
 
 MediaChangeMonitor::MediaChangeMonitor(PlatformDecoderModule* aPDM,
@@ -299,7 +296,8 @@ MediaChangeMonitor::Decode(MediaRawData* aSample)
       return DecodePromise::CreateAndResolve(DecodedData(), __func__);
     }
 
-    rv = mChangeMonitor->PrepareSample(*mConversionRequired, sample);
+    rv = mChangeMonitor->PrepareSample(
+      *mConversionRequired, sample, mNeedKeyframe);
     if (NS_FAILED(rv)) {
       return DecodePromise::CreateAndReject(rv, __func__);
     }
@@ -557,7 +555,8 @@ MediaChangeMonitor::DecodeFirstSample(MediaRawData* aSample)
     return;
   }
 
-  MediaResult rv = mChangeMonitor->PrepareSample(*mConversionRequired, aSample);
+  MediaResult rv =
+    mChangeMonitor->PrepareSample(*mConversionRequired, aSample, mNeedKeyframe);
 
   if (NS_FAILED(rv)) {
     mDecodePromise.Reject(rv, __func__);
