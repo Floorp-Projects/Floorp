@@ -29,6 +29,7 @@ def setupProject(name, path, description, shouldPublish = true) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 setupProject(':concept-awesomebar', 'components/concept/awesomebar', 'An abstract definition of an awesomebar component.')
+setupProject(':concept-fetch', 'components/concept/fetch', 'An abstract definition of an HTTP client for fetching resources.')
 setupProject(':concept-toolbar', 'components/concept/toolbar', 'An abstract definition of a toolbar component.')
 setupProject(':concept-tabstray', 'components/concept/tabstray', 'An abstract definition of a tabs tray component.')
 setupProject(':concept-engine', 'components/concept/engine', 'An abstract layer hiding the actual browser engine implementation.')
