@@ -303,12 +303,3 @@ wl_egl_window_resize(struct wl_egl_window *egl_window,
 {
 }
 
-MOZ_EXPORT GType
-gdk_wayland_display_get_type(void)
-{
-   // This shouldn't be ever called.
-   abort();
-
-   return GDK_TYPE_X11_DISPLAY;
-}
-
