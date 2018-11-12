@@ -14,8 +14,7 @@
   height: 100%;
 }
 
-.network-monitor .panel-container,
-.network-monitor .properties-view {
+.network-monitor .panel-container {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
@@ -28,6 +27,8 @@
 }
 
 .network-monitor .properties-view {
+  display: flex;
+  flex-direction: column;
   flex-grow: 1;
 }
 
