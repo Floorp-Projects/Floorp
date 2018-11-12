@@ -721,6 +721,22 @@ HTMLEditUtils::GetEditActionForInsert(const nsAtom& aTagName)
 }
 
 EditAction
+HTMLEditUtils::GetEditActionForRemoveList(const nsAtom& aTagName)
+{
+  // This method may be in a hot path.  So, return only necessary
+  // EditAction::eRemove*Element.
+  if (&aTagName == nsGkAtoms::ul) {
+    // For InputEvent.inputType, "insertUnorderedList".
+    return EditAction::eRemoveUnorderedListElement;
+  }
+  if (&aTagName == nsGkAtoms::ol) {
+    // For InputEvent.inputType, "insertOrderedList".
+    return EditAction::eRemoveOrderedListElement;
+  }
+  return EditAction::eRemoveListElement;
+}
+
+EditAction
 HTMLEditUtils::GetEditActionForInsert(const Element& aElement)
 {
   return GetEditActionForInsert(*aElement.NodeInfo()->NameAtom());

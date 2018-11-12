@@ -170,14 +170,17 @@ enum class EditAction
   // href attribute.
   eInsertLinkElement,
 
-  // eInsertUnorderedListElement, eInsertOrderedListElement and
-  // eInsertDefinitionListLElement indicate to insert <ul>, <ol> or <dl>
-  // element.
+  // eInsertUnorderedListElement and eInsertOrderedListElement indicate to
+  // insert <ul> or <ol> element.
   eInsertUnorderedListElement,
   eInsertOrderedListElement,
-  eInsertDefinitionListElementv,
 
-  // eRemoveListElement indicates to remove parent list related elements.
+  // eRemoveUnorderedListElement and eRemoveOrderedListElement indicate to
+  // remove <ul> or <ol> element.
+  eRemoveUnorderedListElement,
+  eRemoveOrderedListElement,
+
+  // eRemoveListElement indicates to remove <ul>, <ol> and/or <dl> element.
   eRemoveListElement,
 
   // eInsertBlockquoteElement indicates to insert a <blockquote> element.

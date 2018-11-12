@@ -2377,14 +2377,26 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
 }
 
 NS_IMETHODIMP
-HTMLEditor::RemoveList(const nsAString&)
+HTMLEditor::RemoveList(const nsAString& aListType)
 {
   if (!mRules) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  AutoEditActionDataSetter editActionData(*this,
-                                          EditAction::eRemoveListElement);
+  // Note that we ignore aListType when we actually remove parent list elements.
+  // However, we need to set InputEvent.inputType to "insertOrderedList" or
+  // "insertedUnorderedList" when this is called for
+  // execCommand("insertorderedlist") or execCommand("insertunorderedlist").
+  // Otherwise, comm-central UI may call this methods with "dl" or "".
+  // So, it's okay to use mismatched EditAction here if this is called in
+  // comm-central.
+
+  RefPtr<nsAtom> listAtom = NS_Atomize(aListType);
+  if (NS_WARN_IF(!listAtom)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  AutoEditActionDataSetter editActionData(
+    *this, HTMLEditUtils::GetEditActionForRemoveList(*listAtom));
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
