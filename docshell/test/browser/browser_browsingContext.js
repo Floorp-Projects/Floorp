@@ -98,6 +98,7 @@ add_task(async function() {
       let topContext = getBrowsingContextById(topId);
       isnot(topContext, null);
       is(topContext.parent, null);
+      is(topId, browser.browsingContext.id, "<browser> has the correct browsingContext");
 
       let id0 = await addFrame(browser, "frame0");
       let browsingContext0 = getBrowsingContextById(id0);
