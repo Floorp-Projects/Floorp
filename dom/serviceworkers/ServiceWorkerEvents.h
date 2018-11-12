@@ -123,7 +123,6 @@ class FetchEvent final : public ExtendableEvent
   nsCString mScriptSpec;
   nsCString mPreventDefaultScriptSpec;
   nsString mClientId;
-  nsString mResultingClientId;
   uint32_t mPreventDefaultLineNumber;
   uint32_t mPreventDefaultColumnNumber;
   bool mIsReload;
@@ -168,12 +167,6 @@ public:
   GetClientId(nsAString& aClientId) const
   {
     aClientId = mClientId;
-  }
-
-  void
-  GetResultingClientId(nsAString& aResultingClientId) const
-  {
-    aResultingClientId = mResultingClientId;
   }
 
   bool
