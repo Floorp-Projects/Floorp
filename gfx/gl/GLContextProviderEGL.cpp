@@ -100,7 +100,7 @@ DeleteWaylandGLSurface(EGLSurface surface)
 {
     // We're running on Wayland which means our EGLSurface may
     // have attached Wayland backend data which must be released.
-    if (GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default())) {
+    if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
         auto entry = sWaylandGLSurface.Lookup(surface);
         if (entry) {
             delete entry.Data();
@@ -970,7 +970,7 @@ FillContextAttribs(bool alpha, bool depth, bool stencil, bool bpp16,
 {
     out->AppendElement(LOCAL_EGL_SURFACE_TYPE);
 #if defined(MOZ_WAYLAND)
-    if (GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default())) {
+    if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
         // Wayland on desktop does not support PBuffer or FBO.
         // We create a dummy wl_egl_window instead.
         out->AppendElement(LOCAL_EGL_WINDOW_BIT);
@@ -1101,7 +1101,7 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(CreateContextFlags flags,
     mozilla::gfx::IntSize pbSize(size);
     EGLSurface surface = nullptr;
 #if defined(MOZ_WAYLAND)
-    if (GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default())) {
+    if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
         surface = GLContextEGL::CreateWaylandBufferSurface(config, pbSize);
     } else
 #endif

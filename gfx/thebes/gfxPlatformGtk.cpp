@@ -799,7 +799,7 @@ already_AddRefed<gfx::VsyncSource>
 gfxPlatformGtk::CreateHardwareVsyncSource()
 {
 #ifdef MOZ_WAYLAND
-  if (GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default())) {
+  if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     RefPtr<VsyncSource> vsyncSource = new GtkVsyncSource();
     VsyncSource::Display& display = vsyncSource->GetGlobalDisplay();
     static_cast<GtkVsyncSource::GLXDisplay&>(display).SetupWayland();
