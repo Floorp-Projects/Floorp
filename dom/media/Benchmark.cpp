@@ -299,10 +299,8 @@ BenchmarkPlayback::FinalizeShutdown()
   mDemuxer = nullptr;
 
   RefPtr<Benchmark> ref(mGlobalState);
-  Thread()->AsTaskQueue()->BeginShutdown()->Then(
-    ref->Thread(), __func__,
-    [ref]() { ref->Dispose(); },
-    []() { MOZ_CRASH("not reached"); });
+  ref->Thread()->Dispatch(NS_NewRunnableFunction(
+    "BenchmarkPlayback::FinalizeShutdown", [ref]() { ref->Dispose(); }));
 }
 
 void

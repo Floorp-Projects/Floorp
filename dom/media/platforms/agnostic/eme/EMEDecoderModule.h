@@ -61,7 +61,7 @@ public:
   RefPtr<ShutdownPromise> Shutdown() override;
 
 private:
-  RefPtr<TaskQueue> mTaskQueue;
+  RefPtr<AbstractThread> mThread;
   RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
   MozPromiseRequestHolder<SamplesWaitingForKey::WaitForKeyPromise> mKeyRequest;
   MozPromiseHolder<DecodePromise> mDecodePromise;
