@@ -224,6 +224,9 @@ a11y::ProxyBatch(ProxyAccessible* aDocument,
     case DocAccessibleWrap::eBatch_FocusPath:
       sessionAcc->ReplaceFocusPathCache(accWraps, aData);
       break;
+    case DocAccessibleWrap::eBatch_BoundsUpdate:
+      sessionAcc->UpdateCachedBounds(accWraps, aData);
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown batch type.");
       break;
