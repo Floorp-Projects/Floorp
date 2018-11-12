@@ -4873,24 +4873,6 @@ JSScript::sweepTypes(const js::AutoSweepTypeScript& sweep)
         inlinedCompilations.shrinkTo(dest);
     }
 
-    // Destroy all type information attached to the script if desired. We can
-    // only do this if nothing has been compiled for the script, which will be
-    // the case unless the script has been compiled since we started sweeping.
-    if (types.sweepReleaseTypes &&
-        !types.keepTypeScripts &&
-        !hasBaselineScript() &&
-        !hasIonScript())
-    {
-        types_->destroy();
-        types_ = nullptr;
-
-        // Freeze constraints on stack type sets need to be regenerated the
-        // next time the script is analyzed.
-        clearFlag(MutableFlags::HasFreezeConstraints);
-
-        return;
-    }
-
     unsigned num = TypeScript::NumTypeSets(this);
     StackTypeSet* typeArray = types_->typeArray();
 
@@ -4904,6 +4886,23 @@ JSScript::sweepTypes(const js::AutoSweepTypeScript& sweep)
         // need to be regenerated.
         clearFlag(MutableFlags::HasFreezeConstraints);
     }
+}
+
+void
+JSScript::maybeReleaseTypes()
+{
+    if (!types_ || zone()->types.keepTypeScripts || hasBaselineScript()) {
+        return;
+    }
+
+    MOZ_ASSERT(!hasIonScript());
+
+    types_->destroy();
+    types_ = nullptr;
+
+    // Freeze constraints on stack type sets need to be regenerated the
+    // next time the script is analyzed.
+    clearFlag(MutableFlags::HasFreezeConstraints);
 }
 
 void
@@ -4950,7 +4949,6 @@ TypeZone::TypeZone(Zone* zone)
     currentCompilationId_(zone),
     generation(zone, 0),
     sweepTypeLifoAlloc(zone, (size_t) TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-    sweepReleaseTypes(zone, false),
     sweepingTypes(zone, false),
     oomSweepingTypes(zone, false),
     keepTypeScripts(zone, false),
@@ -4965,12 +4963,9 @@ TypeZone::~TypeZone()
 }
 
 void
-TypeZone::beginSweep(bool releaseTypes)
+TypeZone::beginSweep()
 {
     MOZ_ASSERT(zone()->isGCSweepingOrCompacting());
-    MOZ_ASSERT(!sweepReleaseTypes);
-
-    sweepReleaseTypes = releaseTypes;
 
     // Clear the analysis pool, but don't release its data yet. While sweeping
     // types any live data will be allocated into the pool.
@@ -4982,8 +4977,6 @@ TypeZone::beginSweep(bool releaseTypes)
 void
 TypeZone::endSweep(JSRuntime* rt)
 {
-    sweepReleaseTypes = false;
-
     rt->gc.freeAllLifoBlocksAfterSweeping(&sweepTypeLifoAlloc.ref());
 }
 

@@ -29,8 +29,8 @@ add_task(async function() {
 
   function checklist(signingRequired) {
     let list = mgrWin.document.getElementById("addon-list");
-    is(list.children.length, 2, "Found 2 items in langpack list");
-    for (let item of list.children) {
+    is(list.itemChildren.length, 2, "Found 2 items in langpack list");
+    for (let item of list.itemChildren) {
       let what, warningVisible, errorVisible;
 
       if (item.mAddon.id.startsWith("signed")) {

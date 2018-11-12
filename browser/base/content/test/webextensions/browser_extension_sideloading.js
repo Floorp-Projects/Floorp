@@ -212,7 +212,7 @@ add_task(async function() {
   // Make sure XBL bindings are applied
   list.clientHeight;
 
-  let item = list.children.find(_item => _item.value == ID3);
+  let item = list.itemChildren.find(_item => _item.value == ID3);
   ok(item, "Found entry for sideloaded extension in about:addons");
   item.scrollIntoView({behavior: "instant"});
 
