@@ -24,7 +24,6 @@ import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.browser.session.Session
 import mozilla.components.lib.crash.handler.CrashHandlerService
 import mozilla.components.support.ktx.android.util.Base64
-import mozilla.components.support.utils.ThreadUtils
 import org.json.JSONException
 import org.mozilla.focus.IO
 import org.mozilla.focus.R
@@ -34,7 +33,6 @@ import org.mozilla.focus.gecko.GeckoViewPrompt
 import org.mozilla.focus.gecko.NestedGeckoView
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
-import org.mozilla.focus.utils.FileUtils
 import org.mozilla.focus.utils.IntentUtils
 import org.mozilla.focus.utils.MobileMetricsPingStorage
 import org.mozilla.focus.utils.Settings
@@ -74,9 +72,7 @@ class GeckoWebViewProvider : IWebViewProvider {
     }
 
     override fun performCleanup(context: Context) {
-        ThreadUtils.postToBackgroundThread(Runnable {
-            FileUtils.truncateCacheDirectory(context)
-        })
+        // Nothing: a WebKit work-around.
     }
 
     override fun performNewBrowserSessionCleanup() {
