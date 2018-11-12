@@ -373,3 +373,22 @@ SessionAccessibility::ReplaceFocusPathCache(const nsTArray<AccessibleWrap*>& aAc
 
   mSessionAccessibility->ReplaceFocusPathCache(infos);
 }
+
+void
+SessionAccessibility::UpdateCachedBounds(const nsTArray<AccessibleWrap*>& aAccessibles,
+                                         const nsTArray<BatchData>& aData)
+{
+  auto infos = jni::ObjectArray::New<java::GeckoBundle>(aAccessibles.Length());
+  for (size_t i = 0; i < aAccessibles.Length(); i++) {
+    AccessibleWrap* acc = aAccessibles.ElementAt(i);
+    if (aData.Length() == aAccessibles.Length()) {
+      const BatchData& data = aData.ElementAt(i);
+      auto bundle = acc->ToSmallBundle(data.State(), data.Bounds());
+      infos->SetElement(i, bundle);
+    } else {
+      infos->SetElement(i, acc->ToSmallBundle());
+    }
+  }
+
+  mSessionAccessibility->UpdateCachedBounds(infos);
+}

@@ -37,6 +37,7 @@ public:
   enum {
     eBatch_Viewport = 0,
     eBatch_FocusPath = 1,
+    eBatch_BoundsUpdate = 2,
   };
 
 protected:
@@ -50,9 +51,13 @@ protected:
 private:
   void CacheViewport();
 
+  void UpdateFocusPathBounds();
+
   static void CacheViewportCallback(nsITimer* aTimer, void* aDocAccParam);
 
   nsCOMPtr<nsITimer> mCacheRefreshTimer;
+
+  AccessibleHashtable mFocusPath;
 };
 
 } // namespace a11y
