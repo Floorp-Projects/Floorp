@@ -112,6 +112,9 @@ public:
   void ReplaceFocusPathCache(const nsTArray<AccessibleWrap*>& aAccessibles,
                              const nsTArray<BatchData>& aData = nsTArray<BatchData>());
 
+  void UpdateCachedBounds(const nsTArray<AccessibleWrap*>& aAccessibles,
+                          const nsTArray<BatchData>& aData = nsTArray<BatchData>());
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SessionAccessibility)
 
 private:
