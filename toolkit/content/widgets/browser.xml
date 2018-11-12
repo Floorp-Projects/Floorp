@@ -481,6 +481,18 @@
         ]]></getter>
       </property>
 
+      <field name="_browsingContextId">null</field>
+
+      <property name="browsingContext" readonly="true">
+        <getter><![CDATA[
+          if (!this.isRemoteBrowser) {
+            return this.docShell.browsingContext;
+          }
+
+          return ChromeUtils.getBrowsingContext(this._browsingContextId);
+        ]]></getter>
+      </property>
+
       <field name="_lastSearchString">null</field>
 
 
@@ -1281,6 +1293,7 @@
           switch (aMessage.name) {
             case "Browser:Init":
               this._outerWindowID = data.outerWindowID;
+              this._browsingContextId = data.browsingContextId;
               break;
             case "DOMTitleChanged":
               this._contentTitle = data.title;

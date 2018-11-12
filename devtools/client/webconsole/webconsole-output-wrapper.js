@@ -449,6 +449,13 @@ WebConsoleOutputWrapper.prototype = {
       setTimeout(() => {
         this.throttledDispatchPromise = null;
 
+        if (!store) {
+          // The store is not initialized yet, we can call setTimeoutIfNeeded so the
+          // messages will be handled in the next timeout when the store is ready.
+          this.setTimeoutIfNeeded();
+          return;
+        }
+
         store.dispatch(actions.messagesAdd(this.queuedMessageAdds));
 
         const length = this.queuedMessageAdds.length;

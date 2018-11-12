@@ -10,19 +10,14 @@ import logging
 import os
 import sys
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-PYTHIRDPARTY = os.path.join(HERE, '..', 'third_party', 'python')
-
-# Add some required files to $PATH to ensure they are available
-sys.path.append(os.path.join(HERE, '..', 'python', 'mozbuild', 'mozbuild'))
-sys.path.append(os.path.join(PYTHIRDPARTY, 'requests'))
-sys.path.append(os.path.join(PYTHIRDPARTY, 'voluptuous'))
-
 import requests
 import voluptuous
 import voluptuous.humanize
 
-from mozbuild.telemetry import schema as build_telemetry_schema
+from mozbuild.telemetry import (
+    schema as build_telemetry_schema,
+    verify_statedir,
+)
 
 BUILD_TELEMETRY_URL = 'https://incoming.telemetry.mozilla.org/{endpoint}'
 SUBMIT_ENDPOINT = 'submit/eng-workflow/build/1/{ping_uuid}'
@@ -133,35 +128,6 @@ def submit_telemetry_data(outgoing, submitted):
     delete_expired_files(submitted)
 
     return 0
-
-
-def verify_statedir(statedir):
-    '''Verifies the statedir is structured according to the assumptions of
-    this script
-
-    Requires presence of the following directories; will raise if absent:
-    - statedir/telemetry
-    - statedir/telemetry/outgoing
-
-    Creates the following directories and files if absent (first submission):
-    - statedir/telemetry/submitted
-    '''
-
-    telemetry_dir = os.path.join(statedir, 'telemetry')
-    outgoing = os.path.join(telemetry_dir, 'outgoing')
-    submitted = os.path.join(telemetry_dir, 'submitted')
-    telemetry_log = os.path.join(telemetry_dir, 'telemetry.log')
-
-    if not os.path.isdir(telemetry_dir):
-        raise Exception('{} does not exist'.format(telemetry_dir))
-
-    if not os.path.isdir(outgoing):
-        raise Exception('{} does not exist'.format(outgoing))
-
-    if not os.path.isdir(submitted):
-        os.mkdir(submitted)
-
-    return outgoing, submitted, telemetry_log
 
 
 if __name__ == '__main__':
