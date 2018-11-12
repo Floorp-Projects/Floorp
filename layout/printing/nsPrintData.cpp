@@ -8,6 +8,7 @@
 
 #include "nsIStringBundle.h"
 #include "nsIServiceManager.h"
+#include "nsIWidget.h"
 #include "nsPrintObject.h"
 #include "nsPrintPreviewListener.h"
 #include "nsIWebProgressListener.h"
