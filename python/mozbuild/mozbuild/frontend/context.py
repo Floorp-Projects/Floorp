@@ -1849,10 +1849,6 @@ VARIABLES = {
         """List of manifest files defining marionette-layout tests.
         """),
 
-    'MARIONETTE_GFX_MANIFESTS': (ManifestparserManifestList, list,
-        """List of manifest files defining marionette-gfx tests.
-        """),
-
     'MARIONETTE_UNIT_MANIFESTS': (ManifestparserManifestList, list,
         """List of manifest files defining marionette-unit tests.
         """),
