@@ -55,7 +55,7 @@
 }
 
 .tree-node img.arrow {
-  mask: url("chrome://devtools/skin/images/devtools-components/arrow.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/arrow.svg") no-repeat;
   mask-size: 100%;
   width: 9px;
   height: 9px;
@@ -148,7 +148,6 @@ html[dir="rtl"] .tree-node img.arrow {
 .split-box.horz > .splitter {
   min-height: calc(var(--devtools-splitter-top-width) +
     var(--devtools-splitter-bottom-width) + 1px);
-
   border-top-width: var(--devtools-splitter-top-width);
   border-bottom-width: var(--devtools-splitter-bottom-width);
 
@@ -232,39 +231,39 @@ img.result-item-icon {
 }
 
 img.domain {
-  mask: url("chrome://devtools/skin/images/debugger/domain.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/domain.svg") no-repeat;
 }
 
 img.folder {
-  mask: url("chrome://devtools/skin/images/debugger/folder.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/folder.svg") no-repeat;
 }
 
 img.coffeescript {
-  mask: url("chrome://devtools/skin/images/debugger/coffeescript.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/coffeescript.svg") no-repeat;
 }
 
 img.javascript {
-  mask: url("chrome://devtools/skin/images/debugger/javascript.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/javascript.svg") no-repeat;
 }
 
 img.tab {
-  mask: url("chrome://devtools/skin/images/debugger/tab.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/tab.svg") no-repeat;
 }
 
 img.react {
-  mask: url("chrome://devtools/skin/images/debugger/react.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/react.svg") no-repeat;
 }
 
 img.typescript {
-  mask: url("chrome://devtools/skin/images/debugger/typescript.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/typescript.svg") no-repeat;
 }
 
 img.extension {
-  mask: url("chrome://devtools/skin/images/debugger/extension.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/extension.svg") no-repeat;
 }
 
 img.file {
-  mask: url("chrome://devtools/skin/images/debugger/file.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/file.svg") no-repeat;
   width: 13px;
   height: 13px;
 }
@@ -293,7 +292,7 @@ img.result-item-icon {
 }
 
 img.arrow {
-  mask: url("chrome://devtools/skin/images/debugger/arrow.svg");
+  mask: url("resource://devtools/client/debugger/new/images/arrow.svg");
   margin-inline-end: 5px;
   margin-top: 3px;
   width: 9px;

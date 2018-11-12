@@ -1241,13 +1241,6 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 
 /***/ }),
 
-/***/ 1309:
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-
 /***/ 1310:
 /***/ (function(module, exports) {
 
@@ -1666,15 +1659,6 @@ module.exports = {
   showMenu,
   buildMenu
 };
-
-/***/ }),
-
-/***/ 1440:
-/***/ (function(module, exports, __webpack_require__) {
-
-const SplitBox = __webpack_require__(1536);
-
-module.exports = SplitBox;
 
 /***/ }),
 
@@ -2553,337 +2537,6 @@ module.exports = KeyShortcuts;
  */
 
 exports.register = function (window) {};
-
-/***/ }),
-
-/***/ 1536:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const React = __webpack_require__(0);
-const ReactDOM = __webpack_require__(4);
-const Draggable = React.createFactory(__webpack_require__(1537));
-const { Component } = React;
-const PropTypes = __webpack_require__(3642);
-const dom = __webpack_require__(3643);
-
-__webpack_require__(1309);
-
-/**
- * This component represents a Splitter. The splitter supports vertical
- * as well as horizontal mode.
- */
-class SplitBox extends Component {
-  static get propTypes() {
-    return {
-      // Custom class name. You can use more names separated by a space.
-      className: PropTypes.string,
-      // Initial size of controlled panel.
-      initialSize: PropTypes.any,
-      // Optional initial width of controlled panel.
-      initialWidth: PropTypes.number,
-      // Optional initial height of controlled panel.
-      initialHeight: PropTypes.number,
-      // Left/top panel
-      startPanel: PropTypes.any,
-      // Left/top panel collapse state.
-      startPanelCollapsed: PropTypes.bool,
-      // Min panel size.
-      minSize: PropTypes.any,
-      // Max panel size.
-      maxSize: PropTypes.any,
-      // Right/bottom panel
-      endPanel: PropTypes.any,
-      // Right/bottom panel collapse state.
-      endPanelCollapsed: PropTypes.bool,
-      // True if the right/bottom panel should be controlled.
-      endPanelControl: PropTypes.bool,
-      // Size of the splitter handle bar.
-      splitterSize: PropTypes.number,
-      // True if the splitter bar is vertical (default is vertical).
-      vert: PropTypes.bool,
-      // Optional style properties passed into the splitbox
-      style: PropTypes.object,
-      // Optional callback when splitbox resize stops
-      onResizeEnd: PropTypes.func
-    };
-  }
-
-  static get defaultProps() {
-    return {
-      splitterSize: 5,
-      vert: true,
-      endPanelControl: false,
-      endPanelCollapsed: false,
-      startPanelCollapsed: false
-    };
-  }
-
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      vert: props.vert,
-      // We use integers for these properties
-      width: parseInt(props.initialWidth || props.initialSize, 10),
-      height: parseInt(props.initialHeight || props.initialSize, 10)
-    };
-
-    this.onStartMove = this.onStartMove.bind(this);
-    this.onStopMove = this.onStopMove.bind(this);
-    this.onMove = this.onMove.bind(this);
-    this.preparePanelStyles = this.preparePanelStyles.bind(this);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    if (this.props.vert !== nextProps.vert) {
-      this.setState({ vert: nextProps.vert });
-    }
-    if (this.props.initialSize !== nextProps.initialSize || this.props.initialWidth !== nextProps.initialWidth || this.props.initialHeight !== nextProps.initialHeight) {
-      this.setState({
-        width: parseInt(nextProps.initialWidth || nextProps.initialSize, 10),
-        height: parseInt(nextProps.initialHeight || nextProps.initialSize, 10)
-      });
-    }
-  }
-
-  // Dragging Events
-
-  /**
-   * Set 'resizing' cursor on entire document during splitter dragging.
-   * This avoids cursor-flickering that happens when the mouse leaves
-   * the splitter bar area (happens frequently).
-   */
-  onStartMove() {
-    const splitBox = ReactDOM.findDOMNode(this);
-    const doc = splitBox.ownerDocument;
-    let defaultCursor = doc.documentElement.style.cursor;
-    doc.documentElement.style.cursor = this.state.vert ? "ew-resize" : "ns-resize";
-
-    splitBox.classList.add("dragging");
-    document.dispatchEvent(new CustomEvent("drag:start"));
-
-    this.setState({
-      defaultCursor: defaultCursor
-    });
-  }
-
-  onStopMove() {
-    const splitBox = ReactDOM.findDOMNode(this);
-    const doc = splitBox.ownerDocument;
-    doc.documentElement.style.cursor = this.state.defaultCursor;
-
-    splitBox.classList.remove("dragging");
-    document.dispatchEvent(new CustomEvent("drag:end"));
-
-    if (this.props.onResizeEnd) {
-      this.props.onResizeEnd(this.state.vert ? this.state.width : this.state.height);
-    }
-  }
-
-  /**
-   * Adjust size of the controlled panel. Depending on the current
-   * orientation we either remember the width or height of
-   * the splitter box.
-   */
-  onMove({ movementX, movementY }) {
-    const node = ReactDOM.findDOMNode(this);
-    const doc = node.ownerDocument;
-
-    if (this.props.endPanelControl) {
-      // For the end panel we need to increase the width/height when the
-      // movement is towards the left/top.
-      movementX = -movementX;
-      movementY = -movementY;
-    }
-
-    if (this.state.vert) {
-      const isRtl = doc.dir === "rtl";
-      if (isRtl) {
-        // In RTL we need to reverse the movement again -- but only for vertical
-        // splitters
-        movementX = -movementX;
-      }
-
-      this.setState((state, props) => ({
-        width: state.width + movementX
-      }));
-    } else {
-      this.setState((state, props) => ({
-        height: state.height + movementY
-      }));
-    }
-  }
-
-  // Rendering
-  preparePanelStyles() {
-    const vert = this.state.vert;
-    const {
-      minSize,
-      maxSize,
-      startPanelCollapsed,
-      endPanelControl,
-      endPanelCollapsed
-    } = this.props;
-    let leftPanelStyle, rightPanelStyle;
-
-    // Set proper size for panels depending on the current state.
-    if (vert) {
-      let startWidth = endPanelControl ? null : this.state.width,
-          endWidth = endPanelControl ? this.state.width : null;
-
-      leftPanelStyle = {
-        maxWidth: endPanelControl ? null : maxSize,
-        minWidth: endPanelControl ? null : minSize,
-        width: startPanelCollapsed ? 0 : startWidth
-      };
-      rightPanelStyle = {
-        maxWidth: endPanelControl ? maxSize : null,
-        minWidth: endPanelControl ? minSize : null,
-        width: endPanelCollapsed ? 0 : endWidth
-      };
-    } else {
-      let startHeight = endPanelControl ? null : this.state.height,
-          endHeight = endPanelControl ? this.state.height : null;
-
-      leftPanelStyle = {
-        maxHeight: endPanelControl ? null : maxSize,
-        minHeight: endPanelControl ? null : minSize,
-        height: endPanelCollapsed ? maxSize : startHeight
-      };
-      rightPanelStyle = {
-        maxHeight: endPanelControl ? maxSize : null,
-        minHeight: endPanelControl ? minSize : null,
-        height: startPanelCollapsed ? maxSize : endHeight
-      };
-    }
-
-    return { leftPanelStyle, rightPanelStyle };
-  }
-
-  render() {
-    const vert = this.state.vert;
-    const {
-      startPanelCollapsed,
-      startPanel,
-      endPanel,
-      endPanelControl,
-      splitterSize,
-      endPanelCollapsed
-    } = this.props;
-
-    let style = Object.assign({}, this.props.style);
-
-    // Calculate class names list.
-    let classNames = ["split-box"];
-    classNames.push(vert ? "vert" : "horz");
-    if (this.props.className) {
-      classNames = classNames.concat(this.props.className.split(" "));
-    }
-
-    const { leftPanelStyle, rightPanelStyle } = this.preparePanelStyles();
-
-    // Calculate splitter size
-    let splitterStyle = {
-      flex: `0 0 ${splitterSize}px`
-    };
-
-    return dom.div({
-      className: classNames.join(" "),
-      style: style
-    }, !startPanelCollapsed ? dom.div({
-      className: endPanelControl ? "uncontrolled" : "controlled",
-      style: leftPanelStyle
-    }, startPanel) : null, Draggable({
-      className: "splitter",
-      style: splitterStyle,
-      onStart: this.onStartMove,
-      onStop: this.onStopMove,
-      onMove: this.onMove
-    }), !endPanelCollapsed ? dom.div({
-      className: endPanelControl ? "controlled" : "uncontrolled",
-      style: rightPanelStyle
-    }, endPanel) : null);
-  }
-}
-
-module.exports = SplitBox;
-
-/***/ }),
-
-/***/ 1537:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const React = __webpack_require__(0);
-const ReactDOM = __webpack_require__(4);
-const { Component } = React;
-const PropTypes = __webpack_require__(3642);
-const dom = __webpack_require__(3643);
-
-class Draggable extends Component {
-  static get propTypes() {
-    return {
-      onMove: PropTypes.func.isRequired,
-      onStart: PropTypes.func,
-      onStop: PropTypes.func,
-      style: PropTypes.object,
-      className: PropTypes.string
-    };
-  }
-
-  constructor(props) {
-    super(props);
-    this.startDragging = this.startDragging.bind(this);
-    this.onMove = this.onMove.bind(this);
-    this.onUp = this.onUp.bind(this);
-  }
-
-  startDragging(ev) {
-    ev.preventDefault();
-    const doc = ReactDOM.findDOMNode(this).ownerDocument;
-    doc.addEventListener("mousemove", this.onMove);
-    doc.addEventListener("mouseup", this.onUp);
-    this.props.onStart && this.props.onStart();
-  }
-
-  onMove(ev) {
-    ev.preventDefault();
-
-    // When the target is outside of the document, its tagName is undefined
-    if (!ev.target.tagName) {
-      return
-    }
-
-    // We pass the whole event because we don't know which properties
-    // the callee needs.
-    this.props.onMove(ev);
-  }
-
-  onUp(ev) {
-    ev.preventDefault();
-    const doc = ReactDOM.findDOMNode(this).ownerDocument;
-    doc.removeEventListener("mousemove", this.onMove);
-    doc.removeEventListener("mouseup", this.onUp);
-    this.props.onStop && this.props.onStop();
-  }
-
-  render() {
-    return dom.div({
-      style: this.props.style,
-      className: this.props.className,
-      onMouseDown: this.startDragging
-    });
-  }
-}
-
-module.exports = Draggable;
 
 /***/ }),
 
@@ -7287,7 +6940,7 @@ var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
-var _devtoolsSplitter = __webpack_require__(1440);
+var _devtoolsSplitter = __webpack_require__(3802);
 
 var _devtoolsSplitter2 = _interopRequireDefault(_devtoolsSplitter);
 
@@ -8784,6 +8437,353 @@ module.exports = "<svg viewBox=\"0 0 9 12\" version=\"1.1\" xmlns=\"http://www.w
 
 /***/ }),
 
+/***/ 3802:
+/***/ (function(module, exports, __webpack_require__) {
+
+const SplitBox = __webpack_require__(3803);
+
+module.exports = SplitBox;
+
+/***/ }),
+
+/***/ 3803:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const React = __webpack_require__(0);
+const ReactDOM = __webpack_require__(4);
+const Draggable = React.createFactory(__webpack_require__(3804));
+const { Component } = React;
+const PropTypes = __webpack_require__(3642);
+const dom = __webpack_require__(3643);
+
+__webpack_require__(3805);
+
+/**
+ * This component represents a Splitter. The splitter supports vertical
+ * as well as horizontal mode.
+ */
+class SplitBox extends Component {
+  static get propTypes() {
+    return {
+      // Custom class name. You can use more names separated by a space.
+      className: PropTypes.string,
+      // Initial size of controlled panel.
+      initialSize: PropTypes.any,
+      // Optional initial width of controlled panel.
+      initialWidth: PropTypes.number,
+      // Optional initial height of controlled panel.
+      initialHeight: PropTypes.number,
+      // Left/top panel
+      startPanel: PropTypes.any,
+      // Left/top panel collapse state.
+      startPanelCollapsed: PropTypes.bool,
+      // Min panel size.
+      minSize: PropTypes.any,
+      // Max panel size.
+      maxSize: PropTypes.any,
+      // Right/bottom panel
+      endPanel: PropTypes.any,
+      // Right/bottom panel collapse state.
+      endPanelCollapsed: PropTypes.bool,
+      // True if the right/bottom panel should be controlled.
+      endPanelControl: PropTypes.bool,
+      // Size of the splitter handle bar.
+      splitterSize: PropTypes.number,
+      // True if the splitter bar is vertical (default is vertical).
+      vert: PropTypes.bool,
+      // Optional style properties passed into the splitbox
+      style: PropTypes.object,
+      // Optional callback when splitbox resize stops
+      onResizeEnd: PropTypes.func
+    };
+  }
+
+  static get defaultProps() {
+    return {
+      splitterSize: 5,
+      vert: true,
+      endPanelControl: false,
+      endPanelCollapsed: false,
+      startPanelCollapsed: false
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      vert: props.vert,
+      // We use integers for these properties
+      width: parseInt(props.initialWidth || props.initialSize, 10),
+      height: parseInt(props.initialHeight || props.initialSize, 10)
+    };
+
+    this.onStartMove = this.onStartMove.bind(this);
+    this.onStopMove = this.onStopMove.bind(this);
+    this.onMove = this.onMove.bind(this);
+    this.preparePanelStyles = this.preparePanelStyles.bind(this);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (this.props.vert !== nextProps.vert) {
+      this.setState({ vert: nextProps.vert });
+    }
+    if (this.props.initialSize !== nextProps.initialSize || this.props.initialWidth !== nextProps.initialWidth || this.props.initialHeight !== nextProps.initialHeight) {
+      this.setState({
+        width: parseInt(nextProps.initialWidth || nextProps.initialSize, 10),
+        height: parseInt(nextProps.initialHeight || nextProps.initialSize, 10)
+      });
+    }
+  }
+
+  // Dragging Events
+
+  /**
+   * Set 'resizing' cursor on entire document during splitter dragging.
+   * This avoids cursor-flickering that happens when the mouse leaves
+   * the splitter bar area (happens frequently).
+   */
+  onStartMove() {
+    const splitBox = ReactDOM.findDOMNode(this);
+    const doc = splitBox.ownerDocument;
+    const defaultCursor = doc.documentElement.style.cursor;
+    doc.documentElement.style.cursor = this.state.vert ? "ew-resize" : "ns-resize";
+
+    splitBox.classList.add("dragging");
+    document.dispatchEvent(new CustomEvent("drag:start"));
+
+    this.setState({
+      defaultCursor: defaultCursor
+    });
+  }
+
+  onStopMove() {
+    const splitBox = ReactDOM.findDOMNode(this);
+    const doc = splitBox.ownerDocument;
+    doc.documentElement.style.cursor = this.state.defaultCursor;
+
+    splitBox.classList.remove("dragging");
+    document.dispatchEvent(new CustomEvent("drag:end"));
+
+    if (this.props.onResizeEnd) {
+      this.props.onResizeEnd(this.state.vert ? this.state.width : this.state.height);
+    }
+  }
+
+  /**
+   * Adjust size of the controlled panel. Depending on the current
+   * orientation we either remember the width or height of
+   * the splitter box.
+   */
+  onMove({ movementX, movementY }) {
+    const node = ReactDOM.findDOMNode(this);
+    const doc = node.ownerDocument;
+
+    if (this.props.endPanelControl) {
+      // For the end panel we need to increase the width/height when the
+      // movement is towards the left/top.
+      movementX = -movementX;
+      movementY = -movementY;
+    }
+
+    if (this.state.vert) {
+      const isRtl = doc.dir === "rtl";
+      if (isRtl) {
+        // In RTL we need to reverse the movement again -- but only for vertical
+        // splitters
+        movementX = -movementX;
+      }
+
+      this.setState((state, props) => ({
+        width: state.width + movementX
+      }));
+    } else {
+      this.setState((state, props) => ({
+        height: state.height + movementY
+      }));
+    }
+  }
+
+  // Rendering
+  preparePanelStyles() {
+    const vert = this.state.vert;
+    const {
+      minSize,
+      maxSize,
+      startPanelCollapsed,
+      endPanelControl,
+      endPanelCollapsed
+    } = this.props;
+    let leftPanelStyle, rightPanelStyle;
+
+    // Set proper size for panels depending on the current state.
+    if (vert) {
+      const startWidth = endPanelControl ? null : this.state.width,
+            endWidth = endPanelControl ? this.state.width : null;
+
+      leftPanelStyle = {
+        maxWidth: endPanelControl ? null : maxSize,
+        minWidth: endPanelControl ? null : minSize,
+        width: startPanelCollapsed ? 0 : startWidth
+      };
+      rightPanelStyle = {
+        maxWidth: endPanelControl ? maxSize : null,
+        minWidth: endPanelControl ? minSize : null,
+        width: endPanelCollapsed ? 0 : endWidth
+      };
+    } else {
+      const startHeight = endPanelControl ? null : this.state.height,
+            endHeight = endPanelControl ? this.state.height : null;
+
+      leftPanelStyle = {
+        maxHeight: endPanelControl ? null : maxSize,
+        minHeight: endPanelControl ? null : minSize,
+        height: endPanelCollapsed ? maxSize : startHeight
+      };
+      rightPanelStyle = {
+        maxHeight: endPanelControl ? maxSize : null,
+        minHeight: endPanelControl ? minSize : null,
+        height: startPanelCollapsed ? maxSize : endHeight
+      };
+    }
+
+    return { leftPanelStyle, rightPanelStyle };
+  }
+
+  render() {
+    const vert = this.state.vert;
+    const {
+      startPanelCollapsed,
+      startPanel,
+      endPanel,
+      endPanelControl,
+      splitterSize,
+      endPanelCollapsed
+    } = this.props;
+
+    const style = Object.assign({}, this.props.style);
+
+    // Calculate class names list.
+    let classNames = ["split-box"];
+    classNames.push(vert ? "vert" : "horz");
+    if (this.props.className) {
+      classNames = classNames.concat(this.props.className.split(" "));
+    }
+
+    const { leftPanelStyle, rightPanelStyle } = this.preparePanelStyles();
+
+    // Calculate splitter size
+    const splitterStyle = {
+      flex: `0 0 ${splitterSize}px`
+    };
+
+    return dom.div({
+      className: classNames.join(" "),
+      style: style
+    }, !startPanelCollapsed ? dom.div({
+      className: endPanelControl ? "uncontrolled" : "controlled",
+      style: leftPanelStyle
+    }, startPanel) : null, Draggable({
+      className: "splitter",
+      style: splitterStyle,
+      onStart: this.onStartMove,
+      onStop: this.onStopMove,
+      onMove: this.onMove
+    }), !endPanelCollapsed ? dom.div({
+      className: endPanelControl ? "controlled" : "uncontrolled",
+      style: rightPanelStyle
+    }, endPanel) : null);
+  }
+}
+
+module.exports = SplitBox;
+
+/***/ }),
+
+/***/ 3804:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const React = __webpack_require__(0);
+const ReactDOM = __webpack_require__(4);
+const { Component } = React;
+const PropTypes = __webpack_require__(3642);
+const dom = __webpack_require__(3643);
+
+class Draggable extends Component {
+  static get propTypes() {
+    return {
+      onMove: PropTypes.func.isRequired,
+      onStart: PropTypes.func,
+      onStop: PropTypes.func,
+      style: PropTypes.object,
+      className: PropTypes.string
+    };
+  }
+
+  constructor(props) {
+    super(props);
+    this.startDragging = this.startDragging.bind(this);
+    this.onMove = this.onMove.bind(this);
+    this.onUp = this.onUp.bind(this);
+  }
+
+  startDragging(ev) {
+    ev.preventDefault();
+    const doc = ReactDOM.findDOMNode(this).ownerDocument;
+    doc.addEventListener("mousemove", this.onMove);
+    doc.addEventListener("mouseup", this.onUp);
+    this.props.onStart && this.props.onStart();
+  }
+
+  onMove(ev) {
+    ev.preventDefault();
+
+    // When the target is outside of the document, its tagName is undefined
+    if (!ev.target.tagName) {
+      return;
+    }
+
+    // We pass the whole event because we don't know which properties
+    // the callee needs.
+    this.props.onMove(ev);
+  }
+
+  onUp(ev) {
+    ev.preventDefault();
+    const doc = ReactDOM.findDOMNode(this).ownerDocument;
+    doc.removeEventListener("mousemove", this.onMove);
+    doc.removeEventListener("mouseup", this.onUp);
+    this.props.onStop && this.props.onStop();
+  }
+
+  render() {
+    return dom.div({
+      style: this.props.style,
+      className: this.props.className,
+      onMouseDown: this.startDragging
+    });
+  }
+}
+
+module.exports = Draggable;
+
+/***/ }),
+
+/***/ 3805:
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+
 /***/ 4:
 /***/ (function(module, exports) {
 
@@ -9357,26 +9357,26 @@ module.exports = g;
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
-   if(!module.webpackPolyfill) {
-           module.deprecate = function() {};
-           module.paths = [];
-           // module.parent = undefined by default
-           if(!module.children) module.children = [];
-           Object.defineProperty(module, "loaded", {
-                   enumerable: true,
-                   get: function() {
-                           return module.l;
-                   }
-           });
-           Object.defineProperty(module, "id", {
-                   enumerable: true,
-                   get: function() {
-                           return module.i;
-                   }
-           });
-           module.webpackPolyfill = 1;
-   }
-   return module;
+	if(!module.webpackPolyfill) {
+		module.deprecate = function() {};
+		module.paths = [];
+		// module.parent = undefined by default
+		if(!module.children) module.children = [];
+		Object.defineProperty(module, "loaded", {
+			enumerable: true,
+			get: function() {
+				return module.l;
+			}
+		});
+		Object.defineProperty(module, "id", {
+			enumerable: true,
+			get: function() {
+				return module.i;
+			}
+		});
+		module.webpackPolyfill = 1;
+	}
+	return module;
 };
 
 
