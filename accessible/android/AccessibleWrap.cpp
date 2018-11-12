@@ -12,9 +12,11 @@
 #include "JavaBuiltins.h"
 #include "SessionAccessibility.h"
 #include "nsAccessibilityService.h"
-#include "nsIPersistentProperties2.h"
+#include "nsPersistentProperties.h"
 #include "nsIStringBundle.h"
 #include "nsAccUtils.h"
+
+#include "mozilla/a11y/PDocAccessibleChild.h"
 
 #define ROLE_STRINGS_URL "chrome://global/locale/AccessFu.properties"
 
@@ -293,6 +295,21 @@ AccessibleWrap::GetRoleDescription(role aRole,
   }
 }
 
+already_AddRefed<nsIPersistentProperties>
+AccessibleWrap::AttributeArrayToProperties(const nsTArray<Attribute>& aAttributes)
+{
+  RefPtr<nsPersistentProperties> props = new nsPersistentProperties();
+  nsAutoString unused;
+
+  for (size_t i = 0; i < aAttributes.Length(); i++) {
+    props->SetStringProperty(aAttributes.ElementAt(i).Name(),
+                             aAttributes.ElementAt(i).Value(),
+                             unused);
+  }
+
+  return props.forget();
+}
+
 int32_t
 AccessibleWrap::GetAndroidClass(role aRole)
 {
@@ -375,6 +392,37 @@ AccessibleWrap::WrapperRangeInfo(double* aCurVal, double* aMinVal,
 mozilla::java::GeckoBundle::LocalRef
 AccessibleWrap::ToBundle()
 {
+  nsAutoString name;
+  Name(name);
+  nsAutoString textValue;
+  Value(textValue);
+  nsAutoString nodeID;
+  WrapperDOMNodeID(nodeID);
+
+  double curValue = UnspecifiedNaN<double>();
+  double minValue = UnspecifiedNaN<double>();
+  double maxValue = UnspecifiedNaN<double>();
+  double step = UnspecifiedNaN<double>();
+  WrapperRangeInfo(&curValue, &minValue, &maxValue, &step);
+
+  nsCOMPtr<nsIPersistentProperties> attributes = Attributes();
+
+  return ToBundle(State(), Bounds(), name, textValue, nodeID,
+                  curValue, minValue, maxValue, step, attributes);
+}
+
+mozilla::java::GeckoBundle::LocalRef
+AccessibleWrap::ToBundle(const uint64_t aState,
+                         const nsIntRect& aBounds,
+                         const nsString& aName,
+                         const nsString& aTextValue,
+                         const nsString& aDOMNodeID,
+                         const double& aCurVal,
+                         const double& aMinVal,
+                         const double& aMaxVal,
+                         const double& aStep,
+                         nsIPersistentProperties* aAttributes)
+{
   if (!IsProxy() && IsDefunct()) {
     return nullptr;
   }
@@ -387,24 +435,16 @@ AccessibleWrap::ToBundle()
     java::sdk::Integer::ValueOf(parent ? parent->VirtualViewID() : 0));
 
   role role = WrapperRole();
-  uint64_t state = State();
-  uint32_t flags = GetFlags(role, state);
+  uint32_t flags = GetFlags(role, aState);
   GECKOBUNDLE_PUT(nodeInfo, "flags", java::sdk::Integer::ValueOf(flags));
   GECKOBUNDLE_PUT(nodeInfo, "className", java::sdk::Integer::ValueOf(AndroidClass()));
 
-  nsAutoString text;
-  if (state & states::EDITABLE) {
-    Value(text);
-  }
-
-  if (!text.IsEmpty()) {
-    nsAutoString hint;
-    Name(hint);
-    GECKOBUNDLE_PUT(nodeInfo, "hint", jni::StringParam(hint));
+  if (aState & states::EDITABLE) {
+    GECKOBUNDLE_PUT(nodeInfo, "hint", jni::StringParam(aName));
+    GECKOBUNDLE_PUT(nodeInfo, "text", jni::StringParam(aTextValue));
   } else {
-    Name(text);
+    GECKOBUNDLE_PUT(nodeInfo, "text", jni::StringParam(aName));
   }
-  GECKOBUNDLE_PUT(nodeInfo, "text", jni::StringParam(text));
 
   nsAutoString geckoRole;
   nsAutoString roleDescription;
@@ -433,16 +473,12 @@ AccessibleWrap::ToBundle()
   };
   GECKOBUNDLE_PUT(nodeInfo, "bounds", jni::IntArray::New(data, 4));
 
-  double curValue = 0;
-  double minValue = 0;
-  double maxValue = 0;
-  double step = 0;
-  if (WrapperRangeInfo(&curValue, &minValue, &maxValue, &step)) {
+  if (HasNumericValue()) {
     GECKOBUNDLE_START(rangeInfo);
-    if (maxValue == 1 && minValue == 0) {
+    if (aMaxVal == 1 && aMinVal == 0) {
       GECKOBUNDLE_PUT(
         rangeInfo, "type", java::sdk::Integer::ValueOf(2)); // percent
-    } else if (std::round(step) != step) {
+    } else if (std::round(aStep) != aStep) {
       GECKOBUNDLE_PUT(
         rangeInfo, "type", java::sdk::Integer::ValueOf(1)); // float
     } else {
@@ -450,31 +486,29 @@ AccessibleWrap::ToBundle()
         rangeInfo, "type", java::sdk::Integer::ValueOf(0)); // integer
     }
 
-    if (!IsNaN(curValue)) {
-      GECKOBUNDLE_PUT(rangeInfo, "current", java::sdk::Double::New(curValue));
+    if (!IsNaN(aCurVal)) {
+      GECKOBUNDLE_PUT(rangeInfo, "current", java::sdk::Double::New(aCurVal));
     }
-    if (!IsNaN(minValue)) {
-      GECKOBUNDLE_PUT(rangeInfo, "min", java::sdk::Double::New(minValue));
+    if (!IsNaN(aMinVal)) {
+      GECKOBUNDLE_PUT(rangeInfo, "min", java::sdk::Double::New(aMinVal));
     }
-    if (!IsNaN(maxValue)) {
-      GECKOBUNDLE_PUT(rangeInfo, "max", java::sdk::Double::New(maxValue));
+    if (!IsNaN(aMaxVal)) {
+      GECKOBUNDLE_PUT(rangeInfo, "max", java::sdk::Double::New(aMaxVal));
     }
 
     GECKOBUNDLE_FINISH(rangeInfo);
     GECKOBUNDLE_PUT(nodeInfo, "rangeInfo", rangeInfo);
   }
 
-  nsCOMPtr<nsIPersistentProperties> attributes = Attributes();
-
   nsString inputTypeAttr;
-  nsAccUtils::GetAccAttr(attributes, nsGkAtoms::textInputType, inputTypeAttr);
+  nsAccUtils::GetAccAttr(aAttributes, nsGkAtoms::textInputType, inputTypeAttr);
   int32_t inputType = GetInputType(inputTypeAttr);
   if (inputType) {
     GECKOBUNDLE_PUT(nodeInfo, "inputType", java::sdk::Integer::ValueOf(inputType));
   }
 
   nsString posinset;
-  nsresult rv = attributes->GetStringProperty(NS_LITERAL_CSTRING("posinset"), posinset);
+  nsresult rv = aAttributes->GetStringProperty(NS_LITERAL_CSTRING("posinset"), posinset);
   if (NS_SUCCEEDED(rv)) {
     int32_t rowIndex;
     if (sscanf(NS_ConvertUTF16toUTF8(posinset).get(), "%d", &rowIndex) > 0) {
@@ -494,7 +528,7 @@ AccessibleWrap::ToBundle()
   }
 
   nsString colSize;
-  rv = attributes->GetStringProperty(NS_LITERAL_CSTRING("child-item-count"),
+  rv = aAttributes->GetStringProperty(NS_LITERAL_CSTRING("child-item-count"),
                                       colSize);
   if (NS_SUCCEEDED(rv)) {
     int32_t rowCount;
@@ -506,7 +540,7 @@ AccessibleWrap::ToBundle()
         collectionInfo, "columnCount", java::sdk::Integer::ValueOf(1));
 
       nsString unused;
-      rv = attributes->GetStringProperty(NS_LITERAL_CSTRING("hierarchical"),
+      rv = aAttributes->GetStringProperty(NS_LITERAL_CSTRING("hierarchical"),
                                           unused);
       if (NS_SUCCEEDED(rv)) {
         GECKOBUNDLE_PUT(
@@ -514,7 +548,7 @@ AccessibleWrap::ToBundle()
       }
 
       if (IsSelect()) {
-        int32_t selectionMode = (state & states::MULTISELECTABLE) ? 2 : 1;
+        int32_t selectionMode = (aState & states::MULTISELECTABLE) ? 2 : 1;
         GECKOBUNDLE_PUT(collectionInfo,
                         "selectionMode",
                         java::sdk::Integer::ValueOf(selectionMode));
