@@ -614,6 +614,7 @@ public:
    */
   void AccumulateHitTestItem(ContainerState* aState,
                              nsDisplayItem* aItem,
+                             const DisplayItemClip& aClip,
                              TransformClipNode* aTransform);
 
   /**
@@ -4254,6 +4255,7 @@ PaintedLayerData::CombinedTouchActionRegion()
 void
 PaintedLayerData::AccumulateHitTestItem(ContainerState* aState,
                                         nsDisplayItem* aItem,
+                                        const DisplayItemClip& aClip,
                                         TransformClipNode* aTransform)
 {
   MOZ_ASSERT(aItem->HasHitTestInfo());
@@ -4269,11 +4271,7 @@ PaintedLayerData::AccumulateHitTestItem(ContainerState* aState,
           "area: [%d, %d, %d, %d], flags: 0x%x]\n",
     item, this, area.x, area.y, area.width, area.height, flags.serialize());
 
-  const DisplayItemClip& clip = info.mClip
-                              ? *info.mClip
-                              : DisplayItemClip::NoClip();
-
-  area = clip.ApplyNonRoundedIntersection(area);
+  area = aClip.ApplyNonRoundedIntersection(area);
 
   if (aTransform) {
     area = aTransform->TransformRect(area, aState->mAppUnitsPerDevPixel);
@@ -4285,7 +4283,7 @@ PaintedLayerData::AccumulateHitTestItem(ContainerState* aState,
     return;
   }
 
-  bool hasRoundedCorners = clip.GetRoundedRectCount() > 0;
+  bool hasRoundedCorners = aClip.GetRoundedRectCount() > 0;
 
   // use the NS_FRAME_SIMPLE_EVENT_REGIONS to avoid calling the slightly
   // expensive HasNonZeroCorner function if we know from a previous run that
@@ -4803,13 +4801,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
     const bool inEffect = InTransform() || InOpacity();
 
-    if (marker == DisplayItemEntryType::HIT_TEST_INFO && inEffect) {
-      // Fast-path for hit test items inside flattened inactive layers.
-      MOZ_ASSERT(selectedLayer);
-      selectedLayer->AccumulateHitTestItem(this, item, transformNode);
-      continue;
-    }
-
     NS_ASSERTION(mAppUnitsPerDevPixel == AppUnitsPerDevPixel(item),
                  "items in a container layer should all have the same app "
                  "units per dev pixel");
@@ -4833,38 +4824,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         layerState = LAYER_ACTIVE;
       }
     }
-
-    auto FuseItemClipChainIfNeeded = [&](const ActiveScrolledRoot* aASR) {
-      if (marker == DisplayItemEntryType::ITEM || IsEffectStartMarker(marker)) {
-        // No need to fuse clip chain for effect end markers, since it was
-        // already done for effect start markers.
-        item->FuseClipChainUpTo(mBuilder, aASR);
-      }
-    };
-
-    if (inEffect && marker == DisplayItemEntryType::ITEM) {
-      // Fast-path for items inside flattened inactive layers. This works
-      // because the layer state of the item cannot be active, otherwise the
-      // parent item would not have been flattened.
-      MOZ_ASSERT(selectedLayer);
-
-      FuseItemClipChainIfNeeded(containerASR);
-      selectedLayer->Accumulate(this,
-                                item,
-                                nsIntRect(),
-                                nsRect(),
-                                item->GetClip(),
-                                layerState,
-                                aList,
-                                marker,
-                                opacityIndices,
-                                transformNode);
-      continue;
-    }
-
-    // Items outside of flattened effects and non-item markers inside flattened
-    // effects are processed here.
-    MOZ_ASSERT(!inEffect || (marker != DisplayItemEntryType::ITEM));
 
     AnimatedGeometryRoot* itemAGR = nullptr;
     const ActiveScrolledRoot* itemASR = nullptr;
@@ -4907,16 +4866,54 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       itemAGR = inEffect ? containerAGR : mContainerAnimatedGeometryRoot;
       itemASR = inEffect ? containerASR : mContainerASR;
 
-      FuseItemClipChainIfNeeded(itemASR);
-      if (marker != DisplayItemEntryType::HIT_TEST_INFO) {
-        // Because of the clip chain fusing, |itemClipPtr| needs to be updated.
-        itemClipPtr = &item->GetClip();
+      if (marker == DisplayItemEntryType::HIT_TEST_INFO) {
+        // Items with hit test info are processed twice, once with HIT_TEST_INFO
+        // marker and then with ITEM marker.
+        // With HIT_TEST_INFO markers, fuse the clip chain of hit test struct,
+        // and with ITEM markers, fuse the clip chain of the actual item.
+        itemClipChain = mBuilder->FuseClipChainUpTo(itemClipChain, itemASR);
+      } else if (!IsEffectEndMarker(marker)) {
+        // No need to fuse clip chain for effect end markers, since it was
+        // already done for effect start markers.
+        item->FuseClipChainUpTo(mBuilder, itemASR);
+        itemClipChain = item->GetClipChain();
       }
+
+      itemClipPtr = itemClipChain ? &itemClipChain->mClip : nullptr;
     }
 
     const DisplayItemClip& itemClip = itemClipPtr
                                     ? *itemClipPtr
                                     : DisplayItemClip::NoClip();
+
+    if (inEffect && marker == DisplayItemEntryType::HIT_TEST_INFO) {
+      // Fast-path for hit test items inside flattened inactive layers.
+      MOZ_ASSERT(selectedLayer);
+      selectedLayer->AccumulateHitTestItem(this, item, itemClip, transformNode);
+      continue;
+    }
+
+    if (inEffect && marker == DisplayItemEntryType::ITEM) {
+      // Fast-path for items inside flattened inactive layers. This works
+      // because the layer state of the item cannot be active, otherwise the
+      // parent item would not have been flattened.
+      MOZ_ASSERT(selectedLayer);
+      selectedLayer->Accumulate(this,
+                                item,
+                                nsIntRect(),
+                                nsRect(),
+                                itemClip,
+                                layerState,
+                                aList,
+                                marker,
+                                opacityIndices,
+                                transformNode);
+      continue;
+    }
+
+    // Items outside of flattened effects and non-item markers inside flattened
+    // effects are processed here.
+    MOZ_ASSERT(!inEffect || (marker != DisplayItemEntryType::ITEM));
 
     if (itemAGR == lastAnimatedGeometryRoot) {
       topLeft = lastTopLeft;
@@ -5421,7 +5418,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
       if (marker == DisplayItemEntryType::HIT_TEST_INFO) {
         MOZ_ASSERT(!transformNode);
-        paintedLayerData->AccumulateHitTestItem(this, item, nullptr);
+        paintedLayerData->AccumulateHitTestItem(this, item, itemClip, nullptr);
       } else {
         paintedLayerData->Accumulate(this,
                                      item,
