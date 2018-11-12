@@ -19,11 +19,9 @@
 <!DOCTYPE page [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 <!ENTITY % certManagerDTD SYSTEM "chrome://pippki/locale/certManager.dtd">
-<!ENTITY % deviceManangerDTD SYSTEM "chrome://pippki/locale/deviceManager.dtd">
 <!ENTITY % sanitizeDTD SYSTEM "chrome://browser/locale/sanitize.dtd">
 %brandDTD;
 %certManagerDTD;
-%deviceManangerDTD;
 %sanitizeDTD;
 ]>
 
@@ -50,6 +48,7 @@
     <link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
     <link rel="localization" href="browser/aboutDialog.ftl"/>
     <link rel="localization" href="toolkit/updates/history.ftl"/>
+    <link rel="localization" href="security/certificates/deviceManager.ftl"/>
   </linkset>
 
   <html:link rel="shortcut icon"

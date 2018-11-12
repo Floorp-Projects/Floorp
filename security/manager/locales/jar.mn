@@ -3,6 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+[localization] @AB_CD@.jar:
+  security                                     (%security/**/*.ftl)
 
 @AB_CD@.jar:
 % locale pipnss @AB_CD@ %locale/@AB_CD@/pipnss/
@@ -12,4 +14,3 @@
   locale/@AB_CD@/pippki/pippki.dtd            (%chrome/pippki/pippki.dtd)
   locale/@AB_CD@/pippki/pippki.properties     (%chrome/pippki/pippki.properties)
   locale/@AB_CD@/pippki/certManager.dtd       (%chrome/pippki/certManager.dtd)
-  locale/@AB_CD@/pippki/deviceManager.dtd     (%chrome/pippki/deviceManager.dtd)
