@@ -87,6 +87,9 @@ const RECOMMENDED_PREFS = new Map([
   // inconsistently.
   ["browser.download.panel.shown", true],
 
+  // Always display a blank page
+  ["browser.newtabpage.enabled", false],
+
   // Background thumbnails in particular cause grief, and disabling
   // thumbnails in general cannot hurt
   ["browser.pagethumbnails.capturing_disabled", true],
@@ -117,9 +120,6 @@ const RECOMMENDED_PREFS = new Map([
 
   // Do not redirect user when a milstone upgrade of Firefox is detected
   ["browser.startup.homepage_override.mstone", "ignore"],
-
-  // Disable browser animations (tabs, fullscreen, sliding alerts)
-  ["toolkit.cosmeticAnimations.enabled", false],
 
   // Do not close the window when the last tab gets closed
   ["browser.tabs.closeWindowWithLastTab", false],
@@ -260,6 +260,9 @@ const RECOMMENDED_PREFS = new Map([
   // Disable first-run welcome page
   ["startup.homepage_welcome_url", "about:blank"],
   ["startup.homepage_welcome_url.additional", ""],
+
+  // Disable browser animations (tabs, fullscreen, sliding alerts)
+  ["toolkit.cosmeticAnimations.enabled", false],
 
   // Prevent starting into safe mode after application crashes
   ["toolkit.startup.max_resumed_crashes", -1],
