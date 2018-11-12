@@ -27,10 +27,10 @@ function FrameLocation({ frame }: FrameLocationProps) {
   }
 
   return (
-    <div className="location">
+    <span className="location">
       {library}
       <Svg name={library.toLowerCase()} className="annotation-logo" />
-    </div>
+    </span>
   );
 }
 
@@ -134,10 +134,8 @@ export default class Group extends Component<Props, State> {
         onClick={this.toggleFrames}
         tabIndex={0}
       >
-        <div className="d-flex align-items-center min-width-0">
-          <div className="title">{displayName}</div>
-          <Badge>{this.props.group.length}</Badge>
-        </div>
+        <span className="title">{displayName}</span>
+        <Badge>{this.props.group.length}</Badge>
         <FrameLocation frame={frame} />
       </li>
     );
