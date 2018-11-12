@@ -278,3 +278,33 @@ def gather_telemetry(command='', success=False, start_time=None, end_time=None,
             msg.append(str(error))
         print('\n'.join(msg) + '\n' + pprint.pformat(data))
     return None
+
+
+def verify_statedir(statedir):
+    '''
+    Verifies the statedir is structured correctly. Returns the outgoing,
+    submitted and log paths.
+
+    Requires presence of the following directories; will raise if absent:
+    - statedir/telemetry
+    - statedir/telemetry/outgoing
+
+    Creates the following directories and files if absent (first submission):
+    - statedir/telemetry/submitted
+    '''
+
+    telemetry_dir = os.path.join(statedir, 'telemetry')
+    outgoing = os.path.join(telemetry_dir, 'outgoing')
+    submitted = os.path.join(telemetry_dir, 'submitted')
+    telemetry_log = os.path.join(telemetry_dir, 'telemetry.log')
+
+    if not os.path.isdir(telemetry_dir):
+        raise Exception('{} does not exist'.format(telemetry_dir))
+
+    if not os.path.isdir(outgoing):
+        raise Exception('{} does not exist'.format(outgoing))
+
+    if not os.path.isdir(submitted):
+        os.mkdir(submitted)
+
+    return outgoing, submitted, telemetry_log
