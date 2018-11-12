@@ -531,10 +531,12 @@ class Parser(object):
 
     def expect(self, type, value=None):
         if self.token[0] != type:
-            raise ParseError
+            raise ParseError(self.tokenizer.filename, self.tokenizer.line_number,
+                             "Token '{}' doesn't equal expected type '{}'".format(self.token[0], type))
         if value is not None:
             if self.token[1] != value:
-                raise ParseError
+                raise ParseError(self.tokenizer.filename, self.tokenizer.line_number,
+                                 "Token '{}' doesn't equal expected value '{}'".format(self.token[1], value))
 
         self.consume()
 
