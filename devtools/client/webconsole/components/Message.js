@@ -25,7 +25,7 @@ const MessageIcon =
 const MessageRepeat =
   require("devtools/client/webconsole/components/MessageRepeat");
 const FrameView = createFactory(require("devtools/client/shared/components/Frame"));
-const StackTrace = createFactory(require("devtools/client/shared/components/StackTrace"));
+const SmartTrace = createFactory(require("devtools/client/shared/components/SmartTrace"));
 
 class Message extends Component {
   static get propTypes() {
@@ -177,14 +177,14 @@ class Message extends Component {
         {
           className: "stacktrace devtools-monospace",
         },
-        StackTrace({
-          stacktrace: stacktrace,
+        SmartTrace({
+          stacktrace,
           onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger
             || serviceContainer.onViewSource,
           onViewSourceInScratchpad: serviceContainer.onViewSourceInScratchpad
             || serviceContainer.onViewSource,
           sourceMapService: serviceContainer.sourceMapService,
-        })
+        }),
       );
     }
 

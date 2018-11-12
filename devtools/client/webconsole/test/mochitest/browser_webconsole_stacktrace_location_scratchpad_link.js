@@ -43,20 +43,17 @@ add_task(async function() {
   `);
   scratchpad.run();
   const message = await waitFor(() => findMessage(hud, "console.trace()"));
+  ok(message, "Found console.trace message from Scratchpad");
 
   info("Clicking link to switch to and focus Scratchpad");
-
-  ok(message, "Found console.trace message from Scratchpad");
-  const anchor = message.querySelector(".stack-trace .frame-link .frame-link-filename");
-
+  const anchor = message.querySelector(".stacktrace .frame");
   const onScratchpadSelected = toolbox.once("scratchpad-selected");
 
-  EventUtils.synthesizeMouse(anchor, 2, 2, {}, hud.iframeWindow);
+  EventUtils.sendMouseEvent({ type: "mousedown" }, anchor);
   await onScratchpadSelected;
 
   is(toolbox.getCurrentPanel(), scratchpadPanel,
     "Clicking link in stacktrace switches to Scratchpad panel");
 
-  is(Services.ww.activeWindow, toolbox.win.parent,
-     "Scratchpad's toolbox is focused");
+  is(Services.ww.activeWindow, toolbox.win.parent, "Scratchpad's toolbox is focused");
 });

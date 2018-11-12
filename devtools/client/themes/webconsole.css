@@ -461,11 +461,15 @@ textarea.jsterm-input-node:focus {
   overflow-y: auto;
   margin-block-start: 5px;
   margin-block-end: var(--attachment-margin-block-end);
-  padding-inline-start: 4px;
+  padding-inline-start: 16px;
 }
 
 .message.open .stacktrace {
   display: block;
+}
+
+.objectBox-stackTrace .frames {
+  padding-inline-start: 16px;
 }
 
 .consoletable {
