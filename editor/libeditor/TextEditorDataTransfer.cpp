@@ -65,6 +65,41 @@ TextEditor::PrepareTransferable(nsITransferable** transferable)
 }
 
 nsresult
+TextEditor::PrepareToInsertContent(const EditorDOMPoint& aPointToInsert,
+                                   bool aDoDeleteSelection)
+{
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  MOZ_ASSERT(aPointToInsert.IsSet());
+
+  EditorDOMPoint pointToInsert(aPointToInsert);
+  if (aDoDeleteSelection) {
+    AutoTrackDOMPoint tracker(mRangeUpdater, &pointToInsert);
+    nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
+    if (NS_WARN_IF(Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  ErrorResult error;
+  SelectionRefPtr()->Collapse(pointToInsert, error);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+
+  // TODO: We need to dispatch "input" event only when EditAction is
+  //       eDrop.
+
+  return NS_OK;
+}
+
+nsresult
 TextEditor::InsertTextAt(const nsAString& aStringToInsert,
                          const EditorDOMPoint& aPointToInsert,
                          bool aDoDeleteSelection)
@@ -73,27 +108,12 @@ TextEditor::InsertTextAt(const nsAString& aStringToInsert,
 
   MOZ_ASSERT(aPointToInsert.IsSet());
 
-  EditorDOMPoint collapseAt(aPointToInsert);
-  if (aDoDeleteSelection) {
-    // Use an auto tracker so that our drop point is correctly
-    // positioned after the delete.
-    AutoTrackDOMPoint tracker(mRangeUpdater, &collapseAt);
-    nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    // TODO: We need to dispatch "input" event only when EditAction is
-    //       eDrop.
+  nsresult rv = PrepareToInsertContent(aPointToInsert, aDoDeleteSelection);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
-  ErrorResult error;
-  SelectionRefPtr()->Collapse(collapseAt, error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-
-  nsresult rv = InsertTextAsSubAction(aStringToInsert);
+  rv = InsertTextAsSubAction(aStringToInsert);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -273,6 +293,9 @@ TextEditor::OnDrop(DragEvent* aDropEvent)
 
   // Combine any deletion and drop insertion into one transaction.
   AutoPlaceholderBatch treatAsOneTransaction(*this);
+
+  // Don't dispatch "selectionchange" event until inserting all contents.
+  SelectionBatcher selectionBatcher(SelectionRefPtr());
 
   for (uint32_t i = 0; i < numItems; ++i) {
     InsertFromDataTransfer(dataTransfer, i, srcdoc, droppedAt, deleteSelection);

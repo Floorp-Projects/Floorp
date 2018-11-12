@@ -638,7 +638,16 @@ PasteTransferableCommand::DoCommandParams(const char* aCommandName,
 
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->PasteTransferable(trans);
+  nsresult rv = textEditor->PasteTransferable(trans);
+  if (rv == NS_ERROR_EDITOR_DESTROYED) {
+    // Return NS_OK when editor is destroyed since it's expected by the
+    // web app.
+    return NS_OK;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1306,8 +1315,18 @@ PasteQuotationCommand::DoCommand(const char* aCommandName,
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->PasteAsQuotationAsAction(nsIClipboard::kGlobalClipboard,
-                                              true);
+  nsresult rv =
+    textEditor->PasteAsQuotationAsAction(nsIClipboard::kGlobalClipboard, true);
+  if (rv == NS_ERROR_EDITOR_DESTROYED) {
+    // Return NS_OK when editor is destroyed since it's expected by the
+    // web app.
+    return NS_OK;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+
 }
 
 NS_IMETHODIMP
@@ -1321,8 +1340,17 @@ PasteQuotationCommand::DoCommandParams(const char* aCommandName,
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->PasteAsQuotationAsAction(nsIClipboard::kGlobalClipboard,
-                                              true);
+  nsresult rv =
+    textEditor->PasteAsQuotationAsAction(nsIClipboard::kGlobalClipboard, true);
+  if (rv == NS_ERROR_EDITOR_DESTROYED) {
+    // Return NS_OK when editor is destroyed since it's expected by the
+    // web app.
+    return NS_OK;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
