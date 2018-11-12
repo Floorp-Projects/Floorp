@@ -379,10 +379,6 @@ class TypeZone
     // for the zone.
     ZoneData<LifoAlloc> sweepTypeLifoAlloc;
 
-    // During incremental sweeping, whether to try to destroy all type
-    // information attached to scripts.
-    ZoneData<bool> sweepReleaseTypes;
-
     ZoneData<bool> sweepingTypes;
     ZoneData<bool> oomSweepingTypes;
 
@@ -403,7 +399,7 @@ class TypeZone
         return typeLifoAlloc_.ref();
     }
 
-    void beginSweep(bool releaseTypes);
+    void beginSweep();
     void endSweep(JSRuntime* rt);
     void clearAllNewScriptsOnOOM();
 
