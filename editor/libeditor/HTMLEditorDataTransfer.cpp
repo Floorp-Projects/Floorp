@@ -1411,9 +1411,6 @@ HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
     "and there should've already been placeholder transaction");
   MOZ_ASSERT(aDroppedAt.IsSet());
 
-  // TODO: In some cases, callees may not remove selected content even when
-  //       they return NS_OK.  So, we need to remove instead here.
-
   ErrorResult rv;
   RefPtr<DOMStringList> types =
     aDataTransfer->MozTypesAt(aIndex, CallerType::System, rv);
