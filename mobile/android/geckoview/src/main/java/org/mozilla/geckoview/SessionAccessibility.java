@@ -33,6 +33,8 @@ import android.view.accessibility.AccessibilityNodeInfo.CollectionItemInfo;
 import android.view.accessibility.AccessibilityNodeInfo.CollectionInfo;
 import android.view.accessibility.AccessibilityNodeProvider;
 
+import java.util.LinkedList;
+
 public class SessionAccessibility {
     private static final String LOGTAG = "GeckoAccessibility";
 
@@ -249,20 +251,28 @@ public class SessionAccessibility {
         }
 
         private boolean isNodeCached(final int virtualViewId) {
-            return mViewportCache.get(virtualViewId) != null;
+            return mViewportCache.get(virtualViewId) != null || mFocusPathCache.get(virtualViewId) != null;
         }
 
-        private AccessibilityNodeInfo getNodeFromCache(final int virtualViewId) {
-            GeckoBundle bundle = mViewportCache.get(virtualViewId);
-            if (bundle == null) {
-                Log.e(LOGTAG, "No node for " + virtualViewId + " cache size: " + mViewportCache.size());
-                return null;
+        private synchronized AccessibilityNodeInfo getNodeFromCache(final int virtualViewId) {
+            AccessibilityNodeInfo node = null;
+            for (SparseArray<GeckoBundle> cache : mCaches) {
+                GeckoBundle bundle = cache.get(virtualViewId);
+                if (bundle == null) {
+                    continue;
+                }
+
+                if (node == null) {
+                    node = AccessibilityNodeInfo.obtain(mView, virtualViewId);
+                }
+                populateNodeFromBundle(node, bundle, true);
             }
 
-            AccessibilityNodeInfo node = AccessibilityNodeInfo.obtain(mView, virtualViewId);
-            populateNodeFromBundle(node, bundle, true);
-            return node;
+            if (node == null) {
+                Log.e(LOGTAG, "No cached node for " + virtualViewId);
+            }
 
+            return node;
         }
 
         private void populateNodeFromBundle(final AccessibilityNodeInfo node, final GeckoBundle nodeInfo, final boolean fromCache) {
@@ -287,7 +297,10 @@ public class SessionAccessibility {
             // The basics
             node.setPackageName(GeckoAppShell.getApplicationContext().getPackageName());
             node.setClassName(getClassName(nodeInfo.getInt("className")));
-            node.setText(nodeInfo.getString("text", ""));
+
+            if (nodeInfo.containsKey("text")) {
+                node.setText(nodeInfo.getString("text"));
+            }
 
             // Add actions
             node.addAction(AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT);
@@ -450,6 +463,10 @@ public class SessionAccessibility {
     private int mAccessibilityFocusedNode = 0;
     // Viewport cache
     final SparseArray<GeckoBundle> mViewportCache = new SparseArray<>();
+    // Focus cache
+    final SparseArray<GeckoBundle> mFocusPathCache = new SparseArray<>();
+    // List of caches in descending order from last updated.
+    LinkedList<SparseArray<GeckoBundle>> mCaches = new LinkedList<>();
 
     /* package */ SessionAccessibility(final GeckoSession session) {
         mSession = session;
@@ -676,12 +693,25 @@ public class SessionAccessibility {
         }
 
         @WrapForJNI(calledFrom = "gecko")
-        private void replaceViewportCache(final GeckoBundle[] bundles) {
+        private synchronized void replaceViewportCache(final GeckoBundle[] bundles) {
             mViewportCache.clear();
             for (GeckoBundle bundle : bundles) {
                 if (bundle == null) { continue; }
                 mViewportCache.append(bundle.getInt("id"), bundle);
             }
+            mCaches.remove(mViewportCache);
+            mCaches.add(mViewportCache);
+        }
+
+        @WrapForJNI(calledFrom = "gecko")
+        private synchronized void replaceFocusPathCache(final GeckoBundle[] bundles) {
+            mFocusPathCache.clear();
+            for (GeckoBundle bundle : bundles) {
+                if (bundle == null) { continue; }
+                mFocusPathCache.append(bundle.getInt("id"), bundle);
+            }
+            mCaches.remove(mFocusPathCache);
+            mCaches.add(mFocusPathCache);
         }
     }
 }
