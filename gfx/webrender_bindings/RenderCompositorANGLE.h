@@ -61,6 +61,7 @@ protected:
   ID3D11Device* GetDeviceOfEGLDisplay();
   void CreateSwapChainForDCompIfPossible(IDXGIFactory2* aDXGIFactory2);
   bool SutdownEGLLibraryIfNecessary();
+  RefPtr<ID3D11Query> GetD3D11Query();
 
   EGLConfig mEGLConfig;
   EGLSurface mEGLSurface;
@@ -76,6 +77,7 @@ protected:
   RefPtr<IDCompositionVisual> mVisual;
 
   std::queue<RefPtr<ID3D11Query>> mWaitForPresentQueries;
+  RefPtr<ID3D11Query> mRecycledQuery;
 
   Maybe<LayoutDeviceIntSize> mBufferSize;
 };
