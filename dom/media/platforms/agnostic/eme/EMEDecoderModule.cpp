@@ -311,7 +311,7 @@ EMEMediaDataDecoderProxy::EMEMediaDataDecoderProxy(
   CDMProxy* aProxy,
   const CreateDecoderParams& aParams)
   : MediaDataDecoderProxy(std::move(aProxyThread))
-  , mTaskQueue(AbstractThread::GetCurrent()->AsTaskQueue())
+  , mThread(AbstractThread::GetCurrent())
   , mSamplesWaitingForKey(
       new SamplesWaitingForKey(aProxy,
                                aParams.mType,
@@ -325,7 +325,7 @@ EMEMediaDataDecoderProxy::EMEMediaDataDecoderProxy(
   already_AddRefed<MediaDataDecoder> aProxyDecoder,
   CDMProxy* aProxy)
   : MediaDataDecoderProxy(std::move(aProxyDecoder))
-  , mTaskQueue(AbstractThread::GetCurrent()->AsTaskQueue())
+  , mThread(AbstractThread::GetCurrent())
   , mSamplesWaitingForKey(
       new SamplesWaitingForKey(aProxy,
                                aParams.mType,
@@ -339,17 +339,17 @@ EMEMediaDataDecoderProxy::Decode(MediaRawData* aSample)
 {
   RefPtr<EMEMediaDataDecoderProxy> self = this;
   RefPtr<MediaRawData> sample = aSample;
-  return InvokeAsync(mTaskQueue, __func__, [self, this, sample]() {
+  return InvokeAsync(mThread, __func__, [self, this, sample]() {
     RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
     mSamplesWaitingForKey->WaitIfKeyNotUsable(sample)
-      ->Then(mTaskQueue,
+      ->Then(mThread,
              __func__,
              [self, this](RefPtr<MediaRawData> aSample) {
                mKeyRequest.Complete();
 
                MediaDataDecoderProxy::Decode(aSample)
                  ->Then(
-                   mTaskQueue,
+                   mThread,
                    __func__,
                    [self, this](DecodePromise::ResolveOrRejectValue&& aValue) {
                      mDecodeRequest.Complete();
@@ -372,7 +372,7 @@ RefPtr<MediaDataDecoder::FlushPromise>
 EMEMediaDataDecoderProxy::Flush()
 {
   RefPtr<EMEMediaDataDecoderProxy> self = this;
-  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+  return InvokeAsync(mThread, __func__, [self, this]() {
     mKeyRequest.DisconnectIfExists();
     mDecodeRequest.DisconnectIfExists();
     mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
@@ -384,7 +384,7 @@ RefPtr<ShutdownPromise>
 EMEMediaDataDecoderProxy::Shutdown()
 {
   RefPtr<EMEMediaDataDecoderProxy> self = this;
-  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
+  return InvokeAsync(mThread, __func__, [self, this]() {
     mSamplesWaitingForKey = nullptr;
     mProxy = nullptr;
     return MediaDataDecoderProxy::Shutdown();
