@@ -48,6 +48,8 @@ public:
 
   mozilla::java::GeckoBundle::LocalRef ToSmallBundle();
 
+  virtual void WrapperDOMNodeID(nsString& aDOMNodeID);
+
   int32_t AndroidClass()
   {
     return mID == kNoID ? java::SessionAccessibility::CLASSNAME_WEBVIEW
@@ -77,8 +79,6 @@ private:
   virtual bool WrapperRangeInfo(double* aCurVal, double* aMinVal, double* aMaxVal, double* aStep);
 
   virtual role WrapperRole() { return Role(); }
-
-  virtual void WrapperDOMNodeID(nsString& aDOMNodeID);
 
   static void GetRoleDescription(role aRole,
                                  nsAString& aGeckoRole,
