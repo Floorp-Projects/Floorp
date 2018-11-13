@@ -154,13 +154,13 @@ OpusDataDecoder::DecodeHeader(const unsigned char* aData, size_t aLength)
 
     AutoTArray<uint8_t, 8> map;
     map.SetLength(channels);
-    if (mOpusParser->mChannelMapping == 1 &&
-        vorbisLayout.MappingTable(smpteLayout, &map)) {
+    if (vorbisLayout.MappingTable(smpteLayout, &map)) {
       for (int i = 0; i < channels; i++) {
         mMappingTable[i] = mOpusParser->mMappingTable[map[i]];
       }
     } else {
-      // Use Opus set channel mapping and return channels as-is.
+      // Should never get here as vorbis layout is always convertible to SMPTE
+      // default layout.
       PodCopy(mMappingTable.Elements(), mOpusParser->mMappingTable, channels);
     }
   } else {
