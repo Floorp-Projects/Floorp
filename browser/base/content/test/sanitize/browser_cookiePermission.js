@@ -2,15 +2,18 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm", {});
 const {SiteDataTestUtils} = ChromeUtils.import("resource://testing-common/SiteDataTestUtils.jsm", {});
 
-function createIndexedDB(host) {
-  return SiteDataTestUtils.addToIndexedDB("https://" + host);
+function createIndexedDB(host, originAttributes) {
+  return SiteDataTestUtils.addToIndexedDB("https://" + host, "foo", "bar",
+                                          originAttributes);
 }
 
-function checkIndexedDB(host) {
+function checkIndexedDB(host, originAttributes) {
   return new Promise(resolve => {
     let data = true;
     let uri = Services.io.newURI("https://" + host);
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+    let principal =
+      Services.scriptSecurityManager.createCodebasePrincipal(uri,
+                                                             originAttributes);
     let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
     request.onupgradeneeded = function(e) {
       data = false;
@@ -21,21 +24,23 @@ function checkIndexedDB(host) {
   });
 }
 
-function createHostCookie(host) {
+function createHostCookie(host, originAttributes) {
   Services.cookies.add(host, "/test", "foo", "bar",
-    false, false, false, Date.now() + 24000 * 60 * 60, {},
+    false, false, false, Date.now() + 24000 * 60 * 60, originAttributes,
     Ci.nsICookie2.SAMESITE_UNSET);
 }
 
-function createDomainCookie(host) {
+function createDomainCookie(host, originAttributes) {
   Services.cookies.add("." + host, "/test", "foo", "bar",
-    false, false, false, Date.now() + 24000 * 60 * 60, {},
+    false, false, false, Date.now() + 24000 * 60 * 60, originAttributes,
     Ci.nsICookie2.SAMESITE_UNSET);
 }
 
-function checkCookie(host) {
+function checkCookie(host, originAttributes) {
   for (let cookie of Services.cookies.enumerator) {
-    if (cookie.host.includes(host)) {
+    if (ChromeUtils.isOriginAttributesEqual(originAttributes,
+                                            cookie.originAttributes) &&
+        cookie.host.includes(host)) {
       return true;
     }
   }
@@ -52,27 +57,33 @@ async function deleteOnShutdown(opt) {
     ["network.cookie.lifetimePolicy", opt.lifetimePolicy],
   ]});
 
-  // Custom permission.
+  // Custom permission without considering OriginAttributes
   if (opt.cookiePermission !== undefined) {
     let uri = Services.io.newURI("https://www.example.com");
     Services.perms.add(uri, "cookie", opt.cookiePermission);
   }
 
   // Let's create a tab with some data.
-  await opt.createData((opt.fullHost ? "www." : "") + "example.org");
-  ok(await opt.checkData((opt.fullHost ? "www." : "") + "example.org"),
+  await opt.createData((opt.fullHost ? "www." : "") + "example.org",
+                       opt.originAttributes);
+  ok(await opt.checkData((opt.fullHost ? "www." : "") + "example.org",
+                         opt.originAttributes),
                          "We have data for www.example.org");
-  await opt.createData((opt.fullHost ? "www." : "") + "example.com");
-  ok(await opt.checkData((opt.fullHost ? "www." : "") + "example.com"),
+  await opt.createData((opt.fullHost ? "www." : "") + "example.com",
+                       opt.originAttributes);
+  ok(await opt.checkData((opt.fullHost ? "www." : "") + "example.com",
+                         opt.originAttributes),
                          "We have data for www.example.com");
 
   // Cleaning up.
   await Sanitizer.runSanitizeOnShutdown();
 
   // All gone!
-  is(!!(await opt.checkData((opt.fullHost ? "www." : "") + "example.org")),
+  is(!!(await opt.checkData((opt.fullHost ? "www." : "") + "example.org",
+                            opt.originAttributes)),
                             opt.expectedForOrg, "Do we have data for www.example.org?");
-  is(!!(await opt.checkData((opt.fullHost ? "www." : "") + "example.com")),
+  is(!!(await opt.checkData((opt.fullHost ? "www." : "") + "example.com",
+                            opt.originAttributes)),
                             opt.expectedForCom, "Do we have data for www.example.com?");
 
   // Clean up.
@@ -84,254 +95,141 @@ async function deleteOnShutdown(opt) {
   }
 }
 
-// IDB: Delete all, no custom permission, data in example.com, cookie
-// permission set for www.example.com
-add_task(async function deleteStorageOnShutdown() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
-      createData: createIndexedDB,
-      checkData: checkIndexedDB,
-      cookiePermission: undefined,
-      expectedForOrg: false,
-      expectedForCom: false,
-      fullHost: false,
+let tests = [
+  { name: "IDB",
+    createData: createIndexedDB,
+    checkData: checkIndexedDB },
+  { name: "Host Cookie",
+    createData: createHostCookie,
+    checkData: checkCookie },
+  { name: "Domain Cookie",
+    createData: createDomainCookie,
+    checkData: checkCookie },
+];
+
+let attributes = [
+  {name: "default", oa: {}},
+  {name: "container", oa: {userContextId: 1}},
+];
+
+// Delete all, no custom permission, data in example.com, cookie permission set
+// for www.example.com
+tests.forEach(methods => {
+  attributes.forEach(originAttributes => {
+    add_task(async function deleteStorageOnShutdown() {
+      info(methods.name + ": Delete all, no custom permission, data in example.com, cookie permission set for www.example.com - OA: " + originAttributes.name);
+      await deleteOnShutdown(
+        { lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
+          createData: methods.createData,
+          checkData: methods.checkData,
+          originAttributes: originAttributes.oa,
+          cookiePermission: undefined,
+          expectedForOrg: false,
+          expectedForCom: false,
+          fullHost: false,
+        });
     });
+  });
 });
 
-// IDB: Delete all, no custom permission, data in www.example.com, cookie
-// permission set for www.example.com
-add_task(async function deleteStorageOnShutdown() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
-      createData: createIndexedDB,
-      checkData: checkIndexedDB,
-      cookiePermission: undefined,
-      expectedForOrg: false,
-      expectedForCom: false,
-      fullHost: true,
+// Delete all, no custom permission, data in www.example.com, cookie permission
+// set for www.example.com
+tests.forEach(methods => {
+  attributes.forEach(originAttributes => {
+    add_task(async function deleteStorageOnShutdown() {
+      info(methods.name + ": Delete all, no custom permission, data in www.example.com, cookie permission set for www.example.com - OA: " + originAttributes.name);
+      await deleteOnShutdown(
+        { lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
+          createData: methods.createData,
+          checkData: methods.checkData,
+          originAttributes: originAttributes.oa,
+          cookiePermission: undefined,
+          expectedForOrg: false,
+          expectedForCom: false,
+          fullHost: true,
+        });
     });
+  });
 });
 
-// Host Cookie: Delete all, no custom permission, data in example.com, cookie
-// permission set for www.example.com
-add_task(async function deleteHostCookieOnShutdown() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
-      createData: createHostCookie,
-      checkData: checkCookie,
-      cookiePermission: undefined,
-      expectedForOrg: false,
-      expectedForCom: false,
-      fullHost: false,
-    });
-});
-
-// Host Cookie: Delete all, no custom permission, data in www.example.com,
+// All is session, but with ALLOW custom permission, data in example.com,
 // cookie permission set for www.example.com
-add_task(async function deleteHostCookieOnShutdown() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
-      createData: createHostCookie,
-      checkData: checkCookie,
-      cookiePermission: undefined,
-      expectedForOrg: false,
-      expectedForCom: false,
-      fullHost: true,
+tests.forEach(methods => {
+  attributes.forEach(originAttributes => {
+    add_task(async function deleteStorageWithCustomPermission() {
+      info(methods.name + ": All is session, but with ALLOW custom permission, data in example.com, cookie permission set for www.example.com - OA: " + originAttributes.name);
+      await deleteOnShutdown(
+        { lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
+          createData: methods.createData,
+          checkData: methods.checkData,
+          originAttributes: originAttributes.oa,
+          cookiePermission: Ci.nsICookiePermission.ACCESS_ALLOW,
+          expectedForOrg: false,
+          expectedForCom: true,
+          fullHost: false,
+        });
     });
+  });
 });
 
-// Domain Cookie: Delete all, no custom permission, data in example.com, cookie
-// permission set for www.example.com
-add_task(async function deleteDomainCookieOnShutdown() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
-      createData: createDomainCookie,
-      checkData: checkCookie,
-      cookiePermission: undefined,
-      expectedForOrg: false,
-      expectedForCom: false,
-      fullHost: false,
-    });
-});
-
-// Domain Cookie: Delete all, no custom permission, data in www.example.com,
+// All is session, but with ALLOW custom permission, data in www.example.com,
 // cookie permission set for www.example.com
-add_task(async function deleteDomainCookieOnShutdown() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
-      createData: createDomainCookie,
-      checkData: checkCookie,
-      cookiePermission: undefined,
-      expectedForOrg: false,
-      expectedForCom: false,
-      fullHost: true,
+tests.forEach(methods => {
+  attributes.forEach(originAttributes => {
+    add_task(async function deleteStorageWithCustomPermission() {
+      info(methods.name + ": All is session, but with ALLOW custom permission, data in www.example.com, cookie permission set for www.example.com - OA: " + originAttributes.name);
+      await deleteOnShutdown(
+        { lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
+          createData: methods.createData,
+          checkData: methods.checkData,
+          originAttributes: originAttributes.oa,
+          cookiePermission: Ci.nsICookiePermission.ACCESS_ALLOW,
+          expectedForOrg: false,
+          expectedForCom: true,
+          fullHost: true,
+        });
     });
+  });
 });
 
-// IDB: All is session, but with ALLOW custom permission, data in example.com,
+// All is default, but with SESSION custom permission, data in example.com,
 // cookie permission set for www.example.com
-add_task(async function deleteStorageWithCustomPermission() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
-      createData: createIndexedDB,
-      checkData: checkIndexedDB,
-      cookiePermission: Ci.nsICookiePermission.ACCESS_ALLOW,
-      expectedForOrg: false,
-      expectedForCom: true,
-      fullHost: false,
+tests.forEach(methods => {
+  attributes.forEach(originAttributes => {
+    add_task(async function deleteStorageOnlyCustomPermission() {
+      info(methods.name + ": All is default, but with SESSION custom permission, data in example.com, cookie permission set for www.example.com - OA: " + originAttributes.name);
+      await deleteOnShutdown(
+        { lifetimePolicy: Ci.nsICookieService.ACCEPT_NORMALLY,
+          createData: methods.createData,
+          checkData: methods.checkData,
+          originAttributes: originAttributes.oa,
+          cookiePermission: Ci.nsICookiePermission.ACCESS_SESSION,
+          expectedForOrg: true,
+          // expected data just for example.com when using indexedDB because
+          // QuotaManager deletes for principal.
+          expectedForCom: false,
+          fullHost: false,
+        });
     });
+  });
 });
 
-// IDB: All is session, but with ALLOW custom permission, data in
-// www.example.com, cookie permission set for www.example.com
-add_task(async function deleteStorageWithCustomPermission() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
-      createData: createIndexedDB,
-      checkData: checkIndexedDB,
-      cookiePermission: Ci.nsICookiePermission.ACCESS_ALLOW,
-      expectedForOrg: false,
-      expectedForCom: true,
-      fullHost: true,
+// All is default, but with SESSION custom permission, data in www.example.com,
+// cookie permission set for www.example.com
+tests.forEach(methods => {
+  attributes.forEach(originAttributes => {
+    add_task(async function deleteStorageOnlyCustomPermission() {
+      info(methods.name + ": All is default, but with SESSION custom permission, data in www.example.com, cookie permission set for www.example.com - OA: " + originAttributes.name);
+      await deleteOnShutdown(
+        { lifetimePolicy: Ci.nsICookieService.ACCEPT_NORMALLY,
+          createData: methods.createData,
+          checkData: methods.checkData,
+          originAttributes: originAttributes.oa,
+          cookiePermission: Ci.nsICookiePermission.ACCESS_SESSION,
+          expectedForOrg: true,
+          expectedForCom: false,
+          fullHost: true,
+        });
     });
-});
-
-// Host Cookie: All is session, but with ALLOW custom permission, data in
-// example.com, cookie permission set for www.example.com
-add_task(async function deleteHostCookieWithCustomPermission() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
-      createData: createHostCookie,
-      checkData: checkCookie,
-      cookiePermission: Ci.nsICookiePermission.ACCESS_ALLOW,
-      expectedForOrg: false,
-      expectedForCom: true,
-      fullHost: false,
-    });
-});
-
-// Host Cookie: All is session, but with ALLOW custom permission, data in
-// www.example.com, cookie permission set for www.example.com
-add_task(async function deleteHostCookieWithCustomPermission() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
-      createData: createHostCookie,
-      checkData: checkCookie,
-      cookiePermission: Ci.nsICookiePermission.ACCESS_ALLOW,
-      expectedForOrg: false,
-      expectedForCom: true,
-      fullHost: true,
-    });
-});
-
-// Domain Cookie: All is session, but with ALLOW custom permission, data in
-// example.com, cookie permission set for www.example.com
-add_task(async function deleteDomainCookieWithCustomPermission() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
-      createData: createDomainCookie,
-      checkData: checkCookie,
-      cookiePermission: Ci.nsICookiePermission.ACCESS_ALLOW,
-      expectedForOrg: false,
-      expectedForCom: true,
-      fullHost: false,
-    });
-});
-
-// Domain Cookie: All is session, but with ALLOW custom permission, data in
-// www.example.com, cookie permission set for www.example.com
-add_task(async function deleteDomainCookieWithCustomPermission() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_SESSION,
-      createData: createDomainCookie,
-      checkData: checkCookie,
-      cookiePermission: Ci.nsICookiePermission.ACCESS_ALLOW,
-      expectedForOrg: false,
-      expectedForCom: true,
-      fullHost: true,
-    });
-});
-
-// IDB: All is default, but with SESSION custom permission, data in
-// example.com, cookie permission set for www.example.com
-add_task(async function deleteStorageOnlyCustomPermission() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_NORMALLY,
-      createData: createIndexedDB,
-      checkData: checkIndexedDB,
-      cookiePermission: Ci.nsICookiePermission.ACCESS_SESSION,
-      expectedForOrg: true,
-      expectedForCom: true,
-      fullHost: false,
-    });
-});
-
-// IDB: All is default, but with SESSION custom permission, data in
-// www.example.com, cookie permission set for www.example.com
-add_task(async function deleteStorageOnlyCustomPermission() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_NORMALLY,
-      createData: createIndexedDB,
-      checkData: checkIndexedDB,
-      cookiePermission: Ci.nsICookiePermission.ACCESS_SESSION,
-      expectedForOrg: true,
-      expectedForCom: false,
-      fullHost: true,
-    });
-});
-
-// Host Cookie: All is default, but with SESSION custom permission, data in
-// example.com, cookie permission set for www.example.com
-add_task(async function deleteHostCookieOnlyCustomPermission() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_NORMALLY,
-      createData: createHostCookie,
-      checkData: checkCookie,
-      cookiePermission: Ci.nsICookiePermission.ACCESS_SESSION,
-      expectedForOrg: true,
-      expectedForCom: false,
-      fullHost: false,
-    });
-});
-
-// Host Cookie: All is default, but with SESSION custom permission, data in
-// www.example.com, cookie permission set for www.example.com
-add_task(async function deleteHostCookieOnlyCustomPermission() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_NORMALLY,
-      createData: createHostCookie,
-      checkData: checkCookie,
-      cookiePermission: Ci.nsICookiePermission.ACCESS_SESSION,
-      expectedForOrg: true,
-      expectedForCom: false,
-      fullHost: true,
-    });
-});
-
-// Domain Cookie: All is default, but with SESSION custom permission, data in
-// example.com, cookie permission set for www.example.com
-add_task(async function deleteDomainCookieOnlyCustomPermission() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_NORMALLY,
-      createData: createDomainCookie,
-      checkData: checkCookie,
-      cookiePermission: Ci.nsICookiePermission.ACCESS_SESSION,
-      expectedForOrg: true,
-      expectedForCom: false,
-      fullHost: false,
-    });
-});
-
-// Domain Cookie: All is default, but with SESSION custom permission, data in
-// www.example.com, cookie permission set for www.example.com
-add_task(async function deleteDomainCookieOnlyCustomPermission() {
-  await deleteOnShutdown(
-    { lifetimePolicy: Ci.nsICookieService.ACCEPT_NORMALLY,
-      createData: createDomainCookie,
-      checkData: checkCookie,
-      cookiePermission: Ci.nsICookiePermission.ACCESS_SESSION,
-      expectedForOrg: true,
-      expectedForCom: false,
-      fullHost: true,
-    });
+  });
 });
