@@ -7,7 +7,7 @@
 //! registering fonts found in the blob (see `prepare_request`).
 
 use webrender::api::*;
-use bindings::{ByteSlice, MutByteSlice, wr_moz2d_render_cb, ArcVecU8, gecko_profiler_start_marker, gecko_profiler_end_marker};
+use bindings::{ByteSlice, MutByteSlice, wr_moz2d_render_cb, ArcVecU8};
 use rayon::ThreadPool;
 use rayon::prelude::*;
 
@@ -453,28 +453,10 @@ struct Moz2dBlobRasterizer {
     blob_commands: HashMap<ImageKey, BlobCommand>,
 }
 
-struct GeckoProfilerMarker {
-    name: &'static [u8],
-}
-
-impl GeckoProfilerMarker {
-    pub fn new(name: &'static [u8]) -> GeckoProfilerMarker {
-        unsafe { gecko_profiler_start_marker(name.as_ptr() as *const i8); }
-        GeckoProfilerMarker { name }
-    }
-}
-
-impl Drop for GeckoProfilerMarker {
-    fn drop(&mut self) {
-        unsafe { gecko_profiler_end_marker(self.name.as_ptr() as *const i8); }
-    }
-}
-
 impl AsyncBlobImageRasterizer for Moz2dBlobRasterizer {
    
     fn rasterize(&mut self, requests: &[BlobImageParams], low_priority: bool) -> Vec<(BlobImageRequest, BlobImageResult)> {
         // All we do here is spin up our workers to callback into gecko to replay the drawing commands.
-        let _marker = GeckoProfilerMarker::new(b"BlobRasterization\0");
 
         let requests: Vec<Job> = requests.into_iter().map(|params| {
             let command = &self.blob_commands[&params.request.key];
@@ -622,7 +604,6 @@ extern "C" {
     );
     fn DeleteBlobFont(key: WrFontInstanceKey);
     fn ClearBlobImageResources(namespace: WrIdNamespace);
-
 }
 
 impl Moz2dBlobImageHandler {
