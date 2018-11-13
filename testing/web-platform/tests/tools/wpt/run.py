@@ -179,6 +179,7 @@ class Firefox(BrowserSetup):
     def setup_kwargs(self, kwargs):
         if kwargs["binary"] is None:
             if kwargs["browser_channel"] is None:
+                kwargs["browser_channel"] = "nightly"
                 logger.info("No browser channel specified. Running nightly instead.")
 
             binary = self.browser.find_binary(self.venv.path,
