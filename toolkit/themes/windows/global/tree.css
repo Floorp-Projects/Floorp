@@ -8,14 +8,16 @@
 
 .treecol-sortdirection {
   list-style-image: none;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
-treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="ascending"] {
-  list-style-image: url("chrome://global/skin/tree/sort-asc.png");
+treecol[sortDirection="ascending"]:not([hideheader="true"]) > .treecol-sortdirection {
+  list-style-image: url("chrome://global/skin/tree/sort-asc.svg");
 }
 
-treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="descending"] {
-  list-style-image: url("chrome://global/skin/tree/sort-dsc.png");
+treecol[sortDirection="descending"]:not([hideheader="true"]) > .treecol-sortdirection {
+  list-style-image: url("chrome://global/skin/tree/sort-dsc.svg");
 }
 
 @media (-moz-windows-classic) {
@@ -37,11 +39,11 @@ treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="descend
     border-inline-start-color: ThreeDShadow;
   }
 
-  treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="ascending"] {
+  treecol[sortDirection="ascending"]:not([hideheader="true"]) > .treecol-sortdirection {
     list-style-image: url("chrome://global/skin/tree/sort-asc-classic.png");
   }
 
-  treecol:not([hideheader="true"]) > .treecol-sortdirection[sortDirection="descending"] {
+  treecol[sortDirection="descending"]:not([hideheader="true"]) > .treecol-sortdirection {
     list-style-image: url("chrome://global/skin/tree/sort-dsc-classic.png");
   }
 }
