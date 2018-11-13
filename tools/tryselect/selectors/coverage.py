@@ -115,7 +115,7 @@ def download_coverage_mapping(base_revision):
     except (IOError, ValueError):
         print('Chunk mapping file not found.')
 
-    CHUNK_MAPPING_URL_TEMPLATE = 'https://index.taskcluster.net/v1/task/project.releng.services.project.production.shipit_code_coverage.{}/artifacts/public/chunk_mapping.tar.xz'  # noqa
+    CHUNK_MAPPING_URL_TEMPLATE = 'https://index.taskcluster.net/v1/task/project.releng.services.project.production.code_coverage_bot.{}/artifacts/public/chunk_mapping.tar.xz'  # noqa
     JSON_PUSHES_URL_TEMPLATE = 'https://hg.mozilla.org/mozilla-central/json-pushes?version=2&tipsonly=1&tochange={}&startdate={}'  # noqa
 
     # Get pushes from at most one month ago.
