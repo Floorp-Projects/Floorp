@@ -24,10 +24,10 @@ public:
   {
   }
 
-  bool Reserve(uint32_t aCount)
+  bool Reserve(uint32_t aCount, const ReservationFlags aFlags)
   {
     MOZ_ASSERT(aCount);
-    uint32_t bytesReserved = MMPolicy::Reserve(aCount * kChunkSize);
+    uint32_t bytesReserved = MMPolicy::Reserve(aCount * kChunkSize, aFlags);
     return !!bytesReserved;
   }
 
@@ -127,10 +127,10 @@ public:
     return sUniqueVM.ShouldUnhookUponDestruction();
   }
 
-  bool Reserve(uint32_t aCount)
+  bool Reserve(uint32_t aCount, const ReservationFlags aFlags)
   {
     AutoCriticalSection lock(&sCS);
-    return sUniqueVM.Reserve(aCount);
+    return sUniqueVM.Reserve(aCount, aFlags);
   }
 
   bool IsPageAccessible(void* aVAddress) const
@@ -138,6 +138,14 @@ public:
     AutoCriticalSection lock(&sCS);
     return sUniqueVM.IsPageAccessible(aVAddress);
   }
+
+#if defined(_M_X64)
+  bool IsTrampolineSpaceInLowest2GB() const
+  {
+    AutoCriticalSection lock(&sCS);
+    return sUniqueVM.IsTrampolineSpaceInLowest2GB();
+  }
+#endif // defined(_M_X64)
 
   Trampoline<MMPolicyInProcess> GetNextTrampoline()
   {
