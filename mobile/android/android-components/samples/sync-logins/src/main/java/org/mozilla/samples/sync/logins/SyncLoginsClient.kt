@@ -4,7 +4,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import mozilla.appservices.logins.ServerPassword
 import mozilla.appservices.logins.SyncUnlockInfo
-import mozilla.components.service.fxa.OAuthInfo
+import mozilla.components.service.fxa.AccessTokenInfo
 import mozilla.components.service.sync.logins.AsyncLoginsStorage
 import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
 
@@ -28,15 +28,14 @@ class SyncLoginsClient(databasePath: String) : AutoCloseable {
      * that this may reject with a [SyncAuthInvalidException], in which case the oauth token may
      * need to be refreshed.
      *
-     * @param oauthInfo This should be produced by [FirefoxAccount.completeOAuthFlow], for a flow begun
-     * with `wantsKeys = true`, that requested (at least) the scopes
-     * `https://identity.mozilla.com/apps/oldsync` and `https://identity.mozilla.com/apps/lockbox`.
+     * @param tokenInfo This should be produced by [FirefoxAccount.getAccessToken], for a flow begun
+     * with `wantsKeys = true`, that requested the scope `https://identity.mozilla.com/apps/oldsync`.
      *
      * @param tokenServerURL This should be the result of [FirefoxAccount.getTokenServerEndpointURL]
      */
-    suspend fun syncAndGetPasswords(oauthInfo: OAuthInfo, tokenServerURL: String): List<ServerPassword> {
+    suspend fun syncAndGetPasswords(tokenInfo: AccessTokenInfo, tokenServerURL: String): List<ServerPassword> {
         val store = this.getUnlockedStore()
-        val unlockInfo = this.getUnlockInfo(oauthInfo, tokenServerURL)
+        val unlockInfo = this.getUnlockInfo(tokenInfo, tokenServerURL)
         store.sync(unlockInfo).await()
         return getLocalPasswordList()
     }
@@ -57,15 +56,12 @@ class SyncLoginsClient(databasePath: String) : AutoCloseable {
     }
 
     @Suppress("TooGenericExceptionThrown", "ThrowsCount")
-    // Helper to convert FxA OAuthInfo + TokenServer URL to `SyncUnlockInfo`.
-    private fun getUnlockInfo(oauthInfo: OAuthInfo, tokenServerURL: String): SyncUnlockInfo {
-        val keys = oauthInfo.keys ?: throw RuntimeException("keys are missing!")
-        val keyInfo = keys["https://identity.mozilla.com/apps/oldsync"]
-                ?: throw RuntimeException("Key info is missing!")
-
+    // Helper to convert FxA AccessTokenInfo + TokenServer URL to `SyncUnlockInfo`.
+    private fun getUnlockInfo(tokenInfo: AccessTokenInfo, tokenServerURL: String): SyncUnlockInfo {
+        val keyInfo = tokenInfo.key ?: throw RuntimeException("Key info is missing!")
         return SyncUnlockInfo(
                 kid = keyInfo.kid,
-                fxaAccessToken = oauthInfo.accessToken,
+                fxaAccessToken = tokenInfo.token,
                 syncKey = keyInfo.k,
                 tokenserverURL = tokenServerURL
         )

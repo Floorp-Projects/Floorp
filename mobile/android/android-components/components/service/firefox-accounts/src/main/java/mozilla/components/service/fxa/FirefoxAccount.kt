@@ -11,6 +11,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.plus
 import org.mozilla.fxaclient.internal.FirefoxAccount as InternalFxAcct
+import org.mozilla.fxaclient.internal.FxaException.Unauthorized as Unauthorized
 
 /**
  * FirefoxAccount represents the authentication state of a client.
@@ -55,6 +56,8 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : A
      *
      * @param ignoreCache Fetch the profile information directly from the server
      * @return Deferred<[Profile]> representing the user's basic profile info
+     * @throws Unauthorized We couldn't find any suitable access token to make that call.
+     * The caller should then start the OAuth Flow again with the "profile" scope.
      */
     fun getProfile(ignoreCache: Boolean): Deferred<Profile> {
         return scope.async {
@@ -73,6 +76,8 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : A
      * to retrieval from the server.
      *
      * @return Deferred<[Profile]> representing the user's basic profile info
+     * @throws Unauthorized We couldn't find any suitable access token to make that call.
+     * The caller should then start the OAuth Flow again with the "profile" scope.
      */
     fun getProfile(): Deferred<Profile> = getProfile(false)
 
@@ -87,21 +92,22 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : A
      *
      * Modifies the FirefoxAccount state.
      */
-    fun completeOAuthFlow(code: String, state: String): Deferred<OAuthInfo> {
-        return scope.async { OAuthInfo.fromInternal(inner.completeOAuthFlow(code, state)) }
+    fun completeOAuthFlow(code: String, state: String): Deferred<Unit> {
+        return scope.async { inner.completeOAuthFlow(code, state) }
     }
 
     /**
-     * Tries to fetch a cached access token for the given scope.
+     * Tries to fetch an access token for the given scope.
      *
-     * If the token is close to expiration, we may refresh it.
-     *
-     * @param scopes List of OAuth scopes for which the client wants access
-     * @return [OAuthInfo] that stores the token, along with its scopes and keys when complete
+     * @param scope Single OAuth scope (no spaces) for which the client wants access
+     * @return [AccessTokenInfo] that stores the token, along with its scope, key and
+     *                           expiration timestamp (in seconds) since epoch when complete
+     * @throws Unauthorized We couldn't provide an access token for this scope.
+     * The caller should then start the OAuth Flow again with the desired scope.
      */
-    fun getCachedOAuthToken(scopes: Array<String>): Deferred<OAuthInfo?> {
+    fun getAccessToken(singleScope: String): Deferred<AccessTokenInfo> {
         return scope.async {
-            inner.getCachedOAuthToken(scopes)?.let { OAuthInfo.fromInternal(it) }
+            inner.getAccessToken(singleScope).let { AccessTokenInfo.fromInternal(it) }
         }
     }
 

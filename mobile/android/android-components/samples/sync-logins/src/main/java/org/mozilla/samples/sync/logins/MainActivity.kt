@@ -116,7 +116,8 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     private fun displayAndPersistProfile(code: String, state: String) {
         launch {
             val account = whenAccount.await()
-            val oauthInfo = account.completeOAuthFlow(code, state).await()
+            account.completeOAuthFlow(code, state).await()
+            val tokenInfo = account.getAccessToken("https://identity.mozilla.com/apps/oldsync").await()
 
             val permissionCheck = ContextCompat.checkSelfPermission(this@MainActivity,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -131,7 +132,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
             val appFiles = this@MainActivity.applicationContext.getExternalFilesDir(null)
             SyncLoginsClient(appFiles.absolutePath + "/logins.sqlite").use { logins ->
                 val tokenServer = account.getTokenServerEndpointURL()
-                val syncLogins = logins.syncAndGetPasswords(oauthInfo, tokenServer)
+                val syncLogins = logins.syncAndGetPasswords(tokenInfo, tokenServer)
                 Toast.makeText(this@MainActivity, "Logins success", Toast.LENGTH_SHORT).show()
                 for (i in 0 until syncLogins.size) {
                     adapter.addAll("Login: " + syncLogins[i].hostname)
