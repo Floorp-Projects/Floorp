@@ -69,7 +69,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
             prefs
         } catch (e: NullPointerException) {
             // If we fail to deserialize, we can log the problem but keep on going.
-            logger.error("Failed to deserialize UUIDs with 'user' lifetime")
+            logger.error("Failed to deserialize metric with 'user' lifetime")
             prefs
         }
     }
@@ -133,7 +133,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
     ) {
         checkNotNull(applicationContext) { "No recording can take place without an application context" }
 
-        // Record a copy of the uuid in all the needed stores.
+        // Record a copy of the metric in all the needed stores.
         @SuppressLint("CommitPrefEdits")
         val userPrefs: SharedPreferences.Editor? =
             if (lifetime == Lifetime.User) userLifetimeStorage.edit() else null
