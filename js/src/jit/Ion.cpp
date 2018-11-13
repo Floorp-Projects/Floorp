@@ -2441,6 +2441,7 @@ Compile(JSContext* cx, HandleScript script, BaselineFrame* osrFrame, jsbytecode*
 
     AbortReason reason = IonCompile(cx, script, osrFrame, osrPc, recompile, optimizationLevel);
     if (reason == AbortReason::Error) {
+        MOZ_ASSERT(cx->isExceptionPending());
         return Method_Error;
     }
 
