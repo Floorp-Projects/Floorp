@@ -624,6 +624,8 @@ public class SessionAccessibility {
             return false;
         }
 
+        mView.requestFocus();
+
         final GeckoBundle data = new GeckoBundle(2);
         data.putDoubleArray("coordinates", new double[] {event.getRawX(), event.getRawY()});
         mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityExploreByTouch", data);
