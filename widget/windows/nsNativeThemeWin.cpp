@@ -11,6 +11,7 @@
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/gfx/Types.h" // for Color::FromABGR
 #include "nsColor.h"
 #include "nsDeviceContext.h"
 #include "nsRect.h"
@@ -44,6 +45,7 @@
 #include <algorithm>
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 using namespace mozilla::widget;
 
 extern mozilla::LazyLogModule gWindowsLog;
