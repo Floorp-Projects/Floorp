@@ -598,10 +598,11 @@ AddAnimationsForProperty(nsIFrame* aFrame,
   // layer, we still need to mark it as up-to-date with regards to animations.
   // Otherwise, in RestyleManager we'll notice the discrepancy between the
   // animation generation numbers and update the layer indefinitely.
+  // Note that EffectSet::GetEffectSet expects to work with the style frame
+  // instead of the primary frame.
+  EffectSet* effects = EffectSet::GetEffectSet(styleFrame);
   uint64_t animationGeneration =
-    // Note that GetAnimationGenerationForFrame() calles EffectSet::GetEffectSet
-    // that expects to work with the style frame instead of the primary frame.
-    RestyleManager::GetAnimationGenerationForFrame(styleFrame);
+    effects ? effects->GetAnimationGeneration() : 0;
   aAnimationInfo.SetAnimationGeneration(animationGeneration);
 
   EffectCompositor::ClearIsRunningOnCompositor(styleFrame, aProperty);
@@ -674,7 +675,6 @@ AddAnimationsForProperty(nsIFrame* aFrame,
     nsCSSProps::PropHasFlags(aProperty, CSSPropFlags::CanAnimateOnCompositor),
     "inconsistent property flags");
 
-  EffectSet* effects = EffectSet::GetEffectSet(styleFrame);
   // Add from first to last (since last overrides)
   for (size_t animIdx = 0; animIdx < compositorAnimations.Length(); animIdx++) {
     dom::Animation* anim = compositorAnimations[animIdx];
