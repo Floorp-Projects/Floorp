@@ -11,8 +11,8 @@ const ONEOFF_PREF = "browser.urlbar.oneOffSearches";
 add_task(async function prepare() {
   let engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
-  let oldCurrentEngine = Services.search.currentEngine;
-  Services.search.currentEngine = engine;
+  let oldCurrentEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = engine;
   let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
   let defaults = Services.prefs.getDefaultBranch("browser.urlbar.");
   let searchSuggestionsDefault = defaults.getBoolPref("suggest.searches");
@@ -23,7 +23,7 @@ add_task(async function prepare() {
   Services.prefs.setBoolPref(ONEOFF_PREF, true);
   registerCleanupFunction(async function() {
     defaults.setBoolPref("suggest.searches", searchSuggestionsDefault);
-    Services.search.currentEngine = oldCurrentEngine;
+    Services.search.defaultEngine = oldCurrentEngine;
     Services.prefs.clearUserPref(SUGGEST_ALL_PREF);
     Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
     Services.prefs.setBoolPref(CHOICE_PREF, suggestionsChoice);

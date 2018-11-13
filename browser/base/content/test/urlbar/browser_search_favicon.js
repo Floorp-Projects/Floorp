@@ -4,7 +4,7 @@ var gRestyleSearchesPref = "browser.urlbar.restyleSearches";
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref(gRestyleSearchesPref);
-  Services.search.currentEngine = gOriginalEngine;
+  Services.search.defaultEngine = gOriginalEngine;
   Services.search.removeEngine(gEngine);
   return PlacesUtils.history.clear();
 });
@@ -23,8 +23,8 @@ add_task(async function() {
                                        "GET", "http://s.example.com/search");
   gEngine = Services.search.getEngineByName("SearchEngine");
   gEngine.addParam("q", "{searchTerms}", null);
-  gOriginalEngine = Services.search.currentEngine;
-  Services.search.currentEngine = gEngine;
+  gOriginalEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = gEngine;
 
   let uri = NetUtil.newURI("http://s.example.com/search?q=foobar&client=1");
   await PlacesTestUtils.addVisits({ uri, title: "Foo - SearchEngine Search" });
