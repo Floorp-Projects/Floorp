@@ -82,7 +82,8 @@ enum class MatchForCompositor {
 static MatchForCompositor
 IsMatchForCompositor(const KeyframeEffect& aEffect,
                      nsCSSPropertyID aProperty,
-                     const nsIFrame* aFrame)
+                     const nsIFrame* aFrame,
+                     const EffectSet& aEffects)
 {
   const Animation* animation = aEffect.GetAnimation();
   MOZ_ASSERT(animation);
@@ -103,7 +104,7 @@ IsMatchForCompositor(const KeyframeEffect& aEffect,
     return MatchForCompositor::NoAndBlockThisProperty;
   }
 
-  if (!aEffect.HasEffectiveAnimationOfProperty(aProperty)) {
+  if (!aEffect.HasEffectiveAnimationOfProperty(aProperty, aEffects)) {
     return MatchForCompositor::No;
   }
 
@@ -205,7 +206,7 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
   bool foundRunningAnimations = false;
   for (KeyframeEffect* effect : *effects) {
     MatchForCompositor matchResult =
-      IsMatchForCompositor(*effect, aProperty, aFrame);
+      IsMatchForCompositor(*effect, aProperty, aFrame, *effects);
 
     if (matchResult == MatchForCompositor::NoAndBlockThisProperty) {
       // For a given |aFrame|, we don't want some animations of |aProperty| to

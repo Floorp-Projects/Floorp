@@ -263,20 +263,22 @@ KeyframeEffect::SetKeyframes(
 }
 
 const AnimationProperty*
-KeyframeEffect::GetEffectiveAnimationOfProperty(nsCSSPropertyID aProperty) const
+KeyframeEffect::GetEffectiveAnimationOfProperty(nsCSSPropertyID aProperty,
+                                                const EffectSet& aEffects) const
 {
-  EffectSet* effectSet =
-    EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
+  MOZ_ASSERT(
+    &aEffects ==
+      EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType));
+
   for (size_t propIdx = 0, propEnd = mProperties.Length();
        propIdx != propEnd; ++propIdx) {
     if (aProperty == mProperties[propIdx].mProperty) {
       const AnimationProperty* result = &mProperties[propIdx];
       // Skip if there is a property of animation level that is overridden
       // by !important rules.
-      if (effectSet &&
-          effectSet->PropertiesWithImportantRules()
+      if (aEffects.PropertiesWithImportantRules()
             .HasProperty(result->mProperty) &&
-          effectSet->PropertiesForAnimationsLevel()
+          aEffects.PropertiesForAnimationsLevel()
             .HasProperty(result->mProperty)) {
         result = nullptr;
       }
@@ -1280,16 +1282,16 @@ KeyframeEffect::CanThrottle() const
     MOZ_ASSERT(nsCSSPropertyIDSet::CompositorAnimatables()
                  .HasProperty(property.mProperty),
                "The property should be able to run on the compositor");
-    MOZ_ASSERT(HasEffectiveAnimationOfProperty(property.mProperty),
-               "There should be an effective animation of the property while "
-               "it is marked as being run on the compositor");
-
     if (!effectSet) {
       effectSet = EffectSet::GetEffectSet(mTarget->mElement,
                                           mTarget->mPseudoType);
       MOZ_ASSERT(effectSet, "CanThrottle should be called on an effect "
                             "associated with a target element");
     }
+    MOZ_ASSERT(HasEffectiveAnimationOfProperty(property.mProperty, *effectSet),
+               "There should be an effective animation of the property while "
+               "it is marked as being run on the compositor");
+
 
     DisplayItemType displayItemType =
       LayerAnimationInfo::GetDisplayItemTypeForProperty(property.mProperty);
