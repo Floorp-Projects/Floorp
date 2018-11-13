@@ -921,7 +921,7 @@ RuleRewriter.prototype = {
     if (isEnabled) {
       this.modifications.push({ type: "set", index, name, value: decl.value, priority });
     } else {
-      this.modifications.push({ type: "remove", index, name, priority });
+      this.modifications.push({ type: "disable", index, name });
     }
   },
 
