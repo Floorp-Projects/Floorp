@@ -811,11 +811,11 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "PublicKeyCredential"},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "PushManager", insecureContext: true, android: false },
+    {name: "PushManager", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "PushSubscription", insecureContext: true, android: false },
+    {name: "PushSubscription", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "PushSubscriptionOptions", insecureContext: true, android: false },
+    {name: "PushSubscriptionOptions", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "RadioNodeList", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
