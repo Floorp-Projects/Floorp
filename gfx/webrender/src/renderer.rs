@@ -57,7 +57,7 @@ use internal_types::{CacheTextureId, DebugOutput, FastHashMap, LayerIndex, Rende
 use internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
 use internal_types::{RenderTargetInfo, SavedTargetIndex};
 use prim_store::DeferredResolve;
-use profiler::{BackendProfileCounters, FrameProfileCounters,
+use profiler::{BackendProfileCounters, FrameProfileCounters, TimeProfileCounter,
                GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
 use device::query::GpuProfiler;
 use rayon::{ThreadPool, ThreadPoolBuilder};
@@ -1534,6 +1534,8 @@ pub struct Renderer {
     debug_flags: DebugFlags,
     backend_profile_counters: BackendProfileCounters,
     profile_counters: RendererProfileCounters,
+    resource_upload_time: u64,
+    gpu_cache_upload_time: u64,
     #[cfg(feature = "debug_renderer")]
     profiler: Profiler,
     #[cfg(feature = "debug_renderer")]
@@ -1985,6 +1987,8 @@ impl Renderer {
             debug_flags,
             backend_profile_counters: BackendProfileCounters::new(),
             profile_counters: RendererProfileCounters::new(),
+            resource_upload_time: 0,
+            gpu_cache_upload_time: 0,
             #[cfg(feature = "debug_renderer")]
             profiler: Profiler::new(),
             #[cfg(feature = "debug_renderer")]
@@ -2134,6 +2138,7 @@ impl Renderer {
                 } => {
                     self.pending_texture_updates.push(updates);
                     self.device.begin_frame();
+
                     self.update_texture_cache();
 
                     // Flush the render target pool on memory pressure.
@@ -2705,6 +2710,10 @@ impl Renderer {
         self.backend_profile_counters.reset();
         self.profile_counters.reset();
         self.profile_counters.frame_counter.inc();
+        stats.resource_upload_time = self.resource_upload_time;
+        self.resource_upload_time = 0;
+        stats.gpu_cache_upload_time = self.gpu_cache_upload_time;
+        self.gpu_cache_upload_time = 0;
 
         profile_timers.cpu_time.profile(|| {
             let _gm = self.gpu_profile.start_marker("end frame");
@@ -2774,7 +2783,11 @@ impl Renderer {
                 .update(&mut self.device, &update_list);
         }
 
-        let updated_rows = self.gpu_cache_texture.flush(&mut self.device);
+        let mut upload_time = TimeProfileCounter::new("GPU cache upload time", false);
+        let updated_rows = upload_time.profile(|| {
+            return self.gpu_cache_texture.flush(&mut self.device);
+        });
+        self.gpu_cache_upload_time += upload_time.get();
 
         let counters = &mut self.backend_profile_counters.resources.gpu_cache;
         counters.updated_rows.set(updated_rows);
@@ -2799,101 +2812,104 @@ impl Renderer {
         let _gm = self.gpu_profile.start_marker("texture cache update");
         let mut pending_texture_updates = mem::replace(&mut self.pending_texture_updates, vec![]);
 
-        for update_list in pending_texture_updates.drain(..) {
-            for allocation in update_list.allocations {
-                let is_realloc = matches!(allocation.kind, TextureCacheAllocationKind::Realloc(..));
-                match allocation.kind {
-                    TextureCacheAllocationKind::Alloc(info) |
-                    TextureCacheAllocationKind::Realloc(info) => {
-                        // Create a new native texture, as requested by the texture cache.
-                        //
-                        // Ensure no PBO is bound when creating the texture storage,
-                        // or GL will attempt to read data from there.
-                        let texture = self.device.create_texture(
-                            TextureTarget::Array,
-                            info.format,
-                            info.width,
-                            info.height,
-                            info.filter,
-                            // This needs to be a render target because some render
-                            // tasks get rendered into the texture cache.
-                            Some(RenderTargetInfo { has_depth: false }),
-                            info.layer_count,
-                        );
-
-                        let old = self.texture_resolver.texture_cache_map.insert(allocation.id, texture);
-                        assert_eq!(old.is_some(), is_realloc, "Renderer and RenderBackend disagree");
-                        if let Some(old) = old {
-                            self.device.blit_renderable_texture(
-                                self.texture_resolver.texture_cache_map.get_mut(&allocation.id).unwrap(),
-                                &old
+        let mut upload_time = TimeProfileCounter::new("Resource upload time", false);
+        upload_time.profile(|| {
+            for update_list in pending_texture_updates.drain(..) {
+                for allocation in update_list.allocations {
+                    let is_realloc = matches!(allocation.kind, TextureCacheAllocationKind::Realloc(..));
+                    match allocation.kind {
+                        TextureCacheAllocationKind::Alloc(info) |
+                        TextureCacheAllocationKind::Realloc(info) => {
+                            // Create a new native texture, as requested by the texture cache.
+                            //
+                            // Ensure no PBO is bound when creating the texture storage,
+                            // or GL will attempt to read data from there.
+                            let texture = self.device.create_texture(
+                                TextureTarget::Array,
+                                info.format,
+                                info.width,
+                                info.height,
+                                info.filter,
+                                // This needs to be a render target because some render
+                                // tasks get rendered into the texture cache.
+                                Some(RenderTargetInfo { has_depth: false }),
+                                info.layer_count,
                             );
-                            self.device.delete_texture(old);
+
+                            let old = self.texture_resolver.texture_cache_map.insert(allocation.id, texture);
+                            assert_eq!(old.is_some(), is_realloc, "Renderer and RenderBackend disagree");
+                            if let Some(old) = old {
+                                self.device.blit_renderable_texture(
+                                    self.texture_resolver.texture_cache_map.get_mut(&allocation.id).unwrap(),
+                                    &old
+                                );
+                                self.device.delete_texture(old);
+                            }
+                        },
+                        TextureCacheAllocationKind::Free => {
+                            let texture = self.texture_resolver.texture_cache_map.remove(&allocation.id).unwrap();
+                            self.device.delete_texture(texture);
+                        },
+                    }
+                }
+
+                for update in update_list.updates {
+                    let TextureCacheUpdate { id, rect, stride, offset, layer_index, source } = update;
+                    let texture = &self.texture_resolver.texture_cache_map[&id];
+                    let mut uploader = self.device.upload_texture(
+                        texture,
+                        &self.texture_cache_upload_pbo,
+                        0,
+                    );
+
+                    let bytes_uploaded = match source {
+                        TextureUpdateSource::Bytes { data } => {
+                            uploader.upload(
+                                rect, layer_index, stride,
+                                &data[offset as usize ..],
+                            )
                         }
-                    },
-                    TextureCacheAllocationKind::Free => {
-                        let texture = self.texture_resolver.texture_cache_map.remove(&allocation.id).unwrap();
-                        self.device.delete_texture(texture);
-                    },
+                        TextureUpdateSource::External { id, channel_index } => {
+                            let handler = self.external_image_handler
+                                .as_mut()
+                                .expect("Found external image, but no handler set!");
+                            // The filter is only relevant for NativeTexture external images.
+                            let size = match handler.lock(id, channel_index, ImageRendering::Auto).source {
+                                ExternalImageSource::RawData(data) => {
+                                    uploader.upload(
+                                        rect, layer_index, stride,
+                                        &data[offset as usize ..],
+                                    )
+                                }
+                                ExternalImageSource::Invalid => {
+                                    // Create a local buffer to fill the pbo.
+                                    let bpp = texture.get_format().bytes_per_pixel();
+                                    let width = stride.unwrap_or(rect.size.width * bpp);
+                                    let total_size = width * rect.size.height;
+                                    // WR haven't support RGBAF32 format in texture_cache, so
+                                    // we use u8 type here.
+                                    let dummy_data: Vec<u8> = vec![255; total_size as usize];
+                                    uploader.upload(rect, layer_index, stride, &dummy_data)
+                                }
+                                ExternalImageSource::NativeTexture(eid) => {
+                                    panic!("Unexpected external texture {:?} for the texture cache update of {:?}", eid, id);
+                                }
+                            };
+                            handler.unlock(id, channel_index);
+                            size
+                        }
+                    };
+                    self.profile_counters.texture_data_uploaded.add(bytes_uploaded >> 10);
                 }
             }
 
-            for update in update_list.updates {
-                let TextureCacheUpdate { id, rect, stride, offset, layer_index, source } = update;
-                let texture = &self.texture_resolver.texture_cache_map[&id];
-                let mut uploader = self.device.upload_texture(
-                    texture,
-                    &self.texture_cache_upload_pbo,
-                    0,
-                );
-
-                let bytes_uploaded = match source {
-                    TextureUpdateSource::Bytes { data } => {
-                        uploader.upload(
-                            rect, layer_index, stride,
-                            &data[offset as usize ..],
-                        )
-                    }
-                    TextureUpdateSource::External { id, channel_index } => {
-                        let handler = self.external_image_handler
-                            .as_mut()
-                            .expect("Found external image, but no handler set!");
-                        // The filter is only relevant for NativeTexture external images.
-                        let size = match handler.lock(id, channel_index, ImageRendering::Auto).source {
-                            ExternalImageSource::RawData(data) => {
-                                uploader.upload(
-                                    rect, layer_index, stride,
-                                    &data[offset as usize ..],
-                                )
-                            }
-                            ExternalImageSource::Invalid => {
-                                // Create a local buffer to fill the pbo.
-                                let bpp = texture.get_format().bytes_per_pixel();
-                                let width = stride.unwrap_or(rect.size.width * bpp);
-                                let total_size = width * rect.size.height;
-                                // WR haven't support RGBAF32 format in texture_cache, so
-                                // we use u8 type here.
-                                let dummy_data: Vec<u8> = vec![255; total_size as usize];
-                                uploader.upload(rect, layer_index, stride, &dummy_data)
-                            }
-                            ExternalImageSource::NativeTexture(eid) => {
-                                panic!("Unexpected external texture {:?} for the texture cache update of {:?}", eid, id);
-                            }
-                        };
-                        handler.unlock(id, channel_index);
-                        size
-                    }
-                };
-
-                self.profile_counters.texture_data_uploaded.add(bytes_uploaded >> 10);
-            }
-        }
-
-        drain_filter(
-            &mut self.notifications,
-            |n| { n.when() == Checkpoint::FrameTexturesUpdated },
-            |n| { n.notify(); },
-        );
+            drain_filter(
+                &mut self.notifications,
+                |n| { n.when() == Checkpoint::FrameTexturesUpdated },
+                |n| { n.notify(); },
+            );
+        });
+        self.resource_upload_time += upload_time.get();
     }
 
     pub(crate) fn draw_instanced_batch<T>(
@@ -4679,6 +4695,8 @@ pub struct RendererStats {
     pub alpha_target_count: usize,
     pub color_target_count: usize,
     pub texture_upload_kb: usize,
+    pub resource_upload_time: u64,
+    pub gpu_cache_upload_time: u64,
 }
 
 impl RendererStats {
@@ -4688,6 +4706,8 @@ impl RendererStats {
             alpha_target_count: 0,
             color_target_count: 0,
             texture_upload_kb: 0,
+            resource_upload_time: 0,
+            gpu_cache_upload_time: 0,
         }
     }
 }
