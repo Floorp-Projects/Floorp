@@ -54,16 +54,6 @@ bool is_in_render_thread()
   return mozilla::wr::RenderThread::IsInRenderThread();
 }
 
-void gecko_profiler_start_marker(const char* name)
-{
-  profiler_tracing("WebRender", name, TRACING_INTERVAL_START);
-}
-
-void gecko_profiler_end_marker(const char* name)
-{
-  profiler_tracing("WebRender", name, TRACING_INTERVAL_END);
-}
-
 bool is_glcontext_egl(void* glcontext_ptr)
 {
   MOZ_ASSERT(glcontext_ptr);
