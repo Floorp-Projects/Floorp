@@ -202,6 +202,13 @@ async function add_link(aOptions = {}) {
       button.focus();
 
       ok(!button.disabled, "Save button should be enabled with correct number");
+
+      field = content.document.getElementById("cc-csc");
+      field.focus();
+      content.fillField(field, "123");
+      button.focus();
+
+      ok(!button.disabled, "Save button should be enabled with valid CSC");
     });
 
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
@@ -214,10 +221,10 @@ async function add_link(aOptions = {}) {
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary";
       }, "Check we are back on the summary page");
-    });
 
-    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
-      securityCode: "123",
+      let picker = Cu.waiveXrays(content.document.querySelector("payment-method-picker"));
+      is(picker.securityCodeInput.querySelector("input").value, "123",
+         "Security code should be populated using the value set from the 'add' page");
     });
 
     await spawnPaymentDialogTask(frame, async function checkCardState(testArgs = {}) {
