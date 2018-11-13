@@ -8,7 +8,7 @@ import mozunit
 import pytest
 from moztest.resolve import TestResolver
 
-from tryselect.selectors import fuzzy
+from tryselect.tasks import filter_tasks_by_paths
 
 
 @pytest.fixture
@@ -20,14 +20,14 @@ def patch_resolver(monkeypatch):
     return inner
 
 
-def test_filter_by_paths(patch_resolver):
+def test_filter_tasks_by_paths(patch_resolver):
     tasks = ['foobar/xpcshell-1', 'foobar/mochitest', 'foobar/xpcshell']
 
     patch_resolver(['xpcshell'], {})
-    assert fuzzy.filter_by_paths(tasks, 'dummy') == []
+    assert filter_tasks_by_paths(tasks, 'dummy') == []
 
     patch_resolver([], [{'flavor': 'xpcshell'}])
-    assert fuzzy.filter_by_paths(tasks, 'dummy') == ['foobar/xpcshell-1', 'foobar/xpcshell']
+    assert filter_tasks_by_paths(tasks, 'dummy') == ['foobar/xpcshell-1', 'foobar/xpcshell']
 
 
 if __name__ == '__main__':

@@ -6,19 +6,17 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import platform
-import re
 import subprocess
 import sys
 from distutils.spawn import find_executable
 
 from mozboot.util import get_state_dir
 from mozterm import Terminal
-from moztest.resolve import TestResolver, get_suite_definition
 from six import string_types
 
 from .. import preset as pset
 from ..cli import BaseTryParser
-from ..tasks import generate_tasks
+from ..tasks import generate_tasks, filter_tasks_by_paths
 from ..push import check_working_directory, push_to_try, vcs
 
 terminal = Terminal()
@@ -176,27 +174,6 @@ def format_header():
     return FZF_HEADER.format(shortcuts=', '.join(shortcuts), t=terminal)
 
 
-def filter_by_paths(tasks, paths):
-    resolver = TestResolver.from_environment(cwd=here)
-    run_suites, run_tests = resolver.resolve_metadata(paths)
-    flavors = set([(t['flavor'], t.get('subsuite')) for t in run_tests])
-
-    task_regexes = set()
-    for flavor, subsuite in flavors:
-        suite = get_suite_definition(flavor, subsuite, strict=True)
-        if 'task_regex' not in suite:
-            print("warning: no tasks could be resolved from flavor '{}'{}".format(
-                    flavor, " and subsuite '{}'".format(subsuite) if subsuite else ""))
-            continue
-
-        task_regexes.update(suite['task_regex'])
-
-    def match_task(task):
-        return any(re.search(pattern, task) for pattern in task_regexes)
-
-    return filter(match_task, tasks)
-
-
 def run_fzf(cmd, tasks):
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     out = proc.communicate('\n'.join(tasks))[0].splitlines()
@@ -225,7 +202,7 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
     all_tasks = generate_tasks(parameters, full, root=vcs.path)
 
     if paths:
-        all_tasks = filter_by_paths(all_tasks, paths)
+        all_tasks = filter_tasks_by_paths(all_tasks, paths)
         if not all_tasks:
             return 1
 
