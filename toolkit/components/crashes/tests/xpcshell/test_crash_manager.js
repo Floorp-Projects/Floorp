@@ -394,6 +394,8 @@ add_task(async function test_addCrash() {
                    "gmplugin-crash", DUMMY_DATE);
   await m.addCrash(m.PROCESS_TYPE_GPU, m.CRASH_TYPE_CRASH,
                    "gpu-crash", DUMMY_DATE);
+  await m.addCrash(m.PROCESS_TYPE_RDD, m.CRASH_TYPE_CRASH,
+                   "rdd-crash", DUMMY_DATE);
 
   await m.addCrash(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH,
                    "changing-item", DUMMY_DATE);
@@ -401,7 +403,7 @@ add_task(async function test_addCrash() {
                    "changing-item", DUMMY_DATE_2);
 
   crashes = await m.getCrashes();
-  Assert.equal(crashes.length, 9);
+  Assert.equal(crashes.length, 10);
 
   let map = new Map(crashes.map(crash => [crash.id, crash]));
 
@@ -453,6 +455,12 @@ add_task(async function test_addCrash() {
   Assert.equal(crash.type, m.PROCESS_TYPE_GPU + "-" + m.CRASH_TYPE_CRASH);
   Assert.ok(crash.isOfType(m.PROCESS_TYPE_GPU, m.CRASH_TYPE_CRASH));
 
+  crash = map.get("rdd-crash");
+  Assert.ok(!!crash);
+  Assert.equal(crash.crashDate, DUMMY_DATE);
+  Assert.equal(crash.type, m.PROCESS_TYPE_RDD + "-" + m.CRASH_TYPE_CRASH);
+  Assert.ok(crash.isOfType(m.PROCESS_TYPE_RDD, m.CRASH_TYPE_CRASH));
+
   crash = map.get("changing-item");
   Assert.ok(!!crash);
   Assert.equal(crash.crashDate, DUMMY_DATE_2);
@@ -465,6 +473,7 @@ add_task(async function test_child_process_crash_ping() {
   const EXPECTED_PROCESSES = [
     m.PROCESS_TYPE_CONTENT,
     m.PROCESS_TYPE_GPU,
+    m.PROCESS_TYPE_RDD,
   ];
 
   const UNEXPECTED_PROCESSES = [
