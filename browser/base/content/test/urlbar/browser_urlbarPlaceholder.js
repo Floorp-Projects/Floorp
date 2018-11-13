@@ -10,7 +10,7 @@
 
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
-const originalEngine = Services.search.currentEngine;
+const originalEngine = Services.search.defaultEngine;
 const expectedString = gBrowserBundle.formatStringFromName("urlbar.placeholder",
   [originalEngine.name], 1);
 var extraEngine;
@@ -26,7 +26,7 @@ add_task(async function setup() {
   BrowserTestUtils.removeTab(urlTab);
 
   registerCleanupFunction(() => {
-    Services.search.currentEngine = originalEngine;
+    Services.search.defaultEngine = originalEngine;
     for (let tab of tabs) {
       BrowserTestUtils.removeTab(tab);
     }
@@ -36,13 +36,13 @@ add_task(async function setup() {
 add_task(async function test_change_default_engine_updates_placeholder() {
   tabs.push(await BrowserTestUtils.openNewForegroundTab(gBrowser));
 
-  Services.search.currentEngine = extraEngine;
+  Services.search.defaultEngine = extraEngine;
 
   await TestUtils.waitForCondition(
     () => gURLBar.getAttribute("placeholder") == gURLBar.getAttribute("defaultPlaceholder"),
     "The placeholder should match the default placeholder for non-built-in engines.");
 
-  Services.search.currentEngine = originalEngine;
+  Services.search.defaultEngine = originalEngine;
 
   await TestUtils.waitForCondition(
     () => gURLBar.getAttribute("placeholder") == expectedString,

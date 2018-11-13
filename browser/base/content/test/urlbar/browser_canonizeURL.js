@@ -44,9 +44,9 @@ add_task(async function checkPrefTurnsOffCanonize() {
   // Add a dummy search engine to avoid hitting the network.
   let engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
-  let oldCurrentEngine = Services.search.currentEngine;
-  Services.search.currentEngine = engine;
-  registerCleanupFunction(() => { Services.search.currentEngine = oldCurrentEngine; });
+  let oldCurrentEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = engine;
+  registerCleanupFunction(() => { Services.search.defaultEngine = oldCurrentEngine; });
 
   let tabsToClose = [];
   // Ensure we don't end up loading something in the current tab becuase it's empty:

@@ -46,7 +46,7 @@ add_task(async function test_no_prompt_when_valid_loadPathHash() {
 
   // After making it the currentEngine with the search service API,
   // the test engine should have a valid loadPathHash.
-  Services.search.currentEngine = engine;
+  Services.search.defaultEngine = engine;
   await promiseAfterCache();
   metadata = await promiseEngineMetadata();
   Assert.ok("loadPathHash" in metadata[kTestEngineShortName]);
@@ -56,7 +56,7 @@ add_task(async function test_no_prompt_when_valid_loadPathHash() {
 
   // A search should not cause the search reset prompt.
   let submission =
-    Services.search.currentEngine.getSubmission("foo", null, "searchbar");
+    Services.search.defaultEngine.getSubmission("foo", null, "searchbar");
   Assert.equal(submission.uri.spec,
                "http://www.google.com/search?q=foo");
 });
@@ -65,7 +65,7 @@ add_task(async function test_pending() {
   let checkWithPrefValue = (value, expectPrompt = false) => {
     Services.prefs.setCharPref(BROWSER_SEARCH_PREF + "reset.status", value);
     let submission =
-      Services.search.currentEngine.getSubmission("foo", null, "searchbar");
+      Services.search.defaultEngine.getSubmission("foo", null, "searchbar");
     Assert.equal(submission.uri.spec,
                  expectPrompt ? "about:searchreset?data=foo&purpose=searchbar" :
                    "http://www.google.com/search?q=foo");
@@ -83,7 +83,7 @@ add_task(async function test_promptURLs() {
   await removeLoadPathHash();
 
   // The default should still be the test engine.
-  let currentEngine = Services.search.currentEngine;
+  let currentEngine = Services.search.defaultEngine;
   Assert.equal(currentEngine.name, kTestEngineName);
   // but the submission url should be about:searchreset
   let url = (data, purpose) =>
@@ -98,7 +98,7 @@ add_task(async function test_promptURLs() {
   // Calling the currentEngine setter for the same engine should
   // prevent further prompts.
   // eslint-disable-next-line no-self-assign
-  Services.search.currentEngine = Services.search.currentEngine;
+  Services.search.defaultEngine = Services.search.defaultEngine;
   Assert.equal(url("foo", "searchbar"),
                "http://www.google.com/search?q=foo");
 
@@ -115,7 +115,7 @@ add_task(async function test_whitelist() {
   await removeLoadPathHash();
 
   // The default should still be the test engine.
-  let currentEngine = Services.search.currentEngine;
+  let currentEngine = Services.search.defaultEngine;
   Assert.equal(currentEngine.name, kTestEngineName);
   let expectPrompt = shouldPrompt => {
     let expectedURL =

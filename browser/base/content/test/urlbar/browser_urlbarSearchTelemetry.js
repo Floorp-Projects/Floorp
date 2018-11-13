@@ -9,12 +9,12 @@ add_task(async function prepare() {
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
   let engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
-  let oldCurrentEngine = Services.search.currentEngine;
-  Services.search.currentEngine = engine;
+  let oldCurrentEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = engine;
 
   registerCleanupFunction(async function() {
     Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
-    Services.search.currentEngine = oldCurrentEngine;
+    Services.search.defaultEngine = oldCurrentEngine;
 
     // Clicking urlbar results causes visits to their associated pages, so clear
     // that history now.
@@ -108,7 +108,7 @@ async function compareCounts(clickCallback) {
   // * Telemetry histogram named "SEARCH_COUNTS"
   // * FHR
 
-  let engine = Services.search.currentEngine;
+  let engine = Services.search.defaultEngine;
   let engineID = "org.mozilla.testsearchsuggestions";
 
   // First, get the current counts.

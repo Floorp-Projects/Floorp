@@ -6,13 +6,13 @@ add_task(async function() {
   Services.search.addEngineWithDetails("MozSearch", iconURI, "moz", "", "GET",
                                        "http://example.com/?q={searchTerms}");
   let engine = Services.search.getEngineByName("MozSearch");
-  let originalEngine = Services.search.currentEngine;
-  Services.search.currentEngine = engine;
+  let originalEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = engine;
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
 
   registerCleanupFunction(async function() {
-    Services.search.currentEngine = originalEngine;
+    Services.search.defaultEngine = originalEngine;
     Services.search.removeEngine(engine);
     try {
       BrowserTestUtils.removeTab(tab);
