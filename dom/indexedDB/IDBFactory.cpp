@@ -319,7 +319,7 @@ IDBFactory::AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
   // the factory callsite records whether the browser is in private browsing.
   // and thus we don't have to respect that setting here. IndexedDB has no
   // concept of session-local storage, and thus ignores it.
-  if (access == nsContentUtils::StorageAccess::eDeny) {
+  if (access <= nsContentUtils::StorageAccess::eDeny) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
