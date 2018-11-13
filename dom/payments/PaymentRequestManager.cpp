@@ -304,6 +304,43 @@ ConvertResponseData(const IPCPaymentResponseData& aIPCData,
 /* PaymentRequestManager */
 
 StaticRefPtr<PaymentRequestManager> gPaymentManager;
+const char kSupportedRegionsPref[] = "dom.payments.request.supportedRegions";
+
+void
+SupportedRegionsPrefChangedCallback(const char* aPrefName, nsTArray<nsString>* aRetval)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!strcmp(aPrefName, kSupportedRegionsPref));
+
+  nsAutoString supportedRegions;
+  Preferences::GetString(aPrefName, supportedRegions);
+  aRetval->Clear();
+  for (const nsAString& each : supportedRegions.Split(',')) {
+    aRetval->AppendElement(each);
+  }
+}
+
+PaymentRequestManager::PaymentRequestManager()
+{
+  Preferences::RegisterCallbackAndCall(SupportedRegionsPrefChangedCallback,
+                                       kSupportedRegionsPref,
+                                       &this->mSupportedRegions);
+}
+
+PaymentRequestManager::~PaymentRequestManager()
+{
+  MOZ_ASSERT(mActivePayments.Count() == 0);
+  Preferences::UnregisterCallback(SupportedRegionsPrefChangedCallback,
+                                  kSupportedRegionsPref,
+                                  &this->mSupportedRegions);
+  mSupportedRegions.Clear();
+}
+
+bool
+PaymentRequestManager::IsRegionSupported(const nsAString& region) const
+{
+  return mSupportedRegions.Contains(region);
+}
 
 PaymentRequestChild*
 PaymentRequestManager::GetPaymentChild(PaymentRequest* aRequest)
