@@ -383,6 +383,12 @@ private:
                       SRIMetadata *aMetadataOut);
 
   /**
+   * Given a script element, get the referrer policy should be applied to load
+   * requests.
+   */
+  mozilla::net::ReferrerPolicy GetReferrerPolicy(nsIScriptElement* aElement);
+
+  /**
    * Helper function to check the content policy for a given request.
    */
   static nsresult CheckContentPolicy(nsIDocument* aDocument,

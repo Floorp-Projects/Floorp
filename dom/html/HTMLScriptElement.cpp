@@ -259,6 +259,12 @@ HTMLScriptElement::GetCORSMode() const
   return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
 }
 
+mozilla::net::ReferrerPolicy
+HTMLScriptElement::GetReferrerPolicy()
+{
+  return GetReferrerPolicyAsEnum();
+}
+
 bool
 HTMLScriptElement::HasScriptContent()
 {
