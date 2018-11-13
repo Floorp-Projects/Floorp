@@ -24,13 +24,10 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
 
     protected val userLifetimeStorage: SharedPreferences by lazy { deserializeUserLifetime() }
 
-    // Use a multi-level map to store the data for the different lifetimes and
-    // stores: Map[Lifetime, Map[StorageName, ScalarType]].
-    protected val dataStores: Map<String, GenericStorageMap<ScalarType>> =
-        Lifetime.values().associateBy(
-            { it.toString() },
-            { mutableMapOf<String, GenericDataStorage<ScalarType>>() }
-        )
+    // Store a map for each lifetime as an array element:
+    // Array[Lifetime] = Map[StorageName, ScalarType].
+    protected val dataStores: Array<GenericStorageMap<ScalarType>> =
+        Array(Lifetime.values().size) { mutableMapOf<String, GenericDataStorage<ScalarType>>() }
 
     /**
      * Implementor's provided function to convert deserialized 'user' lifetime
@@ -63,7 +60,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
                 // Split the stored name in 2: we expect it to be in the format
                 // store#metric.name
                 val parts = metricName.split('#', limit = 2)
-                val storeData = dataStores[Lifetime.User.toString()]!!.getOrPut(parts[0]) { mutableMapOf() }
+                val storeData = dataStores[Lifetime.User.ordinal].getOrPut(parts[0]) { mutableMapOf() }
                 // Only set the stored value if we're able to deserialize the persisted data.
                 singleMetricDeserializer(metricValue)?.let {
                     storeData[parts[1]] = it
@@ -82,7 +79,8 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
      * store name.
      *
      * @param storeName the name of the desired store
-     * @param clearStore whether or not to clearStore the requested store
+     * @param clearStore whether or not to clear the requested store. Not that only
+     *        metrics stored with a lifetime of [Lifetime.Ping] will be cleared.
      *
      * @return the [ScalarType] recorded in the requested store
      */
@@ -94,7 +92,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
         userLifetimeStorage.all
 
         // Get the metrics for all the supported lifetimes.
-        for ((_, store) in dataStores) {
+        for (store in dataStores) {
             store[storeName]?.let {
                 allLifetimes.putAll(it)
             }
@@ -102,7 +100,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
 
         if (clearStore) {
             // We only allow clearing metrics with the "ping" lifetime.
-            dataStores[Lifetime.Ping.toString()]!!.remove(storeName)
+            dataStores[Lifetime.Ping.ordinal].remove(storeName)
         }
 
         return if (allLifetimes.isNotEmpty()) allLifetimes else null
@@ -140,7 +138,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
         val userPrefs: SharedPreferences.Editor? =
             if (lifetime == Lifetime.User) userLifetimeStorage.edit() else null
         for (storeName in stores) {
-            val storeData = dataStores[lifetime.toString()]!!.getOrPut(storeName) { mutableMapOf() }
+            val storeData = dataStores[lifetime.ordinal].getOrPut(storeName) { mutableMapOf() }
             val entryName = "$category.$name"
             storeData[entryName] = value
             // Persist data with "user" lifetime
@@ -153,7 +151,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
 
     @VisibleForTesting
     internal open fun clearAllStores() {
-        for ((_, store) in dataStores) {
+        for (store in dataStores) {
             store.clear()
         }
     }

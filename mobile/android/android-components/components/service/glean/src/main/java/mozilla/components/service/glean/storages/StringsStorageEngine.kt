@@ -27,9 +27,9 @@ open class StringsStorageEngineImplementation(
      * Implementor's provided function to convert deserialized 'user' lifetime
      * data to the destination ScalarType.
      *
-     * @param data loaded from the storage as [Any]
+     * @param value loaded from the storage as [Any?]
      *
-     * @return data as [ScalarType] or null if deserialization failed
+     * @return data as [String?] or null if deserialization failed
      */
     override fun singleMetricDeserializer(value: Any?): String? {
         return value as? String
