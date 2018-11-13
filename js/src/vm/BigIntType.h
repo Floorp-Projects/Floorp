@@ -61,6 +61,9 @@ class BigInt final : public js::gc::TenuredCell
     // Read a BigInt value from a little-endian byte array.
     static BigInt* createFromBytes(JSContext* cx, int sign, void* bytes, size_t nbytes);
 
+    static BigInt* createFromInt64(JSContext* cx, int64_t n);
+    static BigInt* createFromUint64(JSContext* cx, uint64_t n);
+
     static const JS::TraceKind TraceKind = JS::TraceKind::BigInt;
 
     void traceChildren(JSTracer* trc);
@@ -90,6 +93,12 @@ class BigInt final : public js::gc::TenuredCell
     static BigInt* bitXor(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
     static BigInt* bitOr(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
     static BigInt* bitNot(JSContext* cx, Handle<BigInt*> x);
+
+    static int64_t toInt64(BigInt* x);
+    static uint64_t toUint64(BigInt* x);
+
+    static BigInt* asIntN(JSContext* cx, HandleBigInt x, uint64_t bits);
+    static BigInt* asUintN(JSContext* cx, HandleBigInt x, uint64_t bits);
 
     // Type-checking versions of arithmetic operations. These methods
     // must be called with at least one BigInt operand. Binary
