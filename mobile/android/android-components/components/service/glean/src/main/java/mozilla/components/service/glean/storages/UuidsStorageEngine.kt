@@ -26,7 +26,7 @@ open class UuidsStorageEngineImplementation(
     override val logger: Logger = Logger("glean/UuidsStorageEngine")
 ) : GenericScalarStorageEngine<UUID>() {
 
-    override fun singleMetricDeserializer(value: Any?): UUID? {
+    override fun deserializeSingleMetric(value: Any?): UUID? {
         return try {
             if (value is String) UUID.fromString(value) else null
         } catch (e: IllegalArgumentException) {

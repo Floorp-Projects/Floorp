@@ -24,7 +24,7 @@ open class StringsStorageEngineImplementation(
     override val logger: Logger = Logger("glean/StringsStorageEngine")
 ) : GenericScalarStorageEngine<String>() {
 
-    override fun singleMetricDeserializer(value: Any?): String? {
+    override fun deserializeSingleMetric(value: Any?): String? {
         return value as? String
     }
 

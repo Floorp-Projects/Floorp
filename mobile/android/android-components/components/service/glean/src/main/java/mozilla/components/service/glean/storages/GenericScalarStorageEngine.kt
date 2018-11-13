@@ -37,7 +37,19 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
      *
      * @return data as [ScalarType] or null if deserialization failed
      */
-    protected abstract fun singleMetricDeserializer(value: Any?): ScalarType?
+    protected abstract fun deserializeSingleMetric(value: Any?): ScalarType?
+
+    /**
+     * Implementor's provided function to serialized 'user' lifetime
+     * data to [String].
+     *
+     * @param value loaded from the storage as [ScalarType]
+     *
+     * @return data as [String] or null if serialization failed
+     */
+    protected fun serializeSingleMetric(value: ScalarType): String? {
+        return value.toString()
+    }
 
     /**
      * Deserialize the metrics with a lifetime = User that are on disk.
@@ -51,31 +63,34 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
         val prefs =
             applicationContext.getSharedPreferences(this.javaClass.simpleName, Context.MODE_PRIVATE)
 
-        return try {
-            for ((metricName, metricValue) in prefs.all.entries) {
-                if (!metricName.contains('#')) {
-                    continue
-                }
-
-                // Split the stored name in 2: we expect it to be in the format
-                // store#metric.name
-                val parts = metricName.split('#', limit = 2)
-                if (parts[0].length <= 1) {
-                    continue
-                }
-
-                val storeData = dataStores[Lifetime.User.ordinal].getOrPut(parts[0]) { mutableMapOf() }
-                // Only set the stored value if we're able to deserialize the persisted data.
-                singleMetricDeserializer(metricValue)?.let {
-                    storeData[parts[1]] = it
-                }
-            }
-            prefs
+        val metrics = try {
+            prefs.all.entries
         } catch (e: NullPointerException) {
             // If we fail to deserialize, we can log the problem but keep on going.
             logger.error("Failed to deserialize metric with 'user' lifetime")
-            prefs
+            return prefs
         }
+
+        for ((metricName, metricValue) in metrics) {
+            if (!metricName.contains('#')) {
+                continue
+            }
+
+            // Split the stored name in 2: we expect it to be in the format
+            // store#metric.name
+            val parts = metricName.split('#', limit = 2)
+            if (parts[0].length <= 1) {
+                continue
+            }
+
+            val storeData = dataStores[Lifetime.User.ordinal].getOrPut(parts[0]) { mutableMapOf() }
+            // Only set the stored value if we're able to deserialize the persisted data.
+            deserializeSingleMetric(metricValue)?.let {
+                storeData[parts[1]] = it
+            }
+        }
+
+        return prefs
     }
 
     /**
@@ -153,7 +168,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
             storeData[entryName] = value
             // Persist data with "user" lifetime
             if (lifetime == Lifetime.User) {
-                userPrefs?.putString("$storeName#$entryName", value.toString())
+                userPrefs?.putString("$storeName#$entryName", serializeSingleMetric(value))
             }
         }
         userPrefs?.apply()
