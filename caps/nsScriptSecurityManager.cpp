@@ -63,8 +63,6 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/dom/WorkerCommon.h"
-#include "mozilla/dom/WorkerPrivate.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "nsILoadInfo.h"
@@ -484,15 +482,6 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx,
     if (!csp)
         return true;
 
-    nsCOMPtr<nsICSPEventListener> cspEventListener;
-    if (!NS_IsMainThread()) {
-      WorkerPrivate* workerPrivate =
-        mozilla::dom::GetWorkerPrivateFromContext(cx);
-      if (workerPrivate) {
-        cspEventListener = workerPrivate->CSPEventListener();
-      }
-    }
-
     bool evalOK = true;
     bool reportViolation = false;
     rv = csp->GetAllowsEval(&reportViolation, &evalOK);
@@ -530,7 +519,6 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx,
         }
         csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
                                  nullptr, // triggering element
-                                 cspEventListener,
                                  fileName,
                                  scriptSample,
                                  lineNum,

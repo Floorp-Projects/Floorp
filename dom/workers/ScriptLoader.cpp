@@ -221,7 +221,6 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                        nullptr, // aCallbacks
                        aLoadFlags,
                        ios);
-    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // We must have a loadGroup with a load context for the principal to
     // traverse the channel correctly.
@@ -229,10 +228,8 @@ ChannelFromScriptURL(nsIPrincipal* principal,
     MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(loadGroup, principal));
 
     RefPtr<PerformanceStorage> performanceStorage;
-    nsCOMPtr<nsICSPEventListener> cspEventListener;
     if (aWorkerPrivate && !aIsMainScript) {
       performanceStorage = aWorkerPrivate->GetPerformanceStorage();
-      cspEventListener = aWorkerPrivate->CSPEventListener();
     }
 
     if (aClientInfo.isSome()) {
@@ -260,19 +257,9 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                          aLoadFlags,
                          ios);
     }
-
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (cspEventListener) {
-      nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
-      if (NS_WARN_IF(!loadInfo)) {
-        return NS_ERROR_UNEXPECTED;
-      }
-
-      rv = loadInfo->SetCspEventListener(cspEventListener);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
   }
+
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel)) {
     mozilla::net::ReferrerPolicy referrerPolicy = parentDoc ?
@@ -1242,7 +1229,6 @@ private:
         wcsp->LogViolationDetails(
             nsIContentSecurityPolicy::VIOLATION_TYPE_REQUIRE_SRI_FOR_SCRIPT,
             nullptr, // triggering element
-            mWorkerPrivate->CSPEventListener(),
             aLoadInfo.mURL, EmptyString(), 0, 0, EmptyString(), EmptyString());
       }
       return NS_ERROR_SRI_CORRUPT;

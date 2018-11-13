@@ -181,7 +181,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
                                   EmptyString(), // aNonce
                                   true,          // aParserCreated
                                   nullptr,       // aElement,
-                                  nullptr,       // nsICSPEventListener
                                   EmptyString(), // aContent
                                   0,             // aLineNumber
                                   0,             // aColumnNumber

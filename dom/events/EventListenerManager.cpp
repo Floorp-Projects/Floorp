@@ -860,7 +860,6 @@ EventListenerManager::SetEventHandler(nsAtom* aName,
                                 EmptyString(), // aNonce
                                 true, // aParserCreated (true because attribute event handler)
                                 aElement,
-                                nullptr, // nsICSPEventListener
                                 aBody,
                                 lineNum,
                                 columnNum,

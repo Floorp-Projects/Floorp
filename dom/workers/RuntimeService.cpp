@@ -2671,7 +2671,6 @@ LogViolationDetailsRunnable::MainThreadRun()
     if (mWorkerPrivate->GetReportCSPViolations()) {
       csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
                                nullptr, // triggering element
-                               mWorkerPrivate->CSPEventListener(),
                                mFileName, mScriptSample, mLineNum, mColumnNum,
                                EmptyString(), EmptyString());
     }
