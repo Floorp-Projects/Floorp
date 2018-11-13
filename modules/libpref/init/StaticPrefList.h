@@ -1069,18 +1069,6 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
-VARCACHE_PREF(
-  "media.rdd-process.enabled",
-   MediaRddProcessEnabled,
-  RelaxedAtomicBool, false
-)
-
-VARCACHE_PREF(
-  "media.rdd-process.startup_timeout_ms",
-   MediaRddProcessStartupTimeoutMs,
-  RelaxedAtomicInt32, 5000
-)
-
 #ifdef ANDROID
 
 // Enable the MediaCodec PlatformDecoderModule by default.
