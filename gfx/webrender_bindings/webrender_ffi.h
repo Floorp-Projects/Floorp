@@ -30,6 +30,9 @@ void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname)
 void gecko_profiler_register_thread(const char* threadname);
 void gecko_profiler_unregister_thread();
 
+void gecko_profiler_start_marker(const char* name);
+void gecko_profiler_end_marker(const char* name);
+
 // Prelude of types necessary before including webrender_ffi_generated.h
 namespace mozilla {
 namespace wr {
