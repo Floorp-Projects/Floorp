@@ -15,7 +15,8 @@ __wptrunner__ = {"product": "webkit",
                               "wdspec": "WebKitDriverWdspecExecutor"},
                  "executor_kwargs": "executor_kwargs",
                  "env_extras": "env_extras",
-                 "env_options": "env_options"}
+                 "env_options": "env_options",
+                 "run_info_extras": "run_info_extras"}
 
 
 def check_args(**kwargs):
@@ -67,6 +68,10 @@ def env_extras(**kwargs):
 
 def env_options():
     return {}
+
+
+def run_info_extras(**kwargs):
+    return {"webkit_port": kwargs["webkit_port"]}
 
 
 class WebKitBrowser(Browser):
