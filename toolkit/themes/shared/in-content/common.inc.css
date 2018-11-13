@@ -785,16 +785,13 @@ xul|treechildren::-moz-tree-image(selected) {
 }
 
 .message-bar-description {
-  line-height: 1.25;
-}
-
-.message-bar > description {
   margin: 0;
+  line-height: 1.25;
 }
 
 /* The message-bar-button styles have extra specificity to override
  * the defaults for buttons. */
-.message-bar > hbox > .message-bar-button {
+.message-bar-content > .message-bar-button {
   background-color: var(--grey-90-a10);
   border: none;
   border-radius: 2px;
@@ -803,11 +800,11 @@ xul|treechildren::-moz-tree-image(selected) {
   padding: 0 8px;
 }
 
-.message-bar > hbox > .message-bar-button:hover {
+.message-bar-content > .message-bar-button:hover {
   background-color: var(--grey-90-a20);
 }
 
-.message-bar > hbox > .message-bar-button:active {
+.message-bar-content > .message-bar-button:hover:active {
   background-color: var(--grey-90-a30);
 }
 
