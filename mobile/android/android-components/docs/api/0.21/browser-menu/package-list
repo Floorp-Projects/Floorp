@@ -1,5 +1,0 @@
-$dokka.format:html
-$dokka.linkExtension:html
-
-mozilla.components.browser.menu
-mozilla.components.browser.menu.item
