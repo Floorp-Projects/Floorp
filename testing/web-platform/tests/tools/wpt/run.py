@@ -197,7 +197,7 @@ Install Firefox or use --binary to set the binary path""")
                 logger.info("""Can't find certutil, certificates will not be checked.
 Consider installing certutil via your OS package manager or directly.""")
             else:
-                print("Using certutil %s" % certutil)
+                logger.info("Using certutil %s" % certutil)
 
             kwargs["certutil_binary"] = certutil
 
@@ -208,15 +208,15 @@ Consider installing certutil via your OS package manager or directly.""")
                 install = self.prompt_install("geckodriver")
 
                 if install:
-                    print("Downloading geckodriver")
+                    logger.info("Downloading geckodriver")
                     webdriver_binary = self.browser.install_webdriver(dest=self.venv.bin_path)
             else:
-                print("Using webdriver binary %s" % webdriver_binary)
+                logger.info("Using webdriver binary %s" % webdriver_binary)
 
             if webdriver_binary:
                 kwargs["webdriver_binary"] = webdriver_binary
             else:
-                print("Unable to find or install geckodriver, skipping wdspec tests")
+                logger.info("Unable to find or install geckodriver, skipping wdspec tests")
                 kwargs["test_types"].remove("wdspec")
 
         if kwargs["prefs_root"] is None:
@@ -253,10 +253,10 @@ class Chrome(BrowserSetup):
                 install = self.prompt_install("chromedriver")
 
                 if install:
-                    print("Downloading chromedriver")
+                    logger.info("Downloading chromedriver")
                     webdriver_binary = self.browser.install_webdriver(dest=self.venv.bin_path)
             else:
-                print("Using webdriver binary %s" % webdriver_binary)
+                logger.info("Using webdriver binary %s" % webdriver_binary)
 
             if webdriver_binary:
                 kwargs["webdriver_binary"] = webdriver_binary
@@ -287,10 +287,10 @@ class ChromeAndroid(BrowserSetup):
                 install = self.prompt_install("chromedriver")
 
                 if install:
-                    print("Downloading chromedriver")
+                    logger.info("Downloading chromedriver")
                     webdriver_binary = self.browser.install_webdriver(dest=self.venv.bin_path)
             else:
-                print("Using webdriver binary %s" % webdriver_binary)
+                logger.info("Using webdriver binary %s" % webdriver_binary)
 
             if webdriver_binary:
                 kwargs["webdriver_binary"] = webdriver_binary
@@ -310,10 +310,10 @@ class Opera(BrowserSetup):
                 install = self.prompt_install("operadriver")
 
                 if install:
-                    print("Downloading operadriver")
+                    logger.info("Downloading operadriver")
                     webdriver_binary = self.browser.install_webdriver(dest=self.venv.bin_path)
             else:
-                print("Using webdriver binary %s" % webdriver_binary)
+                logger.info("Using webdriver binary %s" % webdriver_binary)
 
             if webdriver_binary:
                 kwargs["webdriver_binary"] = webdriver_binary
@@ -454,17 +454,11 @@ product_setup = {
 }
 
 
-def setup_wptrunner(venv, prompt=True, install_browser=False, **kwargs):
-    from wptrunner import wptrunner, wptcommandline
+def setup_logging(kwargs):
     import mozlog
+    from wptrunner import wptrunner
 
     global logger
-
-    kwargs = utils.Kwargs(kwargs.iteritems())
-
-    product_parts = kwargs["product"].split(":")
-    kwargs["product"] = product_parts[0]
-    sub_product = product_parts[1:]
 
     # Use the grouped formatter by default where mozlog 3.9+ is installed
     if hasattr(mozlog.formatters, "GroupingFormatter"):
@@ -473,6 +467,16 @@ def setup_wptrunner(venv, prompt=True, install_browser=False, **kwargs):
         default_formatter = "mach"
     wptrunner.setup_logging(kwargs, {default_formatter: sys.stdout})
     logger = wptrunner.logger
+
+
+def setup_wptrunner(venv, prompt=True, install_browser=False, **kwargs):
+    from wptrunner import wptcommandline
+
+    kwargs = utils.Kwargs(kwargs.iteritems())
+
+    product_parts = kwargs["product"].split(":")
+    kwargs["product"] = product_parts[0]
+    sub_product = product_parts[1:]
 
     check_environ(kwargs["product"])
     args_general(kwargs)
@@ -516,6 +520,8 @@ def setup_wptrunner(venv, prompt=True, install_browser=False, **kwargs):
 
 
 def run(venv, **kwargs):
+    setup_logging(kwargs)
+
     # Remove arguments that aren't passed to wptrunner
     prompt = kwargs.pop("prompt", True)
     install_browser = kwargs.pop("install_browser", False)
