@@ -15,6 +15,7 @@
 #include "mozilla/layers/WebRenderDrawEventRecorder.h"
 #include "WebRenderTypes.h"
 #include "webrender_ffi.h"
+#include "GeckoProfiler.h"
 
 #include <unordered_map>
 
@@ -325,6 +326,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
                                 const mozilla::wr::DeviceUintRect *aDirtyRect,
                                 Range<uint8_t> aOutput)
 {
+  AUTO_PROFILER_TRACING("WebRender", "RasterizeSingleBlob");
   MOZ_ASSERT(aSize.width > 0 && aSize.height > 0);
   if (aSize.width <= 0 || aSize.height <= 0) {
     return false;
