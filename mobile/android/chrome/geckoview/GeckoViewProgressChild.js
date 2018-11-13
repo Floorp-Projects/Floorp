@@ -5,10 +5,15 @@
 
 ChromeUtils.import("resource://gre/modules/GeckoViewChildModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/GeckoViewTelemetry.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
+
+const PAGE_LOAD_PROGRESS_PROBE =
+  new HistogramStopwatch("GV_PAGE_LOAD_PROGRESS_MS", content);
+const PAGE_LOAD_PROBE = new HistogramStopwatch("GV_PAGE_LOAD_MS", content);
 
 class GeckoViewProgressChild extends GeckoViewChildModule {
   onInit() {
@@ -44,25 +49,34 @@ class GeckoViewProgressChild extends GeckoViewChildModule {
     }
 
     const uri = aRequest.QueryInterface(Ci.nsIChannel).URI.displaySpec;
+
+    if (aRequest.URI.schemeIs("about")) {
+      return;
+    }
+
     debug `onStateChange: uri=${uri}`;
 
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
+      PAGE_LOAD_PROBE.start();
       ProgressTracker.start(uri);
     } else if ((aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) &&
                !aWebProgress.isLoadingDocument) {
+      PAGE_LOAD_PROBE.finish();
       ProgressTracker.stop();
     } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_REDIRECTING) {
+      PAGE_LOAD_PROBE.start();
       ProgressTracker.start(uri);
     }
   }
 
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
-    debug `onLocationChange: location=${aLocationURI.displaySpec},
-                             flags=${aFlags}`;
-
-    if (!aWebProgress || !aWebProgress.isTopLevel) {
+    if (!aWebProgress || !aWebProgress.isTopLevel ||
+        !aLocationURI || aLocationURI.schemeIs("about")) {
       return;
     }
+
+    debug `onLocationChange: location=${aLocationURI.displaySpec},
+                             flags=${aFlags}`;
 
     if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
       ProgressTracker.stop();
@@ -82,6 +96,7 @@ const ProgressTracker = {
     debug `ProgressTracker start ${aUri}`;
 
     if (this._tracking) {
+      PAGE_LOAD_PROGRESS_PROBE.cancel();
       this.stop();
     }
 
@@ -100,6 +115,8 @@ const ProgressTracker = {
       data.uri = null;
       return;
     }
+
+    PAGE_LOAD_PROGRESS_PROBE.start();
 
     data.uri = aUri;
     data.pageStart = true;
@@ -252,6 +269,8 @@ const ProgressTracker = {
       return;
     }
 
+    const now = content.performance.now();
+
     let progress = 0;
 
     if (data.pageStart) {
@@ -272,7 +291,7 @@ const ProgressTracker = {
 
     data.totalReceived = 1;
     data.totalExpected = 1;
-    const channelOverdue = content.performance.now() - 300;
+    const channelOverdue = now - 300;
 
     for (let channel in data.channels) {
       if (data.channels[channel].max < 1 &&
@@ -296,7 +315,8 @@ const ProgressTracker = {
       progress += data.totalReceived / data.totalExpected * a;
     }
 
-    debug `ProgressTracker onProgressChangeUpdate ${this._debugData()} ${data.totalReceived}/${data.totalExpected} progress=${progress}`;
+    debug `ProgressTracker updateProgress data=${this._debugData()}
+           progress=${progress}`;
 
     if (data.prev >= progress) {
       return;
@@ -308,6 +328,10 @@ const ProgressTracker = {
     });
 
     data.prev = progress;
+
+    if (progress === 100) {
+      PAGE_LOAD_PROGRESS_PROBE.finish();
+    }
   },
 };
 

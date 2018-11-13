@@ -30,13 +30,15 @@ var SiteDataTestUtils = {
    * @param {String} origin - the origin of the site to add test data for
    * @param {String} name [optional] - the entry key
    * @param {String} value [optional] - the entry value
+   * @param {Object} originAttributes [optional] - the originAttributes
    *
    * @returns a Promise that resolves when the data was added successfully.
    */
-  addToIndexedDB(origin, key = "foo", value = "bar") {
+  addToIndexedDB(origin, key = "foo", value = "bar", originAttributes = {}) {
     return new Promise(resolve => {
       let uri = Services.io.newURI(origin);
-      let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+      let principal =
+        Services.scriptSecurityManager.createCodebasePrincipal(uri, originAttributes);
       let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
       request.onupgradeneeded = function(e) {
         let db = e.target.result;

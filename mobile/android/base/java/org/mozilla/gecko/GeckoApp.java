@@ -320,8 +320,8 @@ public abstract class GeckoApp extends GeckoActivity
 
     protected boolean mInitialized;
     protected boolean mWindowFocusInitialized;
-    private Telemetry.Timer mJavaUiStartupTimer;
-    private Telemetry.Timer mGeckoReadyStartupTimer;
+    private TelemetryUtils.Timer mJavaUiStartupTimer;
+    private TelemetryUtils.Timer mGeckoReadyStartupTimer;
 
     private String mPrivateBrowsingSession;
     private boolean mPrivateBrowsingSessionOutdated;
@@ -978,8 +978,8 @@ public abstract class GeckoApp extends GeckoActivity
         }
 
         // The clock starts...now. Better hurry!
-        mJavaUiStartupTimer = new Telemetry.UptimeTimer("FENNEC_STARTUP_TIME_JAVAUI");
-        mGeckoReadyStartupTimer = new Telemetry.UptimeTimer("FENNEC_STARTUP_TIME_GECKOREADY");
+        mJavaUiStartupTimer = new TelemetryUtils.UptimeTimer("FENNEC_STARTUP_TIME_JAVAUI");
+        mGeckoReadyStartupTimer = new TelemetryUtils.UptimeTimer("FENNEC_STARTUP_TIME_GECKOREADY");
 
         final SafeIntent intent = new SafeIntent(getIntent());
 

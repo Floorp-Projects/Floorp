@@ -243,7 +243,7 @@
 
 button.open-accessibility-inspector,
 button.open-inspector {
-  mask: url("./images/open-inspector.svg") no-repeat;
+  mask: url("resource://devtools/client/shared/components/reps/images/open-inspector.svg") no-repeat;
   display: inline-block;
   background-color: var(--comment-node-color);
   height: 16px;
@@ -264,7 +264,7 @@ button.open-inspector {
 /* Jump to definition button */
 
 button.jump-definition {
-  mask: url("./images/jump-definition.svg") no-repeat;
+  mask: url("resource://devtools/client/shared/components/reps/images/jump-definition.svg") no-repeat;
   display: inline-block;
   background-color: var(--comment-node-color);
   height: 16px;
@@ -338,7 +338,7 @@ button.jump-definition {
 }
 
 .tree-node img.arrow {
-  mask: url("chrome://devtools/skin/images/devtools-components/arrow.svg") no-repeat;
+  mask: url("resource://devtools/client/debugger/new/images/arrow.svg") no-repeat;
   mask-size: 100%;
   width: 9px;
   height: 9px;
