@@ -160,6 +160,16 @@ function generateOffer(options={}) {
   });
 }
 
+async function generateAudioReceiveOnlyOffer(pc)
+{
+    try {
+        pc.addTransceiver('audio', { direction: 'recvonly' });
+        return pc.createOffer();
+    } catch(e) {
+        return pc.createOffer({ offerToReceiveAudio: true });
+    }
+}
+
 async function generateVideoReceiveOnlyOffer(pc)
 {
     try {
