@@ -25,6 +25,7 @@ android {
 
 dependencies {
     implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
     implementation Dependencies.support_compat
 
     implementation project(':support-base')
