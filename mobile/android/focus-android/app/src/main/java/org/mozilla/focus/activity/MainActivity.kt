@@ -12,7 +12,6 @@ import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.AttributeSet
 import android.view.View
-import android.view.WindowManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.lib.crash.Crash
@@ -60,10 +59,6 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         }
 
         initViewModel()
-
-        if (Settings.getInstance(this).shouldUseSecureMode()) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        }
 
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
 
@@ -150,12 +145,6 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
         TelemetryWrapper.startSession()
         checkBiometricStillValid()
-
-        if (Settings.getInstance(this).shouldUseSecureMode()) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        } else {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        }
     }
 
     override fun onPause() {

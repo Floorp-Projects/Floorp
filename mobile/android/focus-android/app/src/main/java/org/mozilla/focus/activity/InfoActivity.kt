@@ -7,7 +7,6 @@ package org.mozilla.focus.activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.util.AttributeSet
 import android.view.View
@@ -15,6 +14,7 @@ import android.view.View
 import org.mozilla.focus.R
 import org.mozilla.focus.browser.LocalizedContent
 import org.mozilla.focus.fragment.InfoFragment
+import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.locale.Locales
 import org.mozilla.focus.web.ClassicWebViewProvider
 import org.mozilla.focus.web.IWebView
@@ -24,8 +24,7 @@ import org.mozilla.focus.web.WebViewProvider
  * A generic activity that supports showing additional information in a WebView. This is useful
  * for showing any web based content, including About/Help/Rights, and also SUMO pages.
  */
-class InfoActivity : AppCompatActivity() {
-
+class InfoActivity : LocaleAwareAppCompatActivity() {
     private lateinit var url: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,6 +57,10 @@ class InfoActivity : AppCompatActivity() {
             return view
         }
         return super.onCreateView(name, context, attrs)
+    }
+
+    override fun applyLocale() {
+        // We don't care about this
     }
 
     companion object {
