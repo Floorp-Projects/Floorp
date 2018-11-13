@@ -2998,6 +2998,8 @@ ContentParent::Observe(nsISupports* aSubject,
 {
   if (mSubprocess && (!strcmp(aTopic, "profile-before-change") ||
                       !strcmp(aTopic, "xpcom-shutdown"))) {
+    mShuttingDown = true;
+
     // Make sure that our process will get scheduled.
     ProcessPriorityManager::SetProcessPriority(this,
                                                PROCESS_PRIORITY_FOREGROUND);
@@ -3300,26 +3302,14 @@ ContentParent::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure)
   self->KillHard("ShutDownKill");
 }
 
-// WARNING: aReason appears in telemetry, so any new value passed in requires
-// data review.
 void
-ContentParent::KillHard(const char* aReason)
+ContentParent::GeneratePairedMinidump(const char* aReason)
 {
-  AUTO_PROFILER_LABEL("ContentParent::KillHard", OTHER);
-
-  // On Windows, calling KillHard multiple times causes problems - the
-  // process handle becomes invalid on the first call, causing a second call
-  // to crash our process - more details in bug 890840.
-  if (mCalledKillHard) {
-    return;
-  }
-  mCalledKillHard = true;
-  mForceKillTimer = nullptr;
-
   // We're about to kill the child process associated with this content.
   // Something has gone wrong to get us here, so we generate a minidump
-  // of the parent and child for submission to the crash server.
-  if (mCrashReporter) {
+  // of the parent and child for submission to the crash server unless we're
+  // already shutting down.
+  if (mCrashReporter && !mShuttingDown) {
     // GeneratePairedMinidump creates two minidumps for us - the main
     // one is for the content process we're about to kill, and the other
     // one is for the main browser process. That second one is the extra
@@ -3342,6 +3332,25 @@ ContentParent::KillHard(const char* aReason)
 
     Telemetry::Accumulate(Telemetry::SUBPROCESS_KILL_HARD, reason, 1);
   }
+}
+
+// WARNING: aReason appears in telemetry, so any new value passed in requires
+// data review.
+void
+ContentParent::KillHard(const char* aReason)
+{
+  AUTO_PROFILER_LABEL("ContentParent::KillHard", OTHER);
+
+  // On Windows, calling KillHard multiple times causes problems - the
+  // process handle becomes invalid on the first call, causing a second call
+  // to crash our process - more details in bug 890840.
+  if (mCalledKillHard) {
+    return;
+  }
+  mCalledKillHard = true;
+  mForceKillTimer = nullptr;
+
+  GeneratePairedMinidump(aReason);
 
   ProcessHandle otherProcessHandle;
   if (!base::OpenProcessHandle(OtherPid(), &otherProcessHandle)) {
