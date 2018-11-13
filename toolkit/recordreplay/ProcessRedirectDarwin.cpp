@@ -199,6 +199,7 @@ namespace recordreplay {
   MACRO(mach_vm_allocate, nullptr, Preamble_mach_vm_allocate)    \
   MACRO(mach_vm_deallocate, nullptr, Preamble_mach_vm_deallocate) \
   MACRO(mach_vm_protect, nullptr, Preamble_mach_vm_protect)      \
+  MACRO(rand, RR_ScalarRval)                                     \
   MACRO(realpath,                                                \
         RR_SaveRvalHadErrorZero<RR_Compose<RR_CStringRval,       \
                                            RR_WriteOptionalBufferFixedSize<1, PATH_MAX>>>) \

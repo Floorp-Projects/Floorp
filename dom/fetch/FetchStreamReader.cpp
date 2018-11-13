@@ -66,10 +66,14 @@ FetchStreamReader::Create(JSContext* aCx, nsIGlobalObject* aGlobal,
 
     RefPtr<WeakWorkerRef> workerRef =
       WeakWorkerRef::Create(workerPrivate, [streamReader]() {
-        // The WorkerPrivate does have a context available, and we could pass
-        // it here to trigger cancellation of the reader, but the author of
-        // this comment chickened out.
-        streamReader->CloseAndRelease(nullptr, NS_ERROR_DOM_INVALID_STATE_ERR);
+        MOZ_ASSERT(streamReader);
+        MOZ_ASSERT(streamReader->mWorkerRef);
+
+        WorkerPrivate* workerPrivate = streamReader->mWorkerRef->GetPrivate();
+        MOZ_ASSERT(workerPrivate);
+
+        streamReader->CloseAndRelease(workerPrivate->GetJSContext(),
+                                      NS_ERROR_DOM_INVALID_STATE_ERR);
       });
 
     if (NS_WARN_IF(!workerRef)) {
