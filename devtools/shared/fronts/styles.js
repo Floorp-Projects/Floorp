@@ -374,8 +374,7 @@ class RuleModificationList {
 
   /**
    * Enable or disable a property.  This implementation acts like
-   * |removeProperty| when disabling, or a no-op when enabling,
-   * because |setRuleText| is not available.
+   * a no-op when enabling, because |setRuleText| is not available.
    *
    * @param {Number} index index of the property in the rule.
    *                       This can be -1 in the case where
@@ -388,7 +387,7 @@ class RuleModificationList {
    */
   setPropertyEnabled(index, name, isEnabled) {
     if (!isEnabled) {
-      this.removeProperty(index, name);
+      this.modifications.push({ type: "disable", index, name });
     }
   }
 
