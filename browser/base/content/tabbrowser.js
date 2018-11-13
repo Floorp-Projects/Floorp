@@ -23,10 +23,6 @@ window._gBrowser = {
     ChromeUtils.defineModuleGetter(this, "UrlbarProviderOpenTabs",
       "resource:///modules/UrlbarProviderOpenTabs.jsm");
 
-    XPCOMUtils.defineLazyServiceGetters(this, {
-      serializationHelper: ["@mozilla.org/network/serialization-helper;1", "nsISerializationHelper"],
-    });
-
     Services.obs.addObserver(this, "contextual-identity-updated");
 
     Services.els.addSystemEventListener(document, "keydown", this, false);

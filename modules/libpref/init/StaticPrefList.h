@@ -894,6 +894,15 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+#ifdef ENABLE_BIGINT
+// BigInt API
+VARCACHE_PREF(
+  "javascript.options.bigint",
+   javascript_options_bigint,
+  RelaxedAtomicBool, false
+)
+#endif
+
 
 //---------------------------------------------------------------------------
 // Media prefs

@@ -69,8 +69,8 @@ add_task(async function setup() {
 
   // Make the first engine the default search engine.
   let engineDefault = Services.search.getEngineByName("MozSearch");
-  let originalEngine = Services.search.currentEngine;
-  Services.search.currentEngine = engineDefault;
+  let originalEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = engineDefault;
 
   // Move the second engine at the beginning of the one-off list.
   let engineOneOff = Services.search.getEngineByName("MozSearch2");
@@ -86,7 +86,7 @@ add_task(async function setup() {
   // Make sure to restore the engine once we're done.
   registerCleanupFunction(function() {
     Services.telemetry.canRecordExtended = oldCanRecord;
-    Services.search.currentEngine = originalEngine;
+    Services.search.defaultEngine = originalEngine;
     Services.search.removeEngine(engineDefault);
     Services.search.removeEngine(engineOneOff);
     Services.telemetry.setEventRecordingEnabled("navigation", false);
@@ -192,8 +192,8 @@ add_task(async function test_oneOff_enterSelection() {
     });
   });
 
-  let previousEngine = Services.search.currentEngine;
-  Services.search.currentEngine = suggestionEngine;
+  let previousEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = suggestionEngine;
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
@@ -212,7 +212,7 @@ add_task(async function test_oneOff_enterSelection() {
     URLBAR_SELECTED_RESULT_METHODS.enterSelection,
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD");
 
-  Services.search.currentEngine = previousEngine;
+  Services.search.defaultEngine = previousEngine;
   Services.search.removeEngine(suggestionEngine);
   BrowserTestUtils.removeTab(tab);
 });
@@ -260,8 +260,8 @@ add_task(async function test_suggestion_click() {
     });
   });
 
-  let previousEngine = Services.search.currentEngine;
-  Services.search.currentEngine = suggestionEngine;
+  let previousEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = suggestionEngine;
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
@@ -293,7 +293,7 @@ add_task(async function test_suggestion_click() {
     URLBAR_SELECTED_RESULT_METHODS.click,
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD");
 
-  Services.search.currentEngine = previousEngine;
+  Services.search.defaultEngine = previousEngine;
   Services.search.removeEngine(suggestionEngine);
   BrowserTestUtils.removeTab(tab);
 });
@@ -317,8 +317,8 @@ add_task(async function test_suggestion_enterSelection() {
     });
   });
 
-  let previousEngine = Services.search.currentEngine;
-  Services.search.currentEngine = suggestionEngine;
+  let previousEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = suggestionEngine;
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
@@ -335,7 +335,7 @@ add_task(async function test_suggestion_enterSelection() {
     URLBAR_SELECTED_RESULT_METHODS.enterSelection,
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD");
 
-  Services.search.currentEngine = previousEngine;
+  Services.search.defaultEngine = previousEngine;
   Services.search.removeEngine(suggestionEngine);
   BrowserTestUtils.removeTab(tab);
 });

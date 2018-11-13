@@ -8,6 +8,7 @@
 #define mozilla_layout_InlineTranslator_h
 
 #include <istream>
+#include <string>
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Filters.h"
@@ -184,10 +185,12 @@ public:
   mozilla::gfx::DrawTarget* GetReferenceDrawTarget() final { return mBaseDT; }
 
   void* GetFontContext() final { return mFontContext; }
+  std::string GetError() { return mError; }
 
 private:
   RefPtr<DrawTarget> mBaseDT;
   void*              mFontContext;
+  std::string        mError;
 
   nsRefPtrHashtable<nsPtrHashKey<void>, DrawTarget> mDrawTargets;
   nsRefPtrHashtable<nsPtrHashKey<void>, Path> mPaths;

@@ -71,7 +71,7 @@ interface nsIImageLoadingContent : imgINotificationObserver
    * the image was blocked.  This status always refers to the
    * CURRENT_REQUEST load.
    */
-  [noscript] readonly attribute short imageBlockingStatus;
+  [noscript, infallible] readonly attribute short imageBlockingStatus;
 
   /**
    * Used to register an image decoder observer.  Typically, this will

@@ -788,15 +788,17 @@
                 class="accessory-button"
                 data-l10n-id="certs-devices"
                 preference="security.disable_button.openDeviceManager"
-                searchkeywords="&devmgr.title;
-                                &devmgr.devlist.label;
-                                &devmgr.details.title;
-                                &devmgr.details.title2;
-                                &devmgr.button.login.label;
-                                &devmgr.button.logout.label;
-                                &devmgr.button.changepw.label;
-                                &devmgr.button.load.label;
-                                &devmgr.button.unload.label;"/>
+                search-l10n-ids="
+                  devmgr.title,
+                  devmgr-devlist.label,
+                  devmgr-header-details.label,
+                  devmgr-header-value.label,
+                  devmgr-button-login.label,
+                  devmgr-button-logout.label,
+                  devmgr-button-changepw.label,
+                  devmgr-button-load.label,
+                  devmgr-button-unload.label
+                "/>
       </hbox>
     </vbox>
   </hbox>

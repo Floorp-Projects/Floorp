@@ -88,13 +88,13 @@ async function withNewSearchEngine(taskFn) {
     });
   });
 
-  let previousEngine = Services.search.currentEngine;
-  Services.search.currentEngine = suggestionEngine;
+  let previousEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = suggestionEngine;
 
   try {
     await taskFn(suggestionEngine);
   } finally {
-    Services.search.currentEngine = previousEngine;
+    Services.search.defaultEngine = previousEngine;
     Services.search.removeEngine(suggestionEngine);
   }
 }
@@ -106,8 +106,8 @@ add_task(async function setup() {
 
   // Make it the default search engine.
   let engine = Services.search.getEngineByName("MozSearch");
-  let originalEngine = Services.search.currentEngine;
-  Services.search.currentEngine = engine;
+  let originalEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = engine;
 
   // Give it some mock internal aliases.
   engine.wrappedJSObject.__internalAliases = ["@mozaliasfoo", "@mozaliasbar"];
@@ -143,7 +143,7 @@ add_task(async function setup() {
   // Make sure to restore the engine once we're done.
   registerCleanupFunction(async function() {
     Services.telemetry.canRecordExtended = oldCanRecord;
-    Services.search.currentEngine = originalEngine;
+    Services.search.defaultEngine = originalEngine;
     Services.search.removeEngine(engine);
     Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
     Services.prefs.clearUserPref(ONEOFF_URLBAR_PREF);

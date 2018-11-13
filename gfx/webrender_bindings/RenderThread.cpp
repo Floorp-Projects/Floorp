@@ -147,13 +147,14 @@ void
 RenderThread::DoAccumulateMemoryReport(MemoryReport aReport, const RefPtr<MemoryReportPromise::Private>& aPromise)
 {
   MOZ_ASSERT(IsInRenderThread());
+  MOZ_ASSERT(aReport.total_gpu_bytes_allocated == 0);
+
   for (auto& r: mRenderers) {
-    wr_renderer_accumulate_memory_report(r.second->GetRenderer(), &aReport);
+    r.second->AccumulateMemoryReport(&aReport);
   }
 
   // Note total gpu bytes allocated across all WR instances.
-  MOZ_ASSERT(aReport.total_gpu_bytes_allocated == 0);
-  aReport.total_gpu_bytes_allocated = wr_total_gpu_bytes_allocated();
+  aReport.total_gpu_bytes_allocated += wr_total_gpu_bytes_allocated();
 
   aPromise->Resolve(aReport, __func__);
 }

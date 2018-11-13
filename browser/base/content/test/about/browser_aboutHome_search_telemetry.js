@@ -8,14 +8,14 @@ add_task(async function() {
   info("Check that performing a search fires a search event and records to Telemetry.");
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, async function(browser) {
-    let currEngine = Services.search.currentEngine;
+    let currEngine = Services.search.defaultEngine;
     let engine = await promiseNewEngine("searchSuggestionEngine.xml");
     // Make this actually work in healthreport by giving it an ID:
     Object.defineProperty(engine.wrappedJSObject, "identifier",
                           { value: "org.mozilla.testsearchsuggestions" });
 
     let p = promiseContentSearchChange(browser, engine.name);
-    Services.search.currentEngine = engine;
+    Services.search.defaultEngine = engine;
     await p;
 
     await ContentTask.spawn(browser, { expectedName: engine.name }, async function(args) {
@@ -37,7 +37,7 @@ add_task(async function() {
 
     let searchStr = "a search";
 
-    let expectedURL = Services.search.currentEngine
+    let expectedURL = Services.search.defaultEngine
       .getSubmission(searchStr, null, "homepage").uri.spec;
     let promise = waitForDocLoadAndStopIt(expectedURL, browser);
 
@@ -58,7 +58,7 @@ add_task(async function() {
     Assert.equal(hs[histogramKey].sum, numSearchesBefore + 1,
                  "histogram sum should be incremented");
 
-    Services.search.currentEngine = currEngine;
+    Services.search.defaultEngine = currEngine;
     try {
       Services.search.removeEngine(engine);
     } catch (ex) {}

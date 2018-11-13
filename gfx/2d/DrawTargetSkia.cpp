@@ -1706,6 +1706,12 @@ DrawTargetSkia::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFor
 }
 
 bool
+DrawTargetSkia::CanCreateSimilarDrawTarget(const IntSize& aSize, SurfaceFormat aFormat) const
+{
+  return size_t(std::max(aSize.width, aSize.height)) < GetMaxSurfaceSize();
+}
+
+bool
 DrawTargetSkia::UsingSkiaGPU() const
 {
 #ifdef USE_SKIA_GPU

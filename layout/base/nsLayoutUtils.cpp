@@ -321,12 +321,29 @@ nsLayoutUtils::HasEffectiveAnimation(const nsIFrame* aFrame,
 
 
   return HasMatchingAnimations(effects,
-    [&aProperty](KeyframeEffect& aEffect)
+    [&aProperty, &effects](KeyframeEffect& aEffect)
     {
       return (aEffect.IsInEffect() || aEffect.IsCurrent()) &&
-             aEffect.HasEffectiveAnimationOfProperty(aProperty);
+             aEffect.HasEffectiveAnimationOfProperty(aProperty, *effects);
     }
   );
+}
+
+/* static */ nsCSSPropertyIDSet
+nsLayoutUtils::GetAnimationPropertiesForCompositor(const nsIFrame* aFrame)
+{
+  nsCSSPropertyIDSet properties;
+
+  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
+  if (!effects) {
+    return properties;
+  }
+
+  for (const KeyframeEffect* effect : *effects) {
+    properties |= effect->GetPropertiesForCompositor(*effects);
+  }
+
+  return properties;
 }
 
 static float
@@ -4819,7 +4836,7 @@ nsLayoutUtils::LastContinuationOrIBSplitSibling(const nsIFrame* aFrame)
 }
 
 bool
-nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(nsIFrame *aFrame)
+nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(const nsIFrame *aFrame)
 {
   if (aFrame->GetPrevContinuation()) {
     return false;

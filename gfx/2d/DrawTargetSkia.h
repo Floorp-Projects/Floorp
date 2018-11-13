@@ -126,6 +126,7 @@ public:
     CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const override;
   virtual already_AddRefed<DrawTarget>
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const override;
+  virtual bool CanCreateSimilarDrawTarget(const IntSize& aSize, SurfaceFormat aFormat) const override;
   virtual already_AddRefed<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const override;
   virtual already_AddRefed<GradientStops> CreateGradientStops(GradientStop *aStops, uint32_t aNumStops, ExtendMode aExtendMode = ExtendMode::CLAMP) const override;
   virtual already_AddRefed<FilterNode> CreateFilter(FilterType aType) override;

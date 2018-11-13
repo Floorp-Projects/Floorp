@@ -36,7 +36,7 @@ function search_observer(subject, topic, data) {
       let retrievedEngine = Services.search.getEngineByName("Test search engine");
       Assert.equal(engine, retrievedEngine);
       Services.search.defaultEngine = engine;
-      Services.search.currentEngine = engine;
+      Services.search.defaultEngine = engine;
       executeSoon(function() {
         Services.search.removeEngine(engine);
       });

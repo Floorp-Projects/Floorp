@@ -1422,8 +1422,7 @@ public:
    * Is FirstContinuationOrIBSplitSibling(aFrame) going to return
    * aFrame?
    */
-  static bool
-  IsFirstContinuationOrIBSplitSibling(nsIFrame *aFrame);
+  static bool IsFirstContinuationOrIBSplitSibling(const nsIFrame *aFrame);
 
   /**
    * Check whether aFrame is a part of the scrollbar or scrollcorner of
@@ -2381,6 +2380,14 @@ public:
    */
   static bool HasEffectiveAnimation(const nsIFrame* aFrame,
                                     nsCSSPropertyID aProperty);
+
+  /**
+   * Returns all effective animated CSS properties on |aFrame|. That means
+   * properties that can be animated on the compositor and are not overridden by
+   * a higher cascade level.
+   */
+  static nsCSSPropertyIDSet
+  GetAnimationPropertiesForCompositor(const nsIFrame* aFrame);
 
   /**
    * Checks if off-main-thread animations are enabled.

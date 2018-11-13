@@ -833,7 +833,7 @@ nsWindow::GetDesktopToDeviceScale()
 {
 #ifdef MOZ_WAYLAND
     GdkDisplay* gdkDisplay = gdk_display_get_default();
-    if (GDK_IS_WAYLAND_DISPLAY(gdkDisplay)) {
+    if (!GDK_IS_X11_DISPLAY(gdkDisplay)) {
         return DesktopToLayoutDeviceScale(GdkScaleFactor());
     }
 #endif
@@ -853,7 +853,7 @@ nsWindow::GetDesktopToDeviceScaleByScreen()
     // so the GdkScaleFactor can return wrong value which can lead to wrong popup
     // placement.
     // We need to use parent's window scale factor for the new one.
-    if (GDK_IS_WAYLAND_DISPLAY(gdkDisplay)) {
+    if (!GDK_IS_X11_DISPLAY(gdkDisplay)) {
         nsView* view = nsView::GetViewFor(this);
         if (view) {
             nsView* parentView = view->GetParent();

@@ -64,10 +64,10 @@ var gTests = [
       let aEngine = gSS.getEngineByAlias("fooalias");
       ok(!aEngine, "Alias was not parsed from engine description");
 
-      gSS.currentEngine = engine;
+      gSS.defaultEngine = engine;
     },
     current(engine) {
-      let currentEngine = gSS.currentEngine;
+      let currentEngine = gSS.defaultEngine;
       is(engine, currentEngine, "engine is current");
       is(engine.name, this.engine.name, "current engine was changed successfully");
 
@@ -80,7 +80,7 @@ var gTests = [
       // engines.
       Services.obs.removeObserver(observer, "browser-search-engine-modified");
 
-      let currentEngine = gSS.currentEngine;
+      let currentEngine = gSS.defaultEngine;
       ok(currentEngine, "An engine is present.");
       isnot(currentEngine.name, this.engine.name, "Current engine reset after removal");
 

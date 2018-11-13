@@ -215,7 +215,7 @@ moz_container_init (MozContainer *container)
       container->parent_surface_committed = false;
 
       GdkDisplay *gdk_display = gtk_widget_get_display(GTK_WIDGET(container));
-      if (GDK_IS_WAYLAND_DISPLAY (gdk_display)) {
+      if (!GDK_IS_X11_DISPLAY(gdk_display)) {
           // Available as of GTK 3.8+
           static auto sGdkWaylandDisplayGetWlDisplay =
               (wl_display *(*)(GdkDisplay *))

@@ -30,12 +30,12 @@ add_task(async function() {
         case "engine-added":
           var engine = ss.getEngineByName(ENGINE_NAME);
           ok(engine, "Engine was added.");
-          ss.currentEngine = engine;
+          ss.defaultEngine = engine;
           envService.set("XPCSHELL_TEST_PROFILE_DIR", originalValue);
           resProt.setSubstitution("search-plugins", originalSubstitution);
           break;
         case "engine-current":
-          is(ss.currentEngine.name, ENGINE_NAME, "currentEngine set");
+          is(ss.defaultEngine.name, ENGINE_NAME, "currentEngine set");
           resolve();
           break;
         case "engine-removed":
@@ -93,7 +93,7 @@ add_task(async function() {
 
   await new Promise(resolve => {
     searchDonePromise = resolve;
-    ss.removeEngine(ss.currentEngine);
+    ss.removeEngine(ss.defaultEngine);
   });
 
   gBrowser.removeCurrentTab();

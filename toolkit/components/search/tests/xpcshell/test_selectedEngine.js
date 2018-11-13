@@ -10,7 +10,7 @@ add_task(async function test_defaultEngine() {
   await asyncInit();
   await installTestEngine();
 
-  Assert.equal(Services.search.currentEngine.name, getDefaultEngineName());
+  Assert.equal(Services.search.defaultEngine.name, getDefaultEngineName());
 });
 
 // Giving prefs a user value shouldn't change the selected engine.
@@ -20,7 +20,7 @@ add_task(async function test_selectedEngine() {
   Services.prefs.setCharPref(kSelectedEnginePref, kTestEngineName);
 
   await asyncReInit();
-  Assert.equal(Services.search.currentEngine.name, defaultEngineName);
+  Assert.equal(Services.search.defaultEngine.name, defaultEngineName);
 
   Services.prefs.clearUserPref(kSelectedEnginePref);
 
@@ -28,7 +28,7 @@ add_task(async function test_selectedEngine() {
   Services.prefs.setCharPref(kDefaultenginenamePref, kTestEngineName);
 
   await asyncReInit();
-  Assert.equal(Services.search.currentEngine.name, defaultEngineName);
+  Assert.equal(Services.search.defaultEngine.name, defaultEngineName);
 
   Services.prefs.clearUserPref(kDefaultenginenamePref);
 });
@@ -36,8 +36,8 @@ add_task(async function test_selectedEngine() {
 // Setting the search engine should be persisted across restarts.
 add_task(async function test_persistAcrossRestarts() {
   // Set the engine through the API.
-  Services.search.currentEngine = Services.search.getEngineByName(kTestEngineName);
-  Assert.equal(Services.search.currentEngine.name, kTestEngineName);
+  Services.search.defaultEngine = Services.search.getEngineByName(kTestEngineName);
+  Assert.equal(Services.search.defaultEngine.name, kTestEngineName);
   await promiseAfterCache();
 
   // Check that the a hash was saved.
@@ -46,18 +46,18 @@ add_task(async function test_persistAcrossRestarts() {
 
   // Re-init and check the engine is still the same.
   await asyncReInit();
-  Assert.equal(Services.search.currentEngine.name, kTestEngineName);
+  Assert.equal(Services.search.defaultEngine.name, kTestEngineName);
 
   // Cleanup (set the engine back to default).
   Services.search.resetToOriginalDefaultEngine();
-  Assert.equal(Services.search.currentEngine.name, getDefaultEngineName());
+  Assert.equal(Services.search.defaultEngine.name, getDefaultEngineName());
 });
 
 // An engine set without a valid hash should be ignored.
 add_task(async function test_ignoreInvalidHash() {
   // Set the engine through the API.
-  Services.search.currentEngine = Services.search.getEngineByName(kTestEngineName);
-  Assert.equal(Services.search.currentEngine.name, kTestEngineName);
+  Services.search.defaultEngine = Services.search.getEngineByName(kTestEngineName);
+  Assert.equal(Services.search.defaultEngine.name, kTestEngineName);
   await promiseAfterCache();
 
   // Then mess with the file (make the hash invalid).
@@ -67,14 +67,14 @@ add_task(async function test_ignoreInvalidHash() {
 
   // Re-init the search service, and check that the json file is ignored.
   await asyncReInit();
-  Assert.equal(Services.search.currentEngine.name, getDefaultEngineName());
+  Assert.equal(Services.search.defaultEngine.name, getDefaultEngineName());
 });
 
 // Resetting the engine to the default should remove the saved value.
 add_task(async function test_settingToDefault() {
   // Set the engine through the API.
-  Services.search.currentEngine = Services.search.getEngineByName(kTestEngineName);
-  Assert.equal(Services.search.currentEngine.name, kTestEngineName);
+  Services.search.defaultEngine = Services.search.getEngineByName(kTestEngineName);
+  Assert.equal(Services.search.defaultEngine.name, kTestEngineName);
   await promiseAfterCache();
 
   // Check that the current engine was saved.
@@ -82,7 +82,7 @@ add_task(async function test_settingToDefault() {
   Assert.equal(metadata.current, kTestEngineName);
 
   // Then set the engine back to the default through the API.
-  Services.search.currentEngine =
+  Services.search.defaultEngine =
     Services.search.getEngineByName(getDefaultEngineName());
   await promiseAfterCache();
 
@@ -93,15 +93,15 @@ add_task(async function test_settingToDefault() {
 
 add_task(async function test_resetToOriginalDefaultEngine() {
   let defaultName = getDefaultEngineName();
-  Assert.equal(Services.search.currentEngine.name, defaultName);
+  Assert.equal(Services.search.defaultEngine.name, defaultName);
 
-  Services.search.currentEngine =
+  Services.search.defaultEngine =
     Services.search.getEngineByName(kTestEngineName);
-  Assert.equal(Services.search.currentEngine.name, kTestEngineName);
+  Assert.equal(Services.search.defaultEngine.name, kTestEngineName);
   await promiseAfterCache();
 
   Services.search.resetToOriginalDefaultEngine();
-  Assert.equal(Services.search.currentEngine.name, defaultName);
+  Assert.equal(Services.search.defaultEngine.name, defaultName);
   await promiseAfterCache();
 });
 
@@ -116,8 +116,8 @@ add_task(async function test_fallback_kept_after_restart() {
       break;
     }
   }
-  Services.search.currentEngine = nonDefaultBuiltInEngine;
-  Assert.equal(Services.search.currentEngine.name, nonDefaultBuiltInEngine.name);
+  Services.search.defaultEngine = nonDefaultBuiltInEngine;
+  Assert.equal(Services.search.defaultEngine.name, nonDefaultBuiltInEngine.name);
   await promiseAfterCache();
 
   // Remove that engine...
@@ -128,18 +128,18 @@ add_task(async function test_fallback_kept_after_restart() {
 
   // Using the currentEngine getter should force a fallback to the
   // original default engine.
-  Assert.equal(Services.search.currentEngine.name, defaultName);
+  Assert.equal(Services.search.defaultEngine.name, defaultName);
 
   // Restoring the default engines should unhide our built-in test
   // engine, but not change the value of currentEngine.
   Services.search.restoreDefaultEngines();
   Assert.ok(!nonDefaultBuiltInEngine.hidden);
-  Assert.equal(Services.search.currentEngine.name, defaultName);
+  Assert.equal(Services.search.defaultEngine.name, defaultName);
   await promiseAfterCache();
 
   // After a restart, the currentEngine value should still be unchanged.
   await asyncReInit();
-  Assert.equal(Services.search.currentEngine.name, defaultName);
+  Assert.equal(Services.search.defaultEngine.name, defaultName);
 });
 
 
