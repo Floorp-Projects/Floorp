@@ -16,7 +16,7 @@ namespace mozilla {
 namespace widget {
 
 class Telemetry final
-    : public java::Telemetry::Natives<Telemetry>
+    : public java::TelemetryUtils::Natives<Telemetry>
 {
     Telemetry() = delete;
 
