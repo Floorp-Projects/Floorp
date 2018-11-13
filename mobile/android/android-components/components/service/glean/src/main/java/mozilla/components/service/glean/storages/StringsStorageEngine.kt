@@ -23,14 +23,7 @@ internal object StringsStorageEngine : StringsStorageEngineImplementation()
 open class StringsStorageEngineImplementation(
     override val logger: Logger = Logger("glean/StringsStorageEngine")
 ) : GenericScalarStorageEngine<String>() {
-    /**
-     * Implementor's provided function to convert deserialized 'user' lifetime
-     * data to the destination ScalarType.
-     *
-     * @param value loaded from the storage as [Any?]
-     *
-     * @return data as [String?] or null if deserialization failed
-     */
+
     override fun singleMetricDeserializer(value: Any?): String? {
         return value as? String
     }

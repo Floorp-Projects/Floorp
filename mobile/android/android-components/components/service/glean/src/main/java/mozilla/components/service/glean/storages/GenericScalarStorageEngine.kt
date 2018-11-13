@@ -37,7 +37,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
      *
      * @return data as [ScalarType] or null if deserialization failed
      */
-    abstract fun singleMetricDeserializer(value: Any?): ScalarType?
+    protected abstract fun singleMetricDeserializer(value: Any?): ScalarType?
 
     /**
      * Deserialize the metrics with a lifetime = User that are on disk.
@@ -60,6 +60,10 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
                 // Split the stored name in 2: we expect it to be in the format
                 // store#metric.name
                 val parts = metricName.split('#', limit = 2)
+                if (parts[0].length <= 1) {
+                    continue
+                }
+
                 val storeData = dataStores[Lifetime.User.ordinal].getOrPut(parts[0]) { mutableMapOf() }
                 // Only set the stored value if we're able to deserialize the persisted data.
                 singleMetricDeserializer(metricValue)?.let {
@@ -89,7 +93,12 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
         val allLifetimes: GenericDataStorage<ScalarType> = mutableMapOf()
 
         // Make sure data with "user" lifetime is loaded before getting the snapshot.
-        userLifetimeStorage.all
+        // We still need to catch exceptions here, as `getAll()` might throw.
+        try {
+            userLifetimeStorage.all
+        } catch (e: NullPointerException) {
+            // Intentionally left blank. We just want to fall through.
+        }
 
         // Get the metrics for all the supported lifetimes.
         for (store in dataStores) {

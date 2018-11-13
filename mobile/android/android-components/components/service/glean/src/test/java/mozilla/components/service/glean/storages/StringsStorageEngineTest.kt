@@ -4,12 +4,16 @@
 package mozilla.components.service.glean.storages
 
 import android.content.Context
+import android.content.SharedPreferences
 import mozilla.components.service.glean.Lifetime
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.eq
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
@@ -27,6 +31,33 @@ class StringsStorageEngineTest {
             .apply()
         StringsStorageEngine.clearAllStores()
     }
+
+    @Test
+    fun `string deserializer should correctly parse strings`() {
+        val persistedSample = mapOf(
+            "store1#telemetry.invalid_number" to 1,
+            "store1#telemetry.invalid_bool" to false,
+            "store1#telemetry.null" to null,
+            "store1#telemetry.valid" to "test"
+        )
+
+        val storageEngine = StringsStorageEngineImplementation()
+
+        // Create a fake application context that will be used to load our data.
+        val context = mock(Context::class.java)
+        val sharedPreferences = mock(SharedPreferences::class.java)
+        `when`(sharedPreferences.all).thenAnswer { persistedSample }
+        `when`(context.getSharedPreferences(
+            eq(storageEngine::class.java.simpleName),
+            eq(Context.MODE_PRIVATE)
+        )).thenReturn(sharedPreferences)
+
+        storageEngine.applicationContext = context
+        val snapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = true)
+        assertEquals(1, snapshot!!.size)
+        assertEquals("test", snapshot["telemetry.valid"])
+    }
+
 
     @Test
     fun `setValue() properly sets the value in all stores`() {

@@ -4,6 +4,7 @@
 package mozilla.components.service.glean.storages
 
 import android.content.Context
+import android.content.SharedPreferences
 import mozilla.components.service.glean.Lifetime
 import java.util.UUID
 
@@ -13,6 +14,12 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.eq
+import org.mockito.Mockito
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
@@ -29,6 +36,32 @@ class UuidsStorageEngineTest {
             .clear()
             .apply()
         UuidsStorageEngine.clearAllStores()
+    }
+
+    @Test
+    fun `uuid deserializer should correctly parse UUIDs`() {
+        val persistedSample = mapOf(
+            "store1#telemetry.invalid_number" to 1,
+            "store1#telemetry.invalid_bool" to false,
+            "store1#telemetry.invalid_string" to "c4ff33",
+            "store1#telemetry.valid" to "ce2adeb8-843a-4232-87a5-a099ed1e7bb3"
+        )
+
+        val storageEngine = UuidsStorageEngineImplementation()
+
+        // Create a fake application context that will be used to load our data.
+        val context = mock(Context::class.java)
+        val sharedPreferences = mock(SharedPreferences::class.java)
+        `when`(sharedPreferences.all).thenAnswer { persistedSample }
+        `when`(context.getSharedPreferences(
+            eq(storageEngine::class.java.simpleName),
+            eq(Context.MODE_PRIVATE)
+        )).thenReturn(sharedPreferences)
+
+        storageEngine.applicationContext = context
+        val snapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = true)
+        assertEquals(1, snapshot!!.size)
+        assertEquals("ce2adeb8-843a-4232-87a5-a099ed1e7bb3", snapshot["telemetry.valid"].toString())
     }
 
     @Test

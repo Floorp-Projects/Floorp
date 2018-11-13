@@ -19,6 +19,7 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.lang.NullPointerException
 
 @RunWith(RobolectricTestRunner::class)
 class GenericScalarStorageEngineTest {
@@ -155,6 +156,56 @@ class GenericScalarStorageEngineTest {
         val snapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = true)
         assertEquals(1, snapshot!!.size)
         assertEquals(37, snapshot["telemetry.pingLifetimeData"])
+    }
+
+    @Test
+    fun `unpersisting metrics must skip data with missing storage name`() {
+        val brokenSample = mapOf(
+            "store_name#telemetry.value1" to 11,
+            "telemetry.value2" to 7,
+            "#telemetry.value3" to 15
+        )
+
+        // Create a fake application context that will be used to load our data.
+        val context = mock(Context::class.java)
+        val sharedPreferences = mock(SharedPreferences::class.java)
+        `when`(sharedPreferences.all).thenAnswer { brokenSample }
+        `when`(context.getSharedPreferences(
+            eq(MockScalarStorageEngine::class.java.simpleName),
+            eq(Context.MODE_PRIVATE)
+        )).thenReturn(sharedPreferences)
+
+        // Instantiate our mock engine and check that it correctly unpersists the
+        // data and makes it available in the snapshot.
+        val storageEngine = MockScalarStorageEngine()
+        storageEngine.applicationContext = context
+
+        val snapshot = storageEngine.getSnapshot(storeName = "store_name", clearStore = true)
+        assertEquals(1, snapshot!!.size)
+        assertEquals(11, snapshot["telemetry.value1"])
+    }
+
+    @Test
+    fun `unpersisting metrics must not fail if SharedPreferences throws`() {
+        // Create a fake application context that will be used to load our data.
+        val context = mock(Context::class.java)
+        val sharedPreferences = mock(SharedPreferences::class.java)
+        `when`(sharedPreferences.all).thenThrow(NullPointerException())
+        `when`(context.getSharedPreferences(
+            eq(MockScalarStorageEngine::class.java.simpleName),
+            eq(Context.MODE_PRIVATE)
+        )).thenReturn(sharedPreferences)
+
+        // Instantiate our mock engine and check that it correctly unpersists the
+        // data and makes it available in the snapshot.
+        val storageEngine = MockScalarStorageEngine()
+        storageEngine.applicationContext = context
+
+        // Make sure we attempt to load data to trigger the exception.
+        storageEngine.getSnapshot(storeName = "store_name", clearStore = true)
+        // The next call verifies that we're called twice: one directly by the snapshot, the other
+        // indirectly by the internal lazy loading function.
+        verify(sharedPreferences, times(2)).all
     }
 
     @Test

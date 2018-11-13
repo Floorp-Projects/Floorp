@@ -5,6 +5,7 @@
 package mozilla.components.service.glean.storages
 
 import android.annotation.SuppressLint
+import android.support.annotation.VisibleForTesting
 import java.util.UUID
 
 import mozilla.components.service.glean.Lifetime
@@ -27,7 +28,11 @@ open class UuidsStorageEngineImplementation(
 ) : GenericScalarStorageEngine<UUID>() {
 
     override fun singleMetricDeserializer(value: Any?): UUID? {
-        return if (value is String) UUID.fromString(value) else null
+        return try {
+            if (value is String) UUID.fromString(value) else null
+        } catch (e: IllegalArgumentException) {
+            null
+        }
     }
 
     /**
