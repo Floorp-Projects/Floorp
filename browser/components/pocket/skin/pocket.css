@@ -58,6 +58,8 @@
 }
 
 #pocket-button-box[animate="true"] > #pocket-animatable-box {
+  position: absolute;
+  overflow: hidden;
   /* .urlbar-icon has width 28px. Each frame is 20px wide. Set margin-inline-start
      to be half the difference, 4px. */
   margin-inline-start: 4px;
