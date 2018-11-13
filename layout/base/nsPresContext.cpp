@@ -638,7 +638,7 @@ nsPresContext::AppUnitsPerDevPixelChanged()
     MediaFeatureChangeReason::ResolutionChange
   });
 
-  mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
+  mCurAppUnitsPerDevPixel = mDeviceContext->AppUnitsPerDevPixel();
 }
 
 void
@@ -648,7 +648,7 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
   if (prefName.EqualsLiteral("layout.css.dpi") ||
       prefName.EqualsLiteral("layout.css.devPixelsPerPx")) {
 
-    int32_t oldAppUnitsPerDevPixel = AppUnitsPerDevPixel();
+    int32_t oldAppUnitsPerDevPixel = mDeviceContext->AppUnitsPerDevPixel();
     if (mDeviceContext->CheckDPIChange() && mShell) {
       nsCOMPtr<nsIPresShell> shell = mShell;
       // Re-fetch the view manager's window dimensions in case there's a deferred
@@ -662,11 +662,11 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
       float oldWidthDevPixels = oldWidthAppUnits/oldAppUnitsPerDevPixel;
       float oldHeightDevPixels = oldHeightAppUnits/oldAppUnitsPerDevPixel;
 
-      nscoord width = NSToCoordRound(oldWidthDevPixels*AppUnitsPerDevPixel());
-      nscoord height = NSToCoordRound(oldHeightDevPixels*AppUnitsPerDevPixel());
-      vm->SetWindowDimensions(width, height);
-
       AppUnitsPerDevPixelChanged();
+
+      nscoord width = NSToCoordRound(oldWidthDevPixels * AppUnitsPerDevPixel());
+      nscoord height = NSToCoordRound(oldHeightDevPixels * AppUnitsPerDevPixel());
+      vm->SetWindowDimensions(width, height);
     }
     return;
   }
@@ -803,7 +803,7 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
 
   if (mDeviceContext->SetFullZoom(mFullZoom))
     mDeviceContext->FlushFontCache();
-  mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
+  mCurAppUnitsPerDevPixel = mDeviceContext->AppUnitsPerDevPixel();
 
   mEventManager = new mozilla::EventStateManager();
 
@@ -1280,11 +1280,12 @@ nsPresContext::SetFullZoom(float aZoom)
   mSuppressResizeReflow = true;
 
   mFullZoom = aZoom;
+
+  AppUnitsPerDevPixelChanged();
+
   mShell->GetViewManager()->
     SetWindowDimensions(NSToCoordRound(oldWidthDevPixels * AppUnitsPerDevPixel()),
                         NSToCoordRound(oldHeightDevPixels * AppUnitsPerDevPixel()));
-
-  AppUnitsPerDevPixelChanged();
 
   mSuppressResizeReflow = false;
 }
@@ -1831,7 +1832,7 @@ nsPresContext::UIResolutionChangedInternalScale(double aScale)
   mPendingUIResolutionChanged = false;
 
   mDeviceContext->CheckDPIChange(&aScale);
-  if (mCurAppUnitsPerDevPixel != AppUnitsPerDevPixel()) {
+  if (mCurAppUnitsPerDevPixel != mDeviceContext->AppUnitsPerDevPixel()) {
     AppUnitsPerDevPixelChanged();
   }
 
@@ -2914,12 +2915,6 @@ bool nsPresContext::GetPaintFlashing() const
     mPaintFlashingInitialized = true;
   }
   return mPaintFlashing;
-}
-
-int32_t
-nsPresContext::AppUnitsPerDevPixel() const
-{
-  return mDeviceContext->AppUnitsPerDevPixel();
 }
 
 nscoord
