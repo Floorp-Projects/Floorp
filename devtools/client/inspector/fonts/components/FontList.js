@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const {
   createElement,
   createFactory,
@@ -19,8 +18,6 @@ const Font = createFactory(require("./Font"));
 const FontPreviewInput = createFactory(require("./FontPreviewInput"));
 
 const Types = require("../types");
-
-const PREF_FONT_EDITOR = "devtools.inspector.fonteditor.enabled";
 
 class FontList extends PureComponent {
   static get propTypes() {
@@ -70,15 +67,11 @@ class FontList extends PureComponent {
       }))
     );
 
-    // Show the font preview input only when the font editor is enabled.
-    const previewInput = Services.prefs.getBoolPref(PREF_FONT_EDITOR) ?
-      FontPreviewInput({
-        ref: this.previewInputRef,
-        onPreviewTextChange,
-        previewText,
-      })
-      :
-      null;
+    const previewInput = FontPreviewInput({
+      ref: this.previewInputRef,
+      onPreviewTextChange,
+      previewText,
+    });
 
     return createElement(Fragment, null, previewInput, list);
   }
