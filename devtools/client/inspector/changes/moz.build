@@ -12,7 +12,6 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'ChangesManager.js',
     'ChangesView.js',
 )
 
