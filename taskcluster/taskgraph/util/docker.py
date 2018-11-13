@@ -104,7 +104,15 @@ def post_to_docker(tar, api_path, **kwargs):
         elif 'stream' in data:
             sys.stderr.write(data['stream'])
         elif 'error' in data:
-            raise Exception(data['error'])
+            sys.stderr.write('{}\n'.format(data['error']))
+            # Sadly, docker doesn't give more than a plain string for errors,
+            # so the best we can do to propagate the error code from the command
+            # that failed is to parse the error message...
+            errcode = 1
+            m = re.search(r'returned a non-zero code: (\d+)', data['error'])
+            if m:
+                errcode = int(m.group(1))
+            sys.exit(errcode)
         else:
             raise NotImplementedError(repr(data))
         sys.stderr.flush()
