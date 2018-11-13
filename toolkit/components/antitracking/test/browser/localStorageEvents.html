@@ -1,0 +1,30 @@
+<script>
+
+let eventCounter = 0;
+
+onmessage = e => {
+  if (e.data == "getValue") {
+    parent.postMessage(localStorage.foo, "*");
+    return;
+  }
+
+  if (e.data == "setValue") {
+    localStorage.foo = "tracker-" + Math.random();
+    return;
+  }
+
+  if (e.data == "getEvents") {
+    parent.postMessage(eventCounter, "*");
+    return;
+  }
+
+  if (e.data == "reload") {
+    window.location.reload();
+  }
+};
+
+addEventListener("storage", _ => {
+  ++eventCounter;
+});
+
+</script>
