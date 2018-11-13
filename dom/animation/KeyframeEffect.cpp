@@ -262,6 +262,15 @@ KeyframeEffect::SetKeyframes(
   }
 }
 
+static bool
+IsEffectiveProperty(const EffectSet& aEffects, nsCSSPropertyID aProperty)
+{
+  return !aEffects.PropertiesWithImportantRules()
+           .HasProperty(aProperty) ||
+         !aEffects.PropertiesForAnimationsLevel()
+           .HasProperty(aProperty);
+}
+
 const AnimationProperty*
 KeyframeEffect::GetEffectiveAnimationOfProperty(nsCSSPropertyID aProperty,
                                                 const EffectSet& aEffects) const
@@ -278,10 +287,7 @@ KeyframeEffect::GetEffectiveAnimationOfProperty(nsCSSPropertyID aProperty,
     const AnimationProperty* result = nullptr;
     // Only include the property if it is not overridden by !important rules in
     // the transitions level.
-    if (!aEffects.PropertiesWithImportantRules()
-           .HasProperty(property.mProperty) ||
-        !aEffects.PropertiesForAnimationsLevel()
-           .HasProperty(property.mProperty)) {
+    if (IsEffectiveProperty(aEffects, property.mProperty)) {
       result = &property;
     }
     return result;
@@ -308,10 +314,7 @@ KeyframeEffect::GetPropertiesForCompositor(const EffectSet& aEffects) const
     if (!compositorAnimatables.HasProperty(property.mProperty)) {
       continue;
     }
-    if (!aEffects.PropertiesWithImportantRules()
-           .HasProperty(property.mProperty) ||
-        !aEffects.PropertiesForAnimationsLevel()
-           .HasProperty(property.mProperty)) {
+    if (IsEffectiveProperty(aEffects, property.mProperty)) {
       properties.AddProperty(property.mProperty);
     }
   }
