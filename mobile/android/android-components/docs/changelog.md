@@ -4,11 +4,22 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.31.0-SNAPSHOT (In Development)
+# 0.32.0-SNAPSHOT (In Devvelopment)
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.31.0...v0.32.0),
+[Milestone](https://github.com/mozilla-mobile/android-components/milestone/34?closed=1),
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.32.0/index)
+
+* Compiled against:
+  * Android (SDK: 27, Support Libraries: 27.1.1)
+  * Kotlin (Stdlib: **1.3.0** 🔺, Coroutines: **1.0.1** 🔺)
+  * GeckoView (Nightly: **65.0.20181107100135** 🔺, Beta: 64.0.20181022150107, Release: 63.0.20181018182531)
+
+# 0.31.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.30.0...v0.31.0),
 [Milestone](https://github.com/mozilla-mobile/android-components/milestone/33?closed=1),
-[API reference](https://mozilla-mobile.github.io/android-components/api/0.30.1/index)
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.31.0/index)
 
 * Compiled against:
   * Android (SDK: 27, Support Libraries: 27.1.1)
@@ -49,6 +60,31 @@ permalink: /changelog/
   // Disable web fonts by default
   SystemEngine(runtime, DefaultSettings(webFontsEnabled = false))
   ```
+
+* **feature-customtabs**
+  * 🆕 New component for providing custom tabs functionality. `CustomTabsService` was moved from `browser-session` to this new component.
+
+* **browser-awesomebar**
+  * Various colors of the Awesome Bar can now be styled:
+
+  ```XML
+    <mozilla.components.browser.awesomebar.BrowserAwesomeBar
+      ..
+      mozac:awesomeBarTitleTextColor="#ffffff"
+      mozac:awesomeBarDescriptionTextColor="#dddddd"
+      mozac:awesomeBarChipTextColor="#ffffff"
+      mozac:awesomeBarChipBackgroundColor="#444444" />
+  ```
+
+* **browser-toolbar**, **feature-toolbar**
+  * Added support for displaying the site security indicator (lock/globe icon).
+
+* [**Reference Browser**](https://github.com/mozilla-mobile/reference-browser)
+  * Integrated crash reporting with [`lib-crash`](https://github.com/mozilla-mobile/android-components/tree/master/components/lib/crash).
+  * Added awesome bar with [`browser-awesomebar`](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/awesomebar).
+  * Toolbar is hiding automatically now when scrolling web content.
+  * Added "Sync Now" button to preferences (without functionality in this release)
+  * Updated theme colors.
 
 # 0.30.0
 
