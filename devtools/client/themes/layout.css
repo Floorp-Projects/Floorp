@@ -199,6 +199,14 @@
   max-width: 450px;
 }
 
+.flex-outline > * {
+  /* To make sure very small distances on the outline still have enough room to be
+     represented and to avoid overlapping labels, we make sure each grid item is at least
+     10px wide. This might sometimes render the outline in a different way than the item
+     but the information shown will still be correct, and will be more easily visible */
+  min-width: 10px;
+}
+
 .flex-outline.column {
   transform: translate(50%, -2em) rotate(.25turn);
   transform-origin: center left;
@@ -298,10 +306,8 @@
 .flex-outline-point {
   position: relative;
   -moz-user-select: none;
-}
-
-.flex-outline-point {
   grid-row: 1;
+  display: grid;
 }
 
 .flex-outline-point.basis,
@@ -376,15 +382,14 @@
 .flex-outline-point.final::before,
 .flex-outline.shrinking .flex-outline-point.min::before,
 .flex-outline-point.max::before,
-.flex-outline.shrinking .flex-outline-point.basis::before,
-.flex-outline.column .flex-outline-point.basisfinal::before {
+.flex-outline.shrinking .flex-outline-point.basis::before {
   border-width: 0 0 0 1px;
 }
 
 .flex-outline-point.basis::before,
 .flex-outline-point.min::before,
 .flex-outline.shrinking .flex-outline-point.final::before,
-.flex-outline.row .flex-outline-point.basisfinal::before {
+.flex-outline-point.basisfinal::before {
   border-width: 0 1px 0 0;
 }
 
