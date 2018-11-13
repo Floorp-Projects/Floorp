@@ -18,16 +18,12 @@
   --tab-line-selected-color: var(--blue-50);
   --toggle-thumb-color: white;
   --toggle-track-color: var(--grey-30);
-  --theme-twisty-fill: rgba(0,0,0,.3);
-  --theme-twisty-selected-fill: rgba(255,255,255,1);
 }
 
 :root.theme-dark {
   --tab-line-hover-color: rgba(255,255,255,.2);
   --toggle-thumb-color: var(--grey-40);
   --toggle-track-color: var(--grey-60);
-  --theme-twisty-fill: rgba(255,255,255,.4);
-  --theme-twisty-selected-fill: rgba(255,255,255,1);
 }
 
 :root[platform="mac"] {
@@ -672,10 +668,10 @@ checkbox:-moz-focusring {
   width: 14px;
   height: 14px;
   cursor: pointer;
-  background-image: url("chrome://devtools/skin/images/devtools-components/arrow.svg");
+  background-image: url("chrome://devtools/skin/images/arrow.svg");
   background-position: center;
   background-repeat: no-repeat;
-  background-size: 9px 9px;
+  background-size: 10px;
   -moz-context-properties: fill;
   fill: var(--theme-twisty-fill);
   transform: rotate(-90deg);
