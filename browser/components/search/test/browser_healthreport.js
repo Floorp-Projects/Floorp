@@ -56,13 +56,13 @@ function test() {
       case "engine-added":
         let engine = Services.search.getEngineByName("Foo");
         ok(engine, "Engine was added.");
-        Services.search.currentEngine = engine;
+        Services.search.defaultEngine = engine;
         break;
 
       case "engine-current":
         // We may be called again when resetting the engine at the end.
         if (!calledTestTelemetry) {
-          is(Services.search.currentEngine.name, "Foo", "Current engine is Foo");
+          is(Services.search.defaultEngine.name, "Foo", "Current engine is Foo");
           testTelemetry();
         }
         break;

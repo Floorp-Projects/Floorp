@@ -31,12 +31,12 @@ add_task(async function setup() {
 
   let engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME);
-  let oldCurrentEngine = Services.search.currentEngine;
-  Services.search.currentEngine = engine;
+  let oldCurrentEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = engine;
 
   registerCleanupFunction(async function() {
     await PlacesUtils.history.clear();
-    Services.search.currentEngine = oldCurrentEngine;
+    Services.search.defaultEngine = oldCurrentEngine;
     gHttpServer.identity.remove(gScheme, gHost, gPort);
     gHttpServer.stop(() => {
       gHttpServer = null;

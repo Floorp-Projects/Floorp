@@ -60,16 +60,16 @@ function promiseNewEngine(basename, options = {}) {
     Services.search.init({
       onInitComplete() {
         let url = getRootDirectory(options.testPath || gTestPath) + basename;
-        let current = Services.search.currentEngine;
+        let current = Services.search.defaultEngine;
         Services.search.addEngine(url, options.iconURL || "", false, {
           onSuccess(engine) {
             info("Search engine added: " + basename);
             if (setAsCurrent) {
-              Services.search.currentEngine = engine;
+              Services.search.defaultEngine = engine;
             }
             registerCleanupFunction(() => {
               if (setAsCurrent) {
-                Services.search.currentEngine = current;
+                Services.search.defaultEngine = current;
               }
               Services.search.removeEngine(engine);
               info("Search engine removed: " + basename);

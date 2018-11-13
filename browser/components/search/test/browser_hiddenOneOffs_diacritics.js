@@ -19,10 +19,10 @@ add_task(async function init() {
   });
   searchIcon = searchbar.querySelector(".searchbar-search-button");
 
-  let currentEngine = Services.search.currentEngine;
+  let currentEngine = Services.search.defaultEngine;
   await promiseNewEngine("testEngine_diacritics.xml", {setAsCurrent: false});
   registerCleanupFunction(() => {
-    Services.search.currentEngine = currentEngine;
+    Services.search.defaultEngine = currentEngine;
     Services.prefs.clearUserPref("browser.search.hiddenOneOffs");
   });
 });

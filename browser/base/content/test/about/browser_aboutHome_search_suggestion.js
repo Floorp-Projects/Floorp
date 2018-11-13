@@ -10,10 +10,10 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, async function(browser) {
     // Add a test engine that provides suggestions and switch to it.
-    let currEngine = Services.search.currentEngine;
+    let currEngine = Services.search.defaultEngine;
     let engine = await promiseNewEngine("searchSuggestionEngine.xml");
     let p = promiseContentSearchChange(browser, engine.name);
-    Services.search.currentEngine = engine;
+    Services.search.defaultEngine = engine;
     await p;
 
     await ContentTask.spawn(browser, null, async function() {
@@ -54,7 +54,7 @@ add_task(async function() {
         "Search suggestion table hidden");
     });
 
-    Services.search.currentEngine = currEngine;
+    Services.search.defaultEngine = currEngine;
     try {
       Services.search.removeEngine(engine);
     } catch (ex) { }
