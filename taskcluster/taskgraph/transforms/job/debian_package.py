@@ -82,6 +82,8 @@ def docker_worker_debian_package(config, job, taskdesc):
         repo=docker_repo,
         dist=run['dist'],
         date=run['snapshot'][:8])
+    # Retry on apt-get errors.
+    worker['retry-exit-status'] = [100]
 
     add_artifacts(config, job, taskdesc, path='/tmp/artifacts')
 
