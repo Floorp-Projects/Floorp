@@ -58,7 +58,6 @@ xhtml|link {
 
 .text-list {
   white-space: pre-line;
-  -moz-user-select: element;
 }
 
 row[unsupported="true"] {
