@@ -63,7 +63,7 @@ add_task(async function() {
   const [type] = await gClient.connect();
   is(type, "browser", "Root actor should identify itself as a browser.");
 
-  const response = await gClient.mainRoot.getProcess(0);
+  const response = await gClient.mainRoot.getMainProcess();
   let actor = response.form.actor;
   gThreadClient = await attachThread(gClient, actor);
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:mozilla");

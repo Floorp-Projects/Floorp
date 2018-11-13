@@ -128,7 +128,7 @@ var onConnectionReady = async function([aType, aTraits]) {
     const a = document.createElement("a");
     a.onclick = function() {
       if (gClient.mainRoot.traits.allowChromeProcess) {
-        gClient.mainRoot.getProcess(0)
+        gClient.mainRoot.getMainProcess()
                .then(aResponse => {
                  openToolbox(aResponse.form, true);
                });

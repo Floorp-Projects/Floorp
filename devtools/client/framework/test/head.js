@@ -34,7 +34,7 @@ function getParentProcessActors(callback) {
 
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect()
-    .then(() => client.mainRoot.getProcess(0))
+    .then(() => client.mainRoot.getMainProcess())
     .then(response => {
       callback(client, response.form);
     });
