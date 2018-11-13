@@ -675,6 +675,12 @@ DrawTargetWrapAndRecord::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFo
   return similarDT.forget();
 }
 
+bool
+DrawTargetWrapAndRecord::CanCreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
+{
+  return mFinalDT->CanCreateSimilarDrawTarget(aSize, aFormat);
+}
+
 already_AddRefed<PathBuilder>
 DrawTargetWrapAndRecord::CreatePathBuilder(FillRule aFillRule) const
 {

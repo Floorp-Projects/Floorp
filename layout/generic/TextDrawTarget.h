@@ -569,6 +569,12 @@ public:
     return nullptr;
   }
 
+  bool
+  CanCreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const override {
+    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    return false;
+  }
+
   already_AddRefed<PathBuilder> CreatePathBuilder(FillRule aFillRule) const override {
     MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
     return nullptr;

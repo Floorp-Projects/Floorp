@@ -303,7 +303,9 @@ public:
   virtual already_AddRefed<DrawTarget>
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const override;
 
-   /**
+  bool CanCreateSimilarDrawTarget(const IntSize& aSize,
+                                  SurfaceFormat aFormat) const override;
+  /**
    * Create a similar DrawTarget whose requested size may be clipped based
    * on this DrawTarget's rect transformed to the new target's space.
    */
