@@ -257,7 +257,7 @@ label[disabled="true"] {
   outline: 1px dotted;
 }
 
-notification > button {
+notification > hbox > button {
   margin-top: 0;
   margin-bottom: 0;
 }

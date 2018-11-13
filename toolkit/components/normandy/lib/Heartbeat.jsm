@@ -173,8 +173,8 @@ var Heartbeat = class {
     // Build the heartbeat stars
     if (!this.options.engagementButtonLabel) {
       const numStars = this.options.engagementButtonLabel ? 0 : 5;
-      const ratingContainer = this.chromeWindow.document.createXULElement("hbox");
-      ratingContainer.id = "star-rating-container";
+      this.ratingContainer = this.chromeWindow.document.createXULElement("hbox");
+      this.ratingContainer.id = "star-rating-container";
 
       for (let i = 0; i < numStars; i++) {
         // create a star rating element
@@ -193,43 +193,38 @@ var Heartbeat = class {
           this.userEngaged({type: "stars", score: rating, flowId: this.options.flowId});
         });
 
-        ratingContainer.appendChild(ratingElement);
+        this.ratingContainer.appendChild(ratingElement);
       }
 
-      frag.appendChild(ratingContainer);
+      frag.appendChild(this.ratingContainer);
     }
 
-    const details = this.chromeWindow.document.getAnonymousElementByAttribute(this.notice, "anonid", "details");
-    details.style.overflow = "hidden";
-
-    this.messageImage = this.chromeWindow.document.getAnonymousElementByAttribute(this.notice, "anonid", "messageImage");
-    this.messageImage.classList.add("heartbeat", "pulse-onshow");
-
-    this.messageText = this.chromeWindow.document.getAnonymousElementByAttribute(this.notice, "anonid", "messageText");
-    this.messageText.classList.add("heartbeat");
+    this.notice.messageDetails.style.overflow = "hidden";
+    this.notice.messageImage.classList.add("heartbeat", "pulse-onshow");
+    this.notice.messageText.classList.add("heartbeat");
 
     // Make sure the stars are not pushed to the right by the spacer.
-    const rightSpacer = this.chromeWindow.document.createXULElement("spacer");
-    rightSpacer.flex = 20;
-    frag.appendChild(rightSpacer);
+    this.rightSpacer = this.chromeWindow.document.createXULElement("spacer");
+    this.rightSpacer.flex = 20;
+    frag.appendChild(this.rightSpacer);
 
     // collapse the space before the stars
-    this.messageText.flex = 0;
-    const leftSpacer = this.messageText.nextSibling;
-    leftSpacer.flex = 0;
+    this.notice.messageText.flex = 0;
+    this.notice.spacer.flex = 0;
 
     // Add Learn More Link
     if (this.options.learnMoreMessage && this.options.learnMoreUrl) {
-      const learnMore = this.chromeWindow.document.createXULElement("label");
-      learnMore.className = "text-link";
-      learnMore.href = this.options.learnMoreUrl.toString();
-      learnMore.setAttribute("value", this.options.learnMoreMessage);
-      learnMore.addEventListener("click", () => this.maybeNotifyHeartbeat("LearnMore"));
-      frag.appendChild(learnMore);
+      this.learnMore = this.chromeWindow.document.createXULElement("label");
+      this.learnMore.className = "text-link";
+      this.learnMore.href = this.options.learnMoreUrl.toString();
+      this.learnMore.setAttribute("value", this.options.learnMoreMessage);
+      this.learnMore.addEventListener("click",
+        () => this.maybeNotifyHeartbeat("LearnMore"));
+      frag.appendChild(this.learnMore);
     }
 
     // Append the fragment and apply the styling
-    this.notice.appendChild(frag);
+    this.notice.messageDetails.appendChild(frag);
     this.notice.classList.add("heartbeat");
 
     // Let the consumer know the notification was shown.
@@ -330,12 +325,17 @@ var Heartbeat = class {
   userEngaged(engagementParams) {
     // Make the heartbeat icon pulse twice
     this.notice.label = this.options.thanksMessage;
-    this.messageImage.classList.remove("pulse-onshow");
-    this.messageImage.classList.add("pulse-twice");
+    this.notice.messageImage.classList.remove("pulse-onshow");
+    this.notice.messageImage.classList.add("pulse-twice");
 
-    // Remove all the children of the notice (rating container, and the flex)
-    while (this.notice.firstChild) {
-      this.notice.firstChild.remove();
+    // Remove the custom contents of the notice and the buttons
+    if (this.ratingContainer) {
+      this.ratingContainer.remove();
+    }
+    this.rightSpacer.remove();
+    this.learnMore.remove();
+    for (let button of this.notice.querySelectorAll("button")) {
+      button.remove();
     }
 
     // Open the engagement tab if we have a valid engagement URL.
@@ -381,8 +381,10 @@ var Heartbeat = class {
     // remove references for garbage collection
     this.chromeWindow = null;
     this.notificationBox = null;
-    this.notification = null;
     this.notice = null;
+    this.ratingContainer = null;
+    this.rightSpacer = null;
+    this.learnMore = null;
     this.eventEmitter = null;
     this.sandboxManager = null;
     // Ensure we don't re-enter and release the CleanupManager's reference to us:

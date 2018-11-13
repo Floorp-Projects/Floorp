@@ -215,7 +215,6 @@ var CaptivePortalWatcher = {
           // Returning true prevents the notification from closing.
           return true;
         },
-        isDefault: true,
       },
     ];
 
