@@ -321,10 +321,10 @@ nsLayoutUtils::HasEffectiveAnimation(const nsIFrame* aFrame,
 
 
   return HasMatchingAnimations(effects,
-    [&aProperty](KeyframeEffect& aEffect)
+    [&aProperty, &effects](KeyframeEffect& aEffect)
     {
       return (aEffect.IsInEffect() || aEffect.IsCurrent()) &&
-             aEffect.HasEffectiveAnimationOfProperty(aProperty);
+             aEffect.HasEffectiveAnimationOfProperty(aProperty, *effects);
     }
   );
 }

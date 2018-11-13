@@ -199,14 +199,19 @@ public:
   // property is not overridden by !important rules.
   // Also EffectiveAnimationOfProperty returns true under the same condition.
   //
+  // |aEffect| should be the EffectSet containing this KeyframeEffect since
+  // this function is typically called for all KeyframeEffects on an element
+  // so that we can avoid multiple calls of EffectSet::GetEffect().
+  //
   // NOTE: We don't currently check for !important rules for properties that
   // can't run on the compositor.
-  bool HasEffectiveAnimationOfProperty(nsCSSPropertyID aProperty) const
+  bool HasEffectiveAnimationOfProperty(nsCSSPropertyID aProperty,
+                                       const EffectSet& aEffect) const
   {
-    return GetEffectiveAnimationOfProperty(aProperty) != nullptr;
+    return GetEffectiveAnimationOfProperty(aProperty, aEffect) != nullptr;
   }
   const AnimationProperty* GetEffectiveAnimationOfProperty(
-    nsCSSPropertyID aProperty) const;
+    nsCSSPropertyID aProperty, const EffectSet& aEffect) const;
 
   // Returns all the effective animated CSS properties that can be animated on
   // the compositor and are not overridden by a higher cascade level.
