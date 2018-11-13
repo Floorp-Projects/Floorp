@@ -107,6 +107,7 @@ public:
 
   void ResponsiveContentDensityChanged();
   void SetupForContentURLRequest();
+  bool ShouldShowBrokenImageIcon() const;
 
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override;
