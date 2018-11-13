@@ -1,6 +1,6 @@
 package org.mozilla.focus.utils
 
-import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
