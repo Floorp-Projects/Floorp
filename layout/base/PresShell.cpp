@@ -7926,74 +7926,6 @@ GetDocumentURIToCompareWithBlacklist(PresShell& aPresShell)
   }
   return nullptr;
 }
-
-static bool
-IsURIInBlacklistPref(nsIURI* aURI,
-                     const char* aBlacklistPrefName)
-{
-  if (!aURI) {
-    return false;
-  }
-
-  nsAutoCString scheme;
-  aURI->GetScheme(scheme);
-  if (!scheme.EqualsLiteral("http") &&
-      !scheme.EqualsLiteral("https")) {
-    return false;
-  }
-
-  nsAutoCString host;
-  aURI->GetHost(host);
-  if (host.IsEmpty()) {
-    return false;
-  }
-
-  // The black list is comma separated domain list.  Each item may start with
-  // "*.".  If starts with "*.", it matches any sub-domains.
-  nsAutoCString blackList;
-  Preferences::GetCString(aBlacklistPrefName, blackList);
-  if (blackList.IsEmpty()) {
-    return false;
-  }
-
-  for (;;) {
-    int32_t index = blackList.Find(host, false);
-    if (index >= 0 &&
-        static_cast<uint32_t>(index) + host.Length() <= blackList.Length() &&
-        // If start of the black list or next to ","?
-        (!index || blackList[index - 1] == ',')) {
-      // If end of the black list or immediately before ","?
-      size_t indexAfterHost = index + host.Length();
-      if (indexAfterHost == blackList.Length() ||
-          blackList[indexAfterHost] == ',') {
-        return true;
-      }
-      // If next character is '/', we need to check the path too.
-      // We assume the path in blacklist means "/foo" + "*".
-      if (blackList[indexAfterHost] == '/') {
-        int32_t endOfPath = blackList.Find(",", false, indexAfterHost);
-        nsDependentCSubstring::size_type length =
-          endOfPath < 0 ? static_cast<nsDependentCSubstring::size_type>(-1) :
-                          endOfPath - indexAfterHost;
-        nsDependentCSubstring pathInBlackList(blackList,
-                                              indexAfterHost, length);
-        nsAutoCString filePath;
-        aURI->GetFilePath(filePath);
-        if (StringBeginsWith(filePath, pathInBlackList)) {
-          return true;
-        }
-      }
-    }
-    int32_t startIndexOfCurrentLevel = host[0] == '*' ? 1 : 0;
-    int32_t startIndexOfNextLevel =
-      host.Find(".", false, startIndexOfCurrentLevel + 1);
-    if (startIndexOfNextLevel <= 0) {
-      return false;
-    }
-    host = NS_LITERAL_CSTRING("*") +
-             nsDependentCSubstring(host, startIndexOfNextLevel);
-  }
-}
 #endif // #ifdef NIGHTLY_BUILD
 
 nsresult
@@ -8039,10 +7971,10 @@ PresShell::DispatchEventToDOM(WidgetEvent* aEvent,
         mInitializedWithKeyPressEventDispatchingBlacklist = true;
         nsCOMPtr<nsIURI> uri = GetDocumentURIToCompareWithBlacklist(*this);
         mForceDispatchKeyPressEventsForNonPrintableKeys =
-          IsURIInBlacklistPref(uri,
+          nsContentUtils::IsURIInPrefList(uri,
             "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys");
         mForceUseLegacyKeyCodeAndCharCodeValues =
-          IsURIInBlacklistPref(uri,
+          nsContentUtils::IsURIInPrefList(uri,
             "dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode");
       }
       if (mForceDispatchKeyPressEventsForNonPrintableKeys) {
