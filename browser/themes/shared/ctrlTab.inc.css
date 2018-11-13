@@ -18,13 +18,13 @@
 %ifndef XP_MACOSX
   font-weight: bold;
 %endif
-  text-shadow: 0 0 1px hsl(0,0%,12%), 0 0 2px hsl(0,0%,12%);
 }
 
 .ctrlTab-preview {
   -moz-appearance: none;
   color: inherit;
   margin: 0;
+  text-shadow: 0 0 1px hsl(0,0%,12%), 0 0 2px hsl(0,0%,12%);
 }
 
 .ctrlTab-canvas > html|img,
