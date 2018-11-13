@@ -66,10 +66,10 @@
 #include "GeckoSystemStateListener.h"
 #include "GeckoVRManager.h"
 #include "PrefsHelper.h"
-#include "fennec/MemoryMonitor.h"
-#include "fennec/Telemetry.h"
-#include "fennec/ThumbnailHelper.h"
 #include "ScreenHelperAndroid.h"
+#include "Telemetry.h"
+#include "fennec/MemoryMonitor.h"
+#include "fennec/ThumbnailHelper.h"
 #include "WebExecutorSupport.h"
 
 #ifdef DEBUG_ANDROID_EVENTS
@@ -412,6 +412,7 @@ nsAppShell::nsAppShell()
         if (jni::IsAvailable()) {
             GeckoThreadSupport::Init();
             GeckoAppShellSupport::Init();
+            mozilla::widget::Telemetry::Init();
 
             // Set the corresponding state in GeckoThread.
             java::GeckoThread::SetState(java::GeckoThread::State::RUNNING());
@@ -433,6 +434,7 @@ nsAppShell::nsAppShell()
         mozilla::GeckoScreenOrientation::Init();
         mozilla::GeckoSystemStateListener::Init();
         mozilla::PrefsHelper::Init();
+        mozilla::widget::Telemetry::Init();
         mozilla::widget::WebExecutorSupport::Init();
         nsWindow::InitNatives();
 
@@ -440,7 +442,6 @@ nsAppShell::nsAppShell()
             BrowserLocaleManagerSupport::Init();
             mozilla::ANRReporter::Init();
             mozilla::MemoryMonitor::Init();
-            mozilla::widget::Telemetry::Init();
             mozilla::ThumbnailHelper::Init();
         }
 

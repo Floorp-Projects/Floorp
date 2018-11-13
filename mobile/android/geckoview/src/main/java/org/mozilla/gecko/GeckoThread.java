@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.TelemetryUtils;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.GeckoLoader;
@@ -126,6 +127,8 @@ public class GeckoThread extends Thread {
     @WrapForJNI
     private static int uiThreadId;
 
+    private static TelemetryUtils.Timer sInitTimer;
+
     // Main process parameters
     public static final int FLAG_DEBUGGING = 1 << 0; // Debugging mode.
     public static final int FLAG_PRELOAD_CHILD = 1 << 1; // Preload child during main thread start.
@@ -176,6 +179,8 @@ public class GeckoThread extends Thread {
         if (mInitialized) {
             return false;
         }
+
+        sInitTimer = new TelemetryUtils.UptimeTimer("GV_STARTUP_RUNTIME_MS");
 
         mInitInfo = info;
 
@@ -569,6 +574,11 @@ public class GeckoThread extends Thread {
         final boolean result = sNativeQueue.checkAndSetState(expectedState, newState);
         if (result) {
             Log.d(LOGTAG, "State changed to " + newState);
+
+            if (sInitTimer != null && isRunning()) {
+                sInitTimer.stop();
+                sInitTimer = null;
+            }
         }
         return result;
     }

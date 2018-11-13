@@ -682,12 +682,23 @@ async function sanitizeOnShutdown(progress) {
   // the permission explicitly set to ACCEPT_SESSION need to be wiped.  There
   // are also other ways to think about and accomplish this, but this is what
   // the logic below currently does!
-  await sanitizeSessionPrincipals();
+  if (Services.prefs.getIntPref(PREF_COOKIE_LIFETIME,
+                                Ci.nsICookieService.ACCEPT_NORMALLY) == Ci.nsICookieService.ACCEPT_SESSION) {
+    let principals = await getAllPrincipals();
+    await maybeSanitizeSessionPrincipals(principals);
+  }
+
 
   // Let's see if we have to forget some particular site.
   for (let permission of Services.perms.enumerator) {
     if (permission.type == "cookie" && permission.capability == Ci.nsICookiePermission.ACCESS_SESSION) {
-      await sanitizeSessionPrincipal(permission.principal);
+      // We use just the URI here, because permissions ignore OriginAttributes.
+      let principals = await getAllPrincipals(permission.principal.URI);
+      let promises = [];
+      principals.forEach(principal => {
+        promises.push(sanitizeSessionPrincipal(principal));
+      });
+      await Promise.all(promises);
     }
   }
 
@@ -704,12 +715,10 @@ async function sanitizeOnShutdown(progress) {
   }
 }
 
-async function sanitizeSessionPrincipals() {
-  if (Services.prefs.getIntPref(PREF_COOKIE_LIFETIME,
-                                Ci.nsICookieService.ACCEPT_NORMALLY) != Ci.nsICookieService.ACCEPT_SESSION) {
-    return;
-  }
-
+// Retrieve the list of nsIPrincipals with site data. If matchUri is not null,
+// it returns only the principals matching that URI, ignoring the
+// OriginAttributes.
+async function getAllPrincipals(matchUri = null) {
   let principals = await new Promise(resolve => {
     quotaManagerService.getUsage(request => {
       if (request.resultCode != Cr.NS_OK) {
@@ -723,7 +732,8 @@ async function sanitizeSessionPrincipals() {
       for (let item of request.result) {
         let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
         let uri = principal.URI;
-        if (uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "file") {
+        if ((!matchUri || Services.eTLD.hasRootDomain(matchUri.host, uri.host)) &&
+            (uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "file")) {
           list.push(principal);
         }
       }
@@ -734,14 +744,19 @@ async function sanitizeSessionPrincipals() {
   let serviceWorkers = serviceWorkerManager.getAllRegistrations();
   for (let i = 0; i < serviceWorkers.length; i++) {
     let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
-    principals.push(sw.principal);
+    let uri = sw.principal.URI;
+    if (!matchUri || Services.eTLD.hasRootDomain(matchUri.host, uri.host)) {
+      principals.push(sw.principal);
+    }
   }
 
   // Let's take the list of unique hosts+OA from cookies.
   let enumerator = Services.cookies.enumerator;
   let hosts = new Set();
   for (let cookie of enumerator) {
-    hosts.add(cookie.rawHost + ChromeUtils.originAttributesToSuffix(cookie.originAttributes));
+    if (!matchUri || Services.eTLD.hasRootDomain(matchUri.host, cookie.rawHost)) {
+      hosts.add(cookie.rawHost + ChromeUtils.originAttributesToSuffix(cookie.originAttributes));
+    }
   }
 
   hosts.forEach(host => {
@@ -751,7 +766,7 @@ async function sanitizeSessionPrincipals() {
       Services.scriptSecurityManager.createCodebasePrincipalFromOrigin("https://" + host));
   });
 
-  await maybeSanitizeSessionPrincipals(principals);
+  return principals;
 }
 
 // This method receives a list of principals and it checks if some of them or
@@ -785,11 +800,6 @@ function cookiesAllowedForDomainOrSubDomain(principal) {
 
   for (let perm of Services.perms.enumerator) {
     if (perm.type != "cookie") {
-      continue;
-    }
-
-    if (!ChromeUtils.isOriginAttributesEqual(principal.originAttributes,
-                                             perm.principal.originAttributes)) {
       continue;
     }
 
