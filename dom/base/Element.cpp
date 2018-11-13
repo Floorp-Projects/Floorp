@@ -2420,8 +2420,8 @@ Element::InternalGetAttrNameFromQName(const nsAString& aStr,
 
 bool
 Element::MaybeCheckSameAttrVal(int32_t aNamespaceID,
-                               nsAtom* aName,
-                               nsAtom* aPrefix,
+                               const nsAtom* aName,
+                               const nsAtom* aPrefix,
                                const nsAttrValueOrString& aValue,
                                bool aNotify,
                                nsAttrValue& aOldValue,
@@ -2905,7 +2905,7 @@ Element::GetEventListenerManagerForAttr(nsAtom* aAttrName,
 }
 
 bool
-Element::GetAttr(int32_t aNameSpaceID, nsAtom* aName,
+Element::GetAttr(int32_t aNameSpaceID, const nsAtom* aName,
                  nsAString& aResult) const
 {
   DOMString str;
@@ -2916,7 +2916,7 @@ Element::GetAttr(int32_t aNameSpaceID, nsAtom* aName,
 
 int32_t
 Element::FindAttrValueIn(int32_t aNameSpaceID,
-                         nsAtom* aName,
+                         const nsAtom* aName,
                          AttrValuesArray* aValues,
                          nsCaseTreatment aCaseSensitive) const
 {
