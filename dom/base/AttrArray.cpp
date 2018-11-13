@@ -34,7 +34,7 @@ AttrArray::Impl::~Impl()
 }
 
 const nsAttrValue*
-AttrArray::GetAttr(nsAtom* aLocalName, int32_t aNamespaceID) const
+AttrArray::GetAttr(const nsAtom* aLocalName, int32_t aNamespaceID) const
 {
   if (aNamespaceID == kNameSpaceID_None) {
     // This should be the common case so lets make an optimized loop
@@ -273,7 +273,7 @@ AttrArray::GetExistingAttrNameFromQName(const nsAString& aName) const
 }
 
 int32_t
-AttrArray::IndexOfAttr(nsAtom* aLocalName, int32_t aNamespaceID) const
+AttrArray::IndexOfAttr(const nsAtom* aLocalName, int32_t aNamespaceID) const
 {
   if (!mImpl) {
     return -1;

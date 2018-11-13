@@ -707,8 +707,9 @@ public:
    * @param aOldValueSet [out] Indicates whether an old attribute value has been
    *   stored in aOldValue. The bool will be set to true if a value was stored.
    */
-  bool MaybeCheckSameAttrVal(int32_t aNamespaceID, nsAtom* aName,
-                             nsAtom* aPrefix,
+  bool MaybeCheckSameAttrVal(int32_t aNamespaceID,
+                             const nsAtom* aName,
+                             const nsAtom* aPrefix,
                              const nsAttrValueOrString& aValue,
                              bool aNotify, nsAttrValue& aOldValue,
                              uint8_t* aModType, bool* aHasListeners,
@@ -765,9 +766,9 @@ public:
    * GetAttr is not inlined on purpose, to keep down codesize from all the
    * inlined nsAttrValue bits for C++ callers.
    */
-  bool GetAttr(int32_t aNameSpaceID, nsAtom* aName, nsAString& aResult) const;
+  bool GetAttr(int32_t aNameSpaceID, const nsAtom* aName, nsAString& aResult) const;
 
-  bool GetAttr(nsAtom* aName, nsAString& aResult) const
+  bool GetAttr(const nsAtom* aName, nsAString& aResult) const
   {
     return GetAttr(kNameSpaceID_None, aName, aResult);
   }
@@ -780,9 +781,9 @@ public:
    * @param aAttr the attribute name
    * @return whether an attribute exists
    */
-  inline bool HasAttr(int32_t aNameSpaceID, nsAtom* aName) const;
+  inline bool HasAttr(int32_t aNameSpaceID, const nsAtom* aName) const;
 
-  bool HasAttr(nsAtom* aAttr) const
+  bool HasAttr(const nsAtom* aAttr) const
   {
     return HasAttr(kNameSpaceID_None, aAttr);
   }
@@ -797,7 +798,7 @@ public:
    * @param aValue The value to compare to.
    * @param aCaseSensitive Whether to do a case-sensitive compare on the value.
    */
-  inline bool AttrValueIs(int32_t aNameSpaceID, nsAtom* aName,
+  inline bool AttrValueIs(int32_t aNameSpaceID, const nsAtom* aName,
                           const nsAString& aValue,
                           nsCaseTreatment aCaseSensitive) const;
 
@@ -812,8 +813,8 @@ public:
    * @param aCaseSensitive Whether to do a case-sensitive compare on the value.
    */
   bool AttrValueIs(int32_t aNameSpaceID,
-                   nsAtom* aName,
-                   nsAtom* aValue,
+                   const nsAtom* aName,
+                   const nsAtom* aValue,
                    nsCaseTreatment aCaseSensitive) const;
 
   enum {
@@ -838,7 +839,7 @@ public:
    */
   typedef nsStaticAtom* const AttrValuesArray;
   int32_t FindAttrValueIn(int32_t aNameSpaceID,
-                                  nsAtom* aName,
+                                  const nsAtom* aName,
                                   AttrValuesArray* aValues,
                                   nsCaseTreatment aCaseSensitive) const;
 
@@ -1014,7 +1015,7 @@ private:
                           uint32_t aMapCount);
 
 protected:
-  inline bool GetAttr(int32_t aNameSpaceID, nsAtom* aName,
+  inline bool GetAttr(int32_t aNameSpaceID, const nsAtom* aName,
                       DOMString& aResult) const
   {
     NS_ASSERTION(nullptr != aName, "must have attribute name");
@@ -1463,12 +1464,12 @@ public:
     return HasServoData() && Servo_Element_IsDisplayContents(this);
   }
 
-  const nsAttrValue* GetParsedAttr(nsAtom* aAttr) const
+  const nsAttrValue* GetParsedAttr(const nsAtom* aAttr) const
   {
     return mAttrs.GetAttr(aAttr);
   }
 
-  const nsAttrValue* GetParsedAttr(nsAtom* aAttr, int32_t aNameSpaceID) const
+  const nsAttrValue* GetParsedAttr(const nsAtom* aAttr, int32_t aNameSpaceID) const
   {
     return mAttrs.GetAttr(aAttr, aNameSpaceID);
   }
@@ -1497,7 +1498,7 @@ public:
    * is, this should only be called from methods that only care about attrs
    * that effectively live in mAttrs.
    */
-  BorrowedAttrInfo GetAttrInfo(int32_t aNamespaceID, nsAtom* aName) const
+  BorrowedAttrInfo GetAttrInfo(int32_t aNamespaceID, const nsAtom* aName) const
   {
     NS_ASSERTION(aName, "must have attribute name");
     NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
@@ -2018,7 +2019,7 @@ private:
 NS_DEFINE_STATIC_IID_ACCESSOR(Element, NS_ELEMENT_IID)
 
 inline bool
-Element::HasAttr(int32_t aNameSpaceID, nsAtom* aName) const
+Element::HasAttr(int32_t aNameSpaceID, const nsAtom* aName) const
 {
   NS_ASSERTION(nullptr != aName, "must have attribute name");
   NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
@@ -2029,7 +2030,7 @@ Element::HasAttr(int32_t aNameSpaceID, nsAtom* aName) const
 
 inline bool
 Element::AttrValueIs(int32_t aNameSpaceID,
-                     nsAtom* aName,
+                     const nsAtom* aName,
                      const nsAString& aValue,
                      nsCaseTreatment aCaseSensitive) const
 {
@@ -2042,8 +2043,8 @@ Element::AttrValueIs(int32_t aNameSpaceID,
 
 inline bool
 Element::AttrValueIs(int32_t aNameSpaceID,
-                     nsAtom* aName,
-                     nsAtom* aValue,
+                     const nsAtom* aName,
+                     const nsAtom* aValue,
                      nsCaseTreatment aCaseSensitive) const
 {
   NS_ASSERTION(aName, "Must have attr name");

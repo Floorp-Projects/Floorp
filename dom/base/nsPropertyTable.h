@@ -61,7 +61,7 @@ class nsPropertyTable
    * |aResult|, if supplied, is filled in with a return status code.
    **/
   void* GetProperty(const nsPropertyOwner& aObject,
-                    nsAtom    *aPropertyName,
+                    const nsAtom *aPropertyName,
                     nsresult   *aResult = nullptr)
   {
     return GetPropertyInternal(aObject, aPropertyName, false, aResult);
@@ -97,7 +97,7 @@ class nsPropertyTable
    * Delete the property |aPropertyName| in the global category for object
    * |aObject|. The property's destructor function will be called.
    */
-  nsresult DeleteProperty(nsPropertyOwner aObject, nsAtom* aPropertyName);
+  nsresult DeleteProperty(nsPropertyOwner aObject, const nsAtom* aPropertyName);
 
   /**
    * Unset the property |aPropertyName| in the global category for object
@@ -105,7 +105,7 @@ class nsPropertyTable
    * property value is returned.
    */
   void* UnsetProperty(const nsPropertyOwner& aObject,
-                      nsAtom* aPropertyName,
+                      const nsAtom* aPropertyName,
                       nsresult* aStatus = nullptr)
   {
     return GetPropertyInternal(aObject, aPropertyName, true, aStatus);
@@ -167,9 +167,9 @@ class nsPropertyTable
 
  private:
   void DestroyPropertyList();
-  PropertyList* GetPropertyListFor(nsAtom* aPropertyName) const;
+  PropertyList* GetPropertyListFor(const nsAtom* aPropertyName) const;
   void* GetPropertyInternal(nsPropertyOwner aObject,
-                            nsAtom* aPropertyName,
+                            const nsAtom* aPropertyName,
                             bool aRemove,
                             nsresult* aStatus);
   nsresult SetPropertyInternal(nsPropertyOwner aObject,
