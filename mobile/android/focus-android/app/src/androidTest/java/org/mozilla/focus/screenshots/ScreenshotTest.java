@@ -4,24 +4,22 @@ import android.app.Instrumentation;
 import android.content.Context;
 import android.support.annotation.StringRes;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.IdlingRegistry;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.uiautomator.UiDevice;
 import android.text.format.DateUtils;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.mozilla.focus.activity.MainActivity;
-import org.mozilla.focus.helpers.HostScreencapScreenshotStrategy;
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule;
 import org.mozilla.focus.helpers.SessionLoadedIdlingResource;
 import org.mozilla.focus.utils.AppConstants;
 
 import tools.fastlane.screengrab.Screengrab;
+import tools.fastlane.screengrab.UiAutomatorScreenshotStrategy;
 
 /**
  * Base class for tests that take screenshots.
@@ -68,12 +66,14 @@ abstract class ScreenshotTest {
         device = UiDevice.getInstance(instrumentation);
 
         // Use this to switch between default strategy and HostScreencap strategy
-        //Screengrab.setDefaultScreenshotStrategy(new UiAutomatorScreenshotStrategy());
-        Screengrab.setDefaultScreenshotStrategy(new HostScreencapScreenshotStrategy(device));
+        Screengrab.setDefaultScreenshotStrategy(new UiAutomatorScreenshotStrategy());
+        //Screengrab.setDefaultScreenshotStrategy(new HostScreencapScreenshotStrategy(device));
 
         device.waitForIdle();
     }
 
+    /* Disable idlingResources.  This causes error when accessing Settings Dialog */
+    /*
     @Before
     public void setUpIdlingResources() {
         loadingIdlingResource = new SessionLoadedIdlingResource();
@@ -85,7 +85,7 @@ abstract class ScreenshotTest {
         device.waitForIdle();
         IdlingRegistry.getInstance().unregister(loadingIdlingResource);
     }
-
+    */
     String getString(@StringRes int resourceId) {
         return targetContext.getString(resourceId).trim();
     }
