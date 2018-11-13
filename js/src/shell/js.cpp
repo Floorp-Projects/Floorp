@@ -522,6 +522,9 @@ static bool enableWasmGc = false;
 static bool enableTestWasmAwaitTier2 = false;
 static bool enableAsyncStacks = false;
 static bool enableStreams = false;
+#ifdef ENABLE_BIGINT
+static bool enableBigInt = false;
+#endif
 #ifdef JS_GC_ZEAL
 static uint32_t gZealBits = 0;
 static uint32_t gZealFrequency = 0;
@@ -3749,6 +3752,9 @@ static void
 SetStandardRealmOptions(JS::RealmOptions& options)
 {
     options.creationOptions().setSharedMemoryAndAtomicsEnabled(enableSharedMemory)
+#ifdef ENABLE_BIGINT
+                             .setBigIntEnabled(enableBigInt)
+#endif
                              .setStreamsEnabled(enableStreams);
 
 }
@@ -10366,6 +10372,9 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
     enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
     enableAsyncStacks = !op.getBoolOption("no-async-stacks");
     enableStreams = !op.getBoolOption("no-streams");
+#ifdef ENABLE_BIGINT
+    enableBigInt = !op.getBoolOption("no-bigint");
+#endif
 
 #if defined ENABLE_WASM_GC && defined ENABLE_WASM_CRANELIFT
     // Note, once we remove --wasm-gc this test will no longer make any sense
@@ -11001,6 +11010,9 @@ main(int argc, char** argv, char** envp)
         || !op.addBoolOption('\0', "no-unboxed-objects", "Disable creating unboxed plain objects")
         || !op.addBoolOption('\0', "enable-streams", "Enable WHATWG Streams (default)")
         || !op.addBoolOption('\0', "no-streams", "Disable WHATWG Streams")
+#ifdef ENABLE_BIGINT
+        || !op.addBoolOption('\0', "no-bigint", "Disable experimental BigInt support")
+#endif
 #ifdef ENABLE_SHARED_ARRAY_BUFFER
         || !op.addStringOption('\0', "shared-memory", "on/off",
                                "SharedArrayBuffer and Atomics "
