@@ -20,7 +20,7 @@ extern constexpr GkAtoms gGkAtoms = {
   //   u"bb",
   //   u"ccc",
   //
-  #define GK_ATOM(name_, value_, hash_, type_, atom_type_) \
+  #define GK_ATOM(name_, value_, hash_, is_ascii_lower_, type_, atom_type_) \
     u"" value_,
   #include "nsGkAtomList.h"
   #undef GK_ATOM
@@ -48,12 +48,12 @@ extern constexpr GkAtoms gGkAtoms = {
     //     offsetof(GkAtoms, mAtoms[static_cast<size_t>(GkAtoms::Atoms::ccc)]) -
     //     offsetof(GkAtoms, ccc_string)),
     //
-    #define GK_ATOM(name_, value_, hash_, type_, atom_type_)                   \
+    #define GK_ATOM(name_, value_, hash_, is_ascii_lower_, type_, atom_type_)  \
       nsStaticAtom(                                                            \
         sizeof(value_) - 1, hash_,                                             \
         offsetof(GkAtoms,                                                      \
                  mAtoms[static_cast<size_t>(GkAtoms::Atoms::name_)]) -         \
-        offsetof(GkAtoms, name_##_string)),
+        offsetof(GkAtoms, name_##_string), is_ascii_lower_),
     #include "nsGkAtomList.h"
     #undef GK_ATOM
   }
