@@ -108,6 +108,11 @@ WINDOWS_WORKER_TYPES = {
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
       'hardware': 'releng-hardware/gecko-t-win10-64-hw',
     },
+    'windows10-64-ux': {
+      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
+      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
+      'hardware': 'releng-hardware/gecko-t-win10-64-ux',
+    },
 }
 
 # os x worker types keyed by test-platform
@@ -1025,7 +1030,10 @@ def set_worker_type(config, tests):
             # figure out what platform the job needs to run on
             if test['virtualization'] == 'hardware':
                 # some jobs like talos and reftest run on real h/w - those are all win10
-                win_worker_type_platform = WINDOWS_WORKER_TYPES['windows10-64']
+                if test_platform.startswith('windows10-64-ux'):
+                    win_worker_type_platform = WINDOWS_WORKER_TYPES['windows10-64-ux']
+                else:
+                    win_worker_type_platform = WINDOWS_WORKER_TYPES['windows10-64']
             else:
                 # the other jobs run on a vm which may or may not be a win10 vm
                 win_worker_type_platform = WINDOWS_WORKER_TYPES[
