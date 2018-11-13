@@ -2181,7 +2181,7 @@ const filterListType = {
       const animation = target.animate(
         { [idlName]:
           // To make missing filter-function-lists, specified the opacity.
-          ['opoacity(1)',
+          ['opacity(1)',
            'opacity(0) grayscale(1) invert(1) sepia(1) blur(10px)'] },
         1000);
 
