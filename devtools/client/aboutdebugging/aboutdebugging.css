@@ -280,14 +280,14 @@ button {
 .target-card-action-link {
   background: none;
   border: none;
-  color: #0087ff;
+  /* !important overrides the common.css button color */
+  color: var(--in-content-link-color) !important;
   font-size: 13px;
   /* Use some negative top margin to account for the padding and keep the
    * button vertically centred. */
   margin: -4px 0 0 12px;
   min-width: auto;
   padding: 4px;
-  transition: color 150ms;
 }
 
 .target-card-action-link:first-of-type {
@@ -310,13 +310,13 @@ button {
 .target-card-action-link:enabled:focus,
 .target-card-action-link:enabled:hover {
   background: none;
-  color: #0052cc;
+  color: var(--in-content-link-color-hover) !important;
   cursor: pointer;
   text-decoration: underline;
 }
 
 .target-card-action-link:enabled:hover:active {
-  color: #003399;
+  color: var(--in-content-link-color-active) !important;
   text-decoration: none;
 }
 
