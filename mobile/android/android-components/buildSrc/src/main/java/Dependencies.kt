@@ -25,6 +25,7 @@ private object Versions {
     const val jna = "4.5.2"
 
     const val sentry = "1.7.10"
+    const val okhttp = "3.11.0"
 
     const val mozilla_fxa = "0.10.0"
     const val mozilla_sync_logins = "0.10.0"
@@ -69,6 +70,7 @@ object Deps {
     const val mozilla_places = "org.mozilla.places:places:${Versions.mozilla_places}"
     const val mozilla_servo = "org.mozilla.servoview:servoview-armv7:${Versions.servo}"
 
+    const val thirdparty_okhttp = "com.squareup.okhttp3:okhttp:${Versions.okhttp}"
     const val thirdparty_sentry = "io.sentry:sentry-android:${Versions.sentry}"
 
     const val jna = "net.java.dev.jna:jna:${Versions.jna}@aar"

@@ -105,7 +105,8 @@ setupProject(':support-utils', 'components/support/utils', 'A collection of gene
 
 setupProject(':lib-crash', 'components/lib/crash', 'A generic crash reporter library that can report crashes to multiple services.')
 setupProject(':lib-dataprotect', 'components/lib/dataprotect', 'A component using AndroidKeyStore to protect user data.')
-setupProject(':lib-fetch-httpurlconnection', 'components/lib/fetch-httpurlconnection', 'An implementation of lib-fetch based on HttpUrlConnection')
+setupProject(':lib-fetch-httpurlconnection', 'components/lib/fetch-httpurlconnection', 'An implementation of lib-fetch based on HttpUrlConnection.')
+setupProject(':lib-fetch-okhttp', 'components/lib/fetch-okhttp', 'An implementation of lib-fetch based on OkHttp.')
 setupProject(':lib-jexl', 'components/lib/jexl', 'Javascript Expression Language: Powerful context-based expression parser and evaluator.')
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
