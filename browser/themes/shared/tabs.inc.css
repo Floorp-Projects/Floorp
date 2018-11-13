@@ -6,18 +6,15 @@
 %filter substitution
 %define horizontalTabPadding 9px
 
-#titlebar,
-#tabbrowser-tabs {
+:root {
   --tab-min-height: 33px;
 }
 
-:root[uidensity=compact] #titlebar,
-:root[uidensity=compact] #tabbrowser-tabs {
+:root[uidensity=compact] {
   --tab-min-height: 29px;
 }
 
-:root[uidensity=touch] #titlebar,
-:root[uidensity=touch] #tabbrowser-tabs {
+:root[uidensity=touch] {
   --tab-min-height: 41px;
 }
 

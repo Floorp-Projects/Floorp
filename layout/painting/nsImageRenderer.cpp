@@ -732,8 +732,13 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
     nsRect destRect = aImageRect - aImageRect.TopLeft();
     nsIntSize roundedOut = destRect.ToOutsidePixels(appUnitsPerDevPixel).Size();
     IntSize imageSize(roundedOut.width, roundedOut.height);
-    RefPtr<gfxDrawable> drawable =
-      nsSVGIntegrationUtils::DrawableFromPaintServer(
+
+    RefPtr<gfxDrawable> drawable;
+
+    SurfaceFormat format = aContext.GetDrawTarget()->GetFormat();
+    // Don't allow creating images that are too big
+    if (aContext.GetDrawTarget()->CanCreateSimilarDrawTarget(imageSize, format)) {
+      drawable = nsSVGIntegrationUtils::DrawableFromPaintServer(
         mPaintServerFrame,
         mForFrame,
         mSize,
@@ -741,6 +746,7 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
         aContext.GetDrawTarget(),
         aContext.CurrentMatrixDouble(),
         nsSVGIntegrationUtils::FLAG_SYNC_DECODE_IMAGES);
+    }
 
     return drawable.forget();
   }

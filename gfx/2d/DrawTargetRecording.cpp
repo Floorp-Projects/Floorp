@@ -567,18 +567,39 @@ DrawTargetRecording::CreateSourceSurfaceFromNativeSurface(const NativeSurface &a
 already_AddRefed<DrawTarget>
 DrawTargetRecording::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
 {
-  RefPtr<DrawTarget> similarDT = new DrawTargetRecording(this, aSize, aFormat);
-  mRecorder->RecordEvent(RecordedCreateSimilarDrawTarget(similarDT.get(),
-                                                         aSize,
-                                                         aFormat));
+  RefPtr<DrawTarget> similarDT;
+  if (mFinalDT->CanCreateSimilarDrawTarget(aSize, aFormat)) {
+    similarDT = new DrawTargetRecording(this, aSize, aFormat);
+    mRecorder->RecordEvent(RecordedCreateSimilarDrawTarget(similarDT.get(),
+                                                           aSize,
+                                                           aFormat));
+  } else if (XRE_IsContentProcess()) {
+    // Crash any content process that calls this function with arguments that
+    // would fail to create a similar draw target. We do this to root out bad
+    // callers. We don't want to crash any important processes though so for
+    // for those we'll just gracefully return nullptr.
+    MOZ_CRASH("Content-process DrawTargetRecording can't create requested similar drawtarget");
+  }
   return similarDT.forget();
+}
+
+bool
+DrawTargetRecording::CanCreateSimilarDrawTarget(const IntSize& aSize, SurfaceFormat aFormat) const
+{
+  return mFinalDT->CanCreateSimilarDrawTarget(aSize, aFormat);
 }
 
 RefPtr<DrawTarget>
 DrawTargetRecording::CreateClippedDrawTarget(const IntSize& aMaxSize, const Matrix& aTransform, SurfaceFormat aFormat) const
 {
-  RefPtr<DrawTarget> similarDT = new DrawTargetRecording(this, aMaxSize, aFormat);
-  mRecorder->RecordEvent(RecordedCreateClippedDrawTarget(similarDT.get(), aMaxSize, aTransform, aFormat));
+  RefPtr<DrawTarget> similarDT;
+  if (mFinalDT->CanCreateSimilarDrawTarget(aMaxSize, aFormat)) {
+   similarDT = new DrawTargetRecording(this, aMaxSize, aFormat);
+    mRecorder->RecordEvent(RecordedCreateClippedDrawTarget(similarDT.get(), aMaxSize, aTransform, aFormat));
+  } else if (XRE_IsContentProcess()) {
+    // See CreateSimilarDrawTarget
+    MOZ_CRASH("Content-process DrawTargetRecording can't create requested clipped drawtarget");
+  }
   return similarDT;
 }
 

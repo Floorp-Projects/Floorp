@@ -531,7 +531,7 @@ add_task(async function ensure_search_engine() {
   Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
                                        "http://s.example.com/search");
   let engine = Services.search.getEngineByName("MozSearch");
-  Services.search.currentEngine = engine;
+  Services.search.defaultEngine = engine;
 });
 
 /**

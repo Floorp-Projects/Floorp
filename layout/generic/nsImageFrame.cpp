@@ -151,6 +151,29 @@ NS_NewImageFrameForGeneratedContentIndex(nsIPresShell* aPresShell,
     aStyle, nsImageFrame::Kind::ContentPropertyAtIndex);
 }
 
+bool
+nsImageFrame::ShouldShowBrokenImageIcon() const
+{
+  // NOTE(emilio, https://github.com/w3c/csswg-drafts/issues/2832): WebKit and
+  // Blink behave differently here for content: url(..), for now adapt to
+  // Blink's behavior.
+  if (mKind != Kind::ImageElement) {
+    return false;
+  }
+
+  // check for broken images. valid null images (eg. img src="") are
+  // not considered broken because they have no image requests
+  if (nsCOMPtr<imgIRequest> currentRequest = GetCurrentRequest()) {
+    uint32_t imageStatus;
+    return NS_SUCCEEDED(currentRequest->GetImageStatus(&imageStatus)) &&
+           (imageStatus & imgIRequest::STATUS_ERROR);
+  }
+
+  nsCOMPtr<nsIImageLoadingContent> loader = do_QueryInterface(mContent);
+  MOZ_ASSERT(loader);
+  return loader->GetImageBlockingStatus() != nsIContentPolicy::ACCEPT;
+}
+
 nsImageFrame*
 nsImageFrame::CreateContinuingFrame(nsIPresShell* aPresShell,
                                     ComputedStyle* aStyle) const
@@ -936,37 +959,8 @@ nsImageFrame::EnsureIntrinsicSizeAndRatio()
     return;
   }
 
-  // NOTE(emilio, https://github.com/w3c/csswg-drafts/issues/2832): WebKit
-  // and Blink behave differently here for content: url(..), for now adapt to
-  // Blink's behavior.
-  const bool mayDisplayBrokenIcon = mKind == Kind::ImageElement;
-  if (!mayDisplayBrokenIcon) {
-    return;
-  }
-  // image request is null or image size not known, probably an
-  // invalid image specified
-  bool imageInvalid = false;
-
-  // check for broken images. valid null images (eg. img src="") are
-  // not considered broken because they have no image requests
-  if (nsCOMPtr<imgIRequest> currentRequest = GetCurrentRequest()) {
-    uint32_t imageStatus;
-    imageInvalid =
-      NS_SUCCEEDED(currentRequest->GetImageStatus(&imageStatus)) &&
-      (imageStatus & imgIRequest::STATUS_ERROR);
-  } else {
-    MOZ_ASSERT(mKind == Kind::ImageElement);
-
-    nsCOMPtr<nsIImageLoadingContent> loader = do_QueryInterface(mContent);
-    MOZ_ASSERT(loader);
-    // check if images are user-disabled (or blocked for other reasons)
-    int16_t imageBlockingStatus;
-    loader->GetImageBlockingStatus(&imageBlockingStatus);
-    imageInvalid = imageBlockingStatus != nsIContentPolicy::ACCEPT;
-  }
-
   // invalid image specified. make the image big enough for the "broken" icon
-  if (imageInvalid) {
+  if (ShouldShowBrokenImageIcon()) {
     nscoord edgeLengthToUse =
       nsPresContext::CSSPixelsToAppUnits(
         ICON_SIZE + (2 * (ICON_PADDING + ALT_BORDER_WIDTH)));
@@ -1494,7 +1488,8 @@ nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
   ImgDrawResult result = ImgDrawResult::NOT_READY;
 
   // Check if we should display image placeholders
-  if (!gIconLoad->mPrefShowPlaceholders ||
+  if (!ShouldShowBrokenImageIcon() ||
+      !gIconLoad->mPrefShowPlaceholders ||
       (isLoading && !gIconLoad->mPrefShowLoadingPlaceholder)) {
     result = ImgDrawResult::SUCCESS;
   } else {

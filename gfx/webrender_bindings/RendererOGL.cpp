@@ -8,6 +8,7 @@
 #include "GLContext.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/gfx/Types.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/LayersTypes.h"
@@ -246,6 +247,22 @@ RenderTextureHost*
 RendererOGL::GetRenderTexture(wr::WrExternalImageId aExternalImageId)
 {
   return mThread->GetRenderTexture(aExternalImageId);
+}
+
+void
+RendererOGL::AccumulateMemoryReport(MemoryReport* aReport)
+{
+  wr_renderer_accumulate_memory_report(GetRenderer(), aReport);
+
+  LayoutDeviceIntSize size = mCompositor->GetBufferSize();
+
+  // Assume BGRA8 for the format since it's not exposed anywhere,
+  // and all compositor backends should be using that.
+  uintptr_t swapChainSize = size.width * size.height * 
+                            BytesPerPixel(SurfaceFormat::B8G8R8A8) *
+                            (mCompositor->UseTripleBuffering() ? 3 : 2);
+  aReport->swap_chain += swapChainSize;
+  aReport->total_gpu_bytes_allocated += swapChainSize;
 }
 
 static void

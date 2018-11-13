@@ -26,7 +26,6 @@ gfx/tests/chrome/**
 gfx/tests/mochitest/**
 image/**
 layout/**
-memory/replace/dmd/test/**
 modules/**
 netwerk/cookie/test/browser/**
 netwerk/test/browser/**

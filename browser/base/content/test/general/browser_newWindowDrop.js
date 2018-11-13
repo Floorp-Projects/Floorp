@@ -1,5 +1,5 @@
 registerCleanupFunction(function cleanup() {
-  Services.search.currentEngine = originalEngine;
+  Services.search.defaultEngine = originalEngine;
   let engine = Services.search.getEngineByName("MozSearch");
   Services.search.removeEngine(engine);
 });
@@ -13,8 +13,8 @@ add_task(async function test_setup() {
   Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
                                        "http://example.com/?q={searchTerms}");
   let engine = Services.search.getEngineByName("MozSearch");
-  originalEngine = Services.search.currentEngine;
-  Services.search.currentEngine = engine;
+  originalEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = engine;
 
   // Move New Window button to nav bar, to make it possible to drag and drop.
   let {CustomizableUI} = ChromeUtils.import("resource:///modules/CustomizableUI.jsm", {});

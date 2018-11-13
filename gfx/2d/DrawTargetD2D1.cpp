@@ -1004,6 +1004,13 @@ DrawTargetD2D1::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFor
   return dt.forget();
 }
 
+bool
+DrawTargetD2D1::CanCreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
+{
+  return (mDC->GetMaximumBitmapSize() >= UINT32(aSize.width) &&
+          mDC->GetMaximumBitmapSize() >= UINT32(aSize.height));
+}
+
 already_AddRefed<PathBuilder>
 DrawTargetD2D1::CreatePathBuilder(FillRule aFillRule) const
 {

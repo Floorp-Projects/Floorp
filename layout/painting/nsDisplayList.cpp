@@ -598,10 +598,11 @@ AddAnimationsForProperty(nsIFrame* aFrame,
   // layer, we still need to mark it as up-to-date with regards to animations.
   // Otherwise, in RestyleManager we'll notice the discrepancy between the
   // animation generation numbers and update the layer indefinitely.
+  // Note that EffectSet::GetEffectSet expects to work with the style frame
+  // instead of the primary frame.
+  EffectSet* effects = EffectSet::GetEffectSet(styleFrame);
   uint64_t animationGeneration =
-    // Note that GetAnimationGenerationForFrame() calles EffectSet::GetEffectSet
-    // that expects to work with the style frame instead of the primary frame.
-    RestyleManager::GetAnimationGenerationForFrame(styleFrame);
+    effects ? effects->GetAnimationGeneration() : 0;
   aAnimationInfo.SetAnimationGeneration(animationGeneration);
 
   EffectCompositor::ClearIsRunningOnCompositor(styleFrame, aProperty);
@@ -686,7 +687,7 @@ AddAnimationsForProperty(nsIFrame* aFrame,
     MOZ_ASSERT(keyframeEffect,
                "A playing animation should have a keyframe effect");
     const AnimationProperty* property =
-      keyframeEffect->GetEffectiveAnimationOfProperty(aProperty);
+      keyframeEffect->GetEffectiveAnimationOfProperty(aProperty, *effects);
     if (!property) {
       continue;
     }

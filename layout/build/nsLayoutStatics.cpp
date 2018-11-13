@@ -258,10 +258,6 @@ nsLayoutStatics::Initialize()
 
   ServiceWorkerRegistrar::Initialize();
 
-#ifdef DEBUG
-  mozilla::LayerAnimationInfo::Initialize();
-#endif
-
   MediaDecoder::InitStatics();
 
   PromiseDebugging::Init();

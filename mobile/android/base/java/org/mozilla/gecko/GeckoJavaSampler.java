@@ -32,7 +32,7 @@ public class GeckoJavaSampler {
         public long mJavaTime; // non-zero if Android system time is used
         public Sample(StackTraceElement[] aStack) {
             mFrames = new Frame[aStack.length];
-            if (GeckoThread.isStateAtLeast(GeckoThread.State.LIBS_READY)) {
+            if (GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY)) {
                 mTime = getProfilerTime();
             }
             if (mTime == 0.0d) {

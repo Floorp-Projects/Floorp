@@ -30,7 +30,7 @@ const SUBMISSION_NO = new Map([
 function addAndMakeDefault(name, searchURL) {
    Services.search.addEngineWithDetails(name, null, null, null, "GET", searchURL);
    let engine = Services.search.getEngineByName(name);
-   Services.search.currentEngine = engine;
+   Services.search.defaultEngine = engine;
    return engine;
 }
 

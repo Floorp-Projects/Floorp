@@ -142,6 +142,14 @@ public:
       return result;
     }
 
+    nsCSSPropertyIDSet& operator|=(const nsCSSPropertyIDSet& aOther)
+    {
+      for (size_t i = 0; i < mozilla::ArrayLength(mProperties); ++i) {
+        mProperties[i] |= aOther.mProperties[i];
+      }
+      return *this;
+    }
+
 private:
     typedef unsigned long property_set_type;
 public:

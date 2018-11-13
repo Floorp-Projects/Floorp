@@ -220,5 +220,11 @@ DrawTargetDual::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFor
   return mA->CreateSimilarDrawTarget(aSize, aFormat);
 }
 
+bool
+DrawTargetDual::CanCreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
+{
+  return mA->CanCreateSimilarDrawTarget(aSize, aFormat);
+}
+
 } // namespace gfx
 } // namespace mozilla

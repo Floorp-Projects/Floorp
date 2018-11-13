@@ -68,7 +68,7 @@ var gTests = [
                                                    gBrowser.selectedBrowser);
     await loadPromise;
 
-    is(engine, Services.search.currentEngine,
+    is(engine, Services.search.defaultEngine,
        "the custom engine is still default");
     is(rawEngine.getAttr("loadPathHash"), initialHash,
        "the loadPathHash has been fixed");
@@ -81,7 +81,7 @@ var gTests = [
 {
   desc: "Test the 'Restore Search Defaults' button.",
   async run() {
-    let currentEngine = Services.search.currentEngine;
+    let currentEngine = Services.search.defaultEngine;
     let originalEngine = Services.search.originalDefaultEngine;
     let browser = gBrowser.selectedBrowser;
     let defaultEngineSpanText =
@@ -108,12 +108,12 @@ var gTests = [
                                                    {}, browser);
     await loadPromise;
 
-    is(originalEngine, Services.search.currentEngine,
+    is(originalEngine, Services.search.defaultEngine,
        "the default engine is back to the original one");
 
     checkTelemetryRecords(TELEMETRY_RESULT_ENUM.RESTORED_DEFAULT);
     is(Services.prefs.getCharPref(kStatusPref), "accepted");
-    Services.search.currentEngine = currentEngine;
+    Services.search.defaultEngine = currentEngine;
   },
 },
 

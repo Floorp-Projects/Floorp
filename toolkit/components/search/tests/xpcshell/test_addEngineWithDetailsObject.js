@@ -43,15 +43,15 @@ add_task(async function test_addEngineWithDetails() {
 
   // Set the engine as default; this should set a loadPath verification hash,
   // which should ensure we don't show the search reset prompt.
-  Services.search.currentEngine = engine;
+  Services.search.defaultEngine = engine;
 
   let expectedURL = kSearchEngineURL.replace("{searchTerms}", kSearchTerm);
   let submission =
-    Services.search.currentEngine.getSubmission(kSearchTerm, null, "searchbar");
+    Services.search.defaultEngine.getSubmission(kSearchTerm, null, "searchbar");
   Assert.equal(submission.uri.spec, expectedURL);
   let expectedSuggestURL = kSearchSuggestURL.replace("{searchTerms}", kSearchTerm);
   let submissionSuggest =
-    Services.search.currentEngine.getSubmission(kSearchTerm, URLTYPE_SUGGEST_JSON);
+    Services.search.defaultEngine.getSubmission(kSearchTerm, URLTYPE_SUGGEST_JSON);
   Assert.equal(submissionSuggest.uri.spec, expectedSuggestURL);
 });
 

@@ -81,10 +81,10 @@ add_task(async function test_setup() {
 
 for (let engine of SEARCH_ENGINE_DETAILS) {
   add_task(async function() {
-    let previouslySelectedEngine = Services.search.currentEngine;
+    let previouslySelectedEngine = Services.search.defaultEngine;
 
     registerCleanupFunction(function() {
-      Services.search.currentEngine = previouslySelectedEngine;
+      Services.search.defaultEngine = previouslySelectedEngine;
     });
 
     await testSearchEngine(engine);
@@ -95,7 +95,7 @@ async function testSearchEngine(engineDetails) {
   let engine = Services.search.getEngineByName(engineDetails.name);
   Assert.ok(engine, `${engineDetails.name} is installed`);
 
-  Services.search.currentEngine = engine;
+  Services.search.defaultEngine = engine;
   engine.alias = engineDetails.alias;
 
   let base = engineDetails.baseURL;

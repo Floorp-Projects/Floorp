@@ -646,6 +646,15 @@ notification[value="translation"] menulist > .menulist-dropmarker {
     visibility: visible;
   }
 
+  /* When temporarily showing the menu bar, make it at least as tall as the tab
+   * bar such that the window controls don't appear to move up. */
+  :root[tabsintitlebar] #toolbar-menubar[autohide="true"] {
+    height: var(--tab-min-height);
+  }
+  :root[tabsintitlebar][sizemode="normal"] #toolbar-menubar[autohide="true"] {
+    height: calc(var(--tab-min-height) + var(--space-above-tabbar));
+  }
+
   /* Add extra space to titlebar for dragging */
   :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar,
   :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar {

@@ -65,10 +65,10 @@ function promiseSetEngine() {
         case "engine-added":
           var engine = ss.getEngineByName("Bug 426329");
           ok(engine, "Engine was added.");
-          ss.currentEngine = engine;
+          ss.defaultEngine = engine;
           break;
         case "engine-current":
-          ok(ss.currentEngine.name == "Bug 426329", "currentEngine set");
+          ok(ss.defaultEngine.name == "Bug 426329", "currentEngine set");
           searchBar = BrowserSearch.searchBar;
           searchButton = searchBar.querySelector(".search-go-button");
           ok(searchButton, "got search-go-button");

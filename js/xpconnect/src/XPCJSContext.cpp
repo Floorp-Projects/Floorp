@@ -784,11 +784,17 @@ bool xpc::ExtraWarningsForSystemJS() { return false; }
 
 static mozilla::Atomic<bool> sSharedMemoryEnabled(false);
 static mozilla::Atomic<bool> sStreamsEnabled(false);
+#ifdef ENABLE_BIGINT
+static mozilla::Atomic<bool> sBigIntEnabled(false);
+#endif
 
 void
 xpc::SetPrefableRealmOptions(JS::RealmOptions &options)
 {
     options.creationOptions().setSharedMemoryAndAtomicsEnabled(sSharedMemoryEnabled)
+#ifdef ENABLE_BIGINT
+                             .setBigIntEnabled(sBigIntEnabled)
+#endif
                              .setStreamsEnabled(sStreamsEnabled);
 }
 
@@ -830,6 +836,10 @@ ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx)
     sDiscardSystemSource = Preferences::GetBool(JS_OPTIONS_DOT_STR "discardSystemSource");
 
     bool useAsyncStack = Preferences::GetBool(JS_OPTIONS_DOT_STR "asyncstack");
+
+#ifdef ENABLE_BIGINT
+    sBigIntEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "bigint");
+#endif
 
     bool throwOnDebuggeeWouldRun = Preferences::GetBool(JS_OPTIONS_DOT_STR
                                                         "throw_on_debuggee_would_run");

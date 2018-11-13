@@ -8,9 +8,12 @@
 #define GFX_ANIMATIONINFO_H
 
 #include "nsAutoPtr.h"
+#include "nsCSSPropertyIDSet.h"
 #include "nsDisplayItemTypes.h"
+#include "mozilla/Array.h"
 
 struct RawServoAnimationValue;
+class nsIContent;
 class nsIFrame;
 
 namespace mozilla {
@@ -48,7 +51,10 @@ public:
   {
     mAnimationGeneration = Some(aCount);
   }
-  Maybe<uint64_t> GetAnimationGeneration() { return mAnimationGeneration; }
+  Maybe<uint64_t> GetAnimationGeneration() const
+  {
+    return mAnimationGeneration;
+  }
 
   // ClearAnimations clears animations on this layer.
   void ClearAnimations();
@@ -71,6 +77,21 @@ public:
   // continuation frame, otherwise this function might return Nothing().
   static Maybe<uint64_t> GetGenerationFromFrame(nsIFrame* aFrame,
                                                 DisplayItemType aDisplayItemKey);
+
+  using CompositorAnimatableDisplayItemTypes =
+    Array<DisplayItemType, nsCSSPropertyIDSet::CompositorAnimatableCount()>;
+  using AnimationGenerationCallback =
+    std::function<bool(const Maybe<uint64_t>& aGeneration,
+                       DisplayItemType aDisplayItemType)>;
+  // Enumerates animation generations on |aFrame| for the given display item
+  // types and calls |aCallback| with the animation generation.
+  //
+  // The enumeration stops if |aCallback| returns false.
+  static void EnumerateGenerationOnFrame(
+    const nsIFrame* aFrame,
+    const nsIContent* aContent,
+    const CompositorAnimatableDisplayItemTypes& aDisplayItemTypes,
+    const AnimationGenerationCallback& aCallback);
 
 protected:
   AnimationArray mAnimations;
