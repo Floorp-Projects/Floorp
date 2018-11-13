@@ -45,7 +45,12 @@ class RuntimeInfo extends PureComponent {
           $deviceName: deviceName,
           $version: version,
         },
-        dom.label({}, `${ name } on ${ deviceName } (${ version })`)
+        dom.label(
+          {
+            className: "js-runtime-info",
+          },
+          `${ name } on ${ deviceName } (${ version })`
+        )
       )
     );
   }

@@ -41,7 +41,7 @@ function getDebugTargetPane(title, document) {
     return titleEl.closest(".js-debug-target-pane");
   }
 
-  throw new Error(`DebugTargetPane for [${ title }] was not found`);
+  return null;
 }
 
 // eslint-disable-next-line no-unused-vars
