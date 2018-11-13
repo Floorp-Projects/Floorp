@@ -397,6 +397,7 @@ private:
     explicit ReceiveStreamStatistics(nsCOMPtr<nsIEventTarget> aStatsThread)
       : StreamStatistics(std::forward<nsCOMPtr<nsIEventTarget>>(aStatsThread))
     {}
+    uint32_t BytesSent() const;
     /**
      * Returns the number of discarded packets
      */
@@ -407,13 +408,16 @@ private:
     uint32_t FramesDecoded() const;
     uint32_t JitterMs() const;
     uint32_t PacketsLost() const;
+    uint32_t PacketsSent() const;
     uint32_t Ssrc() const;
     void Update(const webrtc::VideoReceiveStream::Stats& aStats);
   private:
+    uint32_t mBytesSent = 0;
     uint32_t mDiscardedPackets = 0;
     uint32_t mFramesDecoded = 0;
     uint32_t mJitterMs = 0;
     uint32_t mPacketsLost = 0;
+    uint32_t mPacketsSent = 0;
     uint32_t mSsrc = 0;
   };
 
