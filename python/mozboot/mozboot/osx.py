@@ -415,8 +415,8 @@ class OSXBootstrapper(BaseBootstrapper):
         # TODO: Figure out what not to install for artifact mode
         packages = [
             'yasm',
-            'llvm-4.0',
-            'clang-4.0',
+            'llvm-7.0',
+            'clang-7.0',
         ]
 
         self._ensure_macports_packages(packages)
