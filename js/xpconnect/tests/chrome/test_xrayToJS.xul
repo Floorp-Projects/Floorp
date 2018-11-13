@@ -154,8 +154,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
     testDataView();
 
-    // We could also test DataView and Iterator here for completeness, but it's
-    // more trouble than it's worth.
+    testNumber();
 
     SimpleTest.finish();
   }
@@ -1012,6 +1011,18 @@ for (var prop of props) {
         is(t[get[i]](0), 13, `${get[i]}(0) afer ${set[i]}(0, 13) is 13 for "${constructor}"`);
       }
     }
+  }
+
+  function testNumber() {
+    // We don't actually support Xrays to Number yet.  This is testing
+    // that case.  If we add such support, we might have to start
+    // using a different non-Xrayed class here, if we can find one.
+    let xrayCtor = iwin.Number;
+    is(Object.getOwnPropertyNames(xrayCtor).sort().toSource(),
+       Object.getOwnPropertyNames(function() {}).sort().toSource(),
+       "We should not have any static properties on a non-Xrayable constructor");
+    is(xrayCtor.noSuchProperty, undefined,
+       "Where did our noSuchProperty property come from?");
   }
 
   ]]>
