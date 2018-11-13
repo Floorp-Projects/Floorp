@@ -293,18 +293,6 @@ ScriptLoadHandler::EnsureKnownDataType(nsIIncrementalStreamLoader* aLoader)
   MOZ_ASSERT(req, "StreamLoader's request went away prematurely");
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsICacheInfoChannel> cic(do_QueryInterface(req));
-  if (cic) {
-    nsAutoCString altDataType;
-    cic->GetAlternativeDataType(altDataType);
-    if (altDataType.Equals(nsContentUtils::JSBytecodeMimeType())) {
-      mRequest->SetBytecode();
-      TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_bytecode");
-      return NS_OK;
-    }
-    MOZ_ASSERT(altDataType.IsEmpty());
-  }
-
   if (ScriptLoader::BinASTEncodingEnabled()) {
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(req);
     if (httpChannel) {
@@ -315,8 +303,9 @@ ScriptLoadHandler::EnsureKnownDataType(nsIIncrementalStreamLoader* aLoader)
           mRequest->SetBinASTSource();
           TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_source");
           return NS_OK;
+        } else {
+          return NS_ERROR_FAILURE;
         }
-        return NS_ERROR_FAILURE;
       }
     }
   }
@@ -327,8 +316,22 @@ ScriptLoadHandler::EnsureKnownDataType(nsIIncrementalStreamLoader* aLoader)
     return NS_OK;
   }
 
-  mRequest->SetTextSource();
-  TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_source");
+  nsCOMPtr<nsICacheInfoChannel> cic(do_QueryInterface(req));
+  if (cic) {
+    nsAutoCString altDataType;
+    cic->GetAlternativeDataType(altDataType);
+    if (altDataType.Equals(nsContentUtils::JSBytecodeMimeType())) {
+      mRequest->SetBytecode();
+      TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_bytecode");
+    } else {
+      MOZ_ASSERT(altDataType.IsEmpty());
+      mRequest->SetTextSource();
+      TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_source");
+    }
+  } else {
+    mRequest->SetTextSource();
+    TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_source");
+  }
 
   MOZ_ASSERT(!mRequest->IsUnknownDataType());
   MOZ_ASSERT(mRequest->IsLoading());
