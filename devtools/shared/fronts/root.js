@@ -137,6 +137,16 @@ const RootFront = protocol.FrontClassWithSpec(rootSpec, {
   },
 
   /**
+   * Fetch the ParentProcessTargetActor for the main process.
+   *
+   * `getProcess` requests allows to fetch the target actor for any process
+   * and the main process is having the process ID zero.
+   */
+  getMainProcess() {
+    return this.getProcess(0);
+  },
+
+  /**
    * Fetch the target actor for the currently selected tab, or for a specific
    * tab given as first parameter.
    *
