@@ -49,7 +49,6 @@
   locale/@AB_CD@/global/narrate.properties              (%chrome/global/narrate.properties)
 #endif
   locale/@AB_CD@/global/notification.dtd                (%chrome/global/notification.dtd)
-  locale/@AB_CD@/global/preferences.dtd                 (%chrome/global/preferences.dtd)
 #ifndef MOZ_FENNEC
   locale/@AB_CD@/global/printPageSetup.dtd              (%chrome/global/printPageSetup.dtd)
   locale/@AB_CD@/global/printPreview.dtd                (%chrome/global/printPreview.dtd)
