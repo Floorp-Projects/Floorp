@@ -224,7 +224,8 @@
 
   <string name="pref_feature_tips_notification">&pref_feature_tips_notification;</string>
   <string name="pref_feature_tips_notification_summary">&pref_feature_tips_notification_summary;</string>
-  <string name="pref_feature_tips_notification_enabling_hint">&pref_feature_tips_notification_enabling_hint;</string>
+  <string name="pref_feature_tips_notification_enabling_path">&pref_feature_tips_notification_enabling_path;</string>
+  <string name="pref_feature_tips_notification_enabling_hint">&pref_feature_tips_notification_enabling_hint2;</string>
 
   <string name="pref_category_experimental">&pref_category_experimental;</string>
 
