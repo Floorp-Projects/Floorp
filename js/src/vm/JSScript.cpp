@@ -2379,27 +2379,6 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
         }
         MOZ_TRY(xdr->codeUint32(&uncompressedLength));
 
-        // A compressed length of 0 indicates source is uncompressed (or is
-        // BinAST if |hasBinSource|).
-        uint32_t compressedLength;
-        if (mode == XDR_ENCODE) {
-            compressedLength = compressedLengthOrZero();
-        }
-        MOZ_TRY(xdr->codeUint32(&compressedLength));
-
-        uint8_t srcCharSize;
-        if (mode == XDR_ENCODE) {
-            srcCharSize = sourceCharSize();
-        }
-        MOZ_TRY(xdr->codeUint8(&srcCharSize));
-
-        if (srcCharSize != 1 && srcCharSize != 2) {
-            // Fail in debug, but only soft-fail in release, if the source-char
-            // size is invalid.
-            MOZ_ASSERT_UNREACHABLE("bad XDR source chars size");
-            return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
-        }
-
         if (hasBinSource) {
             if (mode == XDR_DECODE) {
 #if defined(JS_BUILD_BINAST)
@@ -2421,31 +2400,53 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
                 void* bytes = binASTData();
                 MOZ_TRY(xdr->codeBytes(bytes, uncompressedLength));
             }
-        } else if (compressedLength) {
-            if (mode == XDR_DECODE) {
-                // Compressed data is always single-byte chars.
-                auto bytes = xdr->cx()->template make_pod_array<char>(compressedLength);
-                if (!bytes) {
-                    return xdr->fail(JS::TranscodeResult_Throw);
-                }
-                MOZ_TRY(xdr->codeBytes(bytes.get(), compressedLength));
+        } else {
+            // A compressed length of 0 indicates source is uncompressed
+            uint32_t compressedLength;
+            if (mode == XDR_ENCODE) {
+                compressedLength = compressedLengthOrZero();
+            }
+            MOZ_TRY(xdr->codeUint32(&compressedLength));
 
-                if (!(srcCharSize == 1
-                      ? setCompressedSource<Utf8Unit>(xdr->cx(), std::move(bytes),
-                                                      compressedLength, uncompressedLength)
-                      : setCompressedSource<char16_t>(xdr->cx(), std::move(bytes),
-                                                      compressedLength, uncompressedLength)))
-                {
-                    return xdr->fail(JS::TranscodeResult_Throw);
+            uint8_t srcCharSize;
+            if (mode == XDR_ENCODE) {
+                srcCharSize = sourceCharSize();
+            }
+            MOZ_TRY(xdr->codeUint8(&srcCharSize));
+
+            if (srcCharSize != 1 && srcCharSize != 2) {
+                // Fail in debug, but only soft-fail in release, if the source-char
+                // size is invalid.
+                MOZ_ASSERT_UNREACHABLE("bad XDR source chars size");
+                return xdr->fail(JS::TranscodeResult_Failure_BadDecode);
+            }
+
+            if (compressedLength) {
+                if (mode == XDR_DECODE) {
+                    // Compressed data is always single-byte chars.
+                    auto bytes = xdr->cx()->template make_pod_array<char>(compressedLength);
+                    if (!bytes) {
+                        return xdr->fail(JS::TranscodeResult_Throw);
+                    }
+                    MOZ_TRY(xdr->codeBytes(bytes.get(), compressedLength));
+
+                    if (!(srcCharSize == 1
+                          ? setCompressedSource<Utf8Unit>(xdr->cx(), std::move(bytes),
+                                                          compressedLength, uncompressedLength)
+                          : setCompressedSource<char16_t>(xdr->cx(), std::move(bytes),
+                                                          compressedLength, uncompressedLength)))
+                    {
+                        return xdr->fail(JS::TranscodeResult_Throw);
+                    }
+                } else {
+                    void* bytes = srcCharSize == 1
+                                  ? compressedData<Utf8Unit>()
+                                  : compressedData<char16_t>();
+                    MOZ_TRY(xdr->codeBytes(bytes, compressedLength));
                 }
             } else {
-                void* bytes = srcCharSize == 1
-                              ? compressedData<Utf8Unit>()
-                              : compressedData<char16_t>();
-                MOZ_TRY(xdr->codeBytes(bytes, compressedLength));
+                MOZ_TRY(xdrUncompressedSource(xdr, srcCharSize, uncompressedLength));
             }
-        } else {
-            MOZ_TRY(xdrUncompressedSource(xdr, srcCharSize, uncompressedLength));
         }
 
         uint8_t hasMetadata = !!binASTMetadata_;
