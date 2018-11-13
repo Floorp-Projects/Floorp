@@ -955,14 +955,13 @@
   height: 16px;
   float: inline-start;
   margin: 0 1px;
-  background-image: url("chrome://devtools/skin/images/devtools-components/arrow.svg");
+  background-image: url("chrome://devtools/skin/images/arrow.svg");
   background-position: 50% 50%;
   background-repeat: no-repeat;
-  background-size: 10px 10px;
+  background-size: 10px;
   -moz-context-properties: fill;
-  fill: currentColor;
+  fill: var(--theme-twisty-fill);
   cursor: pointer;
-  opacity: 0.5;
   transition: transform 125ms ease;
   transform: rotate(-90deg);
 }
@@ -980,7 +979,7 @@
 }
 
 .tree-widget-item.theme-selected::before {
-  opacity: 1;
+  fill: currentColor;
 }
 
 .tree-widget-item + ul {
