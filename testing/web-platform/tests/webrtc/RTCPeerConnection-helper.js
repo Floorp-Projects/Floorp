@@ -105,8 +105,8 @@ function assert_session_desc_not_similar(sessionDesc1, sessionDesc2) {
 
 async function generateDataChannelOffer(pc) {
   pc.createDataChannel('test');
-  const offer = pc.createOffer();
-  assert_equals(countApplicationLine(sdp), 1, 'Expect m=application line to be present in generated SDP');
+  const offer = await pc.createOffer();
+  assert_equals(countApplicationLine(offer.sdp), 1, 'Expect m=application line to be present in generated SDP');
   return offer;
 }
 
@@ -135,7 +135,7 @@ async function generateVideoReceiveOnlyOffer(pc)
 async function generateAnswer(offer) {
   const pc = new RTCPeerConnection();
   await pc.setRemoteDescription(offer);
-  const answer = pc.createAnswer();
+  const answer = await pc.createAnswer();
   pc.close();
   return answer;
 }
