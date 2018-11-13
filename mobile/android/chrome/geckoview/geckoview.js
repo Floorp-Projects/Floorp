@@ -10,6 +10,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
+  HistogramStopwatch: "resource://gre/modules/GeckoViewTelemetry.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -31,6 +32,11 @@ var ModuleManager = {
   },
 
   init(aBrowser, aModules) {
+    const MODULES_INIT_PROBE =
+      new HistogramStopwatch("GV_STARTUP_MODULES_MS", aBrowser);
+
+    MODULES_INIT_PROBE.start();
+
     const initData = this._initData;
     this._browser = aBrowser;
     this._settings = initData.settings;
@@ -73,6 +79,8 @@ var ModuleManager = {
 
       this._modules.clear();
     });
+
+    MODULES_INIT_PROBE.finish();
   },
 
   get window() {
