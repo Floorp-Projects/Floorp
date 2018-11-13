@@ -181,10 +181,66 @@ BigIntObject::toLocaleString(JSContext* cx, unsigned argc, Value* vp)
     return CallNonGenericMethod<IsBigInt, toLocaleString_impl>(cx, args);
 }
 
+// BigInt proposal section 5.2.1. BigInt.asUintN ( bits, bigint )
+bool
+BigIntObject::asUintN(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    // Step 1.
+    uint64_t bits;
+    if (!ToIndex(cx, args[0], &bits)) {
+        return false;
+    }
+
+    // Step 2.
+    RootedBigInt bi(cx, ToBigInt(cx, args[1]));
+    if (!bi) {
+        return false;
+    }
+
+    // Step 3.
+    BigInt* res = BigInt::asUintN(cx, bi, bits);
+    if (!res) {
+        return false;
+    }
+
+    args.rval().setBigInt(res);
+    return true;
+}
+
+// BigInt proposal section 5.2.2. BigInt.asIntN ( bits, bigint )
+bool
+BigIntObject::asIntN(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    // Step 1.
+    uint64_t bits;
+    if (!ToIndex(cx, args[0], &bits)) {
+        return false;
+    }
+
+    // Step 2.
+    RootedBigInt bi(cx, ToBigInt(cx, args[1]));
+    if (!bi) {
+        return false;
+    }
+
+    // Step 3.
+    BigInt* res = BigInt::asIntN(cx, bi, bits);
+    if (!res) {
+        return false;
+    }
+
+    args.rval().setBigInt(res);
+    return true;
+}
+
 const ClassSpec BigIntObject::classSpec_ = {
     GenericCreateConstructor<BigIntConstructor, 1, gc::AllocKind::FUNCTION>,
     GenericCreatePrototype<BigIntObject>,
-    nullptr,
+    BigIntObject::staticMethods,
     nullptr,
     BigIntObject::methods,
     BigIntObject::properties
@@ -216,5 +272,11 @@ const JSFunctionSpec BigIntObject::methods[] = {
     JS_FN("valueOf", valueOf, 0, 0),
     JS_FN("toString", toString, 0, 0),
     JS_FN("toLocaleString", toLocaleString, 0, 0),
+    JS_FS_END
+};
+
+const JSFunctionSpec BigIntObject::staticMethods[] = {
+    JS_FN("asUintN", asUintN, 2, 0),
+    JS_FN("asIntN", asIntN, 2, 0),
     JS_FS_END
 };
