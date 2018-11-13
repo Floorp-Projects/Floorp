@@ -30,6 +30,7 @@ WORKER_TYPES = {
     'aws-provisioner-v1/gecko-t-win10-64': ('generic-worker', 'windows'),
     'aws-provisioner-v1/gecko-t-win10-64-gpu': ('generic-worker', 'windows'),
     'releng-hardware/gecko-t-win10-64-hw': ('generic-worker', 'windows'),
+    'releng-hardware/gecko-t-win10-64-ux': ('generic-worker', 'windows'),
     'aws-provisioner-v1/gecko-t-win7-32': ('generic-worker', 'windows'),
     'aws-provisioner-v1/gecko-t-win7-32-gpu': ('generic-worker', 'windows'),
     'releng-hardware/gecko-t-win7-32-hw': ('generic-worker', 'windows'),
