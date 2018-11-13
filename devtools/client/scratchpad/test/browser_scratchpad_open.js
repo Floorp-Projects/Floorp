@@ -82,8 +82,10 @@ function testOpenTestFile() {
           is(nb.allNotifications.length, 1, "There is just one notification");
           const cn = nb.currentNotification;
           is(cn.priority, nb.PRIORITY_WARNING_HIGH, "notification priority is correct");
-          is(cn.value, "file-import-convert-failed", "notification value is corrent");
-          is(cn.type, "warning", "notification type is correct");
+          is(cn.getAttribute("value"), "file-import-convert-failed",
+             "notification value is corrent");
+          is(cn.getAttribute("type"), "warning",
+             "notification type is correct");
           done();
         });
       ok(true, "importFromFile does not cause exception");

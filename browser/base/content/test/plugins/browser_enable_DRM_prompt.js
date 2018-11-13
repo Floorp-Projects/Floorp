@@ -45,7 +45,7 @@ add_task(async function() {
     let notification = box.currentNotification;
 
     ok(notification, "Notification should be visible");
-    is(notification.value, "drmContentDisabled",
+    is(notification.getAttribute("value"), "drmContentDisabled",
        "Should be showing the right notification");
 
     // Verify the "Enable DRM" button is there.

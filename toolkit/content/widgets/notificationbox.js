@@ -64,7 +64,49 @@ MozElements.NotificationBox = class NotificationBox {
     return null;
   }
 
-  appendNotification(aLabel, aValue, aImage, aPriority, aButtons, aEventCallback) {
+  /**
+   * Creates a <notification> element and shows it. The calling code can modify
+   * the element synchronously to add features to the notification.
+   *
+   * @param aLabel
+   *        The main message text, or a DocumentFragment containing elements to
+   *        add as children of the notification's main <description> element.
+   * @param aValue
+   *        String identifier of the notification.
+   * @param aImage
+   *        URL of the icon image to display. If not specified, a default icon
+   *        based on the priority will be shown.
+   * @param aPriority
+   *        One of the PRIORITY_ constants. These determine the appearance of
+   *        the notification based on severity (using the "type" attribute), and
+   *        only the notification with the highest priority is displayed.
+   * @param aButtons
+   *        Array of objects defining action buttons:
+   *        {
+   *          label:
+   *            Label of the <button> element.
+   *          accessKey:
+   *            Access key character for the <button> element.
+   *          callback:
+   *            When the button is used, this is called with the arguments:
+   *             1. The <notification> element.
+   *             2. This button object definition.
+   *             3. The <button> element.
+   *             4. The "command" event.
+   *          popup:
+   *            If specified, the button will open the popup element with this
+   *            ID, anchored to the button. This is alternative to "callback".
+   *        }
+   * @param aEventCallback
+   *        This may be called with the "removed" or "dismissed" parameter.
+   * @param aNotificationIs
+   *        Defines a Custom Element name to use as the "is" value on creation.
+   *        This allows subclassing the created element.
+   *
+   * @return The <notification> element that is shown.
+   */
+  appendNotification(aLabel, aValue, aImage, aPriority, aButtons,
+                     aEventCallback, aNotificationIs) {
     if (aPriority < this.PRIORITY_INFO_LOW ||
       aPriority > this.PRIORITY_CRITICAL_HIGH)
       throw "Invalid notification priority " + aPriority;
@@ -79,24 +121,28 @@ MozElements.NotificationBox = class NotificationBox {
       insertPos = notifications[n];
     }
 
-    var newitem = document.createXULElement("notification");
-    // Can't use instanceof in case this was created from a different document:
-    let labelIsDocFragment = aLabel && typeof aLabel == "object" && aLabel.nodeType &&
-      aLabel.nodeType == aLabel.DOCUMENT_FRAGMENT_NODE;
-    if (!labelIsDocFragment)
-      newitem.setAttribute("label", aLabel);
+    // Create the Custom Element and connect it to the document immediately.
+    var newitem = document.createXULElement("notification",
+      aNotificationIs ? { is: aNotificationIs } : {});
+    this.stack.insertBefore(newitem, insertPos);
+
+    // Custom notification classes may not have the messageText property.
+    if (newitem.messageText) {
+      // Can't use instanceof in case this was created from a different document:
+      if (aLabel && typeof aLabel == "object" &&
+          aLabel.nodeType && aLabel.nodeType == aLabel.DOCUMENT_FRAGMENT_NODE) {
+        newitem.messageText.appendChild(aLabel);
+      } else {
+        newitem.messageText.textContent = aLabel;
+      }
+    }
     newitem.setAttribute("value", aValue);
-    if (aImage)
-      newitem.setAttribute("image", aImage);
+    if (aImage) {
+      newitem.messageImage.setAttribute("src", aImage);
+    }
     newitem.eventCallback = aEventCallback;
 
     if (aButtons) {
-      // The notification-button-default class is added to the button
-      // with isDefault set to true. If there is no such button, it is
-      // added to the first button (unless that button has isDefault
-      // set to false). There cannot be multiple default buttons.
-      var defaultElem;
-
       for (var b = 0; b < aButtons.length; b++) {
         var button = aButtons[b];
         var buttonElem = document.createXULElement("button");
@@ -104,20 +150,12 @@ MozElements.NotificationBox = class NotificationBox {
         if (typeof button.accessKey == "string")
           buttonElem.setAttribute("accesskey", button.accessKey);
         buttonElem.classList.add("notification-button");
-
-        if (button.isDefault ||
-          b == 0 && !("isDefault" in button))
-          defaultElem = buttonElem;
-
-        newitem.appendChild(buttonElem);
+        newitem.messageDetails.appendChild(buttonElem);
         buttonElem.buttonInfo = button;
       }
-
-      if (defaultElem)
-        defaultElem.classList.add("notification-button-default");
     }
 
-    newitem.setAttribute("priority", aPriority);
+    newitem.priority = aPriority;
     if (aPriority >= this.PRIORITY_CRITICAL_LOW)
       newitem.setAttribute("type", "critical");
     else if (aPriority <= this.PRIORITY_INFO_HIGH)
@@ -130,17 +168,8 @@ MozElements.NotificationBox = class NotificationBox {
       newitem.style.top = "100%";
       newitem.style.marginTop = "-15px";
       newitem.style.opacity = "0";
-    }
-    this.stack.insertBefore(newitem, insertPos);
-    // Can only insert the document fragment after the item has been created because
-    // otherwise the XBL structure isn't there yet:
-    if (labelIsDocFragment) {
-      document.getAnonymousElementByAttribute(newitem, "anonid", "messageText")
-        .appendChild(aLabel);
-    }
-
-    if (!insertPos)
       this._showNotification(newitem, true);
+    }
 
     // Fire event for accessibility APIs
     var event = document.createEvent("Events");
@@ -265,3 +294,80 @@ Object.assign(MozElements.NotificationBox.prototype, {
   PRIORITY_CRITICAL_MEDIUM: 8,
   PRIORITY_CRITICAL_HIGH: 9,
 });
+
+MozElements.Notification = class Notification extends MozXULElement {
+  constructor() {
+    super();
+    this.persistence = 0;
+    this.priority = 0;
+    this.timeout = 0;
+  }
+
+  connectedCallback() {
+    this.appendChild(MozXULElement.parseXULToFragment(`
+      <hbox class="messageDetails" align="center" flex="1"
+            oncommand="this.parentNode._doButtonCommand(event);">
+        <image class="messageImage"/>
+        <description class="messageText" flex="1"/>
+        <spacer flex="1"/>
+      </hbox>
+      <toolbarbutton ondblclick="event.stopPropagation();"
+                     class="messageCloseButton close-icon tabbable"
+                     tooltiptext="&closeNotification.tooltip;"
+                     oncommand="this.parentNode.dismiss();"/>
+    `, ["chrome://global/locale/notification.dtd"]));
+
+    for (let [propertyName, selector] of [
+      ["messageDetails", ".messageDetails"],
+      ["messageImage", ".messageImage"],
+      ["messageText", ".messageText"],
+      ["spacer", "spacer"],
+    ]) {
+      this[propertyName] = this.querySelector(selector);
+    }
+  }
+
+  get control() {
+    return this.closest(".notificationbox-stack")._notificationBox;
+  }
+
+  /**
+   * This method should only be called when the user has manually closed the
+   * notification. If you want to programmatically close the notification, you
+   * should call close() instead.
+   */
+  dismiss() {
+    if (this.eventCallback) {
+      this.eventCallback("dismissed");
+    }
+    this.close();
+  }
+
+  close() {
+    this.control.removeNotification(this);
+  }
+
+  _doButtonCommand(event) {
+    if (!("buttonInfo" in event.target)) {
+      return;
+    }
+
+    var button = event.target.buttonInfo;
+    if (button.popup) {
+      document.getElementById(button.popup).
+      openPopup(event.originalTarget, "after_start", 0, 0, false, false, event);
+      event.stopPropagation();
+    } else {
+      var callback = button.callback;
+      if (callback) {
+        var result = callback(this, button, event.target, event);
+        if (!result) {
+          this.close();
+        }
+        event.stopPropagation();
+      }
+    }
+  }
+};
+
+customElements.define("notification", MozElements.Notification);
