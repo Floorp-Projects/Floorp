@@ -7,7 +7,7 @@
  *
  * Do not confuse with RTCPeerConnection. This interface is purely for
  * communication between the PeerConnection JS DOM binding and the C++
- * implementation in SIPCC.
+ * implementation.
  *
  * See media/webrtc/signaling/include/PeerConnectionImpl.h
  *
@@ -91,9 +91,9 @@ interface PeerConnectionImpl  {
    * into the SDP.
    */
   [Throws]
-  void addIceCandidate(DOMString candidate, DOMString mid, unsigned short level);
+  void addIceCandidate(DOMString candidate, DOMString mid, unsigned short? level);
 
-  /* Puts the SIPCC engine back to 'kIdle', shuts down threads, deletes state */
+  /* Shuts down threads, deletes state */
   [Throws]
   void close();
 

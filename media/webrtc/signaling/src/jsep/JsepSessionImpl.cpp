@@ -2225,7 +2225,7 @@ JsepSessionImpl::SetState(JsepSignalingState state)
 nsresult
 JsepSessionImpl::AddRemoteIceCandidate(const std::string& candidate,
                                        const std::string& mid,
-                                       uint16_t level,
+                                       const Maybe<uint16_t>& level,
                                        std::string* transportId)
 {
   mLastError.clear();
@@ -2238,10 +2238,14 @@ JsepSessionImpl::AddRemoteIceCandidate(const std::string& candidate,
   }
 
   JsepTransceiver* transceiver;
-  if (mid.empty()) {
-    transceiver = GetTransceiverForLevel(level);
-  } else {
+  if (!mid.empty()) {
     transceiver = GetTransceiverForMid(mid);
+  } else if (level.isSome()) {
+    transceiver = GetTransceiverForLevel(level.value());
+  } else {
+    JSEP_SET_ERROR("ICE candidate: \'" << candidate
+                   << "\' is missing MID and MLineIndex");
+    return NS_ERROR_TYPE_ERR;
   }
 
   if (!transceiver) {
@@ -2250,15 +2254,15 @@ JsepSessionImpl::AddRemoteIceCandidate(const std::string& candidate,
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (transceiver->GetLevel() != level) {
-    JSEP_SET_ERROR("Mismatch between mid and level - \"" << mid
+  if (level.isSome() &&
+      transceiver->GetLevel() != level.value()) {
+    MOZ_MTLOG(ML_WARNING, "Mismatch between mid and level - \"" << mid
                    << "\" is not the mid for level " << level);
-    return NS_ERROR_INVALID_ARG;
   }
 
   *transportId = transceiver->mTransport.mTransportId;
 
-  return mSdpHelper.AddCandidateToSdp(sdp, candidate, level);
+  return mSdpHelper.AddCandidateToSdp(sdp, candidate, transceiver->GetLevel());
 }
 
 nsresult

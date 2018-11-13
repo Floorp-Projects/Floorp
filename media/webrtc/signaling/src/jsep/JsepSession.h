@@ -161,7 +161,7 @@ public:
                                         const std::string& sdp) = 0;
   virtual nsresult AddRemoteIceCandidate(const std::string& candidate,
                                          const std::string& mid,
-                                         uint16_t level,
+                                         const Maybe<uint16_t>& level,
                                          std::string* transportId) = 0;
   virtual nsresult AddLocalIceCandidate(const std::string& candidate,
                                         const std::string& transportId,

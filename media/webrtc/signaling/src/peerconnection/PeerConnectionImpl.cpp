@@ -1687,7 +1687,7 @@ PeerConnectionImpl::GetStats(MediaStreamTrack *aSelector) {
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::AddIceCandidate(const char* aCandidate, const char* aMid, unsigned short aLevel) {
+PeerConnectionImpl::AddIceCandidate(const char* aCandidate, const char* aMid, const dom::Nullable<unsigned short>& aLevel) {
   PC_AUTO_ENTER_API_CALL(true);
 
   if (mForceIceTcp && std::string::npos != std::string(aCandidate).find(" UDP ")) {
@@ -1720,8 +1720,12 @@ PeerConnectionImpl::AddIceCandidate(const char* aCandidate, const char* aMid, un
   }
 
   std::string transportId;
+  Maybe<unsigned short> level;
+  if (!aLevel.IsNull()) {
+    level = Some(aLevel.Value());
+  }
   nsresult res =
-    mJsepSession->AddRemoteIceCandidate(aCandidate, aMid, aLevel, &transportId);
+    mJsepSession->AddRemoteIceCandidate(aCandidate, aMid, level, &transportId);
 
   if (NS_SUCCEEDED(res)) {
     // We do not bother PCMedia about this before offer/answer concludes.
@@ -1740,7 +1744,10 @@ PeerConnectionImpl::AddIceCandidate(const char* aCandidate, const char* aMid, un
         error = kInvalidState;
         break;
       case NS_ERROR_INVALID_ARG:
-        error = kInvalidCandidate;
+        error = kOperationError;
+        break;
+      case NS_ERROR_TYPE_ERR:
+        error = kTypeError;
         break;
       default:
         error = kInternalError;
@@ -1749,10 +1756,10 @@ PeerConnectionImpl::AddIceCandidate(const char* aCandidate, const char* aMid, un
     std::string errorString = mJsepSession->GetLastError();
 
     CSFLogError(LOGTAG, "Failed to incorporate remote candidate into SDP:"
-                        " res = %u, candidate = %s, level = %u, error = %s",
+                        " res = %u, candidate = %s, level = %i, error = %s",
                         static_cast<unsigned>(res),
                         aCandidate,
-                        static_cast<unsigned>(aLevel),
+                        level.valueOr(-1),
                         errorString.c_str());
 
     pco->OnAddIceCandidateError(error, ObString(errorString.c_str()), rv);

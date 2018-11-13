@@ -113,7 +113,7 @@ public:
 
   virtual nsresult AddRemoteIceCandidate(const std::string& candidate,
                                          const std::string& mid,
-                                         uint16_t level,
+                                         const Maybe<uint16_t>& level,
                                          std::string* transportId) override;
 
   virtual nsresult AddLocalIceCandidate(const std::string& candidate,
