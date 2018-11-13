@@ -674,6 +674,7 @@ AddAnimationsForProperty(nsIFrame* aFrame,
     nsCSSProps::PropHasFlags(aProperty, CSSPropFlags::CanAnimateOnCompositor),
     "inconsistent property flags");
 
+  EffectSet* effects = EffectSet::GetEffectSet(styleFrame);
   // Add from first to last (since last overrides)
   for (size_t animIdx = 0; animIdx < compositorAnimations.Length(); animIdx++) {
     dom::Animation* anim = compositorAnimations[animIdx];
@@ -686,7 +687,7 @@ AddAnimationsForProperty(nsIFrame* aFrame,
     MOZ_ASSERT(keyframeEffect,
                "A playing animation should have a keyframe effect");
     const AnimationProperty* property =
-      keyframeEffect->GetEffectiveAnimationOfProperty(aProperty);
+      keyframeEffect->GetEffectiveAnimationOfProperty(aProperty, *effects);
     if (!property) {
       continue;
     }
