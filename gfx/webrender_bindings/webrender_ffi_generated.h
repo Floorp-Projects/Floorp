@@ -1156,9 +1156,6 @@ extern bool is_in_main_thread();
 
 extern bool is_in_render_thread();
 
-extern void gecko_profiler_start_marker(const char* name);
-extern void gecko_profiler_end_marker(const char* name);
-
 extern void record_telemetry_time(TelemetryProbe aProbe,
                                   uint64_t aTimeNs);
 
