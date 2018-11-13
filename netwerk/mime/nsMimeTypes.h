@@ -108,6 +108,9 @@
 #define IMAGE_TIFF                          "image/tiff"
 #define IMAGE_BMP                           "image/bmp"
 #define IMAGE_BMP_MS                        "image/x-ms-bmp"
+// This is used internally to represent Windows clipboard BMPs which remove
+// part of the header.
+#define IMAGE_BMP_MS_CLIPBOARD              "image/x-ms-clipboard-bmp"
 #define IMAGE_ICO                           "image/x-icon"
 #define IMAGE_ICO_MS                        "image/vnd.microsoft.icon"
 #define IMAGE_ICON_MS                       "image/icon"
