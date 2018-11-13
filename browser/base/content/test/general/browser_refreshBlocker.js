@@ -100,7 +100,7 @@ async function testRealRefresh(refreshPage, delay) {
     let notification = notificationBox.currentNotification;
 
     ok(notification, "Notification should be visible");
-    is(notification.value, "refresh-blocked",
+    is(notification.getAttribute("value"), "refresh-blocked",
        "Should be showing the right notification");
 
     // Then click the button to allow the refresh.

@@ -63,15 +63,15 @@ notification[type="critical"] {
   fill: currentColor;
 }
 
-.messageImage[type="info"] {
+notification[type="info"] > hbox > .messageImage {
   list-style-image: url("chrome://global/skin/icons/help.svg");
 }
 
-.messageImage[type="warning"] {
+notification[type="warning"] > hbox > .messageImage {
   list-style-image: url("chrome://global/skin/icons/warning.svg");
 }
 
-.messageImage[type="critical"] {
+notification[type="critical"] > hbox > .messageImage {
   list-style-image: url("chrome://global/skin/icons/error.svg");
 }
 
