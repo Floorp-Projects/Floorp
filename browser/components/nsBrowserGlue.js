@@ -634,6 +634,11 @@ BrowserGlue.prototype = {
     const MAX_DELAY = 300;
     let delay = 3;
     for (let win of Services.wm.getEnumerator("navigator:browser")) {
+      // browser windows without a gBrowser almost certainly means we are
+      // shutting down, so instead of just ignoring that window we abort.
+      if (win.closed || !win.gBrowser) {
+        return;
+      }
       delay += win.gBrowser.tabs.length;
     }
     delay = delay <= MAX_DELAY ? delay : MAX_DELAY;
