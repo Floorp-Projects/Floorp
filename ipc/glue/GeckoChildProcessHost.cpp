@@ -989,6 +989,11 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
         // TODO: Implement sandbox for VR process, Bug 1430043.
       }
       break;
+    case GeckoProcessType_RDD:
+      if (mSandboxLevel > 0 && !PR_GetEnv("MOZ_DISABLE_RDD_SANDBOX")) {
+        // TODO: Implement sandbox for RDD process, Bug 1498624.
+      }
+      break;
     case GeckoProcessType_Default:
     default:
       MOZ_CRASH("Bad process type in GeckoChildProcessHost");
@@ -1071,6 +1076,7 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
     // child processes.
     if (mProcessType == GeckoProcessType_Content ||
         mProcessType == GeckoProcessType_GPU ||
+        mProcessType == GeckoProcessType_RDD ||
         mProcessType == GeckoProcessType_VR ||
         mProcessType == GeckoProcessType_GMPlugin) {
       if (!mSandboxBroker.AddTargetPeer(process)) {
