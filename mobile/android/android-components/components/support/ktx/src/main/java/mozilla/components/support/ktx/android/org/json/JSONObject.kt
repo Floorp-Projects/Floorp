@@ -66,3 +66,10 @@ fun JSONObject.sortKeys(): JSONObject {
     }
     return jsonObject
 }
+
+/**
+ * Convert a Map<String, String> to a JSONObject
+ */
+fun Map<String, String>.toJSON() = JSONObject().apply {
+    forEach { (key, value) -> put(key, value) }
+}

@@ -62,12 +62,8 @@ internal class PingMaker(
      * @return a string holding the data for the ping.
      */
     fun collect(storage: String): String {
-        val jsonPing = JSONObject()
-
-        // Assemble the JSON ping.
+        val jsonPing = storageManager.collect(storage)
         jsonPing.put("ping_info", getPingInfo(storage))
-        jsonPing.put("metrics", storageManager.collect(storage))
-
         return jsonPing.toString()
     }
 }

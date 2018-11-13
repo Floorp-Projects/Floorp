@@ -27,6 +27,7 @@ dependencies {
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
 
+    implementation project(':support-ktx')
     implementation project(':support-base')
 
     testImplementation Dependencies.testing_junit

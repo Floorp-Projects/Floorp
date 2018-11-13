@@ -40,8 +40,8 @@ interface CommonMetricData {
     }
 
     fun shouldRecord(logger: Logger): Boolean {
-        // Silently drop recording for disabled events.
-        if (disabled) {
+        // Silently drop if metrics are turned off globally or locally
+        if (!Glean.getMetricsEnabled() || disabled) {
             return false
         }
 

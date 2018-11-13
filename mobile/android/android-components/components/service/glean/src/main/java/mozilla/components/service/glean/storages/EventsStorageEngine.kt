@@ -117,6 +117,9 @@ internal object EventsStorageEngine : StorageEngine {
         }
     }
 
+    override val sendAsTopLevelField: Boolean
+        get() = true
+
     @VisibleForTesting
     internal fun clearAllStores() {
         eventStores.clear()

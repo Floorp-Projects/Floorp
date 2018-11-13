@@ -32,7 +32,7 @@ class StorageEngineManagerTest {
         ), applicationContext = RuntimeEnvironment.application)
 
         val data = manager.collect("test")
-        assertEquals("{\"engine1\":{\"test\":\"val\"},\"engine2\":[\"a\",\"b\",\"c\"]}",
+        assertEquals("{\"metrics\":{\"engine1\":{\"test\":\"val\"},\"engine2\":[\"a\",\"b\",\"c\"]}}",
             data.toString())
     }
 }

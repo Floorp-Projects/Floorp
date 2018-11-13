@@ -24,4 +24,11 @@ internal interface StorageEngine {
      *         ancestor is [Object], so we need to return [Any].
      */
     fun getSnapshotAsJSON(storeName: String, clearStore: Boolean): Any?
+
+    /**
+     * Indicate whether this storage engine is sent at the top level of the ping
+     * (rather than in the metrics section).
+     */
+    val sendAsTopLevelField: Boolean
+        get() = false
 }

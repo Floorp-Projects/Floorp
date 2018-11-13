@@ -15,8 +15,9 @@ import org.json.JSONObject
 internal class StorageEngineManager(
     private val storageEngines: Map<String, StorageEngine> = mapOf(
         "events" to EventsStorageEngine,
-        "strings" to StringsStorageEngine,
-        "uuids" to UuidsStorageEngine
+        "experiments" to ExperimentsStorageEngine,
+        "string" to StringsStorageEngine,
+        "uuid" to UuidsStorageEngine
     ),
     applicationContext: Context
 ) {
@@ -35,10 +36,17 @@ internal class StorageEngineManager(
      */
     fun collect(storeName: String): JSONObject {
         val jsonPing = JSONObject()
-
+        val metricsSection = JSONObject()
         for ((sectionName, engine) in storageEngines) {
             val engineData = engine.getSnapshotAsJSON(storeName, clearStore = true)
-            jsonPing.put(sectionName, engineData)
+            if (engine.sendAsTopLevelField) {
+                jsonPing.put(sectionName, engineData)
+            } else {
+                metricsSection.put(sectionName, engineData)
+            }
+        }
+        if (metricsSection.length() != 0) {
+            jsonPing.put("metrics", metricsSection)
         }
 
         return jsonPing
