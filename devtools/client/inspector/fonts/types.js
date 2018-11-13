@@ -109,7 +109,4 @@ exports.fontData = {
 
   // The fonts used in the current element.
   fonts: PropTypes.arrayOf(PropTypes.shape(font)),
-
-  // Fonts used elsewhere.
-  otherFonts: PropTypes.arrayOf(PropTypes.shape(font)),
 };
