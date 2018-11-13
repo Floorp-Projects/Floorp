@@ -809,12 +809,14 @@ StripURIForReporting(nsIURI* aURI,
   // 1) If the origin of uri is a globally unique identifier (for example,
   // aURI has a scheme of data, blob, or filesystem), then return the
   // ASCII serialization of uri’s scheme.
-  bool isHttpOrFtp =
-    (NS_SUCCEEDED(aURI->SchemeIs("http", &isHttpOrFtp)) && isHttpOrFtp) ||
-    (NS_SUCCEEDED(aURI->SchemeIs("https", &isHttpOrFtp)) && isHttpOrFtp) ||
-    (NS_SUCCEEDED(aURI->SchemeIs("ftp", &isHttpOrFtp)) && isHttpOrFtp);
+  bool isHttpFtpOrWs =
+    (NS_SUCCEEDED(aURI->SchemeIs("http", &isHttpFtpOrWs)) && isHttpFtpOrWs) ||
+    (NS_SUCCEEDED(aURI->SchemeIs("https", &isHttpFtpOrWs)) && isHttpFtpOrWs) ||
+    (NS_SUCCEEDED(aURI->SchemeIs("ftp", &isHttpFtpOrWs)) && isHttpFtpOrWs) ||
+    (NS_SUCCEEDED(aURI->SchemeIs("ws", &isHttpFtpOrWs)) && isHttpFtpOrWs) ||
+    (NS_SUCCEEDED(aURI->SchemeIs("wss", &isHttpFtpOrWs)) && isHttpFtpOrWs);
 
-  if (!isHttpOrFtp) {
+  if (!isHttpFtpOrWs) {
     // not strictly spec compliant, but what we really care about is
     // http/https and also ftp. If it's not http/https or ftp, then treat aURI
     // as if it's a globally unique identifier and just return the scheme.
