@@ -1867,9 +1867,16 @@ public class BrowserApp extends GeckoApp
 
             case "Sanitize:Finished":
                 if (message.getBoolean("shutdown", false)) {
-                    // Gecko is shutting down and has called our sanitize handlers,
-                    // so we can start exiting, too.
-                    finishAndShutdown(/* restart */ false);
+                    // Gecko is shutting down and has called our sanitize handlers, so to make us
+                    // appear more responsive, we can start shutting down the UI as well, even if
+                    // that means that Android might kill our process before Gecko has fully exited.
+
+                    // There is at least one exception, though: If we want to dump a captured
+                    // profile to disk, Gecko must be able to fully shutdown, so we only kill the UI
+                    // later on, in response to the Gecko thread exiting.
+                    if (!mDumpProfileOnShutdown) {
+                        finishAndShutdown(/* restart */ false);
+                    }
                 }
                 break;
 
@@ -3144,12 +3151,13 @@ public class BrowserApp extends GeckoApp
         final MenuItem enterGuestMode = aMenu.findItem(R.id.new_guest_session);
         final MenuItem exitGuestMode = aMenu.findItem(R.id.exit_guest_session);
 
-        // Only show the "Quit" menu item on pre-ICS, television devices,
+        // Only show the "Quit" menu when capturing a profile, on television devices,
         // or if the user has explicitly enabled the clear on shutdown pref.
         // (We check the pref last to save the pref read.)
         // In ICS+, it's easy to kill an app through the task switcher.
         final SharedPreferences prefs = GeckoSharedPrefs.forProfile(this);
         final boolean visible = HardwareUtils.isTelevision() ||
+                                mDumpProfileOnShutdown ||
                                 prefs.getBoolean(GeckoPreferences.PREFS_SHOW_QUIT_MENU, false) ||
                                 !PrefUtils.getStringSet(prefs,
                                                         ClearOnShutdownPref.PREF,
