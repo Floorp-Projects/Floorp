@@ -11977,7 +11977,6 @@ nsIDocument::InlineScriptAllowedByCSP()
                                        EmptyString(), // aNonce
                                        true,          // aParserCreated
                                        nullptr,       // aTriggeringElement
-                                       nullptr,       // aCSPEventListener
                                        EmptyString(), // FIXME get script sample (bug 1314567)
                                        0,             // aLineNumber
                                        0,             // aColumnNumber

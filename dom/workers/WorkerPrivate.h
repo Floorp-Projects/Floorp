@@ -411,9 +411,6 @@ public:
     return mDebuggerScope;
   }
 
-  nsICSPEventListener*
-  CSPEventListener() const;
-
   void
   SetThread(WorkerThread* aThread);
 
