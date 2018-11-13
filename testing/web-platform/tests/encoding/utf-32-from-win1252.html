@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<meta charset=utf-8>
-<title>Character Decoding: UTF-32 (not supported) subresource of UTF-8 document</title>
+<meta charset=windows-1252>
+<title>Character Decoding: UTF-32 (not supported) subresource of windows-1252 document</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <body>
 <script>
 
 // Since UTF-32 is not supported:
-//  * HTML resources will use the parent encoding (UTF-8)
+//  * HTML resources will use the parent encoding (windows-1252)
 //  * XML resources will default to UTF-8
 // ... except for the UTF-32LE-with-BOM case, where the UTF-32
 // BOM will be mistaken for a UTF-16LE BOM (FF FE 00 00), in which
@@ -15,7 +15,7 @@
 
 const samples = [
   {file: 'resources/utf-32-big-endian-bom.html',
-   characterSet: 'UTF-8',
+   characterSet: 'windows-1252',
    contentType: 'text/html'
   },
   {file: 'resources/utf-32-big-endian-bom.xml',
@@ -23,7 +23,7 @@ const samples = [
    contentType: 'application/xml'
   },
   {file: 'resources/utf-32-big-endian-nobom.html',
-   characterSet: 'UTF-8',
+   characterSet: 'windows-1252',
    contentType: 'text/html'
   },
   {file: 'resources/utf-32-big-endian-nobom.xml',
@@ -40,7 +40,7 @@ const samples = [
    contentType: 'application/xml'
   },
   {file: 'resources/utf-32-little-endian-nobom.html',
-   characterSet: 'UTF-8',
+   characterSet: 'windows-1252',
    contentType: 'text/html'
   },
   {file: 'resources/utf-32-little-endian-nobom.xml',
