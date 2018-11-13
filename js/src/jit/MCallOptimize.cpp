@@ -2333,7 +2333,7 @@ IonBuilder::inlineRegExpSearcher(CallInfo& callInfo)
     JSContext* cx = TlsContext.get();
     if (!cx->realm()->jitRealm()->ensureRegExpSearcherStubExists(cx)) {
         cx->clearPendingException(); // OOM or overrecursion.
-        return abort(AbortReason::Error);
+        return InliningStatus_NotInlined;
     }
 
     callInfo.setImplicitlyUsedUnchecked();
