@@ -5,15 +5,13 @@
 package org.mozilla.focus.screenshots;
 
 import android.os.SystemClock;
-import android.support.test.espresso.ViewInteraction;
+import android.support.test.espresso.NoMatchingViewException;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
-
-import junit.framework.Assert;
 
 import org.junit.After;
 import org.junit.Before;
@@ -37,12 +35,13 @@ import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.hasFocus;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.isEnabled;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withResourceName;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static junit.framework.Assert.assertTrue;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
-import static org.mozilla.focus.helpers.EspressoHelper.childAtPosition;
 import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
 
 @RunWith(AndroidJUnit4.class)
@@ -67,6 +66,10 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
                 .setBody(TestHelper.readTestAsset("download.jpg")));
         // Download
         webServer.enqueue(new MockResponse()
+                .setBody(TestHelper.readTestAsset("image_test.html")));
+        webServer.enqueue(new MockResponse()
+                .setBody(TestHelper.readTestAsset("rabbit.jpg")));
+        webServer.enqueue(new MockResponse()
                 .setBody(TestHelper.readTestAsset("download.jpg")));
     }
 
@@ -84,7 +87,6 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
     public void takeScreenshotsOfBrowsingScreen() throws Exception {
         SystemClock.sleep(5000);
         takeScreenshotsOfBrowsingView();
-        takeScreenshotsOfMenu();
         takeScreenshotsOfOpenWithAndShare();
         takeAddToHomeScreenScreenshot();
         takeScreenshotofInsecureCon();
@@ -97,60 +99,60 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
         onView(withId(R.id.urlView))
                 .check(matches(isDisplayed()));
 
-        /* Autocomplete View */
-        onView(withId(R.id.urlView))
-                .check(matches(isDisplayed()))
-                .check(matches(hasFocus()))
-                .perform(click(), replaceText("mozilla"));
-
-        assertTrue(TestHelper.hint.waitForExists(waitingTime));
-
-        onView(withId(R.id.urlView))
-                .check(matches(isDisplayed()))
-                .check(matches(hasFocus()))
-                .perform(click(), replaceText(webServer.url("/").toString()));
-
-
-        // click yes, then go into search dialog and change to twitter
-        try {
-            onView(withId(R.id.enable_search_suggestions_button))
-                    .check(matches(isDisplayed()))
-                    .perform(click());
-            Screengrab.screenshot("Suggestion_accept_dialog");
-        } catch (AssertionError ignored) { }
-
-        onView(withId(R.id.clearView))
-                .check(matches(isDisplayed()))
-                .perform(click());
-
+        // click yes, then go into search dialog and change to twitter, or create twitter engine
+        // If it does not exist (In order to get search unavailable dialog)
         openSettings();
         onView(withText(R.string.preference_category_search))
                 .perform(click());
-        onView(withText(R.string.preference_search_engine_label))
+        onView(allOf(withText(R.string.preference_search_engine_label),
+                withResourceName("title")))
                 .perform(click());
         onView(withText(R.string.preference_search_installed_search_engines))
                 .check(matches(isDisplayed()));
 
-        onView(allOf(childAtPosition(
-                withId(R.id.search_engine_group), 3),
-                isDisplayed()))
-                .perform(click());
+       try {
+           onView(withText("Twitter"))
+                   .check(matches(isDisplayed()))
+                   .perform(click());
+       } catch (NoMatchingViewException doesnotexist) {
+           final String addEngineLabel = getString(R.string.preference_search_add2);
+           onView(withText(addEngineLabel))
+                   .check(matches(isEnabled()))
+                   .perform(click());
+           onView(withId(R.id.edit_engine_name))
+                   .check(matches(isEnabled()));
+           onView(withId(R.id.edit_engine_name))
+                   .perform(replaceText("twitter"));
+           onView(withId(R.id.edit_search_string))
+                   .perform(replaceText("https://twitter.com/search?q=%s"));
+           onView(withId(R.id.menu_save_search_engine))
+                   .check(matches(isEnabled()))
+                   .perform(click());
+       }
 
         device.pressBack();
+        onView(allOf(withText(R.string.preference_search_engine_label),
+                withResourceName("title")))
+                .check(matches(isDisplayed()));
         device.pressBack();
+        onView(withText(R.string.preference_category_search))
+                .check(matches(isDisplayed()));
         device.pressBack();
 
         onView(withId(R.id.urlView))
                 .check(matches(isDisplayed()))
                 .check(matches(hasFocus()))
                 .perform(click(), replaceText(webServer.url("/").toString()));
-
         try {
-            ViewInteraction dismissbutton = onView(withId(R.id.dismiss_no_suggestions_message));
-            dismissbutton.check(matches(isDisplayed()));
+            onView(withId(R.id.enable_search_suggestions_button))
+                    .check(matches(isDisplayed()));
+            Screengrab.screenshot("Enable_Suggestion_dialog");
+            onView(withId(R.id.enable_search_suggestions_button))
+                    .perform(click());
             Screengrab.screenshot("Suggestion_unavailable_dialog");
-            dismissbutton.perform(click());
-        } catch (AssertionError ignored) { }
+            onView(withId(R.id.dismiss_no_suggestions_message))
+                    .perform(click());
+        } catch (AssertionError dne) {}
 
         onView(withId(R.id.urlView))
                 .check(matches(isDisplayed()))
@@ -165,15 +167,25 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
         onView(withId(R.id.display_url))
                 .check(matches(isDisplayed()))
                 .check(matches(withText(containsString(webServer.getHostName()))));
-    }
 
-    private void takeScreenshotsOfMenu() {
-        TestHelper.menuButton.perform(click());
-        Screengrab.screenshot("BrowserViewMenu");
+        // Check add link to autocomplete text
+        onView(withId(R.id.display_url)).perform(click());
+        onView(withId(R.id.addToAutoComplete))
+                .check(matches(isDisplayed()));
+        Screengrab.screenshot("Addlink_autocomplete");
+        onView(withId(R.id.addToAutoComplete))
+                .perform(click());
+        Screengrab.screenshot("new_customURL_popup");
+        onView(withId(R.id.display_url)).perform(click());
+        onView(withId(R.id.addToAutoComplete))
+                .perform(click());
+        Screengrab.screenshot("customURL_alreadyexists_popup");
     }
 
     private void takeScreenshotsOfOpenWithAndShare() throws Exception {
         /* Open_With View */
+        TestHelper.menuButton.perform(click());
+
         UiObject openWithBtn = device.findObject(new UiSelector()
                 .resourceId(TestHelper.getAppName() + ":id/open_select_browser")
                 .enabled(true));
@@ -207,15 +219,12 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
 
         TestHelper.AddtoHSCancelBtn.waitForExists(waitingTime);
         Screengrab.screenshot("AddtoHSDialog");
-
-        device.pressBack();
-        device.pressBack();
-        Assert.assertTrue(TestHelper.browserURLbar.waitForExists(waitingTime));
+        TestHelper.AddtoHSCancelBtn.click();
     }
 
     private void takeScreenshotOfTabsTrayAndErase() throws Exception {
         final UiObject mozillaImage = device.findObject(new UiSelector()
-                .descriptionContains("download icon")
+                .resourceId("download")
                 .enabled(true));
 
         UiObject imageMenuTitle = device.findObject(new UiSelector()
