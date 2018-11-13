@@ -105,7 +105,7 @@ public:
   // call this function on nsAttrName structs with 0 mBits, so no attempt
   // must be made to do anything with mBits besides comparing it with the
   // incoming aAtom argument.
-  bool Equals(nsAtom* aAtom) const
+  bool Equals(const nsAtom* aAtom) const
   {
     return reinterpret_cast<uintptr_t>(aAtom) == mBits;
   }
@@ -116,7 +116,7 @@ public:
     return IsAtom() && Atom()->Equals(aLocalName);
   }
 
-  bool Equals(nsAtom* aLocalName, int32_t aNamespaceID) const
+  bool Equals(const nsAtom* aLocalName, int32_t aNamespaceID) const
   {
     if (aNamespaceID == kNameSpaceID_None) {
       return Equals(aLocalName);
@@ -187,7 +187,7 @@ public:
     return mBits - 0;
   }
 
-  bool IsSmaller(nsAtom* aOther) const
+  bool IsSmaller(const nsAtom* aOther) const
   {
     return mBits < reinterpret_cast<uintptr_t>(aOther);
   }

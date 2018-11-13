@@ -731,7 +731,7 @@ public:
     return IsElement() && IsInNamespace(kNameSpaceID_XHTML);
   }
 
-  inline bool IsHTMLElement(nsAtom* aTag) const
+  inline bool IsHTMLElement(const nsAtom* aTag) const
   {
     return IsElement() && mNodeInfo->Equals(aTag, kNameSpaceID_XHTML);
   }
@@ -747,7 +747,7 @@ public:
     return IsElement() && IsInNamespace(kNameSpaceID_SVG);
   }
 
-  inline bool IsSVGElement(nsAtom* aTag) const
+  inline bool IsSVGElement(const nsAtom* aTag) const
   {
     return IsElement() && mNodeInfo->Equals(aTag, kNameSpaceID_SVG);
   }
@@ -763,7 +763,7 @@ public:
     return IsElement() && IsInNamespace(kNameSpaceID_XUL);
   }
 
-  inline bool IsXULElement(nsAtom* aTag) const
+  inline bool IsXULElement(const nsAtom* aTag) const
   {
     return IsElement() && mNodeInfo->Equals(aTag, kNameSpaceID_XUL);
   }
@@ -779,7 +779,7 @@ public:
     return IsElement() && IsInNamespace(kNameSpaceID_MathML);
   }
 
-  inline bool IsMathMLElement(nsAtom* aTag) const
+  inline bool IsMathMLElement(const nsAtom* aTag) const
   {
     return IsElement() && mNodeInfo->Equals(aTag, kNameSpaceID_MathML);
   }
@@ -865,7 +865,7 @@ public:
    *                       (though a null return value does not imply the
    *                       property was not set, i.e. it can be set to null).
    */
-  void* GetProperty(nsAtom* aPropertyName, nsresult* aStatus = nullptr) const;
+  void* GetProperty(const nsAtom* aPropertyName, nsresult* aStatus = nullptr) const;
 
   /**
    * Set a property to be associated with this node. This will overwrite an
@@ -904,7 +904,7 @@ public:
    *
    * @param aPropertyName  name of property to destroy.
    */
-  void DeleteProperty(nsAtom* aPropertyName);
+  void DeleteProperty(const nsAtom* aPropertyName);
 
   /**
    * Unset a property associated with this node. The value will not be
@@ -919,7 +919,7 @@ public:
    *                       (though a null return value does not imply the
    *                       property was not set, i.e. it can be set to null).
    */
-  void* UnsetProperty(nsAtom* aPropertyName, nsresult* aStatus = nullptr);
+  void* UnsetProperty(const nsAtom* aPropertyName, nsresult* aStatus = nullptr);
 
   bool HasProperties() const
   {
