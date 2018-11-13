@@ -184,7 +184,7 @@ VARCACHE_PREF(
 // we fear the worst and kill it.
 #if !defined(DEBUG) && !defined(MOZ_ASAN) && !defined(MOZ_VALGRIND) && \
     !defined(MOZ_TSAN)
-# define PREF_VALUE 10
+# define PREF_VALUE 5
 #else
 # define PREF_VALUE 0
 #endif
