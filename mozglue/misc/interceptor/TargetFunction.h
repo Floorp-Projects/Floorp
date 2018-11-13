@@ -41,6 +41,10 @@ CommitAndWriteShortInternal<MMPolicyOutOfProcess>(
 
 #endif // defined(_M_IX86)
 
+// Forward declaration
+template <typename MMPolicy>
+class ReadOnlyTargetFunction;
+
 template <typename MMPolicy>
 class MOZ_STACK_CLASS WritableTargetFunction final
 {
@@ -242,6 +246,48 @@ public:
     return Some(value);
   }
 
+  Maybe<uintptr_t> ReadEncodedPtr()
+  {
+    // Reading is only permitted prior to any writing
+    MOZ_ASSERT(mOffset == mStartWriteOffset);
+    if (mOffset > mStartWriteOffset) {
+      mAccumulatedStatus = false;
+      return Nothing();
+    }
+
+    uintptr_t value;
+    if (!mMMPolicy.Read(&value, reinterpret_cast<const void*>(mFunc + mOffset),
+                        sizeof(uintptr_t))) {
+      mAccumulatedStatus = false;
+      return Nothing();
+    }
+
+    mOffset += sizeof(uintptr_t);
+    mStartWriteOffset += sizeof(uintptr_t);
+    return Some(ReadOnlyTargetFunction<MMPolicy>::DecodePtr(value));
+  }
+
+  Maybe<uint32_t> ReadLong()
+  {
+    // Reading is only permitted prior to any writing
+    MOZ_ASSERT(mOffset == mStartWriteOffset);
+    if (mOffset > mStartWriteOffset) {
+      mAccumulatedStatus = false;
+      return Nothing();
+    }
+
+    uint32_t value;
+    if (!mMMPolicy.Read(&value, reinterpret_cast<const void*>(mFunc + mOffset),
+                        sizeof(uint32_t))) {
+      mAccumulatedStatus = false;
+      return Nothing();
+    }
+
+    mOffset += sizeof(uint32_t);
+    mStartWriteOffset += sizeof(uint32_t);
+    return Some(value);
+  }
+
   void WriteShort(const uint16_t& aValue)
   {
     if (!mLocalBytes.append(reinterpret_cast<const uint8_t*>(&aValue),
@@ -302,6 +348,19 @@ public:
 
     mOffset += sizeof(int32_t);
   }
+
+#if defined(_M_X64)
+  void WriteLong(const uint32_t aValue)
+  {
+    if (!mLocalBytes.append(reinterpret_cast<const uint8_t*>(&aValue),
+                            sizeof(uint32_t))) {
+      mAccumulatedStatus = false;
+      return;
+    }
+
+    mOffset += sizeof(uint32_t);
+  }
+#endif // defined(_M_X64)
 
   void WritePointer(const uintptr_t aAbsTarget)
   {
