@@ -95,6 +95,8 @@ public:
 
   RenderTextureHost* GetRenderTexture(wr::WrExternalImageId aExternalImageId);
 
+  void AccumulateMemoryReport(MemoryReport* aReport);
+
   wr::Renderer* GetRenderer() { return mRenderer; }
 
   gl::GLContext* gl() const;
