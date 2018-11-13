@@ -1513,7 +1513,8 @@ TextNodeCorrespondenceRecorder::TraverseAndRecord(nsIFrame* aFrame)
     }
     // Each whole nsTextNode we find before we get to the text node for
     // the current text frame must be undisplayed.
-    while (mNodeIterator.Current() != node) {
+    while (mNodeIterator.Current() &&
+           mNodeIterator.Current() != node) {
       undisplayed += mNodeIterator.Current()->TextLength();
       NextNode();
     }
