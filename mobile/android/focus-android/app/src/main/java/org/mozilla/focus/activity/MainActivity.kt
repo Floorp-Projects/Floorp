@@ -48,6 +48,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
     private val intentProcessor by lazy { IntentProcessor(components.sessionManager) }
 
+    private var previousSessionCount = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -278,10 +280,20 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             return
         }
 
+        val browserFragment = BrowserFragment.createForSession(currentSession)
+        val isNewSession = previousSessionCount < components.sessionManager.sessions.count() && previousSessionCount > 0
+
+        if ((currentSession.source == Session.Source.ACTION_SEND ||
+                currentSession.source == Session.Source.HOME_SCREEN) && isNewSession) {
+            browserFragment.openedFromExternalLink = true
+        }
+
         fragmentManager
                 .beginTransaction()
-                .replace(R.id.container, BrowserFragment.createForSession(currentSession), BrowserFragment.FRAGMENT_TAG)
+                .replace(R.id.container, browserFragment, BrowserFragment.FRAGMENT_TAG)
             .commitAllowingStateLoss()
+
+        previousSessionCount = components.sessionManager.sessions.count()
     }
 
     override fun onCreateView(name: String, context: Context, attrs: AttributeSet): View? {

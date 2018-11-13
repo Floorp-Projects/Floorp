@@ -80,10 +80,13 @@ class BiometricAuthenticationHandler(private val context: Context) :
     }
 
     // Create the prompt and begin listening
-    private fun startListening(cryptoObject: FingerprintManagerCompat.CryptoObject) {
+    private fun startListening(cryptoObject: FingerprintManagerCompat.CryptoObject, openedFromExternalLink: Boolean) {
         if (biometricFragment == null) {
             biometricFragment = BiometricAuthenticationDialogFragment()
         }
+
+        biometricFragment?.openedFromExternalLink = openedFromExternalLink
+        biometricFragment?.updateNewSessionButton()
 
         cancellationSignal = CancellationSignal()
         selfCancelled = false
@@ -92,16 +95,18 @@ class BiometricAuthenticationHandler(private val context: Context) :
 
     fun stopListening() {
         cancellationSignal?.let {
+            biometricFragment?.dismiss()
             selfCancelled = true
             it.cancel()
             cancellationSignal = null
         }
     }
 
-    fun startAuthentication() {
+    fun startAuthentication(openedFromLink: Boolean) {
         val cryptoObject = cryptoObject
+        if (openedFromLink) needsAuth = true
         if (needsAuth && cryptoObject != null) {
-            startListening(cryptoObject)
+            startListening(cryptoObject, openedFromLink)
         }
     }
 
