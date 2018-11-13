@@ -47,10 +47,10 @@ MOZ_CrashPrintf(const char* aFilename, int aLine, const char* aFormat, ...)
   MOZ_RELEASE_ASSERT(ret >= 0 && size_t(ret) < sPrintfCrashReasonSize,
     "Could not write the explanation string to the supplied buffer!");
 #ifdef DEBUG
-  MOZ_ReportCrash(sPrintfCrashReason, aFilename, aLine);
+  MOZ_CrashOOL(aFilename, aLine, sPrintfCrashReason);
+#else
+  MOZ_CrashOOL(nullptr, aLine, sPrintfCrashReason);
 #endif
-  gMozCrashReason = sPrintfCrashReason;
-  MOZ_REALLY_CRASH(aLine);
 }
 
 MOZ_END_EXTERN_C
