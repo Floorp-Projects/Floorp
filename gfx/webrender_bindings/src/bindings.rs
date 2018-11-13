@@ -785,6 +785,9 @@ impl SceneBuilderHooks for APZCallbacks {
         unsafe { apz_register_updater(self.window_id) }
     }
 
+    fn pre_scene_build(&self) {
+    }
+
     fn pre_scene_swap(&self, scenebuild_time: u64) {
         unsafe {
             record_telemetry_time(TelemetryProbe::SceneBuildTime, scenebuild_time);
@@ -807,6 +810,9 @@ impl SceneBuilderHooks for APZCallbacks {
 
     fn post_resource_update(&self) {
         unsafe { wr_schedule_render(self.window_id) }
+    }
+
+    fn post_empty_scene_build(&self) {
     }
 
     fn poke(&self) {
