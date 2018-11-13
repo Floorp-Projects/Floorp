@@ -293,23 +293,6 @@ ScriptLoadHandler::EnsureKnownDataType(nsIIncrementalStreamLoader* aLoader)
   MOZ_ASSERT(req, "StreamLoader's request went away prematurely");
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (ScriptLoader::BinASTEncodingEnabled()) {
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(req);
-    if (httpChannel) {
-      nsAutoCString mimeType;
-      httpChannel->GetContentType(mimeType);
-      if (mimeType.LowerCaseEqualsASCII(APPLICATION_JAVASCRIPT_BINAST)) {
-        if (mRequest->ShouldAcceptBinASTEncoding()) {
-          mRequest->SetBinASTSource();
-          TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_source");
-          return NS_OK;
-        } else {
-          return NS_ERROR_FAILURE;
-        }
-      }
-    }
-  }
-
   if (mRequest->IsLoadingSource()) {
     mRequest->SetTextSource();
     TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_source");
@@ -323,15 +306,29 @@ ScriptLoadHandler::EnsureKnownDataType(nsIIncrementalStreamLoader* aLoader)
     if (altDataType.Equals(nsContentUtils::JSBytecodeMimeType())) {
       mRequest->SetBytecode();
       TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_bytecode");
-    } else {
-      MOZ_ASSERT(altDataType.IsEmpty());
-      mRequest->SetTextSource();
-      TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_source");
+      return NS_OK;
     }
-  } else {
-    mRequest->SetTextSource();
-    TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_source");
+    MOZ_ASSERT(altDataType.IsEmpty());
   }
+
+  if (ScriptLoader::BinASTEncodingEnabled()) {
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(req);
+    if (httpChannel) {
+      nsAutoCString mimeType;
+      httpChannel->GetContentType(mimeType);
+      if (mimeType.LowerCaseEqualsASCII(APPLICATION_JAVASCRIPT_BINAST)) {
+        if (mRequest->ShouldAcceptBinASTEncoding()) {
+          mRequest->SetBinASTSource();
+          TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_source");
+          return NS_OK;
+        }
+        return NS_ERROR_FAILURE;
+      }
+    }
+  }
+
+  mRequest->SetTextSource();
+  TRACE_FOR_TEST(mRequest->Element(), "scriptloader_load_source");
 
   MOZ_ASSERT(!mRequest->IsUnknownDataType());
   MOZ_ASSERT(mRequest->IsLoading());
