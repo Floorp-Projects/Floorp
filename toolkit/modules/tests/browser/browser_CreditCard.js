@@ -36,7 +36,6 @@ add_task(async function test_getLabel_withOSKeyStore() {
   is(decryptedNumber, ccNumber, "Decrypted CC number should match original");
 
   const name = "Foxkeh";
-  const creditCard = new CreditCard({encryptedNumber, name: "Foxkeh"});
-  const label = await creditCard.getLabel({showNumbers: true});
-  is(label, `${ccNumber}, ${name}`);
+  const label = CreditCard.getLabel({name: "Foxkeh", number: ccNumber});
+  is(label, `**** 1111, ${name}`, "Label matches");
 });

@@ -345,7 +345,12 @@ async function waitForFocusAndFormReady(win) {
 }
 
 async function testDialog(url, testFn, arg = undefined) {
-  if (url == EDIT_CREDIT_CARD_DIALOG_URL && arg && arg.record) {
+  // Skip this step for test cards that lack an encrypted
+  // number since they will fail to decrypt.
+  if (url == EDIT_CREDIT_CARD_DIALOG_URL &&
+      arg &&
+      arg.record &&
+      arg.record["cc-number-encrypted"]) {
     arg.record = Object.assign({}, arg.record, {
       "cc-number": await OSKeyStore.decrypt(arg.record["cc-number-encrypted"]),
     });

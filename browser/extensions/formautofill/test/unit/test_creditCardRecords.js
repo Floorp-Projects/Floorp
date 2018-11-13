@@ -228,7 +228,7 @@ let do_check_credit_card_matches = (creditCardWithMeta, creditCard) => {
       Assert.equal(creditCard["cc-number"].endsWith(matches[2]), true);
       Assert.notEqual(creditCard["cc-number-encrypted"], "");
     } else {
-      Assert.equal(creditCardWithMeta[key], creditCard[key]);
+      Assert.equal(creditCardWithMeta[key], creditCard[key], "Testing " + key);
     }
   }
 };
