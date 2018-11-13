@@ -14256,5 +14256,57 @@
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["ttung@mozilla.com"],
     "description": "Time (ms) for the QuotaManager to initialize repositories."
+  },
+  "GV_PAGE_LOAD_PROGRESS_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": [
+      "geckoview-team@mozilla.com",
+      "esawin@mozilla.com"
+    ],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1499418],
+    "description": "GeckoView: The time between page load progress start (0) and completion (100) in ms."
+  },
+  "GV_PAGE_LOAD_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": [
+      "geckoview-team@mozilla.com",
+      "esawin@mozilla.com"
+    ],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1499418],
+    "description": "GeckoView: Time taken to load a page in ms. This includes all static contents, no dynamic content. Loading of about: pages is not counted."
+  },
+  "GV_STARTUP_RUNTIME_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": [
+      "geckoview-team@mozilla.com",
+      "esawin@mozilla.com"
+    ],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "bug_numbers": [1499418],
+    "description": "GeckoView: Time taken to initialize GeckoRuntime in ms."
+  },
+  "GV_STARTUP_MODULES_MS": {
+    "record_in_processes": ["main"],
+    "alert_emails": [
+      "geckoview-team@mozilla.com",
+      "esawin@mozilla.com"
+    ],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 50,
+    "bug_numbers": [1499418],
+    "description": "GeckoView: Time taken to initialize all GeckoView modules in ms."
   }
 }
