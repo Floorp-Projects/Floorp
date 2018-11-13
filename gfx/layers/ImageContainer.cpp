@@ -17,6 +17,7 @@
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
+#include "mozilla/layers/ImageDataSerializer.h" // for SurfaceDescriptorBuffer
 #include "mozilla/layers/LayersMessages.h"
 #include "mozilla/layers/SharedPlanarYCbCrImage.h"
 #include "mozilla/layers/SharedSurfacesChild.h" // for SharedSurfacesAnimation
@@ -50,6 +51,10 @@ using namespace mozilla::gfx;
 Atomic<int32_t> Image::sSerialCounter(0);
 
 Atomic<uint32_t> ImageContainer::sGenerationCounter(0);
+
+static void
+CopyPlane(uint8_t* aDst, const uint8_t* aSrc,
+          const gfx::IntSize& aSize, int32_t aStride, int32_t aSkip);
 
 RefPtr<PlanarYCbCrImage>
 ImageFactory::CreatePlanarYCbCrImage(const gfx::IntSize& aScaleHint, BufferRecycleBin *aRecycleBin)
@@ -481,6 +486,61 @@ PlanarYCbCrImage::PlanarYCbCrImage()
   , mBufferSize(0)
 {
 }
+
+nsresult
+PlanarYCbCrImage::BuildSurfaceDescriptorBuffer(
+    SurfaceDescriptorBuffer& aSdBuffer)
+{
+  const PlanarYCbCrData* pdata = GetData();
+  MOZ_ASSERT(pdata, "must have PlanarYCbCrData");
+  MOZ_ASSERT(pdata->mYSkip == 0 && pdata->mCbSkip == 0 && pdata->mCrSkip == 0,
+             "YCbCrDescriptor doesn't hold skip values");
+  MOZ_ASSERT(pdata->mPicX == 0 && pdata->mPicY == 0,
+             "YCbCrDescriptor doesn't hold picx or picy");
+
+  uint32_t yOffset;
+  uint32_t cbOffset;
+  uint32_t crOffset;
+  ImageDataSerializer::ComputeYCbCrOffsets(pdata->mYStride,
+                                           pdata->mYSize.height,
+                                           pdata->mCbCrStride,
+                                           pdata->mCbCrSize.height,
+                                           yOffset, cbOffset, crOffset);
+
+  aSdBuffer.desc() = YCbCrDescriptor(pdata->mYSize, pdata->mYStride,
+                                     pdata->mCbCrSize, pdata->mCbCrStride,
+                                     yOffset, cbOffset, crOffset,
+                                     pdata->mStereoMode,
+                                     pdata->mColorDepth,
+                                     pdata->mYUVColorSpace,
+                                     /*hasIntermediateBuffer*/ false);
+
+  uint8_t* buffer = nullptr;
+  const MemoryOrShmem& memOrShmem = aSdBuffer.data();
+  switch (memOrShmem.type()) {
+    case MemoryOrShmem::Tuintptr_t:
+      buffer = reinterpret_cast<uint8_t*>(memOrShmem.get_uintptr_t());
+      break;
+    case MemoryOrShmem::TShmem:
+      buffer = memOrShmem.get_Shmem().get<uint8_t>();
+      break;
+    default:
+      MOZ_ASSERT(false, "Unknown MemoryOrShmem type");
+  }
+  MOZ_ASSERT(buffer, "no valid buffer available to copy image data");
+  if (!buffer) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  CopyPlane(buffer+yOffset, pdata->mYChannel,
+            pdata->mYSize, pdata->mYStride, pdata->mYSkip);
+  CopyPlane(buffer+cbOffset, pdata->mCbChannel,
+            pdata->mCbCrSize, pdata->mCbCrStride, pdata->mCbSkip);
+  CopyPlane(buffer+crOffset, pdata->mCrChannel,
+            pdata->mCbCrSize, pdata->mCbCrStride, pdata->mCrSkip);
+  return NS_OK;
+}
+
 
 RecyclingPlanarYCbCrImage::~RecyclingPlanarYCbCrImage()
 {
