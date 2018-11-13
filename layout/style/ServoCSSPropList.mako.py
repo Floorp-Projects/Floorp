@@ -111,6 +111,7 @@ SERIALIZED_PREDEFINED_TYPES = [
     "Translate",
     "TimingFunction",
     "TransformStyle",
+    "UserSelect",
     "background::BackgroundSize",
     "basic_shape::ClippingShape",
     "basic_shape::FloatAreaShape",

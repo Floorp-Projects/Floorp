@@ -680,8 +680,8 @@ SourceUnits<Utf8Unit>::assertNextCodePoint(const PeekedCodePoint<Utf8Unit>& peek
         expectedUnits[1] = 0b1000'0000 | ((c >> 6) & 0b11'1111);
         expectedUnits[2] = 0b1000'0000 | (c & 0b11'1111);
     } else {
-        expectedUnits[0] = 0b1110'0000 | (c >> 18);
-        expectedUnits[2] = 0b1000'0000 | ((c >> 12) & 0b11'1111);
+        expectedUnits[0] = 0b1111'0000 | (c >> 18);
+        expectedUnits[1] = 0b1000'0000 | ((c >> 12) & 0b11'1111);
         expectedUnits[2] = 0b1000'0000 | ((c >> 6) & 0b11'1111);
         expectedUnits[3] = 0b1000'0000 | (c & 0b11'1111);
     }
@@ -794,14 +794,17 @@ TokenStreamChars<Utf8Unit, AnyCharsAccess>::notEnoughUnits(Utf8Unit lead,
     const char actualStr[] = { toHexChar(remaining - 1), '\0' };
 
     internalEncodingError(remaining, JSMSG_NOT_ENOUGH_CODE_UNITS,
-                          leadByteStr, expectedStr, actualStr, remaining == 2 ? " was" : "s were");
+                          leadByteStr,
+                          expectedStr, required == 2 ? "" : "s",
+                          actualStr, remaining == 2 ? " was" : "s were");
 }
 
 template<class AnyCharsAccess>
 MOZ_COLD void
-TokenStreamChars<Utf8Unit, AnyCharsAccess>::badTrailingUnit(Utf8Unit badUnit,
-                                                            uint8_t unitsObserved)
+TokenStreamChars<Utf8Unit, AnyCharsAccess>::badTrailingUnit(uint8_t unitsObserved)
 {
+    Utf8Unit badUnit = this->sourceUnits.addressOfNextCodeUnit()[unitsObserved - 1];
+
     char badByteStr[5];
     byteToTerminatedString(badUnit.toUint8(), badByteStr);
 
@@ -829,12 +832,13 @@ TokenStreamChars<Utf8Unit, AnyCharsAccess>::badStructurallyValidCodePoint(uint32
     char* codePointStr = codePointCharsArray + ArrayLength(codePointCharsArray);
     *--codePointStr = '\0';
 
-    uint32_t copy = codePoint;
-    while (copy) {
+    // Note that by do-while looping here rather than while-looping, this
+    // writes a '0' when |codePoint == 0|.
+    do {
         MOZ_ASSERT(codePointCharsArray < codePointStr);
-        *--codePointStr = toHexChar(copy & 0xF);
-        copy >>= 4;
-    }
+        *--codePointStr = toHexChar(codePoint & 0xF);
+        codePoint >>= 4;
+    } while (codePoint);
 
     MOZ_ASSERT(codePointCharsArray + 2 <= codePointStr);
     *--codePointStr = 'x';
@@ -856,8 +860,8 @@ TokenStreamChars<Utf8Unit, AnyCharsAccess>::getNonAsciiCodePointDontNormalize(Ut
         this->notEnoughUnits(lead, remaining, required);
     };
 
-    auto onBadTrailingUnit = [this, &lead](uint8_t unitsObserved) {
-        this->badTrailingUnit(lead, unitsObserved);
+    auto onBadTrailingUnit = [this](uint8_t unitsObserved) {
+        this->badTrailingUnit(unitsObserved);
     };
 
     auto onBadCodePoint = [this](char32_t badCodePoint, uint8_t unitsObserved) {
@@ -977,8 +981,8 @@ TokenStreamChars<Utf8Unit, AnyCharsAccess>::getNonAsciiCodePoint(int32_t unit, i
         this->notEnoughUnits(lead, remaining, required);
     };
 
-    auto onBadTrailingUnit = [this, &lead](uint_fast8_t unitsObserved) {
-        this->badTrailingUnit(lead, unitsObserved);
+    auto onBadTrailingUnit = [this](uint_fast8_t unitsObserved) {
+        this->badTrailingUnit(unitsObserved);
     };
 
     auto onBadCodePoint = [this](char32_t badCodePoint, uint_fast8_t unitsObserved) {

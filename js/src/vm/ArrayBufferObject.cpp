@@ -886,7 +886,7 @@ js::CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
                      MutableHandleArrayBufferObjectMaybeShared buffer)
 {
     MOZ_ASSERT(memory.initial % wasm::PageSize == 0);
-    MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
+    MOZ_RELEASE_ASSERT(cx->wasmHaveSignalHandlers);
     MOZ_RELEASE_ASSERT((memory.initial / wasm::PageSize) <= wasm::MaxMemoryInitialPages);
 
     // Prevent applications specifying a large max (like UINT32_MAX) from
@@ -932,7 +932,8 @@ js::CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
 ArrayBufferObject::prepareForAsmJS(JSContext* cx, Handle<ArrayBufferObject*> buffer)
 {
     MOZ_ASSERT(buffer->byteLength() % wasm::PageSize == 0);
-    MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
+    // Don't assert cx->wasmHaveSignalHandlers because (1) they aren't needed
+    // for asm.js, (2) they are only installed for WebAssembly, not asm.js.
 
     if (buffer->forInlineTypedObject()) {
         return false;

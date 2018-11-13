@@ -11091,10 +11091,6 @@ BaseCompiler::finish()
 bool
 js::wasm::BaselineCanCompile()
 {
-    // On all platforms we require signals for Wasm.
-    // If we made it this far we must have signals.
-    MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
-
 #if defined(JS_CODEGEN_ARM)
     // Simplifying assumption: require SDIV and UDIV.
     //

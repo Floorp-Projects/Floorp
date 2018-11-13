@@ -4045,11 +4045,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.PDFFindController = exports.FindState = undefined;
 
+var _ui_utils = __webpack_require__(2);
+
 var _pdfjsLib = __webpack_require__(3);
 
 var _pdf_find_utils = __webpack_require__(16);
-
-var _ui_utils = __webpack_require__(2);
 
 const FindState = {
   FOUND: 0,
@@ -4058,6 +4058,8 @@ const FindState = {
   PENDING: 3
 };
 const FIND_TIMEOUT = 250;
+const MATCH_SCROLL_OFFSET_TOP = -50;
+const MATCH_SCROLL_OFFSET_LEFT = -400;
 const CHARACTERS_TO_NORMALIZE = {
   '\u2018': '\'',
   '\u2019': '\'',
@@ -4114,18 +4116,24 @@ class PDFFindController {
     this._firstPageCapability.resolve();
   }
   executeCommand(cmd, state) {
+    if (!state) {
+      return;
+    }
     const pdfDocument = this._pdfDocument;
-    if (this._state === null || this._shouldDirtyMatch(cmd)) {
+    if (this._state === null || this._shouldDirtyMatch(cmd, state)) {
       this._dirtyMatch = true;
     }
     this._state = state;
-    this._updateUIState(FindState.PENDING);
+    if (cmd !== 'findhighlightallchange') {
+      this._updateUIState(FindState.PENDING);
+    }
     this._firstPageCapability.promise.then(() => {
       if (!this._pdfDocument || pdfDocument && this._pdfDocument !== pdfDocument) {
         return;
       }
       this._extractText();
       const findbarClosed = !this._highlightMatches;
+      const pendingTimeout = !!this._findTimeout;
       if (this._findTimeout) {
         clearTimeout(this._findTimeout);
         this._findTimeout = null;
@@ -4142,13 +4150,36 @@ class PDFFindController {
         if (findbarClosed && this._state.highlightAll) {
           this._updateAllPages();
         }
+      } else if (cmd === 'findhighlightallchange') {
+        if (pendingTimeout) {
+          this._nextMatch();
+        } else {
+          this._highlightMatches = true;
+        }
+        this._updateAllPages();
       } else {
         this._nextMatch();
       }
     });
   }
+  scrollMatchIntoView({ element = null, pageIndex = -1, matchIndex = -1 }) {
+    if (!this._scrollMatches || !element) {
+      return;
+    } else if (matchIndex === -1 || matchIndex !== this._selected.matchIdx) {
+      return;
+    } else if (pageIndex === -1 || pageIndex !== this._selected.pageIdx) {
+      return;
+    }
+    this._scrollMatches = false;
+    const spot = {
+      top: MATCH_SCROLL_OFFSET_TOP,
+      left: MATCH_SCROLL_OFFSET_LEFT
+    };
+    (0, _ui_utils.scrollIntoView)(element, spot, true);
+  }
   _reset() {
     this._highlightMatches = false;
+    this._scrollMatches = false;
     this._pdfDocument = null;
     this._pageMatches = [];
     this._pageMatchesLength = [];
@@ -4180,7 +4211,10 @@ class PDFFindController {
     }
     return this._normalizedQuery;
   }
-  _shouldDirtyMatch(cmd) {
+  _shouldDirtyMatch(cmd, state) {
+    if (state.query !== this._state.query) {
+      return true;
+    }
     switch (cmd) {
       case 'findagain':
         const pageNumber = this._selected.pageIdx + 1;
@@ -4188,6 +4222,8 @@ class PDFFindController {
         if (pageNumber >= 1 && pageNumber <= linkService.pagesCount && linkService.page !== pageNumber && linkService.isPageVisible && !linkService.isPageVisible(pageNumber)) {
           break;
         }
+        return false;
+      case 'findhighlightallchange':
         return false;
     }
     return true;
@@ -4343,7 +4379,7 @@ class PDFFindController {
     }
   }
   _updatePage(index) {
-    if (this._selected.pageIdx === index) {
+    if (this._scrollMatches && this._selected.pageIdx === index) {
       this._linkService.page = index + 1;
     }
     this._eventBus.dispatch('updatetextlayermatches', {
@@ -4463,6 +4499,7 @@ class PDFFindController {
     }
     this._updateUIState(state, this._state.findPrevious);
     if (this._selected.pageIdx !== -1) {
+      this._scrollMatches = true;
       this._updatePage(this._selected.pageIdx);
     }
   }
@@ -6922,20 +6959,17 @@ class BaseViewer {
     let pageView = this._pages[this._currentPageNumber - 1];
     this._scrollIntoView({ pageDiv: pageView.div });
   }
-  scrollPageIntoView(params) {
+  scrollPageIntoView({ pageNumber, destArray = null, allowNegativeOffset = false }) {
     if (!this.pdfDocument) {
       return;
     }
-    let pageNumber = params.pageNumber || 0;
-    let dest = params.destArray || null;
-    let allowNegativeOffset = params.allowNegativeOffset || false;
-    if (this.isInPresentationMode || !dest) {
-      this._setCurrentPageNumber(pageNumber, true);
-      return;
-    }
-    let pageView = this._pages[pageNumber - 1];
+    const pageView = Number.isInteger(pageNumber) && this._pages[pageNumber - 1];
     if (!pageView) {
       console.error(`${this._name}.scrollPageIntoView: Invalid "pageNumber" parameter.`);
+      return;
+    }
+    if (this.isInPresentationMode || !destArray) {
+      this._setCurrentPageNumber(pageNumber, true);
       return;
     }
     let x = 0,
@@ -6948,11 +6982,11 @@ class BaseViewer {
     let pageWidth = (changeOrientation ? pageView.height : pageView.width) / pageView.scale / _ui_utils.CSS_UNITS;
     let pageHeight = (changeOrientation ? pageView.width : pageView.height) / pageView.scale / _ui_utils.CSS_UNITS;
     let scale = 0;
-    switch (dest[1].name) {
+    switch (destArray[1].name) {
       case 'XYZ':
-        x = dest[2];
-        y = dest[3];
-        scale = dest[4];
+        x = destArray[2];
+        y = destArray[3];
+        scale = destArray[4];
         x = x !== null ? x : 0;
         y = y !== null ? y : pageHeight;
         break;
@@ -6962,7 +6996,7 @@ class BaseViewer {
         break;
       case 'FitH':
       case 'FitBH':
-        y = dest[2];
+        y = destArray[2];
         scale = 'page-width';
         if (y === null && this._location) {
           x = this._location.left;
@@ -6971,16 +7005,16 @@ class BaseViewer {
         break;
       case 'FitV':
       case 'FitBV':
-        x = dest[2];
+        x = destArray[2];
         width = pageWidth;
         height = pageHeight;
         scale = 'page-height';
         break;
       case 'FitR':
-        x = dest[2];
-        y = dest[3];
-        width = dest[4] - x;
-        height = dest[5] - y;
+        x = destArray[2];
+        y = destArray[3];
+        width = destArray[4] - x;
+        height = destArray[5] - y;
         let hPadding = this.removePageBorders ? 0 : _ui_utils.SCROLLBAR_PADDING;
         let vPadding = this.removePageBorders ? 0 : _ui_utils.VERTICAL_PADDING;
         widthScale = (this.container.clientWidth - hPadding) / width / _ui_utils.CSS_UNITS;
@@ -6988,7 +7022,7 @@ class BaseViewer {
         scale = Math.min(Math.abs(widthScale), Math.abs(heightScale));
         break;
       default:
-        console.error(`${this._name}.scrollPageIntoView: "${dest[1].name}" ` + 'is not a valid destination type.');
+        console.error(`${this._name}.scrollPageIntoView: ` + `"${destArray[1].name}" is not a valid destination type.`);
         return;
     }
     if (scale && scale !== this._currentScale) {
@@ -6996,7 +7030,7 @@ class BaseViewer {
     } else if (this._currentScale === _ui_utils.UNKNOWN_SCALE) {
       this.currentScaleValue = _ui_utils.DEFAULT_SCALE_VALUE;
     }
-    if (scale === 'page-fit' && !dest[4]) {
+    if (scale === 'page-fit' && !destArray[4]) {
       this._scrollIntoView({
         pageDiv: pageView.div,
         pageNumber
@@ -7232,7 +7266,7 @@ class BaseViewer {
     if (this._currentScaleValue && isNaN(this._currentScaleValue)) {
       this._setScale(this._currentScaleValue, true);
     }
-    this.scrollPageIntoView({ pageNumber });
+    this._setCurrentPageNumber(pageNumber, true);
     this.update();
   }
   get spreadMode() {
@@ -7281,7 +7315,7 @@ class BaseViewer {
     if (!pageNumber) {
       return;
     }
-    this.scrollPageIntoView({ pageNumber });
+    this._setCurrentPageNumber(pageNumber, true);
     this.update();
   }
 }
@@ -7854,8 +7888,6 @@ var _ui_utils = __webpack_require__(2);
 var _pdfjsLib = __webpack_require__(3);
 
 const EXPAND_DIVS_TIMEOUT = 300;
-const MATCH_SCROLL_OFFSET_TOP = -50;
-const MATCH_SCROLL_OFFSET_LEFT = -400;
 class TextLayerBuilder {
   constructor({ textLayerDiv, eventBus, pageIndex, viewport, findController = null, enhanceTextSelection = false }) {
     this.textLayerDiv = textLayerDiv;
@@ -8013,13 +8045,11 @@ class TextLayerBuilder {
       let end = match.end;
       let isSelected = isSelectedPage && i === selectedMatchIdx;
       let highlightSuffix = isSelected ? ' selected' : '';
-      if (findController.selected.matchIdx === i && findController.selected.pageIdx === pageIdx) {
-        const spot = {
-          top: MATCH_SCROLL_OFFSET_TOP,
-          left: MATCH_SCROLL_OFFSET_LEFT
-        };
-        (0, _ui_utils.scrollIntoView)(textDivs[begin.divIdx], spot, true);
-      }
+      findController.scrollMatchIntoView({
+        element: textDivs[begin.divIdx],
+        pageIndex: pageIdx,
+        matchIndex: i
+      });
       if (!prevEnd || begin.divIdx !== prevEnd.divIdx) {
         if (prevEnd !== null) {
           appendTextToDiv(prevEnd.divIdx, prevEnd.offset, infinity.offset);
