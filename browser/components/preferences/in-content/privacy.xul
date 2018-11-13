@@ -378,16 +378,18 @@
         <button id="clearDataSettings"
                 class="accessory-button"
                 data-l10n-id="history-clear-on-close-settings"
-                searchkeywords="&clearDataSettings4.label;
-                                &historySection.label;
-                                &itemHistoryAndDownloads.label;
-                                &itemCookies.label;
-                                &itemActiveLogins.label;
-                                &itemCache.label;
-                                &itemFormSearchHistory.label;
-                                &dataSection.label;
-                                &itemSitePreferences.label;
-                                &itemOfflineApps.label;"/>
+                search-l10n-ids="
+                  clear-data-settings-label,
+                  history-section-label,
+                  item-history-and-downloads.label,
+                  item-cookies.label,
+                  item-active-logins.label,
+                  item-cache.label,
+                  item-form-search-history.label,
+                  data-section-label,
+                  item-site-preferences.label,
+                  item-offline-apps.label
+                "/>
       </hbox>
     </vbox>
   </hbox>

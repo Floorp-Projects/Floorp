@@ -19,10 +19,8 @@
 <!DOCTYPE page [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 <!ENTITY % certManagerDTD SYSTEM "chrome://pippki/locale/certManager.dtd">
-<!ENTITY % sanitizeDTD SYSTEM "chrome://browser/locale/sanitize.dtd">
 %brandDTD;
 %certManagerDTD;
-%sanitizeDTD;
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -47,6 +45,7 @@
     <link rel="localization" href="browser/preferences/selectBookmark.ftl"/>
     <link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
     <link rel="localization" href="browser/aboutDialog.ftl"/>
+    <link rel="localization" href="browser/sanitize.ftl"/>
     <link rel="localization" href="toolkit/updates/history.ftl"/>
     <link rel="localization" href="security/certificates/deviceManager.ftl"/>
   </linkset>
