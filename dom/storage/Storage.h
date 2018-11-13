@@ -35,6 +35,7 @@ public:
   enum StorageType {
     eSessionStorage,
     eLocalStorage,
+    ePartitionedLocalStorage,
   };
 
   virtual StorageType Type() const = 0;
