@@ -94,6 +94,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
 
         // Make sure data with "user" lifetime is loaded before getting the snapshot.
         // We still need to catch exceptions here, as `getAll()` might throw.
+        @Suppress("TooGenericExceptionCaught")
         try {
             userLifetimeStorage.all
         } catch (e: NullPointerException) {

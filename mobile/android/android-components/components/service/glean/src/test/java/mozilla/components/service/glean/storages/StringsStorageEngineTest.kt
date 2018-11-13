@@ -58,7 +58,6 @@ class StringsStorageEngineTest {
         assertEquals("test", snapshot["telemetry.valid"])
     }
 
-
     @Test
     fun `setValue() properly sets the value in all stores`() {
         val storeNames = listOf("store1", "store2")

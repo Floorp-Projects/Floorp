@@ -5,7 +5,6 @@
 package mozilla.components.service.glean.storages
 
 import android.annotation.SuppressLint
-import android.support.annotation.VisibleForTesting
 import java.util.UUID
 
 import mozilla.components.service.glean.Lifetime
