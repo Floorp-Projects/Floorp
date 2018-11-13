@@ -407,6 +407,8 @@ pub struct PicturePrimitive {
 
     /// A descriptor for this surface that can be used as a cache key.
     surface_desc: Option<SurfaceDescriptor>,
+
+    pub gpu_location: GpuCacheHandle,
 }
 
 impl PicturePrimitive {
@@ -485,6 +487,7 @@ impl PicturePrimitive {
             spatial_node_index,
             local_rect: LayoutRect::zero(),
             local_clip_rect,
+            gpu_location: GpuCacheHandle::new(),
         }
     }
 
@@ -614,6 +617,10 @@ impl PicturePrimitive {
                 let local_rect = LayoutRect::from_untyped(&local_rect.to_untyped());
                 let local_rect_changed = local_rect != self.local_rect;
                 self.local_rect = local_rect;
+
+                if local_rect_changed {
+                    frame_state.gpu_cache.invalidate(&mut self.gpu_location);
+                }
 
                 (local_rect_changed, Some(frame_state.clip_store.pop_surface()))
             }

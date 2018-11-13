@@ -61,6 +61,23 @@ config = {
                 },
             },
         },
+        "msi": {
+            "product-name": "Devedition-%(version)s-msi-SSL",
+            "check_uptake": True,
+            "alias": "firefox-devedition-msi-latest-ssl",
+            "ssl-only": True,
+            "add-locales": True,
+            "paths": {
+                "win32": {
+                    "path": "/devedition/releases/%(version)s/win32/:lang/Firefox%%20Setup%%20%(version)s.msi",
+                    "bouncer-platform": "win",
+                },
+                "win64": {
+                    "path": "/devedition/releases/%(version)s/win64/:lang/Firefox%%20Setup%%20%(version)s.msi",
+                    "bouncer-platform": "win64",
+                },
+            },
+        },
         "stub-installer": {
             "product-name": "Devedition-%(version)s-stub",
             "check_uptake": True,

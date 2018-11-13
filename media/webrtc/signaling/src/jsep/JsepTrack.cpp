@@ -116,9 +116,11 @@ JsepTrack::PopulateCodecs(
 }
 
 void
-JsepTrack::AddToOffer(SsrcGenerator& ssrcGenerator, SdpMediaSection* offer)
+JsepTrack::AddToOffer(SsrcGenerator& ssrcGenerator,
+                      bool encodeTrackId,
+                      SdpMediaSection* offer)
 {
-  AddToMsection(mPrototypeCodecs, offer);
+  AddToMsection(mPrototypeCodecs, encodeTrackId, offer);
 
   if (mDirection == sdp::kSend) {
     std::vector<JsConstraints> constraints;
@@ -132,6 +134,7 @@ JsepTrack::AddToOffer(SsrcGenerator& ssrcGenerator, SdpMediaSection* offer)
 void
 JsepTrack::AddToAnswer(const SdpMediaSection& offer,
                        SsrcGenerator& ssrcGenerator,
+                       bool encodeTrackId,
                        SdpMediaSection* answer)
 {
   // We do not modify mPrototypeCodecs here, since we're only creating an
@@ -143,7 +146,7 @@ JsepTrack::AddToAnswer(const SdpMediaSection& offer,
     return;
   }
 
-  AddToMsection(codecs, answer);
+  AddToMsection(codecs, encodeTrackId, answer);
 
   if (mDirection == sdp::kSend) {
     std::vector<JsConstraints> constraints;
@@ -185,6 +188,7 @@ JsepTrack::SetJsConstraints(
 void
 JsepTrack::AddToMsection(
     const std::vector<UniquePtr<JsepCodecDescription>>& codecs,
+    bool encodeTrackId,
     SdpMediaSection* msection)
 {
   MOZ_ASSERT(msection->GetMediaType() == mType);
@@ -198,10 +202,10 @@ JsepTrack::AddToMsection(
       (mType != SdpMediaSection::kApplication) &&
       msection->IsSending()) {
     if (mStreamIds.empty()) {
-      msection->AddMsid("-", mTrackId);
+      msection->AddMsid("-", encodeTrackId ? mTrackId : "");
     } else {
       for (const std::string& streamId : mStreamIds) {
-        msection->AddMsid(streamId, mTrackId);
+        msection->AddMsid(streamId, encodeTrackId ? mTrackId : "");
         // TODO(bug 1402912) Interop hack; older Firefox barfs if there is more
         // than one msid. Remove when safe.
         break;

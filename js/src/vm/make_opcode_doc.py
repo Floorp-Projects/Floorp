@@ -15,7 +15,7 @@ import sys
 
 import os
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
-import opcode
+import jsopcode
 
 from xml.sax.saxutils import escape
 
@@ -139,7 +139,7 @@ if __name__ == '__main__':
     dir = sys.argv[1]
 
     try:
-        index, _ = opcode.get_opcodes(dir)
+        index, _ = jsopcode.get_opcodes(dir)
     except Exception as e:
         print("Error: {}".format(e.args[0]), file=sys.stderr)
         sys.exit(1)

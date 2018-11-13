@@ -33,15 +33,31 @@ public:
 
   mozilla::java::GeckoBundle::LocalRef ToBundle();
 
+  mozilla::java::GeckoBundle::LocalRef ToBundle(const uint64_t aState,
+                                                const nsIntRect& aBounds,
+                                                const nsString& aName,
+                                                const nsString& aTextValue,
+                                                const nsString& aDOMNodeID,
+                                                const double& aCurVal,
+                                                const double& aMinVal,
+                                                const double& aMaxVal,
+                                                const double& aStep,
+                                                nsIPersistentProperties* aAttributes);
+
   mozilla::java::GeckoBundle::LocalRef ToSmallBundle(const uint64_t aState, const nsIntRect& aBounds);
 
   mozilla::java::GeckoBundle::LocalRef ToSmallBundle();
+
+  virtual void WrapperDOMNodeID(nsString& aDOMNodeID);
 
   int32_t AndroidClass()
   {
     return mID == kNoID ? java::SessionAccessibility::CLASSNAME_WEBVIEW
                         : GetAndroidClass(WrapperRole());
   }
+
+  static already_AddRefed<nsIPersistentProperties> AttributeArrayToProperties(
+    const nsTArray<Attribute>& aAttributes);
 
   static const int32_t kNoID = -1;
 
@@ -63,8 +79,6 @@ private:
   virtual bool WrapperRangeInfo(double* aCurVal, double* aMinVal, double* aMaxVal, double* aStep);
 
   virtual role WrapperRole() { return Role(); }
-
-  virtual void WrapperDOMNodeID(nsString& aDOMNodeID);
 
   static void GetRoleDescription(role aRole,
                                  nsAString& aGeckoRole,

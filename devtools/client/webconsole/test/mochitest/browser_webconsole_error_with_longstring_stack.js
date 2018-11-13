@@ -23,10 +23,10 @@ add_task(async function() {
   ok(errorNode, "The error object is logged as expected");
   ok(errorNode.textContent.includes("longString stack"));
 
-  const stackTraceElement = errorNode.querySelector(".stack-trace");
+  const stackTraceElement = errorNode.querySelector(".frames");
   ok(stackTraceElement, "There's a stacktrace element");
-  ok(stackTraceElement.querySelectorAll(".frame-link-function-display-name").length > 0,
+  ok(stackTraceElement.querySelectorAll(".frame .title").length > 0,
     "Frames functions are displayed");
-  ok(stackTraceElement.querySelectorAll(".frame-link-source").length > 0,
+  ok(stackTraceElement.querySelectorAll(".frame .location").length > 0,
     "Frames location are displayed");
 });
