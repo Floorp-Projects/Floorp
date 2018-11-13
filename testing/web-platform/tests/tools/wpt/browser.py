@@ -282,7 +282,7 @@ class Firefox(Browser):
 
             url = self.get_profile_bundle_url(version, channel)
 
-            print("Installing test prefs from %s" % url)
+            logger.info("Installing test prefs from %s" % url)
             try:
                 extract_dir = tempfile.mkdtemp()
                 unzip(get(url).raw, dest=extract_dir)
@@ -294,7 +294,7 @@ class Firefox(Browser):
             finally:
                 shutil.rmtree(extract_dir)
         else:
-            print("Using cached test prefs from %s" % dest)
+            logger.info("Using cached test prefs from %s" % dest)
 
         return dest
 
