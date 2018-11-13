@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1288591
+-->
+<head>
+  <title>Test tabindex attribute for date/time input types</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1288591">Mozilla Bug 1288591</a>
+<p id="display"></p>
+<div id="content">
+  <input id="time1" type="time" tabindex="0">
+  <input id="time2" type="time" tabindex="-1">
+  <input id="time3" type="time" tabindex="0">
+  <input id="date1" type="date" tabindex="0">
+  <input id="date2" type="date" tabindex="-1">
+  <input id="date3" type="date" tabindex="0">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 1288591.
+ * This test checks whether date/time input types tabindex attribute works
+ * correctly.
+ **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  test();
+  SimpleTest.finish();
+});
+
+function testTabindex(type) {
+  let input1 = document.getElementById(type + "1");
+  let input2 = document.getElementById(type + "2");
+  let input3 = document.getElementById(type + "3");
+
+  input1.focus();
+  is(document.activeElement, input1,
+     "input element with tabindex=0 is focusable");
+
+  // Advance to next inner field
+  synthesizeKey("KEY_Tab");
+  is(document.activeElement, input1,
+     "input element with tabindex=0 is tabbable");
+
+  // Advance to next inner field
+  synthesizeKey("KEY_Tab");
+  is(document.activeElement, input1,
+     "input element with tabindex=0 is tabbable");
+
+  // Advance to next element
+  synthesizeKey("KEY_Tab");
+  is(document.activeElement, input3,
+     "input element with tabindex=-1 is not tabbable");
+
+  input2.focus();
+  is(document.activeElement, input2,
+     "input element with tabindex=-1 is still focusable");
+
+  // Changing the tabindex attribute dynamically.
+  input3.setAttribute("tabindex", "-1");
+  synthesizeKey("KEY_Tab"); // need only one TAB since input2 is not tabbable
+  isnot(document.activeElement, input3,
+        "element with tabindex changed to -1 should not be tabbable");
+}
+
+function test() {
+  let inputTypes = ["time", "date"];
+
+  for (let i = 0; i < inputTypes.length; i++) {
+    testTabindex(inputTypes[i]);
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

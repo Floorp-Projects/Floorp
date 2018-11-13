@@ -1,0 +1,324 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=345512
+-->
+<head>
+  <title>Test for Bug 345512</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    input { background-color: rgb(0,0,0) !important; }
+    input:valid   { background-color: rgb(0,255,0) !important; }
+    input:invalid { background-color: rgb(255,0,0) !important; }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=345512">Mozilla Bug 345512</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <input id='i' pattern="tulip" oninvalid="invalidEventHandler(event);">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 345512 **/
+
+var gInvalid = false;
+
+function invalidEventHandler(e)
+{
+  is(e.type, "invalid", "Invalid event type should be invalid");
+  gInvalid = true;
+}
+
+function completeValidityCheck(element, alwaysValid, isBarred)
+{
+  // Check when pattern matches.
+  if (element.type == 'email') {
+    element.pattern = ".*@bar.com";
+    element.value = "foo@bar.com";
+  } else if (element.type == 'url') {
+    element.pattern = "http://.*\\.com$";
+    element.value = "http://mozilla.com";
+  } else if (element.type == 'file') {
+    element.pattern = "foo";
+    SpecialPowers.wrap(element).mozSetFileArray([new File(["foo"], "foo")]);
+  } else {
+    element.pattern = "foo";
+    element.value = "foo";
+  }
+
+  checkValidPattern(element, true, isBarred);
+
+  // Check when pattern does not match.
+
+  if (element.type == 'email') {
+    element.pattern = ".*@bar.com";
+    element.value = "foo@foo.com";
+  } else if (element.type == 'url') {
+    element.pattern = "http://.*\\.com$";
+    element.value = "http://mozilla.org";
+  } else if (element.type == 'file') {
+    element.pattern = "foo";
+    SpecialPowers.wrap(element).mozSetFileArray([new File(["bar"], "bar")]);
+  } else {
+    element.pattern = "foo";
+    element.value = "bar";
+  }
+
+  if (!alwaysValid) {
+    checkInvalidPattern(element, true);
+  } else {
+    checkValidPattern(element, true, isBarred);
+  }
+}
+
+function checkValidPattern(element, completeCheck, isBarred)
+{
+  if (completeCheck) {
+    gInvalid = false;
+
+    ok(!element.validity.patternMismatch,
+       "Element should not suffer from pattern mismatch");
+    ok(element.validity.valid, "Element should be valid");
+    ok(element.checkValidity(), "Element should be valid");
+    ok(!gInvalid, "Invalid event shouldn't have been thrown");
+    is(element.validationMessage, '',
+       "Validation message should be the empty string");
+    if (element.type != 'radio' && element.type != 'checkbox') {
+      is(window.getComputedStyle(element).getPropertyValue('background-color'),
+         isBarred ? "rgb(0, 0, 0)" : "rgb(0, 255, 0)",
+         "The pseudo-class is not correctly applied");
+    }
+  } else {
+    ok(!element.validity.patternMismatch,
+       "Element should not suffer from pattern mismatch");
+  }
+}
+
+function checkInvalidPattern(element, completeCheck)
+{
+  if (completeCheck) {
+    gInvalid = false;
+
+    ok(element.validity.patternMismatch,
+       "Element should suffer from pattern mismatch");
+    ok(!element.validity.valid, "Element should not be valid");
+    ok(!element.checkValidity(), "Element should not be valid");
+    ok(gInvalid, "Invalid event should have been thrown");
+    is(element.validationMessage,
+       "Please match the requested format.",
+       "Validation message is not valid");
+  } else {
+    ok(element.validity.patternMismatch,
+       "Element should suffer from pattern mismatch");
+  }
+
+  if (element.type != 'radio' && element.type != 'checkbox') {
+    is(window.getComputedStyle(element).getPropertyValue('background-color'),
+       "rgb(255, 0, 0)", ":invalid pseudo-class should apply");
+  }
+}
+
+function checkSyntaxError(element)
+{
+    ok(!element.validity.patternMismatch,
+       "On SyntaxError, element should not suffer");
+}
+
+function checkPatternValidity(element)
+{
+  element.pattern = "foo";
+
+  element.value = '';
+  checkValidPattern(element);
+
+  element.value = "foo";
+  checkValidPattern(element);
+
+  element.value = "bar";
+  checkInvalidPattern(element);
+
+  element.value = "foobar";
+  checkInvalidPattern(element);
+
+  element.value = "foofoo";
+  checkInvalidPattern(element);
+
+  element.pattern = "foo\"bar";
+  element.value = "foo\"bar";
+  checkValidPattern(element);
+
+  element.value = 'foo"bar';
+  checkValidPattern(element);
+
+  element.pattern = "foo'bar";
+  element.value = "foo\'bar";
+  checkValidPattern(element);
+
+  element.pattern = "foo\\(bar";
+  element.value = "foo(bar";
+  checkValidPattern(element);
+
+  element.value = "foo";
+  checkInvalidPattern(element);
+
+  element.pattern = "foo\\)bar";
+  element.value = "foo)bar";
+  checkValidPattern(element);
+
+  element.value = "foo";
+  checkInvalidPattern(element);
+
+  // Check for 'i' flag disabled. Should be case sensitive.
+  element.value = "Foo";
+  checkInvalidPattern(element);
+
+  // We can't check for the 'g' flag because we only test, we don't execute.
+  // We can't check for the 'm' flag because .value shouldn't contain line breaks.
+
+  // We need '\\\\' because '\\' will produce '\\' and we want to escape the '\'
+  // for the regexp.
+  element.pattern = "foo\\\\bar";
+  element.value = "foo\\bar";
+  checkValidPattern(element);
+
+  // We may want to escape the ' in the pattern, but this is a SyntaxError
+  // when unicode flag is set.
+  element.pattern = "foo\\'bar";
+  element.value = "foo'bar";
+  checkSyntaxError(element);
+  element.value = "baz";
+  checkSyntaxError(element);
+
+  // We should check the pattern attribute do not pollute |RegExp.lastParen|.
+  is(RegExp.lastParen, "", "RegExp.lastParen should be the empty string");
+
+  element.pattern = "(foo)";
+  element.value = "foo";
+  checkValidPattern(element);
+  is(RegExp.lastParen, "", "RegExp.lastParen should be the empty string");
+
+  // That may sound weird but the empty string is a valid pattern value.
+  element.pattern = "";
+  element.value = "";
+  checkValidPattern(element);
+
+  element.value = "foo";
+  checkInvalidPattern(element);
+
+  // Checking some complex patterns. As we are using js regexp mechanism, these
+  // tests doesn't aim to test the regexp mechanism.
+  element.pattern = "\\d{2}\\s\\d{2}\\s\\d{4}"
+  element.value = "01 01 2010"
+  checkValidPattern(element);
+
+  element.value = "01/01/2010"
+  checkInvalidPattern(element);
+
+  element.pattern = "[0-9a-zA-Z]([-.\\w]*[0-9a-zA-Z_+])*@([0-9a-zA-Z][-\\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,9}";
+  element.value = "foo@bar.com";
+  checkValidPattern(element);
+
+  element.value = "...@bar.com";
+  checkInvalidPattern(element);
+
+  element.pattern = "^(?:\\w{3,})$";
+  element.value = "foo";
+  checkValidPattern(element);
+
+  element.value = "f";
+  checkInvalidPattern(element);
+
+  // If @title is specified, it should be added in the validation message.
+  if (element.type == 'email') {
+    element.pattern = "foo@bar.com"
+    element.value = "bar@foo.com";
+  } else if (element.type == 'url') {
+    element.pattern = "http://mozilla.com";
+    element.value = "http://mozilla.org";
+  } else {
+    element.pattern = "foo";
+    element.value = "bar";
+  }
+  element.title = "this is an explanation of the regexp";
+  is(element.validationMessage,
+     "Please match the requested format: " + element.title + ".",
+     "Validation message is not valid");
+  element.title = "";
+  is(element.validationMessage,
+     "Please match the requested format.",
+     "Validation message is not valid");
+
+  element.pattern = "foo";
+  if (element.type == 'email') {
+    element.value = "bar@foo.com";
+  } else if (element.type == 'url') {
+    element.value = "http://mozilla.org";
+  } else {
+    element.value = "bar";
+  }
+  checkInvalidPattern(element);
+
+  element.removeAttribute('pattern');
+  checkValidPattern(element, true);
+
+  // Unicode pattern
+  for (var pattern of ["\\u{1F438}{2}", "\u{1F438}{2}",
+                       "\\uD83D\\uDC38{2}", "\uD83D\uDC38{2}",
+                       "\u{D83D}\u{DC38}{2}"]) {
+    element.pattern = pattern;
+
+    element.value = "\u{1F438}\u{1F438}";
+    checkValidPattern(element);
+
+    element.value = "\uD83D\uDC38\uD83D\uDC38";
+    checkValidPattern(element);
+
+    element.value = "\uD83D\uDC38\uDC38";
+    checkInvalidPattern(element);
+  }
+
+  element.pattern = "\\u{D83D}\\u{DC38}{2}";
+
+  element.value = "\u{1F438}\u{1F438}";
+  checkInvalidPattern(element);
+
+  element.value = "\uD83D\uDC38\uD83D\uDC38";
+  checkInvalidPattern(element);
+
+  element.value = "\uD83D\uDC38\uDC38";
+  checkInvalidPattern(element);
+}
+
+var input = document.getElementById('i');
+
+// |validTypes| are the types which accept @pattern
+// and |invalidTypes| are the ones which do not accept it.
+var validTypes = Array('text', 'password', 'search', 'tel', 'email', 'url');
+var barredTypes = Array('hidden', 'reset', 'button');
+var invalidTypes = Array('checkbox', 'radio', 'file', 'number', 'range', 'date',
+                         'time', 'color', 'submit', 'image', 'month', 'week',
+                         'datetime-local');
+
+for (type of validTypes) {
+  input.type = type;
+  completeValidityCheck(input, false);
+  checkPatternValidity(input);
+}
+
+for (type of barredTypes) {
+  input.type = type;
+  completeValidityCheck(input, true, true);
+}
+
+for (type of invalidTypes) {
+  input.type = type;
+  completeValidityCheck(input, true);
+}
+
+</script>
+</pre>
+</body>
+</html>
