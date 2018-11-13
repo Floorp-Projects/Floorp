@@ -79,6 +79,9 @@ permalink: /changelog/
 * **browser-toolbar**, **feature-toolbar**
   * Added support for displaying the site security indicator (lock/globe icon).
 
+* **concept-fetch**
+  * 🆕 New component defining an abstract definition of an HTTP client for fetching resources. Later releases will come with components implementing this concept using HttpURLConnection, OkHttp and Necko/GeckoView. Eventually all HTTP client code in the components will be replaced with `concept-fetch` and consumers can decide what HTTP client implementation components should use.
+
 * [**Reference Browser**](https://github.com/mozilla-mobile/reference-browser)
   * Integrated crash reporting with [`lib-crash`](https://github.com/mozilla-mobile/android-components/tree/master/components/lib/crash).
   * Added awesome bar with [`browser-awesomebar`](https://github.com/mozilla-mobile/android-components/tree/master/components/browser/awesomebar).
