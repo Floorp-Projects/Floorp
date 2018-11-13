@@ -67,6 +67,7 @@ EXPORTS.mozilla += [
     'TaskCategory.h',
     'TaskDispatcher.h',
     'TaskQueue.h',
+    'ThreadBound.h',
     'ThreadEventQueue.h',
     'ThrottledEventQueue.h',
 ]
