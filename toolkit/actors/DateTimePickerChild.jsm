@@ -30,20 +30,20 @@ class DateTimePickerChild extends ActorChild {
    */
   close() {
     this.removeListeners();
-    if (!this._inputElement.dateTimeBoxElement) {
+    let dateTimeBoxElement = this._inputElement.dateTimeBoxElement;
+    if (!dateTimeBoxElement) {
       this._inputElement = null;
       return;
     }
 
-    if (this._inputElement.dateTimeBoxElement instanceof Ci.nsIDateTimeInputArea) {
-      this._inputElement.dateTimeBoxElement.setPickerState(false);
+    if (dateTimeBoxElement instanceof Ci.nsIDateTimeInputArea) {
+      dateTimeBoxElement.wrappedJSObject.setPickerState(false);
     } else if (this._inputElement.openOrClosedShadowRoot) {
       // dateTimeBoxElement is within UA Widget Shadow DOM.
       // An event dispatch to it can't be accessed by document.
       let win = this._inputElement.ownerGlobal;
-      this._inputElement.dateTimeBoxElement.dispatchEvent(
-        new win.CustomEvent("MozSetDateTimePickerState",
-          { detail: false }, win));
+      dateTimeBoxElement.dispatchEvent(
+        new win.CustomEvent("MozSetDateTimePickerState", { detail: false }));
     }
 
     this._inputElement = null;
@@ -104,19 +104,21 @@ class DateTimePickerChild extends ActorChild {
         break;
       }
       case "FormDateTime:PickerValueChanged": {
-        if (!this._inputElement.dateTimeBoxElement) {
+        let dateTimeBoxElement = this._inputElement.dateTimeBoxElement;
+        if (!dateTimeBoxElement) {
           return;
         }
 
-        if (this._inputElement.dateTimeBoxElement instanceof Ci.nsIDateTimeInputArea) {
-          this._inputElement.dateTimeBoxElement.setValueFromPicker(aMessage.data);
+        let win = this._inputElement.ownerGlobal;
+
+        if (dateTimeBoxElement instanceof Ci.nsIDateTimeInputArea) {
+          dateTimeBoxElement.wrappedJSObject.setValueFromPicker(Cu.cloneInto(aMessage.data, win));
         } else if (this._inputElement.openOrClosedShadowRoot) {
           // dateTimeBoxElement is within UA Widget Shadow DOM.
           // An event dispatch to it can't be accessed by document.
-          let win = this._inputElement.ownerGlobal;
-          this._inputElement.dateTimeBoxElement.dispatchEvent(
+          dateTimeBoxElement.dispatchEvent(
             new win.CustomEvent("MozPickerValueChanged",
-              { detail: Cu.cloneInto(aMessage.data, win) }, win));
+              { detail: Cu.cloneInto(aMessage.data, win) }));
         }
         break;
       }
@@ -147,20 +149,20 @@ class DateTimePickerChild extends ActorChild {
 
         this._inputElement = aEvent.originalTarget;
 
-        if (!this._inputElement.dateTimeBoxElement) {
+        let dateTimeBoxElement = this._inputElement.dateTimeBoxElement;
+        if (!dateTimeBoxElement) {
           throw new Error("How do we get this event without a UA Widget or XBL binding?");
         }
 
-        if (this._inputElement.dateTimeBoxElement instanceof Ci.nsIDateTimeInputArea) {
-          this._inputElement.dateTimeBoxElement.setPickerState(true);
+        if (dateTimeBoxElement instanceof Ci.nsIDateTimeInputArea) {
+          dateTimeBoxElement.wrappedJSObject.setPickerState(true);
         } else if (this._inputElement.openOrClosedShadowRoot) {
           // dateTimeBoxElement is within UA Widget Shadow DOM.
           // An event dispatch to it can't be accessed by document, because
           // the event is not composed.
           let win = this._inputElement.ownerGlobal;
-          this._inputElement.dateTimeBoxElement.dispatchEvent(
-            new win.CustomEvent("MozSetDateTimePickerState",
-              { detail: true }, win));
+          dateTimeBoxElement.dispatchEvent(
+            new win.CustomEvent("MozSetDateTimePickerState", { detail: true }));
         }
 
         this.addListeners();
