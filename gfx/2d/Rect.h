@@ -296,7 +296,9 @@ template<class units>
 bool RectIsInt32Safe(const RectTyped<units>& aRect) {
   float min = (float)std::numeric_limits<std::int32_t>::min();
   float max = (float)std::numeric_limits<std::int32_t>::max();
-  return aRect.x > min && aRect.y > min && aRect.XMost() < max && aRect.YMost() < max;
+  return aRect.x > min && aRect.y > min &&
+         aRect.width < max && aRect.height < max &&
+         aRect.XMost() < max && aRect.YMost() < max;
 }
 
 template<class units>

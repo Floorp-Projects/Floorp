@@ -42,50 +42,12 @@ using JS::SourceBufferHolder;
 // function bodies.
 class MOZ_STACK_CLASS BytecodeCompiler
 {
-  public:
-    // Construct an object passing mandatory arguments.
-    BytecodeCompiler(JSContext* cx,
-                     const ReadOnlyCompileOptions& options,
-                     SourceBufferHolder& sourceBuffer,
-                     HandleScope enclosingScope);
-
-    JSScript* compileGlobalScript(ScopeKind scopeKind);
-    JSScript* compileEvalScript(HandleObject environment, HandleScope enclosingScope);
-    ModuleObject* compileModule();
-    bool compileStandaloneFunction(MutableHandleFunction fun, GeneratorKind generatorKind,
-                                   FunctionAsyncKind asyncKind,
-                                   const Maybe<uint32_t>& parameterListEnd);
-
-    ScriptSourceObject* sourceObjectPtr() const;
-
-  private:
-    JSScript* compileScript(HandleObject environment, SharedContext* sc);
-    bool checkLength();
-    bool createScriptSource(const Maybe<uint32_t>& parameterListEnd);
-    bool canLazilyParse();
-    bool createParser(ParseGoal goal);
-    bool createSourceAndParser(ParseGoal goal,
-                               const Maybe<uint32_t>& parameterListEnd = Nothing());
-
-    // If toString{Start,End} are not explicitly passed, assume the script's
-    // offsets in the source used to parse it are the same as what should be
-    // used to compute its Function.prototype.toString() value.
-    bool createScript();
-    bool createScript(uint32_t toStringStart, uint32_t toStringEnd);
-
-    using TokenStreamPosition = frontend::TokenStreamPosition<char16_t>;
-
-    bool emplaceEmitter(Maybe<BytecodeEmitter>& emitter, SharedContext* sharedContext);
-    bool handleParseFailure(const Directives& newDirectives, TokenStreamPosition& startPosition);
-    bool deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObject environment);
-
+  protected:
     AutoKeepAtoms keepAtoms;
 
     JSContext* cx;
     const ReadOnlyCompileOptions& options;
     SourceBufferHolder& sourceBuffer;
-
-    RootedScope enclosingScope;
 
     RootedScriptSourceObject sourceObject;
     ScriptSource* scriptSource;
@@ -97,6 +59,80 @@ class MOZ_STACK_CLASS BytecodeCompiler
     Directives directives;
 
     RootedScript script;
+
+  public:
+    // Construct an object passing mandatory arguments.
+    BytecodeCompiler(JSContext* cx,
+                     const ReadOnlyCompileOptions& options,
+                     SourceBufferHolder& sourceBuffer);
+
+    ScriptSourceObject* sourceObjectPtr() const {
+        return sourceObject.get();
+    }
+
+    // Call this before calling compile{Global,Eval}Script.
+    MOZ_MUST_USE bool prepareScriptParse() {
+        return createSourceAndParser(ParseGoal::Script) && createCompleteScript();
+    }
+
+    JSScript* compileGlobalScript(ScopeKind scopeKind);
+    JSScript* compileEvalScript(HandleObject environment, HandleScope enclosingScope);
+
+    // Call this before calling compileModule.
+    MOZ_MUST_USE bool prepareModuleParse() {
+        return createSourceAndParser(ParseGoal::Module) && createCompleteScript();
+    }
+
+    ModuleObject* compileModule(HandleScope enclosingScope);
+
+    // Call this before calling parseStandaloneFunction.
+    MOZ_MUST_USE bool prepareStandaloneFunctionParse(const Maybe<uint32_t>& parameterListEnd) {
+        return createSourceAndParser(ParseGoal::Script, parameterListEnd);
+    }
+
+    // Call this before calling compileStandaloneFunction.
+    CodeNode* parseStandaloneFunction(MutableHandleFunction fun, GeneratorKind generatorKind,
+                                      FunctionAsyncKind asyncKind,
+                                      const Maybe<uint32_t>& parameterListEnd,
+                                      HandleScope enclosingScope);
+
+    bool compileStandaloneFunction(CodeNode* parsedFunction, MutableHandleFunction fun);
+
+  private:
+    void assertSourceAndParserCreated() const {
+        MOZ_ASSERT(sourceObject != nullptr);
+        MOZ_ASSERT(scriptSource != nullptr);
+        MOZ_ASSERT(usedNames.isSome());
+        MOZ_ASSERT(parser.isSome());
+    }
+
+    void assertSourceParserAndScriptCreated() const {
+        assertSourceAndParserCreated();
+        MOZ_ASSERT(script != nullptr);
+    }
+
+    JSScript* compileScript(HandleObject environment, SharedContext* sc);
+    bool checkLength();
+    bool createScriptSource(const Maybe<uint32_t>& parameterListEnd);
+    bool canLazilyParse();
+    bool createParser(ParseGoal goal);
+    bool createSourceAndParser(ParseGoal goal,
+                               const Maybe<uint32_t>& parameterListEnd = Nothing());
+
+    // This assumes the created script's offsets in the source used to parse it
+    // are the same as are used to compute its Function.prototype.toString()
+    // value.
+    bool createCompleteScript();
+
+    // This uses explicitly-provided toString offsets as the created script's
+    // offsets in the source.
+    bool createScript(uint32_t toStringStart, uint32_t toStringEnd);
+
+    using TokenStreamPosition = frontend::TokenStreamPosition<char16_t>;
+
+    bool emplaceEmitter(Maybe<BytecodeEmitter>& emitter, SharedContext* sharedContext);
+    bool handleParseFailure(const Directives& newDirectives, TokenStreamPosition& startPosition);
+    bool deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObject environment);
 };
 
 AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
@@ -153,13 +189,11 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextI
 
 BytecodeCompiler::BytecodeCompiler(JSContext* cx,
                                    const ReadOnlyCompileOptions& options,
-                                   SourceBufferHolder& sourceBuffer,
-                                   HandleScope enclosingScope)
+                                   SourceBufferHolder& sourceBuffer)
   : keepAtoms(cx),
     cx(cx),
     options(options),
     sourceBuffer(sourceBuffer),
-    enclosingScope(cx, enclosingScope),
     sourceObject(cx),
     scriptSource(nullptr),
     directives(options.strictOption),
@@ -229,9 +263,10 @@ BytecodeCompiler::createParser(ParseGoal goal)
     usedNames.emplace(cx);
 
     if (canLazilyParse()) {
-        syntaxParser.emplace(cx, cx->tempLifoAlloc(), options, sourceBuffer.get(),
-                             sourceBuffer.length(), /* foldConstants = */ false,
-                             *usedNames, nullptr, nullptr, sourceObject, goal);
+        syntaxParser.emplace(cx, cx->tempLifoAlloc(), options,
+                             sourceBuffer.get(), sourceBuffer.length(),
+                             /* foldConstants = */ false, *usedNames, nullptr, nullptr,
+                             sourceObject, goal);
         if (!syntaxParser->checkOptions()) {
             return false;
         }
@@ -253,7 +288,7 @@ BytecodeCompiler::createSourceAndParser(ParseGoal goal,
 }
 
 bool
-BytecodeCompiler::createScript()
+BytecodeCompiler::createCompleteScript()
 {
     return createScript(0, sourceBuffer.length());
 }
@@ -325,15 +360,9 @@ BytecodeCompiler::deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObj
 JSScript*
 BytecodeCompiler::compileScript(HandleObject environment, SharedContext* sc)
 {
-    if (!createSourceAndParser(ParseGoal::Script)) {
-        return nullptr;
-    }
+    assertSourceParserAndScriptCreated();
 
     TokenStreamPosition startPosition(keepAtoms, parser->tokenStream);
-
-    if (!createScript()) {
-        return nullptr;
-    }
 
     Maybe<BytecodeEmitter> emitter;
     if (!emplaceEmitter(emitter, sc)) {
@@ -396,6 +425,11 @@ JSScript*
 BytecodeCompiler::compileGlobalScript(ScopeKind scopeKind)
 {
     GlobalSharedContext globalsc(cx, scopeKind, directives, options.extraWarningsOption);
+
+    if (!prepareScriptParse()) {
+        return nullptr;
+    }
+
     return compileScript(nullptr, &globalsc);
 }
 
@@ -404,22 +438,21 @@ BytecodeCompiler::compileEvalScript(HandleObject environment, HandleScope enclos
 {
     EvalSharedContext evalsc(cx, environment, enclosingScope,
                              directives, options.extraWarningsOption);
+
+    if (!prepareScriptParse()) {
+        return nullptr;
+    }
+
     return compileScript(environment, &evalsc);
 }
 
 ModuleObject*
-BytecodeCompiler::compileModule()
+BytecodeCompiler::compileModule(HandleScope enclosingScope)
 {
-    if (!createSourceAndParser(ParseGoal::Module)) {
-        return nullptr;
-    }
+    assertSourceParserAndScriptCreated();
 
     Rooted<ModuleObject*> module(cx, ModuleObject::create(cx));
     if (!module) {
-        return nullptr;
-    }
-
-    if (!createScript()) {
         return nullptr;
     }
 
@@ -461,21 +494,20 @@ BytecodeCompiler::compileModule()
     return module;
 }
 
-// Compile a standalone JS function, which might appear as the value of an
+// Parse a standalone JS function, which might appear as the value of an
 // event handler attribute in an HTML <INPUT> tag, or in a Function()
 // constructor.
-bool
-BytecodeCompiler::compileStandaloneFunction(MutableHandleFunction fun,
-                                            GeneratorKind generatorKind,
-                                            FunctionAsyncKind asyncKind,
-                                            const Maybe<uint32_t>& parameterListEnd)
+CodeNode*
+BytecodeCompiler::parseStandaloneFunction(MutableHandleFunction fun,
+                                          GeneratorKind generatorKind,
+                                          FunctionAsyncKind asyncKind,
+                                          const Maybe<uint32_t>& parameterListEnd,
+                                          HandleScope enclosingScope)
 {
     MOZ_ASSERT(fun);
     MOZ_ASSERT(fun->isTenured());
 
-    if (!createSourceAndParser(ParseGoal::Script, parameterListEnd)) {
-        return false;
-    }
+    assertSourceAndParserCreated();
 
     TokenStreamPosition startPosition(keepAtoms, parser->tokenStream);
 
@@ -490,11 +522,18 @@ BytecodeCompiler::compileStandaloneFunction(MutableHandleFunction fun,
         fn = parser->standaloneFunction(fun, enclosingScope, parameterListEnd, generatorKind,
                                         asyncKind, directives, &newDirectives);
         if (!fn && !handleParseFailure(newDirectives, startPosition)) {
-            return false;
+            return nullptr;
         }
     } while (!fn);
 
-    FunctionBox* funbox = fn->as<CodeNode>().funbox();
+    return &fn->as<CodeNode>();
+}
+
+// Compile a standalone JS function.
+bool
+BytecodeCompiler::compileStandaloneFunction(CodeNode* parsedFunction, MutableHandleFunction fun)
+{
+    FunctionBox* funbox = parsedFunction->funbox();
     if (funbox->function()->isInterpreted()) {
         MOZ_ASSERT(fun == funbox->function());
 
@@ -506,9 +545,7 @@ BytecodeCompiler::compileStandaloneFunction(MutableHandleFunction fun,
         if (!emplaceEmitter(emitter, funbox)) {
             return false;
         }
-        if (!emitter->emitFunctionScript(&fn->as<CodeNode>(),
-                                         BytecodeEmitter::TopLevelFunction::Yes))
-        {
+        if (!emitter->emitFunctionScript(parsedFunction, BytecodeEmitter::TopLevelFunction::Yes)) {
             return false;
         }
     } else {
@@ -517,17 +554,7 @@ BytecodeCompiler::compileStandaloneFunction(MutableHandleFunction fun,
     }
 
     // Enqueue an off-thread source compression task after finishing parsing.
-    if (!scriptSource->tryCompressOffThread(cx)) {
-        return false;
-    }
-
-    return true;
-}
-
-ScriptSourceObject*
-BytecodeCompiler::sourceObjectPtr() const
-{
-    return sourceObject.get();
+    return scriptSource->tryCompressOffThread(cx);
 }
 
 ScriptSourceObject*
@@ -646,7 +673,7 @@ frontend::CompileGlobalScript(JSContext* cx, ScopeKind scopeKind,
 {
     MOZ_ASSERT(scopeKind == ScopeKind::Global || scopeKind == ScopeKind::NonSyntactic);
     AutoAssertReportedException assertException(cx);
-    BytecodeCompiler compiler(cx, options, srcBuf, /* enclosingScope = */ nullptr);
+    BytecodeCompiler compiler(cx, options, srcBuf);
     AutoInitializeSourceObject autoSSO(compiler, sourceObjectOut);
     JSScript* script = compiler.compileGlobalScript(scopeKind);
     if (!script) {
@@ -727,7 +754,7 @@ frontend::CompileEvalScript(JSContext* cx, HandleObject environment,
                             ScriptSourceObject** sourceObjectOut)
 {
     AutoAssertReportedException assertException(cx);
-    BytecodeCompiler compiler(cx, options, srcBuf, enclosingScope);
+    BytecodeCompiler compiler(cx, options, srcBuf);
     AutoInitializeSourceObject autoSSO(compiler, sourceObjectOut);
     JSScript* script = compiler.compileEvalScript(environment, enclosingScope);
     if (!script) {
@@ -753,10 +780,15 @@ frontend::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& optionsInpu
     options.setIsRunOnce(true);
     options.allowHTMLComments = false;
 
-    RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
-    BytecodeCompiler compiler(cx, options, srcBuf, emptyGlobalScope);
+    BytecodeCompiler compiler(cx, options, srcBuf);
     AutoInitializeSourceObject autoSSO(compiler, sourceObjectOut);
-    ModuleObject* module = compiler.compileModule();
+
+    if (!compiler.prepareModuleParse()) {
+        return nullptr;
+    }
+
+    RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
+    ModuleObject* module = compiler.compileModule(emptyGlobalScope);
     if (!module) {
         return nullptr;
     }
@@ -1001,16 +1033,20 @@ frontend::CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
 {
     AutoAssertReportedException assertException(cx);
 
+    BytecodeCompiler compiler(cx, options, srcBuf);
+    if (!compiler.prepareStandaloneFunctionParse(parameterListEnd)) {
+        return false;
+    }
+
     RootedScope scope(cx, enclosingScope);
     if (!scope) {
         scope = &cx->global()->emptyGlobalScope();
     }
 
-    BytecodeCompiler compiler(cx, options, srcBuf, scope);
-    if (!compiler.compileStandaloneFunction(fun, GeneratorKind::NotGenerator,
-                                            FunctionAsyncKind::SyncFunction,
-                                            parameterListEnd))
-    {
+    CodeNode* parsedFunction = compiler.parseStandaloneFunction(fun, GeneratorKind::NotGenerator,
+                                                                FunctionAsyncKind::SyncFunction,
+                                                                parameterListEnd, scope);
+    if (!parsedFunction || !compiler.compileStandaloneFunction(parsedFunction, fun)) {
         return false;
     }
 
@@ -1026,13 +1062,17 @@ frontend::CompileStandaloneGenerator(JSContext* cx, MutableHandleFunction fun,
 {
     AutoAssertReportedException assertException(cx);
 
-    RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
+    BytecodeCompiler compiler(cx, options, srcBuf);
+    if (!compiler.prepareStandaloneFunctionParse(parameterListEnd)) {
+        return false;
+    }
 
-    BytecodeCompiler compiler(cx, options, srcBuf, emptyGlobalScope);
-    if (!compiler.compileStandaloneFunction(fun, GeneratorKind::Generator,
-                                            FunctionAsyncKind::SyncFunction,
-                                            parameterListEnd))
-    {
+    RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
+    CodeNode* parsedFunction = compiler.parseStandaloneFunction(fun, GeneratorKind::Generator,
+                                                                FunctionAsyncKind::SyncFunction,
+                                                                parameterListEnd,
+                                                                emptyGlobalScope);
+    if (!parsedFunction || !compiler.compileStandaloneFunction(parsedFunction, fun)) {
         return false;
     }
 
@@ -1048,13 +1088,17 @@ frontend::CompileStandaloneAsyncFunction(JSContext* cx, MutableHandleFunction fu
 {
     AutoAssertReportedException assertException(cx);
 
-    RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
+    BytecodeCompiler compiler(cx, options, srcBuf);
+    if (!compiler.prepareStandaloneFunctionParse(parameterListEnd)) {
+        return false;
+    }
 
-    BytecodeCompiler compiler(cx, options, srcBuf, emptyGlobalScope);
-    if (!compiler.compileStandaloneFunction(fun, GeneratorKind::NotGenerator,
-                                            FunctionAsyncKind::AsyncFunction,
-                                            parameterListEnd))
-    {
+    RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
+    CodeNode* parsedFunction = compiler.parseStandaloneFunction(fun, GeneratorKind::NotGenerator,
+                                                                FunctionAsyncKind::AsyncFunction,
+                                                                parameterListEnd,
+                                                                emptyGlobalScope);
+    if (!parsedFunction || !compiler.compileStandaloneFunction(parsedFunction, fun)) {
         return false;
     }
 
@@ -1070,13 +1114,17 @@ frontend::CompileStandaloneAsyncGenerator(JSContext* cx, MutableHandleFunction f
 {
     AutoAssertReportedException assertException(cx);
 
-    RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
+    BytecodeCompiler compiler(cx, options, srcBuf);
+    if (!compiler.prepareStandaloneFunctionParse(parameterListEnd)) {
+        return false;
+    }
 
-    BytecodeCompiler compiler(cx, options, srcBuf, emptyGlobalScope);
-    if (!compiler.compileStandaloneFunction(fun, GeneratorKind::Generator,
-                                            FunctionAsyncKind::AsyncFunction,
-                                            parameterListEnd))
-    {
+    RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
+    CodeNode* parsedFunction = compiler.parseStandaloneFunction(fun, GeneratorKind::Generator,
+                                                                FunctionAsyncKind::AsyncFunction,
+                                                                parameterListEnd,
+                                                                emptyGlobalScope);
+    if (!parsedFunction || !compiler.compileStandaloneFunction(parsedFunction, fun)) {
         return false;
     }
 
