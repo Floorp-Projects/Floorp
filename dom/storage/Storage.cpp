@@ -54,7 +54,7 @@ Storage::CanUseStorage(nsIPrincipal& aSubjectPrincipal)
   nsContentUtils::StorageAccess access =
     nsContentUtils::StorageAllowedForPrincipal(Principal());
 
-  if (access == nsContentUtils::StorageAccess::eDeny) {
+  if (access <= nsContentUtils::StorageAccess::eDeny) {
     return false;
   }
 
