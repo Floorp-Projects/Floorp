@@ -307,7 +307,7 @@ def generateCpp(out):
     #
     # Generate the PhaseKindInfo table.
     #
-    out.write("static const PhaseKindTable phaseKinds = {\n")
+    out.write("static constexpr PhaseKindTable phaseKinds = {\n")
     for phaseKind in AllPhaseKinds:
         phase = PhasesForPhaseKind[phaseKind][0]
         out.write("    /* PhaseKind::%s */ PhaseKindInfo { Phase::%s, %d },\n" %
@@ -321,7 +321,7 @@ def generateCpp(out):
     def name(phase):
         return "Phase::" + phase.name if phase else "Phase::NONE"
 
-    out.write("static const PhaseTable phases = {\n")
+    out.write("static constexpr PhaseTable phases = {\n")
     for phase in AllPhases:
         firstChild = phase.children[0] if phase.children else None
         phaseKind = phase.phaseKind
