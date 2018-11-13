@@ -33,24 +33,30 @@ class ChangesApp extends PureComponent {
     this.renderedRules = [];
   }
 
-  renderDeclarations(remove = {}, add = {}) {
-    const removals = Object.entries(remove).map(([property, value]) => {
-      return CSSDeclaration({
-        key: "remove-" + property,
-        className: "level diff-remove",
-        property,
-        value,
+  renderDeclarations(remove = [], add = []) {
+    const removals = remove
+      // Sorting changed declarations in the order they appear in the Rules view.
+      .sort((a, b) => a.index > b.index)
+      .map(({property, value, index}) => {
+        return CSSDeclaration({
+          key: "remove-" + property + index,
+          className: "level diff-remove",
+          property,
+          value,
+        });
       });
-    });
 
-    const additions = Object.entries(add).map(([property, value]) => {
-      return CSSDeclaration({
-        key: "add-" + property,
-        className: "level diff-add",
-        property,
-        value,
+    const additions = add
+      // Sorting changed declarations in the order they appear in the Rules view.
+      .sort((a, b) => a.index > b.index)
+      .map(({property, value, index}) => {
+        return CSSDeclaration({
+          key: "add-" + property + index,
+          className: "level diff-add",
+          property,
+          value,
+        });
       });
-    });
 
     return [removals, additions];
   }
