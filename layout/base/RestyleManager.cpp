@@ -1795,6 +1795,8 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
   uint64_t frameGeneration =
     RestyleManager::GetAnimationGenerationForFrame(aFrame);
 
+  Maybe<nsCSSPropertyIDSet> effectiveAnimationProperties;
+
   nsChangeHint hint = nsChangeHint(0);
   for (const LayerAnimationInfo::Record& layerInfo :
          LayerAnimationInfo::sRecords) {
@@ -1848,9 +1850,17 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
     // not have those properies just before. e.g, setting transform by
     // setKeyframes or changing target element from other target which prevents
     // running on the compositor, etc.
-    if (!generation &&
-        nsLayoutUtils::HasEffectiveAnimation(aFrame, layerInfo.mProperty)) {
-      hint |= layerInfo.mChangeHint;
+    if (!generation) {
+      if (!effectiveAnimationProperties) {
+        effectiveAnimationProperties.emplace(
+          nsLayoutUtils::GetAnimationPropertiesForCompositor(aFrame));
+      }
+      const nsCSSPropertyIDSet& propertiesForDisplayItem =
+        LayerAnimationInfo::GetCSSPropertiesFor(layerInfo.mDisplayItemType);
+      if (effectiveAnimationProperties->Intersects(propertiesForDisplayItem)) {
+        hint |=
+          LayerAnimationInfo::GetChangeHintFor(layerInfo.mDisplayItemType);
+      }
     }
   }
 

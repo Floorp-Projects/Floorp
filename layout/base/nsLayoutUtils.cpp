@@ -329,6 +329,23 @@ nsLayoutUtils::HasEffectiveAnimation(const nsIFrame* aFrame,
   );
 }
 
+/* static */ nsCSSPropertyIDSet
+nsLayoutUtils::GetAnimationPropertiesForCompositor(const nsIFrame* aFrame)
+{
+  nsCSSPropertyIDSet properties;
+
+  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
+  if (!effects) {
+    return properties;
+  }
+
+  for (const KeyframeEffect* effect : *effects) {
+    properties |= effect->GetPropertiesForCompositor(*effects);
+  }
+
+  return properties;
+}
+
 static float
 GetSuitableScale(float aMaxScale, float aMinScale,
                  nscoord aVisibleDimension, nscoord aDisplayDimension)
