@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/FontPropertyTypes.h"
-#include "mozilla/RDDProcessManager.h"
 #include "mozilla/image/ImageMemoryReporter.h"
 #include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -768,7 +767,6 @@ void
 gfxPlatform::Init()
 {
     MOZ_RELEASE_ASSERT(!XRE_IsGPUProcess(), "GFX: Not allowed in GPU process.");
-    MOZ_RELEASE_ASSERT(!XRE_IsRDDProcess(), "GFX: Not allowed in RDD process.");
     MOZ_RELEASE_ASSERT(NS_IsMainThread(), "GFX: Not in main thread.");
 
     if (gEverInitialized) {
@@ -784,7 +782,6 @@ gfxPlatform::Init()
 
     if (XRE_IsParentProcess() || recordreplay::IsRecordingOrReplaying()) {
       GPUProcessManager::Initialize();
-      RDDProcessManager::Initialize();
 
       if (Preferences::GetBool("media.wmf.skip-blacklist")) {
         gfxVars::SetPDMWMFDisableD3D11Dlls(nsCString());
@@ -884,12 +881,6 @@ gfxPlatform::Init()
     if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
       GPUProcessManager* gpu = GPUProcessManager::Get();
       gpu->LaunchGPUProcess();
-    }
-
-    if (XRE_IsParentProcess() &&
-        Preferences::GetBool("media.rdd-process.enabled", false)) {
-      RDDProcessManager* rdd = RDDProcessManager::Get();
-      if (rdd) { rdd->LaunchRDDProcess(); }
     }
 
     if (XRE_IsParentProcess() || recordreplay::IsRecordingOrReplaying()) {
@@ -1170,7 +1161,6 @@ gfxPlatform::Shutdown()
     if (XRE_IsParentProcess()) {
       GPUProcessManager::Shutdown();
       VRProcessManager::Shutdown();
-      RDDProcessManager::Shutdown();
     }
 
     gfx::Factory::ShutDown();
