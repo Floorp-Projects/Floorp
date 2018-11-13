@@ -183,7 +183,9 @@ public:
     kInvalidSessionDescription        = 5,
     kIncompatibleSessionDescription   = 6,
     kIncompatibleMediaStreamTrack     = 8,
-    kInternalError                    = 9
+    kInternalError                    = 9,
+    kTypeError                        = 10,
+    kOperationError                   = 11
   };
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -298,10 +300,11 @@ public:
   }
 
   NS_IMETHODIMP AddIceCandidate(const char* aCandidate, const char* aMid,
-                                unsigned short aLevel);
+                                const dom::Nullable<unsigned short>& aLevel);
 
   void AddIceCandidate(const nsAString& aCandidate, const nsAString& aMid,
-                       unsigned short aLevel, ErrorResult &rv)
+                       const dom::Nullable<unsigned short>& aLevel,
+                       ErrorResult &rv)
   {
     rv = AddIceCandidate(NS_ConvertUTF16toUTF8(aCandidate).get(),
                          NS_ConvertUTF16toUTF8(aMid).get(), aLevel);
