@@ -174,11 +174,6 @@
 
 /* Contextual Feature Recommendation popup-notification */
 
-:root {
-  --cfr-notification-header-image: url(resource://activity-stream/data/content/assets/glyph-help-24.svg);
-  --cfr-notification-footer-star: url(resource://activity-stream/data/content/assets/glyph-star-17.svg);
-}
-
 #cfr-notification-header {
   width: 100%;
   text-align: center;
@@ -208,7 +203,7 @@
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
-  list-style-image: var(--cfr-notification-header-image);
+  list-style-image: url(resource://activity-stream/data/content/assets/glyph-help-24.svg);
 }
 
 #cfr-notification-header-image:hover {
@@ -252,7 +247,7 @@
 #cfr-notification-footer-filled-stars,
 #cfr-notification-footer-empty-stars {
   -moz-context-properties: fill, fill-opacity;
-  background-image: var(--cfr-notification-footer-star);
+  background-image: url(resource://activity-stream/data/content/assets/glyph-star-17.svg);
   background-size: 17px;
   fill: currentColor;
   fill-opacity: 0.7;
