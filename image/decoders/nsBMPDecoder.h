@@ -157,6 +157,7 @@ private:
 
   enum class State {
     FILE_HEADER,
+    CLIPBOARD_HEADER,
     INFO_HEADER_SIZE,
     INFO_HEADER_REST,
     BITFIELDS,
@@ -169,8 +170,8 @@ private:
     RLE_ABSOLUTE
   };
 
-  // This is the constructor used for normal BMP images.
-  explicit nsBMPDecoder(RasterImage* aImage);
+  // This is the constructor used for normal and clipboard BMP images.
+  explicit nsBMPDecoder(RasterImage* aImage, bool aForClipboard = false);
 
   // This is the constructor used for BMP resources in ICO images.
   nsBMPDecoder(RasterImage* aImage, uint32_t aDataOffset);
@@ -185,6 +186,7 @@ private:
   void FinishRow();
 
   LexerTransition<State> ReadFileHeader(const char* aData, size_t aLength);
+  LexerTransition<State> ReadClipboardHeader(const char* aData, size_t aLength);
   LexerTransition<State> ReadInfoHeaderSize(const char* aData, size_t aLength);
   LexerTransition<State> ReadInfoHeaderRest(const char* aData, size_t aLength);
   LexerTransition<State> ReadBitfields(const char* aData, size_t aLength);

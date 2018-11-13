@@ -17,7 +17,6 @@
 #include "IEnumFE.h"
 #include "nsPrimitiveHelpers.h"
 #include "nsString.h"
-#include "nsImageClipboard.h"
 #include "nsCRT.h"
 #include "nsPrintfCString.h"
 #include "nsIStringBundle.h"
@@ -35,6 +34,8 @@
 #include "nsContentUtils.h"
 #include "nsIPrincipal.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsMimeTypes.h"
+#include "imgITools.h"
 
 #include "WinUtils.h"
 #include "mozilla/LazyIdleThread.h"
@@ -44,6 +45,7 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
+#define BFH_LENGTH 14
 #define DEFAULT_THREAD_TIMEOUT_MS 30000
 
 NS_IMPL_ISUPPORTS(nsDataObj::CStream, nsIStreamListener)
@@ -902,20 +904,60 @@ nsDataObj::GetDib(const nsACString& inFlavor,
   mTransferable->GetTransferData(PromiseFlatCString(inFlavor).get(), getter_AddRefs(genericDataWrapper), &len);
   nsCOMPtr<imgIContainer> image ( do_QueryInterface(genericDataWrapper) );
   if ( image ) {
-    // use the |nsImageToClipboard| helper class to build up a bitmap. We now own
-    // the bits, and pass them back to the OS in |aSTG|.
-    nsImageToClipboard converter(image, aFormat.cfFormat == CF_DIBV5);
-    HANDLE bits = nullptr;
-    nsresult rv = converter.GetPicture ( &bits );
-    if ( NS_SUCCEEDED(rv) && bits ) {
-      aSTG.hGlobal = bits;
-      aSTG.tymed = TYMED_HGLOBAL;
-      result = S_OK;
+    nsCOMPtr<imgITools> imgTools = do_CreateInstance("@mozilla.org/image/tools;1");
+
+    nsAutoString options;
+    if (aFormat.cfFormat == CF_DIBV5) {
+      options.AppendLiteral("version=5");
+    } else {
+      options.AppendLiteral("version=3");
     }
-  } // if we have an image
-  else  
+
+    nsCOMPtr<nsIInputStream> inputStream;
+    nsresult rv = imgTools->EncodeImage(image, NS_LITERAL_CSTRING(IMAGE_BMP),
+                                        options, getter_AddRefs(inputStream));
+    if (NS_FAILED(rv) || !inputStream) {
+      return E_FAIL;
+    }
+
+    nsCOMPtr<imgIEncoder> encoder = do_QueryInterface(inputStream);
+    if (!encoder) {
+      return E_FAIL;
+    }
+
+    uint32_t size = 0;
+    rv = encoder->GetImageBufferUsed(&size);
+    if (NS_FAILED(rv) || size <= BFH_LENGTH) {
+      return E_FAIL;
+    }
+
+    char *src = nullptr;
+    rv = encoder->GetImageBuffer(&src);
+    if (NS_FAILED(rv) || !src) {
+      return E_FAIL;
+    }
+
+    // We don't want the file header.
+    src += BFH_LENGTH;
+    size -= BFH_LENGTH;
+
+    HGLOBAL glob = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, size);
+    if (!glob) {
+      DWORD err = ::GetLastError();
+      return E_FAIL;
+    }
+
+    char *dst = (char*) ::GlobalLock(glob);
+    ::CopyMemory(dst, src, size);
+    ::GlobalUnlock(glob);
+
+    aSTG.hGlobal = glob;
+    aSTG.tymed = TYMED_HGLOBAL;
+    result = S_OK;
+  } else {
     NS_WARNING ( "Definitely not an image on clipboard" );
-	return result;
+  }
+  return result;
 }
 
 
@@ -1504,18 +1546,29 @@ HRESULT nsDataObj::DropImage(FORMATETC& aFE, STGMEDIUM& aSTG)
     if (!image) 
       return E_FAIL;
 
-    // Use the clipboard helper class to build up a memory bitmap.
-    nsImageToClipboard converter(image);
-    HANDLE bits = nullptr;
-    rv = converter.GetPicture(&bits); // Clipboard routines return a global handle we own.
-
-    if (NS_FAILED(rv) || !bits)
+    nsCOMPtr<imgITools> imgTools = do_CreateInstance("@mozilla.org/image/tools;1");
+    nsCOMPtr<nsIInputStream> inputStream;
+    rv = imgTools->EncodeImage(image, NS_LITERAL_CSTRING(IMAGE_BMP),
+                               NS_LITERAL_STRING("version=3"),
+                               getter_AddRefs(inputStream));
+    if (NS_FAILED(rv) || !inputStream) {
       return E_FAIL;
+    }
 
-    // We now own these bits!
-    uint32_t bitmapSize = GlobalSize(bits);
-    if (!bitmapSize) {
-      GlobalFree(bits);
+    nsCOMPtr<imgIEncoder> encoder = do_QueryInterface(inputStream);
+    if (!encoder) {
+      return E_FAIL;
+    }
+
+    uint32_t size = 0;
+    rv = encoder->GetImageBufferUsed(&size);
+    if (NS_FAILED(rv)) {
+      return E_FAIL;
+    }
+
+    char *src = nullptr;
+    rv = encoder->GetImageBuffer(&src);
+    if (NS_FAILED(rv) || !src) {
       return E_FAIL;
     }
 
@@ -1523,7 +1576,6 @@ HRESULT nsDataObj::DropImage(FORMATETC& aFE, STGMEDIUM& aSTG)
     nsCOMPtr<nsIFile> dropFile;
     rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dropFile));
     if (!dropFile) {
-      GlobalFree(bits);
       return E_FAIL;
     }
 
@@ -1537,7 +1589,6 @@ HRESULT nsDataObj::DropImage(FORMATETC& aFE, STGMEDIUM& aSTG)
     dropFile->AppendNative(filename);
     rv = dropFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0660);
     if (NS_FAILED(rv)) { 
-      GlobalFree(bits);
       return E_FAIL;
     }
 
@@ -1550,33 +1601,16 @@ HRESULT nsDataObj::DropImage(FORMATETC& aFE, STGMEDIUM& aSTG)
     nsCOMPtr<nsIOutputStream> outStream;
     rv = NS_NewLocalFileOutputStream(getter_AddRefs(outStream), dropFile);
     if (NS_FAILED(rv)) { 
-      GlobalFree(bits);
       return E_FAIL;
     }
 
-    char * bm = (char *)GlobalLock(bits);
-
-    BITMAPFILEHEADER	fileHdr;
-    BITMAPINFOHEADER *bmpHdr = (BITMAPINFOHEADER*)bm;
-
-    fileHdr.bfType        = ((WORD) ('M' << 8) | 'B');
-    fileHdr.bfSize        = GlobalSize (bits) + sizeof(fileHdr);
-    fileHdr.bfReserved1   = 0;
-    fileHdr.bfReserved2   = 0;
-    fileHdr.bfOffBits     = (DWORD) (sizeof(fileHdr) + bmpHdr->biSize);
-
-    uint32_t writeCount = 0;
-    if (NS_FAILED(outStream->Write((const char *)&fileHdr, sizeof(fileHdr), &writeCount)) ||
-        NS_FAILED(outStream->Write((const char *)bm, bitmapSize, &writeCount)))
-      rv = NS_ERROR_FAILURE;
+    uint32_t written = 0;
+    rv = outStream->Write(src, size, &written);
+    if (NS_FAILED(rv) || written != size) {
+      return E_FAIL;
+    }
 
     outStream->Close();
-
-    GlobalUnlock(bits);
-    GlobalFree(bits);
-
-    if (NS_FAILED(rv))
-      return E_FAIL;
   }
   
   // Pass the file name back to the drop target so that it can access the file.
