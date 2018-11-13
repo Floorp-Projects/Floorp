@@ -261,8 +261,7 @@ class UrlbarValueFormatter {
   }
 
   /**
-   * If the input value starts with a search alias, this formatter method
-   * highlights it.
+   * If the input value starts with an @engine search alias, this highlights it.
    *
    * @returns {boolean}
    *   True if formatting was applied and false if not.
@@ -282,12 +281,21 @@ class UrlbarValueFormatter {
       return false;
     }
 
-    // To determine whether the input contains a search engine alias, check the
-    // value of the selected result -- whether it's a search engine result with
-    // an alias.  Actually, check the selected listbox item, not the result in
-    // the controller, because we want to continue highlighting the alias when
-    // the popup is closed and the search has stopped.  The selected index when
-    // the popup is closed is zero, however, which is why we check the previous
+    let editor = this.urlbarInput.editor;
+    let textNode = editor.rootElement.firstChild;
+    let value = textNode.textContent;
+    let trimmedValue = value.trim();
+
+    if (!trimmedValue.startsWith("@")) {
+      return false;
+    }
+
+    // To determine whether the input contains a valid alias, check the value of
+    // the selected result -- whether it's a search engine result with an alias.
+    // Actually, check the selected listbox item, not the result in the
+    // controller, because we want to continue highlighting the alias when the
+    // popup is closed and the search has stopped.  The selected index when the
+    // popup is closed is zero, however, which is why we also check the previous
     // selected index.
     let itemIndex =
       popup.selectedIndex < 0 ? popup._previousSelectedIndex :
@@ -316,10 +324,6 @@ class UrlbarValueFormatter {
       return false;
     }
 
-    let editor = this.urlbarInput.editor;
-    let textNode = editor.rootElement.firstChild;
-    let value = textNode.textContent;
-
     // Make sure the item's input matches the current urlbar input because the
     // urlbar input can change without the popup results changing.  Most notably
     // that happens when the user performs a search using an alias: The popup
@@ -331,7 +335,7 @@ class UrlbarValueFormatter {
     // its input is "@engine ".  So in order to make sure the item's input
     // matches the current urlbar input, we need to check that the urlbar input
     // starts with the item's input.
-    if (!value.trim().startsWith(decodeURIComponent(action.params.input).trim())) {
+    if (!trimmedValue.startsWith(action.params.input.trim())) {
       return false;
     }
 
