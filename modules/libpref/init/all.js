@@ -1569,6 +1569,9 @@ pref("javascript.options.streams", true);
 pref("javascript.options.streams", false);
 #endif
 
+// BigInt API
+pref("javascript.options.bigint", false);
+
 // advanced prefs
 pref("advanced.mailftp",                    false);
 pref("image.animation_mode",                "normal");
