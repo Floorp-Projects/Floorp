@@ -1274,66 +1274,6 @@ nsComputedDOMStyle::DoGetTransform()
   return GetTransformValue(display->mSpecifiedTransform);
 }
 
-static already_AddRefed<CSSValue>
-ReadIndividualTransformValue(nsCSSValueSharedList* aList,
-                             const std::function<void(const nsCSSValue::Array*,
-                                                      nsString&)>& aCallback)
-{
-  if (!aList) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    val->SetIdent(eCSSKeyword_none);
-    return val.forget();
-  }
-
-  nsAutoString result;
-  const nsCSSValue::Array* data = aList->mHead->mValue.GetArrayValue();
-  aCallback(data, result);
-
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetString(result);
-  return val.forget();
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetRotate()
-{
-  return ReadIndividualTransformValue(StyleDisplay()->mSpecifiedRotate,
-    [](const nsCSSValue::Array* aData, nsString& aResult) {
-
-      switch (nsStyleTransformMatrix::TransformFunctionOf(aData)) {
-        /* rotate : <angle> */
-        case eCSSKeyword_rotate: {
-          MOZ_ASSERT(aData->Count() == 2, "Invalid array!");
-          float theta = aData->Item(1).GetAngleValueInDegrees();
-          aResult.AppendFloat(theta);
-          aResult.AppendLiteral("deg");
-          break;
-        }
-        /* rotate : <number> <number> <number> <angle> */
-        case eCSSKeyword_rotate3d: {
-          MOZ_ASSERT(aData->Count() == 5, "Invalid array!");
-          float rx = aData->Item(1).GetFloatValue();
-          float ry = aData->Item(2).GetFloatValue();
-          float rz = aData->Item(3).GetFloatValue();
-          if (rx != 0. || ry != 0. || rz != 1.) {
-            aResult.AppendFloat(rx);
-            aResult.AppendLiteral(" ");
-            aResult.AppendFloat(ry);
-            aResult.AppendLiteral(" ");
-            aResult.AppendFloat(rz);
-            aResult.AppendLiteral(" ");
-          }
-          float theta = aData->Item(4).GetAngleValueInDegrees();
-          aResult.AppendFloat(theta);
-          aResult.AppendLiteral("deg");
-          break;
-        }
-        default:
-          MOZ_ASSERT_UNREACHABLE("Unexpected CSS keyword.");
-      }
-    });
-}
-
 /* static */ already_AddRefed<nsROCSSPrimitiveValue>
 nsComputedDOMStyle::MatrixToCSSValue(const mozilla::gfx::Matrix4x4& matrix)
 {

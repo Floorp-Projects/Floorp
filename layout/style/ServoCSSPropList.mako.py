@@ -105,6 +105,7 @@ SERIALIZED_PREDEFINED_TYPES = [
     "OverflowWrap",
     "Quotes",
     "Resize",
+    "Rotate",
     "Scale",
     "TextAlign",
     "Translate",

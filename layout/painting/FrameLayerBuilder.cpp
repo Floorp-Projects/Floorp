@@ -545,7 +545,6 @@ public:
     , mForceTransparentSurface(false)
     , mHideAllLayersBelow(false)
     , mOpaqueForAnimatedGeometryRootParent(false)
-    , mDisableFlattening(false)
     , mBackfaceHidden(false)
     , mShouldPaintOnContentSide(false)
     , mDTCRequiresTargetConfirmation(false)
@@ -574,6 +573,16 @@ public:
 #else
 #define FLB_LOG_PAINTED_LAYER_DECISION(...)
 #endif
+
+  /**
+   * Disables component alpha for |aItem| if the component alpha bounds are not
+   * contained in |mOpaqueRegion|. Alternatively if possible, sets
+   * |mNeedComponentAlpha| to true for this PaintedLayerData.
+   */
+  bool SetupComponentAlpha(ContainerState* aState,
+                           nsDisplayItem* aItem,
+                           const nsIntRect& aVisibleRect,
+                           const TransformClipNode* aTransform);
 
   /**
    * Record that an item has been added to the PaintedLayer, so we
@@ -614,6 +623,7 @@ public:
    */
   void AccumulateHitTestItem(ContainerState* aState,
                              nsDisplayItem* aItem,
+                             const DisplayItemClip& aClip,
                              TransformClipNode* aTransform);
 
   /**
@@ -747,10 +757,6 @@ public:
    * and the PaintedLayer completely fills the displayport of the scrollframe.
    */
   bool mOpaqueForAnimatedGeometryRootParent;
-  /**
-   * Set if there is content in the layer that must avoid being flattened.
-   */
-  bool mDisableFlattening;
   /**
    * Set if the backface of this region is hidden to the user.
    * Content that backface is hidden should not be draw on the layer
@@ -3857,9 +3863,6 @@ ContainerState::FinishPaintedLayerData(
   } else if (data->mNeedComponentAlpha && !hidpi) {
     flags |= Layer::CONTENT_COMPONENT_ALPHA;
   }
-  if (data->mDisableFlattening) {
-    flags |= Layer::CONTENT_DISABLE_FLATTENING;
-  }
   layer->SetContentFlags(flags);
 
   userData->mItems = std::move(data->mAssignedDisplayItems);
@@ -4019,6 +4022,54 @@ PaintedLayerData::UpdateEffectStatus(DisplayItemEntryType aType,
   }
 }
 
+
+bool
+PaintedLayerData::SetupComponentAlpha(ContainerState* aState,
+                                      nsDisplayItem* aItem,
+                                      const nsIntRect& aVisibleRect,
+                                      const TransformClipNode* aTransform)
+{
+  nsRect componentAlphaBounds =
+    aItem->GetComponentAlphaBounds(aState->mBuilder);
+
+  if (componentAlphaBounds.IsEmpty()) {
+    // The item does not require component alpha, nothing do do here.
+    return false;
+  }
+
+  if (aTransform) {
+    componentAlphaBounds = aTransform->TransformRect(
+      componentAlphaBounds, aState->mAppUnitsPerDevPixel);
+  }
+
+  const nsIntRect pixelBounds =
+    aState->ScaleToOutsidePixels(componentAlphaBounds, false);
+
+  const nsIntRect visibleRect =
+    pixelBounds.Intersect(aVisibleRect);
+
+  if (!mOpaqueRegion.Contains(visibleRect)) {
+    nsRect buildingRect = aItem->GetBuildingRect();
+
+    if (aTransform) {
+      buildingRect =
+        aTransform->TransformRect(buildingRect, aState->mAppUnitsPerDevPixel);
+    }
+
+    const nsRect tightBounds = componentAlphaBounds.Intersect(buildingRect);
+
+    if (IsItemAreaInWindowOpaqueRegion(aState->mBuilder, aItem, tightBounds)) {
+      mNeedComponentAlpha = true;
+    } else {
+      // There is no opaque background below the item, disable component alpha.
+      aItem->DisableComponentAlpha();
+      return false;
+    }
+  }
+
+  return true;
+}
+
 void
 PaintedLayerData::Accumulate(ContainerState* aState,
                              nsDisplayItem* aItem,
@@ -4074,16 +4125,16 @@ PaintedLayerData::Accumulate(ContainerState* aState,
     mForceTransparentSurface = true;
   }
 
-  nsRect componentAlphaBounds;
   if (aState->mParameters.mDisableSubpixelAntialiasingInDescendants) {
     // Disable component alpha.
     // Note that the transform (if any) on the PaintedLayer is always an integer
     // translation so we don't have to factor that in here.
     aItem->DisableComponentAlpha();
   } else {
-    componentAlphaBounds = aItem->GetComponentAlphaBounds(aState->mBuilder);
+    const bool needsComponentAlpha =
+      SetupComponentAlpha(aState, aItem, aVisibleRect, aTransform);
 
-    if (!componentAlphaBounds.IsEmpty()) {
+    if (needsComponentAlpha) {
       // This display item needs background copy when pushing opacity group.
       for (size_t i : aOpacityIndices) {
         AssignedDisplayItem& item = mAssignedDisplayItems[i];
@@ -4213,33 +4264,6 @@ PaintedLayerData::Accumulate(ContainerState* aState,
       }
     }
   }
-
-  if (!aState->mParameters.mDisableSubpixelAntialiasingInDescendants &&
-      !componentAlphaBounds.IsEmpty()) {
-    nsIntRect componentAlphaRect =
-      aState->ScaleToOutsidePixels(componentAlphaBounds, false)
-        .Intersect(aVisibleRect);
-
-    if (!mOpaqueRegion.Contains(componentAlphaRect)) {
-      if (IsItemAreaInWindowOpaqueRegion(
-            aState->mBuilder,
-            aItem,
-            componentAlphaBounds.Intersect(aItem->GetBuildingRect()))) {
-        mNeedComponentAlpha = true;
-      } else {
-        aItem->DisableComponentAlpha();
-      }
-    }
-  }
-
-  // Ensure animated text does not get flattened, even if it forces other
-  // content in the container to be layerized. The content backend might
-  // not support subpixel positioning of text that animated transforms can
-  // generate. bug 633097
-  if (aState->mParameters.mInActiveTransformedSubtree &&
-      (mNeedComponentAlpha || !componentAlphaBounds.IsEmpty())) {
-    mDisableFlattening = true;
-  }
 }
 
 nsRegion
@@ -4254,6 +4278,7 @@ PaintedLayerData::CombinedTouchActionRegion()
 void
 PaintedLayerData::AccumulateHitTestItem(ContainerState* aState,
                                         nsDisplayItem* aItem,
+                                        const DisplayItemClip& aClip,
                                         TransformClipNode* aTransform)
 {
   MOZ_ASSERT(aItem->HasHitTestInfo());
@@ -4269,11 +4294,7 @@ PaintedLayerData::AccumulateHitTestItem(ContainerState* aState,
           "area: [%d, %d, %d, %d], flags: 0x%x]\n",
     item, this, area.x, area.y, area.width, area.height, flags.serialize());
 
-  const DisplayItemClip& clip = info.mClip
-                              ? *info.mClip
-                              : DisplayItemClip::NoClip();
-
-  area = clip.ApplyNonRoundedIntersection(area);
+  area = aClip.ApplyNonRoundedIntersection(area);
 
   if (aTransform) {
     area = aTransform->TransformRect(area, aState->mAppUnitsPerDevPixel);
@@ -4285,7 +4306,7 @@ PaintedLayerData::AccumulateHitTestItem(ContainerState* aState,
     return;
   }
 
-  bool hasRoundedCorners = clip.GetRoundedRectCount() > 0;
+  bool hasRoundedCorners = aClip.GetRoundedRectCount() > 0;
 
   // use the NS_FRAME_SIMPLE_EVENT_REGIONS to avoid calling the slightly
   // expensive HasNonZeroCorner function if we know from a previous run that
@@ -4803,13 +4824,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
     const bool inEffect = InTransform() || InOpacity();
 
-    if (marker == DisplayItemEntryType::HIT_TEST_INFO && inEffect) {
-      // Fast-path for hit test items inside flattened inactive layers.
-      MOZ_ASSERT(selectedLayer);
-      selectedLayer->AccumulateHitTestItem(this, item, transformNode);
-      continue;
-    }
-
     NS_ASSERTION(mAppUnitsPerDevPixel == AppUnitsPerDevPixel(item),
                  "items in a container layer should all have the same app "
                  "units per dev pixel");
@@ -4833,38 +4847,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         layerState = LAYER_ACTIVE;
       }
     }
-
-    auto FuseItemClipChainIfNeeded = [&](const ActiveScrolledRoot* aASR) {
-      if (marker == DisplayItemEntryType::ITEM || IsEffectStartMarker(marker)) {
-        // No need to fuse clip chain for effect end markers, since it was
-        // already done for effect start markers.
-        item->FuseClipChainUpTo(mBuilder, aASR);
-      }
-    };
-
-    if (inEffect && marker == DisplayItemEntryType::ITEM) {
-      // Fast-path for items inside flattened inactive layers. This works
-      // because the layer state of the item cannot be active, otherwise the
-      // parent item would not have been flattened.
-      MOZ_ASSERT(selectedLayer);
-
-      FuseItemClipChainIfNeeded(containerASR);
-      selectedLayer->Accumulate(this,
-                                item,
-                                nsIntRect(),
-                                nsRect(),
-                                item->GetClip(),
-                                layerState,
-                                aList,
-                                marker,
-                                opacityIndices,
-                                transformNode);
-      continue;
-    }
-
-    // Items outside of flattened effects and non-item markers inside flattened
-    // effects are processed here.
-    MOZ_ASSERT(!inEffect || (marker != DisplayItemEntryType::ITEM));
 
     AnimatedGeometryRoot* itemAGR = nullptr;
     const ActiveScrolledRoot* itemASR = nullptr;
@@ -4907,16 +4889,54 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       itemAGR = inEffect ? containerAGR : mContainerAnimatedGeometryRoot;
       itemASR = inEffect ? containerASR : mContainerASR;
 
-      FuseItemClipChainIfNeeded(itemASR);
-      if (marker != DisplayItemEntryType::HIT_TEST_INFO) {
-        // Because of the clip chain fusing, |itemClipPtr| needs to be updated.
-        itemClipPtr = &item->GetClip();
+      if (marker == DisplayItemEntryType::HIT_TEST_INFO) {
+        // Items with hit test info are processed twice, once with HIT_TEST_INFO
+        // marker and then with ITEM marker.
+        // With HIT_TEST_INFO markers, fuse the clip chain of hit test struct,
+        // and with ITEM markers, fuse the clip chain of the actual item.
+        itemClipChain = mBuilder->FuseClipChainUpTo(itemClipChain, itemASR);
+      } else if (!IsEffectEndMarker(marker)) {
+        // No need to fuse clip chain for effect end markers, since it was
+        // already done for effect start markers.
+        item->FuseClipChainUpTo(mBuilder, itemASR);
+        itemClipChain = item->GetClipChain();
       }
+
+      itemClipPtr = itemClipChain ? &itemClipChain->mClip : nullptr;
     }
 
     const DisplayItemClip& itemClip = itemClipPtr
                                     ? *itemClipPtr
                                     : DisplayItemClip::NoClip();
+
+    if (inEffect && marker == DisplayItemEntryType::HIT_TEST_INFO) {
+      // Fast-path for hit test items inside flattened inactive layers.
+      MOZ_ASSERT(selectedLayer);
+      selectedLayer->AccumulateHitTestItem(this, item, itemClip, transformNode);
+      continue;
+    }
+
+    if (inEffect && marker == DisplayItemEntryType::ITEM) {
+      // Fast-path for items inside flattened inactive layers. This works
+      // because the layer state of the item cannot be active, otherwise the
+      // parent item would not have been flattened.
+      MOZ_ASSERT(selectedLayer);
+      selectedLayer->Accumulate(this,
+                                item,
+                                nsIntRect(),
+                                nsRect(),
+                                itemClip,
+                                layerState,
+                                aList,
+                                marker,
+                                opacityIndices,
+                                transformNode);
+      continue;
+    }
+
+    // Items outside of flattened effects and non-item markers inside flattened
+    // effects are processed here.
+    MOZ_ASSERT(!inEffect || (marker != DisplayItemEntryType::ITEM));
 
     if (itemAGR == lastAnimatedGeometryRoot) {
       topLeft = lastTopLeft;
@@ -5421,7 +5441,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
       if (marker == DisplayItemEntryType::HIT_TEST_INFO) {
         MOZ_ASSERT(!transformNode);
-        paintedLayerData->AccumulateHitTestItem(this, item, nullptr);
+        paintedLayerData->AccumulateHitTestItem(this, item, itemClip, nullptr);
       } else {
         paintedLayerData->Accumulate(this,
                                      item,

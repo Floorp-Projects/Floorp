@@ -13,6 +13,7 @@
 #include "RootAccessibleWrap.h"
 #include "nsAccessibilityService.h"
 #include "nsViewManager.h"
+#include "nsIPersistentProperties2.h"
 
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
@@ -324,11 +325,16 @@ SessionAccessibility::SendClickedEvent(AccessibleWrap* aAccessible, bool aChecke
 }
 
 void
-SessionAccessibility::SendSelectedEvent(AccessibleWrap* aAccessible)
+SessionAccessibility::SendSelectedEvent(AccessibleWrap* aAccessible, bool aSelected)
 {
+  GECKOBUNDLE_START(eventInfo);
+  // Boolean::FALSE/TRUE gets clobbered by a macro, so ugh.
+  GECKOBUNDLE_PUT(eventInfo, "selected", java::sdk::Integer::ValueOf(aSelected ? 1 : 0));
+  GECKOBUNDLE_FINISH(eventInfo);
+
   mSessionAccessibility->SendEvent(
     java::sdk::AccessibilityEvent::TYPE_VIEW_SELECTED,
-    aAccessible->VirtualViewID(), aAccessible->AndroidClass(), nullptr);
+    aAccessible->VirtualViewID(), aAccessible->AndroidClass(), eventInfo);
 }
 
 void
@@ -340,11 +346,61 @@ SessionAccessibility::ReplaceViewportCache(const nsTArray<AccessibleWrap*>& aAcc
     AccessibleWrap* acc = aAccessibles.ElementAt(i);
     if (aData.Length() == aAccessibles.Length()) {
       const BatchData& data = aData.ElementAt(i);
-      infos->SetElement(i, acc->ToSmallBundle(data.State(), data.Bounds()));
+      auto bundle = acc->ToSmallBundle(data.State(), data.Bounds());
+      infos->SetElement(i, bundle);
     } else {
       infos->SetElement(i, acc->ToSmallBundle());
     }
   }
 
   mSessionAccessibility->ReplaceViewportCache(infos);
+}
+
+void
+SessionAccessibility::ReplaceFocusPathCache(const nsTArray<AccessibleWrap*>& aAccessibles,
+                                            const nsTArray<BatchData>& aData)
+{
+  auto infos = jni::ObjectArray::New<java::GeckoBundle>(aAccessibles.Length());
+  for (size_t i = 0; i < aAccessibles.Length(); i++) {
+    AccessibleWrap* acc = aAccessibles.ElementAt(i);
+    if (aData.Length() == aAccessibles.Length()) {
+      const BatchData& data = aData.ElementAt(i);
+      nsCOMPtr<nsIPersistentProperties> props =
+        AccessibleWrap::AttributeArrayToProperties(data.Attributes());
+      auto bundle = acc->ToBundle(data.State(),
+                                  data.Bounds(),
+                                  data.Name(),
+                                  data.TextValue(),
+                                  data.DOMNodeID(),
+                                  data.CurValue(),
+                                  data.MinValue(),
+                                  data.MaxValue(),
+                                  data.Step(),
+                                  props);
+      infos->SetElement(i, bundle);
+    } else {
+      infos->SetElement(i, acc->ToBundle());
+    }
+  }
+
+  mSessionAccessibility->ReplaceFocusPathCache(infos);
+}
+
+void
+SessionAccessibility::UpdateCachedBounds(const nsTArray<AccessibleWrap*>& aAccessibles,
+                                         const nsTArray<BatchData>& aData)
+{
+  auto infos = jni::ObjectArray::New<java::GeckoBundle>(aAccessibles.Length());
+  for (size_t i = 0; i < aAccessibles.Length(); i++) {
+    AccessibleWrap* acc = aAccessibles.ElementAt(i);
+    if (aData.Length() == aAccessibles.Length()) {
+      const BatchData& data = aData.ElementAt(i);
+      auto bundle = acc->ToSmallBundle(data.State(), data.Bounds());
+      infos->SetElement(i, bundle);
+    } else {
+      infos->SetElement(i, acc->ToSmallBundle());
+    }
+  }
+
+  mSessionAccessibility->UpdateCachedBounds(infos);
 }

@@ -34,6 +34,9 @@ import android.view.accessibility.AccessibilityNodeInfo.CollectionItemInfo;
 import android.view.accessibility.AccessibilityNodeInfo.CollectionInfo;
 import android.view.accessibility.AccessibilityNodeProvider;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+
 public class SessionAccessibility {
     private static final String LOGTAG = "GeckoAccessibility";
 
@@ -114,6 +117,7 @@ public class SessionAccessibility {
                         getNodeFromGecko(virtualDescendantId) : getNodeFromCache(virtualDescendantId);
                 if (node != null) {
                     node.setAccessibilityFocused(mAccessibilityFocusedNode == virtualDescendantId);
+                    node.setFocused(mFocusedNode == virtualDescendantId);
                 }
             } else {
                 node = AccessibilityNodeInfo.obtain(mView, virtualDescendantId);
@@ -235,10 +239,18 @@ public class SessionAccessibility {
 
         @Override
         public AccessibilityNodeInfo findFocus(int focus) {
-          if (focus == AccessibilityNodeInfo.FOCUS_ACCESSIBILITY &&
-              mAccessibilityFocusedNode != 0) {
-            return createAccessibilityNodeInfo(mAccessibilityFocusedNode);
-          }
+            switch (focus) {
+                case AccessibilityNodeInfo.FOCUS_ACCESSIBILITY:
+                    if (mAccessibilityFocusedNode != 0) {
+                        return createAccessibilityNodeInfo(mAccessibilityFocusedNode);
+                    }
+                    break;
+                case AccessibilityNodeInfo.FOCUS_INPUT:
+                    if (mFocusedNode != 0) {
+                        return createAccessibilityNodeInfo(mFocusedNode);
+                    }
+                    break;
+            }
 
           return super.findFocus(focus);
         }
@@ -249,21 +261,25 @@ public class SessionAccessibility {
             return node;
         }
 
-        private boolean isNodeCached(final int virtualViewId) {
-            return mViewportCache.get(virtualViewId) != null;
-        }
+        private synchronized AccessibilityNodeInfo getNodeFromCache(final int virtualViewId) {
+            AccessibilityNodeInfo node = null;
+            for (SparseArray<GeckoBundle> cache : mCaches) {
+                GeckoBundle bundle = cache.get(virtualViewId);
+                if (bundle == null) {
+                    continue;
+                }
 
-        private AccessibilityNodeInfo getNodeFromCache(final int virtualViewId) {
-            GeckoBundle bundle = mViewportCache.get(virtualViewId);
-            if (bundle == null) {
-                Log.e(LOGTAG, "No node for " + virtualViewId + " cache size: " + mViewportCache.size());
-                return null;
+                if (node == null) {
+                    node = AccessibilityNodeInfo.obtain(mView, virtualViewId);
+                }
+                populateNodeFromBundle(node, bundle, true);
             }
 
-            AccessibilityNodeInfo node = AccessibilityNodeInfo.obtain(mView, virtualViewId);
-            populateNodeFromBundle(node, bundle, true);
-            return node;
+            if (node == null) {
+                Log.e(LOGTAG, "No cached node for " + virtualViewId);
+            }
 
+            return node;
         }
 
         private void populateNodeFromBundle(final AccessibilityNodeInfo node, final GeckoBundle nodeInfo, final boolean fromCache) {
@@ -288,7 +304,10 @@ public class SessionAccessibility {
             // The basics
             node.setPackageName(GeckoAppShell.getApplicationContext().getPackageName());
             node.setClassName(getClassName(nodeInfo.getInt("className")));
-            node.setText(nodeInfo.getString("text", ""));
+
+            if (nodeInfo.containsKey("text")) {
+                node.setText(nodeInfo.getString("text"));
+            }
 
             // Add actions
             node.addAction(AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT);
@@ -307,13 +326,11 @@ public class SessionAccessibility {
 
 
             // Set boolean properties
-            node.setAccessibilityFocused((flags & FLAG_ACCESSIBILITY_FOCUSED) != 0);
             node.setCheckable((flags & FLAG_CHECKABLE) != 0);
             node.setChecked((flags & FLAG_CHECKED) != 0);
             node.setClickable((flags & FLAG_CLICKABLE) != 0);
             node.setEnabled((flags & FLAG_ENABLED) != 0);
             node.setFocusable((flags & FLAG_FOCUSABLE) != 0);
-            node.setFocused((flags & FLAG_FOCUSED) != 0);
             node.setLongClickable((flags & FLAG_LONG_CLICKABLE) != 0);
             node.setPassword((flags & FLAG_PASSWORD) != 0);
             node.setScrollable((flags & FLAG_SCROLLABLE) != 0);
@@ -340,7 +357,7 @@ public class SessionAccessibility {
             int[] children = nodeInfo.getIntArray("children");
             if (children != null) {
                 for (int childId : children) {
-                    if (!fromCache || isNodeCached(childId)) {
+                    if (!fromCache || getMostRecentBundle(childId) != null) {
                         // If this node is from cache, only populate with children that are cached as well.
                         node.addChild(mView, childId);
                     }
@@ -449,8 +466,14 @@ public class SessionAccessibility {
     private boolean mAttached = false;
     // The current node with accessibility focus
     private int mAccessibilityFocusedNode = 0;
+    // The current node with focus
+    private int mFocusedNode = 0;
     // Viewport cache
     final SparseArray<GeckoBundle> mViewportCache = new SparseArray<>();
+    // Focus cache
+    final SparseArray<GeckoBundle> mFocusPathCache = new SparseArray<>();
+    // List of caches in descending order from last updated.
+    LinkedList<SparseArray<GeckoBundle>> mCaches = new LinkedList<>();
 
     /* package */ SessionAccessibility(final GeckoSession session) {
         mSession = session;
@@ -619,8 +642,14 @@ public class SessionAccessibility {
             // display is attached and we must be in a junit test.
             return;
         }
-        if (eventType == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED) {
-            mAccessibilityFocusedNode = sourceId;
+
+        GeckoBundle cachedBundle = null;
+        if (!mSession.getSettings().getBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE)) {
+            cachedBundle = getMostRecentBundle(sourceId);
+            // Suppress events from non cached nodes if cache is enabled.
+            if (cachedBundle == null) {
+                return;
+            }
         }
 
         final AccessibilityEvent event = AccessibilityEvent.obtain(eventType);
@@ -648,7 +677,47 @@ public class SessionAccessibility {
             event.setChecked(eventData.getInt("checked") != 0);
         }
 
+        // Update cache and stored state from this event.
+        switch (eventType) {
+            case AccessibilityEvent.TYPE_VIEW_CLICKED:
+                if (cachedBundle != null && eventData != null && eventData.containsKey("checked")) {
+                    if (eventData.getInt("checked") != 0) {
+                        cachedBundle.putInt("flags", cachedBundle.getInt("flags") | FLAG_CHECKED);
+                    } else {
+                        cachedBundle.putInt("flags", cachedBundle.getInt("flags") & ~FLAG_CHECKED);
+                    }
+                }
+                break;
+            case AccessibilityEvent.TYPE_VIEW_SELECTED:
+                if (cachedBundle != null && eventData != null && eventData.containsKey("selected")) {
+                    if (eventData.getInt("selected") != 0) {
+                        cachedBundle.putInt("flags", cachedBundle.getInt("flags") | FLAG_SELECTED);
+                    } else {
+                        cachedBundle.putInt("flags", cachedBundle.getInt("flags") & ~FLAG_SELECTED);
+                    }
+                }
+                break;
+            case AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED:
+                mAccessibilityFocusedNode = sourceId;
+                break;
+            case AccessibilityEvent.TYPE_VIEW_FOCUSED:
+                mFocusedNode = sourceId;
+                break;
+        }
+
         ((ViewParent) mView).requestSendAccessibilityEvent(mView, event);
+    }
+
+    private synchronized GeckoBundle getMostRecentBundle(final int virtualViewId) {
+        Iterator<SparseArray<GeckoBundle>> iter = mCaches.descendingIterator();
+        while (iter.hasNext()) {
+            GeckoBundle bundle = iter.next().get(virtualViewId);
+            if (bundle != null) {
+                return bundle;
+            }
+        }
+
+        return null;
     }
 
     /* package */ final class NativeProvider extends JNIObject {
@@ -680,11 +749,36 @@ public class SessionAccessibility {
         }
 
         @WrapForJNI(calledFrom = "gecko")
-        private void replaceViewportCache(final GeckoBundle[] bundles) {
+        private synchronized void replaceViewportCache(final GeckoBundle[] bundles) {
             mViewportCache.clear();
             for (GeckoBundle bundle : bundles) {
                 if (bundle == null) { continue; }
                 mViewportCache.append(bundle.getInt("id"), bundle);
+            }
+            mCaches.remove(mViewportCache);
+            mCaches.add(mViewportCache);
+        }
+
+        @WrapForJNI(calledFrom = "gecko")
+        private synchronized void replaceFocusPathCache(final GeckoBundle[] bundles) {
+            mFocusPathCache.clear();
+            for (GeckoBundle bundle : bundles) {
+                if (bundle == null) { continue; }
+                mFocusPathCache.append(bundle.getInt("id"), bundle);
+            }
+            mCaches.remove(mFocusPathCache);
+            mCaches.add(mFocusPathCache);
+        }
+
+        @WrapForJNI(calledFrom = "gecko")
+        private synchronized void updateCachedBounds(final GeckoBundle[] bundles) {
+            for (GeckoBundle bundle : bundles) {
+                GeckoBundle cachedBundle = getMostRecentBundle(bundle.getInt("id"));
+                if (cachedBundle == null) {
+                    Log.e(LOGTAG, "Can't update bounds of uncached node " + bundle.getInt("id"));
+                    continue;
+                }
+                cachedBundle.putIntArray("bounds", bundle.getIntArray("bounds"));
             }
         }
     }

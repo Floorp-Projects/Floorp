@@ -1753,6 +1753,28 @@ nsDisplayListBuilder::CopyWholeChain(const DisplayItemClipChain* aClipChain)
   return CreateClipChainIntersection(nullptr, aClipChain, nullptr);
 }
 
+const DisplayItemClipChain*
+nsDisplayListBuilder::FuseClipChainUpTo(const DisplayItemClipChain* aClipChain,
+                                        const ActiveScrolledRoot* aASR)
+{
+  if (!aClipChain) {
+    return nullptr;
+  }
+
+  const DisplayItemClipChain* sc = aClipChain;
+  DisplayItemClip mergedClip;
+  while (sc && ActiveScrolledRoot::PickDescendant(aASR, sc->mASR) == sc->mASR) {
+    mergedClip.IntersectWith(sc->mClip);
+    sc = sc->mParent;
+  }
+
+  if (!mergedClip.HasClip()) {
+    return nullptr;
+  }
+
+  return AllocateDisplayItemClipChain(mergedClip, aASR, sc);
+}
+
 const nsIFrame*
 nsDisplayListBuilder::FindReferenceFrameFor(const nsIFrame* aFrame,
                                             nsPoint* aOffset) const
@@ -3321,17 +3343,11 @@ void
 nsDisplayItem::FuseClipChainUpTo(nsDisplayListBuilder* aBuilder,
                                  const ActiveScrolledRoot* aASR)
 {
-  const DisplayItemClipChain* sc = mClipChain;
-  DisplayItemClip mergedClip;
-  while (sc && ActiveScrolledRoot::PickDescendant(aASR, sc->mASR) == sc->mASR) {
-    mergedClip.IntersectWith(sc->mClip);
-    sc = sc->mParent;
-  }
-  if (mergedClip.HasClip()) {
-    mClipChain = aBuilder->AllocateDisplayItemClipChain(mergedClip, aASR, sc);
+  mClipChain = aBuilder->FuseClipChainUpTo(mClipChain, aASR);
+
+  if (mClipChain) {
     mClip = &mClipChain->mClip;
   } else {
-    mClipChain = nullptr;
     mClip = nullptr;
   }
 }

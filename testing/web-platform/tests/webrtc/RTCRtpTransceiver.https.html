@@ -340,10 +340,33 @@
       ]);
 
     const offer = await pc.createOffer();
-    assert_true(offer.sdp.includes("a=msid:" + audioStream.id + " " + audio.id),
+    assert_true(offer.sdp.includes("a=msid:" + audioStream.id),
       "offer contains the expected audio msid");
-    assert_true(offer.sdp.includes("a=msid:" + videoStream.id + " " + video.id),
+    assert_true(offer.sdp.includes("a=msid:" + videoStream.id),
       "offer contains the expected video msid");
+  };
+
+  const checkMsidNoTrackId = async t => {
+    const pc1 = new RTCPeerConnection();
+    const pc2 = new RTCPeerConnection();
+    t.add_cleanup(() => pc1.close());
+    t.add_cleanup(() => pc2.close());
+    const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+    t.add_cleanup(() => stopTracks(stream));
+    const track = stream.getAudioTracks()[0];
+    pc1.addTrack(track, stream);
+
+    const offer = await pc1.createOffer();
+    await pc1.setLocalDescription(offer);
+
+    // Remove track-id from msid
+    offer.sdp = offer.sdp.replace(/(a=msid:[^ \t]+).*\r\n/g, "$1\r\n");
+    assert_true(offer.sdp.includes(`a=msid:${stream.id}\r\n`));
+    await pc2.setRemoteDescription(offer);
+
+    const answer = await pc2.createAnswer();
+    await pc1.setRemoteDescription(answer);
+    await pc2.setLocalDescription(answer);
   };
 
   const checkAddTransceiverWithOfferToReceive = async (t, kinds) => {
@@ -2313,6 +2336,7 @@ const tests = [
   checkAddTransceiverWithAddTrack,
   checkAddTransceiverWithDirection,
   checkAddTransceiverWithStream,
+  checkMsidNoTrackId,
   function checkAddTransceiverWithOfferToReceiveAudio(t) {
     return checkAddTransceiverWithOfferToReceive(t, ["audio"]);
   },

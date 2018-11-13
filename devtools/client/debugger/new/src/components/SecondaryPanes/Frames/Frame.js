@@ -24,7 +24,7 @@ type FrameTitleProps = {
 
 function FrameTitle({ frame, options = {}, l10n }: FrameTitleProps) {
   const displayName = formatDisplayName(frame, options, l10n);
-  return <div className="title">{displayName}</div>;
+  return <span className="title">{displayName}</span>;
 }
 
 type FrameLocationProps = { frame: LocalFrame, displayFullUrl: boolean };
@@ -36,10 +36,10 @@ function FrameLocation({ frame, displayFullUrl = false }: FrameLocationProps) {
 
   if (frame.library) {
     return (
-      <div className="location">
+      <span className="location">
         {frame.library}
         <Svg name={frame.library.toLowerCase()} className="annotation-logo" />
-      </div>
+      </span>
     );
   }
 
@@ -48,7 +48,12 @@ function FrameLocation({ frame, displayFullUrl = false }: FrameLocationProps) {
     ? getFileURL(source, false)
     : getFilename(source);
 
-  return <div className="location">{`${filename}:${location.line}`}</div>;
+  return (
+    <span className="location">
+      <span className="filename">{filename}</span>:
+      <span className="line">{location.line}</span>
+    </span>
+  );
 }
 
 FrameLocation.displayName = "FrameLocation";
@@ -135,6 +140,9 @@ export default class FrameComponent extends Component<FrameComponentProps> {
         )
       : undefined;
 
+    const tabChar = "\t";
+    const newLineChar = "\n";
+
     return (
       <li
         key={frame.id}
@@ -145,14 +153,17 @@ export default class FrameComponent extends Component<FrameComponentProps> {
         tabIndex={0}
         title={title}
       >
+        {tabChar}
         <FrameTitle
           frame={frame}
           options={{ shouldMapDisplayName }}
           l10n={l10n}
         />
+        {!hideLocation && " "}
         {!hideLocation && (
           <FrameLocation frame={frame} displayFullUrl={displayFullUrl} />
         )}
+        {newLineChar}
       </li>
     );
   }

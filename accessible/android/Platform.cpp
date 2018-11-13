@@ -90,7 +90,7 @@ a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget,
   }
 
   if (aState & states::SELECTED) {
-    sessionAcc->SendSelectedEvent(WrapperFor(aTarget));
+    sessionAcc->SendSelectedEvent(WrapperFor(aTarget), aEnabled);
   }
 
   if (aState & states::BUSY) {
@@ -220,6 +220,12 @@ a11y::ProxyBatch(ProxyAccessible* aDocument,
   switch (aBatchType) {
     case DocAccessibleWrap::eBatch_Viewport:
       sessionAcc->ReplaceViewportCache(accWraps, aData);
+      break;
+    case DocAccessibleWrap::eBatch_FocusPath:
+      sessionAcc->ReplaceFocusPathCache(accWraps, aData);
+      break;
+    case DocAccessibleWrap::eBatch_BoundsUpdate:
+      sessionAcc->UpdateCachedBounds(accWraps, aData);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown batch type.");
