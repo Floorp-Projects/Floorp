@@ -12,7 +12,7 @@
  * same keyword appear in the list.
  */
 
-add_task(async function test_keyword_searc() {
+add_task(async function test_keyword_search() {
   let uri1 = NetUtil.newURI("http://abc/?search=%s");
   let uri2 = NetUtil.newURI("http://abc/?search=ThisPageIsInHistory");
   let uri3 = NetUtil.newURI("http://somedomain.example/key");
