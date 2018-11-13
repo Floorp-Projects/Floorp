@@ -4162,9 +4162,7 @@ nsIFrame::IsSelectable(StyleUserSelect* aSelectStyle) const
   while (frame) {
     const nsStyleUIReset* userinterface = frame->StyleUIReset();
     switch (userinterface->mUserSelect) {
-      case StyleUserSelect::All:
-      case StyleUserSelect::MozAll:
-      {
+      case StyleUserSelect::All: {
         // override the previous values
         if (selectStyle != StyleUserSelect::MozText) {
           selectStyle = userinterface->mUserSelect;
@@ -4188,8 +4186,6 @@ nsIFrame::IsSelectable(StyleUserSelect* aSelectStyle) const
   if (selectStyle == StyleUserSelect::Auto ||
       selectStyle == StyleUserSelect::MozText) {
     selectStyle = StyleUserSelect::Text;
-  } else if (selectStyle == StyleUserSelect::MozAll) {
-    selectStyle = StyleUserSelect::All;
   }
 
   // If user tries to select all of a non-editable content,
@@ -4268,8 +4264,6 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  // When implementing StyleUserSelect::Element, StyleUserSelect::Elements and
-  // StyleUserSelect::Toggle, need to change this logic
   bool useFrameSelection = (selectStyle == StyleUserSelect::Text);
 
   // If the mouse is dragged outside the nearest enclosing scrollable area

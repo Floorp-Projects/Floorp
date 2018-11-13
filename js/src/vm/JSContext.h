@@ -623,9 +623,10 @@ struct JSContext : public JS::RootingContext,
         suppressProfilerSampling = false;
     }
 
-#if defined(XP_DARWIN)
-    js::wasm::MachExceptionHandler wasmMachExceptionHandler;
-#endif
+    // Used by wasm::EnsureThreadSignalHandlers(cx) to install thread signal
+    // handlers once per JSContext/thread.
+    bool wasmTriedToInstallSignalHandlers;
+    bool wasmHaveSignalHandlers;
 
     /* Temporary arena pool used while compiling and decompiling. */
     static const size_t TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 4 * 1024;
