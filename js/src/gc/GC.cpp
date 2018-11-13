@@ -5860,16 +5860,6 @@ GCRuntime::sweepJitDataOnMainThread(FreeOp* fop)
             js::CancelOffThreadIonCompile(rt, JS::Zone::Sweep);
         }
 
-        for (SweepGroupRealmsIter r(rt); !r.done(); r.next()) {
-            r->sweepJitRealm();
-        }
-
-        for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
-            if (jit::JitZone* jitZone = zone->jitZone()) {
-                jitZone->sweep();
-            }
-        }
-
         // Bug 1071218: the following method has not yet been refactored to
         // work on a single zone-group at once.
 
@@ -5882,6 +5872,22 @@ GCRuntime::sweepJitDataOnMainThread(FreeOp* fop)
         gcstats::AutoPhase apdc(stats(), gcstats::PhaseKind::SWEEP_DISCARD_CODE);
         for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
             zone->discardJitCode(fop);
+        }
+    }
+
+    // JitZone/JitRealm must be swept *after* discarding JIT code, because
+    // Zone::discardJitCode might access CacheIRStubInfos deleted here.
+    {
+        gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_JIT_DATA);
+
+        for (SweepGroupRealmsIter r(rt); !r.done(); r.next()) {
+            r->sweepJitRealm();
+        }
+
+        for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
+            if (jit::JitZone* jitZone = zone->jitZone()) {
+                jitZone->sweep();
+            }
         }
     }
 
