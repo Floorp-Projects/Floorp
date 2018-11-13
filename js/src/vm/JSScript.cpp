@@ -2465,12 +2465,13 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
             if (mode == XDR_DECODE) {
                 // Use calloc, since we're storing this immediately, and filling it might GC, to
                 // avoid marking bogus atoms.
-                setBinASTSourceMetadata(
-                    static_cast<frontend::BinASTSourceMetadata*>(
-                        js_calloc(frontend::BinASTSourceMetadata::totalSize(numBinKinds, numStrings))));
-                if (!binASTMetadata_) {
+                auto metadata = static_cast<frontend::BinASTSourceMetadata*>(
+                    js_calloc(frontend::BinASTSourceMetadata::totalSize(numBinKinds, numStrings)));
+                if (!metadata) {
                     return xdr->fail(JS::TranscodeResult_Throw);
                 }
+                new (metadata) frontend::BinASTSourceMetadata(numBinKinds, numStrings);
+                setBinASTSourceMetadata(metadata);
             }
 
             for (uint32_t i = 0; i < numBinKinds; i++) {
