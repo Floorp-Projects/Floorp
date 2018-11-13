@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
-
 const {
   DEBUG_TARGETS,
   UNWATCH_RUNTIME_START,
@@ -23,32 +21,6 @@ function debugTargetListenerMiddleware(store) {
     store.dispatch(Actions.requestTabs());
   };
 
-  const extensionsListener = {
-    onDisabled() {
-      onExtensionsUpdated();
-    },
-
-    onEnabled() {
-      onExtensionsUpdated();
-    },
-
-    onInstalled() {
-      onExtensionsUpdated();
-    },
-
-    onOperationCancelled() {
-      onExtensionsUpdated();
-    },
-
-    onUninstalled() {
-      onExtensionsUpdated();
-    },
-
-    onUninstalling() {
-      onExtensionsUpdated();
-    },
-  };
-
   const onWorkersUpdated = () => {
     store.dispatch(Actions.requestWorkers());
   };
@@ -64,7 +36,7 @@ function debugTargetListenerMiddleware(store) {
         }
 
         if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.EXTENSION)) {
-          AddonManager.addAddonListener(extensionsListener);
+          client.addListener("addonListChanged", onExtensionsUpdated);
         }
 
         if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.WORKER)) {
@@ -85,7 +57,7 @@ function debugTargetListenerMiddleware(store) {
         }
 
         if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.EXTENSION)) {
-          AddonManager.removeAddonListener(extensionsListener);
+          client.removeListener("addonListChanged", onExtensionsUpdated);
         }
 
         if (isSupportedDebugTarget(runtime.type, DEBUG_TARGETS.WORKER)) {
