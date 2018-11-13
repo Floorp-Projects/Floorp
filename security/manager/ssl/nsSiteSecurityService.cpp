@@ -1594,19 +1594,8 @@ nsSiteSecurityService::IsSecureHost(uint32_t aType, const nsACString& aHost,
                                                 *aResult);
   }
 
-  // Holepunch chart.apis.google.com and subdomains.
   nsAutoCString host(
     PublicKeyPinningService::CanonicalizeHostname(flatHost.get()));
-  if (host.EqualsLiteral("chart.apis.google.com") ||
-      StringEndsWith(host, NS_LITERAL_CSTRING(".chart.apis.google.com"))) {
-    if (aCached) {
-      *aCached = true;
-    }
-    if (aSource) {
-      *aSource = SourcePreload;
-    }
-    return NS_OK;
-  }
 
   // First check the exact host.
   if (HostHasHSTSEntry(host, false, aFlags, aOriginAttributes, aResult,
