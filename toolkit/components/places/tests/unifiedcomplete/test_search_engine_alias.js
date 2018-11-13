@@ -99,6 +99,25 @@ add_task(async function getPost() {
         }),
       ],
     });
+
+    // When a restriction token is used before the alias, the alias should *not*
+    // be recognized.  It should be treated as part of the search string.  Try
+    // all the restriction tokens to test that.  We should get a single "search
+    // with" heuristic result without an alias.
+    for (let restrictToken in UrlbarTokenizer.RESTRICT) {
+      let search = `${restrictToken} ${alias} query string`;
+      await check_autocomplete({
+        search,
+        searchParam: "enable-actions",
+        matches: [
+          makeSearchMatch(search, {
+            engineName: "MozSearch",
+            searchQuery: search,
+            heuristic: true,
+          }),
+        ],
+      });
+    }
   }
 
   await cleanup();

@@ -62,6 +62,19 @@ add_task(async function charsBeforeAlias() {
 });
 
 
+// In a search string that starts with a restriction character followed by an
+// alias, the alias should be neither recognized nor highlighted.
+add_task(async function restrictionCharBeforeAlias() {
+  gURLBar.search(UrlbarTokenizer.RESTRICT.BOOKMARK + " " + ALIAS);
+  await promiseSearchComplete();
+  await waitForAutocompleteResultAt(0);
+  assertAlias(false);
+
+  EventUtils.synthesizeKey("KEY_Escape");
+  await promisePopupHidden(gURLBar.popup);
+});
+
+
 // Aliases are case insensitive, and the alias in the result uses the case that
 // the user typed in the input.  Make sure that searching with an alias using a
 // weird case still causes the alias to be highlighted.
@@ -172,6 +185,26 @@ add_task(async function nonHeuristicAliases() {
   // Hide the popup.
   EventUtils.synthesizeKey("KEY_Escape");
   await promisePopupHidden(gURLBar.popup);
+});
+
+
+// Aliases that don't start with @ shouldn't be highlighted.
+add_task(async function nonAtMarkAlias() {
+  let alias = "notatmarkalias";
+  let engine = Services.search.getEngineByName("Test");
+  engine.alias = "notatmarkalias";
+  Assert.equal(engine.alias, alias);
+
+  gURLBar.search(alias);
+  await promiseSearchComplete();
+  await waitForAutocompleteResultAt(0);
+  assertFirstResultIsAlias(true, alias);
+  assertHighlighted(false);
+
+  EventUtils.synthesizeKey("KEY_Escape");
+  await promisePopupHidden(gURLBar.popup);
+
+  engine.alias = ALIAS;
 });
 
 
