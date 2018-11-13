@@ -34,7 +34,7 @@ class MozFindbar extends XULElement {
           <toolbarbutton anonid="find-previous" class="findbar-find-previous tabbable" data-l10n-attrs="tooltiptext" data-l10n-id="findbar-previous" oncommand="onFindAgainCommand(true);" disabled="true" />
           <toolbarbutton anonid="find-next" class="findbar-find-next tabbable" data-l10n-id="findbar-next" oncommand="onFindAgainCommand(false);" disabled="true" />
         </hbox>
-        <toolbarbutton anonid="highlight" class="findbar-highlight findbar-button tabbable" data-l10n-id="findbar-highlight-all" oncommand="toggleHighlight(this.checked);" type="checkbox" />
+        <toolbarbutton anonid="highlight" class="findbar-highlight findbar-button tabbable" data-l10n-id="findbar-highlight-all2" oncommand="toggleHighlight(this.checked);" type="checkbox" />
         <toolbarbutton anonid="find-case-sensitive" class="findbar-case-sensitive findbar-button tabbable" data-l10n-id="findbar-case-sensitive" oncommand="_setCaseSensitivity(this.checked ? 1 : 0);" type="checkbox" />
         <toolbarbutton anonid="find-entire-word" class="findbar-entire-word findbar-button tabbable" data-l10n-id="findbar-entire-word" oncommand="toggleEntireWord(this.checked);" type="checkbox" />
         <label anonid="match-case-status" class="findbar-find-fast" />
