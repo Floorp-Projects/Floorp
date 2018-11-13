@@ -139,6 +139,12 @@ public:
     return mDrawTarget->CreateSimilarDrawTarget(aSize, aFormat);
   }
 
+  virtual bool
+    CanCreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const override
+  {
+    return mDrawTarget->CanCreateSimilarDrawTarget(aSize, aFormat);
+  }
+
   virtual already_AddRefed<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const override
   {
     return mDrawTarget->CreatePathBuilder(aFillRule);
