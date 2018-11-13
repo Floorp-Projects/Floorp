@@ -27,7 +27,7 @@ public:
   Array() {}
 
   template <typename... Args>
-  MOZ_IMPLICIT Array(Args&&... aArgs)
+  MOZ_IMPLICIT constexpr Array(Args&&... aArgs)
     : mArr{std::forward<Args>(aArgs)...}
   {
     static_assert(sizeof...(aArgs) == Length,
