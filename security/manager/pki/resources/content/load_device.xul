@@ -5,39 +5,37 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE dialog [
-<!ENTITY % deviceManangerDTD SYSTEM "chrome://pippki/locale/deviceManager.dtd">
-%deviceManangerDTD;
-]>
+<!DOCTYPE dialog>
 
 <dialog id="loaddevice"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&loaddevice.title2;"
+        data-l10n-id="load-device"
         buttons="accept,cancel"
         ondialogaccept="return onDialogAccept();">
 
-<stringbundleset id="stringbundleset">
-  <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
-  <stringbundle id="pipnss_bundle" src="chrome://pipnss/locale/pipnss.properties"/>
-</stringbundleset>
+  <linkset>
+    <link rel="localization" href="security/certificates/deviceManager.ftl"/>
+  </linkset>
 
   <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
   <script type="application/javascript"
           src="chrome://pippki/content/load_device.js"/>
 
-  <description>&loaddevice.info;</description>
+  <description data-l10n-id="load-device-info"></description>
   <hbox align="center">
-    <label value="&loaddevice.modname2;" accesskey="&loaddevice.modname2.accesskey;"
+    <label data-l10n-id="load-device-modname"
            control="device_name"/>
-    <textbox id="device_name" flex="1" value="&loaddevice.modname.default;"
+    <textbox id="device_name" flex="1"
+             data-l10n-id="load-device-modname-default"
+             data-l10n-attrs="value"
              onchange="validateModuleName();"/>
   </hbox>
   <hbox align="center">
-    <label value="&loaddevice.filename2;" accesskey="&loaddevice.filename2.accesskey;"
+    <label data-l10n-id="load-device-filename"
            control="device_path"/>
     <textbox id="device_path" flex="1"/>
-    <button id="browse" label="&loaddevice.browse;" flex="1"
-            accesskey="&loaddevice.browse.accesskey;"
+    <button id="browse" flex="1"
+            data-l10n-id="load-device-browse"
             oncommand="onBrowseBtnPress();"/>
   </hbox>
   <label id="helpText" value=""/>

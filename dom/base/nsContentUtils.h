@@ -2065,6 +2065,25 @@ public:
   static JSContext *GetCurrentJSContext();
 
   /**
+   * Case insensitive comparison between two atoms.
+   */
+  static bool EqualsIgnoreASCIICase(nsAtom* aAtom1, nsAtom* aAtom2)
+  {
+    if (aAtom1 == aAtom2) {
+      return true;
+    }
+
+    // If both are ascii lowercase already, we know that the slow comparison
+    // below is going to return false.
+    if (aAtom1->IsAsciiLowercase() && aAtom2->IsAsciiLowercase()) {
+      return false;
+    }
+
+    return EqualsIgnoreASCIICase(nsDependentAtomString(aAtom1),
+                                 nsDependentAtomString(aAtom2));
+  }
+
+  /**
    * Case insensitive comparison between two strings. However it only ignores
    * case for ASCII characters a-z.
    */

@@ -35,9 +35,9 @@ add_task(async function setup() {
   });
 
   // Install the test engine.
-  let oldCurrentEngine = Services.search.currentEngine;
-  registerCleanupFunction(() => Services.search.currentEngine = oldCurrentEngine);
-  Services.search.currentEngine = engine;
+  let oldCurrentEngine = Services.search.defaultEngine;
+  registerCleanupFunction(() => Services.search.defaultEngine = oldCurrentEngine);
+  Services.search.defaultEngine = engine;
 
   // We must make sure the FormHistoryStartup component is initialized.
   Cc["@mozilla.org/satchel/form-history-startup;1"]

@@ -66,15 +66,15 @@ add_task(taskWithNewTab(async function test_disabled_ac() {
   Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
                                        "http://example.com/?q={searchTerms}");
   let engine = Services.search.getEngineByName("MozSearch");
-  let originalEngine = Services.search.currentEngine;
-  Services.search.currentEngine = engine;
+  let originalEngine = Services.search.defaultEngine;
+  Services.search.defaultEngine = engine;
 
   function cleanup() {
     Preferences.set("browser.urlbar.suggest.history", suggestHistory);
     Preferences.set("browser.urlbar.suggest.bookmark", suggestBookmarks);
     Preferences.set("browser.urlbar.suggest.openpage", suggestOpenPages);
 
-    Services.search.currentEngine = originalEngine;
+    Services.search.defaultEngine = originalEngine;
     let mozSearchEngine = Services.search.getEngineByName("MozSearch");
     if (mozSearchEngine) {
       Services.search.removeEngine(mozSearchEngine);

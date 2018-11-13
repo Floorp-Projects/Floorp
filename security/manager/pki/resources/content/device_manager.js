@@ -16,26 +16,22 @@ const nsIPK11TokenDB = Ci.nsIPK11TokenDB;
 const nsIDialogParamBlock = Ci.nsIDialogParamBlock;
 const nsDialogParamBlock = "@mozilla.org/embedcomp/dialogparam;1";
 
-var bundle;
 var secmoddb;
 var skip_enable_buttons = false;
 
 /* Do the initial load of all PKCS# modules and list them. */
 function LoadModules() {
-  bundle = document.getElementById("pippki_bundle");
   secmoddb = Cc[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
   RefreshDeviceList();
 }
 
-function getNSSString(name) {
-  return document.getElementById("pipnss_bundle").getString(name);
-}
-
-function doPrompt(msg) {
+async function doPrompt(l10n_id) {
+  let [msg] = await document.l10n.formatValues([{id: l10n_id}]);
   Services.prompt.alert(window, null, msg);
 }
 
-function doConfirm(msg) {
+async function doConfirm(l10n_id) {
+  let [msg] = await document.l10n.formatValues([{id: l10n_id}]);
   return Services.prompt.confirm(window, null, msg);
 }
 
@@ -51,13 +47,11 @@ function RefreshDeviceList() {
 
 function SetFIPSButton() {
   var fipsButton = document.getElementById("fipsbutton");
-  var label;
   if (secmoddb.isFIPSEnabled) {
-   label = bundle.getString("disable_fips");
+    document.l10n.setAttributes(fipsButton, "devmgr-button-disable-fips");
   } else {
-   label = bundle.getString("enable_fips");
+    document.l10n.setAttributes(fipsButton, "devmgr-button-enable-fips");
   }
-  fipsButton.setAttribute("label", label);
 
   var can_toggle = secmoddb.canToggleFIPS;
   if (can_toggle) {
@@ -199,48 +193,32 @@ function showSlotInfo() {
   ClearInfoList();
   switch (selected_slot.status) {
    case nsIPKCS11Slot.SLOT_DISABLED:
-     AddInfoRow(bundle.getString("devinfo_status"),
-                bundle.getString("devinfo_stat_disabled"),
-                "tok_status");
+     AddInfoRow("devinfo-status", {l10nID: "devinfo-status-disabled"}, "tok_status");
      present = false;
      break;
    case nsIPKCS11Slot.SLOT_NOT_PRESENT:
-     AddInfoRow(bundle.getString("devinfo_status"),
-                bundle.getString("devinfo_stat_notpresent"),
-                "tok_status");
+     AddInfoRow("devinfo-status", {l10nID: "devinfo-status-not-present"}, "tok_status");
      present = false;
      break;
    case nsIPKCS11Slot.SLOT_UNINITIALIZED:
-     AddInfoRow(bundle.getString("devinfo_status"),
-                bundle.getString("devinfo_stat_uninitialized"),
-                "tok_status");
+     AddInfoRow("devinfo-status", {l10nID: "devinfo-status-uninitialized"}, "tok_status");
      break;
    case nsIPKCS11Slot.SLOT_NOT_LOGGED_IN:
-     AddInfoRow(bundle.getString("devinfo_status"),
-                bundle.getString("devinfo_stat_notloggedin"),
-                "tok_status");
+     AddInfoRow("devinfo-status", {l10nID: "devinfo-status-not-logged-in"}, "tok_status");
      break;
    case nsIPKCS11Slot.SLOT_LOGGED_IN:
-     AddInfoRow(bundle.getString("devinfo_status"),
-                bundle.getString("devinfo_stat_loggedin"),
-                "tok_status");
+     AddInfoRow("devinfo-status", {l10nID: "devinfo-status-logged-in"}, "tok_status");
      break;
    case nsIPKCS11Slot.SLOT_READY:
-     AddInfoRow(bundle.getString("devinfo_status"),
-                bundle.getString("devinfo_stat_ready"),
-                "tok_status");
+     AddInfoRow("devinfo-status", {l10nID: "devinfo-status-ready"}, "tok_status");
      break;
    default:
      return;
   }
-  AddInfoRow(bundle.getString("devinfo_desc"),
-             selected_slot.desc, "slot_desc");
-  AddInfoRow(bundle.getString("devinfo_manID"),
-             selected_slot.manID, "slot_manID");
-  AddInfoRow(bundle.getString("devinfo_hwversion"),
-             selected_slot.HWVersion, "slot_hwv");
-  AddInfoRow(bundle.getString("devinfo_fwversion"),
-             selected_slot.FWVersion, "slot_fwv");
+  AddInfoRow("devinfo-desc", {label: selected_slot.desc}, "slot_desc");
+  AddInfoRow("devinfo-man-id", {label: selected_slot.manID}, "slot_manID");
+  AddInfoRow("devinfo-hwversion", {label: selected_slot.HWVersion}, "slot_hwv");
+  AddInfoRow("devinfo-fwversion", {label: selected_slot.FWVersion}, "slot_fwv");
   if (present) {
      showTokenInfo();
   }
@@ -248,23 +226,25 @@ function showSlotInfo() {
 
 function showModuleInfo() {
   ClearInfoList();
-  AddInfoRow(bundle.getString("devinfo_modname"),
-             selected_module.name, "module_name");
-  AddInfoRow(bundle.getString("devinfo_modpath"),
-             selected_module.libName, "module_path");
+  AddInfoRow("devinfo-modname", {label: selected_module.name}, "module_name");
+  AddInfoRow("devinfo-modpath", {label: selected_module.libName}, "module_path");
 }
 
 // add a row to the info list, as [col1 col2] (ex.: ["status" "logged in"])
-function AddInfoRow(col1, col2, cell_id) {
+function AddInfoRow(l10nID, col2, cell_id) {
   var tree = document.getElementById("info_list");
   var item  = document.createXULElement("treeitem");
   var row  = document.createXULElement("treerow");
   var cell1 = document.createXULElement("treecell");
-  cell1.setAttribute("label", col1);
+  document.l10n.setAttributes(cell1, l10nID);
   cell1.setAttribute("crop", "never");
   row.appendChild(cell1);
   var cell2 = document.createXULElement("treecell");
-  cell2.setAttribute("label", col2);
+  if (col2.l10nID) {
+    document.l10n.setAttributes(cell2, col2.l10nID);
+  } else {
+    cell2.setAttribute("label", col2.label);
+  }
   cell2.setAttribute("crop", "never");
   cell2.setAttribute("id", cell_id);
   row.appendChild(cell2);
@@ -281,14 +261,12 @@ function doLogin() {
     selected_token.login(false);
     var tok_status = document.getElementById("tok_status");
     if (selected_token.isLoggedIn()) {
-      tok_status.setAttribute("label",
-                              bundle.getString("devinfo_stat_loggedin"));
+      document.l10n.setAttributes(tok_status, "devinfo-status-logged-in");
     } else {
-      tok_status.setAttribute("label",
-                              bundle.getString("devinfo_stat_notloggedin"));
+      document.l10n.setAttributes(tok_status, "devinfo-status-not-logged-in");
     }
   } catch (e) {
-    doPrompt(bundle.getString("login_failed"));
+    doPrompt("login-failed");
   }
   enableButtons();
 }
@@ -302,11 +280,9 @@ function doLogout() {
     selected_token.logoutAndDropAuthenticatedResources();
     var tok_status = document.getElementById("tok_status");
     if (selected_token.isLoggedIn()) {
-      tok_status.setAttribute("label",
-                              bundle.getString("devinfo_stat_loggedin"));
+      document.l10n.setAttributes(tok_status, "devinfo-status-logged-in");
     } else {
-      tok_status.setAttribute("label",
-                              bundle.getString("devinfo_stat_notloggedin"));
+      document.l10n.setAttributes(tok_status, "devinfo-status-not-logged-in");
     }
   } catch (e) {
   }
@@ -320,14 +296,14 @@ function doLoad() {
   RefreshDeviceList();
 }
 
-function deleteSelected() {
+async function deleteSelected() {
   getSelectedItem();
   if (selected_module &&
-      doConfirm(getNSSString("DelModuleWarning"))) {
+      (await doConfirm("del-module-warning"))) {
     try {
       secmoddb.deleteModule(selected_module.name);
     } catch (e) {
-      doPrompt(getNSSString("DelModuleError"));
+      doPrompt("del-module-error");
       return false;
     }
     selected_module = null;
@@ -336,8 +312,8 @@ function deleteSelected() {
   return false;
 }
 
-function doUnload() {
-  if (deleteSelected()) {
+async function doUnload() {
+  if (await deleteSelected()) {
     ClearDeviceList();
     RefreshDeviceList();
   }
@@ -360,16 +336,11 @@ function changePassword() {
 
 function showTokenInfo() {
   var selected_token = selected_slot.getToken();
-  AddInfoRow(bundle.getString("devinfo_label"),
-             selected_token.tokenName, "tok_label");
-  AddInfoRow(bundle.getString("devinfo_manID"),
-             selected_token.tokenManID, "tok_manID");
-  AddInfoRow(bundle.getString("devinfo_serialnum"),
-             selected_token.tokenSerialNumber, "tok_sNum");
-  AddInfoRow(bundle.getString("devinfo_hwversion"),
-             selected_token.tokenHWVersion, "tok_hwv");
-  AddInfoRow(bundle.getString("devinfo_fwversion"),
-             selected_token.tokenFWVersion, "tok_fwv");
+  AddInfoRow("devinfo-label", {label: selected_token.tokenName}, "tok_label");
+  AddInfoRow("devinfo-man-id", {label: selected_token.tokenManID}, "tok_manID");
+  AddInfoRow("devinfo-serialnum", {label: selected_token.tokenSerialNumber}, "tok_sNum");
+  AddInfoRow("devinfo-hwversion", {label: selected_token.tokenHWVersion}, "tok_hwv");
+  AddInfoRow("devinfo-fwversion", {label: selected_token.tokenFWVersion}, "tok_fwv");
 }
 
 function toggleFIPS() {
@@ -382,7 +353,7 @@ function toggleFIPS() {
     var internal_token = tokendb.getInternalKeyToken(); // nsIPK11Token
     if (!internal_token.hasPassword) {
       // Token has either no or an empty password.
-      doPrompt(bundle.getString("fips_nonempty_password_required"));
+      doPrompt("fips-nonempty-password-required");
       return;
     }
   }
@@ -390,7 +361,7 @@ function toggleFIPS() {
   try {
     secmoddb.toggleFIPSMode();
   } catch (e) {
-    doPrompt(bundle.getString("unable_to_toggle_fips"));
+    doPrompt("unable-to-toggle-fips");
     return;
   }
 

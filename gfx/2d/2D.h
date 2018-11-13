@@ -1376,6 +1376,18 @@ public:
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const = 0;
 
   /**
+   * Returns false if CreateSimilarDrawTarget would return null with the same
+   * parameters. May return true even in cases where CreateSimilarDrawTarget
+   * return null (i.e. this function returning false has meaning, but returning
+   * true doesn't guarantee anything).
+   */
+  virtual bool
+    CanCreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
+  {
+    return true;
+  }
+
+  /**
    * Create a draw target optimized for drawing a shadow.
    *
    * Note that aSigma is the blur radius that must be used when we draw the

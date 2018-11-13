@@ -232,7 +232,7 @@ struct WebRenderUserDataProperty {
 };
 
 template<class T> already_AddRefed<T>
-GetWebRenderUserData(nsIFrame* aFrame, uint32_t aPerFrameKey)
+GetWebRenderUserData(const nsIFrame* aFrame, uint32_t aPerFrameKey)
 {
   MOZ_ASSERT(aFrame);
   WebRenderUserDataTable* userDataTable =

@@ -554,10 +554,10 @@ struct DIGroup
             combined = clip.ApplyNonRoundedIntersection(geometry->ComputeInvalidationRegion());
             IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mLayerBounds.TopLeft());
             // The invalid rect should contain the old rect and the new rect
-            // because the parent should have invalidated this area
-            MOZ_RELEASE_ASSERT(mInvalidRect.Contains(aData->mRect));
+            // but may not because the parent may have been removed.
+            InvalidateRect(aData->mRect);
             aData->mRect = transformedRect.Intersect(mImageBounds);
-            MOZ_RELEASE_ASSERT(mInvalidRect.Contains(aData->mRect));
+            InvalidateRect(aData->mRect);
             GP("ContainerLayer image rect bounds change\n");
           } else {
             // XXX: this code can eventually be deleted/made debug only
@@ -574,10 +574,10 @@ struct DIGroup
           combined = clip.ApplyNonRoundedIntersection(geometry->ComputeInvalidationRegion());
           IntRect transformedRect = ToDeviceSpace(combined.GetBounds(), aMatrix, appUnitsPerDevPixel, mLayerBounds.TopLeft());
           // The invalid rect should contain the old rect and the new rect
-          // because the parent should have invalidated this area
-          MOZ_RELEASE_ASSERT(mInvalidRect.Contains(aData->mRect));
+          // but may not because the parent may have been removed.
+          InvalidateRect(aData->mRect);
           aData->mRect = transformedRect.Intersect(mImageBounds);
-          MOZ_RELEASE_ASSERT(mInvalidRect.Contains(aData->mRect));
+          InvalidateRect(aData->mRect);
           GP("image rect bounds change\n");
         } else {
           // XXX: this code can eventually be deleted/made debug only

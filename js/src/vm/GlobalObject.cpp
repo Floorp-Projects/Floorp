@@ -110,6 +110,11 @@ GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key)
       case JSProto_CountQueuingStrategy:
         return !cx->realm()->creationOptions().getStreamsEnabled();
 
+#ifdef ENABLE_BIGINT
+      case JSProto_BigInt:
+        return !cx->realm()->creationOptions().getBigIntEnabled();
+#endif
+
       // Return true if the given constructor has been disabled at run-time.
       case JSProto_Atomics:
       case JSProto_SharedArrayBuffer:

@@ -33,8 +33,8 @@ add_task(async function() {
   Services.search.addEngineWithDetails("MozSearch2", "", "", "", "GET",
                                        "http://s.example.com/search2");
   let engine = Services.search.getEngineByName("MozSearch2");
-  notEqual(Services.search.currentEngine, engine, "New engine shouldn't be the current engine yet");
-  Services.search.currentEngine = engine;
+  notEqual(Services.search.defaultEngine, engine, "New engine shouldn't be the current engine yet");
+  Services.search.defaultEngine = engine;
   await check_autocomplete({
     search: "mozilla",
     searchParam: "enable-actions",

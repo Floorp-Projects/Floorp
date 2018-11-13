@@ -16,10 +16,10 @@ const urlBarOneOffElement = document.getAnonymousElementByAttribute(
   urlbarPopup, "anonid", "one-off-search-buttons"
 );
 
-let originalEngine = Services.search.currentEngine;
+let originalEngine = Services.search.defaultEngine;
 
 function resetEngine() {
-  Services.search.currentEngine = originalEngine;
+  Services.search.defaultEngine = originalEngine;
 }
 
 registerCleanupFunction(resetEngine);
@@ -88,7 +88,7 @@ add_task(async function test_urlBarChangeEngine() {
   // This also checks the engine correctly changed.
   await promise;
 
-  let currentEngine = Services.search.currentEngine;
+  let currentEngine = Services.search.defaultEngine;
 
   // For the urlbar, we should keep the new engine's icon.
   Assert.equal(oneOffButton.id, URLBAR_BASE_ID + currentEngine.name,
@@ -111,7 +111,7 @@ function promiseCurrentEngineChanged() {
   return new Promise(resolve => {
     function observer(aSub, aTopic, aData) {
       if (aData == "engine-current") {
-        Assert.equal(Services.search.currentEngine.name, TEST_ENGINE_NAME, "currentEngine set");
+        Assert.equal(Services.search.defaultEngine.name, TEST_ENGINE_NAME, "currentEngine set");
         Services.obs.removeObserver(observer, "browser-search-engine-modified");
         resolve();
       }

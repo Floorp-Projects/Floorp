@@ -11,21 +11,11 @@
 #include "nsCSSPropertyID.h"
 #include "nsCSSPropertyIDSet.h"
 #include "nsDisplayList.h" // For nsDisplayItem::Type
+#include "mozilla/Array.h"
 
 namespace mozilla {
 
 struct LayerAnimationInfo {
-#ifdef DEBUG
-  static void Initialize();
-#endif
-  // For CSS properties that may be animated on a separate layer, represents
-  // a record of the corresponding layer type and change hint.
-  struct Record {
-    nsCSSPropertyID mProperty;
-    DisplayItemType mDisplayItemType;
-    nsChangeHint mChangeHint;
-  };
-
   // Returns the corresponding display item type for |aProperty| when it is
   // animated on the compositor.
   // Returns DisplayItemType::TYPE_ZERO if |aProperty| cannot be animated on the
@@ -33,9 +23,61 @@ struct LayerAnimationInfo {
   static DisplayItemType
   GetDisplayItemTypeForProperty(nsCSSPropertyID aProperty);
 
-  static const size_t kRecords =
-    nsCSSPropertyIDSet::CompositorAnimatableCount();
-  static const Record sRecords[kRecords];
+  // Returns the corresponding CSS properties for |aDisplayItemType|.
+  //
+  // This function works only for display items tied to CSS properties that can
+  // be animated on the compositor.
+  static inline const nsCSSPropertyIDSet&
+  GetCSSPropertiesFor(DisplayItemType aDisplayItemType)
+  {
+    static const nsCSSPropertyIDSet transformProperties =
+      nsCSSPropertyIDSet{ eCSSProperty_transform };
+    static const nsCSSPropertyIDSet opacityProperties =
+      nsCSSPropertyIDSet{ eCSSProperty_opacity };
+    static const nsCSSPropertyIDSet empty = nsCSSPropertyIDSet();
+
+    switch (aDisplayItemType) {
+      case DisplayItemType::TYPE_OPACITY:
+        return opacityProperties;
+      case DisplayItemType::TYPE_TRANSFORM:
+        return transformProperties;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Should not be called for display item types "
+                               "that are not able to have animations on the "
+                               "compositor");
+        return empty;
+    }
+  }
+
+  // Returns the appropriate change hint for updating the display item for
+  // |aDisplayItemType|.
+  //
+  // This function works only for display items tied to CSS properties that can
+  // be animated on the compositor.
+  static inline nsChangeHint
+  GetChangeHintFor(DisplayItemType aDisplayItemType)
+  {
+    switch (aDisplayItemType) {
+      case DisplayItemType::TYPE_OPACITY:
+        return nsChangeHint_UpdateOpacityLayer;
+      case DisplayItemType::TYPE_TRANSFORM:
+        return nsChangeHint_UpdateTransformLayer;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Should not be called for display item types "
+                               "that are not able to have animations on the "
+                               "compositor");
+        return nsChangeHint(0);
+    }
+  }
+
+  // An array of DisplayItemType corresponding to the display item taht we can
+  // animate on the compositor.
+  //
+  // This is used to look up the appropriate change hint in cases when
+  // animations need updating but no other change hint is generated.
+  static const Array<DisplayItemType,
+                     nsCSSPropertyIDSet::CompositorAnimatableCount()>
+    sDisplayItemTypes;
 };
 
 } // namespace mozilla

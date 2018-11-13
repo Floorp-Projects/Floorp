@@ -658,7 +658,10 @@ public:
    */
   gfxSize ScreenSizeInchesForFontInflation(bool* aChanged = nullptr);
 
-  int32_t AppUnitsPerDevPixel() const;
+  int32_t AppUnitsPerDevPixel() const
+  {
+    return mCurAppUnitsPerDevPixel;
+  }
 
   static nscoord CSSPixelsToAppUnits(int32_t aPixels)
   { return NSToCoordRoundWithClamp(float(aPixels) *

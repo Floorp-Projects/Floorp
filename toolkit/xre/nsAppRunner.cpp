@@ -4034,7 +4034,7 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
             SaveWordToEnv("DISPLAY", nsDependentCString(display_name));
         }
 #ifdef MOZ_WAYLAND
-        else if (GDK_IS_WAYLAND_DISPLAY(mGdkDisplay)) {
+        else if (!GDK_IS_X11_DISPLAY(mGdkDisplay)) {
             SaveWordToEnv("WAYLAND_DISPLAY", nsDependentCString(display_name));
         }
 #endif
