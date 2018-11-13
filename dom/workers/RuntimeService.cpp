@@ -1648,6 +1648,7 @@ RuntimeService::ScheduleWorker(WorkerPrivate* aWorkerPrivate)
     NS_WARNING("Could not set the thread's priority!");
   }
 
+  aWorkerPrivate->SetThread(thread);
   JSContext* cx = CycleCollectedJSContext::Get()->Context();
   nsCOMPtr<nsIRunnable> runnable =
     new WorkerThreadPrimaryRunnable(aWorkerPrivate, thread,
@@ -2716,20 +2717,20 @@ WorkerThreadPrimaryRunnable::Run()
       MOZ_ASSERT(aWorkerPrivate);
       MOZ_ASSERT(aThread);
 
-      mWorkerPrivate->SetThread(aThread);
+      mWorkerPrivate->SetWorkerPrivateInWorkerThread(aThread);
     }
 
     ~SetThreadHelper()
     {
       if (mWorkerPrivate) {
-        mWorkerPrivate->SetThread(nullptr);
+        mWorkerPrivate->ResetWorkerPrivateInWorkerThread();
       }
     }
 
     void Nullify()
     {
       MOZ_ASSERT(mWorkerPrivate);
-      mWorkerPrivate->SetThread(nullptr);
+      mWorkerPrivate->ResetWorkerPrivateInWorkerThread();
       mWorkerPrivate = nullptr;
     }
   };
