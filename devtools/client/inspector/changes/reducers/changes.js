@@ -229,6 +229,26 @@ const reducers = {
         if (rule.add[addIndex] && rule.add[addIndex].value === decl.value) {
           rule.add.splice(addIndex, 1);
         }
+
+        // Update the indexes of previously tracked declarations which follow this removed
+        // one so future tracking continues to point to the right declarations.
+        if (changeType === "declaration-remove") {
+          rule.add = rule.add.map((addDecl => {
+            if (addDecl.index > decl.index) {
+              addDecl.index--;
+            }
+
+            return addDecl;
+          }));
+
+          rule.remove = rule.remove.map((removeDecl => {
+            if (removeDecl.index > decl.index) {
+              removeDecl.index--;
+            }
+
+            return removeDecl;
+          }));
+        }
       }
     }
 

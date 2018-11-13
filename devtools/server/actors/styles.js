@@ -1483,7 +1483,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         tempElement.style.setProperty(mod.name, mod.value, mod.priority || "");
         this.rawStyle.setProperty(mod.name,
           tempElement.style.getPropertyValue(mod.name), mod.priority || "");
-      } else if (mod.type === "remove") {
+      } else if (mod.type === "remove" || mod.type === "disable") {
         this.rawStyle.removeProperty(mod.name);
       }
     }
@@ -1614,6 +1614,12 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
 
       case "remove":
         data.type = "declaration-remove";
+        data.add = null;
+        data.remove = [{ property: change.name, value: prevValue, index }];
+        break;
+
+      case "disable":
+        data.type = "declaration-disable";
         data.add = null;
         data.remove = [{ property: change.name, value: prevValue, index }];
         break;
