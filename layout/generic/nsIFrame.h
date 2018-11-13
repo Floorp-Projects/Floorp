@@ -4091,6 +4091,10 @@ public:
                             ComputeSizeFlags    aFlags = eDefault);
 
   DisplayItemDataArray& DisplayItemData() { return mDisplayItemData; }
+  const DisplayItemDataArray& DisplayItemData() const
+  {
+    return mDisplayItemData;
+  }
 
   void AddDisplayItem(nsDisplayItem* aItem);
   bool RemoveDisplayItem(nsDisplayItem* aItem);

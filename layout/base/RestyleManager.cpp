@@ -1797,11 +1797,11 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
 
   Maybe<nsCSSPropertyIDSet> effectiveAnimationProperties;
 
+  Maybe<uint64_t> generation;
   nsChangeHint hint = nsChangeHint(0);
-  for (auto displayItemType : LayerAnimationInfo::sDisplayItemTypes) {
-    Maybe<uint64_t> generation =
-      layers::AnimationInfo::GetGenerationFromFrame(aFrame, displayItemType);
-    if (generation && frameGeneration != *generation) {
+  auto maybeApplyChangeHint = [&](const Maybe<uint64_t>& aGeneration,
+                                  DisplayItemType aDisplayItemType) -> bool {
+    if (aGeneration && frameGeneration != *aGeneration) {
       // If we have a transform layer bug don't have any transform style, we
       // probably just removed the transform but haven't destroyed the layer
       // yet. In this case we will typically add the appropriate change hint
@@ -1821,7 +1821,7 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
       // Note that we *don't* add nsChangeHint_UpdateTransformLayer since if we
       // did, ApplyRenderingChangeToTree would complain that we're updating a
       // transform layer without a transform.
-      if (displayItemType == DisplayItemType::TYPE_TRANSFORM &&
+      if (aDisplayItemType == DisplayItemType::TYPE_TRANSFORM &&
           !aFrame->StyleDisplay()->HasTransformStyle()) {
         // Add all the hints for a removing a transform if they are not already
         // set for this frame.
@@ -1830,9 +1830,9 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
                 aHintForThisFrame))) {
           hint |= nsChangeHint_ComprehensiveAddOrRemoveTransform;
         }
-        continue;
+        return true;
       }
-      hint |= LayerAnimationInfo::GetChangeHintFor(displayItemType);
+      hint |= LayerAnimationInfo::GetChangeHintFor(aDisplayItemType);
     }
 
     // We consider it's the first paint for the frame if we have an animation
@@ -1854,13 +1854,20 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
           nsLayoutUtils::GetAnimationPropertiesForCompositor(aFrame));
       }
       const nsCSSPropertyIDSet& propertiesForDisplayItem =
-        LayerAnimationInfo::GetCSSPropertiesFor(displayItemType);
+        LayerAnimationInfo::GetCSSPropertiesFor(aDisplayItemType);
       if (effectiveAnimationProperties->Intersects(propertiesForDisplayItem)) {
         hint |=
-          LayerAnimationInfo::GetChangeHintFor(displayItemType);
+          LayerAnimationInfo::GetChangeHintFor(aDisplayItemType);
       }
     }
-  }
+    return true;
+  };
+
+  AnimationInfo::EnumerateGenerationOnFrame(
+    aFrame,
+    aContent,
+    LayerAnimationInfo::sDisplayItemTypes,
+    maybeApplyChangeHint);
 
   if (hint) {
     aChangeListToProcess.AppendChange(aFrame, aContent, hint);

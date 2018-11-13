@@ -6903,6 +6903,68 @@ FrameLayerBuilder::GetDedicatedLayer(nsIFrame* aFrame,
   return nullptr;
 }
 
+/* static */ void
+FrameLayerBuilder::EnumerateGenerationForDedicatedLayers(
+  const nsIFrame* aFrame,
+  const CompositorAnimatableDisplayItemTypes& aDisplayItemTypes,
+  const AnimationGenerationCallback& aCallback)
+{
+  std::bitset<static_cast<uint32_t>(DisplayItemType::TYPE_MAX)> notFoundTypes;
+  for (auto displayItem : aDisplayItemTypes) {
+    notFoundTypes.set(static_cast<uint32_t>(displayItem));
+  }
+
+  const SmallPointerArray<DisplayItemData>& array = aFrame->DisplayItemData();
+
+  for (uint32_t i = 0; i < array.Length(); i++) {
+    DisplayItemData* element =
+      DisplayItemData::AssertDisplayItemData(array.ElementAt(i));
+    if (!element->mParent->mLayerManager->IsWidgetLayerManager()) {
+      continue;
+    }
+
+    DisplayItemType foundType = DisplayItemType::TYPE_ZERO;
+    for (auto displayItem : aDisplayItemTypes) {
+      if (GetDisplayItemTypeFromKey(element->mDisplayItemKey) == displayItem) {
+        foundType = displayItem;
+        notFoundTypes.reset(static_cast<uint32_t>(displayItem));
+        break;
+      }
+    }
+    if (foundType == DisplayItemType::TYPE_ZERO) {
+      continue;
+    }
+
+    Maybe<uint64_t> generation;
+    if (element->mOptLayer) {
+      generation = element->mOptLayer->GetAnimationGeneration();
+    } else if (!element->mLayer->HasUserData(&gColorLayerUserData) &&
+               !element->mLayer->HasUserData(&gImageLayerUserData) &&
+               !element->mLayer->HasUserData(&gPaintedDisplayItemLayerUserData)) {
+      generation = element->mLayer->GetAnimationGeneration();
+    }
+
+    if (!aCallback(generation, foundType)) {
+      return;
+    }
+  }
+
+  // Bail out if we have already enumerated all possible layers for the given
+  // display item types.
+  if (notFoundTypes.none()) {
+    return;
+  }
+
+  // If there are any display item types that the nsIFrame doesn't have, we need
+  // to call the callback function for them respectively.
+  for (auto displayItem : aDisplayItemTypes) {
+    if (notFoundTypes[static_cast<uint32_t>(displayItem)] &&
+        !aCallback(Nothing(), displayItem)) {
+      return;
+    }
+  }
+}
+
 gfxSize
 FrameLayerBuilder::GetPaintedLayerScaleForFrame(nsIFrame* aFrame)
 {

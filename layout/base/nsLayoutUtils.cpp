@@ -4836,7 +4836,7 @@ nsLayoutUtils::LastContinuationOrIBSplitSibling(const nsIFrame* aFrame)
 }
 
 bool
-nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(nsIFrame *aFrame)
+nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(const nsIFrame *aFrame)
 {
   if (aFrame->GetPrevContinuation()) {
     return false;
