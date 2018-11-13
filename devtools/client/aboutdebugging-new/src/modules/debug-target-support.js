@@ -6,20 +6,53 @@
 
 const { DEBUG_TARGETS, DEBUG_TARGET_PANE, RUNTIMES } = require("../constants");
 
-function isSupportedDebugTarget(runtimeType, debugTargetType) {
-  if (runtimeType === RUNTIMES.THIS_FIREFOX) {
-    return true;
-  }
+const ALL_DEBUG_TARGETS = [
+  DEBUG_TARGETS.EXTENSION,
+  DEBUG_TARGETS.TAB,
+  DEBUG_TARGETS.WORKER,
+];
 
-  return debugTargetType === DEBUG_TARGETS.TAB;
+const SUPPORTED_TARGET_BY_RUNTIME = {
+  [RUNTIMES.THIS_FIREFOX]: ALL_DEBUG_TARGETS,
+  [RUNTIMES.USB]: [
+    DEBUG_TARGETS.EXTENSION,
+    DEBUG_TARGETS.TAB,
+  ],
+  [RUNTIMES.NETWORK]: [
+    DEBUG_TARGETS.TAB,
+  ],
+};
+
+function isSupportedDebugTarget(runtimeType, debugTargetType) {
+  return SUPPORTED_TARGET_BY_RUNTIME[runtimeType].includes(debugTargetType);
 }
 exports.isSupportedDebugTarget = isSupportedDebugTarget;
 
-function isSupportedDebugTargetPane(runtimeType, debugTargetPaneKey) {
-  if (runtimeType === RUNTIMES.THIS_FIREFOX) {
-    return true;
-  }
+const ALL_DEBUG_TARGET_PANES = [
+  DEBUG_TARGET_PANE.INSTALLED_EXTENSION,
+  DEBUG_TARGET_PANE.OTHER_WORKER,
+  DEBUG_TARGET_PANE.SERVICE_WORKER,
+  DEBUG_TARGET_PANE.SHARED_WORKER,
+  DEBUG_TARGET_PANE.TAB,
+  DEBUG_TARGET_PANE.TEMPORARY_EXTENSION,
+];
 
-  return debugTargetPaneKey === DEBUG_TARGET_PANE.TAB;
+const SUPPORTED_TARGET_PANE_BY_RUNTIME = {
+  [RUNTIMES.THIS_FIREFOX]: ALL_DEBUG_TARGET_PANES,
+  [RUNTIMES.USB]: [
+    DEBUG_TARGET_PANE.INSTALLED_EXTENSION,
+    DEBUG_TARGET_PANE.TAB,
+  ],
+  [RUNTIMES.NETWORK]: [
+    DEBUG_TARGET_PANE.TAB,
+  ],
+};
+
+/**
+ * A debug target pane is more specialized than a debug target. For instance EXTENSION is
+ * a DEBUG_TARGET but INSTALLED_EXTENSION and TEMPORARY_EXTENSION are DEBUG_TARGET_PANES.
+ */
+function isSupportedDebugTargetPane(runtimeType, debugTargetPaneKey) {
+  return SUPPORTED_TARGET_PANE_BY_RUNTIME[runtimeType].includes(debugTargetPaneKey);
 }
 exports.isSupportedDebugTargetPane = isSupportedDebugTargetPane;
