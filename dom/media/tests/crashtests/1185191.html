@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="reftest-wait">
 <head>
 <script>
 
@@ -12,7 +12,7 @@ function boom()
 
 function bye()
 {
-    location = "data:text/html,2";
+    document.documentElement.removeAttribute("class");
 }
 
 </script>
