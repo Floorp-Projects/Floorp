@@ -6290,8 +6290,6 @@ EncodeWake(Encoder& e, AstWake& s)
 }
 
 #ifdef ENABLE_WASM_BULKMEM_OPS
-static const uint8_t DEFAULT_MEM_TABLE_FLAGS = 0;
-
 static bool
 EncodeMemOrTableCopy(Encoder& e, AstMemOrTableCopy& s)
 {
@@ -6299,7 +6297,7 @@ EncodeMemOrTableCopy(Encoder& e, AstMemOrTableCopy& s)
            EncodeExpr(e, s.src()) &&
            EncodeExpr(e, s.len()) &&
            e.writeOp(s.isMem() ? MiscOp::MemCopy : MiscOp::TableCopy) &&
-           e.writeFixedU8(DEFAULT_MEM_TABLE_FLAGS);
+           e.writeVarU32(uint32_t(MemoryTableFlags::Default));
 }
 
 static bool
@@ -6316,7 +6314,7 @@ EncodeMemFill(Encoder& e, AstMemFill& s)
            EncodeExpr(e, s.val()) &&
            EncodeExpr(e, s.len()) &&
            e.writeOp(MiscOp::MemFill) &&
-           e.writeFixedU8(DEFAULT_MEM_TABLE_FLAGS);
+           e.writeVarU32(uint32_t(MemoryTableFlags::Default));
 }
 
 static bool
@@ -6326,7 +6324,7 @@ EncodeMemOrTableInit(Encoder& e, AstMemOrTableInit& s)
            EncodeExpr(e, s.src()) &&
            EncodeExpr(e, s.len()) &&
            e.writeOp(s.isMem() ? MiscOp::MemInit : MiscOp::TableInit) &&
-           e.writeFixedU8(DEFAULT_MEM_TABLE_FLAGS) &&
+           e.writeVarU32(uint32_t(MemoryTableFlags::Default)) &&
            e.writeVarU32(s.segIndex());
 }
 #endif
