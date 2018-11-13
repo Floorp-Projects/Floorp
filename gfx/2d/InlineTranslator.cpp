@@ -56,18 +56,21 @@ InlineTranslator::TranslateRecording(char *aData, size_t aLen)
   uint32_t magicInt;
   ReadElement(reader, magicInt);
   if (magicInt != mozilla::gfx::kMagicInt) {
+    mError = "Magic";
     return false;
   }
 
   uint16_t majorRevision;
   ReadElement(reader, majorRevision);
   if (majorRevision != kMajorRevision) {
+    mError = "Major";
     return false;
   }
 
   uint16_t minorRevision;
   ReadElement(reader, minorRevision);
   if (minorRevision > kMinorRevision) {
+    mError = "Minor";
     return false;
   }
 
@@ -78,16 +81,19 @@ InlineTranslator::TranslateRecording(char *aData, size_t aLen)
                                [&] (RecordedEvent *recordedEvent) {
                                  // Make sure that the whole event was read from the stream successfully.
                                  if (!reader.good()) {
+                                     mError = " READ";
                                      return false;
                                  }
 
                                  if (!recordedEvent->PlayEvent(this)) {
+                                     mError = " PLAY";
                                      return false;
                                  }
 
                                  return true;
                               });
     if (!success) {
+      mError = RecordedEvent::GetEventName(static_cast<RecordedEvent::EventType>(eventType)) + mError;
       return false;
     }
 
