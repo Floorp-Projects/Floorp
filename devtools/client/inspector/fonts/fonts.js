@@ -6,7 +6,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { getColor } = require("devtools/client/shared/theme");
 const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
@@ -45,7 +44,6 @@ const FONT_PROPERTIES = [
   "font-weight",
   "line-height",
 ];
-const PREF_FONT_EDITOR = "devtools.inspector.fonteditor.enabled";
 const REGISTERED_AXES_TO_FONT_PROPERTIES = {
   "ital": "font-style",
   "opsz": "font-optical-sizing",
@@ -99,7 +97,6 @@ class FontInspector {
     }
 
     const fontsApp = FontsApp({
-      fontEditorEnabled: Services.prefs.getBoolPref(PREF_FONT_EDITOR),
       onInstanceChange: this.onInstanceChange,
       onToggleFontHighlight: this.onToggleFontHighlight,
       onPreviewTextChange: this.onPreviewTextChange,
@@ -807,11 +804,6 @@ class FontInspector {
    * and the ones already in the store to decide if to update the font editor state.
    */
   async refreshFontEditor() {
-    // Early return if pref for font editor is not enabled.
-    if (!Services.prefs.getBoolPref(PREF_FONT_EDITOR)) {
-      return;
-    }
-
     if (!this.store || !this.isSelectedNodeValid()) {
       if (this.inspector.selection.isPseudoElementNode()) {
         const noPseudoWarning = getStr("fontinspector.noPseduoWarning");

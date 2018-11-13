@@ -7,15 +7,12 @@
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const Services = require("Services");
 
 const Accordion = createFactory(require("devtools/client/inspector/layout/components/Accordion"));
 const FontList = createFactory(require("./FontList"));
 
 const { getStr } = require("../utils/l10n");
 const Types = require("../types");
-
-const PREF_FONT_EDITOR = "devtools.inspector.fonteditor.enabled";
 
 class FontOverview extends PureComponent {
   static get propTypes() {
@@ -34,31 +31,6 @@ class FontOverview extends PureComponent {
     };
   }
 
-  renderElementFonts() {
-    const {
-      fontData,
-      fontOptions,
-      onPreviewTextChange,
-      onToggleFontHighlight,
-    } = this.props;
-    const { fonts } = fontData;
-
-    return fonts.length ?
-      FontList({
-        fonts,
-        fontOptions,
-        onPreviewTextChange,
-        onToggleFontHighlight,
-      })
-      :
-      dom.div(
-        {
-          className: "devtools-sidepanel-no-result",
-        },
-        getStr("fontinspector.noFontsUsedOnCurrentElement")
-      );
-  }
-
   renderFonts() {
     const {
       fontData,
@@ -66,13 +38,7 @@ class FontOverview extends PureComponent {
       onPreviewTextChange,
     } = this.props;
 
-    const header = Services.prefs.getBoolPref(PREF_FONT_EDITOR)
-      ? getStr("fontinspector.allFontsOnPageHeader")
-      : getStr("fontinspector.otherFontsInPageHeader");
-
-    const fonts = Services.prefs.getBoolPref(PREF_FONT_EDITOR)
-      ? fontData.allFonts
-      : fontData.otherFonts;
+    const fonts = fontData.allFonts;
 
     if (!fonts.length) {
       return null;
@@ -81,7 +47,7 @@ class FontOverview extends PureComponent {
     return Accordion({
       items: [
         {
-          header,
+          header: getStr("fontinspector.allFontsOnPageHeader"),
           component: FontList,
           componentProps: {
             fontOptions,
@@ -100,8 +66,6 @@ class FontOverview extends PureComponent {
       {
         id: "font-container",
       },
-      // Render element fonts only when the Font Editor is not enabled.
-      !Services.prefs.getBoolPref(PREF_FONT_EDITOR) && this.renderElementFonts(),
       this.renderFonts()
     );
   }
