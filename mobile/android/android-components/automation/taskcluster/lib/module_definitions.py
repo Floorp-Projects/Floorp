@@ -19,5 +19,6 @@ def from_gradle():
     return [{
         'name': module['name'][1:],  # Gradle prefixes all module names with ":", e.g.: ":browser-awesomebar"
         'artifact': "public/build/{}.maven.zip".format(module['name'][1:]),
-        'path': "{}/target.maven.zip".format(module['buildPath'])
-    } for module in gradle_modules if module['shouldPublish']]
+        'path': "{}/target.maven.zip".format(module['buildPath']),
+        'shouldPublish': module['shouldPublish']
+    } for module in gradle_modules]

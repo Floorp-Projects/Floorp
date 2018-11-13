@@ -106,7 +106,7 @@ def release(version):
     queue = taskcluster.Queue({'baseUrl': 'http://taskcluster/queue/v1'})
 
     task_graph = {}
-    artifacts_info = lib.module_definitions.from_gradle()
+    artifacts_info = [info for info in lib.module_definitions.from_gradle() if info['shouldPublish']]
 
     build_task_id, build_task = generate_build_task(version, artifacts_info)
     lib.tasks.schedule_task(queue, build_task_id, build_task)
