@@ -545,10 +545,20 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       if (steppingType == "finish") {
         const parentFrame = thread._getNextStepFrame(this);
         if (parentFrame && parentFrame.script) {
+          // We can't use the completion value in stepping hooks if we're
+          // replaying, as we can't use its contents after resuming.
+          const ncompletion = thread.dbg.replaying ? null : completion;
           const { onStep, onPop } = thread._makeSteppingHooks(
-            originalLocation, "next", false, completion
+            originalLocation, "next", false, ncompletion
           );
-          parentFrame.onStep = onStep;
+          if (thread.dbg.replaying) {
+            const offsets =
+              thread._findReplayingStepOffsets(originalLocation, parentFrame,
+                                               /* rewinding = */ false);
+            parentFrame.setReplayingOnStep(onStep, offsets);
+          } else {
+            parentFrame.onStep = onStep;
+          }
           // We need the onPop alongside the onStep because it is possible that
           // the parent frame won't have any steppable offsets, and we want to
           // make sure that we always pause in the parent _somewhere_.
