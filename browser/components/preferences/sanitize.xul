@@ -8,14 +8,7 @@
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
 
-<!DOCTYPE dialog [
-  <!ENTITY % preferencesDTD SYSTEM "chrome://global/locale/preferences.dtd">
-  %preferencesDTD;
-  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-  %brandDTD;
-  <!ENTITY % sanitizeDTD SYSTEM "chrome://browser/locale/sanitize.dtd">
-  %sanitizeDTD;
-]>
+<!DOCTYPE dialog>
 
 <dialog id="SanitizeDialog" type="child"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -23,68 +16,66 @@
         persist="lastSelected screenX screenY"
         role="dialog"
         ondialoghelp="openPrefsHelp()"
-        style="width: &sanitizePrefs2.modal.width;"
-        title="&sanitizePrefs2.title;"
+        data-l10n-id="sanitize-prefs"
+        data-l10n-attrs="style"
         helpTopic="prefs-clear-private-data"
         onload="gSanitizeDialog.init();">
+
+  <linkset>
+    <link rel="localization" href="browser/sanitize.ftl"/>
+    <link rel="localization" href="branding/brand.ftl"/>
+  </linkset>
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
 
   <keyset>
-    <key key="&windowClose.key;" modifiers="accel" oncommand="Preferences.close(event)"/>
+    <key data-l10n-id="window-close" modifiers="accel" oncommand="Preferences.close(event)"/>
   </keyset>
 
   <script type="application/javascript" src="chrome://browser/content/preferences/sanitize.js"/>
 
-  <description>&clearDataSettings4.label;</description>
+  <description data-l10n-id="clear-data-settings-label"></description>
 
   <groupbox>
-    <caption><label>&historySection.label;</label></caption>
+    <caption><label data-l10n-id="history-section-label"></label></caption>
     <grid flex="1">
       <columns>
-        <column style="width: &sanitizePrefs2.column.width;"/>
+        <column data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style"/>
         <column flex="1"/>
       </columns>
       <rows>
         <row>
-          <checkbox label="&itemHistoryAndDownloads.label;"
-                    accesskey="&itemHistoryAndDownloads.accesskey;"
+          <checkbox data-l10n-id="item-history-and-downloads"
                     preference="privacy.clearOnShutdown.history"/>
-          <checkbox label="&itemCookies.label;"
-                    accesskey="&itemCookies.accesskey;"
+          <checkbox data-l10n-id="item-cookies"
                     preference="privacy.clearOnShutdown.cookies"/>
         </row>
         <row>
-          <checkbox label="&itemActiveLogins.label;"
-                    accesskey="&itemActiveLogins.accesskey;"
+          <checkbox data-l10n-id="item-active-logins"
                     preference="privacy.clearOnShutdown.sessions"/>
-          <checkbox label="&itemCache.label;"
-                    accesskey="&itemCache.accesskey;"
+          <checkbox data-l10n-id="item-cache"
                     preference="privacy.clearOnShutdown.cache"/>
         </row>
         <row>
-          <checkbox label="&itemFormSearchHistory.label;"
-                    accesskey="&itemFormSearchHistory.accesskey;"
+          <checkbox data-l10n-id="item-form-search-history"
                     preference="privacy.clearOnShutdown.formdata"/>
         </row>
       </rows>
     </grid>
   </groupbox>
   <groupbox>
-    <caption><label>&dataSection.label;</label></caption>
+    <caption><label data-l10n-id="data-section-label"></label></caption>
     <grid flex="1">
       <columns>
-        <column style="width: &sanitizePrefs2.column.width;"/>
+        <column data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style"/>
         <column flex="1"/>
       </columns>
       <rows>
         <row>
-          <checkbox label="&itemSitePreferences.label;"
-                    accesskey="&itemSitePreferences.accesskey;"
+          <checkbox data-l10n-id="item-site-preferences"
                     preference="privacy.clearOnShutdown.siteSettings"/>
-          <checkbox label="&itemOfflineApps.label;"
-                    accesskey="&itemOfflineApps.accesskey;"
+          <checkbox data-l10n-id="item-offline-apps"
                     preference="privacy.clearOnShutdown.offlineApps"/>
         </row>
       </rows>

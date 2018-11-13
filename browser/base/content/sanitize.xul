@@ -12,30 +12,21 @@
 
 <?xml-stylesheet href="chrome://browser/content/sanitizeDialog.css"?>
 
-<!DOCTYPE dialog [
-  <!ENTITY % preferencesDTD SYSTEM "chrome://global/locale/preferences.dtd">
-  <!ENTITY % globalKeysDTD SYSTEM "chrome://global/locale/globalKeys.dtd">
-  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-  <!ENTITY % sanitizeDTD SYSTEM "chrome://browser/locale/sanitize.dtd">
-  %preferencesDTD;
-  %globalKeysDTD;
-  %brandDTD;
-  %sanitizeDTD;
-]>
+<!DOCTYPE dialog>
 
 <dialog id="SanitizeDialog" type="child"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         buttons="accept,cancel"
         persist="lastSelected screenX screenY"
         role="dialog"
-        title="&sanitizeDialog2.title;"
-        noneverythingtitle="&sanitizeDialog2.title;"
-        style="width: &sanitizeDialog2.width;;"
+        data-l10n-id="dialog-title"
+        data-l10n-attrs="style"
         onload="gSanitizePromptDialog.init();"
         ondialogaccept="return gSanitizePromptDialog.sanitize();">
 
-  <stringbundle id="bundleBrowser"
-                src="chrome://browser/locale/browser.properties"/>
+  <linkset>
+    <link rel="localization" href="browser/sanitize.ftl"/>
+  </linkset>
 
   <script type="application/javascript"
           src="chrome://global/content/preferencesBindings.js"/>
@@ -43,8 +34,7 @@
           src="chrome://browser/content/sanitizeDialog.js"/>
 
   <hbox id="SanitizeDurationBox" align="center">
-    <label value="&clearTimeDuration.label;"
-           accesskey="&clearTimeDuration.accesskey;"
+    <label data-l10n-id="clear-time-duration-prefix"
            control="sanitizeDurationChoice"
            id="sanitizeDurationLabel"/>
     <menulist id="sanitizeDurationChoice"
@@ -52,16 +42,16 @@
               onselect="gSanitizePromptDialog.selectByTimespan();"
               flex="1">
       <menupopup id="sanitizeDurationPopup">
-        <menuitem label="&clearTimeDuration.lastHour;" value="1"/>
-        <menuitem label="&clearTimeDuration.last2Hours;" value="2"/>
-        <menuitem label="&clearTimeDuration.last4Hours;" value="3"/>
-        <menuitem label="&clearTimeDuration.today;" value="4"/>
+        <menuitem data-l10n-id="clear-time-duration-value-last-hour" value="1"/>
+        <menuitem data-l10n-id="clear-time-duration-value-last-2-hours" value="2"/>
+        <menuitem data-l10n-id="clear-time-duration-value-last-4-hours" value="3"/>
+        <menuitem data-l10n-id="clear-time-duration-value-today" value="4"/>
         <menuseparator/>
-        <menuitem label="&clearTimeDuration.everything;" value="0"/>
+        <menuitem data-l10n-id="clear-time-duration-value-everything" value="0"/>
       </menupopup>
     </menulist>
     <label id="sanitizeDurationSuffixLabel"
-           value="&clearTimeDuration.suffix;"/>
+           data-l10n-id="clear-time-duration-suffix"/>
   </hbox>
 
   <separator class="thin"/>
@@ -72,7 +62,7 @@
       <image id="sanitizeEverythingWarningIcon"/>
       <vbox id="sanitizeEverythingWarningDescBox" flex="1">
         <description id="sanitizeEverythingWarning"/>
-        <description id="sanitizeEverythingUndoWarning">&sanitizeEverythingUndoWarning;</description>
+        <description id="sanitizeEverythingUndoWarning" data-l10n-id="sanitize-everything-undo-warning"></description>
       </vbox>
     </hbox>
     <spacer flex="1"/>
@@ -81,36 +71,31 @@
   <separator class="thin"/>
 
   <groupbox>
-    <caption><label>&historySection.label;</label></caption>
+    <caption><label data-l10n-id="history-section-label"></label></caption>
     <grid flex="1">
       <columns>
-        <column style="width: &sanitizePrefs2.column.width;"/>
+        <column data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style"/>
         <column flex="1"/>
       </columns>
       <rows>
         <row>
-          <checkbox label="&itemHistoryAndDownloads.label;"
-                    accesskey="&itemHistoryAndDownloads.accesskey;"
+          <checkbox data-l10n-id="item-history-and-downloads"
                     preference="privacy.cpd.history"
                     onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-          <checkbox label="&itemCookies.label;"
-                    accesskey="&itemCookies.accesskey;"
+          <checkbox data-l10n-id="item-cookies"
                     preference="privacy.cpd.cookies"
                     onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
         </row>
         <row>
-          <checkbox label="&itemActiveLogins.label;"
-                    accesskey="&itemActiveLogins.accesskey;"
+          <checkbox data-l10n-id="item-active-logins"
                     preference="privacy.cpd.sessions"
                     onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-          <checkbox label="&itemCache.label;"
-                    accesskey="&itemCache.accesskey;"
+          <checkbox data-l10n-id="item-cache"
                     preference="privacy.cpd.cache"
                     onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
         </row>
         <row>
-          <checkbox label="&itemFormSearchHistory.label;"
-                    accesskey="&itemFormSearchHistory.accesskey;"
+          <checkbox data-l10n-id="item-form-search-history"
                     preference="privacy.cpd.formdata"
                     onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
         </row>
@@ -118,20 +103,18 @@
     </grid>
   </groupbox>
   <groupbox>
-    <caption><label>&dataSection.label;</label></caption>
+    <caption><label data-l10n-id="data-section-label"></label></caption>
     <grid flex="1">
       <columns>
-        <column style="width: &sanitizePrefs2.column.width;"/>
+        <column data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style"/>
         <column flex="1"/>
       </columns>
       <rows>
         <row>
-          <checkbox label="&itemSitePreferences.label;"
-                    accesskey="&itemSitePreferences.accesskey;"
+          <checkbox data-l10n-id="item-site-preferences"
                     preference="privacy.cpd.siteSettings"
                     onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
-          <checkbox label="&itemOfflineApps.label;"
-                    accesskey="&itemOfflineApps.accesskey;"
+          <checkbox data-l10n-id="item-offline-apps"
                     preference="privacy.cpd.offlineApps"
                     onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
         </row>
