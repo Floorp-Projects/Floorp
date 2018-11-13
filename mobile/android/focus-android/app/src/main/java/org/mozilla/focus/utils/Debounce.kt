@@ -6,33 +6,33 @@ package org.mozilla.focus.utils
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.produce
-import kotlinx.coroutines.selects.whileSelect
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * Creates a debounced ReceiveChannel.
  *
  * @param time the amount of time in units to debounce by
- * @param unit The unit to measure the amount of time to debounce by. Default value = TimeUnit.MILLISECONDS
+ * @param channel the channel to debounce
  * @return a throttled channel
  */
+@ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
 fun <T> CoroutineScope.debounce(time: Long, channel: ReceiveChannel<T>): ReceiveChannel<T> =
     produce(coroutineContext, Channel.CONFLATED) {
-        var value = channel.receive()
-
-        whileSelect {
-            onTimeout(time) {
-                this@produce.offer(value)
-                value = channel.receive()
-                true
-            }
-
-            channel.onReceive {
-                value = it
-                true
+        var job: Job? = null
+        channel.consumeEach {
+            job?.cancel()
+            job = launch {
+                delay(time)
+                send(it)
             }
         }
+        job?.join()
     }
