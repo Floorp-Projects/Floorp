@@ -43,8 +43,9 @@ object SupportUtils {
         AUTOCOMPLETE("autofill-domain-android"),
         TRACKERS("trackers"),
         USAGE_DATA("usage-data"),
-        WHATS_NEW("whats-new-focus-android-7"),
-        SEARCH_SUGGESTIONS("search-suggestions-focus-android")
+        WHATS_NEW("whats-new-focus-android-8"),
+        SEARCH_SUGGESTIONS("search-suggestions-focus-android"),
+        ALLOWLIST("focus-android-allowlist")
     }
 
     fun getSumoURLForTopic(context: Context, topic: SumoTopic): String {

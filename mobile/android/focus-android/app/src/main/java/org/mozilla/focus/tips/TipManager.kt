@@ -38,12 +38,19 @@ class Tip(val id: Int, val text: String, val shouldDisplay: () -> Boolean, val d
         fun createAllowlistTip(context: Context): Tip {
             val id = tip_explain_allowlist
             val name = context.resources.getString(id)
+            val url = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.ALLOWLIST)
+
+            val deepLink = {
+                val session = Session(url, source = Session.Source.MENU)
+                context.components.sessionManager.add(session, selected = true)
+                TelemetryWrapper.pressTipEvent(id)
+            }
 
             val shouldDisplayAllowListTip = {
                 ExceptionDomains.load(context).isEmpty()
             }
 
-            return Tip(id, name, shouldDisplayAllowListTip)
+            return Tip(id, name, shouldDisplayAllowListTip, deepLink)
         }
 
         fun createTrackingProtectionTip(context: Context): Tip {
