@@ -270,20 +270,21 @@ KeyframeEffect::GetEffectiveAnimationOfProperty(nsCSSPropertyID aProperty,
     &aEffects ==
       EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType));
 
-  for (size_t propIdx = 0, propEnd = mProperties.Length();
-       propIdx != propEnd; ++propIdx) {
-    if (aProperty == mProperties[propIdx].mProperty) {
-      const AnimationProperty* result = &mProperties[propIdx];
-      // Skip if there is a property of animation level that is overridden
-      // by !important rules.
-      if (aEffects.PropertiesWithImportantRules()
-            .HasProperty(result->mProperty) &&
-          aEffects.PropertiesForAnimationsLevel()
-            .HasProperty(result->mProperty)) {
-        result = nullptr;
-      }
-      return result;
+  for (const AnimationProperty& property : mProperties) {
+    if (aProperty != property.mProperty) {
+      continue;
     }
+
+    const AnimationProperty* result = nullptr;
+    // Only include the property if it is not overridden by !important rules in
+    // the transitions level.
+    if (!aEffects.PropertiesWithImportantRules()
+           .HasProperty(property.mProperty) ||
+        !aEffects.PropertiesForAnimationsLevel()
+           .HasProperty(property.mProperty)) {
+      result = &property;
+    }
+    return result;
   }
   return nullptr;
 }
