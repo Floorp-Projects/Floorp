@@ -45,7 +45,7 @@
 
 #include "MP4Decoder.h"
 #include "VPXDecoder.h"
-#include "mozilla/dom/RemoteVideoDecoder.h"
+#include "mozilla/GpuDecoderModule.h"
 
 #include "H264.h"
 
@@ -355,7 +355,7 @@ PDMFactory::CreatePDMs()
 #ifdef XP_WIN
   if (StaticPrefs::MediaWmfEnabled() && !IsWin7AndPre2000Compatible()) {
     m = new WMFDecoderModule();
-    RefPtr<PlatformDecoderModule> remote = new dom::RemoteDecoderModule(m);
+    RefPtr<PlatformDecoderModule> remote = new GpuDecoderModule(m);
     StartupPDM(remote);
     mWMFFailedToLoad = !StartupPDM(m);
   } else {
