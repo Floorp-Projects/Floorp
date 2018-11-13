@@ -52,5 +52,7 @@ interface IPeerConnection : nsISupports
   const unsigned long kIncompatibleSessionDescription   = 6;
   const unsigned long kIncompatibleMediaStreamTrack     = 8;
   const unsigned long kInternalError                    = 9;
-  const unsigned long kMaxErrorType                     = 9; // Same as final error
+  const unsigned long kTypeError                        = 10;
+  const unsigned long kOperationError                   = 11;
+  const unsigned long kMaxErrorType                     = 11; // Same as final error
 };

@@ -1096,7 +1096,8 @@ protected:
           Tie(level, mid, candidate) = levelMidAndCandidate;
           std::cerr << "trickling candidate: " << candidate << " level: " << level << " mid: " << mid << std::endl;
           std::string transportId;
-          session.AddRemoteIceCandidate(candidate, mid, level, &transportId);
+          Maybe<unsigned long> lev = Some(level);
+          session.AddRemoteIceCandidate(candidate, mid, lev, &transportId);
         }
         mCandidatesToTrickle.clear();
       }
@@ -5117,7 +5118,7 @@ TEST_F(JsepSessionTest, AddCandidateInHaveLocalOffer) {
   std::string mid;
   std::string transportId;
   rv = mSessionOff->AddRemoteIceCandidate(strSampleCandidate,
-                                          mid, nSamplelevel,
+                                          mid, Some(nSamplelevel),
                                           &transportId);
   ASSERT_EQ(NS_ERROR_UNEXPECTED, rv);
 }
