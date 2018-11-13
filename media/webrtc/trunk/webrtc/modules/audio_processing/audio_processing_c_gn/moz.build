@@ -163,6 +163,11 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "winmm"
     ]
 
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
+    ]
+
 if CONFIG["CPU_ARCH"] == "aarch64":
 
     DEFINES["WEBRTC_ARCH_ARM64"] = True
@@ -188,13 +193,6 @@ if CONFIG["CPU_ARCH"] == "arm":
         "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression_x.c",
         "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core.c",
         "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/nsx_core_c.c"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86":
-
-    UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
@@ -227,6 +225,11 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
         "-msse2"
     ]
 
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
 
     UNIFIED_SOURCES += [
@@ -238,6 +241,11 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
 
     CFLAGS += [
         "-msse2"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "FreeBSD":
@@ -253,6 +261,11 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
         "-msse2"
     ]
 
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "NetBSD":
 
     UNIFIED_SOURCES += [
@@ -264,6 +277,11 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "OpenBSD":
 
     CFLAGS += [
         "-msse2"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/noise_suppression.c",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/ns/ns_core.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "OpenBSD":
