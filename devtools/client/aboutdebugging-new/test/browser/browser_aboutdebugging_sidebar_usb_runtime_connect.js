@@ -73,7 +73,7 @@ add_task(async function() {
 
   info("Click on the connect button and wait until it disappears");
   connectButton.click();
-  await waitUntil(() => usbRuntimeSidebarItem.querySelector(".js-connect-button"));
+  await waitUntil(() => !usbRuntimeSidebarItem.querySelector(".js-connect-button"));
 
   info("Remove all USB runtimes");
   usbRuntimesMock.getUSBRuntimes = function() {
