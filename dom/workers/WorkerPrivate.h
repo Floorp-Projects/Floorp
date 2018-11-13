@@ -21,6 +21,7 @@
 #include "mozilla/dom/workerinternals/JSSettings.h"
 #include "mozilla/dom/workerinternals/Queue.h"
 #include "mozilla/PerformanceCounter.h"
+#include "mozilla/ThreadBound.h"
 
 class nsIConsoleReportCollector;
 class nsIThreadInternal;
@@ -402,15 +403,15 @@ public:
   WorkerGlobalScope*
   GlobalScope() const
   {
-    AssertIsOnWorkerThread();
-    return mScope;
+    MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
+    return data->mScope;
   }
 
   WorkerDebuggerGlobalScope*
   DebuggerGlobalScope() const
   {
-    AssertIsOnWorkerThread();
-    return mDebuggerScope;
+    MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
+    return data->mDebuggerScope;
   }
 
   nsICSPEventListener*
@@ -418,6 +419,12 @@ public:
 
   void
   SetThread(WorkerThread* aThread);
+
+  void
+  SetWorkerPrivateInWorkerThread(WorkerThread* aThread);
+
+  void
+  ResetWorkerPrivateInWorkerThread();
 
   bool
   IsOnWorkerThread() const;
@@ -472,8 +479,8 @@ public:
   bool
   OnLine() const
   {
-    AssertIsOnWorkerThread();
-    return mOnLine;
+    MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
+    return data->mOnLine;
   }
 
   void
@@ -1302,8 +1309,9 @@ private:
   bool
   HasActiveHolders()
   {
-    return !(mChildWorkers.IsEmpty() && mTimeouts.IsEmpty() &&
-             mHolders.IsEmpty());
+    MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
+    return !(data->mChildWorkers.IsEmpty() && data->mTimeouts.IsEmpty() &&
+             data->mHolders.IsEmpty());
   }
 
   class EventTarget;
@@ -1363,13 +1371,10 @@ private:
   RefPtr<WorkerThread> mThread;
   PRThread* mPRThread;
 
-  // Things touched on worker thread only.
-  RefPtr<WorkerGlobalScope> mScope;
-  RefPtr<WorkerDebuggerGlobalScope> mDebuggerScope;
-  nsTArray<WorkerPrivate*> mChildWorkers;
-  nsTObserverArray<WorkerHolder*> mHolders;
-  nsTArray<nsAutoPtr<TimeoutInfo>> mTimeouts;
+  // Accessed from main thread
   RefPtr<ThrottledEventQueue> mMainThreadEventTarget;
+
+  // Accessed from worker thread and destructing thread
   RefPtr<WorkerEventTarget> mWorkerControlEventTarget;
   RefPtr<WorkerEventTarget> mWorkerHybridEventTarget;
 
@@ -1394,14 +1399,7 @@ private:
   // modifications are done with mMutex held *only* in DEBUG builds.
   nsTArray<nsAutoPtr<SyncLoopInfo>> mSyncLoopStack;
 
-  nsCOMPtr<nsITimer> mTimer;
-  nsCOMPtr<nsITimerCallback> mTimerRunnable;
-
   nsCOMPtr<nsITimer> mCancelingTimer;
-
-  nsCOMPtr<nsITimer> mGCTimer;
-
-  RefPtr<MemoryReporter> mMemoryReporter;
 
   // fired on the main thread if the worker script fails to load
   nsCOMPtr<nsIRunnable> mLoadFailedRunnable;
@@ -1421,7 +1419,6 @@ private:
   TimeStamp mKillTime;
   WorkerStatus mParentStatus;
   WorkerStatus mStatus;
-  UniquePtr<ClientSource> mClientSource;
 
   // This is touched on parent thread only, but it can be read on a different
   // thread before crashing because hanging.
@@ -1433,26 +1430,48 @@ private:
   DOMHighResTimeStamp mCreationTimeHighRes;
 
   // Things touched on worker thread only.
-  uint32_t mNumHoldersPreventingShutdownStart;
-  uint32_t mDebuggerEventLoopLevel;
+  struct WorkerThreadAccessible
+  {
+    explicit WorkerThreadAccessible(WorkerPrivate* aParent);
 
-  uint32_t mErrorHandlerRecursionCount;
-  uint32_t mNextTimeoutId;
+    RefPtr<WorkerGlobalScope> mScope;
+    RefPtr<WorkerDebuggerGlobalScope> mDebuggerScope;
+    nsTArray<WorkerPrivate*> mChildWorkers;
+    nsTObserverArray<WorkerHolder*> mHolders;
+    nsTArray<nsAutoPtr<TimeoutInfo>> mTimeouts;
+
+    nsCOMPtr<nsITimer> mTimer;
+    nsCOMPtr<nsITimerCallback> mTimerRunnable;
+
+    nsCOMPtr<nsITimer> mGCTimer;
+
+    RefPtr<MemoryReporter> mMemoryReporter;
+
+    UniquePtr<ClientSource> mClientSource;
+
+    uint32_t mNumHoldersPreventingShutdownStart;
+    uint32_t mDebuggerEventLoopLevel;
+
+    uint32_t mErrorHandlerRecursionCount;
+    uint32_t mNextTimeoutId;
+
+    bool mFrozen;
+    bool mTimerRunning;
+    bool mRunningExpiredTimeouts;
+    bool mPeriodicGCTimerRunning;
+    bool mIdleGCTimerRunning;
+    bool mOnLine;
+  };
+  ThreadBound<WorkerThreadAccessible> mWorkerThreadAccessible;
 
   // SharedWorkers may have multiple windows paused, so this must be
   // a count instead of just a boolean.
   uint32_t mParentWindowPausedDepth;
 
-  bool mFrozen;
-  bool mTimerRunning;
-  bool mRunningExpiredTimeouts;
   bool mPendingEventQueueClearing;
   bool mCancelAllPendingRunnables;
-  bool mPeriodicGCTimerRunning;
-  bool mIdleGCTimerRunning;
   bool mWorkerScriptExecutedSuccessfully;
   bool mFetchHandlerWasAdded;
-  bool mOnLine;
   bool mMainThreadObjectsForgotten;
   bool mIsChromeWorker;
   bool mParentFrozen;
