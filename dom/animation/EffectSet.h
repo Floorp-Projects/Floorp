@@ -188,6 +188,10 @@ public:
 
   static nsAtom** GetEffectSetPropertyAtoms();
 
+  const nsCSSPropertyIDSet& PropertiesWithImportantRules() const
+  {
+    return mPropertiesWithImportantRules;
+  }
   nsCSSPropertyIDSet& PropertiesWithImportantRules()
   {
     return mPropertiesWithImportantRules;

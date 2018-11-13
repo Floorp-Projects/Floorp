@@ -2383,6 +2383,14 @@ public:
                                     nsCSSPropertyID aProperty);
 
   /**
+   * Returns all effective animated CSS properties on |aFrame|. That means
+   * properties that can be animated on the compositor and are not overridden by
+   * a higher cascade level.
+   */
+  static nsCSSPropertyIDSet
+  GetAnimationPropertiesForCompositor(const nsIFrame* aFrame);
+
+  /**
    * Checks if off-main-thread animations are enabled.
    */
   static bool AreAsyncAnimationsEnabled();

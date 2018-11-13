@@ -286,6 +286,35 @@ KeyframeEffect::GetEffectiveAnimationOfProperty(nsCSSPropertyID aProperty) const
   return nullptr;
 }
 
+nsCSSPropertyIDSet
+KeyframeEffect::GetPropertiesForCompositor(const EffectSet& aEffects) const
+{
+  MOZ_ASSERT(
+    &aEffects ==
+      EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType));
+
+  nsCSSPropertyIDSet properties;
+
+  if (!IsInEffect() && !IsCurrent()) {
+    return properties;
+  }
+
+  static constexpr nsCSSPropertyIDSet compositorAnimatables =
+    nsCSSPropertyIDSet::CompositorAnimatables();
+  for (const AnimationProperty& property : mProperties) {
+    if (!compositorAnimatables.HasProperty(property.mProperty)) {
+      continue;
+    }
+    if (!aEffects.PropertiesWithImportantRules()
+           .HasProperty(property.mProperty) ||
+        !aEffects.PropertiesForAnimationsLevel()
+           .HasProperty(property.mProperty)) {
+      properties.AddProperty(property.mProperty);
+    }
+  }
+  return properties;
+}
+
 bool
 KeyframeEffect::HasAnimationOfProperty(nsCSSPropertyID aProperty) const
 {

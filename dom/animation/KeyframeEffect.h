@@ -208,6 +208,14 @@ public:
   const AnimationProperty* GetEffectiveAnimationOfProperty(
     nsCSSPropertyID aProperty) const;
 
+  // Returns all the effective animated CSS properties that can be animated on
+  // the compositor and are not overridden by a higher cascade level.
+  //
+  // NOTE: This function is basically called for all KeyframeEffects on an
+  // element thus it takes |aEffects| to avoid multiple calls of
+  // EffectSet::GetEffect().
+  nsCSSPropertyIDSet GetPropertiesForCompositor(const EffectSet& aEffects) const;
+
   const InfallibleTArray<AnimationProperty>& Properties() const
   {
     return mProperties;
