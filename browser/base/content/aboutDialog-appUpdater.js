@@ -40,7 +40,7 @@ function appUpdater(options = {}) {
 
   this.options = options;
   this.updateDeck = document.getElementById("updateDeck");
-  this.promiseAutoUpdateSetting = null;
+  this.promiseAutoUpdateSetting;
 
   // Hide the update deck when the update window is already open and it's not
   // already applied, to avoid syncing issues between them. Applied updates
@@ -256,10 +256,10 @@ appUpdater.prototype =
         return;
       }
 
-      if (this.promiseAutoUpdateSetting == null) {
-        this.promiseAutoUpdateSetting = this.aus.getAutoUpdateIsEnabled();
+      if (!gAppUpdater.promiseAutoUpdateSetting) {
+        gAppUpdater.promiseAutoUpdateSetting = gAppUpdater.aus.getAutoUpdateIsEnabled();
       }
-      this.promiseAutoUpdateSetting.then(updateAuto => {
+      gAppUpdater.promiseAutoUpdateSetting.then(updateAuto => {
         if (updateAuto) { // automatically download and install
           gAppUpdater.startDownload();
         } else { // ask
