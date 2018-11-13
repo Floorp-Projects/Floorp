@@ -797,7 +797,7 @@ impl AlphaBatchBuilder {
             PrimitiveInstanceKind::Picture { pic_index } => {
                 let picture = &ctx.prim_store.pictures[pic_index.0];
                 let non_segmented_blend_mode = BlendMode::PremultipliedAlpha;
-                let prim_cache_address = gpu_cache.get_address(&prim_instance.gpu_location);
+                let prim_cache_address = gpu_cache.get_address(&picture.gpu_location);
 
                 let prim_header = PrimitiveHeader {
                     local_rect: picture.local_rect,
@@ -1225,27 +1225,7 @@ impl AlphaBatchBuilder {
                     }
                 };
 
-                let prim_cache_address = if is_multiple_primitives {
-                    GpuCacheAddress::invalid()
-                } else {
-                    gpu_cache.get_address(&prim_instance.gpu_location)
-                };
-
                 let specified_blend_mode = prim_instance.get_blend_mode(&prim.details);
-
-                let prim_header = PrimitiveHeader {
-                    local_rect: prim.local_rect,
-                    local_clip_rect: prim_instance.combined_local_clip_rect,
-                    task_address,
-                    specific_prim_address: prim_cache_address,
-                    clip_task_address,
-                    transform_id,
-                };
-
-                if prim_instance.is_chased() {
-                    println!("\ttask target {:?}", self.target_rect);
-                    println!("\t{:?}", prim_header);
-                }
 
                 match prim.details {
                     PrimitiveDetails::Brush(ref brush) => {
@@ -1257,6 +1237,26 @@ impl AlphaBatchBuilder {
                         } else {
                             BlendMode::None
                         };
+
+                        let prim_cache_address = if is_multiple_primitives {
+                            GpuCacheAddress::invalid()
+                        } else {
+                            gpu_cache.get_address(&brush.gpu_location)
+                        };
+
+                        let prim_header = PrimitiveHeader {
+                            local_rect: prim.local_rect,
+                            local_clip_rect: prim_instance.combined_local_clip_rect,
+                            task_address,
+                            specific_prim_address: prim_cache_address,
+                            clip_task_address,
+                            transform_id,
+                        };
+
+                        if prim_instance.is_chased() {
+                            println!("\ttask target {:?}", self.target_rect);
+                            println!("\t{:?}", prim_header);
+                        }
 
                         match brush.kind {
                             BrushKind::Image { alpha_type, request, ref opacity_binding, ref visible_tiles, .. } if !visible_tiles.is_empty() => {

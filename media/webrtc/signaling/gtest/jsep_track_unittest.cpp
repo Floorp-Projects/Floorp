@@ -159,8 +159,8 @@ class JsepTrackTest : public ::testing::Test
 
     void CreateOffer()
     {
-      mSendOff.AddToOffer(mSsrcGenerator, &GetOffer());
-      mRecvOff.AddToOffer(mSsrcGenerator, &GetOffer());
+      mSendOff.AddToOffer(mSsrcGenerator, true, &GetOffer());
+      mRecvOff.AddToOffer(mSsrcGenerator, true, &GetOffer());
     }
 
     void CreateAnswer()
@@ -169,8 +169,8 @@ class JsepTrackTest : public ::testing::Test
         mRecvAns.UpdateRecvTrack(*mOffer, GetOffer());
       }
 
-      mSendAns.AddToAnswer(GetOffer(), mSsrcGenerator, &GetAnswer());
-      mRecvAns.AddToAnswer(GetOffer(), mSsrcGenerator, &GetAnswer());
+      mSendAns.AddToAnswer(GetOffer(), mSsrcGenerator, true, &GetAnswer());
+      mRecvAns.AddToAnswer(GetOffer(), mSsrcGenerator, true, &GetAnswer());
     }
 
     void Negotiate()

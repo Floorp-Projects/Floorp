@@ -1305,14 +1305,13 @@ class TreeMetadataEmitter(LoggingMixin):
                                           Manifest('components',
                                                    mozpath.basename(c)))
 
-        if self.config.substs.get('MOZ_RUST_TESTS', None):
-            rust_tests = context.get('RUST_TESTS', [])
-            if rust_tests:
-                # TODO: more sophisticated checking of the declared name vs.
-                # contents of the Cargo.toml file.
-                features = context.get('RUST_TEST_FEATURES', [])
+        rust_tests = context.get('RUST_TESTS', [])
+        if rust_tests:
+            # TODO: more sophisticated checking of the declared name vs.
+            # contents of the Cargo.toml file.
+            features = context.get('RUST_TEST_FEATURES', [])
 
-                yield RustTests(context, rust_tests, features)
+            yield RustTests(context, rust_tests, features)
 
         for obj in self._process_test_manifests(context):
             yield obj

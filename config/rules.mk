@@ -1074,7 +1074,6 @@ rust_test_flag := --no-fail-fast
 force-cargo-test-run:
 	$(call RUN_CARGO,test $(cargo_target_flag) $(rust_test_flag) $(rust_test_options) $(rust_features_flag),$(rustflags_override) $(RUSTFLAGS),$(target_cargo_env_vars))
 
-check:: force-cargo-test-run
 endif
 
 ifdef HOST_RUST_LIBRARY_FILE

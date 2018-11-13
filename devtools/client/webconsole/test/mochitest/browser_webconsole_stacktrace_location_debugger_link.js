@@ -30,29 +30,25 @@ add_task(async function() {
 async function testOpenInDebugger(hud, toolbox, text) {
   info(`Testing message with text "${text}"`);
   const messageNode = await waitFor(() => findMessage(hud, text));
-  const frameLinksNode = messageNode.querySelectorAll(".stack-trace .frame-link");
-  is(frameLinksNode.length, 3,
+  const frameNodes = messageNode.querySelectorAll(".frames .frame");
+  is(frameNodes.length, 3,
     "The message does have the expected number of frames in the stacktrace");
 
-  for (const frameLinkNode of frameLinksNode) {
-    await checkClickOnNode(hud, toolbox, frameLinkNode);
+  for (const frameNode of frameNodes) {
+    await checkClickOnNode(hud, toolbox, frameNode);
 
     info("Selecting the console again");
     await toolbox.selectTool("webconsole");
   }
 }
 
-async function checkClickOnNode(hud, toolbox, frameLinkNode) {
+async function checkClickOnNode(hud, toolbox, frameNode) {
   info("checking click on node location");
-
   const onSourceInDebuggerOpened = once(hud.ui, "source-in-debugger-opened");
-
-  EventUtils.sendMouseEvent({ type: "click" },
-    frameLinkNode.querySelector(".frame-link-source"));
-
+  EventUtils.sendMouseEvent({ type: "mousedown" }, frameNode.querySelector(".location"));
   await onSourceInDebuggerOpened;
 
-  const url = frameLinkNode.getAttribute("data-url");
+  const url = frameNode.querySelector(".filename").textContent;
   const dbg = toolbox.getPanel("jsdebugger");
   is(
     dbg._selectors.getSelectedSource(dbg._getState()).url,

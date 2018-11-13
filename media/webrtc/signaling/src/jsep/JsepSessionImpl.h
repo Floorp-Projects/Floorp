@@ -44,7 +44,8 @@ public:
         mUuidGen(std::move(uuidgen)),
         mSdpHelper(&mLastError),
         mRunRustParser(false),
-        mRunSdpComparer(false)
+        mRunSdpComparer(false),
+        mEncodeTrackId(true)
   {
   }
 
@@ -298,6 +299,7 @@ private:
   SsrcGenerator mSsrcGenerator;
   bool mRunRustParser;
   bool mRunSdpComparer;
+  bool mEncodeTrackId;
   RsdparsaSdpParser mRsdparsaParser;
 };
 

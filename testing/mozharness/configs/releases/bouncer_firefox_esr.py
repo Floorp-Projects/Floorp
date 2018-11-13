@@ -63,6 +63,23 @@ config = {
                 },
             },
         },
+        "msi": {
+            "product-name": "Firefox-%(version)s-msi-SSL",
+            "check_uptake": True,
+            "alias": "firefox-esr-msi-latest-ssl",
+            "ssl-only": True,
+            "add-locales": True,
+            "paths": {
+                "win32": {
+                    "path": "/firefox/releases/%(version)s/win32/:lang/Firefox%%20Setup%%20%(version)s.msi",
+                    "bouncer-platform": "win",
+                },
+                "win64": {
+                    "path": "/firefox/releases/%(version)s/win64/:lang/Firefox%%20Setup%%20%(version)s.msi",
+                    "bouncer-platform": "win64",
+                },
+            },
+        },
         "complete-mar": {
             "product-name": "Firefox-%(version)s-Complete",
             "check_uptake": True,

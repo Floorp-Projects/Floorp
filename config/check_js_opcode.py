@@ -26,10 +26,10 @@ def log_fail(text):
 
 def check_opcode():
     sys.path.insert(0, os.path.join(topsrcdir, 'js', 'src', 'vm'))
-    import opcode
+    import jsopcode
 
     try:
-        opcode.get_opcodes(topsrcdir)
+        jsopcode.get_opcodes(topsrcdir)
     except Exception as e:
         log_fail(e.args[0])
         return False

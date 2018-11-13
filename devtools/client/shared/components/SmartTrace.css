@@ -1,0 +1,102 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * SmartTrace Component
+ * Styles for React component at `devtools/client/shared/components/SmartTrace.js`
+ */
+
+.frames ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: inline-grid;
+  grid-template-columns: auto auto 1fr;
+  grid-column-gap: 8px;
+}
+
+.frames .frame {
+  display: contents;
+  cursor: pointer;
+}
+
+.frames .title {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  grid-column: 1 / 2;
+  color: var(--console-output-color);
+}
+
+.frames .location {
+  color: var(--frame-link-source);
+  grid-column: -1 / -2;
+}
+
+.frames .location .line {
+  color: var(--frame-link-line-color);
+}
+
+.frames ul .frame:hover .location {
+  text-decoration: underline;
+}
+
+/******* Group styles *******/
+.frames .frames-group,
+.frames .frames-group .group {
+  display: contents;
+}
+
+.frames-group .frames-list .frame {
+  padding-inline-start: 16px;
+  display: block;
+  grid-column: 1 / -1;
+}
+
+.frames-list {
+  grid-column: 1 / -1;
+  margin-block-start: 2px;
+}
+
+.frames .frames-list .frame:first-of-type {
+  border-top: 1px solid var(--theme-splitter-color);
+  padding-block-start: 4px;
+}
+
+.frames .frames-list .frame:last-of-type {
+  margin-block-end: 4px;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.frames ul .frames-group.expanded,
+.frames ul .frames-group.expanded .location {
+  color: var(--theme-highlight-blue);
+}
+
+.frames ul .frames-group.expanded .react path {
+  fill: var(--theme-highlight-blue);
+}
+
+.frames ul .frames-group.expanded .badge {
+  color: var(--theme-highlight-blue);
+}
+
+.badge {
+  background: var(--theme-toolbar-background-hover);
+  color: var(--theme-body-color);
+  border-radius: 8px;
+  padding: 1px 4px;
+  font-size: 0.9em;
+  display: inline-block;
+}
+
+.annotation-logo {
+  display: inline-block;
+  width: 12px;
+  margin-inline-start: 4px;
+  vertical-align: middle;
+}
+
+:root.theme-dark .annotation-logo svg path {
+  fill: var(--theme-highlight-blue);
+}

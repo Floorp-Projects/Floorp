@@ -100,7 +100,7 @@ public:
                             uint32_t aLen,
                             bool aIsInsert,
                             bool aFromUser);
-  void SendSelectedEvent(AccessibleWrap* aAccessible);
+  void SendSelectedEvent(AccessibleWrap* aAccessible, bool aSelected);
   void SendClickedEvent(AccessibleWrap* aAccessible, bool aChecked);
   void SendWindowContentChangedEvent(AccessibleWrap* aAccessible);
   void SendWindowStateChangedEvent(AccessibleWrap* aAccessible);
@@ -108,6 +108,12 @@ public:
   // Cache methods
   void ReplaceViewportCache(const nsTArray<AccessibleWrap*>& aAccessibles,
                            const nsTArray<BatchData>& aData = nsTArray<BatchData>());
+
+  void ReplaceFocusPathCache(const nsTArray<AccessibleWrap*>& aAccessibles,
+                             const nsTArray<BatchData>& aData = nsTArray<BatchData>());
+
+  void UpdateCachedBounds(const nsTArray<AccessibleWrap*>& aAccessibles,
+                          const nsTArray<BatchData>& aData = nsTArray<BatchData>());
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SessionAccessibility)
 

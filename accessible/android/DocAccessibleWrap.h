@@ -30,8 +30,14 @@ public:
   void RemoveID(uint32_t aID) { mIDToAccessibleMap.Remove(aID); }
   AccessibleWrap* GetAccessibleByID(int32_t aID) const;
 
+  DocAccessibleWrap* GetTopLevelContentDoc(AccessibleWrap* aAccessible);
+
+  void CacheFocusPath(AccessibleWrap* aAccessible);
+
   enum {
-    eBatch_Viewport = 0
+    eBatch_Viewport = 0,
+    eBatch_FocusPath = 1,
+    eBatch_BoundsUpdate = 2,
   };
 
 protected:
@@ -45,9 +51,13 @@ protected:
 private:
   void CacheViewport();
 
+  void UpdateFocusPathBounds();
+
   static void CacheViewportCallback(nsITimer* aTimer, void* aDocAccParam);
 
   nsCOMPtr<nsITimer> mCacheRefreshTimer;
+
+  AccessibleHashtable mFocusPath;
 };
 
 } // namespace a11y

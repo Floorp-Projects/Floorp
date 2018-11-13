@@ -272,7 +272,7 @@ rustdoc = check_prog('RUSTDOC', add_rustup_path('rustdoc'),
 # This option is separate from --enable-tests because Rust tests are particularly
 # expensive in terms of compile time (especially for code in libxul).
 option('--enable-rust-tests',
-       help='Enable building of Rust tests, and build-time execution of them')
+       help='Enable building and running of Rust tests during `make check`')
 
 
 @depends('--enable-rust-tests', rustdoc)
