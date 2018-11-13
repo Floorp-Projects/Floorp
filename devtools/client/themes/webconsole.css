@@ -18,7 +18,6 @@
 }
 
 .theme-dark {
-  --console-arrow-color: hsl(210, 6%, 52%);
   --console-input-icon-color: hsl(0, 0%, 50%, 0.5);
   --console-input-icon-focused: hsl(210, 100%, 73%);
   --console-output-icon-info: hsl(210, 6%, 52%);
@@ -35,11 +34,10 @@
 }
 
 .theme-light {
-  --console-arrow-color: hsl(210, 6%, 67%);
   --console-input-icon-color: hsl(210, 6%, 75%);
   --console-input-icon-focused: hsl(210, 100%, 44%);
   --console-output-icon-info: hsl(210, 6%, 67%);
-  --console-output-icon-input: hsl(210, 6%, 34%);
+  --console-output-icon-input: hsl(210, 0%, 34%);
   --console-output-icon-error: hsl(0, 90%, 45%);
   --console-output-icon-warning: hsl(36, 100%, 45%);
   --console-output-indent-border-color: var(--theme-highlight-blue);
@@ -915,11 +913,11 @@ body {
 .collapse-button {
   flex: none;
   align-self: flex-start;
-  margin-block-start: var(--console-output-vertical-padding);
-  margin-inline-start: -3px;
-  margin-inline-end: 0;
-  padding: 2px 4px;
+  margin-block-start: calc(var(--console-output-vertical-padding) - 1px);
+  margin-inline-start: -2px;
+  padding: 3px;
   border: none;
+  color: var(--theme-twisty-fill);
   background: transparent;
 }
 
@@ -928,11 +926,12 @@ body {
   display: block;
   width: 10px;
   height: 10px;
-  mask: url("chrome://devtools/skin/images/devtools-components/arrow.svg") no-repeat;
-  mask-size: 100%;
+  background: url("chrome://devtools/skin/images/arrow.svg") no-repeat center;
+  background-size: 10px;
   transform: rotate(-90deg);
-  transition: transform 0.125s ease;
-  background-color: var(--console-arrow-color);
+  transition: transform 125ms ease;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .collapse-button[aria-expanded="true"]::before {
@@ -941,15 +940,6 @@ body {
 
 .collapse-button::-moz-focus-inner {
   border: none;
-}
-
-/* Larger collapse buttons for groups and network requests */
-.message.network > .collapse-button,
-.message.startGroup .collapse-button,
-.message.startGroupCollapsed .collapse-button {
-  margin-inline-start: 0;
-  padding-inline-start: 6px;
-  padding-inline-end: 6px;
 }
 
 /* Hide the icon, so that we can use the collapse-button in its place */
@@ -962,9 +952,19 @@ body {
 /* Center the collapse button in the left gutter (first-level only) */
 .message.network > .collapse-button,
 .message.startGroup > .indent[data-indent="0"] ~ .collapse-button,
-.message.message.startGroupCollapsed > .indent[data-indent="0"] ~ .collapse-button {
-  margin-inline-start: calc(1px + var(--console-icon-horizontal-offset));
-  margin-inline-end: calc(5px - var(--console-icon-horizontal-offset));
+.message.startGroupCollapsed > .indent[data-indent="0"] ~ .collapse-button {
+  width: 24px;
+  margin-inline-start: var(--console-icon-horizontal-offset);
+  margin-inline-end: calc(4px - var(--console-icon-horizontal-offset));
+}
+
+/* Use a bigger arrow that is visually similar to other icons (10px) */
+.message.network > .collapse-button::before,
+.message.startGroup > .indent[data-indent="0"] ~ .collapse-button::before,
+.message.startGroupCollapsed > .indent[data-indent="0"] ~ .collapse-button::before {
+  width: 100%;
+  background-image: url("chrome://devtools/skin/images/arrow-big.svg");
+  fill: var(--console-output-icon-medium-color);
 }
 
 /* Apply a style similar to collapse-button for the object tree arrows */
@@ -974,7 +974,7 @@ body {
   height: 10px;
   vertical-align: 0px;
   line-height: 1;
-  background-color: var(--console-arrow-color);
+  background-color: var(--theme-twisty-fill);
 }
 
 /* Sidebar */

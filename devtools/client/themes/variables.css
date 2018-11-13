@@ -67,6 +67,10 @@
   --theme-highlight-pink: #b82ee5;
   --theme-highlight-gray: #dde1e4;
 
+  /* Twisty (expand) icon colors */
+  --theme-twisty-fill: hsla(0,0%,50%,.70);
+  --theme-twisty-selected-fill: white;
+
   /* For accessibility purposes we want to enhance the focus styling. This
    * should improve keyboard navigation usability. */
   --theme-focus-outline-color: #000000;
@@ -157,6 +161,10 @@
   --theme-highlight-orange: #d96629;
   --theme-highlight-pink: #df80ff;
   --theme-highlight-gray: #e9f4fe;
+
+  /* Twisty (expand) icon colors */
+  --theme-twisty-fill: var(--grey-45);
+  --theme-twisty-selected-fill: white;
 
   /* For accessibility purposes we want to enhance the focus styling. This
    * should improve keyboard navigation usability. */

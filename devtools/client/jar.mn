@@ -266,5 +266,7 @@ devtools.jar:
     content/application/index.html (application/index.html)
 
     # Devtools-components
+    skin/images/arrow.svg (themes/images/arrow.svg)
+    skin/images/arrow-big.svg (themes/images/arrow-big.svg)
     skin/images/devtools-components/arrow.svg (themes/images/devtools-components/arrow.svg)
     skin/images/devtools-components/checkbox.svg (themes/images/devtools-components/checkbox.svg)

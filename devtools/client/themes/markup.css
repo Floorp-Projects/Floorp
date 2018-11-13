@@ -208,9 +208,9 @@ ul.children + .tag-line::before {
 .expander {
   display: inline-block;
   vertical-align: top;
-  margin-left: -14px;
-  margin-top: 0;
-  margin-bottom: 0;
+  width: 14px;
+  height: 16px;
+  margin: -1px 0 -1px -14px;
   /* Make sure the expander still appears above the tag-state */
   position: relative;
   z-index: 1;
