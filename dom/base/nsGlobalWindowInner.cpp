@@ -23,6 +23,7 @@
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/LocalStorage.h"
+#include "mozilla/dom/PartitionedLocalStorage.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/IdleRequest.h"
 #include "mozilla/dom/Performance.h"
@@ -4884,18 +4885,33 @@ nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError)
     return nullptr;
   }
 
-  if (!mLocalStorage) {
-    if (nsContentUtils::StorageAllowedForWindow(this) ==
-          nsContentUtils::StorageAccess::eDeny) {
-      aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
-      return nullptr;
-    }
+  // LocalStorage needs to be exposed in every context except for sandboxes and
+  // NullPrincipals (data: URLs, for instance). But we need to keep data
+  // separate in some scenarios: private-browsing and partitioned trackers.
+  // In private-browsing, LocalStorage keeps data in memory, and it shares
+  // StorageEvents just with other origins in the same private-browsing
+  // environment.
+  // For Partitioned Trackers, we expose a partitioned LocalStorage, which
+  // doesn't share data with other contexts, and it's just in memory.
+  // Partitioned localStorage is available only for trackers listed in the
+  // privacy.restrict3rdpartystorage.partitionedHosts pref. See
+  // nsContentUtils::IsURIInPrefList to know the syntax for the pref value.
+  // This is a temporary web-compatibility hack.
 
-    nsIPrincipal *principal = GetPrincipal();
-    if (!principal) {
-      return nullptr;
-    }
+  nsContentUtils::StorageAccess access =
+    nsContentUtils::StorageAllowedForWindow(this);
+  if (access == nsContentUtils::StorageAccess::eDeny) {
+    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
 
+  // Note that this behavior is observable: if we grant storage permission to a
+  // tracker, we pass from the partitioned LocalStorage to the 'normal'
+  // LocalStorage. The previous data is lost and the 2 window.localStorage
+  // objects, before and after the permission granted, will be different.
+  if (access != nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+      (!mLocalStorage ||
+        mLocalStorage->Type() == Storage::ePartitionedLocalStorage)) {
     nsresult rv;
     nsCOMPtr<nsIDOMStorageManager> storageManager =
       do_GetService("@mozilla.org/dom/localStorage-manager;1", &rv);
@@ -4912,6 +4928,12 @@ nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError)
       }
     }
 
+    nsIPrincipal *principal = GetPrincipal();
+    if (!principal) {
+      aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+      return nullptr;
+    }
+
     RefPtr<Storage> storage;
     aError = storageManager->CreateStorage(this, principal, documentURI,
                                            IsPrivateBrowsing(),
@@ -4923,6 +4945,20 @@ nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError)
     mLocalStorage = storage;
     MOZ_ASSERT(mLocalStorage);
   }
+
+  if (access == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+      !mLocalStorage) {
+    nsIPrincipal *principal = GetPrincipal();
+    if (!principal) {
+      aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+      return nullptr;
+    }
+
+    mLocalStorage = new PartitionedLocalStorage(this, principal);
+  }
+
+  MOZ_ASSERT((access == nsContentUtils::StorageAccess::ePartitionedOrDeny) ==
+               (mLocalStorage->Type() == Storage::ePartitionedLocalStorage));
 
   return mLocalStorage;
 }
@@ -5827,12 +5863,13 @@ nsGlobalWindowInner::CloneStorageEvent(const nsAString& aType,
       return nullptr;
     }
 
-    MOZ_ASSERT(storage->Type() == Storage::eLocalStorage);
-    RefPtr<LocalStorage> localStorage =
-      static_cast<LocalStorage*>(storage.get());
+    if (storage->Type() == Storage::eLocalStorage) {
+      RefPtr<LocalStorage> localStorage =
+        static_cast<LocalStorage*>(storage.get());
 
-    // We must apply the current change to the 'local' localStorage.
-    localStorage->ApplyEvent(aEvent);
+      // We must apply the current change to the 'local' localStorage.
+      localStorage->ApplyEvent(aEvent);
+    }
   } else if (storageArea->Type() == Storage::eSessionStorage) {
     storage = GetSessionStorage(aRv);
   } else {
@@ -5841,6 +5878,12 @@ nsGlobalWindowInner::CloneStorageEvent(const nsAString& aType,
   }
 
   if (aRv.Failed() || !storage) {
+    return nullptr;
+  }
+
+  if (storage->Type() == Storage::ePartitionedLocalStorage) {
+    // This error message is not exposed.
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
 

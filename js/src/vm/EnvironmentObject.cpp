@@ -1598,8 +1598,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler
             CallObject& callobj = env->as<CallObject>();
             RootedFunction fun(cx, &callobj.callee());
             RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
-            AutoKeepTypeScripts keepTypes(cx);
-            if (!script->ensureHasTypes(cx, keepTypes) || !script->ensureHasAnalyzedArgsUsage(cx)) {
+            if (!script->ensureHasAnalyzedArgsUsage(cx)) {
                 return false;
             }
 

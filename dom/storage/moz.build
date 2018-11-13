@@ -10,6 +10,7 @@ with Files("**"):
 EXPORTS.mozilla.dom += [
     'LocalStorage.h',
     'LocalStorageManager.h',
+    'PartitionedLocalStorage.h',
     'SessionStorageManager.h',
     'Storage.h',
     'StorageActivityService.h',
@@ -23,6 +24,7 @@ UNIFIED_SOURCES += [
     'LocalStorage.cpp',
     'LocalStorageCache.cpp',
     'LocalStorageManager.cpp',
+    'PartitionedLocalStorage.cpp',
     'SessionStorage.cpp',
     'SessionStorageCache.cpp',
     'SessionStorageManager.cpp',
