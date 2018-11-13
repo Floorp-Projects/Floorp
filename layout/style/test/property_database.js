@@ -6359,13 +6359,17 @@ if (IsCSSPropertyPrefEnabled("layout.css.individual-transform.enabled")) {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "none" ],
     other_values: [ "45deg", "45grad", "72rad", "0.25turn", ".57rad",
-                    "0 0 0 0rad", "0 0 1 45deg", "0 0 1 0rad", "0rad 0 0 1",
+                    "0 0 0 0rad", "0 0 1 45deg", "0 0 1 0rad",
+                    "0rad 0 0 1", "10rad 10 20 30",
+                    "x 10rad", "y 10rad", "z 10rad",
+                    "10rad x", "10rad y", "10rad z",
                     /* valid calc() values */
                     "calc(1) 0 0 calc(45deg + 5rad)",
                     "0 1 0 calc(400grad + 1rad)",
                     "calc(0.5turn + 10deg)"],
     invalid_values: [ "0", "7", "0, 0, 1, 45deg", "0 0 45deg", "0 0 20rad",
-                      "0 0 0 0",
+                      "0 0 0 0", "x x 10rad", "x y 10rad", "0 0 1 10rad z",
+                      "0 0 1 z 10rad", "z 0 0 1 10rad", "0 0 z 1 10rad",
                       /* invalid calc() values */
                       "0.5 1 0 calc(45deg + 10)", "calc(0.5turn + 10%)"],
   };
