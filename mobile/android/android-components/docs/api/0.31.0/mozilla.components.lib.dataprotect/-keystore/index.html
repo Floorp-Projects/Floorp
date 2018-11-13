@@ -1,0 +1,121 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Keystore - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.lib.dataprotect</a>&nbsp;/&nbsp;<a href="./index.html">Keystore</a><br/>
+<br/>
+<h1>Keystore</h1>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">Keystore</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L142">(source)</a>
+<p>Manages data protection using a system-isolated cryptographic key.</p>
+<p>This class provides for both:</p>
+<ul><li>management for a specific crypto graphic key (identified by a string label)</li>
+<li>protection (encryption/decryption) of data using the managed key</li>
+</ul>
+<p>The specific cryptographic properties are pre-chosen to be the following:</p>
+<ul><li>Algorithm is "AES/GCM/NoPadding"</li>
+<li>Key size is 256 bits</li>
+<li>Tag size is 128 bits</li>
+</ul>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">Keystore</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.dataprotect.Keystore$<init>(kotlin.String, kotlin.Boolean, mozilla.components.lib.dataprotect.KeyStoreWrapper)/label">label</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.dataprotect.Keystore$<init>(kotlin.String, kotlin.Boolean, mozilla.components.lib.dataprotect.KeyStoreWrapper)/manual">manual</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">, </span><span class="identifier" id="mozilla.components.lib.dataprotect.Keystore$<init>(kotlin.String, kotlin.Boolean, mozilla.components.lib.dataprotect.KeyStoreWrapper)/wrapper">wrapper</span><span class="symbol">:</span>&nbsp;<a href="../-key-store-wrapper/index.html"><span class="identifier">KeyStoreWrapper</span></a>&nbsp;<span class="symbol">=</span>&nbsp;KeyStoreWrapper()<span class="symbol">)</span></code>
+<p>Creates a new instance around a key identified by the given label</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="label.html">label</a></p>
+</td>
+<td>
+<code><span class="keyword">val </span><span class="identifier">label</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>The label the cryptographic key is identified as</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="available.html">available</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">available</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Determines if the managed key is available for use.  Consumers can use this to
+determine if the key was somehow lost and should treat any previously-protected
+data as invalid.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="create-decrypt-cipher.html">createDecryptCipher</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">createDecryptCipher</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.dataprotect.Keystore$createDecryptCipher(kotlin.ByteArray)/iv">iv</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html"><span class="identifier">ByteArray</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/javax/crypto/Cipher.html"><span class="identifier">Cipher</span></a></code>
+<p>Create a cipher initialized for decrypting data with the managed key.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="create-encrypt-cipher.html">createEncryptCipher</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">createEncryptCipher</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://developer.android.com/reference/javax/crypto/Cipher.html"><span class="identifier">Cipher</span></a></code>
+<p>Create a cipher initialized for encrypting data with the managed key.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="decrypt-bytes.html">decryptBytes</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">decryptBytes</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.dataprotect.Keystore$decryptBytes(kotlin.ByteArray)/encrypted">encrypted</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html"><span class="identifier">ByteArray</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html"><span class="identifier">ByteArray</span></a></code>
+<p>Decrypts data using the managed key.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="delete-key.html">deleteKey</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">deleteKey</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Deletes the managed key.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="encrypt-bytes.html">encryptBytes</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">encryptBytes</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.lib.dataprotect.Keystore$encryptBytes(kotlin.ByteArray)/plain">plain</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html"><span class="identifier">ByteArray</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html"><span class="identifier">ByteArray</span></a></code>
+<p>Encrypts data using the managed key.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="generate-key.html">generateKey</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">generateKey</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Generates the managed key if it does not already exist.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
