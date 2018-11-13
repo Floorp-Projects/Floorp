@@ -488,6 +488,11 @@ TryResolvePropertyFromSpecs(JSContext* cx, HandleId id, HandleObject holder,
 static bool
 ShouldResolveStaticProperties(JSProtoKey key)
 {
+    if (!IsJSXraySupported(key)) {
+        // If we can't Xray this ES class, then we can't resolve statics on it.
+        return false;
+    }
+
     // Don't try to resolve static properties on RegExp, because they
     // have issues.  In particular, some of them grab state off the
     // global of the RegExp constructor that describes the last regexp
