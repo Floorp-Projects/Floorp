@@ -193,19 +193,17 @@ set_config('MOZ_WIDGET_TOOLKIT', toolkit)
 add_old_configure_assignment('MOZ_WIDGET_TOOLKIT', toolkit)
 
 @depends(toolkit)
-def toolkit_gtk(toolkit):
-    if toolkit == 'gtk3':
-        return '3'
-
-set_define('MOZ_WIDGET_GTK', toolkit_gtk)
-
-@depends(toolkit)
 def toolkit_define(toolkit):
-    if toolkit not in ('gtk3', 'windows'):
+    if toolkit == 'gtk3':
+        toolkit = 'gtk'
+    if toolkit != 'windows':
         return 'MOZ_WIDGET_%s' % toolkit.upper()
 
 set_define(toolkit_define, True)
 
+@depends(toolkit)
+def toolkit_gtk(toolkit):
+    return toolkit == 'gtk3'
 
 set_config('MOZ_X11', True, when=toolkit_gtk)
 set_define('MOZ_X11', True, when=toolkit_gtk)
