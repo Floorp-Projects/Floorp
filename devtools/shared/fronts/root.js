@@ -9,6 +9,7 @@ const protocol = require("devtools/shared/protocol");
 const {custom} = protocol;
 
 loader.lazyRequireGetter(this, "getFront", "devtools/shared/protocol", true);
+loader.lazyRequireGetter(this, "ContentProcessTargetFront", "devtools/shared/fronts/targets/content-process", true);
 
 const RootFront = protocol.FrontClassWithSpec(rootSpec, {
   initialize: function(client, form) {
@@ -189,6 +190,15 @@ const RootFront = protocol.FrontClassWithSpec(rootSpec, {
   }, {
     impl: "_getTab",
   }),
+
+  attachContentProcessTarget: async function(form) {
+    let front = this.actor(form.actor);
+    if (!front) {
+      front = new ContentProcessTargetFront(this._client, form);
+      this.manage(front);
+    }
+    return front;
+  },
 
   /**
    * Test request that returns the object passed as first argument.
