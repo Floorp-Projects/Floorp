@@ -86,7 +86,7 @@
     const states = [];
     pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
 
-    return pc.createOffer({ offerToReceiveVideo: true })
+    return generateVideoReceiveOnlyOffer(pc)
     .then(offer =>
       pc.setRemoteDescription(offer)
       .then(() => pc.createAnswer())
@@ -119,7 +119,7 @@
     const states = [];
     pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
 
-    return pc.createOffer({ offerToReceiveVideo: true })
+    return generateVideoReceiveOnlyOffer(pc)
     .then(offer =>
       pc.setRemoteDescription(offer)
       .then(() => pc.createAnswer())
@@ -141,7 +141,7 @@
     const states = [];
     pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
 
-    return pc.createOffer({ offerToReceiveVideo: true })
+    return generateVideoReceiveOnlyOffer(pc)
     .then(offer =>
       pc.setRemoteDescription(offer)
       .then(() => pc.createAnswer())

@@ -39,7 +39,7 @@
 
     t.add_cleanup(() => pc.close());
 
-    return pc.createOffer({ offerToReceiveVideo: true })
+    return generateVideoReceiveOnlyOffer(pc)
     .then(offer => pc.setRemoteDescription(offer))
     .then(() => pc.createAnswer())
     .then(answer => {
