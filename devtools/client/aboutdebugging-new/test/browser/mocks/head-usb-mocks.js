@@ -40,7 +40,12 @@ class UsbMocks {
 
     // Add a client for THIS_FIREFOX, since about:debugging will start on the This Firefox
     // page.
-    this._clients[RUNTIMES.THIS_FIREFOX] = createThisFirefoxClientMock();
+    this._thisFirefoxClient = createThisFirefoxClientMock();
+    this._clients[RUNTIMES.THIS_FIREFOX] = this._thisFirefoxClient;
+  }
+
+  get thisFirefoxClient() {
+    return this._thisFirefoxClient;
   }
 
   enableMocks() {
