@@ -18,11 +18,23 @@ const DEFAULT_PREFERENCES = {
 
 // Creates a simple mock ClientWrapper.
 function createClientMock() {
+  const EventEmitter = require("devtools/shared/event-emitter");
+  const eventEmitter = {};
+  EventEmitter.decorate(eventEmitter);
+
   return {
-    // no-op
-    addOneTimeListener: () => {},
-    // no-op
-    addListener: () => {},
+    // add a reference to the internal event emitter so that consumers can fire client
+    // events.
+    _eventEmitter: eventEmitter,
+    addOneTimeListener: (evt, listener) => {
+      eventEmitter.once(evt, listener);
+    },
+    addListener: (evt, listener) => {
+      eventEmitter.on(evt, listener);
+    },
+    removeListener: (evt, listener) => {
+      eventEmitter.off(evt, listener);
+    },
     // no-op
     close: () => {},
     // no-op
@@ -46,8 +58,6 @@ function createClientMock() {
       serviceWorkers: [],
       sharedWorkers: [],
     }),
-    // no-op
-    removeListener: () => {},
     // no-op
     setPreference: () => {},
   };
