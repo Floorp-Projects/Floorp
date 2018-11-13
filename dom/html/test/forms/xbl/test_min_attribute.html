@@ -1,0 +1,473 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=635553
+-->
+<head>
+  <title>Test for Bug 635553</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=635499">Mozilla Bug 635499</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 635553 **/
+
+var data = [
+  { type: 'hidden', apply: false },
+  { type: 'text', apply: false },
+  { type: 'search', apply: false },
+  { type: 'tel', apply: false },
+  { type: 'url', apply: false },
+  { type: 'email', apply: false },
+  { type: 'password', apply: false },
+  { type: 'date', apply: true },
+  { type: 'month', apply: true },
+  { type: 'week', apply: true },
+  { type: 'time', apply: true },
+  { type: 'datetime-local', apply: true },
+  { type: 'number', apply: true },
+  { type: 'range', apply: true },
+  { type: 'color', apply: false },
+  { type: 'checkbox', apply: false },
+  { type: 'radio', apply: false },
+  { type: 'file', apply: false },
+  { type: 'submit', apply: false },
+  { type: 'image', apply: false },
+  { type: 'reset', apply: false },
+  { type: 'button', apply: false },
+];
+
+var input = document.createElement("input");
+document.getElementById('content').appendChild(input);
+
+/**
+ * @aValidity - boolean indicating whether the element is expected to be valid
+ *   (aElement.validity.valid is true) or not. The value passed is ignored and
+ *   overridden with true if aApply is false.
+ * @aApply - boolean indicating whether the min/max attributes apply to this
+ *   element type.
+ * @aRangeApply - A boolean that's set to true if the current input type is a
+ *   "[candidate] for constraint validation" and it "[has] range limitations"
+ *   per http://www.whatwg.org/specs/web-apps/current-work/multipage/selectors.html#selector-in-range
+ *   (in other words, one of the pseudo classes :in-range and :out-of-range
+ *   should apply (which, depends on aValidity)).
+ *   Else (neither :in-range or :out-of-range should match) set to false.
+ */
+function checkValidity(aElement, aValidity, aApply, aRangeApply)
+{
+  aValidity = aApply ? aValidity : true;
+
+  is(aElement.validity.valid, aValidity,
+     "element validity should be " + aValidity);
+  is(aElement.validity.rangeUnderflow, !aValidity,
+     "element underflow status should be " + !aValidity);
+  var underflowMsg =
+        (aElement.type == "date" || aElement.type == "time" ||
+         aElement.type == "month" || aElement.type == "week" ||
+         aElement.type == "datetime-local") ?
+        ("Please select a value that is no earlier than " + aElement.min + ".") :
+        ("Please select a value that is no less than " + aElement.min + ".");
+  is(aElement.validationMessage,
+     aValidity ? "" : underflowMsg, "Checking range underflow validation message");
+
+  is(aElement.matches(":valid"), aElement.willValidate && aValidity,
+     (aElement.willValidate && aValidity) ? ":valid should apply" : "valid shouldn't apply");
+  is(aElement.matches(":invalid"), aElement.willValidate && !aValidity,
+     (aElement.wil && aValidity) ? ":invalid shouldn't apply" : "valid should apply");
+
+  if (!aRangeApply) {
+    ok(!aElement.matches(":in-range"), ":in-range should not match");
+    ok(!aElement.matches(":out-of-range"),
+       ":out-of-range should not match");
+  } else {
+    is(aElement.matches(":in-range"), aValidity,
+       ":in-range matches status should be " + aValidity);
+    is(aElement.matches(":out-of-range"), !aValidity,
+       ":out-of-range matches status should be " + !aValidity);
+  }
+}
+
+for (var test of data) {
+  input.type = test.type;
+  var apply = test.apply;
+
+  if (test.todo) {
+    todo_is(input.type, test.type, test.type + " isn't implemented yet");
+    continue;
+  }
+
+  // The element should be valid. Range should not apply when @min and @max are
+  // undefined, except if the input type is 'range' (since that type has a
+  // default minimum and maximum).
+  if (input.type == 'range') {
+    checkValidity(input, true, apply, true);
+  } else {
+    checkValidity(input, true, apply, false);
+  }
+
+  switch (input.type) {
+    case 'hidden':
+    case 'text':
+    case 'search':
+    case 'password':
+    case 'url':
+    case 'tel':
+    case 'email':
+    case 'number':
+    case 'checkbox':
+    case 'radio':
+    case 'file':
+    case 'submit':
+    case 'reset':
+    case 'button':
+    case 'image':
+    case 'color':
+      input.min = '999';
+      break;
+    case 'date':
+      input.min = '2012-06-27';
+      break;
+    case 'time':
+      input.min = '20:20';
+      break;
+    case 'range':
+      // range is special, since setting min to 999 will make it invalid since
+      // it's default maximum is 100, its value would be 999, and it would
+      // suffer from overflow.
+      break;
+    case 'month':
+      input.min = '2016-06';
+      break;
+    case 'week':
+      input.min = '2016-W39';
+      break;
+    case 'datetime-local':
+      input.min = '2017-01-01T00:00';
+      break;
+    default:
+      ok(false, 'please, add a case for this new type (' + input.type + ')');
+  }
+
+  // The element should still be valid and range should apply if it can.
+  checkValidity(input, true, apply, apply);
+
+  switch (input.type) {
+    case 'text':
+    case 'hidden':
+    case 'search':
+    case 'password':
+    case 'tel':
+    case 'radio':
+    case 'checkbox':
+    case 'reset':
+    case 'button':
+    case 'submit':
+    case 'image':
+    case 'color':
+      input.value = '0';
+      checkValidity(input, true, apply, apply);
+      break;
+    case 'url':
+      input.value = 'http://mozilla.org';
+      checkValidity(input, true, apply, apply);
+      break;
+    case 'email':
+      input.value = 'foo@bar.com';
+      checkValidity(input, true, apply, apply);
+      break;
+    case 'file':
+      var file = new File([''], '635499_file');
+
+      SpecialPowers.wrap(input).mozSetFileArray([file]);
+      checkValidity(input, true, apply, apply);
+
+      break;
+    case 'date':
+      input.value = '2012-06-28';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2012-06-27';
+      checkValidity(input, true, apply, apply);
+
+      input.value = 'foo';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2012-06-26';
+      checkValidity(input, false, apply, apply);
+
+      input.min = '2012-02-29';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2012-02-28';
+      checkValidity(input, false, apply, apply);
+
+      input.value = '1000-01-01';
+      checkValidity(input, false, apply, apply);
+
+      input.value = '20120-01-01';
+      checkValidity(input, true, apply, apply);
+
+      input.min = '0050-01-01';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '0049-01-01';
+      checkValidity(input, false, apply, apply);
+
+      input.min = '';
+      checkValidity(input, true, apply, false);
+
+      input.min = 'foo';
+      checkValidity(input, true, apply, false);
+      break;
+    case 'number':
+      input.min = '0';
+      input.value = '1';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '0';
+      checkValidity(input, true, apply, apply);
+
+      input.value = 'foo';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '-1';
+      checkValidity(input, false, apply, apply);
+
+      input.min = '-1';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '-42';
+      checkValidity(input, false, apply, apply);
+
+      input.min = '';
+      checkValidity(input, true, apply, false);
+
+      input.min = 'foo';
+      checkValidity(input, true, apply, false);
+
+      // Check that we correctly convert input.min to a double in
+      // validationMessage.
+      input.min = "4.333333333333333333333333333333333331";
+      input.value = "2";
+      is(input.validationMessage,
+         "Please select a value that is no less than 4.33333333333333.",
+         "validation message");
+      break;
+    case 'range':
+      input.min = '0';
+      input.value = '1';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '0';
+      checkValidity(input, true, apply, apply);
+
+      input.value = 'foo';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '-1';
+      checkValidity(input, true, apply, apply);
+
+      is(input.value, input.min, "the value should have been set to min");
+
+      input.min = '-1';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '-42';
+      checkValidity(input, true, apply, apply);
+
+      is(input.value, input.min, "the value should have been set to min");
+
+      input.min = '';
+      checkValidity(input, true, apply, true);
+
+      input.min = 'foo';
+      checkValidity(input, true, apply, true);
+
+      // We don't check the conversion of input.min to a double in
+      // validationMessage for 'range' since range will always clamp the value
+      // up to at least the minimum (so we will never see the min in a
+      // validationMessage).
+
+      break;
+    case 'time':
+      // Don't worry about that.
+      input.step = 'any';
+
+      input.min = '20:20';
+      input.value = '20:20:01';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '20:20:00';
+      checkValidity(input, true, apply, apply);
+
+      input.value = 'foo';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '10:00';
+      checkValidity(input, false, apply, apply);
+
+      input.min = '20:20:00.001';
+      input.value = '20:20';
+      checkValidity(input, false, apply, apply);
+
+      input.value = '00:00';
+      checkValidity(input, false, apply, apply);
+
+      input.value = '23:59';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '20:20:01';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '20:20:00.01';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '20:20:00.1';
+      checkValidity(input, true, apply, apply);
+
+      input.min = '00:00:00';
+      input.value = '01:00';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '00:00:00.000';
+      checkValidity(input, true, apply, apply);
+
+      input.min = '';
+      checkValidity(input, true, apply, false);
+
+      input.min = 'foo';
+      checkValidity(input, true, apply, false);
+      break;
+    case 'month':
+      input.value = '2016-07';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2016-06';
+      checkValidity(input, true, apply, apply);
+
+      input.value = 'foo';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2016-05';
+      checkValidity(input, false, apply, apply);
+
+      input.min = '2016-01';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2015-12';
+      checkValidity(input, false, apply, apply);
+
+      input.value = '1000-01';
+      checkValidity(input, false, apply, apply);
+
+      input.value = '10000-01';
+      checkValidity(input, true, apply, apply);
+
+      input.min = '0010-01';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '0001-01';
+      checkValidity(input, false, apply, apply);
+
+      input.min = '';
+      checkValidity(input, true, apply, false);
+
+      input.min = 'foo';
+      checkValidity(input, true, apply, false);
+      break;
+    case 'week':
+      input.value = '2016-W40';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2016-W39';
+      checkValidity(input, true, apply, apply);
+
+      input.value = 'foo';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2016-W38';
+      checkValidity(input, false, apply, apply);
+
+      input.min = '2016-W01';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2015-W53';
+      checkValidity(input, false, apply, apply);
+
+      input.value = '1000-W01';
+      checkValidity(input, false, apply, apply);
+
+      input.value = '10000-01';
+      checkValidity(input, true, apply, apply);
+
+      input.min = '0010-W01';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '0001-W01';
+      checkValidity(input, false, apply, apply);
+
+      input.min = '';
+      checkValidity(input, true, apply, false);
+
+      input.min = 'foo';
+      checkValidity(input, true, apply, false);
+      break;
+    case 'datetime-local':
+      input.value = '2017-12-31T23:59';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2017-01-01T00:00';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2017-01-01T00:00:00.123';
+      checkValidity(input, true, apply, apply);
+
+      input.value = 'foo';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2016-12-31T23:59';
+      checkValidity(input, false, apply, apply);
+
+      input.min = '2016-01-01T00:00';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '2015-12-31T23:59';
+      checkValidity(input, false, apply, apply);
+
+      input.value = '1000-01-01T00:00';
+      checkValidity(input, false, apply, apply);
+
+      input.value = '10000-01-01T00:00';
+      checkValidity(input, true, apply, apply);
+
+      input.min = '0010-01-01T12:00';
+      checkValidity(input, true, apply, apply);
+
+      input.value = '0010-01-01T10:00';
+      checkValidity(input, false, apply, apply);
+
+      input.min = '';
+      checkValidity(input, true, apply, false);
+
+      input.min = 'foo';
+      checkValidity(input, true, apply, false);
+      break;
+    default:
+      ok(false, 'write tests for ' + input.type);
+  }
+
+  // Cleaning up,
+  input.removeAttribute('min');
+  input.value = '';
+}
+
+</script>
+</pre>
+</body>
+</html>
