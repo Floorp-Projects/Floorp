@@ -21,9 +21,7 @@ class nsDynamicAtom;
 // This class encompasses both static and dynamic atoms.
 //
 // - In places where static and dynamic atoms can be used, use RefPtr<nsAtom>.
-//   This is by far the most common case. (The exception to this is the HTML5
-//   parser, which does its own weird thing, and uses non-refcounted dynamic
-//   atoms.)
+//   This is by far the most common case.
 //
 // - In places where only static atoms can appear, use nsStaticAtom* to avoid
 //   unnecessary refcounting. This is a moderately common case.
@@ -75,6 +73,13 @@ public:
   //
   uint32_t hash() const { return mHash; }
 
+  // This function returns true if ToLowercaseASCII would return the string
+  // unchanged.
+  bool IsAsciiLowercase() const
+  {
+    return mIsAsciiLowercase;
+  }
+
   // We can't use NS_INLINE_DECL_THREADSAFE_REFCOUNTING because the refcounting
   // of this type is special.
   MozExternalRefCountType AddRef();
@@ -84,16 +89,20 @@ public:
 
 protected:
   // Used by nsStaticAtom.
-  constexpr nsAtom(uint32_t aLength, uint32_t aHash)
+  constexpr nsAtom(uint32_t aLength, uint32_t aHash, bool aIsAsciiLowercase)
     : mLength(aLength)
     , mIsStatic(true)
+    , mIsAsciiLowercase(aIsAsciiLowercase)
     , mHash(aHash)
   {}
 
   // Used by nsDynamicAtom.
-  nsAtom(const nsAString& aString, uint32_t aHash)
+  nsAtom(const nsAString& aString,
+         uint32_t aHash,
+         bool aIsAsciiLowercase)
     : mLength(aString.Length())
     , mIsStatic(false)
+    , mIsAsciiLowercase(aIsAsciiLowercase)
     , mHash(aHash)
   {
   }
@@ -101,8 +110,8 @@ protected:
   ~nsAtom() = default;
 
   const uint32_t mLength:30;
-  // NOTE: There's one free bit here.
   const uint32_t mIsStatic:1;
+  const uint32_t mIsAsciiLowercase:1;
   const uint32_t mHash;
 };
 
@@ -123,8 +132,8 @@ public:
   // Atom.py and assert in nsAtomTable::RegisterStaticAtoms that the two
   // hashes match.
   constexpr nsStaticAtom(uint32_t aLength, uint32_t aHash,
-                         uint32_t aStringOffset)
-    : nsAtom(aLength, aHash)
+                         uint32_t aStringOffset, bool aIsAsciiLowercase)
+    : nsAtom(aLength, aHash, aIsAsciiLowercase)
     , mStringOffset(aStringOffset)
   {}
 
@@ -167,14 +176,10 @@ private:
 
   // These shouldn't be used directly, even by friend classes. The
   // Create()/Destroy() methods use them.
-  static nsDynamicAtom* CreateInner(const nsAString& aString, uint32_t aHash);
-  nsDynamicAtom(const nsAString& aString, uint32_t aHash);
+  nsDynamicAtom(const nsAString& aString, uint32_t aHash, bool aIsAsciiLowercase);
   ~nsDynamicAtom() {}
 
-  // Creation/destruction is done by friend classes. The first Create() is for
-  // dynamic normal atoms, the second is for dynamic HTML5 atoms.
   static nsDynamicAtom* Create(const nsAString& aString, uint32_t aHash);
-  static nsDynamicAtom* Create(const nsAString& aString);
   static void Destroy(nsDynamicAtom* aAtom);
 
   mozilla::ThreadSafeAutoRefCnt mRefCnt;
