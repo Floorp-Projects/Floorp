@@ -898,10 +898,9 @@ class FontInspector {
 
     let allFonts = [];
     let fonts = [];
-    let otherFonts = [];
 
     if (!this.isSelectedNodeValid()) {
-      this.store.dispatch(updateFonts(fonts, otherFonts, allFonts));
+      this.store.dispatch(updateFonts(fonts, allFonts));
       return;
     }
 
@@ -922,15 +921,11 @@ class FontInspector {
     const node = this.inspector.selection.nodeFront;
     fonts = await this.getFontsForNode(node, options);
     allFonts = await this.getAllFonts(options);
-    // Get the subset of fonts from the page which are not used on the selected node.
-    otherFonts = allFonts.filter(font => {
-      return !fonts.some(nodeFont => nodeFont.name === font.name);
-    });
 
-    if (!fonts.length && !otherFonts.length) {
+    if (!fonts.length) {
       // No fonts to display. Clear the previously shown fonts.
       if (this.store) {
-        this.store.dispatch(updateFonts(fonts, otherFonts, allFonts));
+        this.store.dispatch(updateFonts(fonts, allFonts));
       }
       return;
     }
@@ -944,7 +939,7 @@ class FontInspector {
       return;
     }
 
-    this.store.dispatch(updateFonts(fonts, otherFonts, allFonts));
+    this.store.dispatch(updateFonts(fonts, allFonts));
 
     this.inspector.emit("fontinspector-updated");
   }

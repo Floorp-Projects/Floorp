@@ -13,14 +13,12 @@ const INITIAL_FONT_DATA = {
   allFonts: [],
   // Fonts used on the selected element.
   fonts: [],
-  // Fonts on the current page not used on the selected element.
-  otherFonts: [],
 };
 
 const reducers = {
 
-  [UPDATE_FONTS](_, { fonts, otherFonts, allFonts }) {
-    return { fonts, otherFonts, allFonts };
+  [UPDATE_FONTS](_, { fonts, allFonts }) {
+    return { fonts, allFonts };
   },
 
 };
