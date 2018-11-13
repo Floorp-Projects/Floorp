@@ -508,13 +508,9 @@ FormAutofillParent.prototype = {
         return;
       }
 
-      const card = new CreditCard({
-        number: creditCard.record["cc-number"] || creditCard.record["cc-number-decrypted"],
-        encryptedNumber: creditCard.record["cc-number-encrypted"],
-        name: creditCard.record["cc-name"],
-        network: creditCard.record["cc-type"],
-      });
-      const description = await card.getLabel();
+      let number = creditCard.record["cc-number"] || creditCard.record["cc-number-decrypted"];
+      let name = creditCard.record["cc-name"];
+      const description = await CreditCard.getLabel({name, number});
       const state = await FormAutofillDoorhanger.show(target,
                                                       creditCard.guid ? "updateCreditCard" : "addCreditCard",
                                                       description);

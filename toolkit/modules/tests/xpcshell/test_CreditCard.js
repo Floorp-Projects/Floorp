@@ -160,23 +160,28 @@ add_task(function test_longMaskedNumber() {
   testMask("5415425865751454", "************1454");
   testMask("344060747836806", "***********6806");
   testMask("6799990100000000019", "***************0019");
-
   Assert.throws(() => (new CreditCard({number: "1234"})).longMaskedNumber,
     /Invalid credit card number/,
-    "Four or less numbers should throw when retrieving the maskedNumber");
+    "Four or less numbers should throw when retrieving the longMaskedNumber");
 });
 
 add_task(function test_isValid() {
   function testValid(number, expirationMonth, expirationYear, shouldPass, message) {
-    let card = new CreditCard({
-      number,
-      expirationMonth,
-      expirationYear,
-    });
+    let isValid = false;
+    try {
+      let card = new CreditCard({
+        number,
+        expirationMonth,
+        expirationYear,
+      });
+      isValid = card.isValid();
+    } catch (ex) {
+      isValid = false;
+    }
     if (shouldPass) {
-      ok(card.isValid(), message);
+      ok(isValid, message);
     } else {
-      ok(!card.isValid(), message);
+      ok(!isValid, message);
     }
   }
   let year = (new Date()).getFullYear();
@@ -211,8 +216,6 @@ add_task(function test_normalize() {
     "Spaces and hyphens should be removed from card number after it is normalized");
   Assert.equal((new CreditCard({number: "0000000000000000"})).number, "0000000000000000",
     "Normalized numbers should not get changed");
-  Assert.equal((new CreditCard({number: "0000"})).number, null,
-    "Card numbers that are too short get set to null");
 
   let card = new CreditCard({number: "0000000000000000"});
   card.expirationYear = "22";
@@ -274,31 +277,16 @@ add_task(async function test_label() {
   let testCases = [{
       number: "0000000000000000",
       name: "Rudy Badoody",
-      expectedLabel: "0000000000000000, Rudy Badoody",
       expectedMaskedLabel: "**** 0000, Rudy Badoody",
     }, {
       number: "3589993783099582",
       name: "Jimmy Babimmy",
-      expectedLabel: "3589993783099582, Jimmy Babimmy",
       expectedMaskedLabel: "**** 9582, Jimmy Babimmy",
-    }, {
-      number: "************9582",
-      name: "Jimmy Babimmy",
-      expectedLabel: "**** 9582, Jimmy Babimmy",
-      expectedMaskedLabel: "**** 9582, Jimmy Babimmy",
-    }, {
-      name: "Ricky Bobby",
-      expectedLabel: "Ricky Bobby",
-      expectedMaskedLabel: "Ricky Bobby",
-  }];
+    }];
 
   for (let testCase of testCases) {
     let {number, name} = testCase;
-    let card = new CreditCard({number, name});
-
-    Assert.equal(await card.getLabel({showNumbers: true}), testCase.expectedLabel,
-       "The expectedLabel should be shown when showNumbers is true");
-    Assert.equal(await card.getLabel({showNumbers: false}), testCase.expectedMaskedLabel,
+    Assert.equal(await CreditCard.getLabel({number, name}), testCase.expectedMaskedLabel,
        "The expectedMaskedLabel should be shown when showNumbers is false");
   }
 });

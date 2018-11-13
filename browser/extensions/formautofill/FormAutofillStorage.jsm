@@ -1644,7 +1644,14 @@ class CreditCards extends AutofillRecords {
     if (!("cc-number-encrypted" in creditCard)) {
       if ("cc-number" in creditCard) {
         let ccNumber = creditCard["cc-number"];
-        creditCard["cc-number"] = CreditCard.getLongMaskedNumber(ccNumber);
+        if (CreditCard.isValidNumber(ccNumber)) {
+          creditCard["cc-number"] = CreditCard.getLongMaskedNumber(ccNumber);
+        } else {
+          // Credit card numbers can be entered on versions of Firefox that don't validate
+          // the number and then synced to this version of Firefox. Therefore, mask the
+          // full number if the number is invalid on this version.
+          creditCard["cc-number"] = "*".repeat(ccNumber.length);
+        }
         creditCard["cc-number-encrypted"] = await OSKeyStore.encrypt(ccNumber);
       } else {
         creditCard["cc-number-encrypted"] = "";
@@ -1737,28 +1744,30 @@ class CreditCards extends AutofillRecords {
   }
 
   _normalizeCCNumber(creditCard) {
-    if (creditCard["cc-number"]) {
-      let card = new CreditCard({number: creditCard["cc-number"]});
-      creditCard["cc-number"] = card.number;
-      if (!card.isValidNumber()) {
-        delete creditCard["cc-number"];
-      }
+    if (!("cc-number" in creditCard)) {
+      return;
     }
+    if (!CreditCard.isValidNumber(creditCard["cc-number"])) {
+      delete creditCard["cc-number"];
+      return;
+    }
+    let card = new CreditCard({number: creditCard["cc-number"]});
+    creditCard["cc-number"] = card.number;
   }
 
   _normalizeCCExpirationDate(creditCard) {
-    let card = new CreditCard({
+    let normalizedExpiration = CreditCard.normalizeExpiration({
       expirationMonth: creditCard["cc-exp-month"],
       expirationYear: creditCard["cc-exp-year"],
       expirationString: creditCard["cc-exp"],
     });
-    if (card.expirationMonth) {
-      creditCard["cc-exp-month"] = card.expirationMonth;
+    if (normalizedExpiration.month) {
+      creditCard["cc-exp-month"] = normalizedExpiration.month;
     } else {
       delete creditCard["cc-exp-month"];
     }
-    if (card.expirationYear) {
-      creditCard["cc-exp-year"] = card.expirationYear;
+    if (normalizedExpiration.year) {
+      creditCard["cc-exp-year"] = normalizedExpiration.year;
     } else {
       delete creditCard["cc-exp-year"];
     }
@@ -1840,6 +1849,11 @@ class CreditCards extends AutofillRecords {
    */
   async mergeIfPossible(guid, creditCard) {
     this.log.debug("mergeIfPossible:", guid, creditCard);
+
+    // Credit card number is required since it also must match.
+    if (!creditCard["cc-number"]) {
+      return false;
+    }
 
     // Query raw data for comparing the decrypted credit card number
     let creditCardFound = await this.get(guid, {rawData: true});
