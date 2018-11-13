@@ -12,9 +12,12 @@ findbar-previous =
 findbar-find-button-close =
     .tooltiptext = Close find bar
 
-findbar-highlight-all =
+findbar-highlight-all2 =
     .label = Highlight All
-    .accesskey = l
+    .accesskey = { PLATFORM() ->
+        [macos] l
+       *[other] a
+    }
     .tooltiptext = Highlight all occurrences of the phrase
 
 findbar-case-sensitive =
