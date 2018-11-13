@@ -67,6 +67,18 @@ export default class CscInput extends ObservedPropertiesMixin(HTMLElement) {
   }
 
   render() {
+    if (this.defaultValue) {
+      let oldDefaultValue = this._input.defaultValue;
+      this._input.defaultValue = this.defaultValue;
+      if (this._input.defaultValue != oldDefaultValue) {
+        // Setting defaultValue will place a value in the field
+        // but doesn't trigger a 'change' event, which is needed
+        // to update the Pay button state on the summary page.
+        this._input.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    } else {
+      this._input.defaultValue = "";
+    }
     if (this.value) {
       // Setting the value will trigger form validation
       // so only set the value if one has been provided.
