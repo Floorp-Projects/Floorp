@@ -29,8 +29,8 @@ rich-select:focus-within > select {
  * in the closed state opens the HTML select dropdown. */
 rich-select > select {
   /* Hide the text from the closed state so that the text/layout from
-     <rich-option> won't overlap it. */
-  color: transparent;
+     <rich-option> won't overlap it. The !important matches common.css. */
+  color: transparent !important;
   position: absolute;
   top: 0;
   left: 0;
