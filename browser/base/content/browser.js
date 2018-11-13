@@ -304,7 +304,7 @@ Object.defineProperty(this, "gHighPriorityNotificationBox", {
     let notificationbox = new MozElements.NotificationBox(element => {
       element.classList.add("global-notificationbox");
       element.setAttribute("notificationside", "top");
-      document.getElementById("appcontent").append(element);
+      document.getElementById("appcontent").prepend(element);
     });
 
     return this.gHighPriorityNotificationBox = notificationbox;
