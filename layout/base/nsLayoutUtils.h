@@ -1422,8 +1422,7 @@ public:
    * Is FirstContinuationOrIBSplitSibling(aFrame) going to return
    * aFrame?
    */
-  static bool
-  IsFirstContinuationOrIBSplitSibling(nsIFrame *aFrame);
+  static bool IsFirstContinuationOrIBSplitSibling(const nsIFrame *aFrame);
 
   /**
    * Check whether aFrame is a part of the scrollbar or scrollcorner of
