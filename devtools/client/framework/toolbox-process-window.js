@@ -93,7 +93,7 @@ var connect = async function() {
     const addonTargetActor = addons.filter(addon => addon.id === addonID).pop();
     await openToolbox({form: addonTargetActor, chrome: true});
   } else {
-    const response = await gClient.mainRoot.getProcess(0);
+    const response = await gClient.mainRoot.getMainProcess();
     await openToolbox({form: response.form, chrome: true});
   }
 };

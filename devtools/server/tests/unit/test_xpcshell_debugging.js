@@ -25,8 +25,8 @@ add_task(async function() {
   const desc = await deviceFront.getDescription();
   equal(desc.geckobuildid, Services.appinfo.platformBuildID, "device actor works");
 
-  // Even though we have no tabs, getProcess gives us the chromeDebugger.
-  const response = await client.mainRoot.getProcess(0);
+  // Even though we have no tabs, getMainProcess gives us the chromeDebugger.
+  const response = await client.mainRoot.getMainProcess();
 
   const { chromeDebugger } = response.form;
   const [, threadClient] = await client.attachThread(chromeDebugger);
