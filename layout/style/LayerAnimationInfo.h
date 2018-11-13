@@ -16,17 +16,6 @@
 namespace mozilla {
 
 struct LayerAnimationInfo {
-#ifdef DEBUG
-  static void Initialize();
-#endif
-  // For CSS properties that may be animated on a separate layer, represents
-  // a record of the corresponding layer type and change hint.
-  struct Record {
-    nsCSSPropertyID mProperty;
-    DisplayItemType mDisplayItemType;
-    nsChangeHint mChangeHint;
-  };
-
   // Returns the corresponding display item type for |aProperty| when it is
   // animated on the compositor.
   // Returns DisplayItemType::TYPE_ZERO if |aProperty| cannot be animated on the
@@ -89,10 +78,6 @@ struct LayerAnimationInfo {
   static const Array<DisplayItemType,
                      nsCSSPropertyIDSet::CompositorAnimatableCount()>
     sDisplayItemTypes;
-
-  static const size_t kRecords =
-    nsCSSPropertyIDSet::CompositorAnimatableCount();
-  static const Record sRecords[kRecords];
 };
 
 } // namespace mozilla
