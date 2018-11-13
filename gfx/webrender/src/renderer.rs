@@ -4555,6 +4555,8 @@ pub trait SceneBuilderHooks {
     /// This is called exactly once, when the scene builder thread is started
     /// and before it processes anything.
     fn register(&self);
+    /// This is called before each scene build starts.
+    fn pre_scene_build(&self);
     /// This is called before each scene swap occurs.
     fn pre_scene_swap(&self, scenebuild_time: u64);
     /// This is called after each scene swap occurs. The PipelineInfo contains
@@ -4565,6 +4567,11 @@ pub trait SceneBuilderHooks {
     /// thread, in the case where resource updates were applied without a scene
     /// build.
     fn post_resource_update(&self);
+    /// This is called after a scene build completes without any changes being
+    /// made. We guarantee that each pre_scene_build call will be matched with
+    /// exactly one of post_scene_swap, post_resource_update or
+    /// post_empty_scene_build.
+    fn post_empty_scene_build(&self);
     /// This is a generic callback which provides an opportunity to run code
     /// on the scene builder thread. This is called as part of the main message
     /// loop of the scene builder thread, but outside of any specific message

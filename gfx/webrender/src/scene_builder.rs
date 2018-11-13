@@ -382,6 +382,9 @@ impl SceneBuilder {
 
     /// Do the bulk of the work of the scene builder thread.
     fn process_transaction(&mut self, txn: &mut Transaction) -> Box<BuiltTransaction> {
+        if let &Some(ref hooks) = &self.hooks {
+            hooks.pre_scene_build();
+        }
 
         let scene_build_start_time = precise_time_ns();
 
@@ -536,6 +539,10 @@ impl SceneBuilder {
         } else if has_resources_updates {
             if let &Some(ref hooks) = &self.hooks {
                 hooks.post_resource_update();
+            }
+        } else {
+            if let &Some(ref hooks) = &self.hooks {
+                hooks.post_empty_scene_build();
             }
         }
     }
