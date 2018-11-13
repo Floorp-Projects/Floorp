@@ -44,6 +44,49 @@ namespace IPC {
       return false;
     }
   };
+
+  template<>
+  struct ParamTraits<mozilla::AudioInfo>
+  {
+    typedef mozilla::AudioInfo paramType;
+
+    static void Write(Message* aMsg, const paramType& aParam)
+    {
+      // TrackInfo
+      WriteParam(aMsg, aParam.mMimeType);
+
+      // AudioInfo
+      WriteParam(aMsg, aParam.mRate);
+      WriteParam(aMsg, aParam.mChannels);
+      WriteParam(aMsg, aParam.mChannelMap);
+      WriteParam(aMsg, aParam.mBitDepth);
+      WriteParam(aMsg, aParam.mProfile);
+      WriteParam(aMsg, aParam.mExtendedProfile);
+    }
+
+    static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+    {
+      if (ReadParam(aMsg, aIter, &aResult->mMimeType) &&
+          ReadParam(aMsg, aIter, &aResult->mRate) &&
+          ReadParam(aMsg, aIter, &aResult->mChannels) &&
+          ReadParam(aMsg, aIter, &aResult->mChannelMap) &&
+          ReadParam(aMsg, aIter, &aResult->mBitDepth) &&
+          ReadParam(aMsg, aIter, &aResult->mProfile) &&
+          ReadParam(aMsg, aIter, &aResult->mExtendedProfile)) {
+        return true;
+      }
+      return false;
+    }
+  };
+
+  template<>
+  struct ParamTraits<mozilla::MediaDataDecoder::ConversionRequired>
+    : public ContiguousEnumSerializerInclusive<
+        mozilla::MediaDataDecoder::ConversionRequired,
+        mozilla::MediaDataDecoder::ConversionRequired(0),
+        mozilla::MediaDataDecoder::ConversionRequired(
+          mozilla::MediaDataDecoder::ConversionRequired::kNeedAnnexB)> {};
+
 } // namespace IPC
 
 #endif // mozilla_dom_media_MediaIPCUtils_h
