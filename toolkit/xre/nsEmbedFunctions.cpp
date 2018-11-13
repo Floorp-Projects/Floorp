@@ -59,6 +59,7 @@
 
 #include "mozilla/AbstractThread.h"
 #include "mozilla/FilePreferences.h"
+#include "mozilla/RDDProcessImpl.h"
 
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
@@ -625,7 +626,8 @@ XRE_InitChildProcess(int aArgc,
   MOZ_ASSERT(!*end, "invalid parent PID");
 
   nsCOMPtr<nsIFile> crashReportTmpDir;
-  if (XRE_GetProcessType() == GeckoProcessType_GPU) {
+  if (XRE_GetProcessType() == GeckoProcessType_GPU ||
+      XRE_GetProcessType() == GeckoProcessType_RDD) {
     aArgc--;
     if (strlen(aArgv[aArgc])) { // if it's empty, ignore it
       nsresult rv = XRE_GetFileFromPath(aArgv[aArgc], getter_AddRefs(crashReportTmpDir));
@@ -676,6 +678,7 @@ XRE_InitChildProcess(int aArgc,
   case GeckoProcessType_Content:
   case GeckoProcessType_GPU:
   case GeckoProcessType_VR:
+  case GeckoProcessType_RDD:
       // Content processes need the XPCOM/chromium frankenventloop
       uiLoopType = MessageLoop::TYPE_MOZILLA_CHILD;
       break;
@@ -745,6 +748,10 @@ XRE_InitChildProcess(int aArgc,
 
       case GeckoProcessType_VR:
         process = new gfx::VRProcessChild(parentPID);
+        break;
+
+      case GeckoProcessType_RDD:
+        process = new RDDProcessImpl(parentPID);
         break;
 
       default:
