@@ -228,6 +228,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["NTDDI_VERSION"] = "0x0A000000"
     DEFINES["PSAPI_VERSION"] = "1"
     DEFINES["UNICODE"] = True
+    DEFINES["WEBRTC_NS_FLOAT"] = True
     DEFINES["WEBRTC_WIN"] = True
     DEFINES["WIN32"] = True
     DEFINES["WIN32_LEAN_AND_MEAN"] = True
@@ -266,10 +267,6 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_HAS_NEON"] = True
     DEFINES["WEBRTC_NS_FIXED"] = True
 
-if CONFIG["CPU_ARCH"] == "x86":
-
-    DEFINES["WEBRTC_NS_FLOAT"] = True
-
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
@@ -300,6 +297,8 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
         "-msse2"
     ]
 
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["WEBRTC_NS_FLOAT"] = True
@@ -309,6 +308,8 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
     CXXFLAGS += [
         "-msse2"
     ]
+
+    DEFINES["WEBRTC_NS_FLOAT"] = True
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "FreeBSD":
 
@@ -320,6 +321,8 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
         "-msse2"
     ]
 
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "NetBSD":
 
     DEFINES["WEBRTC_NS_FLOAT"] = True
@@ -329,6 +332,8 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "OpenBSD":
     CXXFLAGS += [
         "-msse2"
     ]
+
+    DEFINES["WEBRTC_NS_FLOAT"] = True
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "OpenBSD":
 
