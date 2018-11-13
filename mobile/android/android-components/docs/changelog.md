@@ -4,7 +4,7 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.32.0-SNAPSHOT (In Devvelopment)
+# 0.32.0-SNAPSHOT (In Development)
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.31.0...v0.32.0),
 [Milestone](https://github.com/mozilla-mobile/android-components/milestone/34?closed=1),
@@ -14,6 +14,9 @@ permalink: /changelog/
   * Android (SDK: 27, Support Libraries: 27.1.1)
   * Kotlin (Stdlib: 1.3.0, Coroutines: 1.0.1)
   * GeckoView (Nightly: 65.0.20181107100135, Beta: 64.0.20181022150107, Release: 63.0.20181018182531)
+
+* **lib-crash**
+  * The state of the "Send crash report" checkbox is now getting saved and restored once the dialog is shown again. 
 
 # 0.31.0
 
