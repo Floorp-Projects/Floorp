@@ -1210,6 +1210,12 @@ public:
                                             size_t* aMaxBufferSize,
                                             size_t* aUsedBufferSize);
 
+  // Returns true if the URI's host is contained in a pref list which is a comma
+  // separated domain list.  Each item may start with "*.".  If starts with
+  // "*.", it matches any sub-domains.
+  static bool
+  IsURIInPrefList(nsIURI* aURI, const char* aPrefName);
+
 private:
   /**
    * Fill (with the parameters given) the localized string named |aKey| in
@@ -2947,6 +2953,9 @@ public:
   // of permissions. Private Browsing is considered to be more limiting
   // then session scoping
   enum class StorageAccess {
+    // The storage should be partitioned. if the caller is unable to do it, deny
+    // the storage access.
+    ePartitionedOrDeny = -1,
     // Don't allow access to the storage
     eDeny = 0,
     // Allow access to the storage, but only if it is secure to do so in a
