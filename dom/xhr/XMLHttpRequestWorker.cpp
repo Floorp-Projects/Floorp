@@ -867,8 +867,7 @@ Proxy::Init()
                   ownerWindow ? ownerWindow->AsGlobal() : nullptr,
                   mWorkerPrivate->GetBaseURI(),
                   mWorkerPrivate->GetLoadGroup(),
-                  mWorkerPrivate->GetPerformanceStorage(),
-                  mWorkerPrivate->CSPEventListener());
+                  mWorkerPrivate->GetPerformanceStorage());
 
   mXHR->SetParameters(mMozAnon, mMozSystem);
   mXHR->SetClientInfoAndController(mClientInfo, mController);

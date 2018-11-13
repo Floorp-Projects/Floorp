@@ -135,10 +135,6 @@ CSPService::ShouldLoad(nsIURI *aContentLocation,
     loadingPrincipal->GetURI(getter_AddRefs(requestOrigin));
   }
 
-  nsCOMPtr<nsICSPEventListener> cspEventListener;
-  nsresult rv = aLoadInfo->GetCspEventListener(getter_AddRefs(cspEventListener));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (MOZ_LOG_TEST(gCspPRLog, LogLevel::Debug)) {
     MOZ_LOG(gCspPRLog, LogLevel::Debug,
            ("CSPService::ShouldLoad called for %s",
@@ -174,6 +170,7 @@ CSPService::ShouldLoad(nsIURI *aContentLocation,
     // if we can't query a principal, then there is nothing to do.
     return NS_OK;
   }
+  nsresult rv = NS_OK;
 
   // 1) Apply speculate CSP for preloads
   bool isPreload = nsContentUtils::IsPreloadType(contentType);
@@ -186,7 +183,6 @@ CSPService::ShouldLoad(nsIURI *aContentLocation,
     if (preloadCsp) {
       // obtain the enforcement decision
       rv = preloadCsp->ShouldLoad(contentType,
-                                  cspEventListener,
                                   aContentLocation,
                                   requestOrigin,
                                   requestContext,
@@ -212,7 +208,6 @@ CSPService::ShouldLoad(nsIURI *aContentLocation,
   if (csp) {
     // obtain the enforcement decision
     rv = csp->ShouldLoad(contentType,
-                         cspEventListener,
                          aContentLocation,
                          requestOrigin,
                          requestContext,
@@ -276,10 +271,6 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
 
   nsCOMPtr<nsILoadInfo> loadInfo = oldChannel->GetLoadInfo();
 
-  nsCOMPtr<nsICSPEventListener> cspEventListener;
-  rv = loadInfo->GetCspEventListener(getter_AddRefs(cspEventListener));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // if no loadInfo on the channel, nothing for us to do
   if (!loadInfo) {
     return NS_OK;
@@ -330,7 +321,6 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
     if (preloadCsp) {
       // Pass  originalURI to indicate the redirect
       preloadCsp->ShouldLoad(policyType,     // load type per nsIContentPolicy (uint32_t)
-                             cspEventListener,
                              newUri,         // nsIURI
                              nullptr,        // nsIURI
                              requestContext, // nsISupports
@@ -356,7 +346,6 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   if (csp) {
     // Pass  originalURI to indicate the redirect
     csp->ShouldLoad(policyType,     // load type per nsIContentPolicy (uint32_t)
-                    cspEventListener,
                     newUri,         // nsIURI
                     nullptr,        // nsIURI
                     requestContext, // nsISupports
