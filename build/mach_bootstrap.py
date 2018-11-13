@@ -277,7 +277,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
         machpath = os.path.join(instance.topsrcdir, 'mach')
         with open(os.devnull, 'wb') as devnull:
-            subprocess.Popen([machpath, 'python',
+            subprocess.Popen([sys.executable, machpath, 'python',
                               '--no-virtualenv',
                               os.path.join(topsrcdir, 'build',
                                            'submit_telemetry_data.py'),
