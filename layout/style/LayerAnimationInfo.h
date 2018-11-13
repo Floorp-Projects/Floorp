@@ -11,6 +11,7 @@
 #include "nsCSSPropertyID.h"
 #include "nsCSSPropertyIDSet.h"
 #include "nsDisplayList.h" // For nsDisplayItem::Type
+#include "mozilla/Array.h"
 
 namespace mozilla {
 
@@ -79,6 +80,15 @@ struct LayerAnimationInfo {
         return nsChangeHint(0);
     }
   }
+
+  // An array of DisplayItemType corresponding to the display item taht we can
+  // animate on the compositor.
+  //
+  // This is used to look up the appropriate change hint in cases when
+  // animations need updating but no other change hint is generated.
+  static const Array<DisplayItemType,
+                     nsCSSPropertyIDSet::CompositorAnimatableCount()>
+    sDisplayItemTypes;
 
   static const size_t kRecords =
     nsCSSPropertyIDSet::CompositorAnimatableCount();

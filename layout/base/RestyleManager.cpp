@@ -1798,11 +1798,9 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
   Maybe<nsCSSPropertyIDSet> effectiveAnimationProperties;
 
   nsChangeHint hint = nsChangeHint(0);
-  for (const LayerAnimationInfo::Record& layerInfo :
-         LayerAnimationInfo::sRecords) {
+  for (auto displayItemType : LayerAnimationInfo::sDisplayItemTypes) {
     Maybe<uint64_t> generation =
-      layers::AnimationInfo::GetGenerationFromFrame(aFrame,
-                                                    layerInfo.mDisplayItemType);
+      layers::AnimationInfo::GetGenerationFromFrame(aFrame, displayItemType);
     if (generation && frameGeneration != *generation) {
       // If we have a transform layer bug don't have any transform style, we
       // probably just removed the transform but haven't destroyed the layer
@@ -1823,7 +1821,7 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
       // Note that we *don't* add nsChangeHint_UpdateTransformLayer since if we
       // did, ApplyRenderingChangeToTree would complain that we're updating a
       // transform layer without a transform.
-      if (layerInfo.mDisplayItemType == DisplayItemType::TYPE_TRANSFORM &&
+      if (displayItemType == DisplayItemType::TYPE_TRANSFORM &&
           !aFrame->StyleDisplay()->HasTransformStyle()) {
         // Add all the hints for a removing a transform if they are not already
         // set for this frame.
@@ -1834,7 +1832,7 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
         }
         continue;
       }
-      hint |= layerInfo.mChangeHint;
+      hint |= LayerAnimationInfo::GetChangeHintFor(displayItemType);
     }
 
     // We consider it's the first paint for the frame if we have an animation
@@ -1856,10 +1854,10 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
           nsLayoutUtils::GetAnimationPropertiesForCompositor(aFrame));
       }
       const nsCSSPropertyIDSet& propertiesForDisplayItem =
-        LayerAnimationInfo::GetCSSPropertiesFor(layerInfo.mDisplayItemType);
+        LayerAnimationInfo::GetCSSPropertiesFor(displayItemType);
       if (effectiveAnimationProperties->Intersects(propertiesForDisplayItem)) {
         hint |=
-          LayerAnimationInfo::GetChangeHintFor(layerInfo.mDisplayItemType);
+          LayerAnimationInfo::GetChangeHintFor(displayItemType);
       }
     }
   }
