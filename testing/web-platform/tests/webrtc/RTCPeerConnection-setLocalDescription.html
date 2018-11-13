@@ -50,14 +50,14 @@
     const states = [];
     pc.addEventListener('signalingstatechange', () => states.push(pc.signalingState));
 
-    return pc.createOffer({ offerToReceiveAudio: true })
+    return generateAudioReceiveOnlyOffer(pc)
     .then(offer1 =>
       pc.setLocalDescription(offer1)
       .then(() => generateAnswer(offer1))
       .then(answer => pc.setRemoteDescription(answer))
       .then(() => {
         pc.createDataChannel('test');
-        return pc.createOffer({ offerToReceiveVideo: true });
+        return generateVideoReceiveOnlyOffer(pc);
       })
       .then(offer2 =>
         pc.setLocalDescription(offer2)
@@ -84,7 +84,7 @@
     .then(() => pc.createAnswer())
     .then(answer =>
       pc.setLocalDescription(answer)
-      .then(() => pc.createOffer({ offerToReceiveVideo: true }))
+      .then(() => generateVideoReceiveOnlyOffer(pc))
       .then(offer =>
         pc.setLocalDescription(offer)
         .then(() => {
