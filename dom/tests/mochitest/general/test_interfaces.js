@@ -473,6 +473,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "HTMLMapElement", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "HTMLMarqueeElement", insecureContext: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "HTMLMediaElement", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "HTMLMenuElement", insecureContext: true},
