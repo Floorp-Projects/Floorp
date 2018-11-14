@@ -30,6 +30,7 @@ static FeatureMap sSupportedFeatures[] = {
   { "microphone", FeaturePolicyUtils::FeaturePolicyValue::eSelf },
   { "midi", FeaturePolicyUtils::FeaturePolicyValue::eSelf },
   { "payment", FeaturePolicyUtils::FeaturePolicyValue::eAll },
+  { "document-domain", FeaturePolicyUtils::FeaturePolicyValue::eAll },
   // TODO: not supported yet!!!
   { "speaker", FeaturePolicyUtils::FeaturePolicyValue::eSelf },
   { "vr", FeaturePolicyUtils::FeaturePolicyValue::eAll },

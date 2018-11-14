@@ -9,6 +9,7 @@
 #include "nsIContentPolicy.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/HTMLAllCollection.h"
+#include "mozilla/dom/FeaturePolicyUtils.h"
 #include "nsCOMPtr.h"
 #include "nsGlobalWindow.h"
 #include "nsString.h"
@@ -1018,6 +1019,12 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain, ErrorResult& rv)
 {
   if (mSandboxFlags & SANDBOXED_DOMAIN) {
     // We're sandboxed; disallow setting domain
+    rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  if (!FeaturePolicyUtils::IsFeatureAllowed(this,
+                                            NS_LITERAL_STRING("document-domain"))) {
     rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
