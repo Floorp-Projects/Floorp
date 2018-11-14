@@ -15,12 +15,14 @@ namespace dom {
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReportingObserver)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReportingObserver)
   tmp->Disconnect();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReports)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ReportingObserver)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReports)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -79,19 +81,82 @@ ReportingObserver::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 ReportingObserver::Observe()
 {
-  // TODO
+  mWindow->RegisterReportingObserver(this, mBuffered);
 }
 
 void
 ReportingObserver::Disconnect()
 {
-  // TODO
+  if (mWindow) {
+    mWindow->UnregisterReportingObserver(this);
+  }
 }
 
 void
 ReportingObserver::TakeRecords(nsTArray<RefPtr<Report>>& aRecords)
 {
-  // TODO
+  mReports.SwapElements(aRecords);
+}
+
+void
+ReportingObserver::MaybeReport(Report* aReport)
+{
+  MOZ_ASSERT(aReport);
+
+  if (!mTypes.IsEmpty()) {
+    nsAutoString type;
+    aReport->GetType(type);
+
+    if (!mTypes.Contains(type)) {
+      return;
+    }
+  }
+
+  bool wasEmpty = mReports.IsEmpty();
+
+  RefPtr<Report> report = aReport->Clone();
+  MOZ_ASSERT(report);
+
+  if (NS_WARN_IF(!mReports.AppendElement(report, fallible))) {
+    return;
+  }
+
+  if (!wasEmpty) {
+    return;
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> window = mWindow;
+
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableFunction(
+      "ReportingObserver::MaybeReport",
+      [window]() {
+        window->NotifyReportingObservers();
+      });
+
+  NS_DispatchToCurrentThread(r);
+}
+
+void
+ReportingObserver::MaybeNotify()
+{
+  if (mReports.IsEmpty()) {
+    return;
+  }
+
+  // Let's take the ownership of the reports.
+  nsTArray<RefPtr<Report>> list;
+  list.SwapElements(mReports);
+
+  Sequence<OwningNonNull<Report>> reports;
+  for (Report* report : list) {
+    if (NS_WARN_IF(!reports.AppendElement(*report, fallible))) {
+      return;
+    }
+  }
+
+  // We should report if this throws exception. But where?
+  mCallback->Call(reports, *this);
 }
 
 } // dom namespace

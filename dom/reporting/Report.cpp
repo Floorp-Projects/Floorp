@@ -34,6 +34,14 @@ Report::Report(nsPIDOMWindowInner* aWindow,
 
 Report::~Report() = default;
 
+already_AddRefed<Report>
+Report::Clone()
+{
+  RefPtr<Report> report =
+    new Report(mWindow, mType, mURL, mBody);
+  return report.forget();
+}
+
 JSObject*
 Report::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {

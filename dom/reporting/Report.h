@@ -29,6 +29,9 @@ public:
          const nsAString& aURL,
          ReportBody* aBody);
 
+  already_AddRefed<Report>
+  Clone();
+
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
