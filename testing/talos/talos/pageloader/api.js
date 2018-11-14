@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
@@ -56,11 +57,10 @@ async function talosStart() {
   // window is opened.  Start by finding or waiting for the default window.
   let defaultWin = Services.wm.getMostRecentWindow("navigator:browser");
   if (!defaultWin) {
-    const BROWSER_XUL = "chrome://browser/content/browser.xul";
     defaultWin = await new Promise(resolve => {
       const listener = {
         onOpenWindow(win) {
-          if (win.docShell.domWindow.location.href == BROWSER_XUL) {
+          if (win.docShell.domWindow.location.href == AppConstants.BROWSER_CHROME_URL) {
             Services.wm.removeListener(listener);
             resolve(win);
           }
