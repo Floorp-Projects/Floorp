@@ -11,7 +11,7 @@ add_task(async function testAllow() {
     params.btnAllow.doCommand();
 
     assertListContents(params, [
-      ["http://test.com", params.allowText],
+      ["http://test.com", params.allowL10nId],
     ]);
 
     apply();
@@ -26,7 +26,7 @@ add_task(async function testBlock() {
     params.btnBlock.doCommand();
 
     assertListContents(params, [
-      ["http://test.com", params.denyText],
+      ["http://test.com", params.denyL10nId],
     ]);
 
     apply();
@@ -41,7 +41,7 @@ add_task(async function testAllowAgain() {
     params.btnAllow.doCommand();
 
     assertListContents(params, [
-      ["http://test.com", params.allowText],
+      ["http://test.com", params.allowL10nId],
     ]);
 
     apply();
@@ -84,7 +84,7 @@ add_task(async function testAllowHTTPSWithPort() {
     params.btnAllow.doCommand();
 
     assertListContents(params, [
-      ["https://test.com:12345", params.allowText],
+      ["https://test.com:12345", params.allowL10nId],
     ]);
 
     apply();
@@ -99,7 +99,7 @@ add_task(async function testBlockHTTPSWithPort() {
     params.btnBlock.doCommand();
 
     assertListContents(params, [
-      ["https://test.com:12345", params.denyText],
+      ["https://test.com:12345", params.denyL10nId],
     ]);
 
     apply();
@@ -114,7 +114,7 @@ add_task(async function testAllowAgainHTTPSWithPort() {
     params.btnAllow.doCommand();
 
     assertListContents(params, [
-      ["https://test.com:12345", params.allowText],
+      ["https://test.com:12345", params.allowL10nId],
     ]);
 
     apply();
@@ -141,7 +141,7 @@ add_task(async function testAllowPort() {
     params.btnAllow.doCommand();
 
     assertListContents(params, [
-      ["http://localhost:12345", params.allowText],
+      ["http://localhost:12345", params.allowL10nId],
     ]);
 
     apply();
@@ -156,7 +156,7 @@ add_task(async function testBlockPort() {
     params.btnBlock.doCommand();
 
     assertListContents(params, [
-      ["http://localhost:12345", params.denyText],
+      ["http://localhost:12345", params.denyL10nId],
     ]);
 
     apply();
@@ -171,7 +171,7 @@ add_task(async function testAllowAgainPort() {
     params.btnAllow.doCommand();
 
     assertListContents(params, [
-      ["http://localhost:12345", params.allowText],
+      ["http://localhost:12345", params.allowL10nId],
     ]);
 
     apply();
@@ -204,9 +204,9 @@ add_task(async function testSort() {
     }
 
     assertListContents(params, [
-      ["http://a", params.allowText],
-      ["http://b", params.allowText],
-      ["http://z", params.allowText],
+      ["http://a", params.allowL10nId],
+      ["http://b", params.allowL10nId],
+      ["http://z", params.allowL10nId],
     ]);
 
     // Sort by site name in descending order.
@@ -214,9 +214,9 @@ add_task(async function testSort() {
                                        params.doc.defaultView);
 
     assertListContents(params, [
-      ["http://z", params.allowText],
-      ["http://b", params.allowText],
-      ["http://a", params.allowText],
+      ["http://z", params.allowL10nId],
+      ["http://b", params.allowL10nId],
+      ["http://a", params.allowL10nId],
     ]);
 
     apply();
@@ -242,7 +242,7 @@ function assertListContents(params, expected) {
     Assert.equal(richlistitem.querySelector(".website-name > label")
                              .getAttribute("value"), expected[i][0]);
     Assert.equal(richlistitem.querySelector(".website-capability-value")
-                             .getAttribute("value"), expected[i][1]);
+                             .getAttribute("data-l10n-id"), expected[i][1]);
   }
 }
 
@@ -272,10 +272,8 @@ async function runTest(test, observances) {
     btnAllow: doc.getElementById("btnAllow"),
     btnBlock: doc.getElementById("btnBlock"),
     btnRemove: doc.getElementById("removePermission"),
-    allowText: win.gPermissionManager._getCapabilityString(
-      Ci.nsIPermissionManager.ALLOW_ACTION),
-    denyText: win.gPermissionManager._getCapabilityString(
-      Ci.nsIPermissionManager.DENY_ACTION),
+    allowL10nId: win.gPermissionManager._getCapabilityL10nId(Ci.nsIPermissionManager.ALLOW_ACTION),
+    denyL10nId: win.gPermissionManager._getCapabilityL10nId(Ci.nsIPermissionManager.DENY_ACTION),
     allow: Ci.nsIPermissionManager.ALLOW_ACTION,
     deny: Ci.nsIPermissionManager.DENY_ACTION,
   };
