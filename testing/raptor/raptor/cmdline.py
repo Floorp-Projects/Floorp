@@ -50,6 +50,8 @@ def create_parser(mach_interface=False):
                  "for benchmark tests this is how many times the benchmark test will be run")
     add_arg('--page-timeout', dest="page_timeout", type=int,
             help="How long to wait (ms) for one page_cycle to complete, before timing out")
+    add_arg('--print-tests', action=_PrintTests,
+            help="Print all available Raptor tests")
     if not mach_interface:
         add_arg('--run-local', dest="run_local", default=False, action="store_true",
                 help="Flag that indicates if raptor is running locally or in production")
@@ -80,3 +82,90 @@ def parse_args(argv=None):
     args = parser.parse_args(argv)
     verify_options(parser, args)
     return args
+
+
+class _StopAction(argparse.Action):
+    def __init__(self, option_strings, dest=argparse.SUPPRESS,
+                 default=argparse.SUPPRESS, help=None):
+        super(_StopAction, self).__init__(
+            option_strings=option_strings,
+            dest=dest,
+            default=default,
+            nargs=0,
+            help=help)
+
+
+class _PrintTests(_StopAction):
+    def __call__(self, parser, namespace, values, option_string=None):
+        from manifestparser import TestManifest
+
+        here = os.path.abspath(os.path.dirname(__file__))
+        raptor_ini = os.path.join(here, 'raptor.ini')
+
+        for _app in ["firefox", "chrome", "geckoview", "chrome-android"]:
+            test_manifest = TestManifest([raptor_ini], strict=False)
+            info = {"app": _app}
+            available_tests = test_manifest.active_tests(exists=False,
+                                                         disabled=False,
+                                                         filters=[self.filter_app],
+                                                         **info)
+            if len(available_tests) == 0:
+                # none for that app, skip to next
+                continue
+
+            # print in readable format
+            if _app == "firefox":
+                title = "\nRaptor Tests Available for %s" % self.get_long_name(_app)
+            else:
+                title = "\nRaptor Tests Available for %s (--app=%s)" \
+                    % (self.get_long_name(_app), _app)
+
+            print(title)
+            print("=" * (len(title) - 1))
+
+            # build the list of tests for this app
+            test_list = {}
+
+            for next_test in available_tests:
+                if next_test.get("name", None) is None:
+                    # no test name, skip it
+                    continue
+
+                suite = os.path.basename(next_test['manifest'])[:-4]
+                if suite not in test_list:
+                    test_list[suite] = {'type': None, 'subtests': []}
+
+                # for page-load tests we want to list every subtest, so we
+                # can see which pages are available in which tp6-* sets
+                if next_test.get("type", None) is not None:
+                    test_list[suite]['type'] = next_test['type']
+                    if next_test['type'] == "pageload":
+                        test_list[suite]['subtests'].append(next_test['name'])
+
+            # print the list in a nice readable format
+            for key in sorted(test_list.iterkeys()):
+                print("\n%s" % key)
+                print("  type: %s" % test_list[key]['type'])
+                if len(test_list[key]['subtests']) != 0:
+                    print("  subtests:")
+                    for _sub in sorted(test_list[key]['subtests']):
+                        print("    %s" % _sub)
+
+        print("\nDone.")
+        # exit Raptor
+        parser.exit()
+
+    def get_long_name(self, app):
+        if app == "firefox":
+            return "Firefox Desktop"
+        elif app == "chrome":
+            return "Google Chrome Desktop"
+        elif app == "geckoview":
+            return "Firefox Geckoview on Android"
+        elif app == "chrome-android":
+            return "Google Chrome on Android"
+
+    def filter_app(self, tests, values):
+        for test in tests:
+            if values["app"] in test['apps']:
+                yield test
