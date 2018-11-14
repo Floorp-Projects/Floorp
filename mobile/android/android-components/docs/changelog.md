@@ -17,6 +17,27 @@ permalink: /changelog/
   * Mozilla App Services (FxA: **0.10.0**, Sync Logins: **0.10.0**, Places: **0.10.0**)
   * Third Party Libs (Sentry: **1.7.14**, Okhttp: **3.12.0**)
 
+* **concept-toolbar**: 🆕 Added autocomplete support
+  * Toolbar concept got a new `setAutocompleteListener` method.
+  * Added `AutocompleteDelegate` concept which allows tying together autocomplete results with a UI presenter.
+
+* **concept-storage** and all of its implementations
+  * ⚠️ **This is a breaking change**
+  * Renamed `getDomainSuggestion` to `getAutocompleteSuggestion`, which now returns a `HistoryAutocompleteResult`.
+
+* **feature-toolbar**
+  * 🆕 Added new `ToolbarAutocompleteFeature`:
+
+  ```Kotlin
+  toolbarAutocompleteFeature = ToolbarAutocompleteFeature(toolbar).apply {
+    this.addHistoryStorageProvider(components.historyStorage)
+    this.addDomainProvider(components.shippedDomainsProvider)
+  }
+  ```
+
+* **samples-browser**, **samples-toolbar**
+  * Converted these samples to use the new `ToolbarAutocompleteFeature`.
+
 * **feature-session**
   * Introducing `CoordinateScrollingFeature` a new feature to coordinate scrolling behavior between an `EngineView` and the view that you specify. For a full example take a look at its usages in [Sample Browser](https://github.com/mozilla-mobile/android-components/tree/master/samples/browser).
 
@@ -50,6 +71,9 @@ permalink: /changelog/
   * Mozilla App Services (FxA: **0.10.0** 🔺, Sync Logins: **0.10.0** 🔺, Places: **0.10.0** 🔺)
 
 * ⚠️ **This is the first release compiled against Android SDK 28.**
+
+* **browser-domains**
+  * Deprecated `DomainAutoCompleteProvider` in favour of `CustomDomainsProvider` and `ShippedDomainsProvider`.
 
 * **lib-crash**
   * The state of the "Send crash report" checkbox is now getting saved and restored once the dialog is shown again.
