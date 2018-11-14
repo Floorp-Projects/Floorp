@@ -534,12 +534,18 @@ inline const nsDependentCSubstring
 nsStandardURL::Userpass(bool includeDelim)
 {
     uint32_t pos=0, len=0;
-    // if there is no username, then there can be no password
-    if (mUsername.mLen > 0) {
-        pos = mUsername.mPos;
-        len = mUsername.mLen;
-        if (mPassword.mLen >= 0)
-            len += (mPassword.mLen + 1);
+    if (mUsername.mLen > 0 || mPassword.mLen > 0) {
+        if (mUsername.mLen > 0) {
+            pos = mUsername.mPos;
+            len = mUsername.mLen;
+            if (mPassword.mLen >= 0) {
+                len += (mPassword.mLen + 1);
+            }
+        } else {
+            pos = mPassword.mPos - 1;
+            len = mPassword.mLen + 1;
+        }
+
         if (includeDelim)
             len++;
     }
