@@ -25,6 +25,8 @@ const TEST_URL = `data:text/html;charset=utf-8,
   </script>`;
 
 add_task(async function() {
+  await enableWebComponents();
+
   const {inspector} = await openInspectorForURL(TEST_URL);
 
   // <test-component> is a shadow host.

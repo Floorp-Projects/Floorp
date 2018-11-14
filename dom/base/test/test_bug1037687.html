@@ -20,13 +20,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1037687
 <script type="application/javascript">
   /** Test for Bug 1037687 **/
   SimpleTest.waitForExplicitFinish();
-  window.onload = function() {
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.webcomponents.shadowdom.enabled", true]
+    ]
+  }, function() {
     // This test loads in an iframe, to ensure that the element instance is
     // loaded with the correct value of the preference.
     let iframe = document.createElement("iframe");
     iframe.src = "test_bug1037687_subframe.html";
     document.body.appendChild(iframe);
-  };
+  });
 </script>
 </body>
 </html>

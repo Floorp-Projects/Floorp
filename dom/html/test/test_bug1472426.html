@@ -99,7 +99,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1472426
 
   window.onload = function() {
     SimpleTest.waitForExplicitFinish();
-    testFormSubmissionInShadowDOM();
+    SpecialPowers.pushPrefEnv({"set":[["dom.webcomponents.shadowdom.enabled", true]]},
+                              () => {
+                                testFormSubmissionInShadowDOM();
+                              });
   }
 
   </script>

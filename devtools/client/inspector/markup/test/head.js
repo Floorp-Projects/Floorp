@@ -32,6 +32,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.inspector.htmlPanelOpen");
   Services.prefs.clearUserPref("devtools.inspector.sidebarOpen");
   Services.prefs.clearUserPref("devtools.markup.pagesize");
+  Services.prefs.clearUserPref("dom.webcomponents.shadowdom.enabled");
   Services.prefs.clearUserPref("devtools.inspector.showAllAnonymousContent");
 });
 
