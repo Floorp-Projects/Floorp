@@ -938,11 +938,16 @@ Inspector.prototype = {
         id: "fontinspector",
         title: INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle"),
       },
-      {
+    ];
+
+    if (Services.prefs.getBoolPref(TRACK_CHANGES_PREF)) {
+      // Insert Changes as third tab, right after Computed.
+      // TODO: move this inline to `sidebarPanels` above when addressing Bug 1491887.
+      sidebarPanels.splice(2, 0, {
         id: "changesview",
         title: INSPECTOR_L10N.getStr("inspector.sidebar.changesViewTitle"),
-      },
-    ];
+      });
+    }
 
     for (const { id, title } of sidebarPanels) {
       // The Computed panel is not a React-based panel. We pick its element container from
