@@ -8,6 +8,7 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include "mozilla/EventForwards.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsMenuBaseX.h"

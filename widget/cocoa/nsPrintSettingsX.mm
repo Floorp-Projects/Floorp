@@ -10,6 +10,7 @@
 #include "plstr.h"
 
 #include "nsCocoaUtils.h"
+#include "nsXULAppAPI.h"
 
 #include "mozilla/Preferences.h"
 

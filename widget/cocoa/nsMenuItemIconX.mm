@@ -40,6 +40,8 @@
 #include "nsIContentPolicy.h"
 #include "nsComputedDOMStyle.h"
 
+using namespace mozilla;
+
 using mozilla::dom::Element;
 using mozilla::gfx::SourceSurface;
 

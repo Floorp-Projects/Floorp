@@ -16,6 +16,7 @@
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
 #include "nsTArray.h"
+#include "mozilla/BasicEvents.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/TextEventDispatcherListener.h"
 #include "WritingModes.h"

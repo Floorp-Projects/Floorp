@@ -11,8 +11,12 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/widget/HeadlessWidgetTypes.h"
+#include "mozilla/widget/PlatformWidgetTypes.h"
+#include "nsIScreen.h"
 #include "HeadlessKeyBindings.h"
 
+using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 

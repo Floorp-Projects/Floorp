@@ -11,6 +11,7 @@
 
 #include "nsAlgorithm.h"
 #include "nsAtom.h"
+#include "nsColor.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsMargin.h"
