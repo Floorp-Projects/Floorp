@@ -37,7 +37,7 @@ class CrashTest {
 
     fun getTimeoutMillis(): Long {
         val env = Environment()
-        if ("x86" == env.cpuArch) {
+        if (env.isX86) {
             return if (env.isEmulator)
                 CrashTest.DEFAULT_X86_EMULATOR_TIMEOUT_MILLIS
             else
