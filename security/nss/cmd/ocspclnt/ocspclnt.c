@@ -134,6 +134,8 @@ long_usage(char *progname)
     PR_fprintf(pr_stderr,
                "%-17s s   SSL Server\n", "");
     PR_fprintf(pr_stderr,
+               "%-17s I   IPsec\n", "");
+    PR_fprintf(pr_stderr,
                "%-17s e   Email Recipient\n", "");
     PR_fprintf(pr_stderr,
                "%-17s E   Email Signer\n", "");
@@ -907,6 +909,9 @@ cert_usage_from_char(const char *cert_usage_str, SECCertUsage *cert_usage)
             break;
         case 's':
             *cert_usage = certUsageSSLServer;
+            break;
+        case 'I':
+            *cert_usage = certUsageIPsec;
             break;
         case 'e':
             *cert_usage = certUsageEmailRecipient;

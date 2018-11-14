@@ -446,6 +446,74 @@ cert_GetCertType(CERTCertificate *cert)
     return SECSuccess;
 }
 
+PRBool
+cert_EKUAllowsIPsecIKE(CERTCertificate *cert, PRBool *isCritical)
+{
+    SECStatus rv;
+    SECItem encodedExtKeyUsage;
+    CERTOidSequence *extKeyUsage = NULL;
+    PRBool result = PR_FALSE;
+
+    rv = CERT_GetExtenCriticality(cert->extensions,
+                                  SEC_OID_X509_EXT_KEY_USAGE,
+                                  isCritical);
+    if (rv != SECSuccess) {
+        *isCritical = PR_FALSE;
+    }
+
+    encodedExtKeyUsage.data = NULL;
+    rv = CERT_FindCertExtension(cert, SEC_OID_X509_EXT_KEY_USAGE,
+                                &encodedExtKeyUsage);
+    if (rv != SECSuccess) {
+        /* EKU not present, allowed. */
+        result = PR_TRUE;
+        goto done;
+    }
+
+    extKeyUsage = CERT_DecodeOidSequence(&encodedExtKeyUsage);
+    if (!extKeyUsage) {
+        /* failure */
+        goto done;
+    }
+
+    if (findOIDinOIDSeqByTagNum(extKeyUsage,
+                                SEC_OID_X509_ANY_EXT_KEY_USAGE) ==
+        SECSuccess) {
+        result = PR_TRUE;
+        goto done;
+    }
+
+    if (findOIDinOIDSeqByTagNum(extKeyUsage,
+                                SEC_OID_EXT_KEY_USAGE_IPSEC_IKE) ==
+        SECSuccess) {
+        result = PR_TRUE;
+        goto done;
+    }
+
+    if (findOIDinOIDSeqByTagNum(extKeyUsage,
+                                SEC_OID_IPSEC_IKE_END) ==
+        SECSuccess) {
+        result = PR_TRUE;
+        goto done;
+    }
+
+    if (findOIDinOIDSeqByTagNum(extKeyUsage,
+                                SEC_OID_IPSEC_IKE_INTERMEDIATE) ==
+        SECSuccess) {
+        result = PR_TRUE;
+        goto done;
+    }
+
+done:
+    if (encodedExtKeyUsage.data != NULL) {
+        PORT_Free(encodedExtKeyUsage.data);
+    }
+    if (extKeyUsage != NULL) {
+        CERT_DestroyOidSequence(extKeyUsage);
+    }
+    return result;
+}
+
 PRUint32
 cert_ComputeCertType(CERTCertificate *cert)
 {
@@ -1083,6 +1151,10 @@ CERT_KeyUsageAndTypeForCertUsage(SECCertUsage usage, PRBool ca,
                 requiredKeyUsage = KU_KEY_CERT_SIGN;
                 requiredCertType = NS_CERT_TYPE_SSL_CA;
                 break;
+            case certUsageIPsec:
+                requiredKeyUsage = KU_KEY_CERT_SIGN;
+                requiredCertType = NS_CERT_TYPE_SSL_CA;
+                break;
             case certUsageSSLCA:
                 requiredKeyUsage = KU_KEY_CERT_SIGN;
                 requiredCertType = NS_CERT_TYPE_SSL_CA;
@@ -1124,6 +1196,11 @@ CERT_KeyUsageAndTypeForCertUsage(SECCertUsage usage, PRBool ca,
             case certUsageSSLServer:
                 requiredKeyUsage = KU_KEY_AGREEMENT_OR_ENCIPHERMENT;
                 requiredCertType = NS_CERT_TYPE_SSL_SERVER;
+                break;
+            case certUsageIPsec:
+                /* RFC 4945 Section 5.1.3.2 */
+                requiredKeyUsage = KU_DIGITAL_SIGNATURE_OR_NON_REPUDIATION;
+                requiredCertType = 0;
                 break;
             case certUsageSSLServerWithStepUp:
                 requiredKeyUsage =

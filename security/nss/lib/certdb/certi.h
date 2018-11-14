@@ -294,6 +294,9 @@ extern SECStatus cert_GetCertType(CERTCertificate* cert);
  */
 extern PRUint32 cert_ComputeCertType(CERTCertificate* cert);
 
+extern PRBool cert_EKUAllowsIPsecIKE(CERTCertificate* cert,
+                                     PRBool* isCritical);
+
 void cert_AddToVerifyLog(CERTVerifyLog* log, CERTCertificate* cert,
                          long errorCode, unsigned int depth, void* arg);
 
