@@ -23,13 +23,17 @@
 
   <script>
     SimpleTest.waitForExplicitFinish();
-
-    window.onload = () => {
+    SpecialPowers.pushPrefEnv({
+      set: [
+        ["dom.webcomponents.shadowdom.enabled", true],
+      ],
+    }, function() {
+      // This test loads in an iframe, to ensure that the element instance is
+      // loaded with the correct value of the preference.
       var iframe = document.createElement("iframe");
       iframe.src = "test_shadowroot_subframe.html";
       document.body.appendChild(iframe);
-    };
-
+    });
   </script>
 
 </body>

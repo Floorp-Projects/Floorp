@@ -178,6 +178,9 @@ impl NonTSPseudoClass {
             NonTSPseudoClass::Fullscreen => unsafe {
                 mozilla::StaticPrefs_sVarCache_full_screen_api_unprefix_enabled
             },
+            NonTSPseudoClass::Defined => unsafe {
+                structs::nsContentUtils_sIsCustomElementsEnabled
+            },
             // Otherwise, a pseudo-class is enabled in content when it
             // doesn't have any enabled flag.
             _ => !self
@@ -344,7 +347,10 @@ impl<'a, 'i> ::selectors::Parser<'i> for SelectorParser<'a> {
 
     #[inline]
     fn parse_slotted(&self) -> bool {
-        true
+        // NOTE(emilio): Slot assignment and such works per-document, but
+        // getting a document around here is not trivial, and it's not worth
+        // anyway to handle this in a per-doc basis.
+        unsafe { structs::nsContentUtils_sIsShadowDOMEnabled }
     }
 
     #[inline]

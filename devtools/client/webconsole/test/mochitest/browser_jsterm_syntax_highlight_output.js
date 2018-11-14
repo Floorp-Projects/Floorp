@@ -7,6 +7,8 @@ const TEST_URI =
   "data:text/html;charset=utf-8,Test syntax highlighted output";
 
 add_task(async function() {
+  await pushPref("dom.webcomponents.customelements.enabled", true);
+
   await pushPref("devtools.webconsole.jsterm.codeMirror", true);
   await performTests();
 
