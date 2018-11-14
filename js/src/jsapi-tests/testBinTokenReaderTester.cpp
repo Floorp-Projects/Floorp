@@ -20,6 +20,7 @@
 #include "frontend/BinTokenReaderTester.h"
 #include "frontend/ErrorReporter.h"
 
+#include "js/UniquePtr.h"
 #include "js/Vector.h"
 
 #include "jsapi-tests/tests.h"
@@ -157,7 +158,7 @@ class DummyErrorReporter : public js::frontend::ErrorReporter
     virtual void errorAtVA(uint32_t offset, unsigned errorNumber, va_list* args) override {
         MOZ_CRASH("shouldn't be used in test");
     }
-    virtual bool reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset, unsigned errorNumber, va_list* args) override {
+    virtual bool reportExtraWarningErrorNumberVA(js::UniquePtr<JSErrorNotes> notes, uint32_t offset, unsigned errorNumber, va_list* args) override {
         MOZ_CRASH("shouldn't be used in test");
         return false;
     }
