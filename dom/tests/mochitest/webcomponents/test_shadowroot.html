@@ -17,7 +17,7 @@ SimpleTest.waitForExplicitFinish();
 
 var content = '<div id="movedtoshadow" class="testclass"></div>' +
               '<svg id="svgmovedtoshadow"></svg>';
-setShadowDOMPrefAndCreateIframe(content)
+createIframe(content)
   .then((aDocument) => {
     // Create ShadowRoot.
     var element = aDocument.createElement("div");

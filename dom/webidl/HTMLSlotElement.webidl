@@ -11,7 +11,7 @@
  * and create derivative works of this document.
  */
 
-[Func="nsDocument::IsShadowDOMEnabled", Exposed=Window, HTMLConstructor]
+[Exposed=Window, HTMLConstructor]
 interface HTMLSlotElement : HTMLElement {
   [CEReactions, SetterThrows] attribute DOMString name;
   sequence<Node> assignedNodes(optional AssignedNodesOptions options);

@@ -2,8 +2,7 @@
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv(
-    {"set": [["ui.tooltipDelay", 0],
-             ["dom.webcomponents.shadowdom.enabled", true]]});
+    {"set": [["ui.tooltipDelay", 0]]});
 });
 
 add_task(async function test_title_in_shadow_dom() {

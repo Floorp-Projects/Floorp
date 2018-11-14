@@ -1,8 +1,5 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
-
 // ExtensionContent.jsm needs to know when it's running from xpcshell,
 // to use the right timeout for content scripts executed at document_idle.
 ExtensionTestUtils.mockAppInfo();
@@ -13,22 +10,6 @@ server.registerDirectory("/data/", do_get_file("data"));
 const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
 add_task(async function test_contentscript_shadowDOM() {
-  const PREFS = {
-    "dom.webcomponents.shadowdom.enabled": true,
-  };
-
-  // Set prefs to our initial values.
-  for (let pref in PREFS) {
-    Preferences.set(pref, PREFS[pref]);
-  }
-
-  registerCleanupFunction(() => {
-    // Reset the prefs.
-    for (let pref in PREFS) {
-      Preferences.reset(pref);
-    }
-  });
-
   function backgroundScript() {
     browser.test.assertTrue("openOrClosedShadowRoot" in document.documentElement,
                             "Should have openOrClosedShadowRoot in Element in background script.");

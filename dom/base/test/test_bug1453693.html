@@ -14,14 +14,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1453693
 
   SimpleTest.waitForExplicitFinish();
 
-  function init() {
-    SpecialPowers.pushPrefEnv(
-      {
-        "set": [["dom.webcomponents.shadowdom.enabled", true]]
-      },
-      runTests);
-  }
-
   function runTests() {
     win = window.open("file_bug1453693.html", "", "width=300, height=300");
   }
@@ -30,11 +22,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1453693
     setTimeout("SimpleTest.finish()");
   }
 
-  SimpleTest.waitForFocus(init);
+  ;
 
   </script>
 </head>
-<body>
+<body onload="SimpleTest.waitForFocus(runTests);">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1453693">Mozilla Bug 1453693</a>
 </body>
 </html>
