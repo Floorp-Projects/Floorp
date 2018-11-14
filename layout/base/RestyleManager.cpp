@@ -1803,7 +1803,6 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
 
   Maybe<nsCSSPropertyIDSet> effectiveAnimationProperties;
 
-  Maybe<uint64_t> generation;
   nsChangeHint hint = nsChangeHint(0);
   auto maybeApplyChangeHint = [&](const Maybe<uint64_t>& aGeneration,
                                   DisplayItemType aDisplayItemType) -> bool {
@@ -1854,7 +1853,7 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
     // not have those properies just before. e.g, setting transform by
     // setKeyframes or changing target element from other target which prevents
     // running on the compositor, etc.
-    if (!generation) {
+    if (!aGeneration) {
       if (!effectiveAnimationProperties) {
         effectiveAnimationProperties.emplace(
           nsLayoutUtils::GetAnimationPropertiesForCompositor(aFrame));
