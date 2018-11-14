@@ -33,7 +33,7 @@ MOZ_BEGIN_EXTERN_C
 extern MFBT_DATA const char* gMozCrashReason;
 MOZ_END_EXTERN_C
 
-#if !defined(DEBUG) && (defined(MOZ_HAS_MOZGLUE) || defined(MOZILLA_INTERNAL_API))
+#if defined(MOZ_HAS_MOZGLUE) || defined(MOZILLA_INTERNAL_API)
 static inline void
 AnnotateMozCrashReason(const char* reason)
 {
