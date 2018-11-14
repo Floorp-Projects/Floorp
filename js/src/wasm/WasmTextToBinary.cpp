@@ -1006,8 +1006,11 @@ WasmTokenStream::next()
             return WasmToken(WasmToken::ValueType, ValType::AnyRef, begin, cur_);
         }
 #ifdef ENABLE_WASM_THREAD_OPS
-        if (consume(u"atomic.wake")) {
-            return WasmToken(WasmToken::Wake, ThreadOp::Wake, begin, cur_);
+        if (consume(u"atomic.")) {
+            if (consume(u"wake") || consume(u"notify")) {
+                return WasmToken(WasmToken::Wake, ThreadOp::Wake, begin, cur_);
+            }
+            break;
         }
 #endif
         break;
