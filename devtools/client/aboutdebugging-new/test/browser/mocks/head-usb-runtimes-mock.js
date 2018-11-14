@@ -51,6 +51,10 @@ function createUsbRuntimesMock() {
     console.log("MOCKED METHOD getUSBRuntimes");
   };
 
+  usbRuntimesMock.refreshUSBRuntimes = function() {
+    console.log("MOCKED METHOD refreshUSBRuntimes");
+  };
+
   usbRuntimesMock.removeUSBRuntimesObserver = function(listener) {
     console.log("MOCKED METHOD removeUSBRuntimesObserver");
   };
