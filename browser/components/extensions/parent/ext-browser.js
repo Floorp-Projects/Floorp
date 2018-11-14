@@ -780,6 +780,11 @@ class Tab extends TabBase {
     return this.url && this.url.startsWith(READER_MODE_PREFIX);
   }
 
+  get successorTabId() {
+    const {successor} = this.nativeTab;
+    return successor ? tabTracker.getId(successor) : -1;
+  }
+
   /**
    * Converts session store data to an object compatible with the return value
    * of the convert() method, representing that data.
