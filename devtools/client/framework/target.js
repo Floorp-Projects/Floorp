@@ -128,6 +128,18 @@ const TargetFactory = exports.TargetFactory = {
     if (target == null) {
       target = new Target({
         client: workerTargetFront.client,
+        // Fake a form attribute until all Target is merged with the Front itself
+        // and will receive form attribute natively.
+        get form() {
+          return {
+            actor: workerTargetFront.actorID,
+            traits: {},
+            // /!\ This depends on WorkerTargetFront.attach being called before this.
+            // It happens that WorkerTargetFront is instantiated from attachWorker,
+            // which instiate this class *and* calls `attach`.
+            consoleActor: workerTargetFront.consoleActor,
+          };
+        },
         activeTab: workerTargetFront,
         chrome: false,
       });
@@ -188,15 +200,14 @@ const TargetFactory = exports.TargetFactory = {
  * For now, only workers are having a distinct Target class called WorkerTarget.
  *
  * @param {Object} form
- *                  The TargetActor's form to be connected to. Null if front is passed.
- * @param {Front} activeTab
- *                  If we already have a front for this target, pass it here. Null if
- *                  form is passed.
+ *                 The TargetActor's form to be connected to.
  * @param {DebuggerClient} client
- *                  The DebuggerClient instance to be used to debug this target.
+ *                 The DebuggerClient instance to be used to debug this target.
  * @param {Boolean} chrome
  *                  True, if we allow to see privileged resources like JSM, xpcom,
  *                  frame scripts...
+ * @param {Front}   activeTab (optional)
+ *                  If we already have a front for this target, pass it here.
  * @param {xul:tab} tab (optional)
  *                  If the target is a local Firefox tab, a reference to the firefox
  *                  frontend tab object.
@@ -209,8 +220,8 @@ function Target({ form, client, chrome, activeTab = null, tab = null }) {
   this.activeTab = activeTab;
 
   this._form = form;
-  this._url = this.form.url;
-  this._title = this.form.title;
+  this._url = form.url;
+  this._title = form.title;
 
   this._client = client;
   this._chrome = chrome;
@@ -236,8 +247,8 @@ function Target({ form, client, chrome, activeTab = null, tab = null }) {
   // target actor that doesn't have any valid browsing context.
   // (Once FF63 is no longer supported, we can remove the `else` branch and only look
   // for the traits)
-  if (this.form.traits && ("isBrowsingContext" in this.form.traits)) {
-    this._isBrowsingContext = this.form.traits.isBrowsingContext;
+  if (this._form.traits && ("isBrowsingContext" in this._form.traits)) {
+    this._isBrowsingContext = this._form.traits.isBrowsingContext;
   } else {
     this._isBrowsingContext = !this.isLegacyAddon && !this.isContentProcess && !this.isWorkerTarget;
   }
@@ -357,9 +368,7 @@ Target.prototype = {
   },
 
   get form() {
-    // Target constructor either receive a form or a Front.
-    // If a front is passed, fetch the form from it.
-    return this._form || this.activeTab.targetForm;
+    return this._form;
   },
 
   // Get a promise of the RootActor's form
@@ -424,7 +433,7 @@ Target.prototype = {
 
   get name() {
     if (this.isAddon) {
-      return this.form.name;
+      return this._form.name;
     }
     return this._title;
   },
@@ -442,14 +451,14 @@ Target.prototype = {
   },
 
   get isLegacyAddon() {
-    return !!(this.form && this.form.actor &&
-      this.form.actor.match(/conn\d+\.addon(Target)?\d+/));
+    return !!(this._form && this._form.actor &&
+      this._form.actor.match(/conn\d+\.addon(Target)?\d+/));
   },
 
   get isWebExtension() {
-    return !!(this.form && this.form.actor && (
-      this.form.actor.match(/conn\d+\.webExtension(Target)?\d+/) ||
-      this.form.actor.match(/child\d+\/webExtension(Target)?\d+/)
+    return !!(this._form && this._form.actor && (
+      this._form.actor.match(/conn\d+\.webExtension(Target)?\d+/) ||
+      this._form.actor.match(/child\d+\/webExtension(Target)?\d+/)
     ));
   },
 
@@ -458,8 +467,8 @@ Target.prototype = {
     //   server0.conn0.content-process0/contentProcessTarget7
     // while xpcshell debugging will be:
     //   server1.conn0.contentProcessTarget7
-    return !!(this.form && this.form.actor &&
-      this.form.actor.match(/conn\d+\.(content-process\d+\/)?contentProcessTarget\d+/));
+    return !!(this._form && this._form.actor &&
+      this._form.actor.match(/conn\d+\.(content-process\d+\/)?contentProcessTarget\d+/));
   },
 
   get isLocalTab() {
@@ -525,17 +534,8 @@ Target.prototype = {
 
     // Attach the target actor
     const attachBrowsingContextTarget = async () => {
-      // Some BrowsingContextTargetFront are already instantiated and passed as
-      // contructor's argument, like for ParentProcessTargetActor.
-      // For them, we only need to attach them.
-      // The call to attachTarget is to be removed once all Target are having a front
-      // passed as contructor's argument.
-      if (!this.activeTab) {
-        const [, targetFront] = await this._client.attachTarget(this.form.actor);
-        this.activeTab = targetFront;
-      } else {
-        await this.activeTab.attach();
-      }
+      const [, targetFront] = await this._client.attachTarget(this._form.actor);
+      this.activeTab = targetFront;
 
       this.activeTab.on("tabNavigated", this._onTabNavigated);
       this._onFrameUpdate = packet => {
@@ -547,7 +547,7 @@ Target.prototype = {
     // Attach the console actor
     const attachConsole = async () => {
       const [, consoleClient] = await this._client.attachConsole(
-        this.form.consoleActor, []);
+        this._form.consoleActor, []);
       this.activeConsole = consoleClient;
 
       this._onInspectObject = packet => this.emit("inspect-object", packet);
@@ -555,7 +555,7 @@ Target.prototype = {
     };
 
     this._attach = (async () => {
-      if (this.form.isWebExtension &&
+      if (this._form.isWebExtension &&
           this.client.mainRoot.traits.webExtensionAddonConnect) {
         // The addonTargetActor form is related to a WebExtensionActor instance,
         // which isn't a target actor on its own, it is an actor living in the parent
@@ -565,12 +565,12 @@ Target.prototype = {
         // To retrieve the target actor instance, we call its "connect" method, (which
         // fetches the target actor form from a WebExtensionTargetActor instance).
         const {form} = await this._client.request({
-          to: this.form.actor, type: "connect",
+          to: this._form.actor, type: "connect",
         });
 
         this._form = form;
-        this._url = this.form.url;
-        this._title = this.form.title;
+        this._url = form.url;
+        this._title = form.title;
       }
 
       // AddonTargetActor and ContentProcessTargetActor don't inherit from
@@ -579,7 +579,7 @@ Target.prototype = {
       if (this.isBrowsingContext) {
         await attachBrowsingContextTarget();
       } else if (this.isLegacyAddon) {
-        const [, addonTargetFront] = await this._client.attachAddon(this.form);
+        const [, addonTargetFront] = await this._client.attachAddon(this._form);
         this.activeTab = addonTargetFront;
       } else if (this.isWorkerTarget || this.isContentProcess) {
         // Worker and Content process targets are the first target to have their front already
@@ -676,7 +676,7 @@ Target.prototype = {
     } else {
       this._onTabDetached = (type, packet) => {
         // We have to filter message to ensure that this detach is for this tab
-        if (packet.from == this.form.actor) {
+        if (packet.from == this._form.actor) {
           this.destroy();
         }
       };
@@ -812,7 +812,7 @@ Target.prototype = {
     if (this._tab) {
       targets.delete(this._tab);
     } else {
-      promiseTargets.delete(this.form);
+      promiseTargets.delete(this._form);
     }
 
     this.activeTab = null;
@@ -826,7 +826,7 @@ Target.prototype = {
   },
 
   toString: function() {
-    const id = this._tab ? this._tab : (this.form && this.form.actor);
+    const id = this._tab ? this._tab : (this._form && this._form.actor);
     return `Target:${id}`;
   },
 

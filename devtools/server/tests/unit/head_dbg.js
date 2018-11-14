@@ -101,9 +101,9 @@ async function createFullRuntimeMemoryFront() {
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   await client.connect();
 
-  const front = await client.mainRoot.getMainProcess();
+  const { form } = await client.mainRoot.getMainProcess();
   const options = {
-    activeTab: front,
+    form,
     client,
     chrome: true,
   };
@@ -405,7 +405,7 @@ async function finishClient(client) {
 
 function getParentProcessActors(client, server = DebuggerServer) {
   server.allowChromeProcess = true;
-  return client.mainRoot.getMainProcess().then(response => response.targetForm);
+  return client.mainRoot.getMainProcess().then(response => response.form);
 }
 
 /**

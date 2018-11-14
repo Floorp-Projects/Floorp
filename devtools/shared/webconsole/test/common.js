@@ -78,9 +78,9 @@ var _attachConsole = async function(
   }
 
   if (!attachToTab) {
-    const front = await state.dbgClient.mainRoot.getMainProcess();
-    await front.attach();
-    const consoleActor = front.targetForm.consoleActor;
+    response = await state.dbgClient.mainRoot.getMainProcess();
+    await state.dbgClient.attachTarget(response.form.actor);
+    const consoleActor = response.form.consoleActor;
     state.actor = consoleActor;
     state.dbgClient.attachConsole(consoleActor, listeners)
       .then(_onAttachConsole.bind(null, state), _onAttachError.bind(null, state));
@@ -119,8 +119,8 @@ var _attachConsole = async function(
       return;
     }
     await workerTargetFront.attachThread({});
-    state.actor = workerTargetFront.targetForm.consoleActor;
-    state.dbgClient.attachConsole(workerTargetFront.targetForm.consoleActor, listeners)
+    state.actor = workerTargetFront.consoleActor;
+    state.dbgClient.attachConsole(workerTargetFront.consoleActor, listeners)
       .then(_onAttachConsole.bind(null, state), _onAttachError.bind(null, state));
   } else {
     state.actor = tab.consoleActor;

@@ -28,6 +28,12 @@ function initDebuggerClient() {
   return new DebuggerClient(transport);
 }
 
+async function attachThread(client, actor) {
+  let [response, targetFront] = await client.attachTarget(actor);
+  let [response2, threadClient] = await targetFront.attachThread(null);
+  return threadClient;
+}
+
 function onNewSource(event, packet) {
   if (packet.source.url.startsWith("chrome:")) {
     ok(true, "Received a new chrome source: " + packet.source.url);
@@ -57,10 +63,9 @@ add_task(async function() {
   const [type] = await gClient.connect();
   is(type, "browser", "Root actor should identify itself as a browser.");
 
-  const front = await gClient.mainRoot.getMainProcess();
-  await front.attach();
-  const [, threadClient] = await front.attachThread();
-  gThreadClient = threadClient;
+  const response = await gClient.mainRoot.getMainProcess();
+  let actor = response.form.actor;
+  gThreadClient = await attachThread(gClient, actor);
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:mozilla");
 
   // listen for a new source and global
