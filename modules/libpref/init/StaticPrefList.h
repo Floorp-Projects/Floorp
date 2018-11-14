@@ -1799,6 +1799,13 @@ VARCACHE_PREF(
    dom_security_featurePolicy_header_enabled,
   bool, PREF_VALUE
 )
+
+// Expose the 'policy' attribute in document and HTMLIFrameElement
+VARCACHE_PREF(
+  "dom.security.featurePolicy.webidl.enabled",
+   dom_security_featurePolicy_webidl_enabled,
+  bool, PREF_VALUE
+)
 #undef PREF_VALUE
 
 //---------------------------------------------------------------------------
