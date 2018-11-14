@@ -835,8 +835,8 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
-    private fun delegateNewSession(): GeckoSession {
-        val newSession = sessionRule.createClosedSession()
+    private fun delegateNewSession(settings: GeckoSessionSettings = mainSession.settings): GeckoSession {
+        val newSession = sessionRule.createClosedSession(settings)
 
         sessionRule.session.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
@@ -888,6 +888,28 @@ class NavigationDelegateTest : BaseSessionTest() {
         assertThat("window.opener should be set",
                    newSession.evaluateJS("window.opener.location.pathname") as String,
                    equalTo(NEW_SESSION_HTML_PATH))
+    }
+
+    @Setting(key = Setting.Key.USE_MULTIPROCESS, value = "false")
+    @WithDevToolsAPI
+    @Test fun onNewSession_openRemoteFromNonRemote() {
+        // Disable popup blocker.
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
+
+        // Ensure a non-remote page can open a remote page, as needed by some tests.
+        assertThat("Opening session should be non-remote",
+                   mainSession.settings.getBoolean(GeckoSessionSettings.USE_MULTIPROCESS),
+                   equalTo(false))
+
+        val newSession = delegateNewSession(
+                GeckoSessionSettings(mainSession.settings).apply {
+                    setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, true)
+                })
+        mainSession.evaluateJS("window.open('http://example.com')")
+        newSession.waitForPageStop()
+
+        assertThat("window.opener should be set",
+                   newSession.evaluateJS("window.opener"), notNullValue())
     }
 
     @WithDevToolsAPI
