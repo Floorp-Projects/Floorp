@@ -1093,6 +1093,12 @@ var View = {
 
 var Control = {
   _openItems: new Set(),
+  _removeSubtree(row) {
+    while (row.nextSibling &&
+           row.nextSibling.firstChild.classList.contains("indent")) {
+      row.nextSibling.remove();
+    }
+  },
   init() {
     this._initAutorefresh();
     this._initDisplayMode();
@@ -1111,8 +1117,7 @@ var Control = {
           View.insertAfterRow(row);
         } else {
           this._openItems.delete(id);
-          while (row.nextSibling.firstChild.classList.contains("indent"))
-            row.nextSibling.remove();
+          this._removeSubtree(row);
         }
         return;
       }
@@ -1126,8 +1131,7 @@ var Control = {
           return;
         let {tabbrowser, tab} = found;
         tabbrowser.removeTab(tab);
-        while (row.nextSibling.firstChild.classList.contains("indent"))
-          row.nextSibling.remove();
+        this._removeSubtree(row);
         row.remove();
         return;
       }
