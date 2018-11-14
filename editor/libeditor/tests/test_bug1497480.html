@@ -51,6 +51,7 @@ add_task(async function() {
   });
 
   // Wait for first full spell-checking.
+  synthesizeMouseAtCenter(outOfTarget, {}, window);
   await new Promise((resolve) => {
     onSpellCheck(outOfTarget, function() {
       resolve();
