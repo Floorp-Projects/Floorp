@@ -107,23 +107,28 @@ var ModuleManager = {
     this._modules.forEach(aCallback, this);
   },
 
-  updateRemoteType(aRemoteType) {
-    debug `updateRemoteType remoteType=${aRemoteType}`;
+  updateRemoteTypeForURI(aURI) {
+    const currentType =
+        this.browser.getAttribute("remoteType") || E10SUtils.NOT_REMOTE;
+    const remoteType = E10SUtils.getRemoteTypeForURI(
+        aURI, this.settings.useMultiprocess,
+        currentType, this.browser.currentURI);
 
-    const currentRemoteType = this.browser.getAttribute("remoteType") || E10SUtils.NOT_REMOTE;
+    debug `updateRemoteType: uri=${aURI} currentType=${currentType}
+                             remoteType=${remoteType}`;
 
-    if (aRemoteType && !this.settings.useMultiprocess) {
-      warn `Tried to create a remote browser in multiprocess mode`;
-      return false;
-    }
-
-    if (currentRemoteType === aRemoteType) {
+    if (currentType === remoteType) {
       // We're already using a child process of the correct type.
       return false;
     }
 
+    if (remoteType !== E10SUtils.NOT_REMOTE &&
+        !this.settings.useMultiprocess) {
+      warn `Tried to create a remote browser in non-multiprocess mode`;
+      return false;
+    }
+
     // Now we're switching the remoteness (value of "remote" attr).
-    debug `updateRemoteType: changing from '${currentRemoteType}' to '${aRemoteType}'`;
 
     this.forEach(module => {
       if (module.enabled && module.impl) {
@@ -139,9 +144,9 @@ var ModuleManager = {
 
     const parent = this.browser.parentNode;
     this.browser.remove();
-    if (aRemoteType) {
+    if (remoteType) {
       this.browser.setAttribute("remote", "true");
-      this.browser.setAttribute("remoteType", aRemoteType);
+      this.browser.setAttribute("remoteType", remoteType);
     } else {
       this.browser.setAttribute("remote", "false");
       this.browser.removeAttribute("remoteType");
