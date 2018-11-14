@@ -167,6 +167,7 @@
     macro(getPrototypeOf, getPrototypeOf, "getPrototypeOf") \
     macro(GetTypeError, GetTypeError, "GetTypeError") \
     macro(global, global, "global") \
+    macro(globalThis, globalThis, "globalThis") \
     macro(group, group, "group") \
     macro(Handle, Handle, "Handle") \
     macro(has, has, "has") \
