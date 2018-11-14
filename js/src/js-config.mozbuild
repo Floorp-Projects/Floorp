@@ -10,6 +10,7 @@ if CONFIG['NIGHTLY_BUILD']:
     DEFINES['ENABLE_WASM_BULKMEM_OPS'] = True
     DEFINES['ENABLE_WASM_THREAD_OPS'] = True
     DEFINES['ENABLE_WASM_GC'] = True
+    DEFINES['ENABLE_WASM_GENERALIZED_TABLES'] = True
     DEFINES['WASM_PRIVATE_REFTYPES'] = True
 
 # Some huge-mapping optimization instead of bounds checks on supported

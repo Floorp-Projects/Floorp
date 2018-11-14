@@ -482,8 +482,7 @@ var gPluginHandler = {
     let crashurl = formatURL("app.support.baseURL", true);
     crashurl += "plugin-crashed-notificationbar";
     link.href = crashurl;
-    let description = notification.ownerDocument.getAnonymousElementByAttribute(notification, "anonid", "messageText");
-    description.appendChild(link);
+    notification.messageText.appendChild(link);
   },
 };
 

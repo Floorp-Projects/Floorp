@@ -263,6 +263,12 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "FreeBSD":
         "-msse2"
     ]
 
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
+
+    CFLAGS += [
+        "-msse2"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "NetBSD":
 
     CFLAGS += [

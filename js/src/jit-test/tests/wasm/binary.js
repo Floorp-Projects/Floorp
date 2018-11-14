@@ -115,20 +115,7 @@ assertErrorMessage(() => wasmEval(moduleWithSections([v2vSigSection, declSection
 wasmEval(moduleWithSections([v2vSigSection, declSection([0,0,0]), tableSection(4), elemSection([{offset:0, elems:[0,1,0,2]}]), bodySection([v2vBody, v2vBody, v2vBody])]));
 wasmEval(moduleWithSections([sigSection([v2vSig,i2vSig]), declSection([0,0,1]), tableSection(3), elemSection([{offset:0,elems:[0,1,2]}]), bodySection([v2vBody, v2vBody, v2vBody])]));
 
-function invalidTableSection2() {
-    var body = [];
-    body.push(...varU32(2));           // number of tables
-    body.push(...varU32(AnyFuncCode));
-    body.push(...varU32(0x0));
-    body.push(...varU32(0));
-    body.push(...varU32(AnyFuncCode));
-    body.push(...varU32(0x0));
-    body.push(...varU32(0));
-    return { name: tableId, body };
-}
-
 wasmEval(moduleWithSections([tableSection0()]));
-assertErrorMessage(() => wasmEval(moduleWithSections([invalidTableSection2()])), CompileError, /number of tables must be at most one/);
 
 wasmEval(moduleWithSections([memorySection(0)]));
 
@@ -282,6 +269,8 @@ var reservedMisc =
       0x00: true, 0x01: true, 0x02: true, 0x03: true, 0x04: true, 0x05: true, 0x06: true, 0x07: true,
       // Bulk memory (proposed)
       0x08: true, 0x09: true, 0x0a: true, 0x0b: true, 0x0c: true, 0x0d: true, 0x0e: true,
+      // Table (proposed)
+      0x0f: true, 0x10: true, 0x11: true, 0x12: true,
       // Structure operations (experimental, internal)
       0x50: true, 0x51: true, 0x52: true, 0x53: true };
 

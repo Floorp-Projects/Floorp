@@ -66,6 +66,7 @@ typedef Handle<WasmInstanceObject*> HandleWasmInstanceObject;
 typedef MutableHandle<WasmInstanceObject*> MutableHandleWasmInstanceObject;
 
 class WasmTableObject;
+typedef GCVector<WasmTableObject*, 0, SystemAllocPolicy> WasmTableObjectVector;
 typedef Rooted<WasmTableObject*> RootedWasmTableObject;
 typedef Handle<WasmTableObject*> HandleWasmTableObject;
 typedef MutableHandle<WasmTableObject*> MutableHandleWasmTableObject;
@@ -1002,6 +1003,7 @@ class Export
     DefinitionKind kind() const { return pod.kind_; }
     uint32_t funcIndex() const;
     uint32_t globalIndex() const;
+    uint32_t tableIndex() const;
 
     WASM_DECLARE_SERIALIZABLE(Export)
 };
@@ -1917,7 +1919,11 @@ enum class SymbolicAddress
     MemInit,
     TableCopy,
     TableDrop,
+    TableGet,
+    TableGrow,
     TableInit,
+    TableSet,
+    TableSize,
     PostBarrier,
     StructNew,
     StructNarrow,
@@ -1955,30 +1961,21 @@ struct Limits
 enum class TableKind
 {
     AnyFunction,
+    AnyRef,
     TypedFunction
 };
 
 struct TableDesc
 {
-    // If a table is marked 'external' it is because it can contain functions
-    // from multiple instances; a table is therefore marked external if it is
-    // imported or exported or if it is initialized with an imported function.
-
     TableKind kind;
-#ifdef WASM_PRIVATE_REFTYPES
     bool importedOrExported;
-#endif
-    bool external;
     uint32_t globalDataOffset;
     Limits limits;
 
     TableDesc() = default;
-    TableDesc(TableKind kind, const Limits& limits)
+    TableDesc(TableKind kind, const Limits& limits, bool importedOrExported = false)
      : kind(kind),
-#ifdef WASM_PRIVATE_REFTYPES
-       importedOrExported(false),
-#endif
-       external(false),
+       importedOrExported(importedOrExported),
        globalDataOffset(UINT32_MAX),
        limits(limits)
     {}
@@ -2105,16 +2102,15 @@ struct TableTls
     // Length of the table in number of elements (not bytes).
     uint32_t length;
 
-    // Pointer to the array of elements (of type either ExternalTableElem or
-    // void*).
-    void* base;
+    // Pointer to the array of elements (which can have various representations).
+    // For tables of anyref this is null.
+    void* functionBase;
 };
 
-// When a table can contain functions from other instances (it is "external"),
-// the internal representation is an array of ExternalTableElem instead of just
-// an array of code pointers.
+// Table elements for TableKind::AnyFunctions carry both the code pointer and an
+// instance pointer.
 
-struct ExternalTableElem
+struct FunctionTableElem
 {
     // The code to call when calling this element. The table ABI is the system
     // ABI with the additional ABI requirements that:
@@ -2168,7 +2164,6 @@ class CalleeDesc
         struct {
             uint32_t globalDataOffset_;
             uint32_t minLength_;
-            bool external_;
             FuncTypeIdDesc funcTypeId_;
         } table;
         SymbolicAddress builtin_;
@@ -2193,7 +2188,6 @@ class CalleeDesc
         c.which_ = WasmTable;
         c.u.table.globalDataOffset_ = desc.globalDataOffset;
         c.u.table.minLength_ = desc.limits.initial;
-        c.u.table.external_ = desc.external;
         c.u.table.funcTypeId_ = funcTypeId;
         return c;
     }
@@ -2233,13 +2227,9 @@ class CalleeDesc
         MOZ_ASSERT(isTable());
         return u.table.globalDataOffset_ + offsetof(TableTls, length);
     }
-    uint32_t tableBaseGlobalDataOffset() const {
+    uint32_t tableFunctionBaseGlobalDataOffset() const {
         MOZ_ASSERT(isTable());
-        return u.table.globalDataOffset_ + offsetof(TableTls, base);
-    }
-    bool wasmTableIsExternal() const {
-        MOZ_ASSERT(which_ == WasmTable);
-        return u.table.external_;
+        return u.table.globalDataOffset_ + offsetof(TableTls, functionBase);
     }
     FuncTypeIdDesc wasmTableSigId() const {
         MOZ_ASSERT(which_ == WasmTable);

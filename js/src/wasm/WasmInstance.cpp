@@ -235,7 +235,7 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
     return true;
 }
 
-/* static */ int32_t
+/* static */ int32_t /* 0 to signal trap; 1 to signal OK */
 Instance::callImport_void(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     JSContext* cx = TlsContext.get();
@@ -243,7 +243,7 @@ Instance::callImport_void(Instance* instance, int32_t funcImportIndex, int32_t a
     return instance->callImport(cx, funcImportIndex, argc, argv, &rval);
 }
 
-/* static */ int32_t
+/* static */ int32_t /* 0 to signal trap; 1 to signal OK */
 Instance::callImport_i32(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     JSContext* cx = TlsContext.get();
@@ -255,7 +255,7 @@ Instance::callImport_i32(Instance* instance, int32_t funcImportIndex, int32_t ar
     return ToInt32(cx, rval, (int32_t*)argv);
 }
 
-/* static */ int32_t
+/* static */ int32_t /* 0 to signal trap; 1 to signal OK */
 Instance::callImport_i64(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     JSContext* cx = TlsContext.get();
@@ -263,7 +263,7 @@ Instance::callImport_i64(Instance* instance, int32_t funcImportIndex, int32_t ar
     return false;
 }
 
-/* static */ int32_t
+/* static */ int32_t /* 0 to signal trap; 1 to signal OK */
 Instance::callImport_f64(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     JSContext* cx = TlsContext.get();
@@ -291,7 +291,7 @@ ToRef(JSContext* cx, HandleValue val, void* addr)
     return true;
 }
 
-/* static */ int32_t
+/* static */ int32_t /* 0 to signal trap; 1 to signal OK */
 Instance::callImport_ref(Instance* instance, int32_t funcImportIndex, int32_t argc, uint64_t* argv)
 {
     JSContext* cx = TlsContext.get();
@@ -302,7 +302,7 @@ Instance::callImport_ref(Instance* instance, int32_t funcImportIndex, int32_t ar
     return ToRef(cx, rval, argv);
 }
 
-/* static */ uint32_t
+/* static */ uint32_t /* infallible */
 Instance::growMemory_i32(Instance* instance, uint32_t delta)
 {
     MOZ_ASSERT(!instance->isAsmJS());
@@ -319,7 +319,7 @@ Instance::growMemory_i32(Instance* instance, uint32_t delta)
     return ret;
 }
 
-/* static */ uint32_t
+/* static */ uint32_t /* infallible */
 Instance::currentMemory_i32(Instance* instance)
 {
     // This invariant must hold when running Wasm code. Assert it here so we can
@@ -361,19 +361,19 @@ PerformWait(Instance* instance, uint32_t byteOffset, T value, int64_t timeout_ns
     }
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; nonnegative result for ok */
 Instance::wait_i32(Instance* instance, uint32_t byteOffset, int32_t value, int64_t timeout_ns)
 {
     return PerformWait<int32_t>(instance, byteOffset, value, timeout_ns);
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; nonnegative result for ok */
 Instance::wait_i64(Instance* instance, uint32_t byteOffset, int64_t value, int64_t timeout_ns)
 {
     return PerformWait<int64_t>(instance, byteOffset, value, timeout_ns);
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; nonnegative for ok */
 Instance::wake(Instance* instance, uint32_t byteOffset, int32_t count)
 {
     JSContext* cx = TlsContext.get();
@@ -402,7 +402,7 @@ Instance::wake(Instance* instance, uint32_t byteOffset, int32_t count)
     return int32_t(woken);
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; 0 for ok */
 Instance::memCopy(Instance* instance, uint32_t dstByteOffset, uint32_t srcByteOffset, uint32_t len)
 {
     WasmMemoryObject* mem = instance->memory();
@@ -435,7 +435,7 @@ Instance::memCopy(Instance* instance, uint32_t dstByteOffset, uint32_t srcByteOf
     return -1;
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; 0 for ok */
 Instance::memDrop(Instance* instance, uint32_t segIndex)
 {
     MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveDataSegments_.length(),
@@ -455,7 +455,7 @@ Instance::memDrop(Instance* instance, uint32_t segIndex)
     return 0;
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; 0 for ok */
 Instance::memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint32_t len)
 {
     WasmMemoryObject* mem = instance->memory();
@@ -484,7 +484,7 @@ Instance::memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint3
     return -1;
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; 0 for ok */
 Instance::memInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
                   uint32_t len, uint32_t segIndex)
 {
@@ -538,16 +538,20 @@ Instance::memInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
     return -1;
 }
 
-/* static */ int32_t
-Instance::tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset, uint32_t len)
+/* static */ int32_t  /* -1 to signal trap; 0 for ok */
+Instance::tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset, uint32_t len,
+                    uint32_t dstTableIndex, uint32_t srcTableIndex)
 {
-    const SharedTable& table = instance->tables()[0];
-    uint32_t tableLen = table->length();
+    const SharedTable& srcTable = instance->tables()[srcTableIndex];
+    uint32_t srcTableLen = srcTable->length();
+
+    const SharedTable& dstTable = instance->tables()[dstTableIndex];
+    uint32_t dstTableLen = dstTable->length();
 
     if (len == 0) {
         // Even though the number of items to copy is zero, we must check
         // for valid offsets.
-        if (dstOffset < tableLen && srcOffset < tableLen) {
+        if (dstOffset < dstTableLen && srcOffset < srcTableLen) {
             return 0;
         }
     } else {
@@ -557,18 +561,20 @@ Instance::tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset, 
         CheckedU32 highestSrcOffset = CheckedU32(srcOffset) + lenMinus1;
         if (highestDstOffset.isValid() &&
             highestSrcOffset.isValid() &&
-            highestDstOffset.value() < tableLen &&
-            highestSrcOffset.value() < tableLen)
+            highestDstOffset.value() < dstTableLen &&
+            highestSrcOffset.value() < srcTableLen)
         {
             // Actually do the copy, taking care to handle overlapping cases
             // correctly.
-            if (dstOffset > srcOffset) {
+            if (&srcTable == &dstTable && dstOffset > srcOffset) {
                 for (uint32_t i = len; i > 0; i--) {
-                    table->copy(dstOffset + (i - 1), srcOffset + (i - 1));
+                    dstTable->copy(*srcTable, dstOffset + (i - 1), srcOffset + (i - 1));
                 }
-            } else if (dstOffset < srcOffset) {
+            } else if (&srcTable == &dstTable && dstOffset == srcOffset) {
+                // No-op
+            } else {
                 for (uint32_t i = 0; i < len; i++) {
-                    table->copy(dstOffset + i, srcOffset + i);
+                    dstTable->copy(*srcTable, dstOffset + i, srcOffset + i);
                 }
             }
 
@@ -580,7 +586,7 @@ Instance::tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset, 
     return -1;
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; 0 for ok */
 Instance::tableDrop(Instance* instance, uint32_t segIndex)
 {
     MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveElemSegments_.length(),
@@ -601,9 +607,10 @@ Instance::tableDrop(Instance* instance, uint32_t segIndex)
 }
 
 void
-Instance::initElems(const ElemSegment& seg, uint32_t dstOffset, uint32_t srcOffset, uint32_t len)
+Instance::initElems(uint32_t tableIndex, const ElemSegment& seg, uint32_t dstOffset,
+                    uint32_t srcOffset, uint32_t len)
 {
-    Table& table = *tables_[seg.tableIndex];
+    Table& table = *tables_[tableIndex];
     MOZ_ASSERT(dstOffset <= table.length());
     MOZ_ASSERT(len <= table.length() - dstOffset);
 
@@ -635,18 +642,18 @@ Instance::initElems(const ElemSegment& seg, uint32_t dstOffset, uint32_t srcOffs
                 const CodeRange& calleeCodeRange =
                     calleeInstanceObj->getExportedFunctionCodeRange(fun, calleeTier);
                 void* code = calleeInstance.codeBase(calleeTier) + calleeCodeRange.funcTableEntry();
-                table.set(dstOffset + i, code, &calleeInstance);
+                table.setAnyFunc(dstOffset + i, code, &calleeInstance);
                 continue;
             }
         }
         void* code = codeBaseTier + codeRanges[funcToCodeRange[funcIndex]].funcTableEntry();
-        table.set(dstOffset + i, code, this);
+        table.setAnyFunc(dstOffset + i, code, this);
     }
 }
 
-/* static */ int32_t
+/* static */ int32_t /* -1 to signal trap; 0 for ok */
 Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
-                    uint32_t len, uint32_t segIndex)
+                    uint32_t len, uint32_t segIndex, uint32_t tableIndex)
 {
     MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveElemSegments_.length(),
                        "ensured by validation");
@@ -659,7 +666,11 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
 
     const ElemSegment& seg = *instance->passiveElemSegments_[segIndex];
     MOZ_RELEASE_ASSERT(!seg.active());
-    const Table& table = *instance->tables()[0];
+    const Table& table = *instance->tables()[tableIndex];
+
+    // Element segments cannot currently contain arbitrary values, and anyref
+    // tables cannot be initialized from segments.
+    MOZ_ASSERT(table.kind() == TableKind::AnyFunction);
 
     // We are proposing to copy
     //
@@ -682,7 +693,7 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
             highestDstOffset.value() < table.length() &&
             highestSrcOffset.value() < seg.length())
         {
-            instance->initElems(seg, dstOffset, srcOffset, len);
+            instance->initElems(tableIndex, seg, dstOffset, srcOffset, len);
             return 0;
         }
     }
@@ -691,7 +702,55 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
     return -1;
 }
 
-/* static */ void
+/* static */ void* /* (void*)-1 to signal trap; other pointer value for ok */
+Instance::tableGet(Instance* instance, uint32_t index, uint32_t tableIndex)
+{
+    const Table& table = *instance->tables()[tableIndex];
+    MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
+    if (index >= table.length()) {
+        JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr, JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
+        return (void*)-1;
+    }
+    return table.getAnyRef(index);
+}
+
+/* static */ uint32_t /* infallible */
+Instance::tableGrow(Instance* instance, uint32_t delta, void* initValue, uint32_t tableIndex)
+{
+    RootedObject obj(TlsContext.get(), (JSObject*)initValue);
+    Table& table = *instance->tables()[tableIndex];
+    MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
+
+    uint32_t oldSize = table.grow(delta, TlsContext.get());
+    if (oldSize != uint32_t(-1) && initValue != nullptr) {
+        for (uint32_t i = 0; i < delta; i++) {
+            table.setAnyRef(oldSize + i, obj.get());
+        }
+    }
+    return oldSize;
+}
+
+/* static */ int32_t /* -1 to signal trap; 0 for ok */
+Instance::tableSet(Instance* instance, uint32_t index, void* value, uint32_t tableIndex)
+{
+    Table& table = *instance->tables()[tableIndex];
+    MOZ_RELEASE_ASSERT(table.kind() == TableKind::AnyRef);
+    if (index >= table.length()) {
+        JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr, JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
+        return -1;
+    }
+    table.setAnyRef(index, (JSObject*)value);
+    return 0;
+}
+
+/* static */ uint32_t /* infallible */
+Instance::tableSize(Instance* instance, uint32_t tableIndex)
+{
+    Table& table = *instance->tables()[tableIndex];
+    return table.length();
+}
+
+/* static */ void /* infallible */
 Instance::postBarrier(Instance* instance, gc::Cell** location)
 {
     MOZ_ASSERT(location);
@@ -704,7 +763,7 @@ Instance::postBarrier(Instance* instance, gc::Cell** location)
 // When we fail to allocate we return a nullptr; the wasm side must check this
 // and propagate it as an error.
 
-/* static */ void*
+/* static */ void* /* null on OOM, otherwise a pointer */
 Instance::structNew(Instance* instance, uint32_t typeIndex)
 {
     JSContext* cx = TlsContext.get();
@@ -712,7 +771,7 @@ Instance::structNew(Instance* instance, uint32_t typeIndex)
     return TypedObject::createZeroed(cx, typeDescr);
 }
 
-/* static */ void*
+/* static */ void* /* infallible */
 Instance::structNarrow(Instance* instance, uint32_t mustUnboxAnyref, uint32_t outputTypeIndex,
                        void* maybeNullPtr)
 {
@@ -847,7 +906,7 @@ Instance::Instance(JSContext* cx,
         const TableDesc& td = metadata().tables[i];
         TableTls& table = tableTls(td);
         table.length = tables_[i]->length();
-        table.base = tables_[i]->base();
+        table.functionBase = tables_[i]->functionBase();
     }
 
     for (size_t i = 0; i < metadata().globals.length(); i++) {
@@ -1246,13 +1305,30 @@ Instance::onMovingGrowMemory(uint8_t* prevMemoryBase)
 }
 
 void
-Instance::onMovingGrowTable()
+Instance::onMovingGrowTable(const Table* theTable)
 {
     MOZ_ASSERT(!isAsmJS());
-    MOZ_ASSERT(tables_.length() == 1);
-    TableTls& table = tableTls(metadata().tables[0]);
-    table.length = tables_[0]->length();
-    table.base = tables_[0]->base();
+
+    // `theTable` has grown and we must update cached data for it.  Importantly,
+    // we can have cached those data in more than one location: we'll have
+    // cached them once for each time the table was imported into this instance.
+    //
+    // When an instance is registered as an observer of a table it is only
+    // registered once, regardless of how many times the table was imported.
+    // Thus when a table is grown, onMovingGrowTable() is only invoked once for
+    // the table.
+    //
+    // Ergo we must go through the entire list of tables in the instance here
+    // and check for the table in all the cached-data slots; we can't exit after
+    // the first hit.
+
+    for (uint32_t i = 0; i < tables_.length(); i++) {
+        if (tables_[i] == theTable) {
+            TableTls& table = tableTls(metadata().tables[i]);
+            table.length = tables_[i]->length();
+            table.functionBase = tables_[i]->functionBase();
+        }
+    }
 }
 
 void

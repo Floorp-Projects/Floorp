@@ -134,7 +134,11 @@ web-platform-tests-wdspec:
     description: "Web platform webdriver-spec run"
     suite: web-platform-tests-wdspec
     treeherder-symbol: W(Wd)
-    chunks: 2
+    chunks:
+        by-test-platform:
+            linux64-ccov/debug: 4
+            windows10-64-ccov/debug: 4
+            default: 2
     mozharness:
         extra-options:
             - --test-type=wdspec

@@ -1054,11 +1054,6 @@ browser[tabmodalPromptShowing] {
   -moz-box-align: end;
 }
 
-/* Translation */
-notification[value="translation"] {
-  -moz-binding: url("chrome://browser/content/translation-infobar.xml#translationbar");
-}
-
 /*** Visibility of downloads indicator controls ***/
 
 /* Bug 924050: If we've loaded the indicator, for now we hide it in the menu panel,

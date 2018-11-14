@@ -93,13 +93,12 @@ add_task(async function() {
 
   // Check UI
   const learnMoreEl = hb.notice.querySelector(".text-link");
-  const messageEl = targetWindow.document.getAnonymousElementByAttribute(hb.notice, "anonid", "messageText");
   Assert.equal(notificationBox.allNotifications.length, preCount + 1, "Correct number of notifications open");
   Assert.equal(hb.notice.querySelectorAll(".star-x").length, 5, "Correct number of stars");
   Assert.equal(hb.notice.querySelectorAll(".notification-button").length, 0, "Engagement button not shown");
   Assert.equal(learnMoreEl.href, "https://example.org/learnmore", "Learn more url correct");
   Assert.equal(learnMoreEl.value, "Learn More", "Learn more label correct");
-  Assert.equal(messageEl.textContent, "test", "Message is correct");
+  Assert.equal(hb.notice.messageText.textContent, "test", "Message is correct");
 
   // Check that when clicking the learn more link, a tab opens with the right URL
   let loadedPromise;

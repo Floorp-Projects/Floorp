@@ -166,6 +166,7 @@
       }
       /* Ensure both pseudo elements have the same size and position. */
       .action-icon::before, .action-icon::after {
+        content: "";
         height: 200%;
         position: absolute;
         top: -50%;
@@ -188,8 +189,6 @@
 
       /* icons */
       .action-icon::after {
-        content: ""; /* The ::after pseudo element isn't generated without
-                        specifying a value for this attribute. */
         -moz-context-properties: fill, fill-opacity;
         fill-opacity: 0;
         background-repeat: no-repeat;
@@ -251,6 +250,7 @@
       /* Putting the background image in a positioned pseudo element lets us
        * use CSS transforms on the background image, which we need for rtl. */
       .twisty::before {
+        content: "";
         position: absolute;
         height: 100%;
         width: 100%;
