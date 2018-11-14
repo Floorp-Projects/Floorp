@@ -6,6 +6,8 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const LocalFile = new Components.Constructor("@mozilla.org/file/local;1", Ci.nsIFile, "initWithPath");
 
+Services.prefs.setBoolPref("media.gmp-manager.updateEnabled", true);
+
 var testserver = new HttpServer();
 testserver.registerDirectory("/data/", do_get_file("data/productaddons"));
 testserver.start();
