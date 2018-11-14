@@ -12,9 +12,24 @@ import mozilla.components.service.glean.Lifetime
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
 
+/**
+ * Defines an alias for a generic data storage to be used by
+ * [GenericScalarStorageEngine]. This maps a metric name to
+ * its data.
+ */
 internal typealias GenericDataStorage<T> = MutableMap<String, T>
+
+/**
+ * Defines an alias for a generic storage map to be used by
+ * [GenericScalarStorageEngine]. This maps a store name to
+ * the [GenericDataStorage] it holds.
+ */
 internal typealias GenericStorageMap<T> = MutableMap<String, GenericDataStorage<T>>
 
+/**
+ * A base class for 'scalar' like metrics. This allows sharing the common
+ * store managing and lifetime behaviours.
+ */
 abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
     override lateinit var applicationContext: Context
 
@@ -71,23 +86,24 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
             return prefs
         }
 
-        for ((metricName, metricValue) in metrics) {
-            if (!metricName.contains('#')) {
+        for ((metricStoragePath, metricValue) in metrics) {
+            if (!metricStoragePath.contains('#')) {
                 continue
             }
 
             // Split the stored name in 2: we expect it to be in the format
             // store#metric.name
-            val parts = metricName.split('#', limit = 2)
-            if (parts[0].length <= 1) {
+            val (storeName, metricName) =
+                metricStoragePath.split('#', limit = 2)
+            if (storeName.length <= 1) {
                 continue
             }
 
-            val storeData = dataStores[Lifetime.User.ordinal].getOrPut(parts[0]) { mutableMapOf() }
+            val storeData = dataStores[Lifetime.User.ordinal].getOrPut(storeName) { mutableMapOf() }
             // Only set the stored value if we're able to deserialize the persisted data.
             deserializeSingleMetric(metricValue)?.let {
-                storeData[parts[1]] = it
-            }
+                storeData[metricName] = it
+            } ?: logger.warn("Failed to deserialize $metricStoragePath")
         }
 
         return prefs
@@ -96,6 +112,10 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
     /**
      * Retrieves the [recorded metric data][ScalarType] for the provided
      * store name.
+     *
+     * Please note that the [Lifetime.Application] lifetime is handled implicitly
+     * by never clearing its data. It will naturally clear out when restarting the
+     * application.
      *
      * @param storeName the name of the desired store
      * @param clearStore whether or not to clear the requested store. Not that only
