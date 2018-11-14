@@ -59,7 +59,7 @@ public:
                               const nsTArray<wr::WrFilterOp>& aFilters);
 
   void PushOverrideForASR(const ActiveScrolledRoot* aASR,
-                          const Maybe<wr::WrClipId>& aClipId);
+                          const wr::WrClipId& aClipId);
   void PopOverrideForASR(const ActiveScrolledRoot* aASR);
 
   Maybe<wr::ImageKey> CreateImageKey(nsDisplayItem* aItem,
