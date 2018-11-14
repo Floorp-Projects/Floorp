@@ -1070,7 +1070,7 @@ decorate_task(
       "Preference should be absent",
     );
   },
-);
+).skip(/* bug 1502410 and bug 1505941 */);
 
 // stop should pass "unknown" to telemetry event for `reason` if none is specified
 decorate_task(

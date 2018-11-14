@@ -4,8 +4,14 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "LogManager", "resource://normandy/lib/LogManager.jsm");
 
 var EXPORTED_SYMBOLS = ["PrefUtils"];
+
+XPCOMUtils.defineLazyGetter(this, "log", () => {
+  return LogManager.getLogger("preference-experiments");
+});
 
 const kPrefBranches = {
   user: Services.prefs,
@@ -94,14 +100,7 @@ var PrefUtils = {
     if (branchName === "user") {
       kPrefBranches.user.clearUserPref(pref);
     } else if (branchName === "default") {
-      // deleteBranch will affect the user branch as well. Get the user-branch
-      // value, and re-set it after clearing the pref.
-      const hadUserValue = Services.prefs.prefHasUserValue(pref);
-      const originalValue = this.getPref("user", pref, null);
-      kPrefBranches.default.deleteBranch(pref);
-      if (hadUserValue) {
-        this.setPref(branchName, pref, originalValue);
-      }
+      log.warn(`Cannot not reset pref ${pref} on the default branch. Pref will be cleared at next restart.`);
     }
   },
 };
