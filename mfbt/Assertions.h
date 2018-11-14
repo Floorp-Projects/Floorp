@@ -33,7 +33,7 @@ MOZ_BEGIN_EXTERN_C
 extern MFBT_DATA const char* gMozCrashReason;
 MOZ_END_EXTERN_C
 
-#if defined(MOZ_HAS_MOZGLUE) || defined(MOZILLA_INTERNAL_API)
+#if !defined(DEBUG) && (defined(MOZ_HAS_MOZGLUE) || defined(MOZILLA_INTERNAL_API))
 static inline void
 AnnotateMozCrashReason(const char* reason)
 {
@@ -301,16 +301,15 @@ MOZ_NoReturn(int aLine)
  * to crash-stats and are publicly visible. Firefox data stewards must do data
  * review on usages of this macro.
  */
-static inline MOZ_COLD MOZ_NORETURN void
-MOZ_CrashOOL(const char* aFilename, int aLine, const char* aReason)
-{
-#ifdef DEBUG
-  MOZ_ReportCrash(aReason, aFilename, aLine);
+#ifndef DEBUG
+MFBT_API MOZ_COLD MOZ_NORETURN MOZ_NEVER_INLINE void
+MOZ_CrashOOL(int aLine, const char* aReason);
+#  define MOZ_CRASH_UNSAFE_OOL(reason) MOZ_CrashOOL(__LINE__, reason)
+#else
+MFBT_API MOZ_COLD MOZ_NORETURN MOZ_NEVER_INLINE void
+MOZ_CrashOOL(const char* aFilename, int aLine, const char* aReason);
+#  define MOZ_CRASH_UNSAFE_OOL(reason) MOZ_CrashOOL(__FILE__, __LINE__, reason)
 #endif
-  MOZ_CRASH_ANNOTATE(aReason);
-  MOZ_REALLY_CRASH(aLine);
-}
-#define MOZ_CRASH_UNSAFE_OOL(reason) MOZ_CrashOOL(__FILE__, __LINE__, reason)
 
 static const size_t sPrintfMaxArgs = 4;
 static const size_t sPrintfCrashReasonSize = 1024;
