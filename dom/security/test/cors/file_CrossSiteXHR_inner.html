@@ -88,7 +88,7 @@ window.addEventListener("message", function(e) {
   try {
     xhr.open(req.method, req.url, true,
              ("username" in req) ? req.username : "",
-             ("password" in req) ? req.password : "aa");
+             ("password" in req) ? req.password : "");
   } catch (ex) {
     res.didFail = true;
     post(e, res);

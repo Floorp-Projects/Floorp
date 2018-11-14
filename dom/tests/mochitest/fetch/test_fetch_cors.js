@@ -180,9 +180,7 @@ function testModeCors() {
                },
 
                // nonempty password
-               // XXXbz this passes for now, because we ignore passwords
-               // without usernames in most cases.
-               { pass: 1,
+               { pass: 0,
                  method: "GET",
                  noAllowPreflight: 1,
                  password: "password",
