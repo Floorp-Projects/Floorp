@@ -27,7 +27,7 @@ import org.mozilla.focus.utils.Settings
 import kotlin.coroutines.CoroutineContext
 
 abstract class SearchEngineListPreference : Preference, CoroutineScope {
-    private lateinit var job: Job
+    private val job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
     protected var searchEngines: List<SearchEngine> = emptyList()
@@ -52,11 +52,6 @@ abstract class SearchEngineListPreference : Preference, CoroutineScope {
             .sortedBy { it.name }
 
         refreshSearchEngineViews(context)
-    }
-
-    override fun onAttached() {
-        super.onAttached()
-        job = Job()
     }
 
     override fun onDetached() {
