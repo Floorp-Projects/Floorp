@@ -116,14 +116,23 @@ def download_coverage_mapping(base_revision):
         print('Chunk mapping file not found.')
 
     CHUNK_MAPPING_URL_TEMPLATE = 'https://index.taskcluster.net/v1/task/project.releng.services.project.production.code_coverage_bot.{}/artifacts/public/chunk_mapping.tar.xz'  # noqa
-    JSON_PUSHES_URL_TEMPLATE = 'https://hg.mozilla.org/mozilla-central/json-pushes?version=2&tipsonly=1&tochange={}&startdate={}'  # noqa
+    JSON_PUSHES_URL_TEMPLATE = 'https://hg.mozilla.org/mozilla-central/json-pushes?version=2&tipsonly=1&startdate={}'  # noqa
 
     # Get pushes from at most one month ago.
     PUSH_HISTORY_DAYS = 30
     delta = datetime.timedelta(days=PUSH_HISTORY_DAYS)
     start_time = (datetime.datetime.now() - delta).strftime('%Y-%m-%d')
-    pushes_url = JSON_PUSHES_URL_TEMPLATE.format(base_revision, start_time)
-    pushes = requests.get(pushes_url).json()['pushes']
+    pushes_url = JSON_PUSHES_URL_TEMPLATE.format(start_time)
+    pushes_data = requests.get(pushes_url + '&tochange={}'.format(base_revision)).json()
+    if 'error' in pushes_data:
+        if 'unknown revision' in pushes_data['error']:
+            print('unknown revision {}, trying with latest mozilla-central'.format(base_revision))
+            pushes_data = requests.get(pushes_url).json()
+
+        if 'error' in pushes_data:
+            raise Exception(pushes_data['error'])
+
+    pushes = pushes_data['pushes']
 
     print('Looking for coverage data. This might take a minute or two.')
     print('Base revision:', base_revision)
