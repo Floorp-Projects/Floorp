@@ -797,13 +797,14 @@ class MOZ_RAII AutoProfilerLabel
 public:
   // This is the AUTO_PROFILER_LABEL and AUTO_PROFILER_LABEL_DYNAMIC variant.
   AutoProfilerLabel(const char* aLabel, const char* aDynamicString,
-                    js::ProfilingStackFrame::Category aCategory
+                    js::ProfilingStackFrame::Category aCategory,
+                    uint32_t aFlags = 0
                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
     // Get the ProfilingStack from TLS.
-    Push(sProfilingStack.get(), aLabel, aDynamicString, aCategory);
+    Push(sProfilingStack.get(), aLabel, aDynamicString, aCategory, aFlags);
   }
 
   // This is the AUTO_PROFILER_LABEL_FAST variant. It retrieves the ProfilingStack
