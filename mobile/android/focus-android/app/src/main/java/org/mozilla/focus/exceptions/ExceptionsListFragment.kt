@@ -45,7 +45,7 @@ typealias DomainFormatter = (String) -> String
  * Fragment showing settings UI listing all exception domains.
  */
 open class ExceptionsListFragment : Fragment(), CoroutineScope {
-    val job = Job()
+    private lateinit var job: Job
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
     /**
@@ -128,6 +128,8 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
 
     override fun onResume() {
         super.onResume()
+
+        job = Job()
 
         (activity as BaseSettingsFragment.ActionBarUpdater).apply {
             updateTitle(R.string.preference_exceptions)

@@ -42,7 +42,7 @@ import org.mozilla.focus.utils.UrlUtils
 import kotlin.coroutines.CoroutineContext
 
 class SearchSuggestionsFragment : Fragment(), CoroutineScope {
-    private val job = Job()
+    private lateinit var job: Job
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
 
@@ -56,6 +56,8 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
 
     override fun onResume() {
         super.onResume()
+
+        job = Job()
 
         searchSuggestionsViewModel.refresh()
     }

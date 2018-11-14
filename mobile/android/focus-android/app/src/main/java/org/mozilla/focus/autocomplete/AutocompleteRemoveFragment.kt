@@ -22,7 +22,7 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 import kotlin.coroutines.CoroutineContext
 
 class AutocompleteRemoveFragment : AutocompleteListFragment(), CoroutineScope {
-    private val job = Job()
+    private lateinit var job: Job
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
 
@@ -57,6 +57,8 @@ class AutocompleteRemoveFragment : AutocompleteListFragment(), CoroutineScope {
 
     override fun onResume() {
         super.onResume()
+
+        job = Job()
 
         val updater = activity as BaseSettingsFragment.ActionBarUpdater
         updater.updateTitle(R.string.preference_autocomplete_title_remove)

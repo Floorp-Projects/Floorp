@@ -133,7 +133,7 @@ class GeckoWebViewProvider : IWebViewProvider {
         private var isLoadingInternalUrl = false
         private lateinit var finder: SessionFinder
         private var restored = false
-        private val job = Job()
+        private lateinit var job: Job
         override val coroutineContext: CoroutineContext
             get() = job + Dispatchers.Main
 
@@ -191,6 +191,7 @@ class GeckoWebViewProvider : IWebViewProvider {
         }
 
         override fun onResume() {
+            job = Job()
             storeTelemetrySnapshots()
         }
 
