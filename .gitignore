@@ -13,6 +13,8 @@ ID
 .DS_Store*
 *.pdb
 *.egg-info
+# Filesystem temporaries
+.fuse_hidden*
 
 # Vim swap files.
 .*.sw[a-z]

@@ -2298,6 +2298,7 @@ CASE(EnableInterruptsPseudoOpcode)
 CASE(JSOP_NOP)
 CASE(JSOP_NOP_DESTRUCTURING)
 CASE(JSOP_TRY_DESTRUCTURING_ITERCLOSE)
+CASE(JSOP_UNUSED151)
 CASE(JSOP_UNUSED206)
 CASE(JSOP_CONDSWITCH)
 {
@@ -4352,14 +4353,6 @@ CASE(JSOP_FINALLY)
     CHECK_BRANCH();
 END_CASE(JSOP_FINALLY)
 
-CASE(JSOP_THROWING)
-{
-    ReservedRooted<Value> v(&rootValue0);
-    POP_COPY_TO(v);
-    MOZ_ALWAYS_TRUE(ThrowingOperation(cx, v));
-}
-END_CASE(JSOP_THROWING)
-
 CASE(JSOP_THROW)
 {
     CHECK_BRANCH();
@@ -4876,17 +4869,6 @@ js::Throw(JSContext* cx, HandleValue v)
     MOZ_ASSERT(!cx->isExceptionPending());
     cx->setPendingException(v);
     return false;
-}
-
-bool
-js::ThrowingOperation(JSContext* cx, HandleValue v)
-{
-    // Like js::Throw, but returns |true| instead of |false| to continue
-    // execution instead of calling the (JIT) exception handler.
-
-    MOZ_ASSERT(!cx->isExceptionPending());
-    cx->setPendingException(v);
-    return true;
 }
 
 bool

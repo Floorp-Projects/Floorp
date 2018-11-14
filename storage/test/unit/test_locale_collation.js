@@ -287,4 +287,5 @@ function run_test() {
     print("-- Running test: " + test.desc);
     test.run();
   });
+  cleanupLocaleTests();
 }

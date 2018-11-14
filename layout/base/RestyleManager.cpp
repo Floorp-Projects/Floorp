@@ -731,7 +731,9 @@ RecomputePosition(nsIFrame* aFrame)
   // needs to be repositioned properly as well.
   if (aFrame->HasView() ||
       (aFrame->GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW)) {
-    StyleChangeReflow(aFrame, nsChangeHint_NeedReflow);
+    StyleChangeReflow(aFrame,
+                      nsChangeHint_NeedReflow |
+                      nsChangeHint_ReflowChangesSizeOrPosition);
     return false;
   }
 
@@ -740,7 +742,9 @@ RecomputePosition(nsIFrame* aFrame)
   if (aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
     nsIFrame* ph = aFrame->GetPlaceholderFrame();
     if (ph && ph->HasAnyStateBits(PLACEHOLDER_STATICPOS_NEEDS_CSSALIGN)) {
-      StyleChangeReflow(aFrame, nsChangeHint_NeedReflow);
+      StyleChangeReflow(aFrame,
+                        nsChangeHint_NeedReflow |
+                        nsChangeHint_ReflowChangesSizeOrPosition);
       return false;
     }
   }
@@ -905,7 +909,9 @@ RecomputePosition(nsIFrame* aFrame)
   }
 
   // Fall back to a reflow
-  StyleChangeReflow(aFrame, nsChangeHint_NeedReflow);
+  StyleChangeReflow(aFrame,
+                    nsChangeHint_NeedReflow |
+                    nsChangeHint_ReflowChangesSizeOrPosition);
   return false;
 }
 

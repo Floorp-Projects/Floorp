@@ -44,7 +44,7 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
     def test_chrome_window_handles_with_scopes(self):
         # Open a browser and a non-browser (about window) chrome window
         self.open_window(
-            trigger=lambda: self.marionette.execute_script("window.open();"))
+            trigger=lambda: self.marionette.execute_script("OpenBrowserWindow();"))
         self.assert_window_handles()
         self.assertEqual(len(self.marionette.chrome_window_handles), len(self.start_windows) + 1)
         self.assertEqual(self.marionette.current_chrome_window_handle, self.start_window)

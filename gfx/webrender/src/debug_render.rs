@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorU, DeviceIntRect, DeviceUintSize, ImageFormat, TextureTarget};
+use api::{ColorU, ImageFormat, TextureTarget};
+use api::{DeviceIntRect, DeviceRect, DevicePoint, DeviceSize, DeviceUintSize};
 use debug_font_data;
 use device::{Device, Program, Texture, TextureSlot, VertexDescriptor, ShaderError, VAO};
 use device::{TextureFilter, VertexAttribute, VertexAttributeKind, VertexUsageHint};
@@ -165,7 +166,20 @@ impl DebugRenderer {
         debug_font_data::FONT_SIZE as f32 * 1.1
     }
 
-    pub fn add_text(&mut self, x: f32, y: f32, text: &str, color: ColorU) -> Rect<f32> {
+    /// Draws a line of text at the provided starting coordinates.
+    ///
+    /// If |bounds| is specified, glyphs outside the bounds are discarded.
+    ///
+    /// Y-coordinates is relative to screen top, along with everything else in
+    /// this file.
+    pub fn add_text(
+        &mut self,
+        x: f32,
+        y: f32,
+        text: &str,
+        color: ColorU,
+        bounds: Option<DeviceRect>,
+    ) -> Rect<f32> {
         let mut x_start = x;
         let ipw = 1.0 / debug_font_data::BMP_WIDTH as f32;
         let iph = 1.0 / debug_font_data::BMP_HEIGHT as f32;
@@ -185,6 +199,17 @@ impl DebugRenderer {
 
                 let x1 = x0 + glyph.x1 as f32 - glyph.x0 as f32;
                 let y1 = y0 + glyph.y1 as f32 - glyph.y0 as f32;
+
+                // If either corner of the glyph will end up out of bounds, drop it.
+                if let Some(b) = bounds {
+                    let rect = DeviceRect::new(
+                        DevicePoint::new(x0, y0),
+                        DeviceSize::new(x1 - x0, y1 - y0),
+                    );
+                    if !b.contains_rect(&rect) {
+                        continue;
+                    }
+                }
 
                 let s0 = glyph.x0 as f32 * ipw;
                 let t0 = glyph.y0 as f32 * iph;

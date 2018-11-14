@@ -210,12 +210,18 @@ InternalHeaders::~InternalHeaders()
 bool
 InternalHeaders::IsSimpleHeader(const nsACString& aName, const nsACString& aValue)
 {
+  if (aValue.Length() > 128) {
+    return false;
+  }
   // Note, we must allow a null content-type value here to support
   // get("content-type"), but the IsInvalidValue() check will prevent null
   // from being set or appended.
-  return aName.EqualsLiteral("accept") ||
-         aName.EqualsLiteral("accept-language") ||
-         aName.EqualsLiteral("content-language") ||
+  return (aName.EqualsLiteral("accept") &&
+          nsContentUtils::IsAllowedNonCorsAccept(aValue)) ||
+         (aName.EqualsLiteral("accept-language") &&
+          nsContentUtils::IsAllowedNonCorsLanguage(aValue))||
+         (aName.EqualsLiteral("content-language") &&
+          nsContentUtils::IsAllowedNonCorsLanguage(aValue))||
          (aName.EqualsLiteral("content-type") &&
           nsContentUtils::IsAllowedNonCorsContentType(aValue));
 }

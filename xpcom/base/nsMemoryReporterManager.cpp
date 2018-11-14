@@ -30,6 +30,7 @@
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/RDDProcessManager.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
@@ -1921,6 +1922,12 @@ nsMemoryReporterManager::StartGettingReports()
 
   if (gfx::GPUProcessManager* gpu = gfx::GPUProcessManager::Get()) {
     if (RefPtr<MemoryReportingProcess> proc = gpu->GetProcessMemoryReporter()) {
+      s->mChildrenPending.AppendElement(proc.forget());
+    }
+  }
+
+  if (RDDProcessManager* rdd = RDDProcessManager::Get()) {
+    if (RefPtr<MemoryReportingProcess> proc = rdd->GetProcessMemoryReporter()) {
       s->mChildrenPending.AppendElement(proc.forget());
     }
   }

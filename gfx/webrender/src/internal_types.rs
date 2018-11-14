@@ -127,6 +127,8 @@ pub struct TextureCacheAllocInfo {
     pub layer_count: i32,
     pub format: ImageFormat,
     pub filter: TextureFilter,
+    /// Indicates whether this corresponds to one of the shared texture caches.
+    pub is_shared_cache: bool,
 }
 
 /// Sub-operation-specific information for allocation operations.

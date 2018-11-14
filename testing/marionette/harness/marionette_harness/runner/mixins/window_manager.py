@@ -99,7 +99,7 @@ class WindowManagerMixin(object):
                 trigger()
             else:
                 with self.marionette.using_context("chrome"):
-                    self.marionette.execute_script("window.open();")
+                    self.marionette.execute_script("OpenBrowserWindow();")
         except Exception:
             exc, val, tb = sys.exc_info()
             reraise(exc, 'Failed to trigger opening a new window: {}'.format(val), tb)
