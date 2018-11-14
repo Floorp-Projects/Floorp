@@ -1960,6 +1960,12 @@ interface nsIDOMWindowUtils : nsISupports {
   void notifyTemporaryAutoplayPermissionChanged(in long aState,
                                                 in AString aPrePath);
 
+  /**
+   * Used to check whether the window temporarily allows autoplay for current
+   * domain.
+   */
+  bool isAutoplayTemporarilyAllowed();
+
   // These consts are only for testing purposes.
   const long DEFAULT_MOUSE_POINTER_ID = 0;
   const long DEFAULT_PEN_POINTER_ID   = 1;
