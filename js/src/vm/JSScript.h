@@ -1704,7 +1704,8 @@ class JSScript : public js::gc::TenuredCell
     uint32_t immutableFlags_ = 0;
 
     // Mutable flags typically store information about runtime or deoptimization
-    // behavior of this script.
+    // behavior of this script. This is only public for the JITs.
+  public:
     enum class MutableFlags : uint32_t {
         // Have warned about uses of undefined properties in this script.
         WarnedAboutUndefinedProp = 1 << 0,
@@ -1769,6 +1770,7 @@ class JSScript : public js::gc::TenuredCell
         // Set if the debugger's onNewScript hook has not yet been called.
         HideScriptFromDebugger = 1 << 19,
     };
+  private:
     uint32_t mutableFlags_ = 0;
 
     // 16-bit fields.
@@ -2239,6 +2241,10 @@ class JSScript : public js::gc::TenuredCell
 
     bool hasInnerFunctions() const {
         return hasFlag(ImmutableFlags::HasInnerFunctions);
+    }
+
+    static constexpr size_t offsetOfMutableFlags() {
+        return offsetof(JSScript, mutableFlags_);
     }
 
     bool hasAnyIonScript() const {
