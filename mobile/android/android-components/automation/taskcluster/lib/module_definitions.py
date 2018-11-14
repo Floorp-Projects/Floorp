@@ -15,7 +15,9 @@ def from_gradle():
     if exit_code is not 0:
         print("Gradle command returned error: {}".format(exit_code))
 
-    gradle_modules = json.loads(output)
+    modules_line = [line for line in output.splitlines() if line.startswith('modules: ')][0]
+    modules_json = modules_line.split(' ', 1)[1]
+    gradle_modules = json.loads(modules_json)
     return [{
         'name': module['name'][1:],  # Gradle prefixes all module names with ":", e.g.: ":browser-awesomebar"
         'artifact': "public/build/{}.maven.zip".format(module['name'][1:]),

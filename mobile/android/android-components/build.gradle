@@ -203,7 +203,7 @@ task printModules {
             buildPath: p.buildDir.toString(),
             shouldPublish: p.ext.shouldPublish
         ] }
-        println groovy.json.JsonOutput.toJson(modules)
+        println "modules: " + groovy.json.JsonOutput.toJson(modules)
     }
 }
 
