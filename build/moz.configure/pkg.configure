@@ -40,6 +40,7 @@ def pkg_check_modules(var, package_desc, when=always,
     if isinstance(package_desc, (tuple, list)):
         package_desc = ' '.join(package_desc)
     package_desc = dependable(package_desc)
+    allow_missing = dependable(allow_missing)
 
     @depends(when, '--enable-compile-environment')
     def when_and_compile_environment(when, compile_environment):
@@ -57,11 +58,11 @@ def pkg_check_modules(var, package_desc, when=always,
             die("*** Your version of pkg-config is too old. You need version %s or newer.",
                 min_version)
 
-    @depends(pkg_config, package_desc, when=when_and_compile_environment)
+    @depends(pkg_config, package_desc, allow_missing, when=when_and_compile_environment)
     @imports('subprocess')
     @imports('sys')
     @imports(_from='mozbuild.configure.util', _import='LineIO')
-    def package(pkg_config, package_desc):
+    def package(pkg_config, package_desc, allow_missing):
         # package_desc may start as a depends function, so we can't use
         # @checking here.
         log.info("checking for %s... " % package_desc)
