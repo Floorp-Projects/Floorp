@@ -9,6 +9,7 @@ EXPORTS.mozilla.dom = [
     'Report.h',
     'ReportBody.h',
     'ReportingObserver.h',
+    'ReportingUtils.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -16,6 +17,7 @@ UNIFIED_SOURCES += [
     'Report.cpp',
     'ReportBody.cpp',
     'ReportingObserver.cpp',
+    'ReportingUtils.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

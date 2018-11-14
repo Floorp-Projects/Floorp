@@ -295,6 +295,7 @@ STATIC_ATOMS = [
     Atom("headerDefaultStyle", "default-style"),
     Atom("defer", "defer"),
     Atom("del", "del"),
+    Atom("deprecation", "deprecation"),
     Atom("descendant", "descendant"),
     Atom("descendantOrSelf", "descendant-or-self"),
     Atom("descending", "descending"),
