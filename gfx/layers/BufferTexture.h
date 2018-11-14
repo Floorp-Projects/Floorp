@@ -87,7 +87,6 @@ protected:
   , mMoz2DBackend(aMoz2DBackend)
   {}
 
-  RefPtr<gfx::DrawTarget> mDrawTarget;
   BufferDescriptor mDescriptor;
   gfx::BackendType mMoz2DBackend;
 };
