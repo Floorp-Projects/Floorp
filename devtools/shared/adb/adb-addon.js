@@ -43,10 +43,6 @@ class ADBAddon extends EventEmitter {
 
     this._status = ADB_ADDON_STATES.UNKNOWN;
 
-    // Uninstall unsupported remote debugging extensions that might be installed on this
-    // profile to cleanup old profiles.
-    this.uninstallUnsupportedExtensions();
-
     const addonsListener = {};
     addonsListener.onEnabled =
     addonsListener.onDisabled =
@@ -141,6 +137,10 @@ class ADBAddon extends EventEmitter {
     addon.uninstall();
   }
 
+  /**
+   * Cleanup old remote debugging extensions from profiles that might still have them
+   * installed. Should be called from remote debugging entry points.
+   */
   async uninstallUnsupportedExtensions() {
     const [adbHelperAddon, valenceAddon] = await Promise.all([
       AddonManager.getAddonByID(ADB_HELPER_ADDON_ID),
