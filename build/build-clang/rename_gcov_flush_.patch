@@ -8,7 +8,7 @@ diff --git a/compiler-rt/lib/profile/GCDAProfiling.c b/compiler-rt/lib/profile/G
  }
  
 -void __gcov_flush() {
-+void __llvm_gcov_flush() {
++void __custom_llvm_gcov_flush() {
    struct fn_node* curr = flush_fn_list.head;
  
    while (curr) {
