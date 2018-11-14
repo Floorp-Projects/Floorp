@@ -49,10 +49,10 @@ tasks:
             - --login
             - -cx
             - >-
-              export TERM=dumb
-              && git fetch ${repository} ${head_branch}
+              git fetch ${repository} ${head_branch}
               && git config advice.detachedHead false
               && git checkout ${head_rev}
+              && ./gradlew --no-daemon --version
               && python automation/taskcluster/decision_task.py
           features:
             taskclusterProxy: true
@@ -102,10 +102,10 @@ tasks:
               - --login
               - -cx
               - >-
-                export TERM=dumb
-                && git fetch ${repository} ${head_branch}
+                git fetch ${repository} ${head_branch}
                 && git config advice.detachedHead false
                 && git checkout ${head_rev}
+                && ./gradlew --no-daemon --version
                 && python automation/taskcluster/decision_task.py
             features:
               taskclusterProxy: true
@@ -159,11 +159,11 @@ tasks:
             - --login
             - -cx
             - >-
-              export TERM=dumb
-              && git fetch origin --tags
+              git fetch origin --tags
               && git config advice.detachedHead false
               && git checkout ${tag}
               && pip install pyyaml
+              && ./gradlew --no-daemon --version
               && python automation/taskcluster/decision_task_release.py --version "${tag}"
           features:
             taskclusterProxy: true
