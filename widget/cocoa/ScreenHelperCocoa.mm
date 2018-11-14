@@ -12,6 +12,8 @@
 #include "nsCocoaUtils.h"
 #include "nsObjCExceptions.h"
 
+using namespace mozilla;
+
 static LazyLogModule sScreenLog("WidgetScreen");
 
 @interface ScreenHelperDelegate : NSObject

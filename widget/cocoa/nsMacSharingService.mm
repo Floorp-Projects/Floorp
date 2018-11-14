@@ -6,6 +6,8 @@
 #import <Cocoa/Cocoa.h>
 
 #include "nsMacSharingService.h"
+
+#include "jsapi.h"
 #include "nsCocoaUtils.h"
 #include "mozilla/MacStringHelpers.h"
 
