@@ -16,125 +16,6 @@
       <stylesheet src="chrome://xbl-marquee/content/xbl-marquee.css"/>
     </resources>
     <implementation>
-
-      <property name="scrollAmount" exposeToUntrustedContent="true">
-        <getter>
-          <![CDATA[
-          this._mutationActor(this._mutationObserver.takeRecords());
-          return this._scrollAmount;
-          ]]>
-        </getter>
-        <setter>
-          <![CDATA[
-          var val = parseInt(val);
-          if (val < 0) {
-            return;
-          }
-          if (isNaN(val)) {
-            val = 0;
-          }
-          this.setAttribute("scrollamount", val);
-          ]]>
-        </setter>
-      </property>
-
-      <property name="scrollDelay" exposeToUntrustedContent="true">
-        <getter>
-          <![CDATA[
-          this._mutationActor(this._mutationObserver.takeRecords());
-          var val = parseInt(this.getAttribute("scrolldelay"));
-
-          if (val <= 0 || isNaN(val)) {
-            return this._scrollDelay;
-          }
-
-          return val;
-          ]]>
-        </getter>
-        <setter>
-          var val = parseInt(val);
-          if (val > 0 ) {
-            this.setAttribute("scrolldelay", val);
-          }
-        </setter>
-      </property>
-
-      <property name="trueSpeed" exposeToUntrustedContent="true">
-        <getter>
-          <![CDATA[
-          if (!this.hasAttribute("truespeed")) {
-            return false;
-          }
-
-          return true;
-          ]]>
-        </getter>
-        <setter>
-          <![CDATA[
-          if (val) {
-            this.setAttribute("truespeed", "");
-          } else {
-            this.removeAttribute('truespeed');
-          }
-          ]]>
-        </setter>
-      </property>
-
-      <property name="direction" exposeToUntrustedContent="true">
-        <getter>
-          this._mutationActor(this._mutationObserver.takeRecords());
-          return this._direction;
-        </getter>
-        <setter>
-          <![CDATA[
-          if (typeof val == 'string') {
-            val = val.toLowerCase();
-          } else {
-            return;
-          }
-          if (val != 'left' && val != 'right' && val != 'up' && val != 'down') {
-            val = 'left';
-          }
-
-          this.setAttribute("direction", val);
-          ]]>
-        </setter>
-      </property>
-
-      <property name="behavior" exposeToUntrustedContent="true">
-        <getter>
-          this._mutationActor(this._mutationObserver.takeRecords());
-          return this._behavior;
-        </getter>
-        <setter>
-          if (typeof val == 'string') {
-            val = val.toLowerCase();
-          }
-          if (val == "alternate" || val == "slide" || val == 'scroll') {
-            this.setAttribute("behavior", val);
-          }
-        </setter>
-      </property>
-
-
-      <property name="loop" exposeToUntrustedContent="true">
-        <getter>
-          <![CDATA[
-          this._mutationActor(this._mutationObserver.takeRecords());
-          return this._loop;
-          ]]>
-        </getter>
-        <setter>
-          <![CDATA[
-          var val = parseInt(val);
-          if (val == -1 || val > 0) {
-            this.setAttribute("loop", val);
-          }
-          ]]>
-        </setter>
-      </property>
-
-
       <property name="onstart" exposeToUntrustedContent="true">
         <getter>
           return this.getAttribute("onstart");
@@ -173,102 +54,38 @@
         onget="return document.getAnonymousElementByAttribute(this, 'class', 'innerDiv');"
       />
 
-      <property name="height" exposeToUntrustedContent="true"
-        onget="return this.getAttribute('height');"
-        onset="this.setAttribute('height', val);"
-      />
-
-      <property name="width" exposeToUntrustedContent="true"
-        onget="return this.getAttribute('width');"
-        onset="this.setAttribute('width', val);"
-      />
-
-      <method name="_set_scrollDelay">
-        <parameter name="aValue"/>
-        <body>
-        <![CDATA[
-          aValue = parseInt(aValue);
-          if (aValue <= 0) {
-            return;
-          } else if (isNaN(aValue)) {
-            this._scrollDelay = 85;
-          } else if (aValue < 60) {
-            if (this.trueSpeed == true) {
-              this._scrollDelay = aValue;
-            } else {
-              this._scrollDelay = 60;
-            }
-          } else {
-            this._scrollDelay = aValue;
-          }
-        ]]>
-        </body>
-      </method>
-
-      <method name="_set_scrollAmount">
-        <parameter name="aValue"/>
-        <body>
-        <![CDATA[
-          aValue = parseInt(aValue);
-          if (isNaN(aValue)) {
-            this._scrollAmount = 6;
-          } else if (aValue < 0) {
-            return;
-          } else {
-            this._scrollAmount = aValue;
-          }
-        ]]>
-        </body>
-      </method>
-
-      <method name="_set_behavior">
-        <parameter name="aValue"/>
-        <body>
-        <![CDATA[
-          if (typeof aValue == 'string') {
-            aValue = aValue.toLowerCase();
-          }
-          if (aValue != 'alternate' && aValue != 'slide' && aValue != 'scroll') {
-            this._behavior = 'scroll';
-          } else {
-            this._behavior = aValue;
-          }
-        ]]>
-        </body>
-      </method>
-
-      <method name="_set_direction">
-        <parameter name="aValue"/>
-        <body>
-        <![CDATA[
-          if (typeof aValue == 'string') {
-            aValue = aValue.toLowerCase();
-          }
-          if (aValue != 'left' && aValue != 'right' && aValue != 'up' && aValue != 'down') {
-            aValue = 'left';
-          }
-
-          if (aValue != this._direction) {
-            this.startNewDirection = true;
-          }
-          this._direction = aValue;
-        ]]>
-        </body>
-      </method>
-
-      <method name="_set_loop">
-        <parameter name="aValue"/>
-        <body>
+      <property name="scrollDelayWithTruespeed">
+        <getter>
           <![CDATA[
-          var aValue = parseInt(aValue);
-          if (aValue == 0) {
-            return;
+          if (this.scrollDelay < 60 && !this.trueSpeed) {
+            return 60;
           }
-          if (isNaN(aValue) || aValue <= -1) {
-            aValue = -1;
-          }
-          this._loop = aValue;
+          return this.scrollDelay;
           ]]>
+        </getter>
+      </property>
+
+      <method name="doStart">
+        <body>
+        <![CDATA[
+          if (this.runId == 0) {
+            var lambda = () => this._doMove(false);
+            this.runId = window.setTimeout(lambda, this.scrollDelayWithTruespeed - this._deltaStartStop);
+            this._deltaStartStop = 0;
+          }
+        ]]>
+        </body>
+      </method>
+      <method name="doStop">
+        <body>
+        <![CDATA[
+          if (this.runId != 0) {
+            this._deltaStartStop = Date.now()- this._lastMoveDate;
+            clearTimeout(this.runId);
+          }
+
+          this.runId = 0;
+        ]]>
         </body>
       </method>
 
@@ -352,45 +169,20 @@
         </body>
       </method>
 
-      <method name="start" exposeToUntrustedContent="true">
-        <body>
-        <![CDATA[
-          if (this.runId == 0) {
-            var myThis = this;
-            var lambda = function myTimeOutFunction(){myThis._doMove(false);}
-            this.runId = window.setTimeout(lambda, this._scrollDelay - this._deltaStartStop);
-            this._deltaStartStop = 0;
-          }
-        ]]>
-        </body>
-      </method>
-
-      <method name="stop" exposeToUntrustedContent="true">
-        <body>
-        <![CDATA[
-          if (this.runId != 0) {
-            this._deltaStartStop = Date.now()- this._lastMoveDate;
-            clearTimeout(this.runId);
-          }
-
-          this.runId = 0;
-        ]]>
-        </body>
-      </method>
-
       <method name="_doMove">
         <parameter name="aResetPosition"/>
         <body>
         <![CDATA[
           this._lastMoveDate = Date.now();
 
-          //startNewDirection is true at first load and whenever the direction is changed
-          if (this.startNewDirection) {
-            this.startNewDirection = false; //we only want this to run once every scroll direction change
+          // invalidateCache is true at first load and whenever an attribute
+          // is changed
+          if (this.invalidateCache) {
+            this.invalidateCache = false; //we only want this to run once every scroll direction change
 
             var corrvalue = 0;
 
-            switch (this._direction)
+            switch (this._currentDirection)
             {
               case "up":
                 var height = document.defaultView.getComputedStyle(this).height;
@@ -400,8 +192,8 @@
                 }
                 this.innerDiv.style.padding = height + " 0";
                 this.dirsign = 1;
-                this.startAt = (this._behavior == 'alternate') ? (this.originalHeight - corrvalue) : 0;
-                this.stopAt  = (this._behavior == 'alternate' || this._behavior == 'slide') ? 
+                this.startAt = (this.behavior == 'alternate') ? (this.originalHeight - corrvalue) : 0;
+                this.stopAt  = (this.behavior == 'alternate' || this.behavior == 'slide') ? 
                                 (parseInt(height) + corrvalue) : (this.originalHeight + parseInt(height));
               break;
 
@@ -413,9 +205,9 @@
                 }
                 this.innerDiv.style.padding = height + " 0";
                 this.dirsign = -1;
-                this.startAt  = (this._behavior == 'alternate') ?
+                this.startAt  = (this.behavior == 'alternate') ?
                                 (parseInt(height) + corrvalue) : (this.originalHeight + parseInt(height));
-                this.stopAt = (this._behavior == 'alternate' || this._behavior == 'slide') ? 
+                this.stopAt = (this.behavior == 'alternate' || this.behavior == 'slide') ? 
                               (this.originalHeight - corrvalue) : 0;
               break;
 
@@ -424,9 +216,9 @@
                     corrvalue = this.innerDiv.offsetWidth - this.outerDiv.offsetWidth;
                 }
                 this.dirsign = -1;
-                this.stopAt  = (this._behavior == 'alternate' || this._behavior == 'slide') ? 
+                this.stopAt  = (this.behavior == 'alternate' || this.behavior == 'slide') ? 
                                (this.innerDiv.offsetWidth - corrvalue) : 0;
-                this.startAt = this.outerDiv.offsetWidth + ((this._behavior == 'alternate') ? 
+                this.startAt = this.outerDiv.offsetWidth + ((this.behavior == 'alternate') ? 
                                corrvalue : (this.innerDiv.offsetWidth + this.stopAt));   
               break;
 
@@ -436,9 +228,9 @@
                     corrvalue = this.innerDiv.offsetWidth - this.outerDiv.offsetWidth;
                 }
                 this.dirsign = 1;
-                this.startAt = (this._behavior == 'alternate') ? (this.innerDiv.offsetWidth - corrvalue) : 0;
+                this.startAt = (this.behavior == 'alternate') ? (this.innerDiv.offsetWidth - corrvalue) : 0;
                 this.stopAt  = this.outerDiv.offsetWidth + 
-                               ((this._behavior == 'alternate' || this._behavior == 'slide') ? 
+                               ((this.behavior == 'alternate' || this.behavior == 'slide') ? 
                                corrvalue : (this.innerDiv.offsetWidth + this.startAt));
             }
 
@@ -448,35 +240,35 @@
             }
           } //end if
 
-          this.newPosition = this.newPosition + (this.dirsign * this._scrollAmount);
+          this.newPosition = this.newPosition + (this.dirsign * this.scrollAmount);
 
           if ((this.dirsign == 1 && this.newPosition > this.stopAt) ||
               (this.dirsign == -1 && this.newPosition < this.stopAt))
           {
-            switch (this._behavior) 
+            switch (this.behavior) 
             {
               case 'alternate':
                 // lets start afresh
-                this.startNewDirection = true;
+                this.invalidateCache = true;
 
                 // swap direction
                 const swap = {left: "right", down: "up", up: "down", right: "left"};
-                this._direction = swap[this._direction];
+                this._currentDirection = swap[this._currentDirection] || "left";
                 this.newPosition = this.stopAt;
 
-                if ((this._direction == "up") || (this._direction == "down")) {
+                if ((this._currentDirection == "up") || (this._currentDirection == "down")) {
                   this.outerDiv.scrollTop = this.newPosition;
                 } else {
                   this.outerDiv.scrollLeft = this.newPosition;
                 }
 
-                if (this._loop != 1) {
+                if (this._currentLoop != 1) {
                   this._fireEvent("bounce", false, true);
                 }
               break;
 
               case 'slide':
-                if (this._loop > 1) {
+                if (this._currentLoop > 1) {
                   this.newPosition = this.startAt;
                 }
               break;
@@ -484,20 +276,20 @@
               default:
                 this.newPosition = this.startAt;
 
-                if ((this._direction == "up") || (this._direction == "down")) {
+                if ((this._currentDirection == "up") || (this._currentDirection == "down")) {
                   this.outerDiv.scrollTop = this.newPosition;
                 } else {
                   this.outerDiv.scrollLeft = this.newPosition;
                 }
 
-                //dispatch start event, even when this._loop == 1, comp. with IE6
+                //dispatch start event, even when this._currentLoop == 1, comp. with IE6
                 this._fireEvent("start", false, false);
             }
 
-            if (this._loop > 1) {
-              this._loop--;
-            } else if (this._loop == 1) {
-              if ((this._direction == "up") || (this._direction == "down")) {
+            if (this._currentLoop > 1) {
+              this._currentLoop--;
+            } else if (this._currentLoop == 1) {
+              if ((this._currentDirection == "up") || (this._currentDirection == "down")) {
                 this.outerDiv.scrollTop = this.stopAt;
               } else {
                 this.outerDiv.scrollLeft = this.stopAt;
@@ -508,7 +300,7 @@
             }
           }
           else {
-            if ((this._direction == "up") || (this._direction == "down")) {
+            if ((this._currentDirection == "up") || (this._currentDirection == "down")) {
               this.outerDiv.scrollTop = this.newPosition;
             } else {
               this.outerDiv.scrollLeft = this.newPosition;
@@ -517,7 +309,7 @@
 
           var myThis = this;
           var lambda = function myTimeOutFunction(){myThis._doMove(false);}
-          this.runId = window.setTimeout(lambda, this._scrollDelay);
+          this.runId = window.setTimeout(lambda, this.scrollDelayWithTruespeed);
         ]]>
         </body>
       </method>
@@ -527,7 +319,7 @@
         <![CDATA[
           this.stop();
 
-          if ((this._direction != "up") && (this._direction != "down")) {
+          if ((this._currentDirection != "up") && (this._currentDirection != "down")) {
             var width = window.getComputedStyle(this).width;
             this.innerDiv.parentNode.style.margin = '0 ' + width;
 
@@ -564,45 +356,13 @@
             var newValue = target.getAttribute(attrName);
 
             if (oldValue != newValue) {
+              target.invalidateCache = true;
               switch (attrName) {
                 case "loop":
-                  target._set_loop(newValue);
-                  if (target.rundId == 0) {
-                    target.start();
-                  }
-                  break;
-                case "scrollamount":
-                  target._set_scrollAmount(newValue);
-                  break;
-                case "scrolldelay":
-                  target._set_scrollDelay(newValue);
-                  target.stop();
-                  target.start();
-                  break;
-                case "truespeed":
-                  //needed to update target._scrollDelay
-                  var myThis = target;
-                  var lambda = function() {myThis._set_scrollDelay(myThis.getAttribute('scrolldelay'));}
-                  window.setTimeout(lambda, 0);
-                  break;
-                case "behavior":
-                  target._set_behavior(newValue);
-                  target.startNewDirection = true;
-                  if ((oldValue == "slide" && target.newPosition == target.stopAt) ||
-                      newValue == "alternate" || newValue == "slide") {
-                    target.stop();
-                    target._doMove(true);
-                  }
+                  target._currentLoop = target.loop;
                   break;
                 case "direction":
-                  if (!newValue) {
-                    newValue = "left";
-                  }
-                  target._set_direction(newValue);
-                  break;
-                case "width":
-                case "height":
-                  target.startNewDirection = true;
+                  target._currentDirection = target.direction;
                   break;
                 case "onstart":
                   target._setEventListener("start", newValue);
@@ -622,38 +382,38 @@
 
       <constructor>
         <![CDATA[
+          this.setStartStopCallback(val => {
+            if (val == "start") {
+              this.doStart();
+            } else if (val == "stop") {
+              this.doStop();
+            } else {
+              throw new Error(`setStartStopCallback passed an invalid value: ${val}`);
+            }
+          });
           // Set up state.
-          this._scrollAmount = 6;
-          this._scrollDelay = 85;
-          this._direction = "left";
-          this._behavior = "scroll";
-          this._loop = -1;
+          this._currentDirection = this.direction || "left";
+          this._currentLoop = this.loop;
           this.dirsign = 1;
           this.startAt = 0;
           this.stopAt = 0;
           this.newPosition = 0;
           this.runId = 0;
           this.originalHeight = 0;
-          this.startNewDirection = true;
+          this.invalidateCache = true;
 
           // hack needed to fix js error, see bug 386470
           var myThis = this;
           var lambda = function myScopeFunction() { if (myThis.init) myThis.init(); }
 
-          this._set_direction(this.getAttribute('direction'));
-          this._set_behavior(this.getAttribute('behavior'));
-          this._set_scrollDelay(this.getAttribute('scrolldelay'));
-          this._set_scrollAmount(this.getAttribute('scrollamount'));
-          this._set_loop(this.getAttribute('loop'));
           this._setEventListener("start", this.getAttribute("onstart"));
           this._setEventListener("finish", this.getAttribute("onfinish"));
           this._setEventListener("bounce", this.getAttribute("onbounce"));
-          this.startNewDirection = true;
 
           this._mutationObserver = new MutationObserver(this._mutationActor);
           this._mutationObserver.observe(this, { attributes: true,
             attributeOldValue: true,
-            attributeFilter: ['loop', 'scrollamount', 'scrolldelay', '', 'truespeed', 'behavior',
+            attributeFilter: ['loop', '', 'behavior',
               'direction', 'width', 'height', 'onstart', 'onfinish', 'onbounce'] });
 
           // init needs to be run after the page has loaded in order to calculate
@@ -665,6 +425,11 @@
           }
         ]]>
       </constructor>
+      <destructor>
+        <![CDATA[
+        this.setStartStopCallback(null);
+        ]]>
+      </destructor>
     </implementation>
 
   </binding>
@@ -673,7 +438,7 @@
            extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee"
            inheritstyle="false">
 
-    <!-- White-space isn't allowed because a marquee could be 
+    <!-- White-space isn't allowed because a marquee could be
          inside 'white-space: pre' -->
     <content>
       <html:div style="display: -moz-box; overflow: hidden; width: -moz-available;"
@@ -693,7 +458,7 @@
            extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee"
            inheritstyle="false">
 
-    <!-- White-space isn't allowed because a marquee could be 
+    <!-- White-space isn't allowed because a marquee could be
          inside 'white-space: pre' -->
     <content>
       <html:div style="overflow: hidden; width: -moz-available;"

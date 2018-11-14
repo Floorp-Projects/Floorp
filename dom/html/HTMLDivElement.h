@@ -18,6 +18,7 @@ public:
   explicit HTMLDivElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo))
   {
+    MOZ_ASSERT(mNodeInfo->Equals(nsGkAtoms::div), "HTMLDivElement should be a div");
   }
 
   void GetAlign(DOMString& aAlign)
