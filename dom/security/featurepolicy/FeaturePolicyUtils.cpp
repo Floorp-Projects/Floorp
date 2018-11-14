@@ -6,8 +6,11 @@
 
 #include "FeaturePolicyUtils.h"
 #include "mozilla/dom/FeaturePolicy.h"
+#include "mozilla/dom/FeaturePolicyViolationReportBody.h"
+#include "mozilla/dom/ReportingUtils.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsIDocument.h"
+#include "nsIURIFixup.h"
 
 namespace mozilla {
 namespace dom {
@@ -87,7 +90,72 @@ FeaturePolicyUtils::IsFeatureAllowed(nsIDocument* aDocument,
   FeaturePolicy* policy = aDocument->Policy();
   MOZ_ASSERT(policy);
 
-  return policy->AllowsFeatureInternal(aFeatureName, policy->DefaultOrigin());
+  if (policy->AllowsFeatureInternal(aFeatureName, policy->DefaultOrigin())) {
+    return true;
+  }
+
+  ReportViolation(aDocument, aFeatureName);
+  return false;
+}
+
+/* static */ void
+FeaturePolicyUtils::ReportViolation(nsIDocument* aDocument,
+                                    const nsAString& aFeatureName)
+{
+  MOZ_ASSERT(aDocument);
+
+  nsCOMPtr<nsIURI> uri = aDocument->GetDocumentURI();
+  if (NS_WARN_IF(!uri)) {
+    return;
+  }
+
+  // Strip the URL of any possible username/password and make it ready to be
+  // presented in the UI.
+  nsCOMPtr<nsIURIFixup> urifixup = services::GetURIFixup();
+  if (NS_WARN_IF(!urifixup)) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> exposableURI;
+  nsresult rv = urifixup->CreateExposableURI(uri, getter_AddRefs(exposableURI));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsAutoCString spec;
+  rv = exposableURI->GetSpec(spec);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+  JSContext* cx = nsContentUtils::GetCurrentJSContext();
+  if (NS_WARN_IF(!cx)) {
+    return;
+  }
+
+  nsAutoCString fileName;
+  Nullable<int32_t> lineNumber;
+  Nullable<int32_t> columnNumber;
+  uint32_t line = 0;
+  uint32_t column = 0;
+  if (nsJSUtils::GetCallingLocation(cx, fileName, &line, &column)) {
+    lineNumber.SetValue(static_cast<int32_t>(line));
+    columnNumber.SetValue(static_cast<int32_t>(column));
+  }
+
+  nsPIDOMWindowInner* window = aDocument->GetInnerWindow();
+  if (NS_WARN_IF(!window)) {
+    return;
+  }
+
+  RefPtr<FeaturePolicyViolationReportBody> body =
+    new FeaturePolicyViolationReportBody(window, aFeatureName,
+                                         NS_ConvertUTF8toUTF16(fileName),
+                                         lineNumber, columnNumber,
+                                         NS_LITERAL_STRING("enforce"));
+
+  ReportingUtils::Report(window,
+                         nsGkAtoms::featurePolicyViolation,
+                         NS_ConvertUTF8toUTF16(spec), body);
 }
 
 } // dom namespace

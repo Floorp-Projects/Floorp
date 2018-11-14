@@ -48,6 +48,11 @@ public:
   // Returns the default policy value for aFeatureName.
   static FeaturePolicyValue
   DefaultAllowListFeature(const nsAString& aFeatureName);
+
+private:
+  static void
+  ReportViolation(nsIDocument* aDocument,
+                  const nsAString& aFeatureName);
 };
 
 } // dom namespace
