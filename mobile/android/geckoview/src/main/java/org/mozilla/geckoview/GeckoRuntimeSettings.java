@@ -300,11 +300,11 @@ public final class GeckoRuntimeSettings implements Parcelable {
         /**
          * Set the locale.
          *
-         * @param languageTags List of locale codes in Gecko format ("en" or "en-US").
+         * @param languageTag The locale code in Gecko format ("en" or "en-US").
          * @return The builder instance.
          */
-        public @NonNull Builder locales(String[] requestedLocales) {
-            mSettings.mRequestedLocales = requestedLocales;
+        public @NonNull Builder locale(String languageTag) {
+            mSettings.mLocale = languageTag;
             return this;
         }
     }
@@ -394,7 +394,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
     /* package */ int mScreenWidthOverride;
     /* package */ int mScreenHeightOverride;
     /* package */ Class<? extends Service> mCrashHandler;
-    /* package */ String[] mRequestedLocales;
+    /* package */ String mLocale;
 
     private final Pref<?>[] mPrefs = new Pref<?>[] {
         mCookieBehavior, mCookieLifetime, mConsoleOutput,
@@ -437,7 +437,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         mScreenWidthOverride = settings.mScreenWidthOverride;
         mScreenHeightOverride = settings.mScreenHeightOverride;
         mCrashHandler = settings.mCrashHandler;
-        mRequestedLocales = settings.mRequestedLocales;
+        mLocale = settings.mLocale;
     }
 
     /* package */ Map<String, Object> getPrefsMap() {
@@ -450,7 +450,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
     }
 
     /* package */ void flush() {
-        flushLocales();
+        flushLocale();
 
         // Prefs are flushed individually when they are set, and
         // initial values are handled by GeckoRuntime itself.
@@ -604,27 +604,25 @@ public final class GeckoRuntimeSettings implements Parcelable {
     }
 
     /**
-     * Gets the list of requested locales.
-     *
-     * @return A list of locale codes in Gecko format ("en" or "en-US").
+     * @return The locale code in Gecko format ("en" or "en-US").
      */
-    public String[] getLocales() {
-        return mRequestedLocales;
+    public String getLocale() {
+        return mLocale;
     }
 
     /**
      * Set the locale.
      *
-     * @param requestedLocales An ordered list of locales in Gecko format ("en-US").
+     * @param languageTag The locale code in Gecko format ("en-US").
      */
-    public void setLocales(String[] requestedLocales) {
-        mRequestedLocales = requestedLocales;
-        flushLocales();
+    public void setLocale(String languageTag) {
+        mLocale = languageTag;
+        flushLocale();
     }
 
-    private void flushLocales() {
+    private void flushLocale() {
         final GeckoBundle data = new GeckoBundle(1);
-        data.putStringArray("requestedLocales", mRequestedLocales);
+        data.putString("languageTag", mLocale);
         EventDispatcher.getInstance().dispatch("GeckoView:SetLocale", data);
     }
 
@@ -843,7 +841,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         out.writeInt(mScreenWidthOverride);
         out.writeInt(mScreenHeightOverride);
         out.writeString(mCrashHandler != null ? mCrashHandler.getName() : null);
-        out.writeStringArray(mRequestedLocales);
+        out.writeString(mLocale);
     }
 
     // AIDL code may call readFromParcel even though it's not part of Parcelable.
@@ -877,7 +875,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
             }
         }
 
-        mRequestedLocales = source.createStringArray();
+        mLocale = source.readString();
     }
 
     public static final Parcelable.Creator<GeckoRuntimeSettings> CREATOR
