@@ -135,7 +135,7 @@ public final class GeckoSessionSettings implements Parcelable {
         mBundle.putBoolean(USE_PRIVATE_MODE.name, false);
         mBundle.putBoolean(USE_MULTIPROCESS.name, true);
         mBundle.putBoolean(SUSPEND_MEDIA_WHEN_INACTIVE.name, false);
-        mBundle.putBoolean(FULL_ACCESSIBILITY_TREE.name, true);
+        mBundle.putBoolean(FULL_ACCESSIBILITY_TREE.name, false);
         mBundle.putInt(USER_AGENT_MODE.name, USER_AGENT_MODE_MOBILE);
         mBundle.putInt(DISPLAY_MODE.name, DISPLAY_MODE_BROWSER);
     }
