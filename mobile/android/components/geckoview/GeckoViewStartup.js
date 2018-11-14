@@ -156,7 +156,7 @@ GeckoViewStartup.prototype = {
         break;
       }
       case "GeckoView:SetLocale":
-        Services.locale.requestedLocales = aData.requestedLocales;
+        Services.locale.requestedLocales = [aData.languageTag];
         break;
     }
   },
