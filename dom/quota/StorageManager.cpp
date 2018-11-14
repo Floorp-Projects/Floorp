@@ -165,41 +165,37 @@ public:
  ******************************************************************************/
 
 class PersistentStoragePermissionRequest final
-  : public nsIContentPermissionRequest
+  : public ContentPermissionRequestBase
 {
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  bool mIsHandlingUserInput;
   RefPtr<Promise> mPromise;
-  nsCOMPtr<nsIContentPermissionRequester> mRequester;
 
 public:
   PersistentStoragePermissionRequest(nsIPrincipal* aPrincipal,
                                      nsPIDOMWindowInner* aWindow,
                                      bool aIsHandlingUserInput,
                                      Promise* aPromise)
-    : mPrincipal(aPrincipal)
-    , mWindow(aWindow)
-    , mIsHandlingUserInput(aIsHandlingUserInput)
+    : ContentPermissionRequestBase(aPrincipal, aIsHandlingUserInput, aWindow,
+                                   NS_LITERAL_CSTRING("dom.storageManager"),
+                                   NS_LITERAL_CSTRING("persistent-storage"))
     , mPromise(aPromise)
   {
-    MOZ_ASSERT(aPrincipal);
     MOZ_ASSERT(aWindow);
     MOZ_ASSERT(aPromise);
-
-    mRequester = new nsContentPermissionRequester(mWindow);
   }
 
   nsresult
   Start();
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSICONTENTPERMISSIONREQUEST
-  NS_DECL_CYCLE_COLLECTION_CLASS(PersistentStoragePermissionRequest)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PersistentStoragePermissionRequest,
+                                           ContentPermissionRequestBase)
+
+  // nsIContentPermissionRequest
+  NS_IMETHOD Cancel(void) override;
+  NS_IMETHOD Allow(JS::HandleValue choices) override;
 
 private:
-  ~PersistentStoragePermissionRequest()
-  { }
+  ~PersistentStoragePermissionRequest() = default;
 };
 
 nsresult
@@ -689,69 +685,26 @@ PersistentStoragePermissionRequest::Start()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // Grant permission if pref'ed on.
-  if (Preferences::GetBool("dom.storageManager.prompt.testing", false)) {
-    if (Preferences::GetBool("dom.storageManager.prompt.testing.allow",
-                             false)) {
-      return Allow(JS::UndefinedHandleValue);
-    }
-
+  PromptResult pr;
+  nsresult rv = ShowPrompt(pr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (pr == PromptResult::Granted) {
+    return Allow(JS::UndefinedHandleValue);
+  }
+  if (pr == PromptResult::Denied) {
     return Cancel();
   }
 
   return nsContentPermissionUtils::AskPermission(this, mWindow);
 }
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(PersistentStoragePermissionRequest)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(PersistentStoragePermissionRequest)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(PersistentStoragePermissionRequest,
+                                               ContentPermissionRequestBase)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PersistentStoragePermissionRequest)
-  NS_INTERFACE_MAP_ENTRY(nsIContentPermissionRequest)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTION(PersistentStoragePermissionRequest, mWindow, mPromise)
-
-NS_IMETHODIMP
-PersistentStoragePermissionRequest::GetPrincipal(nsIPrincipal** aPrincipal)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(mPrincipal);
-
-  NS_ADDREF(*aPrincipal = mPrincipal);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PersistentStoragePermissionRequest::GetIsHandlingUserInput(bool* aIsHandlingUserInput)
-{
-  *aIsHandlingUserInput = mIsHandlingUserInput;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PersistentStoragePermissionRequest::GetWindow(mozIDOMWindow** aRequestingWindow)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aRequestingWindow);
-  MOZ_ASSERT(mWindow);
-
-  NS_ADDREF(*aRequestingWindow = mWindow);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PersistentStoragePermissionRequest::GetElement(Element** aElement)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aElement);
-
-  *aElement = nullptr;
-  return NS_OK;
-}
+NS_IMPL_CYCLE_COLLECTION_INHERITED(PersistentStoragePermissionRequest, ContentPermissionRequestBase,
+                                   mPromise)
 
 NS_IMETHODIMP
 PersistentStoragePermissionRequest::Cancel()
@@ -790,32 +743,6 @@ PersistentStoragePermissionRequest::Allow(JS::HandleValue aChoices)
   MOZ_ALWAYS_SUCCEEDS(request->SetCallback(resolver));
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-PersistentStoragePermissionRequest::GetRequester(
-                                     nsIContentPermissionRequester** aRequester)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aRequester);
-
-  nsCOMPtr<nsIContentPermissionRequester> requester = mRequester;
-  requester.forget(aRequester);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PersistentStoragePermissionRequest::GetTypes(nsIArray** aTypes)
-{
-  MOZ_ASSERT(aTypes);
-
-  nsTArray<nsString> emptyOptions;
-
-  return nsContentPermissionUtils::CreatePermissionArray(
-                                       NS_LITERAL_CSTRING("persistent-storage"),
-                                       emptyOptions,
-                                       aTypes);
 }
 
 /*******************************************************************************
