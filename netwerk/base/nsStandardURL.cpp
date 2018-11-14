@@ -714,12 +714,13 @@ nsStandardURL::BuildNormalizedSpec(const char *spec,
     {
         nsSegmentEncoder encoder;
         nsSegmentEncoder queryEncoder(encoding);
-        // Items using an extraLen of 1 don't add anything unless mLen > 0
         // Username@
-        approxLen += encoder.EncodeSegmentCount(spec, mUsername,  esc_Username,      encUsername,  useEncUsername, 1);
+        approxLen += encoder.EncodeSegmentCount(spec, mUsername, esc_Username, encUsername, useEncUsername, 0);
+        approxLen += 1; // reserve length for @
         // :password - we insert the ':' even if there's no actual password if "user:@" was in the spec
-        if (mPassword.mLen >= 0)
+        if (mPassword.mLen > 0) {
             approxLen += 1 + encoder.EncodeSegmentCount(spec, mPassword,  esc_Password,      encPassword,  useEncPassword);
+        }
         // mHost is handled differently below due to encoding differences
         MOZ_ASSERT(mPort >= -1, "Invalid negative mPort");
         if (mPort != -1 && mPort != mDefaultPort)
@@ -831,10 +832,14 @@ nsStandardURL::BuildNormalizedSpec(const char *spec,
     mAuthority.mPos = i;
 
     // append authority
-    if (mUsername.mLen > 0) {
-        i = AppendSegmentToBuf(buf, i, spec, username, mUsername,
-                               &encUsername, useEncUsername, &diff);
-        ShiftFromPassword(diff);
+    if (mUsername.mLen > 0 || mPassword.mLen > 0) {
+        if (mUsername.mLen > 0) {
+            i = AppendSegmentToBuf(buf, i, spec, username, mUsername,
+                                   &encUsername, useEncUsername, &diff);
+            ShiftFromPassword(diff);
+        } else {
+            mUsername.mLen = -1;
+        }
         if (password.mLen > 0) {
             buf[i++] = ':';
             i = AppendSegmentToBuf(buf, i, spec, password, mPassword,
@@ -844,6 +849,9 @@ nsStandardURL::BuildNormalizedSpec(const char *spec,
             mPassword.mLen = -1;
         }
         buf[i++] = '@';
+    } else {
+        mUsername.mLen = -1;
+        mPassword.mLen = -1;
     }
     if (host.mLen > 0) {
         i = AppendSegmentToBuf(buf, i, spec, host, mHost, &encHost, useEncHost,
@@ -963,6 +971,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec,
     MOZ_ASSERT(mSpec.Length() <= (uint32_t) net_GetURLMaxLength(),
                "The spec should never be this long, we missed a check.");
 
+    MOZ_ASSERT(mUsername.mLen != 0 && mPassword.mLen != 0);
     return NS_OK;
 }
 
@@ -1263,7 +1272,7 @@ nsStandardURL::GetSensitiveInfoHiddenSpec(nsACString &result)
     if (NS_FAILED(rv)) {
         return rv;
     }
-    if (mPassword.mLen >= 0) {
+    if (mPassword.mLen > 0) {
       result.ReplaceLiteral(mPassword.mPos, mPassword.mLen, "****");
     }
     return NS_OK;
@@ -1669,22 +1678,6 @@ nsStandardURL::SetUserPass(const nsACString &input)
 
     InvalidateCache();
 
-    if (userpass.IsEmpty()) {
-        // remove user:pass
-        if (mUsername.mLen > 0) {
-            if (mPassword.mLen > 0)
-                mUsername.mLen += (mPassword.mLen + 1);
-            mUsername.mLen++;
-            mSpec.Cut(mUsername.mPos, mUsername.mLen);
-            mAuthority.mLen -= mUsername.mLen;
-            ShiftFromHost(-mUsername.mLen);
-            mUsername.mLen = -1;
-            mPassword.mLen = -1;
-        }
-
-        return NS_OK;
-    }
-
     NS_ASSERTION(mHost.mLen >= 0, "uninitialized");
 
     nsresult rv;
@@ -1698,7 +1691,7 @@ nsStandardURL::SetUserPass(const nsACString &input)
 
     // build new user:pass in |buf|
     nsAutoCString buf;
-    if (usernameLen > 0) {
+    if (usernameLen > 0 || passwordLen > 0) {
         nsSegmentEncoder encoder;
         bool ignoredOut;
         usernameLen = encoder.EncodeSegmentCount(userpass.get(),
@@ -1717,13 +1710,14 @@ nsStandardURL::SetUserPass(const nsACString &input)
         } else {
             passwordLen = -1;
         }
-        if (mUsername.mLen < 0)
+        if (mUsername.mLen < 0 && mPassword.mLen < 0) {
             buf.Append('@');
+        }
     }
 
-    uint32_t shift = 0;
+    int32_t shift = 0;
 
-    if (mUsername.mLen < 0) {
+    if (mUsername.mLen < 0 && mPassword.mLen < 0) {
         // no existing user:pass
         if (!buf.IsEmpty()) {
             mSpec.Insert(buf, mHost.mPos);
@@ -1733,23 +1727,38 @@ nsStandardURL::SetUserPass(const nsACString &input)
     }
     else {
         // replace existing user:pass
-        uint32_t userpassLen = mUsername.mLen;
-        if (mPassword.mLen >= 0)
+        uint32_t userpassLen = 0;
+        if (mUsername.mLen > 0) {
+            userpassLen += mUsername.mLen;
+        }
+        if (mPassword.mLen > 0) {
             userpassLen += (mPassword.mLen + 1);
-        mSpec.Replace(mUsername.mPos, userpassLen, buf);
+        }
+        if (buf.IsEmpty()) {
+            // remove `@` character too
+            userpassLen++;
+        }
+        mSpec.Replace(mAuthority.mPos, userpassLen, buf);
         shift = buf.Length() - userpassLen;
     }
     if (shift) {
         ShiftFromHost(shift);
+        MOZ_DIAGNOSTIC_ASSERT(mAuthority.mLen >= -shift);
         mAuthority.mLen += shift;
     }
     // update positions and lengths
-    mUsername.mLen = usernameLen;
-    mPassword.mLen = passwordLen;
+    mUsername.mLen = usernameLen > 0 ? usernameLen : -1;
+    mUsername.mPos = mAuthority.mPos;
+    mPassword.mLen = passwordLen > 0 ? passwordLen : -1;
     if (passwordLen > 0) {
-        mPassword.mPos = mUsername.mPos + mUsername.mLen + 1;
+        if (mUsername.mLen > 0) {
+            mPassword.mPos = mUsername.mPos + mUsername.mLen + 1;
+        } else {
+            mPassword.mPos = mAuthority.mPos + 1;
+        }
     }
 
+    MOZ_ASSERT(mUsername.mLen != 0 && mPassword.mLen != 0);
     return NS_OK;
 }
 
@@ -1767,9 +1776,6 @@ nsStandardURL::SetUsername(const nsACString &input)
         return NS_ERROR_UNEXPECTED;
     }
 
-    if (username.IsEmpty())
-        return SetUserPass(username);
-
     if (mSpec.Length() + input.Length() - Username().Length() > (uint32_t) net_GetURLMaxLength()) {
         return NS_ERROR_MALFORMED_URI;
     }
@@ -1782,22 +1788,36 @@ nsStandardURL::SetUsername(const nsACString &input)
     const nsACString &escUsername =
         encoder.EncodeSegment(username, esc_Username, buf);
 
-    int32_t shift;
+    int32_t shift = 0;
 
-    if (mUsername.mLen < 0) {
+    if (mUsername.mLen < 0 && escUsername.IsEmpty()) {
+        return NS_OK;
+    }
+
+    if (mUsername.mLen < 0 && mPassword.mLen < 0) {
+        MOZ_ASSERT(!escUsername.IsEmpty(), "Should not be empty at this point");
         mUsername.mPos = mAuthority.mPos;
         mSpec.Insert(escUsername + NS_LITERAL_CSTRING("@"), mUsername.mPos);
         shift = escUsername.Length() + 1;
+        mUsername.mLen = escUsername.Length() > 0 ? escUsername.Length() : -1;
     }
-    else
-        shift = ReplaceSegment(mUsername.mPos, mUsername.mLen, escUsername);
+    else {
+        uint32_t pos = mUsername.mLen < 0 ? mAuthority.mPos : mUsername.mPos;
+        int32_t len = mUsername.mLen < 0 ? 0 : mUsername.mLen;
+
+        if (mPassword.mLen < 0 && escUsername.IsEmpty()) {
+            len++; // remove the @ character too
+        }
+        shift = ReplaceSegment(pos, len, escUsername);
+        mUsername.mLen = escUsername.Length() > 0 ? escUsername.Length() : -1;
+    }
 
     if (shift) {
-        mUsername.mLen = escUsername.Length();
         mAuthority.mLen += shift;
         ShiftFromPassword(shift);
     }
 
+    MOZ_ASSERT(mUsername.mLen != 0 && mPassword.mLen != 0);
     return NS_OK;
 }
 
@@ -1823,14 +1843,6 @@ nsStandardURL::SetPassword(const nsACString &input)
         NS_WARNING("cannot set password on no-auth url");
         return NS_ERROR_UNEXPECTED;
     }
-    if (mUsername.mLen <= 0) {
-        if (password.IsEmpty()) {
-            MOZ_DIAGNOSTIC_ASSERT(Password().IsEmpty());
-            return NS_OK;
-        }
-        NS_WARNING("cannot set password without existing username");
-        return NS_ERROR_FAILURE;
-    }
 
     if (mSpec.Length() + input.Length() - Password().Length() > (uint32_t) net_GetURLMaxLength()) {
         return NS_ERROR_MALFORMED_URI;
@@ -1839,13 +1851,19 @@ nsStandardURL::SetPassword(const nsACString &input)
     InvalidateCache();
 
     if (password.IsEmpty()) {
-        if (mPassword.mLen >= 0) {
+        if (mPassword.mLen > 0) {
             // cut(":password")
-            mSpec.Cut(mPassword.mPos - 1, mPassword.mLen + 1);
-            ShiftFromHost(-(mPassword.mLen + 1));
-            mAuthority.mLen -= (mPassword.mLen + 1);
+            int32_t len = mPassword.mLen;
+            if (mUsername.mLen < 0) {
+                len++; // also cut the @ character
+            }
+            len++; // for the : character
+            mSpec.Cut(mPassword.mPos - 1, len);
+            ShiftFromHost(-len);
+            mAuthority.mLen -= len;
             mPassword.mLen = -1;
         }
+        MOZ_ASSERT(mUsername.mLen != 0 && mPassword.mLen != 0);
         return NS_OK;
     }
 
@@ -1858,9 +1876,15 @@ nsStandardURL::SetPassword(const nsACString &input)
     int32_t shift;
 
     if (mPassword.mLen < 0) {
-        mPassword.mPos = mUsername.mPos + mUsername.mLen + 1;
-        mSpec.Insert(NS_LITERAL_CSTRING(":") + escPassword, mPassword.mPos - 1);
-        shift = escPassword.Length() + 1;
+        if (mUsername.mLen > 0) {
+            mPassword.mPos = mUsername.mPos + mUsername.mLen + 1;
+            mSpec.Insert(NS_LITERAL_CSTRING(":") + escPassword, mPassword.mPos - 1);
+            shift = escPassword.Length() + 1;
+        } else {
+            mPassword.mPos = mAuthority.mPos + 1;
+            mSpec.Insert(NS_LITERAL_CSTRING(":") + escPassword + NS_LITERAL_CSTRING("@"), mPassword.mPos - 1);
+            shift = escPassword.Length() + 2;
+        }
     }
     else
         shift = ReplaceSegment(mPassword.mPos, mPassword.mLen, escPassword);
@@ -1870,6 +1894,8 @@ nsStandardURL::SetPassword(const nsACString &input)
         mAuthority.mLen += shift;
         ShiftFromHost(shift);
     }
+
+    MOZ_ASSERT(mUsername.mLen != 0 && mPassword.mLen != 0);
     return NS_OK;
 }
 

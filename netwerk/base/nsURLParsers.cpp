@@ -535,10 +535,6 @@ nsAuthURLParser::ParseUserInfo(const char *userinfo, int32_t userinfoLen,
     const char *p = (const char *) memchr(userinfo, ':', userinfoLen);
     if (p) {
         // userinfo = <username:password>
-        if (p == userinfo) {
-            // must have a username!
-            return NS_ERROR_MALFORMED_URI;
-        }
         SET_RESULT(username, 0, p - userinfo);
         SET_RESULT(password, p - userinfo + 1, userinfoLen - (p - userinfo + 1));
     }
