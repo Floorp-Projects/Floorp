@@ -22,6 +22,29 @@ static const char pluginSandboxRules[] = R"SANDBOX_LITERAL(
       (deny default)
       (deny default (with no-log)))
 
+  ; These are not included in (deny default)
+  (deny process-info*)
+  ; This isn't available in some older macOS releases.
+  (if (defined? 'nvram*)
+    (deny nvram*))
+  ; This property require macOS 10.10+
+  (if (defined? 'file-map-executable)
+    (deny file-map-executable))
+
+  (if (defined? 'file-map-executable)
+    (allow file-map-executable file-read*
+      (subpath "/System/Library/PrivateFrameworks")
+      (regex #"^/usr/lib/libstdc\+\+\.[^/]*dylib$")
+      (literal plugin-binary-path)
+      (literal app-binary-path)
+      (subpath app-path))
+    (allow file-read*
+      (subpath "/System/Library/PrivateFrameworks")
+      (regex #"^/usr/lib/libstdc\+\+\.[^/]*dylib$")
+      (literal plugin-binary-path)
+      (literal app-binary-path)
+      (subpath app-path)))
+
   (allow signal (target self))
   (allow sysctl-read)
   (allow iokit-open (iokit-user-client-class "IOHIDParamUserClient"))
@@ -31,12 +54,7 @@ static const char pluginSandboxRules[] = R"SANDBOX_LITERAL(
       (literal "/dev/urandom")
       (literal "/usr/share/icu/icudt51l.dat")
       (subpath "/System/Library/Displays/Overrides")
-      (subpath "/System/Library/CoreServices/CoreTypes.bundle")
-      (subpath "/System/Library/PrivateFrameworks")
-      (regex #"^/usr/lib/libstdc\+\+\.[^/]*dylib$")
-      (literal plugin-binary-path)
-      (literal app-path)
-      (literal app-binary-path))
+      (subpath "/System/Library/CoreServices/CoreTypes.bundle"))
 )SANDBOX_LITERAL";
 
 static const char widevinePluginSandboxRulesAddend[] = R"SANDBOX_LITERAL(
