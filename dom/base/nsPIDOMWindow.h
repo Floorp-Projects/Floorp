@@ -58,6 +58,9 @@ class Element;
 class MozIdleObserver;
 class Navigator;
 class Performance;
+class Report;
+class ReportBody;
+class ReportingObserver;
 class Selection;
 class ServiceWorker;
 class ServiceWorkerDescriptor;
@@ -618,6 +621,19 @@ public:
   already_AddRefed<mozilla::AutoplayPermissionManager>
   GetAutoplayPermissionManager();
 
+  void
+  RegisterReportingObserver(mozilla::dom::ReportingObserver* aObserver,
+                            bool aBuffered);
+
+  void
+  UnregisterReportingObserver(mozilla::dom::ReportingObserver* aObserver);
+
+  void
+  BroadcastReport(mozilla::dom::Report* aReport);
+
+  void
+  NotifyReportingObservers();
+
 protected:
   void CreatePerformanceObjectIfNeeded();
 
@@ -709,6 +725,10 @@ protected:
   // The event dispatch code sets and unsets this while keeping
   // the event object alive.
   mozilla::dom::Event* mEvent;
+
+  // List of Report objects for ReportingObservers.
+  nsTArray<RefPtr<mozilla::dom::ReportingObserver>> mReportingObservers;
+  nsTArray<RefPtr<mozilla::dom::Report>> mReportRecords;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowInner, NS_PIDOMWINDOWINNER_IID)
