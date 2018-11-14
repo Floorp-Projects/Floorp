@@ -6171,11 +6171,24 @@
   },
   "FX_PAGE_LOAD_MS": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "default",
+    "expires_in_version": "65",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 20,
-    "description": "Firefox: Time taken to load a page (ms). This includes all static contents, no dynamic content. Loading of about: pages is not counted."
+    "description": "Firefox: Time taken to load a page (ms). This includes all static contents, no dynamic content. Loading of about: pages is not counted.",
+    "bug_numbers": [790213, 1504247],
+    "alert_emails": ["tdsmith@mozilla.com"]
+  },
+  "FX_PAGE_LOAD_MS_2": {
+    "record_in_processes": ["main", "content"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 10000,
+    "n_buckets": 200,
+    "description": "Firefox: Time taken to load a page (ms). This includes all static contents, no dynamic content. Loading of about: pages is not counted.",
+    "bug_numbers": [1504247],
+    "alert_emails": ["tdsmith@mozilla.com", "perfteam@mozilla.com", "product-metrics-telemetry-alerts@mozilla.com"],
+    "releaseChannelCollection": "opt-out"
   },
   "FX_SCHEDULE_PRESSURE_IDLE_SAMPLE_MS": {
     "record_in_processes": ["main"],

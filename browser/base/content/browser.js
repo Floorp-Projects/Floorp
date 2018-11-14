@@ -5344,24 +5344,24 @@ var TabsProgressListener = {
   onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
     // Collect telemetry data about tab load times.
     if (aWebProgress.isTopLevel && (!aRequest.originalURI || aRequest.originalURI.spec.scheme != "about")) {
-      let stopwatchRunning = TelemetryStopwatch.running("FX_PAGE_LOAD_MS", aBrowser);
+      let stopwatchRunning = TelemetryStopwatch.running("FX_PAGE_LOAD_MS_2", aBrowser);
 
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
         if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
           if (stopwatchRunning) {
             // Oops, we're seeing another start without having noticed the previous stop.
-            TelemetryStopwatch.cancel("FX_PAGE_LOAD_MS", aBrowser);
+            TelemetryStopwatch.cancel("FX_PAGE_LOAD_MS_2", aBrowser);
           }
-          TelemetryStopwatch.start("FX_PAGE_LOAD_MS", aBrowser);
+          TelemetryStopwatch.start("FX_PAGE_LOAD_MS_2", aBrowser);
           Services.telemetry.getHistogramById("FX_TOTAL_TOP_VISITS").add(true);
         } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
                    stopwatchRunning /* we won't see STATE_START events for pre-rendered tabs */) {
-          TelemetryStopwatch.finish("FX_PAGE_LOAD_MS", aBrowser);
+          TelemetryStopwatch.finish("FX_PAGE_LOAD_MS_2", aBrowser);
         }
       } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
                  aStatus == Cr.NS_BINDING_ABORTED &&
                  stopwatchRunning /* we won't see STATE_START events for pre-rendered tabs */) {
-        TelemetryStopwatch.cancel("FX_PAGE_LOAD_MS", aBrowser);
+        TelemetryStopwatch.cancel("FX_PAGE_LOAD_MS_2", aBrowser);
       }
     }
   },
