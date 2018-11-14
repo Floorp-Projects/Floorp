@@ -18,11 +18,11 @@ class DeprecationReportBody final : public ReportBody
 public:
   DeprecationReportBody(nsPIDOMWindowInner* aWindow,
                         const nsAString& aId,
-                        Nullable<Date> aDate,
+                        const Nullable<Date>& aDate,
                         const nsAString& aMessage,
                         const nsAString& aSourceFile,
-                        Nullable<uint32_t> aLineNumber,
-                        Nullable<uint32_t> aColumnNumber);
+                        const Nullable<uint32_t>& aLineNumber,
+                        const Nullable<uint32_t>& aColumnNumber);
 
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
