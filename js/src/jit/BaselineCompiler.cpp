@@ -4769,22 +4769,20 @@ BaselineCompiler::emit_JSOP_ARGUMENTS()
 {
     frame.syncStack(0);
 
+    MOZ_ASSERT(script->argumentsHasVarBinding());
+
     Label done;
-    if (!script->argumentsHasVarBinding() || !script->needsArgsObj()) {
+    if (!script->needsArgsObj()) {
         // We assume the script does not need an arguments object. However, this
         // assumption can be invalidated later, see argumentsOptimizationFailed
-        // in JSScript. Because we can't invalidate baseline JIT code, we set a
-        // flag on BaselineScript when that happens and guard on it here.
+        // in JSScript. Guard on the script's NeedsArgsObj flag.
         masm.moveValue(MagicValue(JS_OPTIMIZED_ARGUMENTS), R0);
 
-        // Load script->baseline.
+        // If we don't need an arguments object, skip the VM call.
         Register scratch = R1.scratchReg();
         masm.movePtr(ImmGCPtr(script), scratch);
-        masm.loadPtr(Address(scratch, JSScript::offsetOfBaselineScript()), scratch);
-
-        // If we don't need an arguments object, skip the VM call.
-        masm.branchTest32(Assembler::Zero, Address(scratch, BaselineScript::offsetOfFlags()),
-                          Imm32(BaselineScript::NEEDS_ARGS_OBJ), &done);
+        masm.branchTest32(Assembler::Zero, Address(scratch, JSScript::offsetOfMutableFlags()),
+                          Imm32(uint32_t(JSScript::MutableFlags::NeedsArgsObj)), &done);
     }
 
     prepareVMCall();
