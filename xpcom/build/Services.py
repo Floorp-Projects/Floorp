@@ -117,7 +117,7 @@ def services_h(output):
 #ifdef MOZILLA_INTERNAL_API
 extern "C" {
 /**
- * NOTE: Don't call this method directly, instead call mozilla::services::Get{0}.
+ * NOTE: Don't call this method directly, instead call mozilla::services::Get%(name)s.
  * It is used to expose XPCOM services to rust code. The return value is already addrefed.
  */
 %(type)s* XPCOMService_Get%(name)s();
@@ -157,7 +157,7 @@ static %(type)s* g%(name)s = nullptr;
 
 extern "C" {
 /**
- * NOTE: Don't call this method directly, instead call `mozilla::services::Get{0}`.
+ * NOTE: Don't call this method directly, instead call `mozilla::services::Get%(name)s`.
  * This method is extern "C" to expose XPCOM services to rust code.
  * The return value is already addrefed.
  */
