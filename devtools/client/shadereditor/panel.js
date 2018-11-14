@@ -33,7 +33,7 @@ ShaderEditorPanel.prototype = {
    *         A promise that is resolved when the Shader Editor completes opening.
    */
   async open() {
-    this.front = this.target.getFront("webgl");
+    this.front = await this.target.getFront("webgl");
     this.shadersListView = new ShadersListView();
     this.eventsHandler = new EventsHandler();
     this.shadersEditorsView = new ShadersEditorsView();

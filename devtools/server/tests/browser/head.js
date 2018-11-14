@@ -64,7 +64,7 @@ async function getTargetForTab(tab) {
 
 async function initAnimationsFrontForUrl(url) {
   const { inspector, walker, target } = await initInspectorFront(url);
-  const animations = target.getFront("animations");
+  const animations = await target.getFront("animations");
 
   return {inspector, walker, animations, target};
 }
@@ -80,7 +80,7 @@ async function initAccessibilityFrontForUrl(url) {
   const target = await addTabTarget(url);
   const inspector = await target.getInspector();
   const walker = inspector.walker;
-  const accessibility = target.getFront("accessibility");
+  const accessibility = await target.getFront("accessibility");
 
   await accessibility.bootstrap();
 

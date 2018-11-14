@@ -234,7 +234,7 @@ const initCssProperties = async function(toolbox) {
   }
 
   // Get the list dynamically if the cssProperties actor exists.
-  const front = toolbox.target.getFront("cssProperties");
+  const front = await toolbox.target.getFront("cssProperties");
   const db = await front.getCSSDatabase();
 
   const cssProperties = new CssProperties(normalizeCssData(db));

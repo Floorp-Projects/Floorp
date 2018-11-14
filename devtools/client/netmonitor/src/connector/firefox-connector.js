@@ -75,7 +75,7 @@ class FirefoxConnector {
       this.tabTarget.on("navigate", this.navigate);
 
       // Initialize Emulation front for network throttling.
-      this.emulationFront = this.tabTarget.getFront("emulation");
+      this.emulationFront = await this.tabTarget.getFront("emulation");
     }
 
     // Displaying cache events is only intended for the UI panel.

@@ -569,7 +569,7 @@ exports.ToolboxButtons = [
       if (clipboardEnabled) {
         args.clipboard = true;
       }
-      const screenshotFront = toolbox.target.getFront("screenshot");
+      const screenshotFront = await toolbox.target.getFront("screenshot");
       await screenshotFront.captureAndSave(toolbox.win, args);
     },
   },

@@ -14,7 +14,7 @@ const { pmmIsProfilerActive, pmmLoadFrameScripts } = require("devtools/client/pe
 add_task(async function() {
   const target = await addTabTarget(MAIN_DOMAIN + "doc_perf.html");
 
-  const front = target.getFront("performance");
+  const front = await target.getFront("performance");
   await front.connect();
 
   pmmLoadFrameScripts(gBrowser);
