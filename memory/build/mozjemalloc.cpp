@@ -2890,11 +2890,6 @@ arena_bin_t::Init(SizeClass aSizeClass)
     } while (kFixedHeaderSize + (sizeof(unsigned) * try_mask_nelms) >
              try_reg0_offset);
 
-    // Don't allow runs larger than the largest possible large size class.
-    if (try_run_size > gMaxLargeClass) {
-      break;
-    }
-
     // Try to keep the run overhead below kRunOverhead.
     if (Fraction(try_reg0_offset, try_run_size) <= kRunOverhead) {
       break;
@@ -2918,6 +2913,13 @@ arena_bin_t::Init(SizeClass aSizeClass)
     // so we give up if the required size for mRegionsMask more than doubles the
     // size of the run header.
     if (try_mask_nelms * sizeof(unsigned) >= kFixedHeaderSize) {
+      break;
+    }
+
+    // If next iteration is going to be larger than the largest possible large
+    // size class, then we didn't find a setup where the overhead is small enough,
+    // and we can't do better than the current settings, so just use that.
+    if (try_run_size + gPageSize > gMaxLargeClass) {
       break;
     }
 
