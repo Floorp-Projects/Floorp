@@ -3,7 +3,7 @@
  */
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
-function notifyStoragePressure(usage = 100) {
+async function notifyStoragePressure(usage = 100) {
   let notifyPromise = TestUtils.topicObserved("QuotaManager::StoragePressure", () => true);
   let usageWrapper = Cc["@mozilla.org/supports-PRUint64;1"]
                      .createInstance(Ci.nsISupportsPRUint64);
@@ -28,6 +28,7 @@ add_task(async function() {
   // await SpecialPowers.pushPrefEnv({set: [["privacy.reduceTimerPrecision", false]]});
 
   await notifyStoragePressure();
+  await TestUtils.waitForCondition(() => gHighPriorityNotificationBox.getNotificationWithValue("storage-pressure-notification"));
   let notification = gHighPriorityNotificationBox.getNotificationWithValue("storage-pressure-notification");
   ok(notification instanceof XULElement, "Should display storage pressure notification");
   notification.close();
@@ -38,6 +39,7 @@ add_task(async function() {
 
   await new Promise(resolve => setTimeout(resolve, TEST_NOTIFICATION_INTERVAL_MS + 1));
   await notifyStoragePressure();
+  await TestUtils.waitForCondition(() => gHighPriorityNotificationBox.getNotificationWithValue("storage-pressure-notification"));
   notification = gHighPriorityNotificationBox.getNotificationWithValue("storage-pressure-notification");
   ok(notification instanceof XULElement, "Should display storage pressure notification after the given interval");
   notification.close();
@@ -52,6 +54,7 @@ add_task(async function() {
   const USAGE_THRESHOLD_BYTES = BYTES_IN_GIGABYTE *
     Services.prefs.getIntPref("browser.storageManager.pressureNotification.usageThresholdGB");
   await notifyStoragePressure(USAGE_THRESHOLD_BYTES);
+  await TestUtils.waitForCondition(() => gHighPriorityNotificationBox.getNotificationWithValue("storage-pressure-notification"));
   let notification = gHighPriorityNotificationBox.getNotificationWithValue("storage-pressure-notification");
   ok(notification instanceof XULElement, "Should display storage pressure notification");
 
