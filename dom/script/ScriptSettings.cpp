@@ -645,8 +645,9 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
   // ran.
   , mCallerOverride(cx())
 #ifdef MOZ_GECKO_PROFILER
-  , mAutoProfilerLabel("AutoEntryScript", aReason,
-                       js::ProfilingStackFrame::Category::JS)
+  , mAutoProfilerLabel("", aReason,
+                       js::ProfilingStackFrame::Category::JS,
+                       uint32_t(js::ProfilingStackFrame::Flags::RELEVANT_FOR_JS))
 #endif
 {
   MOZ_ASSERT(aGlobalObject);
