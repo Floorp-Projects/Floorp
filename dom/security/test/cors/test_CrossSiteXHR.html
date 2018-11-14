@@ -83,9 +83,7 @@ function* runTest() {
                },
 
                // nonempty password
-               // XXXbz this passes for now, because we ignore passwords
-               // without usernames in most cases.
-               { pass: 1,
+               { pass: 0,
                  method: "GET",
                  noAllowPreflight: 1,
                  password: "password",
@@ -762,7 +760,7 @@ function* runTest() {
       is(res.responseText, "",
          "wrong responseText in test for " + test.toSource());
       if (!res.sendThrew) {
-        if (test.username) {
+        if (test.username || test.password) {
           is(res.events.join(","),
              "opening,rs1,sending,loadstart,rs4,error,loadend",
              "wrong events in test for " + test.toSource());
