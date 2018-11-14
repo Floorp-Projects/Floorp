@@ -12,7 +12,6 @@
 #include "Layers.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/net/HttpBaseChannel.h"
 
 using namespace mozilla;
 
@@ -157,25 +156,6 @@ static const char *GetNetworkState(NetworkLoadType aType)
   return "";
 }
 
-static const char *GetCacheState(mozilla::net::CacheDisposition aCacheDisposition)
-{
-  switch (aCacheDisposition) {
-    case mozilla::net::kCacheUnresolved:
-      return "Unresolved";
-    case mozilla::net::kCacheHit:
-      return "Hit";
-    case mozilla::net::kCacheHitViaReval:
-      return "HitViaReval";
-    case mozilla::net::kCacheMissedViaReval:
-      return "MissedViaReval";
-    case mozilla::net::kCacheMissed:
-      return "Missed";
-    case mozilla::net::kCacheUnknown:
-    default:
-      return nullptr;
-  }
-  return nullptr;
-}
 
 void
 NetworkMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
@@ -185,12 +165,8 @@ NetworkMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   StreamCommonProps("Network", aWriter, aProcessStartTime, aUniqueStacks);
   aWriter.IntProperty("id", mID);
   const char *typeString = GetNetworkState(mType);
-  const char *cacheString = GetCacheState(mCacheDisposition);
   // want to use aUniqueStacks.mUniqueStrings->WriteElement(aWriter, typeString);
   aWriter.StringProperty("status", typeString);
-  if (cacheString) {
-    aWriter.StringProperty("cache", cacheString);
-  }
   aWriter.IntProperty("pri", mPri);
   if (mCount > 0) {
     aWriter.IntProperty("count", mCount);
