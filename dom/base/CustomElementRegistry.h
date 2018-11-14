@@ -392,9 +392,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CustomElementRegistry)
 
 public:
-  static bool IsCustomElementEnabled(JSContext* aCx, JSObject* aObject);
-  static bool IsCustomElementEnabled(nsIDocument* aDoc);
-
   explicit CustomElementRegistry(nsPIDOMWindowInner* aWindow);
 
 private:

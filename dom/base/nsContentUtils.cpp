@@ -303,7 +303,6 @@ bool nsContentUtils::sIsResourceTimingEnabled = false;
 bool nsContentUtils::sIsPerformanceNavigationTimingEnabled = false;
 bool nsContentUtils::sIsFormAutofillAutocompleteEnabled = false;
 bool nsContentUtils::sIsUAWidgetEnabled = false;
-bool nsContentUtils::sIsCustomElementsEnabled = false;
 bool nsContentUtils::sSendPerformanceTimingNotifications = false;
 bool nsContentUtils::sUseActivityCursor = false;
 bool nsContentUtils::sAnimationsAPICoreEnabled = false;
@@ -672,9 +671,6 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sIsUAWidgetEnabled,
                                "dom.ua_widget.enabled", false);
-
-  Preferences::AddBoolVarCache(&sIsCustomElementsEnabled,
-                               "dom.webcomponents.customelements.enabled", false);
 
   Preferences::AddIntVarCache(&sPrivacyMaxInnerWidth,
                               "privacy.window.maxInnerWidth",
@@ -10065,14 +10061,12 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
 
   MOZ_ASSERT_IF(aDefinition, isCustomElement);
 
-  bool customElementEnabled = CustomElementRegistry::IsCustomElementEnabled(nodeInfo->GetDocument());
-
   // https://dom.spec.whatwg.org/#concept-create-element
   // We only handle the "synchronous custom elements flag is set" now.
   // For the unset case (e.g. cloning a node), see bug 1319342 for that.
   // Step 4.
   CustomElementDefinition* definition = aDefinition;
-  if (customElementEnabled && isCustomElement && !definition) {
+  if (isCustomElement && !definition) {
     MOZ_ASSERT(nodeInfo->NameAtom()->Equals(nodeInfo->LocalName()));
     definition =
       nsContentUtils::LookupCustomElementDefinition(nodeInfo->GetDocument(),
@@ -10193,7 +10187,7 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (customElementEnabled && isCustomElement) {
+  if (isCustomElement) {
     (*aResult)->SetCustomElementData(new CustomElementData(typeAtom));
     nsContentUtils::RegisterCallbackUpgradeElement(*aResult, typeAtom);
   }

@@ -720,13 +720,6 @@ async function injectEventUtilsInContentTask(browser) {
   });
 }
 
-/**
- * Temporarily flip all the preferences needed to enable web components.
- */
-async function enableWebComponents() {
-  await pushPref("dom.webcomponents.customelements.enabled", true);
-}
-
 /*
  * Register an actor in the content process of the current tab.
  *
