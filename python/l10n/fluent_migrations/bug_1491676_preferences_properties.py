@@ -178,3 +178,18 @@ choose-download-folder-title = { COPY(from_path, "chooseDownloadFolderTitle")}
             ),
         ],
     )
+
+    ctx.add_transforms(
+        "browser/browser/preferences/permissions.ftl",
+        "browser/browser/preferences/permissions.ftl",
+        transforms_from(
+            """
+permissions-capabilities-listitem-allow =
+    .value = { COPY(from_path, "can")}
+permissions-capabilities-listitem-allow-first-party =
+    .value = { COPY(from_path, "canAccessFirstParty")}
+permissions-capabilities-listitem-allow-session =
+    .value = { COPY(from_path, "canSession")}
+permissions-capabilities-listitem-block =
+    .value = { COPY(from_path, "cannot")}
+""", from_path="browser/chrome/browser/preferences/preferences.properties"))
