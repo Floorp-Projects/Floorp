@@ -5375,6 +5375,14 @@ nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
     if (!aBlocked) {
       unblocked = !doc->GetHasForeignCookiesBlocked();
     }
+  } else if (aState == nsIWebProgressListener::STATE_COOKIES_LOADED) {
+    MOZ_ASSERT(!aBlocked, "We don't expected to see blocked STATE_COOKIES_LOADED");
+    // Note that the logic in this branch is the logical negation of the logic
+    // in other branches, since the nsIDocument API we have is phrased in
+    // "loaded" terms as opposed to "blocked" terms.
+    doc->SetHasCookiesLoaded(!aBlocked, origin);
+    aBlocked = true;
+    unblocked = false;
   } else {
     // Ignore nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
   }

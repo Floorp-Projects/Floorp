@@ -832,12 +832,18 @@ nsHttpChannel::ConnectOnTailUnblock()
     LOG(("nsHttpChannel::ConnectOnTailUnblock [this=%p]\n", this));
 
     bool isTrackingResource = mIsThirdPartyTrackingResource; // is atomic
-    if (isTrackingResource && CheckFastBlocked()) {
-        AntiTrackingCommon::NotifyRejection(this,
-                                            nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
-        Unused << AsyncAbort(NS_ERROR_TRACKING_ANNOTATION_URI);
-        CloseCacheEntry(false);
-        return NS_OK;
+    if (isTrackingResource) {
+        bool engageFastBlock = CheckFastBlocked();
+        AntiTrackingCommon::NotifyBlockingDecision(this,
+                                                   engageFastBlock ?
+                                                     AntiTrackingCommon::BlockingDecision::eBlock :
+                                                     AntiTrackingCommon::BlockingDecision::eAllow,
+                                                   nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
+        if (engageFastBlock) {
+          Unused << AsyncAbort(NS_ERROR_TRACKING_ANNOTATION_URI);
+          CloseCacheEntry(false);
+          return NS_OK;
+        }
     }
 
     // Consider opening a TCP connection right away.
