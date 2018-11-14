@@ -8,14 +8,11 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var gRemovePasswordDialog = {
   _token: null,
-  _bundle: null,
   _okButton: null,
   _password: null,
   init() {
-    this._bundle = document.getElementById("bundlePreferences");
-
     this._okButton = document.documentElement.getButton("accept");
-    this._okButton.label = this._bundle.getString("pw_remove_button");
+    document.l10n.setAttributes(this._okButton, "pw-remove-button");
 
     this._password = document.getElementById("password");
 
@@ -32,19 +29,22 @@ var gRemovePasswordDialog = {
     this._okButton.disabled = !this._token.checkPassword(this._password.value);
   },
 
+  async createAlert(titleL10nId, messageL10nId) {
+    const [title, message] = await document.l10n.formatValues([
+      {id: titleL10nId},
+      {id: messageL10nId},
+    ]);
+    Services.prompt.alert(window, title, message);
+  },
+
   removePassword() {
     if (this._token.checkPassword(this._password.value)) {
       this._token.changePassword(this._password.value, "");
-      Services.prompt.alert(window,
-                            this._bundle.getString("pw_change_success_title"),
-                            this._bundle.getString("pw_erased_ok")
-                            + " " + this._bundle.getString("pw_empty_warning"));
+      this.createAlert("pw-change-success-title", "pw-erased-ok");
     } else {
       this._password.value = "";
       this._password.focus();
-      Services.prompt.alert(window,
-                            this._bundle.getString("pw_change_failed_title"),
-                            this._bundle.getString("incorrect_pw"));
+      this.createAlert("pw-change-failed-title", "incorrect-pw");
     }
   },
 };
