@@ -45,6 +45,7 @@
 #include "nsIDOMWakeLockListener.h"
 #include "nsIPowerManagerService.h"
 
+using namespace mozilla;
 using namespace mozilla::widget;
 
 #define WAKE_LOCK_LOG(...) MOZ_LOG(gMacWakeLockLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
