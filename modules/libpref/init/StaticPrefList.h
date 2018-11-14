@@ -184,7 +184,7 @@ VARCACHE_PREF(
 // we fear the worst and kill it.
 #if !defined(DEBUG) && !defined(MOZ_ASAN) && !defined(MOZ_VALGRIND) && \
     !defined(MOZ_TSAN)
-# define PREF_VALUE 10
+# define PREF_VALUE 5
 #else
 # define PREF_VALUE 0
 #endif
@@ -1068,6 +1068,18 @@ VARCACHE_PREF(
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
+
+VARCACHE_PREF(
+  "media.rdd-process.enabled",
+   MediaRddProcessEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  "media.rdd-process.startup_timeout_ms",
+   MediaRddProcessStartupTimeoutMs,
+  RelaxedAtomicInt32, 5000
+)
 
 #ifdef ANDROID
 

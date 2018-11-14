@@ -661,18 +661,14 @@ notification[value="translation"] menulist > .menulist-dropmarker {
     padding-top: var(--space-above-tabbar);
   }
 
-  /**
-   * Titlebar items (window caption buttons, private browsing indicator,
-   * accessibility indicator, etc)
-   */
-  :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .titlebar-item,
-  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .titlebar-item {
+  /* Center items (window caption buttons, private browsing indicator,
+   * accessibility indicator, etc) vertically. */
+  :root[sizemode="normal"] #TabsToolbar > .titlebar-item {
     margin-top: calc(-1 * var(--space-above-tabbar));
   }
 
   /* Make #TabsToolbar transparent as we style underlying #titlebar with
-   * -moz-window-titlebar (Gtk+ theme).
-   */
+   * -moz-window-titlebar (Gtk+ theme). */
   :root[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) #TabsToolbar,
   :root[tabsintitlebar][sizemode="maximized"] #TabsToolbar,
   :root[tabsintitlebar] #toolbar-menubar {
@@ -682,16 +678,14 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   /* The button box must appear on top of the navigator-toolbox in order for
    * click and hover mouse events to work properly for the button in the restored
    * window state. Otherwise, elements in the navigator-toolbox, like the menubar,
-   * can swallow those events.
-   */
+   * can swallow those events. */
   .titlebar-buttonbox {
     z-index: 1;
     -moz-box-align: center;
   }
 
   /* Render titlebar command buttons according to system config.
-   * Use full scale icons here as the Gtk+ does.
-   */
+   * Use full scale icons here as the Gtk+ does. */
   @media (-moz-gtk-csd-minimize-button) {
     .titlebar-min {
       -moz-appearance: -moz-window-button-minimize;

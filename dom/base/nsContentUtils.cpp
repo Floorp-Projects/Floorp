@@ -7385,10 +7385,46 @@ nsContentUtils::IsForbiddenResponseHeader(const nsACString& aHeader)
 
 // static
 bool
+nsContentUtils::IsCorsUnsafeRequestHeaderValue(const nsACString& aHeaderValue)
+{
+  const char* cur = aHeaderValue.BeginReading();
+  const char* end = aHeaderValue.EndReading();
+
+  while (cur != end) {
+    // Implementation of https://fetch.spec.whatwg.org/#cors-unsafe-request-header-byte
+    // Is less than a space but not a horizontal tab
+    if ((*cur < ' ' && *cur != '\t') ||
+      *cur == '"' || *cur ==  '(' || *cur ==  ')' || *cur ==  ':' ||
+      *cur ==  '<' || *cur ==  '>' || *cur ==  '?' || *cur ==  '@' ||
+      *cur ==  '[' || *cur ==  '\\' || *cur ==  ']' || *cur ==  '{' ||
+      *cur ==  '}' || *cur ==  0x7F) { // 0x75 is DEL
+      return true;
+    }
+    cur++;
+  }
+  return false;
+}
+
+// static
+bool
+nsContentUtils::IsAllowedNonCorsAccept(const nsACString& aHeaderValue)
+{
+  if (IsCorsUnsafeRequestHeaderValue(aHeaderValue)) {
+    return false;
+  }
+  return true;
+}
+
+// static
+bool
 nsContentUtils::IsAllowedNonCorsContentType(const nsACString& aHeaderValue)
 {
   nsAutoCString contentType;
   nsAutoCString unused;
+
+  if (IsCorsUnsafeRequestHeaderValue(aHeaderValue)) {
+    return false;
+  }
 
   nsresult rv = NS_ParseRequestContentType(aHeaderValue, contentType, unused);
   if (NS_FAILED(rv)) {
@@ -7398,6 +7434,27 @@ nsContentUtils::IsAllowedNonCorsContentType(const nsACString& aHeaderValue)
   return contentType.LowerCaseEqualsLiteral("text/plain") ||
          contentType.LowerCaseEqualsLiteral("application/x-www-form-urlencoded") ||
          contentType.LowerCaseEqualsLiteral("multipart/form-data");
+}
+
+// static
+bool
+nsContentUtils::IsAllowedNonCorsLanguage(const nsACString& aHeaderValue)
+{
+  const char* cur = aHeaderValue.BeginReading();
+  const char* end = aHeaderValue.EndReading();
+
+  while (cur != end) {
+    if ((*cur >= '0' && *cur <= '9') ||
+        (*cur >= 'A' && *cur <= 'Z') ||
+        (*cur >= 'a' && *cur <= 'z') ||
+        *cur == ' ' || *cur == '*' || *cur == ',' ||
+        *cur == '-' || *cur == '.' || *cur == ';' || *cur == '=') {
+      cur++;
+      continue;
+    }
+    return false;
+  }
+  return true;
 }
 
 bool

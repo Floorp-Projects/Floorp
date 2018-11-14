@@ -277,9 +277,7 @@ struct BaselineScript final
 
   public:
     enum Flag {
-        // Flag set by JSScript::argumentsOptimizationFailed. Similar to
-        // JSScript::needsArgsObj_, but can be read from JIT code.
-        NEEDS_ARGS_OBJ = 1 << 0,
+        // (1 << 0) is unused.
 
         // Flag set when discarding JIT code, to indicate this script is
         // on the stack and should not be discarded.
@@ -415,10 +413,6 @@ struct BaselineScript final
     }
     void resetActive() {
         flags_ &= ~ACTIVE;
-    }
-
-    void setNeedsArgsObj() {
-        flags_ |= NEEDS_ARGS_OBJ;
     }
 
     void setModifiesArguments() {

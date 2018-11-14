@@ -360,7 +360,8 @@ nsComponentManagerImpl::Init()
   nsLayoutModuleInitialize();
 
   bool loadChromeManifests = (XRE_GetProcessType() != GeckoProcessType_GPU &&
-                              XRE_GetProcessType() != GeckoProcessType_VR);
+                              XRE_GetProcessType() != GeckoProcessType_VR &&
+                              XRE_GetProcessType() != GeckoProcessType_RDD);
   if (loadChromeManifests) {
     // The overall order in which chrome.manifests are expected to be treated
     // is the following:
@@ -440,7 +441,7 @@ static bool
 ProcessSelectorMatches(Module::ProcessSelector aSelector)
 {
   GeckoProcessType type = XRE_GetProcessType();
-  if (type == GeckoProcessType_GPU) {
+  if (type == GeckoProcessType_GPU || type == GeckoProcessType_RDD) {
     return !!(aSelector & Module::ALLOW_IN_GPU_PROCESS);
   }
 

@@ -2770,10 +2770,27 @@ public:
   static bool IsForbiddenSystemRequestHeader(const nsACString& aHeader);
 
   /**
+   * Returns whether a given header has characters that aren't permitted
+   */
+  static bool IsCorsUnsafeRequestHeaderValue(const nsACString& aHeaderValue);
+
+  /**
+   * Returns whether a given Accept header value is allowed
+   * for a non-CORS XHR or fetch request.
+   */
+  static bool IsAllowedNonCorsAccept(const nsACString& aHeaderValue);
+
+  /**
    * Returns whether a given Content-Type header value is allowed
    * for a non-CORS XHR or fetch request.
    */
   static bool IsAllowedNonCorsContentType(const nsACString& aHeaderValue);
+
+  /**
+   * Returns whether a given Content-Language or accept-language header value is allowed
+   * for a non-CORS XHR or fetch request.
+   */
+  static bool IsAllowedNonCorsLanguage(const nsACString& aHeaderValue);
 
   /**
    * Returns whether a given header is forbidden for an XHR or fetch

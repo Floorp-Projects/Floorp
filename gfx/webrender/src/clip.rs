@@ -10,7 +10,6 @@ use api::{VoidPtrToSizeFn, LayoutRectAu, ImageKey, AuHelpers};
 use app_units::Au;
 use border::{ensure_no_corner_overlap, BorderRadiusAu};
 use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
-use box_shadow::get_max_scale_for_box_shadow;
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use ellipse::Ellipse;
 use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
@@ -339,8 +338,8 @@ impl ClipNode {
             ClipItem::BoxShadow(ref mut info) => {
                 if let Some(mut request) = gpu_cache.request(&mut self.gpu_cache_handle) {
                     request.push([
-                        info.shadow_rect_alloc_size.width,
-                        info.shadow_rect_alloc_size.height,
+                        info.original_alloc_size.width,
+                        info.original_alloc_size.height,
                         info.clip_mode as i32 as f32,
                         0.0,
                     ]);
@@ -358,21 +357,15 @@ impl ClipNode {
                 // Gaussian blur with a standard deviation equal to half the blur radius."
                 let blur_radius_dp = info.blur_radius * 0.5;
 
-                // Create scaling from requested size to cache size.  If the
-                // requested size exceeds the maximum size of the cache, the
-                // box shadow will be scaled down and stretched when rendered
-                // into the document.
-                let world_scale = LayoutToWorldScale::new(1.0);
-                let mut content_scale = world_scale * device_pixel_scale;
-                let max_scale = get_max_scale_for_box_shadow(&info.shadow_rect_alloc_size);
-                content_scale.0 = content_scale.0.min(max_scale.0);
+                // Create scaling from requested size to cache size.
+                let content_scale = LayoutToWorldScale::new(1.0) * device_pixel_scale;
 
                 // Create the cache key for this box-shadow render task.
                 let cache_size = to_cache_size(info.shadow_rect_alloc_size * content_scale);
                 let bs_cache_key = BoxShadowCacheKey {
                     blur_radius_dp: (blur_radius_dp * content_scale.0).round() as i32,
                     clip_mode: info.clip_mode,
-                    rect_size: (info.shadow_rect_alloc_size * content_scale).round().to_i32(),
+                    original_alloc_size: (info.original_alloc_size * content_scale).round().to_i32(),
                     br_top_left: (info.shadow_radius.top_left * content_scale).round().to_i32(),
                     br_top_right: (info.shadow_radius.top_right * content_scale).round().to_i32(),
                     br_bottom_right: (info.shadow_radius.bottom_right * content_scale).round().to_i32(),
@@ -881,6 +874,105 @@ pub enum ClipItem {
     BoxShadow(BoxShadowClipSource),
 }
 
+fn compute_box_shadow_parameters(
+    shadow_rect: LayoutRect,
+    mut shadow_radius: BorderRadius,
+    prim_shadow_rect: LayoutRect,
+    blur_radius: f32,
+    clip_mode: BoxShadowClipMode,
+) -> BoxShadowClipSource {
+    // Make sure corners don't overlap.
+    ensure_no_corner_overlap(&mut shadow_radius, &shadow_rect);
+
+    // Get the fractional offsets required to match the
+    // source rect with a minimal rect.
+    let fract_offset = LayoutPoint::new(
+        shadow_rect.origin.x.fract().abs(),
+        shadow_rect.origin.y.fract().abs(),
+    );
+    let fract_size = LayoutSize::new(
+        shadow_rect.size.width.fract().abs(),
+        shadow_rect.size.height.fract().abs(),
+    );
+
+    // Create a minimal size primitive mask to blur. In this
+    // case, we ensure the size of each corner is the same,
+    // to simplify the shader logic that stretches the blurred
+    // result across the primitive.
+    let max_corner_width = shadow_radius.top_left.width
+                                .max(shadow_radius.bottom_left.width)
+                                .max(shadow_radius.top_right.width)
+                                .max(shadow_radius.bottom_right.width);
+    let max_corner_height = shadow_radius.top_left.height
+                                .max(shadow_radius.bottom_left.height)
+                                .max(shadow_radius.top_right.height)
+                                .max(shadow_radius.bottom_right.height);
+
+    // Get maximum distance that can be affected by given blur radius.
+    let blur_region = (BLUR_SAMPLE_SCALE * blur_radius).ceil();
+
+    // If the largest corner is smaller than the blur radius, we need to ensure
+    // that it's big enough that the corners don't affect the middle segments.
+    let used_corner_width = max_corner_width.max(blur_region);
+    let used_corner_height = max_corner_height.max(blur_region);
+
+    // Minimal nine-patch size, corner + internal + corner.
+    let min_shadow_rect_size = LayoutSize::new(
+        2.0 * used_corner_width + blur_region,
+        2.0 * used_corner_height + blur_region,
+    );
+
+    // The minimal rect to blur.
+    let mut minimal_shadow_rect = LayoutRect::new(
+        LayoutPoint::new(
+            blur_region + fract_offset.x,
+            blur_region + fract_offset.y,
+        ),
+        LayoutSize::new(
+            min_shadow_rect_size.width + fract_size.width,
+            min_shadow_rect_size.height + fract_size.height,
+        ),
+    );
+
+    // If the width or height ends up being bigger than the original
+    // primitive shadow rect, just blur the entire rect along that
+    // axis and draw that as a simple blit. This is necessary for
+    // correctness, since the blur of one corner may affect the blur
+    // in another corner.
+    let mut stretch_mode_x = BoxShadowStretchMode::Stretch;
+    if shadow_rect.size.width < minimal_shadow_rect.size.width {
+        minimal_shadow_rect.size.width = shadow_rect.size.width;
+        stretch_mode_x = BoxShadowStretchMode::Simple;
+    }
+
+    let mut stretch_mode_y = BoxShadowStretchMode::Stretch;
+    if shadow_rect.size.height < minimal_shadow_rect.size.height {
+        minimal_shadow_rect.size.height = shadow_rect.size.height;
+        stretch_mode_y = BoxShadowStretchMode::Simple;
+    }
+
+    // Expand the shadow rect by enough room for the blur to take effect.
+    let shadow_rect_alloc_size = LayoutSize::new(
+        2.0 * blur_region + minimal_shadow_rect.size.width.ceil(),
+        2.0 * blur_region + minimal_shadow_rect.size.height.ceil(),
+    );
+
+    BoxShadowClipSource {
+        original_alloc_size: shadow_rect_alloc_size,
+        shadow_rect_alloc_size,
+        shadow_radius,
+        prim_shadow_rect,
+        blur_radius,
+        clip_mode,
+        stretch_mode_x,
+        stretch_mode_y,
+        cache_handle: None,
+        cache_key: None,
+        clip_data_handle: GpuCacheHandle::new(),
+        minimal_shadow_rect,
+    }
+}
+
 impl ClipItem {
     pub fn new_box_shadow(
         shadow_rect: LayoutRect,
@@ -889,95 +981,54 @@ impl ClipItem {
         blur_radius: f32,
         clip_mode: BoxShadowClipMode,
     ) -> Self {
-        // Make sure corners don't overlap.
-        ensure_no_corner_overlap(&mut shadow_radius, &shadow_rect);
-
-        // Get the fractional offsets required to match the
-        // source rect with a minimal rect.
-        let fract_offset = LayoutPoint::new(
-            shadow_rect.origin.x.fract().abs(),
-            shadow_rect.origin.y.fract().abs(),
-        );
-        let fract_size = LayoutSize::new(
-            shadow_rect.size.width.fract().abs(),
-            shadow_rect.size.height.fract().abs(),
-        );
-
-        // Create a minimal size primitive mask to blur. In this
-        // case, we ensure the size of each corner is the same,
-        // to simplify the shader logic that stretches the blurred
-        // result across the primitive.
-        let max_corner_width = shadow_radius.top_left.width
-                                    .max(shadow_radius.bottom_left.width)
-                                    .max(shadow_radius.top_right.width)
-                                    .max(shadow_radius.bottom_right.width);
-        let max_corner_height = shadow_radius.top_left.height
-                                    .max(shadow_radius.bottom_left.height)
-                                    .max(shadow_radius.top_right.height)
-                                    .max(shadow_radius.bottom_right.height);
-
-        // Get maximum distance that can be affected by given blur radius.
-        let blur_region = (BLUR_SAMPLE_SCALE * blur_radius).ceil();
-
-        // If the largest corner is smaller than the blur radius, we need to ensure
-        // that it's big enough that the corners don't affect the middle segments.
-        let used_corner_width = max_corner_width.max(blur_region);
-        let used_corner_height = max_corner_height.max(blur_region);
-
-        // Minimal nine-patch size, corner + internal + corner.
-        let min_shadow_rect_size = LayoutSize::new(
-            2.0 * used_corner_width + blur_region,
-            2.0 * used_corner_height + blur_region,
-        );
-
-        // The minimal rect to blur.
-        let mut minimal_shadow_rect = LayoutRect::new(
-            LayoutPoint::new(
-                blur_region + fract_offset.x,
-                blur_region + fract_offset.y,
-            ),
-            LayoutSize::new(
-                min_shadow_rect_size.width + fract_size.width,
-                min_shadow_rect_size.height + fract_size.height,
-            ),
-        );
-
-        // If the width or height ends up being bigger than the original
-        // primitive shadow rect, just blur the entire rect along that
-        // axis and draw that as a simple blit. This is necessary for
-        // correctness, since the blur of one corner may affect the blur
-        // in another corner.
-        let mut stretch_mode_x = BoxShadowStretchMode::Stretch;
-        if shadow_rect.size.width < minimal_shadow_rect.size.width {
-            minimal_shadow_rect.size.width = shadow_rect.size.width;
-            stretch_mode_x = BoxShadowStretchMode::Simple;
-        }
-
-        let mut stretch_mode_y = BoxShadowStretchMode::Stretch;
-        if shadow_rect.size.height < minimal_shadow_rect.size.height {
-            minimal_shadow_rect.size.height = shadow_rect.size.height;
-            stretch_mode_y = BoxShadowStretchMode::Simple;
-        }
-
-        // Expand the shadow rect by enough room for the blur to take effect.
-        let shadow_rect_alloc_size = LayoutSize::new(
-            2.0 * blur_region + minimal_shadow_rect.size.width.ceil(),
-            2.0 * blur_region + minimal_shadow_rect.size.height.ceil(),
-        );
-
-        ClipItem::BoxShadow(BoxShadowClipSource {
-            shadow_rect_alloc_size,
+        let mut source = compute_box_shadow_parameters(
+            shadow_rect,
             shadow_radius,
             prim_shadow_rect,
             blur_radius,
             clip_mode,
-            stretch_mode_x,
-            stretch_mode_y,
-            cache_handle: None,
-            cache_key: None,
-            clip_data_handle: GpuCacheHandle::new(),
-            minimal_shadow_rect,
-        })
+        );
+
+        fn needed_downscaling(source: &BoxShadowClipSource) -> Option<f32> {
+            // This size is fairly arbitrary, but it's the same as the size that
+            // we use to avoid caching big blurred stacking contexts.
+            //
+            // If you change it, ensure that the reftests
+            // box-shadow-large-blur-radius-* still hit the downscaling path,
+            // and that they render correctly.
+            const MAX_SIZE: f32 = 2048.;
+
+            let max_dimension =
+                source.shadow_rect_alloc_size.width.max(source.shadow_rect_alloc_size.height);
+
+            if max_dimension > MAX_SIZE {
+                Some(MAX_SIZE / max_dimension)
+            } else {
+                None
+            }
+        }
+
+        if let Some(downscale) = needed_downscaling(&source) {
+            shadow_radius.bottom_left.height *= downscale;
+            shadow_radius.bottom_left.width *= downscale;
+            shadow_radius.bottom_right.height *= downscale;
+            shadow_radius.bottom_right.width *= downscale;
+            shadow_radius.top_left.height *= downscale;
+            shadow_radius.top_left.width *= downscale;
+            shadow_radius.top_right.height *= downscale;
+            shadow_radius.top_right.width *= downscale;
+
+            let original_alloc_size = source.shadow_rect_alloc_size;
+            source = compute_box_shadow_parameters(
+                shadow_rect.scale(downscale, downscale),
+                shadow_radius,
+                prim_shadow_rect,
+                blur_radius * downscale,
+                clip_mode,
+            );
+            source.original_alloc_size = original_alloc_size;
+        }
+        ClipItem::BoxShadow(source)
     }
 
     // Get an optional clip rect that a clip source can provide to

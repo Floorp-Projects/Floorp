@@ -747,6 +747,7 @@ impl TextureCache {
                 format: params.descriptor.format,
                 filter: texture_array.filter,
                 layer_count: 1,
+                is_shared_cache: true,
             };
             self.pending_updates.push_alloc(texture_id, info);
 
@@ -803,6 +804,7 @@ impl TextureCache {
             format: params.descriptor.format,
             filter: params.filter,
             layer_count: 1,
+            is_shared_cache: false,
         };
         self.pending_updates.push_alloc(texture_id, info);
 
@@ -857,6 +859,7 @@ impl TextureCache {
                     format: params.descriptor.format,
                     filter: texture_array.filter,
                     layer_count: (num_regions + 1) as i32,
+                    is_shared_cache: true,
                 };
                 self.pending_updates.push_realloc(texture_array.texture_id.unwrap(), info);
                 texture_array.regions.push(TextureRegion::new(num_regions));

@@ -20,6 +20,7 @@
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessHangMonitorIPC.h"
+#include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/Unused.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/TelemetryIPC.h"
@@ -1507,6 +1508,14 @@ ContentChild::RecvReinitRenderingForDeviceReset()
       tabChild->ReinitRenderingForDeviceReset();
     }
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvInitRemoteDecoder(
+                  Endpoint<PRemoteDecoderManagerChild>&& aRemoteManager)
+{
+  RemoteDecoderManagerChild::InitForContent(std::move(aRemoteManager));
   return IPC_OK();
 }
 

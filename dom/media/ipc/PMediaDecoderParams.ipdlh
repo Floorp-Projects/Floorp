@@ -1,0 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+namespace mozilla {
+
+struct MediaDataIPDL
+{
+  int64_t offset;
+  int64_t time;
+  int64_t timecode;
+  int64_t duration;
+  uint32_t frames;
+  bool keyframe;
+};
+
+struct MediaRawDataIPDL
+{
+  MediaDataIPDL base;
+  Shmem buffer;
+};
+
+} // namespace mozilla

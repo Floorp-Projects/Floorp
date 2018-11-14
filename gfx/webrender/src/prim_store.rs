@@ -2723,8 +2723,8 @@ impl BrushPrimitive {
                     segment_builder.push_mask_region(
                         info.prim_shadow_rect,
                         info.prim_shadow_rect.inflate(
-                            -0.5 * info.shadow_rect_alloc_size.width,
-                            -0.5 * info.shadow_rect_alloc_size.height,
+                            -0.5 * info.original_alloc_size.width,
+                            -0.5 * info.original_alloc_size.height,
                         ),
                         inner_clip_mode,
                     );

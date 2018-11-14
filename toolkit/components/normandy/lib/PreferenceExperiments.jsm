@@ -216,7 +216,9 @@ var PreferenceExperiments = {
    */
   async saveStartupPrefs() {
     const prefBranch = Services.prefs.getBranch(STARTUP_EXPERIMENT_PREFS_BRANCH);
-    prefBranch.deleteBranch("");
+    for (const pref of prefBranch.getChildList("")) {
+      prefBranch.clearUserPref(pref);
+    }
 
     // Filter out non-default-branch experiments (user-branch), because they
     // don't need to be set on the default branch during early startup. Doing so
@@ -520,12 +522,12 @@ var PreferenceExperiments = {
         // Remove the "user set" value (which Shield set), but leave the default intact.
         preferences.clearUserPref(preferenceName);
       } else {
-        // Remove both the user and default branch preference. This
-        // is ok because we only do this when studies expire, not
-        // when users actively leave a study by changing the
-        // preference, so there should not be a user branch value at
-        // this point.
-        Services.prefs.getDefaultBranch("").deleteBranch(preferenceName);
+        log.warn(
+          `Can't revert pref for experiment ${experimentName} because it had no default value. `
+          + `Preference will be reset at the next restart.`
+        );
+        // It would seem that Services.prefs.deleteBranch() could be used for
+        // this, but in Normandy's case it does not work. See bug 1502410.
       }
     }
 
