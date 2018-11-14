@@ -364,6 +364,8 @@ struct JSContext : public JS::RootingContext,
     void addPendingOverRecursed();
     void addPendingOutOfMemory();
 
+    bool isCompileErrorPending() const;
+
     JSRuntime* runtime() { return runtime_; }
     const JSRuntime* runtime() const { return runtime_; }
 
