@@ -255,3 +255,14 @@ cron
 ====
 Indicates that a task is meant to be run via cron tasks, and should not be run
 on push.
+
+cache_digest
+============
+Some tasks generate artifacts that are cached between pushes. This is the unique string used
+to identify the current version of the artifacts. See :py:mod:`taskgraph.util.cached_task`.
+
+cache_type
+==========
+Some tasks generate artifacts that are cached between pushes. This is the type of cache that is
+used for the this task. See :py:mod:`taskgraph.util.cached_task`.
+
