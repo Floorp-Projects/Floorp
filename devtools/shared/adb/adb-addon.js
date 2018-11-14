@@ -12,7 +12,9 @@ const PREF_ADB_EXTENSION_URL = "devtools.remote.adb.extensionURL";
 const PREF_ADB_EXTENSION_ID = "devtools.remote.adb.extensionID";
 
 // Extension ID for adb helper extension that might be installed on Firefox 63 or older.
-const OLD_ADB_ADDON_ID = "adbhelper@mozilla.org";
+const ADB_HELPER_ADDON_ID = "adbhelper@mozilla.org";
+// Extension ID for Valence extension that is no longer supported.
+const VALENCE_ADDON_ID = "fxdevtools-adapters@mozilla.org";
 
 // Possible values for ADBAddon::state. WebIDE relies on the exact values for localization
 // and styles, so they should not be updated until WebIDE is removed.
@@ -41,8 +43,9 @@ class ADBAddon extends EventEmitter {
 
     this._status = ADB_ADDON_STATES.UNKNOWN;
 
-    // Uninstall old version of the extension that might be installed on this profile.
-    this.uninstallOldExtension();
+    // Uninstall unsupported remote debugging extensions that might be installed on this
+    // profile to cleanup old profiles.
+    this.uninstallUnsupportedExtensions();
 
     const addonsListener = {};
     addonsListener.onEnabled =
@@ -138,10 +141,18 @@ class ADBAddon extends EventEmitter {
     addon.uninstall();
   }
 
-  async uninstallOldExtension() {
-    const oldAddon = await AddonManager.getAddonByID(OLD_ADB_ADDON_ID);
-    if (oldAddon) {
-      oldAddon.uninstall();
+  async uninstallUnsupportedExtensions() {
+    const [adbHelperAddon, valenceAddon] = await Promise.all([
+      AddonManager.getAddonByID(ADB_HELPER_ADDON_ID),
+      AddonManager.getAddonByID(VALENCE_ADDON_ID),
+    ]);
+
+    if (adbHelperAddon) {
+      adbHelperAddon.uninstall();
+    }
+
+    if (valenceAddon) {
+      valenceAddon.uninstall();
     }
   }
 
