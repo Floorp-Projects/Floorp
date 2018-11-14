@@ -4,7 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this WebIDL file is
- *   https://www.w3.org/TR/payment-request/#paymentrequest-interface
+ *   https://w3c.github.io/payment-request/#paymentrequest-interface
+ *   https://w3c.github.io/payment-request/#idl-index
  *
  * Copyright © 2018 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
@@ -35,8 +36,7 @@ dictionary PaymentShippingOption {
 
 dictionary PaymentDetailsModifier {
   required DOMString             supportedMethods;
-  // FIXME: bug 1493860: should this "= null" be here?
-           PaymentItem           total = null;
+           PaymentItem           total;
            sequence<PaymentItem> additionalDisplayItems;
            object                data;
 };
@@ -67,10 +67,8 @@ dictionary AddressErrors {
 };
 
 dictionary PaymentValidationErrors {
-  // FIXME: bug 1493860: should this "= null" be here?
-  PayerErrors payer = null;
-  // FIXME: bug 1493860: should this "= null" be here?
-  AddressErrors shippingAddress = null;
+  PayerErrors payer;
+  AddressErrors shippingAddress;
   DOMString error;
   object paymentMethod;
 };
@@ -83,13 +81,10 @@ dictionary PayerErrors {
 
 dictionary PaymentDetailsUpdate : PaymentDetailsBase {
   DOMString     error;
-  // FIXME: bug 1493860: should this "= null" be here?
-  AddressErrors shippingAddressErrors = null;
-  // FIXME: bug 1493860: should this "= null" be here?
-  PayerErrors payerErrors = null;
+  AddressErrors shippingAddressErrors;
+  PayerErrors payerErrors;
   object paymentMethodErrors;
-  // FIXME: bug 1493860: should this "= null" be here?
-  PaymentItem   total = null;
+  PaymentItem   total;
 };
 
 enum PaymentShippingType {

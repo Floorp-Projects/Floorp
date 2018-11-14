@@ -55,7 +55,7 @@ public:
   EnumeratedArray() {}
 
   template <typename... Args>
-  MOZ_IMPLICIT EnumeratedArray(Args&&... aArgs)
+  MOZ_IMPLICIT constexpr EnumeratedArray(Args&&... aArgs)
     : mArray{std::forward<Args>(aArgs)...}
   {}
 

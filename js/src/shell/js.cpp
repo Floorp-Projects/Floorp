@@ -936,7 +936,7 @@ RunFile(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
 #if defined(JS_BUILD_BINAST)
 
 static MOZ_MUST_USE bool
-RunBinAST(JSContext* cx, const char* filename, FILE* file)
+RunBinAST(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
 {
     RootedScript script(cx);
 
@@ -954,6 +954,10 @@ RunBinAST(JSContext* cx, const char* filename, FILE* file)
 
     if (!RegisterScriptPathWithModuleLoader(cx, script, filename)) {
         return false;
+    }
+
+    if (compileOnly) {
+        return true;
     }
 
     return JS_ExecuteScript(cx, script);
@@ -1410,7 +1414,7 @@ Process(JSContext* cx, const char* filename, bool forceTTY, FileKind kind = File
             break;
 #if defined(JS_BUILD_BINAST)
           case FileBinAST:
-            if (!RunBinAST(cx, filename, file)) {
+            if (!RunBinAST(cx, filename, file, compileOnly)) {
                 return false;
             }
             break;

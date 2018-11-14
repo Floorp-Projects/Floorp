@@ -85,7 +85,9 @@ class MOZ_STACK_CLASS BinTokenReaderBase
         , current_(start)
         , stop_(start + length)
         , latestKnownGoodPos_(0)
-    { }
+    {
+        MOZ_ASSERT(errorReporter_);
+    }
 
     /**
      * Read a single byte.
@@ -151,9 +153,7 @@ class MOZ_STACK_CLASS BinTokenReaderBase
 
     void updateLatestKnownGood();
 
-#ifdef DEBUG
     bool hasRaisedError() const;
-#endif
 
     JSContext* cx_;
 

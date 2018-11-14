@@ -1,7 +1,7 @@
 // Larger JS source to exercise off-thread parsing.
 
 // List of words to bulk up output file.
-const words = [
+var words = [
     "A",
     "a",
     "aa",
