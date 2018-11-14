@@ -84,7 +84,7 @@ class ContentDelegateTest : BaseSessionTest() {
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
         // Cannot test x86 debug builds due to Gecko's "ah_crap_handler"
         // that waits for debugger to attach during a SIGSEGV.
-        assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.isX86,
+        assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.cpuArch == "x86",
                    equalTo(false))
 
         mainSession.loadUri(CONTENT_CRASH_URL)
@@ -115,7 +115,7 @@ class ContentDelegateTest : BaseSessionTest() {
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
         // Cannot test x86 debug builds due to Gecko's "ah_crap_handler"
         // that waits for debugger to attach during a SIGSEGV.
-        assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.isX86,
+        assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.cpuArch == "x86",
                    equalTo(false))
 
         mainSession.delegateUntilTestEnd(object : Callbacks.ContentDelegate {
@@ -141,7 +141,7 @@ class ContentDelegateTest : BaseSessionTest() {
         assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
         // Cannot test x86 debug builds due to Gecko's "ah_crap_handler"
         // that waits for debugger to attach during a SIGSEGV.
-        assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.isX86,
+        assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.cpuArch == "x86",
                    equalTo(false))
 
         // XXX we need to make sure all sessions in a given content process receive onCrash().
