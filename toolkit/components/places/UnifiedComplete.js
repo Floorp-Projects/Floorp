@@ -895,10 +895,12 @@ Search.prototype = {
       if (!this.pending)
         return;
 
-      // If the heuristic result is a search engine result with an alias and an
-      // empty query, then we're done.  We want to show only that single result
-      // as a clear hint that the user can continue typing to search.
-      if (this._searchEngineAliasMatch && !this._searchEngineAliasMatch.query) {
+      // If the heuristic result is a search engine result with a token alias
+      // and an empty query, then we're done.  We want to show only that single
+      // result as a clear hint that the user can continue typing to search.
+      if (this._searchEngineAliasMatch &&
+          this._searchEngineAliasMatch.isTokenAlias &&
+          !this._searchEngineAliasMatch.query) {
         this._cleanUpNonCurrentMatches(null, false);
         this._autocompleteSearch.finishSearch(true);
         return;
@@ -948,10 +950,12 @@ Search.prototype = {
             "";
           searchSuggestionsCompletePromise =
             this._matchSearchSuggestions(engine, query, alias);
-          // If the user has used a search engine alias, then the only results
-          // we want to show are suggestions from that engine, so we're done.
-          // We're also done if we're restricting results to suggestions.
-          if (alias || this.hasBehavior("restrict")) {
+          // If the user has used a search engine token alias, then the only
+          // results we want to show are suggestions from that engine, so we're
+          // done.  We're also done if we're restricting results to suggestions.
+          if ((this._searchEngineAliasMatch &&
+               this._searchEngineAliasMatch.isTokenAlias) ||
+              this.hasBehavior("restrict")) {
             // Wait for the suggestions to be added.
             await searchSuggestionsCompletePromise;
             this._cleanUpNonCurrentMatches(null);
@@ -1362,9 +1366,10 @@ Search.prototype = {
     if (this._prohibitSearchSuggestions)
       return true;
 
-    // Never prohibit suggestions when the user has used a search engine alias.
-    // We want "@engine query" to return suggestions from the engine.
-    if (this._searchEngineAliasMatch) {
+    // Never prohibit suggestions when the user has used a search engine token
+    // alias.  We want "@engine query" to return suggestions from the engine.
+    if (this._searchEngineAliasMatch &&
+        this._searchEngineAliasMatch.isTokenAlias) {
       return false;
     }
 
@@ -1555,6 +1560,7 @@ Search.prototype = {
       engine,
       alias,
       query: substringAfter(this._originalSearchString, alias).trim(),
+      isTokenAlias: alias.startsWith("@"),
     };
     this._addSearchEngineMatch(this._searchEngineAliasMatch);
     if (!this._keywordSubstitute) {

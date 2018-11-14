@@ -3,23 +3,21 @@
 
 const SUGGESTIONS_ENGINE_NAME = "engine-suggestions.xml";
 
-add_task(async function init() {
-  // This history result would match some of the searches below were it not for
-  // the fact that don't include history results when the user has used an
-  // engine alias.  Therefore, this result should never appear below.
-  await PlacesTestUtils.addVisits("http://s.example.com/search?q=firefox");
-});
-
-
 // Basic test that uses two engines, a GET engine and a POST engine, neither
 // providing search suggestions.
-add_task(async function getPost() {
+add_task(async function basicGetAndPost() {
   // Note that head_autocomplete.js has already added a MozSearch engine.
   // Here we add another engine with a search alias.
   Services.search.addEngineWithDetails("AliasedGETMozSearch", "", "get", "",
                                        "GET", "http://s.example.com/search");
   Services.search.addEngineWithDetails("AliasedPOSTMozSearch", "", "post", "",
                                        "POST", "http://s.example.com/search");
+
+  await PlacesTestUtils.addVisits("http://s.example.com/search?q=firefox");
+  let historyMatch = {
+    value: "http://s.example.com/search?q=firefox",
+    comment: "test visit for http://s.example.com/search?q=firefox",
+  };
 
   for (let alias of ["get", "post"]) {
     await check_autocomplete({
@@ -32,6 +30,7 @@ add_task(async function getPost() {
           alias,
           heuristic: true,
         }),
+        historyMatch,
       ],
     });
 
@@ -45,6 +44,7 @@ add_task(async function getPost() {
           alias,
           heuristic: true,
         }),
+        historyMatch,
       ],
     });
 
@@ -58,6 +58,7 @@ add_task(async function getPost() {
           alias,
           heuristic: true,
         }),
+        historyMatch,
       ],
     });
 
@@ -128,35 +129,50 @@ add_task(async function getPost() {
 add_task(async function engineWithSuggestions() {
   let engine = await addTestSuggestionsEngine();
 
-  // Use a normal alias and then one with an "@", the latter to simulate the
-  // built-in "@" engine aliases (e.g., "@google").
+  await PlacesTestUtils.addVisits(engine.searchForm);
+  let historyMatch = {
+    value: "http://localhost:9000/search",
+    comment: "test visit for http://localhost:9000/search",
+  };
+
+  // Use a normal alias and then one with an "@".  For the @ alias, the only
+  // matches should be the search suggestions -- no history matches.
   for (let alias of ["moz", "@moz"]) {
     engine.alias = alias;
+    Assert.equal(engine.alias, alias);
 
+    let expectedMatches = [
+      makeSearchMatch(`${alias} `, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        alias,
+        searchQuery: "",
+        heuristic: true,
+      }),
+    ];
+    if (alias[0] != "@") {
+      expectedMatches.push(historyMatch);
+    }
     await check_autocomplete({
       search: alias,
       searchParam: "enable-actions",
-      matches: [
-        makeSearchMatch(`${alias} `, {
-          engineName: SUGGESTIONS_ENGINE_NAME,
-          alias,
-          searchQuery: "",
-          heuristic: true,
-        }),
-      ],
+      matches: expectedMatches,
     });
 
+    expectedMatches = [
+      makeSearchMatch(`${alias} `, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        alias,
+        searchQuery: "",
+        heuristic: true,
+      }),
+    ];
+    if (alias[0] != "@") {
+      expectedMatches.push(historyMatch);
+    }
     await check_autocomplete({
       search: `${alias} `,
       searchParam: "enable-actions",
-      matches: [
-        makeSearchMatch(`${alias} `, {
-          engineName: SUGGESTIONS_ENGINE_NAME,
-          alias,
-          searchQuery: "",
-          heuristic: true,
-        }),
-      ],
+      matches: expectedMatches,
     });
 
     await check_autocomplete({
