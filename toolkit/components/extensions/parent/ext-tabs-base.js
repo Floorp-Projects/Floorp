@@ -496,6 +496,15 @@ class TabBase {
   }
 
   /**
+   * @property {integer} successorTabId
+   *        @readonly
+   *        @abstract
+   */
+  get successorTabId() {
+    throw new Error("Not implemented");
+  }
+
+  /**
    * Returns true if this tab matches the the given query info object. Omitted
    * or null have no effect on the match.
    *
@@ -609,6 +618,7 @@ class TabBase {
       isArticle: this.isArticle,
       isInReaderMode: this.isInReaderMode,
       sharingState: this.sharingState,
+      successorTabId: this.successorTabId,
     };
 
     // If the tab has not been fully layed-out yet, fallback to the geometry
