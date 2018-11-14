@@ -92,6 +92,7 @@ async function testAutoplayUnknownPermission(args) {
     ok(promptShowing(), "Should now be showing permission prompt");
 
     // Click the appropriate doorhanger button.
+    PopupNotifications.panel.firstElementChild.checkbox.checked = args.checkbox;
     if (args.button == "allow") {
       info("Clicking allow button");
       PopupNotifications.panel.firstElementChild.button.click();
@@ -103,6 +104,37 @@ async function testAutoplayUnknownPermission(args) {
     }
     // Check that the video started playing.
     await checkVideoDidPlay(browser, args);
+
+    const isTemporaryPermission = !args.checkbox;
+    if (isTemporaryPermission) {
+      info("- check temporary permission -");
+      const isAllowed = (args.button === "allow");
+
+      let permission = SitePermissions.get(browser.currentURI, "autoplay-media", browser);
+      is(permission.state == SitePermissions.ALLOW, isAllowed,
+         "should get autoplay permission.");
+      ok(permission.scope == SitePermissions.SCOPE_TEMPORARY,
+         "the permission is temporary permission.");
+      await ContentTask.spawn(browser, isAllowed,
+        isAllowed => {
+          is(content.windowUtils.isAutoplayTemporarilyAllowed(), isAllowed,
+             "window should have" + (isAllowed ? " " : " not ") +
+             "granted temporary autoplay permission.");
+        });
+
+      info("- remove temporary permission -");
+      const permissionChanged = BrowserTestUtils.waitForEvent(browser, "PermissionStateChange");
+      SitePermissions.remove(browser.currentURI, "autoplay-media", browser);
+      await permissionChanged;
+
+      permission = SitePermissions.get(browser.currentURI, "autoplay-media", browser);
+      ok(permission.state == SitePermissions.UNKNOWN, "temporary permission has been reset.");
+      await ContentTask.spawn(browser, null,
+        () => {
+          ok(!content.windowUtils.isAutoplayTemporarilyAllowed(),
+             "window should reset temporary autoplay permission as well.");
+        });
+    }
 
     // Reset permission.
     SitePermissions.remove(browser.currentURI, "autoplay-media");
@@ -119,24 +151,56 @@ add_task(async () => {
     button: "allow",
     shouldPlay: true,
     mode: "autoplay attribute",
+    checkbox: true,
   });
   await testAutoplayUnknownPermission({
     name: "Unknown permission click allow call play",
     button: "allow",
     shouldPlay: true,
     mode: "call play",
+    checkbox: true,
+  });
+  await testAutoplayUnknownPermission({
+    name: "Unknown permission click allow autoplay attribute and no check check-box",
+    button: "allow",
+    shouldPlay: true,
+    mode: "autoplay attribute",
+    checkbox: false,
+  });
+  await testAutoplayUnknownPermission({
+    name: "Unknown permission click allow call play and no check check-box",
+    button: "allow",
+    shouldPlay: true,
+    mode: "call play",
+    checkbox: false,
   });
   await testAutoplayUnknownPermission({
     name: "Unknown permission click block autoplay attribute",
     button: "block",
     shouldPlay: false,
     mode: "autoplay attribute",
+    checkbox: true,
   });
   await testAutoplayUnknownPermission({
     name: "Unknown permission click block call play",
     button: "block",
     shouldPlay: false,
     mode: "call play",
+    checkbox: true,
+  });
+  await testAutoplayUnknownPermission({
+    name: "Unknown permission click block autoplay attribute and no check check-box",
+    button: "block",
+    shouldPlay: false,
+    mode: "autoplay attribute",
+    checkbox: false,
+  });
+  await testAutoplayUnknownPermission({
+    name: "Unknown permission click block call play and no check check-box",
+    button: "block",
+    shouldPlay: false,
+    mode: "call play",
+    checkbox: false,
   });
 });
 
