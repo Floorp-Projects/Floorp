@@ -18,6 +18,7 @@
 #include "mozilla/Maybe.h"
 
 #include "frontend/BinTokenReaderTester.h"
+#include "frontend/ErrorReporter.h"
 
 #include "js/Vector.h"
 
@@ -107,6 +108,61 @@ void exitJsDirectory() {
 
 #endif // defined(XP_UNIX) || defined(XP_WIN)
 
+// An dummy error reporter that does nothing, which is requred by
+// BinTokenReaderTester ctor.
+// These testcases don't test error case, so methods that is related to
+// error reporting crashes when called.
+class DummyErrorReporter : public js::frontend::ErrorReporter
+{
+    const JS::CompileOptions options_;
+
+  public:
+    explicit DummyErrorReporter(JSContext* cx)
+      : options_(cx)
+    {}
+
+    virtual const JS::ReadOnlyCompileOptions& options() const override {
+        return options_;
+    }
+
+    virtual void lineAndColumnAt(size_t offset, uint32_t* line, uint32_t* column) const override {
+        *line = 0;
+        *column = 0;
+    }
+    virtual void currentLineAndColumn(uint32_t* line, uint32_t* column) const override {
+        *line = 0;
+        *column = 0;
+    }
+    virtual bool isOnThisLine(size_t offset, uint32_t lineNum, bool *onThisLine) const override {
+        *onThisLine = true;
+        return true;
+    }
+    virtual uint32_t lineAt(size_t offset) const override {
+        return 0;
+    }
+    virtual uint32_t columnAt(size_t offset) const override {
+        return 0;
+    }
+
+    virtual bool hasTokenizationStarted() const override {
+        return true;
+    }
+    virtual void reportErrorNoOffsetVA(unsigned errorNumber, va_list args) override {
+        MOZ_CRASH("shouldn't be used in test");
+    }
+    virtual const char* getFilename() const override {
+        return "dummy filename";
+    }
+
+    virtual void errorAtVA(uint32_t offset, unsigned errorNumber, va_list* args) override {
+        MOZ_CRASH("shouldn't be used in test");
+    }
+    virtual bool reportExtraWarningErrorNumberVA(UniquePtr<JSErrorNotes> notes, uint32_t offset, unsigned errorNumber, va_list* args) override {
+        MOZ_CRASH("shouldn't be used in test");
+        return false;
+    }
+};
+
 void readFull(const char* path, js::Vector<uint8_t>& buf) {
     enterJsDirectory();
     buf.shrinkTo(0);
@@ -140,7 +196,8 @@ BEGIN_TEST(testBinTokenReaderTesterSimpleString)
 {
     js::Vector<uint8_t> contents(cx);
     readFull("jsapi-tests/binast/tokenizer/tester/test-simple-string.binjs", contents);
-    Tokenizer tokenizer(cx, nullptr, contents);
+    DummyErrorReporter reporter(cx);
+    Tokenizer tokenizer(cx, &reporter, contents);
 
     Chars found(cx);
     CHECK(tokenizer.readChars(found).isOk());
@@ -156,7 +213,8 @@ BEGIN_TEST(testBinTokenReaderTesterStringWithEscapes)
 {
     js::Vector<uint8_t> contents(cx);
     readFull("jsapi-tests/binast/tokenizer/tester/test-string-with-escapes.binjs", contents);
-    Tokenizer tokenizer(cx, nullptr, contents);
+    DummyErrorReporter reporter(cx);
+    Tokenizer tokenizer(cx, &reporter, contents);
 
     Chars found(cx);
     CHECK(tokenizer.readChars(found).isOk());
@@ -172,7 +230,8 @@ BEGIN_TEST(testBinTokenReaderTesterEmptyUntaggedTuple)
 {
     js::Vector<uint8_t> contents(cx);
     readFull("jsapi-tests/binast/tokenizer/tester/test-empty-untagged-tuple.binjs", contents);
-    Tokenizer tokenizer(cx, nullptr, contents);
+    DummyErrorReporter reporter(cx);
+    Tokenizer tokenizer(cx, &reporter, contents);
 
     {
         Tokenizer::AutoTuple guard(tokenizer);
@@ -189,7 +248,8 @@ BEGIN_TEST(testBinTokenReaderTesterTwoStringsInTuple)
 {
     js::Vector<uint8_t> contents(cx);
     readFull("jsapi-tests/binast/tokenizer/tester/test-trivial-untagged-tuple.binjs", contents);
-    Tokenizer tokenizer(cx, nullptr, contents);
+    DummyErrorReporter reporter(cx);
+    Tokenizer tokenizer(cx, &reporter, contents);
 
     {
         Tokenizer::AutoTuple guard(tokenizer);
@@ -215,7 +275,8 @@ BEGIN_TEST(testBinTokenReaderTesterSimpleTaggedTuple)
 {
     js::Vector<uint8_t> contents(cx);
     readFull("jsapi-tests/binast/tokenizer/tester/test-simple-tagged-tuple.binjs", contents);
-    Tokenizer tokenizer(cx, nullptr, contents);
+    DummyErrorReporter reporter(cx);
+    Tokenizer tokenizer(cx, &reporter, contents);
 
     {
         js::frontend::BinKind tag;
@@ -249,7 +310,8 @@ BEGIN_TEST(testBinTokenReaderTesterEmptyList)
 {
     js::Vector<uint8_t> contents(cx);
     readFull("jsapi-tests/binast/tokenizer/tester/test-empty-list.binjs", contents);
-    Tokenizer tokenizer(cx, nullptr, contents);
+    DummyErrorReporter reporter(cx);
+    Tokenizer tokenizer(cx, &reporter, contents);
 
     {
         uint32_t length;
@@ -269,7 +331,8 @@ BEGIN_TEST(testBinTokenReaderTesterSimpleList)
 {
     js::Vector<uint8_t> contents(cx);
     readFull("jsapi-tests/binast/tokenizer/tester/test-trivial-list.binjs", contents);
-    Tokenizer tokenizer(cx, nullptr, contents);
+    DummyErrorReporter reporter(cx);
+    Tokenizer tokenizer(cx, &reporter, contents);
 
     {
         uint32_t length;
@@ -299,7 +362,8 @@ BEGIN_TEST(testBinTokenReaderTesterNestedList)
 {
     js::Vector<uint8_t> contents(cx);
     readFull("jsapi-tests/binast/tokenizer/tester/test-nested-lists.binjs", contents);
-    Tokenizer tokenizer(cx, nullptr, contents);
+    DummyErrorReporter reporter(cx);
+    Tokenizer tokenizer(cx, &reporter, contents);
 
     {
         uint32_t outerLength;
