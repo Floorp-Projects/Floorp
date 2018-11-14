@@ -65,16 +65,15 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 class nsGeolocationRequest final
- : public nsIContentPermissionRequest
+ : public ContentPermissionRequestBase
  , public nsIGeolocationUpdate
  , public SupportsWeakPtr<nsGeolocationRequest>
 {
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSICONTENTPERMISSIONREQUEST
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIGEOLOCATIONUPDATE
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsGeolocationRequest, nsIContentPermissionRequest)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsGeolocationRequest, ContentPermissionRequestBase)
 
   nsGeolocationRequest(Geolocation* aLocator,
                        GeoPositionCallback aCallback,
@@ -86,6 +85,10 @@ class nsGeolocationRequest final
                        bool aIsHandlingUserInput = false,
                        int32_t aWatchId = 0);
 
+  // nsIContentPermissionRequest
+  NS_IMETHOD Cancel(void) override;
+  NS_IMETHOD Allow(JS::HandleValue choices) override;
+
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsGeolocationRequest)
 
   void Shutdown();
@@ -95,6 +98,7 @@ class nsGeolocationRequest final
   void SetTimeoutTimer();
   void StopTimeoutTimer();
   void NotifyErrorAndShutdown(uint16_t);
+  using ContentPermissionRequestBase::GetPrincipal;
   nsIPrincipal* GetPrincipal();
 
   bool IsWatch() { return mIsWatchPositionRequest; }
@@ -132,7 +136,6 @@ class nsGeolocationRequest final
   GeoPositionCallback mCallback;
   GeoPositionErrorCallback mErrorCallback;
   UniquePtr<PositionOptions> mOptions;
-  bool mIsHandlingUserInput;
 
   RefPtr<Geolocation> mLocator;
 
@@ -154,52 +157,6 @@ CreatePositionOptionsCopy(const PositionOptions& aOptions)
 
   return geoOptions;
 }
-
-class RequestPromptEvent : public Runnable
-{
-public:
-  RequestPromptEvent(nsGeolocationRequest* aRequest, nsWeakPtr aWindow)
-    : mozilla::Runnable("RequestPromptEvent")
-    , mRequest(aRequest)
-    , mWindow(aWindow)
-  {
-  }
-
-  NS_IMETHOD Run() override
-  {
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(mWindow);
-    nsContentPermissionUtils::AskPermission(mRequest, window);
-    return NS_OK;
-  }
-
-private:
-  RefPtr<nsGeolocationRequest> mRequest;
-  nsWeakPtr mWindow;
-};
-
-class RequestAllowEvent : public Runnable
-{
-public:
-  RequestAllowEvent(int allow, nsGeolocationRequest* request)
-    : mozilla::Runnable("RequestAllowEvent")
-    , mAllow(allow)
-    , mRequest(request)
-  {
-  }
-
-  NS_IMETHOD Run() override {
-    if (mAllow) {
-      mRequest->Allow(JS::UndefinedHandleValue);
-    } else {
-      mRequest->Cancel();
-    }
-    return NS_OK;
-  }
-
-private:
-  bool mAllow;
-  RefPtr<nsGeolocationRequest> mRequest;
-};
 
 class RequestSendLocationEvent : public Runnable
 {
@@ -227,6 +184,18 @@ private:
 // nsGeolocationRequest
 ////////////////////////////////////////////////////
 
+static
+nsPIDOMWindowInner*
+ConvertWeakReferenceToWindow(nsIWeakReference* aWeakPtr)
+{
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(aWeakPtr);
+  // This isn't usually safe, but here we're just extracting a raw pointer in order
+  // to pass it to a base class constructor which will in turn convert it into a
+  // strong pointer for us.
+  nsPIDOMWindowInner* raw = window.get();
+  return raw;
+}
+
 nsGeolocationRequest::nsGeolocationRequest(Geolocation* aLocator,
                                            GeoPositionCallback aCallback,
                                            GeoPositionErrorCallback aErrorCallback,
@@ -236,11 +205,15 @@ nsGeolocationRequest::nsGeolocationRequest(Geolocation* aLocator,
                                            bool aWatchPositionRequest,
                                            bool aIsHandlingUserInput,
                                            int32_t aWatchId)
-  : mIsWatchPositionRequest(aWatchPositionRequest),
+  : ContentPermissionRequestBase(aLocator->GetPrincipal(),
+                                 aIsHandlingUserInput,
+                                 ConvertWeakReferenceToWindow(aLocator->GetOwner()),
+                                 NS_LITERAL_CSTRING("geo"),
+                                 NS_LITERAL_CSTRING("geolocation")),
+    mIsWatchPositionRequest(aWatchPositionRequest),
     mCallback(std::move(aCallback)),
     mErrorCallback(std::move(aErrorCallback)),
     mOptions(std::move(aOptions)),
-    mIsHandlingUserInput(aIsHandlingUserInput),
     mLocator(aLocator),
     mWatchId(aWatchId),
     mShutdown(false),
@@ -249,7 +222,6 @@ nsGeolocationRequest::nsGeolocationRequest(Geolocation* aLocator,
 {
   if (nsCOMPtr<nsPIDOMWindowInner> win =
       do_QueryReferent(mLocator->GetOwner())) {
-    mRequester = new nsContentPermissionRequester(win);
   }
 }
 
@@ -258,15 +230,16 @@ nsGeolocationRequest::~nsGeolocationRequest()
   StopTimeoutTimer();
 }
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGeolocationRequest)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentPermissionRequest)
-  NS_INTERFACE_MAP_ENTRY(nsIContentPermissionRequest)
-  NS_INTERFACE_MAP_ENTRY(nsIGeolocationUpdate)
-NS_INTERFACE_MAP_END
+NS_IMPL_QUERY_INTERFACE_CYCLE_COLLECTION_INHERITED(nsGeolocationRequest,
+                                                   ContentPermissionRequestBase,
+                                                   nsIGeolocationUpdate)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsGeolocationRequest)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsGeolocationRequest)
-NS_IMPL_CYCLE_COLLECTION(nsGeolocationRequest, mCallback, mErrorCallback, mLocator)
+NS_IMPL_ADDREF_INHERITED(nsGeolocationRequest,
+                         ContentPermissionRequestBase)
+NS_IMPL_RELEASE_INHERITED(nsGeolocationRequest,
+                          ContentPermissionRequestBase)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(nsGeolocationRequest, ContentPermissionRequestBase,
+                                   mCallback, mErrorCallback, mLocator)
 
 void
 nsGeolocationRequest::Notify()
@@ -285,52 +258,6 @@ nsGeolocationRequest::NotifyErrorAndShutdown(uint16_t aErrorCode)
   }
 
   NotifyError(aErrorCode);
-}
-
-NS_IMETHODIMP
-nsGeolocationRequest::GetPrincipal(nsIPrincipal * *aRequestingPrincipal)
-{
-  NS_ENSURE_ARG_POINTER(aRequestingPrincipal);
-
-  nsCOMPtr<nsIPrincipal> principal = mLocator->GetPrincipal();
-  principal.forget(aRequestingPrincipal);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGeolocationRequest::GetTypes(nsIArray** aTypes)
-{
-  nsTArray<nsString> emptyOptions;
-  return nsContentPermissionUtils::CreatePermissionArray(NS_LITERAL_CSTRING("geolocation"),
-                                                         emptyOptions,
-                                                         aTypes);
-}
-
-NS_IMETHODIMP
-nsGeolocationRequest::GetWindow(mozIDOMWindow** aRequestingWindow)
-{
-  NS_ENSURE_ARG_POINTER(aRequestingWindow);
-
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(mLocator->GetOwner());
-  window.forget(aRequestingWindow);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGeolocationRequest::GetElement(Element** aRequestingElement)
-{
-  NS_ENSURE_ARG_POINTER(aRequestingElement);
-  *aRequestingElement = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGeolocationRequest::GetIsHandlingUserInput(bool* aIsHandlingUserInput)
-{
-  *aIsHandlingUserInput = mIsHandlingUserInput;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -437,17 +364,6 @@ nsGeolocationRequest::Allow(JS::HandleValue aChoices)
   }
 
   SetTimeoutTimer();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGeolocationRequest::GetRequester(nsIContentPermissionRequester** aRequester)
-{
-  NS_ENSURE_ARG_POINTER(aRequester);
-
-  nsCOMPtr<nsIContentPermissionRequester> requester = mRequester;
-  requester.forget(aRequester);
 
   return NS_OK;
 }
@@ -1240,8 +1156,7 @@ Geolocation::GetCurrentPosition(GeoPositionCallback callback,
 
   if (!sGeoEnabled || ShouldBlockInsecureRequests() ||
       !FeaturePolicyBlocked()) {
-    nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(false, request);
-    target->Dispatch(ev.forget());
+    request->RequestDelayedTask(target, nsGeolocationRequest::DelayedTaskType::Deny);
     return NS_OK;
   }
 
@@ -1261,8 +1176,7 @@ Geolocation::GetCurrentPosition(GeoPositionCallback callback,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(true, request);
-  target->Dispatch(ev.forget());
+  request->RequestDelayedTask(target, nsGeolocationRequest::DelayedTaskType::Allow);
 
   return NS_OK;
 }
@@ -1324,8 +1238,7 @@ Geolocation::WatchPosition(GeoPositionCallback aCallback,
 
   if (!sGeoEnabled || ShouldBlockInsecureRequests() ||
       !FeaturePolicyBlocked()) {
-    nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(false, request);
-    target->Dispatch(ev.forget());
+    request->RequestDelayedTask(target, nsGeolocationRequest::DelayedTaskType::Deny);
     return watchId;
   }
 
@@ -1421,15 +1334,17 @@ bool
 Geolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
 {
   nsIEventTarget* target = MainThreadTarget(this);
-  if (Preferences::GetBool("geo.prompt.testing", false)) {
-    bool allow = Preferences::GetBool("geo.prompt.testing.allow", false);
-    nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(allow, request);
-    target->Dispatch(ev.forget());
+  ContentPermissionRequestBase::PromptResult pr = request->CheckPromptPrefs();
+  if (pr == ContentPermissionRequestBase::PromptResult::Granted) {
+    request->RequestDelayedTask(target, nsGeolocationRequest::DelayedTaskType::Allow);
+    return true;
+  }
+  if (pr == ContentPermissionRequestBase::PromptResult::Denied) {
+    request->RequestDelayedTask(target, nsGeolocationRequest::DelayedTaskType::Deny);
     return true;
   }
 
-  nsCOMPtr<nsIRunnable> ev  = new RequestPromptEvent(request, mOwner);
-  target->Dispatch(ev.forget());
+  request->RequestDelayedTask(target, nsGeolocationRequest::DelayedTaskType::Request);
   return true;
 }
 
