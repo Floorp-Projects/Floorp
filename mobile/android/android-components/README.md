@@ -26,6 +26,7 @@ Before you attempt to make a contribution please read the [Community Participati
 # Maven repository
 
 All components are getting published on [maven.mozilla.org](http://maven.mozilla.org/).
+To use them, you need to add the following to your projects top-level build file, in the `allprojects` block (see e.g. the [reference-browser](https://github.com/mozilla-mobile/reference-browser/blob/master/build.gradle)):
 
 ```groovy
 repositories {
