@@ -954,21 +954,21 @@ notification[value="translation"] {
 
 /* End customization mode */
 
-/**
- * Titlebar items (window caption buttons, private browsing indicator,
- * accessibility indicator, etc)
- */
-:root[sizemode="normal"][chromehidden~="menubar"] .titlebar-item,
-:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .titlebar-item,
-:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] > .titlebar-item {
+/* Prevent titlebar items (window caption buttons, private browsing indicator,
+ * accessibility indicator, etc) from overlapping the nav bar's shadow on the
+ * tab bar. */
+#TabsToolbar > .titlebar-item {
+  margin-bottom: @navbarTabsShadowSize@;
+}
+
+/* Center titlebar items vertically. */
+:root[sizemode="normal"] #TabsToolbar > .titlebar-item {
   margin-top: calc(-1 * var(--space-above-tabbar));
 }
 
 /* Compensate for 4px extra margin on top of the tabs toolbar on Windows 7. */
 @media (-moz-os-version: windows-win7) {
-  :root[sizemode="normal"][chromehidden~="menubar"] .titlebar-item,
-  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .titlebar-item,
-  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] > .titlebar-item {
+  :root[sizemode="normal"] #TabsToolbar > .titlebar-item {
     margin-top: calc(-1 * (var(--space-above-tabbar) + 4px));
   }
 }
