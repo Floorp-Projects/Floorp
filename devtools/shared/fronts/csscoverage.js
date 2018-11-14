@@ -63,7 +63,7 @@ const CSSUsageFront = protocol.FrontClassWithSpec(cssUsageSpec, {
       }
     } else {
       if (notification) {
-        notification.remove();
+        notification.close();
         notification = undefined;
       }
 

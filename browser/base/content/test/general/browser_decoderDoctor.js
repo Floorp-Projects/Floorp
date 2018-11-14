@@ -47,10 +47,10 @@ async function test_decoder_doctor_notification(data, notificationMessage,
     }
     ok(notification, "Got decoder-doctor-notification notification");
 
-    is(notification.getAttribute("label"), notificationMessage,
+    is(notification.messageText.textContent, notificationMessage,
        "notification message should match expectation");
 
-    let button = notification.children[0];
+    let button = notification.querySelector("button");
     if (!label) {
       ok(!button, "There should not be button");
       return;

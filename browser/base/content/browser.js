@@ -242,6 +242,11 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function() {
   return null;
 });
 
+customElements.setElementCreationCallback("translation-notification", () => {
+  Services.scriptloader.loadSubScript(
+    "chrome://browser/content/translation-notification.js", window);
+});
+
 var gBrowser;
 var gLastValidURLStr = "";
 var gInPrintPreviewMode = false;

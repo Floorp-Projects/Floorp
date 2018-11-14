@@ -421,7 +421,20 @@ table_tlsOffset(const TableDesc* table)
 bool
 table_isExternal(const TableDesc* table)
 {
-    return table->external;
+    // The external field was removed because it did not make sense in a
+    // multi-table world in the presence of table.copy - all function tables now
+    // use FunctionTableElem values, carrying both the code pointer and the
+    // instance.
+    //
+    // If you meant to ask whether the function is represented as
+    // 'FunctionTableElem' (what used to be called ExternalTableElem) then you
+    // want to see if
+    // table->kind==TableKind::AnyFunction || table->kind==TableKind::TypedFunction.
+    //
+    // If you meant to ask whether the table needs a JSObject representation,
+    // then you want to see if table->importedOrExported is true.
+
+    MOZ_CRASH("FIXME. This field has been removed.");
 }
 
 // Sig

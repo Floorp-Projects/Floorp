@@ -6,6 +6,8 @@
 
 #include "jit/IonAnalysis.h"
 
+#include <utility> // for ::std::pair
+
 #include "jit/AliasAnalysis.h"
 #include "jit/BaselineInspector.h"
 #include "jit/BaselineJIT.h"
@@ -29,11 +31,116 @@ using namespace js::jit;
 
 using mozilla::DebugOnly;
 
-typedef Vector<MPhi*, 16, SystemAllocPolicy> MPhiVector;
+// Stack used by FlagPhiInputsAsHavingRemovedUses. It stores the Phi instruction
+// pointer and the MUseIterator which should be visited next.
+using MPhiUseIteratorStack = Vector<std::pair<MPhi*, MUseIterator>, 16, SystemAllocPolicy>;
+
+// Look for Phi uses with a depth-first search. If any uses are found the stack
+// of MPhi instructions is returned in the |worklist| argument.
+static bool
+DepthFirstSearchUse(MIRGenerator* mir, MPhiUseIteratorStack& worklist, MPhi* phi)
+{
+    // Push a Phi and the next use to iterate over in the worklist.
+    auto push = [&worklist](MPhi* phi, MUseIterator use) -> bool {
+        phi->setInWorklist();
+        return worklist.append(std::make_pair(phi, use));
+    };
+
+#ifdef DEBUG
+    // Used to assert that when we have no uses, we at least visited all the
+    // transitive uses.
+    size_t refUseCount = phi->useCount();
+    size_t useCount = 0;
+#endif
+    MOZ_ASSERT(worklist.empty());
+    if (!push(phi, phi->usesBegin())) {
+        return false;
+    }
+
+    while (!worklist.empty()) {
+        // Resume iterating over the last phi-use pair added by the next loop.
+        auto pair = worklist.popCopy();
+        MPhi* producer = pair.first;
+        MUseIterator use = pair.second;
+        MUseIterator end(producer->usesEnd());
+        producer->setNotInWorklist();
+
+        // Keep going down the tree of uses, skipping (continue)
+        // non-observable/unused cases and Phi which are already listed in the
+        // worklist. Stop (return) as soon as one use is found.
+        while (use != end) {
+            MNode* consumer = (*use)->consumer();
+            MUseIterator it = use;
+            use++;
+#ifdef DEBUG
+            useCount++;
+#endif
+            if (mir->shouldCancel("FlagPhiInputsAsHavingRemovedUses inner loop")) {
+                return false;
+            }
+
+            if (consumer->isResumePoint()) {
+                MResumePoint* rp = consumer->toResumePoint();
+                // Observable operands are similar to potential uses.
+                if (rp->isObservableOperand(*it)) {
+                    return push(producer, use);
+                }
+                continue;
+            }
+
+            MDefinition* cdef = consumer->toDefinition();
+            if (!cdef->isPhi()) {
+                // The producer is explicitly used by a definition.
+                return push(producer, use);
+            }
+
+            MPhi* cphi = cdef->toPhi();
+            if (cphi->getUsageAnalysis() == PhiUsage::Used || cphi->isUseRemoved()) {
+                // The information got cached on the Phi the last time it
+                // got visited, or when flagging operands of removed
+                // instructions.
+                return push(producer, use);
+            }
+
+            if (cphi->isInWorklist() || cphi == producer) {
+                // We are already iterating over the uses of this Phi
+                // instruction. Skip it.
+                continue;
+            }
+
+            if (cphi->getUsageAnalysis() == PhiUsage::Unused) {
+                // The instruction already got visited and is known to have
+                // no uses. Skip it.
+                continue;
+            }
+
+            // We found another Phi instruction, move the use iterator to
+            // the next use push it to the worklist stack. Then, continue
+            // with a depth search.
+            if (!push(producer, use)) {
+                return false;
+            }
+            producer = cphi;
+            use = producer->usesBegin();
+            end = producer->usesEnd();
+#ifdef DEBUG
+            refUseCount += producer->useCount();
+#endif
+        }
+
+        // When unused, we cannot bubble up this information without iterating
+        // over the rest of the previous Phi instruction consumers.
+        MOZ_ASSERT(use == end);
+        producer->setUsageAnalysis(PhiUsage::Unused);
+    }
+
+    MOZ_ASSERT(useCount == refUseCount);
+    return true;
+}
 
 static bool
 FlagPhiInputsAsHavingRemovedUses(MIRGenerator* mir, MBasicBlock* block, MBasicBlock* succ,
-                                 MPhiVector& worklist)
+                                 MPhiUseIteratorStack& worklist)
 {
     // When removing an edge between 2 blocks, we might remove the ability of
     // later phases to figure out that the uses of a Phi should be considered as
@@ -94,12 +201,11 @@ FlagPhiInputsAsHavingRemovedUses(MIRGenerator* mir, MBasicBlock* block, MBasicBl
     // later compilation phase might optimize them out. The problem is that a
     // bailout will use this value and give it back to baseline, which will then
     // use the OptimizedOut magic value in a computation.
-
-    // Conservative upper limit for the number of Phi instructions which are
-    // visited while looking for uses.
-    const size_t conservativeUsesLimit = 128;
-
-    MOZ_ASSERT(worklist.empty());
+    //
+    // Unfortunately, we cannot be too conservative about flagging Phi inputs as
+    // having removed uses, as this would prevent many optimizations from being
+    // used. Thus, the following code is in charge of flagging Phi instructions
+    // as Unused or Used, and setting UseRemoved accordingly.
     size_t predIndex = succ->getPredecessorIndex(block);
     MPhiIterator end = succ->phisEnd();
     MPhiIterator it = succ->phisBegin();
@@ -117,82 +223,36 @@ FlagPhiInputsAsHavingRemovedUses(MIRGenerator* mir, MBasicBlock* block, MBasicBl
             continue;
         }
 
-        phi->setInWorklist();
-        if (!worklist.append(phi)) {
+        // If the Phi is either Used or Unused, set the UseRemoved flag
+        // accordingly.
+        if (phi->getUsageAnalysis() == PhiUsage::Used || phi->isUseRemoved()) {
+            def->setUseRemoved();
+            continue;
+        } else if (phi->getUsageAnalysis() == PhiUsage::Unused) {
+            continue;
+        }
+
+        // We do not know if the Phi was Used or Unused, iterate over all uses
+        // with a depth-search of uses. Returns the matching stack in the
+        // worklist as soon as one use is found.
+        MOZ_ASSERT(worklist.empty());
+        if (!DepthFirstSearchUse(mir, worklist, phi)) {
             return false;
         }
 
-        // Fill the work list with all the Phi nodes uses until we reach either:
-        //  - A resume point which uses the Phi as an observable operand.
-        //  - An explicit use of the Phi instruction.
-        //  - An implicit use of the Phi instruction.
-        bool isUsed = false;
-        for (size_t idx = 0; !isUsed && idx < worklist.length(); idx++) {
-            phi = worklist[idx];
-
-            if (mir->shouldCancel("FlagPhiInputsAsHavingRemovedUses inner loop 1")) {
-                return false;
-            }
-
-            if (phi->isUseRemoved() || phi->isImplicitlyUsed()) {
-                // The phi is implicitly used.
-                isUsed = true;
-                break;
-            }
-
-            MUseIterator usesEnd(phi->usesEnd());
-            for (MUseIterator use(phi->usesBegin()); use != usesEnd; use++) {
-                MNode* consumer = (*use)->consumer();
-
-                if (mir->shouldCancel("FlagPhiInputsAsHavingRemovedUses inner loop 2")) {
-                    return false;
-                }
-
-                if (consumer->isResumePoint()) {
-                    MResumePoint* rp = consumer->toResumePoint();
-                    if (rp->isObservableOperand(*use)) {
-                        // The phi is observable via a resume point operand.
-                        isUsed = true;
-                        break;
-                    }
-                    continue;
-                }
-
-                MDefinition* cdef = consumer->toDefinition();
-                if (!cdef->isPhi()) {
-                    // The phi is explicitly used.
-                    isUsed = true;
-                    break;
-                }
-
-                phi = cdef->toPhi();
-                if (phi->isInWorklist()) {
-                    continue;
-                }
-
-                phi->setInWorklist();
-                if (!worklist.append(phi)) {
-                    return false;
-                }
-            }
-
-            // Use a conservative upper bound to avoid iterating too many times
-            // on very large graphs.
-            if (idx >= conservativeUsesLimit) {
-                isUsed = true;
-                break;
-            }
-        }
-
-        if (isUsed) {
+        MOZ_ASSERT_IF(worklist.empty(), phi->getUsageAnalysis() == PhiUsage::Unused);
+        if (!worklist.empty()) {
+            // One of the Phis is used, set Used flags on all the Phis which are
+            // in the use chain.
             def->setUseRemoved();
+            do {
+                auto pair = worklist.popCopy();
+                MPhi* producer = pair.first;
+                producer->setUsageAnalysis(PhiUsage::Used);
+                producer->setNotInWorklist();
+            } while (!worklist.empty());
         }
-
-        // Remove all the InWorklist flags.
-        while (!worklist.empty()) {
-            phi = worklist.popCopy();
-            phi->setNotInWorklist();
-        }
+        MOZ_ASSERT(phi->getUsageAnalysis() != PhiUsage::Unknown);
     }
 
     return true;
@@ -246,7 +306,7 @@ FlagAllOperandsAsHavingRemovedUses(MIRGenerator* mir, MBasicBlock* block)
     }
 
     // Flag Phi inputs of the successors has having removed uses.
-    MPhiVector worklist;
+    MPhiUseIteratorStack worklist;
     for (size_t i = 0, e = block->numSuccessors(); i < e; i++) {
         if (mir->shouldCancel("FlagAllOperandsAsHavingRemovedUses loop 3")) {
             return false;

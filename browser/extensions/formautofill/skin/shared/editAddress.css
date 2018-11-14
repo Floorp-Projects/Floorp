@@ -107,6 +107,10 @@
   flex: 0 1 100%;
 }
 
+#street-address {
+  resize: vertical;
+}
+
 #country-warning-message {
   box-sizing: border-box;
   font-size: 1rem;
