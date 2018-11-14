@@ -5,6 +5,9 @@ const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
 const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
 const PREF_SYSTEM_ADDON_UPDATE_ENABLED = "extensions.systemAddon.update.enabled";
 
+// See bug 1507255
+Services.prefs.setBoolPref("media.gmp-manager.updateEnabled", true);
+
 function root(server) {
   let {primaryScheme, primaryHost, primaryPort} = server.identity;
   return `${primaryScheme}://${primaryHost}:${primaryPort}/data`;
