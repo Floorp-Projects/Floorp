@@ -95,7 +95,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
             // store#metric.name
             val (storeName, metricName) =
                 metricStoragePath.split('#', limit = 2)
-            if (storeName.length <= 1) {
+            if (storeName.isEmpty()) {
                 continue
             }
 
