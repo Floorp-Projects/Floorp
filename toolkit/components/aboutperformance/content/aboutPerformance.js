@@ -1074,12 +1074,12 @@ var View = {
 
     elt = document.createElement("td");
     if (type == "tab") {
-      let img = document.createElement("img");
+      let img = document.createElement("span");
       img.className = "action-icon close-icon";
       document.l10n.setAttributes(img, "close-tab");
       elt.appendChild(img);
     } else if (type == "addon") {
-      let img = document.createElement("img");
+      let img = document.createElement("span");
       img.className = "action-icon addon-icon";
       document.l10n.setAttributes(img, "show-addon");
       elt.appendChild(img);
@@ -1256,7 +1256,7 @@ var Control = {
 
         // Show the twisty image.
         let elt = row.firstChild;
-        let img = document.createElement("img");
+        let img = document.createElement("span");
         img.className = "twisty";
         let open = openItems.has(id);
         if (open) {
