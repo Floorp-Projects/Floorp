@@ -122,7 +122,6 @@ using mozilla::ipc::CrashReporterClient;
 extern "C" {
   void install_rust_panic_hook();
   void install_rust_oom_hook();
-  bool get_rust_panic_reason(char** reason, size_t* length);
 }
 
 
@@ -908,12 +907,8 @@ WriteEscapedMozCrashReason(PlatformWriter& aWriter)
 {
   const char *reason;
   size_t len;
-  char *rust_panic_reason;
-  bool rust_panic = get_rust_panic_reason(&rust_panic_reason, &len);
 
-  if (rust_panic) {
-    reason = rust_panic_reason;
-  } else if (gMozCrashReason != nullptr) {
+  if (gMozCrashReason != nullptr) {
     reason = gMozCrashReason;
     len = strlen(reason);
   } else {
