@@ -634,6 +634,14 @@ struct TypedPoint2D {
 
 using WorldPoint = TypedPoint2D<float, WorldPixel>;
 
+struct WrDebugFlags {
+  uint32_t mBits;
+
+  bool operator==(const WrDebugFlags& aOther) const {
+    return mBits == aOther.mBits;
+  }
+};
+
 // A 2d Rectangle optionally tagged with a unit.
 template<typename T, typename U>
 struct TypedRect {
@@ -993,14 +1001,6 @@ struct MutByteSlice {
   }
 };
 
-struct WrDebugFlags {
-  uint32_t mBits;
-
-  bool operator==(const WrDebugFlags& aOther) const {
-    return mBits == aOther.mBits;
-  }
-};
-
 struct RendererStats {
   uintptr_t total_draw_calls;
   uintptr_t alpha_target_count;
@@ -1260,6 +1260,11 @@ WR_INLINE
 void wr_api_send_transaction(DocumentHandle *aDh,
                              Transaction *aTransaction,
                              bool aIsAsync)
+WR_FUNC;
+
+WR_INLINE
+void wr_api_set_debug_flags(DocumentHandle *aDh,
+                            WrDebugFlags aFlags)
 WR_FUNC;
 
 WR_INLINE
@@ -1651,10 +1656,6 @@ WrPipelineInfo wr_renderer_flush_pipeline_info(Renderer *aRenderer)
 WR_FUNC;
 
 WR_INLINE
-WrDebugFlags wr_renderer_get_debug_flags(Renderer *aRenderer)
-WR_FUNC;
-
-WR_INLINE
 void wr_renderer_readback(Renderer *aRenderer,
                           int32_t aWidth,
                           int32_t aHeight,
@@ -1668,11 +1669,6 @@ bool wr_renderer_render(Renderer *aRenderer,
                         int32_t aHeight,
                         bool aHadSlowFrame,
                         RendererStats *aOutStats)
-WR_FUNC;
-
-WR_INLINE
-void wr_renderer_set_debug_flags(Renderer *aRenderer,
-                                 WrDebugFlags aFlags)
 WR_FUNC;
 
 WR_INLINE
