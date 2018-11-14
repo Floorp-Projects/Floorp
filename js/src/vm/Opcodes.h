@@ -1627,17 +1627,8 @@
      */ \
     macro(JSOP_POW, 150, "pow", "**", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
-     * Pops the top of stack value as 'v', sets pending exception as 'v', to
-     * trigger rethrow.
-     *
-     * This opcode is used in conditional catch clauses.
-     *
-     *   Category: Statements
-     *   Type: Exception Handling
-     *   Operands:
-     *   Stack: v =>
      */ \
-    macro(JSOP_THROWING, 151, "throwing", NULL, 1, 1, 0, JOF_BYTE) \
+    macro(JSOP_UNUSED151, 151, "unused151", NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Pops the top of stack value as 'rval', sets the return value in stack
      * frame as 'rval'.

@@ -173,7 +173,6 @@ namespace jit {
     _(JSOP_TYPEOFEXPR)         \
     _(JSOP_THROWMSG)           \
     _(JSOP_THROW)              \
-    _(JSOP_THROWING)           \
     _(JSOP_TRY)                \
     _(JSOP_FINALLY)            \
     _(JSOP_GOSUB)              \
