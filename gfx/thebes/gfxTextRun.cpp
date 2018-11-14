@@ -562,10 +562,10 @@ struct MOZ_STACK_CLASS BufferAlphaColor {
     {
         mContext->Save();
         mContext->NewPath();
-        mContext->Rectangle(gfxRect(aBounds.X() / appsPerDevUnit,
+        mContext->SnappedRectangle(gfxRect(aBounds.X() / appsPerDevUnit,
                     aBounds.Y() / appsPerDevUnit,
                     aBounds.Width() / appsPerDevUnit,
-                    aBounds.Height() / appsPerDevUnit), true);
+                    aBounds.Height() / appsPerDevUnit));
         mContext->Clip();
         mContext->SetColor(Color(aAlphaColor.r, aAlphaColor.g, aAlphaColor.b));
         mContext->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, aAlphaColor.a);

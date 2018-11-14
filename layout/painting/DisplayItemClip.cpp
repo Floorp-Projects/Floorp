@@ -101,7 +101,7 @@ DisplayItemClip::ApplyRectTo(gfxContext* aContext, int32_t A2D) const
 {
   aContext->NewPath();
   gfxRect clip = nsLayoutUtils::RectToGfxRect(mClipRect, A2D);
-  aContext->Rectangle(clip, true);
+  aContext->SnappedRectangle(clip);
   aContext->Clip();
 }
 
