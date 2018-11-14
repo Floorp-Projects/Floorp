@@ -46,4 +46,10 @@ if CONFIG["MOZ_DEBUG"] == "1":
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
     DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
 
+if CONFIG["CPU_ARCH"] == "x86":
+
+    CFLAGS += [
+        "-msse2"
+    ]
+
 Library("cpu_features_linux_gn")

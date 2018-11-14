@@ -579,9 +579,9 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
             CHECK(iter.readCall(&unusedIndex, &unusedArgs));
           }
           case uint16_t(Op::CallIndirect): {
-            uint32_t unusedIndex;
+            uint32_t unusedIndex, unusedIndex2;
             ValidatingOpIter::ValueVector unusedArgs;
-            CHECK(iter.readCallIndirect(&unusedIndex, &nothing, &unusedArgs));
+            CHECK(iter.readCallIndirect(&unusedIndex, &unusedIndex2, &nothing, &unusedArgs));
           }
           case uint16_t(Op::I32Const): {
             int32_t unused;
@@ -904,9 +904,12 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
               case uint16_t(MiscOp::I64TruncUSatF64):
                 CHECK(iter.readConversion(ValType::F64, ValType::I64, &nothing));
 #ifdef ENABLE_WASM_BULKMEM_OPS
-              case uint16_t(MiscOp::MemCopy):
-                  CHECK(iter.readMemOrTableCopy(/*isMem=*/true,
-                                                &nothing, &nothing, &nothing));
+              case uint16_t(MiscOp::MemCopy): {
+                  uint32_t unusedDestMemIndex;
+                  uint32_t unusedSrcMemIndex;
+                  CHECK(iter.readMemOrTableCopy(/*isMem=*/true, &unusedDestMemIndex,
+                                                &nothing, &unusedSrcMemIndex, &nothing, &nothing));
+              }
               case uint16_t(MiscOp::MemDrop): {
                 uint32_t unusedSegIndex;
                 CHECK(iter.readMemOrTableDrop(/*isMem=*/true, &unusedSegIndex));
@@ -915,20 +918,43 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
                 CHECK(iter.readMemFill(&nothing, &nothing, &nothing));
               case uint16_t(MiscOp::MemInit): {
                 uint32_t unusedSegIndex;
+                uint32_t unusedTableIndex;
                 CHECK(iter.readMemOrTableInit(/*isMem=*/true,
-                                              &unusedSegIndex, &nothing, &nothing, &nothing));
+                                              &unusedSegIndex, &unusedTableIndex, &nothing, &nothing, &nothing));
               }
-              case uint16_t(MiscOp::TableCopy):
-                CHECK(iter.readMemOrTableCopy(/*isMem=*/false,
-                                              &nothing, &nothing, &nothing));
+              case uint16_t(MiscOp::TableCopy): {
+                uint32_t unusedDestTableIndex;
+                uint32_t unusedSrcTableIndex;
+                CHECK(iter.readMemOrTableCopy(/*isMem=*/false, &unusedDestTableIndex,
+                                              &nothing, &unusedSrcTableIndex, &nothing, &nothing));
+              }
               case uint16_t(MiscOp::TableDrop): {
                 uint32_t unusedSegIndex;
                 CHECK(iter.readMemOrTableDrop(/*isMem=*/false, &unusedSegIndex));
               }
               case uint16_t(MiscOp::TableInit): {
                 uint32_t unusedSegIndex;
+                uint32_t unusedTableIndex;
                 CHECK(iter.readMemOrTableInit(/*isMem=*/false,
-                                              &unusedSegIndex, &nothing, &nothing, &nothing));
+                                              &unusedSegIndex, &unusedTableIndex, &nothing, &nothing, &nothing));
+              }
+#endif
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+              case uint16_t(MiscOp::TableGet): {
+                uint32_t unusedTableIndex;
+                CHECK(iter.readTableGet(&unusedTableIndex, &nothing));
+              }
+              case uint16_t(MiscOp::TableGrow): {
+                uint32_t unusedTableIndex;
+                CHECK(iter.readTableGrow(&unusedTableIndex, &nothing, &nothing));
+              }
+              case uint16_t(MiscOp::TableSet): {
+                uint32_t unusedTableIndex;
+                CHECK(iter.readTableSet(&unusedTableIndex, &nothing, &nothing));
+              }
+              case uint16_t(MiscOp::TableSize): {
+                uint32_t unusedTableIndex;
+                CHECK(iter.readTableSize(&unusedTableIndex));
               }
 #endif
 #ifdef ENABLE_WASM_GC
@@ -1429,10 +1455,14 @@ DecodeGCFeatureOptInSection(Decoder& d, ModuleEnvironment* env)
     // For documentation of what's in the various versions, see
     // https://github.com/lars-t-hansen/moz-gc-experiments
     //
-    // When we evolve the engine to handle v2, we will continue to recognize v1
-    // here if v2 is fully backwards compatible with v1.
+    // Version 1 is complete.
+    // Version 2 is in progress, currently backward compatible with version 1.
 
-    if (version != 1) {
+    switch (version) {
+      case 1:
+      case 2:
+        break;
+      default:
         return d.fail("unsupported version of the gc feature");
     }
 
@@ -1598,15 +1628,29 @@ DecodeLimits(Decoder& d, Limits* limits, Shareable allowShared = Shareable::Fals
 }
 
 static bool
-DecodeTableLimits(Decoder& d, TableDescVector* tables)
+DecodeTableTypeAndLimits(Decoder& d, HasGcTypes gcTypesEnabled, TableDescVector* tables)
 {
     uint8_t elementType;
     if (!d.readFixedU8(&elementType)) {
         return d.fail("expected table element type");
     }
 
-    if (elementType != uint8_t(TypeCode::AnyFunc)) {
+    TableKind tableKind;
+    if (elementType == uint8_t(TypeCode::AnyFunc)) {
+        tableKind = TableKind::AnyFunction;
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+    } else if (elementType == uint8_t(TypeCode::AnyRef)) {
+        if (gcTypesEnabled == HasGcTypes::False) {
+            return d.fail("reference types not enabled");
+        }
+        tableKind = TableKind::AnyRef;
+#endif
+    } else {
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+        return d.fail("expected 'anyfunc' or 'anyref' element type");
+#else
         return d.fail("expected 'anyfunc' element type");
+#endif
     }
 
     Limits limits;
@@ -1622,11 +1666,11 @@ DecodeTableLimits(Decoder& d, TableDescVector* tables)
           limits.maximum.value() > MaxTableMaximumLength)))
         return d.fail("too many table elements");
 
-    if (tables->length()) {
-        return d.fail("already have default table");
+    if (tables->length() >= MaxTables) {
+        return d.fail("too many tables");
     }
 
-    return tables->emplaceBack(TableKind::AnyFunction, limits);
+    return tables->emplaceBack(tableKind, limits);
 }
 
 static bool
@@ -1775,13 +1819,10 @@ DecodeImport(Decoder& d, ModuleEnvironment* env)
         break;
       }
       case DefinitionKind::Table: {
-        if (!DecodeTableLimits(d, &env->tables)) {
+        if (!DecodeTableTypeAndLimits(d, env->gcTypesEnabled(), &env->tables)) {
             return false;
         }
-        env->tables.back().external = true;
-#ifdef WASM_PRIVATE_REFTYPES
         env->tables.back().importedOrExported = true;
-#endif
         break;
       }
       case DefinitionKind::Memory: {
@@ -1905,12 +1946,8 @@ DecodeTableSection(Decoder& d, ModuleEnvironment* env)
         return d.fail("failed to read number of tables");
     }
 
-    if (numTables > 1) {
-        return d.fail("the number of tables must be at most one");
-    }
-
     for (uint32_t i = 0; i < numTables; ++i) {
-        if (!DecodeTableLimits(d, &env->tables)) {
+        if (!DecodeTableTypeAndLimits(d, env->gcTypesEnabled(), &env->tables)) {
             return false;
         }
     }
@@ -2151,14 +2188,8 @@ DecodeExport(Decoder& d, ModuleEnvironment* env, CStringSet* dupSet)
         if (tableIndex >= env->tables.length()) {
             return d.fail("exported table index out of bounds");
         }
-
-        MOZ_ASSERT(env->tables.length() == 1);
-        env->tables[tableIndex].external = true;
-#ifdef WASM_PRIVATE_REFTYPES
         env->tables[tableIndex].importedOrExported = true;
-#endif
-
-        return env->exports.emplaceBack(std::move(fieldName), DefinitionKind::Table);
+        return env->exports.emplaceBack(std::move(fieldName), tableIndex, DefinitionKind::Table);
       }
       case DefinitionKind::Memory: {
         uint32_t memoryIndex;
@@ -2302,7 +2333,6 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
 
         InitializerKind initializerKind = InitializerKind(initializerKindVal);
 
-        MOZ_ASSERT(env->tables.length() <= 1);
         if (env->tables.length() == 0) {
             return d.fail("elem segment requires a table section");
         }
@@ -2317,9 +2347,17 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
             if (!d.readVarU32(&tableIndex)) {
                 return d.fail("expected table index");
             }
-            if (tableIndex > 0) {
-                return d.fail("table index must be zero");
-            }
+        }
+        if (tableIndex >= env->tables.length()) {
+            return d.fail("table index out of range for element segment");
+        }
+        if (initializerKind == InitializerKind::Passive) {
+            // Too many bugs result from keeping this value zero.  For passive
+            // segments, there really is no segment index, and we should never
+            // touch the field.
+            tableIndex = (uint32_t)-1;
+        } else if (env->tables[tableIndex].kind != TableKind::AnyFunction) {
+            return d.fail("only tables of 'anyfunc' may have element segments");
         }
 
         seg->tableIndex = tableIndex;
@@ -2349,6 +2387,15 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
             return false;
         }
 
+#ifdef WASM_PRIVATE_REFTYPES
+        // We assume that passive segments may be applied to external tables.
+        // We can do slightly better: if there are no external tables in the
+        // module then we don't need to worry about passive segments either.
+        // But this is a temporary restriction.
+        bool exportedTable = initializerKind == InitializerKind::Passive ||
+                             env->tables[tableIndex].importedOrExported;
+#endif
+
         for (uint32_t i = 0; i < numElems; i++) {
             uint32_t funcIndex;
             if (!d.readVarU32(&funcIndex)) {
@@ -2359,17 +2406,8 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
                 return d.fail("table element out of range");
             }
 
-            // If a table element function value is imported then the table can
-            // contain functions from multiple instances and must be marked
-            // external.
-            if (env->funcIsImport(funcIndex)) {
-                env->tables[0].external = true;
-            }
-
 #ifdef WASM_PRIVATE_REFTYPES
-            if (env->tables[0].importedOrExported &&
-                !FuncTypeIsJSCompatible(d, *env->funcTypes[funcIndex]))
-            {
+            if (exportedTable && !FuncTypeIsJSCompatible(d, *env->funcTypes[funcIndex])) {
                 return false;
             }
 #endif

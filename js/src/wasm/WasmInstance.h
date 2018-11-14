@@ -150,12 +150,13 @@ class Instance
     // Called by Wasm(Memory|Table)Object when a moving resize occurs:
 
     void onMovingGrowMemory(uint8_t* prevMemoryBase);
-    void onMovingGrowTable();
+    void onMovingGrowTable(const Table* theTable);
 
     // Called to apply a single ElemSegment at a given offset, assuming
     // that all bounds validation has already been performed.
 
-    void initElems(const ElemSegment& seg, uint32_t dstOffset, uint32_t srcOffset, uint32_t len);
+    void initElems(uint32_t tableIndex, const ElemSegment& seg, uint32_t dstOffset,
+                   uint32_t srcOffset, uint32_t len);
 
     // Debugger support:
 
@@ -188,10 +189,15 @@ class Instance
     static int32_t memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint32_t len);
     static int32_t memInit(Instance* instance, uint32_t dstOffset,
                            uint32_t srcOffset, uint32_t len, uint32_t segIndex);
-    static int32_t tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset, uint32_t len);
+    static int32_t tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset, uint32_t len,
+                             uint32_t dstTableIndex, uint32_t srcTableIndex);
     static int32_t tableDrop(Instance* instance, uint32_t segIndex);
+    static void* tableGet(Instance* instance, uint32_t index, uint32_t tableIndex);
+    static uint32_t tableGrow(Instance* instance, uint32_t delta, void* initValue, uint32_t tableIndex);
+    static int32_t tableSet(Instance* instance, uint32_t index, void* value, uint32_t tableIndex);
+    static uint32_t tableSize(Instance* instance, uint32_t tableIndex);
     static int32_t tableInit(Instance* instance, uint32_t dstOffset,
-                             uint32_t srcOffset, uint32_t len, uint32_t segIndex);
+                             uint32_t srcOffset, uint32_t len, uint32_t segIndex, uint32_t tableIndex);
     static void postBarrier(Instance* instance, gc::Cell** location);
     static void* structNew(Instance* instance, uint32_t typeIndex);
     static void* structNarrow(Instance* instance, uint32_t mustUnboxAnyref, uint32_t outputTypeIndex,

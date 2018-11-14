@@ -13,6 +13,7 @@ import sys
 from mozboot.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozpack.files import FileFinder
+from moztest.resolve import TestResolver, get_suite_definition
 
 import taskgraph
 from taskgraph.generator import TaskGraphGenerator
@@ -104,3 +105,24 @@ def generate_tasks(params, full, root):
     with open(cache, 'w') as fh:
         fh.write('\n'.join(labels))
     return labels
+
+
+def filter_tasks_by_paths(tasks, paths):
+    resolver = TestResolver.from_environment(cwd=here)
+    run_suites, run_tests = resolver.resolve_metadata(paths)
+    flavors = set([(t['flavor'], t.get('subsuite')) for t in run_tests])
+
+    task_regexes = set()
+    for flavor, subsuite in flavors:
+        suite = get_suite_definition(flavor, subsuite, strict=True)
+        if 'task_regex' not in suite:
+            print("warning: no tasks could be resolved from flavor '{}'{}".format(
+                    flavor, " and subsuite '{}'".format(subsuite) if subsuite else ""))
+            continue
+
+        task_regexes.update(suite['task_regex'])
+
+    def match_task(task):
+        return any(re.search(pattern, task) for pattern in task_regexes)
+
+    return filter(match_task, tasks)

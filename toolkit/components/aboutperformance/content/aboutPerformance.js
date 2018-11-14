@@ -1074,12 +1074,12 @@ var View = {
 
     elt = document.createElement("td");
     if (type == "tab") {
-      let img = document.createElement("img");
+      let img = document.createElement("span");
       img.className = "action-icon close-icon";
       document.l10n.setAttributes(img, "close-tab");
       elt.appendChild(img);
     } else if (type == "addon") {
-      let img = document.createElement("img");
+      let img = document.createElement("span");
       img.className = "action-icon addon-icon";
       document.l10n.setAttributes(img, "show-addon");
       elt.appendChild(img);
@@ -1093,6 +1093,12 @@ var View = {
 
 var Control = {
   _openItems: new Set(),
+  _removeSubtree(row) {
+    while (row.nextSibling &&
+           row.nextSibling.firstChild.classList.contains("indent")) {
+      row.nextSibling.remove();
+    }
+  },
   init() {
     this._initAutorefresh();
     this._initDisplayMode();
@@ -1111,8 +1117,7 @@ var Control = {
           View.insertAfterRow(row);
         } else {
           this._openItems.delete(id);
-          while (row.nextSibling.firstChild.classList.contains("indent"))
-            row.nextSibling.remove();
+          this._removeSubtree(row);
         }
         return;
       }
@@ -1126,8 +1131,7 @@ var Control = {
           return;
         let {tabbrowser, tab} = found;
         tabbrowser.removeTab(tab);
-        while (row.nextSibling.firstChild.classList.contains("indent"))
-          row.nextSibling.remove();
+        this._removeSubtree(row);
         row.remove();
         return;
       }
@@ -1256,7 +1260,7 @@ var Control = {
 
         // Show the twisty image.
         let elt = row.firstChild;
-        let img = document.createElement("img");
+        let img = document.createElement("span");
         img.className = "twisty";
         let open = openItems.has(id);
         if (open) {

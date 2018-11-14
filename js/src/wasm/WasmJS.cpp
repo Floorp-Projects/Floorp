@@ -240,7 +240,7 @@ GetImports(JSContext* cx,
            const Module& module,
            HandleObject importObj,
            MutableHandle<FunctionVector> funcImports,
-           MutableHandleWasmTableObject tableImport,
+           WasmTableObjectVector& tableImports,
            MutableHandleWasmMemoryObject memoryImport,
            WasmGlobalObjectVector& globalObjs,
            MutableHandleValVector globalImportValues)
@@ -254,6 +254,8 @@ GetImports(JSContext* cx,
 
     uint32_t globalIndex = 0;
     const GlobalDescVector& globals = metadata.globals;
+    uint32_t tableIndex = 0;
+    const TableDescVector& tables = metadata.tables;
     for (const Import& import : imports) {
         RootedValue v(cx);
         if (!GetProperty(cx, importObj, import.module.get(), &v)) {
@@ -284,12 +286,20 @@ GetImports(JSContext* cx,
             break;
           }
           case DefinitionKind::Table: {
+            const uint32_t index = tableIndex++;
             if (!v.isObject() || !v.toObject().is<WasmTableObject>()) {
                 return ThrowBadImportType(cx, import.field.get(), "Table");
             }
 
-            MOZ_ASSERT(!tableImport);
-            tableImport.set(&v.toObject().as<WasmTableObject>());
+            RootedWasmTableObject obj(cx, &v.toObject().as<WasmTableObject>());
+            if (obj->table().kind() != tables[index].kind) {
+                JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TBL_TYPE_LINK);
+                return false;
+            }
+
+            if (!tableImports.append(obj)) {
+                return false;
+            }
             break;
           }
           case DefinitionKind::Memory: {
@@ -311,11 +321,11 @@ GetImports(JSContext* cx,
                 RootedWasmGlobalObject obj(cx, &v.toObject().as<WasmGlobalObject>());
 
                 if (obj->isMutable() != global.isMutable()) {
-                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MUT_LINK);
+                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GLOB_MUT_LINK);
                     return false;
                 }
                 if (obj->type() != global.type()) {
-                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TYPE_LINK);
+                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GLOB_TYPE_LINK);
                     return false;
                 }
 
@@ -343,7 +353,7 @@ GetImports(JSContext* cx,
                 }
 
                 if (global.isMutable()) {
-                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MUT_LINK);
+                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GLOB_MUT_LINK);
                     return false;
                 }
 
@@ -429,16 +439,16 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     }
 
     Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
-    RootedWasmTableObject table(cx);
+    Rooted<WasmTableObjectVector> tables(cx);
     RootedWasmMemoryObject memory(cx);
     Rooted<WasmGlobalObjectVector> globalObjs(cx);
 
     RootedValVector globals(cx);
-    if (!GetImports(cx, *module, importObj, &funcs, &table, &memory, globalObjs.get(), &globals)) {
+    if (!GetImports(cx, *module, importObj, &funcs, tables.get(), &memory, globalObjs.get(), &globals)) {
         return false;
     }
 
-    return module->instantiate(cx, funcs, table, memory, globals, globalObjs.get(), nullptr,
+    return module->instantiate(cx, funcs, tables.get(), memory, globals, globalObjs.get(), nullptr,
                                instanceObj);
 }
 
@@ -1335,16 +1345,16 @@ Instantiate(JSContext* cx, const Module& module, HandleObject importObj,
     RootedObject instanceProto(cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());
 
     Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
-    RootedWasmTableObject table(cx);
+    Rooted<WasmTableObjectVector> tables(cx);
     RootedWasmMemoryObject memory(cx);
     Rooted<WasmGlobalObjectVector> globalObjs(cx);
 
     RootedValVector globals(cx);
-    if (!GetImports(cx, module, importObj, &funcs, &table, &memory, globalObjs.get(), &globals)) {
+    if (!GetImports(cx, module, importObj, &funcs, tables.get(), &memory, globalObjs.get(), &globals)) {
         return false;
     }
 
-    return module.instantiate(cx, funcs, table, memory, globals, globalObjs.get(), instanceProto,
+    return module.instantiate(cx, funcs, tables.get(), memory, globals, globalObjs.get(), instanceProto,
                               instanceObj);
 }
 
@@ -2065,7 +2075,7 @@ WasmTableObject::trace(JSTracer* trc, JSObject* obj)
 }
 
 /* static */ WasmTableObject*
-WasmTableObject::create(JSContext* cx, const Limits& limits)
+WasmTableObject::create(JSContext* cx, const Limits& limits, TableKind tableKind)
 {
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmTable).toObject());
 
@@ -2077,11 +2087,7 @@ WasmTableObject::create(JSContext* cx, const Limits& limits)
 
     MOZ_ASSERT(obj->isNewborn());
 
-    TableDesc td(TableKind::AnyFunction, limits);
-    td.external = true;
-#ifdef WASM_PRIVATE_REFTYPES
-    td.importedOrExported = true;
-#endif
+    TableDesc td(tableKind, limits, /*importedOrExported=*/true);
 
     SharedTable table = Table::create(cx, td, obj);
     if (!table) {
@@ -2135,8 +2141,23 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (!StringEqualsAscii(elementLinearStr, "anyfunc")) {
+    TableKind tableKind;
+    if (StringEqualsAscii(elementLinearStr, "anyfunc")) {
+        tableKind = TableKind::AnyFunction;
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+    } else if (StringEqualsAscii(elementLinearStr, "anyref")) {
+        if (!cx->options().wasmGc()) {
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
+            return false;
+        }
+        tableKind = TableKind::AnyRef;
+#endif
+    } else {
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT_GENERALIZED);
+#else
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_ELEMENT);
+#endif
         return false;
     }
 
@@ -2147,7 +2168,7 @@ WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    RootedWasmTableObject table(cx, WasmTableObject::create(cx, limits));
+    RootedWasmTableObject table(cx, WasmTableObject::create(cx, limits, tableKind));
     if (!table) {
         return false;
     }
@@ -2212,22 +2233,34 @@ WasmTableObject::getImpl(JSContext* cx, const CallArgs& args)
         return false;
     }
 
-    ExternalTableElem& elem = table.externalArray()[index];
-    if (!elem.code) {
-        args.rval().setNull();
-        return true;
+    switch (table.kind()) {
+      case TableKind::AnyFunction: {
+        const FunctionTableElem& elem = table.getAnyFunc(index);
+        if (!elem.code) {
+            args.rval().setNull();
+            return true;
+        }
+
+        Instance& instance = *elem.tls->instance;
+        const CodeRange& codeRange = *instance.code().lookupFuncRange(elem.code);
+
+        RootedWasmInstanceObject instanceObj(cx, instance.object());
+        RootedFunction fun(cx);
+        if (!instanceObj->getExportedFunction(cx, instanceObj, codeRange.funcIndex(), &fun)) {
+            return false;
+        }
+
+        args.rval().setObject(*fun);
+        break;
+      }
+      case TableKind::AnyRef: {
+        args.rval().setObjectOrNull(table.getAnyRef(index));
+        break;
+      }
+      default: {
+        MOZ_CRASH("Unexpected table kind");
+      }
     }
-
-    Instance& instance = *elem.tls->instance;
-    const CodeRange& codeRange = *instance.code().lookupFuncRange(elem.code);
-
-    RootedWasmInstanceObject instanceObj(cx, instance.object());
-    RootedFunction fun(cx);
-    if (!instanceObj->getExportedFunction(cx, instanceObj, codeRange.funcIndex(), &fun)) {
-        return false;
-    }
-
-    args.rval().setObject(*fun);
     return true;
 }
 
@@ -2253,30 +2286,50 @@ WasmTableObject::setImpl(JSContext* cx, const CallArgs& args)
         return false;
     }
 
-    RootedFunction value(cx);
-    if (!IsExportedFunction(args[1], &value) && !args[1].isNull()) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TABLE_VALUE);
-        return false;
-    }
+    switch (table.kind()) {
+      case TableKind::AnyFunction: {
+        RootedFunction value(cx);
+        if (!IsExportedFunction(args[1], &value) && !args[1].isNull()) {
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TABLE_VALUE);
+            return false;
+        }
 
-    if (value) {
-        RootedWasmInstanceObject instanceObj(cx, ExportedFunctionToInstanceObject(value));
-        uint32_t funcIndex = ExportedFunctionToFuncIndex(value);
+        if (value) {
+            RootedWasmInstanceObject instanceObj(cx, ExportedFunctionToInstanceObject(value));
+            uint32_t funcIndex = ExportedFunctionToFuncIndex(value);
 
 #ifdef DEBUG
-        RootedFunction f(cx);
-        MOZ_ASSERT(instanceObj->getExportedFunction(cx, instanceObj, funcIndex, &f));
-        MOZ_ASSERT(value == f);
+            RootedFunction f(cx);
+            MOZ_ASSERT(instanceObj->getExportedFunction(cx, instanceObj, funcIndex, &f));
+            MOZ_ASSERT(value == f);
 #endif
 
-        Instance& instance = instanceObj->instance();
-        Tier tier = instance.code().bestTier();
-        const MetadataTier& metadata = instance.metadata(tier);
-        const CodeRange& codeRange = metadata.codeRange(metadata.lookupFuncExport(funcIndex));
-        void* code = instance.codeBase(tier) + codeRange.funcTableEntry();
-        table.set(index, code, &instance);
-    } else {
-        table.setNull(index);
+            Instance& instance = instanceObj->instance();
+            Tier tier = instance.code().bestTier();
+            const MetadataTier& metadata = instance.metadata(tier);
+            const CodeRange& codeRange = metadata.codeRange(metadata.lookupFuncExport(funcIndex));
+            void* code = instance.codeBase(tier) + codeRange.funcTableEntry();
+            table.setAnyFunc(index, code, &instance);
+        } else {
+            table.setNull(index);
+        }
+        break;
+      }
+      case TableKind::AnyRef: {
+        if (args[1].isNull()) {
+            table.setNull(index);
+        } else {
+            RootedObject value(cx, ToObject(cx, args[1]));
+            if (!value) {
+                return false;
+            }
+            table.setAnyRef(index, value.get());
+        }
+        break;
+      }
+      default: {
+        MOZ_CRASH("Unexpected table kind");
+      }
     }
 
     args.rval().setUndefined();

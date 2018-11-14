@@ -22,6 +22,14 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+// Actually we depend only on the reftypes proposal; this guard will change once
+// reftypes and GC are pried apart properly.
+#  ifndef ENABLE_WASM_GC
+#    error "Generalized tables require the GC feature"
+#  endif
+#endif
+
 #ifdef DEBUG
 
 # ifdef ENABLE_WASM_GC
@@ -33,6 +41,11 @@ using namespace js::wasm;
 #  define WASM_BULK_OP(code) return code
 # else
 #  define WASM_BULK_OP(code) break
+# endif
+# ifdef ENABLE_WASM_GENERALIZED_TABLES
+#  define WASM_TABLE_OP(code) return code
+# else
+#  define WASM_TABLE_OP(code) break
 # endif
 # ifdef ENABLE_WASM_THREAD_OPS
 #  define WASM_THREAD_OP(code) return code
@@ -284,6 +297,14 @@ wasm::Classify(OpBytes op)
             case MiscOp::MemInit:
             case MiscOp::TableInit:
               WASM_BULK_OP(OpKind::MemOrTableInit);
+            case MiscOp::TableGet:
+              WASM_TABLE_OP(OpKind::TableGet);
+            case MiscOp::TableGrow:
+              WASM_TABLE_OP(OpKind::TableGrow);
+            case MiscOp::TableSet:
+              WASM_TABLE_OP(OpKind::TableSet);
+            case MiscOp::TableSize:
+              WASM_TABLE_OP(OpKind::TableSize);
             case MiscOp::StructNew:
               WASM_GC_OP(OpKind::StructNew);
             case MiscOp::StructGet:
@@ -428,6 +449,7 @@ wasm::Classify(OpBytes op)
 
 # undef WASM_GC_OP
 # undef WASM_BULK_OP
+# undef WASM_TABLE_OP
 # undef WASM_THREAD_OP
 
 #endif

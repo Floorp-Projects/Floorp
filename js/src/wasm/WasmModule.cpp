@@ -631,7 +631,7 @@ Module::initSegments(JSContext* cx,
     for (const ElemSegment* seg : elemSegments_) {
         if (seg->active()) {
             uint32_t offset = EvaluateInitExpr(globalImportValues, seg->offset());
-            instance.initElems(*seg, offset, 0, seg->length());
+            instance.initElems(seg->tableIndex, *seg, offset, 0, seg->length());
         }
     }
 
@@ -803,53 +803,85 @@ Module::instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) c
 }
 
 bool
-Module::instantiateTable(JSContext* cx, MutableHandleWasmTableObject tableObj,
-                         SharedTableVector* tables) const
+Module::instantiateImportedTable(JSContext* cx, const TableDesc& td, Handle<WasmTableObject*> tableObj,
+                                 WasmTableObjectVector* tableObjs, SharedTableVector* tables) const
 {
-    if (tableObj) {
-        MOZ_ASSERT(!metadata().isAsmJS());
+    MOZ_ASSERT(tableObj);
+    MOZ_ASSERT(!metadata().isAsmJS());
 
-        MOZ_ASSERT(metadata().tables.length() == 1);
-        const TableDesc& td = metadata().tables[0];
-        MOZ_ASSERT(td.external);
+    Table& table = tableObj->table();
+    if (!CheckLimits(cx, td.limits.initial, td.limits.maximum, table.length(), table.maximum(),
+                     metadata().isAsmJS(), "Table"))
+    {
+        return false;
+    }
 
-        Table& table = tableObj->table();
-        if (!CheckLimits(cx, td.limits.initial, td.limits.maximum, table.length(), table.maximum(),
-                         metadata().isAsmJS(), "Table")) {
+    if (!tables->append(&table)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    if (!tableObjs->append(tableObj)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    return true;
+}
+
+bool
+Module::instantiateLocalTable(JSContext* cx, const TableDesc& td, WasmTableObjectVector* tableObjs,
+                              SharedTableVector* tables) const
+{
+    SharedTable table;
+    Rooted<WasmTableObject*> tableObj(cx);
+    if (td.importedOrExported) {
+        tableObj.set(WasmTableObject::create(cx, td.limits, td.kind));
+        if (!tableObj) {
             return false;
         }
-
-        if (!tables->append(&table)) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
+        table = &tableObj->table();
     } else {
-        for (const TableDesc& td : metadata().tables) {
-            SharedTable table;
-            if (td.external) {
-                MOZ_ASSERT(!tableObj);
-                MOZ_ASSERT(td.kind == TableKind::AnyFunction);
-
-                tableObj.set(WasmTableObject::create(cx, td.limits));
-                if (!tableObj) {
-                    return false;
-                }
-
-                table = &tableObj->table();
-            } else {
-                table = Table::create(cx, td, /* HandleWasmTableObject = */ nullptr);
-                if (!table) {
-                    return false;
-                }
-            }
-
-            if (!tables->emplaceBack(table)) {
-                ReportOutOfMemory(cx);
-                return false;
-            }
+        table = Table::create(cx, td, /* HandleWasmTableObject = */ nullptr);
+        if (!table) {
+            return false;
         }
     }
 
+    // Note, appending a null pointer for non-exported local tables.
+    if (!tableObjs->append(tableObj.get())) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    if (!tables->emplaceBack(table)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    return true;
+}
+
+bool
+Module::instantiateTables(JSContext* cx,
+                          WasmTableObjectVector& tableImports,
+                          MutableHandle<WasmTableObjectVector> tableObjs,
+                          SharedTableVector* tables) const
+{
+    uint32_t tableIndex = 0;
+    for (const TableDesc& td : metadata().tables) {
+        if (tableIndex < tableImports.length()) {
+            Rooted<WasmTableObject*> tableObj(cx, tableImports[tableIndex]);
+            if (!instantiateImportedTable(cx, td, tableObj, &tableObjs.get(), tables)) {
+                return false;
+            }
+        } else {
+            if (!instantiateLocalTable(cx, td, &tableObjs.get(), tables)) {
+                return false;
+            }
+        }
+        tableIndex++;
+    }
     return true;
 }
 
@@ -1032,7 +1064,7 @@ static bool
 CreateExportObject(JSContext* cx,
                    HandleWasmInstanceObject instanceObj,
                    Handle<FunctionVector> funcImports,
-                   HandleWasmTableObject tableObj,
+                   const WasmTableObjectVector& tableObjs,
                    HandleWasmMemoryObject memoryObj,
                    const WasmGlobalObjectVector& globalObjs,
                    const ExportVector& exports)
@@ -1074,7 +1106,7 @@ CreateExportObject(JSContext* cx,
             }
             break;
           case DefinitionKind::Table:
-            val = ObjectValue(*tableObj);
+            val = ObjectValue(*tableObjs[exp.tableIndex()]);
             break;
           case DefinitionKind::Memory:
             val = ObjectValue(*memoryObj);
@@ -1246,7 +1278,7 @@ Module::makeStructTypeDescrs(JSContext* cx,
 bool
 Module::instantiate(JSContext* cx,
                     Handle<FunctionVector> funcImports,
-                    HandleWasmTableObject tableImport,
+                    WasmTableObjectVector& tableImports,
                     HandleWasmMemoryObject memoryImport,
                     HandleValVector globalImportValues,
                     WasmGlobalObjectVector& globalObjs,
@@ -1264,9 +1296,12 @@ Module::instantiate(JSContext* cx,
         return false;
     }
 
-    RootedWasmTableObject table(cx, tableImport);
+    // Note that tableObjs is sparse: it will be null in slots that contain
+    // tables that are neither exported nor imported.
+
+    Rooted<WasmTableObjectVector> tableObjs(cx);
     SharedTableVector tables;
-    if (!instantiateTable(cx, &table, &tables)) {
+    if (!instantiateTables(cx, tableImports, &tableObjs, &tables)) {
         return false;
     }
 
@@ -1323,7 +1358,7 @@ Module::instantiate(JSContext* cx,
         return false;
     }
 
-    if (!CreateExportObject(cx, instance, funcImports, table, memory, globalObjs, exports_)) {
+    if (!CreateExportObject(cx, instance, funcImports, tableObjs.get(), memory, globalObjs, exports_)) {
         return false;
     }
 

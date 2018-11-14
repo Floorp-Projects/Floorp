@@ -1591,7 +1591,7 @@ var BrowserTestUtils = {
   waitForNotificationInNotificationBox(notificationBox, notificationValue) {
     return new Promise((resolve) => {
       let check = (event) => {
-        return event.target.value == notificationValue;
+        return event.target.getAttribute("value") == notificationValue;
       };
 
       BrowserTestUtils.waitForEvent(notificationBox.stack, "AlertActive",
