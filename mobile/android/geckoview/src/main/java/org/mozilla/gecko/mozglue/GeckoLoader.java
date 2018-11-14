@@ -8,7 +8,6 @@ package org.mozilla.gecko.mozglue;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
-import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.geckoview.BuildConfig;
 
 import android.content.Context;
@@ -315,10 +314,8 @@ public final class GeckoLoader {
         message.append(lib);
 
         // These might differ. If so, we know why the library won't load!
-        HardwareUtils.init(context);
-        message.append(": ABI: " + HardwareUtils.getLibrariesABI() + ", " + getCPUABI());
+        message.append(": ABI: " + BuildConfig.MOZ_APP_ABI + ", " + getCPUABI());
         message.append(": Data: " + context.getApplicationInfo().dataDir);
-
         try {
             final boolean appLibExists = new File("/data/app-lib/" + androidPackageName + "/lib" + lib + ".so").exists();
             final boolean dataDataExists = new File("/data/data/" + androidPackageName + "/lib/lib" + lib + ".so").exists();
