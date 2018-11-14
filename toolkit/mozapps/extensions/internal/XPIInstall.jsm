@@ -645,25 +645,10 @@ async function loadManifestFromRDF(aUri, aData, aPackage) {
       throw new Error("Non-restartless extensions no longer supported");
     }
 
-    addon.hasEmbeddedWebExtension = manifest.hasEmbeddedWebExtension == "true";
-
     if (addon.optionsType &&
         addon.optionsType != AddonManager.OPTIONS_TYPE_INLINE_BROWSER &&
         addon.optionsType != AddonManager.OPTIONS_TYPE_TAB) {
       throw new Error("Install manifest specifies unknown optionsType: " + addon.optionsType);
-    }
-
-    if (addon.hasEmbeddedWebExtension) {
-      let uri = Services.io.newURI("webextension/manifest.json", null, aUri);
-      let embeddedAddon = await loadManifestFromWebManifest(uri, aPackage);
-      if (embeddedAddon.optionsURL) {
-        if (addon.optionsType || addon.optionsURL)
-          logger.warn(`Addon ${addon.id} specifies optionsType or optionsURL ` +
-                      `in both install.rdf and manifest.json`);
-
-        addon.optionsURL = embeddedAddon.optionsURL;
-        addon.optionsType = embeddedAddon.optionsType;
-      }
     }
   } else {
     // Convert legacy dictionaries into a format the WebExtension
