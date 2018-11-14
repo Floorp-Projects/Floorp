@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
+import android.support.v4.app.FragmentManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
@@ -138,6 +139,7 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
 
         (exceptionList.adapter as DomainListAdapter).refresh(activity!!) {
             if ((exceptionList.adapter as DomainListAdapter).itemCount == 0) {
+                fragmentManager!!.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
                 fragmentManager!!.beginTransaction()
                     .replace(R.id.container, PrivacySecuritySettingsFragment())
                     .addToBackStack(null)
