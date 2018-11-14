@@ -152,6 +152,7 @@ private:
       : mEpoch(aEpoch)
       , mImageId(aImageId)
     {}
+    ~ForwardingExternalImage();
     wr::Epoch mEpoch;
     wr::ExternalImageId mImageId;
   };
@@ -160,7 +161,7 @@ private:
     // Holds forwarding WebRenderTextureHosts.
     std::queue<ForwardingTextureHost> mTextureHosts;
     std::queue<ForwardingTextureHostWrapper> mTextureHostWrappers;
-    std::queue<ForwardingExternalImage> mExternalImages;
+    std::queue<UniquePtr<ForwardingExternalImage>> mExternalImages;
     Maybe<wr::Epoch> mDestroyedEpoch;
   };
 

@@ -282,7 +282,9 @@ class Raptor(object):
                     '--ignore-certificate-errors'
                 ]
                 if self.config['host'] not in ('localhost', '127.0.0.1'):
-                    chrome_args[0].replace('127.0.0.1', self.config['host'])
+                    chrome_args[0] = chrome_args[0].replace('127.0.0.1', self.config['host'])
+                if ' '.join(chrome_args) not in ' '.join(self.runner.cmdargs):
+                    self.runner.cmdargs.extend(chrome_args)
 
             self.runner.start()
             proc = self.runner.process_handler

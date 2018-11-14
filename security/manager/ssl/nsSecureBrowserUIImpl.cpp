@@ -154,8 +154,11 @@ nsSecureBrowserUIImpl::CheckForBlockedContent()
   mOldState = mState;
 
   // Has mixed content been loaded or blocked in nsMixedContentBlocker?
-  // This only applies to secure documents.
-  if (mState & STATE_IS_SECURE) {
+  // This only applies to secure documents even if they're affected by mixed
+  // content blocking in which case the STATE_IS_BROKEN bit would be set rather
+  // than STATE_IS_SECURE.
+  if (((mState & STATE_IS_SECURE) != 0) ||
+      ((mState & STATE_IS_BROKEN) != 0)) {
     if (docShell->GetHasMixedActiveContentLoaded()) {
       mState |= STATE_IS_BROKEN | STATE_LOADED_MIXED_ACTIVE_CONTENT;
       mState &= ~STATE_IS_SECURE;
