@@ -262,7 +262,6 @@ public:
                        const mozilla::TimeStamp& aEndTime,
                        int32_t aPri,
                        int64_t aCount,
-                       mozilla::net::CacheDisposition aCacheDisposition,
                        const mozilla::net::TimingStruct* aTimings = nullptr,
                        const char* aRedirectURI = nullptr)
     : ProfilerMarkerPayload(aStartTime, aEndTime, mozilla::Nothing())
@@ -274,7 +273,6 @@ public:
     , mType(aType)
     , mPri(aPri)
     , mCount(aCount)
-    , mCacheDisposition(aCacheDisposition)
   {
     if (aTimings) {
       mTimings = *aTimings;
@@ -291,7 +289,6 @@ private:
   int32_t mPri;
   int64_t mCount;
   mozilla::net::TimingStruct mTimings;
-  mozilla::net::CacheDisposition mCacheDisposition;
 };
 
 class ScreenshotPayload : public ProfilerMarkerPayload
