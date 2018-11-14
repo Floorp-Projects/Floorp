@@ -35,8 +35,8 @@ function getParentProcessActors(callback) {
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect()
     .then(() => client.mainRoot.getMainProcess())
-    .then(response => {
-      callback(client, response.form);
+    .then(front => {
+      callback(client, front);
     });
 
   SimpleTest.registerCleanupFunction(() => {

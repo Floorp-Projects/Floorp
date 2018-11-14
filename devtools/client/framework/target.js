@@ -525,8 +525,17 @@ Target.prototype = {
 
     // Attach the target actor
     const attachBrowsingContextTarget = async () => {
-      const [, targetFront] = await this._client.attachTarget(this.form.actor);
-      this.activeTab = targetFront;
+      // Some BrowsingContextTargetFront are already instantiated and passed as
+      // contructor's argument, like for ParentProcessTargetActor.
+      // For them, we only need to attach them.
+      // The call to attachTarget is to be removed once all Target are having a front
+      // passed as contructor's argument.
+      if (!this.activeTab) {
+        const [, targetFront] = await this._client.attachTarget(this.form.actor);
+        this.activeTab = targetFront;
+      } else {
+        await this.activeTab.attach();
+      }
 
       this.activeTab.on("tabNavigated", this._onTabNavigated);
       this._onFrameUpdate = packet => {
