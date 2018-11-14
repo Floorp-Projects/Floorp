@@ -14,7 +14,7 @@ namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReportingObserver)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReportingObserver)
-  tmp->Disconnect();
+  tmp->Shutdown();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReports)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
@@ -32,8 +32,10 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(ReportingObserver)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ReportingObserver)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReportingObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 /* static */ already_AddRefed<ReportingObserver>
@@ -52,6 +54,18 @@ ReportingObserver::Constructor(const GlobalObject& aGlobal,
 
   RefPtr<ReportingObserver> ro =
     new ReportingObserver(window, aCallback, types, aOptions.mBuffered);
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (NS_WARN_IF(!obs)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  aRv = obs->AddObserver(ro, "memory-pressure", true);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
   return ro.forget();
 }
 
@@ -69,7 +83,18 @@ ReportingObserver::ReportingObserver(nsPIDOMWindowInner* aWindow,
 
 ReportingObserver::~ReportingObserver()
 {
+  Shutdown();
+}
+
+void
+ReportingObserver::Shutdown()
+{
   Disconnect();
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, "memory-pressure");
+  }
 }
 
 JSObject*
@@ -157,6 +182,15 @@ ReportingObserver::MaybeNotify()
 
   // We should report if this throws exception. But where?
   mCallback->Call(reports, *this);
+}
+
+NS_IMETHODIMP
+ReportingObserver::Observe(nsISupports* aSubject, const char* aTopic,
+                           const char16_t* aData)
+{
+  MOZ_ASSERT(!strcmp(aTopic, "memory-pressure"));
+  mReports.Clear();
+  return NS_OK;
 }
 
 } // dom namespace
