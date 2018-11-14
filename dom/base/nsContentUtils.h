@@ -3286,9 +3286,6 @@ public:
   static bool
   IsLocalRefURL(const nsString& aString);
 
-  static bool
-  IsCustomElementsEnabled() { return sIsCustomElementsEnabled; }
-
   /**
    * Compose a tab id with process id and a serial number.
    */

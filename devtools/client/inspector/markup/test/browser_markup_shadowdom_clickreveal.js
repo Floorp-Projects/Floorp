@@ -41,8 +41,6 @@ add_task(async function() {
 });
 
 async function testRevealLink(revealFnFirst, revealFnSecond) {
-  await enableWebComponents();
-
   const { inspector } = await openInspectorForURL(TEST_URL);
   const { markup } = inspector;
 
