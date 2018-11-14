@@ -25,7 +25,6 @@ EXTRA_JS_MODULES += [
     'ExtensionTelemetry.jsm',
     'ExtensionUtils.jsm',
     'FindContent.jsm',
-    'LegacyExtensionsUtils.jsm',
     'MessageChannel.jsm',
     'MessageManagerProxy.jsm',
     'NativeManifests.jsm',

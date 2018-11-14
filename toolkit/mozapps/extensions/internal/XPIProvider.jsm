@@ -35,7 +35,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
   ConsoleAPI: "resource://gre/modules/Console.jsm",
   JSONFile: "resource://gre/modules/JSONFile.jsm",
-  LegacyExtensionsUtils: "resource://gre/modules/LegacyExtensionsUtils.jsm",
   TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
 
   XPIDatabase: "resource://gre/modules/addons/XPIDatabase.jsm",
@@ -376,7 +375,6 @@ const JSON_FIELDS = Object.freeze([
   "dependencies",
   "enabled",
   "file",
-  "hasEmbeddedWebExtension",
   "lastModifiedTime",
   "path",
   "runInSafeMode",
@@ -460,7 +458,6 @@ class XPIState {
     let json = {
       dependencies: this.dependencies,
       enabled: this.enabled,
-      hasEmbeddedWebExtension: this.hasEmbeddedWebExtension,
       lastModifiedTime: this.lastModifiedTime,
       path: this.relativePath,
       runInSafeMode: this.runInSafeMode,
@@ -540,7 +537,6 @@ class XPIState {
 
     this.telemetryKey = this.getTelemetryKey();
 
-    this.hasEmbeddedWebExtension = aDBAddon.hasEmbeddedWebExtension;
     this.dependencies = aDBAddon.dependencies;
     this.runInSafeMode = canRunInSafeMode(aDBAddon);
     this.signedState = aDBAddon.signedState;
@@ -1578,21 +1574,6 @@ class BootstrapScope {
       }
 
       Object.assign(params, aExtraParams);
-
-      if (addon.hasEmbeddedWebExtension) {
-        let reason = Object.keys(BOOTSTRAP_REASONS).find(
-          key => BOOTSTRAP_REASONS[key] == aReason
-        );
-
-        if (aMethod == "startup") {
-          const webExtension = LegacyExtensionsUtils.getEmbeddedExtensionFor(params);
-          params.webExtension = {
-            startup: () => webExtension.startup(reason),
-          };
-        } else if (aMethod == "shutdown") {
-          LegacyExtensionsUtils.getEmbeddedExtensionFor(params).shutdown(reason);
-        }
-      }
 
       let result;
       if (!method) {

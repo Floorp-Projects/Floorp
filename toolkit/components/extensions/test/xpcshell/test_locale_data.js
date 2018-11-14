@@ -9,8 +9,8 @@ const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDG
 async function generateAddon(data) {
   let id = uuidGenerator.generateUUID().number;
 
-  data = Object.assign({embedded: true}, data);
-  data.manifest = Object.assign({applications: {gecko: {id}}}, data.manifest);
+  data = Object.assign({}, data);
+  data.manifest = Object.assign({applications: {gecko: {id}}}, data.manifest || {});
 
   let xpi = Extension.generateXPI(data);
   registerCleanupFunction(() => {
@@ -19,7 +19,7 @@ async function generateAddon(data) {
   });
 
   let fileURI = Services.io.newFileURI(xpi);
-  let jarURI = NetUtil.newURI(`jar:${fileURI.spec}!/webextension/`);
+  let jarURI = NetUtil.newURI(`jar:${fileURI.spec}!/`);
 
   let extension = new ExtensionData(jarURI);
   await extension.loadManifest();
