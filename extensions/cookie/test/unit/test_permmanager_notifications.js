@@ -7,6 +7,7 @@
 var test_generator = do_run_test();
 
 function run_test() {
+  Services.prefs.setCharPref("permissions.manager.defaultsUrl", "");
   do_test_pending();
   test_generator.next();
 }
