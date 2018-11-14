@@ -106,6 +106,7 @@ class GlobalObject : public NativeObject
         INTRINSICS,
         FOR_OF_PIC_CHAIN,
         WINDOW_PROXY,
+        GLOBAL_THIS_RESOLVED,
 
         /* Total reserved-slot count for global objects. */
         RESERVED_SLOTS
@@ -188,6 +189,8 @@ class GlobalObject : public NativeObject
         const Value& v = getPrototype(protoKey);
         return v.isObject() ? &v.toObject() : nullptr;
     }
+
+    static bool maybeResolveGlobalThis(JSContext* cx, Handle<GlobalObject*> global, bool* resolved);
 
     void setConstructor(JSProtoKey key, const Value& v) {
         setSlot(constructorSlot(key), v);

@@ -103,10 +103,6 @@ skip script test262/language/expressions/assignment/fn-name-lhs-member.js
 skip script test262/language/expressions/function/name.js
 skip script test262/language/expressions/generators/name.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1317422
-skip script test262/built-ins/global/property-descriptor.js
-skip script test262/built-ins/global/global-object.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1079853
 skip script test262/built-ins/TypedArray/prototype/every/BigInt/callbackfn-detachbuffer.js
 skip script test262/built-ins/TypedArray/prototype/every/callbackfn-detachbuffer.js
