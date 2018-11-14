@@ -204,7 +204,8 @@ public class GeckoSessionTestRule implements TestRule {
             SCREEN_ID,
             USE_MULTIPROCESS,
             USE_PRIVATE_MODE,
-            USE_TRACKING_PROTECTION;
+            USE_TRACKING_PROTECTION,
+            FULL_ACCESSIBILITY_TREE;
 
             private final GeckoSessionSettings.Key<?> mKey;
             private final Class<?> mType;

@@ -35,6 +35,7 @@ import org.junit.Test
 import org.junit.Before
 import org.junit.After
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
 
 const val DISPLAY_WIDTH = 480
 const val DISPLAY_HEIGHT = 640
@@ -592,6 +593,7 @@ class AccessibilityTest : BaseSessionTest() {
         })
     }
 
+    @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test fun autoFill() {
         // Wait for the accessibility nodes to populate.
         mainSession.loadTestPath(FORMS_HTML_PATH)
@@ -665,6 +667,7 @@ class AccessibilityTest : BaseSessionTest() {
         }
     }
 
+    @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test fun autoFill_navigation() {
         fun countAutoFillNodes(cond: (AccessibilityNodeInfo) -> Boolean =
                                        { it.className == "android.widget.EditText" },
@@ -718,6 +721,7 @@ class AccessibilityTest : BaseSessionTest() {
                    countAutoFillNodes({ it.isFocused }), equalTo(0))
     }
 
+    @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test fun testTree() {
         sessionRule.session.loadString(
                 "<label for='name'>Name:</label><input id='name' type='text' value='Julie'><button>Submit</button>",
@@ -753,6 +757,7 @@ class AccessibilityTest : BaseSessionTest() {
         assertThat("Text leaf has correct text", textLeaf.text.toString(), equalTo("Submit"))
     }
 
+    @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test fun testCollection() {
         sessionRule.session.loadString(
                 """<ul>
@@ -793,6 +798,7 @@ class AccessibilityTest : BaseSessionTest() {
         }
     }
 
+    @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test fun testRange() {
         sessionRule.session.loadString(
                 """<input type="range" aria-label="Rating" min="1" max="10" value="4">

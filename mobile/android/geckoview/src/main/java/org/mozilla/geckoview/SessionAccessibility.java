@@ -643,7 +643,7 @@ public class SessionAccessibility {
         if (!mSession.getSettings().getBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE)) {
             cachedBundle = getMostRecentBundle(sourceId);
             // Suppress events from non cached nodes if cache is enabled.
-            if (cachedBundle == null) {
+            if (cachedBundle == null && sourceId != View.NO_ID) {
                 return;
             }
         }
