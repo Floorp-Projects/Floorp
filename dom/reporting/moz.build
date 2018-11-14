@@ -6,6 +6,7 @@
 
 EXPORTS.mozilla.dom = [
     'DeprecationReportBody.h',
+    'FeaturePolicyViolationReportBody.h',
     'Report.h',
     'ReportBody.h',
     'ReportingObserver.h',
@@ -15,6 +16,7 @@ EXPORTS.mozilla.dom = [
 
 UNIFIED_SOURCES += [
     'DeprecationReportBody.cpp',
+    'FeaturePolicyViolationReportBody.cpp',
     'Report.cpp',
     'ReportBody.cpp',
     'ReportingObserver.cpp',
