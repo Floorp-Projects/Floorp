@@ -5,18 +5,26 @@
 "use strict";
 
 /**
- * Loads an iframe.
+ * Set dom.webcomponents.shadowdom.enabled pref to true and loads an iframe, to
+ * ensure that the Element instance is loaded with the correct value of the
+ * preference.
  *
  * @return {Promise} promise that resolves when iframe is loaded.
  */
-function createIframe(aSrcDoc) {
+function setShadowDOMPrefAndCreateIframe(aSrcDoc) {
   return new Promise(function (aResolve, aReject) {
-    let iframe = document.createElement("iframe");
-    iframe.onload = function () { aResolve(iframe.contentDocument); }
-    iframe.onerror = function () { aReject('Failed to load iframe'); }
-    if (aSrcDoc) {
-      iframe.srcdoc = aSrcDoc;
-    }
-    document.body.appendChild(iframe);
+    SpecialPowers.pushPrefEnv({
+      set: [
+        ["dom.webcomponents.shadowdom.enabled", true]
+      ]
+    }, () => {
+      let iframe = document.createElement("iframe");
+      iframe.onload = function () { aResolve(iframe.contentDocument); }
+      iframe.onerror = function () { aReject('Failed to load iframe'); }
+      if (aSrcDoc) {
+        iframe.srcdoc = aSrcDoc;
+      }
+      document.body.appendChild(iframe);
+    });
   });
 }

@@ -19,10 +19,10 @@ interface Text : CharacterData {
 };
 
 partial interface Text {
-  [BinaryName="assignedSlotByMode"]
+  [BinaryName="assignedSlotByMode", Func="nsTextNode::IsShadowDOMEnabled"]
   readonly attribute HTMLSlotElement? assignedSlot;
 
-  [ChromeOnly, BinaryName="assignedSlot"]
+  [ChromeOnly, BinaryName="assignedSlot", Func="nsTextNode::IsShadowDOMEnabled"]
   readonly attribute HTMLSlotElement? openOrClosedAssignedSlot;
 };
 

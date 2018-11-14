@@ -182,6 +182,10 @@ DocumentOrShadowRoot::GetRetargetedFocusedElement()
       }
 
       if (focusedContent) {
+        if (!nsDocument::IsShadowDOMEnabled(focusedContent)) {
+          return focusedContent->AsElement();
+        }
+
         if (nsIContent* retarget = Retarget(focusedContent)) {
           return retarget->AsElement();
         }

@@ -3799,6 +3799,11 @@ public:
   mozilla::dom::FeaturePolicy*
   Policy() const;
 
+  bool IsShadowDOMEnabled() const
+  {
+    return mIsShadowDOMEnabled;
+  }
+
   bool ModuleScriptsEnabled();
 
   /**
@@ -4265,6 +4270,10 @@ protected:
 
   // True if the encoding menu should be disabled.
   bool mEncodingMenuDisabled : 1;
+
+  // True if dom.webcomponents.shadowdom.enabled pref is set when document is
+  // created.
+  bool mIsShadowDOMEnabled : 1;
 
   // True if this document is for an SVG-in-OpenType font.
   bool mIsSVGGlyphsDocument : 1;
