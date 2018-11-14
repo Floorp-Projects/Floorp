@@ -17,7 +17,7 @@ Bug 1007200 - Create a framerate actor
 
 window.onload = async function() {
   const target = await getTargetForSelectedTab();
-  const front = target.getFront("framerate");
+  const front = await target.getFront("framerate");
   const TICK = 1000;
 
   await waitFor(TICK);

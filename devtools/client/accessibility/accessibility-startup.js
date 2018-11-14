@@ -74,7 +74,7 @@ class AccessibilityStartup {
           this.toolbox.once("accessibility-init"),
         ]);
 
-        this._accessibility = this.target.getFront("accessibility");
+        this._accessibility = await this.target.getFront("accessibility");
         // When target is being destroyed (for example on remoteness change), it
         // destroy accessibility front. In case when a11y is not fully initialized, that
         // may result in unresolved promises.

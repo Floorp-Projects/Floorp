@@ -23,7 +23,7 @@ window.onload = async function() {
   const url = document.getElementById("testContent").href;
   const { target, doc } = await attachURL(url);
   const contentWin = doc.defaultView;
-  const front = target.getFront("framerate");
+  const front = await target.getFront("framerate");
 
   await front.startRecording();
   await waitFor(TICK);
