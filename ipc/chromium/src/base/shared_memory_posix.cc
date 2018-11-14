@@ -65,7 +65,15 @@ bool SharedMemory::AppendPosixShmPrefix(std::string* str, pid_t pid)
   // (it's used for communication with services like PulseAudio);
   // instead AppArmor is used to restrict access to it.  Anything with
   // this prefix is allowed:
-  static const char* const kSnap = PR_GetEnv("SNAP_NAME");
+  static const char* const kSnap = []{
+    auto instanceName = PR_GetEnv("SNAP_INSTANCE_NAME");
+    if (instanceName != nullptr) {
+      return instanceName;
+    }
+    // Compatibility for snapd <= 2.35:
+    return PR_GetEnv("SNAP_NAME");
+  }();
+
   if (kSnap) {
     StringAppendF(str, "snap.%s.", kSnap);
   }
