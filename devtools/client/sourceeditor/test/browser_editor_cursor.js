@@ -37,7 +37,7 @@ function test() {
 
     EventUtils.sendMouseEvent({ type: "mousedown", shiftKey: true }, gutter,
       iframe.contentWindow);
-    is(ed.getSelection(), "Hello.", "shift-click");
+    is(ed.getSelection(), "", "shift-click");
 
     teardown(ed, win);
   });
