@@ -3046,7 +3046,7 @@ Toolbox.prototype = {
       resolvePerformance = resolve;
     });
 
-    this._performance = this.target.getFront("performance");
+    this._performance = await this.target.getFront("performance");
     await this.performance.connect();
 
     // Emit an event when connected, but don't wait on startup for this.

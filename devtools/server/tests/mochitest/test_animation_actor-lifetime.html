@@ -26,7 +26,7 @@ window.onload = function() {
 
     const { target } = await attachURL(url);
     const inspector = await target.getInspector();
-    animationsFront = target.getFront("animations");
+    animationsFront = await target.getFront("animations");
     gWalker = inspector.walker;
     runNextTest();
   });

@@ -107,7 +107,8 @@ add_task(async function testSidebarSetObject() {
 });
 
 add_task(async function testSidebarSetObjectValueGrip() {
-  const inspectedWindowFront = toolbox.target.getFront("webExtensionInspectedWindow");
+  const inspectedWindowFront =
+    await toolbox.target.getFront("webExtensionInspectedWindow");
   const sidebar = inspector.getPanel(SIDEBAR_ID);
   const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
 
@@ -149,7 +150,8 @@ add_task(async function testSidebarSetObjectValueGrip() {
 });
 
 add_task(async function testSidebarDOMNodeHighlighting() {
-  const inspectedWindowFront = toolbox.target.getFront("webExtensionInspectedWindow");
+  const inspectedWindowFront =
+    await toolbox.target.getFront("webExtensionInspectedWindow");
   const sidebar = inspector.getPanel(SIDEBAR_ID);
   const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
 
@@ -229,7 +231,8 @@ add_task(async function testSidebarDOMNodeOpenInspector() {
 });
 
 add_task(async function testSidebarSetExtensionPage() {
-  const inspectedWindowFront = toolbox.target.getFront("webExtensionInspectedWindow");
+  const inspectedWindowFront =
+    await toolbox.target.getFront("webExtensionInspectedWindow");
 
   const sidebar = inspector.getPanel(SIDEBAR_ID);
   const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
