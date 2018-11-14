@@ -318,8 +318,10 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     const client = new DebuggerClient(transport);
 
     await client.connect();
-    const front = await client.mainRoot.getProcess(processId);
+    const { form } = await client.mainRoot.getProcess(processId);
+    const front = await client.mainRoot.attachContentProcessTarget(form);
     const options = {
+      form,
       activeTab: front,
       client,
       chrome: true,

@@ -51,7 +51,7 @@ exports.targetFromURL = async function targetFromURL(url) {
   // (handy to debug chrome stuff in a content process)
   let chrome = params.has("chrome");
 
-  let form, front;
+  let form;
   if (type === "tab") {
     // Fetch target for a remote tab
     id = parseInt(id, 10);
@@ -75,7 +75,8 @@ exports.targetFromURL = async function targetFromURL(url) {
       if (isNaN(id)) {
         id = 0;
       }
-      front = await client.mainRoot.getProcess(id);
+      const response = await client.mainRoot.getProcess(id);
+      form = response.form;
       chrome = true;
     } catch (ex) {
       if (ex.error == "noProcess") {
@@ -106,7 +107,7 @@ exports.targetFromURL = async function targetFromURL(url) {
     throw new Error(`targetFromURL, unsupported type '${type}' parameter`);
   }
 
-  return TargetFactory.forRemoteTab({ client, form, activeTab: front, chrome });
+  return TargetFactory.forRemoteTab({ client, form, chrome });
 };
 
 /**
