@@ -52,10 +52,10 @@ async function testTarget(client, target) {
 function test() {
   waitForExplicitFinish();
 
-  getParentProcessActors((client, front) => {
+  getParentProcessActors((client, response) => {
     const options = {
-      activeTab: front,
-      client,
+      form: response,
+      client: client,
       chrome: true,
     };
 

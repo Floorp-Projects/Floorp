@@ -16,10 +16,6 @@ const WorkerTargetFront = protocol.FrontClassWithSpec(workerTargetSpec, {
     this.thread = null;
     this.traits = {};
 
-    // Save the full form for Target class usage
-    // Do not use `form` name to avoid colliding with protocol.js's `form` method
-    this.targetForm = form;
-
     // TODO: remove once ThreadClient becomes a front
     this.client = client;
 
@@ -54,8 +50,7 @@ const WorkerTargetFront = protocol.FrontClassWithSpec(workerTargetSpec, {
     // Immediately call `connect` in other to fetch console and thread actors
     // that will be later used by Target.
     const connectResponse = await this.connect({});
-    // Set the console actor ID on the form to expose it to Target.attach's attachConsole
-    this.targetForm.consoleActor = connectResponse.consoleActor;
+    this.consoleActor = connectResponse.consoleActor;
     this.threadActor = connectResponse.threadActor;
 
     return response;
@@ -90,7 +85,7 @@ const WorkerTargetFront = protocol.FrontClassWithSpec(workerTargetSpec, {
       const response = [{
         type: "connected",
         threadActor: this.thread._actor,
-        consoleActor: this.targetForm.consoleActor,
+        consoleActor: this.consoleActor,
       }, this.thread];
       return response;
     }
