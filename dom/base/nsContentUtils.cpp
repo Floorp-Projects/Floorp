@@ -6989,7 +6989,12 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
 {
   NS_ASSERTION(aDocument, "aDocument should be a valid pointer (not null)");
 
-  AutoJSContext cx;
+  // The fact that we're using a JS regexp under the hood should not be visible
+  // to things like window onerror handlers, so we don't initialize our JSAPI
+  // with the document's window (which may not exist anyway).
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  JSContext* cx = jsapi.cx();
   AutoDisableJSInterruptCallback disabler(cx);
 
   // We can use the junk scope here, because we're just using it for
