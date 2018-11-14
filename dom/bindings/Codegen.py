@@ -1877,7 +1877,9 @@ class CGClassConstructor(CGAbstractStaticMethod):
             ctorName = self.descriptor.interface.identifier.name
         return fill(
             """
-            AUTO_PROFILER_LABEL_DYNAMIC_FAST("${ctorName}", "constructor", DOM, cx, 0);
+            AUTO_PROFILER_LABEL_DYNAMIC_FAST(
+              "${ctorName}", "constructor", DOM, cx,
+              uint32_t(js::ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
             """,
             ctorName=ctorName)
 
@@ -8702,7 +8704,8 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
             """
             AUTO_PROFILER_LABEL_DYNAMIC_FAST(
               "${interface_name}", "${method_name}", DOM, cx,
-              uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_METHOD));
+              uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_METHOD) |
+              uint32_t(js::ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
             """,
             interface_name=interface_name,
             method_name=method_name)
@@ -8969,7 +8972,8 @@ class CGStaticMethod(CGAbstractStaticBindingMethod):
             """
             AUTO_PROFILER_LABEL_DYNAMIC_FAST(
               "${interface_name}", "${method_name}", DOM, cx,
-              uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_METHOD));
+              uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_METHOD) |
+              uint32_t(js::ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
             """,
             interface_name=interface_name,
             method_name=method_name)
@@ -9083,7 +9087,8 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
             """
             AUTO_PROFILER_LABEL_DYNAMIC_FAST(
               "${interface_name}", "${attr_name}", DOM, cx,
-              uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_GETTER));
+              uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_GETTER) |
+              uint32_t(js::ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
             """,
             interface_name=interface_name,
             attr_name=attr_name)
@@ -9153,7 +9158,8 @@ class CGStaticGetter(CGAbstractStaticBindingMethod):
             """
             AUTO_PROFILER_LABEL_DYNAMIC_FAST(
               "${interface_name}", "${attr_name}", DOM, cx,
-              uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_GETTER));
+              uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_GETTER) |
+              uint32_t(js::ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
             """,
             interface_name=interface_name,
             attr_name=attr_name)
@@ -9187,7 +9193,8 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
             """
             AUTO_PROFILER_LABEL_DYNAMIC_FAST(
               "${interface_name}", "${attr_name}", DOM, cx,
-              uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_SETTER));
+              uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_SETTER) |
+              uint32_t(js::ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
             """,
             interface_name=interface_name,
             attr_name=attr_name)
@@ -9228,7 +9235,8 @@ class CGStaticSetter(CGAbstractStaticBindingMethod):
             """
             AUTO_PROFILER_LABEL_DYNAMIC_FAST(
               "${interface_name}", "${attr_name}", DOM, cx,
-              uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_SETTER));
+              uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_SETTER) |
+              uint32_t(js::ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
             """,
             interface_name=interface_name,
             attr_name=attr_name)
