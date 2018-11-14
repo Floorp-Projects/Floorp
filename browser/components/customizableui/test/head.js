@@ -50,6 +50,7 @@ function createToolbarWithPlacements(id, placements = []) {
     defaultPlacements: placements,
   });
   gNavToolbox.appendChild(tb);
+  CustomizableUI.registerToolbarNode(tb);
   return tb;
 }
 
@@ -90,6 +91,7 @@ function createOverflowableToolbarWithPlacements(id, placements) {
   tb.setAttribute("overflowbutton", chevron.id);
 
   gNavToolbox.appendChild(tb);
+  CustomizableUI.registerToolbarNode(tb);
   return tb;
 }
 

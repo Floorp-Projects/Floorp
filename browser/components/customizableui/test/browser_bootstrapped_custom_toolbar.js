@@ -17,6 +17,7 @@ function createTestBar() {
     type: CustomizableUI.TYPE_TOOLBAR,
   });
   gNavToolbox.appendChild(testBar);
+  CustomizableUI.registerToolbarNode(testBar);
   return testBar;
 }
 
