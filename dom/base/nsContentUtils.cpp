@@ -11211,9 +11211,11 @@ nsContentUtils::IsURIInPrefList(nsIURI* aURI, const char* aPrefName)
   if (host.IsEmpty()) {
     return false;
   }
+  ToLowerCase(host);
 
   nsAutoCString blackList;
   Preferences::GetCString(aPrefName, blackList);
+  ToLowerCase(blackList);
   if (blackList.IsEmpty()) {
     return false;
   }
@@ -11244,6 +11246,7 @@ nsContentUtils::IsURIInPrefList(nsIURI* aURI, const char* aPrefName)
                                               indexAfterHost, length);
         nsAutoCString filePath;
         aURI->GetFilePath(filePath);
+        ToLowerCase(filePath);
         if (StringBeginsWith(filePath, pathInBlackList)) {
           return true;
         }
