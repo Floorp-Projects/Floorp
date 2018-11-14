@@ -447,7 +447,8 @@ typedef enum SECCertUsageEnum {
     certUsageVerifyCA = 8,
     certUsageProtectedObjectSigner = 9,
     certUsageStatusResponder = 10,
-    certUsageAnyCA = 11
+    certUsageAnyCA = 11,
+    certUsageIPsec = 12
 } SECCertUsage;
 
 typedef PRInt64 SECCertificateUsage;
@@ -465,8 +466,9 @@ typedef PRInt64 SECCertificateUsage;
 #define certificateUsageProtectedObjectSigner (0x0200)
 #define certificateUsageStatusResponder (0x0400)
 #define certificateUsageAnyCA (0x0800)
+#define certificateUsageIPsec (0x1000)
 
-#define certificateUsageHighest certificateUsageAnyCA
+#define certificateUsageHighest certificateUsageIPsec
 
 /*
  * Does the cert belong to the user, a peer, or a CA.

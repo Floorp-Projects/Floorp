@@ -352,6 +352,12 @@ create_cert_req()
 -1
 y
 "
+    else
+        CA_FLAG="-2"
+        EXT_DATA="n
+-1
+y
+"
     fi
 
     process_crldp
@@ -1258,6 +1264,12 @@ process_scenario()
     rm ${AIA_FILES}
 }
 
+# process ipsec.cfg separately
+chains_ipsec()
+{
+    process_scenario "ipsec.cfg"
+}
+
 # process ocspd.cfg separately
 chains_ocspd()
 {
@@ -1279,6 +1291,7 @@ chains_main()
     do
         [ `echo ${LINE} | cut -b 1` != "#" ] || continue
 
+	[ ${LINE} != 'ipsec.cfg' ] || continue
 	[ ${LINE} != 'ocspd.cfg' ] || continue
 	[ ${LINE} != 'method.cfg' ] || continue
 
@@ -1292,6 +1305,7 @@ chains_init
 VERIFY_CLASSIC_ENGINE_TOO=
 chains_ocspd
 VERIFY_CLASSIC_ENGINE_TOO=1
+chains_ipsec
 chains_run_httpserv get
 chains_method
 chains_stop_httpserv

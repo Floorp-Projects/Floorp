@@ -117,6 +117,7 @@ Usage(char *progName)
     fprintf(stderr, "%-25s  9 - certUsageProtectedObjectSigner\n", " ");
     fprintf(stderr, "%-25s 10 - certUsageStatusResponder\n", " ");
     fprintf(stderr, "%-25s 11 - certUsageAnyCA\n", " ");
+    fprintf(stderr, "%-25s 12 - certUsageIPsec\n", " ");
 
     exit(-1);
 }
