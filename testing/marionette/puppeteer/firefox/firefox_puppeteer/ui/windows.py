@@ -282,7 +282,7 @@ class BaseWindow(BaseLib):
 
         :param callback: Optional, function to trigger the window to open. It is
          triggered with the current :class:`BaseWindow` as parameter.
-         Defaults to `window.open()`.
+         Defaults to `OpenBrowserWindow()` (from browser.js).
 
         :param force: Optional, forces the closing of the window by using the Gecko API.
          Defaults to `False`.
@@ -336,7 +336,7 @@ class BaseWindow(BaseLib):
 
         :param callback: Optional, function to trigger the window to open. It is
          triggered with the current :class:`BaseWindow` as parameter.
-         Defaults to `window.open()`.
+         Defaults to `OpenBrowserWindow()` (from browser.js).
         :param expected_class: Optional, check for the correct window class.
         :param focus: Optional, if true, focus the new window.
          Defaults to `True`.
@@ -350,7 +350,7 @@ class BaseWindow(BaseLib):
             if callback is not None:
                 callback(self)
             else:
-                self.marionette.execute_script(""" window.open(); """)
+                self.marionette.execute_script(""" OpenBrowserWindow(); """)
 
         # TODO: Needs to be replaced with observer handling code (bug 1121698)
         def window_opened(mn):
