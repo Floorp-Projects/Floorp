@@ -119,8 +119,8 @@ var _attachConsole = async function(
       return;
     }
     await workerTargetFront.attachThread({});
-    state.actor = workerTargetFront.consoleActor;
-    state.dbgClient.attachConsole(workerTargetFront.consoleActor, listeners)
+    state.actor = workerTargetFront.targetForm.consoleActor;
+    state.dbgClient.attachConsole(workerTargetFront.targetForm.consoleActor, listeners)
       .then(_onAttachConsole.bind(null, state), _onAttachError.bind(null, state));
   } else {
     state.actor = tab.consoleActor;
