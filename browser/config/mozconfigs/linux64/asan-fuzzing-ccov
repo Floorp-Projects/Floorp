@@ -23,7 +23,7 @@ ac_add_options --enable-coverage
 
 export CFLAGS="--coverage"
 export CXXFLAGS="--coverage"
-export LDFLAGS="--coverage"
+export LDFLAGS="--coverage -Wl,--compress-debug-sections=zlib"
 
 ac_add_options --enable-fuzzing
 unset MOZ_STDCXX_COMPAT
