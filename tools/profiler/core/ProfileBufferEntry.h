@@ -231,15 +231,17 @@ class UniqueStacks
 public:
   struct FrameKey {
     explicit FrameKey(const char* aLocation)
-      : mData(NormalFrameData{
-                nsCString(aLocation), mozilla::Nothing(), mozilla::Nothing() })
+      : mData(NormalFrameData{ nsCString(aLocation), false,
+                               mozilla::Nothing(), mozilla::Nothing() })
     {
     }
 
-    FrameKey(nsCString&& aLocation, const mozilla::Maybe<unsigned>& aLine,
+    FrameKey(nsCString&& aLocation, bool aRelevantForJS,
+             const mozilla::Maybe<unsigned>& aLine,
              const mozilla::Maybe<unsigned>& aColumn,
              const mozilla::Maybe<unsigned>& aCategory)
-      : mData(NormalFrameData{ aLocation, aLine, aColumn, aCategory })
+      : mData(NormalFrameData{ aLocation, aRelevantForJS, aLine, aColumn,
+                               aCategory })
     {
     }
 
@@ -257,6 +259,7 @@ public:
       bool operator==(const NormalFrameData& aOther) const;
 
       nsCString mLocation;
+      bool mRelevantForJS;
       mozilla::Maybe<unsigned> mLine;
       mozilla::Maybe<unsigned> mColumn;
       mozilla::Maybe<unsigned> mCategory;
