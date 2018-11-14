@@ -559,11 +559,11 @@ class FontInspector {
    * Upon a new node selection, log some interesting telemetry probes.
    */
   logTelemetryProbesOnNewNode() {
-    const { fontData, fontEditor } = this.store.getState();
+    const { fontEditor } = this.store.getState();
     const { telemetry } = this.inspector;
 
     // Log the number of font faces used to render content of the element.
-    const nbOfFontsRendered = fontData.fonts.length;
+    const nbOfFontsRendered = fontEditor.fonts.length;
     if (nbOfFontsRendered) {
       telemetry.getHistogramById(HISTOGRAM_N_FONTS_RENDERED).add(nbOfFontsRendered);
     }
@@ -897,10 +897,9 @@ class FontInspector {
     }
 
     let allFonts = [];
-    let fonts = [];
 
     if (!this.isSelectedNodeValid()) {
-      this.store.dispatch(updateFonts(fonts, allFonts));
+      this.store.dispatch(updateFonts(allFonts));
       return;
     }
 
@@ -909,39 +908,24 @@ class FontInspector {
 
     const options = {
       includePreviews: true,
+      // Coerce the type of `supportsFontVariations` to a boolean.
+      includeVariations: !!this.pageStyle.supportsFontVariations,
       previewText,
       previewFillStyle: getColor("body-color"),
     };
 
-    // Add the includeVariations argument into the option to get font variation data.
-    if (this.pageStyle.supportsFontVariations) {
-      options.includeVariations = true;
-    }
-
-    const node = this.inspector.selection.nodeFront;
-    fonts = await this.getFontsForNode(node, options);
+    // If there are no fonts used on the page, the result is an empty array.
     allFonts = await this.getAllFonts(options);
 
-    if (!fonts.length) {
-      // No fonts to display. Clear the previously shown fonts.
-      if (this.store) {
-        this.store.dispatch(updateFonts(fonts, allFonts));
-      }
-      return;
-    }
-
+    // Augment each font object with a dataURI for an image with a sample of the font.
     for (const font of [...allFonts]) {
       font.previewUrl = await font.preview.data.string();
     }
 
-    // in case we've been destroyed in the meantime
-    if (!this.document) {
-      return;
-    }
-
-    this.store.dispatch(updateFonts(fonts, allFonts));
-
-    this.inspector.emit("fontinspector-updated");
+    // Dispatch to the store if it hasn't been destroyed in the meantime.
+    this.store && this.store.dispatch(updateFonts(allFonts));
+    // Emit on the inspector if it hasn't been destroyed in the meantime.
+    this.inspector && this.inspector.emit("fontinspector-updated");
   }
 
   /**
