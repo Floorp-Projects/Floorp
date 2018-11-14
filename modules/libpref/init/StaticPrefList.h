@@ -1785,9 +1785,18 @@ VARCACHE_PREF(
 #else
 # define PREF_VALUE false
 #endif
+// This pref enables FeaturePolicy logic and the parsing of 'allow' attribute in
+// HTMLIFrameElement objects.
 VARCACHE_PREF(
   "dom.security.featurePolicy.enabled",
    dom_security_featurePolicy_enabled,
+  bool, PREF_VALUE
+)
+
+// This pref enables the featurePolicy header support.
+VARCACHE_PREF(
+  "dom.security.featurePolicy.header.enabled",
+   dom_security_featurePolicy_header_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
