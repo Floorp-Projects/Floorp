@@ -91,15 +91,10 @@ def fill_template(config, tasks):
         if task.kind != 'packages':
             continue
         name = task.label.replace('packages-', '')
-        for route in task.task.get('routes', []):
-            if route.startswith('index.') and '.hash.' in route:
-                # Only keep the hash part of the route.
-                h = route.rsplit('.', 1)[1]
-                assert DIGEST_RE.match(h)
-                available_packages[name] = h
-                break
+        available_packages[name] = task.attributes['cache_digest']
 
     context_hashes = {}
+    image_digests = {}
 
     for task in order_image_tasks(config, tasks):
         image_name = task.pop('name')
@@ -129,6 +124,9 @@ def fill_template(config, tasks):
             GECKO, context_path, image_name, args)
         digest_data = [context_hash]
         context_hashes[image_name] = context_hash
+
+        if parent:
+            digest_data += [image_digests[parent]]
 
         description = 'Build the docker image {} for use by dependent tasks'.format(
             image_name)
@@ -244,5 +242,7 @@ def fill_template(config, tasks):
             cache_name=image_name,
             **kwargs
         )
+
+        image_digests[image_name] = taskdesc['attributes']['cache_digest']
 
         yield taskdesc
