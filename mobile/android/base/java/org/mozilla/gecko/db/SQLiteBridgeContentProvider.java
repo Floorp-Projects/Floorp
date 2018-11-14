@@ -120,9 +120,8 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
 
         boolean dbNeedsSetup = true;
         try {
-            String resourcePath = context.getPackageResourcePath();
-            GeckoLoader.loadSQLiteLibs(context, resourcePath);
-            GeckoLoader.loadNSSLibs(context, resourcePath);
+            GeckoLoader.loadSQLiteLibs(context);
+            GeckoLoader.loadNSSLibs(context);
             bridge = SQLiteBridge.openDatabase(databasePath, null, 0);
             int version = bridge.getVersion();
             dbNeedsSetup = version != getDBVersion();
