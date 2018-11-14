@@ -118,11 +118,13 @@ body {
 .devtools-toolbar .help .btn-content {
   display: block;
   padding: 0;
-  background-color: var(--theme-body-color);
+  -moz-context-properties: fill;
+  fill: var(--theme-body-color);
   width: 16px;
   height: 16px;
-  mask: url("chrome://devtools/skin/images/help.svg") no-repeat;
-  mask-size: contain;
+  background-image: url(chrome://devtools/skin/images/help.svg);
+  background-repeat: no-repeat;
+  background-size: contain;
 }
 
 .devtools-toolbar .help:focus {
