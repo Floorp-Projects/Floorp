@@ -427,6 +427,13 @@ Export::globalIndex() const
     return pod.index_;
 }
 
+uint32_t
+Export::tableIndex() const
+{
+    MOZ_ASSERT(pod.kind_ == DefinitionKind::Table);
+    return pod.index_;
+}
+
 size_t
 Export::serializedSize() const
 {

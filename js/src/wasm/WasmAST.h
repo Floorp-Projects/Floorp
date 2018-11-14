@@ -95,6 +95,9 @@ class AstRef
     AstName name() const {
         return name_;
     }
+    bool isIndex() const {
+        return index_ != AstNoIndex;
+    }
     size_t index() const {
         MOZ_ASSERT(index_ != AstNoIndex);
         return index_;
@@ -496,6 +499,12 @@ enum class AstExprKind
     MemFill,
     MemOrTableInit,
 #endif
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+    TableGet,
+    TableGrow,
+    TableSet,
+    TableSize,
+#endif
 #ifdef ENABLE_WASM_GC
     StructNew,
     StructGet,
@@ -740,15 +749,22 @@ class AstCall : public AstExpr
 
 class AstCallIndirect : public AstExpr
 {
+    AstRef targetTable_;
     AstRef funcType_;
     AstExprVector args_;
     AstExpr* index_;
 
   public:
     static const AstExprKind Kind = AstExprKind::CallIndirect;
-    AstCallIndirect(AstRef funcType, AstExprType type, AstExprVector&& args, AstExpr* index)
-      : AstExpr(Kind, type), funcType_(funcType), args_(std::move(args)), index_(index)
+    AstCallIndirect(AstRef targetTable, AstRef funcType, AstExprType type, AstExprVector&& args,
+                    AstExpr* index)
+      : AstExpr(Kind, type),
+        targetTable_(targetTable),
+        funcType_(funcType),
+        args_(std::move(args)),
+        index_(index)
     {}
+    AstRef& targetTable() { return targetTable_; }
     AstRef& funcType() { return funcType_; }
     const AstExprVector& args() const { return args_; }
     AstExpr* index() const { return index_; }
@@ -973,22 +989,29 @@ class AstWake : public AstExpr
 class AstMemOrTableCopy : public AstExpr
 {
     bool     isMem_;
+    AstRef   destTable_;
     AstExpr* dest_;
+    AstRef   srcTable_;
     AstExpr* src_;
     AstExpr* len_;
 
   public:
     static const AstExprKind Kind = AstExprKind::MemOrTableCopy;
-    explicit AstMemOrTableCopy(bool isMem, AstExpr* dest, AstExpr* src, AstExpr* len)
+    explicit AstMemOrTableCopy(bool isMem, AstRef destTable, AstExpr* dest, AstRef srcTable,
+                               AstExpr* src, AstExpr* len)
       : AstExpr(Kind, ExprType::Void),
         isMem_(isMem),
+        destTable_(destTable),
         dest_(dest),
+        srcTable_(srcTable),
         src_(src),
         len_(len)
     {}
 
     bool     isMem() const { return isMem_; }
+    AstRef&  destTable()   { return destTable_; }
     AstExpr& dest()  const { return *dest_; }
+    AstRef&  srcTable()    { return srcTable_; }
     AstExpr& src()   const { return *src_; }
     AstExpr& len()   const { return *len_; }
 };
@@ -1034,16 +1057,19 @@ class AstMemOrTableInit : public AstExpr
 {
     bool     isMem_;
     uint32_t segIndex_;
+    AstRef   targetTable_;
     AstExpr* dst_;
     AstExpr* src_;
     AstExpr* len_;
 
   public:
     static const AstExprKind Kind = AstExprKind::MemOrTableInit;
-    explicit AstMemOrTableInit(bool isMem, uint32_t segIndex, AstExpr* dst, AstExpr* src, AstExpr* len)
+    explicit AstMemOrTableInit(bool isMem, uint32_t segIndex, AstRef targetTable, AstExpr* dst,
+                               AstExpr* src, AstExpr* len)
       : AstExpr(Kind, ExprType::Void),
         isMem_(isMem),
         segIndex_(segIndex),
+        targetTable_(targetTable),
         dst_(dst),
         src_(src),
         len_(len)
@@ -1051,11 +1077,85 @@ class AstMemOrTableInit : public AstExpr
 
     bool     isMem()    const { return isMem_; }
     uint32_t segIndex() const { return segIndex_; }
+    AstRef&  targetTable()      { return targetTable_; }
     AstExpr& dst()      const { return *dst_; }
     AstExpr& src()      const { return *src_; }
     AstExpr& len()      const { return *len_; }
 };
 #endif
+
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+class AstTableGet : public AstExpr
+{
+    AstRef   targetTable_;
+    AstExpr* index_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::TableGet;
+    explicit AstTableGet(AstRef targetTable, AstExpr* index)
+      : AstExpr(Kind, ExprType::AnyRef),
+        targetTable_(targetTable),
+        index_(index)
+    {}
+
+    AstRef& targetTable() { return targetTable_; }
+    AstExpr& index() const { return *index_; }
+};
+
+class AstTableGrow : public AstExpr
+{
+    AstRef   targetTable_;
+    AstExpr* delta_;
+    AstExpr* initValue_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::TableGrow;
+    AstTableGrow(AstRef targetTable, AstExpr* delta, AstExpr* initValue)
+      : AstExpr(Kind, ExprType::I32),
+        targetTable_(targetTable),
+        delta_(delta),
+        initValue_(initValue)
+    {}
+
+    AstRef& targetTable() { return targetTable_; }
+    AstExpr& delta() const { return *delta_; }
+    AstExpr& initValue() const { return *initValue_; }
+};
+
+class AstTableSet : public AstExpr
+{
+    AstRef   targetTable_;
+    AstExpr* index_;
+    AstExpr* value_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::TableSet;
+    AstTableSet(AstRef targetTable, AstExpr* index, AstExpr* value)
+      : AstExpr(Kind, ExprType::Void),
+        targetTable_(targetTable),
+        index_(index),
+        value_(value)
+    {}
+
+    AstRef& targetTable() { return targetTable_; }
+    AstExpr& index() const { return *index_; }
+    AstExpr& value() const { return *value_; }
+};
+
+class AstTableSize : public AstExpr
+{
+    AstRef   targetTable_;
+
+  public:
+    static const AstExprKind Kind = AstExprKind::TableSize;
+    explicit AstTableSize(AstRef targetTable)
+      : AstExpr(Kind, ExprType::I32),
+        targetTable_(targetTable)
+    {}
+
+    AstRef& targetTable() { return targetTable_; }
+};
+#endif // ENABLE_WASM_GENERALIZED_TABLES
 
 #ifdef ENABLE_WASM_GC
 class AstStructNew : public AstExpr
@@ -1239,6 +1339,7 @@ class AstImport : public AstNode
 
     AstRef funcType_;
     Limits limits_;
+    TableKind tableKind_;
     AstGlobal global_;
 
   public:
@@ -1248,6 +1349,12 @@ class AstImport : public AstNode
     AstImport(AstName name, AstName module, AstName field, DefinitionKind kind,
               const Limits& limits)
       : name_(name), module_(module), field_(field), kind_(kind), limits_(limits)
+    {
+        MOZ_ASSERT(kind != DefinitionKind::Table, "A table must have a kind");
+    }
+    AstImport(AstName name, AstName module, AstName field, const Limits& limits, TableKind tableKind)
+      : name_(name), module_(module), field_(field), kind_(DefinitionKind::Table), limits_(limits),
+        tableKind_(tableKind)
     {}
     AstImport(AstName name, AstName module, AstName field, const AstGlobal& global)
       : name_(name), module_(module), field_(field), kind_(DefinitionKind::Global), global_(global)
@@ -1258,6 +1365,10 @@ class AstImport : public AstNode
     AstName field() const { return field_; }
 
     DefinitionKind kind() const { return kind_; }
+    TableKind tableKind() const {
+        MOZ_ASSERT(kind_ == DefinitionKind::Table);
+        return tableKind_;
+    }
     AstRef& funcType() {
         MOZ_ASSERT(kind_ == DefinitionKind::Function);
         return funcType_;
@@ -1313,15 +1424,19 @@ typedef AstVector<AstDataSegment*> AstDataSegmentVector;
 
 class AstElemSegment : public AstNode
 {
+    AstRef targetTable_;
     AstExpr* offsetIfActive_;
     AstRefVector elems_;
 
   public:
-    AstElemSegment(AstExpr* offsetIfActive, AstRefVector&& elems)
-      : offsetIfActive_(offsetIfActive),
+    AstElemSegment(AstRef targetTable, AstExpr* offsetIfActive, AstRefVector&& elems)
+      : targetTable_(targetTable),
+        offsetIfActive_(offsetIfActive),
         elems_(std::move(elems))
     {}
 
+    AstRef targetTable() const { return targetTable_; }
+    AstRef& targetTableRef() { return targetTable_; }
     AstExpr* offsetIfActive() const { return offsetIfActive_; }
     AstRefVector& elems() { return elems_; }
     const AstRefVector& elems() const { return elems_; }
@@ -1343,15 +1458,30 @@ class AstStartFunc : public AstNode
     }
 };
 
-struct AstResizable
+struct AstMemory
 {
     AstName name;
     Limits limits;
     bool imported;
 
-    AstResizable(const Limits& limits, bool imported, AstName name = AstName())
+    AstMemory(const Limits& limits, bool imported, AstName name = AstName())
       : name(name),
         limits(limits),
+        imported(imported)
+    {}
+};
+
+struct AstTable
+{
+    AstName name;
+    Limits limits;
+    TableKind tableKind;
+    bool imported;
+
+    AstTable(const Limits& limits, TableKind tableKind, bool imported, AstName name = AstName())
+      : name(name),
+        limits(limits),
+        tableKind(tableKind),
         imported(imported)
     {}
 };
@@ -1364,7 +1494,8 @@ class AstModule : public AstNode
     typedef AstVector<AstExport*> ExportVector;
     typedef AstVector<AstTypeDef*> TypeDefVector;
     typedef AstVector<AstName> NameVector;
-    typedef AstVector<AstResizable> AstResizableVector;
+    typedef AstVector<AstMemory> AstMemoryVector;
+    typedef AstVector<AstTable> AstTableVector;
 
   private:
     typedef AstHashMap<AstFuncType*, uint32_t, AstFuncType> FuncTypeMap;
@@ -1374,8 +1505,8 @@ class AstModule : public AstNode
     FuncTypeMap          funcTypeMap_;
     ImportVector         imports_;
     NameVector           funcImportNames_;
-    AstResizableVector   tables_;
-    AstResizableVector   memories_;
+    AstTableVector       tables_;
+    AstMemoryVector      memories_;
 #ifdef ENABLE_WASM_GC
     uint32_t             gcFeatureOptIn_;
 #endif
@@ -1408,12 +1539,12 @@ class AstModule : public AstNode
         numGlobalImports_(0)
     {}
     bool addMemory(AstName name, const Limits& memory) {
-        return memories_.append(AstResizable(memory, false, name));
+        return memories_.append(AstMemory(memory, false, name));
     }
     bool hasMemory() const {
         return !!memories_.length();
     }
-    const AstResizableVector& memories() const {
+    const AstMemoryVector& memories() const {
         return memories_;
     }
 #ifdef ENABLE_WASM_GC
@@ -1425,13 +1556,13 @@ class AstModule : public AstNode
         return gcFeatureOptIn_;
     }
 #endif
-    bool addTable(AstName name, const Limits& table) {
-        return tables_.append(AstResizable(table, false, name));
+    bool addTable(AstName name, const Limits& table, TableKind tableKind) {
+        return tables_.append(AstTable(table, tableKind, false, name));
     }
     bool hasTable() const {
         return !!tables_.length();
     }
-    const AstResizableVector& tables() const {
+    const AstTableVector& tables() const {
         return tables_;
     }
     bool append(AstDataSegment* seg) {
@@ -1508,12 +1639,12 @@ class AstModule : public AstNode
             }
             break;
           case DefinitionKind::Table:
-            if (!tables_.append(AstResizable(imp->limits(), true))) {
+            if (!tables_.append(AstTable(imp->limits(), imp->tableKind(), true))) {
                 return false;
             }
             break;
           case DefinitionKind::Memory:
-            if (!memories_.append(AstResizable(imp->limits(), true))) {
+            if (!memories_.append(AstMemory(imp->limits(), true))) {
                 return false;
             }
             break;

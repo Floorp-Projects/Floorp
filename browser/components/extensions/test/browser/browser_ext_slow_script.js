@@ -49,7 +49,7 @@ add_task(async function test_slow_content_script() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
 
   let notification = await BrowserTestUtils.waitForGlobalNotificationBar(window, "process-hang");
-  let text = document.getAnonymousElementByAttribute(notification, "anonid", "messageText").textContent;
+  let text = notification.messageText.textContent;
 
   ok(text.includes("\u201cSlow Script Extension\u201d"),
      "Label is correct");

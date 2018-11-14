@@ -301,8 +301,8 @@ var tests =
       return ntf;
     },
     result: function(nb, ntf) {
-      SimpleTest.is(nb.currentNotification == ntf ?
-                    nb.currentNotification.value : null, "10", "appendNotification order");
+      is(nb.currentNotification, ntf, "appendNotification last notification");
+      is(nb.currentNotification.getAttribute("value"), "10", "appendNotification order");
       return 1;
     }
   },
@@ -333,8 +333,8 @@ var tests =
     },
     result: function(nb, arr) {
       // arr is [testindex, expectedvalue]
-      SimpleTest.is(nb.currentNotification.value, "" + arr[1], "close order " + arr[0]);
-      SimpleTest.is(nb.allNotifications.length, 10 - arr[0], "close order " + arr[0] + " count");
+      is(nb.currentNotification.getAttribute("value"), "" + arr[1], "close order " + arr[0]);
+      is(nb.allNotifications.length, 10 - arr[0], "close order " + arr[0] + " count");
       if (arr[0] == 6)
         this.repeat = false;
       return ++arr[0];
@@ -400,10 +400,10 @@ function testtag_notificationbox_State(nb, testid, expecteditem, expectedcount)
 
 function testtag_notification_State(nb, ntf, testid, label, value, image, priority)
 {
-  SimpleTest.is(ntf.label, label, testid + " notification.label");
-  SimpleTest.is(ntf.value, value, testid + " notification.value");
-  SimpleTest.is(ntf.image, image, testid + " notification.image");
-  SimpleTest.is(ntf.priority, priority, testid + " notification.priority");
+  is(ntf.messageText.textContent, label, testid + " notification label");
+  is(ntf.getAttribute("value"), value, testid + " notification value");
+  is(ntf.messageImage.getAttribute("src"), image, testid + " notification image");
+  is(ntf.priority, priority, testid + " notification priority");
 
   var type;
   switch (priority) {
@@ -424,7 +424,7 @@ function testtag_notification_State(nb, ntf, testid, label, value, image, priori
       break;
   }
 
-  SimpleTest.is(ntf.type, type, testid + " notification.type");
+  is(ntf.getAttribute("type"), type, testid + " notification type");
 }
 
 function checkPopupTest(nb, ntf)

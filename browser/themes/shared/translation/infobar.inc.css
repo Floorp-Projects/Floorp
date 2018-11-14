@@ -4,25 +4,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 notification[value="translation"] .messageImage {
-  list-style-image: url(chrome://browser/skin/translation-16.png);
+  list-style-image: url(chrome://browser/skin/translation-16.png) !important;
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
 @media (min-resolution: 1.25dppx) {
   notification[value="translation"] .messageImage {
-    list-style-image: url(chrome://browser/skin/translation-16@2x.png);
+    list-style-image: url(chrome://browser/skin/translation-16@2x.png) !important;
     -moz-image-region: rect(0, 64px, 32px, 32px);
   }
 }
 
 notification[value="translation"][state="translating"] .messageImage {
-  list-style-image: url(chrome://browser/skin/translating-16.png);
+  list-style-image: url(chrome://browser/skin/translating-16.png) !important;
   -moz-image-region: auto;
 }
 
 @media (min-resolution: 1.25dppx) {
   notification[value="translation"][state="translating"] .messageImage {
-    list-style-image: url(chrome://browser/skin/translating-16@2x.png);
+    list-style-image: url(chrome://browser/skin/translating-16@2x.png) !important;
   }
 }
 

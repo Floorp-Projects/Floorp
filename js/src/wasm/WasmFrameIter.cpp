@@ -1399,8 +1399,16 @@ ThunkedNativeToDescription(SymbolicAddress func)
         return "call to native table.copy function";
       case SymbolicAddress::TableDrop:
         return "call to native table.drop function";
+      case SymbolicAddress::TableGet:
+        return "call to native table.get function";
+      case SymbolicAddress::TableGrow:
+        return "call to native table.grow function";
       case SymbolicAddress::TableInit:
         return "call to native table.init function";
+      case SymbolicAddress::TableSet:
+        return "call to native table.set function";
+      case SymbolicAddress::TableSize:
+        return "call to native table.size function";
       case SymbolicAddress::PostBarrier:
         return "call to native GC postbarrier (in wasm)";
       case SymbolicAddress::StructNew:

@@ -124,8 +124,6 @@ This test uses the legacy callback API with no media, and thus does not require 
     gSecondConnection.onicecandidate = onIceCandidateToSecond;
     gSecondConnection.oniceconnectionstatechange = onIceConnectionStateChange;
 
-    // The offerToReceiveVideo is necessary and sufficient to make
-    // an actual connection.
     generateVideoReceiveOnlyOffer(gFirstConnection)
       .then(onOfferCreated, failed('createOffer'));
   });

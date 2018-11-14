@@ -21,6 +21,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Sprintf.h"
 
 #include "jsnum.h"
 
@@ -148,6 +149,12 @@ class WasmToken
         TableCopy,
         TableDrop,
         TableInit,
+#endif
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+        TableGet,
+        TableGrow,
+        TableSet,
+        TableSize,
 #endif
         TeeLocal,
         TernaryOpcode,
@@ -374,6 +381,12 @@ class WasmToken
           case TableCopy:
           case TableDrop:
           case TableInit:
+#endif
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+          case TableGet:
+          case TableGrow:
+          case TableSet:
+          case TableSize:
 #endif
           case TeeLocal:
           case TernaryOpcode:
@@ -993,8 +1006,11 @@ WasmTokenStream::next()
             return WasmToken(WasmToken::ValueType, ValType::AnyRef, begin, cur_);
         }
 #ifdef ENABLE_WASM_THREAD_OPS
-        if (consume(u"atomic.wake")) {
-            return WasmToken(WasmToken::Wake, ThreadOp::Wake, begin, cur_);
+        if (consume(u"atomic.")) {
+            if (consume(u"wake") || consume(u"notify")) {
+                return WasmToken(WasmToken::Wake, ThreadOp::Wake, begin, cur_);
+            }
+            break;
         }
 #endif
         break;
@@ -2105,8 +2121,8 @@ WasmTokenStream::next()
         break;
 
       case 't':
-#ifdef ENABLE_WASM_BULKMEM_OPS
         if (consume(u"table.")) {
+#ifdef ENABLE_WASM_BULKMEM_OPS
             if (consume(u"copy")) {
                 return WasmToken(WasmToken::TableCopy, begin, cur_);
             }
@@ -2116,9 +2132,23 @@ WasmTokenStream::next()
             if (consume(u"init")) {
                 return WasmToken(WasmToken::TableInit, begin, cur_);
             }
+#endif
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+            if (consume(u"get")) {
+                return WasmToken(WasmToken::TableGet, begin, cur_);
+            }
+            if (consume(u"grow")) {
+                return WasmToken(WasmToken::TableGrow, begin, cur_);
+            }
+            if (consume(u"set")) {
+                return WasmToken(WasmToken::TableSet, begin, cur_);
+            }
+            if (consume(u"size")) {
+                return WasmToken(WasmToken::TableSize, begin, cur_);
+            }
+#endif
             break;
         }
-#endif
         if (consume(u"table")) {
             return WasmToken(WasmToken::Table, begin, cur_);
         }
@@ -2158,6 +2188,7 @@ struct WasmParseContext
     UniqueChars* error;
     DtoaState* dtoaState;
     uintptr_t stackLimit;
+    uint32_t nextSym;
 
     WasmParseContext(const char16_t* text, uintptr_t stackLimit, LifoAlloc& lifo,
                      UniqueChars* error)
@@ -2165,11 +2196,28 @@ struct WasmParseContext
         lifo(lifo),
         error(error),
         dtoaState(NewDtoaState()),
-        stackLimit(stackLimit)
+        stackLimit(stackLimit),
+        nextSym(0)
     {}
 
     ~WasmParseContext() {
         DestroyDtoaState(dtoaState);
+    }
+
+    AstName gensym(const char* tag) {
+        char buf[128];
+        MOZ_ASSERT(strlen(tag) < sizeof(buf)-20);
+        SprintfLiteral(buf, ".%s.%u", tag, nextSym);
+        nextSym++;
+        size_t k = strlen(buf)+1;
+        char16_t* mem = (char16_t*)lifo.alloc(k * sizeof(char16_t));
+        if (!mem) {
+            return AstName();
+        }
+        for (size_t i = 0; i < k; i++) {
+            mem[i] = buf[i];
+        }
+        return AstName(mem, k-1);
     }
 };
 
@@ -2451,9 +2499,22 @@ ParseCall(WasmParseContext& c, bool inParens)
 static AstCallIndirect*
 ParseCallIndirect(WasmParseContext& c, bool inParens)
 {
+    AstRef firstRef;
+    AstRef secondRef;
     AstRef funcType;
-    if (!c.ts.matchRef(&funcType, c.error)) {
+    AstRef targetTable = AstRef(0);
+
+    // (call_indirect table signature arg ... index)
+    // (call_indirect signature arg ... index)
+
+    if (!c.ts.matchRef(&firstRef, c.error)) {
         return nullptr;
+    }
+    if (c.ts.getIfRef(&secondRef)) {
+        targetTable = firstRef;
+        funcType = secondRef;
+    } else {
+        funcType = firstRef;
     }
 
     AstExprVector args(c.lifo);
@@ -2476,7 +2537,7 @@ ParseCallIndirect(WasmParseContext& c, bool inParens)
         return nullptr;
     }
 
-    return new(c.lifo) AstCallIndirect(funcType, ExprType::Void, std::move(args), index);
+    return new(c.lifo) AstCallIndirect(targetTable, funcType, ExprType::Void, std::move(args), index);
 }
 
 static uint_fast8_t
@@ -3526,9 +3587,29 @@ ParseGrowMemory(WasmParseContext& c, bool inParens)
 static AstMemOrTableCopy*
 ParseMemOrTableCopy(WasmParseContext& c, bool inParens, bool isMem)
 {
+    // (table.copy dest-table dest src-table src len)
+    // (table.copy dest src len)
+    // (memory.copy dest src len)
+
+    AstRef targetMemOrTable = AstRef(0);
+    bool requireSource = false;
+    if (!isMem) {
+        if (c.ts.getIfRef(&targetMemOrTable)) {
+            requireSource = true;
+        }
+    }
+
     AstExpr* dest = ParseExpr(c, inParens);
     if (!dest) {
         return nullptr;
+    }
+
+    AstRef memOrTableSource = AstRef(0);
+    if (requireSource) {
+        if (!c.ts.getIfRef(&memOrTableSource)) {
+            c.ts.generateError(c.ts.peek(), "source is required if target is specified", c.error);
+            return nullptr;
+        }
     }
 
     AstExpr* src = ParseExpr(c, inParens);
@@ -3541,7 +3622,7 @@ ParseMemOrTableCopy(WasmParseContext& c, bool inParens, bool isMem)
         return nullptr;
     }
 
-    return new(c.lifo) AstMemOrTableCopy(isMem, dest, src, len);
+    return new(c.lifo) AstMemOrTableCopy(isMem, targetMemOrTable, dest, memOrTableSource, src, len);
 }
 
 static AstMemOrTableDrop*
@@ -3579,9 +3660,32 @@ ParseMemFill(WasmParseContext& c, bool inParens)
 static AstMemOrTableInit*
 ParseMemOrTableInit(WasmParseContext& c, bool inParens, bool isMem)
 {
+    // (table.init table-index segment-index ...)
+    // (table.init segment-index ...)
+    // (memory.init segment-index ...)
+
+    AstRef targetMemOrTable = AstRef(0);
+    uint32_t segIndex = 0;
+
     WasmToken segIndexTok;
-    if (!c.ts.getIf(WasmToken::Index, &segIndexTok)) {
-        return nullptr;
+    if (isMem) {
+        if (!c.ts.getIf(WasmToken::Index, &segIndexTok)) {
+            return nullptr;
+        }
+        segIndex = segIndexTok.index();
+    } else {
+        // Slightly hairy to parse this for tables because the element index "0"
+        // could just as well be the table index "0".
+        c.ts.getIfRef(&targetMemOrTable);
+        if (c.ts.getIf(WasmToken::Index, &segIndexTok)) {
+            segIndex = segIndexTok.index();
+        } else if (targetMemOrTable.isIndex()) {
+            segIndex = targetMemOrTable.index();
+            targetMemOrTable = AstRef(0);
+        } else {
+            c.ts.generateError(c.ts.peek(), "expected element segment reference", c.error);
+            return nullptr;
+        }
     }
 
     AstExpr* dst = ParseExpr(c, inParens);
@@ -3599,7 +3703,79 @@ ParseMemOrTableInit(WasmParseContext& c, bool inParens, bool isMem)
         return nullptr;
     }
 
-    return new(c.lifo) AstMemOrTableInit(isMem, segIndexTok.index(), dst, src, len);
+    return new(c.lifo) AstMemOrTableInit(isMem, segIndex, targetMemOrTable, dst, src, len);
+}
+#endif
+
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+static AstTableGet*
+ParseTableGet(WasmParseContext& c, bool inParens)
+{
+    // (table.get table index)
+    // (table.get index)
+
+    AstRef targetTable = AstRef(0);
+    c.ts.getIfRef(&targetTable);
+
+    AstExpr* index = ParseExpr(c, inParens);
+    if (!index) {
+        return nullptr;
+    }
+    return new(c.lifo) AstTableGet(targetTable, index);
+}
+
+static AstTableGrow*
+ParseTableGrow(WasmParseContext& c, bool inParens)
+{
+    // (table.grow table delta)
+    // (table.grow delta)
+
+    AstRef targetTable = AstRef(0);
+    c.ts.getIfRef(&targetTable);
+
+    AstExpr* delta = ParseExpr(c, inParens);
+    if (!delta) {
+        return nullptr;
+    }
+
+    AstExpr* initValue = ParseExpr(c, inParens);
+    if (!initValue) {
+        return nullptr;
+    }
+
+    return new(c.lifo) AstTableGrow(targetTable, delta, initValue);
+}
+
+static AstTableSet*
+ParseTableSet(WasmParseContext& c, bool inParens)
+{
+    // (table.set table index value)
+    // (table.set index value)
+
+    AstRef targetTable = AstRef(0);
+    c.ts.getIfRef(&targetTable);
+
+    AstExpr* index = ParseExpr(c, inParens);
+    if (!index) {
+        return nullptr;
+    }
+    AstExpr* value = ParseExpr(c, inParens);
+    if (!value) {
+        return nullptr;
+    }
+    return new(c.lifo) AstTableSet(targetTable, index, value);
+}
+
+static AstTableSize*
+ParseTableSize(WasmParseContext& c, bool inParens)
+{
+    // (table.size table)
+    // (table.size)
+
+    AstRef targetTable = AstRef(0);
+    c.ts.getIfRef(&targetTable);
+
+    return new(c.lifo) AstTableSize(targetTable);
 }
 #endif
 
@@ -3817,6 +3993,16 @@ ParseExprBody(WasmParseContext& c, WasmToken token, bool inParens)
         return ParseMemOrTableDrop(c, /*isMem=*/false);
       case WasmToken::TableInit:
         return ParseMemOrTableInit(c, inParens, /*isMem=*/false);
+#endif
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+      case WasmToken::TableGet:
+        return ParseTableGet(c, inParens);
+      case WasmToken::TableGrow:
+        return ParseTableGrow(c, inParens);
+      case WasmToken::TableSet:
+        return ParseTableSet(c, inParens);
+      case WasmToken::TableSize:
+        return ParseTableSize(c, inParens);
 #endif
 #ifdef ENABLE_WASM_GC
       case WasmToken::StructNew:
@@ -4438,17 +4624,32 @@ ParseGlobalType(WasmParseContext& c, AstValType* type, bool* isMutable)
 }
 
 static bool
-ParseElemType(WasmParseContext& c)
+ParseElemType(WasmParseContext& c, TableKind* tableKind)
 {
-    // Only AnyFunc is allowed at the moment.
-    return c.ts.match(WasmToken::AnyFunc, c.error);
+    WasmToken token;
+    if (c.ts.getIf(WasmToken::AnyFunc, &token)) {
+        *tableKind = TableKind::AnyFunction;
+        return true;
+    }
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+    if (c.ts.getIf(WasmToken::ValueType, &token) &&
+        token.valueType() == ValType::AnyRef)
+    {
+        *tableKind = TableKind::AnyRef;
+        return true;
+    }
+    c.ts.generateError(token, "'anyfunc' or 'anyref' required", c.error);
+#else
+    c.ts.generateError(token, "'anyfunc' required", c.error);
+#endif
+    return false;
 }
 
 static bool
-ParseTableSig(WasmParseContext& c, Limits* table)
+ParseTableSig(WasmParseContext& c, Limits* table, TableKind* tableKind)
 {
     return ParseLimits(c, table, Shareable::False) &&
-           ParseElemType(c);
+           ParseElemType(c, tableKind);
 }
 
 static AstImport*
@@ -4489,15 +4690,17 @@ ParseImport(WasmParseContext& c, AstModule* module)
                 name = c.ts.getIfName();
             }
 
+            TableKind tableKind;
             Limits table;
-            if (!ParseTableSig(c, &table)) {
+            if (!ParseTableSig(c, &table, &tableKind)) {
                 return nullptr;
             }
             if (!c.ts.match(WasmToken::CloseParen, c.error)) {
                 return nullptr;
             }
+
             return new(c.lifo) AstImport(name, moduleName.text(), fieldName.text(),
-                                         DefinitionKind::Table, table);
+                                         table, tableKind);
         }
         if (c.ts.getIf(WasmToken::Global)) {
             if (name.empty()) {
@@ -4657,13 +4860,14 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
                 return false;
             }
 
+            TableKind tableKind;
             Limits table;
-            if (!ParseTableSig(c, &table)) {
+            if (!ParseTableSig(c, &table, &tableKind)) {
                 return false;
             }
 
             auto* import = new(c.lifo) AstImport(name, names.module.text(), names.field.text(),
-                                                 DefinitionKind::Table, table);
+                                                 table, tableKind);
 
             return import && module->append(import);
         }
@@ -4684,15 +4888,17 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
 
     // Either: min max? anyfunc
     if (c.ts.peek().kind() == WasmToken::Index) {
+        TableKind tableKind;
         Limits table;
-        if (!ParseTableSig(c, &table)) {
+        if (!ParseTableSig(c, &table, &tableKind)) {
             return false;
         }
-        return module->addTable(name, table);
+        return module->addTable(name, table, tableKind);
     }
 
     // Or: anyfunc (elem 1 2 ...)
-    if (!ParseElemType(c)) {
+    TableKind tableKind;
+    if (!ParseElemType(c, &tableKind)) {
         return false;
     }
 
@@ -4701,6 +4907,14 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
     }
     if (!c.ts.match(WasmToken::Elem, c.error)) {
         return false;
+    }
+
+    if (name.empty()) {
+        // For inline elements we need a name, so synthesize one if there isn't
+        // one already.
+        name = c.gensym("elem");
+        if (name.empty())
+            return false;
     }
 
     AstRefVector elems(c.lifo);
@@ -4721,7 +4935,9 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
         return false;
     }
 
-    if (!module->addTable(name, Limits(numElements, Some(numElements), Shareable::False))) {
+    if (!module->addTable(name, Limits(numElements, Some(numElements), Shareable::False),
+                          tableKind))
+    {
         return false;
     }
 
@@ -4730,19 +4946,27 @@ ParseTable(WasmParseContext& c, WasmToken token, AstModule* module)
         return false;
     }
 
-    AstElemSegment* segment = new(c.lifo) AstElemSegment(zero, std::move(elems));
+    AstElemSegment* segment = new(c.lifo) AstElemSegment(AstRef(name), zero, std::move(elems));
     return segment && module->append(segment);
 }
 
 static AstElemSegment*
 ParseElemSegment(WasmParseContext& c)
 {
-    if (!MaybeParseOwnerIndex(c)) {
-        return nullptr;
-    }
+    // (elem table-name init-expr ref ...)
+    // (elem init-expr ref ...)
+    // (elem passive ref ...)
+
+    AstRef targetTable = AstRef(0);
+    bool hasTableName = c.ts.getIfRef(&targetTable);
 
     AstExpr* offsetIfActive;
     if (!ParseInitializerExpressionOrPassive(c, &offsetIfActive)) {
+        return nullptr;
+    }
+
+    if (hasTableName && !offsetIfActive) {
+        c.ts.generateError(c.ts.peek(), "passive segment must not have a table", c.error);
         return nullptr;
     }
 
@@ -4755,7 +4979,7 @@ ParseElemSegment(WasmParseContext& c)
         }
     }
 
-    return new(c.lifo) AstElemSegment(offsetIfActive, std::move(elems));
+    return new(c.lifo) AstElemSegment(targetTable, offsetIfActive, std::move(elems));
 }
 
 static bool
@@ -5221,6 +5445,10 @@ ResolveCallIndirect(Resolver& r, AstCallIndirect& c)
         return false;
     }
 
+    if (!r.resolveTable(c.targetTable())) {
+        return false;
+    }
+
     return true;
 }
 
@@ -5448,7 +5676,9 @@ ResolveMemOrTableCopy(Resolver& r, AstMemOrTableCopy& s)
 {
     return ResolveExpr(r, s.dest()) &&
            ResolveExpr(r, s.src()) &&
-           ResolveExpr(r, s.len());
+           ResolveExpr(r, s.len()) &&
+           r.resolveTable(s.destTable()) &&
+           r.resolveTable(s.srcTable());
 }
 
 static bool
@@ -5464,7 +5694,38 @@ ResolveMemOrTableInit(Resolver& r, AstMemOrTableInit& s)
 {
     return ResolveExpr(r, s.dst()) &&
            ResolveExpr(r, s.src()) &&
-           ResolveExpr(r, s.len());
+           ResolveExpr(r, s.len()) &&
+           r.resolveTable(s.targetTable());
+}
+#endif
+
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+static bool
+ResolveTableGet(Resolver& r, AstTableGet& s)
+{
+    return ResolveExpr(r, s.index()) && r.resolveTable(s.targetTable());
+}
+
+static bool
+ResolveTableGrow(Resolver& r, AstTableGrow& s)
+{
+    return ResolveExpr(r, s.delta()) &&
+           ResolveExpr(r, s.initValue()) &&
+           r.resolveTable(s.targetTable());
+}
+
+static bool
+ResolveTableSet(Resolver& r, AstTableSet& s)
+{
+    return ResolveExpr(r, s.index()) &&
+           ResolveExpr(r, s.value()) &&
+           r.resolveTable(s.targetTable());
+}
+
+static bool
+ResolveTableSize(Resolver& r, AstTableSize& s)
+{
+    return r.resolveTable(s.targetTable());
 }
 #endif
 
@@ -5613,6 +5874,16 @@ ResolveExpr(Resolver& r, AstExpr& expr)
       case AstExprKind::MemOrTableInit:
         return ResolveMemOrTableInit(r, expr.as<AstMemOrTableInit>());
 #endif
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+      case AstExprKind::TableGet:
+        return ResolveTableGet(r, expr.as<AstTableGet>());
+      case AstExprKind::TableGrow:
+        return ResolveTableGrow(r, expr.as<AstTableGrow>());
+      case AstExprKind::TableSet:
+        return ResolveTableSet(r, expr.as<AstTableSet>());
+      case AstExprKind::TableSize:
+        return ResolveTableSize(r, expr.as<AstTableSize>());
+#endif
 #ifdef ENABLE_WASM_GC
       case AstExprKind::StructNew:
         return ResolveStructNew(r, expr.as<AstStructNew>());
@@ -5671,6 +5942,14 @@ ResolveStruct(Resolver& r, AstStructType& s)
             return false;
         }
     }
+    return true;
+}
+
+static bool
+ResolveElemSegment(Resolver& r, AstElemSegment& seg)
+{
+    if (!r.resolveTable(seg.targetTableRef()))
+        return false;
     return true;
 }
 
@@ -5778,7 +6057,7 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
         }
     }
 
-    for (const AstResizable& table : module->tables()) {
+    for (const AstTable& table : module->tables()) {
         if (table.imported) {
             continue;
         }
@@ -5787,7 +6066,7 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
         }
     }
 
-    for (const AstResizable& memory : module->memories()) {
+    for (const AstMemory& memory : module->memories()) {
         if (memory.imported) {
             continue;
         }
@@ -5818,6 +6097,12 @@ ResolveModule(LifoAlloc& lifo, AstModule* module, UniqueChars* error)
                 return false;
             }
             break;
+        }
+    }
+
+    for (AstElemSegment* seg : module->elemSegments()) {
+        if (!ResolveElemSegment(r, *seg)) {
+            return false;
         }
     }
 
@@ -5957,6 +6242,16 @@ EncodeCall(Encoder& e, AstCall& c)
 }
 
 static bool
+EncodeOneTableIndex(Encoder& e, uint32_t index)
+{
+    if (index) {
+        return e.writeVarU32(uint32_t(MemoryTableFlags::HasTableIndex)) &&
+               e.writeVarU32(index);
+    }
+    return e.writeVarU32(uint32_t(MemoryTableFlags::Default));
+}
+
+static bool
 EncodeCallIndirect(Encoder& e, AstCallIndirect& c)
 {
     if (!EncodeArgs(e, c.args())) {
@@ -5975,11 +6270,7 @@ EncodeCallIndirect(Encoder& e, AstCallIndirect& c)
         return false;
     }
 
-    if (!e.writeVarU32(uint32_t(MemoryTableFlags::Default))) {
-        return false;
-    }
-
-    return true;
+    return EncodeOneTableIndex(e, c.targetTable().index());
 }
 
 static bool
@@ -6293,11 +6584,20 @@ EncodeWake(Encoder& e, AstWake& s)
 static bool
 EncodeMemOrTableCopy(Encoder& e, AstMemOrTableCopy& s)
 {
-    return EncodeExpr(e, s.dest()) &&
-           EncodeExpr(e, s.src()) &&
-           EncodeExpr(e, s.len()) &&
-           e.writeOp(s.isMem() ? MiscOp::MemCopy : MiscOp::TableCopy) &&
-           e.writeVarU32(uint32_t(MemoryTableFlags::Default));
+    bool result = EncodeExpr(e, s.dest()) &&
+                  EncodeExpr(e, s.src()) &&
+                  EncodeExpr(e, s.len()) &&
+                  e.writeOp(s.isMem() ? MiscOp::MemCopy : MiscOp::TableCopy);
+    if (s.destTable().index() == 0 && s.srcTable().index() == 0) {
+        result = result &&
+                 e.writeVarU32(uint32_t(MemoryTableFlags::Default));
+    } else {
+        result = result &&
+                 e.writeVarU32(uint32_t(MemoryTableFlags::HasTableIndex)) &&
+                 e.writeVarU32(s.destTable().index()) &&
+                 e.writeVarU32(s.srcTable().index());
+    }
+    return result;
 }
 
 static bool
@@ -6324,8 +6624,43 @@ EncodeMemOrTableInit(Encoder& e, AstMemOrTableInit& s)
            EncodeExpr(e, s.src()) &&
            EncodeExpr(e, s.len()) &&
            e.writeOp(s.isMem() ? MiscOp::MemInit : MiscOp::TableInit) &&
-           e.writeVarU32(uint32_t(MemoryTableFlags::Default)) &&
+           EncodeOneTableIndex(e, s.targetTable().index()) &&
            e.writeVarU32(s.segIndex());
+}
+#endif
+
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+static bool
+EncodeTableGet(Encoder& e, AstTableGet& s)
+{
+    return EncodeExpr(e, s.index()) &&
+           e.writeOp(MiscOp::TableGet) &&
+           EncodeOneTableIndex(e, s.targetTable().index());
+}
+
+static bool
+EncodeTableGrow(Encoder& e, AstTableGrow& s)
+{
+    return EncodeExpr(e, s.delta()) &&
+           EncodeExpr(e, s.initValue()) &&
+           e.writeOp(MiscOp::TableGrow) &&
+           EncodeOneTableIndex(e, s.targetTable().index());
+}
+
+static bool
+EncodeTableSet(Encoder& e, AstTableSet& s)
+{
+    return EncodeExpr(e, s.index()) &&
+           EncodeExpr(e, s.value()) &&
+           e.writeOp(MiscOp::TableSet) &&
+           EncodeOneTableIndex(e, s.targetTable().index());
+}
+
+static bool
+EncodeTableSize(Encoder& e, AstTableSize& s)
+{
+    return e.writeOp(MiscOp::TableSize) &&
+           EncodeOneTableIndex(e, s.targetTable().index());
 }
 #endif
 
@@ -6496,6 +6831,16 @@ EncodeExpr(Encoder& e, AstExpr& expr)
         return EncodeMemFill(e, expr.as<AstMemFill>());
       case AstExprKind::MemOrTableInit:
         return EncodeMemOrTableInit(e, expr.as<AstMemOrTableInit>());
+#endif
+#ifdef ENABLE_WASM_GENERALIZED_TABLES
+      case AstExprKind::TableGet:
+        return EncodeTableGet(e, expr.as<AstTableGet>());
+      case AstExprKind::TableGrow:
+        return EncodeTableGrow(e, expr.as<AstTableGrow>());
+      case AstExprKind::TableSet:
+        return EncodeTableSet(e, expr.as<AstTableSet>());
+      case AstExprKind::TableSize:
+        return EncodeTableSize(e, expr.as<AstTableSize>());
 #endif
 #ifdef ENABLE_WASM_GC
       case AstExprKind::StructNew:
@@ -6670,10 +7015,21 @@ EncodeLimits(Encoder& e, const Limits& limits)
 }
 
 static bool
-EncodeTableLimits(Encoder& e, const Limits& limits)
+EncodeTableLimits(Encoder& e, const Limits& limits, TableKind tableKind)
 {
-    if (!e.writeVarU32(uint32_t(TypeCode::AnyFunc))) {
-        return false;
+    switch (tableKind) {
+      case TableKind::AnyFunction:
+        if (!e.writeVarU32(uint32_t(TypeCode::AnyFunc))) {
+            return false;
+        }
+        break;
+      case TableKind::AnyRef:
+        if (!e.writeVarU32(uint32_t(TypeCode::AnyRef))) {
+            return false;
+        }
+        break;
+      default:
+        MOZ_CRASH("Unexpected table kind");
     }
 
     return EncodeLimits(e, limits);
@@ -6714,7 +7070,7 @@ EncodeImport(Encoder& e, AstImport& imp)
         }
         break;
       case DefinitionKind::Table:
-        if (!EncodeTableLimits(e, imp.limits())) {
+        if (!EncodeTableLimits(e, imp.limits(), imp.tableKind())) {
             return false;
         }
         break;
@@ -6758,7 +7114,7 @@ static bool
 EncodeMemorySection(Encoder& e, AstModule& module)
 {
     size_t numOwnMemories = 0;
-    for (const AstResizable& memory : module.memories()) {
+    for (const AstMemory& memory : module.memories()) {
         if (!memory.imported) {
             numOwnMemories++;
         }
@@ -6777,7 +7133,7 @@ EncodeMemorySection(Encoder& e, AstModule& module)
         return false;
     }
 
-    for (const AstResizable& memory : module.memories()) {
+    for (const AstMemory& memory : module.memories()) {
         if (memory.imported) {
             continue;
         }
@@ -6870,7 +7226,7 @@ static bool
 EncodeTableSection(Encoder& e, AstModule& module)
 {
     size_t numOwnTables = 0;
-    for (const AstResizable& table : module.tables()) {
+    for (const AstTable& table : module.tables()) {
         if (!table.imported) {
             numOwnTables++;
         }
@@ -6889,11 +7245,11 @@ EncodeTableSection(Encoder& e, AstModule& module)
         return false;
     }
 
-    for (const AstResizable& table : module.tables()) {
+    for (const AstTable& table : module.tables()) {
         if (table.imported) {
             continue;
         }
-        if (!EncodeTableLimits(e, table.limits)) {
+        if (!EncodeTableLimits(e, table.limits, table.tableKind)) {
             return false;
         }
     }
@@ -6989,14 +7345,22 @@ EncodeCodeSection(Encoder& e, Uint32Vector* offsets, AstModule& module)
 }
 
 static bool
-EncodeDestinationOffsetOrFlags(Encoder& e, AstExpr* offsetIfActive)
+EncodeDestinationOffsetOrFlags(Encoder& e, uint32_t index, AstExpr* offsetIfActive)
 {
     if (offsetIfActive) {
-        // In the MVP, the following VarU32 is the table or linear memory
-        // index and it must be zero.  In the bulk-mem-ops proposal, it is
-        // repurposed as a flag field.
-        if (!e.writeVarU32(uint32_t(InitializerKind::Active))) {
-            return false;
+        // In the MVP, the following VarU32 is the table or linear memory index
+        // and it must be zero.  In the bulk-mem-ops proposal, it is repurposed
+        // as a flag field, and if the index is not zero it must be present.
+        if (index) {
+            if (!e.writeVarU32(uint32_t(InitializerKind::ActiveWithIndex)) ||
+                !e.writeVarU32(index))
+            {
+                return false;
+            }
+        } else {
+            if (!e.writeVarU32(uint32_t(InitializerKind::Active))) {
+                return false;
+            }
         }
         if (!EncodeExpr(e, *offsetIfActive)) {
             return false;
@@ -7016,7 +7380,7 @@ EncodeDestinationOffsetOrFlags(Encoder& e, AstExpr* offsetIfActive)
 static bool
 EncodeDataSegment(Encoder& e, const AstDataSegment& segment)
 {
-    if (!EncodeDestinationOffsetOrFlags(e, segment.offsetIfActive())) {
+    if (!EncodeDestinationOffsetOrFlags(e, 0, segment.offsetIfActive())) {
         return false;
     }
 
@@ -7072,7 +7436,7 @@ EncodeDataSection(Encoder& e, AstModule& module)
 static bool
 EncodeElemSegment(Encoder& e, AstElemSegment& segment)
 {
-    if (!EncodeDestinationOffsetOrFlags(e, segment.offsetIfActive())) {
+    if (!EncodeDestinationOffsetOrFlags(e, segment.targetTable().index(), segment.offsetIfActive())) {
         return false;
     }
 
