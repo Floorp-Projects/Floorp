@@ -11,7 +11,7 @@
   // draft-ietf-rtcweb-jsep-24 section 5.2.1
   promise_test(async t => {
     const pc = new RTCPeerConnection();
-    const offer = await pc.createOffer({offerToReceiveVideo: true});
+    const offer = await generateVideoReceiveOnlyOffer(pc);
     let offer_lines = offer.sdp.split('\r\n');
     // The first 3 lines are dictated by JSEP.
     assert_equals(offer_lines[0], "v=0");

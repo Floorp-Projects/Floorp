@@ -141,7 +141,8 @@ enum class MemoryTableFlags
 {
     Default                              = 0x0,
     HasMaximum                           = 0x1,
-    IsShared                             = 0x2
+    IsShared                             = 0x2,
+    HasTableIndex                        = 0x4, // UNOFFICIAL.  There will be a separate flag for memory.
 };
 
 enum class MemoryMasks
@@ -400,6 +401,12 @@ enum class MiscOp
     TableDrop                            = 0x0d,
     TableCopy                            = 0x0e,
 
+    // Generalized tables (reftypes proposal).  Note, these are unofficial.
+    TableGrow                            = 0x0f,
+    TableGet                             = 0x10,
+    TableSet                             = 0x11,
+    TableSize                            = 0x12,
+
     // Structure operations.  Note, these are unofficial.
     StructNew                            = 0x50,
     StructGet                            = 0x51,
@@ -582,6 +589,7 @@ enum class FieldFlags {
 
 static const unsigned MaxTypes               =  1000000;
 static const unsigned MaxFuncs               =  1000000;
+static const unsigned MaxTables              =   100000;  // TODO: get this into the shared limits spec
 static const unsigned MaxImports             =   100000;
 static const unsigned MaxExports             =   100000;
 static const unsigned MaxGlobals             =  1000000;

@@ -77,43 +77,43 @@ notification.heartbeat {
 }
 
 /* Learn More link styles */
-.heartbeat > .text-link {
+.heartbeat > hbox > .text-link {
   color: #0095DD !important;
   margin-inline-start: 0 !important;
 }
 
-.heartbeat > .text-link:hover {
+.heartbeat > hbox > .text-link:hover {
   color: #008ACB !important;
   text-decoration: none !important;
 }
 
-.heartbeat > .text-link:hover:active {
+.heartbeat > hbox > .text-link:hover:active {
   color: #006B9D !important;
 }
 
 /* Heartbeat UI Rating Star Classes */
-.heartbeat > #star-rating-container {
+#star-rating-container {
   display: -moz-box;
   margin-bottom: 4px;
 }
 
-.heartbeat > #star-rating-container > #star5 {
+#star-rating-container > #star5 {
   -moz-box-ordinal-group: 5;
 }
 
-.heartbeat > #star-rating-container > #star4 {
+#star-rating-container > #star4 {
   -moz-box-ordinal-group: 4;
 }
 
-.heartbeat > #star-rating-container > #star3 {
+#star-rating-container > #star3 {
   -moz-box-ordinal-group: 3;
 }
 
-.heartbeat > #star-rating-container > #star2 {
+#star-rating-container > #star2 {
   -moz-box-ordinal-group: 2;
 }
 
-.heartbeat > #star-rating-container > .star-x {
+#star-rating-container > .star-x {
   background: url("resource://normandy/skin/shared/heartbeat-star-off.svg");
   cursor: pointer;
   height: 16px;
@@ -121,7 +121,7 @@ notification.heartbeat {
   width: 16px;
 }
 
-.heartbeat > #star-rating-container > .star-x:hover,
-.heartbeat > #star-rating-container > .star-x:hover ~ .star-x {
+#star-rating-container > .star-x:hover,
+#star-rating-container > .star-x:hover ~ .star-x {
   background: url("resource://normandy/skin/shared/heartbeat-star-lit.svg");
 }

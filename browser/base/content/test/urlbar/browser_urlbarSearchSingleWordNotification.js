@@ -14,19 +14,8 @@ function promiseNotification(aBrowser, value, expected, input) {
     let notificationBox = aBrowser.getNotificationBox(aBrowser.selectedBrowser);
     if (expected) {
       info("Waiting for " + value + " notification");
-      let checkForNotification = function() {
-        if (notificationBox.getNotificationWithValue(value)) {
-          info("Saw the notification");
-          notificationObserver.disconnect();
-          notificationObserver = null;
-          resolve();
-        }
-      };
-      if (notificationObserver) {
-        notificationObserver.disconnect();
-      }
-      notificationObserver = new MutationObserver(checkForNotification);
-      notificationObserver.observe(notificationBox.stack, {childList: true});
+      resolve(BrowserTestUtils.waitForNotificationInNotificationBox(
+        notificationBox, value));
     } else {
       setTimeout(() => {
         is(notificationBox.getNotificationWithValue(value), null,
@@ -152,7 +141,7 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
     let notificationBox = browser.getNotificationBox(tab.linkedBrowser);
     let notification = notificationBox.getNotificationWithValue("keyword-uri-fixup");
     let docLoadPromise = waitForDocLoadAndStopIt("http://" + hostName + "/", tab.linkedBrowser);
-    notification.querySelector(".notification-button-default").click();
+    notification.querySelector("button").click();
 
     // check pref value
     let prefValue = Services.prefs.getBoolPref(pref);

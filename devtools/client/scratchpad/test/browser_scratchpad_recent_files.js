@@ -152,7 +152,7 @@ function testOpenDeletedFile() {
      "The missing file was successfully removed from the menu.");
   ok(gScratchpad.notificationBox.currentNotification,
      "The notification was successfully displayed.");
-  is(gScratchpad.notificationBox.currentNotification.label,
+  is(gScratchpad.notificationBox.currentNotification.messageText.textContent,
      gScratchpad.strings.GetStringFromName("fileNoLongerExists.notification"),
      "The notification label is correct.");
 

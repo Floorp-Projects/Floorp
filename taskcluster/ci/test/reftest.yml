@@ -55,10 +55,6 @@ crashtest:
         by-test-platform:
             android-em.*: 7200
             default: 3600
-    tier:
-        by-test-platform:
-            android-em-7.0-x86/opt: 3
-            default: default
 
 jsreftest:
     description: "JS Reftest run"

@@ -34,6 +34,8 @@ webrtc_non_unified_sources = [
     'trunk/webrtc/modules/audio_processing/aec/echo_cancellation.cc',            # Because of conflicts over 'near' on windows
     'trunk/webrtc/modules/audio_processing/aecm/aecm_core.cc',                   # Because of the PART_LEN2 define
     'trunk/webrtc/modules/audio_processing/aecm/aecm_core_c.cc',                 # Because of the PART_LEN2 define
+    'trunk/webrtc/modules/audio_processing/aecm/aecm_core_mips.cc',              # Because of the PART_LEN2 define
+    'trunk/webrtc/modules/audio_processing/aecm/aecm_core_neon.cc',              # Because of the PART_LEN2 define
     'trunk/webrtc/modules/audio_processing/aecm/echo_control_mobile.cc',         # Because of the PART_LEN2 define
     'trunk/webrtc/modules/audio_processing/agc/legacy/analog_agc.c',             # Because of name clash in the kInitCheck variable
     'trunk/webrtc/modules/audio_processing/beamformer/covariance_matrix_generator.cc', # Because of needing to define _USE_MATH_DEFINES before including <cmath>
