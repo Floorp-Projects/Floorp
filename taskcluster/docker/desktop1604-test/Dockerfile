@@ -1,7 +1,6 @@
 FROM          ubuntu:16.04
 MAINTAINER    Joel Maher <joel.maher@gmail.com>
 
-
 RUN mkdir /builds
 RUN useradd -d /builds/worker -s /bin/bash -m worker
 WORKDIR /builds/worker
