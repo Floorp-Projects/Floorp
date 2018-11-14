@@ -94,6 +94,9 @@ var UI = {
       adbAddon.install("webide");
     }
 
+    // Remove deprecated remote debugging extensions.
+    adbAddon.uninstallUnsupportedExtensions();
+
     Services.prefs.setBoolPref("devtools.webide.autoinstallADBExtension", false);
 
     this.setupDeck();

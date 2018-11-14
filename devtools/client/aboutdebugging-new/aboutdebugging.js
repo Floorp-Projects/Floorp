@@ -72,6 +72,9 @@ const AboutDebugging = {
 
     adbAddon.on("update", this.onAdbAddonUpdated);
     this.onAdbAddonUpdated();
+
+    // Remove deprecated remote debugging extensions.
+    await adbAddon.uninstallUnsupportedExtensions();
   },
 
   onAdbAddonUpdated() {
