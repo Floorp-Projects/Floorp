@@ -106,7 +106,6 @@ pub struct PictureContext {
 /// the children are processed.
 pub struct PictureState {
     pub is_cacheable: bool,
-    pub local_rect_changed: bool,
     pub map_local_to_pic: SpaceMapper<LayoutPixel, PicturePixel>,
     pub map_pic_to_world: SpaceMapper<PicturePixel, WorldPixel>,
     pub map_pic_to_raster: SpaceMapper<PicturePixel, RasterPixel>,
