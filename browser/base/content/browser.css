@@ -252,10 +252,10 @@ panelview[mainview] > .panel-header {
 }
 
 /* Allow dropping a tab on buttons with associated drop actions. */
-#TabsToolbar[movingtab] + #nav-bar > #nav-bar-customization-target > #personal-bookmarks,
-#TabsToolbar[movingtab] + #nav-bar > #nav-bar-customization-target > #home-button,
-#TabsToolbar[movingtab] + #nav-bar > #nav-bar-customization-target > #downloads-button,
-#TabsToolbar[movingtab] + #nav-bar > #nav-bar-customization-target > #bookmarks-menu-button {
+#navigator-toolbox[movingtab] > #nav-bar > #nav-bar-customization-target > #personal-bookmarks,
+#navigator-toolbox[movingtab] > #nav-bar > #nav-bar-customization-target > #home-button,
+#navigator-toolbox[movingtab] > #nav-bar > #nav-bar-customization-target > #downloads-button,
+#navigator-toolbox[movingtab] > #nav-bar > #nav-bar-customization-target > #bookmarks-menu-button {
   pointer-events: auto;
 }
 
