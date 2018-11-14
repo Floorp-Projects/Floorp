@@ -224,8 +224,9 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         val browserFragment = fragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG) as BrowserFragment?
 
         val isShowingBrowser = browserFragment != null
+        val crashReporterIsVisible = browserFragment?.crashReporterIsVisible() ?: false
 
-        if (isShowingBrowser) {
+        if (isShowingBrowser && !crashReporterIsVisible) {
             ViewUtils.showBrandedSnackbar(findViewById(android.R.id.content),
                     R.string.feedback_erase,
                     resources.getInteger(R.integer.erase_snackbar_delay))

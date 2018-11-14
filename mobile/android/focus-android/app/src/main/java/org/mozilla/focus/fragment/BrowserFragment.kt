@@ -704,6 +704,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
         crashReporterFragment.onCloseTabPressed = { sendCrashReport ->
             if (sendCrashReport) { CrashReporterWrapper.submitCrash(crash) }
+            erase()
             hideCrashReporter()
         }
 
@@ -741,7 +742,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         }
     }
 
-    private fun crashReporterIsVisible(): Boolean = requireActivity().supportFragmentManager.let {
+    fun crashReporterIsVisible(): Boolean = requireActivity().supportFragmentManager.let {
         it.findFragmentByTag(CrashReporterFragment.FRAGMENT_TAG)?.isVisible ?: false
     }
 
