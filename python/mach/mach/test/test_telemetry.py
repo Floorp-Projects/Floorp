@@ -38,10 +38,7 @@ def run_mach(tmpdir):
                                 **kwargs)
         # Load any telemetry data that was written
         path = unicode(tmpdir.join('telemetry', 'outgoing'))
-        try:
-            return [json.load(open(os.path.join(path, f), 'rb')) for f in os.listdir(path)]
-        except OSError:
-            return []
+        return [json.load(open(os.path.join(path, f), 'rb')) for f in os.listdir(path)]
     return run
 
 
