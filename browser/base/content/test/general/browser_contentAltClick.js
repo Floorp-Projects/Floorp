@@ -17,7 +17,6 @@ ChromeUtils.defineModuleGetter(this, "Downloads",
 
 function setup() {
   Services.prefs.setBoolPref("browser.altClickSave", true);
-  Services.prefs.setBoolPref("dom.webcomponents.shadowdom.enabled", true);
 
   let testPage =
     "data:text/html," +
@@ -41,7 +40,6 @@ async function clean_up() {
   await PlacesUtils.history.clear();
 
   Services.prefs.clearUserPref("browser.altClickSave");
-  Services.prefs.clearUserPref("dom.webcomponents.shadowdom.enabled");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 }
 

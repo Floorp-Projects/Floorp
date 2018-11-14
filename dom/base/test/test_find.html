@@ -113,13 +113,11 @@ let runTests = t.step_func_done(function() {
   }, "Mixed shadow and non-shadow text");
 });
 
-SpecialPowers.pushPrefEnv(
-  {"set":[['dom.webcomponents.shadowdom.enabled', true]]},
-  t.step_func(function() {
-    let iframe = document.createElement("iframe");
-    iframe.onload = runTests;
-    iframe.srcdoc = "<!doctype html><html></html>";
-    document.body.appendChild(iframe);
-  }));
+window.onload = function() {
+  let iframe = document.createElement("iframe");
+  iframe.onload = runTests;
+  iframe.srcdoc = "<!doctype html><html></html>";
+  document.body.appendChild(iframe);
+};
 </script>
 </body>

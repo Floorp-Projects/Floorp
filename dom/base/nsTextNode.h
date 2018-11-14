@@ -60,10 +60,6 @@ public:
   nsresult AppendTextForNormalize(const char16_t* aBuffer, uint32_t aLength,
                                   bool aNotify, nsIContent* aNextSibling);
 
-  // Need to have a copy here because including nsDocument.h in this file will
-  // fail to build on Windows.
-  static bool IsShadowDOMEnabled(JSContext* aCx, JSObject* aObject);
-
 #ifdef DEBUG
   virtual void List(FILE* out, int32_t aIndent) const override;
   virtual void DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const override;

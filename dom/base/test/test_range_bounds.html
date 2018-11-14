@@ -118,18 +118,18 @@ function doTest(){
     spanInSecondDivRectList = spanInSecondDiv.getClientRects();
   var widthPerchar = spanInSecondPRect.width / spanInSecondP.firstChild.length;
   var testcases = [
-    {name:'nodesNotInDocument', range:[document.createTextNode('abc'), 1], 
+    {name:'nodesNotInDocument', range:[document.createTextNode('abc'), 1],
       rect:null},
     {name:'collapsedInBlockNode', range:[firstP, 2], rect:null},
     {name:'collapsedAtBeginningOfTextNode', range:[firstP.firstChild, 0],
-      rect:[spanInFirstPRect.left - 6 * widthPerchar, 
-      spanInFirstPRect.left - 6 * widthPerchar, spanInFirstPRect.top, 
+      rect:[spanInFirstPRect.left - 6 * widthPerchar,
+      spanInFirstPRect.left - 6 * widthPerchar, spanInFirstPRect.top,
       spanInFirstPRect.bottom, 0, spanInFirstPRect.height]},
-    {name:'collapsedWithinTextNode', range:[firstP.firstChild, 1], 
-      rect:[spanInFirstPRect.left  - 5 * widthPerchar, 
+    {name:'collapsedWithinTextNode', range:[firstP.firstChild, 1],
+      rect:[spanInFirstPRect.left  - 5 * widthPerchar,
         spanInFirstPRect.left  - 5 * widthPerchar,
         spanInFirstPRect.top, spanInFirstPRect.bottom, 0, spanInFirstPRect.height]},
-    {name:'collapsedAtEndOfTextNode', range:[firstP.firstChild, 6], 
+    {name:'collapsedAtEndOfTextNode', range:[firstP.firstChild, 6],
       rect:[spanInFirstPRect.left, spanInFirstPRect.left,
         spanInFirstPRect.top, spanInFirstPRect.bottom, 0, spanInFirstPRect.height]},
     {name:'singleBlockNode', range:[root, 1, root, 2], rect:firstPRect},
@@ -141,23 +141,23 @@ function doTest(){
     {name:'endOfTextNodeToEndOfAnotherTextNodeInAnotherBlock',
       range:[spanInFirstP.firstChild, 1, firstDiv.firstChild, 5],
       rect:[spanInFirstDivRect.left - 5*widthPerchar, spanInFirstDivRect.left,
-        spanInFirstDivRect.top, spanInFirstDivRect.bottom, 5 * widthPerchar, 
+        spanInFirstDivRect.top, spanInFirstDivRect.bottom, 5 * widthPerchar,
         spanInFirstDivRect.height]},
-    {name:'startOfTextNodeToStartOfAnotherTextNodeInAnotherBlock', 
+    {name:'startOfTextNodeToStartOfAnotherTextNodeInAnotherBlock',
       range:[spanInFirstP.firstChild, 0, firstDiv.firstChild, 0],
       rect:[spanInFirstPRect.left, spanInFirstPRect.left + widthPerchar, spanInFirstPRect.top,
         spanInFirstPRect.bottom, widthPerchar, spanInFirstPRect.height]},
-    {name:'endPortionOfATextNode', range:[firstP.firstChild, 3, 
+    {name:'endPortionOfATextNode', range:[firstP.firstChild, 3,
         firstP.firstChild, 6],
       rect:[spanInFirstPRect.left - 3*widthPerchar, spanInFirstPRect.left,
         spanInFirstPRect.top, spanInFirstPRect.bottom, 3*widthPerchar, spanInFirstPRect.height]},
-    {name:'startPortionOfATextNode', range:[firstP.firstChild, 0, 
+    {name:'startPortionOfATextNode', range:[firstP.firstChild, 0,
         firstP.firstChild, 3],
-      rect:[spanInFirstPRect.left - 6*widthPerchar, 
+      rect:[spanInFirstPRect.left - 6*widthPerchar,
         spanInFirstPRect.left - 3*widthPerchar, spanInFirstPRect.top,
         spanInFirstPRect.bottom, 3 * widthPerchar, spanInFirstPRect.height]},
     {name:'spanTextNodes', range:[secondP.firstChild, 1, secondP.lastChild, 1],
-      rect:[spanInSecondPRect.left - 3*widthPerchar, spanInSecondPRect.right + 
+      rect:[spanInSecondPRect.left - 3*widthPerchar, spanInSecondPRect.right +
         widthPerchar, spanInSecondPRect.top, spanInSecondPRect.bottom,
         spanInSecondPRect.width + 4*widthPerchar, spanInSecondPRect.height],
       rectList:[[spanInSecondPRect.left - 3*widthPerchar, spanInSecondPRect.left,
@@ -183,12 +183,12 @@ function doTest(){
 	spanInSecondDivRectList[1],
 	[spanInSecondDivRectList[2].left,
 	spanInSecondDivRectList[2].right - 4 * widthPerchar, spanInSecondDivRectList[2].top,
-	spanInSecondDivRectList[2].bottom, 
+	spanInSecondDivRectList[2].bottom,
 	spanInSecondDivRectList[2].width - 4 * widthPerchar,
 	spanInSecondDivRectList[2].height]]},
       {name:'textAcrossLines',range:[thirdDiv.firstChild, 13, thirdDiv.firstChild, 28],
         rect: [spanInSecondDivRectList[1].left, spanInSecondDivRectList[1].right,
-          spanInSecondDivRectList[1].top + secondDivRect.height, 
+          spanInSecondDivRectList[1].top + secondDivRect.height,
           spanInSecondDivRectList[1].bottom + secondDivRect.height,
           spanInSecondDivRectList[1].width, spanInSecondDivRectList[1].height]}
     ];
@@ -206,20 +206,20 @@ function doTest(){
 	[spanInSecondDivRectList[4].left,
 	spanInSecondDivRectList[4].right - 4 * widthPerchar,
         spanInSecondDivRectList[4].top,
-	spanInSecondDivRectList[4].bottom, 
+	spanInSecondDivRectList[4].bottom,
 	spanInSecondDivRectList[4].width - 4 * widthPerchar,
 	spanInSecondDivRectList[4].height]]},
       {name:'textAcrossLines',range:[thirdDiv.firstChild, 13, thirdDiv.firstChild, 28],
         rect: [spanInSecondDivRectList[2].left, spanInSecondDivRectList[2].right,
-          spanInSecondDivRectList[2].top + secondDivRect.height, 
+          spanInSecondDivRectList[2].top + secondDivRect.height,
           spanInSecondDivRectList[2].bottom + secondDivRect.height,
 	       spanInSecondDivRectList[2].width, spanInSecondDivRectList[2].height],
        rectList:[[spanInSecondDivRectList[2].left, spanInSecondDivRectList[2].right,
-          spanInSecondDivRectList[2].top + secondDivRect.height, 
+          spanInSecondDivRectList[2].top + secondDivRect.height,
           spanInSecondDivRectList[2].bottom + secondDivRect.height,
           spanInSecondDivRectList[2].width, spanInSecondDivRectList[2].height],
           [spanInSecondDivRectList[2].left, spanInSecondDivRectList[2].left,
-          spanInSecondDivRectList[2].top + secondDivRect.height, 
+          spanInSecondDivRectList[2].top + secondDivRect.height,
           spanInSecondDivRectList[2].bottom + secondDivRect.height,
           0, spanInSecondDivRectList[2].height]]}
      ];
@@ -239,7 +239,7 @@ function testMixedDir(){
   bdo = document.getElementById('bdo2');
   bdoRect=bdo.getBoundingClientRect();
   var widthPerChar = bdoRect.width / bdo.firstChild.length;
-  runATest({name:'mixeddirPartial', range:[firstSpan.firstChild, 3, 
+  runATest({name:'mixeddirPartial', range:[firstSpan.firstChild, 3,
 					   bdo.firstChild, 7],
 	rect: [firstSpanRect.left + 3*widthPerChar, bdoRect.right,
 	       bdoRect.top, bdoRect.bottom,
@@ -290,11 +290,8 @@ function test(){
   root.style.transform = "translate(30px,50px)";
   doTest();
 
-  SpecialPowers.pushPrefEnv({"set":[["dom.webcomponents.shadowdom.enabled", true]]},
-                            () => {
-                              testShadowDOM();
-                              SimpleTest.finish();
-                            });
+  testShadowDOM();
+  SimpleTest.finish();
 }
 
 window.onload = function() {

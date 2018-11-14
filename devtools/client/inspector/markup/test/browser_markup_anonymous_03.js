@@ -10,8 +10,6 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const TEST_URL = URL_ROOT + "doc_markup_anonymous.html";
 
 add_task(async function() {
-  Services.prefs.setBoolPref("dom.webcomponents.shadowdom.enabled", true);
-
   const {inspector} = await openInspectorForURL(TEST_URL);
 
   const shadowHostFront = await getNodeFront("#shadow", inspector.markup);
