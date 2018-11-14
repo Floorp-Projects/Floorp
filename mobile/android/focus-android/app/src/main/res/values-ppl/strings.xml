@@ -41,6 +41,7 @@
   <string name="preference_category_web_content">Tay nemi ijtik ne Matapan</string>
   <string name="preference_category_switching_apps">Shikpata ne aplicación</string>
   <string name="preference_category_general">Muchi tajtaya</string>
+  <string name="preference_general_summary">Ne tajtachialis achtutalijtuk, tzujtzunyu, taketzalis</string>
   <string name="preference_category_data_collection_use">Kan tiksenputzua tamatil wan ken tikwi</string>
   <string name="preference_category_search">Shiktemu</string>
   <string name="preference_show_search_suggestions">Shikneshti tay niweliskia nikishtemua</string>
@@ -50,7 +51,12 @@
   <string name="preference_state_on">Timakaktuk</string>
   <string name="preference_state_off">Sewtuk</string>
   <string name="preference_subitem_autocomplete">URL temi isel</string>
+  <string name="preference_switch_autocomplete_topsites">Ne tepewa kan tiaw sejsenpa</string>
+  <string name="preference_autocomplete_topsite_summary">Shiktimaka su tikneki ma temi isel wan nemit 450 ush ukchupi URLs tik ne barraj ipal direccion.</string>
   <string name="preference_switch_autocomplete_user_list">Pal ne sijsitioj tiktalia</string>
+  <string name="preference_autocomplete_user_list_summary">Shiktimaka su tikneki ma temi isel wan nemit 450 ush ukchupi URLs tik ne barraj ipal direccion.</string>
+  <string name="preference_category_autocomplete_manage_sites">Shiktekitali ne tepewa</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Shiktekitali ne tepewa</string>
   <string name="preference_autocomplete_action_add">+Shiktalili ne mu-URL</string>
   <string name="preference_autocomplete_title_add">Shiktalili ne mu-URL</string>
   <string name="custom_autocomplete_quick_add">Shiktalili ne mu-URL</string>
@@ -81,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Asu tiktimaka, sejseuk iswat welit tekitit ken te tikchia</string>
   <string name="preference_privacy_category_cookies">Shiktentzakwa cookies</string>
   <string name="preference_privacy_should_block_cookies_no_option">Te</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Shiktentzakwa semaya ne cookies ipal sejseuk</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Shiktentzakwa semaya ne cookies ipal sejseuk</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Eje</string>
   <string name="preference_security_biometric">Shiktali ne itashkalchin mumapipil pal tikalaki tik ne aplicación</string>
@@ -105,7 +112,7 @@
   <string name="preference_search_add2">+ Shiktali seuk tepusyulu taishtemua</string>
   <string name="preference_search_remove_title">Shikishti muchi ne tepusyulu taishtemua</string>
   <string name="preference_search_remove">Shikishti</string>
-  <string name="preference_homescreen_tips">Shikneshtili tanawatilis ipal ne achtu iswat</string>
+  <string name="preference_homescreen_tips">Shikneshti tanawatilis ipal ne achtu iswat</string>
   <string name="action_option_add_search_engine">Shiktali se motor tatemualis</string>
   <string name="search_add_manually_name_hint">Shiktemu ne itukay ne motor</string>
   <string name="search_add_manually_string">Search string to use</string>
@@ -119,12 +126,13 @@
   <string name="content_description_clear_input">Shikpupu ne tajkwilujtuk</string>
   <string name="content_description_dismiss_input">Shikishti</string>
   <string name="content_description_erase">Shikpupu mutatemulis panutuk</string>
-  <string name="content_description_tab_counter">Pestañaj tajtapujtuk: %1$s</string>
+  <string name="content_description_tab_counter">Tzujtzunyu tajtapujtuk: %1$s</string>
   <string name="content_description_lock">Te kanaj teyek keman nikneki nimusalua</string>
   <string name="accessibility_announcement_loading">Mutemiltia</string>
   <string name="accessibility_announcement_loading_finished">Iswat ipal ne matapan kimiltijtuk</string>
   <string name="content_description_menu">Ukchiupi taishpejpenalis</string>
-  <string name="content_description_forward">Shipashalu ka ishpan</string>
+  <string name="indicator_content_description_menu">Botonchin pal nikitayuk</string>
+  <string name="content_description_forward">Shu ka ishpan</string>
   <string name="content_description_reload">Shiktemilti ne sitioj Matapan uksenpa</string>
   <string name="content_description_back">Shimukwepa ka ipan</string>
   <string name="content_description_stop">Makaya shiktemilti ne sitioj web</string>
@@ -151,9 +159,13 @@
   <string name="error_hostLookup_title">Ne servidor te muajsik</string>
   <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Shikpepeta ne direcci&#243;n pal tikita su nemi ejerror kenha ken\n          "<strong>ww</strong>".example.com ipatka\n          "<strong>www</strong>.example.com</li>"\n        "<li>Su tesu tiweli tikimiltia nian se sitioj, shikpepeta ne dajdatoj ipal mutanutzalis ush su ne Wi-Fi salujtuk nemi.</li>"\n      "</ul>]]></string>
   <string name="error_malformedURI_title">Ne dirección tesu yek</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>" ne direccion web muita ijkiuni "<strong>http://www.example.com/</strong></li>"\n  "<li>" shikishtemu uksenpa asu tiktalijtuka ne barra yek (shikita ne machiut: "<strong>/</strong>).</li>\n</ul>]]></string>
   <string name="error_redirectLoop_title">Ne iswat tesu muchiwa redireccionar yek</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>" Anka panu ika seujseujti tesu tikneki metzkwikwi ne cookies. "</li>\n</ul>]]></string>
   <string name="error_unsupportedprotocol_title">Ne dirección tesu mumati</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>" Anka ukse programaj muneki ma shikajshiti pal ne direccion nesi. "</li>" \n"</ul>]]></string>
   <string name="error_sslhandshake_title">Tesu muajshitij ne conexión seguruj</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>" Yajini anka se ujkayu iwan ken muajshitij ne servidor, ush anka se akaj kineki kichiwa personificar ne servidor."</li>"\n    "<li>" Su taja timusalujtuk itech ini servidor achtu, ne error anka tesu ishtuna, ush tiweli tikejekua uksenpa nemanha."</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">Anka se te kiajkawa mutemiltia ini iswat.</string>
   <string name="contextmenu_open_in_app">Shiktapu iwan ne aplicación</string>
@@ -162,7 +174,8 @@
   <string name="contextmenu_image_share">Shiktakuli ne kwikwil</string>
   <string name="contextmenu_image_copy">Shikupina ne idirección ne kwikwil</string>
   <string name="contextmenu_image_save">Shikana ne kwikwil</string>
-  <string name="contextmenu_open_in_new_tab">Shiktapu ne ilpika tik se yankwik pestañaj</string>
+  <string name="contextmenu_open_in_new_tab">Shiktapu ne ilpika tik ukse tzunyu</string>
+  <string name="contextmenu_image_warning"><![CDATA["Ne kwijkwil muantuk wan mutakulijtuk "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tesu yawi mupuluat</b>" keman tikpupua ne tay tikitak ipanpa %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Shikchikawa ne muichtakanemilis</string>
   <string name="firstrun_search_title">Ken tikneki titatemua</string>
   <string name="firstrun_shortcut_title">Shiktalili ne achtu iswat se atajoj</string>
@@ -173,14 +186,18 @@
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_action_add">Shiktali</string>
   <string name="dialog_addtohomescreen_action_cancel">Shikajkawa</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Ne tamelawalis tapui iwan ne Tamanawalis itech Tapachiwiani sewtuk</string>
   <string name="notification_browsing_session_channel_name">Sesión pal titaishtemua ichtaka</string>
   <string name="tabs_tray_action_erase">Shikpupu kan tipashaluj</string>
   <string name="download_firefox">Shiktemulti Firefox</string>
+  <string name="your_rights_content5"><![CDATA["Disconnect, Inc. kipalewi nusan %1$s pal tatentzakwa ken itekiw wan tesu tupal, wan  "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" kituktia pal tiwelit tikitat "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">here</a>.]]></string>
   <string name="gv_prompt_username_hint">Mutukay usuarioj</string>
   <string name="gv_prompt_password_hint">Ichtaka taketzalis</string>
   <string name="gv_prompt_clear">Shikpupu</string>
   <string name="security_popup_secure_connection">Timusalua wan tinejmachnemi</string>
   <string name="security_popup_insecure_connection">Timusalua wan tesu nejmachnemi</string>
+  <string name="security_popup_security_verified">Kitak yek %1$s</string>
+  <string name="site_security_icon_content_description">Tetajpialis ipal ne tepewa</string>
   <string name="preference_autocomplete_duplicate_url_error">URL nemia</string>
   <string name="find_in_page">Shikajsi tik ne iswat</string>
   <string name="find_in_page_input">Shikajsi tik ne iswat</string>
@@ -192,23 +209,42 @@
   <string name="http_auth_dialog_title">Muneki ma shina kaj taja</string>
   <string name="http_auth_dialog_username">Mukwachtuyak</string>
   <string name="http_auth_dialog_password">Constraseñaj</string>
+  <string name="preference_performance_request_desktop_site">Shikita ne version ipal ne tajkwilultapech</string>
   <string name="custom_tab_copy_url_action">URL kupintuk</string>
+  <string name="preference_advanced_summary">Tajtaiwan pal titakejketza</string>
+  <string name="preference_category_advanced">Tay panawijtuk</string>
+  <string name="preference_remote_debugging">Shitayekchiwa wejka iwan USB/Wi-Fi</string>
   <string name="biometric_auth_title">Shikmakishti %1$s</string>
   <string name="biometric_auth_new_session">Yankwik Sesion</string>
+  <string name="biometric_auth_image_description">Mapipiltashkal</string>
+  <string name="enable_search_suggestion_title">Mugustoskia asu timetzmakat tay tiweliskia tikishtemua?</string>
+  <string name="enable_search_suggestion_subtitle">Asu tikneki ma timetzmakakan tay tikishtemua %1$s muneki kituktilia tay titajkwilua tik ne barraj ipal ne dirección pal ne mutatemuliani kishtemua mupatka. %2$s.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Shikmatiuk</string>
   <string name="enable_search_suggestions_no">Tesu</string>
   <string name="enable_search_suggestions_yes">Eje</string>
-  <string name="no_suggestions_message">Sejsé tepusyulu taishtemua te weli tanawatiat.</string>
+  <string name="no_suggestions_message">Sejse tepusyulu taishtemua te weli tanawatiat.</string>
   <string name="dismiss_no_suggestions_prompt_button">Shikishti</string>
+  <string name="tip_disable_tracking_protection">Ne sitioj te tekiti ken tikneki?\n Anka shiksewi Tamanawalis itech Tapachiwiani</string>
   <string name="tip_add_to_homescreen">Shikpachu sema senpa pal tikalaki tik ne ijiswat taja tikita mas%1$s Menu &gt; Shiktalili tik Achtu Iswat</string>
   <string name="tip_set_default_browser">Shiktapu sejse ilpika %1$s\n Shikchiwa %1$s ken ne achtutalijtuk tajtachialis</string>
-  <string name="tip_open_in_new_tab">Shiktapu se ilpika tik se yankwik pestañaj\n Shikpajpachu yek ne ilpika taja tikneki tik se iswat</string>
-  <string name="tip_request_desktop">Tiknekiskia nikita muchi ne escritorioj?%1$s Menu &gt; Shiktajtani ne iswat ipal ne escritorioj</string>
+  <string name="tip_autocomplete_url">Ma temit isel ne URLs ipal ne sijsitioj sujsul tikita\n Shikpajpachu ne URL tay tikneki ijtik ne barraj ipal dirección</string>
+  <string name="tip_open_in_new_tab">Shiktapu se ilpika tik ukse tzunyu\n Shikpajpachu yek ne ilpika taja tikneki tik se iswat</string>
+  <string name="tip_request_desktop">Tiknekiskia tikita muchi ne tajkwilultapech?%1$s Menu &gt; Shiktajtani ne sitioj ipal ne tajkwilultapech</string>
+  <string name="tip_disable_tips2">Ma musewi ne tajtanawatial ijpak ne achtu iswat</string>
+  <string name="tip_explain_allowlist">Tiktakwiltia ne ichtakachiwalis ini iswat?\n Tesu tiwelit timetztajpia itech ne tapachiwiani su tina muchi nemi yek tik ini tepewa.</string>
+  <string name="new_tab_opened_snackbar">Se yankwik itzun tapwik</string>
   <string name="open_new_tab_snackbar">Shikpata</string>
+  <string name="preference_open_new_tab">Shiktapu ne ilpika melaktik tik ukse itzunyu</string>
+  <string name="preference_category_safe_browsing">Pal tinejmachnemi keman titajtachia</string>
+  <string name="preference_safe_browsing_title">Ma mutentzakwakan ne sijsitioj tesajsay wan tashijshikuani</string>
   <string name="preference_exceptions_menu_remove">Shikishti</string>
   <string name="preference_exceptions_remove_all_button_label">Shikishti muchi ne sitioj ipal ne matapan</string>
-  <string name="tab_crash_report_title">Ne pestañaj kunaktuk nemi</string>
-  <string name="tab_crash_report_close_tab_button_label">Shiktapu ne pestañaj</string>
+  <string name="tab_crash_report_title">Ne tzunyu kunaktuk nemi</string>
+  <string name="tab_crash_report_headline">Shitapupulwi. Saman tikpiat uijkayu iwan ini itzun.</string>
+  <string name="tab_crash_report_description">Ken se tajtachialis ichtaka, tejemet te keman tikanat nian talneshtiat ini itzun.</string>
+  <string name="tab_crash_report_close_tab_button_label">Shiktzakwa ne tzunyu</string>
+  <string name="fatal_crash_report_title">Shitapupulwia. %1$s kipishki se uijkayu wan kunaktuk tzaktuk.</string>
+  <string name="fatal_crash_report_description">Ken se tajtachialis ichtaka, tejemet te keman tikanat tay tikitak yewasan.</string>
   <string name="fatal_crash_report_close_button_label">Shiktzakwa</string>
   <string name="fatal_crash_report_restart_firefox_label">Shiktzinti uksenpa %1$s</string>
   <string name="crash_report_send_crash_label">Shikilwi Mozilla ka mukunakak</string>

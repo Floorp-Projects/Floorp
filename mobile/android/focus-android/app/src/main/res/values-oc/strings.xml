@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Picar un tèrme de recercar o una adreça</string>
   <string name="teaser">Navegacion privada automatica.\nNavegatz. Escafatz. Tornatz-i.</string>
   <string name="feedback_erase">Vòstre istoric de navegacion es estat escafat.</string>
+  <string name="feedback_erase_custom_tab">L’istoric de navegacion de l’onglet es estat escafat.</string>
   <string name="search_hint">Recercar %1$s</string>
   <string name="menu_share">Partejar…</string>
   <string name="menu_report_site_issue">Senhalar un problèma sul site</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Ajuda</string>
   <string name="menu_rights">Vòstres dreches</string>
   <string name="menu_trackers_blocked_title">Traçadors blocats</string>
+  <string name="menu_trackers_blocked_subtitle">Desactivar aquesta option pòt reglar unes problèmas del site</string>
+  <string name="menu_content_blocking">Blocatge de contengut</string>
+  <string name="menu_content_blocking_subtitle">Desactivar per petaçar unes sites</string>
   <string name="menu_custom_tab_branding">Fonciona gràcia a %1$s</string>
   <string name="share_dialog_title">Partejar via</string>
   <string name="notification_erase_text">Netejar l’istoric de navegacion</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Escafar e dobrir</string>
   <string name="shortcut_erase_short_label">Escafar</string>
   <string name="shortcut_erase_long_label">Escafar l\'istoric de navegacion</string>
+  <string name="shortcut_erase_and_open_short_label">Escafar e dobrir</string>
+  <string name="shortcut_erase_and_open_long_label">Escafar e dobrir %1$s</string>
   <string name="text_selection_search_action">Recèrca privada</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vos d&#242;na lo contr&#242;la.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Utiliza-lo coma un navegador privat&#8239;:\n  "<ul>"\n    "<li>Recercatz e navegatz dins l&#8217;aplicacion</li>"\n    "<li>Blocatz los tra&#231;adors (se cambiatz pas lo param&#232;tre)</li>"\n    "<li>Escafatz los cookies e los istorics de rec&#232;rcas e navegacion</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s produch per Mozilla. N&#242;stra mission es d&#8217;encoratjar un Internet dob&#232;rt e en bona santat.<br/>\n<a href="%2$s">Ne saber mai</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Vida privada e seguretat</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Contengut web</string>
   <string name="preference_category_switching_apps">Bascula entre las aplicacions</string>
   <string name="preference_category_general">General</string>
+  <string name="preference_general_summary">Navegador per defaut, onglets, lenga</string>
   <string name="preference_category_data_collection_use">Collecta de donadas e utilizacion</string>
   <string name="preference_category_search">Recèrca</string>
   <string name="preference_show_search_suggestions">Mostrar las suggestions de recèrca</string>
   <string name="preference_show_search_suggestions_summary">%1$s enviarà çò que picatz dins la barra d’adreça al motor de recèrca</string>
   <string name="preference_search_engine_default">Per defaut</string>
+  <string name="preference_search_engine_label">Motor de recèrca</string>
   <string name="preference_state_on">Activat</string>
   <string name="preference_state_off">Desactivat</string>
   <string name="preference_subitem_autocomplete">Emplenament d’adreças</string>
+  <string name="preference_switch_autocomplete_topsites">Pels sites favorits</string>
+  <string name="preference_autocomplete_topsite_summary">Activar per completar automaticament mai de 450 adreças populara dins la barra d’adreça.</string>
+  <string name="preference_switch_autocomplete_user_list">Pels sites qu’apondètz</string>
+  <string name="preference_autocomplete_user_list_summary">Activar per completar automaticament mai de 450 adreças populara dins la barra d’adreça.</string>
+  <string name="preference_category_autocomplete_manage_sites">Gerir los sites</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Gerir los sites</string>
   <string name="preference_autocomplete_action_add">+ Ajustar una adreça personalizada</string>
   <string name="preference_autocomplete_title_add">Ajustar una adreça personalizada</string>
   <string name="custom_autocomplete_quick_add">Ajustar una adreça personalizada</string>
+  <string name="add_custom_autocomplete_label">Apondre un ligam per autocompletar</string>
   <string name="preference_category_cookies">Cookies e donadas de sites</string>
   <string name="preference_category_data_choices">Donadas reculhidas</string>
   <string name="preference_autocomplete_title_remove">Levar d’adreças personalizadas</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Activar aquesta opcion pòt provocar de problèmas sus de paginas</string>
   <string name="preference_privacy_category_cookies">Blocar los cookies</string>
   <string name="preference_privacy_should_block_cookies_no_option">Non</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blocar solament los traçadors tèrces</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Blocar solament los cookies tèrces</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Òc</string>
   <string name="preference_security_biometric">Utilizar una emprenta digitala per desblocar l’aplicacion</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Cargament</string>
   <string name="accessibility_announcement_loading_finished">Site web cargat</string>
   <string name="content_description_menu">Mai d\'opcions</string>
+  <string name="indicator_content_description_menu">Boton per mostrar mai d’opcions</string>
   <string name="content_description_forward">Avançar dins l’istoric</string>
   <string name="content_description_reload">Actualizar la pagina</string>
   <string name="content_description_back">Tornar</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Aqu&#242; poiri&#225; &#232;sser una probl&#232;ma amb la configuracion del servidor o de qualqu&#8217;un que se faga passar pel servidor .</li>"\n  "<li>Se vos s&#232;tz connectat sens cap de probl&#232;ma los autres c&#242;ps, l&#8217;error p&#242;t &#232;sser tempor&#224;ria e pod&#232;tz tornar ensajar mai tard.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ops</string>
   <string name="error_generic_message">Quicòm fa qu’avèm pas pogut cargar la pagina.</string>
+  <string name="contextmenu_open_in_app">Dobrir amb una aplicacion</string>
   <string name="contextmenu_link_share">Partejar lo ligam</string>
   <string name="contextmenu_link_copy">Copiar l\'adreça del ligam</string>
   <string name="contextmenu_image_share">Partejar l’imatge</string>
@@ -223,5 +241,26 @@
   <string name="tip_set_default_browser">Dobrir totes los ligams amb %1$s\n Definir %1$s coma navegador per defaut</string>
   <string name="tip_autocomplete_url">Emplenament automaticament de las URL dels sites mai visitats\n Mantenètz quichat quin que siá URL dins la barra d’adreça</string>
   <string name="tip_open_in_new_tab">Dobrir un ligam dins un onglet novèl\n Mantenètz quichat quin que siá ligam de la pagina</string>
-  <string name="tip_request_desktop">Vos aimatz mai lo site en version ordenador ? Menú %1$s &gt; Veire version ordenador</string>
+  <string name="tip_request_desktop">Vos estimatz mai lo site en version ordenador ? Menú %1$s &gt; Veire version ordenador</string>
+  <string name="tip_disable_tips2">Quitar de mostrar las astúcias a l’ecran de començament</string>
+  <string name="tip_explain_allowlist">Site de confisança ?\n La liste d’autorizacion desactiva la proteccion contra lo seguiment pels sites que coneissètz e que vos fisatz.</string>
+  <string name="new_tab_opened_snackbar">Novèl onglet dobèrt</string>
+  <string name="open_new_tab_snackbar">Mostrar</string>
+  <string name="preference_open_new_tab">Mostrar sulcòp los ligams dobèrts</string>
+  <string name="preference_category_safe_browsing">Navegacion securizada</string>
+  <string name="preference_safe_browsing_title">Blocar los sites potencialament perilhoses e enganaires</string>
+  <string name="preference_safe_browsing_summary">Blocar los sites senhalats coma perilhoses, los sites de logicials dangieroses e los sites de logicials pas desirats.</string>
+  <string name="preference_exceptions">Excepcions</string>
+  <string name="preference_exceptions_description">Avètz desactivat lo blocatge de contengut per aquestes sites.</string>
+  <string name="preference_exceptions_menu_remove">Suprimir</string>
+  <string name="preference_exceptions_remove_all_button_label">Suprimir totes los sites web</string>
+  <string name="tab_crash_report_title">L’onglet a plantat</string>
+  <string name="tab_crash_report_headline">O planhèm, avèm de problèmas amb aqueste onglet.</string>
+  <string name="tab_crash_report_description">Coma navegador privat, enregistram pas jamai res e podèm pas restablir aqueste onglet.</string>
+  <string name="tab_crash_report_close_tab_button_label">Tampar l\'onglet</string>
+  <string name="fatal_crash_report_title">O planhèm. %1$s a rescontrat un problèma a a quitat de foncionar.</string>
+  <string name="fatal_crash_report_description">Coma navegador privat, enregistram pas jamai res e podèm pas restablir vòstra darrièra session.</string>
+  <string name="fatal_crash_report_close_button_label">Tampar</string>
+  <string name="fatal_crash_report_restart_firefox_label">Reaviar %1$s</string>
+  <string name="crash_report_send_crash_label">Enviar un senhalament de bug a Mozilla</string>
 </resources>

@@ -233,4 +233,10 @@
   <string name="tip_autocomplete_url">Жиірек қолданылатын сайттар үшін сілтемелерді автотолықтырыңыз\n Адрестік жолақта кез келген сілтемеге ұзақ шертіңіз</string>
   <string name="tip_open_in_new_tab">Сілтемені жаңа бетте ашу\n Беттегі кез келген сілтемеге ұзақ шертіңіз</string>
   <string name="tip_request_desktop">Жұмыс үстелге арналған толық өлшемді көргіңіз келе ме?%1$s Мәзір &gt; Сайттың толық нұсқасы</string>
+  <string name="new_tab_opened_snackbar">Жаңа бет ашылды</string>
+  <string name="open_new_tab_snackbar">Ауысу</string>
+  <string name="tab_crash_report_close_tab_button_label">Бетті жабу</string>
+  <string name="fatal_crash_report_close_button_label">Жабу</string>
+  <string name="fatal_crash_report_restart_firefox_label">%1$s қайта қосу</string>
+  <string name="crash_report_send_crash_label">Mozilla-ға құлау хабарламасын жіберу</string>
 </resources>

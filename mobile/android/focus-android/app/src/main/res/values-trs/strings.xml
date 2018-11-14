@@ -173,7 +173,7 @@
   <string name="contextmenu_link_copy">Ga\'ne lînk da\' nachrunt a\'ngô hiuj u</string>
   <string name="contextmenu_image_share">duguachîn asi dusîjt ñadu\'ua</string>
   <string name="contextmenu_image_copy">Guxun\' dirección korreo da\' nachrun\' a\'ngô hiuj u</string>
-  <string name="contextmenu_image_save">Dunaj ñadu\'ua</string>
+  <string name="contextmenu_image_save">Na\'nïnj sà\' ñadu\'ua</string>
   <string name="contextmenu_open_in_new_tab">Na\'nïn\' riña a\'ngô rakïj ñanj nakàa</string>
   <string name="contextmenu_image_warning"><![CDATA["Nej ñadu\'ua nadunïnjt "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" Se si nare\'&#232;j"</b>" nga nadurê\'t %1$s nej sa gi\'iát nga gaché nunt."]]></string>
   <string name="firstrun_defaultbrowser_title">Nagi\'iaj nukuaj riña gache nun \'ngorïnt</string>

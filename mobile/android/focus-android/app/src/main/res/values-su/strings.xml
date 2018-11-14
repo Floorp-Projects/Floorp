@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Paluruh atawa asupkeun alamat</string>
   <string name="teaser">Langlangan nyamuni otomatis.\nLanglang. Pupus. Deui.</string>
   <string name="feedback_erase">Jujutan langlangan nyamuni anjeun geus dipupus.</string>
+  <string name="feedback_erase_custom_tab">Jujutan langlangan tab geus dipupus.</string>
   <string name="search_hint">Paluruh %1$s</string>
   <string name="menu_share">Bagikeun…</string>
   <string name="menu_report_site_issue">Laporkeun Masalah Loka</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Pitulung</string>
   <string name="menu_rights">Hak Anjeun</string>
   <string name="menu_trackers_blocked_title">Palacak dipeungpeuk</string>
+  <string name="menu_trackers_blocked_subtitle">Mareuman ieu bisa menerkeun sababaraha masalah loka</string>
+  <string name="menu_content_blocking">Meungpeuk Kontén</string>
+  <string name="menu_content_blocking_subtitle">Pareuman pikeun menerkeun sababaraha loka</string>
   <string name="menu_custom_tab_branding">Dijalankeun ku %1$s</string>
   <string name="share_dialog_title">Bagikeun kana</string>
   <string name="notification_erase_text">Pupus jujutan langlangan</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Pupus jeung Buka</string>
   <string name="shortcut_erase_short_label">Pupus</string>
   <string name="shortcut_erase_long_label">Pupus jujutan langlangan</string>
+  <string name="shortcut_erase_and_open_short_label">Pupus &amp; buka</string>
+  <string name="shortcut_erase_and_open_long_label">Pupus jeung buka %1$s</string>
   <string name="text_selection_search_action">Pamaluruhan nyalindung</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s m&#233;r&#233; anjeun kadali.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Pak&#233; pikeun panyungsi nyalindung:\n  "<ul>"\n    "<li>Paluruh jeung sungsi langsung dina appna</li>"\n    "<li>Peungpeuk palacak (atawa apd&#233;t set&#233;lan pikeun ngaheugba&#233;keun palacak)</li>"\n    "<li>Pupus pikeun ngaleungitkeun kuki pon kitu og&#233; jujutan pamaluruhan jeung panyungsian</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s dijieun ku Mozilla. Misina nya &#233;ta pikeun ngamumul&#233; Intern&#233;t nembrak anu s&#233;hat.<br/>\n<a href="%2$s">Lenyepan</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Salindungan &amp; Kaamanan</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Eusi Raramat</string>
   <string name="preference_category_switching_apps">Pindah Apps</string>
   <string name="preference_category_general">Umum</string>
+  <string name="preference_general_summary">Panyungsi, tab, jeung basa baku</string>
   <string name="preference_category_data_collection_use">Pangumpulan &amp; Pamakéan Data</string>
   <string name="preference_category_search">Paluruh</string>
   <string name="preference_show_search_suggestions">Cokot bongbolongan maluruh</string>
   <string name="preference_show_search_suggestions_summary">%1$s bakal ngirim naon anu diketikkeun dina bilah alamat kana mesin pamaluruh anjeun</string>
   <string name="preference_search_engine_default">Baku</string>
+  <string name="preference_search_engine_label">Mesin pamaluruh</string>
   <string name="preference_state_on">Hurung</string>
   <string name="preference_state_off">Pareum</string>
   <string name="preference_subitem_autocomplete">URL Otokumplit</string>
+  <string name="preference_switch_autocomplete_topsites">Pikeun loka Petingan</string>
+  <string name="preference_autocomplete_topsite_summary">Aktipkeun pikeun otomatis ngalengkepan leuwih ti 450 URL populér dina palang alamat.</string>
+  <string name="preference_switch_autocomplete_user_list">Pikeun Loka anu Anjeun Nambahkeun</string>
+  <string name="preference_autocomplete_user_list_summary">Aktipkeun pikeun otomatis ngalengkepan leuwih ti 450 URL populér dina palang alamat.</string>
+  <string name="preference_category_autocomplete_manage_sites">Kokolakeun loka</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Kokolakeun loka</string>
   <string name="preference_autocomplete_action_add">+ Tambah URL sakahayang</string>
   <string name="preference_autocomplete_title_add">Tambah URL sakahayang</string>
   <string name="custom_autocomplete_quick_add">Tambah URL sakahayang</string>
+  <string name="add_custom_autocomplete_label">Tambahkeun tutumbu kana autokumplit</string>
   <string name="preference_category_cookies">Data Kuki jeung Loka</string>
   <string name="preference_category_data_choices">Pilihan Data</string>
   <string name="preference_autocomplete_title_remove">Piceun URL sakahayang</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Ngahurungkeun bisa ngabalukarkeun sababaraha kaca jadi ngaco</string>
   <string name="preference_privacy_category_cookies">Peungpeuk kuki</string>
   <string name="preference_privacy_should_block_cookies_no_option">Ulah</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Peungpeuk kuki palacak pihak ka-3 hungkul</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Peungpeuk kuki pihak katilu hungkul</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Okéh</string>
   <string name="preference_security_biometric">Paké sidik ramo pikeun muka konci app</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Ngamuat</string>
   <string name="accessibility_announcement_loading_finished">Raramatloka wéb geus dimuat</string>
   <string name="content_description_menu">Pilihan séjén</string>
+  <string name="indicator_content_description_menu">Tombol pilihan lianna</string>
   <string name="content_description_forward">Maju</string>
   <string name="content_description_reload">Muat ulang raramatloka</string>
   <string name="content_description_back">Mundur</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Ieu t&#233;h meureun disababkeun aya masalah patali jeung set&#233;lan s&#233;rver, atawa bisa wa&#233; aya jalma nu nyoba nyaru minangka server. "</li>"\n  "<li>Mun anjeun sam&#233;m&#233;hna ngahasil nyambung ka server, &#233;rorna bisa ngan saheulaaneun hungkul, anjeun k&#233; bisa mecakan deui.</li>\n</ul>]]></string>
   <string name="error_generic_title">Euleuh</string>
   <string name="error_generic_message">Kami teu sanggup ngaluarkeun ieu kaca kusabab sababaraha alesan.</string>
+  <string name="contextmenu_open_in_app">Buka maké aplikasi</string>
   <string name="contextmenu_link_share">Bagikeun tutumbu</string>
   <string name="contextmenu_link_copy">Tiron alamat tutumbu</string>
   <string name="contextmenu_image_share">Bagikeun gambar</string>
@@ -224,4 +242,25 @@
   <string name="tip_autocomplete_url">Otokumplit URLs pikeun loka anu mindeng dianjangan\n Pencét lila URL dina bilah alamat</string>
   <string name="tip_open_in_new_tab">Muka hiji tutumbu dina hiji tab anyar\n Pencét lila tutumbu dina kacana</string>
   <string name="tip_request_desktop">Leuwih resep nempo loka déstop weuteuh?%1$s Menu &gt; Pilih loka déstop</string>
+  <string name="tip_disable_tips2">Pareuman tips dina layar mimiti</string>
+  <string name="tip_explain_allowlist">Loka kapercaya?\n Allowlist numpurkeun Salindung Palacak pikeun loka anu anjeun wanoh jeung percaya.</string>
+  <string name="new_tab_opened_snackbar">Tab anyar dibuka</string>
+  <string name="open_new_tab_snackbar">Gilir</string>
+  <string name="preference_open_new_tab">Geuwat gilir ka tutumbu di tab anyar</string>
+  <string name="preference_category_safe_browsing">Ngalanglang Aman</string>
+  <string name="preference_safe_browsing_title">Meungpeuk loka pibahyaeun jeung titipu</string>
+  <string name="preference_safe_browsing_summary">Peungpeuk loka anu dilaporkeun titipu jeung virusan, loka malwér, sarta loka sopwér nu teu dipiharep.</string>
+  <string name="preference_exceptions">Iwal</string>
+  <string name="preference_exceptions_description">Anjeun numpurkeun Peungpeuk Kontén pikeun ieu raramatloka.</string>
+  <string name="preference_exceptions_menu_remove">Piceun</string>
+  <string name="preference_exceptions_remove_all_button_label">Piceun sakabéh raramatloka</string>
+  <string name="tab_crash_report_title">Tab Ruksak</string>
+  <string name="tab_crash_report_headline">Hampura. Aya masalah dina ieu tab.</string>
+  <string name="tab_crash_report_description">Salaku panyungsi nyamuni, tab teu kungsi disimpen sarta teu bisa dibuka ulang.</string>
+  <string name="tab_crash_report_close_tab_button_label">Tutup Tab</string>
+  <string name="fatal_crash_report_title">Hampura. %1$s aya masalah tur ruksak.</string>
+  <string name="fatal_crash_report_description">Salaku panyungsi nyamuni, rintakan langlangan panungtung teu disimpen jeung teu bisa dimuat ulang.</string>
+  <string name="fatal_crash_report_close_button_label">Tutup</string>
+  <string name="fatal_crash_report_restart_firefox_label">Mimitian deui %1$s</string>
+  <string name="crash_report_send_crash_label">Kirim laporan nu ruksak ka Mozilla</string>
 </resources>

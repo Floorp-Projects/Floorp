@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Søg eller indtast adresse</string>
   <string name="teaser">Automatisk privat browsing.\nSurf. Slet. Start forfra.</string>
   <string name="feedback_erase">Din browser-historik er blevet slettet.</string>
+  <string name="feedback_erase_custom_tab">Fanebladets historik er slettet.</string>
   <string name="search_hint">Søg efter %1$s</string>
   <string name="menu_share">Del…</string>
   <string name="menu_report_site_issue">Rapportér problem med websted</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Hjælp</string>
   <string name="menu_rights">Dine rettigheder</string>
   <string name="menu_trackers_blocked_title">Forsøg på sporing blokeret</string>
+  <string name="menu_trackers_blocked_subtitle">Deaktivering af dette kan afhjælpe visse webstedsproblemer</string>
+  <string name="menu_content_blocking">Blokering af indhold</string>
+  <string name="menu_content_blocking_subtitle">Deaktiver for at løse problemer på visse websteder</string>
   <string name="menu_custom_tab_branding">%1$s</string>
   <string name="share_dialog_title">Del via</string>
   <string name="notification_erase_text">Slet browser-historik</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Slet og åbn</string>
   <string name="shortcut_erase_short_label">Slet</string>
   <string name="shortcut_erase_long_label">Slet browser-historik</string>
+  <string name="shortcut_erase_and_open_short_label">Slet &amp; åbn</string>
+  <string name="shortcut_erase_and_open_long_label">Slet og åbn %1$s</string>
   <string name="text_selection_search_action">Søg privat</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s giver dig fuld kontrol.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Anvend den som privat browser:\n  "<ul>"\n    "<li>S&#248;g og surf direkte i appen</li>"\n    "<li>Bloker sporing (eller opdater indstillingerne og tillad sporing)</li>"\n    "<li>Slet fjerner cookies samt s&#248;ge- og browser-historik</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s er udviklet af Mozilla. Vores form&#229;l er at fremme et sundt, &#229;bent internet.<br/>\n<a href="%2$s">L&#230;s mere</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Privatliv &amp; sikkerhed</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Webindhold</string>
   <string name="preference_category_switching_apps">Skifte mellem apps</string>
   <string name="preference_category_general">Generelt</string>
+  <string name="preference_general_summary">Standard-browser, faneblade, sprog</string>
   <string name="preference_category_data_collection_use">Dataindsamling &amp; brug</string>
   <string name="preference_category_search">Søgning</string>
   <string name="preference_show_search_suggestions">Vis søgeforslag</string>
   <string name="preference_show_search_suggestions_summary">%1$s sender det indtastede i adresselinjen til den valgte søgetjeneste</string>
   <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_search_engine_label">Søgetjeneste</string>
   <string name="preference_state_on">Aktiveret</string>
   <string name="preference_state_off">Deaktiveret</string>
   <string name="preference_subitem_autocomplete">Autofuldfør URL</string>
+  <string name="preference_switch_autocomplete_topsites">For populære websteder</string>
+  <string name="preference_autocomplete_topsite_summary">Aktiver for at autofuldføre over 450 populære URL\'er i adresselinjen.</string>
+  <string name="preference_switch_autocomplete_user_list">For websteder du tilføjer</string>
+  <string name="preference_autocomplete_user_list_summary">Aktiver for at autofuldføre over 450 populære URL\'er i adresselinjen.</string>
+  <string name="preference_category_autocomplete_manage_sites">Administrer websteder</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Administrer websteder</string>
   <string name="preference_autocomplete_action_add">+ Tilføj brugerdefineret URL</string>
   <string name="preference_autocomplete_title_add">Tilføj brugerdefineret URL</string>
   <string name="custom_autocomplete_quick_add">Tilføj brugerdefineret URL</string>
+  <string name="add_custom_autocomplete_label">Tilføj link til autofuldførelse</string>
   <string name="preference_category_cookies">Cookies og websteds-data</string>
   <string name="preference_category_data_choices">Datadeling</string>
   <string name="preference_autocomplete_title_remove">Fjern brugerdefinerede URL\'er</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Aktivering kan medføre, at visse sider opfører sig uventet</string>
   <string name="preference_privacy_category_cookies">Bloker cookies</string>
   <string name="preference_privacy_should_block_cookies_no_option">Nej</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Bloker kun sporings-cookies fra tredjepart</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloker kun cookies fra tredjepart</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
   <string name="preference_security_biometric">Brug fingeraftryk til at låse appen op</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Siden indlæses</string>
   <string name="accessibility_announcement_loading_finished">Siden er indlæst</string>
   <string name="content_description_menu">Flere indstillinger</string>
+  <string name="indicator_content_description_menu">Knap til flere muligheder</string>
   <string name="content_description_forward">Gå frem</string>
   <string name="content_description_reload">Genindlæs siden</string>
   <string name="content_description_back">Gå tilbage</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Dette kan v&#230;re et problem med serverens konfiguration,\neller det kan betyde, at nogen fors&#248;ger at give sig ud for at v&#230;re serveren.</li>"\n  "<li>Hvis du har kunnet tilg&#229; serveren tidligere kan dette problem v&#230;re midlertidigt\nog du anbefales at pr&#248;ve igen senere.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">Siden kan af uvisse årsager ikke indlæses.</string>
+  <string name="contextmenu_open_in_app">Åbn med app</string>
   <string name="contextmenu_link_share">Del link</string>
   <string name="contextmenu_link_copy">Kopier linkadresse</string>
   <string name="contextmenu_image_share">Del billede</string>
@@ -224,4 +242,25 @@
   <string name="tip_autocomplete_url">Autofuldfør URL\'er for de sider, du bruger mest\n Tryk og hold en URL i adressefeltet</string>
   <string name="tip_open_in_new_tab">Åbn link i et nyt faneblad\n Tryk og hold links på en side</string>
   <string name="tip_request_desktop">Foretrækker du at se desktop-versionen?%1$s Menu &gt; Bed om desktop-version</string>
+  <string name="tip_disable_tips2">Slå tips på startskærmen fra</string>
+  <string name="tip_explain_allowlist">Troværdigt websted?\n Tilladelseslisten deaktiverer sporingsbeskyttelse på sider, du kender og stoler på.</string>
+  <string name="new_tab_opened_snackbar">Nyt faneblad er åbnet</string>
+  <string name="open_new_tab_snackbar">Skift</string>
+  <string name="preference_open_new_tab">Skift straks til link i nyt faneblad</string>
+  <string name="preference_category_safe_browsing">Sikker browsing</string>
+  <string name="preference_safe_browsing_title">Bloker potentielt farlige og vildledende websteder</string>
+  <string name="preference_safe_browsing_summary">Bloker sider, der er indrapporteret som vildledende, farlige, indeholdende malware eller uønsket software.</string>
+  <string name="preference_exceptions">Undtagelser</string>
+  <string name="preference_exceptions_description">Du har deaktiveret blokering af indhold for disse websteder.</string>
+  <string name="preference_exceptions_menu_remove">Fjern</string>
+  <string name="preference_exceptions_remove_all_button_label">Fjern alle websteder</string>
+  <string name="tab_crash_report_title">Fanebladet gik ned</string>
+  <string name="tab_crash_report_headline">Beklager, vi har et problem med denne fane.</string>
+  <string name="tab_crash_report_description">Som en privat browser gemmer vi aldrig, så vi kan ikke gendanne dette faneblad.</string>
+  <string name="tab_crash_report_close_tab_button_label">Luk faneblad</string>
+  <string name="fatal_crash_report_title">Beklager, %1$s fik et problem og gik ned.</string>
+  <string name="fatal_crash_report_description">Som en privat browser gemmer vi aldrig, så vi kan ikke gendanne din sidste browsing-session.</string>
+  <string name="fatal_crash_report_close_button_label">Luk</string>
+  <string name="fatal_crash_report_restart_firefox_label">Genstart %1$s</string>
+  <string name="crash_report_send_crash_label">Send fejlrapport til Mozilla</string>
 </resources>

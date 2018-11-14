@@ -183,4 +183,7 @@
   <string name="enable_search_suggestions_yes">అవును</string>
   <string name="no_suggestions_message">కొన్ని సెర్చింజన్లు సలహాలను చూపించలేవు</string>
   <string name="dismiss_no_suggestions_prompt_button">మూసివేయి</string>
+  <string name="preference_exceptions">మినహాయింపులు</string>
+  <string name="preference_exceptions_menu_remove">తొలగించు</string>
+  <string name="fatal_crash_report_close_button_label">మూసివేయి</string>
 </resources>

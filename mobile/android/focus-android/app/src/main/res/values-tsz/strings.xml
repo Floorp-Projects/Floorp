@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Patsa o miyukwani karanharhita</string>
   <string name="teaser">Jirikurhitini jirinhant\'ani.</string>
   <string name="feedback_erase">Ampe mankari jirinhant\'apka mirikurhisti ya.</string>
+  <string name="feedback_erase_custom_tab">Jirinhantskata ampe kéntitanhasti ya.</string>
   <string name="search_hint">%1$s Jirinhantsï</string>
   <string name="menu_share">Kwankurhini…</string>
   <string name="menu_report_site_issue">Eyankpeni éska eranharhikwa xerekurhiska</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Jahroap\'erakwa</string>
   <string name="menu_rights">Sésikwaecha</string>
   <string name="menu_trackers_blocked_title">Estakutichani kwarhukuani</string>
+  <string name="menu_trackers_blocked_subtitle">Nántika jatsïntaaka xerekurhikwa ampe íni p\'átaparini</string>
+  <string name="menu_content_blocking">Jatakwa ampe kwarhukunhasti</string>
+  <string name="menu_content_blocking_subtitle">P\'átani ka eranharhikwaechani jatsïnt\'ani</string>
   <string name="menu_custom_tab_branding">Winhaskukata %1$s jimpo</string>
   <string name="share_dialog_title">Ixusï kwankurhini</string>
   <string name="notification_erase_text">Jirinhantskwa ampe mirikurhini</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Kéntitani ka mítant\'ani</string>
   <string name="shortcut_erase_short_label">Kéntitani</string>
   <string name="shortcut_erase_long_label">Jirinhantskwani kéntita</string>
+  <string name="shortcut_erase_and_open_short_label">Kéntitani &amp; mítani</string>
+  <string name="shortcut_erase_and_open_long_label">Kéntitani ka mítani %1$s</string>
   <string name="text_selection_search_action">Jirinhakuari</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s T\'uri xanhatatakurhis&#239;nka.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Eska jirikurhiparini &#250;ra:\n  "<ul>"\n    "<li>Jirinhants&#239; &#237;ni &#250;ratarakwarhu</li>"\n    "<li>Estakutiechani kwarhukua (o jimpanhiranta p&#233;kurhintskwaechani ks jiankua estakutiechani)</li>"\n    "<li>K&#233;ntita exepakwa jirinhantskwa ka miantskwa ampe</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla &#250;s&#239;nti. Eska k\'&#233;ri xurukwa s&#233;simintu &#225;nchikurhini jawaka juchaeri &#250;kwaesti.<br/>\n<a href="%2$s">S&#225;nteru jorhenani</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Kwatakwa &amp; Jískakwa</string>
@@ -35,14 +41,20 @@
   <string name="preference_category_web_content">Eranharhikwaeri Jatakwa</string>
   <string name="preference_category_switching_apps">Úratarakwaechani Móptakuani</string>
   <string name="preference_category_general">Yámu</string>
+  <string name="preference_general_summary">Jirinhatarantskwa, erahukwaecha, wantakwa</string>
   <string name="preference_category_data_collection_use">Jatakwa T\'antakwa &amp; Úrani</string>
   <string name="preference_category_search">Jirinhani</string>
   <string name="preference_show_search_suggestions">Arhistsïkwaechani exeani</string>
   <string name="preference_show_search_suggestions_summary">%1$s ch\'eeti jirinhatarantskwarhu axati ampe mankari karanharhikuaka</string>
   <string name="preference_search_engine_default">Pént\'ani</string>
+  <string name="preference_search_engine_label">Jirinhatarantskwa</string>
   <string name="preference_state_on">Étskuni</string>
   <string name="preference_state_off">P\'atani</string>
   <string name="preference_subitem_autocomplete">URL Karanharhikuarini</string>
+  <string name="preference_switch_autocomplete_topsites">Erakukuhikwaecha</string>
+  <string name="preference_autocomplete_topsite_summary">Étskutani karakurhintskwa kari 450 URLs énka sánteru úrakurhijkaksï.</string>
+  <string name="preference_category_autocomplete_manage_sites">Eranharhikwaechani xanhatani</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Eranharhikwaechani xanhatani</string>
   <string name="preference_autocomplete_action_add">+ Kúrhuta máteru pékurhintskwa URL</string>
   <string name="preference_autocomplete_title_add">Kúrhuta máteru pékurhintskwa URL</string>
   <string name="custom_autocomplete_quick_add">Kúrhuta máteru pékurhintskwa URL</string>
@@ -115,6 +127,7 @@
   <string name="accessibility_announcement_loading">Jatsïrakunt\'axati</string>
   <string name="accessibility_announcement_loading_finished">Eranharhikukwa jatsïrakata</string>
   <string name="content_description_menu">Máteru erakukwaecha</string>
+  <string name="indicator_content_description_menu">Sánteru ampe</string>
   <string name="content_description_forward">Jirinhapant\'ani</string>
   <string name="content_description_reload">Eranharhikukwani jatsïrant\'ani</string>
   <string name="content_description_back">Kwanhatsïni</string>
@@ -151,6 +164,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#205; ts&#237;p\'akwa marhuatspetieri p&#233;kurhintskwa jinkonisti, o n&#225;ntika n&#233;nima ch&#225;nakuni jaka.</li>"\n  "<li>&#201;nkari yoni &#237;s&#239; inchaparhatapkari ya, &#237; ts&#237;p\'akwa s&#243;ntituk\'uwati, ka &#250;akari ts&#233;k\'utani t&#225;ts&#239;kwa s&#225;nteru.</li></ul>]]></string>
   <string name="error_generic_title">Uups</string>
   <string name="error_generic_message">Ampenti jimpo enkaksï áamku únki xarhatani ini eranharhikukwani.</string>
+  <string name="contextmenu_open_in_app">Mítani jirinhatarantskwa jinkoni</string>
   <string name="contextmenu_link_share">Miyurakwani kwankurhini</string>
   <string name="contextmenu_link_copy">Miyurakwani p\'itani</string>
   <string name="contextmenu_image_share">P\'itakatani kwankurhini</string>
@@ -221,4 +235,18 @@
   <string name="tip_set_default_browser">Yámu miyukwaechani mítani %1$s rhu\n %1$s Pékurhintsï</string>
   <string name="tip_open_in_new_tab">Miyukwani jimpanhi eranharhikwarhu mítani \n Nákintaru ma miyukwani puchanharhiku</string>
   <string name="tip_request_desktop">Wékapirinkiri etsakwanharhitani?%1$s Jatakwa &gt; Etsakwanharhikata kurhak\'urhini</string>
+  <string name="new_tab_opened_snackbar">Mitakurhisti jimpanhi eranharhikwa</string>
+  <string name="open_new_tab_snackbar">Móptakuni</string>
+  <string name="preference_open_new_tab">Móptakuni jimpanhi eranharhikwarhu</string>
+  <string name="preference_category_safe_browsing">Kwatakata jirinhant\'ani</string>
+  <string name="preference_exceptions_menu_remove">Kéntitani</string>
+  <string name="preference_exceptions_remove_all_button_label">Yámu eranharhikukwaechani kéntitaani</string>
+  <string name="tab_crash_report_title">Eranharhikwa xerekurhisti</string>
+  <string name="tab_crash_report_description">Éska xipatikwarhu jamani, jucha áamku patsoo o pentaaka eranharhikwani.</string>
+  <string name="tab_crash_report_close_tab_button_label">Eranharhikwani míkani</string>
+  <string name="fatal_crash_report_title">Tekantsï. %1$s xerekuristi.</string>
+  <string name="fatal_crash_report_description">Éska xipatikwani jamani, jucha áamku patsanki ch\'éeti jirinhantskwa ampe.</string>
+  <string name="fatal_crash_report_close_button_label">Míkani</string>
+  <string name="fatal_crash_report_restart_firefox_label">Étskukurhint\'ani %1$s</string>
+  <string name="crash_report_send_crash_label">Mozillani ayankuni íni xerekurhikwa</string>
 </resources>

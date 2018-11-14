@@ -86,7 +86,7 @@
   <string name="preference_security_biometric">Kuchun huella digital tava kunu aplicación</string>
   <string name="preference_security_biometric_summary">Tsi huella digital ku kunu %1$s tatu nuna iin URL nu aplicación. Ku nchikasii ña ncheu.</string>
   <string name="preference_privacy_secure_mode">Sèè</string>
-  <string name="preference_privacy_stealth_summary">Chika sèè pagina ta ku ndasamu aplicaciòn.</string>
+  <string name="preference_privacy_stealth_summary">Chika sèè pagina ta ku samu aplicaciòn cha casi ña ndatava.</string>
   <string name="preference_category_security">Vaá</string>
   <string name="preference_category_performance">Nixi sachu\'in</string>
   <string name="preference_performance_block_webfonts">Makuau kuni siin ña\'a</string>

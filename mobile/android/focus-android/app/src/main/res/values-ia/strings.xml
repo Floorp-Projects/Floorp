@@ -20,6 +20,8 @@
   <string name="menu_rights">Tu derectos</string>
   <string name="menu_trackers_blocked_title">Traciatores blocate</string>
   <string name="menu_trackers_blocked_subtitle">Disactivar isto pote remediar alicun problemas del sito</string>
+  <string name="menu_content_blocking">Blocage de contentos</string>
+  <string name="menu_content_blocking_subtitle">Clauder pro remediar alcun sitos</string>
   <string name="menu_custom_tab_branding">Potentiate per %1$s</string>
   <string name="share_dialog_title">Compartir con</string>
   <string name="notification_erase_text">Eliminar le chronologia de navigation</string>
@@ -27,6 +29,8 @@
   <string name="notification_action_erase_and_open">Eliminar e aperir</string>
   <string name="shortcut_erase_short_label">Eliminar</string>
   <string name="shortcut_erase_long_label">Eliminar le chronologia de navigation</string>
+  <string name="shortcut_erase_and_open_short_label">Eliminar e aperir</string>
+  <string name="shortcut_erase_and_open_long_label">Eliminar e aperir %1$s</string>
   <string name="text_selection_search_action">Cercar privatemente</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Usante %1$s, tu es al commando.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Usa lo como un navigator private&#160;:\n  "<ul>"\n    "<li>Cerca e naviga directemente in le application</li>"\n    "<li>Bloca le traciatores (o actualisa le parametros pro permitter traciatores)</li>"\n    "<li>" &#8220;Eliminar&#8221; pro deler le cookies e tamben le chronologia de recercas e de navigation"</li>\n</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s es producite per Mozilla. Nostre mission es promover un Internet san e aperite.<br/>\n<a href="%2$s">Saper plus</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Confidentialitate &amp; securitate</string>
@@ -37,17 +41,26 @@
   <string name="preference_category_web_content">Contento de web</string>
   <string name="preference_category_switching_apps">Navigation trans le applicationes</string>
   <string name="preference_category_general">General</string>
+  <string name="preference_general_summary">Navigator, scheda, lingua predefinite</string>
   <string name="preference_category_data_collection_use">Colligimento e uso de datos</string>
   <string name="preference_category_search">Cercar</string>
   <string name="preference_show_search_suggestions">Obtener suggestiones de recerca</string>
   <string name="preference_show_search_suggestions_summary">%1$s inviara a tu motor de recerca lo que tu scribe in le barra de adresse</string>
   <string name="preference_search_engine_default">Predefinite</string>
+  <string name="preference_search_engine_label">Motor de recerca</string>
   <string name="preference_state_on">Activar</string>
   <string name="preference_state_off">Inactive</string>
   <string name="preference_subitem_autocomplete">Auto-completamento del URL</string>
+  <string name="preference_switch_autocomplete_topsites">Pro le sitos le plus visitate</string>
+  <string name="preference_autocomplete_topsite_summary">Activa pro auto-completar plus de 450 URLs popular in le barra de adresses.</string>
+  <string name="preference_switch_autocomplete_user_list">Pro le sitos que tu adde</string>
+  <string name="preference_autocomplete_user_list_summary">Activa pro auto-completar plus de 450 URLs popular in le barra de adresses.</string>
+  <string name="preference_category_autocomplete_manage_sites">Gerer le sitos</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Gerer le sitos</string>
   <string name="preference_autocomplete_action_add">+ Adder URL personalisate</string>
   <string name="preference_autocomplete_title_add">Adder URL personalisate</string>
   <string name="custom_autocomplete_quick_add">Adder URL personalisate</string>
+  <string name="add_custom_autocomplete_label">Adde ligamine pro autocompletar</string>
   <string name="preference_category_cookies">Cookies e datos de sitos</string>
   <string name="preference_category_data_choices">Selectiones de datos</string>
   <string name="preference_autocomplete_title_remove">Remover URLs personalisate</string>
@@ -74,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Activar isto pote facer le paginas se comportar de maniera inexpectate</string>
   <string name="preference_privacy_category_cookies">Blocar le cookies</string>
   <string name="preference_privacy_should_block_cookies_no_option">No</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blocar solo le cookies traciator de tertie partes</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloca solo le cookies de tertie partes</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Si</string>
   <string name="preference_security_biometric">Usa le impression digital pro disblocar le application</string>
@@ -117,6 +131,7 @@
   <string name="accessibility_announcement_loading">Cargante</string>
   <string name="accessibility_announcement_loading_finished">Sito web cargate</string>
   <string name="content_description_menu">Altere optiones</string>
+  <string name="indicator_content_description_menu">Button altere optiones</string>
   <string name="content_description_forward">Naviga in avante</string>
   <string name="content_description_reload">Recarga le sito web</string>
   <string name="content_description_back">Naviga a retro</string>
@@ -153,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Isto pote esser un problema in le configuration del servitor o il pote esser\nalcuno tentante usurpar le servitor.</li>"\n  "<li>Si tu ha connectite a iste servitor correctemente in le passato, le error pote\nesser temporari e tu pote retentar plus tarde.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">Nos non pote cargar iste pagina pro alcun ration.</string>
+  <string name="contextmenu_open_in_app">Aperir per application</string>
   <string name="contextmenu_link_share">Compartir le ligamine</string>
   <string name="contextmenu_link_copy">Copiar le adresse del ligamine</string>
   <string name="contextmenu_image_share">Compartir le imagine</string>
@@ -226,6 +242,24 @@
   <string name="tip_autocomplete_url">Auto-completar URLs pro le sitos que tu usa plus\n Retene pulsate longemente ulle URL in le barra de adresse</string>
   <string name="tip_open_in_new_tab">Aperi le ligamine in un nove scheda\n Retene pulsate longemente ulle ligamine sur un pagina</string>
   <string name="tip_request_desktop">Vider plus tosto le sito in modo plen scriptorio?%1$s Menu &gt; Requirer sito de scriptorio</string>
+  <string name="tip_disable_tips2">Disactivar le suggestiones sur le pagina initial</string>
+  <string name="tip_explain_allowlist">Sito fidite?\nIste function disactiva le protection contra le traciamento pro sitos que tu cognosce e fide.</string>
+  <string name="new_tab_opened_snackbar">Nove scheda aperite</string>
+  <string name="open_new_tab_snackbar">Commutar</string>
+  <string name="preference_open_new_tab">Commutar a ligamine in nove scheda immediatemente</string>
+  <string name="preference_category_safe_browsing">Navigation secur</string>
+  <string name="preference_safe_browsing_title">Blocar le sitos potentialmente periculose e fraudulente</string>
+  <string name="preference_safe_browsing_summary">Blocar le sitos reportate como fraudulente e que attacca, le sitos de malware e illos de software non desirate.</string>
+  <string name="preference_exceptions">Exceptiones</string>
+  <string name="preference_exceptions_description">Tu ha disactivate le blocage de contentos pro iste sitos.</string>
+  <string name="preference_exceptions_menu_remove">Remover</string>
+  <string name="preference_exceptions_remove_all_button_label">Remover tote le sitos web</string>
+  <string name="tab_crash_report_title">Scheda collabite</string>
+  <string name="tab_crash_report_headline">Nos regretta. Nos ha un problema con iste scheda.</string>
+  <string name="tab_crash_report_description">Como navigator private, nos jammais salva e non pote restaurar iste scheda.</string>
+  <string name="tab_crash_report_close_tab_button_label">Clauder le scheda</string>
+  <string name="fatal_crash_report_title">Nos regretta. %1$s habeva un problema e collabeva.</string>
+  <string name="fatal_crash_report_description">Como navigator private, nos jammais salva e non pote restaurar tu ultime session de navigation.</string>
   <string name="fatal_crash_report_close_button_label">Clauder</string>
   <string name="fatal_crash_report_restart_firefox_label">Reinitiar %1$s</string>
   <string name="crash_report_send_crash_label">Inviar reporto de crash a Mozilla</string>

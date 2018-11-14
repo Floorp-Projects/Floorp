@@ -53,12 +53,14 @@
   <string name="preference_subitem_autocomplete">Samodejno dopolnjevanje URL</string>
   <string name="preference_switch_autocomplete_topsites">Za glavne strani</string>
   <string name="preference_autocomplete_topsite_summary">Omogočite samodejno dopolnjevanje preko 450 priljubljenih URL-jev v naslovni vrstici.</string>
+  <string name="preference_switch_autocomplete_user_list">Za strani, ki jih dodate</string>
   <string name="preference_autocomplete_user_list_summary">Omogočite samodejno dopolnjevanje preko 450 priljubljenih URL-jev v naslovni vrstici.</string>
   <string name="preference_category_autocomplete_manage_sites">Upravljanje strani</string>
   <string name="preference_autocomplete_subitem_manage_sites">Upravljanje strani</string>
   <string name="preference_autocomplete_action_add">+ Dodaj URL po meri</string>
   <string name="preference_autocomplete_title_add">Dodaj URL po meri</string>
   <string name="custom_autocomplete_quick_add">Dodaj spletni naslov po meri</string>
+  <string name="add_custom_autocomplete_label">Dodaj povezavo za samodejno dopolnjevanje</string>
   <string name="preference_category_cookies">Piškotki in podatki strani</string>
   <string name="preference_category_data_choices">Podatkovne možnosti</string>
   <string name="preference_autocomplete_title_remove">Odstrani URL po meri</string>
@@ -241,8 +243,10 @@
   <string name="tip_open_in_new_tab">Odprite povezavo v novem zavihku\n Pridržite prst na katerikoli povezavi na strani</string>
   <string name="tip_request_desktop">Želite uporabljati polno različico strani?%1$s Meni &gt; Zahtevaj stran za namizja</string>
   <string name="tip_disable_tips2">Izključi namige na začetnem zaslonu</string>
+  <string name="tip_explain_allowlist">Zaupanja vredna stran?\n Seznam dovoljenih onemogoči zaščito pred sledenjem za strani, ki jih poznate in jim zaupate.</string>
   <string name="new_tab_opened_snackbar">Odprt nov zavihek</string>
   <string name="open_new_tab_snackbar">Preklopi</string>
+  <string name="preference_open_new_tab">Takoj preklopi na povezavo v novem zavihku</string>
   <string name="preference_category_safe_browsing">Varno brskanje</string>
   <string name="preference_safe_browsing_title">Zavrni morebitne nevarne in zavajajoče strani</string>
   <string name="preference_safe_browsing_summary">Zavračaj znane zavajajoče in napadalne strani ter strani z zlonamerno ali neželeno programsko opremo.</string>

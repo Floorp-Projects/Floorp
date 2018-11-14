@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Kërkoni ose jepni adresë</string>
   <string name="teaser">Shfletim automatikisht privat.\nShfletoni. Fshini Gjurmët. Përsëriteni.</string>
   <string name="feedback_erase">Historiku juaj i shfletimit u fshi.</string>
+  <string name="feedback_erase_custom_tab">Historiku i shfletimit në skedë u fshi.</string>
   <string name="search_hint">Kërko për %1$s</string>
   <string name="menu_share">Ndajeni me të tjerët…</string>
   <string name="menu_report_site_issue">Raporto Problem Sajti</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Ndihmë</string>
   <string name="menu_rights">Të drejtat Tuaja</string>
   <string name="menu_trackers_blocked_title">Gjurmues të bllokuar</string>
+  <string name="menu_trackers_blocked_subtitle">Mbyllja e kësaj mund të ndreqë disa probleme sajti</string>
+  <string name="menu_content_blocking">Bllokim Lënde</string>
+  <string name="menu_content_blocking_subtitle">Çaktivizojeni që të ndreqen disa sajte</string>
   <string name="menu_custom_tab_branding">Powered by %1$s</string>
   <string name="share_dialog_title">Ndajeni përmes</string>
   <string name="notification_erase_text">Fshini historik shfletimesh</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Fshije dhe Hape</string>
   <string name="shortcut_erase_short_label">Fshije</string>
   <string name="shortcut_erase_long_label">Fshi historik shfletimesh</string>
+  <string name="shortcut_erase_and_open_short_label">Fshije &amp; hape</string>
+  <string name="shortcut_erase_and_open_long_label">Fshini dhe hapni %1$s</string>
   <string name="text_selection_search_action">Kërkoni Privatisht</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s-i jua l&#235; juve kontrollin.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"P&#235;rdoreni si nj&#235; shfletues privat:\n  "<ul>"\n    "<li>B&#235;ni k&#235;rkime dhe shfletoni drejt e nga aplikacioni</li>"\n    "<li>Bllokoni gjurmues (ose p&#235;rdit&#235;soni rregullimet q&#235; t&#235; lejoni gjurmime)</li>"\n    "<li>Fshini cookies, si dhe historik k&#235;rkimesh dhe shfletimesh</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s-i prodhohet nga Mozilla. Misioni yn&#235; &#235;sht&#235; t&#235; p&#235;rkujdesemi p&#235;r nj&#235; Internet t&#235; sh&#235;ndetsh&#235;m, t&#235; hapur.<br/>\n<a href="%2$s">M&#235;soni m&#235; tep&#235;r</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Privatësi &amp; Siguri</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Lëndë Web</string>
   <string name="preference_category_switching_apps">Këmbim Aplikacionesh</string>
   <string name="preference_category_general">Të përgjithshme</string>
+  <string name="preference_general_summary">Shfletues parazgjedhje, skeda, gjuhë</string>
   <string name="preference_category_data_collection_use">Grumbullim &amp; Përdorim të Dhënash</string>
   <string name="preference_category_search">Kërkim</string>
   <string name="preference_show_search_suggestions">Merrni këshillime kërkimi</string>
   <string name="preference_show_search_suggestions_summary">%1$s do të dërgojë te motori juaj i kërkimeve atë çka shtypni te shtylla e adresave</string>
   <string name="preference_search_engine_default">Parazgjedhje</string>
+  <string name="preference_search_engine_label">Motor kërkimesh</string>
   <string name="preference_state_on">On</string>
   <string name="preference_state_off">Off</string>
   <string name="preference_subitem_autocomplete">Vetëplotësim URLje</string>
+  <string name="preference_switch_autocomplete_topsites">Për sajtet Kryesues</string>
+  <string name="preference_autocomplete_topsite_summary">Aktivizojeni që të vetëplotësohen te shtylla e adresave mbi 450 URL popullore.</string>
+  <string name="preference_switch_autocomplete_user_list">Për Sajte Që Shtoni</string>
+  <string name="preference_autocomplete_user_list_summary">Aktivizojeni që të vetëplotësohen te shtylla e adresave mbi 450 URL popullore.</string>
+  <string name="preference_category_autocomplete_manage_sites">Administroni sajte</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Administroni sajte</string>
   <string name="preference_autocomplete_action_add">+ Shtoni URL vetjake</string>
   <string name="preference_autocomplete_title_add">Shtoni URL vetjake</string>
   <string name="custom_autocomplete_quick_add">Shtoni URL vetjake</string>
+  <string name="add_custom_autocomplete_label">Shtoni lidhje për vetëplotësim</string>
   <string name="preference_category_cookies">Cookies dhe të Dhëna Sajtesh</string>
   <string name="preference_category_data_choices">Zgjedhje Mbi të Dhënat</string>
   <string name="preference_autocomplete_title_remove">Hiqni URLra Vetjake</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Aktivizimi mund të bëjë që disa faqe të sillen ndryshe nga ç’pritet</string>
   <string name="preference_privacy_category_cookies">Blloko cookie-t</string>
   <string name="preference_privacy_should_block_cookies_no_option">Jo</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blloko vetëm cookie-t nga palë gjurmuese të treta</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Blloko vetëm cookie-t nga palë të treta</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Po</string>
   <string name="preference_security_biometric">Përdor shenjë gishta për shkyçje aplikacioni</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Po ngarkohet</string>
   <string name="accessibility_announcement_loading_finished">Sajti u ngarkua</string>
   <string name="content_description_menu">Më tepër mundësi</string>
+  <string name="indicator_content_description_menu">Buton për më tepër mundësi</string>
   <string name="content_description_forward">Lëvizni përpara</string>
   <string name="content_description_reload">Ringarko sajtin</string>
   <string name="content_description_back">Shko mbrapsht</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Ky mund t&#235; jet&#235; problem i ardhur nga form&#235;simi i sh&#235;rbyesit, ose mund t&#235; b&#235;het fjal&#235; p&#235;r dik&#235; q&#235; po provon t&#235; imitoj&#235; sh&#235;rbyesin.</li>"\n  "<li>Po qe se n&#235; t&#235; kaluar&#235;n jeni lidhur me sukses te ky sh&#235;rbyes, gabimi mund t&#235; jet&#235; i p&#235;rkohsh&#235;m, dhe mund t&#235; riprovoni m&#235; von&#235;.</li>\n</ul>]]></string>
   <string name="error_generic_title">Hëm</string>
   <string name="error_generic_message">Për ndonjë farë arsyeje, s’e ngarkojmë dot këtë faqe.</string>
+  <string name="contextmenu_open_in_app">Hape me aplikacion</string>
   <string name="contextmenu_link_share">Ndani lidhje me të tjerët</string>
   <string name="contextmenu_link_copy">Kopjo adresë lidhjeje</string>
   <string name="contextmenu_image_share">Ndani figurë me të tjerët</string>
@@ -224,4 +242,25 @@
   <string name="tip_autocomplete_url">Vetëplotësim URL-sh për sajtet që përdorni më shpesh\n Shtypni paksa çfarëdo URL-je te shtylla e adresave</string>
   <string name="tip_open_in_new_tab">Hapni një lidhje në një skedë të re\n Shtypeni paksa çfarëdo lidhje në një faqe</string>
   <string name="tip_request_desktop">Më mirë të shihni sajtin e plotë për desktop?%1$s Menu &gt; Kërko sajtin për desktop</string>
+  <string name="tip_disable_tips2">Mbylli ndihmëzat te skena e nisjes</string>
+  <string name="tip_explain_allowlist">Sajt i besueshëm?\n Allowlist e çaktivizon Mbrojtjen Nga Gjurmimet për sajte që i njihni dhe u besoni.</string>
+  <string name="new_tab_opened_snackbar">U hap skedë e re</string>
+  <string name="open_new_tab_snackbar">Kalo në të</string>
+  <string name="preference_open_new_tab">Kalo menjëherë te lidhja në skedën e re</string>
+  <string name="preference_category_safe_browsing">Shfletim i Parrezik</string>
+  <string name="preference_safe_browsing_title">Bllokoni sajte potencialisht të rrezikshëm dhe të rrejshëm</string>
+  <string name="preference_safe_browsing_summary">Bllokoni sajte të raportuar si të rrejshëm dhe sulmesh, sajte malware-i, dhe sajte software-i të padëshiruar.</string>
+  <string name="preference_exceptions">Përjashtime</string>
+  <string name="preference_exceptions_description">E keni çaktivizuar Bllokimin e Lëndës për këto sajte.</string>
+  <string name="preference_exceptions_menu_remove">Hiqe</string>
+  <string name="preference_exceptions_remove_all_button_label">Hiqi krejt sajtet</string>
+  <string name="tab_crash_report_title">Skeda u Vithis</string>
+  <string name="tab_crash_report_headline">Na ndjeni. Po kemi një problem me këtë skedë.</string>
+  <string name="tab_crash_report_description">Si një shfletues privat, nuk e ruajmë kurrë dhe nuk mund të rikthejmë këtë skedë.</string>
+  <string name="tab_crash_report_close_tab_button_label">Mbylle Skedën</string>
+  <string name="fatal_crash_report_title">Na ndjeni. %1$s pati një problem dhe u vithis.</string>
+  <string name="fatal_crash_report_description">Si një shfletues privat, nuk ruajmë kurrë dhe nuk mund të rikthejmë sesionin tuaj të fundit të shfletimit.</string>
+  <string name="fatal_crash_report_close_button_label">Mbylle</string>
+  <string name="fatal_crash_report_restart_firefox_label">Rinise %1$s</string>
+  <string name="crash_report_send_crash_label">Dërgoni raport vithisje te Mozilla</string>
 </resources>

@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Serĉu ion aŭ tajpu adreson</string>
   <string name="teaser">Aŭtomata privata retumo.\nRetumu. Viŝu. Ripetu.</string>
   <string name="feedback_erase">Via retuma historio estis viŝita.</string>
+  <string name="feedback_erase_custom_tab">La retuma historio de la langeto estis viŝita.</string>
   <string name="search_hint">Serĉi %1$s</string>
   <string name="menu_share">Dividi…</string>
   <string name="menu_report_site_issue">Raporti problemon en retejo</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Helpo</string>
   <string name="menu_rights">Viaj rajtoj</string>
   <string name="menu_trackers_blocked_title">Blokitaj spuriloj</string>
+  <string name="menu_trackers_blocked_subtitle">Malŝalto de tio ĉi povus solvi kelkajn retejajn problemojn</string>
+  <string name="menu_content_blocking">Blokado de enhavo</string>
+  <string name="menu_content_blocking_subtitle">Malŝalti por ripari kelkajn retejojn</string>
   <string name="menu_custom_tab_branding">Kun teknologio de %1$s</string>
   <string name="share_dialog_title">Dividi per</string>
   <string name="notification_erase_text">Forviŝi retuman historion</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">Forigi kaj malfermi</string>
   <string name="shortcut_erase_short_label">Forviŝi</string>
   <string name="shortcut_erase_long_label">Forviŝi retuman historion</string>
+  <string name="shortcut_erase_and_open_short_label">Forigi kaj malfermi</string>
+  <string name="shortcut_erase_and_open_long_label">Forigi kaj malfermi %1$s</string>
   <string name="text_selection_search_action">Serĉi private</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s igas vin reganto.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Uzu &#285;in kiel privatan retumilon:\n  "<ul>"\n    "<li>Ser&#265;i kaj retumi rekte en la programo</li>"\n    "<li>Bloki spurilojn (a&#365; &#349;an&#285;i agordojn por permesi spurilojn)</li>"\n    "<li>Forigi kuketojn kaj anka&#365; retuman kaj ser&#265;an historion</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s estas farita de Mozilla. Nia misio estas stimuli sanan kaj malfermitan interreton.<br/>\n<a href="%2$s">Pli da informo</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Privateco kaj sekureco</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Teksaĵa enhavo</string>
   <string name="preference_category_switching_apps">Ŝanĝo de programoj</string>
   <string name="preference_category_general">Ĝenerala</string>
+  <string name="preference_general_summary">Norma retumilo, langetoj, lingvo</string>
   <string name="preference_category_data_collection_use">Kolekto kaj uzo de datumoj</string>
   <string name="preference_category_search">Serĉi</string>
   <string name="preference_show_search_suggestions">Ricevi serĉajn sugestojn</string>
   <string name="preference_show_search_suggestions_summary">%1$s sendos tion, kion vi tajpas en la adresa strio, al via serĉilo</string>
   <string name="preference_search_engine_default">Norma</string>
+  <string name="preference_search_engine_label">Serĉilo</string>
   <string name="preference_state_on">Ŝaltita</string>
   <string name="preference_state_off">Malŝaltita</string>
   <string name="preference_subitem_autocomplete">Aŭtomata kompletigo de adresoj</string>
+  <string name="preference_switch_autocomplete_topsites">Por la plej vizititaj retejoj</string>
+  <string name="preference_autocomplete_topsite_summary">Aktivigu por aŭtomate plenigi en la adresa strio pli da 450 popularaj retadresoj.</string>
+  <string name="preference_switch_autocomplete_user_list">Por retejoj, kiujn vi aldonas</string>
+  <string name="preference_autocomplete_user_list_summary">Aktivigu por aŭtomate plenigi en la adresa strio pli da 450 popularaj retadresoj.</string>
+  <string name="preference_category_autocomplete_manage_sites">Administri retejojn</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Administri retejojn</string>
   <string name="preference_autocomplete_action_add">+ Aldoni personecigitan adreson</string>
   <string name="preference_autocomplete_title_add">Aldoni personecigitan adreson</string>
   <string name="custom_autocomplete_quick_add">Aldoni personecigitan adreson</string>
+  <string name="add_custom_autocomplete_label">Aldoni aŭtomate plenigendan ligilon</string>
   <string name="preference_category_cookies">Kuketoj kaj retejaj datumoj</string>
   <string name="preference_category_data_choices">Elekto de datumoj</string>
   <string name="preference_autocomplete_title_remove">Forigi personecigitajn adresojn</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Se vi ŝaltas tion ĉi, kelkaj paĝoj povus neatendite konduti</string>
   <string name="preference_privacy_category_cookies">Bloki kuketojn</string>
   <string name="preference_privacy_should_block_cookies_no_option">Ne</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Bloki nur nerektajn spurajn kuketojn</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloki nur nerektajn kuketojn</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Jes</string>
   <string name="preference_security_biometric">Uzi fingrospuron por malbloki programon</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Ŝargado</string>
   <string name="accessibility_announcement_loading_finished">Retejo ŝargita</string>
   <string name="content_description_menu">Pli da elektebloj</string>
+  <string name="indicator_content_description_menu">Butono por montri pli da elektebloj</string>
   <string name="content_description_forward">Iri antaŭen</string>
   <string name="content_description_reload">Reŝargi retejon</string>
   <string name="content_description_back">Iri reen</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Tio povus esti problemo kun la agordoj de la servilo, a&#365; iu kiu klopodas trompe &#349;ajnigi esti tiu servilo.</li>"\n  "<li>Se vi konekti&#285;is al tiu servilo en la pasinto, la eraro povas esti momenta, kaj vi povos klopodi denove poste.</li>\n</ul>]]></string>
   <string name="error_generic_title">Fuŝ\'</string>
   <string name="error_generic_message">Ni ne povas ŝargi tiun ĉi paĝon pro iu kialo.</string>
+  <string name="contextmenu_open_in_app">Malfermi per programo</string>
   <string name="contextmenu_link_share">Dividi ligilon</string>
   <string name="contextmenu_link_copy">Kopii adreson de ligilo</string>
   <string name="contextmenu_image_share">Dividi bildon</string>
@@ -224,4 +242,25 @@
   <string name="tip_autocomplete_url">Aŭtomate kompletigi restadresojn por la retejoj, kiujn vi plej multe uzas\n Longe premu iun ajn retadreson en la adresa strio</string>
   <string name="tip_open_in_new_tab">Malfermu ligilon en nova langeto\n Longe premu iun ajn ligilon en paĝo</string>
   <string name="tip_request_desktop">Ĉu vi preferus vidi la version de la retejo por komputiloj?%1$s Menuo &gt; Peti version por komputiloj</string>
+  <string name="tip_disable_tips2">Malŝalti konsilojn en la komenca ekrano</string>
+  <string name="tip_explain_allowlist">Ĉu fidinda retejo?\n La listo de permesataj retejoj malŝaltas la protekton kontraŭ spurado en viaj konataj kaj fidataj retejoj.</string>
+  <string name="new_tab_opened_snackbar">Nova langeto malfermita</string>
+  <string name="open_new_tab_snackbar">Ŝanĝi</string>
+  <string name="preference_open_new_tab">Iri tuj al la ligilo en nova langeto</string>
+  <string name="preference_category_safe_browsing">Sekura retumo</string>
+  <string name="preference_safe_browsing_title">Bloki verŝajne danĝeran kaj trompan enhavon</string>
+  <string name="preference_safe_browsing_summary">Bloki raportitajn trompajn, atakajn, fiprogramajn kaj trudprogramajn retejojn.</string>
+  <string name="preference_exceptions">Esceptoj</string>
+  <string name="preference_exceptions_description">Vi malaktvigis la blokadon de enhavo por tiuj ĉi retejoj.</string>
+  <string name="preference_exceptions_menu_remove">Forigi</string>
+  <string name="preference_exceptions_remove_all_button_label">Forigi ĉiujn retejojn</string>
+  <string name="tab_crash_report_title">Langeto paneis</string>
+  <string name="tab_crash_report_headline">Bedaŭrinde ni havas problemojn kun tiu ĉi langeto.</string>
+  <string name="tab_crash_report_description">Kiel privata retumilo, ni neniam konservis kaj do ne povas restarigi tiun ĉi langeton.</string>
+  <string name="tab_crash_report_close_tab_button_label">Fermi langeton</string>
+  <string name="fatal_crash_report_title">Bedaŭrinde %1$s alfrontis problemon kaj paneis.</string>
+  <string name="fatal_crash_report_description">Kiel privata retumilo, ni neniam konservis kaj do ne povas restarigi vian lastan retuman seancon.</string>
+  <string name="fatal_crash_report_close_button_label">Fermi</string>
+  <string name="fatal_crash_report_restart_firefox_label">Restartigi %1$s</string>
+  <string name="crash_report_send_crash_label">Sendi raporton pri paneo al Mozilla</string>
 </resources>

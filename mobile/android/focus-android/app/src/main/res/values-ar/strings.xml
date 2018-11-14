@@ -6,6 +6,7 @@
   <string name="urlbar_hint">ابحث أو أدخل عنوانا</string>
   <string name="teaser">تصفح خاص تلقائي.\nتصفح. امسح. كرر.</string>
   <string name="feedback_erase">لقد مسح تأريخ تصفحك.</string>
+  <string name="feedback_erase_custom_tab">مُسح تأريخ التصفّح للسان.</string>
   <string name="search_hint">ابحث عن %1$s</string>
   <string name="menu_share">شارك…</string>
   <string name="menu_report_site_issue">أبلِغ عن مشكلة بالموقع</string>
@@ -18,6 +19,8 @@
   <string name="menu_help">مساعدة</string>
   <string name="menu_rights">حقوقك</string>
   <string name="menu_trackers_blocked_title">المتعقبات المحجوبة</string>
+  <string name="menu_content_blocking">حجب المحتوى</string>
+  <string name="menu_content_blocking_subtitle">عطّله لإصلاح علل بعض المواقع</string>
   <string name="menu_custom_tab_branding">تدعمها %1$s</string>
   <string name="share_dialog_title">شارك عبر</string>
   <string name="notification_erase_text">امسح تأريخ التصفح</string>
@@ -25,6 +28,8 @@
   <string name="notification_action_erase_and_open">امسح و افتح</string>
   <string name="shortcut_erase_short_label">امسح</string>
   <string name="shortcut_erase_long_label">امسح تأريخ التصفح</string>
+  <string name="shortcut_erase_and_open_short_label">امسح وافتح</string>
+  <string name="shortcut_erase_and_open_long_label">امسح وافتح %1$s</string>
   <string name="text_selection_search_action">ابحث مع الحفاظ على الخصوصية</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1610;&#1593;&#1591;&#1610;&#1603; %1$s &#1575;&#1604;&#1583;&#1601;&#1577;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1575;&#1587;&#1578;&#1582;&#1583;&#1605;&#1607; &#1603;&#1605;&#1578;&#1589;&#1601;&#1581; &#1582;&#1575;&#1589;:\n  "<ul>"\n    "<li>&#1575;&#1576;&#1581;&#1579; &#1608;&#160;&#1578;&#1589;&#1601;&#1581; &#1605;&#1576;&#1575;&#1588;&#1585;&#1577; &#1601;&#1610; &#1575;&#1604;&#1578;&#1591;&#1576;&#1610;&#1602;</li>"\n    "<li>&#1575;&#1581;&#1580;&#1576; &#1575;&#1604;&#1605;&#1578;&#1593;&#1602;&#1576;&#1575;&#1578; (&#1571;&#1608; &#1581;&#1583;&#1617;&#1579; &#1575;&#1604;&#1573;&#1593;&#1583;&#1575;&#1583;&#1575;&#1578; &#1604;&#1604;&#1587;&#1605;&#1575;&#1581; &#1576;&#1575;&#1604;&#1605;&#1578;&#1593;&#1602;&#1576;&#1575;&#1578;)</li>"\n    "<li>&#1575;&#1605;&#1587;&#1581; &#1575;&#1604;&#1603;&#1593;&#1603;&#1575;&#1578; &#1576;&#1575;&#1604;&#1573;&#1590;&#1575;&#1601;&#1577; &#1573;&#1604;&#1609; &#1581;&#1584;&#1601; &#1578;&#1571;&#1585;&#1610;&#1582; &#1575;&#1604;&#1576;&#1581;&#1579; &#1608;&#160;&#1575;&#1604;&#1578;&#1589;&#1601;&#1581;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#8207;%1$s &#1605;&#1606;&#1578;&#1580; &#1605;&#1606; &#1605;&#1608;&#1586;&#1610;&#1604;&#1575;. &#1605;&#1607;&#1605;&#1578;&#1606;&#1575; &#1578;&#1588;&#1580;&#1610;&#1593; &#1573;&#1606;&#1578;&#1585;&#1606;&#1578; &#1605;&#1601;&#1578;&#1608;&#1581; &#1608;&#160;&#1589;&#1581;&#1610;.<br/>\n<a href="%2$s">&#1575;&#1591;&#1617;&#1604;&#1593; &#1593;&#1604;&#1609; &#1575;&#1604;&#1605;&#1586;&#1610;&#1583;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">الخصوصية والسريّة</string>
@@ -35,17 +40,26 @@
   <string name="preference_category_web_content">محتوى الوب</string>
   <string name="preference_category_switching_apps">التبديل بين التطبيقات</string>
   <string name="preference_category_general">عام</string>
+  <string name="preference_general_summary">المتصفّح والألسنة واللغة المبدئية</string>
   <string name="preference_category_data_collection_use">تجميل البيانات واستخدامها</string>
   <string name="preference_category_search">البحث</string>
   <string name="preference_show_search_suggestions">اجلب اقتراحات البحث</string>
   <string name="preference_show_search_suggestions_summary">سيُرسل %1$s ما تكتبه في شريط العنوان إلى محرك البحث الذي فضّله</string>
   <string name="preference_search_engine_default">المبدئي</string>
+  <string name="preference_search_engine_label">محرك البحث</string>
   <string name="preference_state_on">مفعّل</string>
   <string name="preference_state_off">معطّل</string>
   <string name="preference_subitem_autocomplete">إكمال المسارات تلقائيا</string>
+  <string name="preference_switch_autocomplete_topsites">لأكثر المواقع زيارة</string>
+  <string name="preference_autocomplete_topsite_summary">فعّله لإكمال أكثر 450 مسار تلقائيا في شريط العناوين.</string>
+  <string name="preference_switch_autocomplete_user_list">للمواقع التي تُضيفها</string>
+  <string name="preference_autocomplete_user_list_summary">فعّله لإكمال أكثر 450 مسار تلقائيا في شريط العناوين.</string>
+  <string name="preference_category_autocomplete_manage_sites">أدِر المواقع</string>
+  <string name="preference_autocomplete_subitem_manage_sites">أدِر المواقع</string>
   <string name="preference_autocomplete_action_add">+ أضِف مسارا مخصصا</string>
   <string name="preference_autocomplete_title_add">أضِف مسارا مخصصا</string>
   <string name="custom_autocomplete_quick_add">أضِف مسارا مخصصا</string>
+  <string name="add_custom_autocomplete_label">أضِف رابطا لإكماله تلقائيا</string>
   <string name="preference_category_cookies">الكعكات و بيانات المواقع</string>
   <string name="preference_category_data_choices">اختيارات البيانات</string>
   <string name="preference_autocomplete_title_remove">أزِل المسارات المخصصة</string>
@@ -72,6 +86,7 @@
   <string name="preference_privacy_block_content_summary2">تفعيل الخيار قد يتسبب بألا تعمل بعض الصفحات كما يجب</string>
   <string name="preference_privacy_category_cookies">احجب الكعكات</string>
   <string name="preference_privacy_should_block_cookies_no_option">لا</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">احجب كعكات المتعقّبات من الأطراف الثالثة فحسب</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">احجب الكعكات من الأطراف الثالثة فحسب</string>
   <string name="preference_privacy_should_block_cookies_yes_option">نعم</string>
   <string name="preference_security_biometric">استخدم البصمة لإلغاء قفل التطبيق</string>
@@ -151,6 +166,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#1602;&#1583; &#1578;&#1603;&#1608;&#1606; &#1607;&#1584;&#1607; &#1605;&#1588;&#1603;&#1604;&#1577; &#1601;&#1610; &#1573;&#1593;&#1583;&#1575;&#1583;&#1575;&#1578; &#1575;&#1604;&#1582;&#1575;&#1583;&#1608;&#1605;&#1548;\n&#1571;&#1608; &#1585;&#1576;&#1605;&#1575; &#1610;&#1581;&#1575;&#1608;&#1604; &#1588;&#1582;&#1589; &#1605;&#1575; &#1578;&#1602;&#1604;&#1610;&#1583; &#1575;&#1604;&#1582;&#1575;&#1583;&#1608;&#1605;.</li>"\n  "<li>&#1573;&#1584;&#1575; &#1603;&#1606;&#1578; &#1602;&#1583; &#1575;&#1578;&#1589;&#1604;&#1578; &#1576;&#1575;&#1604;&#1605;&#1608;&#1602;&#1593; &#1576;&#1606;&#1580;&#1575;&#1581; &#1601;&#1610; &#1575;&#1604;&#1605;&#1575;&#1590;&#1610;&#1548;\n&#1601;&#1602;&#1583; &#1610;&#1603;&#1608;&#1606; &#1575;&#1604;&#1582;&#1591;&#1571; &#1605;&#1572;&#1602;&#1578;&#1611;&#1575; &#1608;&#1610;&#1605;&#1603;&#1606;&#1603; &#1575;&#1604;&#1605;&#1581;&#1575;&#1608;&#1604;&#1577; &#1601;&#1610;&#1605;&#1575; &#1576;&#1593;&#1583;.</li>\n</ul>]]></string>
   <string name="error_generic_title">عذرا!</string>
   <string name="error_generic_message">تعذّر تحميل هذه الصفحة لسبب ما.</string>
+  <string name="contextmenu_open_in_app">افتح في التطبيق</string>
   <string name="contextmenu_link_share">شارك الرابط</string>
   <string name="contextmenu_link_copy">انسخ عنوان الرابط</string>
   <string name="contextmenu_image_share">شارك الصورة</string>
@@ -224,4 +240,20 @@
   <string name="tip_autocomplete_url">أكمِل تلقائيًا عناوين المواقع التي تزورها باستمرار\nاضغط مطوّلًا على أي عنوان في شريط العنوان</string>
   <string name="tip_open_in_new_tab">افتح الرابط في لسان جديد\nانقر مطوّلًا على أي رابط في الصفحة</string>
   <string name="tip_request_desktop">أتفضّل عرض نسخة سطح المكتب؟%1$s القائمة &gt; اطلب موقع سطح المكتب</string>
+  <string name="tip_disable_tips2">عطّل النصائح في شاشة البداية</string>
+  <string name="new_tab_opened_snackbar">فُتِح لسان جديد</string>
+  <string name="open_new_tab_snackbar">انتقل</string>
+  <string name="preference_open_new_tab">انتقل إلى الرابط في اللسان حالا</string>
+  <string name="preference_category_safe_browsing">التصفّح الآمن</string>
+  <string name="preference_exceptions">الاستثناءات</string>
+  <string name="preference_exceptions_description">عطّلت حجب المحتوى في هذه المواقع.</string>
+  <string name="preference_exceptions_menu_remove">أزِل</string>
+  <string name="preference_exceptions_remove_all_button_label">أزِل كل مواقع الوِب</string>
+  <string name="tab_crash_report_title">انهار اللسان</string>
+  <string name="tab_crash_report_headline">نأسف. نُواجه مشكلة مع هذا اللسان.</string>
+  <string name="tab_crash_report_close_tab_button_label">أغلِق اللسان</string>
+  <string name="fatal_crash_report_title">نأسف. واجه %1$s مشكلة وانهار.</string>
+  <string name="fatal_crash_report_close_button_label">أغلِق</string>
+  <string name="fatal_crash_report_restart_firefox_label">أعِد تشغيل %1$s</string>
+  <string name="crash_report_send_crash_label">أرسِل تقرير الانهيار إلى موزيلا</string>
 </resources>

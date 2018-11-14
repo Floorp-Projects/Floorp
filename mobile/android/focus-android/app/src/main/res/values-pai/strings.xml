@@ -3,9 +3,10 @@
   <string name="action_cancel">Tubspach</string>
   <string name="action_ok">Jan ik yooch</string>
   <string name="action_save">Chkwaach</string>
-  <string name="urlbar_hint">Ŕmee tñur paa eemch solch</string>
+  <string name="urlbar_hint">Tñur paa eemch ŕmee solch</string>
   <string name="teaser">Byaw´i Sal amchu. Sal m´am. Mtkryee. Mtkweek miyi.</string>
   <string name="feedback_erase">Chumŕmee m´amu hay payt ŕputub bwiir.</string>
+  <string name="feedback_erase_custom_tab">Chumŕmee m´amu hay payt ŕputub bwiir.</string>
   <string name="search_hint">%1$s chŕmee</string>
   <string name="menu_share">Mkwimu…</string>
   <string name="menu_report_site_issue">Wawchuha chlyeebha paytum jwaknaabchu</string>
@@ -18,6 +19,7 @@
   <string name="menu_help">Chbtaarch</string>
   <string name="menu_rights">Mir mir mwii</string>
   <string name="menu_trackers_blocked_title">Chŕmechu ŕ´ap</string>
+  <string name="menu_trackers_blocked_subtitle">Chwichu yak yoya mchubowutemum amchuhal chatewulim chajankyawyu</string>
   <string name="menu_custom_tab_branding">%1$s em ntpachu</string>
   <string name="share_dialog_title">Sam paa m´em</string>
   <string name="notification_erase_text">Sal amchu mujiñ</string>
@@ -25,6 +27,7 @@
   <string name="notification_action_erase_and_open">Ŕmar e sol</string>
   <string name="shortcut_erase_short_label">Ŕmar</string>
   <string name="shortcut_erase_long_label">Sal amchu mujiñ</string>
+  <string name="shortcut_erase_and_open_long_label">Ŕmar e sol %1$s</string>
   <string name="text_selection_search_action">Jabchu tpaay chŕmee</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s hay kamwi &#241;umyabuyiib m&#180;ee.</p><p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Sal amchu jabch tpay muliwu &#241;umtrcheech\n  "<ul>"\n    "<li>Aplicaci&#243;n hal mjaab sal mtrchech</li>"\n    "<li>Sal kch&#341;meech paa mtket( o janmiwuham mnyam baam mchii)</li>"\n    "<li>M&#341;mar chapayt muji&#241; hikyaaw cookies ee kur chkjkeech ee ch&#341;meech sal amchu</li>"\n  "</ul></p><p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ha Mozilla hay uchpach. Chawiwchuha inernet krryeey paa ee hi kyawa.<br/><a href="%2$s">Ch&#341;poraab</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Jabchu tpaay ŕbokjanchu</string>

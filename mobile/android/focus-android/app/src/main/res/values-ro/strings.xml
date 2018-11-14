@@ -6,6 +6,7 @@
   <string name="urlbar_hint">Caută sau introdu adresa</string>
   <string name="teaser">Navigare privată automată.\nNavighează. Șterge. Repetă.</string>
   <string name="feedback_erase">Istoricul de navigare a fost șters.</string>
+  <string name="feedback_erase_custom_tab">Istoricul de navigare al filei a fost șters.</string>
   <string name="search_hint">Caută %1$s</string>
   <string name="menu_share">Partajează…</string>
   <string name="menu_report_site_issue">Raportează problemă cu site-ul</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">Ajutor</string>
   <string name="menu_rights">Drepturile tale</string>
   <string name="menu_trackers_blocked_title">Urmăritori blocați</string>
+  <string name="menu_trackers_blocked_subtitle">Dezactivarea poate remedia unele probleme legate de site</string>
+  <string name="menu_content_blocking">Blocare de conținut</string>
+  <string name="menu_content_blocking_subtitle">Dezactivează pentru a repara unele site-uri</string>
   <string name="menu_custom_tab_branding">Susținut de %1$s</string>
   <string name="share_dialog_title">Partajează via</string>
   <string name="notification_erase_text">Șterge istoricul de navigare</string>
@@ -25,8 +29,10 @@
   <string name="notification_action_erase_and_open">Șterge și deschide</string>
   <string name="shortcut_erase_short_label">Șterge</string>
   <string name="shortcut_erase_long_label">Șterge istoricul de navigare</string>
+  <string name="shortcut_erase_and_open_short_label">Șterge și deschide</string>
+  <string name="shortcut_erase_and_open_long_label">Șterge și deschide %1$s</string>
   <string name="text_selection_search_action">Caută într-un mod privat</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#238;&#539;i ofer&#259; controlul.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Folose&#537;te-l ca browser privat:\n  "<ul>"\n    "<li>Caut&#259; &#537;i navigheaz&#259; direct din aplica&#539;ie</li>"\n    "<li>Blocheaz&#259; urm&#259;ritorii (sau actualizeaz&#259; set&#259;rile pentru a permite urm&#259;ritorii)</li>"\n    "<li>&#536;terge pentru a &#238;ndep&#259;rta cookie-urile precum &#537;i istoricul de c&#259;utare &#537;i navigare</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s este produs de Mozilla. Misiunea noastr&#259; este s&#259; promov&#259;m un internet deschis &#537;i s&#259;n&#259;tos.<br/>\n<a href="%2$s">Afl&#259; mai multe</a></p>]]></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#238;&#539;i ofer&#259; controlul.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Folose&#537;te-l ca browser privat:\n  "<ul>"\n    "<li>Caut&#259; &#537;i navigheaz&#259; direct din aplica&#539;ie</li>"\n    "<li>Blocheaz&#259; urm&#259;ritorii (sau actualizeaz&#259; set&#259;rile pentru a permite urm&#259;ritorii)</li>"\n    "<li>&#536;terge pentru a elimina cookie-urile, precum &#537;i istoricul de c&#259;utare &#537;i navigare</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s este produs de Mozilla. Misiunea noastr&#259; este s&#259; promov&#259;m un internet s&#259;n&#259;tos &#537;i deschis.<br/>\n<a href="%2$s">Afl&#259; mai multe</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Intimitate și securitate</string>
   <string name="preference_privacy_and_security_summary">Urmărire, cookie-uri, împărtășire de date</string>
   <string name="preference_search_summary">Setează motorul implicit, completare automată</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">Conținut web</string>
   <string name="preference_category_switching_apps">Comutare de aplicații</string>
   <string name="preference_category_general">General</string>
+  <string name="preference_general_summary">Browser implicit, file, limbă</string>
   <string name="preference_category_data_collection_use">Colectare de date și utilizare</string>
   <string name="preference_category_search">Căutare</string>
   <string name="preference_show_search_suggestions">Obține sugestii de căutare</string>
   <string name="preference_show_search_suggestions_summary">%1$s va trimite ce tastezi în bara de adrese la motorul de căutare</string>
   <string name="preference_search_engine_default">Implicit</string>
+  <string name="preference_search_engine_label">Motor de căutare</string>
   <string name="preference_state_on">Activat</string>
   <string name="preference_state_off">Dezactivat</string>
-  <string name="preference_subitem_autocomplete">Autocompletare URL</string>
+  <string name="preference_subitem_autocomplete">Completare automată de URL-uri</string>
+  <string name="preference_switch_autocomplete_topsites">Pentru site-uri de top</string>
+  <string name="preference_autocomplete_topsite_summary">Activează pentru a completa automat peste 450 de URL-uri populare în bara de adrese.</string>
+  <string name="preference_switch_autocomplete_user_list">Pentru site-uri pe care le adaugi</string>
+  <string name="preference_autocomplete_user_list_summary">Activează pentru a completa automat peste 450 de URL-uri populare în bara de adrese.</string>
+  <string name="preference_category_autocomplete_manage_sites">Gestionează site-urile</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Gestionează site-urile</string>
   <string name="preference_autocomplete_action_add">+ Adaugă URL personalizat</string>
   <string name="preference_autocomplete_title_add">Adaugă URL personalizat</string>
   <string name="custom_autocomplete_quick_add">Adaugă URL personalizat</string>
+  <string name="add_custom_autocomplete_label">Adaugă un link pentru completare automată</string>
   <string name="preference_category_cookies">Cookie-uri și date ale site-urilor</string>
   <string name="preference_category_data_choices">Împărtășire de date</string>
   <string name="preference_autocomplete_title_remove">Elimină URL-uri personalizate</string>
@@ -66,18 +81,19 @@
   <string name="preference_privacy_block_ads_summary">Anumite reclame urmăresc vizitele pe site, chiar dacă nu dai clic pe reclame</string>
   <string name="preference_privacy_block_analytics">Blochează urmăritorii analitici</string>
   <string name="preference_privacy_block_analytics_summary">Folosit pentru a colecta, analiza și măsura activități precum atingerea și derularea</string>
-  <string name="preference_privacy_block_social">Blochează urmăritorii sociali</string>
-  <string name="preference_privacy_block_social_summary">Încorporat în site-uri pentru a-ți urmări vizitele și a afișa funcții precum butoane de distribuire</string>
+  <string name="preference_privacy_block_social">Blochează urmăritorii rețelelor sociale</string>
+  <string name="preference_privacy_block_social_summary">Încorporat în site-uri pentru a-ți urmări vizitele și a afișa funcții precum butoanele de distribuire</string>
   <string name="preference_privacy_block_content">Blochează alți urmăritori de conținut</string>
-  <string name="preference_privacy_block_content_summary2">Activarea poate cauza ca unele pagini să se comporte în mod neașteptat</string>
-  <string name="preference_privacy_category_cookies">Blochează cookie-uri</string>
+  <string name="preference_privacy_block_content_summary2">Activarea poate cauza un comportament neașteptat al unor pagini</string>
+  <string name="preference_privacy_category_cookies">Blochează cookie-urile</string>
   <string name="preference_privacy_should_block_cookies_no_option">Nu</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blochează numai cookie-urile de urmărire de la terți</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Blochează numai cookie-urile de la terți</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Da</string>
   <string name="preference_security_biometric">Folosește amprenta pentru a debloca aplicația</string>
-  <string name="preference_security_biometric_summary">Amprenta ta poate debloca %1$s dacă este deschisă deja o adresă în aplicație. Modul discret va fi activat.</string>
+  <string name="preference_security_biometric_summary">Amprenta poate debloca %1$s dacă este deja deschis un URL în aplicație. Modul discret va fi activat.</string>
   <string name="preference_privacy_secure_mode">Discret</string>
-  <string name="preference_privacy_stealth_summary">Ascunde paginile web la schimbarea aplicațiilor și blochează capturile de ecran.</string>
+  <string name="preference_privacy_stealth_summary">Ascunde paginile web la comutarea între aplicații și blochează realizarea capturilor de ecran.</string>
   <string name="preference_category_security">Securitate</string>
   <string name="preference_category_performance">Performanță</string>
   <string name="preference_performance_block_webfonts">Blochează fonturile web</string>
@@ -88,7 +104,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Trimite date privind utilizarea</string>
   <string name="preference_mozilla_telemetry_summary">Află mai multe</string>
-  <string name="preference_mozilla_telemetry_summary2">La Mozilla noi colectăm doar strictul necesar pentru a crea și îmbunătăți %1$s pentru toată lumea.</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla se străduiește să colecteze doar strictul necesar pentru a furniza și a îmbunătăți %1$s pentru toți.</string>
   <string name="preference_privacy_notice">Politica de confidențialitate</string>
   <string name="preference_about">Despre %1$s</string>
   <string name="preference_search_installed_search_engines">Motoare de căutare instalate</string>
@@ -96,10 +112,10 @@
   <string name="preference_search_add2">+ Adaugă alt motor de căutare</string>
   <string name="preference_search_remove_title">Elimină motoare de căutare</string>
   <string name="preference_search_remove">Elimină</string>
-  <string name="preference_homescreen_tips">Arată indicii în ecranul principal</string>
+  <string name="preference_homescreen_tips">Afișează ponturi în ecranul principal</string>
   <string name="action_option_add_search_engine">Adaugă motorul de căutare</string>
-  <string name="search_add_manually_name_hint">Nume motor de căutare</string>
-  <string name="search_add_manually_string">Text de căutare</string>
+  <string name="search_add_manually_name_hint">Numele motorului de căutare</string>
+  <string name="search_add_manually_string">Text de căutare spre utilizare</string>
   <string name="search_add_manually_save">Salvează</string>
   <string name="search_add_manually_example">Exemplu: example.com/search/?q=%s</string>
   <string name="search_add_confirmation">Motor nou de căutare adăugat.</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">Se încarcă</string>
   <string name="accessibility_announcement_loading_finished">Site web încărcat</string>
   <string name="content_description_menu">Mai multe opțiuni</string>
+  <string name="indicator_content_description_menu">Buton pentru mai multe opțiuni</string>
   <string name="content_description_forward">Navighează înainte</string>
   <string name="content_description_reload">Reîncarcă site-ul web</string>
   <string name="content_description_back">Navighează înapoi</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Aceasta s-ar putea datora unei probleme &#238;n configura&#539;ia serverului sau\nar putea s&#259; fie cineva care &#238;ncearc&#259; s&#259; uzurpeze identitatea serverului.</li>"\n  "<li>Dac&#259; te-ai conectat cu succes &#238;n trecut la acest server, eroarea poate fi\ntemporar&#259; &#537;i po&#539;i &#238;ncerca din nou mai t&#226;rziu.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ups</string>
   <string name="error_generic_message">Nu putem încărca această pagină dintr-un motiv oarecare.</string>
+  <string name="contextmenu_open_in_app">Deschide cu o aplicație</string>
   <string name="contextmenu_link_share">Partajează linkul</string>
   <string name="contextmenu_link_copy">Copiază adresa linkului</string>
   <string name="contextmenu_image_share">Partajează imaginea</string>
@@ -161,14 +179,14 @@
   <string name="firstrun_defaultbrowser_title">Consolidează-ți confidențialitatea</string>
   <string name="firstrun_defaultbrowser_text2">Du navigarea privată la nivelul următor. Blochează reclamele și alte tipuri de conținut care te pot urmări pe site-uri și care îngreunează timpii de încărcare.</string>
   <string name="firstrun_search_title">Caută în felul tău</string>
-  <string name="firstrun_search_text">Cauţi ceva diferit? Alege un alt motor de căutare implicit din Setări.</string>
+  <string name="firstrun_search_text">Cauți ceva diferit? Alege un alt motor de căutare implicit din Setări.</string>
   <string name="firstrun_shortcut_title">Adaugă scurtături la ecranul principal</string>
-  <string name="firstrun_shortcut_text">Întoarce-te la site-urile tale preferate în %1$s numaidecât. Selectează pur și simplu „Adaugă la ecranul principal” din meniul %1$s.</string>
+  <string name="firstrun_shortcut_text">Întoarce-te numaidecât la site-urile tale favorite în %1$s. Selectează pur și simplu „Adaugă la ecranul principal” din meniul %1$s.</string>
   <string name="firstrun_privacy_title">Obișnuiește-te cu confidențialitatea</string>
   <string name="firstrun_privacy_text">Setează %1$s ca browser implicit și beneficiază de avantajele navigării private atunci când deschizi pagini web din alte aplicații.</string>
   <string name="firstrun_close_button">Ok, am înțeles!</string>
   <string name="firstrun_skip_button">Omite</string>
-  <string name="firstrun_next_button">Mai departe</string>
+  <string name="firstrun_next_button">Înainte</string>
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_action_add">Adaugă</string>
   <string name="dialog_addtohomescreen_action_cancel">Renunță</string>
@@ -181,7 +199,7 @@
   <string name="your_rights_content2"><![CDATA["%1$s este disponibil sub termenii "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licen&#539;ei Publice Mozilla</a>" și alte licențe cu sursă deschisă."]]></string>
   <string name="your_rights_content3"><![CDATA["Nu vi se acordă niciun drept sau licență asupra mărcilor comerciale ale Mozilla Foundation sau ale oricărei părți, inclusiv numele sau logourile Mozilla, Firefox sau %1$s. Informații suplimentare pot fi găsite "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aici</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Codul sursă suplimentar pentru %1$s este disponibil sub diferite alte "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licen&#539;e</a>" gratuite și cu sursă deschisă."]]></string>
-  <string name="your_rights_content5"><![CDATA["De asemenea, %1$s folosește lista de blocări furnizată de Disconnect Inc. ca activitate separată și independentă sub "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licen&#539;a Public&#259; General&#259; GNU v3</a>" și disponibil "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aici</a>.]]></string>
+  <string name="your_rights_content5"><![CDATA["De asemenea, %1$s folosește lista de blocări furnizată de Disconnect Inc. ca activitate separată și independentă sub "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licen&#539;a Public&#259; General&#259; GNU v3</a>". și disponibilă "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aici</a>.]]></string>
   <string name="gv_prompt_username_hint">Utilizator</string>
   <string name="gv_prompt_password_hint">Parolă</string>
   <string name="gv_prompt_clear">Curăță</string>
@@ -209,19 +227,40 @@
   <string name="biometric_auth_description">Atinge senzorul de amprentă pentru a continua.</string>
   <string name="biometric_auth_new_session">Sesiune nouă</string>
   <string name="biometric_auth_image_description">Pictogramă amprentă</string>
-  <string name="biometric_auth_not_recognized_error">Amprenta nu e recunoscută. Încearcă din nou.</string>
+  <string name="biometric_auth_not_recognized_error">Amprentă nerecunoscută. Încearcă din nou.</string>
   <string name="biometric_auth_moved_too_quickly">Deget mutat prea repede. Încearcă din nou.</string>
-  <string name="enable_search_suggestion_title">Dorești să reactivezi sugestiile de căutare?</string>
+  <string name="enable_search_suggestion_title">Dorești să activezi sugestiile de căutare?</string>
   <string name="enable_search_suggestion_subtitle">Pentru a obține sugestii de căutare, %1$s trebuie să trimită ce tastezi în bara de adrese la motorul de căutare ales. %2$s.</string>
   <string name="enable_search_suggestion_subtitle_learnmore">Află mai multe</string>
   <string name="enable_search_suggestions_no">Nu</string>
   <string name="enable_search_suggestions_yes">Da</string>
   <string name="no_suggestions_message">Unele motoare de căutare nu pot afișa sugestii.</string>
   <string name="dismiss_no_suggestions_prompt_button">Înlătură</string>
-  <string name="tip_disable_tracking_protection">Site-ul se comportă neașteptat?\n Încearcă să dezactivezi protecția împotriva urmăririi</string>
-  <string name="tip_add_to_homescreen">Obține acces cu o singură atingere la site-urile vizitate frecvent%1$s Meniu &gt; Adaugă la ecranul principal</string>
+  <string name="tip_disable_tracking_protection">Site-ul are un comportament neașteptat?\n Încearcă să dezactivezi protecția împotriva urmăririi</string>
+  <string name="tip_add_to_homescreen">Obține acces cu o singură atingere la site-urile pe care intri des%1$s Meniu &gt; Adaugă la ecranul principal</string>
   <string name="tip_set_default_browser">Deschide fiecare link în %1$s\n Setează %1$s ca browser implicit</string>
-  <string name="tip_autocomplete_url">Autocompletează adrese pentru site-uri frecvent vizitate\n Apasă lung pe orice adreesă din bara de adrese</string>
-  <string name="tip_open_in_new_tab">Deschide un link într-o filă nouă\n Apasă lung pe orice link din pagină</string>
-  <string name="tip_request_desktop">Vrei să vezi site-ul de desktop?%1$s Meniu &gt; Cere versiune de desktop</string>
+  <string name="tip_autocomplete_url">Completează automat URL-urile site-urilor pe care intri des\n Apasă lung pe orice URL din bara de adrese</string>
+  <string name="tip_open_in_new_tab">Deschide un link într-o filă nouă\n Apasă lung pe orice link dintr-o pagină</string>
+  <string name="tip_request_desktop">Preferi să vezi versiunea de desktop completă?%1$s Meniu &gt; Cere versiune de desktop</string>
+  <string name="tip_disable_tips2">Dezactivează ponturile din ecranul de start</string>
+  <string name="tip_explain_allowlist">Site de încredere?\n Allowlist dezactivează protecția împotriva urmăririi pentru site-urile pe care le cunoști și în care ai încredere.</string>
+  <string name="new_tab_opened_snackbar">Filă nouă deschisă</string>
+  <string name="open_new_tab_snackbar">Comută</string>
+  <string name="preference_open_new_tab">Comută imediat pe link într-o filă nouă</string>
+  <string name="preference_category_safe_browsing">Navigare în siguranță</string>
+  <string name="preference_safe_browsing_title">Blochează site-urile potențial periculoase și înșelătoare</string>
+  <string name="preference_safe_browsing_summary">Blochează site-urile raportate ca fiind înșelătoare și de atac, cu programe rău intenționate și programe nedorite.</string>
+  <string name="preference_exceptions">Excepții</string>
+  <string name="preference_exceptions_description">Ai dezactivat blocarea de conținut pe aceste site-uri web.</string>
+  <string name="preference_exceptions_menu_remove">Elimină</string>
+  <string name="preference_exceptions_remove_all_button_label">Elimină toate site-urile web</string>
+  <string name="tab_crash_report_title">Filă închisă neașteptat</string>
+  <string name="tab_crash_report_headline">Ne pare rău. Avem o problemă cu această filă.</string>
+  <string name="tab_crash_report_description">Ca browser privat, nu salvăm niciodată și nu putem restaura această filă.</string>
+  <string name="tab_crash_report_close_tab_button_label">Închide fila</string>
+  <string name="fatal_crash_report_title">Ne pare rău. %1$s a avut o problemă și s-a închis neașteptat.</string>
+  <string name="fatal_crash_report_description">Ca browser privat, nu salvăm niciodată și nu putem restaura ultima sesiune de navigare.</string>
+  <string name="fatal_crash_report_close_button_label">Închide</string>
+  <string name="fatal_crash_report_restart_firefox_label">Repornește %1$s</string>
+  <string name="crash_report_send_crash_label">Trimite un raport de defecțiune către Mozilla</string>
 </resources>

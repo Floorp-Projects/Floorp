@@ -6,6 +6,7 @@
   <string name="urlbar_hint">მოძებნეთ ან შეიყვანეთ მისამართი</string>
   <string name="teaser">მხოლოდ თვალიერების პირადი რეჟიმი.\nმონახულება. წაშლა. თავიდან დაწყება.</string>
   <string name="feedback_erase">მონახულებული გვერდების ისტორია წაიშალა.</string>
+  <string name="feedback_erase_custom_tab">ჩანართებში მონახულებული გვერდების ისტორია გასუფთავებულია.</string>
   <string name="search_hint">მოძებნა: %1$s</string>
   <string name="menu_share">გვერდის გაზიარება…</string>
   <string name="menu_report_site_issue">საიტის ხარვეზის მოხსენება</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">დახმარება</string>
   <string name="menu_rights">თქვენი უფლებები</string>
   <string name="menu_trackers_blocked_title">შეზღუდული მეთვალყურეები</string>
+  <string name="menu_trackers_blocked_subtitle">გამორთვის შედეგად, საიტის გარკვეული ხარვეზები შეიძლება გამოსწორდეს</string>
+  <string name="menu_content_blocking">შიგთავსის შეზღუდვა</string>
+  <string name="menu_content_blocking_subtitle">გამორთვა, საიტებზე ხარვეზების გამოსასწორებლად</string>
   <string name="menu_custom_tab_branding">უზრუნველყოფს %1$s</string>
   <string name="share_dialog_title">გაზიარება</string>
   <string name="notification_erase_text">ისტორიის წაშლა</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">გასუფთავება და გახსნა</string>
   <string name="shortcut_erase_short_label">გასუფთავება</string>
   <string name="shortcut_erase_long_label">ისტორიის გასუფთავება</string>
+  <string name="shortcut_erase_and_open_short_label">გასუფთავება და გახსნა</string>
+  <string name="shortcut_erase_and_open_long_label">გასუფთავდება და გაიხსნება %1$s</string>
   <string name="text_selection_search_action">მოძებნეთ უსაფრთხოდ</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#4321;&#4320;&#4323;&#4314;&#4304;&#4307; &#4306;&#4312;&#4305;&#4320;&#4323;&#4316;&#4308;&#4305;&#4311; &#4315;&#4304;&#4320;&#4311;&#4309;&#4312;&#4321; &#4321;&#4304;&#4307;&#4304;&#4309;&#4308;&#4308;&#4305;&#4321;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#4306;&#4304;&#4315;&#4317;&#4312;&#4327;&#4308;&#4316;&#4308;&#4311; &#4320;&#4317;&#4306;&#4317;&#4320;&#4330; &#4318;&#4312;&#4320;&#4304;&#4307;&#4312; &#4305;&#4320;&#4304;&#4323;&#4310;&#4308;&#4320;&#4312;:\n  "<ul>"\n    "<li>&#4315;&#4317;&#4331;&#4308;&#4305;&#4316;&#4308;&#4311; &#4307;&#4304; &#4307;&#4304;&#4304;&#4311;&#4309;&#4304;&#4314;&#4312;&#4308;&#4320;&#4308;&#4311; &#4306;&#4309;&#4308;&#4320;&#4307;&#4308;&#4305;&#4312;</li>"\n    "<li>&#4328;&#4308;&#4310;&#4326;&#4323;&#4307;&#4308;&#4311; &#4315;&#4308;&#4311;&#4309;&#4304;&#4314;&#4327;&#4323;&#4320;&#4308; &#4308;&#4314;&#4308;&#4315;&#4308;&#4316;&#4322;&#4308;&#4305;&#4312; (&#4318;&#4304;&#4320;&#4304;&#4315;&#4308;&#4322;&#4320;&#4308;&#4305;&#4312;&#4307;&#4304;&#4316; &#4307;&#4304;&#4328;&#4309;&#4308;&#4305;&#4304;&#4330; &#4328;&#4308;&#4312;&#4331;&#4314;&#4308;&#4305;&#4304;)</li>"\n    "<li>&#4306;&#4304;&#4304;&#4321;&#4323;&#4324;&#4311;&#4304;&#4309;&#4308;&#4311; &#4307;&#4304; &#4332;&#4304;&#4328;&#4304;&#4314;&#4308;&#4311; &#4324;&#4323;&#4316;&#4311;&#4323;&#4328;&#4308;&#4305;&#4312;, &#4331;&#4312;&#4308;&#4305;&#4312;&#4321;&#4304; &#4307;&#4304; &#4311;&#4309;&#4304;&#4314;&#4312;&#4308;&#4320;&#4308;&#4305;&#4312;&#4321; &#4312;&#4321;&#4322;&#4317;&#4320;&#4312;&#4304;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#4328;&#4308;&#4325;&#4315;&#4316;&#4312;&#4314;&#4312;&#4304; Mozilla-&#4321; &#4315;&#4312;&#4308;&#4320;. &#4329;&#4309;&#4308;&#4316;&#4312; &#4315;&#4312;&#4310;&#4304;&#4316;&#4312;, &#4312;&#4316;&#4322;&#4308;&#4320;&#4316;&#4308;&#4322;&#4312;&#4321; &#4306;&#4304;&#4334;&#4321;&#4316;&#4312;&#4314;&#4317;&#4305;&#4304; &#4307;&#4304; &#4321;&#4312;&#4335;&#4304;&#4316;&#4321;&#4304;&#4326;&#4308;&#4304;.<br/>\n<a href="%2$s">&#4309;&#4320;&#4330;&#4314;&#4304;&#4307;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">პირადულობა და უსაფრთხოება</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">ვებშიგთავსი</string>
   <string name="preference_category_switching_apps">პროგრამების გადართვისას</string>
   <string name="preference_category_general">მთავარი</string>
+  <string name="preference_general_summary">ნაგულისხმევი ბრაუზერი, ჩანართები, ენა</string>
   <string name="preference_category_data_collection_use">მონაცემთა აღრიცხვა და გამოყენება</string>
   <string name="preference_category_search">ძიება</string>
   <string name="preference_show_search_suggestions">ძიების შემოთავაზების ჩვენება</string>
   <string name="preference_show_search_suggestions_summary">%1$s გაუგზავნის საძიებო სისტემას, მისამართების ველში აკრეფილ ტექსტს</string>
   <string name="preference_search_engine_default">ნაგულისხმევი</string>
+  <string name="preference_search_engine_label">საძიებო სისტემა</string>
   <string name="preference_state_on">ჩართული</string>
   <string name="preference_state_off">გამორთული</string>
   <string name="preference_subitem_autocomplete">URL-ს თვითშევსება</string>
+  <string name="preference_switch_autocomplete_topsites">რჩეული საიტებისთვის</string>
+  <string name="preference_autocomplete_topsite_summary">ჩართეთ 450-ზე მეტი ცნობილი URL-ბმულის თვითდასრულებისთვის მისამართების ველში.</string>
+  <string name="preference_switch_autocomplete_user_list">თქვენ მიერ დამატებული საიტებისთვის</string>
+  <string name="preference_autocomplete_user_list_summary">ჩართეთ 450-ზე მეტი ცნობილი URL-ბმულის თვითდასრულებისთვის მისამართების ველში.</string>
+  <string name="preference_category_autocomplete_manage_sites">საიტების მართვა</string>
+  <string name="preference_autocomplete_subitem_manage_sites">საიტების მართვა</string>
   <string name="preference_autocomplete_action_add">+ საკუთარი URL-ების დამატება</string>
   <string name="preference_autocomplete_title_add">საკუთარი URL-ს დამატება</string>
   <string name="custom_autocomplete_quick_add">საკუთარი URL-ს დამატება</string>
+  <string name="add_custom_autocomplete_label">ბმულის დამატება თვითდასრულებისთვის</string>
   <string name="preference_category_cookies">ფუნთუშები და საიტის მონაცემები</string>
   <string name="preference_category_data_choices">მონაცემთა შერჩევა</string>
   <string name="preference_autocomplete_title_remove">დამატებული URL-ების მოცილება</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">ჩართვის შედეგად, ზოგიერთმა ვებგვერდმა, შესაძლოა გამართულად ვერ იმუშაოს</string>
   <string name="preference_privacy_category_cookies">ფუნთუშების შეზღუდვა</string>
   <string name="preference_privacy_should_block_cookies_no_option">არა</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">მე-3 მხარის მეთვალყურეების შეზღუდვა</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">მხოლოდ მე-3 მხარის ფუნთუშების</string>
   <string name="preference_privacy_should_block_cookies_yes_option">დიახ</string>
   <string name="preference_security_biometric">გამოიყენეთ თითის ანაბეჭდი, პროგრამის გასახსნელად</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">იტვირთება</string>
   <string name="accessibility_announcement_loading_finished">საიტი ჩაიტვირთა</string>
   <string name="content_description_menu">დამატებითი პარამეტრები</string>
+  <string name="indicator_content_description_menu">დამატებითი პარამეტრების ღილაკი</string>
   <string name="content_description_forward">გადასვლა წინ</string>
   <string name="content_description_reload">საიტის ხელახლა ჩატვირთვა</string>
   <string name="content_description_back">გადასვლა უკან</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#4308;&#4321; &#4328;&#4308;&#4312;&#4331;&#4314;&#4308;&#4305;&#4304;, &#4321;&#4304;&#4312;&#4322;&#4312;&#4321; &#4306;&#4304;&#4323;&#4315;&#4304;&#4320;&#4311;&#4304;&#4317;&#4305;&#4312;&#4321; &#4305;&#4320;&#4304;&#4314;&#4312; &#4312;&#4327;&#4317;&#4321; &#4304;&#4316;\n&#4321;&#4334;&#4309;&#4304; &#4321;&#4304;&#4312;&#4322;&#4304;&#4307; &#4306;&#4304;&#4321;&#4304;&#4326;&#4308;&#4305;&#4312;&#4321; &#4315;&#4330;&#4307;&#4308;&#4314;&#4317;&#4305;&#4304;&#4321; &#4336;&#4325;&#4317;&#4316;&#4307;&#4308;&#4321; &#4304;&#4307;&#4306;&#4312;&#4314;&#4312;.</li>"\n  "<li>&#4311;&#4323; &#4304;&#4315; &#4321;&#4304;&#4312;&#4322;&#4321; &#4315;&#4304;&#4316;&#4304;&#4315;&#4307;&#4308; &#4332;&#4304;&#4320;&#4315;&#4304;&#4322;&#4308;&#4305;&#4312;&#4311; &#4323;&#4313;&#4304;&#4309;&#4328;&#4312;&#4320;&#4307;&#4308;&#4305;&#4317;&#4307;&#4312;&#4311;, &#4334;&#4304;&#4320;&#4309;&#4308;&#4310;&#4312; &#4328;&#4308;&#4321;&#4304;&#4331;&#4314;&#4317;&#4304;\n&#4307;&#4320;&#4317;&#4308;&#4305;&#4312;&#4311;&#4312; &#4312;&#4327;&#4317;&#4321; &#4307;&#4304; &#4315;&#4317;&#4306;&#4309;&#4312;&#4304;&#4316;&#4308;&#4305;&#4312;&#4311; &#4328;&#4308;&#4306;&#4312;&#4331;&#4314;&#4312;&#4304;&#4311; &#4313;&#4309;&#4314;&#4304;&#4309; &#4321;&#4330;&#4304;&#4307;&#4317;&#4311;.</li>\n</ul>]]></string>
   <string name="error_generic_title">უი</string>
   <string name="error_generic_message">ამ გვერდის ჩატვირთვა, რატომღაც ვერ მოხერხდა.</string>
+  <string name="contextmenu_open_in_app">პროგრამით გახსნა</string>
   <string name="contextmenu_link_share">ბმულის გაზიარება</string>
   <string name="contextmenu_link_copy">მისამართის დაკოპირება</string>
   <string name="contextmenu_image_share">სურათის გაზიარება</string>
@@ -224,4 +242,25 @@
   <string name="tip_autocomplete_url">URL-ბმულების თვითშევსება სასურველი საიტებისთვის\n ნებისმიერ URL-ბმულზე ხანგრძლივი დაჭერით მისამართების ველში</string>
   <string name="tip_open_in_new_tab">გახსენით ბმული ახალ ჩანართში\n გვერდის ნებისმიერ ბმულზე ხანგრძლივი დაჭერით</string>
   <string name="tip_request_desktop">საიტის სრული ვერსიის ნახვას ამჯობინებთ?%1$s მენიუ &gt; სრული საიტის მოთხოვნა</string>
+  <string name="tip_disable_tips2">რჩევების ჩვენების შეწყვეტა საწყის ეკრანზე</string>
+  <string name="tip_explain_allowlist">სანდო საიტია?\n დასაშვები სია გამორთავს თვალთვალისგან დაცვას საიტებზე, რომლებსაც იცნობთ და ენდობით.</string>
+  <string name="new_tab_opened_snackbar">ახალი ჩანართი გაიხსნა</string>
+  <string name="open_new_tab_snackbar">გადართვა</string>
+  <string name="preference_open_new_tab">ბმულის ახალ ჩანართში გახსნისას, მაშინვე მასზე გადასვლა</string>
+  <string name="preference_category_safe_browsing">უსაფრთხო თვალიერება</string>
+  <string name="preference_safe_browsing_title">სავარაუდოდ სახიფათო და თაღლითური საიტების შეზღუდვა</string>
+  <string name="preference_safe_browsing_summary">თაღლითურ და მოიერიშედ მიჩნეული, აგრეთვე საზიანო და არასასურველი პროგრამების გამავრცელებელი საიტების შეზღუდვა.</string>
+  <string name="preference_exceptions">გამონაკლისები</string>
+  <string name="preference_exceptions_description">ამ საიტებზე შიგთავსის შეზღუდვა გამორთული გაქვთ.</string>
+  <string name="preference_exceptions_menu_remove">მოცილება</string>
+  <string name="preference_exceptions_remove_all_button_label">ყველა საიტის მოცილება</string>
+  <string name="tab_crash_report_title">ჩანართი გაითიშა</string>
+  <string name="tab_crash_report_headline">ვწუხვართ. ამ ჩანართს რაღაც ხარვეზები გააჩნდა.</string>
+  <string name="tab_crash_report_description">როგორც პირადი ბრაუზერი, ჩვენ არაფერს ვინახავთ და შესაბამისად არ შეგვიძლია ამ ჩანართის აღდგენა.</string>
+  <string name="tab_crash_report_close_tab_button_label">ჩანართის დახურვა</string>
+  <string name="fatal_crash_report_title">ვწუხვართ. %1$s-ს გააჩნდა ხარვეზები და გაითიშა.</string>
+  <string name="fatal_crash_report_description">როგორც პირადი ბრაუზერი, ჩვენ არაფერს ვინახავთ და შესაბამისად არ შეგვიძლია თქვენი ბოლო სეანსის აღდგენა.</string>
+  <string name="fatal_crash_report_close_button_label">დახურვა</string>
+  <string name="fatal_crash_report_restart_firefox_label">ხელახლა გაეშვას %1$s</string>
+  <string name="crash_report_send_crash_label">გათიშვის მოხსენების გადაგზავნა Mozilla-სთვის</string>
 </resources>

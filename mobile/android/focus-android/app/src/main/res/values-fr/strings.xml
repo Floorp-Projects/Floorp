@@ -243,8 +243,10 @@
   <string name="tip_open_in_new_tab">Ouvrir un lien dans un nouvel onglet\n Effectuez un appui long sur un lien dans une page</string>
   <string name="tip_request_desktop">Préférez-vous voir la version pour ordinateur du site ?%1$s Menu &gt; Voir version ordinateur</string>
   <string name="tip_disable_tips2">Désactiver les conseils sur l’écran de démarrage</string>
+  <string name="tip_explain_allowlist">Un site de confiance ?\n Allowlist désactive la protection contre le pistage pour les sites que vous connaissez et auxquels vous faites confiance.</string>
   <string name="new_tab_opened_snackbar">Nouvel onglet ouvert</string>
   <string name="open_new_tab_snackbar">Afficher</string>
+  <string name="preference_open_new_tab">Afficher immédiatement les liens ouverts dans de nouveaux onglets</string>
   <string name="preference_category_safe_browsing">Navigation sécurisée</string>
   <string name="preference_safe_browsing_title">Bloquer les sites potentiellement dangereux ou trompeurs</string>
   <string name="preference_safe_browsing_summary">Bloquer les sites malveillants et trompeurs, les sites de logiciels malveillants et indésirables signalés.</string>

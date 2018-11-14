@@ -6,6 +6,7 @@
   <string name="urlbar_hint">검색어 또는 주소 입력</string>
   <string name="teaser">자동화된 개인 정보 보호 브라우저.\n쓰고, 지우고. 쓰고, 지우고.</string>
   <string name="feedback_erase">페이지 탐색 기록이 삭제되었습니다.</string>
+  <string name="feedback_erase_custom_tab">탭의 탐색 기록이 삭제되었습니다.</string>
   <string name="search_hint">%1$s 검색</string>
   <string name="menu_share">공유…</string>
   <string name="menu_report_site_issue">사이트 이슈 보고</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">도움말</string>
   <string name="menu_rights">사용자 권리</string>
   <string name="menu_trackers_blocked_title">차단된 추적기</string>
+  <string name="menu_trackers_blocked_subtitle">이 기능을 끄면 일부 사이트 문제가 해결 될 수 있습니다.</string>
+  <string name="menu_content_blocking">콘텐츠 차단</string>
+  <string name="menu_content_blocking_subtitle">일부 사이트 문제 해결을 위해 끄기</string>
   <string name="menu_custom_tab_branding">%1$s에서 지원</string>
   <string name="share_dialog_title">다음으로 공유</string>
   <string name="notification_erase_text">방문 기록 지우기</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">지우고 열기</string>
   <string name="shortcut_erase_short_label">지우기</string>
   <string name="shortcut_erase_long_label">방문 기록 지우기</string>
+  <string name="shortcut_erase_and_open_short_label">지우고 열기</string>
+  <string name="shortcut_erase_and_open_long_label">%1$s 지우고 열기</string>
   <string name="text_selection_search_action">사생활 보호 검색</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s&#47484; &#50668;&#47084; &#44592;&#45733;&#51004;&#47196; &#49324;&#50857;&#54624; &#49688; &#51080;&#49845;&#45768;&#45796;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#44060;&#51064; &#51221;&#48372; &#48372;&#54840; &#48652;&#46972;&#50864;&#51200;&#47196; &#49324;&#50857;:\n  "<ul>"\n    "<li>&#50545;&#50640;&#49436; &#44160;&#49353; &#48143; &#48652;&#46972;&#50864;&#51669;&#54616;&#44592;</li>"\n    "<li>&#52628;&#51201;&#44592; &#52264;&#45800;(&#49444;&#51221;&#51012; &#48320;&#44221;&#54644; &#54728;&#50857;&#54624; &#49688; &#51080;&#51020;)</li>"\n    "<li>&#51064;&#53552;&#45367; &#44592;&#47197;&#51060;&#45208; &#44160;&#49353; &#44592;&#47197;, &#53216;&#53412; &#49325;&#51228;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s&#45716; Mozilla&#51032; &#51228;&#54408;&#51077;&#45768;&#45796;. Mozilla&#51032; &#49324;&#47749;&#51008; &#44148;&#44053;&#54616;&#44256; &#44060;&#48169;&#51201;&#51064; &#51064;&#53552;&#45367;&#51012; &#51312;&#49457;&#54616;&#45716; &#44163;&#51077;&#45768;&#45796;.<br/><a href="%2$s">&#45908; &#50508;&#50500;&#48372;&#44592;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">개인정보 보호 및 보안</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">웹 콘텐츠</string>
   <string name="preference_category_switching_apps">앱 전환</string>
   <string name="preference_category_general">일반</string>
+  <string name="preference_general_summary">기본 브라우저, 탭, 언어</string>
   <string name="preference_category_data_collection_use">데이터 수집 및 사용</string>
   <string name="preference_category_search">검색</string>
   <string name="preference_show_search_suggestions">추천 검색어 켜기</string>
   <string name="preference_show_search_suggestions_summary">주소창에 입력을 하면 %1$s가 이를 검색 엔진에 보냄</string>
   <string name="preference_search_engine_default">기본</string>
+  <string name="preference_search_engine_label">검색 엔진</string>
   <string name="preference_state_on">사용 중</string>
   <string name="preference_state_off">사용 안 함</string>
   <string name="preference_subitem_autocomplete">URL 자동 완성</string>
+  <string name="preference_switch_autocomplete_topsites">자주 가는 사이트</string>
+  <string name="preference_autocomplete_topsite_summary">자동 완성 기능을 활성화해서 450개가 넘는 자주 찾는 URL을 주소창에서 사용해 보세요.</string>
+  <string name="preference_switch_autocomplete_user_list">내가 추가한 사이트</string>
+  <string name="preference_autocomplete_user_list_summary">자동 완성 기능을 활성화해서 450개가 넘는 자주 찾는 URL을 주소창에서 사용해 보세요.</string>
+  <string name="preference_category_autocomplete_manage_sites">사이트 관리</string>
+  <string name="preference_autocomplete_subitem_manage_sites">사이트 관리</string>
   <string name="preference_autocomplete_action_add">+ 사용자 정의 URL 추가</string>
   <string name="preference_autocomplete_title_add">사용자 정의 URL 추가</string>
   <string name="custom_autocomplete_quick_add">사용자 정의 URL 추가</string>
+  <string name="add_custom_autocomplete_label">자동 완성 링크 추가</string>
   <string name="preference_category_cookies">쿠키와 사이트 데이타</string>
   <string name="preference_category_data_choices">데이타 선택</string>
   <string name="preference_autocomplete_title_remove">사용자 정의 URL 삭제</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">설정 시 웹 페이지가 제대로 표시되지 않을 수 있습니다</string>
   <string name="preference_privacy_category_cookies">쿠키 차단</string>
   <string name="preference_privacy_should_block_cookies_no_option">아니오</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">제 3자 추적기 쿠키 만 차단</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">제 3자 쿠키만 차단</string>
   <string name="preference_privacy_should_block_cookies_yes_option">예</string>
   <string name="preference_security_biometric">잠금 헤제에 지문을 사용</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">로딩 중</string>
   <string name="accessibility_announcement_loading_finished">웹 사이트 불러옴</string>
   <string name="content_description_menu">옵션 더보기</string>
+  <string name="indicator_content_description_menu">추가 옵션 버튼</string>
   <string name="content_description_forward">앞으로 가기</string>
   <string name="content_description_reload">웹 사이트 다시 불러오기</string>
   <string name="content_description_back">뒤로 가기</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#51060;&#45716; &#49436;&#48260;&#51032; &#44396;&#49457;&#50640; &#47928;&#51228;&#44032; &#51080;&#44144;&#45208; &#45572;&#44400;&#44032;&#44032; &#47564;&#46304; &#44032;&#51676; &#49436;&#48260;&#47196; &#50672;&#44208;&#49884;&#53412;&#47140;&#44256; &#54624; &#46412; &#48156;&#49373;&#46112; &#49688; &#51080;&#49845;&#45768;&#45796;.</li>"\n  "<li>&#47564;&#50557; &#51060;&#51204;&#50640; &#49436;&#48260;&#50640; &#51228;&#45824;&#47196; &#50672;&#44208;&#46096;&#45912; &#51201;&#51060; &#51080;&#50632;&#45796;&#47732;, &#50640;&#47084;&#44032; &#51104;&#44624;&#46041;&#50504;&#47564; &#48156;&#49373;&#54620; &#44163;&#51068; &#54869;&#47456;&#51060; &#45458;&#49845;&#45768;&#45796;. &#45208;&#51473;&#50640; &#45796;&#49884; &#49884;&#46020;&#54644;&#48372;&#49464;&#50836;.</li>\n</ul>]]></string>
   <string name="error_generic_title">앗! 이런</string>
   <string name="error_generic_message">페이지를 불러오지 못했습니다.</string>
+  <string name="contextmenu_open_in_app">앱으로 열기</string>
   <string name="contextmenu_link_share">링크 공유</string>
   <string name="contextmenu_link_copy">링크 주소 복사</string>
   <string name="contextmenu_image_share">이미지 공유</string>
@@ -224,4 +242,25 @@
   <string name="tip_autocomplete_url">자주 사용하는 사이트 URL을 자동 완성합니다\n 주소창에서 URL을 길게 눌러 보세요</string>
   <string name="tip_open_in_new_tab">링크를 새 탭에서 엽니다\n 페이지의 링크를 길게 눌러 보세요</string>
   <string name="tip_request_desktop">전체 데스크톱 사이트를 보고 싶으세요?%1$s 메뉴 &gt; 데스크톱 사이트 요청</string>
+  <string name="tip_disable_tips2">시작 화면에서 도움말 끄기</string>
+  <string name="tip_explain_allowlist">신뢰할 수 있는 사이트인가요?\n 내가 알고 있는 사이트에 대해서 추적 보호를 비활성화 합니다.</string>
+  <string name="new_tab_opened_snackbar">새 탭 열림</string>
+  <string name="open_new_tab_snackbar">전환</string>
+  <string name="preference_open_new_tab">새탭의 링크로 즉시 전환</string>
+  <string name="preference_category_safe_browsing">안전한 브라우징</string>
+  <string name="preference_safe_browsing_title">잠재적으로 위험한 사이트 및 사기성 사이트 차단</string>
+  <string name="preference_safe_browsing_summary">사기성 사이트나 공격 사이트, 악성코드 사이트, 원치 않는 소프트웨어 사이트를 차단합니다.</string>
+  <string name="preference_exceptions">예외</string>
+  <string name="preference_exceptions_description">이 사이트에 대한 콘텐츠 차단을 비활성화 했습니다.</string>
+  <string name="preference_exceptions_menu_remove">삭제</string>
+  <string name="preference_exceptions_remove_all_button_label">모든 웹사이트 삭제</string>
+  <string name="tab_crash_report_title">오류난 탭</string>
+  <string name="tab_crash_report_headline">죄송합니다. 이 탭에 문제가 있습니다.</string>
+  <string name="tab_crash_report_description">사생활 보호 브라우저여서 저장하지 않았기 때문에 이 탭을 복원할 수 없습니다.</string>
+  <string name="tab_crash_report_close_tab_button_label">탭 닫기</string>
+  <string name="fatal_crash_report_title">죄송합니다. %1$s에 문제가 있었고 종료됐습니다.</string>
+  <string name="fatal_crash_report_description">사생활 보호 브라우저여서 저장하지 않았기 때문에 마지막 브라우징 세션을 복원할 수 없습니다.</string>
+  <string name="fatal_crash_report_close_button_label">닫기</string>
+  <string name="fatal_crash_report_restart_firefox_label">%1$s 다시 시작</string>
+  <string name="crash_report_send_crash_label">Mozilla에 충돌 보고서 보내기</string>
 </resources>

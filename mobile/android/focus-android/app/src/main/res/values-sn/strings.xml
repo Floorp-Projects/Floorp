@@ -157,10 +157,15 @@
   <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;<li>" Nzvimbo iyi inogona kunge isipo kwekanguva kana yakabatikana. Edza zvakare munguva shomanana. "</li>\n&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;<li>" Kana usingakwanisi kutakura mapeji chero ipi zvayo, chengetedza dhepfenyuro yemagetsi yako kana kuti Wi-Fi connection. "</li>li&gt;\n&#160;&#160;&#160;&#160;&#160;&#160;</ul>ul>]]></string>
   <string name="error_timeout_title">Kubatana kwakapedzwa nguva</string>
   <string name="error_hostLookup_title">Sevha harina kuoneka</string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;<li>Tarisa kero yekunyora zvikanganiso zvakadai se\n&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;<strong>" ww "</strong>" .example.com panzvimbo ye\n&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;"<strong>" www "</strong>" .example.com "</li>\n&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;<li>" Kana usingakwanisi kutakura mapeji chero ipi zvayo, chengeta dhidhi yako yedhidhiyo kana Wi-Fi connection. "</li>\n&#160;&#160;&#160;&#160;&#160;&#160;</ul>]]></string>
   <string name="error_malformedURI_title">Kero haisi yakakodzera</string>
+  <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n&#160;&#160;<li>"Kero kero dzeWebhu dzinowanzonyorwa se "<strong>" http://www.example.com/"</strong></li>\n&#160;&#160;<li>"Iva nechokwadi chokuti uri kushandisa mberi slashes (i.e. "<strong>/</strong>).</li>\n</ul>]]></string>
   <string name="error_redirectLoop_title">Peji haisi kutungamira zvakanaka</string>
+  <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n&#160;&#160;<li>"Iyi dambudziko dzimwe nguva inokonzerwa nekudzivisa kana kuramba kubvuma makuki "</li>\n</ul>]]></string>
   <string name="error_unsupportedprotocol_title">Kero yacho yakanga isinganzwisisiki</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" "<li>Unofanira kuisa imwe software kuti ukwanise kuvhura adhiresi iyi.</li></ul>]]></string>
   <string name="error_sslhandshake_title">Tatadza kuvhura zvakachengetedzeka</string>
+  <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n&#160;&#160;<li>" Izvi zvinogona kuva dambudziko nekugadziriswa kwevhavha, kana zvingave\nmumwe munhu achiedza kutevedzera sevha. "</li>\n&#160;&#160;<li>" Kana wakabatana neiyo server kubudirira munguva yakapfuura, kukanganisa kunogona\niva kwenguva duku, uye iwe unogona zvakare zvakare gare gare. "</li>\n</ul>]]></string>
   <string name="error_generic_title">Mhaihwee</string>
   <string name="error_generic_message">Hatikwanise kuvhura peji iri nekuda kwezvimwe zvikonzero.</string>
   <string name="contextmenu_open_in_app">Vhura ne app</string>
@@ -170,18 +175,31 @@
   <string name="contextmenu_image_copy">Kopa adhiresi yemupikicha</string>
   <string name="contextmenu_image_save">Chengeta mufananidzo</string>
   <string name="contextmenu_open_in_new_tab">Vhura link mu tebhu nyowani</string>
+  <string name="contextmenu_image_warning"><![CDATA["Mifananidzo yakachengetwa "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">neyakagoverwa haibviswe</b>" paunodzima %1$s nhoroondo."]]></string>
   <string name="firstrun_defaultbrowser_title">Shandisa simba rako rechivande</string>
+  <string name="firstrun_defaultbrowser_text2">Tora browsing pachedu kune imwe inotevera. Chengetedza zvikwereti nezvimwe zvinhu zvinogona kukutevera pazvikwata uye kuvhara pasi peji kutengesa nguva.</string>
   <string name="firstrun_search_title">Kutsvaga kwako, inzira yako</string>
+  <string name="firstrun_search_text">Kutsvaka chimwe chinhu chakasiyana? Sarudza imwe shandiso yekutsvaga injini muZvirevo.</string>
   <string name="firstrun_shortcut_title">Wedzera zvidzitiro pamba peimba yako</string>
+  <string name="firstrun_shortcut_text">Dzokera kunzvimbo dzako dzaunoda mu %1$s nokukurumidza. Ingosarudza \"Wedzera Pamba peji\" kubva ku %1$s menyu.</string>
   <string name="firstrun_privacy_title">Ita kuchengeteka kwako chive chijairire</string>
+  <string name="firstrun_privacy_text">Ita %1$s sechitsvaga chako chekutsvaga uye uwane mararamiro ehupfumi hwepachivande paunotanga mapepa ewebhu kubva kune mamwe maitiro.</string>
   <string name="firstrun_close_button">Horait, Ndazvibata!</string>
   <string name="firstrun_skip_button">Svetuka</string>
   <string name="firstrun_next_button">Enda mberi</string>
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_action_add">Wedzera</string>
   <string name="dialog_addtohomescreen_action_cancel">Kanzura</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Shortcut ichazaruka neTracking Protection yakavharwa</string>
+  <string name="notification_browsing_session_channel_name">Sesheni yekutsvaga pachivande</string>
+  <string name="notification_browsing_session_channel_description">Izaziso dzinokubvumira kuti usasase %1$s svondo yako nepombi. Iwe haufaniri kuzarura purogiramu yacho kana kuona kuti chii chiri kushanda mu browser yako.</string>
   <string name="tabs_tray_action_erase">Bvisa zvawamboona</string>
   <string name="download_firefox">Dounirodha Firefox</string>
+  <string name="your_rights_content1">%1$s yakasununguka uye yakasununguka purogiramu software yakagadzirwa naMozilla nevamwe vanobatsira.</string>
+  <string name="your_rights_content2"><![CDATA["%1$s inowanikwa kwauri pasi pemagariro e "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">"Mozilla Public License "</a>" uye mamwe mavhesi emvura akazaruka."]]></string>
+  <string name="your_rights_content3"><![CDATA["Iwe hauna kupa kodzero chero ipi zvayo kana malayisenzi kune zvikwangwani zveMozilla Foundation kana chero sangano, kusanganisira maMozilla, Firefox kana %1$s mazita kana malogo. Zvimwe zvinowanikwa zvinogona kuwanikwa "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">pano</a>.]]></string>
+  <string name="your_rights_content4"><![CDATA["Zvimwe zvinyorwa zvekushandisa kwe %1$s zvinowanikwa pasi pemamwe marudzi akasiyana uye akasununguka kubva kune "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">zvibvumirano</a>.]]></string>
+  <string name="your_rights_content5"><![CDATA["%1$s inoshandisa mabhiilopu anopiwa neDisconnect, Inc. sezvikamu zvakasiyana uye zvakazvimirira pasi pe "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" GNU General Public License v3 "</a>", uye iripo "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s ">pano</a>.]]></string>
   <string name="gv_prompt_username_hint">Zita rekushandisa</string>
   <string name="gv_prompt_password_hint">Pasiwedhi</string>
   <string name="gv_prompt_clear">Bvisa</string>
@@ -221,17 +239,27 @@
   <string name="tip_disable_tracking_protection">Site yaita zvisingatarisirwi?\n Edza kubvisa Kuchengetedzwa Kwekutevera</string>
   <string name="tip_add_to_homescreen">Iva one-tap-access kune masayiti ako anoshandisa%1$s Menyu &gt; Wedzera kusikirini rekutanga</string>
   <string name="tip_set_default_browser">Vhura mazano ose mu %1$s\n Ita %1$s sechekutsvagisa</string>
+  <string name="tip_autocomplete_url">Ma URLs echikwata zvemasayiti aunonyanya kushandisa\n Dhinda kwenguva ipi neipi URL mubhare rekero</string>
+  <string name="tip_open_in_new_tab">Vhura lingi mune imwe tebhu\n Dhinda kwenguva refu chero chibatanidza pane peji</string>
+  <string name="tip_request_desktop">Pane kuti uone yakazara desktop site?%1$s Menyu &gt; Kumbira nzvimbo ye desktop</string>
   <string name="tip_disable_tips2">Dzima mazano papeji yekutangisa</string>
+  <string name="tip_explain_allowlist">Nzvimbo yakatendwa?\n Chibvumirano chinodzivisa Kuchengetedzwa Kwekuchengetedza kwemasayithi ounoziva uye kuvimba.</string>
   <string name="new_tab_opened_snackbar">Tebhu idzva yavhurwa</string>
   <string name="open_new_tab_snackbar">Chinja</string>
+  <string name="preference_open_new_tab">Chinja ringi kune tebhu idzva pakarepo</string>
   <string name="preference_category_safe_browsing">Kutsvaga Kwakachengeteka</string>
+  <string name="preference_safe_browsing_title">Chengetedza nzvimbo dzingangove dzine ngozi uye dzinonyengedza</string>
+  <string name="preference_safe_browsing_summary">Vharira nzvimbo dzinonyengedza kunze uye dzekurwisa, nzvimbo dzisina kuwanikwa, uye dzisina kuwanikwa software.</string>
   <string name="preference_exceptions">Zvisarudzo</string>
+  <string name="preference_exceptions_description">Wadzima Content Blocking nekuda kwemawebsite aya.</string>
   <string name="preference_exceptions_menu_remove">Bvisa</string>
   <string name="preference_exceptions_remove_all_button_label">Bvisa mawebhusaiti ese</string>
   <string name="tab_crash_report_title">Tebhu rakirasha</string>
   <string name="tab_crash_report_headline">Ruregerero. Taita dambudziko ne tebhu iri.</string>
+  <string name="tab_crash_report_description">Sekuchengetedzwa kwepachivande, hatina kumbochengetedza uye hatigoni kudzorera tabu iyi.</string>
   <string name="tab_crash_report_close_tab_button_label">Vhara Tebhu</string>
   <string name="fatal_crash_report_title">Ndine hurombo. %1$s yakanga ine dambudziko uye yakaparara.</string>
+  <string name="fatal_crash_report_description">Se bhurauza repachivande, hatitombo chengete zvawanga uchiita paindaneti.</string>
   <string name="fatal_crash_report_close_button_label">Vhara</string>
   <string name="fatal_crash_report_restart_firefox_label">Tangidza %1$s</string>
   <string name="crash_report_send_crash_label">Tumira ripoti yekuparara kuMozilla</string>
