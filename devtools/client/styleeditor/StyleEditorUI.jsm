@@ -28,6 +28,7 @@ const {OriginalSource} = require("devtools/client/styleeditor/original-source");
 
 loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
 loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
+loader.lazyRequireGetter(this, "copyString", "devtools/shared/platform/clipboard", true);
 
 const LOAD_ERROR = "error-load";
 const STYLE_EDITOR_TEMPLATE = "stylesheet";
@@ -84,8 +85,9 @@ function StyleEditorUI(debuggee, target, panelDoc, cssProperties) {
   this._updateMediaList = this._updateMediaList.bind(this);
   this._clear = this._clear.bind(this);
   this._onError = this._onError.bind(this);
-  this._updateOpenLinkItem = this._updateOpenLinkItem.bind(this);
+  this._updateContextMenuItems = this._updateContextMenuItems.bind(this);
   this._openLinkNewTab = this._openLinkNewTab.bind(this);
+  this._copyUrl = this._copyUrl.bind(this);
   this._addStyleSheet = this._addStyleSheet.bind(this);
 
   this._prefObserver = new PrefObserver("devtools.styleeditor.");
@@ -164,7 +166,7 @@ StyleEditorUI.prototype = {
 
     this._contextMenu = this._panelDoc.getElementById("sidebar-context");
     this._contextMenu.addEventListener("popupshowing",
-                                       this._updateOpenLinkItem);
+                                       this._updateContextMenuItems);
 
     this._optionsMenu =
       this._panelDoc.getElementById("style-editor-options-popup");
@@ -185,6 +187,9 @@ StyleEditorUI.prototype = {
       this._panelDoc.getElementById("context-openlinknewtab");
     this._openLinkNewTabItem.addEventListener("command",
                                               this._openLinkNewTab);
+
+    this._copyUrlItem = this._panelDoc.getElementById("context-copyurl");
+    this._copyUrlItem.addEventListener("command", this._copyUrl);
 
     const nav = this._panelDoc.querySelector(".splitview-controller");
     nav.setAttribute("width", Services.prefs.getIntPref(PREF_NAV_WIDTH));
@@ -464,7 +469,7 @@ StyleEditorUI.prototype = {
 
   /**
    * This method handles the following cases related to the context
-   * menu item "_openLinkNewTabItem":
+   * menu items "_openLinkNewTabItem" and "_copyUrlItem":
    *
    * 1) There was a stylesheet clicked on and it is external: show and
    * enable the context menu item
@@ -473,12 +478,15 @@ StyleEditorUI.prototype = {
    * 3) There was no stylesheet clicked on (the right click happened
    * below the list): hide the context menu
    */
-  _updateOpenLinkItem: function() {
+  _updateContextMenuItems: function() {
     this._openLinkNewTabItem.setAttribute("hidden",
                                           !this._contextMenuStyleSheet);
+    this._copyUrlItem.setAttribute("hidden", !this._contextMenuStyleSheet);
+
     if (this._contextMenuStyleSheet) {
       this._openLinkNewTabItem.setAttribute("disabled",
                                             !this._contextMenuStyleSheet.href);
+      this._copyUrlItem.setAttribute("disabled", !this._contextMenuStyleSheet.href);
     }
   },
 
@@ -488,6 +496,15 @@ StyleEditorUI.prototype = {
   _openLinkNewTab: function() {
     if (this._contextMenuStyleSheet) {
       openContentLink(this._contextMenuStyleSheet.href);
+    }
+  },
+
+  /**
+   * Copies a stylesheet's URL.
+   */
+  _copyUrl: function() {
+    if (this._contextMenuStyleSheet) {
+      copyString(this._contextMenuStyleSheet.href);
     }
   },
 
