@@ -17,8 +17,8 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 namespace dom {
 
-class ReportBody final : public nsISupports
-                       , public nsWrapperCache
+class ReportBody : public nsISupports
+                 , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -26,7 +26,7 @@ public:
 
   explicit ReportBody(nsPIDOMWindowInner* aWindow);
 
-  JSObject*
+  virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   nsPIDOMWindowInner*
@@ -35,8 +35,8 @@ public:
     return mWindow;
   }
 
-private:
-  ~ReportBody();
+protected:
+  virtual ~ReportBody();
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
 };

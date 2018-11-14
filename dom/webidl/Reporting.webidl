@@ -34,3 +34,13 @@ dictionary ReportingObserverOptions {
 };
 
 typedef sequence<Report> ReportList;
+
+[Func="mozilla::dom::DOMPrefs::dom_reporting_enabled"]
+interface DeprecationReportBody : ReportBody {
+  readonly attribute DOMString id;
+  readonly attribute Date? anticipatedRemoval;
+  readonly attribute DOMString message;
+  readonly attribute DOMString? sourceFile;
+  readonly attribute unsigned long? lineNumber;
+  readonly attribute unsigned long? columnNumber;
+};
