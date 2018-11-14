@@ -7,16 +7,11 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
-
-  <binding id="toolbar">
-  </binding>
-
   <!-- The toolbar-drag binding is almost a verbatim copy of its toolkit counterpart,
        but it inherits from the customizableui's toolbar binding instead of toolkit's.
        This functionality will move into CustomizableUI proper as part of our move
        away from XBL. -->
-  <binding id="toolbar-drag"
-           extends="chrome://browser/content/customizableui/toolbar.xml#toolbar">
+  <binding id="toolbar-drag">
     <implementation>
       <field name="_dragBindingAlive">true</field>
       <constructor><![CDATA[
