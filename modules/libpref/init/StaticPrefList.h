@@ -1790,6 +1790,12 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+VARCACHE_PREF(
+  "dom.reporting.testing.enabled",
+   dom_reporting_testing_enabled,
+  RelaxedAtomicBool, false
+)
+
 //---------------------------------------------------------------------------
 // End of prefs
 //---------------------------------------------------------------------------

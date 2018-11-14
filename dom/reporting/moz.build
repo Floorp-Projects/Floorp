@@ -10,6 +10,7 @@ EXPORTS.mozilla.dom = [
     'ReportBody.h',
     'ReportingObserver.h',
     'ReportingUtils.h',
+    'TestingDeprecatedInterface.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -18,6 +19,7 @@ UNIFIED_SOURCES += [
     'ReportBody.cpp',
     'ReportingObserver.cpp',
     'ReportingUtils.cpp',
+    'TestingDeprecatedInterface.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
@@ -26,3 +28,5 @@ with Files('**'):
     BUG_COMPONENT = ('DOM', 'Security')
 
 FINAL_LIBRARY = 'xul'
+
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
