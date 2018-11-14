@@ -30,9 +30,33 @@ class TestSwitchWindowChrome(TestSwitchToWindowContent):
 
     def open_window_in_background(self):
         with self.marionette.using_context("chrome"):
-            self.marionette.execute_script("""
-              window.open("about:blank", null, "location=1,toolbar=1");
-              window.focus();
+            self.marionette.execute_async_script("""
+              let callback = arguments[0];
+              (async function() {
+                function promiseEvent(target, type, args) {
+                  return new Promise(r => {
+                    let params = Object.assign({once: true}, args);
+                    target.addEventListener(type, r, params);
+                  });
+                }
+                function promiseWindowFocus(w) {
+                  return Promise.all([
+                    promiseEvent(w, "focus", {capture: true}),
+                    promiseEvent(w, "activate"),
+                  ]);
+                }
+                // Open a window, wait for it to receive focus
+                let win = OpenBrowserWindow();
+                await promiseWindowFocus(win);
+
+                // Now refocus our original window and wait for that to happen.
+                let windowFocusPromise = promiseWindowFocus(window);
+                window.focus();
+                return windowFocusPromise;
+              })().then(() => {
+                // can't just pass `callback`, as we can't JSON-ify the events it'd get passed.
+                callback()
+              });
             """)
 
     def open_window_in_foreground(self):
@@ -41,8 +65,6 @@ class TestSwitchWindowChrome(TestSwitchToWindowContent):
             link = self.marionette.find_element(By.ID, "new-window")
             link.click()
 
-    @skipIf(sys.platform.startswith("linux") or sys.platform == "darwin",
-            "Bug 1335457 - Fails to open a background window on Linux / MacOS")
     def test_switch_tabs_for_new_background_window_without_focus_change(self):
         # Open an addition tab in the original window so we can better check
         # the selected index in thew new window to be opened.
