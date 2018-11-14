@@ -149,6 +149,7 @@ public:
     , mCodec(VPXDecoder::IsVP8(aInfo.mMimeType) ? VPXDecoder::Codec::VP8
                                                 : VPXDecoder::Codec::VP9)
   {
+    mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
   }
 
   bool CanBeInstantiated() const override { return true; }
@@ -166,22 +167,25 @@ public:
     }
 
     auto dataSpan = MakeSpan<const uint8_t>(aSample->Data(), aSample->Size());
-    auto dimensions = VPXDecoder::GetFrameSize(dataSpan, mCodec);
-    int profile = mCodec == VPXDecoder::Codec::VP9
-                    ? VPXDecoder::GetVP9Profile(dataSpan)
-                    : 0;
 
-    if (!mSize) {
-      mSize = Some(dimensions);
-      mProfile = Some(profile);
+    VPXDecoder::VPXStreamInfo info;
+    if (!VPXDecoder::GetStreamInfo(dataSpan, info, mCodec)) {
+      return NS_ERROR_DOM_MEDIA_DECODE_ERR;
+    }
+
+    if (!mInfo) {
+      mInfo = Some(info);
       return NS_OK;
     }
-    if (mSize.ref() == dimensions && mProfile.ref() == profile) {
+    if (mInfo.ref().IsCompatible(info)) {
       return NS_OK;
     }
-    mSize = Some(dimensions);
-    mProfile = Some(profile);
-    mCurrentConfig.mDisplay = dimensions;
+    mInfo = Some(info);
+    mCurrentConfig.mImage = info.mImage;
+    mCurrentConfig.mDisplay = info.mDisplay;
+    mCurrentConfig.SetImageRect(
+      gfx::IntRect(0, 0, info.mImage.width, info.mImage.height));
+    mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
 
     return NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
   }
@@ -192,14 +196,17 @@ public:
                             MediaRawData* aSample,
                             bool aNeedKeyFrame) override
   {
+    aSample->mTrackInfo = mTrackInfo;
+
     return NS_OK;
   }
 
 private:
   VideoInfo mCurrentConfig;
   const VPXDecoder::Codec mCodec;
-  Maybe<gfx::IntSize> mSize;
-  Maybe<int> mProfile;
+  Maybe<VPXDecoder::VPXStreamInfo> mInfo;
+  uint32_t mStreamID = 0;
+  RefPtr<TrackInfoSharedPtr> mTrackInfo;
 };
 
 MediaChangeMonitor::MediaChangeMonitor(PlatformDecoderModule* aPDM,
