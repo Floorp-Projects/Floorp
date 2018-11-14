@@ -396,7 +396,6 @@ NS_IMPL_ISUPPORTS(HTMLCanvasElementObserver, nsIObserver)
 HTMLCanvasElement::HTMLCanvasElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
   : nsGenericHTMLElement(std::move(aNodeInfo)),
     mResetLayer(true) ,
-    mMaybeModified(false) ,
     mWriteOnly(false)
 {}
 
@@ -1011,7 +1010,6 @@ HTMLCanvasElement::GetContext(const nsAString& aContextId,
                               nsISupports** aContext)
 {
   ErrorResult rv;
-  mMaybeModified = true; // For FirstContentfulPaint
   *aContext = GetContext(nullptr, aContextId, JS::NullHandleValue, rv).take();
   return rv.StealNSResult();
 }
@@ -1026,7 +1024,6 @@ HTMLCanvasElement::GetContext(JSContext* aCx,
     return nullptr;
   }
 
-  mMaybeModified = true; // For FirstContentfulPaint
   return CanvasRenderingContextHelper::GetContext(aCx, aContextId,
     aContextOptions.isObject() ? aContextOptions : JS::NullHandleValue,
     aRv);

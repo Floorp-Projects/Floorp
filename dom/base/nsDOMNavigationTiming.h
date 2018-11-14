@@ -97,10 +97,6 @@ public:
   {
     return TimeStampToDOM(mNonBlankPaint);
   }
-  DOMTimeMilliSec GetTimeToContentfulPaint() const
-  {
-    return TimeStampToDOM(mContentfulPaint);
-  }
   DOMTimeMilliSec GetTimeToTTFI() const
   {
     return TimeStampToDOM(mTTFI);
@@ -178,7 +174,6 @@ public:
 
   void NotifyLongTask(mozilla::TimeStamp aWhen);
   void NotifyNonBlankPaintForRootContentDocument();
-  void NotifyContentfulPaintForRootContentDocument();
   void NotifyDOMContentFlushedForRootContentDocument();
   void NotifyDocShellStateChanged(DocShellState aDocShellState);
 
@@ -214,7 +209,6 @@ private:
   DOMHighResTimeStamp mNavigationStartHighRes;
   mozilla::TimeStamp mNavigationStart;
   mozilla::TimeStamp mNonBlankPaint;
-  mozilla::TimeStamp mContentfulPaint;
   mozilla::TimeStamp mDOMContentFlushed;
 
   mozilla::TimeStamp mBeforeUnloadStart;
