@@ -30,3 +30,43 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.layout.boxmodel.opened");
   Services.prefs.clearUserPref("devtools.layout.grid.opened");
 });
+
+/**
+ * Toggles ON the flexbox highlighter given the flexbox highlighter button from the
+ * layout panel.
+ *
+ * @param  {DOMNode} button
+ *         The flexbox highlighter toggle button in the flex container panel.
+ * @param  {HighlightersOverlay} highlighters
+ *         The HighlightersOverlay instance.
+ * @param  {Store} store
+ *         The Redux store instance.
+ */
+async function toggleHighlighterON(button, highlighters, store) {
+  info("Toggling ON the flexbox highlighter from the layout panel.");
+  const onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
+  const onToggleChange = waitUntilState(store, state => state.flexbox.highlighted);
+  button.click();
+  await onHighlighterShown;
+  await onToggleChange;
+}
+
+/**
+ * Toggles OFF the flexbox highlighter given the flexbox highlighter button from the
+ * layout panel.
+ *
+ * @param  {DOMNode} button
+ *         The flexbox highlighter toggle button in the flex container panel.
+ * @param  {HighlightersOverlay} highlighters
+ *         The HighlightersOverlay instance.
+ * @param  {Store} store
+ *         The Redux store instance.
+ */
+async function toggleHighlighterOFF(button, highlighters, store) {
+  info("Toggling OFF the flexbox highlighter from the layout panel.");
+  const onHighlighterHidden = highlighters.once("flexbox-highlighter-hidden");
+  const onToggleChange = waitUntilState(store, state => !state.flexbox.highlighted);
+  button.click();
+  await onHighlighterHidden;
+  await onToggleChange;
+}

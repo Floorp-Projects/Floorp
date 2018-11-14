@@ -388,61 +388,65 @@ PaymentResponse::ValidatePaymentValidationErrors(
     return NS_OK;
   }
   // check PaymentValidationErrors.payer
-  PayerErrors payerErrors(aErrors.mPayer);
-  if (payerErrors.mName.WasPassed() && !payerErrors.mName.Value().IsEmpty()) {
-    return NS_OK;
-  }
-  if (payerErrors.mEmail.WasPassed() && !payerErrors.mEmail.Value().IsEmpty()) {
-    return NS_OK;
-  }
-  if (payerErrors.mPhone.WasPassed() && !payerErrors.mPhone.Value().IsEmpty()) {
-    return NS_OK;
+  if (aErrors.mPayer.WasPassed()) {
+    PayerErrors payerErrors(aErrors.mPayer.Value());
+    if (payerErrors.mName.WasPassed() && !payerErrors.mName.Value().IsEmpty()) {
+      return NS_OK;
+    }
+    if (payerErrors.mEmail.WasPassed() && !payerErrors.mEmail.Value().IsEmpty()) {
+      return NS_OK;
+    }
+    if (payerErrors.mPhone.WasPassed() && !payerErrors.mPhone.Value().IsEmpty()) {
+      return NS_OK;
+    }
   }
   // check PaymentValidationErrors.paymentMethod
   if (aErrors.mPaymentMethod.WasPassed()) {
     return NS_OK;
   }
   // check PaymentValidationErrors.shippingAddress
-  AddressErrors addErrors(aErrors.mShippingAddress);
-  if (addErrors.mAddressLine.WasPassed() &&
-      !addErrors.mAddressLine.Value().IsEmpty()) {
-    return NS_OK;
-  }
-  if (addErrors.mCity.WasPassed() && !addErrors.mCity.Value().IsEmpty()) {
-    return NS_OK;
-  }
-  if (addErrors.mCountry.WasPassed() && !addErrors.mCountry.Value().IsEmpty()) {
-    return NS_OK;
-  }
-  if (addErrors.mDependentLocality.WasPassed() &&
-      !addErrors.mDependentLocality.Value().IsEmpty()) {
-    return NS_OK;
-  }
-  if (addErrors.mOrganization.WasPassed() &&
-      !addErrors.mOrganization.Value().IsEmpty()) {
-    return NS_OK;
-  }
-  if (addErrors.mPhone.WasPassed() && !addErrors.mPhone.Value().IsEmpty()) {
-    return NS_OK;
-  }
-  if (addErrors.mPostalCode.WasPassed() &&
-      !addErrors.mPostalCode.Value().IsEmpty()) {
-    return NS_OK;
-  }
-  if (addErrors.mRecipient.WasPassed() &&
-      !addErrors.mRecipient.Value().IsEmpty()) {
-    return NS_OK;
-  }
-  if (addErrors.mRegion.WasPassed() && !addErrors.mRegion.Value().IsEmpty()) {
-    return NS_OK;
-  }
-  if (addErrors.mRegionCode.WasPassed() &&
-      !addErrors.mRegionCode.Value().IsEmpty()) {
-    return NS_OK;
-  }
-  if (addErrors.mSortingCode.WasPassed() &&
-      !addErrors.mSortingCode.Value().IsEmpty()) {
-    return NS_OK;
+  if (aErrors.mShippingAddress.WasPassed()) {
+    AddressErrors addErrors(aErrors.mShippingAddress.Value());
+    if (addErrors.mAddressLine.WasPassed() &&
+        !addErrors.mAddressLine.Value().IsEmpty()) {
+      return NS_OK;
+    }
+    if (addErrors.mCity.WasPassed() && !addErrors.mCity.Value().IsEmpty()) {
+      return NS_OK;
+    }
+    if (addErrors.mCountry.WasPassed() && !addErrors.mCountry.Value().IsEmpty()) {
+      return NS_OK;
+    }
+    if (addErrors.mDependentLocality.WasPassed() &&
+        !addErrors.mDependentLocality.Value().IsEmpty()) {
+      return NS_OK;
+    }
+    if (addErrors.mOrganization.WasPassed() &&
+        !addErrors.mOrganization.Value().IsEmpty()) {
+      return NS_OK;
+    }
+    if (addErrors.mPhone.WasPassed() && !addErrors.mPhone.Value().IsEmpty()) {
+      return NS_OK;
+    }
+    if (addErrors.mPostalCode.WasPassed() &&
+        !addErrors.mPostalCode.Value().IsEmpty()) {
+      return NS_OK;
+    }
+    if (addErrors.mRecipient.WasPassed() &&
+        !addErrors.mRecipient.Value().IsEmpty()) {
+      return NS_OK;
+    }
+    if (addErrors.mRegion.WasPassed() && !addErrors.mRegion.Value().IsEmpty()) {
+      return NS_OK;
+    }
+    if (addErrors.mRegionCode.WasPassed() &&
+        !addErrors.mRegionCode.Value().IsEmpty()) {
+      return NS_OK;
+    }
+    if (addErrors.mSortingCode.WasPassed() &&
+        !addErrors.mSortingCode.Value().IsEmpty()) {
+      return NS_OK;
+    }
   }
   return NS_ERROR_DOM_ABORT_ERR;
 }

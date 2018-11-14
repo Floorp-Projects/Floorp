@@ -20,6 +20,13 @@
 namespace mozilla {
 namespace layers {
 
+AsyncImagePipelineManager::ForwardingExternalImage::~ForwardingExternalImage()
+{
+  DebugOnly<bool> released =
+    SharedSurfacesParent::Release(mImageId);
+    MOZ_ASSERT(released);
+}
+
 AsyncImagePipelineManager::AsyncImagePipeline::AsyncImagePipeline()
  : mInitialised(false)
  , mIsChanged(false)
@@ -52,6 +59,7 @@ AsyncImagePipelineManager::Destroy()
 {
   MOZ_ASSERT(!mDestroyed);
   mApi = nullptr;
+  mPipelineTexturesHolders.Clear();
   mDestroyed = true;
 }
 
@@ -540,7 +548,8 @@ AsyncImagePipelineManager::HoldExternalImage(const wr::PipelineId& aPipelineId, 
     return;
   }
 
-  holder->mExternalImages.push(ForwardingExternalImage(aEpoch, aImageId));
+  auto image = MakeUnique<ForwardingExternalImage>(aEpoch, aImageId);
+  holder->mExternalImages.push(std::move(image));
 }
 
 void
@@ -658,12 +667,9 @@ AsyncImagePipelineManager::ProcessPipelineRendered(const wr::PipelineId& aPipeli
       holder->mTextureHostWrappers.pop();
     }
     while (!holder->mExternalImages.empty()) {
-      if (aEpoch <= holder->mExternalImages.front().mEpoch) {
+      if (aEpoch <= holder->mExternalImages.front()->mEpoch) {
         break;
       }
-      DebugOnly<bool> released =
-        SharedSurfacesParent::Release(holder->mExternalImages.front().mImageId);
-      MOZ_ASSERT(released);
       holder->mExternalImages.pop();
     }
   }
@@ -683,14 +689,6 @@ AsyncImagePipelineManager::ProcessPipelineRemoved(const wr::PipelineId& aPipelin
         HoldUntilNotUsedByGPU(holder->mTextureHosts.front().mTexture, aUpdatesCount);
         holder->mTextureHosts.pop();
       }
-      // Explicitly release all of the shared surfaces.
-      while (!holder->mExternalImages.empty()) {
-        DebugOnly<bool> released =
-          SharedSurfacesParent::Release(holder->mExternalImages.front().mImageId);
-        MOZ_ASSERT(released);
-        holder->mExternalImages.pop();
-      }
-
       // Remove Pipeline
       entry.Remove();
     }
