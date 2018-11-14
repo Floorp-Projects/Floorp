@@ -39,7 +39,7 @@ AutoplayPermissionManager::RequestWithPrompt()
                                            __func__);
   }
 
-  nsCOMPtr<nsIContentPermissionRequest> request =
+  RefPtr<AutoplayPermissionRequest> request =
     AutoplayPermissionRequest::Create(nsGlobalWindowInner::Cast(window), this);
   if (!request) {
     return GenericPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR,
@@ -47,11 +47,8 @@ AutoplayPermissionManager::RequestWithPrompt()
   }
 
   // Dispatch the request.
-  nsCOMPtr<nsIRunnable> f = NS_NewRunnableFunction(
-    "AutoplayPermissionManager::RequestWithPrompt", [window, request]() {
-      dom::nsContentPermissionUtils::AskPermission(request, window);
-    });
-  window->EventTargetFor(TaskCategory::Other)->Dispatch(f, NS_DISPATCH_NORMAL);
+  request->RequestDelayedTask(window->EventTargetFor(TaskCategory::Other),
+                              AutoplayPermissionRequest::DelayedTaskType::Request);
 
   mRequestDispatched = true;
   return mPromiseHolder.Ensure(__func__);

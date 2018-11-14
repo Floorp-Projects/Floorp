@@ -18,7 +18,7 @@ struct MIDIOptions;
  * Handles permission dialog management when requesting MIDI permissions.
  */
 class MIDIPermissionRequest final
-  : public nsIContentPermissionRequest,
+  : public ContentPermissionRequestBase,
     public nsIRunnable
 {
 public:
@@ -26,25 +26,22 @@ public:
                         Promise* aPromise,
                         const MIDIOptions& aOptions);
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSICONTENTPERMISSIONREQUEST
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(MIDIPermissionRequest,
-                                           nsIContentPermissionRequest)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MIDIPermissionRequest,
+                                           ContentPermissionRequestBase)
+  // nsIContentPermissionRequest
+  NS_IMETHOD Cancel(void) override;
+  NS_IMETHOD Allow(JS::HandleValue choices) override;
+  NS_IMETHOD GetTypes(nsIArray** aTypes) override;
 
 private:
-  ~MIDIPermissionRequest();
+  ~MIDIPermissionRequest() = default;
 
-  // Owning window for the permissions requests
-  nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  // Principal for request
-  nsCOMPtr<nsIPrincipal> mPrincipal;
   // Promise for returning MIDIAccess on request success
   RefPtr<Promise> mPromise;
   // True if sysex permissions should be requested
   bool mNeedsSysex;
-  // Requester object
-  nsCOMPtr<nsIContentPermissionRequester> mRequester;
 };
 
 } // namespace dom
