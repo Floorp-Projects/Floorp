@@ -5171,6 +5171,11 @@ XRE_IsPluginProcess()
 bool
 XRE_UseNativeEventProcessing()
 {
+#ifdef XP_MACOSX
+  if (XRE_IsRDDProcess()) {
+    return false;
+  }
+#endif
   if (XRE_IsContentProcess()) {
     static bool sInited = false;
     static bool sUseNativeEventProcessing = false;
