@@ -10,6 +10,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
 #include "nsWrapperCache.h"
 #include "nsTArray.h"
 
@@ -22,12 +24,15 @@ class Report;
 class ReportingObserverCallback;
 struct ReportingObserverOptions;
 
-class ReportingObserver final : public nsISupports
+class ReportingObserver final : public nsIObserver
                               , public nsWrapperCache
+                              , public nsSupportsWeakReference
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ReportingObserver)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(ReportingObserver,
+                                                         nsIObserver)
+  NS_DECL_NSIOBSERVER
 
   static already_AddRefed<ReportingObserver>
   Constructor(const GlobalObject& aGlobal,
@@ -66,6 +71,9 @@ public:
 
 private:
   ~ReportingObserver();
+
+  void
+  Shutdown();
 
   nsTArray<RefPtr<Report>> mReports;
 

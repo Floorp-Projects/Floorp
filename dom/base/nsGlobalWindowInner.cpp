@@ -5672,6 +5672,7 @@ nsGlobalWindowInner::Observe(nsISupports* aSubject, const char* aTopic,
   if (!nsCRT::strcmp(aTopic, MEMORY_PRESSURE_OBSERVER_TOPIC)) {
     if (mPerformance) {
       mPerformance->MemoryPressure();
+      mReportRecords.Clear();
     }
     return NS_OK;
   }
