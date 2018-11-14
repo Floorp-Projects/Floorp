@@ -50,7 +50,6 @@ VideoDecoderChild::VideoDecoderChild()
 
 VideoDecoderChild::~VideoDecoderChild()
 {
-  AssertOnManagerThread();
   mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
 }
 
