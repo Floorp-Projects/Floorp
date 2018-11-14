@@ -740,6 +740,7 @@ WEBIDL_FILES = [
     'PushSubscriptionOptions.webidl',
     'RadioNodeList.webidl',
     'Range.webidl',
+    'Reporting.webidl',
     'Request.webidl',
     'Response.webidl',
     'RTCStatsReport.webidl',
