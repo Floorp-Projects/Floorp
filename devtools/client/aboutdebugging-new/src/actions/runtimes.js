@@ -213,8 +213,10 @@ function updateUSBRuntimes(runtimes) {
     }
 
     // Disconnect runtimes that were no longer valid
-    const invalidRuntimes =
-      getState().runtimes.usbRuntimes.filter(r => !runtimes.includes(r));
+    const validIds = runtimes.map(r => r.id);
+    const existingRuntimes = getState().runtimes.usbRuntimes;
+    const invalidRuntimes = existingRuntimes.filter(r => !validIds.includes(r.id));
+
     for (const invalidRuntime of invalidRuntimes) {
       await dispatch(disconnectRuntime(invalidRuntime.id));
     }
