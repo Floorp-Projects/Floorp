@@ -50,14 +50,12 @@ newscalar:
                 "withoptout": {
                     "kind": "nsITelemetry::SCALAR_TYPE_STRING",
                     "expired": False,
-                    "expires": "never",
                     "record_on_release": True,
                     "keyed": False
                 },
                 "withoptin": {
                     "kind": "nsITelemetry::SCALAR_TYPE_COUNT",
                     "expired": False,
-                    "expires": "never",
                     "record_on_release": False,
                     "keyed": False
                 }

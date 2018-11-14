@@ -52,7 +52,6 @@ with.optin:
                 "testme1": {
                     "objects": ["test1"],
                     "expired": False,
-                    "expires": "never",
                     "methods": ["testme1"],
                     "extra_keys": ["message"],
                     "record_on_release": True
@@ -62,7 +61,6 @@ with.optin:
                 "testme2": {
                     "objects": ["test2"],
                     "expired": False,
-                    "expires": "never",
                     "methods": ["testme2"],
                     "extra_keys": ["message"],
                     "record_on_release": False
