@@ -2,6 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function run_test() {
+  Services.prefs.setCharPref("permissions.manager.defaultsUrl", "");
+
   // initialize the permission manager service
   let pm = Cc["@mozilla.org/permissionmanager;1"].
         getService(Ci.nsIPermissionManager);
