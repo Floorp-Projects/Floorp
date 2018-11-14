@@ -3131,21 +3131,21 @@ var CustomizableUI = {
     CustomizableUIInternal.registerArea(aName, aProperties);
   },
   /**
-   * Register a concrete node for a registered area. This method is automatically
-   * called from any toolbar in the main browser window that has its
-   * "customizable" attribute set to true. There should normally be no need to
-   * call it yourself.
+   * Register a concrete node for a registered area. This method needs to be called
+   * with any toolbar in the main browser window that has its "customizable" attribute
+   * set to true.
    *
    * Note that ideally, you should register your toolbar using registerArea
-   * before any of the toolbars have their XBL bindings constructed (which
-   * will happen when they're added to the DOM and are not hidden). If you
-   * don't, the node will be saved for processing when you call
-   * registerArea. Note that CustomizableUI won't restore state in the area,
+   * before calling this. If you don't, the node will be saved for processing when
+   * you call registerArea. Note that CustomizableUI won't restore state in the area,
    * allow the user to customize it in customize mode, or otherwise deal
    * with it, until the area has been registered.
    */
-  registerToolbarNode(aToolbar, aExistingChildren) {
-    CustomizableUIInternal.registerToolbarNode(aToolbar, aExistingChildren);
+  registerToolbarNode(aToolbar) {
+    let children = Array.from(aToolbar.children)
+                        .filter(child => child.getAttribute("skipintoolbarset") != "true" && child.id)
+                        .map(child => child.id);
+    CustomizableUIInternal.registerToolbarNode(aToolbar, children);
   },
   /**
    * Register the menu panel node. This method should not be called by anyone
