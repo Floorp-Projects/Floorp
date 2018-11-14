@@ -349,8 +349,6 @@ public:
 
   already_AddRefed<layers::SharedSurfaceTextureClient> GetVRFrame();
 
-  bool MaybeModified() const { return mMaybeModified; };
-
 protected:
   virtual ~HTMLCanvasElement();
 
@@ -389,7 +387,6 @@ protected:
   AsyncCanvasRenderer* GetAsyncCanvasRenderer();
 
   bool mResetLayer;
-  bool mMaybeModified; // we fetched the context, so we may have written to the canvas
   RefPtr<HTMLCanvasElement> mOriginalCanvas;
   RefPtr<PrintCallback> mPrintCallback;
   RefPtr<HTMLCanvasPrintState> mPrintState;
