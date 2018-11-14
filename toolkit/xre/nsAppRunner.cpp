@@ -5350,6 +5350,17 @@ GeckoCrashOOL(const char* aFilename, int aLine, const char* aReason) {
   MOZ_CrashOOL(aFilename, aLine, aReason);
 }
 
+// From toolkit/library/rust/shared/lib.rs
+extern "C" void install_rust_panic_hook();
+
+struct InstallRustPanicHook {
+  InstallRustPanicHook() {
+    install_rust_panic_hook();
+  }
+};
+
+InstallRustPanicHook sInstallRustPanicHook;
+
 #ifdef MOZ_ASAN_REPORTER
 void setASanReporterPath(nsIFile* aDir) {
   nsCOMPtr<nsIFile> dir;
