@@ -234,69 +234,70 @@ impl SegmentBuilder {
     ) {
         self.has_interesting_clips = true;
 
-        if inner_rect.is_well_formed_and_nonempty() {
-            debug_assert!(outer_rect.contains_rect(&inner_rect));
-
-            let p0 = outer_rect.origin;
-            let p1 = inner_rect.origin;
-            let p2 = inner_rect.bottom_right();
-            let p3 = outer_rect.bottom_right();
-
-            let segments = &[
-                LayoutRect::new(
-                    LayoutPoint::new(p0.x, p0.y),
-                    LayoutSize::new(p1.x - p0.x, p1.y - p0.y),
-                ),
-                LayoutRect::new(
-                    LayoutPoint::new(p2.x, p0.y),
-                    LayoutSize::new(p3.x - p2.x, p1.y - p0.y),
-                ),
-                LayoutRect::new(
-                    LayoutPoint::new(p2.x, p2.y),
-                    LayoutSize::new(p3.x - p2.x, p3.y - p2.y),
-                ),
-                LayoutRect::new(
-                    LayoutPoint::new(p0.x, p2.y),
-                    LayoutSize::new(p1.x - p0.x, p3.y - p2.y),
-                ),
-                LayoutRect::new(
-                    LayoutPoint::new(p1.x, p0.y),
-                    LayoutSize::new(p2.x - p1.x, p1.y - p0.y),
-                ),
-                LayoutRect::new(
-                    LayoutPoint::new(p2.x, p1.y),
-                    LayoutSize::new(p3.x - p2.x, p2.y - p1.y),
-                ),
-                LayoutRect::new(
-                    LayoutPoint::new(p1.x, p2.y),
-                    LayoutSize::new(p2.x - p1.x, p3.y - p2.y),
-                ),
-                LayoutRect::new(
-                    LayoutPoint::new(p0.x, p1.y),
-                    LayoutSize::new(p1.x - p0.x, p2.y - p1.y),
-                ),
-            ];
-
-            for segment in segments {
-                self.items.push(Item::new(
-                    *segment,
-                    None,
-                    true
-                ));
-            }
-
-            if inner_clip_mode.is_some() {
-                self.items.push(Item::new(
-                    inner_rect,
-                    inner_clip_mode,
-                    false,
-                ));
-            }
-        } else {
+        if !inner_rect.is_well_formed_and_nonempty() {
             self.items.push(Item::new(
                 outer_rect,
                 None,
                 true
+            ));
+            return;
+        }
+
+        debug_assert!(outer_rect.contains_rect(&inner_rect));
+
+        let p0 = outer_rect.origin;
+        let p1 = inner_rect.origin;
+        let p2 = inner_rect.bottom_right();
+        let p3 = outer_rect.bottom_right();
+
+        let segments = &[
+            LayoutRect::new(
+                LayoutPoint::new(p0.x, p0.y),
+                LayoutSize::new(p1.x - p0.x, p1.y - p0.y),
+            ),
+            LayoutRect::new(
+                LayoutPoint::new(p2.x, p0.y),
+                LayoutSize::new(p3.x - p2.x, p1.y - p0.y),
+            ),
+            LayoutRect::new(
+                LayoutPoint::new(p2.x, p2.y),
+                LayoutSize::new(p3.x - p2.x, p3.y - p2.y),
+            ),
+            LayoutRect::new(
+                LayoutPoint::new(p0.x, p2.y),
+                LayoutSize::new(p1.x - p0.x, p3.y - p2.y),
+            ),
+            LayoutRect::new(
+                LayoutPoint::new(p1.x, p0.y),
+                LayoutSize::new(p2.x - p1.x, p1.y - p0.y),
+            ),
+            LayoutRect::new(
+                LayoutPoint::new(p2.x, p1.y),
+                LayoutSize::new(p3.x - p2.x, p2.y - p1.y),
+            ),
+            LayoutRect::new(
+                LayoutPoint::new(p1.x, p2.y),
+                LayoutSize::new(p2.x - p1.x, p3.y - p2.y),
+            ),
+            LayoutRect::new(
+                LayoutPoint::new(p0.x, p1.y),
+                LayoutSize::new(p1.x - p0.x, p2.y - p1.y),
+            ),
+        ];
+
+        for segment in segments {
+            self.items.push(Item::new(
+                *segment,
+                None,
+                true
+            ));
+        }
+
+        if inner_clip_mode.is_some() {
+            self.items.push(Item::new(
+                inner_rect,
+                inner_clip_mode,
+                false,
             ));
         }
     }
