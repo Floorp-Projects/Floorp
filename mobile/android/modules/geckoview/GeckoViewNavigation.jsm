@@ -10,7 +10,6 @@ ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   Utils: "resource://gre/modules/sessionstore/Utils.jsm",
   LoadURIDelegate: "resource://gre/modules/LoadURIDelegate.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -78,9 +77,7 @@ class GeckoViewNavigation extends GeckoViewModule {
         }
 
         if (this.settings.useMultiprocess) {
-          const remoteType =
-            E10SUtils.getRemoteTypeForURI(uri, true);
-          this.moduleManager.updateRemoteType(remoteType);
+          this.moduleManager.updateRemoteTypeForURI(uri);
         }
 
         let parsedUri;
@@ -123,12 +120,12 @@ class GeckoViewNavigation extends GeckoViewModule {
         // we may need to change the remoteness of our browser and
         // load the URI.
         const { uri, flags, referrer, triggeringPrincipal } = aMsg.data.loadOptions;
-        const remoteType =
-          E10SUtils.getRemoteTypeForURI(uri, this.settings.useMultiprocess);
 
-        this.moduleManager.updateRemoteType(remoteType);
-        this.browser.loadURI(aMsg.data.loadOptions.uri, {
-          flags, referrerURI: referrer,
+        this.moduleManager.updateRemoteTypeForURI(uri);
+
+        this.browser.loadURI(uri, {
+          flags,
+          referrerURI: referrer,
           triggeringPrincipal: Utils.deserializePrincipal(triggeringPrincipal),
         });
         break;
