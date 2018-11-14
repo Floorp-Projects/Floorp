@@ -5,12 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom = [
+    'DeprecationReportBody.h',
     'Report.h',
     'ReportBody.h',
     'ReportingObserver.h',
 ]
 
 UNIFIED_SOURCES += [
+    'DeprecationReportBody.cpp',
     'Report.cpp',
     'ReportBody.cpp',
     'ReportingObserver.cpp',
