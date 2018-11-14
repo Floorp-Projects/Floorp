@@ -39,8 +39,8 @@ CHUNK_MAPPING_TAG_FILE = os.path.join(cache_dir, 'chunk_mapping_tag.json')
 # Maps from platform names in the chunk_mapping sqlite database to respective
 # substrings in task names.
 PLATFORM_MAP = {
-    'linux': 'linux64/opt',
-    'windows': 'windows10-64/opt',
+    'linux': 'test-linux64/opt',
+    'windows': 'test-windows10-64/opt',
 }
 
 # List of platform/build type combinations that are included in pushes by |mach try coverage|.
@@ -306,16 +306,23 @@ def filter_tasks_by_chunks(tasks, chunks):
     '''
     selected_tasks = set()
     for platform, chunk in chunks:
-        platform = PLATFORM_MAP.get(platform, platform)
-        match = False
+        platform = PLATFORM_MAP[platform]
+
+        selected_task = None
         for task in tasks:
-            # Chunk names taken from the chunk mapping are not consistent with the
-            # task names, so we're using string inclusion to find the tests.
-            if platform in task and chunk in task:
-                selected_tasks.add(task)
-                match = True
-        if not match:
+            if not task.startswith(platform):
+                continue
+
+            if not any(task[len(platform) + 1:].endswith(c) for c in [chunk, chunk + '-e10s']):
+                continue
+
+            assert selected_task is None, 'Only one task should be selected for a given platform-chunk couple ({} - {}), {} and {} were selected'.format(platform, chunk, selected_task, task)  # noqa
+            selected_task = task
+
+        if selected_task is None:
             print('Warning: no task found for chunk', platform, chunk)
+
+        selected_tasks.add(selected_task)
 
     return list(selected_tasks)
 
