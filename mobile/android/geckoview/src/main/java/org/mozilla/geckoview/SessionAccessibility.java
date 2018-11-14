@@ -260,25 +260,27 @@ public class SessionAccessibility {
             return node;
         }
 
-        private synchronized AccessibilityNodeInfo getNodeFromCache(final int virtualViewId) {
-            AccessibilityNodeInfo node = null;
-            for (SparseArray<GeckoBundle> cache : mCaches) {
-                GeckoBundle bundle = cache.get(virtualViewId);
-                if (bundle == null) {
-                    continue;
+        private AccessibilityNodeInfo getNodeFromCache(final int virtualViewId) {
+            synchronized (SessionAccessibility.this) {
+                AccessibilityNodeInfo node = null;
+                for (SparseArray<GeckoBundle> cache : mCaches) {
+                    GeckoBundle bundle = cache.get(virtualViewId);
+                    if (bundle == null) {
+                        continue;
+                    }
+
+                    if (node == null) {
+                        node = AccessibilityNodeInfo.obtain(mView, virtualViewId);
+                    }
+                    populateNodeFromBundle(node, bundle, true);
                 }
 
                 if (node == null) {
-                    node = AccessibilityNodeInfo.obtain(mView, virtualViewId);
+                    Log.e(LOGTAG, "No cached node for " + virtualViewId);
                 }
-                populateNodeFromBundle(node, bundle, true);
-            }
 
-            if (node == null) {
-                Log.e(LOGTAG, "No cached node for " + virtualViewId);
+                return node;
             }
-
-            return node;
         }
 
         private void populateNodeFromBundle(final AccessibilityNodeInfo node, final GeckoBundle nodeInfo, final boolean fromCache) {
@@ -745,36 +747,46 @@ public class SessionAccessibility {
         }
 
         @WrapForJNI(calledFrom = "gecko")
-        private synchronized void replaceViewportCache(final GeckoBundle[] bundles) {
-            mViewportCache.clear();
-            for (GeckoBundle bundle : bundles) {
-                if (bundle == null) { continue; }
-                mViewportCache.append(bundle.getInt("id"), bundle);
-            }
-            mCaches.remove(mViewportCache);
-            mCaches.add(mViewportCache);
-        }
-
-        @WrapForJNI(calledFrom = "gecko")
-        private synchronized void replaceFocusPathCache(final GeckoBundle[] bundles) {
-            mFocusPathCache.clear();
-            for (GeckoBundle bundle : bundles) {
-                if (bundle == null) { continue; }
-                mFocusPathCache.append(bundle.getInt("id"), bundle);
-            }
-            mCaches.remove(mFocusPathCache);
-            mCaches.add(mFocusPathCache);
-        }
-
-        @WrapForJNI(calledFrom = "gecko")
-        private synchronized void updateCachedBounds(final GeckoBundle[] bundles) {
-            for (GeckoBundle bundle : bundles) {
-                GeckoBundle cachedBundle = getMostRecentBundle(bundle.getInt("id"));
-                if (cachedBundle == null) {
-                    Log.e(LOGTAG, "Can't update bounds of uncached node " + bundle.getInt("id"));
-                    continue;
+        private void replaceViewportCache(final GeckoBundle[] bundles) {
+            synchronized (SessionAccessibility.this) {
+                mViewportCache.clear();
+                for (GeckoBundle bundle : bundles) {
+                    if (bundle == null) {
+                        continue;
+                    }
+                    mViewportCache.append(bundle.getInt("id"), bundle);
                 }
-                cachedBundle.putIntArray("bounds", bundle.getIntArray("bounds"));
+                mCaches.remove(mViewportCache);
+                mCaches.add(mViewportCache);
+            }
+        }
+
+        @WrapForJNI(calledFrom = "gecko")
+        private void replaceFocusPathCache(final GeckoBundle[] bundles) {
+            synchronized (SessionAccessibility.this) {
+                mFocusPathCache.clear();
+                for (GeckoBundle bundle : bundles) {
+                    if (bundle == null) {
+                        continue;
+                    }
+                    mFocusPathCache.append(bundle.getInt("id"), bundle);
+                }
+                mCaches.remove(mFocusPathCache);
+                mCaches.add(mFocusPathCache);
+            }
+        }
+
+        @WrapForJNI(calledFrom = "gecko")
+        private void updateCachedBounds(final GeckoBundle[] bundles) {
+            synchronized (SessionAccessibility.this) {
+                for (GeckoBundle bundle : bundles) {
+                    GeckoBundle cachedBundle = getMostRecentBundle(bundle.getInt("id"));
+                    if (cachedBundle == null) {
+                        Log.e(LOGTAG, "Can't update bounds of uncached node " + bundle.getInt("id"));
+                        continue;
+                    }
+                    cachedBundle.putIntArray("bounds", bundle.getIntArray("bounds"));
+                }
             }
         }
     }
