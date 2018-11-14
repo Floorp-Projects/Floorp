@@ -30,6 +30,7 @@ var results = [
 ];
 
 function run_test() {
+  Services.prefs.setCharPref("permissions.manager.defaultsUrl", "");
   var pm = Cc["@mozilla.org/permissionmanager;1"]
              .getService(Ci.nsIPermissionManager);
 
@@ -102,9 +103,9 @@ function run_test() {
 
   uri = ioService.newURI("https://www.example.com");
   pm.add(uri, "offline-app", pm.ALLOW_ACTION);
-  principal = secMan.createCodebasePrincipalFromOrigin("https://www.example.com");
+  let principal = secMan.createCodebasePrincipalFromOrigin("https://www.example.com");
   // Remove existing entry.
-  perm = pm.getPermissionObject(principal, "offline-app", true);
+  let perm = pm.getPermissionObject(principal, "offline-app", true);
   pm.removePermission(perm);
   // Try to remove already deleted entry.
   perm = pm.getPermissionObject(principal, "offline-app", true);
