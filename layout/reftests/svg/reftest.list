@@ -337,7 +337,7 @@ fuzzy-if(skiaContent,0-7,0-175) fuzzy-if(webrender,54-54,124-124) random-if(/^Wi
 == paint-on-maskLayer-1a.html paint-on-maskLayer-1-ref.html
 == paint-on-maskLayer-1b.html paint-on-maskLayer-1-ref.html
 == paint-on-maskLayer-1c.html paint-on-maskLayer-1-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-15,0-5) == paint-order-01.svg paint-order-01-ref.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-16,0-5) == paint-order-01.svg paint-order-01-ref.svg
 == paint-order-02.svg paint-order-02-ref.svg
 fuzzy-if(webrender,72-72,96-143) == paint-order-03.svg paint-order-03-ref.svg
 
