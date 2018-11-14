@@ -119,9 +119,20 @@ DataStorageSharedThread::Shutdown()
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = gDataStorageSharedThread->mThread->Shutdown();
-  gDataStorageSharedThread->mThread = nullptr;
+  // We can't hold sDataStorageSharedThreadMutex while shutting down the thread,
+  // because we might process events that try to acquire it (e.g. via
+  // DataStorage::GetAllChildProcessData). So, we set our shutdown sentinel
+  // boolean to true, get a handle on the thread, release the lock, shut down
+  // the thread (thus processing all pending events on it), and re-acquire the
+  // lock.
   gDataStorageSharedThreadShutDown = true;
+  nsCOMPtr<nsIThread> threadHandle = gDataStorageSharedThread->mThread;
+  nsresult rv;
+  {
+    StaticMutexAutoUnlock unlock(sDataStorageSharedThreadMutex);
+    rv = threadHandle->Shutdown();
+  }
+  gDataStorageSharedThread->mThread = nullptr;
   delete gDataStorageSharedThread;
   gDataStorageSharedThread = nullptr;
 
@@ -133,7 +144,8 @@ DataStorageSharedThread::Dispatch(nsIRunnable* event)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
   StaticMutexAutoLock lock(sDataStorageSharedThreadMutex);
-  if (!gDataStorageSharedThread || !gDataStorageSharedThread->mThread) {
+  if (gDataStorageSharedThreadShutDown || !gDataStorageSharedThread ||
+      !gDataStorageSharedThread->mThread) {
     return NS_ERROR_FAILURE;
   }
   return gDataStorageSharedThread->mThread->Dispatch(event, NS_DISPATCH_NORMAL);
