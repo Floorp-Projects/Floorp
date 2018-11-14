@@ -1,4 +1,4 @@
-52926
+52944
 0/nm
 0th/pt
 1/n1
@@ -16217,6 +16217,7 @@ bashing/M
 basic/MS
 basically
 basil/M
+basilar
 basilica/MS
 basilisk/MS
 basin/MS
@@ -22036,6 +22037,11 @@ cypress/MS
 cyst/MS
 cysteine/SM
 cystic
+cysticerci
+cysticercoid/S
+cysticercoses
+cysticercosis
+cysticercus
 cystitis
 cytokine/SM
 cytologist/SM
@@ -25362,6 +25368,9 @@ evict/SDG
 eviction/MS
 evidence/MGDS
 evident/Y
+evidential/Y
+evidentiality
+evidentiary
 evil/MRYTSP
 evildoer/SM
 evildoing/M
@@ -26374,7 +26383,7 @@ financial/YS
 financier/MS
 financing/M
 finch/MS
-find/JMRZGS
+find/JMRZGSB
 finder/M
 finding/M
 findings/M
@@ -29381,6 +29390,7 @@ headship/SM
 headshrinker/SM
 headsman/M
 headsmen
+headspace
 headstall/SM
 headstand/SM
 headstone/SM
@@ -32595,6 +32605,7 @@ kleptocracy
 kleptomania/M
 kleptomaniac/SM
 kludge/GDS
+kludgy
 kluge/DS
 klutz/MS
 klutziness/M
@@ -36469,6 +36480,8 @@ neurasthenia/M
 neurasthenic/MS
 neuritic/MS
 neuritis/M
+neurocysticercoses
+neurocysticercosis
 neurological/Y
 neurologist/SM
 neurology/M
@@ -40332,7 +40345,7 @@ position/CKEMS
 positional/KE
 positioned/K
 positioning/AK
-positive/MYPS
+positive/MYPSE
 positiveness/M
 positivism
 positivist/S
@@ -42659,6 +42672,7 @@ reputational
 repute/DSMGB
 reputed/Y
 request/GDR
+requestor
 requiem/SM
 require/LDG
 requirement/MS
@@ -47702,6 +47716,7 @@ superscribe/GDS
 superscript/MS
 superscription/M
 supersede/GDS
+superset
 supersize/GDS
 supersonic
 superstar/MS
@@ -48751,7 +48766,7 @@ theistic
 them
 thematic
 thematically
-theme/DSM
+theme/DSMG
 themselves
 then/M
 thence
@@ -50350,6 +50365,7 @@ uncontrollably
 uncontroversial
 uncool
 uncooperative
+uncopyrightable
 uncouth/Y
 uncrushable
 unction/SM
@@ -50507,6 +50523,7 @@ uneasy/T
 uneatable
 uneconomic
 unemployed/M
+unencrypted
 unending
 unenterprising
 unequal/DY
@@ -51176,6 +51193,7 @@ vertebrae
 vertebral
 vertebrata
 vertebrate/IMS
+vertebrobasilar
 vertex/MS
 vertical/MYS
 vertices

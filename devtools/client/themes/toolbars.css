@@ -233,3 +233,15 @@ splitter.devtools-horizontal-splitter,
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/*
+ * Style for the Network throttling menu button. This is shared between the Responsive
+ * Design Mode and Network Monitor.
+ */
+
+#network-throttling-menu {
+  padding-left: 2px;
+  padding-right: 10px;
+  background-position: right center;
+}
+

@@ -376,6 +376,14 @@ WebrtcVideoConduit::SendStreamStatistics::Update(
 }
 
 uint32_t
+WebrtcVideoConduit::ReceiveStreamStatistics::BytesSent() const
+{
+  ASSERT_ON_THREAD(mStatsThread);
+
+  return mBytesSent;
+}
+
+uint32_t
 WebrtcVideoConduit::ReceiveStreamStatistics::DiscardedPackets() const
 {
   ASSERT_ON_THREAD(mStatsThread);
@@ -408,6 +416,14 @@ WebrtcVideoConduit::ReceiveStreamStatistics::PacketsLost() const
 }
 
 uint32_t
+WebrtcVideoConduit::ReceiveStreamStatistics::PacketsSent() const
+{
+  ASSERT_ON_THREAD(mStatsThread);
+
+  return mPacketsSent;
+}
+
+uint32_t
 WebrtcVideoConduit::ReceiveStreamStatistics::Ssrc() const
 {
   ASSERT_ON_THREAD(mStatsThread);
@@ -424,12 +440,14 @@ WebrtcVideoConduit::ReceiveStreamStatistics::Update(
   CSFLogVerbose(LOGTAG, "%s ", __FUNCTION__);
   StreamStatistics::Update(aStats.decode_frame_rate, aStats.total_bitrate_bps,
                            aStats.rtcp_packet_type_counts);
+  mBytesSent = aStats.rtcp_sender_octets_sent;
   mDiscardedPackets = aStats.discarded_packets;
   mFramesDecoded =
     aStats.frame_counts.key_frames + aStats.frame_counts.delta_frames;
   mJitterMs =
     aStats.rtcp_stats.jitter / (webrtc::kVideoPayloadTypeFrequency / 1000);
   mPacketsLost = aStats.rtcp_stats.packets_lost;
+  mPacketsSent = aStats.rtcp_sender_packets_sent;
   mSsrc = aStats.ssrc;
 }
 
@@ -1297,14 +1315,13 @@ WebrtcVideoConduit::GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
 
   CSFLogVerbose(LOGTAG, "%s for VideoConduit:%p", __FUNCTION__, this);
 
-  if (!mRecvStream) {
+  if (!mRecvStreamStats.Active()) {
     return false;
   }
 
-  webrtc::VideoReceiveStream::Stats stats = mRecvStream->GetStats();
   *timestamp = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
-  *packetsSent = stats.rtcp_sender_packets_sent;
-  *bytesSent = stats.rtcp_sender_octets_sent;
+  *packetsSent = mRecvStreamStats.PacketsSent();
+  *bytesSent = mRecvStreamStats.BytesSent();
   return true;
 }
 
