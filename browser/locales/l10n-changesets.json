@@ -237,7 +237,7 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "56ce7a7b7951"
+        "revision": "f361978cc899"
     },
     "cy": {
         "platforms": [
@@ -282,7 +282,7 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "a9e570dbbc4c"
+        "revision": "c513d8feb716"
     },
     "dsb": {
         "platforms": [
@@ -687,7 +687,7 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "350fa30ddfc1"
+        "revision": "978203500439"
     },
     "hy-AM": {
         "platforms": [
