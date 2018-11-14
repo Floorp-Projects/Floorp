@@ -36,8 +36,6 @@ const TEST_URL = `data:text/html;charset=utf-8,` + encodeURIComponent(`
 `);
 
 add_task(async function() {
-  await pushPref("dom.webcomponents.customelements.enabled", true);
-
   const {inspector} = await openInspectorForURL(TEST_URL);
   const {markup} = inspector;
   const ruleview = inspector.getPanel("ruleview").view;

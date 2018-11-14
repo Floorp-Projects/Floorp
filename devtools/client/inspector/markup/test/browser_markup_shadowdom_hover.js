@@ -36,8 +36,6 @@ const TEST_URL = `data:text/html;charset=utf-8,` + encodeURIComponent(`
   </script>`);
 
 add_task(async function() {
-  await enableWebComponents();
-
   const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
 
   info("Waiting for element picker to become active.");

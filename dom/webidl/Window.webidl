@@ -39,7 +39,6 @@ typedef OfflineResourceList ApplicationCache;
   [PutForwards=href, Unforgeable, BinaryName="getLocation",
    CrossOriginReadable, CrossOriginWritable] readonly attribute Location location;
   [Throws] readonly attribute History history;
-  [Func="CustomElementRegistry::IsCustomElementEnabled"]
   readonly attribute CustomElementRegistry customElements;
   [Replaceable, Throws] readonly attribute BarProp locationbar;
   [Replaceable, Throws] readonly attribute BarProp menubar;
