@@ -9,6 +9,7 @@
 #include "MediaResult.h"
 #include "PlatformDecoderModule.h"
 #include "mozilla/dom/PVideoDecoderChild.h"
+#include "IRemoteDecoderChild.h"
 
 namespace mozilla {
 namespace dom {
@@ -18,11 +19,10 @@ class RemoteDecoderModule;
 class VideoDecoderManagerChild;
 
 class VideoDecoderChild final : public PVideoDecoderChild
+                              , public IRemoteDecoderChild
 {
 public:
   explicit VideoDecoderChild();
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoDecoderChild)
 
   // PVideoDecoderChild
   mozilla::ipc::IPCResult RecvOutput(const VideoDataIPDL& aData) override;
@@ -38,22 +38,22 @@ public:
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  RefPtr<MediaDataDecoder::InitPromise> Init();
-  RefPtr<MediaDataDecoder::DecodePromise> Decode(MediaRawData* aSample);
-  RefPtr<MediaDataDecoder::DecodePromise> Drain();
-  RefPtr<MediaDataDecoder::FlushPromise> Flush();
-  void Shutdown();
-  bool IsHardwareAccelerated(nsACString& aFailureReason) const;
-  nsCString GetDescriptionName() const;
-  void SetSeekThreshold(const media::TimeUnit& aTime);
-  MediaDataDecoder::ConversionRequired NeedsConversion() const;
+  RefPtr<MediaDataDecoder::InitPromise> Init() override;
+  RefPtr<MediaDataDecoder::DecodePromise> Decode(MediaRawData* aSample) override;
+  RefPtr<MediaDataDecoder::DecodePromise> Drain() override;
+  RefPtr<MediaDataDecoder::FlushPromise> Flush() override;
+  void Shutdown() override;
+  bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
+  nsCString GetDescriptionName() const override;
+  void SetSeekThreshold(const media::TimeUnit& aTime) override;
+  MediaDataDecoder::ConversionRequired NeedsConversion() const override;
+  void DestroyIPDL() override;
 
   MOZ_IS_CLASS_INIT
   MediaResult InitIPDL(const VideoInfo& aVideoInfo,
                        float aFramerate,
                        const CreateDecoderParams::OptionSet& aOptions,
                        const layers::TextureFactoryIdentifier& aIdentifier);
-  void DestroyIPDL();
 
   // Called from IPDL when our actor has been destroyed
   void IPDLActorDestroyed();
