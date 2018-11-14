@@ -3765,7 +3765,6 @@ profiler_add_network_marker(nsIURI* aURI,
                             mozilla::TimeStamp aStart,
                             mozilla::TimeStamp aEnd,
                             int64_t aCount,
-                            mozilla::net::CacheDisposition aCacheDisposition,
                             const mozilla::net::TimingStruct* aTimings,
                             nsIURI* aRedirectURI)
 {
@@ -3793,7 +3792,6 @@ profiler_add_network_marker(nsIURI* aURI,
                                                        aEnd,
                                                        aPriority,
                                                        aCount,
-                                                       aCacheDisposition,
                                                        aTimings,
                                                        PromiseFlatCString(redirect_spec).get()));
 }
