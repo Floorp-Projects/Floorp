@@ -146,6 +146,11 @@ class GeckoViewNavigation extends GeckoViewModule {
             }
 
             if (opener) {
+              if (aSubject.browser.hasAttribute("remote")) {
+                // We cannot start in remote mode when we have an opener.
+                aSubject.browser.setAttribute("remote", "false");
+                aSubject.browser.removeAttribute("remoteType");
+              }
               aSubject.browser.presetOpenerWindow(opener);
             }
             Services.obs.removeObserver(handler, "geckoview-window-created");
