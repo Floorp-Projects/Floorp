@@ -18,6 +18,21 @@ MOZ_BEGIN_EXTERN_C
  */
 MFBT_DATA const char* gMozCrashReason = nullptr;
 
+#ifndef DEBUG
+MFBT_API MOZ_COLD MOZ_NORETURN MOZ_NEVER_INLINE void
+MOZ_CrashOOL(int aLine, const char* aReason)
+#else
+MFBT_API MOZ_COLD MOZ_NORETURN MOZ_NEVER_INLINE void
+MOZ_CrashOOL(const char* aFilename, int aLine, const char* aReason)
+#endif
+{
+#ifdef DEBUG
+  MOZ_ReportCrash(aReason, aFilename, aLine);
+#endif
+  gMozCrashReason = aReason;
+  MOZ_REALLY_CRASH(aLine);
+}
+
 static char sPrintfCrashReason[sPrintfCrashReasonSize] = {};
 
 // Accesses to this atomic are not included in web replay recordings, so that
@@ -47,10 +62,10 @@ MOZ_CrashPrintf(const char* aFilename, int aLine, const char* aFormat, ...)
   MOZ_RELEASE_ASSERT(ret >= 0 && size_t(ret) < sPrintfCrashReasonSize,
     "Could not write the explanation string to the supplied buffer!");
 #ifdef DEBUG
-  MOZ_CrashOOL(aFilename, aLine, sPrintfCrashReason);
-#else
-  MOZ_CrashOOL(nullptr, aLine, sPrintfCrashReason);
+  MOZ_ReportCrash(sPrintfCrashReason, aFilename, aLine);
 #endif
+  gMozCrashReason = sPrintfCrashReason;
+  MOZ_REALLY_CRASH(aLine);
 }
 
 MOZ_END_EXTERN_C
