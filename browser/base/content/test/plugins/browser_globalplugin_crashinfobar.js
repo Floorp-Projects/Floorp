@@ -27,7 +27,7 @@ add_task(async function() {
     ok(notification, "Infobar was shown.");
     is(notification.priority, notificationBox.PRIORITY_WARNING_MEDIUM,
        "Correct priority.");
-    is(notification.getAttribute("label"),
+    is(notification.messageText.textContent,
        "The GlobalTestPlugin plugin has crashed.",
        "Correct message.");
   });

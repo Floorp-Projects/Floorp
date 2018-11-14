@@ -50,3 +50,7 @@ toolkit.jar:
   skin/classic/global/icons/windowControls.png             (icons/windowControls.png)
 * skin/classic/global/in-content/common.css                (in-content/common.css)
 * skin/classic/global/in-content/info-pages.css            (in-content/info-pages.css)
+  skin/classic/global/tree/sort-asc.svg                    (tree/sort-asc.svg)
+  skin/classic/global/tree/sort-dsc.svg                    (tree/sort-dsc.svg)
+  skin/classic/global/tree/sort-asc-classic.png            (tree/sort-asc-classic.png)
+  skin/classic/global/tree/sort-dsc-classic.png            (tree/sort-dsc-classic.png)

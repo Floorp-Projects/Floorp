@@ -680,14 +680,26 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
         *abiType = Args_General5;
         return FuncCast(Instance::memInit, *abiType);
       case SymbolicAddress::TableCopy:
-        *abiType = Args_General4;
+        *abiType = Args_General6;
         return FuncCast(Instance::tableCopy, *abiType);
       case SymbolicAddress::TableDrop:
         *abiType = Args_General2;
         return FuncCast(Instance::tableDrop, *abiType);
       case SymbolicAddress::TableInit:
-        *abiType = Args_General5;
+        *abiType = Args_General6;
         return FuncCast(Instance::tableInit, *abiType);
+      case SymbolicAddress::TableGet:
+        *abiType = Args_General3;
+        return FuncCast(Instance::tableGet, *abiType);
+      case SymbolicAddress::TableGrow:
+        *abiType = Args_General4;
+        return FuncCast(Instance::tableGrow, *abiType);
+      case SymbolicAddress::TableSet:
+        *abiType = Args_General4;
+        return FuncCast(Instance::tableSet, *abiType);
+      case SymbolicAddress::TableSize:
+        *abiType = Args_General2;
+        return FuncCast(Instance::tableSize, *abiType);
       case SymbolicAddress::PostBarrier:
         *abiType = Args_General2;
         return FuncCast(Instance::postBarrier, *abiType);
@@ -777,7 +789,11 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
       case SymbolicAddress::MemInit:
       case SymbolicAddress::TableCopy:
       case SymbolicAddress::TableDrop:
+      case SymbolicAddress::TableGet:
+      case SymbolicAddress::TableGrow:
       case SymbolicAddress::TableInit:
+      case SymbolicAddress::TableSet:
+      case SymbolicAddress::TableSize:
       case SymbolicAddress::PostBarrier:
       case SymbolicAddress::StructNew:
       case SymbolicAddress::StructNarrow:

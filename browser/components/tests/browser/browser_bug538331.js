@@ -333,7 +333,8 @@ function testShowNotification() {
       ok(updateBox, "Update notification box should have been displayed");
       if (updateBox) {
         if (testCase.notificationText) {
-          is(updateBox.label, testCase.notificationText, "Update notification box " +
+          is(updateBox.messageText.textContent, testCase.notificationText,
+             "Update notification box " +
              "should have the label provided by the update");
         }
         if (testCase.notificationButtonLabel) {

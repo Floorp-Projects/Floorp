@@ -218,7 +218,7 @@ label[disabled="true"] {
   box-shadow: var(--focus-ring-box-shadow);
 }
 
-notification > button {
+notification > hbox > button {
   margin: 0 3px;
   padding: 1px 10px;
   min-width: 60px;
@@ -232,21 +232,21 @@ notification > button {
   box-shadow: @roundButtonShadow@;
 }
 
-notification > button:active:hover {
+notification > hbox > button:active:hover {
   color: @roundButtonColor@;
   background: @roundButtonPressedBackground@;
   box-shadow: @roundButtonPressedShadow@;
 }
 
-notification > button:-moz-focusring {
+notification > hbox > button:-moz-focusring {
   box-shadow: var(--focus-ring-box-shadow), @roundButtonShadow@;
 }
 
-notification > button:active:hover:-moz-focusring {
+notification > hbox > button:active:hover:-moz-focusring {
   box-shadow: var(--focus-ring-box-shadow), @roundButtonPressedShadow@;
 }
 
-notification > button > .button-box > .button-text {
+notification > hbox > button > .button-box > .button-text {
   margin: 0 !important;
 }
 

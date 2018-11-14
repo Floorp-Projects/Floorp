@@ -55,9 +55,10 @@ for (let type of ['i32', 'i64']) {
     assertEq(valText(text(UNSHARED)), false);
 }
 
-{
+// 'wake' remains a backwards-compatible alias for 'notify'
+for ( let notify of ['wake', 'notify']) {
     let text = (shared) => `(module (memory 1 1 ${shared})
-			     (func (result i32) (atomic.wake (i32.const 0) (i32.const 1)))
+			     (func (result i32) (atomic.${notify} (i32.const 0) (i32.const 1)))
 			     (export "" 0))`;
     assertEq(valText(text(SHARED)), true);
     assertEq(valText(text(UNSHARED)), false);
@@ -74,11 +75,11 @@ for (let [type,align,good] of [['i32',1,false],['i32',2,false],['i32',4,true],['
     assertEq(valText(text), good);
 }
 
-// Required explicit alignment for WAKE is 4
+// Required explicit alignment for NOTIFY is 4
 
 for (let align of [1, 2, 4, 8]) {
     let text = `(module (memory 1 1 shared)
-		 (func (result i32) (atomic.wake align=${align} (i32.const 0) (i32.const 1)))
+		 (func (result i32) (atomic.notify align=${align} (i32.const 0) (i32.const 1)))
 		 (export "" 0))`;
     assertEq(valText(text), align == 4);
 }
@@ -466,7 +467,7 @@ var BoundsAndAlignment =
 
 BoundsAndAlignment.run();
 
-// Bounds and alignment checks on wait and wake
+// Bounds and alignment checks on wait and notify
 
 assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					(func (param i32) (result i32)
@@ -494,15 +495,15 @@ assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 
 assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					(func (param i32) (result i32)
-					 (atomic.wake (get_local 0) (i32.const 1)))
+					 (atomic.notify (get_local 0) (i32.const 1)))
 					(export "" 0))`).exports[""](65536),
 		   RuntimeError, oob);
 
-// Minimum run-time alignment for WAKE is 4
+// Minimum run-time alignment for NOTIFY is 4
 for (let addr of [1,2,3,5,6,7]) {
     assertErrorMessage(() => wasmEvalText(`(module (memory 1 1 shared)
 					    (func (export "f") (param i32) (result i32)
-					     (atomic.wake (get_local 0) (i32.const 1))))`).exports.f(addr),
+					     (atomic.notify (get_local 0) (i32.const 1))))`).exports.f(addr),
 		       RuntimeError, unaligned);
 }
 
