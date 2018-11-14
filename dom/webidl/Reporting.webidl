@@ -44,3 +44,14 @@ interface DeprecationReportBody : ReportBody {
   readonly attribute unsigned long? lineNumber;
   readonly attribute unsigned long? columnNumber;
 };
+
+[Constructor(), Deprecated="DeprecatedTestingInterface",
+ Func="mozilla::dom::DOMPrefs::dom_reporting_testing_enabled",
+ Exposed=(Window,DedicatedWorker)]
+interface TestingDeprecatedInterface {
+  [Deprecated="DeprecatedTestingMethod"]
+  void deprecatedMethod();
+
+  [Deprecated="DeprecatedTestingAttribute"]
+  readonly attribute boolean deprecatedAttribute;
+};
