@@ -185,8 +185,8 @@ enum nsChangeHint : uint32_t {
   /**
    * Indicates that the reflow changes the size or position of the
    * element, and thus the reflow must start from at least the frame's
-   * parent.  Must be not be set without also setting nsChangeHint_NeedReflow
-   * and nsChangeHint_ClearAncestorIntrinsics.
+   * parent.  Must be not be set without also setting nsChangeHint_NeedReflow.
+   * And consider adding nsChangeHint_ClearAncestorIntrinsics if needed.
    */
   nsChangeHint_ReflowChangesSizeOrPosition = 1 << 23,
 
