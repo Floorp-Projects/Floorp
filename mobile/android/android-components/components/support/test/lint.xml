@@ -8,5 +8,6 @@
         <ignore path="**/bcprov-*on-*.jar"/>
         <ignore path="**/shadows-framework-*.jar"/>
         <ignore path="**/xstream-*.jar"/>
+        <ignore path="**/resources-4.0-*.jar"/>
     </issue>
 </lint>
