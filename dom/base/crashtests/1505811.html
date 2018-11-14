@@ -1,0 +1,24 @@
+<html>
+
+<head>
+  <script>
+    function start() {
+      window.CustomElement0 = class extends HTMLElement {
+        constructor() {
+          super()
+        }
+        connectedCallback() {
+          this.before('', custom)
+          this.outerHTML = '<input pattern=""value=ð>'
+        }
+      }
+      customElements.define('custom-element-0', CustomElement0)
+      custom = document.createElementNS('http://www.w3.org/1999/xhtml', 'custom-element-0')
+      document.documentElement.appendChild(custom)
+    }
+
+    document.addEventListener('DOMContentLoaded', start)
+  </script>
+</head>
+
+</html>
