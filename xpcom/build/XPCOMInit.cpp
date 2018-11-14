@@ -8,6 +8,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Poison.h"
+#include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/XPCOM.h"
 #include "nsXULAppAPI.h"
@@ -900,6 +901,7 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
     NS_ProcessPendingEvents(thread);
     gfxPlatform::ShutdownLayersIPC();
     mozilla::dom::VideoDecoderManagerChild::Shutdown();
+    mozilla::RemoteDecoderManagerChild::Shutdown();
 
     mozilla::scache::StartupCache::DeleteSingleton();
     if (observerService)

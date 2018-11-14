@@ -143,8 +143,10 @@ auto
 GeckoChildProcessHost::GetPathToBinary(FilePath& exePath, GeckoProcessType processType) -> BinaryPathType
 {
   if (sRunSelfAsContentProc &&
-      (processType == GeckoProcessType_Content || processType == GeckoProcessType_GPU ||
-       processType == GeckoProcessType_VR)) {
+      (processType == GeckoProcessType_Content ||
+       processType == GeckoProcessType_GPU ||
+       processType == GeckoProcessType_VR ||
+       processType == GeckoProcessType_RDD)) {
 #if defined(OS_WIN)
     wchar_t exePathBuf[MAXPATHLEN];
     if (!::GetModuleFileNameW(nullptr, exePathBuf, MAXPATHLEN)) {
@@ -745,9 +747,12 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   // Add the application directory path (-appdir path)
   AddAppDirToCommandLine(childArgv);
 
-  // Tmp dir that the GPU process should use for crash reports. This arg is
-  // always populated (but possibly with an empty value) for a GPU child process.
-  if (mProcessType == GeckoProcessType_GPU || mProcessType == GeckoProcessType_VR) {
+  // Tmp dir that the GPU or RDD process should use for crash reports.
+  // This arg is always populated (but possibly with an empty value) for
+  // a GPU or RDD child process.
+  if (mProcessType == GeckoProcessType_GPU ||
+      mProcessType == GeckoProcessType_RDD ||
+      mProcessType == GeckoProcessType_VR) {
     nsCOMPtr<nsIFile> file;
     CrashReporter::GetChildProcessTmpDir(getter_AddRefs(file));
     nsAutoCString path;
@@ -1019,9 +1024,11 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   // Win app model id
   cmdLine.AppendLooseValue(mGroupId.get());
 
-  // Tmp dir that the GPU process should use for crash reports. This arg is
-  // always populated (but possibly with an empty value) for a GPU child process.
-  if (mProcessType == GeckoProcessType_GPU) {
+  // Tmp dir that the GPU or RDD process should use for crash reports.
+  // This arg is always populated (but possibly with an empty value) for
+  // a GPU or RDD child process.
+  if (mProcessType == GeckoProcessType_GPU ||
+      mProcessType == GeckoProcessType_RDD) {
     nsCOMPtr<nsIFile> file;
     CrashReporter::GetChildProcessTmpDir(getter_AddRefs(file));
     nsString path;

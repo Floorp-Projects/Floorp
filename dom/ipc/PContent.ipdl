@@ -43,6 +43,7 @@ include protocol PURLClassifier;
 include protocol PURLClassifierLocal;
 include protocol PVRManager;
 include protocol PVideoDecoderManager;
+include protocol PRemoteDecoderManager;
 include protocol PProfiler;
 include protocol PScriptCache;
 include DOMTypes;
@@ -396,6 +397,8 @@ child:
 
     // Re-create the rendering stack for a device reset.
     async ReinitRenderingForDeviceReset();
+
+    async InitRemoteDecoder(Endpoint<PRemoteDecoderManagerChild> decoder);
 
     /**
      * Enable system-level sandboxing features, if available.  Can
