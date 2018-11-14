@@ -78,6 +78,10 @@ add_task(async function setDefaultPrefAndMigrate() {
 add_task(async function installStudyAndMigrate() {
   await sanityCheckInitialState();
 
+  // Normandy can't unset the pref if it didn't already have a value, so give it
+  // a value that will be treated as empty by the migration.
+  Services.prefs.getDefaultBranch(PREF_NAME).setCharPref("", "");
+
   // Install the study.  It should set the pref.
   await PreferenceExperiments.start(newExperimentOpts());
   Assert.ok(await PreferenceExperiments.has(STUDY_NAME),
