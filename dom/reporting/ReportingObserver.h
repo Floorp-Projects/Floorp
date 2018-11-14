@@ -11,11 +11,16 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
+#include "nsTArray.h"
 
 class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
+
+class Report;
+class ReportingObserverCallback;
+struct ReportingObserverOptions;
 
 class ReportingObserver final : public nsISupports
                               , public nsWrapperCache
@@ -53,8 +58,16 @@ public:
   void
   TakeRecords(nsTArray<RefPtr<Report>>& aRecords);
 
+  void
+  MaybeReport(Report* aReport);
+
+  void
+  MaybeNotify();
+
 private:
   ~ReportingObserver();
+
+  nsTArray<RefPtr<Report>> mReports;
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<ReportingObserverCallback> mCallback;

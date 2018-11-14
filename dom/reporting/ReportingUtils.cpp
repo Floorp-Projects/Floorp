@@ -6,6 +6,9 @@
 
 #include "mozilla/dom/ReportingUtils.h"
 #include "mozilla/dom/ReportBody.h"
+#include "mozilla/dom/Report.h"
+#include "nsAtom.h"
+#include "nsPIDOMWindow.h"
 
 namespace mozilla {
 namespace dom {
@@ -16,7 +19,14 @@ ReportingUtils::Report(nsPIDOMWindowInner* aWindow,
                        const nsAString& aURL,
                        ReportBody* aBody)
 {
-  // TODO
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aBody);
+
+  RefPtr<mozilla::dom::Report> report =
+    new mozilla::dom::Report(aWindow, nsDependentAtomString(aType), aURL,
+                             aBody);
+  aWindow->BroadcastReport(report);
 }
 
 } // dom namespace
