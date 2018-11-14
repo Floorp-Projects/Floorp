@@ -17,6 +17,7 @@ add_task(async function() {
   toolbar.id = kToolbarId;
   toolbar.setAttribute("customizable", true);
   gNavToolbox.appendChild(toolbar);
+  CustomizableUI.registerToolbarNode(toolbar);
   ok(!CustomizableUI.areas.includes(kToolbarId),
      "Toolbar should not yet have been registered automatically.");
   CustomizableUI.registerArea(kToolbarId, {defaultPlacements: [kButtonId]});

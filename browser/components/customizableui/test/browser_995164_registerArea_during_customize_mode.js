@@ -73,6 +73,7 @@ add_task(async function() {
   };
   CustomizableUI.addListener(listener);
   otherWin.gNavToolbox.appendChild(otherTB);
+  CustomizableUI.registerToolbarNode(otherTB);
   ok(wasInformedCorrectlyOfAreaAppearing, "Should have been told area was registered.");
   CustomizableUI.removeListener(listener);
 
