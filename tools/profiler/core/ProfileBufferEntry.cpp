@@ -220,6 +220,11 @@ public:
     mJSONWriter.DoubleElement(aValue);
   }
 
+  void BoolElement(uint32_t aIndex, bool aValue) {
+    FillUpTo(aIndex);
+    mJSONWriter.BoolElement(aValue);
+  }
+
   void StringElement(uint32_t aIndex, const char* aValue) {
     MOZ_RELEASE_ASSERT(mStrings);
     FillUpTo(aIndex);
@@ -366,6 +371,7 @@ bool
 UniqueStacks::FrameKey::NormalFrameData::operator==(const NormalFrameData& aOther) const
 {
   return mLocation == aOther.mLocation &&
+         mRelevantForJS == aOther.mRelevantForJS &&
          mLine == aOther.mLine &&
          mColumn == aOther.mColumn &&
          mCategory == aOther.mCategory;
@@ -388,6 +394,7 @@ UniqueStacks::FrameKey::Hash() const
     if (!data.mLocation.IsEmpty()) {
       hash = AddToHash(hash, HashString(data.mLocation.get()));
     }
+    hash = AddToHash(hash, data.mRelevantForJS);
     if (data.mLine.isSome()) {
       hash = AddToHash(hash, *data.mLine);
     }
@@ -534,17 +541,19 @@ UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame)
 
   enum Schema : uint32_t {
     LOCATION = 0,
-    IMPLEMENTATION = 1,
-    OPTIMIZATIONS = 2,
-    LINE = 3,
-    COLUMN = 4,
-    CATEGORY = 5
+    RELEVANT_FOR_JS = 1,
+    IMPLEMENTATION = 2,
+    OPTIMIZATIONS = 3,
+    LINE = 4,
+    COLUMN = 5,
+    CATEGORY = 6
   };
 
   AutoArraySchemaWriter writer(mFrameTableWriter, *mUniqueStrings);
 
   const NormalFrameData& data = aFrame.mData.as<NormalFrameData>();
   writer.StringElement(LOCATION, data.mLocation.get());
+  writer.BoolElement(RELEVANT_FOR_JS, data.mRelevantForJS);
   if (data.mLine.isSome()) {
     writer.IntElement(LINE, *data.mLine);
   }
@@ -656,16 +665,18 @@ StreamJITFrame(JSContext* aContext, SpliceableJSONWriter& aWriter,
 {
   enum Schema : uint32_t {
     LOCATION = 0,
-    IMPLEMENTATION = 1,
-    OPTIMIZATIONS = 2,
-    LINE = 3,
-    COLUMN = 4,
-    CATEGORY = 5
+    RELEVANT_FOR_JS = 1,
+    IMPLEMENTATION = 2,
+    OPTIMIZATIONS = 3,
+    LINE = 4,
+    COLUMN = 5,
+    CATEGORY = 6
   };
 
   AutoArraySchemaWriter writer(aWriter, aUniqueStrings);
 
   writer.StringElement(LOCATION, aJITFrame.label());
+  writer.BoolElement(RELEVANT_FOR_JS, false);
 
   JS::ProfilingFrameIterator::FrameKind frameKind = aJITFrame.frameKind();
   MOZ_ASSERT(frameKind == JS::ProfilingFrameIterator::Frame_Ion ||
@@ -1041,6 +1052,8 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
           e.Next();
         }
 
+        bool relevantForJS = frameFlags & uint32_t(FrameFlags::RELEVANT_FOR_JS);
+
         // Copy potential dynamic string fragments into dynStrBuf, so that
         // dynStrBuf will then contain the entire dynamic string.
         size_t i = 0;
@@ -1098,8 +1111,8 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
         }
 
         stack = aUniqueStacks.AppendFrame(
-          stack, UniqueStacks::FrameKey(std::move(frameLabel), line, column,
-                                        category));
+          stack, UniqueStacks::FrameKey(std::move(frameLabel), relevantForJS,
+                                        line, column, category));
 
       } else if (e.Get().IsJitReturnAddr()) {
         numFrames++;
