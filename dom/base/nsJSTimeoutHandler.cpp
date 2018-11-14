@@ -204,6 +204,7 @@ CheckCSPForEval(JSContext* aCx, nsGlobalWindowInner* aWindow,
 
     csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
                              nullptr, // triggering element
+                             nullptr, // CSP event listener
                              fileNameString, aExpression, lineNum, columnNum,
                              EmptyString(), EmptyString());
   }
