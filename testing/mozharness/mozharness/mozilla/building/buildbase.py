@@ -26,6 +26,7 @@ import re
 from mozharness.base.config import (
     BaseConfig, parse_config_file, DEFAULT_CONFIG_PATH,
 )
+from mozharness.base.errors import MakefileErrorList
 from mozharness.base.log import ERROR, OutputParser, FATAL
 from mozharness.base.script import PostScriptRun
 from mozharness.base.vcs.vcsbase import MercurialScript
@@ -1146,6 +1147,7 @@ or run without that action (ie: --no-{action})"
                 command=mach + ['--log-no-times'] + args,
                 cwd=dirs['abs_src_dir'],
                 env=env,
+                error_list=MakefileErrorList,
                 output_timeout=self.config.get('max_build_output_timeout',
                                                60 * 40)
             )
