@@ -8,6 +8,7 @@
 #include "nsIContentPolicy.idl"
 
 interface nsIChannel;
+interface nsICSPEventListener;
 interface nsINode;
 interface nsIPrincipal;
 interface nsIRedirectHistoryEntry;
@@ -1072,4 +1073,11 @@ interface nsILoadInfo : nsISupports
     * load belongs had finished loading when the load was initiated.
     */
   [infallible] attribute boolean documentHasLoaded;
+
+  /**
+    * The object in charged to receive CSP violation events. It can be null.
+    * This attribute will be merged into the CSP object eventually.
+    * See bug 1500908.
+    */
+  attribute nsICSPEventListener cspEventListener;
 };

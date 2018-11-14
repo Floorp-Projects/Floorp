@@ -554,6 +554,16 @@ FetchDriver::HttpFetch(const nsACString& aPreferredAlternativeDataType)
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (mCSPEventListener) {
+    nsCOMPtr<nsILoadInfo> loadInfo = chan->GetLoadInfo();
+    if (NS_WARN_IF(!loadInfo)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    rv = loadInfo->SetCspEventListener(mCSPEventListener);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // Insert ourselves into the notification callbacks chain so we can set
   // headers on redirects.
 #ifdef DEBUG
@@ -1362,6 +1372,13 @@ FetchDriver::SetDocument(nsIDocument* aDocument)
   // Cannot set document after Fetch() has been called.
   MOZ_ASSERT(!mFetchCalled);
   mDocument = aDocument;
+}
+
+void
+FetchDriver::SetCSPEventListener(nsICSPEventListener* aCSPEventListener)
+{
+  MOZ_ASSERT(!mFetchCalled);
+  mCSPEventListener = aCSPEventListener;
 }
 
 void
