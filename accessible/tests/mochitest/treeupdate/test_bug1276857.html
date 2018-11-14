@@ -114,19 +114,14 @@
     }
 
     SimpleTest.waitForExplicitFinish();
-    SpecialPowers.pushPrefEnv({
-      set: [
-        ["dom.webcomponents.shadowdom.enabled", true],
-      ],
-    }, function() {
-      // This test loads in an iframe, to ensure that the element instance is
-      // loaded with the correct value of the preference.
+
+    window.onload = () => {
       let iframe = document.createElement("iframe");
       iframe.id = "iframe";
       iframe.src = "test_bug1276857_subframe.html";
       addA11yLoadEvent(doTest, iframe.contentWindow);
       document.body.appendChild(iframe);
-    });
+    };
   </script>
 
 </head>
