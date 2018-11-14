@@ -1035,6 +1035,7 @@ dependencies = [
 name = "gkrust-shared"
 version = "0.1.0"
 dependencies = [
+ "arrayvec 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "audioipc-client 0.4.0",
  "audioipc-server 0.2.3",
  "cose-c 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",

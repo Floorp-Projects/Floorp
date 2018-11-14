@@ -8,6 +8,7 @@
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FilePreferences.h"
 #include "mozilla/ChaosMode.h"
@@ -5329,6 +5330,12 @@ XRE_EnableSameExecutableForContentProc() {
 extern "C" void
 GeckoHandleOOM(size_t size) {
   mozalloc_handle_oom(size);
+}
+
+// Similarly, this wraps MOZ_CrashOOL
+extern "C" void
+GeckoCrashOOL(const char* aFilename, int aLine, const char* aReason) {
+  MOZ_CrashOOL(aFilename, aLine, aReason);
 }
 
 #ifdef MOZ_ASAN_REPORTER
