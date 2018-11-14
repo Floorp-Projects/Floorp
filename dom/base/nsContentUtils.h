@@ -1211,6 +1211,13 @@ public:
                                             size_t* aMaxBufferSize,
                                             size_t* aUsedBufferSize);
 
+  // Returns true if the URI's host is contained in a list which is a comma
+  // separated domain list.  Each item may start with "*.".  If starts with
+  // "*.", it matches any sub-domains.
+  // The aList argument must be a lower-case string.
+  static bool
+  IsURIInList(nsIURI* aURI, const nsCString& aList);
+
   // Returns true if the URI's host is contained in a pref list which is a comma
   // separated domain list.  Each item may start with "*.".  If starts with
   // "*.", it matches any sub-domains.
