@@ -607,6 +607,7 @@ WebRenderDebugPrefChangeCallback(const char* aPrefName, void*)
   GFX_WEBRENDER_DEBUG(".new-scene-indicator", 1 << 10)
   GFX_WEBRENDER_DEBUG(".show-overdraw", 1 << 11)
   GFX_WEBRENDER_DEBUG(".slow-frame-indicator", 1 << 13)
+  GFX_WEBRENDER_DEBUG(".texture-cache.clear-evicted", 1 << 14)
 #undef GFX_WEBRENDER_DEBUG
 
   gfx::gfxVars::SetWebRenderDebugFlags(flags);
