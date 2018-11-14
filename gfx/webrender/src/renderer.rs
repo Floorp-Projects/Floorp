@@ -37,7 +37,7 @@ use capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use debug_colors;
 use device::{DepthFunction, Device, GpuFrameId, Program, UploadMethod, Texture, PBO};
 use device::{DrawTarget, ExternalTexture, FBOId, ReadTarget, TextureSlot};
-use device::{ShaderError, TextureFilter,
+use device::{ShaderError, TextureFilter, TextureFlags,
              VertexUsageHint, VAO, VBO, CustomVAO};
 use device::{ProgramCache, ReadPixelsFormat};
 #[cfg(feature = "debug_renderer")]
@@ -2824,7 +2824,7 @@ impl Renderer {
                             //
                             // Ensure no PBO is bound when creating the texture storage,
                             // or GL will attempt to read data from there.
-                            let texture = self.device.create_texture(
+                            let mut texture = self.device.create_texture(
                                 TextureTarget::Array,
                                 info.format,
                                 info.width,
@@ -2835,6 +2835,11 @@ impl Renderer {
                                 Some(RenderTargetInfo { has_depth: false }),
                                 info.layer_count,
                             );
+
+                            if info.is_shared_cache {
+                                texture.flags_mut()
+                                    .insert(TextureFlags::IS_SHARED_TEXTURE_CACHE);
+                            }
 
                             let old = self.texture_resolver.texture_cache_map.insert(allocation.id, texture);
                             assert_eq!(old.is_some(), is_realloc, "Renderer and RenderBackend disagree");
@@ -4185,36 +4190,22 @@ impl Renderer {
             return;
         }
 
-        let mut spacing = 16;
-        let mut size = 512;
-        let fb_width = framebuffer_size.width as i32;
-        let num_layers: i32 = self.texture_resolver.render_target_pool
-            .iter()
-            .map(|texture| texture.get_layer_count() as i32)
-            .sum();
+        let debug_renderer = match self.debug.get_mut(&mut self.device) {
+            Some(render) => render,
+            None => return,
+        };
 
-        if num_layers * (size + spacing) > fb_width {
-            let factor = fb_width as f32 / (num_layers * (size + spacing)) as f32;
-            size = (size as f32 * factor) as i32;
-            spacing = (spacing as f32 * factor) as i32;
-        }
+        let textures =
+            self.texture_resolver.render_target_pool.iter().collect::<Vec<&Texture>>();
 
-        let mut target_index = 0;
-        for texture in &self.texture_resolver.render_target_pool {
-            let dimensions = texture.get_dimensions();
-            let src_rect = DeviceIntRect::new(DeviceIntPoint::zero(), dimensions.to_i32());
-
-            let layer_count = texture.get_layer_count() as usize;
-            for layer in 0 .. layer_count {
-                self.device.bind_read_target(ReadTarget::Texture { texture, layer });
-                let x = fb_width - (spacing + size) * (target_index + 1);
-                let y = spacing;
-
-                let dest_rect = rect(x, y, size, size);
-                self.device.blit_render_target(src_rect, dest_rect);
-                target_index += 1;
-            }
-        }
+        Self::do_debug_blit(
+            &mut self.device,
+            debug_renderer,
+            textures,
+            framebuffer_size,
+            0,
+            &|_| [0.0, 1.0, 0.0, 1.0], // Use green for all RTs.
+        );
     }
 
     #[cfg(feature = "debug_renderer")]
@@ -4223,12 +4214,47 @@ impl Renderer {
             return;
         }
 
+        let debug_renderer = match self.debug.get_mut(&mut self.device) {
+            Some(render) => render,
+            None => return,
+        };
+
+        let textures =
+            self.texture_resolver.texture_cache_map.values().collect::<Vec<&Texture>>();
+
+        fn select_color(texture: &Texture) -> [f32; 4] {
+            if texture.flags().contains(TextureFlags::IS_SHARED_TEXTURE_CACHE) {
+                [1.0, 0.5, 0.0, 1.0] // Orange for shared.
+            } else {
+                [1.0, 0.0, 1.0, 1.0] // Fuchsia for standalone.
+            }
+        }
+
+        Self::do_debug_blit(
+            &mut self.device,
+            debug_renderer,
+            textures,
+            framebuffer_size,
+            if self.debug_flags.contains(DebugFlags::RENDER_TARGET_DBG) { 544 } else { 0 },
+            &select_color,
+        );
+    }
+
+    #[cfg(feature = "debug_renderer")]
+    fn do_debug_blit(
+        device: &mut Device,
+        debug_renderer: &mut DebugRenderer,
+        mut textures: Vec<&Texture>,
+        framebuffer_size: DeviceUintSize,
+        bottom: i32,
+        select_color: &Fn(&Texture) -> [f32; 4],
+    ) {
         let mut spacing = 16;
         let mut size = 512;
+
         let fb_width = framebuffer_size.width as i32;
-        let num_layers: i32 = self.texture_resolver
-            .texture_cache_map
-            .values()
+        let fb_height = framebuffer_size.height as i32;
+        let num_layers: i32 = textures.iter()
             .map(|texture| texture.get_layer_count())
             .sum();
 
@@ -4238,13 +4264,16 @@ impl Renderer {
             spacing = (spacing as f32 * factor) as i32;
         }
 
+        // Sort the display by layer size (in bytes), so that left-to-right is
+        // largest-to-smallest.
+        //
+        // Note that the vec here is in increasing order, because the elements
+        // get drawn right-to-left.
+        textures.sort_by_key(|t| t.layer_size_in_bytes());
+
         let mut i = 0;
-        for texture in self.texture_resolver.texture_cache_map.values() {
-            let y = spacing + if self.debug_flags.contains(DebugFlags::RENDER_TARGET_DBG) {
-                528
-            } else {
-                0
-            };
+        for texture in textures.iter() {
+            let y = spacing + bottom;
             let dimensions = texture.get_dimensions();
             let src_rect = DeviceIntRect::new(
                 DeviceIntPoint::zero(),
@@ -4253,7 +4282,7 @@ impl Renderer {
 
             let layer_count = texture.get_layer_count() as usize;
             for layer in 0 .. layer_count {
-                self.device.bind_read_target(ReadTarget::Texture { texture, layer});
+                device.bind_read_target(ReadTarget::Texture { texture, layer});
 
                 let x = fb_width - (spacing + size) * (i as i32 + 1);
 
@@ -4262,8 +4291,32 @@ impl Renderer {
                     return;
                 }
 
-                let dest_rect = rect(x, y, size, size);
-                self.device.blit_render_target(src_rect, dest_rect);
+                // Draw the info tag.
+                let text_margin = 1;
+                let text_height = 14; // Visually aproximated.
+                let tag_height = text_height + text_margin * 2;
+                let tag_rect = rect(x, y, size, tag_height);
+                let tag_color = select_color(texture);
+                device.clear_target(Some(tag_color), None, Some(tag_rect));
+
+                // Draw the dimensions onto the tag.
+                let dim = texture.get_dimensions();
+                let mut text_rect = tag_rect;
+                text_rect.origin.y =
+                    fb_height - text_rect.origin.y - text_rect.size.height; // Top-relative.
+                debug_renderer.add_text(
+                    (x + text_margin) as f32,
+                    (fb_height - y - text_margin) as f32, // Top-relative.
+                    &format!("{}x{}", dim.width, dim.height),
+                    ColorU::new(0, 0, 0, 255),
+                    Some(text_rect.to_f32())
+                );
+
+                // Blit the contents of the layer. We need to invert Y because
+                // we're blitting from a texture to the main framebuffer, which
+                // use different conventions.
+                let dest_rect = rect(x, y + tag_height, size, size);
+                device.blit_render_target_invert_y(src_rect, dest_rect);
                 i += 1;
             }
         }
@@ -4291,6 +4344,7 @@ impl Renderer {
                 x0, y,
                 &format!("{:?}: {:?}", pipeline, epoch),
                 ColorU::new(255, 255, 0, 255),
+                None,
             ).size.width;
             text_width = f32::max(text_width, w);
         }

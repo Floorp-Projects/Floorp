@@ -575,7 +575,7 @@ impl Wrench {
             let x = self.device_pixel_ratio * (15.0 + co.1);
             let mut y = self.device_pixel_ratio * (15.0 + co.1 + dr.line_height());
             for ref line in &help_lines {
-                dr.add_text(x, y, line, co.0.into());
+                dr.add_text(x, y, line, co.0.into(), None);
                 y += self.device_pixel_ratio * dr.line_height();
             }
         }

@@ -578,24 +578,28 @@ impl ProfileGraph {
             text_origin.y,
             description,
             ColorU::new(0, 255, 0, 255),
+            None,
         );
         debug_renderer.add_text(
             text_origin.x,
             text_origin.y + line_height,
             &format!("Min: {:.2} ms", stats.min_value),
             text_color,
+            None,
         );
         debug_renderer.add_text(
             text_origin.x,
             text_origin.y + line_height * 2.0,
             &format!("Mean: {:.2} ms", stats.mean_value),
             text_color,
+            None,
         );
         debug_renderer.add_text(
             text_origin.x,
             text_origin.y + line_height * 3.0,
             &format!("Max: {:.2} ms", stats.max_value),
             text_color,
+            None,
         );
 
         rect.size.width += 140.0;
@@ -770,6 +774,7 @@ impl GpuFrameCollection {
                 y0 + LEGEND_SIZE * 0.75,
                 label,
                 ColorU::new(255, 255, 0, 255),
+                None,
             );
         }
 
@@ -840,6 +845,7 @@ impl Profiler {
                 current_y,
                 counter.description(),
                 colors[color_index],
+                None,
             );
             color_index = (color_index + 1) % colors.len();
 
@@ -857,6 +863,7 @@ impl Profiler {
                 current_y,
                 &counter.value(),
                 colors[color_index],
+                None,
             );
             color_index = (color_index + 1) % colors.len();
 
@@ -893,6 +900,7 @@ impl Profiler {
             self.draw_state.y_left,
             label,
             label_color,
+            None,
         );
 
         let x_base = rect.origin.x + rect.size.width + 10.0;
