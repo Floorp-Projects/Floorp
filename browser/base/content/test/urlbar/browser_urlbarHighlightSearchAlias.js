@@ -189,10 +189,10 @@ add_task(async function nonHeuristicAliases() {
 
 
 // Aliases that don't start with @ shouldn't be highlighted.
-add_task(async function nonAtMarkAlias() {
-  let alias = "notatmarkalias";
+add_task(async function nonTokenAlias() {
+  let alias = "nontokenalias";
   let engine = Services.search.getEngineByName("Test");
-  engine.alias = "notatmarkalias";
+  engine.alias = "nontokenalias";
   Assert.equal(engine.alias, alias);
 
   gURLBar.search(alias);
