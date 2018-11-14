@@ -30,7 +30,7 @@ BinTokenReaderBase::updateLatestKnownGood()
 ErrorResult<JS::Error&>
 BinTokenReaderBase::raiseError(const char* description)
 {
-    MOZ_ASSERT(!cx_->isExceptionPending());
+    MOZ_ASSERT(!hasRaisedError());
     if (MOZ_LIKELY(errorReporter_)) {
         errorReporter_->reportErrorNoOffset(JSMSG_BINAST, description);
     } else {
@@ -68,13 +68,17 @@ BinTokenReaderBase::raiseInvalidField(const char* kind, const BinField field)
     return raiseError(out.string());
 }
 
-#ifdef DEBUG
 bool
 BinTokenReaderBase::hasRaisedError() const
 {
+    if (cx_->helperThread()) {
+        // When performing off-main-thread parsing, we don't set a pending
+        // exception but instead add a pending compile error.
+        return cx_->isCompileErrorPending();
+    }
+
     return cx_->isExceptionPending();
 }
-#endif
 
 size_t
 BinTokenReaderBase::offset() const
@@ -109,7 +113,7 @@ BinTokenReaderBase::seek(size_t offset)
 JS::Result<Ok>
 BinTokenReaderBase::readBuf(uint8_t* bytes, uint32_t len)
 {
-    MOZ_ASSERT(!cx_->isExceptionPending());
+    MOZ_ASSERT(!hasRaisedError());
     MOZ_ASSERT(len > 0);
 
     if (stop_ < current_ + len) {

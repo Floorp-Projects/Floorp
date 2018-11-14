@@ -151,9 +151,7 @@ class MOZ_STACK_CLASS BinTokenReaderBase
 
     void updateLatestKnownGood();
 
-#ifdef DEBUG
     bool hasRaisedError() const;
-#endif
 
     JSContext* cx_;
 

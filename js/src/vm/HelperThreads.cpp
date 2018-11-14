@@ -2200,6 +2200,13 @@ JSContext::addPendingCompileError(js::CompileError** error)
     return true;
 }
 
+bool
+JSContext::isCompileErrorPending() const
+{
+    ParseTask* parseTask = helperThread()->parseTask();
+    return parseTask->errors.length() > 0;
+}
+
 void
 JSContext::addPendingOverRecursed()
 {
