@@ -559,7 +559,6 @@ impl PicturePrimitive {
 
         let state = PictureState {
             is_cacheable: true,
-            local_rect_changed: false,
             map_local_to_pic,
             map_pic_to_world,
             map_pic_to_raster,
@@ -607,7 +606,7 @@ impl PicturePrimitive {
         context: PictureContext,
         state: PictureState,
         frame_state: &mut FrameBuildingState,
-    ) -> (bool, Option<ClipNodeCollector>) {
+    ) -> Option<ClipNodeCollector> {
         self.prim_list = prim_list;
         self.state = Some((state, context));
 
@@ -615,17 +614,27 @@ impl PicturePrimitive {
             Some(ref raster_config) => {
                 let local_rect = frame_state.surfaces[raster_config.surface_index.0].rect;
                 let local_rect = LayoutRect::from_untyped(&local_rect.to_untyped());
-                let local_rect_changed = local_rect != self.local_rect;
-                self.local_rect = local_rect;
 
-                if local_rect_changed {
-                    frame_state.gpu_cache.invalidate(&mut self.gpu_location);
+                // If the local rect changed (due to transforms in child primitives) then
+                // invalidate the GPU cache location to re-upload the new local rect
+                // and stretch size. Drop shadow filters also depend on the local rect
+                // size for the extra GPU cache data handle.
+                // TODO(gw): In future, if we support specifying a flag which gets the
+                //           stretch size from the segment rect in the shaders, we can
+                //           remove this invalidation here completely.
+                if self.local_rect != local_rect {
+                    frame_state.gpu_cache.invalidate(&self.gpu_location);
+                    if let PictureCompositeMode::Filter(FilterOp::DropShadow(..)) = raster_config.composite_mode {
+                        frame_state.gpu_cache.invalidate(&self.extra_gpu_data_handle);
+                    }
                 }
 
-                (local_rect_changed, Some(frame_state.clip_store.pop_surface()))
+                self.local_rect = local_rect;
+
+                Some(frame_state.clip_store.pop_surface())
             }
             None => {
-                (false, None)
+                None
             }
         }
     }
@@ -957,7 +966,6 @@ impl PicturePrimitive {
         prim_instance: &PrimitiveInstance,
         prim_local_rect: &LayoutRect,
         surface_index: SurfaceIndex,
-        pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
     ) -> bool {
@@ -1197,14 +1205,6 @@ impl PicturePrimitive {
 
                 let render_task_id = frame_state.render_tasks.add(blur_render_task);
                 surfaces[surface_index.0].tasks.push(render_task_id);
-
-                // If the local rect of the contents changed, force the cache handle
-                // to be invalidated so that the primitive data below will get
-                // uploaded to the GPU this frame. This can occur during property
-                // animation.
-                if pic_state.local_rect_changed {
-                    frame_state.gpu_cache.invalidate(&mut self.extra_gpu_data_handle);
-                }
 
                 if let Some(mut request) = frame_state.gpu_cache.request(&mut self.extra_gpu_data_handle) {
                     // TODO(gw): This is very hacky code below! It stores an extra
