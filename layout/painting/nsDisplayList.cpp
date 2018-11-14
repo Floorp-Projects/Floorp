@@ -7839,7 +7839,7 @@ nsDisplayStickyPosition::CreateWebRenderCommands(
                                  applied);
 
     aBuilder.PushClip(id);
-    aManager->CommandBuilder().PushOverrideForASR(mContainerASR, Some(id));
+    aManager->CommandBuilder().PushOverrideForASR(mContainerASR, id);
   }
 
   {
@@ -9473,7 +9473,7 @@ nsDisplayPerspective::CreateWebRenderCommands(
   Point3D roundedOrigin(NS_round(newOrigin.x), NS_round(newOrigin.y), 0);
 
   gfx::Matrix4x4 transformForSC = gfx::Matrix4x4::Translation(roundedOrigin);
-  
+
   nsIFrame* perspectiveFrame = mFrame->GetContainingBlock(nsIFrame::SKIP_SCROLLED_FRAME);
 
   nsTArray<mozilla::wr::WrFilterOp> filters;
@@ -10184,18 +10184,10 @@ nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
                   /*aTransformForScrollData: */ Nothing(),
                   /*aClipNodeId: */ &clipId);
     sc = layer.ptr();
-    // The whole stacking context will be clipped by us, so no need to have any
-    // parent for the children context's clip.
-    aManager->CommandBuilder().PushOverrideForASR(GetActiveScrolledRoot(),
-                                                  Nothing());
   }
 
   nsDisplayEffectsBase::CreateWebRenderCommands(
     aBuilder, aResources, *sc, aManager, aDisplayListBuilder);
-
-  if (clip) {
-    aManager->CommandBuilder().PopOverrideForASR(GetActiveScrolledRoot());
-  }
 
   return true;
 }
@@ -10516,15 +10508,9 @@ nsDisplayFilters::CreateWebRenderCommands(
                            Nothing(),
                            &clipId);
 
-  // The whole stacking context will be clipped by us, so no need to have any
-  // parent for the children context's clip.
-  aManager->CommandBuilder().PushOverrideForASR(GetActiveScrolledRoot(),
-                                                Nothing());
-
   nsDisplayEffectsBase::CreateWebRenderCommands(
     aBuilder, aResources, sc, aManager, aDisplayListBuilder);
 
-  aManager->CommandBuilder().PopOverrideForASR(GetActiveScrolledRoot());
   return true;
 }
 

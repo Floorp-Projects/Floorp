@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, BoxShadowClipMode, ClipMode, ColorF, DeviceIntSize, LayoutPrimitiveInfo};
-use api::{LayoutRect, LayoutSize, LayoutToDeviceScale, LayoutVector2D, MAX_BLUR_RADIUS};
+use api::{LayoutRect, LayoutSize, LayoutVector2D, MAX_BLUR_RADIUS};
 use clip::ClipItemKey;
 use display_list_flattener::DisplayListFlattener;
 use gpu_cache::GpuCacheHandle;
@@ -12,12 +12,6 @@ use prim_store::{BrushKind, BrushPrimitive, PrimitiveContainer};
 use prim_store::ScrollNodeAndClipChain;
 use render_task::RenderTaskCacheEntryHandle;
 use util::RectHelpers;
-
-/// In the majority of cases box-shadow radius in device pixels should be quite
-/// small (< 256), so the choice of max is trade off between panic! in
-/// pathological case of being presented with huge radius and using too much
-/// texture memory for better rendering of such cases.
-const MAX_BOX_SHADOW_RESOLUTION: u32 = 2048;
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -38,6 +32,10 @@ pub struct BoxShadowClipSource {
 
     // Local-space size of the required render task size.
     pub shadow_rect_alloc_size: LayoutSize,
+
+    // Local-space size of the required render task size without any downscaling
+    // applied. This is needed to stretch the shadow properly.
+    pub original_alloc_size: LayoutSize,
 
     // The minimal shadow rect for the parameters above,
     // used when drawing the shadow rect to be blurred.
@@ -60,7 +58,9 @@ pub const BLUR_SAMPLE_SCALE: f32 = 3.0;
 pub struct BoxShadowCacheKey {
     pub blur_radius_dp: i32,
     pub clip_mode: BoxShadowClipMode,
-    pub rect_size: DeviceIntSize,
+    // NOTE(emilio): Only the original allocation size needs to be in the cache
+    // key, since the actual size is derived from that.
+    pub original_alloc_size: DeviceIntSize,
     pub br_top_left: DeviceIntSize,
     pub br_top_right: DeviceIntSize,
     pub br_bottom_right: DeviceIntSize,
@@ -249,9 +249,4 @@ fn adjust_radius_for_box_shadow(border_radius: f32, spread_amount: f32) -> f32 {
     } else {
         0.0
     }
-}
-
-pub fn get_max_scale_for_box_shadow(rect_size: &LayoutSize) -> LayoutToDeviceScale {
-    let r = rect_size.width.max(rect_size.height);
-    LayoutToDeviceScale::new(MAX_BOX_SHADOW_RESOLUTION as f32 / r)
 }

@@ -4577,15 +4577,6 @@ JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script)
     script->setFlag(MutableFlags::NeedsArgsObj);
 
     /*
-     * Since we can't invalidate baseline scripts, set a flag that's checked from
-     * JIT code to indicate the arguments optimization failed and JSOP_ARGUMENTS
-     * should create an arguments object next time.
-     */
-    if (script->hasBaselineScript()) {
-        script->baselineScript()->setNeedsArgsObj();
-    }
-
-    /*
      * By design, the arguments optimization is only made when there are no
      * outstanding cases of MagicValue(JS_OPTIMIZED_ARGUMENTS) at any points
      * where the optimization could fail, other than an active invocation of

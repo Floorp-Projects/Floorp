@@ -413,6 +413,43 @@ JS_IsBuiltinFunctionConstructor(JSFunction* fun);
 
 /************************************************************************/
 
+// [SMDOC] Data Structures (JSContext, JSRuntime, Realm, Compartment, Zone)
+//
+// SpiderMonkey uses some data structures that behave a lot like Russian dolls:
+// runtimes contain zones, zones contain compartments, compartments contain
+// realms. Each layer has its own purpose.
+//
+// Realm
+// -----
+// Data associated with a global object. In the browser each frame has its
+// own global/realm.
+//
+// Compartment
+// -----------
+// Security membrane; when an object from compartment A is used in compartment
+// B, a cross-compartment wrapper (a kind of proxy) is used. In the browser each
+// compartment currently contains one global/realm, but we want to change that
+// so each compartment contains multiple same-origin realms (bug 1357862).
+//
+// Zone
+// ----
+// A Zone is a group of compartments that share GC resources (arenas, strings,
+// etc) for memory usage and performance reasons. Zone is the GC unit: the GC
+// can operate on one or more zones at a time. The browser uses roughly one zone
+// per tab.
+//
+// Context
+// -------
+// JSContext represents a thread: there must be exactly one JSContext for each
+// thread running JS/Wasm. Internally, helper threads have their own JSContext.
+//
+// Runtime
+// -------
+// JSRuntime is very similar to JSContext: each runtime belongs to one context
+// (thread), but helper threads don't have their own runtimes (they're shared by
+// all runtimes in the process and use the runtime of the task they're
+// executing).
+
 /*
  * Locking, contexts, and memory allocation.
  *
@@ -422,8 +459,7 @@ JS_IsBuiltinFunctionConstructor(JSFunction* fun);
  * See: https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/JSAPI_reference
  */
 
-// Create a new runtime, with a single cooperative context for this thread.
-// On success, the new context will be the active context for the runtime.
+// Create a new context (and runtime) for this thread.
 extern JS_PUBLIC_API(JSContext*)
 JS_NewContext(uint32_t maxbytes,
               uint32_t maxNurseryBytes = JS::DefaultNurseryBytes,

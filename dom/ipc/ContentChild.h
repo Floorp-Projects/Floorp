@@ -211,6 +211,10 @@ public:
 
   mozilla::ipc::IPCResult RecvReinitRenderingForDeviceReset() override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvInitRemoteDecoder(
+    Endpoint<PRemoteDecoderManagerChild>&& aRemoteManager) override;
+
   virtual mozilla::ipc::IPCResult RecvSetProcessSandbox(const MaybeFileDesc& aBroker) override;
 
   virtual PBrowserChild* AllocPBrowserChild(const TabId& aTabId,
