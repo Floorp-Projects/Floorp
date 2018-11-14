@@ -83,7 +83,8 @@ GeckoProfilerEntryMarker::~GeckoProfilerEntryMarker()
 
 MOZ_ALWAYS_INLINE
 AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(JSContext* cx, const char* label,
-                                               ProfilingStackFrame::Category category
+                                               ProfilingStackFrame::Category category,
+                                               uint32_t flags
                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : profiler_(&cx->geckoProfiler())
 {
@@ -96,9 +97,9 @@ AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(JSContext* cx, const char* label,
     spBefore_ = profiler_->stackPointer();
 #endif
     profiler_->profilingStack_->pushLabelFrame(label,
-                                            /* dynamicString = */ nullptr,
-                                            /* sp = */ this,
-                                            category);
+                                               /* dynamicString = */ nullptr,
+                                               /* sp = */ this,
+                                               category, flags);
 }
 
 MOZ_ALWAYS_INLINE
