@@ -80,7 +80,7 @@ fuzzy(0-255,0-20) random-if(winWidget) fuzzy-if(skiaContent,0-255,0-610) == corn
 
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),0-1,0-20) fuzzy-if(d2d,0-98,0-157) fuzzy-if(Android,0-166,0-400) fuzzy-if(skiaContent,0-59,0-146) == scroll-1.html scroll-1-ref.html # see bug 732535 #Bug 959166
 
-== transforms-1.html transforms-1-ref.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-9) == transforms-1.html transforms-1-ref.html # bug 1507152
 
 == zero-radius-clip-1.html zero-radius-clip-ref.html
 
