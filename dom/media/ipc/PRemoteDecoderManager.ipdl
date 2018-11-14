@@ -1,0 +1,27 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PRemoteVideoDecoder;
+include "mozilla/dom/MediaIPCUtils.h";
+
+using VideoInfo from "MediaInfo.h";
+using AudioInfo from "MediaInfo.h";
+using mozilla::CreateDecoderParams::OptionSet from "PlatformDecoderModule.h";
+
+namespace mozilla {
+
+sync protocol PRemoteDecoderManager
+{
+  manages PRemoteVideoDecoder;
+
+parent:
+  sync PRemoteVideoDecoder(VideoInfo info,
+                           float framerate,
+                           OptionSet options)
+         returns (bool success,
+                  nsCString aErrorDescription);
+};
+
+} // namespace mozilla
