@@ -8,7 +8,6 @@
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FilePreferences.h"
 #include "mozilla/ChaosMode.h"
@@ -5331,23 +5330,6 @@ extern "C" void
 GeckoHandleOOM(size_t size) {
   mozalloc_handle_oom(size);
 }
-
-// Similarly, this wraps MOZ_CrashOOL
-extern "C" void
-GeckoCrashOOL(const char* aFilename, int aLine, const char* aReason) {
-  MOZ_CrashOOL(aFilename, aLine, aReason);
-}
-
-// From toolkit/library/rust/shared/lib.rs
-extern "C" void install_rust_panic_hook();
-
-struct InstallRustPanicHook {
-  InstallRustPanicHook() {
-    install_rust_panic_hook();
-  }
-};
-
-InstallRustPanicHook sInstallRustPanicHook;
 
 #ifdef MOZ_ASAN_REPORTER
 void setASanReporterPath(nsIFile* aDir) {
