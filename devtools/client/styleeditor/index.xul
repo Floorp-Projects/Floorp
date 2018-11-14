@@ -70,6 +70,8 @@
     <menupopup id="sidebar-context">
       <menuitem id="context-openlinknewtab"
         label="&openLinkNewTab.label;"/>
+      <menuitem id="context-copyurl"
+        label="&copyUrl.label;"/>
     </menupopup>
     <menupopup id="style-editor-options-popup"
                position="before_start">
