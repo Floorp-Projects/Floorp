@@ -774,7 +774,7 @@ nsHtml5ElementName::initializeStatics()
                                     nsHtml5TreeBuilder::OTHER);
   ELT_MARQUEE = new nsHtml5ElementName(nsGkAtoms::marquee,
                                        nsGkAtoms::marquee,
-                                       NS_NewHTMLDivElement,
+                                       NS_NewHTMLMarqueeElement,
                                        NS_NewSVGUnknownElement,
                                        nsHtml5TreeBuilder::MARQUEE_OR_APPLET |
                                          SPECIAL | SCOPING);
