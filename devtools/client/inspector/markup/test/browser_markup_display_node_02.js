@@ -112,8 +112,7 @@ async function runTestData(inspector, testActor,
   await selectNode(selector, inspector);
   const container = await getContainerForSelector(selector, inspector);
 
-  const beforeBadge = container.elt.querySelector(
-    ".inspector-badge.interactive[data-display]");
+  const beforeBadge = container.elt.querySelector(".markup-badge[data-display]");
   is(!!beforeBadge, before.visible,
     `Display badge is visible as expected for ${selector}: ${before.visible}`);
   if (before.visible) {
@@ -138,8 +137,7 @@ async function runTestData(inspector, testActor,
   }
   ok(foundContainer, "Container is part of the list of changed nodes");
 
-  const afterBadge = container.elt.querySelector(
-    ".inspector-badge.interactive[data-display]");
+  const afterBadge = container.elt.querySelector(".markup-badge[data-display]");
   is(!!afterBadge, after.visible,
     `Display badge is visible as expected for ${selector}: ${after.visible}`);
   if (after.visible) {
