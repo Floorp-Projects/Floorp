@@ -9,6 +9,7 @@
 
 #include "gc/WeakMap.h"
 
+#include "js/TraceKind.h"
 #include "vm/JSContext.h"
 
 namespace js {
@@ -28,6 +29,13 @@ template <class K, class V>
 WeakMap<K, V>::WeakMap(JSContext* cx, JSObject* memOf)
   : Base(cx->zone()), WeakMapBase(memOf, cx->zone())
 {
+    using ElemType = typename K::ElementType;
+    using NonPtrType = typename mozilla::RemovePointer<ElemType>::Type;
+    // The object's TraceKind needs to be added to CC graph if this object is
+    // used as a WeakMap key. See the comments for IsCCTraceKind for details.
+    static_assert(JS::IsCCTraceKind(NonPtrType::TraceKind),
+                  "Object's TraceKind should be added to CC graph.");
+
     zone()->gcWeakMapList().insertFront(this);
     marked = JS::IsIncrementalGCInProgress(TlsContext.get());
 }
