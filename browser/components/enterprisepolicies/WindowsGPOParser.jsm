@@ -26,13 +26,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 var EXPORTED_SYMBOLS = ["WindowsGPOParser"];
 
 var WindowsGPOParser = {
-  readPolicies(wrk, policies) {
+  readPolicies(wrk, policies, isMachineRoot) {
     let childWrk = wrk.openChild("Mozilla\\Firefox", wrk.ACCESS_READ);
     if (!policies) {
       policies = {};
     }
     try {
-      policies = registryToObject(childWrk, policies);
+      policies = registryToObject(childWrk, policies, isMachineRoot);
     } catch (e) {
       log.error(e);
     } finally {
@@ -41,13 +41,14 @@ var WindowsGPOParser = {
     // Need an extra check here so we don't
     // JSON.stringify if we aren't in debug mode
     if (log._maxLogLevel == "debug") {
+      log.debug("root = " + isMachineRoot ? "HKEY_LOCAL_MACHINE" : "HKEY_CURRENT_USER");
       log.debug(JSON.stringify(policies, null, 2));
     }
     return policies;
   },
 };
 
-function registryToObject(wrk, policies) {
+function registryToObject(wrk, policies, isMachineRoot) {
   if (!policies) {
     policies = {};
   }
@@ -63,6 +64,9 @@ function registryToObject(wrk, policies) {
     }
     for (let i = 0; i < wrk.valueCount; i++) {
       let name = wrk.getValueName(i);
+      if (!isMachineRoot && isMachineOnlyPolicy(name)) {
+        continue;
+      }
       let value = readRegistryValue(wrk, name);
       policies[name] = value;
     }
@@ -73,6 +77,9 @@ function registryToObject(wrk, policies) {
       let array = [];
       for (let i = 0; i < wrk.childCount; i++) {
         let name = wrk.getChildName(i);
+        if (!isMachineRoot && isMachineOnlyPolicy(name)) {
+          continue;
+        }
         let childWrk = wrk.openChild(name, wrk.ACCESS_READ);
         array.push(registryToObject(childWrk));
         childWrk.close();
@@ -82,6 +89,9 @@ function registryToObject(wrk, policies) {
     }
     for (let i = 0; i < wrk.childCount; i++) {
       let name = wrk.getChildName(i);
+        if (!isMachineRoot && isMachineOnlyPolicy(name)) {
+        continue;
+      }
       let childWrk = wrk.openChild(name, wrk.ACCESS_READ);
       policies[name] = registryToObject(childWrk);
       childWrk.close();
@@ -103,4 +113,13 @@ function readRegistryValue(wrk, value) {
   }
   // unknown type
   return null;
+}
+
+function isMachineOnlyPolicy(name) {
+  if (schema.properties[name] &&
+      schema.properties[name].machine_only) {
+    log.error(`Policy ${name} is only allowed under the HKEY_LOCAL_MACHINE root`);
+    return true;
+  }
+  return false;
 }
