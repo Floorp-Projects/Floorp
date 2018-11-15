@@ -343,11 +343,8 @@ public class Tabs implements BundleEventListener {
         }
 
         // Pass a message to Gecko to update tab state in BrowserApp.
-        final GeckoBundle data = new GeckoBundle(2);
+        final GeckoBundle data = new GeckoBundle(1);
         data.putInt("id", tab.getId());
-        if (oldTab != null && mTabs.containsKey(oldTab.getId())) {
-            data.putInt("previousTabId", oldTab.getId());
-        }
         mEventDispatcher.dispatch("Tab:Selected", data);
         EventDispatcher.getInstance().dispatch("Tab:Selected", data);
         return tab;
