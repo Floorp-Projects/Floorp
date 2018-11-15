@@ -377,7 +377,7 @@
                    role="presentation"/>
       </xul:hbox>
       <xul:richlistbox anonid="richlistbox" class="autocomplete-richlistbox search-panel-tree" flex="1"/>
-      <xul:hbox anonid="search-one-off-buttons" class="search-one-offs"/>
+      <xul:search-one-offs anonid="search-one-off-buttons" class="search-one-offs"/>
     </content>
     <implementation>
       <method name="openAutocompletePopup">
@@ -473,9 +473,8 @@
       </property>
 
       <field name="oneOffButtons" readonly="true">
-        new window.SearchOneOffs(
-          document.getAnonymousElementByAttribute(this, "anonid",
-                                                  "search-one-off-buttons"));
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "search-one-off-buttons");
       </field>
 
       <method name="updateHeader">
