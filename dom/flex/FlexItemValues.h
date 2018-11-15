@@ -39,10 +39,14 @@ public:
   }
 
   nsINode* GetNode() const;
+  double MainPosition() const;
+  double MainSize() const;
   double MainBaseSize() const;
   double MainDeltaSize() const;
   double MainMinSize() const;
   double MainMaxSize() const;
+  double CrossPosition() const;
+  double CrossSize() const;
   double CrossMinSize() const;
   double CrossMaxSize() const;
   FlexItemClampState ClampState() const;
@@ -51,11 +55,15 @@ protected:
   RefPtr<FlexLineValues> mParent;
   RefPtr<nsINode> mNode;
 
-  // These sizes are all CSS pixel units.
+  // These measurements are all CSS pixel units.
+  double mMainPosition;
+  double mMainSize;
   double mMainBaseSize;
   double mMainDeltaSize;
   double mMainMinSize;
   double mMainMaxSize;
+  double mCrossPosition;
+  double mCrossSize;
   double mCrossMinSize;
   double mCrossMaxSize;
   FlexItemClampState mClampState;
