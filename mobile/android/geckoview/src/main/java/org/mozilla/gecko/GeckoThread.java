@@ -284,8 +284,6 @@ public class GeckoThread extends Thread {
 
         final String resourcePath = context.getPackageResourcePath();
 
-        GeckoSystemStateListener.getInstance().initialize(context);
-
         try {
             loadGeckoLibs(context, resourcePath);
             return;
