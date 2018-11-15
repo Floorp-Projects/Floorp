@@ -81,8 +81,13 @@ function run_test() {
   runChecks(null, dbgEnv, sandbox);
 }
 
-function runChecks(dbgObject, dbgEnv, sandbox) {
-  const propertyProvider = (...args) => JSPropertyProvider(dbgObject, dbgEnv, ...args);
+function runChecks(dbgObject, environment, sandbox) {
+  const propertyProvider = (inputValue, options) => JSPropertyProvider({
+    dbgObject,
+    environment,
+    inputValue,
+    ...options,
+  });
 
   info("Test that suggestions are given for 'this'");
   let results = propertyProvider("t");
@@ -241,20 +246,20 @@ function runChecks(dbgObject, dbgEnv, sandbox) {
   Assert.ok(results === null);
 
   info("Test that getters are executed if invokeUnsafeGetter is true");
-  results = propertyProvider("testGetters.x.", undefined, true);
+  results = propertyProvider("testGetters.x.", {invokeUnsafeGetter: true});
   test_has_exact_results(results, ["hello", "world"]);
   Assert.ok(Object.keys(results).includes("isUnsafeGetter") === false);
   Assert.ok(Object.keys(results).includes("getterName") === false);
 
   info("Test that executing getters filters with provided string");
-  results = propertyProvider("testGetters.x.hell", undefined, true);
+  results = propertyProvider("testGetters.x.hell", {invokeUnsafeGetter: true});
   test_has_exact_results(results, ["hello"]);
 
-  results = propertyProvider("testGetters.x['hell", undefined, true);
+  results = propertyProvider("testGetters.x['hell", {invokeUnsafeGetter: true});
   test_has_exact_results(results, ["'hello'"]);
 
   info("Test that children getters are executed if invokeUnsafeGetter is true");
-  results = propertyProvider("testGetters.y.y.", undefined, true);
+  results = propertyProvider("testGetters.y.y.", {invokeUnsafeGetter: true});
   test_has_result(results, "trim");
 
   info("Test with number literals");
