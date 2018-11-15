@@ -96,4 +96,10 @@ class CrashReporterActivity : AppCompatActivity() {
             }
         }
     }
+
+    override fun onBackPressed() {
+        sendCrashReportIfNeeded {
+            finish()
+        }
+    }
 }
