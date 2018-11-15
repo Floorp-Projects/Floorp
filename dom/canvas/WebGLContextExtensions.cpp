@@ -122,13 +122,9 @@ WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
     // In alphabetical order
     // EXT_
     case WebGLExtensionID::EXT_texture_compression_bptc:
-        if (!gfxPrefs::WebGLDraftExtensionsEnabled())
-            return false;
         return WebGLExtensionCompressedTextureBPTC::IsSupported(this);
 
     case WebGLExtensionID::EXT_texture_compression_rgtc:
-        if (!gfxPrefs::WebGLDraftExtensionsEnabled())
-            return false;
         return WebGLExtensionCompressedTextureRGTC::IsSupported(this);
 
     case WebGLExtensionID::EXT_texture_filter_anisotropic:
