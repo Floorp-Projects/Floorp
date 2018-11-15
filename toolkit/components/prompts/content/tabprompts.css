@@ -43,7 +43,7 @@ tabmodalprompt label[value=""] {
   position: absolute;
 }
 
-.paymentDialogContainerFrame {
+.paymentDialogContainer > div {
   align-self: center;
   box-sizing: border-box;
   height: 500px;
@@ -64,4 +64,10 @@ tabmodalprompt label[value=""] {
   /* Vertically overlap the browser chrome. */
   top: -3px;
   width: 600px;
+}
+
+.paymentDialogContainerFrame {
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
 }
