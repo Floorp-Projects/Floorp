@@ -21,3 +21,8 @@
 #  endif
 #endif
 
+// X11 also defines Always, which conflicts with some style system enum variant
+// names, so get rid of that too, given we don't use it anywhere else.
+#ifdef Always
+#undef Always
+#endif
