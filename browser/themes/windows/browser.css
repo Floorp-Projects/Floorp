@@ -329,7 +329,8 @@
   -moz-box-align: stretch;
 }
 
-@media (-moz-os-version: windows-win7) {
+@media (-moz-os-version: windows-win7),
+       (-moz-os-version: windows-win8) {
   /* Preserve window control buttons position at the top of the button box. */
   .titlebar-buttonbox-container {
     -moz-box-align: start;
