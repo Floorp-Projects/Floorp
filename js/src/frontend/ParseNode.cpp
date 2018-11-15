@@ -180,6 +180,11 @@ ParseNode::dump(GenericPrinter& out, int indent)
       case PN_NUMBER:
         as<NumericLiteral>().dump(out, indent);
         return;
+#ifdef ENABLE_BIGINT
+      case PN_BIGINT:
+        as<BigIntLiteral>().dump(out, indent);
+        return;
+#endif
       case PN_REGEXP:
         as<RegExpLiteral>().dump(out, indent);
         return;
@@ -222,6 +227,14 @@ NumericLiteral::dump(GenericPrinter& out, int indent)
         out.printf("%g", value());
     }
 }
+
+#ifdef ENABLE_BIGINT
+void
+BigIntLiteral::dump(GenericPrinter& out, int indent)
+{
+    out.printf("(%s)", parseNodeNames[size_t(getKind())]);
+}
+#endif
 
 void
 RegExpLiteral::dump(GenericPrinter& out, int indent)
@@ -436,23 +449,49 @@ LexicalScopeNode::dump(GenericPrinter& out, int indent)
 }
 #endif
 
-ObjectBox::ObjectBox(JSObject* object, ObjectBox* traceLink)
-  : object(object),
-    traceLink(traceLink),
-    emitLink(nullptr)
+TraceListNode::TraceListNode(js::gc::Cell* gcThing, TraceListNode* traceLink)
+  : gcThing(gcThing),
+    traceLink(traceLink)
 {
-    MOZ_ASSERT(!object->is<JSFunction>());
-    MOZ_ASSERT(object->isTenured());
+    MOZ_ASSERT(gcThing->isTenured());
 }
 
-ObjectBox::ObjectBox(JSFunction* function, ObjectBox* traceLink)
-  : object(function),
-    traceLink(traceLink),
+#ifdef ENABLE_BIGINT
+BigIntBox*
+TraceListNode::asBigIntBox()
+{
+    MOZ_ASSERT(isBigIntBox());
+    return static_cast<BigIntBox*>(this);
+}
+#endif
+
+ObjectBox*
+TraceListNode::asObjectBox()
+{
+    MOZ_ASSERT(isObjectBox());
+    return static_cast<ObjectBox*>(this);
+}
+
+#ifdef ENABLE_BIGINT
+BigIntBox::BigIntBox(BigInt* bi, TraceListNode* traceLink)
+  : TraceListNode(bi, traceLink)
+{
+}
+#endif
+
+ObjectBox::ObjectBox(JSObject* obj, TraceListNode* traceLink)
+  : TraceListNode(obj, traceLink),
     emitLink(nullptr)
 {
-    MOZ_ASSERT(object->is<JSFunction>());
+    MOZ_ASSERT(!object()->is<JSFunction>());
+}
+
+ObjectBox::ObjectBox(JSFunction* function, TraceListNode* traceLink)
+  : TraceListNode(function, traceLink),
+    emitLink(nullptr)
+{
+    MOZ_ASSERT(object()->is<JSFunction>());
     MOZ_ASSERT(asFunctionBox()->function() == function);
-    MOZ_ASSERT(object->isTenured());
 }
 
 FunctionBox*
@@ -463,17 +502,17 @@ ObjectBox::asFunctionBox()
 }
 
 /* static */ void
-ObjectBox::TraceList(JSTracer* trc, ObjectBox* listHead)
+TraceListNode::TraceList(JSTracer* trc, TraceListNode* listHead)
 {
-    for (ObjectBox* box = listHead; box; box = box->traceLink) {
-        box->trace(trc);
+    for (TraceListNode* node = listHead; node; node = node->traceLink) {
+        node->trace(trc);
     }
 }
 
 void
-ObjectBox::trace(JSTracer* trc)
+TraceListNode::trace(JSTracer* trc)
 {
-    TraceRoot(trc, &object, "parser.object");
+    TraceGenericPointerRoot(trc, &gcThing, "parser.traceListNode");
 }
 
 void

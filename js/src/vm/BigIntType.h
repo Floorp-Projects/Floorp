@@ -21,12 +21,16 @@
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "vm/StringType.h"
+#include "vm/Xdr.h"
 
 namespace js {
 
 template <typename CharT>
 static bool StringToBigIntImpl(const mozilla::Range<const CharT>& chars,
                                uint8_t radix, Handle<JS::BigInt*> res);
+
+template<XDRMode mode>
+XDRResult XDRBigInt(XDRState<mode>* xdr, MutableHandleBigInt bi);
 
 } // namespace js
 
@@ -38,6 +42,8 @@ class BigInt final : public js::gc::TenuredCell
     template <typename CharT>
     friend bool js::StringToBigIntImpl(const mozilla::Range<const CharT>& chars,
                                        uint8_t radix, Handle<BigInt*> res);
+    template <js::XDRMode mode>
+    friend js::XDRResult js::XDRBigInt(js::XDRState<mode>* xdr, MutableHandleBigInt bi);
 
   protected:
     // Reserved word for Cell GC invariants. This also ensures minimum
@@ -160,6 +166,10 @@ NumberToBigInt(JSContext* cx, double d);
 // Convert a string to a BigInt, returning nullptr if parsing fails.
 extern JS::Result<JS::BigInt*, JS::OOM&>
 StringToBigInt(JSContext* cx, JS::Handle<JSString*> str, uint8_t radix);
+
+// Same.
+extern JS::BigInt*
+StringToBigInt(JSContext* cx, const mozilla::Range<const char16_t>& chars);
 
 extern JS::BigInt*
 ToBigInt(JSContext* cx, JS::Handle<JS::Value> v);
