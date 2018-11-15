@@ -281,7 +281,7 @@ public:
 
   mozilla::ServoStyleSet* StyleSet() const { return mStyleSet.get(); }
 
-  nsCSSFrameConstructor* FrameConstructor() const { return mFrameConstructor; }
+  nsCSSFrameConstructor* FrameConstructor() const { return mFrameConstructor.get(); }
 
   /* Enable/disable author style level. Disabling author style disables the entire
    * author level of the cascade, including the HTML preshint level.
@@ -1743,7 +1743,7 @@ protected:
   nsCOMPtr<nsIDocument>     mDocument;
   RefPtr<nsPresContext>   mPresContext;
   mozilla::UniquePtr<mozilla::ServoStyleSet> mStyleSet;
-  nsCSSFrameConstructor*    mFrameConstructor; // [OWNS]
+  mozilla::UniquePtr<nsCSSFrameConstructor> mFrameConstructor;
   nsViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
   nsPresArena               mFrameArena;
   RefPtr<nsFrameSelection> mSelection;
