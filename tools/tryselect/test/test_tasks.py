@@ -5,19 +5,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import mozunit
-import pytest
-from moztest.resolve import TestResolver
 
-from tryselect.tasks import filter_tasks_by_paths
-
-
-@pytest.fixture
-def patch_resolver(monkeypatch):
-    def inner(suites, tests):
-        def fake_test_metadata(*args, **kwargs):
-            return suites, tests
-        monkeypatch.setattr(TestResolver, 'resolve_metadata', fake_test_metadata)
-    return inner
+from tryselect.tasks import filter_tasks_by_paths, resolve_tests_by_suite
 
 
 def test_filter_tasks_by_paths(patch_resolver):
@@ -28,6 +17,22 @@ def test_filter_tasks_by_paths(patch_resolver):
 
     patch_resolver([], [{'flavor': 'xpcshell'}])
     assert filter_tasks_by_paths(tasks, 'dummy') == ['foobar/xpcshell-1', 'foobar/xpcshell']
+
+
+def test_resolve_tests_by_suite(patch_resolver):
+    patch_resolver([], [{'flavor': 'xpcshell', 'srcdir_relpath': 'xpcshell.js'}])
+    assert resolve_tests_by_suite(['xpcshell.js']) == {
+        'xpcshell': ['xpcshell.js'],
+    }
+
+    patch_resolver([], [
+        {'flavor': 'xpcshell', 'srcdir_relpath': 'xpcshell.js'},
+        {'flavor': 'mochitest', 'srcdir_relpath': 'mochitest.js'},
+    ])
+    assert resolve_tests_by_suite(['xpcshell.js', 'mochitest.js']) == {
+        'xpcshell': ['xpcshell.js'],
+        'mochitest': ['mochitest.js'],
+    }
 
 
 if __name__ == '__main__':

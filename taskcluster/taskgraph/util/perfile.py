@@ -4,6 +4,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import itertools
+import json
 import logging
 import math
 
@@ -47,9 +49,10 @@ def perfile_number_of_chunks(is_try, try_task_config, head_repository, head_rev,
         return 1
 
     changed_files = set()
-    specified_files = []
     if try_task_config:
-        specified_files = try_task_config.split(":")
+        suite_to_paths = json.loads(try_task_config)
+        specified_files = itertools.chain.from_iterable(suite_to_paths.values())
+        changed_files.update(specified_files)
 
     if is_try:
         changed_files.update(files_changed.get_locally_changed_files(GECKO))
@@ -57,7 +60,6 @@ def perfile_number_of_chunks(is_try, try_task_config, head_repository, head_rev,
         changed_files.update(files_changed.get_changed_files(head_repository,
                                                              head_rev))
 
-    changed_files.update(specified_files)
     test_count = 0
     for pattern in file_patterns:
         for path in changed_files:
