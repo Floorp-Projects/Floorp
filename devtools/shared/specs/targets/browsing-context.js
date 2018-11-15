@@ -37,7 +37,7 @@ types.addDictType("browsingContextTarget.window", {
 
 types.addDictType("browsingContextTarget.workers", {
   error: "nullable:string",
-  workers: "nullable:array:json",
+  workers: "nullable:array:workerTarget",
 });
 
 types.addDictType("browsingContextTarget.reload", {

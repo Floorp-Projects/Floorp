@@ -35,7 +35,7 @@ const {
   RUNTIMES,
 } = require("../constants");
 
-function inspectDebugTarget(type, id) {
+function inspectDebugTarget({ type, id, front }) {
   return async (_, getState) => {
     const runtime = getCurrentRuntime(getState().runtimes);
     const { runtimeDetails, type: runtimeType } = runtime;
@@ -65,7 +65,7 @@ function inspectDebugTarget(type, id) {
       }
       case DEBUG_TARGETS.WORKER: {
         // Open worker toolbox in new window.
-        gDevToolsBrowser.openWorkerToolbox(runtimeDetails.client, id);
+        gDevToolsBrowser.openWorkerToolbox(front);
         break;
       }
 

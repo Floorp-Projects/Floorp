@@ -101,10 +101,6 @@ protocol.FrontClassWithSpec(browsingContextTargetSpec, {
   }, {
     impl: "_detach",
   }),
-
-  attachWorker: function(workerTargetActor) {
-    return this.client.attachWorker(workerTargetActor);
-  },
 });
 
 exports.BrowsingContextTargetFront = BrowsingContextTargetFront;
