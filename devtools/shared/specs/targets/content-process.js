@@ -27,6 +27,9 @@ const contentProcessTargetSpec = generateActorSpec({
       type: "newSource",
       source: Option(0, "json"),
     },
+    workerListChanged: {
+      type: "workerListChanged",
+    },
   },
 });
 
