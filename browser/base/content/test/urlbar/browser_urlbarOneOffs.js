@@ -260,7 +260,7 @@ add_task(async function hiddenWhenUsingSearchAlias() {
   await waitForAutocompleteResultAt(0);
   Assert.equal(gURLBar.popup.oneOffSearchesEnabled, false);
   Assert.equal(
-    window.getComputedStyle(gURLBar.popup.oneOffSearchButtons.container).display,
+    window.getComputedStyle(gURLBar.popup.oneOffSearchButtons).display,
     "none"
   );
   await hidePopup();
@@ -270,7 +270,7 @@ add_task(async function hiddenWhenUsingSearchAlias() {
   await waitForAutocompleteResultAt(0);
   Assert.equal(gURLBar.popup.oneOffSearchesEnabled, true);
   Assert.equal(
-    window.getComputedStyle(gURLBar.popup.oneOffSearchButtons.container).display,
+    window.getComputedStyle(gURLBar.popup.oneOffSearchButtons).display,
     "-moz-box"
   );
   await hidePopup();

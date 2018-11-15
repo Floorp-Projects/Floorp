@@ -9,8 +9,12 @@ const ONEOFF_URLBAR_PREF = "browser.urlbar.oneOffSearches";
 const urlbar = document.getElementById("urlbar");
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
 const urlbarPopup = document.getElementById("PopupAutoCompleteRichResult");
-const searchOneOff = searchPopup.oneOffButtons;
-const urlBarOneOff = urlbarPopup.oneOffSearchButtons;
+const searchOneOffElement = document.getAnonymousElementByAttribute(
+  searchPopup, "anonid", "search-one-off-buttons"
+);
+const urlBarOneOffElement = document.getAnonymousElementByAttribute(
+  urlbarPopup, "anonid", "one-off-search-buttons"
+);
 
 let originalEngine = Services.search.defaultEngine;
 
@@ -36,10 +40,10 @@ add_task(async function init() {
 
 add_task(async function test_searchBarChangeEngine() {
   let oneOffButton = await openPopupAndGetEngineButton(true, searchPopup,
-                                                       searchOneOff,
+                                                       searchOneOffElement,
                                                        SEARCHBAR_BASE_ID);
 
-  const setDefaultEngineMenuItem = searchOneOff.querySelector(
+  const setDefaultEngineMenuItem = searchOneOffElement.querySelector(
     ".search-one-offs-context-set-default"
   );
 
@@ -70,10 +74,10 @@ add_task(async function test_urlBarChangeEngine() {
   resetEngine();
 
   let oneOffButton = await openPopupAndGetEngineButton(false, urlbarPopup,
-                                                       urlBarOneOff,
+                                                       urlBarOneOffElement,
                                                        URLBAR_BASE_ID);
 
-  const setDefaultEngineMenuItem = urlBarOneOff.querySelector(
+  const setDefaultEngineMenuItem = urlBarOneOffElement.querySelector(
     ".search-one-offs-context-set-default"
   );
 
@@ -124,13 +128,13 @@ function promiseCurrentEngineChanged() {
  * @param {Boolean} isSearch true if the search popup should be opened; false
  *                           for the urlbar popup.
  * @param {Object} popup The expected popup.
- * @param {Object} oneOffInstance The expected one-off instance for the popup.
+ * @param {Object} oneOffElement The expected one-off-element for the popup.
  * @param {String} baseId The expected string for the id of the current
  *                        engine button, without the engine name.
  * @return {Object} Returns an object that represents the one off button for the
  *                          test engine.
  */
-async function openPopupAndGetEngineButton(isSearch, popup, oneOffInstance, baseId) {
+async function openPopupAndGetEngineButton(isSearch, popup, oneOffElement, baseId) {
   // Open the popup.
   let promise = promiseEvent(popup, "popupshown");
   info("Opening panel");
@@ -146,8 +150,8 @@ async function openPopupAndGetEngineButton(isSearch, popup, oneOffInstance, base
   }
   await promise;
 
-  const contextMenu = oneOffInstance.contextMenuPopup;
-  const oneOffButtons = oneOffInstance.buttons;
+  const contextMenu = oneOffElement.contextMenuPopup;
+  const oneOffButtons = oneOffElement.buttons;
 
   // Get the one-off button for the test engine.
   let oneOffButton;

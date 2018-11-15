@@ -127,7 +127,7 @@ function assertSearchSuggestionsNotificationVisible(visible) {
 function assertOneOffButtonsVisible(visible) {
   Assert.equal(gURLBar.popup.oneOffSearchesEnabled, visible);
   Assert.equal(
-    window.getComputedStyle(gURLBar.popup.oneOffSearchButtons.container).display,
+    window.getComputedStyle(gURLBar.popup.oneOffSearchButtons).display,
     visible ? "-moz-box" : "none"
   );
 }
