@@ -747,8 +747,7 @@ PresShell::AccessibleCaretEnabled(nsIDocShell* aDocShell)
 }
 
 nsIPresShell::nsIPresShell()
-    : mFrameConstructor(nullptr)
-    , mViewManager(nullptr)
+    : mViewManager(nullptr)
     , mFrameManager(nullptr)
 #ifdef ACCESSIBILITY
     , mDocAccessible(nullptr)
@@ -892,7 +891,8 @@ PresShell::~PresShell()
   MOZ_ASSERT(mAllocatedPointers.IsEmpty(), "Some pres arena objects were not freed");
 
   mStyleSet = nullptr;
-  delete mFrameConstructor;
+  mFrameManager = nullptr;
+  mFrameConstructor = nullptr;
 
   mCurrentEventContent = nullptr;
 }
@@ -929,9 +929,9 @@ PresShell::Init(nsIDocument* aDocument,
   SetNeedStyleFlush();
 
   // Create our frame constructor.
-  mFrameConstructor = new nsCSSFrameConstructor(mDocument, this);
+  mFrameConstructor = MakeUnique<nsCSSFrameConstructor>(mDocument, this);
 
-  mFrameManager = mFrameConstructor;
+  mFrameManager = mFrameConstructor.get();
 
   // The document viewer owns both view manager and pres shell.
   mViewManager->SetPresShell(this);
