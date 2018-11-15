@@ -2116,8 +2116,10 @@ public:
                    const nsRect& aRect)
     : mThebesContext(aThebesContext) {
     mThebesContext->Save();
+    mThebesContext->NewPath();
     gfxRect clip = nsLayoutUtils::RectToGfxRect(aRect, aAppUnitsPerGfxUnit);
-    mThebesContext->SnappedClip(clip);
+    mThebesContext->SnappedRectangle(clip);
+    mThebesContext->Clip();
   }
   ~AutoPushClipRect() {
     mThebesContext->Restore();

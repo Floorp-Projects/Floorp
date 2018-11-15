@@ -5079,7 +5079,7 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
 
     ctx->SetColor(mColor);
     ctx->NewPath();
-    ctx->SnappedRectangle(bounds);
+    ctx->Rectangle(bounds, true);
     ctx->Fill();
     ctx->PopGroupAndBlend();
     return;
@@ -5087,7 +5087,7 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
 
   ctx->SetColor(mColor);
   ctx->NewPath();
-  ctx->SnappedRectangle(bounds);
+  ctx->Rectangle(bounds, true);
   ctx->Fill();
 #endif
 }
