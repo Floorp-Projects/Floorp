@@ -451,6 +451,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType, nsIFrame* aF
       }
     }
 
+    //Disabled due to Bug 1497534
+    /*
     if (aWidgetType == StyleAppearance::MozWindowTitlebar ||
         aWidgetType == StyleAppearance::MozWindowTitlebarMaximized ||
         aWidgetType == StyleAppearance::MozWindowButtonClose ||
@@ -459,6 +461,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aWidgetType, nsIFrame* aF
         aWidgetType == StyleAppearance::MozWindowButtonRestore) {
       aState->backdrop = !nsWindow::GetTopLevelWindowActiveState(aFrame);
     }
+    */
 
     if (aWidgetType ==  StyleAppearance::ScrollbarbuttonUp ||
         aWidgetType ==  StyleAppearance::ScrollbarbuttonDown ||
@@ -1842,7 +1845,8 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
       aWidgetType == StyleAppearance::MozWindowButtonMinimize ||
       aWidgetType == StyleAppearance::MozWindowButtonMaximize ||
       aWidgetType == StyleAppearance::MozWindowButtonRestore) {
-    *aShouldRepaint = true;
+    //Disabled due to Bug 1497534
+    *aShouldRepaint = false;
     return NS_OK;
   }
 
@@ -2154,6 +2158,8 @@ nsNativeThemeGTK::WidgetAppearanceDependsOnWindowFocus(StyleAppearance aWidgetTy
     case StyleAppearance::MozWindowButtonMinimize:
     case StyleAppearance::MozWindowButtonMaximize:
     case StyleAppearance::MozWindowButtonRestore:
+      // Disabled due to Bug 1497534
+      return false;
     case StyleAppearance::ScrollbarbuttonUp:
     case StyleAppearance::ScrollbarbuttonDown:
     case StyleAppearance::ScrollbarbuttonLeft:
