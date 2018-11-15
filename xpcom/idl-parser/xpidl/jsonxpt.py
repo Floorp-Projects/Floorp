@@ -202,16 +202,21 @@ def build_interface(iface):
             hasretval=hasretval, symbol=m.symbol))
 
     def build_attr(a):
+        assert a.realtype.name != 'void'
         # Write the getter
-        param = mk_param(get_type(a.realtype, 'out'), out=1)
-        methods.append(mk_method(a.name, [param], getter=1, hidden=a.noscript,
+        getter_params = []
+        if not a.notxpcom:
+            getter_params.append(mk_param(get_type(a.realtype, 'out'), out=1))
+        methods.append(mk_method(a.name, getter_params, getter=1,
+                                 notxpcom=a.notxpcom, hidden=a.noscript,
                                  context=a.implicit_jscontext, hasretval=1,
                                  symbol=a.symbol))
 
         # And maybe the setter
         if not a.readonly:
             param = mk_param(get_type(a.realtype, 'in'), in_=1)
-            methods.append(mk_method(a.name, [param], setter=1, hidden=a.noscript,
+            methods.append(mk_method(a.name, [param], setter=1,
+                                     notxpcom=a.notxpcom, hidden=a.noscript,
                                      context=a.implicit_jscontext,
                                      symbol=a.symbol))
 
