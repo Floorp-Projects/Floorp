@@ -12,10 +12,13 @@ var EXPORTED_SYMBOLS = [
   "MINIMUM_TAB_COUNT_INTERVAL_MS",
  ];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", null);
 
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  SearchTelemetry: "resource:///modules/SearchTelemetry.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 // The upper bound for the count of the visited unique domain names.
 const MAX_UNIQUE_VISITED_DOMAINS = 100;
@@ -204,9 +207,10 @@ let URICountListener = {
     if (!this.isHttpURI(uri)) {
       return;
     }
+
     if (shouldRecordSearchCount(browser.getTabBrowser()) &&
         !(flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
-      Services.search.recordSearchURLTelemetry(uriSpec);
+      SearchTelemetry.recordSearchURLTelemetry(uriSpec);
     }
 
     if (!shouldCountURI) {
