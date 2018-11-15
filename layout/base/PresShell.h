@@ -761,7 +761,7 @@ private:
 #endif
 
 #ifdef MOZ_REFLOW_PERF
-  ReflowCountMgr* mReflowCountMgr;
+  UniquePtr<ReflowCountMgr> mReflowCountMgr;
 #endif
 
   // This is used for synthetic mouse events that are sent when what is under
