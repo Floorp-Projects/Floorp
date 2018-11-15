@@ -108,7 +108,9 @@ def browser_kwargs(test_type, run_info_data, config, **kwargs):
             "leak_check": kwargs["leak_check"],
             "stylo_threads": kwargs["stylo_threads"],
             "chaos_mode_flags": kwargs["chaos_mode_flags"],
-            "config": config}
+            "config": config,
+            "install_fonts": kwargs["install_fonts"],
+            "tests_root": config.doc_root}
 
 
 def env_extras(**kwargs):
@@ -154,6 +156,8 @@ class FennecBrowser(FirefoxBrowser):
         FirefoxBrowser.__init__(self, logger, None, prefs_root, test_type, **kwargs)
         self._package_name = package_name
         self.device_serial = device_serial
+        self.tests_root = kwargs["tests_root"]
+        self.install_fonts = kwargs["install_fonts"]
 
     @property
     def package_name(self):
@@ -188,6 +192,15 @@ class FennecBrowser(FirefoxBrowser):
                                       "places.history.enabled": False,
                                       "dom.send_after_paint_to_content": True,
                                       "network.preload": True})
+
+        if self.install_fonts:
+            self.logger.debug("Copying Ahem font to profile")
+            font_dir = os.path.join(self.profile.profile, "fonts")
+            if not os.path.exists(font_dir):
+                os.makedirs(font_dir)
+            with open(os.path.join(self.tests_root, "fonts", "Ahem.ttf"), "rb") as src:
+                with open(os.path.join(font_dir, "Ahem.ttf"), "wb") as dest:
+                    dest.write(src.read())
 
         if self.leak_check and kwargs.get("check_leaks", True):
             self.leak_report_file = os.path.join(self.profile.profile, "runtests_leaks.log")
