@@ -777,7 +777,7 @@ def findTestMediaDevices(log):
         return None
 
     # Hardcode the name since it's always the same.
-    info['audio'] = 'Monitor of Dummy Output'
+    info['audio'] = 'Monitor of Null Output'
     return info
 
 
