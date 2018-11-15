@@ -1,5 +1,6 @@
 user_pref("app.update.disabledForTesting", true);
 user_pref("browser.dom.window.dump.enabled", true);
+user_pref("devtools.console.stdout.chrome", true);
 user_pref("browser.sessionstore.resume_from_crash", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.xul.error_pages.enabled", true);

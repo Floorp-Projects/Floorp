@@ -1093,7 +1093,9 @@ Console::Console(JSContext* aCx, nsIGlobalObject* aGlobal,
 {
   // Let's enable the dumping to stdout by default for chrome.
   if (nsContentUtils::ThreadsafeIsSystemCaller(aCx)) {
-    mDumpToStdout = DOMPrefs::DumpEnabled();
+    mDumpToStdout = StaticPrefs::devtools_console_stdout_chrome();
+  } else {
+    mDumpToStdout = StaticPrefs::devtools_console_stdout_content();
   }
 
   mozilla::HoldJSObjects(this);

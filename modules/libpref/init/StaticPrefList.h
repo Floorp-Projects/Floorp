@@ -1776,6 +1776,24 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+#ifdef MOZILLA_OFFICIAL
+# define PREF_VALUE false
+#else
+# define PREF_VALUE true
+#endif
+VARCACHE_PREF(
+  "devtools.console.stdout.chrome",
+   devtools_console_stdout_chrome,
+  RelaxedAtomicBool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+VARCACHE_PREF(
+  "devtools.console.stdout.content",
+   devtools_console_stdout_content,
+  RelaxedAtomicBool, false
+)
+
 //---------------------------------------------------------------------------
 // Feature-Policy prefs
 //---------------------------------------------------------------------------
