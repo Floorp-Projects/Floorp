@@ -17,6 +17,7 @@
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "BrowserWindowTracker",
@@ -42,8 +43,6 @@ function PaymentUIService() {
 PaymentUIService.prototype = {
   classID: Components.ID("{01f8bd55-9017-438b-85ec-7c15d2b35cdc}"),
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
-  DIALOG_URL: "chrome://payments/content/paymentDialogWrapper.xul",
-  REQUEST_ID_PREFIX: "paymentRequest-",
 
   // nsIPaymentUIService implementation:
 
@@ -58,14 +57,24 @@ PaymentUIService.prototype = {
     container.dataset.requestId = requestId;
     container.classList.add("paymentDialogContainer");
     container.hidden = true;
-    let paymentsBrowser = chromeWindow.document.createElementNS(XHTML_NS, "iframe");
-    paymentsBrowser.classList.add("paymentDialogContainerFrame");
-    paymentsBrowser.setAttribute("type", "content");
-    paymentsBrowser.setAttribute("remote", "true");
-    paymentsBrowser.setAttribute("src", `${this.DIALOG_URL}?requestId=${requestId}`);
+    let paymentsBrowser = this._createPaymentFrame(chromeWindow.document, requestId);
+
+    let pdwGlobal = {};
+    Services.scriptloader.loadSubScript("chrome://payments/content/paymentDialogWrapper.js",
+                                        pdwGlobal);
+    paymentsBrowser.paymentDialogWrapper = pdwGlobal.paymentDialogWrapper;
+
+    // Create an <html:div> wrapper to absolutely position the <xul:browser>
+    // because XUL elements don't support position:absolute.
+    let absDiv = chromeWindow.document.createElementNS(XHTML_NS, "div");
+    container.appendChild(absDiv);
+
     // append the frame to start the loading
-    container.appendChild(paymentsBrowser);
+    absDiv.appendChild(paymentsBrowser);
     browserContainer.prepend(container);
+
+    // Initialize the wrapper once the <browser> is connected.
+    paymentsBrowser.paymentDialogWrapper.init(requestId, paymentsBrowser);
 
     // Only show the frame and change the UI when the dialog is ready to show.
     paymentsBrowser.addEventListener("tabmodaldialogready", function readyToShow() {
@@ -120,12 +129,12 @@ PaymentUIService.prototype = {
         break;
     }
 
-    let dialogContainer;
+    let paymentFrame;
     if (!closed) {
       // We need to call findDialog before we respond below as getPaymentRequestById
       // may fail due to the request being removed upon completion.
-      dialogContainer = this.findDialog(requestId).dialogContainer;
-      if (!dialogContainer) {
+      paymentFrame = this.findDialog(requestId).paymentFrame;
+      if (!paymentFrame) {
         this.log.error("completePayment: no dialog found");
         return;
       }
@@ -140,18 +149,18 @@ PaymentUIService.prototype = {
     paymentSrv.respondPayment(completeResponse.QueryInterface(Ci.nsIPaymentActionResponse));
 
     if (!closed) {
-      dialogContainer.querySelector("iframe").contentWindow.paymentDialogWrapper.updateRequest();
+      paymentFrame.paymentDialogWrapper.updateRequest();
     }
   },
 
   updatePayment(requestId) {
-    let {dialogContainer} = this.findDialog(requestId);
+    let {paymentFrame} = this.findDialog(requestId);
     this.log.debug("updatePayment:", requestId);
-    if (!dialogContainer) {
+    if (!paymentFrame) {
       this.log.error("updatePayment: no dialog found");
       return;
     }
-    dialogContainer.querySelector("iframe").contentWindow.paymentDialogWrapper.updateRequest();
+    paymentFrame.paymentDialogWrapper.updateRequest();
   },
 
   closePayment(requestId) {
@@ -159,6 +168,19 @@ PaymentUIService.prototype = {
   },
 
   // other helper methods
+
+  _createPaymentFrame(doc, requestId) {
+    let frame = doc.createXULElement("browser");
+    frame.classList.add("paymentDialogContainerFrame");
+    frame.setAttribute("type", "content");
+    frame.setAttribute("remote", "true");
+    frame.setAttribute("disablehistory", "true");
+    frame.setAttribute("nodefaultsrc", "true");
+    frame.setAttribute("transparent", "true");
+    frame.setAttribute("selectmenulist", "ContentSelectDropdown");
+    frame.setAttribute("autocompletepopup", "PopupAutoComplete");
+    return frame;
+  },
 
   /**
    * @param {string} requestId - Payment Request ID of the dialog to close.
@@ -168,11 +190,13 @@ PaymentUIService.prototype = {
     let {
       browser,
       dialogContainer,
+      paymentFrame,
     } = this.findDialog(requestId);
     if (!dialogContainer) {
       return false;
     }
     this.log.debug(`closing: ${requestId}`);
+    paymentFrame.paymentDialogWrapper.uninit();
     dialogContainer.remove();
     if (!dialogContainer.hidden) {
       // If the container is no longer hidden then the background was added after
@@ -192,7 +216,8 @@ PaymentUIService.prototype = {
         if (dialogContainer.dataset.requestId == requestId) {
           return {
             dialogContainer,
-            browser: dialogContainer.parentElement.querySelector("browser"),
+            paymentFrame: dialogContainer.querySelector(".paymentDialogContainerFrame"),
+            browser: dialogContainer.parentElement.querySelector(".browserStack > browser"),
           };
         }
       }
