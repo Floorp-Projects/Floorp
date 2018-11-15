@@ -3873,22 +3873,39 @@ public:
   {
     MOZ_DIAGNOSTIC_ASSERT(mPhase == Phase::Subscribed);
     MOZ_DIAGNOSTIC_ASSERT(mWeak);
+    MOZ_DIAGNOSTIC_ASSERT(!mAddRefed,
+                          "ReleaseMediaElement should have been called first");
     mWeak = nullptr;
     nsContentUtils::UnregisterShutdownObserver(this);
     mPhase = Phase::Unsubscribed;
   }
-  void AddRefMediaElement() { mWeak->AddRef(); }
-  void ReleaseMediaElement() { mWeak->Release(); }
+  void AddRefMediaElement()
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mWeak);
+    MOZ_DIAGNOSTIC_ASSERT(!mAddRefed, "Should only ever AddRef once");
+    mWeak->AddRef();
+    mAddRefed = true;
+  }
+  void ReleaseMediaElement()
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mWeak);
+    MOZ_DIAGNOSTIC_ASSERT(mAddRefed, "Should only release after AddRef");
+    mWeak->Release();
+    mAddRefed = false;
+  }
 
 private:
   virtual ~ShutdownObserver()
   {
     MOZ_DIAGNOSTIC_ASSERT(mPhase == Phase::Unsubscribed);
     MOZ_DIAGNOSTIC_ASSERT(!mWeak);
+    MOZ_DIAGNOSTIC_ASSERT(!mAddRefed,
+                          "ReleaseMediaElement should have been called first");
   }
   // Guaranteed to be valid by HTMLMediaElement.
   HTMLMediaElement* mWeak = nullptr;
   Phase mPhase = Phase::Init;
+  bool mAddRefed = false;
 };
 
 NS_IMPL_ISUPPORTS(HTMLMediaElement::ShutdownObserver, nsIObserver)
@@ -6801,26 +6818,22 @@ HTMLMediaElement::AddRemoveSelfReference()
 
   if (needSelfReference != mHasSelfReference) {
     mHasSelfReference = needSelfReference;
+    RefPtr<HTMLMediaElement> self = this;
     if (needSelfReference) {
       // The shutdown observer will hold a strong reference to us. This
       // will do to keep us alive. We need to know about shutdown so that
       // we can release our self-reference.
-      mShutdownObserver->AddRefMediaElement();
+      mMainThreadEventTarget->Dispatch(NS_NewRunnableFunction(
+        "dom::HTMLMediaElement::AddSelfReference",
+        [self]() { self->mShutdownObserver->AddRefMediaElement(); }));
     } else {
       // Dispatch Release asynchronously so that we don't destroy this object
       // inside a call stack of method calls on this object
-      mMainThreadEventTarget->Dispatch(
-        NewRunnableMethod("dom::HTMLMediaElement::DoRemoveSelfReference",
-                          this,
-                          &HTMLMediaElement::DoRemoveSelfReference));
+      mMainThreadEventTarget->Dispatch(NS_NewRunnableFunction(
+        "dom::HTMLMediaElement::AddSelfReference",
+        [self]() { self->mShutdownObserver->ReleaseMediaElement(); }));
     }
   }
-}
-
-void
-HTMLMediaElement::DoRemoveSelfReference()
-{
-  mShutdownObserver->ReleaseMediaElement();
 }
 
 void
