@@ -598,9 +598,9 @@ SwitchActiveChild(ChildProcessInfo* aChild, bool aRecoverPosition = true)
     if (aRecoverPosition) {
       aChild->Recover(gActiveChild);
     } else {
-      Vector<SetBreakpointMessage*> breakpoints;
+      InfallibleVector<AddBreakpointMessage*> breakpoints;
       gActiveChild->GetInstalledBreakpoints(breakpoints);
-      for (SetBreakpointMessage* msg : breakpoints) {
+      for (AddBreakpointMessage* msg : breakpoints) {
         aChild->SendMessage(*msg);
       }
     }
@@ -981,18 +981,30 @@ SendRequest(const js::CharBuffer& aBuffer, js::CharBuffer* aResponse)
 }
 
 void
-SetBreakpoint(size_t aId, const js::BreakpointPosition& aPosition)
+AddBreakpoint(const js::BreakpointPosition& aPosition)
 {
-  MaybeCreateCheckpointInRecordingChild();
-  gActiveChild->WaitUntilPaused();
+  MOZ_RELEASE_ASSERT(gActiveChild->IsPaused());
 
-  gActiveChild->SendMessage(SetBreakpointMessage(aId, aPosition));
+  gActiveChild->SendMessage(AddBreakpointMessage(aPosition));
 
   // Also set breakpoints in any recording child that is not currently active.
   // We can't recover recording processes so need to keep their breakpoints up
   // to date.
   if (!gActiveChild->IsRecording() && gRecordingChild) {
-    gRecordingChild->SendMessage(SetBreakpointMessage(aId, aPosition));
+    gRecordingChild->SendMessage(AddBreakpointMessage(aPosition));
+  }
+}
+
+void
+ClearBreakpoints()
+{
+  MOZ_RELEASE_ASSERT(gActiveChild->IsPaused());
+
+  gActiveChild->SendMessage(ClearBreakpointsMessage());
+
+  // Clear breakpoints in the recording child, as for AddBreakpoint().
+  if (!gActiveChild->IsRecording() && gRecordingChild) {
+    gRecordingChild->SendMessage(ClearBreakpointsMessage());
   }
 }
 

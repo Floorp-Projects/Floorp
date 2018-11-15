@@ -193,9 +193,6 @@ struct ExecutionPoint
 // Buffer type used for encoding object data.
 typedef InfallibleVector<char16_t> CharBuffer;
 
-// Called in the middleman when a breakpoint with the specified id has been hit.
-bool HitBreakpoint(JSContext* aCx, size_t id);
-
 // Set up the JS sandbox in the current recording/replaying process and load
 // its target script.
 void SetupDevtoolsSandbox();
