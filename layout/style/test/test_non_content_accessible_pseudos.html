@@ -46,16 +46,14 @@ for (const pseudo of NON_CONTENT_ACCESIBLE_PSEUDOS) {
     sheet.textContent = `${pseudo} { color: blue; }`;
     assert_equals(sheet.sheet.cssRules.length, 0,
       pseudo + " shouldn't be accessible to content");
-    // FIXME(emilio, bug 1433439): This test should pass!
-    //
-    // if (pseudo.indexOf("::") === 0) {
-    //   let pseudoStyle = getComputedStyle(document.documentElement, pseudo);
-    //   let elementStyle = getComputedStyle(document.documentElement);
-    //   for (prop of pseudoStyle) {
-    //     assert_equals(pseudoStyle[prop], elementStyle[prop],
-    //                   pseudo + " styles shouldn't be visible from getComputedStyle");
-    //   }
-    // }
+    if (pseudo.indexOf("::") === 0) {
+      let pseudoStyle = getComputedStyle(document.documentElement, pseudo);
+      let elementStyle = getComputedStyle(document.documentElement);
+      for (prop of pseudoStyle) {
+        assert_equals(pseudoStyle[prop], elementStyle[prop],
+                      pseudo + " styles shouldn't be visible from getComputedStyle");
+      }
+    }
   }, pseudo);
 }
 </script>

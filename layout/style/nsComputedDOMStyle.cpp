@@ -529,9 +529,8 @@ GetPseudoType(nsAtom* aPseudo)
   if (!aPseudo) {
     return CSSPseudoElementType::NotPseudo;
   }
-  // FIXME(emilio, bug 1433439): The eIgnoreEnabledState thing is dubious.
   return nsCSSPseudoElements::GetPseudoType(
-    aPseudo, CSSEnabledState::eIgnoreEnabledState);
+    aPseudo, CSSEnabledState::eForAllContent);
 }
 
 already_AddRefed<ComputedStyle>
