@@ -859,7 +859,9 @@ public:
     mAudioDataRequest.DisconnectIfExists();
     mAudioSeekRequest.DisconnectIfExists();
     if (ShouldDiscardLoopedAudioData()) {
+      mMaster->mAudioDataRequest.DisconnectIfExists();
       DiscardLoopedAudioData();
+      AudioQueue().Finish();
     }
     DecodingState::Exit();
   }
