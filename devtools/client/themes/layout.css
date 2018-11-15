@@ -445,20 +445,6 @@
 }
 
 /**
- * Flex Container Properties
- */
-
-#flex-container-properties {
-  border-block-start: 1px solid var(--theme-splitter-color);
-  margin-bottom: 5px;
-}
-
-#flex-container-properties .layout-properties-header {
-  padding: 5px 0;
-  padding-inline-start: 20px;
-}
-
-/**
  * Grid Container
  */
 
