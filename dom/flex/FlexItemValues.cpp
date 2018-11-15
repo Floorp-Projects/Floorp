@@ -50,10 +50,6 @@ FlexItemValues::FlexItemValues(FlexLineValues* aParent,
   mNode = aItem->mNode;
 
   // Convert app unit sizes to css pixel sizes.
-  mMainPosition = nsPresContext::AppUnitsToDoubleCSSPixels(
-    aItem->mMainPosition);
-  mMainSize = nsPresContext::AppUnitsToDoubleCSSPixels(
-    aItem->mMainSize);
   mMainBaseSize = nsPresContext::AppUnitsToDoubleCSSPixels(
     aItem->mMainBaseSize);
   mMainDeltaSize = nsPresContext::AppUnitsToDoubleCSSPixels(
@@ -61,10 +57,6 @@ FlexItemValues::FlexItemValues(FlexLineValues* aParent,
   mMainMinSize = nsPresContext::AppUnitsToDoubleCSSPixels(
     aItem->mMainMinSize);
   mMainMaxSize = ToPossiblyUnconstrainedPixels(aItem->mMainMaxSize);
-  mCrossPosition = nsPresContext::AppUnitsToDoubleCSSPixels(
-    aItem->mCrossPosition);
-  mCrossSize = nsPresContext::AppUnitsToDoubleCSSPixels(
-    aItem->mCrossSize);
   mCrossMinSize = nsPresContext::AppUnitsToDoubleCSSPixels(
     aItem->mCrossMinSize);
   mCrossMaxSize = ToPossiblyUnconstrainedPixels(aItem->mCrossMaxSize);
@@ -82,18 +74,6 @@ nsINode*
 FlexItemValues::GetNode() const
 {
   return mNode;
-}
-
-double
-FlexItemValues::MainPosition() const
-{
-  return mMainPosition;
-}
-
-double
-FlexItemValues::MainSize() const
-{
-  return mMainSize;
 }
 
 double
@@ -118,18 +98,6 @@ double
 FlexItemValues::MainMaxSize() const
 {
   return mMainMaxSize;
-}
-
-double
-FlexItemValues::CrossPosition() const
-{
-  return mCrossPosition;
-}
-
-double
-FlexItemValues::CrossSize() const
-{
-  return mCrossSize;
 }
 
 double

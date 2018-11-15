@@ -33,8 +33,6 @@ nsContainerFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
 struct ComputedFlexItemInfo
 {
   nsCOMPtr<nsINode> mNode;
-  nscoord mMainPosition;
-  nscoord mMainSize;
   /**
    * mMainBaseSize is a measure of the size of the item in the main
    * axis before the flex sizing algorithm is applied. In the spec,
@@ -54,8 +52,6 @@ struct ComputedFlexItemInfo
   nscoord mMainDeltaSize;
   nscoord mMainMinSize;
   nscoord mMainMaxSize;
-  nscoord mCrossPosition;
-  nscoord mCrossSize;
   nscoord mCrossMinSize;
   nscoord mCrossMaxSize;
   mozilla::dom::FlexItemClampState mClampState;
