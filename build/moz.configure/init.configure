@@ -1045,11 +1045,19 @@ add_old_configure_assignment('MOZ_BUILD_APP', build_project)
 @imports(_from='__builtin__', _import='open')
 @imports('re')
 def milestone(build_env, _):
-    milestone_path = os.path.join(build_env.topsrcdir,
-                                  'config',
-                                  'milestone.txt')
-    with open(milestone_path, 'r') as fh:
-        milestone = fh.read().splitlines()[-1]
+    versions = []
+    for p in (
+        ('config', 'milestone.txt'),
+        ('browser', 'config', 'version.txt'),
+        ('browser', 'config', 'version_display.txt'),
+    ):
+        with open(os.path.join(build_env.topsrcdir, *p), 'r') as fh:
+            content = fh.read().splitlines()
+            if not content:
+                die('Could not find a version number in {}'.format(os.path.join(*p)))
+            versions.append(content[-1])
+
+    milestone, firefox_version, firefox_version_display = versions
 
     is_nightly = is_release_or_beta = None
 
@@ -1071,7 +1079,9 @@ def milestone(build_env, _):
                      uaversion='%s.0' % major_version,
                      symbolversion='%s%s' % (major_version, ab_patch),
                      is_nightly=is_nightly,
-                     is_release_or_beta=is_release_or_beta)
+                     is_release_or_beta=is_release_or_beta,
+                     firefox_version=firefox_version,
+                     firefox_version_display=firefox_version_display)
 
 
 set_config('GRE_MILESTONE', milestone.version)
@@ -1090,6 +1100,11 @@ set_config('MOZILLA_SYMBOLVERSION', milestone.symbolversion)
 # JS configure still wants to look at these.
 add_old_configure_assignment('MOZILLA_VERSION', milestone.version)
 add_old_configure_assignment('MOZILLA_SYMBOLVERSION', milestone.symbolversion)
+
+set_config('FIREFOX_VERSION', milestone.firefox_version)
+set_define('FIREFOX_VERSION', milestone.firefox_version)
+add_old_configure_assignment('FIREFOX_VERSION', milestone.firefox_version)
+add_old_configure_assignment('FIREFOX_VERSION_DISPLAY', milestone.firefox_version_display)
 
 # The app update channel is 'default' when not supplied. The value is used in
 # the application's confvars.sh (and is made available to a project specific
