@@ -579,10 +579,16 @@ Target.prototype = {
       } else if (this.isLegacyAddon) {
         const [, addonTargetFront] = await this._client.attachAddon(this.form);
         this.activeTab = addonTargetFront;
-      } else if (this.isWorkerTarget || this.isContentProcess) {
-        // Worker and Content process targets are the first target to have their front already
-        // instantiated. The plan is to have all targets to have their front passed as
-        // constructor argument.
+
+      // Worker and Content process targets are the first target to have their front already
+      // instantiated. The plan is to have all targets to have their front passed as
+      // constructor argument.
+      } else if (this.isWorkerTarget) {
+        // Worker is the first front to be completely migrated to have only its attach
+        // method being called from Target.attach. Other fronts should be refactored.
+        await this.activeTab.attach();
+      } else if (this.isContentProcess) {
+        // ContentProcessTarget is the only one target without any attach request.
       } else {
         throw new Error(`Unsupported type of target. Expected target of one of the` +
           ` following types: BrowsingContext, ContentProcess, Worker or ` +

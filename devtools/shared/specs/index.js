@@ -272,7 +272,7 @@ const Types = exports.__TypesForTests = [
   {
     types: ["workerTarget"],
     spec: "devtools/shared/specs/targets/worker",
-    front: null,
+    front: "devtools/shared/fronts/targets/worker",
   },
   {
     types: ["audionode", "webaudio"],

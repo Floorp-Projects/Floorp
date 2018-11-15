@@ -27,7 +27,7 @@ class WorkerTarget extends Component {
       target: PropTypes.shape({
         icon: PropTypes.string,
         name: PropTypes.string.isRequired,
-        workerTargetActor: PropTypes.string,
+        workerTargetFront: PropTypes.object,
       }).isRequired,
     };
   }
@@ -38,8 +38,8 @@ class WorkerTarget extends Component {
   }
 
   debug() {
-    const { client, target } = this.props;
-    gDevToolsBrowser.openWorkerToolbox(client, target.workerTargetActor);
+    const { workerTargetFront } = this.props.target;
+    gDevToolsBrowser.openWorkerToolbox(workerTargetFront);
   }
 
   render() {

@@ -44,8 +44,8 @@ function test() {
     // createWorker in the tab to be resolved.
     yield createWorkerInTab(tab, WORKER1_URL);
     let { workers } = yield listWorkers(targetFront);
-    let [, workerTargetFront1] = yield attachWorker(targetFront,
-                                               findWorker(workers, WORKER1_URL));
+    let workerTargetFront1 = findWorker(workers, WORKER1_URL);
+    yield workerTargetFront1.attach();
     is(workerTargetFront1.isClosed, false, "worker in tab 1 should not be closed");
 
     executeSoon(() => {
@@ -56,8 +56,8 @@ function test() {
 
     yield createWorkerInTab(tab, WORKER2_URL);
     ({ workers } = yield listWorkers(targetFront));
-    const [, workerTargetFront2] = yield attachWorker(targetFront,
-                                               findWorker(workers, WORKER2_URL));
+    const workerTargetFront2 = findWorker(workers, WORKER2_URL);
+    yield workerTargetFront2.attach();
     is(workerTargetFront2.isClosed, false, "worker in tab 2 should not be closed");
 
     executeSoon(() => {
@@ -67,8 +67,8 @@ function test() {
     is(workerTargetFront2.isClosed, true, "worker in tab 2 should be closed");
 
     ({ workers } = yield listWorkers(targetFront));
-    [, workerTargetFront1] = yield attachWorker(targetFront,
-                                           findWorker(workers, WORKER1_URL));
+    workerTargetFront1 = findWorker(workers, WORKER1_URL);
+    yield workerTargetFront1.attach();
     is(workerTargetFront1.isClosed, false, "worker in tab 1 should not be closed");
 
     yield close(client);

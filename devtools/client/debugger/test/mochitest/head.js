@@ -951,11 +951,6 @@ function findWorker(workers, url) {
   return null;
 }
 
-function attachWorker(targetFront, worker) {
-  info("Attaching to worker with url '" + worker.url + "'.");
-  return targetFront.attachWorker(worker.actor);
-}
-
 function waitForWorkerListChanged(targetFront) {
   info("Waiting for worker list to change.");
   return targetFront.once("workerListChanged");
@@ -1135,8 +1130,7 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
   await createWorkerInTab(tab, WORKER_URL);
 
   let { workers } = await listWorkers(targetFront);
-  let [, workerTargetFront] = await attachWorker(targetFront,
-                                             findWorker(workers, WORKER_URL));
+  let workerTargetFront = findWorker(workers, WORKER_URL);
 
   let toolbox = await gDevTools.showToolbox(TargetFactory.forWorker(workerTargetFront),
                                             "jsdebugger",

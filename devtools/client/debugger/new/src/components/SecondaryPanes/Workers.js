@@ -16,7 +16,7 @@ import type { Worker } from "../../types";
 export class Workers extends PureComponent {
   props: {
     workers: List<Worker>,
-    openWorkerToolbox: string => void
+    openWorkerToolbox: object => void
   };
 
   renderWorkers(workers) {
