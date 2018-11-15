@@ -21,6 +21,9 @@
 #include "frontend/Parser.h"
 #include "js/CharacterEncoding.h"
 #include "js/StableStringChars.h"
+#ifdef ENABLE_BIGINT
+#include "vm/BigIntType.h"
+#endif
 #include "vm/JSAtom.h"
 #include "vm/JSObject.h"
 #include "vm/RegExpObject.h"
@@ -3147,6 +3150,9 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
       case ParseNodeKind::String:
       case ParseNodeKind::RegExp:
       case ParseNodeKind::Number:
+#ifdef ENABLE_BIGINT
+      case ParseNodeKind::BigInt:
+#endif
       case ParseNodeKind::True:
       case ParseNodeKind::False:
       case ParseNodeKind::Null:
@@ -3312,7 +3318,7 @@ ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst)
 
       case ParseNodeKind::RegExp:
       {
-        RootedObject re1(cx, pn->as<RegExpLiteral>().objbox()->object);
+        RootedObject re1(cx, pn->as<RegExpLiteral>().objbox()->object());
         LOCAL_ASSERT(re1 && re1->is<RegExpObject>());
 
         RootedObject re2(cx, CloneRegExpObject(cx, re1.as<RegExpObject>()));
@@ -3327,6 +3333,16 @@ ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst)
       case ParseNodeKind::Number:
         val.setNumber(pn->as<NumericLiteral>().value());
         break;
+
+#ifdef ENABLE_BIGINT
+      case ParseNodeKind::BigInt:
+      {
+        BigInt* x = pn->as<BigIntLiteral>().box()->value();
+        cx->check(x);
+        val.setBigInt(x);
+        break;
+      }
+#endif
 
       case ParseNodeKind::Null:
         val.setNull();

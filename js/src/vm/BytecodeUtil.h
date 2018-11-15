@@ -57,6 +57,9 @@ enum {
     JOF_REGEXP          = 16,       /* uint32_t regexp index */
     JOF_DOUBLE          = 17,       /* uint32_t index for double value */
     JOF_SCOPE           = 18,       /* uint32_t scope index */
+#ifdef ENABLE_BIGINT
+    JOF_BIGINT          = 19,       /* uint32_t index for BigInt value */
+#endif
     JOF_TYPEMASK        = 0x001f,   /* mask for above immediate types */
 
     JOF_NAME            = 1 << 5,   /* name operation */

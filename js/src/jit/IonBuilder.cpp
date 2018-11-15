@@ -1990,6 +1990,9 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_compare(op);
 
       case JSOP_DOUBLE:
+#ifdef ENABLE_BIGINT
+      case JSOP_BIGINT:
+#endif
         pushConstant(info().getConst(pc));
         return Ok();
 

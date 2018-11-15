@@ -29,20 +29,22 @@ namespace js {
 namespace frontend {
 
 class CGNumberList {
-    Vector<double> list;
+    Rooted<ValueVector> vector;
 
   public:
-    explicit CGNumberList(JSContext* cx) : list(cx) {}
-    MOZ_MUST_USE bool append(double v) {
-        return list.append(v);
+    explicit CGNumberList(JSContext* cx)
+      : vector(cx, ValueVector(cx))
+    { }
+    MOZ_MUST_USE bool append(const Value& v) {
+        return vector.append(v);
     }
-    size_t length() const { return list.length(); }
+    size_t length() const { return vector.length(); }
     void finish(mozilla::Span<GCPtrValue> array);
 };
 
 struct CGObjectList {
     uint32_t            length;     /* number of emitted so far objects */
-    ObjectBox*          lastbox;   /* last emitted object */
+    ObjectBox*          lastbox;    /* last emitted object */
 
     CGObjectList() : length(0), lastbox(nullptr) {}
 
@@ -194,7 +196,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
         return innermostEmitterScope_;
     }
 
-    CGNumberList     numberList;     /* number constants to be included with the script */
+    CGNumberList     numberList;     /* double and bigint values used by script */
     CGObjectList     objectList;     /* list of emitted objects */
     CGScopeList      scopeList;      /* list of emitted scopes */
     CGTryNoteList    tryNoteList;    /* list of emitted try notes */
@@ -529,6 +531,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitN(JSOp op, size_t extra, ptrdiff_t* offset = nullptr);
 
     MOZ_MUST_USE bool emitNumberOp(double dval);
+
+#ifdef ENABLE_BIGINT
+    MOZ_MUST_USE bool emitBigIntOp(BigInt* bigint);
+#endif
 
     MOZ_MUST_USE bool emitThisLiteral(ThisLiteral* pn);
     MOZ_MUST_USE bool emitGetFunctionThis(NameNode* thisName);

@@ -463,6 +463,12 @@ class NameResolver
             MOZ_ASSERT(cur->is<NumericLiteral>());
             break;
 
+#ifdef ENABLE_BIGINT
+          case ParseNodeKind::BigInt:
+            MOZ_ASSERT(cur->is<BigIntLiteral>());
+            break;
+#endif
+
           case ParseNodeKind::TypeOfName:
           case ParseNodeKind::SuperBase:
             MOZ_ASSERT(cur->as<UnaryNode>().kid()->isKind(ParseNodeKind::Name));

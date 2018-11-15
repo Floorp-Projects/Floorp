@@ -1911,6 +1911,13 @@ class GeneralTokenStreamChars
         token->setNumber(dval, decimalPoint);
     }
 
+#ifdef ENABLE_BIGINT
+    void newBigIntToken(TokenStart start, TokenStreamShared::Modifier modifier, TokenKind* out)
+    {
+        newToken(TokenKind::BigInt, start, modifier, out);
+    }
+#endif
+
     void newAtomToken(TokenKind kind, JSAtom* atom, TokenStart start,
                       TokenStreamShared::Modifier modifier, TokenKind* out)
     {
@@ -2349,6 +2356,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using GeneralCharsBase::newNameToken;
     using GeneralCharsBase::newPrivateNameToken;
     using GeneralCharsBase::newNumberToken;
+#ifdef ENABLE_BIGINT
+    using GeneralCharsBase::newBigIntToken;
+#endif
     using GeneralCharsBase::newRegExpToken;
     using GeneralCharsBase::newSimpleToken;
     using CharsBase::peekCodeUnit;
@@ -2515,6 +2525,12 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
     /** Tokenize a regular expression literal beginning at |start|. */
     MOZ_MUST_USE bool regexpLiteral(TokenStart start, TokenKind* out);
+
+    /**
+     * Slurp characters between |start| and sourceUnits.current() into
+     * charBuffer, to later parse into a bigint.
+     */
+    MOZ_MUST_USE bool bigIntLiteral(TokenStart start, Modifier modifier, TokenKind* out);
 
   public:
     // Advance to the next token.  If the token stream encountered an error,
