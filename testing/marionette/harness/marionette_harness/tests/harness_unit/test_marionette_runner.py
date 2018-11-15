@@ -4,8 +4,6 @@
 
 from __future__ import absolute_import
 
-import os
-
 import manifestparser
 import mozunit
 import pytest
@@ -298,7 +296,7 @@ def test_add_test_directory(runner):
             runner.add_test(test_dir)
     assert isdir.called and walk.called
     for test in runner.tests:
-        assert os.path.normpath(test_dir) in test['filepath']
+        assert test_dir in test['filepath']
     assert len(runner.tests) == 2
 
 

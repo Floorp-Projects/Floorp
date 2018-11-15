@@ -25,19 +25,16 @@ python_test_schema = Schema({
 })
 
 
-defaults = {
-    'python-version': 2,
-    'subsuite': 'default',
-}
-
-
-@run_job_using('docker-worker', 'python-test', schema=python_test_schema, defaults=defaults)
-@run_job_using('generic-worker', 'python-test', schema=python_test_schema, defaults=defaults)
-def configure_python_test(config, job, taskdesc):
+@run_job_using(
+    'docker-worker',
+    'python-test',
+    schema=python_test_schema,
+    defaults={'python-version': 2, 'subsuite': 'default'})
+def docker_worker_python_test(config, job, taskdesc):
     run = job['run']
 
     # defer to the run_task implementation
-    run['command'] = 'cd $GECKO_PATH && ' \
+    run['command'] = 'cd {workdir}/checkouts/gecko && ' \
         './mach python-test --python {python-version} --subsuite {subsuite}'.format(**run)
     run['using'] = 'run-task'
     del run['python-version']

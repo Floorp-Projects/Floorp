@@ -94,8 +94,8 @@ for docker images that are pushed to a registry.
 Docker Registry Images (prebuilt)
 :::::::::::::::::::::::::::::::::
 
-***Warning: Registry images are only used for ``decision`` and
-``image_builder`` images.***
+***Warning: Use of prebuilt images should only be used for base images (those that other images
+will inherit from), or private images that must be stored in a private docker registry account.***
 
 These are images that are intended to be pushed to a docker registry and used
 by specifying the docker image name in task definitions.  They are generally
@@ -107,16 +107,17 @@ Example:
 
     image: taskcluster/decision:0.1.10@sha256:c5451ee6c655b3d97d4baa3b0e29a5115f23e0991d4f7f36d2a8f793076d6854
 
-Such images must always be referred to with both a version and a repo digest.
-For the decision image, the repo digest is stored in the ``HASH`` file in the
-image directory and used to refer to the image as above.  The version for both
-images is in ``VERSION``.
+Each image has a repo digest and a version. The repo digest is stored in the
+``HASH`` file in the image directory and used to refer to the image as above.
+The version is in ``VERSION``.
 
-The version file serves to help users identify which image is being used, and makes old
-versions easy to discover in the registry.
+The version file only serves to provide convenient names, such that old
+versions are easy to discover in the registry (and ensuring old versions aren't
+deleted by garbage-collection).
 
-The file ``taskcluster/docker/REGISTRY`` specifies the image registry to which
-the completed image should be uploaded.
+Each image directory also has a ``REGISTRY``, defaulting to the ``REGISTRY`` in
+the ``taskcluster/docker`` directory, and specifying the image registry to
+which the completed image should be uploaded.
 
 Docker Hashes and Digests
 .........................
@@ -163,18 +164,12 @@ Docker Registry Images
 
 Landing docker registry images takes a little more care.
 
-Begin by bumping the ``VERSION``.  Once the new version of the image has been
-built and tested locally, push it to the docker registry and make note of the
-resulting repo digest.  Put this value in the ``HASH`` file for the
-``decision`` image and in ``taskcluster/taskgraph/transforms/docker_image.py``
-for the ``image_builder`` image.
+Once a new version of the image has been built and tested locally, push it to
+the docker registry and make note of the resulting repo digest.  Put this value
+in the ``HASH`` file, and update any references to the image in the code or
+task definitions.
 
 The change is now safe to use in Try pushes.
-
-Note that ``image_builder`` change can be tested directly in try pushes without
-using a registry, as the in-registry ``image_builder`` image is used to build a
-task image which is then used to build other images.  It is referenced by hash
-in ``taskcluster/taskgraph/transforms/docker_image.py``.
 
 Special Dockerfile Syntax
 -------------------------
