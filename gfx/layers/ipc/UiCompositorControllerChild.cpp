@@ -92,14 +92,14 @@ UiCompositorControllerChild::Resume()
 }
 
 bool
-UiCompositorControllerChild::ResumeAndResize(const int32_t& aWidth, const int32_t& aHeight)
+UiCompositorControllerChild::ResumeAndResize(const int32_t& aX, const int32_t& aY, const int32_t& aWidth, const int32_t& aHeight)
 {
   if (!mIsOpen) {
-    mResize = Some(gfx::IntSize(aWidth, aHeight));
+    mResize = Some(gfx::IntRect(aX, aY, aWidth, aHeight));
     // Since we are caching these values, pretend the call succeeded.
     return true;
   }
-  return SendResumeAndResize(aWidth, aHeight);
+  return SendResumeAndResize(aX, aY, aWidth, aHeight);
 }
 
 bool
@@ -358,7 +358,7 @@ UiCompositorControllerChild::SendCachedValues()
 {
   MOZ_ASSERT(mIsOpen);
   if (mResize) {
-    SendResumeAndResize(mResize.ref().width, mResize.ref().height);
+    SendResumeAndResize(mResize.ref().x, mResize.ref().y, mResize.ref().width, mResize.ref().height);
     mResize.reset();
   }
   if (mMaxToolbarHeight) {

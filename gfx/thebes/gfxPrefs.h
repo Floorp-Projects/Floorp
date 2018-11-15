@@ -454,6 +454,14 @@ private:
 #else
   DECL_GFX_PREF(Once, "gfx.blocklist.all",                     BlocklistAll, int32_t, 0);
 #endif
+#if defined(MOZ_WIDGET_ANDROID)
+  // Overrides the glClear color used when the surface origin is not (0, 0)
+  // Used for drawing a border around the content.
+  DECL_GFX_PREF(Live, "gfx.compositor.override.clear-color.r", CompositorOverrideClearColorR, float, 0.0f);
+  DECL_GFX_PREF(Live, "gfx.compositor.override.clear-color.g", CompositorOverrideClearColorG, float, 0.0f);
+  DECL_GFX_PREF(Live, "gfx.compositor.override.clear-color.b", CompositorOverrideClearColorB, float, 0.0f);
+  DECL_GFX_PREF(Live, "gfx.compositor.override.clear-color.a", CompositorOverrideClearColorA, float, 0.0f);
+#endif // defined(MOZ_WIDGET_ANDROID)
   DECL_GFX_PREF(Live, "gfx.compositor.clearstate",             CompositorClearState, bool, false);
   DECL_GFX_PREF(Live, "gfx.compositor.glcontext.opaque",       CompositorGLContextOpaque, bool, false);
   DECL_GFX_PREF(Live, "gfx.canvas.auto_accelerate.min_calls",  CanvasAutoAccelerateMinCalls, int32_t, 4);

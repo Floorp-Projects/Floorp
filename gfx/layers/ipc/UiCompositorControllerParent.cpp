@@ -69,14 +69,15 @@ UiCompositorControllerParent::RecvResume()
 }
 
 mozilla::ipc::IPCResult
-UiCompositorControllerParent::RecvResumeAndResize(const int32_t& aWidth,
+UiCompositorControllerParent::RecvResumeAndResize(const int32_t& aX, const int32_t& aY,
+                                                  const int32_t& aWidth,
                                                   const int32_t& aHeight)
 {
   CompositorBridgeParent* parent = CompositorBridgeParent::GetCompositorBridgeParentFromLayersId(mRootLayerTreeId);
   if (parent) {
     // Front-end expects a first paint callback upon resume/resize.
     parent->ForceIsFirstPaint();
-    parent->ResumeCompositionAndResize(aWidth, aHeight);
+    parent->ResumeCompositionAndResize(aX, aY, aWidth, aHeight);
   }
   return IPC_OK();
 }

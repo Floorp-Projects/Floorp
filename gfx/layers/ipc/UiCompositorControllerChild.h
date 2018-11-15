@@ -31,7 +31,7 @@ public:
 
   bool Pause();
   bool Resume();
-  bool ResumeAndResize(const int32_t& aHeight, const int32_t& aWidth);
+  bool ResumeAndResize(const int32_t& aX, const int32_t& aY, const int32_t& aHeight, const int32_t& aWidth);
   bool InvalidateAndRender();
   bool SetMaxToolbarHeight(const int32_t& aHeight);
   bool SetPinned(const bool& aPinned, const int32_t& aReason);
@@ -64,7 +64,7 @@ private:
 
   bool mIsOpen;
   uint64_t mProcessToken;
-  Maybe<gfx::IntSize> mResize;
+  Maybe<gfx::IntRect> mResize;
   Maybe<int32_t> mMaxToolbarHeight;
   Maybe<uint32_t> mDefaultClearColor;
   Maybe<bool> mLayerUpdateEnabled;

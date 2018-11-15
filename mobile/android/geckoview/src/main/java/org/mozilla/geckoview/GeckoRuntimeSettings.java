@@ -138,6 +138,20 @@ public final class GeckoRuntimeSettings implements Parcelable {
             mSettings.mDebugPause = enabled;
             return this;
         }
+        /**
+         * Set whether the to report the full bit depth of the device.
+         *
+         * By default, 24 bits are reported for high memory devices and 16 bits
+         * for low memory devices. If set to true, the device's maximum bit depth is
+         * reported. On most modern devices this will be 32 bit screen depth.
+         *
+         * @param enable A flag determining whether maximum screen depth should be used.
+         * @return This Builder.
+         */
+        public @NonNull Builder useMaxScreenDepth(boolean enable) {
+            mSettings.mUseMaxScreenDepth = enable;
+            return this;
+        }
 
         /**
          * Set cookie storage behavior.
@@ -389,6 +403,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         "browser.safebrowsing.phishing.enabled", true);
 
     /* package */ boolean mDebugPause;
+    /* package */ boolean mUseMaxScreenDepth;
     /* package */ float mDisplayDensityOverride = -1.0f;
     /* package */ int mDisplayDpiOverride;
     /* package */ int mScreenWidthOverride;
@@ -432,6 +447,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         }
 
         mDebugPause = settings.mDebugPause;
+        mUseMaxScreenDepth = settings.mUseMaxScreenDepth;
         mDisplayDensityOverride = settings.mDisplayDensityOverride;
         mDisplayDpiOverride = settings.mDisplayDpiOverride;
         mScreenWidthOverride = settings.mScreenWidthOverride;
@@ -561,6 +577,13 @@ public final class GeckoRuntimeSettings implements Parcelable {
      * @return True if the pause is enabled.
      */
     public boolean getPauseForDebuggerEnabled() { return mDebugPause; }
+
+    /**
+     * Gets whether the compositor should use the maximum screen depth when rendering.
+     *
+     * @return True if the maximum screen depth should be used.
+     */
+    public boolean getUseMaxScreenDepth() { return mUseMaxScreenDepth; }
 
     /**
      * Gets the display density override value.
@@ -836,6 +859,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         }
 
         ParcelableUtils.writeBoolean(out, mDebugPause);
+        ParcelableUtils.writeBoolean(out, mUseMaxScreenDepth);
         out.writeFloat(mDisplayDensityOverride);
         out.writeInt(mDisplayDpiOverride);
         out.writeInt(mScreenWidthOverride);
@@ -858,6 +882,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
         }
 
         mDebugPause = ParcelableUtils.readBoolean(source);
+        mUseMaxScreenDepth = ParcelableUtils.readBoolean(source);
         mDisplayDensityOverride = source.readFloat();
         mDisplayDpiOverride = source.readInt();
         mScreenWidthOverride = source.readInt();

@@ -121,6 +121,8 @@ public class GeckoSession implements Parcelable {
     private int mLeft;
     private int mTop; // Top of the surface (including toolbar);
     private int mClientTop; // Top of the client area (i.e. excluding toolbar);
+    private int mOffsetX;
+    private int mOffsetY;
     private int mWidth;
     private int mHeight; // Height of the surface (including toolbar);
     private int mClientHeight; // Height of the client area (i.e. excluding toolbar);
@@ -195,7 +197,7 @@ public class GeckoSession implements Parcelable {
 
         // UI thread resumes compositor and notifies Gecko thread; does not block UI thread.
         @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
-        public native void syncResumeResizeCompositor(int width, int height, Object surface);
+        public native void syncResumeResizeCompositor(int x, int y, int width, int height, Object surface);
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
         public native void setMaxToolbarHeight(int height);
@@ -3924,15 +3926,17 @@ public class GeckoSession implements Parcelable {
                             int virtualId);
     }
 
-    /* package */ void onSurfaceChanged(final Surface surface, final int width,
+    /* package */ void onSurfaceChanged(final Surface surface, final int x, final int y, final int width,
                                         final int height) {
         ThreadUtils.assertOnUiThread();
 
+        mOffsetX = x;
+        mOffsetY = y;
         mWidth = width;
         mHeight = height;
 
         if (mCompositorReady) {
-            mCompositor.syncResumeResizeCompositor(width, height, surface);
+            mCompositor.syncResumeResizeCompositor(x, y, width, height, surface);
             onWindowBoundsChanged();
             return;
         }
@@ -3984,7 +3988,7 @@ public class GeckoSession implements Parcelable {
         if (mSurface != null) {
             // If we have a valid surface, create the compositor now that we're attached.
             // Leave mSurface alone because we'll need it later for onCompositorReady.
-            onSurfaceChanged(mSurface, mWidth, mHeight);
+            onSurfaceChanged(mSurface, mOffsetX, mOffsetY, mWidth, mHeight);
         }
 
         mCompositor.sendToolbarAnimatorMessage(IS_COMPOSITOR_CONTROLLER_OPEN);
@@ -4084,7 +4088,7 @@ public class GeckoSession implements Parcelable {
         if (mSurface != null) {
             // If we have a valid surface, resume the
             // compositor now that the compositor is ready.
-            onSurfaceChanged(mSurface, mWidth, mHeight);
+            onSurfaceChanged(mSurface, mOffsetX, mOffsetY, mWidth, mHeight);
             mSurface = null;
         }
 
