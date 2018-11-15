@@ -11,9 +11,10 @@
 #include "mozilla/Unused.h"
 
 #include "builtin/Promise.h"
-#include "frontend/BytecodeCompiler.h"
+#include "frontend/BytecodeCompilation.h"
 #include "gc/GCInternals.h"
 #include "jit/IonBuilder.h"
+#include "js/SourceText.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "threading/CpuCount.h"
@@ -502,7 +503,7 @@ ParseTask::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
            errors.sizeOfExcludingThis(mallocSizeOf);
 }
 
-ScriptParseTask::ScriptParseTask(JSContext* cx, JS::SourceBufferHolder& srcBuf,
+ScriptParseTask::ScriptParseTask(JSContext* cx, JS::SourceText<char16_t>& srcBuf,
                                  JS::OffThreadCompileCallback callback, void* callbackData)
   : ParseTask(ParseTaskKind::Script, cx, callback, callbackData),
     data(std::move(srcBuf))
@@ -513,21 +514,32 @@ ScriptParseTask::parse(JSContext* cx)
 {
     MOZ_ASSERT(cx->helperThread());
 
+    JSScript* script;
     Rooted<ScriptSourceObject*> sourceObject(cx);
 
-    ScopeKind scopeKind = options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
+    {
+        ScopeKind scopeKind = options.nonSyntacticScope
+                              ? ScopeKind::NonSyntactic
+                              : ScopeKind::Global;
+        frontend::GlobalScriptInfo info(cx, options, scopeKind);
+        script = frontend::CompileGlobalScript(info, data,
+                                               /* sourceObjectOut = */ &sourceObject.get());
+    }
 
-    JSScript* script = frontend::CompileGlobalScript(cx, scopeKind, options, data,
-                                                     /* sourceObjectOut = */ &sourceObject.get());
     if (script) {
         scripts.infallibleAppend(script);
     }
+
+    // Whatever happens to the top-level script compilation (even if it fails),
+    // we must finish initializing the SSO.  This is because there may be valid
+    // inner scripts observable by the debugger which reference the partially-
+    // initialized SSO.
     if (sourceObject) {
         sourceObjects.infallibleAppend(sourceObject);
     }
 }
 
-ModuleParseTask::ModuleParseTask(JSContext* cx, JS::SourceBufferHolder& srcBuf,
+ModuleParseTask::ModuleParseTask(JSContext* cx, JS::SourceText<char16_t>& srcBuf,
                                  JS::OffThreadCompileCallback callback, void* callbackData)
   : ParseTask(ParseTaskKind::Module, cx, callback, callbackData),
     data(std::move(srcBuf))
@@ -867,7 +879,7 @@ StartOffThreadParseTask(JSContext* cx, ParseTask* task, const ReadOnlyCompileOpt
 
 bool
 js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& options,
-                              JS::SourceBufferHolder& srcBuf,
+                              JS::SourceText<char16_t>& srcBuf,
                               JS::OffThreadCompileCallback callback, void* callbackData)
 {
     auto task = cx->make_unique<ScriptParseTask>(cx, srcBuf, callback, callbackData);
@@ -881,7 +893,7 @@ js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& optio
 
 bool
 js::StartOffThreadParseModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-                              JS::SourceBufferHolder& srcBuf,
+                              JS::SourceText<char16_t>& srcBuf,
                               JS::OffThreadCompileCallback callback, void* callbackData)
 {
     auto task = cx->make_unique<ModuleParseTask>(cx, srcBuf, callback, callbackData);

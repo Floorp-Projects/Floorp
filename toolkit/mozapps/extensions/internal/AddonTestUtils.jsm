@@ -959,8 +959,7 @@ var AddonTestUtils = {
 
     let props = ["id", "version", "type", "internalName", "updateURL",
                  "optionsURL", "optionsType", "aboutURL", "iconURL",
-                 "skinnable", "bootstrap", "strictCompatibility",
-                 "hasEmbeddedWebExtension"];
+                 "skinnable", "bootstrap", "strictCompatibility"];
     rdf += this._writeProps(data, props);
 
     rdf += this._writeLocaleStrings(data);

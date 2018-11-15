@@ -122,7 +122,9 @@ const char __nss_util_version[] = "Version: NSS " NSSUTIL_VERSION _DEBUG_STRING;
 
 #define VERISIGN 0x60, 0x86, 0x48, 0x01, 0x86, 0xf8, 0x45
 
-#define PKIX 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07
+#define INTERNET_SECURITY_MECH 0x2b, 0x06, 0x01, 0x05, 0x05
+
+#define PKIX INTERNET_SECURITY_MECH, 0x07
 #define PKIX_CERT_EXTENSIONS PKIX, 1
 #define PKIX_POLICY_QUALIFIERS PKIX, 2
 #define PKIX_KEY_USAGE PKIX, 3
@@ -360,6 +362,7 @@ CONST_OID x509FreshestCRL[] = { ID_CE_OID, 46 };
 CONST_OID x509InhibitAnyPolicy[] = { ID_CE_OID, 54 };
 
 CONST_OID x509CertificatePoliciesAnyPolicy[] = { ID_CE_OID, 32, 0 };
+CONST_OID x509ExtKeyUsageAnyUsage[] = { ID_CE_OID, 37, 0 };
 
 CONST_OID x509AuthInfoAccess[] = { PKIX_CERT_EXTENSIONS, 1 };
 CONST_OID x509SubjectInfoAccess[] = { PKIX_CERT_EXTENSIONS, 11 };
@@ -454,7 +457,12 @@ CONST_OID pkixExtendedKeyUsageCodeSign[] = { PKIX_KEY_USAGE, 3 };
 CONST_OID pkixExtendedKeyUsageEMailProtect[] = { PKIX_KEY_USAGE, 4 };
 CONST_OID pkixExtendedKeyUsageTimeStamp[] = { PKIX_KEY_USAGE, 8 };
 CONST_OID pkixOCSPResponderExtendedKeyUsage[] = { PKIX_KEY_USAGE, 9 };
+/* 17 replaces 5 + 6 + 7 (declared obsolete in RFC 4945) */
+CONST_OID pkixExtendedKeyUsageIPsecIKE[] = { PKIX_KEY_USAGE, 17 };
 CONST_OID msExtendedKeyUsageTrustListSigning[] = { MS_CRYPTO_EKU, 1 };
+
+CONST_OID ipsecIKEEnd[] = { INTERNET_SECURITY_MECH, 0x08, 0x02, 0x01 };
+CONST_OID ipsecIKEIntermediate[] = { INTERNET_SECURITY_MECH, 0x08, 0x02, 0x02 };
 
 /* OIDs for Netscape defined algorithms */
 CONST_OID netscapeSMimeKEA[] = { NETSCAPE_ALGS, 0x01 };
@@ -1754,6 +1762,22 @@ const static SECOidData oids[SEC_OID_TOTAL] = {
        "Curve25519", CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION),
     ODE(SEC_OID_TLS13_KEA_ANY,
         "TLS 1.3 fake key exchange", CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION),
+
+    OD(x509ExtKeyUsageAnyUsage, SEC_OID_X509_ANY_EXT_KEY_USAGE,
+       "Any Extended Key Usage",
+       CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION),
+    OD(pkixExtendedKeyUsageIPsecIKE,
+       SEC_OID_EXT_KEY_USAGE_IPSEC_IKE,
+       "IPsec IKE Certificate",
+       CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION),
+    OD(ipsecIKEEnd,
+       SEC_OID_IPSEC_IKE_END,
+       "IPsec IKE End",
+       CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION),
+    OD(ipsecIKEIntermediate,
+       SEC_OID_IPSEC_IKE_INTERMEDIATE,
+       "IPsec IKE Intermediate",
+       CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION),
 };
 
 /* PRIVATE EXTENDED SECOID Table

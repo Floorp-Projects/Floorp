@@ -19,7 +19,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/DeclarationBlock.h"
 #include "js/CompilationAndEvaluation.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "nsFocusManager.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsNameSpaceManager.h"
@@ -2278,7 +2278,9 @@ OffThreadScriptReceiverCallback(JS::OffThreadToken* aToken, void* aCallbackData)
 }
 
 nsresult
-nsXULPrototypeScript::Compile(JS::SourceBufferHolder& aSrcBuf,
+nsXULPrototypeScript::Compile(const char16_t* aText,
+                              size_t aTextLength,
+                              JS::SourceOwnership aOwnership,
                               nsIURI* aURI, uint32_t aLineNo,
                               nsIDocument* aDocument,
                               nsIOffThreadScriptReceiver *aOffThreadReceiver /* = nullptr */)
@@ -2286,9 +2288,20 @@ nsXULPrototypeScript::Compile(JS::SourceBufferHolder& aSrcBuf,
     // We'll compile the script in the compilation scope.
     AutoJSAPI jsapi;
     if (!jsapi.Init(xpc::CompilationScope())) {
+        if (aOwnership == JS::SourceOwnership::TakeOwnership) {
+            // In this early-exit case -- before the |srcBuf.init| call will
+            // own |aText| -- we must relinquish ownership manually.
+            js_free(const_cast<char16_t*>(aText));
+        }
+
         return NS_ERROR_UNEXPECTED;
     }
     JSContext* cx = jsapi.cx();
+
+    JS::SourceText<char16_t> srcBuf;
+    if (NS_WARN_IF(!srcBuf.init(cx, aText, aTextLength, aOwnership))) {
+        return NS_ERROR_FAILURE;
+    }
 
     nsAutoCString urlspec;
     nsresult rv = aURI->GetSpec(urlspec);
@@ -2309,9 +2322,8 @@ nsXULPrototypeScript::Compile(JS::SourceBufferHolder& aSrcBuf,
       JS::ExposeObjectToActiveJS(scope);
     }
 
-    if (aOffThreadReceiver && JS::CanCompileOffThread(cx, options, aSrcBuf.length())) {
-        if (!JS::CompileOffThread(cx, options,
-                                  aSrcBuf,
+    if (aOffThreadReceiver && JS::CanCompileOffThread(cx, options, aTextLength)) {
+        if (!JS::CompileOffThread(cx, options, srcBuf,
                                   OffThreadScriptReceiverCallback,
                                   static_cast<void*>(aOffThreadReceiver))) {
             return NS_ERROR_OUT_OF_MEMORY;
@@ -2319,24 +2331,11 @@ nsXULPrototypeScript::Compile(JS::SourceBufferHolder& aSrcBuf,
         NotifyOffThreadScriptCompletedRunnable::NoteReceiver(aOffThreadReceiver);
     } else {
         JS::Rooted<JSScript*> script(cx);
-        if (!JS::Compile(cx, options, aSrcBuf, &script))
+        if (!JS::Compile(cx, options, srcBuf, &script))
             return NS_ERROR_OUT_OF_MEMORY;
         Set(script);
     }
     return NS_OK;
-}
-
-nsresult
-nsXULPrototypeScript::Compile(const char16_t* aText,
-                              int32_t aTextLength,
-                              nsIURI* aURI,
-                              uint32_t aLineNo,
-                              nsIDocument* aDocument,
-                              nsIOffThreadScriptReceiver *aOffThreadReceiver /* = nullptr */)
-{
-  JS::SourceBufferHolder srcBuf(aText, aTextLength,
-                                JS::SourceBufferHolder::NoOwnership);
-  return Compile(srcBuf, aURI, aLineNo, aDocument, aOffThreadReceiver);
 }
 
 void

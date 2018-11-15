@@ -12,6 +12,7 @@
 #ifndef nsXULElement_h__
 #define nsXULElement_h__
 
+#include "js/SourceText.h"
 #include "js/TracingAPI.h"
 #include "mozilla/Attributes.h"
 #include "nsIServiceManager.h"
@@ -51,10 +52,6 @@ class HTMLIFrameElement;
 enum class CallerType : uint32_t;
 } // namespace dom
 } // namespace mozilla
-
-namespace JS {
-class SourceBufferHolder;
-} // namespace JS
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -218,12 +215,8 @@ public:
     nsresult DeserializeOutOfLine(nsIObjectInputStream* aInput,
                                   nsXULPrototypeDocument* aProtoDoc);
 
-    nsresult Compile(JS::SourceBufferHolder& aSrcBuf,
-                     nsIURI* aURI, uint32_t aLineNo,
-                     nsIDocument* aDocument,
-                     nsIOffThreadScriptReceiver *aOffThreadReceiver = nullptr);
-
-    nsresult Compile(const char16_t* aText, int32_t aTextLength,
+    nsresult Compile(const char16_t* aText, size_t aTextLength,
+                     JS::SourceOwnership aOwnership,
                      nsIURI* aURI, uint32_t aLineNo,
                      nsIDocument* aDocument,
                      nsIOffThreadScriptReceiver *aOffThreadReceiver = nullptr);

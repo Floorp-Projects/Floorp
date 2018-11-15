@@ -221,6 +221,16 @@ public:
 
     return LAYER_INACTIVE;
   }
+
+  // FirstContentfulPaint is supposed to ignore "white" canvases.  We use MaybeModified (if
+  // GetContext() was called on the canvas) as a standin for "white"
+  virtual bool IsContentful() const override
+  {
+    nsHTMLCanvasFrame* f = static_cast<nsHTMLCanvasFrame*>(Frame());
+    HTMLCanvasElement* canvas =
+      HTMLCanvasElement::FromNode(f->GetContent());
+    return canvas->MaybeModified();
+  }
 };
 
 

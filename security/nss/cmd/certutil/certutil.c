@@ -741,6 +741,9 @@ ValidateCert(CERTCertDBHandle *handle, char *name, char *date,
         case 'V':
             usage = certificateUsageSSLServer;
             break;
+        case 'I':
+            usage = certificateUsageIPsec;
+            break;
         case 'S':
             usage = certificateUsageEmailSigner;
             break;
@@ -1706,6 +1709,7 @@ luV(enum usage_level ul, const char *command)
     FPS "%-20s Specify certificate usage:\n", "   -u certusage");
     FPS "%-25s C \t SSL Client\n", "");
     FPS "%-25s V \t SSL Server\n", "");
+    FPS "%-25s I \t IPsec\n", "");
     FPS "%-25s L \t SSL CA\n", "");
     FPS "%-25s A \t Any CA\n", "");
     FPS "%-25s Y \t Verify CA\n", "");

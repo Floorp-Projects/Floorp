@@ -26,6 +26,7 @@
 #include "builtin/Object.h"
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/String.h"
+#include "frontend/BytecodeCompilation.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
@@ -35,8 +36,7 @@
 #include "js/CallNonGenericMethod.h"
 #include "js/CompileOptions.h"
 #include "js/Proxy.h"
-
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
@@ -70,7 +70,8 @@ using mozilla::Utf8Unit;
 
 using JS::AutoStableStringChars;
 using JS::CompileOptions;
-using JS::SourceBufferHolder;
+using JS::SourceOwnership;
+using JS::SourceText;
 
 static bool
 fun_enumerate(JSContext* cx, HandleObject obj)
@@ -1793,9 +1794,14 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
                     return false;
                 }
 
-                // XXX There are no UTF-8 ScriptSources now, so just crash so this
-                //     gets filled in later.
-                MOZ_CRASH("UTF-8 lazy function compilation not implemented yet");
+                if (!frontend::CompileLazyFunction(cx, lazy, units.get(), lazyLength)) {
+                    // The frontend shouldn't fail after linking the function and the
+                    // non-lazy script together.
+                    MOZ_ASSERT(fun->isInterpretedLazy());
+                    MOZ_ASSERT(fun->lazyScript() == lazy);
+                    MOZ_ASSERT(!lazy->hasScript());
+                    return false;
+                }
             } else {
                 MOZ_ASSERT(lazy->scriptSource()->hasSourceType<char16_t>());
 
@@ -2115,10 +2121,14 @@ CreateDynamicFunction(JSContext* cx, const CallArgs& args, GeneratorKind generat
     }
 
     mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
-    SourceBufferHolder::Ownership ownership = stableChars.maybeGiveOwnershipToCaller()
-                                              ? SourceBufferHolder::GiveOwnership
-                                              : SourceBufferHolder::NoOwnership;
-    SourceBufferHolder srcBuf(chars.begin().get(), chars.length(), ownership);
+    SourceOwnership ownership = stableChars.maybeGiveOwnershipToCaller()
+                                ? SourceOwnership::TakeOwnership
+                                : SourceOwnership::Borrowed;
+    SourceText<char16_t> srcBuf;
+    if (!srcBuf.init(cx, chars.begin().get(), chars.length(), ownership)) {
+        return false;
+    }
+
     if (isAsync) {
         if (isGenerator) {
             if (!CompileStandaloneAsyncGenerator(cx, &fun, options, srcBuf, parameterListEnd)) {

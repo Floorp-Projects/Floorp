@@ -7,6 +7,7 @@
 #include "frontend/EmitterScope.h"
 
 #include "frontend/BytecodeEmitter.h"
+#include "frontend/ModuleSharedContext.h"
 #include "frontend/TDZCheckCache.h"
 
 #include "vm/GlobalObject.h"

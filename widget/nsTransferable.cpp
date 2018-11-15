@@ -63,7 +63,9 @@ DataStruct::SetData(nsISupports* aData, uint32_t aDataLen, bool aIsPrivateData)
 {
   // Now, check to see if we consider the data to be "too large"
   // as well as ensuring that private browsing mode is disabled
-  if (aDataLen > kLargeDatasetSize && !aIsPrivateData) {
+  if (aDataLen > kLargeDatasetSize && !aIsPrivateData &&
+      // File IO is not allowed in content processes.
+      XRE_IsParentProcess()) {
     // if so, cache it to disk instead of memory
     if (NS_SUCCEEDED(WriteCache(aData, aDataLen))) {
       // Clear previously set small data.
