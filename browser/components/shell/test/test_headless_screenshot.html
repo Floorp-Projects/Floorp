@@ -76,7 +76,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1378010
       size += "," + height;
     }
 
-    await runFirefox(["-url", "http://mochi.test:8888/headless.html", "-screenshot", screenshotPath, "-window-size", size]);
+    await runFirefox(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", screenshotPath, "-window-size", size]);
 
     let saved = await OS.File.exists(screenshotPath);
     ok(saved, "A screenshot should be saved in the tmp directory");
@@ -109,33 +109,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1378010
 
     // Test all four basic variations of the "screenshot" argument
     // when a file path is specified.
-    await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", "-screenshot", screenshotPath], screenshotPath);
-    await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", `-screenshot=${screenshotPath}`], screenshotPath);
-    await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", "--screenshot", screenshotPath], screenshotPath);
-    await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", `--screenshot=${screenshotPath}`], screenshotPath);
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", screenshotPath], screenshotPath);
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", `-screenshot=${screenshotPath}`], screenshotPath);
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "--screenshot", screenshotPath], screenshotPath);
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", `--screenshot=${screenshotPath}`], screenshotPath);
 
     // Test variations of the "screenshot" argument when a file path
     // isn't specified.
-    await testFileCreationPositive(["-screenshot", "http://mochi.test:8888/headless.html"], "screenshot.png");
-    await testFileCreationPositive(["http://mochi.test:8888/headless.html", "-screenshot"], "screenshot.png");
-    await testFileCreationPositive(["--screenshot", "http://mochi.test:8888/headless.html"], "screenshot.png");
-    await testFileCreationPositive(["http://mochi.test:8888/headless.html", "--screenshot"], "screenshot.png");
+    await testFileCreationPositive(["-screenshot", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html"], "screenshot.png");
+    await testFileCreationPositive(["http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot"], "screenshot.png");
+    await testFileCreationPositive(["--screenshot", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html"], "screenshot.png");
+    await testFileCreationPositive(["http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "--screenshot"], "screenshot.png");
 
     // Test invalid URL arguments (either no argument or too many arguments).
     await testFileCreationNegative(["-screenshot"], "screenshot.png");
-    await testFileCreationNegative(["http://mochi.test:8888/headless.html", "http://mochi.test:8888/headless.html", "-screenshot"], "screenshot.png");
+    await testFileCreationNegative(["http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "http://mochi.test:8888/headless.html", "-screenshot"], "screenshot.png");
 
     // Test all four basic variations of the "window-size" argument.
-    await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", "-screenshot", "-window-size", "800"], "screenshot.png");
-    await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", "-screenshot", "-window-size=800"], "screenshot.png");
-    await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", "-screenshot", "--window-size", "800"], "screenshot.png");
-    await testFileCreationPositive(["-url", "http://mochi.test:8888/headless.html", "-screenshot", "--window-size=800"], "screenshot.png");
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", "-window-size", "800"], "screenshot.png");
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", "-window-size=800"], "screenshot.png");
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", "--window-size", "800"], "screenshot.png");
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", "--window-size=800"], "screenshot.png");
 
     // Test other variations of the "window-size" argument.
     await testWindowSizePositive(800, 600);
     await testWindowSizePositive(1234);
-    await testFileCreationNegative(["-url", "http://mochi.test:8888/headless.html", "-screenshot", "-window-size", "hello"], "screenshot.png");
-    await testFileCreationNegative(["-url", "http://mochi.test:8888/headless.html", "-screenshot", "-window-size", "800,"], "screenshot.png");
+    await testFileCreationNegative(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", "-window-size", "hello"], "screenshot.png");
+    await testFileCreationNegative(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", "-window-size", "800,"], "screenshot.png");
 
     SimpleTest.finish();
   })();
