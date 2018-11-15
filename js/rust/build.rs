@@ -227,7 +227,7 @@ const WHITELIST_TYPES: &'static [&'static str] = &[
     "JS::ServoSizes",
     "js::shadow::Object",
     "js::shadow::ObjectGroup",
-    "JS::SourceBufferHolder",
+    "JS::SourceText",
     "js::StackFormat",
     "JSStructuredCloneCallbacks",
     "JS::Symbol",

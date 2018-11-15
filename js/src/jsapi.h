@@ -15,6 +15,7 @@
 #include "mozilla/Range.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Utf8.h"
 #include "mozilla/Variant.h"
 
 #include <stdarg.h>
@@ -51,7 +52,8 @@
 
 namespace JS {
 
-class SourceBufferHolder;
+template<typename UnitT> class SourceText;
+
 class TwoByteChars;
 
 /** AutoValueArray roots an internal fixed-size array of Values. */
@@ -3125,7 +3127,7 @@ FinishDynamicModuleImport(JSContext* cx, HandleValue referencingPrivate, HandleS
  */
 extern JS_PUBLIC_API(bool)
 CompileModule(JSContext* cx, const ReadOnlyCompileOptions& options,
-              SourceBufferHolder& srcBuf, JS::MutableHandleObject moduleRecord);
+              SourceText<char16_t>& srcBuf, JS::MutableHandleObject moduleRecord);
 
 /**
  * Set a private value associated with a source text module record.

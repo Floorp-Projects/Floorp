@@ -288,7 +288,8 @@ addCertToDB(certDBEntryCert *certEntry, dbRestoreInfo *info,
 
     /*  If user chooses so, ignore expired certificates.  */
     allowOverride = (PRBool)((oldCert->keyUsage == certUsageSSLServer) ||
-                             (oldCert->keyUsage == certUsageSSLServerWithStepUp));
+                             (oldCert->keyUsage == certUsageSSLServerWithStepUp) ||
+                             (oldCert->keyUsage == certUsageIPsec));
     validity = CERT_CheckCertValidTimes(oldCert, PR_Now(), allowOverride);
     /*  If cert expired and user wants to delete it, ignore it. */
     if ((validity != secCertTimeValid) &&

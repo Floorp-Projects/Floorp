@@ -4,7 +4,7 @@
 
 #include "gc/GCInternals.h"
 #include "js/CompilationAndEvaluation.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "jsapi-tests/tests.h"
 #include "vm/Monitor.h"
 #include "vm/MutexIDs.h"
@@ -74,9 +74,10 @@ testCompile(bool nonSyntactic)
     JS::CompileOptions options(cx);
     options.setNonSyntacticScope(nonSyntactic);
 
-    JS::RootedScript script(cx);
+    JS::SourceText<char16_t> buf;
+    CHECK(buf.init(cx, src_16, length, JS::SourceOwnership::Borrowed));
 
-    JS::SourceBufferHolder buf(src_16, length, JS::SourceBufferHolder::NoOwnership);
+    JS::RootedScript script(cx);
 
     // Check explicit non-syntactic compilation first to make sure it doesn't
     // modify our options object.
@@ -87,7 +88,9 @@ testCompile(bool nonSyntactic)
     CHECK_EQUAL(script->hasNonSyntacticScope(), true);
 
     {
-        JS::SourceBufferHolder srcBuf(src_16, length, JS::SourceBufferHolder::NoOwnership);
+        JS::SourceText<char16_t> srcBuf;
+        CHECK(srcBuf.init(cx, src_16, length, JS::SourceOwnership::Borrowed));
+
         CHECK(CompileForNonSyntacticScope(cx, options, srcBuf, &script));
         CHECK_EQUAL(script->hasNonSyntacticScope(), true);
     }
@@ -100,7 +103,9 @@ testCompile(bool nonSyntactic)
     CHECK_EQUAL(script->hasNonSyntacticScope(), nonSyntactic);
 
     {
-        JS::SourceBufferHolder srcBuf(src_16, length, JS::SourceBufferHolder::NoOwnership);
+        JS::SourceText<char16_t> srcBuf;
+        CHECK(srcBuf.init(cx, src_16, length, JS::SourceOwnership::Borrowed));
+
         CHECK(Compile(cx, options, srcBuf, &script));
         CHECK_EQUAL(script->hasNonSyntacticScope(), nonSyntactic);
     }
@@ -110,7 +115,9 @@ testCompile(bool nonSyntactic)
     OffThreadTask task;
     OffThreadToken* token;
 
-    JS::SourceBufferHolder srcBuf(src_16, length, JS::SourceBufferHolder::NoOwnership);
+    JS::SourceText<char16_t> srcBuf;
+    CHECK(srcBuf.init(cx, src_16, length, JS::SourceOwnership::Borrowed));
+
     CHECK(CompileOffThread(cx, options, srcBuf, task.OffThreadCallback, &task));
     CHECK(token = task.waitUntilDone(cx));
     CHECK(script = FinishOffThreadScript(cx, token));
