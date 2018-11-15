@@ -264,8 +264,6 @@ Target.prototype = {
    * methods, one must already be communicating with a specific actor of that
    * type.
    *
-   * Must be a remote target.
-   *
    * @return {Promise}
    * {
    *   "category": "actor",
@@ -304,7 +302,7 @@ Target.prototype = {
 
   /**
    * Returns a boolean indicating whether or not the specific actor
-   * type exists. Must be a remote target.
+   * type exists.
    *
    * @param {String} actorName
    * @return {Boolean}
@@ -321,7 +319,7 @@ Target.prototype = {
    * an available method. The actor must already be lazily-loaded (read
    * the restrictions in the `getActorDescription` comments),
    * so this is for use inside of tool. Returns a promise that
-   * resolves to a boolean. Must be a remote target.
+   * resolves to a boolean.
    *
    * @param {String} actorName
    * @param {String} methodName
