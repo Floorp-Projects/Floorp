@@ -41,7 +41,7 @@ add_task(async function() {
   await selectNode("#grid", inspector);
   const gridContainer = await getContainerForSelector("#grid", inspector);
   const gridDisplayNode = gridContainer.elt.querySelector(
-    ".markup-badge[data-display]");
+    ".inspector-badge.interactive[data-display]");
   ok(gridDisplayNode, "#grid display node is shown.");
   is(gridDisplayNode.textContent, "grid", "Got the correct display type for #grid.");
 
@@ -49,7 +49,7 @@ add_task(async function() {
   await selectNode("#subgrid", inspector);
   const subgridContainer = await getContainerForSelector("#subgrid", inspector);
   const subgridDisplayNode = subgridContainer.elt.querySelector(
-    ".markup-badge[data-display]");
+    ".inspector-badge[data-display]");
   ok(subgridDisplayNode, "#subgrid display node is shown");
   is(subgridDisplayNode.textContent, "subgrid",
     "Got the correct display type for #subgrid");
@@ -58,7 +58,7 @@ add_task(async function() {
   await selectNode("#flex", inspector);
   const flexContainer = await getContainerForSelector("#flex", inspector);
   const flexDisplayNode = flexContainer.elt.querySelector(
-    ".markup-badge[data-display]");
+    ".inspector-badge.interactive[data-display]");
   ok(flexDisplayNode, "#flex display node is shown.");
   is(flexDisplayNode.textContent, "flex", "Got the correct display type for #flex");
 
@@ -66,13 +66,13 @@ add_task(async function() {
   await selectNode("#block", inspector);
   const blockContainer = await getContainerForSelector("#block", inspector);
   const blockDisplayNode = blockContainer.elt.querySelector(
-    ".markup-badge[data-display]");
+    ".inspector-badge.interactive[data-display]");
   ok(!blockDisplayNode, "#block display node is hidden.");
 
   info("Check the display node is hidden for span.");
   await selectNode("span", inspector);
   const spanContainer = await getContainerForSelector("span", inspector);
   const spanDisplayNode = spanContainer.elt.querySelector(
-    ".markup-badge[data-display]");
+    ".inspector-badge.interactive[data-display]");
   ok(!spanDisplayNode, "span display node is hidden.");
 });
