@@ -1129,12 +1129,19 @@ class JSTerm extends Component {
       return;
     }
 
+    let selectedNodeActor = null;
+    const inspectorSelection = this.hud.owner.getInspectorSelection();
+    if (inspectorSelection && inspectorSelection.nodeFront) {
+      selectedNodeActor = inspectorSelection.nodeFront.actorID;
+    }
+
     this.props.autocompleteUpdate({
       inputValue,
       cursor,
       frameActorId,
       force,
       client: this.webConsoleClient,
+      selectedNodeActor,
     });
   }
 
@@ -1612,14 +1619,8 @@ function mapDispatchToProps(dispatch) {
     clearHistory: () => dispatch(historyActions.clearHistory()),
     updateHistoryPosition: (direction, expression) =>
       dispatch(historyActions.updateHistoryPosition(direction, expression)),
-    autocompleteUpdate: ({inputValue, cursor, frameActorId, force, client}) => dispatch(
-      autocompleteActions.autocompleteUpdate({
-        inputValue,
-        cursor,
-        frameActorId,
-        force,
-        client,
-      })
+    autocompleteUpdate: options => dispatch(
+      autocompleteActions.autocompleteUpdate(options)
     ),
     autocompleteBailOut: () => dispatch(autocompleteActions.autocompleteBailOut()),
   };
