@@ -1257,7 +1257,7 @@ gfxDWriteFontList::GetFontsFromCollection(IDWriteFontCollection* aCollection)
             continue;
         }
 
-        if (mBadUnderlineFamilyNames.Contains(name)) {
+        if (mBadUnderlineFamilyNames.ContainsSorted(name)) {
             fam->SetBadUnderlineFamily();
         }
         mFontFamilies.Put(name, fam);
