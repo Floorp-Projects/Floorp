@@ -885,7 +885,6 @@ input[type=range] {
   margin-block-end: 0;
   /* Override some rules that apply on all input types: */
   cursor: default;
-  background: none;
   border: none;
   /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
   -moz-user-select: none ! important;
@@ -937,7 +936,6 @@ input[type=range]::-moz-range-track {
   float: none !important;
   position: static !important;
   border: none;
-  background-color: #999;
   inline-size: 100%;
   block-size: 0.2em;
   /* Prevent nsFrame::HandlePress setting mouse capture to this element. */

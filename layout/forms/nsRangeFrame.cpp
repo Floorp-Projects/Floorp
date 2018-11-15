@@ -876,9 +876,6 @@ nsRangeFrame::ShouldUseNativeStyle() const
   nsIFrame* thumbFrame = mThumbDiv->GetPrimaryFrame();
 
   return (StyleDisplay()->mAppearance == StyleAppearance::Range) &&
-         !PresContext()->HasAuthorSpecifiedRules(this,
-                                                 (NS_AUTHOR_SPECIFIED_BORDER |
-                                                  NS_AUTHOR_SPECIFIED_BACKGROUND)) &&
          trackFrame &&
          !PresContext()->HasAuthorSpecifiedRules(trackFrame,
                                                  STYLES_DISABLING_NATIVE_THEMING) &&
