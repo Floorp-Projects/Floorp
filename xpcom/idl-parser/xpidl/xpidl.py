@@ -682,9 +682,10 @@ class Interface(object):
             if not isinstance(m, CDATA):
                 self.namemap.set(m)
 
-            if m.kind == 'method' and m.notxpcom and name != 'nsISupports':
-                # An interface cannot be implemented by JS if it has a
-                # notxpcom method. Such a type is an "implicit builtinclass".
+            if ((m.kind == 'method' or m.kind == 'attribute') and
+                m.notxpcom and name != 'nsISupports'):
+                # An interface cannot be implemented by JS if it has a notxpcom
+                # method or attribute. Such a type is an "implicit builtinclass".
                 #
                 # XXX(nika): Why does nostdcall not imply builtinclass?
                 # It could screw up the shims as well...
@@ -992,6 +993,7 @@ class CEnum(object):
 class Attribute(object):
     kind = 'attribute'
     noscript = False
+    notxpcom = False
     readonly = False
     symbol = False
     implicit_jscontext = False
@@ -1022,6 +1024,8 @@ class Attribute(object):
 
             if name == 'noscript':
                 self.noscript = True
+            elif name == 'notxpcom':
+                self.notxpcom = True
             elif name == 'symbol':
                 self.symbol = True
             elif name == 'implicit_jscontext':
@@ -1059,7 +1063,7 @@ class Attribute(object):
     def isScriptable(self):
         if not self.iface.attributes.scriptable:
             return False
-        return not self.noscript
+        return not (self.noscript or self.notxpcom)
 
     def __str__(self):
         return "\t%sattribute %s %s\n" % (self.readonly and 'readonly ' or '',
