@@ -65,8 +65,17 @@ class AudioPlaybackChild extends ActorChild {
   }
 
   receiveMessage(msg) {
-    if (msg.name == "AudioPlayback") {
-      this.handleMediaControlMessage(msg.data.type);
+    switch (msg.name) {
+      case "AudioPlayback":
+        this.handleMediaControlMessage(msg.data.type);
+        break;
+      case "TemporaryPermissionChanged":
+        if (msg.data.permission !== "autoplay-media") {
+          return;
+        }
+
+        // TODO : update permission in content side.
+        break;
     }
   }
 }
