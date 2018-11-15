@@ -487,7 +487,7 @@ category used in plural forms. For these reasons, it’s not possible to use
                                       )
                                   ),
                                   FTL.Variant(
-                                      key=FTL.VariantName("other"),
+                                      key=FTL.Identifier("other"),
                                       default=True,
                                       value=COPY(
                                           "browser/chrome/browser/preferences/main.dtd",

@@ -8,7 +8,7 @@ import fluent.syntax.ast as FTL
 from fluent.migrate.helpers import transforms_from
 
 def migrate(ctx):
-    """Bug 1486934 - Modify about:about to use fluent for localization, part {index}."""
+    """Bug 1486934 - Modify about:about to use Fluent for localization, part {index}."""
 
     ctx.add_transforms(
         "toolkit/toolkit/about/aboutAbout.ftl",
