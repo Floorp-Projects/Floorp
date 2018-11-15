@@ -161,6 +161,49 @@ ConvertLegacyStyleToJustifyContent(const nsStyleXUL* aStyleXUL)
   return NS_STYLE_ALIGN_FLEX_START;
 }
 
+// Helper-function to find the first non-anonymous-box descendent of aFrame.
+static nsIFrame*
+GetFirstNonAnonBoxDescendant(nsIFrame* aFrame)
+{
+  while (aFrame) {
+    nsAtom* pseudoTag = aFrame->Style()->GetPseudo();
+
+    // If aFrame isn't an anonymous container, then it'll do.
+    if (!pseudoTag ||                                 // No pseudotag.
+        !nsCSSAnonBoxes::IsAnonBox(pseudoTag) ||      // Pseudotag isn't anon.
+        nsCSSAnonBoxes::IsNonElement(pseudoTag)) {    // Text, not a container.
+      break;
+    }
+
+    // Otherwise, descend to its first child and repeat.
+
+    // SPECIAL CASE: if we're dealing with an anonymous table, then it might
+    // be wrapping something non-anonymous in its caption or col-group lists
+    // (instead of its principal child list), so we have to look there.
+    // (Note: For anonymous tables that have a non-anon cell *and* a non-anon
+    // column, we'll always return the column. This is fine; we're really just
+    // looking for a handle to *anything* with a meaningful content node inside
+    // the table, for use in DOM comparisons to things outside of the table.)
+    if (MOZ_UNLIKELY(aFrame->IsTableWrapperFrame())) {
+      nsIFrame* captionDescendant =
+        GetFirstNonAnonBoxDescendant(aFrame->GetChildList(kCaptionList).FirstChild());
+      if (captionDescendant) {
+        return captionDescendant;
+      }
+    } else if (MOZ_UNLIKELY(aFrame->IsTableFrame())) {
+      nsIFrame* colgroupDescendant =
+        GetFirstNonAnonBoxDescendant(aFrame->GetChildList(kColGroupList).FirstChild());
+      if (colgroupDescendant) {
+        return colgroupDescendant;
+      }
+    }
+
+    // USUAL CASE: Descend to the first child in principal list.
+    aFrame = aFrame->PrincipalChildList().FirstChild();
+  }
+  return aFrame;
+}
+
 // Indicates whether advancing along the given axis is equivalent to
 // increasing our X or Y position (as opposed to decreasing it).
 static inline bool
@@ -4783,24 +4826,37 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 
         // The frame may be for an element, or it may be for an
         // anonymous flex item, e.g. wrapping one or more text nodes.
-        // If it's for an element, we want to return the DOM node that
-        // corresponds to it. If it's an anonymous flex item, we want
-        // to return a null DOM node.
-        nsINode* node = nullptr;
+        // DevTools wants the content node for the actual child in
+        // the DOM tree, so we descend through anonymous boxes.
+        nsIFrame* targetFrame = GetFirstNonAnonBoxDescendant(frame);
+        nsIContent* content = targetFrame->GetContent();
 
-        // If this frame is not an anonymous flex item, we will return its
-        // content as the DOM node for this flex item.
-        nsAtom* pseudoTag = frame->Style()->GetPseudo();
-        if (pseudoTag != nsCSSAnonBoxes::anonymousFlexItem()) {
-          node = frame->GetContent();
+        // Skip over content that is only whitespace, which might
+        // have been broken off from a text node which is our real
+        // target.
+        while (content && content->TextIsOnlyWhitespace()) {
+          // If content is only whitespace, try the frame sibling.
+          targetFrame = targetFrame->GetNextSibling();
+          if (targetFrame) {
+            content = targetFrame->GetContent();
+          } else {
+            content = nullptr;
+          }
         }
 
-        ComputedFlexItemInfo* itemInfo = lineInfo->mItems.AppendElement();
-        itemInfo->mNode = node;
+        ComputedFlexItemInfo* itemInfo =
+          lineInfo->mItems.AppendElement();
 
-        // itemInfo->mMainBaseSize and mMainDeltaSize will be filled out
-        // in ResolveFlexibleLengths(). Other measurements will be captured
-        // at the end of this function.
+        itemInfo->mNode = content;
+
+        // mMainBaseSize and itemInfo->mMainDeltaSize will
+        // be filled out in ResolveFlexibleLengths().
+
+        // Other FlexItem properties can be captured now.
+        itemInfo->mMainMinSize = item->GetMainMinSize();
+        itemInfo->mMainMaxSize = item->GetMainMaxSize();
+        itemInfo->mCrossMinSize = item->GetCrossMinSize();
+        itemInfo->mCrossMaxSize = item->GetCrossMaxSize();
       }
     }
   }
@@ -5205,7 +5261,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize)
 
-  // Finally update our line and item measurements in our containerInfo.
+  // Finally update our line sizing values in our containerInfo.
   if (MOZ_UNLIKELY(containerInfo)) {
     lineIndex = 0;
     for (const FlexLine* line = lines.getFirst(); line;
@@ -5215,20 +5271,6 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       lineInfo.mCrossSize = line->GetLineCrossSize();
       lineInfo.mFirstBaselineOffset = line->GetFirstBaselineOffset();
       lineInfo.mLastBaselineOffset = line->GetLastBaselineOffset();
-
-      uint32_t itemIndex = 0;
-      for (const FlexItem* item = line->GetFirstItem(); item;
-           item = item->getNext(), ++itemIndex) {
-        ComputedFlexItemInfo& itemInfo = lineInfo.mItems[itemIndex];
-        itemInfo.mMainPosition = item->GetMainPosition();
-        itemInfo.mMainSize = item->GetMainSize();
-        itemInfo.mMainMinSize = item->GetMainMinSize();
-        itemInfo.mMainMaxSize = item->GetMainMaxSize();
-        itemInfo.mCrossPosition = item->GetCrossPosition();
-        itemInfo.mCrossSize = item->GetCrossSize();
-        itemInfo.mCrossMinSize = item->GetCrossMinSize();
-        itemInfo.mCrossMaxSize = item->GetCrossMaxSize();
-      }
     }
   }
 }
