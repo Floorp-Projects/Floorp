@@ -5788,7 +5788,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     !(aParentFrame && aParentFrame->IsGridContainerFrame()) &&
     !(bits & FCDATA_IS_TABLE_PART) && !(bits & FCDATA_IS_SVG_TEXT);
 
-  if (canHavePageBreak && display.mBreakBefore) {
+  if (canHavePageBreak && display.BreakBefore()) {
     AddPageBreakItem(aContent, aItems);
   }
 
@@ -5826,7 +5826,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   }
   item->mIsPopup = isPopup;
 
-  if (canHavePageBreak && display.mBreakAfter) {
+  if (canHavePageBreak && display.BreakAfter()) {
     AddPageBreakItem(aContent, aItems);
   }
 
