@@ -18,8 +18,8 @@ class AudioTrack;
 class AudioTrackList : public MediaTrackList
 {
 public:
-  AudioTrackList(nsPIDOMWindowInner* aOwnerWindow, HTMLMediaElement* aMediaElement)
-    : MediaTrackList(aOwnerWindow, aMediaElement) {}
+  AudioTrackList(nsIGlobalObject* aOwnerObject, HTMLMediaElement* aMediaElement)
+    : MediaTrackList(aOwnerObject, aMediaElement) {}
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
