@@ -182,22 +182,17 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
         @SuppressLint("CommitPrefEdits")
         val userPrefs: SharedPreferences.Editor? =
             if (lifetime == Lifetime.User) userLifetimeStorage.edit() else null
-        for (storeName in stores) {
-            val storeData = dataStores[lifetime.ordinal].getOrPut(storeName) { mutableMapOf() }
+        stores.forEach {
+            val storeData = dataStores[lifetime.ordinal].getOrPut(it) { mutableMapOf() }
             val entryName = "$category.$name"
             storeData[entryName] = value
             // Persist data with "user" lifetime
             if (lifetime == Lifetime.User) {
-                userPrefs?.putString("$storeName#$entryName", serializeSingleMetric(value))
+                userPrefs?.putString("$it#$entryName", serializeSingleMetric(value))
             }
         }
         userPrefs?.apply()
     }
 
-    @VisibleForTesting
-    internal open fun clearAllStores() {
-        for (store in dataStores) {
-            store.clear()
-        }
-    }
+    internal open fun clearAllStores() = dataStores.forEach { it.clear() }
 }
