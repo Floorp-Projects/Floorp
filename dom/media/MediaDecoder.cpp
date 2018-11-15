@@ -349,16 +349,15 @@ void
 MediaDecoder::NotifyXPCOMShutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  // NotifyXPCOMShutdown will clear its reference to mDecoder. So we must ensure
+  // that this MediaDecoder stays alive until completion.
+  RefPtr<MediaDecoder> kungFuDeathGrip = this;
   if (auto owner = GetOwner()) {
     owner->NotifyXPCOMShutdown();
-  }
-  MOZ_DIAGNOSTIC_ASSERT(IsShutdown());
-
-  // Don't cause grief to release builds by ensuring Shutdown()
-  // is always called during shutdown phase.
-  if (!IsShutdown()) {
+  } else if (!IsShutdown()) {
     Shutdown();
   }
+  MOZ_DIAGNOSTIC_ASSERT(IsShutdown());
 }
 
 MediaDecoder::~MediaDecoder()
