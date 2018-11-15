@@ -30,6 +30,10 @@ function loadContentWindow(webNavigation, uri, principal) {
         if (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
           return;
         }
+        // Ignore the initial about:blank
+        if (uri != location.spec) {
+          return;
+        }
         let contentWindow = docShell.domWindow;
         progressListeners.delete(progressListener);
         webProgress.removeProgressListener(progressListener);
