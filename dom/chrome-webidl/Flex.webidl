@@ -83,14 +83,10 @@ enum FlexItemClampState {
 interface FlexItemValues
 {
   readonly attribute Node? node;
-  readonly attribute double mainPosition;
-  readonly attribute double mainSize;
   readonly attribute double mainBaseSize;
   readonly attribute double mainDeltaSize;
   readonly attribute double mainMinSize;
   readonly attribute double mainMaxSize;
-  readonly attribute double crossPosition;
-  readonly attribute double crossSize;
   readonly attribute double crossMinSize;
   readonly attribute double crossMaxSize;
   readonly attribute FlexItemClampState clampState;
