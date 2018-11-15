@@ -177,14 +177,19 @@ ExecutionPoint::Decode(JSContext* aCx, HandleObject aObject)
 // Middleman Methods
 ///////////////////////////////////////////////////////////////////////////////
 
-// Keep track of all replay debuggers in existence, so that they can all be
-// invalidated when the process is unpaused.
-static StaticInfallibleVector<PersistentRootedObject*> gReplayDebuggers;
+// There can be at most one replay debugger in existence.
+static PersistentRootedObject* gReplayDebugger;
 
 static bool
 Middleman_RegisterReplayDebugger(JSContext* aCx, unsigned aArgc, Value* aVp)
 {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  if (gReplayDebugger) {
+    args.rval().setObject(**gReplayDebugger);
+    return true;
+  }
+
   RootedObject obj(aCx, NonNullObject(aCx, args.get(0)));
   if (!obj) {
     return false;
@@ -196,27 +201,41 @@ Middleman_RegisterReplayDebugger(JSContext* aCx, unsigned aArgc, Value* aVp)
     return false;
   }
 
-  PersistentRootedObject* root = new PersistentRootedObject(aCx);
-  *root = obj;
-  gReplayDebuggers.append(root);
+  gReplayDebugger = new PersistentRootedObject(aCx);
+  *gReplayDebugger = obj;
 
   args.rval().setUndefined();
   return true;
 }
 
 static bool
-InvalidateReplayDebuggersAfterUnpause(JSContext* aCx)
+CallReplayDebuggerHook(const char* aMethod)
 {
-  RootedValue rval(aCx);
-  for (auto root : gReplayDebuggers) {
-    JSAutoRealm ar(aCx, *root);
-    if (!JS_CallFunctionName(aCx, *root, "invalidateAfterUnpause",
-                             HandleValueArray::empty(), &rval))
-    {
-      return false;
-    }
+  if (!gReplayDebugger) {
+    return false;
+  }
+
+  AutoSafeJSContext cx;
+  JSAutoRealm ar(cx, *gReplayDebugger);
+  RootedValue rval(cx);
+  if (!JS_CallFunctionName(cx, *gReplayDebugger, aMethod,
+                           HandleValueArray::empty(), &rval))
+  {
+    Print("Warning: ReplayDebugger hook %s threw an exception\n", aMethod);
   }
   return true;
+}
+
+bool
+DebuggerOnPause()
+{
+  return CallReplayDebuggerHook("_onPause");
+}
+
+void
+DebuggerOnSwitchChild()
+{
+  CallReplayDebuggerHook("_onSwitchChild");
 }
 
 static bool
@@ -232,10 +251,6 @@ Middleman_Resume(JSContext* aCx, unsigned aArgc, Value* aVp)
 {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
   bool forward = ToBoolean(args.get(0));
-
-  if (!InvalidateReplayDebuggersAfterUnpause(aCx)) {
-    return false;
-  }
 
   parent::Resume(forward);
 
@@ -257,22 +272,7 @@ Middleman_TimeWarp(JSContext* aCx, unsigned aArgc, Value* aVp)
     return false;
   }
 
-  if (!InvalidateReplayDebuggersAfterUnpause(aCx)) {
-    return false;
-  }
-
   parent::TimeWarp(target);
-
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool
-Middleman_Pause(JSContext* aCx, unsigned aArgc, Value* aVp)
-{
-  CallArgs args = CallArgsFromVp(aArgc, aVp);
-
-  parent::Pause();
 
   args.rval().setUndefined();
   return true;
@@ -377,6 +377,57 @@ Middleman_ChildIsRecording(JSContext* aCx, unsigned aArgc, Value* aVp)
 {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
   args.rval().setBoolean(parent::ActiveChildIsRecording());
+  return true;
+}
+
+static bool
+Middleman_MarkExplicitPause(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  parent::MarkActiveChildExplicitPause();
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool
+Middleman_WaitUntilPaused(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  parent::WaitUntilActiveChildIsPaused();
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool
+Middleman_PositionSubsumes(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  RootedObject firstPositionObject(aCx, NonNullObject(aCx, args.get(0)));
+  if (!firstPositionObject) {
+    return false;
+  }
+
+  BreakpointPosition firstPosition;
+  if (!firstPosition.Decode(aCx, firstPositionObject)) {
+    return false;
+  }
+
+  RootedObject secondPositionObject(aCx, NonNullObject(aCx, args.get(1)));
+  if (!secondPositionObject) {
+    return false;
+  }
+
+  BreakpointPosition secondPosition;
+  if (!secondPosition.Decode(aCx, secondPositionObject)) {
+    return false;
+  }
+
+  args.rval().setBoolean(firstPosition.Subsumes(secondPosition));
   return true;
 }
 
@@ -930,7 +981,6 @@ static const JSFunctionSpec gMiddlemanMethods[] = {
   JS_FN("canRewind", Middleman_CanRewind, 0, 0),
   JS_FN("resume", Middleman_Resume, 1, 0),
   JS_FN("timeWarp", Middleman_TimeWarp, 1, 0),
-  JS_FN("pause", Middleman_Pause, 0, 0),
   JS_FN("sendRequest", Middleman_SendRequest, 1, 0),
   JS_FN("addBreakpoint", Middleman_AddBreakpoint, 1, 0),
   JS_FN("clearBreakpoints", Middleman_ClearBreakpoints, 0, 0),
@@ -938,6 +988,9 @@ static const JSFunctionSpec gMiddlemanMethods[] = {
   JS_FN("hadRepaint", Middleman_HadRepaint, 2, 0),
   JS_FN("hadRepaintFailure", Middleman_HadRepaintFailure, 0, 0),
   JS_FN("childIsRecording", Middleman_ChildIsRecording, 0, 0),
+  JS_FN("markExplicitPause", Middleman_MarkExplicitPause, 0, 0),
+  JS_FN("waitUntilPaused", Middleman_WaitUntilPaused, 0, 0),
+  JS_FN("positionSubsumes", Middleman_PositionSubsumes, 2, 0),
   JS_FS_END
 };
 
