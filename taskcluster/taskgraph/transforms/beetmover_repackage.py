@@ -28,6 +28,10 @@ import re
 logger = logging.getLogger(__name__)
 
 
+def _compile_regex_mapping(mapping):
+    return {re.compile(regex): value for regex, value in mapping.iteritems()}
+
+
 _WINDOWS_BUILD_PLATFORMS = [
     'win64-nightly',
     'win32-nightly',
@@ -77,7 +81,7 @@ _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_L10N = [
 # need to be transfered to S3, please be aware you also need to follow-up
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
 # See example in bug 1348286
-UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
+UPSTREAM_ARTIFACT_UNSIGNED_PATHS = _compile_regex_mapping({
     r'^(linux(|64)|macosx64)(|-devedition)-nightly$':
         _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
             'host/bin/mar',
@@ -102,17 +106,17 @@ UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
         ],
     r'^(linux(|64)|macosx64|win(32|64))(|-devedition)-nightly-l10n$':
         _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_L10N,
-}
+})
 
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
 # need to be transfered to S3, please be aware you also need to follow-up
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
 # See example in bug 1348286
-UPSTREAM_ARTIFACT_SIGNED_PATHS = {
+UPSTREAM_ARTIFACT_SIGNED_PATHS = _compile_regex_mapping({
     r'^linux(|64)(|-devedition|-asan-reporter)-nightly(|-l10n)$':
         ['target.tar.bz2', 'target.tar.bz2.asc'],
     r'^win(32|64)(|-devedition|-asan-reporter)-nightly(|-l10n)$': ['target.zip'],
-}
+})
 
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
 # need to be transfered to S3, please be aware you also need to follow-up
@@ -135,15 +139,6 @@ UPSTREAM_ARTIFACT_SIGNED_REPACKAGE_PATHS = [
 UPSTREAM_ARTIFACT_SIGNED_MSI_PATHS = [
     'target.installer.msi',
 ]
-
-# Compile every regex once at import time
-for dict_ in (
-    UPSTREAM_ARTIFACT_UNSIGNED_PATHS, UPSTREAM_ARTIFACT_SIGNED_PATHS,
-):
-    for uncompiled_regex, value in dict_.iteritems():
-        compiled_regex = re.compile(uncompiled_regex)
-        del dict_[uncompiled_regex]
-        dict_[compiled_regex] = value
 
 # Voluptuous uses marker objects as dictionary *keys*, but they are not
 # comparable, so we cast all of the keys back to regular strings
