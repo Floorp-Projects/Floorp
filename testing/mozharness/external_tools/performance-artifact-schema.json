@@ -77,9 +77,11 @@
                     "type": "array",
                     "title": "Extra options used in running suite",
                     "items": {
-                        "type": "string"
+                        "type": "string",
+                        "maxLength": 45
                     },
-                    "uniqueItems": true
+                    "uniqueItems": true,
+                    "maxItems": 8
                 },
                 "subtests": {
                     "items": {

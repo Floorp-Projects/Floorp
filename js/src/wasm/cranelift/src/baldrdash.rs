@@ -134,11 +134,6 @@ impl TableDesc {
     pub fn tls_offset(self) -> usize {
         unsafe { baldrapi::table_tlsOffset(self.0) }
     }
-
-    /// Is this an external table?
-    pub fn is_external(self) -> bool {
-        unsafe { baldrapi::table_isExternal(self.0) }
-    }
 }
 
 #[derive(Clone, Copy)]

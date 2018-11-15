@@ -194,25 +194,31 @@ function analyzeInputString(str) {
  * Provides a list of properties, that are possible matches based on the passed
  * Debugger.Environment/Debugger.Object and inputValue.
  *
- * @param {Object} dbgObject
+ * @param {Object} An object of the following shape:
+ * - {Object} dbgObject
  *        When the debugger is not paused this Debugger.Object wraps
  *        the scope for autocompletion.
  *        It is null if the debugger is paused.
- * @param {Object} anEnvironment
+ * - {Object} environment
  *        When the debugger is paused this Debugger.Environment is the
  *        scope for autocompletion.
  *        It is null if the debugger is not paused.
- * @param {String} inputValue
+ * - {String} inputValue
  *        Value that should be completed.
- * @param {Number} cursor (defaults to inputValue.length).
+ * - {Number} cursor (defaults to inputValue.length).
  *        Optional offset in the input where the cursor is located. If this is
  *        omitted then the cursor is assumed to be at the end of the input
  *        value.
- * @param {Boolean} invokeUnsafeGetter (defaults to false).
+ * - {Boolean} invokeUnsafeGetter (defaults to false).
  *        Optional boolean to indicate if the function should execute unsafe getter
  *        in order to retrieve its result's properties.
  *        ⚠️ This should be set to true *ONLY* on user action as it may cause side-effects
  *        in the content page ⚠️
+ * - {WebconsoleActor} webconsoleActor
+ *        A reference to a webconsole actor which we can use to retrieve the last
+ *        evaluation result or create a debuggee value.
+ * - {String}: selectedNodeActor
+ *        The actor id of the selected node in the inspector.
  * @returns null or object
  *          If the inputValue is an unsafe getter and invokeUnsafeGetter is false, the
  *          following form is returned:
@@ -234,13 +240,15 @@ function analyzeInputString(str) {
  *                               access (e.g. `window["addEvent`).
  *            }
  */
-function JSPropertyProvider(
+function JSPropertyProvider({
   dbgObject,
-  anEnvironment,
+  environment,
   inputValue,
   cursor,
-  invokeUnsafeGetter = false
-) {
+  invokeUnsafeGetter = false,
+  webconsoleActor,
+  selectedNodeActor,
+}) {
   if (cursor === undefined) {
     cursor = inputValue.length;
   }
@@ -365,7 +373,7 @@ function JSPropertyProvider(
 
   // The first property must be found in the environment of the paused debugger
   // or of the global lexical scope.
-  const env = anEnvironment || obj.asEnvironment();
+  const env = environment || obj.asEnvironment();
 
   if (properties.length === 0) {
     return {
@@ -383,6 +391,17 @@ function JSPropertyProvider(
       obj = env.object;
     } catch (e) {
       // Ignore.
+    }
+  } else if (firstProp === "$_" && webconsoleActor) {
+    obj = webconsoleActor.getLastConsoleInputEvaluation();
+  } else if (firstProp === "$0" && selectedNodeActor && webconsoleActor) {
+    const actor = webconsoleActor.conn.getActor(selectedNodeActor);
+    if (actor) {
+      try {
+        obj = webconsoleActor.makeDebuggeeValue(actor.rawNode);
+      } catch (e) {
+        // Ignore.
+      }
     }
   } else if (hasArrayIndex(firstProp)) {
     obj = getArrayMemberProperty(null, env, firstProp);
@@ -527,15 +546,15 @@ function isObjectUsable(object) {
 /**
  * @see getExactMatchImpl()
  */
-function getVariableInEnvironment(anEnvironment, name) {
-  return getExactMatchImpl(anEnvironment, name, DebuggerEnvironmentSupport);
+function getVariableInEnvironment(environment, name) {
+  return getExactMatchImpl(environment, name, DebuggerEnvironmentSupport);
 }
 
 /**
  * @see getMatchedPropsImpl()
  */
-function getMatchedPropsInEnvironment(anEnvironment, match) {
-  return getMatchedPropsImpl(anEnvironment, match, DebuggerEnvironmentSupport);
+function getMatchedPropsInEnvironment(environment, match) {
+  return getMatchedPropsImpl(environment, match, DebuggerEnvironmentSupport);
 }
 
 /**

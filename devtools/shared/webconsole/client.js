@@ -370,22 +370,24 @@ WebConsoleClient.prototype = {
   /**
    * Autocomplete a JavaScript expression.
    *
-   * @param string string
+   * @param {String} string
    *        The code you want to autocomplete.
-   * @param number cursor
+   * @param {Number} cursor
    *        Cursor location inside the string. Index starts from 0.
-   * @param string frameActor
+   * @param {String} frameActor
    *        The id of the frame actor that made the call.
+   * @param {String} selectedNodeActor: Actor id of the selected node in the inspector.
    * @return request
    *         Request object that implements both Promise and EventEmitter interfaces
    */
-  autocomplete: function(string, cursor, frameActor) {
+  autocomplete: function(string, cursor, frameActor, selectedNodeActor) {
     const packet = {
       to: this._actor,
       type: "autocomplete",
       text: string,
-      cursor: cursor,
-      frameActor: frameActor,
+      cursor,
+      frameActor,
+      selectedNodeActor,
     };
     return this._client.request(packet);
   },

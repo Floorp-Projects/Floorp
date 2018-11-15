@@ -26,22 +26,7 @@ add_task(async function() {
   });
   usbMocks.emitUpdate();
 
-  info("Wait until the USB sidebar item appears");
-  await waitUntil(() => findSidebarItemByText(RUNTIME_DEVICE_NAME, document));
-  const usbRuntimeSidebarItem = findSidebarItemByText(RUNTIME_DEVICE_NAME, document);
-  const connectButton = usbRuntimeSidebarItem.querySelector(".js-connect-button");
-  ok(connectButton, "Connect button is displayed for the USB runtime");
-
-  info("Click on the connect button and wait until it disappears");
-  connectButton.click();
-  await waitUntil(() => !usbRuntimeSidebarItem.querySelector(".js-connect-button"));
-
-  usbRuntimeSidebarItem.querySelector(".js-sidebar-link").click();
-
-  await waitUntil(() => {
-    const runtimeInfo = document.querySelector(".js-runtime-info");
-    return runtimeInfo.textContent.includes(RUNTIME_APP_NAME);
-  });
+  await connectToRuntime(RUNTIME_DEVICE_NAME, RUNTIME_APP_NAME, document);
 
   const SUPPORTED_TARGET_PANES = [
     "Extensions",

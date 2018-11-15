@@ -3384,9 +3384,9 @@ nsStyleDisplay::nsStyleDisplay(const nsPresContext* aContext)
   , mFloat(StyleFloat::None)
   , mOriginalFloat(StyleFloat::None)
   , mBreakType(StyleClear::None)
-  , mBreakInside(NS_STYLE_PAGE_BREAK_AUTO)
-  , mBreakBefore(false)
-  , mBreakAfter(false)
+  , mBreakInside(StyleBreakWithin::Auto)
+  , mPageBreakBefore(StyleBreakBetween::Auto)
+  , mPageBreakAfter(StyleBreakBetween::Auto)
   , mOverflowX(NS_STYLE_OVERFLOW_VISIBLE)
   , mOverflowY(NS_STYLE_OVERFLOW_VISIBLE)
   , mOverflowClipBoxBlock(NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX)
@@ -3450,8 +3450,8 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mOriginalFloat(aSource.mOriginalFloat)
   , mBreakType(aSource.mBreakType)
   , mBreakInside(aSource.mBreakInside)
-  , mBreakBefore(aSource.mBreakBefore)
-  , mBreakAfter(aSource.mBreakAfter)
+  , mPageBreakBefore(aSource.mPageBreakBefore)
+  , mPageBreakAfter(aSource.mPageBreakAfter)
   , mOverflowX(aSource.mOverflowX)
   , mOverflowY(aSource.mOverflowY)
   , mOverflowClipBoxBlock(aSource.mOverflowClipBoxBlock)
@@ -3685,10 +3685,13 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
 
   // XXX the following is conservative, for now: changing float breaking shouldn't
   // necessarily require a repaint, reflow should suffice.
+  //
+  // FIXME(emilio): We definitely change the frame tree in nsCSSFrameConstructor
+  // based on break-before / break-after... Shouldn't that reframe?
   if (mBreakType != aNewData.mBreakType
       || mBreakInside != aNewData.mBreakInside
-      || mBreakBefore != aNewData.mBreakBefore
-      || mBreakAfter != aNewData.mBreakAfter
+      || mPageBreakBefore != aNewData.mPageBreakBefore
+      || mPageBreakAfter != aNewData.mPageBreakAfter
       || mAppearance != aNewData.mAppearance
       || mOrient != aNewData.mOrient
       || mOverflowClipBoxBlock != aNewData.mOverflowClipBoxBlock

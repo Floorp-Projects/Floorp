@@ -594,23 +594,15 @@ impl<'a, 'b, 'c> cranelift_wasm::FuncEnvironment for TransEnv<'a, 'b, 'c> {
             .trapz(callee_func, ir::TrapCode::IndirectCallToNull);
 
         // Handle external tables, set up environment.
-        let vmctx;
-        if wtable.external {
-            // This is an external wtable call, so we need to load a new VM context pointer too.
-            vmctx = pos.ins().load(
-                native_pointer_type(),
-                ir::MemFlags::new(),
-                entry,
-                native_pointer_size(),
-            );
-            self.switch_to_indirect_callee_realm(&mut pos, vmctx);
-        } else {
-            // This is an internal wtable call, so pass along the function's own VM context pointer.
-            vmctx = pos
-                .func
-                .special_param(ir::ArgumentPurpose::VMContext)
-                .expect("Missing vmctx arg");
-        }
+        // A function table call could redirect execution to another module with a different realm,
+        // so switch to this realm just in case.
+        let vmctx = pos.ins().load(
+            native_pointer_type(),
+            ir::MemFlags::new(),
+            entry,
+            native_pointer_size(),
+        );
+        self.switch_to_indirect_callee_realm(&mut pos, vmctx);
 
         // First the wasm args.
         let mut args = ir::ValueList::default();
@@ -785,9 +777,6 @@ struct TableInfo {
     /// 0: Unsigned 32-bit table length.
     /// n: Pointer to table (n = sizeof(void*))
     pub global: ir::GlobalValue,
-
-    /// Is this an external table?
-    pub external: bool,
 }
 
 impl TableInfo {
@@ -803,10 +792,7 @@ impl TableInfo {
             global_type: native_pointer_type(),
         });
 
-        TableInfo {
-            global,
-            external: wtab.is_external(),
-        }
+        TableInfo { global }
     }
 
     /// Load the table length.
@@ -826,13 +812,8 @@ impl TableInfo {
 
     /// Get the size in bytes of each table entry.
     pub fn entry_size(&self) -> i64 {
-        native_pointer_size() as i64 * if self.external {
-            // Each entry is an `wasm::ExternalTableElem` which consists of the code pointer
-            // and a new VM context pointer.
-            2
-        } else {
-            // An internal table only has a code pointer in each entry.
-            1
-        }
+        // Each entry is an `wasm::FunctionTableElem` which consists of the code pointer and a new
+        // VM context pointer.
+        native_pointer_size() as i64 * 2
     }
 }

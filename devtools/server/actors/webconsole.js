@@ -1205,8 +1205,15 @@ WebConsoleActor.prototype =
         dbgObject = this.dbg.addDebuggee(this.evalWindow);
       }
 
-      const result = JSPropertyProvider(dbgObject, environment, request.text,
-                                      request.cursor, frameActorId) || {};
+      const result = JSPropertyProvider({
+        dbgObject,
+        environment,
+        inputValue: request.text,
+        cursor: request.cursor,
+        invokeUnsafeGetter: false,
+        webconsoleActor: this,
+        selectedNodeActor: request.selectedNodeActor,
+      }) || {};
 
       if (!hadDebuggee && dbgObject) {
         this.dbg.removeDebuggee(this.evalWindow);

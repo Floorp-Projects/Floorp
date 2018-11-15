@@ -106,10 +106,4 @@ exports.fontEditor = {
 exports.fontData = {
   // All fonts on the current page.
   allFonts: PropTypes.arrayOf(PropTypes.shape(font)),
-
-  // The fonts used in the current element.
-  fonts: PropTypes.arrayOf(PropTypes.shape(font)),
-
-  // Fonts used elsewhere.
-  otherFonts: PropTypes.arrayOf(PropTypes.shape(font)),
 };
