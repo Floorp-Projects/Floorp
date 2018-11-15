@@ -42,7 +42,6 @@
   .mainMinMax  { min-width: 120px;
                  max-width: 500px; }
 
-  .flexGrow    { flex-grow: 1; }
   .spacer150   { width: 150px;
                  box-sizing: border-box;
                  height: 10px;
@@ -55,11 +54,17 @@
 
 SimpleTest.waitForExplicitFinish();
 
-const TEXT_NODE = Node.TEXT_NODE;
-
 function testItemMatchesExpectedValues(item, values, index) {
   if (typeof(values.node) != "undefined") {
     is(item.node, values.node, "Item index " + index + " has expected node.");
+  }
+
+  if (typeof(values.mainPosition) != "undefined") {
+    is(item.mainPosition, values.mainPosition, "Item index " + index + " has expected mainPosition.");
+  }
+
+  if (typeof(values.mainSize) != "undefined") {
+    is(item.mainSize, values.mainSize, "Item index " + index + " has expected mainSize.");
   }
 
   if (typeof(values.mainBaseSize) != "undefined") {
@@ -82,6 +87,14 @@ function testItemMatchesExpectedValues(item, values, index) {
     // default "none" value, which our FlexItem API represents as +infinity.
     is(item.mainMaxSize, Number.POSITIVE_INFINITY,
        "Item index " + index + " has expected (default) mainMaxSize.");
+  }
+
+  if (typeof(values.crossPosition) != "undefined") {
+    is(item.crossPosition, values.crossPosition, "Item index " + index + " has expected crossPosition.");
+  }
+
+  if (typeof(values.crossSize) != "undefined") {
+    is(item.crossSize, values.crossSize, "Item index " + index + " has expected crossSize.");
   }
 
   if (typeof(values.crossMinSize) != "undefined") {
@@ -130,31 +143,41 @@ function testFlexSanity() {
      "that determines it.");
 
   let expectedValues = [
-    { crossMinSize: 0 },
-    { mainBaseSize: 100,
-      mainDeltaSize: 0 },
-    { crossMinSize: 40,
-      crossMaxSize: 120,
-      mainDeltaSize: 0 },
-    { mainMinSize: 120,
-      mainMaxSize: 500,
-      mainDeltaSize: 0 },
-    { mainMinSize: 120,
-      mainMaxSize: 500,
-      mainBaseSize: 150,
-      mainDeltaSize: 0 },
-    { mainBaseSize:  10,
-      mainMaxSize:   5,
-      mainDeltaSize: 0 },
-    { mainBaseSize: 10,
-      mainMinSize:  15,
-      mainDeltaSize: 0 },
-    { mainBaseSize: 50,
-      mainMaxSize: 10 },
-    { mainBaseSize: 1650,
-      mainMaxSize: 10,
-      mainDeltaSize: 0 },
-    { mainDeltaSize: 0 },
+    { mainPosition:    0,
+      crossMinSize:    0 },
+    { mainPosition:  300,
+      mainBaseSize:  100,
+      mainDeltaSize:   0 },
+    { crossMinSize:   40,
+      crossMaxSize:  120,
+      mainDeltaSize:   0 },
+    { mainMinSize:   120,
+      mainMaxSize:   500,
+      mainDeltaSize:   0 },
+    { mainMinSize:   120,
+      mainMaxSize:   500,
+      mainBaseSize:  150,
+      mainDeltaSize:   0 },
+    { mainSize:        5,
+      mainBaseSize:   10,
+      mainMaxSize:     5,
+      mainDeltaSize:   0 },
+    { mainSize:       15,
+      mainBaseSize:   10,
+      mainMinSize:    15,
+      mainDeltaSize:   0 },
+    { mainSize:       10,
+      mainBaseSize:   50,
+      mainMaxSize:    10 },
+    { crossSize:      20 },
+    { mainSize:       10,
+      mainBaseSize: 1650,
+      mainMaxSize:    10,
+      mainDeltaSize:   0 },
+    { mainDeltaSize:   0 },
+    { crossPosition:  10,
+      crossSize:      40 },
+    { mainSize:       20 },
     { /* final item is anonymous flex item */ },
   ];
 
@@ -178,17 +201,11 @@ function testFlexSanity() {
                      ? curElem.firstElementChild
                      : curElem);
     } else {
-      is(container.lastChild.nodeType, TEXT_NODE,
-         "container's last child should be a text node");
-      values.node = container.lastChild;
+      // The final item should be an anonymous flex item with no node reported.
+      values.node = null;
     }
     testItemMatchesExpectedValues(item, values, i);
   }
-
-  // Check that the delta size of the first item is (roughly) equal to the
-  // actual size minus the base size.
-  isfuzzy(items[0].mainDeltaSize, firstRect.width - items[0].mainBaseSize, 1e-4,
-          "flex-grow item should have expected mainDeltaSize.");
 }
 
 // Test for items in "flex-growing" flex container:
@@ -235,7 +252,7 @@ function runTests() {
        - flex items formation for display:contents subtrees & text nodes.
    -->
   <div id="flex-sanity" class="container">
-    <div class="lime base flexGrow">one line (first)</div>
+    <div class="lime base" style="min-width: 300px">one line (first)</div>
     <div class="yellow lastbase" style="width: 100px">one line (last)</div>
     <div class="orange offset lastbase crossMinMax">two<br/>lines and offset (last)</div>
     <div class="pink offset base mainMinMax">offset (first)</div>
@@ -251,10 +268,14 @@ function runTests() {
     <!-- Item that wants to grow but is trivially clamped to max-width
          below base size: -->
     <div style="flex: 1 1 50px; max-width: 10px"></div>
+    <!-- Item with a fixed cross size: -->
+    <div style="height:20px"></div>
     <div class="clamped-huge-item"></div>
     <div style="display:contents">
       <div class="white">replaced</div>
     </div>
+    <table style="margin-top: 10px"></table>
+    <div style="display:table-cell; width: 20px"></div>
     anon item for text
   </div>
 
