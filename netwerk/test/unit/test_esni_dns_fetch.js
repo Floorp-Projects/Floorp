@@ -20,14 +20,12 @@ function run_test() {
   do_get_profile();
   prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
-  prefs.setBoolPref("network.security.esni.enabled", true);
+  prefs.setBoolPref("network.security.esni.enabled", false);
   prefs.setBoolPref("network.http.spdy.enabled", true);
   prefs.setBoolPref("network.http.spdy.enabled.http2", true);
   // the TRR server is on 127.0.0.1
   prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
 
-  // use the h2 server as DOH provider
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/esni-dns");
   // make all native resolve calls "secretly" resolve localhost instead
   prefs.setBoolPref("network.dns.native-is-localhost", true);
 
@@ -43,9 +41,7 @@ function run_test() {
       .getService(Ci.nsIX509CertDB);
   addCertFromFile(certdb, "CA.cert.der", "CTu,u,u");
   do_test_pending();
-
-
-  listen = dns.asyncResolveByType("_esni.example.com", dns.RESOLVE_TYPE_TXT, 0, listenerFine, mainThread, defaultOriginAttributes);
+  run_dns_tests();
 }
 
 registerCleanupFunction(() => {
@@ -83,23 +79,91 @@ function addCertFromFile(certdb, filename, trustString) {
 }
 
 var test_answer="bXkgdm9pY2UgaXMgbXkgcGFzc3dvcmQ=";
+var test_answer_addr="127.0.0.1";
 
 // check that we do lookup by type fine
-var listenerFine = {
+var listenerEsni = {
   onLookupByTypeComplete: function(inRequest, inRecord, inStatus) {
     if (inRequest == listen) {
       Assert.ok(!inStatus);
       var answer = inRecord.getRecordsAsOneString();
       Assert.equal(answer, test_answer);
       do_test_finished();
+      run_dns_tests();
     }
   },
   QueryInterface: function(aIID) {
     if (aIID.equals(Ci.nsIDNSListener) ||
-        aIID.equals(Ci.nsISupports)) {
+      aIID.equals(Ci.nsISupports)) {
       return this;
     }
     throw Cr.NS_ERROR_NO_INTERFACE;
   }
 };
+
+// check that we do lookup for A record is fine
+var listenerAddr = {
+  onLookupComplete: function(inRequest, inRecord, inStatus) {
+    if (inRequest == listen) {
+      Assert.ok(!inStatus);
+      var answer = inRecord.getNextAddrAsString();
+      Assert.equal(answer, test_answer_addr);
+      do_test_finished();
+      run_dns_tests();
+    }
+  },
+  QueryInterface: function(aIID) {
+    if (aIID.equals(Ci.nsIDNSListener) ||
+      aIID.equals(Ci.nsISupports)) {
+      return this;
+    }
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  }
+};
+
+function testEsniRequest()
+{
+  // use the h2 server as DOH provider
+  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/esni-dns");
+  listen = dns.asyncResolveByType("_esni.example.com", dns.RESOLVE_TYPE_TXT, 0, listenerEsni, mainThread, defaultOriginAttributes);
+}
+
+// verify esni record pushed on a A record request
+function testEsniPushPart1()
+{
+  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/esni-dns-push");
+  listen = dns.asyncResolve("_esni_push.example.com", 0, listenerAddr, mainThread, defaultOriginAttributes);
+}
+
+// verify the esni pushed record
+function testEsniPushPart2()
+{
+  // At this point the second host name should've been pushed and we can resolve it using
+  // cache only. Set back the URI to a path that fails.
+  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/404");
+  listen = dns.asyncResolveByType("_esni_push.example.com", dns.RESOLVE_TYPE_TXT, 0, listenerEsni, mainThread, defaultOriginAttributes);
+}
+
+function testsDone()
+{
+  do_test_finished();
+  do_test_finished();
+}
+
+var tests = [testEsniRequest,
+             testEsniPushPart1,
+             testEsniPushPart2,
+             testsDone
+            ];
+var current_test = 0;
+
+function run_dns_tests()
+{
+  if (current_test < tests.length) {
+    dump("starting test " + current_test + "\n");
+    do_test_pending();
+    tests[current_test++]();
+  }
+}
+
 
