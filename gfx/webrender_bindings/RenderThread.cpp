@@ -344,7 +344,8 @@ NotifyDidRender(layers::CompositorBridgeParent* aBridge,
                 RefPtr<WebRenderPipelineInfo> aInfo,
                 TimeStamp aStart,
                 TimeStamp aEnd,
-                bool aRender)
+                bool aRender,
+                RendererStats aStats)
 {
   if (aRender && aBridge->GetWrBridge()) {
     // We call this here to mimic the behavior in LayerManagerComposite, as to
@@ -360,7 +361,8 @@ NotifyDidRender(layers::CompositorBridgeParent* aBridge,
         info.epochs.data[i].pipeline_id,
         info.epochs.data[i].epoch,
         aStart,
-        aEnd);
+        aEnd,
+        &aStats);
   }
 }
 
@@ -384,8 +386,9 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId,
 
   auto& renderer = it->second;
   bool rendered = false;
+  RendererStats stats = { 0 };
   if (aRender) {
-    rendered = renderer->UpdateAndRender(aReadbackSize, aReadbackBuffer, aHadSlowFrame);
+    rendered = renderer->UpdateAndRender(aReadbackSize, aReadbackBuffer, aHadSlowFrame, &stats);
   } else {
     renderer->Update();
   }
@@ -401,7 +404,8 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId,
     renderer->GetCompositorBridge(),
     info,
     aStartTime, end,
-    aRender
+    aRender,
+    stats
   ));
 
   if (rendered) {

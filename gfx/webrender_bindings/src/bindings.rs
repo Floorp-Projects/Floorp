@@ -13,7 +13,7 @@ use std::os::raw::{c_int};
 use gleam::gl;
 
 use webrender::api::*;
-use webrender::{ReadPixelsFormat, Renderer, RendererOptions, ThreadListener};
+use webrender::{ReadPixelsFormat, Renderer, RendererOptions, RendererStats, ThreadListener};
 use webrender::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::DebugFlags;
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
@@ -609,12 +609,16 @@ pub extern "C" fn wr_renderer_update(renderer: &mut Renderer) {
 pub extern "C" fn wr_renderer_render(renderer: &mut Renderer,
                                      width: u32,
                                      height: u32,
-                                     had_slow_frame: bool) -> bool {
+                                     had_slow_frame: bool,
+                                     out_stats: &mut RendererStats) -> bool {
     if had_slow_frame {
       renderer.notify_slow_frame();
     }
     match renderer.render(DeviceUintSize::new(width, height)) {
-        Ok(_) => true,
+        Ok(stats) => {
+            *out_stats = stats;
+            true
+        }
         Err(errors) => {
             for e in errors {
                 warn!(" Failed to render: {:?}", e);
