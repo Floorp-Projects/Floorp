@@ -3,7 +3,7 @@ ChromeUtils.defineModuleGetter(this, "FormHistory",
   "resource://gre/modules/FormHistory.jsm");
 
 function expectedURL(aSearchTerms) {
-  const ENGINE_HTML_BASE = "http://mochi.test:8888/browser/browser/components/search/test/test.html";
+  const ENGINE_HTML_BASE = "http://mochi.test:8888/browser/browser/components/search/test/browser/test.html";
   var searchArg = Services.textToSubURI.ConvertAndEscape("utf-8", aSearchTerms);
   return ENGINE_HTML_BASE + "?test=" + searchArg;
 }
@@ -81,7 +81,7 @@ function promiseSetEngine() {
     }
 
     Services.obs.addObserver(observer, "browser-search-engine-modified");
-    ss.addEngine("http://mochi.test:8888/browser/browser/components/search/test/426329.xml",
+    ss.addEngine("http://mochi.test:8888/browser/browser/components/search/test/browser/426329.xml",
                  "data:image/x-icon,%00", false);
   });
 }

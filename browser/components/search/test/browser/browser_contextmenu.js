@@ -16,7 +16,7 @@ add_task(async function() {
   let originalValue = envService.get("XPCSHELL_TEST_PROFILE_DIR");
   envService.set("XPCSHELL_TEST_PROFILE_DIR", "1");
 
-  let url = "chrome://mochitests/content/browser/browser/components/search/test/";
+  let url = "chrome://mochitests/content/browser/browser/components/search/test/browser/";
   let resProt = Services.io.getProtocolHandler("resource")
                         .QueryInterface(Ci.nsIResProtocolHandler);
   let originalSubstitution = resProt.getSubstitution("search-plugins");
@@ -83,7 +83,7 @@ add_task(async function() {
   });
 
   is(gBrowser.currentURI.spec,
-     "http://mochi.test:8888/browser/browser/components/search/test/?test=test+search&ie=utf-8&channel=contextsearch",
+     "http://mochi.test:8888/browser/browser/components/search/test/browser/?test=test+search&ie=utf-8&channel=contextsearch",
      "Checking context menu search URL");
 
   contextMenu.hidePopup();

@@ -65,7 +65,7 @@ add_task(async function telemetry() {
 
   // Check the loaded tab.
   Assert.equal(tab.linkedBrowser.currentURI.spec,
-               "http://mochi.test:8888/browser/browser/components/search/test/",
+               "http://mochi.test:8888/browser/browser/components/search/test/browser/",
                "Expected search tab should have loaded");
 
   BrowserTestUtils.removeTab(tab);
