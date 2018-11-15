@@ -2542,7 +2542,9 @@ SetupImageLayerClip(nsCSSRendering::ImageLayerClipState& aClipState,
     gfxUtils::ConditionRect(bgAreaGfx);
 
     aAutoSR->EnsureSaved(aCtx);
-    aCtx->SnappedClip(bgAreaGfx);
+    aCtx->NewPath();
+    aCtx->Rectangle(bgAreaGfx, true);
+    aCtx->Clip();
   }
 
   if (aClipState.mHasRoundedCorners) {
@@ -2583,7 +2585,7 @@ DrawBackgroundColor(nsCSSRendering::ImageLayerClipState& aClipState,
   // table painting seems to depend on it.
   if (!aClipState.mHasRoundedCorners || aClipState.mCustomClip) {
     aCtx->NewPath();
-    aCtx->SnappedRectangle(aClipState.mDirtyRectInDevPx);
+    aCtx->Rectangle(aClipState.mDirtyRectInDevPx, true);
     aCtx->Fill();
     return;
   }
@@ -2603,14 +2605,18 @@ DrawBackgroundColor(nsCSSRendering::ImageLayerClipState& aClipState,
   aCtx->Save();
   gfxRect dirty = ThebesRect(bgAreaGfx).Intersect(aClipState.mDirtyRectInDevPx);
 
-  aCtx->SnappedClip(dirty);
+  aCtx->NewPath();
+  aCtx->Rectangle(dirty, true);
+  aCtx->Clip();
 
   if (aClipState.mHasAdditionalBGClipArea) {
     gfxRect bgAdditionalAreaGfx = nsLayoutUtils::RectToGfxRect(
       aClipState.mAdditionalBGClipArea, aAppUnitsPerPixel);
     bgAdditionalAreaGfx.Round();
     gfxUtils::ConditionRect(bgAdditionalAreaGfx);
-    aCtx->SnappedClip(bgAdditionalAreaGfx);
+    aCtx->NewPath();
+    aCtx->Rectangle(bgAdditionalAreaGfx, true);
+    aCtx->Clip();
   }
 
   RefPtr<Path> roundedRect =
@@ -2932,7 +2938,9 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
           gfxRect clip =
             nsLayoutUtils::RectToGfxRect(aParams.borderArea, appUnitsPerPixel);
           autoSR.EnsureSaved(&aRenderingCtx);
-          aRenderingCtx.SnappedClip(clip);
+          aRenderingCtx.NewPath();
+          aRenderingCtx.SnappedRectangle(clip);
+          aRenderingCtx.Clip();
         }
       }
     }
