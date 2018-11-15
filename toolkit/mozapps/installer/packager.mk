@@ -72,6 +72,7 @@ ifdef ENABLE_MOZSEARCH_PLUGIN
 	$(RM) $(MOZSEARCH_RUST_ANALYSIS_BASENAME).zip
 	cd $(topobjdir)/ && \
           find . -type d -name save-analysis | xargs zip -r5D '$(ABS_DIST)/$(PKG_PATH)$(MOZSEARCH_RUST_ANALYSIS_BASENAME).zip'
+	cd $(topobjdir)/ && cp _build_manifests/install/dist_include '$(ABS_DIST)/$(PKG_PATH)$(MOZSEARCH_INCLUDEMAP_BASENAME).map'
 endif
 ifeq (Darwin, $(OS_ARCH))
 ifdef MOZ_ASAN
