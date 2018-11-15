@@ -576,7 +576,7 @@ CompositorOGL::PrepareViewport(CompositingRenderTargetOGL* aRenderTarget)
   const gfx::IntSize& phySize = aRenderTarget->mInitParams.mPhySize;
 
   // Set the viewport correctly.
-  mGLContext->fViewport(0, 0, phySize.width, phySize.height);
+  mGLContext->fViewport(mSurfaceOrigin.x, mSurfaceOrigin.y, phySize.width, phySize.height);
 
   mViewportSize = size;
 
@@ -848,7 +848,18 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
     aClipRectOut->SetRect(0, 0, width, height);
   }
 
+#if defined(MOZ_WIDGET_ANDROID)
+  if ((mSurfaceOrigin.x > 0) || (mSurfaceOrigin.y > 0)) {
+    mGLContext->fClearColor(gfxPrefs::CompositorOverrideClearColorR(),
+                            gfxPrefs::CompositorOverrideClearColorG(),
+                            gfxPrefs::CompositorOverrideClearColorB(),
+                            gfxPrefs::CompositorOverrideClearColorA());
+  } else {
+    mGLContext->fClearColor(mClearColor.r, mClearColor.g, mClearColor.b, mClearColor.a);
+  }
+#else
   mGLContext->fClearColor(mClearColor.r, mClearColor.g, mClearColor.b, mClearColor.a);
+#endif // defined(MOZ_WIDGET_ANDROID)
   mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
 }
 
@@ -1246,7 +1257,7 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
   // drawing is going to be shifted by mRenderOffset then we need
   // to shift the clip rect by the same amount.
   if (!mTarget && mCurrentRenderTarget->IsWindow()) {
-    clipRect.MoveBy(mRenderOffset.x, mRenderOffset.y);
+    clipRect.MoveBy(mRenderOffset.x + mSurfaceOrigin.x, mRenderOffset.y - mSurfaceOrigin.y);
   }
 
   ScopedGLState scopedScissorTestState(mGLContext, LOCAL_GL_SCISSOR_TEST, true);

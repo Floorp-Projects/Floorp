@@ -816,19 +816,22 @@ CompositorBridgeParent::CancelCurrentCompositeTask()
 }
 
 void
-CompositorBridgeParent::SetEGLSurfaceSize(int width, int height)
+CompositorBridgeParent::SetEGLSurfaceRect(int x, int y, int width, int height)
 {
   NS_ASSERTION(mUseExternalSurfaceSize, "Compositor created without UseExternalSurfaceSize provided");
   mEGLSurfaceSize.SizeTo(width, height);
   if (mCompositor) {
     mCompositor->SetDestinationSurfaceSize(gfx::IntSize(mEGLSurfaceSize.width, mEGLSurfaceSize.height));
+    if (mCompositor->AsCompositorOGL()) {
+      mCompositor->AsCompositorOGL()->SetSurfaceOrigin(ScreenIntPoint(x, y));
+    }
   }
 }
 
 void
-CompositorBridgeParent::ResumeCompositionAndResize(int width, int height)
+CompositorBridgeParent::ResumeCompositionAndResize(int x, int y, int width, int height)
 {
-  SetEGLSurfaceSize(width, height);
+  SetEGLSurfaceRect(x, y, width, height);
   ResumeComposition();
 }
 
@@ -869,15 +872,16 @@ CompositorBridgeParent::ScheduleResumeOnCompositorThread()
 }
 
 bool
-CompositorBridgeParent::ScheduleResumeOnCompositorThread(int width, int height)
+CompositorBridgeParent::ScheduleResumeOnCompositorThread(int x, int y, int width, int height)
 {
   MonitorAutoLock lock(mResumeCompositionMonitor);
 
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(NewRunnableMethod<int, int>(
+  CompositorLoop()->PostTask(NewRunnableMethod<int, int, int, int>(
     "layers::CompositorBridgeParent::ResumeCompositionAndResize",
     this,
     &CompositorBridgeParent::ResumeCompositionAndResize,
+    x, y,
     width,
     height));
 

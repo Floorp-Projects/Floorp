@@ -29,7 +29,9 @@ public:
   // PUiCompositorControllerParent functions
   mozilla::ipc::IPCResult RecvPause() override;
   mozilla::ipc::IPCResult RecvResume() override;
-  mozilla::ipc::IPCResult RecvResumeAndResize(const int32_t& aHeight,
+  mozilla::ipc::IPCResult RecvResumeAndResize(const int32_t& aX,
+                                              const int32_t& aY,
+                                              const int32_t& aHeight,
                                               const int32_t& aWidth) override;
   mozilla::ipc::IPCResult RecvInvalidateAndRender() override;
   mozilla::ipc::IPCResult RecvMaxToolbarHeight(const int32_t& aHeight) override;
