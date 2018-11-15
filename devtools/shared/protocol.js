@@ -872,7 +872,6 @@ Pool.prototype = extend(EventEmitter.prototype, {
       }
     }
     this._poolMap.set(actor.actorID, actor);
-    return actor;
   },
 
   /**
@@ -1322,7 +1321,7 @@ Front.prototype = extend(Pool.prototype, {
       throw new Error("Can't manage front without an actor ID.\n" +
                       "Ensure server supports " + front.typeName + ".");
     }
-    return Pool.prototype.manage.call(this, front);
+    Pool.prototype.manage.call(this, front);
   },
 
   toString: function() {
