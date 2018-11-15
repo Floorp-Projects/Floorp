@@ -13,19 +13,19 @@
 # documentation for the reasons why we don't generate certain types of bindings,
 # so that we don't accidentally start generating them in the future.
 
-# notxpcom methods and attributes return their results directly by value. The x86
-# windows stdcall ABI returns aggregates by value differently for methods than
+# notxpcom methods return their results directly by value. The x86 windows
+# stdcall ABI returns aggregates by value differently for methods than
 # functions, and rust only exposes the function ABI, so that's the one we're
-# using. The correct ABI can be emulated for notxpcom methods returning aggregates
-# by passing an &mut ReturnType parameter as the second parameter.  This strategy
-# is used by the winapi-rs crate.
+# using. The correct ABI can be emulated for notxpcom methods returning
+# aggregates by passing an &mut ReturnType parameter as the second parameter.
+# This strategy is used by the winapi-rs crate.
 # https://github.com/retep998/winapi-rs/blob/7338a5216a6a7abeefcc6bb1bc34381c81d3e247/src/macros.rs#L220-L231
 #
-# Right now we can generate code for notxpcom methods and attributes, as we don't
-# support passing aggregates by value over these APIs ever (the types which are
-# allowed in xpidl.py shouldn't include any aggregates), so the code is
-# correct. In the future if we want to start supporting returning aggregates by
-# value, we will need to use a workaround such as the one used by winapi.rs.
+# Right now we can generate code for notxpcom methods, as we don't support
+# passing aggregates by value over these APIs ever (the types which are allowed
+# in xpidl.py shouldn't include any aggregates), so the code is correct. In the
+# future if we want to start supporting returning aggregates by value, we will
+# need to use a workaround such as the one used by winapi.rs.
 
 # nostdcall methods on x86 windows will use the thiscall ABI, which is not
 # stable in rust right now, so we cannot generate bindings to them.
@@ -120,23 +120,13 @@ def attributeNativeName(a, getter):
     return "%s%s" % ('Get' if getter else 'Set', binaryname)
 
 
-def attributeReturnType(a, getter):
-    if a.notxpcom:
-        if getter:
-            return a.realtype.rustType('in').strip()
-        return "::libc::c_void"
-    return "::nserror::nsresult"
-
 def attributeParamName(a):
     return "a" + firstCap(a.name)
 
 
 def attributeRawParamList(iface, a, getter):
-    if getter and a.notxpcom:
-        l = []
-    else:
-        l = [(attributeParamName(a),
-              a.realtype.rustType('out' if getter else 'in'))]
+    l = [(attributeParamName(a),
+          a.realtype.rustType('out' if getter else 'in'))]
     if a.implicit_jscontext:
         raise xpidl.RustNoncompat("jscontext is unsupported")
     if a.nostdcall:
@@ -152,10 +142,9 @@ def attributeParamList(iface, a, getter):
 
 def attrAsVTableEntry(iface, m, getter):
     try:
-        return "pub %s: unsafe extern \"system\" fn (%s) -> %s" % \
+        return "pub %s: unsafe extern \"system\" fn (%s) -> ::nserror::nsresult" % \
             (attributeNativeName(m, getter),
-             attributeParamList(iface, m, getter),
-             attributeReturnType(m, getter))
+             attributeParamList(iface, m, getter))
     except xpidl.RustNoncompat as reason:
         return """\
 /// Unable to generate binding because `%s`
@@ -264,13 +253,12 @@ def attrAsWrapper(iface, m, getter):
                 'realtype': m.realtype.rustType('in'),
             }
 
-        param_list = attributeRawParamList(iface, m, getter)
-        params = ["%s: %s" % x for x in param_list]
+        rust_type = m.realtype.rustType('out' if getter else 'in')
         return method_impl_tmpl % {
             'name': attributeNativeName(m, getter),
-            'params': ', '.join(params),
-            'ret_ty': attributeReturnType(m, getter),
-            'args': '' if getter and m.notxpcom else name,
+            'params': name + ': ' + rust_type,
+            'ret_ty': '::nserror::nsresult',
+            'args': name,
         }
 
     except xpidl.RustNoncompat:
