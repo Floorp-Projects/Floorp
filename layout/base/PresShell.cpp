@@ -6962,10 +6962,8 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     if (aEvent->mMessage == eKeyDown) {
       mNoDelayedKeyEvents = true;
     } else if (!mNoDelayedKeyEvents) {
-      DelayedEvent* event = new DelayedKeyEvent(aEvent->AsKeyboardEvent());
-      if (!mDelayedEvents.AppendElement(event)) {
-        delete event;
-      }
+      auto event = MakeUnique<DelayedKeyEvent>(aEvent->AsKeyboardEvent());
+      mDelayedEvents.AppendElement(std::move(event));
     }
     aEvent->mFlags.mIsSuppressedOrDelayed = true;
     return NS_OK;
@@ -7184,10 +7182,8 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         // contextmenu is triggered after right mouseup on Windows and right
         // mousedown on other platforms.
         aEvent->mMessage == eContextMenu)) {
-        DelayedEvent* event = new DelayedMouseEvent(aEvent->AsMouseEvent());
-        if (!mDelayedEvents.AppendElement(event)) {
-          delete event;
-        }
+        auto event = MakeUnique<DelayedMouseEvent>(aEvent->AsMouseEvent());
+        mDelayedEvents.AppendElement(std::move(event));
       }
       return NS_OK;
     }
@@ -8724,7 +8720,7 @@ PresShell::FireOrClearDelayedEvents(bool aFireEvents)
     nsCOMPtr<nsIDocument> doc = mDocument;
     while (!mIsDestroying && mDelayedEvents.Length() &&
            !doc->EventHandlingSuppressed()) {
-      nsAutoPtr<DelayedEvent> ev(mDelayedEvents[0].forget());
+      UniquePtr<DelayedEvent> ev = std::move(mDelayedEvents[0]);
       mDelayedEvents.RemoveElementAt(0);
       if (ev->IsKeyPressEvent() && mIsLastKeyDownCanceled) {
         continue;
