@@ -7585,6 +7585,9 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
 
       case State::Sweep:
         MOZ_ASSERT(nursery().isEmpty());
+
+        AutoGCRooter::traceAllWrappers(rt->mainContextFromOwnThread(), &marker);
+
         if (performSweepActions(budget) == NotFinished) {
             break;
         }
