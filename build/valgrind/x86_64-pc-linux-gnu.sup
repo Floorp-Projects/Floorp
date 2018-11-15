@@ -176,7 +176,7 @@
    Bug 966673
    Memcheck:Leak
    fun:malloc
-   obj:/lib64/libresolv-2.12.so
+   obj:/lib/x86_64-linux-gnu/libresolv-2.13.so
    ...
    fun:gaih_inet
    fun:getaddrinfo
