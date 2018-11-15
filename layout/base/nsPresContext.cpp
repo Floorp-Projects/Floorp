@@ -251,7 +251,8 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mHasWarnedAboutTooLargeDashedOrDottedRadius(false),
     mQuirkSheetAdded(false),
     mNeedsPrefUpdate(false),
-    mHadNonBlankPaint(false)
+    mHadNonBlankPaint(false),
+    mHadContentfulPaint(false)
 #ifdef DEBUG
     , mInitialized(false)
 #endif
@@ -2889,6 +2890,22 @@ nsPresContext::NotifyNonBlankPaint()
     }
 
     mFirstNonBlankPaintTime = TimeStamp::Now();
+  }
+}
+
+void
+nsPresContext::NotifyContentfulPaint()
+{
+  if (!mHadContentfulPaint) {
+    mHadContentfulPaint = true;
+    if (IsRootContentDocument()) {
+      RefPtr<nsDOMNavigationTiming> timing = mDocument->GetNavigationTiming();
+      if (timing) {
+        timing->NotifyContentfulPaintForRootContentDocument();
+      }
+
+      mFirstContentfulPaintTime = TimeStamp::Now();
+    }
   }
 }
 

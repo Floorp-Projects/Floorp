@@ -12,6 +12,7 @@
 #include "jsapi.h"
 
 #include "builtin/SelfHostingDefines.h"
+#include "frontend/EitherParser.h"
 #include "gc/Zone.h"
 #include "js/GCVector.h"
 #include "js/Id.h"
@@ -29,7 +30,6 @@ namespace frontend {
 class BinaryNode;
 class ListNode;
 class ParseNode;
-class TokenStreamAnyChars;
 } /* namespace frontend */
 
 typedef Rooted<ModuleObject*> RootedModuleObject;
@@ -355,9 +355,14 @@ class ModuleObject : public NativeObject
 // creating a ModuleObject.
 class MOZ_STACK_CLASS ModuleBuilder
 {
-  public:
     explicit ModuleBuilder(JSContext* cx, HandleModuleObject module,
-                           const frontend::TokenStreamAnyChars& tokenStream);
+                           const frontend::EitherParser& eitherParser);
+
+  public:
+    template<class Parser>
+    explicit ModuleBuilder(JSContext* cx, HandleModuleObject module, Parser* parser)
+      : ModuleBuilder(cx, module, frontend::EitherParser(parser))
+    {}
 
     bool processImport(frontend::BinaryNode* importNode);
     bool processExport(frontend::ParseNode* exportNode);
@@ -384,7 +389,7 @@ class MOZ_STACK_CLASS ModuleBuilder
 
     JSContext* cx_;
     RootedModuleObject module_;
-    const frontend::TokenStreamAnyChars& tokenStream_;
+    frontend::EitherParser eitherParser_;
     RootedAtomSet requestedModuleSpecifiers_;
     RootedRequestedModuleVector requestedModules_;
     RootedImportEntryMap importEntries_;

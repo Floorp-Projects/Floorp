@@ -16,7 +16,7 @@
 #include "jsfriendapi.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/OffThreadScriptCompilation.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "js/Utility.h"
 #include "xpcpublic.h"
 #include "nsCycleCollectionParticipant.h"
@@ -68,7 +68,7 @@
 #include "nsIScriptError.h"
 #include "nsIOutputStream.h"
 
-using JS::SourceBufferHolder;
+using JS::SourceText;
 
 using mozilla::Telemetry::LABELS_DOM_SCRIPT_PRELOAD_RESULT;
 
@@ -1933,11 +1933,11 @@ ScriptLoader::CompileOffThreadOrProcessRequest(ScriptLoadRequest* aRequest)
   return ProcessRequest(aRequest);
 }
 
-mozilla::Maybe<SourceBufferHolder>
+mozilla::Maybe<SourceText<char16_t>>
 ScriptLoader::GetScriptSource(JSContext* aCx, ScriptLoadRequest* aRequest)
 {
-  // Return a SourceBufferHolder object holding the script's source text.
-  // Ownership of the buffer is transferred to the resulting SourceBufferHolder.
+  // Return a SourceText<char16_t> object holding the script's source text.
+  // Ownership of the buffer is transferred to the resulting holder.
 
   // If there's no script text, we try to get it from the element
   if (aRequest->mIsInline) {
@@ -1951,12 +1951,28 @@ ScriptLoader::GetScriptSource(JSContext* aCx, ScriptLoadRequest* aRequest)
     }
 
     memcpy(chars.get(), inlineData.get(), nbytes);
-    return Some(SourceBufferHolder(std::move(chars), inlineData.Length()));
+
+    SourceText<char16_t> srcBuf;
+    if (!srcBuf.init(aCx, std::move(chars), inlineData.Length())) {
+      return Nothing();
+    }
+
+    return Some(SourceText<char16_t>(std::move(srcBuf)));
   }
 
   size_t length = aRequest->ScriptText().length();
   JS::UniqueTwoByteChars chars(aRequest->ScriptText().extractOrCopyRawBuffer());
-  return Some(SourceBufferHolder(std::move(chars), length));
+  if (!chars) {
+    JS_ReportOutOfMemory(aCx);
+    return Nothing();
+  }
+
+  SourceText<char16_t> srcBuf;
+  if (!srcBuf.init(aCx, std::move(chars), length)) {
+    return Nothing();
+  }
+
+  return Some(SourceText<char16_t>(std::move(srcBuf)));
 }
 
 nsresult

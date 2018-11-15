@@ -505,9 +505,11 @@ XULContentSinkImpl::HandleEndElement(const char16_t *aName)
             nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
 
             script->mOutOfLine = false;
-            if (doc)
-                script->Compile(mText, mTextLength, mDocumentURL,
+            if (doc) {
+                script->Compile(mText, mTextLength,
+                                JS::SourceOwnership::Borrowed, mDocumentURL,
                                 script->mLineNo, doc);
+            }
         }
 
         FlushText(false);

@@ -14,7 +14,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/CompilationAndEvaluation.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "js/Utility.h"
 
 #include "mozilla/Attributes.h"
@@ -141,7 +141,11 @@ AsyncScriptCompiler::StartCompile(JSContext* aCx)
 {
     Rooted<JSObject*> global(aCx, mGlobalObject->GetGlobalJSObject());
 
-    JS::SourceBufferHolder srcBuf(std::move(mScriptText), mScriptLength);
+    JS::SourceText<char16_t> srcBuf;
+    if (!srcBuf.init(aCx, std::move(mScriptText), mScriptLength)) {
+        return false;
+    }
+
     if (JS::CanCompileOffThread(aCx, mOptions, mScriptLength)) {
         if (!JS::CompileOffThread(aCx, mOptions, srcBuf,
                                   OffThreadScriptLoaderCallback,

@@ -10,7 +10,6 @@
 #include "jspubtd.h"
 #include "jstypes.h"
 
-#include "builtin/ModuleObject.h"
 #include "ds/InlineTable.h"
 #include "frontend/ParseNode.h"
 #include "frontend/TokenStream.h"
@@ -582,29 +581,6 @@ SharedContext::asFunctionBox()
 {
     MOZ_ASSERT(isFunctionBox());
     return static_cast<FunctionBox*>(this);
-}
-
-class MOZ_STACK_CLASS ModuleSharedContext : public SharedContext
-{
-    RootedModuleObject module_;
-    RootedScope enclosingScope_;
-
-  public:
-    Rooted<ModuleScope::Data*> bindings;
-    ModuleBuilder& builder;
-
-    ModuleSharedContext(JSContext* cx, ModuleObject* module, Scope* enclosingScope,
-                        ModuleBuilder& builder);
-
-    HandleModuleObject module() const { return module_; }
-    Scope* compilationEnclosingScope() const override { return enclosingScope_; }
-};
-
-inline ModuleSharedContext*
-SharedContext::asModuleContext()
-{
-    MOZ_ASSERT(isModuleContext());
-    return static_cast<ModuleSharedContext*>(this);
 }
 
 // In generators, we treat all bindings as closed so that they get stored on
