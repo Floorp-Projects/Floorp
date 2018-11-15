@@ -656,15 +656,9 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   }
 
   /* Add extra space to titlebar for dragging */
-  :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar,
-  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar {
+  :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .toolbar-items,
+  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .toolbar-items {
     padding-top: var(--space-above-tabbar);
-  }
-
-  /* Center items (window caption buttons, private browsing indicator,
-   * accessibility indicator, etc) vertically. */
-  :root[sizemode="normal"] #TabsToolbar > .titlebar-item {
-    margin-top: calc(-1 * var(--space-above-tabbar));
   }
 
   /* Make #TabsToolbar transparent as we style underlying #titlebar with
