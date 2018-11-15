@@ -78,9 +78,9 @@ var _attachConsole = async function(
   }
 
   if (!attachToTab) {
-    response = await state.dbgClient.mainRoot.getMainProcess();
-    await state.dbgClient.attachTarget(response.form.actor);
-    const consoleActor = response.form.consoleActor;
+    const front = await state.dbgClient.mainRoot.getMainProcess();
+    await front.attach();
+    const consoleActor = front.targetForm.consoleActor;
     state.actor = consoleActor;
     state.dbgClient.attachConsole(consoleActor, listeners)
       .then(_onAttachConsole.bind(null, state), _onAttachError.bind(null, state));
