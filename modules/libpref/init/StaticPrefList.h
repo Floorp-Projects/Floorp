@@ -1812,11 +1812,17 @@ VARCACHE_PREF(
 // Reporting API
 //---------------------------------------------------------------------------
 
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   "dom.reporting.enabled",
    dom_reporting_enabled,
-  RelaxedAtomicBool, false
+  RelaxedAtomicBool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   "dom.reporting.testing.enabled",
@@ -1824,11 +1830,17 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
 VARCACHE_PREF(
   "dom.reporting.featurePolicy.enabled",
    dom_reporting_featurePolicy_enabled,
-  RelaxedAtomicBool, false
+  RelaxedAtomicBool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 //---------------------------------------------------------------------------
 // End of prefs
