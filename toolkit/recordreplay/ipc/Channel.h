@@ -74,8 +74,14 @@ namespace recordreplay {
   /* after receiving the message and will pause after it sends a DebuggerResponse. */ \
   _Macro(DebuggerRequest)                                      \
                                                                \
-  /* Set or clear a JavaScript breakpoint. */                  \
-  _Macro(SetBreakpoint)                                        \
+  /* Add a breakpoint position to stop at. Because a single entry point is used for */ \
+  /* calling into the ReplayDebugger after pausing, the set of breakpoints is simply */ \
+  /* a set of positions at which the child process should pause and send a HitBreakpoint */ \
+  /* message. */                                               \
+  _Macro(AddBreakpoint)                                        \
+                                                               \
+  /* Clear all installed breakpoints. */                       \
+  _Macro(ClearBreakpoints)                                     \
                                                                \
   /* Unpause the child and play execution either to the next point when a */ \
   /* breakpoint is hit, or to the next checkpoint. Resumption may be either */ \
@@ -280,21 +286,17 @@ struct JSONMessage : public Message
 typedef JSONMessage<MessageType::DebuggerRequest> DebuggerRequestMessage;
 typedef JSONMessage<MessageType::DebuggerResponse> DebuggerResponseMessage;
 
-struct SetBreakpointMessage : public Message
+struct AddBreakpointMessage : public Message
 {
-  // ID of the breakpoint to change.
-  size_t mId;
-
-  // New position of the breakpoint. If this is invalid then the breakpoint is
-  // being cleared.
   js::BreakpointPosition mPosition;
 
-  SetBreakpointMessage(size_t aId, const js::BreakpointPosition& aPosition)
-    : Message(MessageType::SetBreakpoint, sizeof(*this))
-    , mId(aId)
+  explicit AddBreakpointMessage(const js::BreakpointPosition& aPosition)
+    : Message(MessageType::AddBreakpoint, sizeof(*this))
     , mPosition(aPosition)
   {}
 };
+
+typedef EmptyMessage<MessageType::ClearBreakpoints> ClearBreakpointsMessage;
 
 struct ResumeMessage : public Message
 {
@@ -421,22 +423,10 @@ struct HitBreakpointMessage : public Message
 {
   bool mRecordingEndpoint;
 
-  HitBreakpointMessage(uint32_t aSize, bool aRecordingEndpoint)
-    : Message(MessageType::HitBreakpoint, aSize)
+  explicit HitBreakpointMessage(bool aRecordingEndpoint)
+    : Message(MessageType::HitBreakpoint, sizeof(*this))
     , mRecordingEndpoint(aRecordingEndpoint)
   {}
-
-  const uint32_t* Breakpoints() const { return Data<HitBreakpointMessage, uint32_t>(); }
-  uint32_t NumBreakpoints() const { return DataSize<HitBreakpointMessage, uint32_t>(); }
-
-  static HitBreakpointMessage* New(bool aRecordingEndpoint,
-                                   const uint32_t* aBreakpoints, size_t aNumBreakpoints) {
-    HitBreakpointMessage* res =
-      NewWithData<HitBreakpointMessage, uint32_t>(aNumBreakpoints, aRecordingEndpoint);
-    MOZ_RELEASE_ASSERT(res->NumBreakpoints() == aNumBreakpoints);
-    PodCopy(res->Data<HitBreakpointMessage, uint32_t>(), aBreakpoints, aNumBreakpoints);
-    return res;
-  }
 };
 
 typedef EmptyMessage<MessageType::AlwaysMarkMajorCheckpoints> AlwaysMarkMajorCheckpointsMessage;

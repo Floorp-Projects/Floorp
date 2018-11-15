@@ -298,31 +298,13 @@ Middleman_SendRequest(JSContext* aCx, unsigned aArgc, Value* aVp)
   return JS_ParseJSON(aCx, responseBuffer.begin(), responseBuffer.length(), args.rval());
 }
 
-struct InstalledBreakpoint
-{
-  PersistentRootedObject mHandler;
-  BreakpointPosition mPosition;
-
-  InstalledBreakpoint(JSContext* aCx, JSObject* aHandler, const BreakpointPosition& aPosition)
-    : mHandler(aCx, aHandler), mPosition(aPosition)
-  {}
-};
-static StaticInfallibleVector<InstalledBreakpoint*> gBreakpoints;
-
 static bool
-Middleman_SetBreakpoint(JSContext* aCx, unsigned aArgc, Value* aVp)
+Middleman_AddBreakpoint(JSContext* aCx, unsigned aArgc, Value* aVp)
 {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
-  RootedObject handler(aCx, NonNullObject(aCx, args.get(0)));
-  RootedObject positionObject(aCx, NonNullObject(aCx, args.get(1)));
-  if (!handler || !positionObject) {
-    return false;
-  }
-
-  handler = ::js::CheckedUnwrap(handler);
-  if (!handler) {
-    ::js::ReportAccessDenied(aCx);
+  RootedObject positionObject(aCx, NonNullObject(aCx, args.get(0)));
+  if (!positionObject) {
     return false;
   }
 
@@ -331,60 +313,18 @@ Middleman_SetBreakpoint(JSContext* aCx, unsigned aArgc, Value* aVp)
     return false;
   }
 
-  size_t breakpointId;
-  for (breakpointId = 0; breakpointId < gBreakpoints.length(); breakpointId++) {
-    if (!gBreakpoints[breakpointId]) {
-      break;
-    }
-  }
-  if (breakpointId == gBreakpoints.length()) {
-    gBreakpoints.append(nullptr);
-  }
+  parent::AddBreakpoint(position);
 
-  gBreakpoints[breakpointId] = new InstalledBreakpoint(aCx, handler, position);
-
-  parent::SetBreakpoint(breakpointId, position);
-
-  args.rval().setInt32(breakpointId);
+  args.rval().setUndefined();
   return true;
 }
 
-bool
-HitBreakpoint(JSContext* aCx, size_t aId)
-{
-  InstalledBreakpoint* breakpoint = gBreakpoints[aId];
-  MOZ_RELEASE_ASSERT(breakpoint);
-
-  JSAutoRealm ar(aCx, breakpoint->mHandler);
-
-  RootedValue handlerValue(aCx, ObjectValue(*breakpoint->mHandler));
-  RootedValue rval(aCx);
-  return JS_CallFunctionValue(aCx, nullptr, handlerValue,
-                              HandleValueArray::empty(), &rval)
-      // The replaying process will resume after this hook returns, if it
-      // hasn't already been explicitly resumed.
-      && InvalidateReplayDebuggersAfterUnpause(aCx);
-}
-
 /* static */ bool
-Middleman_ClearBreakpoint(JSContext* aCx, unsigned aArgc, Value* aVp)
+Middleman_ClearBreakpoints(JSContext* aCx, unsigned aArgc, Value* aVp)
 {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
-  if (!args.get(0).isNumber()) {
-    JS_ReportErrorASCII(aCx, "Bad breakpoint ID");
-    return false;
-  }
 
-  size_t breakpointId = (size_t) args.get(0).toNumber();
-  if (breakpointId >= gBreakpoints.length() || !gBreakpoints[breakpointId]) {
-    JS_ReportErrorASCII(aCx, "Bad breakpoint ID");
-    return false;
-  }
-
-  delete gBreakpoints[breakpointId];
-  gBreakpoints[breakpointId] = nullptr;
-
-  parent::SetBreakpoint(breakpointId, BreakpointPosition());
+  parent::ClearBreakpoints();
 
   args.rval().setUndefined();
   return true;
@@ -992,8 +932,8 @@ static const JSFunctionSpec gMiddlemanMethods[] = {
   JS_FN("timeWarp", Middleman_TimeWarp, 1, 0),
   JS_FN("pause", Middleman_Pause, 0, 0),
   JS_FN("sendRequest", Middleman_SendRequest, 1, 0),
-  JS_FN("setBreakpoint", Middleman_SetBreakpoint, 2, 0),
-  JS_FN("clearBreakpoint", Middleman_ClearBreakpoint, 1, 0),
+  JS_FN("addBreakpoint", Middleman_AddBreakpoint, 1, 0),
+  JS_FN("clearBreakpoints", Middleman_ClearBreakpoints, 0, 0),
   JS_FN("maybeSwitchToReplayingChild", Middleman_MaybeSwitchToReplayingChild, 0, 0),
   JS_FN("hadRepaint", Middleman_HadRepaint, 2, 0),
   JS_FN("hadRepaintFailure", Middleman_HadRepaintFailure, 0, 0),
