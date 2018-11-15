@@ -553,26 +553,6 @@ WebConsoleActor.prototype =
    */
   replayingMessages: null,
 
-  /**
-   * When using a replaying debugger, this helper returns whether a message has
-   * been seen before. When the process rewinds or plays back through regions
-   * of execution that have executed before, we will see the same messages
-   * again.
-   */
-  isDuplicateReplayingMessage: function(msg) {
-    if (!this.replayingMessages) {
-      this.replayingMessages = {};
-    }
-    // The progress counter on the message is unique across all messages in the
-    // replaying process.
-    const progress = msg.executionPoint.progress;
-    if (this.replayingMessages[progress]) {
-      return true;
-    }
-    this.replayingMessages[progress] = true;
-    return false;
-  },
-
   // Request handlers for known packet types.
 
   /**
@@ -853,9 +833,7 @@ WebConsoleActor.prototype =
 
     let replayingMessages = [];
     if (this.dbg.replaying) {
-      replayingMessages = this.dbg.findAllConsoleMessages().filter(msg => {
-        return !this.isDuplicateReplayingMessage(msg);
-      });
+      replayingMessages = this.dbg.findAllConsoleMessages();
     }
 
     while (types.length > 0) {
@@ -1436,10 +1414,6 @@ WebConsoleActor.prototype =
    * debugger.
    */
   onReplayingMessage: function(msg) {
-    if (this.isDuplicateReplayingMessage(msg)) {
-      return;
-    }
-
     if (msg.messageType == "ConsoleAPI") {
       this.onConsoleAPICall(msg);
     }

@@ -703,8 +703,9 @@ gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW *lpelfe,
             family->ReadOtherFamilyNames(gfxPlatformFontList::PlatformFontList());
         }
 
-        if (fontList->mBadUnderlineFamilyNames.Contains(key))
+        if (fontList->mBadUnderlineFamilyNames.ContainsSorted(key)) {
             family->SetBadUnderlineFamily();
+        }
 
         family->mWindowsFamily = lf.lfPitchAndFamily & 0xF0;
         family->mWindowsPitch = lf.lfPitchAndFamily & 0x0F;

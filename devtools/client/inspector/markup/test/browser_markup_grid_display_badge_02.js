@@ -35,9 +35,12 @@ add_task(async function() {
   const grid1 = await getContainerForSelector("#grid1", inspector);
   const grid2 = await getContainerForSelector("#grid2", inspector);
   const grid3 = await getContainerForSelector("#grid3", inspector);
-  const gridDisplayBadge1 = grid1.elt.querySelector(".markup-badge[data-display]");
-  const gridDisplayBadge2 = grid2.elt.querySelector(".markup-badge[data-display]");
-  const gridDisplayBadge3 = grid3.elt.querySelector(".markup-badge[data-display]");
+  const gridDisplayBadge1 = grid1.elt.querySelector(
+    ".inspector-badge.interactive[data-display]");
+  const gridDisplayBadge2 = grid2.elt.querySelector(
+    ".inspector-badge.interactive[data-display]");
+  const gridDisplayBadge3 = grid3.elt.querySelector(
+    ".inspector-badge.interactive[data-display]");
 
   info("Check the initial state of the grid display badges and grid highlighters");
   ok(!gridDisplayBadge1.classList.contains("active"),

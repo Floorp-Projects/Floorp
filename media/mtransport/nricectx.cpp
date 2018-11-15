@@ -44,6 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
+#include "nr_socket_proxy_config.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -79,7 +80,6 @@ extern "C" {
 #include "nr_crypto.h"
 #include "nr_socket.h"
 #include "nr_socket_local.h"
-#include "nr_proxy_tunnel.h"
 #include "stun_client_ctx.h"
 #include "stun_reg.h"
 #include "stun_server_ctx.h"
@@ -100,6 +100,8 @@ extern "C" {
 
 namespace mozilla {
 
+using std::shared_ptr;
+
 TimeStamp nr_socket_short_term_violation_time() {
   return NrSocketBase::short_term_violation_time();
 }
@@ -115,6 +117,15 @@ const char kNrIceTransportTcp[] = "tcp";
 const char kNrIceTransportTls[] = "tls";
 
 static bool initialized = false;
+
+static int noop(void** obj) {
+  return 0;
+}
+
+static nr_socket_factory_vtbl ctx_socket_factory_vtbl = {
+  nr_socket_local_create,
+  noop
+};
 
 // Implement NSPR-based crypto algorithms
 static int nr_crypto_nss_random_bytes(UCHAR *buf, size_t len) {
@@ -288,7 +299,8 @@ NrIceCtx::NrIceCtx(const std::string& name, Policy policy)
     ice_handler_(nullptr),
     trickle_(true),
     policy_(policy),
-    nat_ (nullptr) {
+    nat_ (nullptr),
+    proxy_config_(nullptr) {
 }
 
 /* static */
@@ -611,6 +623,19 @@ NrIceCtx::Initialize()
     return false;
   }
 
+  // override default factory to capture optional proxy config when creating
+  // sockets.
+  nr_socket_factory* factory;
+  r = nr_socket_factory_create_int(this,
+                                   &ctx_socket_factory_vtbl,
+                                   &factory);
+
+  if (r) {
+    MOZ_MTLOG(LogLevel::Error, "Couldn't create ctx socket factory.");
+    return false;
+  }
+  nr_ice_ctx_set_socket_factory(ctx_, factory);
+
   nr_interface_prioritizer *prioritizer = CreateInterfacePrioritizer();
   if (!prioritizer) {
     MOZ_MTLOG(LogLevel::Error, "Couldn't create interface prioritizer.");
@@ -780,6 +805,7 @@ NrIceStats NrIceCtx::Destroy() {
 
   ice_handler_vtbl_ = nullptr;
   ice_handler_ = nullptr;
+  proxy_config_ = nullptr;
   streams_.clear();
 
   return stats;
@@ -875,43 +901,8 @@ nsresult NrIceCtx::SetResolver(nr_resolver *resolver) {
   return NS_OK;
 }
 
-nsresult NrIceCtx::SetProxyServer(const NrIceProxyServer& proxy_server) {
-  int r,_status;
-  nr_proxy_tunnel_config *config = nullptr;
-  nr_socket_wrapper_factory *wrapper = nullptr;
-
-  if ((r = nr_proxy_tunnel_config_create(&config))) {
-    ABORT(r);
-  }
-
-  if ((r = nr_proxy_tunnel_config_set_proxy(config,
-                                            proxy_server.host().c_str(),
-                                            proxy_server.port()))) {
-    ABORT(r);
-  }
-
-  if ((r = nr_proxy_tunnel_config_set_resolver(config, ctx_->resolver))) {
-    ABORT(r);
-  }
-
-  if ((r = nr_socket_wrapper_factory_proxy_tunnel_create(config, &wrapper))) {
-    MOZ_MTLOG(LogLevel::Error, "Couldn't create proxy tunnel wrapper.");
-    ABORT(r);
-  }
-
-  // nr_ice_ctx will own the wrapper after this call
-  if ((r = nr_ice_ctx_set_turn_tcp_socket_wrapper(ctx_, wrapper))) {
-    MOZ_MTLOG(ML_ERROR, "Couldn't set proxy for '" << name_ << "': " << r);
-    ABORT(r);
-  }
-
-  _status = 0;
-abort:
-  nr_proxy_tunnel_config_destroy(&config);
-  if (_status) {
-    nr_socket_wrapper_factory_destroy(&wrapper);
-    return NS_ERROR_FAILURE;
-  }
+nsresult NrIceCtx::SetProxyServer(NrSocketProxyConfig&& config) {
+  proxy_config_.reset(new NrSocketProxyConfig(std::move(config)));
   return NS_OK;
 }
 
@@ -1169,4 +1160,41 @@ void nr_ice_compute_codeword(char *buf, int len,char *codeword) {
 
     PL_Base64Encode(reinterpret_cast<char*>(&c), 3, codeword);
     codeword[4] = 0;
+}
+
+int nr_socket_local_create(void *obj,
+                            nr_transport_addr *addr,
+                            nr_socket **sockp)
+{
+  using namespace mozilla;
+
+  RefPtr<NrSocketBase> sock;
+  int r, _status;
+  shared_ptr<NrSocketProxyConfig> config = nullptr;
+
+  if (obj) {
+    config = static_cast<NrIceCtx*>(obj)->GetProxyConfig();
+  }
+
+  r = NrSocketBase::CreateSocket(addr, &sock, config);
+  if (r) {
+    ABORT(r);
+  }
+
+  r = nr_socket_create_int(static_cast<void *>(sock),
+                           sock->vtbl(), sockp);
+  if (r)
+    ABORT(r);
+
+  _status = 0;
+
+  {
+    // We will release this reference in destroy(), not exactly the normal
+    // ownership model, but it is what it is.
+    NrSocketBase* dummy = sock.forget().take();
+    (void)dummy;
+  }
+
+abort:
+  return _status;
 }

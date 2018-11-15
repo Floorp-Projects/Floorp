@@ -1128,7 +1128,7 @@ gfxMacPlatformFontList::AddFamily(const nsACString& aFamilyName,
     table.Put(key, familyEntry);
 
     // check the bad underline blacklist
-    if (mBadUnderlineFamilyNames.Contains(key)) {
+    if (mBadUnderlineFamilyNames.ContainsSorted(key)) {
         familyEntry->SetBadUnderlineFamily();
     }
 }

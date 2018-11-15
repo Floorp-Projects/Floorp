@@ -116,6 +116,11 @@ namespace net {
 // without accidentally allowing it for websockets not over http/2
 #define NS_HTTP_ALLOW_SPDY_WITHOUT_KEEPALIVE (1<<15)
 
+// Only permit CONNECTing to a proxy. A channel with this flag will not send an
+// http request after CONNECT or setup tls. An http upgrade handler MUST be
+// set. An ALPN header is set using the upgrade protocol.
+#define NS_HTTP_CONNECT_ONLY            (1<<16)
+
 //-----------------------------------------------------------------------------
 // some default values
 //-----------------------------------------------------------------------------

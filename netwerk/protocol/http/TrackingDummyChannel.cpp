@@ -483,6 +483,18 @@ TrackingDummyChannel::HTTPUpgrade(const nsACString& aProtocolName,
 }
 
 NS_IMETHODIMP
+TrackingDummyChannel::GetOnlyConnect(bool* aOnlyConnect)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TrackingDummyChannel::SetConnectOnly()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 TrackingDummyChannel::GetAllowSpdy(bool* aAllowSpdy)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

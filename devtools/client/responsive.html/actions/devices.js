@@ -21,7 +21,7 @@ const { post } = require("../utils/message");
 
 const { addDevice, getDevices, removeDevice } = require("devtools/client/shared/devices");
 const { changeUserAgent, toggleTouchSimulation } = require("./ui");
-const { changeDevice, changePixelRatio, resizeViewport } = require("./viewports");
+const { changeDevice, changePixelRatio } = require("./viewports");
 
 const DISPLAYED_DEVICES_PREF = "devtools.responsive.html.displayedDeviceList";
 
@@ -186,16 +186,10 @@ module.exports = {
       }
 
       post(window, {
-        type: "viewport-resize",
-        width: device.width,
-        height: device.height,
-      });
-      post(window, {
         type: "change-device",
         device,
       });
 
-      dispatch(resizeViewport(id, device.width, device.height));
       dispatch(changeDevice(id, device.name, deviceType));
       dispatch(changePixelRatio(id, device.pixelRatio));
       dispatch(changeUserAgent(device.userAgent));

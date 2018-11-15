@@ -29,12 +29,14 @@ var gTests = [
   // assumed to be complete when loaded, but we poll the TEST
   // (first file) until the test passes.
 
-  // Tests of the allowed disposal operators for both GIF and APNG: keep, clear,
+  // Tests of the allowed disposal operators for GIF, APNG and WebP: keep, clear,
   // and restore previous.
   "== green-background.html?clear.gif green.png",
   "== green-background.html?clear.png green.png",
+  "== green-background.html?clear.webp green.png",
   "== keep.gif green.png",
   "== keep.png green.png",
+  "== keep.webp green.png",
   "== restore-previous.gif green.png",
   "== restore-previous.png green.png",
 
@@ -46,6 +48,7 @@ var gTests = [
 
   // Test of subframe updates.
   "== clear2.gif clear2-results.gif",
+  "== clear2.webp clear2-results.gif",
 ];
 
 // Maintain a reference count of how many things we're waiting for until
@@ -145,13 +148,18 @@ function startTest(i)
   var reference = startIframe(testData.reference);
 }
 
+function runTests()
+{
+  // Run the tests.
+  for (var i = 0; i < gTests.length; ++i) {
+    startTest(i);
+  }
+}
+
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 
-// Run the tests.
-for (var i = 0; i < gTests.length; ++i) {
-  startTest(i);
-}
+SpecialPowers.pushPrefEnv({"set": [["image.webp.enabled", true]]}, runTests);
 
 </script>
 </pre>
