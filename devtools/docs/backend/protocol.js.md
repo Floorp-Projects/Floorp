@@ -617,7 +617,8 @@ For more complex situations, you can define your own lifetime properties.  Take 
       if (!this._temporaryParent) {
         // Create an actor to serve as the parent for all temporary children and explicitly
         // add it as a child of this actor.
-        this._temporaryParent = this.manage(new Actor(this.conn));
+        this._temporaryParent = new Actor(this.conn));
+        this.manage(this._temporaryParent);
       }
       return new ChildActor(this.conn, id);
     }
