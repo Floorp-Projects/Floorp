@@ -79,7 +79,8 @@ policy-EnableTrackingProtection = Enable or disable Content Blocking and optiona
 
 # A “locked” extension can’t be disabled or removed by the user. This policy
 # takes 3 keys (“Install”, ”Uninstall”, ”Locked”), you can either keep them in
-# English or translate them as verbs.
+# English or translate them as verbs. See also:
+# https://github.com/mozilla/policy-templates/blob/master/README.md#extensions-machine-only
 policy-Extensions = Install, uninstall or lock extensions. The Install option takes URLs or paths as parameters. The Uninstall and Locked options take extension IDs.
 
 policy-FlashPlugin = Allow or deny usage of the Flash plugin.
@@ -116,5 +117,6 @@ policy-SearchEngines = Configure search engine settings. This policy is only ava
 # For more information, see https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS/PKCS11/Module_Installation
 policy-SecurityDevices = Install PKCS #11 modules.
 
-# “format” refers to the format used for the value of this policy.
+# “format” refers to the format used for the value of this policy. See also:
+# https://github.com/mozilla/policy-templates/blob/master/README.md#websitefilter-machine-only
 policy-WebsiteFilter = Block websites from being visited. See documentation for more details on the format.
