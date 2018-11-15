@@ -4,6 +4,7 @@
 
 #include "CSFLog.h"
 
+#include "nr_socket_proxy_config.h"
 #include "MediaPipelineFilter.h"
 #include "MediaPipeline.h"
 #include "PeerConnectionImpl.h"
@@ -20,9 +21,13 @@
 #include "nsIContentPolicy.h"
 #include "nsIProxyInfo.h"
 #include "nsIProtocolProxyService.h"
+#include "nsIPrincipal.h"
+#include "nsProxyRelease.h"
 
 #include "nsIScriptGlobalObject.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/PBrowserOrId.h"
+#include "mozilla/dom/TabChild.h"
 #include "MediaManager.h"
 #include "WebrtcGmpVideoCodec.h"
 
@@ -64,25 +69,10 @@ PeerConnectionMedia::ProtocolProxyQueryHandler::SetProxyOnPcm(
     nsIProxyInfo& proxyinfo)
 {
   CSFLogInfo(LOGTAG, "%s: Had proxyinfo", __FUNCTION__);
-  nsresult rv;
-  nsCString httpsProxyHost;
-  int32_t httpsProxyPort;
 
-  rv = proxyinfo.GetHost(httpsProxyHost);
-  if (NS_FAILED(rv)) {
-    CSFLogError(LOGTAG, "%s: Failed to get proxy server host", __FUNCTION__);
-    return;
-  }
-
-  rv = proxyinfo.GetPort(&httpsProxyPort);
-  if (NS_FAILED(rv)) {
-    CSFLogError(LOGTAG, "%s: Failed to get proxy server port", __FUNCTION__);
-    return;
-  }
-
-  assert(httpsProxyPort >= 0 && httpsProxyPort < (1 << 16));
-  pcm_->mProxyHost = httpsProxyHost.get();
-  pcm_->mProxyPort = static_cast<uint16_t>(httpsProxyPort);
+  nsCString alpn = NS_LITERAL_CSTRING("webrtc,c-webrtc");
+  PBrowserOrId browser = TabChild::GetFrom(pcm_->GetWindow());
+  pcm_->mProxyConfig.reset(new NrSocketProxyConfig(browser, alpn));
 }
 
 NS_IMPL_ISUPPORTS(PeerConnectionMedia::ProtocolProxyQueryHandler, nsIProtocolProxyCallback)
@@ -116,6 +106,7 @@ PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl *parent)
       mMainThread(mParent->GetMainThread()),
       mSTSThread(mParent->GetSTSThread()),
       mProxyResolveCompleted(false),
+      mProxyConfig(nullptr),
       mLocalAddrsCompleted(false) {
 }
 
@@ -491,14 +482,14 @@ PeerConnectionMedia::GatherIfReady() {
 
 void
 PeerConnectionMedia::EnsureIceGathering_s(bool aDefaultRouteOnly) {
-  if (!mProxyHost.empty()) {
+  if (mProxyConfig) {
     // Note that this could check if PrivacyRequested() is set on the PC and
     // remove "webrtc" from the ALPN list.  But that would only work if the PC
     // was constructed with a peerIdentity constraint, not when isolated
     // streams are added.  If we ever need to signal to the proxy that the
     // media is isolated, then we would need to restructure this code.
-    mTransportHandler->SetProxyServer(
-        mProxyHost, mProxyPort, "webrtc,c-webrtc");
+    mTransportHandler->SetProxyServer(std::move(*mProxyConfig));
+    mProxyConfig.reset();
   }
 
   // Make sure we don't call StartIceGathering if we're in e10s mode
@@ -854,4 +845,9 @@ PeerConnectionMedia::AnyCodecHasPluginID(uint64_t aPluginID)
   return false;
 }
 
+nsPIDOMWindowInner*
+PeerConnectionMedia::GetWindow() const
+{
+  return mParent->GetWindow();
+}
 } // namespace mozilla

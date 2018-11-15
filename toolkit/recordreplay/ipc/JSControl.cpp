@@ -449,6 +449,9 @@ static PersistentRootedObject* gDevtoolsSandbox;
 // URL of the root script that runs when recording/replaying.
 #define ReplayScriptURL "resource://devtools/server/actors/replay/replay.js"
 
+// Whether to expose chrome:// and resource:// scripts to the debugger.
+static bool gIncludeSystemScripts;
+
 void
 SetupDevtoolsSandbox()
 {
@@ -479,14 +482,26 @@ SetupDevtoolsSandbox()
   dom::ChromeUtils::Import(global, NS_LITERAL_STRING(ReplayScriptURL),
                            dom::Optional<HandleObject>(), &obj, er);
   MOZ_RELEASE_ASSERT(!er.Failed());
+
+  gIncludeSystemScripts = Preferences::GetBool("devtools.recordreplay.includeSystemScripts");
 }
 
 extern "C" {
 
 MOZ_EXPORT bool
-RecordReplayInterface_IsInternalScript(const char* aURL)
+RecordReplayInterface_ShouldUpdateProgressCounter(const char* aURL)
 {
-  return !strcmp(aURL, ReplayScriptURL);
+  // Progress counters are only updated for scripts which are exposed to the
+  // debugger. The devtools timeline is based on progress values and we don't
+  // want gaps on the timeline which users can't seek to.
+  if (gIncludeSystemScripts) {
+    // Always exclude ReplayScriptURL. Scripts in this file are internal to the
+    // record/replay infrastructure and run non-deterministically between
+    // recording and replaying.
+    return aURL && strcmp(aURL, ReplayScriptURL);
+  } else {
+    return aURL && strncmp(aURL, "resource:", 9) && strncmp(aURL, "chrome:", 7);
+  }
 }
 
 } // extern "C"
@@ -640,6 +655,11 @@ struct ContentInfo
     free(mURL);
     free(mContentType);
   }
+
+  size_t Length() {
+    MOZ_RELEASE_ASSERT(!mContent8.length() || !mContent16.length());
+    return mContent8.length() ? mContent8.length() : mContent16.length();
+  }
 };
 
 // All content that has been parsed so far. Protected by child::gMonitor.
@@ -724,26 +744,35 @@ FetchContent(JSContext* aCx, HandleString aURL,
              MutableHandleString aContentType, MutableHandleString aContent)
 {
   MonitorAutoLock lock(*child::gMonitor);
+
+  // Find the longest content parse data with this URL. This is to handle inline
+  // script elements in HTML pages, where we will see content parses for both
+  // the HTML itself and for each inline script.
+  ContentInfo* best = nullptr;
   for (ContentInfo& info : gContent) {
     if (JS_FlatStringEqualsAscii(JS_ASSERT_STRING_IS_FLAT(aURL), info.mURL)) {
-      aContentType.set(JS_NewStringCopyZ(aCx, info.mContentType));
-      if (!aContentType) {
-        return false;
+      if (!best || info.Length() > best->Length()) {
+        best = &info;
       }
-
-      MOZ_ASSERT(info.mContent8.length() == 0 ||
-                 info.mContent16.length() == 0,
-                 "should have content data of only one type");
-
-      aContent.set(info.mContent8.length() > 0
-                   ? JS_NewStringCopyUTF8N(aCx, JS::UTF8Chars(info.mContent8.begin(),
-                                                              info.mContent8.length()))
-                   : JS_NewUCStringCopyN(aCx, info.mContent16.begin(), info.mContent16.length()));
-      return aContent != nullptr;
     }
   }
-  aContentType.set(JS_NewStringCopyZ(aCx, "text/plain"));
-  aContent.set(JS_NewStringCopyZ(aCx, "Could not find record/replay content"));
+
+  if (best) {
+    aContentType.set(JS_NewStringCopyZ(aCx, best->mContentType));
+
+    MOZ_ASSERT(best->mContent8.length() == 0 ||
+               best->mContent16.length() == 0,
+               "should have content data of only one type");
+
+    aContent.set(best->mContent8.length() > 0
+                 ? JS_NewStringCopyUTF8N(aCx, JS::UTF8Chars(best->mContent8.begin(),
+                                                            best->mContent8.length()))
+                 : JS_NewUCStringCopyN(aCx, best->mContent16.begin(), best->mContent16.length()));
+  } else {
+    aContentType.set(JS_NewStringCopyZ(aCx, "text/plain"));
+    aContent.set(JS_NewStringCopyZ(aCx, "Could not find record/replay content"));
+  }
+
   return aContentType && aContent;
 }
 
@@ -773,6 +802,35 @@ RecordReplay_AdvanceProgressCounter(JSContext* aCx, unsigned aArgc, Value* aVp)
   CallArgs args = CallArgsFromVp(aArgc, aVp);
   AdvanceExecutionProgressCounter();
   args.rval().setUndefined();
+  return true;
+}
+
+static bool
+RecordReplay_ShouldUpdateProgressCounter(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  if (args.get(0).isNull()) {
+    args.rval().setBoolean(ShouldUpdateProgressCounter(nullptr));
+  } else {
+    if (!args.get(0).isString()) {
+      JS_ReportErrorASCII(aCx, "Expected string or null as first argument");
+      return false;
+    }
+
+    JSString* str = args.get(0).toString();
+    size_t len = JS_GetStringLength(str);
+
+    nsAutoString chars;
+    chars.SetLength(len);
+    if (!JS_CopyStringChars(aCx, Range<char16_t>(chars.BeginWriting(), len), str)) {
+      return false;
+    }
+
+    NS_ConvertUTF16toUTF8 utf8(chars);
+    args.rval().setBoolean(ShouldUpdateProgressCounter(utf8.get()));
+  }
+
   return true;
 }
 
@@ -947,6 +1005,7 @@ static const JSFunctionSpec gRecordReplayMethods[] = {
   JS_FN("areThreadEventsDisallowed", RecordReplay_AreThreadEventsDisallowed, 0, 0),
   JS_FN("maybeDivergeFromRecording", RecordReplay_MaybeDivergeFromRecording, 0, 0),
   JS_FN("advanceProgressCounter", RecordReplay_AdvanceProgressCounter, 0, 0),
+  JS_FN("shouldUpdateProgressCounter", RecordReplay_ShouldUpdateProgressCounter, 1, 0),
   JS_FN("positionHit", RecordReplay_PositionHit, 1, 0),
   JS_FN("getContent", RecordReplay_GetContent, 1, 0),
   JS_FN("currentExecutionPoint", RecordReplay_CurrentExecutionPoint, 1, 0),

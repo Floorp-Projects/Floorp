@@ -50,6 +50,7 @@ Stream::ReadBytes(void* aData, size_t aSize)
     MOZ_RELEASE_ASSERT(mChunkIndex < mChunks.length());
 
     const StreamChunkLocation& chunk = mChunks[mChunkIndex++];
+    MOZ_RELEASE_ASSERT(chunk.mStreamPos == mStreamPos);
 
     EnsureMemory(&mBallast, &mBallastSize, chunk.mCompressedSize, BallastMaxSize(),
                  DontCopyExistingData);
@@ -264,7 +265,8 @@ Stream::Flush(bool aTakeLock)
   MOZ_RELEASE_ASSERT((size_t)compressedSize <= bound);
 
   StreamChunkLocation chunk =
-    mFile->WriteChunk(mBallast.get(), compressedSize, mBufferPos, aTakeLock);
+    mFile->WriteChunk(mBallast.get(), compressedSize, mBufferPos,
+                      mStreamPos - mBufferPos, aTakeLock);
   mChunks.append(chunk);
   MOZ_ALWAYS_TRUE(++mChunkIndex == mChunks.length());
 
@@ -456,7 +458,7 @@ File::Flush()
 StreamChunkLocation
 File::WriteChunk(const char* aStart,
                  size_t aCompressedSize, size_t aDecompressedSize,
-                 bool aTakeLock)
+                 uint64_t aStreamPos, bool aTakeLock)
 {
   Maybe<AutoSpinLock> lock;
   if (aTakeLock) {
@@ -467,6 +469,8 @@ File::WriteChunk(const char* aStart,
   chunk.mOffset = mWriteOffset;
   chunk.mCompressedSize = aCompressedSize;
   chunk.mDecompressedSize = aDecompressedSize;
+  chunk.mHash = HashBytes(aStart, aCompressedSize);
+  chunk.mStreamPos = aStreamPos;
 
   DirectWrite(mFd, aStart, aCompressedSize);
   mWriteOffset += aCompressedSize;
@@ -480,9 +484,8 @@ File::ReadChunk(char* aDest, const StreamChunkLocation& aChunk)
   AutoSpinLock lock(mLock);
   DirectSeekFile(mFd, aChunk.mOffset);
   size_t res = DirectRead(mFd, aDest, aChunk.mCompressedSize);
-  if (res != aChunk.mCompressedSize) {
-    MOZ_CRASH();
-  }
+  MOZ_RELEASE_ASSERT(res == aChunk.mCompressedSize);
+  MOZ_RELEASE_ASSERT(HashBytes(aDest, aChunk.mCompressedSize) == aChunk.mHash);
 }
 
 Stream*

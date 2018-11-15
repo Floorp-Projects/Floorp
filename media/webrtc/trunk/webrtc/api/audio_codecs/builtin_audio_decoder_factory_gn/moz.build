@@ -98,12 +98,9 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
     OS_LIBS += [
-        "m",
         "rt"
     ]
 
@@ -169,6 +166,15 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "1"
     DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "0"
 
+if CONFIG["CPU_ARCH"] == "ppc64":
+
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
+
+    OS_LIBS += [
+        "m"
+    ]
+
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
@@ -231,10 +237,37 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "FreeBSD":
     DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
     DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
 
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
+
+    OS_LIBS += [
+        "m"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
     CXXFLAGS += [
         "-msse2"
+    ]
+
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
+
+    OS_LIBS += [
+        "m"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
+    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
+
+    OS_LIBS += [
+        "m"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "NetBSD":

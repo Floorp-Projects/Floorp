@@ -316,10 +316,8 @@ AdvanceExecutionProgressCounter()
 // here later.
 MFBT_API ProgressCounter NewTimeWarpTarget();
 
-// Return whether a script is internal to the record/replay infrastructure,
-// may run non-deterministically between recording and replaying, and whose
-// execution must not update the progress counter.
-MFBT_API bool IsInternalScript(const char* aURL);
+// Return whether a script should update the progress counter when it runs.
+MFBT_API bool ShouldUpdateProgressCounter(const char* aURL);
 
 // Define a RecordReplayControl object on the specified global object, with
 // methods specialized to the current recording/replaying or middleman process

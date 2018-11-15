@@ -32,6 +32,8 @@ const {
 const MessageState = overrides => Object.freeze(Object.assign({
   // List of all the messages added to the console.
   messagesById: new Map(),
+  // When recording or replaying, all progress values in messagesById.
+  replayProgressMessages: new Set(),
   // Array of the visible messages.
   visibleMessages: [],
   // Object for the filtered messages.
@@ -61,6 +63,7 @@ const MessageState = overrides => Object.freeze(Object.assign({
 function cloneState(state) {
   return {
     messagesById: new Map(state.messagesById),
+    replayProgressMessages: new Set(state.replayProgressMessages),
     visibleMessages: [...state.visibleMessages],
     filteredMessagesCount: {...state.filteredMessagesCount},
     messagesUiById: [...state.messagesUiById],
@@ -77,6 +80,7 @@ function cloneState(state) {
 function addMessage(state, filtersState, prefsState, newMessage) {
   const {
     messagesById,
+    replayProgressMessages,
     groupsById,
     currentGroup,
     repeatById,
@@ -85,6 +89,16 @@ function addMessage(state, filtersState, prefsState, newMessage) {
   if (newMessage.type === constants.MESSAGE_TYPE.NULL_MESSAGE) {
     // When the message has a NULL type, we don't add it.
     return state;
+  }
+
+  if (newMessage.executionPoint) {
+    // When replaying old behaviors in a tab, we might see the same messages
+    // multiple times. Ignore duplicate messages with the same progress values.
+    const progress = newMessage.executionPoint.progress;
+    if (replayProgressMessages.has(progress)) {
+      return state;
+    }
+    state.replayProgressMessages.add(progress);
   }
 
   if (newMessage.type === constants.MESSAGE_TYPE.END_GROUP) {

@@ -7,6 +7,8 @@
 mtransport_lcppsrcs = [
     'dtlsidentity.cpp',
     'mediapacket.cpp',
+    'nr_socket_proxy.cpp',
+    'nr_socket_proxy_config.cpp',
     'nr_socket_prsock.cpp',
     'nr_timer.cpp',
     'nricectx.cpp',
@@ -27,6 +29,7 @@ mtransport_lcppsrcs = [
     'transportlayerlog.cpp',
     'transportlayerloopback.cpp',
     'transportlayersrtp.cpp',
+    'WebrtcProxyChannelWrapper.cpp',
 ]
 
 mtransport_cppsrcs = [
