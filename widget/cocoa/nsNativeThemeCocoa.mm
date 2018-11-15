@@ -4390,24 +4390,6 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
     }
 
-    case StyleAppearance::Range:
-    {
-      // The Mac Appearance Manager API (the old API we're currently using)
-      // doesn't define constants to obtain a minimum size for sliders. We use
-      // the "thickness" of a slider that has default dimensions for both the
-      // minimum width and height to get something sane and so that paint
-      // invalidation works.
-      SInt32 size = 0;
-      if (IsRangeHorizontal(aFrame)) {
-        ::GetThemeMetric(kThemeMetricHSliderHeight, &size);
-      } else {
-        ::GetThemeMetric(kThemeMetricVSliderWidth, &size);
-      }
-      aResult->SizeTo(size, size);
-      *aIsOverridable = true;
-      break;
-    }
-
     case StyleAppearance::RangeThumb:
     {
       SInt32 width = 0;
