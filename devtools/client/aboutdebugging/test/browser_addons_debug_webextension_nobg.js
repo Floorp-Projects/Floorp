@@ -45,20 +45,28 @@ add_task(async function testWebExtensionsToolboxNoBackgroundPage() {
         .getService(Ci.nsIEnvironment);
   const testScript = function() {
     /* eslint-disable no-undef */
+    // This is webextension toolbox process. So we can't access mochitest framework.
+    const waitUntil = async function(predicate, interval = 10) {
+      if (await predicate()) {
+        return true;
+      }
+      return new Promise(resolve => {
+        toolbox.win.setTimeout(function() {
+          waitUntil(predicate, interval).then(() => resolve(true));
+        }, interval);
+      });
+    };
+
     toolbox.selectTool("inspector").then(async inspector => {
-      const nodeActor = await inspector.walker.querySelector(
-        inspector.walker.rootNode, "body");
+      let nodeActor;
 
-      if (!nodeActor) {
-        throw new Error("nodeActor not found");
-      }
-
-      if (!(nodeActor.inlineTextChild)) {
-        throw new Error("inlineTextChild not found");
-      }
+      dump(`Wait the fallback window to be fully loaded\n`);
+      await waitUntil(async () => {
+        nodeActor = await inspector.walker.querySelector(inspector.walker.rootNode, "h1");
+        return nodeActor && nodeActor.inlineTextChild;
+      });
 
       dump("Got a nodeActor with an inline text child\n");
-
       const expectedValue = "Your addon does not have any document opened yet.";
       const actualValue = nodeActor.inlineTextChild._form.nodeValue;
 
