@@ -791,8 +791,10 @@ InstallLayerClipPreserves3D(gfxContext* aTarget, Layer* aLayer)
   transform *= oldTransform;
   aTarget->SetMatrix(transform);
 
-  aTarget->SnappedClip(gfxRect(clipRect->X(), clipRect->Y(),
-                               clipRect->Width(), clipRect->Height()));
+  aTarget->NewPath();
+  aTarget->SnappedRectangle(gfxRect(clipRect->X(), clipRect->Y(),
+                                    clipRect->Width(), clipRect->Height()));
+  aTarget->Clip();
 
   aTarget->SetMatrix(oldTransform);
 }
@@ -945,7 +947,9 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
       // Azure doesn't support EXTEND_NONE, so to avoid extending the edges
       // of the source surface out to the current clip region, clip to
       // the rectangle of the result surface now.
-      aTarget->SnappedClip(ThebesRect(xformBounds));
+      aTarget->NewPath();
+      aTarget->SnappedRectangle(ThebesRect(xformBounds));
+      aTarget->Clip();
       FlushGroup(paintLayerContext, needsClipToVisibleRegion);
     }
   }

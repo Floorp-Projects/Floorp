@@ -149,12 +149,10 @@ public:
 
     /**
      * Draws the rectangle given by rect.
+     * @param snapToPixels ?
      */
-    void Rectangle(const gfxRect& rect) { return Rectangle(rect, false); }
+    void Rectangle(const gfxRect& rect, bool snapToPixels = false);
     void SnappedRectangle(const gfxRect& rect) { return Rectangle(rect, true); }
-private:
-    void Rectangle(const gfxRect& rect, bool snapToPixels);
-public:
 
     /**
      ** Transformation Matrix manipulation
@@ -374,7 +372,6 @@ public:
      */
     void Clip(const Rect& rect);
     void Clip(const gfxRect& rect); // will clip to a rect
-    void SnappedClip(const gfxRect& rect); // snap rect and clip to the result
     void Clip(Path* aPath);
 
     void PopClip();
