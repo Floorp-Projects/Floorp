@@ -137,17 +137,6 @@ nsLayoutStylesheetCache::XULSheet()
 }
 
 StyleSheet*
-nsLayoutStylesheetCache::XULComponentsSheet()
-{
-  if (!mXULComponentsSheet) {
-    LoadSheetURL("chrome://global/content/components.css",
-                 &mXULComponentsSheet, eAgentSheetFeatures, eCrash);
-  }
-
-  return mXULComponentsSheet;
-}
-
-StyleSheet*
 nsLayoutStylesheetCache::QuirkSheet()
 {
   return mQuirkSheet;
@@ -297,7 +286,6 @@ nsLayoutStylesheetCache::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf
   MEASURE(mUserChromeSheet);
   MEASURE(mUserContentSheet);
   MEASURE(mXULSheet);
-  MEASURE(mXULComponentsSheet);
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
@@ -336,7 +324,6 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache()
   if (XRE_IsParentProcess()) {
     // We know we need xul.css for the UI, so load that now too:
     XULSheet();
-    XULComponentsSheet();
   }
 
   if (gUserContentSheetURL) {
