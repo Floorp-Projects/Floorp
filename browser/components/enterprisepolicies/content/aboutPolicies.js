@@ -22,18 +22,6 @@ function col(text, className) {
   return column;
 }
 
-function machine_only_col(text) {
-  let icon = document.createElement("span");
-  icon.classList.add("icon");
-  icon.classList.add("machine-only");
-  icon.setAttribute("data-l10n-id", "gpo-machine-only");
-  let column = document.createElement("td");
-  let content = document.createTextNode(text);
-  column.appendChild(content);
-  column.appendChild(icon);
-  return column;
-}
-
 function addMissingColumns() {
   const table = document.getElementById("activeContent");
   let maxColumns = 0;
@@ -246,12 +234,7 @@ function generateDocumentation() {
       content.classList.toggle("content");
     });
     let row = document.createElement("tr");
-    if (AppConstants.platform == "win" &&
-        schema.properties[policyName].machine_only) {
-      row.appendChild(machine_only_col(policyName));
-    } else {
-      row.appendChild(col(policyName));
-    }
+    row.appendChild(col(policyName));
     let descriptionColumn = col("");
     let stringID = string_mapping[policyName] || policyName;
     descriptionColumn.setAttribute("data-l10n-id", `policy-${stringID}`);
