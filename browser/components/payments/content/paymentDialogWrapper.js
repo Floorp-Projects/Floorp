@@ -139,15 +139,24 @@ var paymentDialogWrapper = {
     }
 
     let address = this.createPaymentAddress({
-      country: addressData.country,
       addressLines: addressData["street-address"].split("\n"),
-      region: addressData["address-level1"],
       city: addressData["address-level2"],
+      country: addressData.country,
       dependentLocality: addressData["address-level3"],
-      postalCode: addressData["postal-code"],
       organization: addressData.organization,
-      recipient: addressData.name,
       phone: addressData.tel,
+      postalCode: addressData["postal-code"],
+      recipient: addressData.name,
+      region: addressData["address-level1"],
+      // TODO (bug 1474905), The regionCode will be available when bug 1474905 is fixed
+      // and the region text box is changed to a dropdown with the regionCode being the
+      // value of the option and the region being the label for the option.
+      // A regionCode should be either the empty string or one to three code points
+      // that represent a region as the code element of an [ISO3166-2] country subdivision
+      // name (i.e., the characters after the hyphen in an ISO3166-2 country subdivision
+      // code element, such as "CA" for the state of California in the USA, or "11" for
+      // the Lisbon district of Portugal).
+      regionCode: "",
     });
 
     return address;
@@ -301,17 +310,17 @@ var paymentDialogWrapper = {
   },
 
   createPaymentAddress({
-    country = "",
     addressLines = [],
+    city = "",
+    country = "",
+    dependentLocality = "",
+    organization = "",
+    postalCode = "",
+    phone = "",
+    recipient = "",
     region = "",
     regionCode = "",
-    city = "",
-    dependentLocality = "",
-    postalCode = "",
     sortingCode = "",
-    organization = "",
-    recipient = "",
-    phone = "",
   }) {
     const paymentAddress = Cc["@mozilla.org/dom/payments/payment-address;1"]
                            .createInstance(Ci.nsIPaymentAddress);

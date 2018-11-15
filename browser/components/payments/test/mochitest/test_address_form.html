@@ -410,7 +410,7 @@ add_task(async function test_merchantShippingAddressErrors() {
   await form.promiseReady;
 
   // Merchant errors only make sense when editing a record so add one.
-  let address1 = deepClone(PTU.Addresses.TimBL);
+  let address1 = deepClone(PTU.Addresses.TimBR);
   address1.guid = "9864798564";
 
   const state = {
@@ -428,11 +428,13 @@ add_task(async function test_merchantShippingAddressErrors() {
           addressLine: "Street address needs to start with a D",
           city: "City needs to start with a B",
           country: "Country needs to start with a C",
+          dependentLocality: "Can only be SUBURBS, not NEIGHBORHOODS",
           organization: "organization needs to start with an A",
           phone: "Telephone needs to start with a 9",
           postalCode: "Postal code needs to start with a 0",
           recipient: "Name needs to start with a Z",
           region: "Region needs to start with a Y",
+          regionCode: "Regions must be 1 to 3 characters in length (sometimes ;) )",
         },
       },
     },
@@ -445,8 +447,11 @@ add_task(async function test_merchantShippingAddressErrors() {
   await asyncElementRendered();
 
   function checkValidationMessage(selector, property) {
+    let expected = state.request.paymentDetails.shippingAddressErrors[property];
+    let container = form.form.querySelector(selector + "-container");
+    ok(!isHidden(container), selector + "-container should be visible");
     is(form.form.querySelector(selector).validationMessage,
-       state.request.paymentDetails.shippingAddressErrors[property],
+       expected,
        "Validation message should match for " + selector);
   }
 
@@ -454,12 +459,16 @@ add_task(async function test_merchantShippingAddressErrors() {
 
   checkValidationMessage("#street-address", "addressLine");
   checkValidationMessage("#address-level2", "city");
+  checkValidationMessage("#address-level3", "dependentLocality");
   checkValidationMessage("#country", "country");
   checkValidationMessage("#organization", "organization");
   checkValidationMessage("#tel", "phone");
   checkValidationMessage("#postal-code", "postalCode");
   checkValidationMessage("#given-name", "recipient");
-  checkValidationMessage("#address-level1", "region");
+  checkValidationMessage("#address-level1", "regionCode");
+  isnot(form.form.querySelector("#address-level1"),
+        state.request.paymentDetails.shippingAddressErrors.region,
+        "When both region and regionCode are supplied we only show the 'regionCode' error");
 
   // TODO: bug 1482808 - the save button should be enabled after editing the fields
 
