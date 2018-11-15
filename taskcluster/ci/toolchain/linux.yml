@@ -648,6 +648,7 @@ linux64-sccache:
         toolchain-artifact: public/build/sccache2.tar.xz
     toolchains:
         - linux64-rust-1.28
+        - linux64-binutils
 
 linux64-cbindgen:
     description: "cbindgen toolchain build"
