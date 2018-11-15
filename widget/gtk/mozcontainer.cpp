@@ -180,9 +180,9 @@ registry_handle_global (void *data,
     if(strcmp(interface, "wl_subcompositor") == 0) {
         container->subcompositor =
             static_cast<wl_subcompositor*>(wl_registry_bind(registry,
-                                           name,
-                                           &wl_subcompositor_interface,
-                                           1));
+                name,
+                &wl_subcompositor_interface,
+                WL_SUBCOMPOSITOR_GET_SUBSURFACE_SINCE_VERSION));
     }
 }
 
