@@ -22,7 +22,7 @@ from moztest.resolve import TestResolver
 from mozversioncontrol import get_repository_object
 
 from ..cli import BaseTryParser
-from ..tasks import generate_tasks, filter_tasks_by_paths
+from ..tasks import generate_tasks, filter_tasks_by_paths, resolve_tests_by_suite
 from ..push import push_to_try
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -375,7 +375,7 @@ def run_coverage_try(templates={}, full=False, parameters=None,
     print('Found ' + test_count_message)
 
     # Set the test paths to be run by setting MOZHARNESS_TEST_PATHS.
-    path_env = {'MOZHARNESS_TEST_PATHS': ':'.join(test_files)}
+    path_env = {'MOZHARNESS_TEST_PATHS': json.dumps(resolve_tests_by_suite(test_files))}
     templates.setdefault('env', {}).update(path_env)
 
     # Build commit message.

@@ -6,6 +6,7 @@
 # ***** END LICENSE BLOCK *****
 
 import copy
+import json
 import os
 import sys
 
@@ -317,9 +318,11 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin,
             # Make sure that the logging directory exists
             self.fatal("Could not create blobber upload directory")
 
-        if os.environ.get('MOZHARNESS_TEST_PATHS'):
+        test_paths = json.loads(os.environ.get('MOZHARNESS_TEST_PATHS', '""'))
+
+        if test_paths and 'marionette' in test_paths:
             paths = [os.path.join(dirs['abs_test_install_dir'], 'marionette', 'tests', p)
-                     for p in os.environ['MOZHARNESS_TEST_PATHS'].split(':')]
+                     for p in test_paths['marionette']]
             cmd.extend(paths)
         else:
             cmd.append(manifest)
