@@ -17,16 +17,14 @@
 
   <script type="application/javascript">
     function doTest() {
-      let iframeDoc = document.getElementById("iframe").contentDocument;
-
       // explicit content
-      let label = iframeDoc.getElementById("label");
-      let element = iframeDoc.getElementById("element");
+      let label = document.getElementById("label");
+      let element = document.getElementById("element");
       testRelation(label, RELATION_LABEL_FOR, element);
       testRelation(element, RELATION_LABELLED_BY, label);
 
       // shadow DOM content
-      let shadowRoot = iframeDoc.getElementById("shadowcontainer").shadowRoot;
+      let shadowRoot = document.getElementById("shadowcontainer").shadowRoot;
       let shadowLabel = shadowRoot.getElementById("label");
       let shadowElement = shadowRoot.getElementById("element");
 
@@ -37,38 +35,24 @@
     }
 
     SimpleTest.waitForExplicitFinish();
-    SpecialPowers.pushPrefEnv({
-      set: [
-        [ "dom.webcomponents.shadowdom.enabled", true ],
-      ],
-    }, function() {
-      // This test loads in an iframe, to ensure that the element instance is
-      // loaded with the correct value of the preference.
-      let sc = "script";
-      let iframe = document.createElement("iframe");
-      iframe.id = "iframe";
-      iframe.src = `data:text/html,<html>
-        <body>
-          <div id='label'></div><div id='element' aria-labelledby='label'></div>
-          <div id='shadowcontainer'></div>
-          <${sc}>
-            let shadowRoot = document.getElementById('shadowcontainer').
-              attachShadow({mode: 'open'});
-            shadowRoot.innerHTML =
-              "<div id='label'></div><div id='element' aria-labelledby='label'></div>";
-          </${sc}>
-        </body>
-      </html>`;
 
-      addA11yLoadEvent(doTest, iframe.contentWindow);
-      document.body.appendChild(iframe);
-    });
+    addA11yLoadEvent(doTest, window);
   </script>
 </head>
 
 <body>
   <p id="display"></p>
-  <div id="content" style="display: none"></div>
+  <div id="content">
+    <div id="label"></div>
+    <div id="element" aria-labelledby="label"></div>
+    <div id="shadowcontainer"></div>
+    <script>
+      let shadowRoot = document.getElementById("shadowcontainer").
+        attachShadow({mode: "open"});
+      shadowRoot.innerHTML =
+        `<div id="label"></div><div id="element" aria-labelledby="label"></div>`;
+    </script>
+  </div>
   <pre id="test">
   </pre>
 </body>

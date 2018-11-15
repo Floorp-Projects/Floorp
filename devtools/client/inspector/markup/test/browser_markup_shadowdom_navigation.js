@@ -45,7 +45,6 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  await pushPref("dom.webcomponents.shadowdom.enabled", true);
   await pushPref("dom.webcomponents.customelements.enabled", true);
 
   const {inspector} = await openInspectorForURL(TEST_URL);

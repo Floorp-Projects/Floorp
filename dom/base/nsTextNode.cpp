@@ -151,12 +151,6 @@ void nsTextNode::UnbindFromTree(bool aDeep, bool aNullParent)
   CharacterData::UnbindFromTree(aDeep, aNullParent);
 }
 
-bool
-nsTextNode::IsShadowDOMEnabled(JSContext* aCx, JSObject* aObject)
-{
-  return nsDocument::IsShadowDOMEnabled(aCx, aObject);
-}
-
 #ifdef DEBUG
 void
 nsTextNode::List(FILE* out, int32_t aIndent) const

@@ -17,11 +17,7 @@ NS_NewHTMLSlotElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                       mozilla::dom::FromParser aFromParser)
 {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo(std::move(aNodeInfo));
-  if (nsDocument::IsShadowDOMEnabled(nodeInfo->GetDocument())) {
-    return new mozilla::dom::HTMLSlotElement(nodeInfo.forget());
-  }
-
-  return new mozilla::dom::HTMLUnknownElement(nodeInfo.forget());
+  return new mozilla::dom::HTMLSlotElement(nodeInfo.forget());
 }
 
 namespace mozilla {

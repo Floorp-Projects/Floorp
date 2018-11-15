@@ -18,7 +18,6 @@ class TestShadowDom(MarionetteTestCase):
 
     def setUp(self):
         super(TestShadowDom, self).setUp()
-        self.marionette.set_pref("dom.webcomponents.shadowdom.enabled", True)
         self.marionette.navigate(self.marionette.absolute_url("test_shadow_dom.html"))
 
         self.host = self.marionette.find_element(By.ID, "host")
@@ -26,7 +25,6 @@ class TestShadowDom(MarionetteTestCase):
         self.button = self.marionette.find_element(By.ID, "button")
 
     def tearDown(self):
-        self.marionette.clear_pref("dom.webcomponents.shadowdom.enabled")
         super(TestShadowDom, self).tearDown()
 
     def test_chrome_error(self):
