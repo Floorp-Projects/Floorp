@@ -284,7 +284,8 @@ public:
   void NotifyPipelineRendered(const wr::PipelineId& aPipelineId,
                               const wr::Epoch& aEpoch,
                               TimeStamp& aCompositeStart,
-                              TimeStamp& aCompositeEnd);
+                              TimeStamp& aCompositeEnd,
+                              wr::RendererStats* aStats = nullptr);
   RefPtr<AsyncImagePipelineManager> GetAsyncImagePipelineManager() const;
 
   PCompositorWidgetParent* AllocPCompositorWidgetParent(const CompositorWidgetInitData& aInitData) override;

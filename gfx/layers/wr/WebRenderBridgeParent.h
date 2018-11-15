@@ -169,7 +169,8 @@ public:
                                 const bool aUseForTelemetry = true);
   TransactionId LastPendingTransactionId();
   TransactionId FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, const TimeStamp& aEndTime,
-                                            UiCompositorControllerParent* aUiController);
+                                            UiCompositorControllerParent* aUiController,
+                                            wr::RendererStats* aStats = nullptr);
 
   TextureFactoryIdentifier GetTextureFactoryIdentifier();
 
