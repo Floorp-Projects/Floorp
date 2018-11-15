@@ -47,3 +47,5 @@ fuzzy-if(webrender&&gtkWidget,96-96,163-163) == stepUp.html 75pct-common-ref.htm
 == range-vrl-orient-inline.html range-orient-vertical-rtl.html
 == range-vrl-orient-horizontal.html range-orient-horizontal-rtl.html
 == range-vrl-orient-vertical.html range-orient-vertical-rtl.html
+
+skip-if(Android) == range-border-background.html range-border-background-ref.html # Android doesn't have a native theme for -webkit-appearance:range
