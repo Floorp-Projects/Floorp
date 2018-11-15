@@ -513,14 +513,24 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     // Quick checks to prevent creating a new walker if possible.
     if (isBeforePseudoElement(node.rawNode) ||
         isAfterPseudoElement(node.rawNode) ||
+        isShadowHost(node.rawNode) ||
         node.rawNode.nodeType != Node.ELEMENT_NODE ||
         node.rawNode.children.length > 0) {
       return undefined;
     }
 
-    const walker = isDirectShadowHostChild(node.rawNode)
-      ? this.getNonAnonymousWalker(node.rawNode)
-      : this.getDocumentWalker(node.rawNode);
+    let walker;
+    try {
+      // By default always try to use an anonymous walker. Even for DirectShadowHostChild,
+      // children should be available through an anonymous walker (unless the child is not
+      // slotted, see catch block).
+      walker = this.getDocumentWalker(node.rawNode);
+    } catch (e) {
+      // Using an anonymous walker might throw, for instance on unslotted shadow host
+      // children.
+      walker = this.getNonAnonymousWalker(node.rawNode);
+    }
+
     const firstChild = walker.firstChild();
 
     // Bail out if:
