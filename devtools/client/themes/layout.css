@@ -96,19 +96,6 @@
   flex-direction: column;
 }
 
-#layout-flexbox-container .flex-header-content:not(.flex-item-shown) {
-  overflow: hidden;
-  display: flex;
-}
-
-#layout-flexbox-container .flex-header-content:not(.flex-item-shown) .objectBox {
-  max-width: calc(100% - 20px);
-  margin-inline-end: 5px;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
 /**
  * Header
  */
@@ -116,8 +103,7 @@
 .flex-header {
   display: flex;
   align-items: center;
-  height: 32px;
-  padding: 0 3px;
+  padding: 3px;
   border-block-end: 1px solid var(--theme-splitter-color);
 }
 
@@ -127,16 +113,42 @@
 }
 
 .flex-header-content {
+  display: flex;
   flex: 1;
-  padding-top: 2px;
+  padding: 2px 0;
   padding-inline-start: 20px;
   -moz-user-select: none;
 }
 
+.flex-header-content:not(.flex-item-shown) {
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.flex-header-content:not(.flex-item-shown) .objectBox {
+  max-width: calc(100% - 20px);
+  margin-inline-end: 5px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 .flex-header-content.flex-item-shown {
-  display: flex;
   justify-content: center;
   padding: 0;
+}
+
+.flex-header-container-properties {
+  display: flex;
+}
+
+.flex-header-container-properties .inspector-badge:first-child {
+  margin-inline-start: 0;
+}
+
+.flex-header-container-label,
+.flex-header-container-properties {
+  padding: 3px 0;
 }
 
 /**
