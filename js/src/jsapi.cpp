@@ -4408,6 +4408,13 @@ JS::GetPromiseResult(JS::HandleObject promiseObj)
     return promise->state() == JS::PromiseState::Fulfilled ? promise->value() : promise->reason();
 }
 
+JS_PUBLIC_API(bool)
+JS::GetPromiseIsHandled(JS::HandleObject promiseObj)
+{
+    PromiseObject* promise = &promiseObj->as<PromiseObject>();
+    return !promise->isUnhandled();
+}
+
 JS_PUBLIC_API(JSObject*)
 JS::GetPromiseAllocationSite(JS::HandleObject promise)
 {
