@@ -194,9 +194,12 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
         }
 
         private var suggestions: List<SpannableStringBuilder> = listOf()
+        private var pendingJob: Job? = null
 
         suspend fun refresh(suggestions: List<SpannableStringBuilder>) = coroutineScope {
-            launch(IO) {
+            pendingJob?.cancel()
+
+            pendingJob = launch(IO) {
                 val result = DiffUtil.calculateDiff(DiffCallback(this@SuggestionsAdapter.suggestions, suggestions))
 
                 launch(Main) {
