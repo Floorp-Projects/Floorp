@@ -26,7 +26,8 @@ add_task(async function() {
   info("Check the flex display badge is shown and not active.");
   await selectNode("#flex", inspector);
   const flexContainer = await getContainerForSelector("#flex", inspector);
-  const flexDisplayBadge = flexContainer.elt.querySelector(".markup-badge[data-display]");
+  const flexDisplayBadge = flexContainer.elt.querySelector(
+    ".inspector-badge.interactive[data-display]");
   ok(!flexDisplayBadge.classList.contains("active"), "flex display badge is not active.");
   ok(flexDisplayBadge.classList.contains("interactive"),
     "flex display badge is interactive.");
