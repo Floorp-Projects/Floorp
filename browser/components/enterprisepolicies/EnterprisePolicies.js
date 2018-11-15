@@ -407,7 +407,9 @@ class WindowsGPOPoliciesProvider {
 
     // Machine policies override user policies, so we read
     // user policies first and then replace them if necessary.
+    log.debug("root = HKEY_CURRENT_USER");
     this._readData(wrk, wrk.ROOT_KEY_CURRENT_USER);
+    log.debug("root = HKEY_LOCAL_MACHINE");
     this._readData(wrk, wrk.ROOT_KEY_LOCAL_MACHINE);
   }
 
@@ -426,8 +428,7 @@ class WindowsGPOPoliciesProvider {
   _readData(wrk, root) {
     wrk.open(root, "SOFTWARE\\Policies", wrk.ACCESS_READ);
     if (wrk.hasChild("Mozilla\\Firefox")) {
-      let isMachineRoot = (root == wrk.ROOT_KEY_LOCAL_MACHINE);
-      this._policies = WindowsGPOParser.readPolicies(wrk, this._policies, isMachineRoot);
+      this._policies = WindowsGPOParser.readPolicies(wrk, this._policies);
     }
     wrk.close();
   }
