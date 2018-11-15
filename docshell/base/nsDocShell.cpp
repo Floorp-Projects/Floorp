@@ -4277,22 +4277,6 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
   nsAutoCString cssClass;
   nsAutoCString errorPage;
 
-  if (mLoadURIDelegate) {
-    nsCOMPtr<nsIURI> errorPageURI;
-    rv = mLoadURIDelegate->HandleLoadError(aURI, aError,
-                                           NS_ERROR_GET_MODULE(aError),
-                                           getter_AddRefs(errorPageURI));
-    if (NS_FAILED(rv)) {
-      *aDisplayedErrorPage = false;
-      return NS_OK;
-    }
-
-    if (errorPageURI) {
-      *aDisplayedErrorPage = NS_SUCCEEDED(LoadErrorPage(errorPageURI, aURI, aFailedChannel));
-      return NS_OK;
-    }
-  }
-
   errorPage.AssignLiteral("neterror");
 
   // Turn the error code into a human readable error message.
@@ -4606,6 +4590,22 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
   // Test if the error should be displayed
   if (!error) {
     return NS_OK;
+  }
+
+  if (mLoadURIDelegate) {
+    nsCOMPtr<nsIURI> errorPageURI;
+    rv = mLoadURIDelegate->HandleLoadError(aURI, aError,
+                                           NS_ERROR_GET_MODULE(aError),
+                                           getter_AddRefs(errorPageURI));
+    if (NS_FAILED(rv)) {
+      *aDisplayedErrorPage = false;
+      return NS_OK;
+    }
+
+    if (errorPageURI) {
+      *aDisplayedErrorPage = NS_SUCCEEDED(LoadErrorPage(errorPageURI, aURI, aFailedChannel));
+      return NS_OK;
+    }
   }
 
   if (!errorDescriptionID) {
