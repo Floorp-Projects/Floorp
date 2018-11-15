@@ -121,7 +121,7 @@ FunctionBox::atomsAreKept()
 }
 #endif
 
-FunctionBox::FunctionBox(JSContext* cx, ObjectBox* traceListHead,
+FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
                          JSFunction* fun, uint32_t toStringStart,
                          Directives directives, bool extraWarnings,
                          GeneratorKind generatorKind, FunctionAsyncKind asyncKind)
