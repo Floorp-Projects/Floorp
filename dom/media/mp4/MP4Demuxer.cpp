@@ -10,16 +10,15 @@
 
 #include "MP4Demuxer.h"
 
-#include "mozilla/StaticPrefs.h"
-// Used for telemetry
-#include "mozilla/Telemetry.h"
 #include "AnnexB.h"
-#include "H264.h"
-#include "MoofParser.h"
-#include "MP4Metadata.h"
-#include "ResourceStream.h"
 #include "BufferStream.h"
+#include "H264.h"
 #include "Index.h"
+#include "MP4Metadata.h"
+#include "MoofParser.h"
+#include "ResourceStream.h"
+#include "mozilla/StaticPrefs.h"
+#include "mozilla/Telemetry.h"
 #include "nsAutoPtr.h"
 #include "nsPrintfCString.h"
 
@@ -45,7 +44,7 @@ class MP4TrackDemuxer
   , public DecoderDoctorLifeLogger<MP4TrackDemuxer>
 {
 public:
-  MP4TrackDemuxer(MP4Demuxer* aParent,
+  MP4TrackDemuxer(MediaResource* aResource,
                   UniquePtr<TrackInfo>&& aInfo,
                   const IndiceWrapper& aIndices);
 
@@ -64,17 +63,14 @@ public:
 
   media::TimeIntervals GetBuffered() override;
 
-  void BreakCycles() override;
-
   void NotifyDataRemoved();
+  void NotifyDataArrived();
 
 private:
-  friend class MP4Demuxer;
-  void NotifyDataArrived();
   already_AddRefed<MediaRawData> GetNextSample();
   void EnsureUpToDateIndex();
   void SetNextKeyFrameTime();
-  RefPtr<MP4Demuxer> mParent;
+  RefPtr<MediaResource> mResource;
   RefPtr<ResourceStream> mStream;
   UniquePtr<TrackInfo> mInfo;
   RefPtr<Index> mIndex;
@@ -235,8 +231,8 @@ MP4Demuxer::Init()
         }
         continue;
       }
-      RefPtr<MP4TrackDemuxer> demuxer =
-        new MP4TrackDemuxer(this, std::move(info.Ref()), *indices.Ref().get());
+      RefPtr<MP4TrackDemuxer> demuxer = new MP4TrackDemuxer(
+        mResource, std::move(info.Ref()), *indices.Ref().get());
       DDLINKCHILD("audio demuxer", demuxer.get());
       mAudioDemuxers.AppendElement(std::move(demuxer));
     }
@@ -271,8 +267,8 @@ MP4Demuxer::Init()
         }
         continue;
       }
-      RefPtr<MP4TrackDemuxer> demuxer =
-        new MP4TrackDemuxer(this, std::move(info.Ref()), *indices.Ref().get());
+      RefPtr<MP4TrackDemuxer> demuxer = new MP4TrackDemuxer(
+        mResource, std::move(info.Ref()), *indices.Ref().get());
       DDLINKCHILD("video demuxer", demuxer.get());
       mVideoDemuxers.AppendElement(std::move(demuxer));
     }
@@ -364,11 +360,11 @@ MP4Demuxer::GetCrypto()
   return crypto;
 }
 
-MP4TrackDemuxer::MP4TrackDemuxer(MP4Demuxer* aParent,
+MP4TrackDemuxer::MP4TrackDemuxer(MediaResource* aResource,
                                  UniquePtr<TrackInfo>&& aInfo,
                                  const IndiceWrapper& aIndices)
-  : mParent(aParent)
-  , mStream(new ResourceStream(mParent->mResource))
+  : mResource(aResource)
+  , mStream(new ResourceStream(aResource))
   , mInfo(std::move(aInfo))
   , mIndex(new Index(aIndices,
                      mStream,
@@ -413,7 +409,7 @@ MP4TrackDemuxer::EnsureUpToDateIndex()
   if (!mNeedReIndex) {
     return;
   }
-  AutoPinned<MediaResource> resource(mParent->mResource);
+  AutoPinned<MediaResource> resource(mResource);
   MediaByteRangeSet byteRanges;
   nsresult rv = resource->GetCachedRanges(byteRanges);
   if (NS_FAILED(rv)) {
@@ -624,7 +620,7 @@ media::TimeIntervals
 MP4TrackDemuxer::GetBuffered()
 {
   EnsureUpToDateIndex();
-  AutoPinned<MediaResource> resource(mParent->mResource);
+  AutoPinned<MediaResource> resource(mResource);
   MediaByteRangeSet byteRanges;
   nsresult rv = resource->GetCachedRanges(byteRanges);
 
@@ -644,7 +640,7 @@ MP4TrackDemuxer::NotifyDataArrived()
 void
 MP4TrackDemuxer::NotifyDataRemoved()
 {
-  AutoPinned<MediaResource> resource(mParent->mResource);
+  AutoPinned<MediaResource> resource(mResource);
   MediaByteRangeSet byteRanges;
   nsresult rv = resource->GetCachedRanges(byteRanges);
   if (NS_FAILED(rv)) {
@@ -652,12 +648,6 @@ MP4TrackDemuxer::NotifyDataRemoved()
   }
   mIndex->UpdateMoofIndex(byteRanges, true /* can evict */);
   mNeedReIndex = false;
-}
-
-void
-MP4TrackDemuxer::BreakCycles()
-{
-  mParent = nullptr;
 }
 
 } // namespace mozilla
