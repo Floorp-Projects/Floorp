@@ -230,6 +230,11 @@ Consider installing certutil via your OS package manager or directly.""")
             kwargs["headless"] = True
             logger.info("Running in headless mode, pass --no-headless to disable")
 
+        # Turn off Firefox WebRTC ICE logging on WPT (turned on by mozrunner)
+        os.unsetenv('R_LOG_LEVEL')
+        os.unsetenv('R_LOG_DESTINATION')
+        os.unsetenv('R_LOG_VERBOSE')
+
         # Allow WebRTC tests to call getUserMedia.
         kwargs["extra_prefs"].append("media.navigator.streams.fake=true")
 
