@@ -1585,6 +1585,12 @@
                 "minimum": 0,
                 "description": "The ID of the tab that has become active."
               },
+              "previousTabId": {
+                "type": "integer",
+                "minimum": 0,
+                "optional": true,
+                "description": "The ID of the tab that was previously active, if that tab is still open."
+              },
               "windowId": {
                 "type": "integer",
                 "minimum": 0,
