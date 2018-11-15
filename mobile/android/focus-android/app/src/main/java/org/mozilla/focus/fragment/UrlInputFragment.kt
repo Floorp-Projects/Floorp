@@ -143,7 +143,7 @@ class UrlInputFragment :
         }
     }
 
-    private lateinit var job: Job
+    private var job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
     private val autoCompleteProvider: DomainAutoCompleteProvider = DomainAutoCompleteProvider()
@@ -195,7 +195,9 @@ class UrlInputFragment :
     override fun onResume() {
         super.onResume()
 
-        job = Job()
+        if (job.isCancelled) {
+            job = Job()
+        }
 
         activity?.let {
             val settings = Settings.getInstance(it.applicationContext)
