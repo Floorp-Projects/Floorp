@@ -22,7 +22,8 @@ add_task(async function() {
   info("Check the grid display badge is shown and not active.");
   await selectNode("#grid", inspector);
   const gridContainer = await getContainerForSelector("#grid", inspector);
-  const gridDisplayBadge = gridContainer.elt.querySelector(".markup-badge[data-display]");
+  const gridDisplayBadge = gridContainer.elt.querySelector(
+    ".inspector-badge.interactive[data-display]");
   ok(!gridDisplayBadge.classList.contains("active"), "grid display badge is not active.");
   ok(gridDisplayBadge.classList.contains("interactive"),
     "grid display badge is interactive.");
