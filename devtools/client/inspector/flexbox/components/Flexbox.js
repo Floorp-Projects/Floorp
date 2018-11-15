@@ -14,9 +14,6 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
 
-loader.lazyGetter(this, "FlexContainerProperties", function() {
-  return createFactory(require("./FlexContainerProperties"));
-});
 loader.lazyGetter(this, "FlexItemList", function() {
   return createFactory(require("./FlexItemList"));
 });
@@ -44,12 +41,6 @@ class Flexbox extends PureComponent {
       onToggleFlexboxHighlighter: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
     };
-  }
-
-  renderFlexContainerProperties() {
-    return FlexContainerProperties({
-      properties: this.props.flexContainer.properties,
-    });
   }
 
   renderFlexItemList() {
@@ -133,7 +124,6 @@ class Flexbox extends PureComponent {
         }),
         !flexItemShown && flexItems.length > 0 ? this.renderFlexItemList() : null,
         flexItemShown ? this.renderFlexItemSizing() : null,
-        !flexItemShown ? this.renderFlexContainerProperties() : null
       )
     );
   }
