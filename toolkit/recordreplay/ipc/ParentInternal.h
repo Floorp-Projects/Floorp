@@ -58,9 +58,6 @@ static Monitor* gMonitor;
 // Allow the child process to resume execution.
 void Resume(bool aForward);
 
-// Pause the child process at the next opportunity.
-void Pause();
-
 // Direct the child process to warp to a specific point.
 void TimeWarp(const js::ExecutionPoint& target);
 
@@ -76,6 +73,13 @@ void ClearBreakpoints();
 // which might trigger an unhandled divergence can be processed (recording
 // children cannot process such requests).
 void MaybeSwitchToReplayingChild();
+
+// Block until the active child has paused somewhere.
+void WaitUntilActiveChildIsPaused();
+
+// Notify the parent that the debugger has paused and will allow the user to
+// interact with it and potentially start rewinding.
+void MarkActiveChildExplicitPause();
 
 ///////////////////////////////////////////////////////////////////////////////
 // Graphics
