@@ -120,7 +120,7 @@ legacy-extensions =
                                 ),
                                 variants=[
                                     FTL.Variant(
-                                        key=FTL.VariantName("windows"),
+                                        key=FTL.Identifier("windows"),
                                         default=False,
                                         value=REPLACE(
                                             "toolkit/chrome/mozapps/extensions/extensions.dtd",
@@ -131,7 +131,7 @@ legacy-extensions =
                                         )
                                     ),
                                     FTL.Variant(
-                                        key=FTL.VariantName("other"),
+                                        key=FTL.Identifier("other"),
                                         default=True,
                                         value=REPLACE(
                                             "toolkit/chrome/mozapps/extensions/extensions.dtd",
@@ -161,7 +161,7 @@ legacy-extensions =
                                         ),
                                         variants=[
                                             FTL.Variant(
-                                                key=FTL.VariantName("windows"),
+                                                key=FTL.Identifier("windows"),
                                                 default=False,
                                                 value=COPY(
                                                     "toolkit/chrome/mozapps/extensions/extensions.dtd",
@@ -169,7 +169,7 @@ legacy-extensions =
                                                 )
                                             ),
                                             FTL.Variant(
-                                                key=FTL.VariantName("other"),
+                                                key=FTL.Identifier("other"),
                                                 default=True,
                                                 value=COPY(
                                                     "toolkit/chrome/mozapps/extensions/extensions.dtd",
@@ -193,7 +193,7 @@ legacy-extensions =
                                         ),
                                         variants=[
                                             FTL.Variant(
-                                                key=FTL.VariantName("windows"),
+                                                key=FTL.Identifier("windows"),
                                                 default=False,
                                                 value=COPY(
                                                     "toolkit/chrome/mozapps/extensions/extensions.dtd",
@@ -201,7 +201,7 @@ legacy-extensions =
                                                 )
                                             ),
                                             FTL.Variant(
-                                                key=FTL.VariantName("other"),
+                                                key=FTL.Identifier("other"),
                                                 default=True,
                                                 value=COPY(
                                                     "toolkit/chrome/mozapps/extensions/extensions.dtd",
@@ -271,7 +271,7 @@ legacy-extensions =
                                         ),
                                         variants=[
                                             FTL.Variant(
-                                                key=FTL.VariantName("windows"),
+                                                key=FTL.Identifier("windows"),
                                                 default=False,
                                                 value=COPY(
                                                     "toolkit/chrome/mozapps/extensions/extensions.dtd",
@@ -279,7 +279,7 @@ legacy-extensions =
                                                 )
                                             ),
                                             FTL.Variant(
-                                                key=FTL.VariantName("other"),
+                                                key=FTL.Identifier("other"),
                                                 default=True,
                                                 value=COPY(
                                                     "toolkit/chrome/mozapps/extensions/extensions.dtd",
@@ -303,7 +303,7 @@ legacy-extensions =
                                         ),
                                         variants=[
                                             FTL.Variant(
-                                                key=FTL.VariantName("windows"),
+                                                key=FTL.Identifier("windows"),
                                                 default=False,
                                                 value=COPY(
                                                     "toolkit/chrome/mozapps/extensions/extensions.dtd",
@@ -311,7 +311,7 @@ legacy-extensions =
                                                 )
                                             ),
                                             FTL.Variant(
-                                                key=FTL.VariantName("other"),
+                                                key=FTL.Identifier("other"),
                                                 default=True,
                                                 value=COPY(
                                                     "toolkit/chrome/mozapps/extensions/extensions.dtd",
@@ -335,7 +335,7 @@ legacy-extensions =
                                         ),
                                         variants=[
                                             FTL.Variant(
-                                                key=FTL.VariantName("windows"),
+                                                key=FTL.Identifier("windows"),
                                                 default=False,
                                                 value=COPY(
                                                     "toolkit/chrome/mozapps/extensions/extensions.dtd",
@@ -343,7 +343,7 @@ legacy-extensions =
                                                 )
                                             ),
                                             FTL.Variant(
-                                                key=FTL.VariantName("other"),
+                                                key=FTL.Identifier("other"),
                                                 default=True,
                                                 value=COPY(
                                                     "toolkit/chrome/mozapps/extensions/extensions.dtd",
