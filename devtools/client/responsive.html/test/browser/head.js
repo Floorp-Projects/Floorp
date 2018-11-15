@@ -509,3 +509,9 @@ function reloadOnTouchChange(enabled) {
   const pref = RELOAD_CONDITION_PREF_PREFIX + "touchSimulation";
   Services.prefs.setBoolPref(pref, enabled);
 }
+
+function rotateViewport(ui) {
+  const { document } = ui.toolWindow;
+  const rotateButton = document.getElementById("rotate-button");
+  rotateButton.click();
+}
