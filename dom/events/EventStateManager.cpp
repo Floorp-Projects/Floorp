@@ -844,6 +844,9 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       compositionEvent->mData = selectedText.mReply.mString;
     }
     break;
+  case eTouchStart:
+    SetGestureDownPoint(aEvent->AsTouchEvent());
+    break;
   case eTouchEnd:
     NotifyTargetUserActivation(aEvent, aTargetContent);
     break;
@@ -1688,8 +1691,7 @@ EventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
 
   // Note that |inDownEvent| could be either a mouse down event or a
   // synthesized mouse move event.
-  mGestureDownPoint =
-    inDownEvent->mRefPoint + inDownEvent->mWidget->WidgetToScreenOffset();
+  SetGestureDownPoint(inDownEvent);
 
   if (inDownFrame) {
     inDownFrame->GetContentForEvent(inDownEvent,
@@ -1707,6 +1709,21 @@ EventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
     // fire off a timer to track click-hold
     CreateClickHoldTimer(aPresContext, inDownFrame, inDownEvent);
   }
+}
+
+void
+EventStateManager::SetGestureDownPoint(WidgetGUIEvent* aEvent)
+{
+  mGestureDownPoint =
+    GetEventRefPoint(aEvent) + aEvent->mWidget->WidgetToScreenOffset();
+}
+
+LayoutDeviceIntPoint
+EventStateManager::GetEventRefPoint(WidgetEvent* aEvent) const
+{
+  auto touchEvent = aEvent->AsTouchEvent();
+  return (touchEvent && !touchEvent->mTouches.IsEmpty()) ?
+    aEvent->AsTouchEvent()->mTouches[0]->mRefPoint : aEvent->mRefPoint;
 }
 
 void
@@ -1808,11 +1825,8 @@ EventStateManager::IsEventOutsideDragThreshold(WidgetInputEvent* aEvent) const
       sPixelThresholdY = 5;
   }
 
-  auto touchEvent = aEvent->AsTouchEvent();
-  LayoutDeviceIntPoint pt = aEvent->mWidget->WidgetToScreenOffset() +
-    ((touchEvent && !touchEvent->mTouches.IsEmpty())
-      ? aEvent->AsTouchEvent()->mTouches[0]->mRefPoint
-      : aEvent->mRefPoint);
+  LayoutDeviceIntPoint pt =
+    aEvent->mWidget->WidgetToScreenOffset() + GetEventRefPoint(aEvent);
   LayoutDeviceIntPoint distance = pt - mGestureDownPoint;
   return
     Abs(distance.x) > AssertedCast<uint32_t>(sPixelThresholdX) ||
