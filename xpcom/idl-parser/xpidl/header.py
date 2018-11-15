@@ -33,8 +33,11 @@ def attributeParamName(a):
     return "a" + firstCap(a.name)
 
 
-def attributeParamNames(a):
-    l = [attributeParamName(a)]
+def attributeParamNames(a, getter):
+    if getter and a.notxpcom:
+        l = []
+    else:
+        l = [attributeParamName(a)]
     if a.implicit_jscontext:
         l.insert(0, "cx")
     return ", ".join(l)
@@ -45,20 +48,36 @@ def attributeNativeName(a, getter):
     return "%s%s" % (getter and 'Get' or 'Set', binaryname)
 
 
-def attributeReturnType(a, macro):
+def attributeReturnType(a, getter, macro):
     """macro should be NS_IMETHOD or NS_IMETHODIMP"""
-    if a.nostdcall:
-        ret = macro == "NS_IMETHOD" and "virtual nsresult" or "nsresult"
+    # Pick the type to be returned from the getter/setter.
+    if a.notxpcom:
+        ret = a.realtype.nativeType('in').strip() if getter else "void"
     else:
-        ret = macro
+        ret = "nsresult"
+
+    # Set calling convention and virtual-ness
+    if a.nostdcall:
+        if macro == "NS_IMETHOD":
+            # This is the declaration.
+            ret = "virtual %s" % ret
+    else:
+        if ret == "nsresult":
+            ret = macro
+        else:
+            ret = "%s_(%s)" % (macro, ret)
+
     if a.must_use:
         ret = "MOZ_MUST_USE " + ret
     return ret
 
 
 def attributeParamlist(a, getter):
-    l = ["%s%s" % (a.realtype.nativeType(getter and 'out' or 'in'),
-                   attributeParamName(a))]
+    if getter and a.notxpcom:
+        l = []
+    else:
+        l = ["%s%s" % (a.realtype.nativeType(getter and 'out' or 'in'),
+                       attributeParamName(a))]
     if a.implicit_jscontext:
         l.insert(0, "JSContext* cx")
 
@@ -66,7 +85,7 @@ def attributeParamlist(a, getter):
 
 
 def attributeAsNative(a, getter, declType='NS_IMETHOD'):
-    params = {'returntype': attributeReturnType(a, declType),
+    params = {'returntype': attributeReturnType(a, getter, declType),
               'binaryname': attributeNativeName(a, getter),
               'paramlist': attributeParamlist(a, getter)}
     return "%(returntype)s %(binaryname)s(%(paramlist)s)" % params
@@ -78,15 +97,22 @@ def methodNativeName(m):
 
 def methodReturnType(m, macro):
     """macro should be NS_IMETHOD or NS_IMETHODIMP"""
-    if m.nostdcall and m.notxpcom:
-        ret = "%s%s" % (macro == "NS_IMETHOD" and "virtual " or "",
-                        m.realtype.nativeType('in').strip())
-    elif m.nostdcall:
-        ret = "%snsresult" % (macro == "NS_IMETHOD" and "virtual " or "")
-    elif m.notxpcom:
-        ret = "%s_(%s)" % (macro, m.realtype.nativeType('in').strip())
+    if m.notxpcom:
+        ret = m.realtype.nativeType('in').strip()
     else:
-        ret = macro
+        ret = "nsresult"
+
+    # Set calling convention and virtual-ness
+    if m.nostdcall:
+        if macro == "NS_IMETHOD":
+            # This is the declaration
+            ret = "virtual %s" % ret
+    else:
+        if ret == "nsresult":
+            ret = macro
+        else:
+            ret = "%s_(%s)" % (macro, ret)
+
     if m.must_use:
         ret = "MOZ_MUST_USE " + ret
     return ret
@@ -515,13 +541,14 @@ def write_interface(iface, fd):
                 if forward_infallible and member.infallible:
                     fd.write("\\\n  using %s::%s; " %
                              (iface.name, attributeNativeName(member, True)))
-                fd.write(tmpl % {'asNative': attributeAsNative(member, True),
-                                 'nativeName': attributeNativeName(member, True),
-                                 'paramList': attributeParamNames(member)})
+                attr_tmpl = tmpl_notxpcom if member.notxpcom else tmpl
+                fd.write(attr_tmpl % {'asNative': attributeAsNative(member, True),
+                                      'nativeName': attributeNativeName(member, True),
+                                      'paramList': attributeParamNames(member, True)})
                 if not member.readonly:
-                    fd.write(tmpl % {'asNative': attributeAsNative(member, False),
-                                     'nativeName': attributeNativeName(member, False),
-                                     'paramList': attributeParamNames(member)})
+                    fd.write(attr_tmpl % {'asNative': attributeAsNative(member, False),
+                                          'nativeName': attributeNativeName(member, False),
+                                          'paramList': attributeParamNames(member, False)})
             elif isinstance(member, xpidl.Method):
                 if member.notxpcom:
                     fd.write(tmpl_notxpcom % {'asNative': methodAsNative(member),
