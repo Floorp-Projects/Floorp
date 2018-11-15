@@ -6,19 +6,19 @@
 %define glassActiveBorderColor rgb(37, 44, 51)
 %define glassInactiveBorderColor rgb(102, 102, 102)
 
-@media (-moz-os-version: windows-win7) {
+@media (-moz-os-version: windows-win7),
+       (-moz-os-version: windows-win8) {
   @media (-moz-windows-classic: 0) {
     #main-window[sizemode="normal"] > #navigator-toolbox > #titlebar > #toolbar-menubar:not([autohide="true"]) > #menubar-items,
     #main-window[sizemode="normal"] > #navigator-toolbox > #titlebar > #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .toolbar-items {
       margin-top: 1px;
     }
     /**
-     * For all Windows configurations except for Windows Aero and
-     * Windows Aero Basic, the -moz-window-button-box appearance on
-     * the .titlebar-buttonbox adds an unwanted margin at the top of
-     * the button box.
+     * Except for Windows 8, Windows 7 Aero and Windows 7 Aero Basic, the
+     * -moz-window-button-box appearance on the .titlebar-buttonbox adds an
+     * unwanted margin at the top of the button box.
      *
-     * For Windows Aero:
+     * For Windows 8 and Windows Aero (which both use the compositor):
      *   We want the -moz-window-button-box applied in the restored case,
      *   and -moz-window-button-box-maximized in the maximized case.
      *
