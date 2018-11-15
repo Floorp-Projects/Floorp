@@ -353,32 +353,6 @@ CustomElementRegistry::~CustomElementRegistry()
   mozilla::DropJSObjects(this);
 }
 
-bool
-CustomElementRegistry::IsCustomElementEnabled(JSContext* aCx, JSObject* aObject)
-{
-  if (nsContentUtils::IsCustomElementsEnabled()) {
-    return true;
-  }
-
-  if (!XRE_IsParentProcess()) {
-    return false;
-  }
-
-  nsIPrincipal* principal =
-    nsContentUtils::ObjectPrincipal(js::UncheckedUnwrap(aObject));
-  return nsContentUtils::AllowXULXBLForPrincipal(principal);
-}
-
-bool
-CustomElementRegistry::IsCustomElementEnabled(nsIDocument* aDoc)
-{
-  if (nsContentUtils::IsCustomElementsEnabled()) {
-    return true;
-  }
-
-  return XRE_IsParentProcess() && aDoc->AllowXULXBL();
-}
-
 NS_IMETHODIMP
 CustomElementRegistry::RunCustomElementCreationCallback::Run()
 {

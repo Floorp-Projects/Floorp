@@ -200,13 +200,11 @@ for (const {url, tree, title} of TEST_DATA) {
   // Test each configuration in both open and closed modes
   add_task(async function() {
     info(`Testing: [${title}] in OPEN mode`);
-    await enableWebComponents();
     const {inspector} = await openInspectorForURL(url.replace("#MODE#", "open"));
     await assertMarkupViewAsTree(tree, "test-component", inspector);
   });
   add_task(async function() {
     info(`Testing: [${title}] in CLOSED mode`);
-    await enableWebComponents();
     const {inspector} = await openInspectorForURL(url.replace("#MODE#", "closed"));
     await assertMarkupViewAsTree(tree, "test-component", inspector);
   });

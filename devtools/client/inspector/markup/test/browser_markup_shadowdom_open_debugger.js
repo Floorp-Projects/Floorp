@@ -48,8 +48,6 @@ const TEST_URL = `data:text/html;charset=utf-8,` + encodeURIComponent(`
 </script>`);
 
 add_task(async function() {
-  await enableWebComponents();
-
   const {inspector, toolbox} = await openInspectorForURL(TEST_URL);
 
   // Test with an element to which we attach a shadow.

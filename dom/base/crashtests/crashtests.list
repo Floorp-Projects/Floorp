@@ -208,7 +208,7 @@ load 1324500.html
 pref(dom.IntersectionObserver.enabled,true) load 1326194-1.html
 pref(dom.IntersectionObserver.enabled,true) load 1326194-2.html
 pref(dom.IntersectionObserver.enabled,true) load 1332939.html
-pref(dom.webcomponents.customelements.enabled,true) load 1341693.html
+load 1341693.html
 load 1352453.html
 pref(dom.IntersectionObserver.enabled,true) load 1353529.xul
 load 1368327.html
@@ -232,17 +232,17 @@ load 1403377.html
 load 1405771.html
 load 1406109-1.html
 load 1324463.html
-pref(dom.webcomponents.customelements.enabled,true) load 1413815.html
+load 1413815.html
 load 1411473.html
 load 1419799.html
-skip-if(!browserIsRemote) pref(dom.webcomponents.customelements.enabled,true) pref(dom.disable_open_during_load,false) load 1419902.html # skip on non e10s loads, Bug 1419902
+skip-if(!browserIsRemote) pref(dom.disable_open_during_load,false) load 1419902.html # skip on non e10s loads, Bug 1419902
 load 1422883.html
 load 1428053.html
-pref(dom.webcomponents.customelements.enabled,true) load 1441029.html
+load 1441029.html
 load 1449601.html
 load 1445670.html
 load 1458016.html
 load 1459688.html
 load 1460794.html
 load 1505875.html
-pref(dom.webcomponents.customelements.enabled,true) load 1505811.html
+load 1505811.html

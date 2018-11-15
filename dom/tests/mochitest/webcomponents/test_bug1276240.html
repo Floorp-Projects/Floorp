@@ -36,18 +36,7 @@ function test() {
   is(e.getAttribute("is"), null);
 }
 
-function runTest() {
-  test();
-  SimpleTest.finish();
-}
-
-// test with webcomponents enabled
 test();
-
-// test with webcomponents disabled
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv(
-  { 'set': [["dom.webcomponents.customelements.enabled", false]]}, runTest);
 
 </script>
 </pre>
