@@ -201,7 +201,7 @@ gfxPlatformFontList::MemoryReporter::CollectReports(
 
 gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
     : mFontFamiliesMutex("gfxPlatformFontList::mFontFamiliesMutex"), mFontFamilies(64),
-      mOtherFamilyNames(16), mBadUnderlineFamilyNames(8), mSharedCmaps(8),
+      mOtherFamilyNames(16), mSharedCmaps(8),
       mStartIndex(0), mNumFamilies(0), mFontlistInitCount(0),
       mFontFamilyWhitelistActive(false)
 {
@@ -520,14 +520,13 @@ gfxPlatformFontList::PreloadNamesList()
 void
 gfxPlatformFontList::LoadBadUnderlineList()
 {
-    AutoTArray<nsCString, 10> blacklist;
-    gfxFontUtils::GetPrefsFontList("font.blacklist.underline_offset", blacklist);
-    uint32_t numFonts = blacklist.Length();
-    for (uint32_t i = 0; i < numFonts; i++) {
-        nsAutoCString key;
-        GenerateFontListKey(blacklist[i], key);
-        mBadUnderlineFamilyNames.PutEntry(key);
+    gfxFontUtils::GetPrefsFontList("font.blacklist.underline_offset",
+                                   mBadUnderlineFamilyNames);
+    for (auto& fam : mBadUnderlineFamilyNames) {
+        ToLowerCase(fam);
     }
+    mBadUnderlineFamilyNames.Compact();
+    mBadUnderlineFamilyNames.Sort();
 }
 
 void
@@ -854,8 +853,9 @@ gfxPlatformFontList::AddOtherFamilyName(gfxFontFamily *aFamilyEntry, nsCString& 
                       "other family: %s\n",
                       aFamilyEntry->Name().get(),
                       aOtherFamilyName.get()));
-        if (mBadUnderlineFamilyNames.Contains(key))
+        if (mBadUnderlineFamilyNames.ContainsSorted(key)) {
             aFamilyEntry->SetBadUnderlineFamily();
+        }
     }
 }
 
@@ -1682,7 +1682,11 @@ gfxPlatformFontList::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
         mFontFamiliesToLoad.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
     aSizes->mFontListSize +=
-        mBadUnderlineFamilyNames.SizeOfExcludingThis(aMallocSizeOf);
+        mBadUnderlineFamilyNames.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    for (const auto& i : mBadUnderlineFamilyNames) {
+        aSizes->mFontListSize +=
+            i.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    }
 
     aSizes->mFontListSize +=
         mSharedCmaps.ShallowSizeOfExcludingThis(aMallocSizeOf);
