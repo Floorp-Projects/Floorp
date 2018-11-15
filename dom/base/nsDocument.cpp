@@ -5743,8 +5743,7 @@ nsIDocument::CreateElement(const nsAString& aTagName,
     const ElementCreationOptions& options =
       aOptions.GetAsElementCreationOptions();
 
-    if (CustomElementRegistry::IsCustomElementEnabled(this) &&
-        options.mIs.WasPassed()) {
+    if (options.mIs.WasPassed()) {
       is = &options.mIs.Value();
     }
 
@@ -5788,8 +5787,7 @@ nsIDocument::CreateElementNS(const nsAString& aNamespaceURI,
   }
 
   const nsString* is = nullptr;
-  if (CustomElementRegistry::IsCustomElementEnabled(this) &&
-      aOptions.IsElementCreationOptions()) {
+  if (aOptions.IsElementCreationOptions()) {
     const ElementCreationOptions& options = aOptions.GetAsElementCreationOptions();
     if (options.mIs.WasPassed()) {
       is = &options.mIs.Value();
@@ -5817,8 +5815,7 @@ nsIDocument::CreateXULElement(const nsAString& aTagName,
   }
 
   const nsString* is = nullptr;
-  if (CustomElementRegistry::IsCustomElementEnabled(this) &&
-      aOptions.IsElementCreationOptions()) {
+  if (aOptions.IsElementCreationOptions()) {
     const ElementCreationOptions& options = aOptions.GetAsElementCreationOptions();
     if (options.mIs.WasPassed()) {
       is = &options.mIs.Value();

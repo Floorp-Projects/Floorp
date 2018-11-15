@@ -384,30 +384,27 @@ nsHtml5TreeOperation::CreateHTMLElement(
   RefPtr<nsAtom> isAtom;
   dom::CustomElementDefinition* definition = nullptr;
 
-  // Avoid overhead by checking if custom elements pref is enabled or not.
-  if (dom::CustomElementRegistry::IsCustomElementEnabled(document)) {
-    if (aAttributes) {
-      nsHtml5String is = aAttributes->getValue(nsHtml5AttributeName::ATTR_IS);
-      if (is) {
-        nsAutoString isValue;
-        is.ToString(isValue);
-        isAtom = NS_Atomize(isValue);
-      }
+  if (aAttributes) {
+    nsHtml5String is = aAttributes->getValue(nsHtml5AttributeName::ATTR_IS);
+    if (is) {
+      nsAutoString isValue;
+      is.ToString(isValue);
+      isAtom = NS_Atomize(isValue);
     }
+  }
 
-    isCustomElement = (aCreator == NS_NewCustomElement || isAtom);
-    if (isCustomElement && aFromParser != dom::FROM_PARSER_FRAGMENT) {
-      RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
-      RefPtr<nsAtom> typeAtom =
-        (aCreator == NS_NewCustomElement) ? tagAtom : isAtom;
+  isCustomElement = (aCreator == NS_NewCustomElement || isAtom);
+  if (isCustomElement && aFromParser != dom::FROM_PARSER_FRAGMENT) {
+    RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
+    RefPtr<nsAtom> typeAtom =
+      (aCreator == NS_NewCustomElement) ? tagAtom : isAtom;
 
-      MOZ_ASSERT(nodeInfo->NameAtom()->Equals(nodeInfo->LocalName()));
-      definition = nsContentUtils::LookupCustomElementDefinition(
-        document, nodeInfo->NameAtom(), nodeInfo->NamespaceID(), typeAtom);
+    MOZ_ASSERT(nodeInfo->NameAtom()->Equals(nodeInfo->LocalName()));
+    definition = nsContentUtils::LookupCustomElementDefinition(
+      document, nodeInfo->NameAtom(), nodeInfo->NamespaceID(), typeAtom);
 
-      if (definition) {
-        willExecuteScript = true;
-      }
+    if (definition) {
+      willExecuteScript = true;
     }
   }
 
