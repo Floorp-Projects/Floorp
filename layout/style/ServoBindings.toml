@@ -397,6 +397,7 @@ cbindgen-types = [
     { gecko = "StyleUnicodeRange", servo = "cssparser::UnicodeRange" },
     { gecko = "StyleOverflowWrap", servo = "values::computed::OverflowWrap" },
     { gecko = "StyleUserSelect", servo = "values::computed::UserSelect" },
+    { gecko = "StyleBreakBetween", servo = "values::computed::BreakBetween" },
 ]
 
 mapped-generic-types = [
