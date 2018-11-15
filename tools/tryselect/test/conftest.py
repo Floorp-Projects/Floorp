@@ -4,8 +4,18 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from moztest.resolve import TestResolver
 from mozversioncontrol import HgRepository, GitRepository
 import pytest
+
+
+@pytest.fixture
+def patch_resolver(monkeypatch):
+    def inner(suites, tests):
+        def fake_test_metadata(*args, **kwargs):
+            return suites, tests
+        monkeypatch.setattr(TestResolver, 'resolve_metadata', fake_test_metadata)
+    return inner
 
 
 @pytest.fixture(autouse=True)

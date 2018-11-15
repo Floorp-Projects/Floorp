@@ -7,6 +7,7 @@
 
 import copy
 import datetime
+import json
 import os
 import re
 import sys
@@ -212,7 +213,8 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
             ),
         }
 
-        user_paths = os.environ.get('MOZHARNESS_TEST_PATHS')
+        user_paths = json.loads(os.environ.get('MOZHARNESS_TEST_PATHS', '""'))
+
         for option in self.config["suite_definitions"][self.test_suite]["options"]:
             opt = option.split('=')[0]
             # override configured chunk options with script args, if specified
@@ -229,7 +231,8 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
                     cmd.extend([option])
 
         if user_paths:
-            cmd.extend(user_paths.split(':'))
+            if self.test_suite in user_paths:
+                cmd.extend(user_paths[self.test_suite])
         elif not self.verify_enabled:
             if self.this_chunk is not None:
                 cmd.extend(['--this-chunk', self.this_chunk])
