@@ -133,6 +133,7 @@ definition is a dict-like object that must contain at least the keys:
         self._is_use_counter = name.startswith("USE_COUNTER2_")
         if self._is_use_counter:
             definition.setdefault('record_in_processes', ['main', 'content'])
+            definition.setdefault('releaseChannelCollection', 'opt-out')
         self.verify_attributes(name, definition)
         self._name = name
         self._description = definition['description']
