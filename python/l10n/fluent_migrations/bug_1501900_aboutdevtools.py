@@ -9,7 +9,7 @@ from fluent.migrate import COPY
 from fluent.migrate import CONCAT
 
 def migrate(ctx):
-    """Bug 1501900 -  Migrate aboutdevtools to Fluent, part {index}"""
+    """Bug 1501900 -  Migrate about:devtools to Fluent, part {index}"""
 
     ctx.add_transforms(
         "devtools/startup/aboutDevTools.ftl",

@@ -1,7 +1,18 @@
+#!/bin/bash
+
 # Usage: ./update.sh <theora_src_directory>
 #
 # Copies the needed files from a directory containing the original
 # libtheora source that we need for the Mozilla HTML5 media support.
+#
+# https://git.xiph.org/theora.git
+# Run `autogen.sh` in the theora source clone prior to executing this script.
+
+set -e
+
+[[ -n "$1" ]] || ( echo "syntax: $0 update_src_directory"; exit 1 )
+[[ -e "$1/include/theora/theora.h" ]] || ( echo "$1: cubeb not found"; exit 1 )
+
 sed \
  -e s/\#define\ OC_X86_ASM//g \
  -e s/\#define\ OC_X86_64_ASM//g \
@@ -11,11 +22,13 @@ sed \
  -e s/\#define\ OC_ARM_ASM//g \
  -e s/\#define\ THEORA_DISABLE_ENCODE//g \
  $1/config.h > lib/config.h
+
 sed \
  -e s/@HAVE_ARM_ASM_EDSP@/1/g \
  -e s/@HAVE_ARM_ASM_MEDIA@/1/g \
  -e s/@HAVE_ARM_ASM_NEON@/1/g \
  $1/lib/arm/armopts.s.in > lib/arm/armopts.s
+
 cp $1/LICENSE ./LICENSE
 cp $1/CHANGES ./CHANGES
 cp $1/COPYING ./COPYING
@@ -75,6 +88,34 @@ cp $1/include/theora/theora.h ./include/theora/theora.h
 cp $1/include/theora/theoradec.h ./include/theora/theoradec.h
 cp $1/include/theora/theoraenc.h ./include/theora/theoraenc.h
 cp $1/include/theora/codec.h ./include/theora/codec.h
+
+if [ -d $1/.git ]; then
+  rev=$(cd $1 && git rev-parse --verify HEAD)
+  date=$(cd $1 && git show -s --format=%ci HEAD)
+  dirty=$(cd $1 && git diff-index --name-only HEAD)
+  set +e
+  pre_rev=$(grep -o '[[:xdigit:]]\{40\}' moz.yaml)
+  commits=$(cd $1 && git log --pretty=format:'%h - %s' $pre_rev..$rev)
+  set -e
+fi
+
+if [ -n "$rev" ]; then
+  version=$rev
+  if [ -n "$dirty" ]; then
+    version=$version-dirty
+    echo "WARNING: updating from a dirty git repository."
+  fi
+  sed -i.bak -e "s/^ *release:.*/  release: \"$version ($date)\"/" moz.yaml
+  if [[ ! "$( grep "$version" moz.yaml )" ]]; then
+    echo "Updating moz.yaml failed."
+    exit 1
+  fi
+  rm moz.yaml.bak
+  [[ -n "$commits" ]] && echo -e "Pick commits:\n$commits"
+else
+  echo "Remember to update moz.yaml with the version details."
+fi
+
 patch -p3 < ./bug625773-r17780.patch
 patch -p3 < ./bug468275-r18219.patch
 patch -p3 < ./bug752139-r18031.patch

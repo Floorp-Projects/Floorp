@@ -995,7 +995,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
   if (ContentBSize() != NS_UNCONSTRAINEDSIZE &&
       !mustPlaceFloat &&
       (!mReflowInput.mFlags.mIsTopOfPage || floatPos.B(wm) > 0) &&
-      NS_STYLE_PAGE_BREAK_AVOID == aFloat->StyleDisplay()->mBreakInside &&
+      StyleBreakWithin::Avoid == aFloat->StyleDisplay()->mBreakInside &&
       (!reflowStatus.IsFullyComplete() ||
        aFloat->BSize(wm) + floatMargin.BStartEnd(wm) >
        ContentBEnd() - floatPos.B(wm)) &&

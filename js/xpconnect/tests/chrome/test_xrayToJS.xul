@@ -152,6 +152,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
     testSet();
 
+    testProxy();
+
     testDataView();
 
     testNumber();
@@ -981,6 +983,17 @@ for (var prop of props) {
 
     t.clear();
     is(t.size, 0, "Set is empty after calling clear");
+  }
+
+  function testProxy() {
+    let ProxyCtor = iwin.Proxy;
+    is(Object.getOwnPropertyNames(ProxyCtor).sort().toSource(),
+       ["length", "name"].sort().toSource(),
+       "Xrayed Proxy constructor should not have any properties");
+    is(ProxyCtor.prototype, undefined, "Proxy.prototype should not be set");
+    // Proxy.revocable can safely be exposed, but it is not.
+    // Until it is supported, check that the property is not set.
+    is(ProxyCtor.revocable, undefined, "Proxy.reflect is not set");
   }
 
   function testDataView() {

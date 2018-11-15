@@ -1,5 +1,0 @@
-The source from this directory was copied from the theora git master
-using the update.sh script. The changes made were those applied by update.sh,
-the addition/update of Makefile.in files for the Mozilla build system.
-
-The git commit used was 74b57560775804bf248e3e5b4e57964112ccd7af

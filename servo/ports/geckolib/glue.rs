@@ -5398,21 +5398,48 @@ pub extern "C" fn Servo_StyleSet_HasDocumentStateDependency(
 
 #[no_mangle]
 pub unsafe extern "C" fn Servo_GetPropertyValue(
-    computed_values: ComputedStyleBorrowed,
+    style: ComputedStyleBorrowed,
     prop: nsCSSPropertyID,
     value: *mut nsAString,
 ) {
     use style::properties::PropertyFlags;
 
-    let longhand = LonghandId::from_nscsspropertyid(prop).expect("Not a longhand?");
-    debug_assert!(
-        !longhand.flags().contains(PropertyFlags::GETCS_NEEDS_LAYOUT_FLUSH),
-        "We're not supposed to serialize layout-dependent properties"
-    );
-    computed_values.get_longhand_property_value(
-        longhand,
-        &mut CssWriter::new(&mut *value),
-    ).unwrap();
+    if let Ok(longhand) = LonghandId::from_nscsspropertyid(prop) {
+        debug_assert!(
+            !longhand.flags().contains(PropertyFlags::GETCS_NEEDS_LAYOUT_FLUSH),
+            "We're not supposed to serialize layout-dependent properties"
+        );
+        style.get_longhand_property_value(
+            longhand,
+            &mut CssWriter::new(&mut *value),
+        ).unwrap();
+        return;
+    }
+
+    let shorthand = ShorthandId::from_nscsspropertyid(prop)
+        .expect("Not a shorthand nor a longhand?");
+    let mut block = PropertyDeclarationBlock::new();
+    // NOTE(emilio): We reuse the animation value machinery to avoid blowing up
+    // code size, but may need to come up with something different if ever care
+    // about supporting the cases that assert below. Fortunately we don't right
+    // now.
+    for longhand in shorthand.longhands() {
+        debug_assert!(
+            !longhand.is_logical(),
+            "This won't quite do the right thing if we want to serialize \
+             logical shorthands"
+        );
+        debug_assert!(
+            !longhand.flags().contains(PropertyFlags::GETCS_NEEDS_LAYOUT_FLUSH),
+            "Layout-dependent properties shouldn't get here"
+        );
+        let animated = AnimationValue::from_computed_values(longhand, style)
+            .expect("Somebody tried to serialize a shorthand with \
+                     non-animatable properties, would need more code \
+                     to do this");
+        block.push(animated.uncompute(), Importance::Normal);
+    }
+    block.shorthand_to_css(shorthand, &mut *value).unwrap();
 }
 
 #[no_mangle]

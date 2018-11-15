@@ -11,7 +11,7 @@ from fluent.migrate import REPLACE
 
 
 def migrate(ctx):
-    """Bug 1486937 - Use fluent for about:url-classifier"""
+    """Bug 1486937 - Migrate about:url-classifier to Fluent, part {index}."""
 
     ctx.add_transforms(
         "toolkit/toolkit/about/url-classifier.ftl",

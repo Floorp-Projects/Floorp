@@ -11,7 +11,7 @@ from fluent.migrate import REPLACE, COPY
 
 
 def migrate(ctx):
-    """Bug 1486937 - Move strings from preferences.properties to Fluent"""
+    """Bug 1491676 - Move strings from preferences.properties to Fluent"""
 
     ctx.add_transforms(
         "toolkit/toolkit/preferences/preferences.ftl",
@@ -23,9 +23,9 @@ password-not-set =
 failed-pw-change = { COPY(from_path, "failed_pw_change") }
 incorrect-pw = { COPY(from_path, "incorrect_pw") }
 pw-empty-warning = { COPY(from_path, "pw_empty_warning") }
-pw-change-ok = { COPY(from_path, "pw_change_ok") } { -pw-empty-warning }
-pw-erased-ok = { COPY(from_path, "pw_erased_ok") } { -pw-empty-warning }
-pw-not-wanted = { COPY(from_path, "pw_not_wanted") }
+pw-change-ok = { COPY(from_path, "pw_change_ok") }
+pw-erased-ok = { COPY(from_path, "pw_erased_ok") } { pw-empty-warning }
+pw-not-wanted = { COPY(from_path, "pw_not_wanted") } { pw-empty-warning }
 pw-change2empty-in-fips-mode = { COPY(from_path, "pw_change2empty_in_fips_mode") }
 pw-change-success-title = { COPY(from_path, "pw_change_success_title") }
 pw-change-failed-title = { COPY(from_path, "pw_change_failed_title") }
@@ -79,7 +79,7 @@ choose-download-folder-title = { COPY(from_path, "chooseDownloadFolderTitle")}
                                         ),
                                         variants=[
                                             FTL.Variant(
-                                                key=FTL.VariantName("windows"),
+                                                key=FTL.Identifier("windows"),
                                                 default=False,
                                                 value=COPY(
                                                     "browser/chrome/browser/preferences/preferences.properties",
@@ -87,7 +87,7 @@ choose-download-folder-title = { COPY(from_path, "chooseDownloadFolderTitle")}
                                                 )
                                             ),
                                             FTL.Variant(
-                                                key=FTL.VariantName("other"),
+                                                key=FTL.Identifier("other"),
                                                 default=True,
                                                 value=COPY(
                                                     "browser/chrome/browser/preferences/preferences.properties",
@@ -111,7 +111,7 @@ choose-download-folder-title = { COPY(from_path, "chooseDownloadFolderTitle")}
                                         ),
                                         variants=[
                                             FTL.Variant(
-                                                key=FTL.VariantName("windows"),
+                                                key=FTL.Identifier("windows"),
                                                 default=False,
                                                 value=COPY(
                                                     "browser/chrome/browser/preferences/preferences.properties",
@@ -119,7 +119,7 @@ choose-download-folder-title = { COPY(from_path, "chooseDownloadFolderTitle")}
                                                 )
                                             ),
                                             FTL.Variant(
-                                                key=FTL.VariantName("other"),
+                                                key=FTL.Identifier("other"),
                                                 default=True,
                                                 value=COPY(
                                                     "browser/chrome/browser/preferences/preferences.properties",
@@ -145,7 +145,7 @@ choose-download-folder-title = { COPY(from_path, "chooseDownloadFolderTitle")}
                                 ),
                                 variants=[
                                     FTL.Variant(
-                                        key=FTL.VariantName("windows"),
+                                        key=FTL.Identifier("windows"),
                                         default=False,
                                         value=REPLACE(
                                             "browser/chrome/browser/preferences/preferences.properties",
@@ -158,7 +158,7 @@ choose-download-folder-title = { COPY(from_path, "chooseDownloadFolderTitle")}
                                         )
                                     ),
                                     FTL.Variant(
-                                        key=FTL.VariantName("other"),
+                                        key=FTL.Identifier("other"),
                                         default=True,
                                         value=REPLACE(
                                             "browser/chrome/browser/preferences/preferences.properties",
