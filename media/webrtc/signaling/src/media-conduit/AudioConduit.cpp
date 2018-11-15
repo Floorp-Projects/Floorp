@@ -936,6 +936,7 @@ MediaConduitErrorCode WebrtcAudioConduit::ValidateCodecConfig(
 }
 
 void WebrtcAudioConduit::DeleteSendStream() {
+  MOZ_ASSERT(NS_IsMainThread());
   mMutex.AssertCurrentThreadOwns();
   if (mSendStream) {
     mSendStream->Stop();
@@ -948,6 +949,7 @@ void WebrtcAudioConduit::DeleteSendStream() {
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::CreateSendStream() {
+  MOZ_ASSERT(NS_IsMainThread());
   mMutex.AssertCurrentThreadOwns();
 
   mSendStream = mCall->Call()->CreateAudioSendStream(mSendStreamConfig);
@@ -959,6 +961,7 @@ MediaConduitErrorCode WebrtcAudioConduit::CreateSendStream() {
 }
 
 void WebrtcAudioConduit::DeleteRecvStream() {
+  MOZ_ASSERT(NS_IsMainThread());
   mMutex.AssertCurrentThreadOwns();
   if (mRecvStream) {
     mRecvStream->Stop();
@@ -971,6 +974,7 @@ void WebrtcAudioConduit::DeleteRecvStream() {
 }
 
 MediaConduitErrorCode WebrtcAudioConduit::CreateRecvStream() {
+  MOZ_ASSERT(NS_IsMainThread());
   mMutex.AssertCurrentThreadOwns();
 
   mRecvStreamConfig.rtcp_send_transport = this;
@@ -1075,6 +1079,7 @@ MediaConduitErrorCode WebrtcAudioConduit::CreateChannels() {
 
 void WebrtcAudioConduit::DeleteChannels() {
   MOZ_ASSERT(NS_IsMainThread());
+  mMutex.AssertCurrentThreadOwns();
 
   if (mSendChannel != -1) {
     mSendChannelProxy = nullptr;
