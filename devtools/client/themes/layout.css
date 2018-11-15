@@ -148,6 +148,7 @@
 
 .flex-header-container-label,
 .flex-header-container-properties {
+  display: flex;
   padding: 3px 0;
 }
 
@@ -158,10 +159,16 @@
 .flex-item-list {
   font-size: 12px;
   margin: 0;
-  padding-inline-start: 34px;
   padding-top: 5px;
   padding-bottom: 5px;
   overflow: hidden;
+}
+
+.flex-item-list .flex-item-list-header {
+  color: var(--theme-comment);
+  padding-inline-start: 23px;
+  margin-bottom: 4px;
+  -moz-user-select: none;
 }
 
 .flex-item-list .devtools-button {
@@ -170,6 +177,34 @@
   overflow: hidden;
   inline-size: 100%;
   text-align: start;
+  height: 24px;
+  margin: 0;
+  padding-inline-start: 28px;
+  padding-inline-end: 16px;
+  position: relative;
+}
+
+.flex-item-list .devtools-button::after {
+  content: "";
+  background-image: url(chrome://devtools/skin/images/arrowhead-right.svg);
+  background-size: 16px;
+  background-repeat: no-repeat;
+  background-position: center -1px;
+  fill: var(--theme-comment);
+  -moz-context-properties: fill;
+  position: absolute;
+  right: 7px;
+  width: 16px;
+  height: 16px;
+}
+
+.flex-item-list .flex-item-index {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.flex-item-list .objectBox-node {
+  padding-inline-start: 8px;
 }
 
 /**
