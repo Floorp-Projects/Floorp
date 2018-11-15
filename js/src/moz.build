@@ -151,7 +151,7 @@ EXPORTS.js += [
     '../public/RootingAPI.h',
     '../public/SavedFrameAPI.h',
     '../public/SliceBudget.h',
-    '../public/SourceBufferHolder.h',
+    '../public/SourceText.h',
     '../public/StableStringChars.h',
     '../public/Stream.h',
     '../public/StructuredClone.h',

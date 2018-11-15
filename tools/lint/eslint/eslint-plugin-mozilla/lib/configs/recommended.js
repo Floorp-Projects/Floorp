@@ -35,6 +35,7 @@ module.exports = {
     "DOMRequest": false,
     "Debugger": false,
     "DedicatedWorkerGlobalScope": false,
+    "DeprecationReportBody": false,
     "DominatorTree": false,
     "HeapSnapshot": false,
     "IDBFileRequest": false,
@@ -57,6 +58,7 @@ module.exports = {
     "PlacesObservers": false,
     "PlacesWeakCallbackWrapper": false,
     "PrioEncoder": false,
+    "ReportingObserver": false,
     // Specific to Firefox (Chrome code only).
     "SharedArrayBuffer": false,
     "SimpleGestureEvent": false,
@@ -65,6 +67,7 @@ module.exports = {
     "StopIteration": false,
     "StructuredCloneHolder": false,
     "TelemetryStopwatch": false,
+    "TestingDeprecatedInterface": false,
     "WebAssembly": false,
     "WebExtensionContentScript": false,
     "WebExtensionPolicy": false,

@@ -60,10 +60,9 @@ XPCOMUtils.defineLazyGetter(this, "console", () => ExtensionCommon.getConsole())
  * @param {nsIFile} file
  * @param {nsIURI} rootURI
  * @param {string} installType
- * @param {boolean} [embedded = false]
  */
 class MockExtension {
-  constructor(file, rootURI, installType, embedded) {
+  constructor(file, rootURI, installType) {
     this.id = null;
     this.file = file;
     this.rootURI = rootURI;
@@ -89,9 +88,7 @@ class MockExtension {
     this._extension = null;
     this._extensionPromise = promiseEvent("startup");
     this._readyPromise = promiseEvent("ready");
-    if (!embedded) {
-      this._uninstallPromise = promiseEvent("uninstall-complete");
-    }
+    this._uninstallPromise = promiseEvent("uninstall-complete");
   }
 
   maybeSetID(uri, id) {
@@ -231,60 +228,6 @@ var ExtensionTestCommon = class ExtensionTestCommon {
 
     provide(files, ["manifest.json"], manifest);
 
-    if (data.embedded) {
-      // Package this as a webextension embedded inside a legacy
-      // extension.
-
-      let xpiFiles = {
-        "install.rdf": `<?xml version="1.0" encoding="UTF-8"?>
-          <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-               xmlns:em="http://www.mozilla.org/2004/em-rdf#">
-              <Description about="urn:mozilla:install-manifest"
-                  em:id="${manifest.applications.gecko.id}"
-                  em:name="${manifest.name}"
-                  em:type="2"
-                  em:version="${manifest.version}"
-                  em:description=""
-                  em:multiprocessCompatible="true"
-                  em:hasEmbeddedWebExtension="true"
-                  em:bootstrap="true">
-
-                  <!-- Firefox -->
-                  <em:targetApplication>
-                      <Description
-                          em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
-                          em:minVersion="51.0a1"
-                          em:maxVersion="*"/>
-                  </em:targetApplication>
-                  <em:targetApplication>
-                    <Description>
-                      <em:id>toolkit@mozilla.org</em:id>
-                      <em:minVersion>0</em:minVersion>
-                      <em:maxVersion>*</em:maxVersion>
-                    </Description>
-                  </em:targetApplication>
-              </Description>
-          </RDF>
-        `,
-
-        "bootstrap.js": `
-          function install() {}
-          function uninstall() {}
-          function shutdown() {}
-
-          function startup(data) {
-            data.webExtension.startup();
-          }
-        `,
-      };
-
-      for (let [path, data] of Object.entries(files)) {
-        xpiFiles[`webextension/${path}`] = data;
-      }
-
-      files = xpiFiles;
-    }
-
     return this.generateZipFile(files);
   }
 
@@ -389,7 +332,7 @@ var ExtensionTestCommon = class ExtensionTestCommon {
 
     // This may be "temporary" or "permanent".
     if (data.useAddonManager) {
-      return new MockExtension(file, jarURI, data.useAddonManager, data.embedded);
+      return new MockExtension(file, jarURI, data.useAddonManager);
     }
 
     let id;

@@ -286,6 +286,8 @@ public:
     already_AddRefed<TabPromise> TakeRedirectTabPromise() { return mRedirectTabPromise.forget(); }
     uint64_t CrossProcessRedirectIdentifier() { return mCrossProcessRedirectIdentifier; }
 
+    CacheDisposition mCacheDisposition;
+
 protected:
     virtual ~nsHttpChannel();
 

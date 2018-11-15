@@ -39,6 +39,10 @@ interface PerformanceTiming {
   [Pref="dom.performance.time_to_non_blank_paint.enabled"]
   readonly attribute unsigned long long timeToNonBlankPaint;
 
+  // Returns 0 if a contentful paint has not happened.
+  [Pref="dom.performance.time_to_contentful_paint.enabled"]
+  readonly attribute unsigned long long timeToContentfulPaint;
+
   // This is a Mozilla proprietary extension and not part of the
   // performance/navigation timing specification. It marks the
   // completion of the first presentation flush after DOMContentLoaded.

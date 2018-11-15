@@ -18,7 +18,7 @@
 #include "jsapi.h"
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 
 #include "xpcpublic.h"
 
@@ -492,9 +492,14 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
   JS::CompileOptions options(cx);
   options.setFileAndLine("typein", 0);
 
+  JS::SourceText<char16_t> srcBuf;
+  if (!srcBuf.init(cx, aString.get(), aString.Length(),
+                   JS::SourceOwnership::Borrowed))
+  {
+    return false;
+  }
+
   JS::Rooted<JSScript*> script(cx);
-  JS::SourceBufferHolder srcBuf(aString.get(), aString.Length(),
-                                JS::SourceBufferHolder::NoOwnership);
   if (!JS::Compile(cx, options, srcBuf, &script))
   {
      return false;

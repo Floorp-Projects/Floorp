@@ -6,6 +6,8 @@
 
 #include "ScriptLoader.h"
 
+#include <algorithm>
+
 #include "nsIChannel.h"
 #include "nsIContentPolicy.h"
 #include "nsIContentSecurityPolicy.h"
@@ -26,7 +28,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/CompilationAndEvaluation.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "nsError.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
@@ -2124,11 +2126,19 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     MOZ_ASSERT(loadInfo.mMutedErrorFlag.isSome());
     options.setMutedErrors(loadInfo.mMutedErrorFlag.valueOr(true));
 
-    JS::SourceBufferHolder srcBuf(loadInfo.mScriptTextBuf,
-                                  loadInfo.mScriptTextLength,
-                                  JS::SourceBufferHolder::GiveOwnership);
-    loadInfo.mScriptTextBuf = nullptr;
-    loadInfo.mScriptTextLength = 0;
+    // Pass ownership of the data, first to local variables, then to the
+    // UniqueTwoByteChars moved into the |init| function.
+    size_t dataLength = 0;
+    char16_t* data = nullptr;
+
+    std::swap(dataLength, loadInfo.mScriptTextLength);
+    std::swap(data, loadInfo.mScriptTextBuf);
+
+    JS::SourceText<char16_t> srcBuf;
+    if (!srcBuf.init(aCx, JS::UniqueTwoByteChars(data), dataLength)) {
+      mScriptLoader.mRv.StealExceptionFromJSContext(aCx);
+      return true;
+    }
 
     // Our ErrorResult still shouldn't be a failure.
     MOZ_ASSERT(!mScriptLoader.mRv.Failed(), "Who failed it and why?");

@@ -20,7 +20,7 @@
 #include "jsfriendapi.h"
 #include "xpcprivate.h" // For xpc::OptionsBase
 #include "js/CompilationAndEvaluation.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "js/Wrapper.h"
 
 #include "mozilla/ContentPrincipal.h"
@@ -160,12 +160,13 @@ PrepareScript(nsIURI* uri,
         nsresult rv =
             ScriptLoader::ConvertToUTF16(nullptr, reinterpret_cast<const uint8_t*>(buf), len,
                                          charset, nullptr, scriptBuf, scriptLength);
-
-        JS::SourceBufferHolder srcBuf(scriptBuf, scriptLength,
-                                      JS::SourceBufferHolder::GiveOwnership);
-
         if (NS_FAILED(rv)) {
             ReportError(cx, LOAD_ERROR_BADCHARSET, uri);
+            return false;
+        }
+
+        JS::SourceText<char16_t> srcBuf;
+        if (!srcBuf.init(cx, JS::UniqueTwoByteChars(scriptBuf), scriptLength)) {
             return false;
         }
 

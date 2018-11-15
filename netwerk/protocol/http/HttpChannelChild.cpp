@@ -1231,6 +1231,7 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
     profiler_add_network_marker(mURI, priority, mChannelId, NetworkLoadType::LOAD_STOP,
                                 mLastStatusReported, TimeStamp::Now(),
                                 mTransferSize,
+                                kCacheUnknown,
                                 &mTransactionTimings);
   }
 #endif
@@ -1881,7 +1882,7 @@ HttpChannelChild::Redirect1Begin(const uint32_t& registrarId,
 
   PROFILER_ADD_NETWORK_MARKER(mURI, mPriority, channelId, NetworkLoadType::LOAD_REDIRECT,
                               mLastStatusReported, TimeStamp::Now(),
-                              0,
+                              0, kCacheUnknown,
                               &mTransactionTimings,
                               uri);
 
@@ -2676,7 +2677,7 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   mLastStatusReported = TimeStamp::Now();
   PROFILER_ADD_NETWORK_MARKER(mURI, mPriority, mChannelId, NetworkLoadType::LOAD_START,
                               mChannelCreationTimestamp, mLastStatusReported,
-                              0, nullptr, nullptr);
+                              0, kCacheUnknown, nullptr, nullptr);
 
   mIsPending = true;
   mWasOpened = true;
