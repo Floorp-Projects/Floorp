@@ -6,4 +6,5 @@
 
 DevToolsModules(
     'changes-utils.js',
+    'l10n.js',
 )
