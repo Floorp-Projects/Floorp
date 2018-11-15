@@ -585,8 +585,7 @@ SpawnReplayingChildren()
 }
 
 // Hit any installed breakpoints with the specified kind.
-static void HitBreakpointsWithKind(js::BreakpointPosition::Kind aKind,
-                                   bool aRecordingBoundary = false);
+static void HitBreakpointsWithKind(js::BreakpointPosition::Kind aKind);
 
 // Change the current active child, and select a new role for the old one.
 static void
@@ -1058,8 +1057,7 @@ Resume(bool aForward)
     // Don't rewind if we are at the beginning of the recording.
     if (targetCheckpoint == CheckpointId::Invalid) {
       SendMessageToUIProcess("HitRecordingBeginning");
-      HitBreakpointsWithKind(js::BreakpointPosition::Kind::ForcedPause,
-                             /* aRecordingBoundary = */ true);
+      HitBreakpointsWithKind(js::BreakpointPosition::Kind::ForcedPause);
       return;
     }
 
@@ -1086,8 +1084,7 @@ Resume(bool aForward)
       MOZ_RELEASE_ASSERT(!gActiveChild->IsRecording());
       if (!gRecordingChild) {
         SendMessageToUIProcess("HitRecordingEndpoint");
-        HitBreakpointsWithKind(js::BreakpointPosition::Kind::ForcedPause,
-                               /* aRecordingBoundary = */ true);
+        HitBreakpointsWithKind(js::BreakpointPosition::Kind::ForcedPause);
         return;
       }
 
@@ -1216,34 +1213,47 @@ RecvHitCheckpoint(const HitCheckpointMessage& aMsg)
 }
 
 static void
-HitBreakpoint(uint32_t* aBreakpoints, size_t aNumBreakpoints, bool aRecordingBoundary)
+HitBreakpoint(uint32_t* aBreakpoints, size_t aNumBreakpoints,
+              js::BreakpointPosition::Kind aSharedKind)
 {
   if (!gActiveChild->IsPaused()) {
-    if (aNumBreakpoints) {
-      Print("Warning: Process resumed before breakpoints were hit.\n");
-    }
     delete[] aBreakpoints;
     return;
   }
 
-  MarkActiveChildExplicitPause();
-
-  gResumeForwardOrBackward = true;
-
-  // Call breakpoint handlers until one of them explicitly resumes forward or
-  // backward travel.
-  for (size_t i = 0; i < aNumBreakpoints && gResumeForwardOrBackward; i++) {
-    AutoSafeJSContext cx;
-    if (!js::HitBreakpoint(cx, aBreakpoints[i])) {
-      Print("Warning: hitBreakpoint hook threw an exception.\n");
+  switch (aSharedKind) {
+  case js::BreakpointPosition::ForcedPause:
+    MarkActiveChildExplicitPause();
+    MOZ_FALLTHROUGH;
+  case js::BreakpointPosition::PositionChange:
+    // Call all breakpoint handlers.
+    for (size_t i = 0; i < aNumBreakpoints; i++) {
+      AutoSafeJSContext cx;
+      if (!js::HitBreakpoint(cx, aBreakpoints[i])) {
+        Print("Warning: hitBreakpoint hook threw an exception.\n");
+      }
     }
-  }
+    break;
+  default:
+    gResumeForwardOrBackward = true;
 
-  // If the child was not explicitly resumed by any breakpoint handler, and we
-  // are not at a forced pause at the recording boundary, resume travel in
-  // whichever direction it was going previously.
-  if (gResumeForwardOrBackward && !aRecordingBoundary) {
-    ResumeForwardOrBackward();
+    MarkActiveChildExplicitPause();
+
+    // Call breakpoint handlers until one of them explicitly resumes forward or
+    // backward travel.
+    for (size_t i = 0; i < aNumBreakpoints && gResumeForwardOrBackward; i++) {
+      AutoSafeJSContext cx;
+      if (!js::HitBreakpoint(cx, aBreakpoints[i])) {
+        Print("Warning: hitBreakpoint hook threw an exception.\n");
+      }
+    }
+
+    // If the child was not explicitly resumed by any breakpoint handler,
+    // resume travel in whichever direction we were going previously.
+    if (gResumeForwardOrBackward) {
+      ResumeForwardOrBackward();
+    }
+    break;
   }
 
   delete[] aBreakpoints;
@@ -1256,11 +1266,11 @@ RecvHitBreakpoint(const HitBreakpointMessage& aMsg)
   PodCopy(breakpoints, aMsg.Breakpoints(), aMsg.NumBreakpoints());
   gMainThreadMessageLoop->PostTask(NewRunnableFunction("HitBreakpoint", HitBreakpoint,
                                                        breakpoints, aMsg.NumBreakpoints(),
-                                                       /* aRecordingBoundary = */ false));
+                                                       js::BreakpointPosition::Invalid));
 }
 
 static void
-HitBreakpointsWithKind(js::BreakpointPosition::Kind aKind, bool aRecordingBoundary)
+HitBreakpointsWithKind(js::BreakpointPosition::Kind aKind)
 {
   Vector<uint32_t> breakpoints;
   gActiveChild->GetMatchingInstalledBreakpoints([=](js::BreakpointPosition::Kind aInstalled) {
@@ -1271,7 +1281,7 @@ HitBreakpointsWithKind(js::BreakpointPosition::Kind aKind, bool aRecordingBounda
     PodCopy(newBreakpoints, breakpoints.begin(), breakpoints.length());
     gMainThreadMessageLoop->PostTask(NewRunnableFunction("HitBreakpoint", HitBreakpoint,
                                                          newBreakpoints, breakpoints.length(),
-                                                         aRecordingBoundary));
+                                                         aKind));
   }
 }
 
