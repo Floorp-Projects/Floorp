@@ -40,7 +40,7 @@
 #include "js/CompileOptions.h"
 #include "js/MemoryMetrics.h"
 #include "js/Printf.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Wrapper.h"
@@ -84,7 +84,7 @@ using mozilla::Utf8Unit;
 
 using JS::CompileOptions;
 using JS::ReadOnlyCompileOptions;
-using JS::SourceBufferHolder;
+using JS::SourceText;
 
 template<XDRMode mode>
 XDRResult
@@ -1832,17 +1832,27 @@ ScriptSource::appendSubstring(JSContext* cx, StringBuffer& buf, size_t start, si
     UncompressedSourceCache::AutoHoldEntry holder;
 
     if (hasSourceType<Utf8Unit>()) {
-        MOZ_CRASH("for now");
-        return false;
-    } else {
-        PinnedUnits<char16_t> units(cx, this, holder, start, len);
-        if (!units.asChars()) {
+        PinnedUnits<Utf8Unit> pinned(cx, this, holder, start, len);
+        if (!pinned.get()) {
             return false;
         }
         if (len > SourceDeflateLimit && !buf.ensureTwoByteChars()) {
             return false;
         }
-        return buf.append(units.asChars(), len);
+
+        const Utf8Unit* units = pinned.get();
+        return buf.append(units, len);
+    } else {
+        PinnedUnits<char16_t> pinned(cx, this, holder, start, len);
+        if (!pinned.get()) {
+            return false;
+        }
+        if (len > SourceDeflateLimit && !buf.ensureTwoByteChars()) {
+            return false;
+        }
+
+        const char16_t* units = pinned.get();
+        return buf.append(units, len);
     }
 }
 
@@ -2001,16 +2011,18 @@ ScriptSource::setCompressedSource(JSContext* cx, UniqueChars&& compressed, size_
     return true;
 }
 
+template<typename Unit>
 bool
-ScriptSource::setSourceCopy(JSContext* cx, SourceBufferHolder& srcBuf)
+ScriptSource::setSourceCopy(JSContext* cx, SourceText<Unit>& srcBuf)
 {
     MOZ_ASSERT(!hasSourceText());
 
     JSRuntime* runtime = cx->zone()->runtimeFromAnyThread();
     auto& cache = runtime->sharedImmutableStrings();
     auto deduped = cache.getOrCreate(srcBuf.get(), srcBuf.length(), [&srcBuf]() {
-        return srcBuf.ownsChars()
-               ? UniqueTwoByteChars(srcBuf.take())
+        using CharT = typename SourceTypeTraits<Unit>::CharT;
+        return srcBuf.ownsUnits()
+               ? UniquePtr<CharT[], JS::FreePolicy>(srcBuf.takeChars())
                : DuplicateString(srcBuf.get(), srcBuf.length());
     });
     if (!deduped) {
@@ -2018,9 +2030,12 @@ ScriptSource::setSourceCopy(JSContext* cx, SourceBufferHolder& srcBuf)
         return false;
     }
 
-    setSource<char16_t>(std::move(*deduped));
+    setSource<Unit>(std::move(*deduped));
     return true;
 }
+
+template bool ScriptSource::setSourceCopy(JSContext* cx, SourceText<char16_t>& srcBuf);
+template bool ScriptSource::setSourceCopy(JSContext* cx, SourceText<Utf8Unit>& srcBuf);
 
 void
 ScriptSource::trace(JSTracer* trc)

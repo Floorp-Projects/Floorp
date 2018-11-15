@@ -23,6 +23,8 @@
 
 #include "mozilla/ArrayUtils.h"
 
+#include <algorithm>
+
 #include "XULDocument.h"
 
 #include "nsError.h"
@@ -89,7 +91,7 @@
 #include "nsTextNode.h"
 #include "nsJSUtils.h"
 #include "js/CompilationAndEvaluation.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "mozilla/dom/URL.h"
 #include "nsIContentPolicy.h"
 #include "mozAutoDocUpdate.h"
@@ -1283,22 +1285,19 @@ XULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
                                           mOffThreadCompileStringBuf,
                                           mOffThreadCompileStringLength);
         if (NS_SUCCEEDED(rv)) {
-            // Attempt to give ownership of the buffer to the JS engine.  If
-            // we hit offthread compilation, however, we will have to take it
-            // back below in order to keep the memory alive until compilation
-            // completes.
-            JS::SourceBufferHolder srcBuf(mOffThreadCompileStringBuf,
-                                          mOffThreadCompileStringLength,
-                                          JS::SourceBufferHolder::GiveOwnership);
-            mOffThreadCompileStringBuf = nullptr;
-            mOffThreadCompileStringLength = 0;
+            // Pass ownership of the buffer, carefully emptying the existing
+            // fields in the process.  Note that the |Compile| function called
+            // below always takes ownership of the buffer.
+            char16_t* units = nullptr;
+            size_t unitsLength = 0;
 
-            rv = mCurrentScriptProto->Compile(srcBuf, uri, 1, this, this);
+            std::swap(units, mOffThreadCompileStringBuf);
+            std::swap(unitsLength, mOffThreadCompileStringLength);
+
+            rv = mCurrentScriptProto->Compile(units, unitsLength,
+                                              JS::SourceOwnership::TakeOwnership,
+                                              uri, 1, this, this);
             if (NS_SUCCEEDED(rv) && !mCurrentScriptProto->HasScriptObject()) {
-                // We will be notified via OnOffThreadCompileComplete when the
-                // compile finishes. The JS engine has taken ownership of the
-                // source buffer.
-                MOZ_RELEASE_ASSERT(!srcBuf.ownsChars());
                 mOffThreadCompiling = true;
                 BlockOnload();
                 return NS_OK;

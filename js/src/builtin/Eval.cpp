@@ -9,9 +9,9 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Range.h"
 
-#include "frontend/BytecodeCompiler.h"
+#include "frontend/BytecodeCompilation.h"
 #include "gc/HashUtil.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "vm/Debugger.h"
 #include "vm/GlobalObject.h"
@@ -29,7 +29,8 @@ using mozilla::RangedPtr;
 using JS::AutoCheckCannotGC;
 using JS::AutoStableStringChars;
 using JS::CompileOptions;
-using JS::SourceBufferHolder;
+using JS::SourceOwnership;
+using JS::SourceText;
 
 // We should be able to assert this for *any* fp->environmentChain().
 static void
@@ -317,12 +318,18 @@ EvalKernel(JSContext* cx, HandleValue v, EvalType evalType, AbstractFramePtr cal
             return false;
         }
 
+        SourceText<char16_t> srcBuf;
+
         const char16_t* chars = linearChars.twoByteRange().begin().get();
-        SourceBufferHolder::Ownership ownership = linearChars.maybeGiveOwnershipToCaller()
-                                                  ? SourceBufferHolder::GiveOwnership
-                                                  : SourceBufferHolder::NoOwnership;
-        SourceBufferHolder srcBuf(chars, linearStr->length(), ownership);
-        JSScript* compiled = frontend::CompileEvalScript(cx, env, enclosing, options, srcBuf);
+        SourceOwnership ownership = linearChars.maybeGiveOwnershipToCaller()
+                                    ? SourceOwnership::TakeOwnership
+                                    : SourceOwnership::Borrowed;
+        if (!srcBuf.init(cx, chars, linearStr->length(), ownership)) {
+            return false;
+        }
+
+        frontend::EvalScriptInfo info(cx, options, env, enclosing);
+        JSScript* compiled = frontend::CompileEvalScript(info, srcBuf);
         if (!compiled) {
             return false;
         }
@@ -401,12 +408,18 @@ js::DirectEvalStringFromIon(JSContext* cx,
             return false;
         }
 
+        SourceText<char16_t> srcBuf;
+
         const char16_t* chars = linearChars.twoByteRange().begin().get();
-        SourceBufferHolder::Ownership ownership = linearChars.maybeGiveOwnershipToCaller()
-                                                  ? SourceBufferHolder::GiveOwnership
-                                                  : SourceBufferHolder::NoOwnership;
-        SourceBufferHolder srcBuf(chars, linearStr->length(), ownership);
-        JSScript* compiled = frontend::CompileEvalScript(cx, env, enclosing, options, srcBuf);
+        SourceOwnership ownership = linearChars.maybeGiveOwnershipToCaller()
+                                    ? SourceOwnership::TakeOwnership
+                                    : SourceOwnership::Borrowed;
+        if (!srcBuf.init(cx, chars, linearStr->length(), ownership)) {
+            return false;
+        }
+
+        frontend::EvalScriptInfo info(cx, options, env, enclosing);
+        JSScript* compiled = frontend::CompileEvalScript(info, srcBuf);
         if (!compiled) {
             return false;
         }

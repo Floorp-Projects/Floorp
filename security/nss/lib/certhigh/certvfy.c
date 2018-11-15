@@ -289,6 +289,10 @@ CERT_TrustFlagsForCACertUsage(SECCertUsage usage,
             requiredFlags = CERTDB_TRUSTED_CA;
             trustType = trustSSL;
             break;
+        case certUsageIPsec:
+            requiredFlags = CERTDB_TRUSTED_CA;
+            trustType = trustSSL;
+            break;
         case certUsageSSLServerWithStepUp:
             requiredFlags = CERTDB_TRUSTED_CA | CERTDB_GOVT_APPROVED_CA;
             trustType = trustSSL;
@@ -579,6 +583,7 @@ cert_VerifyCertChainOld(CERTCertDBHandle *handle, CERTCertificate *cert,
     switch (certUsage) {
         case certUsageSSLClient:
         case certUsageSSLServer:
+        case certUsageIPsec:
         case certUsageSSLCA:
         case certUsageSSLServerWithStepUp:
         case certUsageEmailSigner:
@@ -645,7 +650,8 @@ cert_VerifyCertChainOld(CERTCertDBHandle *handle, CERTCertificate *cert,
             CERTGeneralName *subjectNameList;
             int subjectNameListLen;
             int i;
-            PRBool getSubjectCN = (!count && certUsage == certUsageSSLServer);
+            PRBool getSubjectCN = (!count &&
+                                   (certUsage == certUsageSSLServer || certUsage == certUsageIPsec));
             subjectNameList =
                 CERT_GetConstrainedCertificateNames(subjectCert, arena,
                                                     getSubjectCN);
@@ -986,6 +992,7 @@ CERT_VerifyCACertForUsage(CERTCertDBHandle *handle, CERTCertificate *cert,
     switch (certUsage) {
         case certUsageSSLClient:
         case certUsageSSLServer:
+        case certUsageIPsec:
         case certUsageSSLCA:
         case certUsageSSLServerWithStepUp:
         case certUsageEmailSigner:
@@ -1171,6 +1178,7 @@ cert_CheckLeafTrust(CERTCertificate *cert, SECCertUsage certUsage,
         switch (certUsage) {
             case certUsageSSLClient:
             case certUsageSSLServer:
+            case certUsageIPsec:
                 flags = trust.sslFlags;
 
                 /* is the cert directly trusted or not trusted ? */
@@ -1347,7 +1355,8 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
 
     /* make sure that the cert is valid at time t */
     allowOverride = (PRBool)((requiredUsages & certificateUsageSSLServer) ||
-                             (requiredUsages & certificateUsageSSLServerWithStepUp));
+                             (requiredUsages & certificateUsageSSLServerWithStepUp) ||
+                             (requiredUsages & certificateUsageIPsec));
     validity = CERT_CheckCertValidTimes(cert, t, allowOverride);
     if (validity != secCertTimeValid) {
         valid = SECFailure;
@@ -1360,6 +1369,7 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
 
     for (i = 1; i <= certificateUsageHighest &&
                 (SECSuccess == valid || returnedUsages || log);) {
+        PRBool typeAndEKUAllowed = PR_TRUE;
         PRBool requiredUsage = (i & requiredUsages) ? PR_TRUE : PR_FALSE;
         if (PR_FALSE == requiredUsage && PR_FALSE == checkAllUsages) {
             NEXT_USAGE();
@@ -1376,6 +1386,7 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
             case certUsageEmailRecipient:
             case certUsageObjectSigner:
             case certUsageStatusResponder:
+            case certUsageIPsec:
                 rv = CERT_KeyUsageAndTypeForCertUsage(certUsage, PR_FALSE,
                                                       &requiredKeyUsage,
                                                       &requiredCertType);
@@ -1408,7 +1419,19 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
             LOG_ERROR(log, cert, 0, requiredKeyUsage);
             INVALID_USAGE();
         }
-        if (!(certType & requiredCertType)) {
+        if (certUsage != certUsageIPsec) {
+            if (!(certType & requiredCertType)) {
+                typeAndEKUAllowed = PR_FALSE;
+            }
+        } else {
+            PRBool isCritical;
+            PRBool allowed = cert_EKUAllowsIPsecIKE(cert, &isCritical);
+            /* If the extension isn't critical, we allow any EKU value. */
+            if (isCritical && !allowed) {
+                typeAndEKUAllowed = PR_FALSE;
+            }
+        }
+        if (!typeAndEKUAllowed) {
             if (PR_TRUE == requiredUsage) {
                 PORT_SetError(SEC_ERROR_INADEQUATE_CERT_TYPE);
             }
@@ -1508,7 +1531,8 @@ cert_VerifyCertWithFlags(CERTCertDBHandle *handle, CERTCertificate *cert,
 
     /* make sure that the cert is valid at time t */
     allowOverride = (PRBool)((certUsage == certUsageSSLServer) ||
-                             (certUsage == certUsageSSLServerWithStepUp));
+                             (certUsage == certUsageSSLServerWithStepUp) ||
+                             (certUsage == certUsageIPsec));
     validity = CERT_CheckCertValidTimes(cert, t, allowOverride);
     if (validity != secCertTimeValid) {
         LOG_ERROR_OR_EXIT(log, cert, 0, validity);
@@ -1521,6 +1545,7 @@ cert_VerifyCertWithFlags(CERTCertDBHandle *handle, CERTCertificate *cert,
         case certUsageSSLClient:
         case certUsageSSLServer:
         case certUsageSSLServerWithStepUp:
+        case certUsageIPsec:
         case certUsageSSLCA:
         case certUsageEmailSigner:
         case certUsageEmailRecipient:
@@ -1633,6 +1658,7 @@ CERT_VerifyCertNow(CERTCertDBHandle *handle, CERTCertificate *cert,
  *  certUsageSSLClient
  *  certUsageSSLServer
  *  certUsageSSLServerWithStepUp
+ *  certUsageIPsec
  *  certUsageEmailSigner
  *  certUsageEmailRecipient
  *  certUsageObjectSigner

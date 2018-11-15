@@ -13,6 +13,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 #include "mozilla/UseCounter.h"
 
@@ -29,6 +30,7 @@
 #include "nsINode.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
+#include "nsIURIFixup.h"
 #include "nsIXPConnect.h"
 #include "nsUTF8Utils.h"
 #include "WorkerPrivate.h"
@@ -43,6 +45,7 @@
 
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/CustomElementRegistry.h"
+#include "mozilla/dom/DeprecationReportBody.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/HTMLObjectElement.h"
@@ -50,6 +53,7 @@
 #include "mozilla/dom/HTMLEmbedElement.h"
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/dom/HTMLEmbedElementBinding.h"
+#include "mozilla/dom/ReportingUtils.h"
 #include "mozilla/dom/XULElementBinding.h"
 #include "mozilla/dom/XULFrameElementBinding.h"
 #include "mozilla/dom/XULMenuElementBinding.h"
@@ -2200,7 +2204,7 @@ GetCachedSlotStorageObjectSlow(JSContext* cx, JS::Handle<JSObject*> obj,
   }
 
   *isXray = true;
-  return xpc::EnsureXrayExpandoObject(cx, obj);;
+  return xpc::EnsureXrayExpandoObject(cx, obj);
 }
 
 DEFINE_XRAY_EXPANDO_CLASS(, DefaultXrayExpandoObjectClass, 0);
@@ -4103,11 +4107,95 @@ SetDocumentAndPageUseCounter(JSObject* aObject, UseCounter aUseCounter)
 
 namespace {
 
+#define DEPRECATED_OPERATION(_op) #_op,
+static const char* kDeprecatedOperations[] = {
+#include "nsDeprecatedOperationList.h"
+  nullptr
+};
+#undef DEPRECATED_OPERATION
+
+void
+ReportDeprecation(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
+                  nsIDocument::DeprecatedOperations aOperation,
+                  const nsAString& aFileName,
+                  const Nullable<uint32_t>& aLineNumber,
+                  const Nullable<uint32_t>& aColumnNumber)
+{
+  MOZ_ASSERT(aURI);
+
+  // Anonymize the URL.
+  // Strip the URL of any possible username/password and make it ready to be
+  // presented in the UI.
+  nsCOMPtr<nsIURIFixup> urifixup = services::GetURIFixup();
+  if (NS_WARN_IF(!urifixup)) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> exposableURI;
+  nsresult rv = urifixup->CreateExposableURI(aURI, getter_AddRefs(exposableURI));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsAutoCString spec;
+  rv = exposableURI->GetSpec(spec);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsAutoString type;
+  type.AssignASCII(kDeprecatedOperations[aOperation]);
+
+  nsAutoCString key;
+  key.AssignASCII(kDeprecatedOperations[aOperation]);
+  key.AppendASCII("Warning");
+
+  nsAutoString msg;
+  rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                          key.get(), msg);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  RefPtr<DeprecationReportBody> body =
+    new DeprecationReportBody(aWindow, type, Nullable<Date>(),
+                              msg, aFileName, aLineNumber, aColumnNumber);
+
+  ReportingUtils::Report(aWindow, nsGkAtoms::deprecation,
+                         NS_ConvertUTF8toUTF16(spec), body);
+}
+
+void
+MaybeReportDeprecation(nsPIDOMWindowInner* aWindow,
+                       nsIDocument::DeprecatedOperations aOperation,
+                       const nsAString& aFileName,
+                       const Nullable<uint32_t>& aLineNumber,
+                       const Nullable<uint32_t>& aColumnNumber)
+{
+  MOZ_ASSERT(aWindow);
+
+  if (!StaticPrefs::dom_reporting_enabled()) {
+    return;
+  }
+
+  if (NS_WARN_IF(!aWindow->GetExtantDoc())) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri = aWindow->GetExtantDoc()->GetDocumentURI();
+  if (NS_WARN_IF(!uri)) {
+    return;
+  }
+
+  ReportDeprecation(aWindow, uri, aOperation, aFileName, aLineNumber,
+                    aColumnNumber);
+}
+
 // This runnable is used to write a deprecation message from a worker to the
 // console running on the main-thread.
 class DeprecationWarningRunnable final : public WorkerProxyToMainThreadRunnable
 {
-  nsIDocument::DeprecatedOperations mOperation;
+  const nsIDocument::DeprecatedOperations mOperation;
 
 public:
   explicit DeprecationWarningRunnable(nsIDocument::DeprecatedOperations aOperation)
@@ -4161,6 +4249,21 @@ DeprecationWarning(const GlobalObject& aGlobal,
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
     if (window && window->GetExtantDoc()) {
       window->GetExtantDoc()->WarnOnceAbout(aOperation);
+
+      nsAutoCString fileName;
+      Nullable<uint32_t> lineNumber;
+      Nullable<uint32_t> columnNumber;
+      uint32_t line = 0;
+      uint32_t column = 0;
+      if (nsJSUtils::GetCallingLocation(aGlobal.Context(), fileName,
+                                        &line, &column)) {
+        lineNumber.SetValue(line);
+        columnNumber.SetValue(column);
+      }
+
+      MaybeReportDeprecation(window, aOperation,
+                             NS_ConvertUTF8toUTF16(fileName), lineNumber,
+                             columnNumber);
     }
 
     return;

@@ -17,7 +17,7 @@
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/WorkletImpl.h"
 #include "js/CompilationAndEvaluation.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "nsIInputStreamPump.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsNetUtil.h"
@@ -401,10 +401,10 @@ ExecutionRunnable::RunOnWorkletThread()
 
   JSAutoRealm ar(cx, globalObj);
 
-  JS::SourceBufferHolder buffer(mScriptBuffer.release(), mScriptLength,
-                                JS::SourceBufferHolder::GiveOwnership);
   JS::Rooted<JS::Value> unused(cx);
-  if (!JS::Evaluate(cx, compileOptions, buffer, &unused)) {
+  JS::SourceText<char16_t> buffer;
+  if (!buffer.init(cx, std::move(mScriptBuffer), mScriptLength) ||
+      !JS::Evaluate(cx, compileOptions, buffer, &unused)) {
     ErrorResult error;
     error.MightThrowJSException();
     error.StealExceptionFromJSContext(cx);

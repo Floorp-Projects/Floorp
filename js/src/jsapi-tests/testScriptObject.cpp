@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "js/CompilationAndEvaluation.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "jsapi-tests/tests.h"
 
 struct ScriptObjectFixture : public JSAPITest {
@@ -81,8 +81,10 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScript)
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
 
+    JS::SourceText<char16_t> srcBuf;
+    CHECK(srcBuf.init(cx, uc_code, code_size, JS::SourceOwnership::Borrowed));
+
     JS::RootedScript script(cx);
-    JS::SourceBufferHolder srcBuf(uc_code, code_size, JS::SourceBufferHolder::NoOwnership);
     CHECK(JS::Compile(cx, options, srcBuf, &script));
 
     return tryScript(script);
@@ -94,8 +96,10 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScript_empty)
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
 
+    JS::SourceText<char16_t> srcBuf;
+    CHECK(srcBuf.init(cx, uc_code, 0, JS::SourceOwnership::Borrowed));
+
     JS::RootedScript script(cx);
-    JS::SourceBufferHolder srcBuf(uc_code, 0, JS::SourceBufferHolder::NoOwnership);
     CHECK(JS::Compile(cx, options, srcBuf, &script));
 
     return tryScript(script);
@@ -107,8 +111,10 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScriptForPrincipal
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
 
+    JS::SourceText<char16_t> srcBuf;
+    CHECK(srcBuf.init(cx, uc_code, code_size, JS::SourceOwnership::Borrowed));
+
     JS::RootedScript script(cx);
-    JS::SourceBufferHolder srcBuf(uc_code, code_size, JS::SourceBufferHolder::NoOwnership);
     CHECK(JS::Compile(cx, options, srcBuf, &script));
 
     return tryScript(script);

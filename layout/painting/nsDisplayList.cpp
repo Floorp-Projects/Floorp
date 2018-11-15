@@ -19,6 +19,7 @@
 #include "gfxContext.h"
 #include "gfxUtils.h"
 #include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/gfx/2D.h"
@@ -1447,6 +1448,40 @@ DisplayListIsNonBlank(nsDisplayList* aList)
   return false;
 }
 
+// A contentful paint is a paint that does contains DOM content (text,
+// images, non-blank canvases, SVG): "First Contentful Paint entry
+// contains a DOMHighResTimeStamp reporting the time when the browser
+// first rendered any text, image (including background images),
+// non-white canvas or SVG. This excludes any content of iframes, but
+// includes text with pending webfonts. This is the first time users
+// could start consuming page content."
+static bool
+DisplayListIsContentful(nsDisplayList* aList)
+{
+  for (nsDisplayItem* i = aList->GetBottom(); i != nullptr; i = i->GetAbove()) {
+    DisplayItemType type = i->GetType();
+    nsDisplayList* children = i->GetChildren();
+
+    switch (type) {
+      case DisplayItemType::TYPE_SUBDOCUMENT: // iframes are ignored
+        break;
+      // CANVASes check if they may have been modified (as a stand-in
+      // actually tracking all modifications)
+      default:
+        if (i->IsContentful()) {
+          return true;
+        }
+        if (children) {
+          if (DisplayListIsContentful(children)) {
+            return true;
+          }
+        }
+        break;
+    }
+  }
+  return false;
+}
+
 void
 nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame,
                                      nsDisplayList* aPaintedContents)
@@ -1455,12 +1490,18 @@ nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame,
                  aReferenceFrame->PresShell(),
                "Presshell mismatch");
 
-  if (mIsPaintingToWindow) {
+  if (mIsPaintingToWindow && aPaintedContents) {
     nsPresContext* pc = aReferenceFrame->PresContext();
     if (!pc->HadNonBlankPaint()) {
       if (!CurrentPresShellState()->mIsBackgroundOnly &&
           DisplayListIsNonBlank(aPaintedContents)) {
         pc->NotifyNonBlankPaint();
+      }
+    }
+    if (!pc->HadContentfulPaint()) {
+      if (!CurrentPresShellState()->mIsBackgroundOnly &&
+          DisplayListIsContentful(aPaintedContents)) {
+        pc->NotifyContentfulPaint();
       }
     }
   }

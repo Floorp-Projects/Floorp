@@ -16,7 +16,7 @@
 #include "jsfriendapi.h"
 #include "jsnum.h"
 
-#include "frontend/BytecodeCompiler.h"
+#include "frontend/BytecodeCompilation.h"
 #include "frontend/Parser.h"
 #include "gc/FreeOp.h"
 #include "gc/HashUtil.h"
@@ -27,7 +27,7 @@
 #include "jit/BaselineJIT.h"
 #include "js/CharacterEncoding.h"
 #include "js/Date.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/UbiNodeBreadthFirst.h"
 #include "js/Vector.h"
@@ -63,7 +63,8 @@ using JS::CompileOptions;
 using JS::dbg::AutoEntryMonitor;
 using JS::dbg::Builder;
 using js::frontend::IsIdentifier;
-using JS::SourceBufferHolder;
+using JS::SourceOwnership;
+using JS::SourceText;
 using mozilla::DebugOnly;
 using mozilla::MakeScopeExit;
 using mozilla::Maybe;
@@ -8903,8 +8904,13 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
            .setFileAndLine(filename, lineno)
            .setIntroductionType("debugger eval")
            .maybeMakeStrictMode(frame && frame.hasScript() ? frame.script()->strict() : false);
+
+    SourceText<char16_t> srcBuf;
+    if (!srcBuf.init(cx, chars.begin().get(), chars.length(), SourceOwnership::Borrowed)) {
+        return false;
+    }
+
     RootedScript callerScript(cx, frame && frame.hasScript() ? frame.script() : nullptr);
-    SourceBufferHolder srcBuf(chars.begin().get(), chars.length(), SourceBufferHolder::NoOwnership);
     RootedScript script(cx);
 
     ScopeKind scopeKind;
@@ -8920,21 +8926,25 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
         if (!scope) {
             return false;
         }
-        script = frontend::CompileEvalScript(cx, env, scope, options, srcBuf);
-        if (script) {
-            script->setActiveEval();
+
+        frontend::EvalScriptInfo info(cx, options, env, scope);
+        script = frontend::CompileEvalScript(info, srcBuf);
+        if (!script) {
+            return false;
         }
+
+        script->setActiveEval();
     } else {
         // Do not consider executeInGlobal{WithBindings} as an eval, but instead
         // as executing a series of statements at the global level. This is to
         // circumvent the fresh lexical scope that all eval have, so that the
         // users of executeInGlobal, like the web console, may add new bindings to
         // the global scope.
-        script = frontend::CompileGlobalScript(cx, scopeKind, options, srcBuf);
-    }
-
-    if (!script) {
-        return false;
+        frontend::GlobalScriptInfo info(cx, options, scopeKind);
+        script = frontend::CompileGlobalScript(info, srcBuf);
+        if (!script) {
+            return false;
+        }
     }
 
     return ExecuteKernel(cx, script, *env, NullValue(), frame, rval.address());

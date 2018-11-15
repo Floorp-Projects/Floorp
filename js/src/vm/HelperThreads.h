@@ -25,7 +25,7 @@
 #include "ds/Fifo.h"
 #include "jit/Ion.h"
 #include "js/CompileOptions.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "js/TypeDecls.h"
 #include "threading/ConditionVariable.h"
 #include "vm/JSContext.h"
@@ -608,12 +608,12 @@ CancelOffThreadParses(JSRuntime* runtime);
  */
 bool
 StartOffThreadParseScript(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-                          JS::SourceBufferHolder& srcBuf,
+                          JS::SourceText<char16_t>& srcBuf,
                           JS::OffThreadCompileCallback callback, void* callbackData);
 
 bool
 StartOffThreadParseModule(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-                          JS::SourceBufferHolder& srcBuf,
+                          JS::SourceText<char16_t>& srcBuf,
                           JS::OffThreadCompileCallback callback, void* callbackData);
 
 bool
@@ -736,18 +736,18 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>, public JS::OffT
 
 struct ScriptParseTask : public ParseTask
 {
-    JS::SourceBufferHolder data;
+    JS::SourceText<char16_t> data;
 
-    ScriptParseTask(JSContext* cx, JS::SourceBufferHolder& srcBuf,
+    ScriptParseTask(JSContext* cx, JS::SourceText<char16_t>& srcBuf,
                     JS::OffThreadCompileCallback callback, void* callbackData);
     void parse(JSContext* cx) override;
 };
 
 struct ModuleParseTask : public ParseTask
 {
-    JS::SourceBufferHolder data;
+    JS::SourceText<char16_t> data;
 
-    ModuleParseTask(JSContext* cx, JS::SourceBufferHolder& srcBuf,
+    ModuleParseTask(JSContext* cx, JS::SourceText<char16_t>& srcBuf,
                     JS::OffThreadCompileCallback callback, void* callbackData);
     void parse(JSContext* cx) override;
 };
