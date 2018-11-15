@@ -7,6 +7,8 @@
  * own scope.
  */
 
+/* exported paymentDialogWrapper */
+
 "use strict";
 
 const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
@@ -15,7 +17,6 @@ const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
 const paymentUISrv = Cc["@mozilla.org/dom/payments/payment-ui-service;1"]
                      .getService(Ci.nsIPaymentUIService);
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -90,7 +91,7 @@ class TempCollection {
 
 var paymentDialogWrapper = {
   componentsLoaded: new Map(),
-  frame: null,
+  frameWeakRef: null,
   mm: null,
   request: null,
   temporaryStore: null,
@@ -202,8 +203,6 @@ var paymentDialogWrapper = {
       throw new Error("Invalid PaymentRequest ID");
     }
 
-    window.addEventListener("unload", this);
-
     // The Request object returned by the Payment Service is live and
     // will automatically get updated if event.updateWith is used.
     this.request = paymentSrv.getPaymentRequestById(requestId);
@@ -212,22 +211,28 @@ var paymentDialogWrapper = {
       throw new Error(`PaymentRequest not found: ${requestId}`);
     }
 
-    this.frame = frame;
+    this.frameWeakRef = Cu.getWeakReference(frame);
     this.mm = frame.frameLoader.messageManager;
     this.mm.addMessageListener("paymentContentToChrome", this);
     this.mm.loadFrameScript("chrome://payments/content/paymentDialogFrameScript.js", true);
     // Until we have bug 1446164 and bug 1407418 we use form autofill's temporary
     // shim for data-localization* attributes.
     this.mm.loadFrameScript("chrome://formautofill/content/l10n.js", true);
-    if (AppConstants.platform == "win") {
-      this.frame.setAttribute("selectmenulist", "ContentSelectDropdown-windows");
-    }
-    this.frame.setAttribute("src", "resource://payments/paymentRequest.xhtml");
+    frame.setAttribute("src", "resource://payments/paymentRequest.xhtml");
 
     this.temporaryStore = {
       addresses: new TempCollection("addresses"),
       creditCards: new TempCollection("creditCards"),
     };
+  },
+
+  uninit() {
+    try {
+      Services.obs.removeObserver(this, "message-manager-close");
+      Services.obs.removeObserver(this, "formautofill-storage-changed");
+    } catch (ex) {
+      // Observers may not have been added yet
+    }
   },
 
   createShowResponse({
@@ -456,9 +461,10 @@ var paymentDialogWrapper = {
 
   async initializeFrame() {
     Services.obs.addObserver(this, "formautofill-storage-changed", true);
+    Services.obs.addObserver(this, "message-manager-close", true);
 
     let requestSerialized = this._serializeRequest(this.request);
-    let chromeWindow = window.frameElement.ownerGlobal;
+    let chromeWindow = this.frameWeakRef.get().ownerGlobal;
     let isPrivate = PrivateBrowsingUtils.isWindowPrivate(chromeWindow);
 
     let [savedAddresses, savedBasicCards] =
@@ -484,7 +490,7 @@ var paymentDialogWrapper = {
       gDevToolsBrowser,
     } = ChromeUtils.import("resource://devtools/client/framework/gDevTools.jsm", {});
     gDevToolsBrowser.openContentProcessToolbox({
-      selectedBrowser: document.getElementById("paymentRequestFrame").frameLoader,
+      selectedBrowser: this.frameWeakRef.get(),
     });
   },
 
@@ -641,24 +647,6 @@ var paymentDialogWrapper = {
   },
 
   /**
-   * @implement {nsIDOMEventListener}
-   * @param {Event} event
-   */
-  handleEvent(event) {
-    switch (event.type) {
-      case "unload": {
-        // Remove the observer to avoid message manager errors while the dialog
-        // is closing and tests are cleaning up autofill storage.
-        Services.obs.removeObserver(this, "formautofill-storage-changed");
-        break;
-      }
-      default: {
-        throw new Error("Unexpected event handled");
-      }
-    }
-  },
-
-  /**
    * @implements {nsIObserver}
    * @param {nsISupports} subject
    * @param {string} topic
@@ -671,6 +659,14 @@ var paymentDialogWrapper = {
           break;
         }
         this.onAutofillStorageChange();
+        break;
+      }
+      case "message-manager-close": {
+        if (this.mm && subject == this.mm) {
+          // Remove the observer to avoid message manager errors while the dialog
+          // is closing and tests are cleaning up autofill storage.
+          Services.obs.removeObserver(this, "formautofill-storage-changed");
+        }
         break;
       }
     }
@@ -709,7 +705,7 @@ var paymentDialogWrapper = {
         break;
       }
       case "paymentDialogReady": {
-        window.dispatchEvent(new Event("tabmodaldialogready", {
+        this.frameWeakRef.get().dispatchEvent(new Event("tabmodaldialogready", {
           bubbles: true,
         }));
         break;
@@ -728,10 +724,3 @@ var paymentDialogWrapper = {
     }
   },
 };
-
-if ("document" in this) {
-  // Running in a browser, not a unit test
-  let frame = document.getElementById("paymentRequestFrame");
-  let requestId = (new URLSearchParams(window.location.search)).get("requestId");
-  paymentDialogWrapper.init(requestId, frame);
-}

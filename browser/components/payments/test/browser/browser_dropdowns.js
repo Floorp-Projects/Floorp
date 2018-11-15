@@ -40,9 +40,6 @@ add_task(async function test_dropdown() {
 
     let event = await popupshownPromise;
     let expectedPopupID = "ContentSelectDropdown";
-    if (AppConstants.platform == "win") {
-      expectedPopupID = "ContentSelectDropdown-windows";
-    }
     is(event.target.parentElement.id, expectedPopupID, "Checked menulist of opened popup");
 
     event.target.hidePopup(true);
