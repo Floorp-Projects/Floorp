@@ -428,11 +428,12 @@ async function navigateToAddAddressPage(frame, aOptions = {
   }, aOptions);
 }
 
-async function fillInBillingAddressForm(frame, aAddress) {
+async function fillInBillingAddressForm(frame, aAddress, aOptions) {
   // For now billing and shipping address forms have the same fields but that may
   // change so use separarate helpers.
   return fillInShippingAddressForm(frame, aAddress, {
     expectedSelectedStateKey: ["basic-card-page", "billingAddressGUID"],
+    ...aOptions,
   });
 }
 
