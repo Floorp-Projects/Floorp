@@ -3,7 +3,6 @@ toolkit.jar:
 *  content/global/license.html
    content/global/minimal-xul.css
 *  content/global/xul.css
-   content/global/components.css
    content/global/autocomplete.css
    content/global/aboutAbout.js
    content/global/aboutAbout.xhtml
