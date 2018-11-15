@@ -612,7 +612,8 @@ gdk_registry_handle_global(void               *data,
 {
     if (strcmp(interface, "wl_seat") == 0) {
         wl_seat *seat =
-            (wl_seat*)wl_registry_bind(registry, id, &wl_seat_interface, 1);
+            (wl_seat*)wl_registry_bind(registry, id, &wl_seat_interface,
+                                       WL_SEAT_CAPABILITIES_SINCE_VERSION);
         wl_seat_add_listener(seat, &seat_listener, data);
     }
 }
