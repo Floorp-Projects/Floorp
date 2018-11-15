@@ -115,6 +115,79 @@ tasks:
             owner: ${user}@users.noreply.github.com
             source: ${repository}/raw/${head_rev}/.taskcluster.yml
 ####################################################################################################
+# Task: Snapshot release
+####################################################################################################
+  - $if: 'tasks_for == "cron"'
+    then:
+      $let:
+        decision_task_id: {$eval: as_slugid("decision_task")}
+        expires_in: {$fromNow: '1 year'}
+        scheduler_id: focus-nightly-sched
+        user: ${event.sender.login}
+        repository: ${event.repository.clone_url}
+      in:
+        taskId: ${decision_task_id}
+        taskGroupId: ${decision_task_id}
+        created: {$fromNow: ''}
+        deadline: {$fromNow: '2 hours'}
+        expires: ${expires_in}
+        schedulerId: ${scheduler_id}
+        provisionerId: aws-provisioner-v1
+        workerType: gecko-focus
+        requires: all-completed
+        priority: medium
+        retries: 5
+        scopes:
+          - project:mobile:android-components:releng:beetmover:action:push-to-maven
+          - project:mobile:android-components:releng:beetmover:bucket:maven-snapshot-staging
+          - queue:create-task:highest:scriptworker-prov-v1/mobile-beetmover-dev
+          - queue:create-task:highest:aws-provisioner-v1/gecko-focus
+          - queue:scheduler-id:${scheduler_id}
+        payload:
+          maxRunTime: 600
+          image: mozillamobile/android-components:1.10
+          env:
+            TASK_ID: ${decision_task_id}
+            SCHEDULER_ID: ${scheduler_id}
+            MOBILE_HEAD_REPOSITORY: ${repository}
+            MOBILE_HEAD_BRANCH: ${event.release.target_commitish}
+            MOBILE_HEAD_REV: ${event.release.tag_name}
+            MOBILE_TRIGGERED_BY: ${event.sender.login}
+          command:
+            - /bin/bash
+            - --login
+            - -cx
+            - >-
+              git fetch ${repository} ${head_branch}
+              && git config advice.detachedHead false
+              && git checkout ${event.release.tag_name}
+              && ./gradlew --no-daemon --version
+              && python automation/taskcluster/decision_task_snapshot_release.py
+          features:
+            taskclusterProxy: true
+            chainOfTrust: true
+          artifacts:
+            public/task-graph.json:
+              type: file
+              path: /build/android-components/task-graph.json
+              expires: ${expires_in}
+            public/actions.json:
+              type: file
+              path: /build/android-components/actions.json
+              expires: ${expires_in}
+            public/parameters.yml:
+              type: file
+              path: /build/android-components/parameters.yml
+              expires: ${expires_in}
+        extra:
+          cron: {$json: {$eval: 'cron'}}
+          tasks_for: ${tasks_for}
+        metadata:
+          name: Android Components - Decision task for Snapshot release
+          description: Schedules the snapshot release of Android components.
+          owner: skaspari@mozilla.com
+          source: ${repository}/raw/${event.release.tag_name}/.taskcluster.yml
+####################################################################################################
 # Task: Release
 ####################################################################################################
   - $if: 'tasks_for == "github-release"'

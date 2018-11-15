@@ -17,6 +17,48 @@ class TaskBuilder(object):
         self.source = source
         self.scheduler_id = scheduler_id
 
+    def raw_task(self, name, description, command, dependencies=[],
+                   artifacts={}, scopes=[], routes=[], features={},
+                   worker_type='github-worker'):
+        created = datetime.datetime.now()
+        expires = taskcluster.fromNow('1 year')
+        deadline = taskcluster.fromNow('1 day')
+
+        return {
+            "workerType": worker_type,
+            "taskGroupId": self.task_id,
+            "schedulerId": self.scheduler_id,
+            "expires": taskcluster.stringDate(expires),
+            "retries": 5,
+            "created": taskcluster.stringDate(created),
+            "tags": {},
+            "priority": "lowest",
+            "deadline": taskcluster.stringDate(deadline),
+            "dependencies": [self.task_id] + dependencies,
+            "routes": routes,
+            "scopes": scopes,
+            "requires": "all-completed",
+            "payload": {
+                "features": features,
+                "maxRunTime": 7200,
+                "image": "mozillamobile/android-components:1.10",
+                "command": [
+                    "/bin/bash",
+                    "--login",
+                    "-cx",
+                    command
+                ],
+                "artifacts": artifacts,
+            },
+            "provisionerId": "aws-provisioner-v1",
+            "metadata": {
+                "name": name,
+                "description": description,
+                "owner": self.owner,
+                "source": self.source
+            }
+        }
+
     def build_task(self, name, description, command, dependencies=[],
                    artifacts={}, scopes=[], routes=[], features={},
                    worker_type='github-worker'):
@@ -38,7 +80,6 @@ class TaskBuilder(object):
             "created": taskcluster.stringDate(created),
             "tags": {},
             "priority": "lowest",
-            "schedulerId": "taskcluster-github",
             "deadline": taskcluster.stringDate(deadline),
             "dependencies": [self.task_id] + dependencies,
             "routes": routes,
@@ -66,13 +107,14 @@ class TaskBuilder(object):
         }
 
     def beetmover_task(self, name, description, version, artifact_id,
-                       dependencies=[], upstreamArtifacts=[], scopes=[]):
+                       dependencies=[], upstreamArtifacts=[], scopes=[],
+                       worker_type='mobile-beetmover-v1', is_snapshot=False):
         created = datetime.datetime.now()
         expires = taskcluster.fromNow('1 year')
         deadline = taskcluster.fromNow('1 day')
 
         return {
-            "workerType": "mobile-beetmover-v1",
+            "workerType": worker_type,
             "taskGroupId": self.task_id,
             "schedulerId": self.scheduler_id,
             "expires": taskcluster.stringDate(expires),
@@ -80,7 +122,6 @@ class TaskBuilder(object):
             "created": taskcluster.stringDate(created),
             "tags": {},
             "priority": "lowest",
-            "schedulerId": "taskcluster-github",
             "deadline": taskcluster.stringDate(deadline),
             "dependencies": [self.task_id] + dependencies,
             "routes": [],
@@ -90,9 +131,9 @@ class TaskBuilder(object):
                 "maxRunTime": 600,
                 "upstreamArtifacts": upstreamArtifacts,
                 "releaseProperties": {
-                    "appName": "components",
+                    "appName": "snapshot_components" if is_snapshot else "components",
                 },
-                "version": version,
+                "version": "{}-SNAPSHOT".format(version) if is_snapshot else version,
                 "artifact_id": artifact_id
             },
             "provisionerId": "scriptworker-prov-v1",

@@ -24,3 +24,14 @@ def from_gradle():
         'path': "{}/target.maven.zip".format(module['buildPath']),
         'shouldPublish': module['shouldPublish']
     } for module in gradle_modules]
+
+
+def get_version_from_gradle():
+    process = subprocess.Popen(["./gradlew", "--no-daemon", "--quiet", "printVersion"], stdout=subprocess.PIPE)
+    (output, err) = process.communicate()
+    exit_code = process.wait()
+
+    if exit_code is not 0:
+        print("Gradle command returned error: {}".format(exit_code))
+
+    return output.split(' ', 1)[1]
