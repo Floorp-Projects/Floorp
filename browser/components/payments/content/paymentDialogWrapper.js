@@ -211,9 +211,7 @@ var paymentDialogWrapper = {
       throw new Error(`PaymentRequest not found: ${requestId}`);
     }
 
-    this.frameWeakRef = Cu.getWeakReference(frame);
-    this.mm = frame.frameLoader.messageManager;
-    this.mm.addMessageListener("paymentContentToChrome", this);
+    this._attachToFrame(frame);
     this.mm.loadFrameScript("chrome://payments/content/paymentDialogFrameScript.js", true);
     // Until we have bug 1446164 and bug 1407418 we use form autofill's temporary
     // shim for data-localization* attributes.
@@ -233,6 +231,34 @@ var paymentDialogWrapper = {
     } catch (ex) {
       // Observers may not have been added yet
     }
+  },
+
+  /**
+   * Code here will be re-run at various times, e.g. initial show and
+   * when a tab is detached to a different window.
+   *
+   * Code that should only run once belongs in `init`.
+   * Code to only run upon detaching should be in `changeAttachedFrame`.
+   *
+   * @param {Element} frame
+   */
+  _attachToFrame(frame) {
+    this.frameWeakRef = Cu.getWeakReference(frame);
+    this.mm = frame.frameLoader.messageManager;
+    this.mm.addMessageListener("paymentContentToChrome", this);
+    Services.obs.addObserver(this, "message-manager-close", true);
+  },
+
+  /**
+   * Called only when a frame is changed from one to another.
+   *
+   * @param {Element} frame
+   */
+  changeAttachedFrame(frame) {
+    this.mm.removeMessageListener("paymentContentToChrome", this);
+    this._attachToFrame(frame);
+    // This isn't in `attachToFrame` because we only want to do it once we've sent records.
+    Services.obs.addObserver(this, "formautofill-storage-changed", true);
   },
 
   createShowResponse({
@@ -460,8 +486,9 @@ var paymentDialogWrapper = {
   },
 
   async initializeFrame() {
+    // We don't do this earlier as it's only necessary once this function sends
+    // the initial saved records.
     Services.obs.addObserver(this, "formautofill-storage-changed", true);
-    Services.obs.addObserver(this, "message-manager-close", true);
 
     let requestSerialized = this._serializeRequest(this.request);
     let chromeWindow = this.frameWeakRef.get().ownerGlobal;
@@ -641,6 +668,7 @@ var paymentDialogWrapper = {
       }
     } catch (ex) {
       responseMessage.error = true;
+      Cu.reportError(ex);
     } finally {
       this.sendMessageToContent("updateAutofillRecord:Response", responseMessage);
     }
