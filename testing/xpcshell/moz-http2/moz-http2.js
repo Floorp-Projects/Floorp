@@ -765,7 +765,7 @@ function handleRequest(req, res) {
                          "0001" + // QDCOUNT
                          "0001" + // ANCOUNT
                          "00000000" + // NSCOUNT + ARCOUNT
-                         "055F65736E69076578616D706C6503636F6D00" + // esni.example.com
+                         "055F65736E69076578616D706C6503636F6D00" + // _esni.example.com
                          "00100001" + // question type (TXT) + question class (IN)
 
                          "C00C" + // name pointer to .example.com
@@ -776,6 +776,38 @@ function handleRequest(req, res) {
                          "2062586B67646D39705932556761584D6762586B676347467A63336476636D513D", // esni keys.
                          "hex");
 
+    res.setHeader('Content-Type', 'application/dns-message');
+    res.setHeader('Content-Length', content.length);
+    res.writeHead(200);
+    res.write(content);
+    res.end("");
+    return;
+  }
+
+  // for use with test_esni_dns_fetch.js
+  else if (u.pathname === "/esni-dns-push") {
+    // _esni_push.example.com has A entry 127.0.0.1
+    var content= new Buffer("0000010000010001000000000A5F65736E695F70757368076578616D706C6503636F6D0000010001C00C000100010000003700047F000001", "hex");
+
+    // _esni_push.example.com has TXT entry 2062586B67646D39705932556761584D6762586B676347467A63336476636D513D
+    var pcontent= new Buffer("0000818000010001000000000A5F65736E695F70757368076578616D706C6503636F6D0000100001C00C001000010000003700212062586B67646D39705932556761584D6762586B676347467A63336476636D513D", "hex");
+
+    push = res.push({
+      hostname: 'foo.example.com:' + serverPort,
+      port: serverPort,
+      path: '/dns-pushed-response?dns=AAABAAABAAAAAAABCl9lc25pX3B1c2gHZXhhbXBsZQNjb20AABAAAQAAKRAAAAAAAAAIAAgABAABAAA',
+      method: 'GET',
+      headers: {
+        'accept' : 'application/dns-message'
+      }
+    });
+    push.writeHead(200, {
+      'content-type': 'application/dns-message',
+      'pushed' : 'yes',
+      'content-length' : pcontent.length,
+      'X-Connection-Http2': 'yes'
+    });
+    push.end(pcontent);
     res.setHeader('Content-Type', 'application/dns-message');
     res.setHeader('Content-Length', content.length);
     res.writeHead(200);
