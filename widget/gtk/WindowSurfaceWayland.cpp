@@ -242,8 +242,7 @@ global_registry_handler(void *data, wl_registry *registry, uint32_t id,
   if (strcmp(interface, "wl_shm") == 0) {
     auto interface = reinterpret_cast<nsWaylandDisplay *>(data);
     auto shm = static_cast<wl_shm*>(
-        wl_registry_bind(registry, id, &wl_shm_interface,
-                         WL_SHM_POOL_RESIZE_SINCE_VERSION));
+        wl_registry_bind(registry, id, &wl_shm_interface, 1));
     wl_proxy_set_queue((struct wl_proxy *)shm, interface->GetEventQueue());
     interface->SetShm(shm);
   }

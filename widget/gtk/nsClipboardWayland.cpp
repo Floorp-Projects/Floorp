@@ -712,10 +712,7 @@ nsRetrievalContextWayland::InitDataDeviceManager(wl_registry *registry,
                                                  uint32_t id,
                                                  uint32_t version)
 {
-    // The documentation is pretty mean according wl_data_device_manager versions.
-    // We should be fine with version 1 but Gtk+ uses this construction
-    // so let's follow them.
-    int data_device_manager_version = MIN(version, 3);
+    int data_device_manager_version = MIN (version, 3);
     mDataDeviceManager = (wl_data_device_manager *)wl_registry_bind(registry, id,
         &wl_data_device_manager_interface, data_device_manager_version);
 }
@@ -726,8 +723,7 @@ nsRetrievalContextWayland::InitPrimarySelectionDataDeviceManager(
 {
     mPrimarySelectionDataDeviceManager =
         (gtk_primary_selection_device_manager *)wl_registry_bind(registry, id,
-            &gtk_primary_selection_device_manager_interface,
-            /* First version of gtk_primary_selection extension */ 1);
+            &gtk_primary_selection_device_manager_interface, 1);
 }
 
 void
@@ -735,8 +731,7 @@ nsRetrievalContextWayland::InitSeat(wl_registry *registry,
                                     uint32_t id, uint32_t version,
                                     void *data)
 {
-    mSeat = (wl_seat*)wl_registry_bind(registry, id, &wl_seat_interface,
-                                       WL_SEAT_CAPABILITIES_SINCE_VERSION);
+    mSeat = (wl_seat*)wl_registry_bind(registry, id, &wl_seat_interface, 1);
 }
 
 static void
