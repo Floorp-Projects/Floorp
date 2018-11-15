@@ -699,6 +699,7 @@ def main(args):
             os.environ['GECKO_HEAD_REPOSITORY'],
             args.vcs_checkout,
             os.environ['HG_STORE_PATH'],
+            fetch_hgfingerprint=args.fetch_hgfingerprint,
             base_repo=base_repo,
             revision=os.environ.get('GECKO_HEAD_REV'),
             branch=os.environ.get('GECKO_HEAD_REF'),
@@ -713,6 +714,7 @@ def main(args):
         vcs_checkout('https://hg.mozilla.org/build/tools',
                      args.tools_checkout,
                      os.environ['HG_STORE_PATH'],
+                     fetch_hgfingerprint=args.fetch_hgfingerprint,
                      # Always check out the latest commit on default branch.
                      # This is non-deterministic!
                      branch='default')
@@ -728,6 +730,7 @@ def main(args):
             os.environ['COMM_HEAD_REPOSITORY'],
             args.comm_checkout,
             os.environ['HG_STORE_PATH'],
+            fetch_hgfingerprint=args.fetch_hgfingerprint,
             base_repo=base_repo,
             revision=os.environ.get('COMM_HEAD_REV'),
             branch=os.environ.get('COMM_HEAD_REF'))
