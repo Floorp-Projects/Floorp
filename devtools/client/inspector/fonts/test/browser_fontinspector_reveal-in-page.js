@@ -8,10 +8,6 @@
 const TEST_URI = URL_ROOT + "doc_browser_fontinspector.html";
 
 add_task(async function() {
-  await pushPref("devtools.inspector.fonteditor.enabled", true);
-  // Enable the feature, since it's off by default for now.
-  await pushPref("devtools.inspector.fonthighlighter.enabled", true);
-
   // Make sure the toolbox is tall enough to accomodate all fonts, otherwise mouseover
   // events simulation will fail.
   await pushPref("devtools.toolbox.footer.height", 500);

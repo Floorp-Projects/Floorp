@@ -5284,7 +5284,7 @@ nsGridContainerFrame::ReflowInFragmentainer(GridReflowInput&     aState,
       break;
     }
     auto disp = info->mFrame->StyleDisplay();
-    if (disp->mBreakBefore) {
+    if (disp->BreakBefore()) {
       // Propagate break-before on the first row to the container unless we're
       // already at top-of-page.
       if ((itemStartRow == 0 && !isTopOfPage) || avoidBreakInside) {
@@ -5302,7 +5302,7 @@ nsGridContainerFrame::ReflowInFragmentainer(GridReflowInput&     aState,
       }
     }
     uint32_t itemEndRow = info->mArea.mRows.mEnd;
-    if (disp->mBreakAfter) {
+    if (disp->BreakAfter()) {
       if (itemEndRow != numRows) {
         if (itemEndRow > startRow && itemEndRow < endRow) {
           endRow = itemEndRow;

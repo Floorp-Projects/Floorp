@@ -1121,11 +1121,6 @@ protected:
   void AddRemoveSelfReference();
 
   /**
-   * Called asynchronously to release a self-reference to this element.
-   */
-  void DoRemoveSelfReference();
-
-  /**
    * Called when "xpcom-shutdown" event is received.
    */
   void NotifyShutdownEvent();

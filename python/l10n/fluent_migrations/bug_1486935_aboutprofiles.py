@@ -7,7 +7,7 @@ from fluent.migrate import COPY
 
 
 def migrate(ctx):
-    """ Bug 1486935 - Migrate about:Profiles strings to FTL, part {index}. """
+    """ Bug 1486935 - Migrate about:profiles to Fluent, part {index}. """
 
     ctx.add_transforms(
         "toolkit/toolkit/about/aboutProfiles.ftl",
@@ -105,7 +105,7 @@ profiles-delete-profile-failed-message = { COPY("toolkit/chrome/global/aboutProf
                             ),
                             variants=[
                                 FTL.Variant(
-                                    key=FTL.VariantName("macos"),
+                                    key=FTL.Identifier("macos"),
                                     default=False,
                                     value=COPY(
                                         "toolkit/chrome/global/aboutProfiles.properties",
@@ -113,7 +113,7 @@ profiles-delete-profile-failed-message = { COPY("toolkit/chrome/global/aboutProf
                                     )
                                 ),
                                 FTL.Variant(
-                                    key=FTL.VariantName("windows"),
+                                    key=FTL.Identifier("windows"),
                                     default=False,
                                     value=COPY(
                                         "toolkit/chrome/global/aboutProfiles.properties",
@@ -121,7 +121,7 @@ profiles-delete-profile-failed-message = { COPY("toolkit/chrome/global/aboutProf
                                     )
                                 ),
                                 FTL.Variant(
-                                    key=FTL.VariantName("other"),
+                                    key=FTL.Identifier("other"),
                                     default=True,
                                     value=COPY(
                                         "toolkit/chrome/global/aboutProfiles.properties",

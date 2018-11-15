@@ -4038,7 +4038,7 @@ nsFlexContainerFrame::GenerateFlexLines(
 
     // Honor "page-break-before", if we're multi-line and this line isn't empty:
     if (!isSingleLine && !curLine->IsEmpty() &&
-        childFrame->StyleDisplay()->mBreakBefore) {
+        childFrame->StyleDisplay()->BreakBefore()) {
       curLine = AddNewFlexLineToList(aLines, shouldInsertAtFront, aMainGapSize);
     }
 
@@ -4096,7 +4096,7 @@ nsFlexContainerFrame::GenerateFlexLines(
 
     // Honor "page-break-after", if we're multi-line and have more children:
     if (!isSingleLine && childFrame->GetNextSibling() &&
-        childFrame->StyleDisplay()->mBreakAfter) {
+        childFrame->StyleDisplay()->BreakAfter()) {
       curLine = AddNewFlexLineToList(aLines, shouldInsertAtFront, aMainGapSize);
     }
     itemIdxInContainer++;

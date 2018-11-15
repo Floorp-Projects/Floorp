@@ -21,6 +21,7 @@ const {
  *        - {String} frameActorId: The id of the frame we want to autocomplete in.
  *        - {Boolean} force: True to force a call to the server (as opposed to retrieve
  *                           from the cache).
+ *        - {String} selectedNodeActor: Actor id of the selected node in the inspector.
  */
 function autocompleteUpdate({
   inputValue,
@@ -28,6 +29,7 @@ function autocompleteUpdate({
   client,
   frameActorId,
   force,
+  selectedNodeActor,
 }) {
   return ({dispatch, getState}) => {
     const {cache} = getState().autocomplete;
@@ -51,7 +53,12 @@ function autocompleteUpdate({
       return dispatch(autoCompleteDataRetrieveFromCache(input));
     }
 
-    return dispatch(autocompleteDataFetch({input, frameActorId, client}));
+    return dispatch(autocompleteDataFetch({
+      input,
+      frameActorId,
+      client,
+      selectedNodeActor,
+    }));
   };
 }
 
@@ -89,16 +96,18 @@ function generateRequestId() {
  *        - {String} input: the expression that we want to complete.
  *        - {String} frameActorId: The id of the frame we want to autocomplete in.
  *        - {WebConsoleClient} client: The webconsole client.
+ *        - {String} selectedNodeActor: Actor id of the selected node in the inspector.
  */
 function autocompleteDataFetch({
   input,
   frameActorId,
   client,
+  selectedNodeActor,
 }) {
   return ({dispatch}) => {
     const id = generateRequestId();
     dispatch({type: AUTOCOMPLETE_PENDING_REQUEST, id});
-    client.autocomplete(input, undefined, frameActorId).then(res => {
+    client.autocomplete(input, undefined, frameActorId, selectedNodeActor).then(res => {
       dispatch(autocompleteDataReceive(id, input, frameActorId, res));
     }).catch(e => {
       console.error("failed autocomplete", e);

@@ -224,7 +224,7 @@ nsTableFrame::PageBreakAfter(nsIFrame* aSourceFrame,
   const nsStyleDisplay* display = aSourceFrame->StyleDisplay();
   nsTableRowGroupFrame* prevRg = do_QueryFrame(aSourceFrame);
   // don't allow a page break after a repeated element ...
-  if ((display->mBreakAfter || (prevRg && prevRg->HasInternalBreakAfter())) &&
+  if ((display->BreakAfter() || (prevRg && prevRg->HasInternalBreakAfter())) &&
       !IsRepeatedFrame(aSourceFrame)) {
     return !(aNextFrame && IsRepeatedFrame(aNextFrame)); // or before
   }
@@ -233,7 +233,7 @@ nsTableFrame::PageBreakAfter(nsIFrame* aSourceFrame,
     display = aNextFrame->StyleDisplay();
     // don't allow a page break before a repeated element ...
      nsTableRowGroupFrame* nextRg = do_QueryFrame(aNextFrame);
-    if ((display->mBreakBefore ||
+    if ((display->BreakBefore() ||
         (nextRg && nextRg->HasInternalBreakBefore())) &&
         !IsRepeatedFrame(aNextFrame)) {
       return !IsRepeatedFrame(aSourceFrame); // or after

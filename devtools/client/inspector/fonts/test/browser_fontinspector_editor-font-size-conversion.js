@@ -12,7 +12,6 @@
 const TEST_URI = URL_ROOT + "doc_browser_fontinspector_iframe.html";
 
 add_task(async function() {
-  await pushPref("devtools.inspector.fonteditor.enabled", true);
   const { inspector, view } = await openFontInspectorForURL(TEST_URI);
   const viewDoc = view.document;
   const property = "font-size";

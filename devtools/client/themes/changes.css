@@ -95,3 +95,7 @@
   content: "-";
   color: var(--diff-remove-text-color);
 }
+
+#sidebar-panel-changes .devtools-sidepanel-no-result :not(:first-child) {
+  font-style: normal;
+}

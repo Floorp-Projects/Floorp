@@ -10,6 +10,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const CSSDeclaration = createFactory(require("./CSSDeclaration"));
+const { getStr } = require("../utils/l10n");
 
 class ChangesApp extends PureComponent {
   static get propTypes() {
@@ -127,16 +128,25 @@ class ChangesApp extends PureComponent {
     });
   }
 
+  renderEmptyState() {
+    return dom.div({ className: "devtools-sidepanel-no-result" },
+      dom.p({}, getStr("changes.noChanges")),
+      dom.p({}, getStr("changes.noChangesDescription"))
+    );
+  }
+
   render() {
     // Reset log of rendered rules.
     this.renderedRules = [];
+    const hasChanges = Object.keys(this.props.changes).length > 0;
 
     return dom.div(
       {
         className: "theme-sidebar inspector-tabpanel",
         id: "sidebar-panel-changes",
       },
-      this.renderDiff(this.props.changes)
+      !hasChanges && this.renderEmptyState(),
+      hasChanges && this.renderDiff(this.props.changes)
     );
   }
 }

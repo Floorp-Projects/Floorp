@@ -17,6 +17,7 @@ const PREF_TO_TYPE = {
 
 // Some events are fired by mainRoot rather than client.
 const MAIN_ROOT_EVENTS = [
+  "addonListChanged",
   "processListChanged",
   "serviceWorkerRegistrationListChanged",
   "tabListChanged",

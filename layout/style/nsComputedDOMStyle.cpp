@@ -529,9 +529,8 @@ GetPseudoType(nsAtom* aPseudo)
   if (!aPseudo) {
     return CSSPseudoElementType::NotPseudo;
   }
-  // FIXME(emilio, bug 1433439): The eIgnoreEnabledState thing is dubious.
   return nsCSSPseudoElements::GetPseudoType(
-    aPseudo, CSSEnabledState::eIgnoreEnabledState);
+    aPseudo, CSSEnabledState::eForAllContent);
 }
 
 already_AddRefed<ComputedStyle>
@@ -1344,37 +1343,6 @@ nsComputedDOMStyle::DoGetOsxFontSmoothing()
   return val.forget();
 }
 
-// return a value *only* for valid longhand values from CSS 2.1, either
-// normal or small-caps only
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetFontVariant()
-{
-  const nsFont& f = StyleFont()->mFont;
-
-  // if any of the other font-variant subproperties other than
-  // font-variant-caps are not normal then can't calculate a computed value
-  if (f.variantAlternates || f.variantEastAsian || f.variantLigatures ||
-      f.variantNumeric || f.variantPosition) {
-    return nullptr;
-  }
-
-  nsCSSKeyword keyword;
-  switch (f.variantCaps) {
-    case 0:
-      keyword = eCSSKeyword_normal;
-      break;
-    case NS_FONT_VARIANT_CAPS_SMALLCAPS:
-      keyword = eCSSKeyword_small_caps;
-      break;
-    default:
-      return nullptr;
-  }
-
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(keyword);
-  return val.forget();
-}
-
 static void
 SetValueToCalc(const nsStyleCoord::CalcValue* aCalc,
                nsROCSSPrimitiveValue*         aValue)
@@ -1479,13 +1447,6 @@ nsComputedDOMStyle::SetValueToURLValue(const css::URLValue* aURL,
   nsStyleUtil::AppendEscapedCSSString(source, url, '"');
   url.Append(')');
   aValue->SetString(url);
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetBackgroundPosition()
-{
-  const nsStyleImageLayers& layers = StyleBackground()->mImage;
-  return DoGetImageLayerPosition(layers);
 }
 
 already_AddRefed<CSSValue>
@@ -2209,34 +2170,6 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetScrollSnapPointsY()
 {
   return GetScrollSnapPoints(StyleDisplay()->mScrollSnapPointsY);
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetScrollSnapDestination()
-{
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-  SetValueToPosition(StyleDisplay()->mScrollSnapDestination, valueList);
-  return valueList.forget();
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetScrollSnapCoordinate()
-{
-  const nsStyleDisplay* sd = StyleDisplay();
-  if (sd->mScrollSnapCoordinate.IsEmpty()) {
-    // Having no snap coordinates is interpreted as "none"
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    val->SetIdent(eCSSKeyword_none);
-    return val.forget();
-  } else {
-    RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
-    for (size_t i = 0, i_end = sd->mScrollSnapCoordinate.Length(); i < i_end; ++i) {
-      RefPtr<nsDOMCSSValueList> itemList = GetROCSSValueList(false);
-      SetValueToPosition(sd->mScrollSnapCoordinate[i], itemList);
-      valueList->AppendCSSValue(itemList.forget());
-    }
-    return valueList.forget();
-  }
 }
 
 already_AddRefed<CSSValue>
@@ -2982,29 +2915,6 @@ nsComputedDOMStyle::DoGetWillChange()
 }
 
 already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetOverflow()
-{
-  const nsStyleDisplay* display = StyleDisplay();
-
-  RefPtr<nsROCSSPrimitiveValue> overflowX = new nsROCSSPrimitiveValue;
-  overflowX->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(display->mOverflowX,
-                                   nsCSSProps::kOverflowKTable));
-  if (display->mOverflowX == display->mOverflowY) {
-    return overflowX.forget();
-  }
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-  valueList->AppendCSSValue(overflowX.forget());
-
-  RefPtr<nsROCSSPrimitiveValue> overflowY= new nsROCSSPrimitiveValue;
-  overflowY->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(display->mOverflowY,
-                                   nsCSSProps::kOverflowKTable));
-  valueList->AppendCSSValue(overflowY.forget());
-  return valueList.forget();
-}
-
-already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetOverflowY()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
@@ -3209,14 +3119,6 @@ nsComputedDOMStyle::DoGetMinWidth()
 
   SetValueToCoord(val, minWidth, true, nullptr, nsCSSProps::kWidthKTable);
   return val.forget();
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetObjectPosition()
-{
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-  SetValueToPosition(StylePosition()->mObjectPosition, valueList);
-  return valueList.forget();
 }
 
 already_AddRefed<CSSValue>
@@ -4238,13 +4140,6 @@ nsComputedDOMStyle::DoGetMask()
   SetValueToURLValue(firstLayer.mImage.GetURLValue(), val);
 
   return val.forget();
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::DoGetMaskPosition()
-{
-  const nsStyleImageLayers& layers = StyleSVGReset()->mMask;
-  return DoGetImageLayerPosition(layers);
 }
 
 already_AddRefed<CSSValue>

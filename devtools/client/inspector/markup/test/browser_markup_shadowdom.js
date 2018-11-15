@@ -193,6 +193,43 @@ const TEST_DATA = [
     tree: `
       test-component
         #shadow-root`,
+  }, {
+    // Test shadow hosts show their shadow root even if they contain just a short text.
+    title: "shadow host with inline-text-child",
+    url: `data:text/html;charset=utf-8,
+      <test-component>
+        <inner-component>short-text-outside</inner-component>
+      </test-component>
+
+      <script>
+        "use strict";
+
+        customElements.define("test-component", class extends HTMLElement {
+          constructor() {
+            super();
+            let shadowRoot = this.attachShadow({mode: "#MODE#"});
+            shadowRoot.innerHTML = "<div><slot></slot></div>";
+          }
+        });
+
+        customElements.define("inner-component", class extends HTMLElement {
+          constructor() {
+            super();
+            let shadowRoot = this.attachShadow({mode: "#MODE#"});
+            shadowRoot.innerHTML = "short-text-inside";
+          }
+        });
+      </script>`,
+    tree: `
+      test-component
+        #shadow-root
+          div
+            slot
+              inner-component!slotted
+        inner-component
+          #shadow-root
+            short-text-inside
+          short-text-outside`,
   },
 ];
 
@@ -200,12 +237,14 @@ for (const {url, tree, title} of TEST_DATA) {
   // Test each configuration in both open and closed modes
   add_task(async function() {
     info(`Testing: [${title}] in OPEN mode`);
-    const {inspector} = await openInspectorForURL(url.replace("#MODE#", "open"));
+    const {inspector, tab} = await openInspectorForURL(url.replace(/#MODE#/g, "open"));
     await assertMarkupViewAsTree(tree, "test-component", inspector);
+    await removeTab(tab);
   });
   add_task(async function() {
     info(`Testing: [${title}] in CLOSED mode`);
-    const {inspector} = await openInspectorForURL(url.replace("#MODE#", "closed"));
+    const {inspector, tab} = await openInspectorForURL(url.replace(/#MODE#/g, "closed"));
     await assertMarkupViewAsTree(tree, "test-component", inspector);
+    await removeTab(tab);
   });
 }

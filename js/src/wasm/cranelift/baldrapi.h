@@ -199,7 +199,6 @@ extern "C"
     size_t global_tlsOffset(const js::wasm::GlobalDesc*);
 
     size_t table_tlsOffset(const js::wasm::TableDesc*);
-    bool table_isExternal(const js::wasm::TableDesc*);
 
     size_t funcType_numArgs(const js::wasm::FuncTypeWithId*);
     const BD_ValType* funcType_args(const js::wasm::FuncTypeWithId*);

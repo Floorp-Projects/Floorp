@@ -4,7 +4,7 @@ diff --git a/media/libtheora/lib/arm/armbits.s b/media/libtheora/lib/arm/armbits
 @@ -12,16 +12,22 @@
  ;
  ; function:
- ;   last mod: $Id: armbits.s 17481 2010-10-03 22:49:42Z tterribe $
+ ;   last mod: $Id$
  ;
  ;********************************************************************
  
@@ -31,7 +31,7 @@ diff --git a/media/libtheora/lib/arm/armfrag.s b/media/libtheora/lib/arm/armfrag
  ;********************************************************************
  ; Original implementation:
  ;  Copyright (C) 2009 Robin Watts for Pinknoise Productions Ltd
- ; last mod: $Id: armfrag.s 17481 2010-10-03 22:49:42Z tterribe $
+ ; last mod: $Id$
  ;********************************************************************
  
  	AREA	|.text|, CODE, READONLY
@@ -57,7 +57,7 @@ diff --git a/media/libtheora/lib/arm/armidct.s b/media/libtheora/lib/arm/armidct
  ;********************************************************************
  ; Original implementation:
  ;  Copyright (C) 2009 Robin Watts for Pinknoise Productions Ltd
- ; last mod: $Id: armidct.s 17481 2010-10-03 22:49:42Z tterribe $
+ ; last mod: $Id$
  ;********************************************************************
  
  	AREA	|.text|, CODE, READONLY
@@ -83,7 +83,7 @@ diff --git a/media/libtheora/lib/arm/armloop.s b/media/libtheora/lib/arm/armloop
  ;********************************************************************
  ; Original implementation:
  ;  Copyright (C) 2009 Robin Watts for Pinknoise Productions Ltd
- ; last mod: $Id: armloop.s 17481 2010-10-03 22:49:42Z tterribe $
+ ; last mod: $Id$
  ;********************************************************************
  
  	AREA	|.text|, CODE, READONLY

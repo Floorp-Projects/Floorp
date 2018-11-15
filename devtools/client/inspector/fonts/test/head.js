@@ -28,13 +28,8 @@ selectNode = async function(node, inspector, reason) {
   const onEditorUpdated = inspector.once("fonteditor-updated");
   await _selectNode(node, inspector, reason);
 
-  if (Services.prefs.getBoolPref("devtools.inspector.fonteditor.enabled")) {
-    // Wait for both the font inspetor and font editor before proceeding.
-    await Promise.all([onInspectorUpdated, onEditorUpdated]);
-  } else {
-    // Wait just for the font inspector.
-    await onInspectorUpdated;
-  }
+  // Wait for both the font inspector and font editor before proceeding.
+  await Promise.all([onInspectorUpdated, onEditorUpdated]);
 };
 
 /**
