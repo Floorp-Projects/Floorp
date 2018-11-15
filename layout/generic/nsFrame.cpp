@@ -9814,7 +9814,7 @@ nsFrame::ShouldAvoidBreakInside(const ReflowInput& aReflowInput) const
 {
   const auto* disp = StyleDisplay();
   return !aReflowInput.mFlags.mIsTopOfPage &&
-    NS_STYLE_PAGE_BREAK_AVOID == disp->mBreakInside &&
+    StyleBreakWithin::Avoid == disp->mBreakInside &&
     !(HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) && IsAbsolutelyPositioned(disp)) &&
     !GetPrevInFlow();
 }
