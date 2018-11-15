@@ -48,13 +48,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1079236
   }
 
   SimpleTest.waitForExplicitFinish();
-  SimpleTest.waitForFocus(() => {
-    SpecialPowers.pushPrefEnv({
-      set: [
-        ["dom.webcomponents.shadowdom.enabled", true]
-      ]
-    }, runTests);
-  });
+  window.onload = () => {
+    SimpleTest.waitForFocus(runTests);
+  };
 
   </script>
 </head>

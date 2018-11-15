@@ -12,8 +12,6 @@
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 #include "mozilla/dom/Element.h"
-#include "nsBindingManager.h"
-#include "nsXBLService.h"
 #include "nsIScriptSecurityManager.h"
 #include "mozilla/Preferences.h"
 #include "nsIDocument.h"
@@ -128,76 +126,14 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
     RefPtr<Element> rootElement = aDocument->GetRootElement();
     NS_ENSURE_TRUE(rootElement, NS_ERROR_UNEXPECTED);
 
-    if (nsContentUtils::IsShadowDOMEnabled()) {
-        // Attach a closed shadow root on it.
-        RefPtr<ShadowRoot> shadowRoot =
-            rootElement->AttachShadowWithoutNameChecks(ShadowRootMode::Closed);
+    // Attach a closed shadow root on it.
+    RefPtr<ShadowRoot> shadowRoot =
+        rootElement->AttachShadowWithoutNameChecks(ShadowRootMode::Closed);
 
-        // Append the document fragment to the shadow dom.
-        shadowRoot->AppendChild(*resultFragment, err);
-        if (NS_WARN_IF(err.Failed())) {
-            return err.StealNSResult();
-        }
-    } else {
-        //
-        // Apply the prettprint XBL binding.
-        //
-        // We take some shortcuts here. In particular, we don't bother invoking the
-        // contstructor (since the binding has no constructor), and we don't bother
-        // calling LoadBindingDocument because it's a chrome:// URI and thus will get
-        // sync loaded no matter what.
-        //
-
-        // Grab the XBL service.
-        nsXBLService* xblService = nsXBLService::GetInstance();
-        NS_ENSURE_TRUE(xblService, NS_ERROR_NOT_AVAILABLE);
-
-        // Compute the binding URI.
-        nsCOMPtr<nsIURI> bindingUri;
-        rv = NS_NewURI(getter_AddRefs(bindingUri),
-            NS_LITERAL_STRING("chrome://global/content/xml/XMLPrettyPrint.xml#prettyprint"));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        // Grab the system principal.
-        nsCOMPtr<nsIPrincipal> sysPrincipal;
-        nsContentUtils::GetSecurityManager()->
-            GetSystemPrincipal(getter_AddRefs(sysPrincipal));
-
-        // Destroy any existing frames before we unbind anonymous content.
-        // Note that the shell might be Destroy'ed by now (see bug 1415541).
-        if (!shell->IsDestroying()) {
-            shell->DestroyFramesForAndRestyle(rootElement);
-        }
-
-        // Load the bindings.
-        RefPtr<nsXBLBinding> unused;
-        bool ignored;
-        rv = xblService->LoadBindings(rootElement, bindingUri, sysPrincipal,
-                                      getter_AddRefs(unused), &ignored);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        // Fire an event at the bound element to pass it |resultFragment|.
-        RefPtr<CustomEvent> event =
-          NS_NewDOMCustomEvent(rootElement, nullptr, nullptr);
-        MOZ_ASSERT(event);
-        AutoJSAPI jsapi;
-        if (!jsapi.Init(event->GetParentObject())) {
-            return NS_ERROR_UNEXPECTED;
-        }
-        JSContext* cx = jsapi.cx();
-        JS::Rooted<JS::Value> detail(cx);
-        if (!ToJSValue(cx, resultFragment, &detail)) {
-            return NS_ERROR_UNEXPECTED;
-        }
-        event->InitCustomEvent(cx, NS_LITERAL_STRING("prettyprint-dom-created"),
-                               /* bubbles = */ false, /* cancelable = */ false,
-                               detail);
-
-        event->SetTrusted(true);
-        rootElement->DispatchEvent(*event, err);
-        if (NS_WARN_IF(err.Failed())) {
-            return err.StealNSResult();
-        }
+    // Append the document fragment to the shadow dom.
+    shadowRoot->AppendChild(*resultFragment, err);
+    if (NS_WARN_IF(err.Failed())) {
+        return err.StealNSResult();
     }
 
     // Observe the document so we know when to switch to "normal" view
@@ -213,9 +149,8 @@ void
 nsXMLPrettyPrinter::MaybeUnhook(nsIContent* aContent)
 {
     // If aContent is null, the document-node was modified.
-    // If it is not null but in the shadow tree, the <scrollbar> NACs,
-    // or the XBL binding, the change was in the generated content, and
-    // it should be ignored.
+    // If it is not null but in the shadow tree or the <scrollbar> NACs,
+    // the change was in the generated content, and it should be ignored.
     bool isGeneratedContent = !aContent ?
         false :
         aContent->GetBindingParent() || aContent->IsInShadowTree();
@@ -239,9 +174,6 @@ nsXMLPrettyPrinter::Unhook()
     if (element) {
         // Remove the shadow root
         element->UnattachShadow();
-
-        // Remove the bound XBL binding
-        mDocument->BindingManager()->ClearBinding(element);
     }
 
     mDocument = nullptr;

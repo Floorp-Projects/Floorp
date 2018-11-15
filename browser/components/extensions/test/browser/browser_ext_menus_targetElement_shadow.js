@@ -6,10 +6,8 @@
 const PAGE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
 
 add_task(async function menuInShadowDOM() {
-  Services.prefs.setBoolPref("dom.webcomponents.shadowdom.enabled", true);
   Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
   registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("dom.webcomponents.shadowdom.enabled");
     Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
   });
 

@@ -15,10 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1446834
   SimpleTest.waitForExplicitFinish();
 
   window.onload = function() {
-    SpecialPowers.pushPrefEnv({"set": [["dom.webcomponents.shadowdom.enabled", true]]},
-      function() {
-        document.getElementById("iframe").src = "file_bug1446834.html";
-      });
+    document.getElementById("iframe").src = "file_bug1446834.html";
   }
 
   </script>
