@@ -1005,7 +1005,7 @@ public:
     }
 
     void SyncResumeResizeCompositor(const GeckoSession::Compositor::LocalRef& aObj,
-                                    int32_t aWidth, int32_t aHeight,
+                                    int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
                                     jni::Object::Param aSurface)
     {
         MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
@@ -1013,7 +1013,7 @@ public:
         mSurface = aSurface;
 
         if (RefPtr<UiCompositorControllerChild> child = GetUiCompositorControllerChild()) {
-            child->ResumeAndResize(aWidth, aHeight);
+            child->ResumeAndResize(aX, aY, aWidth, aHeight);
         }
 
         mCompositorPaused = false;

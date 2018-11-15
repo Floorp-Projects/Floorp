@@ -200,6 +200,7 @@ public final class GeckoRuntime implements Parcelable {
             }
         }
 
+        GeckoAppShell.useMaxScreenDepth(settings.getUseMaxScreenDepth());
         GeckoAppShell.setDisplayDensityOverride(settings.getDisplayDensityOverride());
         GeckoAppShell.setDisplayDpiOverride(settings.getDisplayDpiOverride());
         GeckoAppShell.setScreenSizeOverride(settings.getScreenSizeOverride());

@@ -275,6 +275,14 @@ public:
     return mRenderOffset;
   }
 
+  /**
+   * Allow the origin of the surface to be offset so that content does not
+   * start at (0, 0) on the surface.
+   */
+  void SetSurfaceOrigin(const ScreenIntPoint& aOrigin) {
+    mSurfaceOrigin = aOrigin;
+  }
+
 private:
   template<typename Geometry>
   void DrawGeometry(const Geometry& aGeometry,
@@ -303,6 +311,9 @@ private:
   gfx::IntSize mSurfaceSize;
 
   ScreenPoint mRenderOffset;
+
+  /** The origin of the content on the surface */
+  ScreenIntPoint mSurfaceOrigin;
 
   already_AddRefed<mozilla::gl::GLContext> CreateContext();
 
