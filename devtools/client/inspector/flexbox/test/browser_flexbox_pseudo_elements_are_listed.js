@@ -19,7 +19,7 @@ add_task(async function() {
   await selectNode(".container", inspector);
   const [flexItemList] = await onItemsListRendered;
 
-  const items = [...flexItemList.querySelectorAll("li")];
+  const items = [...flexItemList.querySelectorAll("button .objectBox")];
   is(items.length, 2, "There are 2 items displayed in the list");
 
   is(items[0].textContent, "::before", "The first item is ::before");

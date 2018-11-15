@@ -7,6 +7,7 @@
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
 
 const FlexItem = createFactory(require(("./FlexItem")));
 
@@ -31,11 +32,13 @@ class FlexItemList extends PureComponent {
     } = this.props;
 
     return (
-      dom.ol(
+      dom.div(
         { className: "flex-item-list" },
-        flexItems.map(flexItem => FlexItem({
+        dom.div({ className: "flex-item-list-header" }, getStr("flexbox.flexItems")),
+        flexItems.map((flexItem, index) => FlexItem({
           key: flexItem.actorID,
           flexItem,
+          index: index + 1,
           onHideBoxModelHighlighter,
           onShowBoxModelHighlighterForNode,
           setSelectedNode,
