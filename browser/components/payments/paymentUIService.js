@@ -62,6 +62,7 @@ PaymentUIService.prototype = {
     let pdwGlobal = {};
     Services.scriptloader.loadSubScript("chrome://payments/content/paymentDialogWrapper.js",
                                         pdwGlobal);
+
     paymentsBrowser.paymentDialogWrapper = pdwGlobal.paymentDialogWrapper;
 
     // Create an <html:div> wrapper to absolutely position the <xul:browser>
@@ -76,6 +77,8 @@ PaymentUIService.prototype = {
     // Initialize the wrapper once the <browser> is connected.
     paymentsBrowser.paymentDialogWrapper.init(requestId, paymentsBrowser);
 
+    this._attachBrowserEventListeners(merchantBrowser);
+
     // Only show the frame and change the UI when the dialog is ready to show.
     paymentsBrowser.addEventListener("tabmodaldialogready", function readyToShow() {
       if (!container) {
@@ -83,17 +86,8 @@ PaymentUIService.prototype = {
         return;
       }
       container.hidden = false;
-
-      // Prevent focusing or interacting with the <browser>.
-      merchantBrowser.setAttribute("tabmodalPromptShowing", "true");
-
-      // Darken the merchant content area.
-      let tabModalBackground = chromeWindow.document.createXULElement("box");
-      tabModalBackground.classList.add("tabModalBackground", "paymentDialogBackground");
-      // Insert the same way as <tabmodalprompt>.
-      merchantBrowser.parentNode.insertBefore(tabModalBackground,
-                                              merchantBrowser.nextElementSibling);
-    }, {
+      this._showDialog(merchantBrowser);
+    }.bind(this), {
       once: true,
     });
   },
@@ -182,6 +176,23 @@ PaymentUIService.prototype = {
     return frame;
   },
 
+  _attachBrowserEventListeners(merchantBrowser) {
+    merchantBrowser.addEventListener("SwapDocShells", this);
+  },
+
+  _showDialog(merchantBrowser) {
+    let chromeWindow = merchantBrowser.ownerGlobal;
+    // Prevent focusing or interacting with the <browser>.
+    merchantBrowser.setAttribute("tabmodalPromptShowing", "true");
+
+    // Darken the merchant content area.
+    let tabModalBackground = chromeWindow.document.createXULElement("box");
+    tabModalBackground.classList.add("tabModalBackground", "paymentDialogBackground");
+    // Insert the same way as <tabmodalprompt>.
+    merchantBrowser.parentNode.insertBefore(tabModalBackground,
+                                            merchantBrowser.nextElementSibling);
+  },
+
   /**
    * @param {string} requestId - Payment Request ID of the dialog to close.
    * @returns {boolean} whether the specified dialog was closed.
@@ -198,6 +209,8 @@ PaymentUIService.prototype = {
     this.log.debug(`closing: ${requestId}`);
     paymentFrame.paymentDialogWrapper.uninit();
     dialogContainer.remove();
+    browser.removeEventListener("SwapDocShells", this);
+
     if (!dialogContainer.hidden) {
       // If the container is no longer hidden then the background was added after
       // `tabmodaldialogready` so remove it.
@@ -208,6 +221,11 @@ PaymentUIService.prototype = {
       }
     }
     return true;
+  },
+
+  getDialogContainerForMerchantBrowser(merchantBrowser) {
+    return merchantBrowser.ownerGlobal.gBrowser.getBrowserContainer(merchantBrowser)
+                          .querySelector(".paymentDialogContainer");
   },
 
   findDialog(requestId) {
@@ -237,6 +255,49 @@ PaymentUIService.prototype = {
     this.log.error("findBrowserByOuterWindowId: No browser found for outerWindowId:",
                    outerWindowId);
     return null;
+  },
+
+  _moveDialogToNewBrowser(oldBrowser, newBrowser) {
+    // Re-attach event listeners to the new browser.
+    newBrowser.addEventListener("SwapDocShells", this);
+
+    let dialogContainer = this.getDialogContainerForMerchantBrowser(oldBrowser);
+    let newBrowserContainer = newBrowser.ownerGlobal.gBrowser.getBrowserContainer(newBrowser);
+
+    // Clone the container tree
+    let newDialogContainer = newBrowserContainer.ownerDocument.importNode(dialogContainer, true);
+
+    let oldFrame = dialogContainer.querySelector(".paymentDialogContainerFrame");
+    let newFrame = newDialogContainer.querySelector(".paymentDialogContainerFrame");
+
+    // We need a document to be synchronously loaded in order to do the swap and
+    // there's no point in wasting resources loading a dialog we're going to replace.
+    newFrame.setAttribute("src", "about:blank");
+    newFrame.setAttribute("nodefaultsrc", "true");
+
+    newBrowserContainer.prepend(newDialogContainer);
+
+    // Force the <browser> to be created so that it'll have a document loaded and frame created.
+    // See `ourChildDocument` and `ourFrame` checks in nsFrameLoader::SwapWithOtherLoader.
+    /* eslint-disable-next-line no-unused-expressions */
+    newFrame.clientTop;
+
+    // Swap the frameLoaders to preserve the frame state
+    newFrame.swapFrameLoaders(oldFrame);
+    newFrame.paymentDialogWrapper = oldFrame.paymentDialogWrapper;
+    newFrame.paymentDialogWrapper.changeAttachedFrame(newFrame);
+    dialogContainer.remove();
+
+    this._showDialog(newBrowser);
+  },
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "SwapDocShells": {
+        this._moveDialogToNewBrowser(event.target, event.detail);
+        break;
+      }
+    }
   },
 };
 
