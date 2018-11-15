@@ -22,27 +22,9 @@ const TEST_URI = `data:text/html;charset=utf-8,
 
 add_task(async function() {
   const toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
-  const inspector = toolbox.getPanel("inspector");
-
   await registerTestActor(toolbox.target.client);
   const testActor = await getTestActor(toolbox);
-
-  const onPickerStarted = inspector.toolbox.once("picker-started");
-  inspector.toolbox.highlighterUtils.startPicker();
-  await onPickerStarted;
-
-  info("Picker mode started, now clicking on <h1> to select that node");
-  const onPickerStopped = toolbox.once("picker-stopped");
-  const onInspectorUpdated = inspector.once("inspector-updated");
-
-  testActor.synthesizeMouse({
-    selector: "h1",
-    center: true,
-    options: {},
-  });
-
-  await onPickerStopped;
-  await onInspectorUpdated;
+  await selectNodeWithPicker(toolbox, testActor, "h1");
 
   info("Picker mode stopped, <h1> selected, now switching to the console");
   const hud = await openConsole();
