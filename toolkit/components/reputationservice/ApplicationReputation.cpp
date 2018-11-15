@@ -600,6 +600,8 @@ static const char* const kBinaryFileExtensions[] = {
     ".pup", // Linux package
     ".py", // Python script
     ".pyc", // Python binary
+    ".pyd", // Equivalent of a DLL, for python libraries
+    ".pyo", // Compiled python code
     ".pyw", // Python GUI
     //".quad",
     //".r00",
