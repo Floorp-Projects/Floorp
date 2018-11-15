@@ -3044,6 +3044,11 @@ nsIDocument::InitFeaturePolicy(nsIChannel* aChannel)
     mFeaturePolicy->InheritPolicy(parentPolicy);
   }
 
+  // We don't want to parse the http Feature-Policy header if this pref is off.
+  if (!StaticPrefs::dom_security_featurePolicy_header_enabled()) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIHttpChannel> httpChannel;
   nsresult rv = GetHttpChannelHelper(aChannel, getter_AddRefs(httpChannel));
   if (NS_WARN_IF(NS_FAILED(rv))) {

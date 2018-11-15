@@ -13,3 +13,12 @@ interface Policy {
   sequence<DOMString> allowedFeatures();
   sequence<DOMString> getAllowlistForFeature(DOMString feature);
 };
+
+[Func="mozilla::dom::DOMPrefs::dom_reporting_featurePolicy_enabled"]
+interface FeaturePolicyViolationReportBody : ReportBody {
+  readonly attribute DOMString featureId;
+  readonly attribute DOMString? sourceFile;
+  readonly attribute long? lineNumber;
+  readonly attribute long? columnNumber;
+  readonly attribute DOMString disposition;
+};

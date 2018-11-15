@@ -16,6 +16,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/Utf8.h"
 #include "mozilla/Variant.h"
 
 #include <utility>
@@ -99,8 +100,16 @@ struct ParserNewObjectBox
 struct ParseHandlerMatcher
 {
     template<class Parser>
-    frontend::FullParseHandler& match(Parser *parser) {
+    frontend::FullParseHandler& match(Parser* parser) {
         return parser->handler;
+    }
+};
+
+struct AnyCharsMatcher
+{
+    template<class Parser>
+    frontend::TokenStreamAnyChars& match(Parser* parser) {
+        return parser->anyChars;
     }
 };
 
@@ -127,7 +136,8 @@ namespace frontend {
 class EitherParser : public BCEParserHandle
 {
     // Leave this as a variant, to promote good form until 8-bit parser integration.
-    mozilla::Variant<Parser<FullParseHandler, char16_t>* const> parser;
+    mozilla::Variant<Parser<FullParseHandler, char16_t>* const,
+                     Parser<FullParseHandler, mozilla::Utf8Unit>* const> parser;
 
     using Node = typename FullParseHandler::Node;
 
@@ -164,6 +174,13 @@ class EitherParser : public BCEParserHandle
         return parser.match(std::move(matcher));
     }
 
+    const TokenStreamAnyChars& anyChars() const {
+        return parser.match(detail::AnyCharsMatcher());
+    }
+
+    void computeLineAndColumn(uint32_t offset, uint32_t* line, uint32_t* column) const {
+        return anyChars().lineAndColumnAt(offset, line, column);
+    }
 };
 
 } /* namespace frontend */

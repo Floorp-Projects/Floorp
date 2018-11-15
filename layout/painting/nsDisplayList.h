@@ -2411,7 +2411,9 @@ public:
    */
   virtual uint32_t GetPerFrameKey() const { return uint32_t(GetType()); }
 
-  uint8_t GetFlags() { return GetDisplayItemFlagsForType(GetType()); }
+  uint8_t GetFlags() const { return GetDisplayItemFlagsForType(GetType()); }
+
+  virtual bool IsContentful() const { return GetFlags() & TYPE_IS_CONTENTFUL; }
 
   /**
    * This is called after we've constructed a display list for event handling.

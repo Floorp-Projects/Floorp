@@ -3,7 +3,7 @@
  */
 
 #include "js/CompilationAndEvaluation.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "jsapi-tests/tests.h"
 
 using mozilla::ArrayLength;
@@ -19,7 +19,10 @@ BEGIN_TEST(testJSEvaluateScript)
     JS::CompileOptions opts(cx);
     JS::AutoObjectVector scopeChain(cx);
     CHECK(scopeChain.append(obj));
-    JS::SourceBufferHolder srcBuf(src, ArrayLength(src) - 1, JS::SourceBufferHolder::NoOwnership);
+
+    JS::SourceText<char16_t> srcBuf;
+    CHECK(srcBuf.init(cx, src, ArrayLength(src) - 1, JS::SourceOwnership::Borrowed));
+
     CHECK(JS::Evaluate(cx, scopeChain, opts.setFileAndLine(__FILE__, __LINE__),
                        srcBuf, &retval));
 

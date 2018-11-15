@@ -20,6 +20,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/Conversions.h"
+#include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "nsString.h"
 
@@ -157,9 +158,9 @@ public:
     MOZ_MUST_USE nsresult JoinAndExec(JS::OffThreadToken** aOffThreadToken,
                                       JS::MutableHandle<JSScript*> aScript);
 
-    // Compile a script contained in a SourceBuffer, and execute it.
+    // Compile a script contained in a SourceText, and execute it.
     nsresult CompileAndExec(JS::CompileOptions& aCompileOptions,
-                            JS::SourceBufferHolder& aSrcBuf,
+                            JS::SourceText<char16_t>& aSrcBuf,
                             JS::MutableHandle<JSScript*> aScript);
 
     // Compile a script contained in a string, and execute it.
@@ -186,7 +187,7 @@ public:
   };
 
   static nsresult CompileModule(JSContext* aCx,
-                                JS::SourceBufferHolder& aSrcBuf,
+                                JS::SourceText<char16_t>& aSrcBuf,
                                 JS::Handle<JSObject*> aEvaluationGlobal,
                                 JS::CompileOptions &aCompileOptions,
                                 JS::MutableHandle<JSObject*> aModule);

@@ -102,6 +102,7 @@ DIRS += [
     'websocket',
     'serviceworkers',
     'simpledb',
+    'reporting',
 ]
 
 if CONFIG['MOZ_LIBPRIO']:

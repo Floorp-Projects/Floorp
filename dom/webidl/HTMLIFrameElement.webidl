@@ -72,7 +72,7 @@ HTMLIFrameElement implements BrowserElement;
 
 // https://wicg.github.io/feature-policy/#policy
 partial interface HTMLIFrameElement {
-  [SameObject, Pref="dom.security.featurePolicy.enabled"]
+  [SameObject, Pref="dom.security.featurePolicy.webidl.enabled"]
   readonly attribute Policy policy;
 
   [CEReactions, SetterThrows, Pure, Pref="dom.security.featurePolicy.enabled"]

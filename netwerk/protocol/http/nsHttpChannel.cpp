@@ -162,13 +162,6 @@ static uint32_t sRCWNMaxWaitMs = 500;
 
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
-enum CacheDisposition {
-    kCacheHit = 1,
-    kCacheHitViaReval = 2,
-    kCacheMissedViaReval = 3,
-    kCacheMissed = 4
-};
-
 using mozilla::Telemetry::LABELS_DOCUMENT_ANALYTICS_TRACKER_FASTBLOCKED;
 
 static const struct {
@@ -331,6 +324,7 @@ AutoRedirectVetoNotifier::ReportRedirectResult(bool succeeded)
 
 nsHttpChannel::nsHttpChannel()
     : HttpAsyncAborter<nsHttpChannel>(this)
+    , mCacheDisposition(kCacheUnresolved)
     , mLogicalOffset(0)
     , mPostID(0)
     , mRequestTime(0)
@@ -942,6 +936,7 @@ nsHttpChannel::ContinueConnect()
             }
 
             AccumulateCacheHitTelemetry(kCacheHit);
+            mCacheDisposition = kCacheHit;
 
             return rv;
         }
@@ -2749,6 +2744,7 @@ nsHttpChannel::ContinueProcessResponse2(nsresult rv)
             cacheDisposition = kCacheMissedViaReval;
         }
         AccumulateCacheHitTelemetry(cacheDisposition);
+        mCacheDisposition = cacheDisposition;
 
         Telemetry::Accumulate(Telemetry::HTTP_RESPONSE_VERSION,
                               static_cast<uint32_t>(mResponseHead->Version()));
@@ -5893,7 +5889,7 @@ nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv)
         GetPriority(&priority);
         profiler_add_network_marker(mURI, priority, mChannelId, NetworkLoadType::LOAD_REDIRECT,
                                     mLastStatusReported, TimeStamp::Now(),
-                                    mLogicalOffset, nullptr,
+                                    mLogicalOffset, mCacheDisposition, nullptr,
                                     mRedirectURI);
     }
 #endif
@@ -6348,7 +6344,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     if (profiler_is_active()) {
         profiler_add_network_marker(mURI, mPriority, mChannelId, NetworkLoadType::LOAD_START,
                                     mChannelCreationTimestamp, mLastStatusReported,
-                                    0);
+                                    0, mCacheDisposition);
     }
 #endif
 
@@ -7738,7 +7734,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
             profiler_add_network_marker(uri, priority, mChannelId, NetworkLoadType::LOAD_STOP,
                                         mLastStatusReported, TimeStamp::Now(),
                                         mLogicalOffset,
-                                        &mTransactionTimings);
+                                        mCacheDisposition, &mTransactionTimings, nullptr);
         }
 #endif
 

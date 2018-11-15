@@ -47,7 +47,7 @@
 #include "js/Debug.h"
 #include "js/HashTable.h"
 #include "js/LocaleSensitive.h"
-#include "js/SourceBufferHolder.h"
+#include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
 #include "js/UbiNode.h"
@@ -93,7 +93,8 @@ using mozilla::Maybe;
 
 using JS::AutoStableStringChars;
 using JS::CompileOptions;
-using JS::SourceBufferHolder;
+using JS::SourceOwnership;
+using JS::SourceText;
 
 // If fuzzingSafe is set, remove functionality that could cause problems with
 // fuzzers. Set this via the environment variable MOZ_FUZZING_SAFE.
@@ -4033,7 +4034,11 @@ EvalReturningScope(JSContext* cx, unsigned argc, Value* vp)
     options.setFileAndLine(filename.get(), lineno);
     options.setNoScriptRval(true);
 
-    JS::SourceBufferHolder srcBuf(src, srclen, JS::SourceBufferHolder::NoOwnership);
+    JS::SourceText<char16_t> srcBuf;
+    if (!srcBuf.init(cx, src, srclen, SourceOwnership::Borrowed)) {
+        return false;
+    }
+
     RootedScript script(cx);
     if (!JS::CompileForNonSyntacticScope(cx, options, srcBuf, &script)) {
         return false;
@@ -4134,7 +4139,11 @@ ShellCloneAndExecuteScript(JSContext* cx, unsigned argc, Value* vp)
     options.setFileAndLine(filename.get(), lineno);
     options.setNoScriptRval(true);
 
-    JS::SourceBufferHolder srcBuf(src, srclen, JS::SourceBufferHolder::NoOwnership);
+    JS::SourceText<char16_t> srcBuf;
+    if (!srcBuf.init(cx, src, srclen, SourceOwnership::Borrowed)) {
+        return false;
+    }
+
     RootedScript script(cx);
     if (!JS::Compile(cx, options, srcBuf, &script)) {
         return false;
@@ -5558,9 +5567,13 @@ js::TestingFunctionArgumentToScript(JSContext* cx,
         }
         const char16_t* chars = linearChars.twoByteRange().begin().get();
 
+        SourceText<char16_t> source;
+        if (!source.init(cx, chars, len, SourceOwnership::Borrowed)) {
+            return nullptr;
+        }
+
         RootedScript script(cx);
         CompileOptions options(cx);
-        SourceBufferHolder source(chars, len, SourceBufferHolder::NoOwnership);
         if (!JS::Compile(cx, options, source, &script)) {
             return nullptr;
         }

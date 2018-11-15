@@ -95,6 +95,8 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         '/docshell/base',
         '/ipc/chromium/src',
         '/mozglue/linker',
+        '/netwerk/base',
+        '/netwerk/protocol/http',
         '/toolkit/crashreporter/google-breakpad/src',
         '/tools/profiler/core/',
         '/tools/profiler/gecko/',
