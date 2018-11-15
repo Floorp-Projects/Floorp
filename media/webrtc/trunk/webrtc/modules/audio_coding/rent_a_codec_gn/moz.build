@@ -106,17 +106,11 @@ if CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["USE_NSS_CERTS"] = "1"
     DEFINES["USE_X11"] = "1"
-    DEFINES["WEBRTC_CODEC_ISAC"] = True
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
-    LOCAL_INCLUDES += [
-        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
-    ]
-
     OS_LIBS += [
-        "m",
         "rt"
     ]
 
@@ -183,6 +177,18 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
     DEFINES["WEBRTC_CODEC_ISACFX"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
+
+if CONFIG["CPU_ARCH"] == "ppc64":
+
+    DEFINES["WEBRTC_CODEC_ISAC"] = True
+
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
+    ]
+
+    OS_LIBS += [
+        "m"
+    ]
 
 if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Android":
 
@@ -264,10 +270,46 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "FreeBSD":
         "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
     ]
 
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["WEBRTC_CODEC_ISAC"] = True
+
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
+    ]
+
+    OS_LIBS += [
+        "m"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
     CXXFLAGS += [
         "-msse2"
+    ]
+
+    DEFINES["WEBRTC_CODEC_ISAC"] = True
+
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
+    ]
+
+    OS_LIBS += [
+        "m"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["WEBRTC_CODEC_ISAC"] = True
+
+    LOCAL_INCLUDES += [
+        "/media/webrtc/trunk/webrtc/modules/audio_coding/codecs/isac/main/include/"
+    ]
+
+    OS_LIBS += [
+        "m"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "NetBSD":

@@ -46,6 +46,23 @@ if CONFIG["MOZ_DEBUG"] == "1":
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
     DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
 
+if CONFIG["CPU_ARCH"] == "aarch64":
+
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+
+if CONFIG["CPU_ARCH"] == "arm":
+
+    CFLAGS += [
+        "-mfpu=neon"
+    ]
+
+    DEFINES["WEBRTC_ARCH_ARM"] = True
+    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+
 if CONFIG["CPU_ARCH"] == "x86":
 
     CFLAGS += [
