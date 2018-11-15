@@ -29,6 +29,8 @@ You can change the value of these preferences by going to `about:config`:
 | Preference name | Value | Comments |
 | --------------- | --------------- | -------- |
 | `browser.dom.window.dump.enabled` | `true` | Adds global `dump` function to log strings to `stdout` |
+| `devtools.console.stdout.chrome` | `true` | Allows console API to write to `stdout` when used by chrome content |
+| `devtools.console.stdout.content` | `true` | Allows console API to write to `stdout` when used by content |
 | `devtools.debugger.log` (*) | `true` | Dump packets sent over remote debugging protocol to `stdout`.<br /><br />The [remote protocol inspector add-on](https://github.com/firebug/rdp-inspector/wiki) might be useful too. |
 | `devtools.dump.emit` (*) | `true` | Log event notifications from the EventEmitter class<br />(found at `devtools/shared/event-emitter.js`). |
 
