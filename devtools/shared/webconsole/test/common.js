@@ -105,19 +105,12 @@ var _attachConsole = async function(
     await waitForMessage(worker);
 
     const { workers } = await targetFront.listWorkers();
-    const workerTargetActor = workers.filter(w => w.url == workerName)[0].actor;
-    if (!workerTargetActor) {
-      console.error("listWorkers failed. Unable to find the " +
-                    "worker actor\n");
+    const workerTargetFront = workers.filter(w => w.url == workerName)[0];
+    if (!workerTargetFront) {
+      console.error("listWorkers failed. Unable to find the worker actor\n");
       return;
     }
-    const [workerResponse, workerTargetFront] =
-      await targetFront.attachWorker(workerTargetActor);
-    if (!workerTargetFront || workerResponse.error) {
-      console.error("attachWorker failed. No worker target front or " +
-                    " error: " + workerResponse.error);
-      return;
-    }
+    await workerTargetFront.attach();
     await workerTargetFront.attachThread({});
     state.actor = workerTargetFront.targetForm.consoleActor;
     state.dbgClient.attachConsole(workerTargetFront.targetForm.consoleActor, listeners)

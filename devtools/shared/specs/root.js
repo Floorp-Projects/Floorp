@@ -15,7 +15,7 @@ types.addDictType("root.listAddons", {
   addons: "array:json",
 });
 types.addDictType("root.listWorkers", {
-  workers: "array:json",
+  workers: "array:workerTarget",
 });
 types.addDictType("root.listServiceWorkerRegistrations", {
   registrations: "array:json",

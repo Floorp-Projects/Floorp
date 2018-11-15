@@ -7,7 +7,7 @@ const {types, Option, RetVal, generateActorSpec} = require("devtools/shared/prot
 
 types.addDictType("contentProcessTarget.workers", {
   error: "nullable:string",
-  workers: "nullable:array:json",
+  workers: "nullable:array:workerTarget",
 });
 
 const contentProcessTargetSpec = generateActorSpec({

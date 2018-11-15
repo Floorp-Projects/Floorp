@@ -95,30 +95,30 @@ const RootFront = protocol.FrontClassWithSpec(rootSpec, {
       });
     });
 
-    workers.forEach(form => {
+    workers.forEach(front => {
       const worker = {
-        name: form.url,
-        url: form.url,
-        workerTargetActor: form.actor,
+        name: front.url,
+        url: front.url,
+        workerTargetFront: front,
       };
-      switch (form.type) {
+      switch (front.type) {
         case Ci.nsIWorkerDebugger.TYPE_SERVICE:
-          const registration = result.service.find(r => r.scope === form.scope);
+          const registration = result.service.find(r => r.scope === front.scope);
           if (registration) {
             // XXX: Race, sometimes a ServiceWorkerRegistrationInfo doesn't
             // have a scriptSpec, but its associated WorkerDebugger does.
             if (!registration.url) {
-              registration.name = registration.url = form.url;
+              registration.name = registration.url = front.url;
             }
-            registration.workerTargetActor = form.actor;
+            registration.workerTargetFront = front;
           } else {
-            worker.fetch = form.fetch;
+            worker.fetch = front.fetch;
 
             // If a service worker registration could not be found, this means we are in
             // e10s, and registrations are not forwarded to other processes until they
             // reach the activated state. Augment the worker as a registration worker to
             // display it in aboutdebugging.
-            worker.scope = form.scope;
+            worker.scope = front.scope;
             worker.active = false;
             result.service.push(worker);
           }

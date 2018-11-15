@@ -25,7 +25,6 @@ loader.lazyRequireGetter(this, "WebConsoleClient", "devtools/shared/webconsole/c
 loader.lazyRequireGetter(this, "AddonTargetFront", "devtools/shared/fronts/targets/addon", true);
 loader.lazyRequireGetter(this, "RootFront", "devtools/shared/fronts/root", true);
 loader.lazyRequireGetter(this, "BrowsingContextTargetFront", "devtools/shared/fronts/targets/browsing-context", true);
-loader.lazyRequireGetter(this, "WorkerTargetFront", "devtools/shared/fronts/targets/worker", true);
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 loader.lazyRequireGetter(this, "Pool", "devtools/shared/protocol", true);
@@ -60,7 +59,7 @@ function DebuggerClient(transport) {
   // Once RootClient becomes a protocol.js actor, these actors can be attached to it
   // instead of this pool.
   // This Pool will automatically be added to this._pools via addActorPool once the first
-  // Front will be added to it (in attachTarget, attachWorker,...).
+  // Front will be added to it (in attachTarget, ...).
   // And it does not need to destroyed explicitly as all Pools are destroyed on client
   // closing.
   this._frontPool = new Pool(this);
@@ -374,17 +373,6 @@ DebuggerClient.prototype = {
     let front = this._frontPool.actor(targetActor);
     if (!front) {
       front = new BrowsingContextTargetFront(this, { actor: targetActor });
-      this._frontPool.manage(front);
-    }
-
-    const response = await front.attach();
-    return [response, front];
-  },
-
-  attachWorker: async function(workerTargetActor) {
-    let front = this._frontPool.actor(workerTargetActor);
-    if (!front) {
-      front = new WorkerTargetFront(this, { actor: workerTargetActor });
       this._frontPool.manage(front);
     }
 

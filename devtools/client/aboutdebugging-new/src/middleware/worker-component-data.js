@@ -42,8 +42,9 @@ function getServiceWorkerStatus(isActive, isRunning) {
 
 function toComponentData(workers, isServiceWorker) {
   return workers.map(worker => {
+    // Here `worker` is the worker object created by RootFront.listAllWorkers
     const type = DEBUG_TARGETS.WORKER;
-    const id = worker.workerTargetActor;
+    const front = worker.workerTargetFront;
     const icon = "chrome://devtools/skin/images/debugging-workers.svg";
     let { fetch, name, registrationActor, scope } = worker;
     let isActive = false;
@@ -54,14 +55,14 @@ function toComponentData(workers, isServiceWorker) {
       fetch = fetch ? SERVICE_WORKER_FETCH_STATES.LISTENING
                     : SERVICE_WORKER_FETCH_STATES.NOT_LISTENING;
       isActive = worker.active;
-      isRunning = !!worker.workerTargetActor;
+      isRunning = !!worker.workerTargetFront;
       status = getServiceWorkerStatus(isActive, isRunning);
     }
 
     return {
       name,
       icon,
-      id,
+      front,
       type,
       details: {
         fetch,

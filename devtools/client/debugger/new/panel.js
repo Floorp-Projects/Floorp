@@ -6,6 +6,7 @@
 const { Task } = require("devtools/shared/task");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const { gDevTools } = require("devtools/client/framework/devtools");
+const { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
 const { TargetFactory } = require("devtools/client/framework/target");
 const { Toolbox } = require("devtools/client/framework/toolbox");
 loader.lazyRequireGetter(this, "openContentLink", "devtools/client/shared/link", true);
@@ -67,12 +68,8 @@ DebuggerPanel.prototype = {
     openContentLink(url);
   },
 
-  openWorkerToolbox: async function(worker) {
-    const [response, workerTargetFront] =
-      await this.toolbox.target.client.attachWorker(worker.actor);
-    const workerTarget = TargetFactory.forWorker(workerTargetFront);
-    const toolbox = await gDevTools.showToolbox(workerTarget, "jsdebugger", Toolbox.HostType.WINDOW);
-    toolbox.once("destroy", () => workerTargetFront.detach());
+  openWorkerToolbox: function(workerTargetFront) {
+    return gDevToolsBrowser.openWorkerToolbox(workerTargetFront, "jsdebugger");
   },
 
   getFrames: function() {

@@ -26,7 +26,7 @@ class InspectAction extends PureComponent {
 
   inspect() {
     const { dispatch, target } = this.props;
-    dispatch(Actions.inspectDebugTarget(target.type, target.id));
+    dispatch(Actions.inspectDebugTarget(target));
   }
 
   render() {
