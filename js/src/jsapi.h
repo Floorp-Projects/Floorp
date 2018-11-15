@@ -4286,6 +4286,16 @@ CreateError(JSContext* cx, JSExnType type, HandleObject stack,
             HandleString fileName, uint32_t lineNumber, uint32_t columnNumber,
             JSErrorReport* report, HandleString message, MutableHandleValue rval);
 
+/*
+ * Prints a full report and returns true if the given report is non-nullptr
+ * and the report doesn't have the JSREPORT_WARNING flag set or reportWarnings
+ * is true.
+ * Returns false otherwise.
+ */
+extern JS_PUBLIC_API(bool)
+PrintError(JSContext* cx, FILE* file, ConstUTF8CharsZ toStringResult,
+           JSErrorReport* report, bool reportWarnings);
+
 /************************************************************************/
 
 /*
