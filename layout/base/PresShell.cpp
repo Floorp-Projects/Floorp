@@ -832,7 +832,7 @@ PresShell::PresShell()
   MOZ_LOG(gLog, LogLevel::Debug, ("PresShell::PresShell this=%p", this));
 
 #ifdef MOZ_REFLOW_PERF
-  mReflowCountMgr = new ReflowCountMgr();
+  mReflowCountMgr = MakeUnique<ReflowCountMgr>();
   mReflowCountMgr->SetPresContext(mPresContext);
   mReflowCountMgr->SetPresShell(this);
 #endif
@@ -1182,10 +1182,7 @@ PresShell::Destroy()
 
 #ifdef MOZ_REFLOW_PERF
   DumpReflows();
-  if (mReflowCountMgr) {
-    delete mReflowCountMgr;
-    mReflowCountMgr = nullptr;
-  }
+  mReflowCountMgr = nullptr;
 #endif
 
   if (mZoomConstraintsClient) {
