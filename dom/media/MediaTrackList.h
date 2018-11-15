@@ -33,7 +33,8 @@ class VideoStreamTrack;
 class MediaTrackList : public DOMEventTargetHelper
 {
 public:
-  MediaTrackList(nsPIDOMWindowInner* aOwnerWindow, HTMLMediaElement* aMediaElement);
+  MediaTrackList(nsIGlobalObject* aOwnerObject,
+                 HTMLMediaElement* aMediaElement);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaTrackList, DOMEventTargetHelper)
