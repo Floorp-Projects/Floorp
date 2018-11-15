@@ -50,7 +50,7 @@ add_task(async function() {
     BrowserTestUtils.removeTab(tab);
   });
 
-  let lotsOfSpaces = new Array(200).fill("%20").join("");
+  let lotsOfSpaces = "%20".repeat(200);
 
   // اسماء.شبكة
   let rtlDomain = "\u0627\u0633\u0645\u0627\u0621\u002e\u0634\u0628\u0643\u0629";
