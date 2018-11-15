@@ -77,5 +77,33 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await testDevicePixelRatio(ui, TEST_DEVICE.pixelRatio);
   await testTouchEventsOverride(ui, TEST_DEVICE.touch);
 
+  info("Rotating the viewport.");
+  rotateViewport(ui);
+
+  reloadOnUAChange(false);
+});
+
+addRDMTask(TEST_URL, async function({ ui }) {
+  const { store } = ui.toolWindow;
+
+  reloadOnUAChange(true);
+
+  info("Reopening RDM and checking that the previous device state is restored.");
+
+  // Wait until the viewport has been added and the device list has been loaded
+  await waitUntilState(store, state =>
+    state.viewports.length == 1 &&
+    state.viewports[0].device === TEST_DEVICE.name &&
+    state.devices.listState == Types.loadableState.LOADED);
+  await waitForViewportResizeTo(ui, TEST_DEVICE.height, TEST_DEVICE.width);
+  await waitForViewportLoad(ui);
+
+  info("Checking the restored RDM state.");
+  testViewportDeviceMenuLabel(ui, TEST_DEVICE.name);
+  testViewportDimensions(ui, TEST_DEVICE.height, TEST_DEVICE.width);
+  await testUserAgent(ui, TEST_DEVICE.userAgent);
+  await testDevicePixelRatio(ui, TEST_DEVICE.pixelRatio);
+  await testTouchEventsOverride(ui, TEST_DEVICE.touch);
+
   reloadOnUAChange(false);
 });
