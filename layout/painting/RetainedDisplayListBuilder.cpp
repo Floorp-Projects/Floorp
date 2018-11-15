@@ -1345,7 +1345,7 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(
                             &modifiedAGR,
                             framesWithProps.Frames()) ||
       !PreProcessDisplayList(&mList, modifiedAGR)) {
-    mBuilder.LeavePresShell(mBuilder.RootReferenceFrame(), List());
+    mBuilder.LeavePresShell(mBuilder.RootReferenceFrame(), nullptr);
     mList.DeleteAll(&mBuilder);
     return PartialUpdateResult::Failed;
   }
@@ -1391,7 +1391,7 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(
 
   if (mBuilder.PartialBuildFailed()) {
     mBuilder.SetPartialBuildFailed(false);
-    mBuilder.LeavePresShell(mBuilder.RootReferenceFrame(), List());
+    mBuilder.LeavePresShell(mBuilder.RootReferenceFrame(), nullptr);
     mList.DeleteAll(&mBuilder);
     modifiedDL.DeleteAll(&mBuilder);
     return PartialUpdateResult::Failed;
