@@ -777,7 +777,8 @@ Target.prototype = {
       // Before taking any action, notify listeners that destruction is imminent.
       this.emit("close");
 
-      for (const [, front] of this.fronts) {
+      for (let [, front] of this.fronts) {
+        front = await front;
         await front.destroy();
       }
 
