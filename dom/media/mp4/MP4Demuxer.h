@@ -41,7 +41,6 @@ public:
   void NotifyDataRemoved() override;
 
 private:
-  friend class MP4TrackDemuxer;
   RefPtr<MediaResource> mResource;
   RefPtr<ResourceStream> mStream;
   AutoTArray<RefPtr<MP4TrackDemuxer>, 1> mAudioDemuxers;
