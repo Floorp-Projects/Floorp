@@ -1285,20 +1285,41 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
         bool isHttps =
             mTransaction ? mTransaction->ConnectionInfo()->EndToEndSSL() :
             mConnInfo->EndToEndSSL();
+        bool onlyConnect = mTransactionCaps & NS_HTTP_CONNECT_ONLY;
 
         if (responseStatus == 200) {
-            LOG(("proxy CONNECT succeeded! endtoendssl=%d\n", isHttps));
-            *reset = true;
+            LOG(("proxy CONNECT succeeded! endtoendssl=%d onlyconnect=%d\n",
+                 isHttps, onlyConnect));
+            // If we're only connecting, we don't need to reset the transaction
+            // state. We need to upgrade the socket now without doing the actual
+            // http request.
+            if (!onlyConnect) {
+                *reset = true;
+            }
             nsresult rv;
+            // CONNECT only flag doesn't do the tls setup. https here only
+            // ensures a proxy tunnel was used not that tls is setup.
             if (isHttps) {
-                if (mConnInfo->UsingHttpsProxy()) {
-                    LOG(("%p new TLSFilterTransaction %s %d\n",
-                         this, mConnInfo->Origin(), mConnInfo->OriginPort()));
-                    SetupSecondaryTLS();
-                }
+                if (!onlyConnect) {
+                    if (mConnInfo->UsingHttpsProxy()) {
+                        LOG(("%p new TLSFilterTransaction %s %d\n",
+                             this,
+                             mConnInfo->Origin(),
+                             mConnInfo->OriginPort()));
+                        SetupSecondaryTLS();
+                    }
 
-                rv = InitSSLParams(false, true);
-                LOG(("InitSSLParams [rv=%" PRIx32 "]\n", static_cast<uint32_t>(rv)));
+                    rv = InitSSLParams(false, true);
+                    LOG(("InitSSLParams [rv=%" PRIx32 "]\n",
+                         static_cast<uint32_t>(rv)));
+                } else {
+                    // We have an https protocol but the CONNECT only flag was
+                    // specified. The consumer only wants a raw socket to the
+                    // proxy. We have to mark this as complete to finish the
+                    // transaction and be upgraded. OnSocketReadable() uses this
+                    // to detect an inactive tunnel and blocks completion.
+                    mNPNComplete = true;
+                }
             }
             mCompletedProxyConnect = true;
             mProxyConnectInProgress = false;
@@ -1307,7 +1328,8 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
             MOZ_ASSERT(NS_SUCCEEDED(rv), "mSocketOut->AsyncWait failed");
         }
         else {
-            LOG(("proxy CONNECT failed! endtoendssl=%d\n", isHttps));
+            LOG(("proxy CONNECT failed! endtoendssl=%d onlyconnect=%d\n",
+                 isHttps, onlyConnect));
             mTransaction->SetProxyConnectFailed();
         }
     }
@@ -1881,6 +1903,25 @@ nsHttpConnection::OnSocketWritable()
 
     mForceSendDuringFastOpenPending = false;
 
+    if (mTransactionCaps & NS_HTTP_CONNECT_ONLY) {
+        if (!mCompletedProxyConnect && !mProxyConnectStream) {
+            // A CONNECT has been requested for this connection but will never
+            // be performed. Fail here to let request callbacks happen.
+            LOG(("return failure because proxy connect will never happen\n"));
+            return NS_ERROR_FAILURE;
+        }
+
+        if (mCompletedProxyConnect) {
+            // Don't need to check this each write attempt since it is only
+            // updated after OnSocketWritable completes.
+            // We've already done primary tls (if needed) and sent our CONNECT.
+            // If we're doing a CONNECT only request there's no need to write
+            // the http transaction or do the SSL handshake here.
+            LOG(("return ok because proxy connect successful\n"));
+            return NS_OK;
+        }
+    }
+
     do {
         ++writeAttempts;
         rv = mSocketOutCondition = NS_OK;
@@ -2042,6 +2083,14 @@ nsHttpConnection::OnSocketReadable()
     // Reset mResponseTimeoutEnabled to stop response timeout checks.
     mResponseTimeoutEnabled = false;
 
+    if ((mTransactionCaps & NS_HTTP_CONNECT_ONLY) &&
+        !mCompletedProxyConnect && !mProxyConnectStream) {
+        // A CONNECT has been requested for this connection but will never
+        // be performed. Fail here to let request callbacks happen.
+        LOG(("return failure because proxy connect will never happen\n"));
+        return NS_ERROR_FAILURE;
+    }
+
     if (mKeepAliveMask && (delta >= mMaxHangTime)) {
         LOG(("max hang time exceeded!\n"));
         // give the handler a chance to create a new persistent connection to
@@ -2197,6 +2246,18 @@ nsHttpConnection::MakeConnectString(nsAHttpTransaction *trans,
         // we don't know for sure if this authorization is intended for the
         // SSL proxy, so we add it just in case.
         rv = request->SetHeader(nsHttp::Proxy_Authorization, val);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
+
+    if ((trans->Caps() & NS_HTTP_CONNECT_ONLY) &&
+        NS_SUCCEEDED(trans->RequestHead()->GetHeader(
+                         nsHttp::Upgrade,
+                         val))) {
+        // rfc7639 proposes using the ALPN header to indicate the protocol used
+        // in CONNECT when not used for TLS. The protocol is stored in Upgrade.
+        // We have to copy this header here since a new HEAD request is created
+        // for the CONNECT.
+        rv = request->SetHeader(NS_LITERAL_CSTRING("ALPN"), val);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 

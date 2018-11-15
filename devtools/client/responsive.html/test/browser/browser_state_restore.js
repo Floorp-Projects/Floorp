@@ -3,7 +3,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-// Test that the previous viewport size, user agent, ddppx and touch simulation properties
+// Test that the previous viewport size, user agent, dppx and touch simulation properties
 // are restored when reopening RDM.
 
 const TEST_URL = "data:text/html;charset=utf-8,";
@@ -42,11 +42,33 @@ addRDMTask(TEST_URL, async function({ ui }) {
   reloadOnTouchChange(true);
   reloadOnUAChange(true);
 
-  info("Reopening RDM and checking that the previous device state is restored.");
+  info("Reopening RDM and checking that the previous state is restored.");
 
   await waitUntilState(store, state => state.viewports.length == 1);
 
   testViewportDimensions(ui, 90, 500);
+  await testUserAgent(ui, NEW_USER_AGENT);
+  await testDevicePixelRatio(ui, NEW_DPPX);
+  await testTouchEventsOverride(ui, true);
+
+  info("Rotating the viewport.");
+  rotateViewport(ui);
+
+  reloadOnTouchChange(false);
+  reloadOnUAChange(false);
+});
+
+addRDMTask(TEST_URL, async function({ ui }) {
+  const { store } = ui.toolWindow;
+
+  reloadOnTouchChange(true);
+  reloadOnUAChange(true);
+
+  info("Reopening RDM and checking that the previous state is restored.");
+
+  await waitUntilState(store, state => state.viewports.length == 1);
+
+  testViewportDimensions(ui, 500, 90);
   await testUserAgent(ui, NEW_USER_AGENT);
   await testDevicePixelRatio(ui, NEW_DPPX);
   await testTouchEventsOverride(ui, true);

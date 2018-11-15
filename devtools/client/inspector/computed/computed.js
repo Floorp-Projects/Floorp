@@ -1430,6 +1430,7 @@ function ComputedViewTool(inspector, window) {
   this.computedView = new CssComputedView(this.inspector, this.document,
     this.inspector.pageStyle);
 
+  this.onDetachedFront = this.onDetachedFront.bind(this);
   this.onSelected = this.onSelected.bind(this);
   this.refresh = this.refresh.bind(this);
   this.onPanelSelected = this.onPanelSelected.bind(this);

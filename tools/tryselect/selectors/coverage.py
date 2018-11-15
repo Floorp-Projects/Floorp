@@ -39,8 +39,8 @@ CHUNK_MAPPING_TAG_FILE = os.path.join(cache_dir, 'chunk_mapping_tag.json')
 # Maps from platform names in the chunk_mapping sqlite database to respective
 # substrings in task names.
 PLATFORM_MAP = {
-    'linux': 'linux64/opt',
-    'windows': 'windows10-64/opt',
+    'linux': 'test-linux64/opt',
+    'windows': 'test-windows10-64/opt',
 }
 
 # List of platform/build type combinations that are included in pushes by |mach try coverage|.
@@ -116,14 +116,23 @@ def download_coverage_mapping(base_revision):
         print('Chunk mapping file not found.')
 
     CHUNK_MAPPING_URL_TEMPLATE = 'https://index.taskcluster.net/v1/task/project.releng.services.project.production.code_coverage_bot.{}/artifacts/public/chunk_mapping.tar.xz'  # noqa
-    JSON_PUSHES_URL_TEMPLATE = 'https://hg.mozilla.org/mozilla-central/json-pushes?version=2&tipsonly=1&tochange={}&startdate={}'  # noqa
+    JSON_PUSHES_URL_TEMPLATE = 'https://hg.mozilla.org/mozilla-central/json-pushes?version=2&tipsonly=1&startdate={}'  # noqa
 
     # Get pushes from at most one month ago.
     PUSH_HISTORY_DAYS = 30
     delta = datetime.timedelta(days=PUSH_HISTORY_DAYS)
     start_time = (datetime.datetime.now() - delta).strftime('%Y-%m-%d')
-    pushes_url = JSON_PUSHES_URL_TEMPLATE.format(base_revision, start_time)
-    pushes = requests.get(pushes_url).json()['pushes']
+    pushes_url = JSON_PUSHES_URL_TEMPLATE.format(start_time)
+    pushes_data = requests.get(pushes_url + '&tochange={}'.format(base_revision)).json()
+    if 'error' in pushes_data:
+        if 'unknown revision' in pushes_data['error']:
+            print('unknown revision {}, trying with latest mozilla-central'.format(base_revision))
+            pushes_data = requests.get(pushes_url).json()
+
+        if 'error' in pushes_data:
+            raise Exception(pushes_data['error'])
+
+    pushes = pushes_data['pushes']
 
     print('Looking for coverage data. This might take a minute or two.')
     print('Base revision:', base_revision)
@@ -306,16 +315,23 @@ def filter_tasks_by_chunks(tasks, chunks):
     '''
     selected_tasks = set()
     for platform, chunk in chunks:
-        platform = PLATFORM_MAP.get(platform, platform)
-        match = False
+        platform = PLATFORM_MAP[platform]
+
+        selected_task = None
         for task in tasks:
-            # Chunk names taken from the chunk mapping are not consistent with the
-            # task names, so we're using string inclusion to find the tests.
-            if platform in task and chunk in task:
-                selected_tasks.add(task)
-                match = True
-        if not match:
+            if not task.startswith(platform):
+                continue
+
+            if not any(task[len(platform) + 1:].endswith(c) for c in [chunk, chunk + '-e10s']):
+                continue
+
+            assert selected_task is None, 'Only one task should be selected for a given platform-chunk couple ({} - {}), {} and {} were selected'.format(platform, chunk, selected_task, task)  # noqa
+            selected_task = task
+
+        if selected_task is None:
             print('Warning: no task found for chunk', platform, chunk)
+
+        selected_tasks.add(selected_task)
 
     return list(selected_tasks)
 

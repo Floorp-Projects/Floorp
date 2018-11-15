@@ -61,9 +61,7 @@ class MediaTransportHandler : public MediaTransportBase,
 
     // We will probably be able to move the proxy lookup stuff into
     // this class once we move mtransport to its own process.
-    nsresult SetProxyServer(const std::string& aProxyHost,
-                            uint16_t aProxyPort,
-                            const std::string& aAlpnProtocols);
+    nsresult SetProxyServer(NrSocketProxyConfig&& aProxyConfig);
 
     void EnsureProvisionalTransport(const std::string& aTransportId,
                                     const std::string& aLocalUfrag,

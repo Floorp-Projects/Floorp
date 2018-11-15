@@ -1232,7 +1232,7 @@ gfxFT2FontList::AddFaceToList(const nsCString& aEntryName, uint32_t aIndex,
             if (mSkipSpaceLookupCheckFamilies.Contains(name)) {
                 family->SetSkipSpaceFeatureCheck(true);
             }
-            if (mBadUnderlineFamilyNames.Contains(name)) {
+            if (mBadUnderlineFamilyNames.ContainsSorted(name)) {
                 family->SetBadUnderlineFamily();
             }
         }
@@ -1514,7 +1514,7 @@ gfxFT2FontList::AppendFaceFromFontListEntry(const FontListEntry& aFLE,
             if (mSkipSpaceLookupCheckFamilies.Contains(aFLE.familyName())) {
                 family->SetSkipSpaceFeatureCheck(true);
             }
-            if (mBadUnderlineFamilyNames.Contains(aFLE.familyName())) {
+            if (mBadUnderlineFamilyNames.ContainsSorted(aFLE.familyName())) {
                 family->SetBadUnderlineFamily();
             }
         }

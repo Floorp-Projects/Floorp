@@ -67,8 +67,6 @@
                 "./src/net/nr_resolver.h",
                 "./src/net/nr_socket_wrapper.c",
                 "./src/net/nr_socket_wrapper.h",
-                "./src/net/nr_proxy_tunnel.c",
-                "./src/net/nr_proxy_tunnel.h",
                 "./src/net/nr_socket.c",
                 "./src/net/nr_socket.h",
                 #"./src/net/nr_socket_local.c",

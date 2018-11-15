@@ -1718,6 +1718,21 @@ nsHttpTransaction::HandleContentStart()
             break;
         }
 
+        // If we're only connecting then we're going to be upgrading this
+        // connection since we were successful. Any data from now on belongs to
+        // the upgrade handler. If we're not successful the content body doesn't
+        // matter. Proxy http errors are treated as network errors. This
+        // connection won't be reused since it's marked sticky and no
+        // keep-alive.
+        if (mCaps & NS_HTTP_CONNECT_ONLY) {
+            MOZ_ASSERT(!(mCaps & NS_HTTP_ALLOW_KEEPALIVE) &&
+                       (mCaps & NS_HTTP_STICKY_CONNECTION),
+                       "connection should be sticky and no keep-alive");
+            // The transaction will expect the server to close the socket if
+            // there's no content length instead of doing the upgrade.
+            mNoContent = true;
+        }
+
         if (mResponseHead->Status() == 200 &&
             mH2WSTransaction) {
             // http/2 websockets do not have response bodies
