@@ -1,0 +1,21 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: "Core"
+  component: "Audio/Video: Playback"
+
+# The source from this directory was copied from the theora git master using
+# the update.sh script. The changes made were those applied by update.sh, the
+# addition/update of Makefile.in files for the Mozilla build system.
+
+origin:
+  name: "libtheora"
+  description: "Video compression format from Xiph"
+
+  url: "https://www.theora.org/"
+  license: "BSD-3-Clause-Clear"
+
+  # update.sh will update this value
+  release: "74b57560775804bf248e3e5b4e57964112ccd7af (2010-10-29 04:21:26 +0000)"
