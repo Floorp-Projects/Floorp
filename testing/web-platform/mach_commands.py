@@ -47,6 +47,12 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             if kwargs["certutil_binary"] is None:
                 kwargs["certutil_binary"] = os.path.join(os.environ.get('MOZ_HOST_BIN'), "certutil")
 
+            if kwargs["install_fonts"] is None:
+                kwargs["install_fonts"] = True
+
+            if kwargs["reftest_internal"] is None:
+                kwargs["reftest_internal"] = False
+
         if kwargs["config"] is None:
             kwargs["config"] = os.path.join(self.topobjdir, '_tests', 'web-platform', 'wptrunner.local.ini')
 
