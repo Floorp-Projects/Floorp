@@ -254,9 +254,6 @@ Channel::PrintMessage(const char* aPrefix, const Message& aMsg)
   case MessageType::HitBreakpoint: {
     const HitBreakpointMessage& nmsg = (const HitBreakpointMessage&) aMsg;
     data.AppendPrintf("Endpoint %d", nmsg.mRecordingEndpoint);
-    for (size_t i = 0; i < nmsg.NumBreakpoints(); i++) {
-      data.AppendPrintf(" Id %d", nmsg.Breakpoints()[i]);
-    }
     break;
   }
   case MessageType::Resume: {
@@ -269,10 +266,10 @@ Channel::PrintMessage(const char* aPrefix, const Message& aMsg)
     data.AppendPrintf("Id %d", (int) nmsg.mCheckpoint);
     break;
   }
-  case MessageType::SetBreakpoint: {
-    const SetBreakpointMessage& nmsg = (const SetBreakpointMessage&) aMsg;
-    data.AppendPrintf("Id %d, Kind %s, Script %d, Offset %d, Frame %d",
-                      (int) nmsg.mId, nmsg.mPosition.KindString(), (int) nmsg.mPosition.mScript,
+  case MessageType::AddBreakpoint: {
+    const AddBreakpointMessage& nmsg = (const AddBreakpointMessage&) aMsg;
+    data.AppendPrintf("Kind %s, Script %d, Offset %d, Frame %d",
+                      nmsg.mPosition.KindString(), (int) nmsg.mPosition.mScript,
                       (int) nmsg.mPosition.mOffset, (int) nmsg.mPosition.mFrameIndex);
     break;
   }

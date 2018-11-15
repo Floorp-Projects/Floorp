@@ -68,8 +68,9 @@ void TimeWarp(const js::ExecutionPoint& target);
 // response.
 void SendRequest(const js::CharBuffer& aBuffer, js::CharBuffer* aResponse);
 
-// Set or clear a breakpoint in the child process.
-void SetBreakpoint(size_t aId, const js::BreakpointPosition& aPosition);
+// Set the breakpoints installed in the child process.
+void AddBreakpoint(const js::BreakpointPosition& aPosition);
+void ClearBreakpoints();
 
 // If possible, make sure the active child is replaying, and that requests
 // which might trigger an unhandled divergence can be processed (recording
@@ -312,16 +313,9 @@ public:
   bool IsPausedAtRecordingEndpoint();
 
   // Get all breakpoints currently installed for this process.
-  void GetInstalledBreakpoints(Vector<SetBreakpointMessage*>& aBreakpoints);
+  void GetInstalledBreakpoints(InfallibleVector<AddBreakpointMessage*>& aBreakpoints);
 
   typedef std::function<bool(js::BreakpointPosition::Kind)> BreakpointFilter;
-
-  // Return whether this process is paused at a breakpoint matching a filter.
-  bool IsPausedAtMatchingBreakpoint(const BreakpointFilter& aFilter);
-
-  // Get the ids of all installed breakpoints matching a filter.
-  void GetMatchingInstalledBreakpoints(const BreakpointFilter& aFilter,
-                                       Vector<uint32_t>& aBreakpointIds);
 
   // Get the checkpoint at or earlier to the process' position. This is either
   // the last reached checkpoint or the previous one.
