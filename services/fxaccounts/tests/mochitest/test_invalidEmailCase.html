@@ -118,6 +118,7 @@ SpecialPowers.pushPrefEnv({"set": [
     ["identity.fxaccounts.enabled", true],         // fx accounts
     ["identity.fxaccounts.auth.uri", TEST_SERVER], // our sjs server
     ["browser.dom.window.dump.enabled", true],
+    ["devtools.console.stdout.chrome", true],
   ]},
   function() { runTest(); }
 );

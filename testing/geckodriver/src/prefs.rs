@@ -18,6 +18,7 @@ lazy_static! {
         // Enable the dump function, which sends messages to the system
         // console
         ("browser.dom.window.dump.enabled", Pref::new(true)),
+        ("devtools.console.stdout.chrome", Pref::new(true)),
 
         // Disable safebrowsing components
         ("browser.safebrowsing.blockedURIs.enabled", Pref::new(false)),

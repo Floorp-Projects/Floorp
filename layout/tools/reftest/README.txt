@@ -394,8 +394,9 @@ that do not depend on XUL, or even ones testing other layout engines.
 Running Tests
 =============
 
-(If you're not using a DEBUG build, first set browser.dom.window.dump.enabled
-to true (in about:config, in the profile you'll be using to run the tests).
+(If you're not using a DEBUG build, first set browser.dom.window.dump.enabled,
+devtools.console.stdout.chrome and devtools.console.stdout.content to true (in
+about:config, in the profile you'll be using to run the tests).
 Create the option as a new boolean if it doesn't exist already. If you skip
 this step you won't get any output in the terminal.)
 
