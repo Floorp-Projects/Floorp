@@ -163,7 +163,7 @@ NoteWeakMapChildrenTracer::onChild(const JS::GCCellPtr& aThing)
     return;
   }
 
-  if (AddToCCKind(aThing.kind())) {
+  if (JS::IsCCTraceKind(aThing.kind())) {
     mCb.NoteWeakMapping(mMap, mKey, mKeyDelegate, aThing);
     mTracedAny = true;
   } else {
@@ -198,13 +198,13 @@ NoteWeakMapsTracer::trace(JSObject* aMap, JS::GCCellPtr aKey,
   // reason about the liveness of their keys, which in turn requires that
   // the key can be represented in the cycle collector graph.  All existing
   // uses of weak maps use either objects or scripts as keys, which are okay.
-  MOZ_ASSERT(AddToCCKind(aKey.kind()));
+  MOZ_ASSERT(JS::IsCCTraceKind(aKey.kind()));
 
   // As an emergency fallback for non-debug builds, if the key is not
   // representable in the cycle collector graph, we treat it as marked.  This
   // can cause leaks, but is preferable to ignoring the binding, which could
   // cause the cycle collector to free live objects.
-  if (!AddToCCKind(aKey.kind())) {
+  if (!JS::IsCCTraceKind(aKey.kind())) {
     aKey = nullptr;
   }
 
@@ -213,7 +213,7 @@ NoteWeakMapsTracer::trace(JSObject* aMap, JS::GCCellPtr aKey,
     kdelegate = js::GetWeakmapKeyDelegate(&aKey.as<JSObject>());
   }
 
-  if (AddToCCKind(aValue.kind())) {
+  if (JS::IsCCTraceKind(aValue.kind())) {
     mCb.NoteWeakMapping(aMap, aKey, kdelegate, aValue);
   } else {
     mChildTracer.mTracedAny = false;
@@ -251,7 +251,7 @@ ShouldWeakMappingEntryBeBlack(JSObject* aMap, JS::GCCellPtr aKey, JS::GCCellPtr 
     return;
   }
 
-  if (!AddToCCKind(aKey.kind())) {
+  if (!JS::IsCCTraceKind(aKey.kind())) {
     aKey = nullptr;
   }
 
@@ -357,7 +357,7 @@ CheckParticipatesInCycleCollection(JS::GCCellPtr aThing, const char* aName,
     return;
   }
 
-  if (AddToCCKind(aThing.kind()) && JS::GCThingIsMarkedGray(aThing)) {
+  if (JS::IsCCTraceKind(aThing.kind()) && JS::GCThingIsMarkedGray(aThing)) {
     *cycleCollectionEnabled = true;
   }
 }
@@ -421,12 +421,12 @@ TraversalTracer::onChild(const JS::GCCellPtr& aThing)
 
   /*
    * This function needs to be careful to avoid stack overflow. Normally, when
-   * AddToCCKind is true, the recursion terminates immediately as we just add
+   * IsCCTraceKind is true, the recursion terminates immediately as we just add
    * |thing| to the CC graph. So overflow is only possible when there are long
-   * or cyclic chains of non-AddToCCKind GC things. Places where this can occur
+   * or cyclic chains of non-IsCCTraceKind GC things. Places where this can occur
    * use special APIs to handle such chains iteratively.
    */
-  if (AddToCCKind(aThing.kind())) {
+  if (JS::IsCCTraceKind(aThing.kind())) {
     if (MOZ_UNLIKELY(mCb.WantDebugInfo())) {
       char buffer[200];
       getTracingEdgeName(buffer, sizeof(buffer));
