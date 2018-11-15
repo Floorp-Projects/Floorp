@@ -16,7 +16,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/UniquePtr.h"
-#include "nsAutoPtr.h"
 #include "nsContentUtils.h" // For AddScriptBlocker().
 #include "nsCRT.h"
 #include "nsIObserver.h"
@@ -785,7 +784,7 @@ private:
   // we finish reflowing mCurrentReflowRoot.
   nsTHashtable<nsPtrHashKey<nsIFrame> > mFramesToDirty;
 
-  nsTArray<nsAutoPtr<DelayedEvent> > mDelayedEvents;
+  nsTArray<UniquePtr<DelayedEvent>> mDelayedEvents;
 private:
   nsRevocableEventPtr<nsSynthMouseMoveEvent> mSynthMouseMoveEvent;
   nsCOMPtr<nsIContent> mLastAnchorScrolledTo;
