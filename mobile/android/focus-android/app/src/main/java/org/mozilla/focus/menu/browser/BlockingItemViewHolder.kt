@@ -17,6 +17,7 @@ import org.mozilla.focus.exceptions.ExceptionDomains
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import java.net.URI
+import java.net.URISyntaxException
 
 internal class BlockingItemViewHolder(itemView: View, private val fragment: BrowserFragment) :
     BrowserMenuViewHolder(itemView), CompoundButton.OnCheckedChangeListener {
@@ -59,10 +60,17 @@ internal class BlockingItemViewHolder(itemView: View, private val fragment: Brow
     override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
         fragment.setBlockingUI(isChecked)
 
+        val url = fragment.url
+        val host = try {
+            URI(url).host
+        } catch (e: URISyntaxException) {
+            url
+        } ?: url
+
         if (!isChecked) {
-            addUrlToExceptionsList(url = fragment.url)
+            addUrlToExceptionsList(host = host)
         } else {
-            removeUrlFromExceptionsList(url = fragment.url)
+            removeUrlFromExceptionsList(host = host)
         }
 
         TelemetryWrapper.blockingSwitchEvent(isChecked)
@@ -76,9 +84,8 @@ internal class BlockingItemViewHolder(itemView: View, private val fragment: Brow
         }, Switch_THUMB_ANIMATION_DURATION)
     }
 
-    private fun addUrlToExceptionsList(url: String) {
+    private fun addUrlToExceptionsList(host: String) {
         fragment.launch(IO) {
-            val host = URI(url).host
             val duplicateURL = ExceptionDomains.load(fragment.requireContext()).contains(host)
 
             if (duplicateURL) return@launch
@@ -86,9 +93,8 @@ internal class BlockingItemViewHolder(itemView: View, private val fragment: Brow
         }
     }
 
-    private fun removeUrlFromExceptionsList(url: String) {
+    private fun removeUrlFromExceptionsList(host: String) {
         fragment.launch(IO) {
-            val host = URI(url).host
             if (ExceptionDomains.load(fragment.requireContext()).contains(host)) {
                 TelemetryWrapper.removeExceptionDomains(1)
                 ExceptionDomains.remove(fragment.requireContext(), listOf(host))
