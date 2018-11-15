@@ -118,12 +118,12 @@ load 945048-1.html
 load 972199-1.html
 load 989965-1.html
 load 992333-1.html
-pref(dom.webcomponents.shadowdom.enabled,true) load 1017798-1.html
+load 1017798-1.html
 load 1028514-1.html
 load 1066089-1.html
 load 1074651-1.html
 load 1135534.html
-pref(dom.webcomponents.shadowdom.enabled,true) load 1089463-1.html
+load 1089463-1.html
 load 1136010-1.html
 load 1146101-1.html
 load 1153693-1.html
@@ -273,22 +273,22 @@ load 1411478.html
 load 1413288.html
 load 1413361.html
 load 1413670.html
-pref(dom.webcomponents.shadowdom.enabled,true) load 1415353.html
+load 1415353.html
 load 1418059.html
 test-pref(dom.animations-api.core.enabled,true) test-pref(dom.animations-api.implicit-keyframes.enabled,true) pref(dom.animations-api.getAnimations.enabled,true) load 1418867.html
-pref(dom.webcomponents.shadowdom.enabled,true) load 1419554.html
+load 1419554.html
 load 1426312.html
 load 1439793.html
 load 1409183.html
-pref(dom.webcomponents.shadowdom.enabled,true) load 1445682.html
-pref(dom.webcomponents.shadowdom.enabled,true) load 1449243.html
+load 1445682.html
+load 1449243.html
 load 1450691.html
-pref(dom.webcomponents.shadowdom.enabled,true) load 1453206.html
+load 1453206.html
 load 1454140.html
 load 1455108.html
 load 1457288.html
 load 1457985.html
-pref(dom.webcomponents.shadowdom.enabled,true) load 1468640.html
+load 1468640.html
 load 1469076.html
 load 1475003.html
 load 1479681.html

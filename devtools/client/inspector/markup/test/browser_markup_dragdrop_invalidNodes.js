@@ -10,7 +10,6 @@ const TEST_URL = URL_ROOT + "doc_markup_dragdrop.html";
 
 add_task(async function() {
   await pushPref("devtools.inspector.showAllAnonymousContent", true);
-  await pushPref("dom.webcomponents.shadowdom.enabled", true);
   await pushPref("dom.webcomponents.customelements.enabled", true);
 
   const {inspector} = await openInspectorForURL(TEST_URL);

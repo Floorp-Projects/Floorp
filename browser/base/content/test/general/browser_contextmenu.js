@@ -63,8 +63,6 @@ add_task(async function test_xul_text_link_label() {
 // Below are test cases for HTML element
 
 add_task(async function test_setup_html() {
-  await pushPrefs(["dom.webcomponents.shadowdom.enabled", true]);
-
   let url = example_base + "subtst_contextmenu.html";
 
   await BrowserTestUtils.openNewForegroundTab(gBrowser, url);

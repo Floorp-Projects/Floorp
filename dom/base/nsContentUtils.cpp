@@ -303,7 +303,6 @@ bool nsContentUtils::sIsResourceTimingEnabled = false;
 bool nsContentUtils::sIsPerformanceNavigationTimingEnabled = false;
 bool nsContentUtils::sIsFormAutofillAutocompleteEnabled = false;
 bool nsContentUtils::sIsUAWidgetEnabled = false;
-bool nsContentUtils::sIsShadowDOMEnabled = false;
 bool nsContentUtils::sIsCustomElementsEnabled = false;
 bool nsContentUtils::sSendPerformanceTimingNotifications = false;
 bool nsContentUtils::sUseActivityCursor = false;
@@ -673,9 +672,6 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sIsUAWidgetEnabled,
                                "dom.ua_widget.enabled", false);
-
-  Preferences::AddBoolVarCache(&sIsShadowDOMEnabled,
-                               "dom.webcomponents.shadowdom.enabled", false);
 
   Preferences::AddBoolVarCache(&sIsCustomElementsEnabled,
                                "dom.webcomponents.customelements.enabled", false);

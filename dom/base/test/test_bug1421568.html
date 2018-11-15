@@ -15,13 +15,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1421568
   SimpleTest.waitForExplicitFinish();
 
   function init() {
-    SpecialPowers.pushPrefEnv({
-      set: [["dom.webcomponents.shadowdom.enabled", true]]
-      },
-      function () {
-        document.getElementById("content").innerHTML =
-          "<iframe src='about:blank' onload='test(this)'></iframe>";
-      });
+    document.getElementById("content").innerHTML =
+      "<iframe src='about:blank' onload='test(this)'></iframe>";
   }
 
   function test(iframe) {

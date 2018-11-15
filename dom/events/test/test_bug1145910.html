@@ -45,13 +45,9 @@ function runTests() {
 };
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(() => {
-  SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.webcomponents.shadowdom.enabled", true]
-    ]
-  }, runTests);
-});
+window.onload = () => {
+  SimpleTest.waitForFocus(runTests);
+};
 
 </script>
 </body>

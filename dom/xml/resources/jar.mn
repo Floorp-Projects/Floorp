@@ -5,4 +5,3 @@
 toolkit.jar:
     content/global/xml/XMLPrettyPrint.css                 (XMLPrettyPrint.css)
     content/global/xml/XMLPrettyPrint.xsl                 (XMLPrettyPrint.xsl)
-    content/global/xml/XMLPrettyPrint.xml                 (XMLPrettyPrint.xml)

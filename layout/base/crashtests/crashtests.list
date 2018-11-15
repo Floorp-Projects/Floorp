@@ -467,7 +467,7 @@ load 1162813.xul
 load 1163583.html
 load 1234622-1.html
 load 1235467-1.html
-pref(dom.webcomponents.shadowdom.enabled,true) load 1261351.html
+load 1261351.html
 load 1270797-1.html
 load 1278455-1.html
 load 1286889.html
@@ -507,8 +507,8 @@ load 1404789-2.html
 load 1406562.html
 load 1409147.html
 load 1411138.html
-pref(dom.webcomponents.shadowdom.enabled,true) load 1414100.html
-pref(dom.webcomponents.shadowdom.enabled,true) load 1414303.html
+load 1414100.html
+load 1414303.html
 load 1419762.html
 load 1419802.html
 load 1420533.html
@@ -516,12 +516,12 @@ load 1423216.html
 load 1425893.html
 load 1425959.html
 load 1428353.html
-pref(dom.webcomponents.shadowdom.enabled,true) load 1429088.html
+load 1429088.html
 load 1429961.html
 load 1429962.html
 load 1435015.html
 load 1437155.html
-pref(dom.webcomponents.shadowdom.enabled,true) load 1439016.html
+load 1439016.html
 load 1442506.html
 load 1443027-1.html
 load 1448841-1.html
@@ -530,11 +530,11 @@ load 1453196.html
 load 1453342.html
 load 1453702.html
 load 1458121.html
-pref(dom.webcomponents.shadowdom.enabled,true) load 1461749.html
+load 1461749.html
 load 1461812.html
 load 1462412.html
 load 1463940.html
-pref(dom.webcomponents.shadowdom.enabled,true) HTTP load 1464641.html
+HTTP load 1464641.html
 load 1464737.html
 load 1466638.html
 load 1467688.html
