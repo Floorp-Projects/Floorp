@@ -208,95 +208,104 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
     wasmFailValidateText('(module (memory 2 1))', /maximum length 1 is less than initial length 2/);
 
     // Test bounds checks and edge cases.
-    const align = 0;
 
-    for (let offset of [0, 1, 2, 3, 4, 8, 16, 41, 0xfff8]) {
-        // Accesses of 1 byte.
-        let lastValidIndex = 0x10000 - 1 - offset;
+    for (let align of [0,1,2,4]) {
 
-        testLoad('i32', '8_s', lastValidIndex, offset, align, 0);
-        testLoadOOB('i32', '8_s', lastValidIndex + 1, offset, align);
+        for (let offset of [0, 1, 2, 3, 4, 8, 16, 41, 0xfff8]) {
+            // Accesses of 1 byte.
+            let lastValidIndex = 0x10000 - 1 - offset;
 
-        testLoad('i32', '8_u', lastValidIndex, offset, align, 0);
-        testLoadOOB('i32', '8_u', lastValidIndex + 1, offset, align);
+            if (align < 2) {
+                testLoad('i32', '8_s', lastValidIndex, offset, align, 0);
+                testLoadOOB('i32', '8_s', lastValidIndex + 1, offset, align);
 
-        testStore('i32', '8', lastValidIndex, offset, align, -42);
-        testStoreOOB('i32', '8', lastValidIndex + 1, offset, align, -42);
+                testLoad('i32', '8_u', lastValidIndex, offset, align, 0);
+                testLoadOOB('i32', '8_u', lastValidIndex + 1, offset, align);
 
-        // Accesses of 2 bytes.
-        lastValidIndex = 0x10000 - 2 - offset;
+                testStore('i32', '8', lastValidIndex, offset, align, -42);
+                testStoreOOB('i32', '8', lastValidIndex + 1, offset, align, -42);
+            }
 
-        testLoad('i32', '16_s', lastValidIndex, offset, align, 0);
-        testLoadOOB('i32', '16_s', lastValidIndex + 1, offset, align);
+            // Accesses of 2 bytes.
+            lastValidIndex = 0x10000 - 2 - offset;
 
-        testLoad('i32', '16_u', lastValidIndex, offset, align, 0);
-        testLoadOOB('i32', '16_u', lastValidIndex + 1, offset, align);
+            if (align < 4) {
+                testLoad('i32', '16_s', lastValidIndex, offset, align, 0);
+                testLoadOOB('i32', '16_s', lastValidIndex + 1, offset, align);
 
-        testStore('i32', '16', lastValidIndex, offset, align, -32768);
-        testStoreOOB('i32', '16', lastValidIndex + 1, offset, align, -32768);
+                testLoad('i32', '16_u', lastValidIndex, offset, align, 0);
+                testLoadOOB('i32', '16_u', lastValidIndex + 1, offset, align);
 
-        // Accesses of 4 bytes.
-        lastValidIndex = 0x10000 - 4 - offset;
+                testStore('i32', '16', lastValidIndex, offset, align, -32768);
+                testStoreOOB('i32', '16', lastValidIndex + 1, offset, align, -32768);
+            }
 
-        testLoad('i32', '', lastValidIndex, offset, align, 0);
-        testLoadOOB('i32', '', lastValidIndex + 1, offset, align);
+            // Accesses of 4 bytes.
+            lastValidIndex = 0x10000 - 4 - offset;
 
-        testLoad('f32', '', lastValidIndex, offset, align, 0);
-        testLoadOOB('f32', '', lastValidIndex + 1, offset, align);
+            testLoad('i32', '', lastValidIndex, offset, align, 0);
+            testLoadOOB('i32', '', lastValidIndex + 1, offset, align);
 
-        testStore('i32', '', lastValidIndex, offset, align, 1337);
-        testStoreOOB('i32', '', lastValidIndex + 1, offset, align, 1337);
+            testLoad('f32', '', lastValidIndex, offset, align, 0);
+            testLoadOOB('f32', '', lastValidIndex + 1, offset, align);
 
-        testStore('f32', '', lastValidIndex, offset, align, Math.fround(13.37));
-        testStoreOOB('f32', '', lastValidIndex + 1, offset, align, Math.fround(13.37));
+            testStore('i32', '', lastValidIndex, offset, align, 1337);
+            testStoreOOB('i32', '', lastValidIndex + 1, offset, align, 1337);
 
-        // Accesses of 8 bytes.
-        lastValidIndex = 0x10000 - 8 - offset;
+            testStore('f32', '', lastValidIndex, offset, align, Math.fround(13.37));
+            testStoreOOB('f32', '', lastValidIndex + 1, offset, align, Math.fround(13.37));
 
-        testLoad('f64', '', lastValidIndex, offset, align, 0);
-        testLoadOOB('f64', '', lastValidIndex + 1, offset, align);
+            // Accesses of 8 bytes.
+            lastValidIndex = 0x10000 - 8 - offset;
 
-        testStore('f64', '', lastValidIndex, offset, align, 1.23456789);
-        testStoreOOB('f64', '', lastValidIndex + 1, offset, align, 1.23456789);
-    }
+            testLoad('f64', '', lastValidIndex, offset, align, 0);
+            testLoadOOB('f64', '', lastValidIndex + 1, offset, align);
 
-    // Ensure wrapping doesn't apply.
-    offset = 0x7fffffff; // maximum allowed offset that doesn't always throw.
-    for (let index of [0, 1, 2, 3, 0x7fffffff, 0x80000000, 0x80000001]) {
-        testLoadOOB('i32', '8_s', index, offset, align);
-        testLoadOOB('i32', '16_s', index, offset, align);
-        testLoadOOB('i32', '', index, offset, align);
-        testLoadOOB('f32', '', index, offset, align);
-        testLoadOOB('f64', '', index, offset, align);
-    }
+            testStore('f64', '', lastValidIndex, offset, align, 1.23456789);
+            testStoreOOB('f64', '', lastValidIndex + 1, offset, align, 1.23456789);
+        }
 
-    // Ensure out of bounds when the offset is greater than the immediate range.
-    index = 0;
-    for (let offset of [0x80000000, 0xfffffffe, 0xffffffff]) {
-        testLoadOOB('i32', '8_s', index, offset, 1);
-        testLoadOOB('i32', '16_s', index, offset, 1);
-        testLoadOOB('i32', '16_s', index, offset, 2);
-        testLoadOOB('i32', '', index, offset, 1);
-        testLoadOOB('i32', '', index, offset, 4);
-        testLoadOOB('f32', '', index, offset, 1);
-        testLoadOOB('f32', '', index, offset, 4);
-        testLoadOOB('f64', '', index, offset, 1);
-        testLoadOOB('f64', '', index, offset, 8);
-    }
+        // Ensure wrapping doesn't apply.
+        offset = 0x7fffffff; // maximum allowed offset that doesn't always throw.
+        for (let index of [0, 1, 2, 3, 0x7fffffff, 0x80000000, 0x80000001]) {
+            if (align < 2) {
+                testLoadOOB('i32', '8_s', index, offset, align);
+            }
+            if (align < 4) {
+                testLoadOOB('i32', '16_s', index, offset, align);
+            }
+            testLoadOOB('i32', '', index, offset, align);
+            testLoadOOB('f32', '', index, offset, align);
+            testLoadOOB('f64', '', index, offset, align);
+        }
 
-    wasmFailValidateText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (i32.const 0))))', mismatchError("i32", "f64"));
-    wasmFailValidateText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (f32.const 0))))', mismatchError("f32", "f64"));
+        // Ensure out of bounds when the offset is greater than the immediate range.
+        index = 0;
+        for (let offset of [0x80000000, 0xfffffffe, 0xffffffff]) {
+            testLoadOOB('i32', '8_s', index, offset, 1);
+            testLoadOOB('i32', '16_s', index, offset, 1);
+            testLoadOOB('i32', '16_s', index, offset, 2);
+            testLoadOOB('i32', '', index, offset, 1);
+            testLoadOOB('i32', '', index, offset, 4);
+            testLoadOOB('f32', '', index, offset, 1);
+            testLoadOOB('f32', '', index, offset, 4);
+            testLoadOOB('f64', '', index, offset, 1);
+            testLoadOOB('f64', '', index, offset, 8);
+        }
 
-    wasmFailValidateText('(module (memory 1) (func (f32.store offset=0 (i32.const 0) (i32.const 0))))', mismatchError("i32", "f32"));
-    wasmFailValidateText('(module (memory 1) (func (f32.store offset=0 (i32.const 0) (f64.const 0))))', mismatchError("f64", "f32"));
+        wasmFailValidateText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (i32.const 0))))', mismatchError("i32", "f64"));
+        wasmFailValidateText('(module (memory 1) (func (f64.store offset=0 (i32.const 0) (f32.const 0))))', mismatchError("f32", "f64"));
 
-    wasmFailValidateText('(module (memory 1) (func (i32.store offset=0 (i32.const 0) (f32.const 0))))', mismatchError("f32", "i32"));
-    wasmFailValidateText('(module (memory 1) (func (i32.store offset=0 (i32.const 0) (f64.const 0))))', mismatchError("f64", "i32"));
+        wasmFailValidateText('(module (memory 1) (func (f32.store offset=0 (i32.const 0) (i32.const 0))))', mismatchError("i32", "f32"));
+        wasmFailValidateText('(module (memory 1) (func (f32.store offset=0 (i32.const 0) (f64.const 0))))', mismatchError("f64", "f32"));
 
-    // Test high number of registers.
-    function testRegisters() {
-        assertEq(wasmEvalText(
-            `(module
+        wasmFailValidateText('(module (memory 1) (func (i32.store offset=0 (i32.const 0) (f32.const 0))))', mismatchError("f32", "i32"));
+        wasmFailValidateText('(module (memory 1) (func (i32.store offset=0 (i32.const 0) (f64.const 0))))', mismatchError("f64", "i32"));
+
+        // Test high number of registers.
+        function testRegisters() {
+            assertEq(wasmEvalText(
+                `(module
               (memory 1)
               (data (i32.const 0) "\\00\\01\\02\\03\\04\\05\\06\\07\\08\\09\\0a\\0b\\0c\\0d\\0e\\0f")
               (data (i32.const 16) "\\f0\\f1\\f2\\f3\\f4\\f5\\f6\\f7\\f8\\f9\\fa\\fb\\fc\\fd\\fe\\ff")
@@ -329,76 +338,81 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
                 )
                )
               ) (export "" 0))`
-        ).exports[""](1), 50464523);
-    }
+            ).exports[""](1), 50464523);
+        }
 
-    testRegisters();
+        testRegisters();
 
-    testLoad('i64', '', 0, 0, 0, '0x0706050403020100');
-    testLoad('i64', '', 1, 0, 0, '0x0807060504030201');
-    testLoad('i64', '', 0, 1, 0, '0x0807060504030201');
-    testLoad('i64', '', 1, 1, 4, '0x0908070605040302');
+        testLoad('i64', '', 0, 0, 0, '0x0706050403020100');
+        testLoad('i64', '', 1, 0, 0, '0x0807060504030201');
+        testLoad('i64', '', 0, 1, 0, '0x0807060504030201');
+        testLoad('i64', '', 1, 1, 4, '0x0908070605040302');
 
-    testLoad('i64', '8_s', 16, 0, 0, -0x10);
-    testLoad('i64', '8_u', 16, 0, 0, 0xf0);
-    testLoad('i64', '16_s', 16, 0, 0, -0xe10);
-    testLoad('i64', '16_u', 16, 0, 0, 0xf1f0);
-    testLoad('i64', '32_s', 16, 0, 0, 0xf3f2f1f0 | 0);
-    testLoad('i64', '32_u', 16, 0, 0, '0xf3f2f1f0');
+        testLoad('i64', '8_s', 16, 0, 0, -0x10);
+        testLoad('i64', '8_u', 16, 0, 0, 0xf0);
+        testLoad('i64', '16_s', 16, 0, 0, -0xe10);
+        testLoad('i64', '16_u', 16, 0, 0, 0xf1f0);
+        testLoad('i64', '32_s', 16, 0, 0, 0xf3f2f1f0 | 0);
+        testLoad('i64', '32_u', 16, 0, 0, '0xf3f2f1f0');
 
-    testStore('i64', '', 0, 0, 0, '0xc0c1d3d4e6e7090a');
-    testStore('i64', '', 1, 0, 0, '0xc0c1d3d4e6e7090a');
-    testStore('i64', '', 0, 1, 0, '0xc0c1d3d4e6e7090a');
-    testStore('i64', '', 1, 1, 4, '0xc0c1d3d4e6e7090a');
-    testStore('i64', '8', 0, 0, 0, 0x23);
-    testStore('i64', '16', 0, 0, 0, 0x23);
-    testStore('i64', '32', 0, 0, 0, 0x23);
+        testStore('i64', '', 0, 0, 0, '0xc0c1d3d4e6e7090a');
+        testStore('i64', '', 1, 0, 0, '0xc0c1d3d4e6e7090a');
+        testStore('i64', '', 0, 1, 0, '0xc0c1d3d4e6e7090a');
+        testStore('i64', '', 1, 1, 4, '0xc0c1d3d4e6e7090a');
+        testStore('i64', '8', 0, 0, 0, 0x23);
+        testStore('i64', '16', 0, 0, 0, 0x23);
+        testStore('i64', '32', 0, 0, 0, 0x23);
 
-    for (let offset of [0, 1, 2, 3, 4, 8, 16, 41, 0xfff8]) {
-        // Accesses of 1 byte.
-        let lastValidIndex = 0x10000 - 1 - offset;
+        for (let offset of [0, 1, 2, 3, 4, 8, 16, 41, 0xfff8]) {
+            // Accesses of 1 byte.
+            let lastValidIndex = 0x10000 - 1 - offset;
 
-        testLoad('i64', '8_s', lastValidIndex, offset, align, 0);
-        testLoadOOB('i64', '8_s', lastValidIndex + 1, offset, align);
+            if (align < 2) {
+                testLoad('i64', '8_s', lastValidIndex, offset, align, 0);
+                testLoadOOB('i64', '8_s', lastValidIndex + 1, offset, align);
 
-        testLoad('i64', '8_u', lastValidIndex, offset, align, 0);
-        testLoadOOB('i64', '8_u', lastValidIndex + 1, offset, align);
+                testLoad('i64', '8_u', lastValidIndex, offset, align, 0);
+                testLoadOOB('i64', '8_u', lastValidIndex + 1, offset, align);
 
-        testStore('i64', '8', lastValidIndex, offset, align, -42);
-        testStoreOOB('i64', '8', lastValidIndex + 1, offset, align, -42);
+                testStore('i64', '8', lastValidIndex, offset, align, -42);
+                testStoreOOB('i64', '8', lastValidIndex + 1, offset, align, -42);
+            }
 
-        // Accesses of 2 bytes.
-        lastValidIndex = 0x10000 - 2 - offset;
+            // Accesses of 2 bytes.
+            lastValidIndex = 0x10000 - 2 - offset;
 
-        testLoad('i64', '16_s', lastValidIndex, offset, align, 0);
-        testLoadOOB('i64', '16_s', lastValidIndex + 1, offset, align);
+            if (align < 4) {
+                testLoad('i64', '16_s', lastValidIndex, offset, align, 0);
+                testLoadOOB('i64', '16_s', lastValidIndex + 1, offset, align);
 
-        testLoad('i64', '16_u', lastValidIndex, offset, align, 0);
-        testLoadOOB('i64', '16_u', lastValidIndex + 1, offset, align);
+                testLoad('i64', '16_u', lastValidIndex, offset, align, 0);
+                testLoadOOB('i64', '16_u', lastValidIndex + 1, offset, align);
 
-        testStore('i64', '16', lastValidIndex, offset, align, -32768);
-        testStoreOOB('i64', '16', lastValidIndex + 1, offset, align, -32768);
+                testStore('i64', '16', lastValidIndex, offset, align, -32768);
+                testStoreOOB('i64', '16', lastValidIndex + 1, offset, align, -32768);
+            }
 
-        // Accesses of 4 bytes.
-        lastValidIndex = 0x10000 - 4 - offset;
+            // Accesses of 4 bytes.
+            lastValidIndex = 0x10000 - 4 - offset;
 
-        testLoad('i64', '32_s', lastValidIndex, offset, align, 0);
-        testLoadOOB('i64', '32_s', lastValidIndex + 1, offset, align);
+            testLoad('i64', '32_s', lastValidIndex, offset, align, 0);
+            testLoadOOB('i64', '32_s', lastValidIndex + 1, offset, align);
 
-        testLoad('i64', '32_u', lastValidIndex, offset, align, 0);
-        testLoadOOB('i64', '32_u', lastValidIndex + 1, offset, align);
+            testLoad('i64', '32_u', lastValidIndex, offset, align, 0);
+            testLoadOOB('i64', '32_u', lastValidIndex + 1, offset, align);
 
-        testStore('i64', '32', lastValidIndex, offset, align, 0xf1231337 | 0);
-        testStoreOOB('i64', '32', lastValidIndex + 1, offset, align, 0xf1231337 | 0);
+            testStore('i64', '32', lastValidIndex, offset, align, 0xf1231337 | 0);
+            testStoreOOB('i64', '32', lastValidIndex + 1, offset, align, 0xf1231337 | 0);
 
-        // Accesses of 8 bytes.
-        lastValidIndex = 0x10000 - 8 - offset;
+            // Accesses of 8 bytes.
+            lastValidIndex = 0x10000 - 8 - offset;
 
-        testLoad('i64', '', lastValidIndex, offset, align, 0);
-        testLoadOOB('i64', '', lastValidIndex + 1, offset, align);
+            testLoad('i64', '', lastValidIndex, offset, align, 0);
+            testLoadOOB('i64', '', lastValidIndex + 1, offset, align);
 
-        testStore('i64', '', lastValidIndex, offset, align, '0x1234567887654321');
-        testStoreOOB('i64', '', lastValidIndex + 1, offset, align, '0x1234567887654321');
+            testStore('i64', '', lastValidIndex, offset, align, '0x1234567887654321');
+            testStoreOOB('i64', '', lastValidIndex + 1, offset, align, '0x1234567887654321');
+        }
     }
 }
 

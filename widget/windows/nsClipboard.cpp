@@ -25,7 +25,6 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsPrimitiveHelpers.h"
-#include "nsImageClipboard.h"
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
@@ -35,6 +34,8 @@
 #include "nsIOutputStream.h"
 #include "nsEscape.h"
 #include "nsIObserverService.h"
+#include "nsMimeTypes.h"
+#include "imgITools.h"
 
 using mozilla::LogLevel;
 
@@ -474,17 +475,39 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
               if (aMIMEImageFormat)
               {
                 uint32_t allocLen = 0;
-                unsigned char * clipboardData;
+                const char* clipboardData;
                 if (NS_SUCCEEDED(GetGlobalData(stm.hGlobal, (void **)&clipboardData, &allocLen)))
                 {
-                  nsImageFromClipboard converter;
-                  nsIInputStream * inputStream;
-                  converter.GetEncodedImageStream(clipboardData, aMIMEImageFormat, &inputStream);   // addrefs for us, don't release
-                  if ( inputStream ) {
-                    *aData = inputStream;
-                    *aLen = sizeof(nsIInputStream*);
-                    result = NS_OK;
+                  nsCOMPtr<imgIContainer> container;
+                  nsCOMPtr<imgITools> imgTools = do_CreateInstance("@mozilla.org/image/tools;1");
+                  result = imgTools->DecodeImageFromBuffer(clipboardData, allocLen,
+                                                           NS_LITERAL_CSTRING(IMAGE_BMP_MS_CLIPBOARD),
+                                                           getter_AddRefs(container));
+                  if (NS_FAILED(result)) {
+                    break;
                   }
+
+                  nsAutoCString mimeType;
+                  if (strcmp(aMIMEImageFormat, kJPGImageMime) == 0) {
+                    mimeType.Assign(IMAGE_JPEG);
+                  } else {
+                    mimeType.Assign(aMIMEImageFormat);
+                  }
+
+                  nsCOMPtr<nsIInputStream> inputStream;
+                  result = imgTools->EncodeImage(container, mimeType, EmptyString(),
+                                                 getter_AddRefs(inputStream));
+                  if (NS_FAILED(result)) {
+                    break;
+                  }
+
+                  if (!inputStream) {
+                    result = NS_ERROR_FAILURE;
+                    break;
+                  }
+
+                  *aData = inputStream.forget().take();
+                  *aLen = sizeof(nsIInputStream*);
                 }
               } break;
 

@@ -2062,14 +2062,14 @@ nsCycleCollector_createLogger()
 static bool
 GCThingIsGrayCCThing(JS::GCCellPtr thing)
 {
-    return AddToCCKind(thing.kind()) &&
+    return JS::IsCCTraceKind(thing.kind()) &&
            JS::GCThingIsMarkedGray(thing);
 }
 
 static bool
 ValueIsGrayCCThing(const JS::Value& value)
 {
-    return AddToCCKind(value.traceKind()) &&
+    return JS::IsCCTraceKind(value.traceKind()) &&
            JS::GCThingIsMarkedGray(value.toGCCellPtr());
 }
 
