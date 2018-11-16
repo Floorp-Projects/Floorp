@@ -1,0 +1,53 @@
+[
+  {
+    "namespace": "nativeMenu",
+    "description": "experimental extension wrapping around a Fennec NativeMenu",
+    "events": [
+      {
+        "name": "onClicked",
+        "type": "function",
+        "parameters": []
+      }
+    ],
+    "functions": [
+      {
+        "name": "disable",
+        "type": "function",
+        "async": true,
+        "description": "Disable the addon's menu item",
+        "parameters": []
+      },
+      {
+        "name": "enable",
+        "type": "function",
+        "async": true,
+        "description": "Enable the addon's menu item",
+        "parameters": []
+      },
+      {
+        "name": "hide",
+        "type": "function",
+        "async": true,
+        "description": "Hide the addon's menu item",
+        "parameters": []
+      },
+      {
+        "name": "show",
+        "type": "function",
+        "async": true,
+        "description": "Show the addon's menu item",
+        "parameters": []
+      },
+      {
+        "name": "setLabel",
+        "type": "function",
+        "async": true,
+        "description": "Set the label of the addon's menu item",
+        "parameters": [{
+          "name": "label",
+          "type": "string"
+        }]
+      }
+    ]
+  }
+]

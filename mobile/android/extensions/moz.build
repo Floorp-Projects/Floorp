@@ -8,5 +8,9 @@ with Files('**'):
     BUG_COMPONENT = ('Firefox for Android', 'General')
 
 DIRS += [
-    'webcompat',
+    'webcompat'
 ]
+if not CONFIG['MOZ_UPDATE_CHANNEL'] in ('release', 'esr'):
+    DIRS += [
+        'report-site-issue'
+    ]

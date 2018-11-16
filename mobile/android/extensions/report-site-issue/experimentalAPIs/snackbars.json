@@ -1,0 +1,21 @@
+[
+  {
+    "namespace": "snackbars",
+    "description": "experimental API extensions for prompting the user via Android Snackbar notifications",
+    "functions": [
+      {
+        "name": "show",
+        "type": "function",
+        "description": "Shows a Snackbar with the given message and button",
+        "parameters": [{
+          "name": "message",
+          "type": "string"
+        },{
+          "name": "button",
+          "type": "string"
+        }],
+        "async": true
+      }
+    ]
+  }
+]
