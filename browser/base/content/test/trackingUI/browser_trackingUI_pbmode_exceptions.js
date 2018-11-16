@@ -59,9 +59,9 @@ function testTrackingPage(window) {
   ok(!hidden("#identity-popup-content-blocking-detected"), "blocking detected label is visible");
 
   ok(!hidden("#identity-popup-content-blocking-category-list"), "category list is visible");
-  ok(hidden("#identity-popup-content-blocking-category-tracking-protection > #identity-popup-content-blocking-tracking-protection-label-allowed"),
-    "TP category item is not showing the allowed label");
-  ok(!hidden("#identity-popup-content-blocking-category-tracking-protection > #identity-popup-content-blocking-tracking-protection-label-blocked"),
+  ok(hidden("#identity-popup-content-blocking-category-tracking-protection > .identity-popup-content-blocking-category-add-blocking"),
+    "TP category item is not showing add blocking");
+  ok(!hidden("#identity-popup-content-blocking-category-tracking-protection > .identity-popup-content-blocking-category-state-label"),
     "TP category item is set to blocked");
 }
 
@@ -84,9 +84,9 @@ function testTrackingPageUnblocked() {
   ok(!hidden("#identity-popup-content-blocking-detected"), "blocking detected label is visible");
 
   ok(!hidden("#identity-popup-content-blocking-category-list"), "category list is visible");
-  ok(!hidden("#identity-popup-content-blocking-category-tracking-protection > #identity-popup-content-blocking-tracking-protection-label-allowed"),
-    "TP category item is showing the allowed label");
-  ok(hidden("#identity-popup-content-blocking-category-tracking-protection > #identity-popup-content-blocking-tracking-protection-label-blocked"),
+  ok(hidden("#identity-popup-content-blocking-category-tracking-protection > .identity-popup-content-blocking-category-add-blocking"),
+    "TP category item is not showing add blocking");
+  ok(hidden("#identity-popup-content-blocking-category-tracking-protection > .identity-popup-content-blocking-category-state-label"),
     "TP category item is not set to blocked");
 }
 
