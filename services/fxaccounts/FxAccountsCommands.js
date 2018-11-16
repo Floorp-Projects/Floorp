@@ -179,14 +179,9 @@ class SendTab {
   }
 
   // Returns true if the target device is compatible with FxA Commands Send tab.
-  async isDeviceCompatible(device) {
-    if (!Services.prefs.getBoolPref("identity.fxaccounts.commands.enabled", true) ||
-        !device.availableCommands || !device.availableCommands[COMMAND_SENDTAB]) {
-      return false;
-    }
-    const {kid: theirKid} = JSON.parse(device.availableCommands[COMMAND_SENDTAB]);
-    const ourKid = await this._getKid();
-    return theirKid == ourKid;
+  isDeviceCompatible(device) {
+    return Services.prefs.getBoolPref("identity.fxaccounts.commands.enabled", true) &&
+           device.availableCommands && device.availableCommands[COMMAND_SENDTAB];
   }
 
   // Handle incoming send tab payload, called by FxAccountsCommands.
@@ -208,20 +203,19 @@ class SendTab {
     Observers.notify("fxaccounts:commands:open-uri", [{uri, title, sender: tabSender}]);
   }
 
-  async _getKid() {
-    let {kXCS} = await this._fxAccounts.getKeys();
-    return kXCS;
-  }
-
   async _encrypt(bytes, device) {
     let bundle = device.availableCommands[COMMAND_SENDTAB];
     if (!bundle) {
       throw new Error(`Device ${device.id} does not have send tab keys.`);
     }
+    const {kSync, kXCS: ourKid} = await this._fxAccounts.getKeys();
+    const {kid: theirKid} = JSON.parse(device.availableCommands[COMMAND_SENDTAB]);
+    if (theirKid != ourKid) {
+      throw new Error("Target Send Tab key ID is different from ours");
+    }
     const json = JSON.parse(bundle);
     const wrapper = new CryptoWrapper();
     wrapper.deserialize({payload: json});
-    const {kSync} = await this._fxAccounts.getKeys();
     const syncKeyBundle = BulkKeyBundle.fromHexKey(kSync);
     let {publicKey, authSecret} = await wrapper.decrypt(syncKeyBundle);
     authSecret = urlsafeBase64Decode(authSecret);
@@ -278,17 +272,16 @@ class SendTab {
       publicKey: sendTabKeys.publicKey,
       authSecret: sendTabKeys.authSecret,
     };
-    const {kSync} = await this._fxAccounts.getSignedInUser();
-    if (!kSync) {
+    const {kSync, kXCS} = await this._fxAccounts.getKeys();
+    if (!kSync || !kXCS) {
       return null;
     }
     const wrapper = new CryptoWrapper();
     wrapper.cleartext = keyToEncrypt;
     const keyBundle = BulkKeyBundle.fromHexKey(kSync);
     await wrapper.encrypt(keyBundle);
-    const kid = await this._getKid();
     return JSON.stringify({
-      kid,
+      kid: kXCS,
       IV: wrapper.IV,
       hmac: wrapper.hmac,
       ciphertext: wrapper.ciphertext,
