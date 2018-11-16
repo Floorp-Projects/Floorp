@@ -14,6 +14,7 @@
 
 #include "INativePlacesEventCallback.h"
 #include "nsTArray.h"
+#include "nsMaybeWeakPtr.h"
 #include "nsInterfaceHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsCycleCollectionParticipant.h"

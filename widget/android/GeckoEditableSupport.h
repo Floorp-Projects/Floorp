@@ -98,6 +98,7 @@ class GeckoEditableSupport final
     int32_t mIMEFocusCount; // We are focused when > 0.
     bool mIMEDelaySynchronizeReply; // We reply asynchronously when true.
     int32_t mIMEActiveSynchronizeCount; // The number of replies being delayed.
+    int32_t mIMEActiveCompositionCount; // The number of compositions expected.
     bool mIMESelectionChanged;
     bool mIMETextChangedDuringFlush;
     bool mIMEMonitorCursor;

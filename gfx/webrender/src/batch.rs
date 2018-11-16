@@ -4,7 +4,7 @@
 
 use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntSize};
 use api::{DeviceUintRect, DeviceUintPoint, ExternalImageType, FilterOp, ImageRendering};
-use api::{YuvColorSpace, YuvFormat, WorldRect, ColorDepth};
+use api::{YuvColorSpace, YuvFormat, ColorDepth, PictureRect};
 use clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use glyph_rasterizer::GlyphFormat;
@@ -125,7 +125,7 @@ fn textures_compatible(t1: TextureSource, t2: TextureSource) -> bool {
 
 pub struct AlphaBatchList {
     pub batches: Vec<PrimitiveBatch>,
-    pub item_rects: Vec<Vec<WorldRect>>,
+    pub item_rects: Vec<Vec<PictureRect>>,
     current_batch_index: usize,
     current_z_id: ZBufferId,
 }
@@ -143,7 +143,7 @@ impl AlphaBatchList {
     pub fn set_params_and_get_batch(
         &mut self,
         key: BatchKey,
-        bounding_rect: &WorldRect,
+        bounding_rect: &PictureRect,
         z_id: ZBufferId,
     ) -> &mut Vec<PrimitiveInstanceData> {
         if z_id != self.current_z_id ||
@@ -224,7 +224,7 @@ impl OpaqueBatchList {
     pub fn set_params_and_get_batch(
         &mut self,
         key: BatchKey,
-        bounding_rect: &WorldRect,
+        bounding_rect: &PictureRect,
     ) -> &mut Vec<PrimitiveInstanceData> {
         if self.current_batch_index == usize::MAX ||
            !self.batches[self.current_batch_index].key.is_compatible_with(&key) {
@@ -296,7 +296,7 @@ impl BatchList {
     pub fn push_single_instance(
         &mut self,
         key: BatchKey,
-        bounding_rect: &WorldRect,
+        bounding_rect: &PictureRect,
         z_id: ZBufferId,
         instance: PrimitiveInstanceData,
     ) {
@@ -322,7 +322,7 @@ impl BatchList {
     pub fn set_params_and_get_batch(
         &mut self,
         key: BatchKey,
-        bounding_rect: &WorldRect,
+        bounding_rect: &PictureRect,
         z_id: ZBufferId,
     ) -> &mut Vec<PrimitiveInstanceData> {
         match key.blend_mode {
@@ -514,7 +514,7 @@ impl AlphaBatchBuilder {
         root_spatial_node_index: SpatialNodeIndex,
         z_generator: &mut ZBufferIdGenerator,
     ) {
-        if prim_instance.clipped_world_rect.is_none() {
+        if prim_instance.bounding_rect.is_none() {
             return;
         }
 
@@ -532,7 +532,7 @@ impl AlphaBatchBuilder {
         //           wasteful. We should probably cache this in
         //           the scroll node...
         let transform_kind = transform_id.transform_kind();
-        let bounding_rect = prim_instance.clipped_world_rect
+        let bounding_rect = prim_instance.bounding_rect
                                          .as_ref()
                                          .expect("bug");
         let z_id = z_generator.next();
@@ -877,7 +877,7 @@ impl AlphaBatchBuilder {
 
                             self.batch_list.push_single_instance(
                                 key,
-                                &prim_instance.clipped_world_rect.as_ref().expect("bug"),
+                                &prim_instance.bounding_rect.as_ref().expect("bug"),
                                 z_id,
                                 PrimitiveInstanceData::from(instance),
                             );
@@ -1365,7 +1365,7 @@ impl AlphaBatchBuilder {
         textures: BatchTextures,
         prim_header_index: PrimitiveHeaderIndex,
         clip_task_address: RenderTaskAddress,
-        bounding_rect: &WorldRect,
+        bounding_rect: &PictureRect,
         edge_flags: EdgeAaSegmentMask,
         uv_rect_address: GpuCacheAddress,
         z_id: ZBufferId,
@@ -1401,7 +1401,7 @@ impl AlphaBatchBuilder {
         batch_kind: BrushBatchKind,
         prim_header_index: PrimitiveHeaderIndex,
         alpha_blend_mode: BlendMode,
-        bounding_rect: &WorldRect,
+        bounding_rect: &PictureRect,
         transform_kind: TransformedRectKind,
         render_tasks: &RenderTaskTree,
         z_id: ZBufferId,
@@ -1461,7 +1461,7 @@ impl AlphaBatchBuilder {
         non_segmented_blend_mode: BlendMode,
         prim_header_index: PrimitiveHeaderIndex,
         clip_task_address: RenderTaskAddress,
-        bounding_rect: &WorldRect,
+        bounding_rect: &PictureRect,
         transform_kind: TransformedRectKind,
         render_tasks: &RenderTaskTree,
         z_id: ZBufferId,
@@ -1556,7 +1556,7 @@ fn add_gradient_tiles(
     stops_handle: &GpuCacheHandle,
     kind: BrushBatchKind,
     blend_mode: BlendMode,
-    bounding_rect: &WorldRect,
+    bounding_rect: &PictureRect,
     clip_task_address: RenderTaskAddress,
     gpu_cache: &GpuCache,
     batch_list: &mut BatchList,
