@@ -579,8 +579,8 @@ ReadableStream::createDefaultStream(JSContext* cx, HandleValue underlyingSource,
 }
 
 static MOZ_MUST_USE ReadableByteStreamController*
-CreateReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream,
-                                   void* underlyingSource);
+CreateExternalReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream,
+                                           void* underlyingSource);
 
 ReadableStream*
 ReadableStream::createExternalSourceStream(JSContext* cx, void* underlyingSource,
@@ -592,7 +592,7 @@ ReadableStream::createExternalSourceStream(JSContext* cx, void* underlyingSource
     }
 
     Rooted<ReadableStreamController*> controller(cx);
-    controller = CreateReadableByteStreamController(cx, stream, underlyingSource);
+    controller = CreateExternalReadableByteStreamController(cx, stream, underlyingSource);
     if (!controller) {
         return nullptr;
     }
@@ -3077,6 +3077,8 @@ ReadableStreamControllerGetDesiredSizeUnchecked(ReadableStreamController* contro
 
 /*** 3.10. Class ReadableByteStreamController ****************************************************/
 
+#if 0 // disable user-defined byte streams
+
 /**
  * Streams spec, 3.10.3 new ReadableByteStreamController ( stream, underlyingSource,
  *                                                         highWaterMark )
@@ -3189,6 +3191,8 @@ CreateReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream
     return controller;
 }
 
+#endif  // user-defined byte streams
+
 // Streams spec, 3.10.3.
 // new ReadableByteStreamController ( stream, underlyingByteSource,
 //                                    highWaterMark )
@@ -3204,8 +3208,8 @@ ReadableByteStreamController::constructor(JSContext* cx, unsigned argc, Value* v
 // Version of the ReadableByteStreamConstructor that's specialized for
 // handling external, embedding-provided, underlying sources.
 static MOZ_MUST_USE ReadableByteStreamController*
-CreateReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream,
-                                   void* underlyingSource)
+CreateExternalReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream,
+                                           void* underlyingSource)
 {
     Rooted<ReadableByteStreamController*> controller(cx);
     controller = NewBuiltinClassInstance<ReadableByteStreamController>(cx);
