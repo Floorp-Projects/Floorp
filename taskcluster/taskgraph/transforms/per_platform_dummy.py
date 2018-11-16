@@ -8,6 +8,7 @@ Transform the repackage task into an actual task description.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.attributes import copy_attributes_from_dependent_job
 
 transforms = TransformSequence()
 
@@ -22,9 +23,9 @@ def one_task_per_product_and_platform(config, jobs):
         product = dep_task.attributes.get("shipping_product")
         platform = dep_task.attributes.get("build_platform")
         if (product, platform) not in unique_products_and_platforms:
-            job.setdefault("attributes", {})
-            job["attributes"]["shipping_product"] = product
-            job["attributes"]["build_platform"] = platform
+            attributes = copy_attributes_from_dependent_job(dep_task)
+            attributes.update(job.get('attributes', {}))
+            job['attributes'] = attributes
             job["name"] = "{}-{}".format(product, platform)
             yield job
             unique_products_and_platforms.add((product, platform))

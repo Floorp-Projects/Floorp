@@ -31,3 +31,5 @@ job-template:
     shipping-phase: promote
     treeherder-group: ms
     description-suffix: 'mar signing'
+    required_signoffs:
+        - mar-signing

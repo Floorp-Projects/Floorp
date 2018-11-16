@@ -24,6 +24,7 @@ def add_dependencies(config, jobs):
         if product is None:
             continue
 
+        required_signoffs = set(job.setdefault('attributes', {}).get('required_signoffs', []))
         for dep_task in config.kind_dependencies_tasks:
             # Weed out unwanted tasks.
             # XXX we have run-on-projects which specifies the on-push behavior;
@@ -47,7 +48,10 @@ def add_dependencies(config, jobs):
             if dep_task.task.get('shipping-product') == product or \
                     dep_task.attributes.get('shipping_product') == product:
                 dependencies[dep_task.label] = dep_task.label
+                required_signoffs.update(dep_task.attributes.get('required_signoffs', []))
 
         job.setdefault('dependencies', {}).update(dependencies)
+        if required_signoffs:
+            job['attributes']['required_signoffs'] = sorted(required_signoffs)
 
         yield job
