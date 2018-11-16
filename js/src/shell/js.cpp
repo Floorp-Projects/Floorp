@@ -7389,7 +7389,7 @@ BufferStreamMain(BufferStreamJob* job)
     byteOffset = 0;
     while (true) {
         if (byteOffset == byteLength) {
-            job->consumer->streamClosed(JS::StreamConsumer::EndOfFile, listener);
+            job->consumer->streamEnd(listener);
             break;
         }
 
@@ -7404,7 +7404,7 @@ BufferStreamMain(BufferStreamJob* job)
         }
 
         if (shutdown) {
-            job->consumer->streamClosed(JS::StreamConsumer::Error);
+            job->consumer->streamError(JSMSG_STREAM_CONSUME_ERROR);
             break;
         }
 
@@ -7524,6 +7524,13 @@ ConsumeBufferSource(JSContext* cx, JS::HandleObject obj, JS::MimeType, JS::Strea
 
     return true;
 }
+
+static void
+ReportStreamError(JSContext* cx, size_t errorNumber)
+{
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber);
+}
+
 
 static bool
 SetBufferStreamParams(JSContext* cx, unsigned argc, Value* vp)
@@ -11348,7 +11355,7 @@ main(int argc, char** argv, char** envp)
         ShutdownBufferStreams();
         js_delete(bufferStreamState);
     });
-    JS::InitConsumeStreamCallback(cx, ConsumeBufferSource);
+    JS::InitConsumeStreamCallback(cx, ConsumeBufferSource, ReportStreamError);
 
     JS_SetNativeStackQuota(cx, gMaxStackSize);
 

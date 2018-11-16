@@ -67,6 +67,16 @@ public:
                      JS::MimeType aMimeType,
                      JS::StreamConsumer* aConsumer,
                      WorkerPrivate* aMaybeWorker);
+
+  /**
+   * Called by JS to report (i.e., throw) an error that was passed to the
+   * JS::StreamConsumer::streamError() method on a random stream thread.
+   * This method is passed by function pointer to the JS engine hence the
+   * untyped 'size_t' instead of Gecko 'nsresult'.
+   */
+  static void
+  ReportJSStreamError(JSContext* aCx,
+                      size_t aErrorCode);
 };
 
 } // namespace dom
