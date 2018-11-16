@@ -6560,6 +6560,18 @@ nsHttpChannel::BeginConnect()
     if (mProxyInfo)
         proxyInfo = do_QueryInterface(mProxyInfo);
 
+    if (mCaps & NS_HTTP_CONNECT_ONLY) {
+        if (!proxyInfo) {
+            LOG(("return failure: no proxy for connect-only channel\n"));
+            return NS_ERROR_FAILURE;
+        }
+
+        if (!proxyInfo->IsHTTP() && !proxyInfo->IsHTTPS()) {
+            LOG(("return failure: non-http proxy for connect-only channel\n"));
+            return NS_ERROR_FAILURE;
+        }
+    }
+
     mRequestHead.SetHTTPS(isHttps);
     mRequestHead.SetOrigin(scheme, host, port);
 

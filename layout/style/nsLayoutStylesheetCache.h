@@ -51,7 +51,6 @@ class nsLayoutStylesheetCache final
   mozilla::StyleSheet* HTMLSheet();
   mozilla::StyleSheet* MinimalXULSheet();
   mozilla::StyleSheet* XULSheet();
-  mozilla::StyleSheet* XULComponentsSheet();
   mozilla::StyleSheet* QuirkSheet();
   mozilla::StyleSheet* SVGSheet();
   mozilla::StyleSheet* MathMLSheet();
@@ -112,7 +111,6 @@ private:
   RefPtr<mozilla::StyleSheet> mUserChromeSheet;
   RefPtr<mozilla::StyleSheet> mUserContentSheet;
   RefPtr<mozilla::StyleSheet> mXULSheet;
-  RefPtr<mozilla::StyleSheet> mXULComponentsSheet;
 };
 
 #endif
