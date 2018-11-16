@@ -388,7 +388,6 @@ class BuildOptionParser(object):
         'android-test': 'builds/releng_sub_%s_configs/%s_test.py',
         'android-test-ccov': 'builds/releng_sub_%s_configs/%s_test_ccov.py',
         'android-checkstyle': 'builds/releng_sub_%s_configs/%s_checkstyle.py',
-        'android-api-lint': 'builds/releng_sub_%s_configs/%s_api_lint.py',
         'android-lint': 'builds/releng_sub_%s_configs/%s_lint.py',
         'android-findbugs': 'builds/releng_sub_%s_configs/%s_findbugs.py',
         'android-geckoview-docs': 'builds/releng_sub_%s_configs/%s_geckoview_docs.py',
