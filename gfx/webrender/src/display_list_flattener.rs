@@ -369,7 +369,7 @@ impl<'a> DisplayListFlattener<'a> {
 
         debug_assert!(info.clip_id != info.scroll_frame_id);
 
-        self.add_clip_node(info.clip_id, clip_and_scroll_ids.scroll_node_id, clip_region);
+        self.add_clip_node(info.clip_id, clip_and_scroll_ids, clip_region);
 
         self.add_scroll_frame(
             info.scroll_frame_id,
@@ -388,12 +388,13 @@ impl<'a> DisplayListFlattener<'a> {
         pipeline_id: PipelineId,
         item: &DisplayItemRef,
         reference_frame: &ReferenceFrame,
-        scroll_node_id: ClipId,
+        clip_and_scroll_ids: &ClipAndScrollInfo,
         reference_frame_relative_offset: LayoutVector2D,
     ) {
         self.push_reference_frame(
             reference_frame.id,
-            Some(scroll_node_id),
+            Some(clip_and_scroll_ids.scroll_node_id),
+            clip_and_scroll_ids.clip_node_id,
             pipeline_id,
             reference_frame.transform,
             reference_frame.perspective,
@@ -464,10 +465,9 @@ impl<'a> DisplayListFlattener<'a> {
             },
         };
 
-        //TODO: use or assert on `clip_and_scroll_ids.clip_node_id` ?
         let clip_chain_index = self.add_clip_node(
             info.clip_id,
-            clip_and_scroll_ids.scroll_node_id,
+            clip_and_scroll_ids,
             ClipRegion::create_for_clip_node_with_local_clip(
                 item.clip_rect(),
                 reference_frame_relative_offset
@@ -480,6 +480,7 @@ impl<'a> DisplayListFlattener<'a> {
         self.push_reference_frame(
             ClipId::root_reference_frame(iframe_pipeline_id),
             Some(info.clip_id),
+            None,
             iframe_pipeline_id,
             None,
             None,
@@ -647,7 +648,7 @@ impl<'a> DisplayListFlattener<'a> {
                     pipeline_id,
                     &item,
                     &info.reference_frame,
-                    clip_and_scroll_ids.scroll_node_id,
+                    &clip_and_scroll_ids,
                     reference_frame_relative_offset,
                 );
                 return Some(subtraversal);
@@ -669,7 +670,7 @@ impl<'a> DisplayListFlattener<'a> {
                     info.image_mask,
                     &reference_frame_relative_offset,
                 );
-                self.add_clip_node(info.id, clip_and_scroll_ids.scroll_node_id, clip_region);
+                self.add_clip_node(info.id, &clip_and_scroll_ids, clip_region);
             }
             SpecificDisplayItem::ClipChain(ref info) => {
                 // For a user defined clip-chain the parent (if specified) must
@@ -1293,13 +1294,14 @@ impl<'a> DisplayListFlattener<'a> {
     pub fn push_reference_frame(
         &mut self,
         reference_frame_id: ClipId,
-        parent_id: Option<ClipId>,
+        parent_scroll_id: Option<ClipId>,
+        parent_clip_id: Option<ClipId>,
         pipeline_id: PipelineId,
         source_transform: Option<PropertyBinding<LayoutTransform>>,
         source_perspective: Option<LayoutTransform>,
         origin_in_parent_reference_frame: LayoutVector2D,
     ) -> SpatialNodeIndex {
-        let parent_index = parent_id.map(|id| self.id_to_index_mapper.get_spatial_node_index(id));
+        let parent_index = parent_scroll_id.map(|id| self.id_to_index_mapper.get_spatial_node_index(id));
         let index = self.clip_scroll_tree.add_reference_frame(
             parent_index,
             source_transform,
@@ -1309,7 +1311,7 @@ impl<'a> DisplayListFlattener<'a> {
         );
         self.id_to_index_mapper.map_spatial_node(reference_frame_id, index);
 
-        match parent_id {
+        match parent_clip_id.or(parent_scroll_id) {
             Some(ref parent_id) =>
                 self.id_to_index_mapper.map_to_parent_clip_chain(reference_frame_id, parent_id),
             _ => self.id_to_index_mapper.add_clip_chain(reference_frame_id, ClipChainId::NONE, 0),
@@ -1331,6 +1333,7 @@ impl<'a> DisplayListFlattener<'a> {
         self.push_reference_frame(
             ClipId::root_reference_frame(pipeline_id),
             None,
+            None,
             pipeline_id,
             None,
             None,
@@ -1351,7 +1354,7 @@ impl<'a> DisplayListFlattener<'a> {
     pub fn add_clip_node<I>(
         &mut self,
         new_node_id: ClipId,
-        parent_id: ClipId,
+        parent: &ClipAndScrollInfo,
         clip_region: ClipRegion<I>,
     ) -> ClipChainId
     where
@@ -1363,9 +1366,9 @@ impl<'a> DisplayListFlattener<'a> {
         // Map from parent ClipId to existing clip-chain.
         let mut parent_clip_chain_index = self
             .id_to_index_mapper
-            .get_clip_chain_id(&parent_id);
+            .get_clip_chain_id(&parent.clip_node_id());
         // Map the ClipId for the positioning node to a spatial node index.
-        let spatial_node = self.id_to_index_mapper.get_spatial_node_index(parent_id);
+        let spatial_node = self.id_to_index_mapper.get_spatial_node_index(parent.scroll_node_id);
 
         // Add a mapping for this ClipId in case it's referenced as a positioning node.
         self.id_to_index_mapper
