@@ -140,8 +140,8 @@ if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
 
 ASFLAGS += CONFIG['VPX_ASFLAGS']
 ASFLAGS += [
-    '-I.',
-    '-I%s/media/libvpx/libvpx' % TOPSRCDIR,
+    '-I./',
+    '-I%s/media/libvpx/libvpx/' % TOPSRCDIR,
 ]
 
 LOCAL_INCLUDES += [
