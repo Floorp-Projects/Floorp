@@ -45,46 +45,6 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
 {
     *aDidPrettyPrint = false;
 
-    // Check for iframe with display:none. Such iframes don't have presshells
-    nsCOMPtr<nsIPresShell> shell = aDocument->GetShell();
-    if (!shell) {
-        return NS_OK;
-    }
-
-    // check if we're in an invisible iframe
-    nsPIDOMWindowOuter *internalWin = aDocument->GetWindow();
-    nsCOMPtr<Element> frameElem;
-    if (internalWin) {
-        frameElem = internalWin->GetFrameElementInternal();
-    }
-
-    if (frameElem) {
-        nsCOMPtr<nsICSSDeclaration> computedStyle;
-        if (nsIDocument* frameOwnerDoc = frameElem->OwnerDoc()) {
-            nsPIDOMWindowOuter* window = frameOwnerDoc->GetDefaultView();
-            if (window) {
-                nsCOMPtr<nsPIDOMWindowInner> innerWindow =
-                    window->GetCurrentInnerWindow();
-
-                ErrorResult dummy;
-                computedStyle = innerWindow->GetComputedStyle(*frameElem,
-                                                              EmptyString(),
-                                                              dummy);
-                dummy.SuppressException();
-            }
-        }
-
-        if (computedStyle) {
-            nsAutoString visibility;
-            computedStyle->GetPropertyValue(NS_LITERAL_STRING("visibility"),
-                                            visibility);
-            if (!visibility.EqualsLiteral("visible")) {
-
-                return NS_OK;
-            }
-        }
-    }
-
     // check the pref
     if (!Preferences::GetBool("layout.xml.prettyprint", true)) {
         return NS_OK;
