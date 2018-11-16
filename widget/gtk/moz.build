@@ -17,10 +17,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
     DIRS += ['mozgtk']
 
 if CONFIG['MOZ_WAYLAND']:
-    if CONFIG['GLIB_LIBS']:
-        DIRS += ['wayland', 'mozwayland']
-    else:
-        error('We support Wayland on glibc systems only, see Bug 1409707 for reference.')
+    DIRS += ['wayland', 'mozwayland']
 
 EXPORTS += [
     'mozcontainer.h',
