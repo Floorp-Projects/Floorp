@@ -16,6 +16,7 @@
 #include "jsnum.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
+#include "js/CallArgs.h"
 #include "js/Wrapper.h"
 #include "vm/Iteration.h"
 #include "vm/JSObject.h"
@@ -266,6 +267,42 @@ UnwrapAndTypeCheckArgument(JSContext* cx,
 }
 
 /**
+ * Unwrap a value of a known type.
+ *
+ * If `value` is an object of class T, this returns a pointer to that object.
+ * If `value` is a wrapper for such an object, this tries to unwrap the object
+ * and return a pointer to it. If access is denied, or `value` was a wrapper
+ * but has been nuked, this reports an error and returns null.
+ *
+ * In all other cases, the behavior is undefined, so call this only if `value`
+ * is known to have been initialized with an object of class T.
+ */
+template <class T>
+MOZ_MUST_USE T*
+UnwrapAndDowncastValue(JSContext* cx, const Value& value)
+{
+    static_assert(!std::is_convertible<T*, Wrapper*>::value,
+                  "T can't be a Wrapper type; this function discards wrappers");
+    JSObject* result = &value.toObject();
+    if (IsProxy(result)) {
+        if (JS_IsDeadWrapper(result)) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+            return nullptr;
+        }
+
+        // It would probably be OK to do an unchecked unwrap here, but we allow
+        // arbitrary security policies, so check anyway.
+        result = CheckedUnwrap(result);
+        if (!result) {
+            ReportAccessDenied(cx);
+            return nullptr;
+        }
+    }
+
+    return &result->as<T>();
+}
+
+/**
  * Read a private slot that is known to point to a particular type of object.
  *
  * Some internal slots specified in various standards effectively have static
@@ -294,23 +331,11 @@ UnwrapInternalSlot(JSContext* cx,
     static_assert(!std::is_convertible<T*, Wrapper*>::value,
                   "T can't be a Wrapper type; this function discards wrappers");
 
-    JSObject* result = &unwrappedObj->getFixedSlot(slot).toObject();
-    if (IsProxy(result)) {
-        if (JS_IsDeadWrapper(result)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
-            return false;
-        }
-
-        // It would probably be OK to do an unchecked unwrap here, but we allow
-        // arbitrary security policies, so check anyway.
-        result = CheckedUnwrap(result);
-        if (!result) {
-            ReportAccessDenied(cx);
-            return false;
-        }
+    T* result = UnwrapAndDowncastValue<T>(cx, unwrappedObj->getFixedSlot(slot));
+    if (!result) {
+        return false;
     }
-
-    unwrappedResult.set(&result->as<T>());
+    unwrappedResult.set(result);
     return true;
 }
 
@@ -325,6 +350,21 @@ UnwrapInternalSlot(JSContext* cx,
                    Rooted<T*>* unwrappedResult)
 {
     return UnwrapInternalSlot(cx, obj, slot, MutableHandle<T*>(unwrappedResult));
+}
+
+/**
+ * Read a function slot that is known to point to a particular type of object.
+ *
+ * This is like UnwrapInternalSlot, but for extended function slots. Call this
+ * only if the specified slot is known to have been initialized with an object
+ * of class T or a wrapper for such an object.
+ */
+template <class T>
+MOZ_MUST_USE T*
+UnwrapCalleeSlot(JSContext* cx, CallArgs& args, size_t extendedSlot)
+{
+    JSFunction& func = args.callee().as<JSFunction>();
+    return UnwrapAndDowncastValue<T>(cx, func.getExtendedSlot(extendedSlot));
 }
 
 } // namespace js
