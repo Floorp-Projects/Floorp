@@ -1835,6 +1835,21 @@ JS_NewGlobalObject(JSContext* cx, const JSClass* clasp, JSPrincipals* principals
 extern JS_PUBLIC_API(void)
 JS_GlobalObjectTraceHook(JSTracer* trc, JSObject* global);
 
+namespace JS {
+
+/**
+ * This allows easily constructing a global object without having to deal with
+ * JSClassOps, forgetting to add JS_GlobalObjectTraceHook, or forgetting to call
+ * JS::InitRealmStandardClasses(). Example:
+ *
+ *     const JSClass globalClass = { "MyGlobal", JSCLASS_GLOBAL_FLAGS,
+ *         &JS::DefaultGlobalClassOps };
+ *     JS_NewGlobalObject(cx, &globalClass, ...);
+ */
+extern JS_PUBLIC_DATA(const JSClassOps) DefaultGlobalClassOps;
+
+} // namespace JS
+
 extern JS_PUBLIC_API(void)
 JS_FireOnNewGlobalObject(JSContext* cx, JS::HandleObject global);
 
