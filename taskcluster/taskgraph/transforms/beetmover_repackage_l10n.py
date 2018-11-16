@@ -36,6 +36,7 @@ def make_beetmover_description(config, jobs):
             'label': job['label'],
             'primary-dependency': dep_job,
             'dependent-tasks': job['dependent-tasks'],
+            'attributes': job['attributes'],
             'treeherder': treeherder,
             'locale': locale,
             'shipping-phase': job['shipping-phase'],

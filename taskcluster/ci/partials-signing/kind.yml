@@ -16,3 +16,5 @@ job-template:
   shipping-phase: promote
   treeherder-group: ps
   description-suffix: 'partial signing'
+  required_signoffs:
+    - mar-signing
