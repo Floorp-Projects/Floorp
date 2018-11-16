@@ -748,6 +748,11 @@ SandboxBroker::SetSecurityLevelForPluginProcess(int32_t aSandboxLevel)
   SANDBOX_ENSURE_SUCCESS(result,
                          "Invalid flags for SetDelayedProcessMitigations.");
 
+  // Restricting SIDs break some Flash functionality in Windows 7.
+  if (!IsWin8OrLater()) {
+    mPolicy->SetDoNotUseRestrictingSIDs();
+  }
+
   // Add rule to allow read / write access to a special plugin temp dir.
   AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_ANY,
                    sPluginTempDir, NS_LITERAL_STRING("\\*"));
