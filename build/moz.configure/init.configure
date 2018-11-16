@@ -1036,6 +1036,21 @@ set_define('MOZ_BUILD_APP', build_project)
 add_old_configure_assignment('MOZ_BUILD_APP', build_project)
 
 
+# This is temporary until js/src/configure and configure are merged.
+# Use instead of option() in js/moz.configure and more generally, for
+# options that are shared between configure and js/src/configure.
+@template
+def js_option(*args, **kwargs):
+    opt = option(*args, **kwargs)
+
+    @depends(opt.option, build_project, when=kwargs.get('when'))
+    def js_option(value, build_project):
+        if build_project != 'js':
+            return value.format(opt.option)
+
+    add_old_configure_arg(js_option)
+
+
 # set RELEASE_OR_BETA and NIGHTLY_BUILD variables depending on the cycle we're in
 # The logic works like this:
 # - if we have "a1" in GRE_MILESTONE, we're building Nightly (define NIGHTLY_BUILD)
@@ -1220,18 +1235,3 @@ def all_configure_options():
 
 
 set_config('MOZ_CONFIGURE_OPTIONS', all_configure_options)
-
-
-# This is temporary until js/src/configure and configure are merged.
-# Use instead of option() in js/moz.configure and more generally, for
-# options that are shared between configure and js/src/configure.
-@template
-def js_option(*args, **kwargs):
-    opt = option(*args, **kwargs)
-
-    @depends(opt.option, build_project, when=kwargs.get('when'))
-    def js_option(value, build_project):
-        if build_project != 'js':
-            return value.format(opt.option)
-
-    add_old_configure_arg(js_option)
