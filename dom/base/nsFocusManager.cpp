@@ -3100,7 +3100,7 @@ ScopedContentTraversal::Next()
   // Get mCurrent's first child if it's in the same scope.
   if (!(mCurrent->GetShadowRoot() || mCurrent->IsHTMLElement(nsGkAtoms::slot)) ||
       mCurrent == mOwner) {
-    FlattenedChildIterator iter(mCurrent);
+    StyleChildrenIterator iter(mCurrent);
     nsIContent* child = iter.GetNextChild();
     if (child) {
       SetCurrent(child);
@@ -3118,12 +3118,11 @@ ScopedContentTraversal::Next()
   while (1) {
     // Create parent's iterator and move to current
     nsIContent* parent = current->GetFlattenedTreeParent();
-    FlattenedChildIterator parentIter(parent);
+    StyleChildrenIterator parentIter(parent);
     parentIter.Seek(current);
 
     // Get next sibling of current
-    nsIContent* next = parentIter.GetNextChild();
-    if (next) {
+    if (nsIContent* next = parentIter.GetNextChild()) {
       SetCurrent(next);
       return;
     }
@@ -3147,14 +3146,14 @@ ScopedContentTraversal::Prev()
   nsIContent* last;
   if (mCurrent == mOwner) {
     // Get last child of mOwner
-    FlattenedChildIterator ownerIter(mOwner, false /* aStartAtBeginning */);
+    StyleChildrenIterator ownerIter(mOwner, false /* aStartAtBeginning */);
     last = ownerIter.GetPreviousChild();
 
     parent = last;
   } else {
     // Create parent's iterator and move to mCurrent
     parent = mCurrent->GetFlattenedTreeParent();
-    FlattenedChildIterator parentIter(parent);
+    StyleChildrenIterator parentIter(parent);
     parentIter.Seek(mCurrent);
 
     // Get previous sibling
@@ -3170,7 +3169,7 @@ ScopedContentTraversal::Prev()
     }
 
     // Find last child
-    FlattenedChildIterator iter(parent, false /* aStartAtBeginning */);
+    StyleChildrenIterator iter(parent, false /* aStartAtBeginning */);
     last = iter.GetPreviousChild();
   }
 
@@ -3308,72 +3307,6 @@ nsFocusManager::GetNextTabbableContentInScope(nsIContent* aOwner,
         frame->IsFocusable(&tabIndex, 0);
       }
       if (tabIndex < 0 || !(aIgnoreTabIndex || tabIndex == aCurrentTabIndex)) {
-        // If the element has native anonymous content, we may need to
-        // focus some NAC element, even if the element itself isn't focusable.
-        // This happens for example with <input type="date">.
-        // So, try to find NAC and then traverse the frame tree to find elements
-        // to focus.
-        // Yet, even if the frame is a nsIAnonymousContentCreator, don't
-        // traverse into the element again when the element is in a UA Widget,
-        // because there isn't any NAC to focus.
-        nsIFrame* possibleAnonOwnerFrame = iterContent->GetPrimaryFrame();
-        nsIAnonymousContentCreator* anonCreator =
-          do_QueryFrame(possibleAnonOwnerFrame);
-        bool isIterContentInUAWidgetShadow =
-          iterContent->GetContainingShadow() &&
-          iterContent->GetContainingShadow()->IsUAWidget();
-        if (anonCreator &&
-            !isIterContentInUAWidgetShadow &&
-            !iterContent->IsInNativeAnonymousSubtree()) {
-          nsIFrame* frame = nullptr;
-          // Find the first or last frame in tree order so that
-          // we can scope frame traversing to NAC.
-          if (aForward) {
-            frame = possibleAnonOwnerFrame->PrincipalChildList().FirstChild();
-          } else {
-            frame = possibleAnonOwnerFrame->PrincipalChildList().LastChild();
-            nsIFrame* last = frame;
-            while (last) {
-              frame = last;
-              last = frame->PrincipalChildList().LastChild();
-            }
-          };
-
-          nsCOMPtr<nsIFrameEnumerator> frameTraversal;
-          nsresult rv = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
-                                             iterContent->OwnerDoc()->
-                                               GetShell()->GetPresContext(),
-                                             frame,
-                                             ePreOrder,
-                                             false, // aVisual
-                                             false, // aLockInScrollView
-                                             true, // aFollowOOFs
-                                             true  // aSkipPopupChecks
-                                             );
-          if (NS_SUCCEEDED(rv)) {
-            nsIFrame* frame =
-              static_cast<nsIFrame*>(frameTraversal->CurrentItem());
-            while (frame) {
-              int32_t tabIndex;
-              frame->IsFocusable(&tabIndex, 0);
-              if (tabIndex >= 0 &&
-                  (aIgnoreTabIndex || aCurrentTabIndex == tabIndex)) {
-                return frame->GetContent();
-              }
-
-              if (aForward) {
-                frameTraversal->Next();
-              } else {
-                frameTraversal->Prev();
-              }
-              frame = static_cast<nsIFrame*>(frameTraversal->CurrentItem());
-              if (frame == possibleAnonOwnerFrame) {
-                break;
-              }
-            }
-          }
-        }
-
         continue;
       }
 
@@ -3981,7 +3914,7 @@ nsFocusManager::GetNextTabIndex(nsIContent* aParent,
                                 bool aForward)
 {
   int32_t tabIndex, childTabIndex;
-  FlattenedChildIterator iter(aParent);
+  StyleChildrenIterator iter(aParent);
 
   if (aForward) {
     tabIndex = 0;
