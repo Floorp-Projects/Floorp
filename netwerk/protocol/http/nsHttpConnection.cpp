@@ -1906,7 +1906,8 @@ nsHttpConnection::OnSocketWritable()
     if (mTransactionCaps & NS_HTTP_CONNECT_ONLY) {
         if (!mCompletedProxyConnect && !mProxyConnectStream) {
             // A CONNECT has been requested for this connection but will never
-            // be performed. Fail here to let request callbacks happen.
+            // be performed. This should never happen.
+            MOZ_ASSERT(false, "proxy connect will never happen");
             LOG(("return failure because proxy connect will never happen\n"));
             return NS_ERROR_FAILURE;
         }
@@ -2086,7 +2087,8 @@ nsHttpConnection::OnSocketReadable()
     if ((mTransactionCaps & NS_HTTP_CONNECT_ONLY) &&
         !mCompletedProxyConnect && !mProxyConnectStream) {
         // A CONNECT has been requested for this connection but will never
-        // be performed. Fail here to let request callbacks happen.
+        // be performed. This should never happen.
+        MOZ_ASSERT(false, "proxy connect will never happen");
         LOG(("return failure because proxy connect will never happen\n"));
         return NS_ERROR_FAILURE;
     }
