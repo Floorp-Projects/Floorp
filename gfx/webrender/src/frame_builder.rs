@@ -12,7 +12,7 @@ use gpu_cache::GpuCache;
 use gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
 use hit_test::{HitTester, HitTestingRun};
 use internal_types::{FastHashMap, PlaneSplitter};
-use picture::{PictureSurface, PictureUpdateContext, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex};
+use picture::{PictureSurface, PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex};
 use prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebugId};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use render_backend::{FrameResources, FrameId};
@@ -223,10 +223,7 @@ impl FrameBuilder {
         );
         surfaces.push(root_surface);
 
-        let pic_update_context = PictureUpdateContext::new(
-            ROOT_SURFACE_INDEX,
-            ROOT_SPATIAL_NODE_INDEX,
-        );
+        let mut pic_update_state = PictureUpdateState::new(surfaces);
 
         // The first major pass of building a frame is to walk the picture
         // tree. This pass must be quick (it should never touch individual
@@ -237,9 +234,8 @@ impl FrameBuilder {
         // be rendered this frame.
         self.prim_store.update_picture(
             self.root_pic_index,
-            &pic_update_context,
+            &mut pic_update_state,
             &frame_context,
-            surfaces,
         );
 
         let mut frame_state = FrameBuildingState {
@@ -252,7 +248,7 @@ impl FrameBuilder {
             transforms: transform_palette,
             resources,
             segment_builder: SegmentBuilder::new(),
-            surfaces,
+            surfaces: pic_update_state.surfaces,
         };
 
         let (pic_context, mut pic_state, mut prim_list) = self
