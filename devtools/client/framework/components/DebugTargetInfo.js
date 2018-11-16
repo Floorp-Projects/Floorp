@@ -19,21 +19,25 @@ class DebugTargetInfo extends PureComponent {
         name: PropTypes.string.isRequired,
         version: PropTypes.string.isRequired,
       }).isRequired,
+      L10N: PropTypes.object.isRequired,
       toolbox: PropTypes.object.isRequired,
     };
   }
 
   getTargetText() {
-    const { toolbox } = this.props;
+    const { L10N, toolbox } = this.props;
     const name = toolbox.target.name;
-    const type = "tab";
-    return name + ` (${ type })`;
+    const type = L10N.getStr("toolbox.debugTargetInfo.type.tab");
+    return L10N.getFormatStr("toolbox.debugTargetInfo.targetLabel", name, type);
   }
 
   getRuntimeText() {
-    const { deviceDescription } = this.props;
+    const { deviceDescription, L10N } = this.props;
     const { name, deviceName, version } = deviceDescription;
-    return name + (deviceName ? ` on ${ deviceName }` : "") + ` (${ version })`;
+    const localizationType =
+      deviceName ? "toolbox.debugTargetInfo.runtimeLabelWithDeviceName"
+                 : "toolbox.debugTargetInfo.runtimeLabel";
+    return L10N.getFormatStr(localizationType, name, version, deviceName);
   }
 
   render() {
