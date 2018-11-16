@@ -20,9 +20,10 @@ import android.view.inputmethod.ExtractedTextRequest
 class Callbacks private constructor() {
     object Default : All
 
-    interface All : ContentDelegate, NavigationDelegate, PermissionDelegate, ProgressDelegate,
-                    PromptDelegate, ScrollDelegate, SelectionActionDelegate, TextInputDelegate,
-                    TrackingProtectionDelegate, MediaDelegate
+    interface All : ContentDelegate, GeckoSession.HistoryDelegate, MediaDelegate,
+                    NavigationDelegate, PermissionDelegate, ProgressDelegate,
+                    PromptDelegate, ScrollDelegate, SelectionActionDelegate,
+                    TextInputDelegate, TrackingProtectionDelegate
 
     interface ContentDelegate : GeckoSession.ContentDelegate {
         override fun onTitleChange(session: GeckoSession, title: String) {
