@@ -79,7 +79,7 @@ LogHeaders(const char *lineStart)
             while (p && *++p)
                 *p = '*';
         }
-        LOG3(("  %s\n", buf.get()));
+        LOG1(("  %s\n", buf.get()));
         lineStart = endOfLine + 2;
     }
 }
@@ -284,7 +284,7 @@ nsHttpTransaction::Init(uint32_t caps,
 {
     nsresult rv;
 
-    LOG(("nsHttpTransaction::Init [this=%p caps=%x]\n", this, caps));
+    LOG1(("nsHttpTransaction::Init [this=%p caps=%x]\n", this, caps));
 
     MOZ_ASSERT(cinfo);
     MOZ_ASSERT(requestHead);
@@ -370,10 +370,10 @@ nsHttpTransaction::Init(uint32_t caps,
     mReqHeaderBuf.Truncate();
     requestHead->Flatten(mReqHeaderBuf, pruneProxyHeaders);
 
-    if (LOG3_ENABLED()) {
-        LOG3(("http request [\n"));
+    if (LOG1_ENABLED()) {
+        LOG1(("http request [\n"));
         LogHeaders(mReqHeaderBuf.get());
-        LOG3(("]\n"));
+        LOG1(("]\n"));
     }
 
     // If the request body does not include headers or if there is no request
@@ -621,8 +621,8 @@ void
 nsHttpTransaction::OnTransportStatus(nsITransport* transport,
                                      nsresult status, int64_t progress)
 {
-    LOG(("nsHttpTransaction::OnSocketStatus [this=%p status=%" PRIx32 " progress=%" PRId64 "]\n",
-         this, static_cast<uint32_t>(status), progress));
+    LOG1(("nsHttpTransaction::OnSocketStatus [this=%p status=%" PRIx32 " progress=%" PRId64 "]\n",
+          this, static_cast<uint32_t>(status), progress));
 
     if (status == NS_NET_STATUS_CONNECTED_TO ||
         status == NS_NET_STATUS_WAITING_FOR) {
@@ -717,8 +717,8 @@ nsHttpTransaction::OnTransportStatus(nsITransport* transport,
     if (status == NS_NET_STATUS_SENDING_TO) {
         // suppress progress when only writing request headers
         if (!mHasRequestBody) {
-            LOG(("nsHttpTransaction::OnTransportStatus %p "
-                 "SENDING_TO without request body\n", this));
+            LOG1(("nsHttpTransaction::OnTransportStatus %p "
+                  "SENDING_TO without request body\n", this));
             return;
         }
 
@@ -733,8 +733,8 @@ nsHttpTransaction::OnTransportStatus(nsITransport* transport,
 
         nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mRequestStream);
         if (!seekable) {
-            LOG(("nsHttpTransaction::OnTransportStatus %p "
-                 "SENDING_TO without seekable request stream\n", this));
+            LOG1(("nsHttpTransaction::OnTransportStatus %p "
+                  "SENDING_TO without seekable request stream\n", this));
             progress = 0;
         } else {
             int64_t prog = 0;
@@ -1431,7 +1431,7 @@ nsHttpTransaction::LocateHttpStart(char *buf, uint32_t len,
 nsresult
 nsHttpTransaction::ParseLine(nsACString &line)
 {
-    LOG(("nsHttpTransaction::ParseLine [%s]\n", PromiseFlatCString(line).get()));
+    LOG1(("nsHttpTransaction::ParseLine [%s]\n", PromiseFlatCString(line).get()));
     nsresult rv = NS_OK;
 
     if (!mHaveStatusLine) {
@@ -1841,8 +1841,8 @@ nsHttpTransaction::HandleContent(char *buf,
         mContentRead += *contentRead;
     }
 
-    LOG(("nsHttpTransaction::HandleContent [this=%p count=%u read=%u mContentRead=%" PRId64 " mContentLength=%" PRId64 "]\n",
-        this, count, *contentRead, mContentRead, mContentLength));
+    LOG1(("nsHttpTransaction::HandleContent [this=%p count=%u read=%u mContentRead=%" PRId64 " mContentLength=%" PRId64 "]\n",
+          this, count, *contentRead, mContentRead, mContentLength));
 
     // check for end-of-file
     if ((mContentRead == mContentLength) ||
@@ -1885,7 +1885,7 @@ nsHttpTransaction::ProcessData(char *buf, uint32_t count, uint32_t *countRead)
 {
     nsresult rv;
 
-    LOG(("nsHttpTransaction::ProcessData [this=%p count=%u]\n", this, count));
+    LOG1(("nsHttpTransaction::ProcessData [this=%p count=%u]\n", this, count));
 
     *countRead = 0;
 
@@ -1978,7 +1978,7 @@ nsHttpTransaction::ProcessData(char *buf, uint32_t count, uint32_t *countRead)
 void
 nsHttpTransaction::SetRequestContext(nsIRequestContext *aRequestContext)
 {
-    LOG(("nsHttpTransaction %p SetRequestContext %p\n", this, aRequestContext));
+    LOG1(("nsHttpTransaction %p SetRequestContext %p\n", this, aRequestContext));
     mRequestContext = aRequestContext;
 }
 

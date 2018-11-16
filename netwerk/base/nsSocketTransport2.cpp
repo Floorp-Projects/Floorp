@@ -881,9 +881,9 @@ nsSocketTransport::Init(const char **types, uint32_t typeCount,
         }
     }
 
-    SOCKET_LOG(("nsSocketTransport::Init [this=%p host=%s:%hu origin=%s:%d proxy=%s:%hu]\n",
-                this, mHost.get(), mPort, mOriginHost.get(), mOriginPort,
-                mProxyHost.get(), mProxyPort));
+    SOCKET_LOG1(("nsSocketTransport::Init [this=%p host=%s:%hu origin=%s:%d proxy=%s:%hu]\n",
+                 this, mHost.get(), mPort, mOriginHost.get(), mOriginPort,
+                 mProxyHost.get(), mProxyPort));
 
     // include proxy type as a socket type if proxy type is not "http"
     mTypeCount = typeCount + (proxyType != nullptr);
@@ -1047,8 +1047,8 @@ nsSocketTransport::PostEvent(uint32_t type, nsresult status, nsISupports *param)
 void
 nsSocketTransport::SendStatus(nsresult status)
 {
-    SOCKET_LOG(("nsSocketTransport::SendStatus [this=%p status=%" PRIx32 "]\n", this,
-                static_cast<uint32_t>(status)));
+    SOCKET_LOG1(("nsSocketTransport::SendStatus [this=%p status=%" PRIx32 "]\n", this,
+                 static_cast<uint32_t>(status)));
 
     nsCOMPtr<nsITransportEventSink> sink;
     uint64_t progress;
@@ -2275,7 +2275,7 @@ nsSocketTransport::OnSocketEvent(uint32_t type, nsresult status, nsISupports *pa
 void
 nsSocketTransport::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
 {
-    SOCKET_LOG(("nsSocketTransport::OnSocketReady [this=%p outFlags=%hd]\n",
+    SOCKET_LOG1(("nsSocketTransport::OnSocketReady [this=%p outFlags=%hd]\n",
         this, outFlags));
 
     if (outFlags == -1) {

@@ -346,7 +346,7 @@ HttpBaseChannel::Init(nsIURI *aURI,
                       nsIURI *aProxyURI,
                       uint64_t aChannelId)
 {
-  LOG(("HttpBaseChannel::Init [this=%p]\n", this));
+  LOG1(("HttpBaseChannel::Init [this=%p]\n", this));
 
   MOZ_ASSERT(aURI, "null uri");
 
@@ -376,11 +376,11 @@ HttpBaseChannel::Init(nsIURI *aURI,
   rv = mURI->GetPort(&port);
   if (NS_FAILED(rv)) return rv;
 
-  LOG(("host=%s port=%d\n", host.get(), port));
+  LOG1(("host=%s port=%d\n", host.get(), port));
 
   rv = mURI->GetAsciiSpec(mSpec);
   if (NS_FAILED(rv)) return rv;
-  LOG(("uri=%s\n", mSpec.get()));
+  LOG1(("uri=%s\n", mSpec.get()));
 
   // Assert default request method
   MOZ_ASSERT(mRequestHead.EqualsMethod(nsHttpRequestHead::kMethod_Get));
