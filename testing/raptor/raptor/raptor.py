@@ -65,7 +65,7 @@ class Raptor(object):
 
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
-                 symbols_path=None, host=None, is_release_build=False):
+                 symbols_path=None, host=None, is_release_build=False, debug_mode=False):
         self.config = {}
         self.config['app'] = app
         self.config['binary'] = binary
@@ -85,7 +85,16 @@ class Raptor(object):
         self.playback = None
         self.benchmark = None
         self.gecko_profiler = None
-        self.post_startup_delay = 30000  # raptor webext pause time after browser startup
+        self.post_startup_delay = 30000
+
+        # debug mode is currently only supported when running locally
+        self.debug_mode = debug_mode if self.config['run_local'] else False
+
+        # if running debug-mode reduce the pause after browser startup
+        if self.debug_mode:
+            self.post_startup_delay = 3000
+            self.log.info("debug-mode enabled, reducing post-browser startup pause to %d ms"
+                          % self.post_startup_delay)
 
         # Create the profile; for geckoview we want a firefox profile type
         if self.config['app'] == 'geckoview':
@@ -138,7 +147,7 @@ class Raptor(object):
         return os.path.join(here, 'profile_data')
 
     def start_control_server(self):
-        self.control_server = RaptorControlServer(self.results_handler)
+        self.control_server = RaptorControlServer(self.results_handler, self.debug_mode)
         self.control_server.start()
 
         # for android we must make the control server available to the device
@@ -176,7 +185,8 @@ class Raptor(object):
                         self.control_server.port,
                         self.post_startup_delay,
                         host=self.config['host'],
-                        b_port=benchmark_port)
+                        b_port=benchmark_port,
+                        debug_mode=1 if self.debug_mode else 0)
 
         # for android we must make the benchmarks server available to the device
         if self.config['app'] == "geckoview" and self.config['host'] in ('localhost', '127.0.0.1'):
@@ -269,6 +279,14 @@ class Raptor(object):
                 self.log.info("setting MOZ_DISABLE_NONLOCAL_CONNECTIONS=1")
                 os.environ['MOZ_DISABLE_NONLOCAL_CONNECTIONS'] = "1"
 
+            # if running debug-mode, tell Firefox to open the browser console on startup
+            # for google chrome, open the devtools on the raptor test tab
+            if self.debug_mode:
+                if self.config['app'] == "firefox":
+                    self.runner.cmdargs.extend(['-jsconsole'])
+                if self.config['app'] == "chrome":
+                    self.runner.cmdargs.extend(['--auto-open-devtools-for-tabs'])
+
             # now start the desktop browser
             self.log.info("starting %s" % self.config['app'])
 
@@ -322,11 +340,14 @@ class Raptor(object):
             elapsed_time = 0
             while not self.control_server._finished:
                 time.sleep(1)
-                elapsed_time += 1
-                if elapsed_time > (timeout) - 5:  # stop 5 seconds early
-                    self.log.info("application timed out after {} seconds".format(timeout))
-                    self.control_server.wait_for_quit()
-                    break
+                # we only want to force browser-shutdown on timeout if not in debug mode;
+                # in debug-mode we leave the browser running (require manual shutdown)
+                if not self.debug_mode:
+                    elapsed_time += 1
+                    if elapsed_time > (timeout) - 5:  # stop 5 seconds early
+                        self.log.info("application timed out after {} seconds".format(timeout))
+                        self.control_server.wait_for_quit()
+                        break
         finally:
             if self.config['app'] != "geckoview":
                 try:
@@ -354,11 +375,18 @@ class Raptor(object):
             self.log.info("cleaning up after gecko profiling")
             self.gecko_profiler.clean()
 
-        if self.config['app'] != "geckoview":
-            if self.runner.is_running():
-                self.runner.stop()
-        # TODO the geckoview app should have been shutdown by this point by the
-        # control server, but we can double-check here to make sure
+        # browser should be closed by now but this is a backup-shutdown (if not in debug-mode)
+        if not self.debug_mode:
+            if self.config['app'] != "geckoview":
+                if self.runner.is_running():
+                    self.runner.stop()
+            # TODO the geckoview app should have been shutdown by this point by the
+            # control server, but we can double-check here to make sure
+        else:
+            # in debug mode, and running locally, leave the browser running
+            if self.config['run_local']:
+                self.log.info("* debug-mode enabled - please shutdown the browser manually...")
+                self.runner.wait(timeout=None)
 
     def _init_gecko_profiling(self, test):
         self.log.info("initializing gecko profiler")
@@ -462,6 +490,10 @@ def main(args=sys.argv[1:]):
     LOG = get_default_logger(component='raptor-main')
 
     LOG.info("raptor-start")
+
+    if args.debug_mode:
+        LOG.info("debug-mode enabled")
+
     LOG.info("received command line arguments: %s" % str(args))
 
     # if a test name specified on command line, and it exists, just run that one
@@ -486,7 +518,8 @@ def main(args=sys.argv[1:]):
                     gecko_profile_entries=args.gecko_profile_entries,
                     symbols_path=args.symbols_path,
                     host=args.host,
-                    is_release_build=args.is_release_build)
+                    is_release_build=args.is_release_build,
+                    debug_mode=args.debug_mode)
 
     raptor.start_control_server()
 
