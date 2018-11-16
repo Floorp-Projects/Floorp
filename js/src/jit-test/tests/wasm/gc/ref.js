@@ -8,7 +8,7 @@ if (!wasmGcEnabled()) {
 
 var bin = wasmTextToBinary(
     `(module
-      (gc_feature_opt_in 1)
+      (gc_feature_opt_in 2)
       (type $cons (struct
                    (field $car i32)
                    (field $cdr (ref $cons))))
@@ -34,7 +34,7 @@ var bin = wasmTextToBinary(
       (func $cdr (param $p (ref $cons)) (result (ref $cons))
        (local $l (ref $cons))
        ;; store null value of correct type
-       (set_local $l (ref.null (ref $cons)))
+       (set_local $l (ref.null))
        ;; store local of correct type
        (set_local $l (get_local $p))
        ;; store call result of correct type
@@ -44,13 +44,13 @@ var bin = wasmTextToBinary(
        (block (ref $cons)
         (if (ref $cons) (i32.eqz (i32.const 0))
             (unreachable)
-            (ref.null (ref $cons)))))
+            (ref.null))))
 
       (func (param (ref $even)) (result (ref $odd))
-       (ref.null (ref $odd)))
+       (ref.null))
 
       (func (param (ref $odd)) (result (ref $even))
-       (ref.null (ref $even)))
+       (ref.null))
 
       (func (param (ref $cons))
        (call $cdr (get_local 0))
@@ -59,10 +59,10 @@ var bin = wasmTextToBinary(
        drop)
 
       (func (param (ref $cons))
-       (drop (ref.eq (get_local 0) (ref.null (ref $cons))))
-       (drop (ref.eq (ref.null (ref $cons)) (get_local 0)))
-       (drop (ref.eq (get_local 0) (ref.null anyref)))
-       (drop (ref.eq (ref.null anyref) (get_local 0))))
+       (drop (ref.eq (get_local 0) (ref.null)))
+       (drop (ref.eq (ref.null) (get_local 0)))
+       (drop (ref.eq (get_local 0) (ref.null)))
+       (drop (ref.eq (ref.null) (get_local 0))))
      )`);
 
 // Validation
@@ -73,7 +73,7 @@ assertEq(WebAssembly.validate(bin), true);
 
 new WebAssembly.Module(wasmTextToBinary(`
 (module
- (gc_feature_opt_in 1)
+ (gc_feature_opt_in 2)
  (type $s (struct))
  (func $null (param (ref $s)) (result i32)
    (ref.is_null (get_local 0))))
@@ -83,7 +83,7 @@ new WebAssembly.Module(wasmTextToBinary(`
 
 new WebAssembly.Module(wasmTextToBinary(`
 (module
- (gc_feature_opt_in 1)
+ (gc_feature_opt_in 2)
  (type $s (struct (field i32)))
  (func $f (param (ref $s)) (call $g (get_local 0)))
  (func $g (param anyref) (unreachable)))
@@ -93,7 +93,7 @@ new WebAssembly.Module(wasmTextToBinary(`
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
+ (gc_feature_opt_in 2)
  (func (param (ref $odd)) (unreachable)))
 `),
 SyntaxError, /Type label.*not found/);
@@ -103,7 +103,7 @@ SyntaxError, /Type label.*not found/);
 
 wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
+ (gc_feature_opt_in 2)
  (type $s (struct (field i32)))
  (type $t (struct (field i32)))
  (func $f (param (ref $s)) (unreachable))
@@ -112,7 +112,7 @@ wasmEvalText(`
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
+ (gc_feature_opt_in 2)
  (type $s (struct (field i32)))
  (type $t (struct (field f32))) ;; Incompatible type
  (func $f (param (ref $s)) (unreachable))
@@ -122,7 +122,7 @@ WebAssembly.CompileError, /expression has type ref.*but expected ref/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
+ (gc_feature_opt_in 2)
  (type $s (struct (field i32)))
  (type $t (struct (field (mut i32)))) ;; Incompatible mutability
  (func $f (param (ref $s)) (unreachable))
@@ -135,7 +135,7 @@ WebAssembly.CompileError, /expression has type ref.*but expected ref/);
 
 wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
+ (gc_feature_opt_in 2)
  (type $s (struct (field i32)))
  (type $t (struct (field i32)))
  (func $f (param (ref $s)) (local (ref $t)) (set_local 1 (get_local 0))))
@@ -143,7 +143,7 @@ wasmEvalText(`
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
+ (gc_feature_opt_in 2)
  (type $s (struct (field i32)))
  (type $t (struct (field f32)))
  (func $f (param (ref $s)) (local (ref $t)) (set_local 1 (get_local 0))))
@@ -152,7 +152,7 @@ WebAssembly.CompileError, /expression has type ref.*but expected ref/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
+ (gc_feature_opt_in 2)
  (type $s (struct (field i32)))
  (type $t (struct (field (mut i32))))
  (func $f (param (ref $s)) (unreachable))
@@ -165,7 +165,7 @@ WebAssembly.CompileError, /expression has type ref.*but expected ref/);
 
 wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
+ (gc_feature_opt_in 2)
  (type $s (struct (field i32)))
  (type $t (struct (field i32)))
  (func $f (param (ref $s)) (result (ref $t)) (get_local 0)))
@@ -173,7 +173,7 @@ wasmEvalText(`
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
+ (gc_feature_opt_in 2)
  (type $s (struct (field i32)))
  (type $t (struct (field f32)))
  (func $f (param (ref $s)) (result (ref $t)) (get_local 0)))
@@ -182,7 +182,7 @@ WebAssembly.CompileError, /expression has type ref.*but expected ref/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
+ (gc_feature_opt_in 2)
  (type $s (struct (field i32)))
  (type $t (struct (field (mut i32))))
  (func $f (param (ref $s)) (result (ref $t)) (get_local 0)))
@@ -193,7 +193,7 @@ WebAssembly.CompileError, /expression has type ref.*but expected ref/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
+ (gc_feature_opt_in 2)
  (type $x (func (param i32)))
  (func $f (param (ref $x)) (unreachable)))
 `),
@@ -201,7 +201,7 @@ SyntaxError, /Type label.*not found/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
+ (gc_feature_opt_in 2)
  (type (func (param i32)))
  (func $f (param (ref 0)) (unreachable)))
 `),
@@ -211,7 +211,7 @@ WebAssembly.CompileError, /does not reference a struct type/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
- (gc_feature_opt_in 1)
+ (gc_feature_opt_in 2)
  (type $s (struct (field i32)))
  (func $f (param anyref) (call $g (get_local 0)))
  (func $g (param (ref $s)) (unreachable)))
