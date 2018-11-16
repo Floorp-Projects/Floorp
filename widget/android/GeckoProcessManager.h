@@ -47,10 +47,10 @@ public:
                       int64_t aContentId, int64_t aTabId)
     {
         nsCOMPtr<nsIWidget> widget = GetWidget(aContentId, aTabId);
-        if (widget && widget->GetNativeData(NS_NATIVE_WIDGET) == widget) {
+        if (RefPtr<nsWindow> window = nsWindow::From(widget)) {
             java::GeckoProcessManager::SetEditableChildParent(
                     aEditableChild,
-                    static_cast<nsWindow*>(widget.get())->GetEditableParent());
+                    window->GetEditableParent());
         }
     }
 };
