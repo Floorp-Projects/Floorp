@@ -65,8 +65,8 @@ impl<'de> Deserialize<'de> for NativeFontHandle {
 pub struct GlyphDimensions {
     pub left: i32,
     pub top: i32,
-    pub width: u32,
-    pub height: u32,
+    pub width: i32,
+    pub height: i32,
     pub advance: f32,
 }
 

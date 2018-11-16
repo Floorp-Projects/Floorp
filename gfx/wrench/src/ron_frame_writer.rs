@@ -18,8 +18,8 @@ enum CachedFont {
 }
 
 struct CachedImage {
-    width: u32,
-    height: u32,
+    width: i32,
+    height: i32,
     format: ImageFormat,
     bytes: Option<Vec<u8>>,
     path: Option<PathBuf>,

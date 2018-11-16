@@ -4,7 +4,7 @@
 
 use api::{AddFont, BlobImageResources, AsyncBlobImageRasterizer, ResourceUpdate};
 use api::{BlobImageDescriptor, BlobImageHandler, BlobImageRequest, RasterizedBlobImage};
-use api::{ClearCache, ColorF, DevicePoint, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
+use api::{ClearCache, ColorF, DevicePoint, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
 use api::{ExternalImageData, ExternalImageType, BlobImageResult, BlobImageParams};
 use api::{FontInstanceData, FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
@@ -69,7 +69,7 @@ pub struct GlyphFetchResult {
 pub struct CacheItem {
     pub texture_id: TextureSource,
     pub uv_rect_handle: GpuCacheHandle,
-    pub uv_rect: DeviceUintRect,
+    pub uv_rect: DeviceIntRect,
     pub texture_layer: i32,
 }
 
@@ -78,7 +78,7 @@ impl CacheItem {
         CacheItem {
             texture_id: TextureSource::Invalid,
             uv_rect_handle: GpuCacheHandle::new(),
-            uv_rect: DeviceUintRect::zero(),
+            uv_rect: DeviceIntRect::zero(),
             texture_layer: 0,
         }
     }
@@ -111,7 +111,7 @@ enum RasterizedBlob {
 struct BlobImageTemplate {
     descriptor: ImageDescriptor,
     tiling: Option<TileSize>,
-    dirty_rect: Option<DeviceUintRect>,
+    dirty_rect: Option<DeviceIntRect>,
     viewport_tiles: Option<TileRange>,
 }
 
@@ -124,7 +124,7 @@ struct ImageResource {
 
 #[derive(Clone, Debug)]
 pub struct ImageTiling {
-    pub image_size: DeviceUintSize,
+    pub image_size: DeviceIntSize,
     pub tile_size: TileSize,
 }
 
@@ -155,7 +155,7 @@ impl ImageTemplates {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct CachedImageInfo {
     texture_cache_handle: TextureCacheHandle,
-    dirty_rect: Option<DeviceUintRect>,
+    dirty_rect: Option<DeviceIntRect>,
     manual_eviction: bool,
 }
 
@@ -174,31 +174,31 @@ pub struct ResourceClassCache<K: Hash + Eq, V, U: Default> {
 }
 
 pub fn intersect_for_tile(
-    dirty: DeviceUintRect,
-    clipped_tile_size: DeviceUintSize,
+    dirty: DeviceIntRect,
+    clipped_tile_size: DeviceIntSize,
     tile_size: TileSize,
     tile_offset: TileOffset,
 
-) -> Option<DeviceUintRect> {
-    dirty.intersection(&DeviceUintRect::new(
-        DeviceUintPoint::new(
-            tile_offset.x as u32 * tile_size as u32,
-            tile_offset.y as u32 * tile_size as u32
+) -> Option<DeviceIntRect> {
+    dirty.intersection(&DeviceIntRect::new(
+        DeviceIntPoint::new(
+            tile_offset.x as i32 * tile_size as i32,
+            tile_offset.y as i32 * tile_size as i32
         ),
         clipped_tile_size,
     )).map(|mut r| {
         // we can't translate by a negative size so do it manually
-        r.origin.x -= tile_offset.x as u32 * tile_size as u32;
-        r.origin.y -= tile_offset.y as u32 * tile_size as u32;
+        r.origin.x -= tile_offset.x as i32 * tile_size as i32;
+        r.origin.y -= tile_offset.y as i32 * tile_size as i32;
         r
     })
 }
 
 fn merge_dirty_rect(
-    prev_dirty_rect: &Option<DeviceUintRect>,
-    dirty_rect: &Option<DeviceUintRect>,
+    prev_dirty_rect: &Option<DeviceIntRect>,
+    dirty_rect: &Option<DeviceIntRect>,
     descriptor: &ImageDescriptor,
-) -> Option<DeviceUintRect> {
+) -> Option<DeviceIntRect> {
     // It is important to never assume an empty dirty rect implies a full reupload here,
     // although we are able to do so elsewhere. We store the descriptor's full rect instead
     // There are update sequences which could cause us to forget the correct dirty regions
@@ -455,11 +455,11 @@ impl ResourceCache {
         }
     }
 
-    pub fn max_texture_size(&self) -> u32 {
+    pub fn max_texture_size(&self) -> i32 {
         self.texture_cache.max_texture_size()
     }
 
-    fn should_tile(limit: u32, descriptor: &ImageDescriptor, data: &ImageData) -> bool {
+    fn should_tile(limit: i32, descriptor: &ImageDescriptor, data: &ImageData) -> bool {
         let size_check = descriptor.size.width > limit || descriptor.size.height > limit;
         match *data {
             ImageData::Raw(_) | ImageData::Blob(_) => size_check,
@@ -752,7 +752,7 @@ impl ResourceCache {
         image_key: ImageKey,
         descriptor: ImageDescriptor,
         data: ImageData,
-        dirty_rect: Option<DeviceUintRect>,
+        dirty_rect: Option<DeviceIntRect>,
     ) {
         let max_texture_size = self.max_texture_size();
         let image = match self.resources.image_templates.get_mut(image_key) {
@@ -780,8 +780,8 @@ impl ResourceCache {
                             let tile_size = image.tiling.unwrap();
                             let clipped_tile_size = compute_tile_size(&descriptor, tile_size, tile);
 
-                            rect.intersection(&DeviceUintRect::new(
-                                DeviceUintPoint::new(tile.x as u32, tile.y as u32) * tile_size as u32,
+                            rect.intersection(&DeviceIntRect::new(
+                                DeviceIntPoint::new(tile.x as i32, tile.y as i32) * tile_size as i32,
                                 clipped_tile_size,
                             ))
                         }
@@ -819,8 +819,8 @@ impl ResourceCache {
                 descriptor: *descriptor,
                 tiling,
                 dirty_rect: Some(
-                    DeviceUintRect::new(
-                        DeviceUintPoint::zero(),
+                    DeviceIntRect::new(
+                        DeviceIntPoint::zero(),
                         descriptor.size,
                     )
                 ),
@@ -834,7 +834,7 @@ impl ResourceCache {
         &mut self,
         key: ImageKey,
         descriptor: &ImageDescriptor,
-        dirty_rect: &Option<DeviceUintRect>,
+        dirty_rect: &Option<DeviceIntRect>,
         data: Arc<BlobImageData>,
     ) {
         self.blob_image_handler.as_mut().unwrap().update(key, data, *dirty_rect);
@@ -904,7 +904,7 @@ impl ResourceCache {
 
         let side_size =
             template.tiling.map_or(cmp::max(template.descriptor.size.width, template.descriptor.size.height),
-                                   |tile_size| tile_size as u32);
+                                   |tile_size| tile_size as i32);
         if side_size > self.texture_cache.max_texture_size() {
             // The image or tiling size is too big for hardware texture size.
             warn!("Dropping image, image:(w:{},h:{}, tile:{}) is too big for hardware!",
@@ -1049,7 +1049,7 @@ impl ResourceCache {
                 let mut tiles = template.viewport_tiles.unwrap_or_else(|| {
                     // Default to requesting the full range of tiles.
                     compute_tile_range(
-                        &DeviceUintRect {
+                        &DeviceIntRect {
                             origin: point2(0, 0),
                             size: template.descriptor.size,
                         },
@@ -1059,7 +1059,7 @@ impl ResourceCache {
 
                 // Don't request tiles that weren't invalidated.
                 if let Some(dirty_rect) = template.dirty_rect {
-                    let dirty_rect = DeviceUintRect {
+                    let dirty_rect = DeviceIntRect {
                         origin: point2(
                             dirty_rect.origin.x,
                             dirty_rect.origin.y,
@@ -1080,8 +1080,8 @@ impl ResourceCache {
                 // This code tries to keep things sane if Gecko sends
                 // nonsensical blob image requests.
                 // Constant here definitely needs to be tweaked.
-                const MAX_TILES_PER_REQUEST: u32 = 64;
-                while tiles.size.width as u32 * tiles.size.height as u32 > MAX_TILES_PER_REQUEST {
+                const MAX_TILES_PER_REQUEST: i32 = 64;
+                while tiles.size.width as i32 * tiles.size.height as i32 > MAX_TILES_PER_REQUEST {
                     // Remove tiles in the largest dimension.
                     if tiles.size.width > tiles.size.height {
                         tiles.size.width -= 2;
@@ -1179,7 +1179,7 @@ impl ResourceCache {
     fn discard_tiles_outside_visible_area(
         &mut self,
         key: ImageKey,
-        area: &DeviceUintRect
+        area: &DeviceIntRect
     ) {
         let template = match self.blob_image_templates.get(&key) {
             Some(template) => template,
@@ -1483,7 +1483,7 @@ impl ResourceCache {
             let image_template = self.resources.image_templates.get_mut(request.key).unwrap();
             debug_assert!(image_template.data.uses_texture_cache());
 
-            let mut updates: SmallVec<[(ImageData, Option<DeviceUintRect>); 1]> = SmallVec::new();
+            let mut updates: SmallVec<[(ImageData, Option<DeviceIntRect>); 1]> = SmallVec::new();
 
             match image_template.data {
                 ImageData::Raw(..) | ImageData::External(..) => {
@@ -1552,8 +1552,8 @@ impl ResourceCache {
                         let stride = descriptor.compute_stride();
                         descriptor.stride = Some(stride);
                         descriptor.offset +=
-                            tile.y as u32 * tile_size as u32 * stride +
-                            tile.x as u32 * tile_size as u32 * bpp;
+                            tile.y as i32 * tile_size as i32 * stride +
+                            tile.x as i32 * tile_size as i32 * bpp;
                     }
 
                     descriptor.size = clipped_tile_size;
@@ -1732,7 +1732,7 @@ impl Drop for ResourceCache {
 pub fn get_blob_tiling(
     tiling: Option<TileSize>,
     descriptor: &ImageDescriptor,
-    max_texture_size: u32,
+    max_texture_size: i32,
 ) -> Option<TileSize> {
     if tiling.is_none() &&
         (descriptor.size.width > max_texture_size ||
@@ -1749,18 +1749,18 @@ pub fn compute_tile_size(
     descriptor: &ImageDescriptor,
     base_size: TileSize,
     tile: TileOffset,
-) -> DeviceUintSize {
-    let base_size = base_size as u32;
+) -> DeviceIntSize {
+    let base_size = base_size as i32;
     // Most tiles are going to have base_size as width and height,
     // except for tiles around the edges that are shrunk to fit the mage data
     // (See decompose_tiled_image in frame.rs).
-    let actual_width = if (tile.x as u32) < descriptor.size.width / base_size {
+    let actual_width = if (tile.x as i32) < descriptor.size.width / base_size {
         base_size
     } else {
         descriptor.size.width % base_size
     };
 
-    let actual_height = if (tile.y as u32) < descriptor.size.height / base_size {
+    let actual_height = if (tile.y as i32) < descriptor.size.height / base_size {
         base_size
     } else {
         descriptor.size.height % base_size
@@ -1891,7 +1891,7 @@ impl ResourceCache {
                     #[cfg(feature = "png")]
                     CaptureConfig::save_png(
                         root.join(format!("images/{}.png", image_id)),
-                        (desc.size.width, desc.size.height),
+                        desc.size,
                         ReadPixelsFormat::Standard(desc.format),
                         &arc,
                     );
@@ -1935,7 +1935,7 @@ impl ResourceCache {
                     #[cfg(feature = "png")]
                     CaptureConfig::save_png(
                         root.join(format!("blobs/{}.png", num_blobs)),
-                        (desc.size.width, desc.size.height),
+                        desc.size,
                         ReadPixelsFormat::Standard(desc.format),
                         &result.data,
                     );

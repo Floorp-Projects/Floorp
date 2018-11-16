@@ -96,7 +96,7 @@ impl Display for Reftest {
 
 struct ReftestImage {
     data: Vec<u8>,
-    size: DeviceUintSize,
+    size: DeviceIntSize,
 }
 enum ReftestImageComparison {
     Equal,
@@ -157,7 +157,7 @@ impl ReftestImage {
         {
             let encoder = PNGEncoder::new(&mut png);
             encoder
-                .encode(&self.data[..], width, height, ColorType::RGBA(8))
+                .encode(&self.data[..], width as u32, height as u32, ColorType::RGBA(8))
                 .expect("Unable to encode PNG!");
         }
         let png_base64 = base64::encode(&png);
@@ -470,14 +470,14 @@ impl<'a> ReftestHarness<'a> {
         let size = img.dimensions();
         ReftestImage {
             data: img.into_raw(),
-            size: DeviceUintSize::new(size.0, size.1),
+            size: DeviceIntSize::new(size.0 as i32, size.1 as i32),
         }
     }
 
     fn render_yaml(
         &mut self,
         filename: &Path,
-        size: DeviceUintSize,
+        size: DeviceIntSize,
         font_render_mode: Option<FontRenderMode>,
         allow_mipmaps: bool,
     ) -> (ReftestImage, RendererStats) {
@@ -500,7 +500,7 @@ impl<'a> ReftestHarness<'a> {
         );
 
         // taking the bottom left sub-rectangle
-        let rect = DeviceUintRect::new(DeviceUintPoint::new(0, window_size.height - size.height), size);
+        let rect = DeviceIntRect::new(DeviceIntPoint::new(0, window_size.height - size.height), size);
         let pixels = self.wrench.renderer.read_pixels_rgba8(rect);
         self.window.swap_buffers();
 

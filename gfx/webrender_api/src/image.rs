@@ -8,7 +8,7 @@ extern crate serde_bytes;
 
 use font::{FontInstanceKey, FontInstanceData, FontKey, FontTemplate};
 use std::sync::Arc;
-use {DevicePoint, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
+use {DevicePoint, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use {IdNamespace, TileOffset, TileSize};
 use euclid::size2;
 
@@ -105,7 +105,7 @@ pub enum ImageFormat {
 
 impl ImageFormat {
     /// Returns the number of bytes per pixel for the given format.
-    pub fn bytes_per_pixel(self) -> u32 {
+    pub fn bytes_per_pixel(self) -> i32 {
         match self {
             ImageFormat::R8 => 1,
             ImageFormat::R16 => 2,
@@ -159,18 +159,18 @@ pub struct ImageDescriptor {
     /// Format of the image data.
     pub format: ImageFormat,
     /// Width and length of the image data, in pixels.
-    pub size: DeviceUintSize,
+    pub size: DeviceIntSize,
     /// The number of bytes from the start of one row to the next. If non-None,
     /// `compute_stride` will return this value, otherwise it returns
     /// `width * bpp`. Different source of images have different alignment
     /// constraints for rows, so the stride isn't always equal to width * bpp.
-    pub stride: Option<u32>,
+    pub stride: Option<i32>,
     /// Offset in bytes of the first pixel of this image in its backing buffer.
     /// This is used for tiling, wherein WebRender extracts chunks of input images
     /// in order to cache, manipulate, and render them individually. This offset
     /// tells the texture upload machinery where to find the bytes to upload for
     /// this tile. Non-tiled images generally set this to zero.
-    pub offset: u32,
+    pub offset: i32,
     /// Whether this image is opaque, or has an alpha channel. Avoiding blending
     /// for opaque surfaces is an important optimization.
     pub is_opaque: bool,
@@ -185,8 +185,8 @@ pub struct ImageDescriptor {
 impl ImageDescriptor {
     /// Mints a new ImageDescriptor.
     pub fn new(
-        width: u32,
-        height: u32,
+        width: i32,
+        height: i32,
         format: ImageFormat,
         is_opaque: bool,
         allow_mipmaps: bool,
@@ -203,19 +203,19 @@ impl ImageDescriptor {
 
     /// Returns the stride, either via an explicit stride stashed on the object
     /// or by the default computation.
-    pub fn compute_stride(&self) -> u32 {
+    pub fn compute_stride(&self) -> i32 {
         self.stride.unwrap_or(self.size.width * self.format.bytes_per_pixel())
     }
 
     /// Computes the total size of the image, in bytes.
-    pub fn compute_total_size(&self) -> u32 {
+    pub fn compute_total_size(&self) -> i32 {
         self.compute_stride() * self.size.height
     }
 
     /// Computes the bounding rectangle for the image, rooted at (0, 0).
-    pub fn full_rect(&self) -> DeviceUintRect {
-        DeviceUintRect::new(
-            DeviceUintPoint::zero(),
+    pub fn full_rect(&self) -> DeviceIntRect {
+        DeviceIntRect::new(
+            DeviceIntPoint::zero(),
             self.size,
         )
     }
@@ -322,7 +322,7 @@ pub trait BlobImageHandler: Send {
     fn add(&mut self, key: ImageKey, data: Arc<BlobImageData>, tiling: Option<TileSize>);
 
     /// Update an already registered blob image.
-    fn update(&mut self, key: ImageKey, data: Arc<BlobImageData>, dirty_rect: Option<DeviceUintRect>);
+    fn update(&mut self, key: ImageKey, data: Arc<BlobImageData>, dirty_rect: Option<DeviceIntRect>);
 
     /// Delete an already registered blob image.
     fn delete(&mut self, key: ImageKey);
@@ -365,7 +365,7 @@ pub struct BlobImageParams {
     /// the entire image when only a portion is updated.
     ///
     /// If set to None the entire image is rasterized.
-    pub dirty_rect: Option<DeviceUintRect>,
+    pub dirty_rect: Option<DeviceIntRect>,
 }
 
 /// Backing store for blob image command streams.
@@ -379,7 +379,7 @@ pub type BlobImageResult = Result<RasterizedBlobImage, BlobImageError>;
 #[derive(Copy, Clone, Debug)]
 pub struct BlobImageDescriptor {
     /// Size in device pixels of the blob's output image.
-    pub size: DeviceUintSize,
+    pub size: DeviceIntSize,
     /// When tiling, offset point in device pixels of this tile in the full
     /// image. Generally (0, 0) outside of tiling.
     pub offset: DevicePoint,
@@ -391,7 +391,7 @@ pub struct BlobImageDescriptor {
 /// `BlobImageData` to the embedding via the rasterization callback.
 pub struct RasterizedBlobImage {
     /// The bounding rectangle for this blob image.
-    pub rasterized_rect: DeviceUintRect,
+    pub rasterized_rect: DeviceIntRect,
     /// Backing store. The format is stored out of band in `BlobImageDescriptor`.
     pub data: Arc<Vec<u8>>,
 }

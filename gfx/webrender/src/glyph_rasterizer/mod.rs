@@ -433,8 +433,8 @@ impl GlyphFormat {
 pub struct RasterizedGlyph {
     pub top: f32,
     pub left: f32,
-    pub width: u32,
-    pub height: u32,
+    pub width: i32,
+    pub height: i32,
     pub scale: f32,
     pub format: GlyphFormat,
     pub bytes: Vec<u8>,

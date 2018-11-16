@@ -27,10 +27,6 @@ pub type DeviceIntSize = TypedSize2D<i32, DevicePixel>;
 pub type DeviceIntLength = Length<i32, DevicePixel>;
 pub type DeviceIntSideOffsets = TypedSideOffsets2D<i32, DevicePixel>;
 
-pub type DeviceUintRect = TypedRect<u32, DevicePixel>;
-pub type DeviceUintPoint = TypedPoint2D<u32, DevicePixel>;
-pub type DeviceUintSize = TypedSize2D<u32, DevicePixel>;
-
 pub type DeviceRect = TypedRect<f32, DevicePixel>;
 pub type DevicePoint = TypedPoint2D<f32, DevicePixel>;
 pub type DeviceVector2D = TypedVector2D<f32, DevicePixel>;
@@ -93,8 +89,8 @@ pub type WorldVector3D = TypedVector3D<f32, WorldPixel>;
 /// Offset in number of tiles.
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Tiles;
-pub type TileOffset = TypedPoint2D<u32, Tiles>;
-pub type TileRange = TypedRect<u32, Tiles>;
+pub type TileOffset = TypedPoint2D<i32, Tiles>;
+pub type TileRange = TypedRect<i32, Tiles>;
 
 /// Scaling ratio from world pixels to device pixels.
 pub type DevicePixelScale = TypedScale<f32, WorldPixel, DevicePixel>;

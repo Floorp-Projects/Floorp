@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ApiMsg, DebugCommand};
+use api::{ApiMsg, DebugCommand, DeviceIntSize};
 use api::channel::MsgSender;
 use print_tree::PrintTreePrinter;
 use std::sync::mpsc::{channel, Receiver};
@@ -276,11 +276,16 @@ pub struct Screenshot {
 }
 
 impl Screenshot {
-    pub fn new(width: u32, height: u32, data: Vec<u8>) -> Self {
-        let mut output = Vec::with_capacity((width * height) as usize);
+    pub fn new(size: DeviceIntSize, data: Vec<u8>) -> Self {
+        let mut output = Vec::with_capacity((size.width * size.height) as usize);
         {
             let encoder = image_loader::png::PNGEncoder::new(&mut output);
-            encoder.encode(&data, width, height, image_loader::ColorType::RGBA(8)).unwrap();
+            encoder.encode(
+                &data,
+                size.width as u32,
+                size.height as u32,
+                image_loader::ColorType::RGBA(8),
+            ).unwrap();
         }
 
         let data = encode(&output);

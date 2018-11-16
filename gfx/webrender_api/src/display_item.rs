@@ -350,10 +350,10 @@ pub struct NinePatchBorder {
     pub source: NinePatchBorderSource,
 
     /// The width of the 9-part image.
-    pub width: u32,
+    pub width: i32,
 
     /// The height of the 9-part image.
-    pub height: u32,
+    pub height: i32,
 
     /// Distances from each edge where the image should be sliced up. These
     /// values are in 9-part-image space (the same space as width and height),
@@ -362,7 +362,7 @@ pub struct NinePatchBorder {
     /// stretching.
     /// Slices can be overlapping. In that case, the same pixels from the
     /// 9-part image will show up in multiple parts of the resulting border.
-    pub slice: SideOffsets2D<u32>,
+    pub slice: SideOffsets2D<i32>,
 
     /// Controls whether the center of the 9 patch image is rendered or
     /// ignored. The center is never rendered if the slices are overlapping.

@@ -13,10 +13,10 @@ pub struct BakedGlyph {
     pub xa: f32,
 }
 
-pub const FIRST_GLYPH_INDEX: u32 = 32;
-pub const BMP_WIDTH: u32 = 128;
-pub const BMP_HEIGHT: u32 = 128;
-pub const FONT_SIZE: u32 = 19;
+pub const FIRST_GLYPH_INDEX: i32 = 32;
+pub const BMP_WIDTH: i32 = 128;
+pub const BMP_HEIGHT: i32 = 128;
+pub const FONT_SIZE: i32 = 19;
 
 pub const GLYPHS: [BakedGlyph; 96] = [
     BakedGlyph {

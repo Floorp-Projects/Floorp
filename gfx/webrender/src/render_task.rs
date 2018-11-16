@@ -1213,8 +1213,8 @@ impl RenderTaskCache {
                 };
 
                 let descriptor = ImageDescriptor::new(
-                    size.width as u32,
-                    size.height as u32,
+                    size.width,
+                    size.height,
                     image_format,
                     entry.is_opaque,
                     false,
