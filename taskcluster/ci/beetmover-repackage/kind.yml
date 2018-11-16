@@ -26,8 +26,8 @@ kind-dependencies:
     - repackage-signing-msi
 
 primary-dependency:
-    - repackage-signing-l10n
-    - repackage-signing
+    - repackage
+    - repackage-l10n
 
 only-for-build-platforms:
     - linux-nightly/opt

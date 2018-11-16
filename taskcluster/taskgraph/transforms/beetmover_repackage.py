@@ -130,8 +130,6 @@ UPSTREAM_ARTIFACT_REPACKAGE_PATHS = [
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
 # See example in bug 1348286
 UPSTREAM_ARTIFACT_SIGNED_REPACKAGE_PATHS = [
-    'target.complete.mar',
-    'target.bz2.complete.mar',
     'target.installer.exe',
     'target.stub-installer.exe',
 ]
@@ -207,7 +205,6 @@ def make_task_description(config, jobs):
 
         upstream_deps = job['dependent-tasks']
 
-        # TODO fix the upstreamArtifact generation to not need this?
         signing_name = "build-signing"
         build_name = "build"
         repackage_name = "repackage"
@@ -221,13 +218,14 @@ def make_task_description(config, jobs):
         dependencies = {
             "build": upstream_deps[build_name],
             "repackage": upstream_deps[repackage_name],
-            "repackage-signing": upstream_deps[repackage_signing_name],
             "signing": upstream_deps[signing_name],
         }
         if 'partials-signing' in upstream_deps:
             dependencies['partials-signing'] = upstream_deps['partials-signing']
         if msi_signing_name in upstream_deps:
             dependencies[msi_signing_name] = upstream_deps[msi_signing_name]
+        if repackage_signing_name in upstream_deps:
+            dependencies["repackage-signing"] = upstream_deps[repackage_signing_name]
 
         attributes = copy_attributes_from_dependent_job(dep_job)
         if job.get('locale'):
