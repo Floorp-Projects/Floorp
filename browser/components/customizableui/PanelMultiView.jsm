@@ -443,8 +443,14 @@ var PanelMultiView = class extends AssociatedToNode {
    * this method is called, but the containing panel must have its display
    * turned on, for example it shouldn't have the "hidden" attribute.
    *
+   * @param anchor
+   *        The node to anchor the popup to.
+   * @param options
+   *        Either options to use or a string position. This is forwarded to
+   *        the openPopup method of the panel.
    * @param args
-   *        Arguments to be forwarded to the openPopup method of the panel.
+   *        Additional arguments to be forwarded to the openPopup method of the
+   *        panel.
    *
    * @resolves With true as soon as the request to display the panel has been
    *           sent, or with false if the operation was canceled. The state of
@@ -453,7 +459,7 @@ var PanelMultiView = class extends AssociatedToNode {
    * @rejects If an exception is thrown at any point in the process before the
    *          request to display the panel is sent.
    */
-  async openPopup(...args) {
+  async openPopup(anchor, options, ...args) {
     // Set up the function that allows hidePopup or a second call to showPopup
     // to cancel the specific panel opening operation that we're starting below.
     // This function must be synchronous, meaning we can't use Promise.race,
@@ -515,7 +521,7 @@ var PanelMultiView = class extends AssociatedToNode {
       // "popuphidden" event even if canCancel was set to false.
       try {
         canCancel = false;
-        this._panel.openPopup(...args);
+        this._panel.openPopup(anchor, options, ...args);
 
         // On Windows, if another popup is hiding while we call openPopup, the
         // call won't fail but the popup won't open. In this case, we have to
@@ -523,6 +529,13 @@ var PanelMultiView = class extends AssociatedToNode {
         if (this._panel.state == "closed" && this.openViews.length) {
           this.dispatchCustomEvent("popuphidden");
           return false;
+        }
+
+        if (options && typeof options == "object" && options.triggerEvent &&
+            options.triggerEvent.type == "keypress" &&
+            this.openViews.length) {
+          // This was opened via the keyboard, so focus the first item.
+          this.openViews[0].focusWhenActive = true;
         }
 
         return true;
@@ -793,6 +806,10 @@ var PanelMultiView = class extends AssociatedToNode {
   _activateView(panelView) {
     if (panelView.isOpenIn(this)) {
       panelView.active = true;
+      if (panelView.focusWhenActive) {
+        panelView.focusFirstNavigableElement();
+        panelView.focusWhenActive = false;
+      }
       panelView.dispatchCustomEvent("ViewShown");
     }
   }
@@ -1153,6 +1170,15 @@ var PanelView = class extends AssociatedToNode {
      * wait for the ViewShown event to know when the view becomes active.
      */
     this.active = false;
+
+    /**
+     * Specifies whether the view should be focused when active. When this
+     * is true, the first navigable element in the view will be focused
+     * when the view becomes active. This should be set to true when the view
+     * is activated from the keyboard. It will be set to false once the view
+     * is active.
+     */
+    this.focusWhenActive = false;
   }
 
   /**
@@ -1186,6 +1212,7 @@ var PanelView = class extends AssociatedToNode {
     } else {
       this.node.removeAttribute("visible");
       this.active = false;
+      this.focusWhenActive = false;
     }
   }
 
