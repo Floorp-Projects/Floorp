@@ -183,7 +183,9 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
             if (lifetime == Lifetime.User) userLifetimeStorage.edit() else null
         stores.forEach {
             val storeData = dataStores[lifetime.ordinal].getOrPut(it) { mutableMapOf() }
-            val entryName = "$category.$name"
+            // We support empty categories for enabling the internal use of metrics
+            // when assembling pings in [PingMaker].
+            val entryName = if (category.isEmpty()) name else "$category.$name"
             storeData[entryName] = value
             // Persist data with "user" lifetime
             if (lifetime == Lifetime.User) {

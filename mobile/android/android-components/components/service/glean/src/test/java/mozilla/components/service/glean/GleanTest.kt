@@ -4,10 +4,12 @@
 
 package mozilla.components.service.glean
 
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -17,7 +19,6 @@ import org.json.JSONObject
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.times
 
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.HttpPingUploader
@@ -28,6 +29,7 @@ import mozilla.components.service.glean.storages.StringsStorageEngine
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 class GleanTest {
@@ -110,8 +112,10 @@ class GleanTest {
             val payloads: MutableMap<String, Pair<String, String>> = mutableMapOf()
 
             doAnswer {
-                val parts = (it.arguments[1] as String).split("/")
-                payloads.set(parts[3], Pair(it.arguments[0] as String, it.arguments[1] as String))
+                val submissionPath = it.arguments[0] as String
+                val pingPayload = it.arguments[1] as String
+                val parts = submissionPath.split("/")
+                payloads.set(parts[3], Pair(pingPayload, submissionPath))
                 null
             }.`when`(client).upload(anyString(), anyString())
 
@@ -133,7 +137,10 @@ class GleanTest {
             )
             Glean.setExperimentInactive("experiment1")
 
-            Glean.handleEvent(Glean.PingEvent.Default)
+            runBlocking {
+                Glean.handleEvent(Glean.PingEvent.Default).join()
+            }
+
             assertEquals(1, payloads.size)
 
             val (metricsJsonData, metricsPath) = payloads.get("metrics")!!
@@ -153,5 +160,24 @@ class GleanTest {
         } finally {
             Glean.httpPingUploader = realClient
         }
+    }
+
+    @Test
+    fun `initialize() must not crash the app if Glean's data dir is messed up`() {
+        // Remove the Glean's data directory.
+        val gleanDir = File(RuntimeEnvironment.application.applicationInfo.dataDir, Glean.GLEAN_DATA_DIR)
+        assertTrue(gleanDir.deleteRecursively())
+
+        // Create a file in its place.
+        assertTrue(gleanDir.createNewFile())
+
+        // Try to init Glean: it should not crash.
+        Glean.initialize(
+            applicationContext = RuntimeEnvironment.application,
+            configuration = Configuration()
+        )
+
+        // Clean up after this, so that other tests don't fail.
+        assertTrue(gleanDir.delete())
     }
 }

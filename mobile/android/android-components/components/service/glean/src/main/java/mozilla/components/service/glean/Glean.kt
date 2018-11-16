@@ -6,15 +6,22 @@ package mozilla.components.service.glean
 
 import android.content.Context
 import android.support.annotation.VisibleForTesting
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 import java.util.UUID
 
 import mozilla.components.service.glean.config.Configuration
+import mozilla.components.service.glean.firstrun.FileFirstRunDetector
+import mozilla.components.service.glean.metrics.GleanInternalMetrics
 import mozilla.components.service.glean.net.HttpPingUploader
 import mozilla.components.service.glean.ping.PingMaker
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
 import mozilla.components.support.base.log.logger.Logger
+import java.io.File
 
 object Glean {
     /**
@@ -35,6 +42,12 @@ object Glean {
 
     internal const val SCHEMA_VERSION = 1
 
+    /**
+     * The name of the directory, inside the application's directory,
+     * in which Glean files are stored.
+     */
+    internal const val GLEAN_DATA_DIR = "glean_data"
+
     // Include our singletons of StorageEngineManager and PingMaker
     private lateinit var storageEngineManager: StorageEngineManager
     private lateinit var pingMaker: PingMaker
@@ -46,6 +59,11 @@ object Glean {
     private var metricsEnabled = true
 
     /**
+     * The instance holding lazy references to the Glean's core metrics.
+     */
+    private val gleanInternalMetrics by lazy { GleanInternalMetrics() }
+
+    /**
      * Initialize glean.
      */
     fun initialize(applicationContext: Context, configuration: Configuration) {
@@ -54,12 +72,14 @@ object Glean {
         this.configuration = configuration
         httpPingUploader = HttpPingUploader(configuration)
         initialized = true
+
+        initializeCoreMetrics(applicationContext)
     }
 
     /**
      * Enable or disable metric collection.
      *
-     * Metric collection is emabled by default.
+     * Metric collection is enabled by default.
      *
      * When disabled, metrics aren't recorded at all.
      *
@@ -114,11 +134,45 @@ object Glean {
         return "/submit/glean/$docType/$SCHEMA_VERSION/$uuid"
     }
 
-    private fun sendPing(store: String, docType: String) {
+    /**
+     * Collect and assemble the ping. Asynchronously submits the assembled
+     * payload to the designated server using [httpPingUploader].
+     *
+     * @return The [Job] created by the ping submission.
+     */
+    private fun sendPing(store: String, docType: String): Job {
         val pingContent = pingMaker.collect(store)
         val uuid = UUID.randomUUID()
         val path = makePath(docType, uuid)
-        this.httpPingUploader.upload(pingContent, path)
+        // Asynchronously perform the HTTP upload off the main thread.
+        return GlobalScope.launch(Dispatchers.IO) {
+            httpPingUploader.upload(path = path, data = pingContent)
+        }
+    }
+
+    /**
+     * Initialize the core metrics internally managed by Glean (e.g. client id).
+     */
+    private fun initializeCoreMetrics(applicationContext: Context) {
+        val gleanDataDir = File(applicationContext.applicationInfo.dataDir, GLEAN_DATA_DIR)
+
+        // Make sure the data directory exists and is writable.
+        if (!gleanDataDir.exists() && !gleanDataDir.mkdirs()) {
+            logger.error("Failed to create Glean's data dir ${gleanDataDir.absolutePath}")
+            return
+        }
+
+        if (!gleanDataDir.isDirectory || !gleanDataDir.canWrite()) {
+            logger.error("Glean's data directory is not a writable directory ${gleanDataDir.absolutePath}")
+            return
+        }
+
+        // The first time Glean runs, we set the client id and other internal
+        // one-time only metrics.
+        val firstRunDetector = FileFirstRunDetector(gleanDataDir)
+        if (firstRunDetector.isFirstRun()) {
+            gleanInternalMetrics.clientId.generateAndSet()
+        }
     }
 
     /**
@@ -131,9 +185,12 @@ object Glean {
      *   - Default: Event that triggers the default pings.
      *
      * @param pingEvent The type of the event.
+     *
+     * @return A [Job], **only** to be used when testing, which allows to wait on
+     *         the ping submission.
      */
-    fun handleEvent(pingEvent: PingEvent) {
-        when (pingEvent) {
+    fun handleEvent(pingEvent: PingEvent): Job {
+        return when (pingEvent) {
             PingEvent.Background -> sendPing("baseline", "baseline")
             PingEvent.Default -> sendPing("metrics", "metrics")
         }

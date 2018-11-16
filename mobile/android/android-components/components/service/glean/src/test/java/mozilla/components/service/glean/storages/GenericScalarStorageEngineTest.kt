@@ -88,6 +88,27 @@ class GenericScalarStorageEngineTest {
     }
 
     @Test
+    fun `metrics with empty 'category' must be properly recorded`() {
+        val storageEngine = MockScalarStorageEngine()
+        storageEngine.applicationContext = RuntimeEnvironment.application
+
+        // Record a value with User lifetime
+        storageEngine.record(
+            stores = listOf("store1"),
+            category = "",
+            name = "noCategoryName",
+            lifetime = Lifetime.Ping,
+            value = 37
+        )
+
+        // Take a snapshot and clear the store: this snapshot must contain the data for
+        // both metrics.
+        val snapshot = storageEngine.getSnapshot(storeName = "store1", clearStore = true)
+        assertEquals(1, snapshot!!.size)
+        assertEquals(37, snapshot["noCategoryName"])
+    }
+
+    @Test
     fun `metric with 'user' lifetime must be correctly unpersisted when recording 'user' values`() {
         // Make up the test data that we pretend to be unserialized.
         val persistedSample = mapOf(

@@ -76,4 +76,24 @@ class JSONObjectTest {
         val jsonObject = JSONObject("""{"key":3}""")
         assertEquals(3, jsonObject.tryGetInt("key"))
     }
+
+    @Test
+    fun mergeWith() {
+        val merged = JSONObject(mapOf(
+            "toKeep" to 3,
+            "toOverride" to "OHNOZ"
+        ))
+
+        merged.mergeWith(JSONObject(mapOf(
+            "newKey" to 5,
+            "toOverride" to "YAY"
+        )))
+
+        val expectedObject = JSONObject(mapOf(
+            "toKeep" to 3,
+            "toOverride" to "YAY",
+            "newKey" to 5
+        ))
+        assertEquals(expectedObject.toString(), merged.toString())
+    }
 }

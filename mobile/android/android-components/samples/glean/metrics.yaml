@@ -29,14 +29,3 @@ basic:
       - 123456789
     notification_emails:
       - telemetry-client-dev@mozilla.com
-
-  client_id:
-    type: uuid
-    lifetime: user
-    description: >
-      A UUID identifying a profile and allowing user-oriented correlation of
-      data.
-    bugs:
-      - 123456789
-    notification_emails:
-      - telemetry-client-dev@mozilla.com

@@ -6,7 +6,10 @@ package org.mozilla.samples.glean
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.view.View
+import kotlinx.android.synthetic.main.activity_main.buttonGenerateData
+import kotlinx.android.synthetic.main.activity_main.buttonSendPing
+import mozilla.components.service.glean.Glean
+import mozilla.components.service.glean.config.Configuration
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 
@@ -18,11 +21,15 @@ open class MainActivity : AppCompatActivity() {
 
         Log.addSink(AndroidLogSink())
 
+        // Initialize the Glean library. Ideally, this is the first thing that
+        // must be done right after enabling logging.
+        Glean.initialize(applicationContext, Configuration())
+
+        // Set a sample value for a metric.
         GleanMetrics.Basic.os.set("Android")
-        GleanMetrics.Basic.clientId.generateAndSet()
 
         // Generate an event when user clicks on the button.
-        findViewById<View>(R.id.buttonWebView).setOnClickListener {
+        buttonGenerateData.setOnClickListener {
             GleanMetrics.BrowserEngagement.click.record(
                     "object1",
                     "data",
@@ -31,6 +38,11 @@ open class MainActivity : AppCompatActivity() {
                             "key2" to "extra_value_2"
                     )
             )
+        }
+
+        // Generate a "baseline" ping on click.
+        buttonSendPing.setOnClickListener {
+            Glean.handleEvent(Glean.PingEvent.Background)
         }
     }
 }
