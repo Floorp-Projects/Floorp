@@ -1414,18 +1414,37 @@ impl DisplayListBuilder {
         I: IntoIterator<Item = ComplexClipRegion>,
         I::IntoIter: ExactSizeIterator + Clone,
     {
-        let parent = self.clip_stack.last().unwrap().scroll_node_id;
-        self.define_clip_with_parent(
-            parent,
+        let clip_and_scroll = self.clip_stack.last().unwrap().clone();
+        self.define_clip_impl(
+            clip_and_scroll,
             clip_rect,
             complex_clips,
-            image_mask
+            image_mask,
         )
     }
 
     pub fn define_clip_with_parent<I>(
         &mut self,
         parent: ClipId,
+        clip_rect: LayoutRect,
+        complex_clips: I,
+        image_mask: Option<ImageMask>,
+    ) -> ClipId
+    where
+        I: IntoIterator<Item = ComplexClipRegion>,
+        I::IntoIter: ExactSizeIterator + Clone,
+    {
+        self.define_clip_impl(
+            ClipAndScrollInfo::simple(parent),
+            clip_rect,
+            complex_clips,
+            image_mask,
+        )
+    }
+
+    fn define_clip_impl<I>(
+        &mut self,
+        scrollinfo: ClipAndScrollInfo,
         clip_rect: LayoutRect,
         complex_clips: I,
         image_mask: Option<ImageMask>,
@@ -1442,7 +1461,6 @@ impl DisplayListBuilder {
 
         let info = LayoutPrimitiveInfo::new(clip_rect);
 
-        let scrollinfo = ClipAndScrollInfo::simple(parent);
         self.push_item_with_clip_scroll_info(item, &info, scrollinfo);
         self.push_iter(complex_clips);
         id
@@ -1455,7 +1473,6 @@ impl DisplayListBuilder {
         vertical_offset_bounds: StickyOffsetBounds,
         horizontal_offset_bounds: StickyOffsetBounds,
         previously_applied_offset: LayoutVector2D,
-
     ) -> ClipId {
         let id = self.generate_spatial_index();
         let item = SpecificDisplayItem::StickyFrame(StickyFrameDisplayItem {
