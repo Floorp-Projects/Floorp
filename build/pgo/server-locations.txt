@@ -175,7 +175,6 @@ http://not-tracking.example.com:80
 http://tracking.example.org:80
 http://another-tracking.example.net:80
 http://itisatracker.org:80
-https://itisatracker.org:443
 http://trackertest.org:80
 
 https://malware.example.com:443
