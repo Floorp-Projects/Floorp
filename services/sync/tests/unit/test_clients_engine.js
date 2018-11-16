@@ -48,6 +48,7 @@ function compareCommands(actual, expected, description) {
 }
 
 async function syncClientsEngine(server) {
+  engine._lastFxADevicesFetch = 0;
   engine.lastModified = server.getCollection("foo", "clients").timestamp;
   await engine._sync();
 }
@@ -1823,7 +1824,7 @@ add_task(async function update_known_stale_clients() {
   const stubRemoteClients = sinon.stub(engine._store, "_remoteClients").get(() => {
     return clients;
   });
-  const stubRefresh = sinon.stub(engine, "_refreshKnownStaleClients", () => {
+  const stubFetchFxADevices = sinon.stub(engine, "_fetchFxADevices", () => {
     engine._knownStaleFxADeviceIds = ["fxa-one", "fxa-two"];
   });
 
@@ -1834,43 +1835,7 @@ add_task(async function update_known_stale_clients() {
   ok(!clients[2].stale);
 
   stubRemoteClients.restore();
-  stubRefresh.restore();
-});
-
-add_task(async function process_incoming_refreshes_known_stale_clients() {
-  const stubProcessIncoming = sinon.stub(SyncEngine.prototype, "_processIncoming");
-  const stubRefresh = sinon.stub(engine, "_refreshKnownStaleClients", () => {
-    engine._knownStaleFxADeviceIds = ["one", "two"];
-  });
-
-  engine._knownStaleFxADeviceIds = null;
-  await engine._processIncoming();
-  ok(stubRefresh.calledOnce, "Should refresh the known stale clients");
-  stubRefresh.reset();
-
-  await engine._processIncoming();
-  ok(stubRefresh.notCalled, "Should not refresh the known stale clients since it's already populated");
-
-  stubProcessIncoming.restore();
-  stubRefresh.restore();
-});
-
-add_task(async function process_incoming_refreshes_known_stale_clients() {
-  Services.prefs.clearUserPref("services.sync.clients.lastModifiedOnProcessCommands");
-  engine._localClientLastModified = Math.round(Date.now() / 1000);
-
-  const stubRemoveLocalCommand = sinon.stub(engine, "removeLocalCommand");
-  const tabProcessedSpy = sinon.spy(engine, "_handleDisplayURIs");
-  engine.localCommands = [{ command: "displayURI", args: ["https://foo.bar", "fxaid1", "foo"] }];
-
-  await engine.processIncomingCommands();
-  ok(tabProcessedSpy.calledOnce);
-  // Let's say we failed to upload and we end up calling processIncomingCommands again
-  await engine.processIncomingCommands();
-  ok(tabProcessedSpy.calledOnce);
-
-  tabProcessedSpy.restore();
-  stubRemoveLocalCommand.restore();
+  stubFetchFxADevices.restore();
 });
 
 add_task(async function test_create_record_command_limit() {

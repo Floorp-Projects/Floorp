@@ -60,9 +60,10 @@ var gSync = {
     return UIState.get().status == UIState.STATUS_SIGNED_IN;
   },
 
-  get remoteClients() {
-    return Weave.Service.clientsEngine.remoteClients
-           .sort((a, b) => a.name.localeCompare(b.name));
+  get sendTabTargets() {
+    return Weave.Service.clientsEngine.fxaDevices
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .filter(d => !d.isCurrentDevice && (fxAccounts.commands.sendTab.isDeviceCompatible(d) || d.clientRecord));
   },
 
   get offline() {
@@ -316,25 +317,16 @@ var gSync = {
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 
-  async sendTabToDevice(url, clients, title) {
-    let devices;
-    try {
-      devices = await fxAccounts.getDeviceList();
-    } catch (e) {
-      console.error("Could not get the FxA device list", e);
-      devices = []; // We can still run in degraded mode.
-    }
+  async sendTabToDevice(url, targets, title) {
     const fxaCommandsDevices = [];
     const oldSendTabClients = [];
-    for (const client of clients) {
-      const device = devices.find(d => d.id == client.fxaDeviceId);
-      if (!device) {
-        console.error(`Could not find associated FxA device for ${client.name}`);
-        continue;
-      } else if ((await fxAccounts.commands.sendTab.isDeviceCompatible(device))) {
-        fxaCommandsDevices.push(device);
+    for (const target of targets) {
+      if (fxAccounts.commands.sendTab.isDeviceCompatible(target)) {
+        fxaCommandsDevices.push(target);
+      } else if (target.clientRecord) {
+        oldSendTabClients.push(target.clientRecord);
       } else {
-        oldSendTabClients.push(client);
+        console.error(`Target ${target.id} unsuitable for send tab.`);
       }
     }
     if (fxaCommandsDevices.length) {
@@ -343,12 +335,11 @@ var gSync = {
       for (let {device, error} of report.failed) {
         console.error(`Failed to send a tab with FxA commands for ${device.name}.
                        Falling back on the Sync back-end`, error);
-        const client = clients.find(c => c.fxaDeviceId == device.id);
-        if (!client) {
+        if (!device.clientRecord) {
           console.error(`Could not find associated Sync device for ${device.name}`);
           continue;
         }
-        oldSendTabClients.push(client);
+        oldSendTabClients.push(device.clientRecord);
       }
     }
     for (let client of oldSendTabClients) {
@@ -363,7 +354,7 @@ var gSync = {
 
   populateSendTabToDevicesMenu(devicesPopup, url, title, multiselected, createDeviceNodeFn) {
     if (!createDeviceNodeFn) {
-      createDeviceNodeFn = (clientId, name, clientType, lastModified) => {
+      createDeviceNodeFn = (targetId, name, targetType, lastModified) => {
         let eltName = name ? "menuitem" : "menuseparator";
         return document.createXULElement(eltName);
       };
@@ -385,7 +376,7 @@ var gSync = {
     const fragment = document.createDocumentFragment();
 
     const state = UIState.get();
-    if (state.status == UIState.STATUS_SIGNED_IN && this.remoteClients.length > 0) {
+    if (state.status == UIState.STATUS_SIGNED_IN && this.sendTabTargets.length > 0) {
       this._appendSendTabDeviceList(fragment, createDeviceNodeFn, url, title, multiselected);
     } else if (state.status == UIState.STATUS_SIGNED_IN) {
       this._appendSendTabSingleDevice(fragment, createDeviceNodeFn);
@@ -403,6 +394,8 @@ var gSync = {
   // this list should be built using the FxA device list instead of the client
   // collection.
   _appendSendTabDeviceList(fragment, createDeviceNodeFn, url, title, multiselected) {
+    const targets = this.sendTabTargets;
+
     let tabsToSend = multiselected ?
       gBrowser.selectedTabs.map(t => {
         return {
@@ -413,36 +406,42 @@ var gSync = {
 
     const onSendAllCommand = (event) => {
       for (let t of tabsToSend) {
-        this.sendTabToDevice(t.url, this.remoteClients, t.title);
+        this.sendTabToDevice(t.url, targets, t.title);
       }
     };
     const onTargetDeviceCommand = (event) => {
-      const clientId = event.target.getAttribute("clientId");
-      const client = this.remoteClients.find(c => c.id == clientId);
+      const targetId = event.target.getAttribute("clientId");
+      const target = targets.find(t => t.id == targetId);
       for (let t of tabsToSend) {
-        this.sendTabToDevice(t.url, [client], t.title);
+        this.sendTabToDevice(t.url, [target], t.title);
       }
     };
 
-    function addTargetDevice(clientId, name, clientType, lastModified) {
-      const targetDevice = createDeviceNodeFn(clientId, name, clientType, lastModified);
-      targetDevice.addEventListener("command", clientId ? onTargetDeviceCommand :
+    function addTargetDevice(targetId, name, targetType, lastModified) {
+      const targetDevice = createDeviceNodeFn(targetId, name, targetType, lastModified);
+      targetDevice.addEventListener("command", targetId ? onTargetDeviceCommand :
                                                           onSendAllCommand, true);
       targetDevice.classList.add("sync-menuitem", "sendtab-target");
-      targetDevice.setAttribute("clientId", clientId);
-      targetDevice.setAttribute("clientType", clientType);
+      targetDevice.setAttribute("clientId", targetId);
+      targetDevice.setAttribute("clientType", targetType);
       targetDevice.setAttribute("label", name);
       fragment.appendChild(targetDevice);
     }
 
-    const clients = this.remoteClients;
-    for (let client of clients) {
-      const type = Weave.Service.clientsEngine.getClientType(client.id);
-      addTargetDevice(client.id, client.name, type, new Date(client.serverLastModified * 1000));
+    for (let target of targets) {
+      let type, lastModified;
+      if (target.clientRecord) {
+        type = Weave.Service.clientsEngine.getClientType(target.clientRecord.id);
+        lastModified = new Date(target.clientRecord.serverLastModified * 1000);
+      } else {
+        type = target.type === "desktop" ? "desktop" : "phone"; // Normalizing the FxA types just in case.
+        lastModified = null;
+      }
+      addTargetDevice(target.id, target.name, type, lastModified);
     }
 
     // "Send to All Devices" menu item
-    if (clients.length > 1) {
+    if (targets.length > 1) {
       const separator = createDeviceNodeFn();
       separator.classList.add("sync-menuitem");
       fragment.appendChild(separator);

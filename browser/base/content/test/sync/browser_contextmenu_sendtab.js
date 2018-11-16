@@ -7,7 +7,7 @@ const chrome_base = "chrome://mochitests/content/browser/browser/base/content/te
 Services.scriptloader.loadSubScript(chrome_base + "head.js", this);
 /* import-globals-from ../general/head.js */
 
-const remoteClientsFixture = [ { id: 1, name: "Foo"}, { id: 2, name: "Bar"} ];
+const targetsFixture = [ { id: 1, name: "Foo"}, { id: 2, name: "Bar"} ];
 
 let [testTab] = gBrowser.visibleTabs;
 
@@ -35,7 +35,7 @@ add_task(async function setup() {
 });
 
 add_task(async function test_tab_contextmenu() {
-  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, remoteClients: remoteClientsFixture,
+  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, targets: targetsFixture,
                                       state: UIState.STATUS_SIGNED_IN, isSendableURI: true });
   let expectation = sandbox.mock(gSync)
                            .expects("sendTabToDevice")
@@ -55,7 +55,7 @@ add_task(async function test_tab_contextmenu() {
 });
 
 add_task(async function test_tab_contextmenu_unconfigured() {
-  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, remoteClients: remoteClientsFixture,
+  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, targets: targetsFixture,
                                       state: UIState.STATUS_NOT_CONFIGURED, isSendableURI: true });
 
   updateTabContextMenu(testTab);
@@ -66,7 +66,7 @@ add_task(async function test_tab_contextmenu_unconfigured() {
 });
 
 add_task(async function test_tab_contextmenu_not_sendable() {
-  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, remoteClients: [{ id: 1, name: "Foo"}],
+  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, targets: [{ id: 1, name: "Foo"}],
                                       state: UIState.STATUS_SIGNED_IN, isSendableURI: false });
 
   updateTabContextMenu(testTab);
@@ -77,7 +77,7 @@ add_task(async function test_tab_contextmenu_not_sendable() {
 });
 
 add_task(async function test_tab_contextmenu_not_synced_yet() {
-  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: false, remoteClients: [],
+  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: false, targets: [],
                                       state: UIState.STATUS_SIGNED_IN, isSendableURI: true });
 
   updateTabContextMenu(testTab);
@@ -88,7 +88,7 @@ add_task(async function test_tab_contextmenu_not_synced_yet() {
 });
 
 add_task(async function test_tab_contextmenu_sync_not_ready_configured() {
-  const sandbox = setupSendTabMocks({ syncReady: false, clientsSynced: false, remoteClients: null,
+  const sandbox = setupSendTabMocks({ syncReady: false, clientsSynced: false, targets: null,
                                       state: UIState.STATUS_SIGNED_IN, isSendableURI: true });
 
   updateTabContextMenu(testTab);
@@ -99,7 +99,7 @@ add_task(async function test_tab_contextmenu_sync_not_ready_configured() {
 });
 
 add_task(async function test_tab_contextmenu_sync_not_ready_other_state() {
-  const sandbox = setupSendTabMocks({ syncReady: false, clientsSynced: false, remoteClients: null,
+  const sandbox = setupSendTabMocks({ syncReady: false, clientsSynced: false, targets: null,
                                       state: UIState.STATUS_NOT_VERIFIED, isSendableURI: true });
 
   updateTabContextMenu(testTab);
