@@ -530,7 +530,6 @@ impl<'a, 'b, 'c> FuncEnvironment for TransEnv<'a, 'b, 'c> {
     ) -> WasmResult<ir::Inst> {
         let wsig = self.env.signature(sig_index);
 
-        // TODO: When compiling asm.js, the table index in inferred from the signature index.
         // Currently, WebAssembly doesn't support multiple tables. That may change.
         assert_eq!(table_index.index(), 0);
         let wtable = self.get_table(pos.func, table_index);
