@@ -236,7 +236,12 @@ WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
 
   mWebRenderCommandBuilder.EmptyTransaction();
 
+  // Get the time of when the refresh driver start its tick (if available), otherwise
+  // use the time of when LayerManager::BeginTransaction was called.
   TimeStamp refreshStart = mTransactionIdAllocator->GetTransactionStart();
+  if (!refreshStart) {
+    refreshStart = mTransactionStart;
+  }
 
   // Skip the synchronization for buffer since we also skip the painting during
   // device-reset status.
@@ -342,7 +347,13 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   ClearPendingScrollInfoUpdate();
 
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId(/*aThrottle*/ true);
+
+  // Get the time of when the refresh driver start its tick (if available), otherwise
+  // use the time of when LayerManager::BeginTransaction was called.
   TimeStamp refreshStart = mTransactionIdAllocator->GetTransactionStart();
+  if (!refreshStart) {
+    refreshStart = mTransactionStart;
+  }
 
   if (mAsyncResourceUpdates) {
     if (resourceUpdates.IsEmpty()) {

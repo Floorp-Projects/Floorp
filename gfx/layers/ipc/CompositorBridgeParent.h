@@ -284,6 +284,7 @@ public:
   void NotifyPipelineRendered(const wr::PipelineId& aPipelineId,
                               const wr::Epoch& aEpoch,
                               TimeStamp& aCompositeStart,
+                              TimeStamp& aRenderStart,
                               TimeStamp& aCompositeEnd,
                               wr::RendererStats* aStats = nullptr);
   RefPtr<AsyncImagePipelineManager> GetAsyncImagePipelineManager() const;

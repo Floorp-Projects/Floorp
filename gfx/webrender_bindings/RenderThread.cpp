@@ -342,7 +342,8 @@ RenderThread::RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aEvent)
 static void
 NotifyDidRender(layers::CompositorBridgeParent* aBridge,
                 RefPtr<WebRenderPipelineInfo> aInfo,
-                TimeStamp aStart,
+                TimeStamp aCompositeStart,
+                TimeStamp aRenderStart,
                 TimeStamp aEnd,
                 bool aRender,
                 RendererStats aStats)
@@ -360,7 +361,8 @@ NotifyDidRender(layers::CompositorBridgeParent* aBridge,
     aBridge->NotifyPipelineRendered(
         info.epochs.data[i].pipeline_id,
         info.epochs.data[i].epoch,
-        aStart,
+        aCompositeStart,
+        aRenderStart,
         aEnd,
         &aStats);
   }
@@ -384,6 +386,8 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId,
     return;
   }
 
+  TimeStamp start = TimeStamp::Now();
+
   auto& renderer = it->second;
   bool rendered = false;
   RendererStats stats = { 0 };
@@ -403,7 +407,7 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId,
     &NotifyDidRender,
     renderer->GetCompositorBridge(),
     info,
-    aStartTime, end,
+    aStartTime, start, end,
     aRender,
     stats
   ));
