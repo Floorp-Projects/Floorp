@@ -6,7 +6,7 @@ loader: taskgraph.loader.single_dep:loader
 
 transforms:
   - taskgraph.transforms.name_sanity:transforms
-  - taskgraph.transforms.partials_signing:transforms
+  - taskgraph.transforms.mar_signing:transforms
   - taskgraph.transforms.task:transforms
 
 kind-dependencies:
@@ -14,3 +14,5 @@ kind-dependencies:
 
 job-template:
   shipping-phase: promote
+  treeherder-group: ps
+  description-suffix: 'partial signing'
