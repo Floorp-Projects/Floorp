@@ -162,8 +162,6 @@ PerformanceTimingData::PerformanceTimingData(nsITimedChannel* aChannel,
     //       ServiceWorker interception responseStart?
     aChannel->GetHandleFetchEventEnd(&mWorkerResponseEnd);
 
-    aChannel->GetNativeServerTiming(mServerTiming);
-
     // The performance timing api essentially requires that the event timestamps
     // have a strict relation with each other. The truth, however, is the
     // browser engages in a number of speculative activities that sometimes mean
@@ -232,6 +230,8 @@ PerformanceTimingData::SetPropertiesFromHttpChannel(nsIHttpChannel* aHttpChannel
   bool redirectsPassCheck = false;
   aChannel->GetAllRedirectsPassTimingAllowCheck(&redirectsPassCheck);
   mReportCrossOriginRedirect = mTimingAllowed && redirectsPassCheck;
+
+  aChannel->GetNativeServerTiming(mServerTiming);
 }
 
 PerformanceTiming::~PerformanceTiming()
