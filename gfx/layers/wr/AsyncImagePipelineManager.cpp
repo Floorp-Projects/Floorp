@@ -35,6 +35,14 @@ AsyncImagePipelineManager::AsyncImagePipeline::AsyncImagePipeline()
  , mMixBlendMode(wr::MixBlendMode::Normal)
 {}
 
+AsyncImagePipelineManager::PipelineUpdates::PipelineUpdates(RefPtr<wr::WebRenderPipelineInfo> aPipelineInfo,
+                                                            const uint64_t aUpdatesCount,
+                                                            const bool aRendered)
+  : mPipelineInfo(aPipelineInfo)
+  , mUpdatesCount(aUpdatesCount)
+  , mRendered(aRendered)
+{}
+
 AsyncImagePipelineManager::AsyncImagePipelineManager(already_AddRefed<wr::WebRenderAPI>&& aApi)
  : mApi(aApi)
  , mIdNamespace(mApi->GetNamespace())
@@ -553,7 +561,7 @@ AsyncImagePipelineManager::HoldExternalImage(const wr::PipelineId& aPipelineId, 
 }
 
 void
-AsyncImagePipelineManager::NotifyPipelinesUpdated(const wr::WrPipelineInfo& aInfo, bool aRender)
+AsyncImagePipelineManager::NotifyPipelinesUpdated(RefPtr<wr::WebRenderPipelineInfo> aInfo, bool aRender)
 {
   // This is called on the render thread, so we just stash the data into
   // UpdatesQueue and process it later on the compositor thread.
@@ -561,18 +569,7 @@ AsyncImagePipelineManager::NotifyPipelinesUpdated(const wr::WrPipelineInfo& aInf
 
   // Increment the count when render happens.
   uint64_t currCount = aRender ? ++mUpdatesCount : mUpdatesCount;
-  auto updates = MakeUnique<PipelineUpdates>(currCount, aRender);
-
-  for (uintptr_t i = 0; i < aInfo.epochs.length; i++) {
-    updates->mQueue.emplace(std::make_pair(
-        aInfo.epochs.data[i].pipeline_id,
-        Some(aInfo.epochs.data[i].epoch)));
-  }
-  for (uintptr_t i = 0; i < aInfo.removed_pipelines.length; i++) {
-    updates->mQueue.emplace(std::make_pair(
-        aInfo.removed_pipelines.data[i],
-        Nothing()));
-  }
+  auto updates = MakeUnique<PipelineUpdates>(aInfo, currCount, aRender);
 
   {
     // Scope lock to push UpdatesQueue to mUpdatesQueues.
@@ -604,13 +601,7 @@ AsyncImagePipelineManager::ProcessPipelineUpdates()
   UniquePtr<PipelineUpdates> updates;
 
   while (true) {
-    // Clear updates if it is empty. It is a preparation for next PipelineUpdates handling.
-    if (updates && updates->mQueue.empty()) {
-      updates = nullptr;
-    }
-
-    // Get new PipelineUpdates if necessary.
-    if (!updates) {
+    {
       // Scope lock to extract UpdatesQueue from mUpdatesQueues.
       MutexAutoLock lock(mUpdatesLock);
       if (mUpdatesQueues.empty()) {
@@ -628,19 +619,16 @@ AsyncImagePipelineManager::ProcessPipelineUpdates()
     }
     MOZ_ASSERT(updates);
 
-    if (updates->mQueue.empty()) {
-      // Try next PipelineUpdates.
-      continue;
+    auto& info = updates->mPipelineInfo->Raw();
+
+    for (uintptr_t i = 0; i < info.epochs.length; i++) {
+      ProcessPipelineRendered(info.epochs.data[i].pipeline_id,
+                              info.epochs.data[i].epoch,
+                              updates->mUpdatesCount);
     }
-
-    wr::PipelineId pipelineId = updates->mQueue.front().first;
-    Maybe<wr::Epoch> epoch = updates->mQueue.front().second;
-    updates->mQueue.pop();
-
-    if (epoch.isSome()) {
-      ProcessPipelineRendered(pipelineId, *epoch, updates->mUpdatesCount);
-    } else {
-      ProcessPipelineRemoved(pipelineId, updates->mUpdatesCount);
+    for (uintptr_t i = 0; i < info.removed_pipelines.length; i++) {
+      ProcessPipelineRemoved(info.removed_pipelines.data[i],
+                             updates->mUpdatesCount);
     }
   }
   CheckForTextureHostsNotUsedByGPU();
