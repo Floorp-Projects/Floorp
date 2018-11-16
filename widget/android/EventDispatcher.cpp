@@ -649,7 +649,7 @@ class NativeCallbackDelegateSupport final :
 
     const nsCOMPtr<nsIAndroidEventCallback> mCallback;
     const nsCOMPtr<nsIAndroidEventFinalizer> mFinalizer;
-    const nsCOMPtr<nsPIDOMWindowOuter> mWindow;
+    const nsCOMPtr<nsIGlobalObject> mGlobalObject;
 
     void Call(jni::Object::Param aData,
               nsresult (nsIAndroidEventCallback::*aCall)(JS::HandleValue))
@@ -659,11 +659,7 @@ class NativeCallbackDelegateSupport final :
         // Use either the attached window's realm or a default realm.
 
         dom::AutoJSAPI jsapi;
-        if (mWindow) {
-            NS_ENSURE_TRUE_VOID(jsapi.Init(mWindow->GetCurrentInnerWindow()));
-        } else {
-            NS_ENSURE_TRUE_VOID(jsapi.Init(xpc::PrivilegedJunkScope()));
-        }
+        NS_ENSURE_TRUE_VOID(jsapi.Init(mGlobalObject));
 
         JS::RootedValue data(jsapi.cx());
         nsresult rv = UnboxData(NS_LITERAL_STRING("callback"), jsapi.cx(),
@@ -695,10 +691,10 @@ public:
 
     NativeCallbackDelegateSupport(nsIAndroidEventCallback* callback,
                                   nsIAndroidEventFinalizer* finalizer,
-                                  nsPIDOMWindowOuter* domWindow)
+                                  nsIGlobalObject* globalObject)
         : mCallback(callback)
         , mFinalizer(finalizer)
-        , mWindow(domWindow)
+        , mGlobalObject(globalObject)
     {}
 
     ~NativeCallbackDelegateSupport()
@@ -749,6 +745,15 @@ NS_IMPL_ISUPPORTS(FinalizingCallbackDelegate, nsIAndroidEventCallback)
 using namespace detail;
 
 NS_IMPL_ISUPPORTS(EventDispatcher, nsIAndroidEventDispatcher)
+
+nsIGlobalObject*
+EventDispatcher::GetGlobalObject()
+{
+  if (mDOMWindow) {
+    return nsGlobalWindowInner::Cast(mDOMWindow->GetCurrentInnerWindow());
+  }
+  return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
+}
 
 nsresult
 EventDispatcher::DispatchOnGecko(ListenersList* list, const nsAString& aEvent,
@@ -802,7 +807,7 @@ EventDispatcher::WrapCallback(nsIAndroidEventCallback* aCallback,
     NativeCallbackDelegateSupport::AttachNative(
             callback,
             MakeUnique<NativeCallbackDelegateSupport>(
-                    aCallback, aFinalizer, mDOMWindow));
+                    aCallback, aFinalizer, GetGlobalObject()));
     return callback;
 }
 
@@ -860,13 +865,8 @@ EventDispatcher::Dispatch(const char16_t* aEvent,
     ListenersList* list = mListenersMap.Get(event);
     if (list) {
         dom::AutoJSAPI jsapi;
-        if (mDOMWindow) {
-            NS_ENSURE_TRUE(jsapi.Init(mDOMWindow->GetCurrentInnerWindow()),
-                           NS_ERROR_FAILURE);
-        } else {
-            NS_ENSURE_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()),
-                           NS_ERROR_FAILURE);
-        }
+        NS_ENSURE_TRUE(jsapi.Init(GetGlobalObject()),
+                       NS_ERROR_FAILURE);
         JS::RootedValue data(jsapi.cx());
         nsresult rv = UnboxData(/* Event */ nullptr, jsapi.cx(), aData, &data,
                                 /* BundleOnly */ true);
@@ -1068,11 +1068,7 @@ EventDispatcher::DispatchToGecko(jni::String::Param aEvent,
     // Use the same compartment as the attached window if possible, otherwise
     // use a default compartment.
     dom::AutoJSAPI jsapi;
-    if (mDOMWindow) {
-        NS_ENSURE_TRUE_VOID(jsapi.Init(mDOMWindow->GetCurrentInnerWindow()));
-    } else {
-        NS_ENSURE_TRUE_VOID(jsapi.Init(xpc::PrivilegedJunkScope()));
-    }
+    NS_ENSURE_TRUE_VOID(jsapi.Init(GetGlobalObject()));
 
     JS::RootedValue data(jsapi.cx());
     nsresult rv = UnboxData(aEvent, jsapi.cx(), aData, &data,
