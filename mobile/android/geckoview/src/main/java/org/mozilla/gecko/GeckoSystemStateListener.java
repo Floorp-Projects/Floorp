@@ -11,6 +11,7 @@ import android.database.ContentObserver;
 import android.hardware.input.InputManager;
 import android.net.Uri;
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.InputDevice;
@@ -48,7 +49,7 @@ public class GeckoSystemStateListener
         sApplicationContext = context;
         ContentResolver contentResolver = sApplicationContext.getContentResolver();
         Uri animationSetting = Settings.System.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE);
-        mContentObserver = new ContentObserver(new Handler()) {
+        mContentObserver = new ContentObserver(new Handler(Looper.getMainLooper())) {
             @Override
             public void onChange(boolean selfChange) {
                 onDeviceChanged();
