@@ -52,17 +52,13 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
             cookiesPreference.entries = cookiesStringsWV.toTypedArray()
             cookiesPreference.entryValues = cookiesStringsWV.toTypedArray()
         }
-
-        val exceptionsPreference = findPreference(getString(R.string.pref_key_screen_exceptions))
-        if (ExceptionDomains.load(requireContext()).isEmpty()) {
-            exceptionsPreference.isEnabled = false
-        }
     }
 
     override fun onResume() {
         super.onResume()
         updateBiometricsToggleAvailability()
         updateStealthToggleAvailability()
+        updateExceptionSettingAvailability()
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
@@ -95,6 +91,13 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
                     .apply()
         } else {
             switch.isEnabled = true
+        }
+    }
+
+    private fun updateExceptionSettingAvailability() {
+        val exceptionsPreference = findPreference(getString(R.string.pref_key_screen_exceptions))
+        if (ExceptionDomains.load(requireContext()).isEmpty()) {
+            exceptionsPreference.isEnabled = false
         }
     }
 

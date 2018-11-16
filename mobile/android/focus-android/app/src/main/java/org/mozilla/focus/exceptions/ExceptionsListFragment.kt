@@ -8,7 +8,6 @@ import android.support.v4.app.Fragment
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import android.support.v4.app.FragmentManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
@@ -34,7 +33,6 @@ import kotlinx.coroutines.launch
 import org.mozilla.focus.R
 import org.mozilla.focus.autocomplete.AutocompleteDomainFormatter
 import org.mozilla.focus.settings.BaseSettingsFragment
-import org.mozilla.focus.settings.PrivacySecuritySettingsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import java.util.Collections
 import org.mozilla.focus.utils.ViewUtils
@@ -120,10 +118,7 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
             val domains = ExceptionDomains.load(context!!)
             TelemetryWrapper.removeAllExceptionDomains(domains.size)
             ExceptionDomains.remove(context!!, domains)
-            fragmentManager!!.beginTransaction()
-                .replace(R.id.container, PrivacySecuritySettingsFragment())
-                .addToBackStack(null)
-                .commit()
+            fragmentManager!!.popBackStack()
         }
     }
 
@@ -139,11 +134,7 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
 
         (exceptionList.adapter as DomainListAdapter).refresh(activity!!) {
             if ((exceptionList.adapter as DomainListAdapter).itemCount == 0) {
-                fragmentManager!!.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
-                fragmentManager!!.beginTransaction()
-                    .replace(R.id.container, PrivacySecuritySettingsFragment())
-                    .addToBackStack(null)
-                    .commit()
+                fragmentManager!!.popBackStack()
             }
             activity?.invalidateOptionsMenu()
         }
