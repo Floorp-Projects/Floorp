@@ -1,13 +1,17 @@
 import itertools
-import json
 import os
 from collections import defaultdict
-from six import iteritems, itervalues, viewkeys, string_types
+from six import iteritems, iterkeys, itervalues, string_types
 
-from .item import ManualTest, WebDriverSpecTest, Stub, RefTestNode, RefTest, TestharnessTest, SupportFile, ConformanceCheckerTest, VisualTest
+from .item import (ManualTest, WebDriverSpecTest, Stub, RefTestNode, RefTest,
+                   TestharnessTest, SupportFile, ConformanceCheckerTest, VisualTest)
 from .log import get_logger
 from .utils import from_os_path, to_os_path
 
+try:
+    import ujson as json
+except ImportError:
+    import json
 
 CURRENT_VERSION = 5
 
@@ -27,11 +31,162 @@ def iterfilter(filters, iter):
         yield item
 
 
+item_classes = {"testharness": TestharnessTest,
+                "reftest": RefTest,
+                "reftest_node": RefTestNode,
+                "manual": ManualTest,
+                "stub": Stub,
+                "wdspec": WebDriverSpecTest,
+                "conformancechecker": ConformanceCheckerTest,
+                "visual": VisualTest,
+                "support": SupportFile}
+
+
+class TypeData(object):
+    def __init__(self, manifest, type_cls):
+        """Dict-like object containing the TestItems for each test type.
+
+        Loading an actual Item class for each test is unnecessarily
+        slow, so this class allows lazy-loading of the test
+        items. When the manifest is loaded we store the raw json
+        corresponding to the test type, and only create an Item
+        subclass when the test is accessed. In order to remain
+        API-compatible with consumers that depend on getting an Item
+        from iteration, we do egerly load all items when iterating
+        over the class.
+
+        """
+        self.manifest = manifest
+        self.type_cls = type_cls
+        self.data = {}
+        self.json_data = None
+        self.tests_root = None
+
+    def __getitem__(self, key):
+        if key not in self.data:
+            self.load(key)
+        return self.data[key]
+
+    def __bool__(self):
+        return bool(self.data)
+
+    def __len__(self):
+        return len(self.data)
+
+    def __delitem__(self, key):
+        del self.data[key]
+
+    def __setitem__(self, key, value):
+        self.data[key] = value
+
+    def __contains__(self, key):
+        self.load_all()
+        return key in self.data
+
+    def __iter__(self):
+        self.load_all()
+        return self.data.__iter__()
+
+    def pop(self, key, default=None):
+        try:
+            value = self[key]
+        except ValueError:
+            value = default
+        else:
+            del self.data[key]
+        return value
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except ValueError:
+            return default
+
+    def itervalues(self):
+        self.load_all()
+        return itervalues(self.data)
+
+    def iteritems(self):
+        self.load_all()
+        for path, tests in iteritems(self.data):
+            yield path, tests
+
+    def load(self, key):
+        """Load a specific Item given a path"""
+        if self.json_data is not None:
+            data = set()
+            path = from_os_path(key)
+            for test in self.json_data.get(path, []):
+                manifest_item = self.type_cls.from_json(self.manifest,
+                                                        self.tests_root,
+                                                        path,
+                                                        test)
+                data.add(manifest_item)
+            self.data[key] = data
+        else:
+            raise ValueError
+
+    def load_all(self):
+        """Load all test items in this class"""
+        if self.json_data is not None:
+            for path, value in iteritems(self.json_data):
+                key = to_os_path(path)
+                if key in self.data:
+                    continue
+                data = set()
+                for test in self.json_data.get(path, []):
+                    manifest_item = self.type_cls.from_json(self.manifest,
+                                                            self.tests_root,
+                                                            path,
+                                                            test)
+                    data.add(manifest_item)
+                self.data[key] = data
+            self.json_data = None
+
+    def set_json(self, tests_root, data):
+        if not isinstance(data, dict):
+            raise ValueError("Got a %s expected a dict" % (type(data)))
+        self.tests_root = tests_root
+        self.json_data = data
+
+    def paths(self):
+        """Get a list of all paths containing items of this type,
+        without actually constructing all the items"""
+        rv = set(iterkeys(self.data))
+        if self.json_data:
+            rv |= set(to_os_path(item) for item in iterkeys(self.json_data))
+        return rv
+
+
+class ManifestData(dict):
+    def __init__(self, manifest, meta_filters=None):
+        """Dictionary subclass containing a TypeData instance for each test type,
+        keyed by type name"""
+        self.initialized = False
+        for key, value in item_classes.iteritems():
+            self[key] = TypeData(manifest, value, meta_filters=meta_filters)
+        self.initialized = True
+        self.json_obj = None
+
+    def __setitem__(self, key, value):
+        if self.initialized:
+            raise AttributeError
+        dict.__setitem__(self, key, value)
+
+    def paths(self):
+        """Get a list of all paths containing test items
+        without actually constructing all the items"""
+        rv = set()
+        for item_data in itervalues(self):
+            rv |= set(item_data.paths())
+        return rv
+
+
 class Manifest(object):
     def __init__(self, url_base="/"):
         assert url_base is not None
         self._path_hash = {}
-        self._data = defaultdict(dict)
+        self._data = ManifestData(self)
         self._reftest_nodes_by_url = None
         self.url_base = url_base
 
@@ -42,7 +197,7 @@ class Manifest(object):
         if not types:
             types = sorted(self._data.keys())
         for item_type in types:
-            for path, tests in sorted(iteritems(self._data[item_type])):
+            for path, tests in sorted(self._data[item_type]):
                 yield item_type, path, tests
 
     def iterpath(self, path):
@@ -74,61 +229,75 @@ class Manifest(object):
         return self.reftest_nodes_by_url.get(url)
 
     def update(self, tree):
-        new_data = defaultdict(dict)
-        new_hashes = {}
+        """Update the manifest given an iterable of items that make up the updated manifest.
 
+        The iterable must either generate tuples of the form (SourceFile, True) for paths
+        that are to be updated, or (path, False) for items that are not to be updated. This
+        unusual API is designed as an optimistaion meaning that SourceFile items need not be
+        constructed in the case we are not updating a path, but the absence of an item from
+        the iterator may be used to remove defunct entries from the manifest."""
         reftest_nodes = []
-        old_files = defaultdict(set, {k: set(viewkeys(v)) for k, v in iteritems(self._data)})
+        seen_files = set()
 
         changed = False
         reftest_changes = False
 
-        for source_file in tree:
-            rel_path = source_file.rel_path
-            file_hash = source_file.hash
+        prev_files = self._data.paths()
 
-            is_new = rel_path not in self._path_hash
-            hash_changed = False
+        reftest_types = ("reftest", "reftest_node")
 
-            if not is_new:
-                old_hash, old_type = self._path_hash[rel_path]
-                old_files[old_type].remove(rel_path)
-                if old_hash != file_hash:
-                    new_type, manifest_items = source_file.manifest_items()
-                    hash_changed = True
-                else:
-                    new_type, manifest_items = old_type, self._data[old_type][rel_path]
-                if old_type in ("reftest", "reftest_node") and new_type != old_type:
-                    reftest_changes = True
+        for source_file, update in tree:
+            if not update:
+                rel_path = source_file
+                seen_files.add(rel_path)
             else:
-                new_type, manifest_items = source_file.manifest_items()
+                rel_path = source_file.rel_path
+                seen_files.add(rel_path)
 
-            if new_type in ("reftest", "reftest_node"):
-                reftest_nodes.extend(manifest_items)
+                file_hash = source_file.hash
+
+                is_new = rel_path not in self._path_hash
+                hash_changed = False
+
+                if not is_new:
+                    old_hash, old_type = self._path_hash[rel_path]
+                    if old_hash != file_hash:
+                        new_type, manifest_items = source_file.manifest_items()
+                        hash_changed = True
+                    else:
+                        new_type, manifest_items = old_type, self._data[old_type][rel_path]
+                    if old_type in reftest_types and new_type != old_type:
+                        reftest_changes = True
+                else:
+                    new_type, manifest_items = source_file.manifest_items()
+
+                if new_type in ("reftest", "reftest_node"):
+                    reftest_nodes.extend(manifest_items)
+                    if is_new or hash_changed:
+                        reftest_changes = True
+                elif new_type:
+                    self._data[new_type][rel_path] = set(manifest_items)
+
+                self._path_hash[rel_path] = (file_hash, new_type)
+
                 if is_new or hash_changed:
-                    reftest_changes = True
-            elif new_type:
-                new_data[new_type][rel_path] = set(manifest_items)
+                    changed = True
 
-            new_hashes[rel_path] = (file_hash, new_type)
-
-            if is_new or hash_changed:
-                changed = True
-
-        if reftest_changes or old_files["reftest"] or old_files["reftest_node"]:
-            reftests, reftest_nodes, changed_hashes = self._compute_reftests(reftest_nodes)
-            new_data["reftest"] = reftests
-            new_data["reftest_node"] = reftest_nodes
-            new_hashes.update(changed_hashes)
-        else:
-            new_data["reftest"] = self._data["reftest"]
-            new_data["reftest_node"] = self._data["reftest_node"]
-
-        if any(itervalues(old_files)):
+        deleted = prev_files - seen_files
+        if deleted:
             changed = True
+            for rel_path in deleted:
+                _, old_type = self._path_hash[rel_path]
+                if old_type in reftest_types:
+                    reftest_changes = True
+                del self._path_hash[rel_path]
+                del self._data[old_type][rel_path]
 
-        self._data = new_data
-        self._path_hash = new_hashes
+        if reftest_changes:
+            reftests, reftest_nodes, changed_hashes = self._compute_reftests(reftest_nodes)
+            self._data["reftest"].data = reftests
+            self._data["reftest_node"].data = reftest_nodes
+            self._path_hash.update(changed_hashes)
 
         return changed
 
@@ -168,7 +337,7 @@ class Manifest(object):
                 [t for t in sorted(test.to_json() for test in tests)]
                 for path, tests in iteritems(type_paths)
             }
-            for test_type, type_paths in iteritems(self._data)
+            for test_type, type_paths in self._data.iteritems() if type_paths
         }
         rv = {"url_base": self.url_base,
               "paths": {from_os_path(k): v for k, v in iteritems(self._path_hash)},
@@ -188,19 +357,7 @@ class Manifest(object):
 
         self._path_hash = {to_os_path(k): v for k, v in iteritems(obj["paths"])}
 
-        item_classes = {"testharness": TestharnessTest,
-                        "reftest": RefTest,
-                        "reftest_node": RefTestNode,
-                        "manual": ManualTest,
-                        "stub": Stub,
-                        "wdspec": WebDriverSpecTest,
-                        "conformancechecker": ConformanceCheckerTest,
-                        "visual": VisualTest,
-                        "support": SupportFile}
-
         meta_filters = meta_filters or []
-
-        source_files = {}
 
         for test_type, type_paths in iteritems(obj["items"]):
             if test_type not in item_classes:
@@ -209,18 +366,7 @@ class Manifest(object):
             if types and test_type not in types:
                 continue
 
-            test_cls = item_classes[test_type]
-            tests = defaultdict(set)
-            for path, manifest_tests in iteritems(type_paths):
-                path = to_os_path(path)
-                for test in iterfilter(meta_filters, manifest_tests):
-                    manifest_item = test_cls.from_json(self,
-                                                       tests_root,
-                                                       path,
-                                                       test,
-                                                       source_files=source_files)
-                    tests[path].add(manifest_item)
-            self._data[test_type] = tests
+            self._data[test_type].set_json(tests_root, type_paths)
 
         return self
 
@@ -252,5 +398,5 @@ def write(manifest, manifest_path):
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
     with open(manifest_path, "wb") as f:
-        json.dump(manifest.to_json(), f, sort_keys=True, indent=1, separators=(',', ': '))
+        json.dump(manifest.to_json(), f, sort_keys=True, indent=1)
         f.write("\n")
