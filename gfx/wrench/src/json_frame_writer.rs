@@ -31,9 +31,9 @@ struct CachedFontInstance {
 }
 
 struct CachedImage {
-    width: u32,
-    height: u32,
-    stride: u32,
+    width: i32,
+    height: i32,
+    stride: i32,
     format: ImageFormat,
     bytes: Option<Vec<u8>>,
     path: Option<PathBuf>,
@@ -227,8 +227,8 @@ impl JsonFrameWriter {
                 save_buffer(
                     &path_file,
                     &bytes,
-                    data.width,
-                    data.height,
+                    data.width as u32,
+                    data.height as u32,
                     ColorType::RGBA(8),
                 ).unwrap();
                 true
@@ -239,8 +239,8 @@ impl JsonFrameWriter {
                 save_buffer(
                     &path_file,
                     &bytes,
-                    data.width,
-                    data.height,
+                    data.width as u32,
+                    data.height as u32,
                     ColorType::Gray(8),
                 ).unwrap();
                 true

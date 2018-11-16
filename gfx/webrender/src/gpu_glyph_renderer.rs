@@ -4,7 +4,7 @@
 
 //! GPU glyph rasterization using Pathfinder.
 
-use api::{DeviceIntPoint, DeviceIntRect, DeviceUintSize, FontRenderMode};
+use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, FontRenderMode};
 use api::{ImageFormat, TextureTarget};
 use debug_colors;
 use device::{DrawTarget, Device, Texture, TextureFilter, VAO};
@@ -57,8 +57,8 @@ impl GpuGlyphRenderer {
         let area_lut_texture = device.create_texture(
             TextureTarget::Default,
             ImageFormat::R8,
-            area_lut_width,
-            area_lut_height,
+            area_lut_width as i32,
+            area_lut_height as i32,
             TextureFilter::Linear,
             None,
             1,
@@ -101,7 +101,7 @@ impl Renderer {
     pub fn stencil_glyphs(&mut self,
                           glyphs: &[GlyphJob],
                           projection: &Transform3D<f32>,
-                          target_size: &DeviceUintSize,
+                          target_size: &DeviceIntSize,
                           stats: &mut RendererStats)
                           -> Option<StenciledGlyphPage> {
         if glyphs.is_empty() {
@@ -183,7 +183,7 @@ impl Renderer {
             TextureTarget::Default,
             ImageFormat::RGBAF32,
             3,
-            glyphs.len() as u32,
+            glyphs.len() as i32,
             TextureFilter::Nearest,
             None,
             1,

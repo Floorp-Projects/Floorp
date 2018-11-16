@@ -300,7 +300,7 @@ impl ClipNode {
                                 &image_rect,
                                 &visible_rect,
                                 &device_image_size,
-                                tile_size as u32,
+                                tile_size as i32,
                             );
                             for tile in tiles {
                                 resource_cache.request_image(

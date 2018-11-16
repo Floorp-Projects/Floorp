@@ -113,6 +113,10 @@ fn u32_node(parent: &mut Table, key: &str, value: u32) {
     yaml_node(parent, key, Yaml::Integer(value as i64));
 }
 
+fn i32_node(parent: &mut Table, key: &str, value: i32) {
+    yaml_node(parent, key, Yaml::Integer(value as i64));
+}
+
 fn usize_node(parent: &mut Table, key: &str, value: usize) {
     yaml_node(parent, key, Yaml::Integer(value as i64));
 }
@@ -138,6 +142,14 @@ fn string_vec_yaml(value: &[String], check_unique: bool) -> Yaml {
 }
 
 fn u32_vec_yaml(value: &[u32], check_unique: bool) -> Yaml {
+    if !value.is_empty() && check_unique && array_elements_are_same(value) {
+        Yaml::Integer(value[0] as i64)
+    } else {
+        Yaml::Array(value.iter().map(|v| Yaml::Integer(*v as i64)).collect())
+    }
+}
+
+fn i32_vec_yaml(value: &[i32], check_unique: bool) -> Yaml {
     if !value.is_empty() && check_unique && array_elements_are_same(value) {
         Yaml::Integer(value[0] as i64)
     } else {
@@ -346,9 +358,9 @@ struct CachedFontInstance {
 }
 
 struct CachedImage {
-    width: u32,
-    height: u32,
-    stride: u32,
+    width: i32,
+    height: i32,
+    stride: i32,
     format: ImageFormat,
     bytes: Option<Vec<u8>>,
     path: Option<PathBuf>,
@@ -639,7 +651,13 @@ impl YamlFrameWriter {
             if data.format == ImageFormat::BGRA8 {
                 unpremultiply(bytes.as_mut_slice());
             }
-            save_buffer(&path_file, &bytes, data.width, data.height, color_type).unwrap();
+            save_buffer(
+                &path_file,
+                &bytes,
+                data.width as u32,
+                data.height as u32,
+                color_type,
+            ).unwrap();
         } else {
             // takes a buffer with a stride and copies it into a new buffer that has stride == width
             assert!(data.stride > data.width * bpp);
@@ -653,7 +671,13 @@ impl YamlFrameWriter {
                 unpremultiply(tmp.as_mut_slice());
             }
 
-            save_buffer(&path_file, &tmp, data.width, data.height, color_type).unwrap();
+            save_buffer(
+                &path_file,
+                &tmp,
+                data.width as u32,
+                data.height as u32,
+                color_type
+            ).unwrap();
         }
 
         data.path = Some(path.clone());
@@ -925,15 +949,15 @@ impl YamlFrameWriter {
                                 }
                             }
 
-                            u32_node(&mut v, "image-width", details.width);
-                            u32_node(&mut v, "image-height", details.height);
-                            let slice: Vec<u32> = vec![
+                            i32_node(&mut v, "image-width", details.width);
+                            i32_node(&mut v, "image-height", details.height);
+                            let slice = [
                                 details.slice.top,
                                 details.slice.right,
                                 details.slice.bottom,
                                 details.slice.left,
                             ];
-                            yaml_node(&mut v, "slice", u32_vec_yaml(&slice, true));
+                            yaml_node(&mut v, "slice", i32_vec_yaml(&slice, true));
                             yaml_node(&mut v, "outset", f32_vec_yaml(&outset, true));
                             match details.repeat_horizontal {
                                 RepeatMode::Stretch => {

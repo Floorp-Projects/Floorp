@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize};
+use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{ExternalImageType, ImageData, ImageFormat};
 use api::ImageDescriptor;
 use device::{TextureFilter, total_gpu_bytes_allocated};
@@ -20,7 +20,7 @@ use std::mem;
 use std::rc::Rc;
 
 /// The size of each region/layer in shared cache texture arrays.
-const TEXTURE_REGION_DIMENSIONS: u32 = 512;
+const TEXTURE_REGION_DIMENSIONS: i32 = 512;
 
 /// Items in the texture cache can either be standalone textures,
 /// or a sub-rect inside the shared cache.
@@ -31,7 +31,7 @@ enum EntryDetails {
     Standalone,
     Cache {
         // Origin within the texture layer where this item exists.
-        origin: DeviceUintPoint,
+        origin: DeviceIntPoint,
         // The layer index of the texture array.
         layer_index: usize,
     },
@@ -65,7 +65,7 @@ pub enum CacheEntryMarker {}
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct CacheEntry {
     /// Size the requested item, in device pixels.
-    size: DeviceUintSize,
+    size: DeviceIntSize,
     /// Details specific to standalone or shared items.
     details: EntryDetails,
     /// Arbitrary user data associated with this item.
@@ -116,7 +116,7 @@ impl CacheEntry {
     fn update_gpu_cache(&mut self, gpu_cache: &mut GpuCache) {
         if let Some(mut request) = gpu_cache.request(&mut self.uv_rect_handle) {
             let (origin, layer_index) = match self.details {
-                EntryDetails::Standalone { .. } => (DeviceUintPoint::zero(), 0.0),
+                EntryDetails::Standalone { .. } => (DeviceIntPoint::zero(), 0.0),
                 EntryDetails::Cache {
                     origin,
                     layer_index,
@@ -314,7 +314,7 @@ pub struct TextureCache {
     shared_textures: SharedTextures,
 
     /// Maximum texture size supported by hardware.
-    max_texture_size: u32,
+    max_texture_size: i32,
 
     /// Maximum number of texture layers supported by hardware.
     max_texture_layers: usize,
@@ -341,7 +341,7 @@ pub struct TextureCache {
 }
 
 impl TextureCache {
-    pub fn new(max_texture_size: u32, mut max_texture_layers: usize) -> Self {
+    pub fn new(max_texture_size: i32, mut max_texture_layers: usize) -> Self {
         if cfg!(target_os = "macos") {
             // On MBP integrated Intel GPUs, texture arrays appear to be
             // implemented as a single texture of stacked layers, and that
@@ -367,6 +367,7 @@ impl TextureCache {
             //     start to introduce performance issues.
             max_texture_layers = max_texture_layers.min(32);
         }
+
         TextureCache {
             shared_textures: SharedTextures::new(),
             max_texture_size,
@@ -453,7 +454,7 @@ impl TextureCache {
         self.entries.get_opt(handle).is_none()
     }
 
-    pub fn max_texture_size(&self) -> u32 {
+    pub fn max_texture_size(&self) -> i32 {
         self.max_texture_size
     }
 
@@ -474,7 +475,7 @@ impl TextureCache {
         filter: TextureFilter,
         data: Option<ImageData>,
         user_data: [f32; 3],
-        mut dirty_rect: Option<DeviceUintRect>,
+        mut dirty_rect: Option<DeviceIntRect>,
         gpu_cache: &mut GpuCache,
         eviction_notice: Option<&EvictionNotice>,
         uv_rect_kind: UvRectKind,
@@ -525,7 +526,7 @@ impl TextureCache {
         // in GPU memory.
         if let Some(data) = data {
             let (layer_index, origin) = match entry.details {
-                EntryDetails::Standalone { .. } => (0, DeviceUintPoint::zero()),
+                EntryDetails::Standalone { .. } => (0, DeviceIntPoint::zero()),
                 EntryDetails::Cache {
                     layer_index,
                     origin,
@@ -574,7 +575,7 @@ impl TextureCache {
         debug_assert_eq!(entry.last_access, self.frame_id);
         let (layer_index, origin) = match entry.details {
             EntryDetails::Standalone { .. } => {
-                (0, DeviceUintPoint::zero())
+                (0, DeviceIntPoint::zero())
             }
             EntryDetails::Cache {
                 layer_index,
@@ -585,7 +586,7 @@ impl TextureCache {
         CacheItem {
             uv_rect_handle: entry.uv_rect_handle,
             texture_id: TextureSource::TextureCache(entry.texture_id),
-            uv_rect: DeviceUintRect::new(origin, entry.size),
+            uv_rect: DeviceIntRect::new(origin, entry.size),
             texture_layer: layer_index as i32,
         }
     }
@@ -597,14 +598,14 @@ impl TextureCache {
     pub fn get_cache_location(
         &self,
         handle: &TextureCacheHandle,
-    ) -> (CacheTextureId, LayerIndex, DeviceUintRect) {
+    ) -> (CacheTextureId, LayerIndex, DeviceIntRect) {
         let entry = self.entries
             .get_opt(handle)
             .expect("BUG: was dropped from cache or not updated!");
         debug_assert_eq!(entry.last_access, self.frame_id);
         let (layer_index, origin) = match entry.details {
             EntryDetails::Standalone { .. } => {
-                (0, DeviceUintPoint::zero())
+                (0, DeviceIntPoint::zero())
             }
             EntryDetails::Cache {
                 layer_index,
@@ -614,7 +615,7 @@ impl TextureCache {
         };
         (entry.texture_id,
          layer_index as usize,
-         DeviceUintRect::new(origin, entry.size))
+         DeviceIntRect::new(origin, entry.size))
     }
 
     pub fn mark_unused(&mut self, handle: &TextureCacheHandle) {
@@ -920,12 +921,12 @@ impl TextureCache {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Copy, Clone, PartialEq)]
 struct SlabSize {
-    width: u32,
-    height: u32,
+    width: i32,
+    height: i32,
 }
 
 impl SlabSize {
-    fn new(size: DeviceUintSize) -> SlabSize {
+    fn new(size: DeviceIntSize) -> SlabSize {
         let x_size = quantize_dimension(size.width);
         let y_size = quantize_dimension(size.height);
 
@@ -968,8 +969,8 @@ impl SlabSize {
 struct TextureLocation(u8, u8);
 
 impl TextureLocation {
-    fn new(x: u32, y: u32) -> Self {
-        debug_assert!(x < 0x100 && y < 0x100);
+    fn new(x: i32, y: i32) -> Self {
+        debug_assert!(x >= 0 && y >= 0 && x < 0x100 && y < 0x100);
         TextureLocation(x as u8, y as u8)
     }
 }
@@ -1028,19 +1029,19 @@ impl TextureRegion {
     }
 
     // Attempt to allocate a fixed size block from this region.
-    fn alloc(&mut self) -> Option<DeviceUintPoint> {
+    fn alloc(&mut self) -> Option<DeviceIntPoint> {
         debug_assert!(self.slab_size != SlabSize::invalid());
 
         self.free_slots.pop().map(|location| {
-            DeviceUintPoint::new(
-                self.slab_size.width * location.0 as u32,
-                self.slab_size.height * location.1 as u32,
+            DeviceIntPoint::new(
+                self.slab_size.width * location.0 as i32,
+                self.slab_size.height * location.1 as i32,
             )
         })
     }
 
     // Free a block in this region.
-    fn free(&mut self, point: DeviceUintPoint) {
+    fn free(&mut self, point: DeviceIntPoint) {
         let x = point.x / self.slab_size.width;
         let y = point.y / self.slab_size.height;
         self.free_slots.push(TextureLocation::new(x, y));
@@ -1088,7 +1089,7 @@ impl TextureArray {
     fn update_profile(&self, counter: &mut ResourceProfileCounter) {
         let layer_count = self.regions.len();
         if layer_count != 0 {
-            let size = layer_count as u32 * TEXTURE_REGION_DIMENSIONS *
+            let size = layer_count as i32 * TEXTURE_REGION_DIMENSIONS *
                 TEXTURE_REGION_DIMENSIONS * self.format.bytes_per_pixel();
             counter.set(layer_count as usize, size as usize);
         } else {
@@ -1172,11 +1173,11 @@ impl TextureCacheUpdate {
     fn new_update(
         data: ImageData,
         descriptor: &ImageDescriptor,
-        origin: DeviceUintPoint,
-        size: DeviceUintSize,
+        origin: DeviceIntPoint,
+        size: DeviceIntSize,
         texture_id: CacheTextureId,
         layer_index: i32,
-        dirty_rect: Option<DeviceUintRect>,
+        dirty_rect: Option<DeviceIntRect>,
     ) -> TextureCacheUpdate {
         let source = match data {
             ImageData::Blob(..) => {
@@ -1209,9 +1210,9 @@ impl TextureCacheUpdate {
 
                 TextureCacheUpdate {
                     id: texture_id,
-                    rect: DeviceUintRect::new(
-                        DeviceUintPoint::new(origin.x + dirty.origin.x, origin.y + dirty.origin.y),
-                        DeviceUintSize::new(
+                    rect: DeviceIntRect::new(
+                        DeviceIntPoint::new(origin.x + dirty.origin.x, origin.y + dirty.origin.y),
+                        DeviceIntSize::new(
                             dirty.size.width.min(size.width - dirty.origin.x),
                             dirty.size.height.min(size.height - dirty.origin.y),
                         ),
@@ -1225,7 +1226,7 @@ impl TextureCacheUpdate {
             None => {
                 TextureCacheUpdate {
                     id: texture_id,
-                    rect: DeviceUintRect::new(origin, size),
+                    rect: DeviceIntRect::new(origin, size),
                     source,
                     stride: descriptor.stride,
                     offset: descriptor.offset,
@@ -1238,7 +1239,7 @@ impl TextureCacheUpdate {
     }
 }
 
-fn quantize_dimension(size: u32) -> u32 {
+fn quantize_dimension(size: i32) -> i32 {
     match size {
         0 => unreachable!(),
         1...16 => 16,

@@ -55,8 +55,8 @@ struct GlyphMetrics {
     #[allow(dead_code)]
     rasterized_descent: i32,
     rasterized_ascent: i32,
-    rasterized_width: u32,
-    rasterized_height: u32,
+    rasterized_width: i32,
+    rasterized_height: i32,
     advance: f32,
 }
 
@@ -156,8 +156,8 @@ fn get_glyph_metrics(
 
     GlyphMetrics {
         rasterized_left: left,
-        rasterized_width: width as u32,
-        rasterized_height: height as u32,
+        rasterized_width: width,
+        rasterized_height: height,
         rasterized_ascent: top,
         rasterized_descent: -bottom,
         advance: advance.width as f32,
@@ -421,8 +421,8 @@ impl FontContext {
                     Some(GlyphDimensions {
                         left: metrics.rasterized_left,
                         top: metrics.rasterized_ascent,
-                        width: metrics.rasterized_width as u32,
-                        height: metrics.rasterized_height as u32,
+                        width: metrics.rasterized_width,
+                        height: metrics.rasterized_height,
                         advance: metrics.advance,
                     })
                 }
@@ -565,7 +565,10 @@ impl FontContext {
             return GlyphRasterResult::LoadFailed
         }
 
-        let raster_size = Size2D::new(metrics.rasterized_width, metrics.rasterized_height);
+        let raster_size = Size2D::new(
+            metrics.rasterized_width as u32,
+            metrics.rasterized_height as u32
+        );
 
         // If the font render mode is Alpha, we support two different ways to
         // compute the grayscale mask, depending on the value of the platform

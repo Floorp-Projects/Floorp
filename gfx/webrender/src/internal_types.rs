@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DebugCommand, DeviceUintRect, DocumentId, ExternalImageData, ExternalImageId};
+use api::{DebugCommand, DeviceIntRect, DocumentId, ExternalImageData, ExternalImageId};
 use api::{ImageFormat, WorldPixel, NotificationRequest};
 use device::TextureFilter;
 use renderer::PipelineInfo;
@@ -122,8 +122,8 @@ pub struct TextureCacheAllocation {
 /// Information used when allocating / reallocating.
 #[derive(Debug)]
 pub struct TextureCacheAllocInfo {
-    pub width: u32,
-    pub height: u32,
+    pub width: i32,
+    pub height: i32,
     pub layer_count: i32,
     pub format: ImageFormat,
     pub filter: TextureFilter,
@@ -148,9 +148,9 @@ pub enum TextureCacheAllocationKind {
 #[derive(Debug)]
 pub struct TextureCacheUpdate {
     pub id: CacheTextureId,
-    pub rect: DeviceUintRect,
-    pub stride: Option<u32>,
-    pub offset: u32,
+    pub rect: DeviceIntRect,
+    pub stride: Option<i32>,
+    pub offset: i32,
     pub layer_index: i32,
     pub source: TextureUpdateSource,
 }

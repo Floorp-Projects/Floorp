@@ -8,6 +8,8 @@ use std::path::{Path, PathBuf};
 use api::{CaptureBits, ExternalImageData, ImageDescriptor, TexelRect};
 #[cfg(feature = "png")]
 use device::ReadPixelsFormat;
+#[cfg(feature = "png")]
+use api::DeviceIntSize;
 use ron;
 use serde;
 
@@ -77,7 +79,7 @@ impl CaptureConfig {
 
     #[cfg(feature = "png")]
     pub fn save_png(
-        path: PathBuf, size: (u32, u32), format: ReadPixelsFormat, data: &[u8],
+        path: PathBuf, size: DeviceIntSize, format: ReadPixelsFormat, data: &[u8],
     ) {
         use api::ImageFormat;
         use png::{BitDepth, ColorType, Encoder, HasParameters};
@@ -97,7 +99,7 @@ impl CaptureConfig {
             }
         };
         let w = BufWriter::new(File::create(path).unwrap());
-        let mut enc = Encoder::new(w, size.0, size.1);
+        let mut enc = Encoder::new(w, size.width as u32, size.height as u32);
         enc
             .set(color_type)
             .set(BitDepth::Eight);

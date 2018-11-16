@@ -38,7 +38,7 @@ fn render_blob(
     color: ColorU,
     descriptor: &BlobImageDescriptor,
     tile: Option<(TileSize, TileOffset)>,
-    dirty_rect: Option<DeviceUintRect>,
+    dirty_rect: Option<DeviceIntRect>,
 ) -> BlobImageResult {
     // Allocate storage for the result. Right now the resource cache expects the
     // tiles to have have no stride or offset.
@@ -54,13 +54,13 @@ fn render_blob(
         None => true,
     };
 
-    let mut dirty_rect = dirty_rect.unwrap_or(DeviceUintRect::new(
-        descriptor.offset.to_u32(),
+    let mut dirty_rect = dirty_rect.unwrap_or(DeviceIntRect::new(
+        descriptor.offset.to_i32(),
         descriptor.size,
     ));
 
     if let Some((tile_size, tile)) = tile {
-        dirty_rect = intersect_for_tile(dirty_rect, size2(tile_size as u32, tile_size as u32),
+        dirty_rect = intersect_for_tile(dirty_rect, size2(tile_size as i32, tile_size as i32),
                                         tile_size, tile)
             .expect("empty rects should be culled by webrender");
     }
@@ -69,8 +69,8 @@ fn render_blob(
         for x in dirty_rect.min_x() .. dirty_rect.max_x() {
             // Apply the tile's offset. This is important: all drawing commands should be
             // translated by this offset to give correct results with tiled blob images.
-            let x2 = x + descriptor.offset.x as u32;
-            let y2 = y + descriptor.offset.y as u32;
+            let x2 = x + descriptor.offset.x as i32;
+            let y2 = y + descriptor.offset.y as i32;
 
             // Render a simple checkerboard pattern
             let checker = if (x2 % 20 >= 10) != (y2 % 20 >= 10) {
@@ -139,7 +139,7 @@ impl BlobImageHandler for CheckerboardRenderer {
             .insert(key, (deserialize_blob(&cmds[..]).unwrap(), tile_size));
     }
 
-    fn update(&mut self, key: ImageKey, cmds: Arc<BlobImageData>, _dirty_rect: Option<DeviceUintRect>) {
+    fn update(&mut self, key: ImageKey, cmds: Arc<BlobImageData>, _dirty_rect: Option<DeviceIntRect>) {
         // Here, updating is just replacing the current version of the commands with
         // the new one (no incremental updates).
         self.image_cmds.get_mut(&key).unwrap().0 = deserialize_blob(&cmds[..]).unwrap();
@@ -175,7 +175,7 @@ struct Command {
     color: ColorU,
     descriptor: BlobImageDescriptor,
     tile: Option<(TileSize, TileOffset)>,
-    dirty_rect: Option<DeviceUintRect>
+    dirty_rect: Option<DeviceIntRect>
 }
 
 struct Rasterizer {

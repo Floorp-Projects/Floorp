@@ -55,7 +55,7 @@ impl<'a> RawtestHarness<'a> {
         self.test_zero_height_window();
     }
 
-    fn render_and_get_pixels(&mut self, window_rect: DeviceUintRect) -> Vec<u8> {
+    fn render_and_get_pixels(&mut self, window_rect: DeviceIntRect) -> Vec<u8> {
         self.rx.recv().unwrap();
         self.wrench.render();
         self.wrench.renderer.read_pixels_rgba8(window_rect)
@@ -138,10 +138,10 @@ impl<'a> RawtestHarness<'a> {
 
         let window_size = self.window.get_inner_size();
 
-        let test_size = DeviceUintSize::new(800, 800);
+        let test_size = DeviceIntSize::new(800, 800);
 
-        let window_rect = DeviceUintRect::new(
-            DeviceUintPoint::new(0, window_size.height - test_size.height),
+        let window_rect = DeviceIntRect::new(
+            DeviceIntPoint::new(0, window_size.height - test_size.height),
             test_size,
         );
 
@@ -185,7 +185,7 @@ impl<'a> RawtestHarness<'a> {
         );
         txn.set_image_visible_area(
             blob_img,
-            DeviceUintRect {
+            DeviceIntRect {
                 origin: point2(0, 111256 / 30),
                 size: size2(1510, 111256 / 30),
             }
@@ -253,9 +253,9 @@ impl<'a> RawtestHarness<'a> {
         assert_eq!(self.wrench.device_pixel_ratio, 1.);
 
         let window_size = self.window.get_inner_size();
-        let test_size = DeviceUintSize::new(800, 800);
-        let window_rect = DeviceUintRect::new(
-            DeviceUintPoint::new(0, window_size.height - test_size.height),
+        let test_size = DeviceIntSize::new(800, 800);
+        let window_rect = DeviceIntRect::new(
+            DeviceIntPoint::new(0, window_size.height - test_size.height),
             test_size,
         );
         let layout_size = LayoutSize::new(800.0, 800.0);
@@ -269,8 +269,8 @@ impl<'a> RawtestHarness<'a> {
         txn.add_image(
             blob_img1,
             ImageDescriptor::new(
-                image_size.width as u32,
-                image_size.height as u32,
+                image_size.width as i32,
+                image_size.height as i32,
                 ImageFormat::BGRA8,
                 false,
                 false
@@ -299,8 +299,8 @@ impl<'a> RawtestHarness<'a> {
         txn.add_image(
             blob_img2,
             ImageDescriptor::new(
-                image_size.width as u32,
-                image_size.height as u32,
+                image_size.width as i32,
+                image_size.height as i32,
                 ImageFormat::BGRA8,
                 false,
                 false
@@ -310,7 +310,7 @@ impl<'a> RawtestHarness<'a> {
         );
         // Set a visible rectangle that is too small.
         // This will force sync rasterization of the missing tiles during frame building.
-        txn.set_image_visible_area(blob_img2, DeviceUintRect {
+        txn.set_image_visible_area(blob_img2, DeviceIntRect {
             origin: point2(200, 200),
             size: size2(80, 80),
         });
@@ -343,10 +343,10 @@ impl<'a> RawtestHarness<'a> {
 
         let window_size = self.window.get_inner_size();
 
-        let test_size = DeviceUintSize::new(800, 800);
+        let test_size = DeviceIntSize::new(800, 800);
 
-        let window_rect = DeviceUintRect::new(
-            DeviceUintPoint::new(0, window_size.height - test_size.height),
+        let window_rect = DeviceIntRect::new(
+            DeviceIntPoint::new(0, window_size.height - test_size.height),
             test_size,
         );
 
@@ -454,10 +454,10 @@ impl<'a> RawtestHarness<'a> {
         let blob_img;
         let window_size = self.window.get_inner_size();
 
-        let test_size = DeviceUintSize::new(400, 400);
+        let test_size = DeviceIntSize::new(400, 400);
 
-        let window_rect = DeviceUintRect::new(
-            DeviceUintPoint::new(0, window_size.height - test_size.height),
+        let window_rect = DeviceIntRect::new(
+            DeviceIntPoint::new(0, window_size.height - test_size.height),
             test_size,
         );
         let layout_size = LayoutSize::new(400., 400.);
@@ -542,9 +542,9 @@ impl<'a> RawtestHarness<'a> {
         let (blob_img, blob_img2);
         let window_size = self.window.get_inner_size();
 
-        let test_size = DeviceUintSize::new(400, 400);
+        let test_size = DeviceIntSize::new(400, 400);
 
-        let window_rect = DeviceUintRect::new(
+        let window_rect = DeviceIntRect::new(
             point(0, window_size.height - test_size.height),
             test_size,
         );
@@ -669,9 +669,9 @@ impl<'a> RawtestHarness<'a> {
         println!("\tblob update test...");
         let window_size = self.window.get_inner_size();
 
-        let test_size = DeviceUintSize::new(400, 400);
+        let test_size = DeviceIntSize::new(400, 400);
 
-        let window_rect = DeviceUintRect::new(
+        let window_rect = DeviceIntRect::new(
             point(0, window_size.height - test_size.height),
             test_size,
         );
@@ -767,10 +767,10 @@ impl<'a> RawtestHarness<'a> {
         println!("\tsave/restore...");
         let window_size = self.window.get_inner_size();
 
-        let test_size = DeviceUintSize::new(400, 400);
+        let test_size = DeviceIntSize::new(400, 400);
 
-        let window_rect = DeviceUintRect::new(
-            DeviceUintPoint::new(0, window_size.height - test_size.height),
+        let window_rect = DeviceIntRect::new(
+            DeviceIntPoint::new(0, window_size.height - test_size.height),
             test_size,
         );
         let layout_size = LayoutSize::new(400., 400.);
@@ -845,10 +845,10 @@ impl<'a> RawtestHarness<'a> {
         println!("\tblur cache...");
         let window_size = self.window.get_inner_size();
 
-        let test_size = DeviceUintSize::new(400, 400);
+        let test_size = DeviceIntSize::new(400, 400);
 
-        let window_rect = DeviceUintRect::new(
-            DeviceUintPoint::new(0, window_size.height - test_size.height),
+        let window_rect = DeviceIntRect::new(
+            DeviceIntPoint::new(0, window_size.height - test_size.height),
             test_size,
         );
         let layout_size = LayoutSize::new(400., 400.);
@@ -889,9 +889,9 @@ impl<'a> RawtestHarness<'a> {
         let path = "../captures/test";
         let layout_size = LayoutSize::new(400., 400.);
         let dim = self.window.get_inner_size();
-        let window_rect = DeviceUintRect::new(
-            point(0, dim.height - layout_size.height as u32),
-            size(layout_size.width as u32, layout_size.height as u32),
+        let window_rect = DeviceIntRect::new(
+            point(0, dim.height - layout_size.height as i32),
+            size(layout_size.width as i32, layout_size.height as i32),
         );
 
         // 1. render some scene
@@ -971,7 +971,7 @@ impl<'a> RawtestHarness<'a> {
         println!("\tzero height test...");
 
         let layout_size = LayoutSize::new(120.0, 0.0);
-        let window_size = DeviceUintSize::new(layout_size.width as u32, layout_size.height as u32);
+        let window_size = DeviceIntSize::new(layout_size.width as i32, layout_size.height as i32);
         let doc_id = self.wrench.api.add_document(window_size, 1);
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
