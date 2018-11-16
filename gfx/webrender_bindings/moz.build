@@ -46,6 +46,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'RenderMacIOSurfaceTextureHostOGL.cpp',
     ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    EXPORTS.mozilla.webrender += [
+        'RenderAndroidSurfaceTextureHostOGL.h',
+    ]
+    UNIFIED_SOURCES += [
+        'RenderAndroidSurfaceTextureHostOGL.cpp',
+    ]
+
 if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
     DEFINES['MOZ_ENABLE_D3D10_LAYER'] = True
     EXPORTS.mozilla.webrender += [
