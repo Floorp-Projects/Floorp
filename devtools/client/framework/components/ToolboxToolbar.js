@@ -8,6 +8,8 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {div, button} = dom;
 
+const DebugTargetInfo =
+  createFactory(require("devtools/client/framework/components/DebugTargetInfo"));
 const MenuButton = createFactory(require("devtools/client/shared/components/menu/MenuButton"));
 const ToolboxTabs = createFactory(require("devtools/client/framework/components/ToolboxTabs"));
 
@@ -94,6 +96,10 @@ class ToolboxToolbar extends Component {
       // Because in the component we cannot compare the visibility since the
       // button definition instance in toolboxButtons will be unchanged.
       visibleToolboxButtonCount: PropTypes.number,
+      // Flag whether need to show DebugTargetInfo.
+      showDebugTargetInfo: PropTypes.bool,
+      // Device description for DebugTargetInfo component.
+      deviceDescription: PropTypes.object,
     };
   }
 
@@ -414,7 +420,7 @@ class ToolboxToolbar extends Component {
    * render functions for how each of the sections is rendered.
    */
   render() {
-    const {toolbox} = this.props;
+    const {deviceDescription, showDebugTargetInfo, toolbox} = this.props;
     const classnames = ["devtools-tabbar"];
     const startButtons = this.renderToolboxButtonsStart();
     const endButtons = this.renderToolboxButtonsEnd();
@@ -440,17 +446,21 @@ class ToolboxToolbar extends Component {
       )
       : div({ className: classnames.join(" ") });
 
+    const debugTargetInfo =
+      showDebugTargetInfo ? DebugTargetInfo({ deviceDescription, toolbox }) : null;
+
     if (toolbox.target.canRewind) {
       return div(
         {},
         WebReplayPlayer({
           toolbox: toolbox,
         }),
+        debugTargetInfo,
         toolbar,
       );
     }
 
-    return toolbar;
+    return div({}, debugTargetInfo, toolbar);
   }
 }
 
