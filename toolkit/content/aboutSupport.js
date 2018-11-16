@@ -1185,22 +1185,32 @@ function safeModeRestart() {
  * Set up event listeners for buttons.
  */
 function setupEventListeners() {
-  if (AppConstants.platform !== "android") {
-    $("show-update-history-button").addEventListener("click", function(event) {
+  let button = $("show-update-history-button");
+  if (button) {
+    button.addEventListener("click", function(event) {
       var prompter = Cc["@mozilla.org/updates/update-prompt;1"].createInstance(Ci.nsIUpdatePrompt);
       prompter.showUpdateHistory(window);
     });
-    $("reset-box-button").addEventListener("click", function(event) {
+  }
+  button = $("reset-box-button");
+  if (button) {
+    button.addEventListener("click", function(event) {
       ResetProfile.openConfirmationDialog(window);
     });
-    $("restart-in-safe-mode-button").addEventListener("click", function(event) {
+  }
+  button = $("restart-in-safe-mode-button");
+  if (button) {
+    button.addEventListener("click", function(event) {
       if (Services.obs.enumerateObservers("restart-in-safe-mode").hasMoreElements()) {
         Services.obs.notifyObservers(null, "restart-in-safe-mode");
       } else {
         safeModeRestart();
       }
     });
-    $("verify-place-integrity-button").addEventListener("click", function(event) {
+  }
+  button = $("verify-place-integrity-button");
+  if (button) {
+    button.addEventListener("click", function(event) {
       PlacesDBUtils.checkAndFixDatabase().then((tasksStatusMap) => {
         let logs = [];
         for (let [key, value] of tasksStatusMap) {
