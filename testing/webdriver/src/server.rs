@@ -226,7 +226,7 @@ impl<U: WebDriverExtensionRoute + 'static> Service for HttpHandler<U> {
 
             let response = Response::builder()
                 .status(status)
-                .header(http::header::CONTENT_TYPE, "application/json; charset=utf8")
+                .header(http::header::CONTENT_TYPE, "application/json; charset=utf-8")
                 .header(http::header::CACHE_CONTROL, "no-cache")
                 .body(resp_body.into())
                 .unwrap();
