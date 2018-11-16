@@ -48,6 +48,7 @@ class GeckoViewSettings extends GeckoViewModule {
     debug `onInit`;
     this._useTrackingProtection = false;
     this._userAgentMode = USER_AGENT_MODE_MOBILE;
+    this._userAgentOverride = null;
     // Required for safe browsing and tracking protection.
     SafeBrowsing.init();
 
@@ -72,6 +73,7 @@ class GeckoViewSettings extends GeckoViewModule {
 
     this.displayMode = settings.displayMode;
     this.userAgentMode = settings.userAgentMode;
+    this.userAgentOverride = settings.userAgentOverride;
   }
 
   get useMultiprocess() {
@@ -87,13 +89,17 @@ class GeckoViewSettings extends GeckoViewModule {
       return;
     }
 
-    if (this.userAgentMode === USER_AGENT_MODE_DESKTOP ||
+    if (this.userAgentOverride !== null ||
+        this.userAgentMode === USER_AGENT_MODE_DESKTOP ||
         this.userAgentMode === USER_AGENT_MODE_VR) {
       channel.setRequestHeader("User-Agent", this.userAgent, false);
     }
   }
 
   get userAgent() {
+    if (this.userAgentOverride !== null) {
+      return this.userAgentOverride;
+    }
     if (this.userAgentMode === USER_AGENT_MODE_DESKTOP) {
       return DESKTOP_USER_AGENT;
     }
@@ -111,12 +117,32 @@ class GeckoViewSettings extends GeckoViewModule {
     if (this.userAgentMode === aMode) {
       return;
     }
-    if (this.userAgentMode === USER_AGENT_MODE_MOBILE) {
-      Services.obs.addObserver(this, "http-on-useragent-request");
-    } else if (aMode === USER_AGENT_MODE_MOBILE) {
-      Services.obs.removeObserver(this, "http-on-useragent-request");
-    }
+    this.updateUserAgentObserver(this._userAgentOverride, aMode);
     this._userAgentMode = aMode;
+  }
+
+  get userAgentOverride() {
+    return this._userAgentOverride;
+  }
+
+  set userAgentOverride(aUserAgent) {
+    this.updateUserAgentObserver(aUserAgent, this._userAgentMode);
+    this._userAgentOverride = aUserAgent;
+  }
+
+  updateUserAgentObserver(aUserAgent, aMode) {
+    const wasAdded = this.userAgentOverride !== null || this.userAgentMode !== USER_AGENT_MODE_MOBILE;
+    const shouldAdd = aUserAgent !== null || aMode !== USER_AGENT_MODE_MOBILE;
+
+    try {
+      if (wasAdded && !shouldAdd) {
+        Services.obs.removeObserver(this, "http-on-useragent-request");
+      } else if (!wasAdded && shouldAdd) {
+        Services.obs.addObserver(this, "http-on-useragent-request");
+      }
+    } catch (e) {
+      warn `Caught exception while adding/removing "http-on-useragent-request" observer: ${e.message}`;
+    }
   }
 
   get displayMode() {
