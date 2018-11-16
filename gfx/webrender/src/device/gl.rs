@@ -1004,14 +1004,18 @@ impl Device {
             }
         } else {
             // BGRA is not supported as an internal format, therefore we will
-            // use RGBA and swizzle during upload. Note that this is not
-            // supported on GLES.
+            // use RGBA. On non-gles we can swizzle during upload. This is not
+            // allowed on gles, so we must us RGBA for the external format too.
+            // Red and blue will appear reversed, but it is the best we can do.
             // Since the internal format will actually be RGBA, if texture
             // storage is supported we can use it for such textures.
-            assert_ne!(gl.get_type(), gl::GlType::Gles, "gles must have compatible internal and external formats");
             (
                 gl::RGBA8,
-                gl::BGRA,
+                if gl.get_type() == gl::GlType::Gles {
+                    gl::RGBA
+                } else {
+                    gl::BGRA
+                },
                 if supports_texture_storage {
                     TexStorageUsage::Always
                 } else {
