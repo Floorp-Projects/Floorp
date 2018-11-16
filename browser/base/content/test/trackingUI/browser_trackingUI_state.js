@@ -134,20 +134,26 @@ function testTrackingPage(window) {
   ok(!hidden("#identity-popup-content-blocking-detected"), "blocking detected label is visible");
 
   ok(!hidden("#identity-popup-content-blocking-category-list"), "category list is visible");
-  let category = Services.prefs.getIntPref(TPC_PREF) == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER ?
-               "#identity-popup-content-blocking-category-3rdpartycookies" :
-               "#identity-popup-content-blocking-category-tracking-protection";
-  is(hidden(category + " > .identity-popup-content-blocking-category-add-blocking"), blockedByTP,
-    "Category item is" + (blockedByTP ? " not" : "") + " showing add blocking");
-  is(hidden(category + " > .identity-popup-content-blocking-category-state-label"), !blockedByTP,
-    "Category item is" + (blockedByTP ? "" : " not") + " set to blocked");
 
-  if (Services.prefs.getIntPref(TPC_PREF) == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER) {
+  let cookiesBlocked = Services.prefs.getIntPref(TPC_PREF) == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
+  if (cookiesBlocked) {
+    let category = "#identity-popup-content-blocking-category-3rdpartycookies";
+    is(hidden(category + " > .identity-popup-content-blocking-category-add-blocking"), blockedByTP,
+      "Category item is" + (blockedByTP ? " not" : "") + " showing add blocking");
+    is(hidden(category + " > .identity-popup-content-blocking-category-state-label"), !blockedByTP,
+      "Category item is" + (blockedByTP ? "" : " not") + " set to blocked");
+
     ok(hidden("#identity-popup-content-blocking-category-label-default"),
       "Not showing default cookie restrictions label.");
     ok(!hidden("#identity-popup-content-blocking-category-label-trackers"),
       "Showing trackers cookie restrictions label.");
   } else {
+    let category = "#identity-popup-content-blocking-category-tracking-protection";
+    is(hidden(category + " > #identity-popup-content-blocking-tracking-protection-label-allowed"), blockedByTP,
+      "Category item is" + (blockedByTP ? " not" : "") + " showing the allowed label");
+    is(!hidden(category + " > #identity-popup-content-blocking-tracking-protection-label-blocked"), blockedByTP,
+      "Category item is" + (blockedByTP ? "" : " not") + " set to blocked");
+
     ok(hidden("#identity-popup-content-blocking-category-label-trackers"),
       "Not showing trackers cookie restrictions label.");
     ok(!hidden("#identity-popup-content-blocking-category-label-default"),
@@ -175,14 +181,22 @@ function testTrackingPageUnblocked(blockedByTP, window) {
   ok(!hidden("#identity-popup-content-blocking-detected"), "blocking detected label is visible");
 
   ok(!hidden("#identity-popup-content-blocking-category-list"), "category list is visible");
-  let category = Services.prefs.getIntPref(TPC_PREF) == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER ?
-               "#identity-popup-content-blocking-category-3rdpartycookies" :
-               "#identity-popup-content-blocking-category-tracking-protection";
-  is(hidden(category + " > .identity-popup-content-blocking-category-add-blocking"), blockedByTP,
-    "Category item is" + (blockedByTP ? " not" : "") + " showing add blocking");
-  // Always hidden no matter if blockedByTP or not, since we have an exception.
-  ok(hidden("#identity-popup-content-blocking-category-tracking-protection > .identity-popup-content-blocking-category-state-label"),
-    "TP category item is not set to blocked");
+
+  let cookiesBlocked = Services.prefs.getIntPref(TPC_PREF) == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
+  if (cookiesBlocked) {
+    let category = "#identity-popup-content-blocking-category-3rdpartycookies";
+    is(hidden(category + " > .identity-popup-content-blocking-category-add-blocking"), blockedByTP,
+      "Category item is" + (blockedByTP ? " not" : "") + " showing add blocking");
+    ok(!hidden("#identity-popup-content-blocking-category-tracking-protection > #identity-popup-content-blocking-tracking-protection-label-allowed"),
+      "TP category item is showing the allowed label");
+  } else {
+    let category = "#identity-popup-content-blocking-category-tracking-protection";
+    // If there's an exception we always show the "Allowed" label.
+    ok(!hidden(category + " > #identity-popup-content-blocking-tracking-protection-label-allowed"),
+      "Category item is showing the allowed label");
+    ok(hidden(category + " > #identity-popup-content-blocking-tracking-protection-label-blocked"),
+      "Category item is not set to blocked");
+  }
 }
 
 async function testContentBlocking(tab) {
