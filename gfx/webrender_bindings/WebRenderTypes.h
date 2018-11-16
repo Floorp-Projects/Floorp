@@ -347,9 +347,9 @@ static inline wr::LayoutRect ToLayoutRect(const gfx::Rect& rect)
   return r;
 }
 
-static inline wr::DeviceUintRect ToDeviceUintRect(const mozilla::ImageIntRect& rect)
+static inline wr::DeviceIntRect ToDeviceIntRect(const mozilla::ImageIntRect& rect)
 {
-  wr::DeviceUintRect r;
+  wr::DeviceIntRect r;
   r.origin.x = rect.X();
   r.origin.y = rect.Y();
   r.size.width = rect.Width();
@@ -538,9 +538,9 @@ static inline wr::LayoutSideOffsets ToBorderWidths(float top, float right, float
   return bw;
 }
 
-static inline wr::SideOffsets2D<uint32_t> ToSideOffsets2D_u32(uint32_t top, uint32_t right, uint32_t bottom, uint32_t left)
+static inline wr::SideOffsets2D<int32_t> ToSideOffsets2D_i32(int32_t top, int32_t right, int32_t bottom, int32_t left)
 {
-  SideOffsets2D<uint32_t> offset;
+  SideOffsets2D<int32_t> offset;
   offset.top = top;
   offset.right = right;
   offset.bottom = bottom;

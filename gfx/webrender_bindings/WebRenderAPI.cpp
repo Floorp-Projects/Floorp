@@ -31,7 +31,7 @@ class NewRenderer : public RendererEvent
 public:
   NewRenderer(wr::DocumentHandle** aDocHandle,
               layers::CompositorBridgeParent* aBridge,
-              uint32_t* aMaxTextureSize,
+              int32_t* aMaxTextureSize,
               bool* aUseANGLE,
               bool* aUseDComp,
               bool* aUseTripleBuffering,
@@ -110,7 +110,7 @@ public:
 
 private:
   wr::DocumentHandle** mDocHandle;
-  uint32_t* mMaxTextureSize;
+  int32_t* mMaxTextureSize;
   bool* mUseANGLE;
   bool* mUseDComp;
   bool* mUseTripleBuffering;
@@ -240,10 +240,10 @@ void
 TransactionBuilder::SetWindowParameters(const LayoutDeviceIntSize& aWindowSize,
                                         const LayoutDeviceIntRect& aDocumentRect)
 {
-  wr::DeviceUintSize wrWindowSize;
+  wr::DeviceIntSize wrWindowSize;
   wrWindowSize.width = aWindowSize.width;
   wrWindowSize.height = aWindowSize.height;
-  wr::DeviceUintRect wrDocRect;
+  wr::DeviceIntRect wrDocRect;
   wrDocRect.origin.x = aDocumentRect.x;
   wrDocRect.origin.y = aDocumentRect.y;
   wrDocRect.size.width = aDocumentRect.width;
@@ -299,7 +299,7 @@ WebRenderAPI::Create(layers::CompositorBridgeParent* aBridge,
       "The FFI bindings assume size_t is the same size as uintptr_t!");
 
   wr::DocumentHandle* docHandle = nullptr;
-  uint32_t maxTextureSize = 0;
+  int32_t maxTextureSize = 0;
   bool useANGLE = false;
   bool useDComp = false;
   bool useTripleBuffering = false;
@@ -338,7 +338,7 @@ WebRenderAPI::Clone()
 already_AddRefed<WebRenderAPI>
 WebRenderAPI::CreateDocument(LayoutDeviceIntSize aSize, int8_t aLayerIndex)
 {
-  wr::DeviceUintSize wrSize;
+  wr::DeviceIntSize wrSize;
   wrSize.width = aSize.width;
   wrSize.height = aSize.height;
   wr::DocumentHandle* newDoc;
@@ -671,7 +671,7 @@ void
 TransactionBuilder::UpdateBlobImage(ImageKey aKey,
                                     const ImageDescriptor& aDescriptor,
                                     wr::Vec<uint8_t>& aBytes,
-                                    const wr::DeviceUintRect& aDirtyRect)
+                                    const wr::DeviceIntRect& aDirtyRect)
 {
   wr_resource_updates_update_blob_image(mTxn,
                                         aKey,
@@ -700,7 +700,7 @@ TransactionBuilder::UpdateExternalImageWithDirtyRect(ImageKey aKey,
                                                      const ImageDescriptor& aDescriptor,
                                                      ExternalImageId aExtID,
                                                      wr::WrExternalImageBufferType aBufferType,
-                                                     const wr::DeviceUintRect& aDirtyRect,
+                                                     const wr::DeviceIntRect& aDirtyRect,
                                                      uint8_t aChannelIndex)
 {
   wr_resource_updates_update_external_image_with_dirty_rect(mTxn,
@@ -714,7 +714,7 @@ TransactionBuilder::UpdateExternalImageWithDirtyRect(ImageKey aKey,
 
 void
 TransactionBuilder::SetImageVisibleArea(ImageKey aKey,
-                                        const wr::DeviceUintRect& aArea)
+                                        const wr::DeviceIntRect& aArea)
 {
   wr_resource_updates_set_image_visible_area(mTxn, aKey, &aArea);
 }
@@ -1231,9 +1231,9 @@ DisplayListBuilder::PushBorderImage(const wr::LayoutRect& aBounds,
                                     bool aIsBackfaceVisible,
                                     const wr::LayoutSideOffsets& aWidths,
                                     wr::ImageKey aImage,
-                                    const uint32_t aWidth,
-                                    const uint32_t aHeight,
-                                    const wr::SideOffsets2D<uint32_t>& aSlice,
+                                    const int32_t aWidth,
+                                    const int32_t aHeight,
+                                    const wr::SideOffsets2D<int32_t>& aSlice,
                                     const wr::SideOffsets2D<float>& aOutset,
                                     const wr::RepeatMode& aRepeatHorizontal,
                                     const wr::RepeatMode& aRepeatVertical)
@@ -1248,9 +1248,9 @@ DisplayListBuilder::PushBorderGradient(const wr::LayoutRect& aBounds,
                                        const wr::LayoutRect& aClip,
                                        bool aIsBackfaceVisible,
                                        const wr::LayoutSideOffsets& aWidths,
-                                       const uint32_t aWidth,
-                                       const uint32_t aHeight,
-                                       const wr::SideOffsets2D<uint32_t>& aSlice,
+                                       const int32_t aWidth,
+                                       const int32_t aHeight,
+                                       const wr::SideOffsets2D<int32_t>& aSlice,
                                        const wr::LayoutPoint& aStartPoint,
                                        const wr::LayoutPoint& aEndPoint,
                                        const nsTArray<wr::GradientStop>& aStops,
