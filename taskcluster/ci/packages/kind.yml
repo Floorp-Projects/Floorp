@@ -278,6 +278,16 @@ jobs:
         url: https://github.com/indygreg/python-zstandard/releases/download/0.9.1/python-zstandard-0.9.1.tar.gz
         sha256: 59c7d6f1f85cebb5124abb50d8ec281c5311e0812e18785e28b197cf1515dd3b
 
+  deb7-nasm:
+    description: "nasm for Debian wheezy"
+    treeherder:
+      symbol: Deb7(nasm)
+    run:
+      using: debian-package
+      dsc:
+        url: http://snapshot.debian.org/archive/debian/20160426T155816Z/pool/main/n/nasm/nasm_2.12.01-1.dsc
+        sha256: 70b0478243ca8b36e163af15fb8a0a9be504b3321a9fb7d67ba0767dbfcc32ec
+
   deb7-pcre3:
     description: "pcre3 8.31 for Debian Wheezy"
     treeherder:
