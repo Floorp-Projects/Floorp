@@ -29,6 +29,9 @@ from taskgraph.parameters import Parameters
 from taskgraph.util.attributes import RELEASE_PROMOTION_PROJECTS
 
 
+RELEASE_PROMOTION_SIGNOFFS = ('mar-signing', )
+
+
 def is_release_promotion_available(parameters):
     return parameters['project'] in RELEASE_PROMOTION_PROJECTS
 
@@ -38,6 +41,27 @@ def get_partner_config(partner_url_config, github_token):
     for kind, url in partner_url_config.items():
         partner_config[kind] = get_partner_config_by_url(url, kind, github_token)
     return partner_config
+
+
+def get_signoff_properties():
+    props = {}
+    for signoff in RELEASE_PROMOTION_SIGNOFFS:
+        props[signoff] = {
+            'type': 'string',
+        }
+    return props
+
+
+def get_required_signoffs(input, parameters):
+    input_signoffs = set(input.get('required_signoffs', []))
+    params_signoffs = set(parameters['required_signoffs'] or [])
+    return sorted(list(input_signoffs | params_signoffs))
+
+
+def get_signoff_urls(input, parameters):
+    signoff_urls = parameters['signoff_urls']
+    signoff_urls.update(input.get('signoff_urls', {}))
+    return signoff_urls
 
 
 def get_flavors(graph_config, param):
@@ -197,6 +221,19 @@ def get_flavors(graph_config, param):
                 'default': False,
                 'description': ('Toggle for creating EME-free repacks'),
             },
+            'required_signoffs': {
+                'type': 'array',
+                'description': ('The flavor of release promotion to perform.'),
+                'items': {
+                    'enum': RELEASE_PROMOTION_SIGNOFFS,
+                }
+            },
+            'signoff_urls': {
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'properties': get_signoff_properties(),
+            },
         },
         "required": ['release_promotion_flavor', 'build_number'],
     }
@@ -307,6 +344,9 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
 
     if input['version']:
         parameters['version'] = input['version']
+
+    parameters['required_signoffs'] = get_required_signoffs(input, parameters)
+    parameters['signoff_urls'] = get_signoff_urls(input, parameters)
 
     # make parameters read-only
     parameters = Parameters(**parameters)
