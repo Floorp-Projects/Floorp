@@ -3,8 +3,6 @@
   "type": "object",
   "properties": {
     "AppUpdateURL": {
-      "machine_only": true,
-
       "type": "URL"
     },
 
@@ -163,8 +161,6 @@
     },
 
     "DisableAppUpdate": {
-      "machine_only": true,
-
       "type": "boolean"
     },
 
@@ -242,14 +238,10 @@
     },
 
     "DisableSystemAddonUpdate": {
-      "machine_only": true,
-
       "type": "boolean"
     },
 
     "DisableTelemetry": {
-      "machine_only": true,
-
       "type": "boolean"
     },
 
@@ -279,8 +271,6 @@
     },
 
     "Extensions": {
-      "machine_only": true,
-
       "type": "object",
       "properties": {
         "Install" : {
@@ -338,8 +328,6 @@
     },
 
     "Homepage": {
-      "machine_only": true,
-
       "type": "object",
       "properties": {
         "URL": {
@@ -387,14 +375,10 @@
     },
 
     "OverrideFirstRunPage": {
-      "machine_only": true,
-
       "type": "URLorEmpty"
     },
 
     "OverridePostUpdatePage": {
-      "machine_only": true,
-
       "type": "URLorEmpty"
     },
 
@@ -671,8 +655,6 @@
     },
 
     "WebsiteFilter": {
-      "machine_only": "true",
-
       "type": "object",
       "properties": {
         "Block": {

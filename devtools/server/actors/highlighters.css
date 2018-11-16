@@ -653,6 +653,10 @@
   max-width: 90%;
 }
 
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty):after {
+  margin-inline-start: 2px;
+}
+
 :-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA:after,
 :-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA:after {
   color: #90E274;
@@ -660,15 +664,28 @@
 
 :-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).fail:after {
   color: #E57180;
-  content: " ⚠️";
+  content: "⚠️";
 }
 
 :-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA:after {
-  content: " AA\2713";
+  content: "AA\2713";
 }
 
 :-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA:after {
-  content: " AAA\2713";
+  content: "AAA\2713";
+}
+
+:-moz-native-anonymous .accessible-infobar-audit .accessible-contrast-ratio-label,
+:-moz-native-anonymous .accessible-infobar-audit #accessible-contrast-ratio-max:not(:empty):before {
+  margin-inline-end: 3px;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit #accessible-contrast-ratio-max {
+  margin-inline-start: 3px;
+}
+
+:-moz-native-anonymous .accessible-infobar-audit #accessible-contrast-ratio-max:not(:empty):before {
+  content: "-";
 }
 
 :-moz-native-anonymous .accessible-infobar-name:not(:empty),

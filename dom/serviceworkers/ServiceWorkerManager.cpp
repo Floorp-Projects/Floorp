@@ -2018,21 +2018,43 @@ public:
     }
 
     nsString clientId;
+    nsString resultingClientId;
     nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
     if (loadInfo) {
+      char buf[NSID_LENGTH];
       Maybe<ClientInfo> clientInfo = loadInfo->GetClientInfo();
       if (clientInfo.isSome()) {
-        char buf[NSID_LENGTH];
         clientInfo.ref().Id().ToProvidedString(buf);
         NS_ConvertASCIItoUTF16 uuid(buf);
 
         // Remove {} and the null terminator
         clientId.Assign(Substring(uuid, 1, NSID_LENGTH - 3));
       }
+
+      // Having an initial or reserved client are mutually exclusive events:
+      // either an initial client is used upon navigating an about:blank
+      // iframe, or a new, reserved environment/client is created (e.g.
+      // upon a top-level navigation). See step 4 of
+      // https://html.spec.whatwg.org/#process-a-navigate-fetch as well as
+      // https://github.com/w3c/ServiceWorker/issues/1228#issuecomment-345132444
+      Maybe<ClientInfo> resulting = loadInfo->GetInitialClientInfo();
+
+      if (resulting.isNothing()) {
+        resulting = loadInfo->GetReservedClientInfo();
+      } else {
+        MOZ_ASSERT(loadInfo->GetReservedClientInfo().isNothing());
+      }
+
+      if (resulting.isSome()) {
+        resulting.ref().Id().ToProvidedString(buf);
+        NS_ConvertASCIItoUTF16 uuid(buf);
+
+        resultingClientId.Assign(Substring(uuid, 1, NSID_LENGTH - 3));
+      }
     }
 
     rv = mServiceWorkerPrivate->SendFetchEvent(mChannel, mLoadGroup, clientId,
-                                               mIsReload);
+                                               resultingClientId, mIsReload);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       HandleError();
     }

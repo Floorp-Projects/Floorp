@@ -29,8 +29,8 @@ function test() {
 
     let client = new DebuggerClient(DebuggerServer.connectPipe());
     yield connect(client);
-    let chrome = yield client.mainRoot.getMainProcess();
-    let [, targetFront] = yield attachTarget(client, chrome.form);
+    let targetFront = yield client.mainRoot.getMainProcess();
+    yield targetFront.attach();
     yield targetFront.attachThread();
 
     yield testGetAllocationStack(client, chrome.form, () => {

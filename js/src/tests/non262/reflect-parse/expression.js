@@ -8,6 +8,9 @@ assertExpr("42", lit(42));
 assertExpr("(/asdf/)", lit(/asdf/));
 assertExpr("this", thisExpr);
 assertExpr("foo", ident("foo"));
+if ("BigInt" in this) {
+    assertExpr("1234n", lit(BigInt(1234)));
+}
 
 // member expressions
 assertExpr("foo.bar", dotExpr(ident("foo"), ident("bar")));

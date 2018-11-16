@@ -13,6 +13,10 @@ const ContentProcessTargetFront = protocol.FrontClassWithSpec(contentProcessTarg
     this.client = client;
     this.chromeDebugger = form.chromeDebugger;
 
+    // Save the full form for Target class usage
+    // Do not use `form` name to avoid colliding with protocol.js's `form` method
+    this.targetForm = form;
+
     this.traits = {};
   },
 

@@ -51,7 +51,7 @@ class BinASTParserBase: private JS::AutoGCRooter
     virtual void doTrace(JSTracer* trc) {}
 
     void trace(JSTracer* trc) {
-        ObjectBox::TraceList(trc, traceListHead_);
+        TraceListNode::TraceList(trc, traceListHead_);
         doTrace(trc);
     }
 
@@ -73,7 +73,7 @@ class BinASTParserBase: private JS::AutoGCRooter
     // ---- Memory-related stuff
   protected:
     LifoAlloc& alloc_;
-    ObjectBox* traceListHead_;
+    TraceListNode* traceListHead_;
     UsedNameTracker& usedNames_;
   private:
     LifoAlloc::Mark tempPoolMark_;
@@ -256,10 +256,10 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
          * function.
          */
 
-         ObjectBox* objbox = alloc_.new_<ObjectBox>(obj, traceListHead_);
-         if (!objbox) {
-             ReportOutOfMemory(cx_);
-             return nullptr;
+        ObjectBox* objbox = alloc_.new_<ObjectBox>(obj, traceListHead_);
+        if (!objbox) {
+            ReportOutOfMemory(cx_);
+            return nullptr;
         }
 
         traceListHead_ = objbox;

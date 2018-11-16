@@ -16,6 +16,7 @@ elif CONFIG['OS_ARCH'] == 'Darwin':
 
 data_symbol = 'icudt%s_dat' % CONFIG['MOZ_ICU_VERSION']
 asflags = [
+    '-I%s/config/external/icu/data/' % TOPSRCDIR,
     '-DICU_DATA_FILE="%s"' % CONFIG['ICU_DATA_FILE'],
     '-DICU_DATA_SYMBOL=%s' % data_symbol,
 ]

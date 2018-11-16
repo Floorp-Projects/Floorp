@@ -9,17 +9,13 @@
   <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-function* test(testDriver) {
-  var initial_resolution = getResolution();
-  ok(initial_resolution > 0,
-      'The initial_resolution is ' + initial_resolution + ', which is some sane value');
-
+function* doubleTapOn(element, x, y, testDriver) {
   // This listener will trigger the test to continue once APZ is done with
   // processing the scroll.
   SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd");
 
-  synthesizeNativeTap(document.getElementById('target'), 10, 10);
-  synthesizeNativeTap(document.getElementById('target'), 10, 10);
+  synthesizeNativeTap(element, x, y);
+  synthesizeNativeTap(element, x, y);
 
   // Wait for the APZ:TransformEnd to fire
   yield true;
@@ -28,10 +24,26 @@ function* test(testDriver) {
   // observer any more.
   SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd", false);
 
-  // Flush state and get the resolution we're at now
+  // Flush state so we can query an accurate resolution
   yield flushApzRepaints(testDriver);
-  let final_resolution = getResolution();
-  ok(final_resolution > initial_resolution, 'The final resolution (' + final_resolution + ') is greater after zooming in');
+}
+
+function* test(testDriver) {
+  var resolution = getResolution();
+  ok(resolution > 0,
+     'The initial_resolution is ' + resolution + ', which is some sane value');
+
+  // Check that double-tapping once zooms in
+  yield* doubleTapOn(document.getElementById('target'), 10, 10, testDriver);
+  var prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution > prev_resolution, 'The first double-tap has increased the resolution to ' + resolution);
+
+  // Check that double-tapping again on the same spot zooms out
+  yield* doubleTapOn(document.getElementById('target'), 10, 10, testDriver);
+  prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution < prev_resolution, 'The second double-tap has decreased the resolution to ' + resolution);
 }
 
 waitUntilApzStable()
@@ -42,14 +54,14 @@ waitUntilApzStable()
   <style type="text/css">
     .box {
         width: 800px;
-        height: 200px;
+        height: 500px;
         margin: 0 auto;
     }
 </style>
 </head>
 <body>
 <div class="box">Text before the div.</div>
-<div id="target" style="width:400px; height: 2000px; background-image: linear-gradient(blue,red)">
-</div>
+<div id="target" style="margin-left: 100px; width:900px; height: 400px; background-image: linear-gradient(blue,red)"></div>
+<div class="box">Text after the div.</div>
 </body>
 </html>

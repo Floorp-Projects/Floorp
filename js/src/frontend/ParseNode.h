@@ -10,6 +10,9 @@
 #include "mozilla/Attributes.h"
 
 #include "frontend/TokenStream.h"
+#ifdef ENABLE_BIGINT
+#include "vm/BigIntType.h"
+#endif
 #include "vm/BytecodeUtil.h"
 #include "vm/Printer.h"
 #include "vm/Scope.h"
@@ -42,6 +45,9 @@ class ParseContext;
 class FullParseHandler;
 class FunctionBox;
 class ObjectBox;
+#ifdef ENABLE_BIGINT
+class BigIntBox;
+#endif
 
 #define FOR_EACH_PARSE_NODE_KIND(F) \
     F(EmptyStatement, PN_NULLARY) \
@@ -71,6 +77,7 @@ class ObjectBox;
     F(PrivateName, PN_NAME) \
     F(ComputedName, PN_UNARY) \
     F(Number, PN_NUMBER) \
+    IF_BIGINT(F(BigInt, PN_BIGINT),/**/) \
     F(String, PN_NAME) \
     F(TemplateStringList, PN_LIST) \
     F(TemplateString, PN_NAME) \
@@ -485,6 +492,8 @@ IsTypeofKind(ParseNodeKind kind)
  *   regexp: RegExp model object
  * Number (NumericLiteral)
  *   value: double value of numeric literal
+ * BigInt (BigIntLiteral)
+ *   box: BigIntBox holding BigInt* value
  * True, False (BooleanLiteral)
  *   pn_op: JSOp bytecode
  * Null (NullLiteral)
@@ -524,6 +533,9 @@ enum ParseNodeArity
     PN_NAME,                            /* name, label, string */
     PN_FIELD,                           /* field name, optional initializer */
     PN_NUMBER,                          /* numeric literal */
+#ifdef ENABLE_BIGINT
+    PN_BIGINT,                          /* BigInt literal */
+#endif
     PN_REGEXP,                          /* regexp literal */
     PN_LOOP,                            /* loop control (break/continue) */
     PN_SCOPE                            /* lexical scope */
@@ -563,6 +575,7 @@ enum ParseNodeArity
     macro(RawUndefinedLiteral, RawUndefinedLiteralType, asRawUndefinedLiteral) \
     \
     macro(NumericLiteral, NumericLiteralType, asNumericLiteral) \
+    IF_BIGINT(macro(BigIntLiteral, BigIntLiteralType, asBigIntLiteral),) \
     \
     macro(RegExpLiteral, RegExpLiteralType, asRegExpLiteral) \
     \
@@ -734,6 +747,13 @@ class ParseNode
             double       value;         /* aligned numeric literal value */
             DecimalPoint decimalPoint;  /* Whether the number has a decimal point */
         } number;
+#ifdef ENABLE_BIGINT
+        struct {
+          private:
+            friend class BigIntLiteral;
+            BigIntBox* box;
+        } bigint;
+#endif
         class {
           private:
             friend class LoopControlStatement;
@@ -753,6 +773,9 @@ class ParseNode
     /* True if pn is a parsenode representing a literal constant. */
     bool isLiteral() const {
         return isKind(ParseNodeKind::Number) ||
+#ifdef ENABLE_BIGINT
+               isKind(ParseNodeKind::BigInt) ||
+#endif
                isKind(ParseNodeKind::String) ||
                isKind(ParseNodeKind::True) ||
                isKind(ParseNodeKind::False) ||
@@ -1526,6 +1549,32 @@ class NumericLiteral : public ParseNode
     }
 };
 
+#ifdef ENABLE_BIGINT
+class BigIntLiteral : public ParseNode
+{
+  public:
+    BigIntLiteral(BigIntBox* bibox, const TokenPos& pos)
+      : ParseNode(ParseNodeKind::BigInt, JSOP_NOP, pos)
+    {
+        pn_u.bigint.box = bibox;
+    }
+
+    static bool test(const ParseNode& node) {
+        bool match = node.isKind(ParseNodeKind::BigInt);
+        MOZ_ASSERT_IF(match, node.isArity(PN_BIGINT));
+        return match;
+    }
+
+#ifdef DEBUG
+    void dump(GenericPrinter& out, int indent);
+#endif
+
+    BigIntBox* box() const {
+        return pn_u.bigint.box;
+    }
+};
+#endif
+
 class LexicalScopeNode : public ParseNode
 {
   public:
@@ -2183,25 +2232,54 @@ ParseNode::isConstant()
     }
 }
 
-class ObjectBox
+class TraceListNode
 {
-  public:
-    JSObject* object;
+  protected:
+    js::gc::Cell* gcThing;
+    TraceListNode* traceLink;
 
-    ObjectBox(JSObject* object, ObjectBox* traceLink);
-    bool isFunctionBox() { return object->is<JSFunction>(); }
-    FunctionBox* asFunctionBox();
+    TraceListNode(js::gc::Cell* gcThing, TraceListNode* traceLink);
+
+#ifdef ENABLE_BIGINT
+    bool isBigIntBox() const { return gcThing->is<BigInt>(); }
+#endif
+    bool isObjectBox() const { return gcThing->is<JSObject>(); }
+
+#ifdef ENABLE_BIGINT
+    BigIntBox* asBigIntBox();
+#endif
+    ObjectBox* asObjectBox();
+
     virtual void trace(JSTracer* trc);
 
-    static void TraceList(JSTracer* trc, ObjectBox* listHead);
+  public:
+    static void TraceList(JSTracer* trc, TraceListNode* listHead);
+};
 
+#ifdef ENABLE_BIGINT
+class BigIntBox : public TraceListNode
+{
+  public:
+    BigIntBox(BigInt* bi, TraceListNode* link);
+    BigInt* value() const { return gcThing->as<BigInt>(); }
+};
+#endif
+
+class ObjectBox : public TraceListNode
+{
   protected:
     friend struct CGObjectList;
-
-    ObjectBox* traceLink;
     ObjectBox* emitLink;
 
-    ObjectBox(JSFunction* function, ObjectBox* traceLink);
+    ObjectBox(JSFunction* function, TraceListNode* link);
+
+  public:
+    ObjectBox(JSObject* obj, TraceListNode* link);
+
+    JSObject* object() const { return gcThing->as<JSObject>(); }
+
+    bool isFunctionBox() const { return object()->is<JSFunction>(); }
+    FunctionBox* asFunctionBox();
 };
 
 enum ParseReportKind

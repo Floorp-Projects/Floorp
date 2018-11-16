@@ -366,18 +366,18 @@ class AsmFlags(BaseCompileFlags):
         debug_flags = []
         if (self._context.config.substs.get('MOZ_DEBUG') or
             self._context.config.substs.get('MOZ_DEBUG_SYMBOLS')):
-            if self._context.get('USE_YASM'):
-                if (self._context.config.substs.get('OS_ARCH') == 'WINNT' and
-                    not self._context.config.substs.get('GNU_CC')):
-                    debug_flags += ['-g', 'cv8']
-                elif self._context.config.substs.get('OS_ARCH') != 'Darwin':
-                    debug_flags += ['-g', 'dwarf2']
-            elif self._context.get('USE_NASM'):
+            if self._context.get('USE_NASM') or (self._context.get('USE_YASM') and self._context.config.substs.get('NASM')):
                 if (self._context.config.substs.get('OS_ARCH') == 'WINNT' and
                     not self._context.config.substs.get('GNU_CC')):
                     debug_flags += ['-F', 'cv8']
                 elif self._context.config.substs.get('OS_ARCH') != 'Darwin':
                     debug_flags += ['-F', 'dwarf']
+            elif self._context.get('USE_YASM'):
+                if (self._context.config.substs.get('OS_ARCH') == 'WINNT' and
+                    not self._context.config.substs.get('GNU_CC')):
+                    debug_flags += ['-g', 'cv8']
+                elif self._context.config.substs.get('OS_ARCH') != 'Darwin':
+                    debug_flags += ['-g', 'dwarf2']
             elif (self._context.config.substs.get('OS_ARCH') == 'WINNT' and
                   self._context.config.substs.get('CPU_ARCH') == 'aarch64'):
                 # armasm64 accepts a paucity of options compared to ml/ml64.

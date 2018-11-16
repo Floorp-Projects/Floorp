@@ -255,9 +255,9 @@ var AppManager = exports.AppManager = {
       // Fx >=39 exposes a ParentProcessTargetActor to debug the main process
       if (this.connection.client.mainRoot.traits.allowChromeProcess) {
         return this.connection.client.mainRoot.getMainProcess()
-                   .then(aResponse => {
+                   .then(front => {
                      return TargetFactory.forRemoteTab({
-                       form: aResponse.form,
+                       activeTab: front,
                        client: this.connection.client,
                        chrome: true,
                      });

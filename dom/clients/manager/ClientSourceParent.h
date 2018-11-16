@@ -10,6 +10,7 @@
 #include "ClientOpPromise.h"
 #include "mozilla/dom/PClientSourceParent.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
+#include "mozilla/MozPromise.h"
 
 namespace mozilla {
 namespace dom {
@@ -23,6 +24,7 @@ class ClientSourceParent final : public PClientSourceParent
   Maybe<ServiceWorkerDescriptor> mController;
   RefPtr<ClientManagerService> mService;
   nsTArray<ClientHandleParent*> mHandleList;
+  MozPromiseHolder<GenericPromise> mExecutionReadyPromise;
   bool mExecutionReady;
   bool mFrozen;
 
@@ -75,6 +77,9 @@ public:
 
   bool
   ExecutionReady() const;
+
+  RefPtr<GenericPromise>
+  ExecutionReadyPromise();
 
   const Maybe<ServiceWorkerDescriptor>&
   GetController() const;

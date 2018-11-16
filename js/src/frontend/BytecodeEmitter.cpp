@@ -1062,6 +1062,13 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = false;
         return true;
 
+#ifdef ENABLE_BIGINT
+      case ParseNodeKind::BigInt:
+        MOZ_ASSERT(pn->is<BigIntLiteral>());
+        *answer = false;
+        return true;
+#endif
+
       // |this| can throw in derived class constructors, including nested arrow
       // functions or eval.
       case ParseNodeKind::This:
@@ -2000,7 +2007,7 @@ BytecodeEmitter::emitNumberOp(double dval)
         return true;
     }
 
-    if (!numberList.append(dval)) {
+    if (!numberList.append(DoubleValue(dval))) {
         return false;
     }
 
@@ -4153,6 +4160,11 @@ ParseNode::getConstantValue(JSContext* cx, AllowConstantObjects allowObjects,
       case ParseNodeKind::Number:
         vp.setNumber(as<NumericLiteral>().value());
         return true;
+#ifdef ENABLE_BIGINT
+      case ParseNodeKind::BigInt:
+        vp.setBigInt(as<BigIntLiteral>().box()->value());
+        return true;
+#endif
       case ParseNodeKind::TemplateString:
       case ParseNodeKind::String:
         vp.setString(as<NameNode>().atom());
@@ -4721,6 +4733,17 @@ BytecodeEmitter::emitCopyDataProperties(CopyOption option)
     MOZ_ASSERT(depth - int(argc) == this->stackDepth);
     return true;
 }
+
+#ifdef ENABLE_BIGINT
+bool
+BytecodeEmitter::emitBigIntOp(BigInt* bigint)
+{
+    if (!numberList.append(BigIntValue(bigint))) {
+        return false;
+    }
+    return emitIndex32(JSOP_BIGINT, numberList.length() - 1);
+}
+#endif
 
 bool
 BytecodeEmitter::emitIterator()
@@ -8915,6 +8938,14 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
         }
         break;
 
+#ifdef ENABLE_BIGINT
+      case ParseNodeKind::BigInt:
+        if (!emitBigIntOp(pn->as<BigIntLiteral>().box()->value())) {
+            return false;
+        }
+        break;
+#endif
+
       case ParseNodeKind::RegExp:
         if (!emitRegExp(objectList.add(pn->as<RegExpLiteral>().objbox()))) {
             return false;
@@ -9224,7 +9255,7 @@ CGNumberList::finish(mozilla::Span<GCPtrValue> array)
     MOZ_ASSERT(length() == array.size());
 
     for (unsigned i = 0; i < length(); i++) {
-        array[i].init(DoubleValue(list[i]));
+        array[i].init(vector[i]);
     }
 }
 
@@ -9239,6 +9270,7 @@ CGNumberList::finish(mozilla::Span<GCPtrValue> array)
 unsigned
 CGObjectList::add(ObjectBox* objbox)
 {
+    MOZ_ASSERT(objbox->isObjectBox());
     MOZ_ASSERT(!objbox->emitLink);
     objbox->emitLink = lastbox;
     lastbox = objbox;
@@ -9254,11 +9286,11 @@ CGObjectList::finish(mozilla::Span<GCPtrObject> array)
     ObjectBox* objbox = lastbox;
     for (GCPtrObject& obj : mozilla::Reversed(array)) {
         MOZ_ASSERT(obj == nullptr);
-        MOZ_ASSERT(objbox->object->isTenured());
+        MOZ_ASSERT(objbox->object()->isTenured());
         if (objbox->isFunctionBox()) {
             objbox->asFunctionBox()->finish();
         }
-        obj.init(objbox->object);
+        obj.init(objbox->object());
         objbox = objbox->emitLink;
     }
 }
