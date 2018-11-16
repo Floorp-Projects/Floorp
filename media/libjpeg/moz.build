@@ -181,8 +181,12 @@ else: # No SIMD support?
 ASFLAGS += CONFIG['LIBJPEG_TURBO_ASFLAGS']
 
 # Make sure the x86 & x86-64 ASM files can see the necessary includes.
-if CONFIG['CPU_ARCH'] == 'x86' or CONFIG['CPU_ARCH'] == 'x86_64':
+if CONFIG['CPU_ARCH'] == 'x86':
     ASFLAGS += ['-I%s/media/libjpeg/simd/nasm/' % TOPSRCDIR]
+    ASFLAGS += ['-I%s/media/libjpeg/simd/i386/' % TOPSRCDIR]
+if CONFIG['CPU_ARCH'] == 'x86_64':
+    ASFLAGS += ['-I%s/media/libjpeg/simd/nasm/' % TOPSRCDIR]
+    ASFLAGS += ['-I%s/media/libjpeg/simd/x86_64/' % TOPSRCDIR]
 
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()

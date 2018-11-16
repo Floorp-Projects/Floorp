@@ -6,7 +6,9 @@
 
 # Add assembler flags and includes
 ASFLAGS += CONFIG['FFVPX_ASFLAGS']
-ASFLAGS += ['-I%s/media/ffvpx' % TOPSRCDIR]
+ASFLAGS += ['-I%s/media/ffvpx/' % TOPSRCDIR]
+ASFLAGS += ['-I%s/media/ffvpx/libavcodec/x86/' % TOPSRCDIR]
+ASFLAGS += ['-I%s/media/ffvpx/libavutil/x86/' % TOPSRCDIR]
 
 if CONFIG['FFVPX_ASFLAGS']:
     if CONFIG['OS_ARCH'] == 'WINNT':
