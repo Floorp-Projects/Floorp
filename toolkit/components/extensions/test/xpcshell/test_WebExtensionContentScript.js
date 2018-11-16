@@ -57,10 +57,12 @@ async function loadURL(url, {frameCount}) {
     }
   }
   function loadObserver(window) {
-    windows.set(window.location.href, window);
-    if (windows.size == frameCount) {
-      resolveLoad();
-    }
+    window.addEventListener("load", function onLoad() {
+      windows.set(window.location.href, window);
+      if (windows.size == frameCount) {
+        resolveLoad();
+      }
+    }, {once: true});
   }
 
   Services.obs.addObserver(requestObserver, "http-on-examine-response");
