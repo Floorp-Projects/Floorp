@@ -998,7 +998,42 @@
       "label": "OISTE_WISeKey_Global_Root_GC_CA",
       "binNumber": 198,
       "sha256Fingerprint": "hWD5HDYk2rqVcLX+oNvjb/EagyO+lIaFT7PzSlVxGY0="
+    },
+    {
+      "label": "GTS_Root_R1",
+      "binNumber": 199,
+      "sha256Fingerprint": "KldUceMTQLwhWBy9LPE+FYRjID7OlLz508wZa/CaVHI="
+    },
+    {
+      "label": "GTS_Root_R2",
+      "binNumber": 200,
+      "sha256Fingerprint": "xF17sI5tZ+YuQjURC1ZOX3j9ku8FjIQK6k5kVddYXGA="
+    },
+    {
+      "label": "GTS_Root_R3",
+      "binNumber": 201,
+      "sha256Fingerprint": "FdW4d0YZ6n1Uzhym0LDEA+A3qRfxMeigTh5renG6vOU="
+    },
+    {
+      "label": "GTS_Root_R4",
+      "binNumber": 202,
+      "sha256Fingerprint": "ccylOR+eeUsEgCUws2PhIdqKMEO7JmYv6k3Kf8lRpL0="
+    },
+    {
+      "label": "UCA_Global_G2_Root",
+      "binNumber": 203,
+      "sha256Fingerprint": "m+oRyXb+AUdkwb5WpvkUtaVgMXq9mYg5M4LlFhqgSTw="
+    },
+    {
+      "label": "UCA_Extended_Validation_Root",
+      "binNumber": 204,
+      "sha256Fingerprint": "1Dr5s1RzdVyWhPwG19jLcO5cKOdz+ylOtB7nFyKSTSQ="
+    },
+    {
+      "label": "Certigna_Root_CA",
+      "binNumber": 205,
+      "sha256Fingerprint": "1I09I+7bUKRZ5VGXYBwnd0udexjJTVoFlRGhAlC5MWg="
     }
   ],
-  "maxBin": 198
+  "maxBin": 205
 }
