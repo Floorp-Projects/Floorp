@@ -50,8 +50,14 @@ enum Count {
 
 // Stats can be set with Statistics::setStat(). They're not reset automatically.
 enum Stat {
+    // Number of strings tenured.
+    STAT_STRINGS_TENURED,
+
     // Number of object types pretenured this minor GC.
     STAT_OBJECT_GROUPS_PRETENURED,
+
+    // Number of realms that had nursery strings disabled due to large numbers being tenured.
+    STAT_NURSERY_STRING_REALMS_DISABLED,
 
     STAT_LIMIT
 };
