@@ -478,13 +478,12 @@ notification[value="translation"] menulist > .menulist-dropmarker {
 }
 
 #nav-bar {
-  -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-drag");
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
 }
 
 @media (-moz-menubar-drag) {
-  #toolbar-menubar:not([autohide="true"]),
   #TabsToolbar {
-    -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-drag");
+    -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
   }
 }
 
