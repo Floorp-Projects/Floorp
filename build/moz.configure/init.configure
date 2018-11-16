@@ -1043,6 +1043,7 @@ add_old_configure_assignment('MOZ_BUILD_APP', build_project)
 # - otherwise, we're building Release/Beta (define RELEASE_OR_BETA)
 @depends(check_build_environment, build_project, '--help')
 @imports(_from='__builtin__', _import='open')
+@imports('os')
 @imports('re')
 def milestone(build_env, build_project, _):
     versions = []
@@ -1054,6 +1055,12 @@ def milestone(build_env, build_project, _):
             'browser/config/version.txt',
             'browser/config/version_display.txt',
         ]
+    for f in ('version.txt', 'version_display.txt'):
+        f = os.path.join(build_project, f)
+        if not os.path.exists(os.path.join(build_env.topsrcdir, f)):
+            break
+        paths.append(f)
+
     for p in paths:
         with open(os.path.join(build_env.topsrcdir, p), 'r') as fh:
             content = fh.read().splitlines()
@@ -1061,7 +1068,15 @@ def milestone(build_env, build_project, _):
                 die('Could not find a version number in {}'.format(p))
             versions.append(content[-1])
 
-    milestone, firefox_version, firefox_version_display = versions
+    milestone, firefox_version, firefox_version_display = versions[:3]
+
+    # version.txt content from the project directory if there is one, otherwise
+    # the firefox version.
+    app_version = versions[3] if len(versions) > 3 else firefox_version
+    # version_display.txt content from the project directory if there is one,
+    # otherwise version.txt content from the project directory, otherwise the
+    # firefox version for display.
+    app_version_display = versions[-1] if len(versions) > 3 else firefox_version_display
 
     is_nightly = is_release_or_beta = None
 
@@ -1084,8 +1099,8 @@ def milestone(build_env, build_project, _):
                      symbolversion='%s%s' % (major_version, ab_patch),
                      is_nightly=is_nightly,
                      is_release_or_beta=is_release_or_beta,
-                     firefox_version=firefox_version,
-                     firefox_version_display=firefox_version_display)
+                     app_version=app_version,
+                     app_version_display=app_version_display)
 
 
 set_config('GRE_MILESTONE', milestone.version)
@@ -1105,10 +1120,9 @@ set_config('MOZILLA_SYMBOLVERSION', milestone.symbolversion)
 add_old_configure_assignment('MOZILLA_VERSION', milestone.version)
 add_old_configure_assignment('MOZILLA_SYMBOLVERSION', milestone.symbolversion)
 
-set_config('FIREFOX_VERSION', milestone.firefox_version)
-set_define('FIREFOX_VERSION', milestone.firefox_version)
-add_old_configure_assignment('FIREFOX_VERSION', milestone.firefox_version)
-add_old_configure_assignment('FIREFOX_VERSION_DISPLAY', milestone.firefox_version_display)
+set_config('MOZ_APP_VERSION', milestone.app_version)
+set_config('MOZ_APP_VERSION_DISPLAY', milestone.app_version_display)
+add_old_configure_assignment('MOZ_APP_VERSION', milestone.app_version)
 
 # The app update channel is 'default' when not supplied. The value is used in
 # the application's confvars.sh (and is made available to a project specific
