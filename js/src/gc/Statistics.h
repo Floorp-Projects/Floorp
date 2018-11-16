@@ -31,19 +31,19 @@ namespace gcstats {
 
 #include "gc/StatsPhasesGenerated.h"
 
-enum Stat {
-    STAT_NEW_CHUNK,
-    STAT_DESTROY_CHUNK,
-    STAT_MINOR_GC,
+enum Count {
+    COUNT_NEW_CHUNK,
+    COUNT_DESTROY_CHUNK,
+    COUNT_MINOR_GC,
 
     // Number of times a 'put' into a storebuffer overflowed, triggering a
     // compaction
-    STAT_STOREBUFFER_OVERFLOW,
+    COUNT_STOREBUFFER_OVERFLOW,
 
     // Number of arenas relocated by compacting GC.
-    STAT_ARENA_RELOCATED,
+    COUNT_ARENA_RELOCATED,
 
-    STAT_LIMIT
+    COUNT_LIMIT
 };
 
 struct ZoneGCStats
@@ -179,11 +179,11 @@ struct Statistics
         return ExplainAbortReason(nonincrementalReason_);
     }
 
-    void count(Stat s) {
+    void count(Count s) {
         counts[s]++;
     }
 
-    uint32_t getCount(Stat s) const {
+    uint32_t getCount(Count s) const {
         return uint32_t(counts[s]);
     }
 
@@ -332,8 +332,8 @@ struct Statistics
     PhaseTimeTable parallelTimes;
 
     /* Number of events of this type for this GC. */
-    EnumeratedArray<Stat,
-                    STAT_LIMIT,
+    EnumeratedArray<Count,
+                    COUNT_LIMIT,
                     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire,
                                     mozilla::recordreplay::Behavior::DontPreserve>> counts;
 
