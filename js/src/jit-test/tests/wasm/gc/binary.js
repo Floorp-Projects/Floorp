@@ -7,28 +7,10 @@ const v2vSigSection = sigSection([v2vSig]);
 
 function checkInvalid(body, errorMessage) {
     assertErrorMessage(() => new WebAssembly.Module(
-        moduleWithSections([gcFeatureOptInSection(1), v2vSigSection, declSection([0]), bodySection([body])])),
+        moduleWithSections([gcFeatureOptInSection(2), v2vSigSection, declSection([0]), bodySection([body])])),
                        WebAssembly.CompileError,
                        errorMessage);
 }
-
-const invalidRefNullBody = funcBody({locals:[], body:[
-    RefNull,
-    RefCode,
-    0x42,
-
-    RefNull,
-    RefCode,
-    0x10,
-
-    // Condition code;
-    I32ConstCode,
-    0x10,
-
-    SelectCode,
-    DropCode
-]});
-checkInvalid(invalidRefNullBody, /invalid reference type for ref.null/);
 
 const invalidRefBlockType = funcBody({locals:[], body:[
     BlockCode,

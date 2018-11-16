@@ -8,7 +8,7 @@
 
 new WebAssembly.Module(wasmTextToBinary(
     `(module
-       (gc_feature_opt_in 1)
+       (gc_feature_opt_in 2)
        (table 10 anyref))`));
 
 // Wasm: Import table-of-anyref
@@ -16,13 +16,13 @@ new WebAssembly.Module(wasmTextToBinary(
 
 new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
     `(module
-       (gc_feature_opt_in 1)
+       (gc_feature_opt_in 2)
        (table (import "m" "t") 10 anyref))`)),
                          {m:{t: new WebAssembly.Table({element:"anyref", initial:10})}});
 
 new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
     `(module
-       (gc_feature_opt_in 1)
+       (gc_feature_opt_in 2)
        (import "m" "t" (table 10 anyref)))`)),
                          {m:{t: new WebAssembly.Table({element:"anyref", initial:10})}});
 
@@ -31,7 +31,7 @@ new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
 {
     let ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
     `(module
-       (gc_feature_opt_in 1)
+       (gc_feature_opt_in 2)
        (table (export "t") 10 anyref))`)));
     let t = ins.exports.t;
     assertEq(t.length, 10);
@@ -44,7 +44,7 @@ new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
 {
     let ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
     `(module
-       (gc_feature_opt_in 1)
+       (gc_feature_opt_in 2)
        (table (export "t") 10 anyref))`)));
     let t = ins.exports.t;
     let objs = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}];
@@ -62,7 +62,7 @@ new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
 {
     let ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
     `(module
-       (gc_feature_opt_in 1)
+       (gc_feature_opt_in 2)
        (table (export "t") 10 anyref)
        (func (export "f")
          (table.copy (i32.const 5) (i32.const 0) (i32.const 3))))`)));
@@ -87,7 +87,7 @@ new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
 
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
-       (gc_feature_opt_in 1)
+       (gc_feature_opt_in 2)
        (func $f1 (result i32) (i32.const 0))
        (table 10 anyref)
        (elem (i32.const 0) $f1))`)),
@@ -98,7 +98,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
 
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
-       (gc_feature_opt_in 1)
+       (gc_feature_opt_in 2)
        (func $f1 (result i32) (i32.const 0))
        (table 10 anyref)
        (elem passive $f1)
@@ -112,7 +112,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
 assertErrorMessage(
     () => new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
     `(module
-       (gc_feature_opt_in 1)
+       (gc_feature_opt_in 2)
        (import "m" "t" (table 10 anyref)))`)),
                                    {m:{t: new WebAssembly.Table({element:"anyfunc", initial:10})}}),
     WebAssembly.LinkError,
@@ -122,7 +122,7 @@ assertErrorMessage(
 
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
-       (gc_feature_opt_in 1)
+       (gc_feature_opt_in 2)
        (table 10 anyref)
        (type $t (func (param i32) (result i32)))
        (func (result i32)
@@ -242,7 +242,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
            (func (export "set_anyref") (param i32) (param anyref)
              (table.set (get_local 0) (get_local 1)))
            (func (export "set_null") (param i32)
-             (table.set (get_local 0) (ref.null anyref)))
+             (table.set (get_local 0) (ref.null)))
            (func (export "set_ref") (param i32) (param anyref)
              (table.set (get_local 0) (struct.narrow anyref (ref $dummy) (get_local 1))))
            (func (export "make_struct") (result anyref)
@@ -267,7 +267,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
        (gc_feature_opt_in 2)
        (table 10 anyref)
        (func (export "f") (param f64)
-         (table.set (get_local 0) (ref.null anyref))))`)),
+         (table.set (get_local 0) (ref.null))))`)),
                    WebAssembly.CompileError,
                    /type mismatch/);
 
@@ -316,7 +316,7 @@ let ins = wasmEvalText(
       (gc_feature_opt_in 2)
       (table (export "t") 10 20 anyref)
       (func (export "grow") (param i32) (result i32)
-       (table.grow (get_local 0) (ref.null anyref))))`);
+       (table.grow (get_local 0) (ref.null))))`);
 assertEq(ins.exports.grow(0), 10);
 assertEq(ins.exports.t.length, 10);
 assertEq(ins.exports.grow(1), 10);
@@ -345,7 +345,7 @@ assertEq(ins.exports.t.length, 20)
           (gc_feature_opt_in 2)
           (table 10 anyref)
           (func (export "grow") (param i32) (result i32)
-           (table.grow (get_local 0) (ref.null anyref))))`);
+           (table.grow (get_local 0) (ref.null))))`);
     assertEq(ins.exports.grow(0), 10);
     assertEq(ins.exports.grow(1), 10);
     assertEq(ins.exports.grow(9), 11);
@@ -359,7 +359,7 @@ assertErrorMessage(() => wasmEvalText(
       (gc_feature_opt_in 2)     ;; Required because of the 'anyref' null value below
       (table $t 2 anyfunc)
       (func $f
-       (drop (table.grow (i32.const 1) (ref.null anyref)))))`),
+       (drop (table.grow (i32.const 1) (ref.null)))))`),
                    WebAssembly.CompileError,
                    /table.grow only on tables of anyref/);
 
@@ -370,7 +370,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
        (gc_feature_opt_in 2)
        (table 10 anyref)
        (func (export "f") (param f64)
-        (table.grow (get_local 0) (ref.null anyref))))`)),
+        (table.grow (get_local 0) (ref.null))))`)),
                    WebAssembly.CompileError,
                    /type mismatch/);
 
@@ -380,7 +380,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (gc_feature_opt_in 2)
        (func (export "f") (param i32)
-        (table.grow (get_local 0) (ref.null anyref))))`)),
+        (table.grow (get_local 0) (ref.null))))`)),
                    WebAssembly.CompileError,
                    /table index out of range for table.grow/);
 
@@ -411,7 +411,7 @@ for (let visibility of ['', '(export "t")', '(import "m" "t")']) {
           (gc_feature_opt_in 2)
           (table ${visibility} 10 20 anyref)
           (func (export "grow") (param i32) (result i32)
-           (table.grow (get_local 0) (ref.null anyref)))
+           (table.grow (get_local 0) (ref.null)))
           (func (export "size") (result i32)
            (table.size)))`,
         exp);
