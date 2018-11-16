@@ -223,7 +223,7 @@ LIRGeneratorARM::lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs, MDe
         if (constant >= -1 && constant <= 2) {
             needsTemp = false;
         }
-        if (int64_t(1) << shift == constant) {
+        if (constant > 0 && int64_t(1) << shift == constant) {
             needsTemp = false;
         }
     }
