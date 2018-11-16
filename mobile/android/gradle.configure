@@ -69,6 +69,32 @@ def gradle_android_build_config():
 
 
 @depends(gradle_android_build_config)
+@imports(_from='itertools', _import='imap')
+def gradle_android_intermediates_folder(build_config):
+    '''Path to intermediates classes folder.'''
+    def uncapitalize(s):
+        if s:
+            return s[0].lower() + s[1:]
+        else:
+            return s
+
+    def capitalize(s):
+        # str.capitalize lower cases trailing letters.
+        if s:
+            return s[0].upper() + s[1:]
+        else:
+            return s
+
+    productFlavor = uncapitalize(''.join(imap(capitalize, build_config.geckoview.variant.productFlavors)))
+    buildType = uncapitalize(build_config.geckoview.variant.buildType)
+
+    return "gradle/build/mobile/android/geckoview/intermediates/classes/{}/{}".format(
+            productFlavor,
+            buildType)
+
+set_config('GRADLE_ANDROID_GECKOVIEW_APILINT_FOLDER', gradle_android_intermediates_folder)
+
+@depends(gradle_android_build_config)
 def gradle_android_variant_name(build_config):
     '''Like "withoutGeckoBinariesDebug".'''
     def uncapitalize(s):
@@ -200,6 +226,15 @@ def gradle_android_lint_tasks(build_config):
 
 set_config('GRADLE_ANDROID_LINT_TASKS', gradle_android_lint_tasks)
 
+@depends(gradle_android_build_config)
+def gradle_android_api_lint_tasks(build_config):
+    '''Gradle tasks run by |mach android api-lint|.'''
+    return [
+        'geckoview:apiLint{geckoview.variant.name}'.format(geckoview=build_config.geckoview),
+    ]
+
+set_config('GRADLE_ANDROID_API_LINT_TASKS', gradle_android_api_lint_tasks)
+
 
 @dependable
 def gradle_android_checkstyle_tasks():
@@ -273,6 +308,7 @@ set_config('GRADLE_ANDROID_INSTALL_GECKOVIEW_EXAMPLE_TASKS', gradle_android_inst
 
 @depends(
     gradle_android_app_tasks,
+    gradle_android_api_lint_tasks,
     gradle_android_test_tasks,
     gradle_android_lint_tasks,
     gradle_android_checkstyle_tasks,
