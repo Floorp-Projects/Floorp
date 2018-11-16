@@ -22,8 +22,7 @@ import {
   getRawSourceURL,
   getTruncatedFileName,
   getDisplayPath,
-  isPretty,
-  getSourceQueryString
+  isPretty
 } from "../../utils/source";
 import { copyToTheClipboard } from "../../utils/clipboard";
 import { getTabMenuItems } from "../../utils/tabs";
@@ -31,8 +30,7 @@ import { getTabMenuItems } from "../../utils/tabs";
 import {
   getSelectedSource,
   getActiveSearch,
-  getSourcesForTabs,
-  getHasSiblingOfSameName
+  getSourcesForTabs
 } from "../../selectors";
 
 import classnames from "classnames";
@@ -48,8 +46,7 @@ type Props = {
   closeTab: Source => void,
   closeTabs: (List<string>) => void,
   togglePrettyPrint: string => void,
-  showSource: string => void,
-  hasSiblingOfSameName: boolean
+  showSource: string => void
 };
 
 class Tab extends PureComponent<Props> {
@@ -158,8 +155,7 @@ class Tab extends PureComponent<Props> {
       selectSource,
       closeTab,
       source,
-      tabSources,
-      hasSiblingOfSameName
+      tabSources
     } = this.props;
     const sourceId = source.id;
     const active =
@@ -185,7 +181,6 @@ class Tab extends PureComponent<Props> {
     });
 
     const path = getDisplayPath(source, tabSources);
-    const query = hasSiblingOfSameName ? getSourceQueryString(source) : "";
 
     return (
       <div
@@ -195,14 +190,15 @@ class Tab extends PureComponent<Props> {
         // Accommodate middle click to close tab
         onMouseUp={e => e.button === 1 && closeTab(source)}
         onContextMenu={e => this.onTabContextMenu(e, sourceId)}
-        title={getFileURL(source, false)}
+        title={getFileURL(source)}
       >
+        <span className="source-tab-line" />
         <SourceIcon
           source={source}
           shouldHide={icon => ["file", "javascript"].includes(icon)}
         />
         <div className="filename">
-          {getTruncatedFileName(source, query)}
+          {getTruncatedFileName(source)}
           {path && <span>{`../${path}/..`}</span>}
         </div>
         <CloseButton
@@ -220,8 +216,7 @@ const mapStateToProps = (state, { source }) => {
   return {
     tabSources: getSourcesForTabs(state),
     selectedSource: selectedSource,
-    activeSearch: getActiveSearch(state),
-    hasSiblingOfSameName: getHasSiblingOfSameName(state, source)
+    activeSearch: getActiveSearch(state)
   };
 };
 

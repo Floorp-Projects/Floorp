@@ -440,14 +440,6 @@ export function getSourcesUrlsInSources(state: OuterState, url: string) {
   return [...new Set(Object.keys(urls).filter(Boolean))];
 }
 
-export function getHasSiblingOfSameName(state: OuterState, source: ?Source) {
-  if (!source) {
-    return false;
-  }
-
-  return getSourcesUrlsInSources(state, source.url).length > 1;
-}
-
 export function getSourceInSources(sources: SourcesMap, id: string): ?Source {
   return sources[id];
 }

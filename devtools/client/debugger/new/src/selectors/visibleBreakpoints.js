@@ -4,13 +4,14 @@
 
 // @flow
 
-import { getBreakpointsList } from "../reducers/breakpoints";
+import { getBreakpoints } from "../reducers/breakpoints";
 import { getSelectedSource } from "../reducers/sources";
 import { isGeneratedId } from "devtools-source-map";
 import { createSelector } from "reselect";
 import memoize from "../utils/memoize";
 
-import type { Breakpoint, Source } from "../types";
+import type { BreakpointsMap } from "../reducers/types";
+import type { Source } from "../types";
 
 function getLocation(breakpoint, isGeneratedSource) {
   return isGeneratedSource
@@ -45,8 +46,8 @@ function isVisible(breakpoint, selectedSource) {
   */
 export const getVisibleBreakpoints = createSelector(
   getSelectedSource,
-  getBreakpointsList,
-  (selectedSource: Source, breakpoints: Breakpoint[]) => {
+  getBreakpoints,
+  (selectedSource: Source, breakpoints: BreakpointsMap) => {
     if (!selectedSource) {
       return null;
     }
