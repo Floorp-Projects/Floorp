@@ -7,29 +7,6 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
-  <!-- The toolbar-drag binding is almost a verbatim copy of its toolkit counterpart,
-       but it inherits from the customizableui's toolbar binding instead of toolkit's.
-       This functionality will move into CustomizableUI proper as part of our move
-       away from XBL. -->
-  <binding id="toolbar-drag">
-    <implementation>
-      <field name="_dragBindingAlive">true</field>
-      <constructor><![CDATA[
-        if (!this._draggableStarted) {
-          this._draggableStarted = true;
-          try {
-            let tmp = {};
-            ChromeUtils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
-            let draggableThis = new tmp.WindowDraggingElement(this);
-            draggableThis.mouseDownCheck = function(e) {
-              return this._dragBindingAlive;
-            };
-          } catch (e) {}
-        }
-      ]]></constructor>
-    </implementation>
-  </binding>
-
   <binding id="toolbarpaletteitem">
     <content>
       <xul:hbox class="toolbarpaletteitem-box">
