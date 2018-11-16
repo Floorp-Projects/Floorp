@@ -135,6 +135,10 @@ async function getSystemInfo() {
     // and `deviceinfo.os`.
     hardware,
 
+    // Device name. This property is only available on Android.
+    // e.g. "Pixel 2"
+    deviceName: getDeviceName(),
+
     // Type of process architecture running:
     // "arm", "ia32", "x86", "x64"
     // Alias to both `arch` and `processor` for node/deviceactor compat
@@ -162,6 +166,15 @@ async function getSystemInfo() {
 
   CACHED_INFO = info;
   return info;
+}
+
+function getDeviceName() {
+  try {
+    // Will throw on other platforms than Firefox for Android.
+    return Services.sysinfo.getProperty("device");
+  } catch (e) {
+    return null;
+  }
 }
 
 function getProfileLocation() {

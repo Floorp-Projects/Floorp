@@ -39,8 +39,9 @@ const {
 } = require("../constants");
 
 async function getRuntimeInfo(runtime, client) {
-  const { extra, type } = runtime;
-  const { name, channel, version } = await client.getDeviceDescription();
+  const { type } = runtime;
+  const { brandName: name, channel, deviceName, version } =
+    await client.getDeviceDescription();
   const icon =
     (channel === "release" || channel === "beta" || channel === "aurora")
       ? `chrome://devtools/skin/images/aboutdebugging-firefox-${ channel }.svg`
@@ -48,7 +49,7 @@ async function getRuntimeInfo(runtime, client) {
 
   return {
     icon,
-    deviceName: extra ? extra.deviceName : undefined,
+    deviceName,
     name,
     type,
     version,
