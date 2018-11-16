@@ -19,9 +19,21 @@ loader.lazyRequireGetter(this, "isDefunct", "devtools/server/actors/utils/access
 loader.lazyRequireGetter(this, "isTypeRegistered", "devtools/server/actors/highlighters", true);
 loader.lazyRequireGetter(this, "isWindowIncluded", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isXUL", "devtools/server/actors/highlighters/utils/markup", true);
+loader.lazyRequireGetter(this, "loadSheet", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "register", "devtools/server/actors/highlighters", true);
+loader.lazyRequireGetter(this, "removeSheet", "devtools/shared/layout/utils", true);
 
 const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER
+
+const HIGHLIGHTER_STYLES_SHEET = `data:text/css;charset=utf-8,
+* {
+  transition: none !important;
+}
+
+:-moz-devtools-highlighted {
+  color: transparent !important;
+  text-shadow: none !important;
+}`;
 
 const nsIAccessibleEvent = Ci.nsIAccessibleEvent;
 const nsIAccessibleStateChangeEvent = Ci.nsIAccessibleStateChangeEvent;
@@ -336,7 +348,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
   },
 
   async getAncestry(accessible) {
-    if (accessible.indexInParent === -1) {
+    if (!accessible || accessible.indexInParent === -1) {
       return [];
     }
     const doc = await this.getDocument();
@@ -478,14 +490,23 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    *         True if highlighter shows the accessible object.
    */
   highlightAccessible(accessible, options = {}) {
+    this.unhighlight();
     const { bounds } = accessible;
     if (!bounds) {
       return false;
     }
 
+    // Disable potential mouse driven transitions (This is important because accessibility
+    // highlighter temporarily modifies text color related CSS properties. In case where
+    // there are transitions that affect them, there might be unexpected side effects when
+    // taking a snapshot for contrast measurement)
+    loadSheet(this.rootWin, HIGHLIGHTER_STYLES_SHEET);
     const { audit, name, role } = accessible;
-    return this.highlighter.show({ rawNode: accessible.rawAccessible.DOMNode },
-                                 { ...options, ...bounds, name, role, audit });
+    const shown = this.highlighter.show({ rawNode: accessible.rawAccessible.DOMNode },
+                                      { ...options, ...bounds, name, role, audit });
+    // Re-enable transitions.
+    removeSheet(this.rootWin, HIGHLIGHTER_STYLES_SHEET);
+    return shown;
   },
 
   /**
@@ -744,7 +765,8 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
   },
 
   /**
-   * If content is still alive, stop picker content listeners.
+   * If content is still alive, stop picker content listeners, reset the hover state for
+   * last target element.
    */
   _unsetPickerEnvironment: function() {
     const target = this.targetActor.chromeEventHandler;
@@ -799,9 +821,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    * Cacncel picker pick. Remvoe all content listeners and hide the highlighter.
    */
   cancelPick: function() {
-    if (this._highlighter) {
-      this.highlighter.hide();
-    }
+    this.unhighlight();
 
     if (this._isPicking) {
       this._unsetPickerEnvironment();

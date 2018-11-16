@@ -79,6 +79,10 @@ const ACCESSIBLE_BOUNDS_SHEET = "data:text/css;charset=utf-8," + encodeURICompon
     max-width: 90%;
   }
 
+  .accessible-infobar-audit .accessible-contrast-ratio:not(:empty):after {
+    margin-inline-start: 2px;
+  }
+
   .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA:after,
   .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA:after {
     color: #90E274;
@@ -86,15 +90,28 @@ const ACCESSIBLE_BOUNDS_SHEET = "data:text/css;charset=utf-8," + encodeURICompon
 
   .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).fail:after {
     color: #E57180;
-    content: " ⚠️";
+    content: "⚠️";
   }
 
   .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AA:after {
-    content: " AA\u2713";
+    content: "AA\u2713";
   }
 
   .accessible-infobar-audit .accessible-contrast-ratio:not(:empty).AAA:after {
-    content: " AAA\u2713";
+    content: "AAA\u2713";
+  }
+
+  .accessible-infobar-audit .accessible-contrast-ratio-label,
+  .accessible-infobar-audit #accessible-contrast-ratio-max:not(:empty):before {
+    margin-inline-end: 3px;
+  }
+
+  .accessible-infobar-audit #accessible-contrast-ratio-max {
+    margin-inline-start: 3px;
+  }
+
+  .accessible-infobar-audit #accessible-contrast-ratio-max:not(:empty):before {
+    content: "-";
   }
 
   .accessible-infobar-name:not(:empty),
