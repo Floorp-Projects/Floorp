@@ -11,14 +11,10 @@ import { connect } from "react-redux";
 import ExceptionOption from "./ExceptionOption";
 
 import Breakpoint from "./Breakpoint";
-import SourceIcon from "../../shared/SourceIcon";
+import BreakpointHeading from "./BreakpointHeading";
 
 import actions from "../../../actions";
-import {
-  getTruncatedFileName,
-  getDisplayPath,
-  getRawSourceURL
-} from "../../../utils/source";
+import { getDisplayPath } from "../../../utils/source";
 import { makeLocationId } from "../../../utils/breakpoint";
 
 import { getSelectedSource, getBreakpointSources } from "../../../selectors";
@@ -33,8 +29,7 @@ type Props = {
   selectedSource: Source,
   shouldPauseOnExceptions: boolean,
   shouldPauseOnCaughtExceptions: boolean,
-  pauseOnExceptions: Function,
-  selectSource: string => void
+  pauseOnExceptions: Function
 };
 
 class Breakpoints extends Component<Props> {
@@ -85,21 +80,12 @@ class Breakpoints extends Component<Props> {
       ...breakpointSources.map(({ source, breakpoints, i }) => {
         const path = getDisplayPath(source, sources);
         return [
-          <div
-            className="breakpoint-heading"
-            title={getRawSourceURL(source.url)}
+          <BreakpointHeading
+            source={source}
+            sources={sources}
+            path={path}
             key={source.url}
-            onClick={() => this.props.selectSource(source.id)}
-          >
-            <SourceIcon
-              source={source}
-              shouldHide={icon => ["file", "javascript"].includes(icon)}
-            />
-            <div className="filename">
-              {getTruncatedFileName(source)}
-              {path && <span>{`../${path}/..`}</span>}
-            </div>
-          </div>,
+          />,
           ...breakpoints.map(breakpoint => (
             <Breakpoint
               breakpoint={breakpoint}
@@ -130,7 +116,6 @@ const mapStateToProps = state => ({
 export default connect(
   mapStateToProps,
   {
-    pauseOnExceptions: actions.pauseOnExceptions,
-    selectSource: actions.selectSource
+    pauseOnExceptions: actions.pauseOnExceptions
   }
 )(Breakpoints);

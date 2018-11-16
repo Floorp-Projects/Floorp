@@ -20,7 +20,7 @@ add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
   const dbg = await initDebugger("doc-sourcemaps2.html");
   const {
-    selectors: { getBreakpoint, getBreakpoints },
+    selectors: { getBreakpoint, getBreakpointCount },
     getState
   } = dbg;
 
@@ -33,7 +33,7 @@ add_task(async function() {
 
   // Test that breakpoint is not off by a line.
   await addBreakpoint(dbg, mainSrc, 4);
-  is(getBreakpoints(getState()).size, 1, "One breakpoint exists");
+  is(getBreakpointCount(getState()), 1, "One breakpoint exists");
   ok(
     getBreakpoint(getState(), { sourceId: mainSrc.id, line: 4, column: 2 }),
     "Breakpoint has correct line"
