@@ -94,13 +94,11 @@ ToUnwrapped(JSContext* cx, HandleValue v)
 /**
  * Returns the stream associated with the given reader.
  */
-static MOZ_MUST_USE bool
-UnwrapStreamFromReader(JSContext *cx,
-                       Handle<ReadableStreamReader*> reader,
-                       MutableHandle<ReadableStream*> unwrappedResult)
+static MOZ_MUST_USE ReadableStream*
+UnwrapStreamFromReader(JSContext *cx, Handle<ReadableStreamReader*> reader)
 {
     MOZ_ASSERT(reader->hasStream());
-    return UnwrapInternalSlot(cx, reader, ReadableStreamReader::Slot_Stream, unwrappedResult);
+    return UnwrapInternalSlot<ReadableStream>(cx, reader, ReadableStreamReader::Slot_Stream);
 }
 
 /**
@@ -109,16 +107,13 @@ UnwrapStreamFromReader(JSContext *cx,
  * Must only be called on ReadableStreams that already have a reader
  * associated with them.
  *
- * If the reader is a wrapper, it will be unwrapped, so the object stored in
- * `unwrappedResult` might not be an object from the currently active
- * compartment.
+ * If the reader is a wrapper, it will be unwrapped, so the result might not be
+ * an object from the currently active compartment.
  */
-static MOZ_MUST_USE bool
-UnwrapReaderFromStream(JSContext* cx,
-                       Handle<ReadableStream*> stream,
-                       MutableHandle<ReadableStreamReader*> unwrappedResult)
+static MOZ_MUST_USE ReadableStreamReader*
+UnwrapReaderFromStream(JSContext* cx, Handle<ReadableStream*> stream)
 {
-    return UnwrapInternalSlot(cx, stream, ReadableStream::Slot_Reader, unwrappedResult);
+    return UnwrapInternalSlot<ReadableStreamReader>(cx, stream, ReadableStream::Slot_Reader);
 }
 
 static MOZ_MUST_USE ReadableStreamReader*
@@ -696,13 +691,9 @@ ReadableStream_locked(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Step 1: If ! IsReadableStream(this) is false, throw a TypeError exception.
-    Rooted<ReadableStream*> unwrappedStream(cx);
-    if (!UnwrapThisForNonGenericMethod(cx,
-                                       args.thisv(),
-                                       "ReadableStream",
-                                       "get locked",
-                                       &unwrappedStream))
-    {
+    Rooted<ReadableStream*> unwrappedStream(cx,
+        UnwrapAndTypeCheckThis<ReadableStream>(cx, args, "get locked"));
+    if (!unwrappedStream) {
         return false;
     }
 
@@ -724,10 +715,9 @@ ReadableStream_cancel(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 1: If ! IsReadableStream(this) is false, return a promise rejected
     //         with a TypeError exception.
-    Rooted<ReadableStream*> unwrappedStream(cx);
-    if (!UnwrapThisForNonGenericMethod(cx, args.thisv(), "ReadableStream", "cancel",
-                                       &unwrappedStream))
-    {
+    Rooted<ReadableStream*> unwrappedStream(cx,
+        UnwrapAndTypeCheckThis<ReadableStream>(cx, args, "cancel"));
+    if (!unwrappedStream) {
         return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
@@ -760,10 +750,9 @@ ReadableStream_getReader(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Step 1: If ! IsReadableStream(this) is false, throw a TypeError exception.
-    Rooted<ReadableStream*> unwrappedStream(cx);
-    if (!UnwrapThisForNonGenericMethod(cx, args.thisv(), "ReadableStream", "getReader",
-                                       &unwrappedStream))
-    {
+    Rooted<ReadableStream*> unwrappedStream(cx,
+        UnwrapAndTypeCheckThis<ReadableStream>(cx, args, "getReader"));
+    if (!unwrappedStream) {
         return false;
     }
 
@@ -831,10 +820,9 @@ ReadableStream_tee(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Step 1: If ! IsReadableStream(this) is false, throw a TypeError exception.
-    Rooted<ReadableStream*> unwrappedStream(cx);
-    if (!UnwrapThisForNonGenericMethod(cx, args.thisv(), "ReadableStream", "tee",
-                                       &unwrappedStream))
-    {
+    Rooted<ReadableStream*> unwrappedStream(cx,
+        UnwrapAndTypeCheckThis<ReadableStream>(cx, args, "tee"));
+    if (!unwrappedStream) {
         return false;
     }
 
@@ -1028,12 +1016,14 @@ ReadableStreamTee_Pull(JSContext* cx, Handle<TeeState*> unwrappedTeeState)
     //         ! ReadableStreamDefaultReaderRead(reader) by a fulfillment
     //         handler which takes the argument result and performs the
     //         following steps:
-    Rooted<ReadableStream*> unwrappedStream(cx);
-    if (!UnwrapInternalSlot(cx, unwrappedTeeState, TeeState::Slot_Stream, &unwrappedStream)) {
+    Rooted<ReadableStream*> unwrappedStream(cx,
+        UnwrapInternalSlot<ReadableStream>(cx, unwrappedTeeState, TeeState::Slot_Stream));
+    if (!unwrappedStream) {
         return nullptr;
     }
-    Rooted<ReadableStreamReader*> unwrappedReaderObj(cx);
-    if (!UnwrapReaderFromStream(cx, unwrappedStream, &unwrappedReaderObj)) {
+    Rooted<ReadableStreamReader*> unwrappedReaderObj(cx,
+        UnwrapReaderFromStream(cx, unwrappedStream));
+    if (!unwrappedReaderObj) {
         return nullptr;
     }
 
@@ -1067,8 +1057,9 @@ ReadableStreamTee_Cancel(JSContext* cx,
                          HandleValue reason)
 {
     // Step 1: Let stream be F.[[stream]] and teeState be F.[[teeState]].
-    Rooted<ReadableStream*> unwrappedStream(cx);
-    if (!UnwrapInternalSlot(cx, unwrappedTeeState, TeeState::Slot_Stream, &unwrappedStream)) {
+    Rooted<ReadableStream*> unwrappedStream(cx,
+        UnwrapInternalSlot<ReadableStream>(cx, unwrappedTeeState, TeeState::Slot_Stream));
+    if (!unwrappedStream) {
         return nullptr;
     }
 
@@ -1304,8 +1295,8 @@ ReadableStreamAddReadOrReadIntoRequest(JSContext* cx, Handle<ReadableStream*> un
 {
     // Step 1: Assert: ! IsReadableStreamBYOBReader(stream.[[reader]]) is true.
     // Skipped: handles both kinds of readers.
-    Rooted<ReadableStreamReader*> unwrappedReader(cx);
-    if (!UnwrapReaderFromStream(cx, unwrappedStream, &unwrappedReader)) {
+    Rooted<ReadableStreamReader*> unwrappedReader(cx, UnwrapReaderFromStream(cx, unwrappedStream));
+    if (!unwrappedReader) {
         return nullptr;
     }
 
@@ -1418,8 +1409,8 @@ ReadableStreamCloseInternal(JSContext* cx, Handle<ReadableStream*> unwrappedStre
     }
 
     // Step 3: Let reader be stream.[[reader]].
-    Rooted<ReadableStreamReader*> unwrappedReader(cx);
-    if (!UnwrapReaderFromStream(cx, unwrappedStream, &unwrappedReader)) {
+    Rooted<ReadableStreamReader*> unwrappedReader(cx, UnwrapReaderFromStream(cx, unwrappedStream));
+    if (!unwrappedReader) {
         return false;
     }
 
@@ -1510,8 +1501,8 @@ ReadableStreamErrorInternal(JSContext* cx, Handle<ReadableStream*> unwrappedStre
     }
 
     // Step 5: Let reader be stream.[[reader]].
-    Rooted<ReadableStreamReader*> unwrappedReader(cx);
-    if (!UnwrapReaderFromStream(cx, unwrappedStream, &unwrappedReader)) {
+    Rooted<ReadableStreamReader*> unwrappedReader(cx, UnwrapReaderFromStream(cx, unwrappedStream));
+    if (!unwrappedReader) {
         return false;
     }
 
@@ -1597,8 +1588,8 @@ ReadableStreamFulfillReadOrReadIntoRequest(JSContext* cx,
     cx->check(chunk);
 
     // Step 1: Let reader be stream.[[reader]].
-    Rooted<ReadableStreamReader*> unwrappedReader(cx);
-    if (!UnwrapReaderFromStream(cx, unwrappedStream, &unwrappedReader)) {
+    Rooted<ReadableStreamReader*> unwrappedReader(cx, UnwrapReaderFromStream(cx, unwrappedStream));
+    if (!unwrappedReader) {
         return false;
     }
 
@@ -1666,8 +1657,8 @@ ReadableStreamHasDefaultReader(JSContext* cx,
 
     // Step 3: If ! ReadableStreamDefaultReader(reader) is false, return false.
     // Step 4: Return true.
-    Rooted<ReadableStreamReader*> unwrappedReader(cx);
-    if (!UnwrapReaderFromStream(cx, unwrappedStream, &unwrappedReader)) {
+    Rooted<ReadableStreamReader*> unwrappedReader(cx, UnwrapReaderFromStream(cx, unwrappedStream));
+    if (!unwrappedReader) {
         return false;
     }
 
@@ -1729,10 +1720,12 @@ ReadableStreamDefaultReader::constructor(JSContext* cx, unsigned argc, Value* vp
     }
 
     // Step 1: If ! IsReadableStream(stream) is false, throw a TypeError exception.
-    Rooted<ReadableStream*> unwrappedStream(cx);
-    if (!UnwrapAndTypeCheckArgument(cx, args, "ReadableStreamDefaultReader constructor", 0,
-                                    &unwrappedStream))
-    {
+    Rooted<ReadableStream*> unwrappedStream(cx,
+        UnwrapAndTypeCheckArgument<ReadableStream>(cx,
+                                                   args,
+                                                   "ReadableStreamDefaultReader constructor",
+                                                   0));
+    if (!unwrappedStream) {
         return false;
     }
 
@@ -1755,13 +1748,9 @@ ReadableStreamDefaultReader_closed(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 1: If ! IsReadableStreamDefaultReader(this) is false, return a promise
     //         rejected with a TypeError exception.
-    Rooted<ReadableStreamDefaultReader*> unwrappedReader(cx);
-    if (!UnwrapThisForNonGenericMethod(cx,
-                                       args.thisv(),
-                                       "ReadableStreamDefaultReader",
-                                       "get closed",
-                                       &unwrappedReader))
-    {
+    Rooted<ReadableStreamDefaultReader*> unwrappedReader(cx,
+        UnwrapAndTypeCheckThis<ReadableStreamDefaultReader>(cx, args, "get closed"));
+    if (!unwrappedReader) {
         return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
@@ -1790,13 +1779,9 @@ ReadableStreamDefaultReader_cancel(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 1: If ! IsReadableStreamDefaultReader(this) is false, return a promise
     //         rejected with a TypeError exception.
-    Rooted<ReadableStreamDefaultReader*> unwrappedReader(cx);
-    if (!UnwrapThisForNonGenericMethod(cx,
-                                       args.thisv(),
-                                       "ReadableStreamDefaultReader",
-                                       "cancel",
-                                       &unwrappedReader))
-    {
+    Rooted<ReadableStreamDefaultReader*> unwrappedReader(cx,
+        UnwrapAndTypeCheckThis<ReadableStreamDefaultReader>(cx, args, "cancel"));
+    if (!unwrappedReader) {
         return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
@@ -1827,13 +1812,9 @@ ReadableStreamDefaultReader_read(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 1: If ! IsReadableStreamDefaultReader(this) is false, return a promise
     //         rejected with a TypeError exception.
-    Rooted<ReadableStreamDefaultReader*> unwrappedReader(cx);
-    if (!UnwrapThisForNonGenericMethod(cx,
-                                       args.thisv(),
-                                       "ReadableStreamDefaultReader",
-                                       "read",
-                                       &unwrappedReader))
-    {
+    Rooted<ReadableStreamDefaultReader*> unwrappedReader(cx,
+        UnwrapAndTypeCheckThis<ReadableStreamDefaultReader>(cx, args, "read"));
+    if (!unwrappedReader) {
         return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
@@ -1866,13 +1847,9 @@ ReadableStreamDefaultReader_releaseLock(JSContext* cx, unsigned argc, Value* vp)
     // Step 1: If ! IsReadableStreamDefaultReader(this) is false,
     //         throw a TypeError exception.
     CallArgs args = CallArgsFromVp(argc, vp);
-    Rooted<ReadableStreamDefaultReader*> reader(cx);
-    if (!UnwrapThisForNonGenericMethod(cx,
-                                       args.thisv(),
-                                       "ReadableStreamDefaultReader",
-                                       "releaseLock",
-                                       &reader))
-    {
+    Rooted<ReadableStreamDefaultReader*> reader(cx,
+        UnwrapAndTypeCheckThis<ReadableStreamDefaultReader>(cx, args, "releaseLock"));
+    if (!reader) {
         return false;
     }
 
@@ -1942,8 +1919,8 @@ ReadableStreamReaderGenericCancel(JSContext* cx,
 {
     // Step 1: Let stream be reader.[[ownerReadableStream]].
     // Step 2: Assert: stream is not undefined (implicit).
-    Rooted<ReadableStream*> unwrappedStream(cx);
-    if (!UnwrapStreamFromReader(cx, unwrappedReader, &unwrappedStream)) {
+    Rooted<ReadableStream*> unwrappedStream(cx, UnwrapStreamFromReader(cx, unwrappedReader));
+    if (!unwrappedStream) {
         return nullptr;
     }
 
@@ -2019,8 +1996,8 @@ static MOZ_MUST_USE bool
 ReadableStreamReaderGenericRelease(JSContext* cx, Handle<ReadableStreamReader*> unwrappedReader)
 {
     // Step 1: Assert: reader.[[ownerReadableStream]] is not undefined.
-    Rooted<ReadableStream*> unwrappedStream(cx);
-    if (!UnwrapStreamFromReader(cx, unwrappedReader, &unwrappedStream)) {
+    Rooted<ReadableStream*> unwrappedStream(cx, UnwrapStreamFromReader(cx, unwrappedReader));
+    if (!unwrappedStream) {
         return false;
     }
 
@@ -2040,12 +2017,11 @@ ReadableStreamReaderGenericRelease(JSContext* cx, Handle<ReadableStreamReader*> 
     // Step 3: If reader.[[ownerReadableStream]].[[state]] is "readable", reject
     //         reader.[[closedPromise]] with a TypeError exception.
     if (unwrappedStream->readable()) {
-        Rooted<PromiseObject*> closedPromise(cx);
-        if (!UnwrapInternalSlot(cx,
-                                unwrappedReader,
-                                ReadableStreamReader::Slot_ClosedPromise,
-                                &closedPromise))
-        {
+        Rooted<PromiseObject*> closedPromise(cx,
+            UnwrapInternalSlot<PromiseObject>(cx,
+                                              unwrappedReader,
+                                              ReadableStreamReader::Slot_ClosedPromise));
+        if (!closedPromise) {
             return false;
         }
 
@@ -2093,8 +2069,8 @@ ReadableStreamDefaultReaderRead(JSContext* cx,
 {
     // Step 1: Let stream be reader.[[ownerReadableStream]].
     // Step 2: Assert: stream is not undefined.
-    Rooted<ReadableStream*> unwrappedStream(cx);
-    if (!UnwrapStreamFromReader(cx, unwrappedReader, &unwrappedStream)) {
+    Rooted<ReadableStream*> unwrappedStream(cx, UnwrapStreamFromReader(cx, unwrappedReader));
+    if (!unwrappedStream) {
         return nullptr;
     }
 
@@ -2327,13 +2303,9 @@ ReadableStreamDefaultController_desiredSize(JSContext* cx, unsigned argc, Value*
     // Step 1: If ! IsReadableStreamDefaultController(this) is false, throw a
     //         TypeError exception.
     CallArgs args = CallArgsFromVp(argc, vp);
-    Rooted<ReadableStreamController*> unwrappedController(cx);
-    if (!UnwrapThisForNonGenericMethod(cx,
-                                       args.thisv(),
-                                       "ReadableStreamDefaultController",
-                                       "get desiredSize",
-                                       &unwrappedController))
-    {
+    Rooted<ReadableStreamController*> unwrappedController(cx,
+        UnwrapAndTypeCheckThis<ReadableStreamDefaultController>(cx, args, "get desiredSize"));
+    if (!unwrappedController) {
         return false;
     }
 
@@ -2398,13 +2370,9 @@ ReadableStreamDefaultController_close(JSContext* cx, unsigned argc, Value* vp)
     // Step 1: If ! IsReadableStreamDefaultController(this) is false, throw a
     //         TypeError exception.
     CallArgs args = CallArgsFromVp(argc, vp);
-    Rooted<ReadableStreamDefaultController*> unwrappedController(cx);
-    if (!UnwrapThisForNonGenericMethod(cx,
-                                       args.thisv(),
-                                       "ReadableStreamDefaultController",
-                                       "close",
-                                       &unwrappedController))
-    {
+    Rooted<ReadableStreamDefaultController*> unwrappedController(cx,
+        UnwrapAndTypeCheckThis<ReadableStreamDefaultController>(cx, args, "close"));
+    if (!unwrappedController) {
         return false;
     }
 
@@ -2430,13 +2398,9 @@ ReadableStreamDefaultController_enqueue(JSContext* cx, unsigned argc, Value* vp)
     // Step 1: If ! IsReadableStreamDefaultController(this) is false, throw a
     //         TypeError exception.
     CallArgs args = CallArgsFromVp(argc, vp);
-    Rooted<ReadableStreamDefaultController*> unwrappedController(cx);
-    if (!UnwrapThisForNonGenericMethod(cx,
-                                       args.thisv(),
-                                       "ReadableStreamDefaultController",
-                                       "enqueue",
-                                       &unwrappedController))
-    {
+    Rooted<ReadableStreamDefaultController*> unwrappedController(cx,
+        UnwrapAndTypeCheckThis<ReadableStreamDefaultController>(cx, args, "enqueue"));
+    if (!unwrappedController) {
         return false;
     }
 
@@ -2473,13 +2437,9 @@ ReadableStreamDefaultController_error(JSContext* cx, unsigned argc, Value* vp)
     //         TypeError exception.
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    Rooted<ReadableStreamDefaultController*> unwrappedController(cx);
-    if (!UnwrapThisForNonGenericMethod(cx,
-                                       args.thisv(),
-                                       "ReadableStreamDefaultController",
-                                       "enqueue",
-                                       &unwrappedController))
-    {
+    Rooted<ReadableStreamDefaultController*> unwrappedController(cx,
+        UnwrapAndTypeCheckThis<ReadableStreamDefaultController>(cx, args, "enqueue"));
+    if (!unwrappedController) {
         return false;
     }
 
@@ -4568,8 +4528,8 @@ JS::ReadableStreamReaderReleaseLock(JSContext* cx, HandleObject readerObj)
     }
 
 #ifdef DEBUG
-    Rooted<ReadableStream*> unwrappedStream(cx);
-    if (!UnwrapStreamFromReader(cx, unwrappedReader, &unwrappedStream)) {
+    Rooted<ReadableStream*> unwrappedStream(cx, UnwrapStreamFromReader(cx, unwrappedReader));
+    if (!unwrappedStream) {
         return false;
     }
     MOZ_ASSERT(ReadableStreamGetNumReadRequests(unwrappedStream) == 0);
