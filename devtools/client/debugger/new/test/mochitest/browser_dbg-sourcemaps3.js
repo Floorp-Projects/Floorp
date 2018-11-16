@@ -12,7 +12,7 @@ add_task(async function() {
 
   const dbg = await initDebugger("doc-sourcemaps3.html");
   const {
-    selectors: { getBreakpoint, getBreakpoints },
+    selectors: { getBreakpoint, getBreakpointCount },
     getState
   } = dbg;
 
@@ -25,7 +25,7 @@ add_task(async function() {
 
   // Test that breakpoint is not off by a line.
   await addBreakpoint(dbg, sortedSrc, 9);
-  is(getBreakpoints(getState()).size, 1, "One breakpoint exists");
+  is(getBreakpointCount(getState()), 1, "One breakpoint exists");
   ok(
     getBreakpoint(getState(), { sourceId: sortedSrc.id, line: 9, column: 4 }),
     "Breakpoint has correct line"

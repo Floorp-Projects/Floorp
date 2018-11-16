@@ -7,7 +7,7 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 
-import { features } from "../utils/prefs";
+import { prefs, features } from "../utils/prefs";
 import actions from "../actions";
 import A11yIntention from "./A11yIntention";
 import { ShortcutsModal } from "./ShortcutsModal";
@@ -247,24 +247,28 @@ class App extends Component<Props, State> {
     const horizontal = this.isHorizontal();
 
     const maxSize = horizontal ? "70%" : "95%";
-    const primaryInitialSize = horizontal ? "250px" : "150px";
 
     return (
       <SplitBox
         style={{ width: "100vw" }}
-        initialHeight={400}
-        initialWidth={300}
+        initialSize={prefs.endPanelSize}
         minSize={30}
         maxSize={maxSize}
         splitterSize={1}
         vert={horizontal}
+        onResizeEnd={num => {
+          prefs.endPanelSize = num;
+        }}
         startPanel={
           <SplitBox
             style={{ width: "100vw" }}
-            initialSize={primaryInitialSize}
+            initialSize={prefs.startPanelSize}
             minSize={30}
             maxSize="85%"
             splitterSize={1}
+            onResizeEnd={num => {
+              prefs.startPanelSize = num;
+            }}
             startPanelCollapsed={startPanelCollapsed}
             startPanel={<PrimaryPanes horizontal={horizontal} />}
             endPanel={this.renderEditorPane()}

@@ -48,8 +48,10 @@ export default function renderWhyPaused(why: Object) {
 
   return (
     <div className={"pane why-paused"}>
-      <div>{L10N.getStr(reason)}</div>
-      {renderMessage(why)}
+      <div>
+        <div>{L10N.getStr(reason)}</div>
+        {renderMessage(why)}
+      </div>
     </div>
   );
 }
