@@ -297,6 +297,8 @@ public class GeckoThread extends Thread {
             res.updateConfiguration(config, null);
         }
 
+        GeckoSystemStateListener.getInstance().initialize(context);
+
         final String resourcePath = context.getPackageResourcePath();
 
         try {
