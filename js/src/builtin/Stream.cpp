@@ -134,6 +134,8 @@ UnwrapReaderFromStreamNoThrow(ReadableStream* stream)
     return &readerObj->as<ReadableStreamReader>();
 }
 
+constexpr size_t StreamHandlerFunctionSlot_Target = 0;
+
 inline static MOZ_MUST_USE JSFunction*
 NewHandler(JSContext* cx, Native handler, HandleObject target)
 {
@@ -146,7 +148,7 @@ NewHandler(JSContext* cx, Native handler, HandleObject target)
     if (!handlerFun) {
         return nullptr;
     }
-    handlerFun->setExtendedSlot(0, ObjectValue(*target));
+    handlerFun->setExtendedSlot(StreamHandlerFunctionSlot_Target, ObjectValue(*target));
     return handlerFun;
 }
 
@@ -158,7 +160,8 @@ template <class T>
 inline static MOZ_MUST_USE T*
 TargetFromHandler(CallArgs& args)
 {
-    return &args.callee().as<JSFunction>().getExtendedSlot(0).toObject().as<T>();
+    JSFunction& func = args.callee().as<JSFunction>();
+    return &func.getExtendedSlot(StreamHandlerFunctionSlot_Target).toObject().as<T>();
 }
 
 inline static MOZ_MUST_USE bool
