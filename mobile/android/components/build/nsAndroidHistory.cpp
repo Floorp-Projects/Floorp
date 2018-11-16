@@ -220,7 +220,10 @@ nsAndroidHistory::SaveVisitURI(nsIURI* aURI) {
 }
 
 NS_IMETHODIMP
-nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlags)
+nsAndroidHistory::VisitURI(nsIWidget* aWidget,
+                           nsIURI* aURI,
+                           nsIURI* aLastVisitedURI,
+                           uint32_t aFlags)
 {
   if (!aURI) {
     return NS_OK;

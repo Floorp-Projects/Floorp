@@ -10,6 +10,7 @@
 #include "nsISupports.h"
 
 class nsIURI;
+class nsIWidget;
 
 namespace mozilla {
 
@@ -100,6 +101,8 @@ public:
    *
    * @pre aURI must not be null.
    *
+   * @param aWidget
+   *        The widget for the DocShell.
    * @param aURI
    *        The URI of the page being visited.
    * @param aLastVisitedURI
@@ -107,7 +110,8 @@ public:
    * @param aFlags
    *        The VisitFlags describing this visit.
    */
-  NS_IMETHOD VisitURI(nsIURI* aURI,
+  NS_IMETHOD VisitURI(nsIWidget* aWidget,
+                      nsIURI* aURI,
                       nsIURI* aLastVisitedURI,
                       uint32_t aFlags) = 0;
 
@@ -139,7 +143,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(IHistory, IHISTORY_IID)
                                      mozilla::dom::Link* aContent) override; \
   NS_IMETHOD UnregisterVisitedCallback(nsIURI* aURI, \
                                        mozilla::dom::Link* aContent) override; \
-  NS_IMETHOD VisitURI(nsIURI* aURI, \
+  NS_IMETHOD VisitURI(nsIWidget* aWidget, \
+                      nsIURI* aURI, \
                       nsIURI* aLastVisitedURI, \
                       uint32_t aFlags) override; \
   NS_IMETHOD SetURITitle(nsIURI* aURI, const nsAString& aTitle) override; \

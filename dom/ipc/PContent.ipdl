@@ -811,7 +811,6 @@ parent:
     // Services remoting
 
     async StartVisitedQuery(URIParams uri);
-    async VisitURI(URIParams uri, OptionalURIParams referrer, uint32_t flags);
     async SetURITitle(URIParams uri, nsString title);
 
     async LoadURIExternal(URIParams uri, PBrowser windowContext);

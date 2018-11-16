@@ -1042,10 +1042,6 @@ private:
 
   virtual mozilla::ipc::IPCResult RecvStartVisitedQuery(const URIParams& uri) override;
 
-  virtual mozilla::ipc::IPCResult RecvVisitURI(const URIParams& uri,
-                                               const OptionalURIParams& referrer,
-                                               const uint32_t& flags) override;
-
   virtual mozilla::ipc::IPCResult RecvSetURITitle(const URIParams& uri,
                                                   const nsString& title) override;
 
