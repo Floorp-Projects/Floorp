@@ -417,7 +417,6 @@ MSG_DEF(JSMSG_WASM_BAD_TABLE_VALUE,    0, JSEXN_TYPEERR,     "can only assign We
 MSG_DEF(JSMSG_WASM_BAD_I64_TYPE,       0, JSEXN_TYPEERR,     "cannot pass i64 to or from JS")
 MSG_DEF(JSMSG_WASM_BAD_GLOBAL_TYPE,    0, JSEXN_TYPEERR,     "bad type for a WebAssembly.Global")
 MSG_DEF(JSMSG_WASM_NO_TRANSFER,        0, JSEXN_TYPEERR,     "cannot transfer WebAssembly/asm.js ArrayBuffer")
-MSG_DEF(JSMSG_WASM_STREAM_ERROR,       0, JSEXN_TYPEERR,     "stream error during WebAssembly compilation")
 MSG_DEF(JSMSG_WASM_TEXT_FAIL,          1, JSEXN_SYNTAXERR,   "wasm text error: {0}")
 MSG_DEF(JSMSG_WASM_MISSING_MAXIMUM,    0, JSEXN_TYPEERR,     "'shared' is true but maximum is not specified")
 MSG_DEF(JSMSG_WASM_GLOBAL_IMMUTABLE,   0, JSEXN_TYPEERR,     "can't set value of immutable global")
@@ -668,7 +667,8 @@ MSG_DEF(JSMSG_READABLESTREAMBYOBREQUEST_RESPOND_CLOSED,  0, JSEXN_TYPEERR, "Read
 MSG_DEF(JSMSG_READABLESTREAM_METHOD_NOT_IMPLEMENTED,     1, JSEXN_TYPEERR, "ReadableStream method {0} not yet implemented")
 
 // Other Stream-related
-MSG_DEF(JSMSG_STREAM_INVALID_HIGHWATERMARK,             0, JSEXN_RANGEERR, "'highWaterMark' must be a non-negative, non-NaN number.")
+MSG_DEF(JSMSG_STREAM_INVALID_HIGHWATERMARK,              0, JSEXN_RANGEERR, "'highWaterMark' must be a non-negative, non-NaN number.")
+MSG_DEF(JSMSG_STREAM_CONSUME_ERROR,                      0, JSEXN_TYPEERR,  "error consuming stream body")
 
 // Response-related
 MSG_DEF(JSMSG_ERROR_CONSUMING_RESPONSE,                  0, JSEXN_TYPEERR,  "there was an error consuming the Response")

@@ -21,6 +21,7 @@ class WebReplayPlayer extends Component {
       executionPoint: null,
       recordingEndpoint: null,
       seeking: false,
+      recording: true,
       messages: [],
     };
   }
@@ -28,6 +29,7 @@ class WebReplayPlayer extends Component {
   componentDidMount() {
     this.threadClient.addListener("paused", this.onPaused.bind(this));
     this.threadClient.addListener("resumed", this.onResumed.bind(this));
+    this.threadClient.addListener("progress", this.onProgress.bind(this));
     this.activeConsole._client.addListener(
       "consoleAPICall",
       this.onMessage.bind(this)
@@ -42,20 +44,34 @@ class WebReplayPlayer extends Component {
     return this.props.toolbox.target.activeConsole;
   }
 
+  isRecording() {
+    return this.state.recording;
+  }
+
+  isReplaying() {
+    const {recording} = this.state;
+    return !this.isPaused() && !recording;
+  }
+
   isPaused() {
-    const { executionPoint, seeking } = this.state;
-    return !!executionPoint || !!seeking;
+    const { paused } = this.state;
+    return paused;
   }
 
   onPaused(_, packet) {
     if (packet && packet.recordingEndpoint) {
       const { executionPoint, recordingEndpoint } = packet;
-      this.setState({ executionPoint, recordingEndpoint, seeking: false });
+      this.setState({ executionPoint, recordingEndpoint, paused: true });
     }
   }
 
   onResumed(_, packet) {
-    this.setState({ executionPoint: null });
+    this.setState({ paused: false });
+  }
+
+  onProgress(_, packet) {
+    const { recording, executionPoint } = packet;
+    this.setState({ recording, executionPoint });
   }
 
   onMessage(_, packet) {
@@ -68,25 +84,36 @@ class WebReplayPlayer extends Component {
     }
 
     // set seeking to the current execution point to avoid a progress bar jump
-    this.setState({ seeking: this.state.executionPoint });
     return this.threadClient.timeWarp(executionPoint);
   }
 
   next(ev) {
+    if (!this.isPaused()) {
+      return null;
+    }
+
     if (!ev.metaKey) {
       return this.threadClient.resume();
     }
 
-    const { messages, executionPoint } = this.state;
-    const seekPoint = messages
+    const { messages, executionPoint, recordingEndpoint } = this.state;
+    let seekPoint = messages
       .map(m => m.executionPoint)
       .filter(point => point.progress > executionPoint.progress)
       .slice(0)[0];
+
+    if (!seekPoint) {
+      seekPoint = recordingEndpoint;
+    }
 
     return this.seek(seekPoint);
   }
 
   previous(ev) {
+    if (!this.isPaused()) {
+      return null;
+    }
+
     if (!ev.metaKey) {
       return this.threadClient.rewind();
     }
@@ -102,31 +129,33 @@ class WebReplayPlayer extends Component {
   }
 
   renderCommands() {
-    if (this.isPaused()) {
+    if (this.isRecording()) {
       return [
         div(
           { className: "command-button" },
           div({
-            className: "rewind-button btn",
-            onClick: ev => this.previous(ev),
-          })
-        ),
-        div(
-          { className: "command-button" },
-          div({
-            className: "play-button btn",
-            onClick: ev => this.next(ev),
+            className: "pause-button btn",
+            onClick: () => this.threadClient.interrupt(),
           })
         ),
       ];
     }
 
+    const isActiveClass = !this.isPaused() ? "active" : "";
+
     return [
       div(
-        { className: "command-button" },
+        { className: `command-button ${isActiveClass}` },
         div({
-          className: "pause-button btn",
-          onClick: () => this.threadClient.interrupt(),
+          className: "rewind-button btn",
+          onClick: ev => this.previous(ev),
+        })
+      ),
+      div(
+        { className: `command-button ${isActiveClass}` },
+        div({
+          className: "play-button btn",
+          onClick: ev => this.next(ev),
         })
       ),
     ];
@@ -134,6 +163,10 @@ class WebReplayPlayer extends Component {
 
   renderMessages() {
     const messages = this.state.messages;
+
+    if (this.isRecording()) {
+      return [];
+    }
 
     return messages.map((message, index) =>
       dom.div({
@@ -169,9 +202,7 @@ class WebReplayPlayer extends Component {
             div({
               className: "progress",
               style: {
-                width: `${this.getPercent(
-                  this.state.executionPoint || this.state.seeking
-                )}%`,
+                width: `${this.getPercent(this.state.executionPoint)}%`,
               },
             }),
             ...this.renderMessages()
