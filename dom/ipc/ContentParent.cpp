@@ -3906,25 +3906,6 @@ ContentParent::RecvStartVisitedQuery(const URIParams& aURI)
   return IPC_OK();
 }
 
-
-mozilla::ipc::IPCResult
-ContentParent::RecvVisitURI(const URIParams& uri,
-                            const OptionalURIParams& referrer,
-                            const uint32_t& flags)
-{
-  nsCOMPtr<nsIURI> ourURI = DeserializeURI(uri);
-  if (!ourURI) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  nsCOMPtr<nsIURI> ourReferrer = DeserializeURI(referrer);
-  nsCOMPtr<IHistory> history = services::GetHistoryService();
-  if (history) {
-    history->VisitURI(ourURI, ourReferrer, flags);
-  }
-  return IPC_OK();
-}
-
-
 mozilla::ipc::IPCResult
 ContentParent::RecvSetURITitle(const URIParams& uri,
                                const nsString& title)

@@ -427,7 +427,7 @@ test_visituri_inserts()
   nsCOMPtr<nsIURI> lastURI = new_test_uri();
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();
 
-  history->VisitURI(visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
+  history->VisitURI(nullptr, visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
 
   RefPtr<VisitURIObserver> finisher = new VisitURIObserver();
   finisher->WaitForNotification();
@@ -451,11 +451,11 @@ test_visituri_updates()
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();
   RefPtr<VisitURIObserver> finisher;
 
-  history->VisitURI(visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
+  history->VisitURI(nullptr, visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
   finisher = new VisitURIObserver();
   finisher->WaitForNotification();
 
-  history->VisitURI(visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
+  history->VisitURI(nullptr, visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
   finisher = new VisitURIObserver();
   finisher->WaitForNotification();
 
@@ -474,10 +474,10 @@ test_visituri_preserves_shown_and_typed()
   nsCOMPtr<nsIURI> lastURI = new_test_uri();
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();
 
-  history->VisitURI(visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
+  history->VisitURI(nullptr, visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
   // this simulates the uri visit happening in a frame.  Normally frame
   // transitions would be hidden unless it was previously loaded top-level
-  history->VisitURI(visitedURI, lastURI, 0);
+  history->VisitURI(nullptr, visitedURI, lastURI, 0);
 
   RefPtr<VisitURIObserver> finisher = new VisitURIObserver(2);
   finisher->WaitForNotification();
@@ -496,7 +496,7 @@ test_visituri_creates_visit()
   nsCOMPtr<nsIURI> lastURI = new_test_uri();
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();
 
-  history->VisitURI(visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
+  history->VisitURI(nullptr, visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
   RefPtr<VisitURIObserver> finisher = new VisitURIObserver();
   finisher->WaitForNotification();
 
@@ -521,7 +521,7 @@ test_visituri_transition_typed()
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();
 
   navHistory->MarkPageAsTyped(visitedURI);
-  history->VisitURI(visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
+  history->VisitURI(nullptr, visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
   RefPtr<VisitURIObserver> finisher = new VisitURIObserver();
   finisher->WaitForNotification();
 
@@ -542,7 +542,7 @@ test_visituri_transition_embed()
   nsCOMPtr<nsIURI> lastURI = new_test_uri();
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();
 
-  history->VisitURI(visitedURI, lastURI, 0);
+  history->VisitURI(nullptr, visitedURI, lastURI, 0);
   RefPtr<VisitURIObserver> finisher = new VisitURIObserver();
   finisher->WaitForNotification();
 
@@ -563,7 +563,7 @@ test_new_visit_adds_place_guid()
   // First, add a visit and wait.  This will also add a place.
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();
   nsCOMPtr<IHistory> history = do_get_IHistory();
-  nsresult rv = history->VisitURI(visitedURI, nullptr,
+  nsresult rv = history->VisitURI(nullptr, visitedURI, nullptr,
                                   mozilla::IHistory::TOP_LEVEL);
   do_check_success(rv);
   RefPtr<VisitURIObserver> finisher = new VisitURIObserver();
@@ -595,7 +595,8 @@ test_two_null_links_same_uri()
   rv = history->RegisterVisitedCallback(testURI, nullptr);
   do_check_success(rv);
 
-  rv = history->VisitURI(testURI, nullptr, mozilla::IHistory::TOP_LEVEL);
+  rv = history->VisitURI(nullptr, testURI, nullptr,
+                         mozilla::IHistory::TOP_LEVEL);
   do_check_success(rv);
 
   RefPtr<VisitURIObserver> finisher = new VisitURIObserver();

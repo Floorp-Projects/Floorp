@@ -339,7 +339,8 @@ addURI(nsIURI* aURI)
 {
   nsCOMPtr<mozilla::IHistory> history = do_GetService(NS_IHISTORY_CONTRACTID);
   do_check_true(history);
-  nsresult rv = history->VisitURI(aURI, nullptr, mozilla::IHistory::TOP_LEVEL);
+  nsresult rv = history->VisitURI(nullptr, aURI, nullptr,
+                                  mozilla::IHistory::TOP_LEVEL);
   do_check_success(rv);
 
   do_wait_async_updates();
