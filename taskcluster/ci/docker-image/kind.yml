@@ -63,10 +63,10 @@ jobs:
       - deb7-gtk3
       - deb7-harfbuzz
       - deb7-libxkbcommon
+      - deb7-nasm
       - deb7-pango
       - deb7-pcre3
       - deb7-valgrind
-      - deb7-wayland
     args:
       ARCH: amd64
   debian7-i386-build:
@@ -88,6 +88,7 @@ jobs:
       - deb7-glib
       - deb7-gtk3
       - deb7-harfbuzz
+      - deb7-nasm
       - deb7-python-defaults
       - deb7-pcre3
       - deb7-valgrind
