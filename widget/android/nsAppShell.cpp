@@ -618,18 +618,7 @@ nsAppShell::Observe(nsISupports* aSubject,
         // for this particular GeckoView.
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(aSubject);
         MOZ_ASSERT(doc);
-        nsCOMPtr<nsIWidget> widget =
-            widget::WidgetUtils::DOMWindowToWidget(doc->GetWindow());
-
-        // `widget` may be one of several different types in the parent
-        // process, including the Android nsWindow, PuppetWidget, etc. To
-        // ensure that we only accept the Android nsWindow, we check that the
-        // widget is a top-level window and that its NS_NATIVE_WIDGET value is
-        // non-null, which is not the case for non-native widgets like
-        // PuppetWidget.
-        if (widget &&
-            widget->WindowType() == nsWindowType::eWindowType_toplevel &&
-            widget->GetNativeData(NS_NATIVE_WIDGET) == widget) {
+        if (const RefPtr<nsWindow> window = nsWindow::From(doc->GetWindow())) {
             if (jni::IsAvailable()) {
                 // When our first window has loaded, assume any JS
                 // initialization has run and set Gecko to ready.
@@ -637,7 +626,6 @@ nsAppShell::Observe(nsISupports* aSubject,
                         java::GeckoThread::State::PROFILE_READY(),
                         java::GeckoThread::State::RUNNING());
             }
-            const auto window = static_cast<nsWindow*>(widget.get());
             window->OnGeckoViewReady();
         }
     } else if (!strcmp(aTopic, "quit-application")) {

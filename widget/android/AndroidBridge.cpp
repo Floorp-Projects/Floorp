@@ -818,24 +818,10 @@ __attribute__ ((visibility("default")))
 jobject JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(JNIEnv *env, jclass, jlong size);
 
-static RefPtr<nsWindow>
-GetWidget(mozIDOMWindowProxy* aWindow)
-{
-    MOZ_ASSERT(aWindow);
-
-    nsCOMPtr<nsPIDOMWindowOuter> domWindow = nsPIDOMWindowOuter::From(aWindow);
-    nsCOMPtr<nsIWidget> widget =
-            widget::WidgetUtils::DOMWindowToWidget(domWindow);
-    MOZ_ASSERT(widget);
-
-    return RefPtr<nsWindow>(static_cast<nsWindow*>(widget.get()));
-}
-
 void
 AndroidBridge::ContentDocumentChanged(mozIDOMWindowProxy* aWindow)
 {
-    auto widget = GetWidget(aWindow);
-    if (widget) {
+    if (RefPtr<nsWindow> widget = nsWindow::From(nsPIDOMWindowOuter::From(aWindow))) {
         widget->SetContentDocumentDisplayed(false);
     }
 }
@@ -843,8 +829,7 @@ AndroidBridge::ContentDocumentChanged(mozIDOMWindowProxy* aWindow)
 bool
 AndroidBridge::IsContentDocumentDisplayed(mozIDOMWindowProxy* aWindow)
 {
-    auto widget = GetWidget(aWindow);
-    if (widget) {
+    if (RefPtr<nsWindow> widget = nsWindow::From(nsPIDOMWindowOuter::From(aWindow))) {
         return widget->IsContentDocumentDisplayed();
     }
     return false;
