@@ -477,7 +477,7 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "4cdd35edeb15"
+        "revision": "3892bd9645e1"
     },
     "ff": {
         "platforms": [
@@ -1187,7 +1187,7 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "a8b8fbf0327c"
+        "revision": "df1b37bd8610"
     },
     "ru": {
         "platforms": [
