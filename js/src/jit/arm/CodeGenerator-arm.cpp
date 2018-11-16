@@ -2175,15 +2175,15 @@ void
 CodeGeneratorARM::emitWasmUnalignedStore(T* lir)
 {
     const MWasmStore* mir = lir->mir();
-    Scalar::Type accessType = mir->access().type();
-
+    MIRType valueType = mir->value()->type();
     Register ptr = ToRegister(lir->ptrCopy());
     Register valOrTmp = ToRegister(lir->valueHelper());
-    if (accessType == Scalar::Int64) {
+
+    if (valueType == MIRType::Int64) {
         masm.wasmUnalignedStoreI64(mir->access(),
                                    ToRegister64(lir->getInt64Operand(LWasmUnalignedStoreI64::ValueIndex)),
                                    HeapReg, ptr, ptr, valOrTmp);
-    } else if (accessType == Scalar::Float32 || accessType == Scalar::Float64) {
+    } else if (valueType == MIRType::Float32 || valueType == MIRType::Double) {
         FloatRegister value = ToFloatRegister(lir->getOperand(LWasmUnalignedStore::ValueIndex));
         masm.wasmUnalignedStoreFP(mir->access(), value, HeapReg, ptr, ptr, valOrTmp);
     } else {
