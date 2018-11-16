@@ -30,7 +30,9 @@
 #include "nsAccessibilityService.h"
 #endif
 
-#define LONG_SIDE_TO_SHORT_SIDE_RATIO 10
+// Our intrinsic size is 12em in the main-axis and 1.3em in the cross-axis.
+#define MAIN_AXIS_EM_SIZE 12
+#define CROSS_AXIS_EM_SIZE 1.3f
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -774,61 +776,34 @@ nsRangeFrame::ComputeAutoSize(gfxContext*         aRenderingContext,
                               const LogicalSize&  aPadding,
                               ComputeSizeFlags    aFlags)
 {
-  nscoord oneEm = NSToCoordRound(StyleFont()->mFont.size *
-                                 nsLayoutUtils::FontSizeInflationFor(this)); // 1em
-
   bool isInlineOriented = IsInlineOriented();
+  auto em = StyleFont()->mFont.size * nsLayoutUtils::FontSizeInflationFor(this);
 
   const WritingMode wm = GetWritingMode();
   LogicalSize autoSize(wm);
-
-  // nsFrame::ComputeSize calls GetMinimumWidgetSize to prevent us from being
-  // given too small a size when we're natively themed. If we're themed, we set
-  // our "thickness" dimension to zero below and rely on that
-  // GetMinimumWidgetSize check to correct that dimension to the natural
-  // thickness of a slider in the current theme.
-
   if (isInlineOriented) {
-    autoSize.ISize(wm) = LONG_SIDE_TO_SHORT_SIDE_RATIO * oneEm;
-    autoSize.BSize(wm) = IsThemed() ? 0 : oneEm;
+    autoSize.ISize(wm) = NSToCoordRound(MAIN_AXIS_EM_SIZE * em);
+    autoSize.BSize(wm) = NSToCoordRound(CROSS_AXIS_EM_SIZE * em);
   } else {
-    autoSize.ISize(wm) = IsThemed() ? 0 : oneEm;
-    autoSize.BSize(wm) = LONG_SIDE_TO_SHORT_SIDE_RATIO * oneEm;
+    autoSize.ISize(wm) = NSToCoordRound(CROSS_AXIS_EM_SIZE * em);
+    autoSize.BSize(wm) = NSToCoordRound(MAIN_AXIS_EM_SIZE * em);
   }
 
   return autoSize.ConvertTo(aWM, wm);
 }
 
 nscoord
-nsRangeFrame::GetMinISize(gfxContext *aRenderingContext)
+nsRangeFrame::GetMinISize(gfxContext* aRenderingContext)
 {
-  // nsFrame::ComputeSize calls GetMinimumWidgetSize to prevent us from being
-  // given too small a size when we're natively themed. If we aren't native
-  // themed, we don't mind how small we're sized.
   return nscoord(0);
 }
 
 nscoord
-nsRangeFrame::GetPrefISize(gfxContext *aRenderingContext)
+nsRangeFrame::GetPrefISize(gfxContext* aRenderingContext)
 {
   bool isInline = IsInlineOriented();
-
-  if (!isInline && IsThemed()) {
-    // nsFrame::ComputeSize calls GetMinimumWidgetSize to prevent us from being
-    // given too small a size when we're natively themed. We return zero and
-    // depend on that correction to get our "natural" width when we're a
-    // vertical slider.
-    return 0;
-  }
-
-  nscoord prefISize = NSToCoordRound(StyleFont()->mFont.size *
-                                     nsLayoutUtils::FontSizeInflationFor(this)); // 1em
-
-  if (isInline) {
-    prefISize *= LONG_SIDE_TO_SHORT_SIDE_RATIO;
-  }
-
-  return prefISize;
+  auto em = StyleFont()->mFont.size * nsLayoutUtils::FontSizeInflationFor(this);
+  return NSToCoordRound(em * (isInline ? MAIN_AXIS_EM_SIZE : CROSS_AXIS_EM_SIZE));
 }
 
 bool
@@ -876,9 +851,6 @@ nsRangeFrame::ShouldUseNativeStyle() const
   nsIFrame* thumbFrame = mThumbDiv->GetPrimaryFrame();
 
   return (StyleDisplay()->mAppearance == StyleAppearance::Range) &&
-         !PresContext()->HasAuthorSpecifiedRules(this,
-                                                 (NS_AUTHOR_SPECIFIED_BORDER |
-                                                  NS_AUTHOR_SPECIFIED_BACKGROUND)) &&
          trackFrame &&
          !PresContext()->HasAuthorSpecifiedRules(trackFrame,
                                                  STYLES_DISABLING_NATIVE_THEMING) &&
