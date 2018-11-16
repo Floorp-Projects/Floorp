@@ -2208,7 +2208,8 @@ void
 CompositorBridgeParent::NotifyPipelineRendered(const wr::PipelineId& aPipelineId,
                                                const wr::Epoch& aEpoch,
                                                TimeStamp& aCompositeStart,
-                                               TimeStamp& aCompositeEnd)
+                                               TimeStamp& aCompositeEnd,
+                                               wr::RendererStats* aStats)
 {
   if (!mWrBridge) {
     return;
@@ -2243,7 +2244,7 @@ CompositorBridgeParent::NotifyPipelineRendered(const wr::PipelineId& aPipelineId
 
       if (!mPaused) {
         CrossProcessCompositorBridgeParent* cpcp = lts->mCrossProcessParent;
-        TransactionId transactionId = lts->mWrBridge->FlushTransactionIdsForEpoch(aEpoch, aCompositeEnd, uiController);
+        TransactionId transactionId = lts->mWrBridge->FlushTransactionIdsForEpoch(aEpoch, aCompositeEnd, uiController, aStats);
         Unused << cpcp->SendDidComposite(aLayersId, transactionId, aCompositeStart, aCompositeEnd);
       }
     }

@@ -18,7 +18,9 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/SystemGroup.h"
+#include "jsfriendapi.h"
 #include "nsIAsyncShutdown.h"
 #include "nsIXULRuntime.h"
 #include "nsProxyRelease.h"
@@ -543,11 +545,34 @@ ClientManagerService::Claim(const ClientClaimArgs& aArgs)
 RefPtr<ClientOpPromise>
 ClientManagerService::GetInfoAndState(const ClientGetInfoAndStateArgs& aArgs)
 {
-  RefPtr<ClientOpPromise> ref;
-
   ClientSourceParent* source = FindSource(aArgs.id(), aArgs.principalInfo());
-  if (!source || !source->ExecutionReady()) {
-    ref = ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+
+  if (!source) {
+    RefPtr<ClientOpPromise> ref =
+      ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+    return ref.forget();
+  }
+
+  if (!source->ExecutionReady()) {
+    RefPtr<ClientManagerService> self = this;
+
+    // rejection ultimately converted to `undefined` in Clients::Get
+    RefPtr<ClientOpPromise> ref =
+      source->ExecutionReadyPromise()
+            ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+                   [self, aArgs] () -> RefPtr<ClientOpPromise> {
+                      ClientSourceParent* source = self->FindSource(aArgs.id(),
+                                                                    aArgs.principalInfo());
+
+                      if (!source) {
+                        RefPtr<ClientOpPromise> ref =
+                          ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+                        return ref.forget();
+                      }
+
+                      return source->StartOp(aArgs);
+                   });
+
     return ref.forget();
   }
 

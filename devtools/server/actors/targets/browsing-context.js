@@ -655,8 +655,7 @@ const browsingContextTargetPrototype = {
       this._workerTargetActorList.onListChanged = this._onWorkerTargetActorListChanged;
 
       return {
-        "from": this.actorID,
-        "workers": actors.map((actor) => actor.form()),
+        workers: actors,
       };
     });
   },

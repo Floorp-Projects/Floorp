@@ -148,7 +148,7 @@ Enrollment
    object
       The string ``"addon_study"``
    value
-      The name of the study (``recipe.arguments.slug``).
+      The name of the study (``recipe.arguments.name``).
    extra
       addonId
          The add-on's ID (example: ``"feature-study@shield.mozilla.com"``).
@@ -161,7 +161,7 @@ Enroll Failure
    object
       The string ``"addon_study"``
    value
-      The name of the study (``recipe.arguments.slug``).
+      The name of the study (``recipe.arguments.name``).
    reason
       A string containing the filename and line number of the code
       that failed, and the name of the error thrown. This information

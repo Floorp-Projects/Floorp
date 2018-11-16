@@ -35,7 +35,7 @@ class Worker extends Component {
         scope: PropTypes.string.isRequired,
         // registrationActor can be missing in e10s.
         registrationActor: PropTypes.string,
-        workerTargetActor: PropTypes.string,
+        workerTargetFront: PropTypes.object,
       }).isRequired,
     };
   }
@@ -54,8 +54,8 @@ class Worker extends Component {
       return;
     }
 
-    const { client, worker } = this.props;
-    gDevToolsBrowser.openWorkerToolbox(client, worker.workerTargetActor);
+    const { workerTargetFront } = this.props.worker;
+    gDevToolsBrowser.openWorkerToolbox(workerTargetFront);
   }
 
   start() {
@@ -81,7 +81,7 @@ class Worker extends Component {
 
   isRunning() {
     // We know the worker is running if it has a worker actor.
-    return !!this.props.worker.workerTargetActor;
+    return !!this.props.worker.workerTargetFront;
   }
 
   isActive() {

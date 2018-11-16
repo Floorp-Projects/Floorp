@@ -13,11 +13,27 @@ loader.lazyRequireGetter(this, "AccessibleActor", "devtools/server/actors/access
 loader.lazyRequireGetter(this, "CustomHighlighterActor", "devtools/server/actors/highlighters", true);
 loader.lazyRequireGetter(this, "DevToolsUtils", "devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
+loader.lazyRequireGetter(this, "getCurrentZoom", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(this, "InspectorUtils", "InspectorUtils");
 loader.lazyRequireGetter(this, "isDefunct", "devtools/server/actors/utils/accessibility", true);
 loader.lazyRequireGetter(this, "isTypeRegistered", "devtools/server/actors/highlighters", true);
 loader.lazyRequireGetter(this, "isWindowIncluded", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "isXUL", "devtools/server/actors/highlighters/utils/markup", true);
+loader.lazyRequireGetter(this, "loadSheet", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "register", "devtools/server/actors/highlighters", true);
+loader.lazyRequireGetter(this, "removeSheet", "devtools/shared/layout/utils", true);
+
+const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER
+
+const HIGHLIGHTER_STYLES_SHEET = `data:text/css;charset=utf-8,
+* {
+  transition: none !important;
+}
+
+:-moz-devtools-highlighted {
+  color: transparent !important;
+  text-shadow: none !important;
+}`;
 
 const nsIAccessibleEvent = Ci.nsIAccessibleEvent;
 const nsIAccessibleStateChangeEvent = Ci.nsIAccessibleStateChangeEvent;
@@ -126,6 +142,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     this.setA11yServiceGetter();
     this.onPick = this.onPick.bind(this);
     this.onHovered = this.onHovered.bind(this);
+    this._preventContentEvent = this._preventContentEvent.bind(this);
     this.onKey = this.onKey.bind(this);
     this.onHighlighterEvent = this.onHighlighterEvent.bind(this);
   },
@@ -331,7 +348,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
   },
 
   async getAncestry(accessible) {
-    if (accessible.indexInParent === -1) {
+    if (!accessible || accessible.indexInParent === -1) {
       return [];
     }
     const doc = await this.getDocument();
@@ -473,14 +490,23 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    *         True if highlighter shows the accessible object.
    */
   highlightAccessible(accessible, options = {}) {
+    this.unhighlight();
     const { bounds } = accessible;
     if (!bounds) {
       return false;
     }
 
+    // Disable potential mouse driven transitions (This is important because accessibility
+    // highlighter temporarily modifies text color related CSS properties. In case where
+    // there are transitions that affect them, there might be unexpected side effects when
+    // taking a snapshot for contrast measurement)
+    loadSheet(this.rootWin, HIGHLIGHTER_STYLES_SHEET);
     const { audit, name, role } = accessible;
-    return this.highlighter.show({ rawNode: accessible.rawAccessible.DOMNode },
-                                 { ...options, ...bounds, name, role, audit });
+    const shown = this.highlighter.show({ rawNode: accessible.rawAccessible.DOMNode },
+                                      { ...options, ...bounds, name, role, audit });
+    // Re-enable transitions.
+    removeSheet(this.rootWin, HIGHLIGHTER_STYLES_SHEET);
+    return shown;
   },
 
   /**
@@ -513,6 +539,24 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
   _preventContentEvent(event) {
     event.stopPropagation();
     event.preventDefault();
+
+    const target = event.originalTarget || event.target;
+    if (target !== this._currentTarget) {
+      this._resetStateAndReleaseTarget();
+      this._currentTarget = target;
+      // We use InspectorUtils to save the original hover content state of the target
+      // element (that includes its hover state). In order to not trigger any visual
+      // changes to the element that depend on its hover state we remove the state while
+      // the element is the most current target of the highlighter.
+      //
+      // TODO: This logic can be removed if/when we can use elementsAtPoint API for
+      // determining topmost DOMNode that corresponds to specific coordinates. We would
+      // then be able to use a highlighter overlay that would prevent all pointer events
+      // to content but still render highlighter for the node/element correctly.
+      this._currentTargetHoverState =
+        InspectorUtils.getContentState(target) & kStateHover;
+      InspectorUtils.removeContentState(target, kStateHover);
+    }
   },
 
   /**
@@ -521,7 +565,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    * @param  {Object} event
    *         Current click event.
    */
-  async onPick(event) {
+  onPick(event) {
     if (!this._isPicking) {
       return;
     }
@@ -535,16 +579,16 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     // the client, but don't stop picking.
     if (event.shiftKey) {
       if (!this._currentAccessible) {
-        this._currentAccessible = await this._findAndAttachAccessible(event);
+        this._currentAccessible = this._findAndAttachAccessible(event);
       }
       events.emit(this, "picker-accessible-previewed", this._currentAccessible);
       return;
     }
 
-    this._stopPickerListeners();
+    this._unsetPickerEnvironment();
     this._isPicking = false;
     if (!this._currentAccessible) {
-      this._currentAccessible = await this._findAndAttachAccessible(event);
+      this._currentAccessible = this._findAndAttachAccessible(event);
     }
     events.emit(this, "picker-accessible-picked", this._currentAccessible);
   },
@@ -555,7 +599,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    * @param  {Object} event
    *         Current hover event.
    */
-  async onHovered(event) {
+  onHovered(event) {
     if (!this._isPicking) {
       return;
     }
@@ -565,7 +609,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
       return;
     }
 
-    const accessible = await this._findAndAttachAccessible(event);
+    const accessible = this._findAndAttachAccessible(event);
     if (!accessible) {
       return;
     }
@@ -626,7 +670,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
   pick: function() {
     if (!this._isPicking) {
       this._isPicking = true;
-      this._startPickerListeners();
+      this._setPickerEnvironment();
     }
   },
 
@@ -651,7 +695,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     // defunct and accessing it via parent property will throw.
     try {
       let parent = accessible;
-      while (parent && parent != accessibleDocument) {
+      while (parent && parent.rawAccessible != accessibleDocument) {
         parent = parent.parentAcc;
       }
     } catch (error) {
@@ -662,48 +706,69 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
   },
 
   /**
-   * Find accessible object that corresponds to a DOMNode and attach (lookup its
-   * ancestry to the root doc) to the AccessibilityWalker tree.
+   * When RDM is used, users can set custom DPR values that are different from the device
+   * they are using. Store true screenPixelsPerCSSPixel value to be able to use accessible
+   * highlighter features correctly.
+   */
+  get pixelRatio() {
+    const { contentViewer } = this.targetActor.docShell;
+    const { windowUtils } = this.rootWin;
+    const overrideDPPX = contentViewer.overrideDPPX;
+    let ratio;
+    if (overrideDPPX) {
+      contentViewer.overrideDPPX = 0;
+      ratio = windowUtils.screenPixelsPerCSSPixel;
+      contentViewer.overrideDPPX = overrideDPPX;
+    } else {
+      ratio = windowUtils.screenPixelsPerCSSPixel;
+    }
+
+    return ratio;
+  },
+
+  /**
+   * Find deepest accessible object that corresponds to the screen coordinates of the
+   * mouse pointer and attach it to the AccessibilityWalker tree.
    *
    * @param  {Object} event
    *         Correspoinding content event.
    * @return {null|Object}
    *         Accessible object, if available, that corresponds to a DOM node.
    */
-  async _findAndAttachAccessible(event) {
-    let target = event.originalTarget || event.target;
-    let rawAccessible;
-    // Find a first accessible object in the target's ancestry, including
-    // target. Note: not all DOM nodes have corresponding accessible objects
-    // (for example, a <DIV> element that is used as a container for other
-    // things) thus we need to find one that does.
-    while (!rawAccessible && target) {
-      rawAccessible = this.getRawAccessibleFor(target);
-      target = target.parentNode;
-    }
-
-    const doc = await this.getDocument();
-    return this.attachAccessible(rawAccessible, doc);
+  _findAndAttachAccessible(event) {
+    const target = event.originalTarget || event.target;
+    const docAcc = this.getRawAccessibleFor(this.rootDoc);
+    const win = target.ownerGlobal;
+    const scale = this.pixelRatio / getCurrentZoom(win);
+    const rawAccessible = docAcc.getDeepestChildAtPoint(
+      event.screenX * scale,
+      event.screenY * scale);
+    return this.attachAccessible(rawAccessible, docAcc);
   },
 
   /**
    * Start picker content listeners.
    */
-  _startPickerListeners: function() {
+  _setPickerEnvironment: function() {
     const target = this.targetActor.chromeEventHandler;
     target.addEventListener("mousemove", this.onHovered, true);
     target.addEventListener("click", this.onPick, true);
     target.addEventListener("mousedown", this._preventContentEvent, true);
     target.addEventListener("mouseup", this._preventContentEvent, true);
+    target.addEventListener("mouseover", this._preventContentEvent, true);
+    target.addEventListener("mouseout", this._preventContentEvent, true);
+    target.addEventListener("mouseleave", this._preventContentEvent, true);
+    target.addEventListener("mouseenter", this._preventContentEvent, true);
     target.addEventListener("dblclick", this._preventContentEvent, true);
     target.addEventListener("keydown", this.onKey, true);
     target.addEventListener("keyup", this._preventContentEvent, true);
   },
 
   /**
-   * If content is still alive, stop picker content listeners.
+   * If content is still alive, stop picker content listeners, reset the hover state for
+   * last target element.
    */
-  _stopPickerListeners: function() {
+  _unsetPickerEnvironment: function() {
     const target = this.targetActor.chromeEventHandler;
 
     if (!target) {
@@ -714,21 +779,52 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     target.removeEventListener("click", this.onPick, true);
     target.removeEventListener("mousedown", this._preventContentEvent, true);
     target.removeEventListener("mouseup", this._preventContentEvent, true);
+    target.removeEventListener("mouseover", this._preventContentEvent, true);
+    target.removeEventListener("mouseout", this._preventContentEvent, true);
+    target.removeEventListener("mouseleave", this._preventContentEvent, true);
+    target.removeEventListener("mouseenter", this._preventContentEvent, true);
     target.removeEventListener("dblclick", this._preventContentEvent, true);
     target.removeEventListener("keydown", this.onKey, true);
     target.removeEventListener("keyup", this._preventContentEvent, true);
+
+    this._resetStateAndReleaseTarget();
+  },
+
+  /**
+   * When using accessibility highlighter, we keep track of the most current event pointer
+   * event target. In order to update or release the target, we need to make sure we set
+   * the content state (using InspectorUtils) to its original value.
+   *
+   * TODO: This logic can be removed if/when we can use elementsAtPoint API for
+   * determining topmost DOMNode that corresponds to specific coordinates. We would then
+   * be able to use a highlighter overlay that would prevent all pointer events to content
+   * but still render highlighter for the node/element correctly.
+   */
+  _resetStateAndReleaseTarget() {
+    if (!this._currentTarget) {
+      return;
+    }
+
+    try {
+      if (this._currentTargetHoverState) {
+        InspectorUtils.setContentState(this._currentTarget, kStateHover);
+      }
+    } catch (e) {
+      // DOMNode is already dead.
+    }
+
+    this._currentTarget = null;
+    this._currentTargetState = null;
   },
 
   /**
    * Cacncel picker pick. Remvoe all content listeners and hide the highlighter.
    */
   cancelPick: function() {
-    if (this._highlighter) {
-      this.highlighter.hide();
-    }
+    this.unhighlight();
 
     if (this._isPicking) {
-      this._stopPickerListeners();
+      this._unsetPickerEnvironment();
       this._isPicking = false;
       this._currentAccessible = null;
     }

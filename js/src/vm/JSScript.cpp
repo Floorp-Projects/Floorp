@@ -101,7 +101,10 @@ js::XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp)
         SCRIPT_NULL,
         SCRIPT_OBJECT,
         SCRIPT_VOID,
-        SCRIPT_HOLE
+        SCRIPT_HOLE,
+#ifdef ENABLE_BIGINT
+        SCRIPT_BIGINT
+#endif
     };
 
     ConstTag tag;
@@ -122,7 +125,13 @@ js::XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp)
             tag = SCRIPT_OBJECT;
         } else if (vp.isMagic(JS_ELEMENTS_HOLE)) {
             tag = SCRIPT_HOLE;
-        } else {
+        }
+#ifdef ENABLE_BIGINT
+        else if (vp.isBigInt()) {
+            tag = SCRIPT_BIGINT;
+        }
+#endif
+        else {
             MOZ_ASSERT(vp.isUndefined());
             tag = SCRIPT_VOID;
         }
@@ -202,6 +211,21 @@ js::XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp)
             vp.setMagic(JS_ELEMENTS_HOLE);
         }
         break;
+#ifdef ENABLE_BIGINT
+      case SCRIPT_BIGINT: {
+        RootedBigInt bi(cx);
+        if (mode == XDR_ENCODE) {
+            bi = vp.toBigInt();
+        }
+
+        MOZ_TRY(XDRBigInt(xdr, &bi));
+
+        if (mode == XDR_DECODE) {
+            vp.setBigInt(bi);
+        }
+        break;
+      }
+#endif
       default:
         // Fail in debug, but only soft-fail in release
         MOZ_ASSERT(false, "Bad XDR value kind");
@@ -3911,9 +3935,7 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     MOZ_ASSERT(!src->sourceObject()->isMarkedGray());
 
     uint32_t nscopes = src->scopes().size();
-#ifdef DEBUG
     uint32_t nconsts = src->hasConsts() ? src->consts().size() : 0;
-#endif
     uint32_t nobjects = src->hasObjects() ? src->objects().size() : 0;
 
     /* Script data */
@@ -3939,6 +3961,41 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
             original = elem.get();
             clone = Scope::clone(cx, original, scopes[FindScopeIndex(src, *original->enclosing())]);
             if (!clone || !scopes.append(clone)) {
+                return false;
+            }
+        }
+    }
+
+    /* Constants */
+
+    AutoValueVector consts(cx);
+    if (nconsts != 0) {
+        RootedValue val(cx);
+        RootedValue clone(cx);
+        for (const GCPtrValue& elem : src->consts()) {
+            val = elem.get();
+            if (val.isDouble()) {
+                clone = val;
+            }
+#ifdef ENABLE_BIGINT
+            else if (val.isBigInt()) {
+                if (cx->zone() == val.toBigInt()->zone()) {
+                    clone.setBigInt(val.toBigInt());
+                } else {
+                    RootedBigInt b(cx, val.toBigInt());
+                    BigInt* copy = BigInt::copy(cx, b);
+                    if (!copy) {
+                        return false;
+                    }
+                    clone.setBigInt(copy);
+                }
+            }
+#endif
+            else {
+                MOZ_ASSERT_UNREACHABLE("bad script consts() element");
+            }
+
+            if (!consts.append(clone)) {
                 return false;
             }
         }
@@ -4024,15 +4081,12 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
             array[i].init(scopes[i]);
         }
     }
-#ifdef DEBUG
     if (nconsts) {
         auto array = dst->data_->consts();
         for (unsigned i = 0; i < nconsts; ++i) {
-            // We don't support GCThings here and thus don't need to call |init|.
-            MOZ_ASSERT(!array[i].isGCThing());
+            array[i].init(consts[i]);
         }
     }
-#endif
     if (nobjects) {
         auto array = dst->data_->objects();
         for (unsigned i = 0; i < nobjects; ++i) {

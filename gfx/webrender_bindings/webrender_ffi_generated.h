@@ -1001,6 +1001,24 @@ struct WrDebugFlags {
   }
 };
 
+struct RendererStats {
+  uintptr_t total_draw_calls;
+  uintptr_t alpha_target_count;
+  uintptr_t color_target_count;
+  uintptr_t texture_upload_kb;
+  uint64_t resource_upload_time;
+  uint64_t gpu_cache_upload_time;
+
+  bool operator==(const RendererStats& aOther) const {
+    return total_draw_calls == aOther.total_draw_calls &&
+           alpha_target_count == aOther.alpha_target_count &&
+           color_target_count == aOther.color_target_count &&
+           texture_upload_kb == aOther.texture_upload_kb &&
+           resource_upload_time == aOther.resource_upload_time &&
+           gpu_cache_upload_time == aOther.gpu_cache_upload_time;
+  }
+};
+
 struct WrExternalImage {
   WrExternalImageType image_type;
   uint32_t handle;
@@ -1134,7 +1152,11 @@ extern void apz_run_updater(WrWindowId aWindowId);
 extern void apz_sample_transforms(WrWindowId aWindowId,
                                   Transaction *aTransaction);
 
+extern void gecko_profiler_end_marker(const char *aName);
+
 extern void gecko_profiler_register_thread(const char *aName);
+
+extern void gecko_profiler_start_marker(const char *aName);
 
 extern void gecko_profiler_unregister_thread();
 
@@ -1155,9 +1177,6 @@ extern bool is_in_compositor_thread();
 extern bool is_in_main_thread();
 
 extern bool is_in_render_thread();
-
-extern void gecko_profiler_start_marker(const char* name);
-extern void gecko_profiler_end_marker(const char* name);
 
 extern void record_telemetry_time(TelemetryProbe aProbe,
                                   uint64_t aTimeNs);
@@ -1647,7 +1666,8 @@ WR_INLINE
 bool wr_renderer_render(Renderer *aRenderer,
                         uint32_t aWidth,
                         uint32_t aHeight,
-                        bool aHadSlowFrame)
+                        bool aHadSlowFrame,
+                        RendererStats *aOutStats)
 WR_FUNC;
 
 WR_INLINE

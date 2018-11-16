@@ -28,6 +28,8 @@
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
 
+#include "vm/JSContext-inl.h"
+
 using namespace js;
 
 using mozilla::Abs;
@@ -1064,6 +1066,22 @@ js::StringToBigInt(JSContext* cx, HandleString str, uint8_t radix)
     return nullptr;
 }
 
+BigInt*
+js::StringToBigInt(JSContext* cx, const Range<const char16_t>& chars)
+{
+    RootedBigInt res(cx, BigInt::create(cx));
+    if (!res) {
+        return nullptr;
+    }
+
+    uint8_t radix = 0;
+    if (StringToBigIntImpl(chars, radix, res)) {
+        return res.get();
+    }
+
+    return nullptr;
+}
+
 size_t
 BigInt::byteLength(BigInt* x)
 {
@@ -1147,3 +1165,58 @@ JS::ubi::Concrete<BigInt>::size(mozilla::MallocSizeOf mallocSizeOf) const
     size += bi.sizeOfExcludingThis(mallocSizeOf);
     return size;
 }
+
+template<XDRMode mode>
+XDRResult
+js::XDRBigInt(XDRState<mode>* xdr, MutableHandleBigInt bi)
+{
+    JSContext* cx = xdr->cx();
+
+    uint8_t sign;
+    uint32_t length;
+
+    if (mode == XDR_ENCODE) {
+        cx->check(bi);
+        sign = static_cast<uint8_t>(bi->sign());
+        uint64_t sz = BigInt::byteLength(bi);
+        // As the maximum source code size is currently UINT32_MAX code units
+        // (see BytecodeCompiler::checkLength), any bigint literal's length in
+        // word-sized digits will be less than UINT32_MAX as well.  That could
+        // change or FoldConstants could start creating these though, so leave
+        // this as a release-enabled assert.
+        MOZ_RELEASE_ASSERT(sz <= UINT32_MAX);
+        length = static_cast<uint32_t>(sz);
+    }
+
+    MOZ_TRY(xdr->codeUint8(&sign));
+    MOZ_TRY(xdr->codeUint32(&length));
+    
+    UniquePtr<uint8_t> buf(cx->pod_malloc<uint8_t>(length));
+    if (!buf) {
+        ReportOutOfMemory(cx);
+        return xdr->fail(JS::TranscodeResult_Throw);
+    }
+
+    if (mode == XDR_ENCODE) {
+        BigInt::writeBytes(bi, RangedPtr<uint8_t>(buf.get(), length));
+    }
+
+    MOZ_TRY(xdr->codeBytes(buf.get(), length));
+
+    if (mode == XDR_DECODE) {
+        BigInt* res = BigInt::createFromBytes(cx, static_cast<int8_t>(sign),
+                                              buf.get(), length);
+        if (!res) {
+            return xdr->fail(JS::TranscodeResult_Throw);
+        }
+        bi.set(res);
+    }
+
+    return Ok();
+}
+
+template XDRResult
+js::XDRBigInt(XDRState<XDR_ENCODE>* xdr, MutableHandleBigInt bi);
+
+template XDRResult
+js::XDRBigInt(XDRState<XDR_DECODE>* xdr, MutableHandleBigInt bi);

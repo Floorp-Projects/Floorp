@@ -125,18 +125,22 @@ var paymentRequest = {
     log.debug("onShowPaymentRequest, isPrivate?", detail.isPrivate);
 
     let paymentDialog = document.querySelector("payment-dialog");
-    let hasSavedAddresses = Object.keys(detail.savedAddresses).length != 0;
-    let hasSavedCards = Object.keys(detail.savedBasicCards).length != 0;
-    let shippingRequested = detail.request.paymentOptions.requestShipping;
     let state = {
       request: detail.request,
       savedAddresses: detail.savedAddresses,
       savedBasicCards: detail.savedBasicCards,
+      // Temp records can exist upon a reload during development.
+      tempAddresses: detail.tempAddresses,
+      tempBasicCards: detail.tempBasicCards,
       isPrivate: detail.isPrivate,
       page: {
         id: "payment-summary",
       },
     };
+
+    let hasSavedAddresses = Object.keys(this.getAddresses(state)).length != 0;
+    let hasSavedCards = Object.keys(this.getBasicCards(state)).length != 0;
+    let shippingRequested = state.request.paymentOptions.requestShipping;
 
     // Onboarding wizard flow.
     if (!hasSavedAddresses && (shippingRequested || !hasSavedCards)) {

@@ -6,9 +6,9 @@ const TEST_MSG = "ContentSearchTest";
 const CONTENT_SEARCH_MSG = "ContentSearch";
 const TEST_CONTENT_SCRIPT_BASENAME = "contentSearch.js";
 
-/* import-globals-from ../../../components/search/test/head.js */
+/* import-globals-from ../../../components/search/test/browser/head.js */
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/browser/components/search/test/head.js",
+  "chrome://mochitests/content/browser/browser/components/search/test/browser/head.js",
   this);
 
 let originalEngine = Services.search.defaultEngine;
@@ -20,7 +20,7 @@ add_task(async function setup() {
 
   await promiseNewEngine("testEngine.xml", {
     setAsCurrent: true,
-    testPath: "chrome://mochitests/content/browser/browser/components/search/test/",
+    testPath: "chrome://mochitests/content/browser/browser/components/search/test/browser/",
   });
 
   registerCleanupFunction(() => {

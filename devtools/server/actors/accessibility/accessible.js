@@ -241,7 +241,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
 
         let targetAcc;
         try {
-          targetAcc = this.walker.attachAccessible(target, doc);
+          targetAcc = this.walker.attachAccessible(target, doc.rawAccessible);
         } catch (e) {
           // Target is not available.
         }
@@ -294,8 +294,15 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
    * Calculate the contrast ratio of the given accessible.
    */
   _getContrastRatio() {
-    return getContrastRatioFor(this._isValidTextLeaf(this.rawAccessible) ?
-      this.rawAccessible.DOMNode.parentNode : this.rawAccessible.DOMNode);
+    if (!this._isValidTextLeaf(this.rawAccessible)) {
+      return null;
+    }
+
+    return getContrastRatioFor(this.rawAccessible.DOMNode.parentNode, {
+      bounds: this.bounds,
+      contexts: this.walker.contexts,
+      win: this.walker.rootWin,
+    });
   },
 
   /**

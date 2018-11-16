@@ -259,6 +259,21 @@ let ADDRESSES_1 = {
     "tel": "+1 416 555-5555",
     timeLastUsed: 90000,
   },
+  TimBR: {
+    "given-name": "Timothy",
+    "additional-name": "João",
+    "family-name": "Berners-Lee",
+    organization: "World Wide Web Consortium",
+    "street-address": "Rua Adalberto Pajuaba, 404",
+    "address-level3": "Campos Elísios",
+    "address-level2": "Ribeirão Preto",
+    "address-level1": "SP",
+    "postal-code": "14055-220",
+    country: "BR",
+    tel: "+0318522222222",
+    email: "timbr@example.org",
+    timeLastUsed: 110000,
+  },
 };
 
 let DUPED_ADDRESSES = {
@@ -482,11 +497,13 @@ let buttonActions = {
         addressLine: "Can only buy from ROADS, not DRIVES, BOULEVARDS, or STREETS",
         city: "Can only buy from CITIES, not TOWNSHIPS or VILLAGES",
         country: "Can only buy from US, not CA",
+        dependentLocality: "Can only be SUBURBS, not NEIGHBORHOODS",
         organization: "Can only buy from CORPORATIONS, not CONSORTIUMS",
         phone: "Only allowed to buy from area codes that start with 9",
         postalCode: "Only allowed to buy from postalCodes that start with 0",
         recipient: "Can only buy from names that start with J",
         region: "Can only buy from regions that start with M",
+        regionCode: "Regions must be 1 to 3 characters in length",
       },
     };
     requestStore.setState({
@@ -573,11 +590,13 @@ let buttonActions = {
       addressLine: "Can only ship to ROADS, not DRIVES, BOULEVARDS, or STREETS",
       city: "Can only ship to CITIES, not TOWNSHIPS or VILLAGES",
       country: "Can only ship to USA, not CA",
+      dependentLocality: "Can only be SUBURBS, not NEIGHBORHOODS",
       organization: "Can only ship to CORPORATIONS, not CONSORTIUMS",
       phone: "Only allowed to ship to area codes that start with 9",
       postalCode: "Only allowed to ship to postalCodes that start with 0",
       recipient: "Can only ship to names that start with J",
       region: "Can only ship to regions that start with M",
+      regionCode: "Regions must be 1 to 3 characters in length",
     };
     requestStore.setState({
       request,

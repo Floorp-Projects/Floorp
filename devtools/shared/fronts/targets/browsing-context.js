@@ -24,6 +24,10 @@ protocol.FrontClassWithSpec(browsingContextTargetSpec, {
 
     // TODO: remove once ThreadClient becomes a front
     this.client = client;
+
+    // Save the full form for Target class usage
+    // Do not use `form` name to avoid colliding with protocol.js's `form` method
+    this.targetForm = form;
   },
 
   /**
@@ -97,10 +101,6 @@ protocol.FrontClassWithSpec(browsingContextTargetSpec, {
   }, {
     impl: "_detach",
   }),
-
-  attachWorker: function(workerTargetActor) {
-    return this.client.attachWorker(workerTargetActor);
-  },
 });
 
 exports.BrowsingContextTargetFront = BrowsingContextTargetFront;

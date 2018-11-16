@@ -32,3 +32,6 @@ pref("dom.push.enabled", false);
 // WR, so why not go containerless). So we set this pref to pick up the value
 // in gfxPrefs.h from whether or not WR is enabled.
 pref("layout.scroll.root-frame-containers", 2);
+
+// Inherit locale from the OS, used for multi-locale builds
+pref("intl.locale.requested", "");

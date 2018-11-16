@@ -142,8 +142,8 @@ if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
 
 ASFLAGS += CONFIG['VPX_ASFLAGS']
 ASFLAGS += [
-    '-I.',
-    '-I%s/third_party/aom' % TOPSRCDIR,
+    '-I./',
+    '-I%s/third_party/aom/' % TOPSRCDIR,
 ]
 
 LOCAL_INCLUDES += [

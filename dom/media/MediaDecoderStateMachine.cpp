@@ -859,7 +859,9 @@ public:
     mAudioDataRequest.DisconnectIfExists();
     mAudioSeekRequest.DisconnectIfExists();
     if (ShouldDiscardLoopedAudioData()) {
+      mMaster->mAudioDataRequest.DisconnectIfExists();
       DiscardLoopedAudioData();
+      AudioQueue().Finish();
     }
     DecodingState::Exit();
   }
@@ -895,7 +897,8 @@ public:
       mMaster->mAudioDecodedDuration.emplace(mMaster->mDecodedAudioEndTime);
     }
 
-    SLOG("received EOS when seamless looping, starts seeking");
+    SLOG("received EOS when seamless looping, starts seeking, "
+         "AudioLoopingOffset=[%" PRId64 "]", mAudioLoopingOffset.ToMicroseconds());
     Reader()->ResetDecode(TrackInfo::kAudioTrack);
     Reader()->Seek(SeekTarget(media::TimeUnit::Zero(), SeekTarget::Accurate))
       ->Then(OwnerThread(), __func__,
@@ -955,6 +958,9 @@ private:
 
   bool ShouldDiscardLoopedAudioData() const
   {
+    if (!mMaster->mMediaSink->IsStarted()) {
+      return false;
+    }
     /**
      * If media cancels looping, we should check whether there are audio data
      * whose time is later than EOS. If so, we should discard them because we
@@ -964,11 +970,11 @@ private:
      *    position          EOS        data time
      *   ----|---------------|------------|---------> (Increasing timeline)
      *    mCurrent        mLooping      mMaster's
-     * PlaybackPosition    Offset      mDecodedAudioEndTime
+     *    ClockTime        Offset      mDecodedAudioEndTime
      *
      */
     return (mAudioLoopingOffset != media::TimeUnit::Zero() &&
-            mMaster->mCurrentPosition.Ref() < mAudioLoopingOffset &&
+            mMaster->GetClock() < mAudioLoopingOffset &&
             mAudioLoopingOffset < mMaster->mDecodedAudioEndTime);
   }
 

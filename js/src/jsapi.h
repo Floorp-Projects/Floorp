@@ -3395,6 +3395,14 @@ extern JS_PUBLIC_API(JS::Value)
 GetPromiseResult(JS::HandleObject promise);
 
 /**
+ * Returns whether the given promise's rejection is already handled or not.
+ *
+ * The caller must check the given promise is rejected before checking it's handled or not.
+ */
+extern JS_PUBLIC_API(bool)
+GetPromiseIsHandled(JS::HandleObject promise);
+
+/**
  * Returns a js::SavedFrame linked list of the stack that lead to the given
  * Promise's allocation.
  */

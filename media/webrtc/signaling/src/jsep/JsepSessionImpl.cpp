@@ -1611,6 +1611,7 @@ JsepSessionImpl::UpdateTransceiversFromRemoteDescription(const Sdp& remote)
         mUsedMids.insert(transceiver->GetMid());
       }
     } else {
+      transceiver->mTransport.Close();
       transceiver->Disassociate();
       // This cannot be rolled back.
       transceiver->Stop();

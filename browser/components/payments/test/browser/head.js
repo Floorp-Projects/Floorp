@@ -45,16 +45,21 @@ async function getPaymentWidget(requestId) {
     if (!dialogContainer) {
       return false;
     }
-    let browserIFrame = dialogContainer.querySelector("iframe");
-    if (!browserIFrame) {
+    let paymentFrame = dialogContainer.querySelector(".paymentDialogContainerFrame");
+    if (!paymentFrame) {
       return false;
     }
-    return browserIFrame.contentWindow;
+    return {
+      get closed() {
+        return !paymentFrame.isConnected;
+      },
+      frameElement: paymentFrame,
+    };
   }, "payment dialog should be opened");
 }
 
 async function getPaymentFrame(widget) {
-  return widget.document.getElementById("paymentRequestFrame");
+  return widget.frameElement;
 }
 
 function waitForMessageFromWidget(messageType, widget = null) {
@@ -423,11 +428,12 @@ async function navigateToAddAddressPage(frame, aOptions = {
   }, aOptions);
 }
 
-async function fillInBillingAddressForm(frame, aAddress) {
+async function fillInBillingAddressForm(frame, aAddress, aOptions) {
   // For now billing and shipping address forms have the same fields but that may
   // change so use separarate helpers.
   return fillInShippingAddressForm(frame, aAddress, {
     expectedSelectedStateKey: ["basic-card-page", "billingAddressGUID"],
+    ...aOptions,
   });
 }
 
