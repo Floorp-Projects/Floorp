@@ -101,6 +101,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     profilerSampleBufferRangeStart_(0),
     telemetryCallback(nullptr),
     consumeStreamCallback(nullptr),
+    reportStreamErrorCallback(nullptr),
     readableStreamDataRequestCallback(nullptr),
     readableStreamWriteIntoReadRequestCallback(nullptr),
     readableStreamCancelCallback(nullptr),

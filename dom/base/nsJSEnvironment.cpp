@@ -2702,7 +2702,9 @@ nsJSContext::EnsureStatics()
   JS::SetAsmJSCacheOps(jsapi.cx(), &asmJSCacheOps);
 
   JS::InitDispatchToEventLoop(jsapi.cx(), DispatchToEventLoop, nullptr);
-  JS::InitConsumeStreamCallback(jsapi.cx(), ConsumeStream);
+  JS::InitConsumeStreamCallback(jsapi.cx(),
+                                ConsumeStream,
+                                FetchUtil::ReportJSStreamError);
 
   // Set these global xpconnect options...
   Preferences::RegisterCallbackAndCall(SetMemoryPrefChangedCallbackMB,
