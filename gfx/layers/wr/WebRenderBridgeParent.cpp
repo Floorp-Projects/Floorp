@@ -445,12 +445,12 @@ WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResour
         if (!reader.Read(op.bytes(), bytes)) {
           return false;
         }
-        aUpdates.UpdateBlobImage(op.key(), op.descriptor(), bytes, wr::ToDeviceUintRect(op.dirtyRect()));
+        aUpdates.UpdateBlobImage(op.key(), op.descriptor(), bytes, wr::ToDeviceIntRect(op.dirtyRect()));
         break;
       }
       case OpUpdateResource::TOpSetImageVisibleArea: {
         const auto& op = cmd.get_OpSetImageVisibleArea();
-        wr::DeviceUintRect area;
+        wr::DeviceIntRect area;
         area.origin.x = op.area().x;
         area.origin.y = op.area().y;
         area.size.width = op.area().width;
@@ -699,7 +699,7 @@ WebRenderBridgeParent::UpdateExternalImage(wr::ExternalImageId aExtId,
                                    dSurf->GetFormat());
     aResources.UpdateExternalImageWithDirtyRect(aKey, descriptor, aExtId,
                                                 wr::WrExternalImageBufferType::ExternalBuffer,
-                                                wr::ToDeviceUintRect(aDirtyRect),
+                                                wr::ToDeviceIntRect(aDirtyRect),
                                                 0);
     return true;
   }

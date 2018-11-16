@@ -252,13 +252,13 @@ impl BlobWriter {
 /// A two-points representation of a rectangle.
 struct Box2d {
     /// Top-left x
-    x1: u32,
+    x1: i32,
     /// Top-left y
-    y1: u32,
+    y1: i32,
     /// Bottom-right x
-    x2: u32,
+    x2: i32,
     /// Bottom-right y
-    y2: u32
+    y2: i32
 }
 
 impl Box2d {
@@ -271,8 +271,8 @@ impl Box2d {
     }
 }
 
-impl From<DeviceUintRect> for Box2d {
-    fn from(rect: DeviceUintRect) -> Self {
+impl From<DeviceIntRect> for Box2d {
+    fn from(rect: DeviceIntRect) -> Self {
         Box2d{ x1: rect.min_x(), y1: rect.min_y(), x2: rect.max_x(), y2: rect.max_y() }
     }
 }
@@ -441,7 +441,7 @@ struct BlobCommand {
     request: BlobImageRequest,
     descriptor: BlobImageDescriptor,
     commands: Arc<BlobImageData>,
-    dirty_rect: Option<DeviceUintRect>,
+    dirty_rect: Option<DeviceIntRect>,
     tile_size: Option<TileSize>,
 }
 
@@ -533,8 +533,8 @@ fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
         ) {
             Ok(RasterizedBlobImage {
                 rasterized_rect: job.dirty_rect.unwrap_or(
-                    DeviceUintRect {
-                        origin: DeviceUintPoint::origin(),
+                    DeviceIntRect {
+                        origin: DeviceIntPoint::origin(),
                         size: descriptor.size,
                     }
                 ),
@@ -557,7 +557,7 @@ impl BlobImageHandler for Moz2dBlobImageHandler {
         self.blob_commands.insert(key, BlobCommand { data: Arc::clone(&data), tile_size });
     }
 
-    fn update(&mut self, key: ImageKey, data: Arc<BlobImageData>, dirty_rect: Option<DeviceUintRect>) {
+    fn update(&mut self, key: ImageKey, data: Arc<BlobImageData>, dirty_rect: Option<DeviceIntRect>) {
         match self.blob_commands.entry(key) {
             hash_map::Entry::Occupied(mut e) => {
                 let command = e.get_mut();
