@@ -273,36 +273,38 @@ impl SpatialNode {
                 self.world_content_transform = self.world_viewport_transform;
 
                 info.invertible = self.world_viewport_transform.is_invertible();
-                if !info.invertible {
-                    return;
+
+                if info.invertible {
+                    // Try to update our compatible coordinate system transform. If we cannot, start a new
+                    // incompatible coordinate system.
+                    match ScaleOffset::from_transform(&relative_transform) {
+                        Some(ref scale_offset) => {
+                            self.coordinate_system_relative_scale_offset =
+                                state.coordinate_system_relative_scale_offset.accumulate(scale_offset);
+                        }
+                        None => {
+                            // If we break 2D axis alignment or have a perspective component, we need to start a
+                            // new incompatible coordinate system with which we cannot share clips without masking.
+                            self.coordinate_system_relative_scale_offset = ScaleOffset::identity();
+
+                            let transform = state.coordinate_system_relative_scale_offset
+                                                 .to_transform()
+                                                 .pre_mul(&relative_transform);
+
+                            // Push that new coordinate system and record the new id.
+                            let coord_system = CoordinateSystem {
+                                transform,
+                                parent: Some(state.current_coordinate_system_id),
+                            };
+                            state.current_coordinate_system_id = CoordinateSystemId(coord_systems.len() as u32);
+                            coord_systems.push(coord_system);
+                        }
+                    }
                 }
 
-                // Try to update our compatible coordinate system transform. If we cannot, start a new
-                // incompatible coordinate system.
-                match ScaleOffset::from_transform(&relative_transform) {
-                    Some(ref scale_offset) => {
-                        self.coordinate_system_relative_scale_offset =
-                            state.coordinate_system_relative_scale_offset.accumulate(scale_offset);
-                    }
-                    None => {
-                        // If we break 2D axis alignment or have a perspective component, we need to start a
-                        // new incompatible coordinate system with which we cannot share clips without masking.
-                        self.coordinate_system_relative_scale_offset = ScaleOffset::identity();
-
-                        let transform = state.coordinate_system_relative_scale_offset
-                                             .to_transform()
-                                             .pre_mul(&relative_transform);
-
-                        // Push that new coordinate system and record the new id.
-                        let coord_system = CoordinateSystem {
-                            transform,
-                            parent: Some(state.current_coordinate_system_id),
-                        };
-                        state.current_coordinate_system_id = CoordinateSystemId(coord_systems.len() as u32);
-                        coord_systems.push(coord_system);
-                    }
-                }
-
+                // Ensure that the current coordinate system ID is propagated to child
+                // nodes, even if we encounter a node that is not invertible. This ensures
+                // that the invariant in get_relative_transform is not violated.
                 self.coordinate_system_id = state.current_coordinate_system_id;
             }
             _ => {
