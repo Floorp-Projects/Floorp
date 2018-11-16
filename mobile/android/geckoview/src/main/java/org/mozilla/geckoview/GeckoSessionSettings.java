@@ -62,33 +62,40 @@ public final class GeckoSessionSettings implements Parcelable {
     public static final Key<Integer> SCREEN_ID =
         new Key<Integer>("screenId", /* initOnly */ true, /* values */ null);
 
-    /*
+    /**
      * Key to enable and disable tracking protection.
      */
     public static final Key<Boolean> USE_TRACKING_PROTECTION =
         new Key<Boolean>("useTrackingProtection");
-    /*
+    /**
      * Key to enable and disable private mode browsing.
      * Read-only once session is open.
      */
     public static final Key<Boolean> USE_PRIVATE_MODE =
         new Key<Boolean>("usePrivateMode", /* initOnly */ true, /* values */ null);
 
-    /*
+    /**
      * Key to enable and disable multiprocess browsing (e10s).
      * Read-only once session is open.
      */
     public static final Key<Boolean> USE_MULTIPROCESS =
         new Key<Boolean>("useMultiprocess", /* initOnly */ true, /* values */ null);
 
-    /*
+    /**
      * Key to specify which user agent mode we should use.
      */
     public static final Key<Integer> USER_AGENT_MODE =
         new Key<Integer>("userAgentMode", /* initOnly */ false,
                          Arrays.asList(USER_AGENT_MODE_MOBILE, USER_AGENT_MODE_DESKTOP, USER_AGENT_MODE_VR));
 
-    /*
+    /**
+     * Key to specify the user agent override string.
+     * Set value to null to use the user agent specified by USER_AGENT_MODE.
+     */
+    public static final Key<String> USER_AGENT_OVERRIDE =
+        new Key<String>("userAgentOverride", /* initOnly */ false, /* values */ null);
+
+    /**
      * Key to specify which display-mode we should use.
      */
     public static final Key<Integer> DISPLAY_MODE =
@@ -96,18 +103,18 @@ public final class GeckoSessionSettings implements Parcelable {
                          Arrays.asList(DISPLAY_MODE_BROWSER, DISPLAY_MODE_MINIMAL_UI,
                                        DISPLAY_MODE_STANDALONE, DISPLAY_MODE_FULLSCREEN));
 
-    /*
+    /**
      * Key to specify if media should be suspended when the session is inactive.
      */
     public static final Key<Boolean> SUSPEND_MEDIA_WHEN_INACTIVE =
         new Key<Boolean>("suspendMediaWhenInactive", /* initOnly */ false, /* values */ null);
 
-    /*
+    /**
      * Key to specify if JavaScript should be allowed on this session.
      */
     public static final Key<Boolean> ALLOW_JAVASCRIPT =
             new Key<Boolean>("allowJavascript", /* initOnly */ false, /* values */ null);
-    /*
+    /**
      * Key to specify if entire accessible tree should be exposed with no caching.
      */
     public static final Key<Boolean> FULL_ACCESSIBILITY_TREE =
@@ -143,6 +150,7 @@ public final class GeckoSessionSettings implements Parcelable {
         mBundle.putBoolean(ALLOW_JAVASCRIPT.name, true);
         mBundle.putBoolean(FULL_ACCESSIBILITY_TREE.name, false);
         mBundle.putInt(USER_AGENT_MODE.name, USER_AGENT_MODE_MOBILE);
+        mBundle.putString(USER_AGENT_OVERRIDE.name, null);
         mBundle.putInt(DISPLAY_MODE.name, DISPLAY_MODE_BROWSER);
     }
 

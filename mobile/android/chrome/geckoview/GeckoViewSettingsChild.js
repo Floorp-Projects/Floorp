@@ -21,6 +21,7 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
   onInit() {
     debug `onInit`;
     this._userAgentMode = USER_AGENT_MODE_MOBILE;
+    this._userAgentOverride = null;
   }
 
   onSettingsUpdate() {
@@ -29,6 +30,7 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
     this.displayMode = this.settings.displayMode;
     this.useTrackingProtection = !!this.settings.useTrackingProtection;
     this.userAgentMode = this.settings.userAgentMode;
+    this.userAgentOverride = this.settings.userAgentOverride;
     this.allowJavascript = this.settings.allowJavascript;
   }
 
@@ -48,9 +50,29 @@ class GeckoViewSettingsChild extends GeckoViewChildModule {
     if (this.userAgentMode === aMode) {
       return;
     }
-    let utils = content.windowUtils;
-    utils.setDesktopModeViewport(aMode === USER_AGENT_MODE_DESKTOP);
     this._userAgentMode = aMode;
+    if (this._userAgentOverride !== null) {
+      return;
+    }
+    const utils = content.windowUtils;
+    utils.setDesktopModeViewport(aMode === USER_AGENT_MODE_DESKTOP);
+  }
+
+  get userAgentOverride() {
+    return this._userAgentOverride;
+  }
+
+  set userAgentOverride(aUserAgent) {
+    if (aUserAgent === this._userAgentOverride) {
+      return;
+    }
+    this._userAgentOverride = aUserAgent;
+    const utils = content.windowUtils;
+    if (aUserAgent === null) {
+      utils.setDesktopModeViewport(this._userAgentMode === USER_AGENT_MODE_DESKTOP);
+      return;
+    }
+    utils.setDesktopModeViewport(false);
   }
 
   get displayMode() {
