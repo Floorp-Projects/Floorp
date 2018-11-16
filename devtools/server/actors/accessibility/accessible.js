@@ -241,7 +241,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
 
         let targetAcc;
         try {
-          targetAcc = this.walker.attachAccessible(target, doc);
+          targetAcc = this.walker.attachAccessible(target, doc.rawAccessible);
         } catch (e) {
           // Target is not available.
         }
