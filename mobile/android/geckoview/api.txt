@@ -1,0 +1,968 @@
+package org.mozilla.geckoview {
+
+  public final enum AllowOrDeny {
+    method public static org.mozilla.geckoview.AllowOrDeny valueOf(java.lang.String);
+    method public static org.mozilla.geckoview.AllowOrDeny[] values();
+    enum_constant public static final org.mozilla.geckoview.AllowOrDeny ALLOW;
+    enum_constant public static final org.mozilla.geckoview.AllowOrDeny DENY;
+  }
+
+  public class BasicSelectionActionDelegate implements android.view.ActionMode.Callback org.mozilla.geckoview.GeckoSession.SelectionActionDelegate {
+    ctor public BasicSelectionActionDelegate(android.app.Activity);
+    ctor public BasicSelectionActionDelegate(android.app.Activity, boolean);
+    method public boolean areExternalActionsEnabled();
+    method public void enableExternalActions(boolean);
+    method public boolean onActionItemClicked(android.view.ActionMode, android.view.MenuItem);
+    method public boolean onCreateActionMode(android.view.ActionMode, android.view.Menu);
+    method public void onDestroyActionMode(android.view.ActionMode);
+    method public void onGetContentRect(android.view.ActionMode, android.view.View, android.graphics.Rect);
+    method public void onHideAction(org.mozilla.geckoview.GeckoSession, int);
+    method public boolean onPrepareActionMode(android.view.ActionMode, android.view.Menu);
+    method public void onShowActionRequest(org.mozilla.geckoview.GeckoSession, org.mozilla.geckoview.GeckoSession.SelectionActionDelegate.Selection, java.lang.String[], org.mozilla.geckoview.GeckoResponse<java.lang.String>);
+    method protected void clearSelection();
+    method protected java.lang.String[] getAllActions();
+    method protected boolean isActionAvailable(java.lang.String);
+    method protected boolean performAction(java.lang.String, android.view.MenuItem);
+    method protected void prepareAction(java.lang.String, android.view.MenuItem);
+    field protected static final java.lang.String ACTION_PROCESS_TEXT = "android.intent.action.PROCESS_TEXT";
+    field protected android.view.ActionMode mActionMode;
+    field protected java.util.List<java.lang.String> mActions;
+    field protected final android.app.Activity mActivity;
+    field protected boolean mRepopulatedMenu;
+    field protected org.mozilla.geckoview.GeckoResponse<java.lang.String> mResponse;
+    field protected org.mozilla.geckoview.GeckoSession.SelectionActionDelegate.Selection mSelection;
+    field protected org.mozilla.geckoview.GeckoSession mSession;
+    field protected final android.graphics.Matrix mTempMatrix;
+    field protected final android.graphics.RectF mTempRect;
+    field protected final boolean mUseFloatingToolbar;
+  }
+
+  public final class CompositorController {
+    method public void addDrawCallback(java.lang.Runnable);
+    method public int getClearColor();
+    method public java.lang.Runnable getFirstPaintCallback();
+    method public void getPixels(org.mozilla.geckoview.CompositorController.GetPixelsCallback);
+    method public void removeDrawCallback(java.lang.Runnable);
+    method public void setClearColor(int);
+    method public void setFirstPaintCallback(java.lang.Runnable);
+  }
+
+  public static interface CompositorController.GetPixelsCallback {
+    method public void onPixelsResult(int, int, java.nio.IntBuffer);
+  }
+
+  public class CrashReporter {
+    ctor public CrashReporter();
+    method public static void sendCrashReport(android.content.Context, android.content.Intent, java.lang.String);
+    method public static void sendCrashReport(android.content.Context, android.os.Bundle, java.lang.String);
+    method public static void sendCrashReport(android.content.Context, java.io.File, java.io.File, boolean, java.lang.String);
+    method public static void sendCrashReport(android.content.Context, java.io.File, java.util.Map<java.lang.String,java.lang.String>, boolean, java.lang.String);
+  }
+
+  public final class DynamicToolbarAnimator {
+    method public org.mozilla.geckoview.DynamicToolbarAnimator.ToolbarChromeProxy getToolbarChromeProxy();
+    method public void hideToolbar(boolean);
+    method public boolean isPinned();
+    method public boolean isPinnedBy(org.mozilla.geckoview.DynamicToolbarAnimator.PinReason);
+    method public void setMaxToolbarHeight(int);
+    method public void setPinned(boolean, org.mozilla.geckoview.DynamicToolbarAnimator.PinReason);
+    method public void setToolbarChromeProxy(org.mozilla.geckoview.DynamicToolbarAnimator.ToolbarChromeProxy);
+    method public void showToolbar(boolean);
+  }
+
+  public static final enum DynamicToolbarAnimator.PinReason {
+    method public static org.mozilla.geckoview.DynamicToolbarAnimator.PinReason valueOf(java.lang.String);
+    method public static org.mozilla.geckoview.DynamicToolbarAnimator.PinReason[] values();
+    enum_constant public static final org.mozilla.geckoview.DynamicToolbarAnimator.PinReason ACTION_MODE;
+    enum_constant public static final org.mozilla.geckoview.DynamicToolbarAnimator.PinReason CARET_DRAG;
+    enum_constant public static final org.mozilla.geckoview.DynamicToolbarAnimator.PinReason CUSTOM_TAB;
+    enum_constant public static final org.mozilla.geckoview.DynamicToolbarAnimator.PinReason DISABLED;
+    enum_constant public static final org.mozilla.geckoview.DynamicToolbarAnimator.PinReason FULL_SCREEN;
+    enum_constant public static final org.mozilla.geckoview.DynamicToolbarAnimator.PinReason PAGE_LOADING;
+    enum_constant public static final org.mozilla.geckoview.DynamicToolbarAnimator.PinReason RELAYOUT;
+    field public final int value;
+  }
+
+  public static interface DynamicToolbarAnimator.ToolbarChromeProxy {
+    method public android.graphics.Bitmap getBitmapOfToolbarChrome();
+    method public boolean isToolbarChromeVisible();
+    method public void toggleToolbarChrome(boolean);
+  }
+
+  public class GeckoDisplay {
+    ctor protected GeckoDisplay(org.mozilla.geckoview.GeckoSession);
+    method @android.support.annotation.UiThread public void screenOriginChanged(int, int);
+    method @android.support.annotation.UiThread public boolean shouldPinOnScreen();
+    method @android.support.annotation.UiThread public void surfaceChanged(android.view.Surface, int, int);
+    method @android.support.annotation.UiThread public void surfaceChanged(android.view.Surface, int, int, int, int);
+    method @android.support.annotation.UiThread public void surfaceDestroyed();
+  }
+
+  public interface GeckoResponse<T> {
+    method public void respond(T);
+  }
+
+  public class GeckoResult<T> {
+    ctor public GeckoResult();
+    ctor public GeckoResult(android.os.Handler);
+    ctor public GeckoResult(org.mozilla.geckoview.GeckoResult<T>);
+    method public synchronized void complete(T);
+    method public synchronized void completeExceptionally(java.lang.Throwable);
+    method public synchronized boolean equals(java.lang.Object);
+    method public <U> org.mozilla.geckoview.GeckoResult<U> exceptionally(org.mozilla.geckoview.GeckoResult.OnExceptionListener<U>);
+    method public static <T> org.mozilla.geckoview.GeckoResult<T> fromException(java.lang.Throwable);
+    method public static <U> org.mozilla.geckoview.GeckoResult<U> fromValue(U);
+    method public android.os.Looper getLooper();
+    method public synchronized int hashCode();
+    method public synchronized T poll();
+    method public synchronized T poll(long);
+    method public <U> org.mozilla.geckoview.GeckoResult<U> then(org.mozilla.geckoview.GeckoResult.OnValueListener<T,U>);
+    method public <U> org.mozilla.geckoview.GeckoResult<U> then(org.mozilla.geckoview.GeckoResult.OnValueListener<T,U>, org.mozilla.geckoview.GeckoResult.OnExceptionListener<U>);
+    method public org.mozilla.geckoview.GeckoResult<T> withHandler(android.os.Handler);
+    field public static final org.mozilla.geckoview.GeckoResult<org.mozilla.geckoview.AllowOrDeny> ALLOW;
+    field public static final org.mozilla.geckoview.GeckoResult<org.mozilla.geckoview.AllowOrDeny> DENY;
+  }
+
+  public static interface GeckoResult.OnExceptionListener<V> {
+    method public org.mozilla.geckoview.GeckoResult<V> onException(java.lang.Throwable);
+  }
+
+  public static interface GeckoResult.OnValueListener<T,U> {
+    method public org.mozilla.geckoview.GeckoResult<U> onValue(T);
+  }
+
+  public static final class GeckoResult.UncaughtException extends java.lang.RuntimeException {
+    ctor public UncaughtException(java.lang.Throwable);
+  }
+
+  public final class GeckoRuntime implements android.os.Parcelable {
+    ctor public GeckoRuntime();
+    method public void attachTo(android.content.Context);
+    method @android.support.annotation.UiThread public static org.mozilla.geckoview.GeckoRuntime create(android.content.Context);
+    method @android.support.annotation.UiThread public static org.mozilla.geckoview.GeckoRuntime create(android.content.Context, org.mozilla.geckoview.GeckoRuntimeSettings);
+    method public int describeContents();
+    method @android.support.annotation.UiThread public static synchronized org.mozilla.geckoview.GeckoRuntime getDefault(android.content.Context);
+    method public org.mozilla.geckoview.GeckoRuntime.Delegate getDelegate();
+    method public java.io.File getProfileDir();
+    method public org.mozilla.geckoview.GeckoRuntimeSettings getSettings();
+    method @android.support.annotation.UiThread public org.mozilla.geckoview.RuntimeTelemetry getTelemetry();
+    method public void orientationChanged();
+    method public void orientationChanged(int);
+    method public void readFromParcel(android.os.Parcel);
+    method public void setDelegate(org.mozilla.geckoview.GeckoRuntime.Delegate);
+    method public void shutdown();
+    method public void writeToParcel(android.os.Parcel, int);
+    field public static final java.lang.String ACTION_CRASHED = "org.mozilla.gecko.ACTION_CRASHED";
+    field public static final android.os.Parcelable.Creator<org.mozilla.geckoview.GeckoRuntime> CREATOR;
+    field public static final java.lang.String EXTRA_CRASH_FATAL = "fatal";
+    field public static final java.lang.String EXTRA_EXTRAS_PATH = "extrasPath";
+    field public static final java.lang.String EXTRA_MINIDUMP_PATH = "minidumpPath";
+    field public static final java.lang.String EXTRA_MINIDUMP_SUCCESS = "minidumpSuccess";
+  }
+
+  public static interface GeckoRuntime.Delegate {
+    method public void onShutdown();
+  }
+
+  public final class GeckoRuntimeSettings implements android.os.Parcelable {
+    method public int describeContents();
+    method public java.lang.String[] getArguments();
+    method public boolean getBlockMalware();
+    method public boolean getBlockPhishing();
+    method public boolean getConsoleOutputEnabled();
+    method public int getCookieBehavior();
+    method public int getCookieLifetime();
+    method public java.lang.Class<?> getCrashHandler();
+    method public java.lang.Float getDisplayDensityOverride();
+    method public java.lang.Integer getDisplayDpiOverride();
+    method public android.os.Bundle getExtras();
+    method public boolean getJavaScriptEnabled();
+    method public java.lang.String[] getLocales();
+    method public boolean getPauseForDebuggerEnabled();
+    method public boolean getRemoteDebuggingEnabled();
+    method public android.graphics.Rect getScreenSizeOverride();
+    method public int getTrackingProtectionCategories();
+    method public boolean getUseContentProcessHint();
+    method public boolean getUseMaxScreenDepth();
+    method public boolean getWebFontsEnabled();
+    method public void readFromParcel(android.os.Parcel);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings setBlockMalware(boolean);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings setBlockPhishing(boolean);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings setConsoleOutputEnabled(boolean);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings setCookieBehavior(int);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings setCookieLifetime(int);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings setJavaScriptEnabled(boolean);
+    method public void setLocales(java.lang.String[]);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings setRemoteDebuggingEnabled(boolean);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings setTrackingProtectionCategories(int);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings setWebFontsEnabled(boolean);
+    method public void writeToParcel(android.os.Parcel, int);
+    field public static final int COOKIE_ACCEPT_ALL = 0;
+    field public static final int COOKIE_ACCEPT_FIRST_PARTY = 1;
+    field public static final int COOKIE_ACCEPT_NONE = 2;
+    field public static final int COOKIE_ACCEPT_NON_TRACKERS = 4;
+    field public static final int COOKIE_ACCEPT_VISITED = 3;
+    field public static final int COOKIE_LIFETIME_DAYS = 3;
+    field public static final int COOKIE_LIFETIME_NORMAL = 0;
+    field public static final int COOKIE_LIFETIME_RUNTIME = 2;
+    field public static final android.os.Parcelable.Creator<org.mozilla.geckoview.GeckoRuntimeSettings> CREATOR;
+  }
+
+  public static final class GeckoRuntimeSettings.Builder {
+    ctor public Builder();
+    ctor public Builder(org.mozilla.geckoview.GeckoRuntimeSettings);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder arguments(java.lang.String[]);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder blockMalware(boolean);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder blockPhishing(boolean);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings build();
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder consoleOutput(boolean);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder cookieBehavior(int);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder cookieLifetime(int);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder crashHandler(java.lang.Class<?>);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder displayDensityOverride(float);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder displayDpiOverride(int);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder extras(android.os.Bundle);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder javaScriptEnabled(boolean);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder locales(java.lang.String[]);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder pauseForDebugger(boolean);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder remoteDebuggingEnabled(boolean);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder screenSizeOverride(int, int);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder trackingProtectionCategories(int);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder useContentProcessHint(boolean);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder useMaxScreenDepth(boolean);
+    method public org.mozilla.geckoview.GeckoRuntimeSettings.Builder webFontsEnabled(boolean);
+  }
+
+  public class GeckoSession implements android.os.Parcelable {
+    ctor public GeckoSession();
+    ctor public GeckoSession(org.mozilla.geckoview.GeckoSessionSettings);
+    method @android.support.annotation.UiThread public org.mozilla.geckoview.GeckoDisplay acquireDisplay();
+    method @android.support.annotation.UiThread public void close();
+    method public static java.lang.String createDataUri(byte[], java.lang.String);
+    method public static java.lang.String createDataUri(java.lang.String, java.lang.String);
+    method public int describeContents();
+    method public boolean equals(java.lang.Object);
+    method public void exitFullScreen();
+    method @android.support.annotation.UiThread public org.mozilla.geckoview.SessionAccessibility getAccessibility();
+    method @android.support.annotation.UiThread public void getClientBounds(android.graphics.RectF);
+    method @android.support.annotation.UiThread public void getClientToScreenMatrix(android.graphics.Matrix);
+    method @android.support.annotation.UiThread public void getClientToSurfaceMatrix(android.graphics.Matrix);
+    method @android.support.annotation.UiThread public org.mozilla.geckoview.CompositorController getCompositorController();
+    method public org.mozilla.geckoview.GeckoSession.ContentDelegate getContentDelegate();
+    method @android.support.annotation.UiThread public org.mozilla.geckoview.DynamicToolbarAnimator getDynamicToolbarAnimator();
+    method public org.mozilla.gecko.EventDispatcher getEventDispatcher();
+    method public org.mozilla.geckoview.SessionFinder getFinder();
+    method public org.mozilla.geckoview.GeckoSession.MediaDelegate getMediaDelegate();
+    method public org.mozilla.geckoview.GeckoSession.NavigationDelegate getNavigationDelegate();
+    method @android.support.annotation.UiThread public org.mozilla.geckoview.OverscrollEdgeEffect getOverscrollEdgeEffect();
+    method @android.support.annotation.UiThread public void getPageToScreenMatrix(android.graphics.Matrix);
+    method @android.support.annotation.UiThread public void getPageToSurfaceMatrix(android.graphics.Matrix);
+    method @android.support.annotation.UiThread public org.mozilla.geckoview.PanZoomController getPanZoomController();
+    method public org.mozilla.geckoview.GeckoSession.PermissionDelegate getPermissionDelegate();
+    method public org.mozilla.geckoview.GeckoSession.ProgressDelegate getProgressDelegate();
+    method public org.mozilla.geckoview.GeckoSession.PromptDelegate getPromptDelegate();
+    method public org.mozilla.geckoview.GeckoSession.ScrollDelegate getScrollDelegate();
+    method public org.mozilla.geckoview.GeckoSession.SelectionActionDelegate getSelectionActionDelegate();
+    method public org.mozilla.geckoview.GeckoSessionSettings getSettings();
+    method @android.support.annotation.UiThread public void getSurfaceBounds(android.graphics.Rect);
+    method @android.support.annotation.AnyThread public org.mozilla.geckoview.SessionTextInput getTextInput();
+    method public org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate getTrackingProtectionDelegate();
+    method public org.mozilla.geckoview.GeckoResult<java.lang.String> getUserAgent();
+    method public void goBack();
+    method public void goForward();
+    method public int hashCode();
+    method public boolean isOpen();
+    method public void loadData(byte[], java.lang.String);
+    method public void loadString(java.lang.String, java.lang.String);
+    method public void loadUri(java.lang.String);
+    method public void loadUri(java.lang.String, int);
+    method public void loadUri(java.lang.String, java.lang.String, int);
+    method public void loadUri(android.net.Uri);
+    method public void loadUri(android.net.Uri, int);
+    method public void loadUri(android.net.Uri, android.net.Uri, int);
+    method @android.support.annotation.UiThread public void open(org.mozilla.geckoview.GeckoRuntime);
+    method public void readFromParcel(android.os.Parcel);
+    method @android.support.annotation.UiThread public void releaseDisplay(org.mozilla.geckoview.GeckoDisplay);
+    method public void reload();
+    method public void restoreState(org.mozilla.geckoview.GeckoSession.SessionState);
+    method public org.mozilla.geckoview.GeckoResult<org.mozilla.geckoview.GeckoSession.SessionState> saveState();
+    method public void setActive(boolean);
+    method public void setContentDelegate(org.mozilla.geckoview.GeckoSession.ContentDelegate);
+    method public void setFocused(boolean);
+    method public void setMediaDelegate(org.mozilla.geckoview.GeckoSession.MediaDelegate);
+    method public void setNavigationDelegate(org.mozilla.geckoview.GeckoSession.NavigationDelegate);
+    method public void setPermissionDelegate(org.mozilla.geckoview.GeckoSession.PermissionDelegate);
+    method public void setProgressDelegate(org.mozilla.geckoview.GeckoSession.ProgressDelegate);
+    method public void setPromptDelegate(org.mozilla.geckoview.GeckoSession.PromptDelegate);
+    method public void setScrollDelegate(org.mozilla.geckoview.GeckoSession.ScrollDelegate);
+    method public void setSelectionActionDelegate(org.mozilla.geckoview.GeckoSession.SelectionActionDelegate);
+    method public void setTrackingProtectionDelegate(org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate);
+    method public void stop();
+    method public void writeToParcel(android.os.Parcel, int);
+    method protected void setShouldPinOnScreen(boolean);
+    field public static final android.os.Parcelable.Creator<org.mozilla.geckoview.GeckoSession> CREATOR;
+    field public static final int FINDER_DISPLAY_DIM_PAGE = 2;
+    field public static final int FINDER_DISPLAY_DRAW_LINK_OUTLINE = 4;
+    field public static final int FINDER_DISPLAY_HIGHLIGHT_ALL = 1;
+    field public static final int FINDER_FIND_BACKWARDS = 1;
+    field public static final int FINDER_FIND_LINKS_ONLY = 8;
+    field public static final int FINDER_FIND_MATCH_CASE = 2;
+    field public static final int FINDER_FIND_WHOLE_WORD = 4;
+    field public static final int LOAD_FLAGS_ALLOW_POPUPS = 8;
+    field public static final int LOAD_FLAGS_BYPASS_CACHE = 1;
+    field public static final int LOAD_FLAGS_BYPASS_PROXY = 2;
+    field public static final int LOAD_FLAGS_EXTERNAL = 4;
+    field public static final int LOAD_FLAGS_NONE = 0;
+    field protected final org.mozilla.geckoview.GeckoSession.Compositor mCompositor;
+    field protected org.mozilla.geckoview.GeckoSession.Window mWindow;
+  }
+
+  public static interface GeckoSession.ContentDelegate {
+    method public void onCloseRequest(org.mozilla.geckoview.GeckoSession);
+    method public void onContextMenu(org.mozilla.geckoview.GeckoSession, int, int, java.lang.String, int, java.lang.String);
+    method public void onCrash(org.mozilla.geckoview.GeckoSession);
+    method public void onExternalResponse(org.mozilla.geckoview.GeckoSession, org.mozilla.geckoview.GeckoSession.WebResponseInfo);
+    method public void onFocusRequest(org.mozilla.geckoview.GeckoSession);
+    method public void onFullScreen(org.mozilla.geckoview.GeckoSession, boolean);
+    method public void onTitleChange(org.mozilla.geckoview.GeckoSession, java.lang.String);
+    field public static final int ELEMENT_TYPE_AUDIO = 3;
+    field public static final int ELEMENT_TYPE_IMAGE = 1;
+    field public static final int ELEMENT_TYPE_NONE = 0;
+    field public static final int ELEMENT_TYPE_VIDEO = 2;
+  }
+
+  public static interface GeckoSession.ContentDelegate.ElementType implements java.lang.annotation.Annotation {
+  }
+
+  public static final class GeckoSession.FinderResult {
+    field public final android.graphics.RectF clientRect;
+    field public final int current;
+    field public final int flags;
+    field public final boolean found;
+    field public final java.lang.String linkUri;
+    field public final java.lang.String searchString;
+    field public final int total;
+    field public final boolean wrapped;
+  }
+
+  public static interface GeckoSession.MediaDelegate {
+    method public void onMediaAdd(org.mozilla.geckoview.GeckoSession, org.mozilla.geckoview.MediaElement);
+    method public void onMediaRemove(org.mozilla.geckoview.GeckoSession, org.mozilla.geckoview.MediaElement);
+  }
+
+  public static interface GeckoSession.NavigationDelegate {
+    method public void onCanGoBack(org.mozilla.geckoview.GeckoSession, boolean);
+    method public void onCanGoForward(org.mozilla.geckoview.GeckoSession, boolean);
+    method public org.mozilla.geckoview.GeckoResult<java.lang.String> onLoadError(org.mozilla.geckoview.GeckoSession, java.lang.String, org.mozilla.geckoview.WebRequestError);
+    method public org.mozilla.geckoview.GeckoResult<org.mozilla.geckoview.AllowOrDeny> onLoadRequest(org.mozilla.geckoview.GeckoSession, org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest);
+    method public void onLocationChange(org.mozilla.geckoview.GeckoSession, java.lang.String);
+    method public org.mozilla.geckoview.GeckoResult<org.mozilla.geckoview.GeckoSession> onNewSession(org.mozilla.geckoview.GeckoSession, java.lang.String);
+    field public static final int LOAD_REQUEST_IS_USER_TRIGGERED = 4096;
+    field public static final int TARGET_WINDOW_CURRENT = 1;
+    field public static final int TARGET_WINDOW_NEW = 2;
+    field public static final int TARGET_WINDOW_NONE = 0;
+  }
+
+  public static class GeckoSession.NavigationDelegate.LoadRequest {
+    field public final boolean isUserTriggered;
+    field public final int target;
+    field public final java.lang.String triggerUri;
+    field public final java.lang.String uri;
+  }
+
+  public static interface GeckoSession.NavigationDelegate.LoadRequestFlags implements java.lang.annotation.Annotation {
+  }
+
+  public static interface GeckoSession.NavigationDelegate.TargetWindow implements java.lang.annotation.Annotation {
+  }
+
+  public static interface GeckoSession.PermissionDelegate {
+    method public void onAndroidPermissionsRequest(org.mozilla.geckoview.GeckoSession, java.lang.String[], org.mozilla.geckoview.GeckoSession.PermissionDelegate.Callback);
+    method public void onContentPermissionRequest(org.mozilla.geckoview.GeckoSession, java.lang.String, int, org.mozilla.geckoview.GeckoSession.PermissionDelegate.Callback);
+    method public void onMediaPermissionRequest(org.mozilla.geckoview.GeckoSession, java.lang.String, org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource[], org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource[], org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaCallback);
+    field public static final int PERMISSION_AUTOPLAY_MEDIA = 2;
+    field public static final int PERMISSION_DESKTOP_NOTIFICATION = 1;
+    field public static final int PERMISSION_GEOLOCATION = 0;
+  }
+
+  public static interface GeckoSession.PermissionDelegate.Callback {
+    method public void grant();
+    method public void reject();
+  }
+
+  public static interface GeckoSession.PermissionDelegate.MediaCallback {
+    method public void grant(java.lang.String, java.lang.String);
+    method public void grant(org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource, org.mozilla.geckoview.GeckoSession.PermissionDelegate.MediaSource);
+    method public void reject();
+  }
+
+  public static class GeckoSession.PermissionDelegate.MediaSource {
+    field public static final int SOURCE_APPLICATION = 2;
+    field public static final int SOURCE_AUDIOCAPTURE = 6;
+    field public static final int SOURCE_BROWSER = 4;
+    field public static final int SOURCE_CAMERA = 0;
+    field public static final int SOURCE_MICROPHONE = 5;
+    field public static final int SOURCE_OTHER = 7;
+    field public static final int SOURCE_SCREEN = 1;
+    field public static final int SOURCE_WINDOW = 3;
+    field public static final int TYPE_AUDIO = 1;
+    field public static final int TYPE_VIDEO = 0;
+    field public final java.lang.String id;
+    field public final java.lang.String name;
+    field public final java.lang.String rawId;
+    field public final int source;
+    field public final int type;
+  }
+
+  public static interface GeckoSession.PermissionDelegate.Permission implements java.lang.annotation.Annotation {
+  }
+
+  public static interface GeckoSession.ProgressDelegate {
+    method public void onPageStart(org.mozilla.geckoview.GeckoSession, java.lang.String);
+    method public void onPageStop(org.mozilla.geckoview.GeckoSession, boolean);
+    method public void onProgressChange(org.mozilla.geckoview.GeckoSession, int);
+    method public void onSecurityChange(org.mozilla.geckoview.GeckoSession, org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation);
+  }
+
+  public static class GeckoSession.ProgressDelegate.SecurityInformation {
+    field public static final int CONTENT_BLOCKED = 1;
+    field public static final int CONTENT_LOADED = 2;
+    field public static final int CONTENT_UNKNOWN = 0;
+    field public static final int SECURITY_MODE_IDENTIFIED = 1;
+    field public static final int SECURITY_MODE_UNKNOWN = 0;
+    field public static final int SECURITY_MODE_VERIFIED = 2;
+    field public final java.lang.String host;
+    field public final boolean isException;
+    field public final boolean isSecure;
+    field public final java.lang.String issuerCommonName;
+    field public final java.lang.String issuerOrganization;
+    field public final int mixedModeActive;
+    field public final int mixedModePassive;
+    field public final java.lang.String organization;
+    field public final java.lang.String origin;
+    field public final int securityMode;
+    field public final java.lang.String subjectName;
+    field public final int trackingMode;
+  }
+
+  public static interface GeckoSession.PromptDelegate {
+    method public void onAlert(org.mozilla.geckoview.GeckoSession, java.lang.String, java.lang.String, org.mozilla.geckoview.GeckoSession.PromptDelegate.AlertCallback);
+    method public void onAuthPrompt(org.mozilla.geckoview.GeckoSession, java.lang.String, java.lang.String, org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthOptions, org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthCallback);
+    method public void onButtonPrompt(org.mozilla.geckoview.GeckoSession, java.lang.String, java.lang.String, java.lang.String[], org.mozilla.geckoview.GeckoSession.PromptDelegate.ButtonCallback);
+    method public void onChoicePrompt(org.mozilla.geckoview.GeckoSession, java.lang.String, java.lang.String, int, org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice[], org.mozilla.geckoview.GeckoSession.PromptDelegate.ChoiceCallback);
+    method public void onColorPrompt(org.mozilla.geckoview.GeckoSession, java.lang.String, java.lang.String, org.mozilla.geckoview.GeckoSession.PromptDelegate.TextCallback);
+    method public void onDateTimePrompt(org.mozilla.geckoview.GeckoSession, java.lang.String, int, java.lang.String, java.lang.String, java.lang.String, org.mozilla.geckoview.GeckoSession.PromptDelegate.TextCallback);
+    method public void onFilePrompt(org.mozilla.geckoview.GeckoSession, java.lang.String, int, java.lang.String[], org.mozilla.geckoview.GeckoSession.PromptDelegate.FileCallback);
+    method public org.mozilla.geckoview.GeckoResult<org.mozilla.geckoview.AllowOrDeny> onPopupRequest(org.mozilla.geckoview.GeckoSession, java.lang.String);
+    method public void onTextPrompt(org.mozilla.geckoview.GeckoSession, java.lang.String, java.lang.String, java.lang.String, org.mozilla.geckoview.GeckoSession.PromptDelegate.TextCallback);
+    field public static final int BUTTON_TYPE_NEGATIVE = 2;
+    field public static final int BUTTON_TYPE_NEUTRAL = 1;
+    field public static final int BUTTON_TYPE_POSITIVE = 0;
+    field public static final int DATETIME_TYPE_DATE = 1;
+    field public static final int DATETIME_TYPE_DATETIME_LOCAL = 5;
+    field public static final int DATETIME_TYPE_MONTH = 2;
+    field public static final int DATETIME_TYPE_TIME = 4;
+    field public static final int DATETIME_TYPE_WEEK = 3;
+    field public static final int FILE_TYPE_MULTIPLE = 2;
+    field public static final int FILE_TYPE_SINGLE = 1;
+  }
+
+  public static interface GeckoSession.PromptDelegate.AlertCallback {
+    method public void dismiss();
+    method public java.lang.String getCheckboxMessage();
+    method public boolean getCheckboxValue();
+    method public boolean hasCheckbox();
+    method public void setCheckboxValue(boolean);
+  }
+
+  public static interface GeckoSession.PromptDelegate.AuthCallback implements org.mozilla.geckoview.GeckoSession.PromptDelegate.AlertCallback {
+    method public void confirm(java.lang.String);
+    method public void confirm(java.lang.String, java.lang.String);
+  }
+
+  public static class GeckoSession.PromptDelegate.AuthOptions {
+    field public static final int AUTH_FLAG_CROSS_ORIGIN_SUB_RESOURCE = 32;
+    field public static final int AUTH_FLAG_HOST = 1;
+    field public static final int AUTH_FLAG_ONLY_PASSWORD = 8;
+    field public static final int AUTH_FLAG_PREVIOUS_FAILED = 16;
+    field public static final int AUTH_FLAG_PROXY = 2;
+    field public static final int AUTH_LEVEL_NONE = 0;
+    field public static final int AUTH_LEVEL_PW_ENCRYPTED = 1;
+    field public static final int AUTH_LEVEL_SECURE = 2;
+    field public int flags;
+    field public int level;
+    field public java.lang.String password;
+    field public java.lang.String uri;
+    field public java.lang.String username;
+  }
+
+  public static interface GeckoSession.PromptDelegate.ButtonCallback implements org.mozilla.geckoview.GeckoSession.PromptDelegate.AlertCallback {
+    method public void confirm(int);
+  }
+
+  public static class GeckoSession.PromptDelegate.Choice {
+    field public static final int CHOICE_TYPE_MENU = 1;
+    field public static final int CHOICE_TYPE_MULTIPLE = 3;
+    field public static final int CHOICE_TYPE_SINGLE = 2;
+    field public final boolean disabled;
+    field public final java.lang.String icon;
+    field public final java.lang.String id;
+    field public final org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice[] items;
+    field public final java.lang.String label;
+    field public final boolean selected;
+    field public final boolean separator;
+  }
+
+  public static interface GeckoSession.PromptDelegate.ChoiceCallback implements org.mozilla.geckoview.GeckoSession.PromptDelegate.AlertCallback {
+    method public void confirm(java.lang.String);
+    method public void confirm(java.lang.String[]);
+    method public void confirm(org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice);
+    method public void confirm(org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice[]);
+  }
+
+  public static interface GeckoSession.PromptDelegate.DatetimeType implements java.lang.annotation.Annotation {
+  }
+
+  public static interface GeckoSession.PromptDelegate.FileCallback implements org.mozilla.geckoview.GeckoSession.PromptDelegate.AlertCallback {
+    method public void confirm(android.content.Context, android.net.Uri);
+    method public void confirm(android.content.Context, android.net.Uri[]);
+  }
+
+  public static interface GeckoSession.PromptDelegate.FileType implements java.lang.annotation.Annotation {
+  }
+
+  public static interface GeckoSession.PromptDelegate.TextCallback implements org.mozilla.geckoview.GeckoSession.PromptDelegate.AlertCallback {
+    method public void confirm(java.lang.String);
+  }
+
+  public static interface GeckoSession.ScrollDelegate {
+    method public void onScrollChanged(org.mozilla.geckoview.GeckoSession, int, int);
+  }
+
+  public static interface GeckoSession.SelectionActionDelegate {
+    method public void onHideAction(org.mozilla.geckoview.GeckoSession, int);
+    method public void onShowActionRequest(org.mozilla.geckoview.GeckoSession, org.mozilla.geckoview.GeckoSession.SelectionActionDelegate.Selection, java.lang.String[], org.mozilla.geckoview.GeckoResponse<java.lang.String>);
+    field public static final java.lang.String ACTION_COLLAPSE_TO_END = "org.mozilla.geckoview.COLLAPSE_TO_END";
+    field public static final java.lang.String ACTION_COLLAPSE_TO_START = "org.mozilla.geckoview.COLLAPSE_TO_START";
+    field public static final java.lang.String ACTION_COPY = "org.mozilla.geckoview.COPY";
+    field public static final java.lang.String ACTION_CUT = "org.mozilla.geckoview.CUT";
+    field public static final java.lang.String ACTION_DELETE = "org.mozilla.geckoview.DELETE";
+    field public static final java.lang.String ACTION_HIDE = "org.mozilla.geckoview.HIDE";
+    field public static final java.lang.String ACTION_PASTE = "org.mozilla.geckoview.PASTE";
+    field public static final java.lang.String ACTION_SELECT_ALL = "org.mozilla.geckoview.SELECT_ALL";
+    field public static final java.lang.String ACTION_UNSELECT = "org.mozilla.geckoview.UNSELECT";
+    field public static final int FLAG_IS_COLLAPSED = 1;
+    field public static final int FLAG_IS_EDITABLE = 2;
+    field public static final int FLAG_IS_PASSWORD = 4;
+    field public static final int HIDE_REASON_ACTIVE_SCROLL = 3;
+    field public static final int HIDE_REASON_ACTIVE_SELECTION = 2;
+    field public static final int HIDE_REASON_INVISIBLE_SELECTION = 1;
+    field public static final int HIDE_REASON_NO_SELECTION = 0;
+  }
+
+  public static interface GeckoSession.SelectionActionDelegate.Action implements java.lang.annotation.Annotation {
+  }
+
+  public static interface GeckoSession.SelectionActionDelegate.Flag implements java.lang.annotation.Annotation {
+  }
+
+  public static interface GeckoSession.SelectionActionDelegate.HideReason implements java.lang.annotation.Annotation {
+  }
+
+  public static class GeckoSession.SelectionActionDelegate.Selection {
+    field public final android.graphics.RectF clientRect;
+    field public final int flags;
+    field public final java.lang.String text;
+  }
+
+  public static class GeckoSession.SessionState implements android.os.Parcelable {
+    ctor public SessionState(java.lang.String);
+    method public int describeContents();
+    method public void readFromParcel(android.os.Parcel);
+    method public java.lang.String toString();
+    method public void writeToParcel(android.os.Parcel, int);
+    field public static final android.os.Parcelable.Creator<org.mozilla.geckoview.GeckoSession.SessionState> CREATOR;
+  }
+
+  public static interface GeckoSession.TextInputDelegate {
+    method @android.support.annotation.UiThread public void hideSoftInput(org.mozilla.geckoview.GeckoSession);
+    method @android.support.annotation.UiThread public void notifyAutoFill(org.mozilla.geckoview.GeckoSession, int, int);
+    method @android.support.annotation.UiThread public void restartInput(org.mozilla.geckoview.GeckoSession, int);
+    method @android.support.annotation.UiThread public void showSoftInput(org.mozilla.geckoview.GeckoSession);
+    method @android.support.annotation.UiThread public void updateCursorAnchorInfo(org.mozilla.geckoview.GeckoSession, android.view.inputmethod.CursorAnchorInfo);
+    method @android.support.annotation.UiThread public void updateExtractedText(org.mozilla.geckoview.GeckoSession, android.view.inputmethod.ExtractedTextRequest, android.view.inputmethod.ExtractedText);
+    method @android.support.annotation.UiThread public void updateSelection(org.mozilla.geckoview.GeckoSession, int, int, int, int);
+    field public static final int AUTO_FILL_NOTIFY_CANCELED = 2;
+    field public static final int AUTO_FILL_NOTIFY_COMMITTED = 1;
+    field public static final int AUTO_FILL_NOTIFY_STARTED = 0;
+    field public static final int AUTO_FILL_NOTIFY_VIEW_ADDED = 3;
+    field public static final int AUTO_FILL_NOTIFY_VIEW_ENTERED = 6;
+    field public static final int AUTO_FILL_NOTIFY_VIEW_EXITED = 7;
+    field public static final int AUTO_FILL_NOTIFY_VIEW_REMOVED = 4;
+    field public static final int AUTO_FILL_NOTIFY_VIEW_UPDATED = 5;
+    field public static final int RESTART_REASON_BLUR = 1;
+    field public static final int RESTART_REASON_CONTENT_CHANGE = 2;
+    field public static final int RESTART_REASON_FOCUS = 0;
+  }
+
+  public static interface GeckoSession.TextInputDelegate.AutoFillNotification implements java.lang.annotation.Annotation {
+  }
+
+  public static interface GeckoSession.TextInputDelegate.RestartReason implements java.lang.annotation.Annotation {
+  }
+
+  public static interface GeckoSession.TrackingProtectionDelegate {
+    method public void onTrackerBlocked(org.mozilla.geckoview.GeckoSession, java.lang.String, int);
+    field public static final int CATEGORY_AD = 1;
+    field public static final int CATEGORY_ALL = 31;
+    field public static final int CATEGORY_ANALYTIC = 2;
+    field public static final int CATEGORY_CONTENT = 8;
+    field public static final int CATEGORY_NONE = 0;
+    field public static final int CATEGORY_SOCIAL = 4;
+    field public static final int CATEGORY_TEST = 16;
+  }
+
+  public static interface GeckoSession.TrackingProtectionDelegate.Category implements java.lang.annotation.Annotation {
+  }
+
+  public static class GeckoSession.WebResponseInfo {
+    field public final long contentLength;
+    field public final java.lang.String contentType;
+    field public final java.lang.String filename;
+    field public final java.lang.String uri;
+  }
+
+  public final class GeckoSessionSettings implements android.os.Parcelable {
+    ctor public GeckoSessionSettings();
+    ctor public GeckoSessionSettings(org.mozilla.geckoview.GeckoSessionSettings);
+    method public int describeContents();
+    method public boolean equals(java.lang.Object);
+    method public boolean getBoolean(org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean>);
+    method public int getInt(org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Integer>);
+    method public java.lang.String getString(org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.String>);
+    method public int hashCode();
+    method public void readFromParcel(android.os.Parcel);
+    method public void setBoolean(org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean>, boolean);
+    method public void setInt(org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Integer>, int);
+    method public void setString(org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.String>, java.lang.String);
+    method public java.lang.String toString();
+    method public void writeToParcel(android.os.Parcel, int);
+    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean> ALLOW_JAVASCRIPT;
+    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.String> CHROME_URI;
+    field public static final android.os.Parcelable.Creator<org.mozilla.geckoview.GeckoSessionSettings> CREATOR;
+    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Integer> DISPLAY_MODE;
+    field public static final int DISPLAY_MODE_BROWSER = 0;
+    field public static final int DISPLAY_MODE_FULLSCREEN = 3;
+    field public static final int DISPLAY_MODE_MINIMAL_UI = 1;
+    field public static final int DISPLAY_MODE_STANDALONE = 2;
+    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean> FULL_ACCESSIBILITY_TREE;
+    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Integer> SCREEN_ID;
+    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean> SUSPEND_MEDIA_WHEN_INACTIVE;
+    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Integer> USER_AGENT_MODE;
+    field public static final int USER_AGENT_MODE_DESKTOP = 1;
+    field public static final int USER_AGENT_MODE_MOBILE = 0;
+    field public static final int USER_AGENT_MODE_VR = 2;
+    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean> USE_MULTIPROCESS;
+    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean> USE_PRIVATE_MODE;
+    field public static final org.mozilla.geckoview.GeckoSessionSettings.Key<java.lang.Boolean> USE_TRACKING_PROTECTION;
+  }
+
+  public static class GeckoSessionSettings.Key<T> {
+  }
+
+  public class GeckoView extends android.widget.FrameLayout {
+    ctor public GeckoView(android.content.Context);
+    ctor public GeckoView(android.content.Context, android.util.AttributeSet);
+    method public void autofill(android.util.SparseArray<android.view.autofill.AutofillValue>);
+    method @android.support.annotation.UiThread public void coverUntilFirstPaint(int);
+    method public void dispatchDraw(android.graphics.Canvas);
+    method public boolean gatherTransparentRegion(android.graphics.Region);
+    method @android.support.annotation.UiThread public org.mozilla.geckoview.DynamicToolbarAnimator getDynamicToolbarAnimator();
+    method public org.mozilla.gecko.EventDispatcher getEventDispatcher();
+    method public android.os.Handler getHandler();
+    method @android.support.annotation.UiThread public org.mozilla.geckoview.PanZoomController getPanZoomController();
+    method public org.mozilla.geckoview.GeckoSession getSession();
+    method public void onAttachedToWindow();
+    method public android.view.inputmethod.InputConnection onCreateInputConnection(android.view.inputmethod.EditorInfo);
+    method public void onDetachedFromWindow();
+    method public boolean onGenericMotionEvent(android.view.MotionEvent);
+    method public boolean onKeyDown(int, android.view.KeyEvent);
+    method public boolean onKeyLongPress(int, android.view.KeyEvent);
+    method public boolean onKeyMultiple(int, int, android.view.KeyEvent);
+    method public boolean onKeyPreIme(int, android.view.KeyEvent);
+    method public boolean onKeyUp(int, android.view.KeyEvent);
+    method public void onProvideAutofillVirtualStructure(android.view.ViewStructure, int);
+    method public boolean onTouchEvent(android.view.MotionEvent);
+    method public void onWindowFocusChanged(boolean);
+    method @android.support.annotation.UiThread public org.mozilla.geckoview.GeckoSession releaseSession();
+    method @android.support.annotation.UiThread public void setSession(org.mozilla.geckoview.GeckoSession);
+    method @android.support.annotation.UiThread public void setSession(org.mozilla.geckoview.GeckoSession, org.mozilla.geckoview.GeckoRuntime);
+    method @android.support.annotation.UiThread public boolean shouldPinOnScreen();
+    method protected void onConfigurationChanged(android.content.res.Configuration);
+    method protected void onFocusChanged(boolean, int, android.graphics.Rect);
+    method protected void onRestoreInstanceState(android.os.Parcelable);
+    method protected android.os.Parcelable onSaveInstanceState();
+    method protected void onWindowVisibilityChanged(int);
+    field protected final org.mozilla.geckoview.GeckoView.Display mDisplay;
+    field protected org.mozilla.geckoview.GeckoRuntime mRuntime;
+    field protected org.mozilla.geckoview.GeckoSession mSession;
+    field protected android.view.SurfaceView mSurfaceView;
+  }
+
+  @android.support.annotation.AnyThread public class GeckoWebExecutor {
+    ctor public GeckoWebExecutor(org.mozilla.geckoview.GeckoRuntime);
+    method public org.mozilla.geckoview.GeckoResult<org.mozilla.geckoview.WebResponse> fetch(org.mozilla.geckoview.WebRequest);
+    method public org.mozilla.geckoview.GeckoResult<org.mozilla.geckoview.WebResponse> fetch(org.mozilla.geckoview.WebRequest, int);
+    method public org.mozilla.geckoview.GeckoResult<java.net.InetAddress[]> resolve(java.lang.String);
+    method public void speculativeConnect(java.lang.String);
+    field public static final int FETCH_FLAGS_ANONYMOUS = 1;
+    field public static final int FETCH_FLAGS_NONE = 0;
+  }
+
+  public static interface GeckoWebExecutor.FetchFlags implements java.lang.annotation.Annotation {
+  }
+
+  public class MediaElement {
+    method public org.mozilla.geckoview.MediaElement.Delegate getDelegate();
+    method public void pause();
+    method public void play();
+    method public void seek(double);
+    method public void setDelegate(org.mozilla.geckoview.MediaElement.Delegate);
+    method public void setMuted(boolean);
+    method public void setPlaybackRate(double);
+    method public void setVolume(double);
+    field public static final int MEDIA_ERROR_ABORTED = 1;
+    field public static final int MEDIA_ERROR_DECODE = 3;
+    field public static final int MEDIA_ERROR_NETWORK = 2;
+    field public static final int MEDIA_ERROR_NETWORK_NO_SOURCE = 0;
+    field public static final int MEDIA_ERROR_SRC_NOT_SUPPORTED = 4;
+    field public static final int MEDIA_READY_STATE_HAVE_CURRENT_DATA = 2;
+    field public static final int MEDIA_READY_STATE_HAVE_ENOUGH_DATA = 4;
+    field public static final int MEDIA_READY_STATE_HAVE_FUTURE_DATA = 3;
+    field public static final int MEDIA_READY_STATE_HAVE_METADATA = 1;
+    field public static final int MEDIA_READY_STATE_HAVE_NOTHING = 0;
+    field public static final int MEDIA_STATE_ABORT = 9;
+    field public static final int MEDIA_STATE_EMPTIED = 10;
+    field public static final int MEDIA_STATE_ENDED = 3;
+    field public static final int MEDIA_STATE_PAUSE = 2;
+    field public static final int MEDIA_STATE_PLAY = 0;
+    field public static final int MEDIA_STATE_PLAYING = 1;
+    field public static final int MEDIA_STATE_SEEKED = 5;
+    field public static final int MEDIA_STATE_SEEKING = 4;
+    field public static final int MEDIA_STATE_STALLED = 6;
+    field public static final int MEDIA_STATE_SUSPEND = 7;
+    field public static final int MEDIA_STATE_WAITING = 8;
+    field protected org.mozilla.geckoview.MediaElement.Delegate mDelegate;
+    field protected final org.mozilla.geckoview.GeckoSession mSession;
+    field protected final long mVideoId;
+  }
+
+  public static interface MediaElement.Delegate {
+    method public void onError(org.mozilla.geckoview.MediaElement, int);
+    method public void onFullscreenChange(org.mozilla.geckoview.MediaElement, boolean);
+    method public void onLoadProgress(org.mozilla.geckoview.MediaElement, org.mozilla.geckoview.MediaElement.LoadProgressInfo);
+    method public void onMetadataChange(org.mozilla.geckoview.MediaElement, org.mozilla.geckoview.MediaElement.Metadata);
+    method public void onPlaybackRateChange(org.mozilla.geckoview.MediaElement, double);
+    method public void onPlaybackStateChange(org.mozilla.geckoview.MediaElement, int);
+    method public void onReadyStateChange(org.mozilla.geckoview.MediaElement, int);
+    method public void onTimeChange(org.mozilla.geckoview.MediaElement, double);
+    method public void onVolumeChange(org.mozilla.geckoview.MediaElement, double, boolean);
+  }
+
+  public static class MediaElement.LoadProgressInfo {
+    field public final org.mozilla.geckoview.MediaElement.LoadProgressInfo.TimeRange[] buffered;
+    field public final long loadedBytes;
+    field public final long totalBytes;
+  }
+
+  public class MediaElement.LoadProgressInfo.TimeRange {
+    field public final double end;
+    field public final double start;
+  }
+
+  public static class MediaElement.Metadata {
+    field public final int audioTrackCount;
+    field public final java.lang.String currentSource;
+    field public final double duration;
+    field public final long height;
+    field public final boolean isSeekable;
+    field public final int videoTrackCount;
+    field public final long width;
+  }
+
+  public final class OverscrollEdgeEffect {
+    method public void draw(android.graphics.Canvas);
+    method public java.lang.Runnable getInvalidationCallback();
+    method public void setInvalidationCallback(java.lang.Runnable);
+    method public void setTheme(android.content.Context);
+  }
+
+  public class PanZoomController extends org.mozilla.gecko.mozglue.JNIObject {
+    ctor protected PanZoomController(org.mozilla.geckoview.GeckoSession);
+    method public float getScrollFactor();
+    method public boolean onMotionEvent(android.view.MotionEvent);
+    method public boolean onMouseEvent(android.view.MotionEvent);
+    method public boolean onTouchEvent(android.view.MotionEvent);
+    method public void setIsLongpressEnabled(boolean);
+    method public void setScrollFactor(float);
+    method protected void disposeNative();
+    method protected void finalize();
+  }
+
+  public final class RuntimeTelemetry {
+    method public org.mozilla.geckoview.GeckoResult<org.mozilla.gecko.util.GeckoBundle> getSnapshots(boolean);
+  }
+
+  public class SessionAccessibility {
+    method public android.view.View getView();
+    method public boolean onMotionEvent(android.view.MotionEvent);
+    method @android.support.annotation.UiThread public void setView(android.view.View);
+  }
+
+  public final class SessionFinder {
+    method public void clear();
+    method public org.mozilla.geckoview.GeckoResult<org.mozilla.geckoview.GeckoSession.FinderResult> find(java.lang.String, int);
+    method public int getDisplayFlags();
+    method public void setDisplayFlags(int);
+  }
+
+  public final class SessionTextInput {
+    method public void autofill(android.util.SparseArray<java.lang.CharSequence>);
+    method @android.support.annotation.UiThread public org.mozilla.geckoview.GeckoSession.TextInputDelegate getDelegate();
+    method @android.support.annotation.AnyThread public synchronized android.os.Handler getHandler(android.os.Handler);
+    method @android.support.annotation.UiThread public android.view.View getView();
+    method @android.support.annotation.AnyThread public synchronized android.view.inputmethod.InputConnection onCreateInputConnection(android.view.inputmethod.EditorInfo);
+    method @android.support.annotation.UiThread public boolean onKeyDown(int, android.view.KeyEvent);
+    method @android.support.annotation.UiThread public boolean onKeyLongPress(int, android.view.KeyEvent);
+    method @android.support.annotation.UiThread public boolean onKeyMultiple(int, int, android.view.KeyEvent);
+    method @android.support.annotation.UiThread public boolean onKeyPreIme(int, android.view.KeyEvent);
+    method @android.support.annotation.UiThread public boolean onKeyUp(int, android.view.KeyEvent);
+    method public void onProvideAutofillVirtualStructure(android.view.ViewStructure, int);
+    method @android.support.annotation.UiThread public void setDelegate(org.mozilla.geckoview.GeckoSession.TextInputDelegate);
+    method @android.support.annotation.UiThread public synchronized void setView(android.view.View);
+  }
+
+  public abstract class WebMessage {
+    field public final java.nio.ByteBuffer body;
+    field public final java.util.Map<java.lang.String, java.lang.String> headers;
+    field public final java.lang.String uri;
+  }
+
+  public abstract static class WebMessage.Builder {
+    method public org.mozilla.geckoview.WebMessage.Builder addHeader(java.lang.String, java.lang.String);
+    method public org.mozilla.geckoview.WebMessage.Builder body(java.nio.ByteBuffer);
+    method public org.mozilla.geckoview.WebMessage.Builder header(java.lang.String, java.lang.String);
+    method public org.mozilla.geckoview.WebMessage.Builder uri(java.lang.String);
+  }
+
+  public class WebRequest extends org.mozilla.geckoview.WebMessage {
+    ctor public WebRequest(java.lang.String);
+    field public static final int CACHE_MODE_DEFAULT = 1;
+    field public static final int CACHE_MODE_FORCE_CACHE = 5;
+    field public static final int CACHE_MODE_NO_CACHE = 4;
+    field public static final int CACHE_MODE_NO_STORE = 2;
+    field public static final int CACHE_MODE_ONLY_IF_CACHED = 6;
+    field public static final int CACHE_MODE_RELOAD = 3;
+    field public final int cacheMode;
+    field public final java.lang.String method;
+    field public final java.lang.String referrer;
+  }
+
+  public static class WebRequest.Builder extends org.mozilla.geckoview.WebMessage.Builder {
+    ctor public Builder(java.lang.String);
+    method public org.mozilla.geckoview.WebRequest.Builder addHeader(java.lang.String, java.lang.String);
+    method public org.mozilla.geckoview.WebRequest.Builder body(java.nio.ByteBuffer);
+    method public org.mozilla.geckoview.WebRequest build();
+    method public org.mozilla.geckoview.WebRequest.Builder cacheMode(int);
+    method public org.mozilla.geckoview.WebRequest.Builder header(java.lang.String, java.lang.String);
+    method public org.mozilla.geckoview.WebRequest.Builder method(java.lang.String);
+    method public org.mozilla.geckoview.WebRequest.Builder referrer(java.lang.String);
+    method public org.mozilla.geckoview.WebRequest.Builder uri(java.lang.String);
+  }
+
+  public static interface WebRequest.CacheMode implements java.lang.annotation.Annotation {
+  }
+
+  public class WebRequestError extends java.lang.Exception {
+    ctor public WebRequestError(int, int);
+    method public boolean equals(java.lang.Object);
+    method public int hashCode();
+    field public static final int ERROR_CATEGORY_CONTENT = 4;
+    field public static final int ERROR_CATEGORY_NETWORK = 3;
+    field public static final int ERROR_CATEGORY_PROXY = 6;
+    field public static final int ERROR_CATEGORY_SAFEBROWSING = 7;
+    field public static final int ERROR_CATEGORY_SECURITY = 2;
+    field public static final int ERROR_CATEGORY_UNKNOWN = 1;
+    field public static final int ERROR_CATEGORY_URI = 5;
+    field public static final int ERROR_CONNECTION_REFUSED = 67;
+    field public static final int ERROR_CONTENT_CRASHED = 68;
+    field public static final int ERROR_CORRUPTED_CONTENT = 52;
+    field public static final int ERROR_FILE_ACCESS_DENIED = 101;
+    field public static final int ERROR_FILE_NOT_FOUND = 85;
+    field public static final int ERROR_INVALID_CONTENT_ENCODING = 84;
+    field public static final int ERROR_MALFORMED_URI = 53;
+    field public static final int ERROR_NET_INTERRUPT = 35;
+    field public static final int ERROR_NET_RESET = 147;
+    field public static final int ERROR_NET_TIMEOUT = 51;
+    field public static final int ERROR_OFFLINE = 115;
+    field public static final int ERROR_PORT_BLOCKED = 131;
+    field public static final int ERROR_PROXY_CONNECTION_REFUSED = 38;
+    field public static final int ERROR_REDIRECT_LOOP = 99;
+    field public static final int ERROR_SAFEBROWSING_HARMFUL_URI = 71;
+    field public static final int ERROR_SAFEBROWSING_MALWARE_URI = 39;
+    field public static final int ERROR_SAFEBROWSING_PHISHING_URI = 87;
+    field public static final int ERROR_SAFEBROWSING_UNWANTED_URI = 55;
+    field public static final int ERROR_SECURITY_BAD_CERT = 50;
+    field public static final int ERROR_SECURITY_SSL = 34;
+    field public static final int ERROR_UNKNOWN = 17;
+    field public static final int ERROR_UNKNOWN_HOST = 37;
+    field public static final int ERROR_UNKNOWN_PROTOCOL = 69;
+    field public static final int ERROR_UNKNOWN_PROXY_HOST = 54;
+    field public static final int ERROR_UNKNOWN_SOCKET_TYPE = 83;
+    field public static final int ERROR_UNSAFE_CONTENT_TYPE = 36;
+    field public final int category;
+    field public final int code;
+  }
+
+  public static interface WebRequestError.Error implements java.lang.annotation.Annotation {
+  }
+
+  public static interface WebRequestError.ErrorCategory implements java.lang.annotation.Annotation {
+  }
+
+  public class WebResponse extends org.mozilla.geckoview.WebMessage {
+    field public final boolean redirected;
+    field public final int statusCode;
+  }
+
+  public static class WebResponse.Builder extends org.mozilla.geckoview.WebMessage.Builder {
+    ctor public Builder(java.lang.String);
+    method public org.mozilla.geckoview.WebResponse.Builder addHeader(java.lang.String, java.lang.String);
+    method public org.mozilla.geckoview.WebResponse.Builder body(java.nio.ByteBuffer);
+    method public org.mozilla.geckoview.WebResponse build();
+    method public org.mozilla.geckoview.WebResponse.Builder header(java.lang.String, java.lang.String);
+    method public org.mozilla.geckoview.WebResponse.Builder redirected(boolean);
+    method public org.mozilla.geckoview.WebResponse.Builder statusCode(int);
+    method public org.mozilla.geckoview.WebResponse.Builder uri(java.lang.String);
+  }
+
+  protected class GeckoSession.Compositor extends org.mozilla.gecko.mozglue.JNIObject {
+    ctor protected Compositor();
+    method public native void attachNPZC(org.mozilla.geckoview.PanZoomController);
+    method public native void enableLayerUpdateNotifications(boolean);
+    method public boolean isReady();
+    method public native void onBoundsChanged(int, int, int, int);
+    method public native void requestScreenPixels();
+    method public native void sendToolbarAnimatorMessage(int);
+    method public native void sendToolbarPixelsToCompositor(int, int, int[]);
+    method public native void setDefaultClearColor(int);
+    method public native void setMaxToolbarHeight(int);
+    method public native void setPinned(boolean, int);
+    method public native void syncPauseCompositor();
+    method public native void syncResumeResizeCompositor(int, int, int, int, java.lang.Object);
+    method protected native void disposeNative();
+    method protected void finalize();
+  }
+
+}
+
