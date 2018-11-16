@@ -220,6 +220,13 @@ public:
     void UpdateOverscrollVelocity(const float aX, const float aY);
     void UpdateOverscrollOffset(const float aX, const float aY);
 
+    mozilla::widget::EventDispatcher* GetEventDispatcher() const {
+        if (mAndroidView) {
+            return mAndroidView->mEventDispatcher;
+        }
+        return nullptr;
+    }
+
     //
     // nsIWidget
     //
