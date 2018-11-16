@@ -10,8 +10,11 @@
     <script>
 
 'use strict';
-EnsureExt('EXT_texture_compression_bptc');
+EnsureExt('EXT_texture_compression_bptc', false);
 
+Lastly_WithDraftExtsEnabled(() => {
+  EnsureExt('EXT_texture_compression_bptc', true);
+});
     </script>
   </body>
 </html>
