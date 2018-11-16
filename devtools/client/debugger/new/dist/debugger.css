@@ -3081,6 +3081,11 @@ debug-expression-error {
   align-items: center;
 }
 
+.breakpoints-list .breakpoint-heading .filename {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .breakpoints-list .breakpoint-heading .filename span {
   opacity: 0.7;
   padding-left: 4px;
@@ -3481,17 +3486,20 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .why-paused {
+  display: flex;
   background-color: var(--theme-body-background);
   color: var(--theme-body-color);
-  padding: 10px 10px 10px 20px;
-  white-space: normal;
   opacity: 0.6;
   font-size: 12px;
-  flex: 0 1 auto;
   text-align: center;
   font-style: italic;
   font-weight: 300;
   cursor: default;
+  min-height: 24px;
+}
+
+.why-paused > div {
+  margin: auto;
 }
 
 .theme-dark .secondary-panes .why-paused {
@@ -3499,6 +3507,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 }
 
 .why-paused .message {
+  padding: 4px;
   font-size: 10px;
 }
 
@@ -3593,6 +3602,8 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
 
 .show-more-container {
   display: flex;
+  min-height: 24px;
+  padding: 4px 0;
 }
 
 .show-more {
@@ -3990,7 +4001,7 @@ img.skipPausing {
 .xhr-label {
   max-width: calc(100% - var(--breakpoint-expression-right-clear-space));
   display: inline-block;
-  cursor: pointer;
+  cursor: text;
   flex-grow: 1;
   text-overflow: ellipsis;
   padding-inline-end: 8px;
@@ -4274,6 +4285,19 @@ html .welcomebox .toggle-button-end.collapsed {
   font-size: 12px;
 }
 
+.source-tab::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: transparent;
+  transition: transform 250ms var(--animation-curve), opacity 250ms var(--animation-curve);
+  opacity: 0;
+  transform: scaleX(0);
+}
+
 .source-tab:first-child {
   margin-inline-start: 0;
 }
@@ -4282,12 +4306,24 @@ html .welcomebox .toggle-button-end.collapsed {
   background: linear-gradient(var(--theme-toolbar-hover) 28px, transparent 1px);
 }
 
+.source-tab:not(.active):hover::before {
+  background: var(--tab-line-hover-color);
+  opacity: 1;
+  transform: scaleX(1);
+}
+
 .source-tab.active {
   color: var(--theme-toolbar-selected-color);
   border-bottom-color: transparent;
   border-left: 1px solid var(--theme-splitter-color);
   border-right: 1px solid var(--theme-splitter-color);
   background-color: var(--theme-body-background);
+}
+
+.source-tab.active::before {
+  background: var(--tab-line-selected-color);
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 .theme-dark .source-tab.active {
@@ -4371,30 +4407,6 @@ html[dir="rtl"] img.moreTabs {
 
 .source-tab:hover .close-btn {
   visibility: visible;
-}
-
-.source-tab-line {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: transparent;
-  transition: transform 250ms var(--animation-curve), opacity 250ms var(--animation-curve);
-  opacity: 0;
-  transform: scaleX(0);
-}
-
-.source-tab:not(.active):hover .source-tab-line {
-  background: var(--tab-line-hover-color);
-  opacity: 1;
-  transform: scaleX(1);
-}
-
-.source-tab.active .source-tab-line {
-  background: var(--tab-line-selected-color);
-  opacity: 1;
-  transform: scaleX(1);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
