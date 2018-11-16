@@ -978,8 +978,10 @@ TeeReaderReadHandler(JSContext* cx, unsigned argc, Value* vp)
     //         true, set value2 to
     //         ? StructuredDeserialize(StructuredSerialize(value2),
     //                                 the current Realm Record).
-    // TODO: add StructuredClone() intrinsic.
-    MOZ_ASSERT(!unwrappedTeeState->cloneForBranch2(), "tee(cloneForBranch2=true) should not be exposed");
+    // We don't yet support any specifications that use cloneForBranch2, and
+    // the Streams spec doesn't offer any way for author code to enable it,
+    // so it's always false here.
+    MOZ_ASSERT(!unwrappedTeeState->cloneForBranch2());
 
     // Step i: If teeState.[[canceled1]] is false, perform
     //         ? ReadableStreamDefaultControllerEnqueue(branch1, value1).
