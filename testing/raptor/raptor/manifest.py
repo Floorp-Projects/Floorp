@@ -99,8 +99,12 @@ def write_test_settings_json(args, test_details, oskey):
     # support optional subtest unit/lower_is_better fields, default to main test values if not set
     val = test_details.get('subtest_unit', test_settings['raptor-options']['unit'])
     test_settings['raptor-options']['subtest_unit'] = val
-    val = test_details.get('subtest_lower', test_settings['raptor-options']['lower_is_better'])
-    test_settings['raptor-options']['subtest_lower_is_better'] = val
+    val = test_details.get('subtest_lower_is_better',
+                           test_settings['raptor-options']['lower_is_better'])
+    if val == "false":
+        test_settings['raptor-options']['subtest_lower_is_better'] = False
+    else:
+        test_settings['raptor-options']['subtest_lower_is_better'] = True
 
     if test_details.get("alert_threshold", None) is not None:
         test_settings['raptor-options']['alert_threshold'] = float(test_details['alert_threshold'])
