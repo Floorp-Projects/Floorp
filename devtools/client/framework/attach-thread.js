@@ -21,11 +21,6 @@ function handleThreadState(toolbox, event, packet) {
   // threadClient now.
   toolbox.target.emit("thread-" + event);
 
-  const replayButton = toolbox.doc.getElementById("command-button-stop-replay");
-  if (replayButton) {
-    replayButton.classList.toggle("paused", event === "paused");
-  }
-
   if (event === "paused") {
     toolbox.highlightTool("jsdebugger");
 
@@ -58,6 +53,13 @@ function attachThread(toolbox) {
 
       threadClient.addListener("paused", handleThreadState.bind(null, toolbox));
       threadClient.addListener("resumed", handleThreadState.bind(null, toolbox));
+
+      threadClient.addListener("progress", (_, {recording}) => {
+        const replayButton = toolbox.doc.getElementById("command-button-stop-replay");
+        if (replayButton) {
+          replayButton.classList.toggle("recording", recording);
+        }
+      });
 
       if (!threadClient.paused) {
         reject(new Error("Thread in wrong state when starting up, should be paused"));
