@@ -6444,10 +6444,11 @@ nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
       return false;
     }
 
-    if (fType == LayoutFrameType::FieldSet) {
+    if (fType == LayoutFrameType::FieldSet ||
+        fType == LayoutFrameType::ColumnSet) {
       LinePosition kidPosition;
       nsIFrame* kid = aFrame->PrincipalChildList().FirstChild();
-      // kid might be a legend frame here, but that's ok.
+      // If aFrame is fieldset, kid might be a legend frame here, but that's ok.
       if (GetFirstLinePosition(aWM, kid, &kidPosition)) {
         *aResult = kidPosition +
           kid->GetLogicalNormalPosition(aWM, aFrame->GetSize()).B(aWM);
