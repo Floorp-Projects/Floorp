@@ -249,11 +249,11 @@ exports.addBreakpoint = addBreakpoint;
 
 async function removeBreakpoints(dbg, line, url) {
   dump(`remove all breakpoints\n`);
-  const breakpoints = dbg.selectors.getBreakpoints(dbg.getState());
+  const breakpoints = dbg.selectors.getBreakpointsList(dbg.getState());
 
-  const onBreakpointsCleared =  waitForState(
+  const onBreakpointsCleared = waitForState(
     dbg,
-    state => !dbg.selectors.getBreakpoints(state).length
+    state => dbg.selectors.getBreakpointCount(state) === 0
   );
   await dbg.actions.removeBreakpoints(breakpoints);
   return onBreakpointsCleared;

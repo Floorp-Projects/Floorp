@@ -27,5 +27,17 @@ add_task(async function() {
     labels.includes("simple1.js?x=1") && labels.includes("simple1.js?x=2"),
     true,
     "simple1.js?x=1 and simple2.jsx=2 exist"
-  )
+  );
+
+  const source = findSource(dbg, "simple1.js?x=1");
+  await selectSource(dbg, source);
+  const tab = findElement(dbg, "activeTab");
+  is(tab.innerText, "simple1.js?x=1", "Tab label is simple1.js?x=1");
+  await addBreakpoint(dbg, "simple1.js?x=1", 6);
+  const breakpointHeading = findElement(dbg, "breakpointItem", 2).innerText;
+  is(
+    breakpointHeading,
+    "simple1.js?x=1",
+    "Breakpoint heading is simple1.js?x=1"
+  );
 });

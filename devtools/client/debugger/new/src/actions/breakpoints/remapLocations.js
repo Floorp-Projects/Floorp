@@ -5,14 +5,13 @@
 // @flow
 
 import type { Breakpoint } from "../../types";
-import type { BreakpointsMap } from "../../selectors";
 
 export default function remapLocations(
   breakpoints: Breakpoint[],
   sourceId: string,
   sourceMaps: Object
 ) {
-  const sourceBreakpoints: BreakpointsMap = breakpoints.map(
+  const sourceBreakpoints: Promise<Breakpoint>[] = breakpoints.map(
     async breakpoint => {
       if (breakpoint.location.sourceId !== sourceId) {
         return breakpoint;
@@ -24,5 +23,5 @@ export default function remapLocations(
     }
   );
 
-  return Promise.all(sourceBreakpoints.valueSeq());
+  return Promise.all(sourceBreakpoints);
 }
