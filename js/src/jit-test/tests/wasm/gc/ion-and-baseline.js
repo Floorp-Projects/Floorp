@@ -20,7 +20,7 @@
 
 var refmod = new WebAssembly.Module(wasmTextToBinary(
     `(module
-      (gc_feature_opt_in 1)
+      (gc_feature_opt_in 2)
 
       (import $tbl "" "tbl" (table 4 anyfunc))
       (import $print "" "print" (func (param i32)))
@@ -35,10 +35,10 @@ var refmod = new WebAssembly.Module(wasmTextToBinary(
 
       (func $g (result anyref)
        (call $print (i32.const 2))
-       (ref.null anyref))
+       (ref.null))
 
       (func (export "test_h")
-       (call_indirect $htype (ref.null anyref) (i32.const 2)))
+       (call_indirect $htype (ref.null) (i32.const 2)))
 
       (func (export "test_i")
        (drop (call_indirect $itype (i32.const 3))))
