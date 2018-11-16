@@ -339,5 +339,66 @@ test(function(t) {
                        'distance of transform lists');
 }, 'Test distance of mismatched transform lists with skew function');
 
+
+// Individual transforms
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'translate', '50px', 'none');
+  assert_equals(dist, Math.sqrt(50 * 50), 'distance of 2D translate and none');
+}, 'Test distance of 2D translate property with none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'translate', '10px 30px', '50px');
+  assert_equals(dist, Math.sqrt(40 * 40 + 30 * 30), 'distance of 2D translate');
+}, 'Test distance of 2D translate property');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'translate', '10px 30px 50px', '50px');
+  assert_equals(dist, Math.sqrt(40 * 40 + 30 * 30 + 50 * 50),
+                'distance of 3D translate');
+}, 'Test distance of 3D translate property');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'scale', '2', 'none');
+  assert_equals(dist, Math.sqrt(1 + 1), 'distance of 2D scale and none');
+}, 'Test distance of 2D scale property with none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'scale', '3', '1 1');
+  assert_equals(dist, Math.sqrt(2 * 2 + 2 * 2), 'distance of 2D scale');
+}, 'Test distance of 2D scale property');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'scale', '3 2 2', '1 1');
+  assert_equals(dist, Math.sqrt(2 * 2 + 1 * 1 + 1 * 1),
+                'distance of 3D scale');
+}, 'Test distance of 3D scale property');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'rotate', '180deg', 'none');
+  assert_equals(dist, Math.PI, 'distance of 2D rotate and none');
+}, 'Test distance of 2D rotate property with none');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'rotate', '180deg', '90deg');
+  assert_equals(dist, Math.PI / 2.0, 'distance of 2D rotate');
+}, 'Test distance of 2D rotate property');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'rotate', 'z 90deg', 'x 90deg');
+  let q1 = getQuaternion([0, 0, 1], Math.PI / 2.0);
+  let q2 = getQuaternion([1, 0, 0], Math.PI / 2.0);
+  assert_approx_equals(dist, computeRotateDistance(q1, q2), EPSILON,
+                       'distance of 3D rotate');
+}, 'Test distance of 3D rotate property');
+
 </script>
 </html>
