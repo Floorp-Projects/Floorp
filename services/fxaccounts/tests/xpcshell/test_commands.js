@@ -7,30 +7,15 @@ ChromeUtils.import("resource://testing-common/Assert.jsm");
 ChromeUtils.import("resource://gre/modules/FxAccountsCommands.js");
 
 add_task(async function test_sendtab_isDeviceCompatible() {
-  const fxAccounts = {
-    getKeys() {
-      return {
-        kXCS: "abcd",
-      };
-    },
-  };
-  const sendTab = new SendTab(null, fxAccounts);
+  const sendTab = new SendTab(null, null);
   let device = {name: "My device"};
-  Assert.ok(!(await sendTab.isDeviceCompatible(device)));
+  Assert.ok(!sendTab.isDeviceCompatible(device));
   device = {name: "My device", availableCommands: {}};
-  Assert.ok(!(await sendTab.isDeviceCompatible(device)));
+  Assert.ok(!sendTab.isDeviceCompatible(device));
   device = {name: "My device", availableCommands: {
-    "https://identity.mozilla.com/cmd/open-uri": JSON.stringify({
-      kid: "dcba",
-    }),
+    "https://identity.mozilla.com/cmd/open-uri": "payload",
   }};
-  Assert.ok(!(await sendTab.isDeviceCompatible(device)));
-  device = {name: "My device", availableCommands: {
-    "https://identity.mozilla.com/cmd/open-uri": JSON.stringify({
-      kid: "abcd",
-    }),
-  }};
-  Assert.ok((await sendTab.isDeviceCompatible(device)));
+  Assert.ok(sendTab.isDeviceCompatible(device));
 });
 
 add_task(async function test_sendtab_send() {

@@ -3,7 +3,7 @@
 
 "use strict";
 
-const remoteClientsFixture = [ { id: 1, name: "Foo"}, { id: 2, name: "Bar"} ];
+const targetsFixture = [ { id: 1, name: "Foo"}, { id: 2, name: "Bar"} ];
 
 add_task(async function setup() {
   await promiseSyncReady();
@@ -14,7 +14,7 @@ add_task(async function setup() {
 });
 
 add_task(async function test_page_contextmenu() {
-  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, remoteClients: remoteClientsFixture,
+  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, targets: targetsFixture,
                                       state: UIState.STATUS_SIGNED_IN, isSendableURI: true });
 
   await openContentContextMenu("#moztext", "context-sendpagetodevice");
@@ -32,7 +32,7 @@ add_task(async function test_page_contextmenu() {
 });
 
 add_task(async function test_link_contextmenu() {
-  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, remoteClients: remoteClientsFixture,
+  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, targets: targetsFixture,
                                       state: UIState.STATUS_SIGNED_IN, isSendableURI: true });
   let expectation = sandbox.mock(gSync)
                            .expects("sendTabToDevice")
@@ -59,7 +59,7 @@ add_task(async function test_link_contextmenu() {
 });
 
 add_task(async function test_page_contextmenu_no_remote_clients() {
-  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, remoteClients: [],
+  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, targets: [],
                                       state: UIState.STATUS_SIGNED_IN, isSendableURI: true });
 
   await openContentContextMenu("#moztext", "context-sendpagetodevice");
@@ -77,7 +77,7 @@ add_task(async function test_page_contextmenu_no_remote_clients() {
 });
 
 add_task(async function test_page_contextmenu_one_remote_client() {
-  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, remoteClients: [{ id: 1, name: "Foo"}],
+  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, targets: [{ id: 1, name: "Foo"}],
                                       state: UIState.STATUS_SIGNED_IN, isSendableURI: true });
 
   await openContentContextMenu("#moztext", "context-sendpagetodevice");
@@ -92,7 +92,7 @@ add_task(async function test_page_contextmenu_one_remote_client() {
 });
 
 add_task(async function test_page_contextmenu_not_sendable() {
-  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, remoteClients: remoteClientsFixture,
+  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, targets: targetsFixture,
                                       state: UIState.STATUS_SIGNED_IN, isSendableURI: false });
 
   await openContentContextMenu("#moztext");
@@ -105,7 +105,7 @@ add_task(async function test_page_contextmenu_not_sendable() {
 });
 
 add_task(async function test_page_contextmenu_not_synced_yet() {
-  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: false, remoteClients: [],
+  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: false, targets: [],
                                       state: UIState.STATUS_SIGNED_IN, isSendableURI: true });
 
   await openContentContextMenu("#moztext");
@@ -118,7 +118,7 @@ add_task(async function test_page_contextmenu_not_synced_yet() {
 });
 
 add_task(async function test_page_contextmenu_sync_not_ready_configured() {
-  const sandbox = setupSendTabMocks({ syncReady: false, clientsSynced: false, remoteClients: null,
+  const sandbox = setupSendTabMocks({ syncReady: false, clientsSynced: false, targets: null,
                                       state: UIState.STATUS_SIGNED_IN, isSendableURI: true });
 
   await openContentContextMenu("#moztext");
@@ -131,7 +131,7 @@ add_task(async function test_page_contextmenu_sync_not_ready_configured() {
 });
 
 add_task(async function test_page_contextmenu_sync_not_ready_other_state() {
-  const sandbox = setupSendTabMocks({ syncReady: false, clientsSynced: false, remoteClients: null,
+  const sandbox = setupSendTabMocks({ syncReady: false, clientsSynced: false, targets: null,
                                       state: UIState.STATUS_NOT_VERIFIED, isSendableURI: true });
 
   await openContentContextMenu("#moztext", "context-sendpagetodevice");
@@ -148,7 +148,7 @@ add_task(async function test_page_contextmenu_sync_not_ready_other_state() {
 });
 
 add_task(async function test_page_contextmenu_unconfigured() {
-  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, remoteClients: null,
+  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, targets: null,
                                       state: UIState.STATUS_NOT_CONFIGURED, isSendableURI: true });
 
   await openContentContextMenu("#moztext", "context-sendpagetodevice");
@@ -167,7 +167,7 @@ add_task(async function test_page_contextmenu_unconfigured() {
 });
 
 add_task(async function test_page_contextmenu_not_verified() {
-  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, remoteClients: null,
+  const sandbox = setupSendTabMocks({ syncReady: true, clientsSynced: true, targets: null,
                                       state: UIState.STATUS_NOT_VERIFIED, isSendableURI: true });
 
   await openContentContextMenu("#moztext", "context-sendpagetodevice");
