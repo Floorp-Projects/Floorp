@@ -11201,6 +11201,7 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   if (!MayNeedToCreateColumnSpanSiblings(blockFrame, childItems)) {
     // No need to create column-span siblings.
     blockFrame->SetInitialChildList(kPrincipalList, childItems);
+    CreateBulletFrameForListItemIfNeeded(blockFrame);
     return;
   }
 
@@ -11209,6 +11210,17 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   nsFrameList initialNonColumnSpanKids =
     childItems.Split([](nsIFrame* f) { return f->IsColumnSpan(); });
   blockFrame->SetInitialChildList(kPrincipalList, initialNonColumnSpanKids);
+
+  nsBlockFrame* blockFrameToCreateBullet = blockFrame;
+  if (needsColumn && (*aNewFrame)->StyleList()->mListStylePosition ==
+                       NS_STYLE_LIST_STYLE_POSITION_OUTSIDE) {
+    // Create the outside bullet on ColumnSetWrapper so that the position of
+    // the bullet is correct.
+    blockFrameToCreateBullet = static_cast<nsBlockFrame*>(*aNewFrame);
+  }
+
+  CreateBulletFrameForListItemIfNeeded(blockFrameToCreateBullet);
+
   if (childItems.IsEmpty()) {
     // No more column-span kids need to be processed.
     return;
