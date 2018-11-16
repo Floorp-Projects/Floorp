@@ -305,10 +305,6 @@ HeadlessThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       aResult->height = 13;
       *aIsOverridable = false;
       break;
-    case StyleAppearance::Range:
-      aResult->width = 14;
-      aResult->height = 18;
-      break;
     case StyleAppearance::Menuseparator:
       aResult->width = 0;
       aResult->height = 8;

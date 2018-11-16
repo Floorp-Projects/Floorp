@@ -1096,9 +1096,13 @@ pref("toolkit.asyncshutdown.log", false);
 // it being specified, dump is disabled in artifact builds (see Bug 1490412).
 #ifdef MOZILLA_OFFICIAL
 pref("browser.dom.window.dump.enabled", false, sticky);
+pref("devtools.console.stdout.chrome", false, sticky);
 #else
 pref("browser.dom.window.dump.enabled", true, sticky);
+pref("devtools.console.stdout.chrome", true, sticky);
 #endif
+
+pref("devtools.console.stdout.content", false, sticky);
 
 // Controls whether EventEmitter module throws dump message on each emit
 pref("toolkit.dump.emit", false);

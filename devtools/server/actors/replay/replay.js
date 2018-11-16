@@ -116,6 +116,10 @@ function scriptFrameForIndex(index) {
   return frame;
 }
 
+function isNonNullObject(obj) {
+  return obj && (typeof obj == "object" || typeof obj == "function");
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Persistent Script State
 ///////////////////////////////////////////////////////////////////////////////
@@ -178,6 +182,26 @@ dbg.onNewScript = function(script) {
   // created.
   installPendingHandlers();
 };
+
+const gConsoleObjectProperties = new Map();
+
+function shouldSaveConsoleProperty({ desc }) {
+  // When logging an object to the console, only properties captured here will
+  // be shown. We limit this to non-object data properties, as more complex
+  // properties have two problems: A) to inspect them we will need to switch to
+  // a replaying child process, which is very slow when there are many console
+  // messages, and B) trying to access objects transitively referred to by
+  // logged console objects will fail when unpaused, and depends on the current
+  // state of the process otherwise.
+  return "value" in desc && !isNonNullObject(desc.value);
+}
+
+function saveConsoleObjectProperties(obj) {
+  if (obj instanceof Debugger.Object) {
+    const properties = getObjectProperties(obj).filter(shouldSaveConsoleProperty);
+    gConsoleObjectProperties.set(obj, properties);
+  }
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Console Message State
@@ -250,6 +274,7 @@ Services.obs.addObserver({
     // Message arguments are preserved as debuggee values.
     if (apiMessage.arguments) {
       contents.arguments = apiMessage.arguments.map(makeDebuggeeValue);
+      contents.arguments.forEach(saveConsoleObjectProperties);
     }
 
     newConsoleMessage("ConsoleAPI", null, contents);
@@ -465,7 +490,7 @@ function convertCompletionValue(value) {
 }
 
 function makeDebuggeeValue(value) {
-  if (value && typeof value == "object") {
+  if (isNonNullObject(value)) {
     assert(!(value instanceof Debugger.Object));
     const global = Cu.getGlobalForObject(value);
     const dbgGlobal = dbg.makeGlobalObjectReference(global);
@@ -515,6 +540,24 @@ function getSourceData(id) {
 
 function forwardToScript(name) {
   return request => gScripts.getObject(request.id)[name](request.value);
+}
+
+function getObjectProperties(object) {
+  const names = object.getOwnPropertyNames();
+
+  return names.map(name => {
+    const desc = object.getOwnPropertyDescriptor(name);
+    if ("value" in desc) {
+      desc.value = convertValue(desc.value);
+    }
+    if ("get" in desc) {
+      desc.get = getObjectId(desc.get);
+    }
+    if ("set" in desc) {
+      desc.set = getObjectId(desc.set);
+    }
+    return { name, desc };
+  });
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -626,21 +669,16 @@ const gRequestHandlers = {
     }
 
     const object = gPausedObjects.getObject(request.id);
-    const names = object.getOwnPropertyNames();
+    return getObjectProperties(object);
+  },
 
-    return names.map(name => {
-      const desc = object.getOwnPropertyDescriptor(name);
-      if ("value" in desc) {
-        desc.value = convertValue(desc.value);
-      }
-      if ("get" in desc) {
-        desc.get = getObjectId(desc.get);
-      }
-      if ("set" in desc) {
-        desc.set = getObjectId(desc.set);
-      }
-      return { name, desc };
-    });
+  getObjectPropertiesForConsole(request) {
+    const object = gPausedObjects.getObject(request.id);
+    const properties = gConsoleObjectProperties.get(object);
+    if (!properties) {
+      throw new Error("Console object properties not saved");
+    }
+    return properties;
   },
 
   getEnvironmentNames(request) {
