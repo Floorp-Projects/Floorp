@@ -25,7 +25,7 @@ class CookiesPreference(context: Context?, attrs: AttributeSet?) : ListPreferenc
         updateSummary()
     }
 
-    private fun updateSummary() {
+    fun updateSummary() {
         val settings = Settings.getInstance(context)
         super.setSummary(settings.shouldBlockCookiesValue())
     }

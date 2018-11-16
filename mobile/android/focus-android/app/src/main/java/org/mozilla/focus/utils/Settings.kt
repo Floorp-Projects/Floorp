@@ -72,9 +72,23 @@ class Settings private constructor(context: Context) {
                 false)
 
     fun shouldBlockCookiesValue(): String =
-            preferences.getString(getPreferenceKey(R.string
-                    .pref_key_performance_enable_cookies),
-                    resources.getString(R.string.preference_privacy_should_block_cookies_no_option))!!
+        if (AppConstants.isGeckoBuild) {
+            preferences.getString(
+                getPreferenceKey(
+                    R.string
+                        .pref_key_performance_enable_cookies
+                ),
+                resources.getString(R.string.preference_privacy_should_block_cookies_third_party_tracker_cookies_option)
+            )!!
+        } else {
+            preferences.getString(
+                getPreferenceKey(
+                    R.string
+                        .pref_key_performance_enable_cookies
+                ),
+                resources.getString(R.string.preference_privacy_should_block_cookies_no_option)
+            )!!
+        }
 
     fun shouldBlockCookies(): Boolean =
             shouldBlockCookiesValue() == resources.getString(
