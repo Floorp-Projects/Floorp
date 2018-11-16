@@ -29,7 +29,7 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(),
         const val FRAGMENT_TAG = "ExperimentSettings"
     }
 
-    private lateinit var job: Job
+    private var job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
     private var enginePref: SwitchPreferenceCompat? = null
@@ -42,7 +42,11 @@ class ExperimentsSettingsFragment : PreferenceFragmentCompat(),
 
     override fun onResume() {
         super.onResume()
-        job = Job()
+
+        if (job.isCancelled) {
+            job = Job()
+        }
+
         preferenceScreen?.sharedPreferences?.registerOnSharedPreferenceChangeListener(this)
     }
 

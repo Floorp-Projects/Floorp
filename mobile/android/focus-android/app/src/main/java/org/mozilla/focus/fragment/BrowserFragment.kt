@@ -160,7 +160,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
     private var biometricController: BiometricAuthenticationHandler? = null
 
-    private lateinit var job: Job
+    private var job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
 
@@ -813,7 +813,9 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
     override fun onResume() {
         super.onResume()
 
-        job = Job()
+        if (job.isCancelled) {
+            job = Job()
+        }
 
         val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
         requireContext().registerReceiver(downloadBroadcastReceiver, filter)

@@ -31,7 +31,7 @@ import kotlin.coroutines.CoroutineContext
  * Fragment showing settings UI to add custom autocomplete domains.
  */
 class AutocompleteAddFragment : Fragment(), CoroutineScope {
-    private lateinit var job: Job
+    private var job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
 
@@ -43,7 +43,9 @@ class AutocompleteAddFragment : Fragment(), CoroutineScope {
     override fun onResume() {
         super.onResume()
 
-        job = Job()
+        if (job.isCancelled) {
+            job = Job()
+        }
 
         val updater = activity as BaseSettingsFragment.ActionBarUpdater
         updater.updateTitle(R.string.preference_autocomplete_title_add)

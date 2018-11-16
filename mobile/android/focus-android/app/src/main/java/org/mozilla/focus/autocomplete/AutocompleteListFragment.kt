@@ -43,7 +43,7 @@ typealias DomainFormatter = (String) -> String
  * Fragment showing settings UI listing all custom autocomplete domains entered by the user.
  */
 open class AutocompleteListFragment : Fragment(), CoroutineScope {
-    private lateinit var job: Job
+    private var job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
 
@@ -131,7 +131,9 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
     override fun onResume() {
         super.onResume()
 
-        job = Job()
+        if (job.isCancelled) {
+            job = Job()
+        }
 
         (activity as BaseSettingsFragment.ActionBarUpdater).apply {
             updateTitle(R.string.preference_autocomplete_subitem_manage_sites)

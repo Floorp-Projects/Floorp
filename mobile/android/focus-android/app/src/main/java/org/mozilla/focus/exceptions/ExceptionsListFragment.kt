@@ -46,7 +46,7 @@ typealias DomainFormatter = (String) -> String
  * Fragment showing settings UI listing all exception domains.
  */
 open class ExceptionsListFragment : Fragment(), CoroutineScope {
-    private lateinit var job: Job
+    private var job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
     /**
