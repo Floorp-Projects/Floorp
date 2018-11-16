@@ -11,7 +11,7 @@ import { List } from "immutable";
 import actions from "../../actions";
 import {
   getTopFrame,
-  getBreakpointsList,
+  getBreakpoints,
   getBreakpointsDisabled,
   getBreakpointsLoading,
   getExpressions,
@@ -118,7 +118,7 @@ class SecondaryPanes extends Component<Props, State> {
     const isIndeterminate =
       !breakpointsDisabled && breakpoints.some(x => x.disabled);
 
-    if (features.skipPausing || breakpoints.length === 0) {
+    if (features.skipPausing || breakpoints.size == 0) {
       return null;
     }
 
@@ -438,7 +438,7 @@ const mapStateToProps = state => ({
   expressions: getExpressions(state),
   extra: getExtra(state),
   hasFrames: !!getTopFrame(state),
-  breakpoints: getBreakpointsList(state),
+  breakpoints: getBreakpoints(state),
   breakpointsDisabled: getBreakpointsDisabled(state),
   breakpointsLoading: getBreakpointsLoading(state),
   isWaitingOnBreak: getIsWaitingOnBreak(state),

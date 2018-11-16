@@ -19,14 +19,10 @@ import { getSelectedLocation } from "../../../utils/source-maps";
 import { features } from "../../../utils/prefs";
 import { getEditor } from "../../../utils/editor";
 
+import type { BreakpointsMap } from "../../../reducers/types";
 import type { FormattedBreakpoint } from "../../../selectors/breakpointSources";
 
-import type {
-  Breakpoint as BreakpointType,
-  Frame,
-  Source,
-  Location
-} from "../../../types";
+import type { Frame, Source, Location } from "../../../types";
 
 type FormattedFrame = {
   ...Frame,
@@ -34,14 +30,14 @@ type FormattedFrame = {
 };
 
 import {
-  getBreakpointsList,
+  getBreakpoints,
   getSelectedFrame,
   getSelectedSource
 } from "../../../selectors";
 
 type Props = {
   breakpoint: FormattedBreakpoint,
-  breakpoints: BreakpointType[],
+  breakpoints: BreakpointsMap,
   source: Source,
   frame: ?FormattedFrame,
   enableBreakpoint: typeof actions.enableBreakpoint,
@@ -187,7 +183,7 @@ const getFormattedFrame = createSelector(
 );
 
 const mapStateToProps = state => ({
-  breakpoints: getBreakpointsList(state),
+  breakpoints: getBreakpoints(state),
   frame: getFormattedFrame(state)
 });
 

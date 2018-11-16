@@ -32,7 +32,8 @@ add_task(async function() {
 
   await waitForBreakpoint(dbg, location);
 
-  const breakpointList = dbg.selectors.getBreakpointsList(dbg.getState());
+  const breakpoints = dbg.selectors.getBreakpoints(dbg.getState());
+  const breakpointList = breakpoints.valueSeq().toJS();
   const breakpoint = breakpointList[0];
 
   is(breakpointList.length, 1);

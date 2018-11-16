@@ -340,12 +340,9 @@ function assertDebugLine(dbg, line) {
 
   const markedSpans = lineInfo.handle.markedSpans;
   if (markedSpans && markedSpans.length > 0) {
-    const classMatch = markedSpans.filter(
-      span => span.marker.className.includes("debug-expression")
-    ).length > 0;
-
+    const marker = markedSpans[0].marker;
     ok(
-      classMatch,
+      marker.className.includes("debug-expression"),
       "expression is highlighted as paused"
     );
   }
@@ -724,7 +721,7 @@ function disableBreakpoint(dbg, source, line, column) {
 
 async function loadAndAddBreakpoint(dbg, filename, line, column) {
   const {
-    selectors: { getBreakpoint, getBreakpointCount, getBreakpointsMap },
+    selectors: { getBreakpoint, getBreakpoints },
     getState
   } = dbg;
 
@@ -738,9 +735,9 @@ async function loadAndAddBreakpoint(dbg, filename, line, column) {
   // Test that breakpoint is not off by a line.
   await addBreakpoint(dbg, source, line);
 
-  is(getBreakpointCount(getState()), 1, "One breakpoint exists");
+  is(getBreakpoints(getState()).size, 1, "One breakpoint exists");
   if (!getBreakpoint(getState(), { sourceId: source.id, line, column })) {
-    const breakpoints = getBreakpointsMap(getState());
+    const breakpoints = getBreakpoints(getState()).toJS();
     const id = Object.keys(breakpoints).pop();
     const loc = breakpoints[id].location;
     ok(
@@ -760,7 +757,7 @@ async function invokeWithBreakpoint(
   handler
 ) {
   const {
-    selectors: { getBreakpointCount },
+    selectors: { getBreakpoints },
     getState
   } = dbg;
 
@@ -781,7 +778,7 @@ async function invokeWithBreakpoint(
 
   await removeBreakpoint(dbg, source.id, line, column);
 
-  is(getBreakpointCount(getState()), 0, "Breakpoint reverted");
+  is(getBreakpoints(getState()).size, 0, "Breakpoint reverted");
 
   await handler(source);
 

@@ -5,7 +5,7 @@ requestLongerTimeout(2);
 async function waitForBreakpointCount(dbg, count) {
   return waitForState(
     dbg,
-    state => dbg.selectors.getBreakpointCount(state) === count
+    state => dbg.selectors.getBreakpoints(state).size === count
   );
 }
 
@@ -13,7 +13,7 @@ add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
   const dbg = await initDebugger("doc-sourcemaps.html");
   const {
-    selectors: { getBreakpoint, getBreakpointCount },
+    selectors: { getBreakpoint, getBreakpoints },
     getState
   } = dbg;
 
@@ -32,7 +32,7 @@ add_task(async function() {
   // Test that breakpoint sliding is not attempted. The breakpoint
   // should not move anywhere.
   await addBreakpoint(dbg, entrySrc, 13);
-  is(getBreakpointCount(getState()), 1, "One breakpoint exists");
+  is(getBreakpoints(getState()).size, 1, "One breakpoint exists");
 
   ok(
     getBreakpoint(getState(), { sourceId: entrySrc.id, line: 13 }),
@@ -52,7 +52,7 @@ add_task(async function() {
   assertPausedLocation(dbg);
 
   await waitForBreakpointCount(dbg, 3);
-  is(getBreakpointCount(getState()), 3, "Three breakpoints exist");
+  is(getBreakpoints(getState()).size, 3, "Three breakpoints exist");
 
   ok(
     getBreakpoint(getState(), { sourceId: entrySrc.id, line: 13 }),
