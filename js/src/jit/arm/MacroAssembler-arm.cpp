@@ -6575,9 +6575,12 @@ MacroAssemblerARM::wasmUnalignedStoreImpl(const wasm::MemoryAccessDesc& access, 
     // handling right.
 
     if (val64 != Register64::Invalid()) {
-        MOZ_ASSERT(byteSize == 8);
-        emitUnalignedStore(&access, /*size=*/4, ptr, val64.high, /*offset=*/4);
-        emitUnalignedStore(nullptr, /*size=*/4, ptr, val64.low);
+        if (byteSize == 8) {
+            emitUnalignedStore(&access, /*size=*/4, ptr, val64.high, /*offset=*/4);
+            emitUnalignedStore(nullptr, /*size=*/4, ptr, val64.low);
+        } else {
+            emitUnalignedStore(&access, byteSize, ptr, val64.low);
+        }
     } else if (!floatValue.isInvalid()) {
         if (floatValue.isDouble()) {
             MOZ_ASSERT(byteSize == 8);

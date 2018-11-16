@@ -17,6 +17,7 @@
 #include "mozilla/SegmentedVector.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/TraceKind.h"
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsDataHashtable.h"
@@ -411,21 +412,6 @@ private:
 };
 
 void TraceScriptHolder(nsISupports* aHolder, JSTracer* aTracer);
-
-// Returns true if the JS::TraceKind is one the cycle collector cares about.
-// Everything used as WeakMap key should be listed here, to represent the key
-// in cycle collector's graph, otherwise the key is considered to be pointed
-// from somewhere unknown, and results in leaking the subgraph which contains
-// the key.
-// See the comments in NoteWeakMapsTracer::trace for more details.
-inline bool AddToCCKind(JS::TraceKind aKind)
-{
-  return aKind == JS::TraceKind::Object ||
-         aKind == JS::TraceKind::Script ||
-         aKind == JS::TraceKind::LazyScript ||
-         aKind == JS::TraceKind::Scope ||
-         aKind == JS::TraceKind::RegExpShared;
-}
 
 } // namespace mozilla
 

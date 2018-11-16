@@ -7149,6 +7149,10 @@ EncodeMemorySection(Encoder& e, AstModule& module)
 static bool
 EncodeGlobalSection(Encoder& e, AstModule& module)
 {
+    if (!module.globals().length()) {
+        return true;
+    }
+
     size_t offset;
     if (!e.startSection(SectionId::Global, &offset)) {
         return false;
