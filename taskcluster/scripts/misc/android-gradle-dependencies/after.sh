@@ -15,7 +15,6 @@ mkdir -p android-gradle-dependencies /builds/worker/artifacts
 
 cp -R ${NEXUS_WORK}/storage/jcenter android-gradle-dependencies
 cp -R ${NEXUS_WORK}/storage/google android-gradle-dependencies
-cp -R ${NEXUS_WORK}/storage/gradle-plugins android-gradle-dependencies
 
 # The Gradle wrapper will have downloaded and verified the hash of exactly one
 # Gradle distribution.  It will be located in $GRADLE_USER_HOME, like
