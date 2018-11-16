@@ -34,6 +34,8 @@ EXPORTS += [
 EXPORTS.mozilla.widget += [
     'AndroidCompositorWidget.h',
     'AndroidUiThread.h',
+    'EventDispatcher.h',
+    'nsWindow.h',
 ]
 
 SOURCES += [

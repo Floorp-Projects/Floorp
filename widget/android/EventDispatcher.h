@@ -54,6 +54,8 @@ public:
                                 jni::Object::Param aData,
                                 JS::MutableHandleValue aOut);
 
+    nsIGlobalObject* GetGlobalObject();
+
     using NativesBase::DisposeNative;
 private:
     java::EventDispatcher::WeakRef mDispatcher;
