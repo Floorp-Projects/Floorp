@@ -136,10 +136,7 @@ WebRenderBridgeChild::EndTransaction(const wr::LayoutSize& aContentSize,
   aDL.dl.inner.capacity = 0;
   aDL.dl.inner.data = nullptr;
 
-  TimeStamp fwdTime;
-#if defined(ENABLE_FRAME_LATENCY_LOG)
-  fwdTime = TimeStamp::Now();
-#endif
+  TimeStamp fwdTime = TimeStamp::Now();
 
   nsTArray<OpUpdateResource> resourceUpdates;
   nsTArray<RefCountedShmem> smallShmems;
@@ -170,10 +167,7 @@ WebRenderBridgeChild::EndEmptyTransaction(const FocusTarget& aFocusTarget,
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mIsInTransaction);
 
-  TimeStamp fwdTime;
-#if defined(ENABLE_FRAME_LATENCY_LOG)
-  fwdTime = TimeStamp::Now();
-#endif
+  TimeStamp fwdTime = TimeStamp::Now();
 
   nsTArray<OpUpdateResource> resourceUpdates;
   nsTArray<RefCountedShmem> smallShmems;

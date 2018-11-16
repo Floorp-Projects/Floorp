@@ -172,9 +172,14 @@ public:
                                 const bool aIsFirstPaint,
                                 const bool aUseForTelemetry = true);
   TransactionId LastPendingTransactionId();
-  TransactionId FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, const TimeStamp& aEndTime,
+  TransactionId FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch,
+                                            const TimeStamp& aCompositeStartTime,
+                                            const TimeStamp& aRenderStartTime,
+                                            const TimeStamp& aEndTime,
                                             UiCompositorControllerParent* aUiController,
-                                            wr::RendererStats* aStats = nullptr);
+                                            wr::RendererStats* aStats = nullptr,
+                                            nsTArray<FrameStats>* aOutputStats = nullptr);
+  void NotifySceneBuiltForEpoch(const wr::Epoch& aEpoch, const TimeStamp& aEndTime);
 
   TextureFactoryIdentifier GetTextureFactoryIdentifier();
 
@@ -314,6 +319,7 @@ private:
       , mTxnStartTime(aTxnStartTime)
       , mTxnURL(aTxnURL)
       , mFwdTime(aFwdTime)
+      , mSkippedComposites(0)
       , mContainsSVGGroup(aContainsSVGGroup)
       , mIsFirstPaint(aIsFirstPaint)
       , mUseForTelemetry(aUseForTelemetry)
@@ -324,6 +330,8 @@ private:
     TimeStamp mTxnStartTime;
     nsCString mTxnURL;
     TimeStamp mFwdTime;
+    TimeStamp mSceneBuiltTime;
+    uint32_t mSkippedComposites;
     bool mContainsSVGGroup;
     bool mIsFirstPaint;
     bool mUseForTelemetry;
@@ -363,7 +371,7 @@ private:
   LayersObserverEpoch mChildLayersObserverEpoch;
   LayersObserverEpoch mParentLayersObserverEpoch;
 
-  std::queue<PendingTransactionId> mPendingTransactionIds;
+  std::deque<PendingTransactionId> mPendingTransactionIds;
   std::queue<CompositorAnimationIdsForEpoch> mCompositorAnimationsToDelete;
   wr::Epoch mWrEpoch;
   wr::IdNamespace mIdNamespace;

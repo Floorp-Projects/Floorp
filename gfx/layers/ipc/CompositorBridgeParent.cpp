@@ -765,7 +765,7 @@ CompositorBridgeParent::PauseComposition()
     } else if (mWrBridge) {
       mWrBridge->Pause();
       NotifyPipelineRendered(mWrBridge->PipelineId(), mWrBridge->GetCurrentEpoch(),
-                             now, now);
+                             now, now, now);
     }
   }
 
@@ -1849,7 +1849,7 @@ CompositorBridgeParent::RecvAdoptChild(const LayersId& child)
                                    mWrBridge->GetTextureFactoryIdentifier());
     // Pretend we composited, since parent CompositorBridgeParent was replaced.
     TimeStamp now = TimeStamp::Now();
-    NotifyPipelineRendered(childWrBridge->PipelineId(), newEpoch, now, now);
+    NotifyPipelineRendered(childWrBridge->PipelineId(), newEpoch, now, now, now);
   }
 
   if (oldApzUpdater) {
@@ -2209,12 +2209,15 @@ void
 CompositorBridgeParent::NotifyPipelineRendered(const wr::PipelineId& aPipelineId,
                                                const wr::Epoch& aEpoch,
                                                TimeStamp& aCompositeStart,
+                                               TimeStamp& aRenderStart,
                                                TimeStamp& aCompositeEnd,
                                                wr::RendererStats* aStats)
 {
   if (!mWrBridge || !mAsyncImageManager) {
     return;
   }
+
+  nsTArray<FrameStats> stats;
 
   RefPtr<UiCompositorControllerParent> uiController =
     UiCompositorControllerParent::GetFromRootLayerTreeId(mRootLayerTreeID);
@@ -2223,7 +2226,7 @@ CompositorBridgeParent::NotifyPipelineRendered(const wr::PipelineId& aPipelineId
     mWrBridge->RemoveEpochDataPriorTo(aEpoch);
 
     if (!mPaused) {
-      TransactionId transactionId = mWrBridge->FlushTransactionIdsForEpoch(aEpoch, aCompositeEnd, uiController);
+      TransactionId transactionId = mWrBridge->FlushTransactionIdsForEpoch(aEpoch, aCompositeStart, aRenderStart, aCompositeEnd, uiController);
       Unused << SendDidComposite(LayersId{0}, transactionId, aCompositeStart, aCompositeEnd);
 
       nsTArray<ImageCompositeNotificationInfo> notifications;
@@ -2240,9 +2243,13 @@ CompositorBridgeParent::NotifyPipelineRendered(const wr::PipelineId& aPipelineId
       MOZ_ASSERT(!wrBridge->IsRootWebRenderBridgeParent());
       wrBridge->RemoveEpochDataPriorTo(aEpoch);
       if (!mPaused) {
-        TransactionId transactionId = wrBridge->FlushTransactionIdsForEpoch(aEpoch, aCompositeEnd, uiController, aStats);
+        TransactionId transactionId = wrBridge->FlushTransactionIdsForEpoch(aEpoch, aCompositeStart, aRenderStart, aCompositeEnd, uiController, aStats, &stats);
         Unused << wrBridge->GetCompositorBridge()->SendDidComposite(wrBridge->GetLayersId(), transactionId, aCompositeStart, aCompositeEnd);
       }
+  }
+
+  if (!stats.IsEmpty()) {
+    Unused << SendNotifyFrameStats(stats);
   }
 }
 
