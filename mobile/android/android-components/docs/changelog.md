@@ -14,6 +14,7 @@ permalink: /changelog/
   * Android (SDK: 27, Support Libraries: 27.1.1)
   * Kotlin (Stdlib: 1.3.0, Coroutines: 1.0.1)
   * GeckoView (Nightly: **65.0.20181116100120** 🔺, Beta: 64.0.20181022150107, Release: 63.0.20181018182531)
+  * Mozilla App Services (FxA: **0.10.0**, Sync Logins: **0.10.0**, Places: **0.10.0**)
 
 * **lib-crash**
   * The state of the "Send crash report" checkbox is now getting saved and restored once the dialog is shown again. 
