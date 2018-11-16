@@ -126,11 +126,14 @@ add_task(async function test_show_field_specific_error_on_addresschange() {
       // check errors and make corrections
       let {shippingAddressErrors} = PTU.Details.fieldSpecificErrors;
       is(content.document.querySelectorAll("address-form .error-text:not(:empty)").length,
-         Object.keys(shippingAddressErrors).length,
-         "Each error should be presented");
+         Object.keys(shippingAddressErrors).length - 1,
+         "Each error should be presented, but only one of region and regionCode are displayed");
       let errorFieldMap =
         Cu.waiveXrays(content.document.querySelector("address-form"))._errorFieldMap;
       for (let [errorName, errorValue] of Object.entries(shippingAddressErrors)) {
+        if (errorName == "region" || errorName == "regionCode") {
+          errorValue = shippingAddressErrors.regionCode;
+        }
         let fieldSelector = errorFieldMap[errorName];
         let containerSelector = fieldSelector + "-container";
         let container = content.document.querySelector(containerSelector);

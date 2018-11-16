@@ -79,19 +79,24 @@ var PaymentDialogUtils = {
       };
     }
 
+    let fieldsOrder = [
+      {fieldId: "name", newLine: true},
+      {fieldId: "street-address", newLine: true},
+      {fieldId: "address-level2"},
+      {fieldId: "address-level1"},
+      {fieldId: "postal-code"},
+      {fieldId: "organization"},
+    ];
+    if (country == "BR") {
+      fieldsOrder.splice(2, 0, {fieldId: "address-level3"});
+    }
+
     return {
       addressLevel3Label: "suburb",
       addressLevel2Label: "city",
       addressLevel1Label: country == "US" ? "state" : "province",
       postalCodeLabel: country == "US" ? "zip" : "postalCode",
-      fieldsOrder: [
-        {fieldId: "name", newLine: true},
-        {fieldId: "street-address", newLine: true},
-        {fieldId: "address-level2"},
-        {fieldId: "address-level1"},
-        {fieldId: "postal-code"},
-        {fieldId: "organization"},
-      ],
+      fieldsOrder,
       // The following values come from addressReferences.js and should not be changed.
       /* eslint-disable-next-line max-len */
       postalCodePattern: country == "US" ? "(\\d{5})(?:[ \\-](\\d{4}))?" : "[ABCEGHJKLMNPRSTVXY]\\d[ABCEGHJ-NPRSTV-Z] ?\\d[ABCEGHJ-NPRSTV-Z]\\d",
