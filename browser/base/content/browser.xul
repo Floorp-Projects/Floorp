@@ -788,11 +788,14 @@ xmlns="http://www.w3.org/1999/xhtml"
           </hbox>
         </vbox>
 
+#ifndef XP_MACOSX
         <button class="accessibility-indicator titlebar-item"  tooltiptext="&accessibilityIndicator.tooltip;"
                 ordinal="1000"
                 aria-live="polite" skipintoolbarset="true"/>
         <hbox class="private-browsing-indicator titlebar-item" skipintoolbarset="true"
               ordinal="1000"/>
+#endif
+
 #include titlebar-items.inc.xul
 
 #ifdef XP_MACOSX
