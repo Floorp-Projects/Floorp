@@ -51,4 +51,6 @@ class GeckoEngineView @JvmOverloads constructor(
             currentGeckoView.session = internalSession.geckoSession
         }
     }
+
+    override fun canScrollVerticallyDown() = true // waiting for this issue https://bugzilla.mozilla.org/show_bug.cgi?id=1507569
 }

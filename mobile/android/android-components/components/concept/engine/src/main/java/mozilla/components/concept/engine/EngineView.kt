@@ -59,6 +59,12 @@ interface EngineView {
      * implementations for details.
      */
     fun onDestroy() = Unit
+
+    /**
+    * Check if [EngineView] can be scrolled vertically down.
+    * true if can and false otherwise.
+    */
+    fun canScrollVerticallyDown(): Boolean = true
 }
 
 /**

@@ -399,6 +399,8 @@ class SystemEngineView @JvmOverloads constructor(
         }
     }
 
+    override fun canScrollVerticallyDown() = currentWebView.canScrollVertically(1)
+
     companion object {
         @Volatile
         internal var URL_MATCHER: UrlMatcher? = null
