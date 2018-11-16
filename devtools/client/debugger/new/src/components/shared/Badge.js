@@ -11,7 +11,7 @@ type Props = {
 };
 
 const Badge = ({ children }: Props) => (
-  <div className="badge text-white text-center">{children}</div>
+  <span className="badge text-white text-center">{children}</span>
 );
 
 export default Badge;

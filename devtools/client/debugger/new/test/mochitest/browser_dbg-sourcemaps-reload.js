@@ -18,8 +18,7 @@ async function waitForBreakpoint(dbg, location) {
 }
 
 function getBreakpoints(dbg) {
-  const breakpoints = dbg.selectors.getBreakpoints(dbg.getState());
-  return breakpoints.valueSeq().toJS();
+  return dbg.selectors.getBreakpointsList(dbg.getState());
 }
 
 add_task(async function() {

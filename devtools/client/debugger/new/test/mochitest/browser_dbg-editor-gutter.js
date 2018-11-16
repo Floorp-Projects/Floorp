@@ -28,7 +28,7 @@ function assertEditorBreakpoint(dbg, line, shouldExist) {
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
   const {
-    selectors: { getBreakpoints, getBreakpoint },
+    selectors: { getBreakpoint, getBreakpointCount },
     getState
   } = dbg;
   const source = findSource(dbg, "simple1.js");
@@ -38,13 +38,13 @@ add_task(async function() {
   // Make sure that clicking the gutter creates a breakpoint icon.
   clickGutter(dbg, 4);
   await waitForDispatch(dbg, "ADD_BREAKPOINT");
-  is(getBreakpoints(getState()).size, 1, "One breakpoint exists");
+  is(getBreakpointCount(getState()), 1, "One breakpoint exists");
   assertEditorBreakpoint(dbg, 4, true);
 
   // Make sure clicking at the same place removes the icon.
   clickGutter(dbg, 4);
   await waitForDispatch(dbg, "REMOVE_BREAKPOINT");
-  is(getBreakpoints(getState()).size, 0, "No breakpoints exist");
+  is(getBreakpointCount(getState()), 0, "No breakpoints exist");
   assertEditorBreakpoint(dbg, 4, false);
 
   // Ensure that clicking the gutter removes all breakpoints on a given line
@@ -52,6 +52,6 @@ add_task(async function() {
   await addBreakpoint(dbg, source, 4, 1);
   await addBreakpoint(dbg, source, 4, 2);
   clickGutter(dbg, 4);
-  await waitForState(dbg, state => dbg.selectors.getBreakpoints(state).size == 0);
+  await waitForState(dbg, state => dbg.selectors.getBreakpointCount(state) === 0);
   assertEditorBreakpoint(dbg, 4, false);
 });
