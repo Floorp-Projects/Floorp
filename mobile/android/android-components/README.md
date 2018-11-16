@@ -114,8 +114,6 @@ _Combined components to implement feature-specific use cases._
 
 * 🔴 [**Toolbar**](components/feature/toolbar/README.md) - A component that connects a (concept) toolbar implementation with the browser session module.
 
-* 🔴 [**Scroll**](components/feature/scroll/README.md) - A component coordinates scroll behavior with an `EngineView`.
-
 ## UI
 
 _Generic low-level UI components for building apps._
