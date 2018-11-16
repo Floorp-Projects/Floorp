@@ -767,7 +767,7 @@ Chunk::allocate(JSRuntime* rt)
     if (!chunk) {
         return nullptr;
     }
-    rt->gc.stats().count(gcstats::STAT_NEW_CHUNK);
+    rt->gc.stats().count(gcstats::COUNT_NEW_CHUNK);
     return chunk;
 }
 
