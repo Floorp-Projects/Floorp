@@ -4179,7 +4179,7 @@ nsNavHistoryResult::AddObserver(nsINavHistoryResultObserver* aObserver,
                                 bool aOwnsWeak)
 {
   NS_ENSURE_ARG(aObserver);
-  nsresult rv = mObservers.AppendWeakElement(aObserver, aOwnsWeak);
+  nsresult rv = mObservers.AppendWeakElementUnlessExists(aObserver, aOwnsWeak);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aObserver->SetResult(this);

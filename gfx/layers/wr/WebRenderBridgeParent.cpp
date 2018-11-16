@@ -197,6 +197,52 @@ protected:
   bool mIsActive;
 };
 
+class SceneBuiltNotification: public wr::NotificationHandler {
+public:
+  explicit SceneBuiltNotification(TimeStamp aTxnStartTime)
+  : mTxnStartTime(aTxnStartTime)
+  {}
+
+  virtual void Notify(wr::Checkpoint) override {
+    auto startTime = this->mTxnStartTime;
+    CompositorThreadHolder::Loop()->PostTask(
+      NS_NewRunnableFunction("SceneBuiltNotificationRunnable", [startTime]() {
+        auto endTime = TimeStamp::Now();
+#ifdef MOZ_GECKO_PROFILER
+        if (profiler_is_active()) {
+          class ContentFullPaintPayload : public ProfilerMarkerPayload
+          {
+          public:
+            ContentFullPaintPayload(const mozilla::TimeStamp& aStartTime,
+                                    const mozilla::TimeStamp& aEndTime)
+              : ProfilerMarkerPayload(aStartTime, aEndTime)
+            {
+            }
+            virtual void StreamPayload(SpliceableJSONWriter& aWriter,
+                                       const TimeStamp& aProcessStartTime,
+                                       UniqueStacks& aUniqueStacks) override
+            {
+              StreamCommonProps("CONTENT_FULL_PAINT_TIME",
+                                aWriter,
+                                aProcessStartTime,
+                                aUniqueStacks);
+            }
+          };
+
+          profiler_add_marker_for_thread(profiler_current_thread_id(),
+                                         "CONTENT_FULL_PAINT_TIME",
+                                         MakeUnique<ContentFullPaintPayload>(startTime, endTime));
+        }
+#endif
+        Telemetry::Accumulate(Telemetry::CONTENT_FULL_PAINT_TIME,
+                              static_cast<uint32_t>((endTime - startTime).ToMilliseconds()));
+      }));
+  }
+protected:
+  TimeStamp mTxnStartTime;
+};
+
+
 class WebRenderBridgeParent::ScheduleSharedSurfaceRelease final
   : public wr::NotificationHandler
 {
@@ -935,6 +981,13 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
         )
       );
     }
+
+    txn.Notify(
+      wr::Checkpoint::SceneBuilt,
+      MakeUnique<SceneBuiltNotification>(
+        aTxnStartTime
+      )
+    );
 
     mApi->SendTransaction(txn);
 

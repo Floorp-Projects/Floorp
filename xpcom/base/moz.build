@@ -80,6 +80,7 @@ EXPORTS += [
     'nsISupportsImpl.h',
     'nsISupportsUtils.h',
     'nsIWeakReferenceUtils.h',
+    'nsMaybeWeakPtr.h',
     'nsMemory.h',
     'nsObjCExceptions.h',
     'nsQueryObject.h',

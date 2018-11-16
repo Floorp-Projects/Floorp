@@ -13,6 +13,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "jsnum.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "js/Wrapper.h"
@@ -108,7 +109,7 @@ JS::Compartment::wrap(JSContext* cx, JS::MutableHandleValue vp)
 namespace js {
 namespace detail {
 
-template<class T>
+template <class T>
 bool
 UnwrapThisSlowPath(JSContext* cx,
                    HandleValue val,
@@ -141,6 +142,44 @@ UnwrapThisSlowPath(JSContext* cx,
     return true;
 }
 
+template <class T>
+inline bool
+UnwrapAndTypeCheckArgumentSlowPath(JSContext* cx,
+                                   CallArgs& args,
+                                   const char* methodName,
+                                   int argIndex,
+                                   MutableHandle<T*> unwrappedResult)
+{
+    Value val = args.get(argIndex);
+    JSObject* obj = nullptr;
+    if (val.isObject()) {
+        obj = &val.toObject();
+        if (IsWrapper(obj)) {
+            obj = CheckedUnwrap(obj);
+            if (!obj) {
+                ReportAccessDenied(cx);
+                return false;
+            }
+        }
+    }
+
+    if (!obj || !obj->is<T>()) {
+        ToCStringBuf cbuf;
+        if (char* numStr = NumberToCString(cx, &cbuf, argIndex + 1, 10)) {
+            JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                                       JSMSG_WRONG_TYPE_ARG,
+                                       numStr,
+                                       methodName,
+                                       T::class_.name,
+                                       InformalValueTypeName(val));
+        }
+        return false;
+    }
+
+    unwrappedResult.set(&obj->as<T>());
+    return true;
+}
+
 } // namespace detail
 
 /**
@@ -158,7 +197,7 @@ UnwrapThisSlowPath(JSContext* cx,
  * example, `Array.prototype.join` is generic; it can be applied to anything
  * with a `.length` property and elements.
  */
-template<class T>
+template <class T>
 inline bool
 UnwrapThisForNonGenericMethod(JSContext* cx,
                               HandleValue val,
@@ -180,7 +219,7 @@ UnwrapThisForNonGenericMethod(JSContext* cx,
 /**
  * Extra signature so callers don't have to specify T explicitly.
  */
-template<class T>
+template <class T>
 inline bool
 UnwrapThisForNonGenericMethod(JSContext* cx,
                               HandleValue val,
@@ -189,6 +228,41 @@ UnwrapThisForNonGenericMethod(JSContext* cx,
                               Rooted<T*>* out)
 {
     return UnwrapThisForNonGenericMethod(cx, val, className, methodName, MutableHandle<T*>(out));
+}
+
+template <class T>
+inline bool
+UnwrapAndTypeCheckArgument(JSContext* cx,
+                           CallArgs& args,
+                           const char* methodName,
+                           int argIndex,
+                           MutableHandle<T*> unwrappedResult)
+{
+    static_assert(!std::is_convertible<T*, Wrapper*>::value,
+                  "T can't be a Wrapper type; this function discards wrappers");
+
+    Value val = args.get(argIndex);
+    if (val.isObject() && val.toObject().is<T>()) {
+        unwrappedResult.set(&val.toObject().as<T>());
+        return true;
+    }
+    return detail::UnwrapAndTypeCheckArgumentSlowPath(cx, args, methodName, argIndex,
+                                                      unwrappedResult);
+}
+
+/**
+ * Extra signature so callers don't have to specify T explicitly.
+ */
+template <class T>
+inline bool
+UnwrapAndTypeCheckArgument(JSContext* cx,
+                           CallArgs& args,
+                           const char* methodName,
+                           int argIndex,
+                           Rooted<T*>* unwrappedResult)
+{
+    return UnwrapAndTypeCheckArgument(cx, args, methodName, argIndex,
+                                      MutableHandle<T*>(unwrappedResult));
 }
 
 /**
