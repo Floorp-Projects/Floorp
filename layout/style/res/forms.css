@@ -877,39 +877,13 @@ meter {
 input[type=range] {
   -moz-appearance: range;
   display: inline-block;
-  inline-size: 12em;
-  block-size: 1.3em;
-  margin-inline-start: 0.7em;
-  margin-inline-end: 0.7em;
-  margin-block-start: 0;
-  margin-block-end: 0;
+  margin: 2px;
   /* Override some rules that apply on all input types: */
   cursor: default;
-  background: none;
-  border: none;
+  padding: unset;
+  border: unset;
   /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
   -moz-user-select: none ! important;
-}
-
-input[type=range][orient=block] {
-  inline-size: 1.3em;
-  block-size: 12em;
-  margin-inline-start: 0;
-  margin-inline-end: 0;
-  margin-block-start: 0.7em;
-  margin-block-end: 0.7em;
-}
-
-input[type=range][orient=horizontal] {
-  width: 12em;
-  height: 1.3em;
-  margin: 0 0.7em;
-}
-
-input[type=range][orient=vertical] {
-  width: 1.3em;
-  height: 12em;
-  margin: 0.7em 0;
 }
 
 /**
@@ -933,30 +907,14 @@ input[type=range]::-moz-focus-outer {
  */
 input[type=range]::-moz-range-track {
   /* Prevent styling that would change the type of frame we construct. */
-  display: inline-block !important;
+  display: block !important;
   float: none !important;
   position: static !important;
-  border: none;
-  background-color: #999;
-  inline-size: 100%;
+  writing-mode: unset !important;
+  direction: unset !important;
   block-size: 0.2em;
   /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
   -moz-user-select: none ! important;
-}
-
-input[type=range][orient=block]::-moz-range-track {
-  inline-size: 0.2em;
-  block-size: 100%;
-}
-
-input[type=range][orient=horizontal]::-moz-range-track {
-  width: 100%;
-  height: 0.2em;
-}
-
-input[type=range][orient=vertical]::-moz-range-track {
-  width: 0.2em;
-  height: 100%;
 }
 
 /**
@@ -969,9 +927,11 @@ input[type=range][orient=vertical]::-moz-range-track {
  */
 input[type=range]::-moz-range-progress {
   /* Prevent styling that would change the type of frame we construct. */
-  display: inline-block !important;
+  display: block !important;
   float: none !important;
   position: static !important;
+  writing-mode: unset !important;
+  direction: unset !important;
   /* Since one of width/height will be ignored, this just sets the "other"
      dimension.
    */
@@ -993,9 +953,11 @@ input[type=range]::-moz-range-thumb {
    */
   -moz-appearance: range-thumb !important;
   /* Prevent styling that would change the type of frame we construct. */
-  display: inline-block !important;
+  display: block !important;
   float: none !important;
   position: static !important;
+  writing-mode: unset !important;
+  direction: unset !important;
   width: 1em;
   height: 1em;
   border: 0.1em solid #999;

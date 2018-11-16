@@ -1291,6 +1291,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
         // xpc::ErrorReport::LogToConsoleWithStack needs this to print errors
         // to stderr.
         Preferences::SetBool("browser.dom.window.dump.enabled", true);
+        Preferences::SetBool("devtools.console.stdout.chrome", true);
 
         AutoJSAPI jsapi;
         jsapi.Init();

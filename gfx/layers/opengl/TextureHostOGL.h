@@ -26,6 +26,7 @@
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/TextureHost.h"  // for TextureHost, etc
 #include "mozilla/mozalloc.h"           // for operator delete, etc
+#include "mozilla/webrender/RenderThread.h"
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsISupportsImpl.h"            // for TextureImage::Release, etc
@@ -473,6 +474,19 @@ public:
   virtual gfx::IntSize GetSize() const override { return mSize; }
 
   virtual const char* Name() override { return "SurfaceTextureHost"; }
+
+  virtual void CreateRenderTexture(const wr::ExternalImageId& aExternalImageId) override;
+
+  virtual void PushResourceUpdates(wr::TransactionBuilder& aResources,
+                                   ResourceUpdateOp aOp,
+                                   const Range<wr::ImageKey>& aImageKeys,
+                                   const wr::ExternalImageId& aExtID) override;
+
+  virtual void PushDisplayItems(wr::DisplayListBuilder& aBuilder,
+                                const wr::LayoutRect& aBounds,
+                                const wr::LayoutRect& aClip,
+                                wr::ImageRendering aFilter,
+                                const Range<wr::ImageKey>& aImageKeys) override;
 
 protected:
   bool EnsureAttached();
