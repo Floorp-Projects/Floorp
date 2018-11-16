@@ -56,8 +56,8 @@ object Dependencies {
     const val support_constraintlayout = "com.android.support.constraint:constraint-layout:${Versions.constraint_layout}"
     const val support_compat = "com.android.support:support-compat:${Versions.support_libraries}"
 
-    const val arch_workmanager = "android.arch.work:work-runtime:${Versions.workmanager}"
     const val arch_lifecycle = "android.arch.lifecycle:extensions:${Versions.lifecycle}"
+    const val arch_workmanager = "android.arch.work:work-runtime:${Versions.workmanager}"
 
     const val tools_dokka = "org.jetbrains.dokka:dokka-android-gradle-plugin:${Versions.dokka}"
     const val tools_androidgradle = "com.android.tools.build:gradle:${Versions.android_gradle_plugin}"

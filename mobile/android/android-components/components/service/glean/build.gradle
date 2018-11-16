@@ -26,6 +26,7 @@ android {
 dependencies {
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
+    implementation Dependencies.arch_lifecycle
 
     implementation project(':support-ktx')
     implementation project(':support-base')

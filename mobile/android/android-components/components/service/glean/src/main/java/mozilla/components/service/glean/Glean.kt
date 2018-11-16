@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean
 
+import android.arch.lifecycle.ProcessLifecycleOwner
 import android.content.Context
 import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +19,7 @@ import mozilla.components.service.glean.firstrun.FileFirstRunDetector
 import mozilla.components.service.glean.metrics.GleanInternalMetrics
 import mozilla.components.service.glean.net.HttpPingUploader
 import mozilla.components.service.glean.ping.PingMaker
+import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
 import mozilla.components.support.base.log.logger.Logger
@@ -55,6 +57,8 @@ object Glean {
     // `internal` so this can be modified for testing
     internal lateinit var httpPingUploader: HttpPingUploader
 
+    private val gleanLifecycleObserver by lazy { GleanLifecycleObserver() }
+
     private var initialized = false
     private var metricsEnabled = true
 
@@ -65,8 +69,15 @@ object Glean {
 
     /**
      * Initialize glean.
+     *
+     * A LifecycleObserver will be added to send pings when the application goes
+     * into the background.
+     *
+     * @param applicationContext [Context] to access application features, such
+     * as shared preferences
+     * @param configuration A Glean [Configuration] object with global settings.
      */
-    fun initialize(applicationContext: Context, configuration: Configuration) {
+    fun initialize(applicationContext: Context, configuration: Configuration = Configuration()) {
         storageEngineManager = StorageEngineManager(applicationContext = applicationContext)
         pingMaker = PingMaker(storageEngineManager)
         this.configuration = configuration
@@ -74,6 +85,8 @@ object Glean {
         initialized = true
 
         initializeCoreMetrics(applicationContext)
+
+        ProcessLifecycleOwner.get().lifecycle.addObserver(gleanLifecycleObserver)
     }
 
     /**

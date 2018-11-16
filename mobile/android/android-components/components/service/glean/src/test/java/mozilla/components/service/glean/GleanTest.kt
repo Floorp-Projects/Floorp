@@ -20,7 +20,6 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
 
-import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.HttpPingUploader
 import mozilla.components.service.glean.storages.EventsStorageEngine
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
@@ -36,8 +35,7 @@ class GleanTest {
     @Before
     fun setup() {
         Glean.initialize(
-            applicationContext = RuntimeEnvironment.application,
-            configuration = Configuration()
+            applicationContext = RuntimeEnvironment.application
         )
     }
 
@@ -173,8 +171,7 @@ class GleanTest {
 
         // Try to init Glean: it should not crash.
         Glean.initialize(
-            applicationContext = RuntimeEnvironment.application,
-            configuration = Configuration()
+            applicationContext = RuntimeEnvironment.application
         )
 
         // Clean up after this, so that other tests don't fail.
