@@ -412,6 +412,7 @@ nsAppShell::nsAppShell()
         if (jni::IsAvailable()) {
             GeckoThreadSupport::Init();
             GeckoAppShellSupport::Init();
+            mozilla::GeckoSystemStateListener::Init();
 
             // Set the corresponding state in GeckoThread.
             java::GeckoThread::SetState(java::GeckoThread::State::RUNNING());

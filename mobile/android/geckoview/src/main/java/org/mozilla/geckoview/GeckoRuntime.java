@@ -224,8 +224,6 @@ public final class GeckoRuntime implements Parcelable {
 
         // Initialize the system ClipboardManager by accessing it on the main thread.
         GeckoAppShell.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
-
-        GeckoSystemStateListener.getInstance().initialize(context);
         return true;
     }
 
