@@ -92,21 +92,21 @@ pub static mut CURRENT_FRAME_NUMBER: u32 = 0;
 
 #[cfg(feature = "headless")]
 pub struct HeadlessContext {
-    width: u32,
-    height: u32,
+    width: i32,
+    height: i32,
     _context: osmesa_sys::OSMesaContext,
     _buffer: Vec<u32>,
 }
 
 #[cfg(not(feature = "headless"))]
 pub struct HeadlessContext {
-    width: u32,
-    height: u32,
+    width: i32,
+    height: i32,
 }
 
 impl HeadlessContext {
     #[cfg(feature = "headless")]
-    fn new(width: u32, height: u32) -> Self {
+    fn new(width: i32, height: i32) -> Self {
         let mut attribs = Vec::new();
 
         attribs.push(osmesa_sys::OSMESA_PROFILE);
@@ -131,8 +131,8 @@ impl HeadlessContext {
                 context,
                 buffer.as_mut_ptr() as *mut _,
                 gl::UNSIGNED_BYTE,
-                width as i32,
-                height as i32,
+                width,
+                height,
             );
             assert!(ret != 0);
         };
@@ -146,7 +146,7 @@ impl HeadlessContext {
     }
 
     #[cfg(not(feature = "headless"))]
-    fn new(width: u32, height: u32) -> Self {
+    fn new(width: i32, height: i32) -> Self {
         HeadlessContext { width, height }
     }
 
@@ -179,18 +179,18 @@ impl WindowWrapper {
         }
     }
 
-    fn get_inner_size(&self) -> DeviceUintSize {
-        fn inner_size(window: &winit::Window) -> DeviceUintSize {
+    fn get_inner_size(&self) -> DeviceIntSize {
+        fn inner_size(window: &winit::Window) -> DeviceIntSize {
             let size = window
                 .get_inner_size()
                 .unwrap()
                 .to_physical(window.get_hidpi_factor());
-            DeviceUintSize::new(size.width as u32, size.height as u32)
+            DeviceIntSize::new(size.width as i32, size.height as i32)
         }
         match *self {
             WindowWrapper::Window(ref window, _) => inner_size(window.window()),
             WindowWrapper::Angle(ref window, ..) => inner_size(window),
-            WindowWrapper::Headless(ref context, _) => DeviceUintSize::new(context.width, context.height),
+            WindowWrapper::Headless(ref context, _) => DeviceIntSize::new(context.width, context.height),
         }
     }
 
@@ -202,7 +202,7 @@ impl WindowWrapper {
         }
     }
 
-    fn resize(&mut self, size: DeviceUintSize) {
+    fn resize(&mut self, size: DeviceIntSize) {
         match *self {
             WindowWrapper::Window(ref mut window, _) => {
                 window.set_inner_size(LogicalSize::new(size.width as f64, size.height as f64))
@@ -240,7 +240,7 @@ impl WindowWrapper {
 }
 
 fn make_window(
-    size: DeviceUintSize,
+    size: DeviceIntSize,
     dp_ratio: Option<f32>,
     vsync: bool,
     events_loop: &Option<winit::EventsLoop>,
@@ -411,20 +411,20 @@ fn main() {
     });
     let size = args.value_of("size")
         .map(|s| if s == "720p" {
-            DeviceUintSize::new(1280, 720)
+            DeviceIntSize::new(1280, 720)
         } else if s == "1080p" {
-            DeviceUintSize::new(1920, 1080)
+            DeviceIntSize::new(1920, 1080)
         } else if s == "4k" {
-            DeviceUintSize::new(3840, 2160)
+            DeviceIntSize::new(3840, 2160)
         } else {
             let x = s.find('x').expect(
                 "Size must be specified exactly as 720p, 1080p, 4k, or width x height",
             );
-            let w = s[0 .. x].parse::<u32>().expect("Invalid size width");
-            let h = s[x + 1 ..].parse::<u32>().expect("Invalid size height");
-            DeviceUintSize::new(w, h)
+            let w = s[0 .. x].parse::<i32>().expect("Invalid size width");
+            let h = s[x + 1 ..].parse::<i32>().expect("Invalid size height");
+            DeviceIntSize::new(w, h)
         })
-        .unwrap_or(DeviceUintSize::new(1920, 1080));
+        .unwrap_or(DeviceIntSize::new(1920, 1080));
     let zoom_factor = args.value_of("zoom").map(|z| z.parse::<f32>().unwrap());
     let chase_primitive = match args.value_of("chase") {
         Some(s) => {
@@ -528,7 +528,7 @@ fn main() {
 fn render<'a>(
     wrench: &mut Wrench,
     window: &mut WindowWrapper,
-    size: DeviceUintSize,
+    size: DeviceIntSize,
     events_loop: &mut Option<winit::EventsLoop>,
     subargs: &clap::ArgMatches<'a>,
 ) {
@@ -744,7 +744,7 @@ fn render<'a>(
     match *events_loop {
         None => {
             while body(wrench, winit::Event::Awakened) == winit::ControlFlow::Continue {}
-            let rect = DeviceUintRect::new(DeviceUintPoint::zero(), size);
+            let rect = DeviceIntRect::new(DeviceIntPoint::zero(), size);
             let pixels = wrench.renderer.read_pixels_rgba8(rect);
             save_flipped("screenshot.png", pixels, size);
         }

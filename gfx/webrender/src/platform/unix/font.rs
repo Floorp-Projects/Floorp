@@ -432,10 +432,10 @@ impl FontContext {
         let (mut left, mut top, mut width, mut height) = match format {
             FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP => {
                 unsafe { (
-                    (*slot).bitmap_left,
-                    (*slot).bitmap_top,
-                    (*slot).bitmap.width,
-                    (*slot).bitmap.rows,
+                    (*slot).bitmap_left as i32,
+                    (*slot).bitmap_top as i32,
+                    (*slot).bitmap.width as i32,
+                    (*slot).bitmap.rows as i32,
                 ) }
             }
             FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE => {
@@ -443,8 +443,8 @@ impl FontContext {
                 (
                     (cbox.xMin >> 6) as i32,
                     (cbox.yMax >> 6) as i32,
-                    ((cbox.xMax - cbox.xMin) >> 6) as u32,
-                    ((cbox.yMax - cbox.yMin) >> 6) as u32,
+                    ((cbox.xMax - cbox.xMin) >> 6) as i32,
+                    ((cbox.yMax - cbox.yMin) >> 6) as i32,
                 )
             }
             _ => return None,
@@ -458,8 +458,8 @@ impl FontContext {
                 let y0 = y1 - height as f32 * scale;
                 left = x0.round() as i32;
                 top = y1.round() as i32;
-                width = (x1.ceil() - x0.floor()) as u32;
-                height = (y1.ceil() - y0.floor()) as u32;
+                width = (x1.ceil() - x0.floor()) as i32;
+                height = (y1.ceil() - y0.floor()) as i32;
                 advance *= scale;
             }
             // An outline glyph's cbox would have already been transformed inside FT_Load_Glyph,
@@ -472,7 +472,7 @@ impl FontContext {
                         font.synthetic_italics.to_skew(),
                     );
                     left += skew_min as i32;
-                    width += (skew_max - skew_min) as u32;
+                    width += (skew_max - skew_min) as i32;
                 }
                 if font.flags.contains(FontInstanceFlags::TRANSPOSE) {
                     mem::swap(&mut width, &mut height);
@@ -804,8 +804,8 @@ impl FontContext {
         GlyphRasterResult::Bitmap(RasterizedGlyph {
             left: left as f32,
             top: top as f32,
-            width: actual_width as u32,
-            height: actual_height as u32,
+            width: actual_width as i32,
+            height: actual_height as i32,
             scale,
             format: glyph_format,
             bytes: final_buffer,

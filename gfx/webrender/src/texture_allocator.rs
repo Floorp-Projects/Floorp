@@ -2,17 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize};
+use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use std::slice::Iter;
 use util;
 
 /// The minimum number of pixels on each side that we require for rects to be classified as
 /// "medium" within the free list.
-const MINIMUM_MEDIUM_RECT_SIZE: u32 = 16;
+const MINIMUM_MEDIUM_RECT_SIZE: i32 = 16;
 
 /// The minimum number of pixels on each side that we require for rects to be classified as
 /// "large" within the free list.
-const MINIMUM_LARGE_RECT_SIZE: u32 = 32;
+const MINIMUM_LARGE_RECT_SIZE: i32 = 32;
 
 /// A texture allocator using the guillotine algorithm with the rectangle merge improvement. See
 /// sections 2.2 and 2.2.5 in "A Thousand Ways to Pack the Bin - A Practical Approach to Two-
@@ -25,14 +25,14 @@ const MINIMUM_LARGE_RECT_SIZE: u32 = 32;
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GuillotineAllocator {
-    texture_size: DeviceUintSize,
+    texture_size: DeviceIntSize,
     free_list: FreeRectList,
     allocations: u32,
     dirty: bool,
 }
 
 impl GuillotineAllocator {
-    pub fn new(texture_size: DeviceUintSize) -> GuillotineAllocator {
+    pub fn new(texture_size: DeviceIntSize) -> GuillotineAllocator {
         let mut page = GuillotineAllocator {
             texture_size,
             free_list: FreeRectList::new(),
@@ -46,7 +46,7 @@ impl GuillotineAllocator {
     fn find_index_of_best_rect_in_bin(
         &self,
         bin: FreeListBin,
-        requested_dimensions: &DeviceUintSize,
+        requested_dimensions: &DeviceIntSize,
     ) -> Option<FreeListIndex> {
         let mut smallest_index_and_area = None;
         for (candidate_index, candidate_rect) in self.free_list.iter(bin).enumerate() {
@@ -66,7 +66,7 @@ impl GuillotineAllocator {
     /// in terms of area (Best-Area-Fit, BAF).
     fn find_index_of_best_rect(
         &self,
-        requested_dimensions: &DeviceUintSize,
+        requested_dimensions: &DeviceIntSize,
     ) -> Option<FreeListIndex> {
         let bin = FreeListBin::for_size(requested_dimensions);
         for &target_bin in &[FreeListBin::Small, FreeListBin::Medium, FreeListBin::Large] {
@@ -81,9 +81,9 @@ impl GuillotineAllocator {
         None
     }
 
-    pub fn allocate(&mut self, requested_dimensions: &DeviceUintSize) -> Option<DeviceUintPoint> {
+    pub fn allocate(&mut self, requested_dimensions: &DeviceIntSize) -> Option<DeviceIntPoint> {
         if requested_dimensions.width == 0 || requested_dimensions.height == 0 {
-            return Some(DeviceUintPoint::new(0, 0));
+            return Some(DeviceIntPoint::new(0, 0));
         }
         let index = match self.find_index_of_best_rect(requested_dimensions) {
             None => return None,
@@ -93,22 +93,22 @@ impl GuillotineAllocator {
         // Remove the rect from the free list and decide how to guillotine it. We choose the split
         // that results in the single largest area (Min Area Split Rule, MINAS).
         let chosen_rect = self.free_list.remove(index);
-        let candidate_free_rect_to_right = DeviceUintRect::new(
-            DeviceUintPoint::new(
+        let candidate_free_rect_to_right = DeviceIntRect::new(
+            DeviceIntPoint::new(
                 chosen_rect.origin.x + requested_dimensions.width,
                 chosen_rect.origin.y,
             ),
-            DeviceUintSize::new(
+            DeviceIntSize::new(
                 chosen_rect.size.width - requested_dimensions.width,
                 requested_dimensions.height,
             ),
         );
-        let candidate_free_rect_to_bottom = DeviceUintRect::new(
-            DeviceUintPoint::new(
+        let candidate_free_rect_to_bottom = DeviceIntRect::new(
+            DeviceIntPoint::new(
                 chosen_rect.origin.x,
                 chosen_rect.origin.y + requested_dimensions.height,
             ),
-            DeviceUintSize::new(
+            DeviceIntSize::new(
                 requested_dimensions.width,
                 chosen_rect.size.height - requested_dimensions.height,
             ),
@@ -122,9 +122,9 @@ impl GuillotineAllocator {
         let new_free_rect_to_right;
         let new_free_rect_to_bottom;
         if candidate_free_rect_to_right_area > candidate_free_rect_to_bottom_area {
-            new_free_rect_to_right = DeviceUintRect::new(
+            new_free_rect_to_right = DeviceIntRect::new(
                 candidate_free_rect_to_right.origin,
-                DeviceUintSize::new(
+                DeviceIntSize::new(
                     candidate_free_rect_to_right.size.width,
                     chosen_rect.size.height,
                 ),
@@ -132,9 +132,9 @@ impl GuillotineAllocator {
             new_free_rect_to_bottom = candidate_free_rect_to_bottom
         } else {
             new_free_rect_to_right = candidate_free_rect_to_right;
-            new_free_rect_to_bottom = DeviceUintRect::new(
+            new_free_rect_to_bottom = DeviceIntRect::new(
                 candidate_free_rect_to_bottom.origin,
-                DeviceUintSize::new(
+                DeviceIntSize::new(
                     chosen_rect.size.width,
                     candidate_free_rect_to_bottom.size.height,
                 ),
@@ -161,8 +161,8 @@ impl GuillotineAllocator {
 
     fn clear(&mut self) {
         self.free_list = FreeRectList::new();
-        self.free_list.push(&DeviceUintRect::new(
-            DeviceUintPoint::zero(),
+        self.free_list.push(&DeviceIntRect::new(
+            DeviceIntPoint::zero(),
             self.texture_size,
         ));
         self.allocations = 0;
@@ -175,9 +175,9 @@ impl GuillotineAllocator {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct FreeRectList {
-    small: Vec<DeviceUintRect>,
-    medium: Vec<DeviceUintRect>,
-    large: Vec<DeviceUintRect>,
+    small: Vec<DeviceIntRect>,
+    medium: Vec<DeviceIntRect>,
+    large: Vec<DeviceIntRect>,
 }
 
 impl FreeRectList {
@@ -189,7 +189,7 @@ impl FreeRectList {
         }
     }
 
-    fn push(&mut self, rect: &DeviceUintRect) {
+    fn push(&mut self, rect: &DeviceIntRect) {
         match FreeListBin::for_size(&rect.size) {
             FreeListBin::Small => self.small.push(*rect),
             FreeListBin::Medium => self.medium.push(*rect),
@@ -197,7 +197,7 @@ impl FreeRectList {
         }
     }
 
-    fn remove(&mut self, index: FreeListIndex) -> DeviceUintRect {
+    fn remove(&mut self, index: FreeListIndex) -> DeviceIntRect {
         match index.0 {
             FreeListBin::Small => self.small.swap_remove(index.1),
             FreeListBin::Medium => self.medium.swap_remove(index.1),
@@ -205,7 +205,7 @@ impl FreeRectList {
         }
     }
 
-    fn iter(&self, bin: FreeListBin) -> Iter<DeviceUintRect> {
+    fn iter(&self, bin: FreeListBin) -> Iter<DeviceIntRect> {
         match bin {
             FreeListBin::Small => self.small.iter(),
             FreeListBin::Medium => self.medium.iter(),
@@ -225,7 +225,7 @@ enum FreeListBin {
 }
 
 impl FreeListBin {
-    fn for_size(size: &DeviceUintSize) -> FreeListBin {
+    fn for_size(size: &DeviceIntSize) -> FreeListBin {
         if size.width >= MINIMUM_LARGE_RECT_SIZE && size.height >= MINIMUM_LARGE_RECT_SIZE {
             FreeListBin::Large
         } else if size.width >= MINIMUM_MEDIUM_RECT_SIZE && size.height >= MINIMUM_MEDIUM_RECT_SIZE
@@ -242,8 +242,8 @@ trait FitsInside {
     fn fits_inside(&self, other: &Self) -> bool;
 }
 
-impl FitsInside for DeviceUintSize {
-    fn fits_inside(&self, other: &DeviceUintSize) -> bool {
+impl FitsInside for DeviceIntSize {
+    fn fits_inside(&self, other: &DeviceIntSize) -> bool {
         self.width <= other.width && self.height <= other.height
     }
 }

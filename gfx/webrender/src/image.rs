@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{TileOffset, TileRange, LayoutRect, LayoutSize, LayoutPoint};
-use api::{DeviceUintSize, DeviceUintRect};
+use api::{DeviceIntSize, DeviceIntRect};
 use euclid::{vec2, point2};
 use prim_store::EdgeAaSegmentMask;
 
@@ -156,10 +156,10 @@ pub struct Tile {
 }
 
 pub struct TileIterator {
-    current_x: u32,
-    x_count: u32,
-    current_y: u32,
-    y_count: u32,
+    current_x: i32,
+    x_count: i32,
+    current_y: i32,
+    y_count: i32,
     origin: TileOffset,
     tile_size: LayoutSize,
     leftover_offset: TileOffset,
@@ -225,8 +225,8 @@ impl Iterator for TileIterator {
 pub fn tiles(
     prim_rect: &LayoutRect,
     visible_rect: &LayoutRect,
-    device_image_size: &DeviceUintSize,
-    device_tile_size: u32,
+    device_image_size: &DeviceIntSize,
+    device_tile_size: i32,
 ) -> TileIterator {
     // The image resource is tiled. We have to generate an image primitive
     // for each tile.
@@ -289,7 +289,7 @@ pub fn tiles(
     // The size in pixels of the tiles on the right and bottom edges, smaller
     // than the regular tile size if the image is not a multiple of the tile size.
     // Zero means the image size is a multiple of the tile size.
-    let leftover_device_size = DeviceUintSize::new(
+    let leftover_device_size = DeviceIntSize::new(
         device_image_size.width % device_tile_size,
         device_image_size.height % device_tile_size
     );
@@ -302,19 +302,19 @@ pub fn tiles(
 
     // Offset of the row and column of tiles with leftover size.
     let leftover_offset = TileOffset::new(
-        (device_image_size.width / device_tile_size) as u32,
-        (device_image_size.height / device_tile_size) as u32,
+        device_image_size.width / device_tile_size,
+        device_image_size.height / device_tile_size,
     );
 
     // Number of culled out tiles to skip before the first visible tile.
     let t0 = TileOffset::new(
         if visible_rect.origin.x > prim_rect.origin.x {
-            f32::floor((visible_rect.origin.x - prim_rect.origin.x) / layer_tile_size.width) as u32
+            f32::floor((visible_rect.origin.x - prim_rect.origin.x) / layer_tile_size.width) as i32
         } else {
             0
         },
         if visible_rect.origin.y > prim_rect.origin.y {
-            f32::floor((visible_rect.origin.y - prim_rect.origin.y) / layer_tile_size.height) as u32
+            f32::floor((visible_rect.origin.y - prim_rect.origin.y) / layer_tile_size.height) as i32
         } else {
             0
         },
@@ -324,7 +324,7 @@ pub fn tiles(
     // size due to floating point precision issues. Detect this case so that we don't return
     // tiles with an empty size.
     let x_max = {
-        let result = f32::ceil((visible_rect.max_x() - prim_rect.origin.x) / layer_tile_size.width) as u32;
+        let result = f32::ceil((visible_rect.max_x() - prim_rect.origin.x) / layer_tile_size.width) as i32;
         if result == leftover_offset.x + 1 && leftover_layer_size.width == 0.0f32 {
             leftover_offset.x
         } else {
@@ -332,7 +332,7 @@ pub fn tiles(
         }
     };
     let y_max = {
-        let result = f32::ceil((visible_rect.max_y() - prim_rect.origin.y) / layer_tile_size.height) as u32;
+        let result = f32::ceil((visible_rect.max_y() - prim_rect.origin.y) / layer_tile_size.height) as i32;
         if result == leftover_offset.y + 1 && leftover_layer_size.height == 0.0f32 {
             leftover_offset.y
         } else {
@@ -359,7 +359,7 @@ pub fn tiles(
 }
 
 pub fn compute_tile_range(
-    visible_area: &DeviceUintRect,
+    visible_area: &DeviceIntRect,
     tile_size: u16,
 ) -> TileRange {
     // Tile dimensions in normalized coordinates.
@@ -369,12 +369,12 @@ pub fn compute_tile_range(
     let t0 = point2(
         f32::floor(visible_area.origin.x as f32 * tw),
         f32::floor(visible_area.origin.y as f32 * th),
-    ).try_cast::<u32>().unwrap_or_else(|| panic!("compute_tile_range bad values {:?} {:?}", visible_area, tile_size));
+    ).try_cast::<i32>().unwrap_or_else(|| panic!("compute_tile_range bad values {:?} {:?}", visible_area, tile_size));
 
     let t1 = point2(
         f32::ceil(visible_area.max_x() as f32 * tw),
         f32::ceil(visible_area.max_y() as f32 * th),
-    ).try_cast::<u32>().unwrap_or_else(|| panic!("compute_tile_range bad values {:?} {:?}", visible_area, tile_size));
+    ).try_cast::<i32>().unwrap_or_else(|| panic!("compute_tile_range bad values {:?} {:?}", visible_area, tile_size));
 
     TileRange {
         origin: t0,
@@ -397,15 +397,15 @@ pub fn for_each_tile_in_range(
 mod tests {
     use super::*;
     use std::collections::HashSet;
-    use api::{LayoutRect, DeviceUintSize};
+    use api::{LayoutRect, DeviceIntSize};
     use euclid::{rect, size2};
 
     // this checks some additional invariants
     fn checked_for_each_tile(
         prim_rect: &LayoutRect,
         visible_rect: &LayoutRect,
-        device_image_size: &DeviceUintSize,
-        device_tile_size: u32,
+        device_image_size: &DeviceIntSize,
+        device_tile_size: i32,
         callback: &mut FnMut(&LayoutRect, TileOffset, EdgeAaSegmentMask),
     ) {
         let mut coverage = LayoutRect::zero();

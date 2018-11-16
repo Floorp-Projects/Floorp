@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, BorderStyle, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale};
-use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, FilterOp, ImageFormat};
+use api::{DocumentLayer, FilterOp, ImageFormat};
 use api::{MixBlendMode, PipelineId, DeviceRect, LayoutSize};
 use batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
 use clip::ClipStore;
@@ -36,7 +36,7 @@ const STYLE_MASK: i32 = 0x00FF_FF00;
 /// optimizations on some intel drivers. We sometimes need to go larger, but
 /// we try to avoid it. This can go away when proper tiling support lands,
 /// since we can then split large primitives across multiple textures.
-const IDEAL_MAX_TEXTURE_DIMENSION: u32 = 2048;
+const IDEAL_MAX_TEXTURE_DIMENSION: i32 = 2048;
 
 /// Identifies a given `RenderTarget` in a `RenderTargetList`.
 #[derive(Debug, Copy, Clone)]
@@ -70,20 +70,20 @@ struct TextureAllocator {
 }
 
 impl TextureAllocator {
-    fn new(size: DeviceUintSize) -> Self {
+    fn new(size: DeviceIntSize) -> Self {
         TextureAllocator {
             allocator: GuillotineAllocator::new(size),
             used_rect: DeviceIntRect::zero(),
         }
     }
 
-    fn allocate(&mut self, size: &DeviceUintSize) -> Option<DeviceUintPoint> {
+    fn allocate(&mut self, size: &DeviceIntSize) -> Option<DeviceIntPoint> {
         let origin = self.allocator.allocate(size);
 
         if let Some(origin) = origin {
             // TODO(gw): We need to make all the device rects
             //           be consistent in the use of the
-            //           DeviceIntRect and DeviceUintRect types!
+            //           DeviceIntRect and DeviceIntRect types!
             let origin = DeviceIntPoint::new(origin.x as i32, origin.y as i32);
             let size = DeviceIntSize::new(size.width as i32, size.height as i32);
             let rect = DeviceIntRect::new(origin, size);
@@ -110,7 +110,7 @@ impl TextureAllocator {
 pub trait RenderTarget {
     /// Creates a new RenderTarget of the given type.
     fn new(
-        size: Option<DeviceUintSize>,
+        size: Option<DeviceIntSize>,
         screen_size: DeviceIntSize,
     ) -> Self;
 
@@ -119,7 +119,7 @@ pub trait RenderTarget {
     ///
     /// If a non-`None` result is returned, that value is generally stored in
     /// a task which is then added to this target via `add_task()`.
-    fn allocate(&mut self, size: DeviceUintSize) -> Option<DeviceUintPoint>;
+    fn allocate(&mut self, size: DeviceIntSize) -> Option<DeviceIntPoint>;
 
     /// Optional hook to provide additional processing for the target at the
     /// end of the build phase.
@@ -204,7 +204,7 @@ pub struct RenderTargetList<T> {
     /// IDEAL_MAX_TEXTURE_DIMENSION. If we encounter a larger primitive, the
     /// allocation will fail, but we'll bump max_dynamic_size, which will cause the
     /// allocator for the next slice to be just large enough to accomodate it.
-    pub max_dynamic_size: DeviceUintSize,
+    pub max_dynamic_size: DeviceIntSize,
     pub targets: Vec<T>,
     pub saved_index: Option<SavedTargetIndex>,
 }
@@ -217,7 +217,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
         RenderTargetList {
             screen_size,
             format,
-            max_dynamic_size: DeviceUintSize::new(0, 0),
+            max_dynamic_size: DeviceIntSize::new(0, 0),
             targets: Vec::new(),
             saved_index: None,
         }
@@ -273,8 +273,8 @@ impl<T: RenderTarget> RenderTargetList<T> {
 
     fn allocate(
         &mut self,
-        alloc_size: DeviceUintSize,
-    ) -> (DeviceUintPoint, RenderTargetIndex) {
+        alloc_size: DeviceIntSize,
+    ) -> (DeviceIntPoint, RenderTargetIndex) {
         let existing_origin = self.targets
             .last_mut()
             .and_then(|target| target.allocate(alloc_size));
@@ -285,7 +285,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
                 // Have the allocator restrict slice sizes to our max ideal
                 // dimensions, unless we've already gone bigger on a previous
                 // slice.
-                let allocator_dimensions = DeviceUintSize::new(
+                let allocator_dimensions = DeviceIntSize::new(
                     cmp::max(IDEAL_MAX_TEXTURE_DIMENSION, self.max_dynamic_size.width),
                     cmp::max(IDEAL_MAX_TEXTURE_DIMENSION, self.max_dynamic_size.height),
                 );
@@ -392,7 +392,7 @@ pub struct ColorRenderTarget {
 }
 
 impl RenderTarget for ColorRenderTarget {
-    fn allocate(&mut self, size: DeviceUintSize) -> Option<DeviceUintPoint> {
+    fn allocate(&mut self, size: DeviceIntSize) -> Option<DeviceIntPoint> {
         self.allocator
             .as_mut()
             .expect("bug: calling allocate on framebuffer")
@@ -400,7 +400,7 @@ impl RenderTarget for ColorRenderTarget {
     }
 
     fn new(
-        size: Option<DeviceUintSize>,
+        size: Option<DeviceIntSize>,
         screen_size: DeviceIntSize,
     ) -> Self {
         ColorRenderTarget {
@@ -544,9 +544,6 @@ impl RenderTarget for ColorRenderTarget {
 
                         // Work out a source rect to copy from the texture, depending on whether
                         // a sub-rect is present or not.
-                        // TODO(gw): We have much type confusion below - f32, i32 and u32 for
-                        //           various representations of the texel rects. We should make
-                        //           this consistent!
                         let source_rect = key.texel_rect.map_or(cache_item.uv_rect.to_i32(), |sub_rect| {
                             DeviceIntRect::new(
                                 DeviceIntPoint::new(
@@ -608,12 +605,12 @@ pub struct AlphaRenderTarget {
 }
 
 impl RenderTarget for AlphaRenderTarget {
-    fn allocate(&mut self, size: DeviceUintSize) -> Option<DeviceUintPoint> {
+    fn allocate(&mut self, size: DeviceIntSize) -> Option<DeviceIntPoint> {
         self.allocator.allocate(&size)
     }
 
     fn new(
-        size: Option<DeviceUintSize>,
+        size: Option<DeviceIntSize>,
         _: DeviceIntSize,
     ) -> Self {
         AlphaRenderTarget {
@@ -908,8 +905,8 @@ impl RenderPass {
                     RenderTargetKind::Color => &mut color.max_dynamic_size,
                     RenderTargetKind::Alpha => &mut alpha.max_dynamic_size,
                 };
-                max_size.width = cmp::max(max_size.width, size.width as u32);
-                max_size.height = cmp::max(max_size.height, size.height as u32);
+                max_size.width = cmp::max(max_size.width, size.width);
+                max_size.height = cmp::max(max_size.height, size.height);
             }
         }
 
@@ -992,12 +989,11 @@ impl RenderPass {
                                 None
                             }
                             RenderTaskLocation::Dynamic(ref mut origin, size) => {
-                                let alloc_size = DeviceUintSize::new(size.width as u32, size.height as u32);
                                 let (alloc_origin, target_index) =  match target_kind {
-                                    RenderTargetKind::Color => color.allocate(alloc_size),
-                                    RenderTargetKind::Alpha => alpha.allocate(alloc_size),
+                                    RenderTargetKind::Color => color.allocate(size),
+                                    RenderTargetKind::Alpha => alpha.allocate(size),
                                 };
-                                *origin = Some((alloc_origin.to_i32(), target_index));
+                                *origin = Some((alloc_origin, target_index));
                                 None
                             }
                         };
@@ -1105,8 +1101,8 @@ impl CompositeOps {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct Frame {
     //TODO: share the fields with DocumentView struct
-    pub window_size: DeviceUintSize,
-    pub inner_rect: DeviceUintRect,
+    pub window_size: DeviceIntSize,
+    pub inner_rect: DeviceIntRect,
     pub background_color: Option<ColorF>,
     pub layer: DocumentLayer,
     pub device_pixel_ratio: f32,

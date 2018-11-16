@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntSize};
-use api::{DeviceUintRect, DeviceUintPoint, ExternalImageType, FilterOp, ImageRendering};
-use api::{YuvColorSpace, YuvFormat, ColorDepth, PictureRect};
+use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntPoint, DeviceIntSize};
+use api::{ExternalImageType, FilterOp, ImageRendering};
+use api::{YuvColorSpace, YuvFormat, PictureRect, ColorDepth};
 use clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use glyph_rasterizer::GlyphFormat;
@@ -1995,8 +1995,8 @@ pub fn resolve_image(
                     let cache_item = CacheItem {
                         texture_id: TextureSource::External(external_image),
                         uv_rect_handle: cache_handle,
-                        uv_rect: DeviceUintRect::new(
-                            DeviceUintPoint::zero(),
+                        uv_rect: DeviceIntRect::new(
+                            DeviceIntPoint::zero(),
                             image_properties.descriptor.size,
                         ),
                         texture_layer: 0,

@@ -332,8 +332,8 @@ impl FontContext {
 
         let bounds = analysis.get_alpha_texture_bounds(texture_type);
 
-        let width = (bounds.right - bounds.left) as u32;
-        let height = (bounds.bottom - bounds.top) as u32;
+        let width = (bounds.right - bounds.left) as i32;
+        let height = (bounds.bottom - bounds.top) as i32;
 
         // Alpha texture bounds can sometimes return an empty rect
         // Such as for spaces
@@ -464,8 +464,8 @@ impl FontContext {
         let texture_type = dwrite_texture_type(font.render_mode);
 
         let bounds = analysis.get_alpha_texture_bounds(texture_type);
-        let width = (bounds.right - bounds.left) as u32;
-        let height = (bounds.bottom - bounds.top) as u32;
+        let width = (bounds.right - bounds.left) as i32;
+        let height = (bounds.bottom - bounds.top) as i32;
 
         // Alpha texture bounds can sometimes return an empty rect
         // Such as for spaces

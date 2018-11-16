@@ -11,7 +11,7 @@
 use api::{ApiMsg, BuiltDisplayList, ClearCache, DebugCommand};
 #[cfg(feature = "debugger")]
 use api::{BuiltDisplayListIter, SpecificDisplayItem};
-use api::{DeviceIntPoint, DevicePixelScale, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
+use api::{DevicePixelScale, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestFlags, HitTestResult};
 use api::{IdNamespace, LayoutPoint, PipelineId, RenderNotifier, SceneMsg, ScrollClamping};
 use api::{MemoryReport, VoidPtrToSizeFn};
@@ -61,8 +61,8 @@ use util::drain_filter;
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Clone)]
 pub struct DocumentView {
-    pub window_size: DeviceUintSize,
-    pub inner_rect: DeviceUintRect,
+    pub window_size: DeviceIntSize,
+    pub inner_rect: DeviceIntRect,
     pub layer: DocumentLayer,
     pub pan: DeviceIntPoint,
     pub device_pixel_ratio: f32,
@@ -197,7 +197,7 @@ struct Document {
 
 impl Document {
     pub fn new(
-        window_size: DeviceUintSize,
+        window_size: DeviceIntSize,
         layer: DocumentLayer,
         default_device_pixel_ratio: f32,
     ) -> Self {
@@ -206,7 +206,7 @@ impl Document {
             removed_pipelines: Vec::new(),
             view: DocumentView {
                 window_size,
-                inner_rect: DeviceUintRect::new(DeviceUintPoint::zero(), window_size),
+                inner_rect: DeviceIntRect::new(DeviceIntPoint::zero(), window_size),
                 layer,
                 pan: DeviceIntPoint::zero(),
                 page_zoom_factor: 1.0,

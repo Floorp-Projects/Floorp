@@ -35,9 +35,9 @@ use std::ops::Add;
 use std::os::raw::c_void;
 
 
-pub const GPU_CACHE_INITIAL_HEIGHT: u32 = 512;
+pub const GPU_CACHE_INITIAL_HEIGHT: i32 = 512;
 const FRAMES_BEFORE_EVICTION: usize = 10;
-const NEW_ROWS_PER_RESIZE: u32 = 512;
+const NEW_ROWS_PER_RESIZE: i32 = 512;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -247,7 +247,7 @@ pub struct GpuCacheUpdateList {
     pub frame_id: FrameId,
     /// The current height of the texture. The render thread
     /// should resize the texture if required.
-    pub height: u32,
+    pub height: i32,
     /// List of updates to apply.
     pub updates: Vec<GpuCacheUpdate>,
     /// A flat list of GPU blocks that are pending upload
@@ -316,7 +316,7 @@ impl FreeBlockLists {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct Texture {
     // Current texture height
-    height: u32,
+    height: i32,
     // All blocks that have been created for this texture
     blocks: Vec<Block>,
     // Metadata about each allocated row.
@@ -379,7 +379,7 @@ impl Texture {
 
         // See if we need a new row (if free-list has nothing available)
         if free_list.is_none() {
-            if self.rows.len() as u32 == self.height {
+            if self.rows.len() as i32 == self.height {
                 self.height += NEW_ROWS_PER_RESIZE;
             }
 

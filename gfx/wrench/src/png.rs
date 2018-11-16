@@ -25,12 +25,14 @@ pub struct SaveSettings {
 pub fn save<P: Clone + AsRef<Path>>(
     path: P,
     orig_pixels: Vec<u8>,
-    mut size: DeviceUintSize,
+    size: DeviceIntSize,
     settings: SaveSettings
 ) {
+    let mut width = size.width as u32;
+    let mut height = size.height as u32;
     let mut buffer = image::RgbaImage::from_raw(
-        size.width,
-        size.height,
+        width,
+        height,
         orig_pixels,
     ).expect("bug: unable to construct image buffer");
 
@@ -43,28 +45,28 @@ pub fn save<P: Clone + AsRef<Path>>(
         if let Ok(existing_image) = image::open(path.clone()) {
             let old_dims = existing_image.dimensions();
             println!("Crop from {:?} to {:?}", size, old_dims);
-            size.width = old_dims.0;
-            size.height = old_dims.1;
+            width = old_dims.0;
+            height = old_dims.1;
             buffer = image::imageops::crop(
                 &mut buffer,
                 0,
                 0,
-                size.width,
-                size.height
+                width,
+                height
             ).to_image();
         }
     }
 
     let encoder = PNGEncoder::new(File::create(path).unwrap());
     encoder
-        .encode(&buffer, size.width, size.height, ColorType::RGBA(8))
+        .encode(&buffer, width, height, ColorType::RGBA(8))
         .expect("Unable to encode PNG!");
 }
 
 pub fn save_flipped<P: Clone + AsRef<Path>>(
     path: P,
     orig_pixels: Vec<u8>,
-    size: DeviceUintSize,
+    size: DeviceIntSize,
 ) {
     save(path, orig_pixels, size, SaveSettings {
         flip_vertical: true,
@@ -88,7 +90,7 @@ pub fn png(
     let (device_size, data, settings) = match surface {
         ReadSurface::Screen => {
             let dim = window.get_inner_size();
-            let rect = DeviceUintRect::new(DeviceUintPoint::zero(), dim);
+            let rect = DeviceIntRect::new(DeviceIntPoint::zero(), dim);
             let data = wrench.renderer
                 .read_pixels_rgba8(rect);
             (rect.size, data, SaveSettings {

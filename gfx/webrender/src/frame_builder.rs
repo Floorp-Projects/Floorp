@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, DeviceIntPoint, DevicePixelScale, LayoutPixel, PicturePixel, RasterPixel};
-use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, FontRenderMode};
+use api::{DeviceIntRect, DeviceIntSize, DocumentLayer, FontRenderMode};
 use api::{LayoutPoint, LayoutRect, LayoutSize, PipelineId, RasterSpace, WorldPoint, WorldRect, WorldPixel};
 use clip::{ClipDataStore, ClipStore};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
@@ -54,9 +54,9 @@ pub struct FrameBuilderConfig {
 
 /// A builder structure for `tiling::Frame`
 pub struct FrameBuilder {
-    screen_rect: DeviceUintRect,
+    screen_rect: DeviceIntRect,
     background_color: Option<ColorF>,
-    window_size: DeviceUintSize,
+    window_size: DeviceIntSize,
     root_pic_index: PictureIndex,
     pub prim_store: PrimitiveStore,
     pub clip_store: ClipStore,
@@ -139,8 +139,8 @@ impl FrameBuilder {
             hit_testing_runs: Vec::new(),
             prim_store: PrimitiveStore::new(),
             clip_store: ClipStore::new(),
-            screen_rect: DeviceUintRect::zero(),
-            window_size: DeviceUintSize::zero(),
+            screen_rect: DeviceIntRect::zero(),
+            window_size: DeviceIntSize::zero(),
             background_color: None,
             root_pic_index: PictureIndex(0),
             config: FrameBuilderConfig {
@@ -153,9 +153,9 @@ impl FrameBuilder {
     }
 
     pub fn with_display_list_flattener(
-        screen_rect: DeviceUintRect,
+        screen_rect: DeviceIntRect,
         background_color: Option<ColorF>,
-        window_size: DeviceUintSize,
+        window_size: DeviceIntSize,
         flattener: DisplayListFlattener,
     ) -> Self {
         FrameBuilder {
@@ -321,7 +321,7 @@ impl FrameBuilder {
     ) -> Frame {
         profile_scope!("build");
         debug_assert!(
-            DeviceUintRect::new(DeviceUintPoint::zero(), self.window_size)
+            DeviceIntRect::new(DeviceIntPoint::zero(), self.window_size)
                 .contains_rect(&self.screen_rect)
         );
 

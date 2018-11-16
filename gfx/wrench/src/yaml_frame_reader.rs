@@ -121,7 +121,7 @@ fn generate_checkerboard_image(
     }
 
     (
-        ImageDescriptor::new(width, height, ImageFormat::BGRA8, true, false),
+        ImageDescriptor::new(width as i32, height as i32, ImageFormat::BGRA8, true, false),
         ImageData::new(pixels),
     )
 }
@@ -139,7 +139,7 @@ fn generate_xy_gradient_image(w: u32, h: u32) -> (ImageDescriptor, ImageData) {
     }
 
     (
-        ImageDescriptor::new(w, h, ImageFormat::BGRA8, true, false),
+        ImageDescriptor::new(w as i32, h as i32, ImageFormat::BGRA8, true, false),
         ImageData::new(pixels),
     )
 }
@@ -169,7 +169,7 @@ fn generate_solid_color_image(
     }
 
     (
-        ImageDescriptor::new(w, h, ImageFormat::BGRA8, a == 255, false),
+        ImageDescriptor::new(w as i32, h as i32, ImageFormat::BGRA8, a == 255, false),
         ImageData::new(pixels),
     )
 }
@@ -461,8 +461,8 @@ impl YamlFrameReader {
                     _ => panic!("We don't support whatever your crazy image type is, come on"),
                 };
                 let descriptor = ImageDescriptor::new(
-                    image_width,
-                    image_height,
+                    image_width as i32,
+                    image_height as i32,
                     format,
                     is_image_opaque(format, &bytes[..]),
                     self.allow_mipmaps,
@@ -967,9 +967,9 @@ impl YamlFrameReader {
 
                     Some(BorderDetails::NinePatch(NinePatchBorder {
                         source,
-                        width: image_width as u32,
-                        height: image_height as u32,
-                        slice: SideOffsets2D::new(slice[0], slice[1], slice[2], slice[3]),
+                        width: image_width as i32,
+                        height: image_height as i32,
+                        slice: SideOffsets2D::new(slice[0] as i32, slice[1] as i32, slice[2] as i32, slice[3] as i32),
                         fill,
                         repeat_horizontal,
                         repeat_vertical,
