@@ -689,18 +689,6 @@ case "$host" in
     ;;
 esac
 
-dnl Get version of various core apps from the version files.
-FIREFOX_VERSION=`cat $_topsrcdir/browser/config/version.txt`
-FIREFOX_VERSION_DISPLAY=`cat $_topsrcdir/browser/config/version_display.txt`
-
-if test -z "$FIREFOX_VERSION"; then
-    AC_MSG_ERROR([FIREFOX_VERSION is unexpectedly blank.])
-fi
-
-if test -z "$FIREFOX_VERSION_DISPLAY"; then
-    AC_MSG_ERROR([FIREFOX_VERSION_DISPLAY is unexpectedly blank.])
-fi
-
 MOZ_DOING_LTO(lto_is_enabled)
 
 dnl ========================================================
@@ -4071,8 +4059,6 @@ AC_DEFINE_UNQUOTED(BROWSER_CHROME_URL, $BROWSER_CHROME_URL)
 AC_DEFINE_UNQUOTED(BROWSER_CHROME_URL_QUOTED, "$BROWSER_CHROME_URL")
 
 AC_SUBST(MOZ_APP_MAXVERSION)
-AC_DEFINE_UNQUOTED(FIREFOX_VERSION,$FIREFOX_VERSION)
-AC_SUBST(FIREFOX_VERSION)
 AC_SUBST(MOZ_UA_OS_AGNOSTIC)
 if test -n "$MOZ_UA_OS_AGNOSTIC"; then
   AC_DEFINE(MOZ_UA_OS_AGNOSTIC)
