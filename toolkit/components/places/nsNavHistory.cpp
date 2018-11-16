@@ -2148,7 +2148,7 @@ nsNavHistory::AddObserver(nsINavHistoryObserver* aObserver, bool aOwnsWeak)
   if (NS_WARN_IF(!mCanNotify))
     return NS_ERROR_UNEXPECTED;
 
-  return mObservers.AppendWeakElement(aObserver, aOwnsWeak);
+  return mObservers.AppendWeakElementUnlessExists(aObserver, aOwnsWeak);
 }
 
 NS_IMETHODIMP

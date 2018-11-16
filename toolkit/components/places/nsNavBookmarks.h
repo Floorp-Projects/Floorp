@@ -11,7 +11,6 @@
 #include "nsToolkitCompsCID.h"
 #include "nsCategoryCache.h"
 #include "nsTHashtable.h"
-#include "nsWeakReference.h"
 #include "mozilla/Attributes.h"
 #include "prtime.h"
 

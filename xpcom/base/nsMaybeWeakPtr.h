@@ -20,16 +20,20 @@ class nsMaybeWeakPtr
 {
 public:
   nsMaybeWeakPtr() = default;
-  MOZ_IMPLICIT nsMaybeWeakPtr(T* aRef) : mPtr(aRef) {}
-  MOZ_IMPLICIT nsMaybeWeakPtr(const nsCOMPtr<nsIWeakReference>& aRef) : mPtr(aRef) {}
+  MOZ_IMPLICIT nsMaybeWeakPtr(T* aRef) : mPtr(aRef), mWeak(false) {}
+  MOZ_IMPLICIT nsMaybeWeakPtr(const nsCOMPtr<nsIWeakReference>& aRef)
+    : mPtr(aRef)
+    , mWeak(true) {}
 
   nsMaybeWeakPtr<T>& operator=(T* aRef) {
     mPtr = aRef;
+    mWeak = false;
     return *this;
   }
 
   nsMaybeWeakPtr<T>& operator=(const nsCOMPtr<nsIWeakReference>& aRef) {
     mPtr = aRef;
+    mWeak = true;
     return *this;
   }
 
@@ -38,11 +42,13 @@ public:
   }
 
   nsISupports* GetRawValue() const { return mPtr.get(); }
+  bool IsWeak() const { return mWeak; }
 
   const nsCOMPtr<T> GetValue() const;
 
 private:
   nsCOMPtr<nsISupports> mPtr;
+  bool mWeak;
 };
 
 // nsMaybeWeakPtrArray is an array of MaybeWeakPtr objects, that knows how to
@@ -54,23 +60,39 @@ class nsMaybeWeakPtrArray : public nsTArray<nsMaybeWeakPtr<T>>
 {
   typedef nsTArray<nsMaybeWeakPtr<T>> MaybeWeakArray;
 
+  nsresult SetMaybeWeakPtr(nsMaybeWeakPtr<T>& aRef, T* aElement, bool aOwnsWeak)
+  {
+    nsresult rv = NS_OK;
+
+    if (aOwnsWeak) {
+      aRef = do_GetWeakReference(aElement, &rv);
+    } else {
+      aRef = aElement;
+    }
+
+    return rv;
+  }
+
 public:
   nsresult AppendWeakElement(T* aElement, bool aOwnsWeak)
   {
     nsMaybeWeakPtr<T> ref;
+    MOZ_TRY(SetMaybeWeakPtr(ref, aElement, aOwnsWeak));
 
-    if (aOwnsWeak) {
-      ref = do_GetWeakReference(aElement);
-    } else {
-      ref = aElement;
-    }
+    MaybeWeakArray::AppendElement(ref);
+    return NS_OK;
+  }
+
+  nsresult AppendWeakElementUnlessExists(T* aElement, bool aOwnsWeak)
+  {
+    nsMaybeWeakPtr<T> ref;
+    MOZ_TRY(SetMaybeWeakPtr(ref, aElement, aOwnsWeak));
 
     if (MaybeWeakArray::Contains(ref)) {
       return NS_ERROR_INVALID_ARG;
     }
-    if (!MaybeWeakArray::AppendElement(ref)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+
+    MaybeWeakArray::AppendElement(ref);
     return NS_OK;
   }
 
@@ -83,7 +105,9 @@ public:
     // Don't use do_GetWeakReference; it should only be called if we know
     // the object supports weak references.
     nsCOMPtr<nsISupportsWeakReference> supWeakRef = do_QueryInterface(aElement);
-    NS_ENSURE_TRUE(supWeakRef, NS_ERROR_INVALID_ARG);
+    if (!supWeakRef) {
+      return NS_ERROR_INVALID_ARG;
+    }
 
     nsCOMPtr<nsIWeakReference> weakRef;
     nsresult rv = supWeakRef->GetWeakReference(getter_AddRefs(weakRef));
@@ -105,15 +129,19 @@ nsMaybeWeakPtr<T>::GetValue() const
     return nullptr;
   }
 
+  nsCOMPtr<T> ref;
   nsresult rv;
-  nsCOMPtr<T> ref = do_QueryInterface(mPtr, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    return ref;
-  }
 
-  nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(mPtr);
-  if (weakRef) {
-    ref = do_QueryReferent(weakRef, &rv);
+  if (mWeak) {
+    nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(mPtr);
+    if (weakRef) {
+      ref = do_QueryReferent(weakRef, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        return ref;
+      }
+    }
+  } else {
+     ref = do_QueryInterface(mPtr, &rv);
     if (NS_SUCCEEDED(rv)) {
       return ref;
     }
