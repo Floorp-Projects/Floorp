@@ -3783,41 +3783,37 @@ CLASS_SPEC(CountQueuingStrategy, 1, 0, 0, 0, JS_NULL_CLASS_OPS);
 
 /**
  * Streams spec, 6.2.1. DequeueValue ( container ) nothrow
- *
- * Note: can operate on unwrapped queue container instances from another
- * compartment. In that case, the returned chunk will be wrapped into the
- * current compartment.
  */
 inline static MOZ_MUST_USE bool
-DequeueValue(JSContext* cx, Handle<ReadableStreamController*> container, MutableHandleValue chunk)
+DequeueValue(JSContext* cx, Handle<ReadableStreamController*> unwrappedContainer, MutableHandleValue chunk)
 {
     // Step 1: Assert: container has [[queue]] and [[queueTotalSize]] internal
     //         slots (implicit).
     // Step 2: Assert: queue is not empty.
-    RootedNativeObject queue(cx, container->queue());
-    MOZ_ASSERT(queue->getDenseInitializedLength() > 0);
+    RootedNativeObject unwrappedQueue(cx, unwrappedContainer->queue());
+    MOZ_ASSERT(unwrappedQueue->getDenseInitializedLength() > 0);
 
     // Step 3. Let pair be the first element of queue.
     // Step 4. Remove pair from queue, shifting all other elements downward
     //         (so that the second becomes the first, and so on).
-    Rooted<QueueEntry*> pair(cx, ShiftFromList<QueueEntry>(cx, queue));
-    MOZ_ASSERT(pair);
+    Rooted<QueueEntry*> unwrappedPair(cx, ShiftFromList<QueueEntry>(cx, unwrappedQueue));
+    MOZ_ASSERT(unwrappedPair);
 
     // Step 5: Set container.[[queueTotalSize]] to
     //         container.[[queueTotalSize]] − pair.[[size]].
     // Step 6: If container.[[queueTotalSize]] < 0, set
     //         container.[[queueTotalSize]] to 0.
     //         (This can occur due to rounding errors.)
-    double totalSize = container->queueTotalSize();
+    double totalSize = unwrappedContainer->queueTotalSize();
 
-    totalSize -= pair->size();
+    totalSize -= unwrappedPair->size();
     if (totalSize < 0) {
         totalSize = 0;
     }
-    container->setQueueTotalSize(totalSize);
+    unwrappedContainer->setQueueTotalSize(totalSize);
 
-    RootedValue val(cx, pair->value());
-    if (container->compartment() != cx->compartment() && !cx->compartment()->wrap(cx, &val)) {
+    RootedValue val(cx, unwrappedPair->value());
+    if (!cx->compartment()->wrap(cx, &val)) {
         return false;
     }
 
@@ -3828,15 +3824,15 @@ DequeueValue(JSContext* cx, Handle<ReadableStreamController*> container, Mutable
 
 /**
  * Streams spec, 6.2.2. EnqueueValueWithSize ( container, value, size ) throws
- *
- * Note: can operate on unwrapped queue container instances from another
- * compartment than the current one. In that case, the given value will be
- * wrapped into the container compartment.
  */
 static MOZ_MUST_USE bool
-EnqueueValueWithSize(JSContext* cx, Handle<ReadableStreamController*> container, HandleValue value,
+EnqueueValueWithSize(JSContext* cx,
+                     Handle<ReadableStreamController*> unwrappedContainer,
+                     HandleValue value,
                      HandleValue sizeVal)
 {
+    cx->check(value, sizeVal);
+
     // Step 1: Assert: container has [[queue]] and [[queueTotalSize]] internal
     //         slots (implicit).
     // Step 2: Let size be ? ToNumber(size).
@@ -3855,11 +3851,10 @@ EnqueueValueWithSize(JSContext* cx, Handle<ReadableStreamController*> container,
 
     // Step 4: Append Record {[[value]]: value, [[size]]: size} as the last element
     //         of container.[[queue]].
-    RootedNativeObject queue(cx, container->queue());
-
-    RootedValue wrappedVal(cx, value);
     {
-        AutoRealm ar(cx, container);
+        AutoRealm ar(cx, unwrappedContainer);
+        RootedNativeObject queue(cx, unwrappedContainer->queue());
+        RootedValue wrappedVal(cx, value);
         if (!cx->compartment()->wrap(cx, &wrappedVal)) {
             return false;
         }
@@ -3876,7 +3871,7 @@ EnqueueValueWithSize(JSContext* cx, Handle<ReadableStreamController*> container,
 
     // Step 5: Set container.[[queueTotalSize]] to
     //         container.[[queueTotalSize]] + size.
-    container->setQueueTotalSize(container->queueTotalSize() + size);
+    unwrappedContainer->setQueueTotalSize(unwrappedContainer->queueTotalSize() + size);
 
     return true;
 }
@@ -3934,6 +3929,8 @@ inline static MOZ_MUST_USE bool
 InvokeOrNoop(JSContext* cx, HandleValue O, HandlePropertyName P, HandleValue arg,
              MutableHandleValue rval)
 {
+    cx->check(O, P, arg);
+
     // Step 1: Assert: P is a valid property key (omitted).
     // Step 2: If args was not passed, let args be a new empty List (omitted).
     // Step 3: Let method be ? GetV(O, P).
@@ -3958,6 +3955,8 @@ InvokeOrNoop(JSContext* cx, HandleValue O, HandlePropertyName P, HandleValue arg
 static MOZ_MUST_USE JSObject*
 PromiseInvokeOrNoop(JSContext* cx, HandleValue O, HandlePropertyName P, HandleValue arg)
 {
+    cx->check(O, P, arg);
+
     // Step 1: Assert: O is not undefined.
     MOZ_ASSERT(!O.isUndefined());
 
