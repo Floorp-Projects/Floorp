@@ -594,6 +594,8 @@
             return;
           }
 
+          let focused = this.mInputElement.matches(":focus");
+
           let root =
             document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
           while (root.firstChild) {
@@ -606,6 +608,10 @@
           this.mMillisecField = null;
 
           this.buildEditFields();
+
+          if (focused) {
+            this.focusInnerTextBox();
+          }
         ]]>
         </body>
       </method>
