@@ -9,7 +9,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:id="@+id/container"
-    tools:context="org.mozilla.samples.sync.logins.MainActivity">
+    tools:context="org.mozilla.samples.glean.MainActivity">
 
 
     <LinearLayout
@@ -19,7 +19,7 @@
         android:layout_alignParentTop="true"
         android:orientation="vertical"
         android:id="@+id/buttonList"
-        tools:context="org.mozilla.samples.sync.logins.MainActivity"
+        tools:context="org.mozilla.samples.glean.MainActivity"
         tools:ignore="UselessParent">
 
         <Button
