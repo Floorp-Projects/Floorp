@@ -342,6 +342,8 @@ class FlexboxInspector {
       this.highlighters.showFlexboxHighlighter(flexbox.flexContainer.nodeFront);
     }
 
+    this._overlayColor = color;
+
     const currentUrl = this.inspector.target.url;
     // Get the hostname, if there is no hostname, fall back on protocol
     // ex: `data:` uri, and `about:` pages

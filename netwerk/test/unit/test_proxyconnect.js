@@ -14,6 +14,11 @@
 // 1. OnTransportAvailable callback NOT called (checked in step 2)
 // 2. StopRequest callback called
 // 3. done
+// test_connectonly_nonhttp tests an http channel with only connect set with a
+// non-http proxy.
+// 1. OnTransportAvailable callback NOT called (checked in step 2)
+// 2. StopRequest callback called
+// 3. done
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -71,6 +76,7 @@ var listener = {
   onStopRequest: function test_onStopR(request, ctx, status) {
     if (state === STATE_COMPLETED) {
       Assert.equal(transportAvailable, false, 'transport available not called');
+      Assert.equal(status, 0x80004005, 'error code matches');
 
       nextTest();
       return;
@@ -294,6 +300,20 @@ function test_connectonly_noproxy() {
   do_test_pending();
 }
 
+function test_connectonly_nonhttp() {
+  clearPrefs()
+
+  Services.prefs.setCharPref("network.proxy.socks", "localhost")
+  Services.prefs.setIntPref("network.proxy.socks_port", socketserver_port)
+  Services.prefs.setCharPref("network.proxy.no_proxies_on", "")
+  Services.prefs.setIntPref("network.proxy.type", 1)
+
+  var chan = makeChan()
+  chan.asyncOpen2(listener)
+
+  do_test_pending()
+}
+
 function nextTest() {
   transportAvailable = false;
 
@@ -308,12 +328,15 @@ function nextTest() {
 
 var tests = [
   test_connectonly,
-  // test_connectonly_noproxy,
+  test_connectonly_noproxy,
+  test_connectonly_nonhttp
 ];
 
 function clearPrefs() {
   Services.prefs.clearUserPref("network.proxy.ssl");
   Services.prefs.clearUserPref("network.proxy.ssl_port");
+  Services.prefs.clearUserPref("network.proxy.socks");
+  Services.prefs.clearUserPref("network.proxy.socks_port");
   Services.prefs.clearUserPref("network.proxy.no_proxies_on");
   Services.prefs.clearUserPref("network.proxy.type");
 }
