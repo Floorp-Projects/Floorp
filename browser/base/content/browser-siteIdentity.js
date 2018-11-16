@@ -818,15 +818,6 @@ var gIdentityHandler = {
       return;
     }
 
-    // Move focus to the next available element in the identity popup.
-    // This is required by role=alertdialog and fixes an issue where
-    // an already open panel would steal focus from the identity popup.
-    if (event.type == "keypress") {
-      let panelView = PanelView.forNode(this._identityPopupMainView);
-      this._identityPopupMainView.addEventListener("ViewShown", () => panelView.focusFirstNavigableElement(),
-        {once: true});
-    }
-
     // Make sure that the display:none style we set in xul is removed now that
     // the popup is actually needed
     this._identityPopup.hidden = false;
@@ -841,8 +832,10 @@ var gIdentityHandler = {
     this._identityBox.setAttribute("open", "true");
 
     // Now open the popup, anchored off the primary chrome element
-    PanelMultiView.openPopup(this._identityPopup, this._identityIcon,
-                             "bottomcenter topleft").catch(Cu.reportError);
+    PanelMultiView.openPopup(this._identityPopup, this._identityIcon, {
+      position: "bottomcenter topleft",
+      triggerEvent: event,
+    }).catch(Cu.reportError);
   },
 
   onPopupShown(event) {
