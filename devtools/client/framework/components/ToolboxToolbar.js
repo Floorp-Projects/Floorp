@@ -86,7 +86,7 @@ class ToolboxToolbar extends Component {
       // it to render nicely.
       canRender: PropTypes.bool,
       // Localization interface.
-      L10N: PropTypes.object,
+      L10N: PropTypes.object.isRequired,
       // The devtools toolbox
       toolbox: PropTypes.object,
       // Call back function to detect tabs order updated.
@@ -420,7 +420,7 @@ class ToolboxToolbar extends Component {
    * render functions for how each of the sections is rendered.
    */
   render() {
-    const {deviceDescription, showDebugTargetInfo, toolbox} = this.props;
+    const {deviceDescription, L10N, showDebugTargetInfo, toolbox} = this.props;
     const classnames = ["devtools-tabbar"];
     const startButtons = this.renderToolboxButtonsStart();
     const endButtons = this.renderToolboxButtonsEnd();
@@ -447,7 +447,7 @@ class ToolboxToolbar extends Component {
       : div({ className: classnames.join(" ") });
 
     const debugTargetInfo =
-      showDebugTargetInfo ? DebugTargetInfo({ deviceDescription, toolbox }) : null;
+      showDebugTargetInfo ? DebugTargetInfo({ deviceDescription, L10N, toolbox }) : null;
 
     if (toolbox.target.canRewind) {
       return div(
