@@ -136,7 +136,7 @@ pub struct DocumentHandle {
 }
 
 impl DocumentHandle {
-    pub fn new(api: RenderApi, size: DeviceUintSize, layer: i8) -> DocumentHandle {
+    pub fn new(api: RenderApi, size: DeviceIntSize, layer: i8) -> DocumentHandle {
         let doc = api.add_document(size, layer);
         DocumentHandle {
             api: api,
@@ -317,16 +317,16 @@ impl From<ImageMask> for WrImageMask {
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct WrImageDescriptor {
     pub format: ImageFormat,
-    pub width: u32,
-    pub height: u32,
-    pub stride: u32,
+    pub width: i32,
+    pub height: i32,
+    pub stride: i32,
     pub opacity: OpacityType,
 }
 
 impl<'a> Into<ImageDescriptor> for &'a WrImageDescriptor {
     fn into(self) -> ImageDescriptor {
         ImageDescriptor {
-            size: DeviceUintSize::new(self.width, self.height),
+            size: DeviceIntSize::new(self.width, self.height),
             stride: if self.stride != 0 {
                 Some(self.stride)
             } else {
@@ -607,14 +607,14 @@ pub extern "C" fn wr_renderer_update(renderer: &mut Renderer) {
 
 #[no_mangle]
 pub extern "C" fn wr_renderer_render(renderer: &mut Renderer,
-                                     width: u32,
-                                     height: u32,
+                                     width: i32,
+                                     height: i32,
                                      had_slow_frame: bool,
                                      out_stats: &mut RendererStats) -> bool {
     if had_slow_frame {
       renderer.notify_slow_frame();
     }
-    match renderer.render(DeviceUintSize::new(width, height)) {
+    match renderer.render(DeviceIntSize::new(width, height)) {
         Ok(stats) => {
             *out_stats = stats;
             true
@@ -635,16 +635,16 @@ pub extern "C" fn wr_renderer_render(renderer: &mut Renderer,
 // Call wr_renderer_render() before calling this function.
 #[no_mangle]
 pub unsafe extern "C" fn wr_renderer_readback(renderer: &mut Renderer,
-                                              width: u32,
-                                              height: u32,
+                                              width: i32,
+                                              height: i32,
                                               dst_buffer: *mut u8,
                                               buffer_size: usize) {
     assert!(is_in_render_thread());
 
     let mut slice = make_slice_mut(dst_buffer, buffer_size);
-    renderer.read_pixels_into(DeviceUintRect::new(
-                                DeviceUintPoint::new(0, 0),
-                                DeviceUintSize::new(width, height)),
+    renderer.read_pixels_into(DeviceIntRect::new(
+                                DeviceIntPoint::new(0, 0),
+                                DeviceIntSize::new(width, height)),
                               ReadPixelsFormat::Standard(ImageFormat::BGRA8),
                               &mut slice);
 }
@@ -1010,8 +1010,8 @@ fn wr_device_new(gl_context: *mut c_void, pc: Option<&mut WrProgramCache>)
 // Call MakeCurrent before this.
 #[no_mangle]
 pub extern "C" fn wr_window_new(window_id: WrWindowId,
-                                window_width: u32,
-                                window_height: u32,
+                                window_width: i32,
+                                window_height: i32,
                                 support_low_priority_transactions: bool,
                                 gl_context: *mut c_void,
                                 program_cache: Option<&mut WrProgramCache>,
@@ -1020,7 +1020,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 size_of_op: VoidPtrToSizeFn,
                                 out_handle: &mut *mut DocumentHandle,
                                 out_renderer: &mut *mut Renderer,
-                                out_max_texture_size: *mut u32)
+                                out_max_texture_size: *mut i32)
                                 -> bool {
     assert!(unsafe { is_in_render_thread() });
 
@@ -1114,7 +1114,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
     unsafe {
         *out_max_texture_size = renderer.get_max_texture_size();
     }
-    let window_size = DeviceUintSize::new(window_width, window_height);
+    let window_size = DeviceIntSize::new(window_width, window_height);
     let layer = 0;
     *out_handle = Box::into_raw(Box::new(
             DocumentHandle::new(sender.create_api_by_client(next_namespace_id()), window_size, layer)));
@@ -1127,7 +1127,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
 pub extern "C" fn wr_api_create_document(
     root_dh: &mut DocumentHandle,
     out_handle: &mut *mut DocumentHandle,
-    doc_size: DeviceUintSize,
+    doc_size: DeviceIntSize,
     layer: i8,
 ) {
     assert!(unsafe { is_in_compositor_thread() });
@@ -1298,8 +1298,8 @@ pub extern "C" fn wr_transaction_set_display_list(
 #[no_mangle]
 pub extern "C" fn wr_transaction_set_window_parameters(
     txn: &mut Transaction,
-    window_size: &DeviceUintSize,
-    doc_rect: &DeviceUintRect,
+    window_size: &DeviceIntSize,
+    doc_rect: &DeviceIntRect,
 ) {
     txn.set_window_parameters(
         *window_size,
@@ -1479,7 +1479,7 @@ pub extern "C" fn wr_resource_updates_update_image(
 pub extern "C" fn wr_resource_updates_set_image_visible_area(
     txn: &mut Transaction,
     key: WrImageKey,
-    area: &DeviceUintRect,
+    area: &DeviceIntRect,
 ) {
     txn.set_image_visible_area(key, *area);
 }
@@ -1515,7 +1515,7 @@ pub extern "C" fn wr_resource_updates_update_external_image_with_dirty_rect(
     external_image_id: WrExternalImageId,
     image_type: WrExternalImageBufferType,
     channel_index: u8,
-    dirty_rect: DeviceUintRect,
+    dirty_rect: DeviceIntRect,
 ) {
     txn.update_image(
         key,
@@ -1537,7 +1537,7 @@ pub extern "C" fn wr_resource_updates_update_blob_image(
     image_key: WrImageKey,
     descriptor: &WrImageDescriptor,
     bytes: &mut WrVecU8,
-    dirty_rect: DeviceUintRect,
+    dirty_rect: DeviceIntRect,
 ) {
     txn.update_image(
         image_key,
@@ -2368,9 +2368,9 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
                                           is_backface_visible: bool,
                                           widths: LayoutSideOffsets,
                                           image: WrImageKey,
-                                          width: u32,
-                                          height: u32,
-                                          slice: SideOffsets2D<u32>,
+                                          width: i32,
+                                          height: i32,
+                                          slice: SideOffsets2D<i32>,
                                           outset: SideOffsets2D<f32>,
                                           repeat_horizontal: RepeatMode,
                                           repeat_vertical: RepeatMode) {
@@ -2398,9 +2398,9 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
                                              clip: LayoutRect,
                                              is_backface_visible: bool,
                                              widths: LayoutSideOffsets,
-                                             width: u32,
-                                             height: u32,
-                                             slice: SideOffsets2D<u32>,
+                                             width: i32,
+                                             height: i32,
+                                             slice: SideOffsets2D<i32>,
                                              start_point: LayoutPoint,
                                              end_point: LayoutPoint,
                                              stops: *const GradientStop,
@@ -2456,10 +2456,10 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
     let stops_vector = stops_slice.to_owned();
 
     let slice = SideOffsets2D::new(
-        widths.top as u32,
-        widths.right as u32,
-        widths.bottom as u32,
-        widths.left as u32,
+        widths.top as i32,
+        widths.right as i32,
+        widths.bottom as i32,
+        widths.left as i32,
     );
 
     let gradient = state.frame_builder.dl_builder.create_radial_gradient(
@@ -2471,8 +2471,8 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
 
     let border_details = BorderDetails::NinePatch(NinePatchBorder {
         source: NinePatchBorderSource::RadialGradient(gradient),
-        width: rect.size.width as u32,
-        height: rect.size.height as u32,
+        width: rect.size.width as i32,
+        height: rect.size.height as i32,
         slice,
         fill: false,
         outset: outset.into(),
@@ -2680,12 +2680,12 @@ pub unsafe extern "C" fn wr_dec_ref_arc(arc: *const VecU8) {
 extern "C" {
      // TODO: figure out the API for tiled blob images.
      pub fn wr_moz2d_render_cb(blob: ByteSlice,
-                               width: u32,
-                               height: u32,
+                               width: i32,
+                               height: i32,
                                format: ImageFormat,
                                tile_size: Option<&u16>,
                                tile_offset: Option<&TileOffset>,
-                               dirty_rect: Option<&DeviceUintRect>,
+                               dirty_rect: Option<&DeviceIntRect>,
                                output: MutByteSlice)
                                -> bool;
 }
