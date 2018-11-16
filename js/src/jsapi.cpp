@@ -4659,9 +4659,11 @@ JS::GetOptimizedEncodingBuildId(JS::BuildIdCharVector* buildId)
 }
 
 JS_PUBLIC_API(void)
-JS::InitConsumeStreamCallback(JSContext* cx, ConsumeStreamCallback callback)
+JS::InitConsumeStreamCallback(JSContext* cx, ConsumeStreamCallback consume,
+                              ReportStreamErrorCallback report)
 {
-    cx->runtime()->consumeStreamCallback = callback;
+    cx->runtime()->consumeStreamCallback = consume;
+    cx->runtime()->reportStreamErrorCallback = report;
 }
 
 JS_PUBLIC_API(void)
