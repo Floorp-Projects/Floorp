@@ -936,22 +936,6 @@ html|*.addon-webext-perm-list {
 
 /* End customization mode */
 
-/* Private browsing and accessibility indicators */
-
-:root[accessibilitymode][tabsintitlebar]:not([inFullscreen]) > #navigator-toolbox > #titlebar > #TabsToolbar > .accessibility-indicator,
-:root[privatebrowsingmode=temporary][tabsintitlebar]:not([inFullscreen]) > #navigator-toolbox > #titlebar > #TabsToolbar > .private-browsing-indicator,
-:root[accessibilitymode]:not([tabsintitlebar]) > #navigator-toolbox > #titlebar > #TabsToolbar > #titlebar-secondary-buttonbox > .accessibility-indicator,
-:root[privatebrowsingmode=temporary]:not([tabsintitlebar]) > #navigator-toolbox > #titlebar > #TabsToolbar > #titlebar-secondary-buttonbox > .private-browsing-indicator {
-  display: none;
-}
-
-#TabsToolbar > .private-browsing-indicator:-moz-locale-dir(rtl),
-#TabsToolbar > .accessibility-indicator:-moz-locale-dir(rtl) {
-  -moz-box-ordinal-group: 0;
-}
-
-/* End private browsing and accessibility indicators */
-
 %include ../shared/UITour.inc.css
 
 #UITourTooltipDescription {
