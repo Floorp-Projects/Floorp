@@ -145,11 +145,9 @@ SessionAccessibility::GetInstanceFor(Accessible* aAccessible)
   nsCOMPtr<nsIWidget> rootWidget;
   vm->GetRootWidget(getter_AddRefs(rootWidget));
   // `rootWidget` can be one of several types. Here we make sure it is an
-  // android nsWindow that implemented NS_NATIVE_WIDGET to return itself.
-  if (rootWidget &&
-      rootWidget->WindowType() == nsWindowType::eWindowType_toplevel &&
-      rootWidget->GetNativeData(NS_NATIVE_WIDGET) == rootWidget) {
-    return static_cast<nsWindow*>(rootWidget.get())->GetSessionAccessibility();
+  // android nsWindow.
+  if (RefPtr<nsWindow> window = nsWindow::From(rootWidget)) {
+    return window->GetSessionAccessibility();
   }
 
   return nullptr;
