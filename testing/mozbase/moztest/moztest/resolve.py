@@ -69,6 +69,7 @@ TEST_SUITES = {
         'aliases': ('mn',),
         'mach_command': 'marionette-test',
         'kwargs': {'tests': None},
+        'task_regex': ['marionette($|.*(-1|[^0-9])$)'],
     },
     'mochitest-a11y': {
         'aliases': ('a11y', 'ally'),
