@@ -1096,6 +1096,8 @@ this.TimeInputImplWidget = class extends DateTimeInputBaseImplWidget {
       return;
     }
 
+    let focused = this.mInputElement.matches(":focus");
+
     let root =
       this.shadowRoot.getElementById("edit-wrapper");
     while (root.firstChild) {
@@ -1115,6 +1117,9 @@ this.TimeInputImplWidget = class extends DateTimeInputBaseImplWidget {
     this.mDayPeriodField = null;
 
     this.buildEditFields();
+    if (focused) {
+      this.focusInnerTextBox();
+    }
   }
 
   buildEditFields() {

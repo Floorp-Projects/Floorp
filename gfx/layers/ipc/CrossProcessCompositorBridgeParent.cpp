@@ -367,6 +367,26 @@ CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
     Unused << state->mParent->SendObserveLayersUpdate(id, aLayerTree->GetChildEpoch(), true);
   }
 
+  auto endTime = TimeStamp::Now();
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_is_active()) {
+    class ContentBuildPayload : public ProfilerMarkerPayload {
+      public:
+        ContentBuildPayload(const mozilla::TimeStamp& aStartTime, const mozilla::TimeStamp& aEndTime)
+          : ProfilerMarkerPayload(aStartTime, aEndTime)
+        {}
+        virtual void StreamPayload(SpliceableJSONWriter& aWriter, const TimeStamp& aProcessStartTime, UniqueStacks& aUniqueStacks) override {
+          StreamCommonProps("CONTENT_FULL_PAINT_TIME", aWriter, aProcessStartTime, aUniqueStacks);
+        }
+    };
+    profiler_add_marker_for_thread(profiler_current_thread_id(), "CONTENT_FULL_PAINT_TIME", MakeUnique<ContentBuildPayload>(aInfo.transactionStart(),
+                                                                                                                       endTime));
+  }
+#endif
+  Telemetry::Accumulate(Telemetry::CONTENT_FULL_PAINT_TIME,
+                        static_cast<uint32_t>((endTime - aInfo.transactionStart()).ToMilliseconds()));
+
+
   aLayerTree->SetPendingTransactionId(aInfo.id(), aInfo.refreshStart(), aInfo.transactionStart(), aInfo.fwdTime());
 }
 

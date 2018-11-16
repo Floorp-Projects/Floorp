@@ -18,3 +18,22 @@ pw-change-success-title = Password Change Succeeded
 pw-change-failed-title = Password Change Failed
 pw-remove-button =
     .label = Remove
+
+set-password =
+    .title = Change Master Password
+set-password-old-password = Current password:
+set-password-new-password = Enter new password:
+set-password-reenter-password = Re-enter password:
+set-password-meter = Password quality meter
+set-password-meter-loading = Loading
+master-password-description = A Master Password is used to protect sensitive information like site passwords. If you create a Master Password you will be asked to enter it once per session when { -brand-short-name } retrieves saved information protected by the password.
+master-password-warning = Please make sure you remember the Master Password you have set. If you forget your Master Password, you will be unable to access any of the information protected by it.
+
+remove-password =
+    .title = Remove Master Password
+remove-info =
+    .label = You must enter your current password to proceed:
+remove-warning1 = Your Master Password is used to protect sensitive information like site passwords.
+remove-warning2 = If you remove your Master Password your information will not be protected if your computer is compromised.
+remove-password-old-password =
+    .label = Current password:

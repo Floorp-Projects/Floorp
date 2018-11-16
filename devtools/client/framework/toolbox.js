@@ -437,7 +437,8 @@ Toolbox.prototype = {
         useOnlyShared: true,
       }).require;
 
-      if (this.win.location.href.startsWith(this._URL)) {
+      const isToolboxURL = this.win.location.href.startsWith(this._URL);
+      if (isToolboxURL) {
         // Update the URL so that onceDOMReady watch for the right url.
         this._URL = this.win.location.href;
       }
@@ -454,6 +455,15 @@ Toolbox.prototype = {
 
       // Load the toolbox-level actor fronts and utilities now
       await this._target.attach();
+
+      // Displays DebugTargetInfo which shows the basic information of debug target,
+      // if `about:devtools-toolbar` URL opens directly.
+      if (isToolboxURL) {
+        this._showDebugTargetInfo = true;
+        const deviceFront = await this.target.client.mainRoot.getFront("device");
+        // DebugTargetInfo requires the device description to be rendered.
+        this._deviceDescription = await deviceFront.getDescription();
+      }
 
       // Start tracking network activity on toolbox open for targets such as tabs.
       // (Workers and potentially others don't manage the console client in the target.)
@@ -1146,6 +1156,8 @@ Toolbox.prototype = {
       closeToolbox: this.destroy,
       focusButton: this._onToolbarFocus,
       toolbox: this,
+      showDebugTargetInfo: this._showDebugTargetInfo,
+      deviceDescription: this._deviceDescription,
       onTabsOrderUpdated: this._onTabsOrderUpdated,
     });
 
