@@ -54,7 +54,6 @@ linux64/opt:
         - linux-talos-flex
         - raptor-firefox
         - raptor-fetch-firefox
-        - raptor-fetch-chrome
 linux64-nightly/opt:
     build-platform: linux64-nightly/opt
     test-sets:
@@ -64,6 +63,7 @@ linux64-nightly/opt:
         - desktop-screenshot-capture
         - awsy
         - raptor-chrome
+        - raptor-fetch-chrome
 linux64-devedition/opt:
     build-platform: linux64-devedition-nightly/opt
     test-sets:
