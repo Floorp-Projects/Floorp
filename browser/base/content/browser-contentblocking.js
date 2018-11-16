@@ -8,8 +8,6 @@ var TrackingProtection = {
   PREF_ENABLED_GLOBALLY: "privacy.trackingprotection.enabled",
   PREF_ENABLED_IN_PRIVATE_WINDOWS: "privacy.trackingprotection.pbmode.enabled",
   PREF_UI_ENABLED: "browser.contentblocking.trackingprotection.control-center.ui.enabled",
-  PREF_TRACKING_TABLE: "urlclassifier.trackingTable",
-  PREF_TRACKING_ANNOTATION_TABLE: "urlclassifier.trackingAnnotationTable",
   enabledGlobally: false,
   enabledInPrivateWindows: false,
 
@@ -19,16 +17,6 @@ var TrackingProtection = {
       document.getElementById("identity-popup-content-blocking-category-tracking-protection");
   },
 
-  get subViewList() {
-    delete this.subViewList;
-    return this.subViewList = document.getElementById("identity-popup-trackersView-list");
-  },
-
-  get strictInfo() {
-    delete this.strictInfo;
-    return this.strictInfo = document.getElementById("identity-popup-trackersView-strict-info");
-  },
-
   init() {
     this.updateEnabled();
 
@@ -36,8 +24,6 @@ var TrackingProtection = {
     Services.prefs.addObserver(this.PREF_ENABLED_IN_PRIVATE_WINDOWS, this);
 
     XPCOMUtils.defineLazyPreferenceGetter(this, "visible", this.PREF_UI_ENABLED, false);
-    XPCOMUtils.defineLazyPreferenceGetter(this, "trackingTable", this.PREF_TRACKING_TABLE, false);
-    XPCOMUtils.defineLazyPreferenceGetter(this, "trackingAnnotationTable", this.PREF_TRACKING_ANNOTATION_TABLE, false);
   },
 
   uninit() {
@@ -64,86 +50,6 @@ var TrackingProtection = {
 
   isBlockerActivated(state) {
     return state & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT;
-  },
-
-  isAllowing(state) {
-    return state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT;
-  },
-
-  async updateSubView() {
-    let previousURI = gBrowser.currentURI.spec;
-    let previousWindow = gBrowser.selectedBrowser.innerWindowID;
-
-    let contentBlockingLogJSON = await gBrowser.selectedBrowser.getContentBlockingLog();
-    let contentBlockingLog = JSON.parse(contentBlockingLogJSON);
-
-    // Don't tell the user to turn on TP if they are already blocking trackers.
-    this.strictInfo.hidden = this.enabled;
-
-    let fragment = document.createDocumentFragment();
-    for (let [origin, actions] of Object.entries(contentBlockingLog)) {
-      let listItem = await this._createListItem(origin, actions);
-      if (listItem) {
-        fragment.appendChild(listItem);
-      }
-    }
-
-    // This might have taken a while. Only update the list if we're still on the same page.
-    if (previousURI == gBrowser.currentURI.spec &&
-        previousWindow == gBrowser.selectedBrowser.innerWindowID) {
-      this.subViewList.textContent = "";
-      this.subViewList.append(fragment);
-    }
-  },
-
-  // Given a URI from a source that was tracking-annotated, figure out
-  // if it's really on the tracking table or just on the annotation table.
-  _isOnTrackingTable(uri) {
-    if (this.trackingTable == this.trackingAnnotationTable) {
-      return true;
-    }
-    return new Promise(resolve => {
-      classifierService.asyncClassifyLocalWithTables(uri, this.trackingTable, [], [],
-        (code, list) => resolve(!!list));
-    });
-  },
-
-  async _createListItem(origin, actions) {
-    // Figure out if this list entry was actually detected by TP or something else.
-    let isDetected = false;
-    let isAllowed = false;
-    for (let [state] of actions) {
-      isAllowed = isAllowed || this.isAllowing(state);
-      isDetected = isDetected || isAllowed || this.isBlockerActivated(state);
-    }
-
-    if (!isDetected) {
-      return null;
-    }
-
-    let uri = Services.io.newURI(origin);
-
-    // Because we might use different lists for annotation vs. blocking, we
-    // need to make sure that this is a tracker that we would actually have blocked
-    // before showing it to the user.
-    let isTracker = await this._isOnTrackingTable(uri);
-    if (!isTracker) {
-      return null;
-    }
-
-    let listItem = document.createXULElement("hbox");
-    listItem.className = "identity-popup-trackersView-list-item";
-    listItem.classList.toggle("allowed", isAllowed);
-
-    let image = document.createXULElement("image");
-    listItem.append(image);
-
-    let label = document.createXULElement("label");
-    label.value = uri.host;
-    label.setAttribute("crop", "end");
-    listItem.append(label);
-
-    return listItem;
   },
 };
 
@@ -241,11 +147,6 @@ var ContentBlocking = {
     return this.appMenuLabel = document.getElementById("appMenu-tp-label");
   },
 
-  get identityPopup() {
-    delete this.identityPopup;
-    return this.identityPopup = document.getElementById("identity-popup");
-  },
-
   strings: {
     get appMenuTitle() {
       delete this.appMenuTitle;
@@ -337,7 +238,7 @@ var ContentBlocking = {
   },
 
   hideIdentityPopupAndReload() {
-    this.identityPopup.hidePopup();
+    document.getElementById("identity-popup").hidePopup();
     BrowserReload();
   },
 
@@ -350,7 +251,7 @@ var ContentBlocking = {
   },
 
   submitBreakageReport() {
-    this.identityPopup.hidePopup();
+    document.getElementById("identity-popup").hidePopup();
 
     let reportEndpoint = Services.prefs.getStringPref(this.PREF_REPORT_BREAKAGE_URL);
     if (!reportEndpoint) {
@@ -411,11 +312,6 @@ var ContentBlocking = {
     let urlWithoutQuery = this.reportURI.asciiSpec.replace("?" + this.reportURI.query, "");
     this.reportBreakageURL.textContent = urlWithoutQuery;
     this.identityPopupMultiView.showSubView("identity-popup-breakageReportView");
-  },
-
-  async showTrackersSubview() {
-    await TrackingProtection.updateSubView();
-    this.identityPopupMultiView.showSubView("identity-popup-trackersView");
   },
 
   shieldHistogramAdd(value) {
