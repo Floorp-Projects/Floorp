@@ -212,6 +212,14 @@ wayland_headers = pkg_check_modules(
     allow_missing=depends(full_toolkit)(lambda t: t == 'cairo-gtk3'),
     when=depends(full_toolkit)(lambda t: t in ('cairo-gtk3', 'cairo-gtk3-wayland')))
 
+
+@depends(wayland_headers, toolkit_gtk, artifact_builds)
+def wayland_headers(wayland, toolkit_gtk, artifacts):
+    if toolkit_gtk and artifacts:
+        return True
+    return wayland
+
+
 set_config('MOZ_WAYLAND', depends_if(wayland_headers)(lambda _: True))
 set_define('MOZ_WAYLAND', depends_if(wayland_headers)(lambda _: True))
 
