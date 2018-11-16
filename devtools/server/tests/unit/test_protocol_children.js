@@ -286,7 +286,8 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   // This should remind you of a pause actor.
   getTemporaryChild: function(id) {
     if (!this._temporaryHolder) {
-      this._temporaryHolder = this.manage(new protocol.Actor(this.conn));
+      this._temporaryHolder = new protocol.Actor(this.conn);
+      this.manage(this._temporaryHolder);
     }
     return new ChildActor(this.conn, id);
   },
@@ -315,7 +316,7 @@ var RootFront = protocol.FrontClassWithSpec(rootSpec, {
     if (!this._temporaryHolder) {
       this._temporaryHolder = new protocol.Front(this.conn);
       this._temporaryHolder.actorID = this.actorID + "_temp";
-      this._temporaryHolder = this.manage(this._temporaryHolder);
+      this.manage(this._temporaryHolder);
     }
     return this._getTemporaryChild(id);
   }, {

@@ -10,8 +10,8 @@ const {custom} = protocol;
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
 
 const WorkerTargetFront = protocol.FrontClassWithSpec(workerTargetSpec, {
-  initialize: function(client, form) {
-    protocol.Front.prototype.initialize.call(this, client, form);
+  initialize: function(client) {
+    protocol.Front.prototype.initialize.call(this, client);
 
     this.thread = null;
     this.traits = {};
@@ -23,6 +23,18 @@ const WorkerTargetFront = protocol.FrontClassWithSpec(workerTargetSpec, {
 
     this.destroy = this.destroy.bind(this);
     this.on("close", this.destroy);
+  },
+
+  form(json) {
+    this.actorID = json.actor;
+
+    // Save the full form for Target class usage.
+    // Do not use `form` name to avoid colliding with protocol.js's `form` method
+    this.targetForm = json;
+    this.url = json.url;
+    this.type = json.type;
+    this.scope = json.scope;
+    this.fetch = json.fetch;
   },
 
   get isClosed() {
@@ -50,7 +62,8 @@ const WorkerTargetFront = protocol.FrontClassWithSpec(workerTargetSpec, {
     // Immediately call `connect` in other to fetch console and thread actors
     // that will be later used by Target.
     const connectResponse = await this.connect({});
-    this.consoleActor = connectResponse.consoleActor;
+    // Set the console actor ID on the form to expose it to Target.attach's attachConsole
+    this.targetForm.consoleActor = connectResponse.consoleActor;
     this.threadActor = connectResponse.threadActor;
 
     return response;
@@ -85,7 +98,7 @@ const WorkerTargetFront = protocol.FrontClassWithSpec(workerTargetSpec, {
       const response = [{
         type: "connected",
         threadActor: this.thread._actor,
-        consoleActor: this.consoleActor,
+        consoleActor: this.targetForm.consoleActor,
       }, this.thread];
       return response;
     }

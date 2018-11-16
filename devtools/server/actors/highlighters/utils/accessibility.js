@@ -475,11 +475,51 @@ class ContrastRatio extends AuditReport {
       nodeType: "span",
       parent: root,
       attributes: {
+        "class": "contrast-ratio-label",
+        "id": "contrast-ratio-label",
+      },
+      prefix: this.prefix,
+      text: L10N.getStr("accessibility.contrast.ratio.label"),
+    });
+
+    createNode(this.win, {
+      nodeType: "span",
+      parent: root,
+      attributes: {
         "class": "contrast-ratio",
-        "id": "contrast-ratio",
+        "id": "contrast-ratio-error",
+      },
+      prefix: this.prefix,
+      text: L10N.getStr("accessibility.contrast.ratio.error"),
+    });
+
+    createNode(this.win, {
+      nodeType: "span",
+      parent: root,
+      attributes: {
+        "class": "contrast-ratio",
+        "id": "contrast-ratio-min",
       },
       prefix: this.prefix,
     });
+
+    createNode(this.win, {
+      nodeType: "span",
+      parent: root,
+      attributes: {
+        "class": "contrast-ratio",
+        "id": "contrast-ratio-max",
+      },
+      prefix: this.prefix,
+    });
+  }
+
+  _fillAndStyleContrastValue(el, value, isLargeText, stringName) {
+    value = value.toFixed(2);
+    const style = getContrastRatioScoreStyle(value, isLargeText);
+    this.setTextContent(el, stringName ? L10N.getFormatStr(stringName, value) : value);
+    el.classList.add(style);
+    el.removeAttribute("hidden");
   }
 
   /**
@@ -491,16 +531,36 @@ class ContrastRatio extends AuditReport {
    *         block should be visible.
    */
   update({ contrastRatio }) {
-    const el = this.getElement("contrast-ratio");
-    ["fail", "AA", "AAA"].forEach(style => el.classList.remove(style));
+    const els = {};
+    for (const key of ["label", "min", "max", "error"]) {
+      const el = els[key] = this.getElement(`contrast-ratio-${key}`);
+      if (["min", "max"].includes(key)) {
+        ["fail", "AA", "AAA"].forEach(className => el.classList.remove(className));
+        this.setTextContent(el, "");
+      }
+
+      el.setAttribute("hidden", true);
+    }
 
     if (!contrastRatio) {
       return false;
     }
 
-    el.classList.add(getContrastRatioScoreStyle(contrastRatio));
-    this.setTextContent(el,
-      L10N.getFormatStr("accessibility.contrast.ratio", contrastRatio.ratio.toFixed(2)));
+    const { isLargeText, error } = contrastRatio;
+    els.label.removeAttribute("hidden");
+    if (error) {
+      els.error.removeAttribute("hidden");
+      return true;
+    }
+
+    if (contrastRatio.value) {
+      this._fillAndStyleContrastValue(els.min, contrastRatio.value, isLargeText);
+      return true;
+    }
+
+    this._fillAndStyleContrastValue(els.min, contrastRatio.min, isLargeText);
+    this._fillAndStyleContrastValue(els.max, contrastRatio.max, isLargeText);
+
     return true;
   }
 }
@@ -563,15 +623,15 @@ function getBounds(win, { x, y, w, h, zoom }) {
 /**
  * Get contrast ratio score styling to be applied on the element that renders the contrast
  * ratio.
- * @param  {Number} options.ratio
+ * @param  {Number} ratio
  *         Value of the contrast ratio for a given accessible object.
- * @param  {Boolean} options.largeText
+ * @param  {Boolean} isLargeText
  *         True if the accessible object contains large text.
  * @return {String}
  *         CSS class that represents the appropriate contrast ratio score styling.
  */
-function getContrastRatioScoreStyle({ ratio, largeText }) {
-  const levels = largeText ? { AA: 3, AAA: 4.5 } : { AA: 4.5, AAA: 7 };
+function getContrastRatioScoreStyle(ratio, isLargeText) {
+  const levels = isLargeText ? { AA: 3, AAA: 4.5 } : { AA: 4.5, AAA: 7 };
 
   let style = "fail";
   if (ratio >= levels.AAA) {

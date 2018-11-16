@@ -101,15 +101,15 @@
   }
 }
 
-:root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar,
-:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar {
+:root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .toolbar-items,
+:root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .toolbar-items {
   padding-top: var(--space-above-tabbar);
 }
 
 /* Add 4px extra margin on top of the tabs toolbar on Windows 7. */
 @media (-moz-os-version: windows-win7) {
-  :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar,
-  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar {
+  :root[sizemode="normal"][chromehidden~="menubar"] #TabsToolbar > .toolbar-items,
+  :root[sizemode="normal"] #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .toolbar-items {
     padding-top: calc(var(--space-above-tabbar) + 4px);
   }
 }
@@ -329,7 +329,8 @@
   -moz-box-align: stretch;
 }
 
-@media (-moz-os-version: windows-win7) {
+@media (-moz-os-version: windows-win7),
+       (-moz-os-version: windows-win8) {
   /* Preserve window control buttons position at the top of the button box. */
   .titlebar-buttonbox-container {
     -moz-box-align: start;
@@ -959,18 +960,6 @@ notification[value="translation"] {
  * tab bar. */
 #TabsToolbar > .titlebar-item {
   margin-bottom: @navbarTabsShadowSize@;
-}
-
-/* Center titlebar items vertically. */
-:root[sizemode="normal"] #TabsToolbar > .titlebar-item {
-  margin-top: calc(-1 * var(--space-above-tabbar));
-}
-
-/* Compensate for 4px extra margin on top of the tabs toolbar on Windows 7. */
-@media (-moz-os-version: windows-win7) {
-  :root[sizemode="normal"] #TabsToolbar > .titlebar-item {
-    margin-top: calc(-1 * (var(--space-above-tabbar) + 4px));
-  }
 }
 
 :root:not([privatebrowsingmode=temporary]) .accessibility-indicator,

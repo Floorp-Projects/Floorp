@@ -155,7 +155,10 @@ add_task(async function test_corrupt_remote_roots() {
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
   let datesAdded = await promiseManyDatesAdded([
-    PlacesUtils.bookmarks.menuGuid]);
+    PlacesUtils.bookmarks.menuGuid,
+    PlacesUtils.bookmarks.unfiledGuid,
+    PlacesUtils.bookmarks.toolbarGuid,
+  ]);
   deepEqual(changesToUpload, {
     menu: {
       tombstone: false,
@@ -170,6 +173,36 @@ add_task(async function test_corrupt_remote_roots() {
         dateAdded: datesAdded.get(PlacesUtils.bookmarks.menuGuid),
         title: BookmarksMenuTitle,
         children: ["bookmarkAAAA"],
+      },
+    },
+    unfiled: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "unfiled",
+        type: "folder",
+        parentid: "places",
+        hasDupe: true,
+        parentName: "",
+        dateAdded: datesAdded.get(PlacesUtils.bookmarks.unfiledGuid),
+        title: UnfiledBookmarksTitle,
+        children: ["bookmarkBBBB"],
+      },
+    },
+    toolbar: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "toolbar",
+        type: "folder",
+        parentid: "places",
+        hasDupe: true,
+        parentName: "",
+        dateAdded: datesAdded.get(PlacesUtils.bookmarks.toolbarGuid),
+        title: BookmarksToolbarTitle,
+        children: [],
       },
     },
   }, "Should reupload invalid roots");

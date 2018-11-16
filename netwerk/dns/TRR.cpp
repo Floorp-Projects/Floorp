@@ -431,10 +431,15 @@ TRR::ReceivePush(nsIHttpChannel *pushed, nsHostRecord *pushedRec)
     return NS_ERROR_UNEXPECTED;
   }
 
+  if ((mType != TRRTYPE_A) && (mType != TRRTYPE_AAAA) && (mType != TRRTYPE_TXT)) {
+    LOG(("TRR::ReceivePush unknown type %d\n", mType));
+    return NS_ERROR_UNEXPECTED;
+  }
+
   RefPtr<nsHostRecord> hostRecord;
   nsresult rv;
   rv = mHostResolver->GetHostRecord(mHost,
-                                    pushedRec->type,
+                                    (mType != TRRTYPE_TXT) ? 0 : nsIDNSService::RESOLVE_TYPE_TXT,
                                     pushedRec->flags, pushedRec->af,
                                     pushedRec->pb,
                                     pushedRec->originSuffix,

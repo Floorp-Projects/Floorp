@@ -85,7 +85,8 @@ function runTests() {
       // Connect to the first content processe available
       const content = response.processes.filter(p => (!p.parent))[0];
 
-      client.mainRoot.getProcess(content.id).then(({form: actor}) => {
+      client.mainRoot.getProcess(content.id).then(front => {
+        const actor = front.targetForm;
         ok(actor.consoleActor, "Got the console actor");
         ok(actor.chromeDebugger, "Got the thread actor");
 
@@ -106,8 +107,8 @@ function runTests() {
   // Assert that calling client.getProcess against the same process id is
   // returning the same actor.
   function getProcessAgain(firstActor, id) {
-    client.mainRoot.getProcess(id).then(response => {
-      const actor = response.form;
+    client.mainRoot.getProcess(id).then(front => {
+      const actor = front.targetForm;
       is(actor, firstActor,
          "Second call to getProcess with the same id returns the same form");
       closeClient();

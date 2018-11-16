@@ -75,6 +75,8 @@ module.exports.colorUtils = {
   colorToRGBA: colorToRGBA,
   isValidCSSColor: isValidCSSColor,
   calculateContrastRatio: calculateContrastRatio,
+  calculateLuminance: calculateLuminance,
+  blendColors: blendColors,
 };
 
 /**
@@ -399,7 +401,7 @@ CssColor.prototype = {
   getRGBATuple: function() {
     const tuple = colorToRGBA(this.authored, this.cssColor4);
 
-    tuple.a = parseFloat(tuple.a.toFixed(1));
+    tuple.a = parseFloat(tuple.a.toFixed(2));
 
     return tuple;
   },
@@ -417,7 +419,7 @@ CssColor.prototype = {
       h,
       s,
       l,
-      a: parseFloat(a.toFixed(1)),
+      a: parseFloat(a.toFixed(2)),
     };
   },
 

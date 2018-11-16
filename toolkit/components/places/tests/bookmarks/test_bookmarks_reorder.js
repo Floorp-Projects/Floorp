@@ -203,3 +203,50 @@ add_task(async function reorder_empty_folder_invalid_children() {
   // However, before bug 1333304, doing this on an empty folder threw.
   await PlacesUtils.bookmarks.reorder(f1.guid, ["123456789012"]);
 });
+
+add_task(async function reorder_lastModified() {
+  // Start clean.
+  await PlacesUtils.bookmarks.eraseEverything();
+
+  let lastModified = new Date(Date.now() - 1000);
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [{
+      guid: "bookmarkAAAA",
+      url: "http://example.com/a",
+      title: "A",
+      dateAdded: lastModified,
+      lastModified,
+    }, {
+      guid: "bookmarkBBBB",
+      url: "http://example.com/b",
+      title: "B",
+      dateAdded: lastModified,
+      lastModified,
+    }],
+  });
+  await PlacesUtils.bookmarks.update({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    lastModified,
+  });
+
+  info("Reorder and set explicit last modified time");
+  let newLastModified = new Date(lastModified.getTime() + 500);
+  await PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.menuGuid,
+    ["bookmarkBBBB", "bookmarkAAAA"],
+    { lastModified: newLastModified });
+  for (let guid of [PlacesUtils.bookmarks.menuGuid, "bookmarkAAAA",
+                    "bookmarkBBBB"]) {
+    let info = await PlacesUtils.bookmarks.fetch(guid);
+    Assert.equal(info.lastModified.getTime(), newLastModified.getTime());
+  }
+
+  info("Reorder and set default last modified time");
+  await PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.menuGuid,
+    ["bookmarkAAAA", "bookmarkBBBB"]);
+  for (let guid of [PlacesUtils.bookmarks.menuGuid, "bookmarkAAAA",
+                    "bookmarkBBBB"]) {
+    let info = await PlacesUtils.bookmarks.fetch(guid);
+    Assert.greater(info.lastModified.getTime(), newLastModified.getTime());
+  }
+});

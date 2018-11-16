@@ -1036,20 +1036,77 @@ set_define('MOZ_BUILD_APP', build_project)
 add_old_configure_assignment('MOZ_BUILD_APP', build_project)
 
 
+# This is temporary until js/src/configure and configure are merged.
+# Use instead of option() in js/moz.configure and more generally, for
+# options that are shared between configure and js/src/configure.
+@template
+def js_option(*args, **kwargs):
+    opt = option(*args, **kwargs)
+
+    @depends(opt.option, build_project, when=kwargs.get('when'))
+    def js_option(value, build_project):
+        if build_project != 'js':
+            return value.format(opt.option)
+
+    add_old_configure_arg(js_option)
+
+
+js_option(env='MOZILLA_OFFICIAL',
+          help='Build an official release')
+
+
+@depends('MOZILLA_OFFICIAL')
+def mozilla_official(official):
+    if official:
+        return True
+
+
+set_config('MOZILLA_OFFICIAL', mozilla_official)
+set_define('MOZILLA_OFFICIAL', mozilla_official)
+add_old_configure_assignment('MOZILLA_OFFICIAL', mozilla_official)
+
+
 # set RELEASE_OR_BETA and NIGHTLY_BUILD variables depending on the cycle we're in
 # The logic works like this:
 # - if we have "a1" in GRE_MILESTONE, we're building Nightly (define NIGHTLY_BUILD)
 # - otherwise, if we have "a" in GRE_MILESTONE, we're building Nightly or Aurora
 # - otherwise, we're building Release/Beta (define RELEASE_OR_BETA)
-@depends(check_build_environment, '--help')
+@depends(check_build_environment, build_project, '--help')
 @imports(_from='__builtin__', _import='open')
+@imports('os')
 @imports('re')
-def milestone(build_env, _):
-    milestone_path = os.path.join(build_env.topsrcdir,
-                                  'config',
-                                  'milestone.txt')
-    with open(milestone_path, 'r') as fh:
-        milestone = fh.read().splitlines()[-1]
+def milestone(build_env, build_project, _):
+    versions = []
+    paths = ['config/milestone.txt']
+    if build_project == 'js':
+        paths = paths * 3
+    else:
+        paths += [
+            'browser/config/version.txt',
+            'browser/config/version_display.txt',
+        ]
+    for f in ('version.txt', 'version_display.txt'):
+        f = os.path.join(build_project, f)
+        if not os.path.exists(os.path.join(build_env.topsrcdir, f)):
+            break
+        paths.append(f)
+
+    for p in paths:
+        with open(os.path.join(build_env.topsrcdir, p), 'r') as fh:
+            content = fh.read().splitlines()
+            if not content:
+                die('Could not find a version number in {}'.format(p))
+            versions.append(content[-1])
+
+    milestone, firefox_version, firefox_version_display = versions[:3]
+
+    # version.txt content from the project directory if there is one, otherwise
+    # the firefox version.
+    app_version = versions[3] if len(versions) > 3 else firefox_version
+    # version_display.txt content from the project directory if there is one,
+    # otherwise version.txt content from the project directory, otherwise the
+    # firefox version for display.
+    app_version_display = versions[-1] if len(versions) > 3 else firefox_version_display
 
     is_nightly = is_release_or_beta = None
 
@@ -1071,7 +1128,9 @@ def milestone(build_env, _):
                      uaversion='%s.0' % major_version,
                      symbolversion='%s%s' % (major_version, ab_patch),
                      is_nightly=is_nightly,
-                     is_release_or_beta=is_release_or_beta)
+                     is_release_or_beta=is_release_or_beta,
+                     app_version=app_version,
+                     app_version_display=app_version_display)
 
 
 set_config('GRE_MILESTONE', milestone.version)
@@ -1091,13 +1150,33 @@ set_config('MOZILLA_SYMBOLVERSION', milestone.symbolversion)
 add_old_configure_assignment('MOZILLA_VERSION', milestone.version)
 add_old_configure_assignment('MOZILLA_SYMBOLVERSION', milestone.symbolversion)
 
-# The app update channel is 'default' when not supplied. The value is used in
-# the application's confvars.sh (and is made available to a project specific
-# moz.configure).
+set_config('MOZ_APP_VERSION', milestone.app_version)
+set_config('MOZ_APP_VERSION_DISPLAY', milestone.app_version_display)
+add_old_configure_assignment('MOZ_APP_VERSION', milestone.app_version)
+
+
+# The app update channel is 'default' when not supplied, and MOZILLA_OFFICIAL
+# is not set. When MOZILLA_OFFICIAL is set, the default is derived from
+# the application display version.
+@depends(milestone, mozilla_official)
+def default_update_channel(milestone, mozilla_official):
+    if not mozilla_official:
+        return 'default'
+    if milestone.is_release_or_beta:
+        if 'esr' in milestone.app_version_display:
+            return 'esr'
+        if 'b' in milestone.app_version_display:
+            return 'beta'
+        return 'release'
+    if milestone.is_nightly:
+        return 'nightly'
+    return 'default'
+
+
 option('--enable-update-channel',
        nargs=1,
        help='Select application update channel',
-       default='default')
+       default=default_update_channel)
 
 
 @depends('--enable-update-channel')
@@ -1187,18 +1266,3 @@ def all_configure_options():
 
 
 set_config('MOZ_CONFIGURE_OPTIONS', all_configure_options)
-
-
-# This is temporary until js/src/configure and configure are merged.
-# Use instead of option() in js/moz.configure and more generally, for
-# options that are shared between configure and js/src/configure.
-@template
-def js_option(*args, **kwargs):
-    opt = option(*args, **kwargs)
-
-    @depends(opt.option, build_project, when=kwargs.get('when'))
-    def js_option(value, build_project):
-        if build_project != 'js':
-            return value.format(opt.option)
-
-    add_old_configure_arg(js_option)

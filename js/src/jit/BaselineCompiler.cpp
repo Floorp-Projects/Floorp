@@ -1871,6 +1871,15 @@ BaselineCompiler::emit_JSOP_DOUBLE()
     return true;
 }
 
+#ifdef ENABLE_BIGINT
+bool
+BaselineCompiler::emit_JSOP_BIGINT()
+{
+    frame.push(script->getConst(GET_UINT32_INDEX(pc)));
+    return true;
+}
+#endif
+
 bool
 BaselineCompiler::emit_JSOP_STRING()
 {

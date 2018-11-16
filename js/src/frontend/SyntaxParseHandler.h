@@ -208,6 +208,12 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
         return NodeGeneric;
     }
 
+#ifdef ENABLE_BIGINT
+    BigIntLiteralType newBigInt() {
+        return NodeGeneric;
+    }
+#endif
+
     BooleanLiteralType newBooleanLiteral(bool cond, const TokenPos& pos) { return NodeGeneric; }
 
     NameNodeType newStringLiteral(JSAtom* atom, const TokenPos& pos) {

@@ -54,7 +54,7 @@
 %define HAVE_SSE42 1
 %define HAVE_SSSE3 1
 %define HAVE_XOP 1
-%define HAVE_CPUNOP 1
+%define HAVE_CPUNOP 0
 %define HAVE_I686 1
 %define HAVE_MIPSFPU 0
 %define HAVE_MIPS32R2 0

@@ -872,7 +872,6 @@ Pool.prototype = extend(EventEmitter.prototype, {
       }
     }
     this._poolMap.set(actor.actorID, actor);
-    return actor;
   },
 
   /**
@@ -1286,6 +1285,10 @@ var Front = function(conn = null, form = null, detail = null, context = null) {
   Pool.call(this, conn);
   this._requests = [];
 
+  // Front listener functions registered via `onFront` get notified
+  // of new fronts via this dedicated EventEmitter object.
+  this._frontListeners = new EventEmitter();
+
   // protocol.js no longer uses this data in the constructor, only external
   // uses do.  External usage of manually-constructed fronts will be
   // drastically reduced if we convert the root and target actors to
@@ -1315,6 +1318,7 @@ Front.prototype = extend(Pool.prototype, {
     }
     Pool.prototype.destroy.call(this);
     this.actorID = null;
+    this._frontListeners = null;
   },
 
   manage: function(front) {
@@ -1322,7 +1326,23 @@ Front.prototype = extend(Pool.prototype, {
       throw new Error("Can't manage front without an actor ID.\n" +
                       "Ensure server supports " + front.typeName + ".");
     }
-    return Pool.prototype.manage.call(this, front);
+    Pool.prototype.manage.call(this, front);
+
+    // Call listeners registered via `onFront` method
+    this._frontListeners.emit(front.typeName, front);
+  },
+
+  // Run callback on every front of this type that currently exists, and on every
+  // instantiation of front type in the future.
+  onFront(typeName, callback) {
+    // First fire the callback on already instantiated fronts
+    for (const front of this.poolChildren()) {
+      if (front.typeName == typeName) {
+        callback(front);
+      }
+    }
+    // Then register the callback for fronts instantiated in the future
+    this._frontListeners.on(typeName, callback);
   },
 
   toString: function() {

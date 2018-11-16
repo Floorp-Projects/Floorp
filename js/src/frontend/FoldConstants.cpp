@@ -379,6 +379,9 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
       case ParseNodeKind::This:
       case ParseNodeKind::Elision:
       case ParseNodeKind::Number:
+#ifdef ENABLE_BIGINT
+      case ParseNodeKind::BigInt:
+#endif
       case ParseNodeKind::New:
       case ParseNodeKind::Generator:
       case ParseNodeKind::ParamsBody:
@@ -472,6 +475,9 @@ IsEffectless(ParseNode* node)
            node->isKind(ParseNodeKind::String) ||
            node->isKind(ParseNodeKind::TemplateString) ||
            node->isKind(ParseNodeKind::Number) ||
+#ifdef ENABLE_BIGINT
+           node->isKind(ParseNodeKind::BigInt) ||
+#endif
            node->isKind(ParseNodeKind::Null) ||
            node->isKind(ParseNodeKind::RawUndefined) ||
            node->isKind(ParseNodeKind::Function);
@@ -485,6 +491,11 @@ Boolish(ParseNode* pn)
     switch (pn->getKind()) {
       case ParseNodeKind::Number:
         return (pn->as<NumericLiteral>().value() != 0 && !IsNaN(pn->as<NumericLiteral>().value())) ? Truthy : Falsy;
+
+#ifdef ENABLE_BIGINT
+      case ParseNodeKind::BigInt:
+        return (pn->as<BigIntLiteral>().box()->value()->toBoolean()) ? Truthy : Falsy;
+#endif
 
       case ParseNodeKind::String:
       case ParseNodeKind::TemplateString:
@@ -567,7 +578,13 @@ FoldTypeOfExpr(JSContext* cx, UnaryNode* node, PerHandlerParser<FullParseHandler
         result = cx->names().string;
     } else if (expr->isKind(ParseNodeKind::Number)) {
         result = cx->names().number;
-    } else if (expr->isKind(ParseNodeKind::Null)) {
+    }
+#ifdef ENABLE_BIGINT
+    else if (expr->isKind(ParseNodeKind::BigInt)) {
+        result = cx->names().bigint;
+    }
+#endif
+    else if (expr->isKind(ParseNodeKind::Null)) {
         result = cx->names().object;
     } else if (expr->isKind(ParseNodeKind::True) || expr->isKind(ParseNodeKind::False)) {
         result = cx->names().boolean;
@@ -1633,6 +1650,12 @@ Fold(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>& parser)
       case ParseNodeKind::Number:
         MOZ_ASSERT(pn->is<NumericLiteral>());
         return true;
+
+#ifdef ENABLE_BIGINT
+      case ParseNodeKind::BigInt:
+        MOZ_ASSERT(pn->is<BigIntLiteral>());
+        return true;
+#endif
 
       case ParseNodeKind::SuperBase:
       case ParseNodeKind::TypeOfName: {

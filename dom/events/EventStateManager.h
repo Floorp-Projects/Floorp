@@ -1096,6 +1096,10 @@ protected:
                                 WidgetMouseEvent* aDownEvent,
                                 nsIFrame* aDownFrame);
 
+  void SetGestureDownPoint(WidgetGUIEvent* aEvent);
+
+  LayoutDeviceIntPoint GetEventRefPoint(WidgetEvent* aEvent) const;
+
   friend class mozilla::dom::TabParent;
   void BeginTrackingRemoteDragGesture(nsIContent* aContent);
   void StopTrackingDragGesture();

@@ -56,10 +56,10 @@ class WorkersPanel extends Component {
     const client = this.props.client;
     // When calling RootFront.listAllWorkers, ContentProcessTargetActor are created
     // for each content process, which sends `workerListChanged` events.
-    // Until we create a Front for ContentProcessTargetActor, we should listen for these
-    // event on DebuggerClient. After that, we have to listen on the related fronts
-    // directly.
-    client.addListener("workerListChanged", this.updateWorkers);
+    client.mainRoot.onFront("contentProcessTarget", front => {
+      front.on("workerListChanged", this.updateWorkers);
+      this.state.contentProcessFronts.push(front);
+    });
     client.mainRoot.on("workerListChanged", this.updateWorkers);
 
     client.mainRoot.on("serviceWorkerRegistrationListChanged", this.updateWorkers);
@@ -90,7 +90,9 @@ class WorkersPanel extends Component {
     client.mainRoot.off("processListChanged", this.updateWorkers);
     client.mainRoot.off("serviceWorkerRegistrationListChanged", this.updateWorkers);
     client.mainRoot.off("workerListChanged", this.updateWorkers);
-    client.removeListener("workerListChanged", this.updateWorkers);
+    for (const front of this.state.contentProcessFronts) {
+      front.off("workerListChanged", this.updateWorkers);
+    }
     client.removeListener("registration-changed", this.updateWorkers);
 
     Services.prefs.removeObserver(PROCESS_COUNT_PREF, this.updateMultiE10S);
@@ -105,6 +107,10 @@ class WorkersPanel extends Component {
         other: [],
       },
       processCount: 1,
+
+      // List of ContentProcessTargetFront registered from componentWillMount
+      // from which we listen for worker list changes
+      contentProcessFronts: [],
     };
   }
 

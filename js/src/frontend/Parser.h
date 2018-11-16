@@ -247,8 +247,8 @@ class MOZ_STACK_CLASS ParserBase
     TokenStreamAnyChars anyChars;
     LifoAlloc::Mark tempPoolMark;
 
-    /* list of parsed objects for GC tracing */
-    ObjectBox* traceListHead;
+    /* list of parsed objects and BigInts for GC tracing */
+    TraceListNode* traceListHead;
 
     /* innermost parse context (stack-allocated) */
     ParseContext* pc;
@@ -348,7 +348,7 @@ class MOZ_STACK_CLASS ParserBase
     {
         friend class ParserBase;
         LifoAlloc::Mark mark;
-        ObjectBox* traceListHead;
+        TraceListNode* traceListHead;
     };
     Mark mark() const {
         Mark m;
@@ -361,7 +361,15 @@ class MOZ_STACK_CLASS ParserBase
         traceListHead = m.traceListHead;
     }
 
+  private:
+    template <typename BoxT, typename ArgT>
+    BoxT* newTraceListNode(ArgT* arg);
+
+  public:
     ObjectBox* newObjectBox(JSObject* obj);
+#ifdef ENABLE_BIGINT
+    BigIntBox* newBigIntBox(BigInt* val);
+#endif
 
     mozilla::Maybe<GlobalScope::Data*> newGlobalScopeData(ParseContext::Scope& scope);
     mozilla::Maybe<ModuleScope::Data*> newModuleScopeData(ParseContext::Scope& scope);
@@ -1295,6 +1303,10 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
         return handler.newNumber(tok.number(), tok.decimalPoint(), tok.pos);
     }
 
+#ifdef ENABLE_BIGINT
+    inline BigIntLiteralType newBigInt();
+#endif
+
   protected:
     // Match the current token against the BindingIdentifier production with
     // the given Yield parameter.  If there is no match, report a syntax
@@ -1410,6 +1422,9 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
     inline void setInParametersOfAsyncFunction(bool inParameters);
 
     RegExpLiteralType newRegExp();
+#ifdef ENABLE_BIGINT
+    BigIntLiteralType newBigInt();
+#endif
 
     // Parse a module.
     CodeNodeType moduleBody(ModuleSharedContext* modulesc);
@@ -1537,6 +1552,9 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
     inline void setInParametersOfAsyncFunction(bool inParameters);
 
     RegExpLiteralType newRegExp();
+#ifdef ENABLE_BIGINT
+    BigIntLiteralType newBigInt();
+#endif
 
     // Parse a module.
     CodeNodeType moduleBody(ModuleSharedContext* modulesc);

@@ -18,7 +18,7 @@ extern constexpr GkAtoms gGkAtoms = {
   //
   //   u"a",
   //   u"bb",
-  //   u"ccc",
+  //   u"Ccc",
   //
   #define GK_ATOM(name_, value_, hash_, is_ascii_lower_, type_, atom_type_) \
     u"" value_,
@@ -34,26 +34,34 @@ extern constexpr GkAtoms gGkAtoms = {
     // Expansion of the example GK_ATOM entries in nsGkAtoms.h:
     //
     //   nsStaticAtom(
-    //     1, 0x01234567,
+    //     1,
+    //     0x01234567,
     //     offsetof(GkAtoms, mAtoms[static_cast<size_t>(GkAtoms::Atoms::a)]) -
-    //     offsetof(GkAtoms, a_string)),
+    //       offsetof(GkAtoms, a_string),
+    //     true),
     //
     //   nsStaticAtom(
-    //     2, 0x12345678,
+    //     2,
+    //     0x12345678,
     //     offsetof(GkAtoms, mAtoms[static_cast<size_t>(GkAtoms::Atoms::bb)]) -
-    //     offsetof(GkAtoms, bb_string)),
+    //       offsetof(GkAtoms, bb_string),
+    //     false),
     //
     //   nsStaticAtom(
-    //     3, 0x23456789,
-    //     offsetof(GkAtoms, mAtoms[static_cast<size_t>(GkAtoms::Atoms::ccc)]) -
-    //     offsetof(GkAtoms, ccc_string)),
+    //     3,
+    //     0x23456789,
+    //     offsetof(GkAtoms, mAtoms[static_cast<size_t>(GkAtoms::Atoms::Ccc)]) -
+    //       offsetof(GkAtoms, Ccc_string),
+    //     false),
     //
     #define GK_ATOM(name_, value_, hash_, is_ascii_lower_, type_, atom_type_)  \
       nsStaticAtom(                                                            \
-        sizeof(value_) - 1, hash_,                                             \
+        sizeof(value_) - 1,                                                    \
+        hash_,                                                                 \
         offsetof(GkAtoms,                                                      \
                  mAtoms[static_cast<size_t>(GkAtoms::Atoms::name_)]) -         \
-        offsetof(GkAtoms, name_##_string), is_ascii_lower_),
+          offsetof(GkAtoms, name_##_string),                                   \
+        is_ascii_lower_),
     #include "nsGkAtomList.h"
     #undef GK_ATOM
   }

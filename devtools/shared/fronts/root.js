@@ -9,6 +9,7 @@ const protocol = require("devtools/shared/protocol");
 const {custom} = protocol;
 
 loader.lazyRequireGetter(this, "getFront", "devtools/shared/protocol", true);
+loader.lazyRequireGetter(this, "BrowsingContextTargetFront", "devtools/shared/fronts/targets/browsing-context", true);
 loader.lazyRequireGetter(this, "ContentProcessTargetFront", "devtools/shared/fronts/targets/content-process", true);
 
 const RootFront = protocol.FrontClassWithSpec(rootSpec, {
@@ -68,12 +69,8 @@ const RootFront = protocol.FrontClassWithSpec(rootSpec, {
         if (process.parent) {
           continue;
         }
-        const { form } = await this.getProcess(process.id);
-        const processActor = form.actor;
-        const response = await this._client.request({
-          to: processActor,
-          type: "listWorkers",
-        });
+        const front = await this.getProcess(process.id);
+        const response = await front.listWorkers();
         workers = workers.concat(response.workers);
       }
     } catch (e) {
@@ -98,30 +95,30 @@ const RootFront = protocol.FrontClassWithSpec(rootSpec, {
       });
     });
 
-    workers.forEach(form => {
+    workers.forEach(front => {
       const worker = {
-        name: form.url,
-        url: form.url,
-        workerTargetActor: form.actor,
+        name: front.url,
+        url: front.url,
+        workerTargetFront: front,
       };
-      switch (form.type) {
+      switch (front.type) {
         case Ci.nsIWorkerDebugger.TYPE_SERVICE:
-          const registration = result.service.find(r => r.scope === form.scope);
+          const registration = result.service.find(r => r.scope === front.scope);
           if (registration) {
             // XXX: Race, sometimes a ServiceWorkerRegistrationInfo doesn't
             // have a scriptSpec, but its associated WorkerDebugger does.
             if (!registration.url) {
-              registration.name = registration.url = form.url;
+              registration.name = registration.url = front.url;
             }
-            registration.workerTargetActor = form.actor;
+            registration.workerTargetFront = front;
           } else {
-            worker.fetch = form.fetch;
+            worker.fetch = front.fetch;
 
             // If a service worker registration could not be found, this means we are in
             // e10s, and registrations are not forwarded to other processes until they
             // reach the activated state. Augment the worker as a registration worker to
             // display it in aboutdebugging.
-            worker.scope = form.scope;
+            worker.scope = front.scope;
             worker.active = false;
             result.service.push(worker);
           }
@@ -146,6 +143,33 @@ const RootFront = protocol.FrontClassWithSpec(rootSpec, {
   getMainProcess() {
     return this.getProcess(0);
   },
+
+  getProcess: custom(async function(id) {
+    // Do not use specification automatic marshalling as getProcess may return
+    // two different type: ParentProcessTargetActor or ContentProcessTargetActor.
+    // Also, we do want to memoize the fronts and return already existing ones.
+    const { form } = await this._getProcess(id);
+    let front = this.actor(form.actor);
+    if (front) {
+      return front;
+    }
+    // getProcess may return a ContentProcessTargetActor or a ParentProcessTargetActor
+    // In most cases getProcess(0) will return the main process target actor,
+    // which is a ParentProcessTargetActor, but not in xpcshell, which uses a
+    // ContentProcessTargetActor. So select the right front based on the actor ID.
+    if (form.actor.includes("contentProcessTarget")) {
+      front = new ContentProcessTargetFront(this._client, form);
+    } else {
+      // ParentProcessTargetActor doesn't have a specific front, instead it uses
+      // BrowsingContextTargetFront on the client side.
+      front = new BrowsingContextTargetFront(this._client, form);
+    }
+    this.manage(front);
+
+    return front;
+  }, {
+    impl: "_getProcess",
+  }),
 
   /**
    * Fetch the target actor for the currently selected tab, or for a specific
@@ -190,15 +214,6 @@ const RootFront = protocol.FrontClassWithSpec(rootSpec, {
   }, {
     impl: "_getTab",
   }),
-
-  attachContentProcessTarget: async function(form) {
-    let front = this.actor(form.actor);
-    if (!front) {
-      front = new ContentProcessTargetFront(this._client, form);
-      this.manage(front);
-    }
-    return front;
-  },
 
   /**
    * Test request that returns the object passed as first argument.

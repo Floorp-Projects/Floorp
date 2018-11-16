@@ -76,6 +76,7 @@
     macro(PrivateName,  "private identifier") \
     macro(Number,       "numeric literal") \
     macro(String,       "string literal") \
+    IF_BIGINT(macro(BigInt, "bigint literal"),) \
     \
     /* start of template literal with substitutions */ \
     macro(TemplateHead,    "'${'") \
