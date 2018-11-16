@@ -90,6 +90,12 @@ IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow)
     return false;
   }
 
+  nsCOMPtr<nsPIDOMWindowOuter> topWindow = aWindow->GetScriptableTop();
+  if (topWindow && topWindow->HasTemporaryAutoplayPermission()) {
+    AUTOPLAY_LOG("Allow autoplay as document has temporary autoplay permission.");
+    return true;
+  }
+
   nsIDocument* approver = ApproverDocOf(*aWindow->GetExtantDoc());
   if (!approver) {
     return false;
@@ -97,7 +103,7 @@ IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow)
 
   if (nsContentUtils::IsExactSitePermAllow(approver->NodePrincipal(),
                                            "autoplay-media")) {
-    AUTOPLAY_LOG("Allow autoplay as document has autoplay permission.");
+    AUTOPLAY_LOG("Allow autoplay as document has permanent autoplay permission.");
     return true;
   }
 
@@ -150,7 +156,7 @@ IsMediaElementAllowedToPlay(const HTMLMediaElement& aElement)
   }
 
   if (IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow())) {
-    AUTOPLAY_LOG("Autoplay allowed as activated/whitelisted window, media %p.", &aElement);
+    AUTOPLAY_LOG("Autoplay allowed as window is allowed to play, media %p.", &aElement);
     return true;
   }
 
