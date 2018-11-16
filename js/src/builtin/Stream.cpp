@@ -2294,39 +2294,10 @@ CreateReadableStreamDefaultController(JSContext* cx, Handle<ReadableStream*> str
 bool
 ReadableStreamDefaultController::constructor(JSContext* cx, unsigned argc, Value* vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (!ThrowIfNotConstructing(cx, args, "ReadableStreamDefaultController")) {
-        return false;
-    }
-
-    // Step 1: If ! IsReadableStream(stream) is false, throw a TypeError exception.
-    HandleValue streamVal = args.get(0);
-    if (!Is<ReadableStream>(streamVal)) {
-        ReportArgTypeError(cx, "ReadableStreamDefaultController", "ReadableStream",
-                           args.get(0));
-        return false;
-    }
-
-    Rooted<ReadableStream*> stream(cx, &streamVal.toObject().as<ReadableStream>());
-
-    // Step 2: If stream.[[readableStreamController]] is not undefined, throw a
-    //         TypeError exception.
-    if (stream->hasController()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_READABLESTREAM_CONTROLLER_SET);
-        return false;
-    }
-
-    // Steps 3-11.
-    RootedObject controller(cx, CreateReadableStreamDefaultController(cx, stream, args.get(1),
-                                                                      args.get(2), args.get(3)));
-    if (!controller) {
-        return false;
-    }
-
-    args.rval().setObject(*controller);
-    return true;
+    // Step 1: Throw a TypeError.
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BOGUS_CONSTRUCTOR, "ReadableStreamDefaultController");
+    return false;
 }
 
 static MOZ_MUST_USE double
@@ -3224,38 +3195,10 @@ CreateReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream
 bool
 ReadableByteStreamController::constructor(JSContext* cx, unsigned argc, Value* vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (!ThrowIfNotConstructing(cx, args, "ReadableByteStreamController")) {
-        return false;
-    }
-
-    // Step 1: If ! IsReadableStream(stream) is false, throw a TypeError exception.
-    HandleValue streamVal = args.get(0);
-    if (!Is<ReadableStream>(streamVal)) {
-        ReportArgTypeError(cx, "ReadableStreamDefaultController", "ReadableStream",
-                           args.get(0));
-        return false;
-    }
-
-    Rooted<ReadableStream*> stream(cx, &streamVal.toObject().as<ReadableStream>());
-
-    // Step 2: If stream.[[readableStreamController]] is not undefined, throw a
-    //         TypeError exception.
-    if (stream->hasController()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_READABLESTREAM_CONTROLLER_SET);
-        return false;
-    }
-
-    RootedObject controller(cx, CreateReadableByteStreamController(cx, stream, args.get(1),
-                                                                   args.get(2)));
-    if (!controller) {
-        return false;
-    }
-
-    args.rval().setObject(*controller);
-    return true;
+    // Step 1: Throw a TypeError exception.
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BOGUS_CONSTRUCTOR, "ReadableByteStreamController");
+    return false;
 }
 
 // Version of the ReadableByteStreamConstructor that's specialized for
