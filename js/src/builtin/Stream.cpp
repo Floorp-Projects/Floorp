@@ -3147,7 +3147,7 @@ CreateReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                       JSMSG_READABLEBYTESTREAMCONTROLLER_BAD_CHUNKSIZE);
             return nullptr;
-    }
+        }
     }
 
     // Step 12: Set this.[[autoAllocateChunkSize]] to autoAllocateChunkSize.
@@ -3642,8 +3642,8 @@ ReadableByteStreamControllerHandleQueueDrain(JSContext* cx,
     // Step 2: If controller.[[queueTotalSize]] is 0 and
     //         controller.[[closeRequested]] is true,
     if (controller->queueTotalSize() == 0 && controller->closeRequested()) {
-      // Step a: Perform ! ReadableStreamClose(controller.[[controlledReadableStream]]).
-      return ReadableStreamCloseInternal(cx, stream);
+        // Step a: Perform ! ReadableStreamClose(controller.[[controlledReadableStream]]).
+        return ReadableStreamCloseInternal(cx, stream);
     }
 
     // Step 3: Otherwise,
@@ -3710,16 +3710,16 @@ js::ByteLengthQueuingStrategy::constructor(JSContext* cx, unsigned argc, Value* 
 
     RootedObject argObj(cx, ToObject(cx, args.get(0)));
     if (!argObj) {
-      return false;
+        return false;
     }
 
     RootedValue highWaterMark(cx);
     if (!GetProperty(cx, argObj, argObj, cx->names().highWaterMark, &highWaterMark)) {
-      return false;
+        return false;
     }
 
     if (!SetProperty(cx, strategy, cx->names().highWaterMark, highWaterMark)) {
-      return false;
+        return false;
     }
 
     args.rval().setObject(*strategy);
@@ -3760,16 +3760,16 @@ js::CountQueuingStrategy::constructor(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject argObj(cx, ToObject(cx, args.get(0)));
     if (!argObj) {
-      return false;
+        return false;
     }
 
     RootedValue highWaterMark(cx);
     if (!GetProperty(cx, argObj, argObj, cx->names().highWaterMark, &highWaterMark)) {
-      return false;
+        return false;
     }
 
     if (!SetProperty(cx, strategy, cx->names().highWaterMark, highWaterMark)) {
-      return false;
+        return false;
     }
 
     args.rval().setObject(*strategy);
