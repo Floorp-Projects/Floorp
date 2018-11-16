@@ -299,6 +299,9 @@ UiCompositorControllerParent::Initialize()
   LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(mRootLayerTreeId);
   MOZ_ASSERT(state);
   MOZ_ASSERT(state->mParent);
+  if (!state->mParent) {
+    return;
+  }
   state->mUiControllerParent = this;
 #if defined(MOZ_WIDGET_ANDROID)
   AndroidDynamicToolbarAnimator* animator = state->mParent->GetAndroidDynamicToolbarAnimator();
