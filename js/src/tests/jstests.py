@@ -305,6 +305,7 @@ def load_wpt_tests(xul_tester, requested_paths, excluded_paths):
 
     sys_paths = [
         "python/mozterm",
+        "python/mozboot",
         "testing/mozbase/mozcrash",
         "testing/mozbase/mozdevice",
         "testing/mozbase/mozfile",
