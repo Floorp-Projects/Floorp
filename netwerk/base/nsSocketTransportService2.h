@@ -37,6 +37,7 @@ namespace net {
 //
 extern LazyLogModule gSocketTransportLog;
 #define SOCKET_LOG(args)     MOZ_LOG(gSocketTransportLog, LogLevel::Debug, args)
+#define SOCKET_LOG1(args)    MOZ_LOG(gSocketTransportLog, LogLevel::Error, args)
 #define SOCKET_LOG_ENABLED() MOZ_LOG_TEST(gSocketTransportLog, LogLevel::Debug)
 
 //

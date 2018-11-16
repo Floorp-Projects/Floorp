@@ -422,7 +422,7 @@ nsHttpChannel::Init(nsIURI *uri,
     if (NS_FAILED(rv))
         return rv;
 
-    LOG(("nsHttpChannel::Init [this=%p]\n", this));
+    LOG1(("nsHttpChannel::Init [this=%p]\n", this));
 
     return rv;
 }
@@ -1371,7 +1371,7 @@ nsHttpChannel::SetupTransaction()
 
     // create the transaction object
     mTransaction = new nsHttpTransaction();
-    LOG(("nsHttpChannel %p created nsHttpTransaction %p\n", this, mTransaction.get()));
+    LOG1(("nsHttpChannel %p created nsHttpTransaction %p\n", this, mTransaction.get()));
     mTransaction->SetTransactionObserver(mTransactionObserver);
     mTransactionObserver = nullptr;
 

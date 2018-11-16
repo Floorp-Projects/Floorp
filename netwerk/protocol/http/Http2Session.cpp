@@ -395,7 +395,7 @@ Http2Session::RegisterStreamID(Http2Stream *stream, uint32_t aNewID)
     mNextStreamID += 2;
   }
 
-  LOG3(("Http2Session::RegisterStreamID session=%p stream=%p id=0x%X "
+  LOG1(("Http2Session::RegisterStreamID session=%p stream=%p id=0x%X "
         "concurrent=%d",this, stream, aNewID, mConcurrent));
 
   // We've used up plenty of ID's on this session. Start

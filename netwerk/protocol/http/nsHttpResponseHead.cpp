@@ -579,8 +579,8 @@ nsHttpResponseHead::ParseStatusLine_locked(const nsACString &line)
         }
     }
 
-    LOG(("Have status line [version=%u status=%u statusText=%s]\n",
-        unsigned(mVersion), unsigned(mStatus), mStatusText.get()));
+    LOG1(("Have status line [version=%u status=%u statusText=%s]\n",
+          unsigned(mVersion), unsigned(mStatus), mStatusText.get()));
 }
 
 nsresult

@@ -81,6 +81,7 @@ namespace mozilla {
 namespace net {
 LazyLogModule gHostResolverLog("nsHostResolver");
 #define LOG(args) MOZ_LOG(mozilla::net::gHostResolverLog, mozilla::LogLevel::Debug, args)
+#define LOG1(args) MOZ_LOG(mozilla::net::gHostResolverLog, mozilla::LogLevel::Error, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(mozilla::net::gHostResolverLog, mozilla::LogLevel::Debug)
 }
 }
@@ -2173,8 +2174,8 @@ nsHostResolver::ThreadFunc()
             rec.swap(tmpRec);
         }
 
-        LOG(("DNS lookup thread - Calling getaddrinfo for host [%s].\n",
-             rec->host.get()));
+        LOG1(("DNS lookup thread - Calling getaddrinfo for host [%s].\n",
+              rec->host.get()));
 
         TimeStamp startTime = TimeStamp::Now();
         bool getTtl = rec->mGetTtl;
@@ -2217,9 +2218,9 @@ nsHostResolver::ThreadFunc()
             }
         }
 
-        LOG(("DNS lookup thread - lookup completed for host [%s]: %s.\n",
-             rec->host.get(),
-             ai ? "success" : "failure: unknown host"));
+        LOG1(("DNS lookup thread - lookup completed for host [%s]: %s.\n",
+              rec->host.get(),
+              ai ? "success" : "failure: unknown host"));
 
         if (LOOKUP_RESOLVEAGAIN == CompleteLookup(rec, status, ai, rec->pb,
                                                   rec->originSuffix)) {
