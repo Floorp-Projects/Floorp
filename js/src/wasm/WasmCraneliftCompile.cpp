@@ -284,6 +284,7 @@ wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
 {
     MOZ_ASSERT(env.tier() == Tier::Optimized);
     MOZ_ASSERT(env.optimizedBackend() == OptimizedBackend::Cranelift);
+    MOZ_ASSERT(!env.isAsmJS());
 
     AutoCranelift compiler(env);
     if (!compiler.init()) {
