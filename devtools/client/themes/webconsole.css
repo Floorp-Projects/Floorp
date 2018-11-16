@@ -18,15 +18,15 @@
 }
 
 .theme-dark {
-  --console-input-icon-color: var(--grey-60);
-  --console-input-icon-focused: var(--blue-30);
-  --console-output-icon-medium-color: var(--grey-50);
-  --console-output-icon-strong-color: var(--grey-30);
-  --console-output-icon-error-color: var(--red-40);
-  --console-output-icon-warning-color: var(--yellow-60);
+  --console-input-icon-color: hsl(0, 0%, 50%, 0.5);
+  --console-input-icon-focused: hsl(210, 100%, 73%);
+  --console-output-icon-info: hsl(210, 6%, 52%);
+  --console-output-icon-input: hsl(210, 6%, 76%);
+  --console-output-icon-error: hsl(0, 100%, 65%);
+  --console-output-icon-warning: hsl(36, 100%, 60%);
   --console-output-indent-border-color: var(--theme-highlight-blue);
   --error-color: var(--red-20);
-  --error-background-color: hsl(345, 23%, 24%);
+  --error-background-color: hsl(352, 79%, 62%, 0.17);
   --warning-color: hsl(43, 94%, 81%);
   --warning-background-color: hsl(42, 37%, 19%);
   --console-output-color: white;
@@ -34,12 +34,12 @@
 }
 
 .theme-light {
-  --console-input-icon-color: var(--grey-40);
-  --console-input-icon-focused: var(--blue-55);
-  --console-output-icon-medium-color: var(--grey-40);
-  --console-output-icon-strong-color: var(--grey-60);
-  --console-output-icon-error-color: var(--red-60);
-  --console-output-icon-warning-color: var(--yellow-65);
+  --console-input-icon-color: hsl(210, 6%, 75%);
+  --console-input-icon-focused: hsl(210, 100%, 44%);
+  --console-output-icon-info: hsl(210, 6%, 67%);
+  --console-output-icon-input: hsl(210, 0%, 34%);
+  --console-output-icon-error: hsl(0, 90%, 45%);
+  --console-output-icon-warning: hsl(36, 100%, 45%);
   --console-output-indent-border-color: var(--theme-highlight-blue);
   --error-color: var(--red-70);
   --error-background-color: hsl(344, 73%, 97%);
@@ -185,27 +185,27 @@ a {
 }
 
 .message.command > .icon {
-  color: var(--console-output-icon-strong-color);
+  color: var(--console-output-icon-input);
   background-image: url(chrome://devtools/skin/images/webconsole/input.svg);
 }
 
 .message.result > .icon {
-  color: var(--console-output-icon-medium-color);
+  color: var(--console-output-icon-info);
   background-image: url(chrome://devtools/skin/images/webconsole/return.svg);
 }
 
 .message.info > .icon {
-  color: var(--console-output-icon-medium-color);
+  color: var(--console-output-icon-info);
   background-image: url(chrome://devtools/skin/images/webconsole/info.svg);
 }
 
 .message.error > .icon {
-  color: var(--console-output-icon-error-color);
+  color: var(--console-output-icon-error);
   background-image: url(chrome://devtools/skin/images/alert.svg);
 }
 
 .message.warn > .icon {
-  color: var(--console-output-icon-warning-color);
+  color: var(--console-output-icon-warning);
   background-image: url(chrome://devtools/skin/images/alert.svg);
 }
 
@@ -651,31 +651,36 @@ a.learn-more-link.webconsole-learn-more-link {
   margin-inline-start: 0.5em;
 }
 
-/* Special casing String reps, and warning/error string colors
- * so they are legible */
-.message .message-body > .objectBox-string,
-.message.error .objectBox-string,
-.message.warn .objectBox-string {
-  color: inherit;
+/* Special casing String reps so they are legible */
+.webconsole-output-wrapper .message .message-body > .objectBox-string {
+  color: currentColor;
+}
+
+/* Special casing warning and error string colors so they are legible */
+.theme-dark .message.error .objectBox-string,
+.theme-light .message.error .objectBox-string,
+.theme-dark .message.warn .objectBox-string,
+.theme-light .message.warn .objectBox-string {
+  color: var(--error-color);
 }
 
 /* Special casing dark-theme error and warning ObjectInspector colors */
-.theme-dark .message.error .tree.object-inspector .object-label,
-.theme-dark .message.error .tree.object-inspector .object-label *,
-.theme-dark .message.warn .tree.object-inspector .object-label,
-.theme-dark .message.warn .tree.object-inspector .object-label *,
-.theme-dark .message.error .objectLeftBrace,
-.theme-dark .message.error .objectRightBrace,
-.theme-dark .message.error .arrayLeftBracket,
-.theme-dark .message.error .arrayRightBracket,
-.theme-dark .message.warn .objectLeftBrace,
-.theme-dark .message.warn .objectRightBrace,
-.theme-dark .message.warn .arrayLeftBracket,
-.theme-dark .message.warn .arrayRightBracket {
+.theme-dark .webconsole-output-wrapper .message.error .tree.object-inspector .object-label,
+.theme-dark .webconsole-output-wrapper .message.error .tree.object-inspector .object-label *,
+.theme-dark .webconsole-output-wrapper .message.warn .tree.object-inspector .object-label,
+.theme-dark .webconsole-output-wrapper .message.warn .tree.object-inspector .object-label *,
+.theme-dark .webconsole-output-wrapper .message.error .objectLeftBrace,
+.theme-dark .webconsole-output-wrapper .message.error .objectRightBrace,
+.theme-dark .webconsole-output-wrapper .message.error .arrayLeftBracket,
+.theme-dark .webconsole-output-wrapper .message.error .arrayRightBracket,
+.theme-dark .webconsole-output-wrapper .message.warn .objectLeftBrace,
+.theme-dark .webconsole-output-wrapper .message.warn .objectRightBrace,
+.theme-dark .webconsole-output-wrapper .message.warn .arrayLeftBracket,
+.theme-dark .webconsole-output-wrapper .message.warn .arrayRightBracket {
   color: var(--theme-body-color);
 }
-.theme-dark .message.error .tree.object-inspector,
-.theme-dark .message.warn .tree.object-inspector {
+.theme-dark .webconsole-output-wrapper .message.error .tree.object-inspector,
+.theme-dark .webconsole-output-wrapper .message.warn .tree.object-inspector {
   --console-output-indent-border-color: var(--theme-body-color);
 }
 
