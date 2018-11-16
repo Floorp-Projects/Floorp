@@ -632,6 +632,9 @@ protected:
   RecvVisitURI(const URIParams& aURI, const OptionalURIParams& aLastVisitedURI,
                const uint32_t& aFlags) override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvQueryVisitedState(InfallibleTArray<URIParams>&& aURIs) override;
+
   ContentCacheInParent mContentCache;
 
   nsIntRect mRect;
