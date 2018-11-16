@@ -94,7 +94,7 @@ def MakeCustomHandlerClass(results_handler, shutdown_browser, write_raw_gecko_pr
 class RaptorControlServer():
     """Container class for Raptor Control Server"""
 
-    def __init__(self, results_handler):
+    def __init__(self, results_handler, debug_mode=False):
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
         self.server = None
         self._server_thread = None
@@ -105,6 +105,7 @@ class RaptorControlServer():
         self.device = None
         self.app_name = None
         self.gecko_profile_dir = None
+        self.debug_mode = debug_mode
 
     def start(self):
         config_dir = os.path.join(here, 'tests')
@@ -131,6 +132,13 @@ class RaptorControlServer():
         self.server = httpd
 
     def shutdown_browser(self):
+        # if debug-mode enabled, leave the browser running - require manual shutdown
+        # this way the browser console remains open, so we can review the logs etc.
+        if self.debug_mode:
+            LOG.info("debug-mode enabled, so NOT shutting down the browser")
+            self._finished = True
+            return
+
         if self.device is not None:
             LOG.info("shutting down android app %s" % self.app_name)
         else:

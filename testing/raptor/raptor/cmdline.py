@@ -52,6 +52,8 @@ def create_parser(mach_interface=False):
             help="How long to wait (ms) for one page_cycle to complete, before timing out")
     add_arg('--print-tests', action=_PrintTests,
             help="Print all available Raptor tests")
+    add_arg('--debug-mode', dest="debug_mode", action="store_true",
+            help="Run Raptor in debug mode (open browser console, limited page-cycles, etc.)")
     if not mach_interface:
         add_arg('--run-local', dest="run_local", default=False, action="store_true",
                 help="Flag that indicates if raptor is running locally or in production")

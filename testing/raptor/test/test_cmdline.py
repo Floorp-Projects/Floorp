@@ -14,7 +14,8 @@ def test_verify_options(filedir):
                      binary='invalid/path',
                      gecko_profile='False',
                      page_cycles=1,
-                     page_timeout=60000)
+                     page_timeout=60000,
+                     debug='True')
     parser = ArgumentParser()
 
     with pytest.raises(SystemExit):
