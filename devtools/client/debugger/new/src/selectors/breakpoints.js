@@ -7,9 +7,8 @@
 import { createSelector } from "reselect";
 
 import type { BreakpointsState } from "../reducers/breakpoints";
-import type { Record } from "../utils/makeRecord";
 
-type OuterState = { breakpoints: Record<BreakpointsState> };
+type OuterState = { breakpoints: BreakpointsState };
 
 export function getXHRBreakpoints(state: OuterState) {
   return state.breakpoints.xhrBreakpoints;

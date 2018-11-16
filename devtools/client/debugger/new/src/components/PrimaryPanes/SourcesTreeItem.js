@@ -14,15 +14,17 @@ import Svg from "../shared/Svg";
 
 import {
   getGeneratedSourceByURL,
-  getSourcesUrlsInSources
+  getHasSiblingOfSameName
 } from "../../selectors";
 import actions from "../../actions";
 
-import { isOriginal as isOriginalSource } from "../../utils/source";
+import {
+  isOriginal as isOriginalSource,
+  getSourceQueryString
+} from "../../utils/source";
 import { isDirectory } from "../../utils/sources-tree";
 import { copyToTheClipboard } from "../../utils/clipboard";
 import { features } from "../../utils/prefs";
-import { parse } from "../../utils/url";
 
 import type { TreeNode } from "../../utils/sources-tree/types";
 import type { Source } from "../../types";
@@ -181,7 +183,7 @@ class SourceTreeItem extends Component<Props, State> {
       <span className="suffix">{L10N.getStr("sourceFooter.mappedSuffix")}</span>
     ) : null;
 
-    const querystring = source ? parse(source.url).search : null;
+    const querystring = getSourceQueryString(source);
     const query =
       hasSiblingOfSameName && querystring ? (
         <span className="query">{querystring}</span>
@@ -212,14 +214,6 @@ function getHasMatchingGeneratedSource(state, source: ?Source) {
   }
 
   return !!getGeneratedSourceByURL(state, source.url);
-}
-
-function getHasSiblingOfSameName(state, source: ?Source) {
-  if (!source) {
-    return false;
-  }
-
-  return getSourcesUrlsInSources(state, source.url).length > 1;
 }
 
 const mapStateToProps = (state, props) => {

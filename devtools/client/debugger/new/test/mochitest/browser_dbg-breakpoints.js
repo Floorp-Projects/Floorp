@@ -44,14 +44,6 @@ function findBreakpoint(dbg, url, line) {
   return getBreakpoint(getState(), { sourceId: source.id, line });
 }
 
-function findBreakpoints(dbg) {
-  const {
-    selectors: { getBreakpoints },
-    getState
-  } = dbg;
-  return getBreakpoints(getState());
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
 

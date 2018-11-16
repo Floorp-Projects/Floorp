@@ -12,12 +12,11 @@ import { getSelectedSource, getVisibleBreakpoints } from "../../selectors";
 import { makeLocationId } from "../../utils/breakpoint";
 import { isLoaded } from "../../utils/source";
 
-import type { BreakpointsMap } from "../../reducers/types";
-import type { Source } from "../../types";
+import type { Breakpoint as BreakpointType, Source } from "../../types";
 
 type Props = {
   selectedSource: Source,
-  breakpoints: BreakpointsMap,
+  breakpoints: BreakpointType[],
   editor: Object
 };
 
@@ -39,7 +38,7 @@ class Breakpoints extends Component<Props> {
 
     return (
       <div>
-        {breakpoints.valueSeq().map(bp => {
+        {breakpoints.map(bp => {
           return (
             <Breakpoint
               key={makeLocationId(bp.location)}
