@@ -3370,7 +3370,6 @@ ReadableByteStreamControllerPullSteps(JSContext* cx,
 
                 auto cb = cx->runtime()->readableStreamWriteIntoReadRequestCallback;
                 MOZ_ASSERT(cb);
-                // TODO: use bytesWritten to correctly update the request's state.
                 cb(cx, unwrappedStream, underlyingSource, unwrappedStream->embeddingFlags(),
                    buffer, queueTotalSize, &bytesWritten);
             }
@@ -4367,7 +4366,6 @@ JS::ReadableStreamUpdateDataAvailableFromSource(JSContext* cx, JS::HandleObject 
             void* buffer = JS_GetArrayBufferViewData(transferredView, &dummy, noGC);
             auto cb = cx->runtime()->readableStreamWriteIntoReadRequestCallback;
             MOZ_ASSERT(cb);
-            // TODO: use bytesWritten to correctly update the request's state.
             cb(cx, unwrappedStream, underlyingSource, unwrappedStream->embeddingFlags(), buffer,
                availableData, &bytesWritten);
         }
