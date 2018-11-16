@@ -890,6 +890,11 @@ child:
      */
     async GetContentBlockingLog() returns(nsString log, bool success);
 
+parent:
+    /** Records a history visit. */
+    async VisitURI(URIParams aURI, OptionalURIParams aLastVisitedURI,
+                   uint32_t aFlags);
+
 /*
  * FIXME: write protocol!
 

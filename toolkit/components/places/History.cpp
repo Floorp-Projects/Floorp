@@ -10,6 +10,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/TabChild.h"
 #include "nsXULAppAPI.h"
 
 #include "History.h"
@@ -27,6 +28,7 @@
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsIFileURL.h"
+#include "nsIWidget.h"
 #include "nsIXPConnect.h"
 #include "nsIXULRuntime.h"
 #include "mozilla/Unused.h"
@@ -2128,7 +2130,8 @@ History::IsRecentlyVisitedURI(nsIURI* aURI) {
 //// IHistory
 
 NS_IMETHODIMP
-History::VisitURI(nsIURI* aURI,
+History::VisitURI(nsIWidget* aWidget,
+                  nsIURI* aURI,
                   nsIURI* aLastVisitedURI,
                   uint32_t aFlags)
 {
@@ -2146,10 +2149,10 @@ History::VisitURI(nsIURI* aURI,
     OptionalURIParams lastVisitedURI;
     SerializeURI(aLastVisitedURI, lastVisitedURI);
 
-    mozilla::dom::ContentChild* cpc =
-      mozilla::dom::ContentChild::GetSingleton();
-    NS_ASSERTION(cpc, "Content Protocol is NULL!");
-    (void)cpc->SendVisitURI(uri, lastVisitedURI, aFlags);
+    NS_ENSURE_ARG(aWidget);
+    TabChild* tabChild = aWidget->GetOwningTabChild();
+    NS_ENSURE_TRUE(tabChild, NS_ERROR_FAILURE);
+    (void)tabChild->SendVisitURI(uri, lastVisitedURI, aFlags);
     return NS_OK;
   }
 

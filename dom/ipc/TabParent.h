@@ -628,6 +628,10 @@ protected:
   mozilla::ipc::IPCResult
   RecvGetSystemFont(nsCString* aFontName) override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvVisitURI(const URIParams& aURI, const OptionalURIParams& aLastVisitedURI,
+               const uint32_t& aFlags) override;
+
   ContentCacheInParent mContentCache;
 
   nsIntRect mRect;

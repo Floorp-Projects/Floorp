@@ -99,6 +99,7 @@
 #include "mozilla/WebBrowserPersistDocumentParent.h"
 #include "ProcessPriorityManager.h"
 #include "nsString.h"
+#include "IHistory.h"
 
 #ifdef XP_WIN
 #include "mozilla/plugins/PluginWidgetParent.h"
@@ -3619,6 +3620,27 @@ TabParent::RecvShowCanvasPermissionPrompt(const nsCString& aFirstPartyURI)
                                     NS_ConvertUTF8toUTF16(aFirstPartyURI).get());
   if (NS_FAILED(rv)) {
     return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+TabParent::RecvVisitURI(const URIParams& aURI,
+                        const OptionalURIParams& aLastVisitedURI,
+                        const uint32_t& aFlags)
+{
+  nsCOMPtr<nsIURI> ourURI = DeserializeURI(aURI);
+  if (!ourURI) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  nsCOMPtr<nsIURI> ourLastVisitedURI = DeserializeURI(aLastVisitedURI);
+  RefPtr<nsIWidget> widget = GetWidget();
+  if (NS_WARN_IF(!widget)) {
+    return IPC_OK();
+  }
+  nsCOMPtr<IHistory> history = services::GetHistoryService();
+  if (history) {
+    Unused << history->VisitURI(widget, ourURI, ourLastVisitedURI, aFlags);
   }
   return IPC_OK();
 }
