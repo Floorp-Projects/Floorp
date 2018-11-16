@@ -1421,12 +1421,11 @@ SpdyConnectTransaction::WebsocketWriteSegments(nsAHttpSegmentWriter *writer,
 
   nsresult rv = WriteDataToBuffer(writer, count, countWritten);
   if (NS_SUCCEEDED(rv)) {
-    nsIInputStreamCallback *cb = mTunnelStreamIn->GetCallback();
-    if (!cb) {
-      rv = NS_BASE_STREAM_WOULD_BLOCK;
-    } else {
-      rv = cb->OnInputStreamReady(mTunnelStreamIn);
+    if (!mTunneledConn || !mTunnelStreamIn->GetCallback()) {
+      return NS_BASE_STREAM_WOULD_BLOCK;
     }
+    nsIInputStreamCallback *cb = mTunnelStreamIn->GetCallback();
+    rv = cb->OnInputStreamReady(mTunnelStreamIn);
   }
 
   return rv;
