@@ -319,7 +319,6 @@ class nsCookieService final : public nsICookieService
     bool                          FindSecureCookie(const nsCookieKey& aKey, nsCookie* aCookie);
     void                          FindStaleCookies(nsCookieEntry *aEntry, int64_t aCurrentTime, const mozilla::Maybe<bool> &aIsSecure, nsTArray<nsListIter>& aOutput, uint32_t aLimit);
     void                          TelemetryForEvictingStaleCookie(nsCookie* aEvicted, int64_t oldestCookieTime);
-    void                          NotifyAccepted(nsIChannel* aChannel);
     void                          NotifyRejected(nsIURI *aHostURI, nsIChannel* aChannel, uint32_t aRejectedReason);
     void                          NotifyThirdParty(nsIURI *aHostURI, bool aAccepted, nsIChannel *aChannel);
     void                          NotifyChanged(nsISupports *aSubject, const char16_t *aData, bool aOldCookieIsSession = false, bool aFromHttp = false);

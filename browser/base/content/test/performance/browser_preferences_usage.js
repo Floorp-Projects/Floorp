@@ -189,19 +189,19 @@ add_task(async function navigate_around() {
     },
     "security.insecure_connection_icon.pbmode.enabled": {
       min: 20,
-      max: 60,
+      max: 30,
     },
     "security.insecure_connection_icon.enabled": {
       min: 20,
-      max: 60,
+      max: 30,
     },
     "security.insecure_connection_text.enabled": {
       min: 20,
-      max: 60,
+      max: 30,
     },
     "security.insecure_connection_text.pbmode.enabled": {
       min: 20,
-      max: 60,
+      max: 30,
     },
     "toolkit.cosmeticAnimations.enabled": {
       min: 45,
