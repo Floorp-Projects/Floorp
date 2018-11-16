@@ -177,28 +177,30 @@ def get_raptor_test_list(args, oskey):
                 # subtest comes from matching test ini file name, so add it
                 tests_to_run.append(next_test)
 
-    # if geckoProfile is enabled, turn it on in test settings and limit pagecycles to 3
-    if args.gecko_profile is True:
-        for next_test in tests_to_run:
+    # go through each test and set the page-cycles and page-timeout, and some config flags
+    # the page-cycles value in the INI can be overriden when debug-mode enabled, when
+    # gecko-profiling enabled, or when --page-cycles cmd line arg was used (that overrides all)
+    for next_test in tests_to_run:
+        LOG.info("configuring settings for test %s" % next_test['name'])
+        max_page_cycles = next_test['page_cycles']
+        if args.gecko_profile is True:
             next_test['gecko_profile'] = True
-            if next_test['page_cycles'] > 3:
-                LOG.info("gecko profiling enabled, limiting pagecycles "
-                         "to 3 for test %s" % next_test['name'])
-                next_test['page_cycles'] = 3
-
-    # if --page-cycles command line arg was provided, override the page_cycles value
-    # that was in the manifest/test INI with the command line arg value instead
-    # also allow the cmd line opt to override pagecycles auto set when gecko profiling is on
-    if args.page_cycles is not None:
-        LOG.info("setting page-cycles to %d as specified on the command line" % args.page_cycles)
-        for next_test in tests_to_run:
+            LOG.info("gecko-profiling enabled")
+            max_page_cycles = 3
+        if args.debug_mode is True:
+            next_test['debug_mode'] = True
+            LOG.info("debug-mode enabled")
+            max_page_cycles = 2
+        if args.page_cycles is not None:
             next_test['page_cycles'] = args.page_cycles
-
-    # if --page-timeout command line arg was provided, override the page_timeout value
-    # that was in the manifest/test INI with the command line arg value instead
-    if args.page_timeout is not None:
-        LOG.info("setting page-timeout to %d as specified on the command line" % args.page_timeout)
-        for next_test in tests_to_run:
+            LOG.info("set page-cycles to %d as specified on cmd line" % args.page_cycles)
+        else:
+            if next_test['page_cycles'] > max_page_cycles:
+                next_test['page_cycles'] = max_page_cycles
+                LOG.info("page-cycles set to %d" % next_test['page_cycles'])
+        # if --page-timeout was provided on the command line, use that instead of INI
+        if args.page_timeout is not None:
+            LOG.info("setting page-timeout to %d as specified on cmd line" % args.page_timeout)
             next_test['page_timeout'] = args.page_timeout
 
     # write out .json test setting files for the control server to read and send to web ext

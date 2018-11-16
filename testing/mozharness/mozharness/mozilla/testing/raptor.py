@@ -133,6 +133,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "dest": "host",
             "help": "Hostname from which to serve urls (default: 127.0.0.1).",
         }],
+        [["--debug-mode"], {
+            "dest": "debug_mode",
+            "action": "store_true",
+            "default": False,
+            "help": "Run Raptor in debug mode (open browser console, limited page-cycles, etc.)",
+        }],
 
     ] + testing_config_options + copy.deepcopy(code_coverage_config_options)
 
@@ -197,6 +203,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         self.test_packages_url = self.config.get('test_packages_url')
         self.host = self.config.get('host')
         self.is_release_build = self.config.get('is_release_build')
+        self.debug_mode = self.config.get('debug_mode', False)
 
     # We accept some configuration options from the try commit message in the
     # format mozharness: <options>. Example try commit message: mozharness:
