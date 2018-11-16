@@ -82,7 +82,7 @@ Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
   nsHttpTransaction *trans = mTransaction->QueryHttpTransaction();
-  LOG3(("Http2Stream::Http2Stream %p trans=%p atrans=%p", this, trans, httpTransaction));
+  LOG1(("Http2Stream::Http2Stream %p trans=%p atrans=%p", this, trans, httpTransaction));
 
   mServerReceiveWindow = session->GetServerInitialStreamWindow();
   mClientReceiveWindow = session->PushAllowance();
@@ -667,7 +667,7 @@ Http2Stream::GenerateOpen()
 
   mTxInlineFrameUsed += messageSize;
   UpdatePriorityDependency();
-  LOG3(("Http2Stream %p Generating %d bytes of HEADERS for stream 0x%X with "
+  LOG1(("Http2Stream %p Generating %d bytes of HEADERS for stream 0x%X with "
         "priority weight %u dep 0x%X frames %u uri=%s\n",
         this, mTxInlineFrameUsed, mStreamID, mPriorityWeight,
         mPriorityDependency, numFrames, requestURI.get()));
@@ -1346,7 +1346,7 @@ Http2Stream::UpdatePriorityDependency()
     nsHttp::NotifyActiveTabLoadOptimization();
   }
 
-  LOG3(("Http2Stream::UpdatePriorityDependency %p "
+  LOG1(("Http2Stream::UpdatePriorityDependency %p "
         "depends on stream 0x%X\n",
         this, mPriorityDependency));
 }

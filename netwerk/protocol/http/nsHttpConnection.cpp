@@ -181,7 +181,7 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info,
                        nsIInterfaceRequestor *callbacks,
                        PRIntervalTime rtt)
 {
-    LOG(("nsHttpConnection::Init this=%p sockettransport=%p", this, transport));
+    LOG1(("nsHttpConnection::Init this=%p sockettransport=%p", this, transport));
     NS_ENSURE_ARG_POINTER(info);
     NS_ENSURE_TRUE(!mConnInfo, NS_ERROR_ALREADY_INITIALIZED);
 
@@ -455,9 +455,9 @@ nsHttpConnection::EnsureNPNComplete(nsresult &aOut0RTTWriteHandshakeValue,
             // if ssl->DriveHandshake() has never been called the value
             // for AlpnEarlySelection is still not set. So call it here and
             // check again.
-            LOG(("nsHttpConnection::EnsureNPNComplete %p - "
-                 "early selected alpn not available, we will try one more time.",
-                 this));
+            LOG1(("nsHttpConnection::EnsureNPNComplete %p - "
+                  "early selected alpn not available, we will try one more time.",
+                  this));
             // Let's do DriveHandshake again.
             rv = ssl->DriveHandshake();
             if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
@@ -472,12 +472,12 @@ nsHttpConnection::EnsureNPNComplete(nsresult &aOut0RTTWriteHandshakeValue,
         }
 
         if (NS_FAILED(rvEarlyAlpn)) {
-            LOG(("nsHttpConnection::EnsureNPNComplete %p - "
-                 "early selected alpn not available", this));
+            LOG1(("nsHttpConnection::EnsureNPNComplete %p - "
+                  "early selected alpn not available", this));
             mEarlyDataNegotiated = false;
         } else {
-            LOG(("nsHttpConnection::EnsureNPNComplete %p -"
-                 "early selected alpn: %s", this, mEarlyNegotiatedALPN.get()));
+            LOG1(("nsHttpConnection::EnsureNPNComplete %p -"
+                  "early selected alpn: %s", this, mEarlyNegotiatedALPN.get()));
             uint32_t infoIndex;
             const SpdyInformation *info = gHttpHandler->SpdyInfo();
             if (NS_FAILED(info->GetNPNIndex(mEarlyNegotiatedALPN, &infoIndex))) {
@@ -525,9 +525,9 @@ nsHttpConnection::EnsureNPNComplete(nsresult &aOut0RTTWriteHandshakeValue,
     }
 
     if (NS_SUCCEEDED(rv)) {
-        LOG(("nsHttpConnection::EnsureNPNComplete %p [%s] negotiated to '%s'%s\n",
-             this, mConnInfo->HashKey().get(), negotiatedNPN.get(),
-             mTLSFilter ? " [Double Tunnel]" : ""));
+        LOG1(("nsHttpConnection::EnsureNPNComplete %p [%s] negotiated to '%s'%s\n",
+              this, mConnInfo->HashKey().get(), negotiatedNPN.get(),
+              mTLSFilter ? " [Double Tunnel]" : ""));
 
         handshakeSucceeded = true;
 
@@ -680,8 +680,8 @@ nsresult
 nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri)
 {
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-    LOG(("nsHttpConnection::Activate [this=%p trans=%p caps=%x]\n",
-         this, trans, caps));
+    LOG1(("nsHttpConnection::Activate [this=%p trans=%p caps=%x]\n",
+          this, trans, caps));
 
     if (!mExperienced && !trans->IsNullTransaction()) {
         if (!mFastOpen) {
@@ -810,8 +810,8 @@ failed_activation:
 void
 nsHttpConnection::SetupSSL()
 {
-    LOG(("nsHttpConnection::SetupSSL %p caps=0x%X %s\n",
-         this, mTransactionCaps, mConnInfo->HashKey().get()));
+    LOG1(("nsHttpConnection::SetupSSL %p caps=0x%X %s\n",
+          this, mTransactionCaps, mConnInfo->HashKey().get()));
 
     if (mSetupSSLCalled) // do only once
         return;
