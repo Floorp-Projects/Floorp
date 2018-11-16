@@ -44,11 +44,21 @@ class CallSites extends Component {
     selectedLocation: Object
   };
 
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      showCallSites: false
+    };
+  }
+
   componentDidMount() {
     const { editor } = this.props;
     const codeMirrorWrapper = editor.codeMirror.getWrapperElement();
 
     codeMirrorWrapper.addEventListener("click", e => this.onTokenClick(e));
+    document.body.addEventListener("keydown", this.onKeyDown);
+    document.body.addEventListener("keyup", this.onKeyUp);
   }
 
   componentWillUnmount() {
@@ -56,15 +66,32 @@ class CallSites extends Component {
     const codeMirrorWrapper = editor.codeMirror.getWrapperElement();
 
     codeMirrorWrapper.removeEventListener("click", e => this.onTokenClick(e));
+    document.body.removeEventListener("keydown", this.onKeyDown);
+    document.body.removeEventListener("keyup", this.onKeyUp);
   }
+
+  onKeyUp = e => {
+    if (e.key === "Alt") {
+      e.preventDefault();
+      this.setState({ showCallSites: false });
+    }
+  };
+
+  onKeyDown = e => {
+    if (e.key === "Alt") {
+      e.preventDefault();
+      this.setState({ showCallSites: true });
+    }
+  };
 
   onTokenClick(e) {
     const { target } = e;
     const { editor, selectedLocation } = this.props;
 
     if (
-      !target.classList.contains("call-site") &&
-      !target.classList.contains("call-site-bp")
+      (!e.altKey && !target.classList.contains("call-site-bp")) ||
+      (!target.classList.contains("call-site") &&
+        !target.classList.contains("call-site-bp"))
     ) {
       return;
     }
@@ -116,37 +143,23 @@ class CallSites extends Component {
     }
   }
 
-  // Return the call sites that are on the same line as an
-  // existing line breakpoint
-  filterCallSitesByLineNumber() {
-    const { callSites, breakpoints } = this.props;
-
-    const breakpointLines = new Set(breakpoints.map(bp => bp.location.line));
-
-    return callSites.filter(({ location }) =>
-      breakpointLines.has(location.start.line)
-    );
-  }
-
   render() {
     const { editor, callSites, selectedSource } = this.props;
-
+    const { showCallSites } = this.state;
     let sites;
-    if (!callSites || (selectedSource && selectedSource.isPrettyPrinted)) {
+    if (!callSites) {
       return null;
     }
 
-    const callSitesFiltered = this.filterCallSitesByLineNumber();
-
     editor.codeMirror.operation(() => {
-      const childCallSites = callSitesFiltered.map((callSite, index) => {
+      const childCallSites = callSites.map((callSite, index) => {
         const props = {
           key: index,
           callSite,
           editor,
           source: selectedSource,
           breakpoint: callSite.breakpoint,
-          showCallSite: true
+          showCallSite: showCallSites
         };
         return <CallSite {...props} />;
       });
@@ -167,7 +180,7 @@ function getCallSites(symbols, breakpoints) {
   // to speed up the lookups. Hopefully we'll fix the
   // inconsistency with column offsets so that we can expect
   // a breakpoint to be added at the beginning of a call expression.
-  const bpLocationMap = keyBy(breakpoints, ({ location }) =>
+  const bpLocationMap = keyBy(breakpoints.valueSeq().toJS(), ({ location }) =>
     locationKey(location)
   );
 

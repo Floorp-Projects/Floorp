@@ -171,12 +171,8 @@ export function getFilename(source: Source) {
  * @memberof utils/source
  * @static
  */
-export function getTruncatedFileName(
-  source: Source,
-  querystring: string = "",
-  length: number = 30
-) {
-  return truncateMiddleText(`${getFilename(source)}${querystring}`, length);
+export function getTruncatedFileName(source: Source, length: number = 30) {
+  return truncateMiddleText(getFilename(source), length);
 }
 
 /* Gets path for files with same filename for editor tabs, breakpoints, etc.
@@ -459,8 +455,4 @@ export function isOriginal(source: Source) {
 
 export function isGenerated(source: Source) {
   return isGeneratedId(source.id);
-}
-
-export function getSourceQueryString(source: ?Source) {
-  return source ? parseURL(source.url).search : "";
 }
