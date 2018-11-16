@@ -10,9 +10,9 @@ MAINTAINER Sebastian Kaspari "skaspari@mozilla.com"
 #-- Configuration -----------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------------
 
-ENV ANDROID_BUILD_TOOLS "27.0.3"
+ENV ANDROID_BUILD_TOOLS "28.0.3"
 ENV ANDROID_SDK_VERSION "3859397"
-ENV ANDROID_PLATFORM_VERSION "27"
+ENV ANDROID_PLATFORM_VERSION "28"
 ENV PROJECT_REPOSITORY "https://github.com/mozilla-mobile/android-components.git"
 
 ENV LANG en_US.UTF-8
@@ -21,6 +21,9 @@ ENV LANG en_US.UTF-8
 ENV TERM dumb
 
 ENV GRADLE_OPTS -Xmx4096m -Dorg.gradle.daemon=false
+
+# Used to detect in scripts whether we are running on taskcluster
+ENV CI_TASKCLUSTER true
 
 #----------------------------------------------------------------------------------------------------------------------
 #-- System ------------------------------------------------------------------------------------------------------------
