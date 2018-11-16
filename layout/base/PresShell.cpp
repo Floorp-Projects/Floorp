@@ -6400,6 +6400,14 @@ PresShell::Paint(nsView*         aViewToPaint,
     // We can paint directly into the widget using its layer manager.
     nsLayoutUtils::PaintFrame(nullptr, frame, aDirtyRegion, bgcolor,
                               nsDisplayListBuilderMode::PAINTING, flags);
+
+    // When recording/replaying, create a checkpoint after every paint. This
+    // can cause content JS to run, so reset |nojs|.
+    if (recordreplay::IsRecordingOrReplaying()) {
+      nojs.reset();
+      recordreplay::child::CreateCheckpoint();
+    }
+
     return;
   }
 

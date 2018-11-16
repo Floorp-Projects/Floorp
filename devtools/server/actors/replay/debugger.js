@@ -243,12 +243,15 @@ ReplayDebugger.prototype = {
   // Object methods
   /////////////////////////////////////////////////////////
 
-  _getObject(id) {
+  // Objects which |forConsole| is set are objects that were logged in console
+  // messages, and had their properties recorded so that they can be inspected
+  // without switching to a replaying child.
+  _getObject(id, forConsole) {
     if (id && !this._objects[id]) {
       const data = this._sendRequest({ type: "getObject", id });
       switch (data.kind) {
       case "Object":
-        this._objects[id] = new ReplayDebuggerObject(this, data);
+        this._objects[id] = new ReplayDebuggerObject(this, data, forConsole);
         break;
       case "Environment":
         this._objects[id] = new ReplayDebuggerEnvironment(this, data);
@@ -257,13 +260,17 @@ ReplayDebugger.prototype = {
         ThrowError("Unknown object kind");
       }
     }
-    return this._objects[id];
+    const rv = this._objects[id];
+    if (forConsole) {
+      rv._forConsole = true;
+    }
+    return rv;
   },
 
-  _convertValue(value) {
-    if (value && typeof value == "object") {
+  _convertValue(value, forConsole) {
+    if (isNonNullObject(value)) {
       if (value.object) {
-        return this._getObject(value.object);
+        return this._getObject(value.object, forConsole);
       } else if (value.special == "undefined") {
         return undefined;
       } else if (value.special == "NaN") {
@@ -332,7 +339,8 @@ ReplayDebugger.prototype = {
     // other contents of the message can be left alone.
     if (message.messageType == "ConsoleAPI" && message.arguments) {
       for (let i = 0; i < message.arguments.length; i++) {
-        message.arguments[i] = this._convertValue(message.arguments[i]);
+        message.arguments[i] = this._convertValue(message.arguments[i],
+                                                  /* forConsole = */ true);
       }
     }
     return message;
@@ -497,7 +505,7 @@ function ReplayDebuggerFrame(dbg, data) {
   this._data = data;
   if (this._data.arguments) {
     this._data.arguments =
-      this._data.arguments.map(this._dbg._convertValue.bind(this._dbg));
+      this._data.arguments.map(a => this._dbg._convertValue(a));
   }
 }
 
@@ -606,9 +614,10 @@ ReplayDebuggerFrame.prototype = {
 // ReplayDebuggerObject
 ///////////////////////////////////////////////////////////////////////////////
 
-function ReplayDebuggerObject(dbg, data) {
+function ReplayDebuggerObject(dbg, data, forConsole) {
   this._dbg = dbg;
   this._data = data;
+  this._forConsole = forConsole;
   this._properties = null;
 }
 
@@ -623,7 +632,6 @@ ReplayDebuggerObject.prototype = {
   get isArrowFunction() { return this._data.isArrowFunction; },
   get isGeneratorFunction() { return this._data.isGeneratorFunction; },
   get isAsyncFunction() { return this._data.isAsyncFunction; },
-  get proto() { return this._dbg._getObject(this._data.proto); },
   get class() { return this._data.class; },
   get name() { return this._data.name; },
   get displayName() { return this._data.displayName; },
@@ -640,6 +648,13 @@ ReplayDebuggerObject.prototype = {
   isSealed() { return this._data.isSealed; },
   isFrozen() { return this._data.isFrozen; },
   unwrap() { return this.isProxy ? NYI() : this; },
+
+  get proto() {
+    // Don't allow inspection of the prototypes of objects logged to the
+    // console. This is a hack that prevents the object inspector from crawling
+    // the object's prototype chain.
+    return this._forConsole ? null : this._dbg._getObject(this._data.proto);
+  },
 
   unsafeDereference() {
     // Direct access to the referent is not currently available.
@@ -664,10 +679,10 @@ ReplayDebuggerObject.prototype = {
 
   _ensureProperties() {
     if (!this._properties) {
-      const properties = this._dbg._sendRequestAllowDiverge({
-        type: "getObjectProperties",
-        id: this._data.id,
-      });
+      const id = this._data.id;
+      const properties = this._forConsole
+        ? this._dbg._sendRequest({ type: "getObjectPropertiesForConsole", id })
+        : this._dbg._sendRequestAllowDiverge({ type: "getObjectProperties", id });
       this._properties = {};
       properties.forEach(({name, desc}) => { this._properties[name] = desc; });
     }
@@ -789,6 +804,10 @@ function assert(v) {
   if (!v) {
     throw new Error("Assertion Failed!");
   }
+}
+
+function isNonNullObject(obj) {
+  return obj && (typeof obj == "object" || typeof obj == "function");
 }
 
 module.exports = ReplayDebugger;

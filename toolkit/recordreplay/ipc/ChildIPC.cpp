@@ -536,8 +536,6 @@ NotifyPaintStart()
 
   gNumPendingPaints++;
   gNumPendingMainThreadPaints++;
-
-  CreateCheckpoint();
 }
 
 static void
