@@ -13,6 +13,7 @@ from __future__ import print_function
 
 import os
 import sys
+import tempfile
 import textwrap
 import platform
 from os.path import abspath, dirname, isfile, realpath
@@ -295,7 +296,7 @@ def parse_args():
     return (options, prefix, requested_paths, excluded_paths)
 
 
-def load_wpt_tests(requested_paths, excluded_paths, debug, wasm):
+def load_wpt_tests(xul_tester, requested_paths, excluded_paths):
     """Return a list of `RefTestCase` objects for the jsshell testharness.js
     tests filtered by the given paths and debug-ness."""
     repo_root = abspath(os.path.join(here, "..", "..", ".."))
@@ -313,6 +314,7 @@ def load_wpt_tests(requested_paths, excluded_paths, debug, wasm):
         "testing/mozbase/mozprocess",
         "testing/mozbase/mozprofile",
         "testing/mozbase/mozrunner",
+        "testing/web-platform/",
         "testing/web-platform/tests/tools",
         "testing/web-platform/tests/tools/third_party/html5lib",
         "testing/web-platform/tests/tools/third_party/webencodings",
@@ -331,17 +333,28 @@ def load_wpt_tests(requested_paths, excluded_paths, debug, wasm):
 
     sys.path[0:0] = abs_sys_paths
 
+    import manifestupdate
     from wptrunner import products, testloader, wptcommandline, wpttest, wptlogging
 
-    wptlogging.setup({}, {})
-    kwargs = {
-        "config": None,
-        "tests_root": wpt,
-        "metadata_root": os.path.join(wp, "meta"),
+    manifest_root = tempfile.gettempdir()
+    path_split = os.path.dirname(xul_tester.js_bin).split(os.path.sep)
+    if path_split[-2:] == ["dist", "bin"]:
+        maybe_root = os.path.join(*path_split[:-2])
+        if os.path.exists(os.path.join(maybe_root, "_tests")):
+            # Assume this is a gecko objdir.
+            manifest_root = maybe_root
+
+    logger = wptlogging.setup({}, {})
+
+    manifestupdate.run(repo_root, manifest_root, logger)
+
+    kwargs = vars(wptcommandline.create_parser().parse_args([]))
+    kwargs.update({
+        "config": os.path.join(manifest_root, "_tests", "web-platform", "wptrunner.local.ini"),
         "gecko_e10s": False,
         "verify": False,
-        "wasm": wasm,
-    }
+        "wasm": xul_tester.test("wasmIsSupported()"),
+    })
     wptcommandline.set_from_config(kwargs)
     test_paths = kwargs["test_paths"]
 
@@ -354,8 +367,10 @@ def load_wpt_tests(requested_paths, excluded_paths, debug, wasm):
                                                meta_filters=[filter_jsshell_tests]).load()
 
     run_info_extras = products.load_product(kwargs["config"], "firefox")[-1](**kwargs)
-    run_info = wpttest.get_run_info(kwargs["metadata_root"], "firefox",
-                                    debug=debug, extras=run_info_extras)
+    run_info = wpttest.get_run_info(kwargs["test_paths"]["/"]["metadata_path"],
+                                    "firefox",
+                                    debug=xul_tester.test("isDebugBuild"),
+                                    extras=run_info_extras)
 
     path_filter = testloader.TestFilter(test_manifests,
                                         include=requested_paths,
@@ -415,9 +430,9 @@ def load_tests(options, requested_paths, excluded_paths):
 
     # WPT tests are already run in the browser in their own harness.
     if not options.make_manifests:
-        wpt_tests = load_wpt_tests(requested_paths, excluded_paths,
-                                   debug=xul_tester.test("isDebugBuild"),
-                                   wasm=xul_tester.test("wasmIsSupported()"))
+        wpt_tests = load_wpt_tests(xul_tester,
+                                   requested_paths,
+                                   excluded_paths)
         test_count += len(wpt_tests)
         test_gen = chain(test_gen, wpt_tests)
 
