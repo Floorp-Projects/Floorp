@@ -110,7 +110,7 @@ DataStorageSharedThread::Shutdown()
   MOZ_ASSERT(XRE_IsParentProcess());
   StaticMutexAutoLock lock(sDataStorageSharedThreadMutex);
 
-  if (!gDataStorageSharedThread) {
+  if (!gDataStorageSharedThread || gDataStorageSharedThreadShutDown) {
     return NS_OK;
   }
 
