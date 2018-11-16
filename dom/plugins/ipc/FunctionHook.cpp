@@ -12,6 +12,7 @@
 #if defined(XP_WIN)
 #include <shlobj.h>
 #include "PluginModuleChild.h"
+#include "mozilla/WindowsVersion.h"
 #endif
 
 namespace mozilla {
@@ -314,6 +315,11 @@ void FunctionHook::HookProtectedMode()
 /* GetFileAttributesW */
 
 typedef BasicFunctionHook<ID_GetFileAttributesW, decltype(GetFileAttributesW)> GetFileAttributesWFH;
+
+// Do not hook GetFileAttributesW in Win7 because the interceptor can't handle it.
+template<>
+ShouldHookFunc* const
+GetFileAttributesWFH::mShouldHook = [](int) { return IsWin8OrLater(); };
 
 DWORD WINAPI GetFileAttributesWHook(LPCWSTR aFilename)
 {
