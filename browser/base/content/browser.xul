@@ -89,6 +89,7 @@ xmlns="http://www.w3.org/1999/xhtml"
 >
   Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/search/search-one-offs.js", this);
 
   window.onload = gBrowserInit.onLoad.bind(gBrowserInit);
   window.onunload = gBrowserInit.onUnload.bind(gBrowserInit);
@@ -260,14 +261,14 @@ xmlns="http://www.w3.org/1999/xhtml"
           <html:div class="urlbarView-results"/>
         </html:div>
       </html:div>
-      <search-one-offs class="search-one-offs"
-                       compact="true"
-                       includecurrentengine="true"
-                       disabletab="true"/>
+      <hbox class="search-one-offs"
+            compact="true"
+            includecurrentengine="true"
+            disabletab="true"/>
     </panel>
 
-   <!-- for date/time picker. consumeoutsideclicks is set to never, so that
-        clicks on the anchored input box are never consumed. -->
+    <!-- for date/time picker. consumeoutsideclicks is set to never, so that
+         clicks on the anchored input box are never consumed. -->
     <panel id="DateTimePickerPanel"
            type="arrow"
            hidden="true"
