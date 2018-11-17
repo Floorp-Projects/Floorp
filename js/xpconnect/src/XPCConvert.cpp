@@ -194,14 +194,7 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
             return true;
         }
 
-        RootedObject scope(cx, JS::CurrentGlobalOrNull(cx));
-        JSObject* obj = xpc_NewIDObject(cx, scope, *iid2);
-        if (!obj) {
-            return false;
-        }
-
-        d.setObject(*obj);
-        return true;
+        return xpc::ID2JSValue(cx, *iid2, d);
     }
 
     case nsXPTType::T_ASTRING:
@@ -583,25 +576,13 @@ XPCConvert::JSData2Native(JSContext* cx,
         XPC_LOG_ERROR(("XPCConvert::JSData2Native : void* params not supported"));
         NS_ERROR("void* params not supported");
         return false;
+
     case nsXPTType::T_IID:
-    {
-        const nsID* pid = nullptr;
-
-        // There's no good reason to pass a null IID.
-        if (s.isNullOrUndefined()) {
-            if (pErr) {
-                *pErr = NS_ERROR_XPC_BAD_CONVERT_JS;
-            }
-            return false;
+        if (Maybe<nsID> id = xpc::JSValue2ID(cx, s)) {
+            *((const nsID**)d) = id.ref().Clone();
+            return true;
         }
-
-        if (!s.isObject() ||
-            !(pid = xpc_JSObjectToID(cx, &s.toObject()))) {
-            return false;
-        }
-        *((const nsID**)d) = pid->Clone();
-        return true;
-    }
+        return false;
 
     case nsXPTType::T_ASTRING:
     {
