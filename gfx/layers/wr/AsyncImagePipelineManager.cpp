@@ -101,7 +101,7 @@ AsyncImagePipelineManager::GetNextExternalImageId()
 }
 
 void
-AsyncImagePipelineManager::AddPipeline(const wr::PipelineId& aPipelineId)
+AsyncImagePipelineManager::AddPipeline(const wr::PipelineId& aPipelineId, WebRenderBridgeParent* aWrBridge)
 {
   if (mDestroyed) {
     return;
@@ -114,9 +114,11 @@ AsyncImagePipelineManager::AddPipeline(const wr::PipelineId& aPipelineId)
     // Previously removed holder could be still alive for waiting destroyed.
     MOZ_ASSERT(holder->mDestroyedEpoch.isSome());
     holder->mDestroyedEpoch = Nothing(); // Revive holder
+    holder->mWrBridge = aWrBridge;
     return;
   }
   holder = new PipelineTexturesHolder();
+  holder->mWrBridge = aWrBridge;
   mPipelineTexturesHolders.Put(id, holder);
 }
 
@@ -132,7 +134,27 @@ AsyncImagePipelineManager::RemovePipeline(const wr::PipelineId& aPipelineId, con
   if (!holder) {
     return;
   }
+  holder->mWrBridge = nullptr;
   holder->mDestroyedEpoch = Some(aEpoch);
+}
+
+WebRenderBridgeParent*
+AsyncImagePipelineManager::GetWrBridge(const wr::PipelineId& aPipelineId)
+{
+  if (mDestroyed) {
+    return nullptr;
+  }
+
+  PipelineTexturesHolder* holder = mPipelineTexturesHolders.Get(wr::AsUint64(aPipelineId));
+  if (!holder) {
+    return nullptr;
+  }
+  if (holder->mWrBridge) {
+    MOZ_ASSERT(holder->mDestroyedEpoch.isNothing());
+    return holder->mWrBridge;
+  }
+
+  return nullptr;
 }
 
 void
