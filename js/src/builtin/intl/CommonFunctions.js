@@ -4,6 +4,19 @@
 
 /* Portions Copyright Norbert Lindenberg 2011-2012. */
 
+#ifdef DEBUG
+#define assertIsValidAndCanonicalLanguageTag(locale, desc) \
+    do { \
+        let localeObj = parseLanguageTag(locale); \
+        assert(localeObj !== null, \
+               `${desc} is a structurally valid language tag`); \
+        assert(CanonicalizeLanguageTagFromObject(localeObj) === locale, \
+               `${desc} is a canonicalized language tag`); \
+    } while (false)
+#else
+#define assertIsValidAndCanonicalLanguageTag(locale, desc) ; // Elided assertion.
+#endif
+
 /**
  * Returns the start index of a "Unicode locale extension sequence", which the
  * specification defines as: "any substring of a language tag that starts with
@@ -18,8 +31,6 @@
  */
 function startOfUnicodeExtensions(locale) {
     assert(typeof locale === "string", "locale is a string");
-    assert(IsStructurallyValidLanguageTag(locale), "locale is a language tag");
-    assert(CanonicalizeLanguageTag(locale) === locale, "locale is a canonicalized language tag");
 
     #define HYPHEN 0x2D
     assert(std_String_fromCharCode(HYPHEN) === "-",
@@ -53,8 +64,6 @@ function startOfUnicodeExtensions(locale) {
  */
 function endOfUnicodeExtensions(locale, start) {
     assert(typeof locale === "string", "locale is a string");
-    assert(IsStructurallyValidLanguageTag(locale), "locale is a language tag");
-    assert(CanonicalizeLanguageTag(locale) === locale, "locale is a canonicalized language tag");
     assert(0 <= start && start < locale.length, "start is an index into locale");
     assert(Substring(locale, start, 3) === "-u-", "start points to Unicode extension sequence");
 
@@ -91,6 +100,8 @@ function endOfUnicodeExtensions(locale, start) {
  * Removes Unicode locale extension sequences from the given language tag.
  */
 function removeUnicodeExtensions(locale) {
+    assertIsValidAndCanonicalLanguageTag(locale, "locale with possible Unicode extension");
+
     var start = startOfUnicodeExtensions(locale);
     if (start < 0)
         return locale;
@@ -101,8 +112,7 @@ function removeUnicodeExtensions(locale) {
     var right = Substring(locale, end, locale.length - end);
     var combined = left + right;
 
-    assert(IsStructurallyValidLanguageTag(combined),
-           "recombination produced an invalid language tag");
+    assertIsValidAndCanonicalLanguageTag(combined, "the recombined locale");
     assert(startOfUnicodeExtensions(combined) < 0,
            "recombination failed to remove all Unicode locale extension sequences");
 
@@ -113,6 +123,8 @@ function removeUnicodeExtensions(locale) {
  * Returns Unicode locale extension sequences from the given language tag.
  */
 function getUnicodeExtensions(locale) {
+    assertIsValidAndCanonicalLanguageTag(locale, "locale with Unicode extension");
+
     var start = startOfUnicodeExtensions(locale);
     assert(start >= 0, "start of Unicode extension sequence not found");
     var end = endOfUnicodeExtensions(locale, start);
@@ -792,8 +804,7 @@ function DefaultLocaleIgnoringAvailableLocales() {
     localeCandidateCache.candidateDefaultLocale = candidate;
     localeCandidateCache.runtimeDefaultLocale = runtimeDefaultLocale;
 
-    assert(IsStructurallyValidLanguageTag(candidate),
-           "the candidate must be structurally valid");
+    assertIsValidAndCanonicalLanguageTag(candidate, "the candidate locale");
     assert(startOfUnicodeExtensions(candidate) < 0,
            "the candidate must not contain a Unicode extension sequence");
 
@@ -830,10 +841,7 @@ function DefaultLocale() {
         locale = lastDitchLocale();
     }
 
-    assert(IsStructurallyValidLanguageTag(locale),
-           "the computed default locale must be structurally valid");
-    assert(locale === CanonicalizeLanguageTag(locale),
-           "the computed default locale must be canonical");
+    assertIsValidAndCanonicalLanguageTag(locale, "the computed default locale");
     assert(startOfUnicodeExtensions(locale) < 0,
            "the computed default locale must not contain a Unicode extension sequence");
 
@@ -924,8 +932,7 @@ function CanonicalizeLocaleList(locales) {
 }
 
 function BestAvailableLocaleHelper(availableLocales, locale, considerDefaultLocale) {
-    assert(IsStructurallyValidLanguageTag(locale), "invalid BestAvailableLocale locale structure");
-    assert(locale === CanonicalizeLanguageTag(locale), "non-canonical BestAvailableLocale locale");
+    assertIsValidAndCanonicalLanguageTag(locale, "BestAvailableLocale locale");
     assert(startOfUnicodeExtensions(locale) < 0, "locale must contain no Unicode extensions");
 
     // In the spec, [[availableLocales]] is formally a list of all available
@@ -1249,12 +1256,9 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
             foundLocale = preExtension + supportedExtension + postExtension;
         }
 
-        // Step 9.d.
-        assert(IsStructurallyValidLanguageTag(foundLocale), "invalid locale after concatenation");
-
-        // Step 9.e (Not required in this implementation, because we don't
-        // canonicalize Unicode extension subtags).
-        assert(foundLocale === CanonicalizeLanguageTag(foundLocale), "same locale with extension");
+        // Steps 9.d-e (Step 9.e is not required in this implementation,
+        // because we don't canonicalize Unicode extension subtags).
+        assertIsValidAndCanonicalLanguageTag(foundLocale, "locale after concatenation");
     }
 
     // Step 10.

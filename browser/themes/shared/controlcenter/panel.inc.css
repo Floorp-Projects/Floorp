@@ -9,6 +9,10 @@
   display: none;
 }
 
+#identity-popup {
+  --identity-popup-width: 33rem;
+}
+
 /* This is used by screenshots tests to hide intermittently different
  * identity popup shadows (see bug 1425253). */
 #identity-popup.no-shadow {
@@ -68,8 +72,8 @@
 }
 
 #identity-popup-mainView {
-  min-width: 33em;
-  max-width: 33em;
+  min-width: var(--identity-popup-width);
+  max-width: var(--identity-popup-width);
 }
 
 .identity-popup-section {
@@ -145,7 +149,12 @@
 
 /* CONTENT */
 
+.identity-popup-footer,
+.tracking-protection-button,
+#identity-popup-trackersView-strict-info > label,
+.identity-popup-trackersView-list-item > label,
 #identity-popup-mainView-panel-header > label,
+#identity-popup-trackersView > .panel-header,
 #identity-popup-securityView > .panel-header,
 #identity-popup-breakageReportView > .panel-header,
 #identity-popup-content-blocking-report-breakage,
@@ -178,7 +187,7 @@
   overflow-wrap: break-word;
   /* This is needed for the overflow-wrap to work correctly.
    * 33em is the panel width, panel-header has 1em padding on each side. */
-  max-width: calc(33rem - 2em);
+  max-width: calc(var(--identity-popup-width) - 2em);
 }
 
 #identity-popup-permissions-content > description,
@@ -201,7 +210,7 @@
   /* This is needed for the overflow-wrap to work correctly.
    * 1em + 2em + 24px is .identity-popup-security-content padding
    * 33em is the panel width */
-  max-width: calc(33rem - 3rem - 24px);
+  max-width: calc(var(--identity-popup-width) - 3rem - 24px);
 }
 
 .identity-popup-warning-gray {
@@ -382,6 +391,93 @@ description#identity-popup-content-verifier,
   background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
 }
 
+#identity-popup-content-blocking-category-tracking-protection {
+  /* Overwrite toolbarbutton styles */
+  margin: 0;
+  padding-inline-start: 0;
+}
+
+#identity-popup-content-blocking-category-tracking-protection:-moz-focusring,
+#identity-popup-content-blocking-category-tracking-protection:hover {
+  border-radius: 2px;
+  background-color: var(--arrowpanel-dimmed-further);
+}
+
+#identity-popup-content-blocking-category-tracking-protection:hover:active {
+  background-color: var(--arrowpanel-dimmed-even-further);
+}
+
+#identity-popup-content-blocking-category-tracking-protection::after {
+  content: url(chrome://browser/skin/back-12.svg);
+  -moz-context-properties: fill, fill-opacity;
+  transform: scaleX(-1) translateY(1px);
+  float: right;
+}
+
+#identity-popup-content-blocking-category-tracking-protection:-moz-locale-dir(rtl)::after {
+  transform: scaleX(1) translateY(1px);
+}
+
+/* This subview could get filled with a lot of trackers, set a maximum size
+ * and allow it to scroll vertically.*/
+#identity-popup-trackersView {
+  max-height: 600px;
+}
+
+#identity-popup-trackersView-list {
+  padding: 5px 20px;
+  -moz-box-flex: 1;
+  overflow: scroll;
+}
+
+.identity-popup-trackersView-list-item {
+  margin: 5px 0;
+  overflow: hidden;
+}
+
+.identity-popup-trackersView-list-item > label {
+  /* Limit to full width - container padding - icon width - icon margin */
+  max-width: calc(var(--identity-popup-width) - 40px - 16px - 10px);
+}
+
+.identity-popup-trackersView-list-item > image {
+  list-style-image: url(chrome://browser/skin/controlcenter/trackers-disabled.svg);
+  margin-inline-end: 10px;
+  -moz-context-properties: fill, fill-opacity;
+}
+
+.identity-popup-trackersView-list-item.allowed > image {
+  list-style-image: url(chrome://browser/skin/controlcenter/trackers.svg);
+}
+
+#identity-popup-trackersView-strict-info {
+  min-height: 40px;
+  /* Limit to full width - margin */
+  max-width: calc(var(--identity-popup-width) - 12px);
+  min-width: calc(var(--identity-popup-width) - 12px);
+  background-color: #45a1ff80;
+  margin: 6px;
+  text-align: center;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  padding: 5px 15px;
+  border-radius: 3px;
+  color: #002275;
+}
+
+#identity-popup-trackersView-strict-info > image {
+  list-style-image: url(chrome://browser/skin/controlcenter/info.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin-inline-end: 10px;
+}
+
+#identity-popup-trackersView-strict-info > label {
+  overflow-wrap: break-word;
+  /* Limit to full width - container margin - container padding - icon width - icon margin */
+  max-width: calc(var(--identity-popup-width) - 12px - 20px - 16px - 10px);
+}
+
 /* Disabled label */
 
 #identity-popup-content-blocking-disabled-label {
@@ -433,9 +529,18 @@ description#identity-popup-content-verifier,
   display: none;
 }
 
-#identity-popup-content-blocking-content[hasException] .identity-popup-content-blocking-category-state-label,
-.identity-popup-content-blocking-category:not(.blocked) .identity-popup-content-blocking-category-state-label {
+.identity-popup-content-blocking-category-state-label {
   display: none;
+}
+
+/* TODO: This will be cleaned up by bug 1501992 */
+/* Hide the state label unless we blocked something only for third party cookies */
+#identity-popup-content-blocking-content:not([hasException]) #identity-popup-content-blocking-category-3rdpartycookies.blocked .identity-popup-content-blocking-category-state-label,
+/* For trackers, either show a "blocked" or "allowed" label depending on the state. */
+#identity-popup-content-blocking-content:not([hasException]) #identity-popup-content-blocking-category-tracking-protection.blocked > #identity-popup-content-blocking-tracking-protection-label-blocked,
+#identity-popup-content-blocking-category-tracking-protection:not(.blocked) > #identity-popup-content-blocking-tracking-protection-label-allowed,
+#identity-popup-content-blocking-content[hasException] #identity-popup-content-blocking-tracking-protection-label-allowed {
+  display: -moz-box;
 }
 
 .identity-popup-content-blocking-category.blocked .identity-popup-content-blocking-category-add-blocking {
@@ -468,6 +573,7 @@ description#identity-popup-content-verifier,
   height: 32px;
   background-color: var(--arrowpanel-dimmed);
   color: inherit;
+  margin-inline-end: 8px;
 }
 
 .tracking-protection-button:hover {
@@ -551,12 +657,20 @@ description#identity-popup-content-verifier,
   /* Offset the padding set on #identity-popup-permissions-content so that it
      shows up just below the section. The permission icons are 16px wide and
      should be right aligned with the section icon. */
-  margin-inline-start: calc(-1em - 16px);
+  margin-inline-start: calc(-1em - 24px);
 }
 
 .identity-popup-content-blocking-category,
 .identity-popup-permission-item {
   min-height: 24px;
+}
+
+.identity-popup-content-blocking-category {
+  padding-inline-end: 12px;
+}
+
+.identity-popup-permission-item {
+  padding-inline-end: 8px;
 }
 
 #identity-popup-permission-list:not(:empty) {
@@ -567,6 +681,7 @@ description#identity-popup-content-verifier,
 .identity-popup-permission-icon {
   width: 16px;
   height: 16px;
+  margin-inline-start: 12px;
 }
 
 .identity-popup-permission-icon.in-use {
