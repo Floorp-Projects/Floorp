@@ -238,8 +238,6 @@ def get_decision_parameters(config, options):
     parameters['release_partner_build_number'] = 1
     parameters['release_enable_emefree'] = False
     parameters['release_product'] = None
-    parameters['required_signoffs'] = []
-    parameters['signoff_urls'] = {}
     parameters['try_mode'] = None
     parameters['try_task_config'] = None
     parameters['try_options'] = None

@@ -2464,13 +2464,21 @@ RelocateArena(Arena* arena, SliceBudget& sliceBudget)
 }
 
 static inline bool
+CanProtectArenas()
+{
+    // On some systems the page size is larger than the size of an arena so we
+    // can't change the mapping permissions per arena.
+    return SystemPageSize() <= ArenaSize;
+}
+
+static inline bool
 ShouldProtectRelocatedArenas(JS::gcreason::Reason reason)
 {
     // For zeal mode collections we don't release the relocated arenas
     // immediately. Instead we protect them and keep them around until the next
     // collection so we can catch any stray accesses to them.
 #ifdef DEBUG
-    return reason == JS::gcreason::DEBUG_GC;
+    return reason == JS::gcreason::DEBUG_GC && CanProtectArenas();
 #else
     return false;
 #endif
@@ -2978,11 +2986,10 @@ GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds, size_t bgTaskCount)
 //  2) typed object type descriptor objects
 //  3) all other objects
 //
-// Also, JSScripts and LazyScripts can have pointers to each other. Each can be
-// updated safely without requiring the referent to be up-to-date, but TSAN can
-// warn about data races when calling IsForwarded() on the new location of a
-// cell that is being updated in parallel. To avoid this, we update these in
-// separate phases.
+// Also, there can be data races calling IsForwarded() on the new location of a
+// cell that is being updated in parallel on another thread. This can be avoided
+// by updating some kinds of cells in different phases. This is done for JSScripts
+// and LazyScripts, and JSScripts and Scopes.
 //
 // Since we want to minimize the number of phases, arrange kinds into three
 // arbitrary phases.
@@ -2994,14 +3001,14 @@ static const AllocKinds UpdatePhaseOne {
     AllocKind::ACCESSOR_SHAPE,
     AllocKind::OBJECT_GROUP,
     AllocKind::STRING,
-    AllocKind::JITCODE,
-    AllocKind::SCOPE
+    AllocKind::JITCODE
 };
 
 // UpdatePhaseTwo is typed object descriptor objects.
 
 static const AllocKinds UpdatePhaseThree {
     AllocKind::LAZY_SCRIPT,
+    AllocKind::SCOPE,
     AllocKind::FUNCTION,
     AllocKind::FUNCTION_EXTENDED,
     AllocKind::OBJECT0,

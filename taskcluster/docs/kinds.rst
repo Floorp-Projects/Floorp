@@ -448,19 +448,13 @@ Repackage-L10n is a ```Repackage``` task split up to be suitable for use after l
 
 repackage-signing
 -----------------
-Repackage-signing take the repackaged installers (windows) and signs them.
+Repackage-signing take the repackaged installers (windows) and update packaging (with
+the signed internal bits) and signs them.
 
 repackage-signing-l10n
 ----------------------
-Repackage-signing-l10n take the repackaged installers (windows) and signs them for localized versions.
-
-mar-signing
------------
-Mar-signing takes the complete update MARs and signs them.
-
-mar-signing-l10n
-----------------
-Mar-signing-l10n takes the complete update MARs and signs them for localized versions.
+Repackage-signing take the repackaged installers (windows) and update packaging (with
+the signed internal bits) and signs them for localized versions.
 
 repackage-msi
 -------------
