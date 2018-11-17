@@ -11174,14 +11174,17 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   }
 
   // Ensure all the children in the multi-column subtree are tagged with
-  // NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR, except for those children in the
-  // column-span subtree. InitAndRestoreFrame() will add
+  // NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR, except for those children in a new
+  // block formatting context. InitAndRestoreFrame() will add
   // mAdditionalStateBits for us.
   AutoRestore<nsFrameState> savedStateBits(aState.mAdditionalStateBits);
   if (StaticPrefs::layout_css_column_span_enabled()) {
+    // Multi-column container creates new block formatting context, so check
+    // needsColumn first to make sure we have the bit set when creating frames
+    // for the elements having style like "columns:3; column-span:all;".
     if (needsColumn) {
       aState.mAdditionalStateBits |= NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR;
-    } else if (blockFrame->IsColumnSpan()) {
+    } else if (blockFrame->HasAllStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS)) {
       aState.mAdditionalStateBits &= ~NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR;
     }
   }
@@ -11392,14 +11395,22 @@ nsCSSFrameConstructor::MayNeedToCreateColumnSpanSiblings(
   MOZ_ASSERT(StaticPrefs::layout_css_column_span_enabled(),
              "Call this only when layout.css.column-span.enabled is true!");
 
-  if (aBlockFrame->IsColumnSpan() ||
-      !aBlockFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
-    // The children of a column-span never need to be further processed even
-    // if there is a nested column-span child. Because a column-span always
-    // creates its own block formatting context, a nested column-span child
-    // won't be in the same block formatting context with the nearest
-    // multi-column ancestor. This is the same case as if the column-span is
-    // outside of a multi-column hierarchy.
+  if (!aBlockFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
+    // The block frame isn't in a multi-column block formatting context.
+    return false;
+  }
+
+  if (aBlockFrame->HasAllStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS) &&
+      aBlockFrame->Style()->GetPseudo() != nsCSSAnonBoxes::columnContent()) {
+    // The block creates its own block formatting context, and is not the block
+    // representing actual column contents.
+    //
+    // For example, the children of a column-span never need to be further
+    // processed even if there is a nested column-span child. Because a
+    // column-span always creates its own block formatting context, a nested
+    // column-span child won't be in the same block formatting context with the
+    // nearest multi-column ancestor. This is the same case as if the
+    // column-span is outside of a multi-column hierarchy.
     return false;
   }
 
@@ -11419,7 +11430,7 @@ nsCSSFrameConstructor::MayNeedToCreateColumnSpanSiblings(
     return false;
   }
 
-  // Need to actually look into the child items.
+  // Need to actually look into the child list.
   return true;
 }
 
