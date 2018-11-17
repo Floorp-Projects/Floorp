@@ -69,7 +69,7 @@ def order_image_tasks(config, tasks):
         parent = task.get('parent')
         if parent and parent not in emitted:
             if parent not in task_names:
-                raise Exception('Missing parant image for {}-{}: {}'.format(
+                raise Exception('Missing parent image for {}-{}: {}'.format(
                     config.kind, task['name'], parent))
             pending.append(task)
             continue
@@ -224,7 +224,7 @@ def fill_template(config, tasks):
             deps = taskdesc.setdefault('dependencies', {})
             deps[parent] = 'build-docker-image-{}'.format(parent)
             worker['env']['DOCKER_IMAGE_PARENT_TASK'] = {
-                'task-reference': '<{}>'.format(parent)
+                'task-reference': '<{}>'.format(parent),
             }
 
         if len(digest_data) > 1:
