@@ -266,10 +266,3 @@ cache_type
 Some tasks generate artifacts that are cached between pushes. This is the type of cache that is
 used for the this task. See :py:mod:`taskgraph.util.cached_task`.
 
-required_signoffs
-=================
-A list of release signoffs that this kind requires, should the release also
-require these signoffs. For example, ``mar-signing`` signoffs may be required
-by some releases in the future; for any releases that require ``mar-signing``
-signoffs, the kinds that also require that signoff are marked with this
-attribute.

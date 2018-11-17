@@ -85,14 +85,6 @@ def filter_release_tasks(task, parameters):
     return True
 
 
-def filter_out_missing_signoffs(task, parameters):
-    for signoff in parameters['required_signoffs']:
-        if signoff not in parameters['signoff_urls'] and \
-           signoff in task.attributes.get('required_signoffs', []):
-            return False
-    return True
-
-
 def standard_filter(task, parameters):
     return all(
         filter_func(task, parameters) for filter_func in
@@ -328,9 +320,6 @@ def target_tasks_promote_desktop(full_task_graph, parameters, graph_config):
             if 'secondary' in task.kind:
                 return False
 
-        if not filter_out_missing_signoffs(task, parameters):
-            return False
-
         if task.attributes.get('shipping_phase') == 'promote':
             return True
 
@@ -346,8 +335,6 @@ def target_tasks_push_desktop(full_task_graph, parameters, graph_config):
     )
 
     def filter(task):
-        if not filter_out_missing_signoffs(task, parameters):
-            return False
         # Include promotion tasks; these will be optimized out
         if task.label in filtered_for_candidates:
             return True
@@ -376,8 +363,6 @@ def target_tasks_ship_desktop(full_task_graph, parameters, graph_config):
         )
 
     def filter(task):
-        if not filter_out_missing_signoffs(task, parameters):
-            return False
         # Include promotion tasks; these will be optimized out
         if task.label in filtered_for_candidates:
             return True
