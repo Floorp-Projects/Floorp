@@ -19,15 +19,34 @@
 "use strict";
 
 const RecordReplayControl = !isWorker && require("RecordReplayControl");
+const Services = require("Services");
 
 ///////////////////////////////////////////////////////////////////////////////
 // ReplayDebugger
 ///////////////////////////////////////////////////////////////////////////////
 
-function ReplayDebugger() {
-  RecordReplayControl.registerReplayDebugger(this);
+// Possible preferred directions of travel.
+const Direction = {
+  FORWARD: "FORWARD",
+  BACKWARD: "BACKWARD",
+  NONE: "NONE",
+};
 
-  // All breakpoints (per BreakpointPosition) installed by this debugger.
+function ReplayDebugger() {
+  const existing = RecordReplayControl.registerReplayDebugger(this);
+  if (existing) {
+    // There is already a ReplayDebugger in existence, use that. There can only
+    // be one ReplayDebugger in the process.
+    return existing;
+  }
+
+  // Whether the process is currently paused.
+  this._paused = false;
+
+  // Preferred direction of travel when not explicitly resumed.
+  this._direction = Direction.NONE;
+
+  // All breakpoint positions and handlers installed by this debugger.
   this._breakpoints = [];
 
   // All ReplayDebuggerFramees that have been created while paused at the
@@ -45,6 +64,23 @@ function ReplayDebugger() {
   // created, indexed by their id. These stay valid even after unpausing.
   this._scripts = [];
   this._scriptSources = [];
+
+  // How many nested thread-wide paused have been entered.
+  this._threadPauseCount = 0;
+
+  // Flag set if the dispatched _performPause() call can be ignored because the
+  // server entered a thread-wide pause first.
+  this._cancelPerformPause = false;
+
+  // After we are done pausing, callback describing how to resume.
+  this._resumeCallback = null;
+
+  // Handler called when hitting the beginning/end of the recording, or when
+  // a time warp target has been reached.
+  this.replayingOnForcedPause = null;
+
+  // Handler called when the child pauses for any reason.
+  this.replayingOnPositionChange = null;
 }
 
 // Frame index used to refer to the newest frame in the child process.
@@ -59,14 +95,6 @@ ReplayDebugger.prototype = {
   replaying: true,
 
   canRewind: RecordReplayControl.canRewind,
-  replayResumeBackward() { RecordReplayControl.resume(/* forward = */ false); },
-  replayResumeForward() { RecordReplayControl.resume(/* forward = */ true); },
-  replayTimeWarp: RecordReplayControl.timeWarp,
-
-  replayPause() {
-    RecordReplayControl.pause();
-    this._repaint();
-  },
 
   replayCurrentExecutionPoint() {
     return this._sendRequest({ type: "currentExecutionPoint" });
@@ -82,13 +110,17 @@ ReplayDebugger.prototype = {
   removeAllDebuggees() {},
 
   replayingContent(url) {
+    this._ensurePaused();
     return this._sendRequest({ type: "getContent", url });
   },
 
+  // Send a request object to the child process, and synchronously wait for it
+  // to respond.
   _sendRequest(request) {
+    assert(this._paused);
     const data = RecordReplayControl.sendRequest(request);
-    //dump("SendRequest: " +
-    //     JSON.stringify(request) + " -> " + JSON.stringify(data) + "\n");
+    dumpv("SendRequest: " +
+          JSON.stringify(request) + " -> " + JSON.stringify(data));
     if (data.exception) {
       ThrowError(data.exception);
     }
@@ -100,6 +132,7 @@ ReplayDebugger.prototype = {
   // replaying process (if there is one), as recording child processes won't
   // provide useful responses to such requests.
   _sendRequestAllowDiverge(request) {
+    assert(this._paused);
     RecordReplayControl.maybeSwitchToReplayingChild();
     return this._sendRequest(request);
   },
@@ -116,19 +149,231 @@ ReplayDebugger.prototype = {
     }
   },
 
+  /////////////////////////////////////////////////////////
+  // Paused/running state
+  /////////////////////////////////////////////////////////
+
+  // Paused State Management
+  //
+  // The single ReplayDebugger is exclusively responsible for controlling the
+  // position of the child process by keeping track of when it pauses and
+  // sending it commands to resume.
+  //
+  // The general goal of controlling this position is to make the child process
+  // execute at predictable times, similar to how it would execute if the
+  // debuggee was in the same process as this one (as is the case when not
+  // replaying), as described below:
+  //
+  // - After the child pauses, the it will only resume executing when an event
+  //   loop is running that is *not* associated with the thread actor's nested
+  //   pauses. As long as the thread actor has pushed a pause, the child will
+  //   remain paused.
+  //
+  // - After the child resumes, installed breakpoint handlers will only execute
+  //   when an event loop is running (which, because of the above point, cannot
+  //   be associated with a thread actor's nested pause).
+
+  replayResumeBackward() { this._resume(/* forward = */ false); },
+  replayResumeForward() { this._resume(/* forward = */ true); },
+
+  _resume(forward) {
+    this._ensurePaused();
+    this._setResume(() => {
+      this._paused = false;
+      this._direction = forward ? Direction.FORWARD : Direction.BACKWARD;
+      dumpv("Resuming " + this._direction);
+      RecordReplayControl.resume(forward);
+      if (this._paused) {
+        // If we resume and immediately pause, we are at an endpoint of the
+        // recording. Force the thread to pause.
+        this.replayingOnForcedPause(this.getNewestFrame());
+      }
+    });
+  },
+
+  replayTimeWarp(target) {
+    this._ensurePaused();
+    this._setResume(() => {
+      this._paused = false;
+      this._direction = Direction.NONE;
+      dumpv("Warping " + JSON.stringify(target));
+      RecordReplayControl.timeWarp(target);
+
+      // timeWarp() doesn't return until the child has reached the target of
+      // the warp, after which we force the thread to pause.
+      assert(this._paused);
+      this.replayingOnForcedPause(this.getNewestFrame());
+    });
+  },
+
+  replayPause() {
+    this._ensurePaused();
+
+    // Cancel any pending resume.
+    this._resumeCallback = null;
+  },
+
+  _ensurePaused() {
+    if (!this._paused) {
+      RecordReplayControl.waitUntilPaused();
+      assert(this._paused);
+    }
+  },
+
+  // This hook is called whenever the child has paused, which can happen
+  // within a RecordReplayControl method (resume, timeWarp, waitUntilPaused) or
+  // or be delivered via the event loop.
+  _onPause() {
+    this._paused = true;
+
+    // The position change handler is always called on pause notifications.
+    if (this.replayingOnPositionChange) {
+      this.replayingOnPositionChange();
+    }
+
+    // Call _performPause() soon via the event loop to check for breakpoint
+    // handlers at this point.
+    this._cancelPerformPause = false;
+    Services.tm.dispatchToMainThread(this._performPause.bind(this));
+  },
+
+  _performPause() {
+    // The child paused at some time in the past and any breakpoint handlers
+    // may still need to be called. If we've entered a thread-wide pause or
+    // have already told the child to resume, don't call handlers.
+    if (!this._paused || this._cancelPerformPause || this._resumeCallback) {
+      return;
+    }
+
+    const point = this.replayCurrentExecutionPoint();
+    dumpv("PerformPause " + JSON.stringify(point));
+
+    if (point.position.kind == "Invalid") {
+      // We paused at a checkpoint, and there are no handlers to call.
+    } else {
+      // Call any handlers for this point, unless one resumes execution.
+      for (const { handler, position } of this._breakpoints) {
+        if (RecordReplayControl.positionSubsumes(position, point.position)) {
+          handler();
+          assert(!this._threadPauseCount);
+          if (this._resumeCallback) {
+            break;
+          }
+        }
+      }
+    }
+
+    // If no handlers entered a thread-wide pause (resetting this._direction)
+    // or gave an explicit resume, continue traveling in the same direction
+    // we were going when we paused.
+    assert(!this._threadPauseCount);
+    if (!this._resumeCallback) {
+      switch (this._direction) {
+      case Direction.FORWARD: this.replayResumeForward(); break;
+      case Direction.BACKWARD: this.replayResumeBackward(); break;
+      }
+    }
+  },
+
+  // This hook is called whenever we switch between recording and replaying
+  // child processes.
+  _onSwitchChild() {
+    // The position change handler listens to changes to the current child.
+    if (this.replayingOnPositionChange) {
+      // Children are paused whenever we switch between them.
+      const paused = this._paused;
+      this._paused = true;
+      this.replayingOnPositionChange();
+      this._paused = paused;
+    }
+  },
+
+  replayPushThreadPause() {
+    // The thread has paused so that the user can interact with it. The child
+    // will stay paused until this thread-wide pause has been popped.
+    assert(this._paused);
+    assert(!this._resumeCallback);
+    if (++this._threadPauseCount == 1) {
+      // Save checkpoints near the current position in case the user rewinds.
+      RecordReplayControl.markExplicitPause();
+
+      // There is no preferred direction of travel after an explicit pause.
+      this._direction = Direction.NONE;
+
+      // Update graphics according to the current state of the child.
+      this._repaint();
+
+      // If breakpoint handlers for the pause haven't been called yet, don't
+      // call them at all.
+      this._cancelPerformPause = true;
+    }
+    const point = this.replayCurrentExecutionPoint();
+    dumpv("PushPause " + JSON.stringify(point));
+  },
+
+  replayPopThreadPause() {
+    dumpv("PopPause");
+
+    // After popping the last thread-wide pause, the child can resume.
+    if (--this._threadPauseCount == 0 && this._resumeCallback) {
+      Services.tm.dispatchToMainThread(this._performResume.bind(this));
+    }
+  },
+
+  _setResume(callback) {
+    assert(this._paused);
+
+    // Overwrite any existing resume direction.
+    this._resumeCallback = callback;
+
+    // The child can resume immediately if there is no thread-wide pause.
+    if (!this._threadPauseCount) {
+      Services.tm.dispatchToMainThread(this._performResume.bind(this));
+    }
+  },
+
+  _performResume() {
+    assert(this._paused && !this._threadPauseCount);
+    if (this._resumeCallback && !this._threadPauseCount) {
+      const callback = this._resumeCallback;
+      this._invalidateAfterUnpause();
+      this._resumeCallback = null;
+      callback();
+    }
+  },
+
+  // Clear out all data that becomes invalid when the child unpauses.
+  _invalidateAfterUnpause() {
+    this._frames.forEach(frame => frame._invalidate());
+    this._frames.length = 0;
+
+    this._objects.forEach(obj => obj._invalidate());
+    this._objects.length = 0;
+  },
+
+  /////////////////////////////////////////////////////////
+  // Breakpoint management
+  /////////////////////////////////////////////////////////
+
   _setBreakpoint(handler, position, data) {
-    const id = RecordReplayControl.setBreakpoint(handler, position);
-    this._breakpoints.push({id, position, data});
+    this._ensurePaused();
+    dumpv("AddBreakpoint " + JSON.stringify(position));
+    RecordReplayControl.addBreakpoint(position);
+    this._breakpoints.push({handler, position, data});
   },
 
   _clearMatchingBreakpoints(callback) {
-    this._breakpoints = this._breakpoints.filter(breakpoint => {
-      if (callback(breakpoint)) {
-        RecordReplayControl.clearBreakpoint(breakpoint.id);
-        return false;
+    this._ensurePaused();
+    const newBreakpoints = this._breakpoints.filter(bp => !callback(bp));
+    if (newBreakpoints.length != this._breakpoints.length) {
+      dumpv("ClearBreakpoints");
+      RecordReplayControl.clearBreakpoints();
+      for (const { position } of newBreakpoints) {
+        dumpv("AddBreakpoint " + JSON.stringify(position));
+        RecordReplayControl.addBreakpoint(position);
       }
-      return true;
-    });
+    }
+    this._breakpoints = newBreakpoints;
   },
 
   _searchBreakpoints(callback) {
@@ -155,16 +400,6 @@ ReplayDebugger.prototype = {
     } else {
       this._clearMatchingBreakpoints(({position}) => position.kind == kind);
     }
-  },
-
-  // This is called on all ReplayDebuggers whenever the child process is about
-  // to unpause. Clear out all data that is invalidated as a result.
-  invalidateAfterUnpause() {
-    this._frames.forEach(frame => frame._invalidate());
-    this._frames.length = 0;
-
-    this._objects.forEach(obj => obj._invalidate());
-    this._objects.length = 0;
   },
 
   /////////////////////////////////////////////////////////
@@ -211,6 +446,7 @@ ReplayDebugger.prototype = {
   },
 
   findAllConsoleMessages() {
+    this._ensurePaused();
     const messages = this._sendRequest({ type: "findConsoleMessages" });
     return messages.map(this._convertConsoleMessage.bind(this));
   },
@@ -235,6 +471,7 @@ ReplayDebugger.prototype = {
   },
 
   findSources() {
+    this._ensurePaused();
     const data = this._sendRequest({ type: "findSources" });
     return data.map(source => this._addSource(source));
   },
@@ -363,8 +600,7 @@ ReplayDebugger.prototype = {
   get onEnterFrame() { return this._breakpointKindGetter("EnterFrame"); },
   set onEnterFrame(handler) {
     this._breakpointKindSetter("EnterFrame", handler,
-                               () => { this._repaint();
-                                       handler.call(this, this.getNewestFrame()); });
+                               () => { handler.call(this, this.getNewestFrame()); });
   },
 
   get replayingOnPopFrame() {
@@ -375,31 +611,13 @@ ReplayDebugger.prototype = {
 
   set replayingOnPopFrame(handler) {
     if (handler) {
-      this._setBreakpoint(() => { this._repaint();
-                                  handler.call(this, this.getNewestFrame()); },
+      this._setBreakpoint(() => { handler.call(this, this.getNewestFrame()); },
                           { kind: "OnPop" }, handler);
     } else {
       this._clearMatchingBreakpoints(({position}) => {
         return position.kind == "OnPop" && !position.script;
       });
     }
-  },
-
-  get replayingOnForcedPause() {
-    return this._breakpointKindGetter("ForcedPause");
-  },
-  set replayingOnForcedPause(handler) {
-    this._breakpointKindSetter("ForcedPause", handler,
-                               () => { this._repaint();
-                                       handler.call(this, this.getNewestFrame()); });
-  },
-
-  get replayingOnPositionChange() {
-    return this._breakpointKindGetter("PositionChange");
-  },
-  set replayingOnPositionChange(handler) {
-    this._breakpointKindSetter("PositionChange", handler,
-                               () => { handler.call(this); });
   },
 
   getNewConsoleMessage() {
@@ -447,8 +665,7 @@ ReplayDebuggerScript.prototype = {
   getPredecessorOffsets(pc) { return this._forward("getPredecessorOffsets", pc); },
 
   setBreakpoint(offset, handler) {
-    this._dbg._setBreakpoint(() => { this._dbg._repaint();
-                                     handler.hit(this._dbg.getNewestFrame()); },
+    this._dbg._setBreakpoint(() => { handler.hit(this._dbg.getNewestFrame()); },
                              { kind: "Break", script: this._data.id, offset },
                              handler);
   },
@@ -565,8 +782,7 @@ ReplayDebuggerFrame.prototype = {
     this._clearOnStepBreakpoints();
     offsets.forEach(offset => {
       this._dbg._setBreakpoint(
-        () => { this._dbg._repaint();
-                handler.call(this._dbg.getNewestFrame()); },
+        () => { handler.call(this._dbg.getNewestFrame()); },
         { kind: "OnStep",
           script: this._data.script,
           offset,
@@ -584,7 +800,6 @@ ReplayDebuggerFrame.prototype = {
   set onPop(handler) {
     if (handler) {
       this._dbg._setBreakpoint(() => {
-          this._dbg._repaint();
           const result = this._dbg._sendRequest({ type: "popFrameResult" });
           handler.call(this._dbg.getNewestFrame(),
                        this._dbg._convertCompletionValue(result));
@@ -785,6 +1000,10 @@ ReplayDebuggerEnvironment.prototype = {
 // Utilities
 ///////////////////////////////////////////////////////////////////////////////
 
+function dumpv(str) {
+  //dump("[ReplayDebugger] " + str + "\n");
+}
+
 function NYI() {
   ThrowError("Not yet implemented");
 }
@@ -802,7 +1021,7 @@ function ThrowError(msg)
 
 function assert(v) {
   if (!v) {
-    throw new Error("Assertion Failed!");
+    ThrowError("Assertion Failed!");
   }
 }
 
