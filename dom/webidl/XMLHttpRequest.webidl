@@ -12,7 +12,6 @@
 
 interface InputStream;
 interface MozChannel;
-interface IID;
 
 enum XMLHttpRequestResponseType {
   "",
@@ -127,7 +126,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   readonly attribute MozChannel? channel;
 
   [Throws, ChromeOnly, Exposed=Window]
-  any getInterface(IID iid);
+  any getInterface(any iid);
 
   [ChromeOnly, Exposed=Window]
   void setOriginAttributes(optional OriginAttributesDictionary originAttributes);

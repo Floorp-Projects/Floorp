@@ -16,7 +16,6 @@ FormHistoryStartup.prototype = {
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIObserver,
     Ci.nsISupportsWeakReference,
-    Ci.nsIFrameMessageListener,
   ]),
 
   observe(subject, topic, data) {
