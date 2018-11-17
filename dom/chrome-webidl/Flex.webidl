@@ -83,7 +83,6 @@ enum FlexItemClampState {
 interface FlexItemValues
 {
   readonly attribute Node? node;
-  readonly attribute DOMRectReadOnly frameRect;
   readonly attribute double mainBaseSize;
   readonly attribute double mainDeltaSize;
   readonly attribute double mainMinSize;
