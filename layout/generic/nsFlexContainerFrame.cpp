@@ -4849,9 +4849,14 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 
         itemInfo->mNode = content;
 
-        // itemInfo->mMainBaseSize and mMainDeltaSize will be filled out
-        // in ResolveFlexibleLengths(). Other measurements will be captured
-        // at the end of this function.
+        // mMainBaseSize and itemInfo->mMainDeltaSize will
+        // be filled out in ResolveFlexibleLengths().
+
+        // Other FlexItem properties can be captured now.
+        itemInfo->mMainMinSize = item->GetMainMinSize();
+        itemInfo->mMainMaxSize = item->GetMainMaxSize();
+        itemInfo->mCrossMinSize = item->GetCrossMinSize();
+        itemInfo->mCrossMaxSize = item->GetCrossMaxSize();
       }
     }
   }
@@ -5256,7 +5261,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize)
 
-  // Finally update our line and item measurements in our containerInfo.
+  // Finally update our line sizing values in our containerInfo.
   if (MOZ_UNLIKELY(containerInfo)) {
     lineIndex = 0;
     for (const FlexLine* line = lines.getFirst(); line;
@@ -5266,17 +5271,6 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       lineInfo.mCrossSize = line->GetLineCrossSize();
       lineInfo.mFirstBaselineOffset = line->GetFirstBaselineOffset();
       lineInfo.mLastBaselineOffset = line->GetLastBaselineOffset();
-
-      uint32_t itemIndex = 0;
-      for (const FlexItem* item = line->GetFirstItem(); item;
-           item = item->getNext(), ++itemIndex) {
-        ComputedFlexItemInfo& itemInfo = lineInfo.mItems[itemIndex];
-        itemInfo.mFrameRect = item->Frame()->GetRect();
-        itemInfo.mMainMinSize = item->GetMainMinSize();
-        itemInfo.mMainMaxSize = item->GetMainMaxSize();
-        itemInfo.mCrossMinSize = item->GetCrossMinSize();
-        itemInfo.mCrossMaxSize = item->GetCrossMaxSize();
-      }
     }
   }
 }
