@@ -2464,13 +2464,21 @@ RelocateArena(Arena* arena, SliceBudget& sliceBudget)
 }
 
 static inline bool
+CanProtectArenas()
+{
+    // On some systems the page size is larger than the size of an arena so we
+    // can't change the mapping permissions per arena.
+    return SystemPageSize() <= ArenaSize;
+}
+
+static inline bool
 ShouldProtectRelocatedArenas(JS::gcreason::Reason reason)
 {
     // For zeal mode collections we don't release the relocated arenas
     // immediately. Instead we protect them and keep them around until the next
     // collection so we can catch any stray accesses to them.
 #ifdef DEBUG
-    return reason == JS::gcreason::DEBUG_GC;
+    return reason == JS::gcreason::DEBUG_GC && CanProtectArenas();
 #else
     return false;
 #endif
