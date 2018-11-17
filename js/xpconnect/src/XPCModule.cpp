@@ -20,5 +20,4 @@ xpcModuleDtor()
 {
     // Release our singletons
     nsXPConnect::ReleaseXPConnectSingleton();
-    xpc_DestroyJSxIDClassObjects();
 }

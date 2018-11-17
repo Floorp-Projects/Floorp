@@ -5008,7 +5008,7 @@ nsGlobalWindowInner::GetInterface(const nsIID & aIID, void **aSink)
 }
 
 void
-nsGlobalWindowInner::GetInterface(JSContext* aCx, nsIJSID* aIID,
+nsGlobalWindowInner::GetInterface(JSContext* aCx, JS::Handle<JS::Value> aIID,
                                   JS::MutableHandle<JS::Value> aRetval,
                                   ErrorResult& aError)
 {

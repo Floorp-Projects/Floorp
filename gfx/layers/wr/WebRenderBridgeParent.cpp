@@ -320,7 +320,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
 {
   MOZ_ASSERT(mAsyncImageManager);
   MOZ_ASSERT(mAnimStorage);
-  mAsyncImageManager->AddPipeline(mPipelineId);
+  mAsyncImageManager->AddPipeline(mPipelineId, this);
   if (IsRootWebRenderBridgeParent()) {
     MOZ_ASSERT(!mCompositorScheduler);
     mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
