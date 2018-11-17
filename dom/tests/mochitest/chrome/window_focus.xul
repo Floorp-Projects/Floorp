@@ -1637,7 +1637,7 @@ SimpleTest.waitForFocus(startTest);
 </hbox>
 <hbox>
   <button id="o2" accesskey="o" style="-moz-user-focus: ignore;" label="no tabindex"/>
-  <button id="o4" style="-moz-user-focus: ignore;" label="tabindex = -1" tabindex="-1"/>
+  <button id="o4" style="-moz-user-focus: ignore;" label="no tabindex"/>
   <button id="t6" style="-moz-user-focus: ignore;" label="tabindex = 0" tabindex="0"/>
   <button id="t2" style="-moz-user-focus: ignore;" label="tabindex = 2" tabindex="2"/>
 </hbox>
@@ -1663,17 +1663,17 @@ SimpleTest.waitForFocus(startTest);
 <vbox>
 <hbox>
   <dropmarker id="o6" value="no tabindex"/>
-  <dropmarker id="o8" value="tabindex = -1" tabindex="-1"/>
-  <dropmarker id="o10" value="tabindex = 0" tabindex="0"/>
-  <dropmarker id="o12" value="tabindex = 2" tabindex="2"/>
+  <dropmarker id="o8" value="no tabindex"/>
+  <dropmarker id="o10" value="no tabindx"/>
+  <dropmarker id="o12" value="no tabindex"/>
   <dropmarker id="t9" accesskey="r" style="-moz-user-focus: normal;" value="no tabindex" />
-  <dropmarker id="t10" style="-moz-user-focus: normal;" value="tabindex = -1" tabindex="-1" />
+  <dropmarker id="t10" style="-moz-user-focus: normal;" value="no tabindex"/>
   <dropmarker id="t11" style="-moz-user-focus: normal;" value="tabindex = 0" tabindex="0" />
-  <dropmarker id="t12" style="-moz-user-focus: normal;" value="tabindex = 2" tabindex="2" />
+  <dropmarker id="t12" style="-moz-user-focus: normal;" value="no tabindex"/>
   <dropmarker id="o14" style="-moz-user-focus: ignore;" value="no tabindex"/>
-  <dropmarker id="o16" style="-moz-user-focus: ignore;" value="tabindex = -1" tabindex="-1"/>
-  <dropmarker id="n1" style="-moz-user-focus: none;" value="tabindex = 0" tabindex="0"/>
-  <dropmarker id="n3" style="-moz-user-focus: none;" value="tabindex = 2" tabindex="2"/>
+  <dropmarker id="o16" style="-moz-user-focus: ignore;" value="no tabindex"/>
+  <dropmarker id="n1" style="-moz-user-focus: none;" value="no tabindex"/>
+  <dropmarker id="n3" style="-moz-user-focus: none;" value="no tabindex"/>
 </hbox>
 </vbox>
 <browser id="childframe" type="content" src="child_focus_frame.html" width="300" height="195"/>
