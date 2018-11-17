@@ -33,6 +33,7 @@ nsContainerFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
 struct ComputedFlexItemInfo
 {
   nsCOMPtr<nsINode> mNode;
+  nsRect mFrameRect;
   /**
    * mMainBaseSize is a measure of the size of the item in the main
    * axis before the flex sizing algorithm is applied. In the spec,
