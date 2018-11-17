@@ -45,6 +45,12 @@ class UrlbarView {
     this.controller.addQueryListener(this);
   }
 
+  get oneOffSearchButtons() {
+    return this._oneOffSearchButtons ||
+      (this._oneOffSearchButtons =
+         new this.window.SearchOneOffs(this.panel.querySelector(".search-one-offs")));
+  }
+
   /**
    * Opens the autocomplete results popup.
    */
@@ -65,6 +71,10 @@ class UrlbarView {
 
     // Subtract two pixels for left and right borders on the panel.
     this._mainContainer.style.maxWidth = (width - 2) + "px";
+
+    // TODO: Search one off buttons are a stub right now.
+    //       We'll need to set them up properly.
+    this.oneOffSearchButtons;
 
     this.panel.openPopup(this.urlbar.textbox.closest("toolbar"), "after_end", 0, -1);
 
