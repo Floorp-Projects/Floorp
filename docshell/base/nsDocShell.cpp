@@ -764,6 +764,7 @@ nsDocShell::LoadURI(nsDocShellLoadState* aLoadState)
                       resultPrincipalURI,
                       aLoadState->KeepResultPrincipalURIIfSet(),
                       aLoadState->LoadReplace(),
+                      aLoadState->GetIsFromProcessingFrameAttributes(),
                       aLoadState->Referrer(),
                       aLoadState->ReferrerPolicy(),
                       aLoadState->TriggeringPrincipal(),
@@ -4814,7 +4815,8 @@ nsDocShell::LoadErrorPage(nsIURI* aErrorURI, nsIURI* aFailedURI, nsIChannel* aFa
     mLSHE->AbandonBFCacheEntry();
   }
 
-  return InternalLoad(aErrorURI, nullptr, Nothing(), false, false, nullptr, RP_Unset,
+  return InternalLoad(aErrorURI, nullptr, Nothing(), false, false,
+                      false, nullptr, RP_Unset,
                       nsContentUtils::GetSystemPrincipal(), nullptr,
                       INTERNAL_LOAD_FLAGS_NONE, EmptyString(),
                       VoidCString(), VoidString(), nullptr, nullptr,
@@ -4914,6 +4916,7 @@ nsDocShell::Reload(uint32_t aReloadFlags)
                       emplacedResultPrincipalURI,
                       false,
                       loadReplace,
+                      false,           // IsFromProcessingFrameAttributes
                       referrerURI,
                       referrerPolicy,
                       triggeringPrincipal,
@@ -9002,6 +9005,7 @@ public:
                     Maybe<nsCOMPtr<nsIURI>> const& aResultPrincipalURI,
                     bool aKeepResultPrincipalURIIfSet,
                     bool aLoadReplace,
+                    bool aIsFromProcessingFrameAttributes,
                     nsIURI* aReferrer, uint32_t aReferrerPolicy,
                     nsIPrincipal* aTriggeringPrincipal,
                     nsIPrincipal* aPrincipalToInherit,
@@ -9024,6 +9028,7 @@ public:
     , mResultPrincipalURI(aResultPrincipalURI)
     , mKeepResultPrincipalURIIfSet(aKeepResultPrincipalURIIfSet)
     , mLoadReplace(aLoadReplace)
+    , mIsFromProcessingFrameAttributes(aIsFromProcessingFrameAttributes)
     , mReferrer(aReferrer)
     , mReferrerPolicy(aReferrerPolicy)
     , mTriggeringPrincipal(aTriggeringPrincipal)
@@ -9048,6 +9053,7 @@ public:
     return mDocShell->InternalLoad(mURI, mOriginalURI, mResultPrincipalURI,
                                    mKeepResultPrincipalURIIfSet,
                                    mLoadReplace,
+                                   mIsFromProcessingFrameAttributes,
                                    mReferrer,
                                    mReferrerPolicy,
                                    mTriggeringPrincipal, mPrincipalToInherit,
@@ -9070,6 +9076,7 @@ private:
   Maybe<nsCOMPtr<nsIURI>> mResultPrincipalURI;
   bool mKeepResultPrincipalURIIfSet;
   bool mLoadReplace;
+  bool mIsFromProcessingFrameAttributes;
   nsCOMPtr<nsIURI> mReferrer;
   uint32_t mReferrerPolicy;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
@@ -9106,6 +9113,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                          Maybe<nsCOMPtr<nsIURI>> const& aResultPrincipalURI,
                          bool aKeepResultPrincipalURIIfSet,
                          bool aLoadReplace,
+                         bool aIsFromProcessingFrameAttributes,
                          nsIURI* aReferrer,
                          uint32_t aReferrerPolicy,
                          nsIPrincipal* aTriggeringPrincipal,
@@ -9458,6 +9466,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                                         aResultPrincipalURI,
                                         aKeepResultPrincipalURIIfSet,
                                         aLoadReplace,
+                                        aIsFromProcessingFrameAttributes,
                                         aReferrer,
                                         aReferrerPolicy,
                                         aTriggeringPrincipal,
@@ -9556,7 +9565,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
       nsCOMPtr<nsIRunnable> ev =
         new InternalLoadEvent(this, aURI, aOriginalURI, aResultPrincipalURI,
                               aKeepResultPrincipalURIIfSet,
-                              aLoadReplace, aReferrer, aReferrerPolicy,
+                              aLoadReplace, aIsFromProcessingFrameAttributes,
+                              aReferrer, aReferrerPolicy,
                               aTriggeringPrincipal, principalToInherit,
                               aFlags, aTypeHint, aPostData,
                               aHeadersData, aLoadType, aSHEntry, aFirstParty,
@@ -10070,6 +10080,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   nsCOMPtr<nsIRequest> req;
   rv = DoURILoad(aURI, aOriginalURI, aResultPrincipalURI,
                  aKeepResultPrincipalURIIfSet, aLoadReplace,
+                 aIsFromProcessingFrameAttributes,
                  loadFromExternal,
                  (aFlags & INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI),
                  (aFlags & INTERNAL_LOAD_FLAGS_ORIGINAL_FRAME_SRC),
@@ -10218,6 +10229,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
                       Maybe<nsCOMPtr<nsIURI>> const& aResultPrincipalURI,
                       bool aKeepResultPrincipalURIIfSet,
                       bool aLoadReplace,
+                      bool aIsFromProcessingFrameAttributes,
                       bool aLoadFromExternal,
                       bool aForceAllowDataURI,
                       bool aOriginalFrameSrc,
@@ -10393,7 +10405,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
     securityFlags |= nsILoadInfo::SEC_SANDBOXED;
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo =
+  RefPtr<LoadInfo> loadInfo =
     (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) ?
       new LoadInfo(loadingWindow, aTriggeringPrincipal, topLevelLoadingContext,
                    securityFlags) :
@@ -10438,6 +10450,10 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   // can be exposed on the service worker FetchEvent.
   rv = loadInfo->SetIsDocshellReload(mLoadType & LOAD_CMD_RELOAD);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aIsFromProcessingFrameAttributes) {
+    loadInfo->SetIsFromProcessingFrameAttributes();
+  }
 
   if (!isSrcdoc) {
     rv = NS_NewChannelInternal(getter_AddRefs(channel),
@@ -12149,6 +12165,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
                     emplacedResultPrincipalURI,
                     false,
                     loadReplace,
+                    false,              // IsFromProcessingFrameAttributes
                     referrerURI,
                     referrerPolicy,
                     triggeringPrincipal,
@@ -13341,6 +13358,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
                              Nothing(),                 // Let the protocol handler assign it
                              false,
                              false,                     // LoadReplace
+                             false,                     // IsFromProcessingFrameAttributes
                              referer,                   // Referer URI
                              refererPolicy,             // Referer policy
                              triggeringPrincipal,
