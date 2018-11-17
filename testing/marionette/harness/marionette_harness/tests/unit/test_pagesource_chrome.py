@@ -13,13 +13,7 @@ class TestPageSourceChrome(WindowManagerMixin, MarionetteTestCase):
         super(TestPageSourceChrome, self).setUp()
         self.marionette.set_context("chrome")
 
-        def open_with_js():
-            self.marionette.execute_script("""
-              window.open('chrome://marionette/content/test.xul',
-                          'foo', 'chrome,centerscreen');
-            """)
-
-        new_window = self.open_window(open_with_js)
+        new_window = self.open_chrome_window("chrome://marionette/content/test.xul")
         self.marionette.switch_to_window(new_window)
 
     def tearDown(self):
