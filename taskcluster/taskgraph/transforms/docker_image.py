@@ -8,6 +8,7 @@ import os
 import re
 
 from collections import deque
+import taskgraph
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import _run_task_suffix
 from .. import GECKO
@@ -112,9 +113,12 @@ def fill_template(config, tasks):
         if parent:
             args['DOCKER_IMAGE_PARENT'] = '{}:{}'.format(parent, context_hashes[parent])
 
-        context_path = os.path.join('taskcluster', 'docker', definition)
-        context_hash = generate_context_hash(
-            GECKO, context_path, image_name, args)
+        if not taskgraph.fast:
+            context_path = os.path.join('taskcluster', 'docker', definition)
+            context_hash = generate_context_hash(
+                GECKO, context_path, image_name, args)
+        else:
+            context_hash = '0'*40
         digest_data = [context_hash]
         context_hashes[image_name] = context_hash
 
