@@ -36,7 +36,6 @@ _OPTIONAL_ATTRIBUTES = (
     'l10n_chunk',
     'locale',
     'nightly',
-    'required_signoffs',
     'signed',
     'shipping_phase',
     'shipping_product',
@@ -132,9 +131,3 @@ def copy_attributes_from_dependent_job(dep_job):
     })
 
     return attributes
-
-
-def sorted_unique_list(*args):
-    """Join one or more lists, and return a sorted list of unique members"""
-    combined = set().union(*args)
-    return sorted(combined)
