@@ -61,6 +61,10 @@ class UAWidgetsChild extends ActorChild {
       case "object":
         // TODO (pluginProblems)
         break;
+      case "marquee":
+        uri = "chrome://global/content/elements/marquee.js";
+        widgetName = "MarqueeWidget";
+        break;
     }
 
     if (!uri || !widgetName) {
