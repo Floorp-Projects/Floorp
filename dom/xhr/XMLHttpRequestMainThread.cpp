@@ -87,7 +87,6 @@
 #include "nsIClassOfService.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsStreamListenerWrapper.h"
-#include "xpcjsid.h"
 #include "nsITimedChannel.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsZipArchive.h"
@@ -3508,7 +3507,7 @@ XMLHttpRequestMainThread::GetInterface(const nsIID & aIID, void **aResult)
 }
 
 void
-XMLHttpRequestMainThread::GetInterface(JSContext* aCx, nsIJSID* aIID,
+XMLHttpRequestMainThread::GetInterface(JSContext* aCx, JS::Handle<JS::Value> aIID,
                                        JS::MutableHandle<JS::Value> aRetval,
                                        ErrorResult& aRv)
 {
