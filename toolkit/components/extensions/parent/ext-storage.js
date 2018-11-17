@@ -73,7 +73,8 @@ this.storage = class extends ExtensionAPI {
               return ExtensionStorage[method](extension.id, ...args);
             }
 
-            const db = await ExtensionStorageIDB.open(res.storagePrincipal.deserialize(this));
+            const persisted = extension.hasPermission("unlimitedStorage");
+            const db = await ExtensionStorageIDB.open(res.storagePrincipal.deserialize(this), persisted);
             const changes = await db[method](...args);
             if (changes) {
               ExtensionStorageIDB.notifyListeners(extension.id, changes);
