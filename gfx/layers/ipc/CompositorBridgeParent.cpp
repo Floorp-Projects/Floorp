@@ -2211,7 +2211,7 @@ CompositorBridgeParent::NotifyPipelineRendered(const wr::PipelineId& aPipelineId
                                                TimeStamp& aCompositeEnd,
                                                wr::RendererStats* aStats)
 {
-  if (!mWrBridge) {
+  if (!mWrBridge || !mAsyncImageManager) {
     return;
   }
 
@@ -2234,21 +2234,15 @@ CompositorBridgeParent::NotifyPipelineRendered(const wr::PipelineId& aPipelineId
     return;
   }
 
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  ForEachIndirectLayerTree([&] (LayerTreeState* lts, const LayersId& aLayersId) -> void {
-    if (lts->mCrossProcessParent &&
-        lts->mWrBridge &&
-        lts->mWrBridge->PipelineId() == aPipelineId) {
-
-      lts->mWrBridge->RemoveEpochDataPriorTo(aEpoch);
-
+  auto wrBridge = mAsyncImageManager->GetWrBridge(aPipelineId);
+  if (wrBridge && wrBridge->GetCompositorBridge()) {
+      MOZ_ASSERT(!wrBridge->IsRootWebRenderBridgeParent());
+      wrBridge->RemoveEpochDataPriorTo(aEpoch);
       if (!mPaused) {
-        CrossProcessCompositorBridgeParent* cpcp = lts->mCrossProcessParent;
-        TransactionId transactionId = lts->mWrBridge->FlushTransactionIdsForEpoch(aEpoch, aCompositeEnd, uiController, aStats);
-        Unused << cpcp->SendDidComposite(aLayersId, transactionId, aCompositeStart, aCompositeEnd);
+        TransactionId transactionId = wrBridge->FlushTransactionIdsForEpoch(aEpoch, aCompositeEnd, uiController, aStats);
+        Unused << wrBridge->GetCompositorBridge()->SendDidComposite(wrBridge->GetLayersId(), transactionId, aCompositeStart, aCompositeEnd);
       }
-    }
-  });
+  }
 }
 
 RefPtr<AsyncImagePipelineManager>
