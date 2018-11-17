@@ -78,8 +78,6 @@ PARAMETERS = {
     'release_partner_build_number': 1,
     'release_type': 'nightly',
     'release_product': None,
-    'required_signoffs': [],
-    'signoff_urls': {},
     'target_tasks_method': 'default',
     'try_mode': None,
     'try_options': None,
