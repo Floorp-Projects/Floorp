@@ -8,12 +8,10 @@
 #include "nsGenericHTMLElement.h"
 #include "nsStyleConsts.h"
 #include "nsMappedAttributes.h"
-#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/HTMLMarqueeElementBinding.h"
 #include "mozilla/dom/CustomEvent.h"
 // This is to pick up the definition of FunctionStringCallback:
 #include "mozilla/dom/DataTransferItemBinding.h"
-#include "mozilla/dom/ShadowRoot.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Marquee)
 
@@ -65,43 +63,6 @@ JSObject*
 HTMLMarqueeElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return dom::HTMLMarqueeElement_Binding::Wrap(aCx, this, aGivenProto);
-}
-
-nsresult
-HTMLMarqueeElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent)
-{
-
-  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
-                                                 aBindingParent);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (nsContentUtils::IsUAWidgetEnabled() && IsInComposedDoc()) {
-    AttachAndSetUAShadowRoot();
-    AsyncEventDispatcher* dispatcher =
-      new AsyncEventDispatcher(this,
-                               NS_LITERAL_STRING("UAWidgetBindToTree"),
-                               CanBubble::eYes,
-                               ChromeOnlyDispatch::eYes);
-    dispatcher->RunDOMEventWhenSafe();
-  }
-
-  return rv;
-}
-
-void
-HTMLMarqueeElement::UnbindFromTree(bool aDeep, bool aNullParent)
-{
-  if (GetShadowRoot() && IsInComposedDoc()) {
-    AsyncEventDispatcher* dispatcher =
-      new AsyncEventDispatcher(this,
-                               NS_LITERAL_STRING("UAWidgetUnbindFromTree"),
-                               CanBubble::eYes,
-                               ChromeOnlyDispatch::eYes);
-    dispatcher->RunDOMEventWhenSafe();
-  }
-
-  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 void
@@ -162,29 +123,6 @@ HTMLMarqueeElement::ParseAttribute(int32_t aNamespaceID,
                                               aMaybeScriptedPrincipal, aResult);
 }
 
-nsresult
-HTMLMarqueeElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                 const nsAttrValue* aValue,
-                                 const nsAttrValue* aOldValue,
-                                 nsIPrincipal* aMaybeScriptedPrincipal,
-                                 bool aNotify)
-{
-  if (nsContentUtils::IsUAWidgetEnabled() &&
-      IsInComposedDoc() &&
-      aNameSpaceID == kNameSpaceID_None &&
-      aName == nsGkAtoms::direction) {
-    AsyncEventDispatcher* dispatcher =
-      new AsyncEventDispatcher(this,
-                               NS_LITERAL_STRING("UAWidgetAttributeChanged"),
-                               CanBubble::eYes,
-                               ChromeOnlyDispatch::eYes);
-    dispatcher->RunDOMEventWhenSafe();
-  }
-  return nsGenericHTMLElement::AfterSetAttr(
-    aNameSpaceID, aName, aValue, aOldValue, aMaybeScriptedPrincipal, aNotify);
-}
-
-
 void
 HTMLMarqueeElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls)
 {
@@ -212,23 +150,9 @@ HTMLMarqueeElement::GetAttributeMappingFunction() const
 }
 
 void
-HTMLMarqueeElement::DispatchEventToShadowRoot(const nsAString& aEventTypeArg)
-{
-  // Dispatch the event to the UA Widget Shadow Root, make it inaccessible to document.
-  RefPtr<nsINode> shadow = GetShadowRoot();
-  MOZ_ASSERT(shadow);
-  RefPtr<Event> event = new Event(shadow, nullptr, nullptr);
-  event->InitEvent(aEventTypeArg, false, false);
-  event->SetTrusted(true);
-  shadow->DispatchEvent(*event, IgnoreErrors());
-}
-
-void
 HTMLMarqueeElement::Start()
 {
-  if (nsINode* shadow = GetShadowRoot()) {
-    DispatchEventToShadowRoot(NS_LITERAL_STRING("marquee-start"));
-  } else if (mStartStopCallback) {
+  if (mStartStopCallback) {
     mStartStopCallback->Call(NS_LITERAL_STRING("start"));
   }
 }
@@ -236,9 +160,7 @@ HTMLMarqueeElement::Start()
 void
 HTMLMarqueeElement::Stop()
 {
-  if (nsINode* shadow = GetShadowRoot()) {
-    DispatchEventToShadowRoot(NS_LITERAL_STRING("marquee-stop"));
-  } else if (mStartStopCallback) {
+  if (mStartStopCallback) {
     mStartStopCallback->Call(NS_LITERAL_STRING("stop"));
   }
 }
