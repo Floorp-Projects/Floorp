@@ -578,8 +578,8 @@ PrintSingleError(JSContext* cx, FILE* file, JS::ConstUTF8CharsZ toStringResult,
     return true;
 }
 
-JS_PUBLIC_API(bool)
-JS::PrintError(JSContext* cx, FILE* file, JS::ConstUTF8CharsZ toStringResult,
+bool
+js::PrintError(JSContext* cx, FILE* file, JS::ConstUTF8CharsZ toStringResult,
                JSErrorReport* report, bool reportWarnings)
 {
     MOZ_ASSERT(report);

@@ -9475,7 +9475,7 @@ js::shell::AutoReportException::~AutoReportException()
     MOZ_ASSERT(!JSREPORT_IS_WARNING(report.report()->flags));
 
     FILE* fp = ErrorFilePointer();
-    JS::PrintError(cx, fp, report.toStringResult(), report.report(), reportWarnings);
+    PrintError(cx, fp, report.toStringResult(), report.report(), reportWarnings);
 
     {
         JS::AutoSaveExceptionState savedExc(cx);
@@ -9521,7 +9521,7 @@ js::shell::WarningReporter(JSContext* cx, JSErrorReport* report)
     }
 
     // Print the warning.
-    JS::PrintError(cx, fp, JS::ConstUTF8CharsZ(), report, reportWarnings);
+    PrintError(cx, fp, JS::ConstUTF8CharsZ(), report, reportWarnings);
 }
 
 static bool
