@@ -215,7 +215,7 @@ public:
   }
 
   virtual void
-  GetInterface(JSContext* aCx, nsIJSID* aIID,
+  GetInterface(JSContext* aCx, JS::Handle<JS::Value> aIID,
                JS::MutableHandle<JS::Value> aRetval,
                ErrorResult& aRv) override
   {

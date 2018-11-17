@@ -47,8 +47,9 @@ protected:
 public:
   void Destroy();
 
-  void AddPipeline(const wr::PipelineId& aPipelineId);
+  void AddPipeline(const wr::PipelineId& aPipelineId, WebRenderBridgeParent* aWrBridge = nullptr);
   void RemovePipeline(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch);
+  WebRenderBridgeParent* GetWrBridge(const wr::PipelineId& aPipelineId);
 
   void HoldExternalImage(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, WebRenderTextureHost* aTexture);
   void HoldExternalImage(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, WebRenderTextureHostWrapper* aWrTextureWrapper);
@@ -164,6 +165,7 @@ private:
     std::queue<ForwardingTextureHostWrapper> mTextureHostWrappers;
     std::queue<UniquePtr<ForwardingExternalImage>> mExternalImages;
     Maybe<wr::Epoch> mDestroyedEpoch;
+    WebRenderBridgeParent* MOZ_NON_OWNING_REF mWrBridge = nullptr;
   };
 
   struct AsyncImagePipeline {

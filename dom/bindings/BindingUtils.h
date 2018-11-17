@@ -43,7 +43,6 @@
 #include "nsWrapperCacheInlines.h"
 
 class nsGenericHTMLElement;
-class nsIJSID;
 
 namespace mozilla {
 
@@ -1907,12 +1906,12 @@ WantsQueryInterface
 
 void
 GetInterfaceImpl(JSContext* aCx, nsIInterfaceRequestor* aRequestor,
-                 nsWrapperCache* aCache, nsIJSID* aIID,
+                 nsWrapperCache* aCache, JS::Handle<JS::Value> aIID,
                  JS::MutableHandle<JS::Value> aRetval, ErrorResult& aError);
 
 template<class T>
 void
-GetInterface(JSContext* aCx, T* aThis, nsIJSID* aIID,
+GetInterface(JSContext* aCx, T* aThis, JS::Handle<JS::Value> aIID,
              JS::MutableHandle<JS::Value> aRetval, ErrorResult& aError)
 {
   GetInterfaceImpl(aCx, aThis, aThis, aIID, aRetval, aError);
