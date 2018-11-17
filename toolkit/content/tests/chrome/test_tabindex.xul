@@ -13,51 +13,48 @@
   Elements are navigated in the following order:
     1. tabindex > 0 in tree order
     2. tabindex = 0 in tree order
-  Elements with tabindex = -1 are not in the tab order
+  Elements with tabindex = -1 are focusable, but not in the tab order
  -->
 <hbox>
-  <button id="t5" label="One"/>
-  <checkbox id="no1" label="Two" tabindex="-1"/>
-  <button id="t6" label="Three" tabindex="0"/>
+  <button id="t7" label="One"/>
+  <checkbox id="f1" label="Two" tabindex="-1"/>
+  <button id="t8" label="Three" tabindex="0"/>
   <checkbox id="t1" label="Four" tabindex="1"/>
 </hbox>
 <hbox>
-  <textbox id="t7" idmod="t3" size="3"/>
-  <textbox id="no2" size="3" tabindex="-1"/>
-  <textbox id="t8" idmod="t4" size="3" tabindex="0"/>
+  <textbox id="t9" idmod="t5" size="3"/>
+  <textbox id="f2" size="3" tabindex="-1"/>
+  <textbox id="t10" idmod="t6" size="3" tabindex="0"/>
   <textbox id="t2" idmod="t1" size="3" tabindex="1"/>
 </hbox>
 <hbox>
-  <button id="no3" style="-moz-user-focus: ignore;" label="One"/>
-  <checkbox id="no4" style="-moz-user-focus: ignore;" label="Two" tabindex="-1"/>
-  <button id="t9" style="-moz-user-focus: ignore;" label="Three" tabindex="0"/>
+  <button id="n1" style="-moz-user-focus: ignore;" label="One"/>
+  <checkbox id="f3" style="-moz-user-focus: ignore;" label="Two" tabindex="-1"/>
+  <button id="t11" style="-moz-user-focus: ignore;" label="Three" tabindex="0"/>
   <checkbox id="t3" style="-moz-user-focus: ignore;" label="Four" tabindex="1"/>
 </hbox>
 <hbox>
-  <textbox id="t10" idmod="t5" style="-moz-user-focus: ignore;" size="3"/>
-  <textbox id="no5" style="-moz-user-focus: ignore;" size="3" tabindex="-1"/>
-  <textbox id="t11" idmod="t6" style="-moz-user-focus: ignore;" size="3" tabindex="0"/>
+  <textbox id="t12" idmod="t7" style="-moz-user-focus: ignore;" size="3"/>
+  <textbox id="f4" style="-moz-user-focus: ignore;" size="3" tabindex="-1"/>
+  <textbox id="t13" idmod="t8" style="-moz-user-focus: ignore;" size="3" tabindex="0"/>
   <textbox id="t4" idmod="t2" style="-moz-user-focus: ignore;" size="3" tabindex="1"/>
 </hbox>
-<richlistbox id="t12" idmod="t7">
+<richlistbox id="t14" idmod="t9">
   <richlistitem><label value="Item One"/></richlistitem>
 </richlistbox>
 
 <hbox>
-  <!-- the tabindex attribute does not apply to non-controls, so it
-       should be treated as -1 for non-focusable dropmarkers, and 0
-       for focusable dropmarkers. Thus, the first four dropmarkers
-       are not in the tab order, and the last four dropmarkers should
-       be in the tab order just after the listbox above.
+  <!-- the tabindex attribute applies to non-controls as well. They are not
+       focusable unless tabindex is explicitly specified.
     -->
-  <dropmarker id="no6"/>
-  <dropmarker id="no7" tabindex="-1"/>
-  <dropmarker id="no8" tabindex="0"/>
-  <dropmarker id="no9" tabindex="1"/>
-  <dropmarker id="t13" style="-moz-user-focus: normal;"/>
-  <dropmarker id="t14" style="-moz-user-focus: normal;" tabindex="-1"/>
-  <dropmarker id="t15" style="-moz-user-focus: normal;" tabindex="0"/>
-  <dropmarker id="t16" style="-moz-user-focus: normal;" tabindex="1"/>
+  <dropmarker id="n2"/>
+  <dropmarker id="f5" tabindex="-1"/>
+  <dropmarker id="t15" tabindex="0"/>
+  <dropmarker id="t5" idmod="t3" tabindex="1"/>
+  <dropmarker id="t16" style="-moz-user-focus: normal;"/>
+  <dropmarker id="f6" style="-moz-user-focus: normal;" tabindex="-1"/>
+  <dropmarker id="t17" style="-moz-user-focus: normal;" tabindex="0"/>
+  <dropmarker id="t6" idmod="t4" style="-moz-user-focus: normal;" tabindex="1"/>
 </hbox>
 
 <body xmlns="http://www.w3.org/1999/xhtml">
@@ -73,19 +70,36 @@
 
 SimpleTest.waitForExplicitFinish();
 
+function checkFocusability(aId, aFocusable)
+{
+  document.activeElement.blur();
+  let testNode = document.getElementById(aId);
+  testNode.focus();
+  let newFocus = document.activeElement;
+  if (newFocus.localName == "input") {
+    newFocus = document.getBindingParent(newFocus);
+  }
+  let check = aFocusable ? is : isnot;
+  let focusableText = aFocusable ? "focusable " : "unfocusable ";
+  check(newFocus, testNode,
+    ".focus() call on " + focusableText + aId);
+}
+
 var gAdjustedTabFocusModel = false;
-var gTestCount = 16;
+var gTestCount = 17;
 var gTestsOccurred = 0;
- 
+let gFocusableNotTabbableCount = 6;
+let gNotFocusableCount = 2;
+
 function runTests()
 {
   var t;
-  window.addEventListener("focus", function (event) {
+  function onFocus(event) {
     if (t == 1 && event.target.id == "t2") {
       // looks to be using the MacOSX Full Keyboard Access set to Textboxes
       // and lists only so use the idmod attribute instead
       gAdjustedTabFocusModel = true;
-      gTestCount = 7;
+      gTestCount = 9;
     }
 
     var attrcompare = gAdjustedTabFocusModel ? "idmod" : "id";
@@ -102,12 +116,23 @@ function runTests()
       if (event.target.localName != "textbox")
         gTestsOccurred++;
     }
-  }, true);
+  }
+  window.addEventListener("focus", onFocus, true);
 
   for (t = 1; t <= gTestCount; t++)
     synthesizeKey("KEY_Tab");
 
   is(gTestsOccurred, gTestCount, "test count");
+  window.removeEventListener("focus", onFocus, true);
+
+  for (let i = 1; i <= gFocusableNotTabbableCount; ++i) {
+    checkFocusability("f" + i, true);
+  }
+
+  for (let i = 1; i <= gNotFocusableCount; ++i) {
+    checkFocusability("n" + i, false);
+  }
+
   SimpleTest.finish();
 }
 
