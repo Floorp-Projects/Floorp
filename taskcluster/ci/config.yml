@@ -77,7 +77,6 @@ treeherder:
         'pub': 'APK publishing'
         'p': 'Partial generation'
         'ps': 'Partials signing'
-        'ms': 'Complete MAR signing'
         'Rel': 'Release promotion'
         'Snap': 'Snap image generation'
         'langpack': 'Langpack sigatures and uploads'
