@@ -75,6 +75,8 @@ interface XULElement : Element {
   [Throws]
   readonly attribute BoxObject?                 boxObject;
 
+  [SetterThrows]
+  attribute long tabIndex;
   [Throws]
   void                      focus();
   [Throws]
