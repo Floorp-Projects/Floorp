@@ -18,6 +18,7 @@
   <string name="menu_help">సహాయం</string>
   <string name="menu_rights">మీ హక్కులు</string>
   <string name="menu_trackers_blocked_title">నిరోధించిన ట్రాకర్లు</string>
+  <string name="menu_content_blocking">విషయ నిరోధం</string>
   <string name="menu_custom_tab_branding">వీరిచే %1$s</string>
   <string name="share_dialog_title">దీనిద్వారా పంచుకోండి</string>
   <string name="notification_erase_text">విహరణ చరిత్రను తుడిచివేయి</string>
@@ -40,6 +41,10 @@
   <string name="preference_state_on">చేతనం</string>
   <string name="preference_state_off">అచేతనం</string>
   <string name="preference_subitem_autocomplete">URL స్వయంపూర్తి</string>
+  <string name="preference_switch_autocomplete_topsites">మేటి సైట్లకు</string>
+  <string name="preference_switch_autocomplete_user_list">మీరు జోడించిన సైట్లకు</string>
+  <string name="preference_category_autocomplete_manage_sites">సైట్ల నిర్వహణ</string>
+  <string name="preference_autocomplete_subitem_manage_sites">సైట్లను నిర్వహించండి</string>
   <string name="preference_autocomplete_action_add">+ఇష్టానుసారమైన URLను జోడించండి</string>
   <string name="preference_autocomplete_title_add">ఇష్టానుసారమైన URLను జోడించండి</string>
   <string name="custom_autocomplete_quick_add">ఇష్టానుసారమైన URLను జోడించండి</string>
@@ -183,7 +188,12 @@
   <string name="enable_search_suggestions_yes">అవును</string>
   <string name="no_suggestions_message">కొన్ని సెర్చింజన్లు సలహాలను చూపించలేవు</string>
   <string name="dismiss_no_suggestions_prompt_button">మూసివేయి</string>
+  <string name="open_new_tab_snackbar">మారు</string>
+  <string name="preference_category_safe_browsing">సురక్షిత విహరణ</string>
   <string name="preference_exceptions">మినహాయింపులు</string>
   <string name="preference_exceptions_menu_remove">తొలగించు</string>
+  <string name="preference_exceptions_remove_all_button_label">అన్ని వెబ్‌సైట్లను తీసివేయి</string>
+  <string name="tab_crash_report_headline">క్షమించండి. ఈ ట్యాబులో ఏదో సమస్య ఉంది.</string>
+  <string name="tab_crash_report_close_tab_button_label">ట్యాబును మూసివేయి</string>
   <string name="fatal_crash_report_close_button_label">మూసివేయి</string>
 </resources>

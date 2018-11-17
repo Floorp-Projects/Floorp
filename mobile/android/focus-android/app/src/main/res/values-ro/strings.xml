@@ -33,7 +33,7 @@
   <string name="shortcut_erase_and_open_long_label">Șterge și deschide %1$s</string>
   <string name="text_selection_search_action">Caută într-un mod privat</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#238;&#539;i ofer&#259; controlul.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Folose&#537;te-l ca browser privat:\n  "<ul>"\n    "<li>Caut&#259; &#537;i navigheaz&#259; direct din aplica&#539;ie</li>"\n    "<li>Blocheaz&#259; urm&#259;ritorii (sau actualizeaz&#259; set&#259;rile pentru a permite urm&#259;ritorii)</li>"\n    "<li>&#536;terge pentru a elimina cookie-urile, precum &#537;i istoricul de c&#259;utare &#537;i navigare</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s este produs de Mozilla. Misiunea noastr&#259; este s&#259; promov&#259;m un internet s&#259;n&#259;tos &#537;i deschis.<br/>\n<a href="%2$s">Afl&#259; mai multe</a></p>]]></string>
-  <string name="preference_privacy_and_security_header">Intimitate și securitate</string>
+  <string name="preference_privacy_and_security_header">Confidențialitate și securitate</string>
   <string name="preference_privacy_and_security_summary">Urmărire, cookie-uri, împărtășire de date</string>
   <string name="preference_search_summary">Setează motorul implicit, completare automată</string>
   <string name="preference_mozilla_summary">Despre %1$s, ajutor</string>

@@ -6,6 +6,7 @@
   <string name="urlbar_hint">ရှာဖွေပါ သို့မဟုတ် လိပ်စာရိုက်ပါ</string>
   <string name="teaser">အလိုအလျောက် တစ်ကိုယ်ရေသုံး၊ \nသုံးပြီးဖျက်</string>
   <string name="feedback_erase">သင့် ဘယောက်ဆာသုံး မှတ်တမ်းဖျက်ပြီး</string>
+  <string name="feedback_erase_custom_tab">ကြည့်ရှုမှတ်တမ်းကို ရှင်းလင်းထားသည်။</string>
   <string name="search_hint">%1$s ကိုရှာမယ်</string>
   <string name="menu_share">မျှဝေပါ…</string>
   <string name="menu_report_site_issue">ဆိုက်ပြဿနာကို သတင်းပို့ရန်</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">အကူအညီ</string>
   <string name="menu_rights">သင်၏ အခွင့်အရေးများ</string>
   <string name="menu_trackers_blocked_title">နောက်ယောင်ခံများကို တားဆီးထား</string>
+  <string name="menu_trackers_blocked_subtitle">ယခုလုပ်ဆောင်ချက်ကို ပိတ်ခြင်းသည် အချို့သော ဝဘ်ဆိုက်များကို ကောင်းမွန်စွာ ဆောင်ရွက်နိုင်စေသည်</string>
+  <string name="menu_content_blocking">အကြောင်းအရာ ပိတ်ပင်ခြင်း</string>
+  <string name="menu_content_blocking_subtitle">အချို့သောဝဘ်ဆိုက်များအတွက် ပိတ်ပါ</string>
   <string name="menu_custom_tab_branding">%1$s ထောက်ပံ့ပေးထားတယ်</string>
   <string name="share_dialog_title">မျှဝေရန်</string>
   <string name="notification_erase_text">ကြည့်ရှုမှုမှတ်တမ်းကို ရှင်းလင်းရန်</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">ဖျက်ပြီး ဖွင့်ပါ</string>
   <string name="shortcut_erase_short_label">ရှင်းလင်းရန်</string>
   <string name="shortcut_erase_long_label">ကြည့်ရှုမှုမှတ်တမ်းကို ရှင်းလင်းရန်</string>
+  <string name="shortcut_erase_and_open_short_label">ဖျက်ပြီးဖွင့်ပါ</string>
+  <string name="shortcut_erase_and_open_long_label">%1$s ကို ဖျက်ပြီး ဖွင့်ပါ</string>
   <string name="text_selection_search_action">သီးသန့်လုံခြုံစွာ ရှာဖွေပါ</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#4126;&#4106;&#4154; &#4126;&#4100;&#4151;&#4154;&#4096;&#4141;&#4143; &#4113;&#4141;&#4116;&#4154;&#4152;&#4097;&#4155;&#4143;&#4117;&#4154;&#4121;&#4158;&#4143; &#4117;&#4145;&#4152;&#4113;&#4140;&#4152;&#4117;&#4139;&#4126;&#4106;&#4154;&#4171;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#4126;&#4142;&#4152;&#4126;&#4116;&#4151;&#4154;&#4112;&#4101;&#4154;&#4096;&#4141;&#4143;&#4122;&#4154;&#4123;&#4145;&#4126;&#4143;&#4150;&#4152; &#4120;&#4123;&#4145;&#4140;&#4100;&#4154;&#4103;&#4140;&#4129;&#4116;&#4145;&#4116;&#4158;&#4100;&#4151;&#4154; &#4129;&#4126;&#4143;&#4150;&#4152;&#4117;&#4156;&#4143;&#4117;&#4139;\n  "<ul>"\n    "<li>&#4123;&#4158;&#4140;&#4118;&#4157;&#4145;&#4096;&#4156;&#4106;&#4151;&#4154;&#4123;&#4158;&#4143;&#4117;&#4139;</li>"\n    "<li>&#4116;&#4145;&#4140;&#4096;&#4154;&#4122;&#4145;&#4140;&#4100;&#4154;&#4097;&#4150;&#4121;&#4155;&#4140;&#4152;&#4096;&#4141;&#4143; &#4112;&#4140;&#4152;&#4102;&#4142;&#4152;&#4117;&#4139; (&#4126;&#4141;&#4143;&#4151;&#4121;&#4127;&#4143;&#4112;&#4154; &#4116;&#4145;&#4140;&#4096;&#4154;&#4122;&#4145;&#4140;&#4100;&#4154;&#4097;&#4150;&#4121;&#4155;&#4140;&#4152;&#4096;&#4141;&#4143; &#4097;&#4157;&#4100;&#4151;&#4154;&#4117;&#4156;&#4143;&#4123;&#4116;&#4154; &#4126;&#4112;&#4154;&#4121;&#4158;&#4112;&#4154;&#4117;&#4156;&#4100;&#4154;&#4102;&#4100;&#4154;&#4117;&#4139;)</li>"\n    "<li>&#4096;&#4157;&#4112;&#4154;&#4096;&#4142;&#4152;&#4121;&#4155;&#4140;&#4152;&#4170; &#4123;&#4158;&#4140;&#4118;&#4157;&#4145;&#4096;&#4156;&#4106;&#4151;&#4154;&#4123;&#4158;&#4143;&#4121;&#4158;&#4143;&#4121;&#4158;&#4112;&#4154;&#4112;&#4121;&#4154;&#4152;&#4121;&#4155;&#4140;&#4152;&#4096;&#4141;&#4143; &#4123;&#4158;&#4100;&#4154;&#4152;&#4124;&#4100;&#4154;&#4152;&#4117;&#4139;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#4096;&#4141;&#4143; Mozilla &#4121;&#4158; &#4113;&#4143;&#4112;&#4154;&#4124;&#4143;&#4117;&#4154;&#4117;&#4139;&#4126;&#4106;&#4154;&#4171; &#4096;&#4155;&#4157;&#4116;&#4154;&#4143;&#4117;&#4154;&#4112;&#4141;&#4143;&#4151;&#4175; &#4123;&#4106;&#4154;&#4121;&#4158;&#4116;&#4154;&#4152;&#4097;&#4155;&#4096;&#4154;&#4126;&#4106;&#4154; &#4096;&#4145;&#4140;&#4100;&#4154;&#4152;&#4121;&#4157;&#4116;&#4154;&#4117;&#4157;&#4100;&#4151;&#4154;&#4124;&#4100;&#4154;&#4152;&#4126;&#4145;&#4140; &#4129;&#4100;&#4154;&#4112;&#4140;&#4116;&#4096;&#4154;&#4096;&#4141;&#4143; &#4112;&#4106;&#4154;&#4102;&#4145;&#4140;&#4096;&#4154;&#4123;&#4116;&#4154; &#4118;&#4156;&#4101;&#4154;&#4126;&#4106;&#4154;&#4171;<br/>\n<a href="%2$s">Learn more</a></p>]]></string>
   <string name="preference_privacy_and_security_header">ကိုယ်ရေးကာကွယ်မှုနှင့် လုံခြုံရေး</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">ဝတ်ဘ်စာကိုယ်</string>
   <string name="preference_category_switching_apps">အက်ပ်များ ဖွင့်ခြင်း</string>
   <string name="preference_category_general">အထွေထွေ</string>
+  <string name="preference_general_summary">မူသေ ဘရောင်ဇာ၊ တဗ်ပ်များ၊ ဘာသာစကား</string>
   <string name="preference_category_data_collection_use">ဒေတာစုစည်းမှုနှင့်အသုံးပြုမှု</string>
   <string name="preference_category_search">ရှာဖွေရန်</string>
   <string name="preference_show_search_suggestions">ရှာဖွေရေး အကြံပေးချက်များ ရယူရန်</string>
   <string name="preference_show_search_suggestions_summary">လိပ်စာဘားတန်းတွင် ရိုက်သမျှကို %1$s သည် ရှာဖွေရေးယန္တရားသို့ ပေးပို့ပါမည်။</string>
   <string name="preference_search_engine_default">မူလသတ်မှတ်ချက်</string>
+  <string name="preference_search_engine_label">ရှာဖွေရေး ယန္တရား</string>
   <string name="preference_state_on">ဖွင့်ပါ</string>
   <string name="preference_state_off">ပိတ်ပါ</string>
   <string name="preference_subitem_autocomplete">URL အလိုအလျောက်ဖြည့်စွက်</string>
+  <string name="preference_switch_autocomplete_topsites">ထိပ်တန်းဆိုက်များအတွက်</string>
+  <string name="preference_autocomplete_topsite_summary">လူသိများသော URL အခု 450 ကျော် ကို အသုံးပြုနိုင်ရန် လိပ်စာဘားတန်းတွင် အလိုအလျောက်ဖြည့်သော လုပ်ဆောင်ချက်ကို ဖွင့်ပါ။</string>
+  <string name="preference_switch_autocomplete_user_list">သင်ရွေးချယ်ထားသော ဝဘ်ဆိုက်များအတွက်</string>
+  <string name="preference_autocomplete_user_list_summary">လိပ်စာဘားတွင် နာမည်ကြီးသောURLs 450ကျော်ကိုဖြည့်စွက်မှုဖွင့်ပါ</string>
+  <string name="preference_category_autocomplete_manage_sites">ဝဘ်ဆိုက်များကို စီမံရန်</string>
+  <string name="preference_autocomplete_subitem_manage_sites">ဝဘ်ဆိုက်များကို စီမံရန်</string>
   <string name="preference_autocomplete_action_add">+ စိတ်ကြိုက် URLs တိုးရန်</string>
   <string name="preference_autocomplete_title_add">စိတ်ကြိုက် URLs တိုးရန်</string>
   <string name="custom_autocomplete_quick_add">စိတ်ကြိုက် URLs တိုးရန်</string>
+  <string name="add_custom_autocomplete_label">အလိုအလျက်ဖြည့်ရန် လင့်ကို ထည့်ပေးပါ</string>
   <string name="preference_category_cookies">ကွတ်ကီးများနှင့် ဝဘ်ဆိုက် အချက်အလက်</string>
   <string name="preference_category_data_choices">ဒေတာအသုံးပြုရန် ရွေးချယ်မှုများ</string>
   <string name="preference_autocomplete_title_remove">စိတ်ကြိုက် URLs ဖယ်ရှားရန်</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">လုပ်ဆောင်ချက်ကို ဖွင့်လိုက်ခြင်းသည် အချို့သော ဝဘ်စာမျက်နှာများ၏ လုပ်ဆောင်ချက်များကို ထိခိုက်စေနိုင်သည်။</string>
   <string name="preference_privacy_category_cookies">ကွတ်ကီးများကို ဖျောက်ထားပါ</string>
   <string name="preference_privacy_should_block_cookies_no_option">မဟုတ်ပါ</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">အခြားသူများ၏ နောက်ယောင်ခံ ကိရိယာများကိုသာ တားဆီးပါ</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">ပြင်ပကွက်ကီးများကို မသိမ်းပါနှင့်</string>
   <string name="preference_privacy_should_block_cookies_yes_option">ဟုတ်ပါသည်</string>
   <string name="preference_security_biometric">အက်ပ်ကို ဖွင့်ရန် လက်ဗွေကို အသုံးပြုပါ</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">ဆောင်ရွက်နေသည်</string>
   <string name="accessibility_announcement_loading_finished">ဝဘ်ဆိုက်ကို ဖွင့်ပြီးပြီ</string>
   <string name="content_description_menu">နောက်ထပ် ရွေးချယ်စရာများ</string>
+  <string name="indicator_content_description_menu">အခြားဆောင်ရွက်နိုင်သည်များ ခလုတ်</string>
   <string name="content_description_forward">ရှေ့သို့ သွားပါ</string>
   <string name="content_description_reload">ဝဘ်ဆိုက်ကို ပြန်ဖွင့်ပါ</string>
   <string name="content_description_back">နောက်သို့ သွားပါ</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#4122;&#4097;&#4143;&#4117;&#4156;&#4159;&#4116;&#4140;&#4126;&#4106;&#4154; &#4102;&#4140;&#4119;&#4140;&#4175; &#4129;&#4117;&#4156;&#4100;&#4154;&#4129;&#4102;&#4100;&#4154;&#4096;&#4156;&#4145;&#4140;&#4100;&#4151;&#4154; &#4126;&#4141;&#4143;&#4151;&#4121;&#4127;&#4143;&#4112;&#4154; &#4112;&#4101;&#4154;&#4122;&#4145;&#4140;&#4096;&#4154;&#4122;&#4145;&#4140;&#4096;&#4154;&#4126;&#4106;&#4154; &#4102;&#4140;&#4119;&#4140; &#4129;&#4122;&#4145;&#4140;&#4100;&#4154;&#4102;&#4145;&#4140;&#4100;&#4154;&#4116;&#4145;&#4126;&#4145;&#4140;&#4096;&#4156;&#4145;&#4140;&#4100;&#4151;&#4154; &#4118;&#4156;&#4101;&#4154;&#4116;&#4141;&#4143;&#4100;&#4154;&#4126;&#4106;&#4154;&#4171;</li>"\n  "<li>&#4129;&#4096;&#4122;&#4154;&#4173; &#4126;&#4100;&#4154;&#4126;&#4106;&#4154; &#4129;&#4123;&#4100;&#4154;&#4096; &#4122;&#4097;&#4143;&#4102;&#4140;&#4119;&#4140;&#4096;&#4141;&#4143; &#4097;&#4155;&#4141;&#4112;&#4154;&#4102;&#4096;&#4154;&#4097;&#4146;&#4151;&#4118;&#4144;&#4152;&#4117;&#4139;&#4096; &#4122;&#4097;&#4143;&#4117;&#4156;&#4159;&#4116;&#4140;&#4126;&#4106;&#4154; &#4122;&#4140;&#4122;&#4142; &#4118;&#4156;&#4101;&#4154;&#4116;&#4141;&#4143;&#4100;&#4154;&#4126;&#4106;&#4154;&#4170; &#4116;&#4145;&#4140;&#4100;&#4154;&#4112;&#4157;&#4100;&#4154; &#4117;&#4156;&#4116;&#4154;&#4124;&#4106;&#4154;&#4097;&#4155;&#4141;&#4112;&#4154;&#4102;&#4096;&#4154;&#4096;&#4156;&#4106;&#4151;&#4154;&#4117;&#4139;&#4171;</li>\n</ul>]]></string>
   <string name="error_generic_title">Oops</string>
   <string name="error_generic_message">အခြားအကြောင်းအရာများ ရှိသောကြောင့် ယခုစာမျက်နှာကို မဖွင့်နိုင်ပါ။</string>
+  <string name="contextmenu_open_in_app">အက်ပ်ဖြင့် ဖွင့်ပါ</string>
   <string name="contextmenu_link_share">လင့်ခ်ကို မျှဝေရန်</string>
   <string name="contextmenu_link_copy">လင့်ခ်လိပ်စာကို ကူးပါ</string>
   <string name="contextmenu_image_share">ရုပ်ပုံကို မျှဝေရန်</string>
@@ -224,4 +242,25 @@
   <string name="tip_autocomplete_url">သင်အသုံးပြုများသော ဆိုက်များ၏ URLs ကို အလိုအလျောက်ဖြည့်ပါမည်\n လိပ်စာဘားတန်းထဲတွင် မည်သည့် URL ကိုမဆို ကြာကြာဖိပြီး ဖွင့်နိုင်သည်</string>
   <string name="tip_open_in_new_tab">လင့်ခ်ကို တဗ်ပ်အသစ်တွင် ဖွင့်ပါ\n စာမျက်နှာရှိ မည်သည့်လင့်ခ်တွင်မဆို ကြာကြာဖိပြီး ဖွင့်နိုင်သည်</string>
   <string name="tip_request_desktop">ဒက်စတော့ဆိုက်ကိုသာ ကြည့်ရှုလိုပါသလား။ %1$s မီနူး &gt; ဒက်စတော့ဆိုက်ကို ပြပါ</string>
+  <string name="tip_disable_tips2">စတင်အသုံးရန် မျက်နှာပြင်တွင် အကြံပြုချက်များ ပြသခြင်းကို ပိတ်ပါ</string>
+  <string name="tip_explain_allowlist">ယုံကြည်ရသော ဝဘ်ဆိုက်များ ဖြစ်ပါသလား။\n Allowlist သည် သင်သိပြီး ယုံကြည်သော ဝဘ်ဆိုက်များအတွက်သာ ခြေရာခံကာကွယ်မှုကို ပိတ်ပါသည်။</string>
+  <string name="new_tab_opened_snackbar">တပ်ဗ်အသစ် ဖွင့်ထားသည်</string>
+  <string name="open_new_tab_snackbar">ပြောင်းလဲအသုံးပြုရန်</string>
+  <string name="preference_open_new_tab">လင့်ခ်ကို ချက်ခြင်း တပ်ဗ်အသစ်ထဲတွင် အသုံးပြုရန်</string>
+  <string name="preference_category_safe_browsing">လုံခြုံသော ရှာဖွေခြင်း</string>
+  <string name="preference_safe_browsing_title">အန္တရာယ်ရှိပြီး လှည့်ဖြားတတ်သည့် ဝဘ်ဆိုက်များကို တားဆီးပါ</string>
+  <string name="preference_safe_browsing_summary">အစီရင်ခံစာတင်ထားသော တိုက်ခိုက်မှုပြုတတ်သည့်ဆိုက်များကို ဖျောက်ပါ</string>
+  <string name="preference_exceptions">ခြွင်းချက်များ</string>
+  <string name="preference_exceptions_description">သင်သည် ထိုဝဘ်ဆိုက်များအတွက် Content Blocking ကို ပိတ်ထားသည်။</string>
+  <string name="preference_exceptions_menu_remove">ဖယ်ရှားပါ</string>
+  <string name="preference_exceptions_remove_all_button_label">ဝဘ်ဆိုက်အားလုံးကို ဖယ်ရှားပါ</string>
+  <string name="tab_crash_report_title">တပ်ဗ် ရပ်ဆိုင်းသွားသည်</string>
+  <string name="tab_crash_report_headline">ဝမ်းနည်းပါတယ်။ ယခုတပ်ဗ်တွင် ပြဿနာတစ်ခု ရှိနေပါသည်။</string>
+  <string name="tab_crash_report_description">တစ်ကိုယ်ရေသုံး ဘရောင်ဇာတစ်ခု ဖြစ်သည့်အတွက် ယခုတပ်ဗ်ဆိုင်ရာ မှတ်တမ်းများကို မသိမ်းပါ၊ ထို့ပြင် ၎င်းတပ်ဗ်ကို ပြန်၍ဖွင့်မရနိုင်ပါ။</string>
+  <string name="tab_crash_report_close_tab_button_label">တပ်ဗ်ကို ပိတ်ပါ</string>
+  <string name="fatal_crash_report_title">ဝမ်းနည်းပါတယ်။ %1$s တွင် ပြဿနာတစ်ခု ပေါ်ခဲ့သဖြင့် ရပ်ဆိုင်းသွားသည်။</string>
+  <string name="fatal_crash_report_description">တစ်ကိုယ်ရေသုံး ဘရောင်ဇာတစ်ခု ဖြစ်သည့်အတွက် သင်နောက်ဆုံးအသုံးပြုခဲ့သည့် မှတ်တမ်းများကို မသိမ်းပါ၊ ထို့ပြင် ၎င်းကို ပြန်၍ဖွင့်မရနိုင်ပါ။</string>
+  <string name="fatal_crash_report_close_button_label">ပိတ်ပါ</string>
+  <string name="fatal_crash_report_restart_firefox_label">%1$s ကို ပြန်စပါ</string>
+  <string name="crash_report_send_crash_label">Mozillaသို့ ပျက်စီးမှုအစီရင်ခံစာပို့ပါ</string>
 </resources>

@@ -3,11 +3,11 @@
   <string name="action_cancel">Ntuvi</string>
   <string name="action_ok">OK</string>
   <string name="action_save">Chuva´a</string>
-  <string name="urlbar_hint">Nánuku a xiin chu´un iin nuu</string>
+  <string name="urlbar_hint">Nánuku a xíín chu´un iin nuu</string>
   <string name="teaser">Nánuku yɨɨ yu´u.</string>
   <string name="feedback_erase">Daa nnánukunu nnaá.</string>
   <string name="feedback_erase_custom_tab">Daa nnánukunu nnaá nuu pestaña.</string>
-  <string name="search_hint">Nuku jii %1$s</string>
+  <string name="search_hint">Nánuku %1$s</string>
   <string name="menu_share">Kua´a...</string>
   <string name="menu_report_site_issue">Iyo iin tixi nuu sitio ya´a</string>
   <string name="menu_open_with_default_browser2">Síne jii %1$s</string>
@@ -67,7 +67,7 @@
   <string name="preference_autocomplete_learn_more">Kutu´va-ka</string>
   <string name="preference_autocomplete_custom_summary">Tee jee tetiñu de kuvi tee ntu´u URL sá´á vii.</string>
   <string name="preference_autocomplete_add_title">URL a tee</string>
-  <string name="preference_autocomplete_add_hint">Tee a xiin chu´un URL</string>
+  <string name="preference_autocomplete_add_hint">Tee a xíín chu´un URL</string>
   <string name="preference_autocomplete_add_example2">Kua: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Kua: nakuvi.com</string>
   <string name="preference_autocomplete_add_confirmation">A jíía vii URL ntee.</string>
@@ -97,7 +97,7 @@
   <string name="preference_category_security">Kumiji noo´o</string>
   <string name="preference_category_performance">Naja satiñu</string>
   <string name="preference_performance_block_webfonts">Chiyu´u tu´un web</string>
-  <string name="preference_performance_block_webfonts_summary">Kuvi tuvi íconos a xiin nkutuvi tutu natava</string>
+  <string name="preference_performance_block_webfonts_summary">Kuvi tuvi íconos a xíín nkutuvi tutu natava</string>
   <string name="preference_performance_block_javascript">Kasɨ JavaScript</string>
   <string name="preference_performance_block_javascript_summary">Daa página kuvi kivu ñama, jee kuvi nsatiñu vii</string>
   <string name="preference_default_browser2">Sá´á %1$s navegador xinañu´u ya´a</string>
@@ -154,9 +154,9 @@
   <string name="errorpage_title">Ntu nkuvi síne página ya´a</string>
   <string name="errorpage_refresh">Nakajie´e tuku</string>
   <string name="error_connectionfailure_title">Ntu nkuvi kivɨ</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Sitio ya&#180;a ntu kuvi s&#237;ne a xiin kue&#180;e &#241;&#616;v&#616; ni&#180;i ya&#180;a.</li>"\n        "<li>Dee ntu kuvi s&#237;ne iin p&#225;gina, kune&#180;y&#225; datos ka&#817;a&#817; noo&#180;o a xiin Wi-Fi.</li></ul>]]></string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>Sitio ya&#180;a ntu kuvi s&#237;ne a x&#237;&#237;n kue&#180;e &#241;&#616;v&#616; ni&#180;i ya&#180;a.</li>"\n        "<li>Dee ntu kuvi s&#237;ne iin p&#225;gina, kune&#180;y&#225; datos ka&#817;a&#817; noo&#180;o a xiin Wi-Fi.</li></ul>]]></string>
   <string name="error_timeout_title">A netu nnɨ´ɨ nuu conexión</string>
-  <string name="error_hostLookup_title">Ntu nani´í kaa servidor</string>
+  <string name="error_hostLookup_title">Ntu nani´í ka̱a̱ servidor</string>
   <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"Kune&#180;y&#225; siv&#616; ntee-n&#250; &#237;yo vatu sa&#817;naan kumi errores kua\n          "<strong>ww</strong>".nakuvi.com nuu inka ya&#180;a "<strong>www</strong>.ejemplo.com</li>"\n        "<li>De ntu kuvi s&#237;ne ni&#180;i p&#225;gina, kune&#180;y&#225; datos ka&#817;a&#817;-nu a x&#237;&#237;n conexi&#243;n Wi-Fi.</li>"\n      "</ul>]]></string>
   <string name="error_malformedURI_title">Dirección ntu vatu</string>
   <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"Direcci&#243;n Web ntaka ichi &#237;yo sukuan "<strong>http://www.example.com/</strong></li>"\n  "<li>"Kune&#180;y&#225; de ni&#180;&#237; nijin-nu daa barras sukuan (kua ya&#180;a. "<strong>/</strong>).</li>\n</ul>]]></string>
@@ -177,7 +177,7 @@
   <string name="contextmenu_open_in_new_tab">Síne link nuu iin pestaña jíía</string>
   <string name="contextmenu_image_warning"><![CDATA["Daa tutu nátava "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Nn&#225;</b>" dee náxitá-nu %1$s daa tu´un nnánukunu."]]></string>
   <string name="firstrun_defaultbrowser_title">Sika privacidad noo´o</string>
-  <string name="firstrun_defaultbrowser_text2">Ni´i nánuku yu´u inka nivel. Xita daa tutu kuvi xiko a xiin daa nita noo´o, saa´a ntu jika ñama ka̱a̱ nánuku.</string>
+  <string name="firstrun_defaultbrowser_text2">Ni´i nánuku yu´u inka nivel. Xita daa tutu kuvi xiko a xíín daa nita noo´o, saa´a ntu jika ñama ka̱a̱ nánuku.</string>
   <string name="firstrun_search_title">Nánuku, kua kachi noo´o</string>
   <string name="firstrun_search_text">Nánukunu inka tu´un? Kaji inka ka̱a̱ nánuku nuu daa ke´í.</string>
   <string name="firstrun_shortcut_title">Tee a kivu ñama nuu kajie´e</string>
@@ -197,7 +197,7 @@
   <string name="download_firefox">Xinuun Firefox</string>
   <string name="your_rights_content1">%1$s kuviji iin ka̱a̱ ntu íyo ya´vi jee kuviji iin código nune a sa´a Mozilla jii inka ñivɨ.</string>
   <string name="your_rights_content2"><![CDATA["%1$s kuviji jiee "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">tutu xitu Mozilla</a>" jii inka tutu código nune."]]></string>
-  <string name="your_rights_content3"><![CDATA["Ntu taji tutu xitu a xiin daa inka tutu xitu Mozilla nu inka vetiñu, ya´a kuvi logos a xiin sivɨ Mozilla, Firefox a xiin %1$s. Kuni kue´e jiee ya´a "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" nuu "</a>.]]></string>
+  <string name="your_rights_content3"><![CDATA["Ntu taji tutu xitu a xíín daa inka tutu xitu Mozilla nu inka vetiñu, ya´a kuvi logos a xiin sivɨ Mozilla, Firefox a xiin %1$s. Kuni kue´e jiee ya´a "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" nuu "</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Inka "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" tutu xitu "</a>" código nune jii ntu íyo ya´vi kumidaja código %1$s."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s ni´i lista ntɨ tuvi a taji Disconnect, Inc. kua tiñu ntu ntaka jiee "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">" tutu xitu ntaka GNU v3 "</a>" jee kuvi nani´inuma "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">" ya&#180;a "</a>.]]></string>
   <string name="gv_prompt_username_hint">Sivɨ</string>

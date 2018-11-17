@@ -48,6 +48,8 @@
   <string name="preference_state_off">Ανενεργό</string>
   <string name="preference_subitem_autocomplete">Αυτόματη συμπλήρωση URL</string>
   <string name="preference_switch_autocomplete_topsites">Για κορυφαίες ιστοσελίδες</string>
+  <string name="preference_category_autocomplete_manage_sites">Διαχείριση ιστοσελίδων</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Διαχείριση ιστοσελίδων</string>
   <string name="preference_autocomplete_action_add">+ Προσθήκη προσαρμοσμένου URL</string>
   <string name="preference_autocomplete_title_add">Προσθήκη προσαρμοσμένου URL</string>
   <string name="custom_autocomplete_quick_add">Προσθήκη προσαρμοσμένου URL</string>
@@ -156,6 +158,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#913;&#965;&#964;&#972; &#952;&#945; &#956;&#960;&#959;&#961;&#959;&#973;&#963;&#949; &#957;&#945; &#949;&#943;&#957;&#945;&#953; &#960;&#961;&#972;&#946;&#955;&#951;&#956;&#945; &#956;&#949; &#964;&#951; &#961;&#973;&#952;&#956;&#953;&#963;&#951; &#964;&#959;&#965; &#948;&#953;&#945;&#954;&#959;&#956;&#953;&#963;&#964;&#942;, &#942; &#952;&#945; &#956;&#960;&#959;&#961;&#959;&#973;&#963;&#949; &#957;&#945; &#949;&#943;&#957;&#945;&#953;\n&#954;&#940;&#960;&#959;&#953;&#959;&#962; &#960;&#959;&#965; &#960;&#961;&#959;&#963;&#960;&#945;&#952;&#949;&#943; &#957;&#945; &#956;&#953;&#956;&#951;&#952;&#949;&#943; &#964;&#959; &#948;&#953;&#945;&#954;&#959;&#956;&#953;&#963;&#964;&#942;.</li>"\n  "<li>&#913;&#957; &#941;&#967;&#949;&#964;&#949; &#963;&#965;&#957;&#948;&#949;&#952;&#949;&#943; &#963;&#949; &#945;&#965;&#964;&#972; &#964;&#959; &#948;&#953;&#945;&#954;&#959;&#956;&#953;&#963;&#964;&#942; &#949;&#960;&#953;&#964;&#965;&#967;&#974;&#962; &#963;&#964;&#959; &#960;&#945;&#961;&#949;&#955;&#952;&#972;&#957;, &#964;&#959; &#963;&#966;&#940;&#955;&#956;&#945; &#949;&#957;&#948;&#941;&#967;&#949;&#964;&#945;&#953; &#957;&#945;\n&#949;&#943;&#957;&#945;&#953; &#960;&#961;&#959;&#963;&#969;&#961;&#953;&#957;&#972; &#954;&#945;&#953; &#956;&#960;&#959;&#961;&#949;&#943;&#964;&#949; &#957;&#945; &#948;&#959;&#954;&#953;&#956;&#940;&#963;&#949;&#964;&#949; &#958;&#945;&#957;&#940; &#945;&#961;&#947;&#972;&#964;&#949;&#961;&#945;.</li>\n</ul>]]></string>
   <string name="error_generic_title">Ωχ</string>
   <string name="error_generic_message">Δεν μπορούμε να φορτώσουμε αυτή τη σελίδα για κάποιο λόγο.</string>
+  <string name="contextmenu_open_in_app">Άνοιγμα με εφαρμογή</string>
   <string name="contextmenu_link_share">Κοινοποίηση συνδέσμου</string>
   <string name="contextmenu_link_copy">Αντιγραφή διεύθυνσης συνδέσμου</string>
   <string name="contextmenu_image_share">Κοινή χρήση εικόνας</string>
@@ -236,4 +239,5 @@
   <string name="preference_exceptions_remove_all_button_label">Αφαίρεση όλων των ιστοσελίδων</string>
   <string name="tab_crash_report_close_tab_button_label">Κλείσιμο καρτέλας</string>
   <string name="fatal_crash_report_close_button_label">Κλείσιμο</string>
+  <string name="fatal_crash_report_restart_firefox_label">Επανεκκίνηση του %1$s</string>
 </resources>

@@ -18,6 +18,9 @@
   <string name="menu_help">Pitulung</string>
   <string name="menu_rights">Hak Sampéyan</string>
   <string name="menu_trackers_blocked_title">Palacak kablokir</string>
+  <string name="menu_trackers_blocked_subtitle">Matèni iki bisa ndandani sawetara masalah situs</string>
+  <string name="menu_content_blocking">Blokir kontèn</string>
+  <string name="menu_content_blocking_subtitle">Patèni kanggo ndandani sawetara situs</string>
   <string name="menu_custom_tab_branding">Disokong déning %1$s</string>
   <string name="share_dialog_title">Dumké liwat</string>
   <string name="notification_erase_text">Busak riwayat dlajahan</string>
@@ -31,7 +34,10 @@
   <string name="preference_category_general">Umum</string>
   <string name="preference_category_search">Golèk</string>
   <string name="preference_show_search_suggestions">Njaluk saran panggolekan</string>
+  <string name="preference_search_engine_label">Mesin panggolèk</string>
+  <string name="preference_state_on">Uripké</string>
   <string name="preference_state_off">Paténi</string>
+  <string name="preference_autocomplete_learn_more">Sinau liyané</string>
   <string name="preference_autocomplete_add_hint">Témpél utowo leboké URL</string>
   <string name="preference_autocomplete_menu_remove">Busak</string>
   <string name="preference_autocomplete_action_remove_content_description">Busak</string>
