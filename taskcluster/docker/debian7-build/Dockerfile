@@ -63,5 +63,5 @@ RUN apt-get update && \
       libxt-dev:$ARCH
 
 # Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
-# %include taskcluster/docker/recipes/xvfb.sh 
+# %include taskcluster/docker/recipes/xvfb.sh
 COPY topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh
