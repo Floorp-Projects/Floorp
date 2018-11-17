@@ -12,8 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FlexItemValues, mParent, mNode,
-                                      mFrameRect)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FlexItemValues, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FlexItemValues)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FlexItemValues)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FlexItemValues)
@@ -50,14 +49,6 @@ FlexItemValues::FlexItemValues(FlexLineValues* aParent,
   // going to keep it around.
   mNode = aItem->mNode;
 
-  // Since mNode might be null, we associate the mFrameRect with
-  // our parent.
-  mFrameRect = new DOMRectReadOnly(mParent,
-    nsPresContext::AppUnitsToDoubleCSSPixels(aItem->mFrameRect.X()),
-    nsPresContext::AppUnitsToDoubleCSSPixels(aItem->mFrameRect.Y()),
-    nsPresContext::AppUnitsToDoubleCSSPixels(aItem->mFrameRect.Width()),
-    nsPresContext::AppUnitsToDoubleCSSPixels(aItem->mFrameRect.Height()));
-
   // Convert app unit sizes to css pixel sizes.
   mMainBaseSize = nsPresContext::AppUnitsToDoubleCSSPixels(
     aItem->mMainBaseSize);
@@ -83,12 +74,6 @@ nsINode*
 FlexItemValues::GetNode() const
 {
   return mNode;
-}
-
-DOMRectReadOnly*
-FlexItemValues::FrameRect() const
-{
-  return mFrameRect;
 }
 
 double
