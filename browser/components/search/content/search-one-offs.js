@@ -8,218 +8,34 @@
 
 {
 
-let sharedFragment;
-function getFragment() {
-  if (!sharedFragment) {
-    sharedFragment = MozXULElement.parseXULToFragment(`
-    <deck class="search-panel-one-offs-header search-panel-header search-panel-current-input">
-      <label class="searchbar-oneoffheader-search" value="&searchWithHeader.label;"></label>
-      <hbox class="search-panel-searchforwith search-panel-current-input">
-        <label value="&searchFor.label;"></label>
-        <label class="searchbar-oneoffheader-searchtext search-panel-input-value" flex="1" crop="end"></label>
-        <label flex="10000" value="&searchWith.label;"></label>
-      </hbox>
-      <hbox class="search-panel-searchonengine search-panel-current-input">
-        <label value="&search.label;"></label>
-        <label class="searchbar-oneoffheader-engine search-panel-input-value" flex="1" crop="end"></label>
-        <label flex="10000" value="&searchAfter.label;"></label>
-      </hbox>
-    </deck>
-    <description role="group" class="search-panel-one-offs">
-      <button oncommand="showSettings();" class="searchbar-engine-one-off-item search-setting-button-compact" tooltiptext="&changeSearchSettings.tooltip;"></button>
-    </description>
-    <vbox class="search-add-engines"></vbox>
-    <button oncommand="showSettings();" class="search-setting-button search-panel-header" label="&changeSearchSettings.button;"></button>
-    <menupopup class="search-one-offs-context-menu">
-      <menuitem class="search-one-offs-context-open-in-new-tab" label="&searchInNewTab.label;" accesskey="&searchInNewTab.accesskey;"></menuitem>
-      <menuitem class="search-one-offs-context-set-default" label="&searchSetAsDefault.label;" accesskey="&searchSetAsDefault.accesskey;"></menuitem>
-    </menupopup>
-    `, ["chrome://browser/locale/browser.dtd"]);
-  }
+class SearchOneOffs {
+  constructor(container) {
+    this.container = container;
 
-  return document.importNode(sharedFragment, true);
-}
-
-class MozSearchOneOffs extends MozXULElement {
-  constructor() {
-    super();
-
-    this.addEventListener("mousedown", event => {
-      let target = event.originalTarget;
-      if (target.classList.contains("addengine-menu-button")) {
-        return;
-      }
-      // Required to receive click events from the buttons on Linux.
-      event.preventDefault();
-    });
-
-    this.addEventListener("mousemove", event => {
-      let target = event.originalTarget;
-
-      // Handle mouseover on the add-engine menu button and its popup items.
-      if ((target.localName == "menuitem" && target.classList.contains("addengine-item")) ||
-          target.classList.contains("addengine-menu-button")) {
-        let menuButton = this.querySelector(".addengine-menu-button");
-        this._updateStateForButton(menuButton);
-        this._addEngineMenuShouldBeOpen = true;
-        this._resetAddEngineMenuTimeout();
-        return;
-      }
-
-      if (target.localName != "button") {
-        return;
-      }
-
-      // Ignore mouse events when the context menu is open.
-      if (this._ignoreMouseEvents) {
-        return;
-      }
-
-      let isOneOff =
-        target.classList.contains("searchbar-engine-one-off-item") &&
-        !target.classList.contains("dummy");
-      if (isOneOff ||
-          target.classList.contains("addengine-item") ||
-          target.classList.contains("search-setting-button")) {
-        this._updateStateForButton(target);
-      }
-    });
-
-    this.addEventListener("mouseout", event => {
-      let target = event.originalTarget;
-
-      // Handle mouseout on the add-engine menu button and its popup items.
-      if ((target.localName == "menuitem" && target.classList.contains("addengine-item")) ||
-          target.classList.contains("addengine-menu-button")) {
-        this._updateStateForButton(null);
-        this._addEngineMenuShouldBeOpen = false;
-        this._resetAddEngineMenuTimeout();
-        return;
-      }
-
-      if (target.localName != "button") {
-        return;
-      }
-
-      // Don't update the mouseover state if the context menu is open.
-      if (this._ignoreMouseEvents) {
-        return;
-      }
-
-      this._updateStateForButton(null);
-    });
-
-    this.addEventListener("click", event => {
-      if (event.button == 2) {
-        return; // ignore right clicks.
-      }
-
-      let button = event.originalTarget;
-      let engine = button.engine;
-
-      if (!engine) {
-        return;
-      }
-
-      // Select the clicked button so that consumers can easily tell which
-      // button was acted on.
-      this.selectedButton = button;
-      this.handleSearchCommand(event, engine);
-    });
-
-    this.addEventListener("command", event => {
-      let target = event.originalTarget;
-      if (target.classList.contains("addengine-item")) {
-        // On success, hide the panel and tell event listeners to reshow it to
-        // show the new engine.
-        let installCallback = {
-          onSuccess: engine => {
-            this._rebuild();
-          },
-          onError(errorCode) {
-            if (errorCode != Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE) {
-              // Download error is shown by the search service
-              return;
-            }
-            const kSearchBundleURI =
-              "chrome://global/locale/search/search.properties";
-            let searchBundle = Services.strings.createBundle(kSearchBundleURI);
-            let brandBundle = document.getElementById("bundle_brand");
-            let brandName = brandBundle.getString("brandShortName");
-            let title = searchBundle.GetStringFromName(
-              "error_invalid_engine_title"
-            );
-            let text = searchBundle.formatStringFromName(
-              "error_duplicate_engine_msg",
-              [brandName, target.getAttribute("uri")],
-              2
-            );
-            Services.prompt.QueryInterface(Ci.nsIPromptFactory);
-            let prompt = Services.prompt.getPrompt(
-              gBrowser.contentWindow,
-              Ci.nsIPrompt
-            );
-            prompt.QueryInterface(Ci.nsIWritablePropertyBag2);
-            prompt.setPropertyAsBool("allowTabModal", true);
-            prompt.alert(title, text);
-          },
-        };
-        Services.search.addEngine(target.getAttribute("uri"),
-                                  target.getAttribute("image"), false,
-                                  installCallback);
-      }
-      if (target.classList.contains("search-one-offs-context-open-in-new-tab")) {
-        // Select the context-clicked button so that consumers can easily
-        // tell which button was acted on.
-        this.selectedButton = this._buttonForEngine(this._contextEngine);
-        this.handleSearchCommand(event, this._contextEngine, true);
-      }
-      if (target.classList.contains("search-one-offs-context-set-default")) {
-        let currentEngine = Services.search.defaultEngine;
-
-        if (!this.getAttribute("includecurrentengine")) {
-          // Make the target button of the context menu reflect the current
-          // search engine first. Doing this as opposed to rebuilding all the
-          // one-off buttons avoids flicker.
-          let button = this._buttonForEngine(this._contextEngine);
-          button.id = this._buttonIDForEngine(currentEngine);
-          let uri = "chrome://browser/skin/search-engine-placeholder.png";
-          if (currentEngine.iconURI) {
-            uri = currentEngine.iconURI.spec;
-          }
-          button.setAttribute("image", uri);
-          button.setAttribute("tooltiptext", currentEngine.name);
-          button.engine = currentEngine;
-        }
-
-        Services.search.defaultEngine = this._contextEngine;
-      }
-    });
-
-    this.addEventListener("contextmenu", event => {
-      let target = event.originalTarget;
-      // Prevent the context menu from appearing except on the one off buttons.
-      if (!target.classList.contains("searchbar-engine-one-off-item") ||
-          target.classList.contains("dummy")) {
-        event.preventDefault();
-        return;
-      }
-      this.querySelector(".search-one-offs-context-set-default")
-          .setAttribute("disabled", target.engine == Services.search.defaultEngine);
-
-      this.contextMenuPopup.openPopupAtScreen(event.screenX, event.screenY, true);
-      event.preventDefault();
-
-      this._contextEngine = target.engine;
-    });
-  }
-
-  connectedCallback() {
-    if (this.delayConnectedCallback()) {
-      return;
-    }
-
-    this.appendChild(getFragment());
+    this.container.appendChild(MozXULElement.parseXULToFragment(`
+      <deck class="search-panel-one-offs-header search-panel-header search-panel-current-input">
+        <label class="searchbar-oneoffheader-search" value="&searchWithHeader.label;"/>
+        <hbox class="search-panel-searchforwith search-panel-current-input">
+          <label value="&searchFor.label;"/>
+          <label class="searchbar-oneoffheader-searchtext search-panel-input-value" flex="1" crop="end"/>
+          <label flex="10000" value="&searchWith.label;"/>
+        </hbox>
+        <hbox class="search-panel-searchonengine search-panel-current-input">
+          <label value="&search.label;"/>
+          <label class="searchbar-oneoffheader-engine search-panel-input-value" flex="1" crop="end"/>
+          <label flex="10000" value="&searchAfter.label;"/>
+        </hbox>
+      </deck>
+      <description role="group" class="search-panel-one-offs">
+        <button class="searchbar-engine-one-off-item search-setting-button-compact" tooltiptext="&changeSearchSettings.tooltip;"/>
+      </description>
+      <vbox class="search-add-engines"/>
+      <button class="search-setting-button search-panel-header" label="&changeSearchSettings.button;"/>
+      <menupopup class="search-one-offs-context-menu">
+        <menuitem class="search-one-offs-context-open-in-new-tab" label="&searchInNewTab.label;" accesskey="&searchInNewTab.accesskey;"/>
+        <menuitem class="search-one-offs-context-set-default" label="&searchSetAsDefault.label;" accesskey="&searchSetAsDefault.accesskey;"/>
+      </menupopup>
+      `, ["chrome://browser/locale/browser.dtd"]));
 
     this._popup = null;
 
@@ -277,6 +93,13 @@ class MozSearchOneOffs extends MozXULElement {
 
     this._addEngineMenuShouldBeOpen = false;
 
+    this.addEventListener("mousedown", this);
+    this.addEventListener("mousemove", this);
+    this.addEventListener("mouseout", this);
+    this.addEventListener("click", this);
+    this.addEventListener("command", this);
+    this.addEventListener("contextmenu", this);
+
     // Prevent popup events from the context menu from reaching the autocomplete
     // binding (or other listeners).
     let listener = aEvent => aEvent.stopPropagation();
@@ -292,6 +115,7 @@ class MozSearchOneOffs extends MozXULElement {
     });
 
     // Add weak referenced observers to invalidate our cached list of engines.
+    this.QueryInterface = ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]);
     Services.prefs.addObserver("browser.search.hiddenOneOffs", this, true);
     Services.obs.addObserver(this, "browser-search-engine-modified", true);
     Services.obs.addObserver(this, "browser-search-service", true);
@@ -300,6 +124,39 @@ class MozSearchOneOffs extends MozXULElement {
     // details.  Summary: On Linux, switching between themes can cause a row
     // of buttons to disappear.
     Services.obs.addObserver(this, "lightweight-theme-changed", true);
+  }
+
+  addEventListener(...args) {
+    this.container.addEventListener(...args);
+  }
+
+  removeEventListener(...args) {
+    this.container.removeEventListener(...args);
+  }
+
+  dispatchEvent(...args) {
+    this.container.dispatchEvent(...args);
+  }
+
+  getAttribute(...args) {
+    return this.container.getAttribute(...args);
+  }
+
+  setAttribute(...args) {
+    this.container.setAttribute(...args);
+  }
+
+  querySelector(...args) {
+    return this.container.querySelector(...args);
+  }
+
+  handleEvent(event) {
+    let methodName = "_on_" + event.type;
+    if (methodName in this) {
+      this[methodName](event);
+    } else {
+      throw new Error("Unrecognized search-one-offs event: " + event.type);
+    }
   }
 
   /**
@@ -338,12 +195,14 @@ class MozSearchOneOffs extends MozXULElement {
     if (val && val.state != "closed") {
       this._rebuild();
     }
+
     return val;
   }
 
   get popup() {
     return this._popup;
   }
+
   /**
    * The textbox associated with the one-offs.  Set this to a textbox to
    * automatically keep the related one-offs UI up to date.  Otherwise you
@@ -360,9 +219,14 @@ class MozSearchOneOffs extends MozXULElement {
     return this._textbox = val;
   }
 
+  get style() {
+    return this.container.style;
+  }
+
   get textbox() {
     return this._textbox;
   }
+
   /**
    * The query string currently shown in the one-offs.  If the textbox
    * property is non-null, then this is automatically updated on
@@ -466,42 +330,9 @@ class MozSearchOneOffs extends MozXULElement {
     return this._engines;
   }
 
-  /**
-   * This handles events outside the one-off buttons, like on the popup
-   * and textbox.
-   */
-  handleEvent(event) {
-    switch (event.type) {
-      case "input":
-        // Allow the consumer's input to override its value property with
-        // a oneOffSearchQuery property.  That way if the value is not
-        // actually what the user typed (e.g., it's autofilled, or it's a
-        // mozaction URI), the consumer has some way of providing it.
-        this.query = event.target.oneOffSearchQuery || event.target.value;
-        break;
-      case "popupshowing":
-        this._rebuild();
-        break;
-      case "popuphidden":
-        Services.tm.dispatchToMainThread(() => {
-          this.selectedButton = null;
-          this._contextEngine = null;
-        });
-        break;
-    }
-  }
-
   observe(aEngine, aTopic, aData) {
     // Make sure the engine list is refetched next time it's needed.
     this._engines = null;
-  }
-
-  showSettings() {
-    openPreferences("paneSearch", { origin: "contentSearch" });
-
-    // If the preference tab was already selected, the panel doesn't
-    // close itself automatically.
-    this.popup.hidePopup();
   }
 
   /**
@@ -1197,9 +1028,212 @@ class MozSearchOneOffs extends MozXULElement {
       button.open = this._addEngineMenuShouldBeOpen;
     }, this._addEngineMenuTimeoutMs);
   }
+
+  // Event handlers below.
+
+  _on_mousedown(event) {
+    let target = event.originalTarget;
+    if (target.classList.contains("addengine-menu-button")) {
+      return;
+    }
+    // Required to receive click events from the buttons on Linux.
+    event.preventDefault();
+  }
+
+  _on_mousemove(event) {
+    let target = event.originalTarget;
+
+    // Handle mouseover on the add-engine menu button and its popup items.
+    if ((target.localName == "menuitem" && target.classList.contains("addengine-item")) ||
+        target.classList.contains("addengine-menu-button")) {
+      let menuButton = this.querySelector(".addengine-menu-button");
+      this._updateStateForButton(menuButton);
+      this._addEngineMenuShouldBeOpen = true;
+      this._resetAddEngineMenuTimeout();
+      return;
+    }
+
+    if (target.localName != "button") {
+      return;
+    }
+
+    // Ignore mouse events when the context menu is open.
+    if (this._ignoreMouseEvents) {
+      return;
+    }
+
+    let isOneOff =
+      target.classList.contains("searchbar-engine-one-off-item") &&
+      !target.classList.contains("dummy");
+    if (isOneOff ||
+        target.classList.contains("addengine-item") ||
+        target.classList.contains("search-setting-button")) {
+      this._updateStateForButton(target);
+    }
+  }
+
+  _on_mouseout(event) {
+    let target = event.originalTarget;
+
+    // Handle mouseout on the add-engine menu button and its popup items.
+    if ((target.localName == "menuitem" && target.classList.contains("addengine-item")) ||
+        target.classList.contains("addengine-menu-button")) {
+      this._updateStateForButton(null);
+      this._addEngineMenuShouldBeOpen = false;
+      this._resetAddEngineMenuTimeout();
+      return;
+    }
+
+    if (target.localName != "button") {
+      return;
+    }
+
+    // Don't update the mouseover state if the context menu is open.
+    if (this._ignoreMouseEvents) {
+      return;
+    }
+
+    this._updateStateForButton(null);
+  }
+
+  _on_click(event) {
+    if (event.button == 2) {
+      return; // ignore right clicks.
+    }
+
+    let button = event.originalTarget;
+    let engine = button.engine;
+
+    if (!engine) {
+      return;
+    }
+
+    // Select the clicked button so that consumers can easily tell which
+    // button was acted on.
+    this.selectedButton = button;
+    this.handleSearchCommand(event, engine);
+  }
+
+  _on_command(event) {
+    let target = event.target;
+
+    if (target == this.settingsButton ||
+        target == this.settingsButtonCompact) {
+      openPreferences("paneSearch", { origin: "contentSearch" });
+
+      // If the preference tab was already selected, the panel doesn't
+      // close itself automatically.
+      this.popup.hidePopup();
+      return;
+    }
+
+    if (target.classList.contains("addengine-item")) {
+      // On success, hide the panel and tell event listeners to reshow it to
+      // show the new engine.
+      let installCallback = {
+        onSuccess: engine => {
+          this._rebuild();
+        },
+        onError(errorCode) {
+          if (errorCode != Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE) {
+            // Download error is shown by the search service
+            return;
+          }
+          const kSearchBundleURI =
+            "chrome://global/locale/search/search.properties";
+          let searchBundle = Services.strings.createBundle(kSearchBundleURI);
+          let brandBundle = document.getElementById("bundle_brand");
+          let brandName = brandBundle.getString("brandShortName");
+          let title = searchBundle.GetStringFromName(
+            "error_invalid_engine_title"
+          );
+          let text = searchBundle.formatStringFromName(
+            "error_duplicate_engine_msg",
+            [brandName, target.getAttribute("uri")],
+            2
+          );
+          Services.prompt.QueryInterface(Ci.nsIPromptFactory);
+          let prompt = Services.prompt.getPrompt(
+            gBrowser.contentWindow,
+            Ci.nsIPrompt
+          );
+          prompt.QueryInterface(Ci.nsIWritablePropertyBag2);
+          prompt.setPropertyAsBool("allowTabModal", true);
+          prompt.alert(title, text);
+        },
+      };
+      Services.search.addEngine(target.getAttribute("uri"),
+                                target.getAttribute("image"), false,
+                                installCallback);
+    }
+
+    if (target.classList.contains("search-one-offs-context-open-in-new-tab")) {
+      // Select the context-clicked button so that consumers can easily
+      // tell which button was acted on.
+      this.selectedButton = this._buttonForEngine(this._contextEngine);
+      this.handleSearchCommand(event, this._contextEngine, true);
+    }
+
+    if (target.classList.contains("search-one-offs-context-set-default")) {
+      let currentEngine = Services.search.defaultEngine;
+
+      if (!this.getAttribute("includecurrentengine")) {
+        // Make the target button of the context menu reflect the current
+        // search engine first. Doing this as opposed to rebuilding all the
+        // one-off buttons avoids flicker.
+        let button = this._buttonForEngine(this._contextEngine);
+        button.id = this._buttonIDForEngine(currentEngine);
+        let uri = "chrome://browser/skin/search-engine-placeholder.png";
+        if (currentEngine.iconURI) {
+          uri = currentEngine.iconURI.spec;
+        }
+        button.setAttribute("image", uri);
+        button.setAttribute("tooltiptext", currentEngine.name);
+        button.engine = currentEngine;
+      }
+
+      Services.search.defaultEngine = this._contextEngine;
+    }
+  }
+
+  _on_contextmenu(event) {
+    let target = event.originalTarget;
+    // Prevent the context menu from appearing except on the one off buttons.
+    if (!target.classList.contains("searchbar-engine-one-off-item") ||
+        target.classList.contains("dummy")) {
+      event.preventDefault();
+      return;
+    }
+    this.querySelector(".search-one-offs-context-set-default")
+        .setAttribute("disabled", target.engine == Services.search.defaultEngine);
+
+    this.contextMenuPopup.openPopupAtScreen(event.screenX, event.screenY, true);
+    event.preventDefault();
+
+    this._contextEngine = target.engine;
+  }
+
+  _on_input(event) {
+    // Allow the consumer's input to override its value property with
+    // a oneOffSearchQuery property.  That way if the value is not
+    // actually what the user typed (e.g., it's autofilled, or it's a
+    // mozaction URI), the consumer has some way of providing it.
+    this.query = event.target.oneOffSearchQuery || event.target.value;
+  }
+
+  _on_popupshowing() {
+    this._rebuild();
+  }
+
+  _on_popuphidden() {
+    Services.tm.dispatchToMainThread(() => {
+      this.selectedButton = null;
+      this._contextEngine = null;
+    });
+  }
 }
 
-MozXULElement.implementCustomInterface(MozSearchOneOffs, [Ci.nsIObserver, Ci.nsIWeakReference]);
-customElements.define("search-one-offs", MozSearchOneOffs);
+window.SearchOneOffs = SearchOneOffs;
 
 }
+

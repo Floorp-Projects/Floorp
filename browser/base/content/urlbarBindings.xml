@@ -1873,12 +1873,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                        flex="1"/>
       <xul:hbox anonid="footer">
         <children/>
-        <xul:search-one-offs anonid="one-off-search-buttons"
-                             class="search-one-offs"
-                             compact="true"
-                             includecurrentengine="true"
-                             disabletab="true"
-                             flex="1"/>
+        <xul:hbox anonid="one-off-search-buttons"
+                  class="search-one-offs"
+                  compact="true"
+                  includecurrentengine="true"
+                  disabletab="true"
+                  flex="1"/>
       </xul:hbox>
     </content>
 
@@ -1912,8 +1912,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       </field>
 
       <field name="oneOffSearchButtons" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid",
-                                                "one-off-search-buttons");
+        new window.SearchOneOffs(
+          document.getAnonymousElementByAttribute(this, "anonid",
+                                                  "one-off-search-buttons"));
       </field>
 
       <field name="_overrideValue">null</field>
