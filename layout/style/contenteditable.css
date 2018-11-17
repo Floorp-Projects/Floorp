@@ -80,12 +80,17 @@ input[contenteditable="true"][type="file"] {
 }
 
 /* emulation of non-standard HTML <marquee> tag */
-marquee:-moz-read-write {
-  -moz-binding: url('chrome://xbl-marquee/content/xbl-marquee.xml#marquee-horizontal-editable');
-}
 
-marquee[direction="up"]:-moz-read-write, marquee[direction="down"]:-moz-read-write {
-  -moz-binding: url('chrome://xbl-marquee/content/xbl-marquee.xml#marquee-vertical-editable');
+@supports not -moz-bool-pref("dom.ua_widget.enabled") {
+
+  marquee:-moz-read-write {
+    -moz-binding: url('chrome://xbl-marquee/content/xbl-marquee.xml#marquee-horizontal-editable');
+  }
+
+  marquee[direction="up"]:-moz-read-write, marquee[direction="down"]:-moz-read-write {
+    -moz-binding: url('chrome://xbl-marquee/content/xbl-marquee.xml#marquee-vertical-editable');
+  }
+
 }
 
 *|*:-moz-read-write > input[type="hidden"],

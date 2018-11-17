@@ -27,6 +27,11 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLMarqueeElement,
                                            nsGenericHTMLElement)
 
+  nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                      nsIContent* aBindingParent) override;
+  void UnbindFromTree(bool aDeep = true,
+                      bool aNullParent = true) override;
+
   static const int kDefaultLoop = -1;
   static const int kDefaultScrollAmount = 6;
   static const int kDefaultScrollDelayMS = 85;
@@ -135,6 +140,11 @@ public:
                               const nsAString& aValue,
                               nsIPrincipal* aMaybeScriptedPrincipal,
                               nsAttrValue& aResult) override;
+  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                const nsAttrValue* aValue,
+                                const nsAttrValue* aOldValue,
+                                nsIPrincipal* aMaybeScriptedPrincipal,
+                                bool aNotify) override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
 
@@ -149,6 +159,8 @@ private:
   RefPtr<FunctionStringCallback> mStartStopCallback;
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     MappedDeclarations&);
+
+  void DispatchEventToShadowRoot(const nsAString& aEventTypeArg);
 };
 
 } // namespace dom

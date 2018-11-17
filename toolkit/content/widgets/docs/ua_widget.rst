@@ -48,3 +48,5 @@ As part of the implementation of the Web Platform, it is important to make sure 
 
 * Do not dispatch non-spec compliant events on the UA Widget Shadow Root host element, as event listeners in web content scripts can access them.
 * The layout and the dimensions of the widget should be ready by the time the constructor returns, since they can be detectable as soon as the content script gets the reference of the host element (i.e. when ``appendChild()`` returns). In order to make this easier we load ``<link>`` elements load chrome stylesheets synchronously when inside a UA Widget Shadow DOM.
+* There shouldn't be any white-spaces nodes in the Shadow DOM, because UA Widget could be placed inside ``white-space: pre``. See bug 1502205.
+* CSP will block inline styles in the Shadow DOM. ``<link>`` is the only safe way to load styles.

@@ -1,0 +1,38 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.horizontalContainer {
+  display: -moz-box;
+  overflow: hidden;
+  width: -moz-available;
+}
+.horizontalOuterDiv {
+  display: -moz-box;
+}
+
+.horizontalInnerDiv {
+  display: table;
+  border-spacing: 0;
+}
+
+.verticalContainer {
+  overflow: hidden;
+  width: -moz-available;
+}
+
+/* disable scrolling in contenteditable */
+:host(:-moz-read-write) .horizontalOuterDiv,
+:host(:-moz-read-write) .verticalInnerDiv {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* PRINT ONLY rules */
+@media print {
+  .horizontalOuterDiv,
+  .verticalInnerDiv {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
