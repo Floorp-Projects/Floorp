@@ -8739,19 +8739,19 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
              "placeholder for primary frame has previous continuations?");
   nsIFrame* parent = inFlowFrame->GetParent();
 
-  if (aFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
+  if (inFlowFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
     nsIFrame* grandparent = parent->GetParent();
     MOZ_ASSERT(grandparent);
 
     bool needsReframe =
       // 1. Removing a column-span may lead to an empty
       // ::-moz-column-span-wrapper.
-      aFrame->IsColumnSpan() ||
+      inFlowFrame->IsColumnSpan() ||
       // 2. Removing a frame which has any column-span siblings may also
       // lead to an empty ::-moz-column-span-wrapper subtree. The
       // column-span siblings were the frame's children, but later become
       // the frame's siblings after CreateColumnSpanSiblings().
-      aFrame->GetProperty(nsIFrame::HasColumnSpanSiblings()) ||
+      inFlowFrame->GetProperty(nsIFrame::HasColumnSpanSiblings()) ||
       // 3. Removing the only child of a ::-moz-column-content, whose
       // ColumnSet grandparent has a previous column-span sibling, requires
       // reframing since we might connect the ColumnSet's next column-span
@@ -8762,7 +8762,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
       (parent->Style()->GetPseudo() == nsCSSAnonBoxes::columnContent() &&
        // The only child in ::-moz-column-content (might be tall enough to
        // split across columns)
-       !aFrame->GetPrevSibling() && !aFrame->GetNextSibling() &&
+       !inFlowFrame->GetPrevSibling() && !inFlowFrame->GetNextSibling() &&
        // That ::-moz-column-content is the first column.
        !parent->GetPrevInFlow() &&
        // The ColumnSet grandparent has a previous sibling that is a
@@ -8770,11 +8770,11 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
        grandparent->GetPrevSibling());
 
     if (needsReframe) {
-      nsIFrame* containingBlock = GetMultiColumnContainingBlockFor(aFrame);
+      nsIFrame* containingBlock = GetMultiColumnContainingBlockFor(inFlowFrame);
 
 #ifdef DEBUG
-      if (IsFramePartOfIBSplit(aFrame)) {
-        nsIFrame* ibContainingBlock = GetIBContainingBlockFor(aFrame);
+      if (IsFramePartOfIBSplit(inFlowFrame)) {
+        nsIFrame* ibContainingBlock = GetIBContainingBlockFor(inFlowFrame);
         MOZ_ASSERT(containingBlock == ibContainingBlock ||
                    nsLayoutUtils::IsProperAncestorFrame(containingBlock,
                                                         ibContainingBlock),
