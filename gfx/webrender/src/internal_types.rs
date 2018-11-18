@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DebugCommand, DeviceIntRect, DocumentId, ExternalImageData, ExternalImageId};
+use api::{DebugCommand, DocumentId, ExternalImageData, ExternalImageId};
+use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{ImageFormat, WorldPixel, NotificationRequest};
 use device::TextureFilter;
 use renderer::PipelineInfo;
@@ -108,6 +109,9 @@ pub enum TextureUpdateSource {
         channel_index: u8,
     },
     Bytes { data: Arc<Vec<u8>> },
+    /// Clears the target area, rather than uploading any pixels. Used when the
+    /// texture cache debug display is active.
+    DebugClear,
 }
 
 /// Command to allocate, reallocate, or free a texture for the texture cache.
@@ -182,6 +186,30 @@ impl TextureUpdateList {
     pub fn push_update(&mut self, update: TextureCacheUpdate) {
         self.updates.push(update);
     }
+
+    /// Sends a command to the Renderer to clear the portion of the shared region
+    /// we just freed. Used when the texture cache debugger is enabled.
+    #[cold]
+    pub fn push_debug_clear(
+        &mut self,
+        id: CacheTextureId,
+        origin: DeviceIntPoint,
+        width: i32,
+        height: i32,
+        layer_index: usize
+    ) {
+        let size = DeviceIntSize::new(width, height);
+        let rect = DeviceIntRect::new(origin, size);
+        self.push_update(TextureCacheUpdate {
+            id,
+            rect,
+            source: TextureUpdateSource::DebugClear,
+            stride: None,
+            offset: 0,
+            layer_index: layer_index as i32,
+        });
+    }
+
 
     /// Pushes an allocation operation onto the list.
     pub fn push_alloc(&mut self, id: CacheTextureId, info: TextureCacheAllocInfo) {

@@ -30,6 +30,7 @@ use api::{MemoryReport, VoidPtrToSizeFn};
 use api::{RenderApiSender, RenderNotifier, TexelRect, TextureTarget};
 use api::{channel};
 use api::DebugCommand;
+pub use api::DebugFlags;
 use api::channel::PayloadReceiverHelperMethods;
 use batch::{BatchKind, BatchTextures, BrushBatchKind};
 #[cfg(any(feature = "capture", feature = "replay"))]
@@ -198,6 +199,11 @@ const GPU_SAMPLER_TAG_TRANSPARENT: GpuProfileTag = GpuProfileTag {
     color: debug_colors::BLACK,
 };
 
+/// The clear color used for the texture cache when the debug display is enabled.
+/// We use a shade of blue so that we can still identify completely blue items in
+/// the texture cache.
+const TEXTURE_CACHE_DBG_CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.8, 1.0];
+
 impl BatchKind {
     #[cfg(feature = "debugger")]
     fn debug_name(&self) -> &'static str {
@@ -234,26 +240,6 @@ impl BatchKind {
             }
             BatchKind::TextRun(_) => GPU_TAG_PRIM_TEXT_RUN,
         }
-    }
-}
-
-bitflags! {
-    #[derive(Default)]
-    pub struct DebugFlags: u32 {
-        const PROFILER_DBG          = 1 << 0;
-        const RENDER_TARGET_DBG     = 1 << 1;
-        const TEXTURE_CACHE_DBG     = 1 << 2;
-        const GPU_TIME_QUERIES      = 1 << 3;
-        const GPU_SAMPLE_QUERIES    = 1 << 4;
-        const DISABLE_BATCHING      = 1 << 5;
-        const EPOCHS                = 1 << 6;
-        const COMPACT_PROFILER      = 1 << 7;
-        const ECHO_DRIVER_MESSAGES  = 1 << 8;
-        const NEW_FRAME_INDICATOR   = 1 << 9;
-        const NEW_SCENE_INDICATOR   = 1 << 10;
-        const SHOW_OVERDRAW         = 1 << 11;
-        const GPU_CACHE_DBG         = 1 << 12;
-        const SLOW_FRAME_INDICATOR  = 1 << 13;
     }
 }
 
@@ -2436,6 +2422,9 @@ impl Renderer {
                     }
                 }
             }
+            DebugCommand::SetFlags(flags) => {
+                self.set_debug_flags(flags);
+            }
         }
     }
 
@@ -2839,6 +2828,14 @@ impl Renderer {
                             if info.is_shared_cache {
                                 texture.flags_mut()
                                     .insert(TextureFlags::IS_SHARED_TEXTURE_CACHE);
+
+                                // Textures in the cache generally don't need to be cleared,
+                                // but we do so if the debug display is active to make it
+                                // easier to identify unallocated regions.
+                                if self.debug_flags.contains(DebugFlags::TEXTURE_CACHE_DBG) {
+                                    self.clear_texture(&texture, TEXTURE_CACHE_DBG_CLEAR_COLOR);
+                                }
+
                             }
 
                             let old = self.texture_resolver.texture_cache_map.insert(allocation.id, texture);
@@ -2861,20 +2858,25 @@ impl Renderer {
                 for update in update_list.updates {
                     let TextureCacheUpdate { id, rect, stride, offset, layer_index, source } = update;
                     let texture = &self.texture_resolver.texture_cache_map[&id];
-                    let mut uploader = self.device.upload_texture(
-                        texture,
-                        &self.texture_cache_upload_pbo,
-                        0,
-                    );
 
                     let bytes_uploaded = match source {
                         TextureUpdateSource::Bytes { data } => {
+                            let mut uploader = self.device.upload_texture(
+                                texture,
+                                &self.texture_cache_upload_pbo,
+                                0,
+                            );
                             uploader.upload(
                                 rect, layer_index, stride,
                                 &data[offset as usize ..],
                             )
                         }
                         TextureUpdateSource::External { id, channel_index } => {
+                            let mut uploader = self.device.upload_texture(
+                                texture,
+                                &self.texture_cache_upload_pbo,
+                                0,
+                            );
                             let handler = self.external_image_handler
                                 .as_mut()
                                 .expect("Found external image, but no handler set!");
@@ -2902,6 +2904,19 @@ impl Renderer {
                             };
                             handler.unlock(id, channel_index);
                             size
+                        }
+                        TextureUpdateSource::DebugClear => {
+                            self.device.bind_draw_target(DrawTarget::Texture {
+                                texture,
+                                layer: layer_index as usize,
+                                with_depth: false,
+                            });
+                            self.device.clear_target(
+                                Some(TEXTURE_CACHE_DBG_CLEAR_COLOR),
+                                None,
+                                Some(rect.to_i32())
+                            );
+                            0
                         }
                     };
                     self.profile_counters.texture_data_uploaded.add(bytes_uploaded >> 10);
@@ -4548,6 +4563,18 @@ impl Renderer {
             self.device.set_blend_mode_show_overdraw();
         } else {
             self.device.set_blend_mode_subpixel_with_bg_color_pass2();
+        }
+    }
+
+    /// Clears all the layers of a texture with a given color.
+    fn clear_texture(&mut self, texture: &Texture, color: [f32; 4]) {
+        for i in 0..texture.get_layer_count() {
+            self.device.bind_draw_target(DrawTarget::Texture {
+                texture: &texture,
+                layer: i as usize,
+                with_depth: false,
+            });
+            self.device.clear_target(Some(color), None, None);
         }
     }
 }
