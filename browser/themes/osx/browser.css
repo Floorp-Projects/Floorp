@@ -27,11 +27,11 @@
 
   --urlbar-separator-color: hsla(0,0%,16%,.2);
 
-  --toolbox-border-bottom-color: #e1e1e2;
+  --chrome-content-separator-color: #e1e1e2;
 }
 
 :root:-moz-lwtheme {
-  --toolbox-border-bottom-color: rgba(0,0,0,.3);
+  --chrome-content-separator-color: rgba(0,0,0,.3);
 }
 
 :root[lwt-popup-brighttext] {
@@ -61,7 +61,7 @@
   height: 1px;
   /* use inset box-shadow instead of border because -moz-appearance hides the border */
   border: none;
-  box-shadow: inset 0 -1px var(--toolbox-border-bottom-color);
+  box-shadow: inset 0 -1px var(--chrome-content-separator-color);
 }
 
 #tabbrowser-tabs {
@@ -567,6 +567,7 @@ html|input.urlbar-input {
 .browserContainer > findbar:-moz-lwtheme {
   background-color: var(--lwt-accent-color);
   background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor));
+  border-top-color: var(--chrome-content-separator-color);
   color: var(--toolbar-color);
 }
 
