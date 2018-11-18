@@ -327,7 +327,7 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULElement)
       }
     }
 
-NS_INTERFACE_MAP_END_INHERITING(Element)
+NS_INTERFACE_MAP_END_INHERITING(nsStyledElement)
 
 //----------------------------------------------------------------------
 // nsINode interface
