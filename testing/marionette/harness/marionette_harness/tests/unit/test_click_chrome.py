@@ -22,7 +22,13 @@ class TestClickChrome(WindowManagerMixin, MarionetteTestCase):
         super(TestClickChrome, self).tearDown()
 
     def test_click(self):
-        win = self.open_chrome_window("chrome://marionette/content/test.xul")
+
+        def open_with_js():
+            self.marionette.execute_script("""
+              window.open('chrome://marionette/content/test.xul',
+                          'foo', 'chrome,centerscreen'); """)
+
+        win = self.open_window(open_with_js)
         self.marionette.switch_to_window(win)
 
         def checked():
