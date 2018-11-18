@@ -24,7 +24,7 @@
 
   --urlbar-separator-color: ThreeDLightShadow;
 
-  --toolbox-border-bottom-color: ThreeDShadow;
+  --chrome-content-separator-color: ThreeDShadow;
 }
 
 #navigator-toolbox {
@@ -45,7 +45,7 @@
 
     --panel-separator-color: hsla(210,4%,10%,.14);
 
-    --toolbox-border-bottom-color: #e1e1e2;
+    --chrome-content-separator-color: #e1e1e2;
   }
 
   #navigator-toolbox {
@@ -58,7 +58,7 @@
 }
 
 :root:-moz-lwtheme {
-  --toolbox-border-bottom-color: rgba(0,0,0,.3);
+  --chrome-content-separator-color: rgba(0,0,0,.3);
 
   --panel-separator-color: hsla(210,4%,10%,.14);
 }
@@ -672,6 +672,7 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 .browserContainer > findbar:-moz-lwtheme {
   background-color: var(--lwt-accent-color);
   background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor));
+  border-top-color: var(--chrome-content-separator-color);
   text-shadow: none;
 }
 
