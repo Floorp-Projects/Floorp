@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize};
+use api::{DebugFlags, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{ExternalImageType, ImageData, ImageFormat};
 use api::ImageDescriptor;
 use device::{TextureFilter, total_gpu_bytes_allocated};
@@ -319,6 +319,9 @@ pub struct TextureCache {
     /// Maximum number of texture layers supported by hardware.
     max_texture_layers: usize,
 
+    /// The current set of debug flags.
+    debug_flags: DebugFlags,
+
     /// The next unused virtual texture ID. Monotonically increasing.
     next_id: CacheTextureId,
 
@@ -372,6 +375,7 @@ impl TextureCache {
             shared_textures: SharedTextures::new(),
             max_texture_size,
             max_texture_layers,
+            debug_flags: DebugFlags::empty(),
             next_id: CacheTextureId(1),
             pending_updates: TextureUpdateList::new(),
             frame_id: FrameId::INVALID,
@@ -379,6 +383,10 @@ impl TextureCache {
             entries: FreeList::new(),
             handles: EntryHandles::default(),
         }
+    }
+
+    pub fn set_debug_flags(&mut self, flags: DebugFlags) {
+        self.debug_flags = flags;
     }
 
     pub fn clear(&mut self) {
@@ -547,16 +555,6 @@ impl TextureCache {
         }
     }
 
-    // Get a specific region by index from a shared texture array.
-    fn get_region_mut(&mut self,
-        format: ImageFormat,
-        filter: TextureFilter,
-        layer_index: usize,
-    ) -> &mut TextureRegion {
-        let texture_array = self.shared_textures.select(format, filter);
-        &mut texture_array.regions[layer_index]
-    }
-
     // Check if a given texture handle has a valid allocation
     // in the texture cache.
     pub fn is_allocated(&self, handle: &TextureCacheHandle) -> bool {
@@ -715,11 +713,20 @@ impl TextureCache {
                 layer_index,
             } => {
                 // Free the block in the given region.
-                let region = self.get_region_mut(
-                    entry.format,
-                    entry.filter,
-                    layer_index,
-                );
+                let texture_array = self.shared_textures.select(entry.format, entry.filter);
+                let region = &mut texture_array.regions[layer_index];
+
+                if self.debug_flags.contains(
+                    DebugFlags::TEXTURE_CACHE_DBG |
+                    DebugFlags::TEXTURE_CACHE_DBG_CLEAR_EVICTED) {
+                    self.pending_updates.push_debug_clear(
+                        entry.texture_id,
+                        origin,
+                        region.slab_size.width,
+                        region.slab_size.height,
+                        layer_index
+                    );
+                }
                 region.free(origin);
             }
         }

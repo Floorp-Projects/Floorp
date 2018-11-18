@@ -664,6 +664,9 @@ pub enum DebugCommand {
     /// Causes the low priority scene builder to pause for a given amount of miliseconds
     /// each time it processes a transaction.
     SimulateLongLowPrioritySceneBuild(u32),
+    /// Sets the provided debug flags. This may overlap with some of the functionality
+    /// above.
+    SetFlags(DebugFlags),
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -913,7 +916,27 @@ impl RenderApiSender {
             next_id: Cell::new(ResourceId(0)),
         }
     }
+}
 
+bitflags! {
+    #[derive(Default, Deserialize, Serialize)]
+    pub struct DebugFlags: u32 {
+        const PROFILER_DBG          = 1 << 0;
+        const RENDER_TARGET_DBG     = 1 << 1;
+        const TEXTURE_CACHE_DBG     = 1 << 2;
+        const GPU_TIME_QUERIES      = 1 << 3;
+        const GPU_SAMPLE_QUERIES    = 1 << 4;
+        const DISABLE_BATCHING      = 1 << 5;
+        const EPOCHS                = 1 << 6;
+        const COMPACT_PROFILER      = 1 << 7;
+        const ECHO_DRIVER_MESSAGES  = 1 << 8;
+        const NEW_FRAME_INDICATOR   = 1 << 9;
+        const NEW_SCENE_INDICATOR   = 1 << 10;
+        const SHOW_OVERDRAW         = 1 << 11;
+        const GPU_CACHE_DBG         = 1 << 12;
+        const SLOW_FRAME_INDICATOR  = 1 << 13;
+        const TEXTURE_CACHE_DBG_CLEAR_EVICTED = 1 << 14;
+    }
 }
 
 pub struct RenderApi {
@@ -1011,6 +1034,11 @@ impl RenderApi {
         let (tx, rx) = channel::msg_channel().unwrap();
         self.api_sender.send(ApiMsg::ReportMemory(tx)).unwrap();
         rx.recv().unwrap()
+    }
+
+    pub fn set_debug_flags(&self, flags: DebugFlags) {
+        let cmd = DebugCommand::SetFlags(flags);
+        self.api_sender.send(ApiMsg::DebugCommand(cmd)).unwrap();
     }
 
     pub fn shut_down(&self) {
