@@ -5,7 +5,7 @@
 use api::{AddFont, BlobImageResources, AsyncBlobImageRasterizer, ResourceUpdate};
 use api::{BlobImageDescriptor, BlobImageHandler, BlobImageRequest, RasterizedBlobImage};
 use api::{ClearCache, ColorF, DevicePoint, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use api::{FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
+use api::{DebugFlags, FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
 use api::{ExternalImageData, ExternalImageType, BlobImageResult, BlobImageParams};
 use api::{FontInstanceData, FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
 use api::{GlyphDimensions, IdNamespace};
@@ -1621,6 +1621,10 @@ impl ResourceCache {
     pub fn end_frame(&mut self) {
         debug_assert_eq!(self.state, State::QueryResources);
         self.state = State::Idle;
+    }
+
+    pub fn set_debug_flags(&mut self, flags: DebugFlags) {
+        self.texture_cache.set_debug_flags(flags);
     }
 
     pub fn clear(&mut self, what: ClearCache) {

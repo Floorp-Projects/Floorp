@@ -947,6 +947,10 @@ impl RenderBackend {
                         ).unwrap();
                         return true;
                     }
+                    DebugCommand::SetFlags(flags) => {
+                        self.resource_cache.set_debug_flags(flags);
+                        ResultMsg::DebugCommand(option)
+                    }
                     _ => ResultMsg::DebugCommand(option),
                 };
                 self.result_tx.send(msg).unwrap();
