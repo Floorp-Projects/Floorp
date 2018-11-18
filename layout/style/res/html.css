@@ -842,12 +842,22 @@ marquee {
   display: inline-block;
   vertical-align: text-bottom;
   text-align: start;
-  -moz-binding: url('chrome://xbl-marquee/content/xbl-marquee.xml#marquee-horizontal');
 }
 
 marquee[direction="up"], marquee[direction="down"] {
-  -moz-binding: url('chrome://xbl-marquee/content/xbl-marquee.xml#marquee-vertical');
   block-size: 200px;
+}
+
+@supports not -moz-bool-pref("dom.ua_widget.enabled") {
+
+  marquee {
+    -moz-binding: url('chrome://xbl-marquee/content/xbl-marquee.xml#marquee-horizontal');
+  }
+
+  marquee[direction="up"], marquee[direction="down"] {
+    -moz-binding: url('chrome://xbl-marquee/content/xbl-marquee.xml#marquee-vertical');
+  }
+
 }
 
 /* PRINT ONLY rules follow */
