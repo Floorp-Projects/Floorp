@@ -66,7 +66,13 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
 
     def test_chrome_window_handles_after_opening_new_dialog(self):
         xul_dialog = "chrome://marionette/content/test_dialog.xul"
-        new_win = self.open_chrome_window(xul_dialog)
+
+        def open_via_js():
+            self.marionette.execute_script("""
+                window.openDialog(arguments[0]);
+            """, script_args=(xul_dialog,))
+
+        new_win = self.open_window(trigger=open_via_js)
         self.assert_window_handles()
         self.assertEqual(len(self.marionette.chrome_window_handles), len(self.start_windows) + 1)
         self.assertEqual(self.marionette.current_chrome_window_handle, self.start_window)
@@ -167,7 +173,13 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
 
     def test_window_handles_after_opening_new_dialog(self):
         xul_dialog = "chrome://marionette/content/test_dialog.xul"
-        new_win = self.open_chrome_window(xul_dialog)
+
+        def open_via_js():
+            self.marionette.execute_script("""
+                window.openDialog(arguments[0]);
+            """, script_args=(xul_dialog,))
+
+        new_win = self.open_window(trigger=open_via_js)
         self.assert_window_handles()
         self.assertEqual(len(self.marionette.window_handles), len(self.start_tabs))
         self.assertEqual(self.marionette.current_window_handle, self.start_tab)
