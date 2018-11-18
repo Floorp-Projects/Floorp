@@ -139,11 +139,15 @@ ChannelMessageHandler(Message* aMsg)
     PauseMainThreadAndInvokeCallback([=]() { navigation::DebuggerRequest(buf); });
     break;
   }
-  case MessageType::SetBreakpoint: {
-    const SetBreakpointMessage& nmsg = (const SetBreakpointMessage&) *aMsg;
+  case MessageType::AddBreakpoint: {
+    const AddBreakpointMessage& nmsg = (const AddBreakpointMessage&) *aMsg;
     PauseMainThreadAndInvokeCallback([=]() {
-        navigation::SetBreakpoint(nmsg.mId, nmsg.mPosition);
+        navigation::AddBreakpoint(nmsg.mPosition);
       });
+    break;
+  }
+  case MessageType::ClearBreakpoints: {
+    PauseMainThreadAndInvokeCallback([=]() { navigation::ClearBreakpoints(); });
     break;
   }
   case MessageType::Resume: {
@@ -704,14 +708,11 @@ RespondToRequest(const js::CharBuffer& aBuffer)
 }
 
 void
-HitBreakpoint(bool aRecordingEndpoint, const uint32_t* aBreakpoints, size_t aNumBreakpoints)
+HitBreakpoint(bool aRecordingEndpoint)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  HitBreakpointMessage* msg =
-    HitBreakpointMessage::New(aRecordingEndpoint, aBreakpoints, aNumBreakpoints);
   PauseMainThreadAndInvokeCallback([=]() {
-      gChannel->SendMessage(*msg);
-      free(msg);
+      gChannel->SendMessage(HitBreakpointMessage(aRecordingEndpoint));
     });
 }
 
