@@ -584,9 +584,6 @@ SpawnReplayingChildren()
   AssignMajorCheckpoint(gSecondReplayingChild, CheckpointId::First);
 }
 
-// Hit any installed breakpoints with the specified kind.
-static void HitBreakpointsWithKind(js::BreakpointPosition::Kind aKind);
-
 // Change the current active child, and select a new role for the old one.
 static void
 SwitchActiveChild(ChildProcessInfo* aChild, bool aRecoverPosition = true)
@@ -598,9 +595,9 @@ SwitchActiveChild(ChildProcessInfo* aChild, bool aRecoverPosition = true)
     if (aRecoverPosition) {
       aChild->Recover(gActiveChild);
     } else {
-      Vector<SetBreakpointMessage*> breakpoints;
+      InfallibleVector<AddBreakpointMessage*> breakpoints;
       gActiveChild->GetInstalledBreakpoints(breakpoints);
-      for (SetBreakpointMessage* msg : breakpoints) {
+      for (AddBreakpointMessage* msg : breakpoints) {
         aChild->SendMessage(*msg);
       }
     }
@@ -613,10 +610,9 @@ SwitchActiveChild(ChildProcessInfo* aChild, bool aRecoverPosition = true)
     oldActiveChild->SetRole(MakeUnique<ChildRoleStandby>());
   }
 
-  // Position state is affected when we switch between recording and
-  // replaying children.
+  // Notify the debugger when switching between recording and replaying children.
   if (aChild->IsRecording() != oldActiveChild->IsRecording()) {
-    HitBreakpointsWithKind(js::BreakpointPosition::Kind::PositionChange);
+    js::DebuggerOnSwitchChild();
   }
 }
 
@@ -835,7 +831,7 @@ HasSavedCheckpointsInRange(ChildProcessInfo* aChild, size_t aStart, size_t aEnd)
   return true;
 }
 
-static void
+void
 MarkActiveChildExplicitPause()
 {
   MOZ_RELEASE_ASSERT(gActiveChild->IsPaused());
@@ -874,6 +870,20 @@ ActiveChildTargetCheckpoint()
     return Some(gActiveChild->RewindTargetCheckpoint());
   }
   return Nothing();
+}
+
+void
+WaitUntilActiveChildIsPaused()
+{
+  if (gActiveChild->IsPaused()) {
+    // The debugger expects an OnPause notification after calling this, even if
+    // it is already paused. This should only happen when attaching the
+    // debugger to a paused child process.
+    js::DebuggerOnPause();
+  } else {
+    MaybeCreateCheckpointInRecordingChild();
+    gActiveChild->WaitUntilPaused();
+  }
 }
 
 void
@@ -963,8 +973,7 @@ RecvDebuggerResponse(const DebuggerResponseMessage& aMsg)
 void
 SendRequest(const js::CharBuffer& aBuffer, js::CharBuffer* aResponse)
 {
-  MaybeCreateCheckpointInRecordingChild();
-  gActiveChild->WaitUntilPaused();
+  MOZ_RELEASE_ASSERT(gActiveChild->IsPaused());
 
   MOZ_RELEASE_ASSERT(!gResponseBuffer);
   gResponseBuffer = aResponse;
@@ -981,29 +990,32 @@ SendRequest(const js::CharBuffer& aBuffer, js::CharBuffer* aResponse)
 }
 
 void
-SetBreakpoint(size_t aId, const js::BreakpointPosition& aPosition)
+AddBreakpoint(const js::BreakpointPosition& aPosition)
 {
-  MaybeCreateCheckpointInRecordingChild();
-  gActiveChild->WaitUntilPaused();
+  MOZ_RELEASE_ASSERT(gActiveChild->IsPaused());
 
-  gActiveChild->SendMessage(SetBreakpointMessage(aId, aPosition));
+  gActiveChild->SendMessage(AddBreakpointMessage(aPosition));
 
   // Also set breakpoints in any recording child that is not currently active.
   // We can't recover recording processes so need to keep their breakpoints up
   // to date.
   if (!gActiveChild->IsRecording() && gRecordingChild) {
-    gRecordingChild->SendMessage(SetBreakpointMessage(aId, aPosition));
+    gRecordingChild->SendMessage(AddBreakpointMessage(aPosition));
   }
 }
 
-// Flags for the preferred direction of travel when execution unpauses,
-// according to the last direction we were explicitly given.
-static bool gChildExecuteForward = true;
-static bool gChildExecuteBackward = false;
+void
+ClearBreakpoints()
+{
+  MOZ_RELEASE_ASSERT(gActiveChild->IsPaused());
 
-// Whether there is a ResumeForwardOrBackward task which should execute on the
-// main thread. This will continue execution in the preferred direction.
-static bool gResumeForwardOrBackward = false;
+  gActiveChild->SendMessage(ClearBreakpointsMessage());
+
+  // Clear breakpoints in the recording child, as for AddBreakpoint().
+  if (!gActiveChild->IsRecording() && gRecordingChild) {
+    gRecordingChild->SendMessage(ClearBreakpointsMessage());
+  }
+}
 
 static void
 MaybeSendRepaintMessage()
@@ -1040,14 +1052,9 @@ MaybeSendRepaintMessage()
 void
 Resume(bool aForward)
 {
-  gActiveChild->WaitUntilPaused();
+  MOZ_RELEASE_ASSERT(gActiveChild->IsPaused());
 
   MaybeSendRepaintMessage();
-
-  // Set the preferred direction of travel.
-  gResumeForwardOrBackward = false;
-  gChildExecuteForward = aForward;
-  gChildExecuteBackward = !aForward;
 
   // When rewinding, make sure the active child can rewind to the previous
   // checkpoint.
@@ -1057,7 +1064,7 @@ Resume(bool aForward)
     // Don't rewind if we are at the beginning of the recording.
     if (targetCheckpoint == CheckpointId::Invalid) {
       SendMessageToUIProcess("HitRecordingBeginning");
-      HitBreakpointsWithKind(js::BreakpointPosition::Kind::ForcedPause);
+      js::DebuggerOnPause();
       return;
     }
 
@@ -1084,7 +1091,7 @@ Resume(bool aForward)
       MOZ_RELEASE_ASSERT(!gActiveChild->IsRecording());
       if (!gRecordingChild) {
         SendMessageToUIProcess("HitRecordingEndpoint");
-        HitBreakpointsWithKind(js::BreakpointPosition::Kind::ForcedPause);
+        js::DebuggerOnPause();
         return;
       }
 
@@ -1104,12 +1111,7 @@ Resume(bool aForward)
 void
 TimeWarp(const js::ExecutionPoint& aTarget)
 {
-  gActiveChild->WaitUntilPaused();
-
-  // There is no preferred direction of travel after warping.
-  gResumeForwardOrBackward = false;
-  gChildExecuteForward = false;
-  gChildExecuteBackward = false;
+  MOZ_RELEASE_ASSERT(gActiveChild->IsPaused());
 
   // Make sure the active child can rewind to the checkpoint prior to the
   // warp target.
@@ -1149,31 +1151,6 @@ TimeWarp(const js::ExecutionPoint& aTarget)
 
   gActiveChild->WaitUntilPaused();
   SendMessageToUIProcess("TimeWarpFinished");
-  HitBreakpointsWithKind(js::BreakpointPosition::Kind::ForcedPause);
-}
-
-void
-Pause()
-{
-  MaybeCreateCheckpointInRecordingChild();
-  gActiveChild->WaitUntilPaused();
-
-  // If the debugger has explicitly paused then there is no preferred direction
-  // of travel.
-  gChildExecuteForward = false;
-  gChildExecuteBackward = false;
-
-  MarkActiveChildExplicitPause();
-}
-
-static void
-ResumeForwardOrBackward()
-{
-  MOZ_RELEASE_ASSERT(!gChildExecuteForward || !gChildExecuteBackward);
-
-  if (gResumeForwardOrBackward && (gChildExecuteForward || gChildExecuteBackward)) {
-    Resume(gChildExecuteForward);
-  }
 }
 
 void
@@ -1185,7 +1162,6 @@ ResumeBeforeWaitingForIPDLReply()
   // recording child process. If the child is paused, resume it immediately so
   // that we don't deadlock.
   if (gActiveChild->IsPaused()) {
-    MOZ_RELEASE_ASSERT(gChildExecuteForward);
     Resume(true);
   }
 }
@@ -1196,92 +1172,29 @@ RecvHitCheckpoint(const HitCheckpointMessage& aMsg)
   UpdateCheckpointTimes(aMsg);
   MaybeUpdateGraphicsAtCheckpoint(aMsg.mCheckpointId);
 
-  // Position state is affected when new checkpoints are reached.
-  HitBreakpointsWithKind(js::BreakpointPosition::Kind::PositionChange);
-
-  // Resume either forwards or backwards. Break the resume off into a separate
-  // runnable, to avoid starving any code already on the stack and waiting for
-  // the process to pause. Immediately resume if the main thread is blocked.
+  // Immediately resume if the main thread is blocked. If there is no
+  // debugger attached a resume is needed as well, but post a runnable so that
+  // callers waiting for the child to pause (e.g. SaveRecording) don't starve.
   if (MainThreadIsWaitingForIPDLReply()) {
-    MOZ_RELEASE_ASSERT(gChildExecuteForward);
     Resume(true);
-  } else if (!gResumeForwardOrBackward) {
-    gResumeForwardOrBackward = true;
-    gMainThreadMessageLoop->PostTask(NewRunnableFunction("ResumeForwardOrBackward",
-                                                         ResumeForwardOrBackward));
+  } else if (!js::DebuggerOnPause()) {
+    gMainThreadMessageLoop->PostTask(NewRunnableFunction("RecvHitCheckpointResume", Resume, true));
   }
-}
-
-static void
-HitBreakpoint(uint32_t* aBreakpoints, size_t aNumBreakpoints,
-              js::BreakpointPosition::Kind aSharedKind)
-{
-  if (!gActiveChild->IsPaused()) {
-    delete[] aBreakpoints;
-    return;
-  }
-
-  switch (aSharedKind) {
-  case js::BreakpointPosition::ForcedPause:
-    MarkActiveChildExplicitPause();
-    MOZ_FALLTHROUGH;
-  case js::BreakpointPosition::PositionChange:
-    // Call all breakpoint handlers.
-    for (size_t i = 0; i < aNumBreakpoints; i++) {
-      AutoSafeJSContext cx;
-      if (!js::HitBreakpoint(cx, aBreakpoints[i])) {
-        Print("Warning: hitBreakpoint hook threw an exception.\n");
-      }
-    }
-    break;
-  default:
-    gResumeForwardOrBackward = true;
-
-    MarkActiveChildExplicitPause();
-
-    // Call breakpoint handlers until one of them explicitly resumes forward or
-    // backward travel.
-    for (size_t i = 0; i < aNumBreakpoints && gResumeForwardOrBackward; i++) {
-      AutoSafeJSContext cx;
-      if (!js::HitBreakpoint(cx, aBreakpoints[i])) {
-        Print("Warning: hitBreakpoint hook threw an exception.\n");
-      }
-    }
-
-    // If the child was not explicitly resumed by any breakpoint handler,
-    // resume travel in whichever direction we were going previously.
-    if (gResumeForwardOrBackward) {
-      ResumeForwardOrBackward();
-    }
-    break;
-  }
-
-  delete[] aBreakpoints;
 }
 
 static void
 RecvHitBreakpoint(const HitBreakpointMessage& aMsg)
 {
-  uint32_t* breakpoints = new uint32_t[aMsg.NumBreakpoints()];
-  PodCopy(breakpoints, aMsg.Breakpoints(), aMsg.NumBreakpoints());
-  gMainThreadMessageLoop->PostTask(NewRunnableFunction("HitBreakpoint", HitBreakpoint,
-                                                       breakpoints, aMsg.NumBreakpoints(),
-                                                       js::BreakpointPosition::Invalid));
-}
-
-static void
-HitBreakpointsWithKind(js::BreakpointPosition::Kind aKind)
-{
-  Vector<uint32_t> breakpoints;
-  gActiveChild->GetMatchingInstalledBreakpoints([=](js::BreakpointPosition::Kind aInstalled) {
-      return aInstalled == aKind;
-    }, breakpoints);
-  if (!breakpoints.empty()) {
-    uint32_t* newBreakpoints = new uint32_t[breakpoints.length()];
-    PodCopy(newBreakpoints, breakpoints.begin(), breakpoints.length());
-    gMainThreadMessageLoop->PostTask(NewRunnableFunction("HitBreakpoint", HitBreakpoint,
-                                                         newBreakpoints, breakpoints.length(),
-                                                         aKind));
+  // HitBreakpoint messages will be sent both when hitting user breakpoints and
+  // when hitting the endpoint of the recording, if it is at a breakpoint
+  // position. Don't send an OnPause notification in the latter case: if the
+  // user installed a breakpoint here we will have already gotten a
+  // HitBreakpoint message *without* mRecordingEndpoint set, and we don't want
+  // to pause twice at the same point.
+  if (aMsg.mRecordingEndpoint) {
+    Resume(true);
+  } else if (!js::DebuggerOnPause()) {
+    gMainThreadMessageLoop->PostTask(NewRunnableFunction("RecvHitBreakpointResume", Resume, true));
   }
 }
 

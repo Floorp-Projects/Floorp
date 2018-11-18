@@ -61,16 +61,7 @@ struct BreakpointPosition
     ConsoleMessage,
 
     // Break when NewTimeWarpTarget() is called.
-    WarpTarget,
-
-    // Break when the debugger should pause even if no breakpoint has been
-    // set: the beginning or end of the replay has been reached, or a time
-    // warp has reached its destination.
-    ForcedPause,
-
-    // Break when the child process reaches a checkpoint or we switch between
-    // recording and replaying child processes.
-    PositionChange
+    WarpTarget
   ));
 
   Kind mKind;
@@ -123,8 +114,6 @@ struct BreakpointPosition
     case NewScript: return "NewScript";
     case ConsoleMessage: return "ConsoleMessage";
     case WarpTarget: return "WarpTarget";
-    case ForcedPause: return "ForcedPause";
-    case PositionChange: return "PositionChange";
     }
     MOZ_CRASH("Bad BreakpointPosition kind");
   }
@@ -193,8 +182,13 @@ struct ExecutionPoint
 // Buffer type used for encoding object data.
 typedef InfallibleVector<char16_t> CharBuffer;
 
-// Called in the middleman when a breakpoint with the specified id has been hit.
-bool HitBreakpoint(JSContext* aCx, size_t id);
+// Called in the middleman when the child has hit a checkpoint or breakpoint.
+// The return value is whether there is a ReplayDebugger available which the
+// notification was sent to.
+bool DebuggerOnPause();
+
+// Called in the middleman when the child has changed.
+void DebuggerOnSwitchChild();
 
 // Set up the JS sandbox in the current recording/replaying process and load
 // its target script.

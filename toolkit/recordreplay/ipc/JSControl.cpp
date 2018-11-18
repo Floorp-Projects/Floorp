@@ -177,14 +177,19 @@ ExecutionPoint::Decode(JSContext* aCx, HandleObject aObject)
 // Middleman Methods
 ///////////////////////////////////////////////////////////////////////////////
 
-// Keep track of all replay debuggers in existence, so that they can all be
-// invalidated when the process is unpaused.
-static StaticInfallibleVector<PersistentRootedObject*> gReplayDebuggers;
+// There can be at most one replay debugger in existence.
+static PersistentRootedObject* gReplayDebugger;
 
 static bool
 Middleman_RegisterReplayDebugger(JSContext* aCx, unsigned aArgc, Value* aVp)
 {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  if (gReplayDebugger) {
+    args.rval().setObject(**gReplayDebugger);
+    return true;
+  }
+
   RootedObject obj(aCx, NonNullObject(aCx, args.get(0)));
   if (!obj) {
     return false;
@@ -196,27 +201,41 @@ Middleman_RegisterReplayDebugger(JSContext* aCx, unsigned aArgc, Value* aVp)
     return false;
   }
 
-  PersistentRootedObject* root = new PersistentRootedObject(aCx);
-  *root = obj;
-  gReplayDebuggers.append(root);
+  gReplayDebugger = new PersistentRootedObject(aCx);
+  *gReplayDebugger = obj;
 
   args.rval().setUndefined();
   return true;
 }
 
 static bool
-InvalidateReplayDebuggersAfterUnpause(JSContext* aCx)
+CallReplayDebuggerHook(const char* aMethod)
 {
-  RootedValue rval(aCx);
-  for (auto root : gReplayDebuggers) {
-    JSAutoRealm ar(aCx, *root);
-    if (!JS_CallFunctionName(aCx, *root, "invalidateAfterUnpause",
-                             HandleValueArray::empty(), &rval))
-    {
-      return false;
-    }
+  if (!gReplayDebugger) {
+    return false;
+  }
+
+  AutoSafeJSContext cx;
+  JSAutoRealm ar(cx, *gReplayDebugger);
+  RootedValue rval(cx);
+  if (!JS_CallFunctionName(cx, *gReplayDebugger, aMethod,
+                           HandleValueArray::empty(), &rval))
+  {
+    Print("Warning: ReplayDebugger hook %s threw an exception\n", aMethod);
   }
   return true;
+}
+
+bool
+DebuggerOnPause()
+{
+  return CallReplayDebuggerHook("_onPause");
+}
+
+void
+DebuggerOnSwitchChild()
+{
+  CallReplayDebuggerHook("_onSwitchChild");
 }
 
 static bool
@@ -232,10 +251,6 @@ Middleman_Resume(JSContext* aCx, unsigned aArgc, Value* aVp)
 {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
   bool forward = ToBoolean(args.get(0));
-
-  if (!InvalidateReplayDebuggersAfterUnpause(aCx)) {
-    return false;
-  }
 
   parent::Resume(forward);
 
@@ -257,22 +272,7 @@ Middleman_TimeWarp(JSContext* aCx, unsigned aArgc, Value* aVp)
     return false;
   }
 
-  if (!InvalidateReplayDebuggersAfterUnpause(aCx)) {
-    return false;
-  }
-
   parent::TimeWarp(target);
-
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool
-Middleman_Pause(JSContext* aCx, unsigned aArgc, Value* aVp)
-{
-  CallArgs args = CallArgsFromVp(aArgc, aVp);
-
-  parent::Pause();
 
   args.rval().setUndefined();
   return true;
@@ -298,31 +298,13 @@ Middleman_SendRequest(JSContext* aCx, unsigned aArgc, Value* aVp)
   return JS_ParseJSON(aCx, responseBuffer.begin(), responseBuffer.length(), args.rval());
 }
 
-struct InstalledBreakpoint
-{
-  PersistentRootedObject mHandler;
-  BreakpointPosition mPosition;
-
-  InstalledBreakpoint(JSContext* aCx, JSObject* aHandler, const BreakpointPosition& aPosition)
-    : mHandler(aCx, aHandler), mPosition(aPosition)
-  {}
-};
-static StaticInfallibleVector<InstalledBreakpoint*> gBreakpoints;
-
 static bool
-Middleman_SetBreakpoint(JSContext* aCx, unsigned aArgc, Value* aVp)
+Middleman_AddBreakpoint(JSContext* aCx, unsigned aArgc, Value* aVp)
 {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
-  RootedObject handler(aCx, NonNullObject(aCx, args.get(0)));
-  RootedObject positionObject(aCx, NonNullObject(aCx, args.get(1)));
-  if (!handler || !positionObject) {
-    return false;
-  }
-
-  handler = ::js::CheckedUnwrap(handler);
-  if (!handler) {
-    ::js::ReportAccessDenied(aCx);
+  RootedObject positionObject(aCx, NonNullObject(aCx, args.get(0)));
+  if (!positionObject) {
     return false;
   }
 
@@ -331,60 +313,18 @@ Middleman_SetBreakpoint(JSContext* aCx, unsigned aArgc, Value* aVp)
     return false;
   }
 
-  size_t breakpointId;
-  for (breakpointId = 0; breakpointId < gBreakpoints.length(); breakpointId++) {
-    if (!gBreakpoints[breakpointId]) {
-      break;
-    }
-  }
-  if (breakpointId == gBreakpoints.length()) {
-    gBreakpoints.append(nullptr);
-  }
+  parent::AddBreakpoint(position);
 
-  gBreakpoints[breakpointId] = new InstalledBreakpoint(aCx, handler, position);
-
-  parent::SetBreakpoint(breakpointId, position);
-
-  args.rval().setInt32(breakpointId);
+  args.rval().setUndefined();
   return true;
 }
 
-bool
-HitBreakpoint(JSContext* aCx, size_t aId)
-{
-  InstalledBreakpoint* breakpoint = gBreakpoints[aId];
-  MOZ_RELEASE_ASSERT(breakpoint);
-
-  JSAutoRealm ar(aCx, breakpoint->mHandler);
-
-  RootedValue handlerValue(aCx, ObjectValue(*breakpoint->mHandler));
-  RootedValue rval(aCx);
-  return JS_CallFunctionValue(aCx, nullptr, handlerValue,
-                              HandleValueArray::empty(), &rval)
-      // The replaying process will resume after this hook returns, if it
-      // hasn't already been explicitly resumed.
-      && InvalidateReplayDebuggersAfterUnpause(aCx);
-}
-
 /* static */ bool
-Middleman_ClearBreakpoint(JSContext* aCx, unsigned aArgc, Value* aVp)
+Middleman_ClearBreakpoints(JSContext* aCx, unsigned aArgc, Value* aVp)
 {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
-  if (!args.get(0).isNumber()) {
-    JS_ReportErrorASCII(aCx, "Bad breakpoint ID");
-    return false;
-  }
 
-  size_t breakpointId = (size_t) args.get(0).toNumber();
-  if (breakpointId >= gBreakpoints.length() || !gBreakpoints[breakpointId]) {
-    JS_ReportErrorASCII(aCx, "Bad breakpoint ID");
-    return false;
-  }
-
-  delete gBreakpoints[breakpointId];
-  gBreakpoints[breakpointId] = nullptr;
-
-  parent::SetBreakpoint(breakpointId, BreakpointPosition());
+  parent::ClearBreakpoints();
 
   args.rval().setUndefined();
   return true;
@@ -437,6 +377,57 @@ Middleman_ChildIsRecording(JSContext* aCx, unsigned aArgc, Value* aVp)
 {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
   args.rval().setBoolean(parent::ActiveChildIsRecording());
+  return true;
+}
+
+static bool
+Middleman_MarkExplicitPause(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  parent::MarkActiveChildExplicitPause();
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool
+Middleman_WaitUntilPaused(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  parent::WaitUntilActiveChildIsPaused();
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool
+Middleman_PositionSubsumes(JSContext* aCx, unsigned aArgc, Value* aVp)
+{
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  RootedObject firstPositionObject(aCx, NonNullObject(aCx, args.get(0)));
+  if (!firstPositionObject) {
+    return false;
+  }
+
+  BreakpointPosition firstPosition;
+  if (!firstPosition.Decode(aCx, firstPositionObject)) {
+    return false;
+  }
+
+  RootedObject secondPositionObject(aCx, NonNullObject(aCx, args.get(1)));
+  if (!secondPositionObject) {
+    return false;
+  }
+
+  BreakpointPosition secondPosition;
+  if (!secondPosition.Decode(aCx, secondPositionObject)) {
+    return false;
+  }
+
+  args.rval().setBoolean(firstPosition.Subsumes(secondPosition));
   return true;
 }
 
@@ -990,14 +981,16 @@ static const JSFunctionSpec gMiddlemanMethods[] = {
   JS_FN("canRewind", Middleman_CanRewind, 0, 0),
   JS_FN("resume", Middleman_Resume, 1, 0),
   JS_FN("timeWarp", Middleman_TimeWarp, 1, 0),
-  JS_FN("pause", Middleman_Pause, 0, 0),
   JS_FN("sendRequest", Middleman_SendRequest, 1, 0),
-  JS_FN("setBreakpoint", Middleman_SetBreakpoint, 2, 0),
-  JS_FN("clearBreakpoint", Middleman_ClearBreakpoint, 1, 0),
+  JS_FN("addBreakpoint", Middleman_AddBreakpoint, 1, 0),
+  JS_FN("clearBreakpoints", Middleman_ClearBreakpoints, 0, 0),
   JS_FN("maybeSwitchToReplayingChild", Middleman_MaybeSwitchToReplayingChild, 0, 0),
   JS_FN("hadRepaint", Middleman_HadRepaint, 2, 0),
   JS_FN("hadRepaintFailure", Middleman_HadRepaintFailure, 0, 0),
   JS_FN("childIsRecording", Middleman_ChildIsRecording, 0, 0),
+  JS_FN("markExplicitPause", Middleman_MarkExplicitPause, 0, 0),
+  JS_FN("waitUntilPaused", Middleman_WaitUntilPaused, 0, 0),
+  JS_FN("positionSubsumes", Middleman_PositionSubsumes, 2, 0),
   JS_FS_END
 };
 
