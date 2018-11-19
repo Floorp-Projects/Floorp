@@ -22,64 +22,53 @@ const FILE_DATABASE = "addons.json";
 
 const ADDONS = [
   {
-    "install.rdf": {
-      id: "test_AddonRepository_1@tests.mozilla.org",
-      version: "1.1",
-      bootstrap: true,
-
+    manifest: {
       name: "XPI Add-on 1",
-      description: "XPI Add-on 1 - Description",
-      creator: "XPI Add-on 1 - Creator",
-      developer: ["XPI Add-on 1 - First Developer",
-                  "XPI Add-on 1 - Second Developer"],
-      translator: ["XPI Add-on 1 - First Translator",
-                   "XPI Add-on 1 - Second Translator"],
-      contributor: ["XPI Add-on 1 - First Contributor",
-                    "XPI Add-on 1 - Second Contributor"],
-      homepageURL: "http://example.com/xpi/1/homepage.html",
-      optionsURL: "http://example.com/xpi/1/options.html",
-      aboutURL: "http://example.com/xpi/1/about.html",
-      iconURL: "http://example.com/xpi/1/icon.png",
+      version: "1.1",
 
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "1",
-        maxVersion: "1"}],
+      description: "XPI Add-on 1 - Description",
+      developer: {
+        name: "XPI Add-on 1 - Author",
+      },
+
+      homepage_url: "http://example.com/xpi/1/homepage.html",
+      icons: {
+        32: "icon.png",
+      },
+
+      options_ui: {
+        page: "options.html",
+      },
+
+      applications: {gecko: {id: "test_AddonRepository_1@tests.mozilla.org" }},
     },
   },
   {
-    "manifest.json": {
-      manifest_version: 2,
+    manifest: {
       name: "XPI Add-on 2",
       version: "1.2",
-      applications: {
-        gecko: {
-          id: "test_AddonRepository_2@tests.mozilla.org",
-        },
-      },
-      theme: {},
+      theme: { },
+      applications: {gecko: {id: "test_AddonRepository_2@tests.mozilla.org"}},
     },
   },
   {
-    "manifest.json": {
-      manifest_version: 2,
+    manifest: {
       name: "XPI Add-on 3",
       version: "1.3",
-      applications: {
-        gecko: {
-          id: "test_AddonRepository_3@tests.mozilla.org",
-        },
+      icons: {
+        32: "icon.png",
       },
-      theme: {},
-      icons: {32: "icon.png"},
+      theme: { },
+      applications: {gecko: {id: "test_AddonRepository_3@tests.mozilla.org"}},
     },
-    "icon.png": "",
-    "preview.png": "",
+    files: {
+      "preview.png": "",
+    },
   },
 ];
 
-const ADDON_IDS = ADDONS.map(addon => addon["install.rdf"] ? addon["install.rdf"].id : addon["manifest.json"].applications.gecko.id);
-const ADDON_FILES = ADDONS.map(addon => AddonTestUtils.createTempXPIFile(addon));
+const ADDON_IDS = ADDONS.map(addon => addon.manifest.applications.gecko.id);
+const ADDON_FILES = ADDONS.map(addon => AddonTestUtils.createTempWebExtensionFile(addon));
 
 const PREF_ADDON0_CACHE_ENABLED = "extensions." + ADDON_IDS[0] + ".getAddons.cache.enabled";
 const PREF_ADDON1_CACHE_ENABLED = "extensions." + ADDON_IDS[1] + ".getAddons.cache.enabled";
