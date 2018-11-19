@@ -8067,6 +8067,20 @@ nsPIDOMWindowInner::GetAutoplayPermissionManager()
   return manager.forget();
 }
 
+void
+nsPIDOMWindowInner::SaveStorageAccessGranted(const nsACString& aPermissionKey)
+{
+  if (!HasStorageAccessGranted(aPermissionKey)) {
+    mStorageAccessGranted.AppendElement(aPermissionKey);
+  }
+}
+
+bool
+nsPIDOMWindowInner::HasStorageAccessGranted(const nsACString& aPermissionKey)
+{
+  return mStorageAccessGranted.Contains(aPermissionKey);
+}
+
 // XXX: Can we define this in a header instead of here?
 namespace mozilla {
 namespace dom {

@@ -489,6 +489,19 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipa
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
+  nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow = outerParentWindow->GetTop();
+  nsGlobalWindowOuter* topWindow = nsGlobalWindowOuter::Cast(topOuterWindow);
+  if (NS_WARN_IF(!topWindow)) {
+    LOG(("No top outer window."));
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+
+  nsPIDOMWindowInner* topInnerWindow = topWindow->GetCurrentInnerWindow();
+  if (NS_WARN_IF(!topInnerWindow)) {
+    LOG(("No top inner window."));
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+
   // We hardcode this block reason since the first-party storage access
   // permission is granted for the purpose of blocking trackers.
   // Note that if aReason is eOpenerAfterUserInteraction, we don't check the
@@ -511,12 +524,18 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipa
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
+  NS_ConvertUTF16toUTF8 grantedOrigin(origin);
+
+  nsAutoCString permissionKey;
+  CreatePermissionKey(trackingOrigin, grantedOrigin, permissionKey);
+
+  // Let's store the permission in the current parent window.
+  topInnerWindow->SaveStorageAccessGranted(permissionKey);
+
   nsIChannel* channel =
     pwin->GetCurrentInnerWindow()->GetExtantDoc()->GetChannel();
 
   pwin->NotifyContentBlockingState(blockReason, channel, false, trackingURI);
-
-  NS_ConvertUTF16toUTF8 grantedOrigin(origin);
 
   ReportUnblockingConsole(parentWindow, NS_ConvertUTF8toUTF16(trackingOrigin),
                           origin, aReason);
@@ -775,8 +794,35 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsPIDOMWindowInner* aWin
     return false;
   }
 
+  NS_ConvertUTF16toUTF8 grantedOrigin(origin);
+
+  nsGlobalWindowOuter* outerWindow =
+    nsGlobalWindowOuter::Cast(aWindow->GetOuterWindow());
+  if (NS_WARN_IF(!outerWindow)) {
+    LOG(("No outer window."));
+    return false;
+  }
+
+  nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow = outerWindow->GetTop();
+  nsGlobalWindowOuter* topWindow = nsGlobalWindowOuter::Cast(topOuterWindow);
+  if (NS_WARN_IF(!topWindow)) {
+    LOG(("No top outer window."));
+    return false;
+  }
+
+  nsPIDOMWindowInner* topInnerWindow = topWindow->GetCurrentInnerWindow();
+  if (NS_WARN_IF(!topInnerWindow)) {
+    LOG(("No top inner window."));
+    return false;
+  }
+
   nsAutoCString type;
-  CreatePermissionKey(trackingOrigin, NS_ConvertUTF16toUTF8(origin), type);
+  CreatePermissionKey(trackingOrigin, grantedOrigin, type);
+
+  if (topInnerWindow->HasStorageAccessGranted(type)) {
+    LOG(("Permission stored in the window. All good."));
+    return true;
+  }
 
   nsCOMPtr<nsIPermissionManager> pm = services::GetPermissionManager();
   if (NS_WARN_IF(!pm)) {
