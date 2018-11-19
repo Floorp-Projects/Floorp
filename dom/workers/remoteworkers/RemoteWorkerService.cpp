@@ -129,7 +129,7 @@ RemoteWorkerService::InitializeOnTargetThread()
   MOZ_ASSERT(mThread->IsOnCurrentThread());
 
   PBackgroundChild* actorChild =
-  BackgroundChild::GetOrCreateForCurrentThread();
+    BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!actorChild)) {
     return;
   }
