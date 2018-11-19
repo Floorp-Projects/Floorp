@@ -25,15 +25,13 @@
 
 mozilla::LazyLogModule gAutoplayPermissionLog("Autoplay");
 
-#define AUTOPLAY_LOG(msg, ...)                                             \
+#define AUTOPLAY_LOG(msg, ...) \
   MOZ_LOG(gAutoplayPermissionLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
 namespace mozilla {
 namespace dom {
 
-static nsIDocument*
-ApproverDocOf(const nsIDocument& aDocument)
-{
+static nsIDocument* ApproverDocOf(const nsIDocument& aDocument) {
   nsCOMPtr<nsIDocShell> ds = aDocument.GetDocShell();
   if (!ds) {
     return nullptr;
@@ -48,13 +46,13 @@ ApproverDocOf(const nsIDocument& aDocument)
   return rootTreeItem->GetDocument();
 }
 
-static bool
-IsActivelyCapturingOrHasAPermission(nsPIDOMWindowInner* aWindow)
-{
+static bool IsActivelyCapturingOrHasAPermission(nsPIDOMWindowInner* aWindow) {
   // Pages which have been granted permission to capture WebRTC camera or
-  // microphone or screen are assumed to be trusted, and are allowed to autoplay.
+  // microphone or screen are assumed to be trusted, and are allowed to
+  // autoplay.
   if (MediaManager::GetIfExists()) {
-    return MediaManager::GetIfExists()->IsActivelyCapturingOrHasAPermission(aWindow->WindowID());
+    return MediaManager::GetIfExists()->IsActivelyCapturingOrHasAPermission(
+        aWindow->WindowID());
   }
 
   auto principal = nsGlobalWindowInner::Cast(aWindow)->GetPrincipal();
@@ -63,16 +61,15 @@ IsActivelyCapturingOrHasAPermission(nsPIDOMWindowInner* aWindow)
           nsContentUtils::IsExactSitePermAllow(principal, "screen"));
 }
 
-static bool
-IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow)
-{
+static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
   if (!aWindow) {
     return false;
   }
 
   if (IsActivelyCapturingOrHasAPermission(aWindow)) {
-    AUTOPLAY_LOG("Allow autoplay as document has camera or microphone or screen"
-                 " permission.");
+    AUTOPLAY_LOG(
+        "Allow autoplay as document has camera or microphone or screen"
+        " permission.");
     return true;
   }
 
@@ -92,7 +89,8 @@ IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow)
 
   nsCOMPtr<nsPIDOMWindowOuter> topWindow = aWindow->GetScriptableTop();
   if (topWindow && topWindow->HasTemporaryAutoplayPermission()) {
-    AUTOPLAY_LOG("Allow autoplay as document has temporary autoplay permission.");
+    AUTOPLAY_LOG(
+        "Allow autoplay as document has temporary autoplay permission.");
     return true;
   }
 
@@ -103,7 +101,8 @@ IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow)
 
   if (nsContentUtils::IsExactSitePermAllow(approver->NodePrincipal(),
                                            "autoplay-media")) {
-    AUTOPLAY_LOG("Allow autoplay as document has permanent autoplay permission.");
+    AUTOPLAY_LOG(
+        "Allow autoplay as document has permanent autoplay permission.");
     return true;
   }
 
@@ -121,9 +120,8 @@ IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow)
 }
 
 /* static */
-already_AddRefed<AutoplayPermissionManager>
-AutoplayPolicy::RequestFor(const nsIDocument& aDocument)
-{
+already_AddRefed<AutoplayPermissionManager> AutoplayPolicy::RequestFor(
+    const nsIDocument& aDocument) {
   nsIDocument* document = ApproverDocOf(aDocument);
   if (!document) {
     return nullptr;
@@ -135,10 +133,9 @@ AutoplayPolicy::RequestFor(const nsIDocument& aDocument)
   return window->GetAutoplayPermissionManager();
 }
 
-static uint32_t
-DefaultAutoplayBehaviour()
-{
-  int prefValue = Preferences::GetInt("media.autoplay.default", nsIAutoplay::ALLOWED);
+static uint32_t DefaultAutoplayBehaviour() {
+  int prefValue =
+      Preferences::GetInt("media.autoplay.default", nsIAutoplay::ALLOWED);
   if (prefValue < nsIAutoplay::ALLOWED || prefValue > nsIAutoplay::PROMPT) {
     // Invalid pref values are just converted to ALLOWED.
     return nsIAutoplay::ALLOWED;
@@ -146,23 +143,22 @@ DefaultAutoplayBehaviour()
   return prefValue;
 }
 
-static bool
-IsMediaElementAllowedToPlay(const HTMLMediaElement& aElement)
-{
+static bool IsMediaElementAllowedToPlay(const HTMLMediaElement& aElement) {
   if ((aElement.Volume() == 0.0 || aElement.Muted()) &&
-       Preferences::GetBool("media.autoplay.allow-muted", true)) {
+      Preferences::GetBool("media.autoplay.allow-muted", true)) {
     AUTOPLAY_LOG("Allow muted media %p to autoplay.", &aElement);
     return true;
   }
 
   if (IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow())) {
-    AUTOPLAY_LOG("Autoplay allowed as window is allowed to play, media %p.", &aElement);
+    AUTOPLAY_LOG("Autoplay allowed as window is allowed to play, media %p.",
+                 &aElement);
     return true;
   }
 
   nsIDocument* topDocument = ApproverDocOf(*aElement.OwnerDoc());
-  if (topDocument &&
-      topDocument->MediaDocumentKind() == nsIDocument::MediaDocumentKind::Video) {
+  if (topDocument && topDocument->MediaDocumentKind() ==
+                         nsIDocument::MediaDocumentKind::Video) {
     AUTOPLAY_LOG("Allow video document %p to autoplay", &aElement);
     return true;
   }
@@ -176,22 +172,20 @@ IsMediaElementAllowedToPlay(const HTMLMediaElement& aElement)
   return false;
 }
 
-/* static */ bool
-AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(const HTMLMediaElement& aElement)
-{
+/* static */ bool AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(
+    const HTMLMediaElement& aElement) {
   return IsMediaElementAllowedToPlay(aElement);
 }
 
-/* static */ bool
-AutoplayPolicy::IsAllowedToPlay(const HTMLMediaElement& aElement)
-{
+/* static */ bool AutoplayPolicy::IsAllowedToPlay(
+    const HTMLMediaElement& aElement) {
   const uint32_t autoplayDefault = DefaultAutoplayBehaviour();
   // TODO : this old way would be removed when user-gestures-needed becomes
   // as a default option to block autoplay.
-  if (!Preferences::GetBool("media.autoplay.enabled.user-gestures-needed", false)) {
+  if (!Preferences::GetBool("media.autoplay.enabled.user-gestures-needed",
+                            false)) {
     // If element is blessed, it would always be allowed to play().
-    return (autoplayDefault == nsIAutoplay::ALLOWED ||
-            aElement.IsBlessed() ||
+    return (autoplayDefault == nsIAutoplay::ALLOWED || aElement.IsBlessed() ||
             EventStateManager::IsHandlingUserInput());
   }
 
@@ -200,17 +194,16 @@ AutoplayPolicy::IsAllowedToPlay(const HTMLMediaElement& aElement)
   }
 
   const bool result = IsMediaElementAllowedToPlay(aElement) ||
-    autoplayDefault == nsIAutoplay::ALLOWED;
+                      autoplayDefault == nsIAutoplay::ALLOWED;
 
-  AUTOPLAY_LOG("IsAllowedToPlay, mediaElement=%p, isAllowToPlay=%s",
-                &aElement, result ? "allowed" : "blocked");
+  AUTOPLAY_LOG("IsAllowedToPlay, mediaElement=%p, isAllowToPlay=%s", &aElement,
+               result ? "allowed" : "blocked");
 
   return result;
 }
 
-/* static */ bool
-AutoplayPolicy::IsAllowedToPlay(const AudioContext& aContext)
-{
+/* static */ bool AutoplayPolicy::IsAllowedToPlay(
+    const AudioContext& aContext) {
   if (!Preferences::GetBool("media.autoplay.block-webaudio", false)) {
     return true;
   }
@@ -219,7 +212,8 @@ AutoplayPolicy::IsAllowedToPlay(const AudioContext& aContext)
     return true;
   }
 
-  if (!Preferences::GetBool("media.autoplay.enabled.user-gestures-needed", false)) {
+  if (!Preferences::GetBool("media.autoplay.enabled.user-gestures-needed",
+                            false)) {
     return true;
   }
 
@@ -235,5 +229,5 @@ AutoplayPolicy::IsAllowedToPlay(const AudioContext& aContext)
   return false;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -732,7 +732,7 @@ mod test_glyph_rasterizer {
         let mut glyph_rasterizer = GlyphRasterizer::new(workers).unwrap();
         let mut glyph_cache = GlyphCache::new();
         let mut gpu_cache = GpuCache::new();
-        let mut texture_cache = TextureCache::new(2048, 1024);
+        let mut texture_cache = TextureCache::new_for_testing(2048, 1024);
         let mut render_task_cache = RenderTaskCache::new();
         let mut render_task_tree = RenderTaskTree::new(FrameId::INVALID);
         let mut special_render_passes = SpecialRenderPasses::new(&DeviceIntSize::new(1366, 768));
@@ -786,7 +786,7 @@ mod test_glyph_rasterizer {
 
         glyph_rasterizer.resolve_glyphs(
             &mut glyph_cache,
-            &mut TextureCache::new(4096, 1024),
+            &mut TextureCache::new_for_testing(4096, 1024),
             &mut gpu_cache,
             &mut render_task_cache,
             &mut render_task_tree,

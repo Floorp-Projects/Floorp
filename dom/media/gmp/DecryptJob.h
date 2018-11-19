@@ -13,7 +13,7 @@
 namespace mozilla {
 
 class DecryptJob {
-public:
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecryptJob)
 
   explicit DecryptJob(MediaRawData* aSample);
@@ -25,11 +25,12 @@ public:
 
   const uint32_t mId;
   RefPtr<MediaRawData> mSample;
-private:
+
+ private:
   ~DecryptJob() {}
   MozPromiseHolder<DecryptPromise> mPromise;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // DecryptJob_h_
+#endif  // DecryptJob_h_

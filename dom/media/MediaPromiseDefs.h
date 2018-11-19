@@ -12,8 +12,8 @@
 namespace mozilla {
 
 using SetCDMPromise =
-  MozPromise<bool /* aIgnored */, MediaResult, /* IsExclusive */ true>;
+    MozPromise<bool /* aIgnored */, MediaResult, /* IsExclusive */ true>;
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

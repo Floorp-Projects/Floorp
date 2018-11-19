@@ -30,9 +30,8 @@ DDLoggedTypeDeclName(MediaResourceCallback);
  * care about the events notified by the MediaResource.
  */
 class MediaResourceCallback
-  : public DecoderDoctorLifeLogger<MediaResourceCallback>
-{
-public:
+    : public DecoderDoctorLifeLogger<MediaResourceCallback> {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaResourceCallback);
 
   // Return an abstract thread on which to run main thread runnables.
@@ -58,10 +57,10 @@ public:
   // Notify that the "cache suspended" status of MediaResource changes.
   virtual void NotifySuspendedStatusChanged(bool aSuspendedByCache) {}
 
-protected:
+ protected:
   virtual ~MediaResourceCallback() {}
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif //MediaResourceCallback_h_
+#endif  // MediaResourceCallback_h_

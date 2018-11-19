@@ -14,15 +14,12 @@ namespace mozilla {
 namespace dom {
 
 MediaElementAudioSourceNode::MediaElementAudioSourceNode(AudioContext* aContext)
-  : MediaStreamAudioSourceNode(aContext)
-{
-}
+    : MediaStreamAudioSourceNode(aContext) {}
 
 /* static */ already_AddRefed<MediaElementAudioSourceNode>
-MediaElementAudioSourceNode::Create(AudioContext& aAudioContext,
-                                    const MediaElementAudioSourceOptions& aOptions,
-                                    ErrorResult& aRv)
-{
+MediaElementAudioSourceNode::Create(
+    AudioContext& aAudioContext, const MediaElementAudioSourceOptions& aOptions,
+    ErrorResult& aRv) {
   if (aAudioContext.IsOffline()) {
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
@@ -33,10 +30,10 @@ MediaElementAudioSourceNode::Create(AudioContext& aAudioContext,
   }
 
   RefPtr<MediaElementAudioSourceNode> node =
-    new MediaElementAudioSourceNode(&aAudioContext);
+      new MediaElementAudioSourceNode(&aAudioContext);
 
-  RefPtr<DOMMediaStream> stream =
-    aOptions.mMediaElement->CaptureAudio(aRv, aAudioContext.Destination()->Stream()->Graph());
+  RefPtr<DOMMediaStream> stream = aOptions.mMediaElement->CaptureAudio(
+      aRv, aAudioContext.Destination()->Stream()->Graph());
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -49,11 +46,10 @@ MediaElementAudioSourceNode::Create(AudioContext& aAudioContext,
   return node.forget();
 }
 
-JSObject*
-MediaElementAudioSourceNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* MediaElementAudioSourceNode::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return MediaElementAudioSourceNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

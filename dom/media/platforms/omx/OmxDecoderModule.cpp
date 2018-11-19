@@ -15,18 +15,14 @@
 
 namespace mozilla {
 
-/* static */ bool
-OmxDecoderModule::Init()
-{
+/* static */ bool OmxDecoderModule::Init() {
 #ifdef MOZ_OMX
   return PureOmxPlatformLayer::Init();
 #endif
   return false;
 }
 
-OmxDecoderModule*
-OmxDecoderModule::Create()
-{
+OmxDecoderModule* OmxDecoderModule::Create() {
 #ifdef MOZ_OMX
   if (Init()) {
     return new OmxDecoderModule();
@@ -35,29 +31,23 @@ OmxDecoderModule::Create()
   return nullptr;
 }
 
-already_AddRefed<MediaDataDecoder>
-OmxDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
-{
-  RefPtr<OmxDataDecoder> decoder = new OmxDataDecoder(aParams.mConfig,
-                                                      aParams.mTaskQueue,
-                                                      aParams.mImageContainer);
+already_AddRefed<MediaDataDecoder> OmxDecoderModule::CreateVideoDecoder(
+    const CreateDecoderParams& aParams) {
+  RefPtr<OmxDataDecoder> decoder = new OmxDataDecoder(
+      aParams.mConfig, aParams.mTaskQueue, aParams.mImageContainer);
   return decoder.forget();
 }
 
-already_AddRefed<MediaDataDecoder>
-OmxDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
-{
-  RefPtr<OmxDataDecoder> decoder = new OmxDataDecoder(aParams.mConfig,
-                                                      aParams.mTaskQueue,
-                                                      nullptr);
+already_AddRefed<MediaDataDecoder> OmxDecoderModule::CreateAudioDecoder(
+    const CreateDecoderParams& aParams) {
+  RefPtr<OmxDataDecoder> decoder =
+      new OmxDataDecoder(aParams.mConfig, aParams.mTaskQueue, nullptr);
   return decoder.forget();
 }
 
-bool
-OmxDecoderModule::SupportsMimeType(const nsACString& aMimeType,
-                                   DecoderDoctorDiagnostics* aDiagnostics) const
-{
+bool OmxDecoderModule::SupportsMimeType(
+    const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   return OmxPlatformLayer::SupportsMimeType(aMimeType);
 }
 
-}
+}  // namespace mozilla

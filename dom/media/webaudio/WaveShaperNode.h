@@ -17,57 +17,48 @@ namespace dom {
 class AudioContext;
 struct WaveShaperOptions;
 
-class WaveShaperNode final : public AudioNode
-{
-public:
-  static already_AddRefed<WaveShaperNode>
-  Create(AudioContext& aAudioContext, const WaveShaperOptions& aOptions,
-         ErrorResult& aRv);
+class WaveShaperNode final : public AudioNode {
+ public:
+  static already_AddRefed<WaveShaperNode> Create(
+      AudioContext& aAudioContext, const WaveShaperOptions& aOptions,
+      ErrorResult& aRv);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(WaveShaperNode, AudioNode)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(WaveShaperNode,
+                                                         AudioNode)
 
-  static already_AddRefed<WaveShaperNode>
-  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
-              const WaveShaperOptions& aOptions, ErrorResult& aRv)
-  {
+  static already_AddRefed<WaveShaperNode> Constructor(
+      const GlobalObject& aGlobal, AudioContext& aAudioContext,
+      const WaveShaperOptions& aOptions, ErrorResult& aRv) {
     return Create(aAudioContext, aOptions, aRv);
   }
 
-  JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   void GetCurve(JSContext* aCx, JS::MutableHandle<JSObject*> aRetval);
   void SetCurve(const Nullable<Float32Array>& aData, ErrorResult& aRv);
 
-  OverSampleType Oversample() const
-  {
-    return mType;
-  }
+  OverSampleType Oversample() const { return mType; }
   void SetOversample(OverSampleType aType);
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override {
     // Possibly track in the future:
     // - mCurve
     return AudioNode::SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  const char* NodeType() const override
-  {
-    return "WaveShaperNode";
-  }
+  const char* NodeType() const override { return "WaveShaperNode"; }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-private:
-  explicit WaveShaperNode(AudioContext *aContext);
+ private:
+  explicit WaveShaperNode(AudioContext* aContext);
   ~WaveShaperNode() = default;
 
-  void SetCurveInternal(const nsTArray<float>& aCurve,
-                        ErrorResult& aRv);
+  void SetCurveInternal(const nsTArray<float>& aCurve, ErrorResult& aRv);
   void CleanCurveInternal();
 
   void SendCurveToStream();
@@ -76,7 +67,7 @@ private:
   OverSampleType mType;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

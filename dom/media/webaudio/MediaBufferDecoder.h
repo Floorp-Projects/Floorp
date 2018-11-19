@@ -25,14 +25,12 @@ class AudioContext;
 class DecodeErrorCallback;
 class DecodeSuccessCallback;
 class Promise;
-} // namespace dom
+}  // namespace dom
 
-struct WebAudioDecodeJob final
-{
+struct WebAudioDecodeJob final {
   // You may omit both the success and failure callback, or you must pass both.
   // The callbacks are only necessary for asynchronous operation.
-  WebAudioDecodeJob(dom::AudioContext* aContext,
-                    dom::Promise* aPromise,
+  WebAudioDecodeJob(dom::AudioContext* aContext, dom::Promise* aPromise,
                     dom::DecodeSuccessCallback* aSuccessCallback = nullptr,
                     dom::DecodeErrorCallback* aFailureCallback = nullptr);
   ~WebAudioDecodeJob();
@@ -59,14 +57,13 @@ struct WebAudioDecodeJob final
   RefPtr<dom::AudioContext> mContext;
   RefPtr<dom::Promise> mPromise;
   RefPtr<dom::DecodeSuccessCallback> mSuccessCallback;
-  RefPtr<dom::DecodeErrorCallback> mFailureCallback; // can be null
+  RefPtr<dom::DecodeErrorCallback> mFailureCallback;  // can be null
   RefPtr<dom::AudioBuffer> mOutput;
 };
 
 void AsyncDecodeWebAudio(const char* aContentType, uint8_t* aBuffer,
                          uint32_t aLength, WebAudioDecodeJob& aDecodeJob);
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif
-

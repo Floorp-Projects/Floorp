@@ -22,9 +22,8 @@ namespace dom {
 class SpeechRecognition;
 
 class SpeechRecognitionResultList final : public nsISupports,
-                                          public nsWrapperCache
-{
-public:
+                                          public nsWrapperCache {
+ public:
   explicit SpeechRecognitionResultList(SpeechRecognition* aParent);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -32,22 +31,25 @@ public:
 
   nsISupports* GetParentObject() const;
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   uint32_t Length() const;
 
   already_AddRefed<SpeechRecognitionResult> Item(uint32_t aIndex);
 
-  already_AddRefed<SpeechRecognitionResult> IndexedGetter(uint32_t aIndex, bool& aPresent);
+  already_AddRefed<SpeechRecognitionResult> IndexedGetter(uint32_t aIndex,
+                                                          bool& aPresent);
 
   nsTArray<RefPtr<SpeechRecognitionResult>> mItems;
-private:
+
+ private:
   ~SpeechRecognitionResultList();
 
   RefPtr<SpeechRecognition> mParent;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

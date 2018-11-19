@@ -11,8 +11,7 @@
 #include "StreamTracks.h"
 #include <algorithm>
 
-namespace mozilla
-{
+namespace mozilla {
 
 class AbstractThread;
 class DOMMediaStream;
@@ -21,9 +20,8 @@ class DOMMediaStream;
  * See MediaStreamGraph::CreateAudioCaptureStream.
  */
 class AudioCaptureStream : public ProcessedMediaStream,
-                           public MixerCallbackReceiver
-{
-public:
+                           public MixerCallbackReceiver {
+ public:
   explicit AudioCaptureStream(TrackID aTrackId);
   virtual ~AudioCaptureStream();
 
@@ -31,7 +29,7 @@ public:
 
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
 
-protected:
+ protected:
   void MixerCallback(AudioDataValue* aMixedBuffer, AudioSampleFormat aFormat,
                      uint32_t aChannels, uint32_t aFrames,
                      uint32_t aSampleRate) override;
@@ -40,6 +38,6 @@ protected:
   bool mStarted;
   bool mTrackCreated;
 };
-}
+}  // namespace mozilla
 
 #endif /* MOZILLA_AUDIOCAPTURESTREAM_H_ */

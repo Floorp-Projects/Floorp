@@ -23,19 +23,13 @@
 
 namespace mozilla {
 
-GMPDecoderModule::GMPDecoderModule()
-{
-}
+GMPDecoderModule::GMPDecoderModule() {}
 
-GMPDecoderModule::~GMPDecoderModule()
-{
-}
+GMPDecoderModule::~GMPDecoderModule() {}
 
-static already_AddRefed<MediaDataDecoderProxy>
-CreateDecoderWrapper()
-{
+static already_AddRefed<MediaDataDecoderProxy> CreateDecoderWrapper() {
   RefPtr<gmp::GeckoMediaPluginService> s(
-    gmp::GeckoMediaPluginService::GetGeckoMediaPluginService());
+      gmp::GeckoMediaPluginService::GetGeckoMediaPluginService());
   if (!s) {
     return nullptr;
   }
@@ -44,13 +38,12 @@ CreateDecoderWrapper()
     return nullptr;
   }
   RefPtr<MediaDataDecoderProxy> decoder(
-    new MediaDataDecoderProxy(thread.forget()));
+      new MediaDataDecoderProxy(thread.forget()));
   return decoder.forget();
 }
 
-already_AddRefed<MediaDataDecoder>
-GMPDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
-{
+already_AddRefed<MediaDataDecoder> GMPDecoderModule::CreateVideoDecoder(
+    const CreateDecoderParams& aParams) {
   if (!MP4Decoder::IsH264(aParams.mConfig.mMimeType) &&
       !VPXDecoder::IsVP8(aParams.mConfig.mMimeType) &&
       !VPXDecoder::IsVP9(aParams.mConfig.mMimeType)) {
@@ -63,17 +56,14 @@ GMPDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
   return wrapper.forget();
 }
 
-already_AddRefed<MediaDataDecoder>
-GMPDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
-{
+already_AddRefed<MediaDataDecoder> GMPDecoderModule::CreateAudioDecoder(
+    const CreateDecoderParams& aParams) {
   return nullptr;
 }
 
 /* static */
-bool
-GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType,
-                                   const Maybe<nsCString>& aGMP)
-{
+bool GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType,
+                                        const Maybe<nsCString>& aGMP) {
   if (aGMP.isNothing()) {
     return false;
   }
@@ -81,25 +71,23 @@ GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType,
   nsCString api = NS_LITERAL_CSTRING(CHROMIUM_CDM_API);
 
   if (MP4Decoder::IsH264(aMimeType)) {
-    return HaveGMPFor(api, { NS_LITERAL_CSTRING("h264"), aGMP.value()});
+    return HaveGMPFor(api, {NS_LITERAL_CSTRING("h264"), aGMP.value()});
   }
 
   if (VPXDecoder::IsVP9(aMimeType)) {
-    return HaveGMPFor(api, { NS_LITERAL_CSTRING("vp9"), aGMP.value()});
+    return HaveGMPFor(api, {NS_LITERAL_CSTRING("vp9"), aGMP.value()});
   }
 
   if (VPXDecoder::IsVP8(aMimeType)) {
-    return HaveGMPFor(api, { NS_LITERAL_CSTRING("vp8"), aGMP.value()});
+    return HaveGMPFor(api, {NS_LITERAL_CSTRING("vp8"), aGMP.value()});
   }
 
   return false;
 }
 
-bool
-GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType,
-                                   DecoderDoctorDiagnostics* aDiagnostics) const
-{
+bool GMPDecoderModule::SupportsMimeType(
+    const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   return false;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

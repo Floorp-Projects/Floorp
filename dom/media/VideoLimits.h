@@ -16,6 +16,6 @@ namespace mozilla {
 static const int32_t MAX_VIDEO_WIDTH = 8192;
 static const int32_t MAX_VIDEO_HEIGHT = 4608;
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // VideoLimits_h
+#endif  // VideoLimits_h

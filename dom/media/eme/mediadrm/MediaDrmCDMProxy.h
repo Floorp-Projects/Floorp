@@ -26,40 +26,32 @@ namespace mozilla {
 
 class MediaDrmCDMCallbackProxy;
 class MediaDrmCDMProxy : public CDMProxy {
-public:
-
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDrmCDMProxy, override)
 
-  MediaDrmCDMProxy(dom::MediaKeys* aKeys,
-                   const nsAString& aKeySystem,
+  MediaDrmCDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem,
                    bool aDistinctiveIdentifierRequired,
-                   bool aPersistentStateRequired,
-                   nsIEventTarget* aMainThread);
+                   bool aPersistentStateRequired, nsIEventTarget* aMainThread);
 
-  void Init(PromiseId aPromiseId,
-            const nsAString& aOrigin,
+  void Init(PromiseId aPromiseId, const nsAString& aOrigin,
             const nsAString& aTopLevelOrigin,
             const nsAString& aGMPName) override;
 
   void CreateSession(uint32_t aCreateSessionToken,
-                     MediaKeySessionType aSessionType,
-                     PromiseId aPromiseId,
+                     MediaKeySessionType aSessionType, PromiseId aPromiseId,
                      const nsAString& aInitDataType,
                      nsTArray<uint8_t>& aInitData) override;
 
-  void LoadSession(PromiseId aPromiseId,
-                   dom::MediaKeySessionType aSessionType,
+  void LoadSession(PromiseId aPromiseId, dom::MediaKeySessionType aSessionType,
                    const nsAString& aSessionId) override;
 
   void SetServerCertificate(PromiseId aPromiseId,
                             nsTArray<uint8_t>& aCert) override;
 
-  void UpdateSession(const nsAString& aSessionId,
-                     PromiseId aPromiseId,
+  void UpdateSession(const nsAString& aSessionId, PromiseId aPromiseId,
                      nsTArray<uint8_t>& aResponse) override;
 
-  void CloseSession(const nsAString& aSessionId,
-                    PromiseId aPromiseId) override;
+  void CloseSession(const nsAString& aSessionId, PromiseId aPromiseId) override;
 
   void RemoveSession(const nsAString& aSessionId,
                      PromiseId aPromiseId) override;
@@ -84,18 +76,14 @@ public:
 
   void OnSessionClosed(const nsAString& aSessionId) override;
 
-  void OnSessionError(const nsAString& aSessionId,
-                      nsresult aException,
-                      uint32_t aSystemCode,
-                      const nsAString& aMsg) override;
+  void OnSessionError(const nsAString& aSessionId, nsresult aException,
+                      uint32_t aSystemCode, const nsAString& aMsg) override;
 
-  void OnRejectPromise(uint32_t aPromiseId,
-                       nsresult aCode,
+  void OnRejectPromise(uint32_t aPromiseId, nsresult aCode,
                        const nsCString& aMsg) override;
 
   RefPtr<DecryptPromise> Decrypt(MediaRawData* aSample) override;
-  void OnDecrypted(uint32_t aId,
-                   DecryptStatus aResult,
+  void OnDecrypted(uint32_t aId, DecryptStatus aResult,
                    const nsTArray<uint8_t>& aDecryptedData) override;
 
   void RejectPromise(PromiseId aId, nsresult aCode,
@@ -121,7 +109,7 @@ public:
 
   const nsString& GetMediaDrmStubId() const;
 
-private:
+ private:
   virtual ~MediaDrmCDMProxy();
 
   void OnCDMCreated(uint32_t aPromiseId);
@@ -146,23 +134,20 @@ private:
   };
 
   class RejectPromiseTask : public Runnable {
-  public:
-    RejectPromiseTask(MediaDrmCDMProxy* aProxy,
-                      PromiseId aId,
-                      nsresult aCode,
+   public:
+    RejectPromiseTask(MediaDrmCDMProxy* aProxy, PromiseId aId, nsresult aCode,
                       const nsCString& aReason)
-      : Runnable("RejectPromiseTask")
-      , mProxy(aProxy)
-      , mId(aId)
-      , mCode(aCode)
-      , mReason(aReason)
-    {
-    }
+        : Runnable("RejectPromiseTask"),
+          mProxy(aProxy),
+          mId(aId),
+          mCode(aCode),
+          mReason(aReason) {}
     NS_IMETHOD Run() override {
       mProxy->RejectPromise(mId, mCode, mReason);
       return NS_OK;
     }
-  private:
+
+   private:
     RefPtr<MediaDrmCDMProxy> mProxy;
     PromiseId mId;
     nsresult mCode;
@@ -174,16 +159,16 @@ private:
   UniquePtr<MediaDrmCDMCallbackProxy> mCallback;
   bool mShutdownCalled;
 
-// =====================================================================
-// For MediaDrmProxySupport
+  // =====================================================================
+  // For MediaDrmProxySupport
   void md_Init(uint32_t aPromiseId);
   void md_CreateSession(UniquePtr<CreateSessionData>&& aData);
   void md_UpdateSession(UniquePtr<UpdateSessionData>&& aData);
   void md_CloseSession(UniquePtr<SessionOpData>&& aData);
   void md_Shutdown();
-// =====================================================================
+  // =====================================================================
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MediaDrmCDMProxy_h_
+#endif  // MediaDrmCDMProxy_h_

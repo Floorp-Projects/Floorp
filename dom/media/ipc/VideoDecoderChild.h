@@ -18,10 +18,9 @@ class RemoteVideoDecoder;
 class RemoteDecoderModule;
 class VideoDecoderManagerChild;
 
-class VideoDecoderChild final : public PVideoDecoderChild
-                              , public IRemoteDecoderChild
-{
-public:
+class VideoDecoderChild final : public PVideoDecoderChild,
+                                public IRemoteDecoderChild {
+ public:
   explicit VideoDecoderChild();
 
   // PVideoDecoderChild
@@ -29,17 +28,17 @@ public:
   mozilla::ipc::IPCResult RecvInputExhausted() override;
   mozilla::ipc::IPCResult RecvDrainComplete() override;
   mozilla::ipc::IPCResult RecvError(const nsresult& aError) override;
-  mozilla::ipc::IPCResult RecvInitComplete(const nsCString& aDecoderDescription,
-                                           const bool& aHardware,
-                                           const nsCString& aHardwareReason,
-                                           const uint32_t& aConversion) override;
+  mozilla::ipc::IPCResult RecvInitComplete(
+      const nsCString& aDecoderDescription, const bool& aHardware,
+      const nsCString& aHardwareReason, const uint32_t& aConversion) override;
   mozilla::ipc::IPCResult RecvInitFailed(const nsresult& aReason) override;
   mozilla::ipc::IPCResult RecvFlushComplete() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   RefPtr<MediaDataDecoder::InitPromise> Init() override;
-  RefPtr<MediaDataDecoder::DecodePromise> Decode(MediaRawData* aSample) override;
+  RefPtr<MediaDataDecoder::DecodePromise> Decode(
+      MediaRawData* aSample) override;
   RefPtr<MediaDataDecoder::DecodePromise> Drain() override;
   RefPtr<MediaDataDecoder::FlushPromise> Flush() override;
   void Shutdown() override;
@@ -50,8 +49,7 @@ public:
   void DestroyIPDL() override;
 
   MOZ_IS_CLASS_INIT
-  MediaResult InitIPDL(const VideoInfo& aVideoInfo,
-                       float aFramerate,
+  MediaResult InitIPDL(const VideoInfo& aVideoInfo, float aFramerate,
                        const CreateDecoderParams::OptionSet& aOptions,
                        const layers::TextureFactoryIdentifier& aIdentifier);
 
@@ -60,7 +58,7 @@ public:
 
   VideoDecoderManagerChild* GetManager();
 
-private:
+ private:
   ~VideoDecoderChild();
 
   void AssertOnManagerThread() const;
@@ -90,7 +88,7 @@ private:
   TimeStamp mGPUCrashTime;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // include_dom_ipc_VideoDecoderChild_h
+#endif  // include_dom_ipc_VideoDecoderChild_h

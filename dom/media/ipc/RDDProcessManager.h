@@ -18,9 +18,8 @@ class RDDChild;
 // The RDDProcessManager is a singleton responsible for creating RDD-bound
 // objects that may live in another process. Currently, it provides access
 // to the RDD process via ContentParent.
-class RDDProcessManager final : public RDDProcessHost::Listener
-{
-public:
+class RDDProcessManager final : public RDDProcessHost::Listener {
+ public:
   static void Initialize();
   static void Shutdown();
   static RDDProcessManager* Get();
@@ -35,10 +34,9 @@ public:
   // Otherwise it blocks until the RDD process has finished launching.
   bool EnsureRDDReady();
 
-  bool CreateContentBridge(
-    base::ProcessId aOtherProcess,
-    mozilla::ipc::Endpoint<PRemoteDecoderManagerChild>* 
-                                                     aOutRemoteDecoderManager);
+  bool CreateContentBridge(base::ProcessId aOtherProcess,
+                           mozilla::ipc::Endpoint<PRemoteDecoderManagerChild>*
+                               aOutRemoteDecoderManager);
 
   void OnProcessLaunchComplete(RDDProcessHost* aHost) override;
   void OnProcessUnexpectedShutdown(RDDProcessHost* aHost) override;
@@ -58,16 +56,12 @@ public:
   RefPtr<MemoryReportingProcess> GetProcessMemoryReporter();
 
   // Returns access to the PRDD protocol if a RDD process is present.
-  RDDChild* GetRDDChild() {
-    return mRDDChild;
-  }
+  RDDChild* GetRDDChild() { return mRDDChild; }
 
   // Returns whether or not a RDD process was ever launched.
-  bool AttemptedRDDProcess() const {
-    return mNumProcessAttempts > 0;
-  }
+  bool AttemptedRDDProcess() const { return mNumProcessAttempts > 0; }
 
-private:
+ private:
   // Called from our xpcom-shutdown observer.
   void OnXPCOMShutdown();
 
@@ -80,19 +74,19 @@ private:
   DISALLOW_COPY_AND_ASSIGN(RDDProcessManager);
 
   class Observer final : public nsIObserver {
-  public:
+   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
     explicit Observer(RDDProcessManager* aManager);
 
-  protected:
+   protected:
     ~Observer() {}
 
     RDDProcessManager* mManager;
   };
   friend class Observer;
 
-private:
+ private:
   RefPtr<Observer> mObserver;
   mozilla::ipc::TaskFactory<RDDProcessManager> mTaskFactory;
   uint32_t mNumProcessAttempts;
@@ -103,6 +97,6 @@ private:
   RDDChild* mRDDChild;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // _include_dom_media_ipc_RDDProcessManager_h_
+#endif  // _include_dom_media_ipc_RDDProcessManager_h_

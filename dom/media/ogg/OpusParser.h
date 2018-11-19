@@ -11,9 +11,8 @@
 
 namespace mozilla {
 
-class OpusParser
-{
-public:
+class OpusParser {
+ public:
   OpusParser();
 
   bool DecodeHeader(unsigned char* aData, size_t aLength);
@@ -21,29 +20,29 @@ public:
   static bool IsValidMapping2ChannelsCount(uint8_t aChannels);
 
   // Various fields from the Ogg Opus header.
-  int mRate;        // Sample rate the decoder uses (always 48 kHz).
-  uint32_t mNominalRate; // Original sample rate of the data (informational).
-  int mChannels;    // Number of channels the stream encodes.
-  uint16_t mPreSkip; // Number of samples to strip after decoder reset.
+  int mRate;              // Sample rate the decoder uses (always 48 kHz).
+  uint32_t mNominalRate;  // Original sample rate of the data (informational).
+  int mChannels;          // Number of channels the stream encodes.
+  uint16_t mPreSkip;      // Number of samples to strip after decoder reset.
 #ifdef MOZ_SAMPLE_TYPE_FLOAT32
-  float mGain;      // Gain to apply to decoder output.
+  float mGain;  // Gain to apply to decoder output.
 #else
-  int32_t mGain_Q16; // Gain to apply to the decoder output.
+  int32_t mGain_Q16;  // Gain to apply to the decoder output.
 #endif
-  int mChannelMapping; // Channel mapping family.
-  int mStreams;     // Number of packed streams in each packet.
-  int mCoupledStreams; // Number of packed coupled streams in each packet.
-  unsigned char mMappingTable[255]; // Channel mapping table.
+  int mChannelMapping;  // Channel mapping family.
+  int mStreams;         // Number of packed streams in each packet.
+  int mCoupledStreams;  // Number of packed coupled streams in each packet.
+  unsigned char mMappingTable[255];  // Channel mapping table.
 
   // Granule position (end sample) of the last decoded Opus packet. This is
   // used to calculate the amount we should trim from the last packet.
   int64_t mPrevPacketGranulepos;
 
-  nsTArray<nsCString> mTags; // Unparsed comment strings from the header.
+  nsTArray<nsCString> mTags;  // Unparsed comment strings from the header.
 
-  nsCString mVendorString;   // Encoder vendor string from the header.
+  nsCString mVendorString;  // Encoder vendor string from the header.
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

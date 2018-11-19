@@ -15,23 +15,16 @@
 namespace mozilla {
 
 ChromiumCDMVideoDecoder::ChromiumCDMVideoDecoder(
-  const GMPVideoDecoderParams& aParams,
-  CDMProxy* aCDMProxy)
-  : mCDMParent(aCDMProxy->AsChromiumCDMProxy()->GetCDMParent())
-  , mConfig(aParams.mConfig)
-  , mCrashHelper(aParams.mCrashHelper)
-  , mGMPThread(GetGMPAbstractThread())
-  , mImageContainer(aParams.mImageContainer)
-{
-}
+    const GMPVideoDecoderParams& aParams, CDMProxy* aCDMProxy)
+    : mCDMParent(aCDMProxy->AsChromiumCDMProxy()->GetCDMParent()),
+      mConfig(aParams.mConfig),
+      mCrashHelper(aParams.mCrashHelper),
+      mGMPThread(GetGMPAbstractThread()),
+      mImageContainer(aParams.mImageContainer) {}
 
-ChromiumCDMVideoDecoder::~ChromiumCDMVideoDecoder()
-{
-}
+ChromiumCDMVideoDecoder::~ChromiumCDMVideoDecoder() {}
 
-static uint32_t
-ToCDMH264Profile(uint8_t aProfile)
-{
+static uint32_t ToCDMH264Profile(uint8_t aProfile) {
   switch (aProfile) {
     case 66:
       return cdm::VideoCodecProfile::kH264ProfileBaseline;
@@ -51,22 +44,19 @@ ToCDMH264Profile(uint8_t aProfile)
   return cdm::VideoCodecProfile::kUnknownVideoCodecProfile;
 }
 
-RefPtr<MediaDataDecoder::InitPromise>
-ChromiumCDMVideoDecoder::Init()
-{
+RefPtr<MediaDataDecoder::InitPromise> ChromiumCDMVideoDecoder::Init() {
   if (!mCDMParent) {
     // Must have failed to get the CDMParent from the ChromiumCDMProxy
     // in our constructor; the MediaKeys must have shut down the CDM
     // before we had a chance to start up the decoder.
-    return InitPromise::CreateAndReject(
-      NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
 
   gmp::CDMVideoDecoderConfig config;
   if (MP4Decoder::IsH264(mConfig.mMimeType)) {
     config.mCodec() = cdm::VideoCodec::kCodecH264;
     config.mProfile() =
-      ToCDMH264Profile(mConfig.mExtraData->SafeElementAt(1, 0));
+        ToCDMH264Profile(mConfig.mExtraData->SafeElementAt(1, 0));
     config.mExtraData() = *mConfig.mExtraData;
     mConvertToAnnexB = true;
   } else if (VPXDecoder::IsVP8(mConfig.mMimeType)) {
@@ -77,7 +67,7 @@ ChromiumCDMVideoDecoder::Init()
     config.mProfile() = cdm::VideoCodecProfile::kProfileNotNeeded;
   } else {
     return MediaDataDecoder::InitPromise::CreateAndReject(
-      NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+        NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
   config.mImageWidth() = mConfig.mImage.width;
   config.mImageHeight() = mConfig.mImage.height;
@@ -86,27 +76,23 @@ ChromiumCDMVideoDecoder::Init()
   VideoInfo info = mConfig;
   RefPtr<layers::ImageContainer> imageContainer = mImageContainer;
   return InvokeAsync(
-    mGMPThread, __func__, [cdm, config, info, imageContainer]() {
-      return cdm->InitializeVideoDecoder(config, info, imageContainer);
-    });
+      mGMPThread, __func__, [cdm, config, info, imageContainer]() {
+        return cdm->InitializeVideoDecoder(config, info, imageContainer);
+      });
 }
 
-nsCString
-ChromiumCDMVideoDecoder::GetDescriptionName() const
-{
+nsCString ChromiumCDMVideoDecoder::GetDescriptionName() const {
   return NS_LITERAL_CSTRING("chromium cdm video decoder");
 }
 
-MediaDataDecoder::ConversionRequired
-ChromiumCDMVideoDecoder::NeedsConversion() const
-{
+MediaDataDecoder::ConversionRequired ChromiumCDMVideoDecoder::NeedsConversion()
+    const {
   return mConvertToAnnexB ? ConversionRequired::kNeedAnnexB
                           : ConversionRequired::kNeedNone;
 }
 
-RefPtr<MediaDataDecoder::DecodePromise>
-ChromiumCDMVideoDecoder::Decode(MediaRawData* aSample)
-{
+RefPtr<MediaDataDecoder::DecodePromise> ChromiumCDMVideoDecoder::Decode(
+    MediaRawData* aSample) {
   RefPtr<gmp::ChromiumCDMParent> cdm = mCDMParent;
   RefPtr<MediaRawData> sample = aSample;
   return InvokeAsync(mGMPThread, __func__, [cdm, sample]() {
@@ -114,26 +100,20 @@ ChromiumCDMVideoDecoder::Decode(MediaRawData* aSample)
   });
 }
 
-RefPtr<MediaDataDecoder::FlushPromise>
-ChromiumCDMVideoDecoder::Flush()
-{
+RefPtr<MediaDataDecoder::FlushPromise> ChromiumCDMVideoDecoder::Flush() {
   MOZ_ASSERT(mCDMParent);
   RefPtr<gmp::ChromiumCDMParent> cdm = mCDMParent;
-  return InvokeAsync(
-    mGMPThread, __func__, [cdm]() { return cdm->FlushVideoDecoder(); });
+  return InvokeAsync(mGMPThread, __func__,
+                     [cdm]() { return cdm->FlushVideoDecoder(); });
 }
 
-RefPtr<MediaDataDecoder::DecodePromise>
-ChromiumCDMVideoDecoder::Drain()
-{
+RefPtr<MediaDataDecoder::DecodePromise> ChromiumCDMVideoDecoder::Drain() {
   MOZ_ASSERT(mCDMParent);
   RefPtr<gmp::ChromiumCDMParent> cdm = mCDMParent;
   return InvokeAsync(mGMPThread, __func__, [cdm]() { return cdm->Drain(); });
 }
 
-RefPtr<ShutdownPromise>
-ChromiumCDMVideoDecoder::Shutdown()
-{
+RefPtr<ShutdownPromise> ChromiumCDMVideoDecoder::Shutdown() {
   if (!mCDMParent) {
     // Must have failed to get the CDMParent from the ChromiumCDMProxy
     // in our constructor; the MediaKeys must have shut down the CDM
@@ -141,8 +121,8 @@ ChromiumCDMVideoDecoder::Shutdown()
     return ShutdownPromise::CreateAndResolve(true, __func__);
   }
   RefPtr<gmp::ChromiumCDMParent> cdm = mCDMParent;
-  return InvokeAsync(
-    mGMPThread, __func__, [cdm]() { return cdm->ShutdownVideoDecoder(); });
+  return InvokeAsync(mGMPThread, __func__,
+                     [cdm]() { return cdm->ShutdownVideoDecoder(); });
 }
 
-} // namespace mozilla
+}  // namespace mozilla

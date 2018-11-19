@@ -50,137 +50,125 @@
  * decoding functions.
  */
 struct vaapi_context {
-    /**
-     * Window system dependent data
-     *
-     * - encoding: unused
-     * - decoding: Set by user
-     */
-    void *display;
+  /**
+   * Window system dependent data
+   *
+   * - encoding: unused
+   * - decoding: Set by user
+   */
+  void *display;
 
-    /**
-     * Configuration ID
-     *
-     * - encoding: unused
-     * - decoding: Set by user
-     */
-    uint32_t config_id;
+  /**
+   * Configuration ID
+   *
+   * - encoding: unused
+   * - decoding: Set by user
+   */
+  uint32_t config_id;
 
-    /**
-     * Context ID (video decode pipeline)
-     *
-     * - encoding: unused
-     * - decoding: Set by user
-     */
-    uint32_t context_id;
+  /**
+   * Context ID (video decode pipeline)
+   *
+   * - encoding: unused
+   * - decoding: Set by user
+   */
+  uint32_t context_id;
 
 #if FF_API_VAAPI_CONTEXT
-    /**
-     * VAPictureParameterBuffer ID
-     *
-     * - encoding: unused
-     * - decoding: Set by libavcodec
-     */
-    attribute_deprecated
-    uint32_t pic_param_buf_id;
+  /**
+   * VAPictureParameterBuffer ID
+   *
+   * - encoding: unused
+   * - decoding: Set by libavcodec
+   */
+  attribute_deprecated uint32_t pic_param_buf_id;
 
-    /**
-     * VAIQMatrixBuffer ID
-     *
-     * - encoding: unused
-     * - decoding: Set by libavcodec
-     */
-    attribute_deprecated
-    uint32_t iq_matrix_buf_id;
+  /**
+   * VAIQMatrixBuffer ID
+   *
+   * - encoding: unused
+   * - decoding: Set by libavcodec
+   */
+  attribute_deprecated uint32_t iq_matrix_buf_id;
 
-    /**
-     * VABitPlaneBuffer ID (for VC-1 decoding)
-     *
-     * - encoding: unused
-     * - decoding: Set by libavcodec
-     */
-    attribute_deprecated
-    uint32_t bitplane_buf_id;
+  /**
+   * VABitPlaneBuffer ID (for VC-1 decoding)
+   *
+   * - encoding: unused
+   * - decoding: Set by libavcodec
+   */
+  attribute_deprecated uint32_t bitplane_buf_id;
 
-    /**
-     * Slice parameter/data buffer IDs
-     *
-     * - encoding: unused
-     * - decoding: Set by libavcodec
-     */
-    attribute_deprecated
-    uint32_t *slice_buf_ids;
+  /**
+   * Slice parameter/data buffer IDs
+   *
+   * - encoding: unused
+   * - decoding: Set by libavcodec
+   */
+  attribute_deprecated uint32_t *slice_buf_ids;
 
-    /**
-     * Number of effective slice buffer IDs to send to the HW
-     *
-     * - encoding: unused
-     * - decoding: Set by libavcodec
-     */
-    attribute_deprecated
-    unsigned int n_slice_buf_ids;
+  /**
+   * Number of effective slice buffer IDs to send to the HW
+   *
+   * - encoding: unused
+   * - decoding: Set by libavcodec
+   */
+  attribute_deprecated unsigned int n_slice_buf_ids;
 
-    /**
-     * Size of pre-allocated slice_buf_ids
-     *
-     * - encoding: unused
-     * - decoding: Set by libavcodec
-     */
-    attribute_deprecated
-    unsigned int slice_buf_ids_alloc;
+  /**
+   * Size of pre-allocated slice_buf_ids
+   *
+   * - encoding: unused
+   * - decoding: Set by libavcodec
+   */
+  attribute_deprecated unsigned int slice_buf_ids_alloc;
 
-    /**
-     * Pointer to VASliceParameterBuffers
-     *
-     * - encoding: unused
-     * - decoding: Set by libavcodec
-     */
-    attribute_deprecated
-    void *slice_params;
+  /**
+   * Pointer to VASliceParameterBuffers
+   *
+   * - encoding: unused
+   * - decoding: Set by libavcodec
+   */
+  attribute_deprecated void *slice_params;
 
-    /**
-     * Size of a VASliceParameterBuffer element
-     *
-     * - encoding: unused
-     * - decoding: Set by libavcodec
-     */
-    attribute_deprecated
-    unsigned int slice_param_size;
+  /**
+   * Size of a VASliceParameterBuffer element
+   *
+   * - encoding: unused
+   * - decoding: Set by libavcodec
+   */
+  attribute_deprecated unsigned int slice_param_size;
 
-    /**
-     * Size of pre-allocated slice_params
-     *
-     * - encoding: unused
-     * - decoding: Set by libavcodec
-     */
-    attribute_deprecated
-    unsigned int slice_params_alloc;
+  /**
+   * Size of pre-allocated slice_params
+   *
+   * - encoding: unused
+   * - decoding: Set by libavcodec
+   */
+  attribute_deprecated unsigned int slice_params_alloc;
 
-    /**
-     * Number of slices currently filled in
-     *
-     * - encoding: unused
-     * - decoding: Set by libavcodec
-     */
-    attribute_deprecated
-    unsigned int slice_count;
+  /**
+   * Number of slices currently filled in
+   *
+   * - encoding: unused
+   * - decoding: Set by libavcodec
+   */
+  attribute_deprecated unsigned int slice_count;
 
-    /**
-     * Pointer to slice data buffer base
-     * - encoding: unused
-     * - decoding: Set by libavcodec
-     */
-    attribute_deprecated
-    const uint8_t *slice_data;
+  /**
+   * Pointer to slice data buffer base
+   * - encoding: unused
+   * - decoding: Set by libavcodec
+   */
+  attribute_deprecated const uint8_t *slice_data;
 
-    /**
-     * Current size of slice data
-     *
-     * - encoding: unused
-     * - decoding: Set by libavcodec
-     */
-    attribute_deprecated
-    uint32_t slice_data_size;
+  /**
+   * Current size of slice data
+   *
+   * - encoding: unused
+   * - decoding: Set by libavcodec
+   */
+  attribute_deprecated uint32_t slice_data_size;
 #endif
 };
 

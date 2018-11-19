@@ -10,41 +10,45 @@
 
 using namespace mozilla::dom;
 
-#define SPEECHDISPATCHERSERVICE_CID \
-  {0x8817b1cf, 0x5ada, 0x43bf, {0xbd, 0x73, 0x60, 0x76, 0x57, 0x70, 0x3d, 0x0d}}
+#define SPEECHDISPATCHERSERVICE_CID                  \
+  {                                                  \
+    0x8817b1cf, 0x5ada, 0x43bf, {                    \
+      0xbd, 0x73, 0x60, 0x76, 0x57, 0x70, 0x3d, 0x0d \
+    }                                                \
+  }
 
-#define SPEECHDISPATCHERSERVICE_CONTRACTID "@mozilla.org/synthspeechdispatcher;1"
+#define SPEECHDISPATCHERSERVICE_CONTRACTID \
+  "@mozilla.org/synthspeechdispatcher;1"
 
 // Defines SpeechDispatcherServiceConstructor
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(SpeechDispatcherService,
-                                         SpeechDispatcherService::GetInstanceForService)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(
+    SpeechDispatcherService, SpeechDispatcherService::GetInstanceForService)
 
 // Defines kSPEECHDISPATCHERSERVICE_CID
 NS_DEFINE_NAMED_CID(SPEECHDISPATCHERSERVICE_CID);
 
 static const mozilla::Module::CIDEntry kCIDs[] = {
-  { &kSPEECHDISPATCHERSERVICE_CID, true, nullptr, SpeechDispatcherServiceConstructor },
-  { nullptr }
-};
+    {&kSPEECHDISPATCHERSERVICE_CID, true, nullptr,
+     SpeechDispatcherServiceConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kContracts[] = {
-  { SPEECHDISPATCHERSERVICE_CONTRACTID, &kSPEECHDISPATCHERSERVICE_CID },
-  { nullptr }
-};
+    {SPEECHDISPATCHERSERVICE_CONTRACTID, &kSPEECHDISPATCHERSERVICE_CID},
+    {nullptr}};
 
 static const mozilla::Module::CategoryEntry kCategories[] = {
-  { "speech-synth-started", "SpeechDispatcher Speech Synth", SPEECHDISPATCHERSERVICE_CONTRACTID },
-  { nullptr }
-};
+    {"speech-synth-started", "SpeechDispatcher Speech Synth",
+     SPEECHDISPATCHERSERVICE_CONTRACTID},
+    {nullptr}};
 
 static const mozilla::Module kModule = {
-  mozilla::Module::kVersion,
-  kCIDs,
-  kContracts,
-  kCategories,
-  nullptr,
-  nullptr,
-  nullptr,
+    mozilla::Module::kVersion,
+    kCIDs,
+    kContracts,
+    kCategories,
+    nullptr,
+    nullptr,
+    nullptr,
 };
 
 NSMODULE_DEFN(synthspeechdispatcher) = &kModule;

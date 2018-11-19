@@ -17,21 +17,14 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(AudioWorkletNode, AudioNode)
 
 AudioWorkletNode::AudioWorkletNode(AudioContext* aAudioContext,
                                    const nsAString& aName)
-  : AudioNode(aAudioContext,
-              2,
-              ChannelCountMode::Max,
-              ChannelInterpretation::Speakers)
-  , mNodeName(aName)
-{
-}
+    : AudioNode(aAudioContext, 2, ChannelCountMode::Max,
+                ChannelInterpretation::Speakers),
+      mNodeName(aName) {}
 
-/* static */ already_AddRefed<AudioWorkletNode>
-AudioWorkletNode::Constructor(const GlobalObject& aGlobal,
-                              AudioContext& aAudioContext,
-                              const nsAString& aName,
-                              const AudioWorkletNodeOptions& aOptions,
-                              ErrorResult& aRv)
-{
+/* static */ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
+    const GlobalObject& aGlobal, AudioContext& aAudioContext,
+    const nsAString& aName, const AudioWorkletNodeOptions& aOptions,
+    ErrorResult& aRv) {
   if (aAudioContext.CheckClosed(aRv)) {
     return nullptr;
   }
@@ -49,8 +42,7 @@ AudioWorkletNode::Constructor(const GlobalObject& aGlobal,
     }
 
     for (uint32_t channelCount : aOptions.mOutputChannelCount.Value()) {
-      if (channelCount == 0 ||
-          channelCount > WebAudioUtils::MaxChannelCount) {
+      if (channelCount == 0 || channelCount > WebAudioUtils::MaxChannelCount) {
         aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
         return nullptr;
       }
@@ -68,36 +60,29 @@ AudioWorkletNode::Constructor(const GlobalObject& aGlobal,
   return audioWorkletNode.forget();
 }
 
-AudioParamMap* AudioWorkletNode::GetParameters(ErrorResult& aRv) const
-{
+AudioParamMap* AudioWorkletNode::GetParameters(ErrorResult& aRv) const {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return nullptr;
 }
 
-MessagePort* AudioWorkletNode::GetPort(ErrorResult& aRv) const
-{
+MessagePort* AudioWorkletNode::GetPort(ErrorResult& aRv) const {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return nullptr;
 }
 
-JSObject*
-AudioWorkletNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* AudioWorkletNode::WrapObject(JSContext* aCx,
+                                       JS::Handle<JSObject*> aGivenProto) {
   return AudioWorkletNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-size_t
-AudioWorkletNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t AudioWorkletNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   size_t amount = AudioNode::SizeOfExcludingThis(aMallocSizeOf);
   return amount;
 }
 
-size_t
-AudioWorkletNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t AudioWorkletNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

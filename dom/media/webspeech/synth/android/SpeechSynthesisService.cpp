@@ -14,7 +14,7 @@
 #include "mozilla/jni/Utils.h"
 #include "mozilla/Preferences.h"
 
-#define ALOG(args...)                                                          \
+#define ALOG(args...) \
   __android_log_print(ANDROID_LOG_INFO, "GeckoSpeechSynthesis", ##args)
 
 namespace mozilla {
@@ -22,12 +22,9 @@ namespace dom {
 
 StaticRefPtr<SpeechSynthesisService> SpeechSynthesisService::sSingleton;
 
-class AndroidSpeechCallback final : public nsISpeechTaskCallback
-{
-public:
-  AndroidSpeechCallback()
-  {
-  }
+class AndroidSpeechCallback final : public nsISpeechTaskCallback {
+ public:
+  AndroidSpeechCallback() {}
 
   NS_DECL_ISUPPORTS
 
@@ -35,15 +32,14 @@ public:
 
   NS_IMETHOD OnPause() override { return NS_OK; }
 
-  NS_IMETHOD OnCancel() override
-  {
+  NS_IMETHOD OnCancel() override {
     java::SpeechSynthesisService::Stop();
     return NS_OK;
   }
 
   NS_IMETHOD OnVolumeChanged(float aVolume) override { return NS_OK; }
 
-private:
+ private:
   ~AndroidSpeechCallback() {}
 };
 
@@ -51,9 +47,7 @@ NS_IMPL_ISUPPORTS(AndroidSpeechCallback, nsISpeechTaskCallback)
 
 NS_IMPL_ISUPPORTS(SpeechSynthesisService, nsISpeechService)
 
-void
-SpeechSynthesisService::Setup()
-{
+void SpeechSynthesisService::Setup() {
   ALOG("SpeechSynthesisService::Setup");
 
   if (!Preferences::GetBool("media.webspeech.synth.enabled") ||
@@ -73,13 +67,9 @@ SpeechSynthesisService::Setup()
 // nsISpeechService
 
 NS_IMETHODIMP
-SpeechSynthesisService::Speak(const nsAString& aText,
-                              const nsAString& aUri,
-                              float aVolume,
-                              float aRate,
-                              float aPitch,
-                              nsISpeechTask* aTask)
-{
+SpeechSynthesisService::Speak(const nsAString& aText, const nsAString& aUri,
+                              float aVolume, float aRate, float aPitch,
+                              nsISpeechTask* aTask) {
   if (mTask) {
     NS_WARNING("Service only supports one speech task at a time.");
     return NS_ERROR_NOT_AVAILABLE;
@@ -93,7 +83,7 @@ SpeechSynthesisService::Speak(const nsAString& aText,
   }
 
   jni::String::LocalRef utteranceId =
-    java::SpeechSynthesisService::Speak(aUri, aText, aRate, aPitch, aVolume);
+      java::SpeechSynthesisService::Speak(aUri, aText, aRate, aPitch, aVolume);
   if (!utteranceId) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -106,13 +96,11 @@ SpeechSynthesisService::Speak(const nsAString& aText,
   return NS_OK;
 }
 
-SpeechSynthesisService*
-SpeechSynthesisService::GetInstance(bool aCreate)
-{
+SpeechSynthesisService* SpeechSynthesisService::GetInstance(bool aCreate) {
   if (XRE_GetProcessType() != GeckoProcessType_Default) {
     MOZ_ASSERT(
-      false,
-      "SpeechSynthesisService can only be started on main gecko process");
+        false,
+        "SpeechSynthesisService can only be started on main gecko process");
     return nullptr;
   }
 
@@ -126,8 +114,7 @@ SpeechSynthesisService::GetInstance(bool aCreate)
 }
 
 already_AddRefed<SpeechSynthesisService>
-SpeechSynthesisService::GetInstanceForService()
-{
+SpeechSynthesisService::GetInstanceForService() {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<SpeechSynthesisService> sapiService = GetInstance();
   return sapiService.forget();
@@ -135,24 +122,18 @@ SpeechSynthesisService::GetInstanceForService()
 
 // JNI
 
-void
-SpeechSynthesisService::RegisterVoice(jni::String::Param aUri,
-                                      jni::String::Param aName,
-                                      jni::String::Param aLocale,
-                                      bool aIsNetwork,
-                                      bool aIsDefault)
-{
+void SpeechSynthesisService::RegisterVoice(jni::String::Param aUri,
+                                           jni::String::Param aName,
+                                           jni::String::Param aLocale,
+                                           bool aIsNetwork, bool aIsDefault) {
   nsSynthVoiceRegistry* registry = nsSynthVoiceRegistry::GetInstance();
   SpeechSynthesisService* service = SpeechSynthesisService::GetInstance(false);
   // This service can only speak one utterance at a time, so we set
   // aQueuesUtterances to true in order to track global state and schedule
   // access to this service.
-  DebugOnly<nsresult> rv = registry->AddVoice(service,
-                                              aUri->ToString(),
-                                              aName->ToString(),
-                                              aLocale->ToString(),
-                                              !aIsNetwork,
-                                              true);
+  DebugOnly<nsresult> rv =
+      registry->AddVoice(service, aUri->ToString(), aName->ToString(),
+                         aLocale->ToString(), !aIsNetwork, true);
 
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to add voice");
 
@@ -163,16 +144,12 @@ SpeechSynthesisService::RegisterVoice(jni::String::Param aUri,
   }
 }
 
-void
-SpeechSynthesisService::DoneRegisteringVoices()
-{
+void SpeechSynthesisService::DoneRegisteringVoices() {
   nsSynthVoiceRegistry* registry = nsSynthVoiceRegistry::GetInstance();
   registry->NotifyVoicesChanged();
 }
 
-void
-SpeechSynthesisService::DispatchStart(jni::String::Param aUtteranceId)
-{
+void SpeechSynthesisService::DispatchStart(jni::String::Param aUtteranceId) {
   if (sSingleton) {
     MOZ_ASSERT(sSingleton->mTaskUtteranceId.Equals(aUtteranceId->ToCString()));
     nsCOMPtr<nsISpeechTask> task = sSingleton->mTask;
@@ -184,9 +161,7 @@ SpeechSynthesisService::DispatchStart(jni::String::Param aUtteranceId)
   }
 }
 
-void
-SpeechSynthesisService::DispatchEnd(jni::String::Param aUtteranceId)
-{
+void SpeechSynthesisService::DispatchEnd(jni::String::Param aUtteranceId) {
   if (sSingleton) {
     // In API older than 23, we will sometimes call this function
     // without providing an utterance ID.
@@ -196,50 +171,44 @@ SpeechSynthesisService::DispatchEnd(jni::String::Param aUtteranceId)
     sSingleton->mTask = nullptr;
     if (task) {
       TimeStamp startTime = sSingleton->mTaskStartTime;
-      DebugOnly<nsresult> rv = task->DispatchEnd(
-        (TimeStamp::Now() - startTime).ToSeconds(), sSingleton->mTaskTextLength);
+      DebugOnly<nsresult> rv =
+          task->DispatchEnd((TimeStamp::Now() - startTime).ToSeconds(),
+                            sSingleton->mTaskTextLength);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Unable to dispatch start");
     }
   }
 }
 
-void
-SpeechSynthesisService::DispatchError(jni::String::Param aUtteranceId)
-{
+void SpeechSynthesisService::DispatchError(jni::String::Param aUtteranceId) {
   if (sSingleton) {
     MOZ_ASSERT(sSingleton->mTaskUtteranceId.Equals(aUtteranceId->ToCString()));
     nsCOMPtr<nsISpeechTask> task = sSingleton->mTask;
     sSingleton->mTask = nullptr;
     if (task) {
       TimeStamp startTime = sSingleton->mTaskStartTime;
-      DebugOnly<nsresult> rv = task->DispatchError(
-        (TimeStamp::Now() - startTime).ToSeconds(), sSingleton->mTaskTextOffset);
+      DebugOnly<nsresult> rv =
+          task->DispatchError((TimeStamp::Now() - startTime).ToSeconds(),
+                              sSingleton->mTaskTextOffset);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Unable to dispatch start");
     }
   }
 }
 
-void
-SpeechSynthesisService::DispatchBoundary(jni::String::Param aUtteranceId,
-                                         int32_t aStart,
-                                         int32_t aEnd)
-{
+void SpeechSynthesisService::DispatchBoundary(jni::String::Param aUtteranceId,
+                                              int32_t aStart, int32_t aEnd) {
   if (sSingleton) {
     MOZ_ASSERT(sSingleton->mTaskUtteranceId.Equals(aUtteranceId->ToCString()));
     nsCOMPtr<nsISpeechTask> task = sSingleton->mTask;
     if (task) {
       TimeStamp startTime = sSingleton->mTaskStartTime;
       sSingleton->mTaskTextOffset = aStart;
-      DebugOnly<nsresult> rv =
-        task->DispatchBoundary(NS_LITERAL_STRING("word"),
-                               (TimeStamp::Now() - startTime).ToSeconds(),
-                               aStart,
-                               aEnd - aStart,
-                               1);
+      DebugOnly<nsresult> rv = task->DispatchBoundary(
+          NS_LITERAL_STRING("word"), (TimeStamp::Now() - startTime).ToSeconds(),
+          aStart, aEnd - aStart, 1);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Unable to dispatch boundary");
     }
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

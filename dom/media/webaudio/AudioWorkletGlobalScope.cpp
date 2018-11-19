@@ -24,30 +24,22 @@ NS_IMPL_ADDREF_INHERITED(AudioWorkletGlobalScope, WorkletGlobalScope)
 NS_IMPL_RELEASE_INHERITED(AudioWorkletGlobalScope, WorkletGlobalScope)
 
 AudioWorkletGlobalScope::AudioWorkletGlobalScope(AudioWorkletImpl* aImpl)
-  : mImpl(aImpl)
-  , mCurrentFrame(0)
-  , mCurrentTime(0)
-  , mSampleRate(0.0)
-{}
+    : mImpl(aImpl), mCurrentFrame(0), mCurrentTime(0), mSampleRate(0.0) {}
 
-bool
-AudioWorkletGlobalScope::WrapGlobalObject(JSContext* aCx,
-                                          JS::MutableHandle<JSObject*> aReflector)
-{
+bool AudioWorkletGlobalScope::WrapGlobalObject(
+    JSContext* aCx, JS::MutableHandle<JSObject*> aReflector) {
   JS::RealmOptions options;
-  return AudioWorkletGlobalScope_Binding::Wrap(aCx, this, this,
-                                              options,
-                                              WorkletPrincipal::GetWorkletPrincipal(),
-                                              true, aReflector);
+  return AudioWorkletGlobalScope_Binding::Wrap(
+      aCx, this, this, options, WorkletPrincipal::GetWorkletPrincipal(), true,
+      aReflector);
 }
 
-void
-AudioWorkletGlobalScope::RegisterProcessor(JSContext* aCx,
-                                           const nsAString& aName,
-                                           VoidFunction& aProcessorCtor,
-                                           ErrorResult& aRv)
-{
-  JS::Rooted<JSObject*> processorConstructor(aCx, aProcessorCtor.CallableOrNull());
+void AudioWorkletGlobalScope::RegisterProcessor(JSContext* aCx,
+                                                const nsAString& aName,
+                                                VoidFunction& aProcessorCtor,
+                                                ErrorResult& aRv) {
+  JS::Rooted<JSObject*> processorConstructor(aCx,
+                                             aProcessorCtor.CallableOrNull());
 
   /**
    * 1. If the name is the empty string, throw a NotSupportedError
@@ -55,10 +47,11 @@ AudioWorkletGlobalScope::RegisterProcessor(JSContext* aCx,
    *    a valid key.
    */
   if (aName.IsEmpty()) {
-    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-            NS_LITERAL_CSTRING(
-                "Argument 1 of AudioWorkletGlobalScope.registerProcessor "
-                "should not be an empty string."));
+    aRv.ThrowDOMException(
+        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+        NS_LITERAL_CSTRING(
+            "Argument 1 of AudioWorkletGlobalScope.registerProcessor "
+            "should not be an empty string."));
     return;
   }
 
@@ -70,7 +63,8 @@ AudioWorkletGlobalScope::RegisterProcessor(JSContext* aCx,
    */
   if (mNameToProcessorMap.GetWeak(aName)) {
     // Duplicate names are not allowed
-    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+    aRv.ThrowDOMException(
+        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
         NS_LITERAL_CSTRING(
             "Argument 1 of AudioWorkletGlobalScope.registerProcessor "
             "is invalid: a class with the same name is already registered."));
@@ -130,8 +124,7 @@ AudioWorkletGlobalScope::RegisterProcessor(JSContext* aCx,
     return;
   }
 
-  if (!process.isObjectOrNull() ||
-      !JS::IsCallable(process.toObjectOrNull())) {
+  if (!process.isObjectOrNull() || !JS::IsCallable(process.toObjectOrNull())) {
     aRv.ThrowTypeError<MSG_NOT_CALLABLE>(NS_LITERAL_STRING(
         "Argument 2 of AudioWorkletGlobalScope.registerProcessor "
         "constructor.process"));
@@ -163,8 +156,8 @@ AudioWorkletGlobalScope::RegisterProcessor(JSContext* aCx,
 
   if (!descriptors.isUndefined() && !isArray) {
     aRv.ThrowTypeError<MSG_NOT_ARRAY_NOR_UNDEFINED>(NS_LITERAL_STRING(
-           "Argument 2 of AudioWorkletGlobalScope.registerProcessor "
-           "constructor.parameterDescriptors"));
+        "Argument 2 of AudioWorkletGlobalScope.registerProcessor "
+        "constructor.parameterDescriptors"));
     return;
   }
 
@@ -191,25 +184,13 @@ AudioWorkletGlobalScope::RegisterProcessor(JSContext* aCx,
   // and https://bugzilla.mozilla.org/show_bug.cgi?id=1492014
 }
 
-WorkletImpl* AudioWorkletGlobalScope::Impl() const
-{
-  return mImpl;
-}
+WorkletImpl* AudioWorkletGlobalScope::Impl() const { return mImpl; }
 
-uint64_t AudioWorkletGlobalScope::CurrentFrame() const
-{
-  return mCurrentFrame;
-}
+uint64_t AudioWorkletGlobalScope::CurrentFrame() const { return mCurrentFrame; }
 
-double AudioWorkletGlobalScope::CurrentTime() const
-{
-  return mCurrentTime;
-}
+double AudioWorkletGlobalScope::CurrentTime() const { return mCurrentTime; }
 
-float AudioWorkletGlobalScope::SampleRate() const
-{
-  return mSampleRate;
-}
+float AudioWorkletGlobalScope::SampleRate() const { return mSampleRate; }
 
-} // dom namespace
-} // mozilla namespace
+}  // namespace dom
+}  // namespace mozilla

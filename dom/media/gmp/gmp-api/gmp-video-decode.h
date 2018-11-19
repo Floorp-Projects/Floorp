@@ -41,9 +41,8 @@
 #include <stdint.h>
 
 // ALL METHODS MUST BE CALLED ON THE MAIN THREAD
-class GMPVideoDecoderCallback
-{
-public:
+class GMPVideoDecoderCallback {
+ public:
   virtual ~GMPVideoDecoderCallback() {}
 
   virtual void Decoded(GMPVideoi420Frame* aDecodedFrame) = 0;
@@ -72,9 +71,8 @@ public:
 // Host API: GMPVideoHost
 //
 // ALL METHODS MUST BE CALLED ON THE MAIN THREAD
-class GMPVideoDecoder
-{
-public:
+class GMPVideoDecoder {
+ public:
   virtual ~GMPVideoDecoder() {}
 
   // - aCodecSettings: Details of decoder to create.
@@ -82,7 +80,8 @@ public:
   //                   to get codec specific config data.
   // - aCodecSpecificLength: number of bytes in aCodecSpecific.
   // - aCallback: Subclass should retain reference to it until DecodingComplete
-  //              is called. Do not attempt to delete it, host retains ownership.
+  //              is called. Do not attempt to delete it, host retains
+  //              ownership.
   // aCoreCount: number of CPU cores.
   virtual void InitDecode(const GMPVideoCodec& aCodecSettings,
                           const uint8_t* aCodecSpecific,
@@ -102,8 +101,7 @@ public:
   // - aCodecSpecificInfoLength : number of bytes in aCodecSpecificInfo
   // - renderTimeMs : System time to render in milliseconds. Only used by
   //                  decoders with internal rendering.
-  virtual void Decode(GMPVideoEncodedFrame* aInputFrame,
-                      bool aMissingFrames,
+  virtual void Decode(GMPVideoEncodedFrame* aInputFrame, bool aMissingFrames,
                       const uint8_t* aCodecSpecificInfo,
                       uint32_t aCodecSpecificInfoLength,
                       int64_t aRenderTimeMs = -1) = 0;
@@ -124,4 +122,4 @@ public:
   virtual void DecodingComplete() = 0;
 };
 
-#endif // GMP_VIDEO_DECODE_h_
+#endif  // GMP_VIDEO_DECODE_h_

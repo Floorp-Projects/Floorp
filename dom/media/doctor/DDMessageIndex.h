@@ -21,6 +21,6 @@ using DDMessageIndex = RollingNumber<uint32_t>;
 // `printf("index=%" PRImi, index);`
 #define PRImi PRIu32
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // DDMessageIndex_h_
+#endif  // DDMessageIndex_h_

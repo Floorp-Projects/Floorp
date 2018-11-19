@@ -7,12 +7,10 @@
 
 #include "MediaData.h"
 
-namespace mozilla
-{
+namespace mozilla {
 
-class BitReader
-{
-public:
+class BitReader {
+ public:
   explicit BitReader(const MediaByteBuffer* aBuffer);
   BitReader(const MediaByteBuffer* aBuffer, size_t aBits);
   BitReader(const uint8_t* aBuffer, size_t aBits);
@@ -38,16 +36,16 @@ public:
   // Return RBSP bit length.
   static uint32_t GetBitLength(const MediaByteBuffer* aNAL);
 
-private:
+ private:
   void FillReservoir();
   const uint8_t* mData;
   const size_t mOriginalBitSize;
   size_t mTotalBitsLeft;
-  size_t mSize;           // Size left in bytes
-  uint32_t mReservoir;    // Left-aligned bits
-  size_t mNumBitsLeft;    // Number of bits left in reservoir.
+  size_t mSize;         // Size left in bytes
+  uint32_t mReservoir;  // Left-aligned bits
+  size_t mNumBitsLeft;  // Number of bits left in reservoir.
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // BIT_READER_H_
+#endif  // BIT_READER_H_

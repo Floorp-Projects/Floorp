@@ -28,10 +28,8 @@ namespace dom {
 
 class ObjectOrString;
 
-class RTCCertificate final : public nsISupports
-                           , public nsWrapperCache
-{
-public:
+class RTCCertificate final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(RTCCertificate)
 
@@ -51,10 +49,7 @@ public:
 
   // WebIDL expires attribute.  Note: JS dates are milliseconds since epoch;
   // NSPR PRTime is in microseconds since the same epoch.
-  uint64_t Expires() const
-  {
-    return mExpires / PR_USEC_PER_MSEC;
-  }
+  uint64_t Expires() const { return mExpires / PR_USEC_PER_MSEC; }
 
   // Accessors for use by PeerConnectionImpl.
   RefPtr<DtlsIdentity> CreateDtlsIdentity() const;
@@ -64,7 +59,7 @@ public:
   bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
   bool ReadStructuredClone(JSStructuredCloneReader* aReader);
 
-private:
+ private:
   ~RTCCertificate() {}
   void operator=(const RTCCertificate&) = delete;
   RTCCertificate(const RTCCertificate&) = delete;
@@ -81,7 +76,7 @@ private:
   PRTime mExpires;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_RTCCertificate_h
+#endif  // mozilla_dom_RTCCertificate_h

@@ -17,15 +17,14 @@ extern "C" {
 
 namespace mozilla {
 
-class AppleCMLinker
-{
-public:
+class AppleCMLinker {
+ public:
   static bool Link();
   static void Unlink();
   static CFStringRef skPropExtensionAtoms;
   static CFStringRef skPropFullRangeVideo;
 
-private:
+ private:
   static void* sLink;
 
   static enum LinkStatus {
@@ -37,10 +36,10 @@ private:
   static CFStringRef GetIOConst(const char* symbol);
 };
 
-#define LINK_FUNC(func) extern typeof(CM ## func)* CM ## func;
+#define LINK_FUNC(func) extern typeof(CM##func)* CM##func;
 #include "AppleCMFunctions.h"
 #undef LINK_FUNC
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // AppleCMLinker_h
+#endif  // AppleCMLinker_h

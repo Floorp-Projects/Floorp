@@ -16,27 +16,24 @@
 
 namespace mozilla {
 
-AppleCMLinker::LinkStatus
-AppleCMLinker::sLinkStatus = LinkStatus_INIT;
+AppleCMLinker::LinkStatus AppleCMLinker::sLinkStatus = LinkStatus_INIT;
 
 void* AppleCMLinker::sLink = nullptr;
 CFStringRef AppleCMLinker::skPropExtensionAtoms = nullptr;
 CFStringRef AppleCMLinker::skPropFullRangeVideo = nullptr;
 
-#define LINK_FUNC(func) typeof(CM ## func) CM ## func;
+#define LINK_FUNC(func) typeof(CM##func) CM##func;
 #include "AppleCMFunctions.h"
 #undef LINK_FUNC
 
-/* static */ bool
-AppleCMLinker::Link()
-{
+/* static */ bool AppleCMLinker::Link() {
   if (sLinkStatus) {
     return sLinkStatus == LinkStatus_SUCCEEDED;
   }
 
-  const char* dlnames[] =
-    { "/System/Library/Frameworks/CoreMedia.framework/CoreMedia",
-      "/System/Library/PrivateFrameworks/CoreMedia.framework/CoreMedia" };
+  const char* dlnames[] = {
+      "/System/Library/Frameworks/CoreMedia.framework/CoreMedia",
+      "/System/Library/PrivateFrameworks/CoreMedia.framework/CoreMedia"};
   bool dlfound = false;
   for (size_t i = 0; i < ArrayLength(dlnames); i++) {
     if ((sLink = dlopen(dlnames[i], RTLD_NOW | RTLD_LOCAL))) {
@@ -49,21 +46,21 @@ AppleCMLinker::Link()
     goto fail;
   }
 
-#define LINK_FUNC2(func)                                       \
-  func = (typeof(func))dlsym(sLink, #func);                    \
-  if (!func) {                                                 \
-    NS_WARNING("Couldn't load CoreMedia function " #func );    \
-    goto fail;                                                 \
+#define LINK_FUNC2(func)                                   \
+  func = (typeof(func))dlsym(sLink, #func);                \
+  if (!func) {                                             \
+    NS_WARNING("Couldn't load CoreMedia function " #func); \
+    goto fail;                                             \
   }
-#define LINK_FUNC(func) LINK_FUNC2(CM ## func)
+#define LINK_FUNC(func) LINK_FUNC2(CM##func)
 #include "AppleCMFunctions.h"
 #undef LINK_FUNC
 #undef LINK_FUNC2
 
-    skPropExtensionAtoms =
-      GetIOConst("kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms");
+  skPropExtensionAtoms = GetIOConst(
+      "kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms");
 
-    skPropFullRangeVideo =
+  skPropFullRangeVideo =
       GetIOConst("kCMFormatDescriptionExtension_FullRangeVideo");
 
   if (!skPropExtensionAtoms) {
@@ -81,9 +78,7 @@ fail:
   return false;
 }
 
-/* static */ void
-AppleCMLinker::Unlink()
-{
+/* static */ void AppleCMLinker::Unlink() {
   if (sLink) {
     LOG("Unlinking CoreMedia framework.");
     dlclose(sLink);
@@ -92,9 +87,7 @@ AppleCMLinker::Unlink()
   }
 }
 
-/* static */ CFStringRef
-AppleCMLinker::GetIOConst(const char* symbol)
-{
+/* static */ CFStringRef AppleCMLinker::GetIOConst(const char* symbol) {
   CFStringRef* address = (CFStringRef*)dlsym(sLink, symbol);
   if (!address) {
     return nullptr;
@@ -103,6 +96,6 @@ AppleCMLinker::GetIOConst(const char* symbol)
   return *address;
 }
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #undef LOG

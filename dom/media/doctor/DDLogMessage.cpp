@@ -10,24 +10,16 @@
 
 namespace mozilla {
 
-nsCString
-DDLogMessage::Print() const
-{
+nsCString DDLogMessage::Print() const {
   nsCString str;
-  str.AppendPrintf("%" PRImi " | %f | %s[%p] | %s | %s | ",
-                   mIndex.Value(),
-                   ToSeconds(mTimeStamp),
-                   mObject.TypeName(),
-                   mObject.Pointer(),
-                   ToShortString(mCategory),
-                   mLabel);
+  str.AppendPrintf("%" PRImi " | %f | %s[%p] | %s | %s | ", mIndex.Value(),
+                   ToSeconds(mTimeStamp), mObject.TypeName(), mObject.Pointer(),
+                   ToShortString(mCategory), mLabel);
   AppendToString(mValue, str);
   return str;
 }
 
-nsCString
-DDLogMessage::Print(const DDLifetimes& aLifetimes) const
-{
+nsCString DDLogMessage::Print(const DDLifetimes& aLifetimes) const {
   nsCString str;
   const DDLifetime* lifetime = aLifetimes.FindLifetime(mObject, mIndex);
   str.AppendPrintf("%" PRImi " | %f | ", mIndex.Value(), ToSeconds(mTimeStamp));
@@ -37,7 +29,7 @@ DDLogMessage::Print(const DDLifetimes& aLifetimes) const
     AppendToString(mValue, str);
   } else {
     const DDLifetime* lifetime2 =
-      aLifetimes.FindLifetime(mValue.as<DDLogObject>(), mIndex);
+        aLifetimes.FindLifetime(mValue.as<DDLogObject>(), mIndex);
     if (lifetime2) {
       lifetime2->AppendPrintf(str);
     } else {
@@ -47,4 +39,4 @@ DDLogMessage::Print(const DDLifetimes& aLifetimes) const
   return str;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

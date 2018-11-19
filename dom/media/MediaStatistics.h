@@ -31,8 +31,7 @@ struct MediaStatistics {
   // a short time).
   bool mPlaybackRateReliable;
 
-  bool CanPlayThrough()
-  {
+  bool CanPlayThrough() {
     // Number of estimated seconds worth of data we need to have buffered
     // ahead of the current playback position before we allow the media decoder
     // to report that it can play through the entire media without the decode
@@ -69,11 +68,11 @@ struct MediaStatistics {
     // we don't suddenly discover that we need to buffer. This is particularly
     // required near the start of the media, when not much data is downloaded.
     int64_t readAheadMargin =
-      static_cast<int64_t>(mPlaybackRate * CAN_PLAY_THROUGH_MARGIN);
+        static_cast<int64_t>(mPlaybackRate * CAN_PLAY_THROUGH_MARGIN);
     return mDownloadPosition > mPlaybackPosition + readAheadMargin;
   }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MediaStatistics_h_
+#endif  // MediaStatistics_h_

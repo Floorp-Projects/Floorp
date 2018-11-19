@@ -20,8 +20,7 @@ namespace mozilla {
 class TaskQueue;
 class Benchmark;
 
-class BenchmarkPlayback : public QueueObject
-{
+class BenchmarkPlayback : public QueueObject {
   friend class Benchmark;
   BenchmarkPlayback(Benchmark* aGlobalState, MediaDataDemuxer* aDemuxer);
   void DemuxSamples();
@@ -54,30 +53,22 @@ class BenchmarkPlayback : public QueueObject
 
 // Init() must have been called at least once prior on the
 // main thread.
-class Benchmark : public QueueObject
-{
-public:
+class Benchmark : public QueueObject {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Benchmark)
 
-  struct Parameters
-  {
+  struct Parameters {
     Parameters()
-      : mFramesToMeasure(UINT32_MAX)
-      , mStartupFrame(1)
-      , mTimeout(TimeDuration::Forever())
-    {
-    }
+        : mFramesToMeasure(UINT32_MAX),
+          mStartupFrame(1),
+          mTimeout(TimeDuration::Forever()) {}
 
-    Parameters(uint32_t aFramesToMeasure,
-               uint32_t aStartupFrame,
-               uint32_t aStopAtFrame,
-               const TimeDuration& aTimeout)
-      : mFramesToMeasure(aFramesToMeasure)
-      , mStartupFrame(aStartupFrame)
-      , mStopAtFrame(Some(aStopAtFrame))
-      , mTimeout(aTimeout)
-    {
-    }
+    Parameters(uint32_t aFramesToMeasure, uint32_t aStartupFrame,
+               uint32_t aStopAtFrame, const TimeDuration& aTimeout)
+        : mFramesToMeasure(aFramesToMeasure),
+          mStartupFrame(aStartupFrame),
+          mStopAtFrame(Some(aStopAtFrame)),
+          mTimeout(aTimeout) {}
 
     const uint32_t mFramesToMeasure;
     const uint32_t mStartupFrame;
@@ -85,7 +76,8 @@ public:
     const TimeDuration mTimeout;
   };
 
-  typedef MozPromise<uint32_t, MediaResult, /* IsExclusive = */ true> BenchmarkPromise;
+  typedef MozPromise<uint32_t, MediaResult, /* IsExclusive = */ true>
+      BenchmarkPromise;
 
   explicit Benchmark(MediaDataDemuxer* aDemuxer,
                      const Parameters& aParameters = Parameters());
@@ -94,7 +86,7 @@ public:
   // Must be called on the main thread.
   static void Init();
 
-private:
+ private:
   friend class BenchmarkPlayback;
   virtual ~Benchmark();
   void ReturnResult(uint32_t aDecodeFps);
@@ -106,9 +98,8 @@ private:
   MozPromiseHolder<BenchmarkPromise> mPromise;
 };
 
-class VP9Benchmark
-{
-public:
+class VP9Benchmark {
+ public:
   static bool IsVP9DecodeFast(bool aDefault = false);
   static const char* sBenchmarkFpsPref;
   static const char* sBenchmarkFpsVersionCheck;
@@ -117,9 +108,10 @@ public:
   // Return the value of media.benchmark.vp9.fps preference (which will be 0 if
   // not known)
   static uint32_t MediaBenchmarkVp9Fps();
-private:
+
+ private:
   static bool ShouldRun();
 };
-}
+}  // namespace mozilla
 
 #endif

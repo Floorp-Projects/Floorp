@@ -15,10 +15,9 @@ namespace mozilla {
 namespace dom {
 
 class SpeechSynthesisService final
-  : public nsISpeechService
-  , public java::SpeechSynthesisService::Natives<SpeechSynthesisService>
-{
-public:
+    : public nsISpeechService,
+      public java::SpeechSynthesisService::Natives<SpeechSynthesisService> {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISPEECHSERVICE
 
@@ -28,10 +27,8 @@ public:
 
   static void DoneRegisteringVoices();
 
-  static void RegisterVoice(jni::String::Param aUri,
-                            jni::String::Param aName,
-                            jni::String::Param aLocale,
-                            bool aIsNetwork,
+  static void RegisterVoice(jni::String::Param aUri, jni::String::Param aName,
+                            jni::String::Param aLocale, bool aIsNetwork,
                             bool aIsDefault);
 
   static void DispatchStart(jni::String::Param aUtteranceId);
@@ -40,8 +37,7 @@ public:
 
   static void DispatchError(jni::String::Param aUtteranceId);
 
-  static void DispatchBoundary(jni::String::Param aUtteranceId,
-                               int32_t aStart,
+  static void DispatchBoundary(jni::String::Param aUtteranceId, int32_t aStart,
                                int32_t aEnd);
 
   static SpeechSynthesisService* GetInstance(bool aCreate = true);
@@ -49,7 +45,7 @@ public:
 
   static StaticRefPtr<SpeechSynthesisService> sSingleton;
 
-private:
+ private:
   virtual ~SpeechSynthesisService(){};
 
   nsCOMPtr<nsISpeechTask> mTask;
@@ -67,6 +63,6 @@ private:
   uint32_t mTaskTextOffset;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 #endif

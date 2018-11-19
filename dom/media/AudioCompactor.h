@@ -12,12 +12,9 @@
 
 namespace mozilla {
 
-class AudioCompactor
-{
-public:
-  explicit AudioCompactor(MediaQueue<AudioData>& aQueue)
-    : mQueue(aQueue)
-  {
+class AudioCompactor {
+ public:
+  explicit AudioCompactor(MediaQueue<AudioData>& aQueue) : mQueue(aQueue) {
     // Determine padding size used by AlignedBuffer.
     size_t paddedSize = AlignedAudioBuffer::AlignmentPaddingSize();
     mSamplesPadding = paddedSize / sizeof(AudioDataValue);
@@ -39,10 +36,9 @@ public:
   // copied must be returned.  This copy functor must support being called
   // multiple times in order to copy the audio data fully.  The copy functor
   // must copy full frames as partial frames will be ignored.
-  template<typename CopyFunc>
+  template <typename CopyFunc>
   bool Push(int64_t aOffset, int64_t aTime, int32_t aSampleRate,
-            uint32_t aFrames, uint32_t aChannels, CopyFunc aCopyFunc)
-  {
+            uint32_t aFrames, uint32_t aChannels, CopyFunc aCopyFunc) {
     auto time = media::TimeUnit::FromMicroseconds(aTime);
 
     // If we are losing more than a reasonable amount to padding, try to chunk
@@ -70,13 +66,8 @@ public:
         return false;
       }
 
-      mQueue.Push(new AudioData(aOffset,
-                                time,
-                                duration,
-                                framesCopied,
-                                std::move(buffer),
-                                aChannels,
-                                aSampleRate));
+      mQueue.Push(new AudioData(aOffset, time, duration, framesCopied,
+                                std::move(buffer), aChannels, aSampleRate));
 
       // Remove the frames we just pushed into the queue and loop if there is
       // more to be done.
@@ -91,20 +82,17 @@ public:
 
   // Copy functor suitable for copying audio samples already in the
   // AudioDataValue format/layout expected by AudioStream on this platform.
-  class NativeCopy
-  {
-  public:
-    NativeCopy(const uint8_t* aSource, size_t aSourceBytes,
-               uint32_t aChannels)
-      : mSource(aSource)
-      , mSourceBytes(aSourceBytes)
-      , mChannels(aChannels)
-      , mNextByte(0)
-    { }
+  class NativeCopy {
+   public:
+    NativeCopy(const uint8_t* aSource, size_t aSourceBytes, uint32_t aChannels)
+        : mSource(aSource),
+          mSourceBytes(aSourceBytes),
+          mChannels(aChannels),
+          mNextByte(0) {}
 
-    uint32_t operator()(AudioDataValue *aBuffer, uint32_t aSamples);
+    uint32_t operator()(AudioDataValue* aBuffer, uint32_t aSamples);
 
-  private:
+   private:
     const uint8_t* const mSource;
     const size_t mSourceBytes;
     const uint32_t mChannels;
@@ -115,26 +103,24 @@ public:
   // access it.
   static const size_t MAX_SLOP_DIVISOR = 8;
 
-private:
+ private:
   // Compute the number of AudioDataValue samples that will be fit the most
   // frames while keeping heap allocation slop less than the given threshold.
-  static uint32_t
-  GetChunkSamples(uint32_t aFrames, uint32_t aChannels, size_t aMaxSlop);
+  static uint32_t GetChunkSamples(uint32_t aFrames, uint32_t aChannels,
+                                  size_t aMaxSlop);
 
-  static size_t BytesPerFrame(uint32_t aChannels)
-  {
+  static size_t BytesPerFrame(uint32_t aChannels) {
     return sizeof(AudioDataValue) * aChannels;
   }
 
-  static size_t AudioDataSize(uint32_t aFrames, uint32_t aChannels)
-  {
+  static size_t AudioDataSize(uint32_t aFrames, uint32_t aChannels) {
     return aFrames * BytesPerFrame(aChannels);
   }
 
-  MediaQueue<AudioData> &mQueue;
+  MediaQueue<AudioData>& mQueue;
   size_t mSamplesPadding;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // AudioCompactor_h
+#endif  // AudioCompactor_h

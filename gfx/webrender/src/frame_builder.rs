@@ -15,7 +15,7 @@ use internal_types::{FastHashMap, PlaneSplitter};
 use picture::{PictureSurface, PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex};
 use prim_store::{PrimitiveStore, SpaceMapper, PictureIndex, PrimitiveDebugId};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
-use render_backend::{FrameResources, FrameId};
+use render_backend::{FrameResources, FrameStamp};
 use render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskTree};
 use resource_cache::{ResourceCache};
 use scene::{ScenePipeline, SceneProperties};
@@ -308,7 +308,7 @@ impl FrameBuilder {
         &mut self,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
-        frame_id: FrameId,
+        stamp: FrameStamp,
         clip_scroll_tree: &mut ClipScrollTree,
         pipelines: &FastHashMap<PipelineId, Arc<ScenePipeline>>,
         device_pixel_scale: DevicePixelScale,
@@ -330,8 +330,8 @@ impl FrameBuilder {
             .total_primitives
             .set(self.prim_store.prim_count());
 
-        resource_cache.begin_frame(frame_id);
-        gpu_cache.begin_frame(frame_id);
+        resource_cache.begin_frame(stamp);
+        gpu_cache.begin_frame(stamp.frame_id());
 
         let mut transform_palette = TransformPalette::new();
         clip_scroll_tree.update_tree(
@@ -340,7 +340,7 @@ impl FrameBuilder {
             Some(&mut transform_palette),
         );
 
-        let mut render_tasks = RenderTaskTree::new(frame_id);
+        let mut render_tasks = RenderTaskTree::new(stamp.frame_id());
         let mut surfaces = Vec::new();
 
         let screen_size = self.screen_rect.size.to_i32();

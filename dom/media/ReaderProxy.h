@@ -23,8 +23,7 @@ namespace mozilla {
  * It also adjusts the seek target passed to Seek() to ensure correct seek time
  * is passed to the underlying reader.
  */
-class ReaderProxy
-{
+class ReaderProxy {
   using MetadataPromise = MediaFormatReader::MetadataPromise;
   using AudioDataPromise = MediaFormatReader::AudioDataPromise;
   using VideoDataPromise = MediaFormatReader::VideoDataPromise;
@@ -33,7 +32,7 @@ class ReaderProxy
   using TrackSet = MediaFormatReader::TrackSet;
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ReaderProxy);
 
-public:
+ public:
   ReaderProxy(AbstractThread* aOwnerThread, MediaFormatReader* aReader);
 
   media::TimeUnit StartTime() const;
@@ -41,8 +40,8 @@ public:
 
   RefPtr<AudioDataPromise> RequestAudioData();
 
-  RefPtr<VideoDataPromise>
-  RequestVideoData(const media::TimeUnit& aTimeThreshold);
+  RefPtr<VideoDataPromise> RequestVideoData(
+      const media::TimeUnit& aTimeThreshold);
 
   RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType);
 
@@ -53,7 +52,9 @@ public:
   void ResetDecode(TrackSet aTracks);
 
   nsresult Init() { return mReader->Init(); }
-  bool UseBufferingHeuristics() const { return mReader->UseBufferingHeuristics(); }
+  bool UseBufferingHeuristics() const {
+    return mReader->UseBufferingHeuristics();
+  }
 
   bool VideoIsHardwareAccelerated() const {
     return mReader->VideoIsHardwareAccelerated();
@@ -82,9 +83,9 @@ public:
   void SetVideoBlankDecode(bool aIsBlankDecode);
 
   void SetCanonicalDuration(
-    AbstractCanonical<media::NullableTimeUnit>* aCanonical);
+      AbstractCanonical<media::NullableTimeUnit>* aCanonical);
 
-private:
+ private:
   ~ReaderProxy();
   RefPtr<MetadataPromise> OnMetadataRead(MetadataHolder&& aMetadata);
   RefPtr<MetadataPromise> OnMetadataNotRead(const MediaResult& aError);
@@ -92,9 +93,9 @@ private:
   RefPtr<SeekPromise> SeekInternal(const SeekTarget& aTarget);
 
   RefPtr<ReaderProxy::AudioDataPromise> OnAudioDataRequestCompleted(
-    RefPtr<AudioData> aAudio);
+      RefPtr<AudioData> aAudio);
   RefPtr<ReaderProxy::AudioDataPromise> OnAudioDataRequestFailed(
-    const MediaResult& aError);
+      const MediaResult& aError);
 
   const RefPtr<AbstractThread> mOwnerThread;
   const RefPtr<MediaFormatReader> mReader;
@@ -109,6 +110,6 @@ private:
   Mirror<media::NullableTimeUnit> mDuration;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // ReaderProxy_h_
+#endif  // ReaderProxy_h_

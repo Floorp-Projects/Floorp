@@ -12,46 +12,33 @@
 
 namespace mozilla {
 
-/* static */ DDMediaLogs::ConstructionResult
-DDMediaLogs::New()
-{
+/* static */ DDMediaLogs::ConstructionResult DDMediaLogs::New() {
   nsCOMPtr<nsIThread> mThread;
-  nsresult rv = NS_NewNamedThread("DDMediaLogs",
-                                  getter_AddRefs(mThread),
-                                  nullptr,
-                                  nsIThreadManager::kThreadPoolStackSize);
+  nsresult rv =
+      NS_NewNamedThread("DDMediaLogs", getter_AddRefs(mThread), nullptr,
+                        nsIThreadManager::kThreadPoolStackSize);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return { rv, nullptr };
+    return {rv, nullptr};
   }
 
-  return { rv, new DDMediaLogs(std::move(mThread)) };
+  return {rv, new DDMediaLogs(std::move(mThread))};
 }
 
 DDMediaLogs::DDMediaLogs(nsCOMPtr<nsIThread>&& aThread)
-  : mMediaLogs(1)
-  , mMutex("DDMediaLogs")
-  , mThread(std::move(aThread))
-{
+    : mMediaLogs(1), mMutex("DDMediaLogs"), mThread(std::move(aThread)) {
   mMediaLogs.SetLength(1);
   mMediaLogs[0].mMediaElement = nullptr;
   DDL_INFO("DDMediaLogs constructed, processing thread: %p", mThread.get());
 }
 
-DDMediaLogs::~DDMediaLogs()
-{
+DDMediaLogs::~DDMediaLogs() {
   // Perform end-of-life processing, ensure the processing thread is shutdown.
   Shutdown(/* aPanic = */ false);
 }
 
-void
-DDMediaLogs::Panic()
-{
-  Shutdown(/* aPanic = */ true);
-}
+void DDMediaLogs::Panic() { Shutdown(/* aPanic = */ true); }
 
-void
-DDMediaLogs::Shutdown(bool aPanic)
-{
+void DDMediaLogs::Shutdown(bool aPanic) {
   nsCOMPtr<nsIThread> thread;
   {
     MutexAutoLock lock(mMutex);
@@ -91,10 +78,9 @@ DDMediaLogs::Shutdown(bool aPanic)
       DDLE_INFO("--- Log for HTMLMediaElement[%p] ---", mediaLog.mMediaElement);
       for (const DDLogMessage& message : mediaLog.mMessages) {
         DDLE_LOG(message.mCategory <= DDLogCategory::_Unlink
-                   ? mozilla::LogLevel::Debug
-                   : mozilla::LogLevel::Info,
-                 "%s",
-                 message.Print(mLifetimes).get());
+                     ? mozilla::LogLevel::Debug
+                     : mozilla::LogLevel::Info,
+                 "%s", message.Print(mLifetimes).get());
       }
       DDLE_DEBUG("--- End log for HTMLMediaElement[%p] ---",
                  mediaLog.mMediaElement);
@@ -102,22 +88,16 @@ DDMediaLogs::Shutdown(bool aPanic)
   }
 }
 
-DDMediaLog&
-DDMediaLogs::LogForUnassociatedMessages()
-{
+DDMediaLog& DDMediaLogs::LogForUnassociatedMessages() {
   MOZ_ASSERT(!mThread || mThread.get() == NS_GetCurrentThread());
   return mMediaLogs[0];
 }
-const DDMediaLog&
-DDMediaLogs::LogForUnassociatedMessages() const
-{
+const DDMediaLog& DDMediaLogs::LogForUnassociatedMessages() const {
   MOZ_ASSERT(!mThread || mThread.get() == NS_GetCurrentThread());
   return mMediaLogs[0];
 }
 
-DDMediaLog*
-DDMediaLogs::GetLogFor(const dom::HTMLMediaElement* aMediaElement)
-{
+DDMediaLog* DDMediaLogs::GetLogFor(const dom::HTMLMediaElement* aMediaElement) {
   MOZ_ASSERT(!mThread || mThread.get() == NS_GetCurrentThread());
   if (!aMediaElement) {
     return &LogForUnassociatedMessages();
@@ -130,9 +110,7 @@ DDMediaLogs::GetLogFor(const dom::HTMLMediaElement* aMediaElement)
   return nullptr;
 }
 
-DDMediaLog&
-DDMediaLogs::LogFor(const dom::HTMLMediaElement* aMediaElement)
-{
+DDMediaLog& DDMediaLogs::LogFor(const dom::HTMLMediaElement* aMediaElement) {
   MOZ_ASSERT(!mThread || mThread.get() == NS_GetCurrentThread());
   DDMediaLog* log = GetLogFor(aMediaElement);
   if (!log) {
@@ -142,10 +120,8 @@ DDMediaLogs::LogFor(const dom::HTMLMediaElement* aMediaElement)
   return *log;
 }
 
-void
-DDMediaLogs::SetMediaElement(DDLifetime& aLifetime,
-                             const dom::HTMLMediaElement* aMediaElement)
-{
+void DDMediaLogs::SetMediaElement(DDLifetime& aLifetime,
+                                  const dom::HTMLMediaElement* aMediaElement) {
   MOZ_ASSERT(!mThread || mThread.get() == NS_GetCurrentThread());
   DDMediaLog& log = LogFor(aMediaElement);
 
@@ -159,8 +135,8 @@ DDMediaLogs::SetMediaElement(DDLifetime& aLifetime,
     lifetime.mMediaElement = aMediaElement;
     // Classified lifetime's tag is a positive index from the DDMediaLog.
     lifetime.mTag = ++log.mLifetimeCount;
-    DDL_DEBUG(
-      "%s -> HTMLMediaElement[%p]", lifetime.Printf().get(), aMediaElement);
+    DDL_DEBUG("%s -> HTMLMediaElement[%p]", lifetime.Printf().get(),
+              aMediaElement);
 
     // Go through the lifetime's existing linked lifetimes, if any is not
     // already linked to aMediaElement, add it to the list so it will get
@@ -169,14 +145,14 @@ DDMediaLogs::SetMediaElement(DDLifetime& aLifetime,
       if (lifetime.IsAliveAt(link.mLinkingIndex)) {
         if (lifetime.mObject == link.mParent) {
           DDLifetime* childLifetime =
-            mLifetimes.FindLifetime(link.mChild, link.mLinkingIndex);
+              mLifetimes.FindLifetime(link.mChild, link.mLinkingIndex);
           if (childLifetime && !childLifetime->mMediaElement &&
               !lifetimes.Contains(childLifetime)) {
             lifetimes.AppendElement(childLifetime);
           }
         } else if (lifetime.mObject == link.mChild) {
           DDLifetime* parentLifetime =
-            mLifetimes.FindLifetime(link.mParent, link.mLinkingIndex);
+              mLifetimes.FindLifetime(link.mParent, link.mLinkingIndex);
           if (parentLifetime && !parentLifetime->mMediaElement &&
               !lifetimes.Contains(parentLifetime)) {
             lifetimes.AppendElement(parentLifetime);
@@ -212,11 +188,9 @@ DDMediaLogs::SetMediaElement(DDLifetime& aLifetime,
   }
 }
 
-DDLifetime&
-DDMediaLogs::FindOrCreateLifetime(const DDLogObject& aObject,
-                                  DDMessageIndex aIndex,
-                                  const DDTimeStamp& aTimeStamp)
-{
+DDLifetime& DDMediaLogs::FindOrCreateLifetime(const DDLogObject& aObject,
+                                              DDMessageIndex aIndex,
+                                              const DDTimeStamp& aTimeStamp) {
   MOZ_ASSERT(!mThread || mThread.get() == NS_GetCurrentThread());
   // Try to find lifetime corresponding to message object.
   DDLifetime* lifetime = mLifetimes.FindLifetime(aObject, aIndex);
@@ -226,15 +200,12 @@ DDMediaLogs::FindOrCreateLifetime(const DDLogObject& aObject,
     if (MOZ_UNLIKELY(aObject.TypeName() ==
                      DDLoggedTypeTraits<dom::HTMLMediaElement>::Name())) {
       const dom::HTMLMediaElement* mediaElement =
-        static_cast<const dom::HTMLMediaElement*>(aObject.Pointer());
+          static_cast<const dom::HTMLMediaElement*>(aObject.Pointer());
       SetMediaElement(*lifetime, mediaElement);
       DDL_DEBUG("%s -> new lifetime: %s with MediaElement %p",
-                aObject.Printf().get(),
-                lifetime->Printf().get(),
-                mediaElement);
+                aObject.Printf().get(), lifetime->Printf().get(), mediaElement);
     } else {
-      DDL_DEBUG("%s -> new lifetime: %s",
-                aObject.Printf().get(),
+      DDL_DEBUG("%s -> new lifetime: %s", aObject.Printf().get(),
                 lifetime->Printf().get());
     }
   }
@@ -242,15 +213,13 @@ DDMediaLogs::FindOrCreateLifetime(const DDLogObject& aObject,
   return *lifetime;
 }
 
-void
-DDMediaLogs::LinkLifetimes(DDLifetime& aParentLifetime,
-                           const char* aLinkName,
-                           DDLifetime& aChildLifetime,
-                           DDMessageIndex aIndex)
-{
+void DDMediaLogs::LinkLifetimes(DDLifetime& aParentLifetime,
+                                const char* aLinkName,
+                                DDLifetime& aChildLifetime,
+                                DDMessageIndex aIndex) {
   MOZ_ASSERT(!mThread || mThread.get() == NS_GetCurrentThread());
   mObjectLinks.AppendElement(DDObjectLink{
-    aParentLifetime.mObject, aChildLifetime.mObject, aLinkName, aIndex });
+      aParentLifetime.mObject, aChildLifetime.mObject, aLinkName, aIndex});
   if (aParentLifetime.mMediaElement) {
     if (!aChildLifetime.mMediaElement) {
       SetMediaElement(aChildLifetime, aParentLifetime.mMediaElement);
@@ -262,9 +231,7 @@ DDMediaLogs::LinkLifetimes(DDLifetime& aParentLifetime,
   }
 }
 
-void
-DDMediaLogs::UnlinkLifetime(DDLifetime& aLifetime, DDMessageIndex aIndex)
-{
+void DDMediaLogs::UnlinkLifetime(DDLifetime& aLifetime, DDMessageIndex aIndex) {
   MOZ_ASSERT(!mThread || mThread.get() == NS_GetCurrentThread());
   for (DDObjectLink& link : mObjectLinks) {
     if ((link.mParent == aLifetime.mObject ||
@@ -275,11 +242,9 @@ DDMediaLogs::UnlinkLifetime(DDLifetime& aLifetime, DDMessageIndex aIndex)
   }
 };
 
-void
-DDMediaLogs::UnlinkLifetimes(DDLifetime& aParentLifetime,
-                             DDLifetime& aChildLifetime,
-                             DDMessageIndex aIndex)
-{
+void DDMediaLogs::UnlinkLifetimes(DDLifetime& aParentLifetime,
+                                  DDLifetime& aChildLifetime,
+                                  DDMessageIndex aIndex) {
   MOZ_ASSERT(!mThread || mThread.get() == NS_GetCurrentThread());
   for (DDObjectLink& link : mObjectLinks) {
     if ((link.mParent == aParentLifetime.mObject &&
@@ -291,9 +256,7 @@ DDMediaLogs::UnlinkLifetimes(DDLifetime& aParentLifetime,
   }
 }
 
-void
-DDMediaLogs::DestroyLifetimeLinks(const DDLifetime& aLifetime)
-{
+void DDMediaLogs::DestroyLifetimeLinks(const DDLifetime& aLifetime) {
   mObjectLinks.RemoveElementsBy([&](DDObjectLink& link) {
     return (link.mParent == aLifetime.mObject ||
             link.mChild == aLifetime.mObject) &&
@@ -301,9 +264,7 @@ DDMediaLogs::DestroyLifetimeLinks(const DDLifetime& aLifetime)
   });
 }
 
-size_t
-DDMediaLogs::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t DDMediaLogs::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   size_t size = aMallocSizeOf(this) +
                 // This will usually be called after processing, so negligible
                 // external data should still be present in the queue.
@@ -318,9 +279,7 @@ DDMediaLogs::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return size;
 }
 
-void
-DDMediaLogs::ProcessBuffer()
-{
+void DDMediaLogs::ProcessBuffer() {
   MOZ_ASSERT(!mThread || mThread.get() == NS_GetCurrentThread());
 
   mMessagesQueue.PopAll([this](const DDLogMessage& message) {
@@ -328,13 +287,13 @@ DDMediaLogs::ProcessBuffer()
 
     // Either this message will carry a new object for which to create a
     // lifetime, or we'll find an existing one.
-    DDLifetime& lifetime =
-      FindOrCreateLifetime(message.mObject, message.mIndex, message.mTimeStamp);
+    DDLifetime& lifetime = FindOrCreateLifetime(message.mObject, message.mIndex,
+                                                message.mTimeStamp);
 
     // Copy the message contents (without the mValid flag) to the
     // appropriate MediaLog corresponding to the message's object lifetime.
     LogFor(lifetime.mMediaElement)
-      .mMessages.AppendElement(static_cast<const DDLogMessage&>(message));
+        .mMessages.AppendElement(static_cast<const DDLogMessage&>(message));
 
     switch (message.mCategory) {
       case DDLogCategory::_Construction:
@@ -351,19 +310,19 @@ DDMediaLogs::ProcessBuffer()
         {
           const DDLogObject& base = message.mValue.as<DDLogObject>();
           DDLifetime& baseLifetime =
-            FindOrCreateLifetime(base, message.mIndex, message.mTimeStamp);
+              FindOrCreateLifetime(base, message.mIndex, message.mTimeStamp);
           // FindOrCreateLifetime could have moved `lifetime`.
           DDLifetime* lifetime2 =
-            mLifetimes.FindLifetime(message.mObject, message.mIndex);
+              mLifetimes.FindLifetime(message.mObject, message.mIndex);
           MOZ_ASSERT(lifetime2);
           // Assume there's no multiple-inheritance (at least for the types
           // we're watching.)
           if (baseLifetime.mDerivedObject.Pointer()) {
             DDL_WARN(
-              "base '%s' was already derived as '%s', now deriving as '%s'",
-              baseLifetime.Printf().get(),
-              baseLifetime.mDerivedObject.Printf().get(),
-              lifetime2->Printf().get());
+                "base '%s' was already derived as '%s', now deriving as '%s'",
+                baseLifetime.Printf().get(),
+                baseLifetime.mDerivedObject.Printf().get(),
+                lifetime2->Printf().get());
           }
           baseLifetime.mDerivedObject = lifetime2->mObject;
           baseLifetime.mDerivedObjectLinkingIndex = message.mIndex;
@@ -384,13 +343,13 @@ DDMediaLogs::ProcessBuffer()
         {
           const DDLogObject& child = message.mValue.as<DDLogObject>();
           DDLifetime& childLifetime =
-            FindOrCreateLifetime(child, message.mIndex, message.mTimeStamp);
+              FindOrCreateLifetime(child, message.mIndex, message.mTimeStamp);
           // FindOrCreateLifetime could have moved `lifetime`.
           DDLifetime* lifetime2 =
-            mLifetimes.FindLifetime(message.mObject, message.mIndex);
+              mLifetimes.FindLifetime(message.mObject, message.mIndex);
           MOZ_ASSERT(lifetime2);
-          LinkLifetimes(
-            *lifetime2, message.mLabel, childLifetime, message.mIndex);
+          LinkLifetimes(*lifetime2, message.mLabel, childLifetime,
+                        message.mIndex);
         }
         break;
 
@@ -399,10 +358,10 @@ DDMediaLogs::ProcessBuffer()
         {
           const DDLogObject& child = message.mValue.as<DDLogObject>();
           DDLifetime& childLifetime =
-            FindOrCreateLifetime(child, message.mIndex, message.mTimeStamp);
+              FindOrCreateLifetime(child, message.mIndex, message.mTimeStamp);
           // FindOrCreateLifetime could have moved `lifetime`.
           DDLifetime* lifetime2 =
-            mLifetimes.FindLifetime(message.mObject, message.mIndex);
+              mLifetimes.FindLifetime(message.mObject, message.mIndex);
           MOZ_ASSERT(lifetime2);
           UnlinkLifetimes(*lifetime2, childLifetime, message.mIndex);
         }
@@ -415,19 +374,13 @@ DDMediaLogs::ProcessBuffer()
   });
 }
 
-struct StringWriteFunc : public JSONWriteFunc
-{
+struct StringWriteFunc : public JSONWriteFunc {
   nsCString& mCString;
-  explicit StringWriteFunc(nsCString& aCString)
-    : mCString(aCString)
-  {
-  }
+  explicit StringWriteFunc(nsCString& aCString) : mCString(aCString) {}
   void Write(const char* aStr) override { mCString.Append(aStr); }
 };
 
-void
-DDMediaLogs::FulfillPromises()
-{
+void DDMediaLogs::FulfillPromises() {
   MOZ_ASSERT(!mThread || mThread.get() == NS_GetCurrentThread());
 
   MozPromiseHolder<LogMessagesPromise> promiseHolder;
@@ -462,7 +415,7 @@ DDMediaLogs::FulfillPromises()
     }
 
     nsCString json;
-    JSONWriter jw{ MakeUnique<StringWriteFunc>(json) };
+    JSONWriter jw{MakeUnique<StringWriteFunc>(json)};
     jw.Start();
     jw.StartArrayProperty("messages");
     for (const DDLogMessage& message : log->mMessages) {
@@ -470,15 +423,14 @@ DDMediaLogs::FulfillPromises()
       jw.IntProperty("i", message.mIndex.Value());
       jw.DoubleProperty("ts", ToSeconds(message.mTimeStamp));
       DDLifetime* lifetime =
-        mLifetimes.FindLifetime(message.mObject, message.mIndex);
+          mLifetimes.FindLifetime(message.mObject, message.mIndex);
       if (lifetime) {
         jw.IntProperty("ob", lifetime->mTag);
       } else {
-        jw.StringProperty("ob",
-                          nsPrintfCString(R"("%s[%p]")",
-                                          message.mObject.TypeName(),
-                                          message.mObject.Pointer())
-                            .get());
+        jw.StringProperty(
+            "ob", nsPrintfCString(R"("%s[%p]")", message.mObject.TypeName(),
+                                  message.mObject.Pointer())
+                      .get());
       }
       jw.StringProperty("cat", ToShortString(message.mCategory));
       if (message.mLabel && message.mLabel[0] != '\0') {
@@ -502,33 +454,35 @@ DDMediaLogs::FulfillPromises()
     jw.EndArray();
     jw.StartObjectProperty("objects");
     mLifetimes.Visit(
-      mediaElement,
-      [&](const DDLifetime& lifetime) {
-        jw.StartObjectProperty(nsPrintfCString("%" PRIi32, lifetime.mTag).get(),
-                               JSONWriter::SingleLineStyle);
-        jw.IntProperty("tag", lifetime.mTag);
-        jw.StringProperty("cls", lifetime.mObject.TypeName());
-        jw.StringProperty(
-          "ptr", nsPrintfCString("%p", lifetime.mObject.Pointer()).get());
-        jw.IntProperty("con", lifetime.mConstructionIndex.Value());
-        jw.DoubleProperty("con_ts", ToSeconds(lifetime.mConstructionTimeStamp));
-        if (lifetime.mDestructionTimeStamp) {
-          jw.IntProperty("des", lifetime.mDestructionIndex.Value());
-          jw.DoubleProperty("des_ts",
-                            ToSeconds(lifetime.mDestructionTimeStamp));
-        }
-        if (lifetime.mDerivedObject.Pointer()) {
-          DDLifetime* derived = mLifetimes.FindLifetime(
-            lifetime.mDerivedObject, lifetime.mDerivedObjectLinkingIndex);
-          if (derived) {
-            jw.IntProperty("drvd", derived->mTag);
+        mediaElement,
+        [&](const DDLifetime& lifetime) {
+          jw.StartObjectProperty(
+              nsPrintfCString("%" PRIi32, lifetime.mTag).get(),
+              JSONWriter::SingleLineStyle);
+          jw.IntProperty("tag", lifetime.mTag);
+          jw.StringProperty("cls", lifetime.mObject.TypeName());
+          jw.StringProperty(
+              "ptr", nsPrintfCString("%p", lifetime.mObject.Pointer()).get());
+          jw.IntProperty("con", lifetime.mConstructionIndex.Value());
+          jw.DoubleProperty("con_ts",
+                            ToSeconds(lifetime.mConstructionTimeStamp));
+          if (lifetime.mDestructionTimeStamp) {
+            jw.IntProperty("des", lifetime.mDestructionIndex.Value());
+            jw.DoubleProperty("des_ts",
+                              ToSeconds(lifetime.mDestructionTimeStamp));
           }
-        }
-        jw.EndObject();
-      },
-      // If there were no (new) messages, only give the main HTMLMediaElement
-      // object (used to identify this log against the correct element.)
-      log->mMessages.IsEmpty());
+          if (lifetime.mDerivedObject.Pointer()) {
+            DDLifetime* derived = mLifetimes.FindLifetime(
+                lifetime.mDerivedObject, lifetime.mDerivedObjectLinkingIndex);
+            if (derived) {
+              jw.IntProperty("drvd", derived->mTag);
+            }
+          }
+          jw.EndObject();
+        },
+        // If there were no (new) messages, only give the main HTMLMediaElement
+        // object (used to identify this log against the correct element.)
+        log->mMessages.IsEmpty());
     jw.EndObject();
     jw.End();
     DDL_DEBUG("RetrieveMessages(%p) ->\n%s", mediaElement, json.get());
@@ -539,8 +493,8 @@ DDMediaLogs::FulfillPromises()
              mediaElement,
              log->mMessages.IsEmpty() ? 0 : log->mMessages[0].mIndex.Value(),
              log->mMessages.IsEmpty()
-               ? 0
-               : log->mMessages[log->mMessages.Length() - 1].mIndex.Value());
+                 ? 0
+                 : log->mMessages[log->mMessages.Length() - 1].mIndex.Value());
     promiseHolder.Resolve(std::move(json), __func__);
 
     // Remove exported messages.
@@ -557,9 +511,7 @@ DDMediaLogs::FulfillPromises()
   }
 }
 
-void
-DDMediaLogs::CleanUpLogs()
-{
+void DDMediaLogs::CleanUpLogs() {
   MOZ_ASSERT(!mThread || mThread.get() == NS_GetCurrentThread());
 
   DDTimeStamp now = DDNow();
@@ -579,12 +531,12 @@ DDMediaLogs::CleanUpLogs()
     if (log.mMediaElement) {
       // Remove logs for which no lifetime still existed some time ago.
       bool used = mLifetimes.VisitBreakable(
-        log.mMediaElement, [&](const DDLifetime& lifetime) {
-          // Do we still have a lifetime that existed recently enough?
-          return !lifetime.mDestructionTimeStamp ||
-                 (now - lifetime.mDestructionTimeStamp).ToSeconds() <=
-                   sMaxAgeDeadLog_s;
-        });
+          log.mMediaElement, [&](const DDLifetime& lifetime) {
+            // Do we still have a lifetime that existed recently enough?
+            return !lifetime.mDestructionTimeStamp ||
+                   (now - lifetime.mDestructionTimeStamp).ToSeconds() <=
+                       sMaxAgeDeadLog_s;
+          });
       if (!used) {
         DDL_INFO("Removed old log for media element %p", log.mMediaElement);
         mLifetimes.Visit(log.mMediaElement, [&](const DDLifetime& lifetime) {
@@ -599,9 +551,10 @@ DDMediaLogs::CleanUpLogs()
     // Remove old messages.
     size_t old = 0;
     const size_t len = log.mMessages.Length();
-    while (old < len && (now - log.mMessages[old].mTimeStamp).ToSeconds() >
-                          (log.mMediaElement ? sMaxAgeClassifiedMessages_s
-                                             : sMaxAgeUnclassifiedMessages_s)) {
+    while (old < len &&
+           (now - log.mMessages[old].mTimeStamp).ToSeconds() >
+               (log.mMediaElement ? sMaxAgeClassifiedMessages_s
+                                  : sMaxAgeUnclassifiedMessages_s)) {
       ++old;
     }
     if (old != 0) {
@@ -652,7 +605,7 @@ DDMediaLogs::CleanUpLogs()
 
         if (message.mValue.is<DDLogObject>()) {
           DDLifetime* lifetime2 = mLifetimes.FindLifetime(
-            message.mValue.as<DDLogObject>(), message.mIndex);
+              message.mValue.as<DDLogObject>(), message.mIndex);
           if (lifetime2) {
             RemoveDestroyedUnusedLifetime(lifetime2);
           }
@@ -660,21 +613,17 @@ DDMediaLogs::CleanUpLogs()
       }
       DDL_INFO("Removed %zu messages (#%" PRImi " %f - #%" PRImi
                " %f) and %zu lifetimes from log for media element %p",
-               old,
-               log.mMessages[0].mIndex.Value(),
+               old, log.mMessages[0].mIndex.Value(),
                ToSeconds(log.mMessages[0].mTimeStamp),
                log.mMessages[old - 1].mIndex.Value(),
-               ToSeconds(log.mMessages[old - 1].mTimeStamp),
-               removedLifetimes,
+               ToSeconds(log.mMessages[old - 1].mTimeStamp), removedLifetimes,
                log.mMediaElement);
       log.mMessages.RemoveElementsAt(0, old);
     }
   }
 }
 
-void
-DDMediaLogs::ProcessLog()
-{
+void DDMediaLogs::ProcessLog() {
   MOZ_ASSERT(!mThread || mThread.get() == NS_GetCurrentThread());
   ProcessBuffer();
   FulfillPromises();
@@ -683,29 +632,24 @@ DDMediaLogs::ProcessLog()
            SizeOfIncludingThis(moz_malloc_size_of));
 }
 
-nsresult
-DDMediaLogs::DispatchProcessLog(const MutexAutoLock& aProofOfLock)
-{
+nsresult DDMediaLogs::DispatchProcessLog(const MutexAutoLock& aProofOfLock) {
   if (!mThread) {
     return NS_ERROR_SERVICE_NOT_AVAILABLE;
   }
   return mThread->Dispatch(
-    NS_NewRunnableFunction("ProcessLog", [this] { ProcessLog(); }),
-    NS_DISPATCH_NORMAL);
+      NS_NewRunnableFunction("ProcessLog", [this] { ProcessLog(); }),
+      NS_DISPATCH_NORMAL);
 }
 
-nsresult
-DDMediaLogs::DispatchProcessLog()
-{
+nsresult DDMediaLogs::DispatchProcessLog() {
   DDL_INFO("DispatchProcessLog() - Yet-unprocessed message buffers: %d",
            mMessagesQueue.LiveBuffersStats().mCount);
   MutexAutoLock lock(mMutex);
   return DispatchProcessLog(lock);
 }
 
-RefPtr<DDMediaLogs::LogMessagesPromise>
-DDMediaLogs::RetrieveMessages(const dom::HTMLMediaElement* aMediaElement)
-{
+RefPtr<DDMediaLogs::LogMessagesPromise> DDMediaLogs::RetrieveMessages(
+    const dom::HTMLMediaElement* aMediaElement) {
   MozPromiseHolder<LogMessagesPromise> holder;
   RefPtr<LogMessagesPromise> promise = holder.Ensure(__func__);
   {
@@ -720,9 +664,9 @@ DDMediaLogs::RetrieveMessages(const dom::HTMLMediaElement* aMediaElement)
       }
     }
     mPendingPromises.AppendElement(
-      PendingPromise{ std::move(holder), aMediaElement });
+        PendingPromise{std::move(holder), aMediaElement});
   }
   return promise;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

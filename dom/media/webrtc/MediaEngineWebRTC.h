@@ -47,10 +47,10 @@
 
 namespace mozilla {
 
-class MediaEngineWebRTC : public MediaEngine
-{
+class MediaEngineWebRTC : public MediaEngine {
   typedef MediaEngine Super;
-public:
+
+ public:
   explicit MediaEngineWebRTC(MediaEnginePrefs& aPrefs);
 
   virtual void SetFakeDeviceChangeEvents() override;
@@ -62,20 +62,18 @@ public:
   // Returns whether the host supports duplex audio stream.
   bool SupportsDuplex();
 
-  void EnumerateDevices(uint64_t aWindowId,
-                        dom::MediaSourceEnum,
-                        MediaSinkEnum,
+  void EnumerateDevices(uint64_t aWindowId, dom::MediaSourceEnum, MediaSinkEnum,
                         nsTArray<RefPtr<MediaDevice>>*) override;
   void ReleaseResourcesForWindow(uint64_t aWindowId) override;
-private:
+
+ private:
   ~MediaEngineWebRTC() = default;
-  void EnumerateVideoDevices(uint64_t aWindowId,
-                             dom::MediaSourceEnum,
+  void EnumerateVideoDevices(uint64_t aWindowId, dom::MediaSourceEnum,
                              nsTArray<RefPtr<MediaDevice>>*);
   void EnumerateMicrophoneDevices(uint64_t aWindowId,
                                   nsTArray<RefPtr<MediaDevice>>*);
   void EnumerateSpeakerDevices(uint64_t aWindowId,
-                               nsTArray<RefPtr<MediaDevice> >*);
+                               nsTArray<RefPtr<MediaDevice>>*);
 
   // gUM runnables can e.g. Enumerate from multiple threads
   Mutex mMutex;
@@ -89,13 +87,13 @@ private:
   // Maps WindowID to a map of device uuid to their MediaEngineSource,
   // separately for audio and video.
   nsClassHashtable<nsUint64HashKey,
-                    nsRefPtrHashtable<nsStringHashKey,
-                                      MediaEngineSource>> mVideoSources;
+                   nsRefPtrHashtable<nsStringHashKey, MediaEngineSource>>
+      mVideoSources;
   nsClassHashtable<nsUint64HashKey,
-                    nsRefPtrHashtable<nsStringHashKey,
-                                      MediaEngineSource>> mAudioSources;
+                   nsRefPtrHashtable<nsStringHashKey, MediaEngineSource>>
+      mAudioSources;
 };
 
-}
+}  // namespace mozilla
 
 #endif /* NSMEDIAENGINEWEBRTC_H_ */

@@ -10,32 +10,27 @@
 
 namespace mozilla {
 
-WebMWriter::WebMWriter(uint32_t aTrackTypes) : ContainerWriter()
-{
+WebMWriter::WebMWriter(uint32_t aTrackTypes) : ContainerWriter() {
   mMetadataRequiredFlag = aTrackTypes;
   mEbmlComposer = new EbmlComposer();
 }
 
-WebMWriter::~WebMWriter()
-{
+WebMWriter::~WebMWriter() {
   // Out-of-line dtor so mEbmlComposer nsAutoPtr can delete a complete type.
 }
 
-nsresult
-WebMWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
-                              uint32_t aFlags)
-{
+nsresult WebMWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
+                                       uint32_t aFlags) {
   AUTO_PROFILER_LABEL("WebMWriter::WriteEncodedTrack", OTHER);
-  for (uint32_t i = 0 ; i < aData.GetEncodedFrames().Length(); i++) {
-    mEbmlComposer->WriteSimpleBlock(aData.GetEncodedFrames().ElementAt(i).get());
+  for (uint32_t i = 0; i < aData.GetEncodedFrames().Length(); i++) {
+    mEbmlComposer->WriteSimpleBlock(
+        aData.GetEncodedFrames().ElementAt(i).get());
   }
   return NS_OK;
 }
 
-nsresult
-WebMWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
-                             uint32_t aFlags)
-{
+nsresult WebMWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
+                                      uint32_t aFlags) {
   AUTO_PROFILER_LABEL("WebMWriter::GetContainerData", OTHER);
   mEbmlComposer->ExtractBuffer(aOutputBufs, aFlags);
   if (aFlags & ContainerWriter::FLUSH_NEEDED) {
@@ -44,9 +39,7 @@ WebMWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
   return NS_OK;
 }
 
-nsresult
-WebMWriter::SetMetadata(TrackMetadataBase* aMetadata)
-{
+nsresult WebMWriter::SetMetadata(TrackMetadataBase* aMetadata) {
   MOZ_ASSERT(aMetadata);
   AUTO_PROFILER_LABEL("WebMWriter::SetMetadata", OTHER);
 
@@ -55,7 +48,8 @@ WebMWriter::SetMetadata(TrackMetadataBase* aMetadata)
     MOZ_ASSERT(meta, "Cannot find vp8 encoder metadata");
     mEbmlComposer->SetVideoConfig(meta->mWidth, meta->mHeight,
                                   meta->mDisplayWidth, meta->mDisplayHeight);
-    mMetadataRequiredFlag = mMetadataRequiredFlag & ~ContainerWriter::CREATE_VIDEO_TRACK;
+    mMetadataRequiredFlag =
+        mMetadataRequiredFlag & ~ContainerWriter::CREATE_VIDEO_TRACK;
   }
 
   if (aMetadata->GetKind() == TrackMetadataBase::METADATA_VORBIS) {
@@ -63,7 +57,8 @@ WebMWriter::SetMetadata(TrackMetadataBase* aMetadata)
     MOZ_ASSERT(meta, "Cannot find vorbis encoder metadata");
     mEbmlComposer->SetAudioConfig(meta->mSamplingFrequency, meta->mChannels);
     mEbmlComposer->SetAudioCodecPrivateData(meta->mData);
-    mMetadataRequiredFlag = mMetadataRequiredFlag & ~ContainerWriter::CREATE_AUDIO_TRACK;
+    mMetadataRequiredFlag =
+        mMetadataRequiredFlag & ~ContainerWriter::CREATE_AUDIO_TRACK;
   }
 
   if (aMetadata->GetKind() == TrackMetadataBase::METADATA_OPUS) {
@@ -71,7 +66,8 @@ WebMWriter::SetMetadata(TrackMetadataBase* aMetadata)
     MOZ_ASSERT(meta, "Cannot find Opus encoder metadata");
     mEbmlComposer->SetAudioConfig(meta->mSamplingFrequency, meta->mChannels);
     mEbmlComposer->SetAudioCodecPrivateData(meta->mIdHeader);
-    mMetadataRequiredFlag = mMetadataRequiredFlag & ~ContainerWriter::CREATE_AUDIO_TRACK;
+    mMetadataRequiredFlag =
+        mMetadataRequiredFlag & ~ContainerWriter::CREATE_AUDIO_TRACK;
   }
 
   if (!mMetadataRequiredFlag) {
@@ -80,4 +76,4 @@ WebMWriter::SetMetadata(TrackMetadataBase* aMetadata)
   return NS_OK;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

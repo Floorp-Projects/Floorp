@@ -21,25 +21,23 @@ class BaseMediaResource;
 DDLoggedTypeDeclNameAndBase(ChannelMediaDecoder, MediaDecoder);
 
 class ChannelMediaDecoder
-  : public MediaDecoder
-  , public DecoderDoctorLifeLogger<ChannelMediaDecoder>
-{
+    : public MediaDecoder,
+      public DecoderDoctorLifeLogger<ChannelMediaDecoder> {
   // Used to register with MediaResource to receive notifications which will
   // be forwarded to MediaDecoder.
-  class ResourceCallback : public MediaResourceCallback
-  {
+  class ResourceCallback : public MediaResourceCallback {
     // Throttle calls to MediaDecoder::NotifyDataArrived()
     // to be at most once per 500ms.
     static const uint32_t sDelay = 500;
 
-  public:
+   public:
     explicit ResourceCallback(AbstractThread* aMainThread);
     // Start to receive notifications from ResourceCallback.
     void Connect(ChannelMediaDecoder* aDecoder);
     // Called upon shutdown to stop receiving notifications.
     void Disconnect();
 
-  private:
+   private:
     ~ResourceCallback();
 
     /* MediaResourceCallback functions */
@@ -60,11 +58,10 @@ class ChannelMediaDecoder
     const RefPtr<AbstractThread> mAbstractMainThread;
   };
 
-protected:
+ protected:
   void OnPlaybackEvent(MediaPlaybackEvent&& aEvent) override;
   void DurationChanged() override;
-  void MetadataLoaded(UniquePtr<MediaInfo> aInfo,
-                      UniquePtr<MetadataTags> aTags,
+  void MetadataLoaded(UniquePtr<MediaInfo> aInfo, UniquePtr<MetadataTags> aTags,
                       MediaDecoderEventVisibility aEventVisibility) override;
   void NotifyPrincipalChanged() override;
 
@@ -75,14 +72,12 @@ protected:
 
   nsCString GetDebugInfo() override;
 
-public:
-
+ public:
   // Create a decoder for the given aType. Returns null if we were unable
   // to create the decoder, for example because the requested MIME type in
   // the init struct was unsupported.
   static already_AddRefed<ChannelMediaDecoder> Create(
-    MediaDecoderInit& aInit,
-    DecoderDoctorDiagnostics* aDiagnostics);
+      MediaDecoderInit& aInit, DecoderDoctorDiagnostics* aDiagnostics);
 
   void Shutdown() override;
 
@@ -91,8 +86,7 @@ public:
   // Create a new decoder of the same type as this one.
   already_AddRefed<ChannelMediaDecoder> Clone(MediaDecoderInit& aInit);
 
-  nsresult Load(nsIChannel* aChannel,
-                bool aIsPrivateBrowsing,
+  nsresult Load(nsIChannel* aChannel, bool aIsPrivateBrowsing,
                 nsIStreamListener** aStreamListener);
 
   void AddSizeOfResources(ResourceSizes* aSizes) override;
@@ -102,7 +96,7 @@ public:
   void Suspend() override;
   void Resume() override;
 
-private:
+ private:
   void DownloadProgressed();
 
   // Create a new state machine to run this decoder.
@@ -121,16 +115,14 @@ private:
 
   bool CanPlayThroughImpl() final;
 
-  struct PlaybackRateInfo
-  {
-    uint32_t mRate; // Estimate of the current playback rate (bytes/second).
-    bool mReliable; // True if mRate is a reliable estimate.
+  struct PlaybackRateInfo {
+    uint32_t mRate;  // Estimate of the current playback rate (bytes/second).
+    bool mReliable;  // True if mRate is a reliable estimate.
   };
   // The actual playback rate computation.
   static PlaybackRateInfo ComputePlaybackRate(
-    const MediaChannelStatistics& aStats,
-    BaseMediaResource* aResource,
-    double aDuration);
+      const MediaChannelStatistics& aStats, BaseMediaResource* aResource,
+      double aDuration);
 
   // Something has changed that could affect the computed playback rate,
   // so recompute it.
@@ -165,6 +157,6 @@ private:
   bool mInitialChannelPrincipalKnown = false;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // ChannelMediaDecoder_h_
+#endif  // ChannelMediaDecoder_h_

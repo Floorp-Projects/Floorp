@@ -10,18 +10,14 @@
 
 namespace mozilla {
 
-Sinf::Sinf(Box& aBox)
-  : mDefaultIVSize(0)
-  , mDefaultEncryptionType()
-{
+Sinf::Sinf(Box& aBox) : mDefaultIVSize(0), mDefaultEncryptionType() {
   SinfParser parser(aBox);
   if (parser.GetSinf().IsValid()) {
     *this = parser.GetSinf();
   }
 }
 
-SinfParser::SinfParser(Box& aBox)
-{
+SinfParser::SinfParser(Box& aBox) {
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("schm")) {
       mozilla::Unused << ParseSchm(box);
@@ -31,23 +27,19 @@ SinfParser::SinfParser(Box& aBox)
   }
 }
 
-Result<Ok, nsresult>
-SinfParser::ParseSchm(Box& aBox)
-{
+Result<Ok, nsresult> SinfParser::ParseSchm(Box& aBox) {
   BoxReader reader(aBox);
 
   if (reader->Remaining() < 8) {
     return Err(NS_ERROR_FAILURE);
   }
 
-  MOZ_TRY(reader->ReadU32()); // flags -- ignore
+  MOZ_TRY(reader->ReadU32());  // flags -- ignore
   MOZ_TRY_VAR(mSinf.mDefaultEncryptionType, reader->ReadU32());
   return Ok();
 }
 
-Result<Ok, nsresult>
-SinfParser::ParseSchi(Box& aBox)
-{
+Result<Ok, nsresult> SinfParser::ParseSchi(Box& aBox) {
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("tenc") && ParseTenc(box).isErr()) {
       return Err(NS_ERROR_FAILURE);
@@ -56,16 +48,14 @@ SinfParser::ParseSchi(Box& aBox)
   return Ok();
 }
 
-Result<Ok, nsresult>
-SinfParser::ParseTenc(Box& aBox)
-{
+Result<Ok, nsresult> SinfParser::ParseTenc(Box& aBox) {
   BoxReader reader(aBox);
 
   if (reader->Remaining() < 24) {
     return Err(NS_ERROR_FAILURE);
   }
 
-  MOZ_TRY(reader->ReadU32()); // flags -- ignore
+  MOZ_TRY(reader->ReadU32());  // flags -- ignore
 
   uint32_t isEncrypted;
   MOZ_TRY_VAR(isEncrypted, reader->ReadU24());
@@ -74,4 +64,4 @@ SinfParser::ParseTenc(Box& aBox)
   return Ok();
 }
 
-}
+}  // namespace mozilla

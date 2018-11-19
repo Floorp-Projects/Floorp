@@ -25,7 +25,7 @@ using namespace std;
 FakeDecryptor* FakeDecryptor::sInstance = nullptr;
 
 class TestManager {
-public:
+ public:
   TestManager() = default;
 
   // Register a test with the test manager.
@@ -61,43 +61,31 @@ public:
     }
   }
 
-private:
+ private:
   ~TestManager() = default;
 
-  static void Error(const string& msg) {
-    FakeDecryptor::Message(msg);
-  }
+  static void Error(const string& msg) { FakeDecryptor::Message(msg); }
 
-  static void Finish() {
-    FakeDecryptor::Message("test-storage complete");
-  }
+  static void Finish() { FakeDecryptor::Message("test-storage complete"); }
 
   std::mutex mMutex;
   set<string> mTestIDs;
 };
 
-FakeDecryptor::FakeDecryptor(cdm::Host_9* aHost)
-  : mHost(aHost)
-{
+FakeDecryptor::FakeDecryptor(cdm::Host_9* aHost) : mHost(aHost) {
   MOZ_ASSERT(!sInstance);
   sInstance = this;
 }
 
-void
-FakeDecryptor::Message(const std::string& aMessage)
-{
+void FakeDecryptor::Message(const std::string& aMessage) {
   MOZ_ASSERT(sInstance);
   const static std::string sid("fake-session-id");
-  sInstance->mHost->OnSessionMessage(sid.c_str(),
-                                     sid.size(),
+  sInstance->mHost->OnSessionMessage(sid.c_str(), sid.size(),
                                      cdm::MessageType::kLicenseRequest,
-                                     aMessage.c_str(),
-                                     aMessage.size());
+                                     aMessage.c_str(), aMessage.size());
 }
 
-std::vector<std::string>
-Tokenize(const std::string& aString)
-{
+std::vector<std::string> Tokenize(const std::string& aString) {
   std::stringstream strstr(aString);
   std::istream_iterator<std::string> it(strstr), end;
   return std::vector<std::string>(it, end);
@@ -106,77 +94,69 @@ Tokenize(const std::string& aString)
 static const string TruncateRecordId = "truncate-record-id";
 static const string TruncateRecordData = "I will soon be truncated";
 
-template<class Continuation>
+template <class Continuation>
 class WriteRecordSuccessTask {
-public:
+ public:
   WriteRecordSuccessTask(string aId, Continuation aThen)
-    : mId(aId)
-    , mThen(move(aThen))
-  {}
+      : mId(aId), mThen(move(aThen)) {}
 
-  void operator()()
-  {
-    ReadRecord(FakeDecryptor::sInstance->mHost, mId, mThen);
-  }
+  void operator()() { ReadRecord(FakeDecryptor::sInstance->mHost, mId, mThen); }
 
   string mId;
   Continuation mThen;
 };
 
 class WriteRecordFailureTask {
-public:
+ public:
   explicit WriteRecordFailureTask(const string& aMessage,
                                   TestManager* aTestManager = nullptr,
                                   const string& aTestID = "")
-    : mMessage(aMessage), mTestmanager(aTestManager), mTestID(aTestID) {}
+      : mMessage(aMessage), mTestmanager(aTestManager), mTestID(aTestID) {}
 
-  void operator()()
-  {
+  void operator()() {
     FakeDecryptor::Message(mMessage);
     if (mTestmanager) {
       mTestmanager->EndTest(mTestID);
     }
   }
 
-private:
+ private:
   string mMessage;
   TestManager* const mTestmanager;
   const string mTestID;
 };
 
 class TestEmptyContinuation : public ReadContinuation {
-public:
+ public:
   TestEmptyContinuation(TestManager* aTestManager, const string& aTestID)
-    : mTestmanager(aTestManager), mTestID(aTestID) {}
+      : mTestmanager(aTestManager), mTestID(aTestID) {}
 
-  virtual void operator()(bool aSuccess,
-                          const uint8_t* aData,
-                          uint32_t aDataSize) override
-  {
+  virtual void operator()(bool aSuccess, const uint8_t* aData,
+                          uint32_t aDataSize) override {
     if (aDataSize) {
-      FakeDecryptor::Message("FAIL TestEmptyContinuation record was not truncated");
+      FakeDecryptor::Message(
+          "FAIL TestEmptyContinuation record was not truncated");
     }
     mTestmanager->EndTest(mTestID);
   }
 
-private:
+ private:
   TestManager* const mTestmanager;
   const string mTestID;
 };
 
 class TruncateContinuation : public ReadContinuation {
-public:
-  TruncateContinuation(const string& aID,
-                       TestManager* aTestManager,
+ public:
+  TruncateContinuation(const string& aID, TestManager* aTestManager,
                        const string& aTestID)
-    : mID(aID), mTestmanager(aTestManager), mTestID(aTestID) {}
+      : mID(aID), mTestmanager(aTestManager), mTestID(aTestID) {}
 
-  virtual void operator()(bool aSuccess,
-                          const uint8_t* aData,
-                          uint32_t aDataSize) override
-  {
-    if (string(reinterpret_cast<const char*>(aData), aDataSize) != TruncateRecordData) {
-      FakeDecryptor::Message("FAIL TruncateContinuation read data doesn't match written data");
+  virtual void operator()(bool aSuccess, const uint8_t* aData,
+                          uint32_t aDataSize) override {
+    if (string(reinterpret_cast<const char*>(aData), aDataSize) !=
+        TruncateRecordData) {
+      FakeDecryptor::Message(
+          "FAIL TruncateContinuation read data doesn't match written data");
     }
     auto cont = TestEmptyContinuation(mTestmanager, mTestID);
     auto msg = "FAIL in TruncateContinuation write.";
@@ -185,52 +165,51 @@ public:
                 WriteRecordFailureTask(msg, mTestmanager, mTestID));
   }
 
-private:
+ private:
   const string mID;
   TestManager* const mTestmanager;
   const string mTestID;
 };
 
 class VerifyAndFinishContinuation : public ReadContinuation {
-public:
-  explicit VerifyAndFinishContinuation(string aValue,
-                                       TestManager* aTestManager,
+ public:
+  explicit VerifyAndFinishContinuation(string aValue, TestManager* aTestManager,
                                        const string& aTestID)
-  : mValue(aValue), mTestmanager(aTestManager), mTestID(aTestID) {}
+      : mValue(aValue), mTestmanager(aTestManager), mTestID(aTestID) {}
 
-  virtual void operator()(bool aSuccess,
-                          const uint8_t* aData,
-                          uint32_t aDataSize) override
-  {
+  virtual void operator()(bool aSuccess, const uint8_t* aData,
+                          uint32_t aDataSize) override {
     if (string(reinterpret_cast<const char*>(aData), aDataSize) != mValue) {
-      FakeDecryptor::Message("FAIL VerifyAndFinishContinuation read data doesn't match expected data");
+      FakeDecryptor::Message(
+          "FAIL VerifyAndFinishContinuation read data doesn't match expected "
+          "data");
     }
     mTestmanager->EndTest(mTestID);
   }
 
-private:
+ private:
   string mValue;
   TestManager* const mTestmanager;
   const string mTestID;
 };
 
 class VerifyAndOverwriteContinuation : public ReadContinuation {
-public:
+ public:
   VerifyAndOverwriteContinuation(string aId, string aValue, string aOverwrite,
-                                 TestManager* aTestManager, const string& aTestID)
-    : mId(aId)
-    , mValue(aValue)
-    , mOverwrite(aOverwrite)
-    , mTestmanager(aTestManager)
-    , mTestID(aTestID)
-  {}
+                                 TestManager* aTestManager,
+                                 const string& aTestID)
+      : mId(aId),
+        mValue(aValue),
+        mOverwrite(aOverwrite),
+        mTestmanager(aTestManager),
+        mTestID(aTestID) {}
 
-  virtual void operator()(bool aSuccess,
-                          const uint8_t* aData,
-                          uint32_t aDataSize) override
-  {
+  virtual void operator()(bool aSuccess, const uint8_t* aData,
+                          uint32_t aDataSize) override {
     if (string(reinterpret_cast<const char*>(aData), aDataSize) != mValue) {
-      FakeDecryptor::Message("FAIL VerifyAndOverwriteContinuation read data doesn't match expected data");
+      FakeDecryptor::Message(
+          "FAIL VerifyAndOverwriteContinuation read data doesn't match "
+          "expected data");
     }
     auto cont = VerifyAndFinishContinuation(mOverwrite, mTestmanager, mTestID);
     auto msg = "FAIL in VerifyAndOverwriteContinuation write.";
@@ -239,7 +218,7 @@ public:
                 WriteRecordFailureTask(msg, mTestmanager, mTestID));
   }
 
-private:
+ private:
   string mId;
   string mValue;
   string mOverwrite;
@@ -250,36 +229,36 @@ private:
 static const string OpenAgainRecordId = "open-again-record-id";
 
 class OpenedSecondTimeContinuation : public OpenContinuation {
-public:
+ public:
   explicit OpenedSecondTimeContinuation(TestManager* aTestManager,
                                         const string& aTestID)
-    : mTestmanager(aTestManager), mTestID(aTestID)
-  {
-  }
+      : mTestmanager(aTestManager), mTestID(aTestID) {}
 
   void operator()(bool aSuccess) override {
     if (!aSuccess) {
-      FakeDecryptor::Message("FAIL OpenSecondTimeContinuation should not be able to re-open record.");
+      FakeDecryptor::Message(
+          "FAIL OpenSecondTimeContinuation should not be able to re-open "
+          "record.");
     }
     // Succeeded, open should have failed.
     mTestmanager->EndTest(mTestID);
   }
 
-private:
+ private:
   TestManager* const mTestmanager;
   const string mTestID;
 };
 
 class OpenedFirstTimeContinuation : public OpenContinuation {
-public:
-  OpenedFirstTimeContinuation(const string& aID,
-                              TestManager* aTestManager,
+ public:
+  OpenedFirstTimeContinuation(const string& aID, TestManager* aTestManager,
                               const string& aTestID)
-    : mID(aID), mTestmanager(aTestManager), mTestID(aTestID) {}
+      : mID(aID), mTestmanager(aTestManager), mTestID(aTestID) {}
 
   void operator()(bool aSuccess) override {
     if (!aSuccess) {
-      FakeDecryptor::Message("FAIL OpenAgainContinuation to open record initially.");
+      FakeDecryptor::Message(
+          "FAIL OpenAgainContinuation to open record initially.");
       mTestmanager->EndTest(mTestID);
       return;
     }
@@ -288,16 +267,15 @@ public:
     OpenRecord(FakeDecryptor::sInstance->mHost, mID, cont);
   }
 
-private:
+ private:
   const string mID;
   TestManager* const mTestmanager;
   const string mTestID;
 };
 
-static void
-DoTestStorage(const string& aPrefix, TestManager* aTestManager)
-{
-  MOZ_ASSERT(FakeDecryptor::sInstance->mHost, "FakeDecryptor::sInstance->mHost should not be null");
+static void DoTestStorage(const string& aPrefix, TestManager* aTestManager) {
+  MOZ_ASSERT(FakeDecryptor::sInstance->mHost,
+             "FakeDecryptor::sInstance->mHost should not be null");
   // Basic I/O tests. We run three cases concurrently. The tests, like
   // CDMStorage run asynchronously. When they've all passed, we send
   // a message back to the parent process, or a failure message if not.
@@ -333,9 +311,10 @@ DoTestStorage(const string& aPrefix, TestManager* aTestManager)
   auto task2 = VerifyAndOverwriteContinuation(id2, record1, overwrite,
                                               aTestManager, testID2);
   auto msg2 = "FAIL in TestStorage writing record1.";
-  WriteRecord(FakeDecryptor::sInstance->mHost, id2, record1,
-              WriteRecordSuccessTask<VerifyAndOverwriteContinuation>(id2, task2),
-              WriteRecordFailureTask(msg2, aTestManager, testID2));
+  WriteRecord(
+      FakeDecryptor::sInstance->mHost, id2, record1,
+      WriteRecordSuccessTask<VerifyAndOverwriteContinuation>(id2, task2),
+      WriteRecordFailureTask(msg2, aTestManager, testID2));
 
   // Test 3: Test that opening a record while it's already open fails.
   //
@@ -349,9 +328,7 @@ DoTestStorage(const string& aPrefix, TestManager* aTestManager)
   OpenRecord(FakeDecryptor::sInstance->mHost, id3, task3);
 }
 
-void
-FakeDecryptor::TestStorage()
-{
+void FakeDecryptor::TestStorage() {
   auto* testManager = new TestManager();
   // Main thread tests.
   DoTestStorage("mt1-", testManager);
@@ -361,13 +338,10 @@ FakeDecryptor::TestStorage()
   // which ends the test for the parent.
 }
 
-class ReportWritten
-{
-public:
+class ReportWritten {
+ public:
   ReportWritten(const string& aRecordId, const string& aValue)
-    : mRecordId(aRecordId)
-    , mValue(aValue)
-  {}
+      : mRecordId(aRecordId), mValue(aValue) {}
   void operator()() {
     FakeDecryptor::Message("stored " + mRecordId + " " + mValue);
   }
@@ -377,14 +351,11 @@ public:
 };
 
 class ReportReadStatusContinuation : public ReadContinuation {
-public:
+ public:
   explicit ReportReadStatusContinuation(const string& aRecordId)
-    : mRecordId(aRecordId)
-  {}
-  void operator()(bool aSuccess,
-                  const uint8_t* aData,
-                  uint32_t aDataSize) override
-  {
+      : mRecordId(aRecordId) {}
+  void operator()(bool aSuccess, const uint8_t* aData,
+                  uint32_t aDataSize) override {
     if (!aSuccess) {
       FakeDecryptor::Message("retrieve " + mRecordId + " failed");
     } else {
@@ -400,59 +371,50 @@ public:
 };
 
 class ReportReadRecordContinuation : public ReadContinuation {
-public:
+ public:
   explicit ReportReadRecordContinuation(const string& aRecordId)
-    : mRecordId(aRecordId)
-  {}
-  void operator()(bool aSuccess,
-                  const uint8_t* aData,
-                  uint32_t aDataSize) override
-  {
+      : mRecordId(aRecordId) {}
+  void operator()(bool aSuccess, const uint8_t* aData,
+                  uint32_t aDataSize) override {
     if (!aSuccess) {
       FakeDecryptor::Message("retrieved " + mRecordId + " failed");
     } else {
-      FakeDecryptor::Message("retrieved " + mRecordId + " " +
-                             string(reinterpret_cast<const char*>(aData),
-                                    aDataSize));
+      FakeDecryptor::Message(
+          "retrieved " + mRecordId + " " +
+          string(reinterpret_cast<const char*>(aData), aDataSize));
     }
   }
   string mRecordId;
 };
 
-enum ShutdownMode {
-  ShutdownNormal,
-  ShutdownTimeout,
-  ShutdownStoreToken
-};
+enum ShutdownMode { ShutdownNormal, ShutdownTimeout, ShutdownStoreToken };
 
 static ShutdownMode sShutdownMode = ShutdownNormal;
 static string sShutdownToken;
 
-void
-FakeDecryptor::UpdateSession(uint32_t aPromiseId,
-                             const char* aSessionId,
-                             uint32_t aSessionIdLength,
-                             const uint8_t* aResponse,
-                             uint32_t aResponseSize)
-{
-  MOZ_ASSERT(FakeDecryptor::sInstance->mHost, "FakeDecryptor::sInstance->mHost should not be null");
-  std::string response((const char*)aResponse, (const char*)(aResponse)+aResponseSize);
+void FakeDecryptor::UpdateSession(uint32_t aPromiseId, const char* aSessionId,
+                                  uint32_t aSessionIdLength,
+                                  const uint8_t* aResponse,
+                                  uint32_t aResponseSize) {
+  MOZ_ASSERT(FakeDecryptor::sInstance->mHost,
+             "FakeDecryptor::sInstance->mHost should not be null");
+  std::string response((const char*)aResponse,
+                       (const char*)(aResponse) + aResponseSize);
   std::vector<std::string> tokens = Tokenize(response);
   const string& task = tokens[0];
   if (task == "test-storage") {
     TestStorage();
   } else if (task == "store") {
-      // send "stored record" message on complete.
+    // send "stored record" message on complete.
     const string& id = tokens[1];
     const string& value = tokens[2];
-    WriteRecord(FakeDecryptor::sInstance->mHost,
-                id,
-                value,
+    WriteRecord(FakeDecryptor::sInstance->mHost, id, value,
                 ReportWritten(id, value),
                 WriteRecordFailureTask("FAIL in writing record."));
   } else if (task == "retrieve") {
     const string& id = tokens[1];
-    ReadRecord(FakeDecryptor::sInstance->mHost, id, ReportReadStatusContinuation(id));
+    ReadRecord(FakeDecryptor::sInstance->mHost, id,
+               ReportReadStatusContinuation(id));
   } else if (task == "shutdown-mode") {
     const string& mode = tokens[1];
     if (mode == "timeout") {
@@ -463,8 +425,7 @@ FakeDecryptor::UpdateSession(uint32_t aPromiseId,
       Message("shutdown-token received " + sShutdownToken);
     }
   } else if (task == "retrieve-shutdown-token") {
-    ReadRecord(FakeDecryptor::sInstance->mHost,
-               "shutdown-token",
+    ReadRecord(FakeDecryptor::sInstance->mHost, "shutdown-token",
                ReportReadRecordContinuation("shutdown-token"));
   } else if (task == "test-op-apis") {
     mozilla::cdmtest::TestOuputProtectionAPIs();

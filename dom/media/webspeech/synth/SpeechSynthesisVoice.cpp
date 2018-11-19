@@ -21,74 +21,54 @@ NS_INTERFACE_MAP_END
 
 SpeechSynthesisVoice::SpeechSynthesisVoice(nsISupports* aParent,
                                            const nsAString& aUri)
-  : mParent(aParent)
-  , mUri(aUri)
-{
-}
+    : mParent(aParent), mUri(aUri) {}
 
-SpeechSynthesisVoice::~SpeechSynthesisVoice()
-{
-}
+SpeechSynthesisVoice::~SpeechSynthesisVoice() {}
 
-JSObject*
-SpeechSynthesisVoice::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SpeechSynthesisVoice::WrapObject(JSContext* aCx,
+                                           JS::Handle<JSObject*> aGivenProto) {
   return SpeechSynthesisVoice_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsISupports*
-SpeechSynthesisVoice::GetParentObject() const
-{
-  return mParent;
-}
+nsISupports* SpeechSynthesisVoice::GetParentObject() const { return mParent; }
 
-void
-SpeechSynthesisVoice::GetVoiceURI(nsString& aRetval) const
-{
+void SpeechSynthesisVoice::GetVoiceURI(nsString& aRetval) const {
   aRetval = mUri;
 }
 
-void
-SpeechSynthesisVoice::GetName(nsString& aRetval) const
-{
+void SpeechSynthesisVoice::GetName(nsString& aRetval) const {
   DebugOnly<nsresult> rv =
-    nsSynthVoiceRegistry::GetInstance()->GetVoiceName(mUri, aRetval);
+      nsSynthVoiceRegistry::GetInstance()->GetVoiceName(mUri, aRetval);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "Failed to get SpeechSynthesisVoice.name");
 }
 
-void
-SpeechSynthesisVoice::GetLang(nsString& aRetval) const
-{
+void SpeechSynthesisVoice::GetLang(nsString& aRetval) const {
   DebugOnly<nsresult> rv =
-    nsSynthVoiceRegistry::GetInstance()->GetVoiceLang(mUri, aRetval);
+      nsSynthVoiceRegistry::GetInstance()->GetVoiceLang(mUri, aRetval);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "Failed to get SpeechSynthesisVoice.lang");
 }
 
-bool
-SpeechSynthesisVoice::LocalService() const
-{
+bool SpeechSynthesisVoice::LocalService() const {
   bool isLocal;
   DebugOnly<nsresult> rv =
-    nsSynthVoiceRegistry::GetInstance()->IsLocalVoice(mUri, &isLocal);
-  NS_WARNING_ASSERTION(
-    NS_SUCCEEDED(rv), "Failed to get SpeechSynthesisVoice.localService");
+      nsSynthVoiceRegistry::GetInstance()->IsLocalVoice(mUri, &isLocal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Failed to get SpeechSynthesisVoice.localService");
 
   return isLocal;
 }
 
-bool
-SpeechSynthesisVoice::Default() const
-{
+bool SpeechSynthesisVoice::Default() const {
   bool isDefault;
   DebugOnly<nsresult> rv =
-    nsSynthVoiceRegistry::GetInstance()->IsDefaultVoice(mUri, &isDefault);
-  NS_WARNING_ASSERTION(
-    NS_SUCCEEDED(rv), "Failed to get SpeechSynthesisVoice.default");
+      nsSynthVoiceRegistry::GetInstance()->IsDefaultVoice(mUri, &isDefault);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Failed to get SpeechSynthesisVoice.default");
 
   return isDefault;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

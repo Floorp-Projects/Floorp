@@ -10,4 +10,4 @@ namespace mozilla {
 
 template class FFmpegDecoderModule<LIBAV_VER>;
 
-} // namespace mozilla
+}  // namespace mozilla

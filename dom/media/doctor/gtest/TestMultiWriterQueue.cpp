@@ -18,10 +18,8 @@ using mozilla::MultiWriterQueueDefaultBufferSize;
 using mozilla::MultiWriterQueueReaderLocking_Mutex;
 using mozilla::MultiWriterQueueReaderLocking_None;
 
-template<size_t BufferSize>
-static void
-TestMultiWriterQueueST(const int loops)
-{
+template <size_t BufferSize>
+static void TestMultiWriterQueueST(const int loops) {
   using Q = MultiWriterQueue<int, BufferSize>;
   Q q;
 
@@ -47,8 +45,7 @@ TestMultiWriterQueueST(const int loops)
   }
 }
 
-TEST(MultiWriterQueue, SingleThreaded)
-{
+TEST(MultiWriterQueue, SingleThreaded) {
   TestMultiWriterQueueST<1>(10);
   TestMultiWriterQueueST<2>(10);
   TestMultiWriterQueueST<4>(10);
@@ -66,13 +63,9 @@ TEST(MultiWriterQueue, SingleThreaded)
   TestMultiWriterQueueST<8192>(8192 * 4 + 1);
 }
 
-template<typename Q>
-static void
-TestMultiWriterQueueMT(int aWriterThreads,
-                       int aReaderThreads,
-                       int aTotalLoops,
-                       const char* aPrintPrefix)
-{
+template <typename Q>
+static void TestMultiWriterQueueMT(int aWriterThreads, int aReaderThreads,
+                                   int aTotalLoops, const char* aPrintPrefix) {
   Q q;
 
   const int threads = aWriterThreads + aReaderThreads;
@@ -80,7 +73,7 @@ TestMultiWriterQueueMT(int aWriterThreads,
 
   nsIThread** array = new nsIThread*[threads];
 
-  mozilla::Atomic<int> pushThreadsCompleted{ 0 };
+  mozilla::Atomic<int> pushThreadsCompleted{0};
   int pops = 0;
 
   nsCOMPtr<nsIRunnable> popper = NS_NewRunnableFunction("MWQPopper", [&]() {
@@ -105,7 +98,7 @@ TestMultiWriterQueueMT(int aWriterThreads,
     // }
   });
   // Cycle through reader threads.
-  mozilla::Atomic<size_t> readerThread{ 0 };
+  mozilla::Atomic<size_t> readerThread{0};
 
   double start = mozilla::ToSeconds(mozilla::DDNow());
 
@@ -127,7 +120,7 @@ TestMultiWriterQueueMT(int aWriterThreads,
             // Run a popper task every time we push the last element of a
             // buffer.
             array[++readerThread % aReaderThreads]->Dispatch(
-              popper, nsIThread::DISPATCH_NORMAL);
+                popper, nsIThread::DISPATCH_NORMAL);
           }
         }
         ++pushThreadsCompleted;
@@ -151,187 +144,168 @@ TestMultiWriterQueueMT(int aWriterThreads,
   q.PopAll([](const int& i) { EXPECT_TRUE(false); });
 
   double duration = mozilla::ToSeconds(mozilla::DDNow()) - start - 0.1;
-  printf("%s threads=%dw+%dr loops/thread=%d pushes=pops=%d duration=%fs "
-         "pushes/s=%f buffers: live=%d (w %d) reusable=%d (w %d) "
-         "alloc=%d (w %d)\n",
-         aPrintPrefix,
-         aWriterThreads,
-         aReaderThreads,
-         loops,
-         pushes,
-         duration,
-         pushes / duration,
-         q.LiveBuffersStats().mCount,
-         q.LiveBuffersStats().mWatermark,
-         q.ReusableBuffersStats().mCount,
-         q.ReusableBuffersStats().mWatermark,
-         q.AllocatedBuffersStats().mCount,
-         q.AllocatedBuffersStats().mWatermark);
+  printf(
+      "%s threads=%dw+%dr loops/thread=%d pushes=pops=%d duration=%fs "
+      "pushes/s=%f buffers: live=%d (w %d) reusable=%d (w %d) "
+      "alloc=%d (w %d)\n",
+      aPrintPrefix, aWriterThreads, aReaderThreads, loops, pushes, duration,
+      pushes / duration, q.LiveBuffersStats().mCount,
+      q.LiveBuffersStats().mWatermark, q.ReusableBuffersStats().mCount,
+      q.ReusableBuffersStats().mWatermark, q.AllocatedBuffersStats().mCount,
+      q.AllocatedBuffersStats().mWatermark);
 }
 
-TEST(MultiWriterQueue, MultiWriterSingleReader)
-{
+TEST(MultiWriterQueue, MultiWriterSingleReader) {
   // Small BufferSize, to exercize the buffer management code.
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
-    1, 0, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
+      1, 0, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
-    1, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
+      1, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
-    2, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
+      2, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
-    3, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
+      3, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
-    4, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
+      4, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
-    5, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
+      5, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
-    6, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
+      6, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
-    7, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
+      7, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
-    8, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
+      8, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
-    9, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
+      9, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
-    10, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
+      10, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
-    16, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
+      16, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
-    32, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
+      32, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
-    64, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
+      64, 1, 2 * 1024 * 1024, "MultiWriterQueue<int, 10, Locking_None>");
 
   // A more real-life buffer size.
-  TestMultiWriterQueueMT<MultiWriterQueue<int,
-                                          MultiWriterQueueDefaultBufferSize,
-                                          MultiWriterQueueReaderLocking_None>>(
-    64,
-    1,
-    2 * 1024 * 1024,
-    "MultiWriterQueue<int, DefaultBufferSize, Locking_None>");
+  TestMultiWriterQueueMT<
+      MultiWriterQueue<int, MultiWriterQueueDefaultBufferSize,
+                       MultiWriterQueueReaderLocking_None>>(
+      64, 1, 2 * 1024 * 1024,
+      "MultiWriterQueue<int, DefaultBufferSize, Locking_None>");
 
   // DEBUG-mode thread-safety checks should make the following (multi-reader
   // with no locking) crash; uncomment to verify.
   // TestMultiWriterQueueMT<
-  //   MultiWriterQueue<int, MultiWriterQueueDefaultBufferSize, MultiWriterQueueReaderLocking_None>>(64, 2, 2*1024*1024);
+  //   MultiWriterQueue<int, MultiWriterQueueDefaultBufferSize,
+  //   MultiWriterQueueReaderLocking_None>>(64, 2, 2*1024*1024);
 }
 
-TEST(MultiWriterQueue, MultiWriterMultiReader)
-{
+TEST(MultiWriterQueue, MultiWriterMultiReader) {
   static_assert(
-    mozilla::IsSame<
-      MultiWriterQueue<int, 10>,
-      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>::value,
-    "MultiWriterQueue reader locking should use Mutex by default");
+      mozilla::IsSame<MultiWriterQueue<int, 10>,
+                      MultiWriterQueue<
+                          int, 10, MultiWriterQueueReaderLocking_Mutex>>::value,
+      "MultiWriterQueue reader locking should use Mutex by default");
 
   // Small BufferSize, to exercize the buffer management code.
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
-    1, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
+      1, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
-    2, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
+      2, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
-    3, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
+      3, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
-    4, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
+      4, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
-    5, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
+      5, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
-    6, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
+      6, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
-    7, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
+      7, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
-    8, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
+      8, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
-    9, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
+      9, 2, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
-    10, 4, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
+      10, 4, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
-    16, 8, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
+      16, 8, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
-    32, 16, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
+      32, 16, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
   TestMultiWriterQueueMT<
-    MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
-    64, 32, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
+      MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_Mutex>>(
+      64, 32, 1024 * 1024, "MultiWriterQueue<int, 10, Locking_Mutex>");
 
   // A more real-life buffer size.
-  TestMultiWriterQueueMT<MultiWriterQueue<int,
-                                          MultiWriterQueueDefaultBufferSize,
-                                          MultiWriterQueueReaderLocking_Mutex>>(
-    64,
-    32,
-    1024 * 1024,
-    "MultiWriterQueue<int, DefaultBufferSize, Locking_Mutex>");
+  TestMultiWriterQueueMT<
+      MultiWriterQueue<int, MultiWriterQueueDefaultBufferSize,
+                       MultiWriterQueueReaderLocking_Mutex>>(
+      64, 32, 1024 * 1024,
+      "MultiWriterQueue<int, DefaultBufferSize, Locking_Mutex>");
 }
 
 // Single-threaded use only.
-struct DequeWrapperST
-{
+struct DequeWrapperST {
   nsDeque mDQ;
 
-  bool Push(int i)
-  {
+  bool Push(int i) {
     mDQ.PushFront(reinterpret_cast<void*>(static_cast<uintptr_t>(i)));
     return true;
   }
-  template<typename F>
-  void PopAll(F&& aF)
-  {
+  template <typename F>
+  void PopAll(F&& aF) {
     while (mDQ.GetSize() != 0) {
       int i = static_cast<int>(reinterpret_cast<uintptr_t>(mDQ.Pop()));
       aF(i);
     }
   }
 
-  struct CountAndWatermark
-  {
+  struct CountAndWatermark {
     int mCount = 0;
     int mWatermark = 0;
   } mLiveBuffersStats, mReusableBuffersStats, mAllocatedBuffersStats;
 
   CountAndWatermark LiveBuffersStats() const { return mLiveBuffersStats; }
-  CountAndWatermark ReusableBuffersStats() const
-  {
+  CountAndWatermark ReusableBuffersStats() const {
     return mReusableBuffersStats;
   }
-  CountAndWatermark AllocatedBuffersStats() const
-  {
+  CountAndWatermark AllocatedBuffersStats() const {
     return mAllocatedBuffersStats;
   }
 };
 
-// Multi-thread (atomic) writes allowed, make sure you don't pop unless writes can't happen.
-struct DequeWrapperAW : DequeWrapperST
-{
-  mozilla::Atomic<bool> mWriting{ false };
+// Multi-thread (atomic) writes allowed, make sure you don't pop unless writes
+// can't happen.
+struct DequeWrapperAW : DequeWrapperST {
+  mozilla::Atomic<bool> mWriting{false};
 
-  bool Push(int i)
-  {
+  bool Push(int i) {
     while (!mWriting.compareExchange(false, true)) {
     }
     mDQ.PushFront(reinterpret_cast<void*>(static_cast<uintptr_t>(i)));
@@ -340,18 +314,14 @@ struct DequeWrapperAW : DequeWrapperST
   }
 };
 
-// Multi-thread writes allowed, make sure you don't pop unless writes can't happen.
-struct DequeWrapperMW : DequeWrapperST
-{
+// Multi-thread writes allowed, make sure you don't pop unless writes can't
+// happen.
+struct DequeWrapperMW : DequeWrapperST {
   mozilla::Mutex mMutex;
 
-  DequeWrapperMW()
-    : mMutex("DequeWrapperMW/MT")
-  {
-  }
+  DequeWrapperMW() : mMutex("DequeWrapperMW/MT") {}
 
-  bool Push(int i)
-  {
+  bool Push(int i) {
     mozilla::MutexAutoLock lock(mMutex);
     mDQ.PushFront(reinterpret_cast<void*>(static_cast<uintptr_t>(i)));
     return true;
@@ -359,11 +329,9 @@ struct DequeWrapperMW : DequeWrapperST
 };
 
 // Multi-thread read&writes allowed.
-struct DequeWrapperMT : DequeWrapperMW
-{
-  template<typename F>
-  void PopAll(F&& aF)
-  {
+struct DequeWrapperMT : DequeWrapperMW {
+  template <typename F>
+  void PopAll(F&& aF) {
     while (mDQ.GetSize() != 0) {
       int i;
       {
@@ -375,26 +343,25 @@ struct DequeWrapperMT : DequeWrapperMW
   }
 };
 
-TEST(MultiWriterQueue, nsDequeBenchmark)
-{
-  TestMultiWriterQueueMT<DequeWrapperST>(
-    1, 0, 2 * 1024 * 1024, "DequeWrapperST ");
+TEST(MultiWriterQueue, nsDequeBenchmark) {
+  TestMultiWriterQueueMT<DequeWrapperST>(1, 0, 2 * 1024 * 1024,
+                                         "DequeWrapperST ");
 
-  TestMultiWriterQueueMT<DequeWrapperAW>(
-    1, 0, 2 * 1024 * 1024, "DequeWrapperAW ");
-  TestMultiWriterQueueMT<DequeWrapperMW>(
-    1, 0, 2 * 1024 * 1024, "DequeWrapperMW ");
-  TestMultiWriterQueueMT<DequeWrapperMT>(
-    1, 0, 2 * 1024 * 1024, "DequeWrapperMT ");
-  TestMultiWriterQueueMT<DequeWrapperMT>(
-    1, 1, 2 * 1024 * 1024, "DequeWrapperMT ");
+  TestMultiWriterQueueMT<DequeWrapperAW>(1, 0, 2 * 1024 * 1024,
+                                         "DequeWrapperAW ");
+  TestMultiWriterQueueMT<DequeWrapperMW>(1, 0, 2 * 1024 * 1024,
+                                         "DequeWrapperMW ");
+  TestMultiWriterQueueMT<DequeWrapperMT>(1, 0, 2 * 1024 * 1024,
+                                         "DequeWrapperMT ");
+  TestMultiWriterQueueMT<DequeWrapperMT>(1, 1, 2 * 1024 * 1024,
+                                         "DequeWrapperMT ");
 
-  TestMultiWriterQueueMT<DequeWrapperAW>(
-    8, 0, 2 * 1024 * 1024, "DequeWrapperAW ");
-  TestMultiWriterQueueMT<DequeWrapperMW>(
-    8, 0, 2 * 1024 * 1024, "DequeWrapperMW ");
-  TestMultiWriterQueueMT<DequeWrapperMT>(
-    8, 0, 2 * 1024 * 1024, "DequeWrapperMT ");
-  TestMultiWriterQueueMT<DequeWrapperMT>(
-    8, 1, 2 * 1024 * 1024, "DequeWrapperMT ");
+  TestMultiWriterQueueMT<DequeWrapperAW>(8, 0, 2 * 1024 * 1024,
+                                         "DequeWrapperAW ");
+  TestMultiWriterQueueMT<DequeWrapperMW>(8, 0, 2 * 1024 * 1024,
+                                         "DequeWrapperMW ");
+  TestMultiWriterQueueMT<DequeWrapperMT>(8, 0, 2 * 1024 * 1024,
+                                         "DequeWrapperMT ");
+  TestMultiWriterQueueMT<DequeWrapperMT>(8, 1, 2 * 1024 * 1024,
+                                         "DequeWrapperMT ");
 }

@@ -24,7 +24,7 @@
 // Uncomment the following to validate that we're predicting the number
 // of Vorbis samples in each packet correctly.
 #define VALIDATE_VORBIS_SAMPLE_CALCULATION
-#ifdef  VALIDATE_VORBIS_SAMPLE_CALCULATION
+#ifdef VALIDATE_VORBIS_SAMPLE_CALCULATION
 #include <map>
 #endif
 
@@ -34,11 +34,9 @@ namespace mozilla {
 
 class OpusParser;
 
-struct OggPacketDeletePolicy
-{
-  void operator()(ogg_packet* aPacket) const
-  {
-    delete [] aPacket->packet;
+struct OggPacketDeletePolicy {
+  void operator()(ogg_packet* aPacket) const {
+    delete[] aPacket->packet;
     delete aPacket;
   }
 };
@@ -46,10 +44,8 @@ struct OggPacketDeletePolicy
 using OggPacketPtr = UniquePtr<ogg_packet, OggPacketDeletePolicy>;
 
 // Deallocates a packet, used in OggPacketQueue below.
-class OggPacketDeallocator : public nsDequeFunctor
-{
-  virtual void operator()(void* aPacket) override
-  {
+class OggPacketDeallocator : public nsDequeFunctor {
+  virtual void operator()(void* aPacket) override {
     OggPacketDeletePolicy()(static_cast<ogg_packet*>(aPacket));
   }
 };
@@ -64,32 +60,26 @@ class OggPacketDeallocator : public nsDequeFunctor
 // frames/samples, reducing the amount of frames/samples we must decode to
 // determine start-time at a particular offset, and gives us finer control
 // over memory usage.
-class OggPacketQueue : private nsDeque
-{
-public:
-  OggPacketQueue() : nsDeque(new OggPacketDeallocator()) { }
+class OggPacketQueue : private nsDeque {
+ public:
+  OggPacketQueue() : nsDeque(new OggPacketDeallocator()) {}
   ~OggPacketQueue() { Erase(); }
   bool IsEmpty() { return nsDeque::GetSize() == 0; }
   void Append(OggPacketPtr aPacket);
-  OggPacketPtr PopFront()
-  {
+  OggPacketPtr PopFront() {
     return OggPacketPtr(static_cast<ogg_packet*>(nsDeque::PopFront()));
   }
-  ogg_packet* PeekFront()
-  {
+  ogg_packet* PeekFront() {
     return static_cast<ogg_packet*>(nsDeque::PeekFront());
   }
-  OggPacketPtr Pop()
-  {
+  OggPacketPtr Pop() {
     return OggPacketPtr(static_cast<ogg_packet*>(nsDeque::Pop()));
   }
-  ogg_packet* operator[](size_t aIndex) const
-  {
+  ogg_packet* operator[](size_t aIndex) const {
     return static_cast<ogg_packet*>(nsDeque::ObjectAt(aIndex));
   }
   size_t Length() const { return nsDeque::GetSize(); }
-  void PushFront(OggPacketPtr aPacket)
-  {
+  void PushFront(OggPacketPtr aPacket) {
     nsDeque::PushFront(aPacket.release());
   }
   void Erase() { nsDeque::Erase(); }
@@ -97,14 +87,12 @@ public:
 
 // Encapsulates the data required for decoding an ogg bitstream and for
 // converting granulepos to timestamps.
-class OggCodecState
-{
-public:
+class OggCodecState {
+ public:
   typedef mozilla::MetadataTags MetadataTags;
   // Ogg types we know about
-  enum CodecType
-  {
-    TYPE_VORBIS=0,
+  enum CodecType {
+    TYPE_VORBIS = 0,
     TYPE_THEORA,
     TYPE_OPUS,
     TYPE_SKELETON,
@@ -125,16 +113,12 @@ public:
   // to determine if the last header has been read.
   // This function takes ownership of the packet and is responsible for
   // releasing it or queuing it for later processing.
-  virtual bool DecodeHeader(OggPacketPtr aPacket)
-  {
+  virtual bool DecodeHeader(OggPacketPtr aPacket) {
     return (mDoneReadingHeaders = true);
   }
 
   // Build a hash table with tag metadata parsed from the stream.
-  virtual MetadataTags* GetTags()
-  {
-    return nullptr;
-  }
+  virtual MetadataTags* GetTags() { return nullptr; }
 
   // Returns the end time that a granulepos represents.
   virtual int64_t Time(int64_t granulepos) { return -1; }
@@ -146,8 +130,7 @@ public:
   virtual int64_t PacketDuration(ogg_packet* aPacket) { return -1; }
 
   // Returns the start time of the given packet, if it can be determined.
-  virtual int64_t PacketStartTime(ogg_packet* aPacket)
-  {
+  virtual int64_t PacketStartTime(ogg_packet* aPacket) {
     if (aPacket->granulepos < 0) {
       return -1;
     }
@@ -170,8 +153,7 @@ public:
 
   // Deactivates the bitstream. Only the primary video and audio bitstreams
   // should be active.
-  void Deactivate()
-  {
+  void Deactivate() {
     mActive = false;
     mDoneReadingHeaders = true;
     Reset();
@@ -248,8 +230,7 @@ public:
   // True when all headers packets have been read.
   bool mDoneReadingHeaders;
 
-  virtual const TrackInfo* GetInfo() const
-  {
+  virtual const TrackInfo* GetInfo() const {
     MOZ_RELEASE_ASSERT(false, "Can't be called directly");
     return nullptr;
   }
@@ -260,11 +241,10 @@ public:
   // Utility method to parse and add a vorbis-style comment
   // to a metadata hash table. Most Ogg-encapsulated codecs
   // use the vorbis comment format for metadata.
-  static bool AddVorbisComment(MetadataTags* aTags,
-                        const char* aComment,
-                        uint32_t aLength);
+  static bool AddVorbisComment(MetadataTags* aTags, const char* aComment,
+                               uint32_t aLength);
 
-protected:
+ protected:
   // Constructs a new OggCodecState. aActive denotes whether the stream is
   // active. For streams of unsupported or unknown types, aActive should be
   // false.
@@ -289,13 +269,12 @@ protected:
   bool SetCodecSpecificConfig(MediaByteBuffer* aBuffer,
                               OggPacketQueue& aHeaders);
 
-private:
+ private:
   bool InternalInit();
 };
 
-class VorbisState : public OggCodecState
-{
-public:
+class VorbisState : public OggCodecState {
+ public:
   explicit VorbisState(ogg_page* aBosPage);
   virtual ~VorbisState();
 
@@ -312,7 +291,7 @@ public:
   // Return a hash table with tag metadata.
   MetadataTags* GetTags() override;
 
-private:
+ private:
   AudioInfo mInfo;
   vorbis_info mVorbisInfo;
   vorbis_comment mComment;
@@ -355,24 +334,20 @@ private:
   // is not defined.
   void AssertHasRecordedPacketSamples(ogg_packet* aPacket);
 
-public:
+ public:
   // Asserts that the number of samples predicted for aPacket is aSamples.
   // This function has no effect if VALIDATE_VORBIS_SAMPLE_CALCULATION
   // is not defined.
   void ValidateVorbisPacketSamples(ogg_packet* aPacket, long aSamples);
-
 };
 
 // Returns 1 if the Theora info struct is decoding a media of Theora
 // version (maj,min,sub) or later, otherwise returns 0.
-int TheoraVersion(th_info* info,
-                  unsigned char maj,
-                  unsigned char min,
+int TheoraVersion(th_info* info, unsigned char maj, unsigned char min,
                   unsigned char sub);
 
-class TheoraState : public OggCodecState
-{
-public:
+class TheoraState : public OggCodecState {
+ public:
   explicit TheoraState(ogg_page* aBosPage);
   virtual ~TheoraState();
 
@@ -388,12 +363,11 @@ public:
   nsresult PageIn(ogg_page* aPage) override;
   const TrackInfo* GetInfo() const override { return &mInfo; }
   int64_t MaxKeyframeOffset() override;
-  int32_t KeyFrameGranuleJobs() override
-  {
+  int32_t KeyFrameGranuleJobs() override {
     return mTheoraInfo.keyframe_granule_shift;
   }
 
-private:
+ private:
   // Returns the end time that a granulepos represents.
   static int64_t Time(th_info* aInfo, int64_t aGranulePos);
 
@@ -413,9 +387,8 @@ private:
   void ReconstructTheoraGranulepos();
 };
 
-class OpusState : public OggCodecState
-{
-public:
+class OpusState : public OggCodecState {
+ public:
   explicit OpusState(ogg_page* aBosPage);
   virtual ~OpusState();
 
@@ -437,7 +410,7 @@ public:
   // Construct and return a table of tags from the metadata header.
   MetadataTags* GetTags() override;
 
-private:
+ private:
   nsAutoPtr<OpusParser> mParser;
   OpusMSDecoder* mDecoder;
 
@@ -462,10 +435,9 @@ private:
 
 // Constructs a 32bit version number out of two 16 bit major,minor
 // version numbers.
-#define SKELETON_VERSION(major, minor) (((major)<<16)|(minor))
+#define SKELETON_VERSION(major, minor) (((major) << 16) | (minor))
 
-enum EMsgHeaderType
-{
+enum EMsgHeaderType {
   eContentType,
   eRole,
   eName,
@@ -477,21 +449,18 @@ enum EMsgHeaderType
   eTrackDependencies
 };
 
-typedef struct
-{
+typedef struct {
   const char* mPatternToRecognize;
   EMsgHeaderType mMsgHeaderType;
 } FieldPatternType;
 
 // Stores the message information for different logical bitstream.
-typedef struct
-{
+typedef struct {
   nsClassHashtable<nsUint32HashKey, nsCString> mValuesStore;
 } MessageField;
 
-class SkeletonState : public OggCodecState
-{
-public:
+class SkeletonState : public OggCodecState {
+ public:
   explicit SkeletonState(ogg_page* aBosPage);
   ~SkeletonState();
 
@@ -508,16 +477,12 @@ public:
 
   // Stores the offset of the page on which a keyframe starts,
   // and its presentation time.
-  class nsKeyPoint
-  {
-  public:
-    nsKeyPoint()
-      : mOffset(INT64_MAX)
-      , mTime(INT64_MAX) {}
+  class nsKeyPoint {
+   public:
+    nsKeyPoint() : mOffset(INT64_MAX), mTime(INT64_MAX) {}
 
     nsKeyPoint(int64_t aOffset, int64_t aTime)
-      : mOffset(aOffset)
-      ,mTime(aTime) {}
+        : mOffset(aOffset), mTime(aTime) {}
 
     // Offset from start of segment/link-in-the-chain in bytes.
     int64_t mOffset;
@@ -525,37 +490,26 @@ public:
     // Presentation time in usecs.
     int64_t mTime;
 
-    bool IsNull()
-    {
-      return mOffset == INT64_MAX && mTime == INT64_MAX;
-    }
+    bool IsNull() { return mOffset == INT64_MAX && mTime == INT64_MAX; }
   };
 
   // Stores a keyframe's byte-offset, presentation time and the serialno
   // of the stream it belongs to.
-  class nsSeekTarget
-  {
-  public:
-    nsSeekTarget() : mSerial(0) { }
+  class nsSeekTarget {
+   public:
+    nsSeekTarget() : mSerial(0) {}
     nsKeyPoint mKeyPoint;
     uint32_t mSerial;
-    bool IsNull()
-    {
-      return mKeyPoint.IsNull() && mSerial == 0;
-    }
+    bool IsNull() { return mKeyPoint.IsNull() && mSerial == 0; }
   };
 
   // Determines from the seek index the keyframe which you must seek back to
   // in order to get all keyframes required to render all streams with
   // serialnos in aTracks, at time aTarget.
-  nsresult IndexedSeekTarget(int64_t aTarget,
-                             nsTArray<uint32_t>& aTracks,
+  nsresult IndexedSeekTarget(int64_t aTarget, nsTArray<uint32_t>& aTracks,
                              nsSeekTarget& aResult);
 
-  bool HasIndex() const
-  {
-    return mIndex.Count() > 0;
-  }
+  bool HasIndex() const { return mIndex.Count() > 0; }
 
   // Returns the duration of the active tracks in the media, if we have
   // an index. aTracks must be filled with the serialnos of the active tracks.
@@ -563,8 +517,7 @@ public:
   // minus the smalled start time of all the active tracks.
   nsresult GetDuration(const nsTArray<uint32_t>& aTracks, int64_t& aDuration);
 
-private:
-
+ private:
   // Decodes an index packet. Returns false on failure.
   bool DecodeIndex(ogg_packet* aPacket);
   // Decodes an fisbone packet. Returns false on failure.
@@ -572,8 +525,7 @@ private:
 
   // Gets the keypoint you must seek to in order to get the keyframe required
   // to render the stream at time aTarget on stream with serial aSerialno.
-  nsresult IndexedSeekTargetForTrack(uint32_t aSerialno,
-                                     int64_t aTarget,
+  nsresult IndexedSeekTargetForTrack(uint32_t aSerialno, int64_t aTarget,
                                      nsKeyPoint& aResult);
 
   // Version of the decoded skeleton track, as per the SKELETON_VERSION macro.
@@ -587,36 +539,22 @@ private:
 
   // Stores the keyframe index and duration information for a particular
   // stream.
-  class nsKeyFrameIndex
-  {
-  public:
-
+  class nsKeyFrameIndex {
+   public:
     nsKeyFrameIndex(int64_t aStartTime, int64_t aEndTime)
-      : mStartTime(aStartTime)
-      , mEndTime(aEndTime)
-    {
+        : mStartTime(aStartTime), mEndTime(aEndTime) {
       MOZ_COUNT_CTOR(nsKeyFrameIndex);
     }
 
-    ~nsKeyFrameIndex()
-    {
-      MOZ_COUNT_DTOR(nsKeyFrameIndex);
-    }
+    ~nsKeyFrameIndex() { MOZ_COUNT_DTOR(nsKeyFrameIndex); }
 
-    void Add(int64_t aOffset, int64_t aTimeMs)
-    {
+    void Add(int64_t aOffset, int64_t aTimeMs) {
       mKeyPoints.AppendElement(nsKeyPoint(aOffset, aTimeMs));
     }
 
-    const nsKeyPoint& Get(uint32_t aIndex) const
-    {
-      return mKeyPoints[aIndex];
-    }
+    const nsKeyPoint& Get(uint32_t aIndex) const { return mKeyPoints[aIndex]; }
 
-    uint32_t Length() const
-    {
-      return mKeyPoints.Length();
-    }
+    uint32_t Length() const { return mKeyPoints.Length(); }
 
     // Presentation time of the first sample in this stream in usecs.
     const int64_t mStartTime;
@@ -624,7 +562,7 @@ private:
     // End time of the last sample in this stream in usecs.
     const int64_t mEndTime;
 
-  private:
+   private:
     nsTArray<nsKeyPoint> mKeyPoints;
   };
 
@@ -632,9 +570,8 @@ private:
   nsClassHashtable<nsUint32HashKey, nsKeyFrameIndex> mIndex;
 };
 
-class FlacState : public OggCodecState
-{
-public:
+class FlacState : public OggCodecState {
+ public:
   explicit FlacState(ogg_page* aBosPage);
 
   CodecType GetType() override { return TYPE_FLAC; }
@@ -649,12 +586,12 @@ public:
 
   const TrackInfo* GetInfo() const override;
 
-private:
+ private:
   bool ReconstructFlacGranulepos(void);
 
   FlacFrameParser mParser;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

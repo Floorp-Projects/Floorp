@@ -11,8 +11,12 @@
 
 using namespace mozilla::dom;
 
-#define SAPISERVICE_CID \
-  {0x21b4a45b, 0x9806, 0x4021, {0xa7, 0x06, 0xd7, 0x68, 0xab, 0x05, 0x48, 0xf9}}
+#define SAPISERVICE_CID                              \
+  {                                                  \
+    0x21b4a45b, 0x9806, 0x4021, {                    \
+      0xa7, 0x06, 0xd7, 0x68, 0xab, 0x05, 0x48, 0xf9 \
+    }                                                \
+  }
 
 #define SAPISERVICE_CONTRACTID "@mozilla.org/synthsapi;1"
 
@@ -24,34 +28,19 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(SapiService,
 NS_DEFINE_NAMED_CID(SAPISERVICE_CID);
 
 static const mozilla::Module::CIDEntry kCIDs[] = {
-  { &kSAPISERVICE_CID, true, nullptr, SapiServiceConstructor },
-  { nullptr }
-};
+    {&kSAPISERVICE_CID, true, nullptr, SapiServiceConstructor}, {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kContracts[] = {
-  { SAPISERVICE_CONTRACTID, &kSAPISERVICE_CID },
-  { nullptr }
-};
+    {SAPISERVICE_CONTRACTID, &kSAPISERVICE_CID}, {nullptr}};
 
 static const mozilla::Module::CategoryEntry kCategories[] = {
-  { "speech-synth-started", "Sapi Speech Synth", SAPISERVICE_CONTRACTID },
-  { nullptr }
-};
+    {"speech-synth-started", "Sapi Speech Synth", SAPISERVICE_CONTRACTID},
+    {nullptr}};
 
-static void
-UnloadSapiModule()
-{
-  SapiService::Shutdown();
-}
+static void UnloadSapiModule() { SapiService::Shutdown(); }
 
 static const mozilla::Module kModule = {
-  mozilla::Module::kVersion,
-  kCIDs,
-  kContracts,
-  kCategories,
-  nullptr,
-  nullptr,
-  UnloadSapiModule
-};
+    mozilla::Module::kVersion, kCIDs, kContracts, kCategories, nullptr, nullptr,
+    UnloadSapiModule};
 
 NSMODULE_DEFN(synthsapi) = &kModule;

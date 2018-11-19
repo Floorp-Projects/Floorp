@@ -14,34 +14,28 @@
 
 #include "mozilla/Monitor.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/MediaKeyStatusMapBinding.h" // For MediaKeyStatus
-#include "mozilla/dom/BindingDeclarations.h" // For Optional
+#include "mozilla/dom/MediaKeyStatusMapBinding.h"  // For MediaKeyStatus
+#include "mozilla/dom/BindingDeclarations.h"       // For Optional
 
 namespace mozilla {
 
 // CDM capabilities; what keys a CDMProxy can use.
 // Must be locked to access state.
 class CDMCaps {
-public:
+ public:
   CDMCaps();
   ~CDMCaps();
 
   struct KeyStatus {
-    KeyStatus(const CencKeyId& aId,
-              const nsString& aSessionId,
+    KeyStatus(const CencKeyId& aId, const nsString& aSessionId,
               dom::MediaKeyStatus aStatus)
-      : mId(aId)
-      , mSessionId(aSessionId)
-      , mStatus(aStatus)
-    {}
+        : mId(aId), mSessionId(aSessionId), mStatus(aStatus) {}
     KeyStatus(const KeyStatus& aOther)
-      : mId(aOther.mId)
-      , mSessionId(aOther.mSessionId)
-      , mStatus(aOther.mStatus)
-    {}
+        : mId(aOther.mId),
+          mSessionId(aOther.mSessionId),
+          mStatus(aOther.mStatus) {}
     bool operator==(const KeyStatus& aOther) const {
-      return mId == aOther.mId &&
-             mSessionId == aOther.mSessionId;
+      return mId == aOther.mId && mSessionId == aOther.mSessionId;
     };
 
     CencKeyId mId;
@@ -53,8 +47,7 @@ public:
 
   // Returns true if key status changed,
   // i.e. the key status changed from usable to expired.
-  bool SetKeyStatus(const CencKeyId& aKeyId,
-                    const nsString& aSessionId,
+  bool SetKeyStatus(const CencKeyId& aKeyId, const nsString& aSessionId,
                     const dom::Optional<dom::MediaKeyStatus>& aStatus);
 
   void GetKeyStatusesForSession(const nsAString& aSessionId,
@@ -68,14 +61,10 @@ public:
   void NotifyWhenKeyIdUsable(const CencKeyId& aKey,
                              SamplesWaitingForKey* aSamplesWaiting);
 
-private:
-
+ private:
   struct WaitForKeys {
-    WaitForKeys(const CencKeyId& aKeyId,
-                SamplesWaitingForKey* aListener)
-      : mKeyId(aKeyId)
-      , mListener(aListener)
-    {}
+    WaitForKeys(const CencKeyId& aKeyId, SamplesWaitingForKey* aListener)
+        : mKeyId(aKeyId), mListener(aListener) {}
     CencKeyId mKeyId;
     RefPtr<SamplesWaitingForKey> mListener;
   };
@@ -89,6 +78,6 @@ private:
   CDMCaps& operator=(const CDMCaps&) = delete;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

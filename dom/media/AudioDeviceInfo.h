@@ -11,28 +11,19 @@
 #include "mozilla/Maybe.h"
 
 // This is mapped to the cubeb_device_info.
-class AudioDeviceInfo final : public nsIAudioDeviceInfo
-{
-public:
+class AudioDeviceInfo final : public nsIAudioDeviceInfo {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIAUDIODEVICEINFO
 
   using AudioDeviceID = mozilla::CubebUtils::AudioDeviceID;
 
-  AudioDeviceInfo(const AudioDeviceID aID,
-                  const nsAString& aName,
-                  const nsAString& aGroupId,
-                  const nsAString& aVendor,
-                  uint16_t aType,
-                  uint16_t aState,
-                  uint16_t aPreferred,
-                  uint16_t aSupportedFormat,
-                  uint16_t aDefaultFormat,
-                  uint32_t aMaxChannels,
-                  uint32_t aDefaultRate,
-                  uint32_t aMaxRate,
-                  uint32_t aMinRate,
-                  uint32_t aMaxLatency,
+  AudioDeviceInfo(const AudioDeviceID aID, const nsAString& aName,
+                  const nsAString& aGroupId, const nsAString& aVendor,
+                  uint16_t aType, uint16_t aState, uint16_t aPreferred,
+                  uint16_t aSupportedFormat, uint16_t aDefaultFormat,
+                  uint32_t aMaxChannels, uint32_t aDefaultRate,
+                  uint32_t aMaxRate, uint32_t aMinRate, uint32_t aMaxLatency,
                   uint32_t aMinLatency);
   explicit AudioDeviceInfo(cubeb_device_info* aInfo);
 
@@ -42,7 +33,8 @@ public:
   uint32_t Type() const;
   uint32_t State() const;
   bool Preferred() const;
-private:
+
+ private:
   virtual ~AudioDeviceInfo() = default;
 
   const AudioDeviceID mDeviceId;
@@ -62,4 +54,4 @@ private:
   const uint32_t mMinLatency;
 };
 
-#endif // MOZILLA_AudioDeviceInfo_H
+#endif  // MOZILLA_AudioDeviceInfo_H

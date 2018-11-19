@@ -19,23 +19,19 @@ namespace dom {
  * Extend Promise to add custom DOMException messages on rejection.
  * Get rid of this once we've ironed out EME errors in the wild.
  */
-class DetailedPromise : public Promise
-{
-public:
-  static already_AddRefed<DetailedPromise>
-  Create(nsIGlobalObject* aGlobal,
-         ErrorResult& aRv,
-         const nsACString& aName);
+class DetailedPromise : public Promise {
+ public:
+  static already_AddRefed<DetailedPromise> Create(nsIGlobalObject* aGlobal,
+                                                  ErrorResult& aRv,
+                                                  const nsACString& aName);
 
-  static already_AddRefed<DetailedPromise>
-  Create(nsIGlobalObject* aGlobal, ErrorResult& aRv,
-         const nsACString& aName,
-         Telemetry::HistogramID aSuccessLatencyProbe,
-         Telemetry::HistogramID aFailureLatencyProbe);
+  static already_AddRefed<DetailedPromise> Create(
+      nsIGlobalObject* aGlobal, ErrorResult& aRv, const nsACString& aName,
+      Telemetry::HistogramID aSuccessLatencyProbe,
+      Telemetry::HistogramID aFailureLatencyProbe);
 
   template <typename T>
-  void MaybeResolve(T&& aArg)
-  {
+  void MaybeResolve(T&& aArg) {
     EME_LOG("%s promise resolved", mName.get());
     MaybeReportTelemetry(eStatus::kSucceeded);
     Promise::MaybeResolve(std::forward<T>(aArg));
@@ -47,12 +43,10 @@ public:
   void MaybeReject(ErrorResult& aArg) = delete;
   void MaybeReject(ErrorResult&, const nsACString& aReason);
 
-private:
-  explicit DetailedPromise(nsIGlobalObject* aGlobal,
-                           const nsACString& aName);
+ private:
+  explicit DetailedPromise(nsIGlobalObject* aGlobal, const nsACString& aName);
 
-  explicit DetailedPromise(nsIGlobalObject* aGlobal,
-                           const nsACString& aName,
+  explicit DetailedPromise(nsIGlobalObject* aGlobal, const nsACString& aName,
                            Telemetry::HistogramID aSuccessLatencyProbe,
                            Telemetry::HistogramID aFailureLatencyProbe);
   virtual ~DetailedPromise();
@@ -67,7 +61,7 @@ private:
   Optional<Telemetry::HistogramID> mFailureLatencyProbe;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // __DetailedPromise_h__
+#endif  // __DetailedPromise_h__

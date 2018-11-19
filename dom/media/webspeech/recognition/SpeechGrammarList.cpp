@@ -22,71 +22,48 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SpeechGrammarList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-SpeechGrammarList::SpeechGrammarList(nsISupports* aParent)
-  : mParent(aParent)
-{
-}
+SpeechGrammarList::SpeechGrammarList(nsISupports* aParent) : mParent(aParent) {}
 
-SpeechGrammarList::~SpeechGrammarList()
-{
-}
+SpeechGrammarList::~SpeechGrammarList() {}
 
-already_AddRefed<SpeechGrammarList>
-SpeechGrammarList::Constructor(const GlobalObject& aGlobal,
-                               ErrorResult& aRv)
-{
+already_AddRefed<SpeechGrammarList> SpeechGrammarList::Constructor(
+    const GlobalObject& aGlobal, ErrorResult& aRv) {
   RefPtr<SpeechGrammarList> speechGrammarList =
-    new SpeechGrammarList(aGlobal.GetAsSupports());
+      new SpeechGrammarList(aGlobal.GetAsSupports());
   return speechGrammarList.forget();
 }
 
-JSObject*
-SpeechGrammarList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SpeechGrammarList::WrapObject(JSContext* aCx,
+                                        JS::Handle<JSObject*> aGivenProto) {
   return SpeechGrammarList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsISupports*
-SpeechGrammarList::GetParentObject() const
-{
-  return mParent;
-}
+nsISupports* SpeechGrammarList::GetParentObject() const { return mParent; }
 
-uint32_t
-SpeechGrammarList::Length() const
-{
-  return mItems.Length();
-}
+uint32_t SpeechGrammarList::Length() const { return mItems.Length(); }
 
-already_AddRefed<SpeechGrammar>
-SpeechGrammarList::Item(uint32_t aIndex, ErrorResult& aRv)
-{
+already_AddRefed<SpeechGrammar> SpeechGrammarList::Item(uint32_t aIndex,
+                                                        ErrorResult& aRv) {
   RefPtr<SpeechGrammar> result = mItems.ElementAt(aIndex);
   return result.forget();
 }
 
-void
-SpeechGrammarList::AddFromURI(const nsAString& aSrc,
-                              const Optional<float>& aWeight,
-                              ErrorResult& aRv)
-{
+void SpeechGrammarList::AddFromURI(const nsAString& aSrc,
+                                   const Optional<float>& aWeight,
+                                   ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
-void
-SpeechGrammarList::AddFromString(const nsAString& aString,
-                                 const Optional<float>& aWeight,
-                                 ErrorResult& aRv)
-{
+void SpeechGrammarList::AddFromString(const nsAString& aString,
+                                      const Optional<float>& aWeight,
+                                      ErrorResult& aRv) {
   SpeechGrammar* speechGrammar = new SpeechGrammar(mParent);
   speechGrammar->SetSrc(aString, aRv);
   mItems.AppendElement(speechGrammar);
 }
 
-already_AddRefed<SpeechGrammar>
-SpeechGrammarList::IndexedGetter(uint32_t aIndex, bool& aPresent,
-                                 ErrorResult& aRv)
-{
+already_AddRefed<SpeechGrammar> SpeechGrammarList::IndexedGetter(
+    uint32_t aIndex, bool& aPresent, ErrorResult& aRv) {
   if (aIndex >= Length()) {
     aPresent = false;
     return nullptr;
@@ -96,5 +73,5 @@ SpeechGrammarList::IndexedGetter(uint32_t aIndex, bool& aPresent,
   return Item(aIndex, rv);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

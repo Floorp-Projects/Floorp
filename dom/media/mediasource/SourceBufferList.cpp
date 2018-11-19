@@ -19,8 +19,12 @@
 extern mozilla::LogModule* GetMediaSourceLog();
 extern mozilla::LogModule* GetMediaSourceAPILog();
 
-#define MSE_API(arg, ...) MOZ_LOG(GetMediaSourceAPILog(), mozilla::LogLevel::Debug, ("SourceBufferList(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#define MSE_DEBUG(arg, ...) MOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Debug, ("SourceBufferList(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define MSE_API(arg, ...)                                   \
+  MOZ_LOG(GetMediaSourceAPILog(), mozilla::LogLevel::Debug, \
+          ("SourceBufferList(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define MSE_DEBUG(arg, ...)                              \
+  MOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Debug, \
+          ("SourceBufferList(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 struct JSContext;
 class JSObject;
@@ -29,13 +33,9 @@ namespace mozilla {
 
 namespace dom {
 
-SourceBufferList::~SourceBufferList()
-{
-}
+SourceBufferList::~SourceBufferList() {}
 
-SourceBuffer*
-SourceBufferList::IndexedGetter(uint32_t aIndex, bool& aFound)
-{
+SourceBuffer* SourceBufferList::IndexedGetter(uint32_t aIndex, bool& aFound) {
   MOZ_ASSERT(NS_IsMainThread());
   aFound = aIndex < mSourceBuffers.Length();
 
@@ -45,47 +45,35 @@ SourceBufferList::IndexedGetter(uint32_t aIndex, bool& aFound)
   return mSourceBuffers[aIndex];
 }
 
-uint32_t
-SourceBufferList::Length()
-{
+uint32_t SourceBufferList::Length() {
   MOZ_ASSERT(NS_IsMainThread());
   return mSourceBuffers.Length();
 }
 
-void
-SourceBufferList::Append(SourceBuffer* aSourceBuffer)
-{
+void SourceBufferList::Append(SourceBuffer* aSourceBuffer) {
   MOZ_ASSERT(NS_IsMainThread());
   mSourceBuffers.AppendElement(aSourceBuffer);
   QueueAsyncSimpleEvent("addsourcebuffer");
 }
 
-void
-SourceBufferList::AppendSimple(SourceBuffer* aSourceBuffer)
-{
+void SourceBufferList::AppendSimple(SourceBuffer* aSourceBuffer) {
   MOZ_ASSERT(NS_IsMainThread());
   mSourceBuffers.AppendElement(aSourceBuffer);
 }
 
-void
-SourceBufferList::Remove(SourceBuffer* aSourceBuffer)
-{
+void SourceBufferList::Remove(SourceBuffer* aSourceBuffer) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ALWAYS_TRUE(mSourceBuffers.RemoveElement(aSourceBuffer));
   aSourceBuffer->Detach();
   QueueAsyncSimpleEvent("removesourcebuffer");
 }
 
-bool
-SourceBufferList::Contains(SourceBuffer* aSourceBuffer)
-{
+bool SourceBufferList::Contains(SourceBuffer* aSourceBuffer) {
   MOZ_ASSERT(NS_IsMainThread());
   return mSourceBuffers.Contains(aSourceBuffer);
 }
 
-void
-SourceBufferList::Clear()
-{
+void SourceBufferList::Clear() {
   MOZ_ASSERT(NS_IsMainThread());
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     mSourceBuffers[i]->Detach();
@@ -94,23 +82,17 @@ SourceBufferList::Clear()
   QueueAsyncSimpleEvent("removesourcebuffer");
 }
 
-void
-SourceBufferList::ClearSimple()
-{
+void SourceBufferList::ClearSimple() {
   MOZ_ASSERT(NS_IsMainThread());
   mSourceBuffers.Clear();
 }
 
-bool
-SourceBufferList::IsEmpty()
-{
+bool SourceBufferList::IsEmpty() {
   MOZ_ASSERT(NS_IsMainThread());
   return mSourceBuffers.IsEmpty();
 }
 
-bool
-SourceBufferList::AnyUpdating()
-{
+bool SourceBufferList::AnyUpdating() {
   MOZ_ASSERT(NS_IsMainThread());
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     if (mSourceBuffers[i]->Updating()) {
@@ -120,9 +102,7 @@ SourceBufferList::AnyUpdating()
   return false;
 }
 
-void
-SourceBufferList::RangeRemoval(double aStart, double aEnd)
-{
+void SourceBufferList::RangeRemoval(double aStart, double aEnd) {
   MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("RangeRemoval(aStart=%f, aEnd=%f)", aStart, aEnd);
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
@@ -130,83 +110,66 @@ SourceBufferList::RangeRemoval(double aStart, double aEnd)
   }
 }
 
-void
-SourceBufferList::Ended()
-{
+void SourceBufferList::Ended() {
   MOZ_ASSERT(NS_IsMainThread());
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     mSourceBuffers[i]->Ended();
   }
 }
 
-double
-SourceBufferList::GetHighestBufferedEndTime()
-{
+double SourceBufferList::GetHighestBufferedEndTime() {
   MOZ_ASSERT(NS_IsMainThread());
   double highestEndTime = 0;
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
-    highestEndTime = std::max(highestEndTime, mSourceBuffers[i]->GetBufferedEnd());
+    highestEndTime =
+        std::max(highestEndTime, mSourceBuffers[i]->GetBufferedEnd());
   }
   return highestEndTime;
 }
 
-void
-SourceBufferList::DispatchSimpleEvent(const char* aName)
-{
+void SourceBufferList::DispatchSimpleEvent(const char* aName) {
   MOZ_ASSERT(NS_IsMainThread());
   MSE_API("Dispatch event '%s'", aName);
   DispatchTrustedEvent(NS_ConvertUTF8toUTF16(aName));
 }
 
-void
-SourceBufferList::QueueAsyncSimpleEvent(const char* aName)
-{
+void SourceBufferList::QueueAsyncSimpleEvent(const char* aName) {
   MSE_DEBUG("Queue event '%s'", aName);
-  nsCOMPtr<nsIRunnable> event = new AsyncEventRunner<SourceBufferList>(this, aName);
+  nsCOMPtr<nsIRunnable> event =
+      new AsyncEventRunner<SourceBufferList>(this, aName);
   mAbstractMainThread->Dispatch(event.forget());
 }
 
 SourceBufferList::SourceBufferList(MediaSource* aMediaSource)
-  : DOMEventTargetHelper(aMediaSource->GetParentObject())
-  , mMediaSource(aMediaSource)
-  , mAbstractMainThread(mMediaSource->AbstractMainThread())
-{
+    : DOMEventTargetHelper(aMediaSource->GetParentObject()),
+      mMediaSource(aMediaSource),
+      mAbstractMainThread(mMediaSource->AbstractMainThread()) {
   MOZ_ASSERT(aMediaSource);
 }
 
-MediaSource*
-SourceBufferList::GetParentObject() const
-{
-  return mMediaSource;
-}
+MediaSource* SourceBufferList::GetParentObject() const { return mMediaSource; }
 
-double
-SourceBufferList::HighestStartTime()
-{
+double SourceBufferList::HighestStartTime() {
   MOZ_ASSERT(NS_IsMainThread());
   double highestStartTime = 0;
   for (auto& sourceBuffer : mSourceBuffers) {
     highestStartTime =
-      std::max(sourceBuffer->HighestStartTime(), highestStartTime);
+        std::max(sourceBuffer->HighestStartTime(), highestStartTime);
   }
   return highestStartTime;
 }
 
-double
-SourceBufferList::HighestEndTime()
-{
+double SourceBufferList::HighestEndTime() {
   MOZ_ASSERT(NS_IsMainThread());
   double highestEndTime = 0;
   for (auto& sourceBuffer : mSourceBuffers) {
-    highestEndTime =
-      std::max(sourceBuffer->HighestEndTime(), highestEndTime);
+    highestEndTime = std::max(sourceBuffer->HighestEndTime(), highestEndTime);
   }
   return highestEndTime;
 }
 
-JSObject*
-SourceBufferList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SourceBufferList::WrapObject(JSContext* aCx,
+                                       JS::Handle<JSObject*> aGivenProto) {
   return SourceBufferList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
@@ -221,6 +184,6 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 #undef MSE_API
 #undef MSE_DEBUG
-} // namespace dom
+}  // namespace dom
 
-} // namespace mozilla
+}  // namespace mozilla

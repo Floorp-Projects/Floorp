@@ -57,14 +57,15 @@ enum GMPPlaneType {
 // Methods that create or destroy shared memory must be called on the main
 // thread. They are marked below.
 class GMPVideoi420Frame : public GMPVideoFrame {
-public:
+ public:
   // MAIN THREAD ONLY
   // CreateEmptyFrame: Sets frame dimensions and allocates buffers based
   // on set dimensions - height and plane stride.
   // If required size is bigger than the allocated one, new buffers of adequate
   // size will be allocated.
   virtual GMPErr CreateEmptyFrame(int32_t aWidth, int32_t aHeight,
-                                  int32_t aStride_y, int32_t aStride_u, int32_t aStride_v) = 0;
+                                  int32_t aStride_y, int32_t aStride_u,
+                                  int32_t aStride_v) = 0;
 
   // MAIN THREAD ONLY
   // CreateFrame: Sets the frame's members and buffers. If required size is
@@ -72,8 +73,8 @@ public:
   virtual GMPErr CreateFrame(int32_t aSize_y, const uint8_t* aBuffer_y,
                              int32_t aSize_u, const uint8_t* aBuffer_u,
                              int32_t aSize_v, const uint8_t* aBuffer_v,
-                             int32_t aWidth, int32_t aHeight,
-                             int32_t aStride_y, int32_t aStride_u, int32_t aStride_v) = 0;
+                             int32_t aWidth, int32_t aHeight, int32_t aStride_y,
+                             int32_t aStride_u, int32_t aStride_v) = 0;
 
   // MAIN THREAD ONLY
   // Copy frame: If required size is bigger than allocated one, new buffers of
@@ -125,8 +126,9 @@ public:
   // Return true if underlying plane buffers are of zero size, false if not.
   virtual bool IsZeroSize() const = 0;
 
-  // Reset underlying plane buffers sizes to 0. This function doesn't clear memory.
+  // Reset underlying plane buffers sizes to 0. This function doesn't clear
+  // memory.
   virtual void ResetSize() = 0;
 };
 
-#endif // GMP_VIDEO_FRAME_I420_h_
+#endif  // GMP_VIDEO_FRAME_I420_h_

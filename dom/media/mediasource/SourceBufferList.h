@@ -22,15 +22,15 @@ class JSObject;
 
 namespace mozilla {
 
-template <typename T> class AsyncEventRunner;
+template <typename T>
+class AsyncEventRunner;
 
 namespace dom {
 
 class MediaSource;
 
-class SourceBufferList final : public DOMEventTargetHelper
-{
-public:
+class SourceBufferList final : public DOMEventTargetHelper {
+ public:
   /** WebIDL Methods. */
   SourceBuffer* IndexedGetter(uint32_t aIndex, bool& aFound);
 
@@ -49,7 +49,8 @@ public:
 
   MediaSource* GetParentObject() const;
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   // Append a SourceBuffer and fire "addsourcebuffer" at the list.
   void Append(SourceBuffer* aSourceBuffer);
@@ -60,7 +61,8 @@ public:
   // Returns true if aSourceBuffer is present in the list.
   bool Contains(SourceBuffer* aSourceBuffer);
 
-  // Remove all SourceBuffers and fire a single "removesourcebuffer" at the list.
+  // Remove all SourceBuffers and fire a single "removesourcebuffer" at the
+  // list.
   void Clear();
 
   // True if list has zero entries.
@@ -69,7 +71,8 @@ public:
   // Returns true if updating is true on any SourceBuffers in the list.
   bool AnyUpdating();
 
-  // Runs the range removal steps from the MSE specification on each SourceBuffer.
+  // Runs the range removal steps from the MSE specification on each
+  // SourceBuffer.
   void RangeRemoval(double aStart, double aEnd);
 
   // Mark all SourceBuffers input buffers as ended.
@@ -88,7 +91,7 @@ public:
   double HighestStartTime();
   double HighestEndTime();
 
-private:
+ private:
   ~SourceBufferList();
 
   friend class AsyncEventRunner<SourceBufferList>;
@@ -100,8 +103,8 @@ private:
   const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
-} // namespace dom
+}  // namespace dom
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_dom_SourceBufferList_h_ */

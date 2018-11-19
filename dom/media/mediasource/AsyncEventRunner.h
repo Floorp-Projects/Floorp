@@ -12,26 +12,21 @@
 namespace mozilla {
 
 template <typename T>
-class AsyncEventRunner : public Runnable
-{
-public:
+class AsyncEventRunner : public Runnable {
+ public:
   AsyncEventRunner(T* aTarget, const char* aName)
-    : Runnable("AsyncEventRunner")
-    , mTarget(aTarget)
-    , mName(aName)
-  {}
+      : Runnable("AsyncEventRunner"), mTarget(aTarget), mName(aName) {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     mTarget->DispatchSimpleEvent(mName);
     return NS_OK;
   }
 
-private:
+ private:
   RefPtr<T> mTarget;
   const char* mName;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* MOZILLA_ASYNCEVENTRUNNER_H_ */

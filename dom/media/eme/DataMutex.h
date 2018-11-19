@@ -33,52 +33,44 @@ namespace mozilla {
 //    x.AppendElement(1u);
 //    assert(x[0], 1u);
 //
-template<typename T>
-class DataMutex
-{
-private:
-  class MOZ_STACK_CLASS AutoLock
-  {
-  public:
+template <typename T>
+class DataMutex {
+ private:
+  class MOZ_STACK_CLASS AutoLock {
+   public:
     T* operator->() const { return &ref(); }
 
     T& operator*() const { return ref(); }
 
     // Like RefPtr, make this act like its underlying raw pointer type
     // whenever it is used in a context where a raw pointer is expected.
-    operator T*() const & { return &ref(); }
+    operator T*() const& { return &ref(); }
 
     // Like RefPtr, don't allow implicit conversion of temporary to raw pointer.
-    operator T*() const && = delete;
+    operator T*() const&& = delete;
 
-    T& ref() const
-    {
+    T& ref() const {
       MOZ_ASSERT(mOwner);
       return mOwner->mValue;
     }
 
-    AutoLock(AutoLock&& aOther)
-      : mOwner(aOther.mOwner)
-    {
+    AutoLock(AutoLock&& aOther) : mOwner(aOther.mOwner) {
       aOther.mOwner = nullptr;
     }
 
-    ~AutoLock()
-    {
+    ~AutoLock() {
       if (mOwner) {
         mOwner->mMutex.Unlock();
         mOwner = nullptr;
       }
     }
 
-  private:
+   private:
     friend class DataMutex;
 
     AutoLock(const AutoLock& aOther) = delete;
 
-    explicit AutoLock(DataMutex<T>* aDataMutex)
-      : mOwner(aDataMutex)
-    {
+    explicit AutoLock(DataMutex<T>* aDataMutex) : mOwner(aDataMutex) {
       MOZ_ASSERT(!!mOwner);
       mOwner->mMutex.Lock();
     }
@@ -86,25 +78,18 @@ private:
     DataMutex<T>* mOwner;
   };
 
-public:
-  explicit DataMutex(const char* aName)
-    : mMutex(aName)
-  {
-  }
+ public:
+  explicit DataMutex(const char* aName) : mMutex(aName) {}
 
-  DataMutex(T&& aValue, const char* aName)
-    : mMutex(aName)
-    , mValue(aValue)
-  {
-  }
+  DataMutex(T&& aValue, const char* aName) : mMutex(aName), mValue(aValue) {}
 
   AutoLock Lock() { return AutoLock(this); }
 
-private:
+ private:
   Mutex mMutex;
   T mValue;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // DataMutex_h__
+#endif  // DataMutex_h__

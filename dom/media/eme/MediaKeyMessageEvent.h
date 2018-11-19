@@ -22,46 +22,42 @@ namespace dom {
 
 struct MediaKeyMessageEventInit;
 
-class MediaKeyMessageEvent final : public Event
-{
-public:
+class MediaKeyMessageEvent final : public Event {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MediaKeyMessageEvent, Event)
-protected:
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MediaKeyMessageEvent,
+                                                         Event)
+ protected:
   virtual ~MediaKeyMessageEvent();
   explicit MediaKeyMessageEvent(EventTarget* aOwner);
 
   MediaKeyMessageType mMessageType;
   JS::Heap<JSObject*> mMessage;
 
-public:
+ public:
   virtual MediaKeyMessageEvent* AsMediaKeyMessageEvent();
 
-  JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObjectInternal(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  static already_AddRefed<MediaKeyMessageEvent>
-  Constructor(EventTarget* aOwner,
-              MediaKeyMessageType aMessageType,
-              const nsTArray<uint8_t>& aMessage);
+  static already_AddRefed<MediaKeyMessageEvent> Constructor(
+      EventTarget* aOwner, MediaKeyMessageType aMessageType,
+      const nsTArray<uint8_t>& aMessage);
 
-  static already_AddRefed<MediaKeyMessageEvent>
-  Constructor(const GlobalObject& aGlobal,
-              const nsAString& aType,
-              const MediaKeyMessageEventInit& aEventInitDict,
-              ErrorResult& aRv);
+  static already_AddRefed<MediaKeyMessageEvent> Constructor(
+      const GlobalObject& aGlobal, const nsAString& aType,
+      const MediaKeyMessageEventInit& aEventInitDict, ErrorResult& aRv);
 
   MediaKeyMessageType MessageType() const { return mMessageType; }
 
-  void GetMessage(JSContext* cx,
-                  JS::MutableHandle<JSObject*> aMessage,
+  void GetMessage(JSContext* cx, JS::MutableHandle<JSObject*> aMessage,
                   ErrorResult& aRv);
 
-private:
+ private:
   nsTArray<uint8_t> mRawMessage;
 };
 
+}  // namespace dom
+}  // namespace mozilla
 
-} // namespace dom
-} // namespace mozilla
-
-#endif // mozilla_dom_MediaKeyMessageEvent_h__
+#endif  // mozilla_dom_MediaKeyMessageEvent_h__

@@ -11,16 +11,14 @@
 namespace mozilla {
 
 /* static */
-bool
-MP3Decoder::IsEnabled() {
+bool MP3Decoder::IsEnabled() {
   RefPtr<PDMFactory> platform = new PDMFactory();
   return platform->SupportsMimeType(NS_LITERAL_CSTRING("audio/mpeg"),
                                     /* DecoderDoctorDiagnostics* */ nullptr);
 }
 
 /* static */
-bool MP3Decoder::IsSupportedType(const MediaContainerType& aContainerType)
-{
+bool MP3Decoder::IsSupportedType(const MediaContainerType& aContainerType) {
   if (aContainerType.Type() == MEDIAMIMETYPE("audio/mp3") ||
       aContainerType.Type() == MEDIAMIMETYPE("audio/mpeg")) {
     return IsEnabled() && (aContainerType.ExtendedType().Codecs().IsEmpty() ||
@@ -29,19 +27,18 @@ bool MP3Decoder::IsSupportedType(const MediaContainerType& aContainerType)
   return false;
 }
 
-/* static */ nsTArray<UniquePtr<TrackInfo>>
-MP3Decoder::GetTracksInfo(const MediaContainerType& aType)
-{
+/* static */ nsTArray<UniquePtr<TrackInfo>> MP3Decoder::GetTracksInfo(
+    const MediaContainerType& aType) {
   nsTArray<UniquePtr<TrackInfo>> tracks;
   if (!IsSupportedType(aType)) {
     return tracks;
   }
 
   tracks.AppendElement(
-    CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-      NS_LITERAL_CSTRING("audio/mpeg"), aType));
+      CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+          NS_LITERAL_CSTRING("audio/mpeg"), aType));
 
   return tracks;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

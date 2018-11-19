@@ -15,20 +15,18 @@ namespace mozilla {
 
 namespace {
 
-class InputStreamReader final : public nsIInputStreamCallback
-{
-public:
+class InputStreamReader final : public nsIInputStreamCallback {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  static already_AddRefed<InputStreamReader>
-  Create(nsICloneableInputStreamWithRange* aStream, int64_t aStart,
-         uint32_t aLength)
-  {
+  static already_AddRefed<InputStreamReader> Create(
+      nsICloneableInputStreamWithRange* aStream, int64_t aStart,
+      uint32_t aLength) {
     MOZ_ASSERT(aStream);
 
     nsCOMPtr<nsIInputStream> stream;
-    nsresult rv = aStream->CloneWithRange(aStart, aLength,
-                                          getter_AddRefs(stream));
+    nsresult rv =
+        aStream->CloneWithRange(aStart, aLength, getter_AddRefs(stream));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }
@@ -37,9 +35,7 @@ public:
     return reader.forget();
   }
 
-  nsresult
-  Read(char* aBuffer, uint32_t aSize, uint32_t* aRead)
-  {
+  nsresult Read(char* aBuffer, uint32_t aSize, uint32_t* aRead) {
     uint32_t done = 0;
     do {
       uint32_t read;
@@ -51,33 +47,28 @@ public:
         return rv;
       }
       done += read;
-    } while(done != aSize);
+    } while (done != aSize);
 
     *aRead = done;
     return NS_OK;
   }
 
   NS_IMETHOD
-  OnInputStreamReady(nsIAsyncInputStream* aStream) override
-  {
+  OnInputStreamReady(nsIAsyncInputStream* aStream) override {
     // Let's continue with SyncRead().
     MonitorAutoLock lock(mMonitor);
     return lock.Notify();
   }
 
-private:
+ private:
   explicit InputStreamReader(nsIInputStream* aStream)
-    : mStream(aStream)
-    , mMonitor("InputStreamReader::mMonitor")
-  {
+      : mStream(aStream), mMonitor("InputStreamReader::mMonitor") {
     MOZ_ASSERT(aStream);
   }
 
   ~InputStreamReader() = default;
 
-  nsresult
-  SyncRead(char* aBuffer, uint32_t aSize, uint32_t* aRead)
-  {
+  nsresult SyncRead(char* aBuffer, uint32_t aSize, uint32_t* aRead) {
     while (1) {
       nsresult rv = mStream->Read(aBuffer, aSize, aRead);
       // All good.
@@ -100,7 +91,7 @@ private:
       }
 
       nsCOMPtr<nsIEventTarget> target =
-        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+          do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
       MOZ_ASSERT(target);
 
       {
@@ -130,32 +121,26 @@ NS_INTERFACE_MAP_BEGIN(InputStreamReader)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStreamCallback)
 NS_INTERFACE_MAP_END
 
-} // anonymous
+}  // namespace
 
-void
-CloneableWithRangeMediaResource::MaybeInitialize()
-{
+void CloneableWithRangeMediaResource::MaybeInitialize() {
   if (!mInitialized) {
     mInitialized = true;
-    mCallback->AbstractMainThread()->Dispatch(
-      NewRunnableMethod<nsresult>("MediaResourceCallback::NotifyDataEnded",
-                                  mCallback.get(),
-                                  &MediaResourceCallback::NotifyDataEnded,
-                                  NS_OK));
+    mCallback->AbstractMainThread()->Dispatch(NewRunnableMethod<nsresult>(
+        "MediaResourceCallback::NotifyDataEnded", mCallback.get(),
+        &MediaResourceCallback::NotifyDataEnded, NS_OK));
   }
 }
 
-nsresult
-CloneableWithRangeMediaResource::GetCachedRanges(MediaByteRangeSet& aRanges)
-{
+nsresult CloneableWithRangeMediaResource::GetCachedRanges(
+    MediaByteRangeSet& aRanges) {
   MaybeInitialize();
   aRanges += MediaByteRange(0, (int64_t)mSize);
   return NS_OK;
 }
 
-nsresult
-CloneableWithRangeMediaResource::Open(nsIStreamListener** aStreamListener)
-{
+nsresult CloneableWithRangeMediaResource::Open(
+    nsIStreamListener** aStreamListener) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aStreamListener);
 
@@ -163,15 +148,10 @@ CloneableWithRangeMediaResource::Open(nsIStreamListener** aStreamListener)
   return NS_OK;
 }
 
-nsresult
-CloneableWithRangeMediaResource::Close()
-{
-  return NS_OK;
-}
+nsresult CloneableWithRangeMediaResource::Close() { return NS_OK; }
 
 already_AddRefed<nsIPrincipal>
-CloneableWithRangeMediaResource::GetCurrentPrincipal()
-{
+CloneableWithRangeMediaResource::GetCurrentPrincipal() {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIPrincipal> principal;
@@ -184,17 +164,16 @@ CloneableWithRangeMediaResource::GetCurrentPrincipal()
   return principal.forget();
 }
 
-nsresult
-CloneableWithRangeMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset,
-                                               uint32_t aCount)
-{
+nsresult CloneableWithRangeMediaResource::ReadFromCache(char* aBuffer,
+                                                        int64_t aOffset,
+                                                        uint32_t aCount) {
   MaybeInitialize();
   if (!aCount) {
     return NS_OK;
   }
 
   RefPtr<InputStreamReader> reader =
-    InputStreamReader::Create(mStream, aOffset, aCount);
+      InputStreamReader::Create(mStream, aOffset, aCount);
   if (!reader) {
     return NS_ERROR_FAILURE;
   }
@@ -208,14 +187,13 @@ CloneableWithRangeMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset,
   return bytes == aCount ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult
-CloneableWithRangeMediaResource::ReadAt(int64_t aOffset, char* aBuffer,
-                                        uint32_t aCount, uint32_t* aBytes)
-{
+nsresult CloneableWithRangeMediaResource::ReadAt(int64_t aOffset, char* aBuffer,
+                                                 uint32_t aCount,
+                                                 uint32_t* aBytes) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   RefPtr<InputStreamReader> reader =
-    InputStreamReader::Create(mStream, aOffset, aCount);
+      InputStreamReader::Create(mStream, aOffset, aCount);
   if (!reader) {
     return NS_ERROR_FAILURE;
   }
@@ -228,4 +206,4 @@ CloneableWithRangeMediaResource::ReadAt(int64_t aOffset, char* aBuffer,
   return NS_OK;
 }
 
-} // mozilla namespace
+}  // namespace mozilla
