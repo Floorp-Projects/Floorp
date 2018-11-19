@@ -47,7 +47,7 @@ protected:
 public:
   void Destroy();
 
-  void AddPipeline(const wr::PipelineId& aPipelineId, WebRenderBridgeParent* aWrBridge = nullptr);
+  void AddPipeline(const wr::PipelineId& aPipelineId, WebRenderBridgeParent* aWrBridge);
   void RemovePipeline(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch);
   WebRenderBridgeParent* GetWrBridge(const wr::PipelineId& aPipelineId);
 
