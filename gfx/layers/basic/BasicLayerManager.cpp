@@ -346,15 +346,15 @@ BasicLayerManager::SetDefaultTargetConfiguration(BufferMode aDoubleBuffering, Sc
 }
 
 bool
-BasicLayerManager::BeginTransaction()
+BasicLayerManager::BeginTransaction(const nsCString &aURL)
 {
   mInTransaction = true;
   mUsingDefaultTarget = true;
-  return BeginTransactionWithTarget(mDefaultTarget);
+  return BeginTransactionWithTarget(mDefaultTarget, aURL);
 }
 
 bool
-BasicLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
+BasicLayerManager::BeginTransactionWithTarget(gfxContext* aTarget, const nsCString &aURL)
 {
   mInTransaction = true;
 

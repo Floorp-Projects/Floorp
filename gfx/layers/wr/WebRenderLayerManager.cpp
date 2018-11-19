@@ -176,14 +176,14 @@ WebRenderLayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
 }
 
 bool
-WebRenderLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
+WebRenderLayerManager::BeginTransactionWithTarget(gfxContext* aTarget, const nsCString &aURL)
 {
   mTarget = aTarget;
-  return BeginTransaction();
+  return BeginTransaction(aURL);
 }
 
 bool
-WebRenderLayerManager::BeginTransaction()
+WebRenderLayerManager::BeginTransaction(const nsCString &aURL)
 {
   if (!WrBridge()->IPCOpen()) {
     gfxCriticalNote << "IPC Channel is already torn down unexpectedly\n";
@@ -191,6 +191,7 @@ WebRenderLayerManager::BeginTransaction()
   }
 
   mTransactionStart = TimeStamp::Now();
+  mURL = aURL;
 
   // Increment the paint sequence number even if test logging isn't
   // enabled in this process; it may be enabled in the parent process,
@@ -248,7 +249,7 @@ WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
 
   WrBridge()->EndEmptyTransaction(mFocusTarget, mPendingScrollUpdates,
       mAsyncResourceUpdates, mPaintSequenceNumber, mLatestTransactionId,
-      refreshStart, mTransactionStart);
+      refreshStart, mTransactionStart, mURL);
   ClearPendingScrollInfoUpdate();
 
   mTransactionStart = TimeStamp();
@@ -380,7 +381,7 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
     AUTO_PROFILER_TRACING("Paint", "ForwardDPTransaction");
     WrBridge()->EndTransaction(contentSize, dl, resourceUpdates, size.ToUnknownSize(),
                                mLatestTransactionId, mScrollData, containsSVGGroup,
-                               refreshStart, mTransactionStart);
+                               refreshStart, mTransactionStart, mURL);
   }
 
   mTransactionStart = TimeStamp();

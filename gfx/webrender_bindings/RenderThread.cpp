@@ -570,6 +570,7 @@ RenderThread::FrameRenderingComplete(wr::WindowId aWindowId)
   }
   info->mPendingCount--;
   info->mRenderingCount--;
+
   // The start time is from WebRenderBridgeParent::CompositeToTarget. From that
   // point until now (when the frame is finally pushed to the screen) is
   // equivalent to the COMPOSITE_TIME metric in the non-WR codepath.
