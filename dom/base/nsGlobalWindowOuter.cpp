@@ -2248,10 +2248,6 @@ void
 nsGlobalWindowOuter::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
                                      bool aOriginalOpener)
 {
-  MOZ_DIAGNOSTIC_ASSERT(!aOpener || aOpener->GetBrowsingContext());
-  MOZ_DIAGNOSTIC_ASSERT(!mOpener || GetBrowsingContext() && GetBrowsingContext()->GetOpener());
-  MOZ_DIAGNOSTIC_ASSERT(mDocShell);
-
   nsWeakPtr opener = do_GetWeakReference(aOpener);
   if (opener == mOpener) {
     MOZ_DIAGNOSTIC_ASSERT(
@@ -2270,11 +2266,11 @@ nsGlobalWindowOuter::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
   mOpener = opener.forget();
   NS_ASSERTION(mOpener || !aOpener, "Opener must support weak references!");
 
-  if (mDocShell) {
+  if (mDocShell && aOpener) {
     // TODO(farre): Here we really wish to only consider the case
     // where 'aOriginalOpener' is false, and we also really want to
     // move opener entirely to BrowsingContext. See bug 1502330.
-    GetBrowsingContext()->SetOpener(aOpener ? aOpener->GetBrowsingContext() : nullptr);
+    GetBrowsingContext()->SetOpener(aOpener->GetBrowsingContext());
   }
 
   // Check that the js visible opener matches! We currently don't depend on this
