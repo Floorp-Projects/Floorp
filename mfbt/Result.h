@@ -221,6 +221,11 @@ struct UnusedZero<T&>
 // We begin by safely assuming types don't have a spare bit.
 template <typename T> struct HasFreeLSB { static const bool value = false; };
 
+// As an incomplete type, void* does not have a spare bit.
+template <> struct HasFreeLSB<void*> {
+  static const bool value = false;
+};
+
 // The lowest bit of a properly-aligned pointer is always zero if the pointee
 // type is greater than byte-aligned. That bit is free to use if it's masked
 // out of such pointers before they're dereferenced.
