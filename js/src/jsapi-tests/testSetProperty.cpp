@@ -9,12 +9,10 @@
 
 BEGIN_TEST(testSetProperty_InheritedGlobalSetter)
 {
-    // This is a JSAPI test because jsapi-test globals can be set up to not have
-    // a resolve hook and therefore can use the property cache in some cases
-    // where the shell can't.
+    // This is a JSAPI test because jsapi-test globals do not have a resolve
+    // hook and therefore can use the property cache in some cases where the
+    // shell can't.
     MOZ_RELEASE_ASSERT(!JS_GetClass(global)->getResolve());
-
-    CHECK(JS::InitRealmStandardClasses(cx));
 
     CHECK(JS_DefineProperty(cx, global, "HOTLOOP", 8, 0));
     EXEC("var n = 0;\n"
@@ -26,29 +24,5 @@ BEGIN_TEST(testSetProperty_InheritedGlobalSetter)
     EXEC("if (n != HOTLOOP)\n"
          "    throw 'FAIL';\n");
     return true;
-}
-
-const JSClass* getGlobalClass(void) override {
-    static const JSClassOps noResolveGlobalClassOps = {
-        nullptr, // add
-        nullptr, // delete
-        nullptr, // enumerate
-        nullptr, // newEnumerate
-        nullptr, // resolve
-        nullptr, // mayResolve
-        nullptr, // finalize
-        nullptr, // call
-        nullptr, // hasInstance
-        nullptr, // construct
-        JS_GlobalObjectTraceHook
-    };
-
-    static const JSClass noResolveGlobalClass = {
-        "testSetProperty_InheritedGlobalSetter_noResolveGlobalClass",
-        JSCLASS_GLOBAL_FLAGS,
-        &noResolveGlobalClassOps
-    };
-
-    return &noResolveGlobalClass;
 }
 END_TEST(testSetProperty_InheritedGlobalSetter)

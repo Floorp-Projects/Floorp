@@ -25,9 +25,15 @@ JSContext* gCx = nullptr;
 static const JSClass*
 getGlobalClass()
 {
+    static const JSClassOps cOps = {
+        nullptr, nullptr, nullptr, nullptr,
+        nullptr, nullptr, nullptr, nullptr,
+        nullptr, nullptr,
+        JS_GlobalObjectTraceHook
+    };
     static const JSClass c = {
         "global", JSCLASS_GLOBAL_FLAGS,
-        &JS::DefaultGlobalClassOps
+        &cOps
     };
     return &c;
 }
@@ -36,13 +42,27 @@ static JSObject*
 jsfuzz_createGlobal(JSContext* cx, JSPrincipals* principals)
 {
     /* Create the global object. */
+    JS::RootedObject newGlobal(cx);
     JS::RealmOptions options;
     options.creationOptions().setStreamsEnabled(true);
 #ifdef ENABLE_BIGINT
     options.creationOptions().setBigIntEnabled(true);
 #endif
-    return JS_NewGlobalObject(cx, getGlobalClass(), principals, JS::FireOnNewGlobalHook,
-                              options);
+    newGlobal = JS_NewGlobalObject(cx, getGlobalClass(), principals, JS::FireOnNewGlobalHook,
+                                   options);
+    if (!newGlobal) {
+        return nullptr;
+    }
+
+    JSAutoRealm ar(cx, newGlobal);
+
+    // Populate the global object with the standard globals like Object and
+    // Array.
+    if (!JS::InitRealmStandardClasses(cx)) {
+        return nullptr;
+    }
+
+    return newGlobal;
 }
 
 static bool
