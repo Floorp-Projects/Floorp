@@ -73,16 +73,12 @@ from its prototype:
     `FunctionDeclaration`, or `FunctionExpression` productions in the
     ECMAScript standard.
 
-    **If the instance refers to WebAssembly code**, the serialized text
-    representation. The format is yet to be specified in the WebAssembly
-    standard. Currently, the text is an s-expression based syntax. The text
-    generation is disabled if the Debugger has the `allowWasmBinarySource`
-    property set, the `"[wasm]"` value will be returned in this case.
+    **If the instance refers to WebAssembly code**, the `"[wasm]"` value will
+    be returned.
 
 `binary`
-:   **If the instance refers to WebAssembly code** and the Debugger has
-    the `allowWasmBinarySource` property set, a Uint8Array that contains the
-    WebAssembly bytecode.
+:   **If the instance refers to WebAssembly code**, a Uint8Array that contains
+    the WebAssembly bytecode.
 
 `url`
 :   **If the instance refers to JavaScript source**, the filename or URL from

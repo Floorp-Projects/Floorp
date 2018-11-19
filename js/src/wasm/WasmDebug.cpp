@@ -34,10 +34,9 @@ using namespace js::wasm;
 
 using mozilla::BinarySearchIf;
 
-DebugState::DebugState(const Code& code, const Module& module, bool binarySource)
+DebugState::DebugState(const Code& code, const Module& module)
   : code_(&code),
     module_(&module),
-    binarySource_(binarySource),
     enterFrameTrapsEnabled_(false),
     enterAndLeaveFrameTrapsCounter_(0)
 {
@@ -60,9 +59,6 @@ SlowCallSiteSearchByOffset(const MetadataTier& metadata, uint32_t offset)
 bool
 DebugState::getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offsets)
 {
-    if (!binarySource_) {
-        return true;
-    }
     const CallSite* callsite = SlowCallSiteSearchByOffset(metadata(Tier::Debug), lineno);
     if (callsite && !offsets->append(lineno)) {
         return false;
@@ -73,9 +69,6 @@ DebugState::getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offse
 bool
 DebugState::getAllColumnOffsets(JSContext* cx, Vector<ExprLoc>* offsets)
 {
-    if (!binarySource_) {
-        return true;
-    }
     for (const CallSite& callSite : metadata(Tier::Debug).callSites) {
         if (callSite.kind() != CallSite::Breakpoint) {
             continue;
@@ -91,21 +84,12 @@ DebugState::getAllColumnOffsets(JSContext* cx, Vector<ExprLoc>* offsets)
 bool
 DebugState::getOffsetLocation(uint32_t offset, size_t* lineno, size_t* column)
 {
-    if (!binarySource_) {
-        return false;
-    }
     if (!SlowCallSiteSearchByOffset(metadata(Tier::Debug), offset)) {
         return false;
     }
     *lineno = offset;
     *column = DefaultBinarySourceColumnNumber;
     return true;
-}
-
-uint32_t
-DebugState::totalSourceLines()
-{
-    return binarySource_ ? bytecode().length() : 0;
 }
 
 bool
