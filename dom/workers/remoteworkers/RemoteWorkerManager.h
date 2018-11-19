@@ -57,9 +57,14 @@ private:
   void
   AsyncCreationFailed(RemoteWorkerController* aController);
 
+  // The list of existing RemoteWorkerServiceParent actors for child processes.
   // Raw pointers because RemoteWorkerServiceParent actors unregister themselves
   // when destroyed.
-  nsTArray<RemoteWorkerServiceParent*> mActors;
+  // XXX For Fission, where we could have a lot of child actors, should we maybe
+  // instead keep either a hash table (PID->actor) or perhaps store the actors
+  // in order, sorted by PID, to avoid linear lookup times?
+  nsTArray<RemoteWorkerServiceParent*> mChildActors;
+  RemoteWorkerServiceParent* mParentActor;
 
   struct Pending {
     RefPtr<RemoteWorkerController> mController;
