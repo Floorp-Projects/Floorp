@@ -15,9 +15,8 @@ struct OpusEncoder;
 namespace mozilla {
 
 // Opus meta data structure
-class OpusMetadata : public TrackMetadataBase
-{
-public:
+class OpusMetadata : public TrackMetadataBase {
+ public:
   // The ID Header of OggOpus. refer to http://wiki.xiph.org/OggOpus.
   nsTArray<uint8_t> mIdHeader;
   // The Comment Header of OggOpus.
@@ -27,9 +26,8 @@ public:
   MetadataKind GetKind() const override { return METADATA_OPUS; }
 };
 
-class OpusTrackEncoder : public AudioTrackEncoder
-{
-public:
+class OpusTrackEncoder : public AudioTrackEncoder {
+ public:
   explicit OpusTrackEncoder(TrackRate aTrackRate);
   virtual ~OpusTrackEncoder();
 
@@ -37,7 +35,7 @@ public:
 
   nsresult GetEncodedTrack(EncodedFrameContainer& aData) override;
 
-protected:
+ protected:
   int GetPacketDuration() override;
 
   nsresult Init(int aChannels, int aSamplingRate) override;
@@ -48,7 +46,7 @@ protected:
    */
   int GetOutputSampleRate();
 
-private:
+ private:
   /**
    * The Opus encoder from libopus.
    */
@@ -86,6 +84,6 @@ private:
   uint64_t mOutputTimeStamp;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

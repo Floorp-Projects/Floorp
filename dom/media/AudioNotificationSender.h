@@ -7,25 +7,24 @@
 #ifndef MOZILLA_AUDIONOTIFICATIONSENDER_H_
 #define MOZILLA_AUDIONOTIFICATIONSENDER_H_
 
-#include "nsError.h" // for nsresult
+#include "nsError.h"  // for nsresult
 
 namespace mozilla {
 namespace audio {
 
 // Please see the architecture figure in AudioNotificationReceiver.h.
-class AudioNotificationSender final
-{
-public:
+class AudioNotificationSender final {
+ public:
   // Register the AudioNotification to get the device-changed event.
   static nsresult Init();
 
-private:
+ private:
   // Send the device-changed notification from the chrome processes
   // to the content processes.
   static void NotifyDefaultDeviceChanged();
-}; // AudioNotificationSender
+};  // AudioNotificationSender
 
-} // namespace audio
-} // namespace mozilla
+}  // namespace audio
+}  // namespace mozilla
 
-#endif // MOZILLA_AUDIONOTIFICATIONSENDER_H_
+#endif  // MOZILLA_AUDIONOTIFICATIONSENDER_H_

@@ -34,39 +34,33 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(WaveShaperNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(WaveShaperNode, AudioNode)
 
-static uint32_t ValueOf(OverSampleType aType)
-{
+static uint32_t ValueOf(OverSampleType aType) {
   switch (aType) {
-  case OverSampleType::None: return 1;
-  case OverSampleType::_2x:  return 2;
-  case OverSampleType::_4x:  return 4;
-  default:
-    MOZ_ASSERT_UNREACHABLE("We should never reach here");
-    return 1;
+    case OverSampleType::None:
+      return 1;
+    case OverSampleType::_2x:
+      return 2;
+    case OverSampleType::_4x:
+      return 4;
+    default:
+      MOZ_ASSERT_UNREACHABLE("We should never reach here");
+      return 1;
   }
 }
 
-class Resampler final
-{
-public:
+class Resampler final {
+ public:
   Resampler()
-    : mType(OverSampleType::None)
-    , mUpSampler(nullptr)
-    , mDownSampler(nullptr)
-    , mChannels(0)
-    , mSampleRate(0)
-  {
-  }
+      : mType(OverSampleType::None),
+        mUpSampler(nullptr),
+        mDownSampler(nullptr),
+        mChannels(0),
+        mSampleRate(0) {}
 
-  ~Resampler()
-  {
-    Destroy();
-  }
+  ~Resampler() { Destroy(); }
 
-  void Reset(uint32_t aChannels, TrackRate aSampleRate, OverSampleType aType)
-  {
-    if (aChannels == mChannels &&
-        aSampleRate == mSampleRate &&
+  void Reset(uint32_t aChannels, TrackRate aSampleRate, OverSampleType aType) {
+    if (aChannels == mChannels && aSampleRate == mSampleRate &&
         aType == mType) {
       return;
     }
@@ -82,53 +76,47 @@ public:
       return;
     }
 
-    mUpSampler = speex_resampler_init(aChannels,
-                                      aSampleRate,
+    mUpSampler = speex_resampler_init(aChannels, aSampleRate,
                                       aSampleRate * ValueOf(aType),
-                                      SPEEX_RESAMPLER_QUALITY_MIN,
-                                      nullptr);
-    mDownSampler = speex_resampler_init(aChannels,
-                                        aSampleRate * ValueOf(aType),
-                                        aSampleRate,
-                                        SPEEX_RESAMPLER_QUALITY_MIN,
-                                        nullptr);
-    mBuffer.SetLength(WEBAUDIO_BLOCK_SIZE*ValueOf(aType));
+                                      SPEEX_RESAMPLER_QUALITY_MIN, nullptr);
+    mDownSampler =
+        speex_resampler_init(aChannels, aSampleRate * ValueOf(aType),
+                             aSampleRate, SPEEX_RESAMPLER_QUALITY_MIN, nullptr);
+    mBuffer.SetLength(WEBAUDIO_BLOCK_SIZE * ValueOf(aType));
   }
 
-  float* UpSample(uint32_t aChannel, const float* aInputData, uint32_t aBlocks)
-  {
+  float* UpSample(uint32_t aChannel, const float* aInputData,
+                  uint32_t aBlocks) {
     uint32_t inSamples = WEBAUDIO_BLOCK_SIZE;
-    uint32_t outSamples = WEBAUDIO_BLOCK_SIZE*aBlocks;
+    uint32_t outSamples = WEBAUDIO_BLOCK_SIZE * aBlocks;
     float* outputData = mBuffer.Elements();
 
     MOZ_ASSERT(mBuffer.Length() == outSamples);
 
-    WebAudioUtils::SpeexResamplerProcess(mUpSampler, aChannel,
-                                         aInputData, &inSamples,
-                                         outputData, &outSamples);
+    WebAudioUtils::SpeexResamplerProcess(mUpSampler, aChannel, aInputData,
+                                         &inSamples, outputData, &outSamples);
 
-    MOZ_ASSERT(inSamples == WEBAUDIO_BLOCK_SIZE && outSamples == WEBAUDIO_BLOCK_SIZE*aBlocks);
+    MOZ_ASSERT(inSamples == WEBAUDIO_BLOCK_SIZE &&
+               outSamples == WEBAUDIO_BLOCK_SIZE * aBlocks);
 
     return outputData;
   }
 
-  void DownSample(uint32_t aChannel, float* aOutputData, uint32_t aBlocks)
-  {
-    uint32_t inSamples = WEBAUDIO_BLOCK_SIZE*aBlocks;
+  void DownSample(uint32_t aChannel, float* aOutputData, uint32_t aBlocks) {
+    uint32_t inSamples = WEBAUDIO_BLOCK_SIZE * aBlocks;
     uint32_t outSamples = WEBAUDIO_BLOCK_SIZE;
     const float* inputData = mBuffer.Elements();
 
     MOZ_ASSERT(mBuffer.Length() == inSamples);
 
-    WebAudioUtils::SpeexResamplerProcess(mDownSampler, aChannel,
-                                         inputData, &inSamples,
-                                         aOutputData, &outSamples);
+    WebAudioUtils::SpeexResamplerProcess(mDownSampler, aChannel, inputData,
+                                         &inSamples, aOutputData, &outSamples);
 
-    MOZ_ASSERT(inSamples == WEBAUDIO_BLOCK_SIZE*aBlocks && outSamples == WEBAUDIO_BLOCK_SIZE);
+    MOZ_ASSERT(inSamples == WEBAUDIO_BLOCK_SIZE * aBlocks &&
+               outSamples == WEBAUDIO_BLOCK_SIZE);
   }
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-  {
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
     size_t amount = 0;
     // Future: properly measure speex memory
     amount += aMallocSizeOf(mUpSampler);
@@ -137,9 +125,8 @@ public:
     return amount;
   }
 
-private:
-  void Destroy()
-  {
+ private:
+  void Destroy() {
     if (mUpSampler) {
       speex_resampler_destroy(mUpSampler);
       mUpSampler = nullptr;
@@ -150,7 +137,7 @@ private:
     }
   }
 
-private:
+ private:
   OverSampleType mType;
   SpeexResamplerState* mUpSampler;
   SpeexResamplerState* mDownSampler;
@@ -159,39 +146,30 @@ private:
   nsTArray<float> mBuffer;
 };
 
-class WaveShaperNodeEngine final : public AudioNodeEngine
-{
-public:
+class WaveShaperNodeEngine final : public AudioNodeEngine {
+ public:
   explicit WaveShaperNodeEngine(AudioNode* aNode)
-    : AudioNodeEngine(aNode)
-    , mType(OverSampleType::None)
-  {
-  }
+      : AudioNodeEngine(aNode), mType(OverSampleType::None) {}
 
-  enum Parameters {
-    TYPE
-  };
+  enum Parameters { TYPE };
 
-  void SetRawArrayData(nsTArray<float>& aCurve) override
-  {
+  void SetRawArrayData(nsTArray<float>& aCurve) override {
     mCurve.SwapElements(aCurve);
   }
 
-  void SetInt32Parameter(uint32_t aIndex, int32_t aValue) override
-  {
+  void SetInt32Parameter(uint32_t aIndex, int32_t aValue) override {
     switch (aIndex) {
-    case TYPE:
-      mType = static_cast<OverSampleType>(aValue);
-      break;
-    default:
-      NS_ERROR("Bad WaveShaperNode Int32Parameter");
+      case TYPE:
+        mType = static_cast<OverSampleType>(aValue);
+        break;
+      default:
+        NS_ERROR("Bad WaveShaperNode Int32Parameter");
     }
   }
 
   template <uint32_t blocks>
-  void ProcessCurve(const float* aInputBuffer, float* aOutputBuffer)
-  {
-    for (uint32_t j = 0; j < WEBAUDIO_BLOCK_SIZE*blocks; ++j) {
+  void ProcessCurve(const float* aInputBuffer, float* aOutputBuffer) {
+    for (uint32_t j = 0; j < WEBAUDIO_BLOCK_SIZE * blocks; ++j) {
       // Index into the curve array based on the amplitude of the
       // incoming signal by using an amplitude range of [-1, 1] and
       // performing a linear interpolation of the neighbor values.
@@ -206,18 +184,15 @@ public:
           uint32_t indexHigher = indexLower + 1;
           float interpolationFactor = index - indexLower;
           aOutputBuffer[j] = (1.0f - interpolationFactor) * mCurve[indexLower] +
-                                     interpolationFactor  * mCurve[indexHigher];
+                             interpolationFactor * mCurve[indexHigher];
         }
       }
     }
   }
 
-  void ProcessBlock(AudioNodeStream* aStream,
-                    GraphTime aFrom,
-                    const AudioBlock& aInput,
-                    AudioBlock* aOutput,
-                    bool* aFinished) override
-  {
+  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+                    const AudioBlock& aInput, AudioBlock* aOutput,
+                    bool* aFinished) override {
     uint32_t channelCount = aInput.ChannelCount();
     if (!mCurve.Length()) {
       // Optimize the case where we don't have a curve buffer
@@ -233,7 +208,8 @@ public:
       uint32_t indexHigher = indexLower + 1;
       float interpolationFactor = index - indexLower;
       if ((1.0f - interpolationFactor) * mCurve[indexLower] +
-          interpolationFactor * mCurve[indexHigher] == 0.0) {
+              interpolationFactor * mCurve[indexHigher] ==
+          0.0) {
         *aOutput = aInput;
         return;
       } else {
@@ -251,9 +227,8 @@ public:
       if (!nullInput) {
         if (aInput.mVolume != 1.0f) {
           AudioBlockCopyChannelWithScale(
-              static_cast<const float*>(aInput.mChannelData[i]),
-                                        aInput.mVolume,
-                                        alignedScaledInput);
+              static_cast<const float*>(aInput.mChannelData[i]), aInput.mVolume,
+              alignedScaledInput);
           inputSamples = alignedScaledInput;
         } else {
           inputSamples = static_cast<const float*>(aInput.mChannelData[i]);
@@ -266,65 +241,60 @@ public:
       float* sampleBuffer;
 
       switch (mType) {
-      case OverSampleType::None:
-        mResampler.Reset(channelCount, aStream->SampleRate(), OverSampleType::None);
-        ProcessCurve<1>(inputSamples, outputBuffer);
-        break;
-      case OverSampleType::_2x:
-        mResampler.Reset(channelCount, aStream->SampleRate(), OverSampleType::_2x);
-        sampleBuffer = mResampler.UpSample(i, inputSamples, 2);
-        ProcessCurve<2>(sampleBuffer, sampleBuffer);
-        mResampler.DownSample(i, outputBuffer, 2);
-        break;
-      case OverSampleType::_4x:
-        mResampler.Reset(channelCount, aStream->SampleRate(), OverSampleType::_4x);
-        sampleBuffer = mResampler.UpSample(i, inputSamples, 4);
-        ProcessCurve<4>(sampleBuffer, sampleBuffer);
-        mResampler.DownSample(i, outputBuffer, 4);
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("We should never reach here");
+        case OverSampleType::None:
+          mResampler.Reset(channelCount, aStream->SampleRate(),
+                           OverSampleType::None);
+          ProcessCurve<1>(inputSamples, outputBuffer);
+          break;
+        case OverSampleType::_2x:
+          mResampler.Reset(channelCount, aStream->SampleRate(),
+                           OverSampleType::_2x);
+          sampleBuffer = mResampler.UpSample(i, inputSamples, 2);
+          ProcessCurve<2>(sampleBuffer, sampleBuffer);
+          mResampler.DownSample(i, outputBuffer, 2);
+          break;
+        case OverSampleType::_4x:
+          mResampler.Reset(channelCount, aStream->SampleRate(),
+                           OverSampleType::_4x);
+          sampleBuffer = mResampler.UpSample(i, inputSamples, 4);
+          ProcessCurve<4>(sampleBuffer, sampleBuffer);
+          mResampler.DownSample(i, outputBuffer, 4);
+          break;
+        default:
+          MOZ_ASSERT_UNREACHABLE("We should never reach here");
       }
     }
   }
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override {
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
     amount += mCurve.ShallowSizeOfExcludingThis(aMallocSizeOf);
     amount += mResampler.SizeOfExcludingThis(aMallocSizeOf);
     return amount;
   }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-private:
+ private:
   nsTArray<float> mCurve;
   OverSampleType mType;
   Resampler mResampler;
 };
 
 WaveShaperNode::WaveShaperNode(AudioContext* aContext)
-  : AudioNode(aContext,
-              2,
-              ChannelCountMode::Max,
-              ChannelInterpretation::Speakers)
-  , mType(OverSampleType::None)
-{
+    : AudioNode(aContext, 2, ChannelCountMode::Max,
+                ChannelInterpretation::Speakers),
+      mType(OverSampleType::None) {
   WaveShaperNodeEngine* engine = new WaveShaperNodeEngine(this);
-  mStream = AudioNodeStream::Create(aContext, engine,
-                                    AudioNodeStream::NO_STREAM_FLAGS,
-                                    aContext->Graph());
+  mStream = AudioNodeStream::Create(
+      aContext, engine, AudioNodeStream::NO_STREAM_FLAGS, aContext->Graph());
 }
 
-/* static */ already_AddRefed<WaveShaperNode>
-WaveShaperNode::Create(AudioContext& aAudioContext,
-                       const WaveShaperOptions& aOptions,
-                       ErrorResult& aRv)
-{
+/* static */ already_AddRefed<WaveShaperNode> WaveShaperNode::Create(
+    AudioContext& aAudioContext, const WaveShaperOptions& aOptions,
+    ErrorResult& aRv) {
   if (aAudioContext.CheckClosed(aRv)) {
     return nullptr;
   }
@@ -347,15 +317,13 @@ WaveShaperNode::Create(AudioContext& aAudioContext,
   return audioNode.forget();
 }
 
-JSObject*
-WaveShaperNode::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* WaveShaperNode::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
   return WaveShaperNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-WaveShaperNode::SetCurve(const Nullable<Float32Array>& aCurve, ErrorResult& aRv)
-{
+void WaveShaperNode::SetCurve(const Nullable<Float32Array>& aCurve,
+                              ErrorResult& aRv) {
   // Let's purge the cached value for the curve attribute.
   WaveShaperNode_Binding::ClearCachedCurveValue(this);
 
@@ -369,7 +337,8 @@ WaveShaperNode::SetCurve(const Nullable<Float32Array>& aCurve, ErrorResult& aRv)
   floats.ComputeLengthAndData();
   if (floats.IsShared()) {
     // Throw if the object is mapping shared memory (must opt in).
-    aRv.ThrowTypeError<MSG_TYPEDARRAY_IS_SHARED>(NS_LITERAL_STRING("Argument of WaveShaperNode.setCurve"));
+    aRv.ThrowTypeError<MSG_TYPEDARRAY_IS_SHARED>(
+        NS_LITERAL_STRING("Argument of WaveShaperNode.setCurve"));
     return;
   }
 
@@ -384,10 +353,8 @@ WaveShaperNode::SetCurve(const Nullable<Float32Array>& aCurve, ErrorResult& aRv)
   SetCurveInternal(curve, aRv);
 }
 
-void
-WaveShaperNode::SetCurveInternal(const nsTArray<float>& aCurve,
-                                 ErrorResult& aRv)
-{
+void WaveShaperNode::SetCurveInternal(const nsTArray<float>& aCurve,
+                                      ErrorResult& aRv) {
   if (aCurve.Length() < 2) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -397,16 +364,12 @@ WaveShaperNode::SetCurveInternal(const nsTArray<float>& aCurve,
   SendCurveToStream();
 }
 
-void
-WaveShaperNode::CleanCurveInternal()
-{
+void WaveShaperNode::CleanCurveInternal() {
   mCurve.Clear();
   SendCurveToStream();
 }
 
-void
-WaveShaperNode::SendCurveToStream()
-{
+void WaveShaperNode::SendCurveToStream() {
   AudioNodeStream* ns = mStream;
   MOZ_ASSERT(ns, "Why don't we have a stream here?");
 
@@ -414,10 +377,8 @@ WaveShaperNode::SendCurveToStream()
   ns->SetRawArrayData(copyCurve);
 }
 
-void
-WaveShaperNode::GetCurve(JSContext* aCx,
-                         JS::MutableHandle<JSObject*> aRetval)
-{
+void WaveShaperNode::GetCurve(JSContext* aCx,
+                              JS::MutableHandle<JSObject*> aRetval) {
   // Let's return a null value if the list is empty.
   if (mCurve.IsEmpty()) {
     aRetval.set(nullptr);
@@ -425,17 +386,15 @@ WaveShaperNode::GetCurve(JSContext* aCx,
   }
 
   MOZ_ASSERT(mCurve.Length() >= 2);
-  aRetval.set(Float32Array::Create(aCx, this, mCurve.Length(),
-                                   mCurve.Elements()));
+  aRetval.set(
+      Float32Array::Create(aCx, this, mCurve.Length(), mCurve.Elements()));
 }
 
-void
-WaveShaperNode::SetOversample(OverSampleType aType)
-{
+void WaveShaperNode::SetOversample(OverSampleType aType) {
   mType = aType;
   SendInt32ParameterToStream(WaveShaperNodeEngine::TYPE,
                              static_cast<int32_t>(aType));
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

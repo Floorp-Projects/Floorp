@@ -16,9 +16,9 @@
 namespace mozilla {
 
 class SourceBufferTask {
-public:
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SourceBufferTask);
-  enum class Type  {
+  enum class Type {
     AppendBuffer,
     Abort,
     Reset,
@@ -29,30 +29,29 @@ public:
   };
 
   typedef Pair<bool, SourceBufferAttributes> AppendBufferResult;
-  typedef MozPromise<AppendBufferResult, MediaResult, /* IsExclusive = */ true> AppendPromise;
-  typedef MozPromise<bool, nsresult, /* IsExclusive = */ true> RangeRemovalPromise;
+  typedef MozPromise<AppendBufferResult, MediaResult, /* IsExclusive = */ true>
+      AppendPromise;
+  typedef MozPromise<bool, nsresult, /* IsExclusive = */ true>
+      RangeRemovalPromise;
 
   virtual Type GetType() const = 0;
   virtual const char* GetTypeName() const = 0;
 
-  template<typename ReturnType>
-  ReturnType* As()
-  {
+  template <typename ReturnType>
+  ReturnType* As() {
     MOZ_ASSERT(this->GetType() == ReturnType::sType);
     return static_cast<ReturnType*>(this);
   }
 
-protected:
+ protected:
   virtual ~SourceBufferTask() {}
 };
 
 class AppendBufferTask : public SourceBufferTask {
-public:
+ public:
   AppendBufferTask(already_AddRefed<MediaByteBuffer> aData,
                    const SourceBufferAttributes& aAttributes)
-  : mBuffer(aData)
-  , mAttributes(aAttributes)
-  {}
+      : mBuffer(aData), mAttributes(aAttributes) {}
 
   static const Type sType = Type::AppendBuffer;
   Type GetType() const override { return Type::AppendBuffer; }
@@ -64,24 +63,23 @@ public:
 };
 
 class AbortTask : public SourceBufferTask {
-public:
+ public:
   static const Type sType = Type::Abort;
   Type GetType() const override { return Type::Abort; }
   const char* GetTypeName() const override { return "Abort"; }
 };
 
 class ResetTask : public SourceBufferTask {
-public:
+ public:
   static const Type sType = Type::Reset;
   Type GetType() const override { return Type::Reset; }
   const char* GetTypeName() const override { return "Reset"; }
 };
 
 class RangeRemovalTask : public SourceBufferTask {
-public:
+ public:
   explicit RangeRemovalTask(const media::TimeInterval& aRange)
-  : mRange(aRange)
-  {}
+      : mRange(aRange) {}
 
   static const Type sType = Type::RangeRemoval;
   Type GetType() const override { return Type::RangeRemoval; }
@@ -92,11 +90,9 @@ public:
 };
 
 class EvictDataTask : public SourceBufferTask {
-public:
+ public:
   EvictDataTask(const media::TimeUnit& aPlaybackTime, int64_t aSizetoEvict)
-  : mPlaybackTime(aPlaybackTime)
-  , mSizeToEvict(aSizetoEvict)
-  {}
+      : mPlaybackTime(aPlaybackTime), mSizeToEvict(aSizetoEvict) {}
 
   static const Type sType = Type::EvictData;
   Type GetType() const override { return Type::EvictData; }
@@ -107,18 +103,15 @@ public:
 };
 
 class DetachTask : public SourceBufferTask {
-public:
+ public:
   static const Type sType = Type::Detach;
   Type GetType() const override { return Type::Detach; }
   const char* GetTypeName() const override { return "Detach"; }
 };
 
 class ChangeTypeTask : public SourceBufferTask {
-public:
-  explicit ChangeTypeTask(const MediaContainerType& aType)
-    : mType(aType)
-  {
-  }
+ public:
+  explicit ChangeTypeTask(const MediaContainerType& aType) : mType(aType) {}
 
   static const Type sType = Type::ChangeType;
   Type GetType() const override { return Type::ChangeType; }
@@ -127,6 +120,6 @@ public:
   const MediaContainerType mType;
 };
 
-} // end mozilla namespace
+}  // namespace mozilla
 
 #endif

@@ -10,65 +10,45 @@
 
 namespace mozilla {
 
-template<class Func, class... Args>
+template <class Func, class... Args>
 void ChromiumCDMCallbackProxy::DispatchToMainThread(const char* const aLabel,
                                                     Func aFunc,
-                                                    Args&&... aArgs)
-{
+                                                    Args&&... aArgs) {
   mMainThread->Dispatch(
-    // Use Decay to ensure all the types are passed by value not by reference.
-    NewRunnableMethod<typename Decay<Args>::Type...>(
-      aLabel,
-      mProxy,
-      aFunc,
-      std::forward<Args>(aArgs)...),
-    NS_DISPATCH_NORMAL);
+      // Use Decay to ensure all the types are passed by value not by reference.
+      NewRunnableMethod<typename Decay<Args>::Type...>(
+          aLabel, mProxy, aFunc, std::forward<Args>(aArgs)...),
+      NS_DISPATCH_NORMAL);
 }
 
-void
-ChromiumCDMCallbackProxy::SetSessionId(uint32_t aPromiseId,
-                                       const nsCString& aSessionId)
-{
+void ChromiumCDMCallbackProxy::SetSessionId(uint32_t aPromiseId,
+                                            const nsCString& aSessionId) {
   DispatchToMainThread("ChromiumCDMProxy::OnSetSessionId",
-                       &ChromiumCDMProxy::OnSetSessionId,
-                       aPromiseId,
+                       &ChromiumCDMProxy::OnSetSessionId, aPromiseId,
                        NS_ConvertUTF8toUTF16(aSessionId));
 }
 
-void
-ChromiumCDMCallbackProxy::ResolveLoadSessionPromise(uint32_t aPromiseId,
-                                                    bool aSuccessful)
-{
+void ChromiumCDMCallbackProxy::ResolveLoadSessionPromise(uint32_t aPromiseId,
+                                                         bool aSuccessful) {
   DispatchToMainThread("ChromiumCDMProxy::OnResolveLoadSessionPromise",
                        &ChromiumCDMProxy::OnResolveLoadSessionPromise,
-                       aPromiseId,
-                       aSuccessful);
+                       aPromiseId, aSuccessful);
 }
 
-void
-ChromiumCDMCallbackProxy::ResolvePromise(uint32_t aPromiseId)
-{
+void ChromiumCDMCallbackProxy::ResolvePromise(uint32_t aPromiseId) {
   DispatchToMainThread("ChromiumCDMProxy::ResolvePromise",
-                       &ChromiumCDMProxy::ResolvePromise,
-                       aPromiseId);
+                       &ChromiumCDMProxy::ResolvePromise, aPromiseId);
 }
 
-void
-ChromiumCDMCallbackProxy::RejectPromise(uint32_t aPromiseId,
-                                        nsresult aException,
-                                        const nsCString& aErrorMessage)
-{
+void ChromiumCDMCallbackProxy::RejectPromise(uint32_t aPromiseId,
+                                             nsresult aException,
+                                             const nsCString& aErrorMessage) {
   DispatchToMainThread("ChromiumCDMProxy::RejectPromise",
-                       &ChromiumCDMProxy::RejectPromise,
-                       aPromiseId,
-                       aException,
+                       &ChromiumCDMProxy::RejectPromise, aPromiseId, aException,
                        aErrorMessage);
 }
 
-
-static dom::MediaKeyMessageType
-ToDOMMessageType(uint32_t aMessageType)
-{
+static dom::MediaKeyMessageType ToDOMMessageType(uint32_t aMessageType) {
   switch (static_cast<cdm::MessageType>(aMessageType)) {
     case cdm::kLicenseRequest:
       return dom::MediaKeyMessageType::License_request;
@@ -83,21 +63,16 @@ ToDOMMessageType(uint32_t aMessageType)
   return dom::MediaKeyMessageType::License_request;
 }
 
-void
-ChromiumCDMCallbackProxy::SessionMessage(const nsACString& aSessionId,
-                                         uint32_t aMessageType,
-                                         nsTArray<uint8_t>&& aMessage)
-{
+void ChromiumCDMCallbackProxy::SessionMessage(const nsACString& aSessionId,
+                                              uint32_t aMessageType,
+                                              nsTArray<uint8_t>&& aMessage) {
   DispatchToMainThread("ChromiumCDMProxy::OnSessionMessage",
                        &ChromiumCDMProxy::OnSessionMessage,
                        NS_ConvertUTF8toUTF16(aSessionId),
-                       ToDOMMessageType(aMessageType),
-                       std::move(aMessage));
+                       ToDOMMessageType(aMessageType), std::move(aMessage));
 }
 
-static dom::MediaKeyStatus
-ToDOMMediaKeyStatus(uint32_t aStatus)
-{
+static dom::MediaKeyStatus ToDOMMediaKeyStatus(uint32_t aStatus) {
   switch (static_cast<cdm::KeyStatus>(aStatus)) {
     case cdm::kUsable:
       return dom::MediaKeyStatus::Usable;
@@ -118,29 +93,24 @@ ToDOMMediaKeyStatus(uint32_t aStatus)
   return dom::MediaKeyStatus::Internal_error;
 }
 
-void
-ChromiumCDMCallbackProxy::ResolvePromiseWithKeyStatus(uint32_t aPromiseId,
-                                                      uint32_t aKeyStatus)
-{
+void ChromiumCDMCallbackProxy::ResolvePromiseWithKeyStatus(
+    uint32_t aPromiseId, uint32_t aKeyStatus) {
   DispatchToMainThread("ChromiumCDMProxy::OnResolvePromiseWithKeyStatus",
                        &ChromiumCDMProxy::OnResolvePromiseWithKeyStatus,
-                       aPromiseId,
-                       ToDOMMediaKeyStatus(aKeyStatus));
+                       aPromiseId, ToDOMMediaKeyStatus(aKeyStatus));
 }
 
-void
-ChromiumCDMCallbackProxy::SessionKeysChange(const nsCString& aSessionId,
-                                            nsTArray<mozilla::gmp::CDMKeyInformation> && aKeysInfo)
-{
+void ChromiumCDMCallbackProxy::SessionKeysChange(
+    const nsCString& aSessionId,
+    nsTArray<mozilla::gmp::CDMKeyInformation>&& aKeysInfo) {
   bool keyStatusesChange = false;
   {
     auto caps = mProxy->Capabilites().Lock();
     for (const auto& keyInfo : aKeysInfo) {
-      keyStatusesChange |=
-        caps->SetKeyStatus(keyInfo.mKeyId(),
-                           NS_ConvertUTF8toUTF16(aSessionId),
-                           dom::Optional<dom::MediaKeyStatus>(
-                             ToDOMMediaKeyStatus(keyInfo.mStatus())));
+      keyStatusesChange |= caps->SetKeyStatus(
+          keyInfo.mKeyId(), NS_ConvertUTF8toUTF16(aSessionId),
+          dom::Optional<dom::MediaKeyStatus>(
+              ToDOMMediaKeyStatus(keyInfo.mStatus())));
     }
   }
   if (keyStatusesChange) {
@@ -150,37 +120,28 @@ ChromiumCDMCallbackProxy::SessionKeysChange(const nsCString& aSessionId,
   }
 }
 
-void
-ChromiumCDMCallbackProxy::ExpirationChange(const nsCString& aSessionId,
-                                           double aSecondsSinceEpoch)
-{
+void ChromiumCDMCallbackProxy::ExpirationChange(const nsCString& aSessionId,
+                                                double aSecondsSinceEpoch) {
   DispatchToMainThread("ChromiumCDMProxy::OnExpirationChange",
                        &ChromiumCDMProxy::OnExpirationChange,
                        NS_ConvertUTF8toUTF16(aSessionId),
                        UnixTime(aSecondsSinceEpoch * 1000));
-
 }
 
-void
-ChromiumCDMCallbackProxy::SessionClosed(const nsCString& aSessionId)
-{
+void ChromiumCDMCallbackProxy::SessionClosed(const nsCString& aSessionId) {
   DispatchToMainThread("ChromiumCDMProxy::OnSessionClosed",
-                       &ChromiumCDMProxy::OnSessionClosed ,
+                       &ChromiumCDMProxy::OnSessionClosed,
                        NS_ConvertUTF8toUTF16(aSessionId));
 }
 
-void
-ChromiumCDMCallbackProxy::Terminated()
-{
+void ChromiumCDMCallbackProxy::Terminated() {
   DispatchToMainThread("ChromiumCDMProxy::Terminated",
                        &ChromiumCDMProxy::Terminated);
 }
 
-void
-ChromiumCDMCallbackProxy::Shutdown()
-{
+void ChromiumCDMCallbackProxy::Shutdown() {
   DispatchToMainThread("ChromiumCDMProxy::Shutdown",
                        &ChromiumCDMProxy::Shutdown);
 }
 
-} //namespace mozilla
+}  // namespace mozilla

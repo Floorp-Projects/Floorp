@@ -15,19 +15,18 @@
 
 extern mozilla::LogModule* GetSourceBufferResourceLog();
 
-#define SBR_DEBUG(arg, ...) MOZ_LOG(GetSourceBufferResourceLog(), mozilla::LogLevel::Debug, ("ResourceQueue(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#define SBR_DEBUGV(arg, ...) MOZ_LOG(GetSourceBufferResourceLog(), mozilla::LogLevel::Verbose, ("ResourceQueue(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define SBR_DEBUG(arg, ...)                                       \
+  MOZ_LOG(GetSourceBufferResourceLog(), mozilla::LogLevel::Debug, \
+          ("ResourceQueue(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define SBR_DEBUGV(arg, ...)                                        \
+  MOZ_LOG(GetSourceBufferResourceLog(), mozilla::LogLevel::Verbose, \
+          ("ResourceQueue(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 namespace mozilla {
 
-ResourceItem::ResourceItem(MediaByteBuffer* aData)
-  : mData(aData)
-{
-}
+ResourceItem::ResourceItem(MediaByteBuffer* aData) : mData(aData) {}
 
-size_t
-ResourceItem::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t ResourceItem::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   // size including this
   size_t size = aMallocSizeOf(this);
 
@@ -38,37 +37,23 @@ ResourceItem::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 class ResourceQueueDeallocator : public nsDequeFunctor {
-  void operator()(void* aObject) override
-  {
+  void operator()(void* aObject) override {
     delete static_cast<ResourceItem*>(aObject);
   }
 };
 
 ResourceQueue::ResourceQueue()
-  : nsDeque(new ResourceQueueDeallocator())
-  , mLogicalLength(0)
-  , mOffset(0)
-{
-}
+    : nsDeque(new ResourceQueueDeallocator()), mLogicalLength(0), mOffset(0) {}
 
-uint64_t
-ResourceQueue::GetOffset()
-{
-  return mOffset;
-}
+uint64_t ResourceQueue::GetOffset() { return mOffset; }
 
-uint64_t
-ResourceQueue::GetLength()
-{
-  return mLogicalLength;
-}
+uint64_t ResourceQueue::GetLength() { return mLogicalLength; }
 
-void
-ResourceQueue::CopyData(uint64_t aOffset, uint32_t aCount, char* aDest)
-{
+void ResourceQueue::CopyData(uint64_t aOffset, uint32_t aCount, char* aDest) {
   uint32_t offset = 0;
   uint32_t start = GetAtOffset(aOffset, &offset);
-  uint32_t end = std::min(GetAtOffset(aOffset + aCount, nullptr) + 1, uint32_t(GetSize()));
+  uint32_t end =
+      std::min(GetAtOffset(aOffset + aCount, nullptr) + 1, uint32_t(GetSize()));
   for (uint32_t i = start; i < end; ++i) {
     ResourceItem* item = ResourceAt(i);
     uint32_t bytes = std::min(aCount, uint32_t(item->mData->Length() - offset));
@@ -81,29 +66,24 @@ ResourceQueue::CopyData(uint64_t aOffset, uint32_t aCount, char* aDest)
   }
 }
 
-void
-ResourceQueue::AppendItem(MediaByteBuffer* aData)
-{
+void ResourceQueue::AppendItem(MediaByteBuffer* aData) {
   mLogicalLength += aData->Length();
   Push(new ResourceItem(aData));
 }
 
-uint32_t
-ResourceQueue::Evict(uint64_t aOffset, uint32_t aSizeToEvict,
-                     ErrorResult& aRv)
-{
-  SBR_DEBUG("Evict(aOffset=%" PRIu64 ", aSizeToEvict=%u)",
-            aOffset, aSizeToEvict);
+uint32_t ResourceQueue::Evict(uint64_t aOffset, uint32_t aSizeToEvict,
+                              ErrorResult& aRv) {
+  SBR_DEBUG("Evict(aOffset=%" PRIu64 ", aSizeToEvict=%u)", aOffset,
+            aSizeToEvict);
   return EvictBefore(std::min(aOffset, mOffset + (uint64_t)aSizeToEvict), aRv);
 }
 
-uint32_t ResourceQueue::EvictBefore(uint64_t aOffset, ErrorResult& aRv)
-{
+uint32_t ResourceQueue::EvictBefore(uint64_t aOffset, ErrorResult& aRv) {
   SBR_DEBUG("EvictBefore(%" PRIu64 ")", aOffset);
   uint32_t evicted = 0;
   while (ResourceItem* item = ResourceAt(0)) {
-    SBR_DEBUG("item=%p length=%zu offset=%" PRIu64,
-              item, item->mData->Length(), mOffset);
+    SBR_DEBUG("item=%p length=%zu offset=%" PRIu64, item, item->mData->Length(),
+              mOffset);
     if (item->mData->Length() + mOffset >= aOffset) {
       if (aOffset <= mOffset) {
         break;
@@ -113,8 +93,7 @@ uint32_t ResourceQueue::EvictBefore(uint64_t aOffset, ErrorResult& aRv)
       evicted += offset;
       RefPtr<MediaByteBuffer> data = new MediaByteBuffer;
       if (!data->AppendElements(item->mData->Elements() + offset,
-                                item->mData->Length() - offset,
-                                fallible)) {
+                                item->mData->Length() - offset, fallible)) {
         aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
         return 0;
       }
@@ -129,14 +108,12 @@ uint32_t ResourceQueue::EvictBefore(uint64_t aOffset, ErrorResult& aRv)
   return evicted;
 }
 
-uint32_t
-ResourceQueue::EvictAll()
-{
+uint32_t ResourceQueue::EvictAll() {
   SBR_DEBUG("EvictAll()");
   uint32_t evicted = 0;
   while (ResourceItem* item = ResourceAt(0)) {
-    SBR_DEBUG("item=%p length=%zu offset=%" PRIu64,
-              item, item->mData->Length(), mOffset);
+    SBR_DEBUG("item=%p length=%zu offset=%" PRIu64, item, item->mData->Length(),
+              mOffset);
     mOffset += item->mData->Length();
     evicted += item->mData->Length();
     delete PopFront();
@@ -144,9 +121,7 @@ ResourceQueue::EvictAll()
   return evicted;
 }
 
-size_t
-ResourceQueue::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t ResourceQueue::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   // Calculate the size of the internal deque.
   size_t size = nsDeque::SizeOfExcludingThis(aMallocSizeOf);
 
@@ -160,9 +135,7 @@ ResourceQueue::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 #if defined(DEBUG)
-void
-ResourceQueue::Dump(const char* aPath)
-{
+void ResourceQueue::Dump(const char* aPath) {
   for (uint32_t i = 0; i < uint32_t(GetSize()); ++i) {
     ResourceItem* item = ResourceAt(i);
 
@@ -178,15 +151,12 @@ ResourceQueue::Dump(const char* aPath)
 }
 #endif
 
-ResourceItem*
-ResourceQueue::ResourceAt(uint32_t aIndex) const
-{
+ResourceItem* ResourceQueue::ResourceAt(uint32_t aIndex) const {
   return static_cast<ResourceItem*>(ObjectAt(aIndex));
 }
 
-uint32_t
-ResourceQueue::GetAtOffset(uint64_t aOffset, uint32_t *aResourceOffset)
-{
+uint32_t ResourceQueue::GetAtOffset(uint64_t aOffset,
+                                    uint32_t* aResourceOffset) {
   MOZ_RELEASE_ASSERT(aOffset >= mOffset);
   uint64_t offset = mOffset;
   for (uint32_t i = 0; i < uint32_t(GetSize()); ++i) {
@@ -204,13 +174,11 @@ ResourceQueue::GetAtOffset(uint64_t aOffset, uint32_t *aResourceOffset)
   return GetSize();
 }
 
-ResourceItem*
-ResourceQueue::PopFront()
-{
+ResourceItem* ResourceQueue::PopFront() {
   return static_cast<ResourceItem*>(nsDeque::PopFront());
 }
 
 #undef SBR_DEBUG
 #undef SBR_DEBUGV
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -8,35 +8,29 @@
 #include "base/thread.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 
-#include "ImageContainer.h" // for PlanarYCbCrData and BufferRecycleBin
+#include "ImageContainer.h"  // for PlanarYCbCrData and BufferRecycleBin
 #include "RemoteDecoderManagerChild.h"
 
 namespace mozilla {
 
 using base::Thread;
-using namespace layers; // for PlanarYCbCrData and BufferRecycleBin
+using namespace layers;  // for PlanarYCbCrData and BufferRecycleBin
 
 RemoteVideoDecoderChild::RemoteVideoDecoderChild()
-  : mThread(RemoteDecoderManagerChild::GetManagerThread())
-  , mCanSend(false)
-  , mInitialized(false)
-  , mIsHardwareAccelerated(false)
-  , mConversion(MediaDataDecoder::ConversionRequired::kNeedNone)
-  , mBufferRecycleBin(new BufferRecycleBin)
-{
-}
+    : mThread(RemoteDecoderManagerChild::GetManagerThread()),
+      mCanSend(false),
+      mInitialized(false),
+      mIsHardwareAccelerated(false),
+      mConversion(MediaDataDecoder::ConversionRequired::kNeedNone),
+      mBufferRecycleBin(new BufferRecycleBin) {}
 
-RemoteVideoDecoderChild::~RemoteVideoDecoderChild()
-{
+RemoteVideoDecoderChild::~RemoteVideoDecoderChild() {
   AssertOnManagerThread();
   mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
 }
 
-RefPtr<mozilla::layers::Image>
-RemoteVideoDecoderChild::DeserializeImage(
-  const SurfaceDescriptorBuffer& aSdBuffer,
-  const IntSize& aPicSize)
-{
+RefPtr<mozilla::layers::Image> RemoteVideoDecoderChild::DeserializeImage(
+    const SurfaceDescriptorBuffer& aSdBuffer, const IntSize& aPicSize) {
   MOZ_ASSERT(aSdBuffer.desc().type() == BufferDescriptor::TYCbCrDescriptor);
   if (aSdBuffer.desc().type() != BufferDescriptor::TYCbCrDescriptor) {
     return nullptr;
@@ -83,7 +77,7 @@ RemoteVideoDecoderChild::DeserializeImage(
 
   switch (memOrShmem.type()) {
     case MemoryOrShmem::Tuintptr_t:
-      delete [] reinterpret_cast<uint8_t*>(memOrShmem.get_uintptr_t());
+      delete[] reinterpret_cast<uint8_t*>(memOrShmem.get_uintptr_t());
       break;
     case MemoryOrShmem::TShmem:
       DeallocShmem(memOrShmem.get_Shmem());
@@ -95,19 +89,16 @@ RemoteVideoDecoderChild::DeserializeImage(
   return image;
 }
 
-mozilla::ipc::IPCResult
-RemoteVideoDecoderChild::RecvVideoOutput(const RemoteVideoDataIPDL& aData)
-{
+mozilla::ipc::IPCResult RemoteVideoDecoderChild::RecvVideoOutput(
+    const RemoteVideoDataIPDL& aData) {
   AssertOnManagerThread();
 
   RefPtr<Image> image = DeserializeImage(aData.sdBuffer(), aData.frameSize());
 
   RefPtr<VideoData> video = VideoData::CreateFromImage(
-      aData.display(),
-      aData.base().offset(),
+      aData.display(), aData.base().offset(),
       media::TimeUnit::FromMicroseconds(aData.base().time()),
-      media::TimeUnit::FromMicroseconds(aData.base().duration()),
-      image,
+      media::TimeUnit::FromMicroseconds(aData.base().duration()), image,
       aData.base().keyframe(),
       media::TimeUnit::FromMicroseconds(aData.base().timecode()));
 
@@ -115,27 +106,22 @@ RemoteVideoDecoderChild::RecvVideoOutput(const RemoteVideoDataIPDL& aData)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-RemoteVideoDecoderChild::RecvInputExhausted()
-{
+mozilla::ipc::IPCResult RemoteVideoDecoderChild::RecvInputExhausted() {
   AssertOnManagerThread();
   mDecodePromise.ResolveIfExists(std::move(mDecodedData), __func__);
   mDecodedData = MediaDataDecoder::DecodedData();
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-RemoteVideoDecoderChild::RecvDrainComplete()
-{
+mozilla::ipc::IPCResult RemoteVideoDecoderChild::RecvDrainComplete() {
   AssertOnManagerThread();
   mDrainPromise.ResolveIfExists(std::move(mDecodedData), __func__);
   mDecodedData = MediaDataDecoder::DecodedData();
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-RemoteVideoDecoderChild::RecvError(const nsresult& aError)
-{
+mozilla::ipc::IPCResult RemoteVideoDecoderChild::RecvError(
+    const nsresult& aError) {
   AssertOnManagerThread();
   mDecodedData = MediaDataDecoder::DecodedData();
   mDecodePromise.RejectIfExists(aError, __func__);
@@ -144,10 +130,9 @@ RemoteVideoDecoderChild::RecvError(const nsresult& aError)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-RemoteVideoDecoderChild::RecvInitComplete(const nsCString& aDecoderDescription,
-                                          const ConversionRequired& aConversion)
-{
+mozilla::ipc::IPCResult RemoteVideoDecoderChild::RecvInitComplete(
+    const nsCString& aDecoderDescription,
+    const ConversionRequired& aConversion) {
   AssertOnManagerThread();
   mInitPromise.ResolveIfExists(TrackInfo::kVideoTrack, __func__);
   mInitialized = true;
@@ -156,34 +141,26 @@ RemoteVideoDecoderChild::RecvInitComplete(const nsCString& aDecoderDescription,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-RemoteVideoDecoderChild::RecvInitFailed(const nsresult& aReason)
-{
+mozilla::ipc::IPCResult RemoteVideoDecoderChild::RecvInitFailed(
+    const nsresult& aReason) {
   AssertOnManagerThread();
   mInitPromise.RejectIfExists(aReason, __func__);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-RemoteVideoDecoderChild::RecvFlushComplete()
-{
+mozilla::ipc::IPCResult RemoteVideoDecoderChild::RecvFlushComplete() {
   AssertOnManagerThread();
   mFlushPromise.ResolveIfExists(true, __func__);
   return IPC_OK();
 }
 
-void
-RemoteVideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void RemoteVideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy) {
   mCanSend = false;
 }
 
-MediaResult
-RemoteVideoDecoderChild::InitIPDL(
-  const VideoInfo& aVideoInfo,
-  float aFramerate,
-  const CreateDecoderParams::OptionSet& aOptions)
-{
+MediaResult RemoteVideoDecoderChild::InitIPDL(
+    const VideoInfo& aVideoInfo, float aFramerate,
+    const CreateDecoderParams::OptionSet& aOptions) {
   RefPtr<RemoteDecoderManagerChild> manager =
       RemoteDecoderManagerChild::GetSingleton();
 
@@ -203,38 +180,27 @@ RemoteVideoDecoderChild::InitIPDL(
   mIPDLSelfRef = this;
   bool success = false;
   nsCString errorDescription;
-  if (manager->SendPRemoteVideoDecoderConstructor(this,
-                                                  aVideoInfo,
-                                                  aFramerate,
-                                                  aOptions,
-                                                  &success,
+  if (manager->SendPRemoteVideoDecoderConstructor(this, aVideoInfo, aFramerate,
+                                                  aOptions, &success,
                                                   &errorDescription)) {
     mCanSend = true;
   }
 
-  return success ? MediaResult(NS_OK) :
-                   MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, errorDescription);
+  return success ? MediaResult(NS_OK)
+                 : MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, errorDescription);
 }
 
-void
-RemoteVideoDecoderChild::DestroyIPDL()
-{
+void RemoteVideoDecoderChild::DestroyIPDL() {
   if (mCanSend) {
     PRemoteVideoDecoderChild::Send__delete__(this);
   }
 }
 
-void
-RemoteVideoDecoderChild::IPDLActorDestroyed()
-{
-  mIPDLSelfRef = nullptr;
-}
+void RemoteVideoDecoderChild::IPDLActorDestroyed() { mIPDLSelfRef = nullptr; }
 
 // MediaDataDecoder methods
 
-RefPtr<MediaDataDecoder::InitPromise>
-RemoteVideoDecoderChild::Init()
-{
+RefPtr<MediaDataDecoder::InitPromise> RemoteVideoDecoderChild::Init() {
   AssertOnManagerThread();
 
   if (!mIPDLSelfRef || !mCanSend) {
@@ -247,9 +213,8 @@ RemoteVideoDecoderChild::Init()
   return mInitPromise.Ensure(__func__);
 }
 
-RefPtr<MediaDataDecoder::DecodePromise>
-RemoteVideoDecoderChild::Decode(MediaRawData* aSample)
-{
+RefPtr<MediaDataDecoder::DecodePromise> RemoteVideoDecoderChild::Decode(
+    MediaRawData* aSample) {
   AssertOnManagerThread();
 
   if (!mCanSend) {
@@ -268,20 +233,17 @@ RemoteVideoDecoderChild::Decode(MediaRawData* aSample)
 
   memcpy(buffer.get<uint8_t>(), aSample->Data(), aSample->Size());
 
-  MediaRawDataIPDL sample(MediaDataIPDL(aSample->mOffset,
-                                        aSample->mTime.ToMicroseconds(),
-                                        aSample->mTimecode.ToMicroseconds(),
-                                        aSample->mDuration.ToMicroseconds(),
-                                        aSample->mFrames,
-                                        aSample->mKeyframe),
-                          buffer);
+  MediaRawDataIPDL sample(
+      MediaDataIPDL(aSample->mOffset, aSample->mTime.ToMicroseconds(),
+                    aSample->mTimecode.ToMicroseconds(),
+                    aSample->mDuration.ToMicroseconds(), aSample->mFrames,
+                    aSample->mKeyframe),
+      buffer);
   SendInput(sample);
   return mDecodePromise.Ensure(__func__);
 }
 
-RefPtr<MediaDataDecoder::FlushPromise>
-RemoteVideoDecoderChild::Flush()
-{
+RefPtr<MediaDataDecoder::FlushPromise> RemoteVideoDecoderChild::Flush() {
   AssertOnManagerThread();
   mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   mDrainPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
@@ -293,9 +255,7 @@ RemoteVideoDecoderChild::Flush()
   return mFlushPromise.Ensure(__func__);
 }
 
-RefPtr<MediaDataDecoder::DecodePromise>
-RemoteVideoDecoderChild::Drain()
-{
+RefPtr<MediaDataDecoder::DecodePromise> RemoteVideoDecoderChild::Drain() {
   AssertOnManagerThread();
   if (!mCanSend) {
     return MediaDataDecoder::DecodePromise::CreateAndReject(
@@ -305,9 +265,7 @@ RemoteVideoDecoderChild::Drain()
   return mDrainPromise.Ensure(__func__);
 }
 
-void
-RemoteVideoDecoderChild::Shutdown()
-{
+void RemoteVideoDecoderChild::Shutdown() {
   AssertOnManagerThread();
   mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   if (mCanSend) {
@@ -316,50 +274,40 @@ RemoteVideoDecoderChild::Shutdown()
   mInitialized = false;
 }
 
-bool
-RemoteVideoDecoderChild::IsHardwareAccelerated(nsACString& aFailureReason) const
-{
+bool RemoteVideoDecoderChild::IsHardwareAccelerated(
+    nsACString& aFailureReason) const {
   AssertOnManagerThread();
   aFailureReason = mHardwareAcceleratedReason;
   return mIsHardwareAccelerated;
 }
 
-nsCString
-RemoteVideoDecoderChild::GetDescriptionName() const
-{
+nsCString RemoteVideoDecoderChild::GetDescriptionName() const {
   AssertOnManagerThread();
   return mDescription;
 }
 
-void
-RemoteVideoDecoderChild::SetSeekThreshold(const media::TimeUnit& aTime)
-{
+void RemoteVideoDecoderChild::SetSeekThreshold(const media::TimeUnit& aTime) {
   AssertOnManagerThread();
   if (mCanSend) {
     SendSetSeekThreshold(aTime.ToMicroseconds());
   }
 }
 
-MediaDataDecoder::ConversionRequired
-RemoteVideoDecoderChild::NeedsConversion() const
-{
+MediaDataDecoder::ConversionRequired RemoteVideoDecoderChild::NeedsConversion()
+    const {
   AssertOnManagerThread();
   return mConversion;
 }
 
-void
-RemoteVideoDecoderChild::AssertOnManagerThread() const
-{
+void RemoteVideoDecoderChild::AssertOnManagerThread() const {
   MOZ_ASSERT(NS_GetCurrentThread() == mThread);
 }
 
-RemoteDecoderManagerChild*
-RemoteVideoDecoderChild::GetManager()
-{
+RemoteDecoderManagerChild* RemoteVideoDecoderChild::GetManager() {
   if (!mCanSend) {
     return nullptr;
   }
   return static_cast<RemoteDecoderManagerChild*>(Manager());
 }
 
-} // namespace mozilla
+}  // namespace mozilla

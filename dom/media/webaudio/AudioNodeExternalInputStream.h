@@ -20,21 +20,19 @@ class AbstractThread;
  * input --- handling any number of audio tracks and handling blocking of
  * the input MediaStream.
  */
-class AudioNodeExternalInputStream final : public AudioNodeStream
-{
-public:
+class AudioNodeExternalInputStream final : public AudioNodeStream {
+ public:
   static already_AddRefed<AudioNodeExternalInputStream> Create(
-    MediaStreamGraph* aGraph,
-    AudioNodeEngine* aEngine);
+      MediaStreamGraph* aGraph, AudioNodeEngine* aEngine);
 
-protected:
+ protected:
   AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate);
   ~AudioNodeExternalInputStream();
 
-public:
+ public:
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
 
-private:
+ private:
   /**
    * Determines if this is enabled or not.  Disabled nodes produce silence.
    * This node becomes disabled if the document principal does not subsume the
@@ -43,6 +41,6 @@ private:
   bool IsEnabled();
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* MOZILLA_AUDIONODESTREAM_H_ */

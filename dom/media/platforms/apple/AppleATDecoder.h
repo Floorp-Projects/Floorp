@@ -19,13 +19,10 @@ class TaskQueue;
 
 DDLoggedTypeDeclNameAndBase(AppleATDecoder, MediaDataDecoder);
 
-class AppleATDecoder
-  : public MediaDataDecoder
-  , public DecoderDoctorLifeLogger<AppleATDecoder>
-{
-public:
-  AppleATDecoder(const AudioInfo& aConfig,
-                 TaskQueue* aTaskQueue);
+class AppleATDecoder : public MediaDataDecoder,
+                       public DecoderDoctorLifeLogger<AppleATDecoder> {
+ public:
+  AppleATDecoder(const AudioInfo& aConfig, TaskQueue* aTaskQueue);
   ~AppleATDecoder();
 
   RefPtr<InitPromise> Init() override;
@@ -34,8 +31,7 @@ public:
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
 
-  nsCString GetDescriptionName() const override
-  {
+  nsCString GetDescriptionName() const override {
     return NS_LITERAL_CSTRING("apple coremedia decoder");
   }
 
@@ -50,7 +46,7 @@ public:
 
   const RefPtr<TaskQueue> mTaskQueue;
 
-private:
+ private:
   AudioConverterRef mConverter;
   AudioStreamBasicDescription mOutputFormat;
   UInt32 mFormatID;
@@ -75,6 +71,6 @@ private:
   bool mErrored;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_AppleATDecoder_h
+#endif  // mozilla_AppleATDecoder_h

@@ -10,58 +10,40 @@
 #include "mozilla/TaskQueue.h"
 #include "MediaData.h"
 
-mozilla::LogModule* GetSourceBufferResourceLog()
-{
+mozilla::LogModule* GetSourceBufferResourceLog() {
   static mozilla::LazyLogModule sLogModule("SourceBufferResource");
   return sLogModule;
 }
 
-#define SBR_DEBUG(arg, ...)                                                    \
-  DDMOZ_LOG(GetSourceBufferResourceLog(),                                      \
-            mozilla::LogLevel::Debug,                                          \
-            "::%s: " arg,                                                      \
-            __func__,                                                          \
-            ##__VA_ARGS__)
-#define SBR_DEBUGV(arg, ...)                                                   \
-  DDMOZ_LOG(GetSourceBufferResourceLog(),                                      \
-            mozilla::LogLevel::Verbose,                                        \
-            "::%s: " arg,                                                      \
-            __func__,                                                          \
-            ##__VA_ARGS__)
+#define SBR_DEBUG(arg, ...)                                         \
+  DDMOZ_LOG(GetSourceBufferResourceLog(), mozilla::LogLevel::Debug, \
+            "::%s: " arg, __func__, ##__VA_ARGS__)
+#define SBR_DEBUGV(arg, ...)                                          \
+  DDMOZ_LOG(GetSourceBufferResourceLog(), mozilla::LogLevel::Verbose, \
+            "::%s: " arg, __func__, ##__VA_ARGS__)
 
 namespace mozilla {
 
-nsresult
-SourceBufferResource::Close()
-{
+nsresult SourceBufferResource::Close() {
   MOZ_ASSERT(OnThread());
   SBR_DEBUG("Close");
   mClosed = true;
   return NS_OK;
 }
 
-nsresult
-SourceBufferResource::ReadAt(int64_t aOffset,
-                             char* aBuffer,
-                             uint32_t aCount,
-                             uint32_t* aBytes)
-{
+nsresult SourceBufferResource::ReadAt(int64_t aOffset, char* aBuffer,
+                                      uint32_t aCount, uint32_t* aBytes) {
   SBR_DEBUG("ReadAt(aOffset=%" PRId64 ", aBuffer=%p, aCount=%u, aBytes=%p)",
             aOffset, aBytes, aCount, aBytes);
   return ReadAtInternal(aOffset, aBuffer, aCount, aBytes);
 }
 
-nsresult
-SourceBufferResource::ReadAtInternal(int64_t aOffset,
-                                     char* aBuffer,
-                                     uint32_t aCount,
-                                     uint32_t* aBytes)
-{
+nsresult SourceBufferResource::ReadAtInternal(int64_t aOffset, char* aBuffer,
+                                              uint32_t aCount,
+                                              uint32_t* aBytes) {
   MOZ_ASSERT(OnThread());
 
-  if (mClosed ||
-      aOffset < 0 ||
-      uint64_t(aOffset) < mInputBuffer.GetOffset() ||
+  if (mClosed || aOffset < 0 || uint64_t(aOffset) < mInputBuffer.GetOffset() ||
       aOffset > GetLength()) {
     return NS_ERROR_FAILURE;
   }
@@ -71,11 +53,7 @@ SourceBufferResource::ReadAtInternal(int64_t aOffset,
 
   SBR_DEBUGV("offset=%" PRId64 " GetLength()=%" PRId64
              " available=%u count=%u mEnded=%d",
-             aOffset,
-             GetLength(),
-             available,
-             count,
-             mEnded);
+             aOffset, GetLength(), available, count, mEnded);
   if (available == 0) {
     SBR_DEBUGV("reached EOF");
     *aBytes = 0;
@@ -88,11 +66,8 @@ SourceBufferResource::ReadAtInternal(int64_t aOffset,
   return NS_OK;
 }
 
-nsresult
-SourceBufferResource::ReadFromCache(char* aBuffer,
-                                    int64_t aOffset,
-                                    uint32_t aCount)
-{
+nsresult SourceBufferResource::ReadFromCache(char* aBuffer, int64_t aOffset,
+                                             uint32_t aCount) {
   SBR_DEBUG("ReadFromCache(aBuffer=%p, aOffset=%" PRId64 ", aCount=%u)",
             aBuffer, aOffset, aCount);
   uint32_t bytesRead;
@@ -103,79 +78,63 @@ SourceBufferResource::ReadFromCache(char* aBuffer,
   return bytesRead == aCount ? NS_OK : NS_ERROR_FAILURE;
 }
 
-uint32_t
-SourceBufferResource::EvictData(uint64_t aPlaybackOffset,
-                                int64_t aThreshold,
-                                ErrorResult& aRv)
-{
+uint32_t SourceBufferResource::EvictData(uint64_t aPlaybackOffset,
+                                         int64_t aThreshold, ErrorResult& aRv) {
   MOZ_ASSERT(OnThread());
-  SBR_DEBUG("EvictData(aPlaybackOffset=%" PRIu64 ","
-            "aThreshold=%" PRId64 ")", aPlaybackOffset, aThreshold);
+  SBR_DEBUG("EvictData(aPlaybackOffset=%" PRIu64
+            ","
+            "aThreshold=%" PRId64 ")",
+            aPlaybackOffset, aThreshold);
   uint32_t result = mInputBuffer.Evict(aPlaybackOffset, aThreshold, aRv);
   return result;
 }
 
-void
-SourceBufferResource::EvictBefore(uint64_t aOffset, ErrorResult& aRv)
-{
+void SourceBufferResource::EvictBefore(uint64_t aOffset, ErrorResult& aRv) {
   MOZ_ASSERT(OnThread());
   SBR_DEBUG("EvictBefore(aOffset=%" PRIu64 ")", aOffset);
 
   mInputBuffer.EvictBefore(aOffset, aRv);
 }
 
-uint32_t
-SourceBufferResource::EvictAll()
-{
+uint32_t SourceBufferResource::EvictAll() {
   MOZ_ASSERT(OnThread());
   SBR_DEBUG("EvictAll()");
   return mInputBuffer.EvictAll();
 }
 
-void
-SourceBufferResource::AppendData(MediaByteBuffer* aData)
-{
+void SourceBufferResource::AppendData(MediaByteBuffer* aData) {
   MOZ_ASSERT(OnThread());
-  SBR_DEBUG("AppendData(aData=%p, aLength=%zu)",
-            aData->Elements(), aData->Length());
+  SBR_DEBUG("AppendData(aData=%p, aLength=%zu)", aData->Elements(),
+            aData->Length());
   mInputBuffer.AppendItem(aData);
   mEnded = false;
 }
 
-void
-SourceBufferResource::Ended()
-{
+void SourceBufferResource::Ended() {
   MOZ_ASSERT(OnThread());
   SBR_DEBUG("");
   mEnded = true;
 }
 
-SourceBufferResource::~SourceBufferResource()
-{
-  SBR_DEBUG("");
-}
+SourceBufferResource::~SourceBufferResource() { SBR_DEBUG(""); }
 
 SourceBufferResource::SourceBufferResource()
 #if defined(DEBUG)
-  : mThread(AbstractThread::GetCurrent())
+    : mThread(AbstractThread::GetCurrent())
 #endif
 {
   SBR_DEBUG("");
 }
 
 #if defined(DEBUG)
-const AbstractThread*
-SourceBufferResource::GetThread() const
-{
+const AbstractThread* SourceBufferResource::GetThread() const {
   return mThread;
 }
-bool
-SourceBufferResource::OnThread() const
-{
+bool SourceBufferResource::OnThread() const {
   return !GetThread() || GetThread()->IsCurrentThreadIn();
 }
 #endif
 
 #undef SBR_DEBUG
 #undef SBR_DEBUGV
-} // namespace mozilla
+}  // namespace mozilla

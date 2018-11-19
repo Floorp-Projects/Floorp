@@ -16,17 +16,11 @@ namespace mozilla {
 using namespace ipc;
 
 RDDProcessImpl::RDDProcessImpl(ProcessId aParentPid)
- : ProcessChild(aParentPid)
-{
-}
+    : ProcessChild(aParentPid) {}
 
-RDDProcessImpl::~RDDProcessImpl()
-{
-}
+RDDProcessImpl::~RDDProcessImpl() {}
 
-bool
-RDDProcessImpl::Init(int aArgc, char* aArgv[])
-{
+bool RDDProcessImpl::Init(int aArgc, char* aArgv[]) {
 #if defined(MOZ_SANDBOX) && defined(OS_WIN)
   mozilla::SandboxTarget::Instance()->StartSandbox();
 #endif
@@ -37,17 +31,10 @@ RDDProcessImpl::Init(int aArgc, char* aArgv[])
     }
   }
 
-  return mRDD.Init(ParentPid(),
-                   parentBuildID,
-                   IOThreadChild::message_loop(),
+  return mRDD.Init(ParentPid(), parentBuildID, IOThreadChild::message_loop(),
                    IOThreadChild::channel());
 }
 
-void
-RDDProcessImpl::CleanUp()
-{
-  NS_ShutdownXPCOM(nullptr);
-}
+void RDDProcessImpl::CleanUp() { NS_ShutdownXPCOM(nullptr); }
 
-} // namespace mozilla
-
+}  // namespace mozilla

@@ -5,24 +5,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "AudioCompactor.h"
 #if defined(MOZ_MEMORY)
-# include "mozmemory.h"
+#include "mozmemory.h"
 #endif
 
 namespace mozilla {
 
-static size_t
-MallocGoodSize(size_t aSize)
-{
-# if defined(MOZ_MEMORY)
+static size_t MallocGoodSize(size_t aSize) {
+#if defined(MOZ_MEMORY)
   return malloc_good_size(aSize);
-# else
+#else
   return aSize;
-# endif
+#endif
 }
 
-static size_t
-TooMuchSlop(size_t aSize, size_t aAllocSize, size_t aMaxSlop)
-{
+static size_t TooMuchSlop(size_t aSize, size_t aAllocSize, size_t aMaxSlop) {
   // If the allocated size is less then our target size, then we
   // are chunking.  This means it will be completely filled with
   // zero slop.
@@ -30,10 +26,8 @@ TooMuchSlop(size_t aSize, size_t aAllocSize, size_t aMaxSlop)
   return slop > aMaxSlop;
 }
 
-uint32_t
-AudioCompactor::GetChunkSamples(uint32_t aFrames, uint32_t aChannels,
-                                size_t aMaxSlop)
-{
+uint32_t AudioCompactor::GetChunkSamples(uint32_t aFrames, uint32_t aChannels,
+                                         size_t aMaxSlop) {
   size_t size = AudioDataSize(aFrames, aChannels);
   size_t chunkSize = MallocGoodSize(size);
 
@@ -48,10 +42,8 @@ AudioCompactor::GetChunkSamples(uint32_t aFrames, uint32_t aChannels,
   return chunkSize / sizeof(AudioDataValue);
 }
 
-uint32_t
-AudioCompactor::NativeCopy::operator()(AudioDataValue *aBuffer,
-                                       uint32_t aSamples)
-{
+uint32_t AudioCompactor::NativeCopy::operator()(AudioDataValue *aBuffer,
+                                                uint32_t aSamples) {
   NS_ASSERTION(aBuffer, "cannot copy to null buffer pointer");
   NS_ASSERTION(aSamples, "cannot copy zero values");
 
@@ -70,4 +62,4 @@ AudioCompactor::NativeCopy::operator()(AudioDataValue *aBuffer,
   return frames;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

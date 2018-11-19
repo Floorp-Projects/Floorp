@@ -17,10 +17,10 @@ namespace mozilla {
 // incoming data to the media cache on the main thread, as this could block
 // causing UI jank.
 //
-// So MediaBlockCacheBase provides an abstraction for a temporary memory buffer or file accessible
-// as an array of blocks, which supports a block move operation, and
-// allows synchronous reading and writing from any thread, with writes being
-// buffered as needed so as not to block.
+// So MediaBlockCacheBase provides an abstraction for a temporary memory buffer
+// or file accessible as an array of blocks, which supports a block move
+// operation, and allows synchronous reading and writing from any thread, with
+// writes being buffered as needed so as not to block.
 //
 // Writes and cache block moves (which require reading) may be deferred to
 // their own non-main thread. This object also ensures that data which has
@@ -33,21 +33,20 @@ namespace mozilla {
 //
 // Note it's also recommended not to read from the media cache from the main
 // thread to prevent jank.
-class MediaBlockCacheBase
-{
-public:
+class MediaBlockCacheBase {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaBlockCacheBase)
 
-  static_assert(
-    MediaCacheStream::BLOCK_SIZE <
-      static_cast<std::remove_const<decltype(MediaCacheStream::BLOCK_SIZE)>::type>(INT32_MAX),
-    "MediaCacheStream::BLOCK_SIZE should fit in 31 bits");
+  static_assert(MediaCacheStream::BLOCK_SIZE <
+                    static_cast<std::remove_const<decltype(
+                        MediaCacheStream::BLOCK_SIZE)>::type>(INT32_MAX),
+                "MediaCacheStream::BLOCK_SIZE should fit in 31 bits");
   static const int32_t BLOCK_SIZE = MediaCacheStream::BLOCK_SIZE;
 
-protected:
+ protected:
   virtual ~MediaBlockCacheBase() {}
 
-public:
+ public:
   // Initialize this cache.
   virtual nsresult Init() = 0;
 
@@ -60,16 +59,13 @@ public:
   virtual int32_t GetMaxBlocks() const = 0;
 
   // Can be called on any thread. This defers to a non-main thread.
-  virtual nsresult WriteBlock(uint32_t aBlockIndex,
-                              Span<const uint8_t> aData1,
+  virtual nsresult WriteBlock(uint32_t aBlockIndex, Span<const uint8_t> aData1,
                               Span<const uint8_t> aData2) = 0;
 
   // Synchronously reads data from file. May read from file or memory
   // depending on whether written blocks have been flushed to file yet.
   // Not recommended to be called from the main thread, as can cause jank.
-  virtual nsresult Read(int64_t aOffset,
-                        uint8_t* aData,
-                        int32_t aLength,
+  virtual nsresult Read(int64_t aOffset, uint8_t* aData, int32_t aLength,
                         int32_t* aBytes) = 0;
 
   // Moves a block asynchronously. Can be called on any thread.
@@ -78,6 +74,6 @@ public:
                              int32_t aDestBlockIndex) = 0;
 };
 
-} // End namespace mozilla.
+}  // End namespace mozilla.
 
 #endif /* MEDIA_BLOCK_CACHE_BASE_H_ */

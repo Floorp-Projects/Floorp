@@ -19,31 +19,34 @@ class Promise;
 struct MediaStreamConstraints;
 struct MediaTrackSupportedConstraints;
 
-#define MOZILLA_DOM_MEDIADEVICES_IMPLEMENTATION_IID \
-{ 0x2f784d8a, 0x7485, 0x4280, \
- { 0x9a, 0x36, 0x74, 0xa4, 0xd6, 0x71, 0xa6, 0xc8 } }
+#define MOZILLA_DOM_MEDIADEVICES_IMPLEMENTATION_IID  \
+  {                                                  \
+    0x2f784d8a, 0x7485, 0x4280, {                    \
+      0x9a, 0x36, 0x74, 0xa4, 0xd6, 0x71, 0xa6, 0xc8 \
+    }                                                \
+  }
 
-class MediaDevices final : public DOMEventTargetHelper
-                          ,public DeviceChangeCallback
-{
-public:
-  explicit MediaDevices(nsPIDOMWindowInner* aWindow) :
-    DOMEventTargetHelper(aWindow) {}
+class MediaDevices final : public DOMEventTargetHelper,
+                           public DeviceChangeCallback {
+ public:
+  explicit MediaDevices(nsPIDOMWindowInner* aWindow)
+      : DOMEventTargetHelper(aWindow) {}
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOM_MEDIADEVICES_IMPLEMENTATION_IID)
 
-  JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* cx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   // No code needed, as MediaTrackSupportedConstraints members default to true.
-  void GetSupportedConstraints(MediaTrackSupportedConstraints& aResult) {};
+  void GetSupportedConstraints(MediaTrackSupportedConstraints& aResult){};
 
-  already_AddRefed<Promise>
-  GetUserMedia(const MediaStreamConstraints& aConstraints,
-	       CallerType aCallerType, ErrorResult &aRv);
+  already_AddRefed<Promise> GetUserMedia(
+      const MediaStreamConstraints& aConstraints, CallerType aCallerType,
+      ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  EnumerateDevices(CallerType aCallerType, ErrorResult &aRv);
+  already_AddRefed<Promise> EnumerateDevices(CallerType aCallerType,
+                                             ErrorResult& aRv);
 
   virtual void OnDeviceChange() override;
 
@@ -54,7 +57,7 @@ public:
   void EventListenerAdded(nsAtom* aType) override;
   using DOMEventTargetHelper::EventListenerAdded;
 
-private:
+ private:
   class GumResolver;
   class EnumDevResolver;
   class GumRejecter;
@@ -66,7 +69,7 @@ private:
 NS_DEFINE_STATIC_IID_ACCESSOR(MediaDevices,
                               MOZILLA_DOM_MEDIADEVICES_IMPLEMENTATION_IID)
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MediaDevices_h
+#endif  // mozilla_dom_MediaDevices_h

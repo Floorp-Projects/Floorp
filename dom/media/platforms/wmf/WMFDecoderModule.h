@@ -11,17 +11,16 @@
 
 namespace mozilla {
 
-class WMFDecoderModule : public PlatformDecoderModule
-{
-public:
+class WMFDecoderModule : public PlatformDecoderModule {
+ public:
   // Initializes the module, loads required dynamic libraries, etc.
   nsresult Startup() override;
 
-  already_AddRefed<MediaDataDecoder>
-  CreateVideoDecoder(const CreateDecoderParams& aParams) override;
+  already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
+      const CreateDecoderParams& aParams) override;
 
-  already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const CreateDecoderParams& aParams) override;
+  already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
+      const CreateDecoderParams& aParams) override;
 
   bool SupportsMimeType(const nsACString& aMimeType,
                         DecoderDoctorDiagnostics* aDiagnostics) const override;
@@ -42,12 +41,12 @@ public:
   static bool HasAAC();
   static bool HasH264();
 
-private:
+ private:
   virtual ~WMFDecoderModule();
 
   bool mWMFInitialized = false;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

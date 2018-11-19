@@ -29,48 +29,44 @@
 namespace mozilla {
 namespace gmp {
 class PassThroughGMPAdapter : public GMPAdapter {
-public:
+ public:
   ~PassThroughGMPAdapter() override {
-    // Ensure we're always shutdown, even if caller forgets to call GMPShutdown().
+    // Ensure we're always shutdown, even if caller forgets to call
+    // GMPShutdown().
     GMPShutdown();
   }
 
-  void SetAdaptee(PRLibrary* aLib) override
-  {
-    mLib = aLib;
-  }
+  void SetAdaptee(PRLibrary* aLib) override { mLib = aLib; }
 
-  GMPErr GMPInit(const GMPPlatformAPI* aPlatformAPI) override
-  {
+  GMPErr GMPInit(const GMPPlatformAPI* aPlatformAPI) override {
     if (!mLib) {
       return GMPGenericErr;
     }
-    GMPInitFunc initFunc = reinterpret_cast<GMPInitFunc>(PR_FindFunctionSymbol(mLib, "GMPInit"));
+    GMPInitFunc initFunc =
+        reinterpret_cast<GMPInitFunc>(PR_FindFunctionSymbol(mLib, "GMPInit"));
     if (!initFunc) {
       return GMPNotImplementedErr;
     }
     return initFunc(aPlatformAPI);
   }
 
-  GMPErr GMPGetAPI(const char* aAPIName,
-                   void* aHostAPI,
-                   void** aPluginAPI,
-                   uint32_t aDecryptorId) override
-  {
+  GMPErr GMPGetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI,
+                   uint32_t aDecryptorId) override {
     if (!mLib) {
       return GMPGenericErr;
     }
-    GMPGetAPIFunc getapiFunc = reinterpret_cast<GMPGetAPIFunc>(PR_FindFunctionSymbol(mLib, "GMPGetAPI"));
+    GMPGetAPIFunc getapiFunc = reinterpret_cast<GMPGetAPIFunc>(
+        PR_FindFunctionSymbol(mLib, "GMPGetAPI"));
     if (!getapiFunc) {
       return GMPNotImplementedErr;
     }
     return getapiFunc(aAPIName, aHostAPI, aPluginAPI);
   }
 
-  void GMPShutdown() override
-  {
+  void GMPShutdown() override {
     if (mLib) {
-      GMPShutdownFunc shutdownFunc = reinterpret_cast<GMPShutdownFunc>(PR_FindFunctionSymbol(mLib, "GMPShutdown"));
+      GMPShutdownFunc shutdownFunc = reinterpret_cast<GMPShutdownFunc>(
+          PR_FindFunctionSymbol(mLib, "GMPShutdown"));
       if (shutdownFunc) {
         shutdownFunc();
       }
@@ -79,16 +75,12 @@ public:
     }
   }
 
-private:
+ private:
   PRLibrary* mLib = nullptr;
 };
 
-bool
-GMPLoader::Load(const char* aUTF8LibPath,
-                uint32_t aUTF8LibPathLen,
-                const GMPPlatformAPI* aPlatformAPI,
-                GMPAdapter* aAdapter)
-{
+bool GMPLoader::Load(const char* aUTF8LibPath, uint32_t aUTF8LibPathLen,
+                     const GMPPlatformAPI* aPlatformAPI, GMPAdapter* aAdapter) {
   if (!getenv("MOZ_DISABLE_GMP_SANDBOX") && mSandboxStarter &&
       !mSandboxStarter->Start(aUTF8LibPath)) {
     return false;
@@ -103,7 +95,8 @@ GMPLoader::Load(const char* aUTF8LibPath,
   }
 
   auto widePath = MakeUnique<wchar_t[]>(pathLen);
-  if (MultiByteToWideChar(CP_UTF8, 0, aUTF8LibPath, -1, widePath.get(), pathLen) == 0) {
+  if (MultiByteToWideChar(CP_UTF8, 0, aUTF8LibPath, -1, widePath.get(),
+                          pathLen) == 0) {
     return false;
   }
 
@@ -128,27 +121,19 @@ GMPLoader::Load(const char* aUTF8LibPath,
   return true;
 }
 
-GMPErr
-GMPLoader::GetAPI(const char* aAPIName,
-                  void* aHostAPI,
-                  void** aPluginAPI,
-                  uint32_t aDecryptorId)
-{
+GMPErr GMPLoader::GetAPI(const char* aAPIName, void* aHostAPI,
+                         void** aPluginAPI, uint32_t aDecryptorId) {
   return mAdapter->GMPGetAPI(aAPIName, aHostAPI, aPluginAPI, aDecryptorId);
 }
 
-void
-GMPLoader::Shutdown()
-{
+void GMPLoader::Shutdown() {
   if (mAdapter) {
     mAdapter->GMPShutdown();
   }
 }
 
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
-void
-GMPLoader::SetSandboxInfo(MacSandboxInfo* aSandboxInfo)
-{
+void GMPLoader::SetSandboxInfo(MacSandboxInfo* aSandboxInfo) {
   if (mSandboxStarter) {
     mSandboxStarter->SetSandboxInfo(aSandboxInfo);
   }
@@ -156,11 +141,9 @@ GMPLoader::SetSandboxInfo(MacSandboxInfo* aSandboxInfo)
 #endif
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-class WinSandboxStarter : public mozilla::gmp::SandboxStarter
-{
-public:
-  bool Start(const char *aLibPath) override
-  {
+class WinSandboxStarter : public mozilla::gmp::SandboxStarter {
+ public:
+  bool Start(const char* aLibPath) override {
     // Cause advapi32 to load before the sandbox is turned on, as
     // Widevine version 970 and later require it and the sandbox
     // blocks it on Win7.
@@ -174,11 +157,9 @@ public:
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
-class MacSandboxStarter : public mozilla::gmp::SandboxStarter
-{
-public:
-  bool Start(const char *aLibPath) override
-  {
+class MacSandboxStarter : public mozilla::gmp::SandboxStarter {
+ public:
+  bool Start(const char* aLibPath) override {
     std::string err;
     bool rv = mozilla::StartMacSandbox(mInfo, err);
     if (!rv) {
@@ -186,26 +167,25 @@ public:
     }
     return rv;
   }
-  void SetSandboxInfo(MacSandboxInfo* aSandboxInfo) override
-  {
+  void SetSandboxInfo(MacSandboxInfo* aSandboxInfo) override {
     mInfo = *aSandboxInfo;
   }
-private:
+
+ private:
   MacSandboxInfo mInfo;
 };
 #endif
 
-#if defined (XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
 namespace {
-class LinuxSandboxStarter : public mozilla::gmp::SandboxStarter
-{
-private:
-  LinuxSandboxStarter() { }
-  friend mozilla::detail::UniqueSelector<LinuxSandboxStarter>::SingleObject mozilla::MakeUnique<LinuxSandboxStarter>();
+class LinuxSandboxStarter : public mozilla::gmp::SandboxStarter {
+ private:
+  LinuxSandboxStarter() {}
+  friend mozilla::detail::UniqueSelector<LinuxSandboxStarter>::SingleObject
+  mozilla::MakeUnique<LinuxSandboxStarter>();
 
-public:
-  static UniquePtr<SandboxStarter> Make()
-  {
+ public:
+  static UniquePtr<SandboxStarter> Make() {
     if (mozilla::SandboxInfo::Get().CanSandboxMedia()) {
       return MakeUnique<LinuxSandboxStarter>();
     }
@@ -213,18 +193,15 @@ public:
     // checked that this plugin doesn't require it.  (Bug 1074561)
     return nullptr;
   }
-  bool Start(const char *aLibPath) override
-  {
+  bool Start(const char* aLibPath) override {
     mozilla::SetMediaPluginSandbox(aLibPath);
     return true;
   }
 };
-} // anonymous namespace
-#endif // XP_LINUX && MOZ_GMP_SANDBOX
+}  // anonymous namespace
+#endif  // XP_LINUX && MOZ_GMP_SANDBOX
 
-static UniquePtr<SandboxStarter>
-MakeSandboxStarter()
-{
+static UniquePtr<SandboxStarter> MakeSandboxStarter() {
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   return mozilla::MakeUnique<WinSandboxStarter>();
 #elif defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
@@ -236,16 +213,9 @@ MakeSandboxStarter()
 #endif
 }
 
-GMPLoader::GMPLoader()
-  : mSandboxStarter(MakeSandboxStarter())
-{
-}
+GMPLoader::GMPLoader() : mSandboxStarter(MakeSandboxStarter()) {}
 
-bool
-GMPLoader::CanSandbox() const
-{
-  return !!mSandboxStarter;
-}
+bool GMPLoader::CanSandbox() const { return !!mSandboxStarter; }
 
-} // namespace gmp
-} // namespace mozilla
+}  // namespace gmp
+}  // namespace mozilla

@@ -18,30 +18,30 @@ namespace mozilla {
 DDLoggedTypeDeclNameAndBase(MediaDataDecoderProxy, MediaDataDecoder);
 
 class MediaDataDecoderProxy
-  : public MediaDataDecoder
-  , public DecoderDoctorLifeLogger<MediaDataDecoderProxy>
-{
-public:
+    : public MediaDataDecoder,
+      public DecoderDoctorLifeLogger<MediaDataDecoderProxy> {
+ public:
   explicit MediaDataDecoderProxy(already_AddRefed<AbstractThread> aProxyThread)
-    : mProxyThread(aProxyThread)
+      : mProxyThread(aProxyThread)
 #if defined(DEBUG)
-    , mIsShutdown(false)
+        ,
+        mIsShutdown(false)
 #endif
   {
   }
 
   explicit MediaDataDecoderProxy(
-    already_AddRefed<MediaDataDecoder> aProxyDecoder)
-    : mProxyDecoder(aProxyDecoder)
+      already_AddRefed<MediaDataDecoder> aProxyDecoder)
+      : mProxyDecoder(aProxyDecoder)
 #if defined(DEBUG)
-    , mIsShutdown(false)
+        ,
+        mIsShutdown(false)
 #endif
   {
     DDLINKCHILD("proxy decoder", mProxyDecoder.get());
   }
 
-  void SetProxyTarget(MediaDataDecoder* aProxyDecoder)
-  {
+  void SetProxyTarget(MediaDataDecoder* aProxyDecoder) {
     MOZ_ASSERT(aProxyDecoder);
     mProxyDecoder = aProxyDecoder;
     DDLINKCHILD("proxy decoder", aProxyDecoder);
@@ -58,7 +58,7 @@ public:
   bool SupportDecoderRecycling() const override;
   ConversionRequired NeedsConversion() const override;
 
-private:
+ private:
   RefPtr<MediaDataDecoder> mProxyDecoder;
   RefPtr<AbstractThread> mProxyThread;
 
@@ -67,6 +67,6 @@ private:
 #endif
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MediaDataDecoderProxy_h_
+#endif  // MediaDataDecoderProxy_h_

@@ -9,47 +9,37 @@
 
 using namespace mozilla::dom;
 
-#define FAKESYNTHSERVICE_CID \
-  {0xe7d52d9e, 0xc148, 0x47d8, {0xab, 0x2a, 0x95, 0xd7, 0xf4, 0x0e, 0xa5, 0x3d}}
+#define FAKESYNTHSERVICE_CID                         \
+  {                                                  \
+    0xe7d52d9e, 0xc148, 0x47d8, {                    \
+      0xab, 0x2a, 0x95, 0xd7, 0xf4, 0x0e, 0xa5, 0x3d \
+    }                                                \
+  }
 
 #define FAKESYNTHSERVICE_CONTRACTID "@mozilla.org/fakesynth;1"
 
 // Defines nsFakeSynthServicesConstructor
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsFakeSynthServices,
-                                         nsFakeSynthServices::GetInstanceForService)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(
+    nsFakeSynthServices, nsFakeSynthServices::GetInstanceForService)
 
 // Defines kFAKESYNTHSERVICE_CID
 NS_DEFINE_NAMED_CID(FAKESYNTHSERVICE_CID);
 
 static const mozilla::Module::CIDEntry kCIDs[] = {
-  { &kFAKESYNTHSERVICE_CID, true, nullptr, nsFakeSynthServicesConstructor },
-  { nullptr }
-};
+    {&kFAKESYNTHSERVICE_CID, true, nullptr, nsFakeSynthServicesConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kContracts[] = {
-  { FAKESYNTHSERVICE_CONTRACTID, &kFAKESYNTHSERVICE_CID },
-  { nullptr }
-};
+    {FAKESYNTHSERVICE_CONTRACTID, &kFAKESYNTHSERVICE_CID}, {nullptr}};
 
 static const mozilla::Module::CategoryEntry kCategories[] = {
-  { "speech-synth-started", "Fake Speech Synth", FAKESYNTHSERVICE_CONTRACTID },
-  { nullptr }
-};
+    {"speech-synth-started", "Fake Speech Synth", FAKESYNTHSERVICE_CONTRACTID},
+    {nullptr}};
 
-static void
-UnloadFakeSynthmodule()
-{
-  nsFakeSynthServices::Shutdown();
-}
+static void UnloadFakeSynthmodule() { nsFakeSynthServices::Shutdown(); }
 
 static const mozilla::Module kModule = {
-  mozilla::Module::kVersion,
-  kCIDs,
-  kContracts,
-  kCategories,
-  nullptr,
-  nullptr,
-  UnloadFakeSynthmodule
-};
+    mozilla::Module::kVersion, kCIDs, kContracts, kCategories, nullptr, nullptr,
+    UnloadFakeSynthmodule};
 
 NSMODULE_DEFN(fakesynth) = &kModule;

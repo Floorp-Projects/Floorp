@@ -12,24 +12,21 @@
 
 namespace mozilla {
 class CDMProxy;
-// Proxies call backs from the MediaDrmProxy -> MediaDrmProxySupport back to the MediaKeys
-// object on the main thread.
-// We used annotation calledFrom = "gecko" to ensure running on main thread.
+// Proxies call backs from the MediaDrmProxy -> MediaDrmProxySupport back to the
+// MediaKeys object on the main thread. We used annotation calledFrom = "gecko"
+// to ensure running on main thread.
 class MediaDrmCDMCallbackProxy : public DecryptorProxyCallback {
-public:
-
+ public:
   void SetDecryptorId(uint32_t aId) override {}
 
   void SetSessionId(uint32_t aCreateSessionToken,
                     const nsCString& aSessionId) override;
 
-  void ResolveLoadSessionPromise(uint32_t aPromiseId,
-                                 bool aSuccess) override;
+  void ResolveLoadSessionPromise(uint32_t aPromiseId, bool aSuccess) override;
 
   void ResolvePromise(uint32_t aPromiseId) override;
 
-  void RejectPromise(uint32_t aPromiseId,
-                     nsresult aException,
+  void RejectPromise(uint32_t aPromiseId, nsresult aException,
                      const nsCString& aSessionId) override;
 
   void SessionMessage(const nsCString& aSessionId,
@@ -41,21 +38,18 @@ public:
 
   void SessionClosed(const nsCString& aSessionId) override;
 
-  void SessionError(const nsCString& aSessionId,
-                    nsresult aException,
-                    uint32_t aSystemCode,
-                    const nsCString& aMessage) override;
+  void SessionError(const nsCString& aSessionId, nsresult aException,
+                    uint32_t aSystemCode, const nsCString& aMessage) override;
 
-  void Decrypted(uint32_t aId,
-                 DecryptStatus aResult,
+  void Decrypted(uint32_t aId, DecryptStatus aResult,
                  const nsTArray<uint8_t>& aDecryptedData) override;
 
   void BatchedKeyStatusChanged(const nsCString& aSessionId,
                                const nsTArray<CDMKeyInfo>& aKeyInfos) override;
 
-   ~MediaDrmCDMCallbackProxy() {}
+  ~MediaDrmCDMCallbackProxy() {}
 
-private:
+ private:
   friend class MediaDrmCDMProxy;
   explicit MediaDrmCDMCallbackProxy(CDMProxy* aProxy);
 
@@ -65,5 +59,5 @@ private:
   CDMProxy* mProxy;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 #endif

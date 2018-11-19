@@ -17,14 +17,13 @@ namespace dom {
  * Used to learn about dynamic changes to an object's principal.
  * Operations relating to these observers must be confined to the main thread.
  */
-template<typename T>
-class PrincipalChangeObserver
-{
-public:
+template <typename T>
+class PrincipalChangeObserver {
+ public:
   virtual void PrincipalChanged(T* aArg) = 0;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* MOZILLA_PRINCIPALCHANGEOBSERVER_H_ */

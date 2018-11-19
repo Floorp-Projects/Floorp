@@ -1417,9 +1417,10 @@ ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     }
 
     CORSMode ourCORSMode = aElement->GetCORSMode();
-    mozilla::net::ReferrerPolicy ourRefPolicy = mDocument->GetReferrerPolicy();
+    mozilla::net::ReferrerPolicy referrerPolicy = GetReferrerPolicy(aElement);
+
     request = CreateLoadRequest(aScriptKind, scriptURI, aElement, principal,
-                                ourCORSMode, sriMetadata, ourRefPolicy);
+                                ourCORSMode, sriMetadata, referrerPolicy);
     request->mIsInline = false;
     request->SetScriptMode(aElement->GetScriptDeferred(),
                            aElement->GetScriptAsync());
@@ -1556,12 +1557,13 @@ ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
     corsMode = aElement->GetCORSMode();
   }
 
+  mozilla::net::ReferrerPolicy referrerPolicy = GetReferrerPolicy(aElement);
   RefPtr<ScriptLoadRequest> request =
     CreateLoadRequest(aScriptKind, mDocument->GetDocumentURI(), aElement,
                       mDocument->NodePrincipal(),
                       corsMode,
                       SRIMetadata(), // SRI doesn't apply
-                      mDocument->GetReferrerPolicy());
+                      referrerPolicy);
   request->mIsInline = true;
   request->mLineNo = aElement->GetScriptLineNumber();
   request->mProgress = ScriptLoadRequest::Progress::eLoading_Source;
@@ -1659,9 +1661,11 @@ ScriptLoader::LookupPreloadRequest(nsIScriptElement* aElement,
   // we have now.
   nsAutoString elementCharset;
   aElement->GetScriptCharset(elementCharset);
+  mozilla::net::ReferrerPolicy referrerPolicy = GetReferrerPolicy(aElement);
+
   if (!elementCharset.Equals(preloadCharset) ||
       aElement->GetCORSMode() != request->CORSMode() ||
-      mDocument->GetReferrerPolicy() != request->ReferrerPolicy() ||
+      referrerPolicy != request->ReferrerPolicy() ||
       aScriptKind != request->mKind) {
     // Drop the preload.
     request->Cancel();
@@ -1692,6 +1696,18 @@ ScriptLoader::GetSRIMetadata(const nsAString& aIntegrityAttr,
   }
   SRICheck::IntegrityMetadata(aIntegrityAttr, sourceUri, mReporter,
                               aMetadataOut);
+}
+
+
+mozilla::net::ReferrerPolicy
+ScriptLoader::GetReferrerPolicy(nsIScriptElement* aElement)
+{
+  mozilla::net::ReferrerPolicy scriptReferrerPolicy =
+    aElement->GetReferrerPolicy();
+  if (scriptReferrerPolicy != mozilla::net::RP_Unset) {
+    return scriptReferrerPolicy;
+  }
+  return mDocument->GetReferrerPolicy();
 }
 
 namespace {

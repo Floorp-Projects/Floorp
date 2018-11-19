@@ -14,28 +14,13 @@ namespace mozilla {
 
 namespace dom {
 
-struct ThreeDPoint final
-{
-  ThreeDPoint()
-    : x(0.)
-    , y(0.)
-    , z(0.)
-  {
-  }
-  ThreeDPoint(double aX, double aY, double aZ)
-    : x(aX)
-    , y(aY)
-    , z(aZ)
-  {
-  }
+struct ThreeDPoint final {
+  ThreeDPoint() : x(0.), y(0.), z(0.) {}
+  ThreeDPoint(double aX, double aY, double aZ) : x(aX), y(aY), z(aZ) {}
 
-  double Magnitude() const
-  {
-    return sqrt(x * x + y * y + z * z);
-  }
+  double Magnitude() const { return sqrt(x * x + y * y + z * z); }
 
-  void Normalize()
-  {
+  void Normalize() {
     // Zero vectors cannot be normalized. For our purpose, normalizing a zero
     // vector results in a zero vector.
     if (IsZero()) {
@@ -53,31 +38,24 @@ struct ThreeDPoint final
     z *= invDistance;
   }
 
-  ThreeDPoint CrossProduct(const ThreeDPoint& rhs) const
-  {
-    return ThreeDPoint(y * rhs.z - z * rhs.y,
-                       z * rhs.x - x * rhs.z,
+  ThreeDPoint CrossProduct(const ThreeDPoint& rhs) const {
+    return ThreeDPoint(y * rhs.z - z * rhs.y, z * rhs.x - x * rhs.z,
                        x * rhs.y - y * rhs.x);
   }
 
-  double DotProduct(const ThreeDPoint& rhs)
-  {
+  double DotProduct(const ThreeDPoint& rhs) {
     return x * rhs.x + y * rhs.y + z * rhs.z;
   }
 
-  bool IsZero() const
-  {
-    return x == 0 && y == 0 && z == 0;
-  }
+  bool IsZero() const { return x == 0 && y == 0 && z == 0; }
 
   // For comparing two vectors of close to unit magnitude.
   bool FuzzyEqual(const ThreeDPoint& other);
 
   double x, y, z;
 
-private:
-  double MaxNorm() const
-  {
+ private:
+  double MaxNorm() const {
     return std::max(fabs(x), std::max(fabs(y), fabs(z)));
   }
 };
@@ -87,8 +65,7 @@ ThreeDPoint operator*(const ThreeDPoint& lhs, const ThreeDPoint& rhs);
 ThreeDPoint operator*(const ThreeDPoint& lhs, const double rhs);
 bool operator==(const ThreeDPoint& lhs, const ThreeDPoint& rhs);
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif
-

@@ -120,15 +120,15 @@ class BouncerCheck(BaseScript, VirtualenvMixin):
             try:
                 r.raise_for_status()
             except Exception:
-                self.warning("FAIL: {}, status: {}".format(url, r.status_code))
+                self.error("FAIL: {}, status: {}".format(url, r.status_code))
                 raise
 
             final_url = urlparse(r.url)
             if final_url.scheme != 'https':
-                self.warning('FAIL: URL scheme is not https: {}'.format(r.url))
+                self.error('FAIL: URL scheme is not https: {}'.format(r.url))
 
             if final_url.netloc not in mozilla_locations:
-                self.warning('FAIL: host not in allowed locations: {}'.format(r.url))
+                self.error('FAIL: host not in allowed locations: {}'.format(r.url))
 
         retry(do_check_url, sleeptime=3, max_sleeptime=10, attempts=3)
 

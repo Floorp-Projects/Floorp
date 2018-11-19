@@ -26,13 +26,11 @@ DDLoggedTypeDeclNameAndBase(MediaChangeMonitor, MediaDataDecoder);
 // input data, and will delay creation of the MediaDataDecoder until such out
 // of band have been extracted should the underlying decoder required it.
 
-class MediaChangeMonitor
-  : public MediaDataDecoder
-  , public DecoderDoctorLifeLogger<MediaChangeMonitor>
-{
-public:
+class MediaChangeMonitor : public MediaDataDecoder,
+                           public DecoderDoctorLifeLogger<MediaChangeMonitor> {
+ public:
   MediaChangeMonitor(PlatformDecoderModule* aPDM,
-                const CreateDecoderParams& aParams);
+                     const CreateDecoderParams& aParams);
   virtual ~MediaChangeMonitor();
 
   RefPtr<InitPromise> Init() override;
@@ -41,24 +39,21 @@ public:
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
-  nsCString GetDescriptionName() const override
-  {
+  nsCString GetDescriptionName() const override {
     if (mDecoder) {
       return mDecoder->GetDescriptionName();
     }
     return NS_LITERAL_CSTRING("MediaChangeMonitor decoder (pending)");
   }
   void SetSeekThreshold(const media::TimeUnit& aTime) override;
-  bool SupportDecoderRecycling() const override
-  {
+  bool SupportDecoderRecycling() const override {
     if (mDecoder) {
       return mDecoder->SupportDecoderRecycling();
     }
     return false;
   }
 
-  ConversionRequired NeedsConversion() const override
-  {
+  ConversionRequired NeedsConversion() const override {
     if (mDecoder) {
       return mDecoder->NeedsConversion();
     }
@@ -67,32 +62,29 @@ public:
   }
   MediaResult GetLastError() const { return mLastError; }
 
-  class CodecChangeMonitor
-  {
-  public:
+  class CodecChangeMonitor {
+   public:
     virtual bool CanBeInstantiated() const = 0;
     virtual MediaResult CheckForChange(MediaRawData* aSample) = 0;
     virtual const TrackInfo& Config() const = 0;
     virtual MediaResult PrepareSample(
-      MediaDataDecoder::ConversionRequired aConversion,
-      MediaRawData* aSample,
-      bool aNeedKeyFrame) = 0;
+        MediaDataDecoder::ConversionRequired aConversion, MediaRawData* aSample,
+        bool aNeedKeyFrame) = 0;
     virtual ~CodecChangeMonitor() = default;
   };
 
-private:
+ private:
   UniquePtr<CodecChangeMonitor> mChangeMonitor;
 
-  void AssertOnTaskQueue() const
-  {
+  void AssertOnTaskQueue() const {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   }
 
   bool CanRecycleDecoder() const;
 
-  // Will create the required MediaDataDecoder if need AVCC and we have a SPS NAL.
-  // Returns NS_ERROR_FAILURE if error is permanent and can't be recovered and
-  // will set mError accordingly.
+  // Will create the required MediaDataDecoder if need AVCC and we have a SPS
+  // NAL. Returns NS_ERROR_FAILURE if error is permanent and can't be recovered
+  // and will set mError accordingly.
   MediaResult CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics);
   MediaResult CreateDecoderAndInit(MediaRawData* aSample);
   MediaResult CheckForChange(MediaRawData* aSample);
@@ -132,6 +124,6 @@ private:
   Atomic<bool> mInConstructor;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_H264Converter_h
+#endif  // mozilla_H264Converter_h

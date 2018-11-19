@@ -16,8 +16,7 @@ class IRemoteDecoderChild;
 class RemoteDecoderModule;
 class RemoteMediaDataDecoder;
 
-DDLoggedTypeCustomNameAndBase(RemoteMediaDataDecoder,
-                              RemoteMediaDataDecoder,
+DDLoggedTypeCustomNameAndBase(RemoteMediaDataDecoder, RemoteMediaDataDecoder,
                               MediaDataDecoder);
 
 // A MediaDataDecoder implementation that proxies through IPDL
@@ -25,10 +24,9 @@ DDLoggedTypeCustomNameAndBase(RemoteMediaDataDecoder,
 // All requests get forwarded to a *DecoderChild instance that
 // operates solely on the provided manager and abstract manager threads.
 class RemoteMediaDataDecoder
-  : public MediaDataDecoder
-  , public DecoderDoctorLifeLogger<RemoteMediaDataDecoder>
-{
-public:
+    : public MediaDataDecoder,
+      public DecoderDoctorLifeLogger<RemoteMediaDataDecoder> {
+ public:
   friend class GpuDecoderModule;
   friend class RemoteDecoderModule;
 
@@ -43,9 +41,8 @@ public:
   nsCString GetDescriptionName() const override;
   ConversionRequired NeedsConversion() const override;
 
-private:
-  RemoteMediaDataDecoder(IRemoteDecoderChild* aChild,
-                         nsIThread* aManagerThread,
+ private:
+  RemoteMediaDataDecoder(IRemoteDecoderChild* aChild, nsIThread* aManagerThread,
                          AbstractThread* aAbstractManagerThread);
   ~RemoteMediaDataDecoder();
 
@@ -63,6 +60,6 @@ private:
   ConversionRequired mConversion = ConversionRequired::kNeedNone;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // include_dom_media_ipc_RemoteMediaDataDecoder_h
+#endif  // include_dom_media_ipc_RemoteMediaDataDecoder_h

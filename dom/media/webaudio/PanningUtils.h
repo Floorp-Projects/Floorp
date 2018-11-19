@@ -13,11 +13,9 @@
 namespace mozilla {
 namespace dom {
 
-template<typename T>
-void
-GainMonoToStereo(const AudioBlock& aInput, AudioBlock* aOutput,
-                 T aGainL, T aGainR)
-{
+template <typename T>
+void GainMonoToStereo(const AudioBlock& aInput, AudioBlock* aOutput, T aGainL,
+                      T aGainR) {
   float* outputL = aOutput->ChannelFloatsForWrite(0);
   float* outputR = aOutput->ChannelFloatsForWrite(1);
   const float* input = static_cast<const float*>(aInput.mChannelData[0]);
@@ -30,11 +28,9 @@ GainMonoToStereo(const AudioBlock& aInput, AudioBlock* aOutput,
 
 // T can be float or an array of float, and  U can be bool or an array of bool,
 // depending if the value of the parameters are constant for this block.
-template<typename T, typename U>
-void
-GainStereoToStereo(const AudioBlock& aInput, AudioBlock* aOutput,
-                   T aGainL, T aGainR, U aOnLeft)
-{
+template <typename T, typename U>
+void GainStereoToStereo(const AudioBlock& aInput, AudioBlock* aOutput, T aGainL,
+                        T aGainR, U aOnLeft) {
   float* outputL = aOutput->ChannelFloatsForWrite(0);
   float* outputR = aOutput->ChannelFloatsForWrite(1);
   const float* inputL = static_cast<const float*>(aInput.mChannelData[0]);
@@ -43,15 +39,15 @@ GainStereoToStereo(const AudioBlock& aInput, AudioBlock* aOutput,
   MOZ_ASSERT(aInput.ChannelCount() == 2);
   MOZ_ASSERT(aOutput->ChannelCount() == 2);
 
-  AudioBlockPanStereoToStereo(inputL, inputR, aGainL, aGainR, aOnLeft, outputL, outputR);
+  AudioBlockPanStereoToStereo(inputL, inputR, aGainL, aGainR, aOnLeft, outputL,
+                              outputR);
 }
 
 // T can be float or an array of float, and  U can be bool or an array of bool,
 // depending if the value of the parameters are constant for this block.
-template<typename T, typename U>
-void ApplyStereoPanning(const AudioBlock& aInput, AudioBlock* aOutput,
-                        T aGainL, T aGainR, U aOnLeft)
-{
+template <typename T, typename U>
+void ApplyStereoPanning(const AudioBlock& aInput, AudioBlock* aOutput, T aGainL,
+                        T aGainR, U aOnLeft) {
   aOutput->AllocateChannels(2);
 
   if (aInput.ChannelCount() == 1) {
@@ -62,7 +58,7 @@ void ApplyStereoPanning(const AudioBlock& aInput, AudioBlock* aOutput,
   aOutput->mVolume = aInput.mVolume;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // PANNING_UTILS_H
+#endif  // PANNING_UTILS_H

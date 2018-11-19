@@ -19,32 +19,22 @@ namespace dom {
 
 class TextTrackCue;
 
-class TextTrackCueList final : public nsISupports
-                             , public nsWrapperCache
-{
-public:
+class TextTrackCueList final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TextTrackCueList)
 
   // TextTrackCueList WebIDL
   explicit TextTrackCueList(nsISupports* aParent);
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  nsISupports* GetParentObject() const
-  {
-    return mParent;
-  }
+  nsISupports* GetParentObject() const { return mParent; }
 
-  uint32_t Length() const
-  {
-    return mList.Length();
-  }
+  uint32_t Length() const { return mList.Length(); }
 
-  bool IsEmpty() const
-  {
-    return mList.Length() == 0;
-  }
+  bool IsEmpty() const { return mList.Length() == 0; }
 
   TextTrackCue* IndexedGetter(uint32_t aIndex, bool& aFound);
   TextTrackCue* operator[](uint32_t aIndex);
@@ -59,27 +49,27 @@ public:
   void RemoveCue(TextTrackCue& aCue, ErrorResult& aRv);
   void RemoveCueAt(uint32_t aIndex);
   void RemoveAll();
-  void GetArray(nsTArray<RefPtr<TextTrackCue> >& aCues);
+  void GetArray(nsTArray<RefPtr<TextTrackCue>>& aCues);
 
   void SetCuesInactive();
 
-  already_AddRefed<TextTrackCueList>
-  GetCueListByTimeInterval(media::Interval<double>& aInterval);
-  void NotifyCueUpdated(TextTrackCue *aCue);
-  bool IsCueExist(TextTrackCue *aCue);
+  already_AddRefed<TextTrackCueList> GetCueListByTimeInterval(
+      media::Interval<double>& aInterval);
+  void NotifyCueUpdated(TextTrackCue* aCue);
+  bool IsCueExist(TextTrackCue* aCue);
   nsTArray<RefPtr<TextTrackCue>>& GetCuesArray();
 
-private:
+ private:
   ~TextTrackCueList();
 
   nsCOMPtr<nsISupports> mParent;
 
   // A sorted list of TextTrackCues sorted by earliest start time. If the start
   // times are equal then it will be sorted by end time, earliest first.
-  nsTArray< RefPtr<TextTrackCue> > mList;
+  nsTArray<RefPtr<TextTrackCue>> mList;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_TextTrackCueList_h
+#endif  // mozilla_dom_TextTrackCueList_h

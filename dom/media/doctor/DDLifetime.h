@@ -15,14 +15,13 @@ namespace mozilla {
 
 namespace dom {
 class HTMLMediaElement;
-} // namespace dom
+}  // namespace dom
 
 // This struct records the lifetime of one C++ object.
 // Note that multiple objects may have the same address and type (at different
 // times), so the recorded construction/destruction times should be used to
 // distinguish them.
-struct DDLifetime
-{
+struct DDLifetime {
   const DDLogObject mObject;
   const DDMessageIndex mConstructionIndex;
   const DDTimeStamp mConstructionTimeStamp;
@@ -45,24 +44,19 @@ struct DDLifetime
   // group.
   int32_t mTag;
 
-  DDLifetime(DDLogObject aObject,
-             DDMessageIndex aConstructionIndex,
-             DDTimeStamp aConstructionTimeStamp,
-             int32_t aTag)
-    : mObject(aObject)
-    , mConstructionIndex(aConstructionIndex)
-    , mConstructionTimeStamp(aConstructionTimeStamp)
-    , mDestructionIndex(0)
-    , mMediaElement(nullptr)
-    , mDerivedObjectLinkingIndex(0)
-    , mTag(aTag)
-  {
-  }
+  DDLifetime(DDLogObject aObject, DDMessageIndex aConstructionIndex,
+             DDTimeStamp aConstructionTimeStamp, int32_t aTag)
+      : mObject(aObject),
+        mConstructionIndex(aConstructionIndex),
+        mConstructionTimeStamp(aConstructionTimeStamp),
+        mDestructionIndex(0),
+        mMediaElement(nullptr),
+        mDerivedObjectLinkingIndex(0),
+        mTag(aTag) {}
 
   // Is this lifetime alive at the given index?
   // I.e.: Constructed before, and destroyed later or not yet.
-  bool IsAliveAt(DDMessageIndex aIndex) const
-  {
+  bool IsAliveAt(DDMessageIndex aIndex) const {
     return aIndex >= mConstructionIndex &&
            (!mDestructionTimeStamp || aIndex <= mDestructionIndex);
   }
@@ -73,6 +67,6 @@ struct DDLifetime
   nsCString Printf() const;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // DDLifetime_h_
+#endif  // DDLifetime_h_

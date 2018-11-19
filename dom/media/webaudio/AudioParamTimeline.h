@@ -23,36 +23,26 @@ namespace dom {
 // This AudioNodeStream is managed by the AudioParam subclass on the main
 // thread, and can only be obtained from the AudioNodeEngine instances
 // consuming this class.
-class AudioParamTimeline : public AudioEventTimeline
-{
+class AudioParamTimeline : public AudioEventTimeline {
   typedef AudioEventTimeline BaseClass;
 
-public:
-  explicit AudioParamTimeline(float aDefaultValue)
-    : BaseClass(aDefaultValue)
-  {
-  }
+ public:
+  explicit AudioParamTimeline(float aDefaultValue) : BaseClass(aDefaultValue) {}
 
-  AudioNodeStream* Stream() const
-  {
-    return mStream;
-  }
+  AudioNodeStream* Stream() const { return mStream; }
 
-  bool HasSimpleValue() const
-  {
+  bool HasSimpleValue() const {
     return BaseClass::HasSimpleValue() &&
-      (!mStream || mStream->LastChunks()[0].IsNull());
+           (!mStream || mStream->LastChunks()[0].IsNull());
   }
 
-  template<class TimeType>
-  float GetValueAtTime(TimeType aTime)
-  {
+  template <class TimeType>
+  float GetValueAtTime(TimeType aTime) {
     return GetValueAtTime(aTime, 0);
   }
 
-  template<typename TimeType>
-  void InsertEvent(const AudioTimelineEvent& aEvent)
-  {
+  template <typename TimeType>
+  void InsertEvent(const AudioTimelineEvent& aEvent) {
     if (aEvent.mType == AudioTimelineEvent::Cancel) {
       CancelScheduledValues(aEvent.Time<TimeType>());
       return;
@@ -71,7 +61,7 @@ public:
   // Get the value of the AudioParam at time aTime + aCounter.
   // aCounter here is an offset to aTime if we try to get the value in ticks,
   // otherwise it should always be zero.  aCounter is meant to be used when
-  template<class TimeType>
+  template <class TimeType>
   float GetValueAtTime(TimeType aTime, size_t aCounter);
 
   // Get the values of the AudioParam at time aTime + (0 to aSize).
@@ -80,31 +70,27 @@ public:
   // otherwise it should always be zero.  aSize is meant to be used when
   // getting the value of an a-rate AudioParam for each tick inside an
   // AudioNodeEngine implementation.
-  template<class TimeType>
+  template <class TimeType>
   void GetValuesAtTime(TimeType aTime, float* aBuffer, const size_t aSize);
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-  {
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
     return mStream ? mStream->SizeOfIncludingThis(aMallocSizeOf) : 0;
   }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-  {
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-
-private:
+ private:
   float AudioNodeInputValue(size_t aCounter) const;
 
-protected:
+ protected:
   // This is created lazily when needed.
   RefPtr<AudioNodeStream> mStream;
 };
 
-template<> inline float
-AudioParamTimeline::GetValueAtTime(double aTime, size_t aCounter)
-{
+template <>
+inline float AudioParamTimeline::GetValueAtTime(double aTime, size_t aCounter) {
   MOZ_ASSERT(!aCounter);
 
   // Getting an AudioParam value on an AudioNode does not consider input from
@@ -112,21 +98,20 @@ AudioParamTimeline::GetValueAtTime(double aTime, size_t aCounter)
   return BaseClass::GetValueAtTime(aTime);
 }
 
-template<> inline float
-AudioParamTimeline::GetValueAtTime(int64_t aTime, size_t aCounter)
-{
+template <>
+inline float AudioParamTimeline::GetValueAtTime(int64_t aTime,
+                                                size_t aCounter) {
   MOZ_ASSERT(aCounter < WEBAUDIO_BLOCK_SIZE);
   MOZ_ASSERT(!aCounter || !HasSimpleValue());
 
   // Mix the value of the AudioParam itself with that of the AudioNode inputs.
   return BaseClass::GetValueAtTime(static_cast<int64_t>(aTime + aCounter)) +
-    (mStream ? AudioNodeInputValue(aCounter) : 0.0f);
+         (mStream ? AudioNodeInputValue(aCounter) : 0.0f);
 }
 
-template<> inline void
-AudioParamTimeline::GetValuesAtTime(double aTime, float* aBuffer,
-                                    const size_t aSize)
-{
+template <>
+inline void AudioParamTimeline::GetValuesAtTime(double aTime, float* aBuffer,
+                                                const size_t aSize) {
   MOZ_ASSERT(aBuffer);
   MOZ_ASSERT(aSize == 1);
 
@@ -135,10 +120,9 @@ AudioParamTimeline::GetValuesAtTime(double aTime, float* aBuffer,
   *aBuffer = BaseClass::GetValueAtTime(aTime);
 }
 
-template<> inline void
-AudioParamTimeline::GetValuesAtTime(int64_t aTime, float* aBuffer,
-                                    const size_t aSize)
-{
+template <>
+inline void AudioParamTimeline::GetValuesAtTime(int64_t aTime, float* aBuffer,
+                                                const size_t aSize) {
   MOZ_ASSERT(aBuffer);
   MOZ_ASSERT(aSize <= WEBAUDIO_BLOCK_SIZE);
   MOZ_ASSERT(aSize == 1 || !HasSimpleValue());
@@ -154,7 +138,7 @@ AudioParamTimeline::GetValuesAtTime(int64_t aTime, float* aBuffer,
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

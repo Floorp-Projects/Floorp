@@ -14,23 +14,21 @@ namespace mozilla {
 class MediaContainerType;
 class TrackInfo;
 
-class WebMDecoder
-{
-public:
-
+class WebMDecoder {
+ public:
   // Returns true if aContainerType is a WebM type that we think we can render
   // with an enabled platform decoder backend.
   // If provided, codecs are checked for support.
   static bool IsSupportedType(const MediaContainerType& aContainerType);
 
   static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(
-    const MediaContainerType& aType);
-private:
+      const MediaContainerType& aType);
+
+ private:
   static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(
-    const MediaContainerType& aType,
-    MediaResult& aError);
+      const MediaContainerType& aType, MediaResult& aError);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

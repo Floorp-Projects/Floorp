@@ -14,12 +14,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1399780
 
   <link rel="stylesheet"
         href="http://example.com/tests/dom/base/test/bug704320_counter.sjs?type=css"
-        onload="incrementLoad2('link', 2);"
+        onload="incrementLoad2('link', 3);"
         referrerpolicy="origin"/>
 
   <img src="http://example.com/tests/dom/base/test/bug704320_counter.sjs?type=img"
-       onload="incrementLoad2('img', 2);"
+       onload="incrementLoad2('img', 3);"
        referrerpolicy="origin"/>
+
+  <script src="http://example.com/tests/dom/base/test/bug704320_counter.sjs?type=js"
+          onload="incrementLoad2('script', 3);"
+          referrerpolicy="origin"></script>
+
 
 </head>
 <body>

@@ -11,13 +11,9 @@ namespace mozilla {
 namespace dom {
 
 MediaDeviceInfo::MediaDeviceInfo(const nsAString& aDeviceId,
-                                 MediaDeviceKind aKind,
-                                 const nsAString& aLabel,
+                                 MediaDeviceKind aKind, const nsAString& aLabel,
                                  const nsAString& aGroupId)
-  : mKind(aKind)
-  , mDeviceId(aDeviceId)
-  , mLabel(aLabel)
-  , mGroupId(aGroupId) {}
+    : mKind(aKind), mDeviceId(aDeviceId), mLabel(aLabel), mGroupId(aGroupId) {}
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(MediaDeviceInfo)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaDeviceInfo)
@@ -27,39 +23,22 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaDeviceInfo)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-JSObject*
-MediaDeviceInfo::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* MediaDeviceInfo::WrapObject(JSContext* aCx,
+                                      JS::Handle<JSObject*> aGivenProto) {
   return MediaDeviceInfo_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsISupports* MediaDeviceInfo::GetParentObject()
-{
-  return nullptr;
-}
+nsISupports* MediaDeviceInfo::GetParentObject() { return nullptr; }
 
-void MediaDeviceInfo::GetDeviceId(nsString& retval)
-{
-  retval = mDeviceId;
-}
+void MediaDeviceInfo::GetDeviceId(nsString& retval) { retval = mDeviceId; }
 
-MediaDeviceKind
-MediaDeviceInfo::Kind()
-{
-  return mKind;
-}
+MediaDeviceKind MediaDeviceInfo::Kind() { return mKind; }
 
-void MediaDeviceInfo::GetGroupId(nsString& retval)
-{
-  retval = mGroupId;
-}
+void MediaDeviceInfo::GetGroupId(nsString& retval) { retval = mGroupId; }
 
-void MediaDeviceInfo::GetLabel(nsString& retval)
-{
-  retval = mLabel;
-}
+void MediaDeviceInfo::GetLabel(nsString& retval) { retval = mLabel; }
 
 MediaDeviceKind Kind();
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

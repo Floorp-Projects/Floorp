@@ -17,10 +17,9 @@
 namespace mozilla {
 
 #if defined(DEBUG)
-static bool IsOnGMPThread()
-{
+static bool IsOnGMPThread() {
   nsCOMPtr<mozIGeckoMediaPluginService> mps =
-    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+      do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   MOZ_ASSERT(mps);
 
   nsCOMPtr<nsIThread> gmpThread;
@@ -31,17 +30,13 @@ static bool IsOnGMPThread()
 #endif
 
 GMPVideoDecoderParams::GMPVideoDecoderParams(const CreateDecoderParams& aParams)
-  : mConfig(aParams.VideoConfig())
-  , mTaskQueue(aParams.mTaskQueue)
-  , mImageContainer(aParams.mImageContainer)
-  , mLayersBackend(aParams.GetLayersBackend())
-  , mCrashHelper(aParams.mCrashHelper)
-{
-}
+    : mConfig(aParams.VideoConfig()),
+      mTaskQueue(aParams.mTaskQueue),
+      mImageContainer(aParams.mImageContainer),
+      mLayersBackend(aParams.GetLayersBackend()),
+      mCrashHelper(aParams.mCrashHelper) {}
 
-void
-GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame)
-{
+void GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
   GMPUniquePtr<GMPVideoi420Frame> decodedFrame(aDecodedFrame);
 
   MOZ_ASSERT(IsOnGMPThread());
@@ -61,68 +56,51 @@ GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame)
     b.mPlanes[i].mSkip = 0;
   }
 
-  gfx::IntRect pictureRegion(
-    0, 0, decodedFrame->Width(), decodedFrame->Height());
+  gfx::IntRect pictureRegion(0, 0, decodedFrame->Width(),
+                             decodedFrame->Height());
   RefPtr<VideoData> v = VideoData::CreateAndCopyData(
-    mConfig,
-    mImageContainer,
-    mLastStreamOffset,
-    media::TimeUnit::FromMicroseconds(decodedFrame->Timestamp()),
-    media::TimeUnit::FromMicroseconds(decodedFrame->Duration()),
-    b,
-    false,
-    media::TimeUnit::FromMicroseconds(-1),
-    pictureRegion);
+      mConfig, mImageContainer, mLastStreamOffset,
+      media::TimeUnit::FromMicroseconds(decodedFrame->Timestamp()),
+      media::TimeUnit::FromMicroseconds(decodedFrame->Duration()), b, false,
+      media::TimeUnit::FromMicroseconds(-1), pictureRegion);
   RefPtr<GMPVideoDecoder> self = this;
   if (v) {
     mDecodedData.AppendElement(std::move(v));
   } else {
     mDecodedData.Clear();
     mDecodePromise.RejectIfExists(
-      MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                  RESULT_DETAIL("CallBack::CreateAndCopyData")),
-      __func__);
+        MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                    RESULT_DETAIL("CallBack::CreateAndCopyData")),
+        __func__);
   }
 }
 
-void
-GMPVideoDecoder::ReceivedDecodedReferenceFrame(const uint64_t aPictureId)
-{
+void GMPVideoDecoder::ReceivedDecodedReferenceFrame(const uint64_t aPictureId) {
   MOZ_ASSERT(IsOnGMPThread());
 }
 
-void
-GMPVideoDecoder::ReceivedDecodedFrame(const uint64_t aPictureId)
-{
+void GMPVideoDecoder::ReceivedDecodedFrame(const uint64_t aPictureId) {
   MOZ_ASSERT(IsOnGMPThread());
 }
 
-void
-GMPVideoDecoder::InputDataExhausted()
-{
+void GMPVideoDecoder::InputDataExhausted() {
   MOZ_ASSERT(IsOnGMPThread());
   mDecodePromise.ResolveIfExists(std::move(mDecodedData), __func__);
   mDecodedData = DecodedData();
 }
 
-void
-GMPVideoDecoder::DrainComplete()
-{
+void GMPVideoDecoder::DrainComplete() {
   MOZ_ASSERT(IsOnGMPThread());
   mDrainPromise.ResolveIfExists(std::move(mDecodedData), __func__);
   mDecodedData = DecodedData();
 }
 
-void
-GMPVideoDecoder::ResetComplete()
-{
+void GMPVideoDecoder::ResetComplete() {
   MOZ_ASSERT(IsOnGMPThread());
   mFlushPromise.ResolveIfExists(true, __func__);
 }
 
-void
-GMPVideoDecoder::Error(GMPErr aErr)
-{
+void GMPVideoDecoder::Error(GMPErr aErr) {
   MOZ_ASSERT(IsOnGMPThread());
   auto error = MediaResult(aErr == GMPDecodeErr ? NS_ERROR_DOM_MEDIA_DECODE_ERR
                                                 : NS_ERROR_DOM_MEDIA_FATAL_ERR,
@@ -132,26 +110,20 @@ GMPVideoDecoder::Error(GMPErr aErr)
   mFlushPromise.RejectIfExists(error, __func__);
 }
 
-void
-GMPVideoDecoder::Terminated()
-{
+void GMPVideoDecoder::Terminated() {
   MOZ_ASSERT(IsOnGMPThread());
   Error(GMPErr::GMPAbortedErr);
 }
 
 GMPVideoDecoder::GMPVideoDecoder(const GMPVideoDecoderParams& aParams)
-  : mConfig(aParams.mConfig)
-  , mGMP(nullptr)
-  , mHost(nullptr)
-  , mConvertNALUnitLengths(false)
-  , mCrashHelper(aParams.mCrashHelper)
-  , mImageContainer(aParams.mImageContainer)
-{
-}
+    : mConfig(aParams.mConfig),
+      mGMP(nullptr),
+      mHost(nullptr),
+      mConvertNALUnitLengths(false),
+      mCrashHelper(aParams.mCrashHelper),
+      mImageContainer(aParams.mImageContainer) {}
 
-void
-GMPVideoDecoder::InitTags(nsTArray<nsCString>& aTags)
-{
+void GMPVideoDecoder::InitTags(nsTArray<nsCString>& aTags) {
   if (MP4Decoder::IsH264(mConfig.mMimeType)) {
     aTags.AppendElement(NS_LITERAL_CSTRING("h264"));
   } else if (VPXDecoder::IsVP8(mConfig.mMimeType)) {
@@ -161,15 +133,10 @@ GMPVideoDecoder::InitTags(nsTArray<nsCString>& aTags)
   }
 }
 
-nsCString
-GMPVideoDecoder::GetNodeId()
-{
-  return SHARED_GMP_DECODING_NODE_ID;
-}
+nsCString GMPVideoDecoder::GetNodeId() { return SHARED_GMP_DECODING_NODE_ID; }
 
-GMPUniquePtr<GMPVideoEncodedFrame>
-GMPVideoDecoder::CreateFrame(MediaRawData* aSample)
-{
+GMPUniquePtr<GMPVideoEncodedFrame> GMPVideoDecoder::CreateFrame(
+    MediaRawData* aSample) {
   GMPVideoFrame* ftmp = nullptr;
   GMPErr err = mHost->CreateFrame(kGMPEncodedVideoFrame, &ftmp);
   if (GMP_FAILED(err)) {
@@ -177,7 +144,7 @@ GMPVideoDecoder::CreateFrame(MediaRawData* aSample)
   }
 
   GMPUniquePtr<GMPVideoEncodedFrame> frame(
-    static_cast<GMPVideoEncodedFrame*>(ftmp));
+      static_cast<GMPVideoEncodedFrame*>(ftmp));
   err = frame->CreateEmptyFrame(aSample->Size());
   if (GMP_FAILED(err)) {
     return nullptr;
@@ -192,7 +159,7 @@ GMPVideoDecoder::CreateFrame(MediaRawData* aSample)
     uint8_t* buf = frame->Buffer();
     while (buf < frame->Buffer() + frame->Size() - kNALLengthSize) {
       uint32_t length = BigEndian::readUint32(buf) + kNALLengthSize;
-      *reinterpret_cast<uint32_t *>(buf) = length;
+      *reinterpret_cast<uint32_t*>(buf) = length;
       buf += length;
     }
   }
@@ -209,15 +176,10 @@ GMPVideoDecoder::CreateFrame(MediaRawData* aSample)
   return frame;
 }
 
-const VideoInfo&
-GMPVideoDecoder::GetConfig() const
-{
-  return mConfig;
-}
+const VideoInfo& GMPVideoDecoder::GetConfig() const { return mConfig; }
 
-void
-GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
-{
+void GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP,
+                                  GMPVideoHost* aHost) {
   MOZ_ASSERT(IsOnGMPThread());
 
   if (!aGMP) {
@@ -242,7 +204,7 @@ GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
   nsTArray<uint8_t> codecSpecific;
   if (MP4Decoder::IsH264(mConfig.mMimeType)) {
     codec.mCodecType = kGMPVideoCodecH264;
-    codecSpecific.AppendElement(0); // mPacketizationMode.
+    codecSpecific.AppendElement(0);  // mPacketizationMode.
     codecSpecific.AppendElements(mConfig.mExtraData->Elements(),
                                  mConfig.mExtraData->Length());
     // OpenH264 expects pseudo-AVCC, but others must be passed
@@ -261,10 +223,8 @@ GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
   codec.mWidth = mConfig.mImage.width;
   codec.mHeight = mConfig.mImage.height;
 
-  nsresult rv = aGMP->InitDecode(codec,
-                                 codecSpecific,
-                                 this,
-                                 PR_GetNumberOfProcessors());
+  nsresult rv =
+      aGMP->InitDecode(codec, codecSpecific, this, PR_GetNumberOfProcessors());
   if (NS_FAILED(rv)) {
     aGMP->Close();
     mInitPromise.Reject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
@@ -287,9 +247,7 @@ GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
   mInitPromise.Resolve(TrackInfo::kVideoTrack, __func__);
 }
 
-RefPtr<MediaDataDecoder::InitPromise>
-GMPVideoDecoder::Init()
-{
+RefPtr<MediaDataDecoder::InitPromise> GMPVideoDecoder::Init() {
   MOZ_ASSERT(IsOnGMPThread());
 
   mMPS = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
@@ -300,28 +258,25 @@ GMPVideoDecoder::Init()
   nsTArray<nsCString> tags;
   InitTags(tags);
   UniquePtr<GetGMPVideoDecoderCallback> callback(new GMPInitDoneCallback(this));
-  if (NS_FAILED(mMPS->GetDecryptingGMPVideoDecoder(mCrashHelper,
-                                                   &tags,
-                                                   GetNodeId(),
-                                                   std::move(callback),
-                                                   DecryptorId()))) {
+  if (NS_FAILED(mMPS->GetDecryptingGMPVideoDecoder(
+          mCrashHelper, &tags, GetNodeId(), std::move(callback),
+          DecryptorId()))) {
     mInitPromise.Reject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
   }
 
   return promise;
 }
 
-RefPtr<MediaDataDecoder::DecodePromise>
-GMPVideoDecoder::Decode(MediaRawData* aSample)
-{
+RefPtr<MediaDataDecoder::DecodePromise> GMPVideoDecoder::Decode(
+    MediaRawData* aSample) {
   MOZ_ASSERT(IsOnGMPThread());
 
   RefPtr<MediaRawData> sample(aSample);
   if (!mGMP) {
     return DecodePromise::CreateAndReject(
-      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                  RESULT_DETAIL("mGMP not initialized")),
-      __func__);
+        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                    RESULT_DETAIL("mGMP not initialized")),
+        __func__);
   }
 
   mLastStreamOffset = sample->mOffset;
@@ -329,12 +284,12 @@ GMPVideoDecoder::Decode(MediaRawData* aSample)
   GMPUniquePtr<GMPVideoEncodedFrame> frame = CreateFrame(sample);
   if (!frame) {
     return DecodePromise::CreateAndReject(
-      MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                  RESULT_DETAIL("CreateFrame returned null")),
-      __func__);
+        MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                    RESULT_DETAIL("CreateFrame returned null")),
+        __func__);
   }
   RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
-  nsTArray<uint8_t> info; // No codec specific per-frame info to pass.
+  nsTArray<uint8_t> info;  // No codec specific per-frame info to pass.
   nsresult rv = mGMP->Decode(std::move(frame), false, info, 0);
   if (NS_FAILED(rv)) {
     mDecodePromise.Reject(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
@@ -345,9 +300,7 @@ GMPVideoDecoder::Decode(MediaRawData* aSample)
   return p;
 }
 
-RefPtr<MediaDataDecoder::FlushPromise>
-GMPVideoDecoder::Flush()
-{
+RefPtr<MediaDataDecoder::FlushPromise> GMPVideoDecoder::Flush() {
   MOZ_ASSERT(IsOnGMPThread());
 
   mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
@@ -361,9 +314,7 @@ GMPVideoDecoder::Flush()
   return p;
 }
 
-RefPtr<MediaDataDecoder::DecodePromise>
-GMPVideoDecoder::Drain()
-{
+RefPtr<MediaDataDecoder::DecodePromise> GMPVideoDecoder::Drain() {
   MOZ_ASSERT(IsOnGMPThread());
 
   MOZ_ASSERT(mDecodePromise.IsEmpty(), "Must wait for decoding to complete");
@@ -376,9 +327,7 @@ GMPVideoDecoder::Drain()
   return p;
 }
 
-RefPtr<ShutdownPromise>
-GMPVideoDecoder::Shutdown()
-{
+RefPtr<ShutdownPromise> GMPVideoDecoder::Shutdown() {
   mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   mFlushPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
 
@@ -393,4 +342,4 @@ GMPVideoDecoder::Shutdown()
   return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

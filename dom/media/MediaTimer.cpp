@@ -20,40 +20,35 @@ NS_IMPL_ADDREF(MediaTimer)
 NS_IMPL_RELEASE_WITH_DESTROY(MediaTimer, DispatchDestroy())
 
 MediaTimer::MediaTimer(bool aFuzzy)
-  : mMonitor("MediaTimer Monitor")
-  , mCreationTimeStamp(TimeStamp::Now())
-  , mUpdateScheduled(false)
-  , mFuzzy(aFuzzy)
-{
+    : mMonitor("MediaTimer Monitor"),
+      mCreationTimeStamp(TimeStamp::Now()),
+      mUpdateScheduled(false),
+      mFuzzy(aFuzzy) {
   TIMER_LOG("MediaTimer::MediaTimer");
 
   // Use the SharedThreadPool to create an nsIThreadPool with a maximum of one
   // thread, which is equivalent to an nsIThread for our purposes.
   RefPtr<SharedThreadPool> threadPool(
-    SharedThreadPool::Get(NS_LITERAL_CSTRING("MediaTimer"), 1));
+      SharedThreadPool::Get(NS_LITERAL_CSTRING("MediaTimer"), 1));
   mThread = threadPool.get();
   mTimer = NS_NewTimer(mThread);
 }
 
-void
-MediaTimer::DispatchDestroy()
-{
+void MediaTimer::DispatchDestroy() {
   // Hold a strong reference to the thread so that it doesn't get deleted in
   // Destroy(), which may run completely before the stack if Dispatch() begins
   // to unwind.
   nsCOMPtr<nsIEventTarget> thread = mThread;
   nsresult rv =
-    thread->Dispatch(NewNonOwningRunnableMethod(
-                       "MediaTimer::Destroy", this, &MediaTimer::Destroy),
-                     NS_DISPATCH_NORMAL);
+      thread->Dispatch(NewNonOwningRunnableMethod("MediaTimer::Destroy", this,
+                                                  &MediaTimer::Destroy),
+                       NS_DISPATCH_NORMAL);
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   Unused << rv;
-  (void) rv;
+  (void)rv;
 }
 
-void
-MediaTimer::Destroy()
-{
+void MediaTimer::Destroy() {
   MOZ_ASSERT(OnMediaTimerThread());
   TIMER_LOG("MediaTimer::Destroy");
 
@@ -69,23 +64,19 @@ MediaTimer::Destroy()
   delete this;
 }
 
-bool
-MediaTimer::OnMediaTimerThread()
-{
+bool MediaTimer::OnMediaTimerThread() {
   bool rv = false;
   mThread->IsOnCurrentThread(&rv);
   return rv;
 }
 
-RefPtr<MediaTimerPromise>
-MediaTimer::WaitFor(const TimeDuration& aDuration, const char* aCallSite)
-{
+RefPtr<MediaTimerPromise> MediaTimer::WaitFor(const TimeDuration& aDuration,
+                                              const char* aCallSite) {
   return WaitUntil(TimeStamp::Now() + aDuration, aCallSite);
 }
 
-RefPtr<MediaTimerPromise>
-MediaTimer::WaitUntil(const TimeStamp& aTimeStamp, const char* aCallSite)
-{
+RefPtr<MediaTimerPromise> MediaTimer::WaitUntil(const TimeStamp& aTimeStamp,
+                                                const char* aCallSite) {
   MonitorAutoLock mon(mMonitor);
   TIMER_LOG("MediaTimer::WaitUntil %" PRId64, RelativeMicroseconds(aTimeStamp));
   Entry e(aTimeStamp, aCallSite);
@@ -95,17 +86,13 @@ MediaTimer::WaitUntil(const TimeStamp& aTimeStamp, const char* aCallSite)
   return p;
 }
 
-void
-MediaTimer::Cancel()
-{
+void MediaTimer::Cancel() {
   MonitorAutoLock mon(mMonitor);
   TIMER_LOG("MediaTimer::Cancel");
   Reject();
 }
 
-void
-MediaTimer::ScheduleUpdate()
-{
+void MediaTimer::ScheduleUpdate() {
   mMonitor.AssertCurrentThreadOwns();
   if (mUpdateScheduled) {
     return;
@@ -113,23 +100,19 @@ MediaTimer::ScheduleUpdate()
   mUpdateScheduled = true;
 
   nsresult rv = mThread->Dispatch(
-    NewRunnableMethod("MediaTimer::Update", this, &MediaTimer::Update),
-    NS_DISPATCH_NORMAL);
+      NewRunnableMethod("MediaTimer::Update", this, &MediaTimer::Update),
+      NS_DISPATCH_NORMAL);
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   Unused << rv;
-  (void) rv;
+  (void)rv;
 }
 
-void
-MediaTimer::Update()
-{
+void MediaTimer::Update() {
   MonitorAutoLock mon(mMonitor);
   UpdateLocked();
 }
 
-bool
-MediaTimer::IsExpired(const TimeStamp& aTarget, const TimeStamp& aNow)
-{
+bool MediaTimer::IsExpired(const TimeStamp& aTarget, const TimeStamp& aNow) {
   MOZ_ASSERT(OnMediaTimerThread());
   mMonitor.AssertCurrentThreadOwns();
   // Treat this timer as expired in fuzzy mode even if it is fired
@@ -140,9 +123,7 @@ MediaTimer::IsExpired(const TimeStamp& aTarget, const TimeStamp& aNow)
   return t <= aNow;
 }
 
-void
-MediaTimer::UpdateLocked()
-{
+void MediaTimer::UpdateLocked() {
   MOZ_ASSERT(OnMediaTimerThread());
   mMonitor.AssertCurrentThreadOwns();
   mUpdateScheduled = false;
@@ -155,7 +136,8 @@ MediaTimer::UpdateLocked()
     mEntries.top().mPromise->Resolve(true, __func__);
     DebugOnly<TimeStamp> poppedTimeStamp = mEntries.top().mTimeStamp;
     mEntries.pop();
-    MOZ_ASSERT_IF(!mEntries.empty(), *&poppedTimeStamp <= mEntries.top().mTimeStamp);
+    MOZ_ASSERT_IF(!mEntries.empty(),
+                  *&poppedTimeStamp <= mEntries.top().mTimeStamp);
   }
 
   // If we've got no more entries, cancel any pending timer and bail out.
@@ -171,9 +153,7 @@ MediaTimer::UpdateLocked()
   }
 }
 
-void
-MediaTimer::Reject()
-{
+void MediaTimer::Reject() {
   mMonitor.AssertCurrentThreadOwns();
   while (!mEntries.empty()) {
     mEntries.top().mPromise->Reject(false, __func__);
@@ -184,28 +164,22 @@ MediaTimer::Reject()
 /*
  * We use a callback function, rather than a callback method, to ensure that
  * the nsITimer does not artifically keep the refcount of the MediaTimer above
- * zero. When the MediaTimer is destroyed, it safely cancels the nsITimer so that
- * we never fire against a dangling closure.
+ * zero. When the MediaTimer is destroyed, it safely cancels the nsITimer so
+ * that we never fire against a dangling closure.
  */
 
-/* static */ void
-MediaTimer::TimerCallback(nsITimer* aTimer, void* aClosure)
-{
+/* static */ void MediaTimer::TimerCallback(nsITimer* aTimer, void* aClosure) {
   static_cast<MediaTimer*>(aClosure)->TimerFired();
 }
 
-void
-MediaTimer::TimerFired()
-{
+void MediaTimer::TimerFired() {
   MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(OnMediaTimerThread());
   mCurrentTimerTarget = TimeStamp();
   UpdateLocked();
 }
 
-void
-MediaTimer::ArmTimer(const TimeStamp& aTarget, const TimeStamp& aNow)
-{
+void MediaTimer::ArmTimer(const TimeStamp& aTarget, const TimeStamp& aNow) {
   MOZ_DIAGNOSTIC_ASSERT(!TimerIsArmed());
   MOZ_DIAGNOSTIC_ASSERT(aTarget > aNow);
 
@@ -219,7 +193,7 @@ MediaTimer::ArmTimer(const TimeStamp& aTarget, const TimeStamp& aNow)
                                                   "MediaTimer::TimerCallback");
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   Unused << rv;
-  (void) rv;
+  (void)rv;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -12,9 +12,7 @@
 
 namespace mozilla {
 
-size_t
-DelayBuffer::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t DelayBuffer::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   size_t amount = 0;
   amount += mChunks.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (size_t i = 0; i < mChunks.Length(); i++) {
@@ -25,9 +23,7 @@ DelayBuffer::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   return amount;
 }
 
-void
-DelayBuffer::Write(const AudioBlock& aInputChunk)
-{
+void DelayBuffer::Write(const AudioBlock& aInputChunk) {
   // We must have a reference to the buffer if there are channels
   MOZ_ASSERT(aInputChunk.IsNull() == !aInputChunk.ChannelCount());
 #ifdef DEBUG
@@ -40,16 +36,14 @@ DelayBuffer::Write(const AudioBlock& aInputChunk)
   }
 
   if (mCurrentChunk == mLastReadChunk) {
-    mLastReadChunk = -1; // invalidate cache
+    mLastReadChunk = -1;  // invalidate cache
   }
   mChunks[mCurrentChunk] = aInputChunk.AsAudioChunk();
 }
 
-void
-DelayBuffer::Read(const float aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
-                  AudioBlock* aOutputChunk,
-                  ChannelInterpretation aChannelInterpretation)
-{
+void DelayBuffer::Read(const float aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
+                       AudioBlock* aOutputChunk,
+                       ChannelInterpretation aChannelInterpretation) {
   int chunkCount = mChunks.Length();
   if (!chunkCount) {
     aOutputChunk->SetNull(WEBAUDIO_BLOCK_SIZE);
@@ -76,8 +70,8 @@ DelayBuffer::Read(const float aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
 
   uint32_t channelCount = 0;
   for (int i = oldestChunk; true; i = (i + 1) % chunkCount) {
-    channelCount = GetAudioChannelsSuperset(channelCount,
-                                            mChunks[i].ChannelCount());
+    channelCount =
+        GetAudioChannelsSuperset(channelCount, mChunks[i].ChannelCount());
     if (i == youngestChunk) {
       break;
     }
@@ -85,44 +79,39 @@ DelayBuffer::Read(const float aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
 
   if (channelCount) {
     aOutputChunk->AllocateChannels(channelCount);
-    ReadChannels(aPerFrameDelays, aOutputChunk,
-                 0, channelCount, aChannelInterpretation);
+    ReadChannels(aPerFrameDelays, aOutputChunk, 0, channelCount,
+                 aChannelInterpretation);
   } else {
     aOutputChunk->SetNull(WEBAUDIO_BLOCK_SIZE);
   }
 }
 
-void
-DelayBuffer::ReadChannel(const float aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
-                         AudioBlock* aOutputChunk, uint32_t aChannel,
-                         ChannelInterpretation aChannelInterpretation)
-{
+void DelayBuffer::ReadChannel(const float aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
+                              AudioBlock* aOutputChunk, uint32_t aChannel,
+                              ChannelInterpretation aChannelInterpretation) {
   if (!mChunks.Length()) {
     float* outputChannel = aOutputChunk->ChannelFloatsForWrite(aChannel);
     PodZero(outputChannel, WEBAUDIO_BLOCK_SIZE);
     return;
   }
 
-  ReadChannels(aPerFrameDelays, aOutputChunk,
-               aChannel, 1, aChannelInterpretation);
+  ReadChannels(aPerFrameDelays, aOutputChunk, aChannel, 1,
+               aChannelInterpretation);
 }
 
-void
-DelayBuffer::ReadChannels(const float aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
-                          AudioBlock* aOutputChunk,
-                          uint32_t aFirstChannel, uint32_t aNumChannelsToRead,
-                          ChannelInterpretation aChannelInterpretation)
-{
+void DelayBuffer::ReadChannels(const float aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
+                               AudioBlock* aOutputChunk, uint32_t aFirstChannel,
+                               uint32_t aNumChannelsToRead,
+                               ChannelInterpretation aChannelInterpretation) {
   uint32_t totalChannelCount = aOutputChunk->ChannelCount();
   uint32_t readChannelsEnd = aFirstChannel + aNumChannelsToRead;
   MOZ_ASSERT(readChannelsEnd <= totalChannelCount);
 
   if (mUpmixChannels.Length() != totalChannelCount) {
-    mLastReadChunk = -1; // invalidate cache
+    mLastReadChunk = -1;  // invalidate cache
   }
 
-  for (uint32_t channel = aFirstChannel;
-       channel < readChannelsEnd; ++channel) {
+  for (uint32_t channel = aFirstChannel; channel < readChannelsEnd; ++channel) {
     PodZero(aOutputChunk->ChannelFloatsForWrite(channel), WEBAUDIO_BLOCK_SIZE);
   }
 
@@ -153,10 +142,10 @@ DelayBuffer::ReadChannels(const float aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
         UpdateUpmixChannels(readChunk, totalChannelCount,
                             aChannelInterpretation);
         float multiplier = interpolationFactor * mChunks[readChunk].mVolume;
-        for (uint32_t channel = aFirstChannel;
-             channel < readChannelsEnd; ++channel) {
-          aOutputChunk->ChannelFloatsForWrite(channel)[i] += multiplier *
-            mUpmixChannels[channel][readOffset];
+        for (uint32_t channel = aFirstChannel; channel < readChannelsEnd;
+             ++channel) {
+          aOutputChunk->ChannelFloatsForWrite(channel)[i] +=
+              multiplier * mUpmixChannels[channel][readOffset];
         }
       }
 
@@ -165,10 +154,8 @@ DelayBuffer::ReadChannels(const float aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
   }
 }
 
-void
-DelayBuffer::Read(float aDelayTicks, AudioBlock* aOutputChunk,
-                  ChannelInterpretation aChannelInterpretation)
-{
+void DelayBuffer::Read(float aDelayTicks, AudioBlock* aOutputChunk,
+                       ChannelInterpretation aChannelInterpretation) {
   float computedDelay[WEBAUDIO_BLOCK_SIZE];
 
   for (unsigned i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
@@ -178,16 +165,14 @@ DelayBuffer::Read(float aDelayTicks, AudioBlock* aOutputChunk,
   Read(computedDelay, aOutputChunk, aChannelInterpretation);
 }
 
-bool
-DelayBuffer::EnsureBuffer()
-{
+bool DelayBuffer::EnsureBuffer() {
   if (mChunks.Length() == 0) {
     // The length of the buffer is at least one block greater than the maximum
     // delay so that writing an input block does not overwrite the block that
     // would subsequently be read at maximum delay.  Also round up to the next
     // block size, so that no block of writes will need to wrap.
     const int chunkCount = (mMaxDelayTicks + 2 * WEBAUDIO_BLOCK_SIZE - 1) >>
-                                         WEBAUDIO_BLOCK_SIZE_BITS;
+                           WEBAUDIO_BLOCK_SIZE_BITS;
     if (!mChunks.SetLength(chunkCount, fallible)) {
       return false;
     }
@@ -197,37 +182,29 @@ DelayBuffer::EnsureBuffer()
   return true;
 }
 
-int
-DelayBuffer::PositionForDelay(int aDelay) {
+int DelayBuffer::PositionForDelay(int aDelay) {
   // Adding mChunks.Length() keeps integers positive for defined and
   // appropriate bitshift, remainder, and bitwise operations.
   return ((mCurrentChunk + mChunks.Length()) * WEBAUDIO_BLOCK_SIZE) - aDelay;
 }
 
-int
-DelayBuffer::ChunkForPosition(int aPosition)
-{
+int DelayBuffer::ChunkForPosition(int aPosition) {
   MOZ_ASSERT(aPosition >= 0);
   return (aPosition >> WEBAUDIO_BLOCK_SIZE_BITS) % mChunks.Length();
 }
 
-int
-DelayBuffer::OffsetForPosition(int aPosition)
-{
+int DelayBuffer::OffsetForPosition(int aPosition) {
   MOZ_ASSERT(aPosition >= 0);
   return aPosition & (WEBAUDIO_BLOCK_SIZE - 1);
 }
 
-int
-DelayBuffer::ChunkForDelay(int aDelay)
-{
+int DelayBuffer::ChunkForDelay(int aDelay) {
   return ChunkForPosition(PositionForDelay(aDelay));
 }
 
-void
-DelayBuffer::UpdateUpmixChannels(int aNewReadChunk, uint32_t aChannelCount,
-                                 ChannelInterpretation aChannelInterpretation)
-{
+void DelayBuffer::UpdateUpmixChannels(
+    int aNewReadChunk, uint32_t aChannelCount,
+    ChannelInterpretation aChannelInterpretation) {
   if (aNewReadChunk == mLastReadChunk) {
     MOZ_ASSERT(mUpmixChannels.Length() == aChannelCount);
     return;
@@ -241,18 +218,18 @@ DelayBuffer::UpdateUpmixChannels(int aNewReadChunk, uint32_t aChannelCount,
   MOZ_ASSERT(mUpmixChannels.Length() <= aChannelCount);
   if (mUpmixChannels.Length() < aChannelCount) {
     if (aChannelInterpretation == ChannelInterpretation::Speakers) {
-      AudioChannelsUpMix(&mUpmixChannels,
-                         aChannelCount, SilentChannel::ZeroChannel<float>());
+      AudioChannelsUpMix(&mUpmixChannels, aChannelCount,
+                         SilentChannel::ZeroChannel<float>());
       MOZ_ASSERT(mUpmixChannels.Length() == aChannelCount,
                  "We called GetAudioChannelsSuperset to avoid this");
     } else {
       // Fill up the remaining channels with zeros
-      for (uint32_t channel = mUpmixChannels.Length();
-           channel < aChannelCount; ++channel) {
+      for (uint32_t channel = mUpmixChannels.Length(); channel < aChannelCount;
+           ++channel) {
         mUpmixChannels.AppendElement(SilentChannel::ZeroChannel<float>());
       }
     }
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

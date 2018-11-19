@@ -16,8 +16,7 @@
 
 namespace mozilla {
 
-namespace layers
-{
+namespace layers {
 class ImageContainer;
 }
 
@@ -40,16 +39,14 @@ class TrackInfo;
  * All of functions and members in this class should be run in the same
  * TaskQueue.
  */
-class OmxPromiseLayer
-{
-protected:
-  virtual ~OmxPromiseLayer() { }
+class OmxPromiseLayer {
+ protected:
+  virtual ~OmxPromiseLayer() {}
 
-public:
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OmxPromiseLayer)
 
-  OmxPromiseLayer(TaskQueue* aTaskQueue,
-                  OmxDataDecoder* aDataDecoder,
+  OmxPromiseLayer(TaskQueue* aTaskQueue, OmxDataDecoder* aDataDecoder,
                   layers::ImageContainer* aImageContainer);
 
   class BufferData;
@@ -57,36 +54,34 @@ public:
   typedef nsTArray<RefPtr<BufferData>> BUFFERLIST;
 
   class OmxBufferFailureHolder {
-  public:
+   public:
     OmxBufferFailureHolder(OMX_ERRORTYPE aError, BufferData* aBuffer)
-      : mError(aError)
-      , mBuffer(aBuffer)
-    {
-    }
+        : mError(aError), mBuffer(aBuffer) {}
 
     OMX_ERRORTYPE mError;
     BufferData* mBuffer;
   };
 
-  typedef MozPromise<BufferData*, OmxBufferFailureHolder, /* IsExclusive = */ false> OmxBufferPromise;
+  typedef MozPromise<BufferData*, OmxBufferFailureHolder,
+                     /* IsExclusive = */ false>
+      OmxBufferPromise;
 
-  class OmxCommandFailureHolder
-  {
-  public:
+  class OmxCommandFailureHolder {
+   public:
     OmxCommandFailureHolder(OMX_ERRORTYPE aErrorType,
                             OMX_COMMANDTYPE aCommandType)
-      : mErrorType(aErrorType)
-      , mCommandType(aCommandType)
-    {
-    }
+        : mErrorType(aErrorType), mCommandType(aCommandType) {}
 
     OMX_ERRORTYPE mErrorType;
     OMX_COMMANDTYPE mCommandType;
   };
 
-  typedef MozPromise<OMX_COMMANDTYPE, OmxCommandFailureHolder, /* IsExclusive = */ true> OmxCommandPromise;
+  typedef MozPromise<OMX_COMMANDTYPE, OmxCommandFailureHolder,
+                     /* IsExclusive = */ true>
+      OmxCommandPromise;
 
-  typedef MozPromise<uint32_t, bool, /* IsExclusive = */ true> OmxPortConfigPromise;
+  typedef MozPromise<uint32_t, bool, /* IsExclusive = */ true>
+      OmxPortConfigPromise;
 
   // TODO: maybe a generic promise is good enough for this case?
   RefPtr<OmxCommandPromise> Init(const TrackInfo* aInfo);
@@ -97,8 +92,7 @@ public:
 
   RefPtr<OmxBufferPromise> EmptyBuffer(BufferData* aData);
 
-  RefPtr<OmxCommandPromise> SendCommand(OMX_COMMANDTYPE aCmd,
-                                        OMX_U32 aParam1,
+  RefPtr<OmxCommandPromise> SendCommand(OMX_COMMANDTYPE aCmd, OMX_U32 aParam1,
                                         OMX_PTR aCmdData);
 
   nsresult AllocateOmxBuffer(OMX_DIRTYPE aType, BUFFERLIST* aBuffers);
@@ -124,18 +118,13 @@ public:
   // BufferData maintains the status of OMX buffer (OMX_BUFFERHEADERTYPE).
   // mStatus tracks the buffer owner.
   // And a promise because OMX buffer working among different threads.
-  class BufferData
-  {
-  protected:
-    virtual ~BufferData() { }
+  class BufferData {
+   protected:
+    virtual ~BufferData() {}
 
-  public:
+   public:
     explicit BufferData(OMX_BUFFERHEADERTYPE* aBuffer)
-      : mEos(false)
-      , mStatus(BufferStatus::FREE)
-      , mBuffer(aBuffer)
-    {
-    }
+        : mEos(false), mStatus(BufferStatus::FREE), mBuffer(aBuffer) {}
 
     typedef void* BufferID;
 
@@ -143,17 +132,13 @@ public:
 
     // In most cases, the ID of this buffer is the pointer address of mBuffer.
     // However, on some platforms it may be another value.
-    virtual BufferID ID()
-    {
-      return mBuffer;
-    }
+    virtual BufferID ID() { return mBuffer; }
 
     // Return the platform dependent MediaData().
     // For example, it returns the MediaData with Gralloc texture.
     // If it returns nullptr, then caller uses the normal way to
     // create MediaData().
-    virtual already_AddRefed<MediaData> GetPlatformMediaData()
-    {
+    virtual already_AddRefed<MediaData> GetPlatformMediaData() {
       return nullptr;
     }
 
@@ -179,8 +164,7 @@ public:
     // For input port buffer, the status transition is:
     // FREE -> OMX_COMPONENT -> OMX_CLIENT -> FREE
     //
-    enum BufferStatus
-    {
+    enum BufferStatus {
       FREE,
       OMX_COMPONENT,
       OMX_CLIENT,
@@ -192,7 +176,8 @@ public:
 
     // The raw keeps in OmxPromiseLayer after EmptyBuffer and then passing to
     // output decoded buffer in EmptyFillBufferDone. It is used to keep the
-    // records of the original data from demuxer, like duration, stream offset...etc.
+    // records of the original data from demuxer, like duration, stream
+    // offset...etc.
     RefPtr<MediaRawData> mRawData;
 
     // Because OMX buffer works across threads, so it uses a promise
@@ -206,18 +191,17 @@ public:
 
   void EmptyFillBufferDone(OMX_DIRTYPE aType, BufferData* aData);
 
-  already_AddRefed<BufferData>
-  FindBufferById(OMX_DIRTYPE aType, BufferData::BufferID aId);
+  already_AddRefed<BufferData> FindBufferById(OMX_DIRTYPE aType,
+                                              BufferData::BufferID aId);
 
-  already_AddRefed<BufferData>
-  FindAndRemoveBufferHolder(OMX_DIRTYPE aType, BufferData::BufferID aId);
+  already_AddRefed<BufferData> FindAndRemoveBufferHolder(
+      OMX_DIRTYPE aType, BufferData::BufferID aId);
 
   // Return true if event is handled.
   bool Event(OMX_EVENTTYPE aEvent, OMX_U32 aData1, OMX_U32 aData2);
 
-protected:
-  struct FlushCommand
-  {
+ protected:
+  struct FlushCommand {
     OMX_DIRTYPE type;
     OMX_PTR cmd;
   };
@@ -240,7 +224,7 @@ protected:
 
   nsAutoPtr<OmxPlatformLayer> mPlatformLayer;
 
-private:
+ private:
   // Elements are added to holders when FillBuffer() or FillBuffer(). And
   // removing element when the promise is resolved. Buffers in these lists
   // should NOT be used by other component; for example, output it to audio
@@ -255,6 +239,6 @@ private:
   nsTArray<RefPtr<MediaRawData>> mRawDatas;
 };
 
-}
+}  // namespace mozilla
 
 #endif /* OmxPromiseLayer_h_ */

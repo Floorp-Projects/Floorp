@@ -9,10 +9,8 @@
 
 namespace mozilla {
 
-uint32_t
-GetAudioChannelsSuperset(uint32_t aChannels1, uint32_t aChannels2)
-{
+uint32_t GetAudioChannelsSuperset(uint32_t aChannels1, uint32_t aChannels2) {
   return std::max(aChannels1, aChannels2);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

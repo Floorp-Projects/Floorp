@@ -15,9 +15,8 @@
 
 namespace mozilla {
 
-/*static*/ nsCString
-CDMStorageIdProvider::ComputeStorageId(const nsCString& aOriginSalt)
-{
+/*static*/ nsCString CDMStorageIdProvider::ComputeStorageId(
+    const nsCString& aOriginSalt) {
 #ifndef SUPPORT_STORAGE_ID
   return EmptyCString();
 #else
@@ -30,38 +29,49 @@ CDMStorageIdProvider::ComputeStorageId(const nsCString& aOriginSalt)
   }
 
   std::string originSalt(aOriginSalt.BeginReading(), aOriginSalt.Length());
-  std::string input = machineId + originSalt + CDMStorageIdProvider::kBrowserIdentifier;
+  std::string input =
+      machineId + originSalt + CDMStorageIdProvider::kBrowserIdentifier;
   nsAutoCString storageId;
   nsresult rv;
-  nsCOMPtr<nsICryptoHash> hasher = do_CreateInstance("@mozilla.org/security/hash;1", &rv);
+  nsCOMPtr<nsICryptoHash> hasher =
+      do_CreateInstance("@mozilla.org/security/hash;1", &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    GMP_LOG("CDMStorageIdProvider::ComputeStorageId: no crypto hash(0x%08" PRIx32 ")",
-            static_cast<uint32_t>(rv));
+    GMP_LOG(
+        "CDMStorageIdProvider::ComputeStorageId: no crypto hash(0x%08" PRIx32
+        ")",
+        static_cast<uint32_t>(rv));
     return EmptyCString();
   }
 
   rv = hasher->Init(nsICryptoHash::SHA256);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    GMP_LOG("CDMStorageIdProvider::ComputeStorageId: failed to initialize hash(0x%08" PRIx32 ")",
-            static_cast<uint32_t>(rv));
+    GMP_LOG(
+        "CDMStorageIdProvider::ComputeStorageId: failed to initialize "
+        "hash(0x%08" PRIx32 ")",
+        static_cast<uint32_t>(rv));
     return EmptyCString();
   }
 
-  rv = hasher->Update(reinterpret_cast<const uint8_t*>(input.c_str()), input.size());
+  rv = hasher->Update(reinterpret_cast<const uint8_t*>(input.c_str()),
+                      input.size());
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    GMP_LOG("CDMStorageIdProvider::ComputeStorageId: failed to update hash(0x%08" PRIx32 ")",
-            static_cast<uint32_t>(rv));
+    GMP_LOG(
+        "CDMStorageIdProvider::ComputeStorageId: failed to update "
+        "hash(0x%08" PRIx32 ")",
+        static_cast<uint32_t>(rv));
     return EmptyCString();
   }
 
   rv = hasher->Finish(false, storageId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    GMP_LOG("CDMStorageIdProvider::ComputeStorageId: failed to get the final hash result(0x%08" PRIx32 ")",
-            static_cast<uint32_t>(rv));
+    GMP_LOG(
+        "CDMStorageIdProvider::ComputeStorageId: failed to get the final hash "
+        "result(0x%08" PRIx32 ")",
+        static_cast<uint32_t>(rv));
     return EmptyCString();
   }
   return std::move(storageId);
 #endif
 }
 
-} // namespace mozilla
+}  // namespace mozilla

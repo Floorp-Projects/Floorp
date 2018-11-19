@@ -12,20 +12,16 @@
 namespace mozilla {
 namespace dom {
 
-class ChannelSplitterNodeEngine final : public AudioNodeEngine
-{
-public:
+class ChannelSplitterNodeEngine final : public AudioNodeEngine {
+ public:
   explicit ChannelSplitterNodeEngine(ChannelSplitterNode* aNode)
-    : AudioNodeEngine(aNode)
-  {
+      : AudioNodeEngine(aNode) {
     MOZ_ASSERT(NS_IsMainThread());
   }
 
   void ProcessBlocksOnPorts(AudioNodeStream* aStream,
-                            const OutputChunks& aInput,
-                            OutputChunks& aOutput,
-                            bool* aFinished) override
-  {
+                            const OutputChunks& aInput, OutputChunks& aOutput,
+                            bool* aFinished) override {
     MOZ_ASSERT(aInput.Length() == 1, "Should only have one input port");
 
     aOutput.SetLength(OutputCount());
@@ -35,8 +31,7 @@ public:
         aOutput[i].AllocateChannels(1);
         AudioBlockCopyChannelWithScale(
             static_cast<const float*>(aInput[0].mChannelData[i]),
-            aInput[0].mVolume,
-            aOutput[i].ChannelFloatsForWrite(0));
+            aInput[0].mVolume, aOutput[i].ChannelFloatsForWrite(0));
       } else {
         // Pad with silent channels if needed
         aOutput[i].SetNull(WEBAUDIO_BLOCK_SIZE);
@@ -44,31 +39,24 @@ public:
     }
   }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 };
 
 ChannelSplitterNode::ChannelSplitterNode(AudioContext* aContext,
                                          uint16_t aOutputCount)
-  : AudioNode(aContext,
-              aOutputCount,
-              ChannelCountMode::Explicit,
-              ChannelInterpretation::Discrete)
-  , mOutputCount(aOutputCount)
-{
-  mStream = AudioNodeStream::Create(aContext,
-                                    new ChannelSplitterNodeEngine(this),
-                                    AudioNodeStream::NO_STREAM_FLAGS,
-                                    aContext->Graph());
+    : AudioNode(aContext, aOutputCount, ChannelCountMode::Explicit,
+                ChannelInterpretation::Discrete),
+      mOutputCount(aOutputCount) {
+  mStream = AudioNodeStream::Create(
+      aContext, new ChannelSplitterNodeEngine(this),
+      AudioNodeStream::NO_STREAM_FLAGS, aContext->Graph());
 }
 
-/* static */ already_AddRefed<ChannelSplitterNode>
-ChannelSplitterNode::Create(AudioContext& aAudioContext,
-                            const ChannelSplitterOptions& aOptions,
-                            ErrorResult& aRv)
-{
+/* static */ already_AddRefed<ChannelSplitterNode> ChannelSplitterNode::Create(
+    AudioContext& aAudioContext, const ChannelSplitterOptions& aOptions,
+    ErrorResult& aRv) {
   if (aAudioContext.CheckClosed(aRv)) {
     return nullptr;
   }
@@ -80,23 +68,25 @@ ChannelSplitterNode::Create(AudioContext& aAudioContext,
   }
 
   RefPtr<ChannelSplitterNode> audioNode =
-    new ChannelSplitterNode(&aAudioContext, aOptions.mNumberOfOutputs);
+      new ChannelSplitterNode(&aAudioContext, aOptions.mNumberOfOutputs);
 
-  // Manually check that the other options are valid, this node has channelCount,
-  // channelCountMode and channelInterpretation constraints: they cannot be
-  // changed from the default.
+  // Manually check that the other options are valid, this node has
+  // channelCount, channelCountMode and channelInterpretation constraints: they
+  // cannot be changed from the default.
   if (aOptions.mChannelCount.WasPassed() &&
       aOptions.mChannelCount.Value() != audioNode->ChannelCount()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
   if (aOptions.mChannelInterpretation.WasPassed() &&
-      aOptions.mChannelInterpretation.Value() != audioNode->ChannelInterpretationValue()) {
+      aOptions.mChannelInterpretation.Value() !=
+          audioNode->ChannelInterpretationValue()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
   if (aOptions.mChannelCountMode.WasPassed() &&
-      aOptions.mChannelCountMode.Value() != audioNode->ChannelCountModeValue()) {
+      aOptions.mChannelCountMode.Value() !=
+          audioNode->ChannelCountModeValue()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
@@ -104,11 +94,10 @@ ChannelSplitterNode::Create(AudioContext& aAudioContext,
   return audioNode.forget();
 }
 
-JSObject*
-ChannelSplitterNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* ChannelSplitterNode::WrapObject(JSContext* aCx,
+                                          JS::Handle<JSObject*> aGivenProto) {
   return ChannelSplitterNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

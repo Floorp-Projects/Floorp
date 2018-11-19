@@ -16,7 +16,6 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/TaskQueue.h"
 
-
 namespace mozilla {
 
 class AbstractThread;
@@ -26,19 +25,17 @@ class MediaSourceTrackDemuxer;
 DDLoggedTypeDeclNameAndBase(MediaSourceDemuxer, MediaDataDemuxer);
 DDLoggedTypeNameAndBase(MediaSourceTrackDemuxer, MediaTrackDemuxer);
 
-class MediaSourceDemuxer
-  : public MediaDataDemuxer
-  , public DecoderDoctorLifeLogger<MediaSourceDemuxer>
-{
-public:
+class MediaSourceDemuxer : public MediaDataDemuxer,
+                           public DecoderDoctorLifeLogger<MediaSourceDemuxer> {
+ public:
   explicit MediaSourceDemuxer(AbstractThread* aAbstractMainThread);
 
   RefPtr<InitPromise> Init() override;
 
   uint32_t GetNumberTracks(TrackInfo::TrackType aType) const override;
 
-  already_AddRefed<MediaTrackDemuxer>
-  GetTrackDemuxer(TrackInfo::TrackType aType, uint32_t aTrackNumber) override;
+  already_AddRefed<MediaTrackDemuxer> GetTrackDemuxer(
+      TrackInfo::TrackType aType, uint32_t aTrackNumber) override;
 
   bool IsSeekable() const override;
 
@@ -62,9 +59,9 @@ public:
   // Due to inaccuracies in determining buffer end
   // frames (Bug 1065207). This value is based on videos seen in the wild.
   static constexpr media::TimeUnit EOS_FUZZ =
-    media::TimeUnit::FromMicroseconds(500000);
+      media::TimeUnit::FromMicroseconds(500000);
 
-private:
+ private:
   ~MediaSourceDemuxer();
   friend class MediaSourceTrackDemuxer;
   // Scan source buffers and update information.
@@ -73,8 +70,7 @@ private:
   TrackInfo* GetTrackInfo(TrackInfo::TrackType);
   void DoAttachSourceBuffer(RefPtr<TrackBuffersManager>&& aSourceBuffer);
   void DoDetachSourceBuffer(RefPtr<TrackBuffersManager>&& aSourceBuffer);
-  bool OnTaskQueue()
-  {
+  bool OnTaskQueue() {
     return !GetTaskQueue() || GetTaskQueue()->IsCurrentThreadIn();
   }
 
@@ -93,10 +89,9 @@ private:
 };
 
 class MediaSourceTrackDemuxer
-  : public MediaTrackDemuxer
-  , public DecoderDoctorLifeLogger<MediaSourceTrackDemuxer>
-{
-public:
+    : public MediaTrackDemuxer,
+      public DecoderDoctorLifeLogger<MediaSourceTrackDemuxer> {
+ public:
   MediaSourceTrackDemuxer(MediaSourceDemuxer* aParent,
                           TrackInfo::TrackType aType,
                           TrackBuffersManager* aManager);
@@ -112,24 +107,19 @@ public:
   nsresult GetNextRandomAccessPoint(media::TimeUnit* aTime) override;
 
   RefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(
-    const media::TimeUnit& aTimeThreshold) override;
+      const media::TimeUnit& aTimeThreshold) override;
 
   media::TimeIntervals GetBuffered() override;
 
   void BreakCycles() override;
 
-  bool GetSamplesMayBlock() const override
-  {
-    return false;
-  }
+  bool GetSamplesMayBlock() const override { return false; }
 
   bool HasManager(TrackBuffersManager* aManager) const;
   void DetachManager();
 
-private:
-
-  bool OnTaskQueue() const
-  {
+ private:
+  bool OnTaskQueue() const {
     MOZ_ASSERT(mParent);
     auto taskQueue = mParent->GetTaskQueue();
     MOZ_ASSERT(taskQueue);
@@ -139,7 +129,7 @@ private:
   RefPtr<SeekPromise> DoSeek(const media::TimeUnit& aTime);
   RefPtr<SamplesPromise> DoGetSamples(int32_t aNumSamples);
   RefPtr<SkipAccessPointPromise> DoSkipToNextRandomAccessPoint(
-    const media::TimeUnit& aTimeThreadshold);
+      const media::TimeUnit& aTimeThreadshold);
   already_AddRefed<MediaRawData> GetSample(MediaResult& aError);
   // Return the timestamp of the next keyframe after mLastSampleIndex.
   media::TimeUnit GetNextRandomAccessPoint();
@@ -164,6 +154,6 @@ private:
   const media::TimeUnit mPreRoll;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

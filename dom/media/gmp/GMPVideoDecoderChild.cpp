@@ -15,37 +15,28 @@ namespace mozilla {
 namespace gmp {
 
 GMPVideoDecoderChild::GMPVideoDecoderChild(GMPContentChild* aPlugin)
-  : GMPSharedMemManager(aPlugin)
-  , mPlugin(aPlugin)
-  , mVideoDecoder(nullptr)
-  , mVideoHost(this)
-  , mNeedShmemIntrCount(0)
-  , mPendingDecodeComplete(false)
-{
+    : GMPSharedMemManager(aPlugin),
+      mPlugin(aPlugin),
+      mVideoDecoder(nullptr),
+      mVideoHost(this),
+      mNeedShmemIntrCount(0),
+      mPendingDecodeComplete(false) {
   MOZ_ASSERT(mPlugin);
 }
 
-GMPVideoDecoderChild::~GMPVideoDecoderChild()
-{
+GMPVideoDecoderChild::~GMPVideoDecoderChild() {
   MOZ_ASSERT(!mNeedShmemIntrCount);
 }
 
-void
-GMPVideoDecoderChild::Init(GMPVideoDecoder* aDecoder)
-{
-  MOZ_ASSERT(aDecoder, "Cannot initialize video decoder child without a video decoder!");
+void GMPVideoDecoderChild::Init(GMPVideoDecoder* aDecoder) {
+  MOZ_ASSERT(aDecoder,
+             "Cannot initialize video decoder child without a video decoder!");
   mVideoDecoder = aDecoder;
 }
 
-GMPVideoHostImpl&
-GMPVideoDecoderChild::Host()
-{
-  return mVideoHost;
-}
+GMPVideoHostImpl& GMPVideoDecoderChild::Host() { return mVideoHost; }
 
-void
-GMPVideoDecoderChild::Decoded(GMPVideoi420Frame* aDecodedFrame)
-{
+void GMPVideoDecoderChild::Decoded(GMPVideoi420Frame* aDecodedFrame) {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   if (!aDecodedFrame) {
@@ -61,97 +52,77 @@ GMPVideoDecoderChild::Decoded(GMPVideoi420Frame* aDecodedFrame)
   aDecodedFrame->Destroy();
 }
 
-void
-GMPVideoDecoderChild::ReceivedDecodedReferenceFrame(const uint64_t aPictureId)
-{
+void GMPVideoDecoderChild::ReceivedDecodedReferenceFrame(
+    const uint64_t aPictureId) {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   SendReceivedDecodedReferenceFrame(aPictureId);
 }
 
-void
-GMPVideoDecoderChild::ReceivedDecodedFrame(const uint64_t aPictureId)
-{
+void GMPVideoDecoderChild::ReceivedDecodedFrame(const uint64_t aPictureId) {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   SendReceivedDecodedFrame(aPictureId);
 }
 
-void
-GMPVideoDecoderChild::InputDataExhausted()
-{
+void GMPVideoDecoderChild::InputDataExhausted() {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   SendInputDataExhausted();
 }
 
-void
-GMPVideoDecoderChild::DrainComplete()
-{
+void GMPVideoDecoderChild::DrainComplete() {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   SendDrainComplete();
 }
 
-void
-GMPVideoDecoderChild::ResetComplete()
-{
+void GMPVideoDecoderChild::ResetComplete() {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   SendResetComplete();
 }
 
-void
-GMPVideoDecoderChild::Error(GMPErr aError)
-{
+void GMPVideoDecoderChild::Error(GMPErr aError) {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   SendError(aError);
 }
 
-mozilla::ipc::IPCResult
-GMPVideoDecoderChild::RecvInitDecode(const GMPVideoCodec& aCodecSettings,
-                                     InfallibleTArray<uint8_t>&& aCodecSpecific,
-                                     const int32_t& aCoreCount)
-{
+mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvInitDecode(
+    const GMPVideoCodec& aCodecSettings,
+    InfallibleTArray<uint8_t>&& aCodecSpecific, const int32_t& aCoreCount) {
   if (!mVideoDecoder) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  // Ignore any return code. It is OK for this to fail without killing the process.
-  mVideoDecoder->InitDecode(aCodecSettings,
-                            aCodecSpecific.Elements(),
-                            aCodecSpecific.Length(),
-                            this,
-                            aCoreCount);
+  // Ignore any return code. It is OK for this to fail without killing the
+  // process.
+  mVideoDecoder->InitDecode(aCodecSettings, aCodecSpecific.Elements(),
+                            aCodecSpecific.Length(), this, aCoreCount);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-GMPVideoDecoderChild::RecvDecode(const GMPVideoEncodedFrameData& aInputFrame,
-                                 const bool& aMissingFrames,
-                                 InfallibleTArray<uint8_t>&& aCodecSpecificInfo,
-                                 const int64_t& aRenderTimeMs)
-{
+mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvDecode(
+    const GMPVideoEncodedFrameData& aInputFrame, const bool& aMissingFrames,
+    InfallibleTArray<uint8_t>&& aCodecSpecificInfo,
+    const int64_t& aRenderTimeMs) {
   if (!mVideoDecoder) {
     return IPC_FAIL_NO_REASON(this);
   }
 
   auto f = new GMPVideoEncodedFrameImpl(aInputFrame, &mVideoHost);
 
-  // Ignore any return code. It is OK for this to fail without killing the process.
-  mVideoDecoder->Decode(f,
-                        aMissingFrames,
-                        aCodecSpecificInfo.Elements(),
-                        aCodecSpecificInfo.Length(),
-                        aRenderTimeMs);
+  // Ignore any return code. It is OK for this to fail without killing the
+  // process.
+  mVideoDecoder->Decode(f, aMissingFrames, aCodecSpecificInfo.Elements(),
+                        aCodecSpecificInfo.Length(), aRenderTimeMs);
 
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-GMPVideoDecoderChild::RecvChildShmemForPool(Shmem&& aFrameBuffer)
-{
+mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvChildShmemForPool(
+    Shmem&& aFrameBuffer) {
   if (aFrameBuffer.IsWritable()) {
     mVideoHost.SharedMemMgr()->MgrDeallocShmem(GMPSharedMem::kGMPFrameData,
                                                aFrameBuffer);
@@ -159,35 +130,31 @@ GMPVideoDecoderChild::RecvChildShmemForPool(Shmem&& aFrameBuffer)
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-GMPVideoDecoderChild::RecvReset()
-{
+mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvReset() {
   if (!mVideoDecoder) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  // Ignore any return code. It is OK for this to fail without killing the process.
+  // Ignore any return code. It is OK for this to fail without killing the
+  // process.
   mVideoDecoder->Reset();
 
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-GMPVideoDecoderChild::RecvDrain()
-{
+mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvDrain() {
   if (!mVideoDecoder) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  // Ignore any return code. It is OK for this to fail without killing the process.
+  // Ignore any return code. It is OK for this to fail without killing the
+  // process.
   mVideoDecoder->Drain();
 
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-GMPVideoDecoderChild::RecvDecodingComplete()
-{
+mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvDecodingComplete() {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   if (mNeedShmemIntrCount) {
@@ -199,7 +166,8 @@ GMPVideoDecoderChild::RecvDecodingComplete()
     return IPC_OK();
   }
   if (mVideoDecoder) {
-    // Ignore any return code. It is OK for this to fail without killing the process.
+    // Ignore any return code. It is OK for this to fail without killing the
+    // process.
     mVideoDecoder->DecodingComplete();
     mVideoDecoder = nullptr;
   }
@@ -213,11 +181,9 @@ GMPVideoDecoderChild::RecvDecodingComplete()
   return IPC_OK();
 }
 
-bool
-GMPVideoDecoderChild::Alloc(size_t aSize,
-                            Shmem::SharedMemory::SharedMemoryType aType,
-                            Shmem* aMem)
-{
+bool GMPVideoDecoderChild::Alloc(size_t aSize,
+                                 Shmem::SharedMemory::SharedMemoryType aType,
+                                 Shmem* aMem) {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   bool rv;
@@ -228,9 +194,8 @@ GMPVideoDecoderChild::Alloc(size_t aSize,
   if (mPendingDecodeComplete && mNeedShmemIntrCount == 0) {
     mPendingDecodeComplete = false;
     mPlugin->GMPMessageLoop()->PostTask(
-      NewRunnableMethod("gmp::GMPVideoDecoderChild::RecvDecodingComplete",
-                        this,
-                        &GMPVideoDecoderChild::RecvDecodingComplete));
+        NewRunnableMethod("gmp::GMPVideoDecoderChild::RecvDecodingComplete",
+                          this, &GMPVideoDecoderChild::RecvDecodingComplete));
   }
 #else
 #ifdef GMP_SAFE_SHMEM
@@ -242,9 +207,7 @@ GMPVideoDecoderChild::Alloc(size_t aSize,
   return rv;
 }
 
-void
-GMPVideoDecoderChild::Dealloc(Shmem& aMem)
-{
+void GMPVideoDecoderChild::Dealloc(Shmem& aMem) {
 #ifndef SHMEM_ALLOC_IN_CHILD
   SendParentShmemForPool(aMem);
 #else
@@ -252,5 +215,5 @@ GMPVideoDecoderChild::Dealloc(Shmem& aMem)
 #endif
 }
 
-} // namespace gmp
-} // namespace mozilla
+}  // namespace gmp
+}  // namespace mozilla

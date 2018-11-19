@@ -20,23 +20,19 @@ static const uint32_t HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE = 416;
 
 mozilla::LazyLogModule gMediaResourceLog("MediaResource");
 // Debug logging macro with object pointer and class name.
-#define LOG(msg, ...)                                                          \
+#define LOG(msg, ...) \
   DDMOZ_LOG(gMediaResourceLog, mozilla::LogLevel::Debug, msg, ##__VA_ARGS__)
 
 namespace mozilla {
 
 ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
-                                           nsIChannel* aChannel,
-                                           nsIURI* aURI,
+                                           nsIChannel* aChannel, nsIURI* aURI,
                                            bool aIsPrivateBrowsing)
-  : BaseMediaResource(aCallback, aChannel, aURI)
-  , mCacheStream(this, aIsPrivateBrowsing)
-  , mSuspendAgent(mCacheStream)
-{
-}
+    : BaseMediaResource(aCallback, aChannel, aURI),
+      mCacheStream(this, aIsPrivateBrowsing),
+      mSuspendAgent(mCacheStream) {}
 
-ChannelMediaResource::~ChannelMediaResource()
-{
+ChannelMediaResource::~ChannelMediaResource() {
   MOZ_ASSERT(mClosed);
   MOZ_ASSERT(!mChannel);
   MOZ_ASSERT(!mListener);
@@ -51,41 +47,28 @@ ChannelMediaResource::~ChannelMediaResource()
 // disconnect the old listener from the ChannelMediaResource and hook up
 // a new listener, so notifications from the old channel are discarded
 // and don't confuse us.
-NS_IMPL_ISUPPORTS(ChannelMediaResource::Listener,
-                  nsIRequestObserver,
-                  nsIStreamListener,
-                  nsIChannelEventSink,
-                  nsIInterfaceRequestor,
+NS_IMPL_ISUPPORTS(ChannelMediaResource::Listener, nsIRequestObserver,
+                  nsIStreamListener, nsIChannelEventSink, nsIInterfaceRequestor,
                   nsIThreadRetargetableStreamListener)
 
-nsresult
-ChannelMediaResource::Listener::OnStartRequest(nsIRequest* aRequest,
-                                               nsISupports* aContext)
-{
+nsresult ChannelMediaResource::Listener::OnStartRequest(nsIRequest* aRequest,
+                                                        nsISupports* aContext) {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mResource)
-    return NS_OK;
+  if (!mResource) return NS_OK;
   return mResource->OnStartRequest(aRequest, mOffset);
 }
 
-nsresult
-ChannelMediaResource::Listener::OnStopRequest(nsIRequest* aRequest,
-                                              nsISupports* aContext,
-                                              nsresult aStatus)
-{
+nsresult ChannelMediaResource::Listener::OnStopRequest(nsIRequest* aRequest,
+                                                       nsISupports* aContext,
+                                                       nsresult aStatus) {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mResource)
-    return NS_OK;
+  if (!mResource) return NS_OK;
   return mResource->OnStopRequest(aRequest, aStatus);
 }
 
-nsresult
-ChannelMediaResource::Listener::OnDataAvailable(nsIRequest* aRequest,
-                                                nsISupports* aContext,
-                                                nsIInputStream* aStream,
-                                                uint64_t aOffset,
-                                                uint32_t aCount)
-{
+nsresult ChannelMediaResource::Listener::OnDataAvailable(
+    nsIRequest* aRequest, nsISupports* aContext, nsIInputStream* aStream,
+    uint64_t aOffset, uint32_t aCount) {
   // This might happen off the main thread.
   RefPtr<ChannelMediaResource> res;
   {
@@ -97,13 +80,9 @@ ChannelMediaResource::Listener::OnDataAvailable(nsIRequest* aRequest,
   return res ? res->OnDataAvailable(mLoadID, aStream, aCount) : NS_OK;
 }
 
-nsresult
-ChannelMediaResource::Listener::AsyncOnChannelRedirect(
-  nsIChannel* aOld,
-  nsIChannel* aNew,
-  uint32_t aFlags,
-  nsIAsyncVerifyRedirectCallback* cb)
-{
+nsresult ChannelMediaResource::Listener::AsyncOnChannelRedirect(
+    nsIChannel* aOld, nsIChannel* aNew, uint32_t aFlags,
+    nsIAsyncVerifyRedirectCallback* cb) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsresult rv = NS_OK;
@@ -119,38 +98,28 @@ ChannelMediaResource::Listener::AsyncOnChannelRedirect(
   return NS_OK;
 }
 
-nsresult
-ChannelMediaResource::Listener::CheckListenerChain()
-{
-  return NS_OK;
-}
+nsresult ChannelMediaResource::Listener::CheckListenerChain() { return NS_OK; }
 
-nsresult
-ChannelMediaResource::Listener::GetInterface(const nsIID& aIID, void** aResult)
-{
+nsresult ChannelMediaResource::Listener::GetInterface(const nsIID& aIID,
+                                                      void** aResult) {
   return QueryInterface(aIID, aResult);
 }
 
-void
-ChannelMediaResource::Listener::Revoke()
-{
+void ChannelMediaResource::Listener::Revoke() {
   MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mMutex);
   mResource = nullptr;
 }
 
-static bool
-IsPayloadCompressed(nsIHttpChannel* aChannel)
-{
+static bool IsPayloadCompressed(nsIHttpChannel* aChannel) {
   nsAutoCString encoding;
-  Unused << aChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Encoding"), encoding);
+  Unused << aChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Encoding"),
+                                        encoding);
   return encoding.Length() > 0;
 }
 
-nsresult
-ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
-                                     int64_t aRequestOffset)
-{
+nsresult ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
+                                              int64_t aRequestOffset) {
   NS_ASSERTION(mChannel.get() == aRequest, "Wrong channel!");
   MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
@@ -211,7 +180,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
         mCacheStream.NotifyDataEnded(mLoadID, status);
       } else {
         mCallback->NotifyNetworkError(
-          MediaResult(NS_ERROR_FAILURE, "HTTP error"));
+            MediaResult(NS_ERROR_FAILURE, "HTTP error"));
       }
 
       // This disconnects our listener so we don't get any more data. We
@@ -224,7 +193,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
     Unused << hc->GetResponseHeader(NS_LITERAL_CSTRING("Accept-Ranges"),
                                     ranges);
     bool acceptsRanges =
-      net::nsHttp::FindToken(ranges.get(), "bytes", HTTP_HEADER_VALUE_SEPS);
+        net::nsHttp::FindToken(ranges.get(), "bytes", HTTP_HEADER_VALUE_SEPS);
 
     int64_t contentLength = -1;
     const bool isCompressed = IsPayloadCompressed(hc);
@@ -248,8 +217,9 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
       if (gotRangeHeader) {
         startOffset = rangeStart;
         // We received 'Content-Range', so the server accepts range requests.
-        // Notify media cache about the length and start offset of data received.
-        // Note: If aRangeTotal == -1, then the total bytes is unknown at this stage.
+        // Notify media cache about the length and start offset of data
+        // received. Note: If aRangeTotal == -1, then the total bytes is unknown
+        // at this stage.
         //       For now, tell the decoder that the stream is infinite.
         if (rangeTotal != -1) {
           contentLength = std::max(contentLength, rangeTotal);
@@ -316,9 +286,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
   return NS_OK;
 }
 
-bool
-ChannelMediaResource::IsTransportSeekable()
-{
+bool ChannelMediaResource::IsTransportSeekable() {
   MOZ_ASSERT(NS_IsMainThread());
   // We Report the transport as seekable if we know we will never seek into
   // the underlying transport. As the MediaCache reads content by block of
@@ -330,17 +298,14 @@ ChannelMediaResource::IsTransportSeekable()
           mFirstReadLength < MediaCacheStream::BLOCK_SIZE);
 }
 
-nsresult
-ChannelMediaResource::ParseContentRangeHeader(nsIHttpChannel * aHttpChan,
-                                              int64_t& aRangeStart,
-                                              int64_t& aRangeEnd,
-                                              int64_t& aRangeTotal) const
-{
+nsresult ChannelMediaResource::ParseContentRangeHeader(
+    nsIHttpChannel* aHttpChan, int64_t& aRangeStart, int64_t& aRangeEnd,
+    int64_t& aRangeTotal) const {
   NS_ENSURE_ARG(aHttpChan);
 
   nsAutoCString rangeStr;
-  nsresult rv = aHttpChan->GetResponseHeader(NS_LITERAL_CSTRING("Content-Range"),
-                                             rangeStr);
+  nsresult rv = aHttpChan->GetResponseHeader(
+      NS_LITERAL_CSTRING("Content-Range"), rangeStr);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_FALSE(rangeStr.IsEmpty(), NS_ERROR_ILLEGAL_VALUE);
 
@@ -350,19 +315,19 @@ ChannelMediaResource::ParseContentRangeHeader(nsIHttpChannel * aHttpChan,
   int32_t slashPos = rangeStr.Find(NS_LITERAL_CSTRING("/"), true, dashPos);
 
   nsAutoCString aRangeStartText;
-  rangeStr.Mid(aRangeStartText, spacePos+1, dashPos-(spacePos+1));
+  rangeStr.Mid(aRangeStartText, spacePos + 1, dashPos - (spacePos + 1));
   aRangeStart = aRangeStartText.ToInteger64(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(0 <= aRangeStart, NS_ERROR_ILLEGAL_VALUE);
 
   nsAutoCString aRangeEndText;
-  rangeStr.Mid(aRangeEndText, dashPos+1, slashPos-(dashPos+1));
+  rangeStr.Mid(aRangeEndText, dashPos + 1, slashPos - (dashPos + 1));
   aRangeEnd = aRangeEndText.ToInteger64(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(aRangeStart < aRangeEnd, NS_ERROR_ILLEGAL_VALUE);
 
   nsAutoCString aRangeTotalText;
-  rangeStr.Right(aRangeTotalText, rangeStr.Length()-(slashPos+1));
+  rangeStr.Right(aRangeTotalText, rangeStr.Length() - (slashPos + 1));
   if (aRangeTotalText[0] == '*') {
     aRangeTotal = -1;
   } else {
@@ -371,15 +336,15 @@ ChannelMediaResource::ParseContentRangeHeader(nsIHttpChannel * aHttpChan,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  LOG("Received bytes [%" PRId64 "] to [%" PRId64 "] of [%" PRId64 "] for decoder[%p]",
+  LOG("Received bytes [%" PRId64 "] to [%" PRId64 "] of [%" PRId64
+      "] for decoder[%p]",
       aRangeStart, aRangeEnd, aRangeTotal, mCallback.get());
 
   return NS_OK;
 }
 
-nsresult
-ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
-{
+nsresult ChannelMediaResource::OnStopRequest(nsIRequest* aRequest,
+                                             nsresult aStatus) {
   NS_ASSERTION(mChannel.get() == aRequest, "Wrong channel!");
   NS_ASSERTION(!mSuspendAgent.IsSuspended(),
                "How can OnStopRequest fire while we're suspended?");
@@ -443,32 +408,26 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
   return NS_OK;
 }
 
-nsresult
-ChannelMediaResource::OnChannelRedirect(nsIChannel* aOld,
-                                        nsIChannel* aNew,
-                                        uint32_t aFlags,
-                                        int64_t aOffset)
-{
+nsresult ChannelMediaResource::OnChannelRedirect(nsIChannel* aOld,
+                                                 nsIChannel* aNew,
+                                                 uint32_t aFlags,
+                                                 int64_t aOffset) {
   // OnChannelRedirect() is followed by OnStartRequest() where we will
   // call mSuspendAgent.Delegate().
   mChannel = aNew;
   return SetupChannelHeaders(aOffset);
 }
 
-nsresult
-ChannelMediaResource::CopySegmentToCache(nsIInputStream* aInStream,
-                                         void* aClosure,
-                                         const char* aFromSegment,
-                                         uint32_t aToOffset,
-                                         uint32_t aCount,
-                                         uint32_t* aWriteCount)
-{
+nsresult ChannelMediaResource::CopySegmentToCache(
+    nsIInputStream* aInStream, void* aClosure, const char* aFromSegment,
+    uint32_t aToOffset, uint32_t aCount, uint32_t* aWriteCount) {
   *aWriteCount = aCount;
   Closure* closure = static_cast<Closure*>(aClosure);
   MediaCacheStream* cacheStream = &closure->mResource->mCacheStream;
   if (cacheStream->OwnerThread()->IsOnCurrentThread()) {
     cacheStream->NotifyDataReceived(
-      closure->mLoadID, aCount, reinterpret_cast<const uint8_t*>(aFromSegment));
+        closure->mLoadID, aCount,
+        reinterpret_cast<const uint8_t*>(aFromSegment));
     return NS_OK;
   }
 
@@ -477,28 +436,25 @@ ChannelMediaResource::CopySegmentToCache(nsIInputStream* aInStream,
   UniquePtr<uint8_t[]> data = MakeUnique<uint8_t[]>(aCount);
   memcpy(data.get(), aFromSegment, aCount);
   cacheStream->OwnerThread()->Dispatch(NS_NewRunnableFunction(
-    "MediaCacheStream::NotifyDataReceived",
-    [ self, loadID, data = std::move(data), aCount ]() {
-      self->mCacheStream.NotifyDataReceived(loadID, aCount, data.get());
-    }));
+      "MediaCacheStream::NotifyDataReceived",
+      [self, loadID, data = std::move(data), aCount]() {
+        self->mCacheStream.NotifyDataReceived(loadID, aCount, data.get());
+      }));
 
   return NS_OK;
 }
 
-nsresult
-ChannelMediaResource::OnDataAvailable(uint32_t aLoadID,
-                                      nsIInputStream* aStream,
-                                      uint32_t aCount)
-{
+nsresult ChannelMediaResource::OnDataAvailable(uint32_t aLoadID,
+                                               nsIInputStream* aStream,
+                                               uint32_t aCount) {
   // This might happen off the main thread.
-  Closure closure{ aLoadID, this };
+  Closure closure{aLoadID, this};
   uint32_t count = aCount;
   while (count > 0) {
     uint32_t read;
     nsresult rv =
-      aStream->ReadSegments(CopySegmentToCache, &closure, count, &read);
-    if (NS_FAILED(rv))
-      return rv;
+        aStream->ReadSegments(CopySegmentToCache, &closure, count, &read);
+    if (NS_FAILED(rv)) return rv;
     NS_ASSERTION(read > 0, "Read 0 bytes while data was available?");
     count -= read;
   }
@@ -506,9 +462,7 @@ ChannelMediaResource::OnDataAvailable(uint32_t aLoadID,
   return NS_OK;
 }
 
-int64_t
-ChannelMediaResource::CalculateStreamLength() const
-{
+int64_t ChannelMediaResource::CalculateStreamLength() const {
   if (!mChannel) {
     return -1;
   }
@@ -548,16 +502,14 @@ ChannelMediaResource::CalculateStreamLength() const
   int64_t rangeEnd = 0;
   int64_t rangeTotal = 0;
   bool gotRangeHeader = NS_SUCCEEDED(
-    ParseContentRangeHeader(hc, rangeStart, rangeEnd, rangeTotal));
+      ParseContentRangeHeader(hc, rangeStart, rangeEnd, rangeTotal));
   if (gotRangeHeader && rangeTotal != -1) {
     contentLength = std::max(contentLength, rangeTotal);
   }
   return contentLength;
 }
 
-nsresult
-ChannelMediaResource::Open(nsIStreamListener** aStreamListener)
-{
+nsresult ChannelMediaResource::Open(nsIStreamListener** aStreamListener) {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   MOZ_ASSERT(aStreamListener);
   MOZ_ASSERT(mChannel);
@@ -578,9 +530,7 @@ ChannelMediaResource::Open(nsIStreamListener** aStreamListener)
   return NS_OK;
 }
 
-nsresult
-ChannelMediaResource::OpenChannel(int64_t aOffset)
-{
+nsresult ChannelMediaResource::OpenChannel(int64_t aOffset) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!mClosed);
   MOZ_ASSERT(mChannel);
@@ -606,9 +556,7 @@ ChannelMediaResource::OpenChannel(int64_t aOffset)
   return NS_OK;
 }
 
-nsresult
-ChannelMediaResource::SetupChannelHeaders(int64_t aOffset)
-{
+nsresult ChannelMediaResource::SetupChannelHeaders(int64_t aOffset) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
@@ -622,7 +570,8 @@ ChannelMediaResource::SetupChannelHeaders(int64_t aOffset)
     nsAutoCString rangeString("bytes=");
     rangeString.AppendInt(aOffset);
     rangeString.Append('-');
-    nsresult rv = hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, false);
+    nsresult rv =
+        hc->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Send Accept header for video and audio types only (Bug 489071)
@@ -638,8 +587,7 @@ ChannelMediaResource::SetupChannelHeaders(int64_t aOffset)
   return NS_OK;
 }
 
-nsresult ChannelMediaResource::Close()
-{
+nsresult ChannelMediaResource::Close() {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   if (!mClosed) {
@@ -650,26 +598,22 @@ nsresult ChannelMediaResource::Close()
   return NS_OK;
 }
 
-already_AddRefed<nsIPrincipal>
-ChannelMediaResource::GetCurrentPrincipal()
-{
+already_AddRefed<nsIPrincipal> ChannelMediaResource::GetCurrentPrincipal() {
   MOZ_ASSERT(NS_IsMainThread());
   return do_AddRef(mSharedInfo->mPrincipal);
 }
 
-bool ChannelMediaResource::CanClone()
-{
+bool ChannelMediaResource::CanClone() {
   return !mClosed && mCacheStream.IsAvailableForSharing();
 }
 
-already_AddRefed<BaseMediaResource>
-ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
-{
+already_AddRefed<BaseMediaResource> ChannelMediaResource::CloneData(
+    MediaResourceCallback* aCallback) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(CanClone(), "Stream can't be cloned");
 
   RefPtr<ChannelMediaResource> resource =
-    new ChannelMediaResource(aCallback, nullptr, mURI);
+      new ChannelMediaResource(aCallback, nullptr, mURI);
 
   resource->mIsLiveStream = mIsLiveStream;
   resource->mIsTransportSeekable = mIsTransportSeekable;
@@ -686,8 +630,7 @@ ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
   return resource.forget();
 }
 
-void ChannelMediaResource::CloseChannel()
-{
+void ChannelMediaResource::CloseChannel() {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   if (mChannel) {
@@ -709,36 +652,26 @@ void ChannelMediaResource::CloseChannel()
   }
 }
 
-nsresult ChannelMediaResource::ReadFromCache(char* aBuffer,
-                                             int64_t aOffset,
-                                             uint32_t aCount)
-{
+nsresult ChannelMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset,
+                                             uint32_t aCount) {
   return mCacheStream.ReadFromCache(aBuffer, aOffset, aCount);
 }
 
-nsresult ChannelMediaResource::ReadAt(int64_t aOffset,
-                                      char* aBuffer,
-                                      uint32_t aCount,
-                                      uint32_t* aBytes)
-{
+nsresult ChannelMediaResource::ReadAt(int64_t aOffset, char* aBuffer,
+                                      uint32_t aCount, uint32_t* aBytes) {
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
   return mCacheStream.ReadAt(aOffset, aBuffer, aCount, aBytes);
 }
 
-void
-ChannelMediaResource::ThrottleReadahead(bool bThrottle)
-{
+void ChannelMediaResource::ThrottleReadahead(bool bThrottle) {
   mCacheStream.ThrottleReadahead(bThrottle);
 }
 
-nsresult ChannelMediaResource::GetCachedRanges(MediaByteRangeSet& aRanges)
-{
+nsresult ChannelMediaResource::GetCachedRanges(MediaByteRangeSet& aRanges) {
   return mCacheStream.GetCachedRanges(aRanges);
 }
 
-void
-ChannelMediaResource::Suspend(bool aCloseImmediately)
-{
+void ChannelMediaResource::Suspend(bool aCloseImmediately) {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
 
   if (mClosed) {
@@ -760,9 +693,7 @@ ChannelMediaResource::Suspend(bool aCloseImmediately)
   }
 }
 
-void
-ChannelMediaResource::Resume()
-{
+void ChannelMediaResource::Resume() {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
 
   if (mClosed) {
@@ -785,15 +716,12 @@ ChannelMediaResource::Resume()
   }
 }
 
-nsresult
-ChannelMediaResource::RecreateChannel()
-{
+nsresult ChannelMediaResource::RecreateChannel() {
   MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
-  nsLoadFlags loadFlags =
-    nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY |
-    nsIChannel::LOAD_CLASSIFY_URI |
-    (mLoadInBackground ? nsIRequest::LOAD_BACKGROUND : 0);
+  nsLoadFlags loadFlags = nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY |
+                          nsIChannel::LOAD_CLASSIFY_URI |
+                          (mLoadInBackground ? nsIRequest::LOAD_BACKGROUND : 0);
 
   MediaDecoderOwner* owner = mCallback->GetMediaOwner();
   MOZ_DIAGNOSTIC_ASSERT(owner);
@@ -803,13 +731,16 @@ ChannelMediaResource::RecreateChannel()
   nsCOMPtr<nsILoadGroup> loadGroup = element->GetDocumentLoadGroup();
   NS_ENSURE_TRUE(loadGroup, NS_ERROR_NULL_POINTER);
 
-  nsSecurityFlags securityFlags = element->ShouldCheckAllowOrigin()
-                                  ? nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS
-                                  : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
+  nsSecurityFlags securityFlags =
+      element->ShouldCheckAllowOrigin()
+          ? nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS
+          : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
 
   MOZ_ASSERT(element->IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video));
-  nsContentPolicyType contentPolicyType = element->IsHTMLElement(nsGkAtoms::audio) ?
-    nsIContentPolicy::TYPE_INTERNAL_AUDIO : nsIContentPolicy::TYPE_INTERNAL_VIDEO;
+  nsContentPolicyType contentPolicyType =
+      element->IsHTMLElement(nsGkAtoms::audio)
+          ? nsIContentPolicy::TYPE_INTERNAL_AUDIO
+          : nsIContentPolicy::TYPE_INTERNAL_VIDEO;
 
   // If element has 'triggeringprincipal' attribute, we will use the value as
   // triggeringPrincipal for the channel, otherwise it will default to use
@@ -818,28 +749,25 @@ ChannelMediaResource::RecreateChannel()
   // setAttrs is true we will override the origin attributes on the channel
   // later.
   nsCOMPtr<nsIPrincipal> triggeringPrincipal;
-  bool setAttrs =
-    nsContentUtils::QueryTriggeringPrincipal(element,
-                                             getter_AddRefs(triggeringPrincipal));
+  bool setAttrs = nsContentUtils::QueryTriggeringPrincipal(
+      element, getter_AddRefs(triggeringPrincipal));
 
-  nsresult rv = NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(mChannel),
-                                                     mURI,
-                                                     element,
-                                                     triggeringPrincipal,
-                                                     securityFlags,
-                                                     contentPolicyType,
-                                                     nullptr, // aPerformanceStorage
-                                                     loadGroup,
-                                                     nullptr,  // aCallbacks
-                                                     loadFlags);
+  nsresult rv = NS_NewChannelWithTriggeringPrincipal(
+      getter_AddRefs(mChannel), mURI, element, triggeringPrincipal,
+      securityFlags, contentPolicyType,
+      nullptr,  // aPerformanceStorage
+      loadGroup,
+      nullptr,  // aCallbacks
+      loadFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (setAttrs) {
     nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
     if (loadInfo) {
       // The function simply returns NS_OK, so we ignore the return value.
-      Unused << loadInfo->SetOriginAttributes(triggeringPrincipal->OriginAttributesRef());
-   }
+      Unused << loadInfo->SetOriginAttributes(
+          triggeringPrincipal->OriginAttributesRef());
+    }
   }
 
   nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(mChannel));
@@ -852,39 +780,30 @@ ChannelMediaResource::RecreateChannel()
   return rv;
 }
 
-void
-ChannelMediaResource::CacheClientNotifyDataReceived()
-{
-  mCallback->AbstractMainThread()->Dispatch(
-    NewRunnableMethod("MediaResourceCallback::NotifyDataArrived",
-                      mCallback.get(),
-                      &MediaResourceCallback::NotifyDataArrived));
+void ChannelMediaResource::CacheClientNotifyDataReceived() {
+  mCallback->AbstractMainThread()->Dispatch(NewRunnableMethod(
+      "MediaResourceCallback::NotifyDataArrived", mCallback.get(),
+      &MediaResourceCallback::NotifyDataArrived));
 }
 
-void
-ChannelMediaResource::CacheClientNotifyDataEnded(nsresult aStatus)
-{
+void ChannelMediaResource::CacheClientNotifyDataEnded(nsresult aStatus) {
   mCallback->AbstractMainThread()->Dispatch(NS_NewRunnableFunction(
-    "ChannelMediaResource::CacheClientNotifyDataEnded",
-    [ self = RefPtr<ChannelMediaResource>(this), aStatus ]() {
-      if (NS_SUCCEEDED(aStatus)) {
-        self->mIsLiveStream = false;
-      }
-      self->mCallback->NotifyDataEnded(aStatus);
-    }));
+      "ChannelMediaResource::CacheClientNotifyDataEnded",
+      [self = RefPtr<ChannelMediaResource>(this), aStatus]() {
+        if (NS_SUCCEEDED(aStatus)) {
+          self->mIsLiveStream = false;
+        }
+        self->mCallback->NotifyDataEnded(aStatus);
+      }));
 }
 
-void
-ChannelMediaResource::CacheClientNotifyPrincipalChanged()
-{
+void ChannelMediaResource::CacheClientNotifyPrincipalChanged() {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
 
   mCallback->NotifyPrincipalChanged();
 }
 
-void
-ChannelMediaResource::UpdatePrincipal()
-{
+void ChannelMediaResource::UpdatePrincipal() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mChannel);
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
@@ -901,19 +820,14 @@ ChannelMediaResource::UpdatePrincipal()
   }
 }
 
-void
-ChannelMediaResource::CacheClientNotifySuspendedStatusChanged(bool aSuspended)
-{
+void ChannelMediaResource::CacheClientNotifySuspendedStatusChanged(
+    bool aSuspended) {
   mCallback->AbstractMainThread()->Dispatch(NewRunnableMethod<bool>(
-    "MediaResourceCallback::NotifySuspendedStatusChanged",
-    mCallback.get(),
-    &MediaResourceCallback::NotifySuspendedStatusChanged,
-    aSuspended));
+      "MediaResourceCallback::NotifySuspendedStatusChanged", mCallback.get(),
+      &MediaResourceCallback::NotifySuspendedStatusChanged, aSuspended));
 }
 
-nsresult
-ChannelMediaResource::Seek(int64_t aOffset, bool aResume)
-{
+nsresult ChannelMediaResource::Seek(int64_t aOffset, bool aResume) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mClosed) {
@@ -941,112 +855,72 @@ ChannelMediaResource::Seek(int64_t aOffset, bool aResume)
   return OpenChannel(aOffset);
 }
 
-void
-ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
-{
+void ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume) {
   RefPtr<ChannelMediaResource> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-    "ChannelMediaResource::Seek", [self, aOffset, aResume]() {
-      nsresult rv = self->Seek(aOffset, aResume);
-      if (NS_FAILED(rv)) {
-        // Close the streams that failed due to error. This will cause all
-        // client Read and Seek operations on those streams to fail. Blocked
-        // Reads will also be woken up.
-        self->Close();
-      }
-    });
+      "ChannelMediaResource::Seek", [self, aOffset, aResume]() {
+        nsresult rv = self->Seek(aOffset, aResume);
+        if (NS_FAILED(rv)) {
+          // Close the streams that failed due to error. This will cause all
+          // client Read and Seek operations on those streams to fail. Blocked
+          // Reads will also be woken up.
+          self->Close();
+        }
+      });
   mCallback->AbstractMainThread()->Dispatch(r.forget());
 }
 
-void
-ChannelMediaResource::CacheClientSuspend()
-{
+void ChannelMediaResource::CacheClientSuspend() {
   mCallback->AbstractMainThread()->Dispatch(
-    NewRunnableMethod<bool>("ChannelMediaResource::Suspend",
-                            this,
-                            &ChannelMediaResource::Suspend,
-                            false));
+      NewRunnableMethod<bool>("ChannelMediaResource::Suspend", this,
+                              &ChannelMediaResource::Suspend, false));
 }
 
-void
-ChannelMediaResource::CacheClientResume()
-{
+void ChannelMediaResource::CacheClientResume() {
   mCallback->AbstractMainThread()->Dispatch(NewRunnableMethod(
-    "ChannelMediaResource::Resume", this, &ChannelMediaResource::Resume));
+      "ChannelMediaResource::Resume", this, &ChannelMediaResource::Resume));
 }
 
-int64_t
-ChannelMediaResource::GetNextCachedData(int64_t aOffset)
-{
+int64_t ChannelMediaResource::GetNextCachedData(int64_t aOffset) {
   return mCacheStream.GetNextCachedData(aOffset);
 }
 
-int64_t
-ChannelMediaResource::GetCachedDataEnd(int64_t aOffset)
-{
+int64_t ChannelMediaResource::GetCachedDataEnd(int64_t aOffset) {
   return mCacheStream.GetCachedDataEnd(aOffset);
 }
 
-bool
-ChannelMediaResource::IsDataCachedToEndOfResource(int64_t aOffset)
-{
+bool ChannelMediaResource::IsDataCachedToEndOfResource(int64_t aOffset) {
   return mCacheStream.IsDataCachedToEndOfStream(aOffset);
 }
 
-bool
-ChannelMediaResource::IsSuspended()
-{
-  return mSuspendAgent.IsSuspended();
-}
+bool ChannelMediaResource::IsSuspended() { return mSuspendAgent.IsSuspended(); }
 
-void
-ChannelMediaResource::SetReadMode(MediaCacheStream::ReadMode aMode)
-{
+void ChannelMediaResource::SetReadMode(MediaCacheStream::ReadMode aMode) {
   mCacheStream.SetReadMode(aMode);
 }
 
-void
-ChannelMediaResource::SetPlaybackRate(uint32_t aBytesPerSecond)
-{
+void ChannelMediaResource::SetPlaybackRate(uint32_t aBytesPerSecond) {
   mCacheStream.SetPlaybackRate(aBytesPerSecond);
 }
 
-void
-ChannelMediaResource::Pin()
-{
-  mCacheStream.Pin();
-}
+void ChannelMediaResource::Pin() { mCacheStream.Pin(); }
 
-void
-ChannelMediaResource::Unpin()
-{
-  mCacheStream.Unpin();
-}
+void ChannelMediaResource::Unpin() { mCacheStream.Unpin(); }
 
-double
-ChannelMediaResource::GetDownloadRate(bool* aIsReliable)
-{
+double ChannelMediaResource::GetDownloadRate(bool* aIsReliable) {
   return mCacheStream.GetDownloadRate(aIsReliable);
 }
 
-int64_t
-ChannelMediaResource::GetLength()
-{
-  return mCacheStream.GetLength();
-}
+int64_t ChannelMediaResource::GetLength() { return mCacheStream.GetLength(); }
 
-nsCString
-ChannelMediaResource::GetDebugInfo()
-{
+nsCString ChannelMediaResource::GetDebugInfo() {
   return NS_LITERAL_CSTRING("ChannelMediaResource: ") +
          mCacheStream.GetDebugInfo();
 }
 
 // ChannelSuspendAgent
 
-bool
-ChannelSuspendAgent::Suspend()
-{
+bool ChannelSuspendAgent::Suspend() {
   MOZ_ASSERT(NS_IsMainThread());
   SuspendInternal();
   if (++mSuspendCount == 1) {
@@ -1056,9 +930,7 @@ ChannelSuspendAgent::Suspend()
   return false;
 }
 
-void
-ChannelSuspendAgent::SuspendInternal()
-{
+void ChannelSuspendAgent::SuspendInternal() {
   MOZ_ASSERT(NS_IsMainThread());
   if (mChannel) {
     bool isPending = false;
@@ -1070,9 +942,7 @@ ChannelSuspendAgent::SuspendInternal()
   }
 }
 
-bool
-ChannelSuspendAgent::Resume()
-{
+bool ChannelSuspendAgent::Resume() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsSuspended(), "Resume without suspend!");
 
@@ -1087,9 +957,7 @@ ChannelSuspendAgent::Resume()
   return false;
 }
 
-void
-ChannelSuspendAgent::Delegate(nsIChannel* aChannel)
-{
+void ChannelSuspendAgent::Delegate(nsIChannel* aChannel) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aChannel);
   MOZ_ASSERT(!mChannel, "The previous channel not closed.");
@@ -1102,9 +970,7 @@ ChannelSuspendAgent::Delegate(nsIChannel* aChannel)
   }
 }
 
-void
-ChannelSuspendAgent::Revoke()
-{
+void ChannelSuspendAgent::Revoke() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mChannel) {
@@ -1112,8 +978,9 @@ ChannelSuspendAgent::Revoke()
     return;
   }
 
-  // Before closing the channel, it needs to be resumed to make sure its internal
-  // state is correct. Besides, We need to suspend the channel after recreating.
+  // Before closing the channel, it needs to be resumed to make sure its
+  // internal state is correct. Besides, We need to suspend the channel after
+  // recreating.
   if (mIsChannelSuspended) {
     mChannel->Resume();
     mIsChannelSuspended = false;
@@ -1121,11 +988,9 @@ ChannelSuspendAgent::Revoke()
   mChannel = nullptr;
 }
 
-bool
-ChannelSuspendAgent::IsSuspended()
-{
+bool ChannelSuspendAgent::IsSuspended() {
   MOZ_ASSERT(NS_IsMainThread());
   return (mSuspendCount > 0);
 }
 
-} // mozilla namespace
+}  // namespace mozilla

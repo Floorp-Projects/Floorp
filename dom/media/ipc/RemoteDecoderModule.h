@@ -13,9 +13,8 @@ namespace mozilla {
 // MediaDataDecoder) that proxies to a RemoteVideoDecoderChild.
 // A decoder child will talk to its respective decoder parent
 // (RemoteVideoDecoderParent) on the RDD process.
-class RemoteDecoderModule : public PlatformDecoderModule
-{
-public:
+class RemoteDecoderModule : public PlatformDecoderModule {
+ public:
   RemoteDecoderModule() = default;
 
   nsresult Startup() override;
@@ -24,15 +23,14 @@ public:
                         DecoderDoctorDiagnostics* aDiagnostics) const override;
 
   already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
-    const CreateDecoderParams& aParams) override;
+      const CreateDecoderParams& aParams) override;
 
   already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
-    const CreateDecoderParams& aParams) override
-  {
+      const CreateDecoderParams& aParams) override {
     return nullptr;
   }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // include_dom_media_ipc_RemoteDecoderModule_h
+#endif  // include_dom_media_ipc_RemoteDecoderModule_h

@@ -6,9 +6,8 @@
 #ifndef GMPCallbackBase_h_
 #define GMPCallbackBase_h_
 
-class GMPCallbackBase
-{
-public:
+class GMPCallbackBase {
+ public:
   virtual ~GMPCallbackBase() {}
 
   // The GMP code will call this if the codec crashes or shuts down.  It's

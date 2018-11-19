@@ -10,32 +10,25 @@
 namespace mozilla {
 namespace dom {
 
-JSObject*
-AudioTrackList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* AudioTrackList::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
   return AudioTrackList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-AudioTrack*
-AudioTrackList::operator[](uint32_t aIndex)
-{
+AudioTrack* AudioTrackList::operator[](uint32_t aIndex) {
   MediaTrack* track = MediaTrackList::operator[](aIndex);
   return track->AsAudioTrack();
 }
 
-AudioTrack*
-AudioTrackList::IndexedGetter(uint32_t aIndex, bool& aFound)
-{
+AudioTrack* AudioTrackList::IndexedGetter(uint32_t aIndex, bool& aFound) {
   MediaTrack* track = MediaTrackList::IndexedGetter(aIndex, aFound);
   return track ? track->AsAudioTrack() : nullptr;
 }
 
-AudioTrack*
-AudioTrackList::GetTrackById(const nsAString& aId)
-{
+AudioTrack* AudioTrackList::GetTrackById(const nsAString& aId) {
   MediaTrack* track = MediaTrackList::GetTrackById(aId);
   return track ? track->AsAudioTrack() : nullptr;
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

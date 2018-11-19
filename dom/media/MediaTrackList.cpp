@@ -19,34 +19,23 @@ namespace dom {
 
 MediaTrackList::MediaTrackList(nsIGlobalObject* aOwnerObject,
                                HTMLMediaElement* aMediaElement)
-  : DOMEventTargetHelper(aOwnerObject)
-  , mMediaElement(aMediaElement)
-{
-}
+    : DOMEventTargetHelper(aOwnerObject), mMediaElement(aMediaElement) {}
 
-MediaTrackList::~MediaTrackList()
-{
-}
+MediaTrackList::~MediaTrackList() {}
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaTrackList,
-                                   DOMEventTargetHelper,
-                                   mTracks,
-                                   mMediaElement)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaTrackList, DOMEventTargetHelper,
+                                   mTracks, mMediaElement)
 
 NS_IMPL_ADDREF_INHERITED(MediaTrackList, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MediaTrackList, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaTrackList)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-MediaTrack*
-MediaTrackList::operator[](uint32_t aIndex)
-{
+MediaTrack* MediaTrackList::operator[](uint32_t aIndex) {
   return mTracks.ElementAt(aIndex);
 }
 
-MediaTrack*
-MediaTrackList::IndexedGetter(uint32_t aIndex, bool& aFound)
-{
+MediaTrack* MediaTrackList::IndexedGetter(uint32_t aIndex, bool& aFound) {
   aFound = aIndex < mTracks.Length();
   if (!aFound) {
     return nullptr;
@@ -54,9 +43,7 @@ MediaTrackList::IndexedGetter(uint32_t aIndex, bool& aFound)
   return mTracks[aIndex];
 }
 
-MediaTrack*
-MediaTrackList::GetTrackById(const nsAString& aId)
-{
+MediaTrack* MediaTrackList::GetTrackById(const nsAString& aId) {
   for (uint32_t i = 0; i < mTracks.Length(); ++i) {
     if (aId.Equals(mTracks[i]->GetId())) {
       return mTracks[i];
@@ -65,9 +52,7 @@ MediaTrackList::GetTrackById(const nsAString& aId)
   return nullptr;
 }
 
-void
-MediaTrackList::AddTrack(MediaTrack* aTrack)
-{
+void MediaTrackList::AddTrack(MediaTrack* aTrack) {
   MOZ_ASSERT(aTrack->GetOwnerGlobal() == GetOwnerGlobal(),
              "Where is this track from?");
   mTracks.AppendElement(aTrack);
@@ -85,54 +70,38 @@ MediaTrackList::AddTrack(MediaTrack* aTrack)
   }
 }
 
-void
-MediaTrackList::RemoveTrack(const RefPtr<MediaTrack>& aTrack)
-{
+void MediaTrackList::RemoveTrack(const RefPtr<MediaTrack>& aTrack) {
   mTracks.RemoveElement(aTrack);
   aTrack->SetEnabledInternal(false, MediaTrack::FIRE_NO_EVENTS);
   aTrack->SetTrackList(nullptr);
   CreateAndDispatchTrackEventRunner(aTrack, NS_LITERAL_STRING("removetrack"));
 }
 
-void
-MediaTrackList::RemoveTracks()
-{
+void MediaTrackList::RemoveTracks() {
   while (!mTracks.IsEmpty()) {
     RefPtr<MediaTrack> track = mTracks.LastElement();
     RemoveTrack(track);
   }
 }
 
-already_AddRefed<AudioTrack>
-MediaTrackList::CreateAudioTrack(nsIGlobalObject* aOwnerGlobal,
-                                 const nsAString& aId,
-                                 const nsAString& aKind,
-                                 const nsAString& aLabel,
-                                 const nsAString& aLanguage,
-                                 bool aEnabled)
-{
-  RefPtr<AudioTrack> track = new AudioTrack(aOwnerGlobal,
-                                            aId, aKind, aLabel, aLanguage,
-                                            aEnabled);
+already_AddRefed<AudioTrack> MediaTrackList::CreateAudioTrack(
+    nsIGlobalObject* aOwnerGlobal, const nsAString& aId, const nsAString& aKind,
+    const nsAString& aLabel, const nsAString& aLanguage, bool aEnabled) {
+  RefPtr<AudioTrack> track =
+      new AudioTrack(aOwnerGlobal, aId, aKind, aLabel, aLanguage, aEnabled);
   return track.forget();
 }
 
-already_AddRefed<VideoTrack>
-MediaTrackList::CreateVideoTrack(nsIGlobalObject* aOwnerGlobal,
-                                 const nsAString& aId,
-                                 const nsAString& aKind,
-                                 const nsAString& aLabel,
-                                 const nsAString& aLanguage,
-                                 VideoStreamTrack* aVideoTrack)
-{
-  RefPtr<VideoTrack> track = new VideoTrack(aOwnerGlobal, aId, aKind, aLabel,
-                                            aLanguage, aVideoTrack);
+already_AddRefed<VideoTrack> MediaTrackList::CreateVideoTrack(
+    nsIGlobalObject* aOwnerGlobal, const nsAString& aId, const nsAString& aKind,
+    const nsAString& aLabel, const nsAString& aLanguage,
+    VideoStreamTrack* aVideoTrack) {
+  RefPtr<VideoTrack> track =
+      new VideoTrack(aOwnerGlobal, aId, aKind, aLabel, aLanguage, aVideoTrack);
   return track.forget();
 }
 
-void
-MediaTrackList::EmptyTracks()
-{
+void MediaTrackList::EmptyTracks() {
   for (uint32_t i = 0; i < mTracks.Length(); ++i) {
     mTracks[i]->SetEnabledInternal(false, MediaTrack::FIRE_NO_EVENTS);
     mTracks[i]->SetTrackList(nullptr);
@@ -140,20 +109,14 @@ MediaTrackList::EmptyTracks()
   mTracks.Clear();
 }
 
-void
-MediaTrackList::CreateAndDispatchChangeEvent()
-{
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(this,
-                             NS_LITERAL_STRING("change"),
-                             CanBubble::eNo);
+void MediaTrackList::CreateAndDispatchChangeEvent() {
+  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
+      this, NS_LITERAL_STRING("change"), CanBubble::eNo);
   asyncDispatcher->PostDOMEvent();
 }
 
-void
-MediaTrackList::CreateAndDispatchTrackEventRunner(MediaTrack* aTrack,
-                                                  const nsAString& aEventName)
-{
+void MediaTrackList::CreateAndDispatchTrackEventRunner(
+    MediaTrack* aTrack, const nsAString& aEventName) {
   TrackEventInit eventInit;
 
   if (aTrack->AsAudioTrack()) {
@@ -163,12 +126,12 @@ MediaTrackList::CreateAndDispatchTrackEventRunner(MediaTrack* aTrack,
   }
 
   RefPtr<TrackEvent> event =
-    TrackEvent::Constructor(this, aEventName, eventInit);
+      TrackEvent::Constructor(this, aEventName, eventInit);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(this, event);
+      new AsyncEventDispatcher(this, event);
   asyncDispatcher->PostDOMEvent();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

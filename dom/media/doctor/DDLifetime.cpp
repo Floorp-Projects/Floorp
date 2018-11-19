@@ -8,9 +8,7 @@
 
 namespace mozilla {
 
-void
-DDLifetime::AppendPrintf(nsCString& aString) const
-{
+void DDLifetime::AppendPrintf(nsCString& aString) const {
   if (!mDerivedObject.Pointer()) {
     mObject.AppendPrintf(aString);
     aString.AppendPrintf("#%" PRIi32, mTag);
@@ -26,12 +24,10 @@ DDLifetime::AppendPrintf(nsCString& aString) const
   }
 }
 
-nsCString
-DDLifetime::Printf() const
-{
+nsCString DDLifetime::Printf() const {
   nsCString s;
   AppendPrintf(s);
   return s;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -27,15 +27,10 @@ extern LogModule* GetGMPLog();
 namespace gmp {
 
 GMPTimerParent::GMPTimerParent(nsISerialEventTarget* aGMPEventTarget)
-  : mGMPEventTarget(aGMPEventTarget)
-  , mIsOpen(true)
-{
-}
+    : mGMPEventTarget(aGMPEventTarget), mIsOpen(true) {}
 
-mozilla::ipc::IPCResult
-GMPTimerParent::RecvSetTimer(const uint32_t& aTimerId,
-                             const uint32_t& aTimeoutMs)
-{
+mozilla::ipc::IPCResult GMPTimerParent::RecvSetTimer(
+    const uint32_t& aTimerId, const uint32_t& aTimeoutMs) {
   LOGD(("%s::%s: %p mIsOpen=%d", __CLASS__, __FUNCTION__, this, mIsOpen));
 
   MOZ_ASSERT(mGMPEventTarget->IsOnCurrentThread());
@@ -47,13 +42,10 @@ GMPTimerParent::RecvSetTimer(const uint32_t& aTimerId,
   nsresult rv;
   nsAutoPtr<Context> ctx(new Context());
 
-  rv = NS_NewTimerWithFuncCallback(getter_AddRefs(ctx->mTimer),
-                                   &GMPTimerParent::GMPTimerExpired,
-                                   ctx,
-                                   aTimeoutMs,
-                                   nsITimer::TYPE_ONE_SHOT,
-                                   "gmp::GMPTimerParent::RecvSetTimer",
-                                   mGMPEventTarget);
+  rv = NS_NewTimerWithFuncCallback(
+      getter_AddRefs(ctx->mTimer), &GMPTimerParent::GMPTimerExpired, ctx,
+      aTimeoutMs, nsITimer::TYPE_ONE_SHOT, "gmp::GMPTimerParent::RecvSetTimer",
+      mGMPEventTarget);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   ctx->mId = aTimerId;
@@ -64,9 +56,7 @@ GMPTimerParent::RecvSetTimer(const uint32_t& aTimerId,
   return IPC_OK();
 }
 
-void
-GMPTimerParent::Shutdown()
-{
+void GMPTimerParent::Shutdown() {
   LOGD(("%s::%s: %p mIsOpen=%d", __CLASS__, __FUNCTION__, this, mIsOpen));
 
   MOZ_ASSERT(mGMPEventTarget->IsOnCurrentThread());
@@ -81,18 +71,14 @@ GMPTimerParent::Shutdown()
   mIsOpen = false;
 }
 
-void
-GMPTimerParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void GMPTimerParent::ActorDestroy(ActorDestroyReason aWhy) {
   LOGD(("%s::%s: %p mIsOpen=%d", __CLASS__, __FUNCTION__, this, mIsOpen));
 
   Shutdown();
 }
 
 /* static */
-void
-GMPTimerParent::GMPTimerExpired(nsITimer *aTimer, void *aClosure)
-{
+void GMPTimerParent::GMPTimerExpired(nsITimer* aTimer, void* aClosure) {
   MOZ_ASSERT(aClosure);
   nsAutoPtr<Context> ctx(static_cast<Context*>(aClosure));
   MOZ_ASSERT(ctx->mParent);
@@ -101,9 +87,7 @@ GMPTimerParent::GMPTimerExpired(nsITimer *aTimer, void *aClosure)
   }
 }
 
-void
-GMPTimerParent::TimerExpired(Context* aContext)
-{
+void GMPTimerParent::TimerExpired(Context* aContext) {
   LOGD(("%s::%s: %p mIsOpen=%d", __CLASS__, __FUNCTION__, this, mIsOpen));
   MOZ_ASSERT(mGMPEventTarget->IsOnCurrentThread());
 
@@ -118,5 +102,5 @@ GMPTimerParent::TimerExpired(Context* aContext)
   }
 }
 
-} // namespace gmp
-} // namespace mozilla
+}  // namespace gmp
+}  // namespace mozilla

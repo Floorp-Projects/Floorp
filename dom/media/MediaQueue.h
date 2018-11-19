@@ -18,24 +18,20 @@ namespace mozilla {
 // Thread and type safe wrapper around nsDeque.
 template <class T>
 class MediaQueueDeallocator : public nsDequeFunctor {
-  virtual void operator()(void* aObject) override
-  {
+  virtual void operator()(void* aObject) override {
     RefPtr<T> releaseMe = dont_AddRef(static_cast<T*>(aObject));
   }
 };
 
 template <class T>
 class MediaQueue : private nsDeque {
-public:
+ public:
   MediaQueue()
-    : nsDeque(new MediaQueueDeallocator<T>()),
-      mRecursiveMutex("mediaqueue"),
-      mEndOfStream(false)
-  {}
+      : nsDeque(new MediaQueueDeallocator<T>()),
+        mRecursiveMutex("mediaqueue"),
+        mEndOfStream(false) {}
 
-  ~MediaQueue() {
-    Reset();
-  }
+  ~MediaQueue() { Reset(); }
 
   inline size_t GetSize() const {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
@@ -127,13 +123,11 @@ public:
   // Elements whose start time is before aTime are ignored.
   void GetElementsAfter(int64_t aTime, nsTArray<RefPtr<T>>* aResult) {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    if (GetSize() == 0)
-      return;
+    if (GetSize() == 0) return;
     size_t i;
     for (i = GetSize() - 1; i > 0; --i) {
       T* v = static_cast<T*>(ObjectAt(i));
-      if (v->GetEndTime().ToMicroseconds() < aTime)
-        break;
+      if (v->GetEndTime().ToMicroseconds() < aTime) break;
     }
     // Elements less than i have a end time before aTime. It's also possible
     // that the element at i has a end time before aTime, but that's OK.
@@ -165,19 +159,13 @@ public:
     return frames;
   }
 
-  MediaEventSource<RefPtr<T>>& PopFrontEvent() {
-    return mPopFrontEvent;
-  }
+  MediaEventSource<RefPtr<T>>& PopFrontEvent() { return mPopFrontEvent; }
 
-  MediaEventSource<RefPtr<T>>& PushEvent() {
-    return mPushEvent;
-  }
+  MediaEventSource<RefPtr<T>>& PushEvent() { return mPushEvent; }
 
-  MediaEventSource<void>& FinishEvent() {
-    return mFinishEvent;
-  }
+  MediaEventSource<void>& FinishEvent() { return mFinishEvent; }
 
-private:
+ private:
   mutable RecursiveMutex mRecursiveMutex;
   MediaEventProducer<RefPtr<T>> mPopFrontEvent;
   MediaEventProducer<RefPtr<T>> mPushEvent;
@@ -187,6 +175,6 @@ private:
   bool mEndOfStream;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

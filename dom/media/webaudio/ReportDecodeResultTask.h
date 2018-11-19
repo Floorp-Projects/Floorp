@@ -12,19 +12,14 @@
 
 namespace mozilla {
 
-class ReportDecodeResultTask final : public Runnable
-{
-public:
-  ReportDecodeResultTask(DecodeJob& aDecodeJob,
-                         DecodeJob::ResultFn aFunction)
-    : mDecodeJob(aDecodeJob)
-    , mFunction(aFunction)
-  {
+class ReportDecodeResultTask final : public Runnable {
+ public:
+  ReportDecodeResultTask(DecodeJob& aDecodeJob, DecodeJob::ResultFn aFunction)
+      : mDecodeJob(aDecodeJob), mFunction(aFunction) {
     MOZ_ASSERT(aFunction);
   }
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
 
     (mDecodeJob.*mFunction)();
@@ -32,12 +27,11 @@ public:
     return NS_OK;
   }
 
-private:
+ private:
   DecodeJob& mDecodeJob;
   DecodeJob::ResultFn mFunction;
 };
 
-}
+}  // namespace mozilla
 
 #endif
-
