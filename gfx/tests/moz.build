@@ -7,3 +7,4 @@
 MOCHITEST_MANIFESTS += ['mochitest/mochitest.ini']
 BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
+MARIONETTE_GPU_MANIFESTS += ['marionette/manifest.ini']
