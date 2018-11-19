@@ -272,7 +272,7 @@ WebConsole.prototype = {
 
     this._parserService.start(
       "resource://devtools/client/debugger/new/dist/parser-worker.js",
-      this.browserWindow);
+      this.chromeUtilsWindow);
     return this._parserService;
   },
 
