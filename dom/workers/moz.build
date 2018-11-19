@@ -7,7 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Workers")
 
-DIRS += ['sharedworkers']
+DIRS += ['remoteworkers', 'sharedworkers']
 
 # Public stuff.
 EXPORTS.mozilla.dom += [

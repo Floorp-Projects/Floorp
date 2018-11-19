@@ -109,6 +109,7 @@
 #include "mozilla/dom/ipc/IPCBlobInputStreamStorage.h"
 #include "mozilla/dom/U2FTokenManager.h"
 #include "mozilla/dom/PointerEventHandler.h"
+#include "mozilla/dom/RemoteWorkerService.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "nsThreadManager.h"
 #include "mozilla/css/ImageLoader.h"
@@ -274,9 +275,10 @@ nsLayoutStatics::Initialize()
   mozilla::dom::U2FTokenManager::Initialize();
 
   if (XRE_IsParentProcess()) {
-    // On content process we initialize DOMPrefs when PContentChild is fully
-    // initialized.
+    // On content process we initialize these components when PContentChild is
+    // fully initialized.
     mozilla::dom::DOMPrefs::Initialize();
+    mozilla::dom::RemoteWorkerService::Initialize();
   }
 
   nsThreadManager::InitializeShutdownObserver();

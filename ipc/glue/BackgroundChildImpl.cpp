@@ -27,6 +27,8 @@
 #include "mozilla/dom/ipc/PendingIPCBlobChild.h"
 #include "mozilla/dom/ipc/TemporaryIPCBlobChild.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
+#include "mozilla/dom/RemoteWorkerChild.h"
+#include "mozilla/dom/RemoteWorkerServiceChild.h"
 #include "mozilla/dom/SharedWorkerChild.h"
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/GamepadEventChannelChild.h"
@@ -286,6 +288,35 @@ bool
 BackgroundChildImpl::DeallocPPendingIPCBlobChild(PPendingIPCBlobChild* aActor)
 {
   delete aActor;
+  return true;
+}
+
+dom::PRemoteWorkerChild*
+BackgroundChildImpl::AllocPRemoteWorkerChild(const RemoteWorkerData& aData)
+{
+  return new dom::RemoteWorkerChild();
+}
+
+bool
+BackgroundChildImpl::DeallocPRemoteWorkerChild(dom::PRemoteWorkerChild* aActor)
+{
+  delete aActor;
+  return true;
+}
+
+dom::PRemoteWorkerServiceChild*
+BackgroundChildImpl::AllocPRemoteWorkerServiceChild()
+{
+  RefPtr<dom::RemoteWorkerServiceChild> agent =
+    new dom::RemoteWorkerServiceChild();
+  return agent.forget().take();
+}
+
+bool
+BackgroundChildImpl::DeallocPRemoteWorkerServiceChild(dom::PRemoteWorkerServiceChild* aActor)
+{
+  RefPtr<dom::RemoteWorkerServiceChild> actor =
+    dont_AddRef(static_cast<dom::RemoteWorkerServiceChild*>(aActor));
   return true;
 }
 
