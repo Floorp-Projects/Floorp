@@ -48,7 +48,7 @@ exports.captureScreenshot = captureScreenshot;
  * area of the browser window
  */
 function createScreenshotDataURL(document, args) {
-  const window = document.defaultView;
+  let window = document.defaultView;
   let left = 0;
   let top = 0;
   let width;
@@ -65,6 +65,9 @@ function createScreenshotDataURL(document, args) {
     width = window.innerWidth + window.scrollMaxX - window.scrollMinX;
     height = window.innerHeight + window.scrollMaxY - window.scrollMinY;
     filename = filename.replace(".png", "-fullpage.png");
+  } else if (args.rawNode) {
+    window = args.rawNode.ownerDocument.defaultView;
+    ({ top, left, width, height } = getRect(window, args.rawNode, window));
   } else if (args.selector) {
     const node = window.document.querySelector(args.selector);
     ({ top, left, width, height } = getRect(window, node, window));
