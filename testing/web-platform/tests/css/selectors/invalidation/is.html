@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>CSS Selectors Invalidation: :matches()</title>
+    <title>CSS Selectors Invalidation: :is()</title>
     <link rel="author" title="Victoria Su" href="mailto:victoriaytsu@google.com">
     <link rel="help" href="https://drafts.csswg.org/selectors-4/#matches">
-    <meta name="assert" content="This tests that the :matches() selector is effective">
+    <meta name="assert" content="This tests that the :is() selector is effective">
     <script src="/resources/testharness.js"></script>
     <script src="/resources/testharnessreport.js"></script>
     <style>
@@ -12,18 +12,18 @@
         color: yellow;
       }
       /*Simple selector arguments */
-      .a :matches(.b, .c) {
+      .a :is(.b, .c) {
         color: red;
       }
       /*Compound selector arguments */
-      .a :matches(.c#d, .e) {
+      .a :is(.c#d, .e) {
         color: green;
       }
       /* Complex selector arguments */
       .a .g>.b {
         color: black;
       }
-      .a :matches(.e+.f, .g>.b, .h) {
+      .a :is(.e+.f, .g>.b, .h) {
         color: blue;
       }
       .g>.b {
@@ -39,7 +39,7 @@
       .c>.a+.e {
         color: black;
       }
-      .a+:matches(.b+.f, :matches(.c>.e, .g)) {
+      .a+:is(.b+.f, :is(.c>.e, .g)) {
         color: red;
       }
       .c>.e {
@@ -108,32 +108,32 @@
         assert_equals(getComputedStyle(b1).color, red);
         assert_equals(getComputedStyle(b3).color, red);
         assert_equals(getComputedStyle(c1).color, red);
-      }, "Invalidate :matches() for simple selector arguments.");
+      }, "Invalidate :is() for simple selector arguments.");
 
       test(() => {
         a1.className = "a";
         assert_equals(getComputedStyle(d).color, green);
-      }, "Invalidate :matches() for compound selector arguments.");
+      }, "Invalidate :is() for compound selector arguments.");
 
       test(() => {
         a1.className = "a";
         assert_equals(getComputedStyle(b2).color, blue);
         assert_equals(getComputedStyle(b3).color, red);
         assert_equals(getComputedStyle(f1).color, blue);
-      }, "Invalidate :matches() for complex selector arguments.");
+      }, "Invalidate :is() for complex selector arguments.");
 
       test(() => {
         a1.className = "a";
         assert_equals(getComputedStyle(e2).color, black);
         a2.className = "a";
         assert_equals(getComputedStyle(e2).color, red);
-      }, "Invalidate nested :matches().");
+      }, "Invalidate nested :is().");
 
       test(() => {
         a1.className = "a";
         assert_equals(getComputedStyle(b2).color, blue);
         assert_equals(getComputedStyle(h1).color, black);
-      }, "Test specificity of :matches().");
+      }, "Test specificity of :is().");
     </script>
   </body>
 </html>
