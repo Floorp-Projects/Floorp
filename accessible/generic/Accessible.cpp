@@ -864,7 +864,7 @@ Accessible::HandleAccEvent(AccEvent* aEvent)
   NS_ENSURE_ARG_POINTER(aEvent);
 
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_is_active()) {
+  if (profiler_thread_is_being_profiled()) {
     nsAutoCString strEventType;
     GetAccService()->GetStringEventType(aEvent->GetEventType(), strEventType);
     nsAutoCString strMarker;

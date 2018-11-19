@@ -10,7 +10,7 @@ using namespace mozilla;
 
 void ProfilerIOInterposeObserver::Observe(Observation& aObservation)
 {
-  if (!IsMainThread()) {
+  if (!IsMainThread() || !profiler_thread_is_being_profiled()) {
     return;
   }
 

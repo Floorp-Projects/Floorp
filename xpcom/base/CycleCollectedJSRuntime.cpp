@@ -839,7 +839,7 @@ CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
   MOZ_ASSERT(CycleCollectedJSContext::Get()->Context() == aContext);
 
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_is_active()) {
+  if (profiler_thread_is_being_profiled()) {
     if (aProgress == JS::GC_CYCLE_END) {
       profiler_add_marker(
         "GCMajor",
@@ -940,7 +940,7 @@ CycleCollectedJSRuntime::GCNurseryCollectionCallback(JSContext* aContext,
   }
 #ifdef MOZ_GECKO_PROFILER
   else if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END &&
-           profiler_is_active())
+           profiler_thread_is_being_profiled())
   {
     profiler_add_marker(
       "GCMinor",

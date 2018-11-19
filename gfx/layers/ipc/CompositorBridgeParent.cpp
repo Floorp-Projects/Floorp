@@ -2076,9 +2076,11 @@ static void
 InsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  profiler_add_marker(
-    "VsyncTimestamp",
-    MakeUnique<VsyncMarkerPayload>(aVsyncTimestamp));
+  if (profiler_thread_is_being_profiled()) {
+    profiler_add_marker(
+      "VsyncTimestamp",
+      MakeUnique<VsyncMarkerPayload>(aVsyncTimestamp));
+  }
 }
 #endif
 
