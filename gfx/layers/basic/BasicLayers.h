@@ -99,8 +99,8 @@ public:
   virtual bool IsWidgetLayerManager() override { return mWidget != nullptr; }
   virtual bool IsInactiveLayerManager() override { return mType == BLM_INACTIVE; }
 
-  virtual bool BeginTransaction() override;
-  virtual bool BeginTransactionWithTarget(gfxContext* aTarget) override;
+  virtual bool BeginTransaction(const nsCString &aURL = nsCString()) override;
+  virtual bool BeginTransactionWithTarget(gfxContext* aTarget, const nsCString &aURL = nsCString()) override;
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override;
   virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,

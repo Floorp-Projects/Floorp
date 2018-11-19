@@ -1055,10 +1055,11 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
   }
 #endif
 
+  nsCString none;
   if (aTarget) {
     mLayerManager->BeginTransactionWithDrawTarget(aTarget, *aRect);
   } else {
-    mLayerManager->BeginTransaction();
+    mLayerManager->BeginTransaction(none);
   }
 
   SetShadowProperties(mLayerManager->GetRoot());
