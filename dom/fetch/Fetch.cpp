@@ -36,6 +36,7 @@
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/SharedWorkerManager.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/Telemetry.h"
 
@@ -906,7 +907,7 @@ WorkerFetchResolver::FlushConsoleReport()
 
   if (worker->IsSharedWorker()) {
     // Flush to shared worker
-    worker->FlushReportsToSharedWorkers(mReporter);
+    worker->GetSharedWorkerManager()->FlushReportsToActorsOnMainThread(mReporter);
     return;
   }
 

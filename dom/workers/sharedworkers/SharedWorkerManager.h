@@ -7,16 +7,20 @@
 #ifndef mozilla_dom_SharedWorkerManager_h
 #define mozilla_dom_SharedWorkerManager_h
 
+#include "mozilla/dom/SharedWorkerTypes.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 
+class nsIConsoleReportCollector;
 class nsIPrincipal;
 
 namespace mozilla {
 namespace dom {
 
+class ErrorValue;
 class SharedWorkerLoadInfo;
 class SharedWorkerParent;
+class WorkerErrorReport;
 class WorkerPrivate;
 
 class SharedWorkerManager final
@@ -26,11 +30,12 @@ public:
 
   // Called on main-thread thread methods
 
-  SharedWorkerManager(const SharedWorkerLoadInfo& aInfo,
+  SharedWorkerManager(nsIEventTarget* aPBackgroundEventTarget,
+                      const SharedWorkerLoadInfo& aInfo,
                       nsIPrincipal* aPrincipal,
                       nsIPrincipal* aLoadingPrincipal);
 
-  nsresult 
+  nsresult
   CreateWorkerOnMainThread();
 
   nsresult
@@ -57,6 +62,16 @@ public:
   void
   ResumeOnMainThread();
 
+  void
+  BroadcastErrorToActorsOnMainThread(const WorkerErrorReport* aReport,
+                                     bool aIsErrorEvent);
+
+  void
+  CloseActorsOnMainThread();
+
+  void
+  FlushReportsToActorsOnMainThread(nsIConsoleReportCollector* aReporter);
+
   // Called on PBackground thread methods
 
   void
@@ -74,8 +89,16 @@ public:
   bool
   IsSecureContext() const;
 
+  void
+  CloseActors();
+
+  void
+  BroadcastErrorToActors(const ErrorValue& aValue);
+
 private:
   ~SharedWorkerManager();
+
+  nsCOMPtr<nsIEventTarget> mPBackgroundEventTarget;
 
   SharedWorkerLoadInfo mInfo;
   nsCOMPtr<nsIPrincipal> mPrincipal;

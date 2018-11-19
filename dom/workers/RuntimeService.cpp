@@ -49,6 +49,7 @@
 #include "mozilla/dom/PerformanceService.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/SharedWorkerManager.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/DebugOnly.h"
@@ -1530,10 +1531,9 @@ RuntimeService::UnregisterWorker(WorkerPrivate* aWorkerPrivate)
                                    aWorkerPrivate->CreationTimeStamp());
   }
 
-  if (aWorkerPrivate->IsSharedWorker() ||
-      aWorkerPrivate->IsServiceWorker()) {
+  if (aWorkerPrivate->IsSharedWorker()) {
     AssertIsOnMainThread();
-    aWorkerPrivate->CloseAllSharedWorkers();
+    aWorkerPrivate->GetSharedWorkerManager()->CloseActorsOnMainThread();
   }
 
   if (parent) {

@@ -4,6 +4,8 @@
 
 include protocol PBackground;
 
+include SharedWorkerTypes;
+
 namespace mozilla {
 namespace dom {
 
@@ -19,7 +21,8 @@ parent:
   async Thaw();
 
 child:
-  async Error(nsresult error);
+  async Error(ErrorValue value);
+  async Terminate();
 
   async __delete__();
 };

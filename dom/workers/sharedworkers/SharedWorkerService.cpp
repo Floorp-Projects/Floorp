@@ -220,7 +220,8 @@ SharedWorkerService::GetOrCreateWorkerManagerOnMainThread(nsIEventTarget* aBackg
 
   // Let's create a new one.
   if (!manager) {
-    manager = new SharedWorkerManager(aInfo, principal, loadingPrincipal);
+    manager = new SharedWorkerManager(aBackgroundEventTarget, aInfo,
+                                      principal, loadingPrincipal);
 
     rv = manager->CreateWorkerOnMainThread();
     if (NS_WARN_IF(NS_FAILED(rv))) {
