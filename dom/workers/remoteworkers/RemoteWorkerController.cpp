@@ -18,12 +18,15 @@ using namespace ipc;
 namespace dom {
 
 /* static */ already_AddRefed<RemoteWorkerController>
-RemoteWorkerController::Create(const RemoteWorkerData& aData)
+RemoteWorkerController::Create(const RemoteWorkerData& aData,
+                               RemoteWorkerObserver* aObserver)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(aObserver);
 
-  RefPtr<RemoteWorkerController> controller = new RemoteWorkerController();
+  RefPtr<RemoteWorkerController> controller =
+    new RemoteWorkerController(aObserver);
 
   RefPtr<RemoteWorkerManager> manager = RemoteWorkerManager::GetOrCreate();
   MOZ_ASSERT(manager);
@@ -33,8 +36,9 @@ RemoteWorkerController::Create(const RemoteWorkerData& aData)
   return controller.forget();
 }
 
-RemoteWorkerController::RemoteWorkerController()
-  : mState(ePending)
+RemoteWorkerController::RemoteWorkerController(RemoteWorkerObserver* aObserver)
+  : mObserver(aObserver)
+  , mState(ePending)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -64,9 +68,15 @@ RemoteWorkerController::CreationFailed()
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(mState == ePending || mState == eTerminated);
 
-  // TODO: maybe notification?
+  if (mState == eTerminated) {
+    MOZ_ASSERT(!mActor);
+    MOZ_ASSERT(mPendingOps.IsEmpty());
+    // Nothing to do.
+    return;
+  }
 
   Shutdown();
+  mObserver->CreationFailed();
 }
 
 void
@@ -86,7 +96,7 @@ RemoteWorkerController::CreationSucceeded()
   MOZ_ASSERT(mActor);
   mState = eReady;
 
-  // TODO: maybe notification?
+  mObserver->CreationSucceeded();
 
   for (UniquePtr<Op>& op : mPendingOps) {
     switch (op->mType) {
@@ -138,7 +148,7 @@ RemoteWorkerController::ErrorPropagation(const ErrorValue& aValue)
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  // TODO: error propagation
+  mObserver->ErrorReceived(aValue);
 }
 
 void
@@ -148,7 +158,7 @@ RemoteWorkerController::WorkerTerminated()
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(mState == eReady);
 
-  // TODO: worker terminated
+  mObserver->Terminated();
   Shutdown();
 }
 
