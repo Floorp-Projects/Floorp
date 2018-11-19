@@ -605,6 +605,8 @@ class XDRIncrementalEncoder : public XDREncoder
     JS::TranscodeBuffer slices_;
     bool oom_;
 
+    class DepthFirstSliceIterator;
+
   public:
     explicit XDRIncrementalEncoder(JSContext* cx)
       : XDREncoder(cx, slices_, 0),
