@@ -7801,6 +7801,32 @@
     "description": "a testing histogram; not meant to be touched",
     "record_into_store": ["main", "sync"]
   },
+  "TELEMETRY_TEST_KEYED_SYNC_ONLY": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "keyed": true,
+    "low": 1,
+    "high": 2147483646,
+    "n_buckets": 10,
+    "bug_numbers": [1498164],
+    "description": "a testing histogram; not meant to be touched",
+    "record_into_store": ["sync"]
+  },
+  "TELEMETRY_TEST_KEYED_MULTIPLE_STORES": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "keyed": true,
+    "low": 1,
+    "high": 2147483646,
+    "n_buckets": 10,
+    "bug_numbers": [1498164],
+    "description": "a testing histogram; not meant to be touched",
+    "record_into_store": ["main", "sync"]
+  },
   "STARTUP_CRASH_DETECTED": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
