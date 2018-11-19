@@ -493,6 +493,12 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
     webrtc::SdpAudioFormat::Parameters parameters;
     if (codec->mName == "opus") {
       parameters = {{"stereo", "1"}};
+
+      if (codec->mMaxPlaybackRate) {
+        std::ostringstream o;
+        o << codec->mMaxPlaybackRate;
+        parameters["maxplaybackrate"] = o.str();
+      }
     }
 
     webrtc::SdpAudioFormat format(codec->mName, codec->mFreq,
