@@ -2982,6 +2982,13 @@ LogDtor(void* self, const char* type, uint32_t sz);
 #define JS_COUNT_DTOR(Class)                            \
     LogDtor((void*) this, #Class, sizeof(Class))
 
+/**
+ * This function only reports GC heap memory,
+ * and not malloc allocated memory associated with GC things.
+ */
+extern JS_FRIEND_API uint64_t
+GetGCHeapUsageForObjectZone(JSObject* obj);
+
 } /* namespace js */
 
 #endif /* jsfriendapi_h */
