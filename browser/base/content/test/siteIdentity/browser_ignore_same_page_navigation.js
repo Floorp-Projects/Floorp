@@ -31,11 +31,11 @@ add_task(async function() {
     BrowserTestUtils.loadURI(browser, uri);
     await BrowserTestUtils.browserLoaded(browser, false, uri);
     is(onLocationChangeCount, 1, "should have 1 onLocationChange event");
-    is(onSecurityChangeCount, 2, "should have 2 onSecurityChange event");
+    is(onSecurityChangeCount, 1, "should have 1 onSecurityChange event");
     await ContentTask.spawn(browser, null, async () => {
       content.history.pushState({}, "", "https://example.com");
     });
     is(onLocationChangeCount, 2, "should have 2 onLocationChange events");
-    is(onSecurityChangeCount, 2, "should still have only 2 onSecurityChange event");
+    is(onSecurityChangeCount, 1, "should still have only 1 onSecurityChange event");
   });
 });
