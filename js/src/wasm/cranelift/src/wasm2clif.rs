@@ -791,6 +791,6 @@ impl TableInfo {
     pub fn entry_size(&self) -> i64 {
         // Each entry is an `wasm::FunctionTableElem` which consists of the code pointer and a new
         // VM context pointer.
-        native_pointer_size() as i64 * 2
+        i64::from(native_pointer_size()) * 2
     }
 }
