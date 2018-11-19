@@ -2,8 +2,6 @@
 
 const {ExtensionManager} = ChromeUtils.import("resource://gre/modules/ExtensionChild.jsm", {});
 
-Cu.importGlobalProperties(["Blob", "URL"]);
-
 let experimentAPIs = {
   userinputtest: {
     schema: "schema.json",
