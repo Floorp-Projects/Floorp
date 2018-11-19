@@ -39,7 +39,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "7388ac456302"
+        "revision": "9cd31b6aaf4e"
     },
     "bn-BD": {
         "platforms": [
@@ -153,7 +153,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "1bdec66e3a18"
+        "revision": "c57dacf71d5f"
     },
     "es-MX": {
         "platforms": [
@@ -195,13 +195,13 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "46d2cea5aad8"
+        "revision": "b4eb727c4bc9"
     },
     "fy-NL": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "c02749d32969"
+        "revision": "4a830404bd79"
     },
     "ga-IE": {
         "platforms": [
@@ -309,7 +309,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "afc4902d0546"
+        "revision": "1f3c9adfb061"
     },
     "kn": {
         "platforms": [
@@ -369,7 +369,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "b9bdf2fe4ea0"
+        "revision": "748fca25add3"
     },
     "my": {
         "platforms": [
@@ -381,7 +381,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "abb24413d57d"
+        "revision": "bc0dae3bc95a"
     },
     "ne-NP": {
         "platforms": [
@@ -405,7 +405,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "605bef59ab71"
+        "revision": "8fc459a48fb8"
     },
     "or": {
         "platforms": [
@@ -453,7 +453,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "a81bdd9c201e"
+        "revision": "913c54421299"
     },
     "sk": {
         "platforms": [
@@ -465,7 +465,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "0dce3089477e"
+        "revision": "f822bcdd31b9"
     },
     "son": {
         "platforms": [
@@ -513,7 +513,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "a055491bf57e"
+        "revision": "bea31caafee9"
     },
     "trs": {
         "platforms": [
