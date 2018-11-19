@@ -504,12 +504,15 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipa
 
   // We hardcode this block reason since the first-party storage access
   // permission is granted for the purpose of blocking trackers.
-  // Note that if aReason is eOpenerAfterUserInteraction, we don't check the
+  // Note that if aReason is eOpenerAfterUserInteraction and the
+  // trackingPrincipal is not in a blacklist, we don't check the
   // user-interaction state, because it could be that the current process has
   // just sent the request to store the user-interaction permission into the
   // parent, without having received the permission itself yet.
   const uint32_t blockReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
-  if (aReason != eOpenerAfterUserInteraction &&
+  if ((aReason != eOpenerAfterUserInteraction ||
+       nsContentUtils::IsURIInPrefList(trackingURI,
+         "privacy.restrict3rdpartystorage.userInteractionRequiredForHosts")) &&
       !HasUserInteraction(trackingPrincipal)) {
     LOG_SPEC(("Tracking principal (%s) hasn't been interacted with before, "
               "refusing to add a first-party storage permission to access it",
