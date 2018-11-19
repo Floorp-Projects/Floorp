@@ -646,6 +646,12 @@ public:
   void
   NotifyReportingObservers();
 
+  void
+  SaveStorageAccessGranted(const nsACString& aPermissionKey);
+
+  bool
+  HasStorageAccessGranted(const nsACString& aPermissionKey);
+
 protected:
   void CreatePerformanceObjectIfNeeded();
 
@@ -744,6 +750,11 @@ protected:
   // List of Report objects for ReportingObservers.
   nsTArray<RefPtr<mozilla::dom::ReportingObserver>> mReportingObservers;
   nsTArray<RefPtr<mozilla::dom::Report>> mReportRecords;
+
+  // This is a list of storage access granted for the current window. These are
+  // also set as permissions, but it could happen that we need to access them
+  // synchronously in this context, and for this, we need a copy here.
+  nsTArray<nsCString> mStorageAccessGranted;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowInner, NS_PIDOMWINDOWINNER_IID)
