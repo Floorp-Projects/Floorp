@@ -23,10 +23,7 @@
 
 use cranelift_codegen::isa;
 use cranelift_codegen::settings::{self, Configurable};
-use std::error;
-use std::mem;
 use std::str::FromStr;
-use target_lexicon;
 use utils::{BasicError, DashResult};
 
 use baldrdash::StaticEnvironment;
