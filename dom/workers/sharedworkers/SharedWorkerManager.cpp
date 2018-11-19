@@ -46,12 +46,14 @@ SharedWorkerManager::~SharedWorkerManager()
 bool
 SharedWorkerManager::MaybeCreateRemoteWorker(const RemoteWorkerData& aData,
                                              uint64_t aWindowID,
-                                             const MessagePortIdentifier& aPortIdentifier)
+                                             const MessagePortIdentifier& aPortIdentifier,
+                                             base::ProcessId aProcessId)
 {
   AssertIsOnBackgroundThread();
 
   if (!mRemoteWorkerController) {
-    mRemoteWorkerController = RemoteWorkerController::Create(aData, this);
+    mRemoteWorkerController =
+      RemoteWorkerController::Create(aData, this, aProcessId);
     if (NS_WARN_IF(!mRemoteWorkerController)) {
       return false;
     }

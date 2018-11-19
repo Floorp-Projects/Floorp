@@ -111,7 +111,8 @@ public:
 
   static already_AddRefed<RemoteWorkerController>
   Create(const RemoteWorkerData& aData,
-         RemoteWorkerObserver* aObserver);
+         RemoteWorkerObserver* aObserver,
+         base::ProcessId = 0);
 
   void
   AddWindowID(uint64_t aWindowID);

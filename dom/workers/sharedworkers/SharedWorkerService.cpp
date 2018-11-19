@@ -156,7 +156,8 @@ public:
     AssertIsOnBackgroundThread();
 
     if (NS_WARN_IF(!mManager->MaybeCreateRemoteWorker(mData, mWindowID,
-                                                      mPortIdentifier))) {
+                                                      mPortIdentifier,
+                                                      mActor->OtherPid()))) {
       mActor->ErrorPropagation(NS_ERROR_FAILURE);
       return NS_OK;
     }
