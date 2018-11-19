@@ -65,10 +65,6 @@ struct nsHostKey
     PLDHashNumber Hash() const;
 };
 
-// 9c29024a-e7ea-48b0-945e-058a8687247b
-#define NS_HOSTRECORD_IID \
-{ 0x9c29024a, 0xe7ea, 0x48b0, {0x94, 0x5e, 0x05, 0x8a, 0x86, 0x87, 0x24, 0x7b }}
-
 /**
  * nsHostRecord - ref counted object type stored in host resolver cache.
  */
@@ -78,15 +74,18 @@ class nsHostRecord :
     public nsISupports
 {
 public:
-    NS_DECLARE_STATIC_IID_ACCESSOR(NS_HOSTRECORD_IID)
+    NS_DECL_THREADSAFE_ISUPPORTS
 
-    virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const = 0;
+    virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+    {
+      return 0;
+    }
 
 protected:
     friend class nsHostResolver;
 
     explicit nsHostRecord(const nsHostKey& key);
-    virtual ~nsHostRecord();
+    virtual ~nsHostRecord() = default;
 
     // Mark hostrecord as not usable
     void Invalidate();
@@ -115,9 +114,9 @@ protected:
     };
     static DnsPriority GetPriority(uint16_t aFlags);
 
-    virtual void Cancel() = 0;
+    virtual void Cancel() {}
 
-    virtual bool HasUsableResultInternal() const = 0;
+    virtual bool HasUsableResultInternal() const { return false; }
 
     mozilla::LinkedList<RefPtr<nsResolveHostCallback>> mCallbacks;
 
@@ -149,8 +148,6 @@ protected:
     uint8_t mDoomed : 1;    // explicitly expired
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsHostRecord, NS_HOSTRECORD_IID)
-
 // b020e996-f6ab-45e5-9bf5-1da71dd0053a
 #define ADDRHOSTRECORD_IID \
 { 0xb020e996, 0xf6ab, 0x45e5, {0x9b, 0xf5, 0x1d, 0xa7, 0x1d, 0xd0, 0x05, 0x3a }}
@@ -161,7 +158,7 @@ class AddrHostRecord final : public nsHostRecord
 
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(ADDRHOSTRECORD_IID)
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
 
     /* a fully resolved host record has either a non-null |addr_info| or |addr|
      * field.  if |addr_info| is null, it implies that the |host| is an IP
@@ -273,7 +270,7 @@ class TypeHostRecord final : public nsHostRecord
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(TYPEHOSTRECORD_IID)
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
 
     void GetRecords(nsTArray<nsCString> &aRecords);
     void GetRecordsAsOneString(nsACString &aRecords);
