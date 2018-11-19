@@ -2,8 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-BootstrapMonitor.init();
-
 const PREF_DB_SCHEMA = "extensions.databaseSchema";
 
 const profileDir = gProfD.clone();
@@ -11,308 +9,93 @@ profileDir.append("extensions");
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "49");
 
-/**
- *  Schema change with no application update reloads metadata.
- */
-add_task(async function schema_change() {
-  await promiseStartupManager();
-
+add_task(async function run_tests() {
   const ID = "schema-change@tests.mozilla.org";
 
-  let xpiFile = createTempXPIFile({
-    id: ID,
-    name: "Test Add-on",
-    version: "1.0",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1.9.2",
-    }],
+  const xpi1 = createTempWebExtensionFile({
+    manifest: {
+      name: "Test Add-on",
+      version: "1.0",
+      applications: {gecko: {id: ID}},
+    },
   });
 
-  await promiseInstallFile(xpiFile);
-
-  let addon = await promiseAddonByID(ID);
-
-  notEqual(addon, null, "Got an addon object as expected");
-  equal(addon.version, "1.0", "Got the expected version");
-
-  await promiseShutdownManager();
-
-  xpiFile = createTempXPIFile({
-    id: ID,
-    name: "Test Add-on 2",
-    version: "2.0",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1.9.2",
-    }],
+  const xpi2 = createTempWebExtensionFile({
+    manifest: {
+      name: "Test Add-on 2",
+      version: "2.0",
+      applications: {gecko: {id: ID}},
+    },
   });
 
-  Services.prefs.setIntPref(PREF_DB_SCHEMA, 0);
+  let xpiPath = OS.Path.join(profileDir.path, `${ID}.xpi`);
 
-  let file = profileDir.clone();
-  file.append(`${ID}.xpi`);
-
-  // Make sure the timestamp is unchanged, so it is not re-scanned for that reason.
-  let timestamp = file.lastModifiedTime;
-  xpiFile.moveTo(profileDir, `${ID}.xpi`);
-
-  file.lastModifiedTime = timestamp;
+  const TESTS = [
+    {
+      what: "Schema change with no application update reloads metadata.",
+      expectedVersion: "2.0",
+      action() {
+        Services.prefs.setIntPref(PREF_DB_SCHEMA, 0);
+      },
+    },
+    {
+      what: "Application update with no schema change does not reload metadata.",
+      expectedVersion: "1.0",
+      action() {
+        gAppInfo.version = "2";
+      },
+    },
+    {
+      what: "App update and a schema change causes a reload of the manifest.",
+      expectedVersion: "2.0",
+      action() {
+        gAppInfo.version = "3";
+        Services.prefs.setIntPref(PREF_DB_SCHEMA, 0);
+      },
+    },
+    {
+      what: "No schema change, no manifest reload.",
+      expectedVersion: "1.0",
+      action() {},
+    },
+    {
+      what: "Modified timestamp on the XPI causes a reload of the manifest.",
+      expectedVersion: "2.0",
+      async action() {
+        let stat = await OS.File.stat(xpiPath);
+        await OS.File.setDates(xpiPath, stat.lastAccessDate,
+                               stat.lastModificationDate.valueOf() + 60 * 1000);
+      },
+    },
+  ];
 
   await promiseStartupManager();
 
-  addon = await promiseAddonByID(ID);
-  notEqual(addon, null, "Got an addon object as expected");
-  equal(addon.version, "2.0", "Got the expected version");
+  for (let test of TESTS) {
+    info(test.what);
+    await promiseInstallFile(xpi1);
 
-  let waitUninstall = promiseAddonEvent("onUninstalled");
-  await addon.uninstall();
-  await waitUninstall;
-});
+    let addon = await promiseAddonByID(ID);
+    notEqual(addon, null, "Got an addon object as expected");
+    equal(addon.version, "1.0", "Got the expected version");
 
-/**
- *  Application update with no schema change does not reload metadata.
- */
-add_task(async function schema_change() {
-  const ID = "schema-change@tests.mozilla.org";
+    await promiseShutdownManager();
 
-  let xpiFile = createTempXPIFile({
-    id: ID,
-    name: "Test Add-on",
-    version: "1.0",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "2",
-    }],
-  });
+    let orig = await OS.File.stat(xpiPath);
 
-  await promiseInstallFile(xpiFile);
+    xpi2.copyTo(profileDir, `${ID}.xpi`);
 
-  let addon = await promiseAddonByID(ID);
+    // Make sure the timestamp is unchanged, so it is not re-scanned for that reason.
+    await OS.File.setDates(xpiPath, orig.lastAccessDate, orig.lastModificationDate);
 
-  notEqual(addon, null, "Got an addon object as expected");
-  equal(addon.version, "1.0", "Got the expected version");
+    await test.action();
 
-  await promiseShutdownManager();
+    await promiseStartupManager();
 
-  xpiFile = createTempXPIFile({
-    id: ID,
-    name: "Test Add-on 2",
-    version: "2.0",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "2",
-    }],
-  });
+    addon = await promiseAddonByID(ID);
+    notEqual(addon, null, "Got an addon object as expected");
+    equal(addon.version, test.expectedVersion, "Got the expected version");
 
-  gAppInfo.version = "2";
-  let file = profileDir.clone();
-  file.append(`${ID}.xpi`);
-
-  // Make sure the timestamp is unchanged, so it is not re-scanned for that reason.
-  let timestamp = file.lastModifiedTime;
-  xpiFile.moveTo(profileDir, `${ID}.xpi`);
-
-  file.lastModifiedTime = timestamp;
-
-  await promiseStartupManager();
-
-  addon = await promiseAddonByID(ID);
-  notEqual(addon, null, "Got an addon object as expected");
-  equal(addon.version, "1.0", "Got the expected version");
-
-  let waitUninstall = promiseAddonEvent("onUninstalled");
-  await addon.uninstall();
-  await waitUninstall;
-});
-
-/**
- *  App update and a schema change causes a reload of the manifest.
- */
-add_task(async function schema_change_app_update() {
-  const ID = "schema-change@tests.mozilla.org";
-
-  let xpiFile = createTempXPIFile({
-    id: ID,
-    name: "Test Add-on",
-    version: "1.0",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3",
-    }],
-  });
-
-  await promiseInstallFile(xpiFile);
-
-  let addon = await promiseAddonByID(ID);
-
-  notEqual(addon, null, "Got an addon object as expected");
-  equal(addon.version, "1.0", "Got the expected version");
-
-  await promiseShutdownManager();
-
-  xpiFile = createTempXPIFile({
-    id: ID,
-    name: "Test Add-on 2",
-    version: "2.0",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3",
-    }],
-  });
-
-  gAppInfo.version = "3";
-  Services.prefs.setIntPref(PREF_DB_SCHEMA, 0);
-
-  let file = profileDir.clone();
-  file.append(`${ID}.xpi`);
-
-  // Make sure the timestamp is unchanged, so it is not re-scanned for that reason.
-  let timestamp = file.lastModifiedTime;
-  xpiFile.moveTo(profileDir, `${ID}.xpi`);
-
-  file.lastModifiedTime = timestamp;
-
-  await promiseStartupManager();
-
-  addon = await promiseAddonByID(ID);
-  notEqual(addon, null, "Got an addon object as expected");
-  equal(addon.appDisabled, false);
-  equal(addon.version, "2.0", "Got the expected version");
-
-  let waitUninstall = promiseAddonEvent("onUninstalled");
-  await addon.uninstall();
-  await waitUninstall;
-});
-
-/**
- *  No schema change, no manifest reload.
- */
-add_task(async function schema_change() {
-  const ID = "schema-change@tests.mozilla.org";
-
-  let xpiFile = createTempXPIFile({
-    id: ID,
-    name: "Test Add-on",
-    version: "1.0",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1.9.2",
-    }],
-  });
-
-  await promiseInstallFile(xpiFile);
-
-  let addon = await promiseAddonByID(ID);
-
-  notEqual(addon, null, "Got an addon object as expected");
-  equal(addon.version, "1.0", "Got the expected version");
-
-  await promiseShutdownManager();
-
-  xpiFile = createTempXPIFile({
-    id: ID,
-    name: "Test Add-on 2",
-    version: "2.0",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1.9.2",
-    }],
-  });
-
-  let file = profileDir.clone();
-  file.append(`${ID}.xpi`);
-
-  // Make sure the timestamp is unchanged, so it is not re-scanned for that reason.
-  let timestamp = file.lastModifiedTime;
-  xpiFile.moveTo(profileDir, `${ID}.xpi`);
-
-  file.lastModifiedTime = timestamp;
-
-  await promiseStartupManager();
-
-  addon = await promiseAddonByID(ID);
-  notEqual(addon, null, "Got an addon object as expected");
-  equal(addon.version, "1.0", "Got the expected version");
-
-  let waitUninstall = promiseAddonEvent("onUninstalled");
-  await addon.uninstall();
-  await waitUninstall;
-});
-
-/**
- *  Modified timestamp on the XPI causes a reload of the manifest.
- */
-add_task(async function schema_change() {
-  const ID = "schema-change@tests.mozilla.org";
-
-  let xpiFile = createTempXPIFile({
-    id: ID,
-    name: "Test Add-on",
-    version: "1.0",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1.9.2",
-    }],
-  });
-
-  await promiseInstallFile(xpiFile);
-
-  let addon = await promiseAddonByID(ID);
-
-  notEqual(addon, null, "Got an addon object as expected");
-  equal(addon.version, "1.0", "Got the expected version");
-
-  await promiseShutdownManager();
-
-  xpiFile = createTempXPIFile({
-    id: ID,
-    name: "Test Add-on 2",
-    version: "2.0",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1.9.2",
-    }],
-  });
-
-  xpiFile.moveTo(profileDir, `${ID}.xpi`);
-
-  let file = profileDir.clone();
-  file.append(`${ID}.xpi`);
-
-  // Set timestamp in the future so manifest is re-scanned.
-  let timestamp = new Date(Date.now() + 60000);
-  xpiFile.moveTo(profileDir, `${ID}.xpi`);
-
-  file.lastModifiedTime = timestamp;
-
-  await promiseStartupManager();
-
-  addon = await promiseAddonByID(ID);
-  notEqual(addon, null, "Got an addon object as expected");
-  equal(addon.version, "2.0", "Got the expected version");
-
-  let waitUninstall = promiseAddonEvent("onUninstalled");
-  await addon.uninstall();
-  await waitUninstall;
+    await addon.uninstall();
+  }
 });

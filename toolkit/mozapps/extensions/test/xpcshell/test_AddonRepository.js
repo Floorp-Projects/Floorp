@@ -6,69 +6,39 @@
 
 ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
 
-var gServer = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+var gServer = createHttpServer({hosts: ["example.com"]});
 
 const PREF_GETADDONS_BROWSEADDONS        = "extensions.getAddons.browseAddons";
 const PREF_GETADDONS_BROWSESEARCHRESULTS = "extensions.getAddons.search.browseURL";
 
-const PORT          = gServer.identity.primaryPort;
 const BASE_URL      = "http://example.com";
 const DEFAULT_URL   = "about:blank";
 
 const ADDONS = [
   {
-    id: "test_AddonRepository_1@tests.mozilla.org",
-    version: "1.1",
-    bootstrap: true,
-
-    name: "XPI Add-on 1",
-    description: "XPI Add-on 1 - Description",
-    creator: "XPI Add-on 1 - Creator",
-    developer: ["XPI Add-on 1 - First Developer",
-                "XPI Add-on 1 - Second Developer"],
-    translator: ["XPI Add-on 1 - First Translator",
-                 "XPI Add-on 1 - Second Translator"],
-    contributor: ["XPI Add-on 1 - First Contributor",
-                  "XPI Add-on 1 - Second Contributor"],
-    homepageURL: "http://example.com/xpi/1/homepage.html",
-    optionsURL: "http://example.com/xpi/1/options.html",
-    aboutURL: "http://example.com/xpi/1/about.html",
-    iconURL: "http://example.com/xpi/1/icon.png",
-
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1"}],
+    manifest: {
+      name: "XPI Add-on 1",
+      version: "1.1",
+      applications: {gecko: {id: "test_AddonRepository_1@tests.mozilla.org" }},
+    },
   },
   {
-    id: "test_AddonRepository_2@tests.mozilla.org",
-    type: 4,
-    internalName: "test2/1.0",
-    version: "1.2",
-    bootstrap: true,
-    name: "XPI Add-on 2",
-
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1"}],
+    manifest: {
+      name: "XPI Add-on 2",
+      version: "1.2",
+      theme: { },
+      applications: {gecko: {id: "test_AddonRepository_2@tests.mozilla.org"}},
+    },
   },
   {
-    id: "test_AddonRepository_3@tests.mozilla.org",
-    type: "4",
-    internalName: "test3/1.0",
-    version: "1.3",
-    bootstrap: true,
-    name: "XPI Add-on 3",
-
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1"}],
+    manifest: {
+      name: "XPI Add-on 3",
+      version: "1.3",
+      theme: { },
+      applications: {gecko: {id: "test_AddonRepository_3@tests.mozilla.org"}},
+    },
   },
 ];
-
-gPort = PORT;
 
 // Path to source URI of installing add-on
 const INSTALL_URL2  = "/addons/test_AddonRepository_2.xpi";
@@ -171,7 +141,7 @@ add_task(async function setup() {
   // Setup for test
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
-  let xpis = ADDONS.map(addon => createTempXPIFile(addon));
+  let xpis = ADDONS.map(addon => createTempWebExtensionFile(addon));
 
   // Register other add-on XPI files
   gServer.registerFile(INSTALL_URL2, xpis[1]);

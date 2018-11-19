@@ -4,11 +4,9 @@
 
 // This verifies that add-on update checks work
 
-const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
-
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
-Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
+
 // This test requires lightweight themes update to be enabled even if the app
 // doesn't support lightweight themes.
 Services.prefs.setBoolPref("lightweightThemes.update.enabled", true);
@@ -20,101 +18,79 @@ Cu.importGlobalProperties(["URLSearchParams"]);
 var gInstallDate;
 
 const updateFile = "test_update.json";
-const appId = "toolkit@mozilla.org";
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-var originalSyncGUID;
-
 const ADDONS = {
   test_update: {
-    "install.rdf": {
-      id: "addon1@tests.mozilla.org",
-      version: "2.0",
-      name: "Test 1",
-    },
+    id: "addon1@tests.mozilla.org",
+    version: "2.0",
+    name: "Test 1",
   },
   test_update8: {
-    "install.rdf": {
-      id: "addon8@tests.mozilla.org",
-      version: "2.0",
-      name: "Test 8",
-    },
+    id: "addon8@tests.mozilla.org",
+    version: "2.0",
+    name: "Test 8",
   },
   test_update12: {
-    "install.rdf": {
-      id: "addon12@tests.mozilla.org",
-      version: "2.0",
-      name: "Test 12",
-    },
+    id: "addon12@tests.mozilla.org",
+    version: "2.0",
+    name: "Test 12",
   },
   test_install2_1: {
-    "install.rdf": {
-      id: "addon2@tests.mozilla.org",
-      version: "2.0",
-      name: "Real Test 2",
-    },
+    id: "addon2@tests.mozilla.org",
+    version: "2.0",
+    name: "Real Test 2",
   },
   test_install2_2: {
-    "install.rdf": {
-      id: "addon2@tests.mozilla.org",
-      version: "3.0",
-      name: "Real Test 3",
-    },
+    id: "addon2@tests.mozilla.org",
+    version: "3.0",
+    name: "Real Test 3",
   },
 };
 
-var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+var testserver = createHttpServer({hosts: ["example.com"]});
 testserver.registerDirectory("/data/", do_get_file("data"));
 
 const XPIS = {};
-for (let [name, addon] of Object.entries(ADDONS)) {
-  XPIS[name] = AddonTestUtils.createTempXPIFile(addon);
-  testserver.registerFile(`/addons/${name}.xpi`, XPIS[name]);
-}
 
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
   Services.locale.requestedLocales = ["fr-FR"];
-});
 
-add_task(async function() {
+  for (let [name, info] of Object.entries(ADDONS)) {
+    XPIS[name] = createTempWebExtensionFile({
+      manifest: {
+        name: info.name,
+        version: info.version,
+        applications: {gecko: {id: info.id}},
+      },
+    });
+    testserver.registerFile(`/addons/${name}.xpi`, XPIS[name]);
+  }
+
   AddonTestUtils.updateReason = AddonManager.UPDATE_WHEN_USER_REQUESTED;
 
   await promiseStartupManager();
-  await promiseInstallXPI({
-    id: "addon1@tests.mozilla.org",
-    updateURL: "http://example.com/data/" + updateFile,
-    name: "Test Addon 1",
-  });
-
-  await promiseInstallXPI({
-    id: "addon2@tests.mozilla.org",
-    updateURL: "http://example.com/data/" + updateFile,
-    targetApplications: [{
-      id: appId,
-      minVersion: "0",
-      maxVersion: "0",
-    }],
-    name: "Test Addon 2",
-  });
-
-  await promiseInstallXPI({
-    id: "addon3@tests.mozilla.org",
-    updateURL: "http://example.com/data/" + updateFile,
-    targetApplications: [{
-      id: appId,
-      minVersion: "5",
-      maxVersion: "5",
-    }],
-    name: "Test Addon 3",
-  });
 });
 
 // Verify that an update is available and can be installed.
-add_task(async function test_1() {
+add_task(async function test_apply_update() {
+  await promiseInstallWebExtension({
+    manifest: {
+      name: "Test Addon 1",
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: "addon1@tests.mozilla.org",
+          update_url: `http://example.com/data/${updateFile}`,
+        },
+      },
+    },
+  });
+
   let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   notEqual(a1, null);
   equal(a1.version, "1.0");
@@ -122,8 +98,7 @@ add_task(async function test_1() {
   equal(a1.releaseNotesURI, null);
   notEqual(a1.syncGUID, null);
 
-  originalSyncGUID = a1.syncGUID;
-  a1.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
+  let originalSyncGUID = a1.syncGUID;
 
   prepare_test({
     "addon1@tests.mozilla.org": [
@@ -218,17 +193,31 @@ add_task(async function test_1() {
   equal(originalSyncGUID, a1.syncGUID);
 
   // Make sure that the extension lastModifiedTime was updated.
-  let testURI = a1.getResourceURI(TEST_UNPACKED ? "install.rdf" : "");
+  let testURI = a1.getResourceURI("");
   let testFile = testURI.QueryInterface(Ci.nsIFileURL).file;
   let difference = testFile.lastModifiedTime - startupTime;
   ok(Math.abs(difference) < MAX_TIME_DIFFERENCE);
 
-  end_test();
+  clearListeners();
   await a1.uninstall();
 });
 
 // Check that an update check finds compatibility updates and applies them
-add_task(async function test_3() {
+add_task(async function test_compat_update() {
+  await promiseInstallWebExtension({
+    manifest: {
+      name: "Test Addon 2",
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: "addon2@tests.mozilla.org",
+          update_url: "http://example.com/data/" + updateFile,
+          strict_max_version: "0",
+        },
+      },
+    },
+  });
+
   let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
   notEqual(a2, null);
   ok(a2.isActive);
@@ -255,7 +244,25 @@ add_task(async function test_3() {
 });
 
 // Checks that we see no compatibility information when there is none.
-add_task(async function test_4() {
+add_task(async function test_no_compat() {
+  gAppInfo.platformVersion = "5";
+  await promiseRestartManager("5");
+  await promiseInstallWebExtension({
+    manifest: {
+      name: "Test Addon 3",
+      applications: {
+        gecko: {
+          id: "addon3@tests.mozilla.org",
+          update_url: `http://example.com/data/${updateFile}`,
+          strict_min_version: "5",
+        },
+      },
+    },
+  });
+
+  gAppInfo.platformVersion = "1";
+  await promiseRestartManager("1");
+
   let a3 = await AddonManager.getAddonByID("addon3@tests.mozilla.org");
   notEqual(a3, null);
   ok(!a3.isActive);
@@ -271,7 +278,7 @@ add_task(async function test_4() {
 
 // Checks that compatibility info for future apps are detected but don't make
 // the item compatibile.
-add_task(async function test_5() {
+add_task(async function test_future_compat() {
   let a3 = await AddonManager.getAddonByID("addon3@tests.mozilla.org");
   notEqual(a3, null);
   ok(!a3.isActive);
@@ -297,22 +304,23 @@ add_task(async function test_5() {
   ok(a3.appDisabled);
 
   await a3.uninstall();
-  end_test();
 });
 
 // Test that background update checks work
-add_task(async function test_6() {
-  await promiseInstallXPI({
-    id: "addon1@tests.mozilla.org",
-    version: "1.0",
-    bootstrap: true,
-    updateURL: "http://example.com/data/" + updateFile,
-    targetApplications: [{
-      id: appId,
-      minVersion: "1",
-      maxVersion: "1",
-    }],
-    name: "Test Addon 1",
+add_task(async function test_background_update() {
+  await promiseInstallWebExtension({
+    manifest: {
+      name: "Test Addon 1",
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: "addon1@tests.mozilla.org",
+          update_url: `http://example.com/data/${updateFile}`,
+          strict_min_version: "1",
+          strict_max_version: "1",
+        },
+      },
+    },
   });
 
   let install = await new Promise(resolve => {
@@ -366,17 +374,17 @@ const PARAMS = "?" + [
 
 const PARAM_ADDONS = {
   "addon1@tests.mozilla.org": {
-    "install.rdf": {
-      id: "addon1@tests.mozilla.org",
-      version: "5.0",
-      bootstrap: true,
-      updateURL: "http://example.com/data/param_test.json" + PARAMS,
-      targetApplications: [{
-        id: appId,
-        minVersion: "1",
-        maxVersion: "2",
-      }],
+    manifest: {
       name: "Test Addon 1",
+      version: "5.0",
+      applications: {
+        gecko: {
+          id: "addon1@tests.mozilla.org",
+          update_url: `http://example.com/data/param_test.json${PARAMS}`,
+          strict_min_version: "1",
+          strict_max_version: "2",
+        },
+      },
     },
     params: {
       item_version: "5.0",
@@ -389,17 +397,17 @@ const PARAM_ADDONS = {
   },
 
   "addon2@tests.mozilla.org": {
-    "install.rdf": {
-      id: "addon2@tests.mozilla.org",
-      version: "67.0.5b1",
-      bootstrap: true,
-      updateURL: "http://example.com/data/param_test.json" + PARAMS,
-      targetApplications: [{
-        id: "toolkit@mozilla.org",
-        minVersion: "0",
-        maxVersion: "3",
-      }],
+    manifest: {
       name: "Test Addon 2",
+      version: "67.0.5b1",
+      applications: {
+        gecko: {
+          id: "addon2@tests.mozilla.org",
+          update_url: "http://example.com/data/param_test.json" + PARAMS,
+          strict_min_version: "0",
+          strict_max_version: "3",
+        },
+      },
     },
     initialState: {
       userDisabled: true,
@@ -416,25 +424,18 @@ const PARAM_ADDONS = {
   },
 
   "addon3@tests.mozilla.org": {
-    "install.rdf": {
-      id: "addon3@tests.mozilla.org",
-      version: "1.3+",
-      bootstrap: true,
-      updateURL: "http://example.com/data/param_test.json" + PARAMS,
-      targetApplications: [{
-        id: appId,
-        minVersion: "0",
-        maxVersion: "0",
-      }, {
-        id: "toolkit@mozilla.org",
-        minVersion: "0",
-        maxVersion: "3",
-      }],
+    manifest: {
       name: "Test Addon 3",
+      version: "1.3+",
+      applications: {
+        gecko: {
+          id: "addon3@tests.mozilla.org",
+          update_url: `http://example.com/data/param_test.json${PARAMS}`,
+        },
+      },
     },
     params: {
       item_version: "1.3+",
-      item_maxappversion: "0",
       item_status: "userEnabled",
       app_version: "1",
       update_type: "112",
@@ -443,17 +444,17 @@ const PARAM_ADDONS = {
   },
 
   "addon4@tests.mozilla.org": {
-    "install.rdf": {
-      id: "addon4@tests.mozilla.org",
-      version: "0.5ab6",
-      bootstrap: true,
-      updateURL: "http://example.com/data/param_test.json" + PARAMS,
-      targetApplications: [{
-        id: appId,
-        minVersion: "1",
-        maxVersion: "5",
-      }],
+    manifest: {
       name: "Test Addon 4",
+      version: "0.5ab6",
+      applications: {
+        gecko: {
+          id: "addon4@tests.mozilla.org",
+          update_url: `http://example.com/data/param_test.json${PARAMS}`,
+          strict_min_version: "1",
+          strict_max_version: "5",
+        },
+      },
     },
     params: {
       item_version: "0.5ab6",
@@ -466,17 +467,17 @@ const PARAM_ADDONS = {
   },
 
   "addon5@tests.mozilla.org": {
-    "install.rdf": {
-      id: "addon5@tests.mozilla.org",
-      version: "1.0",
-      bootstrap: true,
-      updateURL: "http://example.com/data/param_test.json" + PARAMS,
-      targetApplications: [{
-        id: appId,
-        minVersion: "1",
-        maxVersion: "1",
-      }],
+    manifest: {
       name: "Test Addon 5",
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: "addon5@tests.mozilla.org",
+          update_url: `http://example.com/data/param_test.json${PARAMS}`,
+          strict_min_version: "1",
+          strict_max_version: "1",
+        },
+      },
     },
     params: {
       item_version: "1.0",
@@ -490,17 +491,17 @@ const PARAM_ADDONS = {
   },
 
   "addon6@tests.mozilla.org": {
-    "install.rdf": {
-      id: "addon6@tests.mozilla.org",
-      version: "1.0",
-      bootstrap: true,
-      updateURL: "http://example.com/data/param_test.json" + PARAMS,
-      targetApplications: [{
-        id: appId,
-        minVersion: "1",
-        maxVersion: "1",
-      }],
+    manifest: {
       name: "Test Addon 6",
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: "addon6@tests.mozilla.org",
+          update_url: `http://example.com/data/param_test.json${PARAMS}`,
+          strict_min_version: "1",
+          strict_max_version: "1",
+        },
+      },
     },
     params: {
       item_version: "1.0",
@@ -513,17 +514,17 @@ const PARAM_ADDONS = {
   },
 
   "blocklist1@tests.mozilla.org": {
-    "install.rdf": {
-      id: "blocklist1@tests.mozilla.org",
-      version: "5.0",
-      bootstrap: true,
-      updateURL: "http://example.com/data/param_test.json" + PARAMS,
-      targetApplications: [{
-        id: appId,
-        minVersion: "1",
-        maxVersion: "2",
-      }],
+    manifest: {
       name: "Test Addon 1",
+      version: "5.0",
+      applications: {
+        gecko: {
+          id: "blocklist1@tests.mozilla.org",
+          update_url: `http://example.com/data/param_test.json${PARAMS}`,
+          strict_min_version: "1",
+          strict_max_version: "2",
+        },
+      },
     },
     params: {
       item_version: "5.0",
@@ -537,17 +538,17 @@ const PARAM_ADDONS = {
   },
 
   "blocklist2@tests.mozilla.org": {
-    "install.rdf": {
-      id: "blocklist2@tests.mozilla.org",
-      version: "5.0",
-      bootstrap: true,
-      updateURL: "http://example.com/data/param_test.json" + PARAMS,
-      targetApplications: [{
-        id: appId,
-        minVersion: "1",
-        maxVersion: "2",
-      }],
+    manifest: {
       name: "Test Addon 1",
+      version: "5.0",
+      applications: {
+        gecko: {
+          id: "blocklist2@tests.mozilla.org",
+          update_url: `http://example.com/data/param_test.json${PARAMS}`,
+          strict_min_version: "1",
+          strict_max_version: "2",
+        },
+      },
     },
     params: {
       item_version: "5.0",
@@ -564,7 +565,7 @@ const PARAM_ADDONS = {
 const PARAM_IDS = Object.keys(PARAM_ADDONS);
 
 // Verify the parameter escaping in update urls.
-add_task(async function test_8() {
+add_task(async function test_params() {
   let blocklistAddons = new Map();
   for (let [id, options] of Object.entries(PARAM_ADDONS)) {
     if (options.blocklistState) {
@@ -574,7 +575,7 @@ add_task(async function test_8() {
   let mockBlocklist = await AddonTestUtils.overrideBlocklist(blocklistAddons);
 
   for (let [id, options] of Object.entries(PARAM_ADDONS)) {
-    await promiseInstallXPI(options["install.rdf"], profileDir);
+    await promiseInstallWebExtension({manifest: options.manifest});
 
     if (options.initialState) {
       let addon = await AddonManager.getAddonByID(id);
@@ -637,126 +638,71 @@ add_task(async function test_8() {
   await mockBlocklist.unregister();
 });
 
-// Tests that if an install.rdf claims compatibility then the add-on will be
-// seen as compatible regardless of what the update.rdf says.
-add_task(async function test_9() {
-  await promiseInstallXPI({
-    id: "addon4@tests.mozilla.org",
-    version: "5.0",
-    bootstrap: true,
-    updateURL: "http://example.com/data/" + updateFile,
-    targetApplications: [{
-      id: appId,
-      minVersion: "0",
-      maxVersion: "1",
-    }],
-    name: "Test Addon 1",
+// Tests that if a manifest claims compatibility then the add-on will be
+// seen as compatible regardless of what the update payload says.
+add_task(async function test_manifest_compat() {
+  await promiseInstallWebExtension({
+    manifest: {
+      name: "Test Addon 1",
+      version: "5.0",
+      applications: {
+        gecko: {
+          id: "addon4@tests.mozilla.org",
+          update_url: `http://example.com/data/${updateFile}`,
+          strict_min_version: "0",
+          strict_max_version: "1",
+        },
+      },
+    },
   });
 
   let a4 = await AddonManager.getAddonByID("addon4@tests.mozilla.org");
   ok(a4.isActive, "addon4 is active");
   ok(a4.isCompatible, "addon4 is compatible");
-});
 
-// Tests that a normal update check won't decrease a targetApplication's
-// maxVersion.
-add_task(async function test_10() {
-  let a4 = await AddonManager.getAddonByID("addon4@tests.mozilla.org");
+  // Test that a normal update check won't decrease a targetApplication's
+  // maxVersion but an update check for a new application will.
   await AddonTestUtils.promiseFindAddonUpdates(
     a4, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+  ok(a4.isActive, "addon4 is active");
   ok(a4.isCompatible, "addon4 is compatible");
-});
 
-// Tests that an update check for a new application will decrease a
-// targetApplication's maxVersion.
-add_task(async function test_11() {
-  let a4 = await AddonManager.getAddonByID("addon4@tests.mozilla.org");
   await AddonTestUtils.promiseFindAddonUpdates(
     a4, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
-  ok(a4.isCompatible, "addon4 is not compatible");
-});
-
-// Check that the decreased maxVersion applied and disables the add-on
-add_task(async function test_12() {
-  let a4 = await AddonManager.getAddonByID("addon4@tests.mozilla.org");
-  ok(a4.isActive);
-  ok(a4.isCompatible);
+  ok(!a4.isActive, "addon4 is not active");
+  ok(!a4.isCompatible, "addon4 is not compatible");
 
   await a4.uninstall();
 });
 
-// Tests that a compatibility update is passed to the listener when there is
-// compatibility info for the current version of the app but not for the
-// version of the app that the caller requested an update check for, when
-// strict compatibility checking is disabled.
-add_task(async function test_13() {
-  // Not initially compatible but the update check will make it compatible
-  await promiseInstallXPI({
-    id: "addon7@tests.mozilla.org",
-    version: "1.0",
-    bootstrap: true,
-    updateURL: "http://example.com/data/" + updateFile,
-    targetApplications: [{
-      id: appId,
-      minVersion: "0",
-      maxVersion: "0",
-    }],
-    name: "Test Addon 7",
-  });
-
-  let a7 = await AddonManager.getAddonByID("addon7@tests.mozilla.org");
-  notEqual(a7, null);
-  ok(a7.isActive);
-  ok(a7.isCompatible);
-  ok(!a7.appDisabled);
-  ok(a7.isCompatibleWith("0", "0"));
-
-  let result = await AddonTestUtils.promiseFindAddonUpdates(
-    a7, AddonManager.UPDATE_WHEN_NEW_APP_DETECTED, "3.0", "3.0");
-  ok(result.compatibilityUpdate, "Should have seen a compatibility update");
-  ok(!result.updateAvailable, "Should not have seen a version update");
-
-  ok(a7.isCompatible);
-
-  await promiseRestartManager();
-
-  a7 = await AddonManager.getAddonByID("addon7@tests.mozilla.org");
-  notEqual(a7, null);
-  ok(a7.isActive);
-  ok(a7.isCompatible);
-  ok(!a7.appDisabled);
-
-  await a7.uninstall();
-});
-
-// Test that background update checks doesn't update an add-on that isn't
+// Test that the background update check doesn't update an add-on that isn't
 // allowed to update automatically.
-add_task(async function test_14() {
+add_task(async function test_no_auto_update() {
   // Have an add-on there that will be updated so we see some events from it
-  await promiseInstallXPI({
-    id: "addon1@tests.mozilla.org",
-    version: "1.0",
-    bootstrap: true,
-    updateURL: "http://example.com/data/" + updateFile,
-    targetApplications: [{
-      id: appId,
-      minVersion: "1",
-      maxVersion: "1",
-    }],
-    name: "Test Addon 1",
+  await promiseInstallWebExtension({
+    manifest: {
+      name: "Test Addon 1",
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: "addon1@tests.mozilla.org",
+          update_url: `http://example.com/data/${updateFile}`,
+        },
+      },
+    },
   });
 
-  await promiseInstallXPI({
-    id: "addon8@tests.mozilla.org",
-    version: "1.0",
-    bootstrap: true,
-    updateURL: "http://example.com/data/" + updateFile,
-    targetApplications: [{
-      id: appId,
-      minVersion: "1",
-      maxVersion: "1",
-    }],
-    name: "Test Addon 8",
+  await promiseInstallWebExtension({
+    manifest: {
+      name: "Test Addon 8",
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: "addon8@tests.mozilla.org",
+          update_url: `http://example.com/data/${updateFile}`,
+        },
+      },
+    },
   });
 
   let a8 = await AddonManager.getAddonByID("addon8@tests.mozilla.org");
@@ -824,182 +770,8 @@ add_task(async function test_14() {
   await a8.uninstall();
 });
 
-add_task(async function test_16() {
-  let url = "http://example.com/addons/test_install2_1.xpi";
-  let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
-  await promiseCompleteInstall(install);
-
-  let a1 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
-  notEqual(a1.syncGUID, null);
-  let oldGUID = a1.syncGUID;
-
-  let url_2 = "http://example.com/addons/test_install2_2.xpi";
-  let install_2 = await AddonManager.getInstallForURL(url_2, "application/x-xpinstall");
-  await promiseCompleteInstall(install_2);
-
-  let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
-  notEqual(a2.syncGUID, null);
-  equal(oldGUID, a2.syncGUID);
-
-  await a2.uninstall();
-});
-
-// Test that the update check correctly observes the
-// extensions.strictCompatibility pref and compatibility overrides.
-add_task(async function test_17() {
-  await promiseInstallXPI({
-    id: "addon9@tests.mozilla.org",
-    version: "1.0",
-    bootstrap: true,
-    updateURL: "http://example.com/data/" + updateFile,
-    targetApplications: [{
-      id: appId,
-      minVersion: "0.1",
-      maxVersion: "0.2",
-    }],
-    name: "Test Addon 9",
-  });
-
-  let listener;
-  await new Promise(resolve => {
-    listener = {
-      onNewInstall(aInstall) {
-        equal(aInstall.existingAddon.id, "addon9@tests.mozilla.org",
-              "Saw unexpected onNewInstall for " + aInstall.existingAddon.id);
-        equal(aInstall.version, "3.0");
-      },
-      onDownloadFailed(aInstall) {
-        resolve();
-      },
-    };
-    AddonManager.addInstallListener(listener);
-
-    Services.prefs.setCharPref(PREF_GETADDONS_BYIDS,
-                               `http://example.com/data/test_update_addons.json`);
-    Services.prefs.setCharPref(PREF_COMPAT_OVERRIDES,
-                               `http://example.com/data/test_update_compat.json`);
-    Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
-
-    AddonManagerInternal.backgroundUpdateCheck();
-  });
-
-  AddonManager.removeInstallListener(listener);
-
-  let a9 = await AddonManager.getAddonByID("addon9@tests.mozilla.org");
-  await a9.uninstall();
-});
-
-// Tests that compatibility updates are applied to addons when the updated
-// compatibility data wouldn't match with strict compatibility enabled.
-add_task(async function test_18() {
-  await promiseInstallXPI({
-    id: "addon10@tests.mozilla.org",
-    version: "1.0",
-    bootstrap: true,
-    updateURL: "http://example.com/data/" + updateFile,
-    targetApplications: [{
-      id: appId,
-      minVersion: "0.1",
-      maxVersion: "0.2",
-    }],
-    name: "Test Addon 10",
-  });
-
-  let a10 = await AddonManager.getAddonByID("addon10@tests.mozilla.org");
-  notEqual(a10, null);
-
-  let result = await AddonTestUtils.promiseFindAddonUpdates(a10);
-  ok(result.compatibilityUpdate, "Should have seen a compatibility update");
-  ok(!result.updateAvailable, "Should not have seen a version update");
-
-  await a10.uninstall();
-});
-
-// Test that the update check correctly observes when an addon opts-in to
-// strict compatibility checking.
-add_task(async function test_19() {
-  await promiseInstallXPI({
-    id: "addon11@tests.mozilla.org",
-    version: "1.0",
-    bootstrap: true,
-    updateURL: "http://example.com/data/" + updateFile,
-    targetApplications: [{
-      id: appId,
-      minVersion: "0.1",
-      maxVersion: "0.2",
-    }],
-    name: "Test Addon 11",
-  });
-
-  let a11 = await AddonManager.getAddonByID("addon11@tests.mozilla.org");
-  notEqual(a11, null);
-
-  let result = await AddonTestUtils.promiseFindAddonUpdates(a11);
-  ok(!result.compatibilityUpdate, "Should not have seen a compatibility update");
-  ok(!result.updateAvailable, "Should not have seen a version update");
-
-  await a11.uninstall();
-});
-
-// Test that the update succeeds when the update.rdf URN contains a type prefix
-// different from the add-on type
-add_task(async function test_20() {
-  await promiseInstallXPI({
-    id: "addon12@tests.mozilla.org",
-    version: "1.0",
-    bootstrap: true,
-    updateURL: "http://example.com/data/" + updateFile,
-    targetApplications: [{
-      id: appId,
-      minVersion: "1",
-      maxVersion: "1",
-    }],
-    name: "Test Addon 12",
-  });
-
-  let install = await new Promise(resolve => {
-    prepare_test({}, [
-      "onNewInstall",
-      "onDownloadStarted",
-      "onDownloadEnded",
-    ], resolve);
-
-    AddonManagerPrivate.backgroundUpdateCheck();
-  });
-
-  notEqual(install.existingAddon, null);
-  equal(install.existingAddon.id, "addon12@tests.mozilla.org");
-
-  await new Promise(resolve => {
-    prepare_test({
-      "addon12@tests.mozilla.org": [
-        ["onInstalling", false],
-        "onInstalled",
-      ],
-    }, [
-      "onInstallStarted",
-      "onInstallEnded",
-    ], resolve);
-  });
-
-  let a12 = await AddonManager.getAddonByID("addon12@tests.mozilla.org");
-  notEqual(a12, null);
-  equal(a12.version, "2.0");
-  equal(a12.type, "extension");
-
-  end_test();
-  await a12.uninstall();
-});
-
-add_task(async function cleanup() {
-  let addons = await AddonManager.getAddonsByTypes(["extension"]);
-
-  for (let addon of addons)
-    await addon.uninstall();
-});
-
 // Test that background update checks work for lightweight themes
-add_task(async function test_7() {
+add_task(async function test_lwt_update() {
   LightweightThemeManager.currentTheme = {
     id: "1",
     version: "1",
@@ -1154,18 +926,19 @@ add_task(async function run_test_locked_install() {
 
   await promiseShutdownManager();
 
-  await promiseWriteInstallRDFToXPI({
-    id: "addon13@tests.mozilla.org",
-    version: "1.0",
-    bootstrap: true,
-    updateURL: "http://example.com/data/test_update.json",
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "0.1",
-      maxVersion: "0.2",
-    }],
-    name: "Test Addon 13",
-  }, lockedDir);
+  let xpi = await createTempWebExtensionFile({
+    manifest: {
+      name: "Test Addon 13",
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: "addon13@tests.mozilla.org",
+          update_url: "http://example.com/data/test_update.json",
+        },
+      },
+    },
+  });
+  xpi.copyTo(lockedDir, "addon13@tests.mozilla.org.xpi");
 
   let validAddons = { "system": ["addon13@tests.mozilla.org"] };
   await overrideBuiltIns(validAddons);
@@ -1182,3 +955,4 @@ add_task(async function run_test_locked_install() {
   let installs = await AddonManager.getAllInstalls();
   equal(installs.length, 0);
 });
+
