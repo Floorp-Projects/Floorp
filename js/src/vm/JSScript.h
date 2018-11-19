@@ -3279,7 +3279,7 @@ GetSrcNote(JSContext* cx, JSScript* script, jsbytecode* pc);
 extern jsbytecode*
 LineNumberToPC(JSScript* script, unsigned lineno);
 
-extern JS_FRIEND_API(unsigned)
+extern JS_FRIEND_API unsigned
 GetScriptLineExtent(JSScript* script);
 
 } /* namespace js */

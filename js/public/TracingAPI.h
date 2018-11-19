@@ -12,15 +12,15 @@
 #include "js/HeapAPI.h"
 #include "js/TraceKind.h"
 
-class JS_PUBLIC_API(JSTracer);
+class JS_PUBLIC_API JSTracer;
 
 namespace JS {
-class JS_PUBLIC_API(CallbackTracer);
+class JS_PUBLIC_API CallbackTracer;
 template <typename T> class Heap;
 template <typename T> class TenuredHeap;
 
 /** Returns a static string equivalent of |kind|. */
-JS_FRIEND_API(const char*)
+JS_FRIEND_API const char*
 GCTraceKindToAscii(JS::TraceKind kind);
 
 } // namespace JS
@@ -51,7 +51,7 @@ enum WeakMapTraceKind {
     TraceWeakMapKeysValues
 };
 
-class JS_PUBLIC_API(JSTracer)
+class JS_PUBLIC_API JSTracer
 {
   public:
     // Return the runtime set on the tracer.
@@ -134,7 +134,7 @@ class AutoTracingName;
 class AutoTracingIndex;
 class AutoTracingCallback;
 
-class JS_PUBLIC_API(CallbackTracer) : public JSTracer
+class JS_PUBLIC_API CallbackTracer : public JSTracer
 {
   public:
     CallbackTracer(JSRuntime* rt, WeakMapTraceKind weakTraceKind = TraceWeakMapValues)
@@ -359,7 +359,7 @@ JSTracer::asCallbackTracer()
 namespace js {
 namespace gc {
 template <typename T>
-JS_PUBLIC_API(void) TraceExternalEdge(JSTracer* trc, T* thingp, const char* name);
+JS_PUBLIC_API void TraceExternalEdge(JSTracer* trc, T* thingp, const char* name);
 } // namespace gc
 } // namespace js
 
@@ -408,10 +408,10 @@ TraceEdge(JSTracer* trc, JS::TenuredHeap<T>* thingp, const char* name)
 // Note that while |edgep| must never be null, it is fine for |*edgep| to be
 // nullptr.
 template <typename T>
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 UnsafeTraceRoot(JSTracer* trc, T* edgep, const char* name);
 
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 TraceChildren(JSTracer* trc, GCCellPtr thing);
 
 using ZoneSet = js::HashSet<Zone*, js::DefaultHasher<Zone*>, js::SystemAllocPolicy>;
@@ -423,12 +423,12 @@ using CompartmentSet = js::HashSet<JS::Compartment*, js::DefaultHasher<JS::Compa
  * cross-compartment wrapper from a compartment that is not an element of
  * |compartments|.
  */
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 TraceIncomingCCWs(JSTracer* trc, const JS::CompartmentSet& compartments);
 
 } // namespace JS
 
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc,
                      void* thing, JS::TraceKind kind, bool includeDetails);
 
@@ -440,14 +440,14 @@ namespace js {
 // This method does not check if |*edgep| is non-null before tracing through
 // it, so callers must check any nullable pointer before calling this method.
 template <typename T>
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 UnsafeTraceManuallyBarrieredEdge(JSTracer* trc, T* edgep, const char* name);
 
 namespace gc {
 
 // Return true if the given edge is not live and is about to be swept.
 template <typename T>
-extern JS_PUBLIC_API(bool)
+extern JS_PUBLIC_API bool
 EdgeNeedsSweep(JS::Heap<T>* edgep);
 
 // Not part of the public API, but declared here so we can use it in GCPolicy

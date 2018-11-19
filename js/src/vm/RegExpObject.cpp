@@ -1545,7 +1545,7 @@ js::CloneScriptRegExpObject(JSContext* cx, RegExpObject& reobj)
     return RegExpObject::create(cx, source, reobj.getFlags(), TenuredObject);
 }
 
-JS_FRIEND_API(RegExpShared*)
+JS_FRIEND_API RegExpShared*
 js::RegExpToSharedNonInline(JSContext* cx, HandleObject obj)
 {
     return RegExpToShared(cx, obj);

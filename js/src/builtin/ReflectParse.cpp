@@ -3866,7 +3866,7 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
     return true;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS_InitReflectParse(JSContext* cx, HandleObject global)
 {
     RootedValue reflectVal(cx);

@@ -89,7 +89,7 @@ TrackedOptimizations::matchAttempts(const TempOptimizationAttemptsVector& other)
     return VectorContentsMatch(&attempts_, &other);
 }
 
-JS_PUBLIC_API(const char*)
+JS_PUBLIC_API const char*
 JS::TrackedStrategyString(TrackedStrategy strategy)
 {
     switch (strategy) {
@@ -104,7 +104,7 @@ JS::TrackedStrategyString(TrackedStrategy strategy)
     }
 }
 
-JS_PUBLIC_API(const char*)
+JS_PUBLIC_API const char*
 JS::TrackedOutcomeString(TrackedOutcome outcome)
 {
     switch (outcome) {
@@ -119,7 +119,7 @@ JS::TrackedOutcomeString(TrackedOutcome outcome)
     }
 }
 
-JS_PUBLIC_API(const char*)
+JS_PUBLIC_API const char*
 JS::TrackedTypeSiteString(TrackedTypeSite site)
 {
     switch (site) {
@@ -1340,7 +1340,7 @@ FrameHandle::updateHasTrackedOptimizations()
     }
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 FrameHandle::forEachOptimizationAttempt(ForEachTrackedOptimizationAttemptOp& op,
                                         JSScript** scriptOut, jsbytecode** pcOut) const
 {
@@ -1349,7 +1349,7 @@ FrameHandle::forEachOptimizationAttempt(ForEachTrackedOptimizationAttemptOp& op,
     entry_.youngestFrameLocationAtAddr(rt_, addr_, scriptOut, pcOut);
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 FrameHandle::forEachOptimizationTypeInfo(ForEachTrackedOptimizationTypeInfoOp& op) const
 {
     MOZ_ASSERT(optsIndex_.isSome());

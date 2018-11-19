@@ -68,7 +68,7 @@ js::gcstats::ExplainInvocationKind(JSGCInvocationKind gckind)
     }
 }
 
-JS_PUBLIC_API(const char*)
+JS_PUBLIC_API const char*
 JS::gcreason::ExplainReason(JS::gcreason::Reason reason)
 {
     switch (reason) {

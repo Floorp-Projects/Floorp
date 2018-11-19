@@ -19,7 +19,7 @@ struct JSStructuredCloneReader;
 struct JSStructuredCloneWriter;
 
 namespace js {
-    struct JS_PUBLIC_API(PerformanceGroup);
+    struct JS_PUBLIC_API PerformanceGroup;
 } // namespace js
 
 struct JSPrincipals {
@@ -51,13 +51,13 @@ struct JSPrincipals {
      * This is not defined by the JS engine but should be provided by the
      * embedding.
      */
-    JS_PUBLIC_API(void) dump();
+    JS_PUBLIC_API void dump();
 };
 
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 JS_HoldPrincipals(JSPrincipals* principals);
 
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 JS_DropPrincipals(JSContext* cx, JSPrincipals* principals);
 
 // Return whether the first principal subsumes the second. The exact meaning of
@@ -78,10 +78,10 @@ struct JSSecurityCallbacks {
     JSSubsumesOp               subsumes;
 };
 
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 JS_SetSecurityCallbacks(JSContext* cx, const JSSecurityCallbacks* callbacks);
 
-extern JS_PUBLIC_API(const JSSecurityCallbacks*)
+extern JS_PUBLIC_API const JSSecurityCallbacks*
 JS_GetSecurityCallbacks(JSContext* cx);
 
 /*
@@ -96,7 +96,7 @@ JS_GetSecurityCallbacks(JSContext* cx);
  * 'cx', JS_SetTrustedPrincipals must be called again, passing nullptr for
  * 'prin'.
  */
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 JS_SetTrustedPrincipals(JSContext* cx, JSPrincipals* prin);
 
 typedef void
@@ -107,7 +107,7 @@ typedef void
  * when its reference counter drops to zero. The initialization can be done
  * only once per JS runtime.
  */
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 JS_InitDestroyPrincipalsCallback(JSContext* cx, JSDestroyPrincipalsOp destroyPrincipals);
 
 /*
@@ -128,7 +128,7 @@ using JSReadPrincipalsOp = bool (*)(JSContext* cx, JSStructuredCloneReader* read
  * Initialize the callback that is called to read JSPrincipals instances from a
  * buffer. The initialization can be done only once per JS runtime.
  */
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 JS_InitReadPrincipalsCallback(JSContext* cx, JSReadPrincipalsOp read);
 
 

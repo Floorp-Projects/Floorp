@@ -1049,7 +1049,7 @@ AutoSetNewObjectMetadata::~AutoSetNewObjectMetadata()
     }
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 gc::TraceRealm(JSTracer* trc, JS::Realm* realm, const char* name)
 {
     // The way GC works with compartments is basically incomprehensible.
@@ -1062,55 +1062,55 @@ gc::TraceRealm(JSTracer* trc, JS::Realm* realm, const char* name)
     realm->traceGlobal(trc);
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 gc::RealmNeedsSweep(JS::Realm* realm)
 {
     return realm->globalIsAboutToBeFinalized();
 }
 
-JS_PUBLIC_API(JS::Realm*)
+JS_PUBLIC_API JS::Realm*
 JS::GetCurrentRealmOrNull(JSContext* cx)
 {
     return cx->realm();
 }
 
-JS_PUBLIC_API(JS::Realm*)
+JS_PUBLIC_API JS::Realm*
 JS::GetObjectRealmOrNull(JSObject* obj)
 {
     return IsCrossCompartmentWrapper(obj) ? nullptr : obj->nonCCWRealm();
 }
 
-JS_PUBLIC_API(void*)
+JS_PUBLIC_API void*
 JS::GetRealmPrivate(JS::Realm* realm)
 {
     return realm->realmPrivate();
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::SetRealmPrivate(JS::Realm* realm, void* data)
 {
     realm->setRealmPrivate(data);
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::SetDestroyRealmCallback(JSContext* cx, JS::DestroyRealmCallback callback)
 {
     cx->runtime()->destroyRealmCallback = callback;
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::SetRealmNameCallback(JSContext* cx, JS::RealmNameCallback callback)
 {
     cx->runtime()->realmNameCallback = callback;
 }
 
-JS_PUBLIC_API(JSObject*)
+JS_PUBLIC_API JSObject*
 JS::GetRealmGlobalOrNull(Handle<JS::Realm*> realm)
 {
     return realm->maybeGlobal();
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::InitRealmStandardClasses(JSContext* cx)
 {
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
@@ -1119,35 +1119,35 @@ JS::InitRealmStandardClasses(JSContext* cx)
     return GlobalObject::initStandardClasses(cx, cx->global());
 }
 
-JS_PUBLIC_API(JSObject*)
+JS_PUBLIC_API JSObject*
 JS::GetRealmObjectPrototype(JSContext* cx)
 {
     CHECK_THREAD(cx);
     return GlobalObject::getOrCreateObjectPrototype(cx, cx->global());
 }
 
-JS_PUBLIC_API(JSObject*)
+JS_PUBLIC_API JSObject*
 JS::GetRealmFunctionPrototype(JSContext* cx)
 {
     CHECK_THREAD(cx);
     return GlobalObject::getOrCreateFunctionPrototype(cx, cx->global());
 }
 
-JS_PUBLIC_API(JSObject*)
+JS_PUBLIC_API JSObject*
 JS::GetRealmArrayPrototype(JSContext* cx)
 {
     CHECK_THREAD(cx);
     return GlobalObject::getOrCreateArrayPrototype(cx, cx->global());
 }
 
-JS_PUBLIC_API(JSObject*)
+JS_PUBLIC_API JSObject*
 JS::GetRealmErrorPrototype(JSContext* cx)
 {
     CHECK_THREAD(cx);
     return GlobalObject::getOrCreateCustomErrorPrototype(cx, cx->global(), JSEXN_ERR);
 }
 
-JS_PUBLIC_API(JSObject*)
+JS_PUBLIC_API JSObject*
 JS::GetRealmIteratorPrototype(JSContext* cx)
 {
     CHECK_THREAD(cx);

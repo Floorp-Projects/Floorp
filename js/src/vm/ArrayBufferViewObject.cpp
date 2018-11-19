@@ -185,14 +185,14 @@ ArrayBufferViewObject::init(JSContext* cx, ArrayBufferObjectMaybeShared* buffer,
 
 /* JS Friend API */
 
-JS_FRIEND_API(bool)
+JS_FRIEND_API bool
 JS_IsArrayBufferViewObject(JSObject* obj)
 {
     obj = CheckedUnwrap(obj);
     return obj && obj->is<ArrayBufferViewObject>();
 }
 
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 js::UnwrapArrayBufferView(JSObject* obj)
 {
     if (JSObject* unwrapped = CheckedUnwrap(obj)) {
@@ -201,7 +201,7 @@ js::UnwrapArrayBufferView(JSObject* obj)
     return nullptr;
 }
 
-JS_FRIEND_API(void*)
+JS_FRIEND_API void*
 JS_GetArrayBufferViewData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&)
 {
     obj = CheckedUnwrap(obj);
@@ -214,7 +214,7 @@ JS_GetArrayBufferViewData(JSObject* obj, bool* isSharedMemory, const JS::AutoReq
     return view.dataPointerEither().unwrap(/*safe - caller sees isSharedMemory flag*/);
 }
 
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 JS_GetArrayBufferViewBuffer(JSContext* cx, HandleObject obj, bool* isSharedMemory)
 {
     AssertHeapIsIdle();
@@ -246,7 +246,7 @@ JS_GetArrayBufferViewBuffer(JSContext* cx, HandleObject obj, bool* isSharedMemor
     return buffer;
 }
 
-JS_FRIEND_API(uint32_t)
+JS_FRIEND_API uint32_t
 JS_GetArrayBufferViewByteLength(JSObject* obj)
 {
     obj = CheckedUnwrap(obj);
@@ -258,7 +258,7 @@ JS_GetArrayBufferViewByteLength(JSObject* obj)
            : obj->as<TypedArrayObject>().byteLength();
 }
 
-JS_FRIEND_API(uint32_t)
+JS_FRIEND_API uint32_t
 JS_GetArrayBufferViewByteOffset(JSObject* obj)
 {
     obj = CheckedUnwrap(obj);
@@ -270,7 +270,7 @@ JS_GetArrayBufferViewByteOffset(JSObject* obj)
            : obj->as<TypedArrayObject>().byteOffset();
 }
 
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 JS_GetObjectAsArrayBufferView(JSObject* obj, uint32_t* length, bool* isSharedMemory, uint8_t** data)
 {
     if (!(obj = CheckedUnwrap(obj))) {
@@ -284,7 +284,7 @@ JS_GetObjectAsArrayBufferView(JSObject* obj, uint32_t* length, bool* isSharedMem
     return obj;
 }
 
-JS_FRIEND_API(void)
+JS_FRIEND_API void
 js::GetArrayBufferViewLengthAndData(JSObject* obj, uint32_t* length, bool* isSharedMemory,
                                     uint8_t** data)
 {

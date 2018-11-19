@@ -17,7 +17,7 @@
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 
-extern MOZ_COLD JS_PUBLIC_API(void) JS_ReportOutOfMemory(JSContext* cx);
+extern MOZ_COLD JS_PUBLIC_API void JS_ReportOutOfMemory(JSContext* cx);
 
 namespace js {
 
@@ -54,7 +54,7 @@ class SystemAllocPolicy : public AllocPolicyBase
     }
 };
 
-MOZ_COLD JS_FRIEND_API(void) ReportOutOfMemory(JSContext* cx);
+MOZ_COLD JS_FRIEND_API void ReportOutOfMemory(JSContext* cx);
 
 /*
  * Allocation policy that calls the system memory functions and reports errors
@@ -73,8 +73,8 @@ class TempAllocPolicy : public AllocPolicyBase
      * Non-inline helper to call JSRuntime::onOutOfMemory with minimal
      * code bloat.
      */
-    JS_FRIEND_API(void*) onOutOfMemory(AllocFunction allocFunc, size_t nbytes,
-                                       void* reallocPtr = nullptr);
+    JS_FRIEND_API void* onOutOfMemory(AllocFunction allocFunc, size_t nbytes,
+                                      void* reallocPtr = nullptr);
 
     template <typename T>
     T* onOutOfMemoryTyped(AllocFunction allocFunc, size_t numElems, void* reallocPtr = nullptr) {
@@ -120,7 +120,7 @@ class TempAllocPolicy : public AllocPolicyBase
         js_free(p);
     }
 
-    JS_FRIEND_API(void) reportAllocOverflow() const;
+    JS_FRIEND_API void reportAllocOverflow() const;
 
     bool checkSimulatedOOM() const {
         if (js::oom::ShouldFailWithOOM()) {

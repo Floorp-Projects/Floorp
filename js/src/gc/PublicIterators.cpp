@@ -216,7 +216,7 @@ js::IterateGrayObjectsUnderCC(Zone* zone, GCThingCallback cellCallback, void* da
     ::IterateGrayObjects(zone, cellCallback, data);
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS_IterateCompartments(JSContext* cx, void* data,
                        JSIterateCompartmentCallback compartmentCallback)
 {
@@ -227,7 +227,7 @@ JS_IterateCompartments(JSContext* cx, void* data,
     }
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::IterateRealms(JSContext* cx, void* data, JS::IterateRealmCallback realmCallback)
 {
     AutoTraceSession session(cx->runtime());
@@ -239,7 +239,7 @@ JS::IterateRealms(JSContext* cx, void* data, JS::IterateRealmCallback realmCallb
     }
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::IterateRealmsWithPrincipals(JSContext* cx, JSPrincipals* principals, void* data,
                                 JS::IterateRealmCallback realmCallback)
 {
@@ -257,7 +257,7 @@ JS::IterateRealmsWithPrincipals(JSContext* cx, JSPrincipals* principals, void* d
     }
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::IterateRealmsInCompartment(JSContext* cx, JS::Compartment* compartment, void* data,
                                JS::IterateRealmCallback realmCallback)
 {

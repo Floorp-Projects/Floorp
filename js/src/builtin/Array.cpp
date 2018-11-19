@@ -260,7 +260,7 @@ StringIsArrayIndexHelper(const CharT* s, uint32_t length, uint32_t* indexp)
     return false;
 }
 
-JS_FRIEND_API(bool)
+JS_FRIEND_API bool
 js::StringIsArrayIndex(JSLinearString* str, uint32_t* indexp)
 {
     AutoCheckCannotGC nogc;
@@ -269,13 +269,13 @@ js::StringIsArrayIndex(JSLinearString* str, uint32_t* indexp)
            : StringIsArrayIndexHelper(str->twoByteChars(nogc), str->length(), indexp);
 }
 
-JS_FRIEND_API(bool)
+JS_FRIEND_API bool
 js::StringIsArrayIndex(const char16_t* str, uint32_t length, uint32_t* indexp)
 {
     return StringIsArrayIndexHelper(str, length, indexp);
 }
 
-JS_FRIEND_API(bool)
+JS_FRIEND_API bool
 js::StringIsArrayIndex(const char* str, uint32_t length, uint32_t* indexp)
 {
     return StringIsArrayIndexHelper(str, length, indexp);
