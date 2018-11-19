@@ -678,6 +678,12 @@ class nsCSPPolicy {
 
     bool hasDirective(CSPDirective aDir) const;
 
+    inline void setDeliveredViaMetaTagFlag(bool aFlag)
+      { mDeliveredViaMetaTag = aFlag; }
+
+    inline bool getDeliveredViaMetaTagFlag() const
+      { return mDeliveredViaMetaTag; }
+
     inline void setReportOnlyFlag(bool aFlag)
       { mReportOnly = aFlag; }
 
@@ -705,6 +711,7 @@ class nsCSPPolicy {
     nsUpgradeInsecureDirective* mUpgradeInsecDir;
     nsTArray<nsCSPDirective*>   mDirectives;
     bool                        mReportOnly;
+    bool                        mDeliveredViaMetaTag;
 };
 
 #endif /* nsCSPUtils_h___ */

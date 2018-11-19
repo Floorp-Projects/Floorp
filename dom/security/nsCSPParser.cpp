@@ -1289,6 +1289,8 @@ nsCSPParser::parseContentSecurityPolicy(const nsAString& aPolicyString,
     }
   }
 
+  policy->setDeliveredViaMetaTagFlag(aDeliveredViaMetaTag);
+
   if (policy->getNumDirectives() == 0) {
     // Individual errors were already reported in the parser, but if
     // we do not have an enforcable directive at all, we return null.
