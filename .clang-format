@@ -1,4 +1,4 @@
-BasedOnStyle: Mozilla
+BasedOnStyle: Google
 
 # Prevent the loss of indentation with these macros
 MacroBlockBegin: "^\
@@ -19,13 +19,4 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END_INHERITED|\
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED$"
 
 SortIncludes: false
-
-
-BreakBeforeBraces: Custom
-BraceWrapping:
-  AfterEnum: true
-  AfterStruct: true
-  AfterFunction: true
-  AfterClass: true
-  SplitEmptyFunction: true
 
