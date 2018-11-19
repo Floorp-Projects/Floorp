@@ -170,7 +170,7 @@ class JSErrorNotes
                      JSErrorCallback errorCallback, void* userRef,
                      const unsigned errorNumber, ...);
 
-    JS_PUBLIC_API(size_t) length();
+    JS_PUBLIC_API size_t length();
 
     // Create a deep copy of notes.
     js::UniquePtr<JSErrorNotes> copy(JSContext* cx);
@@ -200,8 +200,8 @@ class JSErrorNotes
         }
     };
 
-    JS_PUBLIC_API(iterator) begin();
-    JS_PUBLIC_API(iterator) end();
+    JS_PUBLIC_API iterator begin();
+    JS_PUBLIC_API iterator end();
 };
 
 /**

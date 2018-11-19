@@ -70,7 +70,7 @@ js::AutoEnterPolicy::recordLeave()
     }
 }
 
-JS_FRIEND_API(void)
+JS_FRIEND_API void
 js::assertEnteredPolicy(JSContext* cx, JSObject* proxy, jsid id,
                         BaseProxyHandler::Action act)
 {
@@ -171,7 +171,7 @@ Proxy::delete_(JSContext* cx, HandleObject proxy, HandleId id, ObjectOpResult& r
     return proxy->as<ProxyObject>().handler()->delete_(cx, proxy, id, result);
 }
 
-JS_FRIEND_API(bool)
+JS_FRIEND_API bool
 js::AppendUnique(JSContext* cx, AutoIdVector& base, AutoIdVector& others)
 {
     AutoIdVector uniqueOthers(cx);
@@ -861,7 +861,7 @@ const Class js::ProxyClass =
                     JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy) |
                     JSCLASS_HAS_RESERVED_SLOTS(2));
 
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 js::NewProxyObject(JSContext* cx, const BaseProxyHandler* handler, HandleValue priv, JSObject* proto_,
                    const ProxyOptions& options)
 {

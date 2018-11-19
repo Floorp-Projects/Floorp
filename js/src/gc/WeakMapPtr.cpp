@@ -123,9 +123,9 @@ JS::WeakMapPtr<K, V>::removeValue(const K& key)
 // Supported specializations of JS::WeakMap:
 //
 
-template class JS_PUBLIC_API(JS::WeakMapPtr)<JSObject*, JSObject*>;
+template class JS_PUBLIC_API JS::WeakMapPtr<JSObject*, JSObject*>;
 
 #ifdef DEBUG
 // Nobody's using this at the moment, but we want to make sure it compiles.
-template class JS_PUBLIC_API(JS::WeakMapPtr)<JSObject*, JS::Value>;
+template class JS_PUBLIC_API JS::WeakMapPtr<JSObject*, JS::Value>;
 #endif

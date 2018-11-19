@@ -171,7 +171,7 @@ js::BooleanToString(JSContext* cx, bool b)
     return b ? cx->names().true_ : cx->names().false_;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 js::ToBooleanSlow(HandleValue v)
 {
     if (v.isString()) {

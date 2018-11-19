@@ -582,7 +582,7 @@ Snapshot(JSContext* cx, HandleObject pobj_, unsigned flags, AutoIdVector* props)
     return true;
 }
 
-JS_FRIEND_API(bool)
+JS_FRIEND_API bool
 js::GetPropertyKeys(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVector* props)
 {
     return Snapshot(cx, obj,

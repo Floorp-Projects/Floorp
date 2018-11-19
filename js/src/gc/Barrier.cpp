@@ -224,13 +224,13 @@ MovableCellHasher<T>::match(const Key& k, const Lookup& l)
 #pragma GCC diagnostic ignored "-Wattributes"
 #endif // JS_BROKEN_GCC_ATTRIBUTE_WARNING
 
-template struct JS_PUBLIC_API(MovableCellHasher<JSObject*>);
-template struct JS_PUBLIC_API(MovableCellHasher<GlobalObject*>);
-template struct JS_PUBLIC_API(MovableCellHasher<SavedFrame*>);
-template struct JS_PUBLIC_API(MovableCellHasher<EnvironmentObject*>);
-template struct JS_PUBLIC_API(MovableCellHasher<WasmInstanceObject*>);
-template struct JS_PUBLIC_API(MovableCellHasher<JSScript*>);
-template struct JS_PUBLIC_API(MovableCellHasher<LazyScript*>);
+template struct JS_PUBLIC_API MovableCellHasher<JSObject*>;
+template struct JS_PUBLIC_API MovableCellHasher<GlobalObject*>;
+template struct JS_PUBLIC_API MovableCellHasher<SavedFrame*>;
+template struct JS_PUBLIC_API MovableCellHasher<EnvironmentObject*>;
+template struct JS_PUBLIC_API MovableCellHasher<WasmInstanceObject*>;
+template struct JS_PUBLIC_API MovableCellHasher<JSScript*>;
+template struct JS_PUBLIC_API MovableCellHasher<LazyScript*>;
 
 #ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
 #pragma GCC diagnostic pop
@@ -238,21 +238,21 @@ template struct JS_PUBLIC_API(MovableCellHasher<LazyScript*>);
 
 } // namespace js
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::HeapObjectPostBarrier(JSObject** objp, JSObject* prev, JSObject* next)
 {
     MOZ_ASSERT(objp);
     js::InternalBarrierMethods<JSObject*>::postBarrier(objp, prev, next);
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::HeapStringPostBarrier(JSString** strp, JSString* prev, JSString* next)
 {
     MOZ_ASSERT(strp);
     js::InternalBarrierMethods<JSString*>::postBarrier(strp, prev, next);
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::HeapValuePostBarrier(JS::Value* valuep, const Value& prev, const Value& next)
 {
     MOZ_ASSERT(valuep);

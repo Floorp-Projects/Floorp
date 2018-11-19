@@ -67,27 +67,27 @@ CanDoOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t leng
            !mozilla::recordreplay::IsRecordingOrReplaying();
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::CanCompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t length)
 {
     return CanDoOffThread(cx, options, length, OffThread::Compile);
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::CanDecodeOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t length)
 {
     return CanDoOffThread(cx, options, length, OffThread::Decode);
 }
 
 #ifdef JS_BUILD_BINAST
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::CanDecodeBinASTOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t length)
 {
     return CanDoOffThread(cx, options, length, OffThread::DecodeBinAST);
 }
 #endif
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::CompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
                      JS::SourceText<char16_t>& srcBuf,
                      OffThreadCompileCallback callback, void* callbackData)
@@ -96,7 +96,7 @@ JS::CompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
     return StartOffThreadParseScript(cx, options, srcBuf, callback, callbackData);
 }
 
-JS_PUBLIC_API(JSScript*)
+JS_PUBLIC_API JSScript*
 JS::FinishOffThreadScript(JSContext* cx, JS::OffThreadToken* token)
 {
     MOZ_ASSERT(cx);
@@ -104,7 +104,7 @@ JS::FinishOffThreadScript(JSContext* cx, JS::OffThreadToken* token)
     return HelperThreadState().finishScriptParseTask(cx, token);
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::CancelOffThreadScript(JSContext* cx, JS::OffThreadToken* token)
 {
     MOZ_ASSERT(cx);
@@ -112,7 +112,7 @@ JS::CancelOffThreadScript(JSContext* cx, JS::OffThreadToken* token)
     HelperThreadState().cancelParseTask(cx->runtime(), ParseTaskKind::Script, token);
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
                            JS::SourceText<char16_t>& srcBuf,
                            OffThreadCompileCallback callback, void* callbackData)
@@ -121,7 +121,7 @@ JS::CompileOffThreadModule(JSContext* cx, const ReadOnlyCompileOptions& options,
     return StartOffThreadParseModule(cx, options, srcBuf, callback, callbackData);
 }
 
-JS_PUBLIC_API(JSObject*)
+JS_PUBLIC_API JSObject*
 JS::FinishOffThreadModule(JSContext* cx, JS::OffThreadToken* token)
 {
     MOZ_ASSERT(cx);
@@ -129,7 +129,7 @@ JS::FinishOffThreadModule(JSContext* cx, JS::OffThreadToken* token)
     return HelperThreadState().finishModuleParseTask(cx, token);
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::CancelOffThreadModule(JSContext* cx, JS::OffThreadToken* token)
 {
     MOZ_ASSERT(cx);
@@ -137,7 +137,7 @@ JS::CancelOffThreadModule(JSContext* cx, JS::OffThreadToken* token)
     HelperThreadState().cancelParseTask(cx->runtime(), ParseTaskKind::Module, token);
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::DecodeOffThreadScript(JSContext* cx, const ReadOnlyCompileOptions& options,
                           mozilla::Vector<uint8_t>& buffer /* TranscodeBuffer& */, size_t cursor,
                           OffThreadCompileCallback callback, void* callbackData)
@@ -147,7 +147,7 @@ JS::DecodeOffThreadScript(JSContext* cx, const ReadOnlyCompileOptions& options,
     return StartOffThreadDecodeScript(cx, options, range, callback, callbackData);
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::DecodeOffThreadScript(JSContext* cx, const ReadOnlyCompileOptions& options,
                           const mozilla::Range<uint8_t>& range /* TranscodeRange& */,
                           OffThreadCompileCallback callback, void* callbackData)
@@ -156,7 +156,7 @@ JS::DecodeOffThreadScript(JSContext* cx, const ReadOnlyCompileOptions& options,
     return StartOffThreadDecodeScript(cx, options, range, callback, callbackData);
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::DecodeMultiOffThreadScripts(JSContext* cx, const ReadOnlyCompileOptions& options,
                                 TranscodeSources& sources,
                                 OffThreadCompileCallback callback, void* callbackData)
@@ -171,7 +171,7 @@ JS::DecodeMultiOffThreadScripts(JSContext* cx, const ReadOnlyCompileOptions& opt
     return StartOffThreadDecodeMultiScripts(cx, options, sources, callback, callbackData);
 }
 
-JS_PUBLIC_API(JSScript*)
+JS_PUBLIC_API JSScript*
 JS::FinishOffThreadScriptDecoder(JSContext* cx, JS::OffThreadToken* token)
 {
     MOZ_ASSERT(cx);
@@ -179,7 +179,7 @@ JS::FinishOffThreadScriptDecoder(JSContext* cx, JS::OffThreadToken* token)
     return HelperThreadState().finishScriptDecodeTask(cx, token);
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::CancelOffThreadScriptDecoder(JSContext* cx, JS::OffThreadToken* token)
 {
     MOZ_ASSERT(cx);
@@ -187,7 +187,7 @@ JS::CancelOffThreadScriptDecoder(JSContext* cx, JS::OffThreadToken* token)
     HelperThreadState().cancelParseTask(cx->runtime(), ParseTaskKind::ScriptDecode, token);
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::FinishMultiOffThreadScriptsDecoder(JSContext* cx, JS::OffThreadToken* token, MutableHandle<ScriptVector> scripts)
 {
     MOZ_ASSERT(cx);
@@ -195,7 +195,7 @@ JS::FinishMultiOffThreadScriptsDecoder(JSContext* cx, JS::OffThreadToken* token,
     return HelperThreadState().finishMultiScriptsDecodeTask(cx, token, scripts);
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::CancelMultiOffThreadScriptsDecoder(JSContext* cx, JS::OffThreadToken* token)
 {
     MOZ_ASSERT(cx);

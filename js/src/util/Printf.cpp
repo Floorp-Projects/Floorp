@@ -20,7 +20,7 @@ using namespace js;
 
 typedef mozilla::SmprintfPolicyPointer<js::SystemAllocPolicy> JSSmprintfPointer;
 
-JS_PUBLIC_API(JS::UniqueChars) JS_smprintf(const char* fmt, ...)
+JS_PUBLIC_API JS::UniqueChars JS_smprintf(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -29,7 +29,7 @@ JS_PUBLIC_API(JS::UniqueChars) JS_smprintf(const char* fmt, ...)
     return JS::UniqueChars(result.release());
 }
 
-JS_PUBLIC_API(JS::UniqueChars) JS_sprintf_append(JS::UniqueChars&& last, const char* fmt, ...)
+JS_PUBLIC_API JS::UniqueChars JS_sprintf_append(JS::UniqueChars&& last, const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -40,13 +40,13 @@ JS_PUBLIC_API(JS::UniqueChars) JS_sprintf_append(JS::UniqueChars&& last, const c
     return JS::UniqueChars(result.release());
 }
 
-JS_PUBLIC_API(JS::UniqueChars) JS_vsmprintf(const char* fmt, va_list ap)
+JS_PUBLIC_API JS::UniqueChars JS_vsmprintf(const char* fmt, va_list ap)
 {
     return JS::UniqueChars(mozilla::Vsmprintf<js::SystemAllocPolicy>(fmt, ap).release());
 }
 
-JS_PUBLIC_API(JS::UniqueChars) JS_vsprintf_append(JS::UniqueChars&& last,
-                                                  const char* fmt, va_list ap)
+JS_PUBLIC_API JS::UniqueChars JS_vsprintf_append(JS::UniqueChars&& last,
+                                                 const char* fmt, va_list ap)
 {
     JSSmprintfPointer lastPtr(last.release());
     return JS::UniqueChars(mozilla::VsmprintfAppend<js::SystemAllocPolicy>(std::move(lastPtr),

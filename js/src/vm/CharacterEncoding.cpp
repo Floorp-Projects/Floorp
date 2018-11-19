@@ -78,7 +78,7 @@ GetDeflatedUTF8StringLength(const CharT* chars, size_t nchars)
     return nbytes;
 }
 
-JS_PUBLIC_API(size_t)
+JS_PUBLIC_API size_t
 JS::GetDeflatedUTF8StringLength(JSFlatString* s)
 {
     JS::AutoCheckCannotGC nogc;
@@ -152,7 +152,7 @@ DeflateStringToUTF8Buffer(const CharT* src, size_t srclen, mozilla::RangedPtr<ch
     }
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::DeflateStringToUTF8Buffer(JSFlatString* src, mozilla::RangedPtr<char> dst,
                               size_t* dstlenp, size_t* numcharsp)
 {

@@ -33,7 +33,7 @@ mozilla::Atomic<AutoEnterOOMUnsafeRegion*> AutoEnterOOMUnsafeRegion::owner_;
 
 namespace oom {
 
-JS_PUBLIC_DATA(FailureSimulator) simulator;
+JS_PUBLIC_DATA FailureSimulator simulator;
 static MOZ_THREAD_LOCAL(uint32_t) threadType;
 
 bool
@@ -99,8 +99,8 @@ FailureSimulator::reset()
 
 bool js::gDisablePoisoning = false;
 
-JS_PUBLIC_DATA(arena_id_t) js::MallocArena;
-JS_PUBLIC_DATA(arena_id_t) js::ArrayBufferContentsArena;
+JS_PUBLIC_DATA arena_id_t js::MallocArena;
+JS_PUBLIC_DATA arena_id_t js::ArrayBufferContentsArena;
 
 void
 js::InitMallocAllocator()
@@ -117,7 +117,7 @@ js::ShutDownMallocAllocator()
     // moz_dispose_arena(ArrayBufferContentsArena);
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS_Assert(const char* s, const char* file, int ln)
 {
     MOZ_ReportAssertionFailure(s, file, ln);

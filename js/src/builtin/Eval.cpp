@@ -490,7 +490,7 @@ ExecuteInExtensibleLexicalEnvironment(JSContext* cx, HandleScript scriptArg, Han
                          NullFramePtr() /* evalInFrame */, rval.address());
 }
 
-JS_FRIEND_API(bool)
+JS_FRIEND_API bool
 js::ExecuteInFrameScriptEnvironment(JSContext* cx, HandleObject objArg, HandleScript scriptArg,
                                     MutableHandleObject envArg)
 {
@@ -528,7 +528,7 @@ js::ExecuteInFrameScriptEnvironment(JSContext* cx, HandleObject objArg, HandleSc
     return true;
 }
 
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 js::NewJSMEnvironment(JSContext* cx)
 {
     RootedObject varEnv(cx, NonSyntacticVariablesObject::create(cx));
@@ -546,14 +546,14 @@ js::NewJSMEnvironment(JSContext* cx)
     return varEnv;
 }
 
-JS_FRIEND_API(bool)
+JS_FRIEND_API bool
 js::ExecuteInJSMEnvironment(JSContext* cx, HandleScript scriptArg, HandleObject varEnv)
 {
     AutoObjectVector emptyChain(cx);
     return ExecuteInJSMEnvironment(cx, scriptArg, varEnv, emptyChain);
 }
 
-JS_FRIEND_API(bool)
+JS_FRIEND_API bool
 js::ExecuteInJSMEnvironment(JSContext* cx, HandleScript scriptArg, HandleObject varEnv,
                             AutoObjectVector& targetObj)
 {
@@ -598,7 +598,7 @@ js::ExecuteInJSMEnvironment(JSContext* cx, HandleScript scriptArg, HandleObject 
     return ExecuteInExtensibleLexicalEnvironment(cx, scriptArg, env);
 }
 
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 js::GetJSMEnvironmentOfScriptedCaller(JSContext* cx)
 {
     FrameIter iter(cx);
@@ -618,7 +618,7 @@ js::GetJSMEnvironmentOfScriptedCaller(JSContext* cx)
     return env;
 }
 
-JS_FRIEND_API(bool)
+JS_FRIEND_API bool
 js::IsJSMEnvironment(JSObject* obj)
 {
     // NOTE: This also returns true if the NonSyntacticVariablesObject was

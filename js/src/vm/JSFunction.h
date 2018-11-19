@@ -1077,7 +1077,7 @@ fun_call(JSContext* cx, unsigned argc, Value* vp);
 namespace JS {
 namespace detail {
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 CheckIsValidConstructible(const Value& calleev);
 
 } // namespace detail

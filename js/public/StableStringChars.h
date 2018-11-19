@@ -45,7 +45,7 @@ GetStringLength(JSString* s)
  * JSString methods and often the code can be rewritten so that only indexes
  * instead of char pointers are used in parts of the code that can GC.
  */
-class MOZ_STACK_CLASS JS_FRIEND_API(AutoStableStringChars) final
+class MOZ_STACK_CLASS JS_FRIEND_API AutoStableStringChars final
 {
     /*
      * When copying string char, use this many bytes of inline storage.  This is

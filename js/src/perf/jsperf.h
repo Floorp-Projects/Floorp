@@ -27,7 +27,7 @@ namespace JS {
  * requested are available as data values after calling Stop().  The
  * object may be reused for many measurements.
  */
-class JS_FRIEND_API(PerfMeasurement)
+class JS_FRIEND_API PerfMeasurement
 {
   protected:
     // Implementation-specific data, if any.
@@ -117,7 +117,7 @@ class JS_FRIEND_API(PerfMeasurement)
  * Javascript object passed as an argument (this will normally be a
  * global object).  The JS-visible API is identical to the C++ API.
  */
-extern JS_FRIEND_API(JSObject*)
+extern JS_FRIEND_API JSObject*
     RegisterPerfMeasurement(JSContext* cx, JS::HandleObject global);
 
 /*
@@ -125,7 +125,7 @@ extern JS_FRIEND_API(JSObject*)
  * wrapper class, extract the C++ object.  Returns nullptr if the
  * Value is not an instance of the wrapper.
  */
-extern JS_FRIEND_API(PerfMeasurement*)
+extern JS_FRIEND_API PerfMeasurement*
     ExtractPerfMeasurement(const Value& wrapper);
 
 } // namespace JS

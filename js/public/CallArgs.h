@@ -78,7 +78,7 @@ typedef bool
 
 namespace JS {
 
-extern JS_PUBLIC_DATA(const HandleValue) UndefinedHandleValue;
+extern JS_PUBLIC_DATA const HandleValue UndefinedHandleValue;
 
 namespace detail {
 
@@ -86,11 +86,11 @@ namespace detail {
  * Compute |this| for the |vp| inside a JSNative, either boxing primitives or
  * replacing with the global object as necessary.
  */
-extern JS_PUBLIC_API(bool)
+extern JS_PUBLIC_API bool
 ComputeThis(JSContext* cx, JS::Value* vp, MutableHandleObject thisObject);
 
 #ifdef JS_DEBUG
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 CheckIsValidConstructible(const Value& v);
 #endif
 
@@ -326,7 +326,7 @@ class MOZ_STACK_CLASS CallArgs : public detail::CallArgsBase<detail::IncludeUsed
      * Returns true if there are at least |required| arguments passed in. If
      * false, it reports an error message on the context.
      */
-    JS_PUBLIC_API(bool) requireAtLeast(JSContext* cx, const char* fnname, unsigned required) const;
+    JS_PUBLIC_API bool requireAtLeast(JSContext* cx, const char* fnname, unsigned required) const;
 
 };
 

@@ -82,7 +82,7 @@ enum class AsmJSOption : uint8_t
  * Use this in code that needs to propagate compile options from one
  * compilation unit to another.
  */
-class JS_PUBLIC_API(TransitiveCompileOptions)
+class JS_PUBLIC_API TransitiveCompileOptions
 {
   protected:
     /**
@@ -151,7 +151,7 @@ class JS_PUBLIC_API(TransitiveCompileOptions)
     void operator=(const TransitiveCompileOptions&) = delete;
 };
 
-class JS_PUBLIC_API(CompileOptions);
+class JS_PUBLIC_API CompileOptions;
 
 /**
  * The class representing a full set of compile options.
@@ -161,7 +161,7 @@ class JS_PUBLIC_API(CompileOptions);
  * is protected anyway); instead, create instances only of the derived classes:
  * CompileOptions and OwningCompileOptions.
  */
-class JS_PUBLIC_API(ReadOnlyCompileOptions)
+class JS_PUBLIC_API ReadOnlyCompileOptions
   : public TransitiveCompileOptions
 {
   public:
@@ -228,7 +228,7 @@ class JS_PUBLIC_API(ReadOnlyCompileOptions)
  * comes to refer to the object that owns this, then the whole cycle, and
  * anything else it entrains, will never be freed.
  */
-class JS_PUBLIC_API(OwningCompileOptions) final
+class JS_PUBLIC_API OwningCompileOptions final
   : public ReadOnlyCompileOptions
 {
     PersistentRooted<JSObject*> elementRoot;
@@ -359,7 +359,7 @@ class JS_PUBLIC_API(OwningCompileOptions) final
  * create an instance of this type, it's up to you to guarantee that
  * everything you store in it will outlive it.
  */
-class MOZ_STACK_CLASS JS_PUBLIC_API(CompileOptions) final
+class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   : public ReadOnlyCompileOptions
 {
   private:
