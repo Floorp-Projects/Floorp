@@ -1532,7 +1532,7 @@ WebRenderBridgeParent::UpdateWebRender(CompositorVsyncScheduler* aScheduler,
   mAnimStorage = aAnimStorage;
 
   // Register pipeline to updated AsyncImageManager.
-  mAsyncImageManager->AddPipeline(mPipelineId);
+  mAsyncImageManager->AddPipeline(mPipelineId, this);
 
   return GetNextWrEpoch(); // Update webrender epoch
 }
