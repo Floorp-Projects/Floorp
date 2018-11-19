@@ -12,6 +12,8 @@
 use super::{UnknownUnit, Angle};
 use approxeq::ApproxEq;
 use homogen::HomogeneousVector;
+#[cfg(feature = "mint")]
+use mint;
 use trig::Trig;
 use point::{TypedPoint2D, TypedPoint3D};
 use vector::{TypedVector2D, TypedVector3D, vec2, vec3};
@@ -741,6 +743,31 @@ where T: Copy + fmt::Debug +
     }
 }
 
+#[cfg(feature = "mint")]
+impl<T, Src, Dst> From<mint::RowMatrix4<T>> for TypedTransform3D<T, Src, Dst> {
+    fn from(m: mint::RowMatrix4<T>) -> Self {
+        TypedTransform3D {
+            m11: m.x.x, m12: m.x.y, m13: m.x.z, m14: m.x.w,
+            m21: m.y.x, m22: m.y.y, m23: m.y.z, m24: m.y.w,
+            m31: m.z.x, m32: m.z.y, m33: m.z.z, m34: m.z.w,
+            m41: m.w.x, m42: m.w.y, m43: m.w.z, m44: m.w.w,
+            _unit: PhantomData,
+        }
+    }
+}
+#[cfg(feature = "mint")]
+impl<T, Src, Dst> Into<mint::RowMatrix4<T>> for TypedTransform3D<T, Src, Dst> {
+    fn into(self) -> mint::RowMatrix4<T> {
+        mint::RowMatrix4 {
+            x: mint::Vector4 { x: self.m11, y: self.m12, z: self.m13, w: self.m14 },
+            y: mint::Vector4 { x: self.m21, y: self.m22, z: self.m23, w: self.m24 },
+            z: mint::Vector4 { x: self.m31, y: self.m32, z: self.m33, w: self.m34 },
+            w: mint::Vector4 { x: self.m41, y: self.m42, z: self.m43, w: self.m44 },
+        }
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use approxeq::ApproxEq;
@@ -1020,5 +1047,15 @@ mod tests {
         m.m44 = 1.0;
         m.m24 = -1.0;
         assert_eq!(None, m.transform_point2d(&p));
+    }
+
+    #[cfg(feature = "mint")]
+    #[test]
+    pub fn test_mint() {
+        let m1 = Mf32::create_rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2));
+        let mm: mint::RowMatrix4<_> = m1.into();
+        let m2 = Mf32::from(mm);
+
+        assert_eq!(m1, m2);
     }
 }

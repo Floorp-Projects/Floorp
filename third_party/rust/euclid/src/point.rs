@@ -12,6 +12,8 @@ use approxeq::ApproxEq;
 use length::Length;
 use scale::TypedScale;
 use size::TypedSize2D;
+#[cfg(feature = "mint")]
+use mint;
 use num::*;
 use num_traits::{Float, NumCast};
 use vector::{TypedVector2D, TypedVector3D, vec2, vec3};
@@ -26,6 +28,7 @@ define_matrix! {
         pub y: T,
     }
 }
+mint_vec!(TypedPoint2D[x, y] = Point2);
 
 /// Default 2d point type with no unit.
 ///
@@ -194,6 +197,11 @@ impl<T: Float, U> TypedPoint2D<T, U> {
     #[inline]
     pub fn max(self, other: Self) -> Self {
         point2(self.x.max(other.x), self.y.max(other.y))
+    }
+
+    #[inline]
+    pub fn clamp(&self, start: Self, end: Self) -> Self {
+        self.max(start).min(end)
     }
 }
 
@@ -408,6 +416,7 @@ define_matrix! {
         pub z: T,
     }
 }
+mint_vec!(TypedPoint3D[x, y, z] = Point3);
 
 /// Default 3d point type with no unit.
 ///
@@ -617,6 +626,11 @@ impl<T: Float, U> TypedPoint3D<T, U> {
             self.z.max(other.z),
         )
     }
+
+    #[inline]
+    pub fn clamp(&self, start: Self, end: Self) -> Self {
+        self.max(start).min(end)
+    }
 }
 
 impl<T: Round, U> TypedPoint3D<T, U> {
@@ -777,9 +791,12 @@ pub fn point3<T: Copy, U>(x: T, y: T, z: T) -> TypedPoint3D<T, U> {
     TypedPoint3D::new(x, y, z)
 }
 
+
 #[cfg(test)]
 mod point2d {
     use super::Point2D;
+    #[cfg(feature = "mint")]
+    use mint;
 
     #[test]
     pub fn test_scalar_mul() {
@@ -808,6 +825,16 @@ mod point2d {
         let result = p1.max(p2);
 
         assert_eq!(result, Point2D::new(2.0, 3.0));
+    }
+
+    #[cfg(feature = "mint")]
+    #[test]
+    pub fn test_mint() {
+        let p1 = Point2D::new(1.0, 3.0);
+        let pm: mint::Point2<_> = p1.into();
+        let p2 = Point2D::from(pm);
+
+        assert_eq!(p1, p2);
     }
 }
 
@@ -874,6 +901,8 @@ mod typedpoint2d {
 #[cfg(test)]
 mod point3d {
     use super::{Point3D, point2, point3};
+    #[cfg(feature = "mint")]
+    use mint;
 
     #[test]
     pub fn test_min() {
@@ -915,4 +944,15 @@ mod point3d {
         assert_eq!(p.xz(), point2(1, 3));
         assert_eq!(p.yz(), point2(2, 3));
     }
+
+    #[cfg(feature = "mint")]
+    #[test]
+    pub fn test_mint() {
+        let p1 = Point3D::new(1.0, 3.0, 5.0);
+        let pm: mint::Point3<_> = p1.into();
+        let p2 = Point3D::from(pm);
+
+        assert_eq!(p1, p2);
+    }
+
 }
