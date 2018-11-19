@@ -132,9 +132,6 @@ function wasmRunWithDebugger(wast, lib, init, done) {
     let g = newGlobal('');
     let dbg = new Debugger(g);
 
-    // Enable binary source mode.
-    dbg.allowWasmBinarySource = true;
-
     g.eval(`
 var wasm = wasmTextToBinary('${wast}');
 var lib = ${lib || 'undefined'};

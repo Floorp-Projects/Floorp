@@ -355,7 +355,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
         }
       }
 
-      if (isWasm && this.dbg.allowWasmBinarySource) {
+      if (isWasm) {
         const wasm = this.source.binary;
         const buffer = wasm.buffer;
         assert(

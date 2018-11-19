@@ -1324,8 +1324,7 @@ Module::instantiate(JSContext* cx,
             return false;
         }
 
-        bool binarySource = cx->realm()->debuggerObservesBinarySource();
-        maybeDebug = cx->make_unique<DebugState>(*code, *this, binarySource);
+        maybeDebug = cx->make_unique<DebugState>(*code, *this);
         if (!maybeDebug) {
             return false;
         }
