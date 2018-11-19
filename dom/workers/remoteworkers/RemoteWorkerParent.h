@@ -22,6 +22,9 @@ public:
   RemoteWorkerParent();
 
   void
+  Initialize();
+
+  void
   SetController(RemoteWorkerController* aController);
 
 private:

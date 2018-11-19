@@ -139,6 +139,8 @@ RemoteWorkerManager::LaunchInternal(RemoteWorkerController* aController,
     return;
   }
 
+  workerActor->Initialize();
+
   // This makes the link better the 2 actors.
   aController->SetWorkerActor(workerActor);
   workerActor->SetController(aController);

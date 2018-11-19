@@ -6,14 +6,45 @@
 
 #include "RemoteWorkerParent.h"
 #include "RemoteWorkerController.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Unused.h"
+#include "nsProxyRelease.h"
 
 namespace mozilla {
 
 using namespace ipc;
 
 namespace dom {
+
+namespace {
+
+class UnregisterActorRunnable final : public Runnable
+{
+public:
+  explicit UnregisterActorRunnable(already_AddRefed<ContentParent> aParent)
+    : Runnable("UnregisterActorRunnable")
+    , mContentParent(aParent)
+  {
+    AssertIsOnBackgroundThread();
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mContentParent->UnregisterRemoveWorkerActor();
+    mContentParent = nullptr;
+
+    return NS_OK;
+  }
+
+private:
+  RefPtr<ContentParent> mContentParent;
+};
+
+} // anonymous
 
 RemoteWorkerParent::RemoteWorkerParent()
 {
@@ -28,10 +59,39 @@ RemoteWorkerParent::~RemoteWorkerParent()
 }
 
 void
+RemoteWorkerParent::Initialize()
+{
+  RefPtr<ContentParent> parent = BackgroundParent::GetContentParent(Manager());
+
+  // Parent is null if the child actor runs on the parent process.
+  if (parent) {
+    parent->RegisterRemoteWorkerActor();
+
+    nsCOMPtr<nsIEventTarget> target =
+      SystemGroup::EventTargetFor(TaskCategory::Other);
+
+    NS_ProxyRelease("RemoteWorkerParent::Initialize ContentParent",
+                    target, parent.forget());
+  }
+}
+
+void
 RemoteWorkerParent::ActorDestroy(IProtocol::ActorDestroyReason)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
+
+  RefPtr<ContentParent> parent = BackgroundParent::GetContentParent(Manager());
+
+  // Parent is null if the child actor runs on the parent process.
+  if (parent) {
+    RefPtr<UnregisterActorRunnable> r =
+      new UnregisterActorRunnable(parent.forget());
+
+    nsCOMPtr<nsIEventTarget> target =
+      SystemGroup::EventTargetFor(TaskCategory::Other);
+    target->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+  }
 
   mController = nullptr;
 }
