@@ -159,7 +159,6 @@ extern crate dwrote;
 extern crate app_units;
 extern crate bincode;
 extern crate byteorder;
-extern crate euclid;
 extern crate fxhash;
 extern crate gleam;
 extern crate num_traits;
@@ -202,4 +201,5 @@ pub use renderer::{RendererStats, SceneBuilderHooks, ThreadListener, ShaderPreca
 pub use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 pub use shade::{Shaders, WrShaders};
 pub use webrender_api as api;
+pub use webrender_api::euclid;
 pub use resource_cache::intersect_for_tile;
