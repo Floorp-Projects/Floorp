@@ -2736,14 +2736,18 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
 
     // Top level workers' main script use the document charset for the script
     // uri encoding.
-    bool useDefaultEncoding = false;
+    nsCOMPtr<nsIURI> url;
+    rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(url),
+                                                   aScriptURL,
+                                                   document,
+                                                   loadInfo.mBaseURI);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
+
     rv = ChannelFromScriptURLMainThread(loadInfo.mLoadingPrincipal,
-                                        loadInfo.mBaseURI,
                                         document, loadInfo.mLoadGroup,
-                                        aScriptURL, nullptr,
+                                        url,
                                         clientInfo,
                                         ContentPolicyType(aWorkerType),
-                                        useDefaultEncoding,
                                         getter_AddRefs(loadInfo.mChannel));
     NS_ENSURE_SUCCESS(rv, rv);
 

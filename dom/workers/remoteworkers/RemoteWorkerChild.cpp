@@ -329,16 +329,13 @@ RemoteWorkerChild::ExecWorkerOnMainThread(const RemoteWorkerData& aData)
   // Top level workers' main script use the document charset for the script
   // uri encoding.
   rv = ChannelFromScriptURLMainThread(info.mLoadingPrincipal,
-                                      info.mBaseURI,
                                       nullptr /* parent document */,
                                       info.mLoadGroup,
-                                      EmptyString(),
                                       info.mResolvedScriptURI,
                                       clientInfo,
                                       aData.isSharedWorker()
                                         ? nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER
                                         : nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER,
-                                      false /* default encoding */,
                                       getter_AddRefs(info.mChannel));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
