@@ -164,8 +164,8 @@ public:
 
   void DeleteStreams() override {}
 
-  explicit WebrtcAudioConduit(RefPtr<WebRtcCallWrapper> aCall,
-                              nsCOMPtr<nsIEventTarget> aStsThread)
+  WebrtcAudioConduit(RefPtr<WebRtcCallWrapper> aCall,
+                     nsCOMPtr<nsIEventTarget> aStsThread)
     : mFakeAudioDevice(new webrtc::FakeAudioDeviceModule())
     , mTransportMonitor("WebrtcAudioConduit")
     , mTransmitterTransport(nullptr)
@@ -179,9 +179,7 @@ public:
     , mEngineTransmitting(false)
     , mEngineReceiving(false)
     , mRecvChannel(-1)
-    , mRecvChannelProxy(nullptr)
     , mSendChannel(-1)
-    , mSendChannelProxy(nullptr)
     , mDtmfEnabled(false)
     , mMutex("WebrtcAudioConduit::mMutex")
     , mCaptureDelay(150)
@@ -193,7 +191,7 @@ public:
 
   virtual ~WebrtcAudioConduit();
 
-  MediaConduitErrorCode Init();
+  virtual MediaConduitErrorCode Init();
 
   int GetRecvChannel() { return mRecvChannel; }
   webrtc::VoiceEngine* GetVoiceEngine() {
@@ -275,6 +273,11 @@ public:
 
   bool IsSamplingFreqSupported(int freq) const override;
 
+protected:
+  // These are protected so they can be accessed by unit tests
+  std::unique_ptr<webrtc::voe::ChannelProxy> mRecvChannelProxy = nullptr;
+  std::unique_ptr<webrtc::voe::ChannelProxy> mSendChannelProxy = nullptr;
+
 private:
   WebrtcAudioConduit(const WebrtcAudioConduit& other) = delete;
   void operator=(const WebrtcAudioConduit& other) = delete;
@@ -295,7 +298,7 @@ private:
   void DeleteRecvStream();
 
   MediaConduitErrorCode CreateChannels();
-  void DeleteChannels();
+  virtual void DeleteChannels();
 
   UniquePtr<webrtc::FakeAudioDeviceModule> mFakeAudioDevice;
   mozilla::ReentrantMonitor mTransportMonitor;
@@ -327,9 +330,7 @@ private:
   AutoTArray<Processing,8> mProcessing;
 
   int mRecvChannel;
-  std::unique_ptr<webrtc::voe::ChannelProxy> mRecvChannelProxy;
   int mSendChannel;
-  std::unique_ptr<webrtc::voe::ChannelProxy> mSendChannelProxy;
   bool mDtmfEnabled;
 
   Mutex mMutex;
