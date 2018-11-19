@@ -292,7 +292,7 @@ LoggingHelper(bool aUseProfiler, const char* aFmt, ...)
 
   if (MOZ_LOG_TEST(logModule, logLevel) ||
 #ifdef MOZ_GECKO_PROFILER
-      (aUseProfiler && profiler_is_active())
+      (aUseProfiler && profiler_thread_is_being_profiled())
 #else
       false
 #endif

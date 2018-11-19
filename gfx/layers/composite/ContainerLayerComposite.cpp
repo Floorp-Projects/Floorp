@@ -86,7 +86,7 @@ static void
 PrintUniformityInfo(Layer* aLayer)
 {
 #if defined(MOZ_GECKO_PROFILER)
-  if (!profiler_is_active()) {
+  if (!profiler_thread_is_being_profiled()) {
     return;
   }
 
