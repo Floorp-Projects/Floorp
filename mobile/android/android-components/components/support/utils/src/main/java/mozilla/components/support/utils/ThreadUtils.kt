@@ -5,18 +5,36 @@
 package mozilla.components.support.utils
 
 import android.os.Handler
+import android.os.HandlerThread
 import android.os.Looper
 
-import java.util.concurrent.Executors
-
 object ThreadUtils {
-    // We lazily instantiate this thread so it's only taking up resources if it's used by the project.
-    private val backgroundExecutorService by lazy { Executors.newSingleThreadExecutor() }
+    private val looperBackgroundThread by lazy {
+        HandlerThread("BackgroundThread")
+    }
+    private val looperBackgroundHandler by lazy {
+        looperBackgroundThread.start()
+        Handler(looperBackgroundThread.looper)
+    }
     private val handler = Handler(Looper.getMainLooper())
     private val uiThread = Looper.getMainLooper().thread
 
+    private var handlerForTest: Handler? = null
+
+    private fun backgroundHandler(): Handler {
+        return handlerForTest ?: looperBackgroundHandler
+    }
+
+    fun setHandlerForTest(handler: Handler) {
+        handlerForTest = handler
+    }
+
     fun postToBackgroundThread(runnable: Runnable) {
-        backgroundExecutorService.submit(runnable)
+        backgroundHandler().post(runnable)
+    }
+
+    fun postToBackgroundThread(runnable: () -> Unit) {
+        backgroundHandler().post(runnable)
     }
 
     fun postToMainThread(runnable: Runnable) {

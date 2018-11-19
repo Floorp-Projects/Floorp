@@ -21,7 +21,7 @@ import mozilla.components.support.ktx.kotlin.isEmail
 import mozilla.components.support.ktx.kotlin.isGeoLocation
 import mozilla.components.support.ktx.kotlin.isPhone
 import mozilla.components.support.utils.DownloadUtils
-import org.mozilla.gecko.util.ThreadUtils
+import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
@@ -41,10 +41,11 @@ import org.mozilla.geckoview.WebRequestError
 class GeckoEngineSession(
     private val runtime: GeckoRuntime,
     private val privateMode: Boolean = false,
-    private val defaultSettings: Settings? = null
+    private val defaultSettings: Settings? = null,
+    private val geckoSessionProvider: () -> GeckoSession = { GeckoSession() }
 ) : EngineSession() {
 
-    internal var geckoSession = GeckoSession()
+    internal var geckoSession: GeckoSession = geckoSessionProvider()
     internal var currentUrl: String? = null
 
     /**
@@ -122,7 +123,7 @@ class GeckoEngineSession(
     override fun saveState(): Map<String, Any> = runBlocking {
         val stateMap = CompletableDeferred<Map<String, Any>>()
 
-        ThreadUtils.sGeckoHandler.post {
+        ThreadUtils.postToBackgroundThread {
             geckoSession.saveState().then({ state ->
                 stateMap.complete(mapOf(GECKO_STATE_KEY to state.toString()))
                 GeckoResult<Void>()
@@ -475,7 +476,7 @@ class GeckoEngineSession(
     }
 
     private fun initGeckoSession() {
-        this.geckoSession = GeckoSession()
+        this.geckoSession = geckoSessionProvider()
         defaultSettings?.trackingProtectionPolicy?.let { enableTrackingProtection(it) }
         defaultSettings?.requestInterceptor?.let { settings.requestInterceptor = it }
         defaultSettings?.historyTrackingDelegate?.let { settings.historyTrackingDelegate = it }
