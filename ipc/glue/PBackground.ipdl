@@ -21,6 +21,7 @@ include protocol PGamepadTestChannel;
 include protocol PHttpBackgroundChannel;
 include protocol PIPCBlobInputStream;
 include protocol PPendingIPCBlob;
+include protocol PSharedWorker;
 include protocol PTemporaryIPCBlob;
 include protocol PMessagePort;
 include protocol PCameras;
@@ -45,6 +46,7 @@ include PBackgroundSharedTypes;
 include PBackgroundIDBSharedTypes;
 include PFileSystemParams;
 include ProtocolTypes;
+include SharedWorkerTypes;
 include MIDITypes;
 
 include "mozilla/dom/cache/IPCUtils.h";
@@ -83,6 +85,7 @@ sync protocol PBackground
   manages PHttpBackgroundChannel;
   manages PIPCBlobInputStream;
   manages PPendingIPCBlob;
+  manages PSharedWorker;
   manages PTemporaryIPCBlob;
   manages PMessagePort;
   manages PCameras;
@@ -152,6 +155,8 @@ parent:
   async PHttpBackgroundChannel(uint64_t channelId);
 
   async PWebAuthnTransaction();
+
+  async PSharedWorker(SharedWorkerLoadInfo loadInfo);
 
   async PTemporaryIPCBlob();
 

@@ -6,10 +6,19 @@
 
 EXPORTS.mozilla.dom += [
     'SharedWorker.h',
+    'SharedWorkerChild.h',
+    'SharedWorkerParent.h',
 ]
 
 UNIFIED_SOURCES += [
     'SharedWorker.cpp',
+    'SharedWorkerChild.cpp',
+    'SharedWorkerParent.cpp',
+]
+
+IPDL_SOURCES += [
+    'PSharedWorker.ipdl',
+    'SharedWorkerTypes.ipdlh',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

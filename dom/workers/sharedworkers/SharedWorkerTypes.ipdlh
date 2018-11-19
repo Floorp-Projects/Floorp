@@ -1,0 +1,30 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include DOMTypes;
+include PBackgroundSharedTypes;
+
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+
+namespace mozilla {
+namespace dom {
+
+struct SharedWorkerLoadInfo
+{
+  nsString originalScriptURL;
+  nsCString baseScriptURL;
+  nsCString resolvedScriptURL;
+
+  nsString name;
+
+  PrincipalInfo loadingPrincipalInfo;
+  PrincipalInfo principalInfo;
+
+  nsCString domain;
+
+  MessagePortIdentifier portIdentifier;
+};
+
+} // namespace dom
+} // namespace mozilla

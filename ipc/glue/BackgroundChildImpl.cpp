@@ -27,6 +27,7 @@
 #include "mozilla/dom/ipc/PendingIPCBlobChild.h"
 #include "mozilla/dom/ipc/TemporaryIPCBlobChild.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
+#include "mozilla/dom/SharedWorkerChild.h"
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/GamepadEventChannelChild.h"
 #include "mozilla/dom/GamepadTestChannelChild.h"
@@ -285,6 +286,21 @@ bool
 BackgroundChildImpl::DeallocPPendingIPCBlobChild(PPendingIPCBlobChild* aActor)
 {
   delete aActor;
+  return true;
+}
+
+dom::PSharedWorkerChild*
+BackgroundChildImpl::AllocPSharedWorkerChild(const dom::SharedWorkerLoadInfo& aInfo)
+{
+  RefPtr<dom::SharedWorkerChild> agent = new dom::SharedWorkerChild();
+  return agent.forget().take();
+}
+
+bool
+BackgroundChildImpl::DeallocPSharedWorkerChild(dom::PSharedWorkerChild* aActor)
+{
+  RefPtr<dom::SharedWorkerChild> actor =
+    dont_AddRef(static_cast<dom::SharedWorkerChild*>(aActor));
   return true;
 }
 
