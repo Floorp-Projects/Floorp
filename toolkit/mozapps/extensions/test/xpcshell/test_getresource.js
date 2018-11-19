@@ -6,47 +6,43 @@
 // There are two cases - with a filename it returns an nsIFileURL to the filename
 // and with no parameters, it returns an nsIFileURL to the root of the addon
 
-const ADDONS = {
-  test_getresource: {
-    "install.rdf": {
-      "id": "addon1@tests.mozilla.org",
-      "name": "Test 1",
-    },
-    "icon.png": "Dummy icon file",
-    "subdir/subfile.txt": "Dummy file in subdirectory",
-  },
-};
-
-async function run_test() {
-  do_test_pending();
+add_task(async function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
   await promiseStartupManager();
 
-  let xpi = AddonTestUtils.createTempXPIFile(ADDONS.test_getresource);
-  let aInstall = await AddonManager.getInstallForFile(xpi);
-  Assert.equal(aInstall.addon.getResourceURI().spec, aInstall.sourceURI.spec);
+  const ID = "addon@tests.mozilla.org";
+  let xpi = AddonTestUtils.createTempWebExtensionFile({
+    manifest: { applications: {gecko: {id: ID}}},
+    files: {
+      "icon.png": "Dummy icon file",
+      "subdir/subfile.txt": "Dummy file in subdirectory",
+    },
+  });
 
-  Assert.equal(aInstall.addon.getResourceURI("icon.png").spec,
-               "jar:" + aInstall.sourceURI.spec + "!/icon.png");
+  let install = await AddonManager.getInstallForFile(xpi);
+  Assert.equal(install.addon.getResourceURI().spec, install.sourceURI.spec);
 
-  Assert.equal(aInstall.addon.getResourceURI("subdir/subfile.txt").spec,
-               "jar:" + aInstall.sourceURI.spec + "!/subdir/subfile.txt");
+  Assert.equal(install.addon.getResourceURI("icon.png").spec,
+               `jar:${install.sourceURI.spec}!/icon.png`);
 
-  await promiseCompleteAllInstalls([aInstall]);
+  Assert.equal(install.addon.getResourceURI("subdir/subfile.txt").spec,
+               `jar:${install.sourceURI.spec}!/subdir/subfile.txt`);
+
+  await promiseCompleteInstall(install);
   await promiseRestartManager();
-  let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  let a1 = await AddonManager.getAddonByID(ID);
   Assert.notEqual(a1, null);
 
   let addonDir = gProfD.clone();
   addonDir.append("extensions");
-  let rootUri = do_get_addon_root_uri(addonDir, "addon1@tests.mozilla.org");
+  let rootUri = do_get_addon_root_uri(addonDir, ID);
 
   let uri = a1.getResourceURI("/");
   Assert.equal(uri.spec, rootUri);
 
-  let file = rootUri + "install.rdf";
-  uri = a1.getResourceURI("install.rdf");
+  let file = rootUri + "manifest.json";
+  uri = a1.getResourceURI("manifest.json");
   Assert.equal(uri.spec, file);
 
   file = rootUri + "icon.png";
@@ -58,11 +54,4 @@ async function run_test() {
   Assert.equal(uri.spec, file);
 
   await a1.uninstall();
-
-  await promiseRestartManager();
-
-  let newa1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
-  Assert.equal(newa1, null);
-
-  executeSoon(do_test_finished);
-}
+});
