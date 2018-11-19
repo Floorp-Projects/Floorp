@@ -60,6 +60,7 @@ const RECOMMENDED_PREFS = new Map([
   //
   // This should also be set in the profile prior to starting Firefox,
   // as it is picked up at runtime.
+  ["app.update.checkInstallTime", false],
   ["app.update.disabledForTesting", true],
   ["security.turn_off_all_security_so_that_viruses_can_take_over_this_computer", true],
 
