@@ -2084,50 +2084,33 @@ JsepSessionImpl::SetupDefaultCodecs()
       "109",
       "opus",
       48000,
-      2,
-      960,
-      // TODO Move this elsewhere to be adaptive to rate - Bug 1207925
-      40000
-      ));
+      2));
 
   mSupportedCodecs.emplace_back(new JsepAudioCodecDescription(
       "9",
       "G722",
       8000,
-      1,
-      320,
-      64000));
+      1));
 
-  // packet size and bitrate values below copied from sipcc.
-  // May need reevaluation from a media expert.
   mSupportedCodecs.emplace_back(
       new JsepAudioCodecDescription("0",
                                     "PCMU",
                                     8000,
-                                    1,
-                                    8000 / 50,   // frequency / 50
-                                    8 * 8000 * 1 // 8 * frequency * channels
+                                    1
                                     ));
 
   mSupportedCodecs.emplace_back(
       new JsepAudioCodecDescription("8",
                                     "PCMA",
                                     8000,
-                                    1,
-                                    8000 / 50,   // frequency / 50
-                                    8 * 8000 * 1 // 8 * frequency * channels
+                                    1
                                     ));
 
-  // note: because telephone-event is effectively a marker codec that indicates
-  // that dtmf rtp packets may be passed, the packetSize and bitRate fields
-  // don't make sense here.  For now, use zero. (mjf)
   mSupportedCodecs.emplace_back(
       new JsepAudioCodecDescription("101",
                                     "telephone-event",
                                     8000,
-                                    1,
-                                    0, // packetSize doesn't make sense here
-                                    0  // bitRate doesn't make sense here
+                                    1
                                     ));
 
   // Supported video codecs.
