@@ -795,7 +795,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                 }
                 if isinstance(suites[suite], dict):
                     options_list = suites[suite].get('options', [])
-                    if self.verify_enabled or self.per_test_coverage:
+                    if (self.verify_enabled or self.per_test_coverage or
+                        os.environ.get('MOZHARNESS_TEST_PATHS')):
+                        # Ignore tests list in modes where we are running specific tests.
                         tests_list = []
                     else:
                         tests_list = suites[suite].get('tests', [])
