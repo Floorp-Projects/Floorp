@@ -11,6 +11,13 @@ using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 namespace mozilla {
 namespace dom {
 
+struct ContentSecurityPolicy
+{
+  nsString policy;
+  bool reportOnlyFlag;
+  bool deliveredViaMetaTagFlag;
+};
+
 struct SharedWorkerLoadInfo
 {
   nsString originalScriptURL;
@@ -20,7 +27,12 @@ struct SharedWorkerLoadInfo
   nsString name;
 
   PrincipalInfo loadingPrincipalInfo;
+  ContentSecurityPolicy[] loadingPrincipalCsp;
+  ContentSecurityPolicy[] loadingPrincipalPreloadCsp;
+
   PrincipalInfo principalInfo;
+  ContentSecurityPolicy[] principalCsp;
+  ContentSecurityPolicy[] principalPreloadCsp;
 
   nsCString domain;
 

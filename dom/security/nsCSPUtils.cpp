@@ -1466,6 +1466,7 @@ nsRequireSRIForDirective::getDirName(nsAString& outStr) const
 nsCSPPolicy::nsCSPPolicy()
   : mUpgradeInsecDir(nullptr)
   , mReportOnly(false)
+  , mDeliveredViaMetaTag(false)
 {
   CSPUTILSLOG(("nsCSPPolicy::nsCSPPolicy"));
 }
