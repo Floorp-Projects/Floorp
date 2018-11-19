@@ -33,7 +33,7 @@ describe("SnippetsFeed", () => {
   let clock;
   beforeEach(() => {
     clock = sinon.useFakeTimers();
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     overrider.set({
       ProfileAge: () => Promise.resolve({
         created: Promise.resolve(0),

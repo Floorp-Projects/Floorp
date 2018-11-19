@@ -28,7 +28,7 @@ describe("<ComponentPerfTimer>", () => {
 
   beforeEach(() => {
     mockRaf = createMockRaf();
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     sandbox.stub(window, "requestAnimationFrame").callsFake(mockRaf.raf);
     wrapper = shallow(<ComponentPerfTimer {...DEFAULT_PROPS}><InnerEl /></ComponentPerfTimer>);
   });

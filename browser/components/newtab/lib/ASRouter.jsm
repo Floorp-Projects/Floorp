@@ -928,7 +928,7 @@ class _ASRouter {
         target.browser.ownerGlobal.OpenBrowserWindow({private: true});
         break;
       case ra.OPEN_URL:
-        target.browser.ownerGlobal.openLinkIn(action.data.args, "tabshifted", {
+        target.browser.ownerGlobal.openLinkIn(action.data.args, action.data.where || "current", {
           private: false,
           triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
         });
@@ -948,7 +948,7 @@ class _ASRouter {
       case ra.SHOW_FIREFOX_ACCOUNTS:
         const url = await FxAccounts.config.promiseSignUpURI("snippets");
         // We want to replace the current tab.
-        target.browser.ownerGlobal.openLinkIn(url, "tabshifted", {
+        target.browser.ownerGlobal.openLinkIn(url, "current", {
           private: false,
           triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
         });

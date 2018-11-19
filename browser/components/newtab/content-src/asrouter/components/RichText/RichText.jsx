@@ -17,7 +17,7 @@ const ALLOWED_TAGS = {
  * Transform an object (tag name: {url}) into (tag name: anchor) where the url
  * is used as href, in order to render links inside a Fluent.Localized component.
  */
-export function convertLinks(links, sendClick, doNotAutoBlock) {
+export function convertLinks(links, sendClick, doNotAutoBlock, openNewWindow = false) {
   if (links) {
     return Object.keys(links).reduce((acc, linkTag) => {
       const {action} = links[linkTag];
@@ -25,7 +25,7 @@ export function convertLinks(links, sendClick, doNotAutoBlock) {
       const url = action ? false : safeURI(links[linkTag].url);
 
       acc[linkTag] = (<a href={url}
-        target={doNotAutoBlock ? "_blank" : ""}
+        target={openNewWindow ? "_blank" : ""}
         data-metric={links[linkTag].metric}
         data-action={action}
         data-args={links[linkTag].args}
@@ -46,7 +46,7 @@ export function RichText(props) {
     throw new Error(`ASRouter: ${props.localization_id} is not a valid rich text property. If you want it to be processed, you need to add it to asrouter/rich-text-strings.js`);
   }
   return (
-    <Localized id={props.localization_id} {...ALLOWED_TAGS} {...props.customElements} {...convertLinks(props.links, props.sendClick, props.doNotAutoBlock)}>
+    <Localized id={props.localization_id} {...ALLOWED_TAGS} {...props.customElements} {...convertLinks(props.links, props.sendClick, props.doNotAutoBlock, props.openNewWindow)}>
       <span>{props.text}</span>
     </Localized>
   );

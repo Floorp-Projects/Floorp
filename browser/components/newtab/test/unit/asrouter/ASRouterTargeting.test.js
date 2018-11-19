@@ -10,7 +10,7 @@ describe("#CachedTargetingGetter", () => {
   let frecentStub;
   let topsitesCache;
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     clock = sinon.useFakeTimers();
     frecentStub = sandbox.stub(global.NewTabUtils.activityStreamProvider, "getTopFrecentSites");
     sandbox.stub(global.Cu, "reportError");

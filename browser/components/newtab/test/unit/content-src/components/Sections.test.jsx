@@ -354,7 +354,7 @@ describe("<Section>", () => {
     it("should send an impression if props are updated and props.rows are different", () => {
       const props = {dispatch: sinon.spy()};
       wrapper = renderSection(props);
-      props.dispatch.reset();
+      props.dispatch.resetHistory();
 
       // New rows
       wrapper.setProps(Object.assign({},
@@ -367,7 +367,7 @@ describe("<Section>", () => {
     it("should not send an impression if props are updated but props.rows are the same", () => {
       const props = {dispatch: sinon.spy()};
       wrapper = renderSection(props);
-      props.dispatch.reset();
+      props.dispatch.resetHistory();
 
       // Only update the disclaimer prop
       wrapper.setProps(Object.assign({},
@@ -380,7 +380,7 @@ describe("<Section>", () => {
     it("should not send an impression if props are updated and props.rows are the same but section is collapsed", () => {
       const props = {dispatch: sinon.spy()};
       wrapper = renderSection(props);
-      props.dispatch.reset();
+      props.dispatch.resetHistory();
 
       // New rows and collapsed
       wrapper.setProps(Object.assign({},
@@ -407,7 +407,7 @@ describe("<Section>", () => {
     it("should not send an impression if props are updated but GUIDs are the same", () => {
       const props = {dispatch: sinon.spy()};
       wrapper = renderSection(props);
-      props.dispatch.reset();
+      props.dispatch.resetHistory();
 
       wrapper.setProps(Object.assign({},
         FAKE_TOPSTORIES_SECTION_PROPS,
