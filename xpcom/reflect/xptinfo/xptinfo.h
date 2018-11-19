@@ -657,45 +657,45 @@ GetString(uint32_t aIndex)
 } // namespace detail
 } // namespace xpt
 
-#define XPT_FOR_EACH_ARITHMETIC_TYPE(macro) \
-  macro(TD_INT8,   int8_t) \
-  macro(TD_INT16,  int16_t) \
-  macro(TD_INT32,  int32_t) \
-  macro(TD_INT64,  int64_t) \
-  macro(TD_UINT8,  uint8_t) \
-  macro(TD_UINT16, uint16_t) \
-  macro(TD_UINT32, uint32_t) \
-  macro(TD_UINT64, uint64_t) \
-  macro(TD_FLOAT,  float) \
-  macro(TD_DOUBLE, double) \
-  macro(TD_BOOL,   bool) \
-  macro(TD_CHAR,   char) \
-  macro(TD_WCHAR,  char16_t)
+#define XPT_FOR_EACH_ARITHMETIC_TYPE(MACRO) \
+  MACRO(TD_INT8,   int8_t) \
+  MACRO(TD_INT16,  int16_t) \
+  MACRO(TD_INT32,  int32_t) \
+  MACRO(TD_INT64,  int64_t) \
+  MACRO(TD_UINT8,  uint8_t) \
+  MACRO(TD_UINT16, uint16_t) \
+  MACRO(TD_UINT32, uint32_t) \
+  MACRO(TD_UINT64, uint64_t) \
+  MACRO(TD_FLOAT,  float) \
+  MACRO(TD_DOUBLE, double) \
+  MACRO(TD_BOOL,   bool) \
+  MACRO(TD_CHAR,   char) \
+  MACRO(TD_WCHAR,  char16_t)
 
-#define XPT_FOR_EACH_POINTER_TYPE(macro) \
-  macro(TD_VOID,              void*) \
-  macro(TD_PNSIID,            nsID*) \
-  macro(TD_PSTRING,           char*) \
-  macro(TD_PWSTRING,          wchar_t*) \
-  macro(TD_INTERFACE_TYPE,    nsISupports*) \
-  macro(TD_INTERFACE_IS_TYPE, nsISupports*) \
-  macro(TD_LEGACY_ARRAY,      void*) \
-  macro(TD_PSTRING_SIZE_IS,   char*) \
-  macro(TD_PWSTRING_SIZE_IS,  wchar_t*) \
-  macro(TD_DOMOBJECT,         void*) \
-  macro(TD_PROMISE,           mozilla::dom::Promise*)
+#define XPT_FOR_EACH_POINTER_TYPE(MACRO) \
+  MACRO(TD_VOID,              void*) \
+  MACRO(TD_PNSIID,            nsID*) \
+  MACRO(TD_PSTRING,           char*) \
+  MACRO(TD_PWSTRING,          wchar_t*) \
+  MACRO(TD_INTERFACE_TYPE,    nsISupports*) \
+  MACRO(TD_INTERFACE_IS_TYPE, nsISupports*) \
+  MACRO(TD_LEGACY_ARRAY,      void*) \
+  MACRO(TD_PSTRING_SIZE_IS,   char*) \
+  MACRO(TD_PWSTRING_SIZE_IS,  wchar_t*) \
+  MACRO(TD_DOMOBJECT,         void*) \
+  MACRO(TD_PROMISE,           mozilla::dom::Promise*)
 
-#define XPT_FOR_EACH_COMPLEX_TYPE(macro) \
-  macro(TD_UTF8STRING, nsCString) \
-  macro(TD_CSTRING,    nsCString) \
-  macro(TD_ASTRING,    nsString) \
-  macro(TD_JSVAL,      JS::Value) \
-  macro(TD_ARRAY,      xpt::detail::UntypedTArray)
+#define XPT_FOR_EACH_COMPLEX_TYPE(MACRO) \
+  MACRO(TD_UTF8STRING, nsCString) \
+  MACRO(TD_CSTRING,    nsCString) \
+  MACRO(TD_ASTRING,    nsString) \
+  MACRO(TD_JSVAL,      JS::Value) \
+  MACRO(TD_ARRAY,      xpt::detail::UntypedTArray)
 
-#define XPT_FOR_EACH_TYPE(macro) \
-  XPT_FOR_EACH_ARITHMETIC_TYPE(macro) \
-  XPT_FOR_EACH_POINTER_TYPE(macro) \
-  XPT_FOR_EACH_COMPLEX_TYPE(macro)
+#define XPT_FOR_EACH_TYPE(MACRO) \
+  XPT_FOR_EACH_ARITHMETIC_TYPE(MACRO) \
+  XPT_FOR_EACH_POINTER_TYPE(MACRO) \
+  XPT_FOR_EACH_COMPLEX_TYPE(MACRO)
 
 inline size_t
 nsXPTType::Stride() const
