@@ -9,6 +9,9 @@
     background-color: -moz-win-accentcolor;
     color: -moz-win-accentcolortext;
   }
+  :root[tabsintitlebar] #titlebar {
+    --lwt-toolbarbutton-icon-fill: currentColor;
+  }
 }
 
 /* The window background is white due to no accentcolor in the lightweight
