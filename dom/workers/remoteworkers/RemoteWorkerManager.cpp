@@ -91,12 +91,13 @@ RemoteWorkerManager::UnregisterActor(RemoteWorkerServiceParent* aActor)
 
 void
 RemoteWorkerManager::Launch(RemoteWorkerController* aController,
-                            const RemoteWorkerData& aData)
+                            const RemoteWorkerData& aData,
+                            base::ProcessId aProcessId)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  RemoteWorkerServiceParent* targetActor = SelectTargetActor();
+  RemoteWorkerServiceParent* targetActor = SelectTargetActor(aData, aProcessId);
 
   // If there is not an available actor, let's store the data, and let's spawn a
   // new process.
@@ -156,14 +157,36 @@ RemoteWorkerManager::AsyncCreationFailed(RemoteWorkerController* aController)
 }
 
 RemoteWorkerServiceParent*
-RemoteWorkerManager::SelectTargetActor()
+RemoteWorkerManager::SelectTargetActor(const RemoteWorkerData& aData,
+                                       base::ProcessId aProcessId)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  // TODO
+  if (mActors.IsEmpty()) {
+    return nullptr;
+  }
 
-  return nullptr;
+  // System principal workers should run on the parent process.
+  if (aData.principalInfo().type() == PrincipalInfo::TSystemPrincipalInfo) {
+    for (RemoteWorkerServiceParent* actor : mActors) {
+      if (actor->OtherPid() == 0) {
+        return actor;
+      }
+    }
+  }
+
+  for (RemoteWorkerServiceParent* actor : mActors) {
+    // Let's execute the RemoteWorker on the same process but not on the parent
+    // process.
+    if (aProcessId && actor->OtherPid() == aProcessId) {
+      return actor;
+    }
+  }
+
+  // Let's choose an actor, randomly.
+  uint32_t id = uint32_t(rand()) % mActors.Length();
+  return mActors[id];
 }
 
 void

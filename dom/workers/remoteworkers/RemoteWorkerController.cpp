@@ -19,7 +19,8 @@ namespace dom {
 
 /* static */ already_AddRefed<RemoteWorkerController>
 RemoteWorkerController::Create(const RemoteWorkerData& aData,
-                               RemoteWorkerObserver* aObserver)
+                               RemoteWorkerObserver* aObserver,
+                               base::ProcessId aProcessId)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -31,7 +32,7 @@ RemoteWorkerController::Create(const RemoteWorkerData& aData,
   RefPtr<RemoteWorkerManager> manager = RemoteWorkerManager::GetOrCreate();
   MOZ_ASSERT(manager);
 
-  manager->Launch(controller, aData);
+  manager->Launch(controller, aData, aProcessId);
 
   return controller.forget();
 }

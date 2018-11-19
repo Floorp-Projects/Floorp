@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_RemoteWorkerManager_h
 #define mozilla_dom_RemoteWorkerManager_h
 
+#include "base/process.h"
 #include "mozilla/dom/RemoteWorkerTypes.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
@@ -34,14 +35,16 @@ public:
 
   void
   Launch(RemoteWorkerController* aController,
-         const RemoteWorkerData& aData);
+         const RemoteWorkerData& aData,
+         base::ProcessId aProcessId);
 
 private:
   RemoteWorkerManager();
   ~RemoteWorkerManager();
 
   RemoteWorkerServiceParent*
-  SelectTargetActor();
+  SelectTargetActor(const RemoteWorkerData& aData,
+                    base::ProcessId aProcessId);
 
   void
   LaunchInternal(RemoteWorkerController* aController,

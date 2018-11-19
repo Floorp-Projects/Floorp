@@ -56,7 +56,8 @@ public:
   bool
   MaybeCreateRemoteWorker(const RemoteWorkerData& aData,
                           uint64_t aWindowID,
-                          const MessagePortIdentifier& aPortIdentifier);
+                          const MessagePortIdentifier& aPortIdentifier,
+                          base::ProcessId aProcessId);
 
   void
   AddActor(SharedWorkerParent* aParent);
