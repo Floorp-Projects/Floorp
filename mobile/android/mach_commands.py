@@ -10,6 +10,7 @@ import os
 import shutil
 import subprocess
 import zipfile
+import json
 
 from zipfile import ZipFile
 
@@ -109,6 +110,27 @@ class MachCommands(MachCommandBase):
     def android_generate_fennec_jni_wrappers(self, args):
         ret = self.gradle(
             self.substs['GRADLE_ANDROID_GENERATE_FENNEC_JNI_WRAPPERS_TASKS'] + args, verbose=True)
+
+        return ret
+
+    @SubCommand('android', 'api-lint',
+                """Runs apilint against GeckoView.""")
+    @CommandArgument('args', nargs=argparse.REMAINDER)
+    def android_api_lint(self, args):
+        ret = self.gradle(self.substs['GRADLE_ANDROID_API_LINT_TASKS'] + args, verbose=True)
+        folder = self.substs['GRADLE_ANDROID_GECKOVIEW_APILINT_FOLDER']
+
+        with open(os.path.join(
+                self.topobjdir,
+                '{}/apilint-result.json'.format(folder))) as f:
+            result = json.load(f)
+
+            print('SUITE-START | android-api-lint')
+            for r in result['compat_failures'] + result['failures']:
+                print ('TEST-UNEXPECTED-FAIL | {} | {}'.format(r['detail'], r['msg']))
+            for r in result['api_changes']:
+                print ('TEST-UNEXPECTED-FAIL | {} | Unexpected api change'.format(r))
+            print('SUITE-END | android-api-lint')
 
         return ret
 
