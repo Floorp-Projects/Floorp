@@ -4266,6 +4266,7 @@ bool GCRuntime::beginMarkPhase(JS::gcreason::Reason reason,
 
   marker.start();
   GCMarker* gcmarker = &marker;
+  gcmarker->clearMarkCount();
 
   {
     gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::PREPARE);
