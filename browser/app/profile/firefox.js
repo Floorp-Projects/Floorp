@@ -1379,10 +1379,6 @@ pref("geo.provider.use_gpsd", true);
 
 #endif
 
-// Necko IPC security checks only needed for app isolation for cookies/cache/etc:
-// currently irrelevant for desktop e10s
-pref("network.disable.ipc.security", true);
-
 // CustomizableUI debug logging.
 pref("browser.uiCustomization.debug", false);
 
