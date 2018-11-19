@@ -367,6 +367,9 @@ partial interface Window {
    */
   [Constant, Throws, ChromeOnly]
   readonly attribute nsIDOMWindowUtils windowUtils;
+
+  [ChromeOnly]
+  readonly attribute boolean hasOpenerForInitialContentBrowser;
 };
 
 Window implements TouchEventHandlers;
