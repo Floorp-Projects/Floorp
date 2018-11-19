@@ -12,7 +12,7 @@ with Files('devtools/**'):
     BUG_COMPONENT = ('DevTools', 'General')
 
 with Files('mach/**'):
-    BUG_COMPONENT = ('Core', 'mach')
+    BUG_COMPONENT = ('Firefox Build System', 'Mach Core')
 
 with Files('mozboot/**'):
     BUG_COMPONENT = ('Firefox Build System', 'Bootstrap Configuration')
