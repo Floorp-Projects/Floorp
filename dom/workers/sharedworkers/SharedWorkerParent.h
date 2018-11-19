@@ -61,7 +61,7 @@ public:
   bool
   IsFrozen() const
   {
-    return mSuspended;
+    return mFrozen;
   }
 
   uint64_t

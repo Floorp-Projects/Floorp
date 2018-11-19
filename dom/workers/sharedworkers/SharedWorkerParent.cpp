@@ -160,13 +160,8 @@ SharedWorkerParent::ManagerCreated(SharedWorkerManager* aWorkerManager)
   mStatus = eActive;
   mWorkerManager = aWorkerManager;
 
-  if (mFrozen) {
-    mWorkerManager->UpdateFrozen();
-  }
-
-  if (mSuspended) {
-    mWorkerManager->UpdateSuspend();
-  }
+  mWorkerManager->UpdateFrozen();
+  mWorkerManager->UpdateSuspend();
 }
 
 void

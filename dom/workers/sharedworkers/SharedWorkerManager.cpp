@@ -27,6 +27,8 @@ SharedWorkerManager::SharedWorkerManager(nsIEventTarget* aPBackgroundEventTarget
   , mResolvedScriptURL(aData.resolvedScriptURL())
   , mName(aData.name())
   , mIsSecureContext(aData.isSecureContext())
+  , mSuspended(false)
+  , mFrozen(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aLoadingPrincipal);
@@ -90,21 +92,12 @@ SharedWorkerManager::AddActor(SharedWorkerParent* aParent)
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(!mActors.Contains(aParent));
 
-  uint32_t frozen = 0;
-
-  for (SharedWorkerParent* actor : mActors) {
-    if (actor->IsFrozen()) {
-      ++frozen;
-    }
-  }
-
-  bool hadActors = !mActors.IsEmpty();
-
   mActors.AppendElement(aParent);
 
-  if (hadActors && frozen == mActors.Length() - 1) {
-    mRemoteWorkerController->Thaw();
-  }
+  // NB: We don't update our Suspended/Frozen state here, yet. The aParent is
+  // responsible for doing so from SharedWorkerParent::ManagerCreated.
+  // XXX But we could avoid iterating all of our actors because if aParent is
+  // not frozen and we are, we would just need to thaw ourselves.
 }
 
 void
@@ -122,6 +115,9 @@ SharedWorkerManager::RemoveActor(SharedWorkerParent* aParent)
   mActors.RemoveElement(aParent);
 
   if (!mActors.IsEmpty()) {
+    // Our remaining actors could be all suspended or frozen.
+    UpdateSuspend();
+    UpdateFrozen();
     return;
   }
 
@@ -148,13 +144,18 @@ SharedWorkerManager::UpdateSuspend()
     }
   }
 
-  if (suspended != 0 && suspended != mActors.Length()) {
+  // Call Suspend only when all of our actors' windows are suspended and call
+  // Resume only when one of them resumes.
+  if ((mSuspended && suspended == mActors.Length()) ||
+      (!mSuspended && suspended != mActors.Length())) {
     return;
   }
 
-  if (suspended) {
+  if (!mSuspended) {
+    mSuspended = true;
     mRemoteWorkerController->Suspend();
   } else {
+    mSuspended = false;
     mRemoteWorkerController->Resume();
   }
 }
@@ -173,13 +174,18 @@ SharedWorkerManager::UpdateFrozen()
     }
   }
 
-  if (frozen != 0 && frozen != mActors.Length()) {
+  // Similar to UpdateSuspend, above, we only want to be frozen when all of our
+  // actors are frozen.
+  if ((mFrozen && frozen == mActors.Length()) ||
+      (!mFrozen && frozen != mActors.Length())) {
     return;
   }
 
-  if (frozen) {
+  if (!mFrozen) {
+    mFrozen = true;
     mRemoteWorkerController->Freeze();
   } else {
+    mFrozen = false;
     mRemoteWorkerController->Thaw();
   }
 }
