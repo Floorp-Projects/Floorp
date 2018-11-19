@@ -12,11 +12,11 @@
 namespace mozilla {
 namespace dom {
 
-/* Here a graph about this remote workers are spawn.
+/* Here's a graph about this remote workers are spawned.
  *
  *  _________________________________    |   ________________________________
  * |                                 |   |  |                                |
- * |              Parent process     |  IPC |           Creation ofProcess X |
+ * |              Parent process     |  IPC |          Creation of Process X |
  * |              PBackground thread |   |  |                                |
  * |                                 |   |  | [RemoteWorkerService::Init()]  |
  * |                                 |   |  |               |                |
@@ -67,7 +67,7 @@ namespace dom {
  * 5. RemoteWorkerManager has the list of active RemoteWorkerServiceParent
  *    actors. From them, it picks one.
  *    In case we don't have any content process to select, a new one is
- *    spawn. If this happen, the operation is suspended until a new
+ *    spawned. If this happens, the operation is suspended until a new
  *    RemoteWorkerServiceParent is registered.
  * 6. RemoteWorkerServiceParent is used to create a RemoteWorkerParent.
  * 7. RemoteWorkerChild is created on a selected process and it executes the

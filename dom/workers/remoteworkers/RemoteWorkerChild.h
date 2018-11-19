@@ -114,10 +114,10 @@ private:
     eTerminated,
   };
 
-  // Touched only on the owning thread (PBackground).
+  // Touched only on the owning thread (Worker Launcher).
   WorkerState mWorkerState;
 
-  // Touched only on the owning thread (PBackground).
+  // Touched only on the owning thread (Worker Launcher).
   nsTArray<RemoteWorkerOp> mPendingOps;
 };
 
