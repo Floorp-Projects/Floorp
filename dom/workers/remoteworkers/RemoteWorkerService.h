@@ -27,6 +27,9 @@ public:
   static void
   Initialize();
 
+  static nsIThread*
+  Thread();
+
 private:
   RemoteWorkerService();
   ~RemoteWorkerService();

@@ -7,6 +7,7 @@
 #include "RemoteWorkerParent.h"
 #include "RemoteWorkerController.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 
@@ -51,6 +52,33 @@ RemoteWorkerParent::RecvCreated(const bool& aStatus)
     mController->CreationFailed();
   }
 
+  return IPC_OK();
+}
+
+IPCResult
+RemoteWorkerParent::RecvError(const ErrorValue& aValue)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (mController) {
+    mController->ErrorPropagation(aValue);
+  }
+
+  return IPC_OK();
+}
+
+IPCResult
+RemoteWorkerParent::RecvClose()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (mController) {
+    mController->WorkerTerminated();
+  }
+
+  Unused << Send__delete__(this);
   return IPC_OK();
 }
 

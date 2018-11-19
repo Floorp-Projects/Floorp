@@ -294,13 +294,24 @@ BackgroundChildImpl::DeallocPPendingIPCBlobChild(PPendingIPCBlobChild* aActor)
 dom::PRemoteWorkerChild*
 BackgroundChildImpl::AllocPRemoteWorkerChild(const RemoteWorkerData& aData)
 {
-  return new dom::RemoteWorkerChild();
+  RefPtr<dom::RemoteWorkerChild> agent = new dom::RemoteWorkerChild();
+  return agent.forget().take();
+}
+
+IPCResult
+BackgroundChildImpl::RecvPRemoteWorkerConstructor(PRemoteWorkerChild* aActor,
+                                                  const RemoteWorkerData& aData)
+{
+  dom::RemoteWorkerChild* actor = static_cast<dom::RemoteWorkerChild*>(aActor);
+  actor->ExecWorker(aData);
+  return IPC_OK();
 }
 
 bool
 BackgroundChildImpl::DeallocPRemoteWorkerChild(dom::PRemoteWorkerChild* aActor)
 {
-  delete aActor;
+  RefPtr<dom::RemoteWorkerChild> actor =
+    dont_AddRef(static_cast<dom::RemoteWorkerChild*>(aActor));
   return true;
 }
 
@@ -321,7 +332,9 @@ BackgroundChildImpl::DeallocPRemoteWorkerServiceChild(dom::PRemoteWorkerServiceC
 }
 
 dom::PSharedWorkerChild*
-BackgroundChildImpl::AllocPSharedWorkerChild(const dom::SharedWorkerLoadInfo& aInfo)
+BackgroundChildImpl::AllocPSharedWorkerChild(const dom::RemoteWorkerData& aData,
+                                             const uint64_t& aWindowID,
+                                             const dom::MessagePortIdentifier& aPortIdentifier)
 {
   RefPtr<dom::SharedWorkerChild> agent = new dom::SharedWorkerChild();
   return agent.forget().take();

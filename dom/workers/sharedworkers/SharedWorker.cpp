@@ -14,6 +14,7 @@
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/PMessagePort.h"
+#include "mozilla/dom/RemoteWorkerTypes.h"
 #include "mozilla/dom/SharedWorkerBinding.h"
 #include "mozilla/dom/SharedWorkerChild.h"
 #include "mozilla/dom/WorkerBinding.h"
@@ -247,24 +248,25 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
     ipcClientInfo = void_t();
   }
 
-  SharedWorkerLoadInfo sharedWorkerLoadInfo(nsString(aScriptURL),
-                                            baseURL,
-                                            resolvedScriptURL,
-                                            name,
-                                            loadingPrincipalInfo,
-                                            loadingPrincipalCSP,
-                                            loadingPrincipalPreloadCSP,
-                                            principalInfo,
-                                            principalCSP,
-                                            principalPreloadCSP,
-                                            loadInfo.mDomain,
-                                            isSecureContext,
-                                            loadInfo.mWindowID,
-                                            ipcClientInfo,
-                                            portIdentifier);
+  RemoteWorkerData remoteWorkerData(nsString(aScriptURL),
+                                    baseURL,
+                                    resolvedScriptURL,
+                                    name,
+                                    loadingPrincipalInfo,
+                                    loadingPrincipalCSP,
+                                    loadingPrincipalPreloadCSP,
+                                    principalInfo,
+                                    principalCSP,
+                                    principalPreloadCSP,
+                                    loadInfo.mDomain,
+                                    isSecureContext,
+                                    ipcClientInfo,
+                                    true /* sharedWorker */);
 
   PSharedWorkerChild* pActor =
-    actorChild->SendPSharedWorkerConstructor(sharedWorkerLoadInfo);
+    actorChild->SendPSharedWorkerConstructor(remoteWorkerData,
+                                             loadInfo.mWindowID,
+                                             portIdentifier);
 
   RefPtr<SharedWorkerChild> actor = static_cast<SharedWorkerChild*>(pActor);
   MOZ_ASSERT(actor);
