@@ -304,9 +304,10 @@ SharedWorkerService::GetOrCreateWorkerManagerOnMainThread(nsIEventTarget* aBackg
   }
 
   // Let's see if there is already a SharedWorker to share.
+  nsCOMPtr<nsIURI> resolvedScriptURL = DeserializeURI(aData.resolvedScriptURL());
   for (SharedWorkerManager* workerManager : mWorkerManagers) {
     if (workerManager->MatchOnMainThread(aData.domain(),
-                                         aData.resolvedScriptURL(),
+                                         resolvedScriptURL,
                                          aData.name(), loadingPrincipal)) {
       manager = workerManager;
       break;

@@ -9,6 +9,7 @@
 #include "SharedWorkerService.h"
 #include "mozilla/dom/PSharedWorker.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ipc/URIUtils.h"
 #include "mozilla/dom/RemoteWorkerController.h"
 #include "nsIConsoleReportCollector.h"
 #include "nsINetworkInterceptController.h"
@@ -24,7 +25,7 @@ SharedWorkerManager::SharedWorkerManager(nsIEventTarget* aPBackgroundEventTarget
   : mPBackgroundEventTarget(aPBackgroundEventTarget)
   , mLoadingPrincipal(aLoadingPrincipal)
   , mDomain(aData.domain())
-  , mResolvedScriptURL(aData.resolvedScriptURL())
+  , mResolvedScriptURL(DeserializeURI(aData.resolvedScriptURL()))
   , mName(aData.name())
   , mIsSecureContext(aData.isSecureContext())
   , mSuspended(false)
@@ -71,13 +72,18 @@ SharedWorkerManager::MaybeCreateRemoteWorker(const RemoteWorkerData& aData,
 
 bool
 SharedWorkerManager::MatchOnMainThread(const nsACString& aDomain,
-                                       const nsACString& aScriptURL,
+                                       nsIURI* aScriptURL,
                                        const nsAString& aName,
                                        nsIPrincipal* aLoadingPrincipal) const
 {
   MOZ_ASSERT(NS_IsMainThread());
+  bool urlEquals;
+  if (NS_FAILED(aScriptURL->Equals(mResolvedScriptURL, &urlEquals))) {
+    return false;
+  }
+
   return aDomain == mDomain &&
-         aScriptURL == mResolvedScriptURL &&
+         urlEquals &&
          aName == mName &&
          // We want to be sure that the window's principal subsumes the
          // SharedWorker's loading principal and vice versa.
