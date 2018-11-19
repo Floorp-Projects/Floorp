@@ -1,14 +1,19 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
 import {mountWithIntl} from "test/unit/utils";
 import React from "react";
-import {_StartupOverlay as StartupOverlay} from "content-src/components/StartupOverlay/StartupOverlay";
+import {_StartupOverlay as StartupOverlay} from "content-src/asrouter/templates/StartupOverlay/StartupOverlay";
 
 describe("<StartupOverlay>", () => {
   let wrapper;
   let dispatch;
+  let onReady;
+  let onBlock;
   beforeEach(() => {
     dispatch = sinon.stub();
-    wrapper = mountWithIntl(<StartupOverlay dispatch={dispatch} />);
+    onReady = sinon.stub();
+    onBlock = sinon.stub();
+
+    wrapper = mountWithIntl(<StartupOverlay onBlock={onBlock} onReady={onReady} dispatch={dispatch} />);
   });
 
   it("should not render if state.show is false", () => {

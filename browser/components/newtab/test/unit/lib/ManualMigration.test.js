@@ -25,7 +25,7 @@ describe("ManualMigration", () => {
 
     fakeProfileAge = () => Promise.resolve({created: Promise.resolve(fakeProfileAge.created || Date.now())});
 
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     globals = new GlobalOverrider();
     globals.set("MigrationUtils", fakeMigrationUtils);
     globals.set("ProfileAge", fakeProfileAge);

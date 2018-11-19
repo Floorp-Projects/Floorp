@@ -25,6 +25,9 @@ describe("PersistentCache", () => {
 
     cache = new PersistentCache(filename);
   });
+  afterEach(() => {
+    globals.restore();
+  });
 
   describe("#get", () => {
     it("tries to read the file on the first get", async () => {
@@ -41,7 +44,7 @@ describe("PersistentCache", () => {
     it("doesnt try to read the file if it was already loaded", async () => {
       fakeOS.File.read = sinon.spy();
       await cache._load();
-      fakeOS.File.read.reset();
+      fakeOS.File.read.resetHistory();
       await cache.get("foo");
       assert.notCalled(fakeOS.File.read);
     });
@@ -69,7 +72,7 @@ describe("PersistentCache", () => {
       fakeOS.File.read = sinon.spy();
       cache = new PersistentCache(filename, true);
       await cache._load();
-      fakeOS.File.read.reset();
+      fakeOS.File.read.resetHistory();
       await cache.set("foo", {x: 42});
       assert.notCalled(fakeOS.File.read);
     });
