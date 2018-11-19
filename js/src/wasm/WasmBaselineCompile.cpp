@@ -1164,7 +1164,6 @@ class BaseStackFrame
 
     static constexpr uint32_t ChunkSize = 8 * sizeof(void*);
     static constexpr uint32_t InitialChunk = ChunkSize;
-    static constexpr uint32_t ChunkCutoff = ChunkSize + InitialChunk;
 #endif
 
     MacroAssembler& masm;
@@ -1483,6 +1482,12 @@ class BaseStackFrame
         return StackHeight(currentFramePushed());
     }
 
+    // The current height of the dynamic part of the stack area (ie, the backing
+    // store for the evaluation stack), zero-based.
+    uint32_t dynamicHeight() const {
+        return currentFramePushed() - localSize_;
+    }
+
     // Set the frame height.
     void setStackHeight(StackHeight amount) {
 #ifdef RABALDR_CHUNKY_STACK
@@ -1579,6 +1584,8 @@ class BaseStackFrame
     // Before branching to an outer control label, pop the execution stack to
     // the level expected by that region, but do not update masm.framePushed()
     // as that will happen as compilation leaves the block.
+    //
+    // Note these operate directly on the stack pointer register.
 
     void popStackBeforeBranch(StackHeight destStackHeight) {
         uint32_t framePushedHere = masm.framePushed();
@@ -1597,22 +1604,26 @@ class BaseStackFrame
     // Before exiting a nested control region, pop the execution stack
     // to the level expected by the nesting region, and free the
     // stack.
+    //
+    // Note this operates on the stack height, which is not the same as the
+    // stack pointer on chunky-stack systems; the stack pointer may or may not
+    // change on such systems.
 
     void popStackOnBlockExit(StackHeight destStackHeight, bool deadCode) {
-        uint32_t framePushedHere = masm.framePushed();
-        uint32_t framePushedThere = framePushedForHeight(destStackHeight);
-        if (framePushedHere > framePushedThere) {
+        uint32_t stackHeightHere = currentFramePushed();
+        uint32_t stackHeightThere = destStackHeight.height;
+        if (stackHeightHere > stackHeightThere) {
 #ifdef RABALDR_CHUNKY_STACK
             if (deadCode) {
                 setStackHeight(destStackHeight);
             } else {
-                popChunkyBytes(framePushedHere - framePushedThere);
+                popChunkyBytes(stackHeightHere - stackHeightThere);
             }
 #else
             if (deadCode) {
-                masm.setFramePushed(framePushedThere);
+                masm.setFramePushed(stackHeightThere);
             } else {
-                masm.freeStack(framePushedHere - framePushedThere);
+                masm.freeStack(stackHeightHere - stackHeightThere);
             }
 #endif
         }
@@ -3410,6 +3421,22 @@ class BaseCompiler final : public BaseCompilerInterface
             }
         }
     }
+
+    void assertStackInvariants() const {
+        size_t size = 0;
+        for (const Stk& v : stk_) {
+            switch (v.kind()) {
+              case Stk::MemRef: size += BaseStackFrame::StackSizeOfPtr;    break;
+              case Stk::MemI32: size += BaseStackFrame::StackSizeOfPtr;    break;
+              case Stk::MemI64: size += BaseStackFrame::StackSizeOfInt64;  break;
+              case Stk::MemF64: size += BaseStackFrame::StackSizeOfDouble; break;
+              case Stk::MemF32: size += BaseStackFrame::StackSizeOfFloat;  break;
+              default:          MOZ_ASSERT(!v.isMem());                    break;
+            }
+        }
+        MOZ_ASSERT(size == fr.dynamicHeight());
+    }
+
 #endif
 
     ////////////////////////////////////////////////////////////
@@ -10257,6 +10284,7 @@ BaseCompiler::emitBody()
 
 #ifdef DEBUG
         performRegisterLeakCheck();
+        assertStackInvariants();
 #endif
 
 #define emitBinary(doEmit, type) \
