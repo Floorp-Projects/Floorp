@@ -14,20 +14,20 @@
 
 namespace mozilla {
 
-#define ENSURE_TRUE(condition, rv)                                             \
-  {                                                                            \
-    if (!(condition)) {                                                        \
-      GMP_LOG("ENSURE_TRUE FAILED %s:%d", __FILE__, __LINE__);                 \
-      return rv;                                                               \
-    }                                                                          \
+#define ENSURE_TRUE(condition, rv)                             \
+  {                                                            \
+    if (!(condition)) {                                        \
+      GMP_LOG("ENSURE_TRUE FAILED %s:%d", __FILE__, __LINE__); \
+      return rv;                                               \
+    }                                                          \
   }
 
-#define ENSURE_GMP_SUCCESS(err, rv)                                            \
-  {                                                                            \
-    if (GMP_FAILED(err)) {                                                     \
-      GMP_LOG("ENSURE_GMP_SUCCESS FAILED %s:%d", __FILE__, __LINE__);          \
-      return rv;                                                               \
-    }                                                                          \
+#define ENSURE_GMP_SUCCESS(err, rv)                                   \
+  {                                                                   \
+    if (GMP_FAILED(err)) {                                            \
+      GMP_LOG("ENSURE_GMP_SUCCESS FAILED %s:%d", __FILE__, __LINE__); \
+      return rv;                                                      \
+    }                                                                 \
   }
 
 namespace gmp {
@@ -37,16 +37,14 @@ class WidevineBuffer;
 
 // Base class for our cdm::Buffer implementations, so we can tell at runtime
 // whether the buffer is a Shmem or non-Shmem buffer.
-class CDMBuffer : public cdm::Buffer
-{
-public:
+class CDMBuffer : public cdm::Buffer {
+ public:
   virtual WidevineBuffer* AsArrayBuffer() { return nullptr; }
   virtual gmp::CDMShmemBuffer* AsShmemBuffer() { return nullptr; }
 };
 
-class WidevineBuffer : public CDMBuffer
-{
-public:
+class WidevineBuffer : public CDMBuffer {
+ public:
   explicit WidevineBuffer(size_t aSize);
   ~WidevineBuffer() override;
   void Destroy() override;
@@ -61,16 +59,14 @@ public:
 
   WidevineBuffer* AsArrayBuffer() override { return this; }
 
-private:
+ private:
   nsTArray<uint8_t> mBuffer;
   WidevineBuffer(const WidevineBuffer&);
   void operator=(const WidevineBuffer&);
 };
 
-class WidevineDecryptedBlock : public cdm::DecryptedBlock
-{
-public:
-
+class WidevineDecryptedBlock : public cdm::DecryptedBlock {
+ public:
   WidevineDecryptedBlock();
   ~WidevineDecryptedBlock() override;
   void SetDecryptedBuffer(cdm::Buffer* aBuffer) override;
@@ -78,11 +74,11 @@ public:
   void SetTimestamp(int64_t aTimestamp) override;
   int64_t Timestamp() const override;
 
-private:
+ private:
   cdm::Buffer* mBuffer;
   int64_t mTimestamp;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // WidevineUtils_h_
+#endif  // WidevineUtils_h_

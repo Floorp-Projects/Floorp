@@ -11,36 +11,33 @@ namespace mozilla {
 
 class RemoteDecoderManagerThreadHolder;
 
-class RemoteDecoderManagerParent final : public PRemoteDecoderManagerParent
-{
-public:
+class RemoteDecoderManagerParent final : public PRemoteDecoderManagerParent {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteDecoderManagerParent)
 
   static bool CreateForContent(
-                  Endpoint<PRemoteDecoderManagerParent>&& aEndpoint);
+      Endpoint<PRemoteDecoderManagerParent>&& aEndpoint);
 
   static bool StartupThreads();
   static void ShutdownThreads();
 
   bool OnManagerThread();
 
-protected:
+ protected:
   PRemoteVideoDecoderParent* AllocPRemoteVideoDecoderParent(
-                                 const VideoInfo& aVideoInfo,
-                                 const float& aFramerate,
-                                 const CreateDecoderParams::OptionSet& aOptions,
-                                 bool* aSuccess,
-                                 nsCString* aErrorDescription) override;
+      const VideoInfo& aVideoInfo, const float& aFramerate,
+      const CreateDecoderParams::OptionSet& aOptions, bool* aSuccess,
+      nsCString* aErrorDescription) override;
   bool DeallocPRemoteVideoDecoderParent(
-           PRemoteVideoDecoderParent* actor) override;
+      PRemoteVideoDecoderParent* actor) override;
 
   void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
 
   void DeallocPRemoteDecoderManagerParent() override;
 
-private:
+ private:
   explicit RemoteDecoderManagerParent(
-               RemoteDecoderManagerThreadHolder* aThreadHolder);
+      RemoteDecoderManagerThreadHolder* aThreadHolder);
   ~RemoteDecoderManagerParent();
 
   void Open(Endpoint<PRemoteDecoderManagerParent>&& aEndpoint);
@@ -48,6 +45,6 @@ private:
   RefPtr<RemoteDecoderManagerThreadHolder> mThreadHolder;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // include_dom_media_ipc_RemoteDecoderManagerParent_h
+#endif  // include_dom_media_ipc_RemoteDecoderManagerParent_h

@@ -16,12 +16,10 @@
 
 using mozilla::media::TimeUnit;
 
-namespace mozilla
-{
+namespace mozilla {
 
-mozilla::Result<mozilla::Ok, nsresult>
-CryptoFile::DoUpdate(const uint8_t* aData, size_t aLength)
-{
+mozilla::Result<mozilla::Ok, nsresult> CryptoFile::DoUpdate(
+    const uint8_t* aData, size_t aLength) {
   BufferReader reader(aData, aLength);
   while (reader.Remaining()) {
     PsshInfo psshInfo;
@@ -42,19 +40,15 @@ CryptoFile::DoUpdate(const uint8_t* aData, size_t aLength)
   return mozilla::Ok();
 }
 
-bool
-MP4AudioInfo::IsValid() const
-{
+bool MP4AudioInfo::IsValid() const {
   return mChannels > 0 && mRate > 0 &&
          // Accept any mime type here, but if it's aac, validate the profile.
-         (!mMimeType.EqualsLiteral("audio/mp4a-latm") ||
-          mProfile > 0 || mExtendedProfile > 0);
+         (!mMimeType.EqualsLiteral("audio/mp4a-latm") || mProfile > 0 ||
+          mExtendedProfile > 0);
 }
 
-static void
-UpdateTrackProtectedInfo(mozilla::TrackInfo& aConfig,
-                         const Mp4parseSinfInfo& aSinf)
-{
+static void UpdateTrackProtectedInfo(mozilla::TrackInfo& aConfig,
+                                     const Mp4parseSinfInfo& aSinf) {
   if (aSinf.is_encrypted != 0) {
     aConfig.mCrypto.mValid = true;
     aConfig.mCrypto.mMode = aSinf.is_encrypted;
@@ -63,10 +57,8 @@ UpdateTrackProtectedInfo(mozilla::TrackInfo& aConfig,
   }
 }
 
-void
-MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
-                     const Mp4parseTrackAudioInfo* audio)
-{
+void MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
+                          const Mp4parseTrackAudioInfo* audio) {
   UpdateTrackProtectedInfo(*this, audio->protected_data);
 
   if (track->codec == MP4PARSE_CODEC_OPUS) {
@@ -77,9 +69,9 @@ MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
     if (audio->codec_specific_config.data &&
         audio->codec_specific_config.length >= 12) {
       uint16_t preskip = mozilla::LittleEndian::readUint16(
-        audio->codec_specific_config.data + 10);
+          audio->codec_specific_config.data + 10);
       mozilla::OpusDataDecoder::AppendCodecDelay(
-        mCodecSpecificConfig, mozilla::FramesToUsecs(preskip, 48000).value());
+          mCodecSpecificConfig, mozilla::FramesToUsecs(preskip, 48000).value());
     } else {
       // This file will error later as it will be rejected by the opus decoder.
       mozilla::OpusDataDecoder::AppendCodecDelay(mCodecSpecificConfig, 0);
@@ -117,10 +109,8 @@ MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
   }
 }
 
-void
-MP4VideoInfo::Update(const Mp4parseTrackInfo* track,
-                     const Mp4parseTrackVideoInfo* video)
-{
+void MP4VideoInfo::Update(const Mp4parseTrackInfo* track,
+                          const Mp4parseTrackVideoInfo* video) {
   UpdateTrackProtectedInfo(*this, video->protected_data);
   if (track->codec == MP4PARSE_CODEC_AVC) {
     mMimeType = NS_LITERAL_CSTRING("video/avc");
@@ -140,15 +130,14 @@ MP4VideoInfo::Update(const Mp4parseTrackInfo* track,
   mImage.height = video->image_height;
   mRotation = ToSupportedRotation(video->rotation);
   if (video->extra_data.data) {
-    mExtraData->AppendElements(video->extra_data.data, video->extra_data.length);
+    mExtraData->AppendElements(video->extra_data.data,
+                               video->extra_data.length);
   }
 }
 
-bool
-MP4VideoInfo::IsValid() const
-{
+bool MP4VideoInfo::IsValid() const {
   return (mDisplay.width > 0 && mDisplay.height > 0) ||
-    (mImage.width > 0 && mImage.height > 0);
+         (mImage.width > 0 && mImage.height > 0);
 }
 
-}
+}  // namespace mozilla

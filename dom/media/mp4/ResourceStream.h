@@ -9,16 +9,13 @@
 #include "ByteStream.h"
 #include "mozilla/RefPtr.h"
 
-namespace mozilla
-{
+namespace mozilla {
 
 DDLoggedTypeDeclNameAndBase(ResourceStream, ByteStream);
 
-class ResourceStream
-  : public ByteStream
-  , public DecoderDoctorLifeLogger<ResourceStream>
-{
-public:
+class ResourceStream : public ByteStream,
+                       public DecoderDoctorLifeLogger<ResourceStream> {
+ public:
   explicit ResourceStream(mozilla::MediaResource* aResource);
 
   virtual bool ReadAt(int64_t offset, void* aBuffer, size_t aCount,
@@ -27,27 +24,25 @@ public:
                             size_t* aBytesRead) override;
   virtual bool Length(int64_t* size) override;
 
-  void Pin()
-  {
+  void Pin() {
     mResource.GetResource()->Pin();
     ++mPinCount;
   }
 
-  void Unpin()
-  {
+  void Unpin() {
     mResource.GetResource()->Unpin();
     MOZ_ASSERT(mPinCount);
     --mPinCount;
   }
 
-protected:
+ protected:
   virtual ~ResourceStream();
 
-private:
+ private:
   mozilla::MediaResourceIndex mResource;
   uint32_t mPinCount;
 };
 
-}
+}  // namespace mozilla
 
-#endif // RESOURCESTREAM_H_
+#endif  // RESOURCESTREAM_H_

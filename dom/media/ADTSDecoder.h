@@ -15,17 +15,16 @@ namespace mozilla {
 class MediaContainerType;
 class TrackInfo;
 
-class ADTSDecoder
-{
-public:
+class ADTSDecoder {
+ public:
   // Returns true if the ADTS backend is pref'ed on, and we're running on a
   // platform that is likely to have decoders for the format.
   static bool IsEnabled();
   static bool IsSupportedType(const MediaContainerType& aContainerType);
   static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(
-    const MediaContainerType& aType);
+      const MediaContainerType& aType);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // !ADTS_DECODER_H_
+#endif  // !ADTS_DECODER_H_

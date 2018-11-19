@@ -14,40 +14,35 @@ namespace mozilla {
 class TimeStamp;
 class ChildProfilerController;
 
-class RDDParent final : public PRDDParent
-{
-public:
+class RDDParent final : public PRDDParent {
+ public:
   RDDParent();
   ~RDDParent();
 
   static RDDParent* GetSingleton();
 
-  bool Init(base::ProcessId aParentPid,
-            const char* aParentBuildID,
-            MessageLoop* aIOLoop,
-            IPC::Channel* aChannel);
+  bool Init(base::ProcessId aParentPid, const char* aParentBuildID,
+            MessageLoop* aIOLoop, IPC::Channel* aChannel);
 
   mozilla::ipc::IPCResult RecvInit() override;
   mozilla::ipc::IPCResult RecvInitProfiler(
-                              Endpoint<PProfilerChild>&& aEndpoint) override;
+      Endpoint<PProfilerChild>&& aEndpoint) override;
 
   mozilla::ipc::IPCResult RecvNewContentRemoteDecoderManager(
-                    Endpoint<PRemoteDecoderManagerParent>&& aEndpoint) override;
+      Endpoint<PRemoteDecoderManagerParent>&& aEndpoint) override;
   mozilla::ipc::IPCResult RecvRequestMemoryReport(
-                                        const uint32_t& generation,
-                                        const bool& anonymize,
-                                        const bool& minimizeMemoryUsage,
-                                        const MaybeFileDesc& DMDFile) override;
+      const uint32_t& generation, const bool& anonymize,
+      const bool& minimizeMemoryUsage, const MaybeFileDesc& DMDFile) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-private:
+ private:
   const TimeStamp mLaunchTime;
 #ifdef MOZ_GECKO_PROFILER
   RefPtr<ChildProfilerController> mProfilerController;
 #endif
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // _include_dom_media_ipc_RDDParent_h__
+#endif  // _include_dom_media_ipc_RDDParent_h__

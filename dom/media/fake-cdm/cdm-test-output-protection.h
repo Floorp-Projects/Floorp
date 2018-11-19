@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if defined(XP_WIN)
-#include <d3d9.h> // needed to prevent re-definition of enums
+#include <d3d9.h>  // needed to prevent re-definition of enums
 #include <stdio.h>
 #include <string>
 #include <vector>
@@ -18,14 +18,14 @@ namespace mozilla {
 namespace cdmtest {
 
 #if defined(XP_WIN)
-typedef HRESULT(STDAPICALLTYPE * OPMGetVideoOutputsFromHMONITORProc)
-          (HMONITOR, OPM_VIDEO_OUTPUT_SEMANTICS, ULONG*, IOPMVideoOutput***);
+typedef HRESULT(STDAPICALLTYPE* OPMGetVideoOutputsFromHMONITORProc)(
+    HMONITOR, OPM_VIDEO_OUTPUT_SEMANTICS, ULONG*, IOPMVideoOutput***);
 
-static OPMGetVideoOutputsFromHMONITORProc sOPMGetVideoOutputsFromHMONITORProc = nullptr;
+static OPMGetVideoOutputsFromHMONITORProc sOPMGetVideoOutputsFromHMONITORProc =
+    nullptr;
 
 static BOOL CALLBACK EnumDisplayMonitorsCallback(HMONITOR hMonitor, HDC hdc,
-                                                 LPRECT lprc, LPARAM pData)
-{
+                                                 LPRECT lprc, LPARAM pData) {
   std::vector<std::string>* failureMsgs = (std::vector<std::string>*)pData;
 
   MONITORINFOEXA miex;
@@ -37,14 +37,16 @@ static BOOL CALLBACK EnumDisplayMonitorsCallback(HMONITOR hMonitor, HDC hdc,
 
   ULONG numVideoOutputs = 0;
   IOPMVideoOutput** opmVideoOutputArray = nullptr;
-  HRESULT hr = sOPMGetVideoOutputsFromHMONITORProc(hMonitor,
-                                                   OPM_VOS_OPM_SEMANTICS,
-                                                   &numVideoOutputs,
-                                                   &opmVideoOutputArray);
+  HRESULT hr = sOPMGetVideoOutputsFromHMONITORProc(
+      hMonitor, OPM_VOS_OPM_SEMANTICS, &numVideoOutputs, &opmVideoOutputArray);
   if (S_OK != hr) {
-    if ((HRESULT)0x8007001f != hr && (HRESULT)0x80070032 != hr && (HRESULT)0xc02625e5 != hr) {
+    if ((HRESULT)0x8007001f != hr && (HRESULT)0x80070032 != hr &&
+        (HRESULT)0xc02625e5 != hr) {
       char msg[100];
-      sprintf(msg, "FAIL OPMGetVideoOutputsFromHMONITOR call failed: HRESULT=0x%08lx", hr);
+      sprintf(
+          msg,
+          "FAIL OPMGetVideoOutputsFromHMONITOR call failed: HRESULT=0x%08lx",
+          hr);
       failureMsgs->push_back(msg);
     }
     return true;
@@ -61,9 +63,8 @@ static BOOL CALLBACK EnumDisplayMonitorsCallback(HMONITOR hMonitor, HDC hdc,
     OPM_RANDOM_NUMBER opmRandomNumber;
     BYTE* certificate = nullptr;
     ULONG certificateLength = 0;
-    hr = opmVideoOutputArray[i]->StartInitialization(&opmRandomNumber,
-                                                     &certificate,
-                                                     &certificateLength);
+    hr = opmVideoOutputArray[i]->StartInitialization(
+        &opmRandomNumber, &certificate, &certificateLength);
     if (S_OK != hr) {
       char msg[100];
       sprintf(msg, "FAIL StartInitialization call failed: HRESULT=0x%08lx", hr);
@@ -85,9 +86,7 @@ static BOOL CALLBACK EnumDisplayMonitorsCallback(HMONITOR hMonitor, HDC hdc,
 }
 #endif
 
-static void
-RunOutputProtectionAPITests()
-{
+static void RunOutputProtectionAPITests() {
 #if defined(XP_WIN)
   // Get hold of OPMGetVideoOutputsFromHMONITOR function.
   HMODULE hDvax2DLL = GetModuleHandleW(L"dxva2.dll");
@@ -96,10 +95,12 @@ RunOutputProtectionAPITests()
     return;
   }
 
-  sOPMGetVideoOutputsFromHMONITORProc = (OPMGetVideoOutputsFromHMONITORProc)
-    GetProcAddress(hDvax2DLL, "OPMGetVideoOutputsFromHMONITOR");
+  sOPMGetVideoOutputsFromHMONITORProc =
+      (OPMGetVideoOutputsFromHMONITORProc)GetProcAddress(
+          hDvax2DLL, "OPMGetVideoOutputsFromHMONITOR");
   if (!sOPMGetVideoOutputsFromHMONITORProc) {
-    FakeDecryptor::Message("FAIL GetProcAddress call failed for OPMGetVideoOutputsFromHMONITOR");
+    FakeDecryptor::Message(
+        "FAIL GetProcAddress call failed for OPMGetVideoOutputsFromHMONITOR");
     return;
   }
 
@@ -107,7 +108,7 @@ RunOutputProtectionAPITests()
   // Other APIs are tested in the callback function.
   std::vector<std::string> failureMsgs;
   if (!EnumDisplayMonitors(NULL, NULL, EnumDisplayMonitorsCallback,
-                           (LPARAM) &failureMsgs)) {
+                           (LPARAM)&failureMsgs)) {
     FakeDecryptor::Message("FAIL EnumDisplayMonitors call failed");
   }
 
@@ -118,12 +119,10 @@ RunOutputProtectionAPITests()
 #endif
 }
 
-static void
-TestOuputProtectionAPIs()
-{
+static void TestOuputProtectionAPIs() {
   RunOutputProtectionAPITests();
   FakeDecryptor::Message("OP tests completed");
 }
 
-} // namespace cdmtest
-} // namespace mozilla
+}  // namespace cdmtest
+}  // namespace mozilla

@@ -15,9 +15,8 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 namespace dom {
 
-class AudioParamMap final : public nsWrapperCache
-{
-public:
+class AudioParamMap final : public nsWrapperCache {
+ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AudioParamMap)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AudioParamMap)
 
@@ -25,14 +24,15 @@ public:
 
   nsPIDOMWindowInner* GetParentObject() const { return mParent; }
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-private:
+ private:
   ~AudioParamMap() = default;
   nsCOMPtr<nsPIDOMWindowInner> mParent;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // AudioParamMap_h_
+#endif  // AudioParamMap_h_

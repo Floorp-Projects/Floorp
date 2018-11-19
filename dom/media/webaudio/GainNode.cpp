@@ -15,8 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(GainNode, AudioNode,
-                                   mGain)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(GainNode, AudioNode, mGain)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(GainNode)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)
@@ -24,42 +23,33 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(GainNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(GainNode, AudioNode)
 
-class GainNodeEngine final : public AudioNodeEngine
-{
-public:
+class GainNodeEngine final : public AudioNodeEngine {
+ public:
   GainNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination)
-    : AudioNodeEngine(aNode)
-    , mDestination(aDestination->Stream())
-    // Keep the default value in sync with the default value in GainNode::GainNode.
-    , mGain(1.f)
-  {
-  }
+      : AudioNodeEngine(aNode),
+        mDestination(aDestination->Stream())
+        // Keep the default value in sync with the default value in
+        // GainNode::GainNode.
+        ,
+        mGain(1.f) {}
 
-  enum Parameters {
-    GAIN
-  };
-  void RecvTimelineEvent(uint32_t aIndex,
-                         AudioTimelineEvent& aEvent) override
-  {
+  enum Parameters { GAIN };
+  void RecvTimelineEvent(uint32_t aIndex, AudioTimelineEvent& aEvent) override {
     MOZ_ASSERT(mDestination);
-    WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent,
-                                                    mDestination);
+    WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent, mDestination);
 
     switch (aIndex) {
-    case GAIN:
-      mGain.InsertEvent<int64_t>(aEvent);
-      break;
-    default:
-      NS_ERROR("Bad GainNodeEngine TimelineParameter");
+      case GAIN:
+        mGain.InsertEvent<int64_t>(aEvent);
+        break;
+      default:
+        NS_ERROR("Bad GainNodeEngine TimelineParameter");
     }
   }
 
-  void ProcessBlock(AudioNodeStream* aStream,
-                    GraphTime aFrom,
-                    const AudioBlock& aInput,
-                    AudioBlock* aOutput,
-                    bool* aFinished) override
-  {
+  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+                    const AudioBlock& aInput, AudioBlock* aOutput,
+                    bool* aFinished) override {
     if (aInput.IsNull()) {
       // If input is silent, so is the output
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
@@ -91,23 +81,24 @@ public:
 
       // Apply the gain to the output buffer
       for (size_t channel = 0; channel < aOutput->ChannelCount(); ++channel) {
-        const float* inputBuffer = static_cast<const float*> (aInput.mChannelData[channel]);
+        const float* inputBuffer =
+            static_cast<const float*>(aInput.mChannelData[channel]);
         float* buffer = aOutput->ChannelFloatsForWrite(channel);
-        AudioBlockCopyChannelWithScale(inputBuffer, alignedComputedGain, buffer);
+        AudioBlockCopyChannelWithScale(inputBuffer, alignedComputedGain,
+                                       buffer);
       }
     }
   }
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override {
     // Not owned:
-    // - mDestination - MediaStreamGraphImpl::CollectSizesForMemoryReport() accounts for mDestination.
+    // - mDestination - MediaStreamGraphImpl::CollectSizesForMemoryReport()
+    // accounts for mDestination.
     // - mGain - Internal ref owned by AudioNode
     return AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
@@ -116,23 +107,17 @@ public:
 };
 
 GainNode::GainNode(AudioContext* aContext)
-  : AudioNode(aContext,
-              2,
-              ChannelCountMode::Max,
-              ChannelInterpretation::Speakers)
-  , mGain(new AudioParam(this, GainNodeEngine::GAIN, "gain", 1.0f))
-{
+    : AudioNode(aContext, 2, ChannelCountMode::Max,
+                ChannelInterpretation::Speakers),
+      mGain(new AudioParam(this, GainNodeEngine::GAIN, "gain", 1.0f)) {
   GainNodeEngine* engine = new GainNodeEngine(this, aContext->Destination());
-  mStream = AudioNodeStream::Create(aContext, engine,
-                                    AudioNodeStream::NO_STREAM_FLAGS,
-                                    aContext->Graph());
+  mStream = AudioNodeStream::Create(
+      aContext, engine, AudioNodeStream::NO_STREAM_FLAGS, aContext->Graph());
 }
 
-/* static */ already_AddRefed<GainNode>
-GainNode::Create(AudioContext& aAudioContext,
-                 const GainOptions& aOptions,
-                 ErrorResult& aRv)
-{
+/* static */ already_AddRefed<GainNode> GainNode::Create(
+    AudioContext& aAudioContext, const GainOptions& aOptions,
+    ErrorResult& aRv) {
   if (aAudioContext.CheckClosed(aRv)) {
     return nullptr;
   }
@@ -148,25 +133,20 @@ GainNode::Create(AudioContext& aAudioContext,
   return audioNode.forget();
 }
 
-size_t
-GainNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t GainNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   size_t amount = AudioNode::SizeOfExcludingThis(aMallocSizeOf);
   amount += mGain->SizeOfIncludingThis(aMallocSizeOf);
   return amount;
 }
 
-size_t
-GainNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t GainNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-JSObject*
-GainNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* GainNode::WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) {
   return GainNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

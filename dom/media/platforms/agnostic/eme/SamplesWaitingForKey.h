@@ -17,23 +17,22 @@ namespace mozilla {
 typedef nsTArray<uint8_t> CencKeyId;
 
 class CDMProxy;
-template <typename... Es> class MediaEventProducer;
+template <typename... Es>
+class MediaEventProducer;
 class MediaRawData;
 
 // Encapsulates the task of waiting for the CDMProxy to have the necessary
 // keys to decrypt a given sample.
-class SamplesWaitingForKey
-{
-public:
+class SamplesWaitingForKey {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SamplesWaitingForKey)
 
   typedef MozPromise<RefPtr<MediaRawData>, bool, /* IsExclusive = */ true>
-    WaitForKeyPromise;
+      WaitForKeyPromise;
 
   SamplesWaitingForKey(
-    CDMProxy* aProxy,
-    TrackInfo::TrackType aType,
-    MediaEventProducer<TrackInfo::TrackType>* aOnWaitingForKey);
+      CDMProxy* aProxy, TrackInfo::TrackType aType,
+      MediaEventProducer<TrackInfo::TrackType>* aOnWaitingForKey);
 
   // Returns a promise that will be resolved if or when a key for decoding the
   // sample becomes usable.
@@ -43,14 +42,13 @@ public:
 
   void Flush();
 
-protected:
+ protected:
   ~SamplesWaitingForKey();
 
-private:
+ private:
   Mutex mMutex;
   RefPtr<CDMProxy> mProxy;
-  struct SampleEntry
-  {
+  struct SampleEntry {
     RefPtr<MediaRawData> mSample;
     MozPromiseHolder<WaitForKeyPromise> mPromise;
   };
@@ -59,6 +57,6 @@ private:
   MediaEventProducer<TrackInfo::TrackType>* const mOnWaitingForKeyEvent;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif //  SamplesWaitingForKey_h_
+#endif  //  SamplesWaitingForKey_h_

@@ -21,11 +21,11 @@ namespace mozilla {
 namespace dom {
 class Blob;
 struct MediaTrackSettings;
-} // namespace dom
+}  // namespace dom
 
 namespace ipc {
 class PrincipalInfo;
-} // namespace ipc
+}  // namespace ipc
 
 class AllocationHandle;
 class MediaEnginePhotoCallback;
@@ -37,7 +37,7 @@ class SourceMediaStream;
  * should be called.
  */
 class MediaEnginePhotoCallback {
-public:
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaEnginePhotoCallback)
 
   // aBlob is the image captured by MediaEngineSource. It is
@@ -47,7 +47,7 @@ public:
   // It is called on main thread. aRv is the error code.
   virtual nsresult PhotoError(nsresult aRv) = 0;
 
-protected:
+ protected:
   virtual ~MediaEnginePhotoCallback() {}
 };
 
@@ -55,10 +55,10 @@ protected:
  * Lifecycle state of MediaEngineSource.
  */
 enum MediaEngineSourceState {
-  kAllocated, // Allocated, not yet started.
-  kStarted, // Previously allocated or stopped, then started.
-  kStopped, // Previously started, then stopped.
-  kReleased // Not allocated.
+  kAllocated,  // Allocated, not yet started.
+  kStarted,    // Previously allocated or stopped, then started.
+  kStopped,    // Previously started, then stopped.
+  kReleased    // Not allocated.
 };
 
 /**
@@ -67,7 +67,7 @@ enum MediaEngineSourceState {
  * Most sources are helped by the defaults implemented in MediaEngineSource.
  */
 class MediaEngineSourceInterface {
-public:
+ public:
   /**
    * Returns true if this source requires sharing to support multiple
    * allocations.
@@ -124,8 +124,8 @@ public:
    * MediaEngineSource implementation. Any user is to treat it as an opaque
    * object.
    */
-  virtual nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                            const MediaEnginePrefs &aPrefs,
+  virtual nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
+                            const MediaEnginePrefs& aPrefs,
                             const nsString& aDeviceId,
                             const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                             AllocationHandle** aOutHandle,
@@ -162,7 +162,8 @@ public:
    *                            is not yet implemented.
    * NS_ERROR_FAILURE         - Failures reported from underlying code.
    */
-  virtual nsresult FocusOnSelectedSource(const RefPtr<const AllocationHandle>& aHandle) = 0;
+  virtual nsresult FocusOnSelectedSource(
+      const RefPtr<const AllocationHandle>& aHandle) = 0;
 
   /**
    * Applies new constraints to the capability selection for the underlying
@@ -204,7 +205,8 @@ public:
    * If this was the last registered AllocationHandle, the underlying device
    * will be deallocated.
    */
-  virtual nsresult Deallocate(const RefPtr<const AllocationHandle>& aHandle) = 0;
+  virtual nsresult Deallocate(
+      const RefPtr<const AllocationHandle>& aHandle) = 0;
 
   /**
    * Called by MediaEngine when it knows this MediaEngineSource won't be used
@@ -214,18 +216,19 @@ public:
 
   /**
    * If implementation of MediaEngineSource supports TakePhoto(), the picture
-   * should be returned via aCallback object. Otherwise, it returns NS_ERROR_NOT_IMPLEMENTED.
+   * should be returned via aCallback object. Otherwise, it returns
+   * NS_ERROR_NOT_IMPLEMENTED.
    */
   virtual nsresult TakePhoto(MediaEnginePhotoCallback* aCallback) = 0;
 
   /**
-   * GetBestFitnessDistance returns the best distance the capture device can offer
-   * as a whole, given an accumulated number of ConstraintSets.
-   * Ideal values are considered in the first ConstraintSet only.
-   * Plain values are treated as Ideal in the first ConstraintSet.
-   * Plain values are treated as Exact in subsequent ConstraintSets.
-   * Infinity = UINT32_MAX e.g. device cannot satisfy accumulated ConstraintSets.
-   * A finite result may be used to calculate this device's ranking as a choice.
+   * GetBestFitnessDistance returns the best distance the capture device can
+   * offer as a whole, given an accumulated number of ConstraintSets. Ideal
+   * values are considered in the first ConstraintSet only. Plain values are
+   * treated as Ideal in the first ConstraintSet. Plain values are treated as
+   * Exact in subsequent ConstraintSets. Infinity = UINT32_MAX e.g. device
+   * cannot satisfy accumulated ConstraintSets. A finite result may be used to
+   * calculate this device's ranking as a choice.
    */
   virtual uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
@@ -248,8 +251,7 @@ public:
    * Driven by MediaStreamListener::NotifyPull.
    */
   virtual void Pull(const RefPtr<const AllocationHandle>& aHandle,
-                    const RefPtr<SourceMediaStream>& aStream,
-                    TrackID aTrackID,
+                    const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
                     StreamTime aDesiredTime,
                     const PrincipalHandle& aPrincipalHandle) = 0;
 };
@@ -262,8 +264,7 @@ public:
  * checks in subclasses.
  */
 class MediaEngineSource : public MediaEngineSourceInterface {
-public:
-
+ public:
   // code inside webrtc.org assumes these sizes; don't use anything smaller
   // without verifying it's ok
   static const unsigned int kMaxDeviceNameLength = 128;
@@ -278,8 +279,7 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaEngineSource)
   NS_DECL_OWNINGTHREAD
 
-  void AssertIsOnOwningThread() const
-  {
+  void AssertIsOnOwningThread() const {
     NS_ASSERT_OWNINGTHREAD(MediaEngineSource);
   }
 
@@ -293,7 +293,8 @@ public:
   bool GetScary() const override;
 
   // Returns NS_ERROR_NOT_AVAILABLE by default.
-  nsresult FocusOnSelectedSource(const RefPtr<const AllocationHandle>& aHandle) override;
+  nsresult FocusOnSelectedSource(
+      const RefPtr<const AllocationHandle>& aHandle) override;
 
   // Shutdown does nothing by default.
   void Shutdown() override;
@@ -305,10 +306,10 @@ public:
   // Makes aOutSettings empty by default.
   void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
 
-protected:
+ protected:
   virtual ~MediaEngineSource();
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* MediaEngineSource_h */

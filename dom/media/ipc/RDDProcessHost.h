@@ -26,21 +26,18 @@ class RDDChild;
 // RDDProcessHosts are allocated and managed by RDDProcessManager. For all
 // intents and purposes it is a singleton, though more than one may be allocated
 // at a time due to its shutdown being asynchronous.
-class RDDProcessHost final : public mozilla::ipc::GeckoChildProcessHost
-{
+class RDDProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   friend class RDDChild;
 
-public:
+ public:
   class Listener {
-  public:
-    virtual void OnProcessLaunchComplete(RDDProcessHost* aHost)
-    {}
+   public:
+    virtual void OnProcessLaunchComplete(RDDProcessHost* aHost) {}
 
     // The RDDProcessHost has unexpectedly shutdown or had its connection
     // severed. This is not called if an error occurs after calling
     // Shutdown().
-    virtual void OnProcessUnexpectedShutdown(RDDProcessHost* aHost)
-    {}
+    virtual void OnProcessUnexpectedShutdown(RDDProcessHost* aHost) {}
   };
 
   explicit RDDProcessHost(Listener* listener);
@@ -71,25 +68,19 @@ public:
 
   // Return the actor for the top-level actor of the process. If the process
   // has not connected yet, this returns null.
-  RDDChild* GetActor() const {
-    return mRDDChild.get();
-  }
+  RDDChild* GetActor() const { return mRDDChild.get(); }
 
   // Return a unique id for this process, guaranteed not to be shared with any
   // past or future instance of RDDProcessHost.
   uint64_t GetProcessToken() const;
 
-  bool IsConnected() const {
-    return !!mRDDChild;
-  }
+  bool IsConnected() const { return !!mRDDChild; }
 
   // Return the time stamp for when we tried to launch the RDD process.
   // This is currently used for Telemetry so that we can determine how
   // long RDD processes take to spin up. Note this doesn't denote a
   // successful launch, just when we attempted launch.
-  TimeStamp GetLaunchTime() const {
-    return mLaunchTime;
-  }
+  TimeStamp GetLaunchTime() const { return mLaunchTime; }
 
   // Called on the IO thread.
   void OnChannelConnected(int32_t peer_pid) override;
@@ -100,7 +91,7 @@ public:
   // Used for tests and diagnostics
   void KillProcess();
 
-private:
+ private:
   // Called on the main thread.
   void OnChannelConnectedTask();
   void OnChannelErrorTask();
@@ -116,17 +107,13 @@ private:
 
   void DestroyProcess();
 
-private:
+ private:
   DISALLOW_COPY_AND_ASSIGN(RDDProcessHost);
 
   Listener* mListener;
   mozilla::ipc::TaskFactory<RDDProcessHost> mTaskFactory;
 
-  enum class LaunchPhase {
-    Unlaunched,
-    Waiting,
-    Complete
-  };
+  enum class LaunchPhase { Unlaunched, Waiting, Complete };
   LaunchPhase mLaunchPhase;
 
   UniquePtr<RDDChild> mRDDChild;
@@ -138,6 +125,6 @@ private:
   TimeStamp mLaunchTime;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // _include_dom_media_ipc_RDDProcessHost_h_
+#endif  // _include_dom_media_ipc_RDDProcessHost_h_

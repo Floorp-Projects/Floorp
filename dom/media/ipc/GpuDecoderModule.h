@@ -18,12 +18,10 @@ namespace mozilla {
 // We currently require a 'wrapped' PDM in order to be able to answer
 // SupportsMimeType and DecoderNeedsConversion. Ideally we'd check these
 // over IPDL using the manager protocol
-class GpuDecoderModule : public PlatformDecoderModule
-{
-public:
+class GpuDecoderModule : public PlatformDecoderModule {
+ public:
   explicit GpuDecoderModule(PlatformDecoderModule* aWrapped)
-    : mWrapped(aWrapped)
-  {}
+      : mWrapped(aWrapped) {}
 
   nsresult Startup() override;
 
@@ -33,18 +31,17 @@ public:
                 DecoderDoctorDiagnostics* aDiagnostics) const override;
 
   already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
-    const CreateDecoderParams& aParams) override;
+      const CreateDecoderParams& aParams) override;
 
   already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
-    const CreateDecoderParams& aParams) override
-  {
+      const CreateDecoderParams& aParams) override {
     return nullptr;
   }
 
-private:
+ private:
   RefPtr<PlatformDecoderModule> mWrapped;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // include_dom_media_ipc_GpuDecoderModule_h
+#endif  // include_dom_media_ipc_GpuDecoderModule_h

@@ -11,24 +11,21 @@
 
 namespace mozilla {
 
-template<class T>
+template <class T>
 class SelfReference {
-public:
+ public:
   SelfReference() : mHeld(false) {}
-  ~SelfReference()
-  {
+  ~SelfReference() {
     NS_ASSERTION(!mHeld, "Forgot to drop the self reference?");
   }
 
-  void Take(T* t)
-  {
+  void Take(T* t) {
     if (!mHeld) {
       mHeld = true;
       t->AddRef();
     }
   }
-  void Drop(T* t)
-  {
+  void Drop(T* t) {
     if (mHeld) {
       mHeld = false;
       t->Release();
@@ -39,10 +36,11 @@ public:
 
   SelfReference(const SelfReference& aOther) = delete;
   void operator=(const SelfReference& aOther) = delete;
-private:
+
+ private:
   bool mHeld;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // SELF_REF_H
+#endif  // SELF_REF_H

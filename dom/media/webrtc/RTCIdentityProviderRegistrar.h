@@ -22,9 +22,8 @@ namespace dom {
 struct RTCIdentityProvider;
 
 class RTCIdentityProviderRegistrar final : public nsISupports,
-                                           public nsWrapperCache
-{
-public:
+                                           public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(RTCIdentityProviderRegistrar)
 
@@ -32,21 +31,21 @@ public:
 
   // As required
   nsIGlobalObject* GetParentObject() const;
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   // setter and checker
   void Register(const RTCIdentityProvider& aIdp);
   bool HasIdp() const;
 
-  already_AddRefed<Promise>
-  GenerateAssertion(const nsAString& aContents, const nsAString& aOrigin,
-                    const RTCIdentityProviderOptions& aOptions,
-                    ErrorResult& aRv);
-  already_AddRefed<Promise>
-  ValidateAssertion(const nsAString& assertion, const nsAString& origin,
-                    ErrorResult& aRv);
+  already_AddRefed<Promise> GenerateAssertion(
+      const nsAString& aContents, const nsAString& aOrigin,
+      const RTCIdentityProviderOptions& aOptions, ErrorResult& aRv);
+  already_AddRefed<Promise> ValidateAssertion(const nsAString& assertion,
+                                              const nsAString& origin,
+                                              ErrorResult& aRv);
 
-private:
+ private:
   ~RTCIdentityProviderRegistrar();
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
@@ -54,7 +53,7 @@ private:
   RefPtr<ValidateAssertionCallback> mValidateAssertionCallback;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif /* RTCIDENTITYPROVIDER_H_ */

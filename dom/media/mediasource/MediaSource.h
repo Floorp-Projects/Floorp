@@ -30,12 +30,13 @@ namespace mozilla {
 
 class AbstractThread;
 class ErrorResult;
-template <typename T> class AsyncEventRunner;
+template <typename T>
+class AsyncEventRunner;
 class MediaResult;
 
 namespace dom {
 class MediaSource;
-} // namespace dom
+}  // namespace dom
 DDLoggedTypeName(dom::MediaSource);
 
 namespace dom {
@@ -43,21 +44,22 @@ namespace dom {
 class GlobalObject;
 class SourceBuffer;
 class SourceBufferList;
-template <typename T> class Optional;
+template <typename T>
+class Optional;
 
-#define MOZILLA_DOM_MEDIASOURCE_IMPLEMENTATION_IID \
-  { 0x3839d699, 0x22c5, 0x439f, \
-  { 0x94, 0xca, 0x0e, 0x0b, 0x26, 0xf9, 0xca, 0xbf } }
+#define MOZILLA_DOM_MEDIASOURCE_IMPLEMENTATION_IID   \
+  {                                                  \
+    0x3839d699, 0x22c5, 0x439f, {                    \
+      0x94, 0xca, 0x0e, 0x0b, 0x26, 0xf9, 0xca, 0xbf \
+    }                                                \
+  }
 
-class MediaSource final
-  : public DOMEventTargetHelper
-  , public DecoderDoctorLifeLogger<MediaSource>
-{
-public:
+class MediaSource final : public DOMEventTargetHelper,
+                          public DecoderDoctorLifeLogger<MediaSource> {
+ public:
   /** WebIDL Methods. */
-  static already_AddRefed<MediaSource>
-  Constructor(const GlobalObject& aGlobal,
-              ErrorResult& aRv);
+  static already_AddRefed<MediaSource> Constructor(const GlobalObject& aGlobal,
+                                                   ErrorResult& aRv);
 
   SourceBufferList* SourceBuffers();
   SourceBufferList* ActiveSourceBuffers();
@@ -66,17 +68,20 @@ public:
   double Duration();
   void SetDuration(double aDuration, ErrorResult& aRv);
 
-  already_AddRefed<SourceBuffer> AddSourceBuffer(const nsAString& aType, ErrorResult& aRv);
+  already_AddRefed<SourceBuffer> AddSourceBuffer(const nsAString& aType,
+                                                 ErrorResult& aRv);
   void RemoveSourceBuffer(SourceBuffer& aSourceBuffer, ErrorResult& aRv);
 
-  void EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, ErrorResult& aRv);
+  void EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError,
+                   ErrorResult& aRv);
   void EndOfStream(const MediaResult& aError);
 
   void SetLiveSeekableRange(double aStart, double aEnd, ErrorResult& aRv);
   void ClearLiveSeekableRange(ErrorResult& aRv);
 
   static bool IsTypeSupported(const GlobalObject&, const nsAString& aType);
-  static nsresult IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* aDiagnostics);
+  static nsresult IsTypeSupported(const nsAString& aType,
+                                  DecoderDoctorDiagnostics* aDiagnostics);
 
   static bool Enabled(JSContext* cx, JSObject* aGlobal);
   static bool ExperimentalEnabled(JSContext* cx, JSObject* aGlobal);
@@ -93,45 +98,37 @@ public:
 
   nsPIDOMWindowInner* GetParentObject() const;
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  // Attach this MediaSource to Decoder aDecoder.  Returns false if already attached.
+  // Attach this MediaSource to Decoder aDecoder.  Returns false if already
+  // attached.
   bool Attach(MediaSourceDecoder* aDecoder);
   void Detach();
 
   // Set mReadyState to aState and fire the required events at the MediaSource.
   void SetReadyState(MediaSourceReadyState aState);
 
- // Used by SourceBuffer to call CreateSubDecoder.
-  MediaSourceDecoder* GetDecoder()
-  {
-    return mDecoder;
-  }
+  // Used by SourceBuffer to call CreateSubDecoder.
+  MediaSourceDecoder* GetDecoder() { return mDecoder; }
 
-  nsIPrincipal* GetPrincipal()
-  {
-    return mPrincipal;
-  }
+  nsIPrincipal* GetPrincipal() { return mPrincipal; }
 
   // Returns a string describing the state of the MediaSource internal
   // buffered data. Used for debugging purposes.
   void GetMozDebugReaderData(nsAString& aString);
 
   bool HasLiveSeekableRange() const { return mLiveSeekableRange.isSome(); }
-  media::TimeInterval LiveSeekableRange() const
-  {
+  media::TimeInterval LiveSeekableRange() const {
     return mLiveSeekableRange.value();
   }
 
-  AbstractThread* AbstractMainThread() const
-  {
-    return mAbstractMainThread;
-  }
+  AbstractThread* AbstractMainThread() const { return mAbstractMainThread; }
 
   // Resolve all CompletionPromise pending.
   void CompletePendingTransactions();
 
-private:
+ private:
   // SourceBuffer uses SetDuration and SourceBufferIsActive
   friend class mozilla::dom::SourceBuffer;
 
@@ -149,13 +146,13 @@ private:
   void SetDuration(double aDuration);
 
   typedef MozPromise<bool, MediaResult, /* IsExclusive = */ true>
-    ActiveCompletionPromise;
+      ActiveCompletionPromise;
   // Mark SourceBuffer as active and rebuild ActiveSourceBuffers.
   // Return a MozPromise that will be resolved once all related operations are
   // completed, or can't progress any further.
   // Such as, transition of readyState from HAVE_NOTHING to HAVE_METADATA.
   RefPtr<ActiveCompletionPromise> SourceBufferIsActive(
-    SourceBuffer* aSourceBuffer);
+      SourceBuffer* aSourceBuffer);
 
   RefPtr<SourceBufferList> mSourceBuffers;
   RefPtr<SourceBufferList> mActiveSourceBuffers;
@@ -175,10 +172,11 @@ private:
   nsTArray<MozPromiseHolder<ActiveCompletionPromise>> mCompletionPromises;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(MediaSource, MOZILLA_DOM_MEDIASOURCE_IMPLEMENTATION_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(MediaSource,
+                              MOZILLA_DOM_MEDIASOURCE_IMPLEMENTATION_IID)
 
-} // namespace dom
+}  // namespace dom
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_dom_MediaSource_h_ */

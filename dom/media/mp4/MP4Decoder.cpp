@@ -16,9 +16,7 @@
 
 namespace mozilla {
 
-static bool
-IsWhitelistedH264Codec(const nsAString& aCodec)
-{
+static bool IsWhitelistedH264Codec(const nsAString& aCodec) {
   uint8_t profile = 0, constraint = 0, level = 0;
 
   if (!ExtractH264CodecDetails(aCodec, profile, constraint, level)) {
@@ -35,24 +33,18 @@ IsWhitelistedH264Codec(const nsAString& aCodec)
   // any potential errors, the level limit being rather arbitrary.
   // We also report that we can play Extended profile, as there are
   // bitstreams that are Extended compliant that are also Baseline compliant.
-  return level >= H264_LEVEL_1 &&
-         level <= H264_LEVEL_5_2 &&
-         (profile == H264_PROFILE_BASE ||
-          profile == H264_PROFILE_MAIN ||
-          profile == H264_PROFILE_EXTENDED ||
-          profile == H264_PROFILE_HIGH);
+  return level >= H264_LEVEL_1 && level <= H264_LEVEL_5_2 &&
+         (profile == H264_PROFILE_BASE || profile == H264_PROFILE_MAIN ||
+          profile == H264_PROFILE_EXTENDED || profile == H264_PROFILE_HIGH);
 }
 
 /* static */
-bool
-MP4Decoder::IsSupportedTypeWithoutDiagnostics(
-  const MediaContainerType& aContainerType)
-{
+bool MP4Decoder::IsSupportedTypeWithoutDiagnostics(
+    const MediaContainerType& aContainerType) {
   return IsSupportedType(aContainerType, nullptr);
 }
 
-static bool IsTypeValid(const MediaContainerType& aType)
-{
+static bool IsTypeValid(const MediaContainerType& aType) {
   // Whitelist MP4 types, so they explicitly match what we encounter on
   // the web, as opposed to what we use internally (i.e. what our demuxers
   // etc output).
@@ -63,15 +55,14 @@ static bool IsTypeValid(const MediaContainerType& aType)
          aType.Type() == MEDIAMIMETYPE("video/x-m4v");
 }
 
-/* statis */ nsTArray<UniquePtr<TrackInfo>>
-MP4Decoder::GetTracksInfo(const MediaContainerType& aType, MediaResult& aError)
-{
+/* statis */ nsTArray<UniquePtr<TrackInfo>> MP4Decoder::GetTracksInfo(
+    const MediaContainerType& aType, MediaResult& aError) {
   nsTArray<UniquePtr<TrackInfo>> tracks;
 
   if (!IsTypeValid(aType)) {
     aError = MediaResult(
-      NS_ERROR_DOM_MEDIA_FATAL_ERR,
-      RESULT_DETAIL("Invalid type:%s", aType.Type().AsString().get()));
+        NS_ERROR_DOM_MEDIA_FATAL_ERR,
+        RESULT_DETAIL("Invalid type:%s", aType.Type().AsString().get()));
     return tracks;
   }
 
@@ -89,32 +80,33 @@ MP4Decoder::GetTracksInfo(const MediaContainerType& aType, MediaResult& aError)
   for (const auto& codec : codecs.Range()) {
     if (IsAACCodecString(codec)) {
       tracks.AppendElement(
-        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-          NS_LITERAL_CSTRING("audio/mp4a-latm"), aType));
+          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+              NS_LITERAL_CSTRING("audio/mp4a-latm"), aType));
       continue;
     }
     if (codec.EqualsLiteral("mp3")) {
       tracks.AppendElement(
-        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-          NS_LITERAL_CSTRING("audio/mpeg"), aType));
+          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+              NS_LITERAL_CSTRING("audio/mpeg"), aType));
       continue;
     }
     if (codec.EqualsLiteral("opus") || codec.EqualsLiteral("flac")) {
       tracks.AppendElement(
-        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-          NS_LITERAL_CSTRING("audio/") + NS_ConvertUTF16toUTF8(codec), aType));
+          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+              NS_LITERAL_CSTRING("audio/") + NS_ConvertUTF16toUTF8(codec),
+              aType));
       continue;
     }
     if (IsVP9CodecString(codec)) {
       auto trackInfo =
-        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-          NS_LITERAL_CSTRING("video/vp9"), aType);
+          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+              NS_LITERAL_CSTRING("video/vp9"), aType);
       uint8_t profile = 0;
       uint8_t level = 0;
       uint8_t bitDepth = 0;
       if (ExtractVPXCodecDetails(codec, profile, level, bitDepth)) {
         trackInfo->GetAsVideoInfo()->mColorDepth =
-          gfx::ColorDepthForBitDepth(bitDepth);
+            gfx::ColorDepthForBitDepth(bitDepth);
       }
       tracks.AppendElement(std::move(trackInfo));
       continue;
@@ -122,39 +114,36 @@ MP4Decoder::GetTracksInfo(const MediaContainerType& aType, MediaResult& aError)
 #ifdef MOZ_AV1
     if (IsAV1CodecString(codec)) {
       tracks.AppendElement(
-        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-          NS_LITERAL_CSTRING("video/av1"), aType));
+          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+              NS_LITERAL_CSTRING("video/av1"), aType));
       continue;
     }
 #endif
     if (isVideo && IsWhitelistedH264Codec(codec)) {
       auto trackInfo =
-        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-          NS_LITERAL_CSTRING("video/avc"), aType);
+          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+              NS_LITERAL_CSTRING("video/avc"), aType);
       uint8_t profile = 0, constraint = 0, level = 0;
       MOZ_ALWAYS_TRUE(
-        ExtractH264CodecDetails(codec, profile, constraint, level));
+          ExtractH264CodecDetails(codec, profile, constraint, level));
       uint32_t width = aType.ExtendedType().GetWidth().refOr(1280);
       uint32_t height = aType.ExtendedType().GetHeight().refOr(720);
       trackInfo->GetAsVideoInfo()->mExtraData =
-        H264::CreateExtraData(profile, constraint, level, { width, height });
+          H264::CreateExtraData(profile, constraint, level, {width, height});
       tracks.AppendElement(std::move(trackInfo));
       continue;
     }
     // Unknown codec
-    aError =
-      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                  RESULT_DETAIL("Unknown codec:%s",
-                                NS_ConvertUTF16toUTF8(codec).get()));
+    aError = MediaResult(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR,
+        RESULT_DETAIL("Unknown codec:%s", NS_ConvertUTF16toUTF8(codec).get()));
   }
   return tracks;
 }
 
 /* static */
-bool
-MP4Decoder::IsSupportedType(const MediaContainerType& aType,
-                            DecoderDoctorDiagnostics* aDiagnostics)
-{
+bool MP4Decoder::IsSupportedType(const MediaContainerType& aType,
+                                 DecoderDoctorDiagnostics* aDiagnostics) {
   if (!IsEnabled()) {
     return false;
   }
@@ -170,12 +159,12 @@ MP4Decoder::IsSupportedType(const MediaContainerType& aType,
     if (aType.Type() == MEDIAMIMETYPE("audio/mp4") ||
         aType.Type() == MEDIAMIMETYPE("audio/x-m4a")) {
       tracks.AppendElement(
-        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-          NS_LITERAL_CSTRING("audio/mp4a-latm"), aType));
+          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+              NS_LITERAL_CSTRING("audio/mp4a-latm"), aType));
     } else {
       tracks.AppendElement(
-        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-          NS_LITERAL_CSTRING("video/avc"), aType));
+          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+              NS_LITERAL_CSTRING("video/avc"), aType));
     }
   }
 
@@ -191,32 +180,23 @@ MP4Decoder::IsSupportedType(const MediaContainerType& aType,
 }
 
 /* static */
-bool
-MP4Decoder::IsH264(const nsACString& aMimeType)
-{
+bool MP4Decoder::IsH264(const nsACString& aMimeType) {
   return aMimeType.EqualsLiteral("video/mp4") ||
          aMimeType.EqualsLiteral("video/avc");
 }
 
 /* static */
-bool
-MP4Decoder::IsAAC(const nsACString& aMimeType)
-{
+bool MP4Decoder::IsAAC(const nsACString& aMimeType) {
   return aMimeType.EqualsLiteral("audio/mp4a-latm");
 }
 
 /* static */
-bool
-MP4Decoder::IsEnabled()
-{
-  return StaticPrefs::MediaMp4Enabled();
-}
+bool MP4Decoder::IsEnabled() { return StaticPrefs::MediaMp4Enabled(); }
 
-/* static */ nsTArray<UniquePtr<TrackInfo>>
-MP4Decoder::GetTracksInfo(const MediaContainerType& aType)
-{
+/* static */ nsTArray<UniquePtr<TrackInfo>> MP4Decoder::GetTracksInfo(
+    const MediaContainerType& aType) {
   MediaResult rv = NS_OK;
   return GetTracksInfo(aType, rv);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

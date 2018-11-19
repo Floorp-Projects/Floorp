@@ -10,30 +10,28 @@
 
 namespace mozilla {
 
-class AndroidDecoderModule : public PlatformDecoderModule
-{
-public:
-  already_AddRefed<MediaDataDecoder>
-  CreateVideoDecoder(const CreateDecoderParams& aParams) override;
+class AndroidDecoderModule : public PlatformDecoderModule {
+ public:
+  already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
+      const CreateDecoderParams& aParams) override;
 
-  already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const CreateDecoderParams& aParams) override;
+  already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
+      const CreateDecoderParams& aParams) override;
 
   explicit AndroidDecoderModule(CDMProxy* aProxy = nullptr);
 
   bool SupportsMimeType(const nsACString& aMimeType,
                         DecoderDoctorDiagnostics* aDiagnostics) const override;
 
-private:
-  virtual ~AndroidDecoderModule() { }
+ private:
+  virtual ~AndroidDecoderModule() {}
   RefPtr<MediaDrmCDMProxy> mProxy;
 };
 
 extern LazyLogModule sAndroidDecoderModuleLog;
 
-const nsCString
-TranslateMimeType(const nsACString& aMimeType);
+const nsCString TranslateMimeType(const nsACString& aMimeType);
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

@@ -10,20 +10,17 @@
 
 namespace mozilla {
 
-size_t
-VideoFrameUtils::TotalRequiredBufferSize(
-                  const webrtc::VideoFrame& aVideoFrame)
-{
+size_t VideoFrameUtils::TotalRequiredBufferSize(
+    const webrtc::VideoFrame& aVideoFrame) {
   auto i420 = aVideoFrame.video_frame_buffer()->ToI420();
   auto height = i420->height();
-  return height * i420->StrideY() + ((height+1)/2) * i420->StrideU() +
-         ((height+1)/2) * i420->StrideV();
+  return height * i420->StrideY() + ((height + 1) / 2) * i420->StrideU() +
+         ((height + 1) / 2) * i420->StrideV();
 }
 
 void VideoFrameUtils::InitFrameBufferProperties(
-                  const webrtc::VideoFrame& aVideoFrame,
-                  camera::VideoFrameProperties& aDestProps)
-{
+    const webrtc::VideoFrame& aVideoFrame,
+    camera::VideoFrameProperties& aDestProps) {
   // The VideoFrameBuffer image data stored in the accompanying buffer
   // the buffer is at least this size of larger.
   aDestProps.bufferSize() = TotalRequiredBufferSize(aVideoFrame);
@@ -37,8 +34,8 @@ void VideoFrameUtils::InitFrameBufferProperties(
   auto i420 = aVideoFrame.video_frame_buffer()->ToI420();
   auto height = i420->height();
   aDestProps.yAllocatedSize() = height * i420->StrideY();
-  aDestProps.uAllocatedSize() = ((height+1)/2) * i420->StrideU();
-  aDestProps.vAllocatedSize() = ((height+1)/2) * i420->StrideV();
+  aDestProps.uAllocatedSize() = ((height + 1) / 2) * i420->StrideU();
+  aDestProps.vAllocatedSize() = ((height + 1) / 2) * i420->StrideV();
 
   aDestProps.width() = i420->width();
   aDestProps.height() = height;
@@ -49,9 +46,8 @@ void VideoFrameUtils::InitFrameBufferProperties(
 }
 
 void VideoFrameUtils::CopyVideoFrameBuffers(uint8_t* aDestBuffer,
-                       const size_t aDestBufferSize,
-                       const webrtc::VideoFrame& aFrame)
-{
+                                            const size_t aDestBufferSize,
+                                            const webrtc::VideoFrame& aFrame) {
   size_t aggregateSize = TotalRequiredBufferSize(aFrame);
 
   MOZ_ASSERT(aDestBufferSize >= aggregateSize);
@@ -60,8 +56,7 @@ void VideoFrameUtils::CopyVideoFrameBuffers(uint8_t* aDestBuffer,
   // If planes are ordered YUV and contiguous then do a single copy
   if ((i420->DataY() != nullptr) &&
       // Check that the three planes are ordered
-      (i420->DataY() < i420->DataU()) &&
-      (i420->DataU() < i420->DataV()) &&
+      (i420->DataY() < i420->DataU()) && (i420->DataU() < i420->DataV()) &&
       //  Check that the last plane ends at firstPlane[totalsize]
       (&i420->DataY()[aggregateSize] ==
        &i420->DataV()[((i420->height() + 1) / 2) * i420->StrideV()])) {
@@ -76,17 +71,17 @@ void VideoFrameUtils::CopyVideoFrameBuffers(uint8_t* aDestBuffer,
   size = height * i420->StrideY();
   memcpy(&aDestBuffer[offset], i420->DataY(), size);
   offset += size;
-  size = ((height+1)/2) * i420->StrideU();
+  size = ((height + 1) / 2) * i420->StrideU();
   memcpy(&aDestBuffer[offset], i420->DataU(), size);
   offset += size;
-  size = ((height+1)/2) * i420->StrideV();
+  size = ((height + 1) / 2) * i420->StrideV();
   memcpy(&aDestBuffer[offset], i420->DataV(), size);
 }
 
-void VideoFrameUtils::CopyVideoFrameBuffers(ShmemBuffer& aDestShmem,
-                        const webrtc::VideoFrame& aVideoFrame)
-{
-  CopyVideoFrameBuffers(aDestShmem.Get().get<uint8_t>(), aDestShmem.Get().Size<uint8_t>(), aVideoFrame);
+void VideoFrameUtils::CopyVideoFrameBuffers(
+    ShmemBuffer& aDestShmem, const webrtc::VideoFrame& aVideoFrame) {
+  CopyVideoFrameBuffers(aDestShmem.Get().get<uint8_t>(),
+                        aDestShmem.Get().Size<uint8_t>(), aVideoFrame);
 }
 
-}
+}  // namespace mozilla

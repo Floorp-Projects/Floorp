@@ -32,7 +32,7 @@ class MediaDecoderOwner;
 class VideoFrameContainer : public MediaStreamVideoSink {
   virtual ~VideoFrameContainer();
 
-public:
+ public:
   typedef layers::ImageContainer ImageContainer;
   typedef layers::Image Image;
 
@@ -49,16 +49,19 @@ public:
   PrincipalHandle GetLastPrincipalHandleLocked();
   // We will notify mElement that aPrincipalHandle has been applied when all
   // FrameIDs prior to aFrameID have been flushed out.
-  // aFrameID is ignored if aPrincipalHandle already is our pending principalHandle.
+  // aFrameID is ignored if aPrincipalHandle already is our pending
+  // principalHandle.
   void UpdatePrincipalHandleForFrameID(const PrincipalHandle& aPrincipalHandle,
                                        const ImageContainer::FrameID& aFrameID);
-  void UpdatePrincipalHandleForFrameIDLocked(const PrincipalHandle& aPrincipalHandle,
-                                             const ImageContainer::FrameID& aFrameID);
-  void SetCurrentFrames(const gfx::IntSize& aIntrinsicSize,
-                        const nsTArray<ImageContainer::NonOwningImage>& aImages);
-  void ClearCurrentFrame(const gfx::IntSize& aIntrinsicSize)
-  {
-    SetCurrentFrames(aIntrinsicSize, nsTArray<ImageContainer::NonOwningImage>());
+  void UpdatePrincipalHandleForFrameIDLocked(
+      const PrincipalHandle& aPrincipalHandle,
+      const ImageContainer::FrameID& aFrameID);
+  void SetCurrentFrames(
+      const gfx::IntSize& aIntrinsicSize,
+      const nsTArray<ImageContainer::NonOwningImage>& aImages);
+  void ClearCurrentFrame(const gfx::IntSize& aIntrinsicSize) {
+    SetCurrentFrames(aIntrinsicSize,
+                     nsTArray<ImageContainer::NonOwningImage>());
   }
   VideoFrameContainer* AsVideoFrameContainer() override { return this; }
 
@@ -77,38 +80,34 @@ public:
   // Returns a new frame ID for SetCurrentFrames().  The client must either
   // call this on only one thread or provide barriers.  Do not use together
   // with SetCurrentFrame().
-  ImageContainer::FrameID NewFrameID()
-  {
-    return ++mFrameID;
-  }
+  ImageContainer::FrameID NewFrameID() { return ++mFrameID; }
 
   // Call on main thread
-  enum {
-    INVALIDATE_DEFAULT,
-    INVALIDATE_FORCE
-  };
+  enum { INVALIDATE_DEFAULT, INVALIDATE_FORCE };
   void Invalidate() override { InvalidateWithFlags(INVALIDATE_DEFAULT); }
   void InvalidateWithFlags(uint32_t aFlags);
   ImageContainer* GetImageContainer();
   void ForgetElement() { mOwner = nullptr; }
 
-  uint32_t GetDroppedImageCount() { return mImageContainer->GetDroppedImageCount(); }
+  uint32_t GetDroppedImageCount() {
+    return mImageContainer->GetDroppedImageCount();
+  }
 
-protected:
-  void SetCurrentFramesLocked(const gfx::IntSize& aIntrinsicSize,
-                              const nsTArray<ImageContainer::NonOwningImage>& aImages);
+ protected:
+  void SetCurrentFramesLocked(
+      const gfx::IntSize& aIntrinsicSize,
+      const nsTArray<ImageContainer::NonOwningImage>& aImages);
 
   // Non-addreffed pointer to the owner. The ownenr calls ForgetElement
   // to clear this reference when the owner is destroyed.
   MediaDecoderOwner* mOwner;
   RefPtr<ImageContainer> mImageContainer;
 
-  struct
-  {
+  struct {
     // True when the Image size has changed since the last time Invalidate() was
     // called. When set, the next call to Invalidate() will ensure that the
-    // frame is fully invalidated instead of just invalidating for the image change
-    // in the ImageLayer.
+    // frame is fully invalidated instead of just invalidating for the image
+    // change in the ImageLayer.
     bool mImageSizeChanged = false;
     // The main thread mirror of the member of the same name below.
     gfx::IntSize mIntrinsicSize;
@@ -148,6 +147,6 @@ protected:
   const RefPtr<AbstractThread> mMainThread;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* VIDEOFRAMECONTAINER_H_ */

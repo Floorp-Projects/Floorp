@@ -22,46 +22,42 @@
 namespace mozilla {
 namespace dom {
 
-class MediaEncryptedEvent final : public Event
-{
-public:
+class MediaEncryptedEvent final : public Event {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MediaEncryptedEvent, Event)
-protected:
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MediaEncryptedEvent,
+                                                         Event)
+ protected:
   virtual ~MediaEncryptedEvent();
   explicit MediaEncryptedEvent(EventTarget* aOwner);
 
   nsString mInitDataType;
   JS::Heap<JSObject*> mInitData;
 
-public:
+ public:
+  JSObject* WrapObjectInternal(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  static already_AddRefed<MediaEncryptedEvent> Constructor(EventTarget* aOwner);
 
-  static already_AddRefed<MediaEncryptedEvent>
-  Constructor(EventTarget* aOwner);
+  static already_AddRefed<MediaEncryptedEvent> Constructor(
+      EventTarget* aOwner, const nsAString& aInitDataType,
+      const nsTArray<uint8_t>& aInitData);
 
-  static already_AddRefed<MediaEncryptedEvent>
-  Constructor(EventTarget* aOwner,
-              const nsAString& aInitDataType,
-              const nsTArray<uint8_t>& aInitData);
-
-  static already_AddRefed<MediaEncryptedEvent>
-  Constructor(const GlobalObject& aGlobal,
-              const nsAString& aType,
-              const MediaKeyNeededEventInit& aEventInitDict,
-              ErrorResult& aRv);
+  static already_AddRefed<MediaEncryptedEvent> Constructor(
+      const GlobalObject& aGlobal, const nsAString& aType,
+      const MediaKeyNeededEventInit& aEventInitDict, ErrorResult& aRv);
 
   void GetInitDataType(nsString& aRetVal) const;
 
-  void GetInitData(JSContext* cx,
-                   JS::MutableHandle<JSObject*> aData,
+  void GetInitData(JSContext* cx, JS::MutableHandle<JSObject*> aData,
                    ErrorResult& aRv);
-private:
+
+ private:
   nsTArray<uint8_t> mRawInitData;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MediaKeyNeededEvent_h__
+#endif  // mozilla_dom_MediaKeyNeededEvent_h__

@@ -17,7 +17,7 @@
 #include "nsRefPtrHashtable.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/MediaKeysBinding.h"
-#include "mozilla/dom/MediaKeyStatusMapBinding.h" // For MediaKeyStatus
+#include "mozilla/dom/MediaKeyStatusMapBinding.h"  // For MediaKeyStatus
 #include "mozilla/dom/MediaKeySystemAccessBinding.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/DetailedPromise.h"
@@ -29,7 +29,7 @@ class CDMProxy;
 
 namespace dom {
 class MediaKeys;
-} // namespace dom
+}  // namespace dom
 DDLoggedTypeName(dom::MediaKeys);
 
 namespace dom {
@@ -41,34 +41,33 @@ class HTMLMediaElement;
 
 typedef nsRefPtrHashtable<nsStringHashKey, MediaKeySession> KeySessionHashMap;
 typedef nsRefPtrHashtable<nsUint32HashKey, dom::DetailedPromise> PromiseHashMap;
-typedef nsRefPtrHashtable<nsUint32HashKey, MediaKeySession> PendingKeySessionsHashMap;
+typedef nsRefPtrHashtable<nsUint32HashKey, MediaKeySession>
+    PendingKeySessionsHashMap;
 typedef nsDataHashtable<nsUint32HashKey, uint32_t> PendingPromiseIdTokenHashMap;
 typedef uint32_t PromiseId;
 
 // This class is used on the main thread only.
 // Note: its addref/release is not (and can't be) thread safe!
-class MediaKeys final
-  : public nsISupports
-  , public nsWrapperCache
-  , public SupportsWeakPtr<MediaKeys>
-  , public DecoderDoctorLifeLogger<MediaKeys>
-{
+class MediaKeys final : public nsISupports,
+                        public nsWrapperCache,
+                        public SupportsWeakPtr<MediaKeys>,
+                        public DecoderDoctorLifeLogger<MediaKeys> {
   ~MediaKeys();
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaKeys)
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(MediaKeys)
 
-  MediaKeys(nsPIDOMWindowInner* aParentWindow,
-            const nsAString& aKeySystem,
+  MediaKeys(nsPIDOMWindowInner* aParentWindow, const nsAString& aKeySystem,
             const MediaKeySystemConfiguration& aConfig);
 
   already_AddRefed<DetailedPromise> Init(ErrorResult& aRv);
 
   nsPIDOMWindowInner* GetParentObject() const;
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   nsresult Bind(HTMLMediaElement* aElement);
   void Unbind();
@@ -77,14 +76,12 @@ public:
   void GetKeySystem(nsString& retval) const;
 
   // JavaScript: MediaKeys.createSession()
-  already_AddRefed<MediaKeySession> CreateSession(JSContext* aCx,
-                                                  MediaKeySessionType aSessionType,
-                                                  ErrorResult& aRv);
+  already_AddRefed<MediaKeySession> CreateSession(
+      JSContext* aCx, MediaKeySessionType aSessionType, ErrorResult& aRv);
 
   // JavaScript: MediaKeys.SetServerCertificate()
-  already_AddRefed<DetailedPromise>
-    SetServerCertificate(const ArrayBufferViewOrArrayBuffer& aServerCertificate,
-                         ErrorResult& aRv);
+  already_AddRefed<DetailedPromise> SetServerCertificate(
+      const ArrayBufferViewOrArrayBuffer& aServerCertificate, ErrorResult& aRv);
 
   already_AddRefed<MediaKeySession> GetSession(const nsAString& aSessionId);
 
@@ -144,12 +141,13 @@ public:
   already_AddRefed<Promise> GetStatusForPolicy(const MediaKeysPolicy& aPolicy,
                                                ErrorResult& aR);
   // Called by CDMProxy when CDM successfully GetStatusForPolicy.
-  void ResolvePromiseWithKeyStatus(PromiseId aId, dom::MediaKeyStatus aMediaKeyStatus);
+  void ResolvePromiseWithKeyStatus(PromiseId aId,
+                                   dom::MediaKeyStatus aMediaKeyStatus);
 
-private:
-
+ private:
   // Instantiate CDMProxy instance.
-  // It could be MediaDrmCDMProxy (Widevine on Fennec) or ChromiumCDMProxy (the rest).
+  // It could be MediaDrmCDMProxy (Widevine on Fennec) or ChromiumCDMProxy (the
+  // rest).
   already_AddRefed<CDMProxy> CreateCDMProxy(nsIEventTarget* aMainThread);
 
   // Removes promise from mPromises, and returns it.
@@ -176,7 +174,7 @@ private:
   PendingPromiseIdTokenHashMap mPromiseIdToken;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_mediakeys_h__
+#endif  // mozilla_dom_mediakeys_h__

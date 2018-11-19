@@ -38,38 +38,38 @@
  * @{
  */
 
-
 #if defined(__INTEL_COMPILER) && __INTEL_COMPILER < 1110 || defined(__SUNPRO_C)
-    #define DECLARE_ALIGNED(n,t,v)      t __attribute__ ((aligned (n))) v
-    #define DECLARE_ASM_CONST(n,t,v)    const t __attribute__ ((aligned (n))) v
+#define DECLARE_ALIGNED(n, t, v) t __attribute__((aligned(n))) v
+#define DECLARE_ASM_CONST(n, t, v) const t __attribute__((aligned(n))) v
 #elif defined(__TI_COMPILER_VERSION__)
-    #define DECLARE_ALIGNED(n,t,v)                      \
-        AV_PRAGMA(DATA_ALIGN(v,n))                      \
-        t __attribute__((aligned(n))) v
-    #define DECLARE_ASM_CONST(n,t,v)                    \
-        AV_PRAGMA(DATA_ALIGN(v,n))                      \
-        static const t __attribute__((aligned(n))) v
+#define DECLARE_ALIGNED(n, t, v) \
+  AV_PRAGMA(DATA_ALIGN(v, n))    \
+  t __attribute__((aligned(n))) v
+#define DECLARE_ASM_CONST(n, t, v) \
+  AV_PRAGMA(DATA_ALIGN(v, n))      \
+  static const t __attribute__((aligned(n))) v
 #elif defined(__GNUC__)
-    #define DECLARE_ALIGNED(n,t,v)      t __attribute__ ((aligned (n))) v
-    #define DECLARE_ASM_CONST(n,t,v)    static const t av_used __attribute__ ((aligned (n))) v
+#define DECLARE_ALIGNED(n, t, v) t __attribute__((aligned(n))) v
+#define DECLARE_ASM_CONST(n, t, v) \
+  static const t av_used __attribute__((aligned(n))) v
 #elif defined(_MSC_VER)
-    #define DECLARE_ALIGNED(n,t,v)      __declspec(align(n)) t v
-    #define DECLARE_ASM_CONST(n,t,v)    __declspec(align(n)) static const t v
+#define DECLARE_ALIGNED(n, t, v) __declspec(align(n)) t v
+#define DECLARE_ASM_CONST(n, t, v) __declspec(align(n)) static const t v
 #else
-    #define DECLARE_ALIGNED(n,t,v)      t v
-    #define DECLARE_ASM_CONST(n,t,v)    static const t v
+#define DECLARE_ALIGNED(n, t, v) t v
+#define DECLARE_ASM_CONST(n, t, v) static const t v
 #endif
 
-#if AV_GCC_VERSION_AT_LEAST(3,1)
-    #define av_malloc_attrib __attribute__((__malloc__))
+#if AV_GCC_VERSION_AT_LEAST(3, 1)
+#define av_malloc_attrib __attribute__((__malloc__))
 #else
-    #define av_malloc_attrib
+#define av_malloc_attrib
 #endif
 
-#if AV_GCC_VERSION_AT_LEAST(4,3)
-    #define av_alloc_size(...) __attribute__((alloc_size(__VA_ARGS__)))
+#if AV_GCC_VERSION_AT_LEAST(4, 3)
+#define av_alloc_size(...) __attribute__((alloc_size(__VA_ARGS__)))
 #else
-    #define av_alloc_size(...)
+#define av_alloc_size(...)
 #endif
 
 /**
@@ -90,11 +90,10 @@ void *av_malloc(size_t size) av_malloc_attrib av_alloc_size(1);
  * be allocated.
  * @see av_malloc()
  */
-av_alloc_size(1, 2) static inline void *av_malloc_array(size_t nmemb, size_t size)
-{
-    if (!size || nmemb >= INT_MAX / size)
-        return NULL;
-    return av_malloc(nmemb * size);
+av_alloc_size(1, 2) static inline void *av_malloc_array(size_t nmemb,
+                                                        size_t size) {
+  if (!size || nmemb >= INT_MAX / size) return NULL;
+  return av_malloc(nmemb * size);
 }
 
 /**
@@ -144,8 +143,7 @@ void *av_realloc_f(void *ptr, size_t nelem, size_t elsize);
  *          The situation is undefined according to POSIX and may crash with
  *          some libc implementations.
  */
-av_warn_unused_result
-int av_reallocp(void *ptr, size_t size);
+av_warn_unused_result int av_reallocp(void *ptr, size_t size);
 
 /**
  * Allocate or reallocate an array.
@@ -164,7 +162,8 @@ int av_reallocp(void *ptr, size_t size);
  *          The situation is undefined according to POSIX and may crash with
  *          some libc implementations.
  */
-av_alloc_size(2, 3) void *av_realloc_array(void *ptr, size_t nmemb, size_t size);
+av_alloc_size(2, 3) void *av_realloc_array(void *ptr, size_t nmemb,
+                                           size_t size);
 
 /**
  * Allocate or reallocate an array through a pointer to a pointer.
@@ -226,11 +225,10 @@ void *av_calloc(size_t nmemb, size_t size) av_malloc_attrib;
  * @see av_mallocz()
  * @see av_malloc_array()
  */
-av_alloc_size(1, 2) static inline void *av_mallocz_array(size_t nmemb, size_t size)
-{
-    if (!size || nmemb >= INT_MAX / size)
-        return NULL;
-    return av_mallocz(nmemb * size);
+av_alloc_size(1, 2) static inline void *av_mallocz_array(size_t nmemb,
+                                                         size_t size) {
+  if (!size || nmemb >= INT_MAX / size) return NULL;
+  return av_mallocz(nmemb * size);
 }
 
 /**
@@ -305,8 +303,8 @@ void av_dynarray_add(void *tab_ptr, int *nb_ptr, void *elem);
  * @return >=0 on success, negative otherwise.
  * @see av_dynarray_add(), av_dynarray2_add()
  */
-av_warn_unused_result
-int av_dynarray_add_nofree(void *tab_ptr, int *nb_ptr, void *elem);
+av_warn_unused_result int av_dynarray_add_nofree(void *tab_ptr, int *nb_ptr,
+                                                 void *elem);
 
 /**
  * Add an element of size elem_size to a dynamic array.
@@ -323,10 +321,10 @@ int av_dynarray_add_nofree(void *tab_ptr, int *nb_ptr, void *elem);
  * @param tab_ptr   pointer to the array to grow
  * @param nb_ptr    pointer to the number of elements in the array
  * @param elem_size size in bytes of the elements in the array
- * @param elem_data pointer to the data of the element to add. If NULL, the space of
- *                  the new added element is not filled.
- * @return          pointer to the data of the element to copy in the new allocated space.
- *                  If NULL, the new allocated space is left uninitialized."
+ * @param elem_data pointer to the data of the element to add. If NULL, the
+ * space of the new added element is not filled.
+ * @return          pointer to the data of the element to copy in the new
+ * allocated space. If NULL, the new allocated space is left uninitialized."
  * @see av_dynarray_add(), av_dynarray_add_nofree()
  */
 void *av_dynarray2_add(void **tab_ptr, int *nb_ptr, size_t elem_size,
@@ -336,15 +334,14 @@ void *av_dynarray2_add(void **tab_ptr, int *nb_ptr, size_t elem_size,
  * Multiply two size_t values checking for overflow.
  * @return  0 if success, AVERROR(EINVAL) if overflow.
  */
-static inline int av_size_mult(size_t a, size_t b, size_t *r)
-{
-    size_t t = a * b;
-    /* Hack inspired from glibc: only try the division if nelem and elsize
-     * are both greater than sqrt(SIZE_MAX). */
-    if ((a | b) >= ((size_t)1 << (sizeof(size_t) * 4)) && a && t / a != b)
-        return AVERROR(EINVAL);
-    *r = t;
-    return 0;
+static inline int av_size_mult(size_t a, size_t b, size_t *r) {
+  size_t t = a * b;
+  /* Hack inspired from glibc: only try the division if nelem and elsize
+   * are both greater than sqrt(SIZE_MAX). */
+  if ((a | b) >= ((size_t)1 << (sizeof(size_t) * 4)) && a && t / a != b)
+    return AVERROR(EINVAL);
+  *r = t;
+  return 0;
 }
 
 /**
@@ -355,7 +352,8 @@ void av_max_alloc(size_t max);
 /**
  * deliberately overlapping memcpy implementation
  * @param dst destination buffer
- * @param back how many bytes back we start (the initial size of the overlapping window), must be > 0
+ * @param back how many bytes back we start (the initial size of the overlapping
+ * window), must be > 0
  * @param cnt number of bytes to copy, must be >= 0
  *
  * cnt > back is valid, this will copy the bytes we just copied,
@@ -377,10 +375,11 @@ void *av_fast_realloc(void *ptr, unsigned int *size, size_t min_size);
  * preserved and on error the old buffer is freed, thus no special
  * handling to avoid memleaks is necessary.
  *
- * @param ptr pointer to pointer to already allocated buffer, overwritten with pointer to new buffer
+ * @param ptr pointer to pointer to already allocated buffer, overwritten with
+ * pointer to new buffer
  * @param size size of the buffer *ptr points to
- * @param min_size minimum size of *ptr buffer after returning, *ptr will be NULL and
- *                 *size 0 if an error occurred.
+ * @param min_size minimum size of *ptr buffer after returning, *ptr will be
+ * NULL and *size 0 if an error occurred.
  */
 void av_fast_malloc(void *ptr, unsigned int *size, size_t min_size);
 
@@ -392,10 +391,11 @@ void av_fast_malloc(void *ptr, unsigned int *size, size_t min_size);
  * preserved and on error the old buffer is freed, thus no special
  * handling to avoid memleaks is necessary.
  *
- * @param ptr pointer to pointer to already allocated buffer, overwritten with pointer to new buffer
+ * @param ptr pointer to pointer to already allocated buffer, overwritten with
+ * pointer to new buffer
  * @param size size of the buffer *ptr points to
- * @param min_size minimum size of *ptr buffer after returning, *ptr will be NULL and
- *                 *size 0 if an error occurred.
+ * @param min_size minimum size of *ptr buffer after returning, *ptr will be
+ * NULL and *size 0 if an error occurred.
  */
 void av_fast_mallocz(void *ptr, unsigned int *size, size_t min_size);
 

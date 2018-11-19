@@ -11,47 +11,47 @@
 
 using namespace mozilla::dom;
 
-#define OSXSPEECHSYNTHESIZERSERVICE_CID \
-  {0x914e73b4, 0x6337, 0x4bef, {0x97, 0xf3, 0x4d, 0x06, 0x9e, 0x05, 0x3a, 0x12}}
+#define OSXSPEECHSYNTHESIZERSERVICE_CID              \
+  {                                                  \
+    0x914e73b4, 0x6337, 0x4bef, {                    \
+      0x97, 0xf3, 0x4d, 0x06, 0x9e, 0x05, 0x3a, 0x12 \
+    }                                                \
+  }
 
 #define OSXSPEECHSYNTHESIZERSERVICE_CONTRACTID "@mozilla.org/synthsystem;1"
 
 // Defines OSXSpeechSynthesizerServiceConstructor
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(OSXSpeechSynthesizerService,
-                                         OSXSpeechSynthesizerService::GetInstanceForService)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(
+    OSXSpeechSynthesizerService,
+    OSXSpeechSynthesizerService::GetInstanceForService)
 
 // Defines kOSXSERVICE_CID
 NS_DEFINE_NAMED_CID(OSXSPEECHSYNTHESIZERSERVICE_CID);
 
 static const mozilla::Module::CIDEntry kCIDs[] = {
-  { &kOSXSPEECHSYNTHESIZERSERVICE_CID, true, nullptr, OSXSpeechSynthesizerServiceConstructor },
-  { nullptr }
-};
+    {&kOSXSPEECHSYNTHESIZERSERVICE_CID, true, nullptr,
+     OSXSpeechSynthesizerServiceConstructor},
+    {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kContracts[] = {
-  { OSXSPEECHSYNTHESIZERSERVICE_CONTRACTID, &kOSXSPEECHSYNTHESIZERSERVICE_CID },
-  { nullptr }
-};
+    {OSXSPEECHSYNTHESIZERSERVICE_CONTRACTID, &kOSXSPEECHSYNTHESIZERSERVICE_CID},
+    {nullptr}};
 
 static const mozilla::Module::CategoryEntry kCategories[] = {
-  { "speech-synth-started", "OSX Speech Synth", OSXSPEECHSYNTHESIZERSERVICE_CONTRACTID },
-  { nullptr }
-};
+    {"speech-synth-started", "OSX Speech Synth",
+     OSXSPEECHSYNTHESIZERSERVICE_CONTRACTID},
+    {nullptr}};
 
-static void
-UnloadOSXSpeechSynthesizerModule()
-{
+static void UnloadOSXSpeechSynthesizerModule() {
   OSXSpeechSynthesizerService::Shutdown();
 }
 
-static const mozilla::Module kModule = {
-  mozilla::Module::kVersion,
-  kCIDs,
-  kContracts,
-  kCategories,
-  nullptr,
-  nullptr,
-  UnloadOSXSpeechSynthesizerModule
-};
+static const mozilla::Module kModule = {mozilla::Module::kVersion,
+                                        kCIDs,
+                                        kContracts,
+                                        kCategories,
+                                        nullptr,
+                                        nullptr,
+                                        UnloadOSXSpeechSynthesizerModule};
 
 NSMODULE_DEFN(osxsynth) = &kModule;

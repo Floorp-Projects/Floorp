@@ -25,18 +25,19 @@ namespace dom {
 
 class nsSpeechTask;
 
-class SpeechSynthesis final : public DOMEventTargetHelper
-                            , public nsIObserver
-                            , public nsSupportsWeakReference
-{
-public:
+class SpeechSynthesis final : public DOMEventTargetHelper,
+                              public nsIObserver,
+                              public nsSupportsWeakReference {
+ public:
   explicit SpeechSynthesis(nsPIDOMWindowInner* aParent);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SpeechSynthesis, DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SpeechSynthesis,
+                                           DOMEventTargetHelper)
   NS_DECL_NSIOBSERVER
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   bool Pending() const;
 
@@ -56,13 +57,13 @@ public:
 
   void OnEnd(const nsSpeechTask* aTask);
 
-  void GetVoices(nsTArray< RefPtr<SpeechSynthesisVoice> >& aResult);
+  void GetVoices(nsTArray<RefPtr<SpeechSynthesisVoice> >& aResult);
 
   void ForceEnd();
 
   IMPL_EVENT_HANDLER(voiceschanged)
 
-private:
+ private:
   virtual ~SpeechSynthesis();
 
   void AdvanceQueue();
@@ -80,6 +81,6 @@ private:
   uint64_t mInnerID;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 #endif

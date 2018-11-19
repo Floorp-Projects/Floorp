@@ -9,6 +9,7 @@
 
 #include "mozilla/Logging.h"
 
-#define FFMPEG_LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+#define FFMPEG_LOG(...) \
+  MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
-#endif // __FFmpegLog_h__
+#endif  // __FFmpegLog_h__

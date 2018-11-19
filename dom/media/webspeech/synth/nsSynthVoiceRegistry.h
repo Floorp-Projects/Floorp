@@ -24,19 +24,18 @@ class nsSpeechTask;
 class VoiceData;
 class GlobalQueueItem;
 
-class nsSynthVoiceRegistry final : public nsISynthVoiceRegistry
-{
-public:
+class nsSynthVoiceRegistry final : public nsISynthVoiceRegistry {
+ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISYNTHVOICEREGISTRY
 
   nsSynthVoiceRegistry();
 
-  already_AddRefed<nsSpeechTask> SpeakUtterance(SpeechSynthesisUtterance& aUtterance,
-                                                const nsAString& aDocLang);
+  already_AddRefed<nsSpeechTask> SpeakUtterance(
+      SpeechSynthesisUtterance& aUtterance, const nsAString& aDocLang);
 
   void Speak(const nsAString& aText, const nsAString& aLang,
-             const nsAString& aUri, const float& aVolume,  const float& aRate,
+             const nsAString& aUri, const float& aVolume, const float& aRate,
              const float& aPitch, nsSpeechTask* aTask);
 
   bool SendInitialVoicesAndState(SpeechSynthesisParent* aParent);
@@ -67,26 +66,19 @@ public:
 
   static void RecvNotifyVoicesChanged();
 
-private:
+ private:
   virtual ~nsSynthVoiceRegistry();
 
   VoiceData* FindBestMatch(const nsAString& aUri, const nsAString& lang);
 
   bool FindVoiceByLang(const nsAString& aLang, VoiceData** aRetval);
 
-  nsresult AddVoiceImpl(nsISpeechService* aService,
-                        const nsAString& aUri,
-                        const nsAString& aName,
-                        const nsAString& aLang,
-                        bool aLocalService,
-                        bool aQueuesUtterances);
+  nsresult AddVoiceImpl(nsISpeechService* aService, const nsAString& aUri,
+                        const nsAString& aName, const nsAString& aLang,
+                        bool aLocalService, bool aQueuesUtterances);
 
-  void SpeakImpl(VoiceData* aVoice,
-                 nsSpeechTask* aTask,
-                 const nsAString& aText,
-                 const float& aVolume,
-                 const float& aRate,
-                 const float& aPitch);
+  void SpeakImpl(VoiceData* aVoice, nsSpeechTask* aTask, const nsAString& aText,
+                 const float& aVolume, const float& aRate, const float& aPitch);
 
   nsTArray<RefPtr<VoiceData>> mVoices;
 
@@ -103,7 +95,7 @@ private:
   bool mIsSpeaking;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

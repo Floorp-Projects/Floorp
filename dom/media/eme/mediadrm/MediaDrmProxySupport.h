@@ -12,7 +12,6 @@
 #include "FennecJNIWrappers.h"
 #include "nsString.h"
 
-
 namespace mozilla {
 
 enum MediaDrmSessionType {
@@ -22,41 +21,37 @@ enum MediaDrmSessionType {
 };
 
 #ifndef MDRMN_LOG
-  LogModule* GetMDRMNLog();
-  #define MDRMN_LOG(x, ...) MOZ_LOG(GetMDRMNLog(), mozilla::LogLevel::Debug,\
-    ("[MediaDrmProxySupport][%s]" x, __FUNCTION__, ##__VA_ARGS__))
+LogModule* GetMDRMNLog();
+#define MDRMN_LOG(x, ...)                          \
+  MOZ_LOG(GetMDRMNLog(), mozilla::LogLevel::Debug, \
+          ("[MediaDrmProxySupport][%s]" x, __FUNCTION__, ##__VA_ARGS__))
 #endif
 
-class MediaDrmProxySupport final
-{
-public:
-
+class MediaDrmProxySupport final {
+ public:
   explicit MediaDrmProxySupport(const nsAString& aKeySystem);
   ~MediaDrmProxySupport();
 
   /*
-  * APIs to act as GMPDecryptorAPI, discarding unnecessary calls.
-  */
+   * APIs to act as GMPDecryptorAPI, discarding unnecessary calls.
+   */
   nsresult Init(DecryptorProxyCallback* aCallback);
 
-  void CreateSession(uint32_t aCreateSessionToken,
-                     uint32_t aPromiseId,
+  void CreateSession(uint32_t aCreateSessionToken, uint32_t aPromiseId,
                      const nsCString& aInitDataType,
                      const nsTArray<uint8_t>& aInitData,
                      MediaDrmSessionType aSessionType);
 
-  void UpdateSession(uint32_t aPromiseId,
-                     const nsCString& aSessionId,
+  void UpdateSession(uint32_t aPromiseId, const nsCString& aSessionId,
                      const nsTArray<uint8_t>& aResponse);
 
-  void CloseSession(uint32_t aPromiseId,
-                    const nsCString& aSessionId);
+  void CloseSession(uint32_t aPromiseId, const nsCString& aSessionId);
 
   void Shutdown();
 
   const nsString& GetMediaDrmStubId() const { return mMediaDrmStubId; }
 
-private:
+ private:
   const nsString mKeySystem;
   java::MediaDrmProxy::GlobalRef mBridgeProxy;
   java::MediaDrmProxy::NativeMediaDrmProxyCallbacks::GlobalRef mJavaCallbacks;
@@ -65,5 +60,5 @@ private:
   nsString mMediaDrmStubId;
 };
 
-} // namespace mozilla
-#endif // MediaDrmProxySupport_H
+}  // namespace mozilla
+#endif  // MediaDrmProxySupport_H

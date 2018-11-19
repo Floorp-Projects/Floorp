@@ -8,14 +8,12 @@
 #include "VideoSegment.h"
 
 namespace mozilla {
-void
-MediaStreamVideoSink::NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
-                                              StreamTime aTrackOffset,
-                                              const MediaSegment& aMedia)
-{
+void MediaStreamVideoSink::NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
+                                                   StreamTime aTrackOffset,
+                                                   const MediaSegment& aMedia) {
   if (aMedia.GetType() == MediaSegment::VIDEO) {
     SetCurrentFrames(static_cast<const VideoSegment&>(aMedia));
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

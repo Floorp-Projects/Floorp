@@ -9,8 +9,7 @@
 
 namespace mozilla {
 
-OutputStreamData::~OutputStreamData()
-{
+OutputStreamData::~OutputStreamData() {
   MOZ_ASSERT(NS_IsMainThread());
   // Break the connection to the input stream if necessary.
   for (RefPtr<MediaInputPort>& port : mPorts) {
@@ -18,21 +17,16 @@ OutputStreamData::~OutputStreamData()
   }
 }
 
-void
-OutputStreamData::Init(OutputStreamManager* aOwner,
-                       ProcessedMediaStream* aStream,
-                       TrackID aNextAvailableTrackID)
-{
+void OutputStreamData::Init(OutputStreamManager* aOwner,
+                            ProcessedMediaStream* aStream,
+                            TrackID aNextAvailableTrackID) {
   mOwner = aOwner;
   mStream = aStream;
   mNextAvailableTrackID = aNextAvailableTrackID;
 }
 
-bool
-OutputStreamData::Connect(MediaStream* aStream,
-                          TrackID aInputAudioTrackID,
-                          TrackID aInputVideoTrackID)
-{
+bool OutputStreamData::Connect(MediaStream* aStream, TrackID aInputAudioTrackID,
+                               TrackID aInputVideoTrackID) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPorts.IsEmpty(), "Already connected?");
 
@@ -45,15 +39,13 @@ OutputStreamData::Connect(MediaStream* aStream,
       continue;
     }
     MOZ_ASSERT(IsTrackIDExplicit(tid));
-    mPorts.AppendElement(mStream->AllocateInputPort(
-        aStream, tid, mNextAvailableTrackID++));
+    mPorts.AppendElement(
+        mStream->AllocateInputPort(aStream, tid, mNextAvailableTrackID++));
   }
   return true;
 }
 
-bool
-OutputStreamData::Disconnect()
-{
+bool OutputStreamData::Disconnect() {
   MOZ_ASSERT(NS_IsMainThread());
 
   // During cycle collection, DOMMediaStream can be destroyed and send
@@ -71,29 +63,19 @@ OutputStreamData::Disconnect()
   return true;
 }
 
-bool
-OutputStreamData::Equals(MediaStream* aStream) const
-{
+bool OutputStreamData::Equals(MediaStream* aStream) const {
   return mStream == aStream;
 }
 
-MediaStreamGraph*
-OutputStreamData::Graph() const
-{
-  return mStream->Graph();
-}
+MediaStreamGraph* OutputStreamData::Graph() const { return mStream->Graph(); }
 
-TrackID
-OutputStreamData::NextAvailableTrackID() const
-{
+TrackID OutputStreamData::NextAvailableTrackID() const {
   return mNextAvailableTrackID;
 }
 
-void
-OutputStreamManager::Add(ProcessedMediaStream* aStream,
-                         TrackID aNextAvailableTrackID,
-                         bool aFinishWhenEnded)
-{
+void OutputStreamManager::Add(ProcessedMediaStream* aStream,
+                              TrackID aNextAvailableTrackID,
+                              bool aFinishWhenEnded) {
   MOZ_ASSERT(NS_IsMainThread());
   // All streams must belong to the same graph.
   MOZ_ASSERT(!Graph() || Graph() == aStream->Graph());
@@ -113,9 +95,7 @@ OutputStreamManager::Add(ProcessedMediaStream* aStream,
   }
 }
 
-void
-OutputStreamManager::Remove(MediaStream* aStream)
-{
+void OutputStreamManager::Remove(MediaStream* aStream) {
   MOZ_ASSERT(NS_IsMainThread());
   for (int32_t i = mStreams.Length() - 1; i >= 0; --i) {
     if (mStreams[i].Equals(aStream)) {
@@ -125,16 +105,13 @@ OutputStreamManager::Remove(MediaStream* aStream)
   }
 }
 
-void
-OutputStreamManager::Clear()
-{
+void OutputStreamManager::Clear() {
   MOZ_ASSERT(NS_IsMainThread());
   mStreams.Clear();
 }
 
-TrackID
-OutputStreamManager::NextAvailableTrackIDFor(MediaStream* aOutputStream) const
-{
+TrackID OutputStreamManager::NextAvailableTrackIDFor(
+    MediaStream* aOutputStream) const {
   MOZ_ASSERT(NS_IsMainThread());
   for (const OutputStreamData& out : mStreams) {
     if (out.Equals(aOutputStream)) {
@@ -144,11 +121,8 @@ OutputStreamManager::NextAvailableTrackIDFor(MediaStream* aOutputStream) const
   return TRACK_INVALID;
 }
 
-void
-OutputStreamManager::Connect(MediaStream* aStream,
-                             TrackID aAudioTrackID,
-                             TrackID aVideoTrackID)
-{
+void OutputStreamManager::Connect(MediaStream* aStream, TrackID aAudioTrackID,
+                                  TrackID aVideoTrackID) {
   MOZ_ASSERT(NS_IsMainThread());
   mInputStream = aStream;
   mInputAudioTrackID = aAudioTrackID;
@@ -161,9 +135,7 @@ OutputStreamManager::Connect(MediaStream* aStream,
   }
 }
 
-void
-OutputStreamManager::Disconnect()
-{
+void OutputStreamManager::Disconnect() {
   MOZ_ASSERT(NS_IsMainThread());
   mInputStream = nullptr;
   mInputAudioTrackID = TRACK_INVALID;
@@ -176,4 +148,4 @@ OutputStreamManager::Disconnect()
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

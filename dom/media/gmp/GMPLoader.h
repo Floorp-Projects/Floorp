@@ -20,7 +20,7 @@ namespace mozilla {
 namespace gmp {
 
 class SandboxStarter {
-public:
+ public:
   virtual ~SandboxStarter() {}
   virtual bool Start(const char* aLibPath) = 0;
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
@@ -33,7 +33,7 @@ public:
 
 // Interface that adapts a plugin to the GMP API.
 class GMPAdapter {
-public:
+ public:
   virtual ~GMPAdapter() {}
   // Sets the adapted to plugin library module.
   // Note: the GMPAdapter is responsible for calling PR_UnloadLibrary on aLib
@@ -42,10 +42,8 @@ public:
 
   // These are called in place of the corresponding GMP API functions.
   virtual GMPErr GMPInit(const GMPPlatformAPI* aPlatformAPI) = 0;
-  virtual GMPErr GMPGetAPI(const char* aAPIName,
-                           void* aHostAPI,
-                           void** aPluginAPI,
-                           uint32_t aDecryptorId) = 0;
+  virtual GMPErr GMPGetAPI(const char* aAPIName, void* aHostAPI,
+                           void** aPluginAPI, uint32_t aDecryptorId) = 0;
   virtual void GMPShutdown() = 0;
 };
 
@@ -53,22 +51,18 @@ public:
 // Load() takes an optional GMPAdapter which can be used to adapt non-GMPs
 // to adhere to the GMP API.
 class GMPLoader {
-public:
+ public:
   GMPLoader();
 
   // Activates the sandbox, then loads the GMP library. If aAdapter is
   // non-null, the lib path is assumed to be a non-GMP, and the adapter
   // is initialized with the lib and the adapter is used to interact with
   // the plugin.
-  bool Load(const char* aUTF8LibPath,
-            uint32_t aLibPathLen,
-            const GMPPlatformAPI* aPlatformAPI,
-            GMPAdapter* aAdapter = nullptr);
+  bool Load(const char* aUTF8LibPath, uint32_t aLibPathLen,
+            const GMPPlatformAPI* aPlatformAPI, GMPAdapter* aAdapter = nullptr);
 
   // Retrieves an interface pointer from the GMP.
-  GMPErr GetAPI(const char* aAPIName,
-                void* aHostAPI,
-                void** aPluginAPI,
+  GMPErr GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI,
                 uint32_t aDecryptorId);
 
   // Calls the GMPShutdown function exported by the GMP lib, and unloads the
@@ -84,12 +78,12 @@ public:
 
   bool CanSandbox() const;
 
-private:
+ private:
   UniquePtr<SandboxStarter> mSandboxStarter;
   UniquePtr<GMPAdapter> mAdapter;
 };
 
-} // namespace gmp
-} // namespace mozilla
+}  // namespace gmp
+}  // namespace mozilla
 
-#endif // GMP_LOADER_H__
+#endif  // GMP_LOADER_H__

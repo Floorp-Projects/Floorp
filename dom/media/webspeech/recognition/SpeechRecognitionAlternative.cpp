@@ -21,39 +21,26 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SpeechRecognitionAlternative)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-SpeechRecognitionAlternative::SpeechRecognitionAlternative(SpeechRecognition* aParent)
-  : mConfidence(0)
-  , mParent(aParent)
-{
-}
+SpeechRecognitionAlternative::SpeechRecognitionAlternative(
+    SpeechRecognition* aParent)
+    : mConfidence(0), mParent(aParent) {}
 
-SpeechRecognitionAlternative::~SpeechRecognitionAlternative()
-{
-}
+SpeechRecognitionAlternative::~SpeechRecognitionAlternative() {}
 
-JSObject*
-SpeechRecognitionAlternative::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SpeechRecognitionAlternative::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return SpeechRecognitionAlternative_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsISupports*
-SpeechRecognitionAlternative::GetParentObject() const
-{
+nsISupports* SpeechRecognitionAlternative::GetParentObject() const {
   return static_cast<DOMEventTargetHelper*>(mParent.get());
 }
 
-void
-SpeechRecognitionAlternative::GetTranscript(nsString& aRetVal) const
-{
+void SpeechRecognitionAlternative::GetTranscript(nsString& aRetVal) const {
   aRetVal = mTranscript;
 }
 
-float
-SpeechRecognitionAlternative::Confidence() const
-{
-  return mConfidence;
-}
+float SpeechRecognitionAlternative::Confidence() const { return mConfidence; }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

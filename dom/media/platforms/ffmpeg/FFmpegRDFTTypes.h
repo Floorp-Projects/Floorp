@@ -12,25 +12,23 @@ struct RDFTContext;
 typedef float FFTSample;
 
 enum RDFTransformType {
-    DFT_R2C,
-    IDFT_C2R,
-    IDFT_R2C,
-    DFT_C2R,
+  DFT_R2C,
+  IDFT_C2R,
+  IDFT_R2C,
+  DFT_C2R,
 };
 
 extern "C" {
 
-  typedef RDFTContext* (*AvRdftInitFn)(int nbits, enum RDFTransformType trans);
-  typedef void (*AvRdftCalcFn)(RDFTContext *s, FFTSample *data);
-  typedef void (*AvRdftEndFn)(RDFTContext *s);
-
+typedef RDFTContext *(*AvRdftInitFn)(int nbits, enum RDFTransformType trans);
+typedef void (*AvRdftCalcFn)(RDFTContext *s, FFTSample *data);
+typedef void (*AvRdftEndFn)(RDFTContext *s);
 }
 
-struct FFmpegRDFTFuncs
-{
-    AvRdftInitFn init;
-    AvRdftCalcFn calc;
-    AvRdftEndFn end;
+struct FFmpegRDFTFuncs {
+  AvRdftInitFn init;
+  AvRdftCalcFn calc;
+  AvRdftEndFn end;
 };
 
-#endif // FFmpegRDFTTypes_h
+#endif  // FFmpegRDFTTypes_h

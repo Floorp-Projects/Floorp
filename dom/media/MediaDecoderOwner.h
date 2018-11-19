@@ -23,11 +23,10 @@ class MediaResult;
 
 namespace dom {
 class HTMLMediaElement;
-} // namespace dom
+}  // namespace dom
 
-class MediaDecoderOwner
-{
-public:
+class MediaDecoderOwner {
+ public:
   // Called by the media decoder to indicate that the download is progressing.
   virtual void DownloadProgressed() = 0;
 
@@ -104,7 +103,8 @@ public:
   // suspended the channel.
   virtual void NotifySuspendedByCache(bool aSuspendedByCache) = 0;
 
-  // called to notify that the principal of the decoder's media resource has changed.
+  // called to notify that the principal of the decoder's media resource has
+  // changed.
   virtual void NotifyDecoderPrincipalChanged() = 0;
 
   // The status of the next frame which might be available from the decoder
@@ -173,8 +173,7 @@ public:
   virtual nsIDocument* GetDocument() const { return nullptr; }
 
   // Called by the media decoder to create a GMPCrashHelper.
-  virtual already_AddRefed<GMPCrashHelper> CreateGMPCrashHelper()
-  {
+  virtual already_AddRefed<GMPCrashHelper> CreateGMPCrashHelper() {
     return nullptr;
   }
 
@@ -188,8 +187,8 @@ public:
   // Called after the MediaStream we're playing rendered a frame to aContainer
   // with a different principalHandle than the previous frame.
   virtual void PrincipalHandleChangedForVideoFrameContainer(
-    VideoFrameContainer* aContainer,
-    const PrincipalHandle& aNewPrincipalHandle) {}
+      VideoFrameContainer* aContainer,
+      const PrincipalHandle& aNewPrincipalHandle) {}
 
   /*
    * Servo only methods go here. Please provide default implementations so they
@@ -197,7 +196,6 @@ public:
    */
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif
-

@@ -14,63 +14,53 @@
 namespace mozilla {
 namespace dom {
 
-class AudioProcessingEvent final : public Event
-{
-public:
-  AudioProcessingEvent(ScriptProcessorNode* aOwner,
-                       nsPresContext* aPresContext,
+class AudioProcessingEvent final : public Event {
+ public:
+  AudioProcessingEvent(ScriptProcessorNode* aOwner, nsPresContext* aPresContext,
                        WidgetEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioProcessingEvent, Event)
 
-  JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObjectInternal(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   using Event::InitEvent;
-  void InitEvent(AudioBuffer* aInputBuffer,
-                 uint32_t aNumberOfInputChannels,
-                 double aPlaybackTime)
-  {
-    InitEvent(NS_LITERAL_STRING("audioprocess"), CanBubble::eNo, Cancelable::eNo);
+  void InitEvent(AudioBuffer* aInputBuffer, uint32_t aNumberOfInputChannels,
+                 double aPlaybackTime) {
+    InitEvent(NS_LITERAL_STRING("audioprocess"), CanBubble::eNo,
+              Cancelable::eNo);
     mInputBuffer = aInputBuffer;
     mNumberOfInputChannels = aNumberOfInputChannels;
     mPlaybackTime = aPlaybackTime;
   }
 
-  double PlaybackTime() const
-  {
-    return mPlaybackTime;
-  }
+  double PlaybackTime() const { return mPlaybackTime; }
 
-  AudioBuffer* GetInputBuffer(ErrorResult& aRv)
-  {
+  AudioBuffer* GetInputBuffer(ErrorResult& aRv) {
     if (!mInputBuffer) {
       mInputBuffer = LazilyCreateBuffer(mNumberOfInputChannels, aRv);
     }
     return mInputBuffer;
   }
 
-  AudioBuffer* GetOutputBuffer(ErrorResult& aRv)
-  {
+  AudioBuffer* GetOutputBuffer(ErrorResult& aRv) {
     if (!mOutputBuffer) {
       mOutputBuffer = LazilyCreateBuffer(mNode->NumberOfOutputChannels(), aRv);
     }
     return mOutputBuffer;
   }
 
-  bool HasOutputBuffer() const
-  {
-    return !!mOutputBuffer;
-  }
+  bool HasOutputBuffer() const { return !!mOutputBuffer; }
 
-protected:
+ protected:
   virtual ~AudioProcessingEvent();
 
-private:
-  already_AddRefed<AudioBuffer>
-  LazilyCreateBuffer(uint32_t aNumberOfChannels, ErrorResult& rv);
+ private:
+  already_AddRefed<AudioBuffer> LazilyCreateBuffer(uint32_t aNumberOfChannels,
+                                                   ErrorResult& rv);
 
-private:
+ private:
   double mPlaybackTime;
   RefPtr<AudioBuffer> mInputBuffer;
   RefPtr<AudioBuffer> mOutputBuffer;
@@ -78,8 +68,7 @@ private:
   uint32_t mNumberOfInputChannels;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif
-

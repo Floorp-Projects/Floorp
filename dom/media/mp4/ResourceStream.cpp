@@ -9,22 +9,15 @@
 namespace mozilla {
 
 ResourceStream::ResourceStream(mozilla::MediaResource* aResource)
-  : mResource(aResource)
-  , mPinCount(0)
-{
+    : mResource(aResource), mPinCount(0) {
   MOZ_ASSERT(aResource);
   DDLINKCHILD("resource", &mResource);
 }
 
-ResourceStream::~ResourceStream()
-{
-  MOZ_ASSERT(mPinCount == 0);
-}
+ResourceStream::~ResourceStream() { MOZ_ASSERT(mPinCount == 0); }
 
-bool
-ResourceStream::ReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
-                       size_t* aBytesRead)
-{
+bool ResourceStream::ReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
+                            size_t* aBytesRead) {
   uint32_t sum = 0;
   uint32_t bytesRead = 0;
   do {
@@ -42,12 +35,10 @@ ResourceStream::ReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
   return true;
 }
 
-bool
-ResourceStream::CachedReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
-                        size_t* aBytesRead)
-{
+bool ResourceStream::CachedReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
+                                  size_t* aBytesRead) {
   nsresult rv = mResource.GetResource()->ReadFromCache(
-    reinterpret_cast<char*>(aBuffer), aOffset, aCount);
+      reinterpret_cast<char*>(aBuffer), aOffset, aCount);
   if (NS_FAILED(rv)) {
     *aBytesRead = 0;
     return false;
@@ -56,13 +47,10 @@ ResourceStream::CachedReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
   return true;
 }
 
-bool
-ResourceStream::Length(int64_t* aSize)
-{
-  if (mResource.GetLength() < 0)
-    return false;
+bool ResourceStream::Length(int64_t* aSize) {
+  if (mResource.GetLength() < 0) return false;
   *aSize = mResource.GetLength();
   return true;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

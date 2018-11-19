@@ -40,14 +40,14 @@
 #include "gmp-video-codec.h"
 
 // This interface must be called on the main thread only.
-class GMPVideoHost
-{
-public:
+class GMPVideoHost {
+ public:
   // Construct various video API objects. Host does not retain reference,
   // caller is owner and responsible for deleting.
   // MAIN THREAD ONLY
-  virtual GMPErr CreateFrame(GMPVideoFrameFormat aFormat, GMPVideoFrame** aFrame) = 0;
+  virtual GMPErr CreateFrame(GMPVideoFrameFormat aFormat,
+                             GMPVideoFrame** aFrame) = 0;
   virtual GMPErr CreatePlane(GMPPlane** aPlane) = 0;
 };
 
-#endif // GMP_VIDEO_HOST_h_
+#endif  // GMP_VIDEO_HOST_h_

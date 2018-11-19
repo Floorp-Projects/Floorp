@@ -15,9 +15,8 @@
 #include "GMPUtils.h"
 
 class GMPVideoDecoderCallbackProxy : public GMPCallbackBase,
-                                     public GMPVideoDecoderCallback
-{
-public:
+                                     public GMPVideoDecoderCallback {
+ public:
   virtual ~GMPVideoDecoderCallbackProxy() {}
 };
 
@@ -33,15 +32,15 @@ public:
 
 // This interface is not thread-safe and must only be used from GMPThread.
 class GMPVideoDecoderProxy {
-public:
+ public:
   virtual nsresult InitDecode(const GMPVideoCodec& aCodecSettings,
                               const nsTArray<uint8_t>& aCodecSpecific,
                               GMPVideoDecoderCallbackProxy* aCallback,
                               int32_t aCoreCount) = 0;
-  virtual nsresult Decode(mozilla::GMPUniquePtr<GMPVideoEncodedFrame> aInputFrame,
-                          bool aMissingFrames,
-                          const nsTArray<uint8_t>& aCodecSpecificInfo,
-                          int64_t aRenderTimeMs = -1) = 0;
+  virtual nsresult Decode(
+      mozilla::GMPUniquePtr<GMPVideoEncodedFrame> aInputFrame,
+      bool aMissingFrames, const nsTArray<uint8_t>& aCodecSpecificInfo,
+      int64_t aRenderTimeMs = -1) = 0;
   virtual nsresult Reset() = 0;
   virtual nsresult Drain() = 0;
   virtual uint32_t GetPluginId() const = 0;

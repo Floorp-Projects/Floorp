@@ -7,14 +7,12 @@
 
 #include "mozilla/RefPtr.h"
 
-namespace mozilla
-{
+namespace mozilla {
 
 class MediaByteBuffer;
 
-class BitWriter
-{
-public:
+class BitWriter {
+ public:
   explicit BitWriter(MediaByteBuffer* aBuffer);
   virtual ~BitWriter();
   void WriteBits(uint64_t aValue, size_t aBits);
@@ -32,12 +30,12 @@ public:
   // Return the number of bits written so far;
   size_t BitCount() const { return mPosition * 8 + mBitIndex; }
 
-private:
+ private:
   RefPtr<MediaByteBuffer> mBuffer;
   size_t mPosition = 0;
   uint8_t mBitIndex = 0;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // BIT_WRITER_H_
+#endif  // BIT_WRITER_H_

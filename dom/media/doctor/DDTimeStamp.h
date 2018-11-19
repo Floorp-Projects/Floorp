@@ -14,16 +14,11 @@ namespace mozilla {
 // Simply using mozilla::TimeStamp as our timestamp type.
 using DDTimeStamp = TimeStamp;
 
-inline DDTimeStamp
-DDNow()
-{
-  return TimeStamp::Now();
-}
+inline DDTimeStamp DDNow() { return TimeStamp::Now(); }
 
 // Convert a timestamp to the number of seconds since the process start.
-double
-ToSeconds(const DDTimeStamp& aTimeStamp);
+double ToSeconds(const DDTimeStamp& aTimeStamp);
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // DDTimeStamp_h_
+#endif  // DDTimeStamp_h_

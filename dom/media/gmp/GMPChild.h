@@ -19,16 +19,13 @@ namespace gmp {
 
 class GMPContentChild;
 
-class GMPChild : public PGMPChild
-{
-public:
+class GMPChild : public PGMPChild {
+ public:
   GMPChild();
   virtual ~GMPChild();
 
-  bool Init(const nsAString& aPluginPath,
-            base::ProcessId aParentPid,
-            MessageLoop* aIOLoop,
-            IPC::Channel* aChannel);
+  bool Init(const nsAString& aPluginPath, base::ProcessId aParentPid,
+            MessageLoop* aIOLoop, IPC::Channel* aChannel);
   MessageLoop* GMPMessageLoop();
 
   // Main thread only.
@@ -39,14 +36,15 @@ public:
   bool SetMacSandboxInfo(MacSandboxPluginType aPluginType);
 #endif
 
-private:
+ private:
   friend class GMPContentChild;
 
   bool ResolveLinks(nsCOMPtr<nsIFile>& aPath);
 
   bool GetUTF8LibPath(nsACString& aOutLibPath);
 
-  mozilla::ipc::IPCResult RecvProvideStorageId(const nsCString& aStorageId) override;
+  mozilla::ipc::IPCResult RecvProvideStorageId(
+      const nsCString& aStorageId) override;
 
   mozilla::ipc::IPCResult AnswerStartPlugin(const nsString& aAdapter) override;
   mozilla::ipc::IPCResult RecvPreloadLibs(const nsCString& aLibs) override;
@@ -62,12 +60,14 @@ private:
   mozilla::ipc::IPCResult RecvCrashPluginNow() override;
   mozilla::ipc::IPCResult RecvCloseActive() override;
 
-  mozilla::ipc::IPCResult RecvInitGMPContentChild(Endpoint<PGMPContentChild>&& aEndpoint) override;
+  mozilla::ipc::IPCResult RecvInitGMPContentChild(
+      Endpoint<PGMPContentChild>&& aEndpoint) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void ProcessingError(Result aCode, const char* aReason) override;
 
-  GMPErr GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI, uint32_t aDecryptorId = 0);
+  GMPErr GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI,
+                uint32_t aDecryptorId = 0);
 
   nsTArray<Pair<nsCString, nsCString>> MakeCDMHostVerificationPaths();
 
@@ -82,7 +82,7 @@ private:
   UniquePtr<GMPLoader> mGMPLoader;
 };
 
-} // namespace gmp
-} // namespace mozilla
+}  // namespace gmp
+}  // namespace mozilla
 
-#endif // GMPChild_h_
+#endif  // GMPChild_h_

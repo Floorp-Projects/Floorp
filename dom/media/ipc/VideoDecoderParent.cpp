@@ -25,39 +25,32 @@ using namespace ipc;
 using namespace layers;
 using namespace gfx;
 
-class KnowsCompositorVideo : public layers::KnowsCompositor
-{
-public:
+class KnowsCompositorVideo : public layers::KnowsCompositor {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(KnowsCompositorVideo, override)
 
-  layers::TextureForwarder* GetTextureForwarder() override
-  {
+  layers::TextureForwarder* GetTextureForwarder() override {
     return VideoBridgeChild::GetSingleton();
   }
-  layers::LayersIPCActor* GetLayersIPCActor() override
-  {
+  layers::LayersIPCActor* GetLayersIPCActor() override {
     return VideoBridgeChild::GetSingleton();
   }
-private:
+
+ private:
   virtual ~KnowsCompositorVideo() = default;
 };
 
 VideoDecoderParent::VideoDecoderParent(
-  VideoDecoderManagerParent* aParent,
-  const VideoInfo& aVideoInfo,
-  float aFramerate,
-  const CreateDecoderParams::OptionSet& aOptions,
-  const layers::TextureFactoryIdentifier& aIdentifier,
-  TaskQueue* aManagerTaskQueue,
-  TaskQueue* aDecodeTaskQueue,
-  bool* aSuccess,
-  nsCString* aErrorDescription)
-  : mParent(aParent)
-  , mManagerTaskQueue(aManagerTaskQueue)
-  , mDecodeTaskQueue(aDecodeTaskQueue)
-  , mKnowsCompositor(new KnowsCompositorVideo)
-  , mDestroyed(false)
-{
+    VideoDecoderManagerParent* aParent, const VideoInfo& aVideoInfo,
+    float aFramerate, const CreateDecoderParams::OptionSet& aOptions,
+    const layers::TextureFactoryIdentifier& aIdentifier,
+    TaskQueue* aManagerTaskQueue, TaskQueue* aDecodeTaskQueue, bool* aSuccess,
+    nsCString* aErrorDescription)
+    : mParent(aParent),
+      mManagerTaskQueue(aManagerTaskQueue),
+      mDecodeTaskQueue(aDecodeTaskQueue),
+      mKnowsCompositor(new KnowsCompositorVideo),
+      mDestroyed(false) {
   MOZ_COUNT_CTOR(VideoDecoderParent);
   MOZ_ASSERT(OnManagerThread());
   // We hold a reference to ourselves to keep us alive until IPDL
@@ -100,50 +93,44 @@ VideoDecoderParent::VideoDecoderParent(
   *aSuccess = !!mDecoder;
 }
 
-VideoDecoderParent::~VideoDecoderParent()
-{
+VideoDecoderParent::~VideoDecoderParent() {
   MOZ_COUNT_DTOR(VideoDecoderParent);
 }
 
-void
-VideoDecoderParent::Destroy()
-{
+void VideoDecoderParent::Destroy() {
   MOZ_ASSERT(OnManagerThread());
   mDecodeTaskQueue->AwaitShutdownAndIdle();
   mDestroyed = true;
   mIPDLSelfRef = nullptr;
 }
 
-mozilla::ipc::IPCResult
-VideoDecoderParent::RecvInit()
-{
+mozilla::ipc::IPCResult VideoDecoderParent::RecvInit() {
   MOZ_ASSERT(OnManagerThread());
   RefPtr<VideoDecoderParent> self = this;
-  mDecoder->Init()->Then(mManagerTaskQueue, __func__,
-    [self] (TrackInfo::TrackType aTrack) {
-      if (self->mDecoder) {
-        nsCString hardwareReason;
-        bool hardwareAccelerated =
-          self->mDecoder->IsHardwareAccelerated(hardwareReason);
-        uint32_t conversion =
-          static_cast<uint32_t>(self->mDecoder->NeedsConversion());
-        Unused << self->SendInitComplete(self->mDecoder->GetDescriptionName(),
-                                         hardwareAccelerated,
-                                         hardwareReason,
-                                         conversion);
-      }
-    },
-    [self] (MediaResult aReason) {
-      if (!self->mDestroyed) {
-        Unused << self->SendInitFailed(aReason);
-      }
-    });
+  mDecoder->Init()->Then(
+      mManagerTaskQueue, __func__,
+      [self](TrackInfo::TrackType aTrack) {
+        if (self->mDecoder) {
+          nsCString hardwareReason;
+          bool hardwareAccelerated =
+              self->mDecoder->IsHardwareAccelerated(hardwareReason);
+          uint32_t conversion =
+              static_cast<uint32_t>(self->mDecoder->NeedsConversion());
+          Unused << self->SendInitComplete(self->mDecoder->GetDescriptionName(),
+                                           hardwareAccelerated, hardwareReason,
+                                           conversion);
+        }
+      },
+      [self](MediaResult aReason) {
+        if (!self->mDestroyed) {
+          Unused << self->SendInitFailed(aReason);
+        }
+      });
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-VideoDecoderParent::RecvInput(const MediaRawDataIPDL& aData)
-{
+mozilla::ipc::IPCResult VideoDecoderParent::RecvInput(
+    const MediaRawDataIPDL& aData) {
   MOZ_ASSERT(OnManagerThread());
   // XXX: This copies the data into a buffer owned by the MediaRawData. Ideally
   // we'd just take ownership of the shmem.
@@ -164,21 +151,20 @@ VideoDecoderParent::RecvInput(const MediaRawDataIPDL& aData)
 
   RefPtr<VideoDecoderParent> self = this;
   mDecoder->Decode(data)->Then(
-    mManagerTaskQueue, __func__,
-    [self, this](MediaDataDecoder::DecodedData&& aResults) {
-      if (mDestroyed) {
-        return;
-      }
-      ProcessDecodedData(std::move(aResults));
-      Unused << SendInputExhausted();
-    },
-    [self](const MediaResult& aError) { self->Error(aError); });
+      mManagerTaskQueue, __func__,
+      [self, this](MediaDataDecoder::DecodedData&& aResults) {
+        if (mDestroyed) {
+          return;
+        }
+        ProcessDecodedData(std::move(aResults));
+        Unused << SendInputExhausted();
+      },
+      [self](const MediaResult& aError) { self->Error(aError); });
   return IPC_OK();
 }
 
-void
-VideoDecoderParent::ProcessDecodedData(MediaDataDecoder::DecodedData&& aData)
-{
+void VideoDecoderParent::ProcessDecodedData(
+    MediaDataDecoder::DecodedData&& aData) {
   MOZ_ASSERT(OnManagerThread());
 
   // If the video decoder bridge has shut down, stop.
@@ -188,14 +174,15 @@ VideoDecoderParent::ProcessDecodedData(MediaDataDecoder::DecodedData&& aData)
 
   for (auto&& data : aData) {
     MOZ_ASSERT(data->mType == MediaData::VIDEO_DATA,
-                "Can only decode videos using VideoDecoderParent!");
+               "Can only decode videos using VideoDecoderParent!");
     VideoData* video = static_cast<VideoData*>(data.get());
 
-    MOZ_ASSERT(video->mImage, "Decoded video must output a layer::Image to "
-                              "be used with VideoDecoderParent");
+    MOZ_ASSERT(video->mImage,
+               "Decoded video must output a layer::Image to "
+               "be used with VideoDecoderParent");
 
     RefPtr<TextureClient> texture =
-      video->mImage->GetTextureClient(mKnowsCompositor);
+        video->mImage->GetTextureClient(mKnowsCompositor);
 
     if (!texture) {
       texture = ImageClient::CreateTextureClientForImage(video->mImage,
@@ -208,58 +195,51 @@ VideoDecoderParent::ProcessDecodedData(MediaDataDecoder::DecodedData&& aData)
     }
 
     VideoDataIPDL output(
-      MediaDataIPDL(data->mOffset, data->mTime.ToMicroseconds(),
-                    data->mTimecode.ToMicroseconds(),
-                    data->mDuration.ToMicroseconds(),
-                    data->mFrames, data->mKeyframe),
-      video->mDisplay,
-      texture ? texture->GetSize() : IntSize(),
-      texture ? mParent->StoreImage(video->mImage, texture)
-              : SurfaceDescriptorGPUVideo(0, null_t()),
-      video->mFrameID);
+        MediaDataIPDL(data->mOffset, data->mTime.ToMicroseconds(),
+                      data->mTimecode.ToMicroseconds(),
+                      data->mDuration.ToMicroseconds(), data->mFrames,
+                      data->mKeyframe),
+        video->mDisplay, texture ? texture->GetSize() : IntSize(),
+        texture ? mParent->StoreImage(video->mImage, texture)
+                : SurfaceDescriptorGPUVideo(0, null_t()),
+        video->mFrameID);
     Unused << SendOutput(output);
   }
 }
 
-mozilla::ipc::IPCResult
-VideoDecoderParent::RecvFlush()
-{
+mozilla::ipc::IPCResult VideoDecoderParent::RecvFlush() {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(OnManagerThread());
   RefPtr<VideoDecoderParent> self = this;
   mDecoder->Flush()->Then(
-    mManagerTaskQueue, __func__,
-    [self]() {
-      if (!self->mDestroyed) {
-        Unused << self->SendFlushComplete();
-      }
-    },
-    [self](const MediaResult& aError) { self->Error(aError); });
+      mManagerTaskQueue, __func__,
+      [self]() {
+        if (!self->mDestroyed) {
+          Unused << self->SendFlushComplete();
+        }
+      },
+      [self](const MediaResult& aError) { self->Error(aError); });
 
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-VideoDecoderParent::RecvDrain()
-{
+mozilla::ipc::IPCResult VideoDecoderParent::RecvDrain() {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(OnManagerThread());
   RefPtr<VideoDecoderParent> self = this;
   mDecoder->Drain()->Then(
-    mManagerTaskQueue, __func__,
-    [self, this](MediaDataDecoder::DecodedData&& aResults) {
-      if (!mDestroyed) {
-        ProcessDecodedData(std::move(aResults));
-        Unused << SendDrainComplete();
-      }
-    },
-    [self](const MediaResult& aError) { self->Error(aError); });
+      mManagerTaskQueue, __func__,
+      [self, this](MediaDataDecoder::DecodedData&& aResults) {
+        if (!mDestroyed) {
+          ProcessDecodedData(std::move(aResults));
+          Unused << SendDrainComplete();
+        }
+      },
+      [self](const MediaResult& aError) { self->Error(aError); });
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-VideoDecoderParent::RecvShutdown()
-{
+mozilla::ipc::IPCResult VideoDecoderParent::RecvShutdown() {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(OnManagerThread());
   if (mDecoder) {
@@ -269,18 +249,15 @@ VideoDecoderParent::RecvShutdown()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-VideoDecoderParent::RecvSetSeekThreshold(const int64_t& aTime)
-{
+mozilla::ipc::IPCResult VideoDecoderParent::RecvSetSeekThreshold(
+    const int64_t& aTime) {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(OnManagerThread());
   mDecoder->SetSeekThreshold(TimeUnit::FromMicroseconds(aTime));
   return IPC_OK();
 }
 
-void
-VideoDecoderParent::ActorDestroy(ActorDestroyReason aWhy)
-{
+void VideoDecoderParent::ActorDestroy(ActorDestroyReason aWhy) {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(OnManagerThread());
   if (mDecoder) {
@@ -292,20 +269,16 @@ VideoDecoderParent::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-void
-VideoDecoderParent::Error(const MediaResult& aError)
-{
+void VideoDecoderParent::Error(const MediaResult& aError) {
   MOZ_ASSERT(OnManagerThread());
   if (!mDestroyed) {
     Unused << SendError(aError);
   }
 }
 
-bool
-VideoDecoderParent::OnManagerThread()
-{
+bool VideoDecoderParent::OnManagerThread() {
   return mParent->OnManagerThread();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

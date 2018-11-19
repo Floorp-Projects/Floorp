@@ -35,37 +35,31 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaEncryptedEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
 
 MediaEncryptedEvent::MediaEncryptedEvent(EventTarget* aOwner)
-  : Event(aOwner, nullptr, nullptr)
-{
+    : Event(aOwner, nullptr, nullptr) {
   mozilla::HoldJSObjects(this);
 }
 
-MediaEncryptedEvent::~MediaEncryptedEvent()
-{
+MediaEncryptedEvent::~MediaEncryptedEvent() {
   mInitData = nullptr;
   mozilla::DropJSObjects(this);
 }
 
-JSObject*
-MediaEncryptedEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* MediaEncryptedEvent::WrapObjectInternal(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return MediaEncryptedEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<MediaEncryptedEvent>
-MediaEncryptedEvent::Constructor(EventTarget* aOwner)
-{
+already_AddRefed<MediaEncryptedEvent> MediaEncryptedEvent::Constructor(
+    EventTarget* aOwner) {
   RefPtr<MediaEncryptedEvent> e = new MediaEncryptedEvent(aOwner);
   e->InitEvent(NS_LITERAL_STRING("encrypted"), CanBubble::eNo, Cancelable::eNo);
   e->SetTrusted(true);
   return e.forget();
 }
 
-already_AddRefed<MediaEncryptedEvent>
-MediaEncryptedEvent::Constructor(EventTarget* aOwner,
-                                 const nsAString& aInitDataType,
-                                 const nsTArray<uint8_t>& aInitData)
-{
+already_AddRefed<MediaEncryptedEvent> MediaEncryptedEvent::Constructor(
+    EventTarget* aOwner, const nsAString& aInitDataType,
+    const nsTArray<uint8_t>& aInitData) {
   RefPtr<MediaEncryptedEvent> e = new MediaEncryptedEvent(aOwner);
   e->InitEvent(NS_LITERAL_STRING("encrypted"), CanBubble::eNo, Cancelable::eNo);
   e->mInitDataType = aInitDataType;
@@ -74,12 +68,9 @@ MediaEncryptedEvent::Constructor(EventTarget* aOwner,
   return e.forget();
 }
 
-already_AddRefed<MediaEncryptedEvent>
-MediaEncryptedEvent::Constructor(const GlobalObject& aGlobal,
-                                 const nsAString& aType,
-                                 const MediaKeyNeededEventInit& aEventInitDict,
-                                 ErrorResult& aRv)
-{
+already_AddRefed<MediaEncryptedEvent> MediaEncryptedEvent::Constructor(
+    const GlobalObject& aGlobal, const nsAString& aType,
+    const MediaKeyNeededEventInit& aEventInitDict, ErrorResult& aRv) {
   nsCOMPtr<EventTarget> owner = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<MediaEncryptedEvent> e = new MediaEncryptedEvent(owner);
   bool trusted = e->Init(owner);
@@ -88,9 +79,7 @@ MediaEncryptedEvent::Constructor(const GlobalObject& aGlobal,
   if (!aEventInitDict.mInitData.IsNull()) {
     const auto& a = aEventInitDict.mInitData.Value();
     a.ComputeLengthAndData();
-    e->mInitData = ArrayBuffer::Create(aGlobal.Context(),
-                                       a.Length(),
-                                       a.Data());
+    e->mInitData = ArrayBuffer::Create(aGlobal.Context(), a.Length(), a.Data());
     if (!e->mInitData) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return nullptr;
@@ -100,21 +89,15 @@ MediaEncryptedEvent::Constructor(const GlobalObject& aGlobal,
   return e.forget();
 }
 
-void
-MediaEncryptedEvent::GetInitDataType(nsString& aRetVal) const
-{
+void MediaEncryptedEvent::GetInitDataType(nsString& aRetVal) const {
   aRetVal = mInitDataType;
 }
 
-void
-MediaEncryptedEvent::GetInitData(JSContext* cx,
-                                 JS::MutableHandle<JSObject*> aData,
-                                 ErrorResult& aRv)
-{
+void MediaEncryptedEvent::GetInitData(JSContext* cx,
+                                      JS::MutableHandle<JSObject*> aData,
+                                      ErrorResult& aRv) {
   if (mRawInitData.Length()) {
-    mInitData = ArrayBuffer::Create(cx,
-                                    this,
-                                    mRawInitData.Length(),
+    mInitData = ArrayBuffer::Create(cx, this, mRawInitData.Length(),
                                     mRawInitData.Elements());
     if (!mInitData) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
@@ -125,5 +108,5 @@ MediaEncryptedEvent::GetInitData(JSContext* cx,
   aData.set(mInitData);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

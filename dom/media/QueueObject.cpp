@@ -15,27 +15,15 @@ QueueObject::QueueObject(RefPtr<AbstractThread> aThread) : mThread(aThread) {}
 
 QueueObject::~QueueObject() {}
 
-void
-QueueObject::Dispatch(nsIRunnable* aRunnable)
-{
+void QueueObject::Dispatch(nsIRunnable* aRunnable) {
   Dispatch(do_AddRef(aRunnable));
 }
 
-void
-QueueObject::Dispatch(already_AddRefed<nsIRunnable> aRunnable)
-{
+void QueueObject::Dispatch(already_AddRefed<nsIRunnable> aRunnable) {
   mThread->Dispatch(std::move(aRunnable));
 }
 
-bool
-QueueObject::OnThread()
-{
-  return mThread->IsCurrentThreadIn();
-}
+bool QueueObject::OnThread() { return mThread->IsCurrentThreadIn(); }
 
-AbstractThread*
-QueueObject::Thread()
-{
-  return mThread;
-}
-}
+AbstractThread* QueueObject::Thread() { return mThread; }
+}  // namespace mozilla

@@ -8,8 +8,9 @@
 
 /**
  * CDM will try to request a latest version(0) of storage id.
- * If the storage id computation algorithm changed, we should increase the kCurrentVersion.
-*/
+ * If the storage id computation algorithm changed, we should increase the
+ * kCurrentVersion.
+ */
 
 #include <string>
 
@@ -17,12 +18,10 @@
 
 namespace mozilla {
 
-class CDMStorageIdProvider
-{
-  static constexpr const char* kBrowserIdentifier =
-    "mozilla_firefox_gecko";
+class CDMStorageIdProvider {
+  static constexpr const char* kBrowserIdentifier = "mozilla_firefox_gecko";
 
-public:
+ public:
   // Should increase the value when the storage id algorithm changed.
   static constexpr int kCurrentVersion = 1;
   static constexpr int kCDMRequestLatestVersion = 0;
@@ -35,9 +34,8 @@ public:
   // you should keep the version 1 storage id and consider to provide
   // higher version storage id in another function.
   static nsCString ComputeStorageId(const nsCString& aOriginSalt);
-
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // CDMStorageIdProvider_h_
+#endif  // CDMStorageIdProvider_h_

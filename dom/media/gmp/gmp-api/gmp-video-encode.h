@@ -43,9 +43,8 @@
 #include "gmp-video-codec.h"
 
 // ALL METHODS MUST BE CALLED ON THE MAIN THREAD
-class GMPVideoEncoderCallback
-{
-public:
+class GMPVideoEncoderCallback {
+ public:
   virtual ~GMPVideoEncoderCallback() {}
 
   virtual void Encoded(GMPVideoEncodedFrame* aEncodedFrame,
@@ -66,9 +65,8 @@ public:
 // Host API: GMPVideoHost
 //
 // ALL METHODS MUST BE CALLED ON THE MAIN THREAD
-class GMPVideoEncoder
-{
-public:
+class GMPVideoEncoder {
+ public:
   virtual ~GMPVideoEncoder() {}
 
   // Initialize the encoder with the information from the VideoCodec.
@@ -80,7 +78,8 @@ public:
   //                    this codec type.
   // - aCodecSpecificLength : number of bytes in aCodecSpecific
   // - aCallback: Subclass should retain reference to it until EncodingComplete
-  //              is called. Do not attempt to delete it, host retains ownership.
+  //              is called. Do not attempt to delete it, host retains
+  //              ownership.
   // - aNnumberOfCores : Number of cores available for the encoder
   // - aMaxPayloadSize : The maximum size each payload is allowed
   //                    to have. Usually MTU - overhead.
@@ -88,8 +87,7 @@ public:
                           const uint8_t* aCodecSpecific,
                           uint32_t aCodecSpecificLength,
                           GMPVideoEncoderCallback* aCallback,
-                          int32_t aNumberOfCores,
-                          uint32_t aMaxPayloadSize) = 0;
+                          int32_t aNumberOfCores, uint32_t aMaxPayloadSize) = 0;
 
   // Encode an I420 frame (as a part of a video stream). The encoded frame
   // will be returned to the user through the encode complete callback.
@@ -122,8 +120,8 @@ public:
   // - frameRate : The target frame rate
   virtual void SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) = 0;
 
-  // Use this function to enable or disable periodic key frames. Can be useful for codecs
-  // which have other ways of stopping error propagation.
+  // Use this function to enable or disable periodic key frames. Can be useful
+  // for codecs which have other ways of stopping error propagation.
   //
   // - enable : Enable or disable periodic key frames
   virtual void SetPeriodicKeyFrames(bool aEnable) = 0;
@@ -132,4 +130,4 @@ public:
   virtual void EncodingComplete() = 0;
 };
 
-#endif // GMP_VIDEO_ENCODE_h_
+#endif  // GMP_VIDEO_ENCODE_h_

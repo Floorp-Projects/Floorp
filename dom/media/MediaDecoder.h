@@ -45,13 +45,13 @@ struct MediaPlaybackEvent;
 enum class Visibility : uint8_t;
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
-// GetTickCount() and conflicts with MediaDecoder::GetCurrentTime implementation.
+// GetTickCount() and conflicts with MediaDecoder::GetCurrentTime
+// implementation.
 #ifdef GetCurrentTime
 #undef GetCurrentTime
 #endif
 
-struct MOZ_STACK_CLASS MediaDecoderInit
-{
+struct MOZ_STACK_CLASS MediaDecoderInit {
   MediaDecoderOwner* const mOwner;
   const double mVolume;
   const bool mPreservesPitch;
@@ -61,40 +61,32 @@ struct MOZ_STACK_CLASS MediaDecoderInit
   const bool mLooping;
   const MediaContainerType mContainerType;
 
-  MediaDecoderInit(MediaDecoderOwner* aOwner,
-                   double aVolume,
-                   bool aPreservesPitch,
-                   double aPlaybackRate,
-                   bool aMinimizePreroll,
-                   bool aHasSuspendTaint,
-                   bool aLooping,
+  MediaDecoderInit(MediaDecoderOwner* aOwner, double aVolume,
+                   bool aPreservesPitch, double aPlaybackRate,
+                   bool aMinimizePreroll, bool aHasSuspendTaint, bool aLooping,
                    const MediaContainerType& aContainerType)
-    : mOwner(aOwner)
-    , mVolume(aVolume)
-    , mPreservesPitch(aPreservesPitch)
-    , mPlaybackRate(aPlaybackRate)
-    , mMinimizePreroll(aMinimizePreroll)
-    , mHasSuspendTaint(aHasSuspendTaint)
-    , mLooping(aLooping)
-    , mContainerType(aContainerType)
-  {
-  }
+      : mOwner(aOwner),
+        mVolume(aVolume),
+        mPreservesPitch(aPreservesPitch),
+        mPlaybackRate(aPlaybackRate),
+        mMinimizePreroll(aMinimizePreroll),
+        mHasSuspendTaint(aHasSuspendTaint),
+        mLooping(aLooping),
+        mContainerType(aContainerType) {}
 };
 
 DDLoggedTypeDeclName(MediaDecoder);
 
-class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder>
-{
-public:
+class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
+ public:
   typedef MozPromise<bool /* aIgnored */, bool /* aIgnored */,
                      /* IsExclusive = */ true>
-    SeekPromise;
+      SeekPromise;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoder)
 
   // Enumeration for the valid play states (see mPlayState)
-  enum PlayState
-  {
+  enum PlayState {
     PLAY_STATE_START,
     PLAY_STATE_LOADING,
     PLAY_STATE_PAUSED,
@@ -253,40 +245,26 @@ public:
   // Helper struct for accumulating resource sizes that need to be measured
   // asynchronously. Once all references are dropped the callback will be
   // invoked.
-  struct ResourceSizes
-  {
+  struct ResourceSizes {
     typedef MozPromise<size_t, size_t, true> SizeOfPromise;
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ResourceSizes)
     explicit ResourceSizes(MallocSizeOf aMallocSizeOf)
-      : mMallocSizeOf(aMallocSizeOf)
-      , mByteSize(0)
-      , mCallback()
-    {
-    }
+        : mMallocSizeOf(aMallocSizeOf), mByteSize(0), mCallback() {}
 
     mozilla::MallocSizeOf mMallocSizeOf;
     mozilla::Atomic<size_t> mByteSize;
 
-    RefPtr<SizeOfPromise> Promise()
-    {
-      return mCallback.Ensure(__func__);
-    }
+    RefPtr<SizeOfPromise> Promise() { return mCallback.Ensure(__func__); }
 
-private:
-    ~ResourceSizes()
-    {
-      mCallback.ResolveIfExists(mByteSize, __func__);
-    }
+   private:
+    ~ResourceSizes() { mCallback.ResolveIfExists(mByteSize, __func__); }
 
     MozPromiseHolder<SizeOfPromise> mCallback;
   };
 
   virtual void AddSizeOfResources(ResourceSizes* aSizes) = 0;
 
-  VideoFrameContainer* GetVideoFrameContainer()
-  {
-    return mVideoFrameContainer;
-  }
+  VideoFrameContainer* GetVideoFrameContainer() { return mVideoFrameContainer; }
 
   layers::ImageContainer* GetImageContainer();
 
@@ -304,7 +282,8 @@ private:
                                     bool aIsElementInTree);
 
   // Force override the visible state to hidden.
-  // Called from HTMLMediaElement when testing of video decode suspend from mochitests.
+  // Called from HTMLMediaElement when testing of video decode suspend from
+  // mochitests.
   void SetForcedHidden(bool aForcedHidden);
 
   // Mark the decoder as tainted, meaning suspend-video-decoder is disabled.
@@ -338,8 +317,7 @@ private:
   void SeekingStarted();
 
   void UpdateLogicalPositionInternal();
-  void UpdateLogicalPosition()
-  {
+  void UpdateLogicalPosition() {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
     // Per spec, offical position remains stable during pause and seek.
@@ -361,10 +339,7 @@ private:
 
   MediaDecoderOwner* GetOwner() const;
 
-  AbstractThread* AbstractMainThread() const
-  {
-    return mAbstractMainThread;
-  }
+  AbstractThread* AbstractMainThread() const { return mAbstractMainThread; }
 
   RefPtr<SetCDMPromise> SetCDMProxy(CDMProxy* aProxy);
 
@@ -382,15 +357,13 @@ private:
   // Return the frame decode/paint related statistics.
   FrameStatistics& GetFrameStatistics() { return *mFrameStats; }
 
-  void UpdateReadyState()
-  {
+  void UpdateReadyState() {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
     GetOwner()->UpdateReadyState();
   }
 
-  MediaDecoderOwner::NextFrameStatus NextFrameStatus() const
-  {
+  MediaDecoderOwner::NextFrameStatus NextFrameStatus() const {
     return mNextFrameStatus;
   }
 
@@ -405,11 +378,11 @@ private:
   using DebugInfoPromise = MozPromise<nsCString, bool, true>;
   RefPtr<DebugInfoPromise> RequestDebugInfo();
 
-protected:
+ protected:
   virtual ~MediaDecoder();
 
-  // Called when the first audio and/or video from the media file has been loaded
-  // by the state machine. Call on the main thread only.
+  // Called when the first audio and/or video from the media file has been
+  // loaded by the state machine. Call on the main thread only.
   virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
                                 MediaDecoderEventVisibility aEventVisibility);
 
@@ -425,13 +398,13 @@ protected:
 
   double ExplicitDuration() { return mExplicitDuration.ref(); }
 
-  void SetExplicitDuration(double aValue)
-  {
+  void SetExplicitDuration(double aValue) {
     MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
     mExplicitDuration = Some(aValue);
 
     // We Invoke DurationChanged explicitly, rather than using a watcher, so
-    // that it takes effect immediately, rather than at the end of the current task.
+    // that it takes effect immediately, rather than at the end of the current
+    // task.
     DurationChanged();
   }
 
@@ -458,10 +431,7 @@ protected:
   // This corresponds to the "current position" in HTML5.
   // We allow omx subclasses to substitute an alternative current position for
   // usage with the audio offload player.
-  virtual media::TimeUnit CurrentPosition()
-  {
-    return mCurrentPosition.Ref();
-  }
+  virtual media::TimeUnit CurrentPosition() { return mCurrentPosition.Ref(); }
 
   already_AddRefed<layers::KnowsCompositor> GetCompositor();
 
@@ -478,11 +448,11 @@ protected:
   // the next frame is available.
   // An arbitrary value of 250ms is used.
   static constexpr auto DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED =
-    media::TimeUnit::FromMicroseconds(250000);
+      media::TimeUnit::FromMicroseconds(250000);
 
   virtual nsCString GetDebugInfo();
 
-private:
+ private:
   // Called when the owner's activity changed.
   void NotifyCompositor();
 
@@ -490,10 +460,7 @@ private:
 
   void OnDecoderDoctorEvent(DecoderDoctorEvent aEvent);
 
-  void OnMediaNotSeekable()
-  {
-    mMediaSeekable = false;
-  }
+  void OnMediaNotSeekable() { mMediaSeekable = false; }
 
   void OnNextFrameStatus(MediaDecoderOwner::NextFrameStatus);
 
@@ -513,7 +480,7 @@ private:
   // Explicitly prievate to force access via accessors.
   RefPtr<MediaDecoderStateMachine> mDecoderStateMachine;
 
-protected:
+ protected:
   void NotifyReaderDataArrived();
   void DiscardOngoingSeekIfExists();
   virtual void CallSeek(const SeekTarget& aTarget);
@@ -578,7 +545,7 @@ protected:
   bool mHasSuspendTaint;
 
   MediaDecoderOwner::NextFrameStatus mNextFrameStatus =
-    MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
+      MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
 
   // A listener to receive metadata updates from MDSM.
   MediaEventListener mTimedMetadataListener;
@@ -595,7 +562,7 @@ protected:
   MediaEventListener mOnDecodeWarning;
   MediaEventListener mOnNextFrameStatus;
 
-protected:
+ protected:
   // PlaybackRate and pitch preservation status we should start at.
   double mPlaybackRate;
 
@@ -651,31 +618,24 @@ protected:
   // background.
   bool mIsBackgroundVideoDecodingAllowed;
 
-public:
+ public:
   AbstractCanonical<double>* CanonicalVolume() { return &mVolume; }
-  AbstractCanonical<bool>* CanonicalPreservesPitch()
-  {
+  AbstractCanonical<bool>* CanonicalPreservesPitch() {
     return &mPreservesPitch;
   }
-  AbstractCanonical<bool>* CanonicalLooping()
-  {
-    return &mLooping;
-  }
+  AbstractCanonical<bool>* CanonicalLooping() { return &mLooping; }
   AbstractCanonical<PlayState>* CanonicalPlayState() { return &mPlayState; }
-  AbstractCanonical<bool>* CanonicalLogicallySeeking()
-  {
+  AbstractCanonical<bool>* CanonicalLogicallySeeking() {
     return &mLogicallySeeking;
   }
-  AbstractCanonical<bool>* CanonicalSameOriginMedia()
-  {
+  AbstractCanonical<bool>* CanonicalSameOriginMedia() {
     return &mSameOriginMedia;
   }
-  AbstractCanonical<PrincipalHandle>* CanonicalMediaPrincipalHandle()
-  {
+  AbstractCanonical<PrincipalHandle>* CanonicalMediaPrincipalHandle() {
     return &mMediaPrincipalHandle;
   }
 
-private:
+ private:
   // Notify owner when the audible state changed
   void NotifyAudibleStateChanged();
 
@@ -684,6 +644,6 @@ private:
   bool mCanPlayThrough = false;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

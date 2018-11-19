@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #ifndef SINF_PARSER_H_
 #define SINF_PARSER_H_
 
@@ -14,17 +13,12 @@ namespace mozilla {
 
 class Box;
 
-class Sinf : public Atom
-{
-public:
-  Sinf()
-    : mDefaultIVSize(0)
-    , mDefaultEncryptionType()
-  {}
+class Sinf : public Atom {
+ public:
+  Sinf() : mDefaultIVSize(0), mDefaultEncryptionType() {}
   explicit Sinf(Box& aBox);
 
-  virtual bool IsValid() override
-  {
+  virtual bool IsValid() override {
     return !!mDefaultIVSize && !!mDefaultEncryptionType;
   }
 
@@ -33,13 +27,13 @@ public:
   uint8_t mDefaultKeyID[16];
 };
 
-class SinfParser
-{
-public:
+class SinfParser {
+ public:
   explicit SinfParser(Box& aBox);
 
   Sinf& GetSinf() { return mSinf; }
-private:
+
+ private:
   Result<Ok, nsresult> ParseSchm(Box& aBox);
   Result<Ok, nsresult> ParseSchi(Box& aBox);
   Result<Ok, nsresult> ParseTenc(Box& aBox);
@@ -47,6 +41,6 @@ private:
   Sinf mSinf;
 };
 
-}
+}  // namespace mozilla
 
-#endif // SINF_PARSER_H_
+#endif  // SINF_PARSER_H_

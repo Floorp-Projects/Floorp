@@ -21,29 +21,21 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SpeechRecognitionResult)
 NS_INTERFACE_MAP_END
 
 SpeechRecognitionResult::SpeechRecognitionResult(SpeechRecognition* aParent)
-  : mParent(aParent)
-{
-}
+    : mParent(aParent) {}
 
-SpeechRecognitionResult::~SpeechRecognitionResult()
-{
-}
+SpeechRecognitionResult::~SpeechRecognitionResult() {}
 
-JSObject*
-SpeechRecognitionResult::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SpeechRecognitionResult::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return SpeechRecognitionResult_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsISupports*
-SpeechRecognitionResult::GetParentObject() const
-{
+nsISupports* SpeechRecognitionResult::GetParentObject() const {
   return static_cast<DOMEventTargetHelper*>(mParent.get());
 }
 
 already_AddRefed<SpeechRecognitionAlternative>
-SpeechRecognitionResult::IndexedGetter(uint32_t aIndex, bool& aPresent)
-{
+SpeechRecognitionResult::IndexedGetter(uint32_t aIndex, bool& aPresent) {
   if (aIndex >= Length()) {
     aPresent = false;
     return nullptr;
@@ -53,24 +45,17 @@ SpeechRecognitionResult::IndexedGetter(uint32_t aIndex, bool& aPresent)
   return Item(aIndex);
 }
 
-uint32_t
-SpeechRecognitionResult::Length() const
-{
-  return mItems.Length();
-}
+uint32_t SpeechRecognitionResult::Length() const { return mItems.Length(); }
 
-already_AddRefed<SpeechRecognitionAlternative>
-SpeechRecognitionResult::Item(uint32_t aIndex)
-{
+already_AddRefed<SpeechRecognitionAlternative> SpeechRecognitionResult::Item(
+    uint32_t aIndex) {
   RefPtr<SpeechRecognitionAlternative> alternative = mItems.ElementAt(aIndex);
   return alternative.forget();
 }
 
-bool
-SpeechRecognitionResult::IsFinal() const
-{
-  return true; // TODO
+bool SpeechRecognitionResult::IsFinal() const {
+  return true;  // TODO
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

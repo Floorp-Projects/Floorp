@@ -18,20 +18,19 @@ namespace gmp {
 
 class GMPChild;
 
-class GMPTimerChild : public PGMPTimerChild
-{
-public:
+class GMPTimerChild : public PGMPTimerChild {
+ public:
   NS_INLINE_DECL_REFCOUNTING(GMPTimerChild)
 
   explicit GMPTimerChild(GMPChild* aPlugin);
 
   GMPErr SetTimer(GMPTask* aTask, int64_t aTimeoutMS);
 
-protected:
+ protected:
   // GMPTimerChild
   mozilla::ipc::IPCResult RecvTimerExpired(const uint32_t& aTimerId) override;
 
-private:
+ private:
   ~GMPTimerChild();
 
   nsDataHashtable<nsUint32HashKey, GMPTask*> mTimers;
@@ -40,7 +39,7 @@ private:
   GMPChild* mPlugin;
 };
 
-} // namespace gmp
-} // namespace mozilla
+}  // namespace gmp
+}  // namespace mozilla
 
-#endif // GMPTimerChild_h_
+#endif  // GMPTimerChild_h_

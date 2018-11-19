@@ -24,32 +24,25 @@
 namespace mozilla {
 namespace ipc {
 class CrashReporterHost;
-} // namespace ipc
+}  // namespace ipc
 namespace gmp {
 
-class GMPCapability
-{
-public:
+class GMPCapability {
+ public:
   explicit GMPCapability() {}
   GMPCapability(GMPCapability&& aOther)
-    : mAPIName(std::move(aOther.mAPIName))
-    , mAPITags(std::move(aOther.mAPITags))
-  {
-  }
-  explicit GMPCapability(const nsCString& aAPIName)
-    : mAPIName(aAPIName)
-  {}
+      : mAPIName(std::move(aOther.mAPIName)),
+        mAPITags(std::move(aOther.mAPITags)) {}
+  explicit GMPCapability(const nsCString& aAPIName) : mAPIName(aAPIName) {}
   explicit GMPCapability(const GMPCapability& aOther) = default;
   nsCString mAPIName;
   nsTArray<nsCString> mAPITags;
 
   static bool Supports(const nsTArray<GMPCapability>& aCapabilities,
-                       const nsCString& aAPI,
-                       const nsTArray<nsCString>& aTags);
+                       const nsCString& aAPI, const nsTArray<nsCString>& aTags);
 
   static bool Supports(const nsTArray<GMPCapability>& aCapabilities,
-                       const nsCString& aAPI,
-                       const nsCString& aTag);
+                       const nsCString& aAPI, const nsCString& aTag);
 };
 
 enum GMPState {
@@ -61,14 +54,14 @@ enum GMPState {
 
 class GMPContentParent;
 
-class GMPParent final : public PGMPParent
-{
-public:
+class GMPParent final : public PGMPParent {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPParent)
 
   explicit GMPParent(AbstractThread* aMainThread);
 
-  RefPtr<GenericPromise> Init(GeckoMediaPluginServiceParent* aService, nsIFile* aPluginDir);
+  RefPtr<GenericPromise> Init(GeckoMediaPluginServiceParent* aService,
+                              nsIFile* aPluginDir);
   nsresult CloneFrom(const GMPParent* aOther);
 
   void Crash();
@@ -135,53 +128,59 @@ public:
 
   bool OpenPGMPContent();
 
-  void GetGMPContentParent(UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>>&& aPromiseHolder);
+  void GetGMPContentParent(
+      UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>>&& aPromiseHolder);
   already_AddRefed<GMPContentParent> ForgetGMPContentParent();
 
   bool EnsureProcessLoaded(base::ProcessId* aID);
 
   void IncrementGMPContentChildCount();
 
-  const nsTArray<GMPCapability>& GetCapabilities() const { return mCapabilities; }
+  const nsTArray<GMPCapability>& GetCapabilities() const {
+    return mCapabilities;
+  }
 
-private:
+ private:
   ~GMPParent();
 
   RefPtr<GeckoMediaPluginServiceParent> mService;
   bool EnsureProcessLoaded();
   RefPtr<GenericPromise> ReadGMPMetaData();
   RefPtr<GenericPromise> ReadGMPInfoFile(nsIFile* aFile);
-  RefPtr<GenericPromise> ParseChromiumManifest(const nsAString& aJSON); // Main thread.
-  RefPtr<GenericPromise> ReadChromiumManifestFile(nsIFile* aFile); // GMP thread.
+  RefPtr<GenericPromise> ParseChromiumManifest(
+      const nsAString& aJSON);  // Main thread.
+  RefPtr<GenericPromise> ReadChromiumManifestFile(
+      nsIFile* aFile);  // GMP thread.
   void WriteExtraDataForMinidump();
   bool GetCrashID(nsString& aResult);
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvInitCrashReporter(Shmem&& shmem, const NativeThreadId& aThreadId) override;
+  mozilla::ipc::IPCResult RecvInitCrashReporter(
+      Shmem&& shmem, const NativeThreadId& aThreadId) override;
 
-  mozilla::ipc::IPCResult RecvPGMPStorageConstructor(PGMPStorageParent* actor) override;
+  mozilla::ipc::IPCResult RecvPGMPStorageConstructor(
+      PGMPStorageParent* actor) override;
   PGMPStorageParent* AllocPGMPStorageParent() override;
   bool DeallocPGMPStorageParent(PGMPStorageParent* aActor) override;
 
-  mozilla::ipc::IPCResult RecvPGMPTimerConstructor(PGMPTimerParent* actor) override;
+  mozilla::ipc::IPCResult RecvPGMPTimerConstructor(
+      PGMPTimerParent* actor) override;
   PGMPTimerParent* AllocPGMPTimerParent() override;
   bool DeallocPGMPTimerParent(PGMPTimerParent* aActor) override;
 
   mozilla::ipc::IPCResult RecvPGMPContentChildDestroyed() override;
-  bool IsUsed()
-  {
-    return mGMPContentChildCount > 0 ||
-           !mGetContentParentPromises.IsEmpty();
+  bool IsUsed() {
+    return mGMPContentChildCount > 0 || !mGetContentParentPromises.IsEmpty();
   }
 
   void ResolveGetContentParentPromises();
   void RejectGetContentParentPromises();
 
   GMPState mState;
-  nsCOMPtr<nsIFile> mDirectory; // plugin directory on disk
-  nsString mName; // base name of plugin on disk, UTF-16 because used for paths
-  nsCString mDisplayName; // name of plugin displayed to users
-  nsCString mDescription; // description of plugin for display to users
+  nsCOMPtr<nsIFile> mDirectory;  // plugin directory on disk
+  nsString mName;  // base name of plugin on disk, UTF-16 because used for paths
+  nsCString mDisplayName;  // name of plugin displayed to users
+  nsCString mDescription;  // description of plugin for display to users
   nsCString mVersion;
 #ifdef XP_WIN
   nsCString mLibs;
@@ -204,7 +203,8 @@ private:
   // This is used for GMP content in the parent, there may be more of these in
   // the content processes.
   RefPtr<GMPContentParent> mGMPContentParent;
-  nsTArray<UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>>> mGetContentParentPromises;
+  nsTArray<UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>>>
+      mGetContentParentPromises;
   uint32_t mGMPContentChildCount;
 
   int mChildPid;
@@ -220,7 +220,7 @@ private:
   const RefPtr<AbstractThread> mMainThread;
 };
 
-} // namespace gmp
-} // namespace mozilla
+}  // namespace gmp
+}  // namespace mozilla
 
-#endif // GMPParent_h_
+#endif  // GMPParent_h_

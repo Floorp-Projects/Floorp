@@ -13,35 +13,32 @@ namespace mozilla {
 
 class PureOmxPlatformLayer;
 
-class PureOmxBufferData : public OmxPromiseLayer::BufferData
-{
-protected:
+class PureOmxBufferData : public OmxPromiseLayer::BufferData {
+ protected:
   virtual ~PureOmxBufferData();
 
-public:
+ public:
   PureOmxBufferData(const PureOmxPlatformLayer& aPlatformLayer,
                     const OMX_PARAM_PORTDEFINITIONTYPE& aPortDef);
 
   void ReleaseBuffer();
   OMX_DIRTYPE GetPortDirection() const { return mPortDef.eDir; };
 
-protected:
+ protected:
   bool ShouldUseEGLImage();
 
   const PureOmxPlatformLayer& mPlatformLayer;
   const OMX_PARAM_PORTDEFINITIONTYPE mPortDef;
 };
 
-class PureOmxPlatformLayer : public OmxPlatformLayer
-{
-public:
+class PureOmxPlatformLayer : public OmxPlatformLayer {
+ public:
   static bool Init(void);
 
   static bool SupportsMimeType(const nsACString& aMimeType);
 
   PureOmxPlatformLayer(OmxDataDecoder* aDataDecoder,
-                       OmxPromiseLayer* aPromiseLayer,
-                       TaskQueue* aTaskQueue,
+                       OmxPromiseLayer* aPromiseLayer, TaskQueue* aTaskQueue,
                        layers::ImageContainer* aImageContainer);
 
   virtual ~PureOmxPlatformLayer();
@@ -52,13 +49,14 @@ public:
 
   OMX_ERRORTYPE FillThisBuffer(BufferData* aData) override;
 
-  OMX_ERRORTYPE SendCommand(OMX_COMMANDTYPE aCmd,
-                            OMX_U32 aParam1,
+  OMX_ERRORTYPE SendCommand(OMX_COMMANDTYPE aCmd, OMX_U32 aParam1,
                             OMX_PTR aCmdData) override;
 
-  nsresult AllocateOmxBuffer(OMX_DIRTYPE aType, BUFFERLIST* aBufferList) override;
+  nsresult AllocateOmxBuffer(OMX_DIRTYPE aType,
+                             BUFFERLIST* aBufferList) override;
 
-  nsresult ReleaseOmxBuffer(OMX_DIRTYPE aType, BUFFERLIST* aBufferList) override;
+  nsresult ReleaseOmxBuffer(OMX_DIRTYPE aType,
+                            BUFFERLIST* aBufferList) override;
 
   OMX_ERRORTYPE GetState(OMX_STATETYPE* aType) override;
 
@@ -74,12 +72,9 @@ public:
 
   OMX_HANDLETYPE GetComponent() const { return mComponent; };
 
-  static OMX_ERRORTYPE EventHandler(OMX_HANDLETYPE hComponent,
-                                    OMX_PTR pAppData,
-                                    OMX_EVENTTYPE eEventType,
-                                    OMX_U32 nData1,
-                                    OMX_U32 nData2,
-                                    OMX_PTR pEventData);
+  static OMX_ERRORTYPE EventHandler(OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
+                                    OMX_EVENTTYPE eEventType, OMX_U32 nData1,
+                                    OMX_U32 nData2, OMX_PTR pEventData);
   static OMX_ERRORTYPE EmptyBufferDone(OMX_HANDLETYPE hComponent,
                                        OMX_IN OMX_PTR pAppData,
                                        OMX_IN OMX_BUFFERHEADERTYPE* pBuffer);
@@ -87,7 +82,7 @@ public:
                                       OMX_OUT OMX_PTR pAppData,
                                       OMX_OUT OMX_BUFFERHEADERTYPE* pBuffer);
 
-protected:
+ protected:
   static bool FindStandardComponent(const nsACString& aMimeType,
                                     nsACString* aComponentName);
 
@@ -95,14 +90,12 @@ protected:
   nsresult FindPortDefinition(OMX_DIRTYPE aType,
                               OMX_PARAM_PORTDEFINITIONTYPE& portDef);
 
-  OMX_ERRORTYPE EventHandler(OMX_EVENTTYPE eEventType,
-                             OMX_U32 nData1,
-                             OMX_U32 nData2,
-                             OMX_PTR pEventData);
+  OMX_ERRORTYPE EventHandler(OMX_EVENTTYPE eEventType, OMX_U32 nData1,
+                             OMX_U32 nData2, OMX_PTR pEventData);
   OMX_ERRORTYPE EmptyBufferDone(OMX_IN OMX_BUFFERHEADERTYPE* pBuffer);
   OMX_ERRORTYPE FillBufferDone(OMX_OUT OMX_BUFFERHEADERTYPE* pBuffer);
 
-protected:
+ protected:
   static OMX_CALLBACKTYPE sCallbacks;
 
   OMX_HANDLETYPE mComponent;
@@ -112,6 +105,6 @@ protected:
   RefPtr<layers::ImageContainer> mImageContainer;
 };
 
-}
+}  // namespace mozilla
 
-#endif // PureOmxPlatformLayer_h_
+#endif  // PureOmxPlatformLayer_h_

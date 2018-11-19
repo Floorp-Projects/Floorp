@@ -13,20 +13,15 @@ namespace mozilla {
 namespace gmp {
 
 GMPTimerChild::GMPTimerChild(GMPChild* aPlugin)
-  : mTimerCount(1)
-  , mPlugin(aPlugin)
-{
+    : mTimerCount(1), mPlugin(aPlugin) {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 }
 
-GMPTimerChild::~GMPTimerChild()
-{
+GMPTimerChild::~GMPTimerChild() {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 }
 
-GMPErr
-GMPTimerChild::SetTimer(GMPTask* aTask, int64_t aTimeoutMS)
-{
+GMPErr GMPTimerChild::SetTimer(GMPTask* aTask, int64_t aTimeoutMS) {
   if (!aTask) {
     NS_WARNING("Tried to set timer with null task!");
     return GMPGenericErr;
@@ -50,9 +45,8 @@ GMPTimerChild::SetTimer(GMPTask* aTask, int64_t aTimeoutMS)
   return GMPNoErr;
 }
 
-mozilla::ipc::IPCResult
-GMPTimerChild::RecvTimerExpired(const uint32_t& aTimerId)
-{
+mozilla::ipc::IPCResult GMPTimerChild::RecvTimerExpired(
+    const uint32_t& aTimerId) {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
   GMPTask* task = mTimers.Get(aTimerId);
@@ -63,5 +57,5 @@ GMPTimerChild::RecvTimerExpired(const uint32_t& aTimerId)
   return IPC_OK();
 }
 
-} // namespace gmp
-} // namespace mozilla
+}  // namespace gmp
+}  // namespace mozilla

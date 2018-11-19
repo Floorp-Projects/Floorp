@@ -15,13 +15,15 @@ namespace mozilla {
 namespace dom {
 
 #define MOZILLA_DOM_MEDIADEVICEINFO_IMPLEMENTATION_IID \
-{0x25091870, 0x84d6, 0x4acf, {0xaf, 0x97, 0x6e, 0xd5, 0x5b, 0xe0, 0x47, 0xb2}}
+  {                                                    \
+    0x25091870, 0x84d6, 0x4acf, {                      \
+      0xaf, 0x97, 0x6e, 0xd5, 0x5b, 0xe0, 0x47, 0xb2   \
+    }                                                  \
+  }
 
-class MediaDeviceInfo final : public nsISupports, public nsWrapperCache
-{
-public:
-  explicit MediaDeviceInfo(const nsAString& aDeviceId,
-                           MediaDeviceKind aKind,
+class MediaDeviceInfo final : public nsISupports, public nsWrapperCache {
+ public:
+  explicit MediaDeviceInfo(const nsAString& aDeviceId, MediaDeviceKind aKind,
                            const nsAString& aLabel,
                            const nsAString& aGroupId = nsString());
 
@@ -29,8 +31,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaDeviceInfo)
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOM_MEDIADEVICEINFO_IMPLEMENTATION_IID)
 
-  JSObject*
-  WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* cx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   nsISupports* GetParentObject();
 
@@ -39,7 +41,7 @@ public:
   void GetLabel(nsString& retval);
   void GetGroupId(nsString& retval);
 
-private:
+ private:
   MediaDeviceKind mKind;
   nsString mDeviceId;
   nsString mLabel;
@@ -51,7 +53,7 @@ private:
 NS_DEFINE_STATIC_IID_ACCESSOR(MediaDeviceInfo,
                               MOZILLA_DOM_MEDIADEVICEINFO_IMPLEMENTATION_IID)
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MediaDeviceInfo_h
+#endif  // mozilla_dom_MediaDeviceInfo_h

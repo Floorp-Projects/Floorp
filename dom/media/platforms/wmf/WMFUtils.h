@@ -21,20 +21,12 @@ namespace mozilla {
 // Converts from microseconds to hundreds of nanoseconds.
 // We use microseconds for our timestamps, whereas WMF uses
 // hundreds of nanoseconds.
-inline int64_t
-UsecsToHNs(int64_t aUsecs)
-{
-  return aUsecs * 10;
-}
+inline int64_t UsecsToHNs(int64_t aUsecs) { return aUsecs * 10; }
 
 // Converts from hundreds of nanoseconds to microseconds.
 // We use microseconds for our timestamps, whereas WMF uses
 // hundreds of nanoseconds.
-inline int64_t
-HNsToUsecs(int64_t hNanoSecs)
-{
-  return hNanoSecs / 10;
-}
+inline int64_t HNsToUsecs(int64_t hNanoSecs) { return hNanoSecs / 10; }
 
 HRESULT HNsToFrames(int64_t aHNs, uint32_t aRate, int64_t* aOutFrames);
 
@@ -46,7 +38,8 @@ YUVColorSpace GetYUVColorSpace(IMFMediaType* aType);
 int32_t MFOffsetToInt32(const MFOffset& aOffset);
 
 // Gets the sub-region of the video frame that should be displayed.
-// See: http://msdn.microsoft.com/en-us/library/windows/desktop/bb530115(v=vs.85).aspx
+// See:
+// http://msdn.microsoft.com/en-us/library/windows/desktop/bb530115(v=vs.85).aspx
 HRESULT
 GetPictureRegion(IMFMediaType* aMediaType, gfx::IntRect& aOutPictureRegion);
 
@@ -58,15 +51,13 @@ media::TimeUnit GetSampleDuration(IMFSample* aSample);
 // Returns media::TimeUnit::Invalid() on failure.
 media::TimeUnit GetSampleTime(IMFSample* aSample);
 
-inline bool
-IsFlagSet(DWORD flags, DWORD pattern)
-{
+inline bool IsFlagSet(DWORD flags, DWORD pattern) {
   return (flags & pattern) == pattern;
 }
 
 // Will return %ProgramW6432% value as per:
 // https://msdn.microsoft.com/library/windows/desktop/aa384274.aspx
 nsString GetProgramW6432Path();
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif
