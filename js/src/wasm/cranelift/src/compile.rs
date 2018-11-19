@@ -165,7 +165,7 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
         // Cranelift computes the total stack frame size including the pushed return address,
         // standard SM prologue pushes, and its own stack slots.
         let total = self.context.func.stack_slots.frame_size.expect("No frame");
-        let sm_pushed = self.isa.flags().baldrdash_prologue_words() as StackSize
+        let sm_pushed = StackSize::from(self.isa.flags().baldrdash_prologue_words())
             * mem::size_of::<usize>() as StackSize;
         total
             .checked_sub(sm_pushed)
@@ -269,8 +269,8 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
             _ => panic!("Bad format for call"),
         };
 
-        let func_index = match callee {
-            &ir::ExternalName::User {
+        let func_index = match *callee {
+            ir::ExternalName::User {
                 namespace: 0,
                 index,
             } => FuncIndex::new(index as usize),
@@ -442,11 +442,11 @@ impl<'a> RelocSink for EmitEnv<'a> {
         _addend: Addend,
     ) {
         // Decode the function name.
-        match name {
-            &ir::ExternalName::User { namespace: 0, .. } => {
+        match *name {
+            ir::ExternalName::User { namespace: 0, .. } => {
                 // This is a direct function call handled by `emit_metadata` above.
             }
-            &ir::ExternalName::User {
+            ir::ExternalName::User {
                 namespace: 1,
                 index,
             } => {
@@ -457,7 +457,7 @@ impl<'a> RelocSink for EmitEnv<'a> {
                 self.metadata
                     .push(bd::MetadataEntry::symbolic_access(offset, sym));
             }
-            &ir::ExternalName::LibCall(call) => {
+            ir::ExternalName::LibCall(call) => {
                 let sym = match call {
                     ir::LibCall::CeilF32 => bd::SymbolicAddress::CeilF32,
                     ir::LibCall::CeilF64 => bd::SymbolicAddress::CeilF64,
