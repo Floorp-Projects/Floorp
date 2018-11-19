@@ -870,6 +870,17 @@
     "bug_numbers": [1485299],
     "description": "The percentage of nursery objects that were promoted to tenured heap."
   },
+  "GC_MARK_RATE": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1000,
+    "high": 1000000,
+    "n_buckets": 100,
+    "bug_numbers": [1475896],
+    "description": "The number of objects marked per ms during GC."
+  },
   "GEOLOCATION_ACCURACY_EXPONENTIAL": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",

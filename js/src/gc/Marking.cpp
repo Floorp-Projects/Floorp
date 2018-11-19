@@ -971,11 +971,10 @@ bool js::GCMarker::mark(T* thing) {
   AssertShouldMarkInZone(thing);
   TenuredCell* cell = TenuredCell::fromPointer(thing);
 
-  if (!TypeParticipatesInCC<T>::value) {
-    return cell->markIfUnmarked(MarkColor::Black);
-  }
-
-  return cell->markIfUnmarked(markColor());
+  MarkColor color = TypeParticipatesInCC<T>::value ? markColor()
+                                                   : MarkColor::Black;
+  markCount++;
+  return cell->markIfUnmarked(color);
 }
 
 /*** Inline, Eager GC Marking ***********************************************/
