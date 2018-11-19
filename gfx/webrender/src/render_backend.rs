@@ -51,6 +51,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::mem::replace;
 use std::os::raw::c_void;
 use std::sync::mpsc::{channel, Sender, Receiver};
+use std::time::{UNIX_EPOCH, SystemTime};
 use std::u32;
 #[cfg(feature = "replay")]
 use tiling::Frame;
@@ -127,6 +128,67 @@ impl ::std::ops::Sub<usize> for FrameId {
     }
 }
 
+/// Identifier to track a sequence of frames.
+///
+/// This is effectively a `FrameId` with a ridealong timestamp corresponding
+/// to when advance() was called, which allows for more nuanced cache eviction
+/// decisions. As such, we use the `FrameId` for equality and comparison, since
+/// we should never have two `FrameStamps` with the same id but different
+/// timestamps.
+#[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct FrameStamp {
+    id: FrameId,
+    time: SystemTime,
+}
+
+impl Eq for FrameStamp {}
+
+impl PartialEq for FrameStamp {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl PartialOrd for FrameStamp {
+    fn partial_cmp(&self, other: &Self) -> Option<::std::cmp::Ordering> {
+        self.id.partial_cmp(&other.id)
+    }
+}
+
+impl FrameStamp {
+    /// Gets the FrameId in this stamp.
+    pub fn frame_id(&self) -> FrameId {
+        self.id
+    }
+
+    /// Gets the time associated with this FrameStamp.
+    pub fn time(&self) -> SystemTime {
+        self.time
+    }
+
+    /// Returns a FrameStamp corresponding to the first frame.
+    pub fn first() -> Self {
+        FrameStamp {
+            id: FrameId::first(),
+            time: SystemTime::now(),
+        }
+    }
+
+    /// Advances to a new frame.
+    pub fn advance(&mut self) {
+        self.id.advance();
+        self.time = SystemTime::now();
+    }
+
+    /// An invalid sentinel FrameStamp.
+    pub const INVALID: FrameStamp = FrameStamp {
+        id: FrameId(0),
+        time: UNIX_EPOCH,
+    };
+}
+
 // A collection of resources that are shared by clips, primitives
 // between display lists.
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -166,8 +228,8 @@ struct Document {
     /// frames.
     clip_scroll_tree: ClipScrollTree,
 
-    /// The id of the current frame.
-    frame_id: FrameId,
+    /// The id and time of the current frame.
+    stamp: FrameStamp,
 
     // the `Option` here is only to deal with borrow checker
     frame_builder: Option<FrameBuilder>,
@@ -214,7 +276,7 @@ impl Document {
                 device_pixel_ratio: default_device_pixel_ratio,
             },
             clip_scroll_tree: ClipScrollTree::new(),
-            frame_id: FrameId::first(),
+            stamp: FrameStamp::first(),
             frame_builder: None,
             output_pipelines: FastHashSet::default(),
             hit_tester: None,
@@ -343,7 +405,7 @@ impl Document {
         let accumulated_scale_factor = self.view.accumulated_scale_factor();
         let pan = self.view.pan.to_f32() / accumulated_scale_factor;
 
-        assert!(self.frame_id != FrameId::INVALID,
+        assert!(self.stamp.frame_id() != FrameId::INVALID,
                 "First frame increment must happen before build_frame()");
 
         let frame = {
@@ -351,7 +413,7 @@ impl Document {
             let frame = frame_builder.build(
                 resource_cache,
                 gpu_cache,
-                self.frame_id,
+                self.stamp,
                 &mut self.clip_scroll_tree,
                 &self.scene.pipelines,
                 accumulated_scale_factor,
@@ -447,7 +509,7 @@ impl Document {
         self.clip_scroll_tree.finalize_and_apply_pending_scroll_offsets(old_scrolling_states);
 
         // Advance to the next frame.
-        self.frame_id.advance();
+        self.stamp.advance();
     }
 }
 
@@ -1517,7 +1579,7 @@ impl RenderBackend {
                 removed_pipelines: Vec::new(),
                 view: view.clone(),
                 clip_scroll_tree: ClipScrollTree::new(),
-                frame_id: FrameId::first(),
+                stamp: FrameStamp::first(),
                 frame_builder: Some(FrameBuilder::empty()),
                 output_pipelines: FastHashSet::default(),
                 dynamic_properties: SceneProperties::new(),
