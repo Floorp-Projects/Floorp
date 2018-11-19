@@ -227,6 +227,8 @@ private:
                          recordreplay::Behavior::DontPreserve> sActiveAndFeatures;
 };
 
+bool IsThreadBeingProfiled();
+
 } // namespace detail
 } // namespace profiler
 } // namespace mozilla
@@ -392,6 +394,14 @@ void profiler_clear_js_context();
 inline bool profiler_is_active()
 {
   return mozilla::profiler::detail::RacyFeatures::IsActive();
+}
+
+// Is the profiler active, and is the current thread being profiled?
+// (Same caveats and recommented usage as profiler_is_active().)
+inline bool profiler_thread_is_being_profiled()
+{
+  return profiler_is_active() &&
+         mozilla::profiler::detail::IsThreadBeingProfiled();
 }
 
 // Is the profiler active and paused? Returns false if the profiler is inactive.
