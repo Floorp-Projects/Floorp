@@ -1285,7 +1285,7 @@ Module::instantiate(JSContext* cx,
                     HandleObject instanceProto,
                     MutableHandleWasmInstanceObject instance) const
 {
-    MOZ_RELEASE_ASSERT(metadata().isAsmJS() || cx->wasmHaveSignalHandlers);
+    MOZ_RELEASE_ASSERT(cx->wasmHaveSignalHandlers);
 
     if (!instantiateFunctions(cx, funcImports)) {
         return false;

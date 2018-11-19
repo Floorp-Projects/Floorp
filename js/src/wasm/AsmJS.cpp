@@ -6635,6 +6635,12 @@ TryInstantiate(JSContext* cx, CallArgs args, const Module& module, const AsmJSMe
     HandleValue importVal = args.get(1);
     HandleValue bufferVal = args.get(2);
 
+    // Re-check HasCompilerSupport(cx) since this varies per-thread and
+    // 'module' may have been produced on a parser thread.
+    if (!HasCompilerSupport(cx)) {
+        return LinkFail(cx, "no compiler support");
+    }
+
     RootedArrayBufferObjectMaybeShared buffer(cx);
     RootedWasmMemoryObject memory(cx);
     if (module.metadata().usesMemory()) {
