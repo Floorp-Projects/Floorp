@@ -9,12 +9,14 @@
 #include "SharedWorkerService.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/dom/PSharedWorker.h"
+#include "mozilla/dom/ServiceWorkerInterceptController.h"
 #include "mozilla/dom/WorkerError.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/workerinternals/ScriptLoader.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "nsIConsoleReportCollector.h"
+#include "nsINetworkInterceptController.h"
 #include "nsIPrincipal.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
@@ -53,6 +55,41 @@ private:
     return WorkerRunnable::Cancel();
   }
 };
+
+class SharedWorkerInterfaceRequestor final : public nsIInterfaceRequestor
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  SharedWorkerInterfaceRequestor()
+    : mSWController(new ServiceWorkerInterceptController())
+  {}
+
+  NS_IMETHOD
+  GetInterface(const nsIID& aIID, void** aSink) override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (aIID.Equals(NS_GET_IID(nsINetworkInterceptController))) {
+      // If asked for the network intercept controller, ask the outer requestor,
+      // which could be the docshell.
+      RefPtr<ServiceWorkerInterceptController> swController = mSWController;
+      swController.forget(aSink);
+      return NS_OK;
+    }
+
+    return NS_NOINTERFACE;
+  }
+
+private:
+  ~SharedWorkerInterfaceRequestor() = default;
+
+  RefPtr<ServiceWorkerInterceptController> mSWController;
+};
+
+NS_IMPL_ADDREF(SharedWorkerInterfaceRequestor)
+NS_IMPL_RELEASE(SharedWorkerInterfaceRequestor)
+NS_IMPL_QUERY_INTERFACE(SharedWorkerInterfaceRequestor, nsIInterfaceRequestor)
 
 } // anonymous
 
@@ -133,7 +170,15 @@ SharedWorkerManager::CreateWorkerOnMainThread()
 
   WorkerPrivate::OverrideLoadInfoLoadGroup(info, info.mLoadingPrincipal);
 
+  RefPtr<SharedWorkerInterfaceRequestor> requestor =
+    new SharedWorkerInterfaceRequestor();
+  info.mInterfaceRequestor->SetOuterRequestor(requestor);
+
   rv = info.SetPrincipalOnMainThread(info.mPrincipal, info.mLoadGroup);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   Maybe<ClientInfo> clientInfo;
   if (mInfo.clientInfo().type() == OptionalIPCClientInfo::TIPCClientInfo) {
     clientInfo.emplace(ClientInfo(mInfo.clientInfo().get_IPCClientInfo()));
