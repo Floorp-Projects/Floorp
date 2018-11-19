@@ -691,15 +691,23 @@ async function sanitizeOnShutdown(progress) {
 
   // Let's see if we have to forget some particular site.
   for (let permission of Services.perms.enumerator) {
-    if (permission.type == "cookie" && permission.capability == Ci.nsICookiePermission.ACCESS_SESSION) {
-      // We use just the URI here, because permissions ignore OriginAttributes.
-      let principals = await getAllPrincipals(permission.principal.URI);
-      let promises = [];
-      principals.forEach(principal => {
-        promises.push(sanitizeSessionPrincipal(principal));
-      });
-      await Promise.all(promises);
+    if (permission.type != "cookie" ||
+        permission.capability != Ci.nsICookiePermission.ACCESS_SESSION) {
+      continue;
     }
+
+    // We consider just permissions set for http, https and file URLs.
+    if (!isSupportedURI(permission.principal.URI)) {
+      continue;
+    }
+
+    // We use just the URI here, because permissions ignore OriginAttributes.
+    let principals = await getAllPrincipals(permission.principal.URI);
+    let promises = [];
+    principals.forEach(principal => {
+      promises.push(sanitizeSessionPrincipal(principal));
+    });
+    await Promise.all(promises);
   }
 
   if (Sanitizer.shouldSanitizeNewTabContainer) {
@@ -732,8 +740,11 @@ async function getAllPrincipals(matchUri = null) {
       for (let item of request.result) {
         let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
         let uri = principal.URI;
-        if ((!matchUri || Services.eTLD.hasRootDomain(matchUri.host, uri.host)) &&
-            (uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "file")) {
+        if (!isSupportedURI(uri)) {
+          continue;
+        }
+
+        if (!matchUri || Services.eTLD.hasRootDomain(matchUri.host, uri.host)) {
           list.push(principal);
         }
       }
@@ -745,6 +756,7 @@ async function getAllPrincipals(matchUri = null) {
   for (let i = 0; i < serviceWorkers.length; i++) {
     let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
     let uri = sw.principal.URI;
+    // We don't need to check the scheme. SW are just exposed to http/https URLs.
     if (!matchUri || Services.eTLD.hasRootDomain(matchUri.host, uri.host)) {
       principals.push(sw.principal);
     }
@@ -800,6 +812,11 @@ function cookiesAllowedForDomainOrSubDomain(principal) {
 
   for (let perm of Services.perms.enumerator) {
     if (perm.type != "cookie") {
+      continue;
+    }
+
+    // We consider just permissions set for http, https and file URLs.
+    if (!isSupportedURI(perm.principal.URI)) {
       continue;
     }
 
@@ -859,6 +876,7 @@ function addPendingSanitization(id, itemsToClear, options) {
   Services.prefs.setStringPref(Sanitizer.PREF_PENDING_SANITIZATIONS,
                                JSON.stringify(pendingSanitizations));
 }
+
 function removePendingSanitization(id) {
   let pendingSanitizations = safeGetPendingSanitizations();
   let i = pendingSanitizations.findIndex(s => s.id == id);
@@ -867,12 +885,14 @@ function removePendingSanitization(id) {
     JSON.stringify(pendingSanitizations));
   return s;
 }
+
 function getAndClearPendingSanitizations() {
   let pendingSanitizations = safeGetPendingSanitizations();
   if (pendingSanitizations.length)
     Services.prefs.clearUserPref(Sanitizer.PREF_PENDING_SANITIZATIONS);
   return pendingSanitizations;
 }
+
 function safeGetPendingSanitizations() {
   try {
     return JSON.parse(
@@ -894,4 +914,10 @@ async function clearData(range, flags) {
       Services.clearData.deleteData(flags, resolve);
     });
   }
+}
+
+function isSupportedURI(uri) {
+  return uri.scheme == "http" ||
+         uri.scheme == "https" ||
+         uri.scheme == "file";
 }
