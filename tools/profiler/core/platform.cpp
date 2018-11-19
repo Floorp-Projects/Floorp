@@ -3719,16 +3719,16 @@ racy_profiler_add_marker(const char* aMarkerName,
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  // We don't assert that RacyFeatures::IsActiveWithoutPrivacy() is true here,
-  // because it's possible that the result has changed since we tested it in
-  // the caller.
+  // We don't assert that RacyFeatures::IsActiveWithoutPrivacy() or
+  // RacyRegisteredThread::IsBeingProfiled() is true here, because it's
+  // possible that the result has changed since we tested it in the caller.
   //
   // Because of this imprecision it's possible to miss a marker or record one
   // we shouldn't. Either way is not a big deal.
 
   RacyRegisteredThread* racyRegisteredThread =
     TLSRegisteredThread::RacyRegisteredThread();
-  if (!racyRegisteredThread) {
+  if (!racyRegisteredThread || !racyRegisteredThread->IsBeingProfiled()) {
     return;
   }
 
