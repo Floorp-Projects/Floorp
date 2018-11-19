@@ -1005,14 +1005,12 @@ WasmTokenStream::next()
         if (consume(u"anyref")) {
             return WasmToken(WasmToken::ValueType, ValType::AnyRef, begin, cur_);
         }
-#ifdef ENABLE_WASM_THREAD_OPS
         if (consume(u"atomic.")) {
             if (consume(u"wake") || consume(u"notify")) {
                 return WasmToken(WasmToken::Wake, ThreadOp::Wake, begin, cur_);
             }
             break;
         }
-#endif
         break;
 
       case 'b':
@@ -1365,7 +1363,6 @@ WasmTokenStream::next()
                 if (consume(u"and")) {
                     return WasmToken(WasmToken::BinaryOpcode, Op::I32And, begin, cur_);
                 }
-#ifdef ENABLE_WASM_THREAD_OPS
                 if (consume(u"atomic.")) {
                     if (consume(u"rmw8_u.add")) {
                         return WasmToken(WasmToken::AtomicRMW, ThreadOp::I32AtomicAdd8U, begin, cur_);
@@ -1452,7 +1449,6 @@ WasmTokenStream::next()
                         return WasmToken(WasmToken::Wait, ThreadOp::I32Wait, begin, cur_);
                     }
                 }
-#endif // ENABLE_WASM_THREAD_OPS
                 break;
               case 'c':
                 if (consume(u"const")) {
@@ -1658,7 +1654,6 @@ WasmTokenStream::next()
                 if (consume(u"and")) {
                     return WasmToken(WasmToken::BinaryOpcode, Op::I64And, begin, cur_);
                 }
-#ifdef ENABLE_WASM_THREAD_OPS
                 if (consume(u"atomic.")) {
                     if (consume(u"rmw8_u.add")) {
                         return WasmToken(WasmToken::AtomicRMW, ThreadOp::I64AtomicAdd8U, begin, cur_);
@@ -1772,7 +1767,6 @@ WasmTokenStream::next()
                         return WasmToken(WasmToken::Wait, ThreadOp::I64Wait, begin, cur_);
                     }
                 }
-#endif // ENABLE_WASM_THREAD_OPS
                 break;
               case 'c':
                 if (consume(u"const")) {
@@ -2093,11 +2087,9 @@ WasmTokenStream::next()
         if (consume(u"set_local")) {
             return WasmToken(WasmToken::SetLocal, begin, cur_);
         }
-#ifdef ENABLE_WASM_THREAD_OPS
         if (consume(u"shared")) {
             return WasmToken(WasmToken::Shared, begin, cur_);
         }
-#endif
         if (consume(u"start")) {
             return WasmToken(WasmToken::Start, begin, cur_);
         }

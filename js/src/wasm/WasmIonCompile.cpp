@@ -2774,8 +2774,6 @@ EmitCurrentMemory(FunctionCompiler& f)
     return true;
 }
 
-#ifdef ENABLE_WASM_THREAD_OPS
-
 static bool
 EmitAtomicCmpXchg(FunctionCompiler& f, ValType type, Scalar::Type viewType)
 {
@@ -2979,8 +2977,6 @@ EmitAtomicXchg(FunctionCompiler& f, ValType type, Scalar::Type viewType)
     f.iter().setResult(ins);
     return true;
 }
-
-#endif // ENABLE_WASM_THREAD_OPS
 
 #ifdef ENABLE_WASM_BULKMEM_OPS
 static bool
@@ -3769,7 +3765,6 @@ EmitBodyExprs(FunctionCompiler& f)
 
           // Thread operations
           case uint16_t(Op::ThreadPrefix): {
-#ifdef ENABLE_WASM_THREAD_OPS
             switch (op.b1) {
               case uint16_t(ThreadOp::Wake):
                 CHECK(EmitWake(f));
@@ -3917,9 +3912,6 @@ EmitBodyExprs(FunctionCompiler& f)
               default:
                 return f.iter().unrecognizedOpcode(&op);
             }
-#else
-            return f.iter().unrecognizedOpcode(&op);
-#endif  // ENABLE_WASM_THREAD_OPS
             break;
           }
 
