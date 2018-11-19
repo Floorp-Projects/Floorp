@@ -5295,16 +5295,6 @@ pref("dom.idle-observers-api.fuzz_time.disabled", true);
 // Activates the activity monitor
 pref("io.activity.enabled", false);
 
-// Minimum delay in milliseconds between I/O activity notifications (0 means
-// no notifications). I/O activity includes socket and disk files.
-//
-// The delay is the same for both read and write, though
-// they are handled separately. This pref is only read once at startup:
-// a restart is required to enable a new value.
-//
-// io.activity.enabled needs to be set to true
-pref("io.activity.intervalMilliseconds", 0);
-
 // If true, reuse the same global for (almost) everything loaded by the component
 // loader (JS components, JSMs, etc). This saves memory, but makes it possible
 // for the scripts to interfere with each other.  A restart is required for this
