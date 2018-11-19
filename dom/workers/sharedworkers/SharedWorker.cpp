@@ -19,8 +19,8 @@
 #include "nsContentUtils.h"
 #include "nsIClassInfoImpl.h"
 
-#include "RuntimeService.h"
-#include "WorkerPrivate.h"
+#include "mozilla/dom/workerinternals/RuntimeService.h"
+#include "mozilla/dom/WorkerPrivate.h"
 
 #ifdef XP_WIN
 #undef PostMessage

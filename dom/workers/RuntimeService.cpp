@@ -50,6 +50,7 @@
 #include "mozilla/dom/PerformanceService.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/SharedWorker.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/DebugOnly.h"
@@ -71,7 +72,6 @@
 #include "xpcpublic.h"
 
 #include "Principal.h"
-#include "SharedWorker.h"
 #include "WorkerDebuggerManager.h"
 #include "WorkerError.h"
 #include "WorkerLoadInfo.h"
