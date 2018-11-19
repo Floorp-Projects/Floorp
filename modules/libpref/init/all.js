@@ -1375,10 +1375,6 @@ pref("privacy.popups.disable_from_plugins", 3);
 // Enable Paritioned LocalStorage for a list of hosts.
 pref("privacy.restrict3rdpartystorage.partitionedHosts", "accounts.google.com/o/oauth2/");
 
-// If a host is contained in this pref list, user-interaction is required
-// before granting the storage access permission.
-pref("privacy.restrict3rdpartystorage.userInteractionRequiredForHosts", "");
-
 // Excessive reporting of blocked popups can be a DOS vector,
 // by overloading the main process as popups get blocked and when
 // users try to restore all popups, which is the most visible
