@@ -32,6 +32,7 @@ EXPORTS.mozilla.dom.workerinternals += [
     'JSSettings.h',
     'Queue.h',
     'RuntimeService.h',
+    'ScriptLoader.h',
 ]
 
 XPIDL_MODULE = 'dom_workers'

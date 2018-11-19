@@ -136,6 +136,10 @@ protected:
   virtual mozilla::dom::PSharedWorkerParent*
   AllocPSharedWorkerParent(const mozilla::dom::SharedWorkerLoadInfo& aInfo) override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvPSharedWorkerConstructor(PSharedWorkerParent* aActor,
+                               const mozilla::dom::SharedWorkerLoadInfo& aInfo) override;
+
   virtual bool
   DeallocPSharedWorkerParent(PSharedWorkerParent* aActor) override;
 

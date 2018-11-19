@@ -14,6 +14,10 @@
 namespace mozilla {
 namespace dom {
 
+class SharedWorkerLoadInfo;
+class SharedWorkerManager;
+class SharedWorkerService;
+
 class SharedWorkerParent final : public mozilla::dom::PSharedWorkerParent
 {
 public:
@@ -21,11 +25,61 @@ public:
 
   SharedWorkerParent();
 
+  void
+  Initialize(const SharedWorkerLoadInfo& aInfo);
+
+  void
+  ManagerCreated(SharedWorkerManager* aWorkerManager);
+
+  void
+  ErrorPropagation(nsresult aError);
+
+  mozilla::ipc::IPCResult
+  RecvClose() override;
+
+  mozilla::ipc::IPCResult
+  RecvSuspend() override;
+
+  mozilla::ipc::IPCResult
+  RecvResume() override;
+
+  mozilla::ipc::IPCResult
+  RecvFreeze() override;
+
+  mozilla::ipc::IPCResult
+  RecvThaw() override;
+
+  bool
+  IsSuspended() const
+  {
+    return mSuspended;
+  }
+
+  bool
+  IsFrozen() const
+  {
+    return mSuspended;
+  }
+
 private:
   ~SharedWorkerParent();
 
   void
   ActorDestroy(IProtocol::ActorDestroyReason aReason) override;
+
+  nsCOMPtr<nsIEventTarget> mBackgroundEventTarget;
+  RefPtr<SharedWorkerManager> mWorkerManager;
+  RefPtr<SharedWorkerService> mService;
+
+  enum {
+    eInit,
+    ePending,
+    eActive,
+    eClosed,
+  } mStatus;
+
+  bool mSuspended;
+  bool mFrozen;
 };
 
 } // namespace dom

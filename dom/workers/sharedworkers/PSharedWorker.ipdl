@@ -11,8 +11,16 @@ protocol PSharedWorker
 {
   manager PBackground;
 
+parent:
+  async Close();
+  async Suspend();
+  async Resume();
+  async Freeze();
+  async Thaw();
+
 child:
-  // TODO:
+  async Error(nsresult error);
+
   async __delete__();
 };
 

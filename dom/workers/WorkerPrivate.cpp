@@ -886,39 +886,6 @@ StartsWithExplicit(nsACString& s)
 }
 #endif
 
-class MessagePortRunnable final : public WorkerRunnable
-{
-  MessagePortIdentifier mPortIdentifier;
-
-public:
-  MessagePortRunnable(WorkerPrivate* aWorkerPrivate, MessagePort* aPort)
-  : WorkerRunnable(aWorkerPrivate)
-  {
-    MOZ_ASSERT(aPort);
-    // In order to move the port from one thread to another one, we have to
-    // close and disentangle it. The output will be a MessagePortIdentifier that
-    // will be used to recreate a new MessagePort on the other thread.
-    aPort->CloneAndDisentangle(mPortIdentifier);
-  }
-
-private:
-  ~MessagePortRunnable()
-  { }
-
-  virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
-    return aWorkerPrivate->ConnectMessagePort(aCx, mPortIdentifier);
-  }
-
-  nsresult
-  Cancel() override
-  {
-    MessagePort::ForceClose(mPortIdentifier);
-    return WorkerRunnable::Cancel();
-  }
-};
-
 PRThread*
 PRThreadFromThread(nsIThread* aThread)
 {
@@ -1739,13 +1706,6 @@ WorkerPrivate::Notify(WorkerStatus aStatus)
     mParentStatus = aStatus;
   }
 
-  if (IsSharedWorker()) {
-    RuntimeService* runtime = RuntimeService::GetService();
-    MOZ_ASSERT(runtime);
-
-    runtime->ForgetSharedWorker(this);
-  }
-
   if (pending) {
 #ifdef DEBUG
     {
@@ -1779,35 +1739,6 @@ bool
 WorkerPrivate::Freeze(nsPIDOMWindowInner* aWindow)
 {
   AssertIsOnParentThread();
-
-  // Shared workers are only frozen if all of their owning documents are
-  // frozen. It can happen that mSharedWorkers is empty but this thread has
-  // not been unregistered yet.
-  if ((IsSharedWorker() || IsServiceWorker()) && !mSharedWorkers.IsEmpty()) {
-    AssertIsOnMainThread();
-
-    bool allFrozen = true;
-
-    for (uint32_t i = 0; i < mSharedWorkers.Length(); ++i) {
-      if (aWindow && mSharedWorkers[i]->GetOwner() == aWindow) {
-        // Calling Freeze() may change the refcount, ensure that the worker
-        // outlives this call.
-        RefPtr<SharedWorker> kungFuDeathGrip = mSharedWorkers[i];
-
-        kungFuDeathGrip->Freeze();
-      } else {
-        MOZ_ASSERT_IF(mSharedWorkers[i]->GetOwner() && aWindow,
-                      !SameCOMIdentity(mSharedWorkers[i]->GetOwner(), aWindow));
-        if (!mSharedWorkers[i]->IsFrozen()) {
-          allFrozen = false;
-        }
-      }
-    }
-
-    if (!allFrozen || mParentFrozen) {
-      return true;
-    }
-  }
 
   mParentFrozen = true;
 
@@ -1848,37 +1779,6 @@ bool
 WorkerPrivate::Thaw(nsPIDOMWindowInner* aWindow)
 {
   AssertIsOnParentThread();
-
-  // Shared workers are resumed if any of their owning documents are thawed.
-  // It can happen that mSharedWorkers is empty but this thread has not been
-  // unregistered yet.
-  if ((IsSharedWorker() || IsServiceWorker()) && !mSharedWorkers.IsEmpty()) {
-    AssertIsOnMainThread();
-
-    bool anyRunning = false;
-
-    for (uint32_t i = 0; i < mSharedWorkers.Length(); ++i) {
-      if (aWindow && mSharedWorkers[i]->GetOwner() == aWindow) {
-        // Calling Thaw() may change the refcount, ensure that the worker
-        // outlives this call.
-        RefPtr<SharedWorker> kungFuDeathGrip = mSharedWorkers[i];
-
-        kungFuDeathGrip->Thaw();
-        anyRunning = true;
-      } else {
-        MOZ_ASSERT_IF(mSharedWorkers[i]->GetOwner() && aWindow,
-                      !SameCOMIdentity(mSharedWorkers[i]->GetOwner(), aWindow));
-        if (!mSharedWorkers[i]->IsFrozen()) {
-          anyRunning = true;
-        }
-      }
-    }
-
-    if (!anyRunning || !mParentFrozen) {
-      return true;
-    }
-  }
-
   MOZ_ASSERT(mParentFrozen);
 
   mParentFrozen = false;
@@ -1920,8 +1820,8 @@ void
 WorkerPrivate::ParentWindowPaused()
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT_IF(IsDedicatedWorker(), mParentWindowPausedDepth == 0);
-  mParentWindowPausedDepth += 1;
+  MOZ_ASSERT(!mParentWindowPaused);
+  mParentWindowPaused = true;
 
   // This is called from WorkerPrivate construction, and we may not have
   // allocated mMainThreadDebuggeeEventTarget yet.
@@ -1936,12 +1836,8 @@ WorkerPrivate::ParentWindowResumed()
 {
   AssertIsOnMainThread();
 
-  MOZ_ASSERT(mParentWindowPausedDepth > 0);
-  MOZ_ASSERT_IF(IsDedicatedWorker(), mParentWindowPausedDepth == 1);
-  mParentWindowPausedDepth -= 1;
-  if (mParentWindowPausedDepth > 0) {
-    return;
-  }
+  MOZ_ASSERT(mParentWindowPaused);
+  mParentWindowPaused = false;
 
   {
     MutexAutoLock lock(mMutex);
@@ -2188,33 +2084,6 @@ WorkerPrivate::MemoryPressure(bool aDummy)
   Unused << NS_WARN_IF(!runnable->Dispatch());
 }
 
-bool
-WorkerPrivate::RegisterSharedWorker(SharedWorker* aSharedWorker,
-                                    MessagePort* aPort)
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(aSharedWorker);
-  MOZ_ASSERT(IsSharedWorker());
-  MOZ_ASSERT(!mSharedWorkers.Contains(aSharedWorker));
-
-  if (IsSharedWorker()) {
-    RefPtr<MessagePortRunnable> runnable = new MessagePortRunnable(this, aPort);
-    if (!runnable->Dispatch()) {
-      return false;
-    }
-  }
-
-  mSharedWorkers.AppendElement(aSharedWorker);
-
-  // If there were other SharedWorker objects attached to this worker then they
-  // may all have been frozen and this worker would need to be thawed.
-  if (mSharedWorkers.Length() > 1 && IsFrozen() && !Thaw(nullptr)) {
-    return false;
-  }
-
-  return true;
-}
-
 void
 WorkerPrivate::BroadcastErrorToSharedWorkers(
                                      JSContext* aCx,
@@ -2361,41 +2230,6 @@ WorkerPrivate::GetAllSharedWorkers(nsTArray<RefPtr<SharedWorker>>& aSharedWorker
 
   for (uint32_t i = 0; i < mSharedWorkers.Length(); ++i) {
     aSharedWorkers.AppendElement(mSharedWorkers[i]);
-  }
-}
-
-void
-WorkerPrivate::CloseSharedWorkersForWindow(nsPIDOMWindowInner* aWindow)
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
-  MOZ_ASSERT(aWindow);
-
-  bool someRemoved = false;
-
-  for (uint32_t i = 0; i < mSharedWorkers.Length();) {
-    if (mSharedWorkers[i]->GetOwner() == aWindow) {
-      mSharedWorkers[i]->Close();
-      mSharedWorkers.RemoveElementAt(i);
-      someRemoved = true;
-    } else {
-      MOZ_ASSERT(!SameCOMIdentity(mSharedWorkers[i]->GetOwner(), aWindow));
-      ++i;
-    }
-  }
-
-  if (!someRemoved) {
-    return;
-  }
-
-  // If there are still SharedWorker objects attached to this worker then they
-  // may all be frozen and this worker would need to be frozen. Otherwise,
-  // if that was the last SharedWorker then it's time to cancel this worker.
-
-  if (!mSharedWorkers.IsEmpty()) {
-    Freeze(nullptr);
-  } else {
-    Cancel();
   }
 }
 
@@ -2646,7 +2480,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mCreationTimeStamp(TimeStamp::Now())
   , mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC)
   , mWorkerThreadAccessible(aParent)
-  , mParentWindowPausedDepth(0)
+  , mParentWindowPaused(false)
   , mPendingEventQueueClearing(false)
   , mCancelAllPendingRunnables(false)
   , mWorkerScriptExecutedSuccessfully(false)
@@ -2689,11 +2523,8 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
     // Our secure context state depends on the kind of worker we have.
     if (UsesSystemPrincipal() || IsServiceWorker()) {
       mIsSecureContext = true;
-    } else if (mLoadInfo.mWindow) {
-      // Shared and dedicated workers both inherit the loading window's secure
-      // context state.  Shared workers then prevent windows with a different
-      // secure context state from attaching to them.
-      mIsSecureContext = mLoadInfo.mWindow->IsSecureContext();
+    } else if (mLoadInfo.mSecureContext != WorkerLoadInfo::eNotSet) {
+      mIsSecureContext = mLoadInfo.mSecureContext == WorkerLoadInfo::eSecureContext;
     } else {
       MOZ_ASSERT_UNREACHABLE("non-chrome worker that is not a service worker "
                              "that has no parent and no associated window");
@@ -3056,6 +2887,10 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
       loadInfo.mStorageAllowed = access > nsContentUtils::StorageAccess::eDeny;
       loadInfo.mOriginAttributes = nsContentUtils::GetOriginAttributes(document);
       loadInfo.mParentController = globalWindow->GetController();
+      loadInfo.mSecureContext =
+        loadInfo.mWindow->IsSecureContext()
+          ? WorkerLoadInfo::eSecureContext
+          : WorkerLoadInfo::eInsecureContext;
     } else {
       // Not a window
       MOZ_ASSERT(isChrome);

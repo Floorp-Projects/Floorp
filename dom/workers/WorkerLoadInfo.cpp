@@ -96,6 +96,7 @@ WorkerLoadInfo::WorkerLoadInfo()
   , mStorageAllowed(false)
   , mFirstPartyStorageAccessGranted(false)
   , mServiceWorkersTestingInWindow(false)
+  , mSecureContext(eNotSet)
 {
   MOZ_COUNT_CTOR(WorkerLoadInfo);
 }
@@ -159,6 +160,7 @@ WorkerLoadInfo::StealFrom(WorkerLoadInfo& aOther)
   mServiceWorkersTestingInWindow = aOther.mServiceWorkersTestingInWindow;
   mOriginAttributes = aOther.mOriginAttributes;
   mParentController = aOther.mParentController;
+  mSecureContext = aOther.mSecureContext;
 }
 
 nsresult

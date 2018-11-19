@@ -6,7 +6,9 @@
 
 #include "SharedWorker.h"
 
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessagePort.h"
@@ -20,6 +22,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindowInner.h"
 #include "nsPIDOMWindow.h"
 
 #ifdef XP_WIN
@@ -34,6 +37,7 @@ SharedWorker::SharedWorker(nsPIDOMWindowInner* aWindow,
                            SharedWorkerChild* aActor,
                            MessagePort* aMessagePort)
   : DOMEventTargetHelper(aWindow)
+  , mWindow(aWindow)
   , mActor(aActor)
   , mMessagePort(aMessagePort)
   , mFrozen(false)
@@ -46,6 +50,7 @@ SharedWorker::SharedWorker(nsPIDOMWindowInner* aWindow,
 SharedWorker::~SharedWorker()
 {
   AssertIsOnMainThread();
+  Close();
 }
 
 // static
@@ -144,10 +149,21 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
   // Register this component to PBackground.
   PBackgroundChild* actorChild = BackgroundChild::GetOrCreateForCurrentThread();
 
+  bool isSecureContext = JS::GetIsSecureContext(js::GetContextRealm(cx));
+
+  OptionalIPCClientInfo ipcClientInfo;
+  Maybe<ClientInfo> clientInfo = window->GetClientInfo();
+  if (clientInfo.isSome()) {
+    ipcClientInfo = clientInfo.value().ToIPC();
+  } else {
+    ipcClientInfo = void_t();
+  }
+
   SharedWorkerLoadInfo sharedWorkerLoadInfo(nsString(aScriptURL), baseURL,
                                             resolvedScriptURL, name,
                                             loadingPrincipalInfo, principalInfo,
-                                            loadInfo.mDomain, portIdentifier);
+                                            loadInfo.mDomain, isSecureContext,
+                                            ipcClientInfo, portIdentifier);
 
   PSharedWorkerChild* pActor =
     actorChild->SendPSharedWorkerConstructor(sharedWorkerLoadInfo);
@@ -157,6 +173,10 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
 
   RefPtr<SharedWorker> sharedWorker = new SharedWorker(window, actor,
                                                        channel->Port2());
+
+  // Let's inform the window about this SharedWorker.
+  nsGlobalWindowInner::Cast(window)->StoreSharedWorker(sharedWorker);
+  actor->SetParent(sharedWorker);
 
   return sharedWorker.forget();
 }
@@ -174,7 +194,15 @@ SharedWorker::Freeze()
   AssertIsOnMainThread();
   MOZ_ASSERT(!IsFrozen());
 
+  if (mFrozen) {
+    return;
+  }
+
   mFrozen = true;
+
+  if (mActor) {
+    mActor->SendFreeze();
+  }
 }
 
 void
@@ -183,7 +211,15 @@ SharedWorker::Thaw()
   AssertIsOnMainThread();
   MOZ_ASSERT(IsFrozen());
 
+  if (!mFrozen) {
+    return;
+  }
+
   mFrozen = false;
+
+  if (mActor) {
+    mActor->SendThaw();
+  }
 
   if (!mFrozenEvents.IsEmpty()) {
     nsTArray<RefPtr<Event>> events;
@@ -218,8 +254,35 @@ SharedWorker::Close()
 {
   AssertIsOnMainThread();
 
+  if (mWindow) {
+    nsGlobalWindowInner::Cast(mWindow)->ForgetSharedWorker(this);
+    mWindow = nullptr;
+  }
+
+  if (mActor) {
+    mActor->SendClose();
+    mActor->SetParent(nullptr);
+    mActor = nullptr;
+  }
+
   if (mMessagePort) {
     mMessagePort->Close();
+  }
+}
+
+void
+SharedWorker::Suspend()
+{
+  if (mActor) {
+    mActor->SendSuspend();
+  }
+}
+
+void
+SharedWorker::Resume()
+{
+  if (mActor) {
+    mActor->SendResume();
   }
 }
 
@@ -244,12 +307,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(SharedWorker)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SharedWorker,
                                                   DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessagePort)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrozenEvents)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SharedWorker,
                                                 DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessagePort)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrozenEvents)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -283,4 +348,18 @@ SharedWorker::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   }
 
   DOMEventTargetHelper::GetEventTargetParent(aVisitor);
+}
+
+void
+SharedWorker::ErrorPropagation(nsresult aError)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(NS_FAILED(aError));
+
+  RefPtr<AsyncEventDispatcher> errorEvent =
+    new AsyncEventDispatcher(this, NS_LITERAL_STRING("error"), CanBubble::eNo);
+  errorEvent->PostDOMEvent();
+
+  Close();
 }
