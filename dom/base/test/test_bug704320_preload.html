@@ -139,7 +139,8 @@ function finalizePreloadReuse(results) {
  */
 function finalizePreloadReferrerPolicyAttr(results) {
   var expected = {'css': {'count': 1, 'referrers': ['origin']},
-                  'img': {'count': 1, 'referrers': ['origin']}};
+                  'img': {'count': 1, 'referrers': ['origin']},
+                  'js':  {'count': 1, 'referrers': ['origin']}};
 
   for (var x in expected) {
     ok(x in results, "some " + x + " loads required in results object.");
