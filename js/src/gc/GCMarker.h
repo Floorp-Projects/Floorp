@@ -315,6 +315,9 @@ class GCMarker : public JSTracer {
 
   void markEphemeronValues(gc::Cell* markedCell, gc::WeakEntryVector& entry);
 
+  size_t getMarkCount() const { return markCount; }
+  void clearMarkCount() { markCount = 0; }
+
   static GCMarker* fromTracer(JSTracer* trc) {
     MOZ_ASSERT(trc->isMarkingTracer());
     return static_cast<GCMarker*>(trc);
@@ -398,6 +401,9 @@ class GCMarker : public JSTracer {
    * to iterating until the next GC.
    */
   MainThreadData<bool> linearWeakMarkingDisabled_;
+
+  /* The count of marked objects during GC. */
+  size_t markCount;
 
 #ifdef DEBUG
   /* Count of arenas that are currently in the stack. */
