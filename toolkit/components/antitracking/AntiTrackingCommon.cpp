@@ -332,7 +332,9 @@ ReportUnblockingConsole(nsPIDOMWindowInner* aWindow,
       messageWithSameOrigin = "CookieAllowedForTrackerByStorageAccessAPI";
       break;
 
-    case AntiTrackingCommon::eHeuristic:
+    case AntiTrackingCommon::eOpenerAfterUserInteraction:
+      MOZ_FALLTHROUGH;
+    case AntiTrackingCommon::eOpener:
       messageWithDifferentOrigin = "CookieAllowedForOriginOnTrackerByHeuristic";
       messageWithSameOrigin = "CookieAllowedForTrackerByHeuristic";
       break;
@@ -487,10 +489,15 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipa
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
-  // We hardcode this block reason since the first-party storage access permission
-  // is granted for the purpose of blocking trackers.
+  // We hardcode this block reason since the first-party storage access
+  // permission is granted for the purpose of blocking trackers.
+  // Note that if aReason is eOpenerAfterUserInteraction, we don't check the
+  // user-interaction state, because it could be that the current process has
+  // just sent the request to store the user-interaction permission into the
+  // parent, without having received the permission itself yet.
   const uint32_t blockReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
-  if (!HasUserInteraction(trackingPrincipal)) {
+  if (aReason != eOpenerAfterUserInteraction &&
+      !HasUserInteraction(trackingPrincipal)) {
     LOG_SPEC(("Tracking principal (%s) hasn't been interacted with before, "
               "refusing to add a first-party storage permission to access it",
               _spec), trackingURI);
@@ -594,7 +601,7 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(n
   nsAutoCString type;
   CreatePermissionKey(aTrackingOrigin, aGrantedOrigin, type);
 
-  LOG(("Computed permission key: %s, expiry: %d, proceeding to save in the permission manager",
+  LOG(("Computed permission key: %s, expiry: %u, proceeding to save in the permission manager",
        type.get(), expirationTime));
 
   rv = pm->AddFromPrincipal(aParentPrincipal, type.get(),
