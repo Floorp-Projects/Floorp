@@ -257,7 +257,7 @@ function updateCertDump() {
 
   var tree = document.getElementById("treesetDump");
   if (tree.currentIndex >= 0) {
-    var item = tree.contentView.getItemAtIndex(tree.currentIndex);
+    var item = tree.view.getItemAtIndex(tree.currentIndex);
     var dbKey = item.firstChild.firstChild.getAttribute("display");
     //  Get the cert from the cert database
     var certdb = Cc[nsX509CertDB].getService(nsIX509CertDB);
@@ -282,7 +282,7 @@ function getCurrentCert() {
     realIndex = tree.view.rowCount - 1;
   }
   if (realIndex >= 0) {
-    var item = tree.contentView.getItemAtIndex(realIndex);
+    var item = tree.view.getItemAtIndex(realIndex);
     var dbKey = item.firstChild.firstChild.getAttribute("display");
     var certdb = Cc[nsX509CertDB].getService(nsIX509CertDB);
     var cert = certdb.findCertByDBKey(dbKey);

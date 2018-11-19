@@ -102,7 +102,7 @@ function getSelectedItem() {
   if (tree.currentIndex < 0) {
     return;
   }
-  let item = tree.contentView.getItemAtIndex(tree.currentIndex);
+  let item = tree.view.getItemAtIndex(tree.currentIndex);
   selected_slot = null;
   selected_module = null;
   if (item) {
