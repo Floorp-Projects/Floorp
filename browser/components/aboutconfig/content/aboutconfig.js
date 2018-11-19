@@ -29,8 +29,25 @@ function onLoad() {
 
   gPrefArray.sort((a, b) => a.name > b.name);
 
+  document.getElementById("search").addEventListener("keypress", function(e) {
+    if (e.code == "Enter") {
+      filterPrefs();
+    }
+  });
+
+  document.getElementById("prefs").appendChild(createPrefsFragment(gPrefArray));
+}
+
+function filterPrefs() {
+  let substring = document.getElementById("search").value.trim();
+  let fragment = createPrefsFragment(gPrefArray.filter(pref => pref.name.includes(substring)));
+  document.getElementById("prefs").textContent = "";
+  document.getElementById("prefs").appendChild(fragment);
+}
+
+function createPrefsFragment(prefArray) {
   let fragment = document.createDocumentFragment();
-  for (let pref of gPrefArray) {
+  for (let pref of prefArray) {
     let row = document.createElement("tr");
     if (pref.hasUserValue) {
       row.classList.add("has-user-value");
@@ -53,5 +70,5 @@ function onLoad() {
 
     fragment.appendChild(row);
   }
-  document.getElementById("prefs").appendChild(fragment);
+  return fragment;
 }
