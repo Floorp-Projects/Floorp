@@ -39,6 +39,7 @@
  *
  */
 
+// clang-format off
 /*
  * SpiderMonkey bytecode categorization (as used in generated documentation):
  *
@@ -81,7 +82,9 @@
  *     Class
  *   [Other]
  */
+// clang-format on
 
+// clang-format off
 #define FOR_EACH_OPCODE(MACRO) \
     /*
      * No operation is performed.
@@ -2507,6 +2510,7 @@
      *   Stack: => val
      */ \
     IF_BIGINT(MACRO(JSOP_BIGINT, 234, "bigint", NULL, 5, 0, 1, JOF_BIGINT),)
+// clang-format on
 
 /*
  * In certain circumstances it may be useful to "pad out" the opcode space to
@@ -2542,6 +2546,7 @@ namespace js {
 // the [0, 256) range.  Avert your eyes!  You don't want to know how the
 // sausage gets made.
 
+// clang-format off
 #define VALUE_AND_VALUE_PLUS_ONE(op, val, ...) \
     val) && (val + 1 ==
 #define TRAILING_VALUE_AND_VALUE_PLUS_ONE(val) \
@@ -2554,6 +2559,7 @@ static_assert((0 ==
               "increase from zero to 255");
 #undef TRAILING_VALUE_AND_VALUE_PLUS_ONE
 #undef VALUE_AND_VALUE_PLUS_ONE
+// clang-format on
 
 // Define JSOP_*_LENGTH constants for all ops.
 #define DEFINE_LENGTH_CONSTANT(op, val, name, image, len, ...) \
