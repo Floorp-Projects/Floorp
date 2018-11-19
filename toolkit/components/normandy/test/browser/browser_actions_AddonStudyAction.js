@@ -56,6 +56,7 @@ decorate_task(
     const action = new AddonStudyAction();
     const enrollSpy = sinon.spy(action, "enroll");
     await action.runRecipe(recipe);
+    is(action.lastError, null, "lastError should be null");
     Assert.deepEqual(enrollSpy.args, [], "enroll should not be called");
     Assert.deepEqual(sendEventStub.args, [], "no events should be sent");
   },
@@ -95,6 +96,7 @@ decorate_task(
     const recipe = addonStudyRecipeFactory({ arguments: { name: "conflicting", addonUrl } });
     const action = new AddonStudyAction();
     await action.runRecipe(recipe);
+    is(action.lastError, null, "lastError should be null");
 
     const addon = await AddonManager.getAddonByID(FIXTURE_ADDON_ID);
     is(addon.version, "0.1", "The installed add-on should not be replaced");
@@ -124,6 +126,7 @@ decorate_task(
     const recipe = addonStudyRecipeFactory({ arguments: { name: "success", addonUrl } });
     const action = new AddonStudyAction();
     await action.runRecipe(recipe);
+    is(action.lastError, null, "lastError should be null");
 
     await webExtStartupPromise;
     addon = await AddonManager.getAddonByID(FIXTURE_ADDON_ID);
@@ -270,6 +273,7 @@ decorate_task(
     await action.runRecipe(recipe);
     await action.finalize();
     is(action.state, AddonStudyAction.STATE_FINALIZED, "the action should be finalized");
+    is(action.lastError, null, "lastError should be null");
     Assert.deepEqual(enrollSpy.args, [], "enroll should not be called");
     Assert.deepEqual(sendEventStub.args, [], "no events should be sent");
   },
@@ -299,6 +303,7 @@ decorate_task(
     const action = new AddonStudyAction();
     const unenrollSpy = sinon.stub(action, "unenroll");
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
     Assert.deepEqual(unenrollSpy.args, [[study.recipeId, "recipe-not-seen"]], "unenroll should be called");
   },
 );

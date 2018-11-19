@@ -27,21 +27,23 @@ class NoopAction extends BaseAction {
   }
 }
 
+NoopAction._errorToThrow = new Error("test error");
+
 class FailPreExecutionAction extends NoopAction {
   _preExecution() {
-    throw new Error("Test error");
+    throw NoopAction._errorToThrow;
   }
 }
 
 class FailRunAction extends NoopAction {
   _run(recipe) {
-    throw new Error("Test error");
+    throw NoopAction._errorToThrow;
   }
 }
 
 class FailFinalizeAction extends NoopAction {
   _finalize() {
-    throw new Error("Test error");
+    throw NoopAction._errorToThrow;
   }
 }
 
@@ -128,6 +130,7 @@ decorate_task(
     const recipe = recipeFactory();
     const action = new FailPreExecutionAction();
     is(action.state, FailPreExecutionAction.STATE_FAILED, "Action should fail during pre-execution fail");
+    is(action.lastError, NoopAction._errorToThrow, "The thrown error should be stored in lastError");
 
     // Should not throw, even though the action is in a disabled state.
     await action.runRecipe(recipe);
@@ -136,6 +139,7 @@ decorate_task(
     // Should not throw, even though the action is in a disabled state.
     await action.finalize();
     is(action.state, FailPreExecutionAction.STATE_FINALIZED, "Action should be finalized");
+    is(action.lastError, NoopAction._errorToThrow, "lastError should not have changed");
 
     is(action._testRunFlag, false, "_run should not have been called");
     is(action._testFinalizeFlag, false, "_finalize should not have been called");
