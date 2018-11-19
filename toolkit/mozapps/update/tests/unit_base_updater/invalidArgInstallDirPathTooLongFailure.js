@@ -5,8 +5,9 @@
 
 /* Too long install directory path failure test */
 
+/* The service cannot safely write update.status for this failure. */
 const STATE_AFTER_RUNUPDATE =
-  IS_SERVICE_TEST ? STATE_FAILED_SERVICE_INVALID_INSTALL_DIR_PATH_ERROR
+  IS_SERVICE_TEST ? STATE_PENDING_SVC
                   : STATE_FAILED_INVALID_INSTALL_DIR_PATH_ERROR;
 
 function run_test() {
@@ -50,8 +51,12 @@ function runUpdateFinished() {
  * Called after the call to waitForUpdateXMLFiles finishes.
  */
 function waitForUpdateXMLFilesFinished() {
-  let errorCode = IS_SERVICE_TEST ? SERVICE_INVALID_INSTALL_DIR_PATH_ERROR
-                                  : INVALID_INSTALL_DIR_PATH_ERROR;
-  checkUpdateManager(STATE_NONE, false, STATE_FAILED, errorCode, 1);
+  if (IS_SERVICE_TEST) {
+    checkUpdateManager(STATE_NONE, false, STATE_PENDING_SVC, 0, 1);
+  } else {
+    checkUpdateManager(STATE_NONE, false, STATE_FAILED,
+                       INVALID_INSTALL_DIR_PATH_ERROR, 1);
+  }
+
   waitForFilesInUse();
 }

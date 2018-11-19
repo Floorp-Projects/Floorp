@@ -5,8 +5,10 @@
 
 /* Different install and working directories for a regular update failure */
 
+/* The service cannot safely write update.status for this failure because the
+ * check is done before validating the installed updater. */
 const STATE_AFTER_RUNUPDATE =
-  IS_SERVICE_TEST ? STATE_FAILED_SERVICE_INVALID_APPLYTO_DIR_STAGED_ERROR
+  IS_SERVICE_TEST ? STATE_PENDING_SVC
                   : STATE_FAILED_INVALID_APPLYTO_DIR_STAGED_ERROR;
 
 function run_test() {
@@ -41,8 +43,12 @@ function runUpdateFinished() {
  * Called after the call to waitForUpdateXMLFiles finishes.
  */
 function waitForUpdateXMLFilesFinished() {
-  let errorCode = IS_SERVICE_TEST ? SERVICE_INVALID_APPLYTO_DIR_STAGED_ERROR
-                                  : INVALID_APPLYTO_DIR_STAGED_ERROR;
-  checkUpdateManager(STATE_NONE, false, STATE_FAILED, errorCode, 1);
+  if (IS_SERVICE_TEST) {
+    checkUpdateManager(STATE_NONE, false, STATE_PENDING_SVC, 0, 1);
+  } else {
+    checkUpdateManager(STATE_NONE, false, STATE_FAILED,
+                       INVALID_APPLYTO_DIR_STAGED_ERROR, 1);
+  }
+
   waitForFilesInUse();
 }
