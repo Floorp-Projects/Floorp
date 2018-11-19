@@ -38,7 +38,7 @@ permalink: /changelog/
 * ⚠️ **This is the first release compiled against Android SDK 28.**
 
 * **lib-crash**
-  * The state of the "Send crash report" checkbox is now getting saved and restored once the dialog is shown again. 
+  * The state of the "Send crash report" checkbox is now getting saved and restored once the dialog is shown again.
   * The crash reporter can now sends reports if the prompt is closed by pressing the back button.
 
 * **lib-fetch-httpurlconnection**

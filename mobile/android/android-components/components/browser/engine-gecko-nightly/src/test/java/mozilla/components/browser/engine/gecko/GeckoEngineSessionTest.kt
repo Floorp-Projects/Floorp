@@ -1065,4 +1065,18 @@ class GeckoEngineSessionTest {
 
         return constructor.newInstance(uri, uri, 0, 0)
     }
+
+    @Test
+    fun `after onCrash get called geckoSession must be reset`() {
+        val runtime = mock(GeckoRuntime::class.java)
+        val engineSession = GeckoEngineSession(runtime)
+        val oldGeckoSession = engineSession.geckoSession
+
+        assertTrue(engineSession.geckoSession.isOpen)
+
+        oldGeckoSession.contentDelegate.onCrash(mock())
+
+        assertFalse(oldGeckoSession.isOpen)
+        assertTrue(engineSession.geckoSession != oldGeckoSession)
+    }
 }

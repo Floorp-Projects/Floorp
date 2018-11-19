@@ -37,12 +37,12 @@ import org.mozilla.geckoview.GeckoSessionSettings
  */
 @Suppress("TooManyFunctions")
 class GeckoEngineSession(
-    runtime: GeckoRuntime,
+    private val runtime: GeckoRuntime,
     private val privateMode: Boolean = false,
-    defaultSettings: Settings? = null
+    private val defaultSettings: Settings? = null
 ) : EngineSession() {
 
-    internal var geckoSession = GeckoSession()
+    internal lateinit var geckoSession: GeckoSession
     internal var currentUrl: String? = null
 
     /**
@@ -56,18 +56,7 @@ class GeckoEngineSession(
     private var initialLoad = true
 
     init {
-        defaultSettings?.trackingProtectionPolicy?.let { enableTrackingProtection(it) }
-        defaultSettings?.requestInterceptor?.let { settings.requestInterceptor = it }
-        defaultSettings?.historyTrackingDelegate?.let { settings.historyTrackingDelegate = it }
-
-        geckoSession.settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, privateMode)
-        geckoSession.open(runtime)
-
-        geckoSession.navigationDelegate = createNavigationDelegate()
-        geckoSession.progressDelegate = createProgressDelegate()
-        geckoSession.contentDelegate = createContentDelegate()
-        geckoSession.trackingProtectionDelegate = createTrackingProtectionDelegate()
-        geckoSession.permissionDelegate = createPermissionDelegate()
+        initGeckoSession()
     }
 
     /**
@@ -365,7 +354,10 @@ class GeckoEngineSession(
             }
         }
 
-        override fun onCrash(session: GeckoSession?) = Unit
+        override fun onCrash(session: GeckoSession?) {
+            geckoSession.close()
+            initGeckoSession(GeckoSession())
+        }
 
         override fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
             notifyObservers { onFullScreenChange(fullScreen) }
@@ -483,6 +475,22 @@ class GeckoEngineSession(
         // TODO Waiting for the Gecko team to create an API for this
         // See https://bugzilla.mozilla.org/show_bug.cgi?id=1462018
         return null
+    }
+
+    private fun initGeckoSession(geckoSession: GeckoSession = GeckoSession()) {
+        this.geckoSession = geckoSession
+        defaultSettings?.trackingProtectionPolicy?.let { enableTrackingProtection(it) }
+        defaultSettings?.requestInterceptor?.let { settings.requestInterceptor = it }
+        defaultSettings?.historyTrackingDelegate?.let { settings.historyTrackingDelegate = it }
+
+        geckoSession.settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, privateMode)
+        geckoSession.open(runtime)
+
+        geckoSession.navigationDelegate = createNavigationDelegate()
+        geckoSession.progressDelegate = createProgressDelegate()
+        geckoSession.contentDelegate = createContentDelegate()
+        geckoSession.trackingProtectionDelegate = createTrackingProtectionDelegate()
+        geckoSession.permissionDelegate = createPermissionDelegate()
     }
 
     companion object {
