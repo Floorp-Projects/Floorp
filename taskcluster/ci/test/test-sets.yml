@@ -175,7 +175,6 @@ windows-tests:
     - jsreftest
     - marionette
     - marionette-headless
-    - marionette-gpu
     - mochitest
     - mochitest-a11y
     - mochitest-browser-chrome
