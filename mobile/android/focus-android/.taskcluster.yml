@@ -140,7 +140,7 @@ tasks:
           - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-v1
           - queue:create-task:highest:scriptworker-prov-v1/mobile-pushapk-v1
           - project:mobile:focus:releng:signing:cert:release-signing
-          - project:mobile:focus:releng:signing:format:focus-jar
+          - project:mobile:focus:releng:signing:format:autograph_focus
           - project:mobile:focus:releng:googleplay:product:focus
           - secrets:get:project/focus/tokens
           - queue:route:index.project.mobile.focus.release.latest
