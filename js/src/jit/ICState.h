@@ -35,9 +35,6 @@ class ICState
     // Number of times we failed to attach a stub.
     uint8_t numFailures_;
 
-    // This is only used for shared Baseline ICs and stored here to save space.
-    bool invalid_ : 1;
-
     static const size_t MaxOptimizedStubs = 6;
 
     void transition(Mode mode) {
@@ -57,7 +54,6 @@ class ICState
 
   public:
     ICState()
-      : invalid_(false)
     {
         reset();
     }
@@ -75,9 +71,6 @@ class ICState
         }
         return true;
     }
-
-    bool invalid() const { return invalid_; }
-    void setInvalid() { invalid_ = true; }
 
     // If this returns true, we transitioned to a new mode and the caller
     // should discard all stubs.

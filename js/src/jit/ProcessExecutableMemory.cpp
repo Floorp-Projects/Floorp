@@ -80,7 +80,7 @@ ComputeRandomAllocationAddress()
 # ifdef NEED_JIT_UNWIND_HANDLING
 static js::JitExceptionHandler sJitExceptionHandler;
 
-JS_FRIEND_API(void)
+JS_FRIEND_API void
 js::SetJitExceptionHandler(JitExceptionHandler handler)
 {
     MOZ_ASSERT(!sJitExceptionHandler);

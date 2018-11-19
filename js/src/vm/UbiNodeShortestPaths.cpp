@@ -15,7 +15,7 @@
 namespace JS {
 namespace ubi {
 
-JS_PUBLIC_API(BackEdge::Ptr)
+JS_PUBLIC_API BackEdge::Ptr
 BackEdge::clone() const
 {
     auto clone = js::MakeUnique<BackEdge>();
@@ -48,7 +48,7 @@ dumpNode(const JS::ubi::Node& node)
     fputc('\n', stderr);
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 dumpPaths(JSContext* cx, Node node, uint32_t maxNumPaths /* = 10 */)
 {
     mozilla::Maybe<AutoCheckCannotGC> nogc;

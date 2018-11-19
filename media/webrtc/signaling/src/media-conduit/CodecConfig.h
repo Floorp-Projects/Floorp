@@ -25,9 +25,7 @@ struct AudioCodecConfig
   int mType;
   std::string mName;
   int mFreq;
-  int mPacSize;
   int mChannels;
-  int mRate;
 
   bool mFECEnabled;
   bool mDtmfEnabled;
@@ -35,21 +33,15 @@ struct AudioCodecConfig
   // OPUS-specific
   int mMaxPlaybackRate;
 
-  /* Default constructor is not provided since as a consumer, we
-   * can't decide the default configuration for the codec
-   */
-  explicit AudioCodecConfig(int type, std::string name,
-                            int freq, int pacSize,
-                            int channels, int rate, bool FECEnabled)
-                                                   : mType(type),
-                                                     mName(name),
-                                                     mFreq(freq),
-                                                     mPacSize(pacSize),
-                                                     mChannels(channels),
-                                                     mRate(rate),
-                                                     mFECEnabled(FECEnabled),
-                                                     mDtmfEnabled(false),
-                                                     mMaxPlaybackRate(0)
+  AudioCodecConfig(int type, std::string name, int freq, int channels,
+                   bool FECEnabled)
+    : mType(type)
+    , mName(name)
+    , mFreq(freq)
+    , mChannels(channels)
+    , mFECEnabled(FECEnabled)
+    , mDtmfEnabled(false)
+    , mMaxPlaybackRate(0)
   {
   }
 };

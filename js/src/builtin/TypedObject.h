@@ -264,20 +264,20 @@ class ScalarTypeDescr : public SimpleTypeDescr
 // Enumerates the cases of ScalarTypeDescr::Type which have
 // unique C representation. In particular, omits Uint8Clamped since it
 // is just a Uint8.
-#define JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(macro_)       \
-    macro_(Scalar::Int8,    int8_t,   int8)                     \
-    macro_(Scalar::Uint8,   uint8_t,  uint8)                    \
-    macro_(Scalar::Int16,   int16_t,  int16)                    \
-    macro_(Scalar::Uint16,  uint16_t, uint16)                   \
-    macro_(Scalar::Int32,   int32_t,  int32)                    \
-    macro_(Scalar::Uint32,  uint32_t, uint32)                   \
-    macro_(Scalar::Float32, float,    float32)                  \
-    macro_(Scalar::Float64, double,   float64)
+#define JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(MACRO_)       \
+    MACRO_(Scalar::Int8,    int8_t,   int8)                     \
+    MACRO_(Scalar::Uint8,   uint8_t,  uint8)                    \
+    MACRO_(Scalar::Int16,   int16_t,  int16)                    \
+    MACRO_(Scalar::Uint16,  uint16_t, uint16)                   \
+    MACRO_(Scalar::Int32,   int32_t,  int32)                    \
+    MACRO_(Scalar::Uint32,  uint32_t, uint32)                   \
+    MACRO_(Scalar::Float32, float,    float32)                  \
+    MACRO_(Scalar::Float64, double,   float64)
 
 // Must be in same order as the enum ScalarTypeDescr::Type:
-#define JS_FOR_EACH_SCALAR_TYPE_REPR(macro_)                    \
-    JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(macro_)           \
-    macro_(Scalar::Uint8Clamped, uint8_t, uint8Clamped)
+#define JS_FOR_EACH_SCALAR_TYPE_REPR(MACRO_)                    \
+    JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(MACRO_)           \
+    MACRO_(Scalar::Uint8Clamped, uint8_t, uint8Clamped)
 
 enum class ReferenceType {
     TYPE_ANY = JS_REFERENCETYPEREPR_ANY,
@@ -314,10 +314,10 @@ class ReferenceTypeDescr : public SimpleTypeDescr
     static MOZ_MUST_USE bool call(JSContext* cx, unsigned argc, Value* vp);
 };
 
-#define JS_FOR_EACH_REFERENCE_TYPE_REPR(macro_) \
-    macro_(ReferenceType::TYPE_ANY, GCPtrValue, Any) \
-    macro_(ReferenceType::TYPE_OBJECT, GCPtrObject, Object) \
-    macro_(ReferenceType::TYPE_STRING, GCPtrString, string)
+#define JS_FOR_EACH_REFERENCE_TYPE_REPR(MACRO_) \
+    MACRO_(ReferenceType::TYPE_ANY, GCPtrValue, Any) \
+    MACRO_(ReferenceType::TYPE_OBJECT, GCPtrObject, Object) \
+    MACRO_(ReferenceType::TYPE_STRING, GCPtrString, string)
 
 // Type descriptors whose instances are objects and hence which have
 // an associated `prototype` property.

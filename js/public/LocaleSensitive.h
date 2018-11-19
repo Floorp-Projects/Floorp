@@ -32,7 +32,7 @@ namespace JS { union Value; }
  *
  * The locale string remains owned by the caller.
  */
-extern JS_PUBLIC_API(bool)
+extern JS_PUBLIC_API bool
 JS_SetDefaultLocale(JSRuntime* rt, const char* locale);
 
 /**
@@ -43,11 +43,11 @@ JS_SetDefaultLocale(JSRuntime* rt, const char* locale);
  * XXX Bug 1483961 means it's difficult to interpret the meaning of a null
  *     return value for the time being, and we should fix this!
  */
-extern JS_PUBLIC_API(JS::UniqueChars)
+extern JS_PUBLIC_API JS::UniqueChars
 JS_GetDefaultLocale(JSContext* cx);
 
 /** Reset the default locale to OS defaults. */
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 JS_ResetDefaultLocale(JSRuntime* rt);
 
 using JSLocaleToUpperCase =
@@ -87,13 +87,13 @@ struct JSLocaleCallbacks
  * |callbacks| must persist as long as the |JSRuntime|.  Pass |nullptr| to
  * restore default behavior.
  */
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 JS_SetLocaleCallbacks(JSRuntime* rt, const JSLocaleCallbacks* callbacks);
 
 /**
  * Return the current locale callbacks, which may be nullptr.
  */
-extern JS_PUBLIC_API(const JSLocaleCallbacks*)
+extern JS_PUBLIC_API const JSLocaleCallbacks*
 JS_GetLocaleCallbacks(JSRuntime* rt);
 
 #endif /* js_LocaleSensitive_h */

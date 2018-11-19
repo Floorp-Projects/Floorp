@@ -199,9 +199,9 @@ class FreeSpan
  */
 class Arena
 {
-    static JS_FRIEND_DATA(const uint32_t) ThingSizes[];
-    static JS_FRIEND_DATA(const uint32_t) FirstThingOffsets[];
-    static JS_FRIEND_DATA(const uint32_t) ThingsPerArena[];
+    static JS_FRIEND_DATA const uint32_t ThingSizes[];
+    static JS_FRIEND_DATA const uint32_t FirstThingOffsets[];
+    static JS_FRIEND_DATA const uint32_t ThingsPerArena[];
 
     /*
      * The first span of free things in the arena. Most of these spans are

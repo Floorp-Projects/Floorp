@@ -384,7 +384,7 @@ namespace js
  * information needed to read/write/transfer/free the records within it, in the
  * form of a set of callbacks.
  */
-class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) {
+class MOZ_NON_MEMMOVABLE JS_PUBLIC_API JSStructuredCloneData {
   public:
     using BufferList = mozilla::BufferList<js::SystemAllocPolicy>;
     using Iterator = BufferList::IterImpl;
@@ -405,7 +405,7 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) {
     js::SharedArrayRawBufferRefs refsHeld_;
 
     friend struct JSStructuredCloneWriter;
-    friend class JS_PUBLIC_API(JSAutoStructuredCloneBuffer);
+    friend class JS_PUBLIC_API JSAutoStructuredCloneBuffer;
     template <typename T, typename AllocPolicy> friend struct js::BufferIterator;
 
   public:
@@ -545,7 +545,7 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API(JSStructuredCloneData) {
  *
  * Note: If `data` contains transferable objects, it can be read only once.
  */
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS_ReadStructuredClone(JSContext* cx, JSStructuredCloneData& data, uint32_t version,
                        JS::StructuredCloneScope scope,
                        JS::MutableHandleValue vp,
@@ -559,17 +559,17 @@ JS_ReadStructuredClone(JSContext* cx, JSStructuredCloneData& data, uint32_t vers
  * shared-memory objects, or an error will be signaled if a shared memory object
  * is seen.
  */
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS_WriteStructuredClone(JSContext* cx, JS::HandleValue v, JSStructuredCloneData* data,
                         JS::StructuredCloneScope scope,
                         JS::CloneDataPolicy cloneDataPolicy,
                         const JSStructuredCloneCallbacks* optionalCallbacks,
                         void* closure, JS::HandleValue transferable);
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS_StructuredCloneHasTransferables(JSStructuredCloneData& data, bool* hasTransferable);
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS_StructuredClone(JSContext* cx, JS::HandleValue v, JS::MutableHandleValue vp,
                    const JSStructuredCloneCallbacks* optionalCallbacks, void* closure);
 
@@ -585,7 +585,7 @@ JS_StructuredClone(JSContext* cx, JS::HandleValue v, JS::MutableHandleValue vp,
  * management, and uses the same callbacks for both writing and reading
  * (serializing and deserializing).
  */
-class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
+class JS_PUBLIC_API JSAutoStructuredCloneBuffer {
     const JS::StructuredCloneScope scope_;
     JSStructuredCloneData data_;
     uint32_t version_;
@@ -668,31 +668,31 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
 #define JS_SCERR_UNSUPPORTED_TYPE 3
 #define JS_SCERR_SHMEM_TRANSFERABLE 4
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS_ReadUint32Pair(JSStructuredCloneReader* r, uint32_t* p1, uint32_t* p2);
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS_ReadBytes(JSStructuredCloneReader* r, void* p, size_t len);
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS_ReadTypedArray(JSStructuredCloneReader* r, JS::MutableHandleValue vp);
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS_WriteUint32Pair(JSStructuredCloneWriter* w, uint32_t tag, uint32_t data);
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS_WriteBytes(JSStructuredCloneWriter* w, const void* p, size_t len);
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS_WriteString(JSStructuredCloneWriter* w, JS::HandleString str);
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS_WriteTypedArray(JSStructuredCloneWriter* w, JS::HandleValue v);
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS_ObjectNotWritten(JSStructuredCloneWriter* w, JS::HandleObject obj);
 
-JS_PUBLIC_API(JS::StructuredCloneScope)
+JS_PUBLIC_API JS::StructuredCloneScope
 JS_GetStructuredCloneScope(JSStructuredCloneWriter* w);
 
 #endif  /* js_StructuredClone_h */

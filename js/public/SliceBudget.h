@@ -15,14 +15,14 @@
 
 namespace js {
 
-struct JS_PUBLIC_API(TimeBudget)
+struct JS_PUBLIC_API TimeBudget
 {
     int64_t budget;
 
     explicit TimeBudget(int64_t milliseconds) { budget = milliseconds; }
 };
 
-struct JS_PUBLIC_API(WorkBudget)
+struct JS_PUBLIC_API WorkBudget
 {
     int64_t budget;
 
@@ -35,7 +35,7 @@ struct JS_PUBLIC_API(WorkBudget)
  * to run for unlimited time, and others are bounded. To reduce the number of
  * gettimeofday calls, we only check the time every 1000 operations.
  */
-class JS_PUBLIC_API(SliceBudget)
+class JS_PUBLIC_API SliceBudget
 {
     static mozilla::TimeStamp unlimitedDeadline;
     static const intptr_t unlimitedStartCounter = INTPTR_MAX;

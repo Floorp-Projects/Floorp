@@ -493,6 +493,12 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
     webrtc::SdpAudioFormat::Parameters parameters;
     if (codec->mName == "opus") {
       parameters = {{"stereo", "1"}};
+
+      if (codec->mMaxPlaybackRate) {
+        std::ostringstream o;
+        o << codec->mMaxPlaybackRate;
+        parameters["maxplaybackrate"] = o.str();
+      }
     }
 
     webrtc::SdpAudioFormat format(codec->mName, codec->mFreq,
@@ -539,7 +545,6 @@ WebrtcAudioConduit::SetLocalRTPExtensions(LocalDirection aDirection,
     mRecvStreamConfig.rtp.extensions.clear();
   }
   for(const auto& extension : extensions) {
-    int ret = 0;
     // ssrc-audio-level RTP header extension
     if (extension.uri == webrtc::RtpExtension::kAudioLevelUri) {
       if (isSend) {
@@ -569,13 +574,6 @@ WebrtcAudioConduit::SetLocalRTPExtensions(LocalDirection aDirection,
         mSendStreamConfig.rtp.extensions.push_back(
           webrtc::RtpExtension(extension.uri, extension.id));
         mSendChannelProxy->SetSendMIDStatus(true, extension.id);
-    }
-    // Handle errors
-    if (ret == -1) {
-      CSFLogError(LOGTAG, "Failed %s setting extension %s with id %d",
-                  __FUNCTION__, extension.uri.c_str(),
-                  static_cast<int>(extension.id));
-      return kMediaConduitUnknownError;
     }
   }
   return kMediaConduitNoError;

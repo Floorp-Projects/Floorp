@@ -28,6 +28,7 @@ decorate_task(
     const action = new PreferenceRolloutAction();
     await action.runRecipe(recipe);
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
 
     // rollout prefs are set
     is(Services.prefs.getIntPref("test.pref1"), 1, "integer pref should be set");
@@ -92,6 +93,7 @@ decorate_task(
     let action = new PreferenceRolloutAction();
     await action.runRecipe(recipe);
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
 
     const defaultBranch = Services.prefs.getDefaultBranch("");
     is(defaultBranch.getIntPref("test.pref1"), 1, "pref1 should be set");
@@ -110,6 +112,7 @@ decorate_task(
     action = new PreferenceRolloutAction();
     await action.runRecipe(recipe);
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
 
     /* Todo because of bug 1502410 and bug 1505941 */
     todo_is(Services.prefs.getPrefType("test.pref1"), Services.prefs.PREF_INVALID, "pref1 should be removed");
@@ -185,6 +188,7 @@ decorate_task(
     const action = new PreferenceRolloutAction();
     await action.runRecipe(recipe);
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
 
     is(Services.prefs.getIntPref("test.pref"), 2, "pref should be updated");
     is(Services.prefs.getIntPref("app.normandy.startupRolloutPrefs.test.pref"), 2, "startup pref should be set");
@@ -245,11 +249,13 @@ decorate_task(
     await action.runRecipe(recipe1);
     await action.runRecipe(recipe2);
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
 
     // running recipe2 in a separate session shouldn't change things
     action = new PreferenceRolloutAction();
     await action.runRecipe(recipe2);
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
 
     is(Services.prefs.getIntPref("test.pref1"), 1, "pref1 is set to recipe1's value");
     is(Services.prefs.getIntPref("test.pref2"), 1, "pref2 is set to recipe1's value");
@@ -306,6 +312,7 @@ decorate_task(
     const action = new PreferenceRolloutAction();
     await action.runRecipe(recipe);
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
 
     is(Services.prefs.getCharPref("test.pref"), "not an int", "the pref should not be modified");
     is(Services.prefs.getPrefType("app.normandy.startupRolloutPrefs.test.pref"), Services.prefs.PREF_INVALID, "startup pref is not set");
@@ -339,6 +346,7 @@ decorate_task(
     const action = new PreferenceRolloutAction();
     await action.runRecipe(recipe);
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
 
     is(Services.prefs.getCharPref("test.pref"), "user value", "user branch value should be preserved");
     is(Services.prefs.getDefaultBranch("").getCharPref("test.pref"), "rollout value", "default branch value should change");
@@ -377,6 +385,7 @@ decorate_task(
     const action = new PreferenceRolloutAction();
     await action.runRecipe(recipe);
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
 
     is(Services.prefs.getIntPref("test.pref"), 2, "original user branch value still visible");
     is(Services.prefs.getDefaultBranch("").getIntPref("test.pref"), 1, "default branch was set");
@@ -405,11 +414,13 @@ decorate_task(
     let action = new PreferenceRolloutAction();
     await action.runRecipe(recipe);
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
 
     // run a second time
     action = new PreferenceRolloutAction();
     await action.runRecipe(recipe);
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
 
     Assert.deepEqual(
       sendEventStub.args,
@@ -448,6 +459,7 @@ decorate_task(
     const action = new PreferenceRolloutAction();
     await action.runRecipe(recipe);
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
 
     is(Services.prefs.getIntPref("test.pref"), 1, "pref should not change");
 

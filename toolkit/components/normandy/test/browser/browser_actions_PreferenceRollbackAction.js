@@ -33,6 +33,7 @@ decorate_task(
     const action = new PreferenceRollbackAction();
     await action.runRecipe(recipe);
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
 
     // rollout prefs are reset
     is(Services.prefs.getIntPref("test.pref1"), 1, "integer pref should be rolled back");
@@ -91,6 +92,7 @@ decorate_task(
     const action = new PreferenceRollbackAction();
     await action.runRecipe(recipe);
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
 
     is(Services.prefs.getIntPref("test.pref"), 1, "pref should not change");
     is(Services.prefs.getPrefType("app.normandy.startupRolloutPrefs.test.pref"), Services.prefs.PREF_INVALID, "no startup pref should be added");
@@ -128,6 +130,7 @@ decorate_task(
     const action = new PreferenceRollbackAction();
     await action.runRecipe(recipe);
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
 
     Assert.deepEqual(sendEventStub.args, [], "an unenrollFailure event should not be sent");
     Assert.deepEqual(
@@ -157,6 +160,7 @@ decorate_task(
     const action = new PreferenceRollbackAction();
     await action.runRecipe(recipe);
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
 
     is(Services.prefs.getIntPref("test.pref"), 1, "pref shouldn't change");
     is(Services.prefs.getPrefType("app.normandy.startupRolloutPrefs.test.pref"), Services.prefs.PREF_INVALID, "startup pref should not be set");
@@ -193,6 +197,7 @@ decorate_task(
     const action = new PreferenceRollbackAction();
     await action.runRecipe(recipe);
     await action.finalize();
+    is(action.lastError, null, "lastError should be null");
 
     is(Services.prefs.getDefaultBranch("").getCharPref("test.pref"), "builtin value", "default branch should be reset");
     is(Services.prefs.getCharPref("test.pref"), "user value", "user branch should remain the same");

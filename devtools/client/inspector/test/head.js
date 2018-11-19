@@ -236,6 +236,31 @@ var getNodeFrontInFrame = async function(selector, frameSelector,
   return inspector.walker.querySelector(nodes[0], selector);
 };
 
+/**
+ * Get the NodeFront for a node that matches a given css selector inside a shadow root.
+ *
+ * @param {String} selector
+ *        CSS selector of the node inside the shadow root.
+ * @param {String|NodeFront} hostSelector
+ *        Selector or front of the element to which the shadow root is attached.
+ * @param {InspectorPanel} inspector
+ *        The instance of InspectorPanel currently loaded in the toolbox
+ * @return {Promise} Resolves the node front when the inspector is updated with the new
+ *         node.
+ */
+var getNodeFrontInShadowDom = async function(selector, hostSelector, inspector) {
+  const hostFront = await getNodeFront(hostSelector, inspector);
+  const {nodes} = await inspector.walker.children(hostFront);
+
+  // Find the shadow root in the children of the host element.
+  const shadowRoot = nodes.filter(node => node.isShadowRoot)[0];
+  if (!shadowRoot) {
+    throw new Error("Could not find a shadow root under selector: " + hostSelector);
+  }
+
+  return inspector.walker.querySelector(shadowRoot, selector);
+};
+
 var focusSearchBoxUsingShortcut = async function(panelWin, callback) {
   info("Focusing search box");
   const searchBox = panelWin.document.getElementById("inspector-searchbox");

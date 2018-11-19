@@ -698,7 +698,7 @@ GetFirstSubsumedFrame(JSContext* cx, JSPrincipals* principals, HandleSavedFrame 
                                 skippedAsync);
 }
 
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 GetFirstSubsumedSavedFrame(JSContext* cx, JSPrincipals* principals,
                            HandleObject savedFrame,
                            JS::SavedFrameSelfHosted selfHosted)
@@ -788,7 +788,7 @@ UnwrapSavedFrame(JSContext* cx, JSPrincipals* principals, HandleObject obj,
     return GetFirstSubsumedFrame(cx, principals, frame, selfHosted, skippedAsync);
 }
 
-JS_PUBLIC_API(SavedFrameResult)
+JS_PUBLIC_API SavedFrameResult
 GetSavedFrameSource(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
                     MutableHandleString sourcep,
                     SavedFrameSelfHosted selfHosted /* = SavedFrameSelfHosted::Include */)
@@ -813,7 +813,7 @@ GetSavedFrameSource(JSContext* cx, JSPrincipals* principals, HandleObject savedF
     return SavedFrameResult::Ok;
 }
 
-JS_PUBLIC_API(SavedFrameResult)
+JS_PUBLIC_API SavedFrameResult
 GetSavedFrameLine(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
                   uint32_t* linep,
                   SavedFrameSelfHosted selfHosted /* = SavedFrameSelfHosted::Include */)
@@ -834,7 +834,7 @@ GetSavedFrameLine(JSContext* cx, JSPrincipals* principals, HandleObject savedFra
     return SavedFrameResult::Ok;
 }
 
-JS_PUBLIC_API(SavedFrameResult)
+JS_PUBLIC_API SavedFrameResult
 GetSavedFrameColumn(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
                     uint32_t* columnp,
                     SavedFrameSelfHosted selfHosted /* = SavedFrameSelfHosted::Include */)
@@ -855,7 +855,7 @@ GetSavedFrameColumn(JSContext* cx, JSPrincipals* principals, HandleObject savedF
     return SavedFrameResult::Ok;
 }
 
-JS_PUBLIC_API(SavedFrameResult)
+JS_PUBLIC_API SavedFrameResult
 GetSavedFrameFunctionDisplayName(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
                                  MutableHandleString namep,
                                  SavedFrameSelfHosted selfHosted /* = SavedFrameSelfHosted::Include */)
@@ -880,7 +880,7 @@ GetSavedFrameFunctionDisplayName(JSContext* cx, JSPrincipals* principals, Handle
     return SavedFrameResult::Ok;
 }
 
-JS_PUBLIC_API(SavedFrameResult)
+JS_PUBLIC_API SavedFrameResult
 GetSavedFrameAsyncCause(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
                         MutableHandleString asyncCausep,
                         SavedFrameSelfHosted unused_ /* = SavedFrameSelfHosted::Include */)
@@ -914,7 +914,7 @@ GetSavedFrameAsyncCause(JSContext* cx, JSPrincipals* principals, HandleObject sa
     return SavedFrameResult::Ok;
 }
 
-JS_PUBLIC_API(SavedFrameResult)
+JS_PUBLIC_API SavedFrameResult
 GetSavedFrameAsyncParent(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
                          MutableHandleObject asyncParentp,
                          SavedFrameSelfHosted selfHosted /* = SavedFrameSelfHosted::Include */)
@@ -949,7 +949,7 @@ GetSavedFrameAsyncParent(JSContext* cx, JSPrincipals* principals, HandleObject s
     return SavedFrameResult::Ok;
 }
 
-JS_PUBLIC_API(SavedFrameResult)
+JS_PUBLIC_API SavedFrameResult
 GetSavedFrameParent(JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
                     MutableHandleObject parentp,
                     SavedFrameSelfHosted selfHosted /* = SavedFrameSelfHosted::Include */)
@@ -1059,7 +1059,7 @@ FormatV8StackFrame(JSContext* cx, js::StringBuffer& sb,
         && (lastFrame || sb.append('\n'));
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 BuildStackString(JSContext* cx, JSPrincipals* principals, HandleObject stack,
                  MutableHandleString stringp, size_t indent, js::StackFormat format)
 {
@@ -1128,14 +1128,14 @@ BuildStackString(JSContext* cx, JSPrincipals* principals, HandleObject stack,
     return true;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 IsMaybeWrappedSavedFrame(JSObject* obj)
 {
     MOZ_ASSERT(obj);
     return obj->canUnwrapAs<js::SavedFrame>();
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 IsUnwrappedSavedFrame(JSObject* obj)
 {
     MOZ_ASSERT(obj);
@@ -1967,7 +1967,7 @@ struct MOZ_STACK_CLASS AtomizingMatcher
     }
 };
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 ConstructSavedFrameStackSlow(JSContext* cx, JS::ubi::StackFrame& frame,
                              MutableHandleObject outSavedFrameStack)
 {

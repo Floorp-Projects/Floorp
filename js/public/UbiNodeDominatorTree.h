@@ -66,7 +66,7 @@ namespace ubi {
  *
  * [0]: http://www.cs.rice.edu/~keith/EMBED/dom.pdf
  */
-class JS_PUBLIC_API(DominatorTree)
+class JS_PUBLIC_API DominatorTree
 {
   private:
     // Types.

@@ -2941,11 +2941,6 @@ public:
     // True if this is a sandbox compartment. See xpc::CreateSandboxObject.
     bool isSandboxCompartment;
 
-    // True if EnsureAddonCompartment has been called for this compartment.
-    // Note that this is false for extensions that ship with the browser, like
-    // browser/extensions/activity-stream.
-    bool isAddonCompartment;
-
     // This is only ever set during mochitest runs when enablePrivilege is called.
     // It's intended as a temporary stopgap measure until we can finish ripping out
     // enablePrivilege. Once set, this value is never unset (i.e., it doesn't follow

@@ -29,6 +29,7 @@
 #include "mozilla/Logging.h"
 #include "PLDHashTable.h"
 #include "plstr.h"
+#include "nsQueryObject.h"
 #include "nsURLHelper.h"
 #include "nsThreadUtils.h"
 #include "nsThreadPool.h"
@@ -201,6 +202,8 @@ nsHostKey::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
     return n;
 }
 
+NS_IMPL_ISUPPORTS0(nsHostRecord)
+
 nsHostRecord::nsHostRecord(const nsHostKey& key)
     : nsHostKey(key)
     , mResolverMode(MODE_NATIVEONLY)
@@ -208,11 +211,6 @@ nsHostRecord::nsHostRecord(const nsHostKey& key)
     , negative(false)
     , mDoomed(false)
 {
-}
-
-nsHostRecord::~nsHostRecord()
-{
-    mCallbacks.clear();
 }
 
 void
@@ -294,7 +292,7 @@ SizeOfResolveHostCallbackListExcludingHead(const mozilla::LinkedList<RefPtr<nsRe
     return n;
 }
 
-NS_IMPL_ISUPPORTS(AddrHostRecord, nsISupports, AddrHostRecord, nsHostRecord)
+NS_IMPL_ISUPPORTS_INHERITED(AddrHostRecord, nsHostRecord, AddrHostRecord)
 
 AddrHostRecord::AddrHostRecord(const nsHostKey& key)
     : nsHostRecord(key)
@@ -322,7 +320,7 @@ AddrHostRecord::AddrHostRecord(const nsHostKey& key)
 
 AddrHostRecord::~AddrHostRecord()
 {
-
+    mCallbacks.clear();
     Telemetry::Accumulate(Telemetry::DNS_BLACKLIST_COUNT, mBlacklistedCount);
     delete addr_info;
 }
@@ -567,7 +565,7 @@ AddrHostRecord::GetPriority(uint16_t aFlags)
     return AddrHostRecord::DNS_PRIORITY_LOW;
 }
 
-NS_IMPL_ISUPPORTS(TypeHostRecord, nsISupports, TypeHostRecord, nsHostRecord)
+NS_IMPL_ISUPPORTS_INHERITED(TypeHostRecord, nsHostRecord, TypeHostRecord)
 
 TypeHostRecord::TypeHostRecord(const nsHostKey& key)
     : nsHostRecord(key)
@@ -576,7 +574,10 @@ TypeHostRecord::TypeHostRecord(const nsHostKey& key)
 {
 }
 
-TypeHostRecord::~TypeHostRecord() = default;
+TypeHostRecord::~TypeHostRecord()
+{
+    mCallbacks.clear();
+}
 
 bool
 TypeHostRecord::HasUsableResultInternal() const
@@ -786,7 +787,7 @@ nsHostResolver::FlushCache()
         // By-type records are from TRR. We do not need to flush those entry
         // when the network has change, because they are not local.
         if (record->IsAddrRecord()) {
-            nsCOMPtr<AddrHostRecord> addrRec = do_QueryInterface(record);
+            RefPtr<AddrHostRecord> addrRec = do_QueryObject(record);
             MOZ_ASSERT(addrRec);
             if (addrRec->RemoveOrRefresh()) {
                 if (record->isInList()) {
@@ -883,7 +884,7 @@ nsHostResolver::GetHostRecord(const nsACString &host, uint16_t type,
 
     RefPtr<nsHostRecord> rec = entry;
     if (rec->IsAddrRecord()) {
-        nsCOMPtr<AddrHostRecord> addrRec = do_QueryInterface(rec);
+        RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
         if (addrRec->addr) {
             return NS_ERROR_FAILURE;
         }
@@ -970,7 +971,7 @@ nsHostResolver::ResolveHost(const nsACString       &aHost,
             }
 
             RefPtr<nsHostRecord> rec = entry;
-            nsCOMPtr<AddrHostRecord> addrRec = do_QueryInterface(rec);
+            RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
             MOZ_ASSERT(rec, "Record should not be null");
             MOZ_ASSERT((IS_ADDR_TYPE(type) && rec->IsAddrRecord() && addrRec) ||
                        (IS_OTHER_TYPE(type) && !rec->IsAddrRecord()));
@@ -1068,8 +1069,8 @@ nsHostResolver::ResolveHost(const nsACString       &aHost,
                     if (unspecRec && unspecRec->HasUsableResult(now, flags)) {
                         MOZ_ASSERT(unspecRec->IsAddrRecord());
 
-                        nsCOMPtr<AddrHostRecord> addrUnspecRec =
-                            do_QueryInterface(unspecRec);
+                        RefPtr<AddrHostRecord> addrUnspecRec =
+                            do_QueryObject(unspecRec);
                         MOZ_ASSERT(addrUnspecRec);
                         MOZ_ASSERT(addrUnspecRec->addr_info ||
                                    addrUnspecRec->negative,
@@ -1310,14 +1311,14 @@ nsHostResolver::TrrLookup(nsHostRecord *aRec, TRR *pushedTRR)
     RefPtr<nsHostRecord> rec(aRec);
     mLock.AssertCurrentThreadOwns();
 
-    nsCOMPtr<AddrHostRecord> addrRec;
-    nsCOMPtr<TypeHostRecord> typeRec;
+    RefPtr<AddrHostRecord> addrRec;
+    RefPtr<TypeHostRecord> typeRec;
 
     if (rec->IsAddrRecord()) {
-        addrRec = do_QueryInterface(rec);
+        addrRec = do_QueryObject(rec);
         MOZ_ASSERT(addrRec);
     } else {
-        typeRec = do_QueryInterface(rec);
+        typeRec = do_QueryObject(rec);
         MOZ_ASSERT(typeRec);
     }
 
@@ -1439,8 +1440,8 @@ nsHostResolver::NativeLookup(nsHostRecord *aRec)
     mLock.AssertCurrentThreadOwns();
 
     RefPtr<nsHostRecord> rec(aRec);
-    nsCOMPtr<AddrHostRecord> addrRec;
-    addrRec = do_QueryInterface(rec);
+    RefPtr<AddrHostRecord> addrRec;
+    addrRec = do_QueryObject(rec);
     MOZ_ASSERT(addrRec);
 
     addrRec->mNativeStart = TimeStamp::Now();
@@ -1507,8 +1508,7 @@ nsHostResolver::NameLookup(nsHostRecord *rec)
     ResolverMode mode = rec->mResolverMode = Mode();
 
     if (rec->IsAddrRecord()) {
-        nsCOMPtr<AddrHostRecord> addrRec;
-        addrRec = do_QueryInterface(rec);
+        RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
         MOZ_ASSERT(addrRec);
 
         addrRec->mNativeUsed = false;
@@ -1570,8 +1570,7 @@ nsHostResolver::DeQueue(LinkedList<RefPtr<nsHostRecord>>& aQ,
     RefPtr<nsHostRecord> rec = aQ.popFirst();
     mPendingCount--;
     MOZ_ASSERT(rec->IsAddrRecord());
-    nsCOMPtr<AddrHostRecord> addrRec;
-    addrRec = do_QueryInterface(rec);
+    RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
     MOZ_ASSERT(addrRec);
     addrRec->onQueue = false;
     addrRec.forget(aResult);
@@ -1796,7 +1795,7 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNe
     MOZ_ASSERT(rec->pb == pb);
     MOZ_ASSERT(rec->IsAddrRecord());
 
-    nsCOMPtr<AddrHostRecord> addrRec = do_QueryInterface(rec);
+    RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
     MOZ_ASSERT(addrRec);
 
     // newRRSet needs to be taken into the hostrecord (which will then own it)
@@ -2039,8 +2038,7 @@ nsHostResolver::CompleteLookupByType(nsHostRecord* rec, nsresult status,
     MOZ_ASSERT(rec->pb == pb);
     MOZ_ASSERT(!rec->IsAddrRecord());
 
-    nsCOMPtr<TypeHostRecord> typeRec;
-    typeRec = do_QueryInterface(rec);
+    RefPtr<TypeHostRecord> typeRec = do_QueryObject(rec);
     MOZ_ASSERT(typeRec);
 
     MOZ_ASSERT(typeRec->mResolving);
@@ -2160,12 +2158,12 @@ nsHostResolver::ThreadFunc()
 #if defined(RES_RETRY_ON_FAILURE)
     nsResState rs;
 #endif
-    nsCOMPtr<AddrHostRecord> rec;
+    RefPtr<AddrHostRecord> rec;
     AddrInfo *ai = nullptr;
 
     do {
         if (!rec) {
-            nsCOMPtr<AddrHostRecord> tmpRec;
+            RefPtr<AddrHostRecord> tmpRec;
             if (!GetHostToLookup(getter_AddRefs(tmpRec))) {
                 break; // thread shutdown signal
             }
@@ -2284,7 +2282,7 @@ nsHostResolver::GetDNSCacheEntries(nsTArray<DNSCacheEntries> *args)
             continue;
         }
 
-        nsCOMPtr<AddrHostRecord> addrRec = do_QueryInterface(rec);
+        RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
         MOZ_ASSERT(addrRec);
         if (!addrRec || !addrRec->addr_info) {
             continue;

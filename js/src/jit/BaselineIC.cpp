@@ -1131,10 +1131,6 @@ DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame, ICTypeMonitor_Fallbac
         TypeScript::Monitor(cx, script, pc, types, value);
     }
 
-    if (MOZ_UNLIKELY(stub->invalid())) {
-        return true;
-    }
-
     return stub->addMonitorStubForValue(cx, frame, types, value);
 }
 

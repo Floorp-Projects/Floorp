@@ -460,3 +460,8 @@ if (mozconfig.substs.MOZ_JAVA_CODE_COVERAGE) {
         }
     }
 }
+
+apply plugin: 'org.mozilla.apilint'
+
+// TODO: Change this to `org` after hiding org.mozilla.gecko
+apiLint.packageFilter = 'org.mozilla.geckoview'

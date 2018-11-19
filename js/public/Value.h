@@ -1246,7 +1246,7 @@ SameType(const Value& lhs, const Value& rhs)
 /************************************************************************/
 
 namespace JS {
-JS_PUBLIC_API(void) HeapValuePostBarrier(Value* valuep, const Value& prev, const Value& next);
+JS_PUBLIC_API void HeapValuePostBarrier(Value* valuep, const Value& prev, const Value& next);
 
 template <>
 struct GCPolicy<JS::Value>
@@ -1509,10 +1509,10 @@ ValueIsNotGray(const Heap<Value>& value)
 
 namespace JS {
 
-extern JS_PUBLIC_DATA(const HandleValue) NullHandleValue;
-extern JS_PUBLIC_DATA(const HandleValue) UndefinedHandleValue;
-extern JS_PUBLIC_DATA(const HandleValue) TrueHandleValue;
-extern JS_PUBLIC_DATA(const HandleValue) FalseHandleValue;
+extern JS_PUBLIC_DATA const HandleValue NullHandleValue;
+extern JS_PUBLIC_DATA const HandleValue UndefinedHandleValue;
+extern JS_PUBLIC_DATA const HandleValue TrueHandleValue;
+extern JS_PUBLIC_DATA const HandleValue FalseHandleValue;
 
 } // namespace JS
 
