@@ -3,11 +3,16 @@ const gCompleteState = Ci.nsIWebProgressListener.STATE_STOP +
 
 var gFrontProgressListener = {
   onProgressChange(aWebProgress, aRequest,
-                             aCurSelfProgress, aMaxSelfProgress,
-                             aCurTotalProgress, aMaxTotalProgress) {
+                   aCurSelfProgress, aMaxSelfProgress,
+                   aCurTotalProgress, aMaxTotalProgress) {
   },
 
   onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
+    if (aRequest &&
+        aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec == "about:blank") {
+      // ignore initial about blank
+      return;
+    }
     var state = "onStateChange";
     info("FrontProgress: " + state + " 0x" + aStateFlags.toString(16));
     ok(gFrontNotificationsPos < gFrontNotifications.length, "Got an expected notification for the front notifications listener");
@@ -16,6 +21,11 @@ var gFrontProgressListener = {
   },
 
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
+    if (aRequest &&
+        aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec == "about:blank") {
+      // ignore initial about blank
+      return;
+    }
     var state = "onLocationChange";
     info("FrontProgress: " + state + " " + aLocationURI.spec);
     ok(gFrontNotificationsPos < gFrontNotifications.length, "Got an expected notification for the front notifications listener");
@@ -28,6 +38,11 @@ var gFrontProgressListener = {
 
   onSecurityChange(aWebProgress, aRequest, aOldState, aState,
                    aContentBlockingLogJSON) {
+    if (aRequest &&
+        aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec == "about:blank") {
+      // ignore initial about blank
+      return;
+    }
     var state = "onSecurityChange";
     info("FrontProgress: " + state + " 0x" + aState.toString(16));
     ok(gFrontNotificationsPos < gFrontNotifications.length, "Got an expected notification for the front notifications listener");
@@ -38,6 +53,11 @@ var gFrontProgressListener = {
 
 var gAllProgressListener = {
   onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+    if (aRequest &&
+        aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec == "about:blank") {
+      // ignore initial about blank
+      return;
+    }
     var state = "onStateChange";
     info("AllProgress: " + state + " 0x" + aStateFlags.toString(16));
     ok(aBrowser == gTestBrowser, state + " notification came from the correct browser");
@@ -52,8 +72,12 @@ var gAllProgressListener = {
     }
   },
 
-  onLocationChange(aBrowser, aWebProgress, aRequest, aLocationURI,
-                             aFlags) {
+  onLocationChange(aBrowser, aWebProgress, aRequest, aLocationURI, aFlags) {
+    if (aRequest &&
+        aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec == "about:blank") {
+      // ignore initial about blank
+      return;
+    }
     var state = "onLocationChange";
     info("AllProgress: " + state + " " + aLocationURI.spec);
     ok(aBrowser == gTestBrowser, state + " notification came from the correct browser");
@@ -63,12 +87,22 @@ var gAllProgressListener = {
   },
 
   onStatusChange(aBrowser, aWebProgress, aRequest, aStatus, aMessage) {
+    if (aRequest &&
+        aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec == "about:blank") {
+      // ignore initial about blank
+      return;
+    }
     var state = "onStatusChange";
     ok(aBrowser == gTestBrowser, state + " notification came from the correct browser");
   },
 
   onSecurityChange(aBrowser, aWebProgress, aRequest, aOldState, aState,
                    aContentBlockingLogJSON) {
+    if (aRequest &&
+        aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec == "about:blank") {
+      // ignore initial about blank
+      return;
+    }
     var state = "onSecurityChange";
     info("AllProgress: " + state + " 0x" + aState.toString(16));
     ok(aBrowser == gTestBrowser, state + " notification came from the correct browser");
