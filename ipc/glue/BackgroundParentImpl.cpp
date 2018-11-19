@@ -35,6 +35,7 @@
 #include "mozilla/dom/ipc/TemporaryIPCBlobParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/dom/simpledb/ActorsParent.h"
+#include "mozilla/dom/SharedWorkerParent.h"
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/MIDIManagerParent.h"
 #include "mozilla/dom/MIDIPortParent.h"
@@ -383,6 +384,22 @@ BackgroundParentImpl::DeallocPPendingIPCBlobParent(PPendingIPCBlobParent* aActor
   MOZ_ASSERT(aActor);
 
   delete aActor;
+  return true;
+}
+
+mozilla::dom::PSharedWorkerParent*
+BackgroundParentImpl::AllocPSharedWorkerParent(const mozilla::dom::SharedWorkerLoadInfo& aInfo)
+{
+  RefPtr<dom::SharedWorkerParent> agent =
+    new mozilla::dom::SharedWorkerParent();
+  return agent.forget().take();
+}
+
+bool
+BackgroundParentImpl::DeallocPSharedWorkerParent(mozilla::dom::PSharedWorkerParent* aActor)
+{
+  RefPtr<mozilla::dom::SharedWorkerParent> actor =
+    dont_AddRef(static_cast<mozilla::dom::SharedWorkerParent*>(aActor));
   return true;
 }
 

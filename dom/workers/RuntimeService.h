@@ -155,12 +155,6 @@ public:
   void
   PropagateFirstPartyStorageAccessGranted(nsPIDOMWindowInner* aWindow);
 
-  nsresult
-  CreateSharedWorker(const GlobalObject& aGlobal,
-                     const nsAString& aScriptURL,
-                     const nsAString& aName,
-                     SharedWorker** aSharedWorker);
-
   void
   ForgetSharedWorker(WorkerPrivate* aWorkerPrivate);
 

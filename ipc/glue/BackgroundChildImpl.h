@@ -114,6 +114,12 @@ protected:
   virtual bool
   DeallocPTemporaryIPCBlobChild(PTemporaryIPCBlobChild* aActor) override;
 
+  virtual mozilla::dom::PSharedWorkerChild*
+  AllocPSharedWorkerChild(const mozilla::dom::SharedWorkerLoadInfo& aInfo) override;
+
+  virtual bool
+  DeallocPSharedWorkerChild(mozilla::dom::PSharedWorkerChild* aActor) override;
+
   virtual PFileDescriptorSetChild*
   AllocPFileDescriptorSetChild(const FileDescriptor& aFileDescriptor)
                                override;

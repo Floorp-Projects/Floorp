@@ -6,42 +6,40 @@
 
 #include "SharedWorker.h"
 
-#include "nsPIDOMWindow.h"
-
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessagePort.h"
+#include "mozilla/dom/PMessagePort.h"
 #include "mozilla/dom/SharedWorkerBinding.h"
+#include "mozilla/dom/SharedWorkerChild.h"
 #include "mozilla/dom/WorkerBinding.h"
-#include "mozilla/Telemetry.h"
-#include "nsContentUtils.h"
-#include "nsIClassInfoImpl.h"
-
-#include "mozilla/dom/workerinternals/RuntimeService.h"
+#include "mozilla/dom/WorkerLoadInfo.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/ipc/PBackgroundChild.h"
+#include "nsContentUtils.h"
+#include "nsPIDOMWindow.h"
 
 #ifdef XP_WIN
 #undef PostMessage
 #endif
 
-using mozilla::dom::Optional;
-using mozilla::dom::Sequence;
-using mozilla::dom::MessagePort;
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::ipc;
 
 SharedWorker::SharedWorker(nsPIDOMWindowInner* aWindow,
-                           WorkerPrivate* aWorkerPrivate,
+                           SharedWorkerChild* aActor,
                            MessagePort* aMessagePort)
   : DOMEventTargetHelper(aWindow)
-  , mWorkerPrivate(aWorkerPrivate)
+  , mActor(aActor)
   , mMessagePort(aMessagePort)
   , mFrozen(false)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(aWorkerPrivate);
+  MOZ_ASSERT(aActor);
   MOZ_ASSERT(aMessagePort);
 }
 
@@ -59,12 +57,35 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
 {
   AssertIsOnMainThread();
 
-  workerinternals::RuntimeService* rts =
-    workerinternals::RuntimeService::GetOrCreateService();
-  if (!rts) {
-    aRv = NS_ERROR_NOT_AVAILABLE;
+  nsCOMPtr<nsPIDOMWindowInner> window =
+    do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_ASSERT(window);
+
+  // If the window is blocked from accessing storage, do not allow it
+  // to connect to a SharedWorker.  This would potentially allow it
+  // to communicate with other windows that do have storage access.
+  // Allow private browsing, however, as we handle that isolation
+  // via the principal.
+  auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
+  if (storageAllowed != nsContentUtils::StorageAccess::eAllow &&
+      storageAllowed != nsContentUtils::StorageAccess::ePrivateBrowsing) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
+
+  // Assert that the principal private browsing state matches the
+  // StorageAccess value.
+#ifdef  MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  if (storageAllowed == nsContentUtils::StorageAccess::ePrivateBrowsing) {
+    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    nsCOMPtr<nsIPrincipal> principal = doc ? doc->NodePrincipal() : nullptr;
+    uint32_t privateBrowsingId = 0;
+    if (principal) {
+      MOZ_ALWAYS_SUCCEEDS(principal->GetPrivateBrowsingId(&privateBrowsingId));
+    }
+    MOZ_DIAGNOSTIC_ASSERT(privateBrowsingId != 0);
+  }
+#endif // MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
   nsAutoString name;
   if (aOptions.IsString()) {
@@ -74,13 +95,68 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
     name = aOptions.GetAsWorkerOptions().mName;
   }
 
-  RefPtr<SharedWorker> sharedWorker;
-  nsresult rv = rts->CreateSharedWorker(aGlobal, aScriptURL, name,
-                                        getter_AddRefs(sharedWorker));
-  if (NS_FAILED(rv)) {
-    aRv = rv;
+  JSContext* cx = aGlobal.Context();
+
+  WorkerLoadInfo loadInfo;
+  aRv = WorkerPrivate::GetLoadInfo(cx, window, nullptr, aScriptURL,
+                                   false, WorkerPrivate::OverrideLoadGroup,
+                                   WorkerTypeShared, &loadInfo);
+  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
+
+  PrincipalInfo principalInfo;
+  aRv = PrincipalToPrincipalInfo(loadInfo.mPrincipal, &principalInfo);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  PrincipalInfo loadingPrincipalInfo;
+  aRv = PrincipalToPrincipalInfo(loadInfo.mLoadingPrincipal,
+                                 &loadingPrincipalInfo);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  // We don't actually care about this MessageChannel, but we use it to 'steal'
+  // its 2 connected ports.
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(window);
+  RefPtr<MessageChannel> channel = MessageChannel::Constructor(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  MessagePortIdentifier portIdentifier;
+  channel->Port1()->CloneAndDisentangle(portIdentifier);
+
+  nsAutoCString resolvedScriptURL;
+  aRv = loadInfo.mResolvedScriptURI->GetSpec(resolvedScriptURL);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  nsAutoCString baseURL;
+  aRv = loadInfo.mBaseURI->GetSpec(baseURL);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  // Register this component to PBackground.
+  PBackgroundChild* actorChild = BackgroundChild::GetOrCreateForCurrentThread();
+
+  SharedWorkerLoadInfo sharedWorkerLoadInfo(nsString(aScriptURL), baseURL,
+                                            resolvedScriptURL, name,
+                                            loadingPrincipalInfo, principalInfo,
+                                            loadInfo.mDomain, portIdentifier);
+
+  PSharedWorkerChild* pActor =
+    actorChild->SendPSharedWorkerConstructor(sharedWorkerLoadInfo);
+
+  RefPtr<SharedWorkerChild> actor = static_cast<SharedWorkerChild*>(pActor);
+  MOZ_ASSERT(actor);
+
+  RefPtr<SharedWorker> sharedWorker = new SharedWorker(window, actor,
+                                                       channel->Port2());
 
   return sharedWorker.forget();
 }
@@ -153,7 +229,6 @@ SharedWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                           ErrorResult& aRv)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(mWorkerPrivate);
   MOZ_ASSERT(mMessagePort);
 
   mMessagePort->PostMessage(aCx, aMessage, aTransferable, aRv);
