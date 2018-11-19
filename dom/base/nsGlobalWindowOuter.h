@@ -729,6 +729,10 @@ public:
   already_AddRefed<nsWindowRoot> GetWindowRootOuter();
 
   nsIDOMWindowUtils* WindowUtils();
+  bool HasOpenerForInitialContentBrowser()
+  {
+    return !!mOpenerForInitialContentBrowser;
+  }
 
   virtual bool IsInSyncOperation() override
   {

@@ -1319,49 +1319,18 @@ var gBrowserInit = {
   },
 
   onDOMContentLoaded() {
-    gBrowser = window._gBrowser;
-    delete window._gBrowser;
-    gBrowser.init();
-
+    // This needs setting up before we create the first remote browser.
     window.docShell.treeOwner
           .QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIXULWindow)
           .XULBrowserWindow = window.XULBrowserWindow;
     window.browserDOMWindow = new nsBrowserAccess();
+
+    gBrowser = window._gBrowser;
+    delete window._gBrowser;
+    gBrowser.init();
+
     BrowserWindowTracker.track(window);
-
-    let initBrowser = gBrowser.initialBrowser;
-
-    // remoteType and sameProcessAsFrameLoader are passed through to
-    // updateBrowserRemoteness as part of an options object, which itself defaults
-    // to an empty object. So defaulting them to undefined here will cause the
-    // default behavior in updateBrowserRemoteness if they don't get set.
-    let isRemote = gMultiProcessBrowser;
-    let remoteType;
-    let sameProcessAsFrameLoader;
-
-    let tabArgument = this.getTabToAdopt();
-    if (tabArgument) {
-      // The window's first argument is a tab if and only if we are swapping tabs.
-      // We must set the browser's usercontextid before updateBrowserRemoteness(),
-      // so that the newly created remote tab child has the correct usercontextid.
-      if (tabArgument.hasAttribute("usercontextid")) {
-        initBrowser.setAttribute("usercontextid",
-                                 tabArgument.getAttribute("usercontextid"));
-      }
-
-      let linkedBrowser = tabArgument.linkedBrowser;
-      if (linkedBrowser) {
-        remoteType = linkedBrowser.remoteType;
-        isRemote = remoteType != E10SUtils.NOT_REMOTE;
-        sameProcessAsFrameLoader = linkedBrowser.frameLoader;
-      }
-      initBrowser.removeAttribute("blank");
-    }
-
-    gBrowser.updateBrowserRemoteness(initBrowser, isRemote, {
-      remoteType, sameProcessAsFrameLoader,
-    });
 
     gNavToolbox.palette = document.getElementById("BrowserToolbarPalette");
     gNavToolbox.palette.remove();
