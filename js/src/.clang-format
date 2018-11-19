@@ -1,7 +1,4 @@
-# Clang-format style for SpiderMonkey code which is different than the standard Mozilla style.
-BasedOnStyle: Mozilla
-ColumnLimit: 99
-IndentWidth: 4
+BasedOnStyle: Google
 
 # Prevent the loss of indentation with these macros
 MacroBlockBegin: "^JS_BEGIN_MACRO$"
