@@ -9,15 +9,11 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 addons = [
-    'browser_bug596336_1',
-    'browser_bug596336_2',
     'browser_dragdrop1',
     'browser_dragdrop2',
     'browser_dragdrop_incompat',
     'browser_installssl',
     'browser_theme',
-    'browser_update1_1',
-    'browser_update1_2',
     'options_signed',
 ]
 
