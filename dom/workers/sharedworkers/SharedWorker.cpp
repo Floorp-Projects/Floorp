@@ -12,6 +12,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessagePort.h"
+#include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/dom/SharedWorkerBinding.h"
 #include "mozilla/dom/SharedWorkerChild.h"
@@ -32,6 +33,76 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
+
+namespace {
+
+nsresult
+PopulateContentSecurityPolicies(nsIContentSecurityPolicy* aCSP,
+                                nsTArray<ContentSecurityPolicy>& aPolicies)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aCSP);
+  MOZ_ASSERT(aPolicies.IsEmpty());
+
+  uint32_t count = 0;
+  nsresult rv = aCSP->GetPolicyCount(&count);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  for (uint32_t i = 0; i < count; ++i) {
+    const nsCSPPolicy* policy = aCSP->GetPolicy(i);
+    MOZ_ASSERT(policy);
+
+    nsAutoString policyString;
+    policy->toString(policyString);
+
+    aPolicies.AppendElement(ContentSecurityPolicy(policyString,
+                                                  policy->getReportOnlyFlag(),
+                                                  policy->getDeliveredViaMetaTagFlag()));
+  }
+
+  return NS_OK;
+}
+
+nsresult
+PopulateContentSecurityPolicyArray(nsIPrincipal* aPrincipal,
+                                   nsTArray<ContentSecurityPolicy>& policies,
+                                   nsTArray<ContentSecurityPolicy>& preloadPolicies)
+{
+  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(policies.IsEmpty());
+  MOZ_ASSERT(preloadPolicies.IsEmpty());
+
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  nsresult rv = BasePrincipal::Cast(aPrincipal)->GetCsp(getter_AddRefs(csp));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (csp) {
+    rv = PopulateContentSecurityPolicies(csp, policies);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  rv = BasePrincipal::Cast(aPrincipal)->GetPreloadCsp(getter_AddRefs(csp));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (csp) {
+    rv = PopulateContentSecurityPolicies(csp, preloadPolicies);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
+} // anonymous
 
 SharedWorker::SharedWorker(nsPIDOMWindowInner* aWindow,
                            SharedWorkerChild* aActor,
@@ -116,9 +187,26 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
+  nsTArray<ContentSecurityPolicy> principalCSP;
+  nsTArray<ContentSecurityPolicy> principalPreloadCSP;
+  aRv = PopulateContentSecurityPolicyArray(loadInfo.mPrincipal, principalCSP,
+                                           principalPreloadCSP);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
   PrincipalInfo loadingPrincipalInfo;
   aRv = PrincipalToPrincipalInfo(loadInfo.mLoadingPrincipal,
                                  &loadingPrincipalInfo);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  nsTArray<ContentSecurityPolicy> loadingPrincipalCSP;
+  nsTArray<ContentSecurityPolicy> loadingPrincipalPreloadCSP;
+  aRv = PopulateContentSecurityPolicyArray(loadInfo.mLoadingPrincipal,
+                                           loadingPrincipalCSP,
+                                           loadingPrincipalPreloadCSP);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -159,11 +247,20 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
     ipcClientInfo = void_t();
   }
 
-  SharedWorkerLoadInfo sharedWorkerLoadInfo(nsString(aScriptURL), baseURL,
-                                            resolvedScriptURL, name,
-                                            loadingPrincipalInfo, principalInfo,
-                                            loadInfo.mDomain, isSecureContext,
-                                            loadInfo.mWindowID, ipcClientInfo,
+  SharedWorkerLoadInfo sharedWorkerLoadInfo(nsString(aScriptURL),
+                                            baseURL,
+                                            resolvedScriptURL,
+                                            name,
+                                            loadingPrincipalInfo,
+                                            loadingPrincipalCSP,
+                                            loadingPrincipalPreloadCSP,
+                                            principalInfo,
+                                            principalCSP,
+                                            principalPreloadCSP,
+                                            loadInfo.mDomain,
+                                            isSecureContext,
+                                            loadInfo.mWindowID,
+                                            ipcClientInfo,
                                             portIdentifier);
 
   PSharedWorkerChild* pActor =
