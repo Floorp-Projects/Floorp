@@ -19,9 +19,8 @@ class SourceBufferResource;
 
 DDLoggedTypeDeclName(ContainerParser);
 
-class ContainerParser : public DecoderDoctorLifeLogger<ContainerParser>
-{
-public:
+class ContainerParser : public DecoderDoctorLifeLogger<ContainerParser> {
+ public:
   explicit ContainerParser(const MediaContainerType& aType);
   virtual ~ContainerParser();
 
@@ -46,7 +45,8 @@ public:
   // if aStart and aEnd have been updated and NS_ERROR_NOT_AVAILABLE otherwise
   // when no error were encountered.
   virtual MediaResult ParseStartAndEndTimestamps(MediaByteBuffer* aData,
-                                                 int64_t& aStart, int64_t& aEnd);
+                                                 int64_t& aStart,
+                                                 int64_t& aEnd);
 
   // Compare aLhs and rHs, considering any error that may exist in the
   // timestamps from the format's base representation.  Return true if aLhs
@@ -57,10 +57,7 @@ public:
 
   MediaByteBuffer* InitData();
 
-  bool HasInitData()
-  {
-    return mHasInitData;
-  }
+  bool HasInitData() { return mHasInitData; }
 
   // Return true if a complete initialization segment has been passed
   // to ParseStartAndEndTimestamps(). The calls below to retrieve
@@ -80,7 +77,7 @@ public:
 
   const MediaContainerType& ContainerType() const { return mType; }
 
-protected:
+ protected:
   RefPtr<MediaByteBuffer> mInitData;
   RefPtr<SourceBufferResource> mResource;
   bool mHasInitData;
@@ -92,6 +89,6 @@ protected:
   const MediaContainerType mType;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* MOZILLA_CONTAINERPARSER_H_ */

@@ -16,38 +16,31 @@ namespace mozilla {
 class MediaRawData;
 class DecryptJob;
 class ChromiumCDMCallbackProxy;
-class ChromiumCDMProxy : public CDMProxy
-{
-public:
+class ChromiumCDMProxy : public CDMProxy {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ChromiumCDMProxy, override)
 
-  ChromiumCDMProxy(dom::MediaKeys* aKeys,
-                   const nsAString& aKeySystem,
+  ChromiumCDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem,
                    GMPCrashHelper* aCrashHelper,
-                   bool aAllowDistinctiveIdentifier,
-                   bool aAllowPersistentState,
+                   bool aAllowDistinctiveIdentifier, bool aAllowPersistentState,
                    nsIEventTarget* aMainThread);
 
-  void Init(PromiseId aPromiseId,
-            const nsAString& aOrigin,
+  void Init(PromiseId aPromiseId, const nsAString& aOrigin,
             const nsAString& aTopLevelOrigin,
             const nsAString& aGMPName) override;
 
   void CreateSession(uint32_t aCreateSessionToken,
                      dom::MediaKeySessionType aSessionType,
-                     PromiseId aPromiseId,
-                     const nsAString& aInitDataType,
+                     PromiseId aPromiseId, const nsAString& aInitDataType,
                      nsTArray<uint8_t>& aInitData) override;
 
-  void LoadSession(PromiseId aPromiseId,
-                   dom::MediaKeySessionType aSessionType,
+  void LoadSession(PromiseId aPromiseId, dom::MediaKeySessionType aSessionType,
                    const nsAString& aSessionId) override;
 
   void SetServerCertificate(PromiseId aPromiseId,
                             nsTArray<uint8_t>& aCert) override;
 
-  void UpdateSession(const nsAString& aSessionId,
-                     PromiseId aPromiseId,
+  void UpdateSession(const nsAString& aSessionId, PromiseId aPromiseId,
                      nsTArray<uint8_t>& aResponse) override;
 
   void CloseSession(const nsAString& aSessionId, PromiseId aPromiseId) override;
@@ -75,23 +68,18 @@ public:
 
   void OnSessionClosed(const nsAString& aSessionId) override;
 
-  void OnSessionError(const nsAString& aSessionId,
-                      nsresult aException,
-                      uint32_t aSystemCode,
-                      const nsAString& aMsg) override;
+  void OnSessionError(const nsAString& aSessionId, nsresult aException,
+                      uint32_t aSystemCode, const nsAString& aMsg) override;
 
-  void OnRejectPromise(uint32_t aPromiseId,
-                       nsresult aDOMException,
+  void OnRejectPromise(uint32_t aPromiseId, nsresult aDOMException,
                        const nsCString& aMsg) override;
 
   RefPtr<DecryptPromise> Decrypt(MediaRawData* aSample) override;
 
-  void OnDecrypted(uint32_t aId,
-                   DecryptStatus aResult,
+  void OnDecrypted(uint32_t aId, DecryptStatus aResult,
                    const nsTArray<uint8_t>& aDecryptedData) override;
 
-  void RejectPromise(PromiseId aId,
-                     nsresult aExceptionCode,
+  void RejectPromise(PromiseId aId, nsresult aExceptionCode,
                      const nsCString& aReason) override;
 
   void ResolvePromise(PromiseId aId) override;
@@ -118,7 +106,7 @@ public:
   void OnResolvePromiseWithKeyStatus(uint32_t aPromiseId,
                                      dom::MediaKeyStatus aKeyStatus);
 
-private:
+ private:
   void OnCDMCreated(uint32_t aPromiseId);
 
   ~ChromiumCDMProxy();
@@ -131,6 +119,6 @@ private:
   UniquePtr<ChromiumCDMCallbackProxy> mCallback;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // ChromiumCDMProxy_h_
+#endif  // ChromiumCDMProxy_h_

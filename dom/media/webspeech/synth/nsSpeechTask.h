@@ -21,13 +21,12 @@ class SpeechSynthesisUtterance;
 class SpeechSynthesis;
 class SynthStreamListener;
 
-class nsSpeechTask : public nsISpeechTask
-                   , public nsIAudioChannelAgentCallback
-                   , public nsSupportsWeakReference
-{
+class nsSpeechTask : public nsISpeechTask,
+                     public nsIAudioChannelAgentCallback,
+                     public nsSupportsWeakReference {
   friend class SynthStreamListener;
 
-public:
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsSpeechTask, nsISpeechTask)
 
@@ -61,7 +60,7 @@ public:
 
   bool IsChrome() { return mIsChrome; }
 
-protected:
+ protected:
   virtual ~nsSpeechTask();
 
   nsresult DispatchStartImpl();
@@ -77,13 +76,11 @@ protected:
   virtual nsresult DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex);
 
   virtual nsresult DispatchBoundaryImpl(const nsAString& aName,
-                                        float aElapsedTime,
-                                        uint32_t aCharIndex,
-                                        uint32_t aCharLength,
-                                        uint8_t argc);
+                                        float aElapsedTime, uint32_t aCharIndex,
+                                        uint32_t aCharLength, uint8_t argc);
 
-  virtual nsresult DispatchMarkImpl(const nsAString& aName,
-                                    float aElapsedTime, uint32_t aCharIndex);
+  virtual nsresult DispatchMarkImpl(const nsAString& aName, float aElapsedTime,
+                                    uint32_t aCharIndex);
 
   RefPtr<SpeechSynthesisUtterance> mUtterance;
 
@@ -97,7 +94,7 @@ protected:
 
   bool mPreCanceled;
 
-private:
+ private:
   void End();
 
   void CreateAudioChannelAgent();
@@ -115,7 +112,7 @@ private:
   bool mIsChrome;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

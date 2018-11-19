@@ -18,16 +18,14 @@ class ImageContainer;
 class MediaData;
 class MediaRawData;
 
-class BlankVideoDataCreator : public DummyDataCreator
-{
-public:
-  BlankVideoDataCreator(uint32_t aFrameWidth,
-                        uint32_t aFrameHeight,
+class BlankVideoDataCreator : public DummyDataCreator {
+ public:
+  BlankVideoDataCreator(uint32_t aFrameWidth, uint32_t aFrameHeight,
                         layers::ImageContainer* aImageContainer);
 
   already_AddRefed<MediaData> Create(MediaRawData* aSample) override;
 
-private:
+ private:
   VideoInfo mInfo;
   gfx::IntRect mPicture;
   uint32_t mFrameWidth;
@@ -35,33 +33,30 @@ private:
   RefPtr<layers::ImageContainer> mImageContainer;
 };
 
-class BlankAudioDataCreator : public DummyDataCreator
-{
-public:
+class BlankAudioDataCreator : public DummyDataCreator {
+ public:
   BlankAudioDataCreator(uint32_t aChannelCount, uint32_t aSampleRate);
 
   already_AddRefed<MediaData> Create(MediaRawData* aSample) override;
 
-private:
+ private:
   int64_t mFrameSum;
   uint32_t mChannelCount;
   uint32_t mSampleRate;
 };
 
-class BlankDecoderModule : public PlatformDecoderModule
-{
-public:
-  already_AddRefed<MediaDataDecoder>
-  CreateVideoDecoder(const CreateDecoderParams& aParams) override;
+class BlankDecoderModule : public PlatformDecoderModule {
+ public:
+  already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
+      const CreateDecoderParams& aParams) override;
 
-  already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const CreateDecoderParams& aParams) override;
+  already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
+      const CreateDecoderParams& aParams) override;
 
-  bool
-  SupportsMimeType(const nsACString& aMimeType,
-                   DecoderDoctorDiagnostics* aDiagnostics) const override;
+  bool SupportsMimeType(const nsACString& aMimeType,
+                        DecoderDoctorDiagnostics* aDiagnostics) const override;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* BlankDecoderModule_h_ */

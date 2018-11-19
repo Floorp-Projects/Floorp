@@ -21,26 +21,28 @@ class DDLifetimes;
 
 // Structure containing all the information needed in each log message
 // (before and after processing).
-struct DDLogMessage
-{
+struct DDLogMessage {
   DDMessageIndex mIndex;
   DDTimeStamp mTimeStamp;
   DDLogObject mObject;
   DDLogCategory mCategory;
   const char* mLabel;
-  DDLogValue mValue = DDLogValue{ DDNoValue{} };
+  DDLogValue mValue = DDLogValue{DDNoValue{}};
 
   // Print the message. Format:
   // "index | timestamp | object | category | label | value". E.g.:
-  // "29 | 5.047547 | dom::HTMLMediaElement[134073800] | lnk | decoder | MediaDecoder[136078200]"
+  // "29 | 5.047547 | dom::HTMLMediaElement[134073800] | lnk | decoder |
+  // MediaDecoder[136078200]"
   nsCString Print() const;
 
   // Print the message, using object information from aLifetimes. Format:
   // "index | timestamp | object | category | label | value". E.g.:
-  // "29 | 5.047547 | dom::HTMLVideoElement[134073800]#1 (as dom::HTMLMediaElement) | lnk | decoder | MediaSourceDecoder[136078200]#5 (as MediaDecoder)"
+  // "29 | 5.047547 | dom::HTMLVideoElement[134073800]#1 (as
+  // dom::HTMLMediaElement) | lnk | decoder | MediaSourceDecoder[136078200]#5
+  // (as MediaDecoder)"
   nsCString Print(const DDLifetimes& aLifetimes) const;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // DDLogMessage_h_
+#endif  // DDLogMessage_h_

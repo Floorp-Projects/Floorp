@@ -12,25 +12,18 @@
 
 namespace mozilla {
 
-void
-GMPCrashHelperHolder::SetCrashHelper(GMPCrashHelper* aHelper)
-{
+void GMPCrashHelperHolder::SetCrashHelper(GMPCrashHelper* aHelper) {
   mCrashHelper = aHelper;
 }
 
-GMPCrashHelper*
-GMPCrashHelperHolder::GetCrashHelper()
-{
-  return mCrashHelper;
-}
+GMPCrashHelper* GMPCrashHelperHolder::GetCrashHelper() { return mCrashHelper; }
 
-void
-GMPCrashHelperHolder::MaybeDisconnect(bool aAbnormalShutdown)
-{
+void GMPCrashHelperHolder::MaybeDisconnect(bool aAbnormalShutdown) {
   if (!aAbnormalShutdown) {
-    RefPtr<gmp::GeckoMediaPluginService> service(gmp::GeckoMediaPluginService::GetGeckoMediaPluginService());
+    RefPtr<gmp::GeckoMediaPluginService> service(
+        gmp::GeckoMediaPluginService::GetGeckoMediaPluginService());
     service->DisconnectCrashHelper(GetCrashHelper());
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

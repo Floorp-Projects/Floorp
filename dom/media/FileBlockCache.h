@@ -52,15 +52,14 @@ namespace mozilla {
 // changes listed in mBlockChanges to file. Read() checks mBlockChanges and
 // determines the current data to return, reading from file or from
 // mBlockChanges as necessary.
-class FileBlockCache : public MediaBlockCacheBase
-{
-public:
+class FileBlockCache : public MediaBlockCacheBase {
+ public:
   FileBlockCache();
 
-protected:
+ protected:
   virtual ~FileBlockCache();
 
-public:
+ public:
   // Launch thread and open temporary file.
   nsresult Init() override;
 
@@ -72,16 +71,13 @@ public:
   int32_t GetMaxBlocks() const override;
 
   // Can be called on any thread. This defers to a non-main thread.
-  nsresult WriteBlock(uint32_t aBlockIndex,
-                      Span<const uint8_t> aData1,
+  nsresult WriteBlock(uint32_t aBlockIndex, Span<const uint8_t> aData1,
                       Span<const uint8_t> aData2) override;
 
   // Synchronously reads data from file. May read from file or memory
   // depending on whether written blocks have been flushed to file yet.
   // Not recommended to be called from the main thread, as can cause jank.
-  nsresult Read(int64_t aOffset,
-                uint8_t* aData,
-                int32_t aLength,
+  nsresult Read(int64_t aOffset, uint8_t* aData, int32_t aLength,
                 int32_t* aBytes) override;
 
   // Moves a block asynchronously. Can be called on any thread.
@@ -93,21 +89,17 @@ public:
   // is either a write (and the data to be written is stored in this struct)
   // or a move (and the index of the source block is stored instead).
   struct BlockChange final {
-
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BlockChange)
 
     // This block is waiting in memory to be written.
     // Stores a copy of the block, so we can write it asynchronously.
-    explicit BlockChange(const uint8_t* aData)
-      : mSourceBlockIndex(-1)
-    {
+    explicit BlockChange(const uint8_t* aData) : mSourceBlockIndex(-1) {
       mData = MakeUnique<uint8_t[]>(BLOCK_SIZE);
       memcpy(mData.get(), aData, BLOCK_SIZE);
     }
 
     BlockChange(Span<const uint8_t> aData1, Span<const uint8_t> aData2)
-      : mSourceBlockIndex(-1)
-    {
+        : mSourceBlockIndex(-1) {
       MOZ_ASSERT(aData1.Length() + aData2.Length() == BLOCK_SIZE);
       mData = MakeUnique<uint8_t[]>(BLOCK_SIZE);
       memcpy(mData.get(), aData1.Elements(), aData1.Length());
@@ -117,27 +109,22 @@ public:
     // This block's contents are located in another file
     // block, i.e. this block has been moved.
     explicit BlockChange(int32_t aSourceBlockIndex)
-      : mSourceBlockIndex(aSourceBlockIndex) {}
+        : mSourceBlockIndex(aSourceBlockIndex) {}
 
     UniquePtr<uint8_t[]> mData;
     const int32_t mSourceBlockIndex;
 
-    bool IsMove() const {
-      return mSourceBlockIndex != -1;
-    }
+    bool IsMove() const { return mSourceBlockIndex != -1; }
     bool IsWrite() const {
-      return mSourceBlockIndex == -1 &&
-             mData.get() != nullptr;
+      return mSourceBlockIndex == -1 && mData.get() != nullptr;
     }
 
-  private:
+   private:
     // Private destructor, to discourage deletion outside of Release():
-    ~BlockChange()
-    {
-    }
+    ~BlockChange() {}
   };
 
-private:
+ private:
   int64_t BlockIndexToOffset(int32_t aBlockIndex) {
     return static_cast<int64_t>(aBlockIndex) * BLOCK_SIZE;
   }
@@ -155,14 +142,11 @@ private:
   // while accessing any of the following data fields or methods.
   Mutex mFileMutex;
   // Moves a block already committed to file.
-  nsresult MoveBlockInFile(int32_t aSourceBlockIndex,
-                           int32_t aDestBlockIndex);
+  nsresult MoveBlockInFile(int32_t aSourceBlockIndex, int32_t aDestBlockIndex);
   // Seeks file pointer.
   nsresult Seek(int64_t aOffset);
   // Reads data from file offset.
-  nsresult ReadFromFile(int64_t aOffset,
-                        uint8_t* aDest,
-                        int32_t aBytesToRead,
+  nsresult ReadFromFile(int64_t aOffset, uint8_t* aDest, int32_t aBytesToRead,
                         int32_t& aBytesRead);
   nsresult WriteBlockToFile(int32_t aBlockIndex, const uint8_t* aBlockData);
   // File descriptor we're writing to. This is created externally, but
@@ -181,12 +165,12 @@ private:
   // mDataMutex must be owned while calling this.
   void EnsureWriteScheduled();
 
-  // Array of block changes to made. If mBlockChanges[offset/BLOCK_SIZE] == nullptr,
-  // then the block has no pending changes to be written, but if
+  // Array of block changes to made. If mBlockChanges[offset/BLOCK_SIZE] ==
+  // nullptr, then the block has no pending changes to be written, but if
   // mBlockChanges[offset/BLOCK_SIZE] != nullptr, then either there's a block
   // cached in memory waiting to be written, or this block is the target of a
   // block move.
-  nsTArray< RefPtr<BlockChange> > mBlockChanges;
+  nsTArray<RefPtr<BlockChange> > mBlockChanges;
   // Thread upon which block writes and block moves are performed. This is
   // created upon open, and shutdown (asynchronously) upon close (on the
   // main thread).
@@ -205,6 +189,6 @@ private:
   bool mInitialized = false;
 };
 
-} // End namespace mozilla.
+}  // End namespace mozilla.
 
 #endif /* FILE_BLOCK_CACHE_H_ */

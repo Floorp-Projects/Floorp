@@ -12,38 +12,29 @@
 namespace mozilla {
 namespace dom {
 
-class AudioTrack : public MediaTrack
-{
-public:
-  AudioTrack(nsIGlobalObject* aOwnerGlobal,
-             const nsAString& aId,
-             const nsAString& aKind,
-             const nsAString& aLabel,
-             const nsAString& aLanguage,
-             bool aEnabled);
+class AudioTrack : public MediaTrack {
+ public:
+  AudioTrack(nsIGlobalObject* aOwnerGlobal, const nsAString& aId,
+             const nsAString& aKind, const nsAString& aLabel,
+             const nsAString& aLanguage, bool aEnabled);
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  AudioTrack* AsAudioTrack() override
-  {
-    return this;
-  }
+  AudioTrack* AsAudioTrack() override { return this; }
 
   void SetEnabledInternal(bool aEnabled, int aFlags) override;
 
   // WebIDL
-  bool Enabled() const
-  {
-    return mEnabled;
-  }
+  bool Enabled() const { return mEnabled; }
 
   void SetEnabled(bool aEnabled);
 
-private:
+ private:
   bool mEnabled;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_AudioTrack_h
+#endif  // mozilla_dom_AudioTrack_h

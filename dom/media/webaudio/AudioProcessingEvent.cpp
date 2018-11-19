@@ -12,8 +12,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioProcessingEvent, Event,
-                                   mInputBuffer, mOutputBuffer, mNode)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioProcessingEvent, Event, mInputBuffer,
+                                   mOutputBuffer, mNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AudioProcessingEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
@@ -24,34 +24,23 @@ NS_IMPL_RELEASE_INHERITED(AudioProcessingEvent, Event)
 AudioProcessingEvent::AudioProcessingEvent(ScriptProcessorNode* aOwner,
                                            nsPresContext* aPresContext,
                                            WidgetEvent* aEvent)
-  : Event(aOwner, aPresContext, aEvent)
-  , mPlaybackTime(0.0)
-  , mNode(aOwner)
-{
-}
+    : Event(aOwner, aPresContext, aEvent), mPlaybackTime(0.0), mNode(aOwner) {}
 
-AudioProcessingEvent::~AudioProcessingEvent()
-{
-}
+AudioProcessingEvent::~AudioProcessingEvent() {}
 
-JSObject*
-AudioProcessingEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* AudioProcessingEvent::WrapObjectInternal(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return AudioProcessingEvent_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<AudioBuffer>
-AudioProcessingEvent::LazilyCreateBuffer(uint32_t aNumberOfChannels,
-                                         ErrorResult& aRv)
-{
-  RefPtr<AudioBuffer> buffer =
-    AudioBuffer::Create(mNode->Context()->GetOwner(), aNumberOfChannels,
-                        mNode->BufferSize(),
-                        mNode->Context()->SampleRate(), aRv);
+already_AddRefed<AudioBuffer> AudioProcessingEvent::LazilyCreateBuffer(
+    uint32_t aNumberOfChannels, ErrorResult& aRv) {
+  RefPtr<AudioBuffer> buffer = AudioBuffer::Create(
+      mNode->Context()->GetOwner(), aNumberOfChannels, mNode->BufferSize(),
+      mNode->Context()->SampleRate(), aRv);
   MOZ_ASSERT(buffer || aRv.ErrorCodeIs(NS_ERROR_OUT_OF_MEMORY));
   return buffer.forget();
 }
 
-} // namespace dom
-} // namespace mozilla
-
+}  // namespace dom
+}  // namespace mozilla

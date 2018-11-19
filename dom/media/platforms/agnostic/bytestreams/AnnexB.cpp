@@ -11,14 +11,12 @@
 #include "ByteWriter.h"
 #include "MediaData.h"
 
-namespace mozilla
-{
+namespace mozilla {
 
-static const uint8_t kAnnexBDelimiter[] = { 0, 0, 0, 1 };
+static const uint8_t kAnnexBDelimiter[] = {0, 0, 0, 1};
 
-Result<Ok, nsresult>
-AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample, bool aAddSPS)
-{
+Result<Ok, nsresult> AnnexB::ConvertSampleToAnnexB(
+    mozilla::MediaRawData* aSample, bool aAddSPS) {
   MOZ_ASSERT(aSample);
 
   if (!IsAVCC(aSample)) {
@@ -63,7 +61,7 @@ AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample, bool aAddSPS)
   // Prepend the Annex B NAL with SPS and PPS tables to keyframes.
   if (aAddSPS && aSample->mKeyframe) {
     RefPtr<MediaByteBuffer> annexB =
-      ConvertExtraDataToAnnexB(aSample->mExtraData);
+        ConvertExtraDataToAnnexB(aSample->mExtraData);
     if (!samplewriter->Prepend(annexB->Elements(), annexB->Length())) {
       return Err(NS_ERROR_OUT_OF_MEMORY);
     }
@@ -76,7 +74,7 @@ AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample, bool aAddSPS)
       if (aSample->mCrypto.mPlainSizes.Length() == 0) {
         samplewriter->mCrypto.mPlainSizes.AppendElement(annexB->Length());
         samplewriter->mCrypto.mEncryptedSizes.AppendElement(
-          samplewriter->Size() - annexB->Length());
+            samplewriter->Size() - annexB->Length());
       } else {
         samplewriter->mCrypto.mPlainSizes[0] += annexB->Length();
       }
@@ -86,9 +84,8 @@ AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample, bool aAddSPS)
   return Ok();
 }
 
-already_AddRefed<mozilla::MediaByteBuffer>
-AnnexB::ConvertExtraDataToAnnexB(const mozilla::MediaByteBuffer* aExtraData)
-{
+already_AddRefed<mozilla::MediaByteBuffer> AnnexB::ConvertExtraDataToAnnexB(
+    const mozilla::MediaByteBuffer* aExtraData) {
   // AVCC 6 byte header looks like:
   //     +------+------+------+------+------+------+------+------+
   // [0] |   0  |   0  |   0  |   0  |   0  |   0  |   0  |   1  |
@@ -110,18 +107,18 @@ AnnexB::ConvertExtraDataToAnnexB(const mozilla::MediaByteBuffer* aExtraData)
   const uint8_t* ptr = reader.Read(5);
   if (ptr && ptr[0] == 1) {
     // Append SPS then PPS
-    Unused << reader.ReadU8().map([&] (uint8_t x) { return ConvertSPSOrPPS(reader, x & 31, annexB); });
-    Unused << reader.ReadU8().map([&] (uint8_t x) { return ConvertSPSOrPPS(reader, x, annexB); });
+    Unused << reader.ReadU8().map(
+        [&](uint8_t x) { return ConvertSPSOrPPS(reader, x & 31, annexB); });
+    Unused << reader.ReadU8().map(
+        [&](uint8_t x) { return ConvertSPSOrPPS(reader, x, annexB); });
     // MP4Box adds extra bytes that we ignore. I don't know what they do.
   }
 
   return annexB.forget();
 }
 
-Result<mozilla::Ok, nsresult>
-AnnexB::ConvertSPSOrPPS(BufferReader& aReader, uint8_t aCount,
-                        mozilla::MediaByteBuffer* aAnnexB)
-{
+Result<mozilla::Ok, nsresult> AnnexB::ConvertSPSOrPPS(
+    BufferReader& aReader, uint8_t aCount, mozilla::MediaByteBuffer* aAnnexB) {
   for (int i = 0; i < aCount; i++) {
     uint16_t length;
     MOZ_TRY_VAR(length, aReader.ReadU16());
@@ -136,8 +133,7 @@ AnnexB::ConvertSPSOrPPS(BufferReader& aReader, uint8_t aCount,
   return Ok();
 }
 
-static Result<Ok, nsresult>
-FindStartCodeInternal(BufferReader& aBr) {
+static Result<Ok, nsresult> FindStartCodeInternal(BufferReader& aBr) {
   size_t offset = aBr.Offset();
 
   for (uint32_t i = 0; i < aBr.Align() && aBr.Remaining() >= 3; i++) {
@@ -188,9 +184,8 @@ FindStartCodeInternal(BufferReader& aBr) {
   return Err(NS_ERROR_FAILURE);
 }
 
-static Result<Ok, nsresult>
-FindStartCode(BufferReader& aBr, size_t& aStartSize)
-{
+static Result<Ok, nsresult> FindStartCode(BufferReader& aBr,
+                                          size_t& aStartSize) {
   if (FindStartCodeInternal(aBr).isErr()) {
     aStartSize = 0;
     return Err(NS_ERROR_FAILURE);
@@ -210,9 +205,8 @@ FindStartCode(BufferReader& aBr, size_t& aStartSize)
   return Ok();
 }
 
-static Result<mozilla::Ok, nsresult>
-ParseNALUnits(ByteWriter& aBw, BufferReader& aBr)
-{
+static Result<mozilla::Ok, nsresult> ParseNALUnits(ByteWriter& aBw,
+                                                   BufferReader& aBr) {
   size_t startSize;
 
   auto rv = FindStartCode(aBr, startSize);
@@ -222,8 +216,7 @@ ParseNALUnits(ByteWriter& aBw, BufferReader& aBr)
       size_t offset = aBr.Offset();
       size_t sizeNAL = offset - startOffset - startSize;
       aBr.Seek(startOffset);
-      if (!aBw.WriteU32(sizeNAL)
-          || !aBw.Write(aBr.Read(sizeNAL), sizeNAL)) {
+      if (!aBw.WriteU32(sizeNAL) || !aBw.Write(aBr.Read(sizeNAL), sizeNAL)) {
         return Err(NS_ERROR_OUT_OF_MEMORY);
       }
       aBr.Read(startSize);
@@ -232,17 +225,14 @@ ParseNALUnits(ByteWriter& aBw, BufferReader& aBr)
   }
   size_t sizeNAL = aBr.Remaining();
   if (sizeNAL) {
-    if (!aBw.WriteU32(sizeNAL)
-        || !aBw.Write(aBr.Read(sizeNAL), sizeNAL)) {
+    if (!aBw.WriteU32(sizeNAL) || !aBw.Write(aBr.Read(sizeNAL), sizeNAL)) {
       return Err(NS_ERROR_OUT_OF_MEMORY);
     }
   }
   return Ok();
 }
 
-bool
-AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample)
-{
+bool AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample) {
   if (IsAVCC(aSample)) {
     return ConvertSampleTo4BytesAVCC(aSample).isOk();
   }
@@ -265,13 +255,13 @@ AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample)
   // Create the AVCC header.
   RefPtr<mozilla::MediaByteBuffer> extradata = new mozilla::MediaByteBuffer;
   static const uint8_t kFakeExtraData[] = {
-    1 /* version */,
-    0x64 /* profile (High) */,
-    0 /* profile compat (0) */,
-    40 /* level (40) */,
-    0xfc | 3 /* nal size - 1 */,
-    0xe0 /* num SPS (0) */,
-    0 /* num PPS (0) */
+      1 /* version */,
+      0x64 /* profile (High) */,
+      0 /* profile compat (0) */,
+      40 /* level (40) */,
+      0xfc | 3 /* nal size - 1 */,
+      0xe0 /* num SPS (0) */,
+      0 /* num PPS (0) */
   };
   if (!extradata->AppendElements(kFakeExtraData, ArrayLength(kFakeExtraData))) {
     return false;
@@ -280,9 +270,8 @@ AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample)
   return true;
 }
 
-Result<mozilla::Ok, nsresult>
-AnnexB::ConvertSampleTo4BytesAVCC(mozilla::MediaRawData* aSample)
-{
+Result<mozilla::Ok, nsresult> AnnexB::ConvertSampleTo4BytesAVCC(
+    mozilla::MediaRawData* aSample) {
   MOZ_ASSERT(IsAVCC(aSample));
 
   int nalLenSize = ((*aSample->mExtraData)[4] & 3) + 1;
@@ -296,9 +285,15 @@ AnnexB::ConvertSampleTo4BytesAVCC(mozilla::MediaRawData* aSample)
   while (reader.Remaining() > nalLenSize) {
     uint32_t nalLen;
     switch (nalLenSize) {
-      case 1: MOZ_TRY_VAR(nalLen, reader.ReadU8()); break;
-      case 2: MOZ_TRY_VAR(nalLen, reader.ReadU16()); break;
-      case 3: MOZ_TRY_VAR(nalLen, reader.ReadU24()); break;
+      case 1:
+        MOZ_TRY_VAR(nalLen, reader.ReadU8());
+        break;
+      case 2:
+        MOZ_TRY_VAR(nalLen, reader.ReadU16());
+        break;
+      case 3:
+        MOZ_TRY_VAR(nalLen, reader.ReadU24());
+        break;
     }
 
     MOZ_ASSERT(nalLenSize != 4);
@@ -307,8 +302,7 @@ AnnexB::ConvertSampleTo4BytesAVCC(mozilla::MediaRawData* aSample)
     if (!p) {
       return Ok();
     }
-    if (!writer.WriteU32(nalLen)
-        || !writer.Write(p, nalLen)) {
+    if (!writer.WriteU32(nalLen) || !writer.Write(p, nalLen)) {
       return Err(NS_ERROR_OUT_OF_MEMORY);
     }
   }
@@ -319,16 +313,12 @@ AnnexB::ConvertSampleTo4BytesAVCC(mozilla::MediaRawData* aSample)
   return Ok();
 }
 
-bool
-AnnexB::IsAVCC(const mozilla::MediaRawData* aSample)
-{
+bool AnnexB::IsAVCC(const mozilla::MediaRawData* aSample) {
   return aSample->Size() >= 3 && aSample->mExtraData &&
-    aSample->mExtraData->Length() >= 7 && (*aSample->mExtraData)[0] == 1;
+         aSample->mExtraData->Length() >= 7 && (*aSample->mExtraData)[0] == 1;
 }
 
-bool
-AnnexB::IsAnnexB(const mozilla::MediaRawData* aSample)
-{
+bool AnnexB::IsAnnexB(const mozilla::MediaRawData* aSample) {
   if (aSample->Size() < 4) {
     return false;
   }
@@ -336,4 +326,4 @@ AnnexB::IsAnnexB(const mozilla::MediaRawData* aSample)
   return header == 0x00000001 || (header >> 8) == 0x000001;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

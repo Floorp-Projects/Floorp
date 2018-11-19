@@ -18,20 +18,18 @@
 
 namespace mozilla {
 
-BlankVideoDataCreator::BlankVideoDataCreator(uint32_t aFrameWidth,
-                                             uint32_t aFrameHeight,
-                                             layers::ImageContainer* aImageContainer)
-  : mFrameWidth(aFrameWidth)
-  , mFrameHeight(aFrameHeight)
-  , mImageContainer(aImageContainer)
-{
+BlankVideoDataCreator::BlankVideoDataCreator(
+    uint32_t aFrameWidth, uint32_t aFrameHeight,
+    layers::ImageContainer* aImageContainer)
+    : mFrameWidth(aFrameWidth),
+      mFrameHeight(aFrameHeight),
+      mImageContainer(aImageContainer) {
   mInfo.mDisplay = gfx::IntSize(mFrameWidth, mFrameHeight);
   mPicture = gfx::IntRect(0, 0, mFrameWidth, mFrameHeight);
 }
 
-already_AddRefed<MediaData>
-BlankVideoDataCreator::Create(MediaRawData* aSample)
-{
+already_AddRefed<MediaData> BlankVideoDataCreator::Create(
+    MediaRawData* aSample) {
   // Create a fake YUV buffer in a 420 format. That is, an 8bpp Y plane,
   // with a U and V plane that are half the size of the Y plane, i.e 8 bit,
   // 2x2 subsampled. Have the data pointer of each frame point to the
@@ -72,32 +70,22 @@ BlankVideoDataCreator::Create(MediaRawData* aSample)
   buffer.mPlanes[2].mOffset = 0;
   buffer.mPlanes[2].mSkip = 0;
 
-  return VideoData::CreateAndCopyData(mInfo,
-                                      mImageContainer,
-                                      aSample->mOffset,
-                                      aSample->mTime,
-                                      aSample->mDuration,
-                                      buffer,
-                                      aSample->mKeyframe,
-                                      aSample->mTime,
-                                      mPicture);
+  return VideoData::CreateAndCopyData(
+      mInfo, mImageContainer, aSample->mOffset, aSample->mTime,
+      aSample->mDuration, buffer, aSample->mKeyframe, aSample->mTime, mPicture);
 }
 
-BlankAudioDataCreator::BlankAudioDataCreator(uint32_t aChannelCount, uint32_t aSampleRate)
-  : mFrameSum(0), mChannelCount(aChannelCount), mSampleRate(aSampleRate)
-{
-}
+BlankAudioDataCreator::BlankAudioDataCreator(uint32_t aChannelCount,
+                                             uint32_t aSampleRate)
+    : mFrameSum(0), mChannelCount(aChannelCount), mSampleRate(aSampleRate) {}
 
-already_AddRefed<MediaData>
-BlankAudioDataCreator::Create(MediaRawData* aSample)
-{
+already_AddRefed<MediaData> BlankAudioDataCreator::Create(
+    MediaRawData* aSample) {
   // Convert duration to frames. We add 1 to duration to account for
   // rounding errors, so we get a consistent tone.
-  CheckedInt64 frames = UsecsToFrames(
-    aSample->mDuration.ToMicroseconds()+1, mSampleRate);
-  if (!frames.isValid() ||
-      !mChannelCount ||
-      !mSampleRate ||
+  CheckedInt64 frames =
+      UsecsToFrames(aSample->mDuration.ToMicroseconds() + 1, mSampleRate);
+  if (!frames.isValid() || !mChannelCount || !mSampleRate ||
       frames.value() > (UINT32_MAX / mChannelCount)) {
     return nullptr;
   }
@@ -115,49 +103,43 @@ BlankAudioDataCreator::Create(MediaRawData* aSample)
     }
     mFrameSum++;
   }
-  RefPtr<AudioData> data(new AudioData(aSample->mOffset,
-                                       aSample->mTime,
-                                       aSample->mDuration,
-                                       uint32_t(frames.value()),
-                                       std::move(samples),
-                                       mChannelCount,
-                                       mSampleRate));
+  RefPtr<AudioData> data(
+      new AudioData(aSample->mOffset, aSample->mTime, aSample->mDuration,
+                    uint32_t(frames.value()), std::move(samples), mChannelCount,
+                    mSampleRate));
   return data.forget();
 }
 
-already_AddRefed<MediaDataDecoder>
-BlankDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
-{
+already_AddRefed<MediaDataDecoder> BlankDecoderModule::CreateVideoDecoder(
+    const CreateDecoderParams& aParams) {
   const VideoInfo& config = aParams.VideoConfig();
-  UniquePtr<DummyDataCreator> creator =
-    MakeUnique<BlankVideoDataCreator>(config.mDisplay.width, config.mDisplay.height, aParams.mImageContainer);
+  UniquePtr<DummyDataCreator> creator = MakeUnique<BlankVideoDataCreator>(
+      config.mDisplay.width, config.mDisplay.height, aParams.mImageContainer);
   RefPtr<MediaDataDecoder> decoder = new DummyMediaDataDecoder(
-    std::move(creator), NS_LITERAL_CSTRING("blank media data decoder"), aParams);
+      std::move(creator), NS_LITERAL_CSTRING("blank media data decoder"),
+      aParams);
   return decoder.forget();
 }
 
-already_AddRefed<MediaDataDecoder>
-BlankDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
-{
+already_AddRefed<MediaDataDecoder> BlankDecoderModule::CreateAudioDecoder(
+    const CreateDecoderParams& aParams) {
   const AudioInfo& config = aParams.AudioConfig();
   UniquePtr<DummyDataCreator> creator =
-    MakeUnique<BlankAudioDataCreator>(config.mChannels, config.mRate);
+      MakeUnique<BlankAudioDataCreator>(config.mChannels, config.mRate);
   RefPtr<MediaDataDecoder> decoder = new DummyMediaDataDecoder(
-    std::move(creator), NS_LITERAL_CSTRING("blank media data decoder"), aParams);
+      std::move(creator), NS_LITERAL_CSTRING("blank media data decoder"),
+      aParams);
   return decoder.forget();
 }
 
-bool
-BlankDecoderModule::SupportsMimeType(const nsACString& aMimeType,
-                                     DecoderDoctorDiagnostics* aDiagnostics) const
-{
+bool BlankDecoderModule::SupportsMimeType(
+    const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   return true;
 }
 
-already_AddRefed<PlatformDecoderModule> CreateBlankDecoderModule()
-{
+already_AddRefed<PlatformDecoderModule> CreateBlankDecoderModule() {
   RefPtr<PlatformDecoderModule> pdm = new BlankDecoderModule();
   return pdm.forget();
 }
 
-} // namespace mozilla
+}  // namespace mozilla

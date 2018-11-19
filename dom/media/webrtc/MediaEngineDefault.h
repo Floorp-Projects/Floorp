@@ -28,30 +28,27 @@ namespace mozilla {
 
 namespace layers {
 class ImageContainer;
-} // namespace layers
+}  // namespace layers
 
 class MediaEngineDefault;
 
 /**
  * The default implementation of the MediaEngine interface.
  */
-class MediaEngineDefaultVideoSource : public MediaEngineSource
-{
-public:
+class MediaEngineDefaultVideoSource : public MediaEngineSource {
+ public:
   MediaEngineDefaultVideoSource();
 
   nsString GetName() const override;
   nsCString GetUUID() const override;
 
-  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                    const MediaEnginePrefs &aPrefs,
-                    const nsString& aDeviceId,
+  nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
+                    const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
                     const ipc::PrincipalInfo& aPrincipalInfo,
                     AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override;
   nsresult SetTrack(const RefPtr<const AllocationHandle>& aHandle,
-                    const RefPtr<SourceMediaStream>& aStream,
-                    TrackID aTrackID,
+                    const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
                     const PrincipalHandle& aPrincipal) override;
   nsresult Start(const RefPtr<const AllocationHandle>& aHandle) override;
   nsresult Reconfigure(const RefPtr<AllocationHandle>& aHandle,
@@ -62,8 +59,7 @@ public:
   nsresult Stop(const RefPtr<const AllocationHandle>& aHandle) override;
   nsresult Deallocate(const RefPtr<const AllocationHandle>& aHandle) override;
   void Pull(const RefPtr<const AllocationHandle>& aHandle,
-            const RefPtr<SourceMediaStream>& aStream,
-            TrackID aTrackID,
+            const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
             StreamTime aDesiredTime,
             const PrincipalHandle& aPrincipalHandle) override;
 
@@ -71,17 +67,13 @@ public:
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) const override;
 
-  bool IsFake() const override
-  {
-    return true;
-  }
+  bool IsFake() const override { return true; }
 
-  dom::MediaSourceEnum GetMediaSource() const override
-  {
+  dom::MediaSourceEnum GetMediaSource() const override {
     return dom::MediaSourceEnum::Camera;
   }
 
-protected:
+ protected:
   ~MediaEngineDefaultVideoSource();
 
   /**
@@ -110,23 +102,20 @@ protected:
 
 class SineWaveGenerator;
 
-class MediaEngineDefaultAudioSource : public MediaEngineSource
-{
-public:
+class MediaEngineDefaultAudioSource : public MediaEngineSource {
+ public:
   MediaEngineDefaultAudioSource();
 
   nsString GetName() const override;
   nsCString GetUUID() const override;
 
-  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                    const MediaEnginePrefs &aPrefs,
-                    const nsString& aDeviceId,
+  nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
+                    const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
                     const ipc::PrincipalInfo& aPrincipalInfo,
                     AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override;
   nsresult SetTrack(const RefPtr<const AllocationHandle>& aHandle,
-                    const RefPtr<SourceMediaStream>& aStream,
-                    TrackID aTrackID,
+                    const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
                     const PrincipalHandle& aPrincipal) override;
   nsresult Start(const RefPtr<const AllocationHandle>& aHandle) override;
   nsresult Reconfigure(const RefPtr<AllocationHandle>& aHandle,
@@ -136,22 +125,16 @@ public:
                        const char** aOutBadConstraint) override;
   nsresult Stop(const RefPtr<const AllocationHandle>& aHandle) override;
   nsresult Deallocate(const RefPtr<const AllocationHandle>& aHandle) override;
-  void inline AppendToSegment(AudioSegment& aSegment,
-                              TrackTicks aSamples,
+  void inline AppendToSegment(AudioSegment& aSegment, TrackTicks aSamples,
                               const PrincipalHandle& aPrincipalHandle);
   void Pull(const RefPtr<const AllocationHandle>& aHandle,
-            const RefPtr<SourceMediaStream>& aStream,
-            TrackID aTrackID,
+            const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
             StreamTime aDesiredTime,
             const PrincipalHandle& aPrincipalHandle) override;
 
-  bool IsFake() const override
-  {
-    return true;
-  }
+  bool IsFake() const override { return true; }
 
-  dom::MediaSourceEnum GetMediaSource() const override
-  {
+  dom::MediaSourceEnum GetMediaSource() const override {
     return dom::MediaSourceEnum::Microphone;
   }
 
@@ -161,7 +144,7 @@ public:
 
   bool IsAvailable() const;
 
-protected:
+ protected:
   ~MediaEngineDefaultAudioSource();
 
   // mMutex protects mState, mStream, mTrackID
@@ -175,35 +158,32 @@ protected:
 
   // Accessed in Pull (from MSG thread)
   TrackTicks mLastNotify = 0;
-  uint32_t mFreq = 1000; // ditto
+  uint32_t mFreq = 1000;  // ditto
 
   // Created on Start, then accessed from Pull (MSG thread)
   nsAutoPtr<SineWaveGenerator> mSineGenerator;
 };
 
-
-class MediaEngineDefault : public MediaEngine
-{
-public:
+class MediaEngineDefault : public MediaEngine {
+ public:
   MediaEngineDefault() = default;
 
-  void EnumerateDevices(uint64_t aWindowId,
-                        dom::MediaSourceEnum,
-                        MediaSinkEnum,
+  void EnumerateDevices(uint64_t aWindowId, dom::MediaSourceEnum, MediaSinkEnum,
                         nsTArray<RefPtr<MediaDevice>>*) override;
   void Shutdown() override;
   void ReleaseResourcesForWindow(uint64_t aWindowId) override;
 
-private:
+ private:
   ~MediaEngineDefault() = default;
 
   // WindowID -> Array of devices.
+  nsClassHashtable<nsUint64HashKey, nsTArray<RefPtr<MediaEngineSource>>>
+      mVSources;
   nsClassHashtable<nsUint64HashKey,
-                   nsTArray<RefPtr<MediaEngineSource>>> mVSources;
-  nsClassHashtable<nsUint64HashKey,
-                   nsTArray<RefPtr<MediaEngineDefaultAudioSource>>> mASources;
+                   nsTArray<RefPtr<MediaEngineDefaultAudioSource>>>
+      mASources;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* NSMEDIAENGINEDEFAULT_H_ */

@@ -23,32 +23,23 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MediaKeyStatusMap, mParent)
 
 MediaKeyStatusMap::MediaKeyStatusMap(nsPIDOMWindowInner* aParent)
-  : mParent(aParent)
-{
-}
+    : mParent(aParent) {}
 
-MediaKeyStatusMap::~MediaKeyStatusMap()
-{
-}
+MediaKeyStatusMap::~MediaKeyStatusMap() {}
 
-JSObject*
-MediaKeyStatusMap::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* MediaKeyStatusMap::WrapObject(JSContext* aCx,
+                                        JS::Handle<JSObject*> aGivenProto) {
   return MediaKeyStatusMap_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsPIDOMWindowInner*
-MediaKeyStatusMap::GetParentObject() const
-{
+nsPIDOMWindowInner* MediaKeyStatusMap::GetParentObject() const {
   return mParent;
 }
 
-void
-MediaKeyStatusMap::Get(JSContext* aCx,
-                       const ArrayBufferViewOrArrayBuffer& aKey,
-                       JS::MutableHandle<JS::Value> aOutValue,
-                       ErrorResult& aOutRv) const
-{
+void MediaKeyStatusMap::Get(JSContext* aCx,
+                            const ArrayBufferViewOrArrayBuffer& aKey,
+                            JS::MutableHandle<JS::Value> aOutValue,
+                            ErrorResult& aOutRv) const {
   ArrayData keyId = GetArrayBufferViewOrArrayBufferData(aKey);
   if (!keyId.IsValid()) {
     aOutValue.setUndefined();
@@ -66,9 +57,7 @@ MediaKeyStatusMap::Get(JSContext* aCx,
   aOutValue.setUndefined();
 }
 
-bool
-MediaKeyStatusMap::Has(const ArrayBufferViewOrArrayBuffer& aKey) const
-{
+bool MediaKeyStatusMap::Has(const ArrayBufferViewOrArrayBuffer& aKey) const {
   ArrayData keyId = GetArrayBufferViewOrArrayBufferData(aKey);
   if (!keyId.IsValid()) {
     return false;
@@ -83,47 +72,34 @@ MediaKeyStatusMap::Has(const ArrayBufferViewOrArrayBuffer& aKey) const
   return false;
 }
 
-uint32_t
-MediaKeyStatusMap::GetIterableLength() const
-{
+uint32_t MediaKeyStatusMap::GetIterableLength() const {
   return mStatuses.Length();
 }
 
-TypedArrayCreator<ArrayBuffer>
-MediaKeyStatusMap::GetKeyAtIndex(uint32_t aIndex) const
-{
+TypedArrayCreator<ArrayBuffer> MediaKeyStatusMap::GetKeyAtIndex(
+    uint32_t aIndex) const {
   MOZ_ASSERT(aIndex < GetIterableLength());
   return TypedArrayCreator<ArrayBuffer>(mStatuses[aIndex].mKeyId);
 }
 
-nsString
-MediaKeyStatusMap::GetKeyIDAsHexString(uint32_t aIndex) const
-{
+nsString MediaKeyStatusMap::GetKeyIDAsHexString(uint32_t aIndex) const {
   MOZ_ASSERT(aIndex < GetIterableLength());
   return NS_ConvertUTF8toUTF16(ToHexString(mStatuses[aIndex].mKeyId));
 }
 
-MediaKeyStatus
-MediaKeyStatusMap::GetValueAtIndex(uint32_t aIndex) const
-{
+MediaKeyStatus MediaKeyStatusMap::GetValueAtIndex(uint32_t aIndex) const {
   MOZ_ASSERT(aIndex < GetIterableLength());
   return mStatuses[aIndex].mStatus;
 }
 
-uint32_t
-MediaKeyStatusMap::Size() const
-{
-  return mStatuses.Length();
-}
+uint32_t MediaKeyStatusMap::Size() const { return mStatuses.Length(); }
 
-void
-MediaKeyStatusMap::Update(const nsTArray<CDMCaps::KeyStatus>& aKeys)
-{
+void MediaKeyStatusMap::Update(const nsTArray<CDMCaps::KeyStatus>& aKeys) {
   mStatuses.Clear();
   for (const auto& key : aKeys) {
     mStatuses.InsertElementSorted(KeyStatus(key.mId, key.mStatus));
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

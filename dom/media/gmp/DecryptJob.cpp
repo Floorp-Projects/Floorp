@@ -11,35 +11,25 @@ namespace mozilla {
 static Atomic<uint32_t> sDecryptJobInstanceCount(0u);
 
 DecryptJob::DecryptJob(MediaRawData* aSample)
-  : mId(++sDecryptJobInstanceCount )
-  , mSample(aSample)
-{
-}
+    : mId(++sDecryptJobInstanceCount), mSample(aSample) {}
 
-RefPtr<DecryptPromise>
-DecryptJob::Ensure()
-{
+RefPtr<DecryptPromise> DecryptJob::Ensure() {
   return mPromise.Ensure(__func__);
 }
 
-void
-DecryptJob::PostResult(DecryptStatus aResult)
-{
+void DecryptJob::PostResult(DecryptStatus aResult) {
   nsTArray<uint8_t> empty;
   PostResult(aResult, empty);
 }
 
-void
-DecryptJob::PostResult(DecryptStatus aResult,
-                       Span<const uint8_t> aDecryptedData)
-{
+void DecryptJob::PostResult(DecryptStatus aResult,
+                            Span<const uint8_t> aDecryptedData) {
   if (aDecryptedData.Length() != mSample->Size()) {
     NS_WARNING("CDM returned incorrect number of decrypted bytes");
   }
   if (aResult == eme::Ok) {
     UniquePtr<MediaRawDataWriter> writer(mSample->CreateWriter());
-    PodCopy(writer->Data(),
-            aDecryptedData.Elements(),
+    PodCopy(writer->Data(), aDecryptedData.Elements(),
             std::min<size_t>(aDecryptedData.Length(), mSample->Size()));
   } else if (aResult == eme::NoKeyErr) {
     NS_WARNING("CDM returned NoKeyErr");
@@ -53,4 +43,4 @@ DecryptJob::PostResult(DecryptStatus aResult,
   mPromise.Resolve(DecryptResult(aResult, mSample), __func__);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

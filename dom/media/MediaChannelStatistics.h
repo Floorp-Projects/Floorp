@@ -29,7 +29,7 @@ static const int64_t RELIABLE_DATA_THRESHOLD = 57 * 1460;
  * control the timeline used.
  */
 class MediaChannelStatistics {
-public:
+ public:
   MediaChannelStatistics() = default;
   MediaChannelStatistics(const MediaChannelStatistics&) = default;
   MediaChannelStatistics& operator=(const MediaChannelStatistics&) = default;
@@ -41,14 +41,12 @@ public:
     mIsStarted = false;
   }
   void Start() {
-    if (mIsStarted)
-      return;
+    if (mIsStarted) return;
     mLastStartTime = TimeStamp::Now();
     mIsStarted = true;
   }
   void Stop() {
-    if (!mIsStarted)
-      return;
+    if (!mIsStarted) return;
     mAccumulatedTime += TimeStamp::Now() - mLastStartTime;
     mIsStarted = false;
   }
@@ -60,35 +58,32 @@ public:
     }
     mAccumulatedBytes += aBytes;
   }
-  double GetRateAtLastStop(bool* aReliable) const
-  {
+  double GetRateAtLastStop(bool* aReliable) const {
     double seconds = mAccumulatedTime.ToSeconds();
-    *aReliable = (seconds >= 1.0) ||
-                 (mAccumulatedBytes >= RELIABLE_DATA_THRESHOLD);
-    if (seconds <= 0.0)
-      return 0.0;
-    return static_cast<double>(mAccumulatedBytes)/seconds;
+    *aReliable =
+        (seconds >= 1.0) || (mAccumulatedBytes >= RELIABLE_DATA_THRESHOLD);
+    if (seconds <= 0.0) return 0.0;
+    return static_cast<double>(mAccumulatedBytes) / seconds;
   }
-  double GetRate(bool* aReliable) const
-  {
+  double GetRate(bool* aReliable) const {
     TimeDuration time = mAccumulatedTime;
     if (mIsStarted) {
       time += TimeStamp::Now() - mLastStartTime;
     }
     double seconds = time.ToSeconds();
-    *aReliable = (seconds >= 3.0) ||
-                 (mAccumulatedBytes >= RELIABLE_DATA_THRESHOLD);
-    if (seconds <= 0.0)
-      return 0.0;
-    return static_cast<double>(mAccumulatedBytes)/seconds;
+    *aReliable =
+        (seconds >= 3.0) || (mAccumulatedBytes >= RELIABLE_DATA_THRESHOLD);
+    if (seconds <= 0.0) return 0.0;
+    return static_cast<double>(mAccumulatedBytes) / seconds;
   }
-private:
+
+ private:
   int64_t mAccumulatedBytes = 0;
   TimeDuration mAccumulatedTime;
   TimeStamp mLastStartTime;
   bool mIsStarted = false;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MediaChannelStatistics_h_
+#endif  // MediaChannelStatistics_h_

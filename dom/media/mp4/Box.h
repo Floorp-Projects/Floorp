@@ -17,21 +17,17 @@
 namespace mozilla {
 class ByteStream;
 
-class BoxContext
-{
-public:
+class BoxContext {
+ public:
   BoxContext(ByteStream* aSource, const MediaByteRangeSet& aByteRanges)
-    : mSource(aSource), mByteRanges(aByteRanges)
-  {
-  }
+      : mSource(aSource), mByteRanges(aByteRanges) {}
 
   RefPtr<ByteStream> mSource;
   const MediaByteRangeSet& mByteRanges;
 };
 
-class Box
-{
-public:
+class Box {
+ public:
   Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent = nullptr);
   Box();
 
@@ -52,7 +48,7 @@ public:
 
   const nsTArray<uint8_t>& Header() const { return mHeader; }
 
-private:
+ private:
   bool Contains(MediaByteRange aRange) const;
   BoxContext* mContext;
   mozilla::MediaByteRange mRange;
@@ -63,21 +59,18 @@ private:
   const Box* mParent;
 };
 
-// BoxReader takes a copy of a box contents and serves through an AutoByteReader.
-class MOZ_RAII BoxReader
-{
-public:
+// BoxReader takes a copy of a box contents and serves through an
+// AutoByteReader.
+class MOZ_RAII BoxReader {
+ public:
   explicit BoxReader(Box& aBox)
-    : mBuffer(aBox.Read())
-    , mReader(mBuffer.Elements(), mBuffer.Length())
-  {
-  }
+      : mBuffer(aBox.Read()), mReader(mBuffer.Elements(), mBuffer.Length()) {}
   BufferReader* operator->() { return &mReader; }
 
-private:
+ private:
   nsTArray<uint8_t> mBuffer;
   BufferReader mReader;
 };
-}
+}  // namespace mozilla
 
 #endif

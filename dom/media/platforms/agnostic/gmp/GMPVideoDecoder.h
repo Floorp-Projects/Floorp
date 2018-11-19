@@ -16,8 +16,7 @@
 
 namespace mozilla {
 
-struct GMPVideoDecoderParams
-{
+struct GMPVideoDecoderParams {
   explicit GMPVideoDecoderParams(const CreateDecoderParams& aParams);
 
   const VideoInfo& mConfig;
@@ -29,12 +28,10 @@ struct GMPVideoDecoderParams
 
 DDLoggedTypeDeclNameAndBase(GMPVideoDecoder, MediaDataDecoder);
 
-class GMPVideoDecoder
-  : public MediaDataDecoder
-  , public GMPVideoDecoderCallbackProxy
-  , public DecoderDoctorLifeLogger<GMPVideoDecoder>
-{
-public:
+class GMPVideoDecoder : public MediaDataDecoder,
+                        public GMPVideoDecoderCallbackProxy,
+                        public DecoderDoctorLifeLogger<GMPVideoDecoder> {
+ public:
   explicit GMPVideoDecoder(const GMPVideoDecoderParams& aParams);
 
   RefPtr<InitPromise> Init() override;
@@ -42,12 +39,10 @@ public:
   RefPtr<DecodePromise> Drain() override;
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
-  nsCString GetDescriptionName() const override
-  {
+  nsCString GetDescriptionName() const override {
     return NS_LITERAL_CSTRING("gmp video decoder");
   }
-  ConversionRequired NeedsConversion() const override
-  {
+  ConversionRequired NeedsConversion() const override {
     return mConvertToAnnexB ? ConversionRequired::kNeedAnnexB
                             : ConversionRequired::kNeedAVCC;
   }
@@ -63,29 +58,24 @@ public:
   void Error(GMPErr aErr) override;
   void Terminated() override;
 
-protected:
+ protected:
   virtual void InitTags(nsTArray<nsCString>& aTags);
   virtual nsCString GetNodeId();
   virtual uint32_t DecryptorId() const { return 0; }
   virtual GMPUniquePtr<GMPVideoEncodedFrame> CreateFrame(MediaRawData* aSample);
   virtual const VideoInfo& GetConfig() const;
 
-private:
-
-  class GMPInitDoneCallback : public GetGMPVideoDecoderCallback
-  {
-  public:
+ private:
+  class GMPInitDoneCallback : public GetGMPVideoDecoderCallback {
+   public:
     explicit GMPInitDoneCallback(GMPVideoDecoder* aDecoder)
-      : mDecoder(aDecoder)
-    {
-    }
+        : mDecoder(aDecoder) {}
 
-    void Done(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost) override
-    {
+    void Done(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost) override {
       mDecoder->GMPInitDone(aGMP, aHost);
     }
 
-  private:
+   private:
     RefPtr<GMPVideoDecoder> mDecoder;
   };
   void GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost);
@@ -108,6 +98,6 @@ private:
   bool mConvertToAnnexB = false;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // GMPVideoDecoder_h_
+#endif  // GMPVideoDecoder_h_

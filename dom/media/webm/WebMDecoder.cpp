@@ -17,16 +17,15 @@
 
 namespace mozilla {
 
-/* static */ nsTArray<UniquePtr<TrackInfo>>
-WebMDecoder::GetTracksInfo(const MediaContainerType& aType, MediaResult& aError)
-{
+/* static */ nsTArray<UniquePtr<TrackInfo>> WebMDecoder::GetTracksInfo(
+    const MediaContainerType& aType, MediaResult& aError) {
   nsTArray<UniquePtr<TrackInfo>> tracks;
   const bool isVideo = aType.Type() == MEDIAMIMETYPE("video/webm");
 
   if (aType.Type() != MEDIAMIMETYPE("audio/webm") && !isVideo) {
     aError = MediaResult(
-      NS_ERROR_DOM_MEDIA_FATAL_ERR,
-      RESULT_DETAIL("Invalid type:%s", aType.Type().AsString().get()));
+        NS_ERROR_DOM_MEDIA_FATAL_ERR,
+        RESULT_DETAIL("Invalid type:%s", aType.Type().AsString().get()));
     return tracks;
   }
 
@@ -40,18 +39,19 @@ WebMDecoder::GetTracksInfo(const MediaContainerType& aType, MediaResult& aError)
   for (const auto& codec : codecs.Range()) {
     if (codec.EqualsLiteral("opus") || codec.EqualsLiteral("vorbis")) {
       tracks.AppendElement(
-        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-          NS_LITERAL_CSTRING("audio/") + NS_ConvertUTF16toUTF8(codec), aType));
+          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+              NS_LITERAL_CSTRING("audio/") + NS_ConvertUTF16toUTF8(codec),
+              aType));
       continue;
     }
     if (isVideo) {
       UniquePtr<TrackInfo> trackInfo;
       if (IsVP9CodecString(codec)) {
         trackInfo = CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-          NS_LITERAL_CSTRING("video/vp9"), aType);
+            NS_LITERAL_CSTRING("video/vp9"), aType);
       } else if (IsVP8CodecString(codec)) {
         trackInfo = CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-          NS_LITERAL_CSTRING("video/vp8"), aType);
+            NS_LITERAL_CSTRING("video/vp8"), aType);
       }
       if (trackInfo) {
         uint8_t profile = 0;
@@ -59,7 +59,7 @@ WebMDecoder::GetTracksInfo(const MediaContainerType& aType, MediaResult& aError)
         uint8_t bitDepth = 0;
         if (ExtractVPXCodecDetails(codec, profile, level, bitDepth)) {
           trackInfo->GetAsVideoInfo()->mColorDepth =
-            gfx::ColorDepthForBitDepth(bitDepth);
+              gfx::ColorDepthForBitDepth(bitDepth);
         }
         tracks.AppendElement(std::move(trackInfo));
         continue;
@@ -68,24 +68,21 @@ WebMDecoder::GetTracksInfo(const MediaContainerType& aType, MediaResult& aError)
 #ifdef MOZ_AV1
     if (StaticPrefs::MediaAv1Enabled() && IsAV1CodecString(codec)) {
       tracks.AppendElement(
-        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-          NS_LITERAL_CSTRING("video/av1"), aType));
+          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+              NS_LITERAL_CSTRING("video/av1"), aType));
       continue;
     }
 #endif
     // Unknown codec
-    aError =
-      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                  RESULT_DETAIL("Unknown codec:%s",
-                                NS_ConvertUTF16toUTF8(codec).get()));
+    aError = MediaResult(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR,
+        RESULT_DETAIL("Unknown codec:%s", NS_ConvertUTF16toUTF8(codec).get()));
   }
   return tracks;
 }
 
 /* static */
-bool
-WebMDecoder::IsSupportedType(const MediaContainerType& aContainerType)
-{
+bool WebMDecoder::IsSupportedType(const MediaContainerType& aContainerType) {
   if (!StaticPrefs::MediaWebMEnabled()) {
     return false;
   }
@@ -98,7 +95,8 @@ WebMDecoder::IsSupportedType(const MediaContainerType& aContainerType)
   }
 
   if (tracks.IsEmpty()) {
-    // WebM guarantees that the only codecs it contained are vp8, vp9, opus or vorbis.
+    // WebM guarantees that the only codecs it contained are vp8, vp9, opus or
+    // vorbis.
     return true;
   }
 
@@ -114,12 +112,10 @@ WebMDecoder::IsSupportedType(const MediaContainerType& aContainerType)
   return true;
 }
 
-/* static */ nsTArray<UniquePtr<TrackInfo>>
-WebMDecoder::GetTracksInfo(const MediaContainerType& aType)
-{
+/* static */ nsTArray<UniquePtr<TrackInfo>> WebMDecoder::GetTracksInfo(
+    const MediaContainerType& aType) {
   MediaResult rv = NS_OK;
   return GetTracksInfo(aType, rv);
 }
 
-} // namespace mozilla
-
+}  // namespace mozilla

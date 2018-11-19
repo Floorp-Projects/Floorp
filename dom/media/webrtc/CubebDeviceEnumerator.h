@@ -14,9 +14,8 @@
 namespace mozilla {
 // This class implements a cache for accessing the audio device list.
 // It can be accessed on any thread.
-class CubebDeviceEnumerator final
-{
-public:
+class CubebDeviceEnumerator final {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CubebDeviceEnumerator)
 
   static already_AddRefed<CubebDeviceEnumerator> GetInstance();
@@ -24,16 +23,18 @@ public:
   // This method returns a list of all the input audio devices
   // (sources) available on this machine.
   // This method is safe to call from all threads.
-  void EnumerateAudioInputDevices(nsTArray<RefPtr<AudioDeviceInfo>>& aOutDevices);
+  void EnumerateAudioInputDevices(
+      nsTArray<RefPtr<AudioDeviceInfo>>& aOutDevices);
   // Similar for the audio audio devices (sinks). Also thread safe.
-  void EnumerateAudioOutputDevices(nsTArray<RefPtr<AudioDeviceInfo>>& aOutDevices);
+  void EnumerateAudioOutputDevices(
+      nsTArray<RefPtr<AudioDeviceInfo>>& aOutDevices);
   // From a cubeb device id, return the info for this device, if it's still a
   // valid id, or nullptr otherwise.
   // This method is safe to call from any thread.
-  already_AddRefed<AudioDeviceInfo>
-  DeviceInfoFromID(CubebUtils::AudioDeviceID aID);
+  already_AddRefed<AudioDeviceInfo> DeviceInfoFromID(
+      CubebUtils::AudioDeviceID aID);
 
-private:
+ private:
   CubebDeviceEnumerator();
   ~CubebDeviceEnumerator();
   // Static functions called by cubeb when the audio device list changes
@@ -62,6 +63,6 @@ private:
   static StaticRefPtr<CubebDeviceEnumerator> sInstance;
 };
 
-}
+}  // namespace mozilla
 
-#endif // CUBEBDEVICEENUMERATOR_H_
+#endif  // CUBEBDEVICEENUMERATOR_H_

@@ -6,13 +6,12 @@
 #ifndef DecryptorProxyCallback_h_
 #define DecryptorProxyCallback_h_
 
-#include "mozilla/dom/MediaKeyStatusMapBinding.h" // For MediaKeyStatus
-#include "mozilla/dom/MediaKeyMessageEventBinding.h" // For MediaKeyMessageType
+#include "mozilla/dom/MediaKeyStatusMapBinding.h"     // For MediaKeyStatus
+#include "mozilla/dom/MediaKeyMessageEventBinding.h"  // For MediaKeyMessageType
 #include "mozilla/CDMProxy.h"
 
 class DecryptorProxyCallback {
-public:
-
+ public:
   virtual ~DecryptorProxyCallback() {}
 
   virtual void SetDecryptorId(uint32_t aId) = 0;
@@ -25,8 +24,7 @@ public:
 
   virtual void ResolvePromise(uint32_t aPromiseId) = 0;
 
-  virtual void RejectPromise(uint32_t aPromiseId,
-                             nsresult aException,
+  virtual void RejectPromise(uint32_t aPromiseId, nsresult aException,
                              const nsCString& aSessionId) = 0;
 
   virtual void SessionMessage(const nsCString& aSessionId,
@@ -38,17 +36,16 @@ public:
 
   virtual void SessionClosed(const nsCString& aSessionId) = 0;
 
-  virtual void SessionError(const nsCString& aSessionId,
-                            nsresult aException,
+  virtual void SessionError(const nsCString& aSessionId, nsresult aException,
                             uint32_t aSystemCode,
                             const nsCString& aMessage) = 0;
 
-  virtual void Decrypted(uint32_t aId,
-                         mozilla::DecryptStatus aResult,
+  virtual void Decrypted(uint32_t aId, mozilla::DecryptStatus aResult,
                          const nsTArray<uint8_t>& aDecryptedData) = 0;
 
-  virtual void BatchedKeyStatusChanged(const nsCString& aSessionId,
-                                       const nsTArray<mozilla::CDMKeyInfo>& aKeyInfos) = 0;
+  virtual void BatchedKeyStatusChanged(
+      const nsCString& aSessionId,
+      const nsTArray<mozilla::CDMKeyInfo>& aKeyInfos) = 0;
 };
 
 #endif

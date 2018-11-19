@@ -16,34 +16,33 @@ namespace dom {
 class AudioContext;
 struct StereoPannerOptions;
 
-class StereoPannerNode final : public AudioNode
-{
-public:
-  static already_AddRefed<StereoPannerNode>
-  Create(AudioContext& aAudioContext, const StereoPannerOptions& aOptions,
-         ErrorResult& aRv);
+class StereoPannerNode final : public AudioNode {
+ public:
+  static already_AddRefed<StereoPannerNode> Create(
+      AudioContext& aAudioContext, const StereoPannerOptions& aOptions,
+      ErrorResult& aRv);
 
   MOZ_DECLARE_REFCOUNTED_TYPENAME(StereoPannerNode)
 
-  static already_AddRefed<StereoPannerNode>
-  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
-              const StereoPannerOptions& aOptions, ErrorResult& aRv)
-  {
+  static already_AddRefed<StereoPannerNode> Constructor(
+      const GlobalObject& aGlobal, AudioContext& aAudioContext,
+      const StereoPannerOptions& aOptions, ErrorResult& aRv) {
     return Create(aAudioContext, aOptions, aRv);
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) override
-  {
+  virtual void SetChannelCount(uint32_t aChannelCount,
+                               ErrorResult& aRv) override {
     if (aChannelCount > 2) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return;
     }
     AudioNode::SetChannelCount(aChannelCount, aRv);
   }
-  virtual void SetChannelCountModeValue(ChannelCountMode aMode, ErrorResult& aRv) override
-  {
+  virtual void SetChannelCountModeValue(ChannelCountMode aMode,
+                                        ErrorResult& aRv) override {
     if (aMode == ChannelCountMode::Max) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return;
@@ -51,30 +50,24 @@ public:
     AudioNode::SetChannelCountModeValue(aMode, aRv);
   }
 
-  AudioParam* Pan() const
-  {
-    return mPan;
-  }
+  AudioParam* Pan() const { return mPan; }
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(StereoPannerNode, AudioNode)
 
-  virtual const char* NodeType() const override
-  {
-    return "StereoPannerNode";
-  }
+  virtual const char* NodeType() const override { return "StereoPannerNode"; }
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
-private:
+ private:
   explicit StereoPannerNode(AudioContext* aContext);
   ~StereoPannerNode() = default;
 
   RefPtr<AudioParam> mPan;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

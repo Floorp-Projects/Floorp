@@ -15,25 +15,20 @@ namespace dom {
 class VideoTrackList;
 class VideoStreamTrack;
 
-class VideoTrack : public MediaTrack
-{
-public:
-  VideoTrack(nsIGlobalObject* aOwnerGlobal,
-             const nsAString& aId,
-             const nsAString& aKind,
-             const nsAString& aLabel,
+class VideoTrack : public MediaTrack {
+ public:
+  VideoTrack(nsIGlobalObject* aOwnerGlobal, const nsAString& aId,
+             const nsAString& aKind, const nsAString& aLabel,
              const nsAString& aLanguage,
              VideoStreamTrack* aStreamTarck = nullptr);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(VideoTrack, MediaTrack)
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  VideoTrack* AsVideoTrack() override
-  {
-    return this;
-  }
+  VideoTrack* AsVideoTrack() override { return this; }
 
   // When fetching media resource, if no video track is selected by the media
   // resource, then the first VideoTrack object in the list is set selected as
@@ -48,24 +43,21 @@ public:
   VideoStreamTrack* GetVideoStreamTrack() { return mVideoStreamTrack; }
 
   // WebIDL
-  bool Selected() const
-  {
-    return mSelected;
-  }
+  bool Selected() const { return mSelected; }
 
   // Either zero or one video track is selected in a list; If the selected track
   // is in a VideoTrackList, then all the other VideoTrack objects in that list
   // must be unselected.
   void SetSelected(bool aSelected);
 
-private:
+ private:
   virtual ~VideoTrack();
 
   bool mSelected;
   RefPtr<VideoStreamTrack> mVideoStreamTrack;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_VideoTrack_h
+#endif  // mozilla_dom_VideoTrack_h

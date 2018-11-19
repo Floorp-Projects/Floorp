@@ -8,19 +8,15 @@
 
 namespace mozilla {
 
-void
-DDLogObject::AppendPrintf(nsCString& mString) const
-{
+void DDLogObject::AppendPrintf(nsCString& mString) const {
   MOZ_ASSERT(mTypeName);
   mString.AppendPrintf("%s[%p]", mTypeName, mPointer);
 }
 
-nsCString
-DDLogObject::Printf() const
-{
+nsCString DDLogObject::Printf() const {
   nsCString s;
   AppendPrintf(s);
   return s;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

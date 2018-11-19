@@ -12,9 +12,8 @@ namespace mozilla {
 
 DDLoggedTypeDeclName(ByteStream);
 
-class ByteStream : public DecoderDoctorLifeLogger<ByteStream>
-{
-public:
+class ByteStream : public DecoderDoctorLifeLogger<ByteStream> {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ByteStream);
 
   virtual bool ReadAt(int64_t offset, void* data, size_t size,
@@ -25,10 +24,10 @@ public:
 
   virtual void DiscardBefore(int64_t offset) {}
 
-protected:
+ protected:
   virtual ~ByteStream() {}
 };
 
-}
+}  // namespace mozilla
 
 #endif

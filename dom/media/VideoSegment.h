@@ -15,33 +15,31 @@ namespace mozilla {
 
 namespace layers {
 class Image;
-} // namespace layers
+}  // namespace layers
 
 class VideoFrame {
-public:
+ public:
   typedef mozilla::layers::Image Image;
 
-  VideoFrame(already_AddRefed<Image>& aImage, const gfx::IntSize& aIntrinsicSize);
+  VideoFrame(already_AddRefed<Image>& aImage,
+             const gfx::IntSize& aIntrinsicSize);
   VideoFrame();
   ~VideoFrame();
 
-  bool operator==(const VideoFrame& aFrame) const
-  {
+  bool operator==(const VideoFrame& aFrame) const {
     return mIntrinsicSize == aFrame.mIntrinsicSize &&
            mForceBlack == aFrame.mForceBlack &&
            ((mForceBlack && aFrame.mForceBlack) || mImage == aFrame.mImage) &&
            mPrincipalHandle == aFrame.mPrincipalHandle;
   }
-  bool operator!=(const VideoFrame& aFrame) const
-  {
+  bool operator!=(const VideoFrame& aFrame) const {
     return !operator==(aFrame);
   }
 
   Image* GetImage() const { return mImage; }
   void SetForceBlack(bool aForceBlack) { mForceBlack = aForceBlack; }
   bool GetForceBlack() const { return mForceBlack; }
-  void SetPrincipalHandle(PrincipalHandle aPrincipalHandle)
-  {
+  void SetPrincipalHandle(PrincipalHandle aPrincipalHandle) {
     mPrincipalHandle = std::forward<PrincipalHandle>(aPrincipalHandle);
   }
   const PrincipalHandle& GetPrincipalHandle() const { return mPrincipalHandle; }
@@ -52,7 +50,7 @@ public:
   // Create a planar YCbCr black image.
   static already_AddRefed<Image> CreateBlackImage(const gfx::IntSize& aSize);
 
-protected:
+ protected:
   // mImage can be null to indicate "no video" (aka "empty frame"). It can
   // still have an intrinsic size in this case.
   RefPtr<Image> mImage;
@@ -65,34 +63,32 @@ protected:
 };
 
 struct VideoChunk {
-  void SliceTo(StreamTime aStart, StreamTime aEnd)
-  {
+  void SliceTo(StreamTime aStart, StreamTime aEnd) {
     NS_ASSERTION(aStart >= 0 && aStart < aEnd && aEnd <= mDuration,
                  "Slice out of bounds");
     mDuration = aEnd - aStart;
   }
   StreamTime GetDuration() const { return mDuration; }
-  bool CanCombineWithFollowing(const VideoChunk& aOther) const
-  {
+  bool CanCombineWithFollowing(const VideoChunk& aOther) const {
     return aOther.mFrame == mFrame;
   }
   bool IsNull() const { return !mFrame.GetImage(); }
-  void SetNull(StreamTime aDuration)
-  {
+  void SetNull(StreamTime aDuration) {
     mDuration = aDuration;
     mFrame.SetNull();
     mTimeStamp = TimeStamp();
   }
   void SetForceBlack(bool aForceBlack) { mFrame.SetForceBlack(aForceBlack); }
 
-  size_t SizeOfExcludingThisIfUnshared(MallocSizeOf aMallocSizeOf) const
-  {
+  size_t SizeOfExcludingThisIfUnshared(MallocSizeOf aMallocSizeOf) const {
     // Future:
     // - mFrame
     return 0;
   }
 
-  const PrincipalHandle& GetPrincipalHandle() const { return mFrame.GetPrincipalHandle(); }
+  const PrincipalHandle& GetPrincipalHandle() const {
+    return mFrame.GetPrincipalHandle();
+  }
 
   StreamTime mDuration;
   VideoFrame mFrame;
@@ -100,26 +96,24 @@ struct VideoChunk {
 };
 
 class VideoSegment : public MediaSegmentBase<VideoSegment, VideoChunk> {
-public:
+ public:
   typedef mozilla::layers::Image Image;
   typedef mozilla::gfx::IntSize IntSize;
 
   VideoSegment();
   VideoSegment(VideoSegment&& aSegment);
 
-  VideoSegment(const VideoSegment&)=delete;
-  VideoSegment& operator= (const VideoSegment&)=delete;
+  VideoSegment(const VideoSegment&) = delete;
+  VideoSegment& operator=(const VideoSegment&) = delete;
 
   ~VideoSegment();
 
-  void AppendFrame(already_AddRefed<Image>&& aImage,
-                   StreamTime aDuration,
+  void AppendFrame(already_AddRefed<Image>&& aImage, StreamTime aDuration,
                    const IntSize& aIntrinsicSize,
                    const PrincipalHandle& aPrincipalHandle,
                    bool aForceBlack = false,
                    TimeStamp aTimeStamp = TimeStamp::Now());
-  const VideoFrame* GetLastFrame(StreamTime* aStart = nullptr)
-  {
+  const VideoFrame* GetLastFrame(StreamTime* aStart = nullptr) {
     VideoChunk* c = GetLastChunk();
     if (!c) {
       return nullptr;
@@ -131,8 +125,7 @@ public:
   }
   // Override default impl
   void ReplaceWithDisabled() override {
-    for (ChunkIterator i(*this);
-         !i.IsEnded(); i.Next()) {
+    for (ChunkIterator i(*this); !i.IsEnded(); i.Next()) {
       VideoChunk& chunk = *i;
       chunk.SetForceBlack(true);
     }
@@ -141,18 +134,13 @@ public:
   // Segment-generic methods not in MediaSegmentBase
   static Type StaticType() { return VIDEO; }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  bool IsEmpty() const
-  {
-    return mChunks.IsEmpty();
-  }
-
+  bool IsEmpty() const { return mChunks.IsEmpty(); }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* MOZILLA_VIDEOSEGMENT_H_ */

@@ -19,9 +19,8 @@ namespace dom {
 
 class SpeechRecognition;
 
-class SpeechStreamListener : public MediaStreamListener
-{
-public:
+class SpeechStreamListener : public MediaStreamListener {
+ public:
   explicit SpeechStreamListener(SpeechRecognition* aRecognition);
   ~SpeechStreamListener();
 
@@ -34,13 +33,15 @@ public:
   void NotifyEvent(MediaStreamGraph* aGraph,
                    MediaStreamGraphEvent event) override;
 
-private:
-  template<typename SampleFormatType>
-  void ConvertAndDispatchAudioChunk(int aDuration, float aVolume, SampleFormatType* aData, TrackRate aTrackRate);
+ private:
+  template <typename SampleFormatType>
+  void ConvertAndDispatchAudioChunk(int aDuration, float aVolume,
+                                    SampleFormatType* aData,
+                                    TrackRate aTrackRate);
   RefPtr<SpeechRecognition> mRecognition;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

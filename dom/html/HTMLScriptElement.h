@@ -37,6 +37,7 @@ public:
   virtual void GetScriptCharset(nsAString& charset) override;
   virtual void FreezeExecutionAttrs(nsIDocument* aOwnerDoc) override;
   virtual CORSMode GetCORSMode() const override;
+  virtual mozilla::net::ReferrerPolicy GetReferrerPolicy() override;
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -154,6 +155,14 @@ public:
   void SetIntegrity(const nsAString& aIntegrity, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::integrity, aIntegrity, aRv);
+  }
+  void SetReferrerPolicy(const nsAString& aReferrerPolicy, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::referrerpolicy, aReferrerPolicy, aError);
+  }
+  void GetReferrerPolicy(nsAString& aReferrerPolicy)
+  {
+    GetEnumAttr(nsGkAtoms::referrerpolicy, EmptyCString().get(), aReferrerPolicy);
   }
 
 protected:

@@ -19,19 +19,16 @@ namespace mozilla {
 
 DDLoggedTypeDeclNameAndBase(BaseMediaResource, MediaResource);
 
-class BaseMediaResource
-  : public MediaResource
-  , public DecoderDoctorLifeLogger<BaseMediaResource>
-{
-public:
+class BaseMediaResource : public MediaResource,
+                          public DecoderDoctorLifeLogger<BaseMediaResource> {
+ public:
   /**
    * Create a resource, reading data from the channel. Call on main thread only.
    * The caller must follow up by calling resource->Open().
    */
   static already_AddRefed<BaseMediaResource> Create(
-    MediaResourceCallback* aCallback,
-    nsIChannel* aChannel,
-    bool aIsPrivateBrowsing);
+      MediaResourceCallback* aCallback, nsIChannel* aChannel,
+      bool aIsPrivateBrowsing);
 
   // Pass true to limit the amount of readahead data (specified by
   // "media.cache_readahead_limit") or false to read as much as the
@@ -91,16 +88,14 @@ public:
   // with a new channel. Any cached data associated with the original
   // stream should be accessible in the new stream too.
   virtual already_AddRefed<BaseMediaResource> CloneData(
-    MediaResourceCallback* aCallback)
-  {
+      MediaResourceCallback* aCallback) {
     return nullptr;
   }
 
   // Returns true if the resource is a live stream.
   virtual bool IsLiveStream() const { return false; }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-  {
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
     // Might be useful to track in the future:
     // - mChannel
     // - mURI (possibly owned, looks like just a ref from mChannel)
@@ -109,23 +104,19 @@ public:
     return 0;
   }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-  {
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
   virtual nsCString GetDebugInfo() { return nsCString(); }
 
-protected:
-  BaseMediaResource(MediaResourceCallback* aCallback,
-                    nsIChannel* aChannel,
+ protected:
+  BaseMediaResource(MediaResourceCallback* aCallback, nsIChannel* aChannel,
                     nsIURI* aURI)
-    : mCallback(aCallback)
-    , mChannel(aChannel)
-    , mURI(aURI)
-    , mLoadInBackground(false)
-  {
-  }
+      : mCallback(aCallback),
+        mChannel(aChannel),
+        mURI(aURI),
+        mLoadInBackground(false) {}
   virtual ~BaseMediaResource() {}
 
   // Set the request's load flags to aFlags.  If the request is part of a
@@ -150,6 +141,6 @@ protected:
   bool mLoadInBackground;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // BaseMediaResource_h
+#endif  // BaseMediaResource_h

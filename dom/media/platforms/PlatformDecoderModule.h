@@ -31,7 +31,7 @@ class DecoderDoctorDiagnostics;
 
 namespace layers {
 class ImageContainer;
-} // namespace layers
+}  // namespace layers
 
 class GpuDecoderModule;
 class MediaDataDecoder;
@@ -41,64 +41,53 @@ class CDMProxy;
 
 static LazyLogModule sPDMLog("PlatformDecoderModule");
 
-struct MOZ_STACK_CLASS CreateDecoderParams final
-{
-  explicit CreateDecoderParams(const TrackInfo& aConfig) : mConfig(aConfig) { }
+struct MOZ_STACK_CLASS CreateDecoderParams final {
+  explicit CreateDecoderParams(const TrackInfo& aConfig) : mConfig(aConfig) {}
 
-  enum class Option
-  {
+  enum class Option {
     Default,
     LowLatency,
     HardwareDecoderNotAllowed,
   };
   using OptionSet = EnumSet<Option>;
 
-  struct UseNullDecoder
-  {
+  struct UseNullDecoder {
     UseNullDecoder() = default;
-    explicit UseNullDecoder(bool aUseNullDecoder) : mUse(aUseNullDecoder) { }
+    explicit UseNullDecoder(bool aUseNullDecoder) : mUse(aUseNullDecoder) {}
     bool mUse = false;
   };
 
   // Do not wrap H264 decoder in a H264Converter.
-  struct NoWrapper
-  {
+  struct NoWrapper {
     NoWrapper() = default;
     explicit NoWrapper(bool aDontUseWrapper)
-      : mDontUseWrapper(aDontUseWrapper)
-    {
-    }
+        : mDontUseWrapper(aDontUseWrapper) {}
     bool mDontUseWrapper = false;
   };
 
-  struct VideoFrameRate
-  {
+  struct VideoFrameRate {
     VideoFrameRate() = default;
-    explicit VideoFrameRate(float aFramerate) : mValue(aFramerate) { }
+    explicit VideoFrameRate(float aFramerate) : mValue(aFramerate) {}
     float mValue = 0.0f;
   };
 
   template <typename T1, typename... Ts>
   CreateDecoderParams(const TrackInfo& aConfig, T1&& a1, Ts&&... args)
-    : mConfig(aConfig)
-  {
+      : mConfig(aConfig) {
     Set(std::forward<T1>(a1), std::forward<Ts>(args)...);
   }
 
-  const VideoInfo& VideoConfig() const
-  {
+  const VideoInfo& VideoConfig() const {
     MOZ_ASSERT(mConfig.IsVideo());
     return *mConfig.GetAsVideoInfo();
   }
 
-  const AudioInfo& AudioConfig() const
-  {
+  const AudioInfo& AudioConfig() const {
     MOZ_ASSERT(mConfig.IsAudio());
     return *mConfig.GetAsAudioInfo();
   }
 
-  layers::LayersBackend GetLayersBackend() const
-  {
+  layers::LayersBackend GetLayersBackend() const {
     if (mKnowsCompositor) {
       return mKnowsCompositor->GetCompositorBackendType();
     }
@@ -119,40 +108,34 @@ struct MOZ_STACK_CLASS CreateDecoderParams final
   OptionSet mOptions = OptionSet(Option::Default);
   VideoFrameRate mRate;
 
-private:
+ private:
   void Set(TaskQueue* aTaskQueue) { mTaskQueue = aTaskQueue; }
-  void Set(DecoderDoctorDiagnostics* aDiagnostics)
-  {
+  void Set(DecoderDoctorDiagnostics* aDiagnostics) {
     mDiagnostics = aDiagnostics;
   }
-  void Set(layers::ImageContainer* aImageContainer)
-  {
+  void Set(layers::ImageContainer* aImageContainer) {
     mImageContainer = aImageContainer;
   }
   void Set(MediaResult* aError) { mError = aError; }
   void Set(GMPCrashHelper* aCrashHelper) { mCrashHelper = aCrashHelper; }
-  void Set(UseNullDecoder aUseNullDecoder) { mUseNullDecoder = aUseNullDecoder; }
+  void Set(UseNullDecoder aUseNullDecoder) {
+    mUseNullDecoder = aUseNullDecoder;
+  }
   void Set(NoWrapper aNoWrapper) { mNoWrapper = aNoWrapper; }
   void Set(OptionSet aOptions) { mOptions = aOptions; }
   void Set(VideoFrameRate aRate) { mRate = aRate; }
-  void Set(layers::KnowsCompositor* aKnowsCompositor)
-  {
+  void Set(layers::KnowsCompositor* aKnowsCompositor) {
     if (aKnowsCompositor) {
       mKnowsCompositor = aKnowsCompositor;
       MOZ_ASSERT(aKnowsCompositor->IsThreadSafe());
     }
   }
-  void Set(TrackInfo::TrackType aType)
-  {
-    mType = aType;
-  }
-  void Set(MediaEventProducer<TrackInfo::TrackType>* aOnWaitingForKey)
-  {
+  void Set(TrackInfo::TrackType aType) { mType = aType; }
+  void Set(MediaEventProducer<TrackInfo::TrackType>* aOnWaitingForKey) {
     mOnWaitingForKeyEvent = aOnWaitingForKey;
   }
   template <typename T1, typename T2, typename... Ts>
-  void Set(T1&& a1, T2&& a2, Ts&&... args)
-  {
+  void Set(T1&& a1, T2&& a2, Ts&&... args) {
     Set(std::forward<T1>(a1));
     Set(std::forward<T2>(a2), std::forward<Ts>(args)...);
   }
@@ -161,11 +144,10 @@ private:
 // Used for IPDL serialization.
 // The 'value' have to be the biggest enum from CreateDecoderParams::Option.
 template <>
-struct MaxEnumValue<::mozilla::CreateDecoderParams::Option>
-{
-  static constexpr unsigned int value = static_cast<unsigned int>(CreateDecoderParams::Option::HardwareDecoderNotAllowed);
+struct MaxEnumValue<::mozilla::CreateDecoderParams::Option> {
+  static constexpr unsigned int value = static_cast<unsigned int>(
+      CreateDecoderParams::Option::HardwareDecoderNotAllowed);
 };
-
 
 // The PlatformDecoderModule interface is used by the MediaFormatReader to
 // abstract access to decoders provided by various
@@ -181,9 +163,8 @@ struct MaxEnumValue<::mozilla::CreateDecoderParams::Option>
 // output samples exists for testing, and is created when the pref
 // "media.use-blank-decoder" is true.
 
-class PlatformDecoderModule
-{
-public:
+class PlatformDecoderModule {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PlatformDecoderModule)
 
   // Perform any per-instance initialization.
@@ -191,24 +172,23 @@ public:
   virtual nsresult Startup() { return NS_OK; }
 
   // Indicates if the PlatformDecoderModule supports decoding of aMimeType.
-  virtual bool
-  SupportsMimeType(const nsACString& aMimeType,
-                   DecoderDoctorDiagnostics* aDiagnostics) const = 0;
+  virtual bool SupportsMimeType(
+      const nsACString& aMimeType,
+      DecoderDoctorDiagnostics* aDiagnostics) const = 0;
 
-  virtual bool
-  Supports(const TrackInfo& aTrackInfo,
-           DecoderDoctorDiagnostics* aDiagnostics) const
-  {
+  virtual bool Supports(const TrackInfo& aTrackInfo,
+                        DecoderDoctorDiagnostics* aDiagnostics) const {
     if (!SupportsMimeType(aTrackInfo.mMimeType, aDiagnostics)) {
       return false;
     }
     const auto videoInfo = aTrackInfo.GetAsVideoInfo();
-    return !videoInfo || SupportsColorDepth(videoInfo->mColorDepth, aDiagnostics);
+    return !videoInfo ||
+           SupportsColorDepth(videoInfo->mColorDepth, aDiagnostics);
   }
 
-protected:
-  PlatformDecoderModule() { }
-  virtual ~PlatformDecoderModule() { }
+ protected:
+  PlatformDecoderModule() {}
+  virtual ~PlatformDecoderModule() {}
 
   friend class MediaChangeMonitor;
   friend class PDMFactory;
@@ -218,9 +198,9 @@ protected:
 
   // Indicates if the PlatformDecoderModule supports decoding of aColorDepth.
   // Should override this method when the platform can support color depth != 8.
-  virtual bool SupportsColorDepth(gfx::ColorDepth aColorDepth,
-                                  DecoderDoctorDiagnostics* aDiagnostics) const
-  {
+  virtual bool SupportsColorDepth(
+      gfx::ColorDepth aColorDepth,
+      DecoderDoctorDiagnostics* aDiagnostics) const {
     return aColorDepth == gfx::ColorDepth::COLOR_8;
   }
 
@@ -234,8 +214,8 @@ protected:
   // Returns nullptr if the decoder can't be created.
   // It is safe to store a reference to aConfig.
   // This is called on the decode task queue.
-  virtual already_AddRefed<MediaDataDecoder>
-  CreateVideoDecoder(const CreateDecoderParams& aParams) = 0;
+  virtual already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
+      const CreateDecoderParams& aParams) = 0;
 
   // Creates an Audio decoder with the specified properties.
   // Asynchronous decoding of audio should be done in runnables dispatched to
@@ -246,8 +226,8 @@ protected:
   // COINIT_MULTITHREADED.
   // It is safe to store a reference to aConfig.
   // This is called on the decode task queue.
-  virtual already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const CreateDecoderParams& aParams) = 0;
+  virtual already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
+      const CreateDecoderParams& aParams) = 0;
 };
 
 DDLoggedTypeDeclName(MediaDataDecoder);
@@ -269,18 +249,17 @@ DDLoggedTypeDeclName(MediaDataDecoder);
 // TaskQueue passed into the PlatformDecoderModules's Create*Decoder()
 // function. This may not be necessary for platforms with async APIs
 // for decoding.
-class MediaDataDecoder : public DecoderDoctorLifeLogger<MediaDataDecoder>
-{
-protected:
-  virtual ~MediaDataDecoder() { }
+class MediaDataDecoder : public DecoderDoctorLifeLogger<MediaDataDecoder> {
+ protected:
+  virtual ~MediaDataDecoder() {}
 
-public:
+ public:
   typedef TrackInfo::TrackType TrackType;
   typedef nsTArray<RefPtr<MediaData>> DecodedData;
   typedef MozPromise<TrackType, MediaResult, /* IsExclusive = */ true>
-    InitPromise;
+      InitPromise;
   typedef MozPromise<DecodedData, MediaResult, /* IsExclusive = */ true>
-    DecodePromise;
+      DecodePromise;
   typedef MozPromise<bool, MediaResult, /* IsExclusive = */ true> FlushPromise;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDataDecoder)
@@ -330,8 +309,7 @@ public:
   // Called from the state machine task queue or main thread. Decoder needs to
   // decide whether or not hardware acceleration is supported after creating.
   // It doesn't need to call Init() before calling this function.
-  virtual bool IsHardwareAccelerated(nsACString& aFailureReason) const
-  {
+  virtual bool IsHardwareAccelerated(nsACString& aFailureReason) const {
     return false;
   }
 
@@ -345,7 +323,7 @@ public:
   // Decoder may not honor this value. However, it'd be better that
   // video decoder implements this API to improve seek performance.
   // Note: it should be called before Input() or after Flush().
-  virtual void SetSeekThreshold(const media::TimeUnit& aTime) { }
+  virtual void SetSeekThreshold(const media::TimeUnit& aTime) {}
 
   // When playing adaptive playback, recreating an Android video decoder will
   // cause the transition not smooth during resolution change.
@@ -353,8 +331,7 @@ public:
   // Currently, only Android video decoder will return true.
   virtual bool SupportDecoderRecycling() const { return false; }
 
-  enum class ConversionRequired
-  {
+  enum class ConversionRequired {
     kNeedNone = 0,
     kNeedAVCC = 1,
     kNeedAnnexB = 2,
@@ -363,12 +340,11 @@ public:
   // Indicates that the decoder requires a specific format.
   // The demuxed data will be converted accordingly before feeding it to
   // Decode().
-  virtual ConversionRequired NeedsConversion() const
-  {
+  virtual ConversionRequired NeedsConversion() const {
     return ConversionRequired::kNeedNone;
   }
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

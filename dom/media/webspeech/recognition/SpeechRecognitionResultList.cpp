@@ -13,7 +13,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SpeechRecognitionResultList, mParent, mItems)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SpeechRecognitionResultList, mParent,
+                                      mItems)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SpeechRecognitionResultList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(SpeechRecognitionResultList)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SpeechRecognitionResultList)
@@ -21,30 +22,23 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SpeechRecognitionResultList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-SpeechRecognitionResultList::SpeechRecognitionResultList(SpeechRecognition* aParent)
-  : mParent(aParent)
-{
-}
+SpeechRecognitionResultList::SpeechRecognitionResultList(
+    SpeechRecognition* aParent)
+    : mParent(aParent) {}
 
-SpeechRecognitionResultList::~SpeechRecognitionResultList()
-{
-}
+SpeechRecognitionResultList::~SpeechRecognitionResultList() {}
 
-nsISupports*
-SpeechRecognitionResultList::GetParentObject() const
-{
+nsISupports* SpeechRecognitionResultList::GetParentObject() const {
   return static_cast<DOMEventTargetHelper*>(mParent.get());
 }
 
-JSObject*
-SpeechRecognitionResultList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SpeechRecognitionResultList::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return SpeechRecognitionResultList_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<SpeechRecognitionResult>
-SpeechRecognitionResultList::IndexedGetter(uint32_t aIndex, bool& aPresent)
-{
+SpeechRecognitionResultList::IndexedGetter(uint32_t aIndex, bool& aPresent) {
   if (aIndex >= Length()) {
     aPresent = false;
     return nullptr;
@@ -54,18 +48,13 @@ SpeechRecognitionResultList::IndexedGetter(uint32_t aIndex, bool& aPresent)
   return Item(aIndex);
 }
 
-uint32_t
-SpeechRecognitionResultList::Length() const
-{
-  return mItems.Length();
-}
+uint32_t SpeechRecognitionResultList::Length() const { return mItems.Length(); }
 
-already_AddRefed<SpeechRecognitionResult>
-SpeechRecognitionResultList::Item(uint32_t aIndex)
-{
+already_AddRefed<SpeechRecognitionResult> SpeechRecognitionResultList::Item(
+    uint32_t aIndex) {
   RefPtr<SpeechRecognitionResult> result = mItems.ElementAt(aIndex);
   return result.forget();
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

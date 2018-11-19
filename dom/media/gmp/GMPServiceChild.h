@@ -20,16 +20,14 @@ namespace gmp {
 class GMPContentParent;
 class GMPServiceChild;
 
-class GeckoMediaPluginServiceChild : public GeckoMediaPluginService
-{
+class GeckoMediaPluginServiceChild : public GeckoMediaPluginService {
   friend class GMPServiceChild;
 
-public:
+ public:
   static already_AddRefed<GeckoMediaPluginServiceChild> GetSingleton();
 
-  NS_IMETHOD HasPluginForAPI(const nsACString& aAPI,
-                             nsTArray<nsCString>* aTags,
-                             bool *aRetVal) override;
+  NS_IMETHOD HasPluginForAPI(const nsACString& aAPI, nsTArray<nsCString>* aTags,
+                             bool* aRetVal) override;
   NS_IMETHOD GetNodeId(const nsAString& aOrigin,
                        const nsAString& aTopLevelOrigin,
                        const nsAString& aGMPName,
@@ -41,47 +39,42 @@ public:
 
   void RemoveGMPContentParent(GMPContentParent* aGMPContentParent);
 
-  static void UpdateGMPCapabilities(nsTArray<mozilla::dom::GMPCapabilityData>&& aCapabilities);
+  static void UpdateGMPCapabilities(
+      nsTArray<mozilla::dom::GMPCapabilityData>&& aCapabilities);
 
   void BeginShutdown();
 
-protected:
-  void InitializePlugins(AbstractThread*) override
-  {
+ protected:
+  void InitializePlugins(AbstractThread*) override {
     // Nothing to do here.
   }
 
   virtual RefPtr<GetGMPContentParentPromise> GetContentParent(
-    GMPCrashHelper* aHelper,
-    const nsACString& aNodeIdString,
-    const nsCString& aAPI,
-    const nsTArray<nsCString>& aTags) override;
+      GMPCrashHelper* aHelper, const nsACString& aNodeIdString,
+      const nsCString& aAPI, const nsTArray<nsCString>& aTags) override;
 
   RefPtr<GetGMPContentParentPromise> GetContentParent(
-    GMPCrashHelper* aHelper,
-    const NodeId& aNodeId,
-    const nsCString& aAPI,
-    const nsTArray<nsCString>& aTags) override;
+      GMPCrashHelper* aHelper, const NodeId& aNodeId, const nsCString& aAPI,
+      const nsTArray<nsCString>& aTags) override;
 
-private:
+ private:
   friend class OpenPGMPServiceChild;
 
   typedef MozPromise<GMPServiceChild*, MediaResult, /* IsExclusive = */ true>
-    GetServiceChildPromise;
+      GetServiceChildPromise;
   RefPtr<GetServiceChildPromise> GetServiceChild();
 
   nsTArray<MozPromiseHolder<GetServiceChildPromise>> mGetServiceChildPromises;
   UniquePtr<GMPServiceChild> mServiceChild;
 };
 
-class GMPServiceChild : public PGMPServiceChild
-{
-public:
+class GMPServiceChild : public PGMPServiceChild {
+ public:
   explicit GMPServiceChild();
   virtual ~GMPServiceChild();
 
-  already_AddRefed<GMPContentParent> GetBridgedGMPContentParent(ProcessId aOtherPid,
-                                                                ipc::Endpoint<PGMPContentParent>&& endpoint);
+  already_AddRefed<GMPContentParent> GetBridgedGMPContentParent(
+      ProcessId aOtherPid, ipc::Endpoint<PGMPContentParent>&& endpoint);
 
   void RemoveGMPContentParent(GMPContentParent* aGMPContentParent);
 
@@ -93,11 +86,11 @@ public:
 
   bool HaveContentParents() const;
 
-private:
+ private:
   nsRefPtrHashtable<nsUint64HashKey, GMPContentParent> mContentParents;
 };
 
-} // namespace gmp
-} // namespace mozilla
+}  // namespace gmp
+}  // namespace mozilla
 
-#endif // GMPServiceChild_h_
+#endif  // GMPServiceChild_h_

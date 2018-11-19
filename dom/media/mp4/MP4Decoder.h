@@ -17,9 +17,8 @@ class DecoderDoctorDiagnostics;
 class TrackInfo;
 
 // Decoder that uses a bundled MP4 demuxer and platform decoders to play MP4.
-class MP4Decoder
-{
-public:
+class MP4Decoder {
+ public:
   // Returns true if aContainerType is an MP4 type that we think we can render
   // with the a platform decoder backend.
   // If provided, codecs are checked for support.
@@ -27,7 +26,7 @@ public:
                               DecoderDoctorDiagnostics* aDiagnostics);
 
   static bool IsSupportedTypeWithoutDiagnostics(
-    const MediaContainerType& aContainerType);
+      const MediaContainerType& aContainerType);
 
   // Return true if aMimeType is a one of the strings used by our demuxers to
   // identify H264. Does not parse general content type strings, i.e. white
@@ -43,14 +42,13 @@ public:
   static bool IsEnabled();
 
   static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(
-    const MediaContainerType& aType);
+      const MediaContainerType& aType);
 
-private:
+ private:
   static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(
-    const MediaContainerType& aType,
-    MediaResult& aError);
+      const MediaContainerType& aType, MediaResult& aError);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

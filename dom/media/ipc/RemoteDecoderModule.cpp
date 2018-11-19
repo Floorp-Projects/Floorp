@@ -22,20 +22,15 @@ using base::Thread;
 using namespace ipc;
 using namespace layers;
 
-nsresult
-RemoteDecoderModule::Startup()
-{
+nsresult RemoteDecoderModule::Startup() {
   if (!RemoteDecoderManagerChild::GetManagerThread()) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
 
-bool
-RemoteDecoderModule::SupportsMimeType(
-                                const nsACString& aMimeType,
-                                DecoderDoctorDiagnostics* aDiagnostics) const
-{
+bool RemoteDecoderModule::SupportsMimeType(
+    const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   bool supports = false;
 
 #ifdef MOZ_AV1
@@ -43,36 +38,32 @@ RemoteDecoderModule::SupportsMimeType(
     supports |= AOMDecoder::IsAV1(aMimeType);
   }
 #endif
-  MOZ_LOG(sPDMLog, LogLevel::Debug, ("Sandbox decoder %s requested type",
-        supports ? "supports" : "rejects"));
+  MOZ_LOG(
+      sPDMLog, LogLevel::Debug,
+      ("Sandbox decoder %s requested type", supports ? "supports" : "rejects"));
   return supports;
 }
 
-already_AddRefed<MediaDataDecoder>
-RemoteDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
-{
+already_AddRefed<MediaDataDecoder> RemoteDecoderModule::CreateVideoDecoder(
+    const CreateDecoderParams& aParams) {
   RemoteVideoDecoderChild* child = new RemoteVideoDecoderChild();
-  RefPtr<RemoteMediaDataDecoder> object =
-      new RemoteMediaDataDecoder(
-          child,
-          RemoteDecoderManagerChild::GetManagerThread(),
-          RemoteDecoderManagerChild::GetManagerAbstractThread());
+  RefPtr<RemoteMediaDataDecoder> object = new RemoteMediaDataDecoder(
+      child, RemoteDecoderManagerChild::GetManagerThread(),
+      RemoteDecoderManagerChild::GetManagerAbstractThread());
 
   // (per Matt Woodrow) We can't use NS_DISPATCH_SYNC here since that
   // can spin the event loop while it waits.
   SynchronousTask task("InitIPDL");
   MediaResult result(NS_OK);
   RemoteDecoderManagerChild::GetManagerThread()->Dispatch(
-    NS_NewRunnableFunction(
-      "dom::RemoteDecoderModule::CreateVideoDecoder",
-      [&, child]() {
-        AutoCompleteTask complete(&task);
-        result = child->InitIPDL(
-          aParams.VideoConfig(),
-          aParams.mRate.mValue,
-          aParams.mOptions);
-      }),
-    NS_DISPATCH_NORMAL);
+      NS_NewRunnableFunction("dom::RemoteDecoderModule::CreateVideoDecoder",
+                             [&, child]() {
+                               AutoCompleteTask complete(&task);
+                               result = child->InitIPDL(aParams.VideoConfig(),
+                                                        aParams.mRate.mValue,
+                                                        aParams.mOptions);
+                             }),
+      NS_DISPATCH_NORMAL);
   task.Wait();
 
   if (NS_FAILED(result)) {
@@ -85,4 +76,4 @@ RemoteDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
   return object.forget();
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -18,19 +18,17 @@ class ResourceStream;
 
 DDLoggedTypeDeclNameAndBase(MP4Demuxer, MediaDataDemuxer);
 
-class MP4Demuxer
-  : public MediaDataDemuxer
-  , public DecoderDoctorLifeLogger<MP4Demuxer>
-{
-public:
+class MP4Demuxer : public MediaDataDemuxer,
+                   public DecoderDoctorLifeLogger<MP4Demuxer> {
+ public:
   explicit MP4Demuxer(MediaResource* aResource);
 
   RefPtr<InitPromise> Init() override;
 
   uint32_t GetNumberTracks(TrackInfo::TrackType aType) const override;
 
-  already_AddRefed<MediaTrackDemuxer>
-  GetTrackDemuxer(TrackInfo::TrackType aType, uint32_t aTrackNumber) override;
+  already_AddRefed<MediaTrackDemuxer> GetTrackDemuxer(
+      TrackInfo::TrackType aType, uint32_t aTrackNumber) override;
 
   bool IsSeekable() const override;
 
@@ -40,7 +38,7 @@ public:
 
   void NotifyDataRemoved() override;
 
-private:
+ private:
   RefPtr<MediaResource> mResource;
   RefPtr<ResourceStream> mStream;
   AutoTArray<RefPtr<MP4TrackDemuxer>, 1> mAudioDemuxers;
@@ -49,6 +47,6 @@ private:
   bool mIsSeekable;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

@@ -21,11 +21,7 @@ class TextTrackCue;
 class TextTrackCueList;
 class HTMLTrackElement;
 
-enum TextTrackSource {
-  Track,
-  AddTextTrack,
-  MediaResourceSpecific
-};
+enum TextTrackSource { Track, AddTextTrack, MediaResourceSpecific };
 
 // Constants for numeric readyState property values.
 enum TextTrackReadyState {
@@ -35,52 +31,37 @@ enum TextTrackReadyState {
   FailedToLoad = 3U
 };
 
-class TextTrack final : public DOMEventTargetHelper
-{
-public:
+class TextTrack final : public DOMEventTargetHelper {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TextTrack, DOMEventTargetHelper)
 
-  TextTrack(nsPIDOMWindowInner* aOwnerWindow,
-            TextTrackKind aKind,
-            const nsAString& aLabel,
-            const nsAString& aLanguage,
-            TextTrackMode aMode,
-            TextTrackReadyState aReadyState,
+  TextTrack(nsPIDOMWindowInner* aOwnerWindow, TextTrackKind aKind,
+            const nsAString& aLabel, const nsAString& aLanguage,
+            TextTrackMode aMode, TextTrackReadyState aReadyState,
             TextTrackSource aTextTrackSource);
-  TextTrack(nsPIDOMWindowInner* aOwnerWindow,
-            TextTrackList* aTextTrackList,
-            TextTrackKind aKind,
-            const nsAString& aLabel,
-            const nsAString& aLanguage,
-            TextTrackMode aMode,
-            TextTrackReadyState aReadyState,
-            TextTrackSource aTextTrackSource);
+  TextTrack(nsPIDOMWindowInner* aOwnerWindow, TextTrackList* aTextTrackList,
+            TextTrackKind aKind, const nsAString& aLabel,
+            const nsAString& aLanguage, TextTrackMode aMode,
+            TextTrackReadyState aReadyState, TextTrackSource aTextTrackSource);
 
   void SetDefaultSettings();
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  TextTrackKind Kind() const
-  {
-    return mKind;
-  }
+  TextTrackKind Kind() const { return mKind; }
   void GetLabel(nsAString& aLabel) const;
   void GetLanguage(nsAString& aLanguage) const;
-  void GetInBandMetadataTrackDispatchType(nsAString& aType) const
-  {
+  void GetInBandMetadataTrackDispatchType(nsAString& aType) const {
     aType = mType;
   }
   void GetId(nsAString& aId) const;
 
-  TextTrackMode Mode() const
-  {
-    return mMode;
-  }
+  TextTrackMode Mode() const { return mMode; }
   void SetMode(TextTrackMode aValue);
 
-  TextTrackCueList* GetCues() const
-  {
+  TextTrackCueList* GetCues() const {
     if (mMode == TextTrackMode::Disabled) {
       return nullptr;
     }
@@ -108,19 +89,17 @@ public:
   HTMLTrackElement* GetTrackElement();
   void SetTrackElement(HTMLTrackElement* aTrackElement);
 
-  TextTrackSource GetTextTrackSource() {
-    return mTextTrackSource;
-  }
+  TextTrackSource GetTextTrackSource() { return mTextTrackSource; }
 
   void SetCuesInactive();
 
-  void NotifyCueUpdated(TextTrackCue *aCue);
+  void NotifyCueUpdated(TextTrackCue* aCue);
 
   void DispatchAsyncTrustedEvent(const nsString& aEventName);
 
   bool IsLoaded();
 
-private:
+ private:
   ~TextTrack();
 
   RefPtr<TextTrackList> mTextTrackList;
@@ -143,7 +122,7 @@ private:
   TextTrackSource mTextTrackSource;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_TextTrack_h
+#endif  // mozilla_dom_TextTrack_h

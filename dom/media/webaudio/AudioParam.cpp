@@ -32,36 +32,24 @@ NS_IMPL_CYCLE_COLLECTING_NATIVE_RELEASE(AudioParam)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AudioParam, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioParam, Release)
 
-AudioParam::AudioParam(AudioNode* aNode,
-                       uint32_t aIndex,
-                       const char* aName,
-                       float aDefaultValue,
-                       float aMinValue,
-                       float aMaxValue)
-  : AudioParamTimeline(aDefaultValue)
-  , mNode(aNode)
-  , mName(aName)
-  , mIndex(aIndex)
-  , mDefaultValue(aDefaultValue)
-  , mMinValue(aMinValue)
-  , mMaxValue(aMaxValue)
-{
-}
+AudioParam::AudioParam(AudioNode* aNode, uint32_t aIndex, const char* aName,
+                       float aDefaultValue, float aMinValue, float aMaxValue)
+    : AudioParamTimeline(aDefaultValue),
+      mNode(aNode),
+      mName(aName),
+      mIndex(aIndex),
+      mDefaultValue(aDefaultValue),
+      mMinValue(aMinValue),
+      mMaxValue(aMaxValue) {}
 
-AudioParam::~AudioParam()
-{
-  DisconnectFromGraphAndDestroyStream();
-}
+AudioParam::~AudioParam() { DisconnectFromGraphAndDestroyStream(); }
 
-JSObject*
-AudioParam::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* AudioParam::WrapObject(JSContext* aCx,
+                                 JS::Handle<JSObject*> aGivenProto) {
   return AudioParam_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-AudioParam::DisconnectFromGraphAndDestroyStream()
-{
+void AudioParam::DisconnectFromGraphAndDestroyStream() {
   MOZ_ASSERT(mRefCnt.get() > mInputNodes.Length(),
              "Caller should be holding a reference or have called "
              "mRefCnt.stabilizeForDeletion()");
@@ -84,9 +72,7 @@ AudioParam::DisconnectFromGraphAndDestroyStream()
   }
 }
 
-MediaStream*
-AudioParam::Stream()
-{
+MediaStream* AudioParam::Stream() {
   if (mStream) {
     return mStream;
   }
@@ -107,7 +93,7 @@ AudioParam::Stream()
   AudioNodeStream* nodeStream = mNode->GetStream();
   if (nodeStream) {
     mNodeStreamPort =
-      nodeStream->AllocateInputPort(mStream, AudioNodeStream::AUDIO_TRACK);
+        nodeStream->AllocateInputPort(mStream, AudioNodeStream::AUDIO_TRACK);
   }
 
   // Send the stream to the timeline on the MSG side.
@@ -117,9 +103,7 @@ AudioParam::Stream()
   return mStream;
 }
 
-static const char*
-ToString(AudioTimelineEvent::Type aType)
-{
+static const char* ToString(AudioTimelineEvent::Type aType) {
   switch (aType) {
     case AudioTimelineEvent::SetValue:
       return "SetValue";
@@ -142,22 +126,19 @@ ToString(AudioTimelineEvent::Type aType)
   }
 }
 
-void
-AudioParam::SendEventToEngine(const AudioTimelineEvent& aEvent)
-{
-  WEB_AUDIO_API_LOG("%f: %s for %u %s %s=%g time=%f %s=%g",
-                    GetParentObject()->CurrentTime(),
-                    mName, ParentNodeId(), ToString(aEvent.mType),
-                    aEvent.mType == AudioTimelineEvent::SetValueCurve ?
-                      "length" : "value",
-                    aEvent.mType == AudioTimelineEvent::SetValueCurve ?
-                      static_cast<double>(aEvent.mCurveLength) :
-                      static_cast<double>(aEvent.mValue),
-                    aEvent.Time<double>(),
-                    aEvent.mType == AudioTimelineEvent::SetValueCurve ?
-                      "duration" : "constant",
-                    aEvent.mType == AudioTimelineEvent::SetValueCurve ?
-                      aEvent.mDuration : aEvent.mTimeConstant);
+void AudioParam::SendEventToEngine(const AudioTimelineEvent& aEvent) {
+  WEB_AUDIO_API_LOG(
+      "%f: %s for %u %s %s=%g time=%f %s=%g", GetParentObject()->CurrentTime(),
+      mName, ParentNodeId(), ToString(aEvent.mType),
+      aEvent.mType == AudioTimelineEvent::SetValueCurve ? "length" : "value",
+      aEvent.mType == AudioTimelineEvent::SetValueCurve
+          ? static_cast<double>(aEvent.mCurveLength)
+          : static_cast<double>(aEvent.mValue),
+      aEvent.Time<double>(),
+      aEvent.mType == AudioTimelineEvent::SetValueCurve ? "duration"
+                                                        : "constant",
+      aEvent.mType == AudioTimelineEvent::SetValueCurve ? aEvent.mDuration
+                                                        : aEvent.mTimeConstant);
 
   AudioNodeStream* stream = mNode->GetStream();
   if (stream) {
@@ -165,18 +146,14 @@ AudioParam::SendEventToEngine(const AudioTimelineEvent& aEvent)
   }
 }
 
-void
-AudioParam::CleanupOldEvents()
-{
+void AudioParam::CleanupOldEvents() {
   MOZ_ASSERT(NS_IsMainThread());
   double currentTime = mNode->Context()->CurrentTime();
 
   CleanupEventsOlderThan(currentTime);
 }
 
-float
-AudioParamTimeline::AudioNodeInputValue(size_t aCounter) const
-{
+float AudioParamTimeline::AudioNodeInputValue(size_t aCounter) const {
   MOZ_ASSERT(mStream);
 
   // If we have a chunk produced by the AudioNode inputs to the AudioParam,
@@ -187,13 +164,12 @@ AudioParamTimeline::AudioNodeInputValue(size_t aCounter) const
   if (!lastAudioNodeChunk.IsNull()) {
     MOZ_ASSERT(lastAudioNodeChunk.GetDuration() == WEBAUDIO_BLOCK_SIZE);
     audioNodeInputValue =
-      static_cast<const float*>(lastAudioNodeChunk.mChannelData[0])[aCounter];
+        static_cast<const float*>(lastAudioNodeChunk.mChannelData[0])[aCounter];
     audioNodeInputValue *= lastAudioNodeChunk.mVolume;
   }
 
   return audioNodeInputValue;
 }
 
-} // namespace dom
-} // namespace mozilla
-
+}  // namespace dom
+}  // namespace mozilla

@@ -16,22 +16,16 @@ namespace mozilla {
 // We throttle our decrypt so that we don't decrypt more than a certain
 // duration of samples per second. This is to work around bugs in the
 // Widevine CDM. See bug 1338924 and bug 1342822.
-class DecryptThroughputLimit
-{
-public:
-
+class DecryptThroughputLimit {
+ public:
   explicit DecryptThroughputLimit(AbstractThread* aTargetThread)
-    : mThrottleScheduler(aTargetThread)
-  {
-  }
+      : mThrottleScheduler(aTargetThread) {}
 
   typedef MozPromise<RefPtr<MediaRawData>, MediaResult, true> ThrottlePromise;
 
   // Resolves promise after a delay if necessary in order to reduce the
   // throughput of samples sent through the CDM for decryption.
-  RefPtr<ThrottlePromise>
-  Throttle(MediaRawData* aSample)
-  {
+  RefPtr<ThrottlePromise> Throttle(MediaRawData* aSample) {
     // We should only have one decrypt request being processed at once.
     MOZ_RELEASE_ASSERT(!mThrottleScheduler.IsScheduled());
 
@@ -40,7 +34,8 @@ public:
 
     // Forget decrypts that happened before the start of our window.
     const TimeStamp now = TimeStamp::Now();
-    while (!mDecrypts.empty() && mDecrypts.front().mTimestamp < now - WindowSize) {
+    while (!mDecrypts.empty() &&
+           mDecrypts.front().mTimestamp < now - WindowSize) {
       mDecrypts.pop_front();
     }
 
@@ -57,7 +52,7 @@ public:
       // decrypted more than our threshold for max throughput, over the
       // preceding wall time window. So we're safe to proceed with this
       // decrypt.
-      mDecrypts.push_back(DecryptedJob({ now, sampleDuration }));
+      mDecrypts.push_back(DecryptedJob({now, sampleDuration}));
       return ThrottlePromise::CreateAndResolve(aSample, __func__);
     }
 
@@ -69,38 +64,34 @@ public:
     TimeDuration delay = durationDecrypted - MaxThroughput;
     TimeStamp target = now + delay;
     RefPtr<MediaRawData> sample(aSample);
-    mThrottleScheduler.Ensure(target,
-      [this, sample, sampleDuration]() {
-        mThrottleScheduler.CompleteRequest();
-        mDecrypts.push_back(DecryptedJob({ TimeStamp::Now(), sampleDuration }));
-        mPromiseHolder.Resolve(sample, __func__);
-      },
-      [] () {
-        MOZ_DIAGNOSTIC_ASSERT(false);
-      });
+    mThrottleScheduler.Ensure(
+        target,
+        [this, sample, sampleDuration]() {
+          mThrottleScheduler.CompleteRequest();
+          mDecrypts.push_back(DecryptedJob({TimeStamp::Now(), sampleDuration}));
+          mPromiseHolder.Resolve(sample, __func__);
+        },
+        []() { MOZ_DIAGNOSTIC_ASSERT(false); });
 
     return p;
   }
 
-  void
-  Flush()
-  {
+  void Flush() {
     mThrottleScheduler.Reset();
     mPromiseHolder.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   }
 
-private:
+ private:
   DelayedScheduler mThrottleScheduler;
   MozPromiseHolder<ThrottlePromise> mPromiseHolder;
 
-  struct DecryptedJob
-  {
+  struct DecryptedJob {
     TimeStamp mTimestamp;
     TimeDuration mSampleDuration;
   };
   std::deque<DecryptedJob> mDecrypts;
 };
 
-}
+}  // namespace mozilla
 
-#endif // DecryptThroughputLimit_h
+#endif  // DecryptThroughputLimit_h

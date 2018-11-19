@@ -16,11 +16,11 @@ namespace mozilla {
 
 class DecoderDoctorDiagnostics;
 class PDMFactoryImpl;
-template<class T> class StaticAutoPtr;
+template <class T>
+class StaticAutoPtr;
 
-class PDMFactory final
-{
-public:
+class PDMFactory final {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PDMFactory)
 
   PDMFactory();
@@ -30,8 +30,8 @@ public:
   // instance. It's expected that there will be multiple
   // PlatformDecoderModules alive at the same time.
   // This is called on the decode task queue.
-  already_AddRefed<MediaDataDecoder>
-  CreateDecoder(const CreateDecoderParams& aParams);
+  already_AddRefed<MediaDataDecoder> CreateDecoder(
+      const CreateDecoderParams& aParams);
 
   bool SupportsMimeType(const nsACString& aMimeType,
                         DecoderDoctorDiagnostics* aDiagnostics) const;
@@ -50,20 +50,19 @@ public:
   static constexpr int kYUV422 = 2;
   static constexpr int kYUV444 = 3;
 
-private:
+ private:
   virtual ~PDMFactory();
   void CreatePDMs();
   void CreateNullPDM();
   // Startup the provided PDM and add it to our list if successful.
   bool StartupPDM(PlatformDecoderModule* aPDM, bool aInsertAtBeginning = false);
   // Returns the first PDM in our list supporting the mimetype.
-  already_AddRefed<PlatformDecoderModule>
-  GetDecoder(const TrackInfo& aTrackInfo,
-             DecoderDoctorDiagnostics* aDiagnostics) const;
+  already_AddRefed<PlatformDecoderModule> GetDecoder(
+      const TrackInfo& aTrackInfo,
+      DecoderDoctorDiagnostics* aDiagnostics) const;
 
-  already_AddRefed<MediaDataDecoder>
-  CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
-                       const CreateDecoderParams& aParams);
+  already_AddRefed<MediaDataDecoder> CreateDecoderWithPDM(
+      PlatformDecoderModule* aPDM, const CreateDecoderParams& aParams);
 
   nsTArray<RefPtr<PlatformDecoderModule>> mCurrentPDMs;
   RefPtr<PlatformDecoderModule> mEMEPDM;
@@ -74,11 +73,12 @@ private:
   bool mGMPPDMFailedToStartup = false;
 
   void EnsureInit() const;
-  template<class T> friend class StaticAutoPtr;
+  template <class T>
+  friend class StaticAutoPtr;
   static StaticAutoPtr<PDMFactoryImpl> sInstance;
   static StaticMutex sMonitor;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* PDMFactory_h_ */

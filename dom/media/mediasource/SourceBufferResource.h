@@ -13,7 +13,9 @@
 #include "nsIPrincipal.h"
 #include "ResourceQueue.h"
 
-#define UNIMPLEMENTED() { /* Logging this is too spammy to do by default */ }
+#define UNIMPLEMENTED()                               \
+  { /* Logging this is too spammy to do by default */ \
+  }
 
 namespace mozilla {
 
@@ -24,29 +26,25 @@ namespace dom {
 
 class SourceBuffer;
 
-} // namespace dom
+}  // namespace dom
 
 DDLoggedTypeDeclNameAndBase(SourceBufferResource, MediaResource);
 
 // SourceBufferResource is not thread safe.
 class SourceBufferResource final
-  : public MediaResource
-  , public DecoderDoctorLifeLogger<SourceBufferResource>
-{
-public:
+    : public MediaResource,
+      public DecoderDoctorLifeLogger<SourceBufferResource> {
+ public:
   SourceBufferResource();
   nsresult Close() override;
-  nsresult ReadAt(int64_t aOffset,
-                  char* aBuffer,
-                  uint32_t aCount,
+  nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
                   uint32_t* aBytes) override;
   // Memory-based and no locks, caching discouraged.
   bool ShouldCacheReads() override { return false; }
   void Pin() override { UNIMPLEMENTED(); }
   void Unpin() override { UNIMPLEMENTED(); }
   int64_t GetLength() override { return mInputBuffer.GetLength(); }
-  int64_t GetNextCachedData(int64_t aOffset) override
-  {
+  int64_t GetNextCachedData(int64_t aOffset) override {
     MOZ_ASSERT(OnThread());
     MOZ_ASSERT(aOffset >= 0);
     if (uint64_t(aOffset) < mInputBuffer.GetOffset()) {
@@ -56,8 +54,7 @@ public:
     }
     return aOffset;
   }
-  int64_t GetCachedDataEnd(int64_t aOffset) override
-  {
+  int64_t GetCachedDataEnd(int64_t aOffset) override {
     MOZ_ASSERT(OnThread());
     MOZ_ASSERT(aOffset >= 0);
     if (uint64_t(aOffset) < mInputBuffer.GetOffset() ||
@@ -68,36 +65,31 @@ public:
     return GetLength();
   }
   bool IsDataCachedToEndOfResource(int64_t aOffset) override { return false; }
-  nsresult ReadFromCache(char* aBuffer,
-                         int64_t aOffset,
+  nsresult ReadFromCache(char* aBuffer, int64_t aOffset,
                          uint32_t aCount) override;
 
-  nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override
-  {
+  nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override {
     MOZ_ASSERT(OnThread());
     if (mInputBuffer.GetLength()) {
-      aRanges += MediaByteRange(mInputBuffer.GetOffset(),
-                                mInputBuffer.GetLength());
+      aRanges +=
+          MediaByteRange(mInputBuffer.GetOffset(), mInputBuffer.GetLength());
     }
     return NS_OK;
   }
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-  {
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
     MOZ_ASSERT(OnThread());
     return mInputBuffer.SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
   // Used by SourceBuffer.
   void AppendData(MediaByteBuffer* aData);
   void Ended();
-  bool IsEnded()
-  {
+  bool IsEnded() {
     MOZ_ASSERT(OnThread());
     return mEnded;
   }
@@ -113,24 +105,18 @@ public:
   uint32_t EvictAll();
 
   // Returns the amount of data currently retained by this resource.
-  int64_t GetSize()
-  {
+  int64_t GetSize() {
     MOZ_ASSERT(OnThread());
     return mInputBuffer.GetLength() - mInputBuffer.GetOffset();
   }
 
 #if defined(DEBUG)
-  void Dump(const char* aPath)
-  {
-    mInputBuffer.Dump(aPath);
-  }
+  void Dump(const char* aPath) { mInputBuffer.Dump(aPath); }
 #endif
 
-private:
+ private:
   virtual ~SourceBufferResource();
-  nsresult ReadAtInternal(int64_t aOffset,
-                          char* aBuffer,
-                          uint32_t aCount,
+  nsresult ReadAtInternal(int64_t aOffset, char* aBuffer, uint32_t aCount,
                           uint32_t* aBytes);
 
 #if defined(DEBUG)
@@ -147,7 +133,7 @@ private:
   bool mEnded = false;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #undef UNIMPLEMENTED
 

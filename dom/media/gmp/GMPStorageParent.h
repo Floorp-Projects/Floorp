@@ -15,23 +15,23 @@ namespace gmp {
 class GMPParent;
 
 class GMPStorageParent : public PGMPStorageParent {
-public:
+ public:
   NS_INLINE_DECL_REFCOUNTING(GMPStorageParent)
-  GMPStorageParent(const nsCString& aNodeId,
-                   GMPParent* aPlugin);
+  GMPStorageParent(const nsCString& aNodeId, GMPParent* aPlugin);
 
   nsresult Init();
   void Shutdown();
 
-protected:
+ protected:
   mozilla::ipc::IPCResult RecvOpen(const nsCString& aRecordName) override;
   mozilla::ipc::IPCResult RecvRead(const nsCString& aRecordName) override;
-  mozilla::ipc::IPCResult RecvWrite(const nsCString& aRecordName,
-                                    InfallibleTArray<uint8_t>&& aBytes) override;
+  mozilla::ipc::IPCResult RecvWrite(
+      const nsCString& aRecordName,
+      InfallibleTArray<uint8_t>&& aBytes) override;
   mozilla::ipc::IPCResult RecvClose(const nsCString& aRecordName) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-private:
+ private:
   ~GMPStorageParent() {}
 
   RefPtr<GMPStorage> mStorage;
@@ -42,7 +42,7 @@ private:
   bool mShutdown;
 };
 
-} // namespace gmp
-} // namespace mozilla
+}  // namespace gmp
+}  // namespace mozilla
 
-#endif // GMPStorageParent_h_
+#endif  // GMPStorageParent_h_

@@ -8,22 +8,20 @@
 
 namespace mozilla {
 
-size_t
-DDMediaLog::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t DDMediaLog::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   size_t size = mMessages.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (const DDLogMessage& message : mMessages) {
     if (message.mValue.is<const nsCString>()) {
       size +=
-        message.mValue.as<const nsCString>().SizeOfExcludingThisIfUnshared(
-          aMallocSizeOf);
+          message.mValue.as<const nsCString>().SizeOfExcludingThisIfUnshared(
+              aMallocSizeOf);
     } else if (message.mValue.is<MediaResult>()) {
       size += message.mValue.as<MediaResult>()
-                .Message()
-                .SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+                  .Message()
+                  .SizeOfExcludingThisIfUnshared(aMallocSizeOf);
     }
   }
   return size;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

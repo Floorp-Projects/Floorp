@@ -17,22 +17,19 @@ class AudioWorkletImpl;
 
 namespace dom {
 
-class AudioWorkletGlobalScope final : public WorkletGlobalScope
-{
-public:
+class AudioWorkletGlobalScope final : public WorkletGlobalScope {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioWorkletGlobalScope, WorkletGlobalScope);
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioWorkletGlobalScope,
+                                           WorkletGlobalScope);
 
   explicit AudioWorkletGlobalScope(AudioWorkletImpl* aImpl);
 
-  bool
-  WrapGlobalObject(JSContext* aCx,
-                   JS::MutableHandle<JSObject*> aReflector) override;
+  bool WrapGlobalObject(JSContext* aCx,
+                        JS::MutableHandle<JSObject*> aReflector) override;
 
-  void
-  RegisterProcessor(JSContext* aCx, const nsAString& aName,
-                    VoidFunction& aProcessorCtor,
-                    ErrorResult& aRv);
+  void RegisterProcessor(JSContext* aCx, const nsAString& aName,
+                         VoidFunction& aProcessorCtor, ErrorResult& aRv);
 
   WorkletImpl* Impl() const override;
 
@@ -42,7 +39,7 @@ public:
 
   float SampleRate() const;
 
-private:
+ private:
   ~AudioWorkletGlobalScope() = default;
 
   const RefPtr<AudioWorkletImpl> mImpl;
@@ -51,11 +48,12 @@ private:
   double mCurrentTime;
   float mSampleRate;
 
-  typedef nsRefPtrHashtable<nsStringHashKey, VoidFunction> NodeNameToProcessorDefinitionMap;
+  typedef nsRefPtrHashtable<nsStringHashKey, VoidFunction>
+      NodeNameToProcessorDefinitionMap;
   NodeNameToProcessorDefinitionMap mNameToProcessorMap;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_AudioWorkletGlobalScope_h
+#endif  // mozilla_dom_AudioWorkletGlobalScope_h

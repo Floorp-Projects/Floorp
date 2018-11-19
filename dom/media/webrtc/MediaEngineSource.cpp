@@ -18,9 +18,7 @@ using dom::MediaTrackSettings;
 const unsigned int MediaEngineSource::kMaxDeviceNameLength;
 const unsigned int MediaEngineSource::kMaxUniqueIdLength;
 
-/* static */ bool
-MediaEngineSource::IsVideo(MediaSourceEnum aSource)
-{
+/* static */ bool MediaEngineSource::IsVideo(MediaSourceEnum aSource) {
   switch (aSource) {
     case MediaSourceEnum::Camera:
     case MediaSourceEnum::Screen:
@@ -38,48 +36,28 @@ MediaEngineSource::IsVideo(MediaSourceEnum aSource)
   }
 }
 
-bool
-MediaEngineSource::RequiresSharing() const
-{
-  return false;
-}
+bool MediaEngineSource::RequiresSharing() const { return false; }
 
-bool
-MediaEngineSource::IsFake() const
-{
-  return false;
-}
+bool MediaEngineSource::IsFake() const { return false; }
 
-bool
-MediaEngineSource::GetScary() const
-{
-  return false;
-}
+bool MediaEngineSource::GetScary() const { return false; }
 
-nsresult
-MediaEngineSource::FocusOnSelectedSource(const RefPtr<const AllocationHandle>& aHandle)
-{
+nsresult MediaEngineSource::FocusOnSelectedSource(
+    const RefPtr<const AllocationHandle>& aHandle) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-void
-MediaEngineSource::Shutdown()
-{
-}
+void MediaEngineSource::Shutdown() {}
 
-nsresult
-MediaEngineSource::TakePhoto(MediaEnginePhotoCallback* aCallback)
-{
+nsresult MediaEngineSource::TakePhoto(MediaEnginePhotoCallback* aCallback) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void
-MediaEngineSource::GetSettings(MediaTrackSettings& aOutSettings) const
-{
+void MediaEngineSource::GetSettings(MediaTrackSettings& aOutSettings) const {
   MediaTrackSettings empty;
   aOutSettings = empty;
 }
 
 MediaEngineSource::~MediaEngineSource() = default;
 
-} // namespace mozilla
+}  // namespace mozilla

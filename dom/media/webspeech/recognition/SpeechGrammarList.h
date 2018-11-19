@@ -22,34 +22,38 @@ namespace dom {
 
 class GlobalObject;
 class SpeechGrammar;
-template<typename> class Optional;
+template <typename>
+class Optional;
 
-class SpeechGrammarList final : public nsISupports,
-                                public nsWrapperCache
-{
-public:
+class SpeechGrammarList final : public nsISupports, public nsWrapperCache {
+ public:
   explicit SpeechGrammarList(nsISupports* aParent);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SpeechGrammarList)
 
-  static already_AddRefed<SpeechGrammarList> Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
+  static already_AddRefed<SpeechGrammarList> Constructor(
+      const GlobalObject& aGlobal, ErrorResult& aRv);
 
   nsISupports* GetParentObject() const;
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   uint32_t Length() const;
 
   already_AddRefed<SpeechGrammar> Item(uint32_t aIndex, ErrorResult& aRv);
 
-  void AddFromURI(const nsAString& aSrc, const Optional<float>& aWeight, ErrorResult& aRv);
+  void AddFromURI(const nsAString& aSrc, const Optional<float>& aWeight,
+                  ErrorResult& aRv);
 
-  void AddFromString(const nsAString& aString, const Optional<float>& aWeight, ErrorResult& aRv);
+  void AddFromString(const nsAString& aString, const Optional<float>& aWeight,
+                     ErrorResult& aRv);
 
-  already_AddRefed<SpeechGrammar> IndexedGetter(uint32_t aIndex, bool& aPresent, ErrorResult& aRv);
+  already_AddRefed<SpeechGrammar> IndexedGetter(uint32_t aIndex, bool& aPresent,
+                                                ErrorResult& aRv);
 
-private:
+ private:
   ~SpeechGrammarList();
 
   nsCOMPtr<nsISupports> mParent;
@@ -57,7 +61,7 @@ private:
   nsTArray<RefPtr<SpeechGrammar>> mItems;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

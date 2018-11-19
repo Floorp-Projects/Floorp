@@ -15,12 +15,13 @@ namespace gmp {
 
 class GMPVideoi420FrameData;
 
-class GMPVideoi420FrameImpl : public GMPVideoi420Frame
-{
+class GMPVideoi420FrameImpl : public GMPVideoi420Frame {
   friend struct IPC::ParamTraits<mozilla::gmp::GMPVideoi420FrameImpl>;
-public:
+
+ public:
   explicit GMPVideoi420FrameImpl(GMPVideoHostImpl* aHost);
-  GMPVideoi420FrameImpl(const GMPVideoi420FrameData& aFrameData, GMPVideoHostImpl* aHost);
+  GMPVideoi420FrameImpl(const GMPVideoi420FrameData& aFrameData,
+                        GMPVideoHostImpl* aHost);
   virtual ~GMPVideoi420FrameImpl();
 
   static bool CheckFrameData(const GMPVideoi420FrameData& aFrameData);
@@ -34,18 +35,12 @@ public:
   void Destroy() override;
 
   // GMPVideoi420Frame
-  GMPErr CreateEmptyFrame(int32_t aWidth,
-                          int32_t aHeight,
-                          int32_t aStride_y,
-                          int32_t aStride_u,
-                          int32_t aStride_v) override;
-  GMPErr CreateFrame(int32_t aSize_y, const uint8_t* aBuffer_y,
-                     int32_t aSize_u, const uint8_t* aBuffer_u,
-                     int32_t aSize_v, const uint8_t* aBuffer_v,
-                     int32_t aWidth,
-                     int32_t aHeight,
-                     int32_t aStride_y,
-                     int32_t aStride_u,
+  GMPErr CreateEmptyFrame(int32_t aWidth, int32_t aHeight, int32_t aStride_y,
+                          int32_t aStride_u, int32_t aStride_v) override;
+  GMPErr CreateFrame(int32_t aSize_y, const uint8_t* aBuffer_y, int32_t aSize_u,
+                     const uint8_t* aBuffer_u, int32_t aSize_v,
+                     const uint8_t* aBuffer_v, int32_t aWidth, int32_t aHeight,
+                     int32_t aStride_y, int32_t aStride_u,
                      int32_t aStride_v) override;
   GMPErr CopyFrame(const GMPVideoi420Frame& aFrame) override;
   void SwapFrame(GMPVideoi420Frame* aFrame) override;
@@ -64,9 +59,9 @@ public:
   bool IsZeroSize() const override;
   void ResetSize() override;
 
-private:
-  bool CheckDimensions(int32_t aWidth, int32_t aHeight,
-                       int32_t aStride_y, int32_t aStride_u, int32_t aStride_v);
+ private:
+  bool CheckDimensions(int32_t aWidth, int32_t aHeight, int32_t aStride_y,
+                       int32_t aStride_u, int32_t aStride_v);
 
   GMPPlaneImpl mYPlane;
   GMPPlaneImpl mUPlane;
@@ -77,8 +72,8 @@ private:
   uint64_t mDuration;
 };
 
-} // namespace gmp
+}  // namespace gmp
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // GMPVideoi420FrameImpl_h_
+#endif  // GMPVideoi420FrameImpl_h_

@@ -11,89 +11,78 @@
 
 namespace mozilla {
 
-class CloneableWithRangeMediaResource : public BaseMediaResource
-{
-public:
+class CloneableWithRangeMediaResource : public BaseMediaResource {
+ public:
   CloneableWithRangeMediaResource(MediaResourceCallback* aCallback,
-                                  nsIChannel* aChannel,
-                                  nsIURI* aURI,
-                                  nsIInputStream* aStream,
-                                  uint64_t aSize)
-    : BaseMediaResource(aCallback, aChannel, aURI)
-    , mStream(do_QueryInterface(aStream))
-    , mSize(aSize)
-    , mInitialized(false)
-  {
+                                  nsIChannel* aChannel, nsIURI* aURI,
+                                  nsIInputStream* aStream, uint64_t aSize)
+      : BaseMediaResource(aCallback, aChannel, aURI),
+        mStream(do_QueryInterface(aStream)),
+        mSize(aSize),
+        mInitialized(false) {
     MOZ_ASSERT(mStream);
   }
 
-  ~CloneableWithRangeMediaResource()
-  {
-  }
+  ~CloneableWithRangeMediaResource() {}
 
   // Main thread
   nsresult Open(nsIStreamListener** aStreamListener) override;
   nsresult Close() override;
-  void     Suspend(bool aCloseImmediately) override {}
-  void     Resume() override {}
+  void Suspend(bool aCloseImmediately) override {}
+  void Resume() override {}
   already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override;
-  nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) override;
+  nsresult ReadFromCache(char* aBuffer, int64_t aOffset,
+                         uint32_t aCount) override;
 
   // These methods are called off the main thread.
 
   // Other thread
-  void     SetReadMode(MediaCacheStream::ReadMode aMode) override {}
-  void     SetPlaybackRate(uint32_t aBytesPerSecond) override {}
-  nsresult ReadAt(int64_t aOffset, char* aBuffer,
-                  uint32_t aCount, uint32_t* aBytes) override;
+  void SetReadMode(MediaCacheStream::ReadMode aMode) override {}
+  void SetPlaybackRate(uint32_t aBytesPerSecond) override {}
+  nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
+                  uint32_t* aBytes) override;
   // (Probably) file-based, caching recommended.
   bool ShouldCacheReads() override { return true; }
 
   // Any thread
-  void    Pin() override {}
-  void    Unpin() override {}
+  void Pin() override {}
+  void Unpin() override {}
 
-  double  GetDownloadRate(bool* aIsReliable) override
-  {
+  double GetDownloadRate(bool* aIsReliable) override {
     // The data's all already here
     *aIsReliable = true;
-    return 100*1024*1024; // arbitray, use 100MB/s
+    return 100 * 1024 * 1024;  // arbitray, use 100MB/s
   }
 
-  int64_t GetLength() override
-  {
+  int64_t GetLength() override {
     MaybeInitialize();
     return mSize;
   }
 
-  int64_t GetNextCachedData(int64_t aOffset) override
-  {
+  int64_t GetNextCachedData(int64_t aOffset) override {
     MaybeInitialize();
     return (aOffset < (int64_t)mSize) ? aOffset : -1;
   }
 
-  int64_t GetCachedDataEnd(int64_t aOffset) override
-  {
+  int64_t GetCachedDataEnd(int64_t aOffset) override {
     MaybeInitialize();
     return std::max(aOffset, (int64_t)mSize);
   }
 
-  bool    IsDataCachedToEndOfResource(int64_t aOffset) override { return true; }
-  bool    IsTransportSeekable() override { return true; }
+  bool IsDataCachedToEndOfResource(int64_t aOffset) override { return true; }
+  bool IsTransportSeekable() override { return true; }
 
   nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override;
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override {
     return BaseMediaResource::SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-private:
+ private:
   void MaybeInitialize();
 
   // Input stream for the media data. This can be used from any
@@ -106,6 +95,6 @@ private:
   bool mInitialized;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_dom_media_CloneableWithRangeMediaResource_h
+#endif  // mozilla_dom_media_CloneableWithRangeMediaResource_h

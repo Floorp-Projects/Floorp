@@ -16,11 +16,9 @@ class MP3TrackDemuxer;
 DDLoggedTypeDeclNameAndBase(MP3Demuxer, MediaDataDemuxer);
 DDLoggedTypeNameAndBase(MP3TrackDemuxer, MediaTrackDemuxer);
 
-class MP3Demuxer
-  : public MediaDataDemuxer
-  , public DecoderDoctorLifeLogger<MP3Demuxer>
-{
-public:
+class MP3Demuxer : public MediaDataDemuxer,
+                   public DecoderDoctorLifeLogger<MP3Demuxer> {
+ public:
   // MediaDataDemuxer interface.
   explicit MP3Demuxer(MediaResource* aSource);
   RefPtr<InitPromise> Init() override;
@@ -31,7 +29,7 @@ public:
   void NotifyDataArrived() override;
   void NotifyDataRemoved() override;
 
-private:
+ private:
   // Synchronous initialization.
   bool InitInternal();
 
@@ -41,11 +39,9 @@ private:
 
 // The MP3 demuxer used to extract MPEG frames and side information out of
 // MPEG streams.
-class MP3TrackDemuxer
-  : public MediaTrackDemuxer
-  , public DecoderDoctorLifeLogger<MP3TrackDemuxer>
-{
-public:
+class MP3TrackDemuxer : public MediaTrackDemuxer,
+                        public DecoderDoctorLifeLogger<MP3TrackDemuxer> {
+ public:
   // Constructor, expecting a valid media resource.
   explicit MP3TrackDemuxer(MediaResource* aSource);
 
@@ -78,18 +74,19 @@ public:
   RefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) override;
   void Reset() override;
   RefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(
-    const media::TimeUnit& aTimeThreshold) override;
+      const media::TimeUnit& aTimeThreshold) override;
   int64_t GetResourceOffset() const override;
   media::TimeIntervals GetBuffered() override;
 
-private:
+ private:
   // Destructor.
   ~MP3TrackDemuxer() {}
 
   // Fast approximate seeking to given time.
   media::TimeUnit FastSeek(const media::TimeUnit& aTime);
 
-  // Seeks by scanning the stream up to the given time for more accurate results.
+  // Seeks by scanning the stream up to the given time for more accurate
+  // results.
   media::TimeUnit ScanUntil(const media::TimeUnit& aTime);
 
   // Finds the first valid frame and returns its byte range if found
@@ -152,7 +149,8 @@ private:
   // Samples per frame metric derived from frame headers or 0 if none available.
   int32_t mSamplesPerFrame;
 
-  // Samples per second metric derived from frame headers or 0 if none available.
+  // Samples per second metric derived from frame headers or 0 if none
+  // available.
   int32_t mSamplesPerSecond;
 
   // Channel count derived from frame headers or 0 if none available.
@@ -162,6 +160,6 @@ private:
   UniquePtr<AudioInfo> mInfo;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif
