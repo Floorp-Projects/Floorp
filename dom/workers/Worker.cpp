@@ -13,6 +13,10 @@
 #include "nsContentUtils.h"
 #include "WorkerPrivate.h"
 
+#ifdef XP_WIN
+#undef PostMessage
+#endif
+
 namespace mozilla {
 namespace dom {
 
