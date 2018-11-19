@@ -110,7 +110,7 @@ public class SessionAccessibility {
     /* package */ final class NodeProvider extends AccessibilityNodeProvider {
         @Override
         public AccessibilityNodeInfo createAccessibilityNodeInfo(int virtualDescendantId) {
-            AccessibilityNodeInfo node;
+            AccessibilityNodeInfo node = null;
             if (mAttached) {
                 node = mSession.getSettings().getBoolean(GeckoSessionSettings.FULL_ACCESSIBILITY_TREE) ?
                         getNodeFromGecko(virtualDescendantId) : getNodeFromCache(virtualDescendantId);
@@ -118,8 +118,12 @@ public class SessionAccessibility {
                     node.setAccessibilityFocused(mAccessibilityFocusedNode == virtualDescendantId);
                     node.setFocused(mFocusedNode == virtualDescendantId);
                 }
-            } else {
-                node = AccessibilityNodeInfo.obtain(mView, virtualDescendantId);
+            }
+
+            if (node == null) {
+                Log.w(LOGTAG, "Failed to retrieve accessible node virtualDescendantId=" +
+                        virtualDescendantId + " mAttached=" + mAttached);
+                node = AccessibilityNodeInfo.obtain(mView, View.NO_ID);
                 if (Build.VERSION.SDK_INT < 17 || mView.getDisplay() != null) {
                     // When running junit tests we don't have a display
                     mView.onInitializeAccessibilityNodeInfo(node);
