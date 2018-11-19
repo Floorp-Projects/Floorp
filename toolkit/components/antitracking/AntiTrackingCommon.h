@@ -74,7 +74,8 @@ public:
   enum StorageAccessGrantedReason
   {
     eStorageAccessAPI,
-    eHeuristic,
+    eOpenerAfterUserInteraction,
+    eOpener
   };
 
   // Grant the permission for aOrigin to have access to the first party storage.
