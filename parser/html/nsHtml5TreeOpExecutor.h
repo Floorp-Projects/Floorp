@@ -231,6 +231,7 @@ public:
                      const nsAString& aType,
                      const nsAString& aCrossOrigin,
                      const nsAString& aIntegrity,
+                     ReferrerPolicy aReferrerPolicy,
                      bool aScriptFromHead,
                      bool aAsync,
                      bool aDefer,
@@ -286,6 +287,8 @@ private:
    * list of preloaded URIs
    */
   bool ShouldPreloadURI(nsIURI* aURI);
+
+  ReferrerPolicy GetPreloadReferrerPolicy(const nsAString& aReferrerPolicy);
 };
 
 #endif // nsHtml5TreeOpExecutor_h
