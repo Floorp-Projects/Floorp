@@ -29,7 +29,8 @@ class ManifestItemMeta(ABCMeta):
 
     def __new__(cls, name, bases, attrs, **kwargs):
         rv = ABCMeta.__new__(cls, name, bases, attrs, **kwargs)
-        item_types[rv.item_type] = rv
+        if rv.item_type:
+            item_types[rv.item_type] = rv
 
         return rv
 
