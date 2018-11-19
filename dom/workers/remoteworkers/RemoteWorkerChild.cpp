@@ -332,7 +332,8 @@ RemoteWorkerChild::ExecWorkerOnMainThread(const RemoteWorkerData& aData)
                                       info.mBaseURI,
                                       nullptr /* parent document */,
                                       info.mLoadGroup,
-                                      aData.originalScriptURL(),
+                                      EmptyString(),
+                                      info.mResolvedScriptURI,
                                       clientInfo,
                                       aData.isSharedWorker()
                                         ? nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER
