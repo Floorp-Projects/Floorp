@@ -1112,6 +1112,26 @@ public:
   }
 
   /**
+   * Set the cookies loaded flag for this document.
+   */
+  void SetHasCookiesLoaded(bool aHasCookiesLoaded,
+                           const nsAString& aOriginLoaded)
+  {
+    RecordContentBlockingLog(aOriginLoaded,
+                             nsIWebProgressListener::STATE_COOKIES_LOADED,
+                             aHasCookiesLoaded);
+  }
+
+  /**
+   * Get cookies loaded flag for this document.
+   */
+  bool GetHasCookiesLoaded()
+  {
+    return mContentBlockingLog.HasBlockedAnyOfType(
+        nsIWebProgressListener::STATE_COOKIES_LOADED);
+  }
+
+  /**
    * Get tracking content loaded flag for this document.
    */
   bool GetHasTrackingContentLoaded()
