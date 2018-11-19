@@ -120,3 +120,13 @@
 
 # Temporary fix until we can use androidx
 -dontwarn mozilla.components.service.fretboard.scheduler.workmanager.**
+
+####################################################################################################
+# Kotlinx
+####################################################################################################
+
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepclassmembernames class kotlinx.** {
+    volatile <fields>;
+}
