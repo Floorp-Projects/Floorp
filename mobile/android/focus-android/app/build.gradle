@@ -3,6 +3,7 @@ import com.github.spotbugs.SpotBugsTask
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: "com.github.spotbugs"
+apply plugin: "de.mannodermaus.android-junit5"
 apply plugin: 'jacoco'
 apply plugin: 'pmd'
 apply plugin: 'checkstyle'
@@ -215,7 +216,11 @@ dependencies {
     x86Implementation "org.mozilla.geckoview:geckoview-beta-x86:${geckoview_version}"
     aarch64Implementation "org.mozilla.geckoview:geckoview-beta-arm64-v8a:${geckoview_version}"
 
-    testImplementation 'junit:junit:4.12'
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.3.1"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.3.1"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:5.3.1"
+    testImplementation "junit:junit:4.12"
+    testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.3.1"
     testImplementation "org.robolectric:robolectric:4.0-alpha-3" // required to support api level 28
     testImplementation 'org.mockito:mockito-core:2.21.0'
     testImplementation "android.arch.core:core-testing:${architecture_components_version}"
