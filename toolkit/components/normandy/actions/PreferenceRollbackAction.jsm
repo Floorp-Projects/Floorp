@@ -55,6 +55,5 @@ class PreferenceRollbackAction extends BaseAction {
 
   async _finalize() {
     await PreferenceRollouts.saveStartupPrefs();
-    await PreferenceRollouts.closeDB();
   }
 }
