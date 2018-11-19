@@ -22,13 +22,6 @@ function setup_test_preference() {
   ]});
 }
 
-function loadFrameScript(browser, fn) {
-  // We want the same audio context to be used across different content
-  // tasks, so it needs to be loaded by a frame script.
-  const mm = browser.messageManager;
-  mm.loadFrameScript("data:,(" + fn.toString() + ")();", false);
-}
-
 function createAudioContext() {
   content.ac = new content.AudioContext();
   const ac = content.ac;

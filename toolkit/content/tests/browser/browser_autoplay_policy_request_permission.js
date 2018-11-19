@@ -13,6 +13,7 @@ add_task(() => {
     ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.PROMPT],
     ["media.autoplay.enabled.user-gestures-needed", true],
     ["media.autoplay.ask-permission", true],
+    ["media.autoplay.block-webaudio", true],
     ["media.autoplay.block-event.enabled", true],
   ]});
 });
@@ -204,9 +205,18 @@ add_task(async () => {
   });
 });
 
-// Test that if playback starts while the permission prompt is shown,
-// that the prompt is hidden.
-add_task(async () => {
+async function testIgnorePrompt({name, type, isAudible}) {
+  info(`- Starting test '${name}' -`);
+  if (type == "MediaElement") {
+    await testIgnorePromptAndPlayMediaElement(isAudible);
+  } else if (type == "WebAudio") {
+    await testIgnorePromptAndPlayWebAudio(isAudible);
+  } else {
+    ok(false, `undefined test type.`);
+  }
+}
+
+async function testIgnorePromptAndPlayMediaElement(isAudible) {
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: VIDEO_PAGE,
@@ -234,13 +244,13 @@ add_task(async () => {
       });
 
     let popuphidden = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
-
-    await ContentTask.spawn(browser, null,
-      async () => {
+    await ContentTask.spawn(browser, isAudible,
+      async (isAudible) => {
         // Gesture activate the document, i.e. simulate a click in the document,
         // to unblock autoplay,
         content.document.notifyUserGestureActivation();
         let video = content.document.getElementById("v1");
+        video.muted = !isAudible;
         // Gesture activating in itself should not cause the previous pending
         // play to proceed.
         ok(video.paused && !video.didPlay, "Video should not have played yet");
@@ -253,12 +263,106 @@ add_task(async () => {
         ok(video.didPlay, "Existing promise should resolve when media starts playing");
       });
 
-    info("Awaiting popuphidden");
-    await popuphidden;
-    ok(!promptShowing(), "Permission prompt should have hidden when media started playing");
+    if (isAudible) {
+      info("Awaiting popuphidden");
+      await popuphidden;
+      ok(!promptShowing(), "Permission prompt should have hidden when media started playing");
+    } else {
+      ok(promptShowing(), `doorhanger would only be dismissed when audible media starts`);
+    }
 
     // Reset permission.
     SitePermissions.remove(browser.currentURI, "autoplay-media");
     info("- Finished test prompt hides upon play -");
+  });
+}
+
+async function testIgnorePromptAndPlayWebAudio(isAudible) {
+  function createAudioContext() {
+    content.ac = new content.AudioContext();
+    content.ac.notAllowedToStart = new Promise(resolve => {
+      content.ac.addEventListener("blocked", function() {
+        resolve();
+      }, {once: true});
+    });
+  }
+
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: VIDEO_PAGE,
+  }, async (browser) => {
+    info(`- set the 'autoplay-media' permission to UNKNOWN -`);
+    const promptShowing = () =>
+      PopupNotifications.getNotification("autoplay-media", browser);
+    SitePermissions.set(browser.currentURI, "autoplay-media", SitePermissions.UNKNOWN);
+    ok(!promptShowing(), "Should not be showing permission prompt");
+
+    info(`- create AudioContext which should not start until user approves -`);
+    loadFrameScript(browser, createAudioContext);
+    await ContentTask.spawn(browser, null, async () => {
+      await content.ac.notAllowedToStart;
+      ok(content.ac.state === "suspended", `AudioContext is not started yet.`);
+    });
+
+    info(`- try to start AudioContext and show doorhanger to ask for user's approval -`);
+    const popupShow = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+    await ContentTask.spawn(browser, null, () => {
+      content.ac.resume();
+    });
+    await popupShow;
+    ok(promptShowing(), `should now be showing permission prompt`);
+
+    info(`- simulate user activate the page -`);
+    await ContentTask.spawn(browser, null, () => {
+      content.document.notifyUserGestureActivation();
+    });
+
+    if (isAudible) {
+      info(`- ignore doorhanger, connect audible node and start node -`);
+      const popupHide = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
+      await ContentTask.spawn(browser, null, () => {
+        const ac = content.ac;
+        let node = ac.createOscillator();
+        node.connect(ac.destination);
+        node.start();
+      });
+      await popupHide;
+      ok(true, `doorhanger should dismiss after AudioContext starts audible`);
+    } else {
+      info(`- ignore doorhanger and resume AudioContext without connecting audible node -`);
+      await ContentTask.spawn(browser, null, async () => {
+        await content.ac.resume();
+        ok(true, `successfully resume AudioContext.`);
+      });
+      ok(promptShowing(),
+         `doorhanger would only be dismissed when audible media starts`);
+    }
+
+    SitePermissions.remove(browser.currentURI, "autoplay-media");
+  });
+}
+
+// Test that the prompt would dismiss when audible media starts, but not dismiss
+// when inaudible media starts.
+add_task(async () => {
+  await testIgnorePrompt({
+    name: "ignore doorhanger and play audible media element",
+    type: "MediaElement",
+    isAudible: true,
+  });
+  await testIgnorePrompt({
+    name: "ignore doorhanger and play inaudible media element",
+    type: "MediaElement",
+    isAudible: false,
+  });
+  await testIgnorePrompt({
+    name: "ignore doorhanger and play audible web audio",
+    type: "WebAudio",
+    isAudible: true,
+  });
+  await testIgnorePrompt({
+    name: "ignore doorhanger and play inaudible web audio",
+    type: "WebAudio",
+    isAudible: false,
   });
 });
