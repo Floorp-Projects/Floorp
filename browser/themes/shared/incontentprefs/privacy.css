@@ -18,6 +18,23 @@
   width: 16px;
 }
 
+#contentBlockingTrackingProtectionCheckbox > .checkbox-label-box {
+  list-style-image: url("chrome://browser/skin/controlcenter/trackers.svg");
+}
+
+#contentBlockingTrackingProtectionCheckbox[checked] > .checkbox-label-box {
+  list-style-image: url("chrome://browser/skin/controlcenter/trackers-disabled.svg");
+}
+
+#contentBlockingBlockCookiesCheckbox > .checkbox-label-box {
+  list-style-image: url("chrome://browser/skin/controlcenter/3rdpartycookies.svg");
+}
+
+#contentBlockingBlockCookiesCheckbox[checked] > .checkbox-label-box {
+  list-style-image: url("chrome://browser/skin/controlcenter/3rdpartycookies-disabled.svg");
+}
+
+
 .content-blocking-icon,
 .permission-icon {
   -moz-context-properties: fill;
@@ -50,44 +67,154 @@
 
 /* Content Blocking */
 
-#contentBlockingLearnMore {
-  margin-top: 4px !important;
+/* Override styling that sets descriptions as grey */
+#trackingGroup description.indent,
+#trackingGroup .indent > description {
+  color: #000;
+}
+
+[data-subcategory="trackingprotection"] {
+  margin-top: 10px;
 }
 
 #contentBlockingCategories {
   margin-top: 16px;
 }
 
+#trackingProtectionShield {
+  background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
+  -moz-context-properties: fill;
+  fill: #737373;
+  width: 64px;
+  height: 64px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  margin-inline-end: 10px;
+}
+
 .content-blocking-category {
-  margin: 16px 0;
+  border-radius: 4px;
+  margin: 3px 0;
+  padding: 9px;
+  border: 1px solid #D7D7DB;
+  background-color: rgba(215, 215, 219, 0.2);
 }
 
-.content-blocking-category-labels {
-  padding-inline-start: 4px;
-  margin-inline-start: 25px !important;
+.content-blocking-category.disabled {
+  opacity: 0.5;
 }
 
-#trackingProtectionMenu {
-  margin-top: 0.75em;
+.content-blocking-category.disabled .radio-check {
+  opacity: 1;
 }
 
-#blockCookiesCBDeck[selectedIndex]:not([selectedIndex="0"]) {
-  max-width: 444px;
+.content-blocking-warning > .indent,
+.content-blocking-category > .indent {
+  margin-inline-end: 28px;
 }
 
-#blockCookiesCBDeck:not([selectedIndex]) > .warning-description,
-#blockCookiesCBDeck[selectedIndex="0"] > .warning-description {
+.arrowhead {
+  -moz-appearance: none;
+  border: none;
+  border-radius: 2px;
+  min-height: 20px;
+  min-width: 20px;
+  max-height: 20px;
+  max-width: 20px;
+  background-color: transparent;
+  background-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.arrowhead:not([disabled]):hover {
+  cursor: pointer;
+  background-color: var(--grey-90-a10);
+}
+
+.arrowhead:not([disabled]):hover:active {
+  background-color: var(--grey-90-a20);
+}
+
+.arrowhead.up {
+  background-image: url("chrome://global/skin/icons/arrow-up-12.svg");
+}
+
+.arrowhead > .button-box {
+  padding: 0 !important;
+}
+
+.content-blocking-category.expanded:not(.selected) .content-blocking-warning {
+  background-color: var(--grey-90-a10);
+}
+
+.content-blocking-category.selected .arrowhead {
   display: none;
 }
 
-#blockCookiesCBDeck > .warning-description {
-  margin-bottom: 0.75em !important;
+.content-blocking-category.selected {
+	border: 1px solid #45A1FF;
+  background-color: rgba(69, 161, 255, 0.2);
+}
+
+.content-blocking-warning-title,
+.content-blocking-category .radio-label-box {
+  font-weight: bold;
+}
+
+.content-blocking-extra-information {
+  visibility: collapse;
+}
+
+.extra-information-label {
+  margin-top: 18px;
+}
+
+.extra-information-label:last-child {
+  margin-bottom: 18px;
+}
+
+.content-blocking-category.expanded .content-blocking-extra-information,
+.content-blocking-category.selected .content-blocking-extra-information {
+  visibility: visible;
+}
+
+.content-blocking-extra-information > .custom-option {
+  margin: 10px 0;
+}
+
+.content-blocking-warning {
+  background-color: rgba(69, 161, 255, 0.2);
+  border-radius: 4px;
+  padding: 10px 0;
+  margin: 10px 0;
+}
+
+.content-blocking-trackers-image {
+  list-style-image: url("chrome://browser/skin/controlcenter/trackers-disabled.svg");
+  margin-inline-end: 5px;
+}
+
+.content-blocking-cookies-image {
+  list-style-image: url("chrome://browser/skin/controlcenter/3rdpartycookies-disabled.svg");
+  margin-inline-end: 5px;
+}
+
+.content-blocking-warning-image {
+  list-style-image: url("chrome://global/skin/icons/warning.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin-inline-end: 8px;
+  margin-inline-start: 4px;
+}
+
+#blockCookiesMenu,
+#trackingProtectionMenu {
+  margin: 0;
 }
 
 #changeBlockListLink {
-  font-size: 90%;
-  /* In order to override the margins set in preferences.inc.css, we have to use !important. */
-  margin-top: 1em !important;
+  margin-inline-start: 56px;
 }
 
 .content-blocking-category-description {

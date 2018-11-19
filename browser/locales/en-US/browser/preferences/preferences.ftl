@@ -787,9 +787,9 @@ sitedata-settings =
     .label = Manage Data…
     .accesskey = M
 
-sitedata-cookies-exceptions =
-    .label = Exceptions…
-    .accesskey = E
+sitedata-cookies-permissions =
+    .label = Manage Permissions…
+    .accesskey = P
 
 ## Privacy Section - Address Bar
 
@@ -813,14 +813,32 @@ addressbar-suggestions-settings = Change preferences for search engine suggestio
 
 content-blocking-header = Content Blocking
 
-content-blocking-desc = Block third-party content, like ads or code, that can slow your browsing and track you around the web. Customize your settings for the best balance of protection and performance.
+content-blocking-description = Block third-party content that tracks you around the web. Control how much of your online activity gets stored and shared between websites.
 
 content-blocking-learn-more = Learn more
-content-blocking-restore-defaults =
-  .label = Restore Defaults
-  .accesskey = R
 
-content-blocking-category-label = Choose what to block
+content-blocking-setting-standard =
+  .label = Standard
+  .accesskey = d
+content-blocking-setting-strict =
+  .label = Strict
+  .accesskey = r
+content-blocking-setting-custom =
+  .label = Custom
+  .accesskey = C
+
+content-blocking-standard-desc = Balanced for protection and performance. Allows some trackers so websites function properly.
+content-blocking-strict-desc = Blocks all trackers { -brand-short-name } detects. May cause some sites to break.
+content-blocking-custom-desc = Choose what to block.
+
+content-blocking-private-trackers = Known trackers only in Private Windows
+content-blocking-third-party-cookies = Third-party tracking cookies
+content-blocking-all-windows-trackers = Known trackers in all windows
+content-blocking-all-third-party-cookies = All third-party cookies
+
+content-blocking-warning-title = Heads up!
+content-blocking-warning-desc = Blocking cookies and trackers can cause some websites to break. It’s easy to disable blocking for sites you trust.
+content-blocking-learn-how = Learn how
 
 content-blocking-tracking-protection-trackers-label =
   .label = Trackers
@@ -828,7 +846,6 @@ content-blocking-tracking-protection-trackers-label =
 content-blocking-tracking-protection-all-detected-trackers-label =
   .label = All Detected Trackers
   .accesskey = T
-content-blocking-tracking-protection-new-description = Block all known trackers. (May prevent some pages from loading.)
 content-blocking-tracking-protection-option-always =
   .label = Always
   .accesskey = A
@@ -837,29 +854,14 @@ content-blocking-tracking-protection-option-private =
   .accesskey = p
 content-blocking-tracking-protection-change-block-list = Change block list
 
-content-blocking-third-party-cookies-label =
-  .label = Third-Party Cookies
+content-blocking-cookies-label =
+  .label = Cookies
   .accesskey = C
-content-blocking-reject-trackers-description = Block all third-party cookies or just those set by trackers.
-# This is a warning message shown next to a yellow warning icon when the Third-Party Cookies subsection
-# of the Content Blocking UI in Preferences has been disabled due to the either the "All cookies" option
-# or the "Cookies from unvisited websites" option being selected in the Cookies and Site Data section of
-# the UI.
-content-blocking-reject-trackers-warning-your-settings-prevent-changes = Your settings in Cookies and Site Data are preventing changes to Third-Party Cookies settings.
-content-blocking-change-cookie-settings =
-  .label = Change Cookie Settings
-  .accesskey = S
-content-blocking-reject-trackers-block-trackers-option-recommended =
-  .label = Trackers (recommended)
-  .accesskey = k
-content-blocking-reject-trackers-all-third-parties-option =
-  .label = All third-party cookies (may cause websites to break)
-  .accesskey = A
 
 ## Privacy Section - Tracking
 
-tracking-exceptions =
-    .label = Exceptions…
+tracking-manage-exceptions =
+    .label = Manage Exceptions…
     .accesskey = x
 
 ## Privacy Section - Permissions
