@@ -485,7 +485,6 @@ public:
     PLDHashTable* mTable;             // Main table pointer.
 
   private:
-    char* mStart;                     // The first entry.
     char* mLimit;                     // One past the last entry.
     char* mCurrent;                   // Pointer to the current entry.
     uint32_t mNexts;                  // Number of Next() calls.
