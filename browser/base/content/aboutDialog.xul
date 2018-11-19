@@ -53,7 +53,7 @@
           Extended Support Release
         </label>
         <hbox align="baseline">
-#expand   <label id="version">__MOZ_APP_VERSION_DISPLAY__</label>
+          <label id="version"/>
           <label id="releasenotes" class="text-link" hidden="true" data-l10n-id="releaseNotes-link"></label>
         </hbox>
 
