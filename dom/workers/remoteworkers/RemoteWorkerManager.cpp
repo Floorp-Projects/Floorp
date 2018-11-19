@@ -10,6 +10,7 @@
 #include "mozilla/dom/RemoteWorkerParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundParent.h"
+#include "nsIXULRuntime.h"
 #include "RemoteWorkerServiceParent.h"
 
 namespace mozilla {
@@ -41,6 +42,7 @@ RemoteWorkerManager::GetOrCreate()
 }
 
 RemoteWorkerManager::RemoteWorkerManager()
+  : mParentActor(nullptr)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -61,9 +63,16 @@ RemoteWorkerManager::RegisterActor(RemoteWorkerServiceParent* aActor)
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aActor);
-  MOZ_ASSERT(!mActors.Contains(aActor));
 
-  mActors.AppendElement(aActor);
+  if (!BackgroundParent::IsOtherProcessActor(aActor->Manager())) {
+    MOZ_ASSERT(!mParentActor);
+    mParentActor = aActor;
+    MOZ_ASSERT(mPendings.IsEmpty());
+    return;
+  }
+
+  MOZ_ASSERT(!mChildActors.Contains(aActor));
+  mChildActors.AppendElement(aActor);
 
   if (!mPendings.IsEmpty()) {
     // Flush pending launching.
@@ -85,9 +94,13 @@ RemoteWorkerManager::UnregisterActor(RemoteWorkerServiceParent* aActor)
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aActor);
-  MOZ_ASSERT(mActors.Contains(aActor));
 
-  mActors.RemoveElement(aActor);
+  if (aActor == mParentActor) {
+    mParentActor = nullptr;
+  } else {
+    MOZ_ASSERT(mChildActors.Contains(aActor));
+    mChildActors.RemoveElement(aActor);
+  }
 }
 
 void
@@ -129,7 +142,8 @@ RemoteWorkerManager::LaunchInternal(RemoteWorkerController* aController,
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aController);
   MOZ_ASSERT(aTargetActor);
-  MOZ_ASSERT(mActors.Contains(aTargetActor));
+  MOZ_ASSERT(aTargetActor == mParentActor ||
+             mChildActors.Contains(aTargetActor));
 
   RemoteWorkerParent* workerActor =
     static_cast<RemoteWorkerParent*>(
@@ -166,30 +180,35 @@ RemoteWorkerManager::SelectTargetActor(const RemoteWorkerData& aData,
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  if (mActors.IsEmpty()) {
+  // System principal workers should run on the parent process.
+  if (aData.principalInfo().type() == PrincipalInfo::TSystemPrincipalInfo) {
+    MOZ_ASSERT(mParentActor);
+    return mParentActor;
+  }
+
+  // If e10s is off, use the parent process.
+  if (!BrowserTabsRemoteAutostart()) {
+    MOZ_ASSERT(mParentActor);
+    return mParentActor;
+  }
+
+  // We shouldn't have to worry about content-principal parent-process workers.
+  MOZ_ASSERT(aProcessId != base::GetCurrentProcId());
+
+  if (mChildActors.IsEmpty()) {
     return nullptr;
   }
 
-  // System principal workers should run on the parent process.
-  if (aData.principalInfo().type() == PrincipalInfo::TSystemPrincipalInfo) {
-    for (RemoteWorkerServiceParent* actor : mActors) {
-      if (actor->OtherPid() == 0) {
-        return actor;
-      }
-    }
-  }
-
-  for (RemoteWorkerServiceParent* actor : mActors) {
-    // Let's execute the RemoteWorker on the same process but not on the parent
-    // process.
-    if (aProcessId && actor->OtherPid() == aProcessId) {
+  for (RemoteWorkerServiceParent* actor : mChildActors) {
+    // Let's execute the RemoteWorker on the same process.
+    if (actor->OtherPid() == aProcessId) {
       return actor;
     }
   }
 
   // Let's choose an actor, randomly.
-  uint32_t id = uint32_t(rand()) % mActors.Length();
-  return mActors[id];
+  uint32_t id = uint32_t(rand()) % mChildActors.Length();
+  return mChildActors[id];
 }
 
 void
