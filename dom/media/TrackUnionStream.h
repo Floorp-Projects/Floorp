@@ -16,7 +16,7 @@ namespace mozilla {
  * See MediaStreamGraph::CreateTrackUnionStream.
  */
 class TrackUnionStream : public ProcessedMediaStream {
-public:
+ public:
   explicit TrackUnionStream();
 
   virtual TrackUnionStream* AsTrackUnionStream() override { return this; }
@@ -32,11 +32,11 @@ public:
 
   friend class MediaStreamGraphImpl;
 
-protected:
+ protected:
   // Only non-ended tracks are allowed to persist in this map.
   struct TrackMapEntry {
-    // mEndOfConsumedInputTicks is the end of the input ticks that we've consumed.
-    // 0 if we haven't consumed any yet.
+    // mEndOfConsumedInputTicks is the end of the input ticks that we've
+    // consumed. 0 if we haven't consumed any yet.
     StreamTime mEndOfConsumedInputTicks;
     // mEndOfLastInputIntervalInInputStream is the timestamp for the end of the
     // previous interval which was unblocked for both the input and output
@@ -66,12 +66,13 @@ protected:
   uint32_t AddTrack(MediaInputPort* aPort, StreamTracks::Track* aTrack,
                     GraphTime aFrom);
   void EndTrack(uint32_t aIndex);
-  void CopyTrackData(StreamTracks::Track* aInputTrack,
-                     uint32_t aMapIndex, GraphTime aFrom, GraphTime aTo,
+  void CopyTrackData(StreamTracks::Track* aInputTrack, uint32_t aMapIndex,
+                     GraphTime aFrom, GraphTime aTo,
                      bool* aOutputTrackFinished);
 
-  void AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStreamTrackListener> aListener,
-                                  TrackID aTrackID) override;
+  void AddDirectTrackListenerImpl(
+      already_AddRefed<DirectMediaStreamTrackListener> aListener,
+      TrackID aTrackID) override;
   void RemoveDirectTrackListenerImpl(DirectMediaStreamTrackListener* aListener,
                                      TrackID aTrackID) override;
   void RemoveAllDirectListenersImpl() override;
@@ -87,9 +88,10 @@ protected:
 
   // Direct track listeners that have not been forwarded to their input stream
   // yet. We'll forward these as their inputs become available.
-  nsTArray<TrackBound<DirectMediaStreamTrackListener>> mPendingDirectTrackListeners;
+  nsTArray<TrackBound<DirectMediaStreamTrackListener>>
+      mPendingDirectTrackListeners;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* MOZILLA_MEDIASTREAMGRAPH_H_ */

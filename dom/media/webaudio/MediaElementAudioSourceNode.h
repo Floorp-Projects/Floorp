@@ -15,42 +15,38 @@ namespace dom {
 class AudioContext;
 struct MediaElementAudioSourceOptions;
 
-class MediaElementAudioSourceNode final : public MediaStreamAudioSourceNode
-{
-public:
-  static already_AddRefed<MediaElementAudioSourceNode>
-  Create(AudioContext& aAudioContext,
-         const MediaElementAudioSourceOptions& aOptions,
-         ErrorResult& aRv);
+class MediaElementAudioSourceNode final : public MediaStreamAudioSourceNode {
+ public:
+  static already_AddRefed<MediaElementAudioSourceNode> Create(
+      AudioContext& aAudioContext,
+      const MediaElementAudioSourceOptions& aOptions, ErrorResult& aRv);
 
-  static already_AddRefed<MediaElementAudioSourceNode>
-  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
-              const MediaElementAudioSourceOptions& aOptions, ErrorResult& aRv)
-  {
+  static already_AddRefed<MediaElementAudioSourceNode> Constructor(
+      const GlobalObject& aGlobal, AudioContext& aAudioContext,
+      const MediaElementAudioSourceOptions& aOptions, ErrorResult& aRv) {
     return Create(aAudioContext, aOptions, aRv);
   }
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  const char* NodeType() const override
-  {
+  const char* NodeType() const override {
     return "MediaElementAudioSourceNode";
   }
 
-  const char* CrossOriginErrorString() const override
-  {
+  const char* CrossOriginErrorString() const override {
     return "MediaElementAudioSourceNodeCrossOrigin";
   }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
-private:
+
+ private:
   explicit MediaElementAudioSourceNode(AudioContext* aContext);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

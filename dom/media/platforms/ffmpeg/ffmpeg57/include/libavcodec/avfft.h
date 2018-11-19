@@ -35,7 +35,7 @@
 typedef float FFTSample;
 
 typedef struct FFTComplex {
-    FFTSample re, im;
+  FFTSample re, im;
 } FFTComplex;
 
 typedef struct FFTContext FFTContext;
@@ -43,7 +43,8 @@ typedef struct FFTContext FFTContext;
 /**
  * Set up a complex FFT.
  * @param nbits           log2 of the length of the input array
- * @param inverse         if 0 perform the forward transform, if 1 perform the inverse
+ * @param inverse         if 0 perform the forward transform, if 1 perform the
+ * inverse
  */
 FFTContext *av_fft_init(int nbits, int inverse);
 
@@ -69,10 +70,10 @@ void av_mdct_end(FFTContext *s);
 /* Real Discrete Fourier Transform */
 
 enum RDFTransformType {
-    DFT_R2C,
-    IDFT_C2R,
-    IDFT_R2C,
-    DFT_C2R,
+  DFT_R2C,
+  IDFT_C2R,
+  IDFT_R2C,
+  DFT_C2R,
 };
 
 typedef struct RDFTContext RDFTContext;
@@ -91,10 +92,10 @@ void av_rdft_end(RDFTContext *s);
 typedef struct DCTContext DCTContext;
 
 enum DCTTransformType {
-    DCT_II = 0,
-    DCT_III,
-    DCT_I,
-    DST_I,
+  DCT_II = 0,
+  DCT_III,
+  DCT_I,
+  DST_I,
 };
 
 /**
@@ -109,7 +110,7 @@ enum DCTTransformType {
  */
 DCTContext *av_dct_init(int nbits, enum DCTTransformType type);
 void av_dct_calc(DCTContext *s, FFTSample *data);
-void av_dct_end (DCTContext *s);
+void av_dct_end(DCTContext *s);
 
 /**
  * @}

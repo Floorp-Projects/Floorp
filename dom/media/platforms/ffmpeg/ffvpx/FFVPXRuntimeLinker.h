@@ -11,12 +11,10 @@
 
 struct FFmpegRDFTFuncs;
 
-namespace mozilla
-{
+namespace mozilla {
 
-class FFVPXRuntimeLinker
-{
-public:
+class FFVPXRuntimeLinker {
+ public:
   // Main thread only.
   static bool Init();
   // Main thread or after Init().
@@ -25,7 +23,7 @@ public:
   // Call (on any thread) after Init().
   static void GetRDFTFuncs(FFmpegRDFTFuncs* aOutFuncs);
 
-private:
+ private:
   // Set once on the main thread and then read from other threads.
   static enum LinkStatus {
     LinkStatus_INIT = 0,
@@ -34,6 +32,6 @@ private:
   } sLinkStatus;
 };
 
-}
+}  // namespace mozilla
 
 #endif /* __FFVPXRuntimeLinker_h__ */

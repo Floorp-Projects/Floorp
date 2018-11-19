@@ -10,20 +10,15 @@ namespace mozilla {
 
 namespace layers {
 class Image;
-} // namespace layers
+}  // namespace layers
 
 /**
  * Converts aImage to an I420 image and writes it to the given buffers.
  */
-nsresult ConvertToI420(
-  layers::Image* aImage,
-  uint8_t* aDestY,
-  int aDestStrideY,
-  uint8_t* aDestU,
-  int aDestStrideU,
-  uint8_t* aDestV,
-  int aDestStrideV);
+nsresult ConvertToI420(layers::Image* aImage, uint8_t* aDestY, int aDestStrideY,
+                       uint8_t* aDestU, int aDestStrideU, uint8_t* aDestV,
+                       int aDestStrideV);
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* ImageToI420Converter_h */

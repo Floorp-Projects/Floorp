@@ -15,9 +15,8 @@
 
 namespace mozilla {
 
-/* static */ already_AddRefed<dom::Worklet>
-AudioWorkletImpl::CreateWorklet(dom::AudioContext* aContext, ErrorResult& aRv)
-{
+/* static */ already_AddRefed<dom::Worklet> AudioWorkletImpl::CreateWorklet(
+    dom::AudioContext* aContext, ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsPIDOMWindowInner> window = aContext->GetOwner();
@@ -26,7 +25,7 @@ AudioWorkletImpl::CreateWorklet(dom::AudioContext* aContext, ErrorResult& aRv)
     return nullptr;
   }
   nsCOMPtr<nsIPrincipal> principal =
-    nsGlobalWindowInner::Cast(window)->GetPrincipal();
+      nsGlobalWindowInner::Cast(window)->GetPrincipal();
   if (NS_WARN_IF(!principal)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -38,26 +37,21 @@ AudioWorkletImpl::CreateWorklet(dom::AudioContext* aContext, ErrorResult& aRv)
 
 AudioWorkletImpl::AudioWorkletImpl(nsPIDOMWindowInner* aWindow,
                                    nsIPrincipal* aPrincipal)
-  : WorkletImpl(aWindow, aPrincipal)
-{
-}
+    : WorkletImpl(aWindow, aPrincipal) {}
 
 AudioWorkletImpl::~AudioWorkletImpl() = default;
 
-JSObject*
-AudioWorkletImpl::WrapWorklet(JSContext* aCx, dom::Worklet* aWorklet,
-                              JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* AudioWorkletImpl::WrapWorklet(JSContext* aCx, dom::Worklet* aWorklet,
+                                        JS::Handle<JSObject*> aGivenProto) {
   MOZ_ASSERT(NS_IsMainThread());
   return dom::AudioWorklet_Binding::Wrap(aCx, aWorklet, aGivenProto);
 }
 
 already_AddRefed<dom::WorkletGlobalScope>
-AudioWorkletImpl::ConstructGlobalScope()
-{
+AudioWorkletImpl::ConstructGlobalScope() {
   dom::WorkletThread::AssertIsOnWorkletThread();
 
   return MakeAndAddRef<dom::AudioWorkletGlobalScope>(this);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

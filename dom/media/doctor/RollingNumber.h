@@ -36,24 +36,17 @@ namespace mozilla {
 // In non-debug builds, all APIs will still work as consistently as possible
 // without crashing, but performing operations on "distant" nunbers could lead
 // to unexpected results.
-template<typename T>
-class RollingNumber
-{
+template <typename T>
+class RollingNumber {
   static_assert(!std::numeric_limits<T>::is_signed,
                 "RollingNumber only accepts unsigned number types");
 
-public:
+ public:
   using ValueType = T;
 
-  RollingNumber()
-    : mIndex(0)
-  {
-  }
+  RollingNumber() : mIndex(0) {}
 
-  explicit RollingNumber(ValueType aIndex)
-    : mIndex(aIndex)
-  {
-  }
+  explicit RollingNumber(ValueType aIndex) : mIndex(aIndex) {}
 
   RollingNumber(const RollingNumber&) = default;
   RollingNumber& operator=(const RollingNumber&) = default;
@@ -62,52 +55,45 @@ public:
 
   // Normal increments/decrements.
 
-  RollingNumber& operator++()
-  {
+  RollingNumber& operator++() {
     ++mIndex;
     return *this;
   }
 
-  RollingNumber operator++(int) { return RollingNumber{ mIndex++ }; }
+  RollingNumber operator++(int) { return RollingNumber{mIndex++}; }
 
-  RollingNumber& operator--()
-  {
+  RollingNumber& operator--() {
     --mIndex;
     return *this;
   }
 
-  RollingNumber operator--(int) { return RollingNumber{ mIndex-- }; }
+  RollingNumber operator--(int) { return RollingNumber{mIndex--}; }
 
-  RollingNumber& operator+=(const ValueType& aIncrement)
-  {
+  RollingNumber& operator+=(const ValueType& aIncrement) {
     MOZ_ASSERT(aIncrement <= MaxDiff);
     mIndex += aIncrement;
     return *this;
   }
 
-  RollingNumber operator+(const ValueType& aIncrement) const
-  {
+  RollingNumber operator+(const ValueType& aIncrement) const {
     RollingNumber n = *this;
     return n += aIncrement;
   }
 
-  RollingNumber& operator-=(const ValueType& aDecrement)
-  {
+  RollingNumber& operator-=(const ValueType& aDecrement) {
     MOZ_ASSERT(aDecrement <= MaxDiff);
     mIndex -= aDecrement;
     return *this;
   }
 
   // Translate a RollingNumber by a negative value.
-  RollingNumber operator-(const ValueType& aDecrement) const
-  {
+  RollingNumber operator-(const ValueType& aDecrement) const {
     RollingNumber n = *this;
     return n -= aDecrement;
   }
 
   // Distance between two RollingNumbers, giving a value.
-  ValueType operator-(const RollingNumber& aOther) const
-  {
+  ValueType operator-(const RollingNumber& aOther) const {
     ValueType diff = mIndex - aOther.mIndex;
     MOZ_ASSERT(diff <= MaxDiff);
     return diff;
@@ -115,19 +101,16 @@ public:
 
   // Normal (in)equality operators.
 
-  bool operator==(const RollingNumber& aOther) const
-  {
+  bool operator==(const RollingNumber& aOther) const {
     return mIndex == aOther.mIndex;
   }
-  bool operator!=(const RollingNumber& aOther) const
-  {
+  bool operator!=(const RollingNumber& aOther) const {
     return !(*this == aOther);
   }
 
   // Modified comparison operators.
 
-  bool operator<(const RollingNumber& aOther) const
-  {
+  bool operator<(const RollingNumber& aOther) const {
     const T& a = mIndex;
     const T& b = aOther.mIndex;
     // static_cast needed because of possible integer promotion
@@ -137,8 +120,7 @@ public:
     return lessThanOther;
   }
 
-  bool operator<=(const RollingNumber& aOther) const
-  {
+  bool operator<=(const RollingNumber& aOther) const {
     const T& a = mIndex;
     const T& b = aOther.mIndex;
     const bool lessishThanOther = static_cast<ValueType>(b - a) <= MidWay;
@@ -146,8 +128,7 @@ public:
     return lessishThanOther;
   }
 
-  bool operator>=(const RollingNumber& aOther) const
-  {
+  bool operator>=(const RollingNumber& aOther) const {
     const T& a = mIndex;
     const T& b = aOther.mIndex;
     const bool greaterishThanOther = static_cast<ValueType>(a - b) <= MidWay;
@@ -155,8 +136,7 @@ public:
     return greaterishThanOther;
   }
 
-  bool operator>(const RollingNumber& aOther) const
-  {
+  bool operator>(const RollingNumber& aOther) const {
     const T& a = mIndex;
     const T& b = aOther.mIndex;
     const bool greaterThanOther = static_cast<ValueType>(b - a) > MidWay;
@@ -164,7 +144,7 @@ public:
     return greaterThanOther;
   }
 
-private:
+ private:
   // MidWay is used to split the type range in two, to decide how two numbers
   // are ordered.
   static const T MidWay = std::numeric_limits<T>::max() / 2;
@@ -177,6 +157,6 @@ private:
   ValueType mIndex;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // mozilla_RollingNumber_h_
+#endif  // mozilla_RollingNumber_h_

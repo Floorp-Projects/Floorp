@@ -20,11 +20,9 @@ namespace mozilla {
 
 DDLoggedTypeDeclNameAndBase(VorbisDataDecoder, MediaDataDecoder);
 
-class VorbisDataDecoder
-  : public MediaDataDecoder
-  , public DecoderDoctorLifeLogger<VorbisDataDecoder>
-{
-public:
+class VorbisDataDecoder : public MediaDataDecoder,
+                          public DecoderDoctorLifeLogger<VorbisDataDecoder> {
+ public:
   explicit VorbisDataDecoder(const CreateDecoderParams& aParams);
   ~VorbisDataDecoder();
 
@@ -33,8 +31,7 @@ public:
   RefPtr<DecodePromise> Drain() override;
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
-  nsCString GetDescriptionName() const override
-  {
+  nsCString GetDescriptionName() const override {
     return NS_LITERAL_CSTRING("vorbis audio decoder");
   }
 
@@ -42,7 +39,7 @@ public:
   static bool IsVorbis(const nsACString& aMimeType);
   static const AudioConfig::Channel* VorbisLayout(uint32_t aChannels);
 
-private:
+ private:
   nsresult DecodeHeader(const unsigned char* aData, size_t aLength);
   RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample);
 
@@ -61,5 +58,5 @@ private:
   UniquePtr<AudioConverter> mAudioConverter;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 #endif

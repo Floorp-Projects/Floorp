@@ -21,40 +21,28 @@ using namespace mozilla::layers;
 
 static StaticAutoPtr<RDDProcessManager> sRDDSingleton;
 
-RDDProcessManager*
-RDDProcessManager::Get()
-{
-  return sRDDSingleton;
-}
+RDDProcessManager* RDDProcessManager::Get() { return sRDDSingleton; }
 
-void
-RDDProcessManager::Initialize()
-{
+void RDDProcessManager::Initialize() {
   MOZ_ASSERT(XRE_IsParentProcess());
   sRDDSingleton = new RDDProcessManager();
 }
 
-void
-RDDProcessManager::Shutdown()
-{
-  sRDDSingleton = nullptr;
-}
+void RDDProcessManager::Shutdown() { sRDDSingleton = nullptr; }
 
 RDDProcessManager::RDDProcessManager()
- : mTaskFactory(this),
-   mNumProcessAttempts(0),
-   mProcess(nullptr),
-   mProcessToken(0),
-   mRDDChild(nullptr)
-{
+    : mTaskFactory(this),
+      mNumProcessAttempts(0),
+      mProcess(nullptr),
+      mProcessToken(0),
+      mRDDChild(nullptr) {
   MOZ_COUNT_CTOR(RDDProcessManager);
 
   mObserver = new Observer(this);
   nsContentUtils::RegisterShutdownObserver(mObserver);
 }
 
-RDDProcessManager::~RDDProcessManager()
-{
+RDDProcessManager::~RDDProcessManager() {
   MOZ_COUNT_DTOR(RDDProcessManager);
 
   // The RDD process should have already been shut down.
@@ -67,24 +55,18 @@ RDDProcessManager::~RDDProcessManager()
 NS_IMPL_ISUPPORTS(RDDProcessManager::Observer, nsIObserver);
 
 RDDProcessManager::Observer::Observer(RDDProcessManager* aManager)
- : mManager(aManager)
-{
-}
+    : mManager(aManager) {}
 
 NS_IMETHODIMP
-RDDProcessManager::Observer::Observe(nsISupports* aSubject,
-                                     const char* aTopic,
-                                     const char16_t* aData)
-{
+RDDProcessManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
+                                     const char16_t* aData) {
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     mManager->OnXPCOMShutdown();
   }
   return NS_OK;
 }
 
-void
-RDDProcessManager::OnXPCOMShutdown()
-{
+void RDDProcessManager::OnXPCOMShutdown() {
   if (mObserver) {
     nsContentUtils::UnregisterShutdownObserver(mObserver);
     mObserver = nullptr;
@@ -93,9 +75,7 @@ RDDProcessManager::OnXPCOMShutdown()
   CleanShutdown();
 }
 
-void
-RDDProcessManager::LaunchRDDProcess()
-{
+void RDDProcessManager::LaunchRDDProcess() {
   if (mProcess) {
     return;
   }
@@ -115,9 +95,7 @@ RDDProcessManager::LaunchRDDProcess()
   }
 }
 
-bool
-RDDProcessManager::EnsureRDDReady()
-{
+bool RDDProcessManager::EnsureRDDReady() {
   if (mProcess && !mProcess->IsConnected()) {
     if (!mProcess->WaitForLaunch()) {
       // If this fails, we should have fired OnProcessLaunchComplete and
@@ -140,9 +118,7 @@ RDDProcessManager::EnsureRDDReady()
   return false;
 }
 
-void
-RDDProcessManager::OnProcessLaunchComplete(RDDProcessHost* aHost)
-{
+void RDDProcessManager::OnProcessLaunchComplete(RDDProcessHost* aHost) {
   MOZ_ASSERT(mProcess && mProcess == aHost);
 
   if (!mProcess->IsConnected()) {
@@ -154,24 +130,21 @@ RDDProcessManager::OnProcessLaunchComplete(RDDProcessHost* aHost)
   mProcessToken = mProcess->GetProcessToken();
 
   CrashReporter::AnnotateCrashReport(
-    CrashReporter::Annotation::RDDProcessStatus,
-    NS_LITERAL_CSTRING("Running"));
+      CrashReporter::Annotation::RDDProcessStatus,
+      NS_LITERAL_CSTRING("Running"));
 }
 
-void
-RDDProcessManager::OnProcessUnexpectedShutdown(RDDProcessHost* aHost)
-{
+void RDDProcessManager::OnProcessUnexpectedShutdown(RDDProcessHost* aHost) {
   MOZ_ASSERT(mProcess && mProcess == aHost);
 
   DestroyProcess();
 }
 
-void
-RDDProcessManager::NotifyRemoteActorDestroyed(const uint64_t& aProcessToken)
-{
+void RDDProcessManager::NotifyRemoteActorDestroyed(
+    const uint64_t& aProcessToken) {
   if (!NS_IsMainThread()) {
     RefPtr<Runnable> task = mTaskFactory.NewRunnableMethod(
-      &RDDProcessManager::NotifyRemoteActorDestroyed, aProcessToken);
+        &RDDProcessManager::NotifyRemoteActorDestroyed, aProcessToken);
     NS_DispatchToMainThread(task.forget());
     return;
   }
@@ -188,15 +161,9 @@ RDDProcessManager::NotifyRemoteActorDestroyed(const uint64_t& aProcessToken)
   OnProcessUnexpectedShutdown(mProcess);
 }
 
-void
-RDDProcessManager::CleanShutdown()
-{
-  DestroyProcess();
-}
+void RDDProcessManager::CleanShutdown() { DestroyProcess(); }
 
-void
-RDDProcessManager::KillProcess()
-{
+void RDDProcessManager::KillProcess() {
   if (!mProcess) {
     return;
   }
@@ -204,9 +171,7 @@ RDDProcessManager::KillProcess()
   mProcess->KillProcess();
 }
 
-void
-RDDProcessManager::DestroyProcess()
-{
+void RDDProcessManager::DestroyProcess() {
   if (!mProcess) {
     return;
   }
@@ -217,17 +182,14 @@ RDDProcessManager::DestroyProcess()
   mRDDChild = nullptr;
 
   CrashReporter::AnnotateCrashReport(
-    CrashReporter::Annotation::RDDProcessStatus,
-    NS_LITERAL_CSTRING("Destroyed"));
+      CrashReporter::Annotation::RDDProcessStatus,
+      NS_LITERAL_CSTRING("Destroyed"));
 }
 
-bool
-RDDProcessManager::CreateContentBridge(
-       base::ProcessId aOtherProcess,
-       ipc::Endpoint<PRemoteDecoderManagerChild>* aOutRemoteDecoderManager)
-{
-  if (!EnsureRDDReady() ||
-      !StaticPrefs::MediaRddProcessEnabled()) {
+bool RDDProcessManager::CreateContentBridge(
+    base::ProcessId aOtherProcess,
+    ipc::Endpoint<PRemoteDecoderManagerChild>* aOutRemoteDecoderManager) {
+  if (!EnsureRDDReady() || !StaticPrefs::MediaRddProcessEnabled()) {
     return false;
   }
 
@@ -235,13 +197,9 @@ RDDProcessManager::CreateContentBridge(
   ipc::Endpoint<PRemoteDecoderManagerChild> childPipe;
 
   nsresult rv = PRemoteDecoderManager::CreateEndpoints(
-    mRDDChild->OtherPid(),
-    aOtherProcess,
-    &parentPipe,
-    &childPipe);
+      mRDDChild->OtherPid(), aOtherProcess, &parentPipe, &childPipe);
   if (NS_FAILED(rv)) {
-    MOZ_LOG(sPDMLog,
-            LogLevel::Debug,
+    MOZ_LOG(sPDMLog, LogLevel::Debug,
             ("Could not create content remote decoder: %d", int(rv)));
     return false;
   }
@@ -252,36 +210,28 @@ RDDProcessManager::CreateContentBridge(
   return true;
 }
 
-base::ProcessId
-RDDProcessManager::RDDProcessPid()
-{
-  base::ProcessId rddPid = mRDDChild
-                           ? mRDDChild->OtherPid()
-                           : -1;
+base::ProcessId RDDProcessManager::RDDProcessPid() {
+  base::ProcessId rddPid = mRDDChild ? mRDDChild->OtherPid() : -1;
   return rddPid;
 }
 
-class RDDMemoryReporter : public MemoryReportingProcess
-{
-public:
+class RDDMemoryReporter : public MemoryReportingProcess {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RDDMemoryReporter, override)
 
-  bool IsAlive() const override {
-    return !!GetChild();
-  }
+  bool IsAlive() const override { return !!GetChild(); }
 
   bool SendRequestMemoryReport(const uint32_t& aGeneration,
                                const bool& aAnonymize,
                                const bool& aMinimizeMemoryUsage,
-                               const dom::MaybeFileDesc& aDMDFile) override
-  {
+                               const dom::MaybeFileDesc& aDMDFile) override {
     RDDChild* child = GetChild();
     if (!child) {
       return false;
     }
 
-    return child->SendRequestMemoryReport(
-      aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile);
+    return child->SendRequestMemoryReport(aGeneration, aAnonymize,
+                                          aMinimizeMemoryUsage, aDMDFile);
   }
 
   int32_t Pid() const override {
@@ -291,7 +241,7 @@ public:
     return 0;
   }
 
-private:
+ private:
   RDDChild* GetChild() const {
     if (RDDProcessManager* rddpm = RDDProcessManager::Get()) {
       if (RDDChild* child = rddpm->GetRDDChild()) {
@@ -301,17 +251,15 @@ private:
     return nullptr;
   }
 
-protected:
+ protected:
   ~RDDMemoryReporter() = default;
 };
 
-RefPtr<MemoryReportingProcess>
-RDDProcessManager::GetProcessMemoryReporter()
-{
+RefPtr<MemoryReportingProcess> RDDProcessManager::GetProcessMemoryReporter() {
   if (!EnsureRDDReady()) {
     return nullptr;
   }
   return new RDDMemoryReporter();
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -12,35 +12,29 @@ namespace mozilla {
 namespace gmp {
 
 GMPPlaneImpl::GMPPlaneImpl(GMPVideoHostImpl* aHost)
-: mSize(0),
-  mStride(0),
-  mHost(aHost)
-{
+    : mSize(0), mStride(0), mHost(aHost) {
   MOZ_ASSERT(mHost);
   mHost->PlaneCreated(this);
 }
 
-GMPPlaneImpl::GMPPlaneImpl(const GMPPlaneData& aPlaneData, GMPVideoHostImpl* aHost)
-: mBuffer(aPlaneData.mBuffer()),
-  mSize(aPlaneData.mSize()),
-  mStride(aPlaneData.mStride()),
-  mHost(aHost)
-{
+GMPPlaneImpl::GMPPlaneImpl(const GMPPlaneData& aPlaneData,
+                           GMPVideoHostImpl* aHost)
+    : mBuffer(aPlaneData.mBuffer()),
+      mSize(aPlaneData.mSize()),
+      mStride(aPlaneData.mStride()),
+      mHost(aHost) {
   MOZ_ASSERT(mHost);
   mHost->PlaneCreated(this);
 }
 
-GMPPlaneImpl::~GMPPlaneImpl()
-{
+GMPPlaneImpl::~GMPPlaneImpl() {
   DestroyBuffer();
   if (mHost) {
     mHost->PlaneDestroyed(this);
   }
 }
 
-void
-GMPPlaneImpl::DoneWithAPI()
-{
+void GMPPlaneImpl::DoneWithAPI() {
   DestroyBuffer();
 
   // Do this after destroying the buffer because destruction
@@ -48,9 +42,7 @@ GMPPlaneImpl::DoneWithAPI()
   mHost = nullptr;
 }
 
-void
-GMPPlaneImpl::ActorDestroyed()
-{
+void GMPPlaneImpl::ActorDestroyed() {
   // Simply clear out Shmem reference, do not attempt to
   // properly free it. It has already been freed.
   mBuffer = ipc::Shmem();
@@ -58,9 +50,7 @@ GMPPlaneImpl::ActorDestroyed()
   mHost = nullptr;
 }
 
-bool
-GMPPlaneImpl::InitPlaneData(GMPPlaneData& aPlaneData)
-{
+bool GMPPlaneImpl::InitPlaneData(GMPPlaneData& aPlaneData) {
   aPlaneData.mBuffer() = mBuffer;
   aPlaneData.mSize() = mSize;
   aPlaneData.mStride() = mStride;
@@ -73,8 +63,7 @@ GMPPlaneImpl::InitPlaneData(GMPPlaneData& aPlaneData)
   return true;
 }
 
-GMPErr
-GMPPlaneImpl::MaybeResize(int32_t aNewSize) {
+GMPErr GMPPlaneImpl::MaybeResize(int32_t aNewSize) {
   if (aNewSize <= AllocatedSize()) {
     return GMPNoErr;
   }
@@ -84,8 +73,9 @@ GMPPlaneImpl::MaybeResize(int32_t aNewSize) {
   }
 
   ipc::Shmem new_mem;
-  if (!mHost->SharedMemMgr()->MgrAllocShmem(GMPSharedMem::kGMPFrameData, aNewSize,
-                                            ipc::SharedMemory::TYPE_BASIC, &new_mem) ||
+  if (!mHost->SharedMemMgr()->MgrAllocShmem(
+          GMPSharedMem::kGMPFrameData, aNewSize, ipc::SharedMemory::TYPE_BASIC,
+          &new_mem) ||
       !new_mem.get<uint8_t>()) {
     return GMPAllocErr;
   }
@@ -101,18 +91,16 @@ GMPPlaneImpl::MaybeResize(int32_t aNewSize) {
   return GMPNoErr;
 }
 
-void
-GMPPlaneImpl::DestroyBuffer()
-{
+void GMPPlaneImpl::DestroyBuffer() {
   if (mHost && mBuffer.IsWritable()) {
-    mHost->SharedMemMgr()->MgrDeallocShmem(GMPSharedMem::kGMPFrameData, mBuffer);
+    mHost->SharedMemMgr()->MgrDeallocShmem(GMPSharedMem::kGMPFrameData,
+                                           mBuffer);
   }
   mBuffer = ipc::Shmem();
 }
 
-GMPErr
-GMPPlaneImpl::CreateEmptyPlane(int32_t aAllocatedSize, int32_t aStride, int32_t aPlaneSize)
-{
+GMPErr GMPPlaneImpl::CreateEmptyPlane(int32_t aAllocatedSize, int32_t aStride,
+                                      int32_t aPlaneSize) {
   if (aAllocatedSize < 1 || aStride < 1 || aPlaneSize < 1) {
     return GMPGenericErr;
   }
@@ -128,9 +116,7 @@ GMPPlaneImpl::CreateEmptyPlane(int32_t aAllocatedSize, int32_t aStride, int32_t 
   return GMPNoErr;
 }
 
-GMPErr
-GMPPlaneImpl::Copy(const GMPPlane& aPlane)
-{
+GMPErr GMPPlaneImpl::Copy(const GMPPlane& aPlane) {
   auto& planeimpl = static_cast<const GMPPlaneImpl&>(aPlane);
 
   GMPErr err = MaybeResize(planeimpl.mSize);
@@ -148,9 +134,8 @@ GMPPlaneImpl::Copy(const GMPPlane& aPlane)
   return GMPNoErr;
 }
 
-GMPErr
-GMPPlaneImpl::Copy(int32_t aSize, int32_t aStride, const uint8_t* aBuffer)
-{
+GMPErr GMPPlaneImpl::Copy(int32_t aSize, int32_t aStride,
+                          const uint8_t* aBuffer) {
   GMPErr err = MaybeResize(aSize);
   if (err != GMPNoErr) {
     return err;
@@ -166,9 +151,7 @@ GMPPlaneImpl::Copy(int32_t aSize, int32_t aStride, const uint8_t* aBuffer)
   return GMPNoErr;
 }
 
-void
-GMPPlaneImpl::Swap(GMPPlane& aPlane)
-{
+void GMPPlaneImpl::Swap(GMPPlane& aPlane) {
   auto& planeimpl = static_cast<GMPPlaneImpl&>(aPlane);
 
   std::swap(mStride, planeimpl.mStride);
@@ -176,50 +159,24 @@ GMPPlaneImpl::Swap(GMPPlane& aPlane)
   std::swap(mBuffer, planeimpl.mBuffer);
 }
 
-int32_t
-GMPPlaneImpl::AllocatedSize() const
-{
+int32_t GMPPlaneImpl::AllocatedSize() const {
   if (mBuffer.IsWritable()) {
     return mBuffer.Size<uint8_t>();
   }
   return 0;
 }
 
-void
-GMPPlaneImpl::ResetSize()
-{
-  mSize = 0;
-}
+void GMPPlaneImpl::ResetSize() { mSize = 0; }
 
-bool
-GMPPlaneImpl::IsZeroSize() const
-{
-  return (mSize == 0);
-}
+bool GMPPlaneImpl::IsZeroSize() const { return (mSize == 0); }
 
-int32_t
-GMPPlaneImpl::Stride() const
-{
-  return mStride;
-}
+int32_t GMPPlaneImpl::Stride() const { return mStride; }
 
-const uint8_t*
-GMPPlaneImpl::Buffer() const
-{
-  return mBuffer.get<uint8_t>();
-}
+const uint8_t* GMPPlaneImpl::Buffer() const { return mBuffer.get<uint8_t>(); }
 
-uint8_t*
-GMPPlaneImpl::Buffer()
-{
-  return mBuffer.get<uint8_t>();
-}
+uint8_t* GMPPlaneImpl::Buffer() { return mBuffer.get<uint8_t>(); }
 
-void
-GMPPlaneImpl::Destroy()
-{
-  delete this;
-}
+void GMPPlaneImpl::Destroy() { delete this; }
 
-} // namespace gmp
-} // namespace mozilla
+}  // namespace gmp
+}  // namespace mozilla

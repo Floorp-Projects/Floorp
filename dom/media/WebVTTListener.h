@@ -23,8 +23,7 @@ class HTMLTrackElement;
 class WebVTTListener final : public nsIWebVTTListener,
                              public nsIStreamListener,
                              public nsIChannelEventSink,
-                             public nsIInterfaceRequestor
-{
+                             public nsIInterfaceRequestor {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIWEBVTTLISTENER
   NS_DECL_NSIREQUESTOBSERVER
@@ -32,10 +31,9 @@ class WebVTTListener final : public nsIWebVTTListener,
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(WebVTTListener,
-                                           nsIStreamListener)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(WebVTTListener, nsIStreamListener)
 
-public:
+ public:
   explicit WebVTTListener(HTMLTrackElement* aElement);
 
   /**
@@ -44,13 +42,11 @@ public:
    */
   nsresult LoadResource();
 
-private:
+ private:
   ~WebVTTListener();
 
   // List of error codes returned from the WebVTT parser that we care about.
-  enum ErrorCodes {
-    BadSignature = 0
-  };
+  enum ErrorCodes { BadSignature = 0 };
   static nsresult ParseChunk(nsIInputStream* aInStream, void* aClosure,
                              const char* aFromSegment, uint32_t aToOffset,
                              uint32_t aCount, uint32_t* aWriteCount);
@@ -59,7 +55,7 @@ private:
   nsCOMPtr<nsIWebVTTParserWrapper> mParserWrapper;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_WebVTTListener_h
+#endif  // mozilla_dom_WebVTTListener_h

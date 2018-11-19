@@ -17,32 +17,31 @@ namespace mozilla {
 
 class MediaDecoder;
 
-class BackgroundVideoDecodingPermissionObserver final
-  : public nsIObserver
-{
-  public:
-    NS_DECL_ISUPPORTS
+class BackgroundVideoDecodingPermissionObserver final : public nsIObserver {
+ public:
+  NS_DECL_ISUPPORTS
 
-    explicit BackgroundVideoDecodingPermissionObserver(MediaDecoder* aDecoder);
+  explicit BackgroundVideoDecodingPermissionObserver(MediaDecoder* aDecoder);
 
-    NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
-                       const char16_t* aData) override;
-    void RegisterEvent();
-    void UnregisterEvent();
-  private:
-    ~BackgroundVideoDecodingPermissionObserver();
-    void EnableEvent() const;
-    void DisableEvent() const;
-    already_AddRefed<nsPIDOMWindowOuter> GetOwnerWindow() const;
-    nsIDocument* GetOwnerDoc() const;
-    bool IsValidEventSender(nsISupports* aSubject) const;
+  NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
+                     const char16_t* aData) override;
+  void RegisterEvent();
+  void UnregisterEvent();
 
-    // The life cycle of observer would always be shorter than decoder, so we
-    // use raw pointer here.
-    MediaDecoder* mDecoder;
-    bool mIsRegisteredForEvent;
+ private:
+  ~BackgroundVideoDecodingPermissionObserver();
+  void EnableEvent() const;
+  void DisableEvent() const;
+  already_AddRefed<nsPIDOMWindowOuter> GetOwnerWindow() const;
+  nsIDocument* GetOwnerDoc() const;
+  bool IsValidEventSender(nsISupports* aSubject) const;
+
+  // The life cycle of observer would always be shorter than decoder, so we
+  // use raw pointer here.
+  MediaDecoder* mDecoder;
+  bool mIsRegisteredForEvent;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // BackgroundVideoDecodingPermissionObserver_h_
+#endif  // BackgroundVideoDecodingPermissionObserver_h_

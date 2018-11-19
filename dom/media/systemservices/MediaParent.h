@@ -20,54 +20,50 @@ namespace media {
 
 class OriginKeyStore;
 
-class NonE10s
-{
-  typedef mozilla::ipc::IProtocol::ActorDestroyReason
-      ActorDestroyReason;
-public:
+class NonE10s {
+  typedef mozilla::ipc::IProtocol::ActorDestroyReason ActorDestroyReason;
+
+ public:
   virtual ~NonE10s() {}
-protected:
-  virtual mozilla::ipc::IPCResult
-  RecvGetPrincipalKey(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-                      const bool& aPersist,
-                      PMediaParent::GetPrincipalKeyResolver&& aResolve) = 0;
-  virtual mozilla::ipc::IPCResult RecvSanitizeOriginKeys(const uint64_t& aSinceWhen,
-                                                         const bool& aOnlyPrivateBrowsing) = 0;
-  virtual void
-  ActorDestroy(ActorDestroyReason aWhy) = 0;
+
+ protected:
+  virtual mozilla::ipc::IPCResult RecvGetPrincipalKey(
+      const mozilla::ipc::PrincipalInfo& aPrincipalInfo, const bool& aPersist,
+      PMediaParent::GetPrincipalKeyResolver&& aResolve) = 0;
+  virtual mozilla::ipc::IPCResult RecvSanitizeOriginKeys(
+      const uint64_t& aSinceWhen, const bool& aOnlyPrivateBrowsing) = 0;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) = 0;
 };
 
 /**
  * Dummy class to avoid a templated class being passed to the refcounting macro
  * (see Bug 1334421 for what happens then)
  */
-class RefCountedParent
-{
-public:
+class RefCountedParent {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefCountedParent)
 
-protected:
+ protected:
   virtual ~RefCountedParent() {}
 };
 
 // Super = PMediaParent or NonE10s
 
-template<class Super>
-class Parent : public RefCountedParent, public Super
-{
-  typedef mozilla::ipc::IProtocol::ActorDestroyReason
-      ActorDestroyReason;
-public:
-  virtual mozilla::ipc::IPCResult
-  RecvGetPrincipalKey(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-                      const bool& aPersist,
-                      PMediaParent::GetPrincipalKeyResolver&& aResolve) override;
-  virtual mozilla::ipc::IPCResult RecvSanitizeOriginKeys(const uint64_t& aSinceWhen,
-                                                         const bool& aOnlyPrivateBrowsing) override;
+template <class Super>
+class Parent : public RefCountedParent, public Super {
+  typedef mozilla::ipc::IProtocol::ActorDestroyReason ActorDestroyReason;
+
+ public:
+  virtual mozilla::ipc::IPCResult RecvGetPrincipalKey(
+      const mozilla::ipc::PrincipalInfo& aPrincipalInfo, const bool& aPersist,
+      PMediaParent::GetPrincipalKeyResolver&& aResolve) override;
+  virtual mozilla::ipc::IPCResult RecvSanitizeOriginKeys(
+      const uint64_t& aSinceWhen, const bool& aOnlyPrivateBrowsing) override;
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   Parent();
-private:
+
+ private:
   virtual ~Parent();
 
   RefPtr<OriginKeyStore> mOriginKeyStore;
@@ -76,25 +72,25 @@ private:
   CoatCheck<Pledge<nsCString>> mOutstandingPledges;
 };
 
-template<class Parent>
+template <class Parent>
 mozilla::ipc::IPCResult IPCResult(Parent* aSelf, bool aSuccess);
 
-template<>
-inline mozilla::ipc::IPCResult IPCResult(Parent<PMediaParent>* aSelf, bool aSuccess)
-{
+template <>
+inline mozilla::ipc::IPCResult IPCResult(Parent<PMediaParent>* aSelf,
+                                         bool aSuccess) {
   return aSuccess ? IPC_OK() : IPC_FAIL_NO_REASON(aSelf);
 }
 
-template<>
-inline mozilla::ipc::IPCResult IPCResult(Parent<NonE10s>* aSelf, bool aSuccess)
-{
+template <>
+inline mozilla::ipc::IPCResult IPCResult(Parent<NonE10s>* aSelf,
+                                         bool aSuccess) {
   return IPC_OK();
 }
 
 PMediaParent* AllocPMediaParent();
-bool DeallocPMediaParent(PMediaParent *aActor);
+bool DeallocPMediaParent(PMediaParent* aActor);
 
-} // namespace media
-} // namespace mozilla
+}  // namespace media
+}  // namespace mozilla
 
 #endif  // mozilla_MediaParent_h

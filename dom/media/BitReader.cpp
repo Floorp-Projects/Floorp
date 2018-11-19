@@ -6,34 +6,25 @@
 
 #include "BitReader.h"
 
-namespace mozilla
-{
+namespace mozilla {
 
 BitReader::BitReader(const mozilla::MediaByteBuffer* aBuffer)
-  : BitReader(aBuffer->Elements(), aBuffer->Length() * 8)
-{
-}
+    : BitReader(aBuffer->Elements(), aBuffer->Length() * 8) {}
 
 BitReader::BitReader(const mozilla::MediaByteBuffer* aBuffer, size_t aBits)
-  : BitReader(aBuffer->Elements(), aBits)
-{
-}
+    : BitReader(aBuffer->Elements(), aBits) {}
 
 BitReader::BitReader(const uint8_t* aBuffer, size_t aBits)
-  : mData(aBuffer)
-  , mOriginalBitSize(aBits)
-  , mTotalBitsLeft(aBits)
-  , mSize((aBits + 7) / 8)
-  , mReservoir(0)
-  , mNumBitsLeft(0)
-{
-}
+    : mData(aBuffer),
+      mOriginalBitSize(aBits),
+      mTotalBitsLeft(aBits),
+      mSize((aBits + 7) / 8),
+      mReservoir(0),
+      mNumBitsLeft(0) {}
 
-BitReader::~BitReader() { }
+BitReader::~BitReader() {}
 
-uint32_t
-BitReader::ReadBits(size_t aNum)
-{
+uint32_t BitReader::ReadBits(size_t aNum) {
   MOZ_ASSERT(aNum <= 32);
   if (mTotalBitsLeft < aNum) {
     NS_ASSERTION(false, "Reading past end of buffer");
@@ -62,9 +53,7 @@ BitReader::ReadBits(size_t aNum)
 }
 
 // Read unsigned integer Exp-Golomb-coded.
-uint32_t
-BitReader::ReadUE()
-{
+uint32_t BitReader::ReadUE() {
   uint32_t i = 0;
 
   while (ReadBit() == 0 && i < 32) {
@@ -83,28 +72,22 @@ BitReader::ReadUE()
 }
 
 // Read signed integer Exp-Golomb-coded.
-int32_t
-BitReader::ReadSE()
-{
+int32_t BitReader::ReadSE() {
   int32_t r = ReadUE();
   if (r & 1) {
-    return (r+1) / 2;
+    return (r + 1) / 2;
   } else {
     return -r / 2;
   }
 }
 
-uint64_t
-BitReader::ReadU64()
-{
+uint64_t BitReader::ReadU64() {
   uint64_t hi = ReadU32();
   uint32_t lo = ReadU32();
   return (hi << 32) | lo;
 }
 
-uint64_t
-BitReader::ReadUTF8()
-{
+uint64_t BitReader::ReadUTF8() {
   int64_t val = ReadBits(8);
   uint32_t top = (val & 0x80) >> 1;
 
@@ -125,21 +108,11 @@ BitReader::ReadUTF8()
   return val;
 }
 
-size_t
-BitReader::BitCount() const
-{
-  return mOriginalBitSize - mTotalBitsLeft;
-}
+size_t BitReader::BitCount() const { return mOriginalBitSize - mTotalBitsLeft; }
 
-size_t
-BitReader::BitsLeft() const
-{
-  return mTotalBitsLeft;
-}
+size_t BitReader::BitsLeft() const { return mTotalBitsLeft; }
 
-void
-BitReader::FillReservoir()
-{
+void BitReader::FillReservoir() {
   if (mSize == 0) {
     NS_ASSERTION(false, "Attempting to fill reservoir from past end of data");
     return;
@@ -157,9 +130,8 @@ BitReader::FillReservoir()
   mReservoir <<= 32 - mNumBitsLeft;
 }
 
-/* static */ uint32_t
-BitReader::GetBitLength(const mozilla::MediaByteBuffer* aNAL)
-{
+/* static */ uint32_t BitReader::GetBitLength(
+    const mozilla::MediaByteBuffer* aNAL) {
   size_t size = aNAL->Length();
 
   while (size > 0 && aNAL->ElementAt(size - 1) == 0) {
@@ -203,4 +175,4 @@ BitReader::GetBitLength(const mozilla::MediaByteBuffer* aNAL)
   return size;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

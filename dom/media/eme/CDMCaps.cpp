@@ -11,28 +11,20 @@
 
 namespace mozilla {
 
-CDMCaps::CDMCaps()
-{
-}
+CDMCaps::CDMCaps() {}
 
-CDMCaps::~CDMCaps()
-{
-}
+CDMCaps::~CDMCaps() {}
 
 // Keys with MediaKeyStatus::Usable, MediaKeyStatus::Output_downscaled,
 // or MediaKeyStatus::Output_restricted status can be used by the CDM
 // to decrypt or decrypt-and-decode samples.
-static bool
-IsUsableStatus(dom::MediaKeyStatus aStatus)
-{
+static bool IsUsableStatus(dom::MediaKeyStatus aStatus) {
   return aStatus == dom::MediaKeyStatus::Usable ||
          aStatus == dom::MediaKeyStatus::Output_restricted ||
          aStatus == dom::MediaKeyStatus::Output_downscaled;
 }
 
-bool
-CDMCaps::IsKeyUsable(const CencKeyId& aKeyId)
-{
+bool CDMCaps::IsKeyUsable(const CencKeyId& aKeyId) {
   for (const KeyStatus& keyStatus : mKeyStatuses) {
     if (keyStatus.mId == aKeyId) {
       return IsUsableStatus(keyStatus.mStatus);
@@ -41,16 +33,13 @@ CDMCaps::IsKeyUsable(const CencKeyId& aKeyId)
   return false;
 }
 
-bool
-CDMCaps::SetKeyStatus(const CencKeyId& aKeyId,
-                      const nsString& aSessionId,
-                      const dom::Optional<dom::MediaKeyStatus>& aStatus)
-{
+bool CDMCaps::SetKeyStatus(const CencKeyId& aKeyId, const nsString& aSessionId,
+                           const dom::Optional<dom::MediaKeyStatus>& aStatus) {
   if (!aStatus.WasPassed()) {
     // Called from ForgetKeyStatus.
     // Return true if the element is found to notify key changes.
     return mKeyStatuses.RemoveElement(
-      KeyStatus(aKeyId, aSessionId, dom::MediaKeyStatus::Internal_error));
+        KeyStatus(aKeyId, aSessionId, dom::MediaKeyStatus::Internal_error));
   }
 
   KeyStatus key(aKeyId, aSessionId, aStatus.Value());
@@ -93,19 +82,15 @@ CDMCaps::SetKeyStatus(const CencKeyId& aKeyId,
   return true;
 }
 
-void
-CDMCaps::NotifyWhenKeyIdUsable(const CencKeyId& aKey,
-                               SamplesWaitingForKey* aListener)
-{
+void CDMCaps::NotifyWhenKeyIdUsable(const CencKeyId& aKey,
+                                    SamplesWaitingForKey* aListener) {
   MOZ_ASSERT(!IsKeyUsable(aKey));
   MOZ_ASSERT(aListener);
   mWaitForKeys.AppendElement(WaitForKeys(aKey, aListener));
 }
 
-void
-CDMCaps::GetKeyStatusesForSession(const nsAString& aSessionId,
-                                  nsTArray<KeyStatus>& aOutKeyStatuses)
-{
+void CDMCaps::GetKeyStatusesForSession(const nsAString& aSessionId,
+                                       nsTArray<KeyStatus>& aOutKeyStatuses) {
   for (const KeyStatus& keyStatus : mKeyStatuses) {
     if (keyStatus.mSessionId.Equals(aSessionId)) {
       aOutKeyStatuses.AppendElement(keyStatus);
@@ -113,18 +98,15 @@ CDMCaps::GetKeyStatusesForSession(const nsAString& aSessionId,
   }
 }
 
-bool
-CDMCaps::RemoveKeysForSession(const nsString& aSessionId)
-{
+bool CDMCaps::RemoveKeysForSession(const nsString& aSessionId) {
   bool changed = false;
   nsTArray<KeyStatus> statuses;
   GetKeyStatusesForSession(aSessionId, statuses);
   for (const KeyStatus& status : statuses) {
-    changed |= SetKeyStatus(status.mId,
-                            aSessionId,
+    changed |= SetKeyStatus(status.mId, aSessionId,
                             dom::Optional<dom::MediaKeyStatus>());
   }
   return changed;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

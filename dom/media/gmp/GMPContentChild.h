@@ -14,21 +14,22 @@ namespace gmp {
 
 class GMPChild;
 
-class GMPContentChild : public PGMPContentChild
-                      , public GMPSharedMem
-{
-public:
+class GMPContentChild : public PGMPContentChild, public GMPSharedMem {
+ public:
   explicit GMPContentChild(GMPChild* aChild);
   virtual ~GMPContentChild();
 
   MessageLoop* GMPMessageLoop();
 
-  mozilla::ipc::IPCResult RecvPGMPVideoDecoderConstructor(PGMPVideoDecoderChild* aActor, const uint32_t& aDecryptorId) override;
-  mozilla::ipc::IPCResult RecvPGMPVideoEncoderConstructor(PGMPVideoEncoderChild* aActor) override;
+  mozilla::ipc::IPCResult RecvPGMPVideoDecoderConstructor(
+      PGMPVideoDecoderChild* aActor, const uint32_t& aDecryptorId) override;
+  mozilla::ipc::IPCResult RecvPGMPVideoEncoderConstructor(
+      PGMPVideoEncoderChild* aActor) override;
   mozilla::ipc::IPCResult RecvPChromiumCDMConstructor(
-    PChromiumCDMChild* aActor) override;
+      PChromiumCDMChild* aActor) override;
 
-  PGMPVideoDecoderChild* AllocPGMPVideoDecoderChild(const uint32_t& aDecryptorId) override;
+  PGMPVideoDecoderChild* AllocPGMPVideoDecoderChild(
+      const uint32_t& aDecryptorId) override;
   bool DeallocPGMPVideoDecoderChild(PGMPVideoDecoderChild* aActor) override;
 
   PGMPVideoEncoderChild* AllocPGMPVideoEncoderChild() override;
@@ -49,7 +50,7 @@ public:
   GMPChild* mGMPChild;
 };
 
-} // namespace gmp
-} // namespace mozilla
+}  // namespace gmp
+}  // namespace mozilla
 
-#endif // GMPContentChild_h_
+#endif  // GMPContentChild_h_

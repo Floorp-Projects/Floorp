@@ -18,17 +18,11 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AudioListener, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioListener, Release)
 
 AudioListenerEngine::AudioListenerEngine()
-  : mPosition()
-  , mFrontVector(0., 0., -1.)
-  , mRightVector(1., 0., 0.)
-{
-}
+    : mPosition(), mFrontVector(0., 0., -1.), mRightVector(1., 0., 0.) {}
 
-void
-AudioListenerEngine::RecvListenerEngineEvent(
-  AudioListenerEngine::AudioListenerParameter aParameter,
-  const ThreeDPoint& aValue)
-{
+void AudioListenerEngine::RecvListenerEngineEvent(
+    AudioListenerEngine::AudioListenerParameter aParameter,
+    const ThreeDPoint& aValue) {
   switch (aParameter) {
     case AudioListenerParameter::POSITION:
       mPosition = aValue;
@@ -44,42 +38,30 @@ AudioListenerEngine::RecvListenerEngineEvent(
   }
 }
 
-const ThreeDPoint&
-AudioListenerEngine::Position() const
-{
-  return mPosition;
-}
-const ThreeDPoint&
-AudioListenerEngine::FrontVector() const
-{
+const ThreeDPoint& AudioListenerEngine::Position() const { return mPosition; }
+const ThreeDPoint& AudioListenerEngine::FrontVector() const {
   return mFrontVector;
 }
-const ThreeDPoint&
-AudioListenerEngine::RightVector() const
-{
+const ThreeDPoint& AudioListenerEngine::RightVector() const {
   return mRightVector;
 }
 
 AudioListener::AudioListener(AudioContext* aContext)
-  : mContext(aContext)
-  , mEngine(new AudioListenerEngine())
-  , mPosition()
-  , mFrontVector(0., 0., -1.)
-  , mRightVector(1., 0., 0.)
-{
+    : mContext(aContext),
+      mEngine(new AudioListenerEngine()),
+      mPosition(),
+      mFrontVector(0., 0., -1.),
+      mRightVector(1., 0., 0.) {
   MOZ_ASSERT(aContext);
 }
 
-JSObject*
-AudioListener::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* AudioListener::WrapObject(JSContext* aCx,
+                                    JS::Handle<JSObject*> aGivenProto) {
   return AudioListener_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-AudioListener::SetOrientation(double aX, double aY, double aZ,
-                              double aXUp, double aYUp, double aZUp)
-{
+void AudioListener::SetOrientation(double aX, double aY, double aZ, double aXUp,
+                                   double aYUp, double aZUp) {
   ThreeDPoint front(aX, aY, aZ);
   // The panning effect and the azimuth and elevation calculation in the Web
   // Audio spec becomes undefined with linearly dependent vectors, so keep
@@ -112,9 +94,7 @@ AudioListener::SetOrientation(double aX, double aY, double aZ,
   }
 }
 
-void
-AudioListener::SetPosition(double aX, double aY, double aZ)
-{
+void AudioListener::SetPosition(double aX, double aY, double aZ) {
   if (WebAudioUtils::FuzzyEqual(mPosition.x, aX) &&
       WebAudioUtils::FuzzyEqual(mPosition.y, aY) &&
       WebAudioUtils::FuzzyEqual(mPosition.z, aZ)) {
@@ -127,24 +107,19 @@ AudioListener::SetPosition(double aX, double aY, double aZ)
                           mPosition);
 }
 
-void
-AudioListener::SendListenerEngineEvent(
-  AudioListenerEngine::AudioListenerParameter aParameter,
-  const ThreeDPoint& aValue)
-{
-  class Message final : public ControlMessage
-  {
-  public:
+void AudioListener::SendListenerEngineEvent(
+    AudioListenerEngine::AudioListenerParameter aParameter,
+    const ThreeDPoint& aValue) {
+  class Message final : public ControlMessage {
+   public:
     Message(AudioListenerEngine* aEngine,
             AudioListenerEngine::AudioListenerParameter aParameter,
             const ThreeDPoint& aValue)
-      : ControlMessage(nullptr)
-      , mEngine(aEngine)
-      , mParameter(aParameter)
-      , mValue(aValue)
-    { }
-    void Run() override
-    {
+        : ControlMessage(nullptr),
+          mEngine(aEngine),
+          mParameter(aParameter),
+          mValue(aValue) {}
+    void Run() override {
       mEngine->RecvListenerEngineEvent(mParameter, mValue);
     }
     RefPtr<AudioListenerEngine> mEngine;
@@ -153,15 +128,12 @@ AudioListener::SendListenerEngineEvent(
   };
 
   mContext->DestinationStream()->GraphImpl()->AppendMessage(
-    MakeUnique<Message>(Engine(), aParameter, aValue));
+      MakeUnique<Message>(Engine(), aParameter, aValue));
 }
 
-size_t
-AudioListener::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t AudioListener::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this);
 }
 
-} // namespace dom
-} // namespace mozilla
-
+}  // namespace dom
+}  // namespace mozilla

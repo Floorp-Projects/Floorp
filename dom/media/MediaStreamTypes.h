@@ -7,7 +7,7 @@
 #ifndef MOZILLA_MEDIASTREAMTYPES_h_
 #define MOZILLA_MEDIASTREAMTYPES_h_
 
-#include "StreamTracks.h" // for TrackID
+#include "StreamTracks.h"  // for TrackID
 
 namespace mozilla {
 
@@ -28,20 +28,18 @@ enum TrackEventCommand : uint32_t {
  * Describes how a track should be disabled.
  *
  * ENABLED        Not disabled.
- * SILENCE_BLACK  Audio data is turned into silence, video frames are made black.
- * SILENCE_FREEZE Audio data is turned into silence, video freezes at last frame.
+ * SILENCE_BLACK  Audio data is turned into silence, video frames are made
+ * black. SILENCE_FREEZE Audio data is turned into silence, video freezes at
+ * last frame.
  */
-enum class DisabledTrackMode
-{
-  ENABLED, SILENCE_BLACK, SILENCE_FREEZE
-};
+enum class DisabledTrackMode { ENABLED, SILENCE_BLACK, SILENCE_FREEZE };
 struct DisabledTrack {
   DisabledTrack(TrackID aTrackID, DisabledTrackMode aMode)
-    : mTrackID(aTrackID), mMode(aMode) {}
+      : mTrackID(aTrackID), mMode(aMode) {}
   TrackID mTrackID;
   DisabledTrackMode mMode;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MOZILLA_MEDIASTREAMTYPES_h_
+#endif  // MOZILLA_MEDIASTREAMTYPES_h_

@@ -8,9 +8,7 @@
 
 namespace mozilla {
 
-double
-ToSeconds(const DDTimeStamp& aTimeStamp)
-{
+double ToSeconds(const DDTimeStamp& aTimeStamp) {
   // Timestamp at first call, used internally to convert log timestamps
   // to a duration from this timestamp.
   // What's important is the relative time between log messages.
@@ -19,4 +17,4 @@ ToSeconds(const DDTimeStamp& aTimeStamp)
   return (aTimeStamp - sInitialTimeStamp).ToSeconds();
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -11,8 +11,7 @@ namespace mozilla {
 NS_IMPL_ISUPPORTS(MSCOMInitThreadPoolListener, nsIThreadPoolListener)
 
 NS_IMETHODIMP
-MSCOMInitThreadPoolListener::OnThreadCreated()
-{
+MSCOMInitThreadPoolListener::OnThreadCreated() {
   HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
   if (FAILED(hr)) {
     NS_WARNING("Failed to initialize MSCOM on decoder thread.");
@@ -21,10 +20,9 @@ MSCOMInitThreadPoolListener::OnThreadCreated()
 }
 
 NS_IMETHODIMP
-MSCOMInitThreadPoolListener::OnThreadShuttingDown()
-{
+MSCOMInitThreadPoolListener::OnThreadShuttingDown() {
   CoUninitialize();
   return NS_OK;
 }
 
-}
+}  // namespace mozilla

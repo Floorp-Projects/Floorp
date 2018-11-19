@@ -19,26 +19,26 @@ LogModule* GetEMEVerboseLog() {
   return log;
 }
 
-ArrayData
-GetArrayBufferViewOrArrayBufferData(const dom::ArrayBufferViewOrArrayBuffer& aBufferOrView)
-{
-  MOZ_ASSERT(aBufferOrView.IsArrayBuffer() || aBufferOrView.IsArrayBufferView());
+ArrayData GetArrayBufferViewOrArrayBufferData(
+    const dom::ArrayBufferViewOrArrayBuffer& aBufferOrView) {
+  MOZ_ASSERT(aBufferOrView.IsArrayBuffer() ||
+             aBufferOrView.IsArrayBufferView());
   if (aBufferOrView.IsArrayBuffer()) {
     const dom::ArrayBuffer& buffer = aBufferOrView.GetAsArrayBuffer();
     buffer.ComputeLengthAndData();
     return ArrayData(buffer.Data(), buffer.Length());
   } else if (aBufferOrView.IsArrayBufferView()) {
-    const dom::ArrayBufferView& bufferview = aBufferOrView.GetAsArrayBufferView();
+    const dom::ArrayBufferView& bufferview =
+        aBufferOrView.GetAsArrayBufferView();
     bufferview.ComputeLengthAndData();
     return ArrayData(bufferview.Data(), bufferview.Length());
   }
   return ArrayData(nullptr, 0);
 }
 
-void
-CopyArrayBufferViewOrArrayBufferData(const dom::ArrayBufferViewOrArrayBuffer& aBufferOrView,
-                                     nsTArray<uint8_t>& aOutData)
-{
+void CopyArrayBufferViewOrArrayBufferData(
+    const dom::ArrayBufferViewOrArrayBuffer& aBufferOrView,
+    nsTArray<uint8_t>& aOutData) {
   ArrayData data = GetArrayBufferViewOrArrayBufferData(aBufferOrView);
   aOutData.Clear();
   if (!data.IsValid()) {
@@ -47,21 +47,15 @@ CopyArrayBufferViewOrArrayBufferData(const dom::ArrayBufferViewOrArrayBuffer& aB
   aOutData.AppendElements(data.mData, data.mLength);
 }
 
-bool
-IsClearkeyKeySystem(const nsAString& aKeySystem)
-{
+bool IsClearkeyKeySystem(const nsAString& aKeySystem) {
   return !CompareUTF8toUTF16(kEMEKeySystemClearkey, aKeySystem);
 }
 
-bool
-IsWidevineKeySystem(const nsAString& aKeySystem)
-{
+bool IsWidevineKeySystem(const nsAString& aKeySystem) {
   return !CompareUTF8toUTF16(kEMEKeySystemWidevine, aKeySystem);
 }
 
-nsString
-KeySystemToGMPName(const nsAString& aKeySystem)
-{
+nsString KeySystemToGMPName(const nsAString& aKeySystem) {
   if (IsClearkeyKeySystem(aKeySystem)) {
     return NS_LITERAL_STRING("gmp-clearkey");
   }
@@ -72,4 +66,4 @@ KeySystemToGMPName(const nsAString& aKeySystem)
   return EmptyString();
 }
 
-} // namespace mozilla
+}  // namespace mozilla

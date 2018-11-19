@@ -32,9 +32,8 @@ class AudioContext;
  * 2) Muted media content or video without audio content.
  * 3) Document's origin has the "autoplay-media" permission.
  */
-class AutoplayPolicy
-{
-public:
+class AutoplayPolicy {
+ public:
   // Returns whether a given media element is allowed to play.
   static bool IsAllowedToPlay(const HTMLMediaElement& aElement);
 
@@ -46,15 +45,16 @@ public:
   // either block or ask for permission.
   // Note: this is for telemetry purposes, and doesn't check the prefs
   // which enable/disable block autoplay. Do not use for blocking logic!
-  static bool WouldBeAllowedToPlayIfAutoplayDisabled(const HTMLMediaElement& aElement);
+  static bool WouldBeAllowedToPlayIfAutoplayDisabled(
+      const HTMLMediaElement& aElement);
 
   // Returns the AutoplayPermissionManager that a given document must request on
   // for autoplay permission.
   static already_AddRefed<AutoplayPermissionManager> RequestFor(
-    const nsIDocument& aDocument);
+      const nsIDocument& aDocument);
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

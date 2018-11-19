@@ -35,42 +35,40 @@ class VideoSegment;
  * event to some thread) and return.
  * The listener is not allowed to add/remove any listeners from the stream.
  *
- * When a listener is first attached, we guarantee to send a NotifyBlockingChanged
- * callback to notify of the initial blocking state. Also, if a listener is
- * attached to a stream that has already finished, we'll call NotifyFinished.
+ * When a listener is first attached, we guarantee to send a
+ * NotifyBlockingChanged callback to notify of the initial blocking state. Also,
+ * if a listener is attached to a stream that has already finished, we'll call
+ * NotifyFinished.
  */
-class MediaStreamListener
-{
-protected:
+class MediaStreamListener {
+ protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~MediaStreamListener() {}
 
-public:
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaStreamListener)
 
   /**
    * When a SourceMediaStream has pulling enabled, and the MediaStreamGraph
-   * control loop is ready to pull, this gets called. A NotifyPull implementation
-   * is allowed to call the SourceMediaStream methods that alter track
-   * data. It is not allowed to make other MediaStream API calls, including
-   * calls to add or remove MediaStreamListeners. It is not allowed to block
-   * for any length of time.
-   * aDesiredTime is the stream time we would like to get data up to. Data
-   * beyond this point will not be played until NotifyPull runs again, so there's
-   * not much point in providing it. Note that if the stream is blocked for
-   * some reason, then data before aDesiredTime may not be played immediately.
+   * control loop is ready to pull, this gets called. A NotifyPull
+   * implementation is allowed to call the SourceMediaStream methods that alter
+   * track data. It is not allowed to make other MediaStream API calls,
+   * including calls to add or remove MediaStreamListeners. It is not allowed to
+   * block for any length of time. aDesiredTime is the stream time we would like
+   * to get data up to. Data beyond this point will not be played until
+   * NotifyPull runs again, so there's not much point in providing it. Note that
+   * if the stream is blocked for some reason, then data before aDesiredTime may
+   * not be played immediately.
    */
   virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) {}
 
-  enum Blocking {
-    BLOCKED,
-    UNBLOCKED
-  };
+  enum Blocking { BLOCKED, UNBLOCKED };
   /**
    * Notify that the blocking status of the stream changed. The initial state
    * is assumed to be BLOCKED.
    */
-  virtual void NotifyBlockingChanged(MediaStreamGraph* aGraph, Blocking aBlocked) {}
+  virtual void NotifyBlockingChanged(MediaStreamGraph* aGraph,
+                                     Blocking aBlocked) {}
 
   /**
    * Notify that the stream has data in each track
@@ -90,7 +88,8 @@ public:
   /**
    * Notify that an event has occurred on the Stream
    */
-  virtual void NotifyEvent(MediaStreamGraph* aGraph, MediaStreamGraphEvent aEvent) {}
+  virtual void NotifyEvent(MediaStreamGraph* aGraph,
+                           MediaStreamGraphEvent aEvent) {}
 
   /**
    * Notify that changes to one of the stream tracks have been queued.
@@ -106,7 +105,8 @@ public:
                                         TrackEventCommand aTrackEvents,
                                         const MediaSegment& aQueuedMedia,
                                         MediaStream* aInputStream = nullptr,
-                                        TrackID aInputTrackID = TRACK_INVALID) {}
+                                        TrackID aInputTrackID = TRACK_INVALID) {
+  }
 
   /**
    * Notify queued audio data. Only audio data need to be queued. The video data
@@ -143,23 +143,22 @@ public:
  * If a listener is attached to a track that has already ended, we guarantee
  * to call NotifyEnded.
  */
-class MediaStreamTrackListener
-{
+class MediaStreamTrackListener {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaStreamTrackListener)
 
-public:
+ public:
   virtual void NotifyQueuedChanges(MediaStreamGraph* aGraph,
                                    StreamTime aTrackOffset,
                                    const MediaSegment& aQueuedMedia) {}
 
-  virtual void NotifyPrincipalHandleChanged(MediaStreamGraph* aGraph,
-                                            const PrincipalHandle& aNewPrincipalHandle) {}
+  virtual void NotifyPrincipalHandleChanged(
+      MediaStreamGraph* aGraph, const PrincipalHandle& aNewPrincipalHandle) {}
 
   virtual void NotifyEnded() {}
 
   virtual void NotifyRemoved() {}
 
-protected:
+ protected:
   virtual ~MediaStreamTrackListener() {}
 };
 
@@ -179,12 +178,11 @@ protected:
  * NotifyQueuedChanges() callbacks from the MSG tread, so you must be careful
  * to ignore them if this listener was successfully installed.
  */
-class DirectMediaStreamTrackListener : public MediaStreamTrackListener
-{
+class DirectMediaStreamTrackListener : public MediaStreamTrackListener {
   friend class SourceMediaStream;
   friend class TrackUnionStream;
 
-public:
+ public:
   /*
    * This will be called on any DirectMediaStreamTrackListener added to a
    * SourceMediaStream when AppendToTrack() is called for the listener's bound
@@ -229,12 +227,11 @@ public:
 
   virtual MediaStreamVideoSink* AsMediaStreamVideoSink() { return nullptr; }
 
-protected:
+ protected:
   virtual ~DirectMediaStreamTrackListener() {}
 
   void MirrorAndDisableSegment(AudioSegment& aFrom, AudioSegment& aTo);
-  void MirrorAndDisableSegment(VideoSegment& aFrom,
-                               VideoSegment& aTo,
+  void MirrorAndDisableSegment(VideoSegment& aFrom, VideoSegment& aTo,
                                DisabledTrackMode aMode);
   void NotifyRealtimeTrackDataAndApplyTrackDisabling(MediaStreamGraph* aGraph,
                                                      StreamTime aTrackOffset,
@@ -252,6 +249,6 @@ protected:
   nsAutoPtr<MediaSegment> mMedia;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MOZILLA_MEDIASTREAMLISTENER_h_
+#endif  // MOZILLA_MEDIASTREAMLISTENER_h_

@@ -17,21 +17,20 @@ namespace dom {
 class AudioContext;
 struct AnalyserOptions;
 
-class AnalyserNode final : public AudioNode
-{
-public:
-  static already_AddRefed<AnalyserNode>
-  Create(AudioContext& aAudioContext, const AnalyserOptions& aOptions,
-         ErrorResult& aRv);
+class AnalyserNode final : public AudioNode {
+ public:
+  static already_AddRefed<AnalyserNode> Create(AudioContext& aAudioContext,
+                                               const AnalyserOptions& aOptions,
+                                               ErrorResult& aRv);
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(AnalyserNode, AudioNode)
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  static already_AddRefed<AnalyserNode>
-  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
-              const AnalyserOptions& aOptions, ErrorResult& aRv)
-  {
+  static already_AddRefed<AnalyserNode> Constructor(
+      const GlobalObject& aGlobal, AudioContext& aAudioContext,
+      const AnalyserOptions& aOptions, ErrorResult& aRv) {
     return Create(aAudioContext, aOptions, aRv);
   }
 
@@ -39,42 +38,25 @@ public:
   void GetByteFrequencyData(const Uint8Array& aArray);
   void GetFloatTimeDomainData(const Float32Array& aArray);
   void GetByteTimeDomainData(const Uint8Array& aArray);
-  uint32_t FftSize() const
-  {
-    return mAnalysisBlock.FFTSize();
-  }
+  uint32_t FftSize() const { return mAnalysisBlock.FFTSize(); }
   void SetFftSize(uint32_t aValue, ErrorResult& aRv);
-  uint32_t FrequencyBinCount() const
-  {
-    return FftSize() / 2;
-  }
-  double MinDecibels() const
-  {
-    return mMinDecibels;
-  }
+  uint32_t FrequencyBinCount() const { return FftSize() / 2; }
+  double MinDecibels() const { return mMinDecibels; }
   void SetMinDecibels(double aValue, ErrorResult& aRv);
-  double MaxDecibels() const
-  {
-    return mMaxDecibels;
-  }
+  double MaxDecibels() const { return mMaxDecibels; }
   void SetMaxDecibels(double aValue, ErrorResult& aRv);
-  double SmoothingTimeConstant() const
-  {
-    return mSmoothingTimeConstant;
-  }
+  double SmoothingTimeConstant() const { return mSmoothingTimeConstant; }
   void SetSmoothingTimeConstant(double aValue, ErrorResult& aRv);
 
-  virtual const char* NodeType() const override
-  {
-    return "AnalyserNode";
-  }
+  virtual const char* NodeType() const override { return "AnalyserNode"; }
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
-  void SetMinAndMaxDecibels(double aMinValue, double aMaxValue, ErrorResult& aRv);
+  void SetMinAndMaxDecibels(double aMinValue, double aMaxValue,
+                            ErrorResult& aRv);
 
-private:
+ private:
   ~AnalyserNode() = default;
 
   friend class AnalyserNodeEngine;
@@ -84,7 +66,7 @@ private:
   void ApplyBlackmanWindow(float* aBuffer, uint32_t aSize);
   void GetTimeDomainData(float* aData, size_t aLength);
 
-private:
+ private:
   explicit AnalyserNode(AudioContext* aContext);
 
   FFTBlock mAnalysisBlock;
@@ -96,8 +78,7 @@ private:
   AlignedTArray<float> mOutputBuffer;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif
-

@@ -32,36 +32,28 @@ static const int VIDEO_INIT_FAILED_DURATION = 30;
 static const int DEFAULT_KEYFRAME_INTERVAL_MS = 1000;
 
 TrackEncoder::TrackEncoder(TrackRate aTrackRate)
-  : mEncodingComplete(false)
-  , mEosSetInEncoder(false)
-  , mInitialized(false)
-  , mEndOfStream(false)
-  , mCanceled(false)
-  , mCurrentTime(0)
-  , mInitCounter(0)
-  , mNotInitDuration(0)
-  , mSuspended(false)
-  , mTrackRate(aTrackRate)
-{
-}
+    : mEncodingComplete(false),
+      mEosSetInEncoder(false),
+      mInitialized(false),
+      mEndOfStream(false),
+      mCanceled(false),
+      mCurrentTime(0),
+      mInitCounter(0),
+      mNotInitDuration(0),
+      mSuspended(false),
+      mTrackRate(aTrackRate) {}
 
-bool
-TrackEncoder::IsInitialized()
-{
+bool TrackEncoder::IsInitialized() {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   return mInitialized;
 }
 
-bool
-TrackEncoder::IsEncodingComplete()
-{
+bool TrackEncoder::IsEncodingComplete() {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   return mEncodingComplete;
 }
 
-void
-TrackEncoder::SetInitialized()
-{
+void TrackEncoder::SetInitialized() {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
 
   if (mInitialized) {
@@ -76,9 +68,7 @@ TrackEncoder::SetInitialized()
   }
 }
 
-void
-TrackEncoder::OnDataAvailable()
-{
+void TrackEncoder::OnDataAvailable() {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
 
   auto listeners(mListeners);
@@ -87,9 +77,7 @@ TrackEncoder::OnDataAvailable()
   }
 }
 
-void
-TrackEncoder::OnError()
-{
+void TrackEncoder::OnError() {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
 
   Cancel();
@@ -100,34 +88,25 @@ TrackEncoder::OnError()
   }
 }
 
-void
-TrackEncoder::RegisterListener(TrackEncoderListener* aListener)
-{
+void TrackEncoder::RegisterListener(TrackEncoderListener* aListener) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mListeners.Contains(aListener));
   mListeners.AppendElement(aListener);
 }
 
-bool
-TrackEncoder::UnregisterListener(TrackEncoderListener* aListener)
-{
+bool TrackEncoder::UnregisterListener(TrackEncoderListener* aListener) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   return mListeners.RemoveElement(aListener);
 }
 
-void
-TrackEncoder::SetWorkerThread(AbstractThread* aWorkerThread)
-{
+void TrackEncoder::SetWorkerThread(AbstractThread* aWorkerThread) {
   mWorkerThread = aWorkerThread;
 }
 
-void
-AudioTrackEncoder::Suspend(TimeStamp)
-{
+void AudioTrackEncoder::Suspend(TimeStamp) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
-  TRACK_LOG(LogLevel::Info,
-    ("[AudioTrackEncoder %p]: Suspend(), was %s",
-     this, mSuspended ? "suspended" : "live"));
+  TRACK_LOG(LogLevel::Info, ("[AudioTrackEncoder %p]: Suspend(), was %s", this,
+                             mSuspended ? "suspended" : "live"));
 
   if (mSuspended) {
     return;
@@ -136,13 +115,10 @@ AudioTrackEncoder::Suspend(TimeStamp)
   mSuspended = true;
 }
 
-void
-AudioTrackEncoder::Resume(TimeStamp)
-{
+void AudioTrackEncoder::Resume(TimeStamp) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
-  TRACK_LOG(LogLevel::Info,
-    ("[AudioTrackEncoder %p]: Resume(), was %s",
-     this, mSuspended ? "suspended" : "live"));
+  TRACK_LOG(LogLevel::Info, ("[AudioTrackEncoder %p]: Resume(), was %s", this,
+                             mSuspended ? "suspended" : "live"));
 
   if (!mSuspended) {
     return;
@@ -151,13 +127,11 @@ AudioTrackEncoder::Resume(TimeStamp)
   mSuspended = false;
 }
 
-void
-AudioTrackEncoder::AppendAudioSegment(AudioSegment&& aSegment)
-{
+void AudioTrackEncoder::AppendAudioSegment(AudioSegment&& aSegment) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   TRACK_LOG(LogLevel::Verbose,
-    ("[AudioTrackEncoder %p]: AppendAudioSegment() duration=%" PRIu64,
-     this, aSegment.GetDuration()));
+            ("[AudioTrackEncoder %p]: AppendAudioSegment() duration=%" PRIu64,
+             this, aSegment.GetDuration()));
 
   if (mCanceled) {
     return;
@@ -170,9 +144,7 @@ AudioTrackEncoder::AppendAudioSegment(AudioSegment&& aSegment)
   mIncomingBuffer.AppendFrom(&aSegment);
 }
 
-void
-AudioTrackEncoder::TakeTrackData(AudioSegment& aSegment)
-{
+void AudioTrackEncoder::TakeTrackData(AudioSegment& aSegment) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
 
   if (mCanceled) {
@@ -182,9 +154,8 @@ AudioTrackEncoder::TakeTrackData(AudioSegment& aSegment)
   aSegment.AppendFrom(&mOutgoingBuffer);
 }
 
-void
-AudioTrackEncoder::TryInit(const AudioSegment& aSegment, StreamTime aDuration)
-{
+void AudioTrackEncoder::TryInit(const AudioSegment& aSegment,
+                                StreamTime aDuration) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
 
   if (mInitialized) {
@@ -193,10 +164,11 @@ AudioTrackEncoder::TryInit(const AudioSegment& aSegment, StreamTime aDuration)
 
   mInitCounter++;
   TRACK_LOG(LogLevel::Debug,
-    ("[AudioTrackEncoder %p]: Inited the audio encoder %d times",
-     this, mInitCounter));
+            ("[AudioTrackEncoder %p]: Inited the audio encoder %d times", this,
+             mInitCounter));
 
-  for (AudioSegment::ConstChunkIterator iter(aSegment); !iter.IsEnded(); iter.Next()) {
+  for (AudioSegment::ConstChunkIterator iter(aSegment); !iter.IsEnded();
+       iter.Next()) {
     // The number of channels is determined by the first non-null chunk, and
     // thus the audio encoder is initialized at this time.
     if (iter->IsNull()) {
@@ -207,11 +179,12 @@ AudioTrackEncoder::TryInit(const AudioSegment& aSegment, StreamTime aDuration)
 
     if (NS_SUCCEEDED(rv)) {
       TRACK_LOG(LogLevel::Info,
-        ("[AudioTrackEncoder %p]: Successfully initialized!", this));
+                ("[AudioTrackEncoder %p]: Successfully initialized!", this));
       return;
     } else {
-      TRACK_LOG(LogLevel::Error,
-        ("[AudioTrackEncoder %p]: Failed to initialize the encoder!", this));
+      TRACK_LOG(
+          LogLevel::Error,
+          ("[AudioTrackEncoder %p]: Failed to initialize the encoder!", this));
       OnError();
       return;
     }
@@ -228,11 +201,10 @@ AudioTrackEncoder::TryInit(const AudioSegment& aSegment, StreamTime aDuration)
               ("[AudioTrackEncoder]: Initialize failed "
                "for %ds. Attempting to init with %d "
                "(default) channels!",
-               AUDIO_INIT_FAILED_DURATION,
-               DEFAULT_CHANNELS));
+               AUDIO_INIT_FAILED_DURATION, DEFAULT_CHANNELS));
     nsresult rv = Init(DEFAULT_CHANNELS, mTrackRate);
     Telemetry::Accumulate(
-      Telemetry::MEDIA_RECORDER_TRACK_ENCODER_INIT_TIMEOUT_TYPE, 0);
+        Telemetry::MEDIA_RECORDER_TRACK_ENCODER_INIT_TIMEOUT_TYPE, 0);
     if (NS_FAILED(rv)) {
       TRACK_LOG(LogLevel::Error,
                 ("[AudioTrackEncoder %p]: Default-channel-init failed.", this));
@@ -242,25 +214,22 @@ AudioTrackEncoder::TryInit(const AudioSegment& aSegment, StreamTime aDuration)
   }
 }
 
-void
-AudioTrackEncoder::Cancel()
-{
+void AudioTrackEncoder::Cancel() {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   TRACK_LOG(LogLevel::Info,
-    ("[AudioTrackEncoder %p]: Cancel(), currentTime=%" PRIu64,
-     this, mCurrentTime));
+            ("[AudioTrackEncoder %p]: Cancel(), currentTime=%" PRIu64, this,
+             mCurrentTime));
   mCanceled = true;
   mIncomingBuffer.Clear();
   mOutgoingBuffer.Clear();
 }
 
-void
-AudioTrackEncoder::NotifyEndOfStream()
-{
+void AudioTrackEncoder::NotifyEndOfStream() {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
-  TRACK_LOG(LogLevel::Info,
-    ("[AudioTrackEncoder %p]: NotifyEndOfStream(), currentTime=%" PRIu64,
-     this, mCurrentTime));
+  TRACK_LOG(
+      LogLevel::Info,
+      ("[AudioTrackEncoder %p]: NotifyEndOfStream(), currentTime=%" PRIu64,
+       this, mCurrentTime));
 
   if (!mCanceled && !mInitialized) {
     // If source audio track is completely silent till the end of encoding,
@@ -277,25 +246,22 @@ AudioTrackEncoder::NotifyEndOfStream()
   }
 }
 
-void
-AudioTrackEncoder::SetStartOffset(StreamTime aStartOffset)
-{
+void AudioTrackEncoder::SetStartOffset(StreamTime aStartOffset) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   MOZ_ASSERT(mCurrentTime == 0);
   TRACK_LOG(LogLevel::Info,
-    ("[AudioTrackEncoder %p]: SetStartOffset(), aStartOffset=%" PRIu64,
-     this, aStartOffset));
+            ("[AudioTrackEncoder %p]: SetStartOffset(), aStartOffset=%" PRIu64,
+             this, aStartOffset));
   mIncomingBuffer.InsertNullDataAtStart(aStartOffset);
   mCurrentTime = aStartOffset;
 }
 
-void
-AudioTrackEncoder::AdvanceBlockedInput(StreamTime aDuration)
-{
+void AudioTrackEncoder::AdvanceBlockedInput(StreamTime aDuration) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
-  TRACK_LOG(LogLevel::Verbose,
-    ("[AudioTrackEncoder %p]: AdvanceBlockedInput(), aDuration=%" PRIu64,
-     this, aDuration));
+  TRACK_LOG(
+      LogLevel::Verbose,
+      ("[AudioTrackEncoder %p]: AdvanceBlockedInput(), aDuration=%" PRIu64,
+       this, aDuration));
 
   // We call Init here so it can account for aDuration towards the Init timeout
   TryInit(mOutgoingBuffer, aDuration);
@@ -304,9 +270,7 @@ AudioTrackEncoder::AdvanceBlockedInput(StreamTime aDuration)
   mCurrentTime += aDuration;
 }
 
-void
-AudioTrackEncoder::AdvanceCurrentTime(StreamTime aDuration)
-{
+void AudioTrackEncoder::AdvanceCurrentTime(StreamTime aDuration) {
   AUTO_PROFILER_LABEL("AudioTrackEncoder::AdvanceCurrentTime", OTHER);
 
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
@@ -320,8 +284,8 @@ AudioTrackEncoder::AdvanceCurrentTime(StreamTime aDuration)
   }
 
   TRACK_LOG(LogLevel::Verbose,
-    ("[AudioTrackEncoder %p]: AdvanceCurrentTime() %" PRIu64,
-     this, aDuration));
+            ("[AudioTrackEncoder %p]: AdvanceCurrentTime() %" PRIu64, this,
+             aDuration));
 
   StreamTime currentTime = mCurrentTime + aDuration;
 
@@ -339,11 +303,13 @@ AudioTrackEncoder::AdvanceCurrentTime(StreamTime aDuration)
       OnDataAvailable();
     }
   } else {
-    NS_ASSERTION(false, "AudioTrackEncoder::AdvanceCurrentTime Not enough data");
-    TRACK_LOG(LogLevel::Error,
-      ("[AudioTrackEncoder %p]: AdvanceCurrentTime() Not enough data. "
-       "In incoming=%" PRIu64 ", aDuration=%" PRIu64 ", currentTime=%" PRIu64,
-       this, mIncomingBuffer.GetDuration(), aDuration, currentTime));
+    NS_ASSERTION(false,
+                 "AudioTrackEncoder::AdvanceCurrentTime Not enough data");
+    TRACK_LOG(
+        LogLevel::Error,
+        ("[AudioTrackEncoder %p]: AdvanceCurrentTime() Not enough data. "
+         "In incoming=%" PRIu64 ", aDuration=%" PRIu64 ", currentTime=%" PRIu64,
+         this, mIncomingBuffer.GetDuration(), aDuration, currentTime));
     OnError();
   }
 
@@ -352,22 +318,21 @@ AudioTrackEncoder::AdvanceCurrentTime(StreamTime aDuration)
 }
 
 /*static*/
-void
-AudioTrackEncoder::InterleaveTrackData(AudioChunk& aChunk,
-                                       int32_t aDuration,
-                                       uint32_t aOutputChannels,
-                                       AudioDataValue* aOutput)
-{
-  uint32_t numChannelsToCopy = std::min(aOutputChannels,
-                                        static_cast<uint32_t>(aChunk.mChannelData.Length()));
-  switch(aChunk.mBufferFormat) {
+void AudioTrackEncoder::InterleaveTrackData(AudioChunk& aChunk,
+                                            int32_t aDuration,
+                                            uint32_t aOutputChannels,
+                                            AudioDataValue* aOutput) {
+  uint32_t numChannelsToCopy = std::min(
+      aOutputChannels, static_cast<uint32_t>(aChunk.mChannelData.Length()));
+  switch (aChunk.mBufferFormat) {
     case AUDIO_FORMAT_S16: {
       AutoTArray<const int16_t*, 2> array;
       array.SetLength(numChannelsToCopy);
       for (uint32_t i = 0; i < array.Length(); i++) {
         array[i] = static_cast<const int16_t*>(aChunk.mChannelData[i]);
       }
-      InterleaveTrackData(array, aDuration, aOutputChannels, aOutput, aChunk.mVolume);
+      InterleaveTrackData(array, aDuration, aOutputChannels, aOutput,
+                          aChunk.mVolume);
       break;
     }
     case AUDIO_FORMAT_FLOAT32: {
@@ -376,58 +341,53 @@ AudioTrackEncoder::InterleaveTrackData(AudioChunk& aChunk,
       for (uint32_t i = 0; i < array.Length(); i++) {
         array[i] = static_cast<const float*>(aChunk.mChannelData[i]);
       }
-      InterleaveTrackData(array, aDuration, aOutputChannels, aOutput, aChunk.mVolume);
+      InterleaveTrackData(array, aDuration, aOutputChannels, aOutput,
+                          aChunk.mVolume);
       break;
-   }
-   case AUDIO_FORMAT_SILENCE: {
+    }
+    case AUDIO_FORMAT_SILENCE: {
       MOZ_ASSERT(false, "To implement.");
     }
   };
 }
 
 /*static*/
-void
-AudioTrackEncoder::DeInterleaveTrackData(AudioDataValue* aInput,
-                                         int32_t aDuration,
-                                         int32_t aChannels,
-                                         AudioDataValue* aOutput)
-{
+void AudioTrackEncoder::DeInterleaveTrackData(AudioDataValue* aInput,
+                                              int32_t aDuration,
+                                              int32_t aChannels,
+                                              AudioDataValue* aOutput) {
   for (int32_t i = 0; i < aChannels; ++i) {
-    for(int32_t j = 0; j < aDuration; ++j) {
+    for (int32_t j = 0; j < aDuration; ++j) {
       aOutput[i * aDuration + j] = aInput[i + j * aChannels];
     }
   }
 }
 
-size_t
-AudioTrackEncoder::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-{
+size_t AudioTrackEncoder::SizeOfExcludingThis(
+    mozilla::MallocSizeOf aMallocSizeOf) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   return mIncomingBuffer.SizeOfExcludingThis(aMallocSizeOf) +
          mOutgoingBuffer.SizeOfExcludingThis(aMallocSizeOf);
 }
 
-VideoTrackEncoder::VideoTrackEncoder(TrackRate aTrackRate, FrameDroppingMode aFrameDroppingMode)
-  : TrackEncoder(aTrackRate)
-  , mFrameWidth(0)
-  , mFrameHeight(0)
-  , mDisplayWidth(0)
-  , mDisplayHeight(0)
-  , mEncodedTicks(0)
-  , mVideoBitrate(0)
-  , mFrameDroppingMode(aFrameDroppingMode)
-  , mKeyFrameInterval(DEFAULT_KEYFRAME_INTERVAL_MS)
-{
+VideoTrackEncoder::VideoTrackEncoder(TrackRate aTrackRate,
+                                     FrameDroppingMode aFrameDroppingMode)
+    : TrackEncoder(aTrackRate),
+      mFrameWidth(0),
+      mFrameHeight(0),
+      mDisplayWidth(0),
+      mDisplayHeight(0),
+      mEncodedTicks(0),
+      mVideoBitrate(0),
+      mFrameDroppingMode(aFrameDroppingMode),
+      mKeyFrameInterval(DEFAULT_KEYFRAME_INTERVAL_MS) {
   mLastChunk.mDuration = 0;
 }
 
-void
-VideoTrackEncoder::Suspend(TimeStamp aTime)
-{
+void VideoTrackEncoder::Suspend(TimeStamp aTime) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
-  TRACK_LOG(LogLevel::Info,
-    ("[VideoTrackEncoder %p]: Suspend(), was %s",
-     this, mSuspended ? "suspended" : "live"));
+  TRACK_LOG(LogLevel::Info, ("[VideoTrackEncoder %p]: Suspend(), was %s", this,
+                             mSuspended ? "suspended" : "live"));
 
   if (mSuspended) {
     return;
@@ -437,13 +397,10 @@ VideoTrackEncoder::Suspend(TimeStamp aTime)
   mSuspendTime = aTime;
 }
 
-void
-VideoTrackEncoder::Resume(TimeStamp aTime)
-{
+void VideoTrackEncoder::Resume(TimeStamp aTime) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
-  TRACK_LOG(LogLevel::Info,
-    ("[VideoTrackEncoder %p]: Resume(), was %s",
-     this, mSuspended ? "suspended" : "live"));
+  TRACK_LOG(LogLevel::Info, ("[VideoTrackEncoder %p]: Resume(), was %s", this,
+                             mSuspended ? "suspended" : "live"));
 
   if (!mSuspended) {
     return;
@@ -466,13 +423,11 @@ VideoTrackEncoder::Resume(TimeStamp aTime)
   mSuspendTime = TimeStamp();
 }
 
-void
-VideoTrackEncoder::AppendVideoSegment(VideoSegment&& aSegment)
-{
+void VideoTrackEncoder::AppendVideoSegment(VideoSegment&& aSegment) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   TRACK_LOG(LogLevel::Verbose,
-    ("[VideoTrackEncoder %p]: AppendVideoSegment() duration=%" PRIu64,
-     this, aSegment.GetDuration()));
+            ("[VideoTrackEncoder %p]: AppendVideoSegment() duration=%" PRIu64,
+             this, aSegment.GetDuration()));
 
   if (mCanceled) {
     return;
@@ -485,9 +440,7 @@ VideoTrackEncoder::AppendVideoSegment(VideoSegment&& aSegment)
   mIncomingBuffer.AppendFrom(&aSegment);
 }
 
-void
-VideoTrackEncoder::TakeTrackData(VideoSegment& aSegment)
-{
+void VideoTrackEncoder::TakeTrackData(VideoSegment& aSegment) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
 
   if (mCanceled) {
@@ -498,9 +451,8 @@ VideoTrackEncoder::TakeTrackData(VideoSegment& aSegment)
   mOutgoingBuffer.Clear();
 }
 
-void
-VideoTrackEncoder::Init(const VideoSegment& aSegment, StreamTime aDuration)
-{
+void VideoTrackEncoder::Init(const VideoSegment& aSegment,
+                             StreamTime aDuration) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
 
   if (mInitialized) {
@@ -509,26 +461,28 @@ VideoTrackEncoder::Init(const VideoSegment& aSegment, StreamTime aDuration)
 
   mInitCounter++;
   TRACK_LOG(LogLevel::Debug,
-    ("[VideoTrackEncoder %p]: Init the video encoder %d times",
-     this, mInitCounter));
+            ("[VideoTrackEncoder %p]: Init the video encoder %d times", this,
+             mInitCounter));
 
-  for (VideoSegment::ConstChunkIterator iter(aSegment); !iter.IsEnded(); iter.Next()) {
+  for (VideoSegment::ConstChunkIterator iter(aSegment); !iter.IsEnded();
+       iter.Next()) {
     if (iter->IsNull()) {
       continue;
     }
 
     gfx::IntSize imgsize = iter->mFrame.GetImage()->GetSize();
     gfx::IntSize intrinsicSize = iter->mFrame.GetIntrinsicSize();
-    nsresult rv = Init(imgsize.width, imgsize.height,
-                       intrinsicSize.width, intrinsicSize.height);
+    nsresult rv = Init(imgsize.width, imgsize.height, intrinsicSize.width,
+                       intrinsicSize.height);
 
     if (NS_SUCCEEDED(rv)) {
       TRACK_LOG(LogLevel::Info,
-        ("[VideoTrackEncoder %p]: Successfully initialized!", this));
+                ("[VideoTrackEncoder %p]: Successfully initialized!", this));
       return;
     } else {
-      TRACK_LOG(LogLevel::Error,
-        ("[VideoTrackEncoder %p]: Failed to initialize the encoder!", this));
+      TRACK_LOG(
+          LogLevel::Error,
+          ("[VideoTrackEncoder %p]: Failed to initialize the encoder!", this));
       OnError();
     }
     break;
@@ -538,38 +492,34 @@ VideoTrackEncoder::Init(const VideoSegment& aSegment, StreamTime aDuration)
   if ((mNotInitDuration / mTrackRate > VIDEO_INIT_FAILED_DURATION) &&
       mInitCounter > 1) {
     TRACK_LOG(LogLevel::Warning,
-      ("[VideoTrackEncoder %p]: No successful init for %ds.",
-       this, VIDEO_INIT_FAILED_DURATION));
+              ("[VideoTrackEncoder %p]: No successful init for %ds.", this,
+               VIDEO_INIT_FAILED_DURATION));
     Telemetry::Accumulate(
-      Telemetry::MEDIA_RECORDER_TRACK_ENCODER_INIT_TIMEOUT_TYPE, 1);
+        Telemetry::MEDIA_RECORDER_TRACK_ENCODER_INIT_TIMEOUT_TYPE, 1);
     OnError();
     return;
   }
 }
 
-void
-VideoTrackEncoder::Cancel()
-{
+void VideoTrackEncoder::Cancel() {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   TRACK_LOG(LogLevel::Info,
-    ("[VideoTrackEncoder %p]: Cancel(), currentTime=%" PRIu64,
-     this, mCurrentTime));
+            ("[VideoTrackEncoder %p]: Cancel(), currentTime=%" PRIu64, this,
+             mCurrentTime));
   mCanceled = true;
   mIncomingBuffer.Clear();
   mOutgoingBuffer.Clear();
   mLastChunk.SetNull(0);
 }
 
-void
-VideoTrackEncoder::NotifyEndOfStream()
-{
+void VideoTrackEncoder::NotifyEndOfStream() {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
 
   if (!mCanceled && !mInitialized) {
     // If source video track is muted till the end of encoding, initialize the
     // encoder with default frame width, frame height, and track rate.
-    Init(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT,
-         DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT);
+    Init(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT, DEFAULT_FRAME_WIDTH,
+         DEFAULT_FRAME_HEIGHT);
   }
 
   if (mEndOfStream) {
@@ -578,22 +528,22 @@ VideoTrackEncoder::NotifyEndOfStream()
   }
 
   mEndOfStream = true;
-  TRACK_LOG(LogLevel::Info,
-    ("[VideoTrackEncoder %p]: NotifyEndOfStream(), currentTime=%" PRIu64,
-     this, mCurrentTime));
+  TRACK_LOG(
+      LogLevel::Info,
+      ("[VideoTrackEncoder %p]: NotifyEndOfStream(), currentTime=%" PRIu64,
+       this, mCurrentTime));
 
   if (!mLastChunk.IsNull() && mLastChunk.mDuration > 0) {
     RefPtr<layers::Image> lastImage = mLastChunk.mFrame.GetImage();
     TRACK_LOG(LogLevel::Debug,
               ("[VideoTrackEncoder]: Appending last video frame %p, "
-               "duration=%.5f", lastImage.get(),
+               "duration=%.5f",
+               lastImage.get(),
                FramesToTimeUnit(mLastChunk.mDuration, mTrackRate).ToSeconds()));
-    mOutgoingBuffer.AppendFrame(lastImage.forget(),
-                                mLastChunk.mDuration,
-                                mLastChunk.mFrame.GetIntrinsicSize(),
-                                PRINCIPAL_HANDLE_NONE,
-                                mLastChunk.mFrame.GetForceBlack(),
-                                mLastChunk.mTimeStamp);
+    mOutgoingBuffer.AppendFrame(
+        lastImage.forget(), mLastChunk.mDuration,
+        mLastChunk.mFrame.GetIntrinsicSize(), PRINCIPAL_HANDLE_NONE,
+        mLastChunk.mFrame.GetForceBlack(), mLastChunk.mTimeStamp);
   }
 
   mIncomingBuffer.Clear();
@@ -604,25 +554,22 @@ VideoTrackEncoder::NotifyEndOfStream()
   }
 }
 
-void
-VideoTrackEncoder::SetStartOffset(StreamTime aStartOffset)
-{
+void VideoTrackEncoder::SetStartOffset(StreamTime aStartOffset) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   MOZ_ASSERT(mCurrentTime == 0);
   TRACK_LOG(LogLevel::Info,
-    ("[VideoTrackEncoder %p]: SetStartOffset(), aStartOffset=%" PRIu64,
-     this, aStartOffset));
+            ("[VideoTrackEncoder %p]: SetStartOffset(), aStartOffset=%" PRIu64,
+             this, aStartOffset));
   mIncomingBuffer.InsertNullDataAtStart(aStartOffset);
   mCurrentTime = aStartOffset;
 }
 
-void
-VideoTrackEncoder::AdvanceBlockedInput(StreamTime aDuration)
-{
+void VideoTrackEncoder::AdvanceBlockedInput(StreamTime aDuration) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
-  TRACK_LOG(LogLevel::Verbose,
-    ("[VideoTrackEncoder %p]: AdvanceBlockedInput(), aDuration=%" PRIu64,
-     this, aDuration));
+  TRACK_LOG(
+      LogLevel::Verbose,
+      ("[VideoTrackEncoder %p]: AdvanceBlockedInput(), aDuration=%" PRIu64,
+       this, aDuration));
 
   // We call Init here so it can account for aDuration towards the Init timeout
   Init(mOutgoingBuffer, aDuration);
@@ -631,9 +578,7 @@ VideoTrackEncoder::AdvanceBlockedInput(StreamTime aDuration)
   mCurrentTime += aDuration;
 }
 
-void
-VideoTrackEncoder::AdvanceCurrentTime(StreamTime aDuration)
-{
+void VideoTrackEncoder::AdvanceCurrentTime(StreamTime aDuration) {
   AUTO_PROFILER_LABEL("VideoTrackEncoder::AdvanceCurrentTime", OTHER);
 
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
@@ -647,8 +592,8 @@ VideoTrackEncoder::AdvanceCurrentTime(StreamTime aDuration)
   }
 
   TRACK_LOG(LogLevel::Verbose,
-    ("[VideoTrackEncoder %p]: AdvanceCurrentTime() %" PRIu64,
-     this, aDuration));
+            ("[VideoTrackEncoder %p]: AdvanceCurrentTime() %" PRIu64, this,
+             aDuration));
 
   StreamTime currentTime = mCurrentTime + aDuration;
 
@@ -662,11 +607,13 @@ VideoTrackEncoder::AdvanceCurrentTime(StreamTime aDuration)
   if (currentTime <= mIncomingBuffer.GetDuration()) {
     tempSegment.AppendSlice(mIncomingBuffer, mCurrentTime, currentTime);
   } else {
-    NS_ASSERTION(false, "VideoTrackEncoder::AdvanceCurrentTime Not enough data");
-    TRACK_LOG(LogLevel::Error,
-      ("[VideoTrackEncoder %p]: AdvanceCurrentTime() Not enough data. "
-       "In incoming=%" PRIu64 ", aDuration=%" PRIu64 ", currentTime=%" PRIu64,
-       this, mIncomingBuffer.GetDuration(), aDuration, currentTime));
+    NS_ASSERTION(false,
+                 "VideoTrackEncoder::AdvanceCurrentTime Not enough data");
+    TRACK_LOG(
+        LogLevel::Error,
+        ("[VideoTrackEncoder %p]: AdvanceCurrentTime() Not enough data. "
+         "In incoming=%" PRIu64 ", aDuration=%" PRIu64 ", currentTime=%" PRIu64,
+         this, mIncomingBuffer.GetDuration(), aDuration, currentTime));
     OnError();
   }
 
@@ -696,7 +643,8 @@ VideoTrackEncoder::AdvanceCurrentTime(StreamTime aDuration)
       chunk.mDuration = 0;
 
       TRACK_LOG(LogLevel::Verbose,
-                ("[VideoTrackEncoder]: Got first video chunk after %" PRId64 " ticks.",
+                ("[VideoTrackEncoder]: Got first video chunk after %" PRId64
+                 " ticks.",
                  nullDuration));
       // Adapt to the time before the first frame. This extends the first frame
       // from [start, end] to [0, end], but it'll do for now.
@@ -719,15 +667,16 @@ VideoTrackEncoder::AdvanceCurrentTime(StreamTime aDuration)
       mLastChunk.mDuration += chunk.mDuration;
 
       if (mLastChunk.mDuration < mTrackRate) {
-        TRACK_LOG(LogLevel::Verbose,
-                  ("[VideoTrackEncoder]: Ignoring dupe/null chunk of duration %" PRId64,
-                   chunk.mDuration));
+        TRACK_LOG(LogLevel::Verbose, ("[VideoTrackEncoder]: Ignoring dupe/null "
+                                      "chunk of duration %" PRId64,
+                                      chunk.mDuration));
         continue;
       }
 
       TRACK_LOG(LogLevel::Verbose,
                 ("[VideoTrackEncoder]: Chunk >1 second. duration=%" PRId64 ", "
-                 "trackRate=%" PRId32, mLastChunk.mDuration, mTrackRate));
+                 "trackRate=%" PRId32,
+                 mLastChunk.mDuration, mTrackRate));
 
       // If we have gotten dupes for over a second, we force send one
       // to the encoder to make sure there is some output.
@@ -751,9 +700,9 @@ VideoTrackEncoder::AdvanceCurrentTime(StreamTime aDuration)
     TRACK_LOG(LogLevel::Verbose,
               ("[VideoTrackEncoder]: Appending video frame %p, at pos %.5fs",
                lastImage.get(), relativeTime.ToSeconds()));
-    CheckedInt64 duration = UsecsToFrames(relativeTime.ToMicroseconds(),
-                                          mTrackRate)
-                            - mEncodedTicks;
+    CheckedInt64 duration =
+        UsecsToFrames(relativeTime.ToMicroseconds(), mTrackRate) -
+        mEncodedTicks;
     if (!duration.isValid()) {
       NS_ERROR("Duration overflow");
       return;
@@ -771,12 +720,10 @@ VideoTrackEncoder::AdvanceCurrentTime(StreamTime aDuration)
       chunk.mTimeStamp = mLastChunk.mTimeStamp;
     } else {
       mEncodedTicks += duration.value();
-      mOutgoingBuffer.AppendFrame(lastImage.forget(),
-                                  duration.value(),
-                                  mLastChunk.mFrame.GetIntrinsicSize(),
-                                  PRINCIPAL_HANDLE_NONE,
-                                  mLastChunk.mFrame.GetForceBlack(),
-                                  mLastChunk.mTimeStamp);
+      mOutgoingBuffer.AppendFrame(
+          lastImage.forget(), duration.value(),
+          mLastChunk.mFrame.GetIntrinsicSize(), PRINCIPAL_HANDLE_NONE,
+          mLastChunk.mFrame.GetForceBlack(), mLastChunk.mTimeStamp);
       chunkAppended = true;
     }
 
@@ -791,19 +738,16 @@ VideoTrackEncoder::AdvanceCurrentTime(StreamTime aDuration)
   }
 }
 
-size_t
-VideoTrackEncoder::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-{
+size_t VideoTrackEncoder::SizeOfExcludingThis(
+    mozilla::MallocSizeOf aMallocSizeOf) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   return mIncomingBuffer.SizeOfExcludingThis(aMallocSizeOf) +
          mOutgoingBuffer.SizeOfExcludingThis(aMallocSizeOf);
 }
 
-void
-VideoTrackEncoder::SetKeyFrameInterval(int32_t aKeyFrameInterval)
-{
+void VideoTrackEncoder::SetKeyFrameInterval(int32_t aKeyFrameInterval) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   mKeyFrameInterval = std::min(aKeyFrameInterval, DEFAULT_KEYFRAME_INTERVAL_MS);
 }
 
-} // namespace mozilla
+}  // namespace mozilla

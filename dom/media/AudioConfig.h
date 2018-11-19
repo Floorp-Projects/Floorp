@@ -13,13 +13,11 @@
 
 namespace mozilla {
 
-class AudioConfig
-{
-public:
+class AudioConfig {
+ public:
   // Channel definition is conveniently defined to be in the same order as
   // WAVEFORMAT && SMPTE, even though this is unused for now.
-  enum Channel
-  {
+  enum Channel {
     CHANNEL_INVALID = -1,
     CHANNEL_FRONT_LEFT = 0,
     CHANNEL_FRONT_RIGHT,
@@ -42,22 +40,18 @@ public:
     CHANNEL_TOP_BACK_RIGHT
   };
 
-  class ChannelLayout
-  {
-  public:
+  class ChannelLayout {
+   public:
     // The maximum number of channels a channel map can represent.
     static constexpr uint32_t MAX_CHANNELS = 32;
 
     typedef uint32_t ChannelMap;
 
-    ChannelLayout() : mChannelMap(UNKNOWN_MAP), mValid(false) { }
+    ChannelLayout() : mChannelMap(UNKNOWN_MAP), mValid(false) {}
     explicit ChannelLayout(uint32_t aChannels)
-      : ChannelLayout(aChannels, DefaultLayoutForChannels(aChannels))
-    {
-    }
+        : ChannelLayout(aChannels, DefaultLayoutForChannels(aChannels)) {}
     ChannelLayout(uint32_t aChannels, const Channel* aConfig)
-      : ChannelLayout()
-    {
+        : ChannelLayout() {
       if (aChannels == 0 || !aConfig) {
         return;
       }
@@ -65,26 +59,18 @@ public:
       UpdateChannelMap();
     }
     explicit ChannelLayout(std::initializer_list<Channel> aChannelList)
-      : ChannelLayout(aChannelList.size(), aChannelList.begin())
-    {
-    }
-    bool operator==(const ChannelLayout& aOther) const
-    {
+        : ChannelLayout(aChannelList.size(), aChannelList.begin()) {}
+    bool operator==(const ChannelLayout& aOther) const {
       return mChannels == aOther.mChannels;
     }
-    bool operator!=(const ChannelLayout& aOther) const
-    {
+    bool operator!=(const ChannelLayout& aOther) const {
       return mChannels != aOther.mChannels;
     }
-    const Channel& operator[](uint32_t aIndex) const
-    {
+    const Channel& operator[](uint32_t aIndex) const {
       MOZ_ASSERT(mChannels.Length() > aIndex);
       return mChannels[aIndex];
     }
-    uint32_t Count() const
-    {
-      return mChannels.Length();
-    }
+    uint32_t Count() const { return mChannels.Length(); }
     ChannelMap Map() const;
 
     // Calculate the mapping table from the current layout to aOther such that
@@ -95,22 +81,20 @@ public:
     // allowing conversion from the current layout to aOther.
     // If aMap is empty, then MappingTable can be used to simply determine if
     // the current layout can be easily reordered to aOther.
-    bool MappingTable(const ChannelLayout& aOther, nsTArray<uint8_t>* aMap = nullptr) const;
+    bool MappingTable(const ChannelLayout& aOther,
+                      nsTArray<uint8_t>* aMap = nullptr) const;
     bool IsValid() const { return mValid; }
-    bool HasChannel(Channel aChannel) const
-    {
+    bool HasChannel(Channel aChannel) const {
       return mChannelMap & (1 << aChannel);
     }
     // Return the number of channels found in this ChannelMap.
-    static uint32_t Channels(ChannelMap aMap)
-    {
+    static uint32_t Channels(ChannelMap aMap) {
       static_assert(sizeof(ChannelMap) == sizeof(uint32_t),
                     "Must adjust ChannelMap type");
       return CountPopulation32(aMap);
     }
 
-    static ChannelLayout SMPTEDefault(
-      const ChannelLayout& aChannelLayout);
+    static ChannelLayout SMPTEDefault(const ChannelLayout& aChannelLayout);
     static ChannelLayout SMPTEDefault(ChannelMap aMap);
 
     static constexpr ChannelMap UNKNOWN_MAP = 0;
@@ -118,73 +102,74 @@ public:
     // Common channel layout definitions.
     static constexpr ChannelMap LMONO_MAP = 1 << CHANNEL_FRONT_CENTER;
     static constexpr ChannelMap LMONO_LFE_MAP =
-      1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE;
+        1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE;
     static constexpr ChannelMap LSTEREO_MAP =
-      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT;
+        1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT;
     static constexpr ChannelMap LSTEREO_LFE_MAP =
-      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT | 1 << CHANNEL_LFE;
+        1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT | 1 << CHANNEL_LFE;
     static constexpr ChannelMap L3F_MAP = 1 << CHANNEL_FRONT_LEFT |
-                                        1 << CHANNEL_FRONT_RIGHT |
-                                        1 << CHANNEL_FRONT_CENTER;
+                                          1 << CHANNEL_FRONT_RIGHT |
+                                          1 << CHANNEL_FRONT_CENTER;
     static constexpr ChannelMap L3F_LFE_MAP =
-      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
-      1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE;
+        1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+        1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE;
     static constexpr ChannelMap L2F1_MAP = 1 << CHANNEL_FRONT_LEFT |
-                                         1 << CHANNEL_FRONT_RIGHT |
-                                         1 << CHANNEL_BACK_CENTER;
+                                           1 << CHANNEL_FRONT_RIGHT |
+                                           1 << CHANNEL_BACK_CENTER;
     static constexpr ChannelMap L2F1_LFE_MAP =
-      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT | 1 << CHANNEL_LFE |
-      1 << CHANNEL_BACK_CENTER;
+        1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT | 1 << CHANNEL_LFE |
+        1 << CHANNEL_BACK_CENTER;
     static constexpr ChannelMap L3F1_MAP =
-      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
-      1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_BACK_CENTER;
+        1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+        1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_BACK_CENTER;
     static constexpr ChannelMap LSURROUND_MAP = L3F1_MAP;
     static constexpr ChannelMap L3F1_LFE_MAP =
-      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
-      1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE | 1 << CHANNEL_BACK_CENTER;
+        1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+        1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE | 1 << CHANNEL_BACK_CENTER;
     static constexpr ChannelMap L2F2_MAP =
-      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
-      1 << CHANNEL_SIDE_LEFT | 1 << CHANNEL_SIDE_RIGHT;
+        1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+        1 << CHANNEL_SIDE_LEFT | 1 << CHANNEL_SIDE_RIGHT;
     static constexpr ChannelMap L2F2_LFE_MAP =
-      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT | 1 << CHANNEL_LFE |
-      1 << CHANNEL_SIDE_LEFT | 1 << CHANNEL_SIDE_RIGHT;
+        1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT | 1 << CHANNEL_LFE |
+        1 << CHANNEL_SIDE_LEFT | 1 << CHANNEL_SIDE_RIGHT;
     static constexpr ChannelMap LQUAD_MAP =
-      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
-      1 << CHANNEL_BACK_LEFT | 1 << CHANNEL_BACK_RIGHT;
+        1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+        1 << CHANNEL_BACK_LEFT | 1 << CHANNEL_BACK_RIGHT;
     static constexpr ChannelMap LQUAD_LFE_MAP =
-      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT | 1 << CHANNEL_LFE |
-      1 << CHANNEL_BACK_LEFT | 1 << CHANNEL_BACK_RIGHT;
+        1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT | 1 << CHANNEL_LFE |
+        1 << CHANNEL_BACK_LEFT | 1 << CHANNEL_BACK_RIGHT;
     static constexpr ChannelMap L3F2_MAP =
-      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
-      1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_SIDE_LEFT |
-      1 << CHANNEL_SIDE_RIGHT;
+        1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+        1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_SIDE_LEFT |
+        1 << CHANNEL_SIDE_RIGHT;
     static constexpr ChannelMap L3F2_LFE_MAP =
-      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
-      1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE | 1 << CHANNEL_SIDE_LEFT |
-      1 << CHANNEL_SIDE_RIGHT;
+        1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+        1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE | 1 << CHANNEL_SIDE_LEFT |
+        1 << CHANNEL_SIDE_RIGHT;
     // 3F2_LFE Alias
     static constexpr ChannelMap L5POINT1_SURROUND_MAP = L3F2_LFE_MAP;
     static constexpr ChannelMap L3F2_BACK_MAP =
-      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
-      1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_BACK_LEFT |
-      1 << CHANNEL_BACK_RIGHT;
+        1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+        1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_BACK_LEFT |
+        1 << CHANNEL_BACK_RIGHT;
     static constexpr ChannelMap L3F2_BACK_LFE_MAP =
-      L3F2_BACK_MAP | 1 << CHANNEL_LFE;
+        L3F2_BACK_MAP | 1 << CHANNEL_LFE;
     static constexpr ChannelMap L3F3R_LFE_MAP =
-      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
-      1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE | 1 << CHANNEL_BACK_CENTER |
-      1 << CHANNEL_SIDE_LEFT | 1 << CHANNEL_SIDE_RIGHT;
+        1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+        1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE |
+        1 << CHANNEL_BACK_CENTER | 1 << CHANNEL_SIDE_LEFT |
+        1 << CHANNEL_SIDE_RIGHT;
     static ChannelLayout L3F4_LFE;
     static constexpr ChannelMap L3F4_LFE_MAP =
-      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
-      1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE | 1 << CHANNEL_BACK_LEFT |
-      1 << CHANNEL_BACK_RIGHT | 1 << CHANNEL_SIDE_LEFT |
-      1 << CHANNEL_SIDE_RIGHT;
+        1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+        1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE | 1 << CHANNEL_BACK_LEFT |
+        1 << CHANNEL_BACK_RIGHT | 1 << CHANNEL_SIDE_LEFT |
+        1 << CHANNEL_SIDE_RIGHT;
     // 3F4_LFE Alias
     static ChannelLayout L7POINT1_SURROUND;
     static constexpr ChannelMap L7POINT1_SURROUND_MAP = L3F4_LFE_MAP;
 
-  private:
+   private:
     void UpdateChannelMap();
     const Channel* DefaultLayoutForChannels(uint32_t aChannels) const;
     AutoTArray<Channel, MAX_CHANNELS> mChannels;
@@ -192,8 +177,7 @@ public:
     bool mValid;
   };
 
-  enum SampleFormat
-  {
+  enum SampleFormat {
     FORMAT_NONE = 0,
     FORMAT_U8,
     FORMAT_S16,
@@ -210,24 +194,20 @@ public:
 #endif
   };
 
-  AudioConfig(const ChannelLayout& aChannelLayout,
-              uint32_t aRate,
+  AudioConfig(const ChannelLayout& aChannelLayout, uint32_t aRate,
               AudioConfig::SampleFormat aFormat = FORMAT_DEFAULT,
               bool aInterleaved = true);
-  AudioConfig(const ChannelLayout& aChannelLayout,
-              uint32_t aChannels,
+  AudioConfig(const ChannelLayout& aChannelLayout, uint32_t aChannels,
               uint32_t aRate,
               AudioConfig::SampleFormat aFormat = FORMAT_DEFAULT,
               bool aInterleaved = true);
   // Will create a channel configuration from default SMPTE ordering.
-  AudioConfig(uint32_t aChannels,
-              uint32_t aRate,
+  AudioConfig(uint32_t aChannels, uint32_t aRate,
               AudioConfig::SampleFormat aFormat = FORMAT_DEFAULT,
               bool aInterleaved = true);
 
   const ChannelLayout& Layout() const { return mChannelLayout; }
-  uint32_t Channels() const
-  {
+  uint32_t Channels() const {
     if (!mChannelLayout.IsValid()) {
       return mChannels;
     }
@@ -236,18 +216,15 @@ public:
   uint32_t Rate() const { return mRate; }
   SampleFormat Format() const { return mFormat; }
   bool Interleaved() const { return mInterleaved; }
-  bool operator==(const AudioConfig& aOther) const
-  {
+  bool operator==(const AudioConfig& aOther) const {
     return mChannelLayout == aOther.mChannelLayout && mRate == aOther.mRate &&
            mFormat == aOther.mFormat && mInterleaved == aOther.mInterleaved;
   }
-  bool operator!=(const AudioConfig& aOther) const
-  {
+  bool operator!=(const AudioConfig& aOther) const {
     return !(*this == aOther);
   }
 
-  bool IsValid() const
-  {
+  bool IsValid() const {
     return mChannelLayout.IsValid() && Format() != FORMAT_NONE && Rate() > 0;
   }
 
@@ -255,7 +232,7 @@ public:
   static uint32_t SampleSize(SampleFormat aFormat);
   static uint32_t FormatToBits(SampleFormat aFormat);
 
-private:
+ private:
   // Channels configuration.
   ChannelLayout mChannelLayout;
 
@@ -271,6 +248,6 @@ private:
   bool mInterleaved;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // AudioLayout_h
+#endif  // AudioLayout_h

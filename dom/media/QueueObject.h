@@ -15,9 +15,8 @@ namespace mozilla {
 
 class AbstractThread;
 
-class QueueObject
-{
-public:
+class QueueObject {
+ public:
   explicit QueueObject(RefPtr<AbstractThread> aThread);
   ~QueueObject();
   void Dispatch(nsIRunnable* aRunnable);
@@ -25,9 +24,9 @@ public:
   bool OnThread();
   AbstractThread* Thread();
 
-private:
+ private:
   RefPtr<AbstractThread> mThread;
 };
-}
+}  // namespace mozilla
 
 #endif

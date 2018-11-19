@@ -39,4 +39,4 @@ enum { LIBAV_VER = FFVPX_VERSION };
 enum { LIBAV_VER = LIBAVCODEC_VERSION_MAJOR };
 #endif
 
-#endif // __FFmpegLibs_h__
+#endif  // __FFmpegLibs_h__

@@ -38,124 +38,114 @@ NS_IMPL_RELEASE_INHERITED(AudioBufferSourceNode, AudioScheduledSourceNode)
  * AudioNodeStream::SetBuffer) and a non-zero mBufferEnd has been set (via
  * AudioNodeStream::SetInt32Parameter).
  */
-class AudioBufferSourceNodeEngine final : public AudioNodeEngine
-{
-public:
+class AudioBufferSourceNodeEngine final : public AudioNodeEngine {
+ public:
   AudioBufferSourceNodeEngine(AudioNode* aNode,
-                              AudioDestinationNode* aDestination) :
-    AudioNodeEngine(aNode),
-    mStart(0.0), mBeginProcessing(0),
-    mStop(STREAM_TIME_MAX),
-    mResampler(nullptr), mRemainingResamplerTail(0),
-    mBufferEnd(0),
-    mLoopStart(0), mLoopEnd(0),
-    mBufferPosition(0), mBufferSampleRate(0),
-    // mResamplerOutRate is initialized in UpdateResampler().
-    mChannels(0),
-    mDopplerShift(1.0f),
-    mDestination(aDestination->Stream()),
-    mPlaybackRateTimeline(1.0f),
-    mDetuneTimeline(0.0f),
-    mLoop(false)
-  {}
+                              AudioDestinationNode* aDestination)
+      : AudioNodeEngine(aNode),
+        mStart(0.0),
+        mBeginProcessing(0),
+        mStop(STREAM_TIME_MAX),
+        mResampler(nullptr),
+        mRemainingResamplerTail(0),
+        mBufferEnd(0),
+        mLoopStart(0),
+        mLoopEnd(0),
+        mBufferPosition(0),
+        mBufferSampleRate(0),
+        // mResamplerOutRate is initialized in UpdateResampler().
+        mChannels(0),
+        mDopplerShift(1.0f),
+        mDestination(aDestination->Stream()),
+        mPlaybackRateTimeline(1.0f),
+        mDetuneTimeline(0.0f),
+        mLoop(false) {}
 
-  ~AudioBufferSourceNodeEngine()
-  {
+  ~AudioBufferSourceNodeEngine() {
     if (mResampler) {
       speex_resampler_destroy(mResampler);
     }
   }
 
-  void SetSourceStream(AudioNodeStream* aSource)
-  {
-    mSource = aSource;
-  }
+  void SetSourceStream(AudioNodeStream* aSource) { mSource = aSource; }
 
   void RecvTimelineEvent(uint32_t aIndex,
-                         dom::AudioTimelineEvent& aEvent) override
-  {
+                         dom::AudioTimelineEvent& aEvent) override {
     MOZ_ASSERT(mDestination);
-    WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent,
-                                                    mDestination);
+    WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent, mDestination);
 
     switch (aIndex) {
-    case AudioBufferSourceNode::PLAYBACKRATE:
-      mPlaybackRateTimeline.InsertEvent<int64_t>(aEvent);
-      break;
-    case AudioBufferSourceNode::DETUNE:
-      mDetuneTimeline.InsertEvent<int64_t>(aEvent);
-      break;
-    default:
-      NS_ERROR("Bad AudioBufferSourceNodeEngine TimelineParameter");
+      case AudioBufferSourceNode::PLAYBACKRATE:
+        mPlaybackRateTimeline.InsertEvent<int64_t>(aEvent);
+        break;
+      case AudioBufferSourceNode::DETUNE:
+        mDetuneTimeline.InsertEvent<int64_t>(aEvent);
+        break;
+      default:
+        NS_ERROR("Bad AudioBufferSourceNodeEngine TimelineParameter");
     }
   }
-  void SetStreamTimeParameter(uint32_t aIndex, StreamTime aParam) override
-  {
+  void SetStreamTimeParameter(uint32_t aIndex, StreamTime aParam) override {
     switch (aIndex) {
-    case AudioBufferSourceNode::STOP: mStop = aParam; break;
-    default:
-      NS_ERROR("Bad AudioBufferSourceNodeEngine StreamTimeParameter");
+      case AudioBufferSourceNode::STOP:
+        mStop = aParam;
+        break;
+      default:
+        NS_ERROR("Bad AudioBufferSourceNodeEngine StreamTimeParameter");
     }
   }
-  void SetDoubleParameter(uint32_t aIndex, double aParam) override
-  {
+  void SetDoubleParameter(uint32_t aIndex, double aParam) override {
     switch (aIndex) {
-    case AudioBufferSourceNode::START:
-      MOZ_ASSERT(!mStart, "Another START?");
-      mStart = aParam * mDestination->SampleRate();
-      // Round to nearest
-      mBeginProcessing = mStart + 0.5;
-      break;
-    case AudioBufferSourceNode::DOPPLERSHIFT:
-      mDopplerShift = (aParam <= 0 || mozilla::IsNaN(aParam)) ? 1.0 : aParam;
-      break;
-    default:
-      NS_ERROR("Bad AudioBufferSourceNodeEngine double parameter.");
+      case AudioBufferSourceNode::START:
+        MOZ_ASSERT(!mStart, "Another START?");
+        mStart = aParam * mDestination->SampleRate();
+        // Round to nearest
+        mBeginProcessing = mStart + 0.5;
+        break;
+      case AudioBufferSourceNode::DOPPLERSHIFT:
+        mDopplerShift = (aParam <= 0 || mozilla::IsNaN(aParam)) ? 1.0 : aParam;
+        break;
+      default:
+        NS_ERROR("Bad AudioBufferSourceNodeEngine double parameter.");
     };
   }
-  void SetInt32Parameter(uint32_t aIndex, int32_t aParam) override
-  {
+  void SetInt32Parameter(uint32_t aIndex, int32_t aParam) override {
     switch (aIndex) {
-    case AudioBufferSourceNode::SAMPLE_RATE:
-      MOZ_ASSERT(aParam > 0);
-      mBufferSampleRate = aParam;
-      mSource->SetActive();
-      break;
-    case AudioBufferSourceNode::BUFFERSTART:
-      MOZ_ASSERT(aParam >= 0);
-      if (mBufferPosition == 0) {
-        mBufferPosition = aParam;
-      }
-      break;
-    case AudioBufferSourceNode::BUFFEREND:
-      MOZ_ASSERT(aParam >= 0);
-      mBufferEnd = aParam;
-      break;
-    case AudioBufferSourceNode::LOOP: mLoop = !!aParam; break;
-    case AudioBufferSourceNode::LOOPSTART:
-      MOZ_ASSERT(aParam >= 0);
-      mLoopStart = aParam;
-      break;
-    case AudioBufferSourceNode::LOOPEND:
-      MOZ_ASSERT(aParam >= 0);
-      mLoopEnd = aParam;
-      break;
-    default:
-      NS_ERROR("Bad AudioBufferSourceNodeEngine Int32Parameter");
+      case AudioBufferSourceNode::SAMPLE_RATE:
+        MOZ_ASSERT(aParam > 0);
+        mBufferSampleRate = aParam;
+        mSource->SetActive();
+        break;
+      case AudioBufferSourceNode::BUFFERSTART:
+        MOZ_ASSERT(aParam >= 0);
+        if (mBufferPosition == 0) {
+          mBufferPosition = aParam;
+        }
+        break;
+      case AudioBufferSourceNode::BUFFEREND:
+        MOZ_ASSERT(aParam >= 0);
+        mBufferEnd = aParam;
+        break;
+      case AudioBufferSourceNode::LOOP:
+        mLoop = !!aParam;
+        break;
+      case AudioBufferSourceNode::LOOPSTART:
+        MOZ_ASSERT(aParam >= 0);
+        mLoopStart = aParam;
+        break;
+      case AudioBufferSourceNode::LOOPEND:
+        MOZ_ASSERT(aParam >= 0);
+        mLoopEnd = aParam;
+        break;
+      default:
+        NS_ERROR("Bad AudioBufferSourceNodeEngine Int32Parameter");
     }
   }
-  void SetBuffer(AudioChunk&& aBuffer) override
-  {
-    mBuffer = aBuffer;
-  }
+  void SetBuffer(AudioChunk&& aBuffer) override { mBuffer = aBuffer; }
 
-  bool BegunResampling()
-  {
-    return mBeginProcessing == -STREAM_TIME_MAX;
-  }
+  bool BegunResampling() { return mBeginProcessing == -STREAM_TIME_MAX; }
 
-  void UpdateResampler(int32_t aOutRate, uint32_t aChannels)
-  {
+  void UpdateResampler(int32_t aOutRate, uint32_t aChannels) {
     if (mResampler &&
         (aChannels != mChannels ||
          // If the resampler has begun, then it will have moved
@@ -169,8 +159,7 @@ public:
       mBeginProcessing = mStart + 0.5;
     }
 
-    if (aChannels == 0 ||
-        (aOutRate == mBufferSampleRate && !mResampler)) {
+    if (aChannels == 0 || (aOutRate == mBufferSampleRate && !mResampler)) {
       mResamplerOutRate = aOutRate;
       return;
     }
@@ -178,13 +167,13 @@ public:
     if (!mResampler) {
       mChannels = aChannels;
       mResampler = speex_resampler_init(mChannels, mBufferSampleRate, aOutRate,
-                                        SPEEX_RESAMPLER_QUALITY_MIN,
-                                        nullptr);
+                                        SPEEX_RESAMPLER_QUALITY_MIN, nullptr);
     } else {
       if (mResamplerOutRate == aOutRate) {
         return;
       }
-      if (speex_resampler_set_rate(mResampler, mBufferSampleRate, aOutRate) != RESAMPLER_ERR_SUCCESS) {
+      if (speex_resampler_set_rate(mResampler, mBufferSampleRate, aOutRate) !=
+          RESAMPLER_ERR_SUCCESS) {
         NS_ASSERTION(false, "speex_resampler_set_rate failed");
         return;
       }
@@ -206,20 +195,18 @@ public:
       // next whole tick, because there is no effect on samples outside the
       // filter width.
       mBeginProcessing =
-        (subsample - inputLatency * ratioDen + ratioNum - 1) / ratioNum;
+          (subsample - inputLatency * ratioDen + ratioNum - 1) / ratioNum;
     }
   }
 
   // Borrow a full buffer of size WEBAUDIO_BLOCK_SIZE from the source buffer
   // at offset aSourceOffset.  This avoids copying memory.
-  void BorrowFromInputBuffer(AudioBlock* aOutput,
-                             uint32_t aChannels)
-  {
+  void BorrowFromInputBuffer(AudioBlock* aOutput, uint32_t aChannels) {
     aOutput->SetBuffer(mBuffer.mBuffer);
     aOutput->mChannelData.SetLength(aChannels);
     for (uint32_t i = 0; i < aChannels; ++i) {
       aOutput->mChannelData[i] =
-        mBuffer.ChannelData<float>()[i] + mBufferPosition;
+          mBuffer.ChannelData<float>()[i] + mBufferPosition;
     }
     aOutput->mVolume = mBuffer.mVolume;
     aOutput->mBufferFormat = AUDIO_FORMAT_FLOAT32;
@@ -227,12 +214,10 @@ public:
 
   // Copy aNumberOfFrames frames from the source buffer at offset aSourceOffset
   // and put it at offset aBufferOffset in the destination buffer.
-  template <typename T> void
-  CopyFromInputBuffer(AudioBlock* aOutput,
-                      uint32_t aChannels,
-                      uintptr_t aOffsetWithinBlock,
-                      uint32_t aNumberOfFrames)
-  {
+  template <typename T>
+  void CopyFromInputBuffer(AudioBlock* aOutput, uint32_t aChannels,
+                           uintptr_t aOffsetWithinBlock,
+                           uint32_t aNumberOfFrames) {
     MOZ_ASSERT(mBuffer.mVolume == 1.0f);
     for (uint32_t i = 0; i < aChannels; ++i) {
       float* baseChannelData = aOutput->ChannelFloatsForWrite(i);
@@ -242,18 +227,17 @@ public:
     }
   }
 
-  // Resamples input data to an output buffer, according to |mBufferSampleRate| and
-  // the playbackRate/detune.
-  // The number of frames consumed/produced depends on the amount of space
-  // remaining in both the input and output buffer, and the playback rate (that
-  // is, the ratio between the output samplerate and the input samplerate).
+  // Resamples input data to an output buffer, according to |mBufferSampleRate|
+  // and the playbackRate/detune. The number of frames consumed/produced depends
+  // on the amount of space remaining in both the input and output buffer, and
+  // the playback rate (that is, the ratio between the output samplerate and the
+  // input samplerate).
   void CopyFromInputBufferWithResampling(AudioBlock* aOutput,
                                          uint32_t aChannels,
                                          uint32_t* aOffsetWithinBlock,
                                          uint32_t aAvailableInOutput,
                                          StreamTime* aCurrentPosition,
-                                         uint32_t aBufferMax)
-  {
+                                         uint32_t aBufferMax) {
     if (*aOffsetWithinBlock == 0) {
       aOutput->AllocateChannels(aChannels);
     }
@@ -287,34 +271,32 @@ public:
                      "mBeginProcessing is wrong?");
           skipFracNum -= leadSubsamples;
         }
-        speex_resampler_set_skip_frac_num(resampler,
-                                  std::min<int64_t>(skipFracNum, UINT32_MAX));
+        speex_resampler_set_skip_frac_num(
+            resampler, std::min<int64_t>(skipFracNum, UINT32_MAX));
 
         mBeginProcessing = -STREAM_TIME_MAX;
       }
       inputLimit = std::min(inputLimit, availableInInputBuffer);
 
       MOZ_ASSERT(mBuffer.mVolume == 1.0f);
-      for (uint32_t i = 0; true; ) {
+      for (uint32_t i = 0; true;) {
         uint32_t inSamples = inputLimit;
 
         uint32_t outSamples = aAvailableInOutput;
         float* outputData =
-          aOutput->ChannelFloatsForWrite(i) + *aOffsetWithinBlock;
+            aOutput->ChannelFloatsForWrite(i) + *aOffsetWithinBlock;
 
         if (mBuffer.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
           const float* inputData =
-            mBuffer.ChannelData<float>()[i] + mBufferPosition;
-          WebAudioUtils::SpeexResamplerProcess(resampler, i,
-                                               inputData, &inSamples,
-                                               outputData, &outSamples);
+              mBuffer.ChannelData<float>()[i] + mBufferPosition;
+          WebAudioUtils::SpeexResamplerProcess(
+              resampler, i, inputData, &inSamples, outputData, &outSamples);
         } else {
           MOZ_ASSERT(mBuffer.mBufferFormat == AUDIO_FORMAT_S16);
           const int16_t* inputData =
-            mBuffer.ChannelData<int16_t>()[i] + mBufferPosition;
-          WebAudioUtils::SpeexResamplerProcess(resampler, i,
-                                               inputData, &inSamples,
-                                               outputData, &outSamples);
+              mBuffer.ChannelData<int16_t>()[i] + mBufferPosition;
+          WebAudioUtils::SpeexResamplerProcess(
+              resampler, i, inputData, &inSamples, outputData, &outSamples);
         }
         if (++i == aChannels) {
           mBufferPosition += inSamples;
@@ -326,23 +308,23 @@ public:
             // This handles the output latency as well as capturing the low
             // pass effects of the resample filter.
             mRemainingResamplerTail =
-              2 * speex_resampler_get_input_latency(resampler) - 1;
+                2 * speex_resampler_get_input_latency(resampler) - 1;
           }
           return;
         }
       }
     } else {
-      for (uint32_t i = 0; true; ) {
+      for (uint32_t i = 0; true;) {
         uint32_t inSamples = mRemainingResamplerTail;
         uint32_t outSamples = aAvailableInOutput;
         float* outputData =
-          aOutput->ChannelFloatsForWrite(i) + *aOffsetWithinBlock;
+            aOutput->ChannelFloatsForWrite(i) + *aOffsetWithinBlock;
 
         // AudioDataValue* for aIn selects the function that does not try to
         // copy and format-convert input data.
-        WebAudioUtils::SpeexResamplerProcess(resampler, i,
-                         static_cast<AudioDataValue*>(nullptr), &inSamples,
-                         outputData, &outSamples);
+        WebAudioUtils::SpeexResamplerProcess(
+            resampler, i, static_cast<AudioDataValue*>(nullptr), &inSamples,
+            outputData, &outSamples);
         if (++i == aChannels) {
           MOZ_ASSERT(inSamples <= mRemainingResamplerTail);
           mRemainingResamplerTail -= inSamples;
@@ -362,16 +344,12 @@ public:
    * allocate the output buffer, and also optimizes the case where it can avoid
    * memory allocations.
    */
-  void FillWithZeroes(AudioBlock* aOutput,
-                      uint32_t aChannels,
+  void FillWithZeroes(AudioBlock* aOutput, uint32_t aChannels,
                       uint32_t* aOffsetWithinBlock,
-                      StreamTime* aCurrentPosition,
-                      StreamTime aMaxPos)
-  {
+                      StreamTime* aCurrentPosition, StreamTime aMaxPos) {
     MOZ_ASSERT(*aCurrentPosition < aMaxPos);
-    uint32_t numFrames =
-      std::min<StreamTime>(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
-                           aMaxPos - *aCurrentPosition);
+    uint32_t numFrames = std::min<StreamTime>(
+        WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock, aMaxPos - *aCurrentPosition);
     if (numFrames == WEBAUDIO_BLOCK_SIZE || !aChannels) {
       aOutput->SetNull(numFrames);
     } else {
@@ -393,20 +371,16 @@ public:
    * This function knows when it needs to allocate the output buffer, and also
    * optimizes the case where it can avoid memory allocations.
    */
-  void CopyFromBuffer(AudioBlock* aOutput,
-                      uint32_t aChannels,
+  void CopyFromBuffer(AudioBlock* aOutput, uint32_t aChannels,
                       uint32_t* aOffsetWithinBlock,
-                      StreamTime* aCurrentPosition,
-                      uint32_t aBufferMax)
-  {
+                      StreamTime* aCurrentPosition, uint32_t aBufferMax) {
     MOZ_ASSERT(*aCurrentPosition < mStop);
-    uint32_t availableInOutput =
-      std::min<StreamTime>(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
-                           mStop - *aCurrentPosition);
+    uint32_t availableInOutput = std::min<StreamTime>(
+        WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock, mStop - *aCurrentPosition);
     if (mResampler) {
-      CopyFromInputBufferWithResampling(aOutput, aChannels,
-                                        aOffsetWithinBlock, availableInOutput,
-                                        aCurrentPosition, aBufferMax);
+      CopyFromInputBufferWithResampling(aOutput, aChannels, aOffsetWithinBlock,
+                                        availableInOutput, aCurrentPosition,
+                                        aBufferMax);
       return;
     }
 
@@ -422,16 +396,16 @@ public:
       // increments essentially accumulate if outRate remains constant.  If
       // outRate is varying, then accumulation happens on average but not
       // precisely.
-      TrackTicks start = *aCurrentPosition *
-        mBufferSampleRate / mResamplerOutRate;
+      TrackTicks start =
+          *aCurrentPosition * mBufferSampleRate / mResamplerOutRate;
       TrackTicks end = (*aCurrentPosition + availableInOutput) *
-        mBufferSampleRate / mResamplerOutRate;
+                       mBufferSampleRate / mResamplerOutRate;
       mBufferPosition += end - start;
       return;
     }
 
-    uint32_t numFrames = std::min(aBufferMax - mBufferPosition,
-                                  availableInOutput);
+    uint32_t numFrames =
+        std::min(aBufferMax - mBufferPosition, availableInOutput);
 
     bool shouldBorrow = false;
     if (numFrames == WEBAUDIO_BLOCK_SIZE &&
@@ -452,12 +426,12 @@ public:
         aOutput->AllocateChannels(aChannels);
       }
       if (mBuffer.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
-        CopyFromInputBuffer<float>(aOutput, aChannels,
-                                   *aOffsetWithinBlock, numFrames);
+        CopyFromInputBuffer<float>(aOutput, aChannels, *aOffsetWithinBlock,
+                                   numFrames);
       } else {
         MOZ_ASSERT(mBuffer.mBufferFormat == AUDIO_FORMAT_S16);
-        CopyFromInputBuffer<int16_t>(aOutput, aChannels,
-                                     *aOffsetWithinBlock, numFrames);
+        CopyFromInputBuffer<int16_t>(aOutput, aChannels, *aOffsetWithinBlock,
+                                     numFrames);
       }
     }
     *aOffsetWithinBlock += numFrames;
@@ -465,19 +439,17 @@ public:
     mBufferPosition += numFrames;
   }
 
-  int32_t ComputeFinalOutSampleRate(float aPlaybackRate, float aDetune)
-  {
+  int32_t ComputeFinalOutSampleRate(float aPlaybackRate, float aDetune) {
     float computedPlaybackRate = aPlaybackRate * pow(2, aDetune / 1200.f);
     // Make sure the playback rate and the doppler shift are something
     // our resampler can work with.
-    int32_t rate = WebAudioUtils::
-      TruncateFloatToInt<int32_t>(mSource->SampleRate() /
-                                  (computedPlaybackRate * mDopplerShift));
+    int32_t rate = WebAudioUtils::TruncateFloatToInt<int32_t>(
+        mSource->SampleRate() / (computedPlaybackRate * mDopplerShift));
     return rate ? rate : mBufferSampleRate;
   }
 
-  void UpdateSampleRateIfNeeded(uint32_t aChannels, StreamTime aStreamPosition)
-  {
+  void UpdateSampleRateIfNeeded(uint32_t aChannels,
+                                StreamTime aStreamPosition) {
     float playbackRate;
     float detune;
 
@@ -501,12 +473,9 @@ public:
     UpdateResampler(outRate, aChannels);
   }
 
-  void ProcessBlock(AudioNodeStream* aStream,
-                    GraphTime aFrom,
-                    const AudioBlock& aInput,
-                    AudioBlock* aOutput,
-                    bool* aFinished) override
-  {
+  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+                    const AudioBlock& aInput, AudioBlock* aOutput,
+                    bool* aFinished) override {
     if (mBufferSampleRate == 0) {
       // start() has not yet been called or no buffer has yet been set
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
@@ -520,9 +489,9 @@ public:
 
     uint32_t written = 0;
     while (written < WEBAUDIO_BLOCK_SIZE) {
-      if (mStop != STREAM_TIME_MAX &&
-          streamPosition >= mStop) {
-        FillWithZeroes(aOutput, channels, &written, &streamPosition, STREAM_TIME_MAX);
+      if (mStop != STREAM_TIME_MAX && streamPosition >= mStop) {
+        FillWithZeroes(aOutput, channels, &written, &streamPosition,
+                       STREAM_TIME_MAX);
         continue;
       }
       if (streamPosition < mBeginProcessing) {
@@ -540,9 +509,11 @@ public:
         CopyFromBuffer(aOutput, channels, &written, &streamPosition, mLoopEnd);
       } else {
         if (mBufferPosition < mBufferEnd || mRemainingResamplerTail) {
-          CopyFromBuffer(aOutput, channels, &written, &streamPosition, mBufferEnd);
+          CopyFromBuffer(aOutput, channels, &written, &streamPosition,
+                         mBufferEnd);
         } else {
-          FillWithZeroes(aOutput, channels, &written, &streamPosition, STREAM_TIME_MAX);
+          FillWithZeroes(aOutput, channels, &written, &streamPosition,
+                         STREAM_TIME_MAX);
         }
       }
     }
@@ -555,14 +526,12 @@ public:
     }
   }
 
-  bool IsActive() const override
-  {
+  bool IsActive() const override {
     // Whether buffer has been set and start() has been called.
     return mBufferSampleRate != 0;
   }
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override {
     // Not owned:
     // - mBuffer - shared w/ AudioNode
     // - mPlaybackRateTimeline - shared w/ AudioNode
@@ -582,12 +551,11 @@ public:
     return amount;
   }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  double mStart; // including the fractional position between ticks
+  double mStart;  // including the fractional position between ticks
   // Low pass filter effects from the resampler mean that samples before the
   // start time are influenced by resampling the buffer.  mBeginProcessing
   // includes the extent of this filter.  The special value of -STREAM_TIME_MAX
@@ -617,19 +585,18 @@ public:
 };
 
 AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
-  : AudioScheduledSourceNode(aContext,
-                             2,
-                             ChannelCountMode::Max,
-                             ChannelInterpretation::Speakers)
-  , mLoopStart(0.0)
-  , mLoopEnd(0.0)
-  // mOffset and mDuration are initialized in Start().
-  , mPlaybackRate(new AudioParam(this, PLAYBACKRATE, "playbackRate", 1.0f))
-  , mDetune(new AudioParam(this, DETUNE, "detune", 0.0f))
-  , mLoop(false)
-  , mStartCalled(false)
-{
-  AudioBufferSourceNodeEngine* engine = new AudioBufferSourceNodeEngine(this, aContext->Destination());
+    : AudioScheduledSourceNode(aContext, 2, ChannelCountMode::Max,
+                               ChannelInterpretation::Speakers),
+      mLoopStart(0.0),
+      mLoopEnd(0.0)
+      // mOffset and mDuration are initialized in Start().
+      ,
+      mPlaybackRate(new AudioParam(this, PLAYBACKRATE, "playbackRate", 1.0f)),
+      mDetune(new AudioParam(this, DETUNE, "detune", 0.0f)),
+      mLoop(false),
+      mStartCalled(false) {
+  AudioBufferSourceNodeEngine* engine =
+      new AudioBufferSourceNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,
                                     AudioNodeStream::NEED_MAIN_THREAD_FINISHED,
                                     aContext->Graph());
@@ -640,13 +607,13 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
 /* static */ already_AddRefed<AudioBufferSourceNode>
 AudioBufferSourceNode::Create(JSContext* aCx, AudioContext& aAudioContext,
                               const AudioBufferSourceOptions& aOptions,
-                              ErrorResult& aRv)
-{
+                              ErrorResult& aRv) {
   if (aAudioContext.CheckClosed(aRv)) {
     return nullptr;
   }
 
-  RefPtr<AudioBufferSourceNode> audioNode = new AudioBufferSourceNode(&aAudioContext);
+  RefPtr<AudioBufferSourceNode> audioNode =
+      new AudioBufferSourceNode(&aAudioContext);
 
   if (aOptions.mBuffer.WasPassed()) {
     MOZ_ASSERT(aCx);
@@ -661,9 +628,7 @@ AudioBufferSourceNode::Create(JSContext* aCx, AudioContext& aAudioContext,
 
   return audioNode.forget();
 }
-void
-AudioBufferSourceNode::DestroyMediaStream()
-{
+void AudioBufferSourceNode::DestroyMediaStream() {
   bool hadStream = mStream;
   if (hadStream) {
     mStream->RemoveMainThreadListener(this);
@@ -671,9 +636,8 @@ AudioBufferSourceNode::DestroyMediaStream()
   AudioNode::DestroyMediaStream();
 }
 
-size_t
-AudioBufferSourceNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t AudioBufferSourceNode::SizeOfExcludingThis(
+    MallocSizeOf aMallocSizeOf) const {
   size_t amount = AudioNode::SizeOfExcludingThis(aMallocSizeOf);
 
   /* mBuffer can be shared and is accounted for separately. */
@@ -683,24 +647,22 @@ AudioBufferSourceNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   return amount;
 }
 
-size_t
-AudioBufferSourceNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t AudioBufferSourceNode::SizeOfIncludingThis(
+    MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-JSObject*
-AudioBufferSourceNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* AudioBufferSourceNode::WrapObject(JSContext* aCx,
+                                            JS::Handle<JSObject*> aGivenProto) {
   return AudioBufferSourceNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-AudioBufferSourceNode::Start(double aWhen, double aOffset,
-                             const Optional<double>& aDuration, ErrorResult& aRv)
-{
+void AudioBufferSourceNode::Start(double aWhen, double aOffset,
+                                  const Optional<double>& aDuration,
+                                  ErrorResult& aRv) {
   if (!WebAudioUtils::IsTimeValid(aWhen)) {
-    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(NS_LITERAL_STRING("start time"));
+    aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(
+        NS_LITERAL_STRING("start time"));
     return;
   }
   if (aOffset < 0) {
@@ -744,15 +706,11 @@ AudioBufferSourceNode::Start(double aWhen, double aOffset,
   }
 }
 
-void
-AudioBufferSourceNode::Start(double aWhen, ErrorResult& aRv)
-{
+void AudioBufferSourceNode::Start(double aWhen, ErrorResult& aRv) {
   Start(aWhen, 0 /* offset */, Optional<double>(), aRv);
 }
 
-void
-AudioBufferSourceNode::SendBufferParameterToStream(JSContext* aCx)
-{
+void AudioBufferSourceNode::SendBufferParameterToStream(JSContext* aCx) {
   AudioNodeStream* ns = mStream;
   if (!ns) {
     return;
@@ -773,11 +731,11 @@ AudioBufferSourceNode::SendBufferParameterToStream(JSContext* aCx)
   }
 }
 
-void
-AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* aStream)
-{
-  NS_ASSERTION(mBuffer && mStartCalled,
-               "Only call this when we have a buffer and start() has been called");
+void AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(
+    AudioNodeStream* aStream) {
+  NS_ASSERTION(
+      mBuffer && mStartCalled,
+      "Only call this when we have a buffer and start() has been called");
 
   float rate = mBuffer->SampleRate();
   aStream->SetInt32Parameter(SAMPLE_RATE, rate);
@@ -791,23 +749,21 @@ AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* 
   }
 
   if (mDuration != std::numeric_limits<double>::min()) {
-    MOZ_ASSERT(mDuration >= 0.0); // provided by Start()
-    MOZ_ASSERT(rate >= 0.0f); // provided by AudioBuffer::Create()
+    MOZ_ASSERT(mDuration >= 0.0);  // provided by Start()
+    MOZ_ASSERT(rate >= 0.0f);      // provided by AudioBuffer::Create()
     static_assert(std::numeric_limits<double>::digits >=
-                  std::numeric_limits<decltype(bufferEnd)>::digits,
+                      std::numeric_limits<decltype(bufferEnd)>::digits,
                   "bufferEnd should be represented exactly by double");
     // + 0.5 rounds mDuration to nearest sample when assigned to bufferEnd.
-    bufferEnd = std::min<double>(bufferEnd,
-                                 offsetSamples + mDuration * rate + 0.5);
+    bufferEnd =
+        std::min<double>(bufferEnd, offsetSamples + mDuration * rate + 0.5);
   }
   aStream->SetInt32Parameter(BUFFEREND, bufferEnd);
 
   MarkActive();
 }
 
-void
-AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv)
-{
+void AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv) {
   if (!WebAudioUtils::IsTimeValid(aWhen)) {
     aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(NS_LITERAL_STRING("stop time"));
     return;
@@ -818,8 +774,8 @@ AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv)
     return;
   }
 
-  WEB_AUDIO_API_LOG("%f: %s %u Stop(%f)", Context()->CurrentTime(),
-                    NodeType(), Id(), aWhen);
+  WEB_AUDIO_API_LOG("%f: %s %u Stop(%f)", Context()->CurrentTime(), NodeType(),
+                    Id(), aWhen);
 
   AudioNodeStream* ns = mStream;
   if (!ns || !Context()) {
@@ -830,21 +786,14 @@ AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv)
   ns->SetStreamTimeParameter(STOP, Context(), std::max(0.0, aWhen));
 }
 
-void
-AudioBufferSourceNode::NotifyMainThreadStreamFinished()
-{
+void AudioBufferSourceNode::NotifyMainThreadStreamFinished() {
   MOZ_ASSERT(mStream->IsFinished());
 
-  class EndedEventDispatcher final : public Runnable
-  {
-  public:
+  class EndedEventDispatcher final : public Runnable {
+   public:
     explicit EndedEventDispatcher(AudioBufferSourceNode* aNode)
-      : mozilla::Runnable("EndedEventDispatcher")
-      , mNode(aNode)
-    {
-    }
-    NS_IMETHOD Run() override
-    {
+        : mozilla::Runnable("EndedEventDispatcher"), mNode(aNode) {}
+    NS_IMETHOD Run() override {
       // If it's not safe to run scripts right now, schedule this to run later
       if (!nsContentUtils::IsSafeToRunScript()) {
         nsContentUtils::AddScriptRunner(this);
@@ -856,7 +805,8 @@ AudioBufferSourceNode::NotifyMainThreadStreamFinished()
       mNode->DestroyMediaStream();
       return NS_OK;
     }
-  private:
+
+   private:
     RefPtr<AudioBufferSourceNode> mNode;
   };
 
@@ -867,16 +817,12 @@ AudioBufferSourceNode::NotifyMainThreadStreamFinished()
   MarkInactive();
 }
 
-void
-AudioBufferSourceNode::SendDopplerShiftToStream(double aDopplerShift)
-{
+void AudioBufferSourceNode::SendDopplerShiftToStream(double aDopplerShift) {
   MOZ_ASSERT(mStream, "Should have disconnected panner if no stream");
   SendDoubleParameterToStream(DOPPLERSHIFT, aDopplerShift);
 }
 
-void
-AudioBufferSourceNode::SendLoopParametersToStream()
-{
+void AudioBufferSourceNode::SendLoopParametersToStream() {
   if (!mStream) {
     return;
   }
@@ -885,8 +831,7 @@ AudioBufferSourceNode::SendLoopParametersToStream()
     float rate = mBuffer->SampleRate();
     double length = (double(mBuffer->Length()) / mBuffer->SampleRate());
     double actualLoopStart, actualLoopEnd;
-    if (mLoopStart >= 0.0 && mLoopEnd > 0.0 &&
-        mLoopStart < mLoopEnd) {
+    if (mLoopStart >= 0.0 && mLoopEnd > 0.0 && mLoopStart < mLoopEnd) {
       MOZ_ASSERT(mLoopStart != 0.0 || mLoopEnd != 0.0);
       actualLoopStart = (mLoopStart > length) ? 0.0 : mLoopStart;
       actualLoopEnd = std::min(mLoopEnd, length);
@@ -910,5 +855,5 @@ AudioBufferSourceNode::SendLoopParametersToStream()
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

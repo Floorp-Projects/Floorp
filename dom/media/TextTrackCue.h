@@ -24,24 +24,22 @@ namespace dom {
 class HTMLTrackElement;
 class TextTrackRegion;
 
-class TextTrackCue final : public DOMEventTargetHelper
-{
-public:
+class TextTrackCue final : public DOMEventTargetHelper {
+ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TextTrackCue, DOMEventTargetHelper)
 
   // TextTrackCue WebIDL
   // See bug 868509 about splitting out the WebVTT-specific interfaces.
-  static already_AddRefed<TextTrackCue>
-  Constructor(GlobalObject& aGlobal,
-              double aStartTime,
-              double aEndTime,
-              const nsAString& aText,
-              ErrorResult& aRv)
-  {
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
-    RefPtr<TextTrackCue> ttcue = new TextTrackCue(window, aStartTime,
-                                                    aEndTime, aText, aRv);
+  static already_AddRefed<TextTrackCue> Constructor(GlobalObject& aGlobal,
+                                                    double aStartTime,
+                                                    double aEndTime,
+                                                    const nsAString& aText,
+                                                    ErrorResult& aRv) {
+    nsCOMPtr<nsPIDOMWindowInner> window =
+        do_QueryInterface(aGlobal.GetAsSupports());
+    RefPtr<TextTrackCue> ttcue =
+        new TextTrackCue(window, aStartTime, aEndTime, aText, aRv);
     return ttcue.forget();
   }
   TextTrackCue(nsPIDOMWindowInner* aGlobal, double aStartTime, double aEndTime,
@@ -51,20 +49,14 @@ public:
                const nsAString& aText, HTMLTrackElement* aTrackElement,
                ErrorResult& aRv);
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  TextTrack* GetTrack() const
-  {
-    return mTrack;
-  }
+  TextTrack* GetTrack() const { return mTrack; }
 
-  void GetId(nsAString& aId) const
-  {
-    aId = mId;
-  }
+  void GetId(nsAString& aId) const { aId = mId; }
 
-  void SetId(const nsAString& aId)
-  {
+  void SetId(const nsAString& aId) {
     if (mId == aId) {
       return;
     }
@@ -72,13 +64,9 @@ public:
     mId = aId;
   }
 
-  double StartTime() const
-  {
-    return mStartTime;
-  }
+  double StartTime() const { return mStartTime; }
 
-  void SetStartTime(double aStartTime)
-  {
+  void SetStartTime(double aStartTime) {
     if (mStartTime == aStartTime) {
       return;
     }
@@ -88,13 +76,9 @@ public:
     NotifyCueUpdated(this);
   }
 
-  double EndTime() const
-  {
-    return mEndTime;
-  }
+  double EndTime() const { return mEndTime; }
 
-  void SetEndTime(double aEndTime)
-  {
+  void SetEndTime(double aEndTime) {
     if (mEndTime == aEndTime) {
       return;
     }
@@ -104,13 +88,9 @@ public:
     NotifyCueUpdated(this);
   }
 
-  bool PauseOnExit()
-  {
-    return mPauseOnExit;
-  }
+  bool PauseOnExit() { return mPauseOnExit; }
 
-  void SetPauseOnExit(bool aPauseOnExit)
-  {
+  void SetPauseOnExit(bool aPauseOnExit) {
     if (mPauseOnExit == aPauseOnExit) {
       return;
     }
@@ -122,13 +102,9 @@ public:
   TextTrackRegion* GetRegion();
   void SetRegion(TextTrackRegion* aRegion);
 
-  DirectionSetting Vertical() const
-  {
-    return mVertical;
-  }
+  DirectionSetting Vertical() const { return mVertical; }
 
-  void SetVertical(const DirectionSetting& aVertical)
-  {
+  void SetVertical(const DirectionSetting& aVertical) {
     if (mVertical == aVertical) {
       return;
     }
@@ -137,13 +113,9 @@ public:
     mVertical = aVertical;
   }
 
-  bool SnapToLines()
-  {
-    return mSnapToLines;
-  }
+  bool SnapToLines() { return mSnapToLines; }
 
-  void SetSnapToLines(bool aSnapToLines)
-  {
+  void SetSnapToLines(bool aSnapToLines) {
     if (mSnapToLines == aSnapToLines) {
       return;
     }
@@ -152,8 +124,7 @@ public:
     mSnapToLines = aSnapToLines;
   }
 
-  void GetLine(OwningDoubleOrAutoKeyword& aLine) const
-  {
+  void GetLine(OwningDoubleOrAutoKeyword& aLine) const {
     if (mLineIsAutoKeyword) {
       aLine.SetAsAutoKeyword() = AutoKeyword::Auto;
       return;
@@ -161,8 +132,7 @@ public:
     aLine.SetAsDouble() = mLine;
   }
 
-  void SetLine(const DoubleOrAutoKeyword& aLine)
-  {
+  void SetLine(const DoubleOrAutoKeyword& aLine) {
     if (aLine.IsDouble() &&
         (mLineIsAutoKeyword || (aLine.GetAsDouble() != mLine))) {
       mLineIsAutoKeyword = false;
@@ -176,13 +146,9 @@ public:
     }
   }
 
-  LineAlignSetting LineAlign() const
-  {
-    return mLineAlign;
-  }
+  LineAlignSetting LineAlign() const { return mLineAlign; }
 
-  void SetLineAlign(LineAlignSetting& aLineAlign, ErrorResult& aRv)
-  {
+  void SetLineAlign(LineAlignSetting& aLineAlign, ErrorResult& aRv) {
     if (mLineAlign == aLineAlign) {
       return;
     }
@@ -191,8 +157,7 @@ public:
     mLineAlign = aLineAlign;
   }
 
-  void GetPosition(OwningDoubleOrAutoKeyword& aPosition) const
-  {
+  void GetPosition(OwningDoubleOrAutoKeyword& aPosition) const {
     if (mPositionIsAutoKeyword) {
       aPosition.SetAsAutoKeyword() = AutoKeyword::Auto;
       return;
@@ -200,10 +165,9 @@ public:
     aPosition.SetAsDouble() = mPosition;
   }
 
-  void SetPosition(const DoubleOrAutoKeyword& aPosition, ErrorResult& aRv)
-  {
+  void SetPosition(const DoubleOrAutoKeyword& aPosition, ErrorResult& aRv) {
     if (!aPosition.IsAutoKeyword() &&
-        (aPosition.GetAsDouble() > 100.0 || aPosition.GetAsDouble() < 0.0)){
+        (aPosition.GetAsDouble() > 100.0 || aPosition.GetAsDouble() < 0.0)) {
       aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
       return;
     }
@@ -222,13 +186,9 @@ public:
     }
   }
 
-  PositionAlignSetting PositionAlign() const
-  {
-    return mPositionAlign;
-  }
+  PositionAlignSetting PositionAlign() const { return mPositionAlign; }
 
-  void SetPositionAlign(PositionAlignSetting aPositionAlign, ErrorResult& aRv)
-  {
+  void SetPositionAlign(PositionAlignSetting aPositionAlign, ErrorResult& aRv) {
     if (mPositionAlign == aPositionAlign) {
       return;
     }
@@ -237,13 +197,9 @@ public:
     mPositionAlign = aPositionAlign;
   }
 
-  double Size() const
-  {
-    return mSize;
-  }
+  double Size() const { return mSize; }
 
-  void SetSize(double aSize, ErrorResult& aRv)
-  {
+  void SetSize(double aSize, ErrorResult& aRv) {
     if (mSize == aSize) {
       return;
     }
@@ -257,13 +213,9 @@ public:
     mSize = aSize;
   }
 
-  AlignSetting Align() const
-  {
-    return mAlign;
-  }
+  AlignSetting Align() const { return mAlign; }
 
-  void SetAlign(AlignSetting& aAlign)
-  {
+  void SetAlign(AlignSetting& aAlign) {
     if (mAlign == aAlign) {
       return;
     }
@@ -272,13 +224,9 @@ public:
     mAlign = aAlign;
   }
 
-  void GetText(nsAString& aText) const
-  {
-    aText = mText;
-  }
+  void GetText(nsAString& aText) const { aText = mText; }
 
-  void SetText(const nsAString& aText)
-  {
+  void SetText(const nsAString& aText) {
     if (mText == aText) {
       return;
     }
@@ -290,39 +238,27 @@ public:
   IMPL_EVENT_HANDLER(enter)
   IMPL_EVENT_HANDLER(exit)
 
-  HTMLDivElement* GetDisplayState()
-  {
+  HTMLDivElement* GetDisplayState() {
     return static_cast<HTMLDivElement*>(mDisplayState.get());
   }
 
-  void SetDisplayState(HTMLDivElement* aDisplayState)
-  {
+  void SetDisplayState(HTMLDivElement* aDisplayState) {
     mDisplayState = aDisplayState;
     mReset = false;
   }
 
-  void Reset()
-  {
-    mReset = true;
-  }
+  void Reset() { mReset = true; }
 
-  bool HasBeenReset()
-  {
-    return mReset;
-  }
+  bool HasBeenReset() { return mReset; }
 
   double ComputedLine();
   double ComputedPosition();
   PositionAlignSetting ComputedPositionAlign();
 
   // Helper functions for implementation.
-  const nsAString& Id() const
-  {
-    return mId;
-  }
+  const nsAString& Id() const { return mId; }
 
-  void SetTrack(TextTrack* aTextTrack)
-  {
+  void SetTrack(TextTrack* aTextTrack) {
     mTrack = aTextTrack;
     if (!mHaveStartedWatcher && aTextTrack) {
       mHaveStartedWatcher = true;
@@ -344,8 +280,7 @@ public:
 
   void SetTrackElement(HTMLTrackElement* aTrackElement);
 
-  void SetActive(bool aActive)
-  {
+  void SetActive(bool aActive) {
     if (mActive == aActive) {
       return;
     }
@@ -354,16 +289,12 @@ public:
     mDisplayState = mActive ? mDisplayState : nullptr;
   }
 
-  bool GetActive()
-  {
-    return mActive;
-  }
+  bool GetActive() { return mActive; }
 
-private:
+ private:
   ~TextTrackCue();
 
-  void NotifyCueUpdated(TextTrackCue* aCue)
-  {
+  void NotifyCueUpdated(TextTrackCue* aCue) {
     if (mTrack) {
       mTrack->NotifyCueUpdated(aCue);
     }
@@ -412,7 +343,7 @@ private:
   WatchManager<TextTrackCue> mWatchManager;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_TextTrackCue_h
+#endif  // mozilla_dom_TextTrackCue_h

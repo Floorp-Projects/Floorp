@@ -16,50 +16,40 @@ class ContentParent;
 class SpeechTaskParent;
 class SpeechSynthesisRequestParent;
 
-class SpeechSynthesisParent : public PSpeechSynthesisParent
-{
+class SpeechSynthesisParent : public PSpeechSynthesisParent {
   friend class ContentParent;
   friend class SpeechSynthesisRequestParent;
 
-public:
+ public:
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   bool SendInit();
 
-protected:
+ protected:
   SpeechSynthesisParent();
   virtual ~SpeechSynthesisParent();
-  PSpeechSynthesisRequestParent* AllocPSpeechSynthesisRequestParent(const nsString& aText,
-                                                                    const nsString& aLang,
-                                                                    const nsString& aUri,
-                                                                    const float& aVolume,
-                                                                    const float& aRate,
-                                                                    const float& aPitch,
-                                                                    const bool& aIsChrome)
-                                                                    override;
+  PSpeechSynthesisRequestParent* AllocPSpeechSynthesisRequestParent(
+      const nsString& aText, const nsString& aLang, const nsString& aUri,
+      const float& aVolume, const float& aRate, const float& aPitch,
+      const bool& aIsChrome) override;
 
-  bool DeallocPSpeechSynthesisRequestParent(PSpeechSynthesisRequestParent* aActor) override;
+  bool DeallocPSpeechSynthesisRequestParent(
+      PSpeechSynthesisRequestParent* aActor) override;
 
-  mozilla::ipc::IPCResult RecvPSpeechSynthesisRequestConstructor(PSpeechSynthesisRequestParent* aActor,
-                                                                 const nsString& aText,
-                                                                 const nsString& aLang,
-                                                                 const nsString& aUri,
-                                                                 const float& aVolume,
-                                                                 const float& aRate,
-                                                                 const float& aPitch,
-                                                                 const bool& aIsChrome) override;
+  mozilla::ipc::IPCResult RecvPSpeechSynthesisRequestConstructor(
+      PSpeechSynthesisRequestParent* aActor, const nsString& aText,
+      const nsString& aLang, const nsString& aUri, const float& aVolume,
+      const float& aRate, const float& aPitch, const bool& aIsChrome) override;
 };
 
-class SpeechSynthesisRequestParent : public PSpeechSynthesisRequestParent
-{
-public:
+class SpeechSynthesisRequestParent : public PSpeechSynthesisRequestParent {
+ public:
   explicit SpeechSynthesisRequestParent(SpeechTaskParent* aTask);
   virtual ~SpeechSynthesisRequestParent();
 
   RefPtr<SpeechTaskParent> mTask;
 
-protected:
-
+ protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvPause() override;
@@ -70,21 +60,18 @@ protected:
 
   mozilla::ipc::IPCResult RecvForceEnd() override;
 
-  mozilla::ipc::IPCResult RecvSetAudioOutputVolume(const float& aVolume) override;
+  mozilla::ipc::IPCResult RecvSetAudioOutputVolume(
+      const float& aVolume) override;
 
   mozilla::ipc::IPCResult Recv__delete__() override;
 };
 
-class SpeechTaskParent : public nsSpeechTask
-{
+class SpeechTaskParent : public nsSpeechTask {
   friend class SpeechSynthesisRequestParent;
-public:
+
+ public:
   SpeechTaskParent(float aVolume, const nsAString& aUtterance, bool aIsChrome)
-    : nsSpeechTask(aVolume
-    , aUtterance, aIsChrome)
-    , mActor(nullptr)
-    {
-    }
+      : nsSpeechTask(aVolume, aUtterance, aIsChrome), mActor(nullptr) {}
 
   nsresult DispatchStartImpl(const nsAString& aUri) override;
 
@@ -96,18 +83,18 @@ public:
 
   nsresult DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex) override;
 
-  nsresult DispatchBoundaryImpl(const nsAString& aName,
-                                float aElapsedTime, uint32_t aCharIndex,
-                                uint32_t aCharLength, uint8_t argc) override;
+  nsresult DispatchBoundaryImpl(const nsAString& aName, float aElapsedTime,
+                                uint32_t aCharIndex, uint32_t aCharLength,
+                                uint8_t argc) override;
 
-  nsresult DispatchMarkImpl(const nsAString& aName,
-                            float aElapsedTime, uint32_t aCharIndex) override;
+  nsresult DispatchMarkImpl(const nsAString& aName, float aElapsedTime,
+                            uint32_t aCharIndex) override;
 
-private:
+ private:
   SpeechSynthesisRequestParent* mActor;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

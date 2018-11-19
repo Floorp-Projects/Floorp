@@ -8,20 +8,16 @@
 #include "nsTArray.h"
 #include <algorithm>
 
-namespace mozilla
-{
+namespace mozilla {
 
 template <typename T>
-struct MP4Interval
-{
+struct MP4Interval {
   MP4Interval() : start(0), end(0) {}
-  MP4Interval(T aStart, T aEnd) : start(aStart), end(aEnd)
-  {
+  MP4Interval(T aStart, T aEnd) : start(aStart), end(aEnd) {
     MOZ_ASSERT(aStart <= aEnd);
   }
   T Length() { return end - start; }
-  MP4Interval Intersection(const MP4Interval& aOther) const
-  {
+  MP4Interval Intersection(const MP4Interval& aOther) const {
     T s = start > aOther.start ? start : aOther.start;
     T e = end < aOther.end ? end : aOther.end;
     if (s > e) {
@@ -29,34 +25,29 @@ struct MP4Interval
     }
     return MP4Interval(s, e);
   }
-  bool Contains(const MP4Interval& aOther) const
-  {
+  bool Contains(const MP4Interval& aOther) const {
     return aOther.start >= start && aOther.end <= end;
   }
-  bool operator==(const MP4Interval& aOther) const
-  {
+  bool operator==(const MP4Interval& aOther) const {
     return start == aOther.start && end == aOther.end;
   }
-  bool operator!=(const MP4Interval& aOther) const { return !(*this == aOther); }
-  bool IsNull() const
-  {
-    return end == start;
+  bool operator!=(const MP4Interval& aOther) const {
+    return !(*this == aOther);
   }
-  MP4Interval Extents(const MP4Interval& aOther) const
-  {
+  bool IsNull() const { return end == start; }
+  MP4Interval Extents(const MP4Interval& aOther) const {
     if (IsNull()) {
       return aOther;
     }
     return MP4Interval(std::min(start, aOther.start),
-                    std::max(end, aOther.end));
+                       std::max(end, aOther.end));
   }
 
   T start;
   T end;
 
   static void SemiNormalAppend(nsTArray<MP4Interval<T>>& aIntervals,
-                               MP4Interval<T> aMP4Interval)
-  {
+                               MP4Interval<T> aMP4Interval) {
     if (!aIntervals.IsEmpty() &&
         aIntervals.LastElement().end == aMP4Interval.start) {
       aIntervals.LastElement().end = aMP4Interval.end;
@@ -66,8 +57,7 @@ struct MP4Interval
   }
 
   static void Normalize(const nsTArray<MP4Interval<T>>& aIntervals,
-                        nsTArray<MP4Interval<T>>* aNormalized)
-  {
+                        nsTArray<MP4Interval<T>>* aNormalized) {
     if (!aNormalized || !aIntervals.Length()) {
       MOZ_ASSERT(aNormalized);
       return;
@@ -96,8 +86,7 @@ struct MP4Interval
 
   static void Intersection(const nsTArray<MP4Interval<T>>& a0,
                            const nsTArray<MP4Interval<T>>& a1,
-                           nsTArray<MP4Interval<T>>* aIntersection)
-  {
+                           nsTArray<MP4Interval<T>>* aIntersection) {
     MOZ_ASSERT(IsNormalized(a0));
     MOZ_ASSERT(IsNormalized(a1));
     size_t i0 = 0;
@@ -119,8 +108,7 @@ struct MP4Interval
     }
   }
 
-  static bool IsNormalized(const nsTArray<MP4Interval<T>>& aIntervals)
-  {
+  static bool IsNormalized(const nsTArray<MP4Interval<T>>& aIntervals) {
     for (size_t i = 1; i < aIntervals.Length(); i++) {
       if (aIntervals[i - 1].end >= aIntervals[i].start) {
         return false;
@@ -129,19 +117,16 @@ struct MP4Interval
     return true;
   }
 
-  struct Compare
-  {
-    bool Equals(const MP4Interval<T>& a0, const MP4Interval<T>& a1) const
-    {
+  struct Compare {
+    bool Equals(const MP4Interval<T>& a0, const MP4Interval<T>& a1) const {
       return a0.start == a1.start && a0.end == a1.end;
     }
 
-    bool LessThan(const MP4Interval<T>& a0, const MP4Interval<T>& a1) const
-    {
+    bool LessThan(const MP4Interval<T>& a0, const MP4Interval<T>& a1) const {
       return a0.start < a1.start;
     }
   };
 };
-}
+}  // namespace mozilla
 
 #endif

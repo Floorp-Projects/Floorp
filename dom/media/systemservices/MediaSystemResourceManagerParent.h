@@ -17,29 +17,30 @@ namespace media {
 /**
  * Handle MediaSystemResourceManager's IPC
  */
-class MediaSystemResourceManagerParent final : public PMediaSystemResourceManagerParent
-{
-public:
+class MediaSystemResourceManagerParent final
+    : public PMediaSystemResourceManagerParent {
+ public:
   MediaSystemResourceManagerParent();
   virtual ~MediaSystemResourceManagerParent();
 
-protected:
-  mozilla::ipc::IPCResult RecvAcquire(const uint32_t& aId,
-                                      const MediaSystemResourceType& aResourceType,
-                                      const bool& aWillWait) override;
+ protected:
+  mozilla::ipc::IPCResult RecvAcquire(
+      const uint32_t& aId, const MediaSystemResourceType& aResourceType,
+      const bool& aWillWait) override;
 
   mozilla::ipc::IPCResult RecvRelease(const uint32_t& aId) override;
 
   mozilla::ipc::IPCResult RecvRemoveResourceManager() override;
 
-private:
+ private:
   void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
 
   struct MediaSystemResourceRequest {
     MediaSystemResourceRequest()
-      : mId(-1), mResourceType(MediaSystemResourceType::INVALID_RESOURCE) {}
-    MediaSystemResourceRequest(uint32_t aId, MediaSystemResourceType aResourceType)
-      : mId(aId), mResourceType(aResourceType) {}
+        : mId(-1), mResourceType(MediaSystemResourceType::INVALID_RESOURCE) {}
+    MediaSystemResourceRequest(uint32_t aId,
+                               MediaSystemResourceType aResourceType)
+        : mId(aId), mResourceType(aResourceType) {}
     int32_t mId;
     MediaSystemResourceType mResourceType;
   };
@@ -48,10 +49,11 @@ private:
 
   RefPtr<MediaSystemResourceService> mMediaSystemResourceService;
 
-  nsClassHashtable<nsUint32HashKey, MediaSystemResourceRequest> mResourceRequests;
+  nsClassHashtable<nsUint32HashKey, MediaSystemResourceRequest>
+      mResourceRequests;
 };
 
-} // namespace media
-} // namespace mozilla
+}  // namespace media
+}  // namespace mozilla
 
 #endif

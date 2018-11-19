@@ -14,11 +14,10 @@
 
 namespace mozilla {
 
-class MFTDecoder final
-{
+class MFTDecoder final {
   ~MFTDecoder();
 
-public:
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFTDecoder)
 
   MFTDecoder();
@@ -38,10 +37,9 @@ public:
   //  - aOutputType needs at least major and minor types set.
   //    This is used to select the matching output type out
   //    of all the available output types of the MFT.
-  HRESULT SetMediaTypes(IMFMediaType* aInputType,
-                        IMFMediaType* aOutputType,
+  HRESULT SetMediaTypes(IMFMediaType* aInputType, IMFMediaType* aOutputType,
                         std::function<HRESULT(IMFMediaType*)>&& aCallback =
-                          [](IMFMediaType* aOutput) { return S_OK; });
+                            [](IMFMediaType* aOutput) { return S_OK; });
 
   // Returns the MFT's IMFAttributes object.
   already_AddRefed<IMFAttributes> GetAttributes();
@@ -56,13 +54,11 @@ public:
   // Returns:
   //  - MF_E_NOTACCEPTING if the decoder can't accept input. The data
   //    must be resubmitted after Output() stops producing output.
-  HRESULT Input(const uint8_t* aData,
-                uint32_t aDataSize,
+  HRESULT Input(const uint8_t* aData, uint32_t aDataSize,
                 int64_t aTimestampUsecs);
   HRESULT Input(IMFSample* aSample);
 
-  HRESULT CreateInputSample(const uint8_t* aData,
-                            uint32_t aDataSize,
+  HRESULT CreateInputSample(const uint8_t* aData, uint32_t aDataSize,
                             int64_t aTimestampUsecs,
                             RefPtr<IMFSample>* aOutSample);
 
@@ -89,13 +85,13 @@ public:
 
   HRESULT FindDecoderOutputTypeWithSubtype(const GUID& aSubType);
   HRESULT FindDecoderOutputType();
-private:
+
+ private:
   // Will search a suitable MediaType using aTypeToUse if set, if not will
   // use the current mOutputType.
   HRESULT SetDecoderOutputType(
-    const GUID& aSubType,
-    IMFMediaType* aTypeToUse,
-    std::function<HRESULT(IMFMediaType*)>&& aCallback);
+      const GUID& aSubType, IMFMediaType* aTypeToUse,
+      std::function<HRESULT(IMFMediaType*)>&& aCallback);
   HRESULT CreateOutputSample(RefPtr<IMFSample>* aOutSample);
 
   MFT_INPUT_STREAM_INFO mInputStreamInfo;
@@ -113,6 +109,6 @@ private:
   bool mDiscontinuity = true;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

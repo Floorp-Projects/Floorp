@@ -20,19 +20,16 @@ namespace mozilla {
 
 using namespace dom;
 
-NS_IMPL_ISUPPORTS(FakeSpeechRecognitionService, nsISpeechRecognitionService, nsIObserver)
+NS_IMPL_ISUPPORTS(FakeSpeechRecognitionService, nsISpeechRecognitionService,
+                  nsIObserver)
 
-FakeSpeechRecognitionService::FakeSpeechRecognitionService()
-{
-}
+FakeSpeechRecognitionService::FakeSpeechRecognitionService() {}
 
-FakeSpeechRecognitionService::~FakeSpeechRecognitionService()
-{
-}
+FakeSpeechRecognitionService::~FakeSpeechRecognitionService() {}
 
 NS_IMETHODIMP
-FakeSpeechRecognitionService::Initialize(WeakPtr<SpeechRecognition> aSpeechRecognition)
-{
+FakeSpeechRecognitionService::Initialize(
+    WeakPtr<SpeechRecognition> aSpeechRecognition) {
   mRecognition = aSpeechRecognition;
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   obs->AddObserver(this, SPEECH_RECOGNITION_TEST_EVENT_REQUEST_TOPIC, false);
@@ -41,32 +38,26 @@ FakeSpeechRecognitionService::Initialize(WeakPtr<SpeechRecognition> aSpeechRecog
 }
 
 NS_IMETHODIMP
-FakeSpeechRecognitionService::ProcessAudioSegment(AudioSegment* aAudioSegment, int32_t aSampleRate)
-{
+FakeSpeechRecognitionService::ProcessAudioSegment(AudioSegment* aAudioSegment,
+                                                  int32_t aSampleRate) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-FakeSpeechRecognitionService::SoundEnd()
-{
+FakeSpeechRecognitionService::SoundEnd() { return NS_OK; }
+
+NS_IMETHODIMP
+FakeSpeechRecognitionService::ValidateAndSetGrammarList(
+    mozilla::dom::SpeechGrammar*, nsISpeechGrammarCompilationCallback*) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-FakeSpeechRecognitionService::ValidateAndSetGrammarList(mozilla::dom::SpeechGrammar*, nsISpeechGrammarCompilationCallback*)
-{
-  return NS_OK;
-}
+FakeSpeechRecognitionService::Abort() { return NS_OK; }
 
 NS_IMETHODIMP
-FakeSpeechRecognitionService::Abort()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FakeSpeechRecognitionService::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
-{
+FakeSpeechRecognitionService::Observe(nsISupports* aSubject, const char* aTopic,
+                                      const char16_t* aData) {
   MOZ_ASSERT(StaticPrefs::MediaWebspeechTextFakeRecognitionService(),
              "Got request to fake recognition service event, but "
              "media.webspeech.test.fake_recognition_service is not set");
@@ -82,14 +73,14 @@ FakeSpeechRecognitionService::Observe(nsISupports* aSubject, const char* aTopic,
   const nsDependentString eventName = nsDependentString(aData);
 
   if (eventName.EqualsLiteral("EVENT_RECOGNITIONSERVICE_ERROR")) {
-    mRecognition->DispatchError(SpeechRecognition::EVENT_RECOGNITIONSERVICE_ERROR,
-                                SpeechRecognitionErrorCode::Network, // TODO different codes?
-                                NS_LITERAL_STRING("RECOGNITIONSERVICE_ERROR test event"));
+    mRecognition->DispatchError(
+        SpeechRecognition::EVENT_RECOGNITIONSERVICE_ERROR,
+        SpeechRecognitionErrorCode::Network,  // TODO different codes?
+        NS_LITERAL_STRING("RECOGNITIONSERVICE_ERROR test event"));
 
   } else if (eventName.EqualsLiteral("EVENT_RECOGNITIONSERVICE_FINAL_RESULT")) {
-    RefPtr<SpeechEvent> event =
-      new SpeechEvent(mRecognition,
-                      SpeechRecognition::EVENT_RECOGNITIONSERVICE_FINAL_RESULT);
+    RefPtr<SpeechEvent> event = new SpeechEvent(
+        mRecognition, SpeechRecognition::EVENT_RECOGNITIONSERVICE_FINAL_RESULT);
 
     event->mRecognitionResultList = BuildMockResultList();
     NS_DispatchToMainThread(event);
@@ -99,12 +90,13 @@ FakeSpeechRecognitionService::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 SpeechRecognitionResultList*
-FakeSpeechRecognitionService::BuildMockResultList()
-{
-  SpeechRecognitionResultList* resultList = new SpeechRecognitionResultList(mRecognition);
+FakeSpeechRecognitionService::BuildMockResultList() {
+  SpeechRecognitionResultList* resultList =
+      new SpeechRecognitionResultList(mRecognition);
   SpeechRecognitionResult* result = new SpeechRecognitionResult(mRecognition);
   if (0 < mRecognition->MaxAlternatives()) {
-    SpeechRecognitionAlternative* alternative = new SpeechRecognitionAlternative(mRecognition);
+    SpeechRecognitionAlternative* alternative =
+        new SpeechRecognitionAlternative(mRecognition);
 
     alternative->mTranscript = NS_LITERAL_STRING("Mock final result");
     alternative->mConfidence = 0.0f;
@@ -116,4 +108,4 @@ FakeSpeechRecognitionService::BuildMockResultList()
   return resultList;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

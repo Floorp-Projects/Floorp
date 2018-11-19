@@ -19,9 +19,8 @@ class GMPContentChild;
 
 class GMPVideoEncoderChild : public PGMPVideoEncoderChild,
                              public GMPVideoEncoderCallback,
-                             public GMPSharedMemManager
-{
-public:
+                             public GMPSharedMemManager {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPVideoEncoderChild);
 
   explicit GMPVideoEncoderChild(GMPContentChild* aPlugin);
@@ -37,26 +36,29 @@ public:
 
   // GMPSharedMemManager
   bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType,
-    Shmem* aMem) override;
+             Shmem* aMem) override;
   void Dealloc(Shmem& aMem) override;
 
-private:
+ private:
   virtual ~GMPVideoEncoderChild();
 
   // PGMPVideoEncoderChild
-  mozilla::ipc::IPCResult RecvInitEncode(const GMPVideoCodec& aCodecSettings,
-                                         InfallibleTArray<uint8_t>&& aCodecSpecific,
-                                         const int32_t& aNumberOfCores,
-                                         const uint32_t& aMaxPayloadSize) override;
-  mozilla::ipc::IPCResult RecvEncode(const GMPVideoi420FrameData& aInputFrame,
-                                     InfallibleTArray<uint8_t>&& aCodecSpecificInfo,
-                                     InfallibleTArray<GMPVideoFrameType>&& aFrameTypes) override;
-  mozilla::ipc::IPCResult RecvChildShmemForPool(Shmem&& aEncodedBuffer) override;
-  mozilla::ipc::IPCResult RecvSetChannelParameters(const uint32_t& aPacketLoss,
-                                                   const uint32_t& aRTT) override;
+  mozilla::ipc::IPCResult RecvInitEncode(
+      const GMPVideoCodec& aCodecSettings,
+      InfallibleTArray<uint8_t>&& aCodecSpecific, const int32_t& aNumberOfCores,
+      const uint32_t& aMaxPayloadSize) override;
+  mozilla::ipc::IPCResult RecvEncode(
+      const GMPVideoi420FrameData& aInputFrame,
+      InfallibleTArray<uint8_t>&& aCodecSpecificInfo,
+      InfallibleTArray<GMPVideoFrameType>&& aFrameTypes) override;
+  mozilla::ipc::IPCResult RecvChildShmemForPool(
+      Shmem&& aEncodedBuffer) override;
+  mozilla::ipc::IPCResult RecvSetChannelParameters(
+      const uint32_t& aPacketLoss, const uint32_t& aRTT) override;
   mozilla::ipc::IPCResult RecvSetRates(const uint32_t& aNewBitRate,
                                        const uint32_t& aFrameRate) override;
-  mozilla::ipc::IPCResult RecvSetPeriodicKeyFrames(const bool& aEnable) override;
+  mozilla::ipc::IPCResult RecvSetPeriodicKeyFrames(
+      const bool& aEnable) override;
   mozilla::ipc::IPCResult RecvEncodingComplete() override;
 
   GMPContentChild* mPlugin;
@@ -69,7 +71,7 @@ private:
   bool mPendingEncodeComplete;
 };
 
-} // namespace gmp
-} // namespace mozilla
+}  // namespace gmp
+}  // namespace mozilla
 
-#endif // GMPVideoEncoderChild_h_
+#endif  // GMPVideoEncoderChild_h_

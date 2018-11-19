@@ -1,18 +1,18 @@
 /*
-* Copyright 2013, Mozilla Foundation and contributors
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2013, Mozilla Foundation and contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #ifndef GMP_STORAGE_h_
 #define GMP_STORAGE_h_
@@ -40,8 +40,7 @@
 // GMPRecord to delete the GMPRecord object's memory. If your GMP does not
 // call Close(), the GMPRecord's memory will leak.
 class GMPRecord {
-public:
-
+ public:
   // Opens the record. Calls OpenComplete() once the record is open.
   // Note: Only work when GMP is loading content from a webserver.
   // Does not work for web pages on loaded from disk.
@@ -72,7 +71,6 @@ public:
 // run asynchronously to the GMPRecord call, on the main thread.
 class GMPRecordClient {
  public:
-
   // Response to a GMPRecord::Open() call with the open |status|.
   // aStatus values:
   // - GMPNoErr - Record opened successfully. Record may be empty.
@@ -94,8 +92,7 @@ class GMPRecordClient {
   // - GMPGenericErr - Unspecified error.
   // If aStatus is not GMPNoErr, the GMPRecord is unusable, and you must
   // call Close() on the GMPRecord to dispose of it.
-  virtual void ReadComplete(GMPErr aStatus,
-                            const uint8_t* aData,
+  virtual void ReadComplete(GMPErr aStatus, const uint8_t* aData,
                             uint32_t aDataSize) = 0;
 
   // Response to a GMPRecord::Write() call.
@@ -110,4 +107,4 @@ class GMPRecordClient {
   virtual ~GMPRecordClient() {}
 };
 
-#endif // GMP_STORAGE_h_
+#endif  // GMP_STORAGE_h_

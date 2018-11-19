@@ -18,63 +18,56 @@ namespace dom {
 class AudioContext;
 struct MediaStreamAudioSourceOptions;
 
-class MediaStreamAudioSourceNodeEngine final : public AudioNodeEngine
-{
-public:
+class MediaStreamAudioSourceNodeEngine final : public AudioNodeEngine {
+ public:
   explicit MediaStreamAudioSourceNodeEngine(AudioNode* aNode)
-    : AudioNodeEngine(aNode), mEnabled(false) {}
+      : AudioNodeEngine(aNode), mEnabled(false) {}
 
   bool IsEnabled() const { return mEnabled; }
-  enum Parameters {
-    ENABLE
-  };
-  void SetInt32Parameter(uint32_t aIndex, int32_t aValue) override
-  {
+  enum Parameters { ENABLE };
+  void SetInt32Parameter(uint32_t aIndex, int32_t aValue) override {
     switch (aIndex) {
-    case ENABLE:
-      mEnabled = !!aValue;
-      break;
-    default:
-      NS_ERROR("MediaStreamAudioSourceNodeEngine bad parameter index");
+      case ENABLE:
+        mEnabled = !!aValue;
+        break;
+      default:
+        NS_ERROR("MediaStreamAudioSourceNodeEngine bad parameter index");
     }
   }
 
-private:
+ private:
   bool mEnabled;
 };
 
-class MediaStreamAudioSourceNode : public AudioNode,
-                                   public DOMMediaStream::TrackListener,
-                                   public PrincipalChangeObserver<MediaStreamTrack>
-{
-public:
-  static already_AddRefed<MediaStreamAudioSourceNode>
-  Create(AudioContext& aContext, const MediaStreamAudioSourceOptions& aOptions,
-         ErrorResult& aRv);
+class MediaStreamAudioSourceNode
+    : public AudioNode,
+      public DOMMediaStream::TrackListener,
+      public PrincipalChangeObserver<MediaStreamTrack> {
+ public:
+  static already_AddRefed<MediaStreamAudioSourceNode> Create(
+      AudioContext& aContext, const MediaStreamAudioSourceOptions& aOptions,
+      ErrorResult& aRv);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaStreamAudioSourceNode, AudioNode)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaStreamAudioSourceNode,
+                                           AudioNode)
 
-  static already_AddRefed<MediaStreamAudioSourceNode>
-  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
-              const MediaStreamAudioSourceOptions& aOptions, ErrorResult& aRv)
-  {
+  static already_AddRefed<MediaStreamAudioSourceNode> Constructor(
+      const GlobalObject& aGlobal, AudioContext& aAudioContext,
+      const MediaStreamAudioSourceOptions& aOptions, ErrorResult& aRv) {
     return Create(aAudioContext, aOptions, aRv);
   }
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   void DestroyMediaStream() override;
 
   uint16_t NumberOfInputs() const override { return 0; }
 
-  const char* NodeType() const override
-  {
-    return "MediaStreamAudioSourceNode";
-  }
+  const char* NodeType() const override { return "MediaStreamAudioSourceNode"; }
 
-  virtual const char* CrossOriginErrorString() const
-  {
+  virtual const char* CrossOriginErrorString() const {
     return "MediaStreamAudioSourceNodeCrossOrigin";
   }
 
@@ -97,13 +90,13 @@ public:
   // From PrincipalChangeObserver<MediaStreamTrack>.
   void PrincipalChanged(MediaStreamTrack* aMediaStreamTrack) override;
 
-protected:
+ protected:
   explicit MediaStreamAudioSourceNode(AudioContext* aContext);
   void Init(DOMMediaStream* aMediaStream, ErrorResult& aRv);
   void Destroy();
   virtual ~MediaStreamAudioSourceNode();
 
-private:
+ private:
   RefPtr<MediaInputPort> mInputPort;
   RefPtr<DOMMediaStream> mInputStream;
 
@@ -111,7 +104,7 @@ private:
   RefPtr<MediaStreamTrack> mInputTrack;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

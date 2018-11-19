@@ -12,17 +12,12 @@ namespace mozilla {
 namespace gmp {
 
 GMPVideoHostImpl::GMPVideoHostImpl(GMPSharedMemManager* aSharedMemMgr)
-: mSharedMemMgr(aSharedMemMgr)
-{
-}
+    : mSharedMemMgr(aSharedMemMgr) {}
 
-GMPVideoHostImpl::~GMPVideoHostImpl()
-{
-}
+GMPVideoHostImpl::~GMPVideoHostImpl() {}
 
-GMPErr
-GMPVideoHostImpl::CreateFrame(GMPVideoFrameFormat aFormat, GMPVideoFrame** aFrame)
-{
+GMPErr GMPVideoHostImpl::CreateFrame(GMPVideoFrameFormat aFormat,
+                                     GMPVideoFrame** aFrame) {
   if (!mSharedMemMgr) {
     return GMPGenericErr;
   }
@@ -46,9 +41,7 @@ GMPVideoHostImpl::CreateFrame(GMPVideoFrameFormat aFormat, GMPVideoFrame** aFram
   return GMPGenericErr;
 }
 
-GMPErr
-GMPVideoHostImpl::CreatePlane(GMPPlane** aPlane)
-{
+GMPErr GMPVideoHostImpl::CreatePlane(GMPPlane** aPlane) {
   if (!mSharedMemMgr) {
     return GMPGenericErr;
   }
@@ -65,22 +58,12 @@ GMPVideoHostImpl::CreatePlane(GMPPlane** aPlane)
   return GMPNoErr;
 }
 
-GMPSharedMemManager*
-GMPVideoHostImpl::SharedMemMgr()
-{
-  return mSharedMemMgr;
-}
+GMPSharedMemManager* GMPVideoHostImpl::SharedMemMgr() { return mSharedMemMgr; }
 
 // XXX This should merge with ActorDestroyed
-void
-GMPVideoHostImpl::DoneWithAPI()
-{
-  ActorDestroyed();
-}
+void GMPVideoHostImpl::DoneWithAPI() { ActorDestroyed(); }
 
-void
-GMPVideoHostImpl::ActorDestroyed()
-{
+void GMPVideoHostImpl::ActorDestroyed() {
   for (uint32_t i = mPlanes.Length(); i > 0; i--) {
     mPlanes[i - 1]->DoneWithAPI();
     mPlanes.RemoveElementAt(i - 1);
@@ -92,29 +75,22 @@ GMPVideoHostImpl::ActorDestroyed()
   mSharedMemMgr = nullptr;
 }
 
-void
-GMPVideoHostImpl::PlaneCreated(GMPPlaneImpl* aPlane)
-{
+void GMPVideoHostImpl::PlaneCreated(GMPPlaneImpl* aPlane) {
   mPlanes.AppendElement(aPlane);
 }
 
-void
-GMPVideoHostImpl::PlaneDestroyed(GMPPlaneImpl* aPlane)
-{
+void GMPVideoHostImpl::PlaneDestroyed(GMPPlaneImpl* aPlane) {
   MOZ_ALWAYS_TRUE(mPlanes.RemoveElement(aPlane));
 }
 
-void
-GMPVideoHostImpl::EncodedFrameCreated(GMPVideoEncodedFrameImpl* aEncodedFrame)
-{
+void GMPVideoHostImpl::EncodedFrameCreated(
+    GMPVideoEncodedFrameImpl* aEncodedFrame) {
   mEncodedFrames.AppendElement(aEncodedFrame);
 }
 
-void
-GMPVideoHostImpl::EncodedFrameDestroyed(GMPVideoEncodedFrameImpl* aFrame)
-{
+void GMPVideoHostImpl::EncodedFrameDestroyed(GMPVideoEncodedFrameImpl* aFrame) {
   MOZ_ALWAYS_TRUE(mEncodedFrames.RemoveElement(aFrame));
 }
 
-} // namespace gmp
-} // namespace mozilla
+}  // namespace gmp
+}  // namespace mozilla

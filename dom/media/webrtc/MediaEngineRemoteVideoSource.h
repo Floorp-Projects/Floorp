@@ -50,39 +50,35 @@ namespace mozilla {
 // https://w3c.github.io/mediacapture-main/getusermedia.html#dfn-selectsettings
 
 // The main difference of feasibility and fitness distance is that if the
-// constraint is required ('max', or 'exact'), and the settings dictionary's value
-// for the constraint does not satisfy the constraint, the fitness distance is
-// positive infinity. Given a continuous space of settings dictionaries comprising
-// all discrete combinations of dimension and frame-rate related properties,
-// the feasibility distance is still in keeping with the constraints algorithm.
-enum DistanceCalculation {
-  kFitness,
-  kFeasibility
-};
+// constraint is required ('max', or 'exact'), and the settings dictionary's
+// value for the constraint does not satisfy the constraint, the fitness
+// distance is positive infinity. Given a continuous space of settings
+// dictionaries comprising all discrete combinations of dimension and frame-rate
+// related properties, the feasibility distance is still in keeping with the
+// constraints algorithm.
+enum DistanceCalculation { kFitness, kFeasibility };
 
 /**
  * The WebRTC implementation of the MediaEngine interface.
  */
 class MediaEngineRemoteVideoSource : public MediaEngineSource,
-                                     public camera::FrameRelay
-{
+                                     public camera::FrameRelay {
   ~MediaEngineRemoteVideoSource() = default;
 
   struct CapabilityCandidate {
     explicit CapabilityCandidate(webrtc::CaptureCapability&& aCapability,
                                  uint32_t aDistance = 0)
-    : mCapability(std::forward<webrtc::CaptureCapability>(aCapability))
-    , mDistance(aDistance) {}
+        : mCapability(std::forward<webrtc::CaptureCapability>(aCapability)),
+          mDistance(aDistance) {}
 
     const webrtc::CaptureCapability mCapability;
     uint32_t mDistance;
   };
 
   class CapabilityComparator {
-  public:
+   public:
     bool Equals(const CapabilityCandidate& aCandidate,
-                const webrtc::CaptureCapability& aCapability) const
-    {
+                const webrtc::CaptureCapability& aCapability) const {
       return aCandidate.mCapability == aCapability;
     }
   };
@@ -94,17 +90,17 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
                         const DistanceCalculation aCalculate);
 
   uint32_t GetDistance(const webrtc::CaptureCapability& aCandidate,
-                       const NormalizedConstraintSet &aConstraints,
+                       const NormalizedConstraintSet& aConstraints,
                        const nsString& aDeviceId,
                        const DistanceCalculation aCalculate) const;
 
   uint32_t GetFitnessDistance(const webrtc::CaptureCapability& aCandidate,
-                              const NormalizedConstraintSet &aConstraints,
+                              const NormalizedConstraintSet& aConstraints,
                               const nsString& aDeviceId) const;
 
   uint32_t GetFeasibilityDistance(const webrtc::CaptureCapability& aCandidate,
-                              const NormalizedConstraintSet &aConstraints,
-                              const nsString& aDeviceId) const;
+                                  const NormalizedConstraintSet& aConstraints,
+                                  const nsString& aDeviceId) const;
 
   static void TrimLessFitCandidates(nsTArray<CapabilityCandidate>& aSet);
 
@@ -112,31 +108,24 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) const override;
 
-public:
-  MediaEngineRemoteVideoSource(int aIndex,
-                               camera::CaptureEngine aCapEngine,
-                               dom::MediaSourceEnum aMediaSource,
-                               bool aScary);
+ public:
+  MediaEngineRemoteVideoSource(int aIndex, camera::CaptureEngine aCapEngine,
+                               dom::MediaSourceEnum aMediaSource, bool aScary);
 
   // ExternalRenderer
   int DeliverFrame(uint8_t* buffer,
                    const camera::VideoFrameProperties& properties) override;
 
   // MediaEngineSource
-  dom::MediaSourceEnum GetMediaSource() const override
-  {
-    return mMediaSource;
-  }
-  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                    const MediaEnginePrefs &aPrefs,
-                    const nsString& aDeviceId,
+  dom::MediaSourceEnum GetMediaSource() const override { return mMediaSource; }
+  nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
+                    const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
                     const ipc::PrincipalInfo& aPrincipalInfo,
                     AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override;
   nsresult Deallocate(const RefPtr<const AllocationHandle>& aHandle) override;
   nsresult SetTrack(const RefPtr<const AllocationHandle>& aHandle,
-                    const RefPtr<SourceMediaStream>& aStream,
-                    TrackID aTrackID,
+                    const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
                     const PrincipalHandle& aPrincipal) override;
   nsresult Start(const RefPtr<const AllocationHandle>& aHandle) override;
   nsresult Reconfigure(const RefPtr<AllocationHandle>& aHandle,
@@ -144,14 +133,13 @@ public:
                        const MediaEnginePrefs& aPrefs,
                        const nsString& aDeviceId,
                        const char** aOutBadConstraint) override;
-  nsresult FocusOnSelectedSource(const RefPtr<const AllocationHandle>& aHandle) override;
+  nsresult FocusOnSelectedSource(
+      const RefPtr<const AllocationHandle>& aHandle) override;
   nsresult Stop(const RefPtr<const AllocationHandle>& aHandle) override;
   void Pull(const RefPtr<const AllocationHandle>& aHandle,
-            const RefPtr<SourceMediaStream>& aStream,
-            TrackID aTrackID,
+            const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
             StreamTime aDesiredTime,
             const PrincipalHandle& aPrincipalHandle) override;
-
 
   void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
 
@@ -167,7 +155,7 @@ public:
 
   bool GetScary() const override { return mScary; }
 
-private:
+ private:
   // Initialize the needed Video engine interfaces.
   void Init();
 
@@ -186,7 +174,8 @@ private:
   webrtc::CaptureCapability GetCapability(size_t aIndex) const;
 
   int mCaptureIndex;
-  const dom::MediaSourceEnum mMediaSource; // source of media (camera | application | screen)
+  const dom::MediaSourceEnum
+      mMediaSource;  // source of media (camera | application | screen)
   const camera::CaptureEngine mCapEngine;
   const bool mScary;
 
@@ -265,6 +254,6 @@ private:
   bool mInitDone = false;
 };
 
-}
+}  // namespace mozilla
 
 #endif /* MEDIAENGINE_REMOTE_VIDEO_SOURCE_H_ */

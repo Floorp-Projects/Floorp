@@ -14,131 +14,89 @@
 namespace mozilla {
 
 class SourceBufferAttributes {
-public:
-
+ public:
   // Current state as per Segment Parser Loop Algorithm
   // http://w3c.github.io/media-source/index.html#sourcebuffer-segment-parser-loop
-  enum class AppendState
-  {
+  enum class AppendState {
     WAITING_FOR_SEGMENT,
     PARSING_INIT_SEGMENT,
     PARSING_MEDIA_SEGMENT,
   };
 
   explicit SourceBufferAttributes(bool aGenerateTimestamp)
-  : mGenerateTimestamps(aGenerateTimestamp)
-  , mAppendWindowStart(0)
-  , mAppendWindowEnd(PositiveInfinity<double>())
-  , mAppendMode(dom::SourceBufferAppendMode::Segments)
-  , mApparentTimestampOffset(0)
-  , mAppendState(AppendState::WAITING_FOR_SEGMENT)
-  {}
+      : mGenerateTimestamps(aGenerateTimestamp),
+        mAppendWindowStart(0),
+        mAppendWindowEnd(PositiveInfinity<double>()),
+        mAppendMode(dom::SourceBufferAppendMode::Segments),
+        mApparentTimestampOffset(0),
+        mAppendState(AppendState::WAITING_FOR_SEGMENT) {}
 
   SourceBufferAttributes(const SourceBufferAttributes& aOther) = default;
 
-  double GetAppendWindowStart() const
-  {
-    return mAppendWindowStart;
-  }
+  double GetAppendWindowStart() const { return mAppendWindowStart; }
 
-  double GetAppendWindowEnd() const
-  {
-    return mAppendWindowEnd;
-  }
+  double GetAppendWindowEnd() const { return mAppendWindowEnd; }
 
-  void SetAppendWindowStart(double aWindowStart)
-  {
+  void SetAppendWindowStart(double aWindowStart) {
     mAppendWindowStart = aWindowStart;
   }
 
-  void SetAppendWindowEnd(double aWindowEnd)
-  {
-    mAppendWindowEnd = aWindowEnd;
-  }
+  void SetAppendWindowEnd(double aWindowEnd) { mAppendWindowEnd = aWindowEnd; }
 
-  double GetApparentTimestampOffset() const
-  {
-    return mApparentTimestampOffset;
-  }
+  double GetApparentTimestampOffset() const { return mApparentTimestampOffset; }
 
-  void SetApparentTimestampOffset(double aTimestampOffset)
-  {
+  void SetApparentTimestampOffset(double aTimestampOffset) {
     mApparentTimestampOffset = aTimestampOffset;
     mTimestampOffset = media::TimeUnit::FromSeconds(aTimestampOffset);
   }
 
-  media::TimeUnit GetTimestampOffset() const
-  {
-    return mTimestampOffset;
-  }
+  media::TimeUnit GetTimestampOffset() const { return mTimestampOffset; }
 
-  void SetTimestampOffset(const media::TimeUnit& aTimestampOffset)
-  {
+  void SetTimestampOffset(const media::TimeUnit& aTimestampOffset) {
     mTimestampOffset = aTimestampOffset;
     mApparentTimestampOffset = aTimestampOffset.ToSeconds();
   }
 
-  dom::SourceBufferAppendMode GetAppendMode() const
-  {
-    return mAppendMode;
-  }
+  dom::SourceBufferAppendMode GetAppendMode() const { return mAppendMode; }
 
-  void SetAppendMode(dom::SourceBufferAppendMode aAppendMode)
-  {
+  void SetAppendMode(dom::SourceBufferAppendMode aAppendMode) {
     mAppendMode = aAppendMode;
   }
 
-  void SetGroupStartTimestamp(const media::TimeUnit& aGroupStartTimestamp)
-  {
+  void SetGroupStartTimestamp(const media::TimeUnit& aGroupStartTimestamp) {
     mGroupStartTimestamp = Some(aGroupStartTimestamp);
   }
 
-  media::TimeUnit GetGroupStartTimestamp() const
-  {
+  media::TimeUnit GetGroupStartTimestamp() const {
     return mGroupStartTimestamp.ref();
   }
 
-  bool HaveGroupStartTimestamp() const
-  {
-    return mGroupStartTimestamp.isSome();
-  }
+  bool HaveGroupStartTimestamp() const { return mGroupStartTimestamp.isSome(); }
 
-  void ResetGroupStartTimestamp()
-  {
-    mGroupStartTimestamp.reset();
-  }
+  void ResetGroupStartTimestamp() { mGroupStartTimestamp.reset(); }
 
-  void RestartGroupStartTimestamp()
-  {
+  void RestartGroupStartTimestamp() {
     mGroupStartTimestamp = Some(mGroupEndTimestamp);
   }
 
-  media::TimeUnit GetGroupEndTimestamp() const
-  {
-    return mGroupEndTimestamp;
-  }
+  media::TimeUnit GetGroupEndTimestamp() const { return mGroupEndTimestamp; }
 
-  void SetGroupEndTimestamp(const media::TimeUnit& aGroupEndTimestamp)
-  {
+  void SetGroupEndTimestamp(const media::TimeUnit& aGroupEndTimestamp) {
     mGroupEndTimestamp = aGroupEndTimestamp;
   }
 
-  AppendState GetAppendState() const
-  {
-    return mAppendState;
-  }
+  AppendState GetAppendState() const { return mAppendState; }
 
-  void SetAppendState(AppendState aState)
-  {
-    mAppendState = aState;
-  }
+  void SetAppendState(AppendState aState) { mAppendState = aState; }
 
-  // mGenerateTimestamp isn't mutable once the source buffer has been constructed
+  // mGenerateTimestamp isn't mutable once the source buffer has been
+  // constructed
   bool mGenerateTimestamps;
 
-  SourceBufferAttributes& operator=(const SourceBufferAttributes& aOther) = default;
+  SourceBufferAttributes& operator=(const SourceBufferAttributes& aOther) =
+      default;
 
-private:
+ private:
   SourceBufferAttributes() = delete;
 
   double mAppendWindowStart;
@@ -148,10 +106,11 @@ private:
   media::TimeUnit mTimestampOffset;
   Maybe<media::TimeUnit> mGroupStartTimestamp;
   media::TimeUnit mGroupEndTimestamp;
-  // The current append state as per https://w3c.github.io/media-source/#sourcebuffer-append-state
+  // The current append state as per
+  // https://w3c.github.io/media-source/#sourcebuffer-append-state
   AppendState mAppendState;
 };
 
-} // end namespace mozilla
+}  // end namespace mozilla
 
 #endif /* mozilla_SourceBufferAttributes_h_ */

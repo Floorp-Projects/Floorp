@@ -12,21 +12,15 @@
 namespace mozilla {
 namespace dom {
 
-void
-VideoStreamTrack::AddVideoOutput(MediaStreamVideoSink* aSink)
-{
+void VideoStreamTrack::AddVideoOutput(MediaStreamVideoSink* aSink) {
   GetOwnedStream()->AddVideoOutput(aSink, mTrackID);
 }
 
-void
-VideoStreamTrack::RemoveVideoOutput(MediaStreamVideoSink* aSink)
-{
+void VideoStreamTrack::RemoveVideoOutput(MediaStreamVideoSink* aSink) {
   GetOwnedStream()->RemoveVideoOutput(aSink, mTrackID);
 }
 
-void
-VideoStreamTrack::GetLabel(nsAString& aLabel, CallerType aCallerType)
-{
+void VideoStreamTrack::GetLabel(nsAString& aLabel, CallerType aCallerType) {
   if (nsContentUtils::ResistFingerprinting(aCallerType)) {
     aLabel.AssignLiteral("Internal Camera");
     return;
@@ -34,5 +28,5 @@ VideoStreamTrack::GetLabel(nsAString& aLabel, CallerType aCallerType)
   MediaStreamTrack::GetLabel(aLabel, aCallerType);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

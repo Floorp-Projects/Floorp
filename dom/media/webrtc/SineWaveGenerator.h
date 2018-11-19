@@ -10,18 +10,17 @@
 namespace mozilla {
 
 // generate 1k sine wave per second
-class SineWaveGenerator
-{
-public:
+class SineWaveGenerator {
+ public:
   static const int bytesPerSample = 2;
   static const int millisecondsPerSecond = PR_MSEC_PER_SEC;
 
-  explicit SineWaveGenerator(uint32_t aSampleRate, uint32_t aFrequency) :
-    mTotalLength(aSampleRate / aFrequency),
-    mReadLength(0) {
-    // If we allow arbitrary frequencies, there's no guarantee we won't get rounded here
-    // We could include an error term and adjust for it in generation; not worth the trouble
-    //MOZ_ASSERT(mTotalLength * aFrequency == aSampleRate);
+  explicit SineWaveGenerator(uint32_t aSampleRate, uint32_t aFrequency)
+      : mTotalLength(aSampleRate / aFrequency), mReadLength(0) {
+    // If we allow arbitrary frequencies, there's no guarantee we won't get
+    // rounded here We could include an error term and adjust for it in
+    // generation; not worth the trouble
+    // MOZ_ASSERT(mTotalLength * aFrequency == aSampleRate);
     mAudioBuffer = MakeUnique<int16_t[]>(mTotalLength);
     for (int i = 0; i < mTotalLength; i++) {
       // Set volume to -20db. It's from 32768.0 * 10^(-20/20) = 3276.8
@@ -41,7 +40,8 @@ public:
       } else {
         processSamples = mTotalLength - mReadLength;
       }
-      memcpy(aBuffer, &mAudioBuffer[mReadLength], processSamples * bytesPerSample);
+      memcpy(aBuffer, &mAudioBuffer[mReadLength],
+             processSamples * bytesPerSample);
       aBuffer += processSamples;
       mReadLength += processSamples;
       remaining -= processSamples;
@@ -51,12 +51,12 @@ public:
     }
   }
 
-private:
+ private:
   UniquePtr<int16_t[]> mAudioBuffer;
   TrackTicks mTotalLength;
   TrackTicks mReadLength;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* SINEWAVEGENERATOR_H_ */

@@ -14,14 +14,13 @@ namespace mozilla {
 
 namespace dom {
 class HTMLMediaElement;
-} // namespace dom
+}  // namespace dom
 
 class DDLifetimes;
 
 // Container of processed messages corresponding to an HTMLMediaElement (or
 // not yet).
-struct DDMediaLog
-{
+struct DDMediaLog {
   // Associated HTMLMediaElement, or nullptr for the DDMediaLog containing
   // messages for yet-unassociated objects.
   // TODO: Should use a DDLogObject instead, to distinguish between elements
@@ -38,6 +37,6 @@ struct DDMediaLog
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // DDMediaLog_h_
+#endif  // DDMediaLog_h_

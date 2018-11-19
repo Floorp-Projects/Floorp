@@ -14,28 +14,27 @@ namespace mozilla {
 namespace layers {
 class BufferRecycleBin;
 }
-}
+}  // namespace mozilla
 
 namespace mozilla {
 
 class RemoteDecoderManagerChild;
 using mozilla::MediaDataDecoder;
 
-class RemoteVideoDecoderChild final : public PRemoteVideoDecoderChild
-                                    , public IRemoteDecoderChild
-{
-public:
+class RemoteVideoDecoderChild final : public PRemoteVideoDecoderChild,
+                                      public IRemoteDecoderChild {
+ public:
   explicit RemoteVideoDecoderChild();
 
   // PRemoteVideoDecoderChild
   mozilla::ipc::IPCResult RecvVideoOutput(
-                              const RemoteVideoDataIPDL& aData) override;
+      const RemoteVideoDataIPDL& aData) override;
   mozilla::ipc::IPCResult RecvInputExhausted() override;
   mozilla::ipc::IPCResult RecvDrainComplete() override;
   mozilla::ipc::IPCResult RecvError(const nsresult& aError) override;
   mozilla::ipc::IPCResult RecvInitComplete(
-                              const nsCString& aDecoderDescription,
-                              const ConversionRequired& aConversion) override;
+      const nsCString& aDecoderDescription,
+      const ConversionRequired& aConversion) override;
   mozilla::ipc::IPCResult RecvInitFailed(const nsresult& aReason) override;
   mozilla::ipc::IPCResult RecvFlushComplete() override;
 
@@ -43,7 +42,8 @@ public:
 
   // IRemoteDecoderChild
   RefPtr<MediaDataDecoder::InitPromise> Init() override;
-  RefPtr<MediaDataDecoder::DecodePromise> Decode(MediaRawData* aSample) override;
+  RefPtr<MediaDataDecoder::DecodePromise> Decode(
+      MediaRawData* aSample) override;
   RefPtr<MediaDataDecoder::DecodePromise> Drain() override;
   RefPtr<MediaDataDecoder::FlushPromise> Flush() override;
   void Shutdown() override;
@@ -54,8 +54,7 @@ public:
   void DestroyIPDL() override;
 
   MOZ_IS_CLASS_INIT
-  MediaResult InitIPDL(const VideoInfo& aVideoInfo,
-                       float aFramerate,
+  MediaResult InitIPDL(const VideoInfo& aVideoInfo, float aFramerate,
                        const CreateDecoderParams::OptionSet& aOptions);
 
   // Called from IPDL when our actor has been destroyed
@@ -63,13 +62,12 @@ public:
 
   RemoteDecoderManagerChild* GetManager();
 
-private:
+ private:
   ~RemoteVideoDecoderChild();
 
   void AssertOnManagerThread() const;
   RefPtr<mozilla::layers::Image> DeserializeImage(
-                                     const SurfaceDescriptorBuffer& sdBuffer,
-                                     const IntSize& aPicSize);
+      const SurfaceDescriptorBuffer& sdBuffer, const IntSize& aPicSize);
 
   RefPtr<RemoteVideoDecoderChild> mIPDLSelfRef;
   RefPtr<nsIThread> mThread;
@@ -89,6 +87,6 @@ private:
   RefPtr<mozilla::layers::BufferRecycleBin> mBufferRecycleBin;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // include_dom_media_ipc_RemoteVideoDecoderChild_h
+#endif  // include_dom_media_ipc_RemoteVideoDecoderChild_h

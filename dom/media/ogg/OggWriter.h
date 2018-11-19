@@ -18,13 +18,12 @@ namespace mozilla {
  * For more details, please reference:
  * http://www.xiph.org/ogg/doc/libogg/encoding.html
  */
-class OggWriter : public ContainerWriter
-{
-public:
+class OggWriter : public ContainerWriter {
+ public:
   OggWriter();
   ~OggWriter();
 
-  nsresult WriteEncodedTrack(const EncodedFrameContainer &aData,
+  nsresult WriteEncodedTrack(const EncodedFrameContainer& aData,
                              uint32_t aFlags = 0) override;
 
   nsresult GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
@@ -32,7 +31,8 @@ public:
 
   // Check metadata type integrity and reject unacceptable track encoder.
   nsresult SetMetadata(TrackMetadataBase* aMetadata) override;
-private:
+
+ private:
   nsresult Init();
 
   nsresult WriteEncodedData(const nsTArray<uint8_t>& aBuffer, int aDuration,
@@ -47,6 +47,6 @@ private:
   ogg_packet mPacket;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

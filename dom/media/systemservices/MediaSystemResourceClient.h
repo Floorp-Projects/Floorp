@@ -18,14 +18,13 @@ namespace mozilla {
 
 class MediaSystemResourceManager;
 
-
 /**
  * This is a base class for listener callbacks.
  * This callback is invoked when the media system resource reservation state
  * is changed.
  */
 class MediaSystemResourceReservationListener {
-public:
+ public:
   virtual void ResourceReserved() = 0;
   virtual void ResourceReserveFailed() = 0;
 };
@@ -35,10 +34,8 @@ public:
  * like hw decoder. When system has a limitation of a media resource,
  * use this class to mediate use rights of the resource.
  */
-class MediaSystemResourceClient
-{
-public:
-
+class MediaSystemResourceClient {
+ public:
   // Enumeration for the valid decoding states
   enum ResourceState {
     RESOURCE_STATE_START,
@@ -58,10 +55,9 @@ public:
   // If the resource is used by others, wait until acquired.
   void Acquire();
 
-  // Try to acquire media resource synchronously. If the resource is not immediately
-  // available, fail to acquire it.
-  // return false if resource is not acquired.
-  // return true if resource is acquired.
+  // Try to acquire media resource synchronously. If the resource is not
+  // immediately available, fail to acquire it. return false if resource is not
+  // acquired. return true if resource is acquired.
   //
   // This function should not be called on ImageBridge thread.
   // It should be used only for compatibility with legacy code.
@@ -69,7 +65,7 @@ public:
 
   void ReleaseResource();
 
-private:
+ private:
   ~MediaSystemResourceClient();
 
   RefPtr<MediaSystemResourceManager> mManager;
@@ -77,7 +73,8 @@ private:
   const uint32_t mId;
 
   // Modified only by MediaSystemResourceManager.
-  // Accessed and modified with MediaSystemResourceManager::mReentrantMonitor held.
+  // Accessed and modified with MediaSystemResourceManager::mReentrantMonitor
+  // held.
   MediaSystemResourceReservationListener* mListener;
   ResourceState mResourceState;
   bool mIsSync;
@@ -89,6 +86,6 @@ private:
   friend class MediaSystemResourceManager;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

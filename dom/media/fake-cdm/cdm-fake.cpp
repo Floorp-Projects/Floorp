@@ -41,32 +41,24 @@
 extern "C" {
 
 CDM_API
-void INITIALIZE_CDM_MODULE() {
-
-}
+void INITIALIZE_CDM_MODULE() {}
 
 CDM_API
-void* CreateCdmInstance(int cdm_interface_version,
-                        const char* key_system,
+void* CreateCdmInstance(int cdm_interface_version, const char* key_system,
                         uint32_t key_system_size,
-                        GetCdmHostFunc get_cdm_host_func,
-                        void* user_data)
-{
+                        GetCdmHostFunc get_cdm_host_func, void* user_data) {
   if (cdm_interface_version != cdm::ContentDecryptionModule_9::kVersion) {
     // Only support CDM version 9 currently.
     return nullptr;
   }
   cdm::Host_9* host = static_cast<cdm::Host_9*>(
-    get_cdm_host_func(cdm_interface_version, user_data));
+      get_cdm_host_func(cdm_interface_version, user_data));
   return new FakeDecryptor(host);
 }
 
-
 CDM_API
-bool
-VerifyCdmHost_0(const cdm::HostFile* aHostFiles, uint32_t aNumFiles)
-{
+bool VerifyCdmHost_0(const cdm::HostFile* aHostFiles, uint32_t aNumFiles) {
   return true;
 }
 
-} // extern "C"
+}  // extern "C"

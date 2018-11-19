@@ -55,16 +55,13 @@ struct ThreeDPoint;
  * still alive, and will still be alive when it receives a message from the
  * engine.
  */
-class AudioNode : public DOMEventTargetHelper,
-                  public nsSupportsWeakReference
-{
-protected:
+class AudioNode : public DOMEventTargetHelper, public nsSupportsWeakReference {
+ protected:
   // You can only use refcounting to delete this object
   virtual ~AudioNode();
 
-public:
-  AudioNode(AudioContext* aContext,
-            uint32_t aChannelCount,
+ public:
+  AudioNode(AudioContext* aContext, uint32_t aChannelCount,
             ChannelCountMode aChannelCountMode,
             ChannelInterpretation aChannelInterpretation);
 
@@ -72,23 +69,13 @@ public:
   virtual void DestroyMediaStream();
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioNode,
-                                           DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioNode, DOMEventTargetHelper)
 
-  virtual AudioBufferSourceNode* AsAudioBufferSourceNode()
-  {
-    return nullptr;
-  }
+  virtual AudioBufferSourceNode* AsAudioBufferSourceNode() { return nullptr; }
 
-  AudioContext* GetParentObject() const
-  {
-    return mContext;
-  }
+  AudioContext* GetParentObject() const { return mContext; }
 
-  AudioContext* Context() const
-  {
-    return mContext;
-  }
+  AudioContext* Context() const { return mContext; }
 
   virtual AudioNode* Connect(AudioNode& aDestination, uint32_t aOutput,
                              uint32_t aInput, ErrorResult& aRv);
@@ -101,9 +88,8 @@ public:
   virtual void Disconnect(AudioNode& aDestination, ErrorResult& aRv);
   virtual void Disconnect(AudioNode& aDestination, uint32_t aOutput,
                           ErrorResult& aRv);
-  virtual void Disconnect(AudioNode& aDestination,
-                          uint32_t aOutput, uint32_t aInput,
-                          ErrorResult& aRv);
+  virtual void Disconnect(AudioNode& aDestination, uint32_t aOutput,
+                          uint32_t aInput, ErrorResult& aRv);
   virtual void Disconnect(AudioParam& aDestination, ErrorResult& aRv);
   virtual void Disconnect(AudioParam& aDestination, uint32_t aOutput,
                           ErrorResult& aRv);
@@ -129,46 +115,37 @@ public:
   void SetPassThrough(bool aPassThrough);
 
   uint32_t ChannelCount() const { return mChannelCount; }
-  virtual void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv)
-  {
-    if (aChannelCount == 0 ||
-        aChannelCount > WebAudioUtils::MaxChannelCount) {
+  virtual void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) {
+    if (aChannelCount == 0 || aChannelCount > WebAudioUtils::MaxChannelCount) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return;
     }
     mChannelCount = aChannelCount;
     SendChannelMixingParametersToStream();
   }
-  ChannelCountMode ChannelCountModeValue() const
-  {
-    return mChannelCountMode;
-  }
-  virtual void SetChannelCountModeValue(ChannelCountMode aMode, ErrorResult& aRv)
-  {
+  ChannelCountMode ChannelCountModeValue() const { return mChannelCountMode; }
+  virtual void SetChannelCountModeValue(ChannelCountMode aMode,
+                                        ErrorResult& aRv) {
     mChannelCountMode = aMode;
     SendChannelMixingParametersToStream();
   }
-  ChannelInterpretation ChannelInterpretationValue() const
-  {
+  ChannelInterpretation ChannelInterpretationValue() const {
     return mChannelInterpretation;
   }
-  virtual void SetChannelInterpretationValue(ChannelInterpretation aMode, ErrorResult& aRv)
-  {
+  virtual void SetChannelInterpretationValue(ChannelInterpretation aMode,
+                                             ErrorResult& aRv) {
     mChannelInterpretation = aMode;
     SendChannelMixingParametersToStream();
   }
 
-  struct InputNode final
-  {
-    ~InputNode()
-    {
+  struct InputNode final {
+    ~InputNode() {
       if (mStreamPort) {
         mStreamPort->Destroy();
       }
     }
 
-    size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-    {
+    size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
       size_t amount = 0;
       if (mStreamPort) {
         amount += mStreamPort->SizeOfIncludingThis(aMallocSizeOf);
@@ -190,22 +167,16 @@ public:
   // Returns the stream, if any.
   AudioNodeStream* GetStream() const { return mStream; }
 
-  const nsTArray<InputNode>& InputNodes() const
-  {
-    return mInputNodes;
-  }
-  const nsTArray<RefPtr<AudioNode> >& OutputNodes() const
-  {
+  const nsTArray<InputNode>& InputNodes() const { return mInputNodes; }
+  const nsTArray<RefPtr<AudioNode> >& OutputNodes() const {
     return mOutputNodes;
   }
-  const nsTArray<RefPtr<AudioParam> >& OutputParams() const
-  {
+  const nsTArray<RefPtr<AudioParam> >& OutputParams() const {
     return mOutputParams;
   }
 
-  template<typename T>
-  const nsTArray<InputNode>&
-  InputsForDestination(uint32_t aOutputIndex) const;
+  template <typename T>
+  const nsTArray<InputNode>& InputsForDestination(uint32_t aOutputIndex) const;
 
   void RemoveOutputParam(AudioParam* aParam);
 
@@ -229,7 +200,7 @@ public:
 
   AbstractThread* AbstractMainThread() const { return mAbstractMainThread; }
 
-private:
+ private:
   // Given:
   //
   // - a DestinationType, that can be an AudioNode or an AudioParam ;
@@ -238,12 +209,11 @@ private:
   // This method iterates on the InputNodes() of the node at the index
   // aDestinationIndex, and calls `DisconnectFromOutputIfConnected` with this
   // input node, if aPredicate returns true.
-  template<typename DestinationType, typename Predicate>
+  template <typename DestinationType, typename Predicate>
   bool DisconnectMatchingDestinationInputs(uint32_t aDestinationIndex,
                                            Predicate aPredicate);
 
-  virtual void LastRelease() override
-  {
+  virtual void LastRelease() override {
     // We are about to be deleted, disconnect the object from the graph before
     // the derived type is destroyed.
     DisconnectFromGraph();
@@ -251,28 +221,30 @@ private:
   // Callers must hold a reference to 'this'.
   void DisconnectFromGraph();
 
-  template<typename DestinationType>
-  bool DisconnectFromOutputIfConnected(uint32_t aOutputIndex, uint32_t aInputIndex);
+  template <typename DestinationType>
+  bool DisconnectFromOutputIfConnected(uint32_t aOutputIndex,
+                                       uint32_t aInputIndex);
 
-protected:
+ protected:
   // Helper for the Constructors for nodes.
   void Initialize(const AudioNodeOptions& aOptions, ErrorResult& aRv);
 
   // Helpers for sending different value types to streams
   void SendDoubleParameterToStream(uint32_t aIndex, double aValue);
   void SendInt32ParameterToStream(uint32_t aIndex, int32_t aValue);
-  void SendThreeDPointParameterToStream(uint32_t aIndex, const ThreeDPoint& aValue);
+  void SendThreeDPointParameterToStream(uint32_t aIndex,
+                                        const ThreeDPoint& aValue);
   void SendChannelMixingParametersToStream();
 
-private:
+ private:
   RefPtr<AudioContext> mContext;
 
-protected:
+ protected:
   // Set in the constructor of all nodes except offline AudioDestinationNode.
   // Must not become null until finished.
   RefPtr<AudioNodeStream> mStream;
 
-private:
+ private:
   // For every InputNode, there is a corresponding entry in mOutputNodes of the
   // InputNode's mInputNode.
   nsTArray<InputNode> mInputNodes;
@@ -291,14 +263,15 @@ private:
   ChannelCountMode mChannelCountMode;
   ChannelInterpretation mChannelInterpretation;
   const uint32_t mId;
-  // Whether the node just passes through its input.  This is a devtools API that
-  // only works for some node types.
+  // Whether the node just passes through its input.  This is a devtools API
+  // that only works for some node types.
   bool mPassThrough;
-  // DocGroup-specifc AbstractThread::MainThread() for MediaStreamGraph operations.
+  // DocGroup-specifc AbstractThread::MainThread() for MediaStreamGraph
+  // operations.
   const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

@@ -15,12 +15,10 @@
 namespace mozilla {
 
 // Main object managing all processed logs, and yet-unprocessed messages.
-struct DDMediaLogs
-{
-public:
+struct DDMediaLogs {
+ public:
   // Construct a DDMediaLogs object if possible.
-  struct ConstructionResult
-  {
+  struct ConstructionResult {
     nsresult mRv;
     DDMediaLogs* mMediaLogs;
   };
@@ -34,21 +32,18 @@ public:
   // possible.
   void Panic();
 
-  inline void Log(const char* aSubjectTypeName,
-                  const void* aSubjectPointer,
-                  DDLogCategory aCategory,
-                  const char* aLabel,
-                  DDLogValue&& aValue)
-  {
+  inline void Log(const char* aSubjectTypeName, const void* aSubjectPointer,
+                  DDLogCategory aCategory, const char* aLabel,
+                  DDLogValue&& aValue) {
     if (mMessagesQueue.PushF(
-          [&](DDLogMessage& aMessage, MessagesQueue::Index i) {
-            aMessage.mIndex = i;
-            aMessage.mTimeStamp = DDNow();
-            aMessage.mObject.Set(aSubjectTypeName, aSubjectPointer);
-            aMessage.mCategory = aCategory;
-            aMessage.mLabel = aLabel;
-            aMessage.mValue = std::move(aValue);
-          })) {
+            [&](DDLogMessage& aMessage, MessagesQueue::Index i) {
+              aMessage.mIndex = i;
+              aMessage.mTimeStamp = DDNow();
+              aMessage.mObject.Set(aSubjectTypeName, aSubjectPointer);
+              aMessage.mCategory = aCategory;
+              aMessage.mLabel = aLabel;
+              aMessage.mValue = std::move(aValue);
+            })) {
       // Filled a buffer-full of messages, process it in another thread.
       DispatchProcessLog();
     }
@@ -62,18 +57,18 @@ public:
   void ProcessLog();
 
   using LogMessagesPromise =
-    MozPromise<nsCString, nsresult, /* IsExclusive = */ true>;
+      MozPromise<nsCString, nsresult, /* IsExclusive = */ true>;
 
   // Retrieve all messages associated with an HTMLMediaElement.
   // This will trigger an async processing run (to ensure most recent messages
   // get retrieved too), and the returned promise will be resolved with all
   // found log messages.
   RefPtr<LogMessagesPromise> RetrieveMessages(
-    const dom::HTMLMediaElement* aMediaElement);
+      const dom::HTMLMediaElement* aMediaElement);
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
-private:
+ private:
   // Constructor, takes the given thread to use for log processing.
   explicit DDMediaLogs(nsCOMPtr<nsIThread>&& aThread);
 
@@ -113,10 +108,8 @@ private:
   // Link two lifetimes together (at a given time corresponding to aIndex).
   // If only one is associated with an HTMLMediaElement, run SetMediaElement on
   // the other one.
-  void LinkLifetimes(DDLifetime& aParentLifetime,
-                     const char* aLinkName,
-                     DDLifetime& aChildLifetime,
-                     DDMessageIndex aIndex);
+  void LinkLifetimes(DDLifetime& aParentLifetime, const char* aLinkName,
+                     DDLifetime& aChildLifetime, DDMessageIndex aIndex);
 
   // Unlink all lifetimes linked to aLifetime; only used to know when links
   // expire, so that they won't be used after this time.
@@ -124,8 +117,7 @@ private:
 
   // Unlink two lifetimes; only used to know when a link expires, so that it
   // won't be used after this time.
-  void UnlinkLifetimes(DDLifetime& aParentLifetime,
-                       DDLifetime& aChildLifetime,
+  void UnlinkLifetimes(DDLifetime& aParentLifetime, DDLifetime& aChildLifetime,
                        DDMessageIndex aIndex);
 
   // Remove all links involving aLifetime from the database.
@@ -153,9 +145,9 @@ private:
   // Request log-processing on the processing thread.
   nsresult DispatchProcessLog(const MutexAutoLock& aProofOfLock);
 
-  using MessagesQueue = MultiWriterQueue<DDLogMessage,
-                                         MultiWriterQueueDefaultBufferSize,
-                                         MultiWriterQueueReaderLocking_None>;
+  using MessagesQueue =
+      MultiWriterQueue<DDLogMessage, MultiWriterQueueDefaultBufferSize,
+                       MultiWriterQueueReaderLocking_None>;
   MessagesQueue mMessagesQueue;
 
   DDLifetimes mLifetimes;
@@ -164,25 +156,20 @@ private:
   // mMediaLogs[1+] contains sorted messages for each media element.
   nsTArray<DDMediaLog> mMediaLogs;
 
-  struct DDObjectLink
-  {
+  struct DDObjectLink {
     const DDLogObject mParent;
     const DDLogObject mChild;
     const char* const mLinkName;
     const DDMessageIndex mLinkingIndex;
     Maybe<DDMessageIndex> mUnlinkingIndex;
 
-    DDObjectLink(DDLogObject aParent,
-                 DDLogObject aChild,
-                 const char* aLinkName,
+    DDObjectLink(DDLogObject aParent, DDLogObject aChild, const char* aLinkName,
                  DDMessageIndex aLinkingIndex)
-      : mParent(aParent)
-      , mChild(aChild)
-      , mLinkName(aLinkName)
-      , mLinkingIndex(aLinkingIndex)
-      , mUnlinkingIndex(Nothing{})
-    {
-    }
+        : mParent(aParent),
+          mChild(aChild),
+          mLinkName(aLinkName),
+          mLinkingIndex(aLinkingIndex),
+          mUnlinkingIndex(Nothing{}) {}
   };
   // Links between live objects, updated while messages are processed.
   nsTArray<DDObjectLink> mObjectLinks;
@@ -193,8 +180,7 @@ private:
   // Processing thread.
   nsCOMPtr<nsIThread> mThread;
 
-  struct PendingPromise
-  {
+  struct PendingPromise {
     MozPromiseHolder<LogMessagesPromise> mPromiseHolder;
     const dom::HTMLMediaElement* mMediaElement;
   };
@@ -202,6 +188,6 @@ private:
   AutoTArray<PendingPromise, 2> mPendingPromises;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // DDMediaLogs_h_
+#endif  // DDMediaLogs_h_

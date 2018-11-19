@@ -14,10 +14,10 @@ enum class MediaSystemResourceType : uint32_t {
   AUDIO_DECODER,  // Not supported currently.
   VIDEO_ENCODER,
   AUDIO_ENCODER,  // Not supported currently.
-  CAMERA,          // Not supported currently.
+  CAMERA,         // Not supported currently.
   INVALID_RESOURCE,
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

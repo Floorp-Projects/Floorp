@@ -20,36 +20,29 @@ namespace media {
  * Similar to media::NewRunnableFrom() - Create an nsRunnable from a lambda.
  */
 
-template<typename OnRunType>
-class LambdaTask : public Runnable
-{
-public:
+template <typename OnRunType>
+class LambdaTask : public Runnable {
+ public:
   explicit LambdaTask(OnRunType&& aOnRun)
-    : Runnable("media::LambdaTask")
-    , mOnRun(std::move(aOnRun))
-  {
-  }
+      : Runnable("media::LambdaTask"), mOnRun(std::move(aOnRun)) {}
 
-private:
+ private:
   NS_IMETHOD
-  Run() override
-  {
+  Run() override {
     mOnRun();
     return NS_OK;
   }
   OnRunType mOnRun;
 };
 
-template<typename OnRunType>
-already_AddRefed<LambdaTask<OnRunType>>
-NewTaskFrom(OnRunType&& aOnRun)
-{
+template <typename OnRunType>
+already_AddRefed<LambdaTask<OnRunType>> NewTaskFrom(OnRunType&& aOnRun) {
   typedef LambdaTask<OnRunType> LambdaType;
   RefPtr<LambdaType> lambda = new LambdaType(std::forward<OnRunType>(aOnRun));
   return lambda.forget();
 }
 
-} // namespace media
-} // namespace mozilla
+}  // namespace media
+}  // namespace mozilla
 
-#endif // mozilla_MediaTaskUtils_h
+#endif  // mozilla_MediaTaskUtils_h

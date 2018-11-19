@@ -14,34 +14,31 @@
 namespace mozilla {
 
 // Class containing media type information for containers.
-class MediaContainerType
-{
-public:
+class MediaContainerType {
+ public:
   explicit MediaContainerType(const MediaMIMEType& aType)
-    : mExtendedMIMEType(aType)
-  {}
+      : mExtendedMIMEType(aType) {}
   explicit MediaContainerType(MediaMIMEType&& aType)
-    : mExtendedMIMEType(std::move(aType))
-  {}
+      : mExtendedMIMEType(std::move(aType)) {}
   explicit MediaContainerType(const MediaExtendedMIMEType& aType)
-    : mExtendedMIMEType(aType)
-  {
-  }
+      : mExtendedMIMEType(aType) {}
   explicit MediaContainerType(MediaExtendedMIMEType&& aType)
-    : mExtendedMIMEType(std::move(aType))
-  {
-  }
+      : mExtendedMIMEType(std::move(aType)) {}
 
   const MediaMIMEType& Type() const { return mExtendedMIMEType.Type(); }
-  const MediaExtendedMIMEType& ExtendedType() const { return mExtendedMIMEType; }
+  const MediaExtendedMIMEType& ExtendedType() const {
+    return mExtendedMIMEType;
+  }
 
   // Original string. Note that "type/subtype" may not be lowercase,
   // use Type().AsString() instead to get the normalized "type/subtype".
-  const nsCString& OriginalString() const { return mExtendedMIMEType.OriginalString(); }
+  const nsCString& OriginalString() const {
+    return mExtendedMIMEType.OriginalString();
+  }
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-private:
+ private:
   MediaExtendedMIMEType mExtendedMIMEType;
 };
 
@@ -49,6 +46,6 @@ Maybe<MediaContainerType> MakeMediaContainerType(const nsAString& aType);
 Maybe<MediaContainerType> MakeMediaContainerType(const nsACString& aType);
 Maybe<MediaContainerType> MakeMediaContainerType(const char* aType);
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MediaContainerType_h_
+#endif  // MediaContainerType_h_

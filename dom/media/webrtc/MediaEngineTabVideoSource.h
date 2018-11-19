@@ -11,34 +11,27 @@
 
 namespace mozilla {
 
-class MediaEngineTabVideoSource : public MediaEngineSource
-{
-public:
+class MediaEngineTabVideoSource : public MediaEngineSource {
+ public:
   MediaEngineTabVideoSource();
 
   nsString GetName() const override;
   nsCString GetUUID() const override;
 
-  bool GetScary() const override
-  {
-    return true;
-  }
+  bool GetScary() const override { return true; }
 
-  dom::MediaSourceEnum GetMediaSource() const override
-  {
+  dom::MediaSourceEnum GetMediaSource() const override {
     return dom::MediaSourceEnum::Browser;
   }
 
-  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                    const MediaEnginePrefs &aPrefs,
-                    const nsString& aDeviceId,
+  nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
+                    const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
                     const ipc::PrincipalInfo& aPrincipalInfo,
                     AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override;
   nsresult Deallocate(const RefPtr<const AllocationHandle>& aHandle) override;
   nsresult SetTrack(const RefPtr<const AllocationHandle>& aHandle,
-                    const RefPtr<SourceMediaStream>& aStream,
-                    TrackID aTrackID,
+                    const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
                     const PrincipalHandle& aPrincipal) override;
   nsresult Start(const RefPtr<const AllocationHandle>& aHandle) override;
   nsresult Reconfigure(const RefPtr<AllocationHandle>& aHandle,
@@ -46,68 +39,63 @@ public:
                        const MediaEnginePrefs& aPrefs,
                        const nsString& aDeviceId,
                        const char** aOutBadConstraint) override;
-  nsresult FocusOnSelectedSource(const RefPtr<const AllocationHandle>& aHandle) override;
+  nsresult FocusOnSelectedSource(
+      const RefPtr<const AllocationHandle>& aHandle) override;
   nsresult Stop(const RefPtr<const AllocationHandle>& aHandle) override;
 
   void Pull(const RefPtr<const AllocationHandle>& aHandle,
-            const RefPtr<SourceMediaStream>& aStream,
-            TrackID aTrackID,
+            const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
             StreamTime aDesiredTime,
             const PrincipalHandle& aPrincipalHandle) override;
 
   uint32_t GetBestFitnessDistance(
-    const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-    const nsString& aDeviceId) const override
-  {
+      const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
+      const nsString& aDeviceId) const override {
     return 0;
   }
 
   void Draw();
 
   class StartRunnable : public Runnable {
-  public:
-    explicit StartRunnable(MediaEngineTabVideoSource *videoSource)
-      : Runnable("MediaEngineTabVideoSource::StartRunnable")
-      , mVideoSource(videoSource)
-    {}
+   public:
+    explicit StartRunnable(MediaEngineTabVideoSource* videoSource)
+        : Runnable("MediaEngineTabVideoSource::StartRunnable"),
+          mVideoSource(videoSource) {}
     NS_IMETHOD Run() override;
     RefPtr<MediaEngineTabVideoSource> mVideoSource;
   };
 
   class StopRunnable : public Runnable {
-  public:
-    explicit StopRunnable(MediaEngineTabVideoSource *videoSource)
-      : Runnable("MediaEngineTabVideoSource::StopRunnable")
-      , mVideoSource(videoSource)
-    {}
+   public:
+    explicit StopRunnable(MediaEngineTabVideoSource* videoSource)
+        : Runnable("MediaEngineTabVideoSource::StopRunnable"),
+          mVideoSource(videoSource) {}
     NS_IMETHOD Run() override;
     RefPtr<MediaEngineTabVideoSource> mVideoSource;
   };
 
   class InitRunnable : public Runnable {
-  public:
-    explicit InitRunnable(MediaEngineTabVideoSource *videoSource)
-      : Runnable("MediaEngineTabVideoSource::InitRunnable")
-      , mVideoSource(videoSource)
-    {}
+   public:
+    explicit InitRunnable(MediaEngineTabVideoSource* videoSource)
+        : Runnable("MediaEngineTabVideoSource::InitRunnable"),
+          mVideoSource(videoSource) {}
     NS_IMETHOD Run() override;
     RefPtr<MediaEngineTabVideoSource> mVideoSource;
   };
 
   class DestroyRunnable : public Runnable {
-  public:
+   public:
     explicit DestroyRunnable(MediaEngineTabVideoSource* videoSource)
-      : Runnable("MediaEngineTabVideoSource::DestroyRunnable")
-      , mVideoSource(videoSource)
-    {}
+        : Runnable("MediaEngineTabVideoSource::DestroyRunnable"),
+          mVideoSource(videoSource) {}
     NS_IMETHOD Run() override;
     RefPtr<MediaEngineTabVideoSource> mVideoSource;
   };
 
-protected:
+ protected:
   ~MediaEngineTabVideoSource() {}
 
-private:
+ private:
   int32_t mBufWidthMax = 0;
   int32_t mBufHeightMax = 0;
   int64_t mWindowId = 0;
@@ -139,4 +127,4 @@ private:
   nsCOMPtr<nsITabSource> mTabSource;
 };
 
-} // namespace mozilla
+}  // namespace mozilla

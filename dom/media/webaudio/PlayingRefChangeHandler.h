@@ -13,19 +13,15 @@
 namespace mozilla {
 namespace dom {
 
-class PlayingRefChangeHandler final : public Runnable
-{
-public:
+class PlayingRefChangeHandler final : public Runnable {
+ public:
   enum ChangeType { ADDREF, RELEASE };
   PlayingRefChangeHandler(AudioNodeStream* aStream, ChangeType aChange)
-    : Runnable("dom::PlayingRefChangeHandler")
-    , mStream(aStream)
-    , mChange(aChange)
-  {
-  }
+      : Runnable("dom::PlayingRefChangeHandler"),
+        mStream(aStream),
+        mChange(aChange) {}
 
-  NS_IMETHOD Run() override
-  {
+  NS_IMETHOD Run() override {
     RefPtr<AudioNode> node = mStream->Engine()->NodeMainThread();
     if (node) {
       if (mChange == ADDREF) {
@@ -37,13 +33,12 @@ public:
     return NS_OK;
   }
 
-private:
+ private:
   RefPtr<AudioNodeStream> mStream;
   ChangeType mChange;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif
-

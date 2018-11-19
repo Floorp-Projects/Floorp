@@ -17,64 +17,45 @@ namespace dom {
 class AudioContext;
 struct BiquadFilterOptions;
 
-class BiquadFilterNode final : public AudioNode
-{
-public:
-  static already_AddRefed<BiquadFilterNode>
-  Create(AudioContext& aAudioContext, const BiquadFilterOptions& aOptions,
-         ErrorResult& aRv);
+class BiquadFilterNode final : public AudioNode {
+ public:
+  static already_AddRefed<BiquadFilterNode> Create(
+      AudioContext& aAudioContext, const BiquadFilterOptions& aOptions,
+      ErrorResult& aRv);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BiquadFilterNode, AudioNode)
 
-  static already_AddRefed<BiquadFilterNode>
-  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
-              const BiquadFilterOptions& aOptions, ErrorResult& aRv)
-  {
+  static already_AddRefed<BiquadFilterNode> Constructor(
+      const GlobalObject& aGlobal, AudioContext& aAudioContext,
+      const BiquadFilterOptions& aOptions, ErrorResult& aRv) {
     return Create(aAudioContext, aOptions, aRv);
   }
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  BiquadFilterType Type() const
-  {
-    return mType;
-  }
+  BiquadFilterType Type() const { return mType; }
   void SetType(BiquadFilterType aType);
 
-  AudioParam* Frequency() const
-  {
-    return mFrequency;
-  }
+  AudioParam* Frequency() const { return mFrequency; }
 
-  AudioParam* Detune() const
-  {
-    return mDetune;
-  }
+  AudioParam* Detune() const { return mDetune; }
 
-  AudioParam* Q() const
-  {
-    return mQ;
-  }
+  AudioParam* Q() const { return mQ; }
 
-  AudioParam* Gain() const
-  {
-    return mGain;
-  }
+  AudioParam* Gain() const { return mGain; }
 
   void GetFrequencyResponse(const Float32Array& aFrequencyHz,
                             const Float32Array& aMagResponse,
                             const Float32Array& aPhaseResponse);
 
-  const char* NodeType() const override
-  {
-    return "BiquadFilterNode";
-  }
+  const char* NodeType() const override { return "BiquadFilterNode"; }
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
-private:
+ private:
   explicit BiquadFilterNode(AudioContext* aContext);
   ~BiquadFilterNode() = default;
 
@@ -85,7 +66,7 @@ private:
   RefPtr<AudioParam> mGain;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

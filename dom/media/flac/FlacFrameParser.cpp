@@ -1,8 +1,8 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FlacFrameParser.h"
 #include "nsTArray.h"
@@ -12,16 +12,14 @@
 #include "BufferReader.h"
 #include "mozilla/ResultExtensions.h"
 
-namespace mozilla
-{
+namespace mozilla {
 
 #define OGG_FLAC_METADATA_TYPE_STREAMINFO 0x7F
-#define FLAC_STREAMINFO_SIZE   34
+#define FLAC_STREAMINFO_SIZE 34
 
-#define BITMASK(x) ((1ULL << x)-1)
+#define BITMASK(x) ((1ULL << x) - 1)
 
-enum
-{
+enum {
   FLAC_METADATA_TYPE_STREAMINFO = 0,
   FLAC_METADATA_TYPE_PADDING,
   FLAC_METADATA_TYPE_APPLICATION,
@@ -33,23 +31,17 @@ enum
 };
 
 FlacFrameParser::FlacFrameParser()
-  : mMinBlockSize(0)
-  , mMaxBlockSize(0)
-  , mMinFrameSize(0)
-  , mMaxFrameSize(0)
-  , mNumFrames(0)
-  , mFullMetadata(false)
-  , mPacketCount(0)
-{
-}
+    : mMinBlockSize(0),
+      mMaxBlockSize(0),
+      mMinFrameSize(0),
+      mMaxFrameSize(0),
+      mNumFrames(0),
+      mFullMetadata(false),
+      mPacketCount(0) {}
 
-FlacFrameParser::~FlacFrameParser()
-{
-}
+FlacFrameParser::~FlacFrameParser() {}
 
-uint32_t
-FlacFrameParser::HeaderBlockLength(const uint8_t* aPacket) const
-{
+uint32_t FlacFrameParser::HeaderBlockLength(const uint8_t* aPacket) const {
   uint32_t extra = 4;
   if (aPacket[0] == 'f') {
     // This must be the first block read, which contains the fLaC signature.
@@ -59,9 +51,8 @@ FlacFrameParser::HeaderBlockLength(const uint8_t* aPacket) const
   return (BigEndian::readUint32(aPacket) & BITMASK(24)) + extra;
 }
 
-Result<Ok, nsresult>
-FlacFrameParser::DecodeHeaderBlock(const uint8_t* aPacket, size_t aLength)
-{
+Result<Ok, nsresult> FlacFrameParser::DecodeHeaderBlock(const uint8_t* aPacket,
+                                                        size_t aLength) {
   if (aLength < 4 || aPacket[0] == 0xff) {
     // Not a header block.
     return Err(NS_ERROR_FAILURE);
@@ -95,11 +86,11 @@ FlacFrameParser::DecodeHeaderBlock(const uint8_t* aPacket, size_t aLength)
       // unsupported version;
       return Err(NS_ERROR_FAILURE);
     }
-    MOZ_TRY(br.ReadU8()); // minor version
+    MOZ_TRY(br.ReadU8());  // minor version
     uint32_t header;
     MOZ_TRY_VAR(header, br.ReadU16());
     mNumHeaders = Some(header);
-    br.Read(4); // fLaC
+    br.Read(4);  // fLaC
     MOZ_TRY_VAR(blockType, br.ReadU8());
     blockType &= BITMASK(7);
     // First METADATA_BLOCK_STREAMINFO
@@ -118,8 +109,7 @@ FlacFrameParser::DecodeHeaderBlock(const uint8_t* aPacket, size_t aLength)
   }
 
   switch (blockType) {
-    case FLAC_METADATA_TYPE_STREAMINFO:
-    {
+    case FLAC_METADATA_TYPE_STREAMINFO: {
       if (mPacketCount != 1 || blockDataSize != FLAC_STREAMINFO_SIZE) {
         // STREAMINFO must be the first metadata block found, and its size
         // is constant.
@@ -157,8 +147,7 @@ FlacFrameParser::DecodeHeaderBlock(const uint8_t* aPacket, size_t aLength)
       mParser = new OpusParser;
       break;
     }
-    case FLAC_METADATA_TYPE_VORBIS_COMMENT:
-    {
+    case FLAC_METADATA_TYPE_VORBIS_COMMENT: {
       if (!mParser) {
         // We must have seen a valid streaminfo first.
         return Err(NS_ERROR_FAILURE);
@@ -187,9 +176,8 @@ FlacFrameParser::DecodeHeaderBlock(const uint8_t* aPacket, size_t aLength)
   return Ok();
 }
 
-int64_t
-FlacFrameParser::BlockDuration(const uint8_t* aPacket, size_t aLength) const
-{
+int64_t FlacFrameParser::BlockDuration(const uint8_t* aPacket,
+                                       size_t aLength) const {
   if (!mInfo.IsValid()) {
     return -1;
   }
@@ -201,15 +189,15 @@ FlacFrameParser::BlockDuration(const uint8_t* aPacket, size_t aLength) const
   return 0;
 }
 
-Result<bool, nsresult>
-FlacFrameParser::IsHeaderBlock(const uint8_t* aPacket, size_t aLength) const
-{
+Result<bool, nsresult> FlacFrameParser::IsHeaderBlock(const uint8_t* aPacket,
+                                                      size_t aLength) const {
   // Ogg Flac header
   // The one-byte packet type 0x7F
   // The four-byte ASCII signature "FLAC", i.e. 0x46, 0x4C, 0x41, 0x43
 
   // Flac header:
-  // "fLaC", the FLAC stream marker in ASCII, meaning byte 0 of the stream is 0x66, followed by 0x4C 0x61 0x43
+  // "fLaC", the FLAC stream marker in ASCII, meaning byte 0 of the stream is
+  // 0x66, followed by 0x4C 0x61 0x43
 
   // If we detect either a ogg or plain flac header, then it must be valid.
   if (aLength < 4 || aPacket[0] == 0xff) {
@@ -235,9 +223,7 @@ FlacFrameParser::IsHeaderBlock(const uint8_t* aPacket, size_t aLength) const
   return type >= 1 && type <= 6;
 }
 
-MetadataTags*
-FlacFrameParser::GetTags() const
-{
+MetadataTags* FlacFrameParser::GetTags() const {
   if (!mParser) {
     return nullptr;
   }
@@ -246,12 +232,11 @@ FlacFrameParser::GetTags() const
 
   tags = new MetadataTags;
   for (uint32_t i = 0; i < mParser->mTags.Length(); i++) {
-    OggCodecState::AddVorbisComment(tags,
-                                    mParser->mTags[i].Data(),
+    OggCodecState::AddVorbisComment(tags, mParser->mTags[i].Data(),
                                     mParser->mTags[i].Length());
   }
 
   return tags;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

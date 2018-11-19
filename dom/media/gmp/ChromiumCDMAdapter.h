@@ -24,9 +24,8 @@ typedef nsString HostFileString;
 typedef nsCString HostFileString;
 #endif
 
-class HostFile
-{
-public:
+class HostFile {
+ public:
   explicit HostFile(const nsCString& aPath);
   HostFile(HostFile&& aOther);
   ~HostFile();
@@ -34,24 +33,17 @@ public:
   const HostFileString& Path() const { return mPath; }
   cdm::PlatformFile TakePlatformFile();
 
-private:
+ private:
   const HostFileString mPath;
   cdm::PlatformFile mFile = cdm::kInvalidPlatformFile;
 };
 
-struct HostFileData
-{
+struct HostFileData {
   HostFileData(HostFile&& aBinary, HostFile&& aSig)
-    : mBinary(std::move(aBinary))
-    , mSig(std::move(aSig))
-  {
-  }
+      : mBinary(std::move(aBinary)), mSig(std::move(aSig)) {}
 
   HostFileData(HostFileData&& aOther)
-    : mBinary(std::move(aOther.mBinary))
-    , mSig(std::move(aOther.mSig))
-  {
-  }
+      : mBinary(std::move(aOther.mBinary)), mSig(std::move(aOther.mSig)) {}
 
   ~HostFileData() {}
 
@@ -59,32 +51,29 @@ struct HostFileData
   HostFile mSig;
 };
 
-class ChromiumCDMAdapter : public gmp::GMPAdapter
-{
-public:
-  explicit ChromiumCDMAdapter(nsTArray<Pair<nsCString, nsCString>>&& aHostPathPairs);
+class ChromiumCDMAdapter : public gmp::GMPAdapter {
+ public:
+  explicit ChromiumCDMAdapter(
+      nsTArray<Pair<nsCString, nsCString>>&& aHostPathPairs);
 
   void SetAdaptee(PRLibrary* aLib) override;
 
   // These are called in place of the corresponding GMP API functions.
   GMPErr GMPInit(const GMPPlatformAPI* aPlatformAPI) override;
-  GMPErr GMPGetAPI(const char* aAPIName,
-                   void* aHostAPI,
-                   void** aPluginAPI,
+  GMPErr GMPGetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI,
                    uint32_t aDecryptorId) override;
   void GMPShutdown() override;
 
-  static bool Supports(int32_t aModuleVersion,
-                       int32_t aInterfaceVersion,
+  static bool Supports(int32_t aModuleVersion, int32_t aInterfaceVersion,
                        int32_t aHostVersion);
 
-private:
+ private:
   void PopulateHostFiles(nsTArray<Pair<nsCString, nsCString>>&& aHostFilePaths);
 
   PRLibrary* mLib = nullptr;
   nsTArray<HostFileData> mHostFiles;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // ChromiumAdapter_h_
+#endif  // ChromiumAdapter_h_

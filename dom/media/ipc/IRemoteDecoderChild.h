@@ -14,34 +14,31 @@ namespace mozilla {
 // to allow proxying to a remote decoder in RemoteDecoderModule or
 // GpuDecoderModule. RemoteAudioDecoderChild, RemoteVideoDecoderChild,
 // and VideoDecoderChild (for GPU) implement this interface.
-class IRemoteDecoderChild
-{
-public:
+class IRemoteDecoderChild {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(IRemoteDecoderChild);
 
   virtual RefPtr<MediaDataDecoder::InitPromise> Init() = 0;
   virtual RefPtr<MediaDataDecoder::DecodePromise> Decode(
-    MediaRawData* aSample) = 0;
+      MediaRawData* aSample) = 0;
   virtual RefPtr<MediaDataDecoder::DecodePromise> Drain() = 0;
   virtual RefPtr<MediaDataDecoder::FlushPromise> Flush() = 0;
   virtual void Shutdown() = 0;
-  virtual bool IsHardwareAccelerated(nsACString& aFailureReason) const
-  {
+  virtual bool IsHardwareAccelerated(nsACString& aFailureReason) const {
     return false;
   }
   virtual nsCString GetDescriptionName() const = 0;
   virtual void SetSeekThreshold(const media::TimeUnit& aTime) {}
-  virtual MediaDataDecoder::ConversionRequired NeedsConversion() const
-  {
+  virtual MediaDataDecoder::ConversionRequired NeedsConversion() const {
     return MediaDataDecoder::ConversionRequired::kNeedNone;
   }
 
   virtual void DestroyIPDL() = 0;
 
-protected:
+ protected:
   virtual ~IRemoteDecoderChild() {}
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // include_dom_media_ipc_IRemoteDecoderChild_h
+#endif  // include_dom_media_ipc_IRemoteDecoderChild_h

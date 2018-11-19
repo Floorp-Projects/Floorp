@@ -14,8 +14,7 @@
 static bool gRunLoopSet = false;
 static mozilla::StaticMutex gMutex;
 
-void mozilla_set_coreaudio_notification_runloop_if_needed()
-{
+void mozilla_set_coreaudio_notification_runloop_if_needed() {
   mozilla::StaticMutexAutoLock lock(gMutex);
   if (gRunLoopSet) {
     return;
@@ -25,19 +24,17 @@ void mozilla_set_coreaudio_notification_runloop_if_needed()
    * not the main thread. If we don't do that, they are not called, or a crash
    * occur, depending on the OSX version. */
   AudioObjectPropertyAddress runloop_address = {
-    kAudioHardwarePropertyRunLoop,
-    kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
-  };
+      kAudioHardwarePropertyRunLoop, kAudioObjectPropertyScopeGlobal,
+      kAudioObjectPropertyElementMaster};
 
   CFRunLoopRef run_loop = nullptr;
 
   OSStatus r;
-  r = AudioObjectSetPropertyData(kAudioObjectSystemObject,
-                                 &runloop_address,
-                                 0, NULL, sizeof(CFRunLoopRef), &run_loop);
+  r = AudioObjectSetPropertyData(kAudioObjectSystemObject, &runloop_address, 0,
+                                 NULL, sizeof(CFRunLoopRef), &run_loop);
   if (r != noErr) {
-    NS_WARNING("Could not make global CoreAudio notifications use their own thread.");
+    NS_WARNING(
+        "Could not make global CoreAudio notifications use their own thread.");
   }
 
   gRunLoopSet = true;
