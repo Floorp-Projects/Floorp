@@ -30,7 +30,7 @@ use gpu_types::UvRectKind;
 use image::{compute_tile_range, for_each_tile_in_range};
 use internal_types::{FastHashMap, FastHashSet, TextureSource, TextureUpdateList};
 use profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
-use render_backend::FrameId;
+use render_backend::{FrameId, FrameStamp};
 use render_task::{RenderTaskCache, RenderTaskCacheKey, RenderTaskId};
 use render_task::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle, RenderTaskTree};
 use smallvec::SmallVec;
@@ -1415,13 +1415,13 @@ impl ResourceCache {
         })
     }
 
-    pub fn begin_frame(&mut self, frame_id: FrameId) {
+    pub fn begin_frame(&mut self, stamp: FrameStamp) {
         debug_assert_eq!(self.state, State::Idle);
         self.state = State::AddResources;
-        self.texture_cache.begin_frame(frame_id);
+        self.texture_cache.begin_frame(stamp);
         self.cached_glyphs.begin_frame(&self.texture_cache, &self.cached_render_tasks, &mut self.glyph_rasterizer);
         self.cached_render_tasks.begin_frame(&mut self.texture_cache);
-        self.current_frame_id = frame_id;
+        self.current_frame_id = stamp.frame_id();
     }
 
     pub fn block_until_all_resources_added(
