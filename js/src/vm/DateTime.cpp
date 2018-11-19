@@ -567,7 +567,7 @@ js::ResetTimeZoneInternal(ResetTimeZoneMode mode)
 #endif
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::ResetTimeZone()
 {
     js::ResetTimeZoneInternal(js::ResetTimeZoneMode::ResetEvenIfOffsetUnchaged);

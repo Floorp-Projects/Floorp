@@ -81,7 +81,7 @@ JSID_TO_STRING(jsid id)
  * N.B. if a jsid is backed by a string which has not been interned, that
  * string must be appropriately rooted to avoid being collected by the GC.
  */
-JS_PUBLIC_API(jsid)
+JS_PUBLIC_API jsid
 INTERNED_STRING_TO_JSID(JSContext* cx, JSString* str);
 
 static MOZ_ALWAYS_INLINE bool
@@ -177,8 +177,8 @@ JSID_IS_EMPTY(const jsid id)
 constexpr const jsid JSID_VOID;
 constexpr const jsid JSID_EMPTY = jsid::fromRawBits(JSID_TYPE_EMPTY);
 
-extern JS_PUBLIC_DATA(const JS::HandleId) JSID_VOIDHANDLE;
-extern JS_PUBLIC_DATA(const JS::HandleId) JSID_EMPTYHANDLE;
+extern JS_PUBLIC_DATA const JS::HandleId JSID_VOIDHANDLE;
+extern JS_PUBLIC_DATA const JS::HandleId JSID_EMPTYHANDLE;
 
 namespace JS {
 

@@ -121,13 +121,9 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
                             const std::string& name,
                             uint32_t clock,
                             uint32_t channels,
-                            uint32_t packetSize,
-                            uint32_t bitRate,
                             bool enabled = true)
       : JsepCodecDescription(mozilla::SdpMediaSection::kAudio, defaultPt, name,
                              clock, channels, enabled),
-        mPacketSize(packetSize),
-        mBitrate(bitRate),
         mMaxPlaybackRate(0),
         mForceMono(false),
         mFECEnabled(false),
@@ -217,8 +213,6 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
     return true;
   }
 
-  uint32_t mPacketSize;
-  uint32_t mBitrate;
   uint32_t mMaxPlaybackRate;
   bool mForceMono;
   bool mFECEnabled;

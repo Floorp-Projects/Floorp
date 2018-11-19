@@ -44,7 +44,7 @@ class MOZ_STACK_CLASS WrapperOptions : public ProxyOptions {
 
 // Base class for proxy handlers that want to forward all operations to an
 // object stored in the proxy's private slot.
-class JS_FRIEND_API(ForwardingProxyHandler) : public BaseProxyHandler
+class JS_FRIEND_API ForwardingProxyHandler : public BaseProxyHandler
 {
   public:
     using BaseProxyHandler::BaseProxyHandler;
@@ -117,7 +117,7 @@ class JS_FRIEND_API(ForwardingProxyHandler) : public BaseProxyHandler
  * to add an override in CrossCompartmentWrapper. If you don't, you risk
  * compartment mismatches. See bug 945826 comment 0.
  */
-class JS_FRIEND_API(Wrapper) : public ForwardingProxyHandler
+class JS_FRIEND_API Wrapper : public ForwardingProxyHandler
 {
     unsigned mFlags;
 
@@ -165,7 +165,7 @@ WrapperOptions::proto() const
 }
 
 /* Base class for all cross compartment wrapper handlers. */
-class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
+class JS_FRIEND_API CrossCompartmentWrapper : public Wrapper
 {
   public:
     explicit constexpr CrossCompartmentWrapper(unsigned aFlags, bool aHasPrototype = false,
@@ -227,7 +227,7 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     static const CrossCompartmentWrapper singletonWithPrototype;
 };
 
-class JS_FRIEND_API(OpaqueCrossCompartmentWrapper) : public CrossCompartmentWrapper
+class JS_FRIEND_API OpaqueCrossCompartmentWrapper : public CrossCompartmentWrapper
 {
   public:
     explicit constexpr OpaqueCrossCompartmentWrapper() : CrossCompartmentWrapper(0)
@@ -291,7 +291,7 @@ class JS_FRIEND_API(OpaqueCrossCompartmentWrapper) : public CrossCompartmentWrap
  * access, relying on derived SecurityWrapper to block access when necessary.
  */
 template <class Base>
-class JS_FRIEND_API(SecurityWrapper) : public Base
+class JS_FRIEND_API SecurityWrapper : public Base
 {
   public:
     explicit constexpr SecurityWrapper(unsigned flags, bool hasPrototype = false)
@@ -362,7 +362,7 @@ Wrapper::wrapperHandler(const JSObject* wrapper)
 // ExposeToActiveJS is called on wrapper targets to allow gray marking
 // assertions to work while an incremental GC is in progress, but this means
 // that this cannot be called from the GC or off the main thread.
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 UncheckedUnwrap(JSObject* obj, bool stopAtWindowProxy = true, unsigned* flagsp = nullptr);
 
 // Given a JSObject, returns that object stripped of wrappers. At each stage,
@@ -373,12 +373,12 @@ UncheckedUnwrap(JSObject* obj, bool stopAtWindowProxy = true, unsigned* flagsp =
 // ExposeToActiveJS is called on wrapper targets to allow gray marking
 // assertions to work while an incremental GC is in progress, but this means
 // that this cannot be called from the GC or off the main thread.
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 CheckedUnwrap(JSObject* obj, bool stopAtWindowProxy = true);
 
 // Unwrap only the outermost security wrapper, with the same semantics as
 // above. This is the checked version of Wrapper::wrappedObject.
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 UnwrapOneChecked(JSObject* obj, bool stopAtWindowProxy = true);
 
 // Given a JSObject, returns that object stripped of wrappers. This returns the
@@ -386,25 +386,25 @@ UnwrapOneChecked(JSObject* obj, bool stopAtWindowProxy = true);
 //
 // ExposeToActiveJS is not called on wrapper targets so this can be called from
 // the GC or off the main thread.
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 UncheckedUnwrapWithoutExpose(JSObject* obj);
 
 void
 ReportAccessDenied(JSContext* cx);
 
-JS_FRIEND_API(void)
+JS_FRIEND_API void
 NukeCrossCompartmentWrapper(JSContext* cx, JSObject* wrapper);
 
 void
 RemapWrapper(JSContext* cx, JSObject* wobj, JSObject* newTarget);
 
-JS_FRIEND_API(bool)
+JS_FRIEND_API bool
 RemapAllWrappersForObject(JSContext* cx, JSObject* oldTarget,
                           JSObject* newTarget);
 
 // API to recompute all cross-compartment wrappers whose source and target
 // match the given filters.
-JS_FRIEND_API(bool)
+JS_FRIEND_API bool
 RecomputeWrappers(JSContext* cx, const CompartmentFilter& sourceFilter,
                   const CompartmentFilter& targetFilter);
 

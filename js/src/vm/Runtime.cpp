@@ -743,7 +743,7 @@ JSRuntime::updateMallocCounter(size_t nbytes)
     gc.updateMallocCounter(nbytes);
 }
 
-JS_FRIEND_API(void*)
+JS_FRIEND_API void*
 JSRuntime::onOutOfMemory(AllocFunction allocFunc, size_t nbytes, void* reallocPtr, JSContext* maybecx)
 {
     MOZ_ASSERT_IF(allocFunc != AllocFunction::Realloc, !reallocPtr);
@@ -855,20 +855,20 @@ js::CurrentThreadIsPerformingGC()
 }
 #endif
 
-JS_FRIEND_API(void)
+JS_FRIEND_API void
 JS::SetJSContextProfilerSampleBufferRangeStart(JSContext* cx, uint64_t rangeStart)
 {
     cx->runtime()->setProfilerSampleBufferRangeStart(rangeStart);
 }
 
-JS_FRIEND_API(bool)
+JS_FRIEND_API bool
 JS::IsProfilingEnabledForContext(JSContext* cx)
 {
     MOZ_ASSERT(cx);
     return cx->runtime()->geckoProfiler().enabled();
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::shadow::RegisterWeakCache(JSRuntime* rt, detail::WeakCacheBase* cachep)
 {
     rt->registerWeakCache(cachep);

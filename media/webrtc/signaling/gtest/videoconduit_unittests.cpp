@@ -344,7 +344,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodec)
   memset(longName, 'A', longNameLength - 2);
   longName[longNameLength - 1] = 0;
   VideoCodecConfig codecConfigLongName(120, longName, constraints);
-  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfigBadName);
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfigLongName);
   ASSERT_EQ(ec, kMediaConduitMalformedArgument);
   delete[] longName;
 }

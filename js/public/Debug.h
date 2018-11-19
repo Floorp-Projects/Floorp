@@ -262,12 +262,12 @@ class BuilderOrigin : public Builder {
 
 // Tell Debuggers in |cx| to use |mallocSizeOf| to find the size of
 // malloc'd blocks.
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 SetDebuggerMallocSizeOf(JSContext* cx, mozilla::MallocSizeOf mallocSizeOf);
 
 // Get the MallocSizeOf function that the given context is using to find the
 // size of malloc'd blocks.
-JS_PUBLIC_API(mozilla::MallocSizeOf)
+JS_PUBLIC_API mozilla::MallocSizeOf
 GetDebuggerMallocSizeOf(JSContext* cx);
 
 
@@ -285,22 +285,22 @@ GetDebuggerMallocSizeOf(JSContext* cx);
 // Determine whether it's necessary to call FireOnGarbageCollectionHook() after
 // a GC. This is only required if there are debuggers with an
 // onGarbageCollection hook observing a global in the set of collected zones.
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 FireOnGarbageCollectionHookRequired(JSContext* cx);
 
 // For each Debugger that observed a debuggee involved in the given GC event,
 // call its `onGarbageCollection` hook.
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 FireOnGarbageCollectionHook(JSContext* cx, GarbageCollectionEvent::Ptr&& data);
 
 
 // Return true if the given value is a Debugger object, false otherwise.
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 IsDebugger(JSObject& obj);
 
 // Append each of the debuggee global objects observed by the Debugger object
 // |dbgObj| to |vector|. Returns true on success, false on failure.
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 GetDebuggeeGlobals(JSContext* cx, JSObject& dbgObj, AutoObjectVector& vector);
 
 
@@ -317,7 +317,7 @@ GetDebuggeeGlobals(JSContext* cx, JSObject& dbgObj, AutoObjectVector& vector);
 // call the appropriate |Entry| member function to indicate where we've begun
 // execution.
 
-class MOZ_STACK_CLASS JS_PUBLIC_API(AutoEntryMonitor) {
+class MOZ_STACK_CLASS JS_PUBLIC_API AutoEntryMonitor {
     JSContext* cx_;
     AutoEntryMonitor* savedMonitor_;
 

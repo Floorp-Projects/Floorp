@@ -2294,7 +2294,7 @@ Inspector.prototype = {
       .getBoolPref("devtools.screenshot.clipboard.enabled");
     const args = {
       file: true,
-      selector: this.selectionCssSelector,
+      nodeActorID: this.selection.nodeFront.actorID,
       clipboard: clipboardEnabled,
     };
     const screenshotFront = this.target.getFront("screenshot");

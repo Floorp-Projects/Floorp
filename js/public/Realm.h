@@ -13,8 +13,8 @@
 
 namespace js {
 namespace gc {
-JS_PUBLIC_API(void) TraceRealm(JSTracer* trc, JS::Realm* realm, const char* name);
-JS_PUBLIC_API(bool) RealmNeedsSweep(JS::Realm* realm);
+JS_PUBLIC_API void TraceRealm(JSTracer* trc, JS::Realm* realm, const char* name);
+JS_PUBLIC_API bool RealmNeedsSweep(JS::Realm* realm);
 }
 }
 
@@ -36,7 +36,7 @@ struct GCPolicy<Realm*> : public NonGCPointerPolicy<Realm*>
 
 // Get the current realm, if any. The ECMAScript spec calls this "the current
 // Realm Record".
-extern JS_PUBLIC_API(Realm*)
+extern JS_PUBLIC_API Realm*
 GetCurrentRealmOrNull(JSContext* cx);
 
 namespace shadow {
@@ -71,17 +71,17 @@ GetCompartmentForRealm(Realm* realm)
 // Return an object's realm. All objects except cross-compartment wrappers are
 // created in a particular realm, which never changes. Returns null if obj is
 // a cross-compartment wrapper.
-extern JS_PUBLIC_API(Realm*)
+extern JS_PUBLIC_API Realm*
 GetObjectRealmOrNull(JSObject* obj);
 
 // Get the value of the "private data" internal field of the given Realm.
 // This field is initially null and is set using SetRealmPrivate.
 // It's a pointer to embeddding-specific data that SpiderMonkey never uses.
-extern JS_PUBLIC_API(void*)
+extern JS_PUBLIC_API void*
 GetRealmPrivate(Realm* realm);
 
 // Set the "private data" internal field of the given Realm.
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 SetRealmPrivate(Realm* realm, void* data);
 
 typedef void
@@ -93,7 +93,7 @@ typedef void
 //
 // By the time this is called, the global object for the realm has already been
 // collected.
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 SetDestroyRealmCallback(JSContext* cx, DestroyRealmCallback callback);
 
 typedef void
@@ -101,18 +101,18 @@ typedef void
 
 // Set the callback SpiderMonkey calls to get the name of a realm, for
 // diagnostic output.
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 SetRealmNameCallback(JSContext* cx, RealmNameCallback callback);
 
 // Get the global object for the given realm. This only returns nullptr during
 // GC, between collecting the global object and destroying the Realm.
-extern JS_PUBLIC_API(JSObject*)
+extern JS_PUBLIC_API JSObject*
 GetRealmGlobalOrNull(Handle<Realm*> realm);
 
 // Initialize standard JS class constructors, prototypes, and any top-level
 // functions and constants associated with the standard classes (e.g. isNaN
 // for Number).
-extern JS_PUBLIC_API(bool)
+extern JS_PUBLIC_API bool
 InitRealmStandardClasses(JSContext* cx);
 
 /*
@@ -120,19 +120,19 @@ InitRealmStandardClasses(JSContext* cx);
  * on the JSContext's current Realm.
  */
 
-extern JS_PUBLIC_API(JSObject*)
+extern JS_PUBLIC_API JSObject*
 GetRealmObjectPrototype(JSContext* cx);
 
-extern JS_PUBLIC_API(JSObject*)
+extern JS_PUBLIC_API JSObject*
 GetRealmFunctionPrototype(JSContext* cx);
 
-extern JS_PUBLIC_API(JSObject*)
+extern JS_PUBLIC_API JSObject*
 GetRealmArrayPrototype(JSContext* cx);
 
-extern JS_PUBLIC_API(JSObject*)
+extern JS_PUBLIC_API JSObject*
 GetRealmErrorPrototype(JSContext* cx);
 
-extern JS_PUBLIC_API(JSObject*)
+extern JS_PUBLIC_API JSObject*
 GetRealmIteratorPrototype(JSContext* cx);
 
 } // namespace JS

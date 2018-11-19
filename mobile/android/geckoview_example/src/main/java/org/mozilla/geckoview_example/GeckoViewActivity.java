@@ -50,7 +50,7 @@ import java.util.Locale;
 
 public class GeckoViewActivity extends AppCompatActivity {
     private static final String LOGTAG = "GeckoViewActivity";
-    private static final String DEFAULT_URL = "https://mozilla.org";
+    private static final String DEFAULT_URL = "about:blank";
     private static final String USE_MULTIPROCESS_EXTRA = "use_multiprocess";
     private static final String FULL_ACCESSIBILITY_TREE_EXTRA = "full_accessibility_tree";
     private static final String SEARCH_URI_BASE = "https://www.google.com/search?q=";

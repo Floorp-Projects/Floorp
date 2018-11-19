@@ -2,6 +2,7 @@
 name = "binast"
 version = "0.1.1"
 authors = ["David Teller <D.O.Teller@gmail.com>"]
+autobins = false
 
 [dependencies]
 binjs_meta = "^0.4.3"
@@ -11,3 +12,7 @@ itertools = "^0.7.6"
 log = "0.4"
 yaml-rust = "^0.4"
 webidl = "^0.8"
+
+[[bin]]
+name = "binsource"
+path = "src/main.rs"

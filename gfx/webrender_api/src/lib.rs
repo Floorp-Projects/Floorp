@@ -27,7 +27,7 @@ extern crate core_foundation;
 extern crate core_graphics;
 #[cfg(target_os = "windows")]
 extern crate dwrote;
-extern crate euclid;
+pub extern crate euclid;
 #[cfg(feature = "ipc")]
 extern crate ipc_channel;
 extern crate serde;

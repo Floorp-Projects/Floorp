@@ -678,14 +678,6 @@ class ICFallbackStub : public ICStub
         return state_.numOptimizedStubs();
     }
 
-    void setInvalid() {
-        state_.setInvalid();
-    }
-
-    bool invalid() const {
-        return state_.invalid();
-    }
-
     ICState& state() {
         return state_;
     }
@@ -703,7 +695,6 @@ class ICFallbackStub : public ICStub
 
     // Add a new stub to the IC chain terminated by this fallback stub.
     void addNewStub(ICStub* stub) {
-        MOZ_ASSERT(!invalid());
         MOZ_ASSERT(*lastStubPtrAddr_ == this);
         MOZ_ASSERT(stub->next() == nullptr);
         stub->setNext(this);
@@ -748,6 +739,7 @@ class ICFallbackStub : public ICStub
     // caller.
     uint32_t enteredCount() const { return enteredCount_; }
     inline void incrementEnteredCount() { enteredCount_++; }
+    void resetEnteredCount() { enteredCount_ = 0; }
 };
 
 // Shared trait for all CacheIR stubs.
@@ -776,6 +768,8 @@ class ICCacheIR_Trait
     // Return the number of times this stub has successfully provided a value to the
     // caller.
     uint32_t enteredCount() const { return enteredCount_; }
+    void resetEnteredCount() { enteredCount_ = 0; }
+
     static size_t offsetOfEnteredCount() { return offsetof(T, enteredCount_); }
 };
 
@@ -1242,8 +1236,6 @@ class ICTypeMonitor_Fallback : public ICStub
     // Count of optimized type monitor stubs in this chain.
     uint32_t numOptimizedMonitorStubs_ : 7;
 
-    uint32_t invalid_ : 1;
-
     // Whether this has a fallback stub referring to the IC entry.
     bool hasFallbackStub_ : 1;
 
@@ -1260,7 +1252,6 @@ class ICTypeMonitor_Fallback : public ICStub
         firstMonitorStub_(thisFromCtor()),
         lastMonitorStubPtrAddr_(nullptr),
         numOptimizedMonitorStubs_(0),
-        invalid_(false),
         hasFallbackStub_(mainFallbackStub != nullptr),
         argumentIndex_(argumentIndex)
     { }
@@ -1270,7 +1261,6 @@ class ICTypeMonitor_Fallback : public ICStub
     }
 
     void addOptimizedMonitorStub(ICStub* stub) {
-        MOZ_ASSERT(!invalid());
         stub->setNext(this);
 
         MOZ_ASSERT((lastMonitorStubPtrAddr_ != nullptr) ==
@@ -1324,14 +1314,6 @@ class ICTypeMonitor_Fallback : public ICStub
 
     inline uint32_t numOptimizedMonitorStubs() const {
         return numOptimizedMonitorStubs_;
-    }
-
-    void setInvalid() {
-        invalid_ = 1;
-    }
-
-    bool invalid() const {
-        return invalid_;
     }
 
     inline bool monitorsThis() const {

@@ -2251,8 +2251,9 @@ nsGlobalWindowOuter::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
   nsWeakPtr opener = do_GetWeakReference(aOpener);
   if (opener == mOpener) {
     MOZ_DIAGNOSTIC_ASSERT(
-      !aOpener || (GetBrowsingContext() && GetBrowsingContext()->GetOpener() ==
-                                             aOpener->GetBrowsingContext()));
+      !aOpener || !aOpener->GetDocShell() ||
+      (GetBrowsingContext() &&
+       GetBrowsingContext()->GetOpener() == aOpener->GetBrowsingContext()));
     return;
   }
 

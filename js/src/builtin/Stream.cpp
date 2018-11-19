@@ -978,8 +978,10 @@ TeeReaderReadHandler(JSContext* cx, unsigned argc, Value* vp)
     //         true, set value2 to
     //         ? StructuredDeserialize(StructuredSerialize(value2),
     //                                 the current Realm Record).
-    // TODO: add StructuredClone() intrinsic.
-    MOZ_ASSERT(!unwrappedTeeState->cloneForBranch2(), "tee(cloneForBranch2=true) should not be exposed");
+    // We don't yet support any specifications that use cloneForBranch2, and
+    // the Streams spec doesn't offer any way for author code to enable it,
+    // so it's always false here.
+    MOZ_ASSERT(!unwrappedTeeState->cloneForBranch2());
 
     // Step i: If teeState.[[canceled1]] is false, perform
     //         ? ReadableStreamDefaultControllerEnqueue(branch1, value1).
@@ -3989,7 +3991,7 @@ ValidateAndNormalizeQueuingStrategy(JSContext* cx, HandleValue size,
 
 /*** API entry points ****************************************************************************/
 
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 js::UnwrapReadableStream(JSObject* obj)
 {
     if (JSObject* unwrapped = CheckedUnwrap(obj)) {
@@ -3998,7 +4000,7 @@ js::UnwrapReadableStream(JSObject* obj)
     return nullptr;
 }
 
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 JS::SetReadableStreamCallbacks(JSContext* cx,
                                JS::RequestReadableStreamDataCallback dataRequestCallback,
                                JS::WriteIntoReadRequestBufferCallback writeIntoReadRequestCallback,
@@ -4031,13 +4033,13 @@ JS::SetReadableStreamCallbacks(JSContext* cx,
     rt->readableStreamFinalizeCallback = finalizeCallback;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::HasReadableStreamCallbacks(JSContext* cx)
 {
     return cx->runtime()->readableStreamDataRequestCallback;
 }
 
-JS_PUBLIC_API(JSObject*)
+JS_PUBLIC_API JSObject*
 JS::NewReadableDefaultStreamObject(JSContext* cx,
                                    JS::HandleObject underlyingSource /* = nullptr */,
                                    JS::HandleFunction size /* = nullptr */,
@@ -4062,7 +4064,7 @@ JS::NewReadableDefaultStreamObject(JSContext* cx,
     return ReadableStream::createDefaultStream(cx, sourceVal, sizeVal, highWaterMarkVal, proto);
 }
 
-JS_PUBLIC_API(JSObject*)
+JS_PUBLIC_API JSObject*
 JS::NewReadableExternalSourceStreamObject(JSContext* cx,
                                           void* underlyingSource,
                                           uint8_t flags /* = 0 */,
@@ -4087,19 +4089,19 @@ JS::NewReadableExternalSourceStreamObject(JSContext* cx,
     return ReadableStream::createExternalSourceStream(cx, underlyingSource, flags, proto);
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::IsReadableStream(JSObject* obj)
 {
     return obj->canUnwrapAs<ReadableStream>();
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::IsReadableStreamReader(JSObject* obj)
 {
     return obj->canUnwrapAs<ReadableStreamDefaultReader>();
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::IsReadableStreamDefaultReader(JSObject* obj)
 {
     return obj->canUnwrapAs<ReadableStreamDefaultReader>();
@@ -4113,7 +4115,7 @@ APIToUnwrapped(JSContext* cx, JSObject* obj)
     return ToUnwrapped<T>(cx, obj);
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::ReadableStreamIsReadable(JSContext* cx, HandleObject streamObj, bool* result)
 {
     ReadableStream* unwrappedStream = APIToUnwrapped<ReadableStream>(cx, streamObj);
@@ -4125,7 +4127,7 @@ JS::ReadableStreamIsReadable(JSContext* cx, HandleObject streamObj, bool* result
     return true;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::ReadableStreamIsLocked(JSContext* cx, HandleObject streamObj, bool* result)
 {
     ReadableStream* unwrappedStream = APIToUnwrapped<ReadableStream>(cx, streamObj);
@@ -4137,7 +4139,7 @@ JS::ReadableStreamIsLocked(JSContext* cx, HandleObject streamObj, bool* result)
     return true;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::ReadableStreamIsDisturbed(JSContext* cx, HandleObject streamObj, bool* result)
 {
     ReadableStream* unwrappedStream = APIToUnwrapped<ReadableStream>(cx, streamObj);
@@ -4149,7 +4151,7 @@ JS::ReadableStreamIsDisturbed(JSContext* cx, HandleObject streamObj, bool* resul
     return true;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::ReadableStreamGetEmbeddingFlags(JSContext* cx, HandleObject streamObj, uint8_t* flags)
 {
     ReadableStream* unwrappedStream = APIToUnwrapped<ReadableStream>(cx, streamObj);
@@ -4161,7 +4163,7 @@ JS::ReadableStreamGetEmbeddingFlags(JSContext* cx, HandleObject streamObj, uint8
     return true;
 }
 
-JS_PUBLIC_API(JSObject*)
+JS_PUBLIC_API JSObject*
 JS::ReadableStreamCancel(JSContext* cx, HandleObject streamObj, HandleValue reason)
 {
     AssertHeapIsIdle();
@@ -4176,7 +4178,7 @@ JS::ReadableStreamCancel(JSContext* cx, HandleObject streamObj, HandleValue reas
     return ::ReadableStreamCancel(cx, unwrappedStream, reason);
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::ReadableStreamGetMode(JSContext* cx, HandleObject streamObj, JS::ReadableStreamMode* mode)
 {
     ReadableStream* unwrappedStream = APIToUnwrapped<ReadableStream>(cx, streamObj);
@@ -4188,7 +4190,7 @@ JS::ReadableStreamGetMode(JSContext* cx, HandleObject streamObj, JS::ReadableStr
     return true;
 }
 
-JS_PUBLIC_API(JSObject*)
+JS_PUBLIC_API JSObject*
 JS::ReadableStreamGetReader(JSContext* cx, HandleObject streamObj, ReadableStreamReaderMode mode)
 {
     AssertHeapIsIdle();
@@ -4204,7 +4206,7 @@ JS::ReadableStreamGetReader(JSContext* cx, HandleObject streamObj, ReadableStrea
     return result;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::ReadableStreamGetExternalUnderlyingSource(JSContext* cx, HandleObject streamObj, void** source)
 {
     AssertHeapIsIdle();
@@ -4233,7 +4235,7 @@ JS::ReadableStreamGetExternalUnderlyingSource(JSContext* cx, HandleObject stream
     return true;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::ReadableStreamReleaseExternalUnderlyingSource(JSContext* cx, HandleObject streamObj)
 {
     ReadableStream* unwrappedStream = APIToUnwrapped<ReadableStream>(cx, streamObj);
@@ -4248,7 +4250,7 @@ JS::ReadableStreamReleaseExternalUnderlyingSource(JSContext* cx, HandleObject st
     return true;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::ReadableStreamUpdateDataAvailableFromSource(JSContext* cx, JS::HandleObject streamObj,
                                                 uint32_t availableData)
 {
@@ -4363,7 +4365,7 @@ JS::ReadableStreamUpdateDataAvailableFromSource(JSContext* cx, JS::HandleObject 
     return true;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::ReadableStreamTee(JSContext* cx, HandleObject streamObj,
                       MutableHandleObject branch1Obj, MutableHandleObject branch2Obj)
 {
@@ -4387,7 +4389,7 @@ JS::ReadableStreamTee(JSContext* cx, HandleObject streamObj,
     return true;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::ReadableStreamGetDesiredSize(JSContext* cx, JSObject* streamObj, bool* hasValue, double* value)
 {
     ReadableStream* unwrappedStream = APIToUnwrapped<ReadableStream>(cx, streamObj);
@@ -4411,7 +4413,7 @@ JS::ReadableStreamGetDesiredSize(JSContext* cx, JSObject* streamObj, bool* hasVa
     return true;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::ReadableStreamClose(JSContext* cx, HandleObject streamObj)
 {
     AssertHeapIsIdle();
@@ -4438,7 +4440,7 @@ JS::ReadableStreamClose(JSContext* cx, HandleObject streamObj)
     return ReadableByteStreamControllerClose(cx, unwrappedController);
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::ReadableStreamEnqueue(JSContext* cx, HandleObject streamObj, HandleValue chunk)
 {
     AssertHeapIsIdle();
@@ -4466,7 +4468,7 @@ JS::ReadableStreamEnqueue(JSContext* cx, HandleObject streamObj, HandleValue chu
     return ReadableStreamDefaultControllerEnqueue(cx, unwrappedController, chunk);
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::ReadableStreamError(JSContext* cx, HandleObject streamObj, HandleValue error)
 {
     AssertHeapIsIdle();
@@ -4490,7 +4492,7 @@ JS::ReadableStreamError(JSContext* cx, HandleObject streamObj, HandleValue error
     return ReadableStreamControllerError(cx, unwrappedController, error);
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::ReadableStreamReaderIsClosed(JSContext* cx, HandleObject readerObj, bool* result)
 {
     Rooted<ReadableStreamReader*> unwrappedReader(cx,
@@ -4503,7 +4505,7 @@ JS::ReadableStreamReaderIsClosed(JSContext* cx, HandleObject readerObj, bool* re
     return true;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::ReadableStreamReaderCancel(JSContext* cx, HandleObject readerObj, HandleValue reason)
 {
     AssertHeapIsIdle();
@@ -4519,7 +4521,7 @@ JS::ReadableStreamReaderCancel(JSContext* cx, HandleObject readerObj, HandleValu
     return ReadableStreamReaderGenericCancel(cx, unwrappedReader, reason);
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::ReadableStreamReaderReleaseLock(JSContext* cx, HandleObject readerObj)
 {
     AssertHeapIsIdle();
@@ -4541,7 +4543,7 @@ JS::ReadableStreamReaderReleaseLock(JSContext* cx, HandleObject readerObj)
     return ReadableStreamReaderGenericRelease(cx, unwrappedReader);
 }
 
-JS_PUBLIC_API(JSObject*)
+JS_PUBLIC_API JSObject*
 JS::ReadableStreamDefaultReaderRead(JSContext* cx, HandleObject readerObj)
 {
     AssertHeapIsIdle();

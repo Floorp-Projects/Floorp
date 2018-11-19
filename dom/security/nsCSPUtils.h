@@ -119,15 +119,15 @@ inline CSPDirective CSP_StringToCSPDirective(const nsAString& aDir)
   return nsIContentSecurityPolicy::NO_DIRECTIVE;
 }
 
-#define FOR_EACH_CSP_KEYWORD(macro) \
-  macro(CSP_SELF,            "'self'") \
-  macro(CSP_UNSAFE_INLINE,   "'unsafe-inline'") \
-  macro(CSP_UNSAFE_EVAL,     "'unsafe-eval'") \
-  macro(CSP_NONE,            "'none'") \
-  macro(CSP_NONCE,           "'nonce-") \
-  macro(CSP_REQUIRE_SRI_FOR, "require-sri-for") \
-  macro(CSP_REPORT_SAMPLE,   "'report-sample'") \
-  macro(CSP_STRICT_DYNAMIC,  "'strict-dynamic'")
+#define FOR_EACH_CSP_KEYWORD(MACRO) \
+  MACRO(CSP_SELF,            "'self'") \
+  MACRO(CSP_UNSAFE_INLINE,   "'unsafe-inline'") \
+  MACRO(CSP_UNSAFE_EVAL,     "'unsafe-eval'") \
+  MACRO(CSP_NONE,            "'none'") \
+  MACRO(CSP_NONCE,           "'nonce-") \
+  MACRO(CSP_REQUIRE_SRI_FOR, "require-sri-for") \
+  MACRO(CSP_REPORT_SAMPLE,   "'report-sample'") \
+  MACRO(CSP_STRICT_DYNAMIC,  "'strict-dynamic'")
 
 enum CSPKeyword {
   #define KEYWORD_ENUM(id_, string_) id_,

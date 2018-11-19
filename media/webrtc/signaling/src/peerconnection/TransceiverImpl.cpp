@@ -682,9 +682,7 @@ JsepCodecDescToAudioCodecConfig(const JsepCodecDescription& aCodec,
   aConfig->reset(new AudioCodecConfig(pt,
                                   desc.mName,
                                   desc.mClock,
-                                  desc.mPacketSize,
                                   desc.mForceMono ? 1 : desc.mChannels,
-                                  desc.mBitrate,
                                   desc.mFECEnabled));
   (*aConfig)->mMaxPlaybackRate = desc.mMaxPlaybackRate;
   (*aConfig)->mDtmfEnabled = desc.mDtmfEnabled;
