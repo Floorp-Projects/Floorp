@@ -363,6 +363,8 @@ function ReadTests() {
 
         if ((testList && manifests) || !(testList || manifests)) {
             logger.error("Exactly one of reftest.manifests or reftest.tests must be specified.");
+            logger.debug("reftest.manifests is: " + manifests);
+            logger.error("reftest.tests is: " + testList);
             DoneTests();
         }
 
