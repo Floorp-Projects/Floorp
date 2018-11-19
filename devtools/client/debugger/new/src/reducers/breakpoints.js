@@ -77,7 +77,7 @@ function update(
     }
 
     case "NAVIGATE": {
-      return initialBreakpointsState();
+      return initialBreakpointsState(state.xhrBreakpoints);
     }
 
     case "SET_XHR_BREAKPOINT": {
