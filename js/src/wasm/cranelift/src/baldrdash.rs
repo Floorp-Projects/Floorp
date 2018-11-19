@@ -17,13 +17,10 @@
 // baldrapi but none of the functions.
 
 use baldrapi::CraneliftModuleEnvironment;
-use cranelift_codegen::binemit::CodeOffset;
-use cranelift_codegen::cursor::{Cursor, FuncCursor};
+use cranelift_codegen::cursor::FuncCursor;
 use cranelift_codegen::entity::EntityRef;
 use cranelift_codegen::ir::immediates::{Ieee32, Ieee64};
-use cranelift_codegen::ir::stackslot::StackSize;
 use cranelift_codegen::ir::{self, InstBuilder};
-use cranelift_codegen::{CodegenError, CodegenResult};
 use cranelift_wasm::{FuncIndex, GlobalIndex, SignatureIndex, TableIndex};
 use std::mem;
 use std::slice;
@@ -39,13 +36,6 @@ pub use baldrapi::CraneliftStaticEnvironment as StaticEnvironment;
 pub use baldrapi::FuncTypeIdDescKind;
 pub use baldrapi::Trap;
 pub use baldrapi::TypeCode;
-
-pub enum ConstantValue {
-    I32(i32),
-    I64(i64),
-    F32(f32),
-    F64(f64),
-}
 
 /// Convert a `TypeCode` into the equivalent Cranelift type.
 ///

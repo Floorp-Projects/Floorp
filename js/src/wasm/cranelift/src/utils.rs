@@ -14,7 +14,6 @@
  */
 
 /// Helpers common to other source files here.
-use std;
 use std::error;
 use std::fmt;
 
