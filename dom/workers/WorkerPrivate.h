@@ -1477,12 +1477,14 @@ private:
   bool mParentFrozen;
 
   // mIsSecureContext is set once in our constructor; after that it can be read
-  // from various threads.
+  // from various threads.  We could make this const if we were OK with setting
+  // it in the initializer list via calling some function that takes all sorts
+  // of state (loadinfo, worker type, parent).
   //
   // It's a bit unfortunate that we have to have an out-of-band boolean for
   // this, but we need access to this state from the parent thread, and we can't
   // use our global object's secure state there.
-  const bool mIsSecureContext;
+  bool mIsSecureContext;
 
   bool mDebuggerRegistered;
 
