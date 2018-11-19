@@ -54,7 +54,8 @@
 #define IF_SAB(REAL,IMAGINARY) IMAGINARY
 #endif
 
-#define JS_FOR_PROTOTYPES(REAL,IMAGINARY) \
+#define JS_FOR_PROTOTYPES_(REAL, IMAGINARY, \
+                           REAL_IF_INTL, REAL_IF_BDATA, REAL_IF_SAB, REAL_IF_BIGINT) \
     IMAGINARY(Null,             InitNullClass,          dummy) \
     REAL(Object,                InitViaClassSpec,       OCLASP(Plain)) \
     REAL(Function,              InitViaClassSpec,       &JSFunction::class_) \
@@ -88,20 +89,20 @@
     REAL(Float32Array,          InitViaClassSpec,       TYPED_ARRAY_CLASP(Float32)) \
     REAL(Float64Array,          InitViaClassSpec,       TYPED_ARRAY_CLASP(Float64)) \
     REAL(Uint8ClampedArray,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint8Clamped)) \
-IF_BIGINT(REAL,IMAGINARY)(BigInt, InitViaClassSpec, OCLASP(BigInt)) \
+    REAL_IF_BIGINT(BigInt, InitViaClassSpec, OCLASP(BigInt)) \
     REAL(Proxy,                 InitProxyClass,         &js::ProxyClass) \
     REAL(WeakMap,               InitWeakMapClass,       OCLASP(WeakMap)) \
     REAL(Map,                   InitViaClassSpec,       OCLASP(Map)) \
     REAL(Set,                   InitViaClassSpec,       OCLASP(Set)) \
     REAL(DataView,              InitViaClassSpec,       OCLASP(DataView)) \
     REAL(Symbol,                InitSymbolClass,        OCLASP(Symbol)) \
-IF_SAB(REAL,IMAGINARY)(SharedArrayBuffer,       InitViaClassSpec, OCLASP(SharedArrayBuffer)) \
-IF_INTL(REAL,IMAGINARY) (Intl,                  InitIntlClass,          CLASP(Intl)) \
-IF_BDATA(REAL,IMAGINARY)(TypedObject,           InitTypedObjectModuleObject,   OCLASP(TypedObjectModule)) \
+    REAL_IF_SAB(SharedArrayBuffer, InitViaClassSpec, OCLASP(SharedArrayBuffer)) \
+    REAL_IF_INTL(Intl, InitIntlClass, CLASP(Intl)) \
+    REAL_IF_BDATA(TypedObject, InitTypedObjectModuleObject, OCLASP(TypedObjectModule)) \
     REAL(Reflect,               InitReflect,            nullptr) \
     REAL(WeakSet,               InitWeakSetClass,       OCLASP(WeakSet)) \
     REAL(TypedArray,            InitViaClassSpec,       &js::TypedArrayObject::sharedTypedArrayPrototypeClass) \
-IF_SAB(REAL,IMAGINARY)(Atomics, InitAtomicsClass, OCLASP(Atomics)) \
+    REAL_IF_SAB(Atomics, InitAtomicsClass, OCLASP(Atomics)) \
     REAL(SavedFrame,            InitViaClassSpec,       &js::SavedFrame::class_) \
     REAL(Promise,               InitViaClassSpec,       OCLASP(Promise)) \
     REAL(ReadableStream,        InitViaClassSpec,       &js::ReadableStream::class_) \
@@ -119,6 +120,14 @@ IF_SAB(REAL,IMAGINARY)(Atomics, InitAtomicsClass, OCLASP(Atomics)) \
     IMAGINARY(WasmMemory,       dummy,                  dummy) \
     IMAGINARY(WasmTable,        dummy,                  dummy) \
     IMAGINARY(WasmGlobal,       dummy,                  dummy) \
+
+#define JS_FOR_PROTOTYPES(REAL, IMAGINARY) \
+    JS_FOR_PROTOTYPES_(REAL, \
+                       IMAGINARY, \
+                       IF_INTL(REAL, IMAGINARY), \
+                       IF_BDATA(REAL, IMAGINARY), \
+                       IF_SAB(REAL, IMAGINARY), \
+                       IF_BIGINT(REAL, IMAGINARY))
 
 #define JS_FOR_EACH_PROTOTYPE(MACRO) JS_FOR_PROTOTYPES(MACRO,MACRO)
 
