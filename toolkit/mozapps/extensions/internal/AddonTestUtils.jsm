@@ -547,6 +547,13 @@ var AddonTestUtils = {
     return server;
   },
 
+  registerJSON(server, path, obj) {
+    server.registerPathHandler(path, (request, response) => {
+      response.setHeader("content-type", "application/json", true);
+      response.write(JSON.stringify(obj));
+    });
+  },
+
   info(msg) {
     // info() for mochitests, do_print for xpcshell.
     let print = this.testScope.info || this.testScope.do_print;
@@ -1085,6 +1092,17 @@ var AddonTestUtils = {
   },
 
   tempXPIs: [],
+
+  allocTempXPIFile() {
+    let file = this.tempDir.clone();
+    let uuid = uuidGen.generateUUID().number.slice(1, -1);
+    file.append(`${uuid}.xpi`);
+
+    this.tempXPIs.push(file);
+
+    return file;
+  },
+
   /**
    * Creates an XPI file for some manifest data in the temporary directory and
    * returns the nsIFile for it. The file will be deleted when the test completes.
@@ -1094,12 +1112,7 @@ var AddonTestUtils = {
    * @return {nsIFile} A file pointing to the created XPI file
    */
   createTempXPIFile(files) {
-    var file = this.tempDir.clone();
-    let uuid = uuidGen.generateUUID().number.slice(1, -1);
-    file.append(`${uuid}.xpi`);
-
-    this.tempXPIs.push(file);
-
+    let file = this.allocTempXPIFile();
     if (typeof files["install.rdf"] === "object")
       files["install.rdf"] = this.createInstallRDF(files["install.rdf"]);
 
@@ -1337,6 +1350,19 @@ var AddonTestUtils = {
       };
 
       AddonManager.addAddonListener(listener);
+    });
+  },
+
+  promiseInstallEvent(event) {
+    return new Promise(resolve => {
+      let listener = {
+        [event](...args) {
+          AddonManager.removeInstallListener(listener);
+          resolve(args);
+        },
+      };
+
+      AddonManager.addInstallListener(listener);
     });
   },
 

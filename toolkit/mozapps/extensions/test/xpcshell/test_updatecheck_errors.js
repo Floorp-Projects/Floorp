@@ -8,14 +8,12 @@
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
 var testserver;
-const profileDir = gProfD.clone();
-profileDir.append("extensions");
 
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   // Create and configure the HTTP server.
-  testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+  testserver = createHttpServer({hosts: ["example.com"]});
   testserver.registerDirectory("/data/", do_get_file("data"));
 
   await promiseStartupManager();
@@ -23,19 +21,20 @@ add_task(async function setup() {
 
 // Verify that an update check returns the correct errors.
 add_task(async function() {
-  let {addon} = await promiseInstallXPI({
-    id: "addon1@tests.mozilla.org",
-    version: "1.0",
-    updateURL: `http://example.com/data/test_missing.json`,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1",
-    }],
-    name: "Test Addon 1",
-    bootstrap: "true",
+  await promiseInstallWebExtension({
+    manifest: {
+      name: "Test Addon 1",
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: "addon1@tests.mozilla.org",
+          update_url: "http://example.com/data/test_missing.json",
+        },
+      },
+    },
   });
 
+  let addon = await promiseAddonByID("addon1@tests.mozilla.org");
   equal(addon.version, "1.0");
 
   // We're expecting an error, so resolve when the promise is rejected.
