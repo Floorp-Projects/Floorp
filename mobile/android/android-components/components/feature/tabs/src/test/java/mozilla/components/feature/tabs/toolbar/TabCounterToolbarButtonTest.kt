@@ -8,8 +8,6 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.storage.SessionWithState
-import mozilla.components.browser.session.storage.SessionsSnapshot
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -145,10 +143,10 @@ class TabCounterToolbarButtonTest {
 
         assertEquals("0", view.getText())
 
-        val snapshot = SessionsSnapshot(listOf(
-            SessionWithState(Session("about:blank")),
-            SessionWithState(Session("about:blank")),
-            SessionWithState(Session("about:blank"))
+        val snapshot = SessionManager.Snapshot(listOf(
+            SessionManager.Snapshot.Item(Session("about:blank")),
+            SessionManager.Snapshot.Item(Session("about:blank")),
+            SessionManager.Snapshot.Item(Session("about:blank"))
         ), selectedSessionIndex = 0)
         sessionManager.restore(snapshot)
 

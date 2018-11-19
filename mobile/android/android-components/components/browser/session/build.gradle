@@ -27,7 +27,10 @@ dependencies {
     implementation project(':support-ktx')
 
     implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
+
     implementation Dependencies.support_customtabs
+    implementation Dependencies.arch_lifecycle
 
     // We expose this as API because we are using Observable in our public API and do not want every
     // consumer to have to manually import "utils".

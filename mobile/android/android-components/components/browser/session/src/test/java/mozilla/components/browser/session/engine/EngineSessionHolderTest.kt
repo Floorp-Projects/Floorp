@@ -4,8 +4,8 @@
 
 package mozilla.components.browser.session.engine
 
-import junit.framework.Assert.assertTrue
 import mozilla.components.concept.engine.EngineSession
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.mock
 import java.util.concurrent.CountDownLatch
@@ -17,7 +17,7 @@ class EngineSessionHolderTest {
     @Test
     fun `engine session holder changes are visible across threads`() {
         val engineSessionHolder = EngineSessionHolder()
-        var countDownLatch = CountDownLatch(1)
+        val countDownLatch = CountDownLatch(1)
 
         val executor = Executors.newScheduledThreadPool(2)
 

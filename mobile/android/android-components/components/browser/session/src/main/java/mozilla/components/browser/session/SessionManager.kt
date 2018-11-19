@@ -6,8 +6,6 @@ package mozilla.components.browser.session
 
 import android.support.annotation.GuardedBy
 import mozilla.components.browser.session.engine.EngineObserver
-import mozilla.components.browser.session.storage.SessionWithState
-import mozilla.components.browser.session.storage.SessionsSnapshot
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.base.observer.Observable
@@ -38,11 +36,11 @@ class SessionManager(
      * Produces a snapshot of this manager's state, suitable for restoring via [SessionManager.restore].
      * Only regular sessions are included in the snapshot. Private and Custom Tab sessions are omitted.
      *
-     * @return [SessionsSnapshot] or null if no sessions are present.
+     * @return [Snapshot] or null if no sessions are present.
      */
-    fun createSnapshot(): SessionsSnapshot? = synchronized(values) {
+    fun createSnapshot(): Snapshot? = synchronized(values) {
         if (values.isEmpty()) {
-            return@synchronized null
+            return null
         }
 
         // Filter out CustomTab and private sessions.
@@ -51,16 +49,16 @@ class SessionManager(
                 .filter { !it.isCustomTabSession() }
                 .filter { !it.private }
                 .map { session ->
-                    SessionWithState(
-                            session,
-                            session.engineSessionHolder.engineSession
+                    Snapshot.Item(
+                        session,
+                        session.engineSessionHolder.engineSession
                     )
                 }
                 .toList()
 
         // We might have some sessions (private, custom tab) but none we'd include in the snapshot.
         if (sessionStateTuples.isEmpty()) {
-            return@synchronized null
+            return null
         }
 
         // We need to find out the index of our selected session in the filtered list. If we have a
@@ -79,7 +77,7 @@ class SessionManager(
             "Selection index after filtering session must be valid"
         }
 
-        SessionsSnapshot(
+        Snapshot(
             sessions = sessionStateTuples,
             selectedSessionIndex = selectedIndexAfterFiltering
         )
@@ -176,17 +174,17 @@ class SessionManager(
     }
 
     /**
-     * Restores sessions from the provided [SessionsSnapshot].
+     * Restores sessions from the provided [Snapshot].
      * Notification behaviour is as follows:
      * - onSessionAdded notifications will not fire,
      * - onSessionSelected notification will fire exactly once if the snapshot isn't empty,
      * - once snapshot has been restored, and appropriate session has been selected, onSessionsRestored
      *   notification will fire.
      *
-     * @param snapshot A [SessionsSnapshot] which may be produced by [createSnapshot].
+     * @param snapshot A [Snapshot] which may be produced by [createSnapshot].
      * @throws IllegalArgumentException if an empty snapshot is passed in.
      */
-    fun restore(snapshot: SessionsSnapshot) = synchronized(values) {
+    fun restore(snapshot: Snapshot) = synchronized(values) {
         require(snapshot.sessions.isNotEmpty()) {
             "Snapshot must contain session state tuples"
         }
@@ -469,5 +467,17 @@ class SessionManager(
          * session has been removed by calling <code>remove()</code> on the <code>SessionManager</code>.
          */
         fun onAllSessionsRemoved() = Unit
+    }
+
+    data class Snapshot(
+        val sessions: List<Item>,
+        val selectedSessionIndex: Int
+    ) {
+        fun isEmpty() = sessions.isEmpty()
+
+        data class Item(
+            val session: Session,
+            val engineSession: EngineSession? = null
+        )
     }
 }

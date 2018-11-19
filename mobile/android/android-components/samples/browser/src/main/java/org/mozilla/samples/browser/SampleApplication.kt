@@ -5,7 +5,15 @@
 package org.mozilla.samples.browser
 
 import android.app.Application
+import mozilla.components.support.base.log.Log
+import mozilla.components.support.base.log.sink.AndroidLogSink
 
 class SampleApplication : Application() {
     val components by lazy { Components(this) }
+
+    override fun onCreate() {
+        super.onCreate()
+
+        Log.addSink(AndroidLogSink())
+    }
 }

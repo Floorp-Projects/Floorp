@@ -5,7 +5,6 @@
 package mozilla.components.feature.session
 
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.concept.engine.EngineView
 
 /**
@@ -15,7 +14,6 @@ class SessionFeature(
     private val sessionManager: SessionManager,
     private val sessionUseCases: SessionUseCases,
     engineView: EngineView,
-    private val sessionStorage: SessionStorage? = null,
     sessionId: String? = null
 ) {
     internal val presenter = EngineViewPresenter(sessionManager, engineView, sessionId)
@@ -25,8 +23,6 @@ class SessionFeature(
      */
     fun start() {
         presenter.start()
-
-        sessionStorage?.start(sessionManager)
     }
 
     /**
@@ -50,13 +46,5 @@ class SessionFeature(
      */
     fun stop() {
         presenter.stop()
-
-        sessionStorage?.stop()
-        val snapshot = sessionManager.createSnapshot()
-        if (snapshot == null) {
-            sessionStorage?.clear(sessionManager.engine)
-        } else {
-            sessionStorage?.persist(sessionManager.engine, snapshot)
-        }
     }
 }

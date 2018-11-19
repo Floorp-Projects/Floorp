@@ -48,7 +48,6 @@ class BrowserFragment : Fragment(), BackHandler, DownloadDialogListener {
                 components.sessionManager,
                 components.sessionUseCases,
                 engineView,
-                components.sessionStorage,
                 sessionId)
 
         toolbarFeature = ToolbarFeature(
