@@ -25,7 +25,6 @@ bincode = "1.0"
 bitflags = "1.0"
 byteorder = "1.0"
 cfg-if = "0.1.2"
-euclid = "0.19"
 fxhash = "0.2.1"
 gleam = "0.6.3"
 image = { optional = true, version = "0.20" }
