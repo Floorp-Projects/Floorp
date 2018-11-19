@@ -161,6 +161,7 @@ class SrcNote {
     };
 };
 
+// clang-format off
 #define FOR_EACH_SRC_NOTE_TYPE(M)                                                                  \
     M(SRC_NULL,         "null",        0)  /* Terminates a note vector. */                         \
     M(SRC_IF,           "if",          0)  /* JSOP_IFEQ bytecode is from an if-then. */            \
@@ -189,6 +190,7 @@ class SrcNote {
     M(SRC_UNUSED22,     "unused22",    0)  /* Unused. */                                           \
     M(SRC_UNUSED23,     "unused23",    0)  /* Unused. */                                           \
     M(SRC_XDELTA,       "xdelta",      0)  /* 24-31 are for extended delta notes. */
+// clang-format on
 
 enum SrcNoteType {
 #define DEFINE_SRC_NOTE_TYPE(sym, name, arity) sym,
@@ -311,17 +313,17 @@ struct JSSrcNoteSpec {
     int8_t          arity;      /* number of offset operands */
 };
 
-extern JS_FRIEND_DATA(const JSSrcNoteSpec) js_SrcNoteSpec[];
+extern JS_FRIEND_DATA const JSSrcNoteSpec js_SrcNoteSpec[];
 
 namespace js {
 
-extern JS_FRIEND_API(unsigned)
+extern JS_FRIEND_API unsigned
 SrcNoteLength(jssrcnote* sn);
 
 /*
  * Get and set the offset operand identified by which (0 for the first, etc.).
  */
-extern JS_FRIEND_API(ptrdiff_t)
+extern JS_FRIEND_API ptrdiff_t
 GetSrcNoteOffset(jssrcnote* sn, unsigned which);
 
 } // namespace js

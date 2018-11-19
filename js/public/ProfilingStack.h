@@ -20,7 +20,7 @@
 #pragma GCC diagnostic ignored "-Wattributes"
 #endif // JS_BROKEN_GCC_ATTRIBUTE_WARNING
 
-class JS_PUBLIC_API(JSTracer);
+class JS_PUBLIC_API JSTracer;
 
 #ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
 #pragma GCC diagnostic pop
@@ -320,7 +320,7 @@ class ProfilingStackFrame
         return spOrScript;
     }
 
-    JS_PUBLIC_API(JSScript*) script() const;
+    JS_PUBLIC_API JSScript* script() const;
 
     // Note that the pointer returned might be invalid.
     JSScript* rawScript() const {
@@ -330,7 +330,7 @@ class ProfilingStackFrame
     }
 
     // We can't know the layout of JSScript, so look in vm/GeckoProfiler.cpp.
-    JS_FRIEND_API(jsbytecode*) pc() const;
+    JS_FRIEND_API jsbytecode* pc() const;
     void setPC(jsbytecode* pc);
 
     void trace(JSTracer* trc);
@@ -341,15 +341,15 @@ class ProfilingStackFrame
     static const int32_t NullPCOffset = -1;
 };
 
-JS_FRIEND_API(void)
+JS_FRIEND_API void
 SetContextProfilingStack(JSContext* cx, ProfilingStack* profilingStack);
 
 // GetContextProfilingStack also exists, but it's defined in RootingAPI.h.
 
-JS_FRIEND_API(void)
+JS_FRIEND_API void
 EnableContextProfilingStack(JSContext* cx, bool enabled);
 
-JS_FRIEND_API(void)
+JS_FRIEND_API void
 RegisterContextProfilingEventMarker(JSContext* cx, void (*fn)(const char*));
 
 } // namespace js
@@ -362,7 +362,7 @@ typedef ProfilingStack*
 typedef void
 (* UnregisterThreadCallback)();
 
-JS_FRIEND_API(void)
+JS_FRIEND_API void
 SetProfilingThreadCallbacks(RegisterThreadCallback registerThread,
                             UnregisterThreadCallback unregisterThread);
 

@@ -30,13 +30,13 @@ class JsepTrackTest : public ::testing::Test
     {
       std::vector<UniquePtr<JsepCodecDescription>> results;
       results.emplace_back(
-          new JsepAudioCodecDescription("1", "opus", 48000, 2, 960, 40000));
+          new JsepAudioCodecDescription("1", "opus", 48000, 2));
       results.emplace_back(
-          new JsepAudioCodecDescription("9", "G722", 8000, 1, 320, 64000));
+          new JsepAudioCodecDescription("9", "G722", 8000, 1));
       if (addDtmfCodec) {
         results.emplace_back(
             new JsepAudioCodecDescription("101", "telephone-event",
-                                          8000, 1, 0, 0));
+                                          8000, 1));
       }
 
       if (addFecCodecs && preferRed) {

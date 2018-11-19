@@ -613,73 +613,73 @@ PerformanceGroup::Release()
     this->Delete();
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 SetStopwatchStartCallback(JSContext* cx, StopwatchStartCallback cb, void* closure)
 {
     cx->runtime()->performanceMonitoring().setStopwatchStartCallback(cb, closure);
     return true;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 SetStopwatchCommitCallback(JSContext* cx, StopwatchCommitCallback cb, void* closure)
 {
     cx->runtime()->performanceMonitoring().setStopwatchCommitCallback(cb, closure);
     return true;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 SetGetPerformanceGroupsCallback(JSContext* cx, GetGroupsCallback cb, void* closure)
 {
     cx->runtime()->performanceMonitoring().setGetGroupsCallback(cb, closure);
     return true;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 FlushPerformanceMonitoring(JSContext* cx)
 {
     return cx->runtime()->performanceMonitoring().commit();
 }
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 ResetPerformanceMonitoring(JSContext* cx)
 {
     return cx->runtime()->performanceMonitoring().reset();
 }
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 DisposePerformanceMonitoring(JSContext* cx)
 {
     return cx->runtime()->performanceMonitoring().dispose(cx->runtime());
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 SetStopwatchIsMonitoringJank(JSContext* cx, bool value)
 {
     return cx->runtime()->performanceMonitoring().setIsMonitoringJank(value);
 }
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 GetStopwatchIsMonitoringJank(JSContext* cx)
 {
     return cx->runtime()->performanceMonitoring().isMonitoringJank();
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 SetStopwatchIsMonitoringCPOW(JSContext* cx, bool value)
 {
     return cx->runtime()->performanceMonitoring().setIsMonitoringCPOW(value);
 }
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 GetStopwatchIsMonitoringCPOW(JSContext* cx)
 {
     return cx->runtime()->performanceMonitoring().isMonitoringCPOW();
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 GetPerfMonitoringTestCpuRescheduling(JSContext* cx, uint64_t* stayed, uint64_t* moved)
 {
     *stayed = cx->runtime()->performanceMonitoring().testCpuRescheduling.stayed;
     *moved = cx->runtime()->performanceMonitoring().testCpuRescheduling.moved;
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 AddCPOWPerformanceDelta(JSContext* cx, uint64_t delta)
 {
     cx->runtime()->performanceMonitoring().totalCPOWTime += delta;

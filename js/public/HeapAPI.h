@@ -19,7 +19,7 @@ struct JSStringFinalizer;
 /* These values are private to the JS engine. */
 namespace js {
 
-JS_FRIEND_API(bool)
+JS_FRIEND_API bool
 CurrentThreadCanAccessZone(JS::Zone* zone);
 
 namespace gc {
@@ -97,7 +97,7 @@ enum class ChunkLocation : uint32_t
 
 #ifdef JS_DEBUG
 /* When downcasting, ensure we are actually the right type. */
-extern JS_FRIEND_API(void)
+extern JS_FRIEND_API void
 AssertGCThingHasType(js::gc::Cell* cell, JS::TraceKind kind);
 #else
 inline void
@@ -257,7 +257,7 @@ struct Symbol {
  * is for use when that is not possible because a single pointer must point
  * to several kinds of GC thing.
  */
-class JS_FRIEND_API(GCCellPtr)
+class JS_FRIEND_API GCCellPtr
 {
   public:
     // Construction from a void* and trace kind.
@@ -452,14 +452,14 @@ CellIsMarkedGray(const Cell* cell)
     return TenuredCellIsMarkedGray(cell);
 }
 
-extern JS_PUBLIC_API(bool)
+extern JS_PUBLIC_API bool
 CellIsMarkedGrayIfKnown(const Cell* cell);
 
 #ifdef DEBUG
-extern JS_PUBLIC_API(bool)
+extern JS_PUBLIC_API bool
 CellIsNotGray(const Cell* cell);
 
-extern JS_PUBLIC_API(bool)
+extern JS_PUBLIC_API bool
 ObjectIsMarkedBlack(const JSObject* obj);
 #endif
 
@@ -532,7 +532,7 @@ GetTenuredGCThingZone(GCCellPtr thing)
     return js::gc::detail::GetGCThingZone(thing.unsafeAsUIntPtr());
 }
 
-extern JS_PUBLIC_API(Zone*)
+extern JS_PUBLIC_API Zone*
 GetNurseryStringZone(JSString* str);
 
 static MOZ_ALWAYS_INLINE Zone*
@@ -544,7 +544,7 @@ GetStringZone(JSString* str)
     return GetNurseryStringZone(str);
 }
 
-extern JS_PUBLIC_API(Zone*)
+extern JS_PUBLIC_API Zone*
 GetObjectZone(JSObject* obj);
 
 static MOZ_ALWAYS_INLINE bool
@@ -556,13 +556,13 @@ GCThingIsMarkedGray(GCCellPtr thing)
     return js::gc::detail::CellIsMarkedGrayIfKnown(thing.asCell());
 }
 
-extern JS_PUBLIC_API(JS::TraceKind)
+extern JS_PUBLIC_API JS::TraceKind
 GCThingTraceKind(void* thing);
 
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 EnableNurseryStrings(JSContext* cx);
 
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 DisableNurseryStrings(JSContext* cx);
 
 /*
@@ -571,21 +571,21 @@ DisableNurseryStrings(JSContext* cx);
  * mutator code in-between GC slices. At other times, the barrier may be elided
  * for performance.
  */
-extern JS_PUBLIC_API(bool)
+extern JS_PUBLIC_API bool
 IsIncrementalBarrierNeeded(JSContext* cx);
 
 /*
  * Notify the GC that a reference to a JSObject is about to be overwritten.
  * This method must be called if IsIncrementalBarrierNeeded.
  */
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 IncrementalPreWriteBarrier(JSObject* obj);
 
 /*
  * Notify the GC that a weak reference to a GC thing has been read.
  * This method must be called if IsIncrementalBarrierNeeded.
  */
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 IncrementalReadBarrier(GCCellPtr thing);
 
 /**
@@ -593,7 +593,7 @@ IncrementalReadBarrier(GCCellPtr thing);
  * JS::TraceKind::Shape. |thing| should be non-null. The return value indicates
  * if anything was unmarked.
  */
-extern JS_FRIEND_API(bool)
+extern JS_FRIEND_API bool
 UnmarkGrayGCThingRecursively(GCCellPtr thing);
 
 } // namespace JS
@@ -642,7 +642,7 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
 }
 
 template <typename T>
-extern JS_PUBLIC_API(bool)
+extern JS_PUBLIC_API bool
 EdgeNeedsSweepUnbarrieredSlow(T* thingp);
 
 static MOZ_ALWAYS_INLINE bool

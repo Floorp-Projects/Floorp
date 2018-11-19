@@ -164,7 +164,7 @@ WeakCollectionObject::nondeterministicGetKeys(JSContext* cx, Handle<WeakCollecti
     return true;
 }
 
-JS_FRIEND_API(bool)
+JS_FRIEND_API bool
 JS_NondeterministicGetWeakMapKeys(JSContext* cx, HandleObject objArg, MutableHandleObject ret)
 {
     RootedObject obj(cx, UncheckedUnwrap(objArg));
@@ -192,19 +192,19 @@ WeakCollection_finalize(FreeOp* fop, JSObject* obj)
     }
 }
 
-JS_PUBLIC_API(JSObject*)
+JS_PUBLIC_API JSObject*
 JS::NewWeakMapObject(JSContext* cx)
 {
     return NewBuiltinClassInstance<WeakMapObject>(cx);
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::IsWeakMapObject(JSObject* obj)
 {
     return obj->is<WeakMapObject>();
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::GetWeakMapEntry(JSContext* cx, HandleObject mapObj, HandleObject key,
                     MutableHandleValue rval)
 {
@@ -224,7 +224,7 @@ JS::GetWeakMapEntry(JSContext* cx, HandleObject mapObj, HandleObject key,
     return true;
 }
 
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 JS::SetWeakMapEntry(JSContext* cx, HandleObject mapObj, HandleObject key,
                     HandleValue val)
 {

@@ -362,7 +362,7 @@ Wrapper::wrappedObject(JSObject* wrapper)
     return target;
 }
 
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 js::UncheckedUnwrapWithoutExpose(JSObject* wrapped)
 {
     while (true) {
@@ -380,7 +380,7 @@ js::UncheckedUnwrapWithoutExpose(JSObject* wrapped)
     return wrapped;
 }
 
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 js::UncheckedUnwrap(JSObject* wrapped, bool stopAtWindowProxy, unsigned* flagsp)
 {
     MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
@@ -402,7 +402,7 @@ js::UncheckedUnwrap(JSObject* wrapped, bool stopAtWindowProxy, unsigned* flagsp)
     return wrapped;
 }
 
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 js::CheckedUnwrap(JSObject* obj, bool stopAtWindowProxy)
 {
     while (true) {
@@ -414,7 +414,7 @@ js::CheckedUnwrap(JSObject* obj, bool stopAtWindowProxy)
     }
 }
 
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 js::UnwrapOneChecked(JSObject* obj, bool stopAtWindowProxy)
 {
     MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());

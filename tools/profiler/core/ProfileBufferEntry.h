@@ -32,29 +32,29 @@ class ProfilerMarker;
 
 // NOTE!  If you add entries, you need to verify if they need to be added to the
 // switch statement in DuplicateLastSample!
-#define FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(macro) \
-  macro(Category,              int) \
-  macro(CollectionStart,       double) \
-  macro(CollectionEnd,         double) \
-  macro(Label,                 const char*) \
-  macro(FrameFlags,            uint64_t) \
-  macro(DynamicStringFragment, char*) /* char[kNumChars], really */ \
-  macro(JitReturnAddr,         void*) \
-  macro(LineNumber,            int) \
-  macro(ColumnNumber,          int) \
-  macro(NativeLeafAddr,        void*) \
-  macro(Marker,                ProfilerMarker*) \
-  macro(Pause,                 double) \
-  macro(Responsiveness,        double) \
-  macro(Resume,                double) \
-  macro(ThreadId,              int) \
-  macro(Time,                  double) \
-  macro(ResidentMemory,        uint64_t) \
-  macro(UnsharedMemory,        uint64_t) \
-  macro(CounterId,             void*) \
-  macro(CounterKey,            uint64_t) \
-  macro(Number,                uint64_t) \
-  macro(Count,                 int64_t)
+#define FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(MACRO) \
+  MACRO(Category,              int) \
+  MACRO(CollectionStart,       double) \
+  MACRO(CollectionEnd,         double) \
+  MACRO(Label,                 const char*) \
+  MACRO(FrameFlags,            uint64_t) \
+  MACRO(DynamicStringFragment, char*) /* char[kNumChars], really */ \
+  MACRO(JitReturnAddr,         void*) \
+  MACRO(LineNumber,            int) \
+  MACRO(ColumnNumber,          int) \
+  MACRO(NativeLeafAddr,        void*) \
+  MACRO(Marker,                ProfilerMarker*) \
+  MACRO(Pause,                 double) \
+  MACRO(Responsiveness,        double) \
+  MACRO(Resume,                double) \
+  MACRO(ThreadId,              int) \
+  MACRO(Time,                  double) \
+  MACRO(ResidentMemory,        uint64_t) \
+  MACRO(UnsharedMemory,        uint64_t) \
+  MACRO(CounterId,             void*) \
+  MACRO(CounterKey,            uint64_t) \
+  MACRO(Number,                uint64_t) \
+  MACRO(Count,                 int64_t)
 
 
 // NB: Packing this structure has been shown to cause SIGBUS issues on ARM.

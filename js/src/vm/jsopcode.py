@@ -100,7 +100,7 @@ class CommentInfo:
         self.ndefs_override = ''
 
 # Holds the information stored in the macro with the following format:
-#   macro({name}, {value}, {display_name}, {image}, {length}, {nuses}, {ndefs},
+#   MACRO({name}, {value}, {display_name}, {image}, {length}, {nuses}, {ndefs},
 #         {flags})
 # and the information from CommentInfo.
 
@@ -137,9 +137,9 @@ class OpcodeInfo:
         #   /*
         #    * comment
         #    */
-        #   macro(JSOP_SUB, ...)
-        #   macro(JSOP_MUL, ...)
-        #   macro(JSOP_DIV, ...)
+        #   MACRO(JSOP_SUB, ...)
+        #   MACRO(JSOP_MUL, ...)
+        #   MACRO(JSOP_DIV, ...)
         self.group = []
 
         self.sort_key = ''
@@ -198,7 +198,7 @@ def get_tag_value(line):
 def get_opcodes(dir):
     iter_pat = re.compile(r"/\*(.*?)\*/"  # either a documentation comment...
                           r"|"
-                          r"macro\("      # or a macro(...) call
+                          r"MACRO\("      # or a MACRO(...) call
                           r"(?P<name>[^,]+),\s*"
                           r"(?P<value>[0-9]+),\s*"
                           r"(?P<display_name>[^,]+,)\s*"

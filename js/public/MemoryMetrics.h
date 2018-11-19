@@ -109,7 +109,7 @@ namespace js {
  * We need to define this value here, rather than in the code which actually
  * generates the memory reports, because NotableStringInfo uses this value.
  */
-JS_FRIEND_API(size_t) MemoryReportingSundriesThreshold();
+JS_FRIEND_API size_t MemoryReportingSundriesThreshold();
 
 /**
  * This hash policy avoids flattening ropes (which perturbs the site being
@@ -161,16 +161,16 @@ namespace JS {
 
 struct ClassInfo
 {
-#define FOR_EACH_SIZE(macro) \
-    macro(Objects, GCHeapUsed, objectsGCHeap) \
-    macro(Objects, MallocHeap, objectsMallocHeapSlots) \
-    macro(Objects, MallocHeap, objectsMallocHeapElementsNormal) \
-    macro(Objects, MallocHeap, objectsMallocHeapElementsAsmJS) \
-    macro(Objects, MallocHeap, objectsMallocHeapMisc) \
-    macro(Objects, NonHeap,    objectsNonHeapElementsNormal) \
-    macro(Objects, NonHeap,    objectsNonHeapElementsShared) \
-    macro(Objects, NonHeap,    objectsNonHeapElementsWasm) \
-    macro(Objects, NonHeap,    objectsNonHeapCodeWasm)
+#define FOR_EACH_SIZE(MACRO) \
+    MACRO(Objects, GCHeapUsed, objectsGCHeap) \
+    MACRO(Objects, MallocHeap, objectsMallocHeapSlots) \
+    MACRO(Objects, MallocHeap, objectsMallocHeapElementsNormal) \
+    MACRO(Objects, MallocHeap, objectsMallocHeapElementsAsmJS) \
+    MACRO(Objects, MallocHeap, objectsMallocHeapMisc) \
+    MACRO(Objects, NonHeap,    objectsNonHeapElementsNormal) \
+    MACRO(Objects, NonHeap,    objectsNonHeapElementsShared) \
+    MACRO(Objects, NonHeap,    objectsNonHeapElementsWasm) \
+    MACRO(Objects, NonHeap,    objectsNonHeapCodeWasm)
 
     ClassInfo()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -218,13 +218,13 @@ struct ClassInfo
 
 struct ShapeInfo
 {
-#define FOR_EACH_SIZE(macro) \
-    macro(Other,   GCHeapUsed, shapesGCHeapTree) \
-    macro(Other,   GCHeapUsed, shapesGCHeapDict) \
-    macro(Other,   GCHeapUsed, shapesGCHeapBase) \
-    macro(Other,   MallocHeap, shapesMallocHeapTreeTables) \
-    macro(Other,   MallocHeap, shapesMallocHeapDictTables) \
-    macro(Other,   MallocHeap, shapesMallocHeapTreeKids)
+#define FOR_EACH_SIZE(MACRO) \
+    MACRO(Other,   GCHeapUsed, shapesGCHeapTree) \
+    MACRO(Other,   GCHeapUsed, shapesGCHeapDict) \
+    MACRO(Other,   GCHeapUsed, shapesGCHeapBase) \
+    MACRO(Other,   MallocHeap, shapesMallocHeapTreeTables) \
+    MACRO(Other,   MallocHeap, shapesMallocHeapDictTables) \
+    MACRO(Other,   MallocHeap, shapesMallocHeapTreeKids)
 
     ShapeInfo()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -293,12 +293,12 @@ struct NotableClassInfo : public ClassInfo
 /** Data for tracking JIT-code memory usage. */
 struct CodeSizes
 {
-#define FOR_EACH_SIZE(macro) \
-    macro(_, NonHeap, ion) \
-    macro(_, NonHeap, baseline) \
-    macro(_, NonHeap, regexp) \
-    macro(_, NonHeap, other) \
-    macro(_, NonHeap, unused)
+#define FOR_EACH_SIZE(MACRO) \
+    MACRO(_, NonHeap, ion) \
+    MACRO(_, NonHeap, baseline) \
+    MACRO(_, NonHeap, regexp) \
+    MACRO(_, NonHeap, other) \
+    MACRO(_, NonHeap, unused)
 
     CodeSizes()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -320,15 +320,15 @@ struct GCSizes
 {
     // |nurseryDecommitted| is marked as NonHeap rather than GCHeapDecommitted
     // because we don't consider the nursery to be part of the GC heap.
-#define FOR_EACH_SIZE(macro) \
-    macro(_, MallocHeap, marker) \
-    macro(_, NonHeap,    nurseryCommitted) \
-    macro(_, MallocHeap, nurseryMallocedBuffers) \
-    macro(_, MallocHeap, storeBufferVals) \
-    macro(_, MallocHeap, storeBufferCells) \
-    macro(_, MallocHeap, storeBufferSlots) \
-    macro(_, MallocHeap, storeBufferWholeCells) \
-    macro(_, MallocHeap, storeBufferGenerics)
+#define FOR_EACH_SIZE(MACRO) \
+    MACRO(_, MallocHeap, marker) \
+    MACRO(_, NonHeap,    nurseryCommitted) \
+    MACRO(_, MallocHeap, nurseryMallocedBuffers) \
+    MACRO(_, MallocHeap, storeBufferVals) \
+    MACRO(_, MallocHeap, storeBufferCells) \
+    MACRO(_, MallocHeap, storeBufferSlots) \
+    MACRO(_, MallocHeap, storeBufferWholeCells) \
+    MACRO(_, MallocHeap, storeBufferGenerics)
 
     GCSizes()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -354,11 +354,11 @@ struct GCSizes
  */
 struct StringInfo
 {
-#define FOR_EACH_SIZE(macro) \
-    macro(Strings, GCHeapUsed, gcHeapLatin1) \
-    macro(Strings, GCHeapUsed, gcHeapTwoByte) \
-    macro(Strings, MallocHeap, mallocHeapLatin1) \
-    macro(Strings, MallocHeap, mallocHeapTwoByte)
+#define FOR_EACH_SIZE(MACRO) \
+    MACRO(Strings, GCHeapUsed, gcHeapLatin1) \
+    MACRO(Strings, GCHeapUsed, gcHeapTwoByte) \
+    MACRO(Strings, MallocHeap, mallocHeapLatin1) \
+    MACRO(Strings, MallocHeap, mallocHeapTwoByte)
 
     StringInfo()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -435,8 +435,8 @@ struct NotableStringInfo : public StringInfo
  */
 struct ScriptSourceInfo
 {
-#define FOR_EACH_SIZE(macro) \
-    macro(_, MallocHeap, misc)
+#define FOR_EACH_SIZE(MACRO) \
+    MACRO(_, MallocHeap, misc)
 
     ScriptSourceInfo()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -498,11 +498,11 @@ struct NotableScriptSourceInfo : public ScriptSourceInfo
 
 struct HelperThreadStats
 {
-#define FOR_EACH_SIZE(macro) \
-    macro(_, MallocHeap, stateData) \
-    macro(_, MallocHeap, parseTask) \
-    macro(_, MallocHeap, ionBuilder) \
-    macro(_, MallocHeap, wasmCompile)
+#define FOR_EACH_SIZE(MACRO) \
+    MACRO(_, MallocHeap, stateData) \
+    MACRO(_, MallocHeap, parseTask) \
+    MACRO(_, MallocHeap, ionBuilder) \
+    MACRO(_, MallocHeap, wasmCompile)
 
     explicit HelperThreadStats()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -523,8 +523,8 @@ struct HelperThreadStats
  */
 struct GlobalStats
 {
-#define FOR_EACH_SIZE(macro) \
-    macro(_, MallocHeap, tracelogger)
+#define FOR_EACH_SIZE(MACRO) \
+    MACRO(_, MallocHeap, tracelogger)
 
     explicit GlobalStats(mozilla::MallocSizeOf mallocSizeOf)
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -546,20 +546,20 @@ struct GlobalStats
  */
 struct RuntimeSizes
 {
-#define FOR_EACH_SIZE(macro) \
-    macro(_, MallocHeap, object) \
-    macro(_, MallocHeap, atomsTable) \
-    macro(_, MallocHeap, atomsMarkBitmaps) \
-    macro(_, MallocHeap, contexts) \
-    macro(_, MallocHeap, temporary) \
-    macro(_, MallocHeap, interpreterStack) \
-    macro(_, MallocHeap, sharedImmutableStringsCache) \
-    macro(_, MallocHeap, sharedIntlData) \
-    macro(_, MallocHeap, uncompressedSourceCache) \
-    macro(_, MallocHeap, scriptData) \
-    macro(_, MallocHeap, tracelogger) \
-    macro(_, MallocHeap, wasmRuntime) \
-    macro(_, MallocHeap, jitLazyLink)
+#define FOR_EACH_SIZE(MACRO) \
+    MACRO(_, MallocHeap, object) \
+    MACRO(_, MallocHeap, atomsTable) \
+    MACRO(_, MallocHeap, atomsMarkBitmaps) \
+    MACRO(_, MallocHeap, contexts) \
+    MACRO(_, MallocHeap, temporary) \
+    MACRO(_, MallocHeap, interpreterStack) \
+    MACRO(_, MallocHeap, sharedImmutableStringsCache) \
+    MACRO(_, MallocHeap, sharedIntlData) \
+    MACRO(_, MallocHeap, uncompressedSourceCache) \
+    MACRO(_, MallocHeap, scriptData) \
+    MACRO(_, MallocHeap, tracelogger) \
+    MACRO(_, MallocHeap, wasmRuntime) \
+    MACRO(_, MallocHeap, jitLazyLink)
 
     RuntimeSizes()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -613,19 +613,19 @@ struct RuntimeSizes
 
 struct UnusedGCThingSizes
 {
-#define FOR_EACH_SIZE(macro) \
-    macro(Other, GCHeapUnused, object) \
-    macro(Other, GCHeapUnused, script) \
-    macro(Other, GCHeapUnused, lazyScript) \
-    macro(Other, GCHeapUnused, shape) \
-    macro(Other, GCHeapUnused, baseShape) \
-    macro(Other, GCHeapUnused, objectGroup) \
-    macro(Other, GCHeapUnused, string) \
-    macro(Other, GCHeapUnused, symbol) \
-    IF_BIGINT(macro(Other, GCHeapUnused, bigInt),) \
-    macro(Other, GCHeapUnused, jitcode) \
-    macro(Other, GCHeapUnused, scope) \
-    macro(Other, GCHeapUnused, regExpShared)
+#define FOR_EACH_SIZE(MACRO) \
+    MACRO(Other, GCHeapUnused, object) \
+    MACRO(Other, GCHeapUnused, script) \
+    MACRO(Other, GCHeapUnused, lazyScript) \
+    MACRO(Other, GCHeapUnused, shape) \
+    MACRO(Other, GCHeapUnused, baseShape) \
+    MACRO(Other, GCHeapUnused, objectGroup) \
+    MACRO(Other, GCHeapUnused, string) \
+    MACRO(Other, GCHeapUnused, symbol) \
+    IF_BIGINT(MACRO(Other, GCHeapUnused, bigInt),) \
+    MACRO(Other, GCHeapUnused, jitcode) \
+    MACRO(Other, GCHeapUnused, scope) \
+    MACRO(Other, GCHeapUnused, regExpShared)
 
     UnusedGCThingSizes()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -684,30 +684,30 @@ struct UnusedGCThingSizes
 
 struct ZoneStats
 {
-#define FOR_EACH_SIZE(macro) \
-    macro(Other,   GCHeapUsed,  symbolsGCHeap) \
-    IF_BIGINT(macro(Other,   GCHeapUsed,  bigIntsGCHeap),) \
-    IF_BIGINT(macro(Other,   MallocHeap,  bigIntsMallocHeap),) \
-    macro(Other,   GCHeapAdmin, gcHeapArenaAdmin) \
-    macro(Other,   GCHeapUsed,  lazyScriptsGCHeap) \
-    macro(Other,   MallocHeap,  lazyScriptsMallocHeap) \
-    macro(Other,   GCHeapUsed,  jitCodesGCHeap) \
-    macro(Other,   GCHeapUsed,  objectGroupsGCHeap) \
-    macro(Other,   MallocHeap,  objectGroupsMallocHeap) \
-    macro(Other,   GCHeapUsed,  scopesGCHeap) \
-    macro(Other,   MallocHeap,  scopesMallocHeap) \
-    macro(Other,   GCHeapUsed,  regExpSharedsGCHeap) \
-    macro(Other,   MallocHeap,  regExpSharedsMallocHeap) \
-    macro(Other,   MallocHeap,  typePool) \
-    macro(Other,   MallocHeap,  regexpZone) \
-    macro(Other,   MallocHeap,  jitZone) \
-    macro(Other,   MallocHeap,  baselineStubsOptimized) \
-    macro(Other,   MallocHeap,  cachedCFG) \
-    macro(Other,   MallocHeap,  uniqueIdMap) \
-    macro(Other,   MallocHeap,  shapeTables) \
-    macro(Other,   MallocHeap,  compartmentObjects) \
-    macro(Other,   MallocHeap,  crossCompartmentWrappersTables) \
-    macro(Other,   MallocHeap,  compartmentsPrivateData)
+#define FOR_EACH_SIZE(MACRO) \
+    MACRO(Other,   GCHeapUsed,  symbolsGCHeap) \
+    IF_BIGINT(MACRO(Other,   GCHeapUsed,  bigIntsGCHeap),) \
+    IF_BIGINT(MACRO(Other,   MallocHeap,  bigIntsMallocHeap),) \
+    MACRO(Other,   GCHeapAdmin, gcHeapArenaAdmin) \
+    MACRO(Other,   GCHeapUsed,  lazyScriptsGCHeap) \
+    MACRO(Other,   MallocHeap,  lazyScriptsMallocHeap) \
+    MACRO(Other,   GCHeapUsed,  jitCodesGCHeap) \
+    MACRO(Other,   GCHeapUsed,  objectGroupsGCHeap) \
+    MACRO(Other,   MallocHeap,  objectGroupsMallocHeap) \
+    MACRO(Other,   GCHeapUsed,  scopesGCHeap) \
+    MACRO(Other,   MallocHeap,  scopesMallocHeap) \
+    MACRO(Other,   GCHeapUsed,  regExpSharedsGCHeap) \
+    MACRO(Other,   MallocHeap,  regExpSharedsMallocHeap) \
+    MACRO(Other,   MallocHeap,  typePool) \
+    MACRO(Other,   MallocHeap,  regexpZone) \
+    MACRO(Other,   MallocHeap,  jitZone) \
+    MACRO(Other,   MallocHeap,  baselineStubsOptimized) \
+    MACRO(Other,   MallocHeap,  cachedCFG) \
+    MACRO(Other,   MallocHeap,  uniqueIdMap) \
+    MACRO(Other,   MallocHeap,  shapeTables) \
+    MACRO(Other,   MallocHeap,  compartmentObjects) \
+    MACRO(Other,   MallocHeap,  crossCompartmentWrappersTables) \
+    MACRO(Other,   MallocHeap,  compartmentsPrivateData)
 
     ZoneStats()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -807,27 +807,27 @@ struct RealmStats
     // actually guaranteed. But for Servo, at least, it's a moot point because
     // it doesn't provide an ObjectPrivateVisitor so the value will always be
     // zero.
-#define FOR_EACH_SIZE(macro) \
-    macro(Private, MallocHeap, objectsPrivate) \
-    macro(Other,   GCHeapUsed, scriptsGCHeap) \
-    macro(Other,   MallocHeap, scriptsMallocHeapData) \
-    macro(Other,   MallocHeap, baselineData) \
-    macro(Other,   MallocHeap, baselineStubsFallback) \
-    macro(Other,   MallocHeap, ionData) \
-    macro(Other,   MallocHeap, typeInferenceTypeScripts) \
-    macro(Other,   MallocHeap, typeInferenceAllocationSiteTables) \
-    macro(Other,   MallocHeap, typeInferenceArrayTypeTables) \
-    macro(Other,   MallocHeap, typeInferenceObjectTypeTables) \
-    macro(Other,   MallocHeap, realmObject) \
-    macro(Other,   MallocHeap, realmTables) \
-    macro(Other,   MallocHeap, innerViewsTable) \
-    macro(Other,   MallocHeap, lazyArrayBuffersTable) \
-    macro(Other,   MallocHeap, objectMetadataTable) \
-    macro(Other,   MallocHeap, savedStacksSet) \
-    macro(Other,   MallocHeap, varNamesSet) \
-    macro(Other,   MallocHeap, nonSyntacticLexicalScopesTable) \
-    macro(Other,   MallocHeap, jitRealm) \
-    macro(Other,   MallocHeap, scriptCountsMap)
+#define FOR_EACH_SIZE(MACRO) \
+    MACRO(Private, MallocHeap, objectsPrivate) \
+    MACRO(Other,   GCHeapUsed, scriptsGCHeap) \
+    MACRO(Other,   MallocHeap, scriptsMallocHeapData) \
+    MACRO(Other,   MallocHeap, baselineData) \
+    MACRO(Other,   MallocHeap, baselineStubsFallback) \
+    MACRO(Other,   MallocHeap, ionData) \
+    MACRO(Other,   MallocHeap, typeInferenceTypeScripts) \
+    MACRO(Other,   MallocHeap, typeInferenceAllocationSiteTables) \
+    MACRO(Other,   MallocHeap, typeInferenceArrayTypeTables) \
+    MACRO(Other,   MallocHeap, typeInferenceObjectTypeTables) \
+    MACRO(Other,   MallocHeap, realmObject) \
+    MACRO(Other,   MallocHeap, realmTables) \
+    MACRO(Other,   MallocHeap, innerViewsTable) \
+    MACRO(Other,   MallocHeap, lazyArrayBuffersTable) \
+    MACRO(Other,   MallocHeap, objectMetadataTable) \
+    MACRO(Other,   MallocHeap, savedStacksSet) \
+    MACRO(Other,   MallocHeap, varNamesSet) \
+    MACRO(Other,   MallocHeap, nonSyntacticLexicalScopesTable) \
+    MACRO(Other,   MallocHeap, jitRealm) \
+    MACRO(Other,   MallocHeap, scriptCountsMap)
 
     RealmStats()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -916,13 +916,13 @@ struct RuntimeStats
     // values from the zones and compartments. Both of those values are not
     // reported directly, but are just present for sanity-checking other
     // values.
-#define FOR_EACH_SIZE(macro) \
-    macro(_, Ignore,            gcHeapChunkTotal) \
-    macro(_, GCHeapDecommitted, gcHeapDecommittedArenas) \
-    macro(_, GCHeapUnused,      gcHeapUnusedChunks) \
-    macro(_, GCHeapUnused,      gcHeapUnusedArenas) \
-    macro(_, GCHeapAdmin,       gcHeapChunkAdmin) \
-    macro(_, Ignore,            gcHeapGCThings)
+#define FOR_EACH_SIZE(MACRO) \
+    MACRO(_, Ignore,            gcHeapChunkTotal) \
+    MACRO(_, GCHeapDecommitted, gcHeapDecommittedArenas) \
+    MACRO(_, GCHeapUnused,      gcHeapUnusedChunks) \
+    MACRO(_, GCHeapUnused,      gcHeapUnusedArenas) \
+    MACRO(_, GCHeapAdmin,       gcHeapChunkAdmin) \
+    MACRO(_, Ignore,            gcHeapGCThings)
 
     explicit RuntimeStats(mozilla::MallocSizeOf mallocSizeOf)
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -997,26 +997,26 @@ class ObjectPrivateVisitor
     {}
 };
 
-extern JS_PUBLIC_API(bool)
+extern JS_PUBLIC_API bool
 CollectGlobalStats(GlobalStats* gStats);
 
-extern JS_PUBLIC_API(bool)
+extern JS_PUBLIC_API bool
 CollectRuntimeStats(JSContext* cx, RuntimeStats* rtStats, ObjectPrivateVisitor* opv, bool anonymize);
 
-extern JS_PUBLIC_API(size_t)
+extern JS_PUBLIC_API size_t
 SystemRealmCount(JSContext* cx);
 
-extern JS_PUBLIC_API(size_t)
+extern JS_PUBLIC_API size_t
 UserRealmCount(JSContext* cx);
 
-extern JS_PUBLIC_API(size_t)
+extern JS_PUBLIC_API size_t
 PeakSizeOfTemporary(const JSContext* cx);
 
-extern JS_PUBLIC_API(bool)
+extern JS_PUBLIC_API bool
 AddSizeOfTab(JSContext* cx, JS::HandleObject obj, mozilla::MallocSizeOf mallocSizeOf,
              ObjectPrivateVisitor* opv, TabSizes* sizes);
 
-extern JS_PUBLIC_API(bool)
+extern JS_PUBLIC_API bool
 AddServoSizeOf(JSContext* cx, mozilla::MallocSizeOf mallocSizeOf,
                ObjectPrivateVisitor* opv, ServoSizes* sizes);
 

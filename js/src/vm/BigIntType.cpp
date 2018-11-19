@@ -61,7 +61,7 @@ js_mp_free(void* ptr, size_t size)
 
 static bool memoryFunctionsInitialized = false;
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::SetGMPMemoryFunctions(JS::GMPAllocFn allocFn,
                           JS::GMPReallocFn reallocFn,
                           JS::GMPFreeFn freeFn)

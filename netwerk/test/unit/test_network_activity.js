@@ -33,7 +33,6 @@ async function checkValueAndTrigger(request, data) {
 }
 
 function doTest() {
-    prefs.clearUserPref("network.activity.intervalMilliseconds");
     ok(results.length > 0);
     ok(results[0].host == "127.0.0.1");
     ok(results[0].rx > 0 || results[0].tx > 0);
@@ -50,9 +49,6 @@ function run_test() {
   };
 
   Services.obs.addObserver(networkActivity, 'network-activity');
-
-  // send events every 100ms
-  prefs.setIntPref("network.activity.intervalMilliseconds", 100);
 
   // why do I have to do this ??
   Services.obs.notifyObservers(null, "profile-initial-state", null);

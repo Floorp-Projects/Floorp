@@ -9,18 +9,18 @@
  * macros that the user must call, providing a macro that will consume the
  * arguments provided to it by the higher-order macro. The macros exposed are:
  *
- *   CTYPES_FOR_EACH_BOOL_TYPE(macro)
- *   CTYPES_FOR_EACH_CHAR_TYPE(macro)
- *   CTYPES_FOR_EACH_CHAR16_TYPE(macro)
- *   CTYPES_FOR_EACH_INT_TYPE(macro)
- *   CTYPES_FOR_EACH_WRAPPED_INT_TYPE(macro)
- *   CTYPES_FOR_EACH_FLOAT_TYPE(macro)
- *   CTYPES_FOR_EACH_TYPE(macro)
+ *   CTYPES_FOR_EACH_BOOL_TYPE(MACRO)
+ *   CTYPES_FOR_EACH_CHAR_TYPE(MACRO)
+ *   CTYPES_FOR_EACH_CHAR16_TYPE(MACRO)
+ *   CTYPES_FOR_EACH_INT_TYPE(MACRO)
+ *   CTYPES_FOR_EACH_WRAPPED_INT_TYPE(MACRO)
+ *   CTYPES_FOR_EACH_FLOAT_TYPE(MACRO)
+ *   CTYPES_FOR_EACH_TYPE(MACRO)
  *
- * The macro name provided to any of these macros will then be repeatedly
+ * The MACRO name provided to any of these macros will then be repeatedly
  * invoked as
  *
- *   macro(typename, ctype, ffitype)
+ *   MACRO(typename, ctype, ffitype)
  *
  * where 'typename' is the name of the type constructor (accessible as
  * ctypes.typename), 'ctype' is the corresponding C type declaration (from
@@ -53,54 +53,54 @@
 #define CTYPES_FFI_INTPTR_T  (sizeof(uintptr_t) == 4 ? ffi_type_sint32 : ffi_type_sint64)
 #define CTYPES_FFI_UINTPTR_T (sizeof(uintptr_t) == 4 ? ffi_type_uint32 : ffi_type_uint64)
 
-#define CTYPES_FOR_EACH_BOOL_TYPE(macro) \
-  macro(bool,               bool,               CTYPES_FFI_BOOL)
+#define CTYPES_FOR_EACH_BOOL_TYPE(MACRO) \
+  MACRO(bool,               bool,               CTYPES_FFI_BOOL)
 
-#define CTYPES_FOR_EACH_INT_TYPE(macro) \
-  macro(int8_t,             int8_t,             ffi_type_sint8) \
-  macro(int16_t,            int16_t,            ffi_type_sint16) \
-  macro(int32_t,            int32_t,            ffi_type_sint32) \
-  macro(uint8_t,            uint8_t,            ffi_type_uint8) \
-  macro(uint16_t,           uint16_t,           ffi_type_uint16) \
-  macro(uint32_t,           uint32_t,           ffi_type_uint32) \
-  macro(short,              short,              ffi_type_sint16) \
-  macro(unsigned_short,     unsigned short,     ffi_type_uint16) \
-  macro(int,                int,                ffi_type_sint32) \
-  macro(unsigned_int,       unsigned int,       ffi_type_uint32)
+#define CTYPES_FOR_EACH_INT_TYPE(MACRO) \
+  MACRO(int8_t,             int8_t,             ffi_type_sint8) \
+  MACRO(int16_t,            int16_t,            ffi_type_sint16) \
+  MACRO(int32_t,            int32_t,            ffi_type_sint32) \
+  MACRO(uint8_t,            uint8_t,            ffi_type_uint8) \
+  MACRO(uint16_t,           uint16_t,           ffi_type_uint16) \
+  MACRO(uint32_t,           uint32_t,           ffi_type_uint32) \
+  MACRO(short,              short,              ffi_type_sint16) \
+  MACRO(unsigned_short,     unsigned short,     ffi_type_uint16) \
+  MACRO(int,                int,                ffi_type_sint32) \
+  MACRO(unsigned_int,       unsigned int,       ffi_type_uint32)
 
-#define CTYPES_FOR_EACH_WRAPPED_INT_TYPE(macro) \
-  macro(int64_t,            int64_t,            ffi_type_sint64) \
-  macro(uint64_t,           uint64_t,           ffi_type_uint64) \
-  macro(long,               long,               CTYPES_FFI_LONG) \
-  macro(unsigned_long,      unsigned long,      CTYPES_FFI_ULONG) \
-  macro(long_long,          long long,          ffi_type_sint64) \
-  macro(unsigned_long_long, unsigned long long, ffi_type_uint64) \
-  macro(size_t,             size_t,             CTYPES_FFI_SIZE_T) \
-  macro(ssize_t,            CTYPES_SSIZE_T,     CTYPES_FFI_SSIZE_T) \
-  macro(off_t,              off_t,              CTYPES_FFI_OFF_T) \
-  macro(intptr_t,           intptr_t,           CTYPES_FFI_INTPTR_T) \
-  macro(uintptr_t,          uintptr_t,          CTYPES_FFI_UINTPTR_T)
+#define CTYPES_FOR_EACH_WRAPPED_INT_TYPE(MACRO) \
+  MACRO(int64_t,            int64_t,            ffi_type_sint64) \
+  MACRO(uint64_t,           uint64_t,           ffi_type_uint64) \
+  MACRO(long,               long,               CTYPES_FFI_LONG) \
+  MACRO(unsigned_long,      unsigned long,      CTYPES_FFI_ULONG) \
+  MACRO(long_long,          long long,          ffi_type_sint64) \
+  MACRO(unsigned_long_long, unsigned long long, ffi_type_uint64) \
+  MACRO(size_t,             size_t,             CTYPES_FFI_SIZE_T) \
+  MACRO(ssize_t,            CTYPES_SSIZE_T,     CTYPES_FFI_SSIZE_T) \
+  MACRO(off_t,              off_t,              CTYPES_FFI_OFF_T) \
+  MACRO(intptr_t,           intptr_t,           CTYPES_FFI_INTPTR_T) \
+  MACRO(uintptr_t,          uintptr_t,          CTYPES_FFI_UINTPTR_T)
 
-#define CTYPES_FOR_EACH_FLOAT_TYPE(macro) \
-  macro(float32_t,          float,              ffi_type_float) \
-  macro(float64_t,          double,             ffi_type_double) \
-  macro(float,              float,              ffi_type_float) \
-  macro(double,             double,             ffi_type_double)
+#define CTYPES_FOR_EACH_FLOAT_TYPE(MACRO) \
+  MACRO(float32_t,          float,              ffi_type_float) \
+  MACRO(float64_t,          double,             ffi_type_double) \
+  MACRO(float,              float,              ffi_type_float) \
+  MACRO(double,             double,             ffi_type_double)
 
-#define CTYPES_FOR_EACH_CHAR_TYPE(macro) \
-  macro(char,               char,               ffi_type_uint8) \
-  macro(signed_char,        signed char,        ffi_type_sint8) \
-  macro(unsigned_char,      unsigned char,      ffi_type_uint8)
+#define CTYPES_FOR_EACH_CHAR_TYPE(MACRO) \
+  MACRO(char,               char,               ffi_type_uint8) \
+  MACRO(signed_char,        signed char,        ffi_type_sint8) \
+  MACRO(unsigned_char,      unsigned char,      ffi_type_uint8)
 
-#define CTYPES_FOR_EACH_CHAR16_TYPE(macro) \
-  macro(char16_t,           char16_t,           ffi_type_uint16)
+#define CTYPES_FOR_EACH_CHAR16_TYPE(MACRO) \
+  MACRO(char16_t,           char16_t,           ffi_type_uint16)
 
-#define CTYPES_FOR_EACH_TYPE(macro) \
-  CTYPES_FOR_EACH_BOOL_TYPE(macro) \
-  CTYPES_FOR_EACH_INT_TYPE(macro) \
-  CTYPES_FOR_EACH_WRAPPED_INT_TYPE(macro) \
-  CTYPES_FOR_EACH_FLOAT_TYPE(macro) \
-  CTYPES_FOR_EACH_CHAR_TYPE(macro) \
-  CTYPES_FOR_EACH_CHAR16_TYPE(macro)
+#define CTYPES_FOR_EACH_TYPE(MACRO) \
+  CTYPES_FOR_EACH_BOOL_TYPE(MACRO) \
+  CTYPES_FOR_EACH_INT_TYPE(MACRO) \
+  CTYPES_FOR_EACH_WRAPPED_INT_TYPE(MACRO) \
+  CTYPES_FOR_EACH_FLOAT_TYPE(MACRO) \
+  CTYPES_FOR_EACH_CHAR_TYPE(MACRO) \
+  CTYPES_FOR_EACH_CHAR16_TYPE(MACRO)
 
 #endif /* ctypes_typedefs_h */

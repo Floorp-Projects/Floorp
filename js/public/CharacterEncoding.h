@@ -129,7 +129,7 @@ class UTF8CharsZ : public mozilla::RangedPtr<unsigned char>
  * to others.  This differs from UTF8CharsZ in that the chars are
  * const and it disallows assignment.
  */
-class JS_PUBLIC_API(ConstUTF8CharsZ)
+class JS_PUBLIC_API ConstUTF8CharsZ
 {
     const char* data_;
 
@@ -242,7 +242,7 @@ template <typename CharT>
 extern UTF8CharsZ
 CharsToNewUTF8CharsZ(JSContext* maybeCx, const mozilla::Range<CharT> chars);
 
-JS_PUBLIC_API(uint32_t)
+JS_PUBLIC_API uint32_t
 Utf8ToOneUcs4Char(const uint8_t* utf8Buffer, int utf8Length);
 
 /*
@@ -251,13 +251,13 @@ Utf8ToOneUcs4Char(const uint8_t* utf8Buffer, int utf8Length);
  * - On success, returns a malloc'd TwoByteCharsZ, and updates |outlen| to hold
  *   its length;  the length value excludes the trailing null.
  */
-extern JS_PUBLIC_API(TwoByteCharsZ)
+extern JS_PUBLIC_API TwoByteCharsZ
 UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
 
 /*
  * Like UTF8CharsToNewTwoByteCharsZ, but for ConstUTF8CharsZ.
  */
-extern JS_PUBLIC_API(TwoByteCharsZ)
+extern JS_PUBLIC_API TwoByteCharsZ
 UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* outlen);
 
 /*
@@ -265,17 +265,17 @@ UTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* 
  * will be replaced by \uFFFD. No exception will be thrown for malformed UTF-8
  * input.
  */
-extern JS_PUBLIC_API(TwoByteCharsZ)
+extern JS_PUBLIC_API TwoByteCharsZ
 LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
 
-extern JS_PUBLIC_API(TwoByteCharsZ)
+extern JS_PUBLIC_API TwoByteCharsZ
 LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8, size_t* outlen);
 
 /*
  * Returns the length of the char buffer required to encode |s| as UTF8.
  * Does not include the null-terminator.
  */
-JS_PUBLIC_API(size_t)
+JS_PUBLIC_API size_t
 GetDeflatedUTF8StringLength(JSFlatString* s);
 
 /*
@@ -290,7 +290,7 @@ GetDeflatedUTF8StringLength(JSFlatString* s);
  * than the length of the string, if the buffer is exhausted before the string
  * is fully encoded).
  */
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 DeflateStringToUTF8Buffer(JSFlatString* src, mozilla::RangedPtr<char> dst,
                           size_t* dstlenp = nullptr, size_t* numcharsp = nullptr);
 
@@ -309,7 +309,7 @@ enum class SmallestEncoding {
  * codepoints are <128 then ASCII, otherwise if all codepoints are <256
  * Latin-1, else UTF16.
  */
-JS_PUBLIC_API(SmallestEncoding)
+JS_PUBLIC_API SmallestEncoding
 FindSmallestEncoding(UTF8Chars utf8);
 
 /*
@@ -318,7 +318,7 @@ FindSmallestEncoding(UTF8Chars utf8);
   * report an error if the string contains non-Latin-1 codepoints.  Returns
   * Latin1CharsZ() on failure.
  */
-extern JS_PUBLIC_API(Latin1CharsZ)
+extern JS_PUBLIC_API Latin1CharsZ
 UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
 
 /*
@@ -326,14 +326,14 @@ UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
  * storing its length (excluding null terminator) in |*outlen|.  Non-Latin-1
  * codepoints are replaced by '?'.  Returns Latin1CharsZ() on failure.
  */
-extern JS_PUBLIC_API(Latin1CharsZ)
+extern JS_PUBLIC_API Latin1CharsZ
 LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8, size_t* outlen);
 
 /*
  * Returns true if all characters in the given null-terminated string are
  * ASCII, i.e. < 0x80, false otherwise.
  */
-extern JS_PUBLIC_API(bool)
+extern JS_PUBLIC_API bool
 StringIsASCII(const char* s);
 
 } // namespace JS
@@ -355,7 +355,7 @@ inline void JS_free(JS::UTF8CharsZ& ptr) { js_free((void*)ptr.get()); }
  * contains any nulls.  Avoid using this function if possible, because it will
  * eventually be removed.
  */
-extern JS_PUBLIC_API(JS::UniqueChars)
+extern JS_PUBLIC_API JS::UniqueChars
 JS_EncodeStringToLatin1(JSContext* cx, JSString* str);
 
 /**
@@ -375,7 +375,7 @@ JS_EncodeStringToLatin1(JSContext* cx, JSString* str);
  * Avoid using this function if possible, because we'll remove it once we can
  * devise a better API for the task.
  */
-extern JS_PUBLIC_API(JS::UniqueChars)
+extern JS_PUBLIC_API JS::UniqueChars
 JS_EncodeStringToUTF8(JSContext* cx, JS::Handle<JSString*> str);
 
 /**
@@ -394,7 +394,7 @@ JS_EncodeStringToUTF8(JSContext* cx, JS::Handle<JSString*> str);
  * Avoid using this function if possible, because we'll remove it once we can
  * devise a better API for the task.
  */
-extern JS_PUBLIC_API(JS::UniqueChars)
+extern JS_PUBLIC_API JS::UniqueChars
 JS_EncodeStringToASCII(JSContext* cx, JSString* str);
 
 #endif /* js_CharacterEncoding_h */

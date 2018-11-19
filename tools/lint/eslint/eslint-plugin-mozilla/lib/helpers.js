@@ -268,6 +268,7 @@ module.exports = {
         express.callee.property.name === "importGlobalProperties") {
       return express.arguments[0].elements.map(literal => {
         return {
+          explicit: true,
           name: literal.value,
           writable: false,
         };

@@ -60,10 +60,11 @@
 #[macro_use]
 extern crate serde;
 
+#[cfg(feature = "mint")]
+pub extern crate mint;
 extern crate num_traits;
 #[cfg(test)]
 extern crate rand;
-
 #[cfg(test)]
 use std as core;
 
@@ -77,6 +78,7 @@ pub use vector::{BoolVector2D, BoolVector3D, bvec2, bvec3};
 pub use homogen::HomogeneousVector;
 
 pub use rect::{rect, Rect, TypedRect};
+pub use translation::{TypedTranslation2D, TypedTranslation3D};
 pub use rotation::{Angle, Rotation2D, Rotation3D, TypedRotation2D, TypedRotation3D};
 pub use side_offsets::{SideOffsets2D, TypedSideOffsets2D};
 pub use size::{Size2D, TypedSize2D, size2};
@@ -97,6 +99,7 @@ mod side_offsets;
 mod size;
 mod transform2d;
 mod transform3d;
+mod translation;
 mod trig;
 mod vector;
 

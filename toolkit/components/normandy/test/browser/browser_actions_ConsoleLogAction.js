@@ -10,6 +10,7 @@ add_task(async function logging_works() {
   try {
     const recipe = {id: 1, arguments: {message: "Hello, world!"}};
     await action.runRecipe(recipe);
+    is(action.lastError, null, "lastError should be null");
     Assert.deepEqual(infoStub.args, ["Hello, world!"], "the message should be logged");
   } finally {
     infoStub.restore();
@@ -28,6 +29,7 @@ decorate_task(
       // message is required
       let recipe = {id: 1, arguments: {}};
       await action.runRecipe(recipe);
+      is(action.lastError, null, "lastError should be null");
       Assert.deepEqual(infoStub.args, [], "no message should be logged");
       Assert.deepEqual(reportRecipeStub.args, [[recipe.id, Uptake.RECIPE_EXECUTION_ERROR]]);
 
@@ -36,6 +38,7 @@ decorate_task(
       // message must be a string
       recipe = {id: 1, arguments: {message: 1}};
       await action.runRecipe(recipe);
+      is(action.lastError, null, "lastError should be null");
       Assert.deepEqual(infoStub.args, [], "no message should be logged");
       Assert.deepEqual(reportRecipeStub.args, [[recipe.id, Uptake.RECIPE_EXECUTION_ERROR]]);
     } finally {
