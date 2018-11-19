@@ -34,14 +34,14 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             sys.path.append(build_path)
 
         if kwargs["product"] == "fennec":
-            # Note that this import may fail in non-fennec trees
-            from mozrunner.devices.android_device import verify_android_device, grant_runtime_permissions
-            verify_android_device(self, install=True, verbose=False, xre=True)
-
             # package_name may be non-fennec in the future
             package_name = kwargs["package_name"]
             if not package_name:
                 package_name = self.substs["ANDROID_PACKAGE_NAME"]
+
+            # Note that this import may fail in non-fennec trees
+            from mozrunner.devices.android_device import verify_android_device, grant_runtime_permissions
+            verify_android_device(self, install=True, verbose=False, xre=True, app=package_name)
 
             grant_runtime_permissions(self, package_name, kwargs["device_serial"])
             if kwargs["certutil_binary"] is None:
