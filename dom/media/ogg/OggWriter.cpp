@@ -12,27 +12,20 @@
 namespace mozilla {
 
 OggWriter::OggWriter()
-  : ContainerWriter()
-  , mOggStreamState()
-  , mOggPage()
-  , mPacket()
-{
+    : ContainerWriter(), mOggStreamState(), mOggPage(), mPacket() {
   if (NS_FAILED(Init())) {
     LOG("ERROR! Fail to initialize the OggWriter.");
   }
 }
 
-OggWriter::~OggWriter()
-{
+OggWriter::~OggWriter() {
   if (mInitialized) {
     ogg_stream_clear(&mOggStreamState);
   }
   // mPacket's data was always owned by us, no need to ogg_packet_clear.
 }
 
-nsresult
-OggWriter::Init()
-{
+nsresult OggWriter::Init() {
   MOZ_ASSERT(!mInitialized);
 
   // The serial number (serialno) should be a random number, for the current
@@ -53,24 +46,23 @@ OggWriter::Init()
   return (rc == 0) ? NS_OK : NS_ERROR_NOT_INITIALIZED;
 }
 
-nsresult
-OggWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
-                             uint32_t aFlags)
-{
+nsresult OggWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
+                                      uint32_t aFlags) {
   AUTO_PROFILER_LABEL("OggWriter::WriteEncodedTrack", OTHER);
 
   uint32_t len = aData.GetEncodedFrames().Length();
   for (uint32_t i = 0; i < len; i++) {
-    if (aData.GetEncodedFrames()[i]->GetFrameType() != EncodedFrame::OPUS_AUDIO_FRAME) {
+    if (aData.GetEncodedFrames()[i]->GetFrameType() !=
+        EncodedFrame::OPUS_AUDIO_FRAME) {
       LOG("[OggWriter] wrong encoded data type!");
       return NS_ERROR_FAILURE;
     }
 
     // only pass END_OF_STREAM on the last frame!
-    nsresult rv = WriteEncodedData(aData.GetEncodedFrames()[i]->GetFrameData(),
-                                   aData.GetEncodedFrames()[i]->GetDuration(),
-                                   i < len-1 ? (aFlags & ~ContainerWriter::END_OF_STREAM) :
-                                   aFlags);
+    nsresult rv = WriteEncodedData(
+        aData.GetEncodedFrames()[i]->GetFrameData(),
+        aData.GetEncodedFrames()[i]->GetDuration(),
+        i < len - 1 ? (aFlags & ~ContainerWriter::END_OF_STREAM) : aFlags);
     if (NS_FAILED(rv)) {
       LOG("%p Failed to WriteEncodedTrack!", this);
       return rv;
@@ -79,10 +71,8 @@ OggWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
   return NS_OK;
 }
 
-nsresult
-OggWriter::WriteEncodedData(const nsTArray<uint8_t>& aBuffer, int aDuration,
-                            uint32_t aFlags)
-{
+nsresult OggWriter::WriteEncodedData(const nsTArray<uint8_t>& aBuffer,
+                                     int aDuration, uint32_t aFlags) {
   if (!mInitialized) {
     LOG("[OggWriter] OggWriter has not initialized!");
     return NS_ERROR_FAILURE;
@@ -121,22 +111,17 @@ OggWriter::WriteEncodedData(const nsTArray<uint8_t>& aBuffer, int aDuration,
   return NS_OK;
 }
 
-void
-OggWriter::ProduceOggPage(nsTArray<nsTArray<uint8_t> >* aOutputBufs)
-{
+void OggWriter::ProduceOggPage(nsTArray<nsTArray<uint8_t> >* aOutputBufs) {
   aOutputBufs->AppendElement();
-  aOutputBufs->LastElement().SetLength(mOggPage.header_len +
-                                       mOggPage.body_len);
+  aOutputBufs->LastElement().SetLength(mOggPage.header_len + mOggPage.body_len);
   memcpy(aOutputBufs->LastElement().Elements(), mOggPage.header,
          mOggPage.header_len);
   memcpy(aOutputBufs->LastElement().Elements() + mOggPage.header_len,
          mOggPage.body, mOggPage.body_len);
 }
 
-nsresult
-OggWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
-                            uint32_t aFlags)
-{
+nsresult OggWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
+                                     uint32_t aFlags) {
   int rc = -1;
   AUTO_PROFILER_LABEL("OggWriter::GetContainerData", OTHER);
   // Generate the oggOpus Header
@@ -162,8 +147,8 @@ OggWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
     ProduceOggPage(aOutputBufs);
     return NS_OK;
 
-  // Force generate a page even if the amount of packet data is not enough.
-  // Usually do so after a header packet.
+    // Force generate a page even if the amount of packet data is not enough.
+    // Usually do so after a header packet.
   } else if (aFlags & ContainerWriter::FLUSH_NEEDED) {
     // rc = 0 means no packet to put into a page, or an internal error.
     rc = ogg_stream_flush(&mOggStreamState, &mOggPage);
@@ -182,9 +167,7 @@ OggWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
   return (rc > 0) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult
-OggWriter::SetMetadata(TrackMetadataBase* aMetadata)
-{
+nsresult OggWriter::SetMetadata(TrackMetadataBase* aMetadata) {
   MOZ_ASSERT(aMetadata);
 
   AUTO_PROFILER_LABEL("OggWriter::SetMetadata", OTHER);
@@ -207,4 +190,4 @@ OggWriter::SetMetadata(TrackMetadataBase* aMetadata)
   return NS_OK;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -10,46 +10,44 @@
 #endif
 
 #include "RemoteVideoDecoderParent.h"
-#include "VideoUtils.h" // for MediaThreadType
+#include "VideoUtils.h"  // for MediaThreadType
 
 namespace mozilla {
 
 StaticRefPtr<nsIThread> sRemoteDecoderManagerParentThread;
 StaticRefPtr<TaskQueue> sRemoteDecoderManagerTaskQueue;
 
-class RemoteDecoderManagerThreadHolder
-{
+class RemoteDecoderManagerThreadHolder {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteDecoderManagerThreadHolder)
 
-public:
-  RemoteDecoderManagerThreadHolder() { }
+ public:
+  RemoteDecoderManagerThreadHolder() {}
 
-private:
-  ~RemoteDecoderManagerThreadHolder()
-  {
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "dom::RemoteDecoderManagerThreadHolder::~RemoteDecoderManagerThreadHolder",
-      []() {
-        sRemoteDecoderManagerParentThread->Shutdown();
-        sRemoteDecoderManagerParentThread = nullptr;
-      }));
+ private:
+  ~RemoteDecoderManagerThreadHolder() {
+    NS_DispatchToMainThread(
+        NS_NewRunnableFunction("dom::RemoteDecoderManagerThreadHolder::~"
+                               "RemoteDecoderManagerThreadHolder",
+                               []() {
+                                 sRemoteDecoderManagerParentThread->Shutdown();
+                                 sRemoteDecoderManagerParentThread = nullptr;
+                               }));
   }
 };
 
 StaticRefPtr<RemoteDecoderManagerThreadHolder>
     sRemoteDecoderManagerParentThreadHolder;
 
-class RemoteDecoderManagerThreadShutdownObserver : public nsIObserver
-{
+class RemoteDecoderManagerThreadShutdownObserver : public nsIObserver {
   virtual ~RemoteDecoderManagerThreadShutdownObserver() = default;
-public:
+
+ public:
   RemoteDecoderManagerThreadShutdownObserver() = default;
 
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
-                     const char16_t* aData) override
-  {
+                     const char16_t* aData) override {
     MOZ_ASSERT(strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0);
 
     RemoteDecoderManagerParent::ShutdownThreads();
@@ -58,9 +56,7 @@ public:
 };
 NS_IMPL_ISUPPORTS(RemoteDecoderManagerThreadShutdownObserver, nsIObserver);
 
-bool
-RemoteDecoderManagerParent::StartupThreads()
-{
+bool RemoteDecoderManagerParent::StartupThreads() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (sRemoteDecoderManagerParentThread) {
@@ -83,12 +79,12 @@ RemoteDecoderManagerParent::StartupThreads()
       new RemoteDecoderManagerThreadHolder();
 #if XP_WIN
   sRemoteDecoderManagerParentThread->Dispatch(
-      NS_NewRunnableFunction(
-          "RemoteDecoderManagerParent::StartupThreads",
-          []() {
-            DebugOnly<HRESULT> hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-            MOZ_ASSERT(SUCCEEDED(hr));
-          }),
+      NS_NewRunnableFunction("RemoteDecoderManagerParent::StartupThreads",
+                             []() {
+                               DebugOnly<HRESULT> hr =
+                                   CoInitializeEx(0, COINIT_MULTITHREADED);
+                               MOZ_ASSERT(SUCCEEDED(hr));
+                             }),
       NS_DISPATCH_NORMAL);
 #endif
 
@@ -101,9 +97,7 @@ RemoteDecoderManagerParent::StartupThreads()
   return true;
 }
 
-void
-RemoteDecoderManagerParent::ShutdownThreads()
-{
+void RemoteDecoderManagerParent::ShutdownThreads() {
   sRemoteDecoderManagerTaskQueue = nullptr;
 
   sRemoteDecoderManagerParentThreadHolder = nullptr;
@@ -112,16 +106,12 @@ RemoteDecoderManagerParent::ShutdownThreads()
   }
 }
 
-bool
-RemoteDecoderManagerParent::OnManagerThread()
-{
+bool RemoteDecoderManagerParent::OnManagerThread() {
   return NS_GetCurrentThread() == sRemoteDecoderManagerParentThread;
 }
 
-bool
-RemoteDecoderManagerParent::CreateForContent(
-    Endpoint<PRemoteDecoderManagerParent>&& aEndpoint)
-{
+bool RemoteDecoderManagerParent::CreateForContent(
+    Endpoint<PRemoteDecoderManagerParent>&& aEndpoint) {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_RDD);
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -130,14 +120,12 @@ RemoteDecoderManagerParent::CreateForContent(
   }
 
   RefPtr<RemoteDecoderManagerParent> parent =
-    new RemoteDecoderManagerParent(sRemoteDecoderManagerParentThreadHolder);
+      new RemoteDecoderManagerParent(sRemoteDecoderManagerParentThreadHolder);
 
   RefPtr<Runnable> task =
-    NewRunnableMethod<Endpoint<PRemoteDecoderManagerParent>&&>(
-      "dom::RemoteDecoderManagerParent::Open",
-      parent,
-      &RemoteDecoderManagerParent::Open,
-      std::move(aEndpoint));
+      NewRunnableMethod<Endpoint<PRemoteDecoderManagerParent>&&>(
+          "dom::RemoteDecoderManagerParent::Open", parent,
+          &RemoteDecoderManagerParent::Open, std::move(aEndpoint));
   sRemoteDecoderManagerParentThread->Dispatch(task.forget(),
                                               NS_DISPATCH_NORMAL);
   return true;
@@ -145,61 +133,45 @@ RemoteDecoderManagerParent::CreateForContent(
 
 RemoteDecoderManagerParent::RemoteDecoderManagerParent(
     RemoteDecoderManagerThreadHolder* aHolder)
- : mThreadHolder(aHolder)
-{
+    : mThreadHolder(aHolder) {
   MOZ_COUNT_CTOR(RemoteDecoderManagerParent);
 }
 
-RemoteDecoderManagerParent::~RemoteDecoderManagerParent()
-{
+RemoteDecoderManagerParent::~RemoteDecoderManagerParent() {
   MOZ_COUNT_DTOR(RemoteDecoderManagerParent);
 }
 
-void
-RemoteDecoderManagerParent::ActorDestroy(
-    mozilla::ipc::IProtocol::ActorDestroyReason)
-{
+void RemoteDecoderManagerParent::ActorDestroy(
+    mozilla::ipc::IProtocol::ActorDestroyReason) {
   mThreadHolder = nullptr;
 }
 
 PRemoteVideoDecoderParent*
 RemoteDecoderManagerParent::AllocPRemoteVideoDecoderParent(
-    const VideoInfo& aVideoInfo,
-    const float& aFramerate,
-    const CreateDecoderParams::OptionSet& aOptions,
-    bool* aSuccess,
-    nsCString* aErrorDescription)
-{
-  RefPtr<TaskQueue> decodeTaskQueue = new TaskQueue(
-      GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-      "RemoteVideoDecoderParent::mDecodeTaskQueue");
+    const VideoInfo& aVideoInfo, const float& aFramerate,
+    const CreateDecoderParams::OptionSet& aOptions, bool* aSuccess,
+    nsCString* aErrorDescription) {
+  RefPtr<TaskQueue> decodeTaskQueue =
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+                    "RemoteVideoDecoderParent::mDecodeTaskQueue");
 
-  auto* parent = new RemoteVideoDecoderParent(this,
-                                              aVideoInfo,
-                                              aFramerate,
-                                              aOptions,
-                                              sRemoteDecoderManagerTaskQueue,
-                                              decodeTaskQueue,
-                                              aSuccess,
-                                              aErrorDescription);
+  auto* parent = new RemoteVideoDecoderParent(
+      this, aVideoInfo, aFramerate, aOptions, sRemoteDecoderManagerTaskQueue,
+      decodeTaskQueue, aSuccess, aErrorDescription);
 
   return parent;
 }
 
-bool
-RemoteDecoderManagerParent::DeallocPRemoteVideoDecoderParent(
-    PRemoteVideoDecoderParent* actor)
-{
+bool RemoteDecoderManagerParent::DeallocPRemoteVideoDecoderParent(
+    PRemoteVideoDecoderParent* actor) {
   RemoteVideoDecoderParent* parent =
       static_cast<RemoteVideoDecoderParent*>(actor);
   parent->Destroy();
   return true;
 }
 
-void
-RemoteDecoderManagerParent::Open(
-    Endpoint<PRemoteDecoderManagerParent>&& aEndpoint)
-{
+void RemoteDecoderManagerParent::Open(
+    Endpoint<PRemoteDecoderManagerParent>&& aEndpoint) {
   if (!aEndpoint.Bind(this)) {
     // We can't recover from this.
     MOZ_CRASH("Failed to bind RemoteDecoderManagerParent to endpoint");
@@ -207,10 +179,8 @@ RemoteDecoderManagerParent::Open(
   AddRef();
 }
 
-void
-RemoteDecoderManagerParent::DeallocPRemoteDecoderManagerParent()
-{
+void RemoteDecoderManagerParent::DeallocPRemoteDecoderManagerParent() {
   Release();
 }
 
-} // namespace mozilla
+}  // namespace mozilla

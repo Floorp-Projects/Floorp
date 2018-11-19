@@ -22,9 +22,8 @@
 namespace mozilla {
 
 LazyLogModule gVP8TrackEncoderLog("VP8TrackEncoder");
-#define VP8LOG(level, msg, ...) MOZ_LOG(gVP8TrackEncoderLog, \
-                                        level, \
-                                        (msg, ##__VA_ARGS__))
+#define VP8LOG(level, msg, ...) \
+  MOZ_LOG(gVP8TrackEncoderLog, level, (msg, ##__VA_ARGS__))
 
 #define DEFAULT_BITRATE_BPS 2500000
 #define MAX_KEYFRAME_INTERVAL 600
@@ -36,22 +35,18 @@ using namespace mozilla::dom;
 
 VP8TrackEncoder::VP8TrackEncoder(TrackRate aTrackRate,
                                  FrameDroppingMode aFrameDroppingMode)
-  : VideoTrackEncoder(aTrackRate, aFrameDroppingMode)
-  , mVPXContext(new vpx_codec_ctx_t())
-  , mVPXImageWrapper(new vpx_image_t())
-{
+    : VideoTrackEncoder(aTrackRate, aFrameDroppingMode),
+      mVPXContext(new vpx_codec_ctx_t()),
+      mVPXImageWrapper(new vpx_image_t()) {
   MOZ_COUNT_CTOR(VP8TrackEncoder);
 }
 
-VP8TrackEncoder::~VP8TrackEncoder()
-{
+VP8TrackEncoder::~VP8TrackEncoder() {
   Destroy();
   MOZ_COUNT_DTOR(VP8TrackEncoder);
 }
 
-void
-VP8TrackEncoder::Destroy()
-{
+void VP8TrackEncoder::Destroy() {
   if (mInitialized) {
     vpx_codec_destroy(mVPXContext);
   }
@@ -62,10 +57,8 @@ VP8TrackEncoder::Destroy()
   mInitialized = false;
 }
 
-nsresult
-VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
-                      int32_t aDisplayHeight)
-{
+nsresult VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight,
+                               int32_t aDisplayWidth, int32_t aDisplayHeight) {
   if (aWidth < 1 || aHeight < 1 || aDisplayWidth < 1 || aDisplayHeight < 1) {
     return NS_ERROR_FAILURE;
   }
@@ -77,14 +70,15 @@ VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
 
   // Encoder configuration structure.
   vpx_codec_enc_cfg_t config;
-  nsresult rv = SetConfigurationValues(aWidth, aHeight, aDisplayWidth, aDisplayHeight, config);
+  nsresult rv = SetConfigurationValues(aWidth, aHeight, aDisplayWidth,
+                                       aDisplayHeight, config);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   // Creating a wrapper to the image - setting image data to NULL. Actual
   // pointer will be set in encode. Setting align to 1, as it is meaningless
   // (actual memory is not allocated).
-  vpx_img_wrap(mVPXImageWrapper, VPX_IMG_FMT_I420,
-               mFrameWidth, mFrameHeight, 1, nullptr);
+  vpx_img_wrap(mVPXImageWrapper, VPX_IMG_FMT_I420, mFrameWidth, mFrameHeight, 1,
+               nullptr);
 
   vpx_codec_flags_t flags = 0;
   flags |= VPX_CODEC_USE_OUTPUT_PARTITION;
@@ -102,11 +96,11 @@ VP8TrackEncoder::Init(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
   return NS_OK;
 }
 
-nsresult
-VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight,
-                             int32_t aDisplayWidth, int32_t aDisplayHeight)
-{
-  if(aWidth <= 0 || aHeight <= 0 || aDisplayWidth <= 0 || aDisplayHeight <= 0) {
+nsresult VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight,
+                                      int32_t aDisplayWidth,
+                                      int32_t aDisplayHeight) {
+  if (aWidth <= 0 || aHeight <= 0 || aDisplayWidth <= 0 ||
+      aDisplayHeight <= 0) {
     MOZ_ASSERT(false);
     return NS_ERROR_FAILURE;
   }
@@ -121,7 +115,8 @@ VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight,
   vpx_img_wrap(mVPXImageWrapper, VPX_IMG_FMT_I420, aWidth, aHeight, 1, nullptr);
   // Encoder configuration structure.
   vpx_codec_enc_cfg_t config;
-  nsresult rv = SetConfigurationValues(aWidth, aHeight, aDisplayWidth, aDisplayHeight, config);
+  nsresult rv = SetConfigurationValues(aWidth, aHeight, aDisplayWidth,
+                                       aDisplayHeight, config);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   // Set new configuration
   if (vpx_codec_enc_config_set(mVPXContext.get(), &config) != VPX_CODEC_OK) {
@@ -131,10 +126,11 @@ VP8TrackEncoder::Reconfigure(int32_t aWidth, int32_t aHeight,
   return NS_OK;
 }
 
-nsresult
-VP8TrackEncoder::SetConfigurationValues(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
-                                        int32_t aDisplayHeight, vpx_codec_enc_cfg_t& config)
-{
+nsresult VP8TrackEncoder::SetConfigurationValues(int32_t aWidth,
+                                                 int32_t aHeight,
+                                                 int32_t aDisplayWidth,
+                                                 int32_t aDisplayHeight,
+                                                 vpx_codec_enc_cfg_t& config) {
   mFrameWidth = aWidth;
   mFrameHeight = aHeight;
   mDisplayWidth = aDisplayWidth;
@@ -149,11 +145,12 @@ VP8TrackEncoder::SetConfigurationValues(int32_t aWidth, int32_t aHeight, int32_t
 
   config.g_w = mFrameWidth;
   config.g_h = mFrameHeight;
-  // TODO: Maybe we should have various aFrameRate bitrate pair for each devices?
-  // or for different platform
+  // TODO: Maybe we should have various aFrameRate bitrate pair for each
+  // devices? or for different platform
 
   // rc_target_bitrate needs kbit/s
-  config.rc_target_bitrate = (mVideoBitrate != 0 ? mVideoBitrate : DEFAULT_BITRATE_BPS)/1000;
+  config.rc_target_bitrate =
+      (mVideoBitrate != 0 ? mVideoBitrate : DEFAULT_BITRATE_BPS) / 1000;
 
   // Setting the time base of the codec
   config.g_timebase.num = 1;
@@ -161,15 +158,15 @@ VP8TrackEncoder::SetConfigurationValues(int32_t aWidth, int32_t aHeight, int32_t
 
   config.g_error_resilient = 0;
 
-  config.g_lag_in_frames = 0; // 0- no frame lagging
+  config.g_lag_in_frames = 0;  // 0- no frame lagging
 
   int32_t number_of_cores = PR_GetNumberOfProcessors();
   if (mFrameWidth * mFrameHeight > 1280 * 960 && number_of_cores >= 6) {
-    config.g_threads = 3; // 3 threads for 1080p.
+    config.g_threads = 3;  // 3 threads for 1080p.
   } else if (mFrameWidth * mFrameHeight > 640 * 480 && number_of_cores >= 3) {
-    config.g_threads = 2; // 2 threads for qHD/HD.
+    config.g_threads = 2;  // 2 threads for qHD/HD.
   } else {
-    config.g_threads = 1; // 1 thread for VGA or less
+    config.g_threads = 1;  // 1 thread for VGA or less
   }
 
   // rate control settings
@@ -193,9 +190,7 @@ VP8TrackEncoder::SetConfigurationValues(int32_t aWidth, int32_t aHeight, int32_t
   return NS_OK;
 }
 
-already_AddRefed<TrackMetadataBase>
-VP8TrackEncoder::GetMetadata()
-{
+already_AddRefed<TrackMetadataBase> VP8TrackEncoder::GetMetadata() {
   AUTO_PROFILER_LABEL("VP8TrackEncoder::GetMetadata", OTHER);
 
   MOZ_ASSERT(mInitialized || mCanceled);
@@ -214,20 +209,20 @@ VP8TrackEncoder::GetMetadata()
   meta->mDisplayWidth = mDisplayWidth;
   meta->mDisplayHeight = mDisplayHeight;
 
-  VP8LOG(LogLevel::Info, "GetMetadata() width=%d, height=%d, "
-                         "displayWidht=%d, displayHeight=%d",
-         meta->mWidth, meta->mHeight, meta->mDisplayWidth, meta->mDisplayHeight);
+  VP8LOG(LogLevel::Info,
+         "GetMetadata() width=%d, height=%d, "
+         "displayWidht=%d, displayHeight=%d",
+         meta->mWidth, meta->mHeight, meta->mDisplayWidth,
+         meta->mDisplayHeight);
 
   return meta.forget();
 }
 
-nsresult
-VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData)
-{
+nsresult VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData) {
   vpx_codec_iter_t iter = nullptr;
   EncodedFrame::FrameType frameType = EncodedFrame::VP8_P_FRAME;
   nsTArray<uint8_t> frameData;
-  const vpx_codec_cx_pkt_t *pkt = nullptr;
+  const vpx_codec_cx_pkt_t* pkt = nullptr;
   while ((pkt = vpx_codec_get_cx_data(mVPXContext, &iter)) != nullptr) {
     switch (pkt->kind) {
       case VPX_CODEC_CX_FRAME_PKT: {
@@ -236,9 +231,7 @@ VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData)
                                  pkt->data.frame.sz);
         break;
       }
-      default: {
-        break;
-      }
+      default: { break; }
     }
     // End of frame
     if ((pkt->data.frame.flags & VPX_FRAME_IS_FRAGMENT) == 0) {
@@ -269,7 +262,7 @@ VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData)
     }
 
     CheckedInt64 totalDuration =
-      FramesToUsecs(mExtractedDuration.value(), mTrackRate);
+        FramesToUsecs(mExtractedDuration.value(), mTrackRate);
     if (!totalDuration.isValid()) {
       NS_ERROR("Duration overflow");
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
@@ -285,7 +278,8 @@ VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData)
     videoData->SetDuration((uint64_t)duration.value());
     videoData->SwapInFrameData(frameData);
     VP8LOG(LogLevel::Verbose,
-           "GetEncodedPartitions TimeStamp %" PRIu64 ", Duration %" PRIu64 ", FrameType %d",
+           "GetEncodedPartitions TimeStamp %" PRIu64 ", Duration %" PRIu64
+           ", FrameType %d",
            videoData->GetTimeStamp(), videoData->GetDuration(),
            videoData->GetFrameType());
     aData.AppendEncodedFrame(videoData);
@@ -294,10 +288,8 @@ VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData)
   return pkt ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
-
-template<int N>
-static int Aligned(int aValue)
-{
+template <int N>
+static int Aligned(int aValue) {
   if (aValue < N) {
     return N;
   }
@@ -306,12 +298,12 @@ static int Aligned(int aValue)
   return (((aValue - 1) / N) + 1) * N;
 }
 
-nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
-{
+nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk& aChunk) {
   RefPtr<Image> img;
   if (aChunk.mFrame.GetForceBlack() || aChunk.IsNull()) {
     if (!mMuteFrame) {
-      mMuteFrame = VideoFrame::CreateBlackImage(gfx::IntSize(mFrameWidth, mFrameHeight));
+      mMuteFrame =
+          VideoFrame::CreateBlackImage(gfx::IntSize(mFrameWidth, mFrameHeight));
     }
     if (!mMuteFrame) {
       VP8LOG(LogLevel::Warning, "Failed to allocate black image of size %dx%d",
@@ -324,27 +316,24 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
   }
 
   if (img->GetSize() != IntSize(mFrameWidth, mFrameHeight)) {
-    VP8LOG(LogLevel::Info,
-           "Dynamic resolution change (was %dx%d, now %dx%d).",
-           mFrameWidth, mFrameHeight, img->GetSize().width, img->GetSize().height);
-
+    VP8LOG(LogLevel::Info, "Dynamic resolution change (was %dx%d, now %dx%d).",
+           mFrameWidth, mFrameHeight, img->GetSize().width,
+           img->GetSize().height);
 
     gfx::IntSize intrinsicSize = aChunk.mFrame.GetIntrinsicSize();
     gfx::IntSize imgSize = aChunk.mFrame.GetImage()->GetSize();
-    if (imgSize <= IntSize(mFrameWidth, mFrameHeight) && // check buffer size instead
-        // If the new size is less than or equal to old,
-        // the existing encoder instance can continue.
-        NS_SUCCEEDED(Reconfigure(imgSize.width,
-                                 imgSize.height,
-                                 intrinsicSize.width,
-                                 intrinsicSize.height))) {
+    if (imgSize <= IntSize(mFrameWidth,
+                           mFrameHeight) &&  // check buffer size instead
+                                             // If the new size is less than or
+                                             // equal to old, the existing
+                                             // encoder instance can continue.
+        NS_SUCCEEDED(Reconfigure(imgSize.width, imgSize.height,
+                                 intrinsicSize.width, intrinsicSize.height))) {
       VP8LOG(LogLevel::Info, "Reconfigured VP8 encoder.");
     } else {
       // New frame size is larger; re-create the encoder.
       Destroy();
-      nsresult rv = Init(imgSize.width,
-                         imgSize.height,
-                         intrinsicSize.width,
+      nsresult rv = Init(imgSize.width, imgSize.height, intrinsicSize.width,
                          intrinsicSize.height);
       VP8LOG(LogLevel::Info, "Recreated VP8 encoder.");
       NS_ENSURE_SUCCESS(rv, rv);
@@ -374,8 +363,7 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
   }
 
   if (!mI420Frame) {
-    VP8LOG(LogLevel::Warning,
-           "Allocating I420 frame of size %zu failed",
+    VP8LOG(LogLevel::Warning, "Allocating I420 frame of size %zu failed",
            neededSize);
     return NS_ERROR_FAILURE;
   }
@@ -385,14 +373,8 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
   uint8_t* uChannel = &mI420Frame[yPlaneSize];
   uint8_t* vChannel = &mI420Frame[yPlaneSize + uvPlaneSize];
 
-  nsresult rv = ConvertToI420(
-    img,
-    yChannel,
-    yStride,
-    uChannel,
-    uvStride,
-    vChannel,
-    uvStride);
+  nsresult rv = ConvertToI420(img, yChannel, yStride, uChannel, uvStride,
+                              vChannel, uvStride);
 
   if (NS_FAILED(rv)) {
     VP8LOG(LogLevel::Error, "Converting to I420 failed");
@@ -419,16 +401,14 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
  * the processed frame duration in mSourceSegment
  * in order to set the nextEncodeOperation for next target frame.
  */
-VP8TrackEncoder::EncodeOperation
-VP8TrackEncoder::GetNextEncodeOperation(TimeDuration aTimeElapsed,
-                                        StreamTime aProcessedDuration)
-{
+VP8TrackEncoder::EncodeOperation VP8TrackEncoder::GetNextEncodeOperation(
+    TimeDuration aTimeElapsed, StreamTime aProcessedDuration) {
   if (mFrameDroppingMode == FrameDroppingMode::DISALLOW) {
     return ENCODE_NORMAL_FRAME;
   }
 
   int64_t durationInUsec =
-    FramesToUsecs(aProcessedDuration, mTrackRate).value();
+      FramesToUsecs(aProcessedDuration, mTrackRate).value();
   if (aTimeElapsed.ToMicroseconds() > (durationInUsec * SKIP_FRAME_RATIO)) {
     // The encoder is too slow.
     // We should skip next frame to consume the mSourceSegment.
@@ -457,9 +437,7 @@ VP8TrackEncoder::GetNextEncodeOperation(TimeDuration aTimeElapsed,
  *      encode it.
  * 4. Remove the encoded chunks in mSourceSegment after for-loop.
  */
-nsresult
-VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
-{
+nsresult VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData) {
   AUTO_PROFILER_LABEL("VP8TrackEncoder::GetEncodedTrack", OTHER);
 
   MOZ_ASSERT(mInitialized || mCanceled);
@@ -478,11 +456,12 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
   TimeStamp timebase = TimeStamp::Now();
   EncodeOperation nextEncodeOperation = ENCODE_NORMAL_FRAME;
 
-  for (VideoSegment::ChunkIterator iter(mSourceSegment);
-       !iter.IsEnded(); iter.Next()) {
-    VideoChunk &chunk = *iter;
-    VP8LOG(LogLevel::Verbose, "nextEncodeOperation is %d for frame of duration %" PRId64,
-             nextEncodeOperation, chunk.GetDuration());
+  for (VideoSegment::ChunkIterator iter(mSourceSegment); !iter.IsEnded();
+       iter.Next()) {
+    VideoChunk& chunk = *iter;
+    VP8LOG(LogLevel::Verbose,
+           "nextEncodeOperation is %d for frame of duration %" PRId64,
+           nextEncodeOperation, chunk.GetDuration());
 
     // Encode frame.
     if (nextEncodeOperation != SKIP_FRAME) {
@@ -492,15 +471,16 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
       // Encode the data with VP8 encoder
       int flags = 0;
       if (nextEncodeOperation == ENCODE_I_FRAME) {
-        VP8LOG(LogLevel::Warning, "MediaRecorder lagging behind. Encoding keyframe.");
+        VP8LOG(LogLevel::Warning,
+               "MediaRecorder lagging behind. Encoding keyframe.");
         flags |= VPX_EFLAG_FORCE_KF;
       }
 
-      // Sum duration of non-key frames and force keyframe if exceeded the given keyframe interval
-      if (mKeyFrameInterval > 0)
-      {
-        if ((mDurationSinceLastKeyframe * 1000 / mTrackRate) >= mKeyFrameInterval)
-        {
+      // Sum duration of non-key frames and force keyframe if exceeded the given
+      // keyframe interval
+      if (mKeyFrameInterval > 0) {
+        if ((mDurationSinceLastKeyframe * 1000 / mTrackRate) >=
+            mKeyFrameInterval) {
           mDurationSinceLastKeyframe = 0;
           flags |= VPX_EFLAG_FORCE_KF;
         }
@@ -520,7 +500,8 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
       // SKIP_FRAME
       // Extend the duration of the last encoded data in aData
       // because this frame will be skipped.
-      VP8LOG(LogLevel::Warning, "MediaRecorder lagging behind. Skipping a frame.");
+      VP8LOG(LogLevel::Warning,
+             "MediaRecorder lagging behind. Skipping a frame.");
       RefPtr<EncodedFrame> last = aData.GetEncodedFrames().LastElement();
       if (last) {
         mExtractedDuration += chunk.mDuration;
@@ -529,7 +510,8 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
           return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
         }
 
-        CheckedInt64 totalDuration = FramesToUsecs(mExtractedDuration.value(), mTrackRate);
+        CheckedInt64 totalDuration =
+            FramesToUsecs(mExtractedDuration.value(), mTrackRate);
         CheckedInt64 skippedDuration = totalDuration - mExtractedDurationUs;
         mExtractedDurationUs = totalDuration;
         if (!skippedDuration.isValid()) {
@@ -547,8 +529,8 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
 
     // Check what to do next.
     TimeDuration elapsedTime = TimeStamp::Now() - timebase;
-    nextEncodeOperation = GetNextEncodeOperation(elapsedTime,
-                                                 totalProcessedDuration);
+    nextEncodeOperation =
+        GetNextEncodeOperation(elapsedTime, totalProcessedDuration);
   }
 
   // Remove the chunks we have processed.
@@ -561,14 +543,14 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
     // Bug 1243611, keep calling vpx_codec_encode and vpx_codec_get_cx_data
     // until vpx_codec_get_cx_data return null.
     do {
-      if (vpx_codec_encode(mVPXContext, nullptr, mEncodedTimestamp,
-                           0, 0, VPX_DL_REALTIME)) {
+      if (vpx_codec_encode(mVPXContext, nullptr, mEncodedTimestamp, 0, 0,
+                           VPX_DL_REALTIME)) {
         return NS_ERROR_FAILURE;
       }
-    } while(NS_SUCCEEDED(GetEncodedPartitions(aData)));
+    } while (NS_SUCCEEDED(GetEncodedPartitions(aData)));
   }
 
-  return NS_OK ;
+  return NS_OK;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

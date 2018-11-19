@@ -19,36 +19,36 @@ mozilla::LazyLogModule gMediaChildLog("MediaChild");
 namespace mozilla {
 namespace media {
 
-RefPtr<PrincipalKeyPromise>
-GetPrincipalKey(const ipc::PrincipalInfo& aPrincipalInfo, bool aPersist)
-{
+RefPtr<PrincipalKeyPromise> GetPrincipalKey(
+    const ipc::PrincipalInfo& aPrincipalInfo, bool aPersist) {
   RefPtr<MediaManager> mgr = MediaManager::GetInstance();
   MOZ_ASSERT(mgr);
 
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
     auto p = MakeRefPtr<PrincipalKeyPromise::Private>(__func__);
 
-    mgr->GetNonE10sParent()->RecvGetPrincipalKey(aPrincipalInfo, aPersist,
-                                                 [p](const nsCString& aKey) {
-                                                   p->Resolve(aKey, __func__);
-                                                 });
+    mgr->GetNonE10sParent()->RecvGetPrincipalKey(
+        aPrincipalInfo, aPersist,
+        [p](const nsCString& aKey) { p->Resolve(aKey, __func__); });
     return p;
   }
-  return Child::Get()->SendGetPrincipalKey(aPrincipalInfo, aPersist)
-    ->Then(GetMainThreadSerialEventTarget(), __func__,
-           [](const Child::GetPrincipalKeyPromise::ResolveOrRejectValue& aValue) {
-             if (aValue.IsReject() || aValue.ResolveValue().IsEmpty()) {
-               return PrincipalKeyPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-             }
-             return PrincipalKeyPromise::CreateAndResolve(aValue.ResolveValue(), __func__);
-           });
+  return Child::Get()
+      ->SendGetPrincipalKey(aPrincipalInfo, aPersist)
+      ->Then(GetMainThreadSerialEventTarget(), __func__,
+             [](const Child::GetPrincipalKeyPromise::ResolveOrRejectValue&
+                    aValue) {
+               if (aValue.IsReject() || aValue.ResolveValue().IsEmpty()) {
+                 return PrincipalKeyPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                             __func__);
+               }
+               return PrincipalKeyPromise::CreateAndResolve(
+                   aValue.ResolveValue(), __func__);
+             });
 }
 
-void
-SanitizeOriginKeys(const uint64_t& aSinceWhen, bool aOnlyPrivateBrowsing)
-{
+void SanitizeOriginKeys(const uint64_t& aSinceWhen, bool aOnlyPrivateBrowsing) {
   LOG(("SanitizeOriginKeys since %" PRIu64 " %s", aSinceWhen,
-       (aOnlyPrivateBrowsing? "in Private Browsing." : ".")));
+       (aOnlyPrivateBrowsing ? "in Private Browsing." : ".")));
 
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
     // Avoid opening MediaManager in this case, since this is called by
@@ -62,47 +62,35 @@ SanitizeOriginKeys(const uint64_t& aSinceWhen, bool aOnlyPrivateBrowsing)
 
 static Child* sChild;
 
-Child* Child::Get()
-{
+Child* Child::Get() {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Content);
   MOZ_ASSERT(NS_IsMainThread());
   if (!sChild) {
-    sChild = static_cast<Child*>(dom::ContentChild::GetSingleton()->SendPMediaConstructor());
+    sChild = static_cast<Child*>(
+        dom::ContentChild::GetSingleton()->SendPMediaConstructor());
   }
   return sChild;
 }
 
-Child::Child()
-  : mActorDestroyed(false)
-{
+Child::Child() : mActorDestroyed(false) {
   LOG(("media::Child: %p", this));
   MOZ_COUNT_CTOR(Child);
 }
 
-Child::~Child()
-{
+Child::~Child() {
   LOG(("~media::Child: %p", this));
   sChild = nullptr;
   MOZ_COUNT_DTOR(Child);
 }
 
-void Child::ActorDestroy(ActorDestroyReason aWhy)
-{
-  mActorDestroyed = true;
-}
+void Child::ActorDestroy(ActorDestroyReason aWhy) { mActorDestroyed = true; }
 
-PMediaChild*
-AllocPMediaChild()
-{
-  return new Child();
-}
+PMediaChild* AllocPMediaChild() { return new Child(); }
 
-bool
-DeallocPMediaChild(media::PMediaChild *aActor)
-{
+bool DeallocPMediaChild(media::PMediaChild* aActor) {
   delete static_cast<Child*>(aActor);
   return true;
 }
 
-} // namespace media
-} // namespace mozilla
+}  // namespace media
+}  // namespace mozilla

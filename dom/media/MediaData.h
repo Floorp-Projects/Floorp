@@ -27,7 +27,7 @@ namespace layers {
 class Image;
 class ImageContainer;
 class KnowsCompositor;
-} // namespace layers
+}  // namespace layers
 
 class MediaByteBuffer;
 class TrackInfoSharedPtr;
@@ -60,31 +60,19 @@ class TrackInfoSharedPtr;
 // if (!buffer) { return NS_ERROR_OUT_OF_MEMORY; }
 
 template <typename Type, int Alignment = 32>
-class AlignedBuffer
-{
-public:
+class AlignedBuffer {
+ public:
   AlignedBuffer()
-    : mData(nullptr)
-    , mLength(0)
-    , mBuffer(nullptr)
-    , mCapacity(0)
-  {
-  }
+      : mData(nullptr), mLength(0), mBuffer(nullptr), mCapacity(0) {}
 
   explicit AlignedBuffer(size_t aLength)
-    : mData(nullptr)
-    , mLength(0)
-    , mBuffer(nullptr)
-    , mCapacity(0)
-  {
+      : mData(nullptr), mLength(0), mBuffer(nullptr), mCapacity(0) {
     if (EnsureCapacity(aLength)) {
       mLength = aLength;
     }
   }
 
-  AlignedBuffer(const Type* aData, size_t aLength)
-    : AlignedBuffer(aLength)
-  {
+  AlignedBuffer(const Type* aData, size_t aLength) : AlignedBuffer(aLength) {
     if (!mData) {
       return;
     }
@@ -92,23 +80,19 @@ public:
   }
 
   AlignedBuffer(const AlignedBuffer& aOther)
-    : AlignedBuffer(aOther.Data(), aOther.Length())
-  {
-  }
+      : AlignedBuffer(aOther.Data(), aOther.Length()) {}
 
   AlignedBuffer(AlignedBuffer&& aOther)
-    : mData(aOther.mData)
-    , mLength(aOther.mLength)
-    , mBuffer(std::move(aOther.mBuffer))
-    , mCapacity(aOther.mCapacity)
-  {
+      : mData(aOther.mData),
+        mLength(aOther.mLength),
+        mBuffer(std::move(aOther.mBuffer)),
+        mCapacity(aOther.mCapacity) {
     aOther.mData = nullptr;
     aOther.mLength = 0;
     aOther.mCapacity = 0;
   }
 
-  AlignedBuffer& operator=(AlignedBuffer&& aOther)
-  {
+  AlignedBuffer& operator=(AlignedBuffer&& aOther) {
     this->~AlignedBuffer();
     new (this) AlignedBuffer(std::move(aOther));
     return *this;
@@ -117,20 +101,17 @@ public:
   Type* Data() const { return mData; }
   size_t Length() const { return mLength; }
   size_t Size() const { return mLength * sizeof(Type); }
-  Type& operator[](size_t aIndex)
-  {
+  Type& operator[](size_t aIndex) {
     MOZ_ASSERT(aIndex < mLength);
     return mData[aIndex];
   }
-  const Type& operator[](size_t aIndex) const
-  {
+  const Type& operator[](size_t aIndex) const {
     MOZ_ASSERT(aIndex < mLength);
     return mData[aIndex];
   }
   // Set length of buffer, allocating memory as required.
   // If length is increased, new buffer area is filled with 0.
-  bool SetLength(size_t aLength)
-  {
+  bool SetLength(size_t aLength) {
     if (aLength > mLength && !EnsureCapacity(aLength)) {
       return false;
     }
@@ -138,8 +119,7 @@ public:
     return true;
   }
   // Add aData at the beginning of buffer.
-  bool Prepend(const Type* aData, size_t aLength)
-  {
+  bool Prepend(const Type* aData, size_t aLength) {
     if (!EnsureCapacity(aLength + mLength)) {
       return false;
     }
@@ -152,8 +132,7 @@ public:
     return true;
   }
   // Add aData at the end of buffer.
-  bool Append(const Type* aData, size_t aLength)
-  {
+  bool Append(const Type* aData, size_t aLength) {
     if (!EnsureCapacity(aLength + mLength)) {
       return false;
     }
@@ -164,8 +143,7 @@ public:
     return true;
   }
   // Replace current content with aData.
-  bool Replace(const Type* aData, size_t aLength)
-  {
+  bool Replace(const Type* aData, size_t aLength) {
     // If aLength is smaller than our current length, we leave the buffer as is,
     // only adjusting the reported length.
     if (!EnsureCapacity(aLength)) {
@@ -177,66 +155,52 @@ public:
     return true;
   }
   // Clear the memory buffer. Will set target mData and mLength to 0.
-  void Clear()
-  {
+  void Clear() {
     mLength = 0;
     mData = nullptr;
   }
 
   // Methods for reporting memory.
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
     size_t size = aMallocSizeOf(this);
     size += aMallocSizeOf(mBuffer.get());
     return size;
   }
   // AlignedBuffer is typically allocated on the stack. As such, you likely
   // want to use SizeOfExcludingThis
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-  {
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
     return aMallocSizeOf(mBuffer.get());
   }
-  size_t ComputedSizeOfExcludingThis() const
-  {
-    return mCapacity;
-  }
+  size_t ComputedSizeOfExcludingThis() const { return mCapacity; }
 
   // For backward compatibility with UniquePtr<Type[]>
   Type* get() const { return mData; }
   explicit operator bool() const { return mData != nullptr; }
 
   // Size in bytes of extra space allocated for padding.
-  static size_t AlignmentPaddingSize()
-  {
-    return AlignmentOffset() * 2;
-  }
+  static size_t AlignmentPaddingSize() { return AlignmentOffset() * 2; }
 
-  void PopFront(size_t aSize)
-  {
+  void PopFront(size_t aSize) {
     MOZ_ASSERT(mLength >= aSize);
     PodMove(mData, mData + aSize, mLength - aSize);
     mLength -= aSize;
   }
 
-private:
-  static size_t AlignmentOffset()
-  {
-    return Alignment ? Alignment - 1 : 0;
-  }
+ private:
+  static size_t AlignmentOffset() { return Alignment ? Alignment - 1 : 0; }
 
   // Ensure that the backend buffer can hold aLength data. Will update mData.
   // Will enforce that the start of allocated data is always Alignment bytes
   // aligned and that it has sufficient end padding to allow for Alignment bytes
   // block read as required by some data decoders.
   // Returns false if memory couldn't be allocated.
-  bool EnsureCapacity(size_t aLength)
-  {
+  bool EnsureCapacity(size_t aLength) {
     if (!aLength) {
       // No need to allocate a buffer yet.
       return true;
     }
     const CheckedInt<size_t> sizeNeeded =
-      CheckedInt<size_t>(aLength) * sizeof(Type) + AlignmentPaddingSize();
+        CheckedInt<size_t>(aLength) * sizeof(Type) + AlignmentPaddingSize();
 
     if (!sizeNeeded.isValid() || sizeNeeded.value() >= INT32_MAX) {
       // overflow or over an acceptable size.
@@ -253,8 +217,9 @@ private:
     // Find alignment address.
     const uintptr_t alignmask = AlignmentOffset();
     Type* newData = reinterpret_cast<Type*>(
-      (reinterpret_cast<uintptr_t>(newBuffer.get()) + alignmask) & ~alignmask);
-    MOZ_ASSERT(uintptr_t(newData) % (AlignmentOffset()+1) == 0);
+        (reinterpret_cast<uintptr_t>(newBuffer.get()) + alignmask) &
+        ~alignmask);
+    MOZ_ASSERT(uintptr_t(newData) % (AlignmentOffset() + 1) == 0);
 
     MOZ_ASSERT(!mLength || mData);
 
@@ -281,34 +246,21 @@ typedef AlignedBuffer<int16_t> AlignedShortBuffer;
 typedef AlignedBuffer<AudioDataValue> AlignedAudioBuffer;
 
 // Container that holds media samples.
-class MediaData
-{
-public:
-
+class MediaData {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaData)
 
-  enum Type
-  {
-    AUDIO_DATA = 0,
-    VIDEO_DATA,
-    RAW_DATA,
-    NULL_DATA
-  };
+  enum Type { AUDIO_DATA = 0, VIDEO_DATA, RAW_DATA, NULL_DATA };
 
-  MediaData(Type aType,
-            int64_t aOffset,
-            const media::TimeUnit& aTimestamp,
-            const media::TimeUnit& aDuration,
-            uint32_t aFrames)
-    : mType(aType)
-    , mOffset(aOffset)
-    , mTime(aTimestamp)
-    , mTimecode(aTimestamp)
-    , mDuration(aDuration)
-    , mFrames(aFrames)
-    , mKeyframe(false)
-  {
-  }
+  MediaData(Type aType, int64_t aOffset, const media::TimeUnit& aTimestamp,
+            const media::TimeUnit& aDuration, uint32_t aFrames)
+      : mType(aType),
+        mOffset(aOffset),
+        mTime(aTimestamp),
+        mTimecode(aTimestamp),
+        mDuration(aDuration),
+        mFrames(aFrames),
+        mKeyframe(false) {}
 
   // Type of contained data.
   const Type mType;
@@ -331,79 +283,55 @@ public:
 
   bool mKeyframe;
 
-  media::TimeUnit GetEndTime() const
-  {
-    return mTime + mDuration;
-  }
+  media::TimeUnit GetEndTime() const { return mTime + mDuration; }
 
-  bool AdjustForStartTime(int64_t aStartTime)
-  {
+  bool AdjustForStartTime(int64_t aStartTime) {
     mTime = mTime - media::TimeUnit::FromMicroseconds(aStartTime);
     return !mTime.IsNegative();
   }
 
   template <typename ReturnType>
-  const ReturnType* As() const
-  {
+  const ReturnType* As() const {
     MOZ_ASSERT(this->mType == ReturnType::sType);
     return static_cast<const ReturnType*>(this);
   }
 
   template <typename ReturnType>
-  ReturnType* As()
-  {
+  ReturnType* As() {
     MOZ_ASSERT(this->mType == ReturnType::sType);
     return static_cast<ReturnType*>(this);
   }
 
-protected:
+ protected:
   MediaData(Type aType, uint32_t aFrames)
-    : mType(aType)
-    , mOffset(0)
-    , mFrames(aFrames)
-    , mKeyframe(false)
-  {
-  }
+      : mType(aType), mOffset(0), mFrames(aFrames), mKeyframe(false) {}
 
-  virtual ~MediaData() { }
-
+  virtual ~MediaData() {}
 };
 
 // NullData is for decoder generating a sample which doesn't need to be
 // rendered.
-class NullData : public MediaData
-{
-public:
-  NullData(int64_t aOffset,
-           const media::TimeUnit& aTime,
+class NullData : public MediaData {
+ public:
+  NullData(int64_t aOffset, const media::TimeUnit& aTime,
            const media::TimeUnit& aDuration)
-    : MediaData(NULL_DATA, aOffset, aTime, aDuration, 0)
-  {
-  }
+      : MediaData(NULL_DATA, aOffset, aTime, aDuration, 0) {}
 
   static const Type sType = NULL_DATA;
 };
 
 // Holds chunk a decoded audio frames.
-class AudioData : public MediaData
-{
-public:
-
-  AudioData(int64_t aOffset,
-            const media::TimeUnit& aTime,
-            const media::TimeUnit& aDuration,
-            uint32_t aFrames,
-            AlignedAudioBuffer&& aData,
-            uint32_t aChannels,
-            uint32_t aRate,
+class AudioData : public MediaData {
+ public:
+  AudioData(int64_t aOffset, const media::TimeUnit& aTime,
+            const media::TimeUnit& aDuration, uint32_t aFrames,
+            AlignedAudioBuffer&& aData, uint32_t aChannels, uint32_t aRate,
             uint32_t aChannelMap = AudioConfig::ChannelLayout::UNKNOWN_MAP)
-    : MediaData(sType, aOffset, aTime, aDuration, aFrames)
-    , mChannels(aChannels)
-    , mChannelMap(aChannelMap)
-    , mRate(aRate)
-    , mAudioData(std::move(aData))
-  {
-  }
+      : MediaData(sType, aOffset, aTime, aDuration, aFrames),
+        mChannels(aChannels),
+        mChannelMap(aChannelMap),
+        mRate(aRate),
+        mAudioData(std::move(aData)) {}
 
   static const Type sType = AUDIO_DATA;
   static const char* sTypeName;
@@ -412,10 +340,9 @@ public:
   // specified timestamp and duration. All data from aOther is copied
   // into the new AudioData but the audio data which is transferred.
   // After such call, the original aOther is unusable.
-  static already_AddRefed<AudioData>
-  TransferAndUpdateTimestampAndDuration(AudioData* aOther,
-                                        const media::TimeUnit& aTimestamp,
-                                        const media::TimeUnit& aDuration);
+  static already_AddRefed<AudioData> TransferAndUpdateTimestampAndDuration(
+      AudioData* aOther, const media::TimeUnit& aTimestamp,
+      const media::TimeUnit& aDuration);
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
@@ -439,21 +366,20 @@ public:
   // mFrames frames, each with mChannels values
   AlignedAudioBuffer mAudioData;
 
-protected:
-  ~AudioData() { }
+ protected:
+  ~AudioData() {}
 };
 
 namespace layers {
 class TextureClient;
 class PlanarYCbCrImage;
-} // namespace layers
+}  // namespace layers
 
 class VideoInfo;
 
 // Holds a decoded video frame, in YCbCr format. These are queued in the reader.
-class VideoData : public MediaData
-{
-public:
+class VideoData : public MediaData {
+ public:
   typedef gfx::IntRect IntRect;
   typedef gfx::IntSize IntSize;
   typedef gfx::ColorDepth ColorDepth;
@@ -468,10 +394,8 @@ public:
   //   0 = Y
   //   1 = Cb
   //   2 = Cr
-  struct YCbCrBuffer
-  {
-    struct Plane
-    {
+  struct YCbCrBuffer {
+    struct Plane {
       uint8_t* mData;
       uint32_t mWidth;
       uint32_t mHeight;
@@ -485,11 +409,10 @@ public:
     ColorDepth mColorDepth = ColorDepth::COLOR_8;
   };
 
-  class Listener
-  {
-  public:
+  class Listener {
+   public:
     virtual void OnSentToCompositor() = 0;
-    virtual ~Listener() { }
+    virtual ~Listener() {}
   };
 
   // Constructs a VideoData object. If aImage is nullptr, creates a new Image
@@ -501,49 +424,33 @@ public:
   // be allocated to create the VideoData object, or it may indicate some
   // problem with the input data (e.g. negative stride).
 
-
   // Creates a new VideoData containing a deep copy of aBuffer. May use
   // aContainer to allocate an Image to hold the copied data.
   static already_AddRefed<VideoData> CreateAndCopyData(
-    const VideoInfo& aInfo,
-    ImageContainer* aContainer,
-    int64_t aOffset,
-    const media::TimeUnit& aTime,
-    const media::TimeUnit& aDuration,
-    const YCbCrBuffer& aBuffer,
-    bool aKeyframe,
-    const media::TimeUnit& aTimecode,
-    const IntRect& aPicture,
-    layers::KnowsCompositor* aAllocator = nullptr);
+      const VideoInfo& aInfo, ImageContainer* aContainer, int64_t aOffset,
+      const media::TimeUnit& aTime, const media::TimeUnit& aDuration,
+      const YCbCrBuffer& aBuffer, bool aKeyframe,
+      const media::TimeUnit& aTimecode, const IntRect& aPicture,
+      layers::KnowsCompositor* aAllocator = nullptr);
 
   static already_AddRefed<VideoData> CreateAndCopyData(
-    const VideoInfo& aInfo,
-    ImageContainer* aContainer,
-    int64_t aOffset,
-    const media::TimeUnit& aTime,
-    const media::TimeUnit& aDuration,
-    const YCbCrBuffer& aBuffer,
-    const YCbCrBuffer::Plane& aAlphaPlane,
-    bool aKeyframe,
-    const media::TimeUnit& aTimecode,
-    const IntRect& aPicture);
+      const VideoInfo& aInfo, ImageContainer* aContainer, int64_t aOffset,
+      const media::TimeUnit& aTime, const media::TimeUnit& aDuration,
+      const YCbCrBuffer& aBuffer, const YCbCrBuffer::Plane& aAlphaPlane,
+      bool aKeyframe, const media::TimeUnit& aTimecode,
+      const IntRect& aPicture);
 
   static already_AddRefed<VideoData> CreateFromImage(
-    const IntSize& aDisplay,
-    int64_t aOffset,
-    const media::TimeUnit& aTime,
-    const media::TimeUnit& aDuration,
-    const RefPtr<Image>& aImage,
-    bool aKeyframe,
-    const media::TimeUnit& aTimecode);
+      const IntSize& aDisplay, int64_t aOffset, const media::TimeUnit& aTime,
+      const media::TimeUnit& aDuration, const RefPtr<Image>& aImage,
+      bool aKeyframe, const media::TimeUnit& aTimecode);
 
   // Initialize PlanarYCbCrImage. Only When aCopyData is true,
   // video data is copied to PlanarYCbCrImage.
   static bool SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
                                   const VideoInfo& aInfo,
                                   const YCbCrBuffer& aBuffer,
-                                  const IntRect& aPicture,
-                                  bool aCopyData);
+                                  const IntRect& aPicture, bool aCopyData);
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
@@ -557,12 +464,9 @@ public:
 
   int32_t mFrameID;
 
-  VideoData(int64_t aOffset,
-            const media::TimeUnit& aTime,
-            const media::TimeUnit& aDuration,
-            bool aKeyframe,
-            const media::TimeUnit& aTimecode,
-            IntSize aDisplay,
+  VideoData(int64_t aOffset, const media::TimeUnit& aTime,
+            const media::TimeUnit& aDuration, bool aKeyframe,
+            const media::TimeUnit& aTimecode, IntSize aDisplay,
             uint32_t aFrameID);
 
   void SetListener(UniquePtr<Listener> aListener);
@@ -572,17 +476,13 @@ public:
   void UpdateDuration(const media::TimeUnit& aDuration);
   void UpdateTimestamp(const media::TimeUnit& aTimestamp);
 
-  void SetNextKeyFrameTime(const media::TimeUnit& aTime)
-  {
+  void SetNextKeyFrameTime(const media::TimeUnit& aTime) {
     mNextKeyFrameTime = aTime;
   }
 
-  const media::TimeUnit& NextKeyFrameTime() const
-  {
-    return mNextKeyFrameTime;
-  }
+  const media::TimeUnit& NextKeyFrameTime() const { return mNextKeyFrameTime; }
 
-protected:
+ protected:
   ~VideoData();
 
   bool mSentToCompositor;
@@ -590,19 +490,17 @@ protected:
   media::TimeUnit mNextKeyFrameTime;
 };
 
-class CryptoTrack
-{
-public:
-  CryptoTrack() : mValid(false), mMode(0), mIVSize(0) { }
+class CryptoTrack {
+ public:
+  CryptoTrack() : mValid(false), mMode(0), mIVSize(0) {}
   bool mValid;
   int32_t mMode;
   int32_t mIVSize;
   nsTArray<uint8_t> mKeyId;
 };
 
-class CryptoSample : public CryptoTrack
-{
-public:
+class CryptoSample : public CryptoTrack {
+ public:
   nsTArray<uint16_t> mPlainSizes;
   nsTArray<uint32_t> mEncryptedSizes;
   nsTArray<uint8_t> mIV;
@@ -632,9 +530,8 @@ public:
 
 class MediaRawData;
 
-class MediaRawDataWriter
-{
-public:
+class MediaRawDataWriter {
+ public:
   // Pointer to data or null if not-yet allocated
   uint8_t* Data();
   // Writeable size of buffer.
@@ -656,20 +553,19 @@ public:
   // Remove aSize bytes from the front of the sample.
   void PopFront(size_t aSize);
 
-private:
+ private:
   friend class MediaRawData;
   explicit MediaRawDataWriter(MediaRawData* aMediaRawData);
   MOZ_MUST_USE bool EnsureSize(size_t aSize);
   MediaRawData* mTarget;
 };
 
-class MediaRawData final : public MediaData
-{
-public:
+class MediaRawData final : public MediaData {
+ public:
   MediaRawData();
   MediaRawData(const uint8_t* aData, size_t aSize);
-  MediaRawData(const uint8_t* aData, size_t aSize,
-               const uint8_t* aAlphaData, size_t aAlphaSize);
+  MediaRawData(const uint8_t* aData, size_t aSize, const uint8_t* aAlphaData,
+               size_t aAlphaSize);
 
   // Pointer to data or null if not-yet allocated
   const uint8_t* Data() const { return mBuffer.Data(); }
@@ -678,11 +574,9 @@ public:
   // Size of buffer.
   size_t Size() const { return mBuffer.Length(); }
   size_t AlphaSize() const { return mAlphaBuffer.Length(); }
-  size_t ComputedSizeOfIncludingThis() const
-  {
-    return sizeof(*this)
-           + mBuffer.ComputedSizeOfExcludingThis()
-           + mAlphaBuffer.ComputedSizeOfExcludingThis();
+  size_t ComputedSizeOfIncludingThis() const {
+    return sizeof(*this) + mBuffer.ComputedSizeOfExcludingThis() +
+           mAlphaBuffer.ComputedSizeOfExcludingThis();
   }
   // Access the buffer as a Span.
   operator Span<const uint8_t>() { return MakeSpan(Data(), Size()); }
@@ -707,28 +601,27 @@ public:
   UniquePtr<MediaRawDataWriter> CreateWriter();
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
-protected:
+ protected:
   ~MediaRawData();
 
-private:
+ private:
   friend class MediaRawDataWriter;
   AlignedByteBuffer mBuffer;
   AlignedByteBuffer mAlphaBuffer;
   CryptoSample mCryptoInternal;
-  MediaRawData(const MediaRawData&); // Not implemented
+  MediaRawData(const MediaRawData&);  // Not implemented
 };
 
-  // MediaByteBuffer is a ref counted infallible TArray.
-class MediaByteBuffer : public nsTArray<uint8_t>
-{
+// MediaByteBuffer is a ref counted infallible TArray.
+class MediaByteBuffer : public nsTArray<uint8_t> {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaByteBuffer);
   MediaByteBuffer() = default;
-  explicit MediaByteBuffer(size_t aCapacity) : nsTArray<uint8_t>(aCapacity) { }
+  explicit MediaByteBuffer(size_t aCapacity) : nsTArray<uint8_t>(aCapacity) {}
 
-private:
-  ~MediaByteBuffer() { }
+ private:
+  ~MediaByteBuffer() {}
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MediaData_h
+#endif  // MediaData_h

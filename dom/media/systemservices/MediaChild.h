@@ -34,31 +34,28 @@ typedef MozPromise<nsCString, nsresult, false> PrincipalKeyPromise;
 // pledges (promise-like objects) with the future value. Use pledge.Then(func)
 // to access.
 
-RefPtr<PrincipalKeyPromise>
-GetPrincipalKey(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-                bool aPersist);
+RefPtr<PrincipalKeyPromise> GetPrincipalKey(
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo, bool aPersist);
 
-void
-SanitizeOriginKeys(const uint64_t& aSinceWhen, bool aOnlyPrivateBrowsing);
+void SanitizeOriginKeys(const uint64_t& aSinceWhen, bool aOnlyPrivateBrowsing);
 
-class Child : public PMediaChild
-{
-public:
+class Child : public PMediaChild {
+ public:
   static Child* Get();
 
   Child();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   virtual ~Child();
-private:
 
+ private:
   bool mActorDestroyed;
 };
 
 PMediaChild* AllocPMediaChild();
-bool DeallocPMediaChild(PMediaChild *aActor);
+bool DeallocPMediaChild(PMediaChild* aActor);
 
-} // namespace media
-} // namespace mozilla
+}  // namespace media
+}  // namespace mozilla
 
 #endif  // mozilla_MediaChild_h

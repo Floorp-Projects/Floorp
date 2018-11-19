@@ -19,26 +19,19 @@ DDLoggedTypeDeclNameAndBase(BufferMediaResource, MediaResource);
 // on top of it.  The Read implementation involves copying memory, which is
 // unfortunate, but the MediaResource interface mandates that.
 class BufferMediaResource
-  : public MediaResource
-  , public DecoderDoctorLifeLogger<BufferMediaResource>
-{
-public:
+    : public MediaResource,
+      public DecoderDoctorLifeLogger<BufferMediaResource> {
+ public:
   BufferMediaResource(const uint8_t* aBuffer, uint32_t aLength)
-    : mBuffer(aBuffer)
-    , mLength(aLength)
-  {
-  }
+      : mBuffer(aBuffer), mLength(aLength) {}
 
-protected:
-  virtual ~BufferMediaResource()
-  {
-  }
+ protected:
+  virtual ~BufferMediaResource() {}
 
-private:
+ private:
   // These methods are called off the main thread.
-  nsresult ReadAt(int64_t aOffset, char* aBuffer,
-                  uint32_t aCount, uint32_t* aBytes) override
-  {
+  nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
+                  uint32_t* aBytes) override {
     if (aOffset < 0 || aOffset > mLength) {
       return NS_ERROR_FAILURE;
     }
@@ -53,15 +46,12 @@ private:
   void Unpin() override {}
   int64_t GetLength() override { return mLength; }
   int64_t GetNextCachedData(int64_t aOffset) override { return aOffset; }
-  int64_t GetCachedDataEnd(int64_t aOffset) override
-  {
+  int64_t GetCachedDataEnd(int64_t aOffset) override {
     return std::max(aOffset, int64_t(mLength));
   }
   bool IsDataCachedToEndOfResource(int64_t aOffset) override { return true; }
-  nsresult ReadFromCache(char* aBuffer,
-                         int64_t aOffset,
-                         uint32_t aCount) override
-  {
+  nsresult ReadFromCache(char* aBuffer, int64_t aOffset,
+                         uint32_t aCount) override {
     if (aOffset < 0) {
       return NS_ERROR_FAILURE;
     }
@@ -71,17 +61,16 @@ private:
     return NS_OK;
   }
 
-  nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override
-  {
+  nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override {
     aRanges += MediaByteRange(0, int64_t(mLength));
     return NS_OK;
   }
 
-private:
-  const uint8_t * mBuffer;
+ private:
+  const uint8_t* mBuffer;
   uint32_t mLength;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

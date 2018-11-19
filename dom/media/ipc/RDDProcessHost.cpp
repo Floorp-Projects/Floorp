@@ -11,31 +11,24 @@
 
 #include "RDDChild.h"
 
-
 namespace mozilla {
 
 using namespace ipc;
 
 RDDProcessHost::RDDProcessHost(Listener* aListener)
- : GeckoChildProcessHost(GeckoProcessType_RDD),
-   mListener(aListener),
-   mTaskFactory(this),
-   mLaunchPhase(LaunchPhase::Unlaunched),
-   mProcessToken(0),
-   mShutdownRequested(false),
-   mChannelClosed(false)
-{
+    : GeckoChildProcessHost(GeckoProcessType_RDD),
+      mListener(aListener),
+      mTaskFactory(this),
+      mLaunchPhase(LaunchPhase::Unlaunched),
+      mProcessToken(0),
+      mShutdownRequested(false),
+      mChannelClosed(false) {
   MOZ_COUNT_CTOR(RDDProcessHost);
 }
 
-RDDProcessHost::~RDDProcessHost()
-{
-  MOZ_COUNT_DTOR(RDDProcessHost);
-}
+RDDProcessHost::~RDDProcessHost() { MOZ_COUNT_DTOR(RDDProcessHost); }
 
-bool
-RDDProcessHost::Launch(StringVector aExtraOpts)
-{
+bool RDDProcessHost::Launch(StringVector aExtraOpts) {
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Unlaunched);
   MOZ_ASSERT(!mRDDChild);
 
@@ -53,9 +46,7 @@ RDDProcessHost::Launch(StringVector aExtraOpts)
   return true;
 }
 
-bool
-RDDProcessHost::WaitForLaunch()
-{
+bool RDDProcessHost::WaitForLaunch() {
   if (mLaunchPhase == LaunchPhase::Complete) {
     return !!mRDDChild;
   }
@@ -78,9 +69,7 @@ RDDProcessHost::WaitForLaunch()
   return result;
 }
 
-void
-RDDProcessHost::OnChannelConnected(int32_t peer_pid)
-{
+void RDDProcessHost::OnChannelConnected(int32_t peer_pid) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   GeckoChildProcessHost::OnChannelConnected(peer_pid);
@@ -96,9 +85,7 @@ RDDProcessHost::OnChannelConnected(int32_t peer_pid)
   NS_DispatchToMainThread(runnable);
 }
 
-void
-RDDProcessHost::OnChannelError()
-{
+void RDDProcessHost::OnChannelError() {
   MOZ_ASSERT(!NS_IsMainThread());
 
   GeckoChildProcessHost::OnChannelError();
@@ -114,17 +101,13 @@ RDDProcessHost::OnChannelError()
   NS_DispatchToMainThread(runnable);
 }
 
-void
-RDDProcessHost::OnChannelConnectedTask()
-{
+void RDDProcessHost::OnChannelConnectedTask() {
   if (mLaunchPhase == LaunchPhase::Waiting) {
     InitAfterConnect(true);
   }
 }
 
-void
-RDDProcessHost::OnChannelErrorTask()
-{
+void RDDProcessHost::OnChannelErrorTask() {
   if (mLaunchPhase == LaunchPhase::Waiting) {
     InitAfterConnect(false);
   }
@@ -132,9 +115,7 @@ RDDProcessHost::OnChannelErrorTask()
 
 static uint64_t sRDDProcessTokenCounter = 0;
 
-void
-RDDProcessHost::InitAfterConnect(bool aSucceeded)
-{
+void RDDProcessHost::InitAfterConnect(bool aSucceeded) {
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Waiting);
   MOZ_ASSERT(!mRDDChild);
 
@@ -144,7 +125,7 @@ RDDProcessHost::InitAfterConnect(bool aSucceeded)
     mProcessToken = ++sRDDProcessTokenCounter;
     mRDDChild = MakeUnique<RDDChild>(this);
     DebugOnly<bool> rv =
-      mRDDChild->Open(GetChannel(), base::GetProcId(GetChildProcessHandle()));
+        mRDDChild->Open(GetChannel(), base::GetProcId(GetChildProcessHandle()));
     MOZ_ASSERT(rv);
 
     mRDDChild->Init();
@@ -155,9 +136,7 @@ RDDProcessHost::InitAfterConnect(bool aSucceeded)
   }
 }
 
-void
-RDDProcessHost::Shutdown()
-{
+void RDDProcessHost::Shutdown() {
   MOZ_ASSERT(!mShutdownRequested);
 
   mListener = nullptr;
@@ -190,9 +169,7 @@ RDDProcessHost::Shutdown()
   DestroyProcess();
 }
 
-void
-RDDProcessHost::OnChannelClosed()
-{
+void RDDProcessHost::OnChannelClosed() {
   mChannelClosed = true;
 
   if (!mShutdownRequested && mListener) {
@@ -207,9 +184,7 @@ RDDProcessHost::OnChannelClosed()
   MOZ_ASSERT(!mRDDChild);
 }
 
-void
-RDDProcessHost::KillHard(const char* aReason)
-{
+void RDDProcessHost::KillHard(const char* aReason) {
   ProcessHandle handle = GetChildProcessHandle();
   if (!base::KillProcess(handle, base::PROCESS_END_KILLED_BY_USER, false)) {
     NS_WARNING("failed to kill subprocess!");
@@ -218,29 +193,16 @@ RDDProcessHost::KillHard(const char* aReason)
   SetAlreadyDead();
 }
 
-uint64_t
-RDDProcessHost::GetProcessToken() const
-{
-  return mProcessToken;
+uint64_t RDDProcessHost::GetProcessToken() const { return mProcessToken; }
+
+static void RDDDelayedDeleteSubprocess(GeckoChildProcessHost* aSubprocess) {
+  XRE_GetIOMessageLoop()->PostTask(
+      mozilla::MakeAndAddRef<DeleteTask<GeckoChildProcessHost>>(aSubprocess));
 }
 
-static void
-RDDDelayedDeleteSubprocess(GeckoChildProcessHost* aSubprocess)
-{
-  XRE_GetIOMessageLoop()->
-    PostTask(
-        mozilla::MakeAndAddRef<DeleteTask<GeckoChildProcessHost>>(aSubprocess));
-}
+void RDDProcessHost::KillProcess() { KillHard("DiagnosticKill"); }
 
-void
-RDDProcessHost::KillProcess()
-{
-  KillHard("DiagnosticKill");
-}
-
-void
-RDDProcessHost::DestroyProcess()
-{
+void RDDProcessHost::DestroyProcess() {
   // Cancel all tasks. We don't want anything triggering after our caller
   // expects this to go away.
   {
@@ -248,10 +210,8 @@ RDDProcessHost::DestroyProcess()
     mTaskFactory.RevokeAll();
   }
 
-  MessageLoop::current()->
-    PostTask(NewRunnableFunction("DestroyProcessRunnable",
-                                 RDDDelayedDeleteSubprocess,
-                                 this));
+  MessageLoop::current()->PostTask(NewRunnableFunction(
+      "DestroyProcessRunnable", RDDDelayedDeleteSubprocess, this));
 }
 
-} // namespace mozilla
+}  // namespace mozilla

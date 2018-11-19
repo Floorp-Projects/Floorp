@@ -15,20 +15,17 @@
 namespace mozilla {
 
 template <int V>
-class FFmpegDataDecoder : public MediaDataDecoder
-{
-};
+class FFmpegDataDecoder : public MediaDataDecoder {};
 
-template<>
+template <>
 class FFmpegDataDecoder<LIBAV_VER>;
 DDLoggedTypeNameAndBase(FFmpegDataDecoder<LIBAV_VER>, MediaDataDecoder);
 
-template<>
+template <>
 class FFmpegDataDecoder<LIBAV_VER>
-  : public MediaDataDecoder
-  , public DecoderDoctorLifeLogger<FFmpegDataDecoder<LIBAV_VER>>
-{
-public:
+    : public MediaDataDecoder,
+      public DecoderDoctorLifeLogger<FFmpegDataDecoder<LIBAV_VER>> {
+ public:
   FFmpegDataDecoder(FFmpegLibWrapper* aLib, TaskQueue* aTaskQueue,
                     AVCodecID aCodecID);
   virtual ~FFmpegDataDecoder();
@@ -43,15 +40,14 @@ public:
 
   static AVCodec* FindAVCodec(FFmpegLibWrapper* aLib, AVCodecID aCodec);
 
-protected:
+ protected:
   // Flush and Drain operation, always run
   virtual RefPtr<FlushPromise> ProcessFlush();
   virtual void ProcessShutdown();
-  virtual void InitCodecContext() { }
+  virtual void InitCodecContext() {}
   AVFrame* PrepareFrame();
   MediaResult InitDecoder();
-  MediaResult DoDecode(MediaRawData* aSample,
-                       bool* aGotFrame,
+  MediaResult DoDecode(MediaRawData* aSample, bool* aGotFrame,
                        DecodedData& aOutResults);
 
   FFmpegLibWrapper* mLib;
@@ -62,12 +58,10 @@ protected:
   RefPtr<MediaByteBuffer> mExtraData;
   AVCodecID mCodecID;
 
-private:
+ private:
   RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample);
   RefPtr<DecodePromise> ProcessDrain();
-  virtual MediaResult DoDecode(MediaRawData* aSample,
-                               uint8_t* aData,
-                               int aSize,
+  virtual MediaResult DoDecode(MediaRawData* aSample, uint8_t* aData, int aSize,
                                bool* aGotFrame,
                                MediaDataDecoder::DecodedData& aOutResults) = 0;
   virtual bool NeedParser() const { return false; }
@@ -79,6 +73,6 @@ private:
   media::TimeUnit mLastInputDts;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // __FFmpegDataDecoder_h__
+#endif  // __FFmpegDataDecoder_h__

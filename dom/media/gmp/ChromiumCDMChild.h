@@ -16,12 +16,10 @@ namespace gmp {
 
 class GMPContentChild;
 
-class ChromiumCDMChild
-  : public PChromiumCDMChild
-  , public cdm::Host_9
-  , public cdm::Host_10
-{
-public:
+class ChromiumCDMChild : public PChromiumCDMChild,
+                         public cdm::Host_9,
+                         public cdm::Host_10 {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ChromiumCDMChild);
 
   explicit ChromiumCDMChild(GMPContentChild* aPlugin);
@@ -36,32 +34,24 @@ public:
   cdm::Time GetCurrentWallTime() override;
   void OnResolveKeyStatusPromise(uint32_t aPromiseId,
                                  cdm::KeyStatus aKeyStatus) override;
-  void OnResolveNewSessionPromise(uint32_t aPromiseId,
-                                  const char* aSessionId,
+  void OnResolveNewSessionPromise(uint32_t aPromiseId, const char* aSessionId,
                                   uint32_t aSessionIdSize) override;
   void OnResolvePromise(uint32_t aPromiseId) override;
-  void OnRejectPromise(uint32_t aPromiseId,
-                       cdm::Exception aException,
-                       uint32_t aSystemCode,
-                       const char* aErrorMessage,
+  void OnRejectPromise(uint32_t aPromiseId, cdm::Exception aException,
+                       uint32_t aSystemCode, const char* aErrorMessage,
                        uint32_t aErrorMessageSize) override;
-  void OnSessionMessage(const char* aSessionId,
-                        uint32_t aSessionIdSize,
-                        cdm::MessageType aMessageType,
-                        const char* aMessage,
+  void OnSessionMessage(const char* aSessionId, uint32_t aSessionIdSize,
+                        cdm::MessageType aMessageType, const char* aMessage,
                         uint32_t aMessageSize) override;
-  void OnSessionKeysChange(const char* aSessionId,
-                           uint32_t aSessionIdSize,
+  void OnSessionKeysChange(const char* aSessionId, uint32_t aSessionIdSize,
                            bool aHasAdditionalUsableKey,
                            const cdm::KeyInformation* aKeysInfo,
                            uint32_t aKeysInfoCount) override;
-  void OnExpirationChange(const char* aSessionId,
-                          uint32_t aSessionIdSize,
+  void OnExpirationChange(const char* aSessionId, uint32_t aSessionIdSize,
                           cdm::Time aNewExpiryTime) override;
   void OnSessionClosed(const char* aSessionId,
                        uint32_t aSessionIdSize) override;
-  void SendPlatformChallenge(const char* aServiceId,
-                             uint32_t aServiceIdSize,
+  void SendPlatformChallenge(const char* aServiceId, uint32_t aServiceIdSize,
                              const char* aChallenge,
                              uint32_t aChallengeSize) override {}
   void EnableOutputProtection(uint32_t aDesiredProtectionMask) override {}
@@ -77,7 +67,7 @@ public:
 
   void GiveBuffer(ipc::Shmem&& aBuffer);
 
-protected:
+ protected:
   ~ChromiumCDMChild();
 
   bool OnResolveNewSessionPromiseInternal(uint32_t aPromiseId,
@@ -92,13 +82,10 @@ protected:
                           const bool& aAllowPersistentState,
                           InitResolver&& aResolver) override;
   ipc::IPCResult RecvSetServerCertificate(
-    const uint32_t& aPromiseId,
-    nsTArray<uint8_t>&& aServerCert) override;
+      const uint32_t& aPromiseId, nsTArray<uint8_t>&& aServerCert) override;
   ipc::IPCResult RecvCreateSessionAndGenerateRequest(
-    const uint32_t& aPromiseId,
-    const uint32_t& aSessionType,
-    const uint32_t& aInitDataType,
-    nsTArray<uint8_t>&& aInitData) override;
+      const uint32_t& aPromiseId, const uint32_t& aSessionType,
+      const uint32_t& aInitDataType, nsTArray<uint8_t>&& aInitData) override;
   ipc::IPCResult RecvLoadSession(const uint32_t& aPromiseId,
                                  const uint32_t& aSessionType,
                                  const nsCString& aSessionId) override;
@@ -109,16 +96,16 @@ protected:
                                   const nsCString& aSessionId) override;
   ipc::IPCResult RecvRemoveSession(const uint32_t& aPromiseId,
                                    const nsCString& aSessionId) override;
-  ipc::IPCResult RecvGetStatusForPolicy(const uint32_t& aPromiseId,
-                                        const nsCString& aMinHdcpVersion) override;
+  ipc::IPCResult RecvGetStatusForPolicy(
+      const uint32_t& aPromiseId, const nsCString& aMinHdcpVersion) override;
   ipc::IPCResult RecvDecrypt(const uint32_t& aId,
                              const CDMInputBuffer& aBuffer) override;
   ipc::IPCResult RecvInitializeVideoDecoder(
-    const CDMVideoDecoderConfig& aConfig) override;
+      const CDMVideoDecoderConfig& aConfig) override;
   ipc::IPCResult RecvDeinitializeVideoDecoder() override;
   ipc::IPCResult RecvResetVideoDecoder() override;
   ipc::IPCResult RecvDecryptAndDecodeFrame(
-    const CDMInputBuffer& aBuffer) override;
+      const CDMInputBuffer& aBuffer) override;
   ipc::IPCResult RecvDrain() override;
   ipc::IPCResult RecvDestroy() override;
 
@@ -128,7 +115,7 @@ protected:
   template <typename MethodType, typename... ParamType>
   void CallMethod(MethodType, ParamType&&...);
 
-  template<typename MethodType, typename... ParamType>
+  template <typename MethodType, typename... ParamType>
   void CallOnMessageLoopThread(const char* const, MethodType, ParamType&&...);
 
   GMPContentChild* mPlugin = nullptr;
@@ -138,7 +125,7 @@ protected:
   DurationMap mFrameDurations;
   nsTArray<uint32_t> mLoadSessionPromiseIds;
 
-  cdm::Size mCodedSize = { 0, 0 };
+  cdm::Size mCodedSize = {0, 0};
   nsTArray<ipc::Shmem> mBuffers;
 
   bool mDecoderInitialized = false;
@@ -152,7 +139,7 @@ protected:
   MozPromiseHolder<InitPromise> mInitPromise;
 };
 
-} // namespace gmp
-} // namespace mozilla
+}  // namespace gmp
+}  // namespace mozilla
 
-#endif // ChromiumCDMChild_h_
+#endif  // ChromiumCDMChild_h_

@@ -16,23 +16,20 @@
 namespace mozilla {
 
 template <int V>
-class FFmpegDecoderModule : public PlatformDecoderModule
-{
-public:
-  static already_AddRefed<PlatformDecoderModule>
-  Create(FFmpegLibWrapper* aLib)
-  {
+class FFmpegDecoderModule : public PlatformDecoderModule {
+ public:
+  static already_AddRefed<PlatformDecoderModule> Create(
+      FFmpegLibWrapper* aLib) {
     RefPtr<PlatformDecoderModule> pdm = new FFmpegDecoderModule(aLib);
 
     return pdm.forget();
   }
 
-  explicit FFmpegDecoderModule(FFmpegLibWrapper* aLib) : mLib(aLib) { }
-  virtual ~FFmpegDecoderModule() { }
+  explicit FFmpegDecoderModule(FFmpegLibWrapper* aLib) : mLib(aLib) {}
+  virtual ~FFmpegDecoderModule() {}
 
-  already_AddRefed<MediaDataDecoder>
-  CreateVideoDecoder(const CreateDecoderParams& aParams) override
-  {
+  already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
+      const CreateDecoderParams& aParams) override {
     // Temporary - forces use of VPXDecoder when alpha is present.
     // Bug 1263836 will handle alpha scenario once implemented. It will shift
     // the check for alpha to PDMFactory but not itself remove the need for a
@@ -40,34 +37,26 @@ public:
     if (aParams.VideoConfig().HasAlpha()) {
       return nullptr;
     }
-    if (aParams.mOptions.contains(
-          CreateDecoderParams::Option::LowLatency) &&
+    if (aParams.mOptions.contains(CreateDecoderParams::Option::LowLatency) &&
         !StaticPrefs::MediaFfmpegLowLatencyEnabled()) {
       return nullptr;
     }
     RefPtr<MediaDataDecoder> decoder = new FFmpegVideoDecoder<V>(
-      mLib,
-      aParams.mTaskQueue,
-      aParams.VideoConfig(),
-      aParams.mKnowsCompositor,
-      aParams.mImageContainer,
-      aParams.mOptions.contains(CreateDecoderParams::Option::LowLatency));
+        mLib, aParams.mTaskQueue, aParams.VideoConfig(),
+        aParams.mKnowsCompositor, aParams.mImageContainer,
+        aParams.mOptions.contains(CreateDecoderParams::Option::LowLatency));
     return decoder.forget();
   }
 
-  already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const CreateDecoderParams& aParams) override
-  {
-    RefPtr<MediaDataDecoder> decoder =
-      new FFmpegAudioDecoder<V>(mLib,
-                                aParams.mTaskQueue,
-                                aParams.AudioConfig());
+  already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
+      const CreateDecoderParams& aParams) override {
+    RefPtr<MediaDataDecoder> decoder = new FFmpegAudioDecoder<V>(
+        mLib, aParams.mTaskQueue, aParams.AudioConfig());
     return decoder.forget();
   }
 
   bool SupportsMimeType(const nsACString& aMimeType,
-                        DecoderDoctorDiagnostics* aDiagnostics) const override
-  {
+                        DecoderDoctorDiagnostics* aDiagnostics) const override {
     AVCodecID videoCodec = FFmpegVideoDecoder<V>::GetCodecId(aMimeType);
     AVCodecID audioCodec = FFmpegAudioDecoder<V>::GetCodecId(aMimeType);
     if (audioCodec == AV_CODEC_ID_NONE && videoCodec == AV_CODEC_ID_NONE) {
@@ -77,20 +66,20 @@ public:
     return !!FFmpegDataDecoder<V>::FindAVCodec(mLib, codec);
   }
 
-protected:
-  bool SupportsColorDepth(gfx::ColorDepth aColorDepth,
-                          DecoderDoctorDiagnostics* aDiagnostics) const override
-  {
+ protected:
+  bool SupportsColorDepth(
+      gfx::ColorDepth aColorDepth,
+      DecoderDoctorDiagnostics* aDiagnostics) const override {
 #if defined(MOZ_WIDGET_ANDROID)
     return aColorDepth == gfx::ColorDepth::COLOR_8;
 #endif
     return true;
   }
 
-private:
+ private:
   FFmpegLibWrapper* mLib;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // __FFmpegDecoderModule_h__
+#endif  // __FFmpegDecoderModule_h__

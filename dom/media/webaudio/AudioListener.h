@@ -21,27 +21,25 @@ namespace mozilla {
 
 namespace dom {
 
-class AudioListenerEngine final
-{
-public:
+class AudioListenerEngine final {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioListenerEngine)
 
   AudioListenerEngine();
 
-  enum class AudioListenerParameter
-  {
+  enum class AudioListenerParameter {
     POSITION,
-    FRONT, // unit length
-    RIGHT // unit length, orthogonal to FRONT
+    FRONT,  // unit length
+    RIGHT   // unit length, orthogonal to FRONT
   };
   void RecvListenerEngineEvent(
-    AudioListenerEngine::AudioListenerParameter aParameter,
-    const ThreeDPoint& aValue);
+      AudioListenerEngine::AudioListenerParameter aParameter,
+      const ThreeDPoint& aValue);
   const ThreeDPoint& Position() const;
   const ThreeDPoint& FrontVector() const;
   const ThreeDPoint& RightVector() const;
 
-private:
+ private:
   ~AudioListenerEngine() = default;
 
   ThreeDPoint mPosition;
@@ -49,9 +47,8 @@ private:
   ThreeDPoint mRightVector;
 };
 
-class AudioListener final : public nsWrapperCache
-{
-public:
+class AudioListener final : public nsWrapperCache {
+ public:
   explicit AudioListener(AudioContext* aContext);
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AudioListener)
@@ -59,28 +56,28 @@ public:
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  AudioContext* GetParentObject() const
-  {
-    return mContext;
-  }
+  AudioContext* GetParentObject() const { return mContext; }
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   void SetPosition(double aX, double aY, double aZ);
-  void SetOrientation(double aX, double aY, double aZ,
-                      double aXUp, double aYUp, double aZUp);
+  void SetOrientation(double aX, double aY, double aZ, double aXUp, double aYUp,
+                      double aZUp);
 
   AudioListenerEngine* Engine() { return mEngine.get(); }
 
-private:
+ private:
   void SendListenerEngineEvent(
-    AudioListenerEngine::AudioListenerParameter aParameter,
-    const ThreeDPoint& aValue);
+      AudioListenerEngine::AudioListenerParameter aParameter,
+      const ThreeDPoint& aValue);
 
   ~AudioListener() = default;
 
-  void SendThreeDPointParameterToStream(uint32_t aIndex, const ThreeDPoint& aValue);
-private:
+  void SendThreeDPointParameterToStream(uint32_t aIndex,
+                                        const ThreeDPoint& aValue);
+
+ private:
   RefPtr<AudioContext> mContext;
   RefPtr<AudioListenerEngine> mEngine;
   ThreeDPoint mPosition;
@@ -88,8 +85,7 @@ private:
   ThreeDPoint mRightVector;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif
-

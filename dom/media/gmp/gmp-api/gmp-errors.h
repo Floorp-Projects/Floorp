@@ -49,10 +49,11 @@ typedef enum {
   GMPInvalidArgErr = 12,
   GMPAbortedErr = 13,
   GMPRecordCorrupted = 14,
-  GMPLastErr // Placeholder, must be last. This enum's values must remain consecutive!
+  GMPLastErr  // Placeholder, must be last. This enum's values must remain
+              // consecutive!
 } GMPErr;
 
 #define GMP_SUCCEEDED(x) ((x) == GMPNoErr)
 #define GMP_FAILED(x) ((x) != GMPNoErr)
 
-#endif // GMP_ERRORS_h_
+#endif  // GMP_ERRORS_h_

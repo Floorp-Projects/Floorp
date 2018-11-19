@@ -29,20 +29,18 @@ class WAVTrackDemuxer;
 DDLoggedTypeDeclNameAndBase(WAVDemuxer, MediaDataDemuxer);
 DDLoggedTypeNameAndBase(WAVTrackDemuxer, MediaTrackDemuxer);
 
-class WAVDemuxer
-  : public MediaDataDemuxer
-  , public DecoderDoctorLifeLogger<WAVDemuxer>
-{
-public:
+class WAVDemuxer : public MediaDataDemuxer,
+                   public DecoderDoctorLifeLogger<WAVDemuxer> {
+ public:
   // MediaDataDemuxer interface.
   explicit WAVDemuxer(MediaResource* aSource);
   RefPtr<InitPromise> Init() override;
   uint32_t GetNumberTracks(TrackInfo::TrackType aType) const override;
   already_AddRefed<MediaTrackDemuxer> GetTrackDemuxer(
-    TrackInfo::TrackType aType, uint32_t aTrackNumber) override;
+      TrackInfo::TrackType aType, uint32_t aTrackNumber) override;
   bool IsSeekable() const override;
 
-private:
+ private:
   // Synchronous Initialization.
   bool InitInternal();
 
@@ -50,21 +48,20 @@ private:
   RefPtr<WAVTrackDemuxer> mTrackDemuxer;
 };
 
-class RIFFParser
-{
-private:
+class RIFFParser {
+ private:
   class RIFFHeader;
-public:
+
+ public:
   const RIFFHeader& RiffHeader() const;
 
   Result<uint32_t, nsresult> Parse(BufferReader& aReader);
 
   void Reset();
 
-private:
-  class RIFFHeader
-  {
-  public:
+ private:
+  class RIFFHeader {
+   public:
     RIFFHeader();
     void Reset();
 
@@ -73,7 +70,7 @@ private:
 
     bool ParseNext(uint8_t c);
 
-  private:
+   private:
     bool Update(uint8_t c);
 
     uint8_t mRaw[RIFF_CHUNK_SIZE];
@@ -84,21 +81,20 @@ private:
   RIFFHeader mRiffHeader;
 };
 
-class HeaderParser
-{
-private:
+class HeaderParser {
+ private:
   class ChunkHeader;
-public:
+
+ public:
   const ChunkHeader& GiveHeader() const;
 
   Result<uint32_t, nsresult> Parse(BufferReader& aReader);
 
   void Reset();
 
-private:
-  class ChunkHeader
-  {
-  public:
+ private:
+  class ChunkHeader {
+   public:
     ChunkHeader();
     void Reset();
 
@@ -109,7 +105,7 @@ private:
 
     bool ParseNext(uint8_t c);
 
-  private:
+   private:
     void Update(uint8_t c);
 
     uint8_t mRaw[CHUNK_HEAD_SIZE];
@@ -120,21 +116,20 @@ private:
   ChunkHeader mHeader;
 };
 
-class FormatParser
-{
-private:
+class FormatParser {
+ private:
   class FormatChunk;
-public:
+
+ public:
   const FormatChunk& FmtChunk() const;
 
   Result<uint32_t, nsresult> Parse(BufferReader& aReader);
 
   void Reset();
 
-private:
-  class FormatChunk
-  {
-  public:
+ private:
+  class FormatChunk {
+   public:
     FormatChunk();
     void Reset();
 
@@ -147,7 +142,7 @@ private:
     bool IsValid() const;
     bool ParseNext(uint8_t c);
 
-  private:
+   private:
     void Update(uint8_t c);
 
     uint8_t mRaw[FMT_CHUNK_MIN_SIZE];
@@ -158,34 +153,32 @@ private:
   FormatChunk mFmtChunk;
 };
 
-class DataParser
-{
-private:
+class DataParser {
+ private:
   class DataChunk;
-public:
+
+ public:
   DataParser();
 
   const DataChunk& CurrentChunk() const;
 
   void Reset();
 
-private:
-  class DataChunk
-  {
-  public:
+ private:
+  class DataChunk {
+   public:
     void Reset();
-  private:
-    int mPos; // To Check Alignment
+
+   private:
+    int mPos;  // To Check Alignment
   };
 
   DataChunk mChunk;
 };
 
-class WAVTrackDemuxer
-  : public MediaTrackDemuxer
-  , public DecoderDoctorLifeLogger<WAVTrackDemuxer>
-{
-public:
+class WAVTrackDemuxer : public MediaTrackDemuxer,
+                        public DecoderDoctorLifeLogger<WAVTrackDemuxer> {
+ public:
   explicit WAVTrackDemuxer(MediaResource* aSource);
 
   bool Init();
@@ -206,12 +199,12 @@ public:
   RefPtr<SamplesPromise> GetSamples(int32_t aNumSamples) override;
   void Reset() override;
   RefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(
-    const media::TimeUnit& aTimeThreshold) override;
+      const media::TimeUnit& aTimeThreshold) override;
   int64_t GetResourceOffset() const override;
   media::TimeIntervals GetBuffered() override;
 
-private:
-  ~WAVTrackDemuxer() { }
+ private:
+  ~WAVTrackDemuxer() {}
 
   media::TimeUnit FastSeek(const media::TimeUnit& aTime);
   media::TimeUnit ScanUntil(const media::TimeUnit& aTime);
@@ -269,6 +262,6 @@ private:
   UniquePtr<AudioInfo> mInfo;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

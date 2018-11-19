@@ -27,18 +27,13 @@ static const float MAX_LATENCY_S = 0.5;
 
 // This class manages a queue of output buffers shared between
 // the main thread and the Media Stream Graph thread.
-class SharedBuffers final
-{
-private:
-  class OutputQueue final
-  {
-  public:
-    explicit OutputQueue(const char* aName)
-      : mMutex(aName)
-    {}
+class SharedBuffers final {
+ private:
+  class OutputQueue final {
+   public:
+    explicit OutputQueue(const char* aName) : mMutex(aName) {}
 
-    size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-    {
+    size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
       mMutex.AssertCurrentThreadOwns();
 
       size_t amount = 0;
@@ -51,16 +46,14 @@ private:
 
     Mutex& Lock() const { return const_cast<OutputQueue*>(this)->mMutex; }
 
-    size_t ReadyToConsume() const
-    {
+    size_t ReadyToConsume() const {
       // Accessed on both main thread and media graph thread.
       mMutex.AssertCurrentThreadOwns();
       return mBufferList.size();
     }
 
     // Produce one buffer
-    AudioChunk& Produce()
-    {
+    AudioChunk& Produce() {
       mMutex.AssertCurrentThreadOwns();
       MOZ_ASSERT(NS_IsMainThread());
       mBufferList.push_back(AudioChunk());
@@ -68,8 +61,7 @@ private:
     }
 
     // Consumes one buffer.
-    AudioChunk Consume()
-    {
+    AudioChunk Consume() {
       mMutex.AssertCurrentThreadOwns();
       MOZ_ASSERT(!NS_IsMainThread());
       MOZ_ASSERT(ReadyToConsume() > 0);
@@ -79,13 +71,12 @@ private:
     }
 
     // Empties the buffer queue.
-    void Clear()
-    {
+    void Clear() {
       mMutex.AssertCurrentThreadOwns();
       mBufferList.clear();
     }
 
-  private:
+   private:
     typedef std::deque<AudioChunk> BufferList;
 
     // Synchronizes access to mBufferList.  Note that it's the responsibility
@@ -96,18 +87,15 @@ private:
     BufferList mBufferList;
   };
 
-public:
+ public:
   explicit SharedBuffers(float aSampleRate)
-    : mOutputQueue("SharedBuffers::outputQueue")
-    , mDelaySoFar(STREAM_TIME_MAX)
-    , mSampleRate(aSampleRate)
-    , mLatency(0.0)
-    , mDroppingBuffers(false)
-  {
-  }
+      : mOutputQueue("SharedBuffers::outputQueue"),
+        mDelaySoFar(STREAM_TIME_MAX),
+        mSampleRate(aSampleRate),
+        mLatency(0.0),
+        mDroppingBuffers(false) {}
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
     size_t amount = aMallocSizeOf(this);
 
     {
@@ -122,8 +110,7 @@ public:
 
   // NotifyNodeIsConnected() may be called even when the state has not
   // changed.
-  void NotifyNodeIsConnected(bool aIsConnected)
-  {
+  void NotifyNodeIsConnected(bool aIsConnected) {
     MOZ_ASSERT(NS_IsMainThread());
     if (!aIsConnected) {
       // Reset main thread state for FinishProducingOutputBuffer().
@@ -137,8 +124,7 @@ public:
     mNodeIsConnected = aIsConnected;
   }
 
-  void FinishProducingOutputBuffer(const AudioChunk& aBuffer)
-  {
+  void FinishProducingOutputBuffer(const AudioChunk& aBuffer) {
     MOZ_ASSERT(NS_IsMainThread());
 
     if (!mNodeIsConnected) {
@@ -190,8 +176,7 @@ public:
 
   // graph thread
 
-  AudioChunk GetOutputBuffer()
-  {
+  AudioChunk GetOutputBuffer() {
     MOZ_ASSERT(!NS_IsMainThread());
     AudioChunk buffer;
 
@@ -215,14 +200,12 @@ public:
     return buffer;
   }
 
-  StreamTime DelaySoFar() const
-  {
+  StreamTime DelaySoFar() const {
     MOZ_ASSERT(!NS_IsMainThread());
     return mDelaySoFar == STREAM_TIME_MAX ? 0 : mDelaySoFar;
   }
 
-  void Flush()
-  {
+  void Flush() {
     MOZ_ASSERT(!NS_IsMainThread());
     mDelaySoFar = STREAM_TIME_MAX;
     {
@@ -231,7 +214,7 @@ public:
     }
   }
 
-private:
+ private:
   OutputQueue mOutputQueue;
   // How much delay we've seen so far.  This measures the amount of delay
   // caused by the main thread lagging behind in producing output buffers.
@@ -253,48 +236,38 @@ private:
   bool mNodeIsConnected;
 };
 
-class ScriptProcessorNodeEngine final : public AudioNodeEngine
-{
-public:
+class ScriptProcessorNodeEngine final : public AudioNodeEngine {
+ public:
   ScriptProcessorNodeEngine(ScriptProcessorNode* aNode,
                             AudioDestinationNode* aDestination,
                             uint32_t aBufferSize,
                             uint32_t aNumberOfInputChannels)
-    : AudioNodeEngine(aNode)
-    , mDestination(aDestination->Stream())
-    , mSharedBuffers(new SharedBuffers(mDestination->SampleRate()))
-    , mBufferSize(aBufferSize)
-    , mInputChannelCount(aNumberOfInputChannels)
-    , mInputWriteIndex(0)
-  {
-  }
+      : AudioNodeEngine(aNode),
+        mDestination(aDestination->Stream()),
+        mSharedBuffers(new SharedBuffers(mDestination->SampleRate())),
+        mBufferSize(aBufferSize),
+        mInputChannelCount(aNumberOfInputChannels),
+        mInputWriteIndex(0) {}
 
-  SharedBuffers* GetSharedBuffers() const
-  {
-    return mSharedBuffers;
-  }
+  SharedBuffers* GetSharedBuffers() const { return mSharedBuffers; }
 
   enum {
     IS_CONNECTED,
   };
 
-  void SetInt32Parameter(uint32_t aIndex, int32_t aParam) override
-  {
+  void SetInt32Parameter(uint32_t aIndex, int32_t aParam) override {
     switch (aIndex) {
       case IS_CONNECTED:
         mIsConnected = aParam;
         break;
       default:
         NS_ERROR("Bad Int32Parameter");
-    } // End index switch.
+    }  // End index switch.
   }
 
-  void ProcessBlock(AudioNodeStream* aStream,
-                    GraphTime aFrom,
-                    const AudioBlock& aInput,
-                    AudioBlock* aOutput,
-                    bool* aFinished) override
-  {
+  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+                    const AudioBlock& aInput, AudioBlock* aOutput,
+                    bool* aFinished) override {
     // This node is not connected to anything. Per spec, we don't fire the
     // onaudioprocess event. We also want to clear out the input and output
     // buffer queue, and output a null buffer.
@@ -307,8 +280,8 @@ public:
 
     // The input buffer is allocated lazily when non-null input is received.
     if (!aInput.IsNull() && !mInputBuffer) {
-      mInputBuffer = ThreadSharedFloatArrayBufferList::
-        Create(mInputChannelCount, mBufferSize, fallible);
+      mInputBuffer = ThreadSharedFloatArrayBufferList::Create(
+          mInputChannelCount, mBufferSize, fallible);
       if (mInputBuffer && mInputWriteIndex) {
         // Zero leading for null chunks that were skipped.
         for (uint32_t i = 0; i < mInputChannelCount; ++i) {
@@ -327,8 +300,9 @@ public:
       } else {
         MOZ_ASSERT(aInput.GetDuration() == WEBAUDIO_BLOCK_SIZE, "sanity check");
         MOZ_ASSERT(aInput.ChannelCount() == inputChannelCount);
-        AudioBlockCopyChannelWithScale(static_cast<const float*>(aInput.mChannelData[i]),
-                                       aInput.mVolume, writeData);
+        AudioBlockCopyChannelWithScale(
+            static_cast<const float*>(aInput.mChannelData[i]), aInput.mVolume,
+            writeData);
       }
     }
     mInputWriteIndex += aInput.GetDuration();
@@ -344,16 +318,14 @@ public:
     }
   }
 
-  bool IsActive() const override
-  {
+  bool IsActive() const override {
     // Could return false when !mIsConnected after all output chunks produced
     // by main thread events calling
     // SharedBuffers::FinishProducingOutputBuffer() have been processed.
     return true;
   }
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override {
     // Not owned:
     // - mDestination (probably)
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
@@ -365,14 +337,12 @@ public:
     return amount;
   }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-private:
-  void SendBuffersToMainThread(AudioNodeStream* aStream, GraphTime aFrom)
-  {
+ private:
+  void SendBuffersToMainThread(AudioNodeStream* aStream, GraphTime aFrom) {
     MOZ_ASSERT(!NS_IsMainThread());
 
     // we now have a full input buffer ready to be sent to the main thread.
@@ -384,29 +354,24 @@ private:
     // Compute the playback time in the coordinate system of the destination
     double playbackTime = mDestination->StreamTimeToSeconds(playbackTick);
 
-    class Command final : public Runnable
-    {
-    public:
+    class Command final : public Runnable {
+     public:
       Command(AudioNodeStream* aStream,
               already_AddRefed<ThreadSharedFloatArrayBufferList> aInputBuffer,
               double aPlaybackTime)
-        : mozilla::Runnable("Command")
-        , mStream(aStream)
-        , mInputBuffer(aInputBuffer)
-        , mPlaybackTime(aPlaybackTime)
-      {
-      }
+          : mozilla::Runnable("Command"),
+            mStream(aStream),
+            mInputBuffer(aInputBuffer),
+            mPlaybackTime(aPlaybackTime) {}
 
-      NS_IMETHOD Run() override
-      {
-
+      NS_IMETHOD Run() override {
         auto engine =
-          static_cast<ScriptProcessorNodeEngine*>(mStream->Engine());
+            static_cast<ScriptProcessorNodeEngine*>(mStream->Engine());
         AudioChunk output;
         output.SetNull(engine->mBufferSize);
         {
-          auto node = static_cast<ScriptProcessorNode*>
-            (engine->NodeMainThread());
+          auto node =
+              static_cast<ScriptProcessorNode*>(engine->NodeMainThread());
           if (!node) {
             return NS_OK;
           }
@@ -425,8 +390,7 @@ private:
 
       // Sets up |output| iff buffers are set in event handlers.
       void DispatchAudioProcessEvent(ScriptProcessorNode* aNode,
-                                     AudioChunk* aOutput)
-      {
+                                     AudioChunk* aOutput) {
         AudioContext* context = aNode->Context();
         if (!context) {
           return;
@@ -443,10 +407,9 @@ private:
         RefPtr<AudioBuffer> inputBuffer;
         if (mInputBuffer) {
           ErrorResult rv;
-          inputBuffer =
-            AudioBuffer::Create(context->GetOwner(), inputChannelCount,
-                                aNode->BufferSize(), context->SampleRate(),
-                                mInputBuffer.forget(), rv);
+          inputBuffer = AudioBuffer::Create(
+              context->GetOwner(), inputChannelCount, aNode->BufferSize(),
+              context->SampleRate(), mInputBuffer.forget(), rv);
           if (rv.Failed()) {
             rv.SuppressException();
             return;
@@ -454,12 +417,13 @@ private:
         }
 
         // Ask content to produce data in the output buffer
-        // Note that we always avoid creating the output buffer here, and we try to
-        // avoid creating the input buffer as well.  The AudioProcessingEvent class
-        // knows how to lazily create them if needed once the script tries to access
-        // them.  Otherwise, we may be able to get away without creating them!
+        // Note that we always avoid creating the output buffer here, and we try
+        // to avoid creating the input buffer as well.  The AudioProcessingEvent
+        // class knows how to lazily create them if needed once the script tries
+        // to access them.  Otherwise, we may be able to get away without
+        // creating them!
         RefPtr<AudioProcessingEvent> event =
-          new AudioProcessingEvent(aNode, nullptr, nullptr);
+            new AudioProcessingEvent(aNode, nullptr, nullptr);
         event->InitEvent(inputBuffer, inputChannelCount, mPlaybackTime);
         aNode->DispatchTrustedEvent(event);
 
@@ -475,18 +439,19 @@ private:
           MOZ_ASSERT(!rv.Failed());
           *aOutput = buffer->GetThreadSharedChannelsForRate(cx);
           MOZ_ASSERT(aOutput->IsNull() ||
-                     aOutput->mBufferFormat == AUDIO_FORMAT_FLOAT32,
+                         aOutput->mBufferFormat == AUDIO_FORMAT_FLOAT32,
                      "AudioBuffers initialized from JS have float data");
         }
       }
-    private:
+
+     private:
       RefPtr<AudioNodeStream> mStream;
       RefPtr<ThreadSharedFloatArrayBufferList> mInputBuffer;
       double mPlaybackTime;
     };
 
-    RefPtr<Command> command = new Command(aStream, mInputBuffer.forget(),
-                                          playbackTime);
+    RefPtr<Command> command =
+        new Command(aStream, mInputBuffer.forget(), playbackTime);
     mAbstractMainThread->Dispatch(command.forget());
   }
 
@@ -506,73 +471,57 @@ ScriptProcessorNode::ScriptProcessorNode(AudioContext* aContext,
                                          uint32_t aBufferSize,
                                          uint32_t aNumberOfInputChannels,
                                          uint32_t aNumberOfOutputChannels)
-  : AudioNode(aContext,
-              aNumberOfInputChannels,
-              mozilla::dom::ChannelCountMode::Explicit,
-              mozilla::dom::ChannelInterpretation::Speakers)
-  , mBufferSize(aBufferSize ?
-                  aBufferSize : // respect what the web developer requested
-                  4096)         // choose our own buffer size -- 4KB for now
-  , mNumberOfOutputChannels(aNumberOfOutputChannels)
-{
+    : AudioNode(aContext, aNumberOfInputChannels,
+                mozilla::dom::ChannelCountMode::Explicit,
+                mozilla::dom::ChannelInterpretation::Speakers),
+      mBufferSize(aBufferSize ? aBufferSize
+                              :  // respect what the web developer requested
+                      4096)      // choose our own buffer size -- 4KB for now
+      ,
+      mNumberOfOutputChannels(aNumberOfOutputChannels) {
   MOZ_ASSERT(BufferSize() % WEBAUDIO_BLOCK_SIZE == 0, "Invalid buffer size");
-  ScriptProcessorNodeEngine* engine =
-    new ScriptProcessorNodeEngine(this,
-                                  aContext->Destination(),
-                                  BufferSize(),
-                                  aNumberOfInputChannels);
-  mStream = AudioNodeStream::Create(aContext, engine,
-                                    AudioNodeStream::NO_STREAM_FLAGS,
-                                    aContext->Graph());
+  ScriptProcessorNodeEngine* engine = new ScriptProcessorNodeEngine(
+      this, aContext->Destination(), BufferSize(), aNumberOfInputChannels);
+  mStream = AudioNodeStream::Create(
+      aContext, engine, AudioNodeStream::NO_STREAM_FLAGS, aContext->Graph());
 }
 
-ScriptProcessorNode::~ScriptProcessorNode()
-{
-}
+ScriptProcessorNode::~ScriptProcessorNode() {}
 
-size_t
-ScriptProcessorNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t ScriptProcessorNode::SizeOfExcludingThis(
+    MallocSizeOf aMallocSizeOf) const {
   size_t amount = AudioNode::SizeOfExcludingThis(aMallocSizeOf);
   return amount;
 }
 
-size_t
-ScriptProcessorNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t ScriptProcessorNode::SizeOfIncludingThis(
+    MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-void
-ScriptProcessorNode::EventListenerAdded(nsAtom* aType)
-{
+void ScriptProcessorNode::EventListenerAdded(nsAtom* aType) {
   AudioNode::EventListenerAdded(aType);
   if (aType == nsGkAtoms::onaudioprocess) {
     UpdateConnectedStatus();
   }
 }
 
-void
-ScriptProcessorNode::EventListenerRemoved(nsAtom* aType)
-{
+void ScriptProcessorNode::EventListenerRemoved(nsAtom* aType) {
   AudioNode::EventListenerRemoved(aType);
   if (aType == nsGkAtoms::onaudioprocess) {
     UpdateConnectedStatus();
   }
 }
 
-JSObject*
-ScriptProcessorNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* ScriptProcessorNode::WrapObject(JSContext* aCx,
+                                          JS::Handle<JSObject*> aGivenProto) {
   return ScriptProcessorNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-ScriptProcessorNode::UpdateConnectedStatus()
-{
+void ScriptProcessorNode::UpdateConnectedStatus() {
   bool isConnected =
-    mHasPhantomInput || !(OutputNodes().IsEmpty() && OutputParams().IsEmpty() &&
-                          InputNodes().IsEmpty());
+      mHasPhantomInput || !(OutputNodes().IsEmpty() &&
+                            OutputParams().IsEmpty() && InputNodes().IsEmpty());
 
   // Events are queued even when there is no listener because a listener
   // may be added while events are in the queue.
@@ -589,6 +538,5 @@ ScriptProcessorNode::UpdateConnectedStatus()
   engine->GetSharedBuffers()->NotifyNodeIsConnected(isConnected);
 }
 
-} // namespace dom
-} // namespace mozilla
-
+}  // namespace dom
+}  // namespace mozilla

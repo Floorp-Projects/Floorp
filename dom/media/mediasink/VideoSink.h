@@ -21,20 +21,18 @@
 namespace mozilla {
 
 class VideoFrameContainer;
-template <class T> class MediaQueue;
+template <class T>
+class MediaQueue;
 
 namespace media {
 
-class VideoSink : public MediaSink
-{
+class VideoSink : public MediaSink {
   typedef mozilla::layers::ImageContainer::ProducerID ProducerID;
-public:
-  VideoSink(AbstractThread* aThread,
-            MediaSink* aAudioSink,
-            MediaQueue<VideoData>& aVideoQueue,
-            VideoFrameContainer* aContainer,
-            FrameStatistics& aFrameStats,
-            uint32_t aVQueueSentToCompositerSize);
+
+ public:
+  VideoSink(AbstractThread* aThread, MediaSink* aAudioSink,
+            MediaQueue<VideoData>& aVideoQueue, VideoFrameContainer* aContainer,
+            FrameStatistics& aFrameStats, uint32_t aVQueueSentToCompositerSize);
 
   const PlaybackParams& GetPlaybackParams() const override;
 
@@ -70,7 +68,7 @@ public:
 
   nsCString GetDebugInfo() override;
 
-private:
+ private:
   virtual ~VideoSink();
 
   // VideoQueue listener related.
@@ -103,15 +101,11 @@ private:
 
   void MaybeResolveEndPromise();
 
-  void AssertOwnerThread() const
-  {
+  void AssertOwnerThread() const {
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   }
 
-  MediaQueue<VideoData>& VideoQueue() const
-  {
-    return mVideoQueue;
-  }
+  MediaQueue<VideoData>& VideoQueue() const { return mVideoQueue; }
 
   const RefPtr<AbstractThread> mOwnerThread;
   RefPtr<MediaSink> mAudioSink;
@@ -168,7 +162,7 @@ private:
 #endif
 };
 
-} // namespace media
-} // namespace mozilla
+}  // namespace media
+}  // namespace mozilla
 
 #endif

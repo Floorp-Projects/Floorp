@@ -22,14 +22,12 @@ bool AppleDecoderModule::sIsVTAvailable = false;
 bool AppleDecoderModule::sIsVTHWAvailable = false;
 bool AppleDecoderModule::sCanUseHardwareVideoDecoder = true;
 
-AppleDecoderModule::AppleDecoderModule() { }
+AppleDecoderModule::AppleDecoderModule() {}
 
-AppleDecoderModule::~AppleDecoderModule() { }
+AppleDecoderModule::~AppleDecoderModule() {}
 
 /* static */
-void
-AppleDecoderModule::Init()
-{
+void AppleDecoderModule::Init() {
   if (sInitialized) {
     return;
   }
@@ -48,49 +46,41 @@ AppleDecoderModule::Init()
 
   sIsVTHWAvailable = AppleVTLinker::skPropEnableHWAccel != nullptr;
 
-  sCanUseHardwareVideoDecoder = loaded &&
-    gfx::gfxVars::CanUseHardwareVideoDecoding();
+  sCanUseHardwareVideoDecoder =
+      loaded && gfx::gfxVars::CanUseHardwareVideoDecoding();
 
   sInitialized = true;
 }
 
-nsresult
-AppleDecoderModule::Startup()
-{
+nsresult AppleDecoderModule::Startup() {
   if (!sInitialized || !sIsVTAvailable) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
 
-already_AddRefed<MediaDataDecoder>
-AppleDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
-{
+already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateVideoDecoder(
+    const CreateDecoderParams& aParams) {
   RefPtr<MediaDataDecoder> decoder =
-    new AppleVTDecoder(aParams.VideoConfig(),
-                       aParams.mTaskQueue,
-                       aParams.mImageContainer,
-                       aParams.mOptions);
+      new AppleVTDecoder(aParams.VideoConfig(), aParams.mTaskQueue,
+                         aParams.mImageContainer, aParams.mOptions);
   return decoder.forget();
 }
 
-already_AddRefed<MediaDataDecoder>
-AppleDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
-{
+already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateAudioDecoder(
+    const CreateDecoderParams& aParams) {
   RefPtr<MediaDataDecoder> decoder =
-    new AppleATDecoder(aParams.AudioConfig(), aParams.mTaskQueue);
+      new AppleATDecoder(aParams.AudioConfig(), aParams.mTaskQueue);
   return decoder.forget();
 }
 
-bool
-AppleDecoderModule::SupportsMimeType(const nsACString& aMimeType,
-                                     DecoderDoctorDiagnostics* aDiagnostics) const
-{
+bool AppleDecoderModule::SupportsMimeType(
+    const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   return (sIsCoreMediaAvailable &&
           (aMimeType.EqualsLiteral("audio/mpeg") ||
            aMimeType.EqualsLiteral("audio/mp4a-latm"))) ||
-    (sIsVTAvailable && (aMimeType.EqualsLiteral("video/mp4") ||
-                        aMimeType.EqualsLiteral("video/avc")));
+         (sIsVTAvailable && (aMimeType.EqualsLiteral("video/mp4") ||
+                             aMimeType.EqualsLiteral("video/avc")));
 }
 
-} // namespace mozilla
+}  // namespace mozilla

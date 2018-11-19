@@ -32,27 +32,20 @@ const GMPPlatformAPI* sPlatform = nullptr;
 namespace mozilla {
 
 #ifdef XP_WIN
-static void
-InitializeHooks();
+static void InitializeHooks();
 #endif
 
-ChromiumCDMAdapter::ChromiumCDMAdapter(nsTArray<Pair<nsCString, nsCString>>&& aHostPathPairs)
-{
+ChromiumCDMAdapter::ChromiumCDMAdapter(
+    nsTArray<Pair<nsCString, nsCString>>&& aHostPathPairs) {
 #ifdef XP_WIN
   InitializeHooks();
 #endif
   PopulateHostFiles(std::move(aHostPathPairs));
 }
 
-void
-ChromiumCDMAdapter::SetAdaptee(PRLibrary* aLib)
-{
-  mLib = aLib;
-}
+void ChromiumCDMAdapter::SetAdaptee(PRLibrary* aLib) { mLib = aLib; }
 
-void*
-ChromiumCdmHost(int aHostInterfaceVersion, void* aUserData)
-{
+void* ChromiumCdmHost(int aHostInterfaceVersion, void* aUserData) {
   GMP_LOG("ChromiumCdmHostFunc(%d, %p)", aHostInterfaceVersion, aUserData);
   if (aHostInterfaceVersion != cdm::Host_9::kVersion &&
       aHostInterfaceVersion != cdm::Host_10::kVersion) {
@@ -65,18 +58,14 @@ ChromiumCdmHost(int aHostInterfaceVersion, void* aUserData)
 #define _STRINGIFY(s) #s
 
 #ifdef MOZILLA_OFFICIAL
-static cdm::HostFile
-TakeToCDMHostFile(HostFileData& aHostFileData)
-{
+static cdm::HostFile TakeToCDMHostFile(HostFileData& aHostFileData) {
   return cdm::HostFile(aHostFileData.mBinary.Path().get(),
                        aHostFileData.mBinary.TakePlatformFile(),
                        aHostFileData.mSig.TakePlatformFile());
 }
 #endif
 
-GMPErr
-ChromiumCDMAdapter::GMPInit(const GMPPlatformAPI* aPlatformAPI)
-{
+GMPErr ChromiumCDMAdapter::GMPInit(const GMPPlatformAPI* aPlatformAPI) {
   GMP_LOG("ChromiumCDMAdapter::GMPInit");
   sPlatform = aPlatformAPI;
   if (!mLib) {
@@ -87,7 +76,7 @@ ChromiumCDMAdapter::GMPInit(const GMPPlatformAPI* aPlatformAPI)
   // Note: we must call the VerifyCdmHost_0 function if it's present before
   // we call the initialize function.
   auto verify = reinterpret_cast<decltype(::VerifyCdmHost_0)*>(
-    PR_FindFunctionSymbol(mLib, STRINGIFY(VerifyCdmHost_0)));
+      PR_FindFunctionSymbol(mLib, STRINGIFY(VerifyCdmHost_0)));
   if (verify) {
     nsTArray<cdm::HostFile> files;
     for (HostFileData& hostFile : mHostFiles) {
@@ -99,7 +88,7 @@ ChromiumCDMAdapter::GMPInit(const GMPPlatformAPI* aPlatformAPI)
 #endif
 
   auto init = reinterpret_cast<decltype(::INITIALIZE_CDM_MODULE)*>(
-    PR_FindFunctionSymbol(mLib, STRINGIFY(INITIALIZE_CDM_MODULE)));
+      PR_FindFunctionSymbol(mLib, STRINGIFY(INITIALIZE_CDM_MODULE)));
   if (!init) {
     return GMPGenericErr;
   }
@@ -110,51 +99,33 @@ ChromiumCDMAdapter::GMPInit(const GMPPlatformAPI* aPlatformAPI)
   return GMPNoErr;
 }
 
-GMPErr
-ChromiumCDMAdapter::GMPGetAPI(const char* aAPIName,
-                              void* aHostAPI,
-                              void** aPluginAPI,
-                              uint32_t aDecryptorId)
-{
+GMPErr ChromiumCDMAdapter::GMPGetAPI(const char* aAPIName, void* aHostAPI,
+                                     void** aPluginAPI, uint32_t aDecryptorId) {
   GMP_LOG("ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p",
-          aAPIName,
-          aHostAPI,
-          aPluginAPI,
-          aDecryptorId,
-          this);
+          aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
   bool isCDM10 = !strcmp(aAPIName, CHROMIUM_CDM_API);
   bool isCDM9 = !strcmp(aAPIName, CHROMIUM_CDM_API_BACKWARD_COMPAT);
   if (isCDM9 || isCDM10) {
     auto create = reinterpret_cast<decltype(::CreateCdmInstance)*>(
-      PR_FindFunctionSymbol(mLib, "CreateCdmInstance"));
+        PR_FindFunctionSymbol(mLib, "CreateCdmInstance"));
     if (!create) {
-      GMP_LOG("ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p "
-              "FAILED to find CreateCdmInstance",
-              aAPIName,
-              aHostAPI,
-              aPluginAPI,
-              aDecryptorId,
-              this);
+      GMP_LOG(
+          "ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p "
+          "FAILED to find CreateCdmInstance",
+          aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
       return GMPGenericErr;
     }
 
     int version = isCDM9 ? cdm::ContentDecryptionModule_9::kVersion
                          : cdm::ContentDecryptionModule_10::kVersion;
     void* cdm =
-      create(version,
-             kEMEKeySystemWidevine.get(),
-             kEMEKeySystemWidevine.Length(),
-             &ChromiumCdmHost,
-             aHostAPI);
+        create(version, kEMEKeySystemWidevine.get(),
+               kEMEKeySystemWidevine.Length(), &ChromiumCdmHost, aHostAPI);
     if (!cdm) {
-      GMP_LOG("ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p "
-              "FAILED to create cdm version %d",
-              aAPIName,
-              aHostAPI,
-              aPluginAPI,
-              aDecryptorId,
-              this,
-              version);
+      GMP_LOG(
+          "ChromiumCDMAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p "
+          "FAILED to create cdm version %d",
+          aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this, version);
       return GMPGenericErr;
     }
     GMP_LOG("cdm: 0x%p, version: %d", cdm, version);
@@ -163,13 +134,12 @@ ChromiumCDMAdapter::GMPGetAPI(const char* aAPIName,
   return *aPluginAPI ? GMPNoErr : GMPNotImplementedErr;
 }
 
-void
-ChromiumCDMAdapter::GMPShutdown()
-{
+void ChromiumCDMAdapter::GMPShutdown() {
   GMP_LOG("ChromiumCDMAdapter::GMPShutdown()");
 
   decltype(::DeinitializeCdmModule)* deinit;
-  deinit = (decltype(deinit))(PR_FindFunctionSymbol(mLib, "DeinitializeCdmModule"));
+  deinit =
+      (decltype(deinit))(PR_FindFunctionSymbol(mLib, "DeinitializeCdmModule"));
   if (deinit) {
     GMP_LOG("DeinitializeCdmModule()");
     deinit();
@@ -177,11 +147,9 @@ ChromiumCDMAdapter::GMPShutdown()
 }
 
 /* static */
-bool
-ChromiumCDMAdapter::Supports(int32_t aModuleVersion,
-                             int32_t aInterfaceVersion,
-                             int32_t aHostVersion)
-{
+bool ChromiumCDMAdapter::Supports(int32_t aModuleVersion,
+                                  int32_t aInterfaceVersion,
+                                  int32_t aHostVersion) {
   return aModuleVersion == CDM_MODULE_VERSION &&
          (aInterfaceVersion == cdm::ContentDecryptionModule_9::kVersion ||
           aInterfaceVersion == cdm::ContentDecryptionModule_10::kVersion) &&
@@ -198,13 +166,12 @@ typedef DWORD(WINAPI* QueryDosDeviceWFnPtr)(_In_opt_ LPCWSTR lpDeviceName,
                                             _In_ DWORD ucchMax);
 
 static WindowsDllInterceptor::FuncHookType<QueryDosDeviceWFnPtr>
-  sOriginalQueryDosDeviceWFnPtr;
+    sOriginalQueryDosDeviceWFnPtr;
 
 static std::unordered_map<std::wstring, std::wstring>* sDeviceNames = nullptr;
 
-DWORD WINAPI
-QueryDosDeviceWHook(LPCWSTR lpDeviceName, LPWSTR lpTargetPath, DWORD ucchMax)
-{
+DWORD WINAPI QueryDosDeviceWHook(LPCWSTR lpDeviceName, LPWSTR lpTargetPath,
+                                 DWORD ucchMax) {
   if (!sDeviceNames) {
     return 0;
   }
@@ -223,9 +190,7 @@ QueryDosDeviceWHook(LPCWSTR lpDeviceName, LPWSTR lpTargetPath, DWORD ucchMax)
   return name.size();
 }
 
-static std::vector<std::wstring>
-GetDosDeviceNames()
-{
+static std::vector<std::wstring> GetDosDeviceNames() {
   std::vector<std::wstring> v;
   std::vector<wchar_t> buf;
   buf.resize(1024);
@@ -252,10 +217,8 @@ GetDosDeviceNames()
   return v;
 }
 
-static std::wstring
-GetDeviceMapping(const std::wstring& aDosDeviceName)
-{
-  wchar_t buf[MAX_PATH] = { 0 };
+static std::wstring GetDeviceMapping(const std::wstring& aDosDeviceName) {
+  wchar_t buf[MAX_PATH] = {0};
   DWORD rv = QueryDosDeviceW(aDosDeviceName.c_str(), buf, MAX_PATH);
   if (rv == 0) {
     return std::wstring(L"");
@@ -263,9 +226,7 @@ GetDeviceMapping(const std::wstring& aDosDeviceName)
   return std::wstring(buf, buf + rv);
 }
 
-static void
-InitializeHooks()
-{
+static void InitializeHooks() {
   static bool initialized = false;
   if (initialized) {
     return;
@@ -283,13 +244,9 @@ InitializeHooks()
 #endif
 
 HostFile::HostFile(HostFile&& aOther)
-  : mPath(aOther.mPath)
-  , mFile(aOther.TakePlatformFile())
-{
-}
+    : mPath(aOther.mPath), mFile(aOther.TakePlatformFile()) {}
 
-HostFile::~HostFile()
-{
+HostFile::~HostFile() {
   if (mFile != cdm::kInvalidPlatformFile) {
 #ifdef XP_WIN
     CloseHandle(mFile);
@@ -302,44 +259,33 @@ HostFile::~HostFile()
 
 #ifdef XP_WIN
 HostFile::HostFile(const nsCString& aPath)
-  : mPath(NS_ConvertUTF8toUTF16(aPath))
-{
-  HANDLE handle = CreateFileW(mPath.get(),
-                              GENERIC_READ,
-                              FILE_SHARE_READ | FILE_SHARE_WRITE,
-                              NULL,
-                              OPEN_EXISTING,
-                              0,
-                              NULL);
+    : mPath(NS_ConvertUTF8toUTF16(aPath)) {
+  HANDLE handle =
+      CreateFileW(mPath.get(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                  NULL, OPEN_EXISTING, 0, NULL);
   mFile = (handle == INVALID_HANDLE_VALUE) ? cdm::kInvalidPlatformFile : handle;
 }
 #endif
 
 #ifndef XP_WIN
-HostFile::HostFile(const nsCString& aPath)
-  : mPath(aPath)
-{
+HostFile::HostFile(const nsCString& aPath) : mPath(aPath) {
   // Note: open() returns -1 on failure; i.e. kInvalidPlatformFile.
   mFile = open(aPath.get(), O_RDONLY);
 }
 #endif
 
-cdm::PlatformFile
-HostFile::TakePlatformFile()
-{
+cdm::PlatformFile HostFile::TakePlatformFile() {
   cdm::PlatformFile f = mFile;
   mFile = cdm::kInvalidPlatformFile;
   return f;
 }
 
-void
-ChromiumCDMAdapter::PopulateHostFiles(nsTArray<Pair<nsCString, nsCString>>&& aHostPathPairs)
-{
+void ChromiumCDMAdapter::PopulateHostFiles(
+    nsTArray<Pair<nsCString, nsCString>>&& aHostPathPairs) {
   for (const auto& pair : aHostPathPairs) {
-    mHostFiles.AppendElement(
-      HostFileData(mozilla::HostFile(pair.first()),
-                   mozilla::HostFile(pair.second())));
+    mHostFiles.AppendElement(HostFileData(mozilla::HostFile(pair.first()),
+                                          mozilla::HostFile(pair.second())));
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

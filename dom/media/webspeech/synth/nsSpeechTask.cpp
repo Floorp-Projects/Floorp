@@ -36,49 +36,37 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSpeechTask)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSpeechTask)
 
 nsSpeechTask::nsSpeechTask(SpeechSynthesisUtterance* aUtterance, bool aIsChrome)
-  : mUtterance(aUtterance)
-  , mInited(false)
-  , mPrePaused(false)
-  , mPreCanceled(false)
-  , mCallback(nullptr)
-  , mIsChrome(aIsChrome)
-{
+    : mUtterance(aUtterance),
+      mInited(false),
+      mPrePaused(false),
+      mPreCanceled(false),
+      mCallback(nullptr),
+      mIsChrome(aIsChrome) {
   mText = aUtterance->mText;
   mVolume = aUtterance->Volume();
 }
 
-nsSpeechTask::nsSpeechTask(float aVolume, const nsAString& aText, bool aIsChrome)
-  : mUtterance(nullptr)
-  , mVolume(aVolume)
-  , mText(aText)
-  , mInited(false)
-  , mPrePaused(false)
-  , mPreCanceled(false)
-  , mCallback(nullptr)
-  , mIsChrome(aIsChrome)
-{
-}
+nsSpeechTask::nsSpeechTask(float aVolume, const nsAString& aText,
+                           bool aIsChrome)
+    : mUtterance(nullptr),
+      mVolume(aVolume),
+      mText(aText),
+      mInited(false),
+      mPrePaused(false),
+      mPreCanceled(false),
+      mCallback(nullptr),
+      mIsChrome(aIsChrome) {}
 
-nsSpeechTask::~nsSpeechTask()
-{
-  LOG(LogLevel::Debug, ("~nsSpeechTask"));
-}
+nsSpeechTask::~nsSpeechTask() { LOG(LogLevel::Debug, ("~nsSpeechTask")); }
 
-void
-nsSpeechTask::Init()
-{
-  mInited = true;
-}
+void nsSpeechTask::Init() { mInited = true; }
 
-void
-nsSpeechTask::SetChosenVoiceURI(const nsAString& aUri)
-{
+void nsSpeechTask::SetChosenVoiceURI(const nsAString& aUri) {
   mChosenVoiceURI = aUri;
 }
 
 NS_IMETHODIMP
-nsSpeechTask::Setup(nsISpeechTaskCallback* aCallback)
-{
+nsSpeechTask::Setup(nsISpeechTaskCallback* aCallback) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   LOG(LogLevel::Debug, ("nsSpeechTask::Setup"));
@@ -89,25 +77,21 @@ nsSpeechTask::Setup(nsISpeechTaskCallback* aCallback)
 }
 
 NS_IMETHODIMP
-nsSpeechTask::DispatchStart()
-{
+nsSpeechTask::DispatchStart() {
   nsSynthVoiceRegistry::GetInstance()->SetIsSpeaking(true);
   return DispatchStartImpl();
 }
 
-nsresult
-nsSpeechTask::DispatchStartImpl()
-{
+nsresult nsSpeechTask::DispatchStartImpl() {
   return DispatchStartImpl(mChosenVoiceURI);
 }
 
-nsresult
-nsSpeechTask::DispatchStartImpl(const nsAString& aUri)
-{
+nsresult nsSpeechTask::DispatchStartImpl(const nsAString& aUri) {
   LOG(LogLevel::Debug, ("nsSpeechTask::DispatchStartImpl"));
 
   MOZ_ASSERT(mUtterance);
-  if(NS_WARN_IF(!(mUtterance->mState == SpeechSynthesisUtterance::STATE_PENDING))) {
+  if (NS_WARN_IF(
+          !(mUtterance->mState == SpeechSynthesisUtterance::STATE_PENDING))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -122,8 +106,7 @@ nsSpeechTask::DispatchStartImpl(const nsAString& aUri)
 }
 
 NS_IMETHODIMP
-nsSpeechTask::DispatchEnd(float aElapsedTime, uint32_t aCharIndex)
-{
+nsSpeechTask::DispatchEnd(float aElapsedTime, uint32_t aCharIndex) {
   // After we end, no callback functions should go through.
   mCallback = nullptr;
 
@@ -134,15 +117,14 @@ nsSpeechTask::DispatchEnd(float aElapsedTime, uint32_t aCharIndex)
   return DispatchEndImpl(aElapsedTime, aCharIndex);
 }
 
-nsresult
-nsSpeechTask::DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex)
-{
+nsresult nsSpeechTask::DispatchEndImpl(float aElapsedTime,
+                                       uint32_t aCharIndex) {
   LOG(LogLevel::Debug, ("nsSpeechTask::DispatchEndImpl"));
 
   DestroyAudioChannelAgent();
 
   MOZ_ASSERT(mUtterance);
-  if(NS_WARN_IF(mUtterance->mState == SpeechSynthesisUtterance::STATE_ENDED)) {
+  if (NS_WARN_IF(mUtterance->mState == SpeechSynthesisUtterance::STATE_ENDED)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -165,20 +147,18 @@ nsSpeechTask::DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex)
 }
 
 NS_IMETHODIMP
-nsSpeechTask::DispatchPause(float aElapsedTime, uint32_t aCharIndex)
-{
+nsSpeechTask::DispatchPause(float aElapsedTime, uint32_t aCharIndex) {
   return DispatchPauseImpl(aElapsedTime, aCharIndex);
 }
 
-nsresult
-nsSpeechTask::DispatchPauseImpl(float aElapsedTime, uint32_t aCharIndex)
-{
+nsresult nsSpeechTask::DispatchPauseImpl(float aElapsedTime,
+                                         uint32_t aCharIndex) {
   LOG(LogLevel::Debug, ("nsSpeechTask::DispatchPauseImpl"));
   MOZ_ASSERT(mUtterance);
-  if(NS_WARN_IF(mUtterance->mPaused)) {
+  if (NS_WARN_IF(mUtterance->mPaused)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  if(NS_WARN_IF(mUtterance->mState == SpeechSynthesisUtterance::STATE_ENDED)) {
+  if (NS_WARN_IF(mUtterance->mState == SpeechSynthesisUtterance::STATE_ENDED)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -192,20 +172,18 @@ nsSpeechTask::DispatchPauseImpl(float aElapsedTime, uint32_t aCharIndex)
 }
 
 NS_IMETHODIMP
-nsSpeechTask::DispatchResume(float aElapsedTime, uint32_t aCharIndex)
-{
+nsSpeechTask::DispatchResume(float aElapsedTime, uint32_t aCharIndex) {
   return DispatchResumeImpl(aElapsedTime, aCharIndex);
 }
 
-nsresult
-nsSpeechTask::DispatchResumeImpl(float aElapsedTime, uint32_t aCharIndex)
-{
+nsresult nsSpeechTask::DispatchResumeImpl(float aElapsedTime,
+                                          uint32_t aCharIndex) {
   LOG(LogLevel::Debug, ("nsSpeechTask::DispatchResumeImpl"));
   MOZ_ASSERT(mUtterance);
-  if(NS_WARN_IF(!(mUtterance->mPaused))) {
+  if (NS_WARN_IF(!(mUtterance->mPaused))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  if(NS_WARN_IF(mUtterance->mState == SpeechSynthesisUtterance::STATE_ENDED)) {
+  if (NS_WARN_IF(mUtterance->mState == SpeechSynthesisUtterance::STATE_ENDED)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -219,15 +197,12 @@ nsSpeechTask::DispatchResumeImpl(float aElapsedTime, uint32_t aCharIndex)
   return NS_OK;
 }
 
-void
-nsSpeechTask::ForceError(float aElapsedTime, uint32_t aCharIndex)
-{
+void nsSpeechTask::ForceError(float aElapsedTime, uint32_t aCharIndex) {
   DispatchError(aElapsedTime, aCharIndex);
 }
 
 NS_IMETHODIMP
-nsSpeechTask::DispatchError(float aElapsedTime, uint32_t aCharIndex)
-{
+nsSpeechTask::DispatchError(float aElapsedTime, uint32_t aCharIndex) {
   LOG(LogLevel::Debug, ("nsSpeechTask::DispatchError"));
 
   if (!mPreCanceled) {
@@ -237,11 +212,10 @@ nsSpeechTask::DispatchError(float aElapsedTime, uint32_t aCharIndex)
   return DispatchErrorImpl(aElapsedTime, aCharIndex);
 }
 
-nsresult
-nsSpeechTask::DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex)
-{
+nsresult nsSpeechTask::DispatchErrorImpl(float aElapsedTime,
+                                         uint32_t aCharIndex) {
   MOZ_ASSERT(mUtterance);
-  if(NS_WARN_IF(mUtterance->mState == SpeechSynthesisUtterance::STATE_ENDED)) {
+  if (NS_WARN_IF(mUtterance->mState == SpeechSynthesisUtterance::STATE_ENDED)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -257,55 +231,52 @@ nsSpeechTask::DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex)
 }
 
 NS_IMETHODIMP
-nsSpeechTask::DispatchBoundary(const nsAString& aName,
-                               float aElapsedTime, uint32_t aCharIndex,
-                               uint32_t aCharLength, uint8_t argc)
-{
-  return DispatchBoundaryImpl(aName, aElapsedTime, aCharIndex, aCharLength, argc);
+nsSpeechTask::DispatchBoundary(const nsAString& aName, float aElapsedTime,
+                               uint32_t aCharIndex, uint32_t aCharLength,
+                               uint8_t argc) {
+  return DispatchBoundaryImpl(aName, aElapsedTime, aCharIndex, aCharLength,
+                              argc);
 }
 
-nsresult
-nsSpeechTask::DispatchBoundaryImpl(const nsAString& aName,
-                                   float aElapsedTime, uint32_t aCharIndex,
-                                   uint32_t aCharLength, uint8_t argc)
-{
+nsresult nsSpeechTask::DispatchBoundaryImpl(const nsAString& aName,
+                                            float aElapsedTime,
+                                            uint32_t aCharIndex,
+                                            uint32_t aCharLength,
+                                            uint8_t argc) {
   MOZ_ASSERT(mUtterance);
-  if(NS_WARN_IF(!(mUtterance->mState == SpeechSynthesisUtterance::STATE_SPEAKING))) {
+  if (NS_WARN_IF(
+          !(mUtterance->mState == SpeechSynthesisUtterance::STATE_SPEAKING))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("boundary"),
-                                           aCharIndex,
-                                           argc ? static_cast<Nullable<uint32_t> >(aCharLength) : nullptr,
-                                           aElapsedTime, aName);
+  mUtterance->DispatchSpeechSynthesisEvent(
+      NS_LITERAL_STRING("boundary"), aCharIndex,
+      argc ? static_cast<Nullable<uint32_t> >(aCharLength) : nullptr,
+      aElapsedTime, aName);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSpeechTask::DispatchMark(const nsAString& aName,
-                           float aElapsedTime, uint32_t aCharIndex)
-{
+nsSpeechTask::DispatchMark(const nsAString& aName, float aElapsedTime,
+                           uint32_t aCharIndex) {
   return DispatchMarkImpl(aName, aElapsedTime, aCharIndex);
 }
 
-nsresult
-nsSpeechTask::DispatchMarkImpl(const nsAString& aName,
-                               float aElapsedTime, uint32_t aCharIndex)
-{
+nsresult nsSpeechTask::DispatchMarkImpl(const nsAString& aName,
+                                        float aElapsedTime,
+                                        uint32_t aCharIndex) {
   MOZ_ASSERT(mUtterance);
-  if(NS_WARN_IF(!(mUtterance->mState == SpeechSynthesisUtterance::STATE_SPEAKING))) {
+  if (NS_WARN_IF(
+          !(mUtterance->mState == SpeechSynthesisUtterance::STATE_SPEAKING))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("mark"),
-                                           aCharIndex, nullptr, aElapsedTime,
-                                           aName);
+  mUtterance->DispatchSpeechSynthesisEvent(
+      NS_LITERAL_STRING("mark"), aCharIndex, nullptr, aElapsedTime, aName);
   return NS_OK;
 }
 
-void
-nsSpeechTask::Pause()
-{
+void nsSpeechTask::Pause() {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   if (mCallback) {
@@ -318,9 +289,7 @@ nsSpeechTask::Pause()
   }
 }
 
-void
-nsSpeechTask::Resume()
-{
+void nsSpeechTask::Resume() {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   if (mCallback) {
@@ -335,9 +304,7 @@ nsSpeechTask::Resume()
   }
 }
 
-void
-nsSpeechTask::Cancel()
-{
+void nsSpeechTask::Cancel() {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   LOG(LogLevel::Debug, ("nsSpeechTask::Cancel"));
@@ -353,9 +320,7 @@ nsSpeechTask::Cancel()
   }
 }
 
-void
-nsSpeechTask::ForceEnd()
-{
+void nsSpeechTask::ForceEnd() {
   if (!mInited) {
     mPreCanceled = true;
   }
@@ -363,15 +328,11 @@ nsSpeechTask::ForceEnd()
   DispatchEnd(0, 0);
 }
 
-void
-nsSpeechTask::SetSpeechSynthesis(SpeechSynthesis* aSpeechSynthesis)
-{
+void nsSpeechTask::SetSpeechSynthesis(SpeechSynthesis* aSpeechSynthesis) {
   mSpeechSynthesis = aSpeechSynthesis;
 }
 
-void
-nsSpeechTask::CreateAudioChannelAgent()
-{
+void nsSpeechTask::CreateAudioChannelAgent() {
   if (!mUtterance) {
     return;
   }
@@ -384,8 +345,8 @@ nsSpeechTask::CreateAudioChannelAgent()
   mAudioChannelAgent->InitWithWeakCallback(mUtterance->GetOwner(), this);
 
   AudioPlaybackConfig config;
-  nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&config,
-                                                         AudioChannelService::AudibleState::eAudible);
+  nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(
+      &config, AudioChannelService::AudibleState::eAudible);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -394,9 +355,7 @@ nsSpeechTask::CreateAudioChannelAgent()
   WindowSuspendChanged(config.mSuspend);
 }
 
-void
-nsSpeechTask::DestroyAudioChannelAgent()
-{
+void nsSpeechTask::DestroyAudioChannelAgent() {
   if (mAudioChannelAgent) {
     mAudioChannelAgent->NotifyStoppedPlaying();
     mAudioChannelAgent = nullptr;
@@ -404,21 +363,18 @@ nsSpeechTask::DestroyAudioChannelAgent()
 }
 
 NS_IMETHODIMP
-nsSpeechTask::WindowVolumeChanged(float aVolume, bool aMuted)
-{
+nsSpeechTask::WindowVolumeChanged(float aVolume, bool aMuted) {
   SetAudioOutputVolume(aMuted ? 0.0 : mVolume * aVolume);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSpeechTask::WindowSuspendChanged(nsSuspendedTypes aSuspend)
-{
+nsSpeechTask::WindowSuspendChanged(nsSuspendedTypes aSuspend) {
   if (!mUtterance) {
     return NS_OK;
   }
 
-  if (aSuspend == nsISuspendedTypes::NONE_SUSPENDED &&
-      mUtterance->mPaused) {
+  if (aSuspend == nsISuspendedTypes::NONE_SUSPENDED && mUtterance->mPaused) {
     Resume();
   } else if (aSuspend != nsISuspendedTypes::NONE_SUSPENDED &&
              !mUtterance->mPaused) {
@@ -428,19 +384,16 @@ nsSpeechTask::WindowSuspendChanged(nsSuspendedTypes aSuspend)
 }
 
 NS_IMETHODIMP
-nsSpeechTask::WindowAudioCaptureChanged(bool aCapture)
-{
+nsSpeechTask::WindowAudioCaptureChanged(bool aCapture) {
   // This is not supported yet.
   return NS_OK;
 }
 
-void
-nsSpeechTask::SetAudioOutputVolume(float aVolume)
-{
+void nsSpeechTask::SetAudioOutputVolume(float aVolume) {
   if (mCallback) {
     mCallback->OnVolumeChanged(aVolume);
   }
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

@@ -48,9 +48,8 @@ DDLoggedTypeDeclName(MediaResource);
  * For cross-process blob URL, CloneableWithRangeMediaResource is used.
  * MediaResource::Create automatically chooses the best implementation class.
  */
-class MediaResource : public DecoderDoctorLifeLogger<MediaResource>
-{
-public:
+class MediaResource : public DecoderDoctorLifeLogger<MediaResource> {
+ public:
   // Our refcounting is threadsafe, and when our refcount drops to zero
   // we dispatch an event to the main thread to delete the MediaResource.
   // Note that this means it's safe for references to this object to be
@@ -69,8 +68,8 @@ public:
   // aOffset in the stream, seeking to that location initially if
   // it is not the current stream offset. The remaining arguments,
   // results and requirements are the same as per the Read method.
-  virtual nsresult ReadAt(int64_t aOffset, char* aBuffer,
-                          uint32_t aCount, uint32_t* aBytes) = 0;
+  virtual nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
+                          uint32_t* aBytes) = 0;
   // Indicate whether caching data in advance of reads is worth it.
   // E.g. Caching lockless and memory-based MediaResource subclasses would be a
   // waste, but caching lock/IO-bound resources means reducing the impact of
@@ -103,8 +102,7 @@ public:
   // be read, this function will return failure. This function be called from
   // any thread, and it is the only read operation which is safe to call on
   // the main thread, since it's guaranteed to be non blocking.
-  virtual nsresult ReadFromCache(char* aBuffer,
-                                 int64_t aOffset,
+  virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset,
                                  uint32_t aCount) = 0;
 
   /**
@@ -114,10 +112,10 @@ public:
    */
   virtual nsresult GetCachedRanges(MediaByteRangeSet& aRanges) = 0;
 
-protected:
-  virtual ~MediaResource() {};
+ protected:
+  virtual ~MediaResource(){};
 
-private:
+ private:
   void Destroy();
   mozilla::ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
@@ -126,26 +124,25 @@ private:
 /**
  * RAII class that handles pinning and unpinning for MediaResource and derived.
  * This should be used when making calculations that involve potentially-cached
- * MediaResource data, so that the state of the world can't change out from under
- * us.
+ * MediaResource data, so that the state of the world can't change out from
+ * under us.
  */
-template<class T>
+template <class T>
 class MOZ_RAII AutoPinned {
  public:
-  explicit AutoPinned(T* aResource MOZ_GUARD_OBJECT_NOTIFIER_PARAM) : mResource(aResource) {
+  explicit AutoPinned(T* aResource MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mResource(aResource) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mResource);
     mResource->Pin();
   }
 
-  ~AutoPinned() {
-    mResource->Unpin();
-  }
+  ~AutoPinned() { mResource->Unpin(); }
 
   operator T*() const { return mResource; }
   T* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN { return mResource; }
 
-private:
+ private:
   T* mResource;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -159,9 +156,8 @@ DDLoggedTypeDeclName(MediaResourceIndex);
  * example. You must ensure that no threads are calling these methods once
  * the MediaResource has been Closed.
  */
-class MediaResourceIndex : public DecoderDoctorLifeLogger<MediaResourceIndex>
-{
-public:
+class MediaResourceIndex : public DecoderDoctorLifeLogger<MediaResourceIndex> {
+ public:
   explicit MediaResourceIndex(MediaResource* aResource);
 
   // Read up to aCount bytes from the stream. The buffer must have
@@ -215,16 +211,12 @@ public:
   // (mostly by avoiding using the resource's IOs and locks.)
   // *aBytes will contain the number of bytes copied, even if an error occurred.
   // ReadAt doesn't have an impact on the offset returned by Tell().
-  nsresult ReadAt(int64_t aOffset,
-                  char* aBuffer,
-                  uint32_t aCount,
+  nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
                   uint32_t* aBytes);
 
   // Same as ReadAt, but doesn't try to cache around the read.
   // Useful if you know that you will not read again from the same area.
-  nsresult UncachedReadAt(int64_t aOffset,
-                          char* aBuffer,
-                          uint32_t aCount,
+  nsresult UncachedReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
                           uint32_t* aBytes) const;
 
   // Similar to ReadAt, but doesn't try to cache around the read.
@@ -233,10 +225,8 @@ public:
   // MediaResource/ ReadAt()'s until a read returns 0 bytes (so we may actually
   // get less than aRequestedCount bytes), or until we get at least
   // aRequestedCount bytes (so we may not get any/all of the aExtraCount bytes.)
-  nsresult UncachedRangedReadAt(int64_t aOffset,
-                                char* aBuffer,
-                                uint32_t aRequestedCount,
-                                uint32_t aExtraCount,
+  nsresult UncachedRangedReadAt(int64_t aOffset, char* aBuffer,
+                                uint32_t aRequestedCount, uint32_t aExtraCount,
                                 uint32_t* aBytes) const;
 
   // This method returns nullptr if anything fails.
@@ -258,15 +248,13 @@ public:
   // the result of GetLength to reflect the data that's actually arriving.
   int64_t GetLength() const;
 
-private:
+ private:
   // If the resource has cached data past the requested range, try to grab it
   // into our local cache.
   // If there is no cached data, or attempting to read it fails, fallback on
   // a (potentially-blocking) read of just what was requested, so that we don't
   // get unexpected side-effects by trying to read more than intended.
-  nsresult CacheOrReadAt(int64_t aOffset,
-                         char* aBuffer,
-                         uint32_t aCount,
+  nsresult CacheOrReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
                          uint32_t* aBytes);
 
   // Maps a file offset to a mCachedBlock index.
@@ -296,6 +284,6 @@ private:
   UniquePtr<char[]> mCachedBlock;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

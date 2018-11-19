@@ -13,11 +13,9 @@ namespace mozilla {
 
 DDLoggedTypeDeclNameAndBase(WaveDataDecoder, MediaDataDecoder);
 
-class WaveDataDecoder
-  : public MediaDataDecoder
-  , public DecoderDoctorLifeLogger<WaveDataDecoder>
-{
-public:
+class WaveDataDecoder : public MediaDataDecoder,
+                        public DecoderDoctorLifeLogger<WaveDataDecoder> {
+ public:
   explicit WaveDataDecoder(const CreateDecoderParams& aParams);
 
   // Return true if mimetype is Wave
@@ -28,16 +26,15 @@ public:
   RefPtr<DecodePromise> Drain() override;
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
-  nsCString GetDescriptionName() const override
-  {
+  nsCString GetDescriptionName() const override {
     return NS_LITERAL_CSTRING("wave audio decoder");
   }
 
-private:
+ private:
   RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample);
   const AudioInfo& mInfo;
   const RefPtr<TaskQueue> mTaskQueue;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 #endif

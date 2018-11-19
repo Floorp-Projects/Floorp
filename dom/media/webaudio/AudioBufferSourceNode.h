@@ -16,85 +16,56 @@ namespace dom {
 struct AudioBufferSourceOptions;
 class AudioParam;
 
-class AudioBufferSourceNode final : public AudioScheduledSourceNode
-                                  , public MainThreadMediaStreamListener
-{
-public:
-  static already_AddRefed<AudioBufferSourceNode>
-  Create(JSContext* aCx, AudioContext& aAudioContext,
-         const AudioBufferSourceOptions& aOptions, ErrorResult& aRv);
+class AudioBufferSourceNode final : public AudioScheduledSourceNode,
+                                    public MainThreadMediaStreamListener {
+ public:
+  static already_AddRefed<AudioBufferSourceNode> Create(
+      JSContext* aCx, AudioContext& aAudioContext,
+      const AudioBufferSourceOptions& aOptions, ErrorResult& aRv);
 
   void DestroyMediaStream() override;
 
-  uint16_t NumberOfInputs() const final
-  {
-    return 0;
-  }
-  AudioBufferSourceNode* AsAudioBufferSourceNode() override
-  {
-    return this;
-  }
+  uint16_t NumberOfInputs() const final { return 0; }
+  AudioBufferSourceNode* AsAudioBufferSourceNode() override { return this; }
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioBufferSourceNode,
                                            AudioScheduledSourceNode)
 
-  static already_AddRefed<AudioBufferSourceNode>
-  Constructor(const GlobalObject& aGlobal, AudioContext& aAudioContext,
-              const AudioBufferSourceOptions& aOptions, ErrorResult& aRv)
-  {
+  static already_AddRefed<AudioBufferSourceNode> Constructor(
+      const GlobalObject& aGlobal, AudioContext& aAudioContext,
+      const AudioBufferSourceOptions& aOptions, ErrorResult& aRv) {
     return Create(aGlobal.Context(), aAudioContext, aOptions, aRv);
   }
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  void Start(double aWhen, double aOffset,
-             const Optional<double>& aDuration, ErrorResult& aRv);
+  void Start(double aWhen, double aOffset, const Optional<double>& aDuration,
+             ErrorResult& aRv);
 
   void Start(double aWhen, ErrorResult& aRv) override;
   void Stop(double aWhen, ErrorResult& aRv) override;
 
-  AudioBuffer* GetBuffer(JSContext* aCx) const
-  {
-    return mBuffer;
-  }
-  void SetBuffer(JSContext* aCx, AudioBuffer* aBuffer)
-  {
+  AudioBuffer* GetBuffer(JSContext* aCx) const { return mBuffer; }
+  void SetBuffer(JSContext* aCx, AudioBuffer* aBuffer) {
     mBuffer = aBuffer;
     SendBufferParameterToStream(aCx);
     SendLoopParametersToStream();
   }
-  AudioParam* PlaybackRate() const
-  {
-    return mPlaybackRate;
-  }
-  AudioParam* Detune() const
-  {
-    return mDetune;
-  }
-  bool Loop() const
-  {
-    return mLoop;
-  }
-  void SetLoop(bool aLoop)
-  {
+  AudioParam* PlaybackRate() const { return mPlaybackRate; }
+  AudioParam* Detune() const { return mDetune; }
+  bool Loop() const { return mLoop; }
+  void SetLoop(bool aLoop) {
     mLoop = aLoop;
     SendLoopParametersToStream();
   }
-  double LoopStart() const
-  {
-    return mLoopStart;
-  }
-  void SetLoopStart(double aStart)
-  {
+  double LoopStart() const { return mLoopStart; }
+  void SetLoopStart(double aStart) {
     mLoopStart = aStart;
     SendLoopParametersToStream();
   }
-  double LoopEnd() const
-  {
-    return mLoopEnd;
-  }
-  void SetLoopEnd(double aEnd)
-  {
+  double LoopEnd() const { return mLoopEnd; }
+  void SetLoopEnd(double aEnd) {
     mLoopEnd = aEnd;
     SendLoopParametersToStream();
   }
@@ -102,15 +73,12 @@ public:
 
   void NotifyMainThreadStreamFinished() override;
 
-  const char* NodeType() const override
-  {
-    return "AudioBufferSourceNode";
-  }
+  const char* NodeType() const override { return "AudioBufferSourceNode"; }
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
-private:
+ private:
   explicit AudioBufferSourceNode(AudioContext* aContext);
   ~AudioBufferSourceNode() = default;
 
@@ -152,7 +120,7 @@ private:
   bool mStartCalled;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

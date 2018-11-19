@@ -190,18 +190,14 @@ DDLoggedTypeDeclName(MediaCacheStream);
  *
  * This class can be directly embedded as a value.
  */
-class MediaCacheStream : public DecoderDoctorLifeLogger<MediaCacheStream>
-{
+class MediaCacheStream : public DecoderDoctorLifeLogger<MediaCacheStream> {
   using AutoLock = MonitorAutoLock;
 
-public:
+ public:
   // This needs to be a power of two
   static const int64_t BLOCK_SIZE = 32768;
 
-  enum ReadMode {
-    MODE_METADATA,
-    MODE_PLAYBACK
-  };
+  enum ReadMode { MODE_METADATA, MODE_PLAYBACK };
 
   // aClient provides the underlying transport that cache will use to read
   // data for this stream.
@@ -261,17 +257,14 @@ public:
   // data available based on an incorrect reported length. Seeks relative
   // EOF also depend on the reported length if we haven't managed to
   // read the whole stream yet.
-  void NotifyDataStarted(uint32_t aLoadID,
-                         int64_t aOffset,
-                         bool aSeekable,
+  void NotifyDataStarted(uint32_t aLoadID, int64_t aOffset, bool aSeekable,
                          int64_t aLength);
   // Notifies the cache that data has been received. The stream already
   // knows the offset because data is received in sequence and
   // the starting offset is known via NotifyDataStarted or because
   // the cache requested the offset in
   // ChannelMediaResource::CacheClientSeek, or because it defaulted to 0.
-  void NotifyDataReceived(uint32_t aLoadID,
-                          uint32_t aCount,
+  void NotifyDataReceived(uint32_t aLoadID, uint32_t aCount,
                           const uint8_t* aData);
 
   // Set the load ID so the following NotifyDataEnded() call can work properly.
@@ -304,8 +297,7 @@ public:
   // Return the length and offset where next channel data will write to. Main
   // thread only.
   // This method should be removed as part of bug 1464045.
-  struct LengthAndOffset
-  {
+  struct LengthAndOffset {
     int64_t mLength;
     int64_t mOffset;
   };
@@ -360,8 +352,8 @@ public:
   nsresult Read(AutoLock&, char* aBuffer, uint32_t aCount, uint32_t* aBytes);
   // Seeks to aOffset in the stream then performs a Read operation. See
   // 'Read' for argument and return details.
-  nsresult ReadAt(int64_t aOffset, char* aBuffer,
-                  uint32_t aCount, uint32_t* aBytes);
+  nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
+                  uint32_t* aBytes);
 
   void ThrottleReadahead(bool bThrottle);
 
@@ -369,7 +361,7 @@ public:
 
   nsCString GetDebugInfo();
 
-private:
+ private:
   friend class MediaCache;
 
   /**
@@ -382,7 +374,7 @@ private:
    * the next/prev pointers are not stored in the block.
    */
   class BlockList {
-  public:
+   public:
     BlockList() : mFirstBlock(-1), mCount(0) {}
     ~BlockList() {
       NS_ASSERTION(mFirstBlock == -1 && mCount == 0,
@@ -414,16 +406,14 @@ private:
 
     size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  private:
+   private:
     struct Entry : public nsUint32HashKey {
       explicit Entry(KeyTypePointer aKey)
-        : nsUint32HashKey(aKey)
-        , mNextBlock(0)
-        , mPrevBlock(0)
-      {
-      }
-      Entry(const Entry& toCopy) : nsUint32HashKey(&toCopy.GetKey()),
-        mNextBlock(toCopy.mNextBlock), mPrevBlock(toCopy.mPrevBlock) {}
+          : nsUint32HashKey(aKey), mNextBlock(0), mPrevBlock(0) {}
+      Entry(const Entry& toCopy)
+          : nsUint32HashKey(&toCopy.GetKey()),
+            mNextBlock(toCopy.mNextBlock),
+            mPrevBlock(toCopy.mPrevBlock) {}
 
       int32_t mNextBlock;
       int32_t mPrevBlock;
@@ -443,8 +433,7 @@ private:
 
   // Read data from the cache block specified by aOffset. Return the number of
   // bytes read successfully or an error code if any failure.
-  Result<uint32_t, nsresult> ReadBlockFromCache(AutoLock&,
-                                                int64_t aOffset,
+  Result<uint32_t, nsresult> ReadBlockFromCache(AutoLock&, int64_t aOffset,
                                                 Span<char> aBuffer,
                                                 bool aNoteBlockUsage = false);
 
@@ -466,10 +455,8 @@ private:
   // waiting on the media cache monitor. Called on the main thread only.
   void FlushPartialBlockInternal(AutoLock&, bool aNotify);
 
-  void NotifyDataStartedInternal(uint32_t aLoadID,
-                                 int64_t aOffset,
-                                 bool aSeekable,
-                                 int64_t aLength);
+  void NotifyDataStartedInternal(uint32_t aLoadID, int64_t aOffset,
+                                 bool aSeekable, int64_t aLength);
 
   void NotifyDataEndedInternal(uint32_t aLoadID, nsresult aStatus);
 
@@ -505,40 +492,40 @@ private:
   // True if the channel ended and we haven't seeked it again.
   bool mChannelEnded;
 
-  // The following fields are protected by the cache's monitor and can be written
-  // by any thread.
+  // The following fields are protected by the cache's monitor and can be
+  // written by any thread.
 
   // The reported or discovered length of the data, or -1 if nothing is known
   int64_t mStreamLength = -1;
   // The offset where the next data from the channel will arrive
   int64_t mChannelOffset = 0;
   // The offset where the reader is positioned in the stream
-  int64_t           mStreamOffset;
+  int64_t mStreamOffset;
   // For each block in the stream data, maps to the cache entry for the
   // block, or -1 if the block is not cached.
   nsTArray<int32_t> mBlocks;
   // The list of read-ahead blocks, ordered by stream offset; the first
   // block is the earliest in the stream (so the last block will be the
   // least valuable).
-  BlockList         mReadaheadBlocks;
+  BlockList mReadaheadBlocks;
   // The list of metadata blocks; the first block is the most recently used
-  BlockList         mMetadataBlocks;
+  BlockList mMetadataBlocks;
   // The list of played-back blocks; the first block is the most recently used
-  BlockList         mPlayedBlocks;
+  BlockList mPlayedBlocks;
   // The last reported estimate of the decoder's playback rate
-  uint32_t          mPlaybackBytesPerSecond;
+  uint32_t mPlaybackBytesPerSecond;
   // The number of times this stream has been Pinned without a
   // corresponding Unpin
-  uint32_t          mPinCount;
+  uint32_t mPinCount;
   // True if CacheClientNotifyDataEnded has been called for this stream.
-  bool              mDidNotifyDataEnded = false;
+  bool mDidNotifyDataEnded = false;
   // The status used when we did CacheClientNotifyDataEnded. Only valid
   // when mDidNotifyDataEnded is true.
-  nsresult          mNotifyDataEndedStatus;
+  nsresult mNotifyDataEndedStatus;
   // The last reported read mode
   ReadMode mCurrentMode = MODE_METADATA;
   // True if some data in mPartialBlockBuffer has been read as metadata
-  bool              mMetadataInPartialBlockBuffer;
+  bool mMetadataInPartialBlockBuffer;
   // The load ID of the current channel. Used to check whether the data is
   // coming from an old channel and should be discarded.
   uint32_t mLoadID = 0;
@@ -555,7 +542,7 @@ private:
   // slop when combined with the rest of the object members.
   // This partial buffer should always be read/write within the cache's monitor.
   const UniquePtr<uint8_t[]> mPartialBlockBuffer =
-    MakeUnique<uint8_t[]>(BLOCK_SIZE);
+      MakeUnique<uint8_t[]>(BLOCK_SIZE);
 
   // True if associated with a private browsing window.
   const bool mIsPrivateBrowsing;
@@ -566,6 +553,6 @@ private:
   MediaChannelStatistics mDownloadStatistics;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

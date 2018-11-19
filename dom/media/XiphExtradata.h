@@ -19,10 +19,9 @@ bool XiphHeadersToExtradata(MediaByteBuffer* aCodecSpecificConfig,
 
 /* This converts a set of extradata back into a list of headers. */
 bool XiphExtradataToHeaders(nsTArray<unsigned char*>& aHeaders,
-                            nsTArray<size_t>& aHeaderLens,
-                            unsigned char* aData,
+                            nsTArray<size_t>& aHeaderLens, unsigned char* aData,
                             size_t aAvailable);
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // XiphExtradata_h
+#endif  // XiphExtradata_h

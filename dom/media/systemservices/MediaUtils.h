@@ -51,56 +51,46 @@ namespace media {
  * See media::CoatCheck below for an example of GetFooAsynchronously().
  */
 
-class PledgeBase
-{
-public:
+class PledgeBase {
+ public:
   NS_INLINE_DECL_REFCOUNTING(PledgeBase);
-protected:
-  virtual ~PledgeBase() {};
+
+ protected:
+  virtual ~PledgeBase(){};
 };
 
-template<typename ValueType, typename ErrorType = nsresult>
-class Pledge : public PledgeBase
-{
+template <typename ValueType, typename ErrorType = nsresult>
+class Pledge : public PledgeBase {
   // TODO: Remove workaround once mozilla allows std::function from <functional>
   // wo/std::function support, do template + virtual trick to accept lambdas
-  class FunctorsBase
-  {
-  public:
+  class FunctorsBase {
+   public:
     FunctorsBase() {}
     virtual void Succeed(ValueType& result) = 0;
     virtual void Fail(ErrorType& error) = 0;
-    virtual ~FunctorsBase() {};
+    virtual ~FunctorsBase(){};
   };
 
-public:
+ public:
   explicit Pledge() : mDone(false), mRejected(false) {}
   Pledge(const Pledge& aOther) = delete;
-  Pledge& operator = (const Pledge&) = delete;
+  Pledge& operator=(const Pledge&) = delete;
 
-  template<typename OnSuccessType>
-  void Then(OnSuccessType&& aOnSuccess)
-  {
-    Then(std::forward<OnSuccessType>(aOnSuccess), [](ErrorType&){});
+  template <typename OnSuccessType>
+  void Then(OnSuccessType&& aOnSuccess) {
+    Then(std::forward<OnSuccessType>(aOnSuccess), [](ErrorType&) {});
   }
 
-  template<typename OnSuccessType, typename OnFailureType>
-  void Then(OnSuccessType&& aOnSuccess, OnFailureType&& aOnFailure)
-  {
-    class Functors : public FunctorsBase
-    {
-    public:
+  template <typename OnSuccessType, typename OnFailureType>
+  void Then(OnSuccessType&& aOnSuccess, OnFailureType&& aOnFailure) {
+    class Functors : public FunctorsBase {
+     public:
       Functors(OnSuccessType&& aOnSuccessRef, OnFailureType&& aOnFailureRef)
-        : mOnSuccess(std::move(aOnSuccessRef)), mOnFailure(std::move(aOnFailureRef)) {}
+          : mOnSuccess(std::move(aOnSuccessRef)),
+            mOnFailure(std::move(aOnFailureRef)) {}
 
-      void Succeed(ValueType& result)
-      {
-        mOnSuccess(result);
-      }
-      void Fail(ErrorType& error)
-      {
-        mOnFailure(error);
-      };
+      void Succeed(ValueType& result) { mOnSuccess(result); }
+      void Fail(ErrorType& error) { mOnFailure(error); };
 
       OnSuccessType mOnSuccess;
       OnFailureType mOnFailure;
@@ -116,14 +106,12 @@ public:
     }
   }
 
-  void Resolve(const ValueType& aValue)
-  {
+  void Resolve(const ValueType& aValue) {
     mValue = aValue;
     Resolve();
   }
 
-  void Reject(ErrorType rv)
-  {
+  void Reject(ErrorType rv) {
     if (!mDone) {
       mDone = mRejected = true;
       mError = rv;
@@ -133,9 +121,8 @@ public:
     }
   }
 
-protected:
-  void Resolve()
-  {
+ protected:
+  void Resolve() {
     if (!mDone) {
       mDone = true;
       MOZ_ASSERT(!mRejected);
@@ -146,8 +133,9 @@ protected:
   }
 
   ValueType mValue;
-private:
-  ~Pledge() {};
+
+ private:
+  ~Pledge(){};
   bool mDone;
   bool mRejected;
   ErrorType mError;
@@ -192,35 +180,28 @@ private:
  * The 'mutable' keyword is only needed for non-const access to bar.
  */
 
-template<typename OnRunType>
-class LambdaRunnable : public Runnable
-{
-public:
+template <typename OnRunType>
+class LambdaRunnable : public Runnable {
+ public:
   explicit LambdaRunnable(OnRunType&& aOnRun)
-    : Runnable("media::LambdaRunnable")
-    , mOnRun(std::move(aOnRun))
-  {
-  }
+      : Runnable("media::LambdaRunnable"), mOnRun(std::move(aOnRun)) {}
 
-private:
+ private:
   NS_IMETHODIMP
-  Run() override
-  {
-    return mOnRun();
-  }
+  Run() override { return mOnRun(); }
   OnRunType mOnRun;
 };
 
-template<typename OnRunType>
-already_AddRefed<LambdaRunnable<OnRunType>>
-NewRunnableFrom(OnRunType&& aOnRun)
-{
+template <typename OnRunType>
+already_AddRefed<LambdaRunnable<OnRunType>> NewRunnableFrom(
+    OnRunType&& aOnRun) {
   typedef LambdaRunnable<OnRunType> LambdaType;
   RefPtr<LambdaType> lambda = new LambdaType(std::forward<OnRunType>(aOnRun));
   return lambda.forget();
 }
 
-/* media::CoatCheck - There and back again. Park an object in exchange for an id.
+/* media::CoatCheck - There and back again. Park an object in exchange for an
+ * id.
  *
  * A common problem with calling asynchronous functions that do work on other
  * threads or processes is how to pass in a heap object for use once the
@@ -282,21 +263,18 @@ NewRunnableFrom(OnRunType&& aOnRun)
  * It is also not thread-safe as the whole point is to stay on the same thread.
  */
 
-template<class T>
-class CoatCheck
-{
-public:
+template <class T>
+class CoatCheck {
+ public:
   typedef std::pair<uint32_t, RefPtr<T>> Element;
 
-  uint32_t Append(T& t)
-  {
+  uint32_t Append(T& t) {
     uint32_t id = GetNextId();
     mElements.AppendElement(Element(id, RefPtr<T>(&t)));
     return id;
   }
 
-  already_AddRefed<T> Remove(uint32_t aId)
-  {
+  already_AddRefed<T> Remove(uint32_t aId) {
     for (auto& element : mElements) {
       if (element.first == aId) {
         RefPtr<T> ref;
@@ -309,9 +287,8 @@ public:
     return nullptr;
   }
 
-private:
-  static uint32_t GetNextId()
-  {
+ private:
+  static uint32_t GetNextId() {
     static uint32_t counter = 0;
     return ++counter;
   };
@@ -334,82 +311,71 @@ private:
  * a constructor. Please add below (UniquePtr covers a lot of ground though).
  */
 
-class RefcountableBase
-{
-public:
+class RefcountableBase {
+ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefcountableBase)
-protected:
+ protected:
   virtual ~RefcountableBase() {}
 };
 
-template<typename T>
-class Refcountable : public T, public RefcountableBase
-{
-public:
-  NS_METHOD_(MozExternalRefCountType) AddRef()
-  {
+template <typename T>
+class Refcountable : public T, public RefcountableBase {
+ public:
+  NS_METHOD_(MozExternalRefCountType) AddRef() {
     return RefcountableBase::AddRef();
   }
 
-  NS_METHOD_(MozExternalRefCountType) Release()
-  {
+  NS_METHOD_(MozExternalRefCountType) Release() {
     return RefcountableBase::Release();
   }
 
-private:
+ private:
   ~Refcountable<T>() {}
 };
 
-template<typename T>
-class Refcountable<UniquePtr<T>> : public UniquePtr<T>
-{
-public:
+template <typename T>
+class Refcountable<UniquePtr<T>> : public UniquePtr<T> {
+ public:
   explicit Refcountable<UniquePtr<T>>(T* aPtr) : UniquePtr<T>(aPtr) {}
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Refcountable<T>)
-private:
+ private:
   ~Refcountable<UniquePtr<T>>() {}
 };
 
 /* Async shutdown helpers
  */
 
-already_AddRefed<nsIAsyncShutdownClient>
-GetShutdownBarrier();
+already_AddRefed<nsIAsyncShutdownClient> GetShutdownBarrier();
 
-class ShutdownBlocker : public nsIAsyncShutdownBlocker
-{
-public:
+class ShutdownBlocker : public nsIAsyncShutdownBlocker {
+ public:
   ShutdownBlocker(const nsString& aName) : mName(aName) {}
 
   NS_IMETHOD
   BlockShutdown(nsIAsyncShutdownClient* aProfileBeforeChange) override = 0;
 
-  NS_IMETHOD GetName(nsAString& aName) override
-  {
+  NS_IMETHOD GetName(nsAString& aName) override {
     aName = mName;
     return NS_OK;
   }
 
-  NS_IMETHOD GetState(nsIPropertyBag**) override
-  {
-    return NS_OK;
-  }
+  NS_IMETHOD GetState(nsIPropertyBag**) override { return NS_OK; }
 
   NS_DECL_ISUPPORTS
-protected:
+ protected:
   virtual ~ShutdownBlocker() {}
-private:
+
+ private:
   const nsString mName;
 };
 
-class ShutdownTicket final
-{
-public:
-  explicit ShutdownTicket(nsIAsyncShutdownBlocker* aBlocker) : mBlocker(aBlocker) {}
+class ShutdownTicket final {
+ public:
+  explicit ShutdownTicket(nsIAsyncShutdownBlocker* aBlocker)
+      : mBlocker(aBlocker) {}
   NS_INLINE_DECL_REFCOUNTING(ShutdownTicket)
-private:
-  ~ShutdownTicket()
-  {
+ private:
+  ~ShutdownTicket() {
     nsCOMPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
     barrier->RemoveBlocker(mBlocker);
   }
@@ -427,36 +393,31 @@ private:
  * Await() can *NOT* be called from a task queue/nsISerialEventTarget used for
  * resolving/rejecting aPromise, otherwise things will deadlock.
  */
-template<typename ResolveValueType,
-         typename RejectValueType,
-         typename ResolveFunction,
-         typename RejectFunction>
-void
-Await(
-  already_AddRefed<nsIEventTarget> aPool,
-  RefPtr<MozPromise<ResolveValueType, RejectValueType, true>> aPromise,
-  ResolveFunction&& aResolveFunction,
-  RejectFunction&& aRejectFunction)
-{
+template <typename ResolveValueType, typename RejectValueType,
+          typename ResolveFunction, typename RejectFunction>
+void Await(already_AddRefed<nsIEventTarget> aPool,
+           RefPtr<MozPromise<ResolveValueType, RejectValueType, true>> aPromise,
+           ResolveFunction&& aResolveFunction,
+           RejectFunction&& aRejectFunction) {
   RefPtr<TaskQueue> taskQueue =
-    new TaskQueue(std::move(aPool), "MozPromiseAwait");
+      new TaskQueue(std::move(aPool), "MozPromiseAwait");
   Monitor mon(__func__);
   bool done = false;
 
-  aPromise->Then(taskQueue,
-                 __func__,
-                 [&](ResolveValueType&& aResolveValue) {
-                   MonitorAutoLock lock(mon);
-                   aResolveFunction(std::forward<ResolveValueType>(aResolveValue));
-                   done = true;
-                   mon.Notify();
-                 },
-                 [&](RejectValueType&& aRejectValue) {
-                   MonitorAutoLock lock(mon);
-                   aRejectFunction(std::forward<RejectValueType>(aRejectValue));
-                   done = true;
-                   mon.Notify();
-                 });
+  aPromise->Then(
+      taskQueue, __func__,
+      [&](ResolveValueType&& aResolveValue) {
+        MonitorAutoLock lock(mon);
+        aResolveFunction(std::forward<ResolveValueType>(aResolveValue));
+        done = true;
+        mon.Notify();
+      },
+      [&](RejectValueType&& aRejectValue) {
+        MonitorAutoLock lock(mon);
+        aRejectFunction(std::forward<RejectValueType>(aRejectValue));
+        done = true;
+        mon.Notify();
+      });
 
   MonitorAutoLock lock(mon);
   while (!done) {
@@ -464,20 +425,19 @@ Await(
   }
 }
 
-template<typename ResolveValueType, typename RejectValueType, bool Excl>
-typename MozPromise<ResolveValueType, RejectValueType, Excl>::
-  ResolveOrRejectValue
+template <typename ResolveValueType, typename RejectValueType, bool Excl>
+typename MozPromise<ResolveValueType, RejectValueType,
+                    Excl>::ResolveOrRejectValue
 Await(already_AddRefed<nsIEventTarget> aPool,
-      RefPtr<MozPromise<ResolveValueType, RejectValueType, Excl>> aPromise)
-{
+      RefPtr<MozPromise<ResolveValueType, RejectValueType, Excl>> aPromise) {
   RefPtr<TaskQueue> taskQueue =
-    new TaskQueue(std::move(aPool), "MozPromiseAwait");
+      new TaskQueue(std::move(aPool), "MozPromiseAwait");
   Monitor mon(__func__);
   bool done = false;
 
-  typename MozPromise<ResolveValueType, RejectValueType, Excl>::ResolveOrRejectValue val;
-  aPromise->Then(taskQueue,
-                 __func__,
+  typename MozPromise<ResolveValueType, RejectValueType,
+                      Excl>::ResolveOrRejectValue val;
+  aPromise->Then(taskQueue, __func__,
                  [&](ResolveValueType aResolveValue) {
                    val.SetResolve(std::move(aResolveValue));
                    MonitorAutoLock lock(mon);
@@ -503,47 +463,41 @@ Await(already_AddRefed<nsIEventTarget> aPool,
  * Similar to Await, takes an array of promises of the same type.
  * MozPromise::All is used to handle the resolution/rejection of the promises.
  */
-template<typename ResolveValueType,
-         typename RejectValueType,
-         typename ResolveFunction,
-         typename RejectFunction>
-void
-AwaitAll(already_AddRefed<nsIEventTarget> aPool,
-         nsTArray<RefPtr<MozPromise<ResolveValueType, RejectValueType, true>>>&
-           aPromises,
-         ResolveFunction&& aResolveFunction,
-         RejectFunction&& aRejectFunction)
-{
+template <typename ResolveValueType, typename RejectValueType,
+          typename ResolveFunction, typename RejectFunction>
+void AwaitAll(
+    already_AddRefed<nsIEventTarget> aPool,
+    nsTArray<RefPtr<MozPromise<ResolveValueType, RejectValueType, true>>>&
+        aPromises,
+    ResolveFunction&& aResolveFunction, RejectFunction&& aRejectFunction) {
   typedef MozPromise<ResolveValueType, RejectValueType, true> Promise;
   RefPtr<nsIEventTarget> pool = aPool;
   RefPtr<TaskQueue> taskQueue =
-    new TaskQueue(do_AddRef(pool), "MozPromiseAwaitAll");
+      new TaskQueue(do_AddRef(pool), "MozPromiseAwaitAll");
   RefPtr<typename Promise::AllPromiseType> p =
-    Promise::All(taskQueue, aPromises);
-  Await(
-    pool.forget(), p, std::move(aResolveFunction), std::move(aRejectFunction));
+      Promise::All(taskQueue, aPromises);
+  Await(pool.forget(), p, std::move(aResolveFunction),
+        std::move(aRejectFunction));
 }
 
 // Note: only works with exclusive MozPromise, as Promise::All would attempt
 // to perform copy of nsTArrays which are disallowed.
-template<typename ResolveValueType, typename RejectValueType>
-typename MozPromise<ResolveValueType,
-                    RejectValueType,
+template <typename ResolveValueType, typename RejectValueType>
+typename MozPromise<ResolveValueType, RejectValueType,
                     true>::AllPromiseType::ResolveOrRejectValue
 AwaitAll(already_AddRefed<nsIEventTarget> aPool,
          nsTArray<RefPtr<MozPromise<ResolveValueType, RejectValueType, true>>>&
-           aPromises)
-{
+             aPromises) {
   typedef MozPromise<ResolveValueType, RejectValueType, true> Promise;
   RefPtr<nsIEventTarget> pool = aPool;
   RefPtr<TaskQueue> taskQueue =
-    new TaskQueue(do_AddRef(pool), "MozPromiseAwaitAll");
+      new TaskQueue(do_AddRef(pool), "MozPromiseAwaitAll");
   RefPtr<typename Promise::AllPromiseType> p =
-    Promise::All(taskQueue, aPromises);
+      Promise::All(taskQueue, aPromises);
   return Await(pool.forget(), p);
 }
 
-} // namespace media
-} // namespace mozilla
+}  // namespace media
+}  // namespace mozilla
 
-#endif // mozilla_MediaUtils_h
+#endif  // mozilla_MediaUtils_h

@@ -18,9 +18,7 @@ StaticRefPtr<AbstractThread> sRemoteDecoderManagerChildAbstractThread;
 // Only accessed from sRemoteDecoderManagerChildThread
 static StaticRefPtr<RemoteDecoderManagerChild> sRemoteDecoderManagerChild;
 
-/* static */ void
-RemoteDecoderManagerChild::InitializeThread()
-{
+/* static */ void RemoteDecoderManagerChild::InitializeThread() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sRemoteDecoderManagerChildThread) {
@@ -30,25 +28,20 @@ RemoteDecoderManagerChild::InitializeThread()
     sRemoteDecoderManagerChildThread = childThread;
 
     sRemoteDecoderManagerChildAbstractThread =
-      AbstractThread::CreateXPCOMThreadWrapper(childThread, false);
+        AbstractThread::CreateXPCOMThreadWrapper(childThread, false);
   }
 }
 
-/* static */ void
-RemoteDecoderManagerChild::InitForContent(
-    Endpoint<PRemoteDecoderManagerChild>&& aVideoManager)
-{
+/* static */ void RemoteDecoderManagerChild::InitForContent(
+    Endpoint<PRemoteDecoderManagerChild>&& aVideoManager) {
   InitializeThread();
   sRemoteDecoderManagerChildThread->Dispatch(
-      NewRunnableFunction("InitForContentRunnable",
-                          &Open,
+      NewRunnableFunction("InitForContentRunnable", &Open,
                           std::move(aVideoManager)),
       NS_DISPATCH_NORMAL);
 }
 
-/* static */ void
-RemoteDecoderManagerChild::Shutdown()
-{
+/* static */ void RemoteDecoderManagerChild::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (sRemoteDecoderManagerChildThread) {
@@ -70,48 +63,37 @@ RemoteDecoderManagerChild::Shutdown()
 }
 
 /* static */ RemoteDecoderManagerChild*
-RemoteDecoderManagerChild::GetSingleton()
-{
+RemoteDecoderManagerChild::GetSingleton() {
   MOZ_ASSERT(NS_GetCurrentThread() == GetManagerThread());
   return sRemoteDecoderManagerChild;
 }
 
-/* static */ nsIThread*
-RemoteDecoderManagerChild::GetManagerThread()
-{
+/* static */ nsIThread* RemoteDecoderManagerChild::GetManagerThread() {
   return sRemoteDecoderManagerChildThread;
 }
 
 /* static */ AbstractThread*
-RemoteDecoderManagerChild::GetManagerAbstractThread()
-{
+RemoteDecoderManagerChild::GetManagerAbstractThread() {
   return sRemoteDecoderManagerChildAbstractThread;
 }
 
 PRemoteVideoDecoderChild*
 RemoteDecoderManagerChild::AllocPRemoteVideoDecoderChild(
-    const VideoInfo& /* not used */,
-    const float& /* not used */,
-    const CreateDecoderParams::OptionSet& /* not used */,
-    bool* /* not used */,
-    nsCString* /* not used */)
-{
+    const VideoInfo& /* not used */, const float& /* not used */,
+    const CreateDecoderParams::OptionSet& /* not used */, bool* /* not used */,
+    nsCString* /* not used */) {
   return new RemoteVideoDecoderChild();
 }
 
-bool
-RemoteDecoderManagerChild::DeallocPRemoteVideoDecoderChild(
-    PRemoteVideoDecoderChild* actor)
-{
+bool RemoteDecoderManagerChild::DeallocPRemoteVideoDecoderChild(
+    PRemoteVideoDecoderChild* actor) {
   RemoteVideoDecoderChild* child = static_cast<RemoteVideoDecoderChild*>(actor);
   child->IPDLActorDestroyed();
   return true;
 }
 
-void
-RemoteDecoderManagerChild::Open(
-    Endpoint<PRemoteDecoderManagerChild>&& aEndpoint)
-{
+void RemoteDecoderManagerChild::Open(
+    Endpoint<PRemoteDecoderManagerChild>&& aEndpoint) {
   sRemoteDecoderManagerChild = nullptr;
   if (aEndpoint.IsValid()) {
     RefPtr<RemoteDecoderManagerChild> manager = new RemoteDecoderManagerChild();
@@ -122,30 +104,22 @@ RemoteDecoderManagerChild::Open(
   }
 }
 
-void
-RemoteDecoderManagerChild::InitIPDL()
-{
+void RemoteDecoderManagerChild::InitIPDL() {
   mCanSend = true;
   mIPDLSelfRef = this;
 }
 
-void
-RemoteDecoderManagerChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void RemoteDecoderManagerChild::ActorDestroy(ActorDestroyReason aWhy) {
   mCanSend = false;
 }
 
-void
-RemoteDecoderManagerChild::DeallocPRemoteDecoderManagerChild()
-{
+void RemoteDecoderManagerChild::DeallocPRemoteDecoderManagerChild() {
   mIPDLSelfRef = nullptr;
 }
 
-bool
-RemoteDecoderManagerChild::CanSend()
-{
+bool RemoteDecoderManagerChild::CanSend() {
   MOZ_ASSERT(NS_GetCurrentThread() == GetManagerThread());
   return mCanSend;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

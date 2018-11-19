@@ -16,27 +16,26 @@ class BitReader;
 
 // NAL unit types
 enum NAL_TYPES {
-    H264_NAL_SLICE           = 1,
-    H264_NAL_DPA             = 2,
-    H264_NAL_DPB             = 3,
-    H264_NAL_DPC             = 4,
-    H264_NAL_IDR_SLICE       = 5,
-    H264_NAL_SEI             = 6,
-    H264_NAL_SPS             = 7,
-    H264_NAL_PPS             = 8,
-    H264_NAL_AUD             = 9,
-    H264_NAL_END_SEQUENCE    = 10,
-    H264_NAL_END_STREAM      = 11,
-    H264_NAL_FILLER_DATA     = 12,
-    H264_NAL_SPS_EXT         = 13,
-    H264_NAL_PREFIX          = 14,
-    H264_NAL_AUXILIARY_SLICE = 19,
-    H264_NAL_SLICE_EXT       = 20,
-    H264_NAL_SLICE_EXT_DVC   = 21,
+  H264_NAL_SLICE = 1,
+  H264_NAL_DPA = 2,
+  H264_NAL_DPB = 3,
+  H264_NAL_DPC = 4,
+  H264_NAL_IDR_SLICE = 5,
+  H264_NAL_SEI = 6,
+  H264_NAL_SPS = 7,
+  H264_NAL_PPS = 8,
+  H264_NAL_AUD = 9,
+  H264_NAL_END_SEQUENCE = 10,
+  H264_NAL_END_STREAM = 11,
+  H264_NAL_FILLER_DATA = 12,
+  H264_NAL_SPS_EXT = 13,
+  H264_NAL_PREFIX = 14,
+  H264_NAL_AUXILIARY_SLICE = 19,
+  H264_NAL_SLICE_EXT = 20,
+  H264_NAL_SLICE_EXT_DVC = 21,
 };
 
-struct SPSData
-{
+struct SPSData {
   bool operator==(const SPSData& aOther) const;
   bool operator!=(const SPSData& aOther) const;
 
@@ -51,7 +50,8 @@ struct SPSData
   uint32_t pic_width;
   /*
     pic_height is the decoded height according to:
-    pic_height = (2 - frame_mbs_only_flag) * ((pic_height_in_map_units_minus1 + 1) * 16)
+    pic_height = (2 - frame_mbs_only_flag) * ((pic_height_in_map_units_minus1 +
+    1) * 16)
                  - (frame_crop_top_offset + frame_crop_bottom_offset) * 2
    */
   uint32_t pic_height;
@@ -128,7 +128,8 @@ struct SPSData
       BitDepth C = 8 + bit_depth_chroma_minus8 (7-5)
       QpBdOffset C = 6 * bit_depth_chroma_minus8 (7-6)
     When bit_depth_chroma_minus8 is not present, it shall be inferred to be
-    equal to 0. bit_depth_chroma_minus8 shall be in the range of 0 to 6, inclusive.
+    equal to 0. bit_depth_chroma_minus8 shall be in the range of 0 to 6,
+    inclusive.
   */
   uint8_t bit_depth_chroma_minus8;
 
@@ -145,16 +146,16 @@ struct SPSData
    */
   bool separate_colour_plane_flag;
 
-/*
-   seq_scaling_matrix_present_flag equal to 1 specifies that the flags
-   seq_scaling_list_present_flag[ i ] for i = 0..7 or
-   i = 0..11 are present. seq_scaling_matrix_present_flag equal to 0 specifies
-   that these flags are not present and the sequence-level scaling list
-   specified by Flat_4x4_16 shall be inferred for i = 0..5 and the
-   sequence-level scaling list specified by Flat_8x8_16 shall be inferred for
-   i = 6..11. When seq_scaling_matrix_present_flag is not present, it shall be
-   inferred to be equal to 0.
-   */
+  /*
+     seq_scaling_matrix_present_flag equal to 1 specifies that the flags
+     seq_scaling_list_present_flag[ i ] for i = 0..7 or
+     i = 0..11 are present. seq_scaling_matrix_present_flag equal to 0 specifies
+     that these flags are not present and the sequence-level scaling list
+     specified by Flat_4x4_16 shall be inferred for i = 0..5 and the
+     sequence-level scaling list specified by Flat_8x8_16 shall be inferred for
+     i = 6..11. When seq_scaling_matrix_present_flag is not present, it shall be
+     inferred to be equal to 0.
+     */
   bool seq_scaling_matrix_present_flag;
 
   /*
@@ -341,9 +342,9 @@ struct SPSData
   /*
     video_format indicates the representation of the pictures as specified in
     Table E-2, before being coded in accordance with this
-    Recommendation | International Standard. When the video_format syntax element
-    is not present, video_format value shall be inferred to be equal to 5.
-    (Unspecified video format)
+    Recommendation | International Standard. When the video_format syntax
+    element is not present, video_format value shall be inferred to be equal
+    to 5. (Unspecified video format)
    */
   uint8_t video_format;
 
@@ -403,8 +404,7 @@ struct SPSData
   SPSData();
 };
 
-struct SEIRecoveryData
-{
+struct SEIRecoveryData {
   /*
     recovery_frame_cnt specifies the recovery point of output pictures in output
     order. All decoded pictures in output order are indicated to be correct or
@@ -438,15 +438,14 @@ struct SEIRecoveryData
   uint8_t changing_slice_group_idc = 0;
 };
 
-class H264
-{
-public:
+class H264 {
+ public:
   /* Check if out of band extradata contains a SPS NAL */
   static bool HasSPS(const mozilla::MediaByteBuffer* aExtraData);
   // Extract SPS and PPS NALs from aSample by looking into each NALs.
   // aSample must be in AVCC format.
   static already_AddRefed<mozilla::MediaByteBuffer> ExtractExtraData(
-    const mozilla::MediaRawData* aSample);
+      const mozilla::MediaRawData* aSample);
   // Return true if both extradata are equal.
   static bool CompareExtraData(const mozilla::MediaByteBuffer* aExtraData1,
                                const mozilla::MediaByteBuffer* aExtraData2);
@@ -461,10 +460,9 @@ public:
   // If the given aExtraData is valid, return the aExtraData.max_num_ref_frames
   // clamped to be in the range of [4, 16]; otherwise return 4.
   static uint32_t ComputeMaxRefFrames(
-    const mozilla::MediaByteBuffer* aExtraData);
+      const mozilla::MediaByteBuffer* aExtraData);
 
-  enum class FrameType
-  {
+  enum class FrameType {
     I_FRAME,
     OTHER,
     INVALID,
@@ -476,21 +474,19 @@ public:
   // Create a dummy extradata, useful to create a decoder and test the
   // capabilities of the decoder.
   static already_AddRefed<mozilla::MediaByteBuffer> CreateExtraData(
-    uint8_t aProfile,
-    uint8_t aConstraints,
-    uint8_t aLevel,
-    const gfx::IntSize& aSize);
+      uint8_t aProfile, uint8_t aConstraints, uint8_t aLevel,
+      const gfx::IntSize& aSize);
 
-private:
+ private:
   friend class SPSNAL;
   /* Extract RAW BYTE SEQUENCE PAYLOAD from NAL content.
      Returns nullptr if invalid content.
      This is compliant to ITU H.264 7.3.1 Syntax in tabular form NAL unit syntax
    */
   static already_AddRefed<mozilla::MediaByteBuffer> DecodeNALUnit(
-    const uint8_t* aNAL, size_t aLength);
+      const uint8_t* aNAL, size_t aLength);
   static already_AddRefed<mozilla::MediaByteBuffer> EncodeNALUnit(
-    const uint8_t* aNAL, size_t aLength);
+      const uint8_t* aNAL, size_t aLength);
   /* Decode SPS NAL RBSP and fill SPSData structure */
   static bool DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest);
   static bool vui_parameters(mozilla::BitReader& aBr, SPSData& aDest);
@@ -503,6 +499,6 @@ private:
                                 SEIRecoveryData& aDest);
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // MP4_DEMUXER_H264_H_
+#endif  // MP4_DEMUXER_H264_H_

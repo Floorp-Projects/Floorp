@@ -23,9 +23,8 @@ using mozilla::layers::Image;
 using mozilla::layers::PlanarYCbCrData;
 using mozilla::layers::PlanarYCbCrImage;
 
-static const PlanarYCbCrData* GetPlanarYCbCrData(Image* aImage)
-{
-  switch(aImage->GetFormat()) {
+static const PlanarYCbCrData* GetPlanarYCbCrData(Image* aImage) {
+  switch (aImage->GetFormat()) {
     case ImageFormat::PLANAR_YCBCR:
       return aImage->AsPlanarYCbCrImage()->GetData();
     case ImageFormat::NV_IMAGE:
@@ -35,8 +34,7 @@ static const PlanarYCbCrData* GetPlanarYCbCrData(Image* aImage)
   }
 }
 
-static already_AddRefed<SourceSurface> GetSourceSurface(Image* aImage)
-{
+static already_AddRefed<SourceSurface> GetSourceSurface(Image* aImage) {
   if (!aImage->AsGLImage() || NS_IsMainThread()) {
     return aImage->GetAsSourceSurface();
   }
@@ -44,19 +42,18 @@ static already_AddRefed<SourceSurface> GetSourceSurface(Image* aImage)
   // GLImage::GetAsSourceSurface() only supports main thread
   RefPtr<SourceSurface> surf;
   NS_DispatchToMainThread(
-    NS_NewRunnableFunction(
-      "ImageToI420::GLImage::GetSourceSurface",
-      [&aImage, &surf]() { surf = aImage->GetAsSourceSurface(); }),
-    NS_DISPATCH_SYNC);
+      NS_NewRunnableFunction(
+          "ImageToI420::GLImage::GetSourceSurface",
+          [&aImage, &surf]() { surf = aImage->GetAsSourceSurface(); }),
+      NS_DISPATCH_SYNC);
 
   return surf.forget();
 }
 
-static nsresult MapRv(int aRv)
-{
+static nsresult MapRv(int aRv) {
   // Docs for libyuv::ConvertToI420 say:
   // Returns 0 for successful; -1 for invalid parameter. Non-zero for failure.
-  switch(aRv) {
+  switch (aRv) {
     case 0:
       return NS_OK;
     case -1:
@@ -68,98 +65,46 @@ static nsresult MapRv(int aRv)
 
 namespace mozilla {
 
-nsresult ConvertToI420(
-  Image* aImage,
-  uint8_t* aDestY,
-  int aDestStrideY,
-  uint8_t* aDestU,
-  int aDestStrideU,
-  uint8_t* aDestV,
-  int aDestStrideV)
-{
+nsresult ConvertToI420(Image* aImage, uint8_t* aDestY, int aDestStrideY,
+                       uint8_t* aDestU, int aDestStrideU, uint8_t* aDestV,
+                       int aDestStrideV) {
   if (!aImage->IsValid()) {
     return NS_ERROR_INVALID_ARG;
   }
 
   if (const PlanarYCbCrData* data = GetPlanarYCbCrData(aImage)) {
     const ImageUtils imageUtils(aImage);
-    switch(imageUtils.GetFormat()) {
+    switch (imageUtils.GetFormat()) {
       case ImageBitmapFormat::YUV420P:
         return MapRv(libyuv::I420ToI420(
-          data->mYChannel,
-          data->mYStride,
-          data->mCbChannel,
-          data->mCbCrStride,
-          data->mCrChannel,
-          data->mCbCrStride,
-          aDestY,
-          aDestStrideY,
-          aDestU,
-          aDestStrideU,
-          aDestV,
-          aDestStrideV,
-          aImage->GetSize().width,
-          aImage->GetSize().height));
+            data->mYChannel, data->mYStride, data->mCbChannel,
+            data->mCbCrStride, data->mCrChannel, data->mCbCrStride, aDestY,
+            aDestStrideY, aDestU, aDestStrideU, aDestV, aDestStrideV,
+            aImage->GetSize().width, aImage->GetSize().height));
       case ImageBitmapFormat::YUV422P:
         return MapRv(libyuv::I422ToI420(
-          data->mYChannel,
-          data->mYStride,
-          data->mCbChannel,
-          data->mCbCrStride,
-          data->mCrChannel,
-          data->mCbCrStride,
-          aDestY,
-          aDestStrideY,
-          aDestU,
-          aDestStrideU,
-          aDestV,
-          aDestStrideV,
-          aImage->GetSize().width,
-          aImage->GetSize().height));
+            data->mYChannel, data->mYStride, data->mCbChannel,
+            data->mCbCrStride, data->mCrChannel, data->mCbCrStride, aDestY,
+            aDestStrideY, aDestU, aDestStrideU, aDestV, aDestStrideV,
+            aImage->GetSize().width, aImage->GetSize().height));
       case ImageBitmapFormat::YUV444P:
         return MapRv(libyuv::I444ToI420(
-          data->mYChannel,
-          data->mYStride,
-          data->mCbChannel,
-          data->mCbCrStride,
-          data->mCrChannel,
-          data->mCbCrStride,
-          aDestY,
-          aDestStrideY,
-          aDestU,
-          aDestStrideU,
-          aDestV,
-          aDestStrideV,
-          aImage->GetSize().width,
-          aImage->GetSize().height));
+            data->mYChannel, data->mYStride, data->mCbChannel,
+            data->mCbCrStride, data->mCrChannel, data->mCbCrStride, aDestY,
+            aDestStrideY, aDestU, aDestStrideU, aDestV, aDestStrideV,
+            aImage->GetSize().width, aImage->GetSize().height));
       case ImageBitmapFormat::YUV420SP_NV12:
         return MapRv(libyuv::NV12ToI420(
-          data->mYChannel,
-          data->mYStride,
-          data->mCbChannel,
-          data->mCbCrStride,
-          aDestY,
-          aDestStrideY,
-          aDestU,
-          aDestStrideU,
-          aDestV,
-          aDestStrideV,
-          aImage->GetSize().width,
-          aImage->GetSize().height));
+            data->mYChannel, data->mYStride, data->mCbChannel,
+            data->mCbCrStride, aDestY, aDestStrideY, aDestU, aDestStrideU,
+            aDestV, aDestStrideV, aImage->GetSize().width,
+            aImage->GetSize().height));
       case ImageBitmapFormat::YUV420SP_NV21:
         return MapRv(libyuv::NV21ToI420(
-          data->mYChannel,
-          data->mYStride,
-          data->mCrChannel,
-          data->mCbCrStride,
-          aDestY,
-          aDestStrideY,
-          aDestU,
-          aDestStrideU,
-          aDestV,
-          aDestStrideV,
-          aImage->GetSize().width,
-          aImage->GetSize().height));
+            data->mYChannel, data->mYStride, data->mCrChannel,
+            data->mCbCrStride, aDestY, aDestStrideY, aDestU, aDestStrideU,
+            aDestV, aDestStrideV, aImage->GetSize().width,
+            aImage->GetSize().height));
       default:
         MOZ_ASSERT_UNREACHABLE("YUV format conversion not implemented");
         return NS_ERROR_NOT_IMPLEMENTED;
@@ -185,33 +130,18 @@ nsresult ConvertToI420(
     case SurfaceFormat::B8G8R8A8:
     case SurfaceFormat::B8G8R8X8:
       return MapRv(libyuv::ARGBToI420(
-        static_cast<uint8_t*>(map.GetData()),
-        map.GetStride(),
-        aDestY,
-        aDestStrideY,
-        aDestU,
-        aDestStrideU,
-        aDestV,
-        aDestStrideV,
-        aImage->GetSize().width,
-        aImage->GetSize().height));
+          static_cast<uint8_t*>(map.GetData()), map.GetStride(), aDestY,
+          aDestStrideY, aDestU, aDestStrideU, aDestV, aDestStrideV,
+          aImage->GetSize().width, aImage->GetSize().height));
     case SurfaceFormat::R5G6B5_UINT16:
       return MapRv(libyuv::RGB565ToI420(
-        static_cast<uint8_t*>(map.GetData()),
-        map.GetStride(),
-        aDestY,
-        aDestStrideY,
-        aDestU,
-        aDestStrideU,
-        aDestV,
-        aDestStrideV,
-        aImage->GetSize().width,
-        aImage->GetSize().height));
+          static_cast<uint8_t*>(map.GetData()), map.GetStride(), aDestY,
+          aDestStrideY, aDestU, aDestStrideU, aDestV, aDestStrideV,
+          aImage->GetSize().width, aImage->GetSize().height));
     default:
       MOZ_ASSERT_UNREACHABLE("Surface format conversion not implemented");
       return NS_ERROR_NOT_IMPLEMENTED;
   }
 }
 
-} // namespace mozilla
-
+}  // namespace mozilla

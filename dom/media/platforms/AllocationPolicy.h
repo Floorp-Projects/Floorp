@@ -25,13 +25,11 @@ namespace mozilla {
  * The destructor of the token will restore the decoder count so it is available
  * for next calls of Alloc().
  */
-class GlobalAllocPolicy
-{
-public:
-  class Token
-  {
+class GlobalAllocPolicy {
+ public:
+  class Token {
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Token)
-  protected:
+   protected:
     virtual ~Token() {}
   };
 
@@ -46,7 +44,7 @@ public:
   // Get the singleton for the given track type. Thread-safe.
   static GlobalAllocPolicy& Instance(TrackInfo::TrackType aTrack);
 
-private:
+ private:
   class AutoDeallocToken;
   using PromisePrivate = Promise::Private;
   GlobalAllocPolicy();
@@ -66,56 +64,49 @@ private:
   std::queue<RefPtr<PromisePrivate>> mPromises;
 };
 
-class AllocationWrapper : public MediaDataDecoder
-{
+class AllocationWrapper : public MediaDataDecoder {
   using Token = GlobalAllocPolicy::Token;
 
-public:
+ public:
   AllocationWrapper(already_AddRefed<MediaDataDecoder> aDecoder,
                     already_AddRefed<Token> aToken);
   ~AllocationWrapper();
 
   RefPtr<InitPromise> Init() override { return mDecoder->Init(); }
-  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override
-  {
+  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override {
     return mDecoder->Decode(aSample);
   }
   RefPtr<DecodePromise> Drain() override { return mDecoder->Drain(); }
   RefPtr<FlushPromise> Flush() override { return mDecoder->Flush(); }
-  bool IsHardwareAccelerated(nsACString& aFailureReason) const override
-  {
+  bool IsHardwareAccelerated(nsACString& aFailureReason) const override {
     return mDecoder->IsHardwareAccelerated(aFailureReason);
   }
-  nsCString GetDescriptionName() const override
-  {
+  nsCString GetDescriptionName() const override {
     return mDecoder->GetDescriptionName();
   }
-  void SetSeekThreshold(const media::TimeUnit& aTime) override
-  {
+  void SetSeekThreshold(const media::TimeUnit& aTime) override {
     mDecoder->SetSeekThreshold(aTime);
   }
-  bool SupportDecoderRecycling() const override
-  {
+  bool SupportDecoderRecycling() const override {
     return mDecoder->SupportDecoderRecycling();
   }
   RefPtr<ShutdownPromise> Shutdown() override;
 
-  typedef MozPromise<RefPtr<MediaDataDecoder>,
-                     MediaResult,
+  typedef MozPromise<RefPtr<MediaDataDecoder>, MediaResult,
                      /* IsExclusive = */ true>
-    AllocateDecoderPromise;
+      AllocateDecoderPromise;
   // Will create a decoder has soon as one can be created according to the
   // GlobalAllocPolicy.
   // Warning: all aParams members must be valid until the promise has been
   // resolved, as some contains raw pointers to objects.
   static RefPtr<AllocateDecoderPromise> CreateDecoder(
-    const CreateDecoderParams& aParams);
+      const CreateDecoderParams& aParams);
 
-private:
+ private:
   RefPtr<MediaDataDecoder> mDecoder;
   RefPtr<Token> mToken;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

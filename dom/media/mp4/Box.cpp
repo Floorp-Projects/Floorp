@@ -18,9 +18,7 @@ const uint64_t Box::kMAX_BOX_READ = 32 * 1024 * 1024;
 
 // Returns the offset from the start of the body of a box of type |aType|
 // to the start of its first child.
-static uint32_t
-BoxOffset(AtomType aType)
-{
+static uint32_t BoxOffset(AtomType aType) {
   const uint32_t FULLBOX_OFFSET = 4;
 
   if (aType == AtomType("mp4a") || aType == AtomType("enca")) {
@@ -40,8 +38,7 @@ BoxOffset(AtomType aType)
 }
 
 Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
-  : mContext(aContext), mParent(aParent)
-{
+    : mContext(aContext), mParent(aParent) {
   uint8_t header[8];
 
   if (aOffset > INT64_MAX - sizeof(header)) {
@@ -54,7 +51,7 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
   }
 
   const MediaByteRange* byteRange;
-  for (int i = 0; ; i++) {
+  for (int i = 0;; i++) {
     if (i == mContext->mByteRanges.Length()) {
       return;
     }
@@ -122,22 +119,14 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
 }
 
 Box::Box()
-  : mContext(nullptr)
-  , mBodyOffset(0)
-  , mChildOffset(0)
-  , mParent(nullptr)
-{}
+    : mContext(nullptr), mBodyOffset(0), mChildOffset(0), mParent(nullptr) {}
 
-Box
-Box::Next() const
-{
+Box Box::Next() const {
   MOZ_ASSERT(IsAvailable());
   return Box(mContext, mRange.mEnd, mParent);
 }
 
-Box
-Box::FirstChild() const
-{
+Box Box::FirstChild() const {
   MOZ_ASSERT(IsAvailable());
   if (mChildOffset == mRange.mEnd) {
     return Box();
@@ -145,17 +134,13 @@ Box::FirstChild() const
   return Box(mContext, mChildOffset, this);
 }
 
-nsTArray<uint8_t>
-Box::Read() const
-{
+nsTArray<uint8_t> Box::Read() const {
   nsTArray<uint8_t> out;
   Unused << Read(&out, mRange);
   return out;
 }
 
-bool
-Box::Read(nsTArray<uint8_t>* aDest, const MediaByteRange& aRange) const
-{
+bool Box::Read(nsTArray<uint8_t>* aDest, const MediaByteRange& aRange) const {
   int64_t length;
   if (!mContext->mSource->Length(&length)) {
     // The HTTP server didn't give us a length to work with.
@@ -176,4 +161,4 @@ Box::Read(nsTArray<uint8_t>* aDest, const MediaByteRange& aRange) const
   }
   return true;
 }
-}
+}  // namespace mozilla

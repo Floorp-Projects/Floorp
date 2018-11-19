@@ -15,20 +15,15 @@ namespace mozilla {
  * ContainerWriter packs encoded track data into a specific media container.
  */
 class ContainerWriter {
-public:
-  ContainerWriter()
-    : mInitialized(false)
-    , mIsWritingComplete(false)
-  {}
+ public:
+  ContainerWriter() : mInitialized(false), mIsWritingComplete(false) {}
   virtual ~ContainerWriter() {}
   // Mapping to DOMMediaStream::TrackTypeHints
   enum {
     CREATE_AUDIO_TRACK = 1 << 0,
     CREATE_VIDEO_TRACK = 1 << 1,
   };
-  enum {
-    END_OF_STREAM = 1 << 0
-  };
+  enum { END_OF_STREAM = 1 << 0 };
 
   /**
    * Writes encoded track data from aBuffer to a packet, and insert this packet
@@ -43,8 +38,9 @@ public:
   /**
    * Set the meta data pointer into muxer
    * This function will check the integrity of aMetadata.
-   * If the meta data isn't well format, this function will return NS_ERROR_FAILURE to caller,
-   * else save the pointer to mMetadata and return NS_OK.
+   * If the meta data isn't well format, this function will return
+   * NS_ERROR_FAILURE to caller, else save the pointer to mMetadata and return
+   * NS_OK.
    */
   virtual nsresult SetMetadata(TrackMetadataBase* aMetadata) = 0;
 
@@ -53,10 +49,7 @@ public:
    */
   virtual bool IsWritingComplete() { return mIsWritingComplete; }
 
-  enum {
-    FLUSH_NEEDED = 1 << 0,
-    GET_HEADER = 1 << 1
-  };
+  enum { FLUSH_NEEDED = 1 << 0, GET_HEADER = 1 << 1 };
 
   /**
    * Copies the final container data to a buffer if it has accumulated enough
@@ -68,11 +61,12 @@ public:
    */
   virtual nsresult GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
                                     uint32_t aFlags = 0) = 0;
-protected:
+
+ protected:
   bool mInitialized;
   bool mIsWritingComplete;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

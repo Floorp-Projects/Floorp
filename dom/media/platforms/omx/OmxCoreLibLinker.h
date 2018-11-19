@@ -9,31 +9,28 @@
 
 struct PRLibrary;
 
-namespace mozilla
-{
+namespace mozilla {
 
-class OmxCoreLibLinker
-{
-public:
+class OmxCoreLibLinker {
+ public:
   static bool Link();
   static void Unlink();
 
-private:
+ private:
   static PRLibrary* sLinkedLib;
   static const char* sLibName;
   static const char* sLibNames[];
 
-  static bool TryLinkingLibrary(const char *libName);
+  static bool TryLinkingLibrary(const char* libName);
   static bool Bind(const char* aLibName);
 
-  static enum LinkStatus
-  {
+  static enum LinkStatus {
     LinkStatus_INIT = 0,
     LinkStatus_FAILED,
     LinkStatus_SUCCEEDED
   } sLinkStatus;
 };
 
-}
+}  // namespace mozilla
 
-#endif // __OmxCoreLibLinker_h__
+#endif  // __OmxCoreLibLinker_h__

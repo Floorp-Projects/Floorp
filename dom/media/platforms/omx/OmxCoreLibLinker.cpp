@@ -15,18 +15,18 @@
 #undef LOG
 #endif
 
-#define LOG(arg, ...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, ("OmxCoreLibLinker::%s: " arg, __func__, ##__VA_ARGS__))
+#define LOG(arg, ...)                        \
+  MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, \
+          ("OmxCoreLibLinker::%s: " arg, __func__, ##__VA_ARGS__))
 
-namespace mozilla
-{
+namespace mozilla {
 
-OmxCoreLibLinker::LinkStatus OmxCoreLibLinker::sLinkStatus =
-  LinkStatus_INIT;
+OmxCoreLibLinker::LinkStatus OmxCoreLibLinker::sLinkStatus = LinkStatus_INIT;
 
 const char* OmxCoreLibLinker::sLibNames[] = {
-  "libopenmaxil.so",        // Raspberry Pi
-  "libomxr_core.so",        // Renesas R-Car, RZ/G
-  "libomxil-bellagio.so.0", // Bellagio: An OSS implementation of OpenMAX IL
+    "libopenmaxil.so",         // Raspberry Pi
+    "libomxr_core.so",         // Renesas R-Car, RZ/G
+    "libomxil-bellagio.so.0",  // Bellagio: An OSS implementation of OpenMAX IL
 };
 
 PRLibrary* OmxCoreLibLinker::sLinkedLib = nullptr;
@@ -36,9 +36,7 @@ const char* OmxCoreLibLinker::sLibName = nullptr;
 #include "OmxFunctionList.h"
 #undef OMX_FUNC
 
-bool
-OmxCoreLibLinker::TryLinkingLibrary(const char *libName)
-{
+bool OmxCoreLibLinker::TryLinkingLibrary(const char* libName) {
   PRLibSpec lspec;
   lspec.type = PR_LibSpec_Pathname;
   lspec.value.pathname = libName;
@@ -56,9 +54,7 @@ OmxCoreLibLinker::TryLinkingLibrary(const char *libName)
   return false;
 }
 
-/* static */ bool
-OmxCoreLibLinker::Link()
-{
+/* static */ bool OmxCoreLibLinker::Link() {
   LOG("");
 
   if (sLinkStatus) {
@@ -87,24 +83,20 @@ OmxCoreLibLinker::Link()
   return false;
 }
 
-/* static */ bool
-OmxCoreLibLinker::Bind(const char* aLibName)
-{
-#define OMX_FUNC(func)                                                  \
-  {                                                                     \
-    if (!(func = (typeof(func))PR_FindSymbol(sLinkedLib, #func))) {     \
-      LOG("Couldn't load function " #func " from %s.", aLibName);       \
-      return false;                                                     \
-    }                                                                   \
+/* static */ bool OmxCoreLibLinker::Bind(const char* aLibName) {
+#define OMX_FUNC(func)                                              \
+  {                                                                 \
+    if (!(func = (typeof(func))PR_FindSymbol(sLinkedLib, #func))) { \
+      LOG("Couldn't load function " #func " from %s.", aLibName);   \
+      return false;                                                 \
+    }                                                               \
   }
 #include "OmxFunctionList.h"
 #undef OMX_FUNC
   return true;
 }
 
-/* static */ void
-OmxCoreLibLinker::Unlink()
-{
+/* static */ void OmxCoreLibLinker::Unlink() {
   LOG("");
 
   if (sLinkedLib) {
@@ -115,4 +107,4 @@ OmxCoreLibLinker::Unlink()
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

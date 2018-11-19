@@ -11,7 +11,11 @@
 // Logger
 mozilla::LogModule* GetHLSLog();
 
-#define HLS_DEBUG(TAG, format, ...) MOZ_LOG(GetHLSLog(), mozilla::LogLevel::Debug, (TAG "(%p)::%s: " format, this, __func__, ##__VA_ARGS__))
-#define HLS_DEBUG_NON_MEMBER(TAG, format, ...) MOZ_LOG(GetHLSLog(), mozilla::LogLevel::Debug, (TAG " %s: " format, __func__, ##__VA_ARGS__))
+#define HLS_DEBUG(TAG, format, ...)              \
+  MOZ_LOG(GetHLSLog(), mozilla::LogLevel::Debug, \
+          (TAG "(%p)::%s: " format, this, __func__, ##__VA_ARGS__))
+#define HLS_DEBUG_NON_MEMBER(TAG, format, ...)   \
+  MOZ_LOG(GetHLSLog(), mozilla::LogLevel::Debug, \
+          (TAG " %s: " format, __func__, ##__VA_ARGS__))
 
-#endif // HLSUtils_h_
+#endif  // HLSUtils_h_

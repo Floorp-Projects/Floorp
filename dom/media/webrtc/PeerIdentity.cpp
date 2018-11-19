@@ -14,15 +14,11 @@
 
 namespace mozilla {
 
-bool
-PeerIdentity::Equals(const PeerIdentity& aOther) const
-{
+bool PeerIdentity::Equals(const PeerIdentity& aOther) const {
   return Equals(aOther.mPeerIdentity);
 }
 
-bool
-PeerIdentity::Equals(const nsAString& aOtherString) const
-{
+bool PeerIdentity::Equals(const nsAString& aOtherString) const {
   nsString user;
   GetUser(mPeerIdentity, user);
   nsString otherUser;
@@ -37,8 +33,8 @@ PeerIdentity::Equals(const nsAString& aOtherString) const
   GetHost(aOtherString, otherHost);
 
   nsresult rv;
-  nsCOMPtr<nsIIDNService> idnService
-    = do_GetService("@mozilla.org/network/idn-service;1", &rv);
+  nsCOMPtr<nsIIDNService> idnService =
+      do_GetService("@mozilla.org/network/idn-service;1", &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return host == otherHost;
   }
@@ -50,9 +46,8 @@ PeerIdentity::Equals(const nsAString& aOtherString) const
   return normHost == normOtherHost;
 }
 
-/* static */ void
-PeerIdentity::GetUser(const nsAString& aPeerIdentity, nsAString& aUser)
-{
+/* static */ void PeerIdentity::GetUser(const nsAString& aPeerIdentity,
+                                        nsAString& aUser) {
   int32_t at = aPeerIdentity.FindChar('@');
   if (at >= 0) {
     aUser = Substring(aPeerIdentity, 0, at);
@@ -61,9 +56,8 @@ PeerIdentity::GetUser(const nsAString& aPeerIdentity, nsAString& aUser)
   }
 }
 
-/* static */ void
-PeerIdentity::GetHost(const nsAString& aPeerIdentity, nsAString& aHost)
-{
+/* static */ void PeerIdentity::GetHost(const nsAString& aPeerIdentity,
+                                        nsAString& aHost) {
   int32_t at = aPeerIdentity.FindChar('@');
   if (at >= 0) {
     aHost = Substring(aPeerIdentity, at + 1);
@@ -72,13 +66,12 @@ PeerIdentity::GetHost(const nsAString& aPeerIdentity, nsAString& aHost)
   }
 }
 
-/* static */ void
-PeerIdentity::GetNormalizedHost(const nsCOMPtr<nsIIDNService>& aIdnService,
-                                const nsAString& aHost,
-                                nsACString& aNormalizedHost)
-{
+/* static */ void PeerIdentity::GetNormalizedHost(
+    const nsCOMPtr<nsIIDNService>& aIdnService, const nsAString& aHost,
+    nsACString& aNormalizedHost) {
   const nsCString chost = NS_ConvertUTF16toUTF8(aHost);
-  DebugOnly<nsresult> rv = aIdnService->ConvertUTF8toACE(chost, aNormalizedHost);
+  DebugOnly<nsresult> rv =
+      aIdnService->ConvertUTF8toACE(chost, aNormalizedHost);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "Failed to convert UTF-8 host to ASCII");
 }

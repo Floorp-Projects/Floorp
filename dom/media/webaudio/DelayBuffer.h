@@ -10,22 +10,22 @@
 #include "nsTArray.h"
 #include "AudioBlock.h"
 #include "AudioSegment.h"
-#include "mozilla/dom/AudioNodeBinding.h" // for ChannelInterpretation
+#include "mozilla/dom/AudioNodeBinding.h"  // for ChannelInterpretation
 
 namespace mozilla {
 
-class DelayBuffer final
-{
+class DelayBuffer final {
   typedef dom::ChannelInterpretation ChannelInterpretation;
 
-public:
+ public:
   explicit DelayBuffer(float aMaxDelayTicks)
-    // Round the maximum delay up to the next tick.
-    : mMaxDelayTicks(std::ceil(aMaxDelayTicks))
-    , mCurrentChunk(0)
-    // mLastReadChunk is initialized in EnsureBuffer
+      // Round the maximum delay up to the next tick.
+      : mMaxDelayTicks(std::ceil(aMaxDelayTicks)),
+        mCurrentChunk(0)
+  // mLastReadChunk is initialized in EnsureBuffer
 #ifdef DEBUG
-    , mHaveWrittenBlock(false)
+        ,
+        mHaveWrittenBlock(false)
 #endif
   {
     // The 180 second limit in AudioContext::CreateDelay() and the
@@ -57,8 +57,7 @@ public:
                    ChannelInterpretation aChannelInterpretation);
 
   // Advance the buffer pointer
-  void NextBlock()
-  {
+  void NextBlock() {
     mCurrentChunk = (mCurrentChunk + 1) % mChunks.Length();
 #ifdef DEBUG
     MOZ_ASSERT(mHaveWrittenBlock);
@@ -66,18 +65,16 @@ public:
 #endif
   }
 
-  void Reset() {
-    mChunks.Clear();
-  };
+  void Reset() { mChunks.Clear(); };
 
   int MaxDelayTicks() const { return mMaxDelayTicks; }
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 
-private:
+ private:
   void ReadChannels(const float aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
-                    AudioBlock* aOutputChunk,
-                    uint32_t aFirstChannel, uint32_t aNumChannelsToRead,
+                    AudioBlock* aOutputChunk, uint32_t aFirstChannel,
+                    uint32_t aNumChannelsToRead,
                     ChannelInterpretation aChannelInterpretation);
   bool EnsureBuffer();
   int PositionForDelay(int aDelay);
@@ -90,7 +87,7 @@ private:
   // Circular buffer for capturing delayed samples.
   FallibleTArray<AudioChunk> mChunks;
   // Cache upmixed channel arrays.
-  AutoTArray<const float*,GUESS_AUDIO_CHANNELS> mUpmixChannels;
+  AutoTArray<const float*, GUESS_AUDIO_CHANNELS> mUpmixChannels;
   // Maximum delay, in ticks
   int mMaxDelayTicks;
   // The current position in the circular buffer.  The next write will be to
@@ -103,6 +100,6 @@ private:
 #endif
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // DelayBuffer_h_
+#endif  // DelayBuffer_h_

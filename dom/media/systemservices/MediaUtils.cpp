@@ -9,9 +9,7 @@
 namespace mozilla {
 namespace media {
 
-already_AddRefed<nsIAsyncShutdownClient>
-GetShutdownBarrier()
-{
+already_AddRefed<nsIAsyncShutdownClient> GetShutdownBarrier() {
   nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdown();
   MOZ_RELEASE_ASSERT(svc);
 
@@ -29,5 +27,5 @@ GetShutdownBarrier()
 
 NS_IMPL_ISUPPORTS(ShutdownBlocker, nsIAsyncShutdownBlocker)
 
-} // namespace media
-} // namespace mozilla
+}  // namespace media
+}  // namespace mozilla

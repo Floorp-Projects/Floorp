@@ -26,7 +26,7 @@ class KnowsCompositor;
 }
 namespace dom {
 class MediaCapabilities;
-} // namespace dom
+}  // namespace dom
 DDLoggedTypeName(dom::MediaCapabilities);
 
 namespace dom {
@@ -37,22 +37,17 @@ struct AudioConfiguration;
 struct VideoConfiguration;
 class Promise;
 
-class MediaCapabilities final
-  : public nsISupports
-  , public nsWrapperCache
-{
-public:
+class MediaCapabilities final : public nsISupports, public nsWrapperCache {
+ public:
   // Ref counting and cycle collection
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaCapabilities)
 
   // WebIDL Methods
   already_AddRefed<Promise> DecodingInfo(
-    const MediaDecodingConfiguration& aConfiguration,
-    ErrorResult& aRv);
+      const MediaDecodingConfiguration& aConfiguration, ErrorResult& aRv);
   already_AddRefed<Promise> EncodingInfo(
-    const MediaEncodingConfiguration& aConfiguration,
-    ErrorResult& aRv);
+      const MediaEncodingConfiguration& aConfiguration, ErrorResult& aRv);
   // End WebIDL Methods
 
   explicit MediaCapabilities(nsIGlobalObject* aParent);
@@ -63,12 +58,12 @@ public:
 
   static bool Enabled(JSContext* aCx, JSObject* aGlobal);
 
-private:
+ private:
   virtual ~MediaCapabilities() = default;
   Maybe<MediaContainerType> CheckVideoConfiguration(
-    const VideoConfiguration& aConfig) const;
+      const VideoConfiguration& aConfig) const;
   Maybe<MediaContainerType> CheckAudioConfiguration(
-    const AudioConfiguration& aConfig) const;
+      const AudioConfiguration& aConfig) const;
   bool CheckTypeForMediaSource(const nsAString& aType);
   bool CheckTypeForFile(const nsAString& aType);
   bool CheckTypeForEncoder(const nsAString& aType);
@@ -76,9 +71,8 @@ private:
   nsCOMPtr<nsIGlobalObject> mParent;
 };
 
-class MediaCapabilitiesInfo final : public NonRefcountedDOMObject
-{
-public:
+class MediaCapabilitiesInfo final : public NonRefcountedDOMObject {
+ public:
   // WebIDL methods
   bool Supported() const { return mSupported; }
   bool Smooth() const { return mSmooth; }
@@ -86,24 +80,21 @@ public:
   // End WebIDL methods
 
   MediaCapabilitiesInfo(bool aSupported, bool aSmooth, bool aPowerEfficient)
-    : mSupported(aSupported)
-    , mSmooth(aSmooth)
-    , mPowerEfficient(aPowerEfficient)
-  {
-  }
+      : mSupported(aSupported),
+        mSmooth(aSmooth),
+        mPowerEfficient(aPowerEfficient) {}
 
-  bool WrapObject(JSContext* aCx,
-                  JS::Handle<JSObject*> aGivenProto,
+  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aReflector);
 
-private:
+ private:
   bool mSupported;
   bool mSmooth;
   bool mPowerEfficient;
 };
 
-} // namespace dom
+}  // namespace dom
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif /* mozilla_dom_MediaCapabilities_h_ */

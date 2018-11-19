@@ -10,8 +10,7 @@ namespace mozilla {
 
 bool XiphHeadersToExtradata(MediaByteBuffer* aCodecSpecificConfig,
                             const nsTArray<const unsigned char*>& aHeaders,
-                            const nsTArray<size_t>& aHeaderLens)
-{
+                            const nsTArray<size_t>& aHeaderLens) {
   size_t nheaders = aHeaders.Length();
   if (!nheaders || nheaders > 255) return false;
   aCodecSpecificConfig->AppendElement(nheaders - 1);
@@ -29,10 +28,8 @@ bool XiphHeadersToExtradata(MediaByteBuffer* aCodecSpecificConfig,
 }
 
 bool XiphExtradataToHeaders(nsTArray<unsigned char*>& aHeaders,
-                            nsTArray<size_t>& aHeaderLens,
-                            unsigned char* aData,
-                            size_t aAvailable)
-{
+                            nsTArray<size_t>& aHeaderLens, unsigned char* aData,
+                            size_t aAvailable) {
   size_t total = 0;
   if (aAvailable < 1) {
     return false;
@@ -77,4 +74,4 @@ bool XiphExtradataToHeaders(nsTArray<unsigned char*>& aHeaders,
   return true;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

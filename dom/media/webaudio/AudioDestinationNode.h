@@ -17,17 +17,14 @@ namespace dom {
 
 class AudioContext;
 
-class AudioDestinationNode final : public AudioNode
-                                 , public nsIAudioChannelAgentCallback
-                                 , public MainThreadMediaStreamListener
-{
-public:
+class AudioDestinationNode final : public AudioNode,
+                                   public nsIAudioChannelAgentCallback,
+                                   public MainThreadMediaStreamListener {
+ public:
   // This node type knows what MediaStreamGraph to use based on
   // whether it's in offline mode.
-  AudioDestinationNode(AudioContext* aContext,
-                       bool aIsOffline,
-                       bool aAllowedToStart,
-                       uint32_t aNumberOfChannels,
+  AudioDestinationNode(AudioContext* aContext, bool aIsOffline,
+                       bool aAllowedToStart, uint32_t aNumberOfChannels,
                        uint32_t aLength);
 
   void DestroyMediaStream() override;
@@ -36,16 +33,13 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioDestinationNode, AudioNode)
   NS_DECL_NSIAUDIOCHANNELAGENTCALLBACK
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
-  uint16_t NumberOfOutputs() const final
-  {
-    return 0;
-  }
+  uint16_t NumberOfOutputs() const final { return 0; }
 
   uint32_t MaxChannelCount() const;
-  void SetChannelCount(uint32_t aChannelCount,
-                       ErrorResult& aRv) override;
+  void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) override;
 
   // Returns the stream or null after unlink.
   AudioNodeStream* Stream();
@@ -66,10 +60,7 @@ public:
   nsresult CreateAudioChannelAgent();
   void DestroyAudioChannelAgent();
 
-  const char* NodeType() const override
-  {
-    return "AudioDestinationNode";
-  }
+  const char* NodeType() const override { return "AudioDestinationNode"; }
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
@@ -77,16 +68,15 @@ public:
   void NotifyAudibleStateChanged(bool aAudible);
   void ResolvePromise(AudioBuffer* aRenderedBuffer);
 
-  unsigned long Length()
-  {
+  unsigned long Length() {
     MOZ_ASSERT(mIsOffline);
     return mFramesToProduce;
   }
 
-protected:
+ protected:
   virtual ~AudioDestinationNode();
 
-private:
+ private:
   SelfReference<AudioDestinationNode> mOfflineRenderingRef;
   uint32_t mFramesToProduce;
 
@@ -107,8 +97,7 @@ private:
   TimeDuration mDurationBeforeFirstTimeAudible;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif
-

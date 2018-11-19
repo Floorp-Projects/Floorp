@@ -17,25 +17,23 @@ namespace mozilla {
 class CDMProxy;
 class PDMFactory;
 
-class EMEDecoderModule : public PlatformDecoderModule
-{
-public:
+class EMEDecoderModule : public PlatformDecoderModule {
+ public:
   EMEDecoderModule(CDMProxy* aProxy, PDMFactory* aPDM);
 
-protected:
+ protected:
   // Decode thread.
-  already_AddRefed<MediaDataDecoder>
-  CreateVideoDecoder(const CreateDecoderParams& aParams) override;
+  already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
+      const CreateDecoderParams& aParams) override;
 
   // Decode thread.
-  already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const CreateDecoderParams& aParams) override;
+  already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
+      const CreateDecoderParams& aParams) override;
 
-  bool
-  SupportsMimeType(const nsACString &aMimeType,
-                   DecoderDoctorDiagnostics *aDiagnostics) const override;
+  bool SupportsMimeType(const nsACString& aMimeType,
+                        DecoderDoctorDiagnostics* aDiagnostics) const override;
 
-private:
+ private:
   virtual ~EMEDecoderModule();
   RefPtr<CDMProxy> mProxy;
   // Will be null if CDM has decoding capability.
@@ -45,13 +43,12 @@ private:
 DDLoggedTypeDeclNameAndBase(EMEMediaDataDecoderProxy, MediaDataDecoderProxy);
 
 class EMEMediaDataDecoderProxy
-  : public MediaDataDecoderProxy
-  , public DecoderDoctorLifeLogger<EMEMediaDataDecoderProxy>
-{
-public:
-  EMEMediaDataDecoderProxy(
-    already_AddRefed<AbstractThread> aProxyThread, CDMProxy* aProxy,
-    const CreateDecoderParams& aParams);
+    : public MediaDataDecoderProxy,
+      public DecoderDoctorLifeLogger<EMEMediaDataDecoderProxy> {
+ public:
+  EMEMediaDataDecoderProxy(already_AddRefed<AbstractThread> aProxyThread,
+                           CDMProxy* aProxy,
+                           const CreateDecoderParams& aParams);
   EMEMediaDataDecoderProxy(const CreateDecoderParams& aParams,
                            already_AddRefed<MediaDataDecoder> aProxyDecoder,
                            CDMProxy* aProxy);
@@ -60,7 +57,7 @@ public:
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
 
-private:
+ private:
   RefPtr<AbstractThread> mThread;
   RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
   MozPromiseRequestHolder<SamplesWaitingForKey::WaitForKeyPromise> mKeyRequest;
@@ -69,6 +66,6 @@ private:
   RefPtr<CDMProxy> mProxy;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // EMEDecoderModule_h_
+#endif  // EMEDecoderModule_h_

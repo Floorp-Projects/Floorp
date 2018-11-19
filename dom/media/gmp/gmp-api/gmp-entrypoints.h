@@ -40,9 +40,11 @@
 /* C functions exposed by Gecko Media Plugin shared library. */
 
 // GMPInit
-// - Called once after plugin library is loaded, before GMPGetAPI or GMPShutdown are called.
+// - Called once after plugin library is loaded, before GMPGetAPI or GMPShutdown
+// are called.
 // - Called on main thread.
-// - 'aPlatformAPI' is a structure containing platform-provided APIs. It is valid until
+// - 'aPlatformAPI' is a structure containing platform-provided APIs. It is
+// valid until
 //   'GMPShutdown' is called. Owned and must be deleted by plugin.
 typedef GMPErr (*GMPInitFunc)(const GMPPlatformAPI* aPlatformAPI);
 
@@ -55,15 +57,17 @@ typedef GMPErr (*GMPInitFunc)(const GMPPlatformAPI* aPlatformAPI);
 //   make sure you compare aAPIName against the corresponding GMP_API_* macro!
 // - 'aHostAPI' is the host API which is specific to the API being requested
 //   from the plugin. It is valid so long as the API object requested from the
-//   plugin is valid. It is owned by the host, plugin should not attempt to delete.
-//   May be null.
-// - 'aPluginAPI' is for returning the requested API. Destruction of the requsted
+//   plugin is valid. It is owned by the host, plugin should not attempt to
+//   delete. May be null.
+// - 'aPluginAPI' is for returning the requested API. Destruction of the
+// requsted
 //   API object is defined by the API.
-typedef GMPErr (*GMPGetAPIFunc)(const char* aAPIName, void* aHostAPI, void** aPluginAPI);
+typedef GMPErr (*GMPGetAPIFunc)(const char* aAPIName, void* aHostAPI,
+                                void** aPluginAPI);
 
 // GMPShutdown
 // - Called once before exiting process (unloading library).
 // - Called on main thread.
-typedef void   (*GMPShutdownFunc)(void);
+typedef void (*GMPShutdownFunc)(void);
 
-#endif // GMP_ENTRYPOINTS_h_
+#endif  // GMP_ENTRYPOINTS_h_

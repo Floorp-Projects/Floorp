@@ -17,21 +17,13 @@ namespace mozilla {
 
 using namespace layers;
 
-RDDChild::RDDChild(RDDProcessHost* aHost)
- : mHost(aHost),
-   mRDDReady(false)
-{
+RDDChild::RDDChild(RDDProcessHost* aHost) : mHost(aHost), mRDDReady(false) {
   MOZ_COUNT_CTOR(RDDChild);
 }
 
-RDDChild::~RDDChild()
-{
-  MOZ_COUNT_DTOR(RDDChild);
-}
+RDDChild::~RDDChild() { MOZ_COUNT_DTOR(RDDChild); }
 
-void
-RDDChild::Init()
-{
+void RDDChild::Init() {
   SendInit();
 
 #ifdef MOZ_GECKO_PROFILER
@@ -39,9 +31,7 @@ RDDChild::Init()
 #endif
 }
 
-bool
-RDDChild::EnsureRDDReady()
-{
+bool RDDChild::EnsureRDDReady() {
   if (mRDDReady) {
     return true;
   }
@@ -50,9 +40,7 @@ RDDChild::EnsureRDDReady()
   return true;
 }
 
-mozilla::ipc::IPCResult
-RDDChild::RecvInitComplete()
-{
+mozilla::ipc::IPCResult RDDChild::RecvInitComplete() {
   // We synchronously requested RDD parameters before this arrived.
   if (mRDDReady) {
     return IPC_OK();
@@ -62,43 +50,34 @@ RDDChild::RecvInitComplete()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-RDDChild::RecvInitCrashReporter(Shmem&& aShmem, const NativeThreadId& aThreadId)
-{
-  mCrashReporter = MakeUnique<ipc::CrashReporterHost>(
-    GeckoProcessType_RDD,
-    aShmem,
-    aThreadId);
+mozilla::ipc::IPCResult RDDChild::RecvInitCrashReporter(
+    Shmem&& aShmem, const NativeThreadId& aThreadId) {
+  mCrashReporter = MakeUnique<ipc::CrashReporterHost>(GeckoProcessType_RDD,
+                                                      aShmem, aThreadId);
 
   return IPC_OK();
 }
 
-bool
-RDDChild::SendRequestMemoryReport(const uint32_t& aGeneration,
-                                  const bool& aAnonymize,
-                                  const bool& aMinimizeMemoryUsage,
-                                  const MaybeFileDesc& aDMDFile)
-{
+bool RDDChild::SendRequestMemoryReport(const uint32_t& aGeneration,
+                                       const bool& aAnonymize,
+                                       const bool& aMinimizeMemoryUsage,
+                                       const MaybeFileDesc& aDMDFile) {
   mMemoryReportRequest = MakeUnique<MemoryReportRequestHost>(aGeneration);
-  Unused << PRDDChild::SendRequestMemoryReport(aGeneration,
-                                               aAnonymize,
-                                               aMinimizeMemoryUsage,
-                                               aDMDFile);
+  Unused << PRDDChild::SendRequestMemoryReport(aGeneration, aAnonymize,
+                                               aMinimizeMemoryUsage, aDMDFile);
   return true;
 }
 
-mozilla::ipc::IPCResult
-RDDChild::RecvAddMemoryReport(const MemoryReport& aReport)
-{
+mozilla::ipc::IPCResult RDDChild::RecvAddMemoryReport(
+    const MemoryReport& aReport) {
   if (mMemoryReportRequest) {
     mMemoryReportRequest->RecvReport(aReport);
   }
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-RDDChild::RecvFinishMemoryReport(const uint32_t& aGeneration)
-{
+mozilla::ipc::IPCResult RDDChild::RecvFinishMemoryReport(
+    const uint32_t& aGeneration) {
   if (mMemoryReportRequest) {
     mMemoryReportRequest->Finish(aGeneration);
     mMemoryReportRequest = nullptr;
@@ -106,9 +85,7 @@ RDDChild::RecvFinishMemoryReport(const uint32_t& aGeneration)
   return IPC_OK();
 }
 
-void
-RDDChild::ActorDestroy(ActorDestroyReason aWhy)
-{
+void RDDChild::ActorDestroy(ActorDestroyReason aWhy) {
   if (aWhy == AbnormalShutdown) {
     if (mCrashReporter) {
       mCrashReporter->GenerateCrashReport(OtherPid());
@@ -119,27 +96,19 @@ RDDChild::ActorDestroy(ActorDestroyReason aWhy)
   mHost->OnChannelClosed();
 }
 
-class DeferredDeleteRDDChild : public Runnable
-{
-public:
+class DeferredDeleteRDDChild : public Runnable {
+ public:
   explicit DeferredDeleteRDDChild(UniquePtr<RDDChild>&& aChild)
-    : Runnable("gfx::DeferredDeleteRDDChild")
-    , mChild(std::move(aChild))
-  {
-  }
+      : Runnable("gfx::DeferredDeleteRDDChild"), mChild(std::move(aChild)) {}
 
-  NS_IMETHODIMP Run() override {
-    return NS_OK;
-  }
+  NS_IMETHODIMP Run() override { return NS_OK; }
 
-private:
+ private:
   UniquePtr<RDDChild> mChild;
 };
 
-/* static */ void
-RDDChild::Destroy(UniquePtr<RDDChild>&& aChild)
-{
+/* static */ void RDDChild::Destroy(UniquePtr<RDDChild>&& aChild) {
   NS_DispatchToMainThread(new DeferredDeleteRDDChild(std::move(aChild)));
 }
 
-} // namespace mozilla
+}  // namespace mozilla

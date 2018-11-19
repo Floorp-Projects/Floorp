@@ -19,11 +19,8 @@
 
 namespace mozilla {
 
-void
-SplitAt(const char* aDelims,
-        const nsACString& aInput,
-        nsTArray<nsCString>& aOutTokens)
-{
+void SplitAt(const char* aDelims, const nsACString& aInput,
+             nsTArray<nsCString>& aOutTokens) {
   nsAutoCString str(aInput);
   char* end = str.BeginWriting();
   const char* start = nullptr;
@@ -32,15 +29,9 @@ SplitAt(const char* aDelims,
   }
 }
 
-nsCString
-ToHexString(const uint8_t * aBytes, uint32_t aLength)
-{
-  static const char hex[] = {
-    '0', '1', '2', '3',
-    '4', '5', '6', '7',
-    '8', '9', 'a', 'b',
-    'c', 'd', 'e', 'f'
-  };
+nsCString ToHexString(const uint8_t* aBytes, uint32_t aLength) {
+  static const char hex[] = {'0', '1', '2', '3', '4', '5', '6', '7',
+                             '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
   nsCString str;
   for (uint32_t i = 0; i < aLength; i++) {
     char buf[3];
@@ -52,28 +43,21 @@ ToHexString(const uint8_t * aBytes, uint32_t aLength)
   return str;
 }
 
-nsCString
-ToHexString(const nsTArray<uint8_t>& aBytes)
-{
+nsCString ToHexString(const nsTArray<uint8_t>& aBytes) {
   return ToHexString(aBytes.Elements(), aBytes.Length());
 }
 
-bool
-FileExists(nsIFile* aFile)
-{
+bool FileExists(nsIFile* aFile) {
   bool exists = false;
   return aFile && NS_SUCCEEDED(aFile->Exists(&exists)) && exists;
 }
 
 DirectoryEnumerator::DirectoryEnumerator(nsIFile* aPath, Mode aMode)
-  : mMode(aMode)
-{
+    : mMode(aMode) {
   aPath->GetDirectoryEntries(getter_AddRefs(mIter));
 }
 
-already_AddRefed<nsIFile>
-DirectoryEnumerator::Next()
-{
+already_AddRefed<nsIFile> DirectoryEnumerator::Next() {
   if (!mIter) {
     return nullptr;
   }
@@ -102,11 +86,8 @@ DirectoryEnumerator::Next()
   return nullptr;
 }
 
-bool
-ReadIntoArray(nsIFile* aFile,
-              nsTArray<uint8_t>& aOutDst,
-              size_t aMaxLength)
-{
+bool ReadIntoArray(nsIFile* aFile, nsTArray<uint8_t>& aOutDst,
+                   size_t aMaxLength) {
   if (!FileExists(aFile)) {
     return false;
   }
@@ -131,23 +112,17 @@ ReadIntoArray(nsIFile* aFile,
   return (bytesRead == length);
 }
 
-bool
-ReadIntoString(nsIFile* aFile,
-               nsCString& aOutDst,
-               size_t aMaxLength)
-{
+bool ReadIntoString(nsIFile* aFile, nsCString& aOutDst, size_t aMaxLength) {
   nsTArray<uint8_t> buf;
   bool rv = ReadIntoArray(aFile, buf, aMaxLength);
   if (rv) {
-    buf.AppendElement(0); // Append null terminator, required by nsC*String.
+    buf.AppendElement(0);  // Append null terminator, required by nsC*String.
     aOutDst = nsDependentCString((const char*)buf.Elements(), buf.Length() - 1);
   }
   return rv;
 }
 
-bool
-GMPInfoFileParser::Init(nsIFile* aInfoFile)
-{
+bool GMPInfoFileParser::Init(nsIFile* aInfoFile) {
   nsTArray<nsCString> lines;
   static const size_t MAX_GMP_INFO_FILE_LENGTH = 5 * 1024;
 
@@ -176,21 +151,19 @@ GMPInfoFileParser::Init(nsIFile* aInfoFile)
 
     nsCString* value = new nsCString(Substring(line, colon + 1));
     value->Trim(" ");
-    mValues.Put(key, value); // Hashtable assumes ownership of value.
+    mValues.Put(key, value);  // Hashtable assumes ownership of value.
   }
 
   return true;
 }
 
-bool
-GMPInfoFileParser::Contains(const nsCString& aKey) const {
+bool GMPInfoFileParser::Contains(const nsCString& aKey) const {
   nsCString key(aKey);
   ToLowerCase(key);
   return mValues.Contains(key);
 }
 
-nsCString
-GMPInfoFileParser::Get(const nsCString& aKey) const {
+nsCString GMPInfoFileParser::Get(const nsCString& aKey) const {
   MOZ_ASSERT(Contains(aKey));
   nsCString key(aKey);
   ToLowerCase(key);
@@ -201,12 +174,9 @@ GMPInfoFileParser::Get(const nsCString& aKey) const {
   return EmptyCString();
 }
 
-bool
-HaveGMPFor(const nsCString& aAPI,
-           nsTArray<nsCString>&& aTags)
-{
+bool HaveGMPFor(const nsCString& aAPI, nsTArray<nsCString>&& aTags) {
   nsCOMPtr<mozIGeckoMediaPluginService> mps =
-    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+      do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   if (NS_WARN_IF(!mps)) {
     return false;
   }
@@ -218,11 +188,9 @@ HaveGMPFor(const nsCString& aAPI,
   return hasPlugin;
 }
 
-void
-LogToConsole(const nsAString& aMsg)
-{
+void LogToConsole(const nsAString& aMsg) {
   nsCOMPtr<nsIConsoleService> console(
-    do_GetService("@mozilla.org/consoleservice;1"));
+      do_GetService("@mozilla.org/consoleservice;1"));
   if (!console) {
     NS_WARNING("Failed to log message to console.");
     return;
@@ -231,24 +199,18 @@ LogToConsole(const nsAString& aMsg)
   console->LogStringMessage(msg.get());
 }
 
-RefPtr<AbstractThread>
-GetGMPAbstractThread()
-{
+RefPtr<AbstractThread> GetGMPAbstractThread() {
   RefPtr<gmp::GeckoMediaPluginService> service =
-    gmp::GeckoMediaPluginService::GetGeckoMediaPluginService();
+      gmp::GeckoMediaPluginService::GetGeckoMediaPluginService();
   return service ? service->GetAbstractGMPThread() : nullptr;
 }
 
-static size_t
-Align16(size_t aNumber)
-{
-  const size_t mask = 15; // Alignment - 1.
+static size_t Align16(size_t aNumber) {
+  const size_t mask = 15;  // Alignment - 1.
   return (aNumber + mask) & ~mask;
 }
 
-size_t
-I420FrameBufferSizePadded(int32_t aWidth, int32_t aHeight)
-{
+size_t I420FrameBufferSizePadded(int32_t aWidth, int32_t aHeight) {
   if (aWidth <= 0 || aHeight <= 0 || aWidth > MAX_VIDEO_WIDTH ||
       aHeight > MAX_VIDEO_HEIGHT) {
     return 0;
@@ -258,4 +220,4 @@ I420FrameBufferSizePadded(int32_t aWidth, int32_t aHeight)
   return ySize + (ySize / 4) * 2;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

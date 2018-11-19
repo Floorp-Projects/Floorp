@@ -16,9 +16,8 @@ namespace mozilla {
 
 class MediaRawData;
 
-class DummyDataCreator
-{
-public:
+class DummyDataCreator {
+ public:
   virtual ~DummyDataCreator();
   virtual already_AddRefed<MediaData> Create(MediaRawData* aSample) = 0;
 };
@@ -28,10 +27,9 @@ DDLoggedTypeDeclNameAndBase(DummyMediaDataDecoder, MediaDataDecoder);
 // Decoder that uses a passed in object's Create function to create Null
 // MediaData objects.
 class DummyMediaDataDecoder
-  : public MediaDataDecoder
-  , public DecoderDoctorLifeLogger<DummyMediaDataDecoder>
-{
-public:
+    : public MediaDataDecoder,
+      public DecoderDoctorLifeLogger<DummyMediaDataDecoder> {
+ public:
   DummyMediaDataDecoder(UniquePtr<DummyDataCreator>&& aCreator,
                         const nsACString& aDescription,
                         const CreateDecoderParams& aParams);
@@ -50,7 +48,7 @@ public:
 
   ConversionRequired NeedsConversion() const override;
 
-private:
+ private:
   UniquePtr<DummyDataCreator> mCreator;
   const bool mIsH264;
   const uint32_t mMaxRefFrames;
@@ -59,6 +57,6 @@ private:
   nsCString mDescription;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
-#endif // !defined(DummyMediaDataDecoder_h_)
+#endif  // !defined(DummyMediaDataDecoder_h_)

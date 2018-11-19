@@ -19,60 +19,40 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SpeechGrammar)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-SpeechGrammar::SpeechGrammar(nsISupports* aParent)
-  : mParent(aParent)
-{
-}
+SpeechGrammar::SpeechGrammar(nsISupports* aParent) : mParent(aParent) {}
 
-SpeechGrammar::~SpeechGrammar()
-{
-}
+SpeechGrammar::~SpeechGrammar() {}
 
-already_AddRefed<SpeechGrammar>
-SpeechGrammar::Constructor(const GlobalObject& aGlobal,
-                           ErrorResult& aRv)
-{
+already_AddRefed<SpeechGrammar> SpeechGrammar::Constructor(
+    const GlobalObject& aGlobal, ErrorResult& aRv) {
   RefPtr<SpeechGrammar> speechGrammar =
-    new SpeechGrammar(aGlobal.GetAsSupports());
+      new SpeechGrammar(aGlobal.GetAsSupports());
   return speechGrammar.forget();
 }
 
-nsISupports*
-SpeechGrammar::GetParentObject() const
-{
-  return mParent;
-}
+nsISupports* SpeechGrammar::GetParentObject() const { return mParent; }
 
-JSObject*
-SpeechGrammar::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* SpeechGrammar::WrapObject(JSContext* aCx,
+                                    JS::Handle<JSObject*> aGivenProto) {
   return SpeechGrammar_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-SpeechGrammar::GetSrc(nsString& aRetVal, ErrorResult& aRv) const
-{
+void SpeechGrammar::GetSrc(nsString& aRetVal, ErrorResult& aRv) const {
   aRetVal = mSrc;
 }
 
-void
-SpeechGrammar::SetSrc(const nsAString& aArg, ErrorResult& aRv)
-{
+void SpeechGrammar::SetSrc(const nsAString& aArg, ErrorResult& aRv) {
   mSrc = aArg;
 }
 
-float
-SpeechGrammar::GetWeight(ErrorResult& aRv) const
-{
+float SpeechGrammar::GetWeight(ErrorResult& aRv) const {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return 0;
 }
 
-void
-SpeechGrammar::SetWeight(float aArg, ErrorResult& aRv)
-{
+void SpeechGrammar::SetWeight(float aArg, ErrorResult& aRv) {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

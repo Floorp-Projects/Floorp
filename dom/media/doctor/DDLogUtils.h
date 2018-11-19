@@ -11,23 +11,23 @@
 
 // Logging for the DecoderDoctorLoggger code.
 extern mozilla::LazyLogModule sDecoderDoctorLoggerLog;
-#define DDL_LOG(level, arg, ...)                                               \
+#define DDL_LOG(level, arg, ...) \
   MOZ_LOG(sDecoderDoctorLoggerLog, level, (arg, ##__VA_ARGS__))
-#define DDL_DEBUG(arg, ...)                                                    \
+#define DDL_DEBUG(arg, ...) \
   DDL_LOG(mozilla::LogLevel::Debug, arg, ##__VA_ARGS__)
 #define DDL_INFO(arg, ...) DDL_LOG(mozilla::LogLevel::Info, arg, ##__VA_ARGS__)
-#define DDL_WARN(arg, ...)                                                     \
+#define DDL_WARN(arg, ...) \
   DDL_LOG(mozilla::LogLevel::Warning, arg, ##__VA_ARGS__)
 
 // Output at shutdown the log given to DecoderDoctorLogger.
 extern mozilla::LazyLogModule sDecoderDoctorLoggerEndLog;
-#define DDLE_LOG(level, arg, ...)                                              \
+#define DDLE_LOG(level, arg, ...) \
   MOZ_LOG(sDecoderDoctorLoggerEndLog, level, (arg, ##__VA_ARGS__))
-#define DDLE_DEBUG(arg, ...)                                                   \
+#define DDLE_DEBUG(arg, ...) \
   DDLE_LOG(mozilla::LogLevel::Debug, arg, ##__VA_ARGS__)
-#define DDLE_INFO(arg, ...)                                                    \
+#define DDLE_INFO(arg, ...) \
   DDLE_LOG(mozilla::LogLevel::Info, arg, ##__VA_ARGS__)
-#define DDLE_WARN(arg, ...)                                                    \
+#define DDLE_WARN(arg, ...) \
   DDLE_LOG(mozilla::LogLevel::Warning, arg, ##__VA_ARGS__)
 
-#endif // DDLogUtils_h_
+#endif  // DDLogUtils_h_

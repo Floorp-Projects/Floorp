@@ -29,11 +29,9 @@ namespace gmp {
 
 class GMPContentParent;
 
-class ChromiumCDMParent final
-  : public PChromiumCDMParent
-  , public GMPCrashHelperHolder
-{
-public:
+class ChromiumCDMParent final : public PChromiumCDMParent,
+                                public GMPCrashHelperHolder {
+ public:
   typedef MozPromise<bool, MediaResult, /* IsExclusive = */ true> InitPromise;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ChromiumCDMParent)
@@ -47,21 +45,17 @@ public:
                            bool aAllowPersistentState,
                            nsIEventTarget* aMainThread);
 
-  void CreateSession(uint32_t aCreateSessionToken,
-                     uint32_t aSessionType,
-                     uint32_t aInitDataType,
-                     uint32_t aPromiseId,
+  void CreateSession(uint32_t aCreateSessionToken, uint32_t aSessionType,
+                     uint32_t aInitDataType, uint32_t aPromiseId,
                      const nsTArray<uint8_t>& aInitData);
 
-  void LoadSession(uint32_t aPromiseId,
-                   uint32_t aSessionType,
+  void LoadSession(uint32_t aPromiseId, uint32_t aSessionType,
                    nsString aSessionId);
 
   void SetServerCertificate(uint32_t aPromiseId,
                             const nsTArray<uint8_t>& aCert);
 
-  void UpdateSession(const nsCString& aSessionId,
-                     uint32_t aPromiseId,
+  void UpdateSession(const nsCString& aSessionId, uint32_t aPromiseId,
                      const nsTArray<uint8_t>& aResponse);
 
   void CloseSession(const nsCString& aSessionId, uint32_t aPromiseId);
@@ -76,12 +70,11 @@ public:
   // TODO: Add functions for clients to send data to CDM, and
   // a Close() function.
   RefPtr<MediaDataDecoder::InitPromise> InitializeVideoDecoder(
-    const gmp::CDMVideoDecoderConfig& aConfig,
-    const VideoInfo& aInfo,
-    RefPtr<layers::ImageContainer> aImageContainer);
+      const gmp::CDMVideoDecoderConfig& aConfig, const VideoInfo& aInfo,
+      RefPtr<layers::ImageContainer> aImageContainer);
 
   RefPtr<MediaDataDecoder::DecodePromise> DecryptAndDecodeFrame(
-    MediaRawData* aSample);
+      MediaRawData* aSample);
 
   RefPtr<MediaDataDecoder::FlushPromise> FlushVideoDecoder();
 
@@ -91,19 +84,16 @@ public:
 
   void Shutdown();
 
-protected:
+ protected:
   ~ChromiumCDMParent() {}
 
   ipc::IPCResult Recv__delete__() override;
   ipc::IPCResult RecvOnResolvePromiseWithKeyStatus(
-    const uint32_t& aPromiseId,
-    const uint32_t& aKeyStatus) override;
+      const uint32_t& aPromiseId, const uint32_t& aKeyStatus) override;
   ipc::IPCResult RecvOnResolveNewSessionPromise(
-    const uint32_t& aPromiseId,
-    const nsCString& aSessionId) override;
+      const uint32_t& aPromiseId, const nsCString& aSessionId) override;
   ipc::IPCResult RecvResolveLoadSessionPromise(
-    const uint32_t& aPromiseId,
-    const bool& aSuccessful) override;
+      const uint32_t& aPromiseId, const bool& aSuccessful) override;
   ipc::IPCResult RecvOnResolvePromise(const uint32_t& aPromiseId) override;
   ipc::IPCResult RecvOnRejectPromise(const uint32_t& aPromiseId,
                                      const uint32_t& aError,
@@ -113,14 +103,12 @@ protected:
                                       const uint32_t& aMessageType,
                                       nsTArray<uint8_t>&& aMessage) override;
   ipc::IPCResult RecvOnSessionKeysChange(
-    const nsCString& aSessionId,
-    nsTArray<CDMKeyInformation>&& aKeysInfo) override;
+      const nsCString& aSessionId,
+      nsTArray<CDMKeyInformation>&& aKeysInfo) override;
   ipc::IPCResult RecvOnExpirationChange(
-    const nsCString& aSessionId,
-    const double& aSecondsSinceEpoch) override;
+      const nsCString& aSessionId, const double& aSecondsSinceEpoch) override;
   ipc::IPCResult RecvOnSessionClosed(const nsCString& aSessionId) override;
-  ipc::IPCResult RecvDecrypted(const uint32_t& aId,
-                               const uint32_t& aStatus,
+  ipc::IPCResult RecvDecrypted(const uint32_t& aId, const uint32_t& aStatus,
                                ipc::Shmem&& aData) override;
   ipc::IPCResult RecvDecryptFailed(const uint32_t& aId,
                                    const uint32_t& aStatus) override;
@@ -139,8 +127,7 @@ protected:
 
   void ReorderAndReturnOutput(RefPtr<VideoData>&& aFrame);
 
-  void RejectPromise(uint32_t aPromiseId,
-                     nsresult aError,
+  void RejectPromise(uint32_t aPromiseId, nsresult aError,
                      const nsCString& aErrorMessage);
 
   void ResolvePromise(uint32_t aPromiseId);
@@ -154,8 +141,8 @@ protected:
 
   const uint32_t mPluginId;
   GMPContentParent* mContentParent;
-  // Note: this pointer is a weak reference as ChromiumCDMProxy has a strong reference to the
-  // ChromiumCDMCallback.
+  // Note: this pointer is a weak reference as ChromiumCDMProxy has a strong
+  // reference to the ChromiumCDMCallback.
   ChromiumCDMCallback* mCDMCallback = nullptr;
   nsDataHashtable<nsUint32HashKey, uint32_t> mPromiseToCreateSessionToken;
   nsTArray<RefPtr<DecryptJob>> mDecrypts;
@@ -197,7 +184,7 @@ protected:
   nsCOMPtr<nsIEventTarget> mMainThread;
 };
 
-} // namespace gmp
-} // namespace mozilla
+}  // namespace gmp
+}  // namespace mozilla
 
-#endif // ChromiumCDMParent_h_
+#endif  // ChromiumCDMParent_h_

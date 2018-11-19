@@ -18,11 +18,9 @@
 
 namespace mozilla {
 
-already_AddRefed<BaseMediaResource>
-BaseMediaResource::Create(MediaResourceCallback* aCallback,
-                          nsIChannel* aChannel,
-                          bool aIsPrivateBrowsing)
-{
+already_AddRefed<BaseMediaResource> BaseMediaResource::Create(
+    MediaResourceCallback* aCallback, nsIChannel* aChannel,
+    bool aIsPrivateBrowsing) {
   NS_ASSERTION(NS_IsMainThread(),
                "MediaResource::Open called on non-main thread");
 
@@ -36,7 +34,7 @@ BaseMediaResource::Create(MediaResourceCallback* aCallback,
   nsAutoCString contentTypeString;
   aChannel->GetContentType(contentTypeString);
   Maybe<MediaContainerType> containerType =
-    MakeMediaContainerType(contentTypeString);
+      MakeMediaContainerType(contentTypeString);
   if (!containerType) {
     return nullptr;
   }
@@ -45,7 +43,7 @@ BaseMediaResource::Create(MediaResourceCallback* aCallback,
   nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(aChannel);
   if (fc) {
     RefPtr<BaseMediaResource> resource =
-      new FileMediaResource(aCallback, aChannel, uri);
+        new FileMediaResource(aCallback, aChannel, uri);
     return resource.forget();
   }
 
@@ -75,28 +73,26 @@ BaseMediaResource::Create(MediaResourceCallback* aCallback,
     nsCOMPtr<nsISeekableStream> seekableStream = do_QueryInterface(stream);
     if (seekableStream) {
       RefPtr<BaseMediaResource> resource =
-        new FileMediaResource(aCallback, aChannel, uri, size);
+          new FileMediaResource(aCallback, aChannel, uri, size);
       return resource.forget();
     }
 
     // Maybe this blob URL can be cloned with a range.
     nsCOMPtr<nsICloneableInputStreamWithRange> cloneableWithRange =
-      do_QueryInterface(stream);
+        do_QueryInterface(stream);
     if (cloneableWithRange) {
       RefPtr<BaseMediaResource> resource = new CloneableWithRangeMediaResource(
-        aCallback, aChannel, uri, stream, size);
+          aCallback, aChannel, uri, stream, size);
       return resource.forget();
     }
   }
 
   RefPtr<BaseMediaResource> resource =
-    new ChannelMediaResource(aCallback, aChannel, uri, aIsPrivateBrowsing);
+      new ChannelMediaResource(aCallback, aChannel, uri, aIsPrivateBrowsing);
   return resource.forget();
 }
 
-void
-BaseMediaResource::SetLoadInBackground(bool aLoadInBackground)
-{
+void BaseMediaResource::SetLoadInBackground(bool aLoadInBackground) {
   if (aLoadInBackground == mLoadInBackground) {
     return;
   }
@@ -132,9 +128,7 @@ BaseMediaResource::SetLoadInBackground(bool aLoadInBackground)
   }
 }
 
-void
-BaseMediaResource::ModifyLoadFlags(nsLoadFlags aFlags)
-{
+void BaseMediaResource::ModifyLoadFlags(nsLoadFlags aFlags) {
   nsCOMPtr<nsILoadGroup> loadGroup;
   nsresult rv = mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
   MOZ_ASSERT(NS_SUCCEEDED(rv), "GetLoadGroup() failed!");
@@ -159,4 +153,4 @@ BaseMediaResource::ModifyLoadFlags(nsLoadFlags aFlags)
   }
 }
 
-} // namespace mozilla
+}  // namespace mozilla

@@ -15,9 +15,7 @@
 
 namespace mozilla {
 
-void
-FileMediaResource::EnsureSizeInitialized()
-{
+void FileMediaResource::EnsureSizeInitialized() {
   mLock.AssertCurrentThreadOwns();
   NS_ASSERTION(mInput, "Must have file input stream");
   if (mSizeInitialized && mNotifyDataEndedProcessed) {
@@ -34,18 +32,14 @@ FileMediaResource::EnsureSizeInitialized()
   }
   mSizeInitialized = true;
   if (!mNotifyDataEndedProcessed && mSize >= 0) {
-    mCallback->AbstractMainThread()->Dispatch(
-      NewRunnableMethod<nsresult>("MediaResourceCallback::NotifyDataEnded",
-                                  mCallback.get(),
-                                  &MediaResourceCallback::NotifyDataEnded,
-                                  NS_OK));
+    mCallback->AbstractMainThread()->Dispatch(NewRunnableMethod<nsresult>(
+        "MediaResourceCallback::NotifyDataEnded", mCallback.get(),
+        &MediaResourceCallback::NotifyDataEnded, NS_OK));
   }
   mNotifyDataEndedProcessed = true;
 }
 
-nsresult
-FileMediaResource::GetCachedRanges(MediaByteRangeSet& aRanges)
-{
+nsresult FileMediaResource::GetCachedRanges(MediaByteRangeSet& aRanges) {
   MutexAutoLock lock(mLock);
 
   EnsureSizeInitialized();
@@ -56,9 +50,7 @@ FileMediaResource::GetCachedRanges(MediaByteRangeSet& aRanges)
   return NS_OK;
 }
 
-nsresult
-FileMediaResource::Open(nsIStreamListener** aStreamListener)
-{
+nsresult FileMediaResource::Open(nsIStreamListener** aStreamListener) {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   MOZ_ASSERT(aStreamListener);
 
@@ -74,8 +66,8 @@ FileMediaResource::Open(nsIStreamListener** aStreamListener)
     rv = fc->GetFile(getter_AddRefs(file));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = NS_NewLocalFileInputStream(
-      getter_AddRefs(mInput), file, -1, -1, nsIFileInputStream::SHARE_DELETE);
+    rv = NS_NewLocalFileInputStream(getter_AddRefs(mInput), file, -1, -1,
+                                    nsIFileInputStream::SHARE_DELETE);
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (dom::IsBlobURI(mURI)) {
     RefPtr<dom::BlobImpl> blobImpl;
@@ -102,9 +94,7 @@ FileMediaResource::Open(nsIStreamListener** aStreamListener)
   return NS_OK;
 }
 
-nsresult
-FileMediaResource::Close()
-{
+nsresult FileMediaResource::Close() {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   // Since mChennel is only accessed by main thread, there is no necessary to
@@ -117,23 +107,18 @@ FileMediaResource::Close()
   return NS_OK;
 }
 
-already_AddRefed<nsIPrincipal>
-FileMediaResource::GetCurrentPrincipal()
-{
+already_AddRefed<nsIPrincipal> FileMediaResource::GetCurrentPrincipal() {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
   nsCOMPtr<nsIPrincipal> principal;
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  if (!secMan || !mChannel)
-    return nullptr;
+  if (!secMan || !mChannel) return nullptr;
   secMan->GetChannelResultPrincipal(mChannel, getter_AddRefs(principal));
   return principal.forget();
 }
 
-nsresult
-FileMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset,
-                                 uint32_t aCount)
-{
+nsresult FileMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset,
+                                          uint32_t aCount) {
   MutexAutoLock lock(mLock);
 
   EnsureSizeInitialized();
@@ -142,9 +127,9 @@ FileMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset,
   }
   int64_t offset = 0;
   nsresult res = mSeekable->Tell(&offset);
-  NS_ENSURE_SUCCESS(res,res);
+  NS_ENSURE_SUCCESS(res, res);
   res = mSeekable->Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
-  NS_ENSURE_SUCCESS(res,res);
+  NS_ENSURE_SUCCESS(res, res);
   uint32_t bytesRead = 0;
   do {
     uint32_t x = 0;
@@ -161,23 +146,20 @@ FileMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset,
   nsresult seekres = mSeekable->Seek(nsISeekableStream::NS_SEEK_SET, offset);
 
   // If a read failed in the loop above, we want to return its failure code.
-  NS_ENSURE_SUCCESS(res,res);
+  NS_ENSURE_SUCCESS(res, res);
 
   // Else we succeed if the reset-seek succeeds.
   return seekres;
 }
 
-nsresult
-FileMediaResource::UnsafeRead(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
-{
+nsresult FileMediaResource::UnsafeRead(char* aBuffer, uint32_t aCount,
+                                       uint32_t* aBytes) {
   EnsureSizeInitialized();
   return mInput->Read(aBuffer, aCount, aBytes);
 }
 
-nsresult
-FileMediaResource::ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
-                          uint32_t* aBytes)
-{
+nsresult FileMediaResource::ReadAt(int64_t aOffset, char* aBuffer,
+                                   uint32_t aCount, uint32_t* aBytes) {
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
   nsresult rv;
@@ -190,9 +172,8 @@ FileMediaResource::ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
   return rv;
 }
 
-already_AddRefed<MediaByteBuffer>
-FileMediaResource::UnsafeMediaReadAt(int64_t aOffset, uint32_t aCount)
-{
+already_AddRefed<MediaByteBuffer> FileMediaResource::UnsafeMediaReadAt(
+    int64_t aOffset, uint32_t aCount) {
   RefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
   bool ok = bytes->SetLength(aCount, fallible);
   NS_ENSURE_TRUE(ok, nullptr);
@@ -214,15 +195,12 @@ FileMediaResource::UnsafeMediaReadAt(int64_t aOffset, uint32_t aCount)
   return bytes.forget();
 }
 
-nsresult
-FileMediaResource::UnsafeSeek(int32_t aWhence, int64_t aOffset)
-{
+nsresult FileMediaResource::UnsafeSeek(int32_t aWhence, int64_t aOffset) {
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
-  if (!mSeekable)
-    return NS_ERROR_FAILURE;
+  if (!mSeekable) return NS_ERROR_FAILURE;
   EnsureSizeInitialized();
   return mSeekable->Seek(aWhence, aOffset);
 }
 
-} // mozilla namespace
+}  // namespace mozilla

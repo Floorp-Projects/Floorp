@@ -18,34 +18,23 @@
 
 extern mozilla::LogModule* GetMediaSourceLog();
 
-#define MSE_DEBUG(arg, ...)                                                    \
-  DDMOZ_LOG(GetMediaSourceLog(),                                               \
-            mozilla::LogLevel::Debug,                                          \
-            "::%s: " arg,                                                      \
-            __func__,                                                          \
-            ##__VA_ARGS__)
-#define MSE_DEBUGV(arg, ...)                                                   \
-  DDMOZ_LOG(GetMediaSourceLog(),                                               \
-            mozilla::LogLevel::Verbose,                                        \
-            "::%s: " arg,                                                      \
-            __func__,                                                          \
-            ##__VA_ARGS__)
+#define MSE_DEBUG(arg, ...)                                              \
+  DDMOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Debug, "::%s: " arg, \
+            __func__, ##__VA_ARGS__)
+#define MSE_DEBUGV(arg, ...)                                               \
+  DDMOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Verbose, "::%s: " arg, \
+            __func__, ##__VA_ARGS__)
 
 using namespace mozilla::media;
 
 namespace mozilla {
 
 MediaSourceDecoder::MediaSourceDecoder(MediaDecoderInit& aInit)
-  : MediaDecoder(aInit)
-  , mMediaSource(nullptr)
-  , mEnded(false)
-{
+    : MediaDecoder(aInit), mMediaSource(nullptr), mEnded(false) {
   mExplicitDuration.emplace(UnspecifiedNaN<double>());
 }
 
-MediaDecoderStateMachine*
-MediaSourceDecoder::CreateStateMachine()
-{
+MediaDecoderStateMachine* MediaSourceDecoder::CreateStateMachine() {
   MOZ_ASSERT(NS_IsMainThread());
   mDemuxer = new MediaSourceDemuxer(AbstractMainThread());
   MediaFormatReaderInit init;
@@ -58,9 +47,7 @@ MediaSourceDecoder::CreateStateMachine()
   return new MediaDecoderStateMachine(this, mReader);
 }
 
-nsresult
-MediaSourceDecoder::Load(nsIPrincipal* aPrincipal)
-{
+nsresult MediaSourceDecoder::Load(nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!GetStateMachine());
   AbstractThread::AutoEnter context(AbstractMainThread());
@@ -86,9 +73,7 @@ MediaSourceDecoder::Load(nsIPrincipal* aPrincipal)
   return NS_OK;
 }
 
-media::TimeIntervals
-MediaSourceDecoder::GetSeekable()
-{
+media::TimeIntervals MediaSourceDecoder::GetSeekable() {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
   if (!mMediaSource) {
@@ -108,12 +93,12 @@ MediaSourceDecoder::GetSeekable()
       // 1. Let union ranges be the union of live seekable range and the
       // HTMLMediaElement.buffered attribute.
       media::TimeIntervals unionRanges =
-        buffered + mMediaSource->LiveSeekableRange();
+          buffered + mMediaSource->LiveSeekableRange();
       // 2. Return a single range with a start time equal to the earliest start
       // time in union ranges and an end time equal to the highest end time in
       // union ranges and abort these steps.
       seekable +=
-        media::TimeInterval(unionRanges.GetStart(), unionRanges.GetEnd());
+          media::TimeInterval(unionRanges.GetStart(), unionRanges.GetEnd());
       return seekable;
     }
 
@@ -121,16 +106,14 @@ MediaSourceDecoder::GetSeekable()
       seekable += media::TimeInterval(TimeUnit::Zero(), buffered.GetEnd());
     }
   } else {
-    seekable += media::TimeInterval(TimeUnit::Zero(),
-                                    TimeUnit::FromSeconds(duration));
+    seekable +=
+        media::TimeInterval(TimeUnit::Zero(), TimeUnit::FromSeconds(duration));
   }
   MSE_DEBUG("ranges=%s", DumpTimeRanges(seekable).get());
   return seekable;
 }
 
-media::TimeIntervals
-MediaSourceDecoder::GetBuffered()
-{
+media::TimeIntervals MediaSourceDecoder::GetBuffered() {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
 
@@ -154,7 +137,7 @@ MediaSourceDecoder::GetBuffered()
 
     activeRanges.AppendElement(sb->GetTimeIntervals());
     highestEndTime =
-      std::max(highestEndTime, activeRanges.LastElement().GetEnd());
+        std::max(highestEndTime, activeRanges.LastElement().GetEnd());
   }
 
   buffered += media::TimeInterval(TimeUnit::Zero(), highestEndTime);
@@ -164,8 +147,7 @@ MediaSourceDecoder::GetBuffered()
       // Set the end time on the last range to highestEndTime by adding a
       // new range spanning the current end time to highestEndTime, which
       // Normalize() will then merge with the old last range.
-      range +=
-        media::TimeInterval(range.GetEnd(), highestEndTime);
+      range += media::TimeInterval(range.GetEnd(), highestEndTime);
     }
     buffered.Intersection(range);
   }
@@ -174,9 +156,7 @@ MediaSourceDecoder::GetBuffered()
   return buffered;
 }
 
-void
-MediaSourceDecoder::Shutdown()
-{
+void MediaSourceDecoder::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
   MSE_DEBUG("Shutdown");
@@ -190,25 +170,19 @@ MediaSourceDecoder::Shutdown()
   MediaDecoder::Shutdown();
 }
 
-void
-MediaSourceDecoder::AttachMediaSource(dom::MediaSource* aMediaSource)
-{
+void MediaSourceDecoder::AttachMediaSource(dom::MediaSource* aMediaSource) {
   MOZ_ASSERT(!mMediaSource && !GetStateMachine() && NS_IsMainThread());
   mMediaSource = aMediaSource;
   DDLINKCHILD("mediasource", aMediaSource);
 }
 
-void
-MediaSourceDecoder::DetachMediaSource()
-{
+void MediaSourceDecoder::DetachMediaSource() {
   MOZ_ASSERT(mMediaSource && NS_IsMainThread());
   DDUNLINKCHILD(mMediaSource);
   mMediaSource = nullptr;
 }
 
-void
-MediaSourceDecoder::Ended(bool aEnded)
-{
+void MediaSourceDecoder::Ended(bool aEnded) {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
   if (aEnded) {
@@ -220,9 +194,7 @@ MediaSourceDecoder::Ended(bool aEnded)
   GetStateMachine()->DispatchIsLiveStream(!mEnded);
 }
 
-void
-MediaSourceDecoder::AddSizeOfResources(ResourceSizes* aSizes)
-{
+void MediaSourceDecoder::AddSizeOfResources(ResourceSizes* aSizes) {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
   if (GetDemuxer()) {
@@ -230,9 +202,7 @@ MediaSourceDecoder::AddSizeOfResources(ResourceSizes* aSizes)
   }
 }
 
-void
-MediaSourceDecoder::SetInitialDuration(int64_t aDuration)
-{
+void MediaSourceDecoder::SetInitialDuration(int64_t aDuration) {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
   // Only use the decoded duration if one wasn't already
@@ -248,9 +218,7 @@ MediaSourceDecoder::SetInitialDuration(int64_t aDuration)
   SetMediaSourceDuration(duration);
 }
 
-void
-MediaSourceDecoder::SetMediaSourceDuration(double aDuration)
-{
+void MediaSourceDecoder::SetMediaSourceDuration(double aDuration) {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
   MOZ_ASSERT(!IsShutdown());
@@ -267,9 +235,7 @@ MediaSourceDecoder::SetMediaSourceDuration(double aDuration)
   }
 }
 
-void
-MediaSourceDecoder::GetMozDebugReaderData(nsACString& aString)
-{
+void MediaSourceDecoder::GetMozDebugReaderData(nsACString& aString) {
   aString += NS_LITERAL_CSTRING("Container Type: MediaSource\n");
   if (mReader && mDemuxer) {
     mReader->GetMozDebugReaderData(aString);
@@ -277,17 +243,14 @@ MediaSourceDecoder::GetMozDebugReaderData(nsACString& aString)
   }
 }
 
-double
-MediaSourceDecoder::GetDuration()
-{
+double MediaSourceDecoder::GetDuration() {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
   return ExplicitDuration();
 }
 
 MediaDecoderOwner::NextFrameStatus
-MediaSourceDecoder::NextFrameBufferedStatus()
-{
+MediaSourceDecoder::NextFrameBufferedStatus() {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
 
@@ -302,16 +265,13 @@ MediaSourceDecoder::NextFrameBufferedStatus()
   TimeIntervals buffered = GetBuffered();
   buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ / 2);
   TimeInterval interval(
-    currentPosition,
-    currentPosition + DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED);
+      currentPosition, currentPosition + DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED);
   return buffered.ContainsWithStrictEnd(ClampIntervalToEnd(interval))
-         ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
-         : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
+             ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
+             : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
 }
 
-bool
-MediaSourceDecoder::CanPlayThroughImpl()
-{
+bool MediaSourceDecoder::CanPlayThroughImpl() {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
 
@@ -333,14 +293,13 @@ MediaSourceDecoder::CanPlayThroughImpl()
   TimeIntervals buffered = GetBuffered();
   buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ / 2);
   TimeUnit timeAhead =
-    std::min(duration, currentPosition + TimeUnit::FromSeconds(10));
+      std::min(duration, currentPosition + TimeUnit::FromSeconds(10));
   TimeInterval interval(currentPosition, timeAhead);
   return buffered.ContainsWithStrictEnd(ClampIntervalToEnd(interval));
 }
 
-TimeInterval
-MediaSourceDecoder::ClampIntervalToEnd(const TimeInterval& aInterval)
-{
+TimeInterval MediaSourceDecoder::ClampIntervalToEnd(
+    const TimeInterval& aInterval) {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
 
@@ -351,14 +310,11 @@ MediaSourceDecoder::ClampIntervalToEnd(const TimeInterval& aInterval)
   if (duration < aInterval.mStart) {
     return aInterval;
   }
-  return TimeInterval(aInterval.mStart,
-                      std::min(aInterval.mEnd, duration),
+  return TimeInterval(aInterval.mStart, std::min(aInterval.mEnd, duration),
                       aInterval.mFuzz);
 }
 
-void
-MediaSourceDecoder::NotifyInitDataArrived()
-{
+void MediaSourceDecoder::NotifyInitDataArrived() {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
 
@@ -367,9 +323,7 @@ MediaSourceDecoder::NotifyInitDataArrived()
   }
 }
 
-void
-MediaSourceDecoder::NotifyDataArrived()
-{
+void MediaSourceDecoder::NotifyDataArrived() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   AbstractThread::AutoEnter context(AbstractMainThread());
@@ -377,9 +331,7 @@ MediaSourceDecoder::NotifyDataArrived()
   GetOwner()->DownloadProgressed();
 }
 
-already_AddRefed<nsIPrincipal>
-MediaSourceDecoder::GetCurrentPrincipal()
-{
+already_AddRefed<nsIPrincipal> MediaSourceDecoder::GetCurrentPrincipal() {
   MOZ_ASSERT(NS_IsMainThread());
   return do_AddRef(mPrincipal);
 }
@@ -387,4 +339,4 @@ MediaSourceDecoder::GetCurrentPrincipal()
 #undef MSE_DEBUG
 #undef MSE_DEBUGV
 
-} // namespace mozilla
+}  // namespace mozilla

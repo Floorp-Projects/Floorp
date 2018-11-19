@@ -28,20 +28,19 @@ class HLSTrackDemuxer;
 DDLoggedTypeDeclNameAndBase(HLSDemuxer, MediaDataDemuxer);
 DDLoggedTypeNameAndBase(HLSTrackDemuxer, MediaTrackDemuxer);
 
-class HLSDemuxer final
-  : public MediaDataDemuxer
-  , public DecoderDoctorLifeLogger<HLSDemuxer>
-{
+class HLSDemuxer final : public MediaDataDemuxer,
+                         public DecoderDoctorLifeLogger<HLSDemuxer> {
   class HLSDemuxerCallbacksSupport;
-public:
+
+ public:
   explicit HLSDemuxer(int aPlayerId);
 
   RefPtr<InitPromise> Init() override;
 
   uint32_t GetNumberTracks(TrackInfo::TrackType aType) const override;
 
-  already_AddRefed<MediaTrackDemuxer>
-  GetTrackDemuxer(TrackInfo::TrackType aType, uint32_t aTrackNumber) override;
+  already_AddRefed<MediaTrackDemuxer> GetTrackDemuxer(
+      TrackInfo::TrackType aType, uint32_t aTrackNumber) override;
 
   bool IsSeekable() const override;
 
@@ -55,7 +54,7 @@ public:
   void OnInitialized(bool aHasAudio, bool aHasVideo);
   void OnError(int aErrorCode);
 
-private:
+ private:
   media::TimeUnit GetNextKeyFrameTime();
 
   bool OnTaskQueue() const;
@@ -73,13 +72,10 @@ private:
   java::GeckoHLSDemuxerWrapper::GlobalRef mHLSDemuxerWrapper;
 };
 
-class HLSTrackDemuxer
-  : public MediaTrackDemuxer
-  , public DecoderDoctorLifeLogger<HLSTrackDemuxer>
-{
-public:
-  HLSTrackDemuxer(HLSDemuxer* aParent,
-                  TrackInfo::TrackType aType,
+class HLSTrackDemuxer : public MediaTrackDemuxer,
+                        public DecoderDoctorLifeLogger<HLSTrackDemuxer> {
+ public:
+  HLSTrackDemuxer(HLSDemuxer* aParent, TrackInfo::TrackType aType,
                   UniquePtr<TrackInfo> aTrackInfo);
   ~HLSTrackDemuxer();
   UniquePtr<TrackInfo> GetInfo() const override;
@@ -95,23 +91,20 @@ public:
   nsresult GetNextRandomAccessPoint(media::TimeUnit* aTime) override;
 
   RefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(
-    const media::TimeUnit& aTimeThreshold) override;
+      const media::TimeUnit& aTimeThreshold) override;
 
   media::TimeIntervals GetBuffered() override;
 
   void BreakCycles() override;
 
-  bool GetSamplesMayBlock() const override
-  {
-    return false;
-  }
+  bool GetSamplesMayBlock() const override { return false; }
 
-  bool IsTrackValid() const
-  {
+  bool IsTrackValid() const {
     MutexAutoLock lock(mMutex);
     return mTrackInfo->IsValid();
   }
-private:
+
+ private:
   // Update the timestamp of the next keyframe if there's one.
   void UpdateNextKeyFrameTime();
 
@@ -119,11 +112,12 @@ private:
   RefPtr<SeekPromise> DoSeek(const media::TimeUnit& aTime);
   RefPtr<SamplesPromise> DoGetSamples(int32_t aNumSamples);
   RefPtr<SkipAccessPointPromise> DoSkipToNextRandomAccessPoint(
-    const media::TimeUnit& aTimeThreshold);
+      const media::TimeUnit& aTimeThreshold);
 
   CryptoSample ExtractCryptoSample(size_t aSampleSize,
                                    java::sdk::CryptoInfo::LocalRef aCryptoInfo);
-  RefPtr<MediaRawData> ConvertToMediaRawData(java::GeckoHLSSample::LocalRef aSample);
+  RefPtr<MediaRawData> ConvertToMediaRawData(
+      java::GeckoHLSSample::LocalRef aSample);
 
   RefPtr<HLSDemuxer> mParent;
   TrackInfo::TrackType mType;
@@ -137,6 +131,6 @@ private:
   UniquePtr<TrackInfo> mTrackInfo;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif

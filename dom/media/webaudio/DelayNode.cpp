@@ -16,8 +16,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(DelayNode, AudioNode,
-                                   mDelay)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DelayNode, AudioNode, mDelay)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DelayNode)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)
@@ -25,63 +24,55 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(DelayNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(DelayNode, AudioNode)
 
-class DelayNodeEngine final : public AudioNodeEngine
-{
+class DelayNodeEngine final : public AudioNodeEngine {
   typedef PlayingRefChangeHandler PlayingRefChanged;
-public:
+
+ public:
   DelayNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination,
                   float aMaxDelayTicks)
-    : AudioNodeEngine(aNode)
-    , mDestination(aDestination->Stream())
-    // Keep the default value in sync with the default value in DelayNode::DelayNode.
-    , mDelay(0.f)
-    // Use a smoothing range of 20ms
-    , mBuffer(std::max(aMaxDelayTicks,
-                       static_cast<float>(WEBAUDIO_BLOCK_SIZE)))
-    , mMaxDelay(aMaxDelayTicks)
-    , mHaveProducedBeforeInput(false)
-    , mLeftOverData(INT32_MIN)
-  {
-  }
+      : AudioNodeEngine(aNode),
+        mDestination(aDestination->Stream())
+        // Keep the default value in sync with the default value in
+        // DelayNode::DelayNode.
+        ,
+        mDelay(0.f)
+        // Use a smoothing range of 20ms
+        ,
+        mBuffer(
+            std::max(aMaxDelayTicks, static_cast<float>(WEBAUDIO_BLOCK_SIZE))),
+        mMaxDelay(aMaxDelayTicks),
+        mHaveProducedBeforeInput(false),
+        mLeftOverData(INT32_MIN) {}
 
-  DelayNodeEngine* AsDelayNodeEngine() override
-  {
-    return this;
-  }
+  DelayNodeEngine* AsDelayNodeEngine() override { return this; }
 
   enum Parameters {
     DELAY,
   };
-  void RecvTimelineEvent(uint32_t aIndex,
-                         AudioTimelineEvent& aEvent) override
-  {
+  void RecvTimelineEvent(uint32_t aIndex, AudioTimelineEvent& aEvent) override {
     MOZ_ASSERT(mDestination);
-    WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent,
-                                                    mDestination);
+    WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent, mDestination);
 
     switch (aIndex) {
-    case DELAY:
-      mDelay.InsertEvent<int64_t>(aEvent);
-      break;
-    default:
-      NS_ERROR("Bad DelayNodeEngine TimelineParameter");
+      case DELAY:
+        mDelay.InsertEvent<int64_t>(aEvent);
+        break;
+      default:
+        NS_ERROR("Bad DelayNodeEngine TimelineParameter");
     }
   }
 
-  void ProcessBlock(AudioNodeStream* aStream,
-                    GraphTime aFrom,
-                    const AudioBlock& aInput,
-                    AudioBlock* aOutput,
-                    bool* aFinished) override
-  {
+  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+                    const AudioBlock& aInput, AudioBlock* aOutput,
+                    bool* aFinished) override {
     MOZ_ASSERT(aStream->SampleRate() == mDestination->SampleRate());
 
     if (!aInput.IsSilentOrSubnormal()) {
       if (mLeftOverData <= 0) {
         RefPtr<PlayingRefChanged> refchanged =
-          new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
+            new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
         aStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
-          refchanged.forget());
+            refchanged.forget());
       }
       mLeftOverData = mBuffer.MaxDelayTicks();
     } else if (mLeftOverData > 0) {
@@ -95,9 +86,9 @@ public:
         mBuffer.Reset();
 
         RefPtr<PlayingRefChanged> refchanged =
-          new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
+            new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
         aStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
-          refchanged.forget());
+            refchanged.forget());
       }
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
       return;
@@ -115,18 +106,17 @@ public:
   }
 
   void UpdateOutputBlock(AudioNodeStream* aStream, GraphTime aFrom,
-                         AudioBlock* aOutput, float minDelay)
-  {
+                         AudioBlock* aOutput, float minDelay) {
     float maxDelay = mMaxDelay;
     float sampleRate = aStream->SampleRate();
     ChannelInterpretation channelInterpretation =
-      aStream->GetChannelInterpretation();
+        aStream->GetChannelInterpretation();
     if (mDelay.HasSimpleValue()) {
       // If this DelayNode is in a cycle, make sure the delay value is at least
       // one block, even if that is greater than maxDelay.
       float delayFrames = mDelay.GetValue() * sampleRate;
       float delayFramesClamped =
-        std::max(minDelay, std::min(delayFrames, maxDelay));
+          std::max(minDelay, std::min(delayFrames, maxDelay));
       mBuffer.Read(delayFramesClamped, aOutput, channelInterpretation);
     } else {
       // Compute the delay values for the duration of the input AudioChunk
@@ -134,23 +124,21 @@ public:
       // one block.
       StreamTime tick = mDestination->GraphTimeToStreamTime(aFrom);
       float values[WEBAUDIO_BLOCK_SIZE];
-      mDelay.GetValuesAtTime(tick, values,WEBAUDIO_BLOCK_SIZE);
+      mDelay.GetValuesAtTime(tick, values, WEBAUDIO_BLOCK_SIZE);
 
       float computedDelay[WEBAUDIO_BLOCK_SIZE];
       for (size_t counter = 0; counter < WEBAUDIO_BLOCK_SIZE; ++counter) {
         float delayAtTick = values[counter] * sampleRate;
         float delayAtTickClamped =
-          std::max(minDelay, std::min(delayAtTick, maxDelay));
+            std::max(minDelay, std::min(delayAtTick, maxDelay));
         computedDelay[counter] = delayAtTickClamped;
       }
       mBuffer.Read(computedDelay, aOutput, channelInterpretation);
     }
   }
 
-  void ProduceBlockBeforeInput(AudioNodeStream* aStream,
-                               GraphTime aFrom,
-                               AudioBlock* aOutput) override
-  {
+  void ProduceBlockBeforeInput(AudioNodeStream* aStream, GraphTime aFrom,
+                               AudioBlock* aOutput) override {
     if (mLeftOverData <= 0) {
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
     } else {
@@ -159,13 +147,9 @@ public:
     mHaveProducedBeforeInput = true;
   }
 
-  bool IsActive() const override
-  {
-    return mLeftOverData != INT32_MIN;
-  }
+  bool IsActive() const override { return mLeftOverData != INT32_MIN; }
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override {
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
     // Not owned:
     // - mDestination - probably not owned
@@ -174,8 +158,7 @@ public:
     return amount;
   }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
@@ -184,32 +167,25 @@ public:
   DelayBuffer mBuffer;
   float mMaxDelay;
   bool mHaveProducedBeforeInput;
-  // How much data we have in our buffer which needs to be flushed out when our inputs
-  // finish.
+  // How much data we have in our buffer which needs to be flushed out when our
+  // inputs finish.
   int32_t mLeftOverData;
 };
 
 DelayNode::DelayNode(AudioContext* aContext, double aMaxDelay)
-  : AudioNode(aContext,
-              2,
-              ChannelCountMode::Max,
-              ChannelInterpretation::Speakers)
-  , mDelay(new AudioParam(this, DelayNodeEngine::DELAY, "delayTime", 0.0f,
-                          0.f, aMaxDelay))
-{
-  DelayNodeEngine* engine =
-    new DelayNodeEngine(this, aContext->Destination(),
-                        aContext->SampleRate() * aMaxDelay);
-  mStream = AudioNodeStream::Create(aContext, engine,
-                                    AudioNodeStream::NO_STREAM_FLAGS,
-                                    aContext->Graph());
+    : AudioNode(aContext, 2, ChannelCountMode::Max,
+                ChannelInterpretation::Speakers),
+      mDelay(new AudioParam(this, DelayNodeEngine::DELAY, "delayTime", 0.0f,
+                            0.f, aMaxDelay)) {
+  DelayNodeEngine* engine = new DelayNodeEngine(
+      this, aContext->Destination(), aContext->SampleRate() * aMaxDelay);
+  mStream = AudioNodeStream::Create(
+      aContext, engine, AudioNodeStream::NO_STREAM_FLAGS, aContext->Graph());
 }
 
-/* static */ already_AddRefed<DelayNode>
-DelayNode::Create(AudioContext& aAudioContext,
-                  const DelayOptions& aOptions,
-                  ErrorResult& aRv)
-{
+/* static */ already_AddRefed<DelayNode> DelayNode::Create(
+    AudioContext& aAudioContext, const DelayOptions& aOptions,
+    ErrorResult& aRv) {
   if (aAudioContext.CheckClosed(aRv)) {
     return nullptr;
   }
@@ -219,8 +195,8 @@ DelayNode::Create(AudioContext& aAudioContext,
     return nullptr;
   }
 
-  RefPtr<DelayNode> audioNode = new DelayNode(&aAudioContext,
-                                              aOptions.mMaxDelayTime);
+  RefPtr<DelayNode> audioNode =
+      new DelayNode(&aAudioContext, aOptions.mMaxDelayTime);
 
   audioNode->Initialize(aOptions, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -231,25 +207,20 @@ DelayNode::Create(AudioContext& aAudioContext,
   return audioNode.forget();
 }
 
-size_t
-DelayNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t DelayNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   size_t amount = AudioNode::SizeOfExcludingThis(aMallocSizeOf);
   amount += mDelay->SizeOfIncludingThis(aMallocSizeOf);
   return amount;
 }
 
-size_t
-DelayNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
+size_t DelayNode::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-JSObject*
-DelayNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
+JSObject* DelayNode::WrapObject(JSContext* aCx,
+                                JS::Handle<JSObject*> aGivenProto) {
   return DelayNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla

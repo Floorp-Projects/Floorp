@@ -20,13 +20,11 @@ namespace dom {
 class nsSynthVoiceRegistry;
 class SpeechSynthesis;
 
-class SpeechSynthesisVoice final : public nsISupports,
-                                   public nsWrapperCache
-{
+class SpeechSynthesisVoice final : public nsISupports, public nsWrapperCache {
   friend class nsSynthVoiceRegistry;
   friend class SpeechSynthesis;
 
-public:
+ public:
   SpeechSynthesisVoice(nsISupports* aParent, const nsAString& aUri);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -34,7 +32,8 @@ public:
 
   nsISupports* GetParentObject() const;
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   void GetVoiceURI(nsString& aRetval) const;
 
@@ -46,7 +45,7 @@ public:
 
   bool Default() const;
 
-private:
+ private:
   virtual ~SpeechSynthesisVoice();
 
   nsCOMPtr<nsISupports> mParent;
@@ -54,7 +53,7 @@ private:
   nsString mUri;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
 #endif

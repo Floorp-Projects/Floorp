@@ -20,23 +20,17 @@ using TrackType = TrackInfo::TrackType;
 
 StaticMutex GlobalAllocPolicy::sMutex;
 
-class GlobalAllocPolicy::AutoDeallocToken : public Token
-{
-public:
-  explicit AutoDeallocToken(GlobalAllocPolicy& aPolicy) : mPolicy(aPolicy) { }
+class GlobalAllocPolicy::AutoDeallocToken : public Token {
+ public:
+  explicit AutoDeallocToken(GlobalAllocPolicy& aPolicy) : mPolicy(aPolicy) {}
 
-private:
-  ~AutoDeallocToken()
-  {
-    mPolicy.Dealloc();
-  }
+ private:
+  ~AutoDeallocToken() { mPolicy.Dealloc(); }
 
-  GlobalAllocPolicy& mPolicy; // reference to a singleton object.
+  GlobalAllocPolicy& mPolicy;  // reference to a singleton object.
 };
 
-static int32_t
-MediaDecoderLimitDefault()
-{
+static int32_t MediaDecoderLimitDefault() {
 #ifdef MOZ_WIDGET_ANDROID
   if (jni::GetAPIVersion() < 18) {
     // Older Android versions have broken support for multiple simultaneous
@@ -49,18 +43,16 @@ MediaDecoderLimitDefault()
 }
 
 GlobalAllocPolicy::GlobalAllocPolicy()
-  : mMonitor("DecoderAllocPolicy::mMonitor")
-  , mDecoderLimit(MediaDecoderLimitDefault())
-{
+    : mMonitor("DecoderAllocPolicy::mMonitor"),
+      mDecoderLimit(MediaDecoderLimitDefault()) {
   SystemGroup::Dispatch(
-    TaskCategory::Other,
-    NS_NewRunnableFunction("GlobalAllocPolicy::GlobalAllocPolicy", [this]() {
-      ClearOnShutdown(this, ShutdownPhase::ShutdownThreads);
-    }));
+      TaskCategory::Other,
+      NS_NewRunnableFunction("GlobalAllocPolicy::GlobalAllocPolicy", [this]() {
+        ClearOnShutdown(this, ShutdownPhase::ShutdownThreads);
+      }));
 }
 
-GlobalAllocPolicy::~GlobalAllocPolicy()
-{
+GlobalAllocPolicy::~GlobalAllocPolicy() {
   while (!mPromises.empty()) {
     RefPtr<PromisePrivate> p = mPromises.front().forget();
     mPromises.pop();
@@ -68,9 +60,7 @@ GlobalAllocPolicy::~GlobalAllocPolicy()
   }
 }
 
-GlobalAllocPolicy&
-GlobalAllocPolicy::Instance(TrackType aTrack)
-{
+GlobalAllocPolicy& GlobalAllocPolicy::Instance(TrackType aTrack) {
   StaticMutexAutoLock lock(sMutex);
   if (aTrack == TrackType::kAudioTrack) {
     static auto sAudioPolicy = new GlobalAllocPolicy();
@@ -81,9 +71,7 @@ GlobalAllocPolicy::Instance(TrackType aTrack)
   }
 }
 
-auto
-GlobalAllocPolicy::Alloc() -> RefPtr<Promise>
-{
+auto GlobalAllocPolicy::Alloc() -> RefPtr<Promise> {
   // No decoder limit set.
   if (mDecoderLimit < 0) {
     return Promise::CreateAndResolve(new Token(), __func__);
@@ -96,17 +84,14 @@ GlobalAllocPolicy::Alloc() -> RefPtr<Promise>
   return p.forget();
 }
 
-void
-GlobalAllocPolicy::Dealloc()
-{
+void GlobalAllocPolicy::Dealloc() {
   ReentrantMonitorAutoEnter mon(mMonitor);
   ++mDecoderLimit;
   ResolvePromise(mon);
 }
 
-void
-GlobalAllocPolicy::ResolvePromise(ReentrantMonitorAutoEnter& aProofOfLock)
-{
+void GlobalAllocPolicy::ResolvePromise(
+    ReentrantMonitorAutoEnter& aProofOfLock) {
   MOZ_ASSERT(mDecoderLimit >= 0);
 
   if (mDecoderLimit > 0 && !mPromises.empty()) {
@@ -117,42 +102,30 @@ GlobalAllocPolicy::ResolvePromise(ReentrantMonitorAutoEnter& aProofOfLock)
   }
 }
 
-void
-GlobalAllocPolicy::operator=(std::nullptr_t)
-{
-  delete this;
-}
+void GlobalAllocPolicy::operator=(std::nullptr_t) { delete this; }
 
 AllocationWrapper::AllocationWrapper(
-  already_AddRefed<MediaDataDecoder> aDecoder,
-  already_AddRefed<Token> aToken)
-  : mDecoder(aDecoder)
-  , mToken(aToken)
-{
+    already_AddRefed<MediaDataDecoder> aDecoder, already_AddRefed<Token> aToken)
+    : mDecoder(aDecoder), mToken(aToken) {
   DecoderDoctorLogger::LogConstructionAndBase(
-    "AllocationWrapper", this, static_cast<const MediaDataDecoder*>(this));
-  DecoderDoctorLogger::LinkParentAndChild(
-    "AllocationWrapper", this, "decoder", mDecoder.get());
+      "AllocationWrapper", this, static_cast<const MediaDataDecoder*>(this));
+  DecoderDoctorLogger::LinkParentAndChild("AllocationWrapper", this, "decoder",
+                                          mDecoder.get());
 }
 
-AllocationWrapper::~AllocationWrapper()
-{
+AllocationWrapper::~AllocationWrapper() {
   DecoderDoctorLogger::LogDestruction("AllocationWrapper", this);
 }
 
-RefPtr<ShutdownPromise>
-AllocationWrapper::Shutdown()
-{
+RefPtr<ShutdownPromise> AllocationWrapper::Shutdown() {
   RefPtr<MediaDataDecoder> decoder = mDecoder.forget();
   RefPtr<Token> token = mToken.forget();
   return decoder->Shutdown()->Then(
-    AbstractThread::GetCurrent(), __func__, [token]() {
-      return ShutdownPromise::CreateAndResolve(true, __func__);
-    });
+      AbstractThread::GetCurrent(), __func__,
+      [token]() { return ShutdownPromise::CreateAndResolve(true, __func__); });
 }
 /* static */ RefPtr<AllocationWrapper::AllocateDecoderPromise>
-AllocationWrapper::CreateDecoder(const CreateDecoderParams& aParams)
-{
+AllocationWrapper::CreateDecoder(const CreateDecoderParams& aParams) {
   // aParams.mConfig is guaranteed to stay alive during the lifetime of the
   // MediaDataDecoder, so keeping a pointer to the object is safe.
   const TrackInfo* config = &aParams.mConfig;
@@ -165,52 +138,55 @@ AllocationWrapper::CreateDecoder(const CreateDecoderParams& aParams)
   CreateDecoderParams::NoWrapper noWrapper = aParams.mNoWrapper;
   TrackInfo::TrackType type = aParams.mType;
   MediaEventProducer<TrackInfo::TrackType>* onWaitingForKeyEvent =
-    aParams.mOnWaitingForKeyEvent;
+      aParams.mOnWaitingForKeyEvent;
   CreateDecoderParams::OptionSet options = aParams.mOptions;
   CreateDecoderParams::VideoFrameRate rate = aParams.mRate;
 
   RefPtr<AllocateDecoderPromise> p =
-    GlobalAllocPolicy::Instance(aParams.mType)
-      .Alloc()
-      ->Then(
-        AbstractThread::GetCurrent(),
-        __func__,
-        [=](RefPtr<Token> aToken) {
-          // result may not always be updated by PDMFactory::CreateDecoder
-          // either when the creation succeeded or failed, as such it must be
-          // initialized to a fatal error by default.
-          MediaResult result = MediaResult(
-            NS_ERROR_DOM_MEDIA_FATAL_ERR,
-            nsPrintfCString("error creating %s decoder", TrackTypeToStr(type)));
-          RefPtr<PDMFactory> pdm = new PDMFactory();
-          CreateDecoderParams params{ *config,
-                                      taskQueue,
-                                      diagnostics,
-                                      imageContainer,
-                                      &result,
-                                      knowsCompositor,
-                                      crashHelper,
-                                      useNullDecoder,
-                                      noWrapper,
-                                      type,
-                                      onWaitingForKeyEvent,
-                                      options,
-                                      rate };
-          RefPtr<MediaDataDecoder> decoder = pdm->CreateDecoder(params);
-          if (decoder) {
-            RefPtr<AllocationWrapper> wrapper =
-              new AllocationWrapper(decoder.forget(), aToken.forget());
-            return AllocateDecoderPromise::CreateAndResolve(wrapper, __func__);
-          }
-          return AllocateDecoderPromise::CreateAndReject(result, __func__);
-        },
-        []() {
-          return AllocateDecoderPromise::CreateAndReject(
-            MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                        "Allocation policy expired"),
-            __func__);
-        });
+      GlobalAllocPolicy::Instance(aParams.mType)
+          .Alloc()
+          ->Then(AbstractThread::GetCurrent(), __func__,
+                 [=](RefPtr<Token> aToken) {
+                   // result may not always be updated by
+                   // PDMFactory::CreateDecoder either when the creation
+                   // succeeded or failed, as such it must be initialized to a
+                   // fatal error by default.
+                   MediaResult result =
+                       MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                   nsPrintfCString("error creating %s decoder",
+                                                   TrackTypeToStr(type)));
+                   RefPtr<PDMFactory> pdm = new PDMFactory();
+                   CreateDecoderParams params{*config,
+                                              taskQueue,
+                                              diagnostics,
+                                              imageContainer,
+                                              &result,
+                                              knowsCompositor,
+                                              crashHelper,
+                                              useNullDecoder,
+                                              noWrapper,
+                                              type,
+                                              onWaitingForKeyEvent,
+                                              options,
+                                              rate};
+                   RefPtr<MediaDataDecoder> decoder =
+                       pdm->CreateDecoder(params);
+                   if (decoder) {
+                     RefPtr<AllocationWrapper> wrapper = new AllocationWrapper(
+                         decoder.forget(), aToken.forget());
+                     return AllocateDecoderPromise::CreateAndResolve(wrapper,
+                                                                     __func__);
+                   }
+                   return AllocateDecoderPromise::CreateAndReject(result,
+                                                                  __func__);
+                 },
+                 []() {
+                   return AllocateDecoderPromise::CreateAndReject(
+                       MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                   "Allocation policy expired"),
+                       __func__);
+                 });
   return p;
 }
 
-} // namespace mozilla
+}  // namespace mozilla

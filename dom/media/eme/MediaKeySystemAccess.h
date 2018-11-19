@@ -24,25 +24,24 @@ class DecoderDoctorDiagnostics;
 
 namespace dom {
 
-class MediaKeySystemAccess final : public nsISupports,
-                                   public nsWrapperCache
-{
-public:
+class MediaKeySystemAccess final : public nsISupports, public nsWrapperCache {
+ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaKeySystemAccess)
 
-public:
+ public:
   explicit MediaKeySystemAccess(nsPIDOMWindowInner* aParent,
                                 const nsAString& aKeySystem,
                                 const MediaKeySystemConfiguration& aConfig);
 
-protected:
+ protected:
   ~MediaKeySystemAccess();
 
-public:
+ public:
   nsPIDOMWindowInner* GetParentObject() const;
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   void GetKeySystem(nsString& aRetVal) const;
 
@@ -50,8 +49,8 @@ public:
 
   already_AddRefed<Promise> CreateMediaKeys(ErrorResult& aRv);
 
-  static MediaKeySystemStatus GetKeySystemStatus(const nsAString& aKeySystem,
-                                                 nsACString& aOutExceptionMessage);
+  static MediaKeySystemStatus GetKeySystemStatus(
+      const nsAString& aKeySystem, nsACString& aOutExceptionMessage);
 
   static bool IsSupported(const nsAString& aKeySystem,
                           const Sequence<MediaKeySystemConfiguration>& aConfigs,
@@ -62,26 +61,25 @@ public:
                               MediaKeySystemStatus aStatus);
 
   static bool GetSupportedConfig(
-    const nsAString& aKeySystem,
-    const Sequence<MediaKeySystemConfiguration>& aConfigs,
-    MediaKeySystemConfiguration& aOutConfig,
-    DecoderDoctorDiagnostics* aDiagnostics,
-    bool aIsPrivateBrowsing,
-    const std::function<void(const char*)>& aDeprecationLogFn);
+      const nsAString& aKeySystem,
+      const Sequence<MediaKeySystemConfiguration>& aConfigs,
+      MediaKeySystemConfiguration& aOutConfig,
+      DecoderDoctorDiagnostics* aDiagnostics, bool aIsPrivateBrowsing,
+      const std::function<void(const char*)>& aDeprecationLogFn);
 
   static bool KeySystemSupportsInitDataType(const nsAString& aKeySystem,
                                             const nsAString& aInitDataType);
 
   static nsCString ToCString(
-    const Sequence<MediaKeySystemConfiguration>& aConfig);
+      const Sequence<MediaKeySystemConfiguration>& aConfig);
 
-private:
+ private:
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   const nsString mKeySystem;
   const MediaKeySystemConfiguration mConfig;
 };
 
-} // namespace dom
-} // namespace mozilla
+}  // namespace dom
+}  // namespace mozilla
 
-#endif // mozilla_dom_MediaKeySystemAccess_h
+#endif  // mozilla_dom_MediaKeySystemAccess_h
