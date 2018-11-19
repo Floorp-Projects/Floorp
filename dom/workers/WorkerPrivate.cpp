@@ -2620,6 +2620,42 @@ WorkerPrivate::WorkerThreadAccessible::WorkerThreadAccessible(WorkerPrivate* con
   , mOnLine(aParent ? aParent->OnLine() : !NS_IsOffline())
 {}
 
+namespace {
+
+bool
+IsNewWorkerSecureContext(const WorkerPrivate* const aParent,
+                         const WorkerType aWorkerType,
+                         const WorkerLoadInfo& aLoadInfo)
+{
+  if (aParent) {
+    return aParent->IsSecureContext();
+  }
+
+  // Our secure context state depends on the kind of worker we have.
+
+  if (aLoadInfo.mPrincipalIsSystem) {
+    return true;
+  }
+
+  if (aWorkerType == WorkerTypeService) {
+    return true;
+  }
+
+  if (aLoadInfo.mWindow) {
+    // Shared and dedicated workers both inherit the loading window's secure
+    // context state.  Shared workers then prevent windows with a different
+    // secure context state from attaching to them.
+    return aLoadInfo.mWindow->IsSecureContext();
+  }
+
+  MOZ_ASSERT_UNREACHABLE("non-chrome worker that is not a service worker "
+                         "that has no parent and no associated window");
+
+  return false;
+}
+
+}
+
 WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
                              const nsAString& aScriptURL,
                              bool aIsChromeWorker, WorkerType aWorkerType,
@@ -2632,6 +2668,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mScriptURL(aScriptURL)
   , mWorkerName(aWorkerName)
   , mWorkerType(aWorkerType)
+  , mLoadInfo(std::move(aLoadInfo))
   , mDebugger(nullptr)
   , mJSContext(nullptr)
   , mPRThread(nullptr)
@@ -2654,13 +2691,12 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mMainThreadObjectsForgotten(false)
   , mIsChromeWorker(aIsChromeWorker)
   , mParentFrozen(false)
-  , mIsSecureContext(false)
+  , mIsSecureContext(IsNewWorkerSecureContext(mParent, mWorkerType, mLoadInfo))
   , mDebuggerRegistered(false)
   , mIsInAutomation(false)
   , mPerformanceCounter(nullptr)
 {
   MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
-  mLoadInfo.StealFrom(aLoadInfo);
 
   if (aParent) {
     aParent->AssertIsOnWorkerThread();
@@ -2668,9 +2704,6 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
     // Note that this copies our parent's secure context state into mJSSettings.
     aParent->CopyJSSettings(mJSSettings);
 
-    // And manually set our mIsSecureContext, though it's not really relevant to
-    // dedicated workers...
-    mIsSecureContext = aParent->IsSecureContext();
     MOZ_ASSERT_IF(mIsChromeWorker, mIsSecureContext);
 
     mIsInAutomation = aParent->IsInAutomation();
@@ -2685,19 +2718,6 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
     AssertIsOnMainThread();
 
     RuntimeService::GetDefaultJSSettings(mJSSettings);
-
-    // Our secure context state depends on the kind of worker we have.
-    if (UsesSystemPrincipal() || IsServiceWorker()) {
-      mIsSecureContext = true;
-    } else if (mLoadInfo.mWindow) {
-      // Shared and dedicated workers both inherit the loading window's secure
-      // context state.  Shared workers then prevent windows with a different
-      // secure context state from attaching to them.
-      mIsSecureContext = mLoadInfo.mWindow->IsSecureContext();
-    } else {
-      MOZ_ASSERT_UNREACHABLE("non-chrome worker that is not a service worker "
-                             "that has no parent and no associated window");
-    }
 
     if (mIsSecureContext) {
       mJSSettings.chrome.realmOptions
@@ -3133,7 +3153,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
   MOZ_DIAGNOSTIC_ASSERT(loadInfo.mLoadingPrincipal);
   MOZ_DIAGNOSTIC_ASSERT(loadInfo.PrincipalIsValid());
 
-  aLoadInfo->StealFrom(loadInfo);
+  *aLoadInfo = std::move(loadInfo);
   return NS_OK;
 }
 
