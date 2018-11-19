@@ -739,6 +739,7 @@ class ICFallbackStub : public ICStub
     // caller.
     uint32_t enteredCount() const { return enteredCount_; }
     inline void incrementEnteredCount() { enteredCount_++; }
+    void resetEnteredCount() { enteredCount_ = 0; }
 };
 
 // Shared trait for all CacheIR stubs.
@@ -767,6 +768,8 @@ class ICCacheIR_Trait
     // Return the number of times this stub has successfully provided a value to the
     // caller.
     uint32_t enteredCount() const { return enteredCount_; }
+    void resetEnteredCount() { enteredCount_ = 0; }
+
     static size_t offsetOfEnteredCount() { return offsetof(T, enteredCount_); }
 };
 
