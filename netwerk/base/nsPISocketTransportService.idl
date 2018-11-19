@@ -53,12 +53,6 @@ interface nsPISocketTransportService : nsIRoutedSocketTransportService
  * amount of data we're sending/receiving via sockets and disk files.
  *
  * Activated via the "io.activity.enabled" preference.
- *
- * when "io.activity.intervalMilliseconds" is > 0, automatically sends
- * out this topic no more than every intervalMilliseconds.
- *
- * if "io.activity.intervalMilliseconds" is 0, notifications are triggered
- * manually via IOActivityMonitor::NotifyActivities()
  */
 #define NS_IO_ACTIVITY "io-activity"
 
