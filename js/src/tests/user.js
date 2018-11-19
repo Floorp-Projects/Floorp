@@ -1,3 +1,4 @@
+user_pref("app.update.checkInstallTime", false);
 user_pref("app.update.disabledForTesting", true);
 user_pref("browser.dom.window.dump.enabled", true);
 user_pref("devtools.console.stdout.chrome", true);
