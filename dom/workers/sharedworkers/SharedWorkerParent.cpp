@@ -7,6 +7,7 @@
 #include "SharedWorkerParent.h"
 #include "SharedWorkerManager.h"
 #include "SharedWorkerService.h"
+#include "mozilla/dom/RemoteWorkerTypes.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/Unused.h"
@@ -20,7 +21,6 @@ namespace dom {
 SharedWorkerParent::SharedWorkerParent()
   : mBackgroundEventTarget(GetCurrentThreadEventTarget())
   , mStatus(eInit)
-  , mWindowID(0)
   , mSuspended(false)
   , mFrozen(false)
 {
@@ -41,7 +41,9 @@ SharedWorkerParent::ActorDestroy(IProtocol::ActorDestroyReason aReason)
 }
 
 void
-SharedWorkerParent::Initialize(const SharedWorkerLoadInfo& aInfo)
+SharedWorkerParent::Initialize(const RemoteWorkerData& aData,
+                               uint64_t aWindowID,
+                               const MessagePortIdentifier& aPortIdentifier)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mStatus == eInit);
@@ -50,11 +52,10 @@ SharedWorkerParent::Initialize(const SharedWorkerLoadInfo& aInfo)
   mService = SharedWorkerService::GetOrCreate();
   MOZ_ASSERT(mService);
 
-  // This is the only information we currently care.
-  mWindowID = aInfo.windowID();
+  mWindowID = aWindowID;
 
   mStatus = ePending;
-  mService->GetOrCreateWorkerManager(this, aInfo);
+  mService->GetOrCreateWorkerManager(this, aData, aWindowID, aPortIdentifier);
 }
 
 IPCResult

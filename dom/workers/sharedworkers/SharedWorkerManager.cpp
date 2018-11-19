@@ -7,103 +7,28 @@
 #include "SharedWorkerManager.h"
 #include "SharedWorkerParent.h"
 #include "SharedWorkerService.h"
-#include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/dom/PSharedWorker.h"
-#include "mozilla/dom/ServiceWorkerInterceptController.h"
-#include "mozilla/dom/WorkerError.h"
-#include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/WorkerRunnable.h"
-#include "mozilla/dom/workerinternals/ScriptLoader.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/dom/RemoteWorkerController.h"
 #include "nsIConsoleReportCollector.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIPrincipal.h"
-#include "nsNetUtil.h"
 #include "nsProxyRelease.h"
 
 namespace mozilla {
 namespace dom {
 
-using workerinternals::ChannelFromScriptURLMainThread;
-
-namespace {
-
-class MessagePortRunnable final : public WorkerRunnable
-{
-  MessagePortIdentifier mPortIdentifier;
-
-public:
-  MessagePortRunnable(WorkerPrivate* aWorkerPrivate,
-                      const MessagePortIdentifier& aPortIdentifier)
-    : WorkerRunnable(aWorkerPrivate)
-    , mPortIdentifier(aPortIdentifier)
-  {}
-
-private:
-  ~MessagePortRunnable() = default;
-
-  virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
-    return aWorkerPrivate->ConnectMessagePort(aCx, mPortIdentifier);
-  }
-
-  nsresult
-  Cancel() override
-  {
-    MessagePort::ForceClose(mPortIdentifier);
-    return WorkerRunnable::Cancel();
-  }
-};
-
-class SharedWorkerInterfaceRequestor final : public nsIInterfaceRequestor
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  SharedWorkerInterfaceRequestor()
-    : mSWController(new ServiceWorkerInterceptController())
-  {}
-
-  NS_IMETHOD
-  GetInterface(const nsIID& aIID, void** aSink) override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (aIID.Equals(NS_GET_IID(nsINetworkInterceptController))) {
-      // If asked for the network intercept controller, ask the outer requestor,
-      // which could be the docshell.
-      RefPtr<ServiceWorkerInterceptController> swController = mSWController;
-      swController.forget(aSink);
-      return NS_OK;
-    }
-
-    return NS_NOINTERFACE;
-  }
-
-private:
-  ~SharedWorkerInterfaceRequestor() = default;
-
-  RefPtr<ServiceWorkerInterceptController> mSWController;
-};
-
-NS_IMPL_ADDREF(SharedWorkerInterfaceRequestor)
-NS_IMPL_RELEASE(SharedWorkerInterfaceRequestor)
-NS_IMPL_QUERY_INTERFACE(SharedWorkerInterfaceRequestor, nsIInterfaceRequestor)
-
-} // anonymous
-
 SharedWorkerManager::SharedWorkerManager(nsIEventTarget* aPBackgroundEventTarget,
-                                         const SharedWorkerLoadInfo& aInfo,
-                                         nsIPrincipal* aPrincipal,
+                                         const RemoteWorkerData& aData,
                                          nsIPrincipal* aLoadingPrincipal)
   : mPBackgroundEventTarget(aPBackgroundEventTarget)
-  , mInfo(aInfo)
-  , mPrincipal(aPrincipal)
   , mLoadingPrincipal(aLoadingPrincipal)
+  , mDomain(aData.domain())
+  , mResolvedScriptURL(aData.resolvedScriptURL())
+  , mName(aData.name())
+  , mIsSecureContext(aData.isSecureContext())
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aLoadingPrincipal);
 }
 
@@ -112,124 +37,32 @@ SharedWorkerManager::~SharedWorkerManager()
   nsCOMPtr<nsIEventTarget> target =
     SystemGroup::EventTargetFor(TaskCategory::Other);
 
-  NS_ProxyRelease("SharedWorkerManager::mPrincipal",
-                  target, mPrincipal.forget());
   NS_ProxyRelease("SharedWorkerManager::mLoadingPrincipal",
                   target, mLoadingPrincipal.forget());
-  NS_ProxyRelease("SharedWorkerManager::mWorkerPrivate",
-                  target, mWorkerPrivate.forget());
+  NS_ProxyRelease("SharedWorkerManager::mRemoteWorkerController",
+                  mPBackgroundEventTarget, mRemoteWorkerController.forget());
 }
 
-nsresult
-SharedWorkerManager::CreateWorkerOnMainThread()
+bool
+SharedWorkerManager::MaybeCreateRemoteWorker(const RemoteWorkerData& aData,
+                                             uint64_t aWindowID,
+                                             const MessagePortIdentifier& aPortIdentifier)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnBackgroundThread();
 
-  // Ensure that the IndexedDatabaseManager is initialized
-  Unused << NS_WARN_IF(!IndexedDatabaseManager::GetOrCreate());
-
-  WorkerLoadInfo info;
-  nsresult rv = NS_NewURI(getter_AddRefs(info.mBaseURI),
-                          mInfo.baseScriptURL(),
-                          nullptr, nullptr);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (!mRemoteWorkerController) {
+    mRemoteWorkerController = RemoteWorkerController::Create(aData);
+    if (NS_WARN_IF(!mRemoteWorkerController)) {
+      return false;
+    }
   }
 
-  rv = NS_NewURI(getter_AddRefs(info.mResolvedScriptURI),
-                 mInfo.resolvedScriptURL(), nullptr, info.mBaseURI);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (aWindowID) {
+    mRemoteWorkerController->AddWindowID(aWindowID);
   }
 
-  info.mPrincipalInfo = new PrincipalInfo();
-  rv = PrincipalToPrincipalInfo(mPrincipal, info.mPrincipalInfo);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  info.mResolvedScriptURI = info.mBaseURI;
-
-  info.mDomain = mInfo.domain();
-  info.mPrincipal = mPrincipal;
-  info.mLoadingPrincipal = mLoadingPrincipal;
-
-  nsContentUtils::StorageAccess access =
-    nsContentUtils::StorageAllowedForPrincipal(info.mPrincipal);
-  info.mStorageAllowed =
-    access > nsContentUtils::StorageAccess::ePrivateBrowsing;
-  info.mOriginAttributes =
-    BasePrincipal::Cast(mPrincipal)->OriginAttributesRef();
-
-  // Default CSP permissions for now.  These will be overrided if necessary
-  // based on the script CSP headers during load in ScriptLoader.
-  info.mEvalAllowed = true;
-  info.mReportCSPViolations = false;
-  info.mSecureContext = mInfo.isSecureContext()
-    ? WorkerLoadInfo::eSecureContext : WorkerLoadInfo::eInsecureContext;
-
-  WorkerPrivate::OverrideLoadInfoLoadGroup(info, info.mLoadingPrincipal);
-
-  RefPtr<SharedWorkerInterfaceRequestor> requestor =
-    new SharedWorkerInterfaceRequestor();
-  info.mInterfaceRequestor->SetOuterRequestor(requestor);
-
-  rv = info.SetPrincipalOnMainThread(info.mPrincipal, info.mLoadGroup);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  Maybe<ClientInfo> clientInfo;
-  if (mInfo.clientInfo().type() == OptionalIPCClientInfo::TIPCClientInfo) {
-    clientInfo.emplace(ClientInfo(mInfo.clientInfo().get_IPCClientInfo()));
-  }
-
-  // Top level workers' main script use the document charset for the script
-  // uri encoding.
-  rv = ChannelFromScriptURLMainThread(info.mLoadingPrincipal,
-                                      info.mBaseURI,
-                                      nullptr /* parent document */,
-                                      info.mLoadGroup,
-                                      mInfo.originalScriptURL(),
-                                      clientInfo,
-                                      nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER,
-                                      false /* default encoding */,
-                                      getter_AddRefs(info.mChannel));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  AutoJSAPI jsapi;
-  jsapi.Init();
-
-  ErrorResult error;
-  mWorkerPrivate = WorkerPrivate::Constructor(jsapi.cx(),
-                                              mInfo.originalScriptURL(),
-                                              false,
-                                              WorkerTypeShared,
-                                              mInfo.name(),
-                                              VoidCString(),
-                                              &info, error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-
-  mWorkerPrivate->SetSharedWorkerManager(this);
-  return NS_OK;
-}
-
-nsresult
-SharedWorkerManager::ConnectPortOnMainThread(const MessagePortIdentifier& aPortIdentifier)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  RefPtr<MessagePortRunnable> runnable =
-    new MessagePortRunnable(mWorkerPrivate, aPortIdentifier);
-  if (NS_WARN_IF(!runnable->Dispatch())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  mRemoteWorkerController->AddPortIdentifier(aPortIdentifier);
+  return true;
 }
 
 bool
@@ -239,9 +72,9 @@ SharedWorkerManager::MatchOnMainThread(const nsACString& aDomain,
                                        nsIPrincipal* aLoadingPrincipal) const
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return aDomain == mInfo.domain() &&
-         aScriptURL == mInfo.resolvedScriptURL() &&
-         aName == mInfo.name() &&
+  return aDomain == mDomain &&
+         aScriptURL == mResolvedScriptURL &&
+         aName == mName &&
          // We want to be sure that the window's principal subsumes the
          // SharedWorker's loading principal and vice versa.
          mLoadingPrincipal->Subsumes(aLoadingPrincipal) &&
@@ -255,7 +88,21 @@ SharedWorkerManager::AddActor(SharedWorkerParent* aParent)
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(!mActors.Contains(aParent));
 
+  uint32_t frozen = 0;
+
+  for (SharedWorkerParent* actor : mActors) {
+    if (actor->IsFrozen()) {
+      ++frozen;
+    }
+  }
+
+  bool hadActors = !mActors.IsEmpty();
+
   mActors.AppendElement(aParent);
+
+  if (hadActors && frozen == mActors.Length() - 1) {
+    mRemoteWorkerController->Thaw();
+  }
 }
 
 void
@@ -265,6 +112,11 @@ SharedWorkerManager::RemoveActor(SharedWorkerParent* aParent)
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(mActors.Contains(aParent));
 
+  uint64_t windowID = aParent->WindowID();
+  if (windowID) {
+    mRemoteWorkerController->RemoveWindowID(windowID);
+  }
+
   mActors.RemoveElement(aParent);
 
   if (!mActors.IsEmpty()) {
@@ -273,16 +125,8 @@ SharedWorkerManager::RemoveActor(SharedWorkerParent* aParent)
 
   // Time to go.
 
-  RefPtr<SharedWorkerManager> self = this;
-  nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction("SharedWorkerManager::RemoveActor",
-                           [self]() {
-    self->CloseOnMainThread();
-  });
-
-  nsCOMPtr<nsIEventTarget> target =
-    SystemGroup::EventTargetFor(TaskCategory::Other);
-  target->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+  mRemoteWorkerController->Terminate();
+  mRemoteWorkerController = nullptr;
 
   // SharedWorkerService exists because it is kept alive by SharedWorkerParent.
   SharedWorkerService::Get()->RemoveWorkerManager(this);
@@ -292,6 +136,7 @@ void
 SharedWorkerManager::UpdateSuspend()
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mRemoteWorkerController);
 
   uint32_t suspended = 0;
 
@@ -305,26 +150,18 @@ SharedWorkerManager::UpdateSuspend()
     return;
   }
 
-  RefPtr<SharedWorkerManager> self = this;
-  nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction("SharedWorkerManager::UpdateSuspend",
-                           [self, suspended]() {
-    if (suspended) {
-      self->SuspendOnMainThread();
-    } else {
-      self->ResumeOnMainThread();
-    }
-  });
-
-  nsCOMPtr<nsIEventTarget> target =
-    SystemGroup::EventTargetFor(TaskCategory::Other);
-  target->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+  if (suspended) {
+    mRemoteWorkerController->Suspend();
+  } else {
+    mRemoteWorkerController->Resume();
+  }
 }
 
 void
 SharedWorkerManager::UpdateFrozen()
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mRemoteWorkerController);
 
   uint32_t frozen = 0;
 
@@ -338,94 +175,20 @@ SharedWorkerManager::UpdateFrozen()
     return;
   }
 
-  RefPtr<SharedWorkerManager> self = this;
-  nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction("SharedWorkerManager::UpdateFrozen",
-                           [self, frozen]() {
-    if (frozen) {
-      self->FreezeOnMainThread();
-    } else {
-      self->ThawOnMainThread();
-    }
-  });
-
-  nsCOMPtr<nsIEventTarget> target =
-    SystemGroup::EventTargetFor(TaskCategory::Other);
-  target->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+  if (frozen) {
+    mRemoteWorkerController->Freeze();
+  } else {
+    mRemoteWorkerController->Thaw();
+  }
 }
 
 bool
 SharedWorkerManager::IsSecureContext() const
 {
-  return mInfo.isSecureContext();
+  return mIsSecureContext;
 }
 
-void
-SharedWorkerManager::FreezeOnMainThread()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!mWorkerPrivate || mWorkerPrivate->IsFrozen()) {
-    // Already released.
-    return;
-  }
-
-  mWorkerPrivate->Freeze(nullptr);
-}
-
-void
-SharedWorkerManager::ThawOnMainThread()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!mWorkerPrivate || !mWorkerPrivate->IsFrozen()) {
-    // Already released.
-    return;
-  }
-
-  mWorkerPrivate->Thaw(nullptr);
-}
-
-void
-SharedWorkerManager::SuspendOnMainThread()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!mWorkerPrivate) {
-    // Already released.
-    return;
-  }
-
-  mWorkerPrivate->ParentWindowPaused();
-}
-
-void
-SharedWorkerManager::ResumeOnMainThread()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!mWorkerPrivate) {
-    // Already released.
-    return;
-  }
-
-  mWorkerPrivate->ParentWindowResumed();
-}
-
-void
-SharedWorkerManager::CloseOnMainThread()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!mWorkerPrivate) {
-    // Already released.
-    return;
-  }
-
-  mWorkerPrivate->Cancel();
-  mWorkerPrivate = nullptr;
-}
-
+/* TODO
 void
 SharedWorkerManager::BroadcastErrorToActorsOnMainThread(const WorkerErrorReport* aReport,
                                                         bool aIsErrorEvent)
@@ -530,6 +293,7 @@ SharedWorkerManager::FlushReportsToActorsOnMainThread(nsIConsoleReportCollector*
 
   aReporter->ClearConsoleReports();
 }
+*/
 
 } // dom namespace
 } // mozilla namespace

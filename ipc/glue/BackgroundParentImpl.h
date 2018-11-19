@@ -149,11 +149,15 @@ protected:
   DeallocPRemoteWorkerServiceParent(PRemoteWorkerServiceParent* aActor) override;
 
   virtual mozilla::dom::PSharedWorkerParent*
-  AllocPSharedWorkerParent(const mozilla::dom::SharedWorkerLoadInfo& aInfo) override;
+  AllocPSharedWorkerParent(const mozilla::dom::RemoteWorkerData& aData,
+                           const uint64_t& aWindowID,
+                           const mozilla::dom::MessagePortIdentifier& aPortIdentifier) override;
 
   virtual mozilla::ipc::IPCResult
   RecvPSharedWorkerConstructor(PSharedWorkerParent* aActor,
-                               const mozilla::dom::SharedWorkerLoadInfo& aInfo) override;
+                               const mozilla::dom::RemoteWorkerData& aData,
+                               const uint64_t& aWindowID,
+                               const mozilla::dom::MessagePortIdentifier& aPortIdentifier) override;
 
   virtual bool
   DeallocPSharedWorkerParent(PSharedWorkerParent* aActor) override;

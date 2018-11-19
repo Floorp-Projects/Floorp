@@ -9,8 +9,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/ErrorEventBinding.h"
-#include "mozilla/dom/PSharedWorker.h"
-#include "mozilla/dom/SharedWorkerManager.h"
+#include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/SimpleGlobalObject.h"
 #include "mozilla/dom/WorkerDebuggerGlobalScopeBinding.h"
@@ -203,9 +202,9 @@ private:
       MOZ_ASSERT(!aWorkerPrivate->IsParentWindowPaused());
 
       if (aWorkerPrivate->IsSharedWorker()) {
-        aWorkerPrivate->GetSharedWorkerManager()
-                      ->BroadcastErrorToActorsOnMainThread(&mReport,
-                                                           /* isErrorEvent */ true);
+        aWorkerPrivate->GetRemoteWorkerController()
+                      ->ErrorPropagationOnMainThread(&mReport,
+                                                     /* isErrorEvent */ true);
         return true;
       }
 
@@ -294,8 +293,8 @@ private:
     MOZ_ASSERT(!aWorkerPrivate->IsParentWindowPaused());
 
     if (aWorkerPrivate->IsSharedWorker()) {
-      aWorkerPrivate->GetSharedWorkerManager()
-                    ->BroadcastErrorToActorsOnMainThread(nullptr, false);
+      aWorkerPrivate->GetRemoteWorkerController()
+                    ->ErrorPropagationOnMainThread(nullptr, false);
       return true;
     }
 

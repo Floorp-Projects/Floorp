@@ -78,6 +78,8 @@ namespace dom {
  *    In case there were pending operations, they are now executed.
  */
 
+class ErrorValue;
+class MessagePortIdentifier;
 class RemoteWorkerManager;
 class RemoteWorkerParent;
 
@@ -90,7 +92,31 @@ public:
   NS_INLINE_DECL_REFCOUNTING(RemoteWorkerController)
 
   static already_AddRefed<RemoteWorkerController>
-  Create(); // TODO parameters?
+  Create(const RemoteWorkerData& aData);
+
+  void
+  AddWindowID(uint64_t aWindowID);
+
+  void
+  RemoveWindowID(uint64_t aWindowID);
+
+  void
+  AddPortIdentifier(const MessagePortIdentifier& aPortIdentifier);
+
+  void
+  Terminate();
+
+  void
+  Suspend();
+
+  void
+  Resume();
+
+  void
+  Freeze();
+
+  void
+  Thaw();
 
 private:
   RemoteWorkerController();
@@ -98,6 +124,15 @@ private:
 
   void
   SetWorkerActor(RemoteWorkerParent* aActor);
+
+  void
+  ErrorPropagation(const ErrorValue& aValue);
+
+  void
+  WorkerTerminated();
+
+  void
+  Shutdown();
 
   void
   CreationFailed();
@@ -112,6 +147,55 @@ private:
   } mState;
 
   RefPtr<RemoteWorkerParent> mActor;
+
+  struct Op {
+    enum Type {
+      eTerminate,
+      eSuspend,
+      eResume,
+      eFreeze,
+      eThaw,
+      ePortIdentifier,
+      eAddWindowID,
+      eRemoveWindowID,
+    };
+
+    explicit Op(Type aType, uint64_t aWindowID = 0)
+      : mType(aType)
+      , mWindowID(aWindowID)
+      , mCompleted(false)
+    {
+       MOZ_COUNT_CTOR(Op);
+    }
+
+    explicit Op(const MessagePortIdentifier& aPortIdentifier)
+      : mType(ePortIdentifier)
+      , mPortIdentifier(aPortIdentifier)
+      , mCompleted(false)
+    {
+       MOZ_COUNT_CTOR(Op);
+    }
+
+    // This object cannot be copied.
+    Op(Op const&) = delete;
+    Op& operator=(Op const&) = delete;
+
+    ~Op();
+
+    void
+    Completed()
+    {
+      mCompleted = true;
+    }
+
+    Type mType;
+
+    MessagePortIdentifier mPortIdentifier;
+    uint64_t mWindowID;
+    bool mCompleted;
+  };
+
+  nsTArray<UniquePtr<Op>> mPendingOps;
 };
 
 } // dom namespace

@@ -69,6 +69,15 @@ RemoteWorkerService::Initialize()
   sRemoteWorkerService = service;
 }
 
+/* static */ nsIThread*
+RemoteWorkerService::Thread()
+{
+  StaticMutexAutoLock lock(sRemoteWorkerServiceMutex);
+  MOZ_ASSERT(sRemoteWorkerService);
+  MOZ_ASSERT(sRemoteWorkerService->mThread);
+  return sRemoteWorkerService->mThread;
+}
+
 nsresult
 RemoteWorkerService::InitializeOnMainThread()
 {

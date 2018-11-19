@@ -47,9 +47,9 @@
 #include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/PerformanceService.h"
+#include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/SharedWorkerManager.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/DebugOnly.h"
@@ -1533,7 +1533,7 @@ RuntimeService::UnregisterWorker(WorkerPrivate* aWorkerPrivate)
 
   if (aWorkerPrivate->IsSharedWorker()) {
     AssertIsOnMainThread();
-    aWorkerPrivate->GetSharedWorkerManager()->CloseActorsOnMainThread();
+    aWorkerPrivate->GetRemoteWorkerController()->CloseWorkerOnMainThread();
   }
 
   if (parent) {
