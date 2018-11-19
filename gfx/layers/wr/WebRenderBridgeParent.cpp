@@ -901,6 +901,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
                                           const bool& aContainsSVGGroup,
                                           const TimeStamp& aRefreshStartTime,
                                           const TimeStamp& aTxnStartTime,
+                                          const nsCString& aTxnURL,
                                           const TimeStamp& aFwdTime)
 {
   if (mDestroyed) {
@@ -998,7 +999,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   }
 
   HoldPendingTransactionId(wrEpoch, aTransactionId, aContainsSVGGroup,
-                           aRefreshStartTime, aTxnStartTime, aFwdTime, mIsFirstPaint);
+                           aRefreshStartTime, aTxnStartTime, aTxnURL, aFwdTime, mIsFirstPaint);
   mIsFirstPaint = false;
 
   if (!validTransaction) {
@@ -1029,6 +1030,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
                                             const wr::IdNamespace& aIdNamespace,
                                             const TimeStamp& aRefreshStartTime,
                                             const TimeStamp& aTxnStartTime,
+                                            const nsCString& aTxnURL,
                                             const TimeStamp& aFwdTime)
 {
   if (mDestroyed) {
@@ -1112,6 +1114,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
                            false,
                            aRefreshStartTime,
                            aTxnStartTime,
+                           aTxnURL,
                            aFwdTime,
                            /* aIsFirstPaint */false,
                            /* aUseForTelemetry */scheduleComposite);
@@ -1837,6 +1840,7 @@ WebRenderBridgeParent::HoldPendingTransactionId(const wr::Epoch& aWrEpoch,
                                                 bool aContainsSVGGroup,
                                                 const TimeStamp& aRefreshStartTime,
                                                 const TimeStamp& aTxnStartTime,
+                                                const nsCString& aTxnURL,
                                                 const TimeStamp& aFwdTime,
                                                 const bool aIsFirstPaint,
                                                 const bool aUseForTelemetry)
@@ -1847,6 +1851,7 @@ WebRenderBridgeParent::HoldPendingTransactionId(const wr::Epoch& aWrEpoch,
                                                    aContainsSVGGroup,
                                                    aRefreshStartTime,
                                                    aTxnStartTime,
+                                                   aTxnURL,
                                                    aFwdTime,
                                                    aIsFirstPaint,
                                                    aUseForTelemetry));

@@ -204,7 +204,7 @@ LayerManagerComposite::AreComponentAlphaLayersEnabled()
 }
 
 bool
-LayerManagerComposite::BeginTransaction()
+LayerManagerComposite::BeginTransaction(const nsCString &aURL)
 {
   mInTransaction = true;
 

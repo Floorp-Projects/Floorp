@@ -286,7 +286,7 @@ public:
    * This transaction will update the state of the window from which
    * this LayerManager was obtained.
    */
-  virtual bool BeginTransaction() = 0;
+  virtual bool BeginTransaction(const nsCString& aURL = nsCString()) = 0;
   /**
    * Start a new transaction. Nested transactions are not allowed so
    * there must be no transaction currently in progress.
@@ -294,7 +294,7 @@ public:
    * the given target context. The rendering will be complete when
    * EndTransaction returns.
    */
-  virtual bool BeginTransactionWithTarget(gfxContext* aTarget) = 0;
+  virtual bool BeginTransactionWithTarget(gfxContext* aTarget, const nsCString& aURL = nsCString()) = 0;
 
   enum EndTransactionFlags {
     END_DEFAULT = 0,
