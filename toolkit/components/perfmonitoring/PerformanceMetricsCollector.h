@@ -11,6 +11,7 @@
 #include "nsID.h"
 #include "mozilla/dom/ChromeUtilsBinding.h"  // defines PerformanceInfoDictionary
 #include "mozilla/dom/DOMTypes.h"   // defines PerformanceInfo
+#include "mozilla/PerformanceTypes.h"
 
 namespace mozilla {
 
@@ -38,30 +39,29 @@ private:
 };
 
 // AggregatedResults receives PerformanceInfo results that are collected
-// via IPDL from all content processes and the main process. They
-// are converted into an array of PerformanceInfoDictionary dictionaries (webidl)
-//
-// The class is instanciated with a Promise and a number of processes
-// that are supposed to send back results.
+// asynchronously via IPDL from all content processes.
+// They are converted into an array of
+// PerformanceInfoDictionary dictionaries (webidl)
 //
 // Once every process have sent back its results, AggregatedResults will
-// resolve the promise with all the collected data and send back the
-// dictionnary.
+// resolve the MozPromise returned by GetPromise()
+// with all the collected data.
 //
+// See ChromeUtils::RequestPerformanceMetrics.
 class AggregatedResults final
 {
 public:
-  AggregatedResults(nsID aUUID, PerformanceMetricsCollector* aCollector,
-                    dom::Promise* aPromise);
+  AggregatedResults(nsID aUUID, PerformanceMetricsCollector* aCollector);
   ~AggregatedResults() = default;
   void AppendResult(const nsTArray<dom::PerformanceInfo>& aMetrics);
   void SetNumResultsRequired(uint32_t aNumResultsRequired);
   void Abort(nsresult aReason);
   void ResolveNow();
+  RefPtr<RequestMetricsPromise> GetPromise();
 
 private:
   RefPtr<IPCTimeout> mIPCTimeout;
-  RefPtr<dom::Promise> mPromise;
+  MozPromiseHolder<RequestMetricsPromise> mHolder;
   uint32_t mPendingResults;
   FallibleTArray<dom::PerformanceInfoDictionary> mData;
 
@@ -90,15 +90,14 @@ class PerformanceMetricsCollector final
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(PerformanceMetricsCollector)
-
-  static void RequestMetrics(dom::Promise* aPromise);
+  static RefPtr<RequestMetricsPromise> RequestMetrics();
   static nsresult DataReceived(const nsID& aUUID,
                                const nsTArray<dom::PerformanceInfo>& aMetrics);
   void ForgetAggregatedResults(const nsID& aUUID);
 
 private:
   ~PerformanceMetricsCollector();
-  void RequestMetricsInternal(dom::Promise* aPromise);
+  RefPtr<RequestMetricsPromise> RequestMetricsInternal();
   nsresult DataReceivedInternal(const nsID& aUUID,
                                 const nsTArray<dom::PerformanceInfo>& aMetrics);
   nsDataHashtable<nsIDHashKey, UniquePtr<AggregatedResults>> mAggregatedResults;

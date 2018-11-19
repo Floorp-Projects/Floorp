@@ -1407,9 +1407,21 @@ mozilla::ipc::IPCResult
 ContentChild::RecvRequestPerformanceMetrics(const nsID& aID)
 {
   MOZ_ASSERT(mozilla::StaticPrefs::dom_performance_enable_scheduler_timing());
-  nsTArray<PerformanceInfo> info;
-  CollectPerformanceInfo(info);
-  SendAddPerformanceMetrics(aID, info);
+  RefPtr<ContentChild> self = this;
+  RefPtr<AbstractThread> mainThread = SystemGroup::AbstractMainThreadFor(
+    TaskCategory::Performance);
+  nsTArray<RefPtr<PerformanceInfoPromise>> promises = CollectPerformanceInfo();
+
+  PerformanceInfoPromise::All(mainThread, promises)
+    ->Then(mainThread,
+           __func__,
+           [self, aID](const nsTArray<mozilla::dom::PerformanceInfo>& aResult) {
+             self->SendAddPerformanceMetrics(aID, aResult);
+           },
+           []() {  /* silently fails -- the parent times out
+                      and proceeds when the data is not coming back */}
+          );
+
   return IPC_OK();
 }
 

@@ -35,6 +35,10 @@ class nsIPrincipal;
 
 namespace mozilla {
 
+namespace dom {
+class MediaMemoryInfo;
+}
+
 class AbstractThread;
 class FrameStatistics;
 class VideoFrameContainer;
@@ -643,6 +647,10 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   const MediaContainerType mContainerType;
   bool mCanPlayThrough = false;
 };
+
+typedef MozPromise<mozilla::dom::MediaMemoryInfo, nsresult, true> MediaMemoryPromise;
+
+RefPtr<MediaMemoryPromise> GetMediaMemorySizes();
 
 }  // namespace mozilla
 

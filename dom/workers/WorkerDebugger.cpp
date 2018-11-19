@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"
+#include "mozilla/PerformanceUtils.h"
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"
 #include "nsThreadUtils.h"
@@ -474,18 +475,21 @@ WorkerDebugger::ReportErrorToDebuggerOnMainThread(const nsAString& aFilename,
   WorkerErrorReport::LogErrorToConsole(report, 0);
 }
 
-PerformanceInfo
+RefPtr<PerformanceInfoPromise>
 WorkerDebugger::ReportPerformanceInfo()
 {
   AssertIsOnMainThread();
+  nsCOMPtr<nsPIDOMWindowOuter> top;
+  RefPtr<WorkerDebugger> self = this;
 
 #if defined(XP_WIN)
   uint32_t pid = GetCurrentProcessId();
 #else
   uint32_t pid = getpid();
 #endif
-  bool isTopLevel= false;
+  bool isTopLevel = false;
   uint64_t windowID = mWorkerPrivate->WindowID();
+  PerformanceMemoryInfo memoryInfo;
 
   // Walk up to our containing page and its window
   WorkerPrivate* wp = mWorkerPrivate;
@@ -496,7 +500,7 @@ WorkerDebugger::ReportPerformanceInfo()
   if (win) {
     nsPIDOMWindowOuter* outer = win->GetOuterWindow();
     if (outer) {
-      nsCOMPtr<nsPIDOMWindowOuter> top = outer->GetTop();
+      top = outer->GetTop();
       if (top) {
         windowID = top->WindowID();
         isTopLevel = outer->IsTopLevelWindow();
@@ -508,9 +512,10 @@ WorkerDebugger::ReportPerformanceInfo()
   RefPtr<nsIURI> scriptURI = mWorkerPrivate->GetResolvedScriptURI();
   nsCString url = scriptURI->GetSpecOrDefault();
 
-  // Workers only produce metrics for a single category - DispatchCategory::Worker.
-  // We still return an array of CategoryDispatch so the PerformanceInfo
-  // struct is common to all performance counters throughout Firefox.
+  // Workers only produce metrics for a single category -
+  // DispatchCategory::Worker. We still return an array of CategoryDispatch so
+  // the PerformanceInfo struct is common to all performance counters throughout
+  // Firefox.
   FallibleTArray<CategoryDispatch> items;
   uint64_t duration = 0;
   uint16_t count = 0;
@@ -519,16 +524,55 @@ WorkerDebugger::ReportPerformanceInfo()
   RefPtr<PerformanceCounter> perf = mWorkerPrivate->GetPerformanceCounter();
   if (perf) {
     perfId = perf->GetID();
-    count =  perf->GetTotalDispatchCount();
+    count = perf->GetTotalDispatchCount();
     duration = perf->GetExecutionDuration();
-    CategoryDispatch item = CategoryDispatch(DispatchCategory::Worker.GetValue(), count);
+    CategoryDispatch item =
+      CategoryDispatch(DispatchCategory::Worker.GetValue(), count);
     if (!items.AppendElement(item, fallible)) {
       NS_ERROR("Could not complete the operation");
-      return PerformanceInfo(url, pid, windowID, duration, perfId, true, isTopLevel, items);
     }
   }
 
-  return PerformanceInfo(url, pid, windowID, duration, perfId, true, isTopLevel, items);
+  if (!isTopLevel) {
+    return PerformanceInfoPromise::CreateAndResolve(PerformanceInfo(url,
+                                                                    pid,
+                                                                    windowID,
+                                                                    duration,
+                                                                    perfId,
+                                                                    true,
+                                                                    isTopLevel,
+                                                                    memoryInfo,
+                                                                    items),
+                                                    __func__);
+  }
+
+  // We need to keep a ref on workerPrivate, passed to the promise,
+  // to make sure it's still aloive when collecting the info.
+  RefPtr<WorkerPrivate> workerRef = mWorkerPrivate;
+  RefPtr<AbstractThread> mainThread =
+    SystemGroup::AbstractMainThreadFor(TaskCategory::Performance);
+
+  return CollectMemoryInfo(top, mainThread)
+    ->Then(mainThread,
+           __func__,
+           [workerRef, url, pid, perfId, windowID, duration, isTopLevel, items](
+             const PerformanceMemoryInfo& aMemoryInfo) {
+             return PerformanceInfoPromise::CreateAndResolve(
+               PerformanceInfo(url,
+                               pid,
+                               windowID,
+                               duration,
+                               perfId,
+                               true,
+                               isTopLevel,
+                               aMemoryInfo,
+                               items),
+               __func__);
+           },
+           [workerRef]() {
+             return PerformanceInfoPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                            __func__);
+           });
 }
 
 } // dom namespace
