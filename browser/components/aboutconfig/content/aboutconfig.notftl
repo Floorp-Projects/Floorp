@@ -3,3 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 about-config-title = about:config
+
+about-config-search =
+    .placeholder = Search
