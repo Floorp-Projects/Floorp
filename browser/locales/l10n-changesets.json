@@ -1007,7 +1007,7 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "ed9955bea35e"
+        "revision": "0f05cb372f6a"
     },
     "nb-NO": {
         "platforms": [
@@ -1247,7 +1247,7 @@
             "win64",
             "win64-devedition"
         ],
-        "revision": "d8ee4c2076b1"
+        "revision": "6457a5eb064a"
     },
     "son": {
         "platforms": [
