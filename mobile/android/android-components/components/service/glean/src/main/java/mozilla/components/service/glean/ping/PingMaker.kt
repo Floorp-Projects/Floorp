@@ -40,11 +40,14 @@ internal class PingMaker(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun getPingInfo(pingName: String): JSONObject {
-        // TODO this section is still missing app_build, client_id, seq and experiments.
-        // These fields will be added by bug 1497894 when 1499756 and 1501318 land.
         val pingInfo = JSONObject()
         pingInfo.put("ping_type", pingName)
         pingInfo.put("telemetry_sdk_build", BuildConfig.LIBRARY_VERSION)
+
+        // TODO this section is still missing real app_build, seq and experiments.
+        // These fields will be added by bug 1497894 when 1499756 and 1501318 land.
+        pingInfo.put("seq", 0)
+        pingInfo.put("app_build", "test-placeholder")
 
         pingInfo.mergeWith(getPingInfoMetrics())
 
