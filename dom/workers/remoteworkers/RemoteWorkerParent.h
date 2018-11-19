@@ -31,6 +31,12 @@ private:
   ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
 
   mozilla::ipc::IPCResult
+  RecvError(const ErrorValue& aValue) override;
+
+  mozilla::ipc::IPCResult
+  RecvClose() override;
+
+  mozilla::ipc::IPCResult
   RecvCreated(const bool& aStatus) override;
 
   RefPtr<RemoteWorkerController> mController;

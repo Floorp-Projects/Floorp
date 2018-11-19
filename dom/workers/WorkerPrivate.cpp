@@ -30,7 +30,7 @@
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceStorageWorker.h"
 #include "mozilla/dom/PromiseDebugging.h"
-#include "mozilla/dom/SharedWorkerManager.h"
+#include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/ThrottledEventQueue.h"
@@ -1888,7 +1888,7 @@ WorkerPrivate::ModifyBusyCount(bool aIncrease)
 {
   AssertIsOnParentThread();
 
-  NS_ASSERTION(aIncrease || mBusyCount, "Mismatched busy count mods!");
+  MOZ_ASSERT(aIncrease || mBusyCount, "Mismatched busy count mods!");
 
   if (aIncrease) {
     mBusyCount++;
@@ -4907,7 +4907,7 @@ WorkerPrivate::EndCTypesCall()
 
 bool
 WorkerPrivate::ConnectMessagePort(JSContext* aCx,
-                                  MessagePortIdentifier& aIdentifier)
+                                  const MessagePortIdentifier& aIdentifier)
 {
   AssertIsOnWorkerThread();
 
@@ -5075,21 +5075,21 @@ WorkerPrivate::GetPerformanceStorage()
 }
 
 void
-WorkerPrivate::SetSharedWorkerManager(SharedWorkerManager* aManager)
+WorkerPrivate::SetRemoteWorkerController(RemoteWorkerChild* aController)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(aManager);
-  MOZ_ASSERT(!mSharedWorkerManager);
+  MOZ_ASSERT(aController);
+  MOZ_ASSERT(!mRemoteWorkerController);
 
-  mSharedWorkerManager = aManager;
+  mRemoteWorkerController = aController;
 }
 
-SharedWorkerManager*
-WorkerPrivate::GetSharedWorkerManager()
+RemoteWorkerChild*
+WorkerPrivate::GetRemoteWorkerController()
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(mSharedWorkerManager);
-  return mSharedWorkerManager;
+  MOZ_ASSERT(mRemoteWorkerController);
+  return mRemoteWorkerController;
 }
 
 NS_IMPL_ADDREF(WorkerPrivate::EventTarget)

@@ -14,7 +14,8 @@
 namespace mozilla {
 namespace dom {
 
-class SharedWorkerLoadInfo;
+class MessagePortIdentifier;
+class RemoteWorkerData;
 class SharedWorkerManager;
 class SharedWorkerService;
 
@@ -26,7 +27,9 @@ public:
   SharedWorkerParent();
 
   void
-  Initialize(const SharedWorkerLoadInfo& aInfo);
+  Initialize(const RemoteWorkerData& aData,
+             uint64_t aWindowID,
+             const MessagePortIdentifier& aPortIdentifier);
 
   void
   ManagerCreated(SharedWorkerManager* aWorkerManager);

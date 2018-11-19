@@ -4,7 +4,7 @@
 
 include protocol PBackground;
 
-include SharedWorkerTypes;
+include RemoteWorkerTypes;
 
 namespace mozilla {
 namespace dom {

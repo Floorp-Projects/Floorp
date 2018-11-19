@@ -21,7 +21,6 @@ UNIFIED_SOURCES += [
 
 IPDL_SOURCES += [
     'PSharedWorker.ipdl',
-    'SharedWorkerTypes.ipdlh',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

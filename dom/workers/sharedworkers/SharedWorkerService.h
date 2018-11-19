@@ -18,6 +18,8 @@ class PrincipalInfo;
 
 namespace dom {
 
+class MessagePortIdentifier;
+class RemoteWorkerData;
 class SharedWorkerManager;
 class SharedWorkerParent;
 
@@ -38,12 +40,16 @@ public:
   // PBackground method only.
   void
   GetOrCreateWorkerManager(SharedWorkerParent* aActor,
-                           const SharedWorkerLoadInfo& aInfo);
+                           const RemoteWorkerData& aData,
+                           uint64_t aWindowID,
+                           const MessagePortIdentifier& aPortIdentifier);
 
   void
   GetOrCreateWorkerManagerOnMainThread(nsIEventTarget* aBackgroundEventTarget,
                                        SharedWorkerParent* aActor,
-                                       const SharedWorkerLoadInfo& aInfo);
+                                       const RemoteWorkerData& aData,
+                                       uint64_t aWindowID,
+                                       const MessagePortIdentifier& aPortIdentifier);
 
   // PBackground method only.
   void

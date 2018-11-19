@@ -2,11 +2,73 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include ClientIPCTypes;
+include PBackgroundSharedTypes;
+
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+
 namespace mozilla {
 namespace dom {
 
+struct ContentSecurityPolicy
+{
+  nsString policy;
+  bool reportOnlyFlag;
+  bool deliveredViaMetaTagFlag;
+};
+
 struct RemoteWorkerData
 {
+  nsString originalScriptURL;
+  nsCString baseScriptURL;
+  nsCString resolvedScriptURL;
+
+  nsString name;
+
+  PrincipalInfo loadingPrincipalInfo;
+  ContentSecurityPolicy[] loadingPrincipalCsp;
+  ContentSecurityPolicy[] loadingPrincipalPreloadCsp;
+
+  PrincipalInfo principalInfo;
+  ContentSecurityPolicy[] principalCsp;
+  ContentSecurityPolicy[] principalPreloadCsp;
+
+  nsCString domain;
+
+  bool isSecureContext;
+
+  OptionalIPCClientInfo clientInfo;
+
+  bool isSharedWorker;
+};
+
+// ErrorData/ErrorDataNote correspond to WorkerErrorReport/WorkerErrorNote
+// which in turn correspond to JSErrorReport/JSErrorNotes which allows JS to
+// report complicated errors such as redeclarations that involve multiple
+// distinct lines.  For more generic error-propagation IPC structures, see bug
+// 1357463 on making ErrorResult usable over IPC.
+
+struct ErrorDataNote {
+  uint32_t lineNumber;
+  uint32_t columnNumber;
+  nsString message;
+  nsString filename;
+};
+
+struct ErrorData {
+  uint32_t lineNumber;
+  uint32_t columnNumber;
+  uint32_t flags;
+  nsString message;
+  nsString filename;
+  nsString line;
+  ErrorDataNote[] notes;
+};
+
+union ErrorValue {
+  nsresult;
+  ErrorData;
+  void_t;
 };
 
 } // namespace dom

@@ -49,7 +49,6 @@ include PBackgroundIDBSharedTypes;
 include PFileSystemParams;
 include ProtocolTypes;
 include RemoteWorkerTypes;
-include SharedWorkerTypes;
 include MIDITypes;
 
 include "mozilla/dom/cache/IPCUtils.h";
@@ -161,7 +160,9 @@ parent:
 
   async PWebAuthnTransaction();
 
-  async PSharedWorker(SharedWorkerLoadInfo loadInfo);
+  async PSharedWorker(RemoteWorkerData data,
+                      uint64_t windowID,
+                      MessagePortIdentifier portIdentifier);
 
   async PTemporaryIPCBlob();
 
