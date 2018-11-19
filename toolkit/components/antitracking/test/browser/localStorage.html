@@ -24,6 +24,22 @@ if (parent) {
 
     if (e.data == "open") {
       window.open("localStorage.html");
+      return;
+    }
+
+    if (e.data == "open and test") {
+      let w = window.open("localStorage.html");
+      w.addEventListener("load", _ => {
+        let status;
+        try {
+          localStorage.foo = "value" + Math.random();
+          status = true;
+        } catch (e) {
+          status = false;
+        }
+
+        parent.postMessage({type: "test", status }, "*");
+      }, {once: true});
     }
   };
 
