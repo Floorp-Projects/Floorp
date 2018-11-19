@@ -44,10 +44,6 @@ buildscript {
                 url repository
             }
         }
-        // For in tree plugins.
-        maven {
-            url "file://${gradle.mozconfig.topsrcdir}/mobile/android/gradle/m2repo"
-        }
     }
 
     ext.kotlin_version = '1.2.41'
