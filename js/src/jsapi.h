@@ -4073,19 +4073,19 @@ JS_PUBLIC_API(JSString*)
 GetSymbolDescription(HandleSymbol symbol);
 
 /* Well-known symbols. */
-#define JS_FOR_EACH_WELL_KNOWN_SYMBOL(macro) \
-    macro(isConcatSpreadable) \
-    macro(iterator) \
-    macro(match) \
-    macro(replace) \
-    macro(search) \
-    macro(species) \
-    macro(hasInstance) \
-    macro(split) \
-    macro(toPrimitive) \
-    macro(toStringTag) \
-    macro(unscopables) \
-    macro(asyncIterator)
+#define JS_FOR_EACH_WELL_KNOWN_SYMBOL(MACRO) \
+    MACRO(isConcatSpreadable) \
+    MACRO(iterator) \
+    MACRO(match) \
+    MACRO(replace) \
+    MACRO(search) \
+    MACRO(species) \
+    MACRO(hasInstance) \
+    MACRO(split) \
+    MACRO(toPrimitive) \
+    MACRO(toStringTag) \
+    MACRO(unscopables) \
+    MACRO(asyncIterator)
 
 enum class SymbolCode : uint32_t {
     // There is one SymbolCode for each well-known symbol.
