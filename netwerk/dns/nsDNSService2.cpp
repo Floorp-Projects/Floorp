@@ -30,6 +30,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsNetAddr.h"
 #include "nsProxyRelease.h"
+#include "nsQueryObject.h"
 #include "nsIObserverService.h"
 #include "nsINetworkLinkService.h"
 #include "TRRService.h"
@@ -71,13 +72,13 @@ public:
         , mIterGenCnt(-1)
         , mDone(false)
     {
-        mHostRecord = do_QueryInterface(hostRecord);
+        mHostRecord = do_QueryObject(hostRecord);
     }
 
 private:
     virtual ~nsDNSRecord() = default;
 
-    nsCOMPtr<AddrHostRecord>  mHostRecord;
+    RefPtr<AddrHostRecord>  mHostRecord;
     NetAddrElement            *mIter;
     int                        mIterGenCnt; // the generation count of
                                             // mHostRecord->addr_info when we
@@ -317,12 +318,12 @@ public:
 
     explicit nsDNSByTypeRecord(nsHostRecord *hostRecord)
     {
-        mHostRecord = do_QueryInterface(hostRecord);
+        mHostRecord = do_QueryObject(hostRecord);
     }
 
 private:
     virtual ~nsDNSByTypeRecord() = default;
-    nsCOMPtr<TypeHostRecord>  mHostRecord;
+    RefPtr<TypeHostRecord>  mHostRecord;
 };
 
 NS_IMPL_ISUPPORTS(nsDNSByTypeRecord, nsIDNSByTypeRecord)
