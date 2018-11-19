@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_SharedWorkerManager_h
 #define mozilla_dom_SharedWorkerManager_h
 
+#include "mozilla/dom/RemoteWorkerController.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 
@@ -17,13 +18,12 @@ namespace dom {
 
 class MessagePortIdentifier;
 class RemoteWorkerData;
-class RemoteWorkerController;
 class SharedWorkerParent;
 
-class SharedWorkerManager final
+class SharedWorkerManager final : public RemoteWorkerObserver
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedWorkerManager);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedWorkerManager, override);
 
   // Called on main-thread thread methods
 
@@ -36,6 +36,20 @@ public:
                     const nsACString& aScriptURL,
                     const nsAString& aName,
                     nsIPrincipal* aLoadingPrincipal) const;
+
+  // RemoteWorkerObserver
+
+  void
+  CreationFailed() override;
+
+  void
+  CreationSucceeded() override;
+
+  void
+  ErrorReceived(const ErrorValue& aValue) override;
+
+  void
+  Terminated() override;
 
   // Called on PBackground thread methods
 

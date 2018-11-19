@@ -51,7 +51,7 @@ SharedWorkerManager::MaybeCreateRemoteWorker(const RemoteWorkerData& aData,
   AssertIsOnBackgroundThread();
 
   if (!mRemoteWorkerController) {
-    mRemoteWorkerController = RemoteWorkerController::Create(aData);
+    mRemoteWorkerController = RemoteWorkerController::Create(aData, this);
     if (NS_WARN_IF(!mRemoteWorkerController)) {
       return false;
     }
@@ -188,46 +188,25 @@ SharedWorkerManager::IsSecureContext() const
   return mIsSecureContext;
 }
 
-/* TODO
 void
-SharedWorkerManager::BroadcastErrorToActorsOnMainThread(const WorkerErrorReport* aReport,
-                                                        bool aIsErrorEvent)
+SharedWorkerManager::CreationFailed()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  AssertIsOnBackgroundThread();
 
-  ErrorValue value;
-  if (aIsErrorEvent) {
-    nsTArray<ErrorDataNote> notes;
-    for (size_t i = 0, len = aReport->mNotes.Length(); i < len; i++) {
-      const WorkerErrorNote& note = aReport->mNotes.ElementAt(i);
-      notes.AppendElement(ErrorDataNote(note.mLineNumber, note.mColumnNumber,
-                                        note.mMessage, note.mFilename));
-    }
-
-    ErrorData data(aReport->mLineNumber,
-                   aReport->mColumnNumber,
-                   aReport->mFlags,
-                   aReport->mMessage,
-                   aReport->mFilename,
-                   aReport->mLine,
-                   notes);
-    value = data;
-  } else {
-    value = void_t();
+  for (SharedWorkerParent* actor : mActors) {
+    Unused << actor->SendError(NS_ERROR_FAILURE);
   }
-
-  RefPtr<SharedWorkerManager> self = this;
-  nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction("SharedWorkerManager::BroadcastErrorToActorsOnMainThread",
-                           [self, value]() {
-    self->BroadcastErrorToActors(value);
-  });
-
-  mPBackgroundEventTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
 void
-SharedWorkerManager::BroadcastErrorToActors(const ErrorValue& aValue)
+SharedWorkerManager::CreationSucceeded()
+{
+  AssertIsOnBackgroundThread();
+  // Nothing to do here.
+}
+
+void
+SharedWorkerManager::ErrorReceived(const ErrorValue& aValue)
 {
   AssertIsOnBackgroundThread();
 
@@ -237,23 +216,7 @@ SharedWorkerManager::BroadcastErrorToActors(const ErrorValue& aValue)
 }
 
 void
-SharedWorkerManager::CloseActorsOnMainThread()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  CloseOnMainThread();
-
-  RefPtr<SharedWorkerManager> self = this;
-  nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction("SharedWorkerManager::CloseActorsOnMainThread",
-                           [self]() {
-    self->CloseActors();
-  });
-
-  mPBackgroundEventTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
-}
-
-void
-SharedWorkerManager::CloseActors()
+SharedWorkerManager::Terminated()
 {
   AssertIsOnBackgroundThread();
 
@@ -261,39 +224,6 @@ SharedWorkerManager::CloseActors()
     Unused << actor->SendTerminate();
   }
 }
-
-void
-SharedWorkerManager::FlushReportsToActorsOnMainThread(nsIConsoleReportCollector* aReporter)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  AutoTArray<uint64_t, 10> windowIDs;
-  for (SharedWorkerParent* actor : mActors) {
-    uint64_t windowID = actor->WindowID();
-    if (windowID && !windowIDs.Contains(windowID)) {
-      windowIDs.AppendElement(windowID);
-    }
-  }
-
-  bool reportErrorToBrowserConsole = true;
-
-  // Flush the reports.
-  for (uint32_t index = 0; index < windowIDs.Length(); index++) {
-    aReporter->FlushReportsToConsole(windowIDs[index],
-      nsIConsoleReportCollector::ReportAction::Save);
-    reportErrorToBrowserConsole = false;
-  }
-
-  // Finally report to browser console if there is no any window or shared
-  // worker.
-  if (reportErrorToBrowserConsole) {
-    aReporter->FlushReportsToConsole(0);
-    return;
-  }
-
-  aReporter->ClearConsoleReports();
-}
-*/
 
 } // dom namespace
 } // mozilla namespace

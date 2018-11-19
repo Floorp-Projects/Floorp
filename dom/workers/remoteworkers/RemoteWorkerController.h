@@ -83,6 +83,24 @@ class MessagePortIdentifier;
 class RemoteWorkerManager;
 class RemoteWorkerParent;
 
+class RemoteWorkerObserver
+{
+public:
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+  virtual void
+  CreationFailed() = 0;
+
+  virtual void
+  CreationSucceeded() = 0;
+
+  virtual void
+  ErrorReceived(const ErrorValue& aValue) = 0;
+
+  virtual void
+  Terminated() = 0;
+};
+
 class RemoteWorkerController final
 {
   friend class RemoteWorkerManager;
@@ -92,7 +110,8 @@ public:
   NS_INLINE_DECL_REFCOUNTING(RemoteWorkerController)
 
   static already_AddRefed<RemoteWorkerController>
-  Create(const RemoteWorkerData& aData);
+  Create(const RemoteWorkerData& aData,
+         RemoteWorkerObserver* aObserver);
 
   void
   AddWindowID(uint64_t aWindowID);
@@ -119,7 +138,7 @@ public:
   Thaw();
 
 private:
-  RemoteWorkerController();
+  explicit RemoteWorkerController(RemoteWorkerObserver* aObserver);
   ~RemoteWorkerController();
 
   void
@@ -140,13 +159,14 @@ private:
   void
   CreationSucceeded();
 
+  RefPtr<RemoteWorkerObserver> mObserver;
+  RefPtr<RemoteWorkerParent> mActor;
+
   enum {
     ePending,
     eReady,
     eTerminated,
   } mState;
-
-  RefPtr<RemoteWorkerParent> mActor;
 
   struct Op {
     enum Type {
