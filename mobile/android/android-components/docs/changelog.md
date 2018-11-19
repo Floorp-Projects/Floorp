@@ -11,13 +11,22 @@ permalink: /changelog/
 [API reference](https://mozilla-mobile.github.io/android-components/api/0.32.0/index)
 
 * Compiled against:
-  * Android (SDK: 27, Support Libraries: 27.1.1)
+  * Android (SDK: **28** 🔺, Support Libraries: **28.0.0** 🔺)
   * Kotlin (Stdlib: 1.3.0, Coroutines: 1.0.1)
   * GeckoView (Nightly: **65.0.20181116100120** 🔺, Beta: 64.0.20181022150107, Release: 63.0.20181018182531)
   * Mozilla App Services (FxA: **0.10.0**, Sync Logins: **0.10.0**, Places: **0.10.0**)
 
+* ⚠️ **This is the first release compiled against Android SDK 28.**
+
 * **lib-crash**
   * The state of the "Send crash report" checkbox is now getting saved and restored once the dialog is shown again. 
+  * The crash reporter can now sends reports if the prompt is closed by pressing the back button.
+
+* **lib-fetch-httpurlconnection**
+  * 🆕 New component: `concept-fetch` implementation using [HttpURLConnection](https://developer.android.com/reference/java/net/HttpURLConnection.html).
+
+* **lib-fetch-okhttp**
+  * 🆕 New component: `concept-fetch` implementation using [OkHttp](https://github.com/square/okhttp).
 
 # 0.31.0
 
