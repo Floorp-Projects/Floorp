@@ -817,8 +817,7 @@ Realm::updateDebuggerObservesFlag(unsigned flag)
     MOZ_ASSERT(isDebuggee());
     MOZ_ASSERT(flag == DebuggerObservesAllExecution ||
                flag == DebuggerObservesCoverage ||
-               flag == DebuggerObservesAsmJS ||
-               flag == DebuggerObservesBinarySource);
+               flag == DebuggerObservesAsmJS);
 
     GlobalObject* global = zone()->runtimeFromMainThread()->gc.isForegroundSweeping()
                            ? unsafeUnbarrieredMaybeGlobal()
@@ -828,8 +827,7 @@ Realm::updateDebuggerObservesFlag(unsigned flag)
         Debugger* dbg = *p;
         if (flag == DebuggerObservesAllExecution ? dbg->observesAllExecution() :
             flag == DebuggerObservesCoverage ? dbg->observesCoverage() :
-            flag == DebuggerObservesAsmJS ? dbg->observesAsmJS() :
-            dbg->observesBinarySource())
+            flag == DebuggerObservesAsmJS && dbg->observesAsmJS())
         {
             debugModeBits_ |= flag;
             return;
