@@ -449,9 +449,9 @@ AtomicOperations::exchangeSeqCst(uint64_t* addr, uint64_t val) {
 } }
 #endif
 
-#elif defined(ENABLE_SHARED_ARRAY_BUFFER)
+#else
 
-# error "Either disable JS shared memory, use GCC or Clang, or add code here"
+# error "Either use GCC or Clang, or add code here"
 
 #endif
 
