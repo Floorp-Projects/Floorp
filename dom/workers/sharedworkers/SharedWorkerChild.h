@@ -22,10 +22,39 @@ public:
 
   SharedWorkerChild();
 
+  void
+  SetParent(SharedWorker* aSharedWorker)
+  {
+    mParent = aSharedWorker;
+  }
+
+  void
+  SendClose();
+
+  void
+  SendSuspend();
+
+  void
+  SendResume();
+
+  void
+  SendFreeze();
+
+  void
+  SendThaw();
+
 private:
   ~SharedWorkerChild();
 
-  void ActorDestroy(ActorDestroyReason aWhy) override;
+  mozilla::ipc::IPCResult
+  RecvError(const nsresult& error) override;
+
+  void
+  ActorDestroy(ActorDestroyReason aWhy) override;
+
+  // Raw pointer because mParent is set to null when released.
+  SharedWorker* MOZ_NON_OWNING_REF mParent;
+  bool mActive;
 };
 
 } // namespace dom
