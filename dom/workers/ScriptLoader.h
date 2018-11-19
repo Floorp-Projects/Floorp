@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workers_scriptloader_h__
 #define mozilla_dom_workers_scriptloader_h__
 
-#include "WorkerCommon.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "nsIContentPolicy.h"
 #include "nsStringFwd.h"
 

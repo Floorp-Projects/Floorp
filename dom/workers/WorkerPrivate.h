@@ -723,7 +723,7 @@ public:
   IsParentWindowPaused() const
   {
     AssertIsOnParentThread();
-    return mParentWindowPausedDepth > 0;
+    return mParentWindowPaused;
   }
 
   // When we debug a worker, we want to disconnect the window and the worker
@@ -1080,9 +1080,6 @@ public:
     mLoadingWorkerScript = aLoadingWorkerScript;
   }
 
-  bool
-  RegisterSharedWorker(SharedWorker* aSharedWorker, MessagePort* aPort);
-
   void
   BroadcastErrorToSharedWorkers(JSContext* aCx,
                                 const WorkerErrorReport* aReport,
@@ -1092,9 +1089,6 @@ public:
   GetAllSharedWorkers(nsTArray<RefPtr<SharedWorker>>& aSharedWorkers);
 
   void
-  CloseSharedWorkersForWindow(nsPIDOMWindowInner* aWindow);
-
-  void
   CloseAllSharedWorkers();
 
   void
@@ -1102,10 +1096,6 @@ public:
 
   // We can assume that an nsPIDOMWindow will be available for Freeze, Thaw
   // as these are only used for globals going in and out of the bfcache.
-  //
-  // XXXbz: This is a bald-faced lie given the uses in RegisterSharedWorker and
-  // CloseSharedWorkersForWindow, which pass null for aWindow to Thaw and Freeze
-  // respectively.  See bug 1251722.
   bool
   Freeze(nsPIDOMWindowInner* aWindow);
 
@@ -1464,9 +1454,7 @@ private:
   };
   ThreadBound<WorkerThreadAccessible> mWorkerThreadAccessible;
 
-  // SharedWorkers may have multiple windows paused, so this must be
-  // a count instead of just a boolean.
-  uint32_t mParentWindowPausedDepth;
+  bool mParentWindowPaused;
 
   bool mPendingEventQueueClearing;
   bool mCancelAllPendingRunnables;

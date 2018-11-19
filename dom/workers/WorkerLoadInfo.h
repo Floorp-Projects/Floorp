@@ -107,6 +107,12 @@ struct WorkerLoadInfo
   bool mServiceWorkersTestingInWindow;
   OriginAttributes mOriginAttributes;
 
+  enum {
+    eNotSet,
+    eInsecureContext,
+    eSecureContext,
+  } mSecureContext;
+
   WorkerLoadInfo();
   ~WorkerLoadInfo();
 

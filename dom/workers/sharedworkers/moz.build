@@ -13,7 +13,9 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     'SharedWorker.cpp',
     'SharedWorkerChild.cpp',
+    'SharedWorkerManager.cpp',
     'SharedWorkerParent.cpp',
+    'SharedWorkerService.cpp',
 ]
 
 IPDL_SOURCES += [

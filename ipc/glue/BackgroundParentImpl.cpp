@@ -395,6 +395,16 @@ BackgroundParentImpl::AllocPSharedWorkerParent(const mozilla::dom::SharedWorkerL
   return agent.forget().take();
 }
 
+IPCResult
+BackgroundParentImpl::RecvPSharedWorkerConstructor(PSharedWorkerParent* aActor,
+                                                   const mozilla::dom::SharedWorkerLoadInfo& aInfo)
+{
+  mozilla::dom::SharedWorkerParent* actor =
+    static_cast<mozilla::dom::SharedWorkerParent*>(aActor);
+  actor->Initialize(aInfo);
+  return IPC_OK();
+}
+
 bool
 BackgroundParentImpl::DeallocPSharedWorkerParent(mozilla::dom::PSharedWorkerParent* aActor)
 {

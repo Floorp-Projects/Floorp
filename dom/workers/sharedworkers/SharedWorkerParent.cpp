@@ -5,16 +5,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SharedWorkerParent.h"
+#include "SharedWorkerManager.h"
+#include "SharedWorkerService.h"
+#include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 
-using ipc::PrincipalInfo;
+using namespace ipc;
 
 namespace dom {
 
 SharedWorkerParent::SharedWorkerParent()
+  : mBackgroundEventTarget(GetCurrentThreadEventTarget())
+  , mStatus(eInit)
+  , mSuspended(false)
+  , mFrozen(false)
 {
-  // TODO
+  AssertIsOnBackgroundThread();
 }
 
 SharedWorkerParent::~SharedWorkerParent() = default;
@@ -22,7 +31,152 @@ SharedWorkerParent::~SharedWorkerParent() = default;
 void
 SharedWorkerParent::ActorDestroy(IProtocol::ActorDestroyReason aReason)
 {
-  // TODO
+  AssertIsOnBackgroundThread();
+
+  if (mWorkerManager) {
+    mWorkerManager->RemoveActor(this);
+    mWorkerManager = nullptr;
+  }
+}
+
+void
+SharedWorkerParent::Initialize(const SharedWorkerLoadInfo& aInfo)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mStatus == eInit);
+
+  // Let's keep the service alive.
+  mService = SharedWorkerService::GetOrCreate();
+  MOZ_ASSERT(mService);
+
+  mStatus = ePending;
+  mService->GetOrCreateWorkerManager(this, aInfo);
+}
+
+IPCResult
+SharedWorkerParent::RecvClose()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mStatus == ePending || mStatus == eActive);
+
+  mStatus = eClosed;
+
+  if (mWorkerManager) {
+    mWorkerManager->RemoveActor(this);
+    mWorkerManager = nullptr;
+  }
+
+  Unused << Send__delete__(this);
+  return IPC_OK();
+}
+
+IPCResult
+SharedWorkerParent::RecvSuspend()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mSuspended);
+  MOZ_ASSERT(mStatus == ePending || mStatus == eActive);
+
+  mSuspended = true;
+
+  if (mStatus == eActive) {
+    MOZ_ASSERT(mWorkerManager);
+    mWorkerManager->UpdateSuspend();
+  }
+
+  return IPC_OK();
+}
+
+IPCResult
+SharedWorkerParent::RecvResume()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mSuspended);
+  MOZ_ASSERT(mStatus == ePending || mStatus == eActive);
+
+  mSuspended = false;
+
+  if (mStatus == eActive) {
+    MOZ_ASSERT(mWorkerManager);
+    mWorkerManager->UpdateSuspend();
+  }
+
+  return IPC_OK();
+}
+
+IPCResult
+SharedWorkerParent::RecvFreeze()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mFrozen);
+  MOZ_ASSERT(mStatus == ePending || mStatus == eActive);
+
+  mFrozen = true;
+
+  if (mStatus == eActive) {
+    MOZ_ASSERT(mWorkerManager);
+    mWorkerManager->UpdateFrozen();
+  }
+
+  return IPC_OK();
+}
+
+IPCResult
+SharedWorkerParent::RecvThaw()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mFrozen);
+  MOZ_ASSERT(mStatus == ePending || mStatus == eActive);
+
+  mFrozen = false;
+
+  if (mStatus == eActive) {
+    MOZ_ASSERT(mWorkerManager);
+    mWorkerManager->UpdateFrozen();
+  }
+
+  return IPC_OK();
+}
+
+void
+SharedWorkerParent::ManagerCreated(SharedWorkerManager* aWorkerManager)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aWorkerManager);
+  MOZ_ASSERT(!mWorkerManager);
+  MOZ_ASSERT(mStatus == ePending || mStatus == eClosed);
+
+  // Already gone.
+  if (mStatus == eClosed) {
+    aWorkerManager->RemoveActor(this);
+    return;
+  }
+
+  mStatus = eActive;
+  mWorkerManager = aWorkerManager;
+
+  if (mFrozen) {
+    mWorkerManager->UpdateFrozen();
+  }
+
+  if (mSuspended) {
+    mWorkerManager->UpdateSuspend();
+  }
+}
+
+void
+SharedWorkerParent::ErrorPropagation(nsresult aError)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(NS_FAILED(aError));
+  MOZ_ASSERT(mStatus == ePending || mStatus == eClosed);
+
+  // Already gone.
+  if (mStatus == eClosed) {
+    return;
+  }
+
+  Unused << SendError(aError);
 }
 
 } // namespace dom
