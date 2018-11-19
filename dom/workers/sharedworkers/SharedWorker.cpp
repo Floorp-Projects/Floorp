@@ -23,6 +23,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/ipc/URIUtils.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindowInner.h"
 #include "nsPIDOMWindow.h"
@@ -223,17 +224,11 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
   MessagePortIdentifier portIdentifier;
   channel->Port1()->CloneAndDisentangle(portIdentifier);
 
-  nsAutoCString resolvedScriptURL;
-  aRv = loadInfo.mResolvedScriptURI->GetSpec(resolvedScriptURL);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
+  URIParams resolvedScriptURL;
+  SerializeURI(loadInfo.mResolvedScriptURI, resolvedScriptURL);
 
-  nsAutoCString baseURL;
-  aRv = loadInfo.mBaseURI->GetSpec(baseURL);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
+  URIParams baseURL;
+  SerializeURI(loadInfo.mBaseURI, baseURL);
 
   // Register this component to PBackground.
   PBackgroundChild* actorChild = BackgroundChild::GetOrCreateForCurrentThread();

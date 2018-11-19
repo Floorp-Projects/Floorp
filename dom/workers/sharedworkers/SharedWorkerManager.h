@@ -33,7 +33,7 @@ public:
 
   bool
   MatchOnMainThread(const nsACString& aDomain,
-                    const nsACString& aScriptURL,
+                    nsIURI* aScriptURL,
                     const nsAString& aName,
                     nsIPrincipal* aLoadingPrincipal) const;
 
@@ -81,7 +81,7 @@ private:
 
   nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
   nsCString mDomain;
-  nsCString mResolvedScriptURL;
+  nsCOMPtr<nsIURI> mResolvedScriptURL;
   nsString mName;
   bool mIsSecureContext;
   bool mSuspended;

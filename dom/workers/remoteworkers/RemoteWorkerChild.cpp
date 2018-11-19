@@ -16,6 +16,7 @@
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/ipc/URIUtils.h"
 #include "nsIConsoleReportCollector.h"
 #include "nsIPrincipal.h"
 #include "nsNetUtil.h"
@@ -286,17 +287,8 @@ RemoteWorkerChild::ExecWorkerOnMainThread(const RemoteWorkerData& aData)
   }
 
   WorkerLoadInfo info;
-  rv = NS_NewURI(getter_AddRefs(info.mBaseURI), aData.baseScriptURL(),
-                 nullptr, nullptr);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = NS_NewURI(getter_AddRefs(info.mResolvedScriptURI),
-                 aData.resolvedScriptURL(), nullptr, info.mBaseURI);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  info.mBaseURI = DeserializeURI(aData.baseScriptURL());
+  info.mResolvedScriptURI = DeserializeURI(aData.resolvedScriptURL());
 
   info.mPrincipalInfo = new PrincipalInfo(aData.principalInfo());
 
