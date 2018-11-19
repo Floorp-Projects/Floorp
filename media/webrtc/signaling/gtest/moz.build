@@ -25,6 +25,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit' and CONFIG['OS_TARGET'] != 'Android':
     ]
 
     SOURCES += [
+        'audioconduit_unittests.cpp',
         'jsep_session_unittest.cpp',
         'jsep_track_unittest.cpp',
         'mediaconduit_unittests.cpp',
