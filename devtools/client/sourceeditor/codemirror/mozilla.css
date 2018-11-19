@@ -152,10 +152,15 @@
 /* Fold addon */
 
 .CodeMirror-foldmarker {
-  color: blue;
-  text-shadow: #b9f 1px 1px 2px, #b9f -1px -1px 2px, #b9f 1px -1px 2px, #b9f -1px 1px 2px;
+  display: inline-block;
   font-family: sans-serif;
-  line-height: .3;
+  line-height: 10px;
+  margin: 0 1px;
+  padding: 0 2px;
+  border-radius: 3px;
+  border: solid 1px var(--theme-splitter-color);
+  color: var(--theme-body-color);
+  background-color: var(--theme-sidebar-background);
   cursor: pointer;
 }
 
@@ -165,18 +170,19 @@
 
 .CodeMirror-foldgutter-open,
 .CodeMirror-foldgutter-folded {
-  color: #555;
+  height: 14px;
+  background-image: url("chrome://devtools/skin/images/arrow.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: var(--theme-content-color3);
+  /* make the icons smaller than regular twistys (10->8px) */
+  background-size: 8px;
   cursor: pointer;
 }
 
-.CodeMirror-foldgutter-open:after {
-  font-size: 120%;
-  content: "\25BE";
-}
-
-.CodeMirror-foldgutter-folded:after {
-  font-size: 120%;
-  content: "\25B8";
+.CodeMirror-foldgutter-folded {
+  transform: rotate(-90deg);
 }
 
 .CodeMirror-hints {
