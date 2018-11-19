@@ -9,9 +9,10 @@
 const EDIT_ADDRESS_URL = "chrome://formautofill/content/editAddress.xhtml";
 const EDIT_CREDIT_CARD_URL = "chrome://formautofill/content/editCreditCard.xhtml";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://formautofill/FormAutofill.jsm");
 
 ChromeUtils.defineModuleGetter(this, "CreditCard",
                                "resource://gre/modules/CreditCard.jsm");
@@ -21,6 +22,12 @@ ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
                                "resource://formautofill/FormAutofillUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "OSKeyStore",
                                "resource://formautofill/OSKeyStore.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
+  const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName("brandShortName");
+  return FormAutofillUtils.stringBundle.formatStringFromName(
+    `editCreditCardPasswordPrompt.${AppConstants.platform}`, [brandShortName], 1);
+});
 
 this.log = null;
 FormAutofill.defineLazyLogGetter(this, "manageAddresses");
@@ -327,7 +334,7 @@ class ManageCreditCards extends ManageRecords {
    */
   async openEditDialog(creditCard) {
     // Ask for reauth if user is trying to edit an existing credit card.
-    if (!creditCard || await OSKeyStore.ensureLoggedIn(true)) {
+    if (!creditCard || await OSKeyStore.ensureLoggedIn(reauthPasswordPromptMessage)) {
       let decryptedCCNumObj = {};
       if (creditCard && creditCard["cc-number-encrypted"]) {
         try {
