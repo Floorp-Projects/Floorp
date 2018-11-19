@@ -677,6 +677,16 @@ CssLogic.getComputedStyle = function(node) {
   }
 
   const {bindingElement, pseudo} = CssLogic.getBindingElementAndPseudo(node);
+
+  // For reasons that still escape us, pseudo-elements can sometimes be "unattached" (i.e.
+  // not have a parentNode defined). This seems to happen when a page is reloaded while
+  // the inspector is open. Bailing out here ensures that the inspector does not fail at
+  // presenting DOM nodes and CSS styles when this happens. This is a temporary measure.
+  // See bug 1506792.
+  if (!bindingElement) {
+    return null;
+  }
+
   return node.ownerGlobal.getComputedStyle(bindingElement, pseudo);
 };
 
