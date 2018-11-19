@@ -7,55 +7,45 @@
 <!DOCTYPE html [
   <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
   %htmlDTD;
-  <!ENTITY % netErrorDTD SYSTEM "chrome://global/locale/netError.dtd">
-  %netErrorDTD;
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-  %globalDTD;
-  <!ENTITY % restorepageDTD SYSTEM "chrome://browser/locale/aboutSessionRestore.dtd">
-  %restorepageDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <head>
-    <title>&restorepage.tabtitle;</title>
+    <title data-l10n-id="restore-page-tab-title"></title>
     <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css" media="all"/>
     <link rel="stylesheet" href="chrome://browser/skin/aboutSessionRestore.css" type="text/css" media="all"/>
     <link rel="icon" href="chrome://global/skin/icons/warning.svg"/>
-
+    <link rel="localization" href="browser/aboutSessionRestore.ftl"/>
+    <link rel="localization" href="branding/brand.ftl"/>
     <script type="application/javascript" src="chrome://browser/content/aboutSessionRestore.js"/>
   </head>
 
-  <body dir="&locale.dir;" class="illustrated">
+  <body class="illustrated">
 
     <div class="container restore-chosen">
       <div class="description-wrapper">
         <div class="title">
-          <h1 class="title-text">&restorepage.errorTitle2;</h1>
+          <h1 class="title-text" data-l10n-id="restore-page-error-title"></h1>
         </div>
         <div class="description">
-          <p>&restorepage.problemDesc2;</p>
+          <p data-l10n-id="restore-page-problem-desc"></p>
 
           <div id="errorLongDesc">
-            <p>&restorepage.tryThis2;</p>
+            <p data-l10n-id="restore-page-try-this"></p>
           </div>
         </div>
         <button id="tabsToggle" class="show-tabs">
-          <span id="showTabs">
-            &restorepage.showTabs;
-          </span>
-          <span id="hideTabs">
-            &restorepage.hideTabs;
-          </span>
+          <span id="showTabs" data-l10n-id="restore-page-show-tabs"></span>
+          <span id="hideTabs" data-l10n-id="restore-page-hide-tabs"></span>
         </button>
       </div>
       <div class="tree-container" available="true">
         <xul:tree id="tabList" seltype="single" hidecolumnpicker="true"
-              onclick="onListClick(event);" onkeydown="onListKeyDown(event);"
-              _window_label="&restorepage.windowLabel;">
+              onclick="onListClick(event);" onkeydown="onListKeyDown(event);">
           <xul:treecols>
-            <xul:treecol cycler="true" id="restore" type="checkbox" label="&restorepage.restoreHeader;"/>
+            <xul:treecol cycler="true" id="restore" type="checkbox" data-l10n-id="restore-page-restore-header"/>
             <xul:splitter class="tree-splitter"/>
-            <xul:treecol primary="true" id="title" label="&restorepage.listHeader;" flex="1"/>
+            <xul:treecol primary="true" id="title" data-l10n-id="restore-page-list-header" flex="1"/>
           </xul:treecols>
           <xul:treechildren flex="1"/>
         </xul:tree>
@@ -63,23 +53,19 @@
       <div class="button-container">
 #ifdef XP_UNIX
         <xul:button id="errorCancel"
-                label="&restorepage.closeButton2;"
-                accesskey="&restorepage.close.access2;"
+                data-l10n-id="restore-page-close-button"
                 oncommand="startNewSession();"/>
         <xul:button class="primary"
                 id="errorTryAgain"
-                label="&restorepage.tryagainButton2;"
-                accesskey="&restorepage.restore.access2;"
+                data-l10n-id="restore-page-try-again-button"
                 oncommand="restoreSession();"/>
 #else
         <xul:button class="primary"
                 id="errorTryAgain"
-                label="&restorepage.tryagainButton2;"
-                accesskey="&restorepage.restore.access2;"
+                data-l10n-id="restore-page-try-again-button"
                 oncommand="restoreSession();"/>
         <xul:button id="errorCancel"
-                label="&restorepage.closeButton2;"
-                accesskey="&restorepage.close.access2;"
+                data-l10n-id="restore-page-close-button"
                 oncommand="startNewSession();"/>
 #endif
       </div>
