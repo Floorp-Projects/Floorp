@@ -7,10 +7,11 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Workers")
 
+DIRS += ['sharedworkers']
+
 # Public stuff.
 EXPORTS.mozilla.dom += [
     'ChromeWorker.h',
-    'SharedWorker.h',
     'Worker.h',
     'WorkerCommon.h',
     'WorkerDebugger.h',
@@ -48,7 +49,6 @@ UNIFIED_SOURCES += [
     'RegisterBindings.cpp',
     'RuntimeService.cpp',
     'ScriptLoader.cpp',
-    'SharedWorker.cpp',
     'Worker.cpp',
     'WorkerCSPEventListener.cpp',
     'WorkerDebugger.cpp',

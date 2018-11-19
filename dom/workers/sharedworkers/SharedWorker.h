@@ -7,8 +7,7 @@
 #ifndef mozilla_dom_workers_sharedworker_h__
 #define mozilla_dom_workers_sharedworker_h__
 
-#include "WorkerCommon.h"
-
+#include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
