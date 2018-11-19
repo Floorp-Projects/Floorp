@@ -195,7 +195,6 @@ CompartmentPrivate::CompartmentPrivate(JS::Compartment* c, mozilla::BasePrincipa
     , isContentXBLCompartment(false)
     , isUAWidgetCompartment(false)
     , isSandboxCompartment(false)
-    , isAddonCompartment(false)
     , universalXPConnectEnabled(false)
     , forcePermissiveCOWs(false)
     , wasNuked(false)
