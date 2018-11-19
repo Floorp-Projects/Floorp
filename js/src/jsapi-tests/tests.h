@@ -261,9 +261,15 @@ class JSAPITest
     JSAPITestString messages() const { return msgs; }
 
     static const JSClass * basicGlobalClass() {
+        static const JSClassOps cOps = {
+            nullptr, nullptr, nullptr, nullptr,
+            nullptr, nullptr, nullptr, nullptr,
+            nullptr, nullptr,
+            JS_GlobalObjectTraceHook
+        };
         static const JSClass c = {
             "global", JSCLASS_GLOBAL_FLAGS,
-            &JS::DefaultGlobalClassOps
+            &cOps
         };
         return &c;
     }

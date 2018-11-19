@@ -69,9 +69,15 @@ struct DevTools : public ::testing::Test {
   }
 
   static const JSClass* getGlobalClass() {
+    static const JSClassOps globalClassOps = {
+      nullptr, nullptr, nullptr, nullptr,
+      nullptr, nullptr, nullptr, nullptr,
+      nullptr, nullptr,
+      JS_GlobalObjectTraceHook
+    };
     static const JSClass globalClass = {
       "global", JSCLASS_GLOBAL_FLAGS,
-      &JS::DefaultGlobalClassOps
+      &globalClassOps
     };
     return &globalClass;
   }
@@ -79,9 +85,21 @@ struct DevTools : public ::testing::Test {
   JSObject* createGlobal()
   {
     /* Create the global object. */
+    JS::RootedObject newGlobal(cx);
     JS::RealmOptions options;
-    return JS_NewGlobalObject(cx, getGlobalClass(), nullptr,
-                              JS::FireOnNewGlobalHook, options);
+    newGlobal = JS_NewGlobalObject(cx, getGlobalClass(), nullptr,
+                                   JS::FireOnNewGlobalHook, options);
+    if (!newGlobal)
+      return nullptr;
+
+    JSAutoRealm ar(cx, newGlobal);
+
+    /* Populate the global object with the standard globals, like Object and
+       Array. */
+    if (!JS::InitRealmStandardClasses(cx))
+      return nullptr;
+
+    return newGlobal;
   }
 
   virtual void TearDown() {

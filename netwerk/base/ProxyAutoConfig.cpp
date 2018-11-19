@@ -680,6 +680,9 @@ private:
 
     JSAutoRealm ar(mContext, global);
     AutoPACErrorReporter aper(mContext);
+    if (!JS::InitRealmStandardClasses(mContext)) {
+      return NS_ERROR_FAILURE;
+    }
     if (!JS_DefineFunctions(mContext, global, PACGlobalFunctions)) {
       return NS_ERROR_FAILURE;
     }
@@ -690,10 +693,17 @@ private:
   }
 };
 
+static const JSClassOps sJSContextWrapperGlobalClassOps = {
+  nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr,
+  JS_GlobalObjectTraceHook
+};
+
 const JSClass JSContextWrapper::sGlobalClass = {
   "PACResolutionThreadGlobal",
   JSCLASS_GLOBAL_FLAGS,
-  &JS::DefaultGlobalClassOps
+  &sJSContextWrapperGlobalClassOps
 };
 
 void

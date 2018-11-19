@@ -84,9 +84,15 @@ RunTest(JSContext* cx, ArrayT* array)
 static void
 CreateGlobalAndRunTest(JSContext* cx)
 {
+  static const JSClassOps GlobalClassOps = {
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, JS_GlobalObjectTraceHook
+  };
+
   static const JSClass GlobalClass = {
     "global", JSCLASS_GLOBAL_FLAGS,
-    &JS::DefaultGlobalClassOps
+    &GlobalClassOps
   };
 
   JS::RealmOptions options;
