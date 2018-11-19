@@ -121,6 +121,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                      nsIIOService* ios,
                      nsIScriptSecurityManager* secMan,
                      const nsAString& aScriptURL,
+                     nsIURI* aResolvedScriptURL,
                      const Maybe<ClientInfo>& aClientInfo,
                      const Maybe<ServiceWorkerDescriptor>& aController,
                      bool aIsMainScript,
@@ -131,11 +132,15 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                      nsIChannel** aChannel)
 {
   AssertIsOnMainThread();
+  MOZ_ASSERT(!aResolvedScriptURL || aScriptURL.IsEmpty());
 
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
 
-  if (aDefaultURIEncoding) {
+  if (aResolvedScriptURL) {
+    uri = aResolvedScriptURL;
+    rv = NS_OK;
+  } else if (aDefaultURIEncoding) {
     rv = NS_NewURI(getter_AddRefs(uri), aScriptURL, nullptr, baseURI);
   } else {
     rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
@@ -1056,7 +1061,7 @@ private:
       bool useDefaultEncoding = !(!parentWorker && IsMainWorkerScript());
       rv = ChannelFromScriptURL(principal, baseURI, parentDoc, mWorkerPrivate,
                                 loadGroup, ios,
-                                secMan, loadInfo.mURL,
+                                secMan, loadInfo.mURL, nullptr,
                                 mClientInfo, mController,
                                 IsMainWorkerScript(),
                                 mWorkerScriptType,
@@ -1981,6 +1986,7 @@ public:
                                      baseURI, parentDoc,
                                      mLoadInfo.mLoadGroup,
                                      mScriptURL,
+                                     nullptr,
                                      clientInfo,
                                      // Nested workers are always dedicated.
                                      nsIContentPolicy::TYPE_INTERNAL_WORKER,
@@ -2327,12 +2333,14 @@ ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
                                nsIDocument* aParentDoc,
                                nsILoadGroup* aLoadGroup,
                                const nsAString& aScriptURL,
+                               nsIURI* aResolvedScriptURL,
                                const Maybe<ClientInfo>& aClientInfo,
                                nsContentPolicyType aMainScriptContentPolicyType,
                                bool aDefaultURIEncoding,
                                nsIChannel** aChannel)
 {
   AssertIsOnMainThread();
+  MOZ_ASSERT(!aResolvedScriptURL || aScriptURL.IsEmpty());
 
   nsCOMPtr<nsIIOService> ios(do_GetIOService());
 
@@ -2340,7 +2348,8 @@ ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
   NS_ASSERTION(secMan, "This should never be null!");
 
   return ChannelFromScriptURL(aPrincipal, aBaseURI, aParentDoc, nullptr,
-                              aLoadGroup, ios, secMan, aScriptURL, aClientInfo,
+                              aLoadGroup, ios, secMan, aScriptURL,
+                              aResolvedScriptURL, aClientInfo,
                               Maybe<ServiceWorkerDescriptor>(),
                               true, WorkerScript, aMainScriptContentPolicyType,
                               nsIRequest::LOAD_NORMAL, aDefaultURIEncoding,
