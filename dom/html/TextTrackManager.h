@@ -174,11 +174,15 @@ private:
     {
       MOZ_ASSERT(NS_IsMainThread());
       if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
-        nsContentUtils::UnregisterShutdownObserver(this);
-        mManager->NotifyShutdown();
+        if (mManager) {
+          mManager->NotifyShutdown();
+        }
+        Unregister();
       }
       return NS_OK;
     }
+
+    void Unregister();
 
   private:
     ~ShutdownObserverProxy() {};

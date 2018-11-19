@@ -20,6 +20,7 @@ using mozilla::dom::FontListEntry;
 class FontNameCache;
 typedef struct FT_FaceRec_* FT_Face;
 class nsZipArchive;
+class WillShutdownObserver;
 
 class FT2FontEntry : public gfxFontEntry
 {
@@ -200,7 +201,8 @@ protected:
 private:
     mozilla::UniquePtr<FontNameCache> mFontNameCache;
     int64_t mJarModifiedTime;
-    nsCOMPtr<nsIObserver> mObserver;
+    RefPtr<WillShutdownObserver> mObserver;
+
 };
 
 #endif /* GFX_FT2FONTLIST_H */
