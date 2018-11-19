@@ -84,6 +84,8 @@ private:
   nsCString mResolvedScriptURL;
   nsString mName;
   bool mIsSecureContext;
+  bool mSuspended;
+  bool mFrozen;
 
   // Raw pointers because SharedWorkerParent unregisters itself in ActorDestroy().
   nsTArray<SharedWorkerParent*> mActors;
