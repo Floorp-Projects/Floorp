@@ -2,6 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#search {
+  position: sticky;
+  top: 0;
+  margin: 10px;
+  box-sizing: border-box;
+  width: calc(100% - 20px);
+  min-width: 644px;
+  background-image: url("chrome://global/skin/icons/search-textbox.svg");
+  background-repeat: no-repeat;
+  background-position: 9px center;
+  background-size: 12px 12px;
+  padding-left: 30px;
+}
+
 #prefs {
   background-color: var(--in-content-box-background);
   color: var(--in-content-text-color);
