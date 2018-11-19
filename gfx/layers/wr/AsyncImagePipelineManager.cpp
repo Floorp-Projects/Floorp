@@ -170,7 +170,7 @@ AsyncImagePipelineManager::AddAsyncImagePipeline(const wr::PipelineId& aPipeline
   AsyncImagePipeline* holder = new AsyncImagePipeline();
   holder->mImageHost = aImageHost;
   mAsyncImagePipelines.Put(id, holder);
-  AddPipeline(aPipelineId);
+  AddPipeline(aPipelineId, /* aWrBridge */ nullptr);
 }
 
 void
