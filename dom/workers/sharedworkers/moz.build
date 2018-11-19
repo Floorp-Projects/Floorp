@@ -7,6 +7,7 @@
 EXPORTS.mozilla.dom += [
     'SharedWorker.h',
     'SharedWorkerChild.h',
+    'SharedWorkerManager.h',
     'SharedWorkerParent.h',
 ]
 

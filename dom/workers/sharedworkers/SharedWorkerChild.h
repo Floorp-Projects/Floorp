@@ -47,7 +47,10 @@ private:
   ~SharedWorkerChild();
 
   mozilla::ipc::IPCResult
-  RecvError(const nsresult& error) override;
+  RecvError(const ErrorValue& aValue) override;
+
+  mozilla::ipc::IPCResult
+  RecvTerminate() override;
 
   void
   ActorDestroy(ActorDestroyReason aWhy) override;

@@ -16,6 +16,7 @@ EXPORTS.mozilla.dom += [
     'WorkerCommon.h',
     'WorkerDebugger.h',
     'WorkerDebuggerManager.h',
+    'WorkerError.h',
     'WorkerHolder.h',
     'WorkerHolderToken.h',
     'WorkerLoadInfo.h',
