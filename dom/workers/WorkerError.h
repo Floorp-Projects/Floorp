@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workers_WorkerError_h
 #define mozilla_dom_workers_WorkerError_h
 
-#include "WorkerCommon.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "jsapi.h"
 
 namespace mozilla {
@@ -16,6 +16,7 @@ class DOMEventTargetHelper;
 
 namespace dom {
 
+class ErrorData;
 class WorkerErrorBase
 {
 public:
@@ -70,6 +71,9 @@ public:
 
   static void
   LogErrorToConsole(const WorkerErrorReport& aReport, uint64_t aInnerWindowId);
+
+  static void
+  LogErrorToConsole(const mozilla::dom::ErrorData& aReport, uint64_t aInnerWindowId);
 
   static void
   CreateAndDispatchGenericErrorRunnableToParent(WorkerPrivate* aWorkerPrivate);

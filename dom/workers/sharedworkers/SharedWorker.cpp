@@ -163,7 +163,8 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
                                             resolvedScriptURL, name,
                                             loadingPrincipalInfo, principalInfo,
                                             loadInfo.mDomain, isSecureContext,
-                                            ipcClientInfo, portIdentifier);
+                                            loadInfo.mWindowID, ipcClientInfo,
+                                            portIdentifier);
 
   PSharedWorkerChild* pActor =
     actorChild->SendPSharedWorkerConstructor(sharedWorkerLoadInfo);

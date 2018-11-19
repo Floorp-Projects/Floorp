@@ -23,7 +23,6 @@
 #include "mozilla/PerformanceCounter.h"
 #include "mozilla/ThreadBound.h"
 
-class nsIConsoleReportCollector;
 class nsIThreadInternal;
 
 namespace mozilla {
@@ -45,7 +44,7 @@ class Function;
 class MessagePort;
 class MessagePortIdentifier;
 class PerformanceStorage;
-class SharedWorker;
+class SharedWorkerManager;
 class WorkerControlRunnable;
 class WorkerCSPEventListener;
 class WorkerDebugger;
@@ -1080,19 +1079,11 @@ public:
     mLoadingWorkerScript = aLoadingWorkerScript;
   }
 
-  void
-  BroadcastErrorToSharedWorkers(JSContext* aCx,
-                                const WorkerErrorReport* aReport,
-                                bool aIsErrorEvent);
+  SharedWorkerManager*
+  GetSharedWorkerManager();
 
   void
-  GetAllSharedWorkers(nsTArray<RefPtr<SharedWorker>>& aSharedWorkers);
-
-  void
-  CloseAllSharedWorkers();
-
-  void
-  FlushReportsToSharedWorkers(nsIConsoleReportCollector* aReporter);
+  SetSharedWorkerManager(SharedWorkerManager* aWorkerManager);
 
   // We can assume that an nsPIDOMWindow will be available for Freeze, Thaw
   // as these are only used for globals going in and out of the bfcache.
@@ -1401,9 +1392,8 @@ private:
   // Protected by mMutex.
   nsTArray<RefPtr<WorkerRunnable>> mPreStartRunnables;
 
-  // Only touched on the parent thread (currently this is always the main
-  // thread as SharedWorkers are always top-level).
-  nsTArray<RefPtr<SharedWorker>> mSharedWorkers;
+  // Only touched on the parent thread. This is set only if IsSharedWorker().
+  RefPtr<SharedWorkerManager> mSharedWorkerManager;
 
   JS::UniqueChars mDefaultLocale; // nulled during worker JSContext init
   TimeStamp mKillTime;

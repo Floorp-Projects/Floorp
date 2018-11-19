@@ -61,6 +61,12 @@ public:
     return mSuspended;
   }
 
+  uint64_t
+  WindowID() const
+  {
+    return mWindowID;
+  }
+
 private:
   ~SharedWorkerParent();
 
@@ -77,6 +83,8 @@ private:
     eActive,
     eClosed,
   } mStatus;
+
+  uint64_t mWindowID;
 
   bool mSuspended;
   bool mFrozen;

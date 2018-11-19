@@ -8,10 +8,13 @@
 #include "SharedWorkerParent.h"
 #include "SharedWorkerService.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
+#include "mozilla/dom/PSharedWorker.h"
+#include "mozilla/dom/WorkerError.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/workerinternals/ScriptLoader.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "nsIConsoleReportCollector.h"
 #include "nsIPrincipal.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
@@ -53,10 +56,12 @@ private:
 
 } // anonymous
 
-SharedWorkerManager::SharedWorkerManager(const SharedWorkerLoadInfo& aInfo,
+SharedWorkerManager::SharedWorkerManager(nsIEventTarget* aPBackgroundEventTarget,
+                                         const SharedWorkerLoadInfo& aInfo,
                                          nsIPrincipal* aPrincipal,
                                          nsIPrincipal* aLoadingPrincipal)
-  : mInfo(aInfo)
+  : mPBackgroundEventTarget(aPBackgroundEventTarget)
+  , mInfo(aInfo)
   , mPrincipal(aPrincipal)
   , mLoadingPrincipal(aLoadingPrincipal)
 {
@@ -164,6 +169,7 @@ SharedWorkerManager::CreateWorkerOnMainThread()
     return error.StealNSResult();
   }
 
+  mWorkerPrivate->SetSharedWorkerManager(this);
   return NS_OK;
 }
 
@@ -313,7 +319,11 @@ void
 SharedWorkerManager::FreezeOnMainThread()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mWorkerPrivate);
+
+  if (!mWorkerPrivate || mWorkerPrivate->IsFrozen()) {
+    // Already released.
+    return;
+  }
 
   mWorkerPrivate->Freeze(nullptr);
 }
@@ -322,7 +332,11 @@ void
 SharedWorkerManager::ThawOnMainThread()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mWorkerPrivate);
+
+  if (!mWorkerPrivate || !mWorkerPrivate->IsFrozen()) {
+    // Already released.
+    return;
+  }
 
   mWorkerPrivate->Thaw(nullptr);
 }
@@ -331,7 +345,11 @@ void
 SharedWorkerManager::SuspendOnMainThread()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mWorkerPrivate);
+
+  if (!mWorkerPrivate) {
+    // Already released.
+    return;
+  }
 
   mWorkerPrivate->ParentWindowPaused();
 }
@@ -340,7 +358,11 @@ void
 SharedWorkerManager::ResumeOnMainThread()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mWorkerPrivate);
+
+  if (!mWorkerPrivate) {
+    // Already released.
+    return;
+  }
 
   mWorkerPrivate->ParentWindowResumed();
 }
@@ -349,10 +371,119 @@ void
 SharedWorkerManager::CloseOnMainThread()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mWorkerPrivate);
+
+  if (!mWorkerPrivate) {
+    // Already released.
+    return;
+  }
 
   mWorkerPrivate->Cancel();
   mWorkerPrivate = nullptr;
+}
+
+void
+SharedWorkerManager::BroadcastErrorToActorsOnMainThread(const WorkerErrorReport* aReport,
+                                                        bool aIsErrorEvent)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ErrorValue value;
+  if (aIsErrorEvent) {
+    nsTArray<ErrorDataNote> notes;
+    for (size_t i = 0, len = aReport->mNotes.Length(); i < len; i++) {
+      const WorkerErrorNote& note = aReport->mNotes.ElementAt(i);
+      notes.AppendElement(ErrorDataNote(note.mLineNumber, note.mColumnNumber,
+                                        note.mMessage, note.mFilename));
+    }
+
+    ErrorData data(aReport->mLineNumber,
+                   aReport->mColumnNumber,
+                   aReport->mFlags,
+                   aReport->mMessage,
+                   aReport->mFilename,
+                   aReport->mLine,
+                   notes);
+    value = data;
+  } else {
+    value = void_t();
+  }
+
+  RefPtr<SharedWorkerManager> self = this;
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableFunction("SharedWorkerManager::BroadcastErrorToActorsOnMainThread",
+                           [self, value]() {
+    self->BroadcastErrorToActors(value);
+  });
+
+  mPBackgroundEventTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+}
+
+void
+SharedWorkerManager::BroadcastErrorToActors(const ErrorValue& aValue)
+{
+  AssertIsOnBackgroundThread();
+
+  for (SharedWorkerParent* actor : mActors) {
+    Unused << actor->SendError(aValue);
+  }
+}
+
+void
+SharedWorkerManager::CloseActorsOnMainThread()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  CloseOnMainThread();
+
+  RefPtr<SharedWorkerManager> self = this;
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableFunction("SharedWorkerManager::CloseActorsOnMainThread",
+                           [self]() {
+    self->CloseActors();
+  });
+
+  mPBackgroundEventTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+}
+
+void
+SharedWorkerManager::CloseActors()
+{
+  AssertIsOnBackgroundThread();
+
+  for (SharedWorkerParent* actor : mActors) {
+    Unused << actor->SendTerminate();
+  }
+}
+
+void
+SharedWorkerManager::FlushReportsToActorsOnMainThread(nsIConsoleReportCollector* aReporter)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  AutoTArray<uint64_t, 10> windowIDs;
+  for (SharedWorkerParent* actor : mActors) {
+    uint64_t windowID = actor->WindowID();
+    if (windowID && !windowIDs.Contains(windowID)) {
+      windowIDs.AppendElement(windowID);
+    }
+  }
+
+  bool reportErrorToBrowserConsole = true;
+
+  // Flush the reports.
+  for (uint32_t index = 0; index < windowIDs.Length(); index++) {
+    aReporter->FlushReportsToConsole(windowIDs[index],
+      nsIConsoleReportCollector::ReportAction::Save);
+    reportErrorToBrowserConsole = false;
+  }
+
+  // Finally report to browser console if there is no any window or shared
+  // worker.
+  if (reportErrorToBrowserConsole) {
+    aReporter->FlushReportsToConsole(0);
+    return;
+  }
+
+  aReporter->ClearConsoleReports();
 }
 
 } // dom namespace

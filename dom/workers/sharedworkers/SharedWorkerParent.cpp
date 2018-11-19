@@ -20,6 +20,7 @@ namespace dom {
 SharedWorkerParent::SharedWorkerParent()
   : mBackgroundEventTarget(GetCurrentThreadEventTarget())
   , mStatus(eInit)
+  , mWindowID(0)
   , mSuspended(false)
   , mFrozen(false)
 {
@@ -48,6 +49,9 @@ SharedWorkerParent::Initialize(const SharedWorkerLoadInfo& aInfo)
   // Let's keep the service alive.
   mService = SharedWorkerService::GetOrCreate();
   MOZ_ASSERT(mService);
+
+  // This is the only information we currently care.
+  mWindowID = aInfo.windowID();
 
   mStatus = ePending;
   mService->GetOrCreateWorkerManager(this, aInfo);
