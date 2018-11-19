@@ -2285,7 +2285,7 @@ js::ToStringSlow<CanGC>(JSContext* cx, HandleValue arg);
 template JSString*
 js::ToStringSlow<NoGC>(JSContext* cx, const Value& arg);
 
-JS_PUBLIC_API(JSString*)
+JS_PUBLIC_API JSString*
 js::ToStringSlow(JSContext* cx, HandleValue v)
 {
     return ToStringSlow<CanGC>(cx, v);

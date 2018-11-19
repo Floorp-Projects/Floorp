@@ -251,13 +251,13 @@ enum class TrackedTypeSite : uint32_t {
     Count
 };
 
-JS_PUBLIC_API(const char*)
+JS_PUBLIC_API const char*
 TrackedStrategyString(TrackedStrategy strategy);
 
-JS_PUBLIC_API(const char*)
+JS_PUBLIC_API const char*
 TrackedOutcomeString(TrackedOutcome outcome);
 
-JS_PUBLIC_API(const char*)
+JS_PUBLIC_API const char*
 TrackedTypeSiteString(TrackedTypeSite site);
 
 struct ForEachTrackedOptimizationAttemptOp

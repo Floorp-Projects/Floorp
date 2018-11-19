@@ -3515,7 +3515,7 @@ TokenStreamSpecific<char16_t, ParserAnyCharsAccess<GeneralParser<SyntaxParseHand
 } // namespace js
 
 
-JS_FRIEND_API(int)
+JS_FRIEND_API int
 js_fgets(char* buf, int size, FILE* file)
 {
     int n, i, c;

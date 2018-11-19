@@ -50,7 +50,7 @@ namespace JS {
  * operations requiring instantaneous correctness, to guarantee correct
  * behavior.
  */
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API void
 ResetTimeZone();
 
 class ClippedTime;
@@ -122,7 +122,7 @@ TimeValue(ClippedTime time)
 // Create a new Date object whose [[DateValue]] internal slot contains the
 // clipped |time|.  (Users who must represent times outside that range must use
 // another representation.)
-extern JS_PUBLIC_API(JSObject*)
+extern JS_PUBLIC_API JSObject*
 NewDateObject(JSContext* cx, ClippedTime time);
 
 // Year is a year, month is 0-11, day is 1-based.  The return value is a number
@@ -130,7 +130,7 @@ NewDateObject(JSContext* cx, ClippedTime time);
 //
 // Consistent with the MakeDate algorithm defined in ECMAScript, this value is
 // *not* clipped!  Use JS::TimeClip if you need a clipped date.
-JS_PUBLIC_API(double)
+JS_PUBLIC_API double
 MakeDate(double year, unsigned month, unsigned day);
 
 // Year is a year, month is 0-11, day is 1-based, and time is in milliseconds.
@@ -138,22 +138,22 @@ MakeDate(double year, unsigned month, unsigned day);
 //
 // Consistent with the MakeDate algorithm defined in ECMAScript, this value is
 // *not* clipped!  Use JS::TimeClip if you need a clipped date.
-JS_PUBLIC_API(double)
+JS_PUBLIC_API double
 MakeDate(double year, unsigned month, unsigned day, double time);
 
 // Takes an integer number of milliseconds since the epoch and returns the
 // year.  Can return NaN, and will do so if NaN is passed in.
-JS_PUBLIC_API(double)
+JS_PUBLIC_API double
 YearFromTime(double time);
 
 // Takes an integer number of milliseconds since the epoch and returns the
 // month (0-11).  Can return NaN, and will do so if NaN is passed in.
-JS_PUBLIC_API(double)
+JS_PUBLIC_API double
 MonthFromTime(double time);
 
 // Takes an integer number of milliseconds since the epoch and returns the
 // day (1-based).  Can return NaN, and will do so if NaN is passed in.
-JS_PUBLIC_API(double)
+JS_PUBLIC_API double
 DayFromTime(double time);
 
 // Takes an integer year and returns the number of days from epoch to the given
@@ -162,14 +162,14 @@ DayFromTime(double time);
 // the ECMAScript specification.  Nonfinite years, years containing fractional
 // components, and years outside ECMAScript's date range are not handled with
 // any particular intelligence.  Garbage in, garbage out.
-JS_PUBLIC_API(double)
+JS_PUBLIC_API double
 DayFromYear(double year);
 
 // Takes an integer number of milliseconds since the epoch and an integer year,
 // returns the number of days in that year. If |time| is nonfinite, returns NaN.
 // Otherwise |time| *must* correspond to a time within the valid year |year|.
 // This should usually be ensured by computing |year| as |JS::DayFromYear(time)|.
-JS_PUBLIC_API(double)
+JS_PUBLIC_API double
 DayWithinYear(double time, double year);
 
 // The callback will be a wrapper function that accepts a single double (the time
@@ -179,13 +179,13 @@ using ReduceMicrosecondTimePrecisionCallback = double(*)(double);
 
 // Set a callback into the toolkit/components/resistfingerprinting function that
 // will centralize time resolution and jitter into one place.
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 SetReduceMicrosecondTimePrecisionCallback(ReduceMicrosecondTimePrecisionCallback callback);
 
 // Sets the time resolution for fingerprinting protection, and whether jitter
 // should occur. If resolution is set to zero, then no rounding or jitter will
 // occur. This is used if the callback above is not specified.
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 SetTimeResolutionUsec(uint32_t resolution, bool jitter);
 
 } // namespace JS

@@ -453,14 +453,14 @@ js::AsSharedArrayBuffer(HandleObject obj)
     return obj->as<SharedArrayBufferObject>();
 }
 
-JS_FRIEND_API(uint32_t)
+JS_FRIEND_API uint32_t
 JS_GetSharedArrayBufferByteLength(JSObject* obj)
 {
     obj = CheckedUnwrap(obj);
     return obj ? obj->as<SharedArrayBufferObject>().byteLength() : 0;
 }
 
-JS_FRIEND_API(void)
+JS_FRIEND_API void
 js::GetSharedArrayBufferLengthAndData(JSObject* obj, uint32_t* length, bool* isSharedMemory, uint8_t** data)
 {
     MOZ_ASSERT(obj->is<SharedArrayBufferObject>());
@@ -469,7 +469,7 @@ js::GetSharedArrayBufferLengthAndData(JSObject* obj, uint32_t* length, bool* isS
     *isSharedMemory = true;
 }
 
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 JS_NewSharedArrayBuffer(JSContext* cx, uint32_t nbytes)
 {
     MOZ_ASSERT(cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled());
@@ -478,14 +478,14 @@ JS_NewSharedArrayBuffer(JSContext* cx, uint32_t nbytes)
     return SharedArrayBufferObject::New(cx, nbytes, /* proto = */ nullptr);
 }
 
-JS_FRIEND_API(bool)
+JS_FRIEND_API bool
 JS_IsSharedArrayBufferObject(JSObject* obj)
 {
     obj = CheckedUnwrap(obj);
     return obj ? obj->is<SharedArrayBufferObject>() : false;
 }
 
-JS_FRIEND_API(uint8_t*)
+JS_FRIEND_API uint8_t*
 JS_GetSharedArrayBufferData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&)
 {
     obj = CheckedUnwrap(obj);

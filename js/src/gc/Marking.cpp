@@ -405,7 +405,7 @@ template <typename T> void NoteWeakEdge(GCMarker* gcmarker, T** thingp);
 template <typename T> void NoteWeakEdge(GCMarker* gcmarker, T* thingp);
 
 template <typename T>
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 js::gc::TraceExternalEdge(JSTracer* trc, T* thingp, const char* name)
 {
     MOZ_ASSERT(InternalBarrierMethods<T>::isMarkable(*thingp));
@@ -413,14 +413,14 @@ js::gc::TraceExternalEdge(JSTracer* trc, T* thingp, const char* name)
 }
 
 template <typename T>
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 js::UnsafeTraceManuallyBarrieredEdge(JSTracer* trc, T* thingp, const char* name)
 {
     TraceEdgeInternal(trc, ConvertToBase(thingp), name);
 }
 
 template <typename T>
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::UnsafeTraceRoot(JSTracer* trc, T* thingp, const char* name)
 {
     MOZ_ASSERT(thingp);
@@ -429,10 +429,10 @@ JS::UnsafeTraceRoot(JSTracer* trc, T* thingp, const char* name)
 
 // Instantiate a copy of the Tracing templates for each public GC pointer type.
 #define INSTANTIATE_PUBLIC_TRACE_FUNCTIONS(type) \
-    template JS_PUBLIC_API(void) JS::UnsafeTraceRoot<type>(JSTracer*, type*, const char*); \
-    template JS_PUBLIC_API(void) js::UnsafeTraceManuallyBarrieredEdge<type>(JSTracer*, type*, \
-                                                                            const char*); \
-    template JS_PUBLIC_API(void) js::gc::TraceExternalEdge<type>(JSTracer*, type*, const char*);
+    template JS_PUBLIC_API void JS::UnsafeTraceRoot<type>(JSTracer*, type*, const char*); \
+    template JS_PUBLIC_API void js::UnsafeTraceManuallyBarrieredEdge<type>(JSTracer*, type*, \
+                                                                           const char*); \
+    template JS_PUBLIC_API void js::gc::TraceExternalEdge<type>(JSTracer*, type*, const char*);
 FOR_EACH_PUBLIC_GC_POINTER_TYPE(INSTANTIATE_PUBLIC_TRACE_FUNCTIONS)
 FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_PUBLIC_TRACE_FUNCTIONS)
 #undef INSTANTIATE_PUBLIC_TRACE_FUNCTIONS
@@ -3465,14 +3465,14 @@ namespace js {
 namespace gc {
 
 template <typename T>
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 EdgeNeedsSweep(JS::Heap<T>* thingp)
 {
     return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeGet()));
 }
 
 template <typename T>
-JS_PUBLIC_API(bool)
+JS_PUBLIC_API bool
 EdgeNeedsSweepUnbarrieredSlow(T* thingp)
 {
     return IsAboutToBeFinalizedInternal(ConvertToBase(thingp));
@@ -3480,8 +3480,8 @@ EdgeNeedsSweepUnbarrieredSlow(T* thingp)
 
 // Instantiate a copy of the Tracing templates for each public GC type.
 #define INSTANTIATE_ALL_VALID_HEAP_TRACE_FUNCTIONS(type) \
-    template JS_PUBLIC_API(bool) EdgeNeedsSweep<type>(JS::Heap<type>*); \
-    template JS_PUBLIC_API(bool) EdgeNeedsSweepUnbarrieredSlow<type>(type*);
+    template JS_PUBLIC_API bool EdgeNeedsSweep<type>(JS::Heap<type>*); \
+    template JS_PUBLIC_API bool EdgeNeedsSweepUnbarrieredSlow<type>(type*);
 FOR_EACH_PUBLIC_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_HEAP_TRACE_FUNCTIONS)
 FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_HEAP_TRACE_FUNCTIONS)
 
@@ -3648,7 +3648,7 @@ UnmarkGrayGCThing(JSRuntime* rt, JS::GCCellPtr thing)
     return unmarker.unmarkedAny;
 }
 
-JS_FRIEND_API(bool)
+JS_FRIEND_API bool
 JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr thing)
 {
     MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());

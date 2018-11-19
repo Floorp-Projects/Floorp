@@ -37,7 +37,7 @@ NewDateObjectMsec(JSContext* cx, JS::ClippedTime t, JS::HandleObject proto = nul
  * due to the 0-based month numbering copied into JS from Java (java.util.Date
  * in 1995).
  */
-extern JS_FRIEND_API(JSObject*)
+extern JS_FRIEND_API JSObject*
 NewDateObject(JSContext* cx, int year, int mon, int mday, int hour, int min, int sec);
 
 /* Date methods exposed so they can be installed in the self-hosting global. */

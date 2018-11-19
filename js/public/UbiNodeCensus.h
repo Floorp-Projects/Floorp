@@ -88,7 +88,7 @@ struct Census;
 class CountBase;
 
 struct CountDeleter {
-    JS_PUBLIC_API(void) operator()(CountBase*);
+    JS_PUBLIC_API void operator()(CountBase*);
 };
 
 using CountBasePtr = js::UniquePtr<CountBase, CountDeleter>;
@@ -229,23 +229,23 @@ class CensusHandler {
     // This class needs to retain no per-node data.
     class NodeData { };
 
-    MOZ_MUST_USE JS_PUBLIC_API(bool) operator() (BreadthFirst<CensusHandler>& traversal,
-                                                 Node origin, const Edge& edge,
-                                                 NodeData* referentData, bool first);
+    MOZ_MUST_USE JS_PUBLIC_API bool operator() (BreadthFirst<CensusHandler>& traversal,
+                                                Node origin, const Edge& edge,
+                                                NodeData* referentData, bool first);
 };
 
 using CensusTraversal = BreadthFirst<CensusHandler>;
 
 // Examine the census options supplied by the API consumer, and (among other
 // things) use that to build a CountType tree.
-MOZ_MUST_USE JS_PUBLIC_API(bool) ParseCensusOptions(JSContext* cx,
-                                                    Census& census, HandleObject options,
-                                                    CountTypePtr& outResult);
+MOZ_MUST_USE JS_PUBLIC_API bool ParseCensusOptions(JSContext* cx,
+                                                   Census& census, HandleObject options,
+                                                   CountTypePtr& outResult);
 
 // Parse the breakdown language (as described in
 // js/src/doc/Debugger/Debugger.Memory.md) into a CountTypePtr. A null pointer
 // is returned on error and is reported to the cx.
-JS_PUBLIC_API(CountTypePtr) ParseBreakdown(JSContext* cx, HandleValue breakdownValue);
+JS_PUBLIC_API CountTypePtr ParseBreakdown(JSContext* cx, HandleValue breakdownValue);
 
 
 } // namespace ubi

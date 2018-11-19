@@ -957,7 +957,7 @@ const JSPropertySpec DataViewObject::properties[] = {
     JS_PS_END
 };
 
-JS_FRIEND_API(uint32_t)
+JS_FRIEND_API uint32_t
 JS_GetDataViewByteOffset(JSObject* obj)
 {
     obj = CheckedUnwrap(obj);
@@ -967,7 +967,7 @@ JS_GetDataViewByteOffset(JSObject* obj)
     return obj->as<DataViewObject>().byteOffset();
 }
 
-JS_FRIEND_API(void*)
+JS_FRIEND_API void*
 JS_GetDataViewData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&)
 {
     obj = CheckedUnwrap(obj);
@@ -979,7 +979,7 @@ JS_GetDataViewData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoG
     return dv.dataPointerEither().unwrap(/*safe - caller sees isSharedMemory*/);
 }
 
-JS_FRIEND_API(uint32_t)
+JS_FRIEND_API uint32_t
 JS_GetDataViewByteLength(JSObject* obj)
 {
     obj = CheckedUnwrap(obj);
@@ -989,7 +989,7 @@ JS_GetDataViewByteLength(JSObject* obj)
     return obj->as<DataViewObject>().byteLength();
 }
 
-JS_FRIEND_API(JSObject*)
+JS_FRIEND_API JSObject*
 JS_NewDataView(JSContext* cx, HandleObject buffer, uint32_t byteOffset, int32_t byteLength)
 {
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(&DataViewObject::class_);

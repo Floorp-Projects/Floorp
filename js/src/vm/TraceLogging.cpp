@@ -1189,13 +1189,13 @@ TraceLoggerEvent::TraceLoggerEvent(const TraceLoggerEvent& other)
     }
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::ResetTraceLogger(void)
 {
     js::ResetTraceLogger();
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::StartTraceLogger(JSContext *cx, mozilla::TimeStamp profilerStart)
 {
     if (jit::JitOptions.enableTraceLogger || !traceLoggerState)  {
@@ -1214,7 +1214,7 @@ JS::StartTraceLogger(JSContext *cx, mozilla::TimeStamp profilerStart)
     }
 }
 
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 JS::StopTraceLogger(JSContext *cx)
 {
     if (!jit::JitOptions.enableTraceLogger || !traceLoggerState) {

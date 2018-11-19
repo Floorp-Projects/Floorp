@@ -39,7 +39,7 @@ namespace js {}
 #define JS_STATIC_ASSERT(cond)           static_assert(cond, "JS_STATIC_ASSERT")
 #define JS_STATIC_ASSERT_IF(cond, expr)  MOZ_STATIC_ASSERT_IF(cond, expr, "JS_STATIC_ASSERT_IF")
 
-extern MOZ_NORETURN MOZ_COLD JS_PUBLIC_API(void)
+extern MOZ_NORETURN MOZ_COLD JS_PUBLIC_API void
 JS_Assert(const char* s, const char* file, int ln);
 
 /*
@@ -95,7 +95,7 @@ const ThreadType LastThreadTypeToTest = THREAD_TYPE_WASM_TIER2;
 
 extern bool InitThreadType(void);
 extern void SetThreadType(ThreadType);
-extern JS_FRIEND_API(uint32_t) GetThreadType(void);
+extern JS_FRIEND_API uint32_t GetThreadType(void);
 
 # else
 
@@ -188,7 +188,7 @@ class FailureSimulator
     void simulateFailureAfter(Kind kind, uint64_t checks, uint32_t thread, bool always);
     void reset();
 };
-extern JS_PUBLIC_DATA(FailureSimulator) simulator;
+extern JS_PUBLIC_DATA FailureSimulator simulator;
 
 inline bool
 IsSimulatedOOMAllocation()
@@ -308,7 +308,7 @@ static inline bool ShouldFailWithOOM() { return false; }
 namespace js {
 
 /* Disable OOM testing in sections which are not OOM safe. */
-struct MOZ_RAII JS_PUBLIC_DATA(AutoEnterOOMUnsafeRegion)
+struct MOZ_RAII JS_PUBLIC_DATA AutoEnterOOMUnsafeRegion
 {
     MOZ_NORETURN MOZ_COLD void crash(const char* reason);
     MOZ_NORETURN MOZ_COLD void crash(size_t size, const char* reason);
@@ -350,8 +350,8 @@ struct MOZ_RAII JS_PUBLIC_DATA(AutoEnterOOMUnsafeRegion)
 
 namespace js {
 
-extern JS_PUBLIC_DATA(arena_id_t) MallocArena;
-extern JS_PUBLIC_DATA(arena_id_t) ArrayBufferContentsArena;
+extern JS_PUBLIC_DATA arena_id_t MallocArena;
+extern JS_PUBLIC_DATA arena_id_t ArrayBufferContentsArena;
 
 extern void InitMallocAllocator();
 extern void ShutDownMallocAllocator();

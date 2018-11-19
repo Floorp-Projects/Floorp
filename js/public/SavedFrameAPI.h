@@ -66,7 +66,7 @@ enum class SavedFrameSelfHosted {
  * Given a SavedFrame JSObject, get its source property. Defaults to the empty
  * string.
  */
-extern JS_PUBLIC_API(SavedFrameResult)
+extern JS_PUBLIC_API SavedFrameResult
 GetSavedFrameSource(JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
                     MutableHandle<JSString*> sourcep,
                     SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
@@ -74,7 +74,7 @@ GetSavedFrameSource(JSContext* cx, JSPrincipals* principals, Handle<JSObject*> s
 /**
  * Given a SavedFrame JSObject, get its line property. Defaults to 0.
  */
-extern JS_PUBLIC_API(SavedFrameResult)
+extern JS_PUBLIC_API SavedFrameResult
 GetSavedFrameLine(JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
                   uint32_t* linep,
                   SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
@@ -82,7 +82,7 @@ GetSavedFrameLine(JSContext* cx, JSPrincipals* principals, Handle<JSObject*> sav
 /**
  * Given a SavedFrame JSObject, get its column property. Defaults to 0.
  */
-extern JS_PUBLIC_API(SavedFrameResult)
+extern JS_PUBLIC_API SavedFrameResult
 GetSavedFrameColumn(JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
                     uint32_t* columnp,
                     SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
@@ -92,7 +92,7 @@ GetSavedFrameColumn(JSContext* cx, JSPrincipals* principals, Handle<JSObject*> s
  * if SpiderMonkey was unable to infer a name for the captured frame's
  * function. Defaults to nullptr.
  */
-extern JS_PUBLIC_API(SavedFrameResult)
+extern JS_PUBLIC_API SavedFrameResult
 GetSavedFrameFunctionDisplayName(JSContext* cx, JSPrincipals* principals,
                                  Handle<JSObject*> savedFrame,
                                  MutableHandle<JSString*> namep,
@@ -101,7 +101,7 @@ GetSavedFrameFunctionDisplayName(JSContext* cx, JSPrincipals* principals,
 /**
  * Given a SavedFrame JSObject, get its asyncCause string. Defaults to nullptr.
  */
-extern JS_PUBLIC_API(SavedFrameResult)
+extern JS_PUBLIC_API SavedFrameResult
 GetSavedFrameAsyncCause(JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
                         MutableHandle<JSString*> asyncCausep,
                         SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
@@ -111,7 +111,7 @@ GetSavedFrameAsyncCause(JSContext* cx, JSPrincipals* principals, Handle<JSObject
  * if there is no asyncParent. The `asyncParentp` out parameter is _NOT_
  * guaranteed to be in the cx's compartment. Defaults to nullptr.
  */
-extern JS_PUBLIC_API(SavedFrameResult)
+extern JS_PUBLIC_API SavedFrameResult
 GetSavedFrameAsyncParent(JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
                          MutableHandle<JSObject*> asyncParentp,
                          SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
@@ -121,7 +121,7 @@ GetSavedFrameAsyncParent(JSContext* cx, JSPrincipals* principals, Handle<JSObjec
  * it is the oldest frame in the stack. The `parentp` out parameter is _NOT_
  * guaranteed to be in the cx's compartment. Defaults to nullptr.
  */
-extern JS_PUBLIC_API(SavedFrameResult)
+extern JS_PUBLIC_API SavedFrameResult
 GetSavedFrameParent(JSContext* cx, JSPrincipals* principals, Handle<JSObject*> savedFrame,
                     MutableHandle<JSObject*> parentp,
                     SavedFrameSelfHosted selfHosted = SavedFrameSelfHosted::Include);
@@ -136,7 +136,7 @@ namespace js {
  *
  * Do NOT pass a non-SavedFrame object here.
  */
-extern JS_FRIEND_API(JSObject*)
+extern JS_FRIEND_API JSObject*
 GetFirstSubsumedSavedFrame(JSContext* cx, JSPrincipals* principals,
                            JS::Handle<JSObject*> savedFrame, JS::SavedFrameSelfHosted selfHosted);
 

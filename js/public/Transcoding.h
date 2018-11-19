@@ -60,20 +60,20 @@ enum TranscodeResult : uint8_t
     TranscodeResult_Throw = 0x20
 };
 
-extern JS_PUBLIC_API(TranscodeResult)
+extern JS_PUBLIC_API TranscodeResult
 EncodeScript(JSContext* cx, TranscodeBuffer& buffer, Handle<JSScript*> script);
 
-extern JS_PUBLIC_API(TranscodeResult)
+extern JS_PUBLIC_API TranscodeResult
 EncodeInterpretedFunction(JSContext* cx, TranscodeBuffer& buffer, Handle<JSObject*> funobj);
 
-extern JS_PUBLIC_API(TranscodeResult)
+extern JS_PUBLIC_API TranscodeResult
 DecodeScript(JSContext* cx, TranscodeBuffer& buffer, MutableHandle<JSScript*> scriptp,
              size_t cursorIndex = 0);
 
-extern JS_PUBLIC_API(TranscodeResult)
+extern JS_PUBLIC_API TranscodeResult
 DecodeScript(JSContext* cx, const TranscodeRange& range, MutableHandle<JSScript*> scriptp);
 
-extern JS_PUBLIC_API(TranscodeResult)
+extern JS_PUBLIC_API TranscodeResult
 DecodeInterpretedFunction(JSContext* cx, TranscodeBuffer& buffer, MutableHandle<JSFunction*> funp,
                           size_t cursorIndex = 0);
 
@@ -89,10 +89,10 @@ DecodeInterpretedFunction(JSContext* cx, TranscodeBuffer& buffer, MutableHandle<
 // The |buffer| argument of |FinishIncrementalEncoding| is used for appending
 // the encoded bytecode into the buffer. If any of these functions failed, the
 // content of |buffer| would be undefined.
-extern JS_PUBLIC_API(bool)
+extern JS_PUBLIC_API bool
 StartIncrementalEncoding(JSContext* cx, Handle<JSScript*> script);
 
-extern JS_PUBLIC_API(bool)
+extern JS_PUBLIC_API bool
 FinishIncrementalEncoding(JSContext* cx, Handle<JSScript*> script, TranscodeBuffer& buffer);
 
 } // namespace JS

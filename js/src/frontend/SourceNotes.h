@@ -313,17 +313,17 @@ struct JSSrcNoteSpec {
     int8_t          arity;      /* number of offset operands */
 };
 
-extern JS_FRIEND_DATA(const JSSrcNoteSpec) js_SrcNoteSpec[];
+extern JS_FRIEND_DATA const JSSrcNoteSpec js_SrcNoteSpec[];
 
 namespace js {
 
-extern JS_FRIEND_API(unsigned)
+extern JS_FRIEND_API unsigned
 SrcNoteLength(jssrcnote* sn);
 
 /*
  * Get and set the offset operand identified by which (0 for the first, etc.).
  */
-extern JS_FRIEND_API(ptrdiff_t)
+extern JS_FRIEND_API ptrdiff_t
 GetSrcNoteOffset(jssrcnote* sn, unsigned which);
 
 } // namespace js

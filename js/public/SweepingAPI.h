@@ -15,9 +15,9 @@ class WeakCacheBase;
 } // namespace detail
 
 namespace shadow {
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 RegisterWeakCache(JS::Zone* zone, JS::detail::WeakCacheBase* cachep);
-JS_PUBLIC_API(void)
+JS_PUBLIC_API void
 RegisterWeakCache(JSRuntime* rt, JS::detail::WeakCacheBase* cachep);
 } // namespace shadow
 

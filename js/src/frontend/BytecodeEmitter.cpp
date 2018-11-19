@@ -9404,7 +9404,7 @@ SrcNoteArity(jssrcnote* sn)
     return js_SrcNoteSpec[SN_TYPE(sn)].arity;
 }
 
-JS_FRIEND_API(unsigned)
+JS_FRIEND_API unsigned
 js::SrcNoteLength(jssrcnote* sn)
 {
     unsigned arity;
@@ -9419,7 +9419,7 @@ js::SrcNoteLength(jssrcnote* sn)
     return sn - base;
 }
 
-JS_FRIEND_API(ptrdiff_t)
+JS_FRIEND_API ptrdiff_t
 js::GetSrcNoteOffset(jssrcnote* sn, unsigned which)
 {
     /* Find the offset numbered which (i.e., skip exactly which offsets). */

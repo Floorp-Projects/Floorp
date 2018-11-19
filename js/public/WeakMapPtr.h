@@ -20,7 +20,7 @@ namespace JS {
 // If you want to use this class for a different key/value combination, add it
 // to the list and the compiler will generate the relevant machinery.
 template <typename K, typename V>
-class JS_PUBLIC_API(WeakMapPtr)
+class JS_PUBLIC_API WeakMapPtr
 {
   public:
     WeakMapPtr() : ptr(nullptr) {}
