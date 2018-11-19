@@ -2189,6 +2189,27 @@ BaselineCacheIRCompiler::init(CacheKind kind)
 
 static const size_t MaxOptimizedCacheIRStubs = 16;
 
+static void
+ResetEnteredCounts(ICFallbackStub* stub)
+{
+    for (ICStubIterator iter = stub->beginChain(); !iter.atEnd(); iter++) {
+        switch (iter->kind()) {
+          case ICStub::CacheIR_Regular:
+            iter->toCacheIR_Regular()->resetEnteredCount();
+            break;
+          case ICStub::CacheIR_Updated:
+            iter->toCacheIR_Updated()->resetEnteredCount();
+            break;
+          case ICStub::CacheIR_Monitored:
+            iter->toCacheIR_Monitored()->resetEnteredCount();
+            break;
+          default:
+            break;
+        }
+    }
+    stub->resetEnteredCount();
+}
+
 ICStub*
 js::jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
                                    CacheKind kind, BaselineCacheIRStubKind stubKind,
@@ -2329,6 +2350,10 @@ js::jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
     if (!newStubMem) {
         return nullptr;
     }
+
+    // Resetting the entered counts on the IC chain makes subsequent reasoning
+    // about the chain much easier.
+    ResetEnteredCounts(stub);
 
     switch (stubKind) {
       case BaselineCacheIRStubKind::Regular: {
