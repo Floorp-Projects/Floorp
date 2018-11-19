@@ -542,50 +542,50 @@ enum ParseNodeArity
 };
 
 // FIXME: Remove `*Type` (bug 1489008)
-#define FOR_EACH_PARSENODE_SUBCLASS(macro) \
-    macro(BinaryNode, BinaryNodeType, asBinary) \
-    macro(AssignmentNode, AssignmentNodeType, asAssignment) \
-    macro(CaseClause, CaseClauseType, asCaseClause) \
-    macro(ClassMethod, ClassMethodType, asClassMethod) \
-    macro(ClassField, ClassFieldType, asClassField) \
-    macro(ClassNames, ClassNamesType, asClassNames) \
-    macro(ForNode, ForNodeType, asFor) \
-    macro(PropertyAccess, PropertyAccessType, asPropertyAccess) \
-    macro(PropertyByValue, PropertyByValueType, asPropertyByValue) \
-    macro(SwitchStatement, SwitchStatementType, asSwitchStatement) \
+#define FOR_EACH_PARSENODE_SUBCLASS(MACRO) \
+    MACRO(BinaryNode, BinaryNodeType, asBinary) \
+    MACRO(AssignmentNode, AssignmentNodeType, asAssignment) \
+    MACRO(CaseClause, CaseClauseType, asCaseClause) \
+    MACRO(ClassMethod, ClassMethodType, asClassMethod) \
+    MACRO(ClassField, ClassFieldType, asClassField) \
+    MACRO(ClassNames, ClassNamesType, asClassNames) \
+    MACRO(ForNode, ForNodeType, asFor) \
+    MACRO(PropertyAccess, PropertyAccessType, asPropertyAccess) \
+    MACRO(PropertyByValue, PropertyByValueType, asPropertyByValue) \
+    MACRO(SwitchStatement, SwitchStatementType, asSwitchStatement) \
     \
-    macro(CodeNode, CodeNodeType, asCode) \
+    MACRO(CodeNode, CodeNodeType, asCode) \
     \
-    macro(LexicalScopeNode, LexicalScopeNodeType, asLexicalScope) \
+    MACRO(LexicalScopeNode, LexicalScopeNodeType, asLexicalScope) \
     \
-    macro(ListNode, ListNodeType, asList) \
-    macro(CallSiteNode, CallSiteNodeType, asCallSite) \
+    MACRO(ListNode, ListNodeType, asList) \
+    MACRO(CallSiteNode, CallSiteNodeType, asCallSite) \
     \
-    macro(LoopControlStatement, LoopControlStatementType, asLoopControlStatement) \
-    macro(BreakStatement, BreakStatementType, asBreakStatement) \
-    macro(ContinueStatement, ContinueStatementType, asContinueStatement) \
+    MACRO(LoopControlStatement, LoopControlStatementType, asLoopControlStatement) \
+    MACRO(BreakStatement, BreakStatementType, asBreakStatement) \
+    MACRO(ContinueStatement, ContinueStatementType, asContinueStatement) \
     \
-    macro(NameNode, NameNodeType, asName) \
-    macro(LabeledStatement, LabeledStatementType, asLabeledStatement) \
+    MACRO(NameNode, NameNodeType, asName) \
+    MACRO(LabeledStatement, LabeledStatementType, asLabeledStatement) \
     \
-    macro(NullaryNode, NullaryNodeType, asNullary) \
-    macro(BooleanLiteral, BooleanLiteralType, asBooleanLiteral) \
-    macro(DebuggerStatement, DebuggerStatementType, asDebuggerStatement) \
-    macro(NullLiteral, NullLiteralType, asNullLiteral) \
-    macro(RawUndefinedLiteral, RawUndefinedLiteralType, asRawUndefinedLiteral) \
+    MACRO(NullaryNode, NullaryNodeType, asNullary) \
+    MACRO(BooleanLiteral, BooleanLiteralType, asBooleanLiteral) \
+    MACRO(DebuggerStatement, DebuggerStatementType, asDebuggerStatement) \
+    MACRO(NullLiteral, NullLiteralType, asNullLiteral) \
+    MACRO(RawUndefinedLiteral, RawUndefinedLiteralType, asRawUndefinedLiteral) \
     \
-    macro(NumericLiteral, NumericLiteralType, asNumericLiteral) \
-    IF_BIGINT(macro(BigIntLiteral, BigIntLiteralType, asBigIntLiteral),) \
+    MACRO(NumericLiteral, NumericLiteralType, asNumericLiteral) \
+    IF_BIGINT(MACRO(BigIntLiteral, BigIntLiteralType, asBigIntLiteral),) \
     \
-    macro(RegExpLiteral, RegExpLiteralType, asRegExpLiteral) \
+    MACRO(RegExpLiteral, RegExpLiteralType, asRegExpLiteral) \
     \
-    macro(TernaryNode, TernaryNodeType, asTernary) \
-    macro(ClassNode, ClassNodeType, asClass) \
-    macro(ConditionalExpression, ConditionalExpressionType, asConditionalExpression) \
-    macro(TryNode, TryNodeType, asTry) \
+    MACRO(TernaryNode, TernaryNodeType, asTernary) \
+    MACRO(ClassNode, ClassNodeType, asClass) \
+    MACRO(ConditionalExpression, ConditionalExpressionType, asConditionalExpression) \
+    MACRO(TryNode, TryNodeType, asTry) \
     \
-    macro(UnaryNode, UnaryNodeType, asUnary) \
-    macro(ThisLiteral, ThisLiteralType, asThisLiteral)
+    MACRO(UnaryNode, UnaryNodeType, asUnary) \
+    MACRO(ThisLiteral, ThisLiteralType, asThisLiteral)
 
 #define DECLARE_CLASS(typeName, longTypeName, asMethodName) \
 class typeName;
