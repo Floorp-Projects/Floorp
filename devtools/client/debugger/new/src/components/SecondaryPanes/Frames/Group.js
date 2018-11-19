@@ -4,6 +4,7 @@
 
 // @flow
 import React, { Component } from "react";
+import PropTypes from "prop-types";
 import classNames from "classnames";
 import Svg from "../../shared/Svg";
 import {
@@ -127,12 +128,20 @@ export default class Group extends Component<Props, State> {
   renderDescription() {
     const frame = this.props.group[0];
     const displayName = formatDisplayName(frame);
+
+    const l10NEntry = this.state.expanded
+      ? "callStack.group.collapseTooltip"
+      : "callStack.group.expandTooltip";
+    const { l10n } = this.context;
+    const title = l10n.getFormatStr(l10NEntry, frame.library);
+
     return (
       <li
         key={frame.id}
         className={classNames("group")}
         onClick={this.toggleFrames}
         tabIndex={0}
+        title={title}
       >
         <span className="title">{displayName}</span>
         <Badge>{this.props.group.length}</Badge>
@@ -157,3 +166,4 @@ export default class Group extends Component<Props, State> {
 }
 
 Group.displayName = "Group";
+Group.contextTypes = { l10n: PropTypes.object };
