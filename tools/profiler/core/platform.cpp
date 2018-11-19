@@ -3640,6 +3640,16 @@ profiler_thread_wake()
 }
 
 bool
+mozilla::profiler::detail::IsThreadBeingProfiled()
+{
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  const RacyRegisteredThread* racyRegisteredThread =
+    TLSRegisteredThread::RacyRegisteredThread();
+  return racyRegisteredThread && racyRegisteredThread->IsBeingProfiled();
+}
+
+bool
 profiler_thread_is_sleeping()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
