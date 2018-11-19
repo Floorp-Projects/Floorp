@@ -197,6 +197,7 @@ function validateAndParseSimpleParam(param, type) {
         let pathQueryRef = parsedParam.pathname + parsedParam.hash;
         // Make sure that "origin" types won't accept full URLs.
         if (pathQueryRef != "/" && pathQueryRef != "") {
+          log.error(`Ignoring parameter "${param}" - origin was expected but received full URL.`);
           valid = false;
         } else {
           valid = true;
