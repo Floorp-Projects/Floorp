@@ -95,13 +95,13 @@ IF_BIGINT(real,imaginary)(BigInt, InitViaClassSpec, OCLASP(BigInt)) \
     real(Set,                   InitViaClassSpec,       OCLASP(Set)) \
     real(DataView,              InitViaClassSpec,       OCLASP(DataView)) \
     real(Symbol,                InitSymbolClass,        OCLASP(Symbol)) \
-IF_SAB(real,imaginary)(SharedArrayBuffer,       InitViaClassSpec, OCLASP(SharedArrayBuffer)) \
+    real(SharedArrayBuffer,    InitViaClassSpec,       OCLASP(SharedArrayBuffer)) \
 IF_INTL(real,imaginary) (Intl,                  InitIntlClass,          CLASP(Intl)) \
 IF_BDATA(real,imaginary)(TypedObject,           InitTypedObjectModuleObject,   OCLASP(TypedObjectModule)) \
     real(Reflect,               InitReflect,            nullptr) \
     real(WeakSet,               InitWeakSetClass,       OCLASP(WeakSet)) \
     real(TypedArray,            InitViaClassSpec,       &js::TypedArrayObject::sharedTypedArrayPrototypeClass) \
-IF_SAB(real,imaginary)(Atomics, InitAtomicsClass, OCLASP(Atomics)) \
+    real(Atomics,               InitAtomicsClass,       OCLASP(Atomics)) \
     real(SavedFrame,            InitViaClassSpec,       &js::SavedFrame::class_) \
     real(Promise,               InitViaClassSpec,       OCLASP(Promise)) \
     real(ReadableStream,        InitViaClassSpec,       &js::ReadableStream::class_) \

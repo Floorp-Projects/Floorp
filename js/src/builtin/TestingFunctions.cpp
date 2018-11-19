@@ -664,15 +664,11 @@ static bool
 WasmThreadsSupported(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-#ifdef ENABLE_WASM_THREAD_OPS
     bool isSupported = wasm::HasSupport(cx);
-# ifdef ENABLE_WASM_CRANELIFT
+#ifdef ENABLE_WASM_CRANELIFT
     if (cx->options().wasmForceCranelift()) {
         isSupported = false;
     }
-# endif
-#else
-    bool isSupported = false;
 #endif
     args.rval().setBoolean(isSupported);
     return true;
