@@ -253,4 +253,53 @@ promise_test(async t => {
   assert_equals(localStream.writeBufferedAmount, 10);
 }, 'writeBufferedAmount maintained after finish() has been called.');
 
+promise_test(async t => {
+  const [ localQuicTransport, remoteQuicTransport ] =
+      await makeTwoConnectedQuicTransports(t);
+  const localStream = localQuicTransport.createStream();
+  await localStream.waitForWriteBufferedAmountBelow(0);
+}, 'waitForWriteBufferedAmountBelow(0) resolves immediately.');
+
+promise_test(async t => {
+  const [ localQuicTransport, remoteQuicTransport ] =
+      await makeTwoConnectedQuicTransports(t);
+  const localStream = localQuicTransport.createStream();
+  await localStream.waitForWriteBufferedAmountBelow(
+      localStream.maxWriteBufferedAmount);
+}, 'waitForWriteBufferedAmountBelow(maxWriteBufferedAmount) resolves ' +
+  'immediately.');
+
+promise_test(async t => {
+  const [ localQuicTransport, remoteQuicTransport ] =
+      await makeTwoConnectedQuicTransports(t);
+  const localStream = localQuicTransport.createStream();
+  localStream.write(new Uint8Array(localStream.maxWriteBufferedAmount));
+  const promise1 = localStream.waitForWriteBufferedAmountBelow(0);
+  const promise2 = localStream.waitForWriteBufferedAmountBelow(0);
+  localStream.finish();
+  await Promise.all([
+      promise_rejects(t, 'InvalidStateError', promise1),
+      promise_rejects(t, 'InvalidStateError', promise2)]);
+}, 'Pending waitForWriteBufferedAmountBelow() promises rejected after ' +
+  'finish().');
+
+promise_test(async t => {
+  const [ localQuicTransport, remoteQuicTransport ] =
+      await makeTwoConnectedQuicTransports(t);
+  const localStream = localQuicTransport.createStream();
+  localStream.write(new Uint8Array(localStream.maxWriteBufferedAmount));
+  const promise1 = localStream.waitForWriteBufferedAmountBelow(0);
+  const promise2 = localStream.waitForWriteBufferedAmountBelow(0);
+  localStream.reset();
+  await Promise.all([
+      promise_rejects(t, 'InvalidStateError', promise1),
+      promise_rejects(t, 'InvalidStateError', promise2)]);
+}, 'Pending waitForWriteBufferedAmountBelow() promises rejected after ' +
+  'reset().');
+
+closed_stream_test(async (t, stream) => {
+  await promise_rejects(t, 'InvalidStateError',
+      stream.waitForWriteBufferedAmountBelow(0));
+}, 'waitForWriteBufferedBelow() rejects with InvalidStateError.');
+
 </script>
