@@ -35,14 +35,11 @@ namespace workerinternals {
 
 nsresult
 ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
-                               nsIURI* aBaseURI,
                                nsIDocument* aParentDoc,
                                nsILoadGroup* aLoadGroup,
-                               const nsAString& aScriptURL,
-                               nsIURI* aResolvedScriptURL,
+                               nsIURI* aScriptURL,
                                const Maybe<ClientInfo>& aClientInfo,
                                nsContentPolicyType aContentPolicyType,
-                               bool aDefaultURIEncoding,
                                nsIChannel** aChannel);
 
 nsresult
