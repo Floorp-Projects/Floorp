@@ -11,6 +11,8 @@ const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/te
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 const COOKIE_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/cookiePage.html";
 
+requestLongerTimeout(2);
+
 registerCleanupFunction(function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
   Services.prefs.clearUserPref(TP_PREF);
@@ -83,7 +85,7 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
 
   info("Reload tracking cookies tab");
-  securityChanged = waitForSecurityChange(tabbrowser, 2);
+  securityChanged = waitForSecurityChange(tabbrowser, 4);
   tabbrowser.reload();
   await securityChanged;
 
@@ -92,7 +94,7 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   await BrowserTestUtils.waitForEvent(ContentBlocking.animatedIcon, "animationend");
 
   info("Reload tracking tab");
-  securityChanged = waitForSecurityChange(tabbrowser, 3);
+  securityChanged = waitForSecurityChange(tabbrowser, 5);
   tabbrowser.selectedTab = trackingTab;
   tabbrowser.reload();
   await securityChanged;
@@ -102,7 +104,7 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   await BrowserTestUtils.waitForEvent(ContentBlocking.animatedIcon, "animationend");
 
   info("Inject tracking cookie inside tracking tab");
-  securityChanged = waitForSecurityChange(tabbrowser);
+  securityChanged = waitForSecurityChange(tabbrowser, 2);
   await ContentTask.spawn(tabbrowser.selectedBrowser, {},
                           function() {
     content.postMessage("cookie", "*");
@@ -126,7 +128,7 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   tabbrowser.selectedTab = trackingCookiesTab;
 
   info("Inject tracking cookie inside tracking cookies tab");
-  securityChanged = waitForSecurityChange(tabbrowser);
+  securityChanged = waitForSecurityChange(tabbrowser, 2);
   await ContentTask.spawn(tabbrowser.selectedBrowser, {},
                           function() {
     content.postMessage("cookie", "*");
@@ -137,7 +139,7 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   ok(!ContentBlocking.iconBox.hasAttribute("animate"), "iconBox not animating");
 
   info("Inject tracking element inside tracking cookies tab");
-  securityChanged = waitForSecurityChange(tabbrowser);
+  securityChanged = waitForSecurityChange(tabbrowser, 2);
   await ContentTask.spawn(tabbrowser.selectedBrowser, {},
                           function() {
     content.postMessage("tracking", "*");

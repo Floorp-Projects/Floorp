@@ -208,6 +208,10 @@ nsSecureBrowserUIImpl::CheckForBlockedContent()
   if (docShell->GetHasAllCookiesBeenBlocked()) {
     mState |= STATE_COOKIES_BLOCKED_ALL;
   }
+
+  if (docShell->GetHasCookiesLoaded()) {
+    mState |= STATE_COOKIES_LOADED;
+  }
 }
 
 // Helper function to determine if the given URI can be considered secure.
