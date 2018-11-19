@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Σημείωση Απορρήτου",
   "firstrun_continue_to_login": "Συνέχεια",
   "firstrun_skip_login": "Παράλειψη βήματος",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Άνοιγμα μενού",
   "pocket_learn_more": "Μάθετε περισσότερα"
 };

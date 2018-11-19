@@ -17,7 +17,7 @@ describe("ASRouterUtils", () => {
   let fakeSendAsyncMessage;
   beforeEach(() => {
     global = new GlobalOverrider();
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     fakeSendAsyncMessage = sandbox.stub();
     global.set({RPMSendAsyncMessage: fakeSendAsyncMessage});
   });
@@ -43,7 +43,7 @@ describe("ASRouterUISurface", () => {
   let fakeDocument;
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     fakeDocument = {
       location: {href: ""},
       _listeners: new Set(),

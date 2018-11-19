@@ -80,7 +80,7 @@ describe("ASRouter", () => {
     messageImpressions = {};
     providerImpressions = {};
     previousSessionEnd = 100;
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
 
     sandbox.spy(ASRouterPreferences, "init");
     sandbox.spy(ASRouterPreferences, "uninit");
@@ -840,7 +840,7 @@ describe("ASRouter", () => {
       });
       it("should call openLinkIn with the correct params on OPEN_URL", async () => {
         let [testMessage] = Router.state.messages;
-        testMessage.button_action = {type: "OPEN_URL", data: {args: "some/url.com"}};
+        testMessage.button_action = {type: "OPEN_URL", data: {args: "some/url.com", where: "tabshifted"}};
         const msg = fakeExecuteUserAction(testMessage.button_action);
         await Router.onMessage(msg);
 
@@ -873,7 +873,7 @@ describe("ASRouter", () => {
 
         assert.calledOnce(msg.target.browser.ownerGlobal.openLinkIn);
         assert.calledWith(msg.target.browser.ownerGlobal.openLinkIn,
-          "some/url", "tabshifted", {"private": false, "triggeringPrincipal": undefined});
+          "some/url", "current", {"private": false, "triggeringPrincipal": undefined});
       });
     });
 
