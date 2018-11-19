@@ -10,6 +10,8 @@
 #![cfg_attr(feature = "cargo-clippy", allow(just_underscores_and_digits))]
 
 use super::{UnknownUnit, Angle};
+#[cfg(feature = "mint")]
+use mint;
 use num::{One, Zero};
 use point::TypedPoint2D;
 use vector::{TypedVector2D, vec2};
@@ -405,12 +407,37 @@ where T: Copy + fmt::Debug +
     }
 }
 
+#[cfg(feature = "mint")]
+impl<T, Src, Dst> From<mint::RowMatrix3x2<T>> for TypedTransform2D<T, Src, Dst> {
+    fn from(m: mint::RowMatrix3x2<T>) -> Self {
+        TypedTransform2D {
+            m11: m.x.x, m12: m.x.y,
+            m21: m.y.x, m22: m.y.y,
+            m31: m.z.x, m32: m.z.y,
+            _unit: PhantomData,
+        }
+    }
+}
+#[cfg(feature = "mint")]
+impl<T, Src, Dst> Into<mint::RowMatrix3x2<T>> for TypedTransform2D<T, Src, Dst> {
+    fn into(self) -> mint::RowMatrix3x2<T> {
+        mint::RowMatrix3x2 {
+            x: mint::Vector2 { x: self.m11, y: self.m12 },
+            y: mint::Vector2 { x: self.m21, y: self.m22 },
+            z: mint::Vector2 { x: self.m31, y: self.m32 },
+        }
+    }
+}
+
+
 #[cfg(test)]
 mod test {
     use super::*;
     use approxeq::ApproxEq;
     use point::Point2D;
     use Angle;
+    #[cfg(feature = "mint")]
+    use mint;
 
     use core::f32::consts::FRAC_PI_2;
 
@@ -538,5 +565,15 @@ mod test {
         let m1 = Mat::create_translation(1.0, 1.0);
         let v1 = vec2(10.0, -10.0);
         assert_eq!(v1, m1.transform_vector(&v1));
+    }
+
+    #[cfg(feature = "mint")]
+    #[test]
+    pub fn test_mint() {
+        let m1 = Mat::create_rotation(rad(FRAC_PI_2));
+        let mm: mint::RowMatrix3x2<_> = m1.into();
+        let m2 = Mat::from(mm);
+
+        assert_eq!(m1, m2);
     }
 }
