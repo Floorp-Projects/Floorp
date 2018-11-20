@@ -1738,7 +1738,8 @@ PaintByLayer(nsDisplayItem* aItem,
   layerBuilder->DidBeginRetainedLayerTransaction(aManager);
 
   aManager->SetDefaultTarget(aContext);
-  aManager->BeginTransactionWithTarget(aContext);
+  nsCString none;
+  aManager->BeginTransactionWithTarget(aContext, none);
   bool isInvalidated = false;
 
   ContainerLayerParameters param(aScale.width, aScale.height);

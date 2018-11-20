@@ -92,6 +92,9 @@ public:
                    const TimeStamp& aCompositeEnd) override;
 
   virtual mozilla::ipc::IPCResult
+  RecvNotifyFrameStats(nsTArray<FrameStats>&& aFrameStats) override;
+
+  virtual mozilla::ipc::IPCResult
   RecvInvalidateLayers(const LayersId& aLayersId) override;
 
   virtual mozilla::ipc::IPCResult

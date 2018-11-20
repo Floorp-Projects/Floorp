@@ -476,12 +476,14 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   static void
-  Create(Promise* aPromise, FetchBodyConsumer<Derived>* aConsumer)
+  Create(Promise* aPromise, FetchBodyConsumer<Derived>* aConsumer,
+         ThreadSafeWorkerRef* aWorkerRef)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aPromise);
 
-    RefPtr<FileCreationHandler> handler = new FileCreationHandler<Derived>(aConsumer);
+    RefPtr<FileCreationHandler> handler =
+      new FileCreationHandler<Derived>(aConsumer, aWorkerRef);
     aPromise->AppendNativeHandler(handler);
   }
 
@@ -491,17 +493,17 @@ public:
     AssertIsOnMainThread();
 
     if (NS_WARN_IF(!aValue.isObject())) {
-      mConsumer->OnBlobResult(nullptr);
+      mConsumer->OnBlobResult(nullptr, mWorkerRef);
       return;
     }
 
     RefPtr<Blob> blob;
     if (NS_WARN_IF(NS_FAILED(UNWRAP_OBJECT(Blob, &aValue.toObject(), blob)))) {
-      mConsumer->OnBlobResult(nullptr);
+      mConsumer->OnBlobResult(nullptr, mWorkerRef);
       return;
     }
 
-    mConsumer->OnBlobResult(blob);
+    mConsumer->OnBlobResult(blob, mWorkerRef);
   }
 
   void
@@ -509,12 +511,14 @@ public:
   {
     AssertIsOnMainThread();
 
-    mConsumer->OnBlobResult(nullptr);
+    mConsumer->OnBlobResult(nullptr, mWorkerRef);
   }
 
 private:
-  explicit FileCreationHandler<Derived>(FetchBodyConsumer<Derived>* aConsumer)
+  FileCreationHandler<Derived>(FetchBodyConsumer<Derived>* aConsumer,
+                               ThreadSafeWorkerRef* aWorkerRef)
     : mConsumer(aConsumer)
+    , mWorkerRef(aWorkerRef)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aConsumer);
@@ -523,6 +527,7 @@ private:
   ~FileCreationHandler() = default;
 
   RefPtr<FetchBodyConsumer<Derived>> mConsumer;
+  RefPtr<ThreadSafeWorkerRef> mWorkerRef;
 };
 
 template <class Derived>
@@ -604,7 +609,7 @@ FetchBodyConsumer<Derived>::BeginConsumeBodyMainThread(ThreadSafeWorkerRef* aWor
         return;
       }
       autoReject.DontFail();
-      ContinueConsumeBlobBody(blobImpl);
+      DispatchContinueConsumeBlobBody(blobImpl, aWorkerRef);
       return;
     }
 
@@ -623,8 +628,8 @@ FetchBodyConsumer<Derived>::BeginConsumeBodyMainThread(ThreadSafeWorkerRef* aWor
         return;
       }
 
-      FileCreationHandler<Derived>::Create(promise, this);
       autoReject.DontFail();
+      FileCreationHandler<Derived>::Create(promise, this, aWorkerRef);
       return;
     }
   }
@@ -688,19 +693,42 @@ template <class Derived>
 void
 FetchBodyConsumer<Derived>::OnBlobResult(Blob* aBlob, ThreadSafeWorkerRef* aWorkerRef)
 {
-  MOZ_ASSERT(aBlob);
+  AssertIsOnMainThread();
+
+  DispatchContinueConsumeBlobBody(aBlob ? aBlob->Impl() : nullptr, aWorkerRef);
+}
+
+template <class Derived>
+void
+FetchBodyConsumer<Derived>::DispatchContinueConsumeBlobBody(BlobImpl* aBlobImpl,
+                                                            ThreadSafeWorkerRef* aWorkerRef)
+{
+  AssertIsOnMainThread();
 
   // Main-thread.
   if (!aWorkerRef) {
-    ContinueConsumeBlobBody(aBlob->Impl());
+    if (aBlobImpl) {
+      ContinueConsumeBlobBody(aBlobImpl);
+    } else {
+      ContinueConsumeBody(NS_ERROR_DOM_ABORT_ERR, 0, nullptr);
+    }
     return;
   }
 
   // Web Worker.
-  {
+  if (aBlobImpl) {
     RefPtr<ContinueConsumeBlobBodyRunnable<Derived>> r =
       new ContinueConsumeBlobBodyRunnable<Derived>(this, aWorkerRef->Private(),
-                                                   aBlob->Impl());
+                                                   aBlobImpl);
+
+    if (r->Dispatch()) {
+      return;
+    }
+  } else {
+    RefPtr<ContinueConsumeBodyRunnable<Derived>> r =
+      new ContinueConsumeBodyRunnable<Derived>(this, aWorkerRef->Private(),
+                                               NS_ERROR_DOM_ABORT_ERR, 0,
+                                               nullptr);
 
     if (r->Dispatch()) {
       return;
