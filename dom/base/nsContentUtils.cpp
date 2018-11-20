@@ -8952,11 +8952,19 @@ nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
   bool disabled =
     StorageDisabledByAntiTrackingInternal(aWindow, aChannel, aPrincipal, aURI,
                                           &rejectedReason);
-  if (disabled && sAntiTrackingControlCenterUIEnabled && rejectedReason) {
+  if (sAntiTrackingControlCenterUIEnabled) {
     if (aWindow) {
-      AntiTrackingCommon::NotifyRejection(aWindow, rejectedReason);
+      AntiTrackingCommon::NotifyBlockingDecision(aWindow,
+                                                 disabled ?
+                                                   AntiTrackingCommon::BlockingDecision::eBlock :
+                                                   AntiTrackingCommon::BlockingDecision::eAllow,
+                                                 rejectedReason);
     } else if (aChannel) {
-      AntiTrackingCommon::NotifyRejection(aChannel, rejectedReason);
+      AntiTrackingCommon::NotifyBlockingDecision(aChannel,
+                                                 disabled ?
+                                                   AntiTrackingCommon::BlockingDecision::eBlock :
+                                                   AntiTrackingCommon::BlockingDecision::eAllow,
+                                                 rejectedReason);
     }
   }
   return disabled;
