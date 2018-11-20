@@ -18,15 +18,14 @@ function openIdentityPopup() {
   return viewShown;
 }
 
-function waitForSecurityChange(blocked) {
+function waitForSecurityChange(counter) {
   return new Promise(resolve => {
     let webProgressListener = {
       onStateChange: () => {},
       onStatusChange: () => {},
       onLocationChange: () => {},
       onSecurityChange: (webProgress, request, oldState, state) => {
-        if ((!blocked && state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) ||
-            (blocked && state & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT)) {
+        if (--counter == 0) {
           gBrowser.removeProgressListener(webProgressListener);
           resolve();
         }
@@ -68,7 +67,7 @@ async function assertSitesListed(blocked) {
 
     ok(true, "Main view was shown");
 
-    let change = waitForSecurityChange(blocked);
+    let change = waitForSecurityChange(2);
 
     await ContentTask.spawn(browser, {}, function() {
       content.postMessage("more-tracking", "*");
