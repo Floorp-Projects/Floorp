@@ -90,9 +90,12 @@ class TraceLoggerEvent {
          * TraceLoggerTextId. The last bit decides how to read the payload.
          *
          * payload_ = [                   | 0 ]
-         *            ------------------------  = TraceLoggerEventPayload* (incl. last bit)
+         *             -----------------------
+         *             TraceLoggerEventPayload* (incl. last bit)
+         *
          * payload_ = [                   | 1 ]
-         *             -------------------      = TraceLoggerTextId (excl. last bit)
+         *             -------------------
+         *             TraceLoggerTextId (excl. last bit)
          */
         uintptr_t payload_;
 

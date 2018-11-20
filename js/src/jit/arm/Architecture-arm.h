@@ -559,10 +559,10 @@ class VFPRegister
     // to know if a register is available or not, as we have the following
     // relations:
     //
-    //   d0.alignedOrDominatedAliasedSet() ==
-    //       s0.alignedOrDominatedAliasedSet() | s1.alignedOrDominatedAliasedSet()
+    //  d0.alignedOrDominatedAliasedSet() ==
+    //      s0.alignedOrDominatedAliasedSet() | s1.alignedOrDominatedAliasedSet()
     //
-    //   s0.alignedOrDominatedAliasedSet() & s1.alignedOrDominatedAliasedSet() == 0
+    //  s0.alignedOrDominatedAliasedSet() & s1.alignedOrDominatedAliasedSet() == 0
     //
     SetType alignedOrDominatedAliasedSet() const {
         if (isSingle()) {

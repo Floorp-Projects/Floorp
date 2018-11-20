@@ -969,7 +969,8 @@ JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm, Label* profi
         masm.storePtr(scratch2, lastProfilingCallSite);
 
         // Store return frame in lastProfilingFrame.
-        // scratch2 := masm.getStackPointer() + Descriptor.size*1 + JitFrameLayout::Size();
+        // scratch2 := masm.getStackPointer() + Descriptor.size*1 +
+        //             JitFrameLayout::Size();
         masm.Add(ARMRegister(scratch2, 64), masm.GetStackPointer64(), ARMRegister(scratch1, 64));
         masm.syncStackPtr();
         masm.addPtr(Imm32(JitFrameLayout::Size()), scratch2, scratch2);
@@ -1085,7 +1086,8 @@ JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm, Label* profi
         masm.loadPtr(Address(scratch2, RectifierFrameLayout::offsetOfReturnAddress()), scratch3);
         masm.storePtr(scratch3, lastProfilingCallSite);
 
-        // scratch3 := RectFrame + Rect-Descriptor.Size + RectifierFrameLayout::Size()
+        // scratch3 := RectFrame + Rect-Descriptor.Size +
+        //             RectifierFrameLayout::Size()
         masm.addPtr(scratch2, scratch1, scratch3);
         masm.add32(Imm32(RectifierFrameLayout::Size()), scratch3);
         masm.storePtr(scratch3, lastProfilingFrame);
