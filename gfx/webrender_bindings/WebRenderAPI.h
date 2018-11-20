@@ -246,11 +246,14 @@ protected:
     , mUseDComp(aUseDComp)
     , mUseTripleBuffering(aUseTripleBuffering)
     , mSyncHandle(aSyncHandle)
+    , mDebugFlags({ 0 })
   {}
 
   ~WebRenderAPI();
   // Should be used only for shutdown handling
   void WaitFlushed();
+
+  void UpdateDebugFlags(uint32_t aFlags);
 
   wr::DocumentHandle* mDocHandle;
   wr::WindowId mId;
@@ -259,6 +262,7 @@ protected:
   bool mUseDComp;
   bool mUseTripleBuffering;
   layers::SyncHandle mSyncHandle;
+  wr::DebugFlags mDebugFlags;
 
   // We maintain alive the root api to know when to shut the render backend down,
   // and the root api for the document to know when to delete the document.

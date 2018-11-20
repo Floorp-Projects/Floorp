@@ -105,7 +105,7 @@ public:
 
   virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
 
-  NS_IMETHOD GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance) override;
+  nsNPAPIPluginInstance* GetPluginInstance() override;
 
   virtual void SetIsDocumentActive(bool aIsActive) override;
 

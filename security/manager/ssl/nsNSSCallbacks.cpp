@@ -245,13 +245,7 @@ OCSPRequest::Run()
     return NotifyDone(rv, lock);
   }
 
-  bool isPACLoading = false;
-  rv = pps->GetIsPACLoading(&isPACLoading);
-  if (NS_FAILED(rv)) {
-    return NotifyDone(rv, lock);
-  }
-
-  if (isPACLoading) {
+  if (pps->GetIsPACLoading()) {
     return NotifyDone(NS_ERROR_FAILURE, lock);
   }
 

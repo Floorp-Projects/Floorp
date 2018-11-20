@@ -10931,7 +10931,6 @@ BaseCompiler::emitBody()
 
           // Thread operations
           case uint16_t(Op::ThreadPrefix): {
-#ifdef ENABLE_WASM_THREAD_OPS
             switch (op.b1) {
               case uint16_t(ThreadOp::Wake):
                 CHECK_NEXT(emitWake());
@@ -11079,9 +11078,6 @@ BaseCompiler::emitBody()
               default:
                 return iter_.unrecognizedOpcode(&op);
             }
-#else
-            return iter_.unrecognizedOpcode(&op);
-#endif  // ENABLE_WASM_THREAD_OPS
             break;
           }
 

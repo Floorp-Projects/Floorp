@@ -892,7 +892,11 @@ class ExtensionData {
     for (let id of this.dependencies) {
       let policy = WebExtensionPolicy.getByID(id);
       if (policy) {
-        apiManagers.push(policy.extension.experimentAPIManager);
+        if (policy.extension.experimentAPIManager) {
+          apiManagers.push(policy.extension.experimentAPIManager);
+        } else if (AppConstants.DEBUG) {
+          Cu.reportError(`Cannot find experimental API exported from ${id}`);
+        }
       }
     }
 

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackground;
+include "mozilla/layers/LayersMessageUtils.h";
 
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 

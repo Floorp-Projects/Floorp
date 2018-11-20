@@ -10,101 +10,13 @@ Services.prefs.setIntPref("extensions.enabledScopes",
                           AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_USER +
                           AddonManager.SCOPE_SYSTEM);
 
-var addon1 = {
-  id: "addon1@tests.mozilla.org",
-  version: "1.0",
-  name: "Test 1",
-  bootstrap: true,
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "1",
-  }, {                 // Repeated target application entries should be ignored
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "2",
-    maxVersion: "2",
-  }],
-};
+function getID(n) { return `addon${n}@tests.mozilla.org`; }
+function initialVersion(n) { return `${n}.0`; }
 
-var addon2 = {
-  id: "addon2@tests.mozilla.org",
-  version: "2.0",
-  name: "Test 2",
-  bootstrap: true,
-  targetApplications: [{  // Bad target application entries should be ignored
-    minVersion: "3",
-    maxVersion: "4",
-  }, {
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "2",
-  }],
-};
-
-var addon3 = {
-  id: "addon3@tests.mozilla.org",
-  version: "3.0",
-  name: "Test 3",
-  bootstrap: true,
-  targetApplications: [{
-    id: "toolkit@mozilla.org",
-    minVersion: "1.9.2",
-    maxVersion: "1.9.2.*",
-  }],
-};
-
-// Should be ignored because it has no ID
-var addon4 = {
-  version: "4.0",
-  name: "Test 4",
-  bootstrap: true,
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "1",
-  }],
-};
-
-// Should be ignored because it has no version
-var addon5 = {
-  id: "addon5@tests.mozilla.org",
-  version: undefined,
-  name: "Test 5",
-  bootstrap: true,
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "1",
-  }],
-};
-
-// Should be ignored because it has an invalid type
-var addon6 = {
-  id: "addon6@tests.mozilla.org",
-  version: "3.0",
-  name: "Test 6",
-  bootstrap: true,
-  type: 5,
-  targetApplications: [{
-    id: "toolkit@mozilla.org",
-    minVersion: "1.9.2",
-    maxVersion: "1.9.2.*",
-  }],
-};
-
-// Should be ignored because it has an invalid type
-var addon7 = {
-  id: "addon7@tests.mozilla.org",
-  version: "3.0",
-  name: "Test 3",
-  bootstrap: true,
-  type: "extension",
-  targetApplications: [{
-    id: "toolkit@mozilla.org",
-    minVersion: "1.9.2",
-    maxVersion: "1.9.2.*",
-  }],
-};
+const ID1 = getID(1);
+const ID2 = getID(2);
+const ID3 = getID(3);
+const ID4 = getID(4);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
@@ -121,18 +33,37 @@ registerDirectory("XREUSysExt", userDir.parent);
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-var gCachePurged = false;
+function check_startup_changes(aType, aIds) {
+  var ids = aIds.slice(0);
+  ids.sort();
+  var changes = AddonManager.getStartupChanges(aType);
+  changes = changes.filter(aEl => /@tests.mozilla.org$/.test(aEl));
+  changes.sort();
+
+  Assert.equal(JSON.stringify(ids), JSON.stringify(changes));
+}
+
+function promiseCacheInvalidated() {
+  return new Promise(resolve => {
+    let observer = () => {
+      Services.obs.removeObserver(observer, "startupcache-invalidate");
+      resolve();
+    };
+    Services.obs.addObserver(observer, "startupcache-invalidate");
+  });
+}
+
+function createWebExtension(id, version) {
+  return createTempWebExtensionFile({
+    manifest: {
+      version,
+      applications: {gecko: {id}},
+    },
+  });
+}
 
 // Set up the profile
-async function run_test() {
-  do_test_pending("test_startup main");
-
-  Services.obs.addObserver({
-    observe(aSubject, aTopic, aData) {
-      gCachePurged = true;
-    },
-  }, "startupcache-invalidate");
-
+add_task(async function setup() {
   await promiseStartupManager();
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, []);
@@ -142,668 +73,543 @@ async function run_test() {
 
   Assert.ok(!gExtensionsJSON.exists());
 
-  let [a1, a2, a3, a4, a5] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                                "addon2@tests.mozilla.org",
-                                                                "addon3@tests.mozilla.org",
-                                                                "addon4@tests.mozilla.org",
-                                                                "addon5@tests.mozilla.org"]);
-  Assert.equal(a1, null);
-  do_check_not_in_crash_annotation(addon1.id, addon1.version);
-  Assert.equal(a2, null);
-  do_check_not_in_crash_annotation(addon2.id, addon2.version);
-  Assert.equal(a3, null);
-  do_check_not_in_crash_annotation(addon3.id, addon3.version);
-  Assert.equal(a4, null);
-  Assert.equal(a5, null);
-
-  executeSoon(run_test_1);
-}
-
-function end_test() {
-  do_test_finished("test_startup main");
-}
+  for (let n of [1, 2, 3]) {
+    let addon = await promiseAddonByID(getID(n));
+    Assert.equal(addon, null);
+    do_check_not_in_crash_annotation(getID(n), initialVersion(n));
+  }
+});
 
 // Try to install all the items into the profile
-async function run_test_1() {
-  await promiseWriteInstallRDFForExtension(addon1, profileDir);
-  var dest = await promiseWriteInstallRDFForExtension(addon2, profileDir);
-  // Attempt to make this look like it was added some time in the past so
-  // the change in run_test_2 makes the last modified time change.
-  setExtensionModifiedTime(dest, dest.lastModifiedTime - 5000);
+add_task(async function test_scan_profile() {
+  let ids = [];
+  for (let n of [1, 2, 3]) {
+    let id = getID(n);
+    ids.push(id);
+    let xpi = await createWebExtension(id, initialVersion(n));
+    xpi.copyTo(profileDir, `${id}.xpi`);
+  }
 
-  await promiseWriteInstallRDFForExtension(addon3, profileDir);
-  await promiseWriteInstallRDFForExtension(addon4, profileDir, "addon4@tests.mozilla.org");
-  await promiseWriteInstallRDFForExtension(addon5, profileDir);
-  await promiseWriteInstallRDFForExtension(addon6, profileDir);
-  await promiseWriteInstallRDFForExtension(addon7, profileDir);
+  await Promise.all([
+    promiseCacheInvalidated(),
+    promiseRestartManager(),
+  ]);
 
-  gCachePurged = false;
-  await promiseRestartManager();
-  check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, ["addon1@tests.mozilla.org",
-                                      "addon2@tests.mozilla.org",
-                                      "addon3@tests.mozilla.org"]);
+  check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, ids);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_DISABLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
-  Assert.ok(gCachePurged);
 
   info("Checking for " + gAddonStartup.path);
   Assert.ok(gAddonStartup.exists());
 
-  let [a1, a2, a3, a4, a5, a6, a7] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                                        "addon2@tests.mozilla.org",
-                                                                        "addon3@tests.mozilla.org",
-                                                                        "addon4@tests.mozilla.org",
-                                                                        "addon5@tests.mozilla.org",
-                                                                        "addon6@tests.mozilla.org",
-                                                                        "addon7@tests.mozilla.org"]);
-  Assert.notEqual(a1, null);
-  Assert.equal(a1.id, "addon1@tests.mozilla.org");
-  Assert.notEqual(a1.syncGUID, null);
-  Assert.ok(a1.syncGUID.length >= 9);
-  Assert.equal(a1.version, "1.0");
-  Assert.equal(a1.name, "Test 1");
-  Assert.ok(isExtensionInBootstrappedList(profileDir, a1.id));
-  Assert.ok(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
-  Assert.ok(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
-  do_check_in_crash_annotation(addon1.id, addon1.version);
-  Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
-  Assert.equal(a1.sourceURI, null);
-  Assert.ok(a1.foreignInstall);
-  Assert.ok(!a1.userDisabled);
-  Assert.ok(a1.seen);
-
-  Assert.notEqual(a2, null);
-  Assert.equal(a2.id, "addon2@tests.mozilla.org");
-  Assert.notEqual(a2.syncGUID, null);
-  Assert.ok(a2.syncGUID.length >= 9);
-  Assert.equal(a2.version, "2.0");
-  Assert.equal(a2.name, "Test 2");
-  Assert.ok(isExtensionInBootstrappedList(profileDir, a2.id));
-  Assert.ok(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
-  Assert.ok(hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
-  do_check_in_crash_annotation(addon2.id, addon2.version);
-  Assert.equal(a2.scope, AddonManager.SCOPE_PROFILE);
-  Assert.equal(a2.sourceURI, null);
-  Assert.ok(a2.foreignInstall);
-  Assert.ok(!a1.userDisabled);
-  Assert.ok(a1.seen);
-
-  Assert.notEqual(a3, null);
-  Assert.equal(a3.id, "addon3@tests.mozilla.org");
-  Assert.notEqual(a3.syncGUID, null);
-  Assert.ok(a3.syncGUID.length >= 9);
-  Assert.equal(a3.version, "3.0");
-  Assert.equal(a3.name, "Test 3");
-  Assert.ok(isExtensionInBootstrappedList(profileDir, a3.id));
-  Assert.ok(hasFlag(a3.permissions, AddonManager.PERM_CAN_UNINSTALL));
-  Assert.ok(hasFlag(a3.permissions, AddonManager.PERM_CAN_UPGRADE));
-  do_check_in_crash_annotation(addon3.id, addon3.version);
-  Assert.equal(a3.scope, AddonManager.SCOPE_PROFILE);
-  Assert.equal(a3.sourceURI, null);
-  Assert.ok(a3.foreignInstall);
-  Assert.ok(!a1.userDisabled);
-  Assert.ok(a1.seen);
-
-  Assert.equal(a4, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon4@tests.mozilla.org"));
-  dest = profileDir.clone();
-  dest.append(do_get_expected_addon_name("addon4@tests.mozilla.org"));
-  Assert.ok(!dest.exists());
-
-  Assert.equal(a5, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon5@tests.mozilla.org"));
-  dest = profileDir.clone();
-  dest.append(do_get_expected_addon_name("addon5@tests.mozilla.org"));
-  Assert.ok(!dest.exists());
-
-  Assert.equal(a6, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon6@tests.mozilla.org"));
-  dest = profileDir.clone();
-  dest.append(do_get_expected_addon_name("addon6@tests.mozilla.org"));
-  Assert.ok(!dest.exists());
-
-  Assert.equal(a7, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon7@tests.mozilla.org"));
-  dest = profileDir.clone();
-  dest.append(do_get_expected_addon_name("addon7@tests.mozilla.org"));
-  Assert.ok(!dest.exists());
+  for (let n of [1, 2, 3]) {
+    let id = getID(n);
+    let addon = await promiseAddonByID(id);
+    Assert.notEqual(addon, null);
+    Assert.equal(addon.id, id);
+    Assert.notEqual(addon.syncGUID, null);
+    Assert.ok(addon.syncGUID.length >= 9);
+    Assert.equal(addon.version, initialVersion(n));
+    Assert.ok(isExtensionInBootstrappedList(profileDir, id));
+    Assert.ok(hasFlag(addon.permissions, AddonManager.PERM_CAN_UNINSTALL));
+    Assert.ok(hasFlag(addon.permissions, AddonManager.PERM_CAN_UPGRADE));
+    do_check_in_crash_annotation(id, initialVersion(n));
+    Assert.equal(addon.scope, AddonManager.SCOPE_PROFILE);
+    Assert.equal(addon.sourceURI, null);
+    Assert.ok(addon.foreignInstall);
+    Assert.ok(!addon.userDisabled);
+    Assert.ok(addon.seen);
+  }
 
   let extensionAddons = await AddonManager.getAddonsByTypes(["extension"]);
   Assert.equal(extensionAddons.length, 3);
-
-  executeSoon(run_test_2);
-}
+});
 
 // Test that modified items are detected and items in other install locations
 // are ignored
-async function run_test_2() {
+add_task(async function test_modify() {
   await promiseShutdownManager();
 
-  addon1.version = "1.1";
-  await promiseWriteInstallRDFForExtension(addon1, userDir);
-  addon2.version = "2.1";
-  await promiseWriteInstallRDFForExtension(addon2, profileDir);
-  addon2.version = "2.2";
-  await promiseWriteInstallRDFForExtension(addon2, globalDir);
-  addon2.version = "2.3";
-  await promiseWriteInstallRDFForExtension(addon2, userDir);
-  var dest = profileDir.clone();
-  dest.append(do_get_expected_addon_name("addon3@tests.mozilla.org"));
-  dest.remove(true);
+  let xpi = await createWebExtension(ID1, "1.1");
+  xpi.copyTo(userDir, `${ID1}.xpi`);
 
-  gCachePurged = false;
-  await promiseStartupManager();
+  xpi = await createWebExtension(ID2, "2.1");
+  xpi.copyTo(profileDir, `${ID2}.xpi`);
+
+  xpi = await createWebExtension(ID2, "2.2");
+  xpi.copyTo(globalDir, `${ID2}.xpi`);
+
+  xpi = await createWebExtension(ID2, "2.3");
+  xpi.copyTo(userDir, `${ID2}.xpi`);
+
+  await OS.File.remove(OS.Path.join(profileDir.path, `${ID3}.xpi`));
+
+  await Promise.all([
+    promiseCacheInvalidated(),
+    promiseStartupManager(),
+  ]);
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
-  check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon2@tests.mozilla.org"]);
-  check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, ["addon3@tests.mozilla.org"]);
+  check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, [ID2]);
+  check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, [ID3]);
   check_startup_changes(AddonManager.STARTUP_CHANGE_DISABLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
-  Assert.ok(gCachePurged);
 
   Assert.ok(gAddonStartup.exists());
 
-  let [a1, a2, a3, a4, a5] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                                "addon2@tests.mozilla.org",
-                                                                "addon3@tests.mozilla.org",
-                                                                "addon4@tests.mozilla.org",
-                                                                "addon5@tests.mozilla.org"]);
+  let [a1, a2, a3] = await AddonManager.getAddonsByIDs([ID1, ID2, ID3]);
+
   Assert.notEqual(a1, null);
-  Assert.equal(a1.id, "addon1@tests.mozilla.org");
+  Assert.equal(a1.id, ID1);
   Assert.equal(a1.version, "1.0");
-  Assert.ok(isExtensionInBootstrappedList(profileDir, a1.id));
-  Assert.ok(!isExtensionInBootstrappedList(userDir, a1.id));
+  Assert.ok(isExtensionInBootstrappedList(profileDir, ID1));
+  Assert.ok(!isExtensionInBootstrappedList(userDir, ID1));
   Assert.ok(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
   Assert.ok(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
-  do_check_in_crash_annotation(addon1.id, a1.version);
+  do_check_in_crash_annotation(ID1, "1.0");
   Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
   Assert.ok(a1.foreignInstall);
 
+  // The version in the profile should take precedence.
+  const VERSION2 = "2.1";
   Assert.notEqual(a2, null);
-  Assert.equal(a2.id, "addon2@tests.mozilla.org");
-  Assert.equal(a2.version, "2.1");
-  Assert.ok(isExtensionInBootstrappedList(profileDir, a2.id));
-  Assert.ok(!isExtensionInBootstrappedList(userDir, a2.id));
-  Assert.ok(!isExtensionInBootstrappedList(globalDir, a2.id));
+  Assert.equal(a2.id, ID2);
+  Assert.equal(a2.version, VERSION2);
+  Assert.ok(isExtensionInBootstrappedList(profileDir, ID2));
+  Assert.ok(!isExtensionInBootstrappedList(userDir, ID2));
+  Assert.ok(!isExtensionInBootstrappedList(globalDir, ID2));
   Assert.ok(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
   Assert.ok(hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
-  do_check_in_crash_annotation(addon2.id, a2.version);
+  do_check_in_crash_annotation(ID2, VERSION2);
   Assert.equal(a2.scope, AddonManager.SCOPE_PROFILE);
   Assert.ok(a2.foreignInstall);
 
   Assert.equal(a3, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon3@tests.mozilla.org"));
-  do_check_not_in_crash_annotation(addon3.id, addon3.version);
-
-  Assert.equal(a4, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon4@tests.mozilla.org"));
-
-  Assert.equal(a5, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon5@tests.mozilla.org"));
-
-  executeSoon(run_test_3);
-}
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID3));
+  do_check_not_in_crash_annotation(ID3, "3.0");
+});
 
 // Check that removing items from the profile reveals their hidden versions.
-async function run_test_3() {
+add_task(async function test_reveal() {
   await promiseShutdownManager();
 
-  var dest = profileDir.clone();
-  dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
-  dest.remove(true);
-  dest = profileDir.clone();
-  dest.append(do_get_expected_addon_name("addon2@tests.mozilla.org"));
-  dest.remove(true);
-  await promiseWriteInstallRDFForExtension(addon3, profileDir, "addon4@tests.mozilla.org");
+  await OS.File.remove(OS.Path.join(profileDir.path, `${ID1}.xpi`));
+  await OS.File.remove(OS.Path.join(profileDir.path, `${ID2}.xpi`));
 
-  gCachePurged = false;
-  await promiseStartupManager();
+  // XPI with wrong name (basename doesn't match the id)
+  let xpi = await createWebExtension(ID3, "3.0");
+  xpi.copyTo(profileDir, `${ID4}.xpi`);
+
+  await Promise.all([
+    promiseCacheInvalidated(),
+    promiseStartupManager(),
+  ]);
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
-  check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon1@tests.mozilla.org",
-                                    "addon2@tests.mozilla.org"]);
+  check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, [ID1, ID2]);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_DISABLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
-  Assert.ok(gCachePurged);
 
-  let [a1, a2, a3, a4, a5] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                                "addon2@tests.mozilla.org",
-                                                                "addon3@tests.mozilla.org",
-                                                                "addon4@tests.mozilla.org",
-                                                                "addon5@tests.mozilla.org"]);
+  let [a1, a2, a3, a4] = await AddonManager.getAddonsByIDs([ID1, ID2, ID3, ID4]);
+
+  // Copy of addon1 in the per-user directory is now revealed.
+  const VERSION1 = "1.1";
   Assert.notEqual(a1, null);
-  Assert.equal(a1.id, "addon1@tests.mozilla.org");
-  Assert.equal(a1.version, "1.1");
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, a1.id));
-  Assert.ok(isExtensionInBootstrappedList(userDir, a1.id));
+  Assert.equal(a1.id, ID1);
+  Assert.equal(a1.version, VERSION1);
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID1));
+  Assert.ok(isExtensionInBootstrappedList(userDir, ID1));
   Assert.ok(!hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
   Assert.ok(!hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
-  do_check_in_crash_annotation(addon1.id, a1.version);
+  do_check_in_crash_annotation(ID1, VERSION1);
   Assert.equal(a1.scope, AddonManager.SCOPE_USER);
 
+  // Likewise with addon2
+  const VERSION2 = "2.3";
   Assert.notEqual(a2, null);
-  Assert.equal(a2.id, "addon2@tests.mozilla.org");
-  Assert.equal(a2.version, "2.3");
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, a2.id));
-  Assert.ok(isExtensionInBootstrappedList(userDir, a2.id));
-  Assert.ok(!isExtensionInBootstrappedList(globalDir, a2.id));
+  Assert.equal(a2.id, ID2);
+  Assert.equal(a2.version, VERSION2);
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID2));
+  Assert.ok(isExtensionInBootstrappedList(userDir, ID2));
+  Assert.ok(!isExtensionInBootstrappedList(globalDir, ID2));
   Assert.ok(!hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
   Assert.ok(!hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
-  do_check_in_crash_annotation(addon2.id, a2.version);
+  do_check_in_crash_annotation(ID2, VERSION2);
   Assert.equal(a2.scope, AddonManager.SCOPE_USER);
 
   Assert.equal(a3, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon3@tests.mozilla.org"));
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID3));
 
   Assert.equal(a4, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon4@tests.mozilla.org"));
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID4));
 
-  Assert.equal(a5, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon5@tests.mozilla.org"));
-
-  dest = profileDir.clone();
-  dest.append(do_get_expected_addon_name("addon4@tests.mozilla.org"));
-  Assert.ok(!dest.exists());
-
-  executeSoon(run_test_4);
-}
+  let addon4Exists = await OS.File.exists(OS.Path.join(profileDir.path, `${ID4}.xpi`));
+  Assert.ok(!addon4Exists, "Misnamed xpi should be removed from profile");
+});
 
 // Test that disabling an install location works
-async function run_test_4() {
+add_task(async function test_disable_location() {
   Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_SYSTEM);
 
-  gCachePurged = false;
-  await promiseRestartManager();
+  await Promise.all([
+    promiseCacheInvalidated(),
+    promiseRestartManager(),
+  ]);
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
-  check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon2@tests.mozilla.org"]);
-  check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, ["addon1@tests.mozilla.org"]);
+  check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, [ID2]);
+  check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, [ID1]);
   check_startup_changes(AddonManager.STARTUP_CHANGE_DISABLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
-  Assert.ok(gCachePurged);
 
-  let [a1, a2] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                    "addon2@tests.mozilla.org"]);
+  let [a1, a2] = await AddonManager.getAddonsByIDs([ID1, ID2]);
   Assert.equal(a1, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon1@tests.mozilla.org"));
-  Assert.ok(!isExtensionInBootstrappedList(userDir, "addon1@tests.mozilla.org"));
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID1));
+  Assert.ok(!isExtensionInBootstrappedList(userDir, ID1));
 
+  // System-wide copy of addon2 is now revealed
+  const VERSION2 = "2.2";
   Assert.notEqual(a2, null);
-  Assert.equal(a2.id, "addon2@tests.mozilla.org");
-  Assert.equal(a2.version, "2.2");
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, a2.id));
-  Assert.ok(!isExtensionInBootstrappedList(userDir, a2.id));
-  Assert.ok(isExtensionInBootstrappedList(globalDir, a2.id));
+  Assert.equal(a2.id, ID2);
+  Assert.equal(a2.version, VERSION2);
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID2));
+  Assert.ok(!isExtensionInBootstrappedList(userDir, ID2));
+  Assert.ok(isExtensionInBootstrappedList(globalDir, ID2));
   Assert.ok(!hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
   Assert.ok(!hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
-  do_check_in_crash_annotation(addon2.id, a2.version);
+  do_check_in_crash_annotation(ID2, VERSION2);
   Assert.equal(a2.scope, AddonManager.SCOPE_SYSTEM);
-
-  executeSoon(run_test_5);
-}
+});
 
 // Switching disabled locations works
-async function run_test_5() {
+add_task(async function test_disable_location2() {
   Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_USER);
 
-  gCachePurged = false;
-  await promiseRestartManager();
+  await Promise.all([
+    promiseCacheInvalidated(),
+    promiseRestartManager(),
+  ]);
 
-  check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, ["addon1@tests.mozilla.org"]);
-  check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon2@tests.mozilla.org"]);
+  check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, [ID1]);
+  check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, [ID2]);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_DISABLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
-  Assert.ok(gCachePurged);
 
-  let [a1, a2] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                    "addon2@tests.mozilla.org"]);
+  let [a1, a2] = await AddonManager.getAddonsByIDs([ID1, ID2]);
+
+  const VERSION1 = "1.1";
   Assert.notEqual(a1, null);
-  Assert.equal(a1.id, "addon1@tests.mozilla.org");
-  Assert.equal(a1.version, "1.1");
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, a1.id));
-  Assert.ok(isExtensionInBootstrappedList(userDir, a1.id));
+  Assert.equal(a1.id, ID1);
+  Assert.equal(a1.version, VERSION1);
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID1));
+  Assert.ok(isExtensionInBootstrappedList(userDir, ID1));
   Assert.ok(!hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
   Assert.ok(!hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
-  do_check_in_crash_annotation(addon1.id, a1.version);
+  do_check_in_crash_annotation(ID1, VERSION1);
   Assert.equal(a1.scope, AddonManager.SCOPE_USER);
 
+  const VERSION2 = "2.3";
   Assert.notEqual(a2, null);
-  Assert.equal(a2.id, "addon2@tests.mozilla.org");
-  Assert.equal(a2.version, "2.3");
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, a2.id));
-  Assert.ok(isExtensionInBootstrappedList(userDir, a2.id));
-  Assert.ok(!isExtensionInBootstrappedList(globalDir, a2.id));
+  Assert.equal(a2.id, ID2);
+  Assert.equal(a2.version, VERSION2);
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID2));
+  Assert.ok(isExtensionInBootstrappedList(userDir, ID2));
+  Assert.ok(!isExtensionInBootstrappedList(globalDir, ID2));
   Assert.ok(!hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
   Assert.ok(!hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
-  do_check_in_crash_annotation(addon2.id, a2.version);
+  do_check_in_crash_annotation(ID2, VERSION2);
   Assert.equal(a2.scope, AddonManager.SCOPE_USER);
-
-  executeSoon(run_test_6);
-}
+});
 
 // Resetting the pref makes everything visible again
-async function run_test_6() {
+add_task(async function test_enable_location() {
   Services.prefs.clearUserPref("extensions.enabledScopes");
 
-  gCachePurged = false;
-  await promiseRestartManager();
+  await Promise.all([
+    promiseCacheInvalidated(),
+    promiseRestartManager(),
+  ]);
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_DISABLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
-  Assert.ok(gCachePurged);
 
-  let [a1, a2] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                    "addon2@tests.mozilla.org"]);
+  let [a1, a2] = await AddonManager.getAddonsByIDs([ID1, ID2]);
+
+  const VERSION1 = "1.1";
   Assert.notEqual(a1, null);
-  Assert.equal(a1.id, "addon1@tests.mozilla.org");
-  Assert.equal(a1.version, "1.1");
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, a1.id));
-  Assert.ok(isExtensionInBootstrappedList(userDir, a1.id));
+  Assert.equal(a1.id, ID1);
+  Assert.equal(a1.version, VERSION1);
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID1));
+  Assert.ok(isExtensionInBootstrappedList(userDir, ID1));
   Assert.ok(!hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
   Assert.ok(!hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
-  do_check_in_crash_annotation(addon1.id, a1.version);
+  do_check_in_crash_annotation(ID1, VERSION1);
   Assert.equal(a1.scope, AddonManager.SCOPE_USER);
 
+  const VERSION2 = "2.3";
   Assert.notEqual(a2, null);
-  Assert.equal(a2.id, "addon2@tests.mozilla.org");
-  Assert.equal(a2.version, "2.3");
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, a2.id));
-  Assert.ok(isExtensionInBootstrappedList(userDir, a2.id));
-  Assert.ok(!isExtensionInBootstrappedList(globalDir, a2.id));
+  Assert.equal(a2.id, ID2);
+  Assert.equal(a2.version, VERSION2);
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID2));
+  Assert.ok(isExtensionInBootstrappedList(userDir, ID2));
+  Assert.ok(!isExtensionInBootstrappedList(globalDir, ID2));
   Assert.ok(!hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
   Assert.ok(!hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
-  do_check_in_crash_annotation(addon2.id, a2.version);
+  do_check_in_crash_annotation(ID2, VERSION2);
   Assert.equal(a2.scope, AddonManager.SCOPE_USER);
-
-  executeSoon(run_test_7);
-}
+});
 
 // Check that items in the profile hide the others again.
-async function run_test_7() {
+add_task(async function test_profile_hiding() {
   await promiseShutdownManager();
 
-  addon1.version = "1.2";
-  await promiseWriteInstallRDFForExtension(addon1, profileDir);
-  var dest = userDir.clone();
-  dest.append(do_get_expected_addon_name("addon2@tests.mozilla.org"));
-  dest.remove(true);
+  const VERSION1 = "1.2";
+  let xpi = await createWebExtension(ID1, VERSION1);
+  xpi.copyTo(profileDir, `${ID1}.xpi`);
 
-  gCachePurged = false;
-  await promiseStartupManager();
+  await OS.File.remove(OS.Path.join(userDir.path, `${ID2}.xpi`));
+
+  await Promise.all([
+    promiseCacheInvalidated(),
+    promiseStartupManager(),
+  ]);
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
-  check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon1@tests.mozilla.org",
-                                    "addon2@tests.mozilla.org"]);
+  check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, [ID1, ID2]);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_DISABLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
-  Assert.ok(gCachePurged);
 
-  let [a1, a2, a3, a4, a5] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                                "addon2@tests.mozilla.org",
-                                                                "addon3@tests.mozilla.org",
-                                                                "addon4@tests.mozilla.org",
-                                                                "addon5@tests.mozilla.org"]);
+  let [a1, a2, a3] = await AddonManager.getAddonsByIDs([ID1, ID2, ID3]);
+
   Assert.notEqual(a1, null);
-  Assert.equal(a1.id, "addon1@tests.mozilla.org");
-  Assert.equal(a1.version, "1.2");
-  Assert.ok(isExtensionInBootstrappedList(profileDir, a1.id));
-  Assert.ok(!isExtensionInBootstrappedList(userDir, a1.id));
+  Assert.equal(a1.id, ID1);
+  Assert.equal(a1.version, VERSION1);
+  Assert.ok(isExtensionInBootstrappedList(profileDir, ID1));
+  Assert.ok(!isExtensionInBootstrappedList(userDir, ID1));
   Assert.ok(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
   Assert.ok(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
-  do_check_in_crash_annotation(addon1.id, a1.version);
+  do_check_in_crash_annotation(ID1, VERSION1);
   Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
 
+  const VERSION2 = "2.2";
   Assert.notEqual(a2, null);
-  Assert.equal(a2.id, "addon2@tests.mozilla.org");
-  Assert.equal(a2.version, "2.2");
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, a2.id));
-  Assert.ok(!isExtensionInBootstrappedList(userDir, a2.id));
-  Assert.ok(isExtensionInBootstrappedList(globalDir, a2.id));
+  Assert.equal(a2.id, ID2);
+  Assert.equal(a2.version, VERSION2);
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID2));
+  Assert.ok(!isExtensionInBootstrappedList(userDir, ID2));
+  Assert.ok(isExtensionInBootstrappedList(globalDir, ID2));
   Assert.ok(!hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
   Assert.ok(!hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
-  do_check_in_crash_annotation(addon2.id, a2.version);
+  do_check_in_crash_annotation(ID2, VERSION2);
   Assert.equal(a2.scope, AddonManager.SCOPE_SYSTEM);
 
   Assert.equal(a3, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon3@tests.mozilla.org"));
-
-  Assert.equal(a4, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon4@tests.mozilla.org"));
-
-  Assert.equal(a5, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon5@tests.mozilla.org"));
-
-  executeSoon(run_test_8);
-}
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID3));
+});
 
 // Disabling all locations still leaves the profile working
-async function run_test_8() {
+add_task(async function test_disable3() {
   Services.prefs.setIntPref("extensions.enabledScopes", 0);
 
-  gCachePurged = false;
-  await promiseRestartManager();
+  await Promise.all([
+    promiseCacheInvalidated(),
+    await promiseRestartManager(),
+  ]);
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, ["addon2@tests.mozilla.org"]);
   check_startup_changes(AddonManager.STARTUP_CHANGE_DISABLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
-  Assert.ok(gCachePurged);
 
-  let [a1, a2] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                    "addon2@tests.mozilla.org"]);
+  let [a1, a2] = await AddonManager.getAddonsByIDs([ID1, ID2]);
+
+  const VERSION1 = "1.2";
   Assert.notEqual(a1, null);
-  Assert.equal(a1.id, "addon1@tests.mozilla.org");
-  Assert.equal(a1.version, "1.2");
-  Assert.ok(isExtensionInBootstrappedList(profileDir, a1.id));
-  Assert.ok(!isExtensionInBootstrappedList(userDir, a1.id));
+  Assert.equal(a1.id, ID1);
+  Assert.equal(a1.version, VERSION1);
+  Assert.ok(isExtensionInBootstrappedList(profileDir, ID1));
+  Assert.ok(!isExtensionInBootstrappedList(userDir, ID1));
   Assert.ok(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
   Assert.ok(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
-  do_check_in_crash_annotation(addon1.id, a1.version);
+  do_check_in_crash_annotation(ID1, VERSION1);
   Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
 
   Assert.equal(a2, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon2@tests.mozilla.org"));
-  Assert.ok(!isExtensionInBootstrappedList(userDir, "addon2@tests.mozilla.org"));
-  Assert.ok(!isExtensionInBootstrappedList(globalDir, "addon2@tests.mozilla.org"));
-
-  executeSoon(run_test_9);
-}
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID2));
+  Assert.ok(!isExtensionInBootstrappedList(userDir, ID2));
+  Assert.ok(!isExtensionInBootstrappedList(globalDir, ID2));
+});
 
 // More hiding and revealing
-async function run_test_9() {
+add_task(async function test_reval() {
   Services.prefs.clearUserPref("extensions.enabledScopes");
 
   await promiseShutdownManager();
 
-  var dest = userDir.clone();
-  dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
-  dest.remove(true);
-  dest = globalDir.clone();
-  dest.append(do_get_expected_addon_name("addon2@tests.mozilla.org"));
-  dest.remove(true);
-  addon2.version = "2.4";
-  await promiseWriteInstallRDFForExtension(addon2, profileDir);
+  await OS.File.remove(OS.Path.join(userDir.path, `${ID1}.xpi`));
+  await OS.File.remove(OS.Path.join(globalDir.path, `${ID2}.xpi`));
 
-  gCachePurged = false;
-  await promiseStartupManager();
+  const VERSION2 = "2.4";
+  let xpi = createWebExtension(ID2, VERSION2);
+  xpi.copyTo(profileDir, `${ID2}.xpi`);
+
+  await Promise.all([
+    promiseCacheInvalidated(),
+    promiseStartupManager(),
+  ]);
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, ["addon2@tests.mozilla.org"]);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_DISABLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
-  Assert.ok(gCachePurged);
 
-  let [a1, a2, a3, a4, a5] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                                "addon2@tests.mozilla.org",
-                                                                "addon3@tests.mozilla.org",
-                                                                "addon4@tests.mozilla.org",
-                                                                "addon5@tests.mozilla.org"]);
+  let [a1, a2, a3] = await AddonManager.getAddonsByIDs([ID1, ID2, ID3]);
+
   Assert.notEqual(a1, null);
-  Assert.equal(a1.id, "addon1@tests.mozilla.org");
+  Assert.equal(a1.id, ID1);
   Assert.equal(a1.version, "1.2");
-  Assert.ok(isExtensionInBootstrappedList(profileDir, a1.id));
-  Assert.ok(!isExtensionInBootstrappedList(userDir, a1.id));
+  Assert.ok(isExtensionInBootstrappedList(profileDir, ID1));
+  Assert.ok(!isExtensionInBootstrappedList(userDir, ID1));
   Assert.ok(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
   Assert.ok(hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
   Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
 
   Assert.notEqual(a2, null);
-  Assert.equal(a2.id, "addon2@tests.mozilla.org");
-  Assert.equal(a2.version, "2.4");
-  Assert.ok(isExtensionInBootstrappedList(profileDir, a2.id));
-  Assert.ok(!isExtensionInBootstrappedList(userDir, a2.id));
-  Assert.ok(!isExtensionInBootstrappedList(globalDir, a2.id));
+  Assert.equal(a2.id, ID2);
+  Assert.equal(a2.version, VERSION2);
+  Assert.ok(isExtensionInBootstrappedList(profileDir, ID2));
+  Assert.ok(!isExtensionInBootstrappedList(userDir, ID2));
+  Assert.ok(!isExtensionInBootstrappedList(globalDir, ID2));
   Assert.ok(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
   Assert.ok(hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
   Assert.equal(a2.scope, AddonManager.SCOPE_PROFILE);
 
   Assert.equal(a3, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon3@tests.mozilla.org"));
-
-  Assert.equal(a4, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon4@tests.mozilla.org"));
-
-  Assert.equal(a5, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon5@tests.mozilla.org"));
-
-  executeSoon(run_test_10);
-}
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID3));
+});
 
 // Checks that a removal from one location and an addition in another location
 // for the same item is handled
-async function run_test_10() {
+add_task(async function test_move() {
   await promiseShutdownManager();
 
-  var dest = profileDir.clone();
-  dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
-  dest.remove(true);
-  addon1.version = "1.3";
-  await promiseWriteInstallRDFForExtension(addon1, userDir);
+  await OS.File.remove(OS.Path.join(profileDir.path, `${ID1}.xpi`));
+  const VERSION1 = "1.3";
+  let xpi = createWebExtension(ID1, VERSION1);
+  xpi.copyTo(userDir, `${ID1}.xpi`);
 
-  gCachePurged = false;
-  await promiseStartupManager();
+  await Promise.all([
+    promiseCacheInvalidated(),
+    promiseStartupManager(),
+  ]);
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
-  check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon1@tests.mozilla.org"]);
+  check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, [ID1]);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_DISABLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
-  Assert.ok(gCachePurged);
 
-  let [a1, a2, a3, a4, a5] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                                "addon2@tests.mozilla.org",
-                                                                "addon3@tests.mozilla.org",
-                                                                "addon4@tests.mozilla.org",
-                                                                "addon5@tests.mozilla.org"]);
+  let [a1, a2] = await AddonManager.getAddonsByIDs([ID1, ID2]);
+
   Assert.notEqual(a1, null);
-  Assert.equal(a1.id, "addon1@tests.mozilla.org");
-  Assert.equal(a1.version, "1.3");
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, a1.id));
-  Assert.ok(isExtensionInBootstrappedList(userDir, a1.id));
+  Assert.equal(a1.id, ID1);
+  Assert.equal(a1.version, VERSION1);
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID1));
+  Assert.ok(isExtensionInBootstrappedList(userDir, ID1));
   Assert.ok(!hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
   Assert.ok(!hasFlag(a1.permissions, AddonManager.PERM_CAN_UPGRADE));
   Assert.equal(a1.scope, AddonManager.SCOPE_USER);
 
+  const VERSION2 = "2.4";
   Assert.notEqual(a2, null);
-  Assert.equal(a2.id, "addon2@tests.mozilla.org");
-  Assert.equal(a2.version, "2.4");
-  Assert.ok(isExtensionInBootstrappedList(profileDir, a2.id));
-  Assert.ok(!isExtensionInBootstrappedList(userDir, a2.id));
-  Assert.ok(!isExtensionInBootstrappedList(globalDir, a2.id));
+  Assert.equal(a2.id, ID2);
+  Assert.equal(a2.version, VERSION2);
+  Assert.ok(isExtensionInBootstrappedList(profileDir, ID2));
+  Assert.ok(!isExtensionInBootstrappedList(userDir, ID2));
+  Assert.ok(!isExtensionInBootstrappedList(globalDir, ID2));
   Assert.ok(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
   Assert.ok(hasFlag(a2.permissions, AddonManager.PERM_CAN_UPGRADE));
   Assert.equal(a2.scope, AddonManager.SCOPE_PROFILE);
-
-  Assert.equal(a3, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon3@tests.mozilla.org"));
-
-  Assert.equal(a4, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon4@tests.mozilla.org"));
-
-  Assert.equal(a5, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon5@tests.mozilla.org"));
-
-  executeSoon(run_test_11);
-}
+});
 
 // This should remove any remaining items
-async function run_test_11() {
+add_task(async function test_remove() {
   await promiseShutdownManager();
 
-  var dest = userDir.clone();
-  dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
-  dest.remove(true);
-  dest = profileDir.clone();
-  dest.append(do_get_expected_addon_name("addon2@tests.mozilla.org"));
-  dest.remove(true);
+  await OS.File.remove(OS.Path.join(userDir.path, `${ID1}.xpi`));
+  await OS.File.remove(OS.Path.join(profileDir.path, `${ID2}.xpi`));
 
-  gCachePurged = false;
-  await promiseStartupManager();
+  await Promise.all([
+    promiseCacheInvalidated(),
+    promiseStartupManager(),
+  ]);
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, []);
-  check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, ["addon1@tests.mozilla.org",
-                                        "addon2@tests.mozilla.org"]);
+  check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, [ID1, ID2]);
   check_startup_changes(AddonManager.STARTUP_CHANGE_DISABLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
-  Assert.ok(gCachePurged);
 
-  let [a1, a2, a3, a4, a5] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                                "addon2@tests.mozilla.org",
-                                                                "addon3@tests.mozilla.org",
-                                                                "addon4@tests.mozilla.org",
-                                                                "addon5@tests.mozilla.org"]);
+  let [a1, a2, a3] = await AddonManager.getAddonsByIDs([ID1, ID2, ID3]);
   Assert.equal(a1, null);
   Assert.equal(a2, null);
   Assert.equal(a3, null);
-  Assert.equal(a4, null);
-  Assert.equal(a5, null);
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon1@tests.mozilla.org"));
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon2@tests.mozilla.org"));
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon3@tests.mozilla.org"));
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon4@tests.mozilla.org"));
-  Assert.ok(!isExtensionInBootstrappedList(profileDir, "addon5@tests.mozilla.org"));
-  Assert.ok(!isExtensionInBootstrappedList(userDir, "addon1@tests.mozilla.org"));
-  Assert.ok(!isExtensionInBootstrappedList(userDir, "addon2@tests.mozilla.org"));
-  Assert.ok(!isExtensionInBootstrappedList(userDir, "addon3@tests.mozilla.org"));
-  Assert.ok(!isExtensionInBootstrappedList(userDir, "addon4@tests.mozilla.org"));
-  Assert.ok(!isExtensionInBootstrappedList(userDir, "addon5@tests.mozilla.org"));
-  Assert.ok(!isExtensionInBootstrappedList(globalDir, "addon1@tests.mozilla.org"));
-  Assert.ok(!isExtensionInBootstrappedList(globalDir, "addon2@tests.mozilla.org"));
-  Assert.ok(!isExtensionInBootstrappedList(globalDir, "addon3@tests.mozilla.org"));
-  Assert.ok(!isExtensionInBootstrappedList(globalDir, "addon4@tests.mozilla.org"));
-  Assert.ok(!isExtensionInBootstrappedList(globalDir, "addon5@tests.mozilla.org"));
-  do_check_not_in_crash_annotation(addon1.id, addon1.version);
-  do_check_not_in_crash_annotation(addon2.id, addon2.version);
 
-  executeSoon(run_test_12);
-}
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID1));
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID2));
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID3));
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID4));
+  Assert.ok(!isExtensionInBootstrappedList(profileDir, ID4));
+  Assert.ok(!isExtensionInBootstrappedList(userDir, ID1));
+  Assert.ok(!isExtensionInBootstrappedList(userDir, ID2));
+  Assert.ok(!isExtensionInBootstrappedList(userDir, ID3));
+  Assert.ok(!isExtensionInBootstrappedList(userDir, ID4));
+  Assert.ok(!isExtensionInBootstrappedList(userDir, ID4));
+  Assert.ok(!isExtensionInBootstrappedList(globalDir, ID1));
+  Assert.ok(!isExtensionInBootstrappedList(globalDir, ID2));
+  Assert.ok(!isExtensionInBootstrappedList(globalDir, ID3));
+  Assert.ok(!isExtensionInBootstrappedList(globalDir, ID4));
+  Assert.ok(!isExtensionInBootstrappedList(globalDir, ID4));
+});
 
 // Test that auto-disabling for specific scopes works
-async function run_test_12() {
+add_task(async function test_autoDisable() {
   Services.prefs.setIntPref("extensions.autoDisableScopes", AddonManager.SCOPE_USER);
 
   await promiseShutdownManager();
 
-  await promiseWriteInstallRDFForExtension(addon1, profileDir);
-  await promiseWriteInstallRDFForExtension(addon2, userDir);
-  await promiseWriteInstallRDFForExtension(addon3, globalDir);
+  async function writeAll() {
+    let xpi = await createWebExtension(ID1, "1.0");
+    xpi.copyTo(profileDir, `${ID1}.xpi`);
+
+    xpi = await createWebExtension(ID2, "2.0");
+    xpi.copyTo(userDir, `${ID2}.xpi`);
+
+    xpi = await createWebExtension(ID3, "3.0");
+    xpi.copyTo(globalDir, `${ID3}.xpi`);
+  }
+
+  async function removeAll() {
+    await OS.File.remove(OS.Path.join(profileDir.path, `${ID1}.xpi`));
+    await OS.File.remove(OS.Path.join(userDir.path, `${ID2}.xpi`));
+    await OS.File.remove(OS.Path.join(globalDir.path, `${ID3}.xpi`));
+  }
+
+  await writeAll();
 
   await promiseStartupManager();
 
-  let [a1, a2, a3] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                        "addon2@tests.mozilla.org",
-                                                        "addon3@tests.mozilla.org"]);
+  let [a1, a2, a3] = await AddonManager.getAddonsByIDs([ID1, ID2, ID3]);
   Assert.notEqual(a1, null);
   Assert.ok(!a1.userDisabled);
   Assert.ok(a1.seen);
@@ -821,87 +627,61 @@ async function run_test_12() {
 
   await promiseShutdownManager();
 
-  var dest = profileDir.clone();
-  dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
-  dest.remove(true);
-  dest = userDir.clone();
-  dest.append(do_get_expected_addon_name("addon2@tests.mozilla.org"));
-  dest.remove(true);
-  dest = globalDir.clone();
-  dest.append(do_get_expected_addon_name("addon3@tests.mozilla.org"));
-  dest.remove(true);
+  await removeAll();
 
   await promiseStartupManager();
   await promiseShutdownManager();
 
   Services.prefs.setIntPref("extensions.autoDisableScopes", AddonManager.SCOPE_SYSTEM);
 
-  await promiseWriteInstallRDFForExtension(addon1, profileDir);
-  await promiseWriteInstallRDFForExtension(addon2, userDir);
-  await promiseWriteInstallRDFForExtension(addon3, globalDir);
+  await writeAll();
 
   await promiseStartupManager();
 
-  let [a1_2, a2_2, a3_2] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                              "addon2@tests.mozilla.org",
-                                                              "addon3@tests.mozilla.org"]);
-  Assert.notEqual(a1_2, null);
-  Assert.ok(!a1_2.userDisabled);
-  Assert.ok(a1_2.seen);
-  Assert.ok(a1_2.isActive);
+  [a1, a2, a3] = await AddonManager.getAddonsByIDs([ID1, ID2, ID3]);
+  Assert.notEqual(a1, null);
+  Assert.ok(!a1.userDisabled);
+  Assert.ok(a1.seen);
+  Assert.ok(a1.isActive);
 
-  Assert.notEqual(a2_2, null);
-  Assert.ok(!a2_2.userDisabled);
-  Assert.ok(a2_2.seen);
-  Assert.ok(a2_2.isActive);
+  Assert.notEqual(a2, null);
+  Assert.ok(!a2.userDisabled);
+  Assert.ok(a2.seen);
+  Assert.ok(a2.isActive);
 
-  Assert.notEqual(a3_2, null);
-  Assert.ok(a3_2.userDisabled);
-  Assert.ok(!a3_2.seen);
-  Assert.ok(!a3_2.isActive);
+  Assert.notEqual(a3, null);
+  Assert.ok(a3.userDisabled);
+  Assert.ok(!a3.seen);
+  Assert.ok(!a3.isActive);
 
   await promiseShutdownManager();
 
-  var dest2 = profileDir.clone();
-  dest2.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
-  dest2.remove(true);
-  dest2 = userDir.clone();
-  dest2.append(do_get_expected_addon_name("addon2@tests.mozilla.org"));
-  dest2.remove(true);
-  dest2 = globalDir.clone();
-  dest2.append(do_get_expected_addon_name("addon3@tests.mozilla.org"));
-  dest2.remove(true);
+  await removeAll();
 
   await promiseStartupManager();
   await promiseShutdownManager();
 
   Services.prefs.setIntPref("extensions.autoDisableScopes", AddonManager.SCOPE_USER + AddonManager.SCOPE_SYSTEM);
 
-  await promiseWriteInstallRDFForExtension(addon1, profileDir);
-  await promiseWriteInstallRDFForExtension(addon2, userDir);
-  await promiseWriteInstallRDFForExtension(addon3, globalDir);
+  await writeAll();
 
   await promiseStartupManager();
 
-  let [a1_3, a2_3, a3_3] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                              "addon2@tests.mozilla.org",
-                                                              "addon3@tests.mozilla.org"]);
-  Assert.notEqual(a1_3, null);
-  Assert.ok(!a1_3.userDisabled);
-  Assert.ok(a1_3.seen);
-  Assert.ok(a1_3.isActive);
+  [a1, a2, a3] = await AddonManager.getAddonsByIDs([ID1, ID2, ID3]);
+  Assert.notEqual(a1, null);
+  Assert.ok(!a1.userDisabled);
+  Assert.ok(a1.seen);
+  Assert.ok(a1.isActive);
 
-  Assert.notEqual(a2_3, null);
-  Assert.ok(a2_3.userDisabled);
-  Assert.ok(!a2_3.seen);
-  Assert.ok(!a2_3.isActive);
+  Assert.notEqual(a2, null);
+  Assert.ok(a2.userDisabled);
+  Assert.ok(!a2.seen);
+  Assert.ok(!a2.isActive);
 
-  Assert.notEqual(a3_3, null);
-  Assert.ok(a3_3.userDisabled);
-  Assert.ok(!a3_3.seen);
-  Assert.ok(!a3_3.isActive);
+  Assert.notEqual(a3, null);
+  Assert.ok(a3.userDisabled);
+  Assert.ok(!a3.seen);
+  Assert.ok(!a3.isActive);
 
   await promiseShutdownManager();
-
-  executeSoon(end_test);
-}
+});

@@ -27,6 +27,7 @@
 #include "wasm/WasmInstance.h"
 
 #if defined(XP_WIN)
+# include <winternl.h>  // must include before util/Windows.h's `#undef`s
 # include "util/Windows.h"
 #elif defined(XP_DARWIN)
 # include <mach/exc.h>
@@ -490,10 +491,18 @@ HandleTrap(CONTEXT* context, JSContext* assertCx = nullptr)
 // =============================================================================
 
 #if defined(XP_WIN)
+// Obtained empirically from thread_local codegen on x86/x64/arm64.
+// Compiled in all user binaries, so should be stable over time.
+static const unsigned sThreadLocalArrayPointerIndex = 11;
 
 static LONG WINAPI
 WasmTrapHandler(LPEXCEPTION_POINTERS exception)
 {
+    // Make sure TLS is initialized before reading sAlreadyHandlingTrap.
+    if (!NtCurrentTeb()->Reserved1[sThreadLocalArrayPointerIndex]) {
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
     if (sAlreadyHandlingTrap.get()) {
         return EXCEPTION_CONTINUE_SEARCH;
     }

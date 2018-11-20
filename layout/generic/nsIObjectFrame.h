@@ -22,7 +22,7 @@ class nsIObjectFrame : public nsQueryFrame
 public:
   NS_DECL_QUERYFRAME_TARGET(nsIObjectFrame)
 
-  NS_IMETHOD GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance) = 0;
+  virtual nsNPAPIPluginInstance* GetPluginInstance() = 0;
 
   /**
    * Get the native widget for the plugin, if any.

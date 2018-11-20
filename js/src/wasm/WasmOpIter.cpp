@@ -47,11 +47,6 @@ using namespace js::wasm;
 # else
 #  define WASM_TABLE_OP(code) break
 # endif
-# ifdef ENABLE_WASM_THREAD_OPS
-#  define WASM_THREAD_OP(code) return code
-# else
-#  define WASM_THREAD_OP(code) break
-# endif
 
 OpKind
 wasm::Classify(OpBytes op)
@@ -322,10 +317,10 @@ wasm::Classify(OpBytes op)
               // Reject Limit for ThreadPrefix encoding
               break;
             case ThreadOp::Wake:
-              WASM_THREAD_OP(OpKind::Wake);
+              return OpKind::Wake;
             case ThreadOp::I32Wait:
             case ThreadOp::I64Wait:
-              WASM_THREAD_OP(OpKind::Wait);
+              return OpKind::Wait;
             case ThreadOp::I32AtomicLoad:
             case ThreadOp::I64AtomicLoad:
             case ThreadOp::I32AtomicLoad8U:
@@ -333,7 +328,7 @@ wasm::Classify(OpBytes op)
             case ThreadOp::I64AtomicLoad8U:
             case ThreadOp::I64AtomicLoad16U:
             case ThreadOp::I64AtomicLoad32U:
-              WASM_THREAD_OP(OpKind::AtomicLoad);
+              return OpKind::AtomicLoad;
             case ThreadOp::I32AtomicStore:
             case ThreadOp::I64AtomicStore:
             case ThreadOp::I32AtomicStore8U:
@@ -341,7 +336,7 @@ wasm::Classify(OpBytes op)
             case ThreadOp::I64AtomicStore8U:
             case ThreadOp::I64AtomicStore16U:
             case ThreadOp::I64AtomicStore32U:
-              WASM_THREAD_OP(OpKind::AtomicStore);
+              return OpKind::AtomicStore;
             case ThreadOp::I32AtomicAdd:
             case ThreadOp::I64AtomicAdd:
             case ThreadOp::I32AtomicAdd8U:
@@ -384,7 +379,7 @@ wasm::Classify(OpBytes op)
             case ThreadOp::I64AtomicXchg8U:
             case ThreadOp::I64AtomicXchg16U:
             case ThreadOp::I64AtomicXchg32U:
-              WASM_THREAD_OP(OpKind::AtomicBinOp);
+              return OpKind::AtomicBinOp;
             case ThreadOp::I32AtomicCmpXchg:
             case ThreadOp::I64AtomicCmpXchg:
             case ThreadOp::I32AtomicCmpXchg8U:
@@ -392,7 +387,7 @@ wasm::Classify(OpBytes op)
             case ThreadOp::I64AtomicCmpXchg8U:
             case ThreadOp::I64AtomicCmpXchg16U:
             case ThreadOp::I64AtomicCmpXchg32U:
-              WASM_THREAD_OP(OpKind::AtomicCompareExchange);
+              return OpKind::AtomicCompareExchange;
             default:
               break;
           }
@@ -450,6 +445,5 @@ wasm::Classify(OpBytes op)
 # undef WASM_GC_OP
 # undef WASM_BULK_OP
 # undef WASM_TABLE_OP
-# undef WASM_THREAD_OP
 
 #endif

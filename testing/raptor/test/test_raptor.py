@@ -35,6 +35,7 @@ def test_create_profile(options, app, get_prefs):
 
     # These prefs are set in mozprofile
     firefox_prefs = [
+        'user_pref("app.update.checkInstallTime", false);',
         'user_pref("app.update.disabledForTesting", true);',
         'user_pref("'
         'security.turn_off_all_security_so_that_viruses_can_take_over_this_computer", true);'

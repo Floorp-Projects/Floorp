@@ -243,9 +243,7 @@ nsDOMWindowUtils::GetPresContext()
   nsIDocShell *docShell = window->GetDocShell();
   if (!docShell)
     return nullptr;
-  RefPtr<nsPresContext> presContext;
-  docShell->GetPresContext(getter_AddRefs(presContext));
-  return presContext;
+  return docShell->GetPresContext();
 }
 
 nsIDocument*

@@ -126,9 +126,7 @@ nsLoadGroup::~nsLoadGroup()
     mDefaultLoadRequest = nullptr;
 
     if (mRequestContext) {
-        uint64_t rcid;
-        mRequestContext->GetID(&rcid);
-        mRequestContextService->RemoveRequestContext(rcid);
+        mRequestContextService->RemoveRequestContext(mRequestContext->GetID());
     }
 
     LOG(("LOADGROUP [%p]: Destroyed.\n", this));
@@ -703,7 +701,8 @@ nsLoadGroup::GetRequestContextID(uint64_t *aRCID)
     if (!mRequestContext) {
         return NS_ERROR_NOT_AVAILABLE;
     }
-    return mRequestContext->GetID(aRCID);
+    *aRCID = mRequestContext->GetID();
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

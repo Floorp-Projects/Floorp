@@ -82,12 +82,6 @@ interface nsIProfiler : nsISupports
    */
   void GetAllFeatures(out uint32_t aCount, [retval, array, size_is(aCount)] out string aFeatures);
 
-  /**
-   * The starting parameters that were sent to the profiler for sampling.
-   * If the profiler is not currently sampling, this will return null.
-   */
-  [noscript] readonly attribute nsIProfilerStartParams startParams;
-
   void GetBufferInfo(out uint32_t aCurrentPosition, out uint32_t aTotalSize,
                      out uint32_t aGeneration);
 

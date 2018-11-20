@@ -54,7 +54,7 @@ interface nsIRequestContext : nsISupports
   /**
    * A unique identifier for this request context
    */
-  [noscript] readonly attribute unsigned long long ID;
+  [notxpcom, nostdcall] readonly attribute unsigned long long ID;
 
   /**
    * Called by the associated document when its load starts.  This resets
@@ -91,12 +91,12 @@ interface nsIRequestContext : nsISupports
    * and will destroy it when overwritten or when the context
    * ends.
    */
-  [noscript] attribute SpdyPushCachePtr spdyPushCache;
+  [notxpcom,nostdcall] attribute SpdyPushCachePtr spdyPushCache;
 
   /**
    * This holds a cached value of the user agent override.
    */
-  [noscript] attribute ACString userAgentOverride;
+  [notxpcom,nostdcall] attribute ACString userAgentOverride;
 
   /**
    * Increases/decrease the number of non-tailed requests in this context.

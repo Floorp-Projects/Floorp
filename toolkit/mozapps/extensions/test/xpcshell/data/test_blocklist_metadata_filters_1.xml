@@ -9,7 +9,7 @@
         </targetApplication>
       </versionRange>
     </emItem>
-    <emItem id="/block2/" name="/^Moz/" creator="Dangerous"
+    <emItem id="/block2/" name="/^Moz/"
       homepageURL="/\.dangerous\.com/" updateURL="/\.dangerous\.com/">
       <versionRange severity="3">
         <targetApplication id="xpcshell@tests.mozilla.org">

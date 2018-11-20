@@ -341,11 +341,9 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable *aTransferable,
 
     file->Append(targetFilename);
 
-    bool isPrivate;
-    aTransferable->GetIsPrivateData(&isPrivate);
+    bool isPrivate = aTransferable->GetIsPrivateData();
 
-    nsCOMPtr<nsIPrincipal> principal;
-    aTransferable->GetRequestingPrincipal(getter_AddRefs(principal));
+    nsCOMPtr<nsIPrincipal> principal = aTransferable->GetRequestingPrincipal();
     rv = SaveURIToFile(sourceURI, principal, file, isPrivate);
     // send back an nsIFile
     if (NS_SUCCEEDED(rv)) {

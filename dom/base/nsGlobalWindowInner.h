@@ -119,6 +119,7 @@ class Promise;
 class PostMessageEvent;
 struct RequestInit;
 class RequestOrUSVString;
+class SharedWorker;
 class Selection;
 class SpeechSynthesis;
 class TabGroup;
@@ -711,6 +712,12 @@ public:
 
   mozilla::dom::IntlUtils*
   GetIntlUtils(mozilla::ErrorResult& aRv);
+
+  void
+  StoreSharedWorker(mozilla::dom::SharedWorker* aSharedWorker);
+
+  void
+  ForgetSharedWorker(mozilla::dom::SharedWorker* aSharedWorker);
 
 public:
   void Alert(nsIPrincipal& aSubjectPrincipal,
@@ -1404,6 +1411,8 @@ protected:
   RefPtr<mozilla::dom::Location> mLocation;
   RefPtr<nsHistory>           mHistory;
   RefPtr<mozilla::dom::CustomElementRegistry> mCustomElements;
+
+  nsTObserverArray<RefPtr<mozilla::dom::SharedWorker>> mSharedWorkers;
 
   RefPtr<mozilla::dom::VisualViewport> mVisualViewport;
 

@@ -158,12 +158,12 @@ nsPrintingProxy::ShowProgress(mozIDOMWindowProxy*      parent,
   SendPPrintProgressDialogConstructor(dialogChild);
 
   // Get the RemotePrintJob if we have one available.
-  RefPtr<mozilla::layout::RemotePrintJobChild> remotePrintJob;
+  RefPtr<RemotePrintJobChild> remotePrintJob;
   if (printSettings) {
     nsCOMPtr<nsIPrintSession> printSession;
     nsresult rv = printSettings->GetPrintSession(getter_AddRefs(printSession));
     if (NS_SUCCEEDED(rv) && printSession) {
-      printSession->GetRemotePrintJob(getter_AddRefs(remotePrintJob));
+      remotePrintJob = printSession->GetRemotePrintJob();
     }
   }
 

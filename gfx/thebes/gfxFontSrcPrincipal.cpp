@@ -18,9 +18,7 @@ gfxFontSrcPrincipal::gfxFontSrcPrincipal(nsIPrincipal* aPrincipal)
 
   mPrincipal = aPrincipal;
 
-  uint32_t hash = 0;
-  mPrincipal->GetHashValue(&hash);
-  mHash = hash;
+  mHash = mPrincipal->GetHashValue();
 }
 
 gfxFontSrcPrincipal::~gfxFontSrcPrincipal()

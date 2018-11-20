@@ -703,7 +703,6 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
     uncaughtExceptionHook(nullptr),
     enabled(true),
     allowUnobservedAsmJS(false),
-    allowWasmBinarySource(false),
     collectCoverageInfo(false),
     observedGCs(cx->zone()),
     allocationsLog(cx),
@@ -3093,15 +3092,6 @@ Debugger::observesAsmJS() const
 }
 
 Debugger::IsObserving
-Debugger::observesBinarySource() const
-{
-    if (enabled && allowWasmBinarySource) {
-        return Observing;
-    }
-    return NotObserving;
-}
-
-Debugger::IsObserving
 Debugger::observesCoverage() const
 {
     if (enabled && collectCoverageInfo) {
@@ -3205,21 +3195,6 @@ Debugger::updateObservesAsmJSOnDebuggees(IsObserving observing)
         }
 
         realm->updateDebuggerObservesAsmJS();
-    }
-}
-
-void
-Debugger::updateObservesBinarySourceDebuggees(IsObserving observing)
-{
-    for (WeakGlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
-        GlobalObject* global = r.front();
-        Realm* realm = global->realm();
-
-        if (realm->debuggerObservesBinarySource() == observing) {
-            continue;
-        }
-
-        realm->updateDebuggerObservesBinarySource();
     }
 }
 
@@ -3720,7 +3695,6 @@ Debugger::setEnabled(JSContext* cx, unsigned argc, Value* vp)
         // stack frame, thus the coverage does not depend on the enabled flag.
 
         dbg->updateObservesAsmJSOnDebuggees(dbg->observesAsmJS());
-        dbg->updateObservesBinarySourceDebuggees(dbg->observesBinarySource());
     }
 
     args.rval().setUndefined();
@@ -3924,33 +3898,6 @@ Debugger::setAllowUnobservedAsmJS(JSContext* cx, unsigned argc, Value* vp)
         GlobalObject* global = r.front();
         Realm* realm = global->realm();
         realm->updateDebuggerObservesAsmJS();
-    }
-
-    args.rval().setUndefined();
-    return true;
-}
-
-/* static */ bool
-Debugger::getAllowWasmBinarySource(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGGER(cx, argc, vp, "get allowWasmBinarySource", args, dbg);
-    args.rval().setBoolean(dbg->allowWasmBinarySource);
-    return true;
-}
-
-/* static */ bool
-Debugger::setAllowWasmBinarySource(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGGER(cx, argc, vp, "set allowWasmBinarySource", args, dbg);
-    if (!args.requireAtLeast(cx, "Debugger.set allowWasmBinarySource", 1)) {
-        return false;
-    }
-    dbg->allowWasmBinarySource = ToBoolean(args[0]);
-
-    for (WeakGlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront()) {
-        GlobalObject* global = r.front();
-        Realm* realm = global->realm();
-        realm->updateDebuggerObservesBinarySource();
     }
 
     args.rval().setUndefined();
@@ -4441,7 +4388,6 @@ Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
     AutoRestoreRealmDebugMode debugModeGuard(debuggeeRealm);
     debuggeeRealm->setIsDebuggee();
     debuggeeRealm->updateDebuggerObservesAsmJS();
-    debuggeeRealm->updateDebuggerObservesBinarySource();
     debuggeeRealm->updateDebuggerObservesCoverage();
     if (observesAllExecution() && !ensureExecutionObservabilityOfRealm(cx, debuggeeRealm)) {
         return false;
@@ -4583,7 +4529,6 @@ Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
     } else {
         global->realm()->updateDebuggerObservesAllExecution();
         global->realm()->updateDebuggerObservesAsmJS();
-        global->realm()->updateDebuggerObservesBinarySource();
         global->realm()->updateDebuggerObservesCoverage();
     }
 }
@@ -5818,8 +5763,6 @@ const JSPropertySpec Debugger::properties[] = {
             Debugger::setUncaughtExceptionHook, 0),
     JS_PSGS("allowUnobservedAsmJS", Debugger::getAllowUnobservedAsmJS,
             Debugger::setAllowUnobservedAsmJS, 0),
-    JS_PSGS("allowWasmBinarySource", Debugger::getAllowWasmBinarySource,
-            Debugger::setAllowWasmBinarySource, 0),
     JS_PSGS("collectCoverageInfo", Debugger::getCollectCoverageInfo,
             Debugger::setCollectCoverageInfo, 0),
     JS_PSG("memory", Debugger::getMemory, 0),
@@ -6292,7 +6235,7 @@ struct DebuggerScriptGetLineCountMatcher
     ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
         wasm::Instance& instance = instanceObj->instance();
         if (instance.debugEnabled()) {
-            totalLines = double(instance.debug().totalSourceLines());
+            totalLines = double(instance.debug().bytecode().length());
         } else {
             totalLines = 0;
         }
@@ -8073,7 +8016,7 @@ DebuggerSource_getBinary(JSContext* cx, unsigned argc, Value* vp)
     RootedWasmInstanceObject instanceObj(cx, referent.as<WasmInstanceObject*>());
     wasm::Instance& instance = instanceObj->instance();
 
-    if (!instance.debugEnabled() || !instance.debug().binarySource()) {
+    if (!instance.debugEnabled()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_DEBUG_NO_BINARY_SOURCE);
         return false;

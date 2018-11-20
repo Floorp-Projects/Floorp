@@ -36,7 +36,7 @@ interface nsIPluginInstanceOwner : nsISupports
   /**
    * Get the instance associated with this owner.
    */
-  nsNPAPIPluginInstancePtr getInstance();
+  [notxpcom, nostdcall] nsNPAPIPluginInstancePtr getInstance();
 
   /**
    * Get a handle to the window structure of the owner.

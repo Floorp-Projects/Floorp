@@ -1,0 +1,13 @@
+{
+  "manifest_version": 2,
+
+  "name": "XPI Telemetry System Add-on Test",
+  "description": "A system addon which is shipped with Firefox.",
+  "version": "1.0",
+
+  "applications": {
+    "gecko": {
+      "id": "tel-system-xpi@tests.mozilla.org"
+    }
+  }
+}

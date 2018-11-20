@@ -9,6 +9,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/ErrorEventBinding.h"
+#include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/SimpleGlobalObject.h"
 #include "mozilla/dom/WorkerDebuggerGlobalScopeBinding.h"
@@ -201,8 +202,9 @@ private:
       MOZ_ASSERT(!aWorkerPrivate->IsParentWindowPaused());
 
       if (aWorkerPrivate->IsSharedWorker()) {
-        aWorkerPrivate->BroadcastErrorToSharedWorkers(aCx, &mReport,
-                                                      /* isErrorEvent */ true);
+        aWorkerPrivate->GetRemoteWorkerController()
+                      ->ErrorPropagationOnMainThread(&mReport,
+                                                     /* isErrorEvent */ true);
         return true;
       }
 
@@ -291,8 +293,8 @@ private:
     MOZ_ASSERT(!aWorkerPrivate->IsParentWindowPaused());
 
     if (aWorkerPrivate->IsSharedWorker()) {
-      aWorkerPrivate->BroadcastErrorToSharedWorkers(aCx, nullptr,
-                                                    /* isErrorEvent */ false);
+      aWorkerPrivate->GetRemoteWorkerController()
+                    ->ErrorPropagationOnMainThread(nullptr, false);
       return true;
     }
 
@@ -498,6 +500,27 @@ WorkerErrorReport::ReportError(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
 WorkerErrorReport::LogErrorToConsole(const WorkerErrorReport& aReport,
                                      uint64_t aInnerWindowId)
 {
+  nsTArray<ErrorDataNote> notes;
+  for (size_t i = 0, len = aReport.mNotes.Length(); i < len; i++) {
+    const WorkerErrorNote& note = aReport.mNotes.ElementAt(i);
+    notes.AppendElement(ErrorDataNote(note.mLineNumber, note.mColumnNumber,
+                                      note.mMessage, note.mFilename));
+  }
+
+  ErrorData errorData(aReport.mLineNumber,
+                      aReport.mColumnNumber,
+                      aReport.mFlags,
+                      aReport.mMessage,
+                      aReport.mFilename,
+                      aReport.mLine,
+                      notes);
+  LogErrorToConsole(errorData, aInnerWindowId);
+}
+
+/* static */ void
+WorkerErrorReport::LogErrorToConsole(const ErrorData& aReport,
+                                     uint64_t aInnerWindowId)
+{
   AssertIsOnMainThread();
 
   RefPtr<nsScriptErrorBase> scriptError = new nsScriptError();
@@ -505,24 +528,24 @@ WorkerErrorReport::LogErrorToConsole(const WorkerErrorReport& aReport,
 
   if (scriptError) {
     nsAutoCString category("Web Worker");
-    if (NS_FAILED(scriptError->InitWithWindowID(aReport.mMessage,
-                                                aReport.mFilename,
-                                                aReport.mLine,
-                                                aReport.mLineNumber,
-                                                aReport.mColumnNumber,
-                                                aReport.mFlags,
+    if (NS_FAILED(scriptError->InitWithWindowID(aReport.message(),
+                                                aReport.filename(),
+                                                aReport.line(),
+                                                aReport.lineNumber(),
+                                                aReport.columnNumber(),
+                                                aReport.flags(),
                                                 category,
                                                 aInnerWindowId))) {
       NS_WARNING("Failed to init script error!");
       scriptError = nullptr;
     }
 
-    for (size_t i = 0, len = aReport.mNotes.Length(); i < len; i++) {
-      const WorkerErrorNote& note = aReport.mNotes.ElementAt(i);
+    for (size_t i = 0, len = aReport.notes().Length(); i < len; i++) {
+      const ErrorDataNote& note = aReport.notes().ElementAt(i);
 
       nsScriptErrorNote* noteObject = new nsScriptErrorNote();
-      noteObject->Init(note.mMessage, note.mFilename,
-                       note.mLineNumber, note.mColumnNumber);
+      noteObject->Init(note.message(), note.filename(),
+                       note.lineNumber(), note.columnNumber());
       scriptError->AddNote(noteObject);
     }
   }
@@ -538,23 +561,23 @@ WorkerErrorReport::LogErrorToConsole(const WorkerErrorReport& aReport,
       }
       NS_WARNING("LogMessage failed!");
     } else if (NS_SUCCEEDED(consoleService->LogStringMessage(
-                              aReport.mMessage.BeginReading()))) {
+                              aReport.message().BeginReading()))) {
       return;
     }
     NS_WARNING("LogStringMessage failed!");
   }
 
-  NS_ConvertUTF16toUTF8 msg(aReport.mMessage);
-  NS_ConvertUTF16toUTF8 filename(aReport.mFilename);
+  NS_ConvertUTF16toUTF8 msg(aReport.message());
+  NS_ConvertUTF16toUTF8 filename(aReport.filename());
 
   static const char kErrorString[] = "JS error in Web Worker: %s [%s:%u]";
 
 #ifdef ANDROID
   __android_log_print(ANDROID_LOG_INFO, "Gecko", kErrorString, msg.get(),
-                      filename.get(), aReport.mLineNumber);
+                      filename.get(), aReport.lineNumber());
 #endif
 
-  fprintf(stderr, kErrorString, msg.get(), filename.get(), aReport.mLineNumber);
+  fprintf(stderr, kErrorString, msg.get(), filename.get(), aReport.lineNumber());
   fflush(stderr);
 }
 

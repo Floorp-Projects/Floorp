@@ -188,7 +188,7 @@ interface nsITransferable : nsISupports
    * be avoided as much as possible because the value set may not reflect the status 
    * of the context in which the transferable was created.
    */
-  [noscript] attribute boolean isPrivateData;
+  [notxpcom, nostdcall] attribute boolean isPrivateData;
 
   /**
    * The principal of the source dom node this transferable was
@@ -196,7 +196,7 @@ interface nsITransferable : nsISupports
    * Note, currently only used on Windows for network principal and
    * contentPolicyType information in clipboard and drag operations.
    */
-  [noscript] attribute nsIPrincipal requestingPrincipal;
-  [noscript] attribute nsContentPolicyType contentPolicyType;
+  [notxpcom, nostdcall] attribute nsIPrincipal requestingPrincipal;
+  [notxpcom, nostdcall] attribute nsContentPolicyType contentPolicyType;
 
 };

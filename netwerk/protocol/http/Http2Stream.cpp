@@ -467,7 +467,7 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
     nsIRequestContext *requestContext = mTransaction->RequestContext();
     SpdyPushCache *cache = nullptr;
     if (requestContext) {
-      requestContext->GetSpdyPushCache(&cache);
+      cache = requestContext->GetSpdyPushCache();
     }
 
     Http2PushedStream *pushedStream = nullptr;

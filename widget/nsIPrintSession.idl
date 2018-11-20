@@ -36,5 +36,5 @@ interface nsIPrintSession : nsISupports
   /**
    * The remote print job is used for printing via the parent process.
    */
-  [noscript] attribute RemotePrintJobChildPtr remotePrintJob;
+  [notxpcom, nostdcall] attribute RemotePrintJobChildPtr remotePrintJob;
 };
