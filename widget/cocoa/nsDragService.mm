@@ -393,10 +393,9 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
         nsCString& flavorStr = flavors[i];
 
         nsCOMPtr<nsISupports> dataSupports;
-        uint32_t dataSize = 0;
-        rv = currentTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(dataSupports), &dataSize);
+        rv = currentTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(dataSupports));
         if (NS_SUCCEEDED(rv)) {
-          aTransferable->SetTransferData(flavorStr.get(), dataSupports, dataSize);
+          aTransferable->SetTransferData(flavorStr.get(), dataSupports, 0);
           return NS_OK; // maybe try to fill in more types? Is there a point?
         }
       }

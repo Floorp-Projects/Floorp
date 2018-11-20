@@ -33,9 +33,7 @@ nsClipboard::SetData(nsITransferable *aTransferable,
     return NS_ERROR_NOT_IMPLEMENTED;
 
   nsCOMPtr<nsISupports> tmp;
-  uint32_t len;
-  nsresult rv  = aTransferable->GetTransferData(kUnicodeMime, getter_AddRefs(tmp),
-                                                &len);
+  nsresult rv  = aTransferable->GetTransferData(kUnicodeMime, getter_AddRefs(tmp));
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsISupportsString> supportsString = do_QueryInterface(tmp);
   // No support for non-text data
