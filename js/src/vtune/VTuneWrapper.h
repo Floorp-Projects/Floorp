@@ -33,7 +33,7 @@ void MarkStub(const js::jit::JitCode* code, const char* name);
 void MarkRegExp(const js::jit::JitCode* code, bool match_only);
 
 void MarkScript(const js::jit::JitCode* code,
-                const JSScript* script,
+                JSScript* script,
                 const char* module);
 
 void MarkWasm(unsigned methodId,

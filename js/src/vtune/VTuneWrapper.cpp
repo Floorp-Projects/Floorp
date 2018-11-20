@@ -119,7 +119,7 @@ MarkRegExp(const js::jit::JitCode* code, bool match_only)
 }
 
 void
-MarkScript(const js::jit::JitCode* code, const JSScript* script, const char* module)
+MarkScript(const js::jit::JitCode* code, JSScript* script, const char* module)
 {
     if (!IsProfilingActive())
         return;

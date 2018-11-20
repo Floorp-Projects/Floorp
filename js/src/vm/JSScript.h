@@ -219,6 +219,13 @@ using ScriptNameMap = HashMap<JSScript*,
                               DefaultHasher<JSScript*>,
                               SystemAllocPolicy>;
 
+#ifdef MOZ_VTUNE
+using ScriptVTuneIdMap = HashMap<JSScript*,
+                                 uint32_t,
+                                 DefaultHasher<JSScript*>,
+                                 SystemAllocPolicy>;
+#endif
+
 class DebugScript
 {
     friend class ::JSScript;
@@ -1626,12 +1633,6 @@ class JSScript : public js::gc::TenuredCell
     uint32_t toStringStart_ = 0;
     uint32_t toStringEnd_ = 0;
 
-#ifdef MOZ_VTUNE
-    // Unique Method ID passed to the VTune profiler, or 0 if unset.
-    // Allows attribution of different jitcode to the same source script.
-    uint32_t vtuneMethodId_ = 0;
-#endif
-
     // Number of times the script has been called or has had backedges taken.
     // When running in ion, also increased for any inlined scripts. Reset if
     // the script's JIT code is forcibly discarded.
@@ -1705,6 +1706,8 @@ class JSScript : public js::gc::TenuredCell
         // See comments below.
         ArgsHasVarBinding = 1 << 21,
     };
+    // Note: don't make this a bitfield! It makes it hard to read these flags
+    // from JIT code.
     uint32_t immutableFlags_ = 0;
 
     // Mutable flags typically store information about runtime or deoptimization
@@ -1775,6 +1778,8 @@ class JSScript : public js::gc::TenuredCell
         HideScriptFromDebugger = 1 << 19,
     };
   private:
+    // Note: don't make this a bitfield! It makes it hard to read these flags
+    // from JIT code.
     uint32_t mutableFlags_ = 0;
 
     // 16-bit fields.
@@ -2394,7 +2399,9 @@ class JSScript : public js::gc::TenuredCell
     const char* maybeForwardedFilename() const { return maybeForwardedScriptSource()->filename(); }
 
 #ifdef MOZ_VTUNE
-    uint32_t vtuneMethodID() const { return vtuneMethodId_; }
+    // Unique Method ID passed to the VTune profiler. Allows attribution of
+    // different jitcode to the same source script.
+    uint32_t vtuneMethodID();
 #endif
 
   public:
