@@ -42,7 +42,7 @@ protected:
     kLargeDatasetSize = 1000000        // 1 million bytes
   };
   
-  nsresult WriteCache(nsISupports* aData, uint32_t aDataLen );
+  nsresult WriteCache(void* aData, uint32_t aDataLen);
   nsresult ReadCache(nsISupports** aData, uint32_t* aDataLen );
   
   // mData + mDataLen OR mCacheFD should be used, not both.
