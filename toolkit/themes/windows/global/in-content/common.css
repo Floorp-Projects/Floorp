@@ -4,10 +4,6 @@
 
 %include ../../../shared/in-content/common.inc.css
 
-:root {
-  --in-content-box-background-odd: transparent;
-}
-
 xul|*.menulist-dropmarker {
   margin-top: 1px;
   margin-bottom: 1px;
