@@ -714,9 +714,9 @@ nsPrintJob::DoCommonPrint(bool                    aIsPrintPreview,
       NS_ENSURE_SUCCESS(rv, rv);
       printData->mPrintSettings->SetPrintSession(printSession);
     } else {
-      RefPtr<mozilla::layout::RemotePrintJobChild> remotePrintJob;
-      printSession->GetRemotePrintJob(getter_AddRefs(remotePrintJob));
-      if (NS_SUCCEEDED(rv) && remotePrintJob) {
+      RefPtr<layout::RemotePrintJobChild> remotePrintJob =
+        printSession->GetRemotePrintJob();
+      if (remotePrintJob) {
         // If we have a RemotePrintJob add it to the print progress listeners,
         // so it can forward to the parent.
         printData->mPrintProgressListeners.AppendElement(remotePrintJob);
@@ -877,9 +877,9 @@ nsPrintJob::DoCommonPrint(bool                    aIsPrintPreview,
             // If we haven't already added the RemotePrintJob as a listener,
             // add it now if there is one.
             if (!remotePrintJobListening) {
-              RefPtr<mozilla::layout::RemotePrintJobChild> remotePrintJob;
-              printSession->GetRemotePrintJob(getter_AddRefs(remotePrintJob));
-              if (NS_SUCCEEDED(rv) && remotePrintJob) {
+              RefPtr<layout::RemotePrintJobChild> remotePrintJob =
+                printSession->GetRemotePrintJob();
+              if (remotePrintJob) {
                 printData->mPrintProgressListeners.AppendElement(
                                                      remotePrintJob);
                 remotePrintJobListening = true;
@@ -3502,9 +3502,9 @@ nsPrintJob::StartPagePrintTimer(const UniquePtr<nsPrintObject>& aPO)
     nsCOMPtr<nsIPrintSession> printSession;
     nsresult rv = mPrt->mPrintSettings->GetPrintSession(getter_AddRefs(printSession));
     if (NS_SUCCEEDED(rv) && printSession) {
-      RefPtr<mozilla::layout::RemotePrintJobChild> remotePrintJob;
-      printSession->GetRemotePrintJob(getter_AddRefs(remotePrintJob));
-      if (NS_SUCCEEDED(rv) && remotePrintJob) {
+      RefPtr<layout::RemotePrintJobChild> remotePrintJob =
+        printSession->GetRemotePrintJob();
+      if (remotePrintJob) {
         remotePrintJob->SetPagePrintTimer(mPagePrintTimer);
         remotePrintJob->SetPrintJob(this);
       }
