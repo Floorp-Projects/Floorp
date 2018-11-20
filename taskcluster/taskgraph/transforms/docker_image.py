@@ -17,7 +17,6 @@ from taskgraph.util.docker import (
 from taskgraph.util.cached_tasks import add_optimization
 from taskgraph.util.schema import (
     Schema,
-    validate_schema,
 )
 from voluptuous import (
     Optional,
@@ -54,13 +53,7 @@ docker_image_schema = Schema({
 })
 
 
-@transforms.add
-def validate(config, tasks):
-    for task in tasks:
-        validate_schema(
-            docker_image_schema, task,
-            "In docker image {!r}:".format(task.get('name', 'unknown')))
-        yield task
+transforms.add_validate(docker_image_schema)
 
 
 def order_image_tasks(config, tasks):
