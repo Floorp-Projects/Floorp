@@ -595,7 +595,7 @@ void MediaDecoder::OnMetadataUpdate(TimedMetadata&& aMetadata) {
   AbstractThread::AutoEnter context(AbstractMainThread());
   GetOwner()->RemoveMediaTracks();
   MetadataLoaded(MakeUnique<MediaInfo>(*aMetadata.mInfo),
-                 UniquePtr<MetadataTags>(aMetadata.mTags.forget()),
+                 UniquePtr<MetadataTags>(std::move(aMetadata.mTags)),
                  MediaDecoderEventVisibility::Observable);
   FirstFrameLoaded(std::move(aMetadata.mInfo),
                    MediaDecoderEventVisibility::Observable);

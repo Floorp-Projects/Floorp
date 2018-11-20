@@ -118,7 +118,7 @@ class OggCodecState {
   }
 
   // Build a hash table with tag metadata parsed from the stream.
-  virtual MetadataTags* GetTags() { return nullptr; }
+  virtual UniquePtr<MetadataTags> GetTags() { return nullptr; }
 
   // Returns the end time that a granulepos represents.
   virtual int64_t Time(int64_t granulepos) { return -1; }
@@ -241,10 +241,11 @@ class OggCodecState {
   // Utility method to parse and add a vorbis-style comment
   // to a metadata hash table. Most Ogg-encapsulated codecs
   // use the vorbis comment format for metadata.
-  static bool AddVorbisComment(MetadataTags* aTags, const char* aComment,
+  static bool AddVorbisComment(UniquePtr<MetadataTags>& aTags,
+                               const char* aComment,
                                uint32_t aLength);
 
- protected:
+protected:
   // Constructs a new OggCodecState. aActive denotes whether the stream is
   // active. For streams of unsupported or unknown types, aActive should be
   // false.
@@ -289,7 +290,7 @@ class VorbisState : public OggCodecState {
   const TrackInfo* GetInfo() const override { return &mInfo; }
 
   // Return a hash table with tag metadata.
-  MetadataTags* GetTags() override;
+  UniquePtr<MetadataTags> GetTags() override;
 
  private:
   AudioInfo mInfo;
@@ -408,7 +409,7 @@ class OpusState : public OggCodecState {
   static int64_t Time(int aPreSkip, int64_t aGranulepos);
 
   // Construct and return a table of tags from the metadata header.
-  MetadataTags* GetTags() override;
+  UniquePtr<MetadataTags> GetTags() override;
 
  private:
   nsAutoPtr<OpusParser> mParser;
@@ -582,7 +583,7 @@ class FlacState : public OggCodecState {
   nsresult PageIn(ogg_page* aPage) override;
 
   // Return a hash table with tag metadata.
-  MetadataTags* GetTags() override;
+  UniquePtr<MetadataTags> GetTags() override;
 
   const TrackInfo* GetInfo() const override;
 
