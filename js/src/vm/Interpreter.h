@@ -68,7 +68,8 @@ CallGetter(JSContext* cx, HandleValue thisv, HandleValue getter, MutableHandleVa
 extern bool
 CallSetter(JSContext* cx, HandleValue thisv, HandleValue setter, HandleValue rval);
 
-// ES7 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 7.3.12 Call(F, V, argumentsList).
+// ES7 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93
+// 7.3.12 Call(F, V, argumentsList).
 // All parameters are required, hopefully forcing callers to be careful not to
 // (say) blindly pass callee as |newTarget| when a different value should have
 // been passed.  Behavior is unspecified if any element of |args| isn't initialized.
