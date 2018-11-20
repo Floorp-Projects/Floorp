@@ -1888,7 +1888,7 @@ extern JS_PUBLIC_API bool
 JS_FreezeObject(JSContext* cx, JS::Handle<JSObject*> obj);
 
 
-/*** Property descriptors ************************************************************************/
+/*** Property descriptors ***************************************************/
 
 namespace JS {
 
@@ -2160,7 +2160,7 @@ FromPropertyDescriptor(JSContext* cx,
 } // namespace JS
 
 
-/*** Standard internal methods ********************************************************************
+/*** Standard internal methods **********************************************
  *
  * The functions below are the fundamental operations on objects.
  *
@@ -2741,7 +2741,7 @@ extern JS_PUBLIC_API JSObject*
 JS_New(JSContext* cx, JS::HandleObject ctor, const JS::HandleValueArray& args);
 
 
-/*** Other property-defining functions ***********************************************************/
+/*** Other property-defining functions **************************************/
 
 extern JS_PUBLIC_API JSObject*
 JS_DefineObject(JSContext* cx, JS::HandleObject obj, const char* name,

@@ -1115,7 +1115,7 @@ Realm::createIterResultTemplateObject(JSContext* cx, WithObjectPrototype withPro
     return templateObject;
 }
 
-/*** Iterator objects ****************************************************************************/
+/*** Iterator objects *******************************************************/
 
 size_t
 PropertyIteratorObject::sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf) const
