@@ -12,8 +12,6 @@ const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
 
-Cu.importGlobalProperties(["URLSearchParams"]);
-
 const updateFile = "test_update.json";
 const appId = "toolkit@mozilla.org";
 
