@@ -134,7 +134,7 @@ interface nsISSLSocketControl : nsISupports {
      * If set to true before the server requests a client cert
      * no cert will be sent.
      */
-    [noscript] attribute boolean denyClientCert;
+    [notxpcom, nostdcall] attribute boolean denyClientCert;
 
     /**
      * If set before the server requests a client cert (assuming it does so at

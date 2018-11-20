@@ -684,12 +684,11 @@ LoadInfo::FindPrincipalToInherit(nsIChannel* aChannel)
   return prin->PrincipalToInherit(uri);
 }
 
-NS_IMETHODIMP
-LoadInfo::GetSandboxedLoadingPrincipal(nsIPrincipal** aPrincipal)
+nsIPrincipal*
+LoadInfo::GetSandboxedLoadingPrincipal()
 {
   if (!(mSecurityFlags & nsILoadInfo::SEC_SANDBOXED)) {
-    *aPrincipal = nullptr;
-    return NS_OK;
+    return nullptr;
   }
 
   if (!mSandboxedLoadingPrincipal) {
@@ -703,33 +702,17 @@ LoadInfo::GetSandboxedLoadingPrincipal(nsIPrincipal** aPrincipal)
   }
   MOZ_ASSERT(mSandboxedLoadingPrincipal);
 
-  nsCOMPtr<nsIPrincipal> copy(mSandboxedLoadingPrincipal);
-  copy.forget(aPrincipal);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetTopLevelPrincipal(nsIPrincipal** aTopLevelPrincipal)
-{
-  NS_IF_ADDREF(*aTopLevelPrincipal = mTopLevelPrincipal);
-  return NS_OK;
+  return mSandboxedLoadingPrincipal;
 }
 
 nsIPrincipal*
-LoadInfo::TopLevelPrincipal()
+LoadInfo::GetTopLevelPrincipal()
 {
   return mTopLevelPrincipal;
 }
 
-NS_IMETHODIMP
-LoadInfo::GetTopLevelStorageAreaPrincipal(nsIPrincipal** aTopLevelStorageAreaPrincipal)
-{
-  NS_IF_ADDREF(*aTopLevelStorageAreaPrincipal = mTopLevelStorageAreaPrincipal);
-  return NS_OK;
-}
-
 nsIPrincipal*
-LoadInfo::TopLevelStorageAreaPrincipal()
+LoadInfo::GetTopLevelStorageAreaPrincipal()
 {
   return mTopLevelStorageAreaPrincipal;
 }
