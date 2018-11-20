@@ -169,6 +169,11 @@ public:
            aEvent->mMessage == eTouchPointerCancel;
   }
 
+  static MOZ_ALWAYS_INLINE int32_t GetSpoofedPointerIdForRFP()
+  {
+    return sSpoofedPointerId.valueOr(0);
+  }
+
 private:
   // GetPointerType returns pointer type like mouse, pen or touch for pointer
   // event with pointerId. The return value must be one of
@@ -183,6 +188,17 @@ private:
                 bool aIsGotCapture,
                 const WidgetPointerEvent* aPointerEvent,
                 nsIContent* aCaptureTarget);
+
+  // The cached spoofed pointer ID for fingerprinting resistance. We will use a
+  // mouse pointer id for desktop. For mobile, we should use the touch pointer
+  // id as the spoofed one, and this work will be addressed in Bug 1492775.
+  static Maybe<int32_t> sSpoofedPointerId;
+
+  // A helper function to cache the pointer id of the spoofed interface, we
+  // would only cache the pointer id once. After that, we would always stick to
+  // that pointer id for fingerprinting resistance.
+  static void MaybeCacheSpoofedPointerID(uint16_t aInputSource,
+                                         uint32_t aPointerId);
 };
 
 } // namespace mozilla
