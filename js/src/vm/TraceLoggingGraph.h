@@ -34,7 +34,8 @@
  *       => 64 bits: Time Stamp Counter of end of event.
  *       => 31 bits: Index to dict file containing the log text.
  *       =>  1 bit:  Boolean signifying if this entry has children.
- *                   When true, the child can be found just right after this entry.
+ *                   When true, the child can be found just right after this
+ *                   entry.
  *       => 32 bits: Containing the ID of the next event on the same depth
  *                   or 0 if there isn't an event on the same depth anymore.
  *

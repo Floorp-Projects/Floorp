@@ -22,7 +22,8 @@ using namespace js::jit;
 
 /* This method generates a trampoline on ARM64 for a c++ function with
  * the following signature:
- *   bool blah(void* code, int argc, Value* argv, JSObject* scopeChain, Value* vp)
+ *   bool blah(void* code, int argc, Value* argv,
+ *             JSObject* scopeChain, Value* vp)
  *   ...using standard AArch64 calling convention
  */
 void

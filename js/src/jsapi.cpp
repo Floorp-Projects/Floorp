@@ -820,9 +820,9 @@ ReleaseAssertObjectHasNoWrappers(JSContext* cx, HandleObject target)
  *
  * A few rules:
  *
- * -   `origobj` and `target` must be two distinct objects of the same `JSClass`.
- *     Some classes may not support transplantation; WindowProxy objects and DOM
- *     nodes are OK.
+ * -   `origobj` and `target` must be two distinct objects of the same
+ *     `JSClass`.  Some classes may not support transplantation; WindowProxy
+ *     objects and DOM nodes are OK.
  *
  * -   `target` should be created specifically to be passed to this function.
  *     There must be no existing cross-compartment wrappers for it; ideally

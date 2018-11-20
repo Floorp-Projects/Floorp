@@ -100,8 +100,8 @@ struct EnterJITStack
 /*
  * This method generates a trampoline for a c++ function with the following
  * signature:
- *   void enter(void* code, int argc, Value* argv, InterpreterFrame* fp, CalleeToken
- *              calleeToken, JSObject* scopeChain, Value* vp)
+ *   void enter(void* code, int argc, Value* argv, InterpreterFrame* fp,
+ *              CalleeToken calleeToken, JSObject* scopeChain, Value* vp)
  *   ...using standard EABI calling convention
  */
 void
