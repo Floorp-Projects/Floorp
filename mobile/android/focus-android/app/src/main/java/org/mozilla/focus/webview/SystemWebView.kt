@@ -273,6 +273,10 @@ class SystemWebView(context: Context, attrs: AttributeSet) : NestedWebView(conte
         }
     }
 
+    override fun releaseGeckoSession() {
+        // Do nothing, only for GV
+    }
+
     private fun createDownloadListener(): DownloadListener {
         return DownloadListener { url, userAgent, contentDisposition, mimetype, contentLength ->
             if (!AppConstants.supportsDownloadingFiles()) {

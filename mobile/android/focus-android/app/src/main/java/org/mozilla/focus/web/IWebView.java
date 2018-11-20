@@ -142,6 +142,8 @@ public interface IWebView {
 
     void loadData(String baseURL, String data, String mimeType, String encoding, String historyURL);
 
+    void releaseGeckoSession();
+
     /**
      * Get the title of the currently displayed website.
      */

@@ -1071,6 +1071,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
                 requireComponents.sessionManager.select(session)
 
                 val webView = getWebView()
+                webView?.releaseGeckoSession()
                 webView?.saveWebViewState(session)
 
                 val intent = Intent(context, MainActivity::class.java)

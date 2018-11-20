@@ -685,6 +685,10 @@ class GeckoWebViewProvider : IWebViewProvider {
             })
         }
 
+        override fun releaseGeckoSession() {
+            releaseSession()
+        }
+
         override fun onDetachedFromWindow() {
             PreferenceManager.getDefaultSharedPreferences(context)
                 .unregisterOnSharedPreferenceChangeListener(this)
