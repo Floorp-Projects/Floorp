@@ -5,10 +5,8 @@
 package org.mozilla.geckoview.test
 
 import android.app.assist.AssistStructure
-import android.graphics.SurfaceTexture
 import android.os.Build
 import org.mozilla.geckoview.AllowOrDeny
-import org.mozilla.geckoview.GeckoDisplay
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
@@ -26,7 +24,6 @@ import android.support.test.filters.SdkSuppress
 import android.support.test.runner.AndroidJUnit4
 import android.text.InputType
 import android.util.SparseArray
-import android.view.Surface
 import android.view.View
 import android.view.ViewStructure
 import android.widget.EditText
@@ -481,28 +478,5 @@ class ContentDelegateTest : BaseSessionTest() {
         goFullscreen()
         mainSession.exitFullScreen()
         waitForFullscreenExit()
-    }
-
-    @Test fun firstComposite() {
-        val display = mainSession.acquireDisplay()
-        val texture = SurfaceTexture(0)
-        texture.setDefaultBufferSize(100, 100)
-        val surface = Surface(texture)
-        display.surfaceChanged(surface, 100, 100)
-        mainSession.loadTestPath(HELLO_HTML_PATH)
-        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
-            @AssertCalled(count = 1)
-            override fun onFirstComposite(session: GeckoSession) {
-            }
-        })
-        display.surfaceDestroyed()
-        display.surfaceChanged(surface, 100, 100)
-        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
-            @AssertCalled(count = 1)
-            override fun onFirstComposite(session: GeckoSession) {
-            }
-        })
-        display.surfaceDestroyed()
-        mainSession.releaseDisplay(display)
     }
 }
