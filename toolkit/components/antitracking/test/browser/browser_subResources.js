@@ -188,23 +188,11 @@ add_task(async function() {
   for (let trackerOrigin in log) {
     is(trackerOrigin, TEST_3RD_PARTY_DOMAIN, "Correct tracker origin must be reported");
     let originLog = log[trackerOrigin];
-    is(originLog.length, 16, "We should have 16 entries in the compressed log");
+    is(originLog.length, 4, "We should have 4 entries in the compressed log");
     expectTrackerFound(originLog[0]);
     expectCookiesLoaded(originLog[1]);
     expectTrackerBlocked(originLog[2], true);
-    expectCookiesLoaded(originLog[3]);
-    expectTrackerBlocked(originLog[4], true);
-    expectCookiesLoaded(originLog[5]);
-    expectTrackerBlocked(originLog[6], true);
-    expectCookiesLoaded(originLog[7]);
-    expectTrackerBlocked(originLog[8], true);
-    expectCookiesLoaded(originLog[9]);
-    expectTrackerBlocked(originLog[10], true);
-    expectCookiesLoaded(originLog[11]);
-    expectTrackerBlocked(originLog[12], true);
-    expectCookiesLoaded(originLog[13]);
-    expectTrackerBlocked(originLog[14], false);
-    expectCookiesLoaded(originLog[15]);
+    expectTrackerBlocked(originLog[3], false);
   }
 
   info("Removing the tab");
