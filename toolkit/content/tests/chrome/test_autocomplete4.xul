@@ -91,13 +91,6 @@ componentManager.registerFactory(autoCompleteSimpleID, "Test Simple Autocomplete
 
 SimpleTest.waitForExplicitFinish();
 
-// 8 or 6 assertions are recorded due to nested setting <input>.value but not a problem.
-// They are necessary to detect invalid method call without event loop.
-if (IS_MAC)
-  SimpleTest.expectAssertions(6, 6);
-else
-  SimpleTest.expectAssertions(8, 8);
-
 setTimeout(nextTest, 0);
 
 var currentTest = null;

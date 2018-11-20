@@ -385,9 +385,9 @@ var FormDataInternal = {
    * @param node (DOMNode)
    */
   fireInputEvent(node) {
-    let doc = node.ownerDocument;
-    let event = doc.createEvent("UIEvents");
-    event.initUIEvent("input", true, true, doc.defaultView, 0);
+    let event = node.isInputEventTarget ?
+      new node.ownerGlobal.InputEvent("input", {bubbles: true}) :
+      new node.ownerGlobal.Event("input", {bubbles: true});
     node.dispatchEvent(event);
   },
 

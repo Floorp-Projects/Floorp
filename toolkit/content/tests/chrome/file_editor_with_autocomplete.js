@@ -92,13 +92,8 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
                  this._description + ", " + aTest.description + ": \"input\" event shouldn't be dispatched anymore");
         return;
       }
-      if (aTest.inputEvents[i].todoInterfaceOnXUL && aInputEvents[i].target.tagName === "textbox") {
-        this._todo_is(aInputEvents[i] instanceof this._window.InputEvent, true,
-                      this._description + ", " + aTest.description + ': "input" event should be dispatched with InputEvent interface');
-      } else {
-        this._is(aInputEvents[i] instanceof this._window.InputEvent, true,
-                 this._description + ", " + aTest.description + ': "input" event should be dispatched with InputEvent interface');
-      }
+      this._is(aInputEvents[i] instanceof this._window.InputEvent, true,
+               this._description + ", " + aTest.description + ': "input" event should be dispatched with InputEvent interface');
       this._is(aInputEvents[i].cancelable, false,
                this._description + ", " + aTest.description + ': "input" event should be never cancelable');
       this._is(aInputEvents[i].bubbles, true,
@@ -127,7 +122,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: false, value: "Mozilla", searchString: "Mozilla",
       inputEvents: [
-        {inputType: "insertReplacementText", todoInterfaceOnXUL: true},
+        {inputType: "insertReplacementText"},
       ],
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case: undo the word, but typed text shouldn't be canceled",
@@ -202,7 +197,7 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: false, value: "Mozilla", searchString: "Mozilla",
       inputEvents: [
-        {inputType: "insertReplacementText", todoInterfaceOnXUL: true},
+        {inputType: "insertReplacementText"},
       ],
     },
     { description: "Undo/Redo behavior check when typed text does not match the case: undo the word, but typed text shouldn't be canceled",
