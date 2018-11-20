@@ -13,12 +13,12 @@ use_tests_in_packages ['org.mozilla.focus.screenshots']
 app_apk_path 'app/build/outputs/apk/focusArm/debug/app-focus-arm-debug.apk'
 tests_apk_path 'app/build/outputs/apk/androidTest/focusArm/debug/app-focus-arm-debug-androidTest.apk'
 
-locales ['af', 'ace','am','an','anp','ar', 'ast', 'ay', 'az', 'bg', 'bn-BD', 'bn-IN', 'bo','bs','ca',
-         'cak', 'co', 'cs', 'cy', 'da','de', 'dsb', 'el', 'eo', 'es-AR', 'es-CL', 'es-ES', 'es-MX',
-         'eu','fa', 'fi','fr', 'fy-NL','ga-IE', 'gl','gu-IN','he', 'hi-IN','hr', 'hsb', 'hu', 'hus',
+locales ['af','am','an','anp','ar', 'ast', 'ay', 'az', 'bg', 'bn-BD', 'bn-IN', 'bs','ca',
+         'cak','cs', 'cy', 'da','de', 'dsb', 'el', 'eo', 'es-AR', 'es-CL', 'es-ES', 'es-MX',
+         'eu','fa', 'fi','fr', 'fy-NL','ga-IE', 'gl','gu-IN','he', 'hi-IN','hr', 'hsb', 'hu',
          'hy-AM', 'ia','id', 'it', 'ixl', 'ja', 'jv', 'ka', 'kab', 'kk', 'ko', 'kw', 'lo', 'lt',
          'meh','mix', 'mr', 'ms', 'my','nb-NO', 'ne-NP', 'nl', 'nn-NO','oc', 'pa-IN', 'pai', 'pl',
-         'ppl', 'pt-BR', 'quc', 'quy', 'ro', 'ru', 'sk', 'sl', 'sn', 'sq', 'sr', 'su', 'sv-SE', 'ta',
+         'ppl', 'pt-BR', 'quc', 'quy', 'ro', 'ru', 'sk', 'sl', 'sq', 'sr', 'su', 'sv-SE', 'ta', 
          'te', 'th', 'tr','trs', 'tsz', 'tt', 'uk', 'ur', 'vi','wo','zam','zh-CN', 'zh-TW','en-CA']
 
 # Clear all previous screenshots locally. Technically not needed in automation.

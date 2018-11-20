@@ -19,6 +19,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
+import org.mozilla.focus.helpers.TestHelper;
 
 import java.util.Collections;
 
@@ -32,15 +33,11 @@ import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition;
-import static android.support.test.espresso.contrib.RecyclerViewActions.scrollToPosition;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.isEnabled;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withResourceName;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.EspressoHelper.assertToolbarMatchesText;
@@ -81,8 +78,11 @@ public class SettingsScreenshots extends ScreenshotTest {
         Screengrab.screenshot("Settings_View_Top");
 
         /* General Settings */
-        onView(withText(R.string.preference_category_general))
-                .perform(click());
+        UiObject generalHeading = TestHelper.mDevice.findObject(new UiSelector()
+                .text("General")
+                .resourceId("android:id/title"));
+        generalHeading.waitForExists(waitingTime);
+        generalHeading.click();
 
         /* Language List (First page only */
         onView(withText(R.string.preference_language))
@@ -99,15 +99,14 @@ public class SettingsScreenshots extends ScreenshotTest {
         CancelBtn.click();
         onView(withText(R.string.preference_language))
                 .check(matches(isDisplayed()));
-        Screengrab.screenshot("General_Submenu");
+
         Espresso.pressBack();
 
         /* Search Engine List */
         onView(withText(R.string.preference_category_search))
                 .perform(click());
         Screengrab.screenshot("Search_Submenu");
-        onView(allOf(withText(R.string.preference_search_engine_label),
-                withResourceName("title")))
+        onView(withText(R.string.preference_search_engine_label))
                 .perform(click());
         onView(withText(R.string.preference_search_installed_search_engines))
                 .check(matches(isDisplayed()));
@@ -147,19 +146,20 @@ public class SettingsScreenshots extends ScreenshotTest {
         device.waitForIdle();
         Espresso.pressBack();
         device.waitForIdle();
+        onView(withText(R.string.preference_search_engine_label))
+                .check(matches(isDisplayed()));
 
         /* Tap autocomplete menu */
-        onView(
-                allOf(withId(R.id.recycler_view),
-                        childAtPosition(
-                                withId(android.R.id.list_container),
-                                0)))
-            .perform(actionOnItemAtPosition(2, click()));
-
-        onView(withText(getString(R.string.preference_autocomplete_subitem_manage_sites)))
+        final String urlAutocompletemenu = getString(R.string.preference_subitem_autocomplete);
+        onView(withText(urlAutocompletemenu))
+                .perform(click());
+        onView(withText(getString(R.string.preference_autocomplete_custom_summary)))
                 .check(matches(isDisplayed()));
         Screengrab.screenshot("Autocomplete_Menu_Item");
 
+        /* Enable Autocomplete, and enter Custom URLs */
+        onView(withText(getString(R.string.preference_autocomplete_custom_summary)))
+                .perform(click());
         /* Add custom URL */
         onView(childAtPosition(withId(R.id.recycler_view), 4)).perform(click());
 
@@ -206,6 +206,8 @@ public class SettingsScreenshots extends ScreenshotTest {
         onView(withText(addCustomURLAction))
                 .check(matches(isDisplayed()));
         Espresso.pressBack();
+        onView(withText(urlAutocompletemenu))
+                .check(matches(isDisplayed()));
         Espresso.pressBack();
         Espresso.pressBack();
 
@@ -221,7 +223,7 @@ public class SettingsScreenshots extends ScreenshotTest {
                 .check(matches(isDisplayed()))
                 .perform(click());
 
-        onView(withId(R.id.infofragment))
+        onView(withText(R.string.menu_about))
                 .check(matches(isDisplayed()));
         Screengrab.screenshot("About_Page");
 
@@ -235,9 +237,8 @@ public class SettingsScreenshots extends ScreenshotTest {
                 .check(matches(isDisplayed()))
                 .perform(click());
 
-        onView(withId(R.id.infofragment))
+        onView(withText(R.string.your_rights))
                 .check(matches(isDisplayed()));
-
         Screengrab.screenshot("YourRights_Page");
         device.pressBack();
         device.pressBack();
@@ -251,24 +252,5 @@ public class SettingsScreenshots extends ScreenshotTest {
             settingsView.scrollToEnd(5);
             Screengrab.screenshot("Privacy_Security_Submenu_bottom");
         }
-
-        // Block Cookies dialog
-        onView(withResourceName("recycler_view"))
-                .perform(scrollToPosition(5));
-        onView(withText(R.string.preference_privacy_category_cookies))
-                .perform(click());
-        CancelBtn.waitForExists(waitingTime);
-        Screengrab.screenshot("Block_cookies_dialog");
-        CancelBtn.click();
-        onView(withText(R.string.preference_privacy_and_security_header))
-                .check(matches(isDisplayed()));
-        device.pressBack();
-
-        // Advanced
-        onView(withText(R.string.preference_category_advanced))
-                .perform(click());
-        onView(withText(R.string.preference_remote_debugging))
-                .check(matches(isDisplayed()));
-        Screengrab.screenshot("Advanced_Page");
     }
 }
