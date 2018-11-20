@@ -10,6 +10,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.permission.PermissionRequest
+import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.support.base.observer.Consumable
 import org.junit.Assert
 import org.junit.Assert.assertEquals
@@ -288,5 +289,17 @@ class EngineObserverTest {
 
         verify(permissionRequest).reject()
         assertTrue(session.contentPermissionRequest.isConsumed())
+    }
+
+    @Test
+    fun engineSessionObserverWithOnPromptRequest() {
+
+        val promptRequest = mock(PromptRequest::class.java)
+        val session = Session("")
+        val observer = EngineObserver(session)
+
+        assertTrue(session.promptRequest.isConsumed())
+        observer.onPromptRequest(promptRequest)
+        assertFalse(session.promptRequest.isConsumed())
     }
 }

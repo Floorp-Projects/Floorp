@@ -18,6 +18,19 @@ permalink: /changelog/
   * Mozilla App Services (FxA: 0.10.0, Sync Logins: 0.10.0, Places: 0.10.0)
   * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
 
+* **feature-prompts**
+  * 🆕 New component: A component that will subscribe to the selected session and will handle all the common prompt dialogs from web content.
+
+  ```kotlin
+  val promptFeature = PromptFeature(sessionManager,fragmentManager)
+
+  //It will start listing for new prompt requests for web content.
+  promptFeature.start()
+
+  //It will stop listing for future prompt requests for web content.
+  promptFeature.stop()
+  ```
+
 # 0.33.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.32.0...v0.33.0),

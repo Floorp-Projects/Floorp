@@ -11,6 +11,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.permission.PermissionRequest
+import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.support.base.observer.Consumable
 
 @Suppress("TooManyFunctions")
@@ -107,5 +108,9 @@ internal class EngineObserver(val session: Session) : EngineSession.Observer {
 
     override fun onAppPermissionRequest(permissionRequest: PermissionRequest) {
         session.appPermissionRequest = Consumable.from(permissionRequest)
+    }
+
+    override fun onPromptRequest(promptRequest: PromptRequest) {
+        session.promptRequest = Consumable.from(promptRequest)
     }
 }

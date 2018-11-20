@@ -116,6 +116,8 @@ _Combined components to implement feature-specific use cases._
 
 * 🔴 [**Toolbar**](components/feature/toolbar/README.md) - A component that connects a (concept) toolbar implementation with the browser session module.
 
+* 🔴 [**Prompts**](components/feature/prompts/README.md) - A component that will handle all the common prompt dialogs from web content.
+
 ## UI
 
 _Generic low-level UI components for building apps._

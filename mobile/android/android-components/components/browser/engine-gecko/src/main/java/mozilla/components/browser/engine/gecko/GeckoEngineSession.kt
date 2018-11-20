@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.engine.gecko
 
+import mozilla.components.browser.engine.gecko.prompt.GeckoPromptDelegate
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import kotlinx.coroutines.CompletableDeferred
@@ -500,6 +501,7 @@ class GeckoEngineSession(
         geckoSession.contentDelegate = createContentDelegate()
         geckoSession.trackingProtectionDelegate = createTrackingProtectionDelegate()
         geckoSession.permissionDelegate = createPermissionDelegate()
+        geckoSession.promptDelegate = GeckoPromptDelegate(this)
     }
 
     companion object {

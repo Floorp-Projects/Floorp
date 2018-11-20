@@ -9,6 +9,7 @@ import android.graphics.Bitmap
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
+import mozilla.components.browser.engine.gecko.prompt.GeckoPromptDelegate
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
@@ -498,6 +499,7 @@ class GeckoEngineSession(
         geckoSession.contentDelegate = createContentDelegate()
         geckoSession.trackingProtectionDelegate = createTrackingProtectionDelegate()
         geckoSession.permissionDelegate = createPermissionDelegate()
+        geckoSession.promptDelegate = GeckoPromptDelegate(this)
     }
 
     companion object {
