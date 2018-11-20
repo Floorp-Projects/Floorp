@@ -25,8 +25,8 @@ private object Versions {
 
     const val jna = "4.5.2"
 
-    const val sentry = "1.7.10"
-    const val okhttp = "3.11.0"
+    const val sentry = "1.7.14"
+    const val okhttp = "3.12.0"
 
     const val mozilla_fxa = "0.10.0"
     const val mozilla_sync_logins = "0.10.0"

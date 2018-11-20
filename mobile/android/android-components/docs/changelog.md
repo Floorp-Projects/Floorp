@@ -15,7 +15,7 @@ permalink: /changelog/
   * Kotlin (Stdlib: 1.3.0, Coroutines: 1.0.1)
   * GeckoView (Nightly: **65.0.20181116100120**, Beta: 64.0.20181022150107, Release: 63.0.20181018182531)
   * Mozilla App Services (FxA: **0.10.0**, Sync Logins: **0.10.0**, Places: **0.10.0**)
-  * Third Party Libs (Sentry: **1.7.10**, Okhttp: **3.11.0**)
+  * Third Party Libs (Sentry: **1.7.14**, Okhttp: **3.12.0**)
 
 * **feature-session**
   * Introducing `CoordinateScrollingFeature` a new feature to coordinate scrolling behavior between an `EngineView` and the view that you specify. For a full example take a look at its usages in [Sample Browser](https://github.com/mozilla-mobile/android-components/tree/master/samples/browser).
