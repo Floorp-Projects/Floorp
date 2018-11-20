@@ -130,22 +130,6 @@ add_task(async function open_10_tabs() {
       min: 10,
       max: 25,
     },
-    "security.insecure_connection_icon.pbmode.enabled": {
-      min: 10,
-      max: 18,
-    },
-    "security.insecure_connection_icon.enabled": {
-      min: 10,
-      max: 18,
-    },
-    "security.insecure_connection_text.enabled": {
-      min: 10,
-      max: 18,
-    },
-    "security.insecure_connection_text.pbmode.enabled": {
-      min: 10,
-      max: 18,
-    },
     "browser.startup.record": {
       max: 20,
     },
@@ -186,22 +170,6 @@ add_task(async function navigate_around() {
     },
     "network.loadinfo.skip_type_assertion": {
       // This is accessed in debug only.
-    },
-    "security.insecure_connection_icon.pbmode.enabled": {
-      min: 20,
-      max: 60,
-    },
-    "security.insecure_connection_icon.enabled": {
-      min: 20,
-      max: 60,
-    },
-    "security.insecure_connection_text.enabled": {
-      min: 20,
-      max: 60,
-    },
-    "security.insecure_connection_text.pbmode.enabled": {
-      min: 20,
-      max: 60,
     },
     "toolkit.cosmeticAnimations.enabled": {
       min: 45,
