@@ -530,6 +530,12 @@ Realm::sweepTemplateObjects()
     if (iterResultTemplate_ && IsAboutToBeFinalized(&iterResultTemplate_)) {
         iterResultTemplate_.set(nullptr);
     }
+
+    if (iterResultWithoutPrototypeTemplate_ &&
+        IsAboutToBeFinalized(&iterResultWithoutPrototypeTemplate_))
+    {
+        iterResultWithoutPrototypeTemplate_.set(nullptr);
+    }
 }
 
 void
