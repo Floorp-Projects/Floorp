@@ -6251,8 +6251,7 @@ provideDataForType:(NSString*)aType
             continue;
           }
 
-          item->SetTransferData(kFilePromiseDirectoryMime, macLocalFile,
-                                sizeof(nsIFile*));
+          item->SetTransferData(kFilePromiseDirectoryMime, macLocalFile);
 
           // Now request the kFilePromiseMime data, which will invoke the data
           // provider. If successful, the file will have been created.

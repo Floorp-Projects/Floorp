@@ -239,7 +239,7 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
       nsCOMPtr<nsISupports> genericDataWrapper;
       nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, clipboardDataPtrNoBOM, dataLength,
                                                  getter_AddRefs(genericDataWrapper));
-      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper, dataLength);
+      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper);
       free(clipboardDataPtr);
       break;
     }
@@ -269,7 +269,7 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
       nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, clipboardDataPtr, dataLength,
                                                  getter_AddRefs(genericDataWrapper));
 
-      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper, dataLength);
+      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper);
       free(clipboardDataPtr);
     }
     else if (flavorStr.EqualsLiteral(kJPEGImageMime) ||
@@ -336,7 +336,7 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
         NS_NewByteInputStream(getter_AddRefs(byteStream), (const char*)[encodedData bytes],
                                    [encodedData length], NS_ASSIGNMENT_COPY);
   
-        aTransferable->SetTransferData(flavorStr.get(), byteStream, sizeof(nsIInputStream*));
+        aTransferable->SetTransferData(flavorStr.get(), byteStream);
       }
 
       if (dest)
@@ -391,7 +391,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhi
         nsCOMPtr<nsISupports> dataSupports;
         rv = mTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(dataSupports));
         if (NS_SUCCEEDED(rv)) {
-          aTransferable->SetTransferData(flavorStr.get(), dataSupports, 0);
+          aTransferable->SetTransferData(flavorStr.get(), dataSupports);
           return NS_OK; // maybe try to fill in more types? Is there a point?
         }
       }

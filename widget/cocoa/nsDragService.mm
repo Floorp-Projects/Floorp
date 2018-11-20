@@ -395,7 +395,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
         nsCOMPtr<nsISupports> dataSupports;
         rv = currentTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(dataSupports));
         if (NS_SUCCEEDED(rv)) {
-          aTransferable->SetTransferData(flavorStr.get(), dataSupports, 0);
+          aTransferable->SetTransferData(flavorStr.get(), dataSupports);
           return NS_OK; // maybe try to fill in more types? Is there a point?
         }
       }
@@ -442,7 +442,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
       if (NS_FAILED(rv))
         continue;
 
-      aTransferable->SetTransferData(flavorStr.get(), file, dataLength);
+      aTransferable->SetTransferData(flavorStr.get(), file);
       
       break;
     }
@@ -469,7 +469,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
       nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, clipboardDataPtr, dataLength,
                                                  getter_AddRefs(genericDataWrapper));
 
-      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper, sizeof(nsIInputStream*));
+      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper);
       free(clipboardDataPtr);
       break;
     }
@@ -535,7 +535,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
       nsCOMPtr<nsISupports> genericDataWrapper;
       nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, clipboardDataPtrNoBOM, dataLength,
                                                  getter_AddRefs(genericDataWrapper));
-      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper, dataLength);
+      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper);
       free(clipboardDataPtr);
       break;
     }
