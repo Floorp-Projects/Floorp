@@ -176,6 +176,12 @@ Release Promotion
 ``release_product``
    The product that is being released.
 
+``required_signoffs``
+   A list of signoffs that are required for this release promotion flavor. If specified, and if the corresponding `signoff_urls` url isn't specified, tasks that require these signoffs will not be scheduled.
+
+``signoff_urls``
+   A dictionary of signoff keys to url values. These are the urls marking the corresponding ``required_signoffs`` as signed off.
+
 Comm Push Information
 ---------------------
 
