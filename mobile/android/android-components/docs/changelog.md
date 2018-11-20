@@ -20,6 +20,9 @@ permalink: /changelog/
 * **feature-session**
   * Introducing `CoordinateScrollingFeature` a new feature to coordinate scrolling behavior between an `EngineView` and the view that you specify. For a full example take a look at its usages in [Sample Browser](https://github.com/mozilla-mobile/android-components/tree/master/samples/browser).
 
+* **engine-gecko,engine-gecko-beta and engine-gecko-nightly**
+  * Fixing bug #1333. This issue didn't allow to use a `GeckoEngineSession` after sending a crash report.
+
 # 0.32.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.31.0...v0.32.0),
