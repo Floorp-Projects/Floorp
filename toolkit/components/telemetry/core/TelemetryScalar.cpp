@@ -331,16 +331,6 @@ ScalarInfo::expiration() const
 class ScalarBase
 {
 public:
-  explicit ScalarBase(const BaseScalarInfo& aInfo)
-    : mStoreCount(aInfo.storeCount())
-    , mStoreOffset(aInfo.storeOffset())
-    , mStoreHasValue(mStoreCount)
-  {
-    mStoreHasValue.SetLength(mStoreCount);
-    for (auto& val: mStoreHasValue) {
-      val = false;
-    }
-  };
   virtual ~ScalarBase() = default;
 
   // Set, Add and SetMaximum functions as described in the Telemetry IDL.
@@ -356,24 +346,13 @@ public:
   virtual void SetMaximum(uint32_t aValue) { mozilla::Unused << HandleUnsupported(); }
 
   // GetValue is used to get the value of the scalar when persisting it to JS.
-  virtual nsresult GetValue(const nsACString& aStoreName, bool aClearStore, nsCOMPtr<nsIVariant>& aResult) = 0;
+  virtual nsresult GetValue(nsCOMPtr<nsIVariant>& aResult) const = 0;
 
   // To measure the memory stats.
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
-
-protected:
-  bool HasValueInStore(size_t aStoreIndex) const;
-  void ClearValueInStore(size_t aStoreIndex);
-  void SetValueInStores();
-  nsresult StoreIndex(const nsACString& aStoreName, size_t* aStoreIndex) const;
 
 private:
   ScalarResult HandleUnsupported() const;
-
-  const uint32_t mStoreCount;
-  const uint16_t mStoreOffset;
-  nsTArray<bool> mStoreHasValue;
 };
 
 ScalarResult
@@ -381,59 +360,6 @@ ScalarBase::HandleUnsupported() const
 {
   MOZ_ASSERT(false, "This operation is not support for this scalar type.");
   return ScalarResult::OperationNotSupported;
-}
-
-bool
-ScalarBase::HasValueInStore(size_t aStoreIndex) const
-{
-  MOZ_ASSERT(aStoreIndex < mStoreHasValue.Length(),
-             "Invalid scalar store index.");
-  return mStoreHasValue[aStoreIndex];
-}
-
-void
-ScalarBase::ClearValueInStore(size_t aStoreIndex)
-{
-  MOZ_ASSERT(aStoreIndex < mStoreHasValue.Length(),
-             "Invalid scalar store index to clear.");
-  mStoreHasValue[aStoreIndex] = false;
-}
-
-void
-ScalarBase::SetValueInStores()
-{
-  for (auto& val: mStoreHasValue) {
-    val = true;
-  }
-}
-
-nsresult
-ScalarBase::StoreIndex(const nsACString& aStoreName, size_t* aStoreIndex) const
-{
-  if (mStoreCount == 1 && mStoreOffset == UINT16_MAX) {
-    // This Scalar is only in the "main" store.
-    if (aStoreName.EqualsLiteral("main")) {
-      *aStoreIndex = 0;
-      return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
-  }
-
-  // Multiple stores. Linear scan to find one that matches aStoreName.
-  for (uint32_t i = 0; i < mStoreCount; ++i) {
-    uint32_t stringIndex = gScalarStoresTable[mStoreOffset + i];
-    if (aStoreName.EqualsASCII(&gScalarsStringTable[stringIndex])) {
-      *aStoreIndex = i;
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE;
-}
-
-size_t
-ScalarBase::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-{
-  return mStoreHasValue.ShallowSizeOfExcludingThis(aMallocSizeOf);
 }
 
 /**
@@ -444,16 +370,7 @@ class ScalarUnsigned : public ScalarBase
 public:
   using ScalarBase::SetValue;
 
-  explicit ScalarUnsigned(const BaseScalarInfo& aInfo)
-    : ScalarBase(aInfo)
-    , mStorage(aInfo.storeCount())
-  {
-    mStorage.SetLength(aInfo.storeCount());
-    for (auto& val: mStorage) {
-      val = 0;
-    }
-  };
-
+  ScalarUnsigned() : mStorage(0) {};
   ~ScalarUnsigned() override = default;
 
   ScalarResult SetValue(nsIVariant* aValue) final;
@@ -462,11 +379,11 @@ public:
   void AddValue(uint32_t aValue) final;
   ScalarResult SetMaximum(nsIVariant* aValue) final;
   void SetMaximum(uint32_t aValue) final;
-  nsresult GetValue(const nsACString& aStoreName, bool aClearStore, nsCOMPtr<nsIVariant>& aResult) final;
+  nsresult GetValue(nsCOMPtr<nsIVariant>& aResult) const final;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
 private:
-  nsTArray<uint32_t> mStorage;
+  uint32_t mStorage;
 
   ScalarResult CheckInput(nsIVariant* aValue);
 
@@ -483,22 +400,16 @@ ScalarUnsigned::SetValue(nsIVariant* aValue)
     return sr;
   }
 
-  uint32_t value = 0;
-  if (NS_FAILED(aValue->GetAsUint32(&value))) {
+  if (NS_FAILED(aValue->GetAsUint32(&mStorage))) {
     return ScalarResult::InvalidValue;
   }
-
-  SetValue(value);
   return sr;
 }
 
 void
 ScalarUnsigned::SetValue(uint32_t aValue)
 {
-  for (auto& val: mStorage) {
-    val = aValue;
-  }
-  SetValueInStores();
+  mStorage = aValue;
 }
 
 ScalarResult
@@ -514,18 +425,14 @@ ScalarUnsigned::AddValue(nsIVariant* aValue)
   if (NS_FAILED(rv)) {
     return ScalarResult::InvalidValue;
   }
-
-  AddValue(newAddend);
+  mStorage += newAddend;
   return sr;
 }
 
 void
 ScalarUnsigned::AddValue(uint32_t aValue)
 {
-  for (auto& val: mStorage) {
-    val += aValue;
-  }
-  SetValueInStores();
+  mStorage += aValue;
 }
 
 ScalarResult
@@ -541,53 +448,36 @@ ScalarUnsigned::SetMaximum(nsIVariant* aValue)
   if (NS_FAILED(rv)) {
     return ScalarResult::InvalidValue;
   }
-
-  SetMaximum(newValue);
+  if (newValue > mStorage) {
+    mStorage = newValue;
+  }
   return sr;
 }
 
 void
 ScalarUnsigned::SetMaximum(uint32_t aValue)
 {
-  for (auto& val: mStorage) {
-    if (aValue > val) {
-      val = aValue;
-    }
+  if (aValue > mStorage) {
+    mStorage = aValue;
   }
-  SetValueInStores();
 }
 
 nsresult
-ScalarUnsigned::GetValue(const nsACString& aStoreName, bool aClearStore, nsCOMPtr<nsIVariant>& aResult)
+ScalarUnsigned::GetValue(nsCOMPtr<nsIVariant>& aResult) const
 {
-  size_t storeIndex = 0;
-  nsresult rv = StoreIndex(aStoreName, &storeIndex);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!HasValueInStore(storeIndex)) {
-    return NS_ERROR_NO_CONTENT;
-  }
   nsCOMPtr<nsIWritableVariant> outVar(new nsVariant());
-  rv = outVar->SetAsUint32(mStorage[storeIndex]);
+  nsresult rv = outVar->SetAsUint32(mStorage);
   if (NS_FAILED(rv)) {
     return rv;
   }
   aResult = outVar.forget();
-  if (aClearStore) {
-    mStorage[storeIndex] = 0;
-    ClearValueInStore(storeIndex);
-  }
   return NS_OK;
 }
 
 size_t
 ScalarUnsigned::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  size_t n = aMallocSizeOf(this);
-  n += ScalarBase::SizeOfExcludingThis(aMallocSizeOf);
-  n += mStorage.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  return n;
+  return aMallocSizeOf(this);
 }
 
 ScalarResult
@@ -619,22 +509,16 @@ class ScalarString : public ScalarBase
 public:
   using ScalarBase::SetValue;
 
-  explicit ScalarString(const BaseScalarInfo& aInfo)
-    : ScalarBase(aInfo)
-    , mStorage(aInfo.storeCount())
-  {
-    mStorage.SetLength(aInfo.storeCount());
-  };
-
+  ScalarString() : mStorage(EmptyString()) {};
   ~ScalarString() override = default;
 
   ScalarResult SetValue(nsIVariant* aValue) final;
   ScalarResult SetValue(const nsAString& aValue) final;
-  nsresult GetValue(const nsACString& aStoreName, bool aClearStore, nsCOMPtr<nsIVariant>& aResult) final;
+  nsresult GetValue(nsCOMPtr<nsIVariant>& aResult) const final;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
 private:
-  nsTArray<nsString> mStorage;
+  nsString mStorage;
 
   // Prevent copying.
   ScalarString(const ScalarString& aOther) = delete;
@@ -669,11 +553,7 @@ ScalarString::SetValue(nsIVariant* aValue)
 ScalarResult
 ScalarString::SetValue(const nsAString& aValue)
 {
-  auto str = Substring(aValue, 0, kMaximumStringValueLength);
-  for (auto& val: mStorage) {
-    val.Assign(str);
-  }
-  SetValueInStores();
+  mStorage = Substring(aValue, 0, kMaximumStringValueLength);
   if (aValue.Length() > kMaximumStringValueLength) {
     return ScalarResult::StringTooLong;
   }
@@ -681,23 +561,12 @@ ScalarString::SetValue(const nsAString& aValue)
 }
 
 nsresult
-ScalarString::GetValue(const nsACString& aStoreName, bool aClearStore, nsCOMPtr<nsIVariant>& aResult)
+ScalarString::GetValue(nsCOMPtr<nsIVariant>& aResult) const
 {
   nsCOMPtr<nsIWritableVariant> outVar(new nsVariant());
-  size_t storeIndex = 0;
-  nsresult rv = StoreIndex(aStoreName, &storeIndex);
+  nsresult rv = outVar->SetAsAString(mStorage);
   if (NS_FAILED(rv)) {
     return rv;
-  }
-  if (!HasValueInStore(storeIndex)) {
-    return NS_ERROR_NO_CONTENT;
-  }
-  rv = outVar->SetAsAString(mStorage[storeIndex]);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (aClearStore) {
-    ClearValueInStore(storeIndex);
   }
   aResult = outVar.forget();
   return NS_OK;
@@ -707,11 +576,7 @@ size_t
 ScalarString::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
-  n += ScalarBase::SizeOfExcludingThis(aMallocSizeOf);
-  n += mStorage.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (auto& val: mStorage) {
-    n += val.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-  }
+  n+= mStorage.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   return n;
 }
 
@@ -723,16 +588,12 @@ class ScalarBoolean : public ScalarBase
 public:
   using ScalarBase::SetValue;
 
-  ScalarBoolean(const BaseScalarInfo& aInfo)
-    : ScalarBase(aInfo)
-    , mStorage(false)
-  {};
-
+  ScalarBoolean() : mStorage(false) {};
   ~ScalarBoolean() override = default;
 
   ScalarResult SetValue(nsIVariant* aValue) final;
   void SetValue(bool aValue) final;
-  nsresult GetValue(const nsACString& aStoreName, bool aClearStore, nsCOMPtr<nsIVariant>& aResult) final;
+  nsresult GetValue(nsCOMPtr<nsIVariant>& aResult) const final;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
 private:
@@ -773,7 +634,7 @@ ScalarBoolean::SetValue(bool aValue)
 }
 
 nsresult
-ScalarBoolean::GetValue(const nsACString& aStoreName, bool aClearStore, nsCOMPtr<nsIVariant>& aResult)
+ScalarBoolean::GetValue(nsCOMPtr<nsIVariant>& aResult) const
 {
   nsCOMPtr<nsIWritableVariant> outVar(new nsVariant());
   nsresult rv = outVar->SetAsBool(mStorage);
@@ -798,18 +659,18 @@ ScalarBoolean::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
  *         scalar type.
  */
 ScalarBase*
-internal_ScalarAllocate(const BaseScalarInfo& aInfo)
+internal_ScalarAllocate(uint32_t aScalarKind)
 {
   ScalarBase* scalar = nullptr;
-  switch (aInfo.kind) {
+  switch (aScalarKind) {
   case nsITelemetry::SCALAR_TYPE_COUNT:
-    scalar = new ScalarUnsigned(aInfo);
+    scalar = new ScalarUnsigned();
     break;
   case nsITelemetry::SCALAR_TYPE_STRING:
-    scalar = new ScalarString(aInfo);
+    scalar = new ScalarString();
     break;
   case nsITelemetry::SCALAR_TYPE_BOOLEAN:
-    scalar = new ScalarBoolean(aInfo);
+    scalar = new ScalarBoolean();
     break;
   default:
     MOZ_ASSERT(false, "Invalid scalar type");
@@ -845,7 +706,7 @@ public:
 
   // GetValue is used to get the key-value pairs stored in the keyed scalar
   // when persisting it to JS.
-  nsresult GetValue(const nsACString& aStoreName, bool aClearStorage, nsTArray<KeyValuePair>& aValues);
+  nsresult GetValue(nsTArray<KeyValuePair>& aValues) const;
 
   // To measure the memory stats.
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
@@ -978,18 +839,15 @@ KeyedScalar::SetMaximum(const StaticMutexAutoLock& locker, const nsAString& aKey
  *         ScalarUnsigned).
  */
 nsresult
-KeyedScalar::GetValue(const nsACString& aStoreName, bool aClearStorage, nsTArray<KeyValuePair>& aValues)
+KeyedScalar::GetValue(nsTArray<KeyValuePair>& aValues) const
 {
   for (auto iter = mScalarKeys.ConstIter(); !iter.Done(); iter.Next()) {
     ScalarBase* scalar = static_cast<ScalarBase*>(iter.Data());
 
     // Get the scalar value.
     nsCOMPtr<nsIVariant> scalarValue;
-    nsresult rv = scalar->GetValue(aStoreName, aClearStorage, scalarValue);
-    if (rv == NS_ERROR_NO_CONTENT) {
-      // No value for this store.
-      continue;
-    } else if (NS_FAILED(rv)) {
+    nsresult rv = scalar->GetValue(scalarValue);
+    if (NS_FAILED(rv)) {
       return rv;
     }
 
@@ -1052,7 +910,7 @@ KeyedScalar::GetScalarForKey(const StaticMutexAutoLock& locker, const nsAString&
     return ScalarResult::TooManyKeys;
   }
 
-  scalar = internal_ScalarAllocate(mScalarInfo);
+  scalar = internal_ScalarAllocate(mScalarInfo.kind);
   if (!scalar) {
     return ScalarResult::InvalidType;
   }
@@ -1440,7 +1298,7 @@ internal_GetScalarByEnum(const StaticMutexAutoLock& lock,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  scalar = internal_ScalarAllocate(info);
+  scalar = internal_ScalarAllocate(info.kind);
   if (!scalar) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -1933,9 +1791,7 @@ internal_ScalarSnapshotter(const StaticMutexAutoLock& aLock,
                            ScalarSnapshotTable& aScalarsToReflect,
                            unsigned int aDataset,
                            ProcessesScalarsMapType& aProcessStorage,
-                           bool aIsBuiltinDynamic,
-                           bool aClearScalars,
-                           const nsACString& aStoreName)
+                           bool aIsBuiltinDynamic)
 {
   // Iterate the scalars in aProcessStorage. The storage may contain empty or yet to be
   // initialized scalars from all the supported processes.
@@ -1959,11 +1815,8 @@ internal_ScalarSnapshotter(const StaticMutexAutoLock& aLock,
       if (IsInDataset(info.dataset, aDataset)) {
         // Get the scalar value.
         nsCOMPtr<nsIVariant> scalarValue;
-        nsresult rv = scalar->GetValue(aStoreName, aClearScalars, scalarValue);
-        if (rv == NS_ERROR_NO_CONTENT) {
-          // No value for this store. Proceed.
-          continue;
-        } else if (NS_FAILED(rv)) {
+        nsresult rv = scalar->GetValue(scalarValue);
+        if (NS_FAILED(rv)) {
           return rv;
         }
         // Append it to our list.
@@ -1988,9 +1841,7 @@ internal_KeyedScalarSnapshotter(const StaticMutexAutoLock& aLock,
                                 KeyedScalarSnapshotTable& aScalarsToReflect,
                                 unsigned int aDataset,
                                 ProcessesKeyedScalarsMapType& aProcessStorage,
-                                bool aIsBuiltinDynamic,
-                                bool aClearScalars,
-                                const nsACString& aStoreName)
+                                bool aIsBuiltinDynamic)
 {
   // Iterate the scalars in aProcessStorage. The storage may contain empty or yet
   // to be initialized scalars from all the supported processes.
@@ -2014,7 +1865,7 @@ internal_KeyedScalarSnapshotter(const StaticMutexAutoLock& aLock,
       if (IsInDataset(info.dataset, aDataset)) {
         // Get the keys for this scalar.
         nsTArray<KeyedScalar::KeyValuePair> scalarKeyedData;
-        nsresult rv = scalar->GetValue(aStoreName, aClearScalars, scalarKeyedData);
+        nsresult rv = scalar->GetValue(scalarKeyedData);
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -2034,23 +1885,19 @@ internal_KeyedScalarSnapshotter(const StaticMutexAutoLock& aLock,
  * @param {aScalarsToReflect} The table that will contain the snapshot.
  * @param {aDataset} The dataset we're asking the snapshot for.
  * @param {aClearScalars} Whether or not to clear the scalar storage.
- * @param {aStoreName} The name of the store to snapshot.
  * @return NS_OK or the error code describing the failure reason.
  */
 nsresult
 internal_GetScalarSnapshot(const StaticMutexAutoLock& aLock,
                            ScalarSnapshotTable& aScalarsToReflect,
-                           unsigned int aDataset, bool aClearScalars,
-                           const nsACString& aStoreName)
+                           unsigned int aDataset, bool aClearScalars)
 {
   // Take a snapshot of the scalars.
   nsresult rv = internal_ScalarSnapshotter(aLock,
                                            aScalarsToReflect,
                                            aDataset,
                                            gScalarStorageMap,
-                                           false, /*aIsBuiltinDynamic*/
-                                           aClearScalars,
-                                           aStoreName);
+                                           false /*aIsBuiltinDynamic*/);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2060,9 +1907,7 @@ internal_GetScalarSnapshot(const StaticMutexAutoLock& aLock,
                                   aScalarsToReflect,
                                   aDataset,
                                   gDynamicBuiltinScalarStorageMap,
-                                  true, /*aIsBuiltinDynamic*/
-                                  aClearScalars,
-                                  aStoreName);
+                                  true /*aIsBuiltinDynamic*/);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2083,23 +1928,19 @@ internal_GetScalarSnapshot(const StaticMutexAutoLock& aLock,
  * @param {aScalarsToReflect} The table that will contain the snapshot.
  * @param {aDataset} The dataset we're asking the snapshot for.
  * @param {aClearScalars} Whether or not to clear the scalar storage.
- * @param {aStoreName} The name of the store to snapshot.
  * @return NS_OK or the error code describing the failure reason.
  */
 nsresult
 internal_GetKeyedScalarSnapshot(const StaticMutexAutoLock& aLock,
                                 KeyedScalarSnapshotTable& aScalarsToReflect,
-                                unsigned int aDataset, bool aClearScalars,
-                                const nsACString& aStoreName)
+                                unsigned int aDataset, bool aClearScalars)
 {
   // Take a snapshot of the scalars.
   nsresult rv = internal_KeyedScalarSnapshotter(aLock,
                                                 aScalarsToReflect,
                                                 aDataset,
                                                 gKeyedScalarStorageMap,
-                                                false, /*aIsBuiltinDynamic*/
-                                                aClearScalars,
-                                                aStoreName);
+                                                false /*aIsBuiltinDynamic*/);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2109,9 +1950,7 @@ internal_GetKeyedScalarSnapshot(const StaticMutexAutoLock& aLock,
                                        aScalarsToReflect,
                                        aDataset,
                                        gDynamicBuiltinKeyedScalarStorageMap,
-                                       true, /*aIsBuiltinDynamic*/
-                                       aClearScalars,
-                                       aStoreName);
+                                       true /*aIsBuiltinDynamic*/);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -3128,10 +2967,17 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& a
   scalar->SetMaximum(locker, aKey, aValue);
 }
 
+/**
+ * Serializes the scalars from the given dataset to a json-style object and resets them.
+ * The returned structure looks like:
+ *    {"process": {"category1.probe":1,"category1.other_probe":false,...}, ... }.
+ *
+ * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
+ * @param aClear Whether to clear out the scalars after snapshotting.
+ */
 nsresult
 TelemetryScalar::CreateSnapshots(unsigned int aDataset, bool aClearScalars, JSContext* aCx,
-                                 uint8_t optional_argc, JS::MutableHandle<JS::Value> aResult,
-                                 bool aFilterTest, const nsACString& aStoreName)
+                                 uint8_t optional_argc, JS::MutableHandle<JS::Value> aResult, bool aFilterTest)
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Snapshotting scalars should only happen in the parent processes.");
@@ -3157,8 +3003,7 @@ TelemetryScalar::CreateSnapshots(unsigned int aDataset, bool aClearScalars, JSCo
     StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
     nsresult rv =
-      internal_GetScalarSnapshot(locker, scalarsToReflect, aDataset,
-                                 aClearScalars, aStoreName);
+      internal_GetScalarSnapshot(locker, scalarsToReflect, aDataset, aClearScalars);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -3203,10 +3048,18 @@ TelemetryScalar::CreateSnapshots(unsigned int aDataset, bool aClearScalars, JSCo
   return NS_OK;
 }
 
+/**
+ * Serializes the scalars from the given dataset to a json-style object and resets them.
+ * The returned structure looks like:
+ *   { "process": { "category1.probe": { "key_1": 2, "key_2": 1, ... }, ... }, ... }
+ *
+ * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
+ * @param aClear Whether to clear out the keyed scalars after snapshotting.
+ */
 nsresult
 TelemetryScalar::CreateKeyedSnapshots(unsigned int aDataset, bool aClearScalars, JSContext* aCx,
                                       uint8_t optional_argc, JS::MutableHandle<JS::Value> aResult,
-                                      bool aFilterTest, const nsACString& aStoreName)
+                                      bool aFilterTest)
 {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Snapshotting scalars should only happen in the parent processes.");
@@ -3232,8 +3085,7 @@ TelemetryScalar::CreateKeyedSnapshots(unsigned int aDataset, bool aClearScalars,
     StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
     nsresult rv =
-      internal_GetKeyedScalarSnapshot(locker, scalarsToReflect, aDataset,
-                                      aClearScalars, aStoreName);
+      internal_GetKeyedScalarSnapshot(locker, scalarsToReflect, aDataset, aClearScalars);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -3689,8 +3541,7 @@ TelemetryScalar::SerializeScalars(mozilla::JSONWriter& aWriter)
     nsresult rv = internal_GetScalarSnapshot(locker,
                                              scalarsToReflect,
                                              nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN,
-                                             false, /*aClearScalars*/
-                                             NS_LITERAL_CSTRING("main"));
+                                             false /*aClearScalars*/);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -3741,8 +3592,7 @@ TelemetryScalar::SerializeKeyedScalars(mozilla::JSONWriter& aWriter)
     nsresult rv = internal_GetKeyedScalarSnapshot(locker,
                                          keyedScalarsToReflect,
                                          nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN,
-                                         false, /*aClearScalars*/
-                                         NS_LITERAL_CSTRING("main"));
+                                         false /*aClearScalars*/);
     if (NS_FAILED(rv)) {
       return rv;
     }
