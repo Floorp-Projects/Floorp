@@ -114,6 +114,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             }
 
             override fun onSessionRemoved(session: Session) {
+                previousSessionCount = components.sessionManager.sessions.count()
                 if (!isCustomTabMode && components.sessionManager.sessions.isEmpty()) {
                     showUrlInputScreen()
 
