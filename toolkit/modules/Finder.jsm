@@ -611,8 +611,7 @@ function GetClipboardSearchString(aLoadContext) {
     Clipboard.getData(trans, Ci.nsIClipboard.kFindClipboard);
 
     let data = {};
-    let dataLen = {};
-    trans.getTransferData("text/unicode", data, dataLen);
+    trans.getTransferData("text/unicode", data);
     if (data.value) {
       data = data.value.QueryInterface(Ci.nsISupportsString);
       searchString = data.toString();

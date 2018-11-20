@@ -7994,8 +7994,7 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
       }
 
       nsCOMPtr<nsISupports> data;
-      uint32_t dataLen = 0;
-      aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(data), &dataLen);
+      aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(data));
 
       nsCOMPtr<nsISupportsString> text = do_QueryInterface(data);
       nsCOMPtr<nsISupportsCString> ctext = do_QueryInterface(data);

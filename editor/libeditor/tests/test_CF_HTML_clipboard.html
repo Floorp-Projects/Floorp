@@ -55,7 +55,7 @@ function copyCF_HTML(cfhtml, success, failure) {
     cb.getData(trans, cb.kGlobalClipboard);
     var data = SpecialPowers.createBlankObject();
     try {
-      trans.getTransferData(CF_HTML, data, {});
+      trans.getTransferData(CF_HTML, data);
       data = SpecialPowers.wrap(data).value.QueryInterface(Ci.nsISupportsCString).data;
     } catch (e) {
       setTimeout(function() { copyCF_HTML_worker(successFn, failureFn); }, 100);
