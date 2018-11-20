@@ -265,6 +265,9 @@ include margin-collapsing/reftest.list
 # marquee/
 include marquee/reftest.list
 
+# meta viewport
+include meta-viewport/reftest.list
+
 # native-theme/
 # (no XUL theme on Android)
 skip-if(Android) include native-theme/reftest.list
