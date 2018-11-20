@@ -91,6 +91,50 @@ addMessageListener("Test:SynthesizeMouse", (message) => {
   sendAsyncMessage("Test:SynthesizeMouseDone", { defaultPrevented: result });
 });
 
+addMessageListener("Test:SynthesizeTouch", (message) => {
+  let data = message.data;
+  let target = data.target;
+  if (typeof target == "string") {
+    target = content.document.querySelector(target);
+  }
+  else if (Array.isArray(target)) {
+    let elem = {contentDocument: content.document};
+    for (let sel of target) {
+      elem = elem.contentDocument.querySelector(sel);
+    }
+    target = elem;
+  }
+  else if (typeof data.targetFn == "string") {
+    let runnablestr = `
+      (() => {
+        return (${data.targetFn});
+      })();`
+    target = eval(runnablestr)();
+  }
+  else {
+    target = message.objects.object;
+  }
+
+  if (target) {
+    if (target.ownerDocument !== content.document) {
+      // Account for nodes found in iframes.
+      let cur = target;
+      do {
+        cur = cur.ownerGlobal.frameElement;
+      } while (cur && cur.ownerDocument !== content.document);
+
+      // node must be in this document tree.
+      if (!cur) {
+        sendAsyncMessage("Test:SynthesizeTouchDone",
+                         { error: "target must be in the main document tree"});
+        return;
+      }
+    }
+  }
+  let result = EventUtils.synthesizeTouch(target, data.x, data.y, data.event, content)
+  sendAsyncMessage("Test:SynthesizeTouchDone", { defaultPrevented: result });
+});
+
 addMessageListener("Test:SendChar", message => {
   let result = EventUtils.sendChar(message.data.char, content);
   sendAsyncMessage("Test:SendCharDone", { result, seq: message.data.seq });
