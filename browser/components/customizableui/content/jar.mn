@@ -4,5 +4,3 @@
 
 browser.jar:
   content/browser/customizableui/panelUI.js
-  content/browser/customizableui/toolbar.xml
-
