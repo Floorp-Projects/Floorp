@@ -94,6 +94,8 @@ IsJSXraySupported(JSProtoKey key)
       case JSProto_SharedArrayBuffer:
       case JSProto_Map:
       case JSProto_Set:
+      case JSProto_WeakMap:
+      case JSProto_WeakSet:
         return true;
       default:
         return false;

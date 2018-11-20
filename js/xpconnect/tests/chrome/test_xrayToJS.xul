@@ -46,7 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   // In the former case, the constructor is invoked without any args; in the
   // latter case, it is invoked with `args` as the arguments list.
   simpleConstructors = ['Object', 'Function', 'Array', 'Boolean', 'Date', 'Number',
-                        'String', 'RegExp', 'ArrayBuffer', 'WeakMap', 'Map', 'Set',
+                        'String', 'RegExp', 'ArrayBuffer', 'WeakMap', 'WeakSet', 'Map', 'Set',
                         {name: 'Promise', args: [function(){}]}].concat(typedArrayClasses)
                                                                 .concat(errorObjectClasses);
 
@@ -151,6 +151,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     testMap();
 
     testSet();
+
+    testWeakMap();
+
+    testWeakSet();
 
     testProxy();
 
@@ -270,6 +274,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   gConstructorProperties['Set'] =
     constructorProps([Symbol.species]);
 
+  gPrototypeProperties['WeakMap'] =
+    ["constructor", Symbol.toStringTag, "get", "has", "set", "delete"];
+  gConstructorProperties['WeakMap'] =
+    constructorProps([]);
+
+  gPrototypeProperties['WeakSet'] =
+    ["constructor", Symbol.toStringTag, "has", "add", "delete"];
+  gConstructorProperties['WeakSet'] =
+    constructorProps([]);
+
   gPrototypeProperties['DataView'] =
     ["constructor", "buffer", "byteLength", "byteOffset", Symbol.toStringTag,
      "getInt8", "getUint8", "getInt16", "getUint16",
@@ -317,8 +331,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
         } while (!desc);
         return desc.get || desc.value;
       };
-      ok(xrayProto.hasOwnProperty(name), "proto should have the property as own");
-      ok(!xray.hasOwnProperty(name), "instance should not have the property as own");
+      ok(xrayProto.hasOwnProperty(name), `proto should have the property '${name}' as own`);
+      ok(!xray.hasOwnProperty(name), `instance should not have the property '${name}' as own`);
       let method = lookupCallable(xrayProto);
       is(typeof method, 'function', "Methods from Xrays are functions");
       is(global(method), window, "Methods from Xrays are local");
@@ -565,7 +579,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
                    get getterSetterProp() { return 3; },
                    set getterSetterProp(x) { },
                    callableProp: function() { },
-                   nonXrayableProp: new WeakMap()
+                   nonXrayableProp: new Map()[Symbol.iterator]()
                    ${symbolProps}
                  });
                  Object.defineProperty(o, "nonConfigurableGetterSetterProp",
@@ -605,7 +619,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
                  Object.defineProperty(trickyArray, 'getterSetterProp', { get: function() { return 3; }, set: function(x) {}, configurable: true});
                  Object.defineProperty(trickyArray, 'nonConfigurableGetterSetterProp', { get: function() { return 5; }, set: function(x) {}});
                  trickyArray.callableProp = function() {};
-                 trickyArray.nonXrayableProp = new WeakMap();
+                 trickyArray.nonXrayableProp = new Map()[Symbol.iterator]();
                  ${symbolProps}
                  trickyArray;`);
 
@@ -983,6 +997,51 @@ for (var prop of props) {
 
     t.clear();
     is(t.size, 0, "Set is empty after calling clear");
+  }
+
+  function testWeakMap() {
+    testXray('WeakMap', new iwin.WeakMap(), new iwin.WeakMap());
+
+    var key1 = iwin.eval(`var key1 = {}; key1`);
+    var key2 = iwin.eval(`var key2 = []; key2`);
+    var key3 = iwin.eval(`var key3 = /a/; key3`);
+    var key4 = {};
+    var key5 = [];
+    var t = iwin.eval(`new WeakMap([[key1, "a"], [key2, "b"]])`);
+    is(t.get(key1), "a", "key1 has the correct value");
+    is(t.get(key2), "b", "key2 has the correct value");
+    is(t.has(key1), true, "Has key1");
+    is(t.has(key3), false, "Doesn't have key3");
+    is(t.has(key5), false, "Doesn't have key5");
+    is(t.set(key4, 5).get(key4), 5, "Correctly sets key");
+    is(t.get(key1), "a", "key1 has the correct value after modification");
+    is(t.get(key2), "b", "key2 has the correct value after modification");
+    is(t.delete(key1), true, "key1 can be deleted");
+    is(t.delete(key2), true, "key2 can be deleted");
+    is(t.delete(key3), false, "key3 cannot be deleted");
+    is(t.delete(key4), true, "key4 can be deleted");
+    is(t.delete(key5), false, "key5 cannot be deleted");
+  }
+
+  function testWeakSet() {
+    testXray('WeakSet', new iwin.WeakSet(), new iwin.WeakSet());
+
+    var key1 = iwin.eval(`var key1 = {}; key1`);
+    var key2 = iwin.eval(`var key2 = []; key2`);
+    var key3 = iwin.eval(`var key3 = /a/; key3`);
+    var key4 = {};
+    var key5 = [];
+    var t = iwin.eval(`new WeakSet([key1, key2])`);
+    is(t.has(key1), true, "Has key1");
+    is(t.has(key2), true, "Has key2");
+    is(t.has(key3), false, "Doesn't have key3");
+    is(t.has(key5), false, "Doesn't have key5");
+    is(t.add(key4, 5).has(key4), true, "Can add value to set");
+    is(t.delete(key1), true, "key1 can be deleted");
+    is(t.delete(key2), true, "key2 can be deleted");
+    is(t.delete(key3), false, "key3 cannot be deleted");
+    is(t.delete(key4), true, "key4 can be deleted");
+    is(t.delete(key5), false, "key5 cannot be deleted");
   }
 
   function testProxy() {
