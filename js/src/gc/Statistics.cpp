@@ -809,6 +809,10 @@ Statistics::Statistics(JSRuntime* rt)
         count = 0;
     }
 
+    for (auto& stat : stats) {
+        stat = 0;
+    }
+
 #ifdef DEBUG
     for (const auto& duration : totalTimes_) {
 #if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_UNIX) && !defined(__clang__))
