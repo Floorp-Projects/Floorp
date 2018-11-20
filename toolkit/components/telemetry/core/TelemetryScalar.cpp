@@ -723,10 +723,15 @@ class ScalarBoolean : public ScalarBase
 public:
   using ScalarBase::SetValue;
 
-  ScalarBoolean(const BaseScalarInfo& aInfo)
+  explicit ScalarBoolean(const BaseScalarInfo& aInfo)
     : ScalarBase(aInfo)
-    , mStorage(false)
-  {};
+    , mStorage(aInfo.storeCount())
+  {
+    mStorage.SetLength(aInfo.storeCount());
+    for (auto& val: mStorage) {
+      val = false;
+    }
+  };
 
   ~ScalarBoolean() override = default;
 
@@ -736,7 +741,7 @@ public:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
 private:
-  bool mStorage;
+  nsTArray<bool> mStorage;
 
   // Prevent copying.
   ScalarBoolean(const ScalarBoolean& aOther) = delete;
@@ -760,23 +765,39 @@ ScalarBoolean::SetValue(nsIVariant* aValue)
     return ScalarResult::InvalidType;
   }
 
-  if (NS_FAILED(aValue->GetAsBool(&mStorage))) {
+  bool value = false;
+  if (NS_FAILED(aValue->GetAsBool(&value))) {
     return ScalarResult::InvalidValue;
   }
+  SetValue(value);
   return ScalarResult::Ok;
 };
 
 void
 ScalarBoolean::SetValue(bool aValue)
 {
-  mStorage = aValue;
+  for (auto& val: mStorage) {
+    val = aValue;
+  }
+  SetValueInStores();
 }
 
 nsresult
 ScalarBoolean::GetValue(const nsACString& aStoreName, bool aClearStore, nsCOMPtr<nsIVariant>& aResult)
 {
   nsCOMPtr<nsIWritableVariant> outVar(new nsVariant());
-  nsresult rv = outVar->SetAsBool(mStorage);
+  size_t storeIndex = 0;
+  nsresult rv = StoreIndex(aStoreName, &storeIndex);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (!HasValueInStore(storeIndex)) {
+    return NS_ERROR_NO_CONTENT;
+  }
+  if (aClearStore) {
+    ClearValueInStore(storeIndex);
+  }
+  rv = outVar->SetAsBool(mStorage[storeIndex]);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -787,7 +808,10 @@ ScalarBoolean::GetValue(const nsACString& aStoreName, bool aClearStore, nsCOMPtr
 size_t
 ScalarBoolean::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  return aMallocSizeOf(this);
+  size_t n = aMallocSizeOf(this);
+  n += ScalarBase::SizeOfExcludingThis(aMallocSizeOf);
+  n += mStorage.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  return n;
 }
 
 /**
