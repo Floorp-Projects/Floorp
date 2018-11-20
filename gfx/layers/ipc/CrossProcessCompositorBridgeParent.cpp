@@ -293,7 +293,6 @@ CrossProcessCompositorBridgeParent::RecvMapAndNotifyChildCreated(const LayersId&
   return IPC_FAIL_NO_REASON(this);
 }
 
-
 mozilla::ipc::IPCResult
 CrossProcessCompositorBridgeParent::RecvCheckContentOnlyTDR(const uint32_t& sequenceNum,
                                                             bool* isContentOnlyTDR)
@@ -387,7 +386,7 @@ CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
                         static_cast<uint32_t>((endTime - aInfo.transactionStart()).ToMilliseconds()));
 
 
-  aLayerTree->SetPendingTransactionId(aInfo.id(), aInfo.refreshStart(), aInfo.transactionStart(), aInfo.fwdTime());
+  aLayerTree->SetPendingTransactionId(aInfo.id(), aInfo.refreshStart(), aInfo.transactionStart(), aInfo.url(), aInfo.fwdTime());
 }
 
 void

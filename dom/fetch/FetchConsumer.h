@@ -61,6 +61,10 @@ public:
   ContinueConsumeBlobBody(BlobImpl* aBlobImpl, bool aShuttingDown = false);
 
   void
+  DispatchContinueConsumeBlobBody(BlobImpl* aBlobImpl,
+                                  ThreadSafeWorkerRef* aWorkerRef);
+
+  void
   ShutDownMainThreadConsuming();
 
   void

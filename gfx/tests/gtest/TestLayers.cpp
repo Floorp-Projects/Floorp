@@ -65,7 +65,7 @@ public:
   }
   virtual void GetBackendName(nsAString& aName) {}
   virtual LayersBackend GetBackendType() { return LayersBackend::LAYERS_BASIC; }
-  virtual bool BeginTransaction() { return true; }
+  virtual bool BeginTransaction(const nsCString& = nsCString()) { return true; }
   virtual already_AddRefed<ImageLayer> CreateImageLayer() {
     MOZ_CRASH("Not implemented.");
   }
@@ -77,7 +77,7 @@ public:
     MOZ_CRASH("Not implemented.");
   }
   virtual void SetRoot(Layer* aLayer) {}
-  virtual bool BeginTransactionWithTarget(gfxContext* aTarget) { return true; }
+  virtual bool BeginTransactionWithTarget(gfxContext* aTarget, const nsCString& = nsCString()) { return true; }
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() {
     MOZ_CRASH("Not implemented.");
   }

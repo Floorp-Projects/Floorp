@@ -346,15 +346,15 @@ BasicLayerManager::SetDefaultTargetConfiguration(BufferMode aDoubleBuffering, Sc
 }
 
 bool
-BasicLayerManager::BeginTransaction()
+BasicLayerManager::BeginTransaction(const nsCString &aURL)
 {
   mInTransaction = true;
   mUsingDefaultTarget = true;
-  return BeginTransactionWithTarget(mDefaultTarget);
+  return BeginTransactionWithTarget(mDefaultTarget, aURL);
 }
 
 bool
-BasicLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
+BasicLayerManager::BeginTransactionWithTarget(gfxContext* aTarget, const nsCString &aURL)
 {
   mInTransaction = true;
 
@@ -791,10 +791,8 @@ InstallLayerClipPreserves3D(gfxContext* aTarget, Layer* aLayer)
   transform *= oldTransform;
   aTarget->SetMatrix(transform);
 
-  aTarget->NewPath();
-  aTarget->SnappedRectangle(gfxRect(clipRect->X(), clipRect->Y(),
-                                    clipRect->Width(), clipRect->Height()));
-  aTarget->Clip();
+  aTarget->SnappedClip(gfxRect(clipRect->X(), clipRect->Y(),
+                               clipRect->Width(), clipRect->Height()));
 
   aTarget->SetMatrix(oldTransform);
 }
@@ -947,9 +945,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
       // Azure doesn't support EXTEND_NONE, so to avoid extending the edges
       // of the source surface out to the current clip region, clip to
       // the rectangle of the result surface now.
-      aTarget->NewPath();
-      aTarget->SnappedRectangle(ThebesRect(xformBounds));
-      aTarget->Clip();
+      aTarget->SnappedClip(ThebesRect(xformBounds));
       FlushGroup(paintLayerContext, needsClipToVisibleRegion);
     }
   }

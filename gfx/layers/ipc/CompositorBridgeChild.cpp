@@ -553,6 +553,12 @@ CompositorBridgeChild::RecvDidComposite(const LayersId& aId,
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+CompositorBridgeChild::RecvNotifyFrameStats(nsTArray<FrameStats>&& aFrameStats)
+{
+  gfxPlatform::GetPlatform()->NotifyFrameStats(std::move(aFrameStats));
+  return IPC_OK();
+}
 
 void
 CompositorBridgeChild::ActorDestroy(ActorDestroyReason aWhy)

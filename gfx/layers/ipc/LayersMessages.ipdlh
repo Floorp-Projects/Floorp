@@ -554,6 +554,7 @@ struct TransactionInfo
   bool isRepeatTransaction;
   TimeStamp refreshStart;
   TimeStamp transactionStart;
+  nsCString url;
   TimeStamp fwdTime;
 };
 
