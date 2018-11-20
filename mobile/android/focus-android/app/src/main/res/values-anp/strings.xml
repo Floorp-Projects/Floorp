@@ -2,7 +2,7 @@
 <resources>
   <string name="action_cancel">रद्द करियै</string>
   <string name="action_ok">ठीक</string>
-  <string name="action_save">सेव करियै</string>
+  <string name="action_save">सहेजियै</string>
   <string name="urlbar_hint">खोजियै अथवा पता भरियै</string>
   <string name="teaser">स्वचालित निजी ब्रॉउजिंग.ब्रॉउज. मेटैइयै. दोहरैइयै.</string>
   <string name="feedback_erase">अपने के ब्रॉउजिंग इतिहास मेटाए देलो गेलए.</string>
@@ -104,7 +104,7 @@
   <string name="action_option_add_search_engine">सर्च ईंजन जोरियै</string>
   <string name="search_add_manually_name_hint">सर्च ईंजन नाम</string>
   <string name="search_add_manually_string">उपयोग लेली सर्च स्ट्रिंग</string>
-  <string name="search_add_manually_save">सेव करियै</string>
+  <string name="search_add_manually_save">सहेजियै</string>
   <string name="search_add_manually_example">उदाहरण: example.com/search/?q=%s</string>
   <string name="search_add_confirmation">नया सर्च ईंजन जोड़लो गेल.</string>
   <string name="search_add_error_empty_name">सर्च ईंजन केरो नाम भरियै</string>

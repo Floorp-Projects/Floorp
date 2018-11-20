@@ -2,10 +2,11 @@
 <resources>
   <string name="action_cancel">Ka kuba\'</string>
   <string name="action_ok">Ka bats\'uw</string>
-  <string name="action_save">Dheya\'</string>
+  <string name="action_save">Ka dheya\'</string>
   <string name="urlbar_hint">Ka dhucha\' axi a le\' ka aliy</string>
-  <string name="teaser">Tsinat tsa\'bixtaláb axi kwetem u japnal. Kit kowláts. Ka tsa\'biy. Ka k\'wit\'iy. Ka tsab t\'aja\'.</string>
+  <string name="teaser">Eyendhanél abal kit almáts tsinat. \nKit almáts. Ka pakuw. Ka tsab t\'aja\'.</string>
   <string name="feedback_erase">Pakuwatits an dhuchlab xi in olnál jant\'oj a aliyamal.</string>
+  <string name="feedback_erase_custom_tab">Pakuwatits an dhuchlab xi in olnál jant\'oj a aliyamal.</string>
   <string name="search_hint">Ka aliy %1$s</string>
   <string name="menu_share">Ka buk\'uw…</string>
   <string name="menu_report_site_issue">Ka olna\' max wa\'ats jún i odheltaláb al an xeklek</string>
@@ -25,12 +26,13 @@
   <string name="notification_action_erase_and_open">Ka pakuw ani ka japiy</string>
   <string name="shortcut_erase_short_label">Ka pakuw</string>
   <string name="shortcut_erase_long_label">Ka pakuw an dhuchlab xi in olnál jant\'oj a aliyamal</string>
+  <string name="shortcut_erase_and_open_long_label">Ka pakuw ani ka japiy %1$s</string>
   <string name="text_selection_search_action">Kit alim tsinat</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ti pudh&#225;l a awiltal.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Ka eyendha\' an eyendhan&#233;l abal kit tsinat tsa\'bixin:\n  "<ul>"\n    "<li>Ka aliy ani ka tsa\'biy an xeklek, ti eyendhan&#233;l</li>"\n    "<li>Ka mapchij in belil an alim (o ka t\'ojojoy max a le\' ka jila\' ka otsits)</li>"\n    "<li>Ka pakuw abal ka tixk\'a\' an tsakam tsi\'madh bok\'&#243;l ani patal axi a aliyamal ani a tsa\'biyamal</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ts\'ejkadh k\'al Mozilla. I le\' abal ka wa\'tsin jun i ebtsol&#243;m lubach ani japidh.<br/>\n<a href="%2$s">Xa exla\'yej</a></p>]]></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ti pidh&#225;l a awiltal.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Ka eyendha\' an eyendhan&#233;l abal kit tsinat tsa\'bixin:\n  "<ul>"\n    "<li>Ka aliy ani ka tsa\'biy an xeklek, ti eyendhan&#233;l</li>"\n    "<li>Ka mapchij in belil an alim (o ka t\'ojojoy max a le\' ka jila\' ka otsits)</li>"\n    "<li>Ka pakuw abal ka tixk\'a\' an tsakam tsi\'madh bok\'&#243;l ani patal axi a aliyamal ani a tsa\'biyamal</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ts\'ejkadh k\'al Mozilla. I le\' abal ka wa\'tsin jun i ebtsol&#243;m lubach ani japidh.<br/>\n<a href="%2$s">Xa exla\'yej</a></p>]]></string>
   <string name="preference_privacy_and_security_header">Tsinataláb ani belkadhtaláb</string>
   <string name="preference_privacy_and_security_summary">Alim, cookies, a k\'al</string>
   <string name="preference_search_summary">An eyendhanél axi a takuyamal, kwetem kidhbax</string>
-  <string name="preference_mozilla_summary">Tin kwentaj an %1$s, tolmixtaláb</string>
+  <string name="preference_mozilla_summary">Tin kwentaj %1$s, tolmixtaláb</string>
   <string name="preference_category_tracking_protection">K\'anix abal yab ka exláj jant\'oj a aliyamal</string>
   <string name="preference_category_web_content">Xi in kwa\'al an xeklek</string>
   <string name="preference_category_switching_apps">Jalk\'unal an eyendhanél</string>
@@ -44,6 +46,8 @@
   <string name="preference_state_on">Ka lek\'wtsiy</string>
   <string name="preference_state_off">Ka tepdha\'</string>
   <string name="preference_subitem_autocomplete">Ka kwetém kidhban an URL</string>
+  <string name="preference_autocomplete_topsite_summary">ka lek\'wtsiy abal kin kwetém kidhbay 450 i URLs abal ebál, axi lej exladh, ti jolataláb ju\'taj it alim.</string>
+  <string name="preference_autocomplete_user_list_summary">ka lek\'wtsiy abal kin kwetém kidhbay 450 i URLs abal ebál, axi lej exladh, ti jolataláb ju\'taj it alim.</string>
   <string name="preference_autocomplete_action_add">+ Ka punuw an URL axi tsab bijidh</string>
   <string name="preference_autocomplete_title_add">Ka punuw an URL axi tsab bijidh</string>
   <string name="custom_autocomplete_quick_add">Ka punuw an URL axi tsab bijidh</string>
@@ -73,6 +77,7 @@
   <string name="preference_privacy_block_content_summary2">Max ka lek\'wtsiy, wa\'ats i xeklek axi yab ne\'ets ka alwa\' tejwa\'mej</string>
   <string name="preference_privacy_category_cookies">Ka kuba\' an cookies</string>
   <string name="preference_privacy_should_block_cookies_no_option">Ibaj</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Ka kuba\' an cookies xi in k\'al pil jita\'</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Ka kuba\' an cookies xi in k\'al pil jita\'</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Aníts</string>
   <string name="preference_security_biometric">Ka eyendha\' in t\'iplabil a ch\'uchub abal ka japiy a eyextal</string>
@@ -225,5 +230,7 @@
   <string name="tip_autocomplete_url">"Ka eyendha\' an kweten putundhach URLs abal an xeklek axi a eyendal\n Ka ni\'a\' jawakits tum URLs ti alimtaláb\n "</string>
   <string name="tip_open_in_new_tab">Ka japiy jun i ne\'dhach al jun i it xeklek\n Ka jila\' ni\'adh jawakitsk\'ij tum ne\'dhach al jun i xeklek</string>
   <string name="tip_request_desktop">A le\' ka meta\' an xeklek ta mexajil%1$s Takuxtaláb &gt; Ka konoy an xeklek ta mexajil</string>
+  <string name="tip_disable_tips2">Ka tepdha\' an kawchix axi ti olchal ti ok\'ox xeklek</string>
   <string name="preference_open_new_tab">Ka japiy al jún i it xeklek</string>
+  <string name="preference_exceptions_menu_remove">Ka pakuw</string>
 </resources>

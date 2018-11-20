@@ -249,6 +249,7 @@
   <string name="preference_open_new_tab">Cambie a un enlace en una nueva pestaña inmediatamente</string>
   <string name="preference_category_safe_browsing">Navegación segura</string>
   <string name="preference_safe_browsing_title">Bloquear sitios potencialmente peligrosos y engañosos</string>
+  <string name="preference_safe_browsing_summary">Bloqueo de sitios informados como fraudulentos y de ataques, de malware y de software no deseado.</string>
   <string name="preference_exceptions">Excepciones</string>
   <string name="preference_exceptions_description">Ha desactivado el bloqueo de contenido para estos sitios.</string>
   <string name="preference_exceptions_menu_remove">Eliminar</string>

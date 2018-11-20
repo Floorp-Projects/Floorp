@@ -40,7 +40,7 @@
   <string name="preference_category_tracking_protection">Apsauga nuo stebėjimo</string>
   <string name="preference_category_web_content">Saityno turinys</string>
   <string name="preference_category_switching_apps">Programų perjungimas</string>
-  <string name="preference_category_general">Bendrosios</string>
+  <string name="preference_category_general">Bendrieji</string>
   <string name="preference_general_summary">Numatytoji naršyklė, kortelės, kalba</string>
   <string name="preference_category_data_collection_use">Duomenų rinkimas ir naudojimas</string>
   <string name="preference_category_search">Paieška</string>
@@ -131,7 +131,7 @@
   <string name="accessibility_announcement_loading">Įkeliama</string>
   <string name="accessibility_announcement_loading_finished">Svetainė įkelta</string>
   <string name="content_description_menu">Daugiau parinkčių</string>
-  <string name="indicator_content_description_menu">Daugiau nuostatų mygtukas</string>
+  <string name="indicator_content_description_menu">Mygtukas „Daugiau parinkčių“</string>
   <string name="content_description_forward">Eiti pirmyn</string>
   <string name="content_description_reload">Įkelti svetainę iš naujo</string>
   <string name="content_description_back">Grįžti atgal</string>

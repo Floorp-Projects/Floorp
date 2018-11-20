@@ -52,9 +52,15 @@
   <string name="preference_state_off">Сөндірілген</string>
   <string name="preference_subitem_autocomplete">URL автотолықтыру</string>
   <string name="preference_switch_autocomplete_topsites">Үздік сайттар үшін</string>
+  <string name="preference_autocomplete_topsite_summary">Адрестік жолақта 450-ден астам әйгілі URL-ды автотолықтыру үшін іске қосыңыз.</string>
+  <string name="preference_switch_autocomplete_user_list">Қосылатын сайттар үшін</string>
+  <string name="preference_autocomplete_user_list_summary">Адрестік жолақта 450-ден астам әйгілі URL-ды автотолықтыру үшін іске қосыңыз.</string>
+  <string name="preference_category_autocomplete_manage_sites">Сайттарды басқару</string>
+  <string name="preference_autocomplete_subitem_manage_sites">Сайттарды басқару</string>
   <string name="preference_autocomplete_action_add">+ Таңдауыңызша URL қосу</string>
   <string name="preference_autocomplete_title_add">Таңдауыңызша URL қосу</string>
   <string name="custom_autocomplete_quick_add">Таңдауыңызша URL қосу</string>
+  <string name="add_custom_autocomplete_label">Автотолықтыру үшін сілтемені қосу</string>
   <string name="preference_category_cookies">Cookies файлдары және сайт деректері</string>
   <string name="preference_category_data_choices">Деректер таңдауы</string>
   <string name="preference_autocomplete_title_remove">Таңдауыңызша URL-дер өшіру</string>
@@ -81,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">Бұны іске қосу кейбір сайттардың мінез-құлығын күтпегендей өзгертеді</string>
   <string name="preference_privacy_category_cookies">Cookies файлдарын бұғаттау</string>
   <string name="preference_privacy_should_block_cookies_no_option">Жоқ</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Тек үшінші жақты cookies файлдарын бұғаттау</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">Тек үшінші жақты cookies файлдарын бұғаттау</string>
   <string name="preference_privacy_should_block_cookies_yes_option">Иә</string>
   <string name="preference_security_biometric">Қолданбаны босату үшін саусақ баспасын қолдану</string>
@@ -124,6 +131,7 @@
   <string name="accessibility_announcement_loading">Жүктелуде</string>
   <string name="accessibility_announcement_loading_finished">Вебсайт жүктелген</string>
   <string name="content_description_menu">Көбірек опциялар</string>
+  <string name="indicator_content_description_menu">Қосымша опциялар батырмасы</string>
   <string name="content_description_forward">Алға өту</string>
   <string name="content_description_reload">Вебсайтты қайта жүктеу</string>
   <string name="content_description_back">Артқа өту</string>
@@ -160,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#1041;&#1201;&#1083; &#1089;&#1077;&#1088;&#1074;&#1077;&#1088;&#1076;&#1110;&#1187; &#1179;&#1072;&#1090;&#1077;&#1089;&#1110; &#1073;&#1086;&#1083;&#1091;&#1099; &#1084;&#1199;&#1084;&#1082;&#1110;&#1085;, &#1085;&#1077;&#1084;&#1077;&#1089;&#1077; &#1073;&#1110;&#1088;&#1077;&#1091; &#1089;&#1110;&#1079;&#1075;&#1077; &#1082;&#1077;&#1088;&#1077;&#1082; &#1089;&#1077;&#1088;&#1074;&#1077;&#1088;&#1076;&#1110; &#1073;&#1072;&#1089;&#1179;&#1072;&#1089;&#1099;&#1084;&#1077;&#1085; &#1072;&#1091;&#1099;&#1089;&#1090;&#1099;&#1088;&#1171;&#1099;&#1089;&#1099; &#1082;&#1077;&#1083;&#1077;&#1076;&#1110;.</li>"\n  "<li>&#1054;&#1089;&#1099;&#1171;&#1072;&#1085; &#1076;&#1077;&#1081;&#1110;&#1085; &#1073;&#1201;&#1083; &#1089;&#1077;&#1088;&#1074;&#1077;&#1088;&#1075;&#1077; &#1089;&#1241;&#1090;&#1090;&#1110; &#1179;&#1086;&#1089;&#1099;&#1083;&#1171;&#1072;&#1085; &#1073;&#1086;&#1083;&#1089;&#1072;&#1187;&#1099;&#1079;, &#1073;&#1201;&#1083; &#1179;&#1072;&#1090;&#1077; &#1091;&#1072;&#1179;&#1099;&#1090;&#1096;&#1072; &#1073;&#1086;&#1083;&#1091;&#1099; &#1084;&#1199;&#1084;&#1082;&#1110;&#1085;. &#1041;&#1110;&#1088;&#1072;&#1079;&#1076;&#1072;&#1085; &#1082;&#1077;&#1081;&#1110;&#1085; &#1179;&#1072;&#1081;&#1090;&#1072;&#1083;&#1072;&#1087; &#1082;&#1257;&#1088;&#1110;&#1187;&#1110;&#1079;.</li>\n</ul>]]></string>
   <string name="error_generic_title">Қап</string>
   <string name="error_generic_message">Бұл парақты қандай да бір себеппен жүктей алмадық.</string>
+  <string name="contextmenu_open_in_app">Қолданбамен ашу</string>
   <string name="contextmenu_link_share">Сілтемемен бөлісу</string>
   <string name="contextmenu_link_copy">Сілтеме адресін көшіріп алу</string>
   <string name="contextmenu_image_share">Суретпен бөлісу</string>
@@ -233,9 +242,24 @@
   <string name="tip_autocomplete_url">Жиірек қолданылатын сайттар үшін сілтемелерді автотолықтырыңыз\n Адрестік жолақта кез келген сілтемеге ұзақ шертіңіз</string>
   <string name="tip_open_in_new_tab">Сілтемені жаңа бетте ашу\n Беттегі кез келген сілтемеге ұзақ шертіңіз</string>
   <string name="tip_request_desktop">Жұмыс үстелге арналған толық өлшемді көргіңіз келе ме?%1$s Мәзір &gt; Сайттың толық нұсқасы</string>
+  <string name="tip_disable_tips2">Іске қосу экранында кеңестерді сөндіру</string>
+  <string name="tip_explain_allowlist">Сенімді сайт па?\n Рұқсат тізімі өзіңіз білетін және сенетін сайттар үшін бақылаудан қорғанысты сөндіреді.</string>
   <string name="new_tab_opened_snackbar">Жаңа бет ашылды</string>
   <string name="open_new_tab_snackbar">Ауысу</string>
+  <string name="preference_open_new_tab">Жаңа бетке тура ауысу</string>
+  <string name="preference_category_safe_browsing">Қауіпсіз шолу</string>
+  <string name="preference_safe_browsing_title">Қауіпті және алдамшы болуы мүмкін сайттарды блоктау</string>
+  <string name="preference_safe_browsing_summary">Хабарланған алмамшы, шабуылшы, зиянкес және қаламайтын БҚ орнататын сайттарды бұғаттау.</string>
+  <string name="preference_exceptions">Ережеден бөлек</string>
+  <string name="preference_exceptions_description">Бұл веб-сайттар үшін құраманы бұғаттауды сөндіргенсіз.</string>
+  <string name="preference_exceptions_menu_remove">Өшіру</string>
+  <string name="preference_exceptions_remove_all_button_label">Барлық веб-сайттарды өшіру</string>
+  <string name="tab_crash_report_title">Бет құлады</string>
+  <string name="tab_crash_report_headline">Кешіріңіз. Бұл бетпен мәселе бар.</string>
+  <string name="tab_crash_report_description">Жеке браузер ретінде ешқашан сақтамаймыз және осы бетті қалпына келтіре алмаймыз.</string>
   <string name="tab_crash_report_close_tab_button_label">Бетті жабу</string>
+  <string name="fatal_crash_report_title">Кешіріңіз. %1$s мәселе туындады және құлады.</string>
+  <string name="fatal_crash_report_description">Жеке браузер ретінде ешқашан сақтамаймыз және соңғы шолу сессияңызды қалпына келтіре алмаймыз.</string>
   <string name="fatal_crash_report_close_button_label">Жабу</string>
   <string name="fatal_crash_report_restart_firefox_label">%1$s қайта қосу</string>
   <string name="crash_report_send_crash_label">Mozilla-ға құлау хабарламасын жіберу</string>
