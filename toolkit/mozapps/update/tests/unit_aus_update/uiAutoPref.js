@@ -19,7 +19,7 @@ const WindowMediator = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIWindowMediator]),
 };
 
-async function run_test() {
+function run_test() {
   setupTestCommon();
   // Calling do_get_profile prevents an error from being logged
   do_get_profile();
@@ -27,7 +27,6 @@ async function run_test() {
   debugDump("testing that an update download doesn't start when the \"update " +
             "auto\" value is false");
 
-  await gAUS.setAutoUpdateIsEnabled(false);
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, false);
 
   start_httpserver();
