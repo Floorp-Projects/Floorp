@@ -47,3 +47,16 @@ marionette-headless:
     mozharness:
         extra-options:
             - --headless
+
+marionette-gpu:
+    description: "Marionette with GPU unittest run"
+    treeherder-symbol: MnG
+    max-run-time: 1800
+    instance-size: default
+    mozharness:
+        extra-options:
+            - --test-manifest gpu-unit-tests.ini
+    virtualization:
+        by-test-platform:
+            windows10-64.*: virtual-with-gpu
+            default: virtual
