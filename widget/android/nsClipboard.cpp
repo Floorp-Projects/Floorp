@@ -33,7 +33,9 @@ nsClipboard::SetData(nsITransferable *aTransferable,
     return NS_ERROR_NOT_IMPLEMENTED;
 
   nsCOMPtr<nsISupports> tmp;
-  nsresult rv  = aTransferable->GetTransferData(kUnicodeMime, getter_AddRefs(tmp));
+  uint32_t len;
+  nsresult rv  = aTransferable->GetTransferData(kUnicodeMime, getter_AddRefs(tmp),
+                                                &len);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsISupportsString> supportsString = do_QueryInterface(tmp);
   // No support for non-text data
@@ -71,7 +73,8 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
 
   nsCOMPtr<nsISupports> nsisupportsDataWrapper =
     do_QueryInterface(dataWrapper);
-  rv = aTransferable->SetTransferData(kUnicodeMime, nsisupportsDataWrapper);
+  rv = aTransferable->SetTransferData(kUnicodeMime, nsisupportsDataWrapper,
+                                      buffer.Length() * sizeof(char16_t));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

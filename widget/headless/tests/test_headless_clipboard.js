@@ -16,11 +16,12 @@ function getString(clipboard) {
 
   try {
     var data = {};
-    trans.getTransferData("text/unicode", data);
+    var dataLen = {};
+    trans.getTransferData("text/unicode", data, dataLen);
 
     if (data) {
       data = data.value.QueryInterface(Ci.nsISupportsString);
-      str = data.data;
+      str = data.data.substring(0, dataLen.value / 2);
     }
   } catch (ex) {
     // If the clipboard is empty getTransferData will throw.

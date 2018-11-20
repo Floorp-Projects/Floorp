@@ -179,8 +179,9 @@ DataTransferItem::FillInExternalData()
     }
   }
 
+  uint32_t length = 0;
   nsCOMPtr<nsISupports> data;
-  nsresult rv = trans->GetTransferData(format, getter_AddRefs(data));
+  nsresult rv = trans->GetTransferData(format, getter_AddRefs(data), &length);
   if (NS_WARN_IF(NS_FAILED(rv) || !data)) {
     return;
   }

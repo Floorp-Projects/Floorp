@@ -7755,7 +7755,8 @@ nsContentUtils::IPCTransferableToTransferable(const IPCDataTransfer& aDataTransf
       rv = dataWrapper->SetData(text);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper);
+      rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper,
+                                  text.Length() * sizeof(char16_t));
 
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (item.data().type() == IPCDataTransferData::TShmem) {
@@ -7765,7 +7766,7 @@ nsContentUtils::IPCTransferableToTransferable(const IPCDataTransfer& aDataTransf
                                                      getter_AddRefs(imageContainer));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        aTransferable->SetTransferData(item.flavor().get(), imageContainer);
+        aTransferable->SetTransferData(item.flavor().get(), imageContainer, sizeof(nsISupports*));
       } else {
         nsCOMPtr<nsISupportsCString> dataWrapper =
           do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
@@ -7778,7 +7779,7 @@ nsContentUtils::IPCTransferableToTransferable(const IPCDataTransfer& aDataTransf
         rv = dataWrapper->SetData(text);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper);
+        rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper, text.Length());
 
         NS_ENSURE_SUCCESS(rv, rv);
       }
@@ -7993,7 +7994,8 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
       }
 
       nsCOMPtr<nsISupports> data;
-      aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(data));
+      uint32_t dataLen = 0;
+      aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(data), &dataLen);
 
       nsCOMPtr<nsISupportsString> text = do_QueryInterface(data);
       nsCOMPtr<nsISupportsCString> ctext = do_QueryInterface(data);

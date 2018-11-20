@@ -709,17 +709,20 @@ nsDragService::GetData(nsITransferable * aTransferable,
                 continue;
 
             nsCOMPtr<nsISupports> data;
+            uint32_t tmpDataLen = 0;
             MOZ_LOG(sDragLm, LogLevel::Debug,
                    ("trying to get transfer data for %s\n",
                    flavorStr.get()));
             rv = item->GetTransferData(flavorStr.get(),
-                                       getter_AddRefs(data));
+                                       getter_AddRefs(data),
+                                       &tmpDataLen);
             if (NS_FAILED(rv)) {
                 MOZ_LOG(sDragLm, LogLevel::Debug, ("failed.\n"));
                 continue;
             }
             MOZ_LOG(sDragLm, LogLevel::Debug, ("succeeded.\n"));
-            rv = aTransferable->SetTransferData(flavorStr.get(), data);
+            rv = aTransferable->SetTransferData(flavorStr.get(), data,
+                                                tmpDataLen);
             if (NS_FAILED(rv)) {
                 MOZ_LOG(sDragLm,
                        LogLevel::Debug,
@@ -786,7 +789,8 @@ nsDragService::GetData(nsITransferable * aTransferable,
                                     // and calls text-specific operations.
                                     // Make a secret hideout here for nsIFile
                                     // objects and return early.
-                                    aTransferable->SetTransferData(flavorStr.get(), file);
+                                    aTransferable->SetTransferData(flavorStr.get(), file,
+                                                                   convertedTextLen);
                                     g_free(convertedText);
                                     return NS_OK;
                                 }
@@ -939,7 +943,8 @@ nsDragService::GetData(nsITransferable * aTransferable,
                                 mTargetDragData, mTargetDragDataLen,
                                 getter_AddRefs(genericDataWrapper));
             aTransferable->SetTransferData(flavorStr.get(),
-                                           genericDataWrapper);
+                                           genericDataWrapper,
+                                           mTargetDragDataLen);
             // we found one, get out of this loop!
             MOZ_LOG(sDragLm, LogLevel::Debug, ("dataFound and converted!\n"));
             break;
@@ -1485,7 +1490,9 @@ CreateURIList(nsIArray* aItems, nsACString& aURIList)
         }
 
         nsCOMPtr<nsISupports> data;
-        nsresult rv = item->GetTransferData(kURLMime, getter_AddRefs(data));
+        uint32_t len = 0;
+        nsresult rv = item->GetTransferData(kURLMime, getter_AddRefs(data),
+                                            &len);
         if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsISupportsString> string = do_QueryInterface(data);
 
@@ -1508,7 +1515,7 @@ CreateURIList(nsIArray* aItems, nsACString& aURIList)
 
         // There is no URI available. If there is a file available, create
         // a URI from the file.
-        rv = item->GetTransferData(kFileMime, getter_AddRefs(data));
+        rv = item->GetTransferData(kFileMime, getter_AddRefs(data), &len);
         if (NS_SUCCEEDED(rv)) {
             if (nsCOMPtr<nsIFile> file = do_QueryInterface(data)) {
                 nsCOMPtr<nsIURI> fileURI;
@@ -1648,7 +1655,8 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
             nsCOMPtr<nsIFile> directory;
             file->GetParent(getter_AddRefs(directory));
 
-            item->SetTransferData(kFilePromiseDirectoryMime, directory);
+            item->SetTransferData(kFilePromiseDirectoryMime, directory,
+                                  sizeof(nsIFile*));
 
             nsCOMPtr<nsISupportsString> filenamePrimitive =
                 do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
@@ -1659,7 +1667,8 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
             file->GetLeafName(leafName);
             filenamePrimitive->SetData(leafName);
 
-            item->SetTransferData(kFilePromiseDestFilename, filenamePrimitive);
+            item->SetTransferData(kFilePromiseDestFilename, filenamePrimitive,
+                                  leafName.Length() * sizeof(PRUnichar));
 
             // Request a different type in GetTransferData.
             actualFlavor = kFilePromiseMime;
@@ -1668,8 +1677,10 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
         }
         nsresult rv;
         nsCOMPtr<nsISupports> data;
+        uint32_t len;
         rv = item->GetTransferData(actualFlavor,
-                                   getter_AddRefs(data));
+                                   getter_AddRefs(data),
+                                   &len);
 
         if (strcmp(actualFlavor, kFilePromiseMime) == 0) {
             if (NS_SUCCEEDED(rv)) {
@@ -1739,8 +1750,9 @@ nsDragService::SourceBeginDrag(GdkDragContext *aContext)
     for (uint32_t i = 0; i < flavors.Length(); ++i) {
         if (flavors[i].EqualsLiteral(kFilePromiseDestFilename)) {
             nsCOMPtr<nsISupports> data;
+            uint32_t dataSize = 0;
             transferable->GetTransferData(kFilePromiseDestFilename,
-                                          getter_AddRefs(data));
+                                          getter_AddRefs(data), &dataSize);
             nsCOMPtr<nsISupportsString> fileName = do_QueryInterface(data);
             if (!fileName)
                 return;

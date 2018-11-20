@@ -230,10 +230,12 @@ CheckAndGetExtensionForMime(const nsCString& aExtension,
 NS_IMETHODIMP
 nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable *aTransferable,
                                                  const char *aFlavor,
-                                                 nsISupports **aData)
+                                                 nsISupports **aData,
+                                                 uint32_t *aDataLen)
 {
-  NS_ENSURE_ARG_POINTER(aData);
+  NS_ENSURE_ARG_POINTER(aData && aDataLen);
   *aData = nullptr;
+  *aDataLen = 0;
 
   nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
 
@@ -241,7 +243,9 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable *aTransferable,
     // get the URI from the kFilePromiseURLMime flavor
     NS_ENSURE_ARG(aTransferable);
     nsCOMPtr<nsISupports> tmp;
-    aTransferable->GetTransferData(kFilePromiseURLMime, getter_AddRefs(tmp));
+    uint32_t dataSize = 0;
+    aTransferable->GetTransferData(kFilePromiseURLMime,
+                                   getter_AddRefs(tmp), &dataSize);
     nsCOMPtr<nsISupportsString> supportsString =
       do_QueryInterface(tmp);
     if (!supportsString)
@@ -257,7 +261,7 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable *aTransferable,
     NS_ENSURE_SUCCESS(rv, rv);
 
     aTransferable->GetTransferData(kFilePromiseDestFilename,
-                                   getter_AddRefs(tmp));
+                                   getter_AddRefs(tmp), &dataSize);
     supportsString = do_QueryInterface(tmp);
     if (!supportsString)
       return NS_ERROR_FAILURE;
@@ -276,7 +280,7 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable *aTransferable,
     // content processes.
     if (XRE_IsParentProcess()) {
       aTransferable->GetTransferData(kImageRequestMime,
-                                     getter_AddRefs(tmp));
+                                     getter_AddRefs(tmp), &dataSize);
       supportsString = do_QueryInterface(tmp);
       if (!supportsString)
         return NS_ERROR_FAILURE;
@@ -324,8 +328,9 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable *aTransferable,
     // get the target directory from the kFilePromiseDirectoryMime
     // flavor
     nsCOMPtr<nsISupports> dirPrimitive;
+    dataSize = 0;
     aTransferable->GetTransferData(kFilePromiseDirectoryMime,
-                                   getter_AddRefs(dirPrimitive));
+                                   getter_AddRefs(dirPrimitive), &dataSize);
     nsCOMPtr<nsIFile> destDirectory = do_QueryInterface(dirPrimitive);
     if (!destDirectory)
       return NS_ERROR_FAILURE;
@@ -343,6 +348,7 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable *aTransferable,
     // send back an nsIFile
     if (NS_SUCCEEDED(rv)) {
       CallQueryInterface(file, aData);
+      *aDataLen = sizeof(nsIFile*);
     }
   }
 
@@ -788,22 +794,27 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
 
     nsCOMPtr<nsISupports> supports;
     nsCOMPtr<nsISupportsString> data;
-    rv = transferable->GetTransferData(kHTMLMime, getter_AddRefs(supports));
+    uint32_t dataSize;
+    rv = transferable->GetTransferData(kHTMLMime, getter_AddRefs(supports),
+                                       &dataSize);
     data = do_QueryInterface(supports);
     if (NS_SUCCEEDED(rv)) {
       data->GetData(mHtmlString);
     }
-    rv = transferable->GetTransferData(kHTMLContext, getter_AddRefs(supports));
+    rv = transferable->GetTransferData(kHTMLContext, getter_AddRefs(supports),
+                                       &dataSize);
     data = do_QueryInterface(supports);
     if (NS_SUCCEEDED(rv)) {
       data->GetData(mContextString);
     }
-    rv = transferable->GetTransferData(kHTMLInfo, getter_AddRefs(supports));
+    rv = transferable->GetTransferData(kHTMLInfo, getter_AddRefs(supports),
+                                       &dataSize);
     data = do_QueryInterface(supports);
     if (NS_SUCCEEDED(rv)) {
       data->GetData(mInfoString);
     }
-    rv = transferable->GetTransferData(kUnicodeMime, getter_AddRefs(supports));
+    rv = transferable->GetTransferData(kUnicodeMime, getter_AddRefs(supports),
+                                       &dataSize);
     data = do_QueryInterface(supports);
     NS_ENSURE_SUCCESS(rv, rv); // require plain text at a minimum
     data->GetData(mTitleString);
