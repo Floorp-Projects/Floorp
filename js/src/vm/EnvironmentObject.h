@@ -31,11 +31,11 @@ typedef Handle<ModuleObject*> HandleModuleObject;
 extern Shape*
 EnvironmentCoordinateToEnvironmentShape(JSScript* script, jsbytecode* pc);
 
-/* Return the name being accessed by the given ALIASEDVAR op. */
+// Return the name being accessed by the given ALIASEDVAR op.
 extern PropertyName*
 EnvironmentCoordinateName(EnvironmentCoordinateNameCache& cache, JSScript* script, jsbytecode* pc);
 
-/* Return the function script accessed by the given ALIASEDVAR op, or nullptr. */
+// Return the function script accessed by the given ALIASEDVAR op, or nullptr.
 extern JSScript*
 EnvironmentCoordinateFunctionScript(JSScript* script, jsbytecode* pc);
 

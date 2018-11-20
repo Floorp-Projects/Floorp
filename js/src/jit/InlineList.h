@@ -489,10 +489,9 @@ class InlineListReverseIterator
     Node* iter;
 };
 
-/* This list type is more or less exactly an InlineForwardList without a sentinel
- * node. It is useful in cases where you are doing algorithms that deal with many
- * merging singleton lists, rather than often empty ones.
- */
+// This list type is more or less exactly an InlineForwardList without a
+// sentinel node. It is useful in cases where you are doing algorithms that deal
+// with many merging singleton lists, rather than often empty ones.
 template <typename T> class InlineConcatListIterator;
 template <typename T>
 class InlineConcatList

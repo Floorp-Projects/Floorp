@@ -365,7 +365,8 @@ OptionParser::handleArg(size_t argc, char** argv, size_t* i, bool* optionsAllowe
         return Okay;
       case OptionKindMultiString:
       {
-        /* Don't advance the next argument -- there can only be one (final) variadic argument. */
+        // Don't advance the next argument -- there can only be one (final)
+        // variadic argument.
         StringArg value(argv[*i], *i);
         return arg->asMultiStringOption()->strings.append(value) ? Okay : Fail;
       }
@@ -379,7 +380,8 @@ OptionParser::parseArgs(int inputArgc, char** argv)
 {
     MOZ_ASSERT(inputArgc >= 0);
     size_t argc = inputArgc;
-    /* Permit a "no more options" capability, like |--| offers in many shell interfaces. */
+    // Permit a "no more options" capability, like |--| offers in many shell
+    // interfaces.
     bool optionsAllowed = true;
 
     for (size_t i = 1; i < argc; ++i) {

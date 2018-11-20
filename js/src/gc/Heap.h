@@ -58,7 +58,7 @@ enum InitialHeap : uint8_t {
     TenuredHeap
 };
 
-/* Cells are aligned to CellAlignShift, so the largest tagged null pointer is: */
+// Cells are aligned to CellAlignShift, so the largest tagged null pointer is:
 const uintptr_t LargestTaggedNullCellPointer = (1 << CellAlignShift) - 1;
 
 /*
@@ -518,7 +518,8 @@ struct ChunkTrailer
 static_assert(sizeof(ChunkTrailer) == ChunkTrailerSize,
               "ChunkTrailer size must match the API defined size.");
 
-/* The chunk header (located at the end of the chunk to preserve arena alignment). */
+// The chunk header (located at the end of the chunk to preserve arena
+// alignment).
 struct ChunkInfo
 {
     void init() {

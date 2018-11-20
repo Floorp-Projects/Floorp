@@ -3118,7 +3118,8 @@ JS_DeepFreezeObject(JSContext* cx, HandleObject obj)
     CHECK_THREAD(cx);
     cx->check(obj);
 
-    /* Assume that non-extensible objects are already deep-frozen, to avoid divergence. */
+    // Assume that non-extensible objects are already deep-frozen, to avoid
+    // divergence.
     bool extensible;
     if (!IsExtensible(cx, obj, &extensible)) {
         return false;
@@ -3131,7 +3132,7 @@ JS_DeepFreezeObject(JSContext* cx, HandleObject obj)
         return false;
     }
 
-    /* Walk slots in obj and if any value is a non-null object, seal it. */
+    // Walk slots in obj and if any value is a non-null object, seal it.
     if (obj->isNative()) {
         RootedNativeObject nobj(cx, &obj->as<NativeObject>());
         for (uint32_t i = 0, n = nobj->slotSpan(); i < n; ++i) {

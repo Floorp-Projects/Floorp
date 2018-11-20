@@ -45,42 +45,39 @@ IdIsIndex(jsid id, uint32_t* indexp)
 
 // The methods below only create dense boxed arrays.
 
-/* Create a dense array with no capacity allocated, length set to 0. */
+// Create a dense array with no capacity allocated, length set to 0.
 extern ArrayObject * JS_FASTCALL
 NewDenseEmptyArray(JSContext* cx, HandleObject proto = nullptr,
                    NewObjectKind newKind = GenericObject);
 
-/*
- * Create a dense array with a set length, but without allocating space for the
- * contents. This is useful, e.g., when accepting length from the user.
- */
+// Create a dense array with a set length, but without allocating space for the
+// contents. This is useful, e.g., when accepting length from the user.
 extern ArrayObject * JS_FASTCALL
 NewDenseUnallocatedArray(JSContext* cx, uint32_t length, HandleObject proto = nullptr,
                          NewObjectKind newKind = GenericObject);
 
-/*
- * Create a dense array with length and capacity == |length|, initialized length set to 0,
- * but with only |EagerAllocationMaxLength| elements allocated.
- */
+// Create a dense array with length and capacity == |length|, initialized length
+// set to 0, but with only |EagerAllocationMaxLength| elements allocated.
 extern ArrayObject * JS_FASTCALL
 NewDensePartlyAllocatedArray(JSContext* cx, uint32_t length, HandleObject proto = nullptr,
                              NewObjectKind newKind = GenericObject);
 
-/* Create a dense array with length and capacity == 'length', initialized length set to 0. */
+// Create a dense array with length and capacity == 'length', initialized length
+// set to 0.
 extern ArrayObject * JS_FASTCALL
 NewDenseFullyAllocatedArray(JSContext* cx, uint32_t length, HandleObject proto = nullptr,
                             NewObjectKind newKind = GenericObject);
 
-/* Create a dense array from the given array values, which must be rooted */
+// Create a dense array from the given array values, which must be rooted.
 extern ArrayObject*
 NewDenseCopiedArray(JSContext* cx, uint32_t length, const Value* values,
                     HandleObject proto = nullptr, NewObjectKind newKind = GenericObject);
 
-/* Create a dense array based on templateObject with the given length. */
+// Create a dense array based on templateObject with the given length.
 extern ArrayObject*
 NewDenseFullyAllocatedArrayWithTemplate(JSContext* cx, uint32_t length, JSObject* templateObject);
 
-/* Create a dense array with the same copy-on-write elements as another object. */
+// Create a dense array with the same copy-on-write elements as another object.
 extern ArrayObject*
 NewDenseCopyOnWriteArray(JSContext* cx, HandleArrayObject templateObject, gc::InitialHeap heap);
 

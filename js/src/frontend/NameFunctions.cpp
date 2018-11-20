@@ -65,7 +65,7 @@ class NameResolver
         return buf->append(number, digits);
     }
 
-    /* Append "[<n>]" to buf, referencing a property named by a numeric literal. */
+    // Append "[<n>]" to buf, referencing a property named by a numeric literal.
     bool appendNumericPropertyReference(double n) {
         return buf->append("[") && appendNumber(n) && buf->append(']');
     }

@@ -232,7 +232,8 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
 
     gc.atomsZone = atomsZone.release();
 
-    /* The garbage collector depends on everything before this point being initialized. */
+    // The garbage collector depends on everything before this point being
+    // initialized.
     gcInitialized = true;
 
     if (!InitRuntimeNumberState(this)) {

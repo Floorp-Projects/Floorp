@@ -501,7 +501,8 @@ js::ReadPropertyDescriptors(JSContext* cx, HandleObject props, bool checkAccesso
 static unsigned
 GetSealedOrFrozenAttributes(unsigned attrs, IntegrityLevel level)
 {
-    /* Make all attributes permanent; if freezing, make data attributes read-only. */
+    // Make all attributes permanent; if freezing, make data attributes
+    // read-only.
     if (level == IntegrityLevel::Frozen && !(attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
         return JSPROP_PERMANENT | JSPROP_READONLY;
     }

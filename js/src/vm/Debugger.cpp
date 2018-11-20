@@ -9330,7 +9330,8 @@ DebuggerFrame::olderGetter(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-/* The getter used for each element of frame.arguments. See DebuggerFrame_getArguments. */
+// The getter used for each element of frame.arguments.
+// See DebuggerFrame_getArguments.
 static bool
 DebuggerArguments_getArg(JSContext* cx, unsigned argc, Value* vp)
 {

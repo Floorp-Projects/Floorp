@@ -926,26 +926,21 @@ class FunctionExtended : public JSFunction
   public:
     static const unsigned NUM_EXTENDED_SLOTS = 2;
 
-    /* Arrow functions store their lexical new.target in the first extended slot. */
+    // Arrow functions store their lexical new.target in the first extended
+    // slot.
     static const unsigned ARROW_NEWTARGET_SLOT = 0;
 
     static const unsigned METHOD_HOMEOBJECT_SLOT = 0;
 
-    /*
-     * Exported asm.js/wasm functions store their WasmInstanceObject in the
-     * first slot.
-     */
+    // Exported asm.js/wasm functions store their WasmInstanceObject in the
+    // first slot.
     static const unsigned WASM_INSTANCE_SLOT = 0;
 
-    /*
-     * wasm/asm.js exported functions store the wasm::TlsData pointer of their
-     * instance.
-     */
+    // wasm/asm.js exported functions store the wasm::TlsData pointer of their
+    // instance.
     static const unsigned WASM_TLSDATA_SLOT = 1;
 
-    /*
-     * asm.js module functions store their WasmModuleObject in the first slot.
-     */
+    // asm.js module functions store their WasmModuleObject in the first slot.
     static const unsigned ASMJS_MODULE_SLOT = 0;
 
 

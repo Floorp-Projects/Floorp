@@ -125,9 +125,8 @@ GeckoProfilerRuntime::enable(bool enabled)
      */
     jit::ToggleBaselineProfiling(rt, enabled);
 
-    /* Update lastProfilingFrame to point to the top-most JS jit-frame currently on
-     * stack.
-     */
+    // Update lastProfilingFrame to point to the top-most JS jit-frame currently
+    // on stack.
     if (cx->jitActivation) {
         // Walk through all activations, and set their lastProfilingFrame appropriately.
         if (enabled) {
