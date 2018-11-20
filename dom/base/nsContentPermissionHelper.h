@@ -77,6 +77,7 @@ public:
   CreateContentPermissionRequestParent(const nsTArray<PermissionRequest>& aRequests,
                                        Element* aElement,
                                        const IPC::Principal& aPrincipal,
+                                       const IPC::Principal& aTopLevelPrincipal,
                                        const bool aIsHandlingUserInput,
                                        const TabId& aTabId);
 
@@ -120,6 +121,7 @@ public:
 
   NS_IMETHOD GetTypes(nsIArray **aTypes) override;
   NS_IMETHOD GetPrincipal(nsIPrincipal **aPrincipal) override;
+  NS_IMETHOD GetTopLevelPrincipal(nsIPrincipal **aTopLevelPrincipal) override;
   NS_IMETHOD GetWindow(mozIDOMWindow **aWindow) override;
   NS_IMETHOD GetElement(mozilla::dom::Element **aElement) override;
   NS_IMETHOD GetIsHandlingUserInput(bool *aIsHandlingUserInput) override;
@@ -150,6 +152,7 @@ protected:
   virtual ~ContentPermissionRequestBase() = default;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsCOMPtr<nsIPrincipal> mTopLevelPrincipal;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsIContentPermissionRequester> mRequester;
   nsCString mPrefName;

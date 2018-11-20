@@ -1030,6 +1030,8 @@ parent:
      *   The array of permissions to request.
      * @param aPrincipal
      *   The principal of the request.
+     * @param aTopLevelPrincipal
+     *   The principal of the top level page the request comes from.
      * @param tabId
      *   To identify which tab issues this request.
      *
@@ -1038,7 +1040,8 @@ parent:
      *       provided.
      */
     async PContentPermissionRequest(PermissionRequest[] aRequests, Principal aPrincipal,
-                                    bool aIsHandlingUserInput, TabId tabId);
+                                    Principal aTopLevelPrincipal, bool aIsHandlingUserInput,
+                                    TabId tabId);
 
     async ShutdownProfile(nsCString aProfile);
 

@@ -73,6 +73,11 @@ interface nsIContentPermissionRequest : nsISupports {
    */
   readonly attribute nsIPrincipal principal;
 
+  /*
+   *  The principal of the top-level page the permission request comes from.
+   */
+  readonly attribute nsIPrincipal topLevelPrincipal;
+
   /**
    *  The window or element that the permission request was
    *  originated in.  Typically the element will be non-null
