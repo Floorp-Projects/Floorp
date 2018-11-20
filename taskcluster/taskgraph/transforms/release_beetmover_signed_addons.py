@@ -11,7 +11,7 @@ from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.beetmover import craft_release_properties
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
-from taskgraph.util.schema import validate_schema, optionally_keyed_by, resolve_keyed_by
+from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
                                          get_beetmover_action_scope)
 from taskgraph.transforms.task import task_description_schema
@@ -63,14 +63,7 @@ def set_label(config, jobs):
         yield job
 
 
-@transforms.add
-def validate(config, jobs):
-    for job in jobs:
-        validate_schema(
-            beetmover_description_schema, job,
-            "In beetmover ({!r} kind) task for {!r}:".format(config.kind, job['label'])
-        )
-        yield job
+transforms.add_validate(beetmover_description_schema)
 
 
 @transforms.add
