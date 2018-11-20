@@ -5282,12 +5282,17 @@ Perpendicular(mozilla::LogicalSide aSide1,
   return IsInline(aSide1) != IsInline(aSide2);
 }
 
+// Initial value indicating that BCCornerInfo's ownerStyle hasn't been set yet.
+#define BORDER_STYLE_UNSET 0xFF
+
 // XXX allocate this as number-of-cols+1 instead of number-of-cols+1 * number-of-rows+1
 struct BCCornerInfo
 {
   BCCornerInfo() { ownerColor = 0; ownerWidth = subWidth = ownerElem = subSide =
                    subElem = hasDashDot = numSegs = bevel = 0; ownerSide = eLogicalSideBStart;
-                   ownerStyle = 0xFF; subStyle = NS_STYLE_BORDER_STYLE_SOLID;  }
+                   ownerStyle = BORDER_STYLE_UNSET;
+                   subStyle = NS_STYLE_BORDER_STYLE_SOLID; }
+
   void Set(mozilla::LogicalSide aSide,
            BCCellBorder  border);
 
@@ -5339,8 +5344,7 @@ void
 BCCornerInfo::Update(mozilla::LogicalSide aSide,
                      BCCellBorder  aBorder)
 {
-  bool existingWins = false;
-  if (0xFF == ownerStyle) { // initial value indiating that it hasn't been set yet
+  if (ownerStyle == BORDER_STYLE_UNSET) {
     Set(aSide, aBorder);
   }
   else {
@@ -5353,6 +5357,7 @@ BCCornerInfo::Update(mozilla::LogicalSide aSide,
 
     LogicalSide oldSide  = LogicalSide(ownerSide);
 
+    bool existingWins = false;
     tempBorder = CompareBorders(CELL_CORNER, oldBorder, aBorder, isInline, &existingWins);
 
     ownerElem  = tempBorder.owner;
