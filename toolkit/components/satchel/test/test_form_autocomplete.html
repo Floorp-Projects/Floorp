@@ -993,8 +993,10 @@ function runTest() { // eslint-disable-line complexity
     case 500:
       input.addEventListener("input", function(event) {
         ok(true, testNum + " oninput should have been received");
+        ok(event instanceof InputEvent,
+           testNum + " input event should be dispatched with InputEvent interface");
         ok(event.bubbles, testNum + " input event should bubble");
-        ok(event.cancelable, testNum + " input event should be cancelable");
+        ok(!event.cancelable, testNum + " input event shouldn't be cancelable");
       }, {once: true});
 
       synthesizeKey("KEY_ArrowDown");

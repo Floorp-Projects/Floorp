@@ -19,26 +19,54 @@ SimpleTest.waitForFocus(function() {
   let editor = document.getElementById("content");
   let selection = document.getSelection();
 
+  function checkInputEvent(aEvent, aDescription) {
+    ok(aEvent instanceof InputEvent,
+       `"input" event should be dispatched with InputEvent interface ${aDescription}`);
+    is(aEvent.cancelable, false,
+       `"input" event should be never cancelable ${aDescription}`);
+    is(aEvent.bubbles, true,
+       `"input" event should always bubble ${aDescription}`);
+  }
+
+  let inputEvents = [];
+  function onInput(aEvent) {
+    inputEvents.push(aEvent);
+  }
+  editor.addEventListener("input", onInput);
+
+  inputEvents = [];
   selection.collapse(editor.firstChild, 0);
   getTableEditor().insertTableRow(1, false);
   is(editor.innerHTML, "out of table<table><tbody><tr><td>default content</td></tr></tbody></table>",
      "nsITableEditor.insertTableRow(1, false) should do nothing if selection is not in <table>");
+  is(inputEvents.length, 0,
+     'No "input" event should be fired when a call of nsITableEditor.insertTableRow(1, false) does nothing');
+
+  inputEvents = [];
   getTableEditor().insertTableRow(1, true);
   is(editor.innerHTML, "out of table<table><tbody><tr><td>default content</td></tr></tbody></table>",
      "nsITableEditor.insertTableRow(1, true) should do nothing if selection is not in <table>");
+  is(inputEvents.length, 0,
+     'No "input" event should be fired when a call of nsITableEditor.insertTableRow(1, true) does nothing');
 
   selection.removeAllRanges();
   try {
+    inputEvents = [];
     getTableEditor().insertTableRow(1, false);
     ok(false, "getTableEditor().insertTableRow(1, false) without selection ranges should throw exception");
   } catch (e) {
     ok(true, "getTableEditor().insertTableRow(1, false) without selection ranges should throw exception");
+    is(inputEvents.length, 0,
+       'No "input" event should be fired when nsITableEditor.insertTableRow(1, false) causes exception due to no selection range');
   }
   try {
+    inputEvents = [];
     getTableEditor().insertTableRow(1, true);
     ok(false, "getTableEditor().insertTableRow(1, true) without selection ranges should throw exception");
   } catch (e) {
     ok(true, "getTableEditor().insertTableRow(1, true) without selection ranges should throw exception");
+    is(inputEvents.length, 0,
+       'No "input" event should be fired when nsITableEditor.insertTableRow(1, true) causes exception due to no selection range');
   }
 
   selection.removeAllRanges();
@@ -49,6 +77,7 @@ SimpleTest.waitForFocus(function() {
                      "</table>";
   editor.focus();
   editor.scrollTop; // layout information required.
+  inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
                              document.getElementById("select").firstChild, 0);
   getTableEditor().insertTableRow(1, false);
@@ -59,6 +88,9 @@ SimpleTest.waitForFocus(function() {
                          "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.insertTableRow(1, false) should insert a row above the second row");
+  is(inputEvents.length, 1,
+     'Only one "input" event should be fired when selection is collapsed in a cell in second row (before)');
+  checkInputEvent(inputEvents[0], "when selection is collapsed in a cell in second row (before)");
 
   selection.removeAllRanges();
   editor.innerHTML = "<table>" +
@@ -68,6 +100,7 @@ SimpleTest.waitForFocus(function() {
                      "</table>";
   editor.focus();
   editor.scrollTop; // layout information required.
+  inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
                              document.getElementById("select").firstChild, 0);
   getTableEditor().insertTableRow(1, true);
@@ -78,6 +111,9 @@ SimpleTest.waitForFocus(function() {
                          "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.insertTableRow(1, true) should insert a row below the second row");
+  is(inputEvents.length, 1,
+     'Only one "input" event should be fired when selection is collapsed in a cell in second row (after)');
+  checkInputEvent(inputEvents[0], "when selection is collapsed in a cell in second row (after)");
 
   selection.removeAllRanges();
   editor.innerHTML = "<table>" +
@@ -87,6 +123,7 @@ SimpleTest.waitForFocus(function() {
                      "</table>";
   editor.focus();
   editor.scrollTop; // layout information required.
+  inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
                              document.getElementById("select").firstChild, 0);
   getTableEditor().insertTableRow(1, false);
@@ -97,6 +134,9 @@ SimpleTest.waitForFocus(function() {
                          "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.insertTableRow(1, false) should insert a row above the second row and rowspan in the first row should be increased");
+  is(inputEvents.length, 1,
+     'Only one "input" event should be fired when selection is collapsed in a cell in second row which has row-spanned cell (before)');
+  checkInputEvent(inputEvents[0], "when selection is collapsed in a cell in second row which has row-spanned cell (before)");
 
   selection.removeAllRanges();
   editor.innerHTML = "<table>" +
@@ -106,6 +146,7 @@ SimpleTest.waitForFocus(function() {
                      "</table>";
   editor.focus();
   editor.scrollTop; // layout information required.
+  inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
                              document.getElementById("select").firstChild, 0);
   getTableEditor().insertTableRow(1, true);
@@ -116,6 +157,9 @@ SimpleTest.waitForFocus(function() {
                          "<tr><td>cell3-1</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.insertTableRow(1, true) should insert a row below the second row and rowspan in the first row should be increased");
+  is(inputEvents.length, 1,
+     'Only one "input" event should be fired when selection is collapsed in a cell in second row which has row-spanned cell (after)');
+  checkInputEvent(inputEvents[0], "when selection is collapsed in a cell in second row which has row-spanned cell (after)");
 
   selection.removeAllRanges();
   editor.innerHTML = "<table>" +
@@ -125,6 +169,7 @@ SimpleTest.waitForFocus(function() {
                      "</table>";
   editor.focus();
   editor.scrollTop; // layout information required.
+  inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
                              document.getElementById("select").firstChild, 1);
   getTableEditor().insertTableRow(2, false);
@@ -136,6 +181,9 @@ SimpleTest.waitForFocus(function() {
                          "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.insertTableRow(2, false) should insert 2 rows above the first row");
+  is(inputEvents.length, 1,
+     'Only one "input" event should be fired when selection is collapsed in a cell which is row-spanning (before)');
+  checkInputEvent(inputEvents[0], "when selection is collapsed in a cell which is row-spanning (before)");
 
   selection.removeAllRanges();
   editor.innerHTML = "<table>" +
@@ -145,6 +193,7 @@ SimpleTest.waitForFocus(function() {
                      "</table>";
   editor.focus();
   editor.scrollTop; // layout information required.
+  inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
                              document.getElementById("select").firstChild, 1);
   getTableEditor().insertTableRow(2, true);
@@ -156,6 +205,11 @@ SimpleTest.waitForFocus(function() {
                          "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.insertTableRow(2, false) should insert 2 rows below the second row (i.e., below the bottom row of the row-spanning cell");
+  is(inputEvents.length, 1,
+     'Only one "input" event should be fired when selection is collapsed in a cell which is row-spanning (after)');
+  checkInputEvent(inputEvents[0], "when selection is collapsed in a cell which is row-spanning (after)");
+
+  editor.removeEventListener("input", onInput);
 
   SimpleTest.finish();
 });

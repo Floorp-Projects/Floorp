@@ -48,6 +48,14 @@ const SPIN_UP_Y = 3;
 const SPIN_DOWN_X = inputRect.width - 3;
 const SPIN_DOWN_Y = inputRect.height - 3;
 
+function checkInputEvent(aEvent, aDescription) {
+  // Probably, key operation should fire "input" event with InputEvent interface.
+  // See https://github.com/w3c/input-events/issues/88
+  todo(aEvent instanceof InputEvent, `"input" event should be dispatched with InputEvent interface on input element whose type is number ${aDescription}`);
+  is(aEvent.cancelable, false, `"input" event should be never cancelable on input element whose type is number ${aDescription}`);
+  is(aEvent.bubbles, true, `"input" event should always bubble on input element whose type is number ${aDescription}`);
+}
+
 function test() {
   input.value = 0;
 
@@ -134,6 +142,7 @@ var spinTests = [
     input.value = 0;
     input.addEventListener("input", function(evt) {
       ++inputEventCount;
+      checkInputEvent(event, "#1");
       if (inputEventCount == 3) {
         is(input.value, "3", "Testing spin-up button");
         synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mousemove" });
@@ -154,6 +163,7 @@ var spinTests = [
     input.value = 0;
     input.addEventListener("input", function(evt) {
       ++inputEventCount;
+      checkInputEvent(event, "#2");
       if (inputEventCount == 3) {
         is(input.value, "-3", "Testing spin-down button");
         synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, { type: "mousemove" });
@@ -174,6 +184,7 @@ var spinTests = [
     input.value = 0;
     input.addEventListener("input", function(evt) {
       ++inputEventCount;
+      checkInputEvent(event, "#3");
       if (inputEventCount == 3) {
         synthesizeMouse(input, -1, -1, { type: "mousemove" });
         var eventHandler = arguments.callee;
@@ -195,6 +206,7 @@ var spinTests = [
     input.value = 0;
     input.addEventListener("input", function(evt) {
       ++inputEventCount;
+      checkInputEvent(event, "#4");
       if (inputEventCount == 3) {
         input.type = "text"
         var eventHandler = arguments.callee;
