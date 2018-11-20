@@ -289,12 +289,8 @@ SVGDrawingCallback::operator()(gfxContext* aContext,
   MOZ_ASSERT(mSVGDocumentWrapper, "need an SVGDocumentWrapper");
 
   // Get (& sanity-check) the helper-doc's presShell
-  nsCOMPtr<nsIPresShell> presShell;
-  if (NS_FAILED(mSVGDocumentWrapper->GetPresShell(getter_AddRefs(presShell)))) {
-    NS_WARNING("Unable to draw -- presShell lookup failed");
-    return false;
-  }
-  MOZ_ASSERT(presShell, "GetPresShell succeeded but returned null");
+  nsCOMPtr<nsIPresShell> presShell = mSVGDocumentWrapper->GetPresShell();
+  MOZ_ASSERT(presShell, "GetPresShell returned null for an SVG image?");
 
 #ifdef MOZ_GECKO_PROFILER
   nsIDocument* doc = presShell->GetDocument();

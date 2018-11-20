@@ -323,8 +323,7 @@ nsGenericHTMLFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
           if (cur != val) {
             scrollable->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X, val);
             scrollable->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y, val);
-            RefPtr<nsPresContext> presContext;
-            docshell->GetPresContext(getter_AddRefs(presContext));
+            RefPtr<nsPresContext> presContext = docshell->GetPresContext();
             nsIPresShell* shell = presContext ? presContext->GetPresShell() : nullptr;
             nsIFrame* rootScroll = shell ? shell->GetRootScrollFrame() : nullptr;
             if (rootScroll) {

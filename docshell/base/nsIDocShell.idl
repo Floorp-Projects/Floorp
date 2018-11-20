@@ -238,18 +238,18 @@ interface nsIDocShell : nsIDocShellTreeItem
   /**
    * Presentation context for the currently loaded document.  This may be null.
    */
-  [noscript] readonly attribute nsPresContext presContext;
+  [notxpcom,nostdcall] readonly attribute nsPresContext presContext;
 
   /**
    * Presentation shell for the currently loaded document.  This may be null.
    */
-  [noscript,notxpcom] nsIPresShell GetPresShell();
+  [notxpcom,nostdcall] readonly attribute nsIPresShell presShell;
 
   /**
    * Presentation shell for the oldest document, if this docshell is
    * currently transitioning between documents.
    */
-  [noscript] readonly attribute nsIPresShell eldestPresShell;
+  [notxpcom,nostdcall] readonly attribute nsIPresShell eldestPresShell;
 
   /**
    * Content Viewer that is currently loaded for this DocShell.  This may
@@ -559,7 +559,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * The original offset of this child in its container. This property is -1 for
    * dynamically added docShells.
    */
-  [noscript] attribute long childOffset;
+  [notxpcom,nostdcall] attribute long childOffset;
 
   /**
    * Find out whether the docshell is currently in the middle of a page

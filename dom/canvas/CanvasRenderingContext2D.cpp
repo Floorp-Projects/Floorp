@@ -5288,7 +5288,7 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow, double aX,
   RefPtr<nsPresContext> presContext;
   nsIDocShell* docshell = aWindow.GetDocShell();
   if (docshell) {
-    docshell->GetPresContext(getter_AddRefs(presContext));
+    presContext = docshell->GetPresContext();
   }
   if (!presContext) {
     aError.Throw(NS_ERROR_FAILURE);

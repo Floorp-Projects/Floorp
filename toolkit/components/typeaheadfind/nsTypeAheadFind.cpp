@@ -785,8 +785,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
 
   nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
 
-  RefPtr<nsPresContext> presContext;
-  docShell->GetPresContext(getter_AddRefs(presContext));
+  RefPtr<nsPresContext> presContext = docShell->GetPresContext();
 
   if (!presShell || !presContext)
     return NS_ERROR_FAILURE;

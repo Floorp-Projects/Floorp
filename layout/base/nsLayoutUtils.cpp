@@ -7647,8 +7647,7 @@ nsLayoutUtils::GetDeviceContextForScreenInfo(nsPIDOMWindowOuter* aWindow)
 
     win->EnsureSizeAndPositionUpToDate();
 
-    RefPtr<nsPresContext> presContext;
-    docShell->GetPresContext(getter_AddRefs(presContext));
+    RefPtr<nsPresContext> presContext = docShell->GetPresContext();
     if (presContext) {
       nsDeviceContext* context = presContext->DeviceContext();
       if (context) {
@@ -9215,9 +9214,8 @@ MaybeReflowForInflationScreenSizeChange(nsPresContext *aPresContext)
           nsTArray<nsCOMPtr<nsIContentViewer> > array;
           cv->AppendSubtree(array);
           for (uint32_t i = 0, iEnd = array.Length(); i < iEnd; ++i) {
-            nsCOMPtr<nsIPresShell> shell;
             nsCOMPtr<nsIContentViewer> cv = array[i];
-            cv->GetPresShell(getter_AddRefs(shell));
+            nsCOMPtr<nsIPresShell> shell = cv->GetPresShell();
             if (shell) {
               nsIFrame *rootFrame = shell->GetRootFrame();
               if (rootFrame) {
