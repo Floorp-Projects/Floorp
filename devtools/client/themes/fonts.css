@@ -347,6 +347,7 @@
 }
 
 .font-value-slider {
+  background: transparent;
   width: 100%;
   margin: 0;
 }
