@@ -166,9 +166,18 @@ class WebPlatformTestsUpdater(MozbuildObject):
         import update
         return update.setup_logging(kwargs, {"mach": sys.stdout})
 
+    def update_manifest(self, logger, **kwargs):
+        import manifestupdate
+        return manifestupdate.run(logger=logger,
+                                  src_root=self.topsrcdir,
+                                  obj_root=self.topobjdir,
+                                  **kwargs)
+
     def run_update(self, logger, **kwargs):
         import update
         from update import updatecommandline
+
+        self.update_manifest(logger, **kwargs)
 
         if kwargs["config"] is None:
             kwargs["config"] = os.path.join(self.topobjdir, '_tests', 'web-platform', 'wptrunner.local.ini')
