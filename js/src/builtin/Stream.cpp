@@ -520,7 +520,7 @@ const Class cls::protoClass_ = { \
 };
 
 
-/*** 3.2. Class ReadableStream *******************************************************************/
+/*** 3.2. Class ReadableStream **********************************************/
 
 /**
  * Streams spec, 3.2.3., steps 1-4.
@@ -871,7 +871,7 @@ static const JSPropertySpec ReadableStream_properties[] = {
 CLASS_SPEC(ReadableStream, 0, SlotCount, 0, 0, JS_NULL_CLASS_OPS);
 
 
-/*** 3.3. General readable stream abstract operations ********************************************/
+/*** 3.3. General readable stream abstract operations ***********************/
 
 // Streams spec, 3.3.1. AcquireReadableStreamBYOBReader ( stream )
 // Always inlined.
@@ -1307,7 +1307,7 @@ ReadableStreamTee(JSContext* cx,
 }
 
 
-/*** 3.4. The interface between readable streams and controllers *********************************/
+/*** 3.4. The interface between readable streams and controllers ************/
 
 inline static MOZ_MUST_USE bool
 AppendToListAtSlot(JSContext* cx,
@@ -1748,7 +1748,7 @@ ReadableStreamHasDefaultReader(JSContext* cx,
 }
 
 
-/*** 3.5. Class ReadableStreamDefaultReader ******************************************************/
+/*** 3.5. Class ReadableStreamDefaultReader *********************************/
 
 static MOZ_MUST_USE bool
 ReadableStreamReaderGenericInitialize(JSContext* cx,
@@ -1985,7 +1985,7 @@ CLASS_SPEC(ReadableStreamDefaultReader, 1, SlotCount, ClassSpec::DontDefineConst
            JS_NULL_CLASS_OPS);
 
 
-/*** 3.7. Readable stream reader abstract operations *********************************************/
+/*** 3.7. Readable stream reader abstract operations ************************/
 
 // Streams spec, 3.7.1. IsReadableStreamDefaultReader ( x )
 // Implemented via is<ReadableStreamDefaultReader>()
@@ -2202,7 +2202,7 @@ ReadableStreamDefaultReaderRead(JSContext* cx,
 }
 
 
-/*** 3.8. Class ReadableStreamDefaultController **************************************************/
+/*** 3.8. Class ReadableStreamDefaultController *****************************/
 
 inline static MOZ_MUST_USE bool
 ReadableStreamControllerCallPullIfNeeded(JSContext* cx,
@@ -2743,7 +2743,7 @@ ReadableStreamDefaultControllerPullSteps(JSContext* cx,
 }
 
 
-/*** 3.9. Readable stream default controller abstract operations *********************************/
+/*** 3.9. Readable stream default controller abstract operations ************/
 
 // Streams spec, 3.9.1. IsReadableStreamDefaultController ( x )
 // Implemented via is<ReadableStreamDefaultController>()
@@ -3134,7 +3134,7 @@ ReadableStreamControllerGetDesiredSizeUnchecked(ReadableStreamController* contro
 }
 
 
-/*** 3.10. Class ReadableByteStreamController ****************************************************/
+/*** 3.10. Class ReadableByteStreamController *******************************/
 
 #if 0 // disable user-defined byte streams
 
@@ -3580,7 +3580,7 @@ ReadableStreamControllerPullSteps(JSContext* cx, Handle<ReadableStreamController
 }
 
 
-/*** 3.12. Readable stream BYOB controller abstract operations ***********************************/
+/*** 3.12. Readable stream BYOB controller abstract operations **************/
 
 // Streams spec, 3.12.1. IsReadableStreamBYOBRequest ( x )
 // Implemented via is<ReadableStreamBYOBRequest>()
@@ -3747,7 +3747,7 @@ ReadableByteStreamControllerInvalidateBYOBRequest(JSContext* cx,
 // Unified with 3.9.3 above.
 
 
-/*** 6.1. Queuing strategies *********************************************************************/
+/*** 6.1. Queuing strategies ************************************************/
 
 // Streams spec, 6.1.2.2. new ByteLengthQueuingStrategy({ highWaterMark })
 bool
@@ -3853,7 +3853,7 @@ CLASS_SPEC(CountQueuingStrategy, 1, 0, 0, 0, JS_NULL_CLASS_OPS);
 #undef CLASS_SPEC
 
 
-/*** 6.2. Queue-with-sizes operations ************************************************************/
+/*** 6.2. Queue-with-sizes operations ***************************************/
 
 /**
  * Streams spec, 6.2.1. DequeueValue ( container ) nothrow
@@ -3973,7 +3973,7 @@ ResetQueue(JSContext* cx, Handle<ReadableStreamController*> unwrappedContainer)
 }
 
 
-/*** 6.3. Miscellaneous operations ***************************************************************/
+/*** 6.3. Miscellaneous operations ******************************************/
 
 /**
  * Appends the given |obj| to the given list |container|'s list.
@@ -4092,7 +4092,7 @@ ValidateAndNormalizeQueuingStrategy(JSContext* cx, HandleValue size,
 }
 
 
-/*** API entry points ****************************************************************************/
+/*** API entry points *******************************************************/
 
 JS_FRIEND_API JSObject*
 js::UnwrapReadableStream(JSObject* obj)

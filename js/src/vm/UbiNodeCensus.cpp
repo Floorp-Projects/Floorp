@@ -34,7 +34,7 @@ CountDeleter::operator()(CountBase* ptr)
     js_free(ptr);
 }
 
-/*** Count Types ***********************************************************************************/
+/*** Count Types ************************************************************/
 
 // The simplest type: just count everything.
 class SimpleCount : public CountType {
@@ -1134,7 +1134,7 @@ ByFilename::report(JSContext* cx, CountBase& countBase, MutableHandleValue repor
 }
 
 
-/*** Census Handler *******************************************************************************/
+/*** Census Handler *********************************************************/
 
 JS_PUBLIC_API bool
 CensusHandler::operator() (BreadthFirst<CensusHandler>& traversal,
@@ -1170,7 +1170,7 @@ CensusHandler::operator() (BreadthFirst<CensusHandler>& traversal,
 }
 
 
-/*** Parsing Breakdowns ***************************************************************************/
+/*** Parsing Breakdowns *****************************************************/
 
 static CountTypePtr
 ParseChildBreakdown(JSContext* cx, HandleObject breakdown, PropertyName* prop)
