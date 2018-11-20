@@ -408,11 +408,12 @@ JitRuntime::generateArgumentsRectifier(MacroAssembler& masm)
     masm.subq(r8, rcx);
 
     // Caller:
-    // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]] <- rsp <- r9
+    // [arg2] [arg1] [this] [ [argc] [callee] [descr] [raddr] ] <- rsp <- r9
     // '------ #r8 -------'
     //
     // Rectifier frame:
-    // [undef] [undef] [undef] [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]]
+    // [undef] [undef] [undef] [arg2] [arg1] [this] [ [argc] [callee]
+    //                                                [descr] [raddr] ]
     // '------- #rcx --------' '------ #r8 -------'
 
     // Copy the number of actual arguments into rdx. Use lea to subtract 1 for
@@ -475,11 +476,12 @@ JitRuntime::generateArgumentsRectifier(MacroAssembler& masm)
 
 
     // Caller:
-    // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]] <- r9
+    // [arg2] [arg1] [this] [ [argc] [callee] [descr] [raddr] ] <- r9
     //
     //
     // Rectifier frame:
-    // [undef] [undef] [undef] [arg2] [arg1] [this] <- rsp [[argc] [callee] [descr] [raddr]]
+    // [undef] [undef] [undef] [arg2] [arg1] [this] <- rsp [ [argc] [callee]
+    //                                                       [descr] [raddr] ]
     //
 
     // Construct descriptor.
@@ -1145,7 +1147,8 @@ JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm, Label* profi
         masm.loadPtr(Address(scratch2, RectifierFrameLayout::offsetOfReturnAddress()), scratch3);
         masm.storePtr(scratch3, lastProfilingCallSite);
 
-        // scratch3 := RectFrame + Rect-Descriptor.Size + RectifierFrameLayout::Size()
+        // scratch3 := RectFrame + Rect-Descriptor.Size +
+        //             RectifierFrameLayout::Size()
         masm.lea(Operand(scratch2, scratch1, TimesOne, RectifierFrameLayout::Size()), scratch3);
         masm.storePtr(scratch3, lastProfilingFrame);
         masm.ret();
