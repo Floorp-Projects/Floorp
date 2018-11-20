@@ -307,9 +307,8 @@ nsTransferable::GetTransferData(const char* aFlavor,
           }
         }
 
-        uint32_t dataLen;
-        return mFormatConv->Convert(data.GetFlavor().get(), dataBytes, 0,
-                                    aFlavor, aData, &dataLen);
+        return mFormatConv->Convert(data.GetFlavor().get(), dataBytes, aFlavor,
+                                    aData);
       }
     }
   }
@@ -368,13 +367,10 @@ nsTransferable::SetTransferData(const char* aFlavor,
 
       if (canConvert) {
         nsCOMPtr<nsISupports> ConvertedData;
-        uint32_t ConvertedLen;
         mFormatConv->Convert(aFlavor,
                              aData,
-                             0,
                              data.GetFlavor().get(),
-                             getter_AddRefs(ConvertedData),
-                             &ConvertedLen);
+                             getter_AddRefs(ConvertedData));
         data.SetData(ConvertedData, mPrivateData);
         return NS_OK;
       }
