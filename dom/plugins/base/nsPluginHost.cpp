@@ -829,12 +829,7 @@ nsPluginHost::InstantiatePluginInstance(const nsACString& aMimeType, nsIURI* aUR
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<nsNPAPIPluginInstance> instance;
-  rv = instanceOwner->GetInstance(getter_AddRefs(instance));
-  if (NS_FAILED(rv)) {
-    instanceOwner->Destroy();
-    return rv;
-  }
+  RefPtr<nsNPAPIPluginInstance> instance = instanceOwner->GetInstance();
 
   if (instance) {
     CreateWidget(instanceOwner);

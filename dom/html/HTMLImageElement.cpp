@@ -758,23 +758,10 @@ HTMLImageElement::Image(const GlobalObject& aGlobal,
   return img.forget();
 }
 
-NS_IMETHODIMP
-HTMLImageElement::GetNaturalHeight(uint32_t* aNaturalHeight)
-{
-  *aNaturalHeight = NaturalHeight();
-  return NS_OK;
-}
-
 uint32_t
 HTMLImageElement::NaturalHeight()
 {
-  uint32_t height;
-  nsresult rv = nsImageLoadingContent::GetNaturalHeight(&height);
-
-  if (NS_FAILED(rv)) {
-    MOZ_ASSERT(false, "GetNaturalHeight should not fail");
-    return 0;
-  }
+  uint32_t height = nsImageLoadingContent::NaturalHeight();
 
   if (mResponsiveSelector) {
     double density = mResponsiveSelector->GetSelectedImageDensity();
@@ -785,23 +772,10 @@ HTMLImageElement::NaturalHeight()
   return height;
 }
 
-NS_IMETHODIMP
-HTMLImageElement::GetNaturalWidth(uint32_t* aNaturalWidth)
-{
-  *aNaturalWidth = NaturalWidth();
-  return NS_OK;
-}
-
 uint32_t
 HTMLImageElement::NaturalWidth()
 {
-  uint32_t width;
-  nsresult rv = nsImageLoadingContent::GetNaturalWidth(&width);
-
-  if (NS_FAILED(rv)) {
-    MOZ_ASSERT(false, "GetNaturalWidth should not fail");
-    return 0;
-  }
+  uint32_t width = nsImageLoadingContent::NaturalWidth();
 
   if (mResponsiveSelector) {
     double density = mResponsiveSelector->GetSelectedImageDensity();
