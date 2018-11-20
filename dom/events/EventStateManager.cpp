@@ -5833,12 +5833,11 @@ EventStateManager::DoContentCommandEvent(WidgetContentCommandEvent* aEvent)
                                                           &ipcDataTransfer,
                                                           false, nullptr,
                                                           cp);
-            bool isPrivateData = false;
-            transferable->GetIsPrivateData(&isPrivateData);
-            nsCOMPtr<nsIPrincipal> requestingPrincipal;
-            transferable->GetRequestingPrincipal(getter_AddRefs(requestingPrincipal));
-            nsContentPolicyType contentPolicyType = nsIContentPolicy::TYPE_OTHER;
-            transferable->GetContentPolicyType(&contentPolicyType);
+            bool isPrivateData = transferable->GetIsPrivateData();
+            nsCOMPtr<nsIPrincipal> requestingPrincipal =
+              transferable->GetRequestingPrincipal();
+            nsContentPolicyType contentPolicyType =
+              transferable->GetContentPolicyType();
             remote->SendPasteTransferable(ipcDataTransfer, isPrivateData,
                                           IPC::Principal(requestingPrincipal),
                                           contentPolicyType);
