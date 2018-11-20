@@ -1374,7 +1374,16 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
         offset = layout.addScalar(Scalar::Float64);
         break;
       case ValType::Ref:
+        offset = layout.addReference(ReferenceType::TYPE_OBJECT);
+        break;
       case ValType::AnyRef:
+        // TODO/AnyRef-boxing: TYPE_OBJECT is not an appropriate
+        // representation for anyref in a structure.  So long as we box
+        // non-Object values in Objects, it is safe; however,
+        // boxing/unboxing operations on the JS side will be incorrect.
+        // Once we use a tagged representation, using TYPE_OBJECT will be
+        // unsound.
+        ASSERT_ANYREF_IS_JSOBJECT;
         offset = layout.addReference(ReferenceType::TYPE_OBJECT);
         break;
       default:
@@ -1996,7 +2005,11 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
         return d.fail(
             "type mismatch: initializer type and expected type don't match");
       }
-      *init = InitExpr(LitVal(expected, nullptr));
+      if (expected == ValType::AnyRef) {
+        *init = InitExpr(LitVal(AnyRef::null()));
+      } else {
+        *init = InitExpr(LitVal(expected, nullptr));
+      }
       break;
     }
     case uint16_t(Op::GetGlobal): {
