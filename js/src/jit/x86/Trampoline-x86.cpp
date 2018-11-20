@@ -359,7 +359,7 @@ JitRuntime::generateArgumentsRectifier(MacroAssembler& masm)
     argumentsRectifierOffset_ = startTrampolineCode(masm);
 
     // Caller:
-    // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]] <- esp
+    // [arg2] [arg1] [this] [ [argc] [callee] [descr] [raddr] ] <- esp
 
     // Load argc.
     masm.loadPtr(Address(esp, RectifierFrameLayout::offsetOfNumActualArgs()), esi);
@@ -410,14 +410,14 @@ JitRuntime::generateArgumentsRectifier(MacroAssembler& masm)
     masm.push(FramePointer /* padding */);
 
     // Caller:
-    // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]]
+    // [arg2] [arg1] [this] [ [argc] [callee] [descr] [raddr] ]
     // '-- #esi ---'
     //
     // Rectifier frame:
     // [ebp'] <- ebp [padding] <- esp [undef] [undef] [arg2] [arg1] [this]
     //                                '--- #ecx ----' '-- #esi ---'
     //
-    // [[argc] [callee] [descr] [raddr]]
+    // [ [argc] [callee] [descr] [raddr] ]
 
     // Push undefined.
     {
@@ -1170,7 +1170,8 @@ JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm, Label* profi
         masm.loadPtr(Address(scratch2, RectifierFrameLayout::offsetOfReturnAddress()), scratch3);
         masm.storePtr(scratch3, lastProfilingCallSite);
 
-        // scratch3 := RectFrame + Rect-Descriptor.Size + RectifierFrameLayout::Size()
+        // scratch3 := RectFrame + Rect-Descriptor.Size +
+        //             RectifierFrameLayout::Size()
         masm.lea(Operand(scratch2, scratch1, TimesOne, RectifierFrameLayout::Size()), scratch3);
         masm.storePtr(scratch3, lastProfilingFrame);
         masm.ret();

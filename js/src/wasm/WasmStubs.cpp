@@ -1259,7 +1259,7 @@ GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
     MOZ_ALWAYS_TRUE(invokeArgTypes.append(typeArray, ArrayLength(typeArray)));
 
     // At the point of the call, the stack layout shall be (sp grows to the left):
-    //   | stack args | padding | Value argv[] | padding | retaddr | caller stack args |
+    //  | stack args | padding | argv[] | padding | retaddr | caller stack args |
     // The padding between stack args and argv ensures that argv is aligned. The
     // padding between argv and retaddr ensures that sp is aligned.
     unsigned argOffset = AlignBytes(StackArgBytes(invokeArgTypes), sizeof(double));
