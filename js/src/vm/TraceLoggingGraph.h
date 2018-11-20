@@ -13,6 +13,7 @@
 #include "vm/MutexIDs.h"
 #include "vm/TraceLoggingTypes.h"
 
+// clang-format off
 /*
  * The output of a tracelogging session is saved in /tmp/tl-data.json.
  * The format of that file is a JS array per tracelogger (=thread), with a map
@@ -60,6 +61,7 @@
  *                                  |                                  |
  *         0x240: [start, end, dictId, 0, 4]    0x300 [start, end, dictId, 0, 0]
  */
+// clang-format on
 
 namespace js {
 void DestroyTraceLoggerGraphState();

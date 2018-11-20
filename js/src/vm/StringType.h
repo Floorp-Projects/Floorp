@@ -48,6 +48,7 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
 
 } /* namespace js */
 
+// clang-format off
 /*
  * [SMDOC] JavaScript Strings
  *
@@ -160,6 +161,7 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  * The ensureX() operations mutate 'this' in place to effectively the type to be
  * at least X (e.g., ensureLinear will change a JSRope to be a JSFlatString).
  */
+// clang-format on
 
 class JSString : public js::gc::Cell
 {
