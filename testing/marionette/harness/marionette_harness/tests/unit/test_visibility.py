@@ -17,6 +17,7 @@ def inline(doc):
 
 def element_direction_doc(direction):
     return inline("""
+        <meta name="viewport" content="initial-scale=1,width=device-width">
         <style>
           .element{{
             position: absolute;

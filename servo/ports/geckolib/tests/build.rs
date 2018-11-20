@@ -12,8 +12,11 @@ use std::path::Path;
 
 fn main() {
     // https://github.com/rust-lang/cargo/issues/3544
-    let style_out_dir = env::var_os("DEP_FOR SOME REASON THE LINKS KEY IS REQUIRED \
-                                     TO PASS DATA AROUND BETWEEN BUILD SCRIPTS_OUT_DIR").unwrap();
+    let style_out_dir = env::var_os(
+        "DEP_FOR SOME REASON THE LINKS KEY IS REQUIRED \
+         TO PASS DATA AROUND BETWEEN BUILD SCRIPTS_OUT_DIR",
+    )
+    .unwrap();
     let root_path = Path::new("../../../");
     let bindings_file = Path::new(&style_out_dir).join("gecko/bindings.rs");
     let glue_file = root_path.join("ports/geckolib/glue.rs");
@@ -61,7 +64,10 @@ fn main() {
                 {
                     continue;
                 }
-                w.write_all(format!("    [ Servo_{0}, bindings::Servo_{0} ];\n", &cap[1]).as_bytes()).unwrap();
+                w.write_all(
+                    format!("    [ Servo_{0}, bindings::Servo_{0} ];\n", &cap[1]).as_bytes(),
+                )
+                .unwrap();
             }
         }
 
@@ -73,10 +79,13 @@ fn main() {
         let r = BufReader::new(File::open(glue_file).unwrap());
         let mut w = File::create(output).unwrap();
 
-        w.write_all(b"pub use style::gecko::arc_types::*;\n").unwrap();
+        w.write_all(b"pub use style::gecko::arc_types::*;\n")
+            .unwrap();
 
         for line in r.lines() {
-            let s = line.unwrap().replace("pub extern \"C\" fn", "pub unsafe extern \"C\" fn");
+            let s = line
+                .unwrap()
+                .replace("pub extern \"C\" fn", "pub unsafe extern \"C\" fn");
             w.write_all(s.as_bytes()).unwrap();
             w.write_all(b"\n").unwrap();
         }
@@ -84,8 +93,13 @@ fn main() {
 
     File::create(out_dir.join("bindings.rs"))
         .unwrap()
-        .write_all(format!("include!(concat!({:?}, \"/gecko/structs.rs\"));",
-                           style_out_dir).as_bytes())
+        .write_all(
+            format!(
+                "include!(concat!({:?}, \"/gecko/structs.rs\"));",
+                style_out_dir
+            )
+            .as_bytes(),
+        )
         .unwrap();
 
     if env::var_os("MOZ_SRC").is_some() {

@@ -110,6 +110,19 @@ public:
                                                   const mozilla::ScreenIntSize& aDisplaySize,
                                                   const mozilla::CSSSize& aViewportSize) const;
 
+  /*
+   * Returns the screen size subtracted the scrollbar sizes from |aDisplaySize|.
+   */
+  mozilla::ScreenIntSize
+  GetCompositionSize(const mozilla::ScreenIntSize& aDisplaySize) const;
+
+  /*
+   * Shrink the content to fit it to the display width if no initial-scale is
+   * specified and if the content is still wider than the display width.
+   */
+  void ShrinkToDisplaySizeIfNeeded(nsViewportInfo& aViewportInfo,
+                                   const mozilla::ScreenIntSize& aDisplaySize);
+
   nsCOMPtr<nsIDocument> mDocument;
   nsIPresShell* MOZ_NON_OWNING_REF mPresShell; // raw ref since the presShell owns this
   nsCOMPtr<mozilla::dom::EventTarget> mEventTarget;

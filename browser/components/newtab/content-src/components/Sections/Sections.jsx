@@ -235,8 +235,8 @@ export class Section extends React.PureComponent {
           <div className="section-empty-state">
             <div className="empty-state">
               {emptyState.icon && emptyState.icon.startsWith("moz-extension://") ?
-                <img className="empty-state-icon icon" style={{"background-image": `url('${emptyState.icon}')`}} /> :
-                <img className={`empty-state-icon icon icon-${emptyState.icon}`} />}
+                <span className="empty-state-icon icon" style={{"background-image": `url('${emptyState.icon}')`}} /> :
+                <span className={`empty-state-icon icon icon-${emptyState.icon}`} />}
               <p className="empty-state-message">
                 {getFormattedMessage(emptyState.message)}
               </p>

@@ -70,7 +70,7 @@ describe("ActivityStreamPrefs", () => {
       let defaultPrefs;
       let sandbox;
       beforeEach(() => {
-        sandbox = sinon.sandbox.create();
+        sandbox = sinon.createSandbox();
         defaultPrefs = new DefaultPrefs(TEST_PREF_CONFIG);
         sinon.stub(defaultPrefs, "set");
       });

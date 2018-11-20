@@ -25,13 +25,11 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(AutoplayPermissionRequest,
 AutoplayPermissionRequest::AutoplayPermissionRequest(
   AutoplayPermissionManager* aManager,
   nsGlobalWindowInner* aWindow,
-  nsIPrincipal* aNodePrincipal,
-  nsIEventTarget* aMainThreadTarget)
+  nsIPrincipal* aNodePrincipal)
   : ContentPermissionRequestBase(aNodePrincipal, false, aWindow,
                                  NS_LITERAL_CSTRING(""), // No testing pref used in this class
                                  NS_LITERAL_CSTRING("autoplay-media"))
   , mManager(aManager)
-  , mMainThreadTarget(aMainThreadTarget)
 {
 }
 
@@ -68,15 +66,13 @@ already_AddRefed<AutoplayPermissionRequest>
 AutoplayPermissionRequest::Create(nsGlobalWindowInner* aWindow,
                                   AutoplayPermissionManager* aManager)
 {
-  if (!aWindow || !aWindow->GetPrincipal() ||
-      !aWindow->EventTargetFor(TaskCategory::Other)) {
+  if (!aWindow || !aWindow->GetPrincipal()) {
     return nullptr;
   }
   RefPtr<AutoplayPermissionRequest> request =
     new AutoplayPermissionRequest(aManager,
                                   aWindow,
-                                  aWindow->GetPrincipal(),
-                                  aWindow->EventTargetFor(TaskCategory::Other));
+                                  aWindow->GetPrincipal());
   PLAY_REQUEST_LOG("AutoplayPermissionRequest %p Create()", request.get());
   return request.forget();
 }

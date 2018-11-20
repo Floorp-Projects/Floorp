@@ -7,61 +7,55 @@
 <!DOCTYPE html [
   <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
   %htmlDTD;
-  <!ENTITY % netErrorDTD SYSTEM "chrome://global/locale/netError.dtd">
-  %netErrorDTD;
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-  %globalDTD;
-  <!ENTITY % restorepageDTD SYSTEM "chrome://browser/locale/aboutSessionRestore.dtd">
-  %restorepageDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <head>
-    <title>&welcomeback2.tabtitle;</title>
+    <title data-l10n-id="welcome-back-tab-title"></title>
     <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" type="text/css" media="all"/>
     <link rel="stylesheet" href="chrome://browser/skin/aboutWelcomeBack.css" type="text/css" media="all"/>
     <link rel="icon" type="image/png" href="chrome://browser/skin/info.svg"/>
-
+    <link rel="localization" href="browser/aboutSessionRestore.ftl"/>
+    <link rel="localization" href="branding/brand.ftl"/>
     <script type="application/javascript" src="chrome://browser/content/aboutSessionRestore.js"/>
   </head>
 
-  <body dir="&locale.dir;">
+  <body>
 
     <div class="container">
 
       <div class="title">
-        <h1 class="title-text">&welcomeback2.pageTitle;</h1>
+        <h1 class="title-text" data-l10n-id="welcome-back-page-title"></h1>
       </div>
 
       <div class="description">
 
-        <p>&welcomeback2.pageInfo1;</p>
+        <p data-l10n-id="welcome-back-page-info"></p>
         <!-- Note a href in the anchor below is added by JS -->
-        <p>&welcomeback2.beforelink.pageInfo2;<a id="linkMoreTroubleshooting" target="_blank">&welcomeback2.link.pageInfo2;</a>&welcomeback2.afterlink.pageInfo2;</p>
+        <p data-l10n-id="welcome-back-page-info-link"><a id="linkMoreTroubleshooting" target="_blank" data-l10n-name="link-more"></a></p>
 
         <div>
           <div class="radioRestoreContainer">
             <input class="radioRestoreButton" id="radioRestoreAll" type="radio"
                    name="restore" checked="checked"/>
-            <label class="radioRestoreLabel" for="radioRestoreAll">&welcomeback2.restoreAll.label;</label>
+            <label class="radioRestoreLabel" for="radioRestoreAll" data-l10n-id="welcome-back-restore-all-label"></label>
           </div>
 
           <div class="radioRestoreContainer">
             <input class="radioRestoreButton" id="radioRestoreChoose" type="radio"
                    name="restore"/>
-            <label class="radioRestoreLabel" for="radioRestoreChoose">&welcomeback2.restoreSome.label;</label>
+            <label class="radioRestoreLabel" for="radioRestoreChoose" data-l10n-id="welcome-back-restore-some-label"></label>
           </div>
         </div>
       </div>
 
       <div class="tree-container">
         <xul:tree id="tabList" flex="1" seltype="single" hidecolumnpicker="true"
-                  onclick="onListClick(event);" onkeydown="onListKeyDown(event);"
-                  _window_label="&restorepage.windowLabel;">
+                  onclick="onListClick(event);" onkeydown="onListKeyDown(event);">
           <xul:treecols>
-            <xul:treecol cycler="true" id="restore" type="checkbox" label="&restorepage.restoreHeader;"/>
+            <xul:treecol cycler="true" id="restore" type="checkbox" data-l10n-id="restore-page-restore-header"/>
             <xul:splitter class="tree-splitter"/>
-            <xul:treecol primary="true" id="title" label="&restorepage.listHeader;" flex="1"/>
+            <xul:treecol primary="true" id="title" data-l10n-id="restore-page-list-header" flex="1"/>
           </xul:treecols>
           <xul:treechildren flex="1"/>
         </xul:tree>
@@ -70,8 +64,7 @@
       <div class="button-container">
         <xul:button class="primary"
                     id="errorTryAgain"
-                    label="&welcomeback2.restoreButton;"
-                    accesskey="&welcomeback2.restoreButton.access;"
+                    data-l10n-id="welcome-back-restore-button"
                     oncommand="restoreSession();"/>
       </div>
 

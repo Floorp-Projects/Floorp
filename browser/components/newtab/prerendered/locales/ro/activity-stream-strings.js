@@ -107,6 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Politica de confidențialitate",
   "firstrun_continue_to_login": "Continuă",
   "firstrun_skip_login": "Omite acest pas",
-  "context_menu_title": "Open menu",
+  "context_menu_title": "Deschide meniul",
   "pocket_learn_more": "Află mai multe"
 };

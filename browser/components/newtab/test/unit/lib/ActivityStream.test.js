@@ -9,7 +9,7 @@
 //   function Fake() {}
 
 //   beforeEach(() => {
-//     sandbox = sinon.sandbox.create();
+//     sandbox = sinon.createSandbox();
 //     ({ActivityStream, PREFS_CONFIG} = injector({
 //       "lib/AboutPreferences.jsm": {AboutPreferences: Fake},
 //       "lib/ManualMigration.jsm": {ManualMigration: Fake},
