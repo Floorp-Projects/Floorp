@@ -67,6 +67,7 @@ public:
     return new (aMemory) RangeInputType(aInputElement);
   }
 
+  MOZ_CAN_RUN_SCRIPT
   nsresult MinMaxStepAttrChanged() override;
 
 private:
