@@ -19,6 +19,8 @@ use error::{ErrorStatus, WebDriverError, WebDriverResult};
 use httpapi::{VoidWebDriverExtensionRoute, WebDriverExtensionRoute, WebDriverHttpApi};
 use response::{CloseWindowResponse, WebDriverResponse};
 
+// Silence warning about Quit being unused for now.
+#[allow(dead_code)]
 enum DispatchMessage<U: WebDriverExtensionRoute> {
     HandleWebDriver(
         WebDriverMessage<U>,
