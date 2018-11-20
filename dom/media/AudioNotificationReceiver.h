@@ -7,15 +7,17 @@
 #ifndef MOZILLA_AUDIONOTIFICATIONRECEIVER_H_
 #define MOZILLA_AUDIONOTIFICATIONRECEIVER_H_
 
+// clang-format off
 /*
  * Architecture to send/receive default device-changed notification:
  *
  *  Chrome Process                       ContentProcess 1
  *  ------------------                   ------------------
  *
- *       AudioNotification               DeviceChangeListener 1
- * DeviceChangeListener N |      ^                             |      ^ ^ (4)|
- * |(2)                          |(3)   |(8)      . v      | v      |         v
+ *       AudioNotification               DeviceChangeListener 1   DeviceChangeListener N
+ *             |      ^                             |      ^         ^
+ *          (4)|      |(2)                          |(3)   |(8)      .
+ *             v      |                             v      |         v
  *   AudioNotificationSender                  AudioNotificationReceiver
  *     ^       |      ^                                ^
  *     .    (5)|      |(1)                             |(7)
@@ -59,6 +61,7 @@
  * AudioNotificationReceiver. f) All the ContentParents are registered in the
  * AudioNotificationSender.
  */
+// clang-format on
 
 namespace mozilla {
 namespace audio {
