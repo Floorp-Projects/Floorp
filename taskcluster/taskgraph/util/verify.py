@@ -183,6 +183,33 @@ def verify_dependency_tiers(task, taskgraph, scratch_pad):
                                 d, printable_tier(tiers[d])))
 
 
+@verifications.add('full_task_graph')
+def verify_required_signoffs(task, taskgraph, scratch_pad):
+    """
+    Task with required signoffs can't be dependencies of tasks with less
+    required signoffs.
+    """
+    all_required_signoffs = scratch_pad
+    if task is not None:
+        all_required_signoffs[task.label] = set(task.attributes.get('required_signoffs', []))
+    else:
+        def printable_signoff(signoffs):
+            if len(signoffs) == 1:
+                return 'required signoff {}'.format(*signoffs)
+            elif signoffs:
+                return 'required signoffs {}'.format(', '.join(signoffs))
+            else:
+                return 'no required signoffs'
+        for task in taskgraph.tasks.itervalues():
+            required_signoffs = all_required_signoffs[task.label]
+            for d in task.dependencies.itervalues():
+                if required_signoffs < all_required_signoffs[d]:
+                    raise Exception(
+                        '{} ({}) cannot depend on {} ({})'
+                        .format(task.label, printable_signoff(required_signoffs),
+                                d, printable_signoff(all_required_signoffs[d])))
+
+
 @verifications.add('optimized_task_graph')
 def verify_always_optimized(task, taskgraph, scratch_pad):
     """
