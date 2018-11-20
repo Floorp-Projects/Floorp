@@ -4,8 +4,4 @@ BasedOnStyle: Google
 MacroBlockBegin: "^JS_BEGIN_MACRO$"
 MacroBlockEnd: "^JS_END_MACRO$"
 
-# Ignore all comments because they aren't reflowed properly.
-# We require 80-col comments and 99-col code.
-CommentPragmas: "^"
-
 SortIncludes: false
