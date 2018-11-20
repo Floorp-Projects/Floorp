@@ -412,10 +412,10 @@ HTMLObjectElement::SubmitNamesValues(HTMLFormSubmission *aFormSubmission)
     return NS_OK;
   }
 
-  RefPtr<nsNPAPIPluginInstance> pi;
-  objFrame->GetPluginInstance(getter_AddRefs(pi));
-  if (!pi)
+  RefPtr<nsNPAPIPluginInstance> pi = objFrame->GetPluginInstance();
+  if (!pi) {
     return NS_OK;
+  }
 
   nsAutoString value;
   nsresult rv = pi->GetFormValue(value);

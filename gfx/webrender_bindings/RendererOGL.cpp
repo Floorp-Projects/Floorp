@@ -56,7 +56,6 @@ RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
   , mRenderer(aRenderer)
   , mBridge(aBridge)
   , mWindowId(aWindowId)
-  , mDebugFlags({ 0 })
 {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(mCompositor);
@@ -89,12 +88,6 @@ RendererOGL::GetExternalImageHandler()
 void
 RendererOGL::Update()
 {
-  uint32_t flags = gfx::gfxVars::WebRenderDebugFlags();
-  if (mDebugFlags.mBits != flags) {
-    mDebugFlags.mBits = flags;
-    wr_renderer_set_debug_flags(mRenderer, mDebugFlags);
-  }
-
   if (mCompositor->MakeCurrent()) {
     wr_renderer_update(mRenderer);
   }
@@ -112,17 +105,6 @@ RendererOGL::UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize,
                              bool aHadSlowFrame,
                              RendererStats* aOutStats)
 {
-  uint32_t flags = gfx::gfxVars::WebRenderDebugFlags();
-  // Disable debug flags during readback
-  if (aReadbackBuffer.isSome()) {
-    flags = 0;
-  }
-
-  if (mDebugFlags.mBits != flags) {
-    mDebugFlags.mBits = flags;
-    wr_renderer_set_debug_flags(mRenderer, mDebugFlags);
-  }
-
   mozilla::widget::WidgetRenderingContext widgetContext;
 
 #if defined(XP_MACOSX)

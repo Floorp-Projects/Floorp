@@ -723,7 +723,6 @@ PLDHashTable::ShallowSizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 
 PLDHashTable::Iterator::Iterator(Iterator&& aOther)
   : mTable(aOther.mTable)
-  , mStart(aOther.mStart)
   , mLimit(aOther.mLimit)
   , mCurrent(aOther.mCurrent)
   , mNexts(aOther.mNexts)
@@ -732,7 +731,6 @@ PLDHashTable::Iterator::Iterator(Iterator&& aOther)
 {
   // No need to change |mChecker| here.
   aOther.mTable = nullptr;
-  aOther.mStart = nullptr;
   aOther.mLimit = nullptr;
   aOther.mCurrent = nullptr;
   aOther.mNexts = 0;
@@ -742,7 +740,6 @@ PLDHashTable::Iterator::Iterator(Iterator&& aOther)
 
 PLDHashTable::Iterator::Iterator(PLDHashTable* aTable)
   : mTable(aTable)
-  , mStart(mTable->mEntryStore.Get())
   , mLimit(mTable->mEntryStore.Get() + mTable->Capacity() * mTable->mEntrySize)
   , mCurrent(mTable->mEntryStore.Get())
   , mNexts(0)
@@ -793,7 +790,7 @@ PLDHashTable::Iterator::MoveToNextEntry()
 {
   mCurrent += mTable->mEntrySize;
   if (mCurrent == mLimit) {
-    mCurrent = mStart;  // Wrap-around. Possible due to Chaos Mode.
+    mCurrent = mTable->mEntryStore.Get();  // Wrap-around. Possible due to Chaos Mode.
   }
 }
 

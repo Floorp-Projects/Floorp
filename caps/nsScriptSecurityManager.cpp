@@ -350,12 +350,14 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
   }
 
   if (loadInfo) {
-        if (!aIgnoreSandboxing && loadInfo->GetLoadingSandboxed()) {
-          MOZ_ALWAYS_TRUE(NS_SUCCEEDED(loadInfo->GetSandboxedLoadingPrincipal(aPrincipal)));
-          MOZ_ASSERT(*aPrincipal);
-          InheritAndSetCSPOnPrincipalIfNeeded(aChannel, *aPrincipal);
-          return NS_OK;
-        }
+    if (!aIgnoreSandboxing && loadInfo->GetLoadingSandboxed()) {
+      nsCOMPtr<nsIPrincipal> sandboxedLoadingPrincipal =
+        loadInfo->GetSandboxedLoadingPrincipal();
+      MOZ_ASSERT(sandboxedLoadingPrincipal);
+      InheritAndSetCSPOnPrincipalIfNeeded(aChannel, sandboxedLoadingPrincipal);
+      sandboxedLoadingPrincipal.forget(aPrincipal);
+      return NS_OK;
+    }
 
     bool forceInherit = loadInfo->GetForceInheritPrincipal();
     if (aIgnoreSandboxing && !forceInherit) {

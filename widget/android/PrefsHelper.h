@@ -32,10 +32,7 @@ class PrefsHelper
             return false;
         }
 
-        uint16_t varType = nsIDataType::VTYPE_EMPTY;
-        if (NS_FAILED(aVariant->GetDataType(&varType))) {
-            return false;
-        }
+        uint16_t varType = aVariant->GetDataType();
 
         int32_t type = java::PrefsHelper::PREF_INVALID;
         bool boolVal = false;
@@ -110,7 +107,7 @@ class PrefsHelper
 
         uint16_t varType = nsIDataType::VTYPE_EMPTY;
         if (NS_SUCCEEDED(rv)) {
-            rv = aVariant->GetDataType(&varType);
+            varType = aVariant->GetDataType();
         }
 
         // We use set-to-empty to signal the pref was handled.

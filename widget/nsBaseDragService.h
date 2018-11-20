@@ -163,7 +163,6 @@ protected:
   uint32_t mDragAction;
   uint32_t mDragActionFromChildProcess;
 
-  nsSize mTargetSize;
   nsCOMPtr<nsINode> mSourceNode;
   nsCString mTriggeringPrincipalURISpec;
   nsCOMPtr<nsIDocument> mSourceDocument;          // the document at the drag source. will be null

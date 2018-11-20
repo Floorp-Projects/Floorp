@@ -372,6 +372,10 @@ WebConsoleActor.prototype =
                                   "last-pb-context-exited");
     }
 
+    if (this.dbg.replaying && !isWorker) {
+      this.dbg.onConsoleMessage = null;
+    }
+
     this._actorPool = null;
     this._webConsoleCommandsCache = null;
     this._lastConsoleInputEvaluation = null;

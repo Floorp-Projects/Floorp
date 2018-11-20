@@ -388,14 +388,12 @@ class JS::Realm : public JS::shadow::Realm
         DebuggerObservesAllExecution = 1 << 1,
         DebuggerObservesAsmJS = 1 << 2,
         DebuggerObservesCoverage = 1 << 3,
-        DebuggerObservesBinarySource = 1 << 4,
-        DebuggerNeedsDelazification = 1 << 5
+        DebuggerNeedsDelazification = 1 << 4
     };
     static const unsigned DebuggerObservesMask = IsDebuggee |
                                                  DebuggerObservesAllExecution |
                                                  DebuggerObservesCoverage |
-                                                 DebuggerObservesAsmJS |
-                                                 DebuggerObservesBinarySource;
+                                                 DebuggerObservesAsmJS;
     unsigned debugModeBits_ = 0;
     friend class js::AutoRestoreRealmDebugMode;
 
@@ -771,15 +769,6 @@ class JS::Realm : public JS::shadow::Realm
     }
     void updateDebuggerObservesAsmJS() {
         updateDebuggerObservesFlag(DebuggerObservesAsmJS);
-    }
-
-    bool debuggerObservesBinarySource() const {
-        static const unsigned Mask = IsDebuggee | DebuggerObservesBinarySource;
-        return (debugModeBits_ & Mask) == Mask;
-    }
-
-    void updateDebuggerObservesBinarySource() {
-        updateDebuggerObservesFlag(DebuggerObservesBinarySource);
     }
 
     // True if this realm's global is a debuggee of some Debugger object

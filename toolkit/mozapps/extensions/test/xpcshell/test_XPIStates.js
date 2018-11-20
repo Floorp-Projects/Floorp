@@ -10,39 +10,24 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-const ADDONS = {
-  test_bootstrap1_1: {
-    "install.rdf": {
-      "id": "bootstrap1@tests.mozilla.org",
-      "name": "Test Bootstrap 1",
-    },
-    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS,
-  },
-};
-
-/* We want one add-on installed packed, and one installed unpacked
- */
-
-function run_test() {
-  // Shut down the add-on manager after all tests run.
-  registerCleanupFunction(promiseShutdownManager);
-  // Kick off the task-based tests...
-  run_next_test();
-}
-
-// Use bootstrap extensions so the changes will be immediate.
-// A packed extension, to be enabled
 add_task(async function setup() {
-  await promiseWriteInstallRDFToXPI({
-    id: "packed-enabled@tests.mozilla.org",
-    name: "Packed, Enabled",
-  }, profileDir);
+  await promiseStartupManager();
+  registerCleanupFunction(promiseShutdownManager);
 
-  // Packed, will be disabled
-  await promiseWriteInstallRDFToXPI({
-    id: "packed-disabled@tests.mozilla.org",
-    name: "Packed, Disabled",
-  }, profileDir);
+  await promiseInstallWebExtension({
+    manifest: {
+      applications: {gecko: {id: "enabled@tests.mozilla.org"}},
+    },
+  });
+  await promiseInstallWebExtension({
+    manifest: {
+      applications: {gecko: {id: "disabled@tests.mozilla.org"}},
+    },
+  });
+
+  let addon = await promiseAddonByID("disabled@tests.mozilla.org");
+  notEqual(addon, null);
+  await addon.disable();
 });
 
 // Keep track of the last time stamp we've used, so that we can keep moving
@@ -79,15 +64,6 @@ async function getXSJSON() {
 }
 
 add_task(async function detect_touches() {
-  await promiseStartupManager();
-  let [/* pe */, pd] = await promiseAddonsByIDs([
-         "packed-enabled@tests.mozilla.org",
-         "packed-disabled@tests.mozilla.org",
-         ]);
-
-  info("Disable test add-ons");
-  await pd.disable();
-
   let XS = getXS();
 
   // Should be no changes detected here, because everything should start out up-to-date.
@@ -96,46 +72,54 @@ add_task(async function detect_touches() {
   let states = XS.getLocation("app-profile");
 
   // State should correctly reflect enabled/disabled
-  Assert.ok(states.get("packed-enabled@tests.mozilla.org").enabled);
-  Assert.ok(!states.get("packed-disabled@tests.mozilla.org").enabled);
+
+  let state = states.get("enabled@tests.mozilla.org");
+  Assert.notEqual(state, null, "Found xpi state for enabled extension");
+  Assert.ok(state.enabled, "enabled extension has correct xpi state");
+
+  state = states.get("disabled@tests.mozilla.org");
+  Assert.notEqual(state, null, "Found xpi state for disabled extension");
+  Assert.ok(!state.enabled, "disabled extension has correct xpi state");
 
   // Touch various files and make sure the change is detected.
 
   // We notice that a packed XPI is touched for an enabled add-on.
   let peFile = profileDir.clone();
-  peFile.append("packed-enabled@tests.mozilla.org.xpi");
+  peFile.append("enabled@tests.mozilla.org.xpi");
   checkChange(XS, peFile, true);
 
   // We should notice the packed XPI change for a disabled add-on too.
   let pdFile = profileDir.clone();
-  pdFile.append("packed-disabled@tests.mozilla.org.xpi");
+  pdFile.append("disabled@tests.mozilla.org.xpi");
   checkChange(XS, pdFile, true);
 });
 
 /*
- * Uninstalling bootstrap add-ons should immediately remove them from the
- * extensions.xpiState preference.
+ * Uninstalling extensions should immediately remove them from XPIStates.
  */
 add_task(async function uninstall_bootstrap() {
-  let [pe /* pd */] = await promiseAddonsByIDs([
-         "packed-enabled@tests.mozilla.org",
-         "packed-disabled@tests.mozilla.org",
-         ]);
+  let pe = await promiseAddonByID("enabled@tests.mozilla.org");
   await pe.uninstall();
 
   let xpiState = await getXSJSON();
-  Assert.equal(false, "packed-enabled@tests.mozilla.org" in xpiState["app-profile"].addons);
+  Assert.equal(false, "enabled@tests.mozilla.org" in xpiState["app-profile"].addons);
 });
 
 /*
- * Installing a restartless add-on should immediately add it to XPIState
+ * Installing an extension should immediately add it to XPIState
  */
 add_task(async function install_bootstrap() {
+  const ID = "addon@tests.mozilla.org";
   let XS = getXS();
 
-  let {addon} = await AddonTestUtils.promiseInstallXPI(ADDONS.test_bootstrap1_1);
+  await promiseInstallWebExtension({
+    manifest: {
+      applications: {gecko: {id: ID}},
+    },
+  });
+  let addon = await promiseAddonByID(ID);
 
-  let xState = XS.getAddon("app-profile", addon.id);
+  let xState = XS.getAddon("app-profile", ID);
   Assert.ok(!!xState);
   Assert.ok(xState.enabled);
   Assert.equal(xState.mtime, addon.updateDate.getTime());

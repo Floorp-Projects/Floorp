@@ -43,9 +43,9 @@ interface nsIContentViewer : nsISupports
 
   [noscript,notxpcom,nostdcall] void loadStart(in Document aDoc);
   void loadComplete(in nsresult aStatus);
-  [noscript] readonly attribute boolean loadCompleted;
+  [notxpcom,nostdcall] readonly attribute boolean loadCompleted;
 
-  [noscript] readonly attribute boolean isStopped;
+  [notxpcom,nostdcall] readonly attribute boolean isStopped;
 
   /**
    * aPermitUnloadFlags are passed to PermitUnload to indicate what action to take
@@ -153,7 +153,7 @@ interface nsIContentViewer : nsISupports
    * The previous content viewer, which has been |close|d but not
    * |destroy|ed.
    */
-  [noscript] attribute nsIContentViewer previousViewer;
+  [notxpcom,nostdcall] attribute nsIContentViewer previousViewer;
 
   void move(in long aX, in long aY);
 
@@ -214,8 +214,10 @@ interface nsIContentViewer : nsISupports
    */
   attribute boolean isHidden;
 
-  [noscript] readonly attribute nsIPresShellPtr presShell;
-  [noscript] readonly attribute nsPresContextPtr presContext;
+  // presShell can be null.
+  [notxpcom,nostdcall] readonly attribute nsIPresShellPtr presShell;
+  // presContext can be null.
+  [notxpcom,nostdcall] readonly attribute nsPresContextPtr presContext;
   // aDocument must not be null.
   [noscript] void setDocumentInternal(in Document aDocument,
                                       in boolean aForceReuseInnerWindow);

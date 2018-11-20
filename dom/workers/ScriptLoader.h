@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workers_scriptloader_h__
 #define mozilla_dom_workers_scriptloader_h__
 
-#include "WorkerCommon.h"
+#include "mozilla/dom/WorkerCommon.h"
 #include "nsIContentPolicy.h"
 #include "nsStringFwd.h"
 
@@ -35,13 +35,11 @@ namespace workerinternals {
 
 nsresult
 ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
-                               nsIURI* aBaseURI,
                                nsIDocument* aParentDoc,
                                nsILoadGroup* aLoadGroup,
-                               const nsAString& aScriptURL,
+                               nsIURI* aScriptURL,
                                const Maybe<ClientInfo>& aClientInfo,
                                nsContentPolicyType aContentPolicyType,
-                               bool aDefaultURIEncoding,
                                nsIChannel** aChannel);
 
 nsresult

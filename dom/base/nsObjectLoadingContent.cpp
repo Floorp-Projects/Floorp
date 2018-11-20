@@ -539,10 +539,8 @@ nsObjectLoadingContent::MakePluginListener()
   }
   NS_ASSERTION(!mFinalListener, "overwriting a final listener");
   nsresult rv;
-  RefPtr<nsNPAPIPluginInstance> inst;
+  RefPtr<nsNPAPIPluginInstance> inst = mInstanceOwner->GetInstance();
   nsCOMPtr<nsIStreamListener> finalListener;
-  rv = mInstanceOwner->GetInstance(getter_AddRefs(inst));
-  NS_ENSURE_SUCCESS(rv, false);
   rv = pluginHost->NewPluginStreamListener(mURI, inst,
                                            getter_AddRefs(finalListener));
   NS_ENSURE_SUCCESS(rv, false);
@@ -755,8 +753,7 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
     //             don't want to touch the protochain or delayed stop.
     //             (Bug 767635)
     if (newOwner) {
-      RefPtr<nsNPAPIPluginInstance> inst;
-      newOwner->GetInstance(getter_AddRefs(inst));
+      RefPtr<nsNPAPIPluginInstance> inst = newOwner->GetInstance();
       newOwner->SetFrame(nullptr);
       if (inst) {
         pluginHost->StopPluginInstance(inst);
@@ -769,11 +766,7 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
   mInstanceOwner = newOwner;
 
   if (mInstanceOwner) {
-    RefPtr<nsNPAPIPluginInstance> inst;
-    rv = mInstanceOwner->GetInstance(getter_AddRefs(inst));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    RefPtr<nsNPAPIPluginInstance> inst = mInstanceOwner->GetInstance();
 
     rv = inst->GetRunID(&mRunID);
     mHasRunID = NS_SUCCEEDED(rv);
@@ -794,8 +787,7 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
   // Set up scripting interfaces.
   NotifyContentObjectWrapper();
 
-  RefPtr<nsNPAPIPluginInstance> pluginInstance;
-  GetPluginInstance(getter_AddRefs(pluginInstance));
+  RefPtr<nsNPAPIPluginInstance> pluginInstance = GetPluginInstance();
   if (pluginInstance) {
     nsCOMPtr<nsIPluginTag> pluginTag;
     pluginHost->GetPluginTagForInstance(pluginInstance,
@@ -1189,16 +1181,14 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsObjectLoadingContent::GetPluginInstance(nsNPAPIPluginInstance** aInstance)
+nsNPAPIPluginInstance*
+nsObjectLoadingContent::GetPluginInstance()
 {
-  *aInstance = nullptr;
-
   if (!mInstanceOwner) {
-    return NS_OK;
+    return nullptr;
   }
 
-  return mInstanceOwner->GetInstance(aInstance);
+  return mInstanceOwner->GetInstance();
 }
 
 NS_IMETHODIMP
@@ -1206,13 +1196,6 @@ nsObjectLoadingContent::GetContentTypeForMIMEType(const nsACString& aMIMEType,
                                                   uint32_t* aType)
 {
   *aType = GetTypeOfContent(PromiseFlatCString(aMIMEType), false);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsObjectLoadingContent::GetBaseURI(nsIURI **aResult)
-{
-  NS_IF_ADDREF(*aResult = mBaseURI);
   return NS_OK;
 }
 
@@ -2828,9 +2811,8 @@ nsObjectLoadingContent::PluginCrashed(nsIPluginTag* aPluginTag,
   return NS_OK;
 }
 
-nsresult
-nsObjectLoadingContent::ScriptRequestPluginInstance(JSContext* aCx,
-                                                    nsNPAPIPluginInstance **aResult)
+nsNPAPIPluginInstance*
+nsObjectLoadingContent::ScriptRequestPluginInstance(JSContext* aCx)
 {
   // The below methods pull the cx off the stack, so make sure they match.
   //
@@ -2849,8 +2831,6 @@ nsObjectLoadingContent::ScriptRequestPluginInstance(JSContext* aCx,
 
   nsCOMPtr<nsIContent> thisContent =
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-
-  *aResult = nullptr;
 
   // The first time content script attempts to access placeholder content, fire
   // an event.  Fallback types >= eFallbackClickToPlay are plugin-replacement
@@ -2875,11 +2855,11 @@ nsObjectLoadingContent::ScriptRequestPluginInstance(JSContext* aCx,
   }
 
   if (mInstanceOwner) {
-    return mInstanceOwner->GetInstance(aResult);
+    return mInstanceOwner->GetInstance();
   }
 
   // Note that returning a null plugin is expected (and happens often)
-  return NS_OK;
+  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -3027,8 +3007,7 @@ nsObjectLoadingContent::DoStopPlugin(nsPluginInstanceOwner* aInstanceOwner)
       mFrameLoader = nullptr;
     }
   } else {
-    RefPtr<nsNPAPIPluginInstance> inst;
-    aInstanceOwner->GetInstance(getter_AddRefs(inst));
+    RefPtr<nsNPAPIPluginInstance> inst = aInstanceOwner->GetInstance();
     if (inst) {
 #if defined(XP_MACOSX)
       aInstanceOwner->HidePluginWindow();
@@ -3577,11 +3556,7 @@ nsObjectLoadingContent::SetupProtoChain(JSContext* aCx,
   MOZ_ASSERT(IsDOMObject(aObject));
   JSAutoRealm ar(aCx, aObject);
 
-  RefPtr<nsNPAPIPluginInstance> pi;
-  nsresult rv = ScriptRequestPluginInstance(aCx, getter_AddRefs(pi));
-  if (NS_FAILED(rv)) {
-    return;
-  }
+  RefPtr<nsNPAPIPluginInstance> pi = ScriptRequestPluginInstance(aCx);
 
   if (!pi) {
     // No plugin around for this object.
@@ -3591,7 +3566,7 @@ nsObjectLoadingContent::SetupProtoChain(JSContext* aCx,
   JS::Rooted<JSObject*> pi_obj(aCx); // XPConnect-wrapped peer object, when we get it.
   JS::Rooted<JSObject*> pi_proto(aCx); // 'pi.__proto__'
 
-  rv = GetPluginJSObject(aCx, pi, &pi_obj, &pi_proto);
+  nsresult rv = GetPluginJSObject(aCx, pi, &pi_obj, &pi_proto);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -3746,12 +3721,7 @@ nsObjectLoadingContent::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
 {
   // We don't resolve anything; we just try to make sure we're instantiated.
   // This purposefully does not fire for chrome/xray resolves, see bug 967694
-
-  RefPtr<nsNPAPIPluginInstance> pi;
-  nsresult rv = ScriptRequestPluginInstance(aCx, getter_AddRefs(pi));
-  if (NS_FAILED(rv)) {
-    return mozilla::dom::Throw(aCx, rv);
-  }
+  Unused << ScriptRequestPluginInstance(aCx);
   return true;
 }
 
@@ -3772,8 +3742,7 @@ nsObjectLoadingContent::GetOwnPropertyNames(JSContext* aCx,
   // Just like DoResolve, just make sure we're instantiated.  That will do
   // the work our Enumerate hook needs to do.  This purposefully does not fire
   // for xray resolves, see bug 967694
-  RefPtr<nsNPAPIPluginInstance> pi;
-  aRv = ScriptRequestPluginInstance(aCx, getter_AddRefs(pi));
+  Unused << ScriptRequestPluginInstance(aCx);
 }
 
 void

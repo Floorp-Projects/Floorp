@@ -649,24 +649,6 @@ pub unsafe extern "C" fn wr_renderer_readback(renderer: &mut Renderer,
                               &mut slice);
 }
 
-/// cbindgen:field-names=[mBits]
-#[repr(C)]
-pub struct WrDebugFlags {
-    bits: u32,
-}
-
-#[no_mangle]
-pub extern "C" fn wr_renderer_get_debug_flags(renderer: &mut Renderer) -> WrDebugFlags {
-    WrDebugFlags { bits: renderer.get_debug_flags().bits() }
-}
-
-#[no_mangle]
-pub extern "C" fn wr_renderer_set_debug_flags(renderer: &mut Renderer, flags: WrDebugFlags) {
-    if let Some(dbg_flags) = DebugFlags::from_bits(flags.bits) {
-        renderer.set_debug_flags(dbg_flags);
-    }
-}
-
 #[no_mangle]
 pub extern "C" fn wr_renderer_current_epoch(renderer: &mut Renderer,
                                             pipeline_id: WrPipelineId,
@@ -1174,6 +1156,19 @@ pub unsafe extern "C" fn wr_api_shut_down(dh: &mut DocumentHandle) {
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_notify_memory_pressure(dh: &mut DocumentHandle) {
     dh.api.notify_memory_pressure();
+}
+
+/// cbindgen:field-names=[mBits]
+#[repr(C)]
+pub struct WrDebugFlags {
+    bits: u32,
+}
+
+#[no_mangle]
+pub extern "C" fn wr_api_set_debug_flags(dh: &mut DocumentHandle, flags: WrDebugFlags) {
+    if let Some(dbg_flags) = DebugFlags::from_bits(flags.bits) {
+        dh.api.set_debug_flags(dbg_flags);
+    }
 }
 
 #[no_mangle]

@@ -96,13 +96,13 @@
     REAL(Set,                   InitViaClassSpec,       OCLASP(Set)) \
     REAL(DataView,              InitViaClassSpec,       OCLASP(DataView)) \
     REAL(Symbol,                InitSymbolClass,        OCLASP(Symbol)) \
-    REAL_IF_SAB(SharedArrayBuffer, InitViaClassSpec, OCLASP(SharedArrayBuffer)) \
+    REAL(SharedArrayBuffer,     InitViaClassSpec,       OCLASP(SharedArrayBuffer)) \
     REAL_IF_INTL(Intl, InitIntlClass, CLASP(Intl)) \
     REAL_IF_BDATA(TypedObject, InitTypedObjectModuleObject, OCLASP(TypedObjectModule)) \
     REAL(Reflect,               InitReflect,            nullptr) \
     REAL(WeakSet,               InitWeakSetClass,       OCLASP(WeakSet)) \
     REAL(TypedArray,            InitViaClassSpec,       &js::TypedArrayObject::sharedTypedArrayPrototypeClass) \
-    REAL_IF_SAB(Atomics, InitAtomicsClass, OCLASP(Atomics)) \
+    REAL(Atomics,               InitAtomicsClass,       OCLASP(Atomics)) \
     REAL(SavedFrame,            InitViaClassSpec,       &js::SavedFrame::class_) \
     REAL(Promise,               InitViaClassSpec,       OCLASP(Promise)) \
     REAL(ReadableStream,        InitViaClassSpec,       &js::ReadableStream::class_) \

@@ -27,6 +27,9 @@
 #include "mozilla/dom/ipc/PendingIPCBlobChild.h"
 #include "mozilla/dom/ipc/TemporaryIPCBlobChild.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
+#include "mozilla/dom/RemoteWorkerChild.h"
+#include "mozilla/dom/RemoteWorkerServiceChild.h"
+#include "mozilla/dom/SharedWorkerChild.h"
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/GamepadEventChannelChild.h"
 #include "mozilla/dom/GamepadTestChannelChild.h"
@@ -285,6 +288,63 @@ bool
 BackgroundChildImpl::DeallocPPendingIPCBlobChild(PPendingIPCBlobChild* aActor)
 {
   delete aActor;
+  return true;
+}
+
+dom::PRemoteWorkerChild*
+BackgroundChildImpl::AllocPRemoteWorkerChild(const RemoteWorkerData& aData)
+{
+  RefPtr<dom::RemoteWorkerChild> agent = new dom::RemoteWorkerChild();
+  return agent.forget().take();
+}
+
+IPCResult
+BackgroundChildImpl::RecvPRemoteWorkerConstructor(PRemoteWorkerChild* aActor,
+                                                  const RemoteWorkerData& aData)
+{
+  dom::RemoteWorkerChild* actor = static_cast<dom::RemoteWorkerChild*>(aActor);
+  actor->ExecWorker(aData);
+  return IPC_OK();
+}
+
+bool
+BackgroundChildImpl::DeallocPRemoteWorkerChild(dom::PRemoteWorkerChild* aActor)
+{
+  RefPtr<dom::RemoteWorkerChild> actor =
+    dont_AddRef(static_cast<dom::RemoteWorkerChild*>(aActor));
+  return true;
+}
+
+dom::PRemoteWorkerServiceChild*
+BackgroundChildImpl::AllocPRemoteWorkerServiceChild()
+{
+  RefPtr<dom::RemoteWorkerServiceChild> agent =
+    new dom::RemoteWorkerServiceChild();
+  return agent.forget().take();
+}
+
+bool
+BackgroundChildImpl::DeallocPRemoteWorkerServiceChild(dom::PRemoteWorkerServiceChild* aActor)
+{
+  RefPtr<dom::RemoteWorkerServiceChild> actor =
+    dont_AddRef(static_cast<dom::RemoteWorkerServiceChild*>(aActor));
+  return true;
+}
+
+dom::PSharedWorkerChild*
+BackgroundChildImpl::AllocPSharedWorkerChild(const dom::RemoteWorkerData& aData,
+                                             const uint64_t& aWindowID,
+                                             const dom::MessagePortIdentifier& aPortIdentifier)
+{
+  RefPtr<dom::SharedWorkerChild> agent = new dom::SharedWorkerChild();
+  return agent.forget().take();
+}
+
+bool
+BackgroundChildImpl::DeallocPSharedWorkerChild(dom::PSharedWorkerChild* aActor)
+{
+  RefPtr<dom::SharedWorkerChild> actor =
+    dont_AddRef(static_cast<dom::SharedWorkerChild*>(aActor));
   return true;
 }
 

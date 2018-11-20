@@ -65,6 +65,13 @@ struct WorkerLoadInfo
     void MaybeAddTabChild(nsILoadGroup* aLoadGroup);
     NS_IMETHOD GetInterface(const nsIID& aIID, void** aSink) override;
 
+    void SetOuterRequestor(nsIInterfaceRequestor* aOuterRequestor)
+    {
+      MOZ_ASSERT(!mOuterRequestor);
+      MOZ_ASSERT(aOuterRequestor);
+      mOuterRequestor = aOuterRequestor;
+    }
+
   private:
     ~InterfaceRequestor() { }
 
@@ -106,6 +113,12 @@ struct WorkerLoadInfo
   bool mFirstPartyStorageAccessGranted;
   bool mServiceWorkersTestingInWindow;
   OriginAttributes mOriginAttributes;
+
+  enum {
+    eNotSet,
+    eInsecureContext,
+    eSecureContext,
+  } mSecureContext;
 
   WorkerLoadInfo();
   ~WorkerLoadInfo();

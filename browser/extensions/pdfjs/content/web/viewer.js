@@ -1495,7 +1495,9 @@ function webViewerZoomOut() {
 }
 function webViewerPageNumberChanged(evt) {
   let pdfViewer = PDFViewerApplication.pdfViewer;
-  pdfViewer.currentPageLabel = evt.value;
+  if (evt.value !== '') {
+    pdfViewer.currentPageLabel = evt.value;
+  }
   if (evt.value !== pdfViewer.currentPageNumber.toString() && evt.value !== pdfViewer.currentPageLabel) {
     PDFViewerApplication.toolbar.setPageNumber(pdfViewer.currentPageNumber, pdfViewer.currentPageLabel);
   }
@@ -6634,18 +6636,19 @@ class BaseViewer {
     if (!this.pdfDocument) {
       return;
     }
-    this._setCurrentPageNumber(val, true);
+    if (!this._setCurrentPageNumber(val, true)) {
+      console.error(`${this._name}.currentPageNumber: "${val}" is not a valid page.`);
+    }
   }
   _setCurrentPageNumber(val, resetCurrentPageView = false) {
     if (this._currentPageNumber === val) {
       if (resetCurrentPageView) {
         this._resetCurrentPageView();
       }
-      return;
+      return true;
     }
     if (!(0 < val && val <= this.pagesCount)) {
-      console.error(`${this._name}._setCurrentPageNumber: "${val}" is out of bounds.`);
-      return;
+      return false;
     }
     this._currentPageNumber = val;
     this.eventBus.dispatch('pagechanging', {
@@ -6656,26 +6659,32 @@ class BaseViewer {
     if (resetCurrentPageView) {
       this._resetCurrentPageView();
     }
+    return true;
   }
   get currentPageLabel() {
     return this._pageLabels && this._pageLabels[this._currentPageNumber - 1];
   }
   set currentPageLabel(val) {
-    let pageNumber = val | 0;
+    if (!this.pdfDocument) {
+      return;
+    }
+    let page = val | 0;
     if (this._pageLabels) {
       let i = this._pageLabels.indexOf(val);
       if (i >= 0) {
-        pageNumber = i + 1;
+        page = i + 1;
       }
     }
-    this.currentPageNumber = pageNumber;
+    if (!this._setCurrentPageNumber(page, true)) {
+      console.error(`${this._name}.currentPageLabel: "${val}" is not a valid page.`);
+    }
   }
   get currentScale() {
     return this._currentScale !== _ui_utils.UNKNOWN_SCALE ? this._currentScale : _ui_utils.DEFAULT_SCALE;
   }
   set currentScale(val) {
     if (isNaN(val)) {
-      throw new Error('Invalid numeric scale');
+      throw new Error('Invalid numeric scale.');
     }
     if (!this.pdfDocument) {
       return;
@@ -6965,7 +6974,7 @@ class BaseViewer {
     }
     const pageView = Number.isInteger(pageNumber) && this._pages[pageNumber - 1];
     if (!pageView) {
-      console.error(`${this._name}.scrollPageIntoView: Invalid "pageNumber" parameter.`);
+      console.error(`${this._name}.scrollPageIntoView: ` + `"${pageNumber}" is not a valid pageNumber parameter.`);
       return;
     }
     if (this.isInPresentationMode || !destArray) {
@@ -8043,13 +8052,15 @@ class TextLayerBuilder {
       let match = matches[i];
       let begin = match.begin;
       let end = match.end;
-      let isSelected = isSelectedPage && i === selectedMatchIdx;
-      let highlightSuffix = isSelected ? ' selected' : '';
-      findController.scrollMatchIntoView({
-        element: textDivs[begin.divIdx],
-        pageIndex: pageIdx,
-        matchIndex: i
-      });
+      const isSelected = isSelectedPage && i === selectedMatchIdx;
+      const highlightSuffix = isSelected ? ' selected' : '';
+      if (isSelected) {
+        findController.scrollMatchIntoView({
+          element: textDivs[begin.divIdx],
+          pageIndex: pageIdx,
+          matchIndex: selectedMatchIdx
+        });
+      }
       if (!prevEnd || begin.divIdx !== prevEnd.divIdx) {
         if (prevEnd !== null) {
           appendTextToDiv(prevEnd.divIdx, prevEnd.offset, infinity.offset);

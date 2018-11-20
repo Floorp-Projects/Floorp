@@ -144,8 +144,8 @@ ExpandedPrincipal::MayLoadInternal(nsIURI* uri)
   return false;
 }
 
-NS_IMETHODIMP
-ExpandedPrincipal::GetHashValue(uint32_t* result)
+uint32_t
+ExpandedPrincipal::GetHashValue()
 {
   MOZ_CRASH("extended principal should never be used as key in a hash map");
 }

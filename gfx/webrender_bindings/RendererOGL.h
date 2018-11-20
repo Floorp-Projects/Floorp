@@ -113,7 +113,6 @@ protected:
   layers::CompositorBridgeParent* mBridge;
   wr::WindowId mWindowId;
   TimeStamp mFrameStartTime;
-  wr::DebugFlags mDebugFlags;
 };
 
 } // namespace wr

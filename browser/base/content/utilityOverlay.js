@@ -506,7 +506,8 @@ function openLinkIn(url, where, params) {
 
     // When navigating a recording tab, use a new content process in order to
     // start a new recording.
-    if (targetBrowser.hasAttribute("recordExecution")) {
+    if (targetBrowser.hasAttribute("recordExecution") &&
+        targetBrowser.currentURI.spec != "about:blank") {
       w.gBrowser.updateBrowserRemoteness(targetBrowser, true,
                                          { recordExecution: "*", newFrameloader: true });
     }

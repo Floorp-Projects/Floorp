@@ -33,12 +33,10 @@ nsClipboardProxy::SetData(nsITransferable *aTransferable,
   nsContentUtils::TransferableToIPCTransferable(aTransferable, &ipcDataTransfer,
                                                 false, child, nullptr);
 
-  bool isPrivateData = false;
-  aTransferable->GetIsPrivateData(&isPrivateData);
-  nsCOMPtr<nsIPrincipal> requestingPrincipal;
-  aTransferable->GetRequestingPrincipal(getter_AddRefs(requestingPrincipal));
-  nsContentPolicyType contentPolicyType = nsIContentPolicy::TYPE_OTHER;
-  aTransferable->GetContentPolicyType(&contentPolicyType);
+  bool isPrivateData = aTransferable->GetIsPrivateData();
+  nsCOMPtr<nsIPrincipal> requestingPrincipal =
+    aTransferable->GetRequestingPrincipal();
+  nsContentPolicyType contentPolicyType = aTransferable->GetContentPolicyType();
   child->SendSetClipboard(ipcDataTransfer, isPrivateData,
                           IPC::Principal(requestingPrincipal),
                           contentPolicyType, aWhichClipboard);

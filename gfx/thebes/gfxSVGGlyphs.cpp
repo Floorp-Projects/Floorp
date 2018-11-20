@@ -154,9 +154,7 @@ gfxSVGGlyphsDocument::SetupPresentation()
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    nsCOMPtr<nsIPresShell> presShell;
-    rv = viewer->GetPresShell(getter_AddRefs(presShell));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIPresShell> presShell = viewer->GetPresShell();
     if (!presShell->DidInitialize()) {
         rv = presShell->Initialize();
         NS_ENSURE_SUCCESS(rv, rv);

@@ -24,24 +24,6 @@ async function createWebExtension(details) {
   await AddonTestUtils.manuallyInstall(xpi);
 }
 
-async function createXULExtension(details) {
-  let xpi = AddonTestUtils.createTempXPIFile({
-    "install.rdf": {
-      id: details.id,
-      name: details.name,
-      bootstrap: true,
-      version: "0.1",
-      targetApplications: [{
-        id: "toolkit@mozilla.org",
-        minVersion: "0",
-        maxVersion: "*",
-      }],
-    },
-  });
-
-  await AddonTestUtils.manuallyInstall(xpi);
-}
-
 add_task(async function test_sideloading() {
   Services.prefs.setIntPref("extensions.autoDisableScopes", 15);
   Services.prefs.setIntPref("extensions.startupScanScopes", 0);
@@ -56,22 +38,16 @@ add_task(async function test_sideloading() {
   });
 
   const ID2 = "addon2@tests.mozilla.org";
-  await createXULExtension({
+  await createWebExtension({
     id: ID2,
     name: "Test 2",
+    permissions: ["<all_urls>"],
   });
 
   const ID3 = "addon3@tests.mozilla.org";
   await createWebExtension({
     id: ID3,
     name: "Test 3",
-    permissions: ["<all_urls>"],
-  });
-
-  const ID4 = "addon4@tests.mozilla.org";
-  await createWebExtension({
-    id: ID4,
-    name: "Test 4",
     permissions: ["<all_urls>"],
   });
 
@@ -82,10 +58,10 @@ add_task(async function test_sideloading() {
   sideloaded.sort((a, b) => a.id.localeCompare(b.id));
 
   deepEqual(sideloaded.map(a => a.id),
-            [ID1, ID2, ID3, ID4],
+            [ID1, ID2, ID3],
             "Got the correct sideload add-ons");
 
   deepEqual(sideloaded.map(a => a.userDisabled),
-            [true, true, true, true],
+            [true, true, true],
             "All sideloaded add-ons are disabled");
 });

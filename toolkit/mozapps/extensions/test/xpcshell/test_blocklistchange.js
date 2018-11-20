@@ -30,466 +30,13 @@ ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 // Allow insecure updates
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
-var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+Services.prefs.setBoolPref("extensions.webextPermissionPrompts", false);
+
+var testserver = createHttpServer({hosts: ["example.com"]});
 
 testserver.registerDirectory("/data/", do_get_file("data"));
 
-const ADDONS = {
-  "blocklist_hard1_1": {
-    id: "hardblock@tests.mozilla.org",
-    version: "1.0",
-    name: "Hardblocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_hard1_2": {
-    id: "hardblock@tests.mozilla.org",
-    version: "2.0",
-    name: "Hardblocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_hard1_3": {
-    id: "hardblock@tests.mozilla.org",
-    version: "3.0",
-    name: "Hardblocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_regexp1_1": {
-    id: "regexpblock@tests.mozilla.org",
-    version: "1.0",
-    name: "RegExp-blocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_regexp1_2": {
-    id: "regexpblock@tests.mozilla.org",
-    version: "2.0",
-    name: "RegExp-blocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_regexp1_3": {
-    id: "regexpblock@tests.mozilla.org",
-    version: "3.0",
-    name: "RegExp-blocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_soft1_1": {
-    id: "softblock1@tests.mozilla.org",
-    version: "1.0",
-    name: "Softblocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_soft1_2": {
-    id: "softblock1@tests.mozilla.org",
-    version: "2.0",
-    name: "Softblocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_soft1_3": {
-    id: "softblock1@tests.mozilla.org",
-    version: "3.0",
-    name: "Softblocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_soft2_1": {
-    id: "softblock2@tests.mozilla.org",
-    version: "1.0",
-    name: "Softblocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_soft2_2": {
-    id: "softblock2@tests.mozilla.org",
-    version: "2.0",
-    name: "Softblocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_soft2_3": {
-    id: "softblock2@tests.mozilla.org",
-    version: "3.0",
-    name: "Softblocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_soft3_1": {
-    id: "softblock3@tests.mozilla.org",
-    version: "1.0",
-    name: "Softblocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_soft3_2": {
-    id: "softblock3@tests.mozilla.org",
-    version: "2.0",
-    name: "Softblocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_soft3_3": {
-    id: "softblock3@tests.mozilla.org",
-    version: "3.0",
-    name: "Softblocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_soft4_1": {
-    id: "softblock4@tests.mozilla.org",
-    version: "1.0",
-    name: "Softblocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_soft4_2": {
-    id: "softblock4@tests.mozilla.org",
-    version: "2.0",
-    name: "Softblocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_soft4_3": {
-    id: "softblock4@tests.mozilla.org",
-    version: "3.0",
-    name: "Softblocked add-on",
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_soft5_1": {
-    id: "softblock5@tests.mozilla.org",
-    version: "1.0",
-    name: "Softblocked add-on",
-    bootstrap: true,
-    internalName: "test/1.0",
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_soft5_2": {
-    id: "softblock5@tests.mozilla.org",
-    version: "2.0",
-    name: "Softblocked add-on",
-    bootstrap: true,
-    internalName: "test/1.0",
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-  "blocklist_soft5_3": {
-    id: "softblock5@tests.mozilla.org",
-    version: "3.0",
-    name: "Softblocked add-on",
-    bootstrap: true,
-    internalName: "test/1.0",
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "3"}],
-  },
-};
-
 const XPIS = {};
-
-for (let [name, manifest] of Object.entries(ADDONS)) {
-  XPIS[name] = createTempXPIFile(manifest);
-  testserver.registerFile(`/addons/${name}.xpi`, XPIS[name]);
-}
-
-var softblock1_1 = {
-  id: "softblock1@tests.mozilla.org",
-  version: "1.0",
-  name: "Softblocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update1.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
-
-var softblock1_2 = {
-  id: "softblock1@tests.mozilla.org",
-  version: "2.0",
-  name: "Softblocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update2.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
-
-var softblock1_3 = {
-  id: "softblock1@tests.mozilla.org",
-  version: "3.0",
-  name: "Softblocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update3.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
-
-var softblock2_1 = {
-  id: "softblock2@tests.mozilla.org",
-  version: "1.0",
-  name: "Softblocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update1.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
-
-var softblock2_2 = {
-  id: "softblock2@tests.mozilla.org",
-  version: "2.0",
-  name: "Softblocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update2.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
-
-var softblock2_3 = {
-  id: "softblock2@tests.mozilla.org",
-  version: "3.0",
-  name: "Softblocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update3.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
-
-var softblock3_1 = {
-  id: "softblock3@tests.mozilla.org",
-  version: "1.0",
-  name: "Softblocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update1.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
-
-var softblock3_2 = {
-  id: "softblock3@tests.mozilla.org",
-  version: "2.0",
-  name: "Softblocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update2.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
-
-var softblock3_3 = {
-  id: "softblock3@tests.mozilla.org",
-  version: "3.0",
-  name: "Softblocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update3.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
-
-var softblock4_1 = {
-  id: "softblock4@tests.mozilla.org",
-  version: "1.0",
-  name: "Softblocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update1.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
-
-var softblock4_2 = {
-  id: "softblock4@tests.mozilla.org",
-  version: "2.0",
-  name: "Softblocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update2.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
-
-var softblock4_3 = {
-  id: "softblock4@tests.mozilla.org",
-  version: "3.0",
-  name: "Softblocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update3.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
-
-var hardblock_1 = {
-  id: "hardblock@tests.mozilla.org",
-  version: "1.0",
-  name: "Hardblocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update1.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
-
-var hardblock_2 = {
-  id: "hardblock@tests.mozilla.org",
-  version: "2.0",
-  name: "Hardblocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update2.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
-
-var hardblock_3 = {
-  id: "hardblock@tests.mozilla.org",
-  version: "3.0",
-  name: "Hardblocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update3.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
-
-var regexpblock_1 = {
-  id: "regexpblock@tests.mozilla.org",
-  version: "1.0",
-  name: "RegExp-blocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update1.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
-
-var regexpblock_2 = {
-  id: "regexpblock@tests.mozilla.org",
-  version: "2.0",
-  name: "RegExp-blocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update2.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
-
-var regexpblock_3 = {
-  id: "regexpblock@tests.mozilla.org",
-  version: "3.0",
-  name: "RegExp-blocked add-on",
-  bootstrap: true,
-  updateURL: "http://example.com/data/blocklistchange/addon_update3.json",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3",
-  }],
-};
 
 const ADDON_IDS = ["softblock1@tests.mozilla.org",
                    "softblock2@tests.mozilla.org",
@@ -567,10 +114,10 @@ function Pload_blocklist(aFile) {
 // Does a background update check for add-ons and returns a promise that
 // resolves when any started installs complete
 function Pbackground_update() {
-  var installCount = 0;
-  var backgroundCheckCompleted = false;
+  return new Promise((resolve, reject) => {
+    let installCount = 0;
+    let backgroundCheckCompleted = false;
 
-  let updated = new Promise((resolve, reject) => {
     AddonManager.addInstallListener({
       onNewInstall(aInstall) {
         installCount++;
@@ -604,36 +151,30 @@ function Pbackground_update() {
 
       resolve();
     }, "addons-background-update-complete");
-  });
 
-  AddonManagerPrivate.backgroundUpdateCheck();
-  return updated;
+    AddonManagerPrivate.backgroundUpdateCheck();
+  });
 }
 
 // Manually updates the test add-ons to the given version
 function Pmanual_update(aVersion) {
-  let Pinstalls = [];
-  for (let name of ["soft1", "soft2", "soft3", "soft4", "hard1", "regexp1"]) {
-    Pinstalls.push(
-      AddonManager.getInstallForURL(
-        `http://example.com/addons/blocklist_${name}_${aVersion}.xpi`, "application/x-xpinstall"));
-  }
+  const names = ["soft1", "soft2", "soft3", "soft4", "hard", "regexp"];
+  return Promise.all(names.map(async name => {
+    let url = `http://example.com/addons/blocklist_${name}_${aVersion}.xpi`;
+    let install = await AddonManager.getInstallForURL(url, "application/x-xpinstall");
 
-  return Promise.all(Pinstalls).then(installs => {
-    let completePromises = [];
-    for (let install of installs) {
-      completePromises.push(new Promise(resolve => {
-        install.addListener({
-          onDownloadCancelled: resolve,
-          onInstallEnded: resolve,
-        });
-      }));
+    // installAddonFromAOM() does more checking than install.install().
+    // In particular, it will refuse to install an incompatible addon.
+
+    return new Promise(resolve => {
+      install.addListener({
+        onDownloadCancelled: resolve,
+        onInstallEnded: resolve,
+      });
 
       AddonManager.installAddonFromAOM(null, null, install);
-    }
-
-    return Promise.all(completePromises);
-  });
+    });
+  }));
 }
 
 // Checks that an add-ons properties match expected values
@@ -684,28 +225,49 @@ function check_addon(aAddon, aExpectedVersion, aExpectedUserDisabled,
   }
 }
 
-function run_test() {
+add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
-  run_next_test();
-}
 
-add_task(async function init() {
-  await promiseWriteInstallRDFForExtension(softblock1_1, profileDir);
-  await promiseWriteInstallRDFForExtension(softblock2_1, profileDir);
-  await promiseWriteInstallRDFForExtension(softblock3_1, profileDir);
-  await promiseWriteInstallRDFForExtension(softblock4_1, profileDir);
-  await promiseWriteInstallRDFForExtension(hardblock_1, profileDir);
-  await promiseWriteInstallRDFForExtension(regexpblock_1, profileDir);
+  // pattern used to map ids like softblock1 to soft1
+  let pattern = /^(soft|hard|regexp)block([1-9]*)@/;
+  for (let id of ADDON_IDS) {
+    for (let version of [1, 2, 3]) {
+      let match = id.match(pattern);
+      let name = `blocklist_${match[1]}${match[2]}_${version}`;
+
+      XPIS[name] = createTempWebExtensionFile({
+        manifest: {
+          name: "Test",
+          version: `${version}.0`,
+          applications: {
+            gecko: {
+              id,
+              update_url: `http://example.com/data/blocklistchange/addon_update${version}.json`,
+            },
+          },
+        },
+      });
+
+      testserver.registerFile(`/addons/${name}.xpi`, XPIS[name]);
+    }
+  }
+
   await promiseStartupManager();
 
-  let [/* s1 */, /* s2 */, /* s3 */, s4 /* h, r */] = await promiseAddonsByIDs(ADDON_IDS);
+  await promiseInstallFile(XPIS.blocklist_soft1_1);
+  await promiseInstallFile(XPIS.blocklist_soft2_1);
+  await promiseInstallFile(XPIS.blocklist_soft3_1);
+  await promiseInstallFile(XPIS.blocklist_soft4_1);
+  await promiseInstallFile(XPIS.blocklist_hard_1);
+  await promiseInstallFile(XPIS.blocklist_regexp_1);
+
+  let s4 = await promiseAddonByID("softblock4@tests.mozilla.org");
   await s4.disable();
 });
 
 // Starts with add-ons unblocked and then switches application versions to
 // change add-ons to blocked and back
 add_task(async function run_app_update_test() {
-  await promiseRestartManager();
   await Pload_blocklist("app_update.xml");
   await promiseRestartManager();
 
@@ -948,22 +510,12 @@ add_task(async function run_addon_change_test() {
 });
 
 add_task(async function run_addon_change_2() {
-  await promiseShutdownManager();
-
-  await promiseWriteInstallRDFForExtension(softblock1_2, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock1_2.id), Date.now() + 10000);
-  await promiseWriteInstallRDFForExtension(softblock2_2, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock2_2.id), Date.now() + 10000);
-  await promiseWriteInstallRDFForExtension(softblock3_2, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock3_2.id), Date.now() + 10000);
-  await promiseWriteInstallRDFForExtension(softblock4_2, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock4_2.id), Date.now() + 10000);
-  await promiseWriteInstallRDFForExtension(hardblock_2, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, hardblock_2.id), Date.now() + 10000);
-  await promiseWriteInstallRDFForExtension(regexpblock_2, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, regexpblock_2.id), Date.now() + 10000);
-
-  await promiseStartupManager();
+  await promiseInstallFile(XPIS.blocklist_soft1_2);
+  await promiseInstallFile(XPIS.blocklist_soft2_2);
+  await promiseInstallFile(XPIS.blocklist_soft3_2);
+  await promiseInstallFile(XPIS.blocklist_soft4_2);
+  await promiseInstallFile(XPIS.blocklist_hard_2);
+  await promiseInstallFile(XPIS.blocklist_regexp_2);
 
   let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
@@ -982,24 +534,12 @@ add_task(async function run_addon_change_2() {
 });
 
 add_task(async function run_addon_change_3() {
-  await promiseRestartManager();
-
-  await promiseShutdownManager();
-
-  await promiseWriteInstallRDFForExtension(softblock1_3, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock1_3.id), Date.now() + 20000);
-  await promiseWriteInstallRDFForExtension(softblock2_3, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock2_3.id), Date.now() + 20000);
-  await promiseWriteInstallRDFForExtension(softblock3_3, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock3_3.id), Date.now() + 20000);
-  await promiseWriteInstallRDFForExtension(softblock4_3, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock4_3.id), Date.now() + 20000);
-  await promiseWriteInstallRDFForExtension(hardblock_3, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, hardblock_3.id), Date.now() + 20000);
-  await promiseWriteInstallRDFForExtension(regexpblock_3, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, regexpblock_3.id), Date.now() + 20000);
-
-  await promiseStartupManager();
+  await promiseInstallFile(XPIS.blocklist_soft1_3);
+  await promiseInstallFile(XPIS.blocklist_soft2_3);
+  await promiseInstallFile(XPIS.blocklist_soft3_3);
+  await promiseInstallFile(XPIS.blocklist_soft4_3);
+  await promiseInstallFile(XPIS.blocklist_hard_3);
+  await promiseInstallFile(XPIS.blocklist_regexp_3);
 
   let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
@@ -1012,22 +552,12 @@ add_task(async function run_addon_change_3() {
 });
 
 add_task(async function run_addon_change_4() {
-  await promiseShutdownManager();
-
-  await promiseWriteInstallRDFForExtension(softblock1_1, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock1_1.id), Date.now() + 30000);
-  await promiseWriteInstallRDFForExtension(softblock2_1, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock2_1.id), Date.now() + 30000);
-  await promiseWriteInstallRDFForExtension(softblock3_1, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock3_1.id), Date.now() + 30000);
-  await promiseWriteInstallRDFForExtension(softblock4_1, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock4_1.id), Date.now() + 30000);
-  await promiseWriteInstallRDFForExtension(hardblock_1, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, hardblock_1.id), Date.now() + 30000);
-  await promiseWriteInstallRDFForExtension(regexpblock_1, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, regexpblock_1.id), Date.now() + 30000);
-
-  await promiseStartupManager();
+  await promiseInstallFile(XPIS.blocklist_soft1_1);
+  await promiseInstallFile(XPIS.blocklist_soft2_1);
+  await promiseInstallFile(XPIS.blocklist_soft3_1);
+  await promiseInstallFile(XPIS.blocklist_soft4_1);
+  await promiseInstallFile(XPIS.blocklist_hard_1);
+  await promiseInstallFile(XPIS.blocklist_regexp_1);
 
   let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
@@ -1040,105 +570,6 @@ add_task(async function run_addon_change_4() {
 
   await s1.enable();
   await s2.enable();
-});
-
-// Starts with add-ons blocked and then new versions are installed outside of
-// the app to change them to unblocked.
-add_task(async function run_addon_change_2_test() {
-  await promiseShutdownManager();
-
-  getFileForAddon(profileDir, softblock1_1.id).remove(true);
-  getFileForAddon(profileDir, softblock2_1.id).remove(true);
-  getFileForAddon(profileDir, softblock3_1.id).remove(true);
-  getFileForAddon(profileDir, softblock4_1.id).remove(true);
-  getFileForAddon(profileDir, hardblock_1.id).remove(true);
-  getFileForAddon(profileDir, regexpblock_1.id).remove(true);
-
-  await promiseStartupManager();
-  await promiseShutdownManager();
-
-  await promiseWriteInstallRDFForExtension(softblock1_2, profileDir);
-  await promiseWriteInstallRDFForExtension(softblock2_2, profileDir);
-  await promiseWriteInstallRDFForExtension(softblock3_2, profileDir);
-  await promiseWriteInstallRDFForExtension(softblock4_2, profileDir);
-  await promiseWriteInstallRDFForExtension(hardblock_2, profileDir);
-  await promiseWriteInstallRDFForExtension(regexpblock_2, profileDir);
-
-  await promiseStartupManager();
-
-  let [s1, s2, s3, /* s4 */, h, r] = await promiseAddonsByIDs(ADDON_IDS);
-
-  check_addon(s1, "2.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  check_addon(s2, "2.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  check_addon(s3, "2.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  check_addon(h, "2.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
-  check_addon(r, "2.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
-
-  await s2.enable();
-  await s2.disable();
-  check_addon(s2, "2.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  await s3.enable();
-  check_addon(s3, "2.0", false, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-});
-
-add_task(async function addon_change_2_test_2() {
-  await promiseRestartManager();
-
-  await promiseShutdownManager();
-
-  await promiseWriteInstallRDFForExtension(softblock1_3, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock1_3.id), Date.now() + 10000);
-  await promiseWriteInstallRDFForExtension(softblock2_3, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock2_3.id), Date.now() + 10000);
-  await promiseWriteInstallRDFForExtension(softblock3_3, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock3_3.id), Date.now() + 10000);
-  await promiseWriteInstallRDFForExtension(softblock4_3, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock4_3.id), Date.now() + 10000);
-  await promiseWriteInstallRDFForExtension(hardblock_3, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, hardblock_3.id), Date.now() + 10000);
-  await promiseWriteInstallRDFForExtension(regexpblock_3, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, regexpblock_3.id), Date.now() + 10000);
-
-  await promiseStartupManager();
-
-  let [s1, s2, s3, /* s4 */, h, r] = await promiseAddonsByIDs(ADDON_IDS);
-
-  check_addon(s1, "3.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  check_addon(s2, "3.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  check_addon(s3, "3.0", false, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  check_addon(h, "3.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
-  check_addon(r, "3.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
-});
-
-add_task(async function addon_change_2_test_3() {
-  await promiseShutdownManager();
-
-  await promiseWriteInstallRDFForExtension(softblock1_1, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock1_1.id), Date.now() + 20000);
-  await promiseWriteInstallRDFForExtension(softblock2_1, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock2_1.id), Date.now() + 20000);
-  await promiseWriteInstallRDFForExtension(softblock3_1, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock3_1.id), Date.now() + 20000);
-  await promiseWriteInstallRDFForExtension(softblock4_1, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock4_1.id), Date.now() + 20000);
-  await promiseWriteInstallRDFForExtension(hardblock_1, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, hardblock_1.id), Date.now() + 20000);
-  await promiseWriteInstallRDFForExtension(regexpblock_1, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, regexpblock_1.id), Date.now() + 20000);
-
-  await promiseStartupManager();
-
-  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
-
-  check_addon(s1, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  check_addon(s2, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  check_addon(s3, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-
-  await s1.enable();
-  await s2.enable();
-  await s4.disable();
 });
 
 // Add-ons are initially unblocked then attempts to upgrade to blocked versions
@@ -1171,26 +602,12 @@ add_task(async function run_background_update_test() {
 // Starts with add-ons blocked and then new versions are detected and installed
 // automatically for unblocked versions.
 add_task(async function run_background_update_2_test() {
-  await promiseShutdownManager();
-
-  getFileForAddon(profileDir, softblock1_1.id).remove(true);
-  getFileForAddon(profileDir, softblock2_1.id).remove(true);
-  getFileForAddon(profileDir, softblock3_1.id).remove(true);
-  getFileForAddon(profileDir, softblock4_1.id).remove(true);
-  getFileForAddon(profileDir, hardblock_1.id).remove(true);
-  getFileForAddon(profileDir, regexpblock_1.id).remove(true);
-
-  await promiseStartupManager();
-  await promiseShutdownManager();
-
-  await promiseWriteInstallRDFForExtension(softblock1_3, profileDir);
-  await promiseWriteInstallRDFForExtension(softblock2_3, profileDir);
-  await promiseWriteInstallRDFForExtension(softblock3_3, profileDir);
-  await promiseWriteInstallRDFForExtension(softblock4_3, profileDir);
-  await promiseWriteInstallRDFForExtension(hardblock_3, profileDir);
-  await promiseWriteInstallRDFForExtension(regexpblock_3, profileDir);
-
-  await promiseStartupManager();
+  await promiseInstallFile(XPIS.blocklist_soft1_3);
+  await promiseInstallFile(XPIS.blocklist_soft2_3);
+  await promiseInstallFile(XPIS.blocklist_soft3_3);
+  await promiseInstallFile(XPIS.blocklist_soft4_3);
+  await promiseInstallFile(XPIS.blocklist_hard_3);
+  await promiseInstallFile(XPIS.blocklist_regexp_3);
 
   let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
@@ -1206,10 +623,7 @@ add_task(async function run_background_update_2_test() {
   await s3.enable();
   check_addon(s3, "3.0", false, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
 
-  await promiseRestartManager();
-
   await Pbackground_update();
-  await promiseRestartManager();
 
   [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
@@ -1227,9 +641,7 @@ add_task(async function run_background_update_2_test() {
 // Starts with add-ons blocked and then simulates the user upgrading them to
 // unblocked versions.
 add_task(async function run_manual_update_test() {
-  await promiseRestartManager();
   await Pload_blocklist("manual_update.xml");
-  await promiseRestartManager();
 
   let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
@@ -1246,10 +658,7 @@ add_task(async function run_manual_update_test() {
   await s3.enable();
   check_addon(s3, "1.0", false, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
 
-  await promiseRestartManager();
-
   await Pmanual_update("2");
-  await promiseRestartManager();
 
   [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
@@ -1262,7 +671,6 @@ add_task(async function run_manual_update_test() {
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
 
   await Pmanual_update("3");
-  await promiseRestartManager();
 
   [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
@@ -1277,26 +685,15 @@ add_task(async function run_manual_update_test() {
 // Starts with add-ons blocked and then new versions are installed outside of
 // the app to change them to unblocked.
 add_task(async function run_manual_update_2_test() {
-  await promiseShutdownManager();
+  let addons = await promiseAddonsByIDs(ADDON_IDS);
+  await Promise.all(addons.map(addon => addon.uninstall()));
 
-  getFileForAddon(profileDir, softblock1_1.id).remove(true);
-  getFileForAddon(profileDir, softblock2_1.id).remove(true);
-  getFileForAddon(profileDir, softblock3_1.id).remove(true);
-  getFileForAddon(profileDir, softblock4_1.id).remove(true);
-  getFileForAddon(profileDir, hardblock_1.id).remove(true);
-  getFileForAddon(profileDir, regexpblock_1.id).remove(true);
-
-  await promiseStartupManager();
-  await promiseShutdownManager();
-
-  await promiseWriteInstallRDFForExtension(softblock1_1, profileDir);
-  await promiseWriteInstallRDFForExtension(softblock2_1, profileDir);
-  await promiseWriteInstallRDFForExtension(softblock3_1, profileDir);
-  await promiseWriteInstallRDFForExtension(softblock4_1, profileDir);
-  await promiseWriteInstallRDFForExtension(hardblock_1, profileDir);
-  await promiseWriteInstallRDFForExtension(regexpblock_1, profileDir);
-
-  await promiseStartupManager();
+  await promiseInstallFile(XPIS.blocklist_soft1_1);
+  await promiseInstallFile(XPIS.blocklist_soft2_1);
+  await promiseInstallFile(XPIS.blocklist_soft3_1);
+  await promiseInstallFile(XPIS.blocklist_soft4_1);
+  await promiseInstallFile(XPIS.blocklist_hard_1);
+  await promiseInstallFile(XPIS.blocklist_regexp_1);
 
   let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
@@ -1311,10 +708,8 @@ add_task(async function run_manual_update_2_test() {
   check_addon(s2, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   await s3.enable();
   check_addon(s3, "1.0", false, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  await promiseRestartManager();
 
   await Pmanual_update("2");
-  await promiseRestartManager();
 
   [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
@@ -1325,10 +720,8 @@ add_task(async function run_manual_update_2_test() {
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
 
-  await promiseRestartManager();
 
   await Pmanual_update("3");
-  await promiseRestartManager();
 
   [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
@@ -1345,29 +738,21 @@ add_task(async function run_manual_update_2_test() {
 
 // Uses the API to install blocked add-ons from the local filesystem
 add_task(async function run_local_install_test() {
-  await promiseShutdownManager();
-
-  getFileForAddon(profileDir, softblock1_1.id).remove(true);
-  getFileForAddon(profileDir, softblock2_1.id).remove(true);
-  getFileForAddon(profileDir, softblock3_1.id).remove(true);
-  getFileForAddon(profileDir, softblock4_1.id).remove(true);
-  getFileForAddon(profileDir, hardblock_1.id).remove(true);
-  getFileForAddon(profileDir, regexpblock_1.id).remove(true);
-
-  await promiseStartupManager();
+  let addons = await promiseAddonsByIDs(ADDON_IDS);
+  await Promise.all(addons.map(addon => addon.uninstall()));
 
   await promiseInstallAllFiles([
     XPIS.blocklist_soft1_1,
     XPIS.blocklist_soft2_1,
     XPIS.blocklist_soft3_1,
     XPIS.blocklist_soft4_1,
-    XPIS.blocklist_hard1_1,
-    XPIS.blocklist_regexp1_1,
+    XPIS.blocklist_hard_1,
+    XPIS.blocklist_regexp_1,
   ]);
 
-  let aInstalls = await AddonManager.getAllInstalls();
+  let installs = await AddonManager.getAllInstalls();
   // Should have finished all installs without needing to restart
-  Assert.equal(aInstalls.length, 0);
+  Assert.equal(installs.length, 0);
 
   let [s1, s2, s3, /* s4 */, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 

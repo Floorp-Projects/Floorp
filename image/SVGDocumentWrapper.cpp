@@ -208,8 +208,7 @@ SVGDocumentWrapper::SetCurrentTime(float aTime)
 void
 SVGDocumentWrapper::TickRefreshDriver()
 {
-  nsCOMPtr<nsIPresShell> presShell;
-  mViewer->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = mViewer->GetPresShell();
   if (presShell) {
     nsPresContext* presContext = presShell->GetPresContext();
     if (presContext) {

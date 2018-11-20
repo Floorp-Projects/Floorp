@@ -757,8 +757,7 @@ txMozillaXSLTProcessor::SetParameter(const nsAString& aNamespaceURI,
 
     nsCOMPtr<nsIVariant> value = aValue;
 
-    uint16_t dataType;
-    value->GetDataType(&dataType);
+    uint16_t dataType = value->GetDataType();
     switch (dataType) {
         // Number
         case nsIDataType::VTYPE_INT8:
@@ -1313,8 +1312,7 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
 {
     *aResult = nullptr;
 
-    uint16_t dataType;
-    aValue->GetDataType(&dataType);
+    uint16_t dataType = aValue->GetDataType();
     switch (dataType) {
         // Number
         case nsIDataType::VTYPE_INT8:

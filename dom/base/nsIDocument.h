@@ -3982,7 +3982,7 @@ protected:
   // Return the same type parent docuement if exists, or return null.
   nsIDocument* GetSameTypeParentDocument();
 
-  void MaybeAllowStorageForOpener();
+  void MaybeAllowStorageForOpenerAfterUserInteraction();
 
   void MaybeStoreUserInteractionAsPermission();
 
