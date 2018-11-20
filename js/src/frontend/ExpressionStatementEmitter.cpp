@@ -44,8 +44,14 @@ ExpressionStatementEmitter::emitEnd()
     MOZ_ASSERT(state_ == State::Expr);
     MOZ_ASSERT(bce_->stackDepth == depth_ + 1);
 
+    //                        [stack] VAL
+
     JSOp op = valueUsage_ == ValueUsage::WantValue ? JSOP_SETRVAL : JSOP_POP;
     if (!bce_->emit1(op)) {
+        //                    [stack] # if WantValue
+        //                    [stack] VAL
+        //                    [stack] # otherwise
+        //                    [stack]
         return false;
     }
 

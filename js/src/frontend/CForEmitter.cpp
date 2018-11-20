@@ -75,6 +75,7 @@ CForEmitter::emitBody(Cond cond, const Maybe<uint32_t>& bodyPos)
         return false;
     }
     if (!bce_->emit1(JSOP_NOP)) {
+        //                    [stack]
         return false;
     }
 
@@ -88,11 +89,13 @@ CForEmitter::emitBody(Cond cond, const Maybe<uint32_t>& bodyPos)
     }
 
     if (!loopInfo_->emitLoopHead(bce_, bodyPos)) {
+        //                    [stack]
         return false;
     }
 
     if (cond_ == Cond::Missing) {
         if (!loopInfo_->emitLoopEntry(bce_, bodyPos)) {
+            //                [stack]
             return false;
         }
     }
@@ -157,7 +160,10 @@ CForEmitter::emitCond(const Maybe<uint32_t>& forPos,
     MOZ_ASSERT(state_ == State::Update);
 
     if (update_ == Update::Present) {
-        if (!bce_->emit1(JSOP_POP)) {                 //
+        //                    [stack] UPDATE
+
+        if (!bce_->emit1(JSOP_POP)) {
+            //                [stack]
             return false;
         }
 
@@ -183,6 +189,7 @@ CForEmitter::emitCond(const Maybe<uint32_t>& forPos,
 
     if (cond_ == Cond::Present) {
         if (!loopInfo_->emitLoopEntry(bce_, condPos)) {
+            //                [stack]
             return false;
         }
     } else if (update_ == Update::Missing) {
@@ -221,7 +228,8 @@ CForEmitter::emitEnd()
 
     // If no loop condition, just emit a loop-closing jump.
     if (!loopInfo_->emitLoopEnd(bce_, cond_ == Cond::Present ? JSOP_IFNE : JSOP_GOTO)) {
-        return false;                                 //
+        //                    [stack]
+        return false;
     }
 
     // The third note offset helps us find the loop-closing jump.
@@ -239,6 +247,7 @@ CForEmitter::emitEnd()
     }
 
     if (!loopInfo_->patchBreaksAndContinues(bce_)) {
+        //                    [stack]
         return false;
     }
 

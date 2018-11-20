@@ -51,11 +51,13 @@ ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos)
     tdzCacheForIteratedValue_.reset();
 
     if (iterKind_ == IteratorKind::Async) {
-        if (!bce_->emitAsyncIterator()) {             // NEXT ITER
+        if (!bce_->emitAsyncIterator()) {
+            //                [stack] NEXT ITER
             return false;
         }
     } else {
-        if (!bce_->emitIterator()) {                  // NEXT ITER
+        if (!bce_->emitIterator()) {
+            //                [stack] NEXT ITER
             return false;
         }
     }
@@ -65,7 +67,8 @@ ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos)
     // For-of loops have the iterator next method, the iterator itself, and
     // the result.value on the stack.
     // Push an undefined to balance the stack.
-    if (!bce_->emit1(JSOP_UNDEFINED)) {               // NEXT ITER UNDEF
+    if (!bce_->emit1(JSOP_UNDEFINED)) {
+        //                    [stack] NEXT ITER UNDEF
         return false;
     }
 
@@ -76,11 +79,13 @@ ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos)
         return false;
     }
 
-    if (!loopInfo_->emitEntryJump(bce_)) {            // NEXT ITER UNDEF
+    if (!loopInfo_->emitEntryJump(bce_)) {
+        //                    [stack] NEXT ITER UNDEF
         return false;
     }
 
-    if (!loopInfo_->emitLoopHead(bce_, Nothing())) {  // NEXT ITER UNDEF
+    if (!loopInfo_->emitLoopHead(bce_, Nothing())) {
+        //                    [stack] NEXT ITER UNDEF
         return false;
     }
 
@@ -97,7 +102,8 @@ ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos)
 
         if (headLexicalEmitterScope_->hasEnvironment()) {
             if (!bce_->emit1(JSOP_RECREATELEXICALENV)) {
-                return false;                         // NEXT ITER UNDEF
+                //            [stack] NEXT ITER UNDEF
+                return false;
             }
         }
 
@@ -118,45 +124,55 @@ ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos)
         }
     }
 
-    if (!bce_->emit1(JSOP_POP)) {                     // NEXT ITER
+    if (!bce_->emit1(JSOP_POP)) {
+        //                    [stack] NEXT ITER
         return false;
     }
-    if (!bce_->emit1(JSOP_DUP2)) {                    // NEXT ITER NEXT ITER
+    if (!bce_->emit1(JSOP_DUP2)) {
+        //                    [stack] NEXT ITER NEXT ITER
         return false;
     }
 
     if (!bce_->emitIteratorNext(forPos, iterKind_, allowSelfHostedIter_)) {
-        return false;                                 // NEXT ITER RESULT
+        //                    [stack] NEXT ITER RESULT
+        return false;
     }
 
-    if (!bce_->emit1(JSOP_DUP)) {                     // NEXT ITER RESULT RESULT
+    if (!bce_->emit1(JSOP_DUP)) {
+        //                    [stack] NEXT ITER RESULT RESULT
         return false;
     }
     if (!bce_->emitAtomOp(bce_->cx->names().done, JSOP_GETPROP)) {
-        return false;                                 // NEXT ITER RESULT DONE
+        //                    [stack] NEXT ITER RESULT DONE
+        return false;
     }
 
     InternalIfEmitter ifDone(bce_);
 
-    if (!ifDone.emitThen()) {                         // NEXT ITER RESULT
+    if (!ifDone.emitThen()) {
+        //                    [stack] NEXT ITER RESULT
         return false;
     }
 
     // Remove RESULT from the stack to release it.
-    if (!bce_->emit1(JSOP_POP)) {                     // NEXT ITER
+    if (!bce_->emit1(JSOP_POP)) {
+        //                    [stack] NEXT ITER
         return false;
     }
-    if (!bce_->emit1(JSOP_UNDEFINED)) {               // NEXT ITER UNDEF
+    if (!bce_->emit1(JSOP_UNDEFINED)) {
+        //                    [stack] NEXT ITER UNDEF
         return false;
     }
 
     // If the iteration is done, leave loop here, instead of the branch at
     // the end of the loop.
-    if (!loopInfo_->emitSpecialBreakForDone(bce_)) {  // NEXT ITER UNDEF
+    if (!loopInfo_->emitSpecialBreakForDone(bce_)) {
+        //                    [stack] NEXT ITER UNDEF
         return false;
     }
 
-    if (!ifDone.emitEnd()) {                          // NEXT ITER RESULT
+    if (!ifDone.emitEnd()) {
+        //                    [stack] NEXT ITER RESULT
         return false;
     }
 
@@ -165,7 +181,8 @@ ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos)
     // Note that ES 13.7.5.13, step 5.c says getting result.value does not
     // call IteratorClose, so start JSTRY_ITERCLOSE after the GETPROP.
     if (!bce_->emitAtomOp(bce_->cx->names().value, JSOP_GETPROP)) {
-        return false;                                 // NEXT ITER VALUE
+        //                    [stack] NEXT ITER VALUE
+        return false;
     }
 
     if (!loopInfo_->emitBeginCodeNeedingIteratorClose(bce_)) {
@@ -188,10 +205,12 @@ ForOfEmitter::emitBody()
                "operation");
 
     // Remove VALUE from the stack to release it.
-    if (!bce_->emit1(JSOP_POP)) {                     // NEXT ITER
+    if (!bce_->emit1(JSOP_POP)) {
+        //                    [stack] NEXT ITER
         return false;
     }
-    if (!bce_->emit1(JSOP_UNDEFINED)) {               // NEXT ITER UNDEF
+    if (!bce_->emit1(JSOP_UNDEFINED)) {
+        //                    [stack] NEXT ITER UNDEF
         return false;
     }
 
@@ -223,10 +242,12 @@ ForOfEmitter::emitEnd(const Maybe<uint32_t>& iteratedPos)
         return false;
     }
 
-    if (!bce_->emit1(JSOP_FALSE)) {                   // NEXT ITER UNDEF FALSE
+    if (!bce_->emit1(JSOP_FALSE)) {
+        //                    [stack] NEXT ITER UNDEF FALSE
         return false;
     }
-    if (!loopInfo_->emitLoopEnd(bce_, JSOP_IFEQ)) {   // NEXT ITER UNDEF
+    if (!loopInfo_->emitLoopEnd(bce_, JSOP_IFEQ)) {
+        //                    [stack] NEXT ITER UNDEF
         return false;
     }
 
@@ -249,7 +270,8 @@ ForOfEmitter::emitEnd(const Maybe<uint32_t>& iteratedPos)
         return false;
     }
 
-    if (!bce_->emitPopN(3)) {                         //
+    if (!bce_->emitPopN(3)) {
+        //                    [stack]
         return false;
     }
 

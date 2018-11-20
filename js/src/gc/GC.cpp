@@ -846,7 +846,7 @@ GCRuntime::prepareToFreeChunk(ChunkInfo& info)
 {
     MOZ_ASSERT(numArenasFreeCommitted >= info.numArenasFreeCommitted);
     numArenasFreeCommitted -= info.numArenasFreeCommitted;
-    stats().count(gcstats::STAT_DESTROY_CHUNK);
+    stats().count(gcstats::COUNT_DESTROY_CHUNK);
 #ifdef DEBUG
     /*
      * Let FreeChunkPool detect a missing prepareToFreeChunk call before it
@@ -2498,7 +2498,7 @@ ArenaList::relocateArenas(Arena* toRelocate, Arena* relocated, SliceBudget& slic
         // Prepend to list of relocated arenas
         arena->next = relocated;
         relocated = arena;
-        stats.count(gcstats::STAT_ARENA_RELOCATED);
+        stats.count(gcstats::COUNT_ARENA_RELOCATED);
     }
 
     check();
