@@ -113,11 +113,6 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
           "dest": "suite",
           "help": "Talos suite to run (from talos json)"
           }],
-        [["--branch-name"],
-         {"action": "store",
-          "dest": "branch",
-          "help": "Graphserver branch to report to"
-          }],
         [["--system-bits"],
          {"action": "store",
           "dest": "system_bits",
@@ -344,8 +339,6 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
                 kw_options['suite'] = "%s-e10s" % self.config['suite']
         if self.config.get('title'):
             kw_options['title'] = self.config['title']
-        if self.config.get('branch'):
-            kw_options['branchName'] = self.config['branch']
         if self.symbols_path:
             kw_options['symbolsPath'] = self.symbols_path
         # if using mitmproxy, we've already created a py3 venv just

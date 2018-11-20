@@ -120,7 +120,6 @@ class Test_get_browser_config(object):
     required = ('extensions', 'browser_path', 'browser_wait',
                 'extra_args', 'buildid', 'env', 'init_url', 'webserver')
     optional = ['bcontroller_config',
-                'branch_name',
                 'child_process',
                 'debug',
                 'debugger',
