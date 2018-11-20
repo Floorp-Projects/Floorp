@@ -12,7 +12,6 @@
 
   // The following helper functions are called from RTCPeerConnection-helper.js:
   //   generateAnswer
-  //   generateAudioReceiveOnlyOffer
   //   test_never_resolve
 
   // Listen to the negotiationneeded event on a peer connection
@@ -166,7 +165,7 @@
     const pc = new RTCPeerConnection();
     const negotiated = awaitNegotiation(pc);
 
-    return generateAudioReceiveOnlyOffer(pc)
+    return pc.createOffer({ offerToReceiveAudio: true })
     .then(offer => pc.setLocalDescription(offer))
     .then(() => negotiated)
     .then(({nextPromise}) => {
@@ -191,7 +190,7 @@
 
     return assert_first_promise_fulfill_after_second(
       awaitNegotiation(pc),
-      generateAudioReceiveOnlyOffer(pc)
+      pc.createOffer({ offerToReceiveAudio: true })
       .then(offer =>
         pc.setLocalDescription(offer)
         .then(() => {

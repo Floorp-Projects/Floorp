@@ -22,7 +22,7 @@
 
     function keysort(desc, unsorted, expected) {
         var db,
-            t = async_test("Database readback sort - " + desc),
+            t = async_test("Database readback sort - " + desc, { timeout: 10000 }),
             store_name = 'store-' + Date.now() + Math.random();
 
         // The database test
