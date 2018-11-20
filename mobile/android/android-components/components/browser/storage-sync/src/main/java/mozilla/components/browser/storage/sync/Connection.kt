@@ -8,6 +8,7 @@ import android.support.annotation.GuardedBy
 import org.mozilla.places.PlacesAPI
 import org.mozilla.places.PlacesConnection
 import java.io.Closeable
+import java.io.File
 
 const val DB_NAME = "places.sqlite"
 
@@ -18,9 +19,9 @@ internal object RustPlacesConnection : Connection {
     @GuardedBy("this")
     private var placesConnection: PlacesConnection? = null
 
-    fun init(dbPath: String, encryptionString: String?) = synchronized(this) {
+    fun init(parentDir: File, encryptionString: String?) = synchronized(this) {
         if (placesConnection == null) {
-            placesConnection = PlacesConnection(dbPath, encryptionString)
+            placesConnection = PlacesConnection(File(parentDir, DB_NAME).canonicalPath, encryptionString)
         }
     }
 

@@ -28,7 +28,7 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage {
 
     @VisibleForTesting
     internal open val places: Connection by lazy {
-        RustPlacesConnection.init(context.getDatabasePath(DB_NAME).canonicalPath, null)
+        RustPlacesConnection.init(context.filesDir, null)
         RustPlacesConnection
     }
 
