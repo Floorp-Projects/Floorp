@@ -17,7 +17,6 @@ var testServices = [
     ["nsINavBookmarksService", "nsINavHistoryObserver"],
     ["createFolder", "getObservers", "onFrecencyChanged", "onTitleChanged", "onDeleteURI"],
   ],
-  ["browser/livemark-service;2", ["mozIAsyncLivemarks"], ["reloadLivemarks"]],
   ["browser/favicon-service;1", ["nsIFaviconService"], []],
   ["browser/tagging-service;1", ["nsITaggingService"], []],
 ];

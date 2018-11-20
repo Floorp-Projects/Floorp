@@ -158,9 +158,11 @@ PointerEvent::GetPointerType(nsAString& aPointerType, CallerType aCallerType)
 }
 
 int32_t
-PointerEvent::PointerId()
+PointerEvent::PointerId(CallerType aCallerType)
 {
-  return mEvent->AsPointerEvent()->pointerId;
+  return ShouldResistFingerprinting(aCallerType) ?
+           PointerEventHandler::GetSpoofedPointerIdForRFP() :
+           mEvent->AsPointerEvent()->pointerId;
 }
 
 int32_t

@@ -13,6 +13,7 @@ interface WindowProxy;
  Constructor(DOMString type, optional PointerEventInit eventInitDict)]
 interface PointerEvent : MouseEvent
 {
+  [NeedsCallerType]
   readonly attribute long pointerId;
 
   [NeedsCallerType]

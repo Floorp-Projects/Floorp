@@ -421,6 +421,9 @@ class JS::Realm : public JS::shadow::Realm
     js::UniquePtr<js::ScriptCountsMap> scriptCountsMap;
     js::UniquePtr<js::ScriptNameMap> scriptNameMap;
     js::UniquePtr<js::DebugScriptMap> debugScriptMap;
+#ifdef MOZ_VTUNE
+    js::UniquePtr<js::ScriptVTuneIdMap> scriptVTuneIdMap;
+#endif
 
     /*
      * Lazily initialized script source object to use for scripts cloned
