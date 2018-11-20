@@ -76,7 +76,7 @@ namespace recordreplay {
   MACRO(__close_nocancel, RR_SaveRvalHadErrorNegative)           \
   MACRO(mkdir, RR_SaveRvalHadErrorNegative)                      \
   MACRO(dup, RR_SaveRvalHadErrorNegative)                        \
-  MACRO(access, RR_SaveRvalHadErrorNegative)                     \
+  MACRO(access, RR_SaveRvalHadErrorNegative, nullptr, nullptr, Preamble_SetError<EACCES>) \
   MACRO(lseek, RR_SaveRvalHadErrorNegative)                      \
   MACRO(socketpair, RR_SaveRvalHadErrorNegative<RR_WriteBufferFixedSize<3, 2 * sizeof(int)>>) \
   MACRO(fileport_makeport,                                       \
@@ -178,18 +178,20 @@ namespace recordreplay {
   MACRO(ftell, RR_SaveRvalHadErrorNegative)                      \
   MACRO(fwrite, RR_ScalarRval)                                   \
   MACRO(getenv, RR_CStringRval, Preamble_getenv, nullptr, Preamble_Veto<0>) \
-  MACRO(localtime_r, RR_SaveRvalHadErrorZero<RR_Compose<         \
-                       RR_WriteBufferFixedSize<1, sizeof(struct tm)>, \
-                       RR_RvalIsArgument<1>>>)                   \
-  MACRO(gmtime_r, RR_SaveRvalHadErrorZero<RR_Compose<            \
-                    RR_WriteBufferFixedSize<1, sizeof(struct tm)>, \
-                    RR_RvalIsArgument<1>>>)                      \
-  MACRO(localtime, nullptr, Preamble_localtime)                  \
-  MACRO(gmtime, nullptr, Preamble_gmtime)                        \
+  MACRO(localtime_r,                                             \
+        RR_SaveRvalHadErrorZero<RR_Compose<RR_WriteBufferFixedSize<1, sizeof(struct tm)>, \
+                                RR_RvalIsArgument<1>>>,          \
+        nullptr, nullptr, Preamble_PassThrough)                  \
+  MACRO(gmtime_r,                                                \
+        RR_SaveRvalHadErrorZero<RR_Compose<RR_WriteBufferFixedSize<1, sizeof(struct tm)>, \
+                                RR_RvalIsArgument<1>>>,          \
+        nullptr, nullptr, Preamble_PassThrough)                  \
+  MACRO(localtime, nullptr, Preamble_localtime, nullptr, Preamble_PassThrough) \
+  MACRO(gmtime, nullptr, Preamble_gmtime, nullptr, Preamble_PassThrough) \
   MACRO(mktime, RR_Compose<RR_ScalarRval, RR_WriteBufferFixedSize<0, sizeof(struct tm)>>) \
   MACRO(setlocale, RR_CStringRval)                               \
   MACRO(strftime, RR_Compose<RR_ScalarRval, RR_WriteBufferViaRval<0, 1, 1>>) \
-  MACRO(arc4random, RR_ScalarRval)                               \
+  MACRO(arc4random, RR_ScalarRval, nullptr, nullptr, Preamble_PassThrough) \
   MACRO(mach_absolute_time, RR_ScalarRval, Preamble_mach_absolute_time, \
         nullptr, Preamble_PassThrough)                           \
   MACRO(mach_msg, RR_Compose<RR_ScalarRval, RR_WriteBuffer<0, 3>>, \
@@ -357,7 +359,7 @@ namespace recordreplay {
   MACRO(CGColorSpaceCreateDeviceGray, RR_ScalarRval, nullptr, Middleman_CreateCFTypeRval) \
   MACRO(CGColorSpaceCreateDeviceRGB, RR_ScalarRval, nullptr, Middleman_CreateCFTypeRval) \
   MACRO(CGColorSpaceCreatePattern, RR_ScalarRval)                \
-  MACRO(CGColorSpaceRelease, RR_ScalarRval)                      \
+  MACRO(CGColorSpaceRelease, RR_ScalarRval, nullptr, nullptr, Preamble_Veto<0>) \
   MACRO(CGContextBeginTransparencyLayerWithRect)                 \
   MACRO(CGContextClipToRects, RR_ScalarRval, nullptr,            \
         Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_Buffer<1, 2, CGRect>>) \
@@ -412,7 +414,10 @@ namespace recordreplay {
         Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_CreateCFTypeRval>) \
   MACRO(CGFontCopyVariations, RR_ScalarRval, nullptr,            \
         Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_CreateCFTypeRval>) \
-  MACRO(CGFontCreateCopyWithVariations, RR_ScalarRval)           \
+  MACRO(CGFontCreateCopyWithVariations, RR_ScalarRval, nullptr,  \
+        Middleman_Compose<Middleman_CFTypeArg<0>,                \
+                          Middleman_CFTypeArg<1>,                \
+                          Middleman_CreateCFTypeRval>)           \
   MACRO(CGFontCreateWithDataProvider, RR_ScalarRval, nullptr,    \
         Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_CreateCFTypeRval>) \
   MACRO(CGFontCreateWithFontName, RR_ScalarRval, nullptr,        \
