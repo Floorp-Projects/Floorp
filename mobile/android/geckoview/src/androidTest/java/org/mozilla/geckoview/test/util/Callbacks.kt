@@ -20,7 +20,7 @@ import android.view.inputmethod.ExtractedTextRequest
 class Callbacks private constructor() {
     object Default : All
 
-    interface All : ContentDelegate, GeckoSession.HistoryDelegate, MediaDelegate,
+    interface All : ContentDelegate, HistoryDelegate, MediaDelegate,
                     NavigationDelegate, PermissionDelegate, ProgressDelegate,
                     PromptDelegate, ScrollDelegate, SelectionActionDelegate,
                     TextInputDelegate, TrackingProtectionDelegate
@@ -185,6 +185,18 @@ class Callbacks private constructor() {
         }
 
         override fun onMediaRemove(session: GeckoSession, element: MediaElement) {
+        }
+    }
+
+    interface HistoryDelegate : GeckoSession.HistoryDelegate {
+        override fun onVisited(session: GeckoSession, url: String, lastVisitedURL: String?,
+                               flags: Int): GeckoResult<Boolean>? {
+            return null
+        }
+
+        override fun getVisited(session: GeckoSession,
+                                urls: Array<out String>): GeckoResult<BooleanArray>? {
+            return null
         }
     }
 }
