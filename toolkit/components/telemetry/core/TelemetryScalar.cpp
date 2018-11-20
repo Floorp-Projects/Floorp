@@ -331,6 +331,16 @@ ScalarInfo::expiration() const
 class ScalarBase
 {
 public:
+  explicit ScalarBase(const BaseScalarInfo& aInfo)
+    : mStoreCount(aInfo.storeCount())
+    , mStoreOffset(aInfo.storeOffset())
+    , mStoreHasValue(mStoreCount)
+  {
+    mStoreHasValue.SetLength(mStoreCount);
+    for (auto& val: mStoreHasValue) {
+      val = false;
+    }
+  };
   virtual ~ScalarBase() = default;
 
   // Set, Add and SetMaximum functions as described in the Telemetry IDL.
@@ -349,10 +359,21 @@ public:
   virtual nsresult GetValue(const nsACString& aStoreName, nsCOMPtr<nsIVariant>& aResult) const = 0;
 
   // To measure the memory stats.
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
+
+protected:
+  bool HasValueInStore(size_t aStoreIndex) const;
+  void ClearValueInStore(size_t aStoreIndex);
+  void SetValueInStores();
+  nsresult StoreIndex(const nsACString& aStoreName, size_t* aStoreIndex) const;
 
 private:
   ScalarResult HandleUnsupported() const;
+
+  const uint32_t mStoreCount;
+  const uint16_t mStoreOffset;
+  nsTArray<bool> mStoreHasValue;
 };
 
 ScalarResult
@@ -360,6 +381,59 @@ ScalarBase::HandleUnsupported() const
 {
   MOZ_ASSERT(false, "This operation is not support for this scalar type.");
   return ScalarResult::OperationNotSupported;
+}
+
+bool
+ScalarBase::HasValueInStore(size_t aStoreIndex) const
+{
+  MOZ_ASSERT(aStoreIndex < mStoreHasValue.Length(),
+             "Invalid scalar store index.");
+  return mStoreHasValue[aStoreIndex];
+}
+
+void
+ScalarBase::ClearValueInStore(size_t aStoreIndex)
+{
+  MOZ_ASSERT(aStoreIndex < mStoreHasValue.Length(),
+             "Invalid scalar store index to clear.");
+  mStoreHasValue[aStoreIndex] = false;
+}
+
+void
+ScalarBase::SetValueInStores()
+{
+  for (auto& val: mStoreHasValue) {
+    val = true;
+  }
+}
+
+nsresult
+ScalarBase::StoreIndex(const nsACString& aStoreName, size_t* aStoreIndex) const
+{
+  if (mStoreCount == 1 && mStoreOffset == UINT16_MAX) {
+    // This Scalar is only in the "main" store.
+    if (aStoreName.EqualsLiteral("main")) {
+      *aStoreIndex = 0;
+      return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+  }
+
+  // Multiple stores. Linear scan to find one that matches aStoreName.
+  for (uint32_t i = 0; i < mStoreCount; ++i) {
+    uint32_t stringIndex = gScalarStoresTable[mStoreOffset + i];
+    if (aStoreName.EqualsASCII(&gScalarsStringTable[stringIndex])) {
+      *aStoreIndex = i;
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
+size_t
+ScalarBase::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  return mStoreHasValue.ShallowSizeOfExcludingThis(aMallocSizeOf);
 }
 
 /**
@@ -370,7 +444,11 @@ class ScalarUnsigned : public ScalarBase
 public:
   using ScalarBase::SetValue;
 
-  ScalarUnsigned() : mStorage(0) {};
+  ScalarUnsigned(const BaseScalarInfo& aInfo)
+    : ScalarBase(aInfo)
+    , mStorage(0)
+  {};
+
   ~ScalarUnsigned() override = default;
 
   ScalarResult SetValue(nsIVariant* aValue) final;
@@ -509,7 +587,11 @@ class ScalarString : public ScalarBase
 public:
   using ScalarBase::SetValue;
 
-  ScalarString() : mStorage(EmptyString()) {};
+  ScalarString(const BaseScalarInfo& aInfo)
+    : ScalarBase(aInfo)
+    , mStorage(EmptyString())
+  {};
+
   ~ScalarString() override = default;
 
   ScalarResult SetValue(nsIVariant* aValue) final;
@@ -588,7 +670,11 @@ class ScalarBoolean : public ScalarBase
 public:
   using ScalarBase::SetValue;
 
-  ScalarBoolean() : mStorage(false) {};
+  ScalarBoolean(const BaseScalarInfo& aInfo)
+    : ScalarBase(aInfo)
+    , mStorage(false)
+  {};
+
   ~ScalarBoolean() override = default;
 
   ScalarResult SetValue(nsIVariant* aValue) final;
@@ -659,18 +745,18 @@ ScalarBoolean::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
  *         scalar type.
  */
 ScalarBase*
-internal_ScalarAllocate(uint32_t aScalarKind)
+internal_ScalarAllocate(const BaseScalarInfo& aInfo)
 {
   ScalarBase* scalar = nullptr;
-  switch (aScalarKind) {
+  switch (aInfo.kind) {
   case nsITelemetry::SCALAR_TYPE_COUNT:
-    scalar = new ScalarUnsigned();
+    scalar = new ScalarUnsigned(aInfo);
     break;
   case nsITelemetry::SCALAR_TYPE_STRING:
-    scalar = new ScalarString();
+    scalar = new ScalarString(aInfo);
     break;
   case nsITelemetry::SCALAR_TYPE_BOOLEAN:
-    scalar = new ScalarBoolean();
+    scalar = new ScalarBoolean(aInfo);
     break;
   default:
     MOZ_ASSERT(false, "Invalid scalar type");
@@ -910,7 +996,7 @@ KeyedScalar::GetScalarForKey(const StaticMutexAutoLock& locker, const nsAString&
     return ScalarResult::TooManyKeys;
   }
 
-  scalar = internal_ScalarAllocate(mScalarInfo.kind);
+  scalar = internal_ScalarAllocate(mScalarInfo);
   if (!scalar) {
     return ScalarResult::InvalidType;
   }
@@ -1298,7 +1384,7 @@ internal_GetScalarByEnum(const StaticMutexAutoLock& lock,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  scalar = internal_ScalarAllocate(info.kind);
+  scalar = internal_ScalarAllocate(info);
   if (!scalar) {
     return NS_ERROR_INVALID_ARG;
   }
