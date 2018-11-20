@@ -254,13 +254,20 @@ toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
   outline-offset: -5px;
 }
 
+toolbarpaletteitem[place=palette]::after {
+  content: attr(title);
+  display: block;
+  text-align: center;
+}
+
 toolbarpaletteitem[place=palette] > toolbarspring {
   width: 7em;
   min-width: 7em;
   outline: 1px solid;
   outline-offset: -8px;
   opacity: .6;
-  height: 37px;
+  min-height: 37px;
+  max-height: 37px;
 }
 
 toolbarpaletteitem[place=toolbar] > toolbarspring {
@@ -280,10 +287,17 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   display: none;
 }
 
-#customization-palette > toolbarpaletteitem > label {
-  text-align: center;
-  margin-left: 0;
-  margin-right: 0;
+/* Squeeze together the multi-button toolbarpaletteitems: */
+#wrapper-zoom-controls[place="palette"] > #zoom-controls > #zoom-out-button,
+#wrapper-edit-controls[place="palette"] > #edit-controls > #cut-button {
+  -moz-box-align: end;
+}
+#wrapper-zoom-controls[place="palette"] > #zoom-controls > #zoom-in-button,
+#wrapper-edit-controls[place="palette"] > #edit-controls > #paste-button {
+  -moz-box-align: start;
+}
+#wrapper-edit-controls[place="palette"] > #edit-controls > #copy-button {
+  -moz-box-flex: 0;
 }
 
 #customization-uidensity-touch-spacer {

@@ -325,6 +325,7 @@ window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-but
 
 toolbarpaletteitem {
   -moz-window-dragging: no-drag;
+  -moz-box-pack: start;
 }
 
 .titlebar-buttonbox-container {
@@ -1260,13 +1261,10 @@ toolbarpaletteitem[dragover] {
   display: -moz-box;
 }
 
-toolbarpaletteitem {
-  -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbarpaletteitem");
-}
-
 toolbarpaletteitem[place="palette"] {
   -moz-box-orient: vertical;
   width: 7em;
+  max-width: 7em;
   /* icon (16) + margin (9 + 12) + 3 lines of text: */
   height: calc(39px + 3em);
   margin-bottom: 5px;
@@ -1276,24 +1274,14 @@ toolbarpaletteitem[place="palette"] {
   vertical-align: top;
 }
 
-toolbarpaletteitem:not([place="palette"]) > .toolbarpaletteitem-label,
 toolbarpaletteitem[place="palette"][hidden] {
   display: none;
 }
 
-.toolbarpaletteitem-box {
+toolbarpaletteitem > toolbarbutton,
+toolbarpaletteitem > toolbaritem {
   /* Prevent children from getting events */
   pointer-events: none;
-}
-
-toolbarpaletteitem[place="palette"] > .toolbarpaletteitem-box {
-  -moz-box-pack: center;
-  width: 7em;
-  max-width: 7em;
-}
-
-toolbarpaletteitem:not([place="palette"]) > .toolbarpaletteitem-box {
-  -moz-box-flex: 1;
 }
 
 #main-window[customizing=true] .addon-banner-item,
