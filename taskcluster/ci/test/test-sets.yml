@@ -223,9 +223,6 @@ windows-talos:
     - talos-tps
     # - talos-h1 Bug 1487031 - Disabled for not finding actionable regressions
 
-marionette-gpu-tests:
-    - marionette-gpu
-
 macosx64-tests:
     - cppunit
     - crashtest

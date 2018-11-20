@@ -532,11 +532,6 @@ private:
 
   DECL_GFX_PREF(Once, "gfx.webrender.all",                     WebRenderAll, bool, false);
   DECL_GFX_PREF(Once, "gfx.webrender.all.qualified",           WebRenderAllQualified, bool, true);
-  DECL_GFX_PREF(Once,
-                "gfx.webrender.all.qualified.default",
-                WebRenderAllQualifiedDefault,
-                bool,
-                false);
   DECL_GFX_PREF(Live, "gfx.webrender.blob-images",             WebRenderBlobImages, bool, true);
   DECL_GFX_PREF(Live, "gfx.webrender.blob.invalidation",       WebRenderBlobInvalidation, bool, false);
   DECL_GFX_PREF(Live, "gfx.webrender.blob.paint-flashing",     WebRenderBlobPaintFlashing, bool, false);
