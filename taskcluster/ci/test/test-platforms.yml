@@ -173,14 +173,12 @@ windows10-64-ccov/debug:
         - desktop-screenshot-capture
         - windows-reftest-gpu
         - windows-talos
-        - marionette-gpu-tests
         - windows-tests
         - ccov-code-coverage-tests
 
 windows10-64/debug:
     build-platform: win64/debug
     test-sets:
-        - marionette-gpu-tests
         - windows-tests
         - mochitest-headless
 
@@ -190,7 +188,6 @@ windows10-64/opt:
         - awsy
         - desktop-screenshot-capture
         - windows-talos
-        - marionette-gpu-tests
         - windows-tests
         - mochitest-headless
         - raptor-firefox
@@ -205,9 +202,7 @@ windows10-64-pgo/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
-        - marionette-gpu-tests
         - windows-talos
-        - marionette-gpu-tests
         - windows-tests
         - raptor-firefox
 
@@ -217,7 +212,6 @@ windows10-64-nightly/opt:
         - awsy
         - desktop-screenshot-capture
         - desktop-instrumentation
-        - marionette-gpu-tests
         - windows-tests
         - raptor-chrome
 
@@ -225,7 +219,6 @@ windows10-64-devedition/opt:
     build-platform: win64-devedition-nightly/opt
     test-sets:
         - desktop-screenshot-capture
-        - marionette-gpu-tests
         - windows-tests
 
 windows10-64-asan/opt:
