@@ -4312,13 +4312,20 @@ var gCSSProperties = {
     other_values: [ "always", "avoid", "left", "right" ],
     invalid_values: []
   },
-  "page-break-inside": {
-    domProp: "pageBreakInside",
+  "break-inside": {
+    domProp: "breakInside",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "auto" ],
     other_values: [ "avoid" ],
-    invalid_values: [ "left", "right" ]
+    invalid_values: [ "left", "right", "always" ]
+  },
+  "page-break-inside": {
+    domProp: "pageBreakInside",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "break-inside",
+    subproperties: [ "break-inside" ],
   },
   "paint-order": {
     domProp: "paintOrder",
