@@ -6257,9 +6257,8 @@ provideDataForType:(NSString*)aType
           // Now request the kFilePromiseMime data, which will invoke the data
           // provider. If successful, the file will have been created.
           nsCOMPtr<nsISupports> fileDataPrimitive;
-          uint32_t dataSize = 0;
           item->GetTransferData(kFilePromiseMime,
-                                getter_AddRefs(fileDataPrimitive), &dataSize);
+                                getter_AddRefs(fileDataPrimitive));
         }
         CFRelease(urlRef);
         CFRelease(pboardRef);

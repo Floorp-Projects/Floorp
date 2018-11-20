@@ -709,20 +709,17 @@ nsDragService::GetData(nsITransferable * aTransferable,
                 continue;
 
             nsCOMPtr<nsISupports> data;
-            uint32_t tmpDataLen = 0;
             MOZ_LOG(sDragLm, LogLevel::Debug,
                    ("trying to get transfer data for %s\n",
                    flavorStr.get()));
             rv = item->GetTransferData(flavorStr.get(),
-                                       getter_AddRefs(data),
-                                       &tmpDataLen);
+                                       getter_AddRefs(data));
             if (NS_FAILED(rv)) {
                 MOZ_LOG(sDragLm, LogLevel::Debug, ("failed.\n"));
                 continue;
             }
             MOZ_LOG(sDragLm, LogLevel::Debug, ("succeeded.\n"));
-            rv = aTransferable->SetTransferData(flavorStr.get(), data,
-                                                tmpDataLen);
+            rv = aTransferable->SetTransferData(flavorStr.get(), data, 0);
             if (NS_FAILED(rv)) {
                 MOZ_LOG(sDragLm,
                        LogLevel::Debug,
@@ -1490,9 +1487,7 @@ CreateURIList(nsIArray* aItems, nsACString& aURIList)
         }
 
         nsCOMPtr<nsISupports> data;
-        uint32_t len = 0;
-        nsresult rv = item->GetTransferData(kURLMime, getter_AddRefs(data),
-                                            &len);
+        nsresult rv = item->GetTransferData(kURLMime, getter_AddRefs(data));
         if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsISupportsString> string = do_QueryInterface(data);
 
@@ -1515,7 +1510,7 @@ CreateURIList(nsIArray* aItems, nsACString& aURIList)
 
         // There is no URI available. If there is a file available, create
         // a URI from the file.
-        rv = item->GetTransferData(kFileMime, getter_AddRefs(data), &len);
+        rv = item->GetTransferData(kFileMime, getter_AddRefs(data));
         if (NS_SUCCEEDED(rv)) {
             if (nsCOMPtr<nsIFile> file = do_QueryInterface(data)) {
                 nsCOMPtr<nsIURI> fileURI;
@@ -1677,10 +1672,8 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
         }
         nsresult rv;
         nsCOMPtr<nsISupports> data;
-        uint32_t len;
         rv = item->GetTransferData(actualFlavor,
-                                   getter_AddRefs(data),
-                                   &len);
+                                   getter_AddRefs(data));
 
         if (strcmp(actualFlavor, kFilePromiseMime) == 0) {
             if (NS_SUCCEEDED(rv)) {
@@ -1750,9 +1743,8 @@ nsDragService::SourceBeginDrag(GdkDragContext *aContext)
     for (uint32_t i = 0; i < flavors.Length(); ++i) {
         if (flavors[i].EqualsLiteral(kFilePromiseDestFilename)) {
             nsCOMPtr<nsISupports> data;
-            uint32_t dataSize = 0;
             transferable->GetTransferData(kFilePromiseDestFilename,
-                                          getter_AddRefs(data), &dataSize);
+                                          getter_AddRefs(data));
             nsCOMPtr<nsISupportsString> fileName = do_QueryInterface(data);
             if (!fileName)
                 return;
