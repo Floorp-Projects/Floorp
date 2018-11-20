@@ -850,7 +850,7 @@ class GCRuntime
     /* Indicates that the last incremental slice exhausted the mark stack. */
     MainThreadData<bool> lastMarkSlice;
 
-    /* Whether it's currently safe to yield to the mutator in an incremental GC. */
+    // Whether it's currently safe to yield to the mutator in an incremental GC.
     MainThreadData<bool> safeToYield;
 
     /* Whether any sweeping will take place in the separate GC helper thread. */

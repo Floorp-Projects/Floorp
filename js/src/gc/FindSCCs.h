@@ -149,7 +149,8 @@ class ComponentFinder
     /* Constant used to indicate an unprocessed vertex. */
     static const unsigned Undefined = 0;
 
-    /* Constant used to indicate an processed vertex that is no longer on the stack. */
+    // Constant used to indicate an processed vertex that is no longer on the
+    // stack.
     static const unsigned Finished = (unsigned)-1;
 
     void processNode(Node* v) {

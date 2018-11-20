@@ -1866,7 +1866,10 @@ JS_IsNative(JSObject* obj);
 extern JS_PUBLIC_API JSObject*
 JS_NewObjectWithGivenProto(JSContext* cx, const JSClass* clasp, JS::Handle<JSObject*> proto);
 
-/** Creates a new plain object, like `new Object()`, with Object.prototype as [[Prototype]]. */
+/**
+ * Creates a new plain object, like `new Object()`, with Object.prototype as
+ * [[Prototype]].
+ */
 extern JS_PUBLIC_API JSObject*
 JS_NewPlainObject(JSContext* cx);
 

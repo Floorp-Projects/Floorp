@@ -118,7 +118,8 @@ GetGCObjectKindForBytes(size_t nbytes)
 static inline size_t
 GetGCKindSlots(AllocKind thingKind)
 {
-    /* Using a switch in hopes that thingKind will usually be a compile-time constant. */
+    // Using a switch in hopes that thingKind will usually be a compile-time
+    // constant.
     switch (thingKind) {
       case AllocKind::FUNCTION:
       case AllocKind::OBJECT0:

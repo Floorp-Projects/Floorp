@@ -132,7 +132,7 @@ MapAlignedPages(size_t size, size_t alignment)
 
     void* p = MapMemory(size, MEM_COMMIT | MEM_RESERVE);
 
-    /* Special case: If we want allocation alignment, no further work is needed. */
+    // Special case: If we want allocation alignment, no further work is needed.
     if (alignment == allocGranularity) {
         return p;
     }

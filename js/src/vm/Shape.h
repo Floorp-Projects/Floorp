@@ -358,20 +358,19 @@ class ShapeTable {
         MOZ_ASSERT(entryCount_ + removedCount_ <= capacity());
     }
 
-    /* By definition, hashShift = HASH_BITS - log2(capacity). */
+    // By definition, hashShift = HASH_BITS - log2(capacity).
     uint32_t capacity() const { return JS_BIT(HASH_BITS - hashShift_); }
 
-    /* Whether we need to grow.  We want to do this if the load factor is >= 0.75 */
+    // Whether we need to grow.  We want to do this if the load factor
+    // is >= 0.75
     bool needsToGrow() const {
         uint32_t size = capacity();
         return entryCount_ + removedCount_ >= size - (size >> 2);
     }
 
-    /*
-     * Try to grow the table.  On failure, reports out of memory on cx
-     * and returns false.  This will make any extant pointers into the
-     * table invalid.  Don't call this unless needsToGrow() is true.
-     */
+    // Try to grow the table.  On failure, reports out of memory on cx
+    // and returns false.  This will make any extant pointers into the
+    // table invalid.  Don't call this unless needsToGrow() is true.
     bool grow(JSContext* cx);
 };
 
@@ -780,7 +779,8 @@ class Shape : public gc::TenuredCell
     inline void initDictionaryShape(const StackShape& child, uint32_t nfixed,
                                     GCPtrShape* dictp);
 
-    /* Replace the base shape of the last shape in a non-dictionary lineage with base. */
+    // Replace the base shape of the last shape in a non-dictionary lineage with
+    // base.
     static Shape* replaceLastProperty(JSContext* cx, StackBaseShape& base,
                                       TaggedProto proto, HandleShape shape);
 

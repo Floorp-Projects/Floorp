@@ -7,7 +7,8 @@
 #ifndef vm_ArrayBufferObject_inl_h
 #define vm_ArrayBufferObject_inl_h
 
-/* Utilities and common inline code for ArrayBufferObject and SharedArrayBufferObject */
+// Utilities and common inline code for ArrayBufferObject and
+// SharedArrayBufferObject.
 
 #include "vm/ArrayBufferObject.h"
 

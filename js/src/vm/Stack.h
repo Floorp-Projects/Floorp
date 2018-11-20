@@ -2305,7 +2305,7 @@ class NonBuiltinFrameIter : public FrameIter
     }
 };
 
-/* A filtering of the ScriptFrameIter to only stop at non-self-hosted scripts. */
+// A filtering of the ScriptFrameIter to only stop at non-self-hosted scripts.
 class NonBuiltinScriptFrameIter : public ScriptFrameIter
 {
     void settle();

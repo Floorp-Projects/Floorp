@@ -263,7 +263,7 @@ class MOZ_STACK_CLASS ParserBase
     /* Root atoms and objects allocated for the parsed tree. */
     AutoKeepAtoms       keepAtoms;
 
-    /* Perform constant-folding; must be true when interfacing with the emitter. */
+    // Perform constant-folding; must be true when interfacing with the emitter.
     const bool          foldConstants:1;
 
   protected:
