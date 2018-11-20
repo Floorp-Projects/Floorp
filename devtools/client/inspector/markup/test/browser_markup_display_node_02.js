@@ -98,6 +98,9 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
+  info("Enable the flexbox highlighter to get the interactive flex display badge.");
+  await pushPref("devtools.inspector.flexboxHighlighter.enabled", true);
+
   const {inspector, testActor} = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
