@@ -78,11 +78,13 @@ public:
   void SetPendingTransactionId(TransactionId aId,
                                const TimeStamp& aRefreshStartTime,
                                const TimeStamp& aTxnStartTime,
+                               const nsCString& aURL,
                                const TimeStamp& aFwdTime)
   {
     mPendingTransaction = aId;
     mRefreshStartTime = aRefreshStartTime;
     mTxnStartTime = aTxnStartTime;
+    mTxnURL = aURL;
     mFwdTime = aFwdTime;
   }
   TransactionId FlushTransactionId(TimeStamp& aCompositeEnd);
@@ -198,6 +200,7 @@ private:
   TimeStamp mRefreshStartTime;
   TimeStamp mTxnStartTime;
   TimeStamp mFwdTime;
+  nsCString mTxnURL;
 
   // When the widget/frame/browser stuff in this process begins its
   // destruction process, we need to Disconnect() all the currently

@@ -307,7 +307,9 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin,
             self.fatal("Could not create blobber upload directory")
 
         if os.environ.get('MOZHARNESS_TEST_PATHS'):
-            cmd.extend(os.environ['MOZHARNESS_TEST_PATHS'].split(':'))
+            paths = [os.path.join(dirs['abs_test_install_dir'], 'marionette', 'tests', p)
+                     for p in os.environ['MOZHARNESS_TEST_PATHS'].split(':')]
+            cmd.extend(paths)
         else:
             cmd.append(manifest)
 

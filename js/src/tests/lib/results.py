@@ -57,10 +57,11 @@ class TestResult:
 
     """Classified result from a test run."""
 
-    def __init__(self, test, result, results):
+    def __init__(self, test, result, results, wpt_results=None):
         self.test = test
         self.result = result
         self.results = results
+        self.wpt_results = wpt_results  # Only used for wpt tests.
 
     @classmethod
     def from_wpt_output(cls, output):
@@ -97,7 +98,9 @@ class TestResult:
 
         result = cls.PASS
         results = []
-        if harness_status != output.test.wpt.expected():
+        subtests = []
+        expected_harness_status = output.test.wpt.expected()
+        if harness_status != expected_harness_status:
             if harness_status == "CRASH":
                 result = cls.CRASH
             else:
@@ -115,12 +118,25 @@ class TestResult:
                     test_output += "expected %s, found %s" % (expected, test.status)
                     if test.message:
                         test_output += " (with message: \"%s\")" % (test.message,)
+                subtests.append({
+                    "test": output.test.wpt.id,
+                    "subtest": test.name,
+                    "status": test.status,
+                    "expected": expected,
+                })
                 results.append(test_result)
                 stdout.append(test_output)
 
         output.out = "\n".join(stdout) + "\n"
 
-        return cls(output.test, result, results)
+        wpt_results = {
+            "name": output.test.wpt.id,
+            "status": harness_status,
+            "expected": expected_harness_status,
+            "subtests": subtests,
+        }
+
+        return cls(output.test, result, results, wpt_results)
 
     @classmethod
     def from_output(cls, output):
@@ -189,6 +205,15 @@ class ResultsSink:
             self.slog = TestLogger(testsuite)
             self.slog.suite_start()
 
+        self.wptreport = None
+        if self.options.wptreport:
+            try:
+                from .wptreport import WptreportHandler
+                self.wptreport = WptreportHandler(self.options.wptreport)
+                self.wptreport.suite_start()
+            except ImportError:
+                pass
+
         self.groups = {}
         self.output_dict = {}
         self.counts = {'PASS': 0, 'FAIL': 0, 'TIMEOUT': 0, 'SKIP': 0}
@@ -220,6 +245,10 @@ class ResultsSink:
             self.n += 1
         else:
             result = TestResult.from_output(output)
+
+            if self.wptreport is not None and result.wpt_results:
+                self.wptreport.test(result.wpt_results, output.dt)
+
             tup = (result.result, result.test.expect, result.test.random)
             dev_label = self.LABELS[tup][1]
 
@@ -306,6 +335,9 @@ class ResultsSink:
             self.slog.suite_end()
         else:
             self.list(completed)
+
+        if self.wptreport is not None:
+            self.wptreport.suite_end()
 
     # Conceptually, this maps (test result x test expection) to text labels.
     #      key   is (result, expect, random)

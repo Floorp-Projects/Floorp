@@ -79,7 +79,7 @@ public:
   HostLayerManager();
   ~HostLayerManager();
 
-  virtual bool BeginTransactionWithTarget(gfxContext* aTarget) override
+  virtual bool BeginTransactionWithTarget(gfxContext* aTarget, const nsCString &aURL) override
   {
     MOZ_CRASH("GFX: Use BeginTransactionWithDrawTarget");
   }
@@ -282,7 +282,7 @@ public:
 
   void UpdateRenderBounds(const gfx::IntRect& aRect) override;
 
-  virtual bool BeginTransaction() override;
+  virtual bool BeginTransaction(const nsCString &aURL) override;
   void BeginTransactionWithDrawTarget(gfx::DrawTarget* aTarget,
                                       const gfx::IntRect& aRect) override;
   void EndTransaction(const TimeStamp& aTimeStamp,

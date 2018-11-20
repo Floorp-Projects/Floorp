@@ -48,6 +48,22 @@ using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
 namespace mozilla {
 namespace layers {
 
+struct FrameStats {
+  TransactionId id;
+  TimeStamp compositeStart;
+  TimeStamp renderStart;
+  TimeStamp compositeEnd;
+  int32_t contentFrameTime;
+  double resourceUploadTime;
+  double gpuCacheUploadTime;
+  TimeStamp transactionStart;
+  TimeStamp refreshStart;
+  TimeStamp fwdTime;
+  TimeStamp sceneBuiltTime;
+  uint32_t skippedComposites;
+  nsCString url;
+};
+
 
 /**
  * The PCompositorBridge protocol is a top-level protocol for the compositor.
@@ -99,6 +115,8 @@ child:
   // if there was no transaction since the last composite.
   async DidComposite(LayersId id, TransactionId transactionId,
                      TimeStamp compositeStart, TimeStamp compositeEnd);
+
+  async NotifyFrameStats(FrameStats[] aFrameStats);
 
   /**
    * Parent informs the child that the graphics objects are ready for

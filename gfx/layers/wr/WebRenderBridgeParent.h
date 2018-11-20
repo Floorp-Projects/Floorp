@@ -98,6 +98,7 @@ public:
                                              const bool& aContainsSVGGroup,
                                              const TimeStamp& aRefreshStartTime,
                                              const TimeStamp& aTxnStartTime,
+                                             const nsCString& aTxnURL,
                                              const TimeStamp& aFwdTime) override;
   mozilla::ipc::IPCResult RecvEmptyTransaction(const FocusTarget& aFocusTarget,
                                                const ScrollUpdatesMap& aUpdates,
@@ -112,6 +113,7 @@ public:
                                                const wr::IdNamespace& aIdNamespace,
                                                const TimeStamp& aRefreshStartTime,
                                                const TimeStamp& aTxnStartTime,
+                                               const nsCString& aTxnURL,
                                                const TimeStamp& aFwdTime) override;
   mozilla::ipc::IPCResult RecvSetFocusTarget(const FocusTarget& aFocusTarget) override;
   mozilla::ipc::IPCResult RecvParentCommands(nsTArray<WebRenderParentCommand>&& commands) override;
@@ -165,13 +167,19 @@ public:
                                 bool aContainsSVGGroup,
                                 const TimeStamp& aRefreshStartTime,
                                 const TimeStamp& aTxnStartTime,
+                                const nsCString& aTxnURL,
                                 const TimeStamp& aFwdTime,
                                 const bool aIsFirstPaint,
                                 const bool aUseForTelemetry = true);
   TransactionId LastPendingTransactionId();
-  TransactionId FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, const TimeStamp& aEndTime,
+  TransactionId FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch,
+                                            const TimeStamp& aCompositeStartTime,
+                                            const TimeStamp& aRenderStartTime,
+                                            const TimeStamp& aEndTime,
                                             UiCompositorControllerParent* aUiController,
-                                            wr::RendererStats* aStats = nullptr);
+                                            wr::RendererStats* aStats = nullptr,
+                                            nsTArray<FrameStats>* aOutputStats = nullptr);
+  void NotifySceneBuiltForEpoch(const wr::Epoch& aEpoch, const TimeStamp& aEndTime);
 
   TextureFactoryIdentifier GetTextureFactoryIdentifier();
 
@@ -301,6 +309,7 @@ private:
                          bool aContainsSVGGroup,
                          const TimeStamp& aRefreshStartTime,
                          const TimeStamp& aTxnStartTime,
+                         const nsCString& aTxnURL,
                          const TimeStamp& aFwdTime,
                          const bool aIsFirstPaint,
                          const bool aUseForTelemetry)
@@ -308,7 +317,9 @@ private:
       , mId(aId)
       , mRefreshStartTime(aRefreshStartTime)
       , mTxnStartTime(aTxnStartTime)
+      , mTxnURL(aTxnURL)
       , mFwdTime(aFwdTime)
+      , mSkippedComposites(0)
       , mContainsSVGGroup(aContainsSVGGroup)
       , mIsFirstPaint(aIsFirstPaint)
       , mUseForTelemetry(aUseForTelemetry)
@@ -317,7 +328,10 @@ private:
     TransactionId mId;
     TimeStamp mRefreshStartTime;
     TimeStamp mTxnStartTime;
+    nsCString mTxnURL;
     TimeStamp mFwdTime;
+    TimeStamp mSceneBuiltTime;
+    uint32_t mSkippedComposites;
     bool mContainsSVGGroup;
     bool mIsFirstPaint;
     bool mUseForTelemetry;
@@ -357,7 +371,7 @@ private:
   LayersObserverEpoch mChildLayersObserverEpoch;
   LayersObserverEpoch mParentLayersObserverEpoch;
 
-  std::queue<PendingTransactionId> mPendingTransactionIds;
+  std::deque<PendingTransactionId> mPendingTransactionIds;
   std::queue<CompositorAnimationIdsForEpoch> mCompositorAnimationsToDelete;
   wr::Epoch mWrEpoch;
   wr::IdNamespace mIdNamespace;
