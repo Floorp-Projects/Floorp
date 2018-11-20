@@ -207,9 +207,6 @@ SimpleTest.waitForFocus(() => {
         is(inputEvents.length, 0,
            `No "input" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
       }
-    } else if (test.type === "password") {
-      is(inputEvents.length, 0,
-         `Only one "input" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
     } else {
       is(inputEvents.length, 1,
          `Only one "input" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
