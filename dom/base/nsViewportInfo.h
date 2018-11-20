@@ -28,6 +28,10 @@ class MOZ_STACK_CLASS nsViewportInfo
       AutoSize,
       FixedSize,
     };
+    enum class AutoScaleFlag {
+      AutoScale,
+      FixedScale,
+    };
     enum class ZoomFlag {
       AllowZoom,
       DisallowZoom,
@@ -52,12 +56,13 @@ class MOZ_STACK_CLASS nsViewportInfo
                    const mozilla::CSSToScreenScale& aMaxZoom,
                    const mozilla::CSSSize& aSize,
                    AutoSizeFlag aAutoSizeFlag,
+                   AutoScaleFlag aAutoScaleFlag,
                    ZoomFlag aZoomFlag) :
                      mDefaultZoom(aDefaultZoom),
                      mMinZoom(aMinZoom),
                      mMaxZoom(aMaxZoom),
                      mSize(aSize),
-                     mDefaultZoomValid(true),
+                     mDefaultZoomValid(aAutoScaleFlag != AutoScaleFlag::AutoScale),
                      mAutoSize(aAutoSizeFlag == AutoSizeFlag::AutoSize),
                      mAllowZoom(aZoomFlag == ZoomFlag::AllowZoom)
     {
@@ -110,6 +115,8 @@ class MOZ_STACK_CLASS nsViewportInfo
 
     // If the default zoom was specified and was between the min and max
     // zoom values.
+    // FIXME: Bug 1504362 - Unify this and mDefaultZoom into
+    // Maybe<CSSToScreenScale>.
     bool mDefaultZoomValid;
 
     // Whether or not we should automatically size the viewport to the device's
