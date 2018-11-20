@@ -21,6 +21,9 @@ void SkFlattenable::PrivateInitializer::InitEffects() {
     // Shader
     SkGradientShader::InitializeFlattenables();
 
+    // Mask filters.
+    SkMaskFilter::InitializeFlattenables();
+
     // PathEffect
     SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkDashImpl)
 }
