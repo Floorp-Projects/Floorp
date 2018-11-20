@@ -365,6 +365,7 @@ class JS::Realm : public JS::shadow::Realm
     js::ReadBarriered<js::ArgumentsObject*> mappedArgumentsTemplate_ { nullptr };
     js::ReadBarriered<js::ArgumentsObject*> unmappedArgumentsTemplate_ { nullptr };
     js::ReadBarriered<js::NativeObject*> iterResultTemplate_ { nullptr };
+    js::ReadBarriered<js::NativeObject*> iterResultWithoutPrototypeTemplate_ { nullptr };
 
     // There are two ways to enter a realm:
     //
@@ -695,7 +696,13 @@ class JS::Realm : public JS::shadow::Realm
     static const size_t IterResultObjectValueSlot = 0;
     static const size_t IterResultObjectDoneSlot = 1;
     js::NativeObject* getOrCreateIterResultTemplateObject(JSContext* cx);
+    js::NativeObject* getOrCreateIterResultWithoutPrototypeTemplateObject(JSContext* cx);
 
+  private:
+    enum class WithObjectPrototype { No, Yes };
+    js::NativeObject* createIterResultTemplateObject(JSContext* cx, WithObjectPrototype withProto);
+
+  public:
     js::ArgumentsObject* getOrCreateArgumentsTemplateObject(JSContext* cx, bool mapped);
     js::ArgumentsObject* maybeArgumentsTemplateObject(bool mapped) const;
 

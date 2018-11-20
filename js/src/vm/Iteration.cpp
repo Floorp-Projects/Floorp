@@ -1036,10 +1036,35 @@ Realm::getOrCreateIterResultTemplateObject(JSContext* cx)
         return iterResultTemplate_;
     }
 
+    NativeObject* templateObj = createIterResultTemplateObject(cx, WithObjectPrototype::Yes);
+    iterResultTemplate_.set(templateObj);
+    return iterResultTemplate_;
+}
+
+NativeObject*
+Realm::getOrCreateIterResultWithoutPrototypeTemplateObject(JSContext* cx)
+{
+    MOZ_ASSERT(cx->realm() == this);
+
+    if (iterResultWithoutPrototypeTemplate_) {
+        return iterResultWithoutPrototypeTemplate_;
+    }
+
+    NativeObject* templateObj = createIterResultTemplateObject(cx, WithObjectPrototype::No);
+    iterResultWithoutPrototypeTemplate_.set(templateObj);
+    return iterResultWithoutPrototypeTemplate_;
+}
+
+NativeObject*
+Realm::createIterResultTemplateObject(JSContext* cx, WithObjectPrototype withProto)
+{
     // Create template plain object
-    RootedNativeObject templateObject(cx, NewBuiltinClassInstance<PlainObject>(cx, TenuredObject));
+    RootedNativeObject templateObject(cx,
+        withProto == WithObjectPrototype::Yes
+        ? NewBuiltinClassInstance<PlainObject>(cx, TenuredObject)
+        : NewObjectWithNullTaggedProto<PlainObject>(cx));
     if (!templateObject) {
-        return iterResultTemplate_; // = nullptr
+        return nullptr;
     }
 
     // Create a new group for the template.
@@ -1048,7 +1073,7 @@ Realm::getOrCreateIterResultTemplateObject(JSContext* cx)
                                                             templateObject->getClass(),
                                                             proto));
     if (!group) {
-        return iterResultTemplate_; // = nullptr
+        return nullptr;
     }
     templateObject->setGroup(group);
 
@@ -1056,14 +1081,14 @@ Realm::getOrCreateIterResultTemplateObject(JSContext* cx)
     if (!NativeDefineDataProperty(cx, templateObject, cx->names().value, UndefinedHandleValue,
                                   JSPROP_ENUMERATE))
     {
-        return iterResultTemplate_; // = nullptr
+        return nullptr;
     }
 
     // Set dummy `done` property
     if (!NativeDefineDataProperty(cx, templateObject, cx->names().done, TrueHandleValue,
                                   JSPROP_ENUMERATE))
     {
-        return iterResultTemplate_; // = nullptr
+        return nullptr;
     }
 
     AutoSweepObjectGroup sweep(group);
@@ -1084,9 +1109,7 @@ Realm::getOrCreateIterResultTemplateObject(JSContext* cx)
     MOZ_ASSERT(shape->slot() == Realm::IterResultObjectDoneSlot &&
                shape->propidRef() == NameToId(cx->names().done));
 
-    iterResultTemplate_.set(templateObject);
-
-    return iterResultTemplate_;
+    return templateObject;
 }
 
 /*** Iterator objects ****************************************************************************/
