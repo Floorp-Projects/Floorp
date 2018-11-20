@@ -62,7 +62,7 @@ nsBaseDragService::nsBaseDragService()
     mHasImage(false), mUserCancelled(false),
     mDragEventDispatchedToChildProcess(false),
     mDragAction(DRAGDROP_ACTION_NONE),
-    mDragActionFromChildProcess(DRAGDROP_ACTION_UNINITIALIZED), mTargetSize(0,0),
+    mDragActionFromChildProcess(DRAGDROP_ACTION_UNINITIALIZED),
     mContentPolicyType(nsIContentPolicy::TYPE_OTHER),
     mSuppressLevel(0), mInputSource(MouseEvent_Binding::MOZ_SOURCE_MOUSE)
 {
@@ -116,22 +116,6 @@ NS_IMETHODIMP
 nsBaseDragService::GetDragAction(uint32_t * anAction)
 {
   *anAction = mDragAction;
-  return NS_OK;
-}
-
-//---------------------------------------------------------
-NS_IMETHODIMP
-nsBaseDragService::SetTargetSize(nsSize aDragTargetSize)
-{
-  mTargetSize = aDragTargetSize;
-  return NS_OK;
-}
-
-//---------------------------------------------------------
-NS_IMETHODIMP
-nsBaseDragService::GetTargetSize(nsSize * aDragTargetSize)
-{
-  *aDragTargetSize = mTargetSize;
   return NS_OK;
 }
 

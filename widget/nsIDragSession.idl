@@ -38,12 +38,6 @@ interface nsIDragSession : nsISupports
   attribute unsigned long dragAction;
   
   /**
-    * Sets the current width and height of the drag target area. 
-    * It will contain the current size of the Frame that the drag is currently in
-    */  
-  [noscript] attribute nsSize targetSize;
- 
-  /**
     * Get the number of items that were dropped
     */
   readonly attribute unsigned long numDropItems;
