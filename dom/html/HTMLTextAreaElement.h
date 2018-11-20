@@ -309,6 +309,11 @@ public:
     return mState.GetTextEditor();
   }
 
+  bool IsInputEventTarget() const
+  {
+    return true;
+  }
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void SetUserInput(const nsAString& aValue,
                     nsIPrincipal& aSubjectPrincipal);

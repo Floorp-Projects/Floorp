@@ -53,8 +53,8 @@ function checkElementFilled(element, expectedvalue) {
           ok(event instanceof InputEvent,
              `"input" event should be dispatched with InputEvent interface on ${element.name}`);
         } else {
-          todo(event instanceof Event && !(event instanceof UIEvent),
-               `"input" event should be dispatched with Event interface on ${element.name}`);
+          ok(event instanceof Event && !(event instanceof UIEvent),
+             `"input" event should be dispatched with Event interface on ${element.name}`);
         }
         is(event.cancelable, false,
            `"input" event should be never cancelable on ${element.name}`);
