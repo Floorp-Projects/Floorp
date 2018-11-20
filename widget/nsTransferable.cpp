@@ -58,22 +58,32 @@ DataStruct::~DataStruct()
 }
 
 //-------------------------------------------------------------------------
+
 void
 DataStruct::SetData(nsISupports* aData, uint32_t aDataLen, bool aIsPrivateData)
 {
   // Now, check to see if we consider the data to be "too large"
-  // as well as ensuring that private browsing mode is disabled
-  if (aDataLen > kLargeDatasetSize && !aIsPrivateData &&
-      // File IO is not allowed in content processes.
-      XRE_IsParentProcess()) {
-    // if so, cache it to disk instead of memory
-    if (NS_SUCCEEDED(WriteCache(aData, aDataLen))) {
-      // Clear previously set small data.
-      mData = nullptr;
-      mDataLen = 0;
-      return;
+  // as well as ensuring that private browsing mode is disabled.
+  // File IO is not allowed in content processes.
+  if (!aIsPrivateData && XRE_IsParentProcess()) {
+    void* data = nullptr;
+    uint32_t dataLen = 0;
+    nsPrimitiveHelpers::CreateDataFromPrimitive(mFlavor, aData, &data, &dataLen);
+
+    if (dataLen > kLargeDatasetSize) {
+      // Too large, cache it to disk instead of memory.
+      if (NS_SUCCEEDED(WriteCache(data, dataLen))) {
+        free(data);
+        // Clear previously set small data.
+        mData = nullptr;
+        mDataLen = 0;
+        return;
+      }
+
+      NS_WARNING("Oh no, couldn't write data to the cache file");
     }
-    NS_WARNING("Oh no, couldn't write data to the cache file");
+
+    free(data);
   }
 
   if (mCacheFD) {
@@ -114,8 +124,12 @@ DataStruct::GetData(nsISupports** aData, uint32_t* aDataLen)
 
 //-------------------------------------------------------------------------
 nsresult
-DataStruct::WriteCache(nsISupports* aData, uint32_t aDataLen)
+DataStruct::WriteCache(void* aData, uint32_t aDataLen)
 {
+  MOZ_ASSERT(aData && aDataLen);
+  MOZ_ASSERT(aDataLen <= uint32_t(std::numeric_limits<int32_t>::max()),
+             "too large size for PR_Write");
+
   nsresult rv;
   if (!mCacheFD) {
     rv = NS_OpenAnonymousTemporaryFile(&mCacheFD);
@@ -126,17 +140,12 @@ DataStruct::WriteCache(nsISupports* aData, uint32_t aDataLen)
     return NS_ERROR_FAILURE;
   }
 
-  // write out the contents of the clipboard to the file
-  void* buff = nullptr;
-  uint32_t dataLen = 0;
-  nsPrimitiveHelpers::CreateDataFromPrimitive(mFlavor, aData, &buff, &dataLen);
-  if (buff) {
-    int32_t written = PR_Write(mCacheFD, buff, dataLen);
-    free(buff);
-    if (written) {
-      return NS_OK;
-    }
+  // Write out the contents of the clipboard to the file.
+  int32_t written = PR_Write(mCacheFD, aData, aDataLen);
+  if (written == int32_t(aDataLen)) {
+    return NS_OK;
   }
+
   PR_Close(mCacheFD);
   mCacheFD = nullptr;
   return NS_ERROR_FAILURE;
