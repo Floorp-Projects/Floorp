@@ -341,7 +341,7 @@ public:
 
   ~AutoVirtualProtect()
   {
-    if (!mError) {
+    if (mError.IsFailure()) {
       return;
     }
 
@@ -351,7 +351,7 @@ public:
 
   explicit operator bool() const
   {
-    return !!mError;
+    return mError.IsSuccess();
   }
 
   WindowsError GetError() const
