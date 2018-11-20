@@ -1499,6 +1499,14 @@ nsDocShell::GetHasForeignCookiesBeenBlocked(bool* aHasForeignCookiesBeenBlocked)
 }
 
 NS_IMETHODIMP
+nsDocShell::GetHasCookiesLoaded(bool* aHasCookiesLoaded)
+{
+  nsCOMPtr<nsIDocument> doc(GetDocument());
+  *aHasCookiesLoaded = doc && doc->GetHasCookiesLoaded();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetAllowPlugins(bool* aAllowPlugins)
 {
   NS_ENSURE_ARG_POINTER(aAllowPlugins);

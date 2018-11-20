@@ -153,6 +153,7 @@ function startTest1() {
 
   gAllNotifications = [
     "onStateChange",
+    "onSecurityChange",
     "onLocationChange",
     "onSecurityChange",
     "onStateChange",
@@ -165,6 +166,7 @@ function startTest2() {
   info("\nTest 2");
   gAllNotifications = [
     "onStateChange",
+    "onSecurityChange",
     "onLocationChange",
     "onSecurityChange",
     "onStateChange",
@@ -177,6 +179,7 @@ function startTest3() {
   info("\nTest 3");
   gAllNotifications = [
     "onStateChange",
+    "onSecurityChange",
     "onLocationChange",
     "onSecurityChange",
     "onStateChange",
@@ -189,6 +192,7 @@ function startTest4() {
   info("\nTest 4");
   gAllNotifications = [
     "onStateChange",
+    "onSecurityChange",
     "onLocationChange",
     "onSecurityChange",
     "onStateChange",
@@ -209,6 +213,7 @@ function startTest5() {
 
   gAllNotifications = [
     "onStateChange",
+    "onSecurityChange",
     "onLocationChange",
     "onSecurityChange",
     "onStateChange",
@@ -221,6 +226,7 @@ function startTest6() {
   info("\nTest 6");
   gAllNotifications = [
     "onStateChange",
+    "onSecurityChange",
     "onLocationChange",
     "onSecurityChange",
     "onStateChange",
