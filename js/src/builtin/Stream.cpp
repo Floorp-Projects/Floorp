@@ -742,7 +742,9 @@ ReadableStream_cancel(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static MOZ_MUST_USE ReadableStreamDefaultReader*
-CreateReadableStreamDefaultReader(JSContext* cx, Handle<ReadableStream*> unwrappedStream);
+CreateReadableStreamDefaultReader(JSContext* cx,
+                                  Handle<ReadableStream*> unwrappedStream,
+                                  ForAuthorCodeBool forAuthorCode = ForAuthorCodeBool::No);
 
 /**
  * Streams spec, 3.2.5.3. getReader()
@@ -772,7 +774,7 @@ ReadableStream_getReader(JSContext* cx, unsigned argc, Value* vp)
     }
 
     if (modeVal.isUndefined()) {
-        reader = CreateReadableStreamDefaultReader(cx, unwrappedStream);
+        reader = CreateReadableStreamDefaultReader(cx, unwrappedStream, ForAuthorCodeBool::Yes);
     } else {
         // Step 3: Set mode to ? ToString(mode) (implicit).
         RootedString mode(cx, ToString<CanGC>(cx, modeVal));
@@ -1292,8 +1294,12 @@ AppendToListAtSlot(JSContext* cx,
                    HandleObject obj);
 
 /**
- * Streams spec, 3.4.1. ReadableStreamAddReadIntoRequest ( stream )
- * Streams spec, 3.4.2. ReadableStreamAddReadRequest ( stream )
+ * Streams spec, 3.4.1. ReadableStreamAddReadIntoRequest ( stream, forAuthorCode )
+ * Streams spec, 3.4.2. ReadableStreamAddReadRequest ( stream, forAuthorCode )
+ *
+ * Our implementation does not pass around forAuthorCode parameters in the same
+ * places as the standard, but the effect is the same. See the comment on
+ * `ReadableStreamReader::forAuthorCode()`.
  */
 static MOZ_MUST_USE JSObject*
 ReadableStreamAddReadOrReadIntoRequest(JSContext* cx, Handle<ReadableStream*> unwrappedStream)
@@ -1314,10 +1320,13 @@ ReadableStreamAddReadOrReadIntoRequest(JSContext* cx, Handle<ReadableStream*> un
         return nullptr;
     }
 
-    // Step 4: Let read{Into}Request be Record {[[promise]]: promise}.
+    // Step 4: Let read{Into}Request be
+    //         Record {[[promise]]: promise, [[forAuthorCode]]: forAuthorCode}.
     // Step 5: Append read{Into}Request as the last element of
     //         stream.[[reader]].[[read{Into}Requests]].
-    // Since [[promise]] is the Record's only field, we store it directly.
+    // Since we don't need the [[forAuthorCode]] field (see the comment on
+    // `ReadableStreamReader::forAuthorCode()`), we elide the Record and store
+    // only the promise.
     if (!AppendToListAtSlot(cx, unwrappedReader, ReadableStreamReader::Slot_Requests, promise)) {
         return nullptr;
     }
@@ -1396,6 +1405,12 @@ ReadableStreamCancel(JSContext* cx, Handle<ReadableStream*> unwrappedStream, Han
     return JS::CallOriginalPromiseThen(cx, sourceCancelPromise, returnUndefined, nullptr);
 }
 
+static MOZ_MUST_USE JSObject*
+ReadableStreamCreateReadResult(JSContext* cx,
+                               HandleValue value,
+                               bool done,
+                               ForAuthorCodeBool forAuthorCode);
+
 /**
  * Streams spec, 3.4.4. ReadableStreamClose ( stream )
  */
@@ -1421,6 +1436,8 @@ ReadableStreamCloseInternal(JSContext* cx, Handle<ReadableStream*> unwrappedStre
 
     // Step 5: If ! IsReadableStreamDefaultReader(reader) is true,
     if (unwrappedReader->is<ReadableStreamDefaultReader>()) {
+        ForAuthorCodeBool forAuthorCode = unwrappedReader->forAuthorCode();
+
         // Step a: Repeat for each readRequest that is an element of
         //         reader.[[readRequests]],
         RootedNativeObject unwrappedReadRequests(cx, unwrappedReader->requests());
@@ -1430,13 +1447,15 @@ ReadableStreamCloseInternal(JSContext* cx, Handle<ReadableStream*> unwrappedStre
         RootedValue resultVal(cx);
         for (uint32_t i = 0; i < len; i++) {
             // Step i: Resolve readRequest.[[promise]] with
-            //         ! CreateIterResultObject(undefined, true).
+            //         ! ReadableStreamCreateReadResult(undefined, true,
+            //                                          readRequest.[[forAuthorCode]]).
             readRequest = &unwrappedReadRequests->getDenseElement(i).toObject();
             if (!cx->compartment()->wrap(cx, &readRequest)) {
                 return false;
             }
 
-            resultObj = CreateIterResultObject(cx, UndefinedHandleValue, true);
+            resultObj = ReadableStreamCreateReadResult(cx, UndefinedHandleValue, true,
+                                                       forAuthorCode);
             if (!resultObj) {
                 return false;
             }
@@ -1474,6 +1493,40 @@ ReadableStreamCloseInternal(JSContext* cx, Handle<ReadableStream*> unwrappedStre
     }
 
     return true;
+}
+
+/**
+ * Streams spec, 3.4.5. ReadableStreamCreateReadResult ( value, done, forAuthorCode )
+ */
+static MOZ_MUST_USE JSObject*
+ReadableStreamCreateReadResult(JSContext* cx,
+                               HandleValue value,
+                               bool done,
+                               ForAuthorCodeBool forAuthorCode)
+{
+    // Step 1: Let prototype be null.
+    // Step 2: If forAuthorCode is true, set prototype to %ObjectPrototype%.
+    RootedObject templateObject(cx,
+        forAuthorCode == ForAuthorCodeBool::Yes
+        ? cx->realm()->getOrCreateIterResultTemplateObject(cx)
+        : cx->realm()->getOrCreateIterResultWithoutPrototypeTemplateObject(cx));
+
+    // Step 3: Assert: Type(done) is Boolean (implicit).
+
+    // Step 4: Let obj be ObjectCreate(prototype).
+    NativeObject* obj;
+    JS_TRY_VAR_OR_RETURN_NULL(cx, obj, NativeObject::createWithTemplate(cx, gc::DefaultHeap,
+                                                                        templateObject));
+
+    // Step 5: Perform CreateDataProperty(obj, "value", value).
+    obj->setSlot(Realm::IterResultObjectValueSlot, value);
+
+    // Step 6: Perform CreateDataProperty(obj, "done", done).
+    obj->setSlot(Realm::IterResultObjectDoneSlot,
+                 done ? TrueHandleValue : FalseHandleValue);
+
+    // Step 7: Return obj.
+    return obj;
 }
 
 /**
@@ -1610,9 +1663,10 @@ ReadableStreamFulfillReadOrReadIntoRequest(JSContext* cx,
         return false;
     }
 
-    // Step 4: Resolve readIntoRequest.[[promise]] with
-    //         ! CreateIterResultObject(chunk, done).
-    RootedObject iterResult(cx, CreateIterResultObject(cx, chunk, done));
+    // Step 4: Resolve read{Into}Request.[[promise]] with
+    //         ! ReadableStreamCreateReadResult(chunk, done, readIntoRequest.[[forAuthorCode]]).
+    RootedObject iterResult(cx,
+        ReadableStreamCreateReadResult(cx, chunk, done, unwrappedReader->forAuthorCode()));
     if (!iterResult) {
         return false;
     }
@@ -1677,14 +1731,17 @@ ReadableStreamHasDefaultReader(JSContext* cx,
 static MOZ_MUST_USE bool
 ReadableStreamReaderGenericInitialize(JSContext* cx,
                                       Handle<ReadableStreamReader*> reader,
-                                      Handle<ReadableStream*> unwrappedStream);
+                                      Handle<ReadableStream*> unwrappedStream,
+                                      ForAuthorCodeBool forAuthorCode);
 
 /**
  * Stream spec, 3.5.3. new ReadableStreamDefaultReader ( stream )
  * Steps 2-4.
  */
 static MOZ_MUST_USE ReadableStreamDefaultReader*
-CreateReadableStreamDefaultReader(JSContext* cx, Handle<ReadableStream*> unwrappedStream)
+CreateReadableStreamDefaultReader(JSContext* cx,
+                                  Handle<ReadableStream*> unwrappedStream,
+                                  ForAuthorCodeBool forAuthorCode)
 {
     Rooted<ReadableStreamDefaultReader*> reader(cx,
         NewBuiltinClassInstance<ReadableStreamDefaultReader>(cx));
@@ -1700,7 +1757,7 @@ CreateReadableStreamDefaultReader(JSContext* cx, Handle<ReadableStream*> unwrapp
     }
 
     // Step 3: Perform ! ReadableStreamReaderGenericInitialize(this, stream).
-    if (!ReadableStreamReaderGenericInitialize(cx, reader, unwrappedStream)) {
+    if (!ReadableStreamReaderGenericInitialize(cx, reader, unwrappedStream, forAuthorCode)) {
         return nullptr;
     }
 
@@ -1831,7 +1888,7 @@ ReadableStreamDefaultReader_read(JSContext* cx, unsigned argc, Value* vp)
         return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
-    // Step 3: Return ! ReadableStreamDefaultReaderRead(this).
+    // Step 3: Return ! ReadableStreamDefaultReaderRead(this, true).
     JSObject* readPromise = ::ReadableStreamDefaultReaderRead(cx, unwrappedReader);
     if (!readPromise) {
         return false;
@@ -1937,8 +1994,10 @@ ReadableStreamReaderGenericCancel(JSContext* cx,
  * Streams spec, 3.7.4. ReadableStreamReaderGenericInitialize ( reader, stream )
  */
 static MOZ_MUST_USE bool
-ReadableStreamReaderGenericInitialize(JSContext* cx, Handle<ReadableStreamReader*> reader,
-                                      Handle<ReadableStream*> unwrappedStream)
+ReadableStreamReaderGenericInitialize(JSContext* cx,
+                                      Handle<ReadableStreamReader*> reader,
+                                      Handle<ReadableStream*> unwrappedStream,
+                                      ForAuthorCodeBool forAuthorCode)
 {
     cx->check(reader);
 
@@ -1991,6 +2050,11 @@ ReadableStreamReaderGenericInitialize(JSContext* cx, Handle<ReadableStreamReader
     }
 
     reader->setClosedPromise(promise);
+
+    // Extra step not in the standard. See the comment on
+    // `ReadableStreamReader::forAuthorCode()`.
+    reader->setForAuthorCode(forAuthorCode);
+
     return true;
 }
 
@@ -2066,26 +2130,30 @@ ReadableStreamControllerPullSteps(JSContext* cx,
                                   Handle<ReadableStreamController*> unwrappedController);
 
 /**
- * Streams spec, 3.7.7. ReadableStreamDefaultReaderRead ( reader )
+ * Streams spec, 3.7.7. ReadableStreamDefaultReaderRead ( reader [, forAuthorCode ] )
  */
 static MOZ_MUST_USE JSObject*
 ReadableStreamDefaultReaderRead(JSContext* cx,
                                 Handle<ReadableStreamDefaultReader*> unwrappedReader)
 {
-    // Step 1: Let stream be reader.[[ownerReadableStream]].
-    // Step 2: Assert: stream is not undefined.
+    // Step 1: If forAuthorCode was not passed, set it to false (implicit).
+
+    // Step 2: Let stream be reader.[[ownerReadableStream]].
+    // Step 3: Assert: stream is not undefined.
     Rooted<ReadableStream*> unwrappedStream(cx, UnwrapStreamFromReader(cx, unwrappedReader));
     if (!unwrappedStream) {
         return nullptr;
     }
 
-    // Step 3: Set stream.[[disturbed]] to true.
+    // Step 4: Set stream.[[disturbed]] to true.
     unwrappedStream->setDisturbed();
 
-    // Step 4: If stream.[[state]] is "closed", return a new promise resolved with
-    //         ! CreateIterResultObject(undefined, true).
+    // Step 5: If stream.[[state]] is "closed", return a new promise resolved with
+    //         ! ReadableStreamCreateReadResult(undefined, true, forAuthorCode).
     if (unwrappedStream->closed()) {
-        RootedObject iterResult(cx, CreateIterResultObject(cx, UndefinedHandleValue, true));
+        RootedObject iterResult(cx,
+            ReadableStreamCreateReadResult(cx, UndefinedHandleValue, true,
+                                           unwrappedReader->forAuthorCode()));
         if (!iterResult) {
             return nullptr;
         }
@@ -2093,7 +2161,7 @@ ReadableStreamDefaultReaderRead(JSContext* cx,
         return PromiseObject::unforgeableResolve(cx, iterResultVal);
     }
 
-    // Step 5: If stream.[[state]] is "errored", return a new promise rejected with
+    // Step 6: If stream.[[state]] is "errored", return a new promise rejected with
     //         stream.[[storedError]].
     if (unwrappedStream->errored()) {
         RootedValue storedError(cx, unwrappedStream->storedError());
@@ -2103,10 +2171,10 @@ ReadableStreamDefaultReaderRead(JSContext* cx,
         return PromiseObject::unforgeableReject(cx, storedError);
     }
 
-    // Step 6: Assert: stream.[[state]] is "readable".
+    // Step 7: Assert: stream.[[state]] is "readable".
     MOZ_ASSERT(unwrappedStream->readable());
 
-    // Step 7: Return ! stream.[[readableStreamController]].[[PullSteps]]().
+    // Step 8: Return ! stream.[[readableStreamController]].[[PullSteps]]().
     Rooted<ReadableStreamController*> unwrappedController(cx, unwrappedStream->controller());
     return ReadableStreamControllerPullSteps(cx, unwrappedController);
 }
@@ -2580,7 +2648,7 @@ DequeueValue(JSContext* cx,
              MutableHandleValue chunk);
 
 /**
- * Streams spec, 3.8.5.2. ReadableStreamDefaultController [[PullSteps]]()
+ * Streams spec, 3.8.5.2. ReadableStreamDefaultController [[PullSteps]]( forAuthorCode )
  */
 static JSObject*
 ReadableStreamDefaultControllerPullSteps(JSContext* cx,
@@ -2620,17 +2688,24 @@ ReadableStreamDefaultControllerPullSteps(JSContext* cx,
             }
         }
 
-        // Step d: Return a promise resolved with ! CreateIterResultObject(chunk, false).
+        // Step d: Return a promise resolved with
+        //         ! ReadableStreamCreateReadResult(chunk, false, forAuthorCode).
         cx->check(chunk);
-        RootedObject iterResultObj(cx, CreateIterResultObject(cx, chunk, false));
-        if (!iterResultObj) {
+        ReadableStreamReader* unwrappedReader = UnwrapReaderFromStream(cx, unwrappedStream);
+        if (!unwrappedReader) {
             return nullptr;
         }
-        RootedValue iterResult(cx, ObjectValue(*iterResultObj));
-        return PromiseObject::unforgeableResolve(cx, iterResult);
+        RootedObject readResultObj(cx,
+            ReadableStreamCreateReadResult(cx, chunk, false, unwrappedReader->forAuthorCode()));
+        if (!readResultObj) {
+            return nullptr;
+        }
+        RootedValue readResult(cx, ObjectValue(*readResultObj));
+        return PromiseObject::unforgeableResolve(cx, readResult);
     }
 
-    // Step 3: Let pendingPromise be ! ReadableStreamAddReadRequest(stream).
+    // Step 3: Let pendingPromise be
+    //         ! ReadableStreamAddReadRequest(stream, forAuthorCode).
     RootedObject pendingPromise(cx, ReadableStreamAddReadOrReadIntoRequest(cx, unwrappedStream));
     if (!pendingPromise) {
         return nullptr;
@@ -3297,7 +3372,7 @@ ReadableByteStreamControllerHandleQueueDrain(JSContext* cx,
                                              Handle<ReadableStreamController*> unwrappedController);
 
 /**
- * Streams spec, 3.10.5.2. [[PullSteps]] ()
+ * Streams spec, 3.10.5.2. [[PullSteps]] ( forAuthorCode )
  */
 static MOZ_MUST_USE JSObject*
 ReadableByteStreamControllerPullSteps(JSContext* cx,
@@ -3386,13 +3461,19 @@ ReadableByteStreamControllerPullSteps(JSContext* cx,
             return nullptr;
         }
 
-        // Step 3.g: Return a promise resolved with ! CreateIterResultObject(view, false).
+        // Step 3.g: Return a promise resolved with
+        //           ! ReadableStreamCreateReadResult(view, false, forAuthorCode).
         val.setObject(*view);
-        RootedObject iterResult(cx, CreateIterResultObject(cx, val, false));
-        if (!iterResult) {
+        ReadableStreamReader* unwrappedReader = UnwrapReaderFromStream(cx, unwrappedStream);
+        if (!unwrappedReader) {
             return nullptr;
         }
-        val.setObject(*iterResult);
+        RootedObject readResult(cx,
+            ReadableStreamCreateReadResult(cx, val, false, unwrappedReader->forAuthorCode()));
+        if (!readResult) {
+            return nullptr;
+        }
+        val.setObject(*readResult);
 
         return PromiseObject::unforgeableResolve(cx, val);
     }
@@ -3440,7 +3521,7 @@ ReadableByteStreamControllerPullSteps(JSContext* cx,
         }
     }
 
-    // Step 6: Let promise be ! ReadableStreamAddReadRequest(stream).
+    // Step 6: Let promise be ! ReadableStreamAddReadRequest(stream, forAuthorCode).
     RootedObject promise(cx, ReadableStreamAddReadOrReadIntoRequest(cx, unwrappedStream));
     if (!promise) {
         return nullptr;
@@ -3458,9 +3539,9 @@ ReadableByteStreamControllerPullSteps(JSContext* cx,
 /**
  * Unified implementation of ReadableStream controllers' [[PullSteps]] internal
  * methods.
- * Streams spec, 3.8.5.2. [[PullSteps]] ()
+ * Streams spec, 3.8.5.2. [[PullSteps]] ( forAuthorCode )
  * and
- * Streams spec, 3.10.5.2. [[PullSteps]] ()
+ * Streams spec, 3.10.5.2. [[PullSteps]] ( forAuthorCode )
  */
 static MOZ_MUST_USE JSObject*
 ReadableStreamControllerPullSteps(JSContext* cx, Handle<ReadableStreamController*> unwrappedController)
@@ -4517,6 +4598,8 @@ JS::ReadableStreamReaderCancel(JSContext* cx, HandleObject readerObj, HandleValu
     if (!unwrappedReader) {
         return false;
     }
+    MOZ_ASSERT(unwrappedReader->forAuthorCode() == ForAuthorCodeBool::No,
+               "C++ code should not touch readers created by scripts");
 
     return ReadableStreamReaderGenericCancel(cx, unwrappedReader, reason);
 }
@@ -4527,10 +4610,13 @@ JS::ReadableStreamReaderReleaseLock(JSContext* cx, HandleObject readerObj)
     AssertHeapIsIdle();
     CHECK_THREAD(cx);
 
-    Rooted<ReadableStreamReader*> unwrappedReader(cx, APIToUnwrapped<ReadableStreamReader>(cx, readerObj));
+    Rooted<ReadableStreamReader*> unwrappedReader(cx,
+        APIToUnwrapped<ReadableStreamReader>(cx, readerObj));
     if (!unwrappedReader) {
         return false;
     }
+    MOZ_ASSERT(unwrappedReader->forAuthorCode() == ForAuthorCodeBool::No,
+               "C++ code should not touch readers created by scripts");
 
 #ifdef DEBUG
     Rooted<ReadableStream*> unwrappedStream(cx, UnwrapStreamFromReader(cx, unwrappedReader));
@@ -4554,6 +4640,8 @@ JS::ReadableStreamDefaultReaderRead(JSContext* cx, HandleObject readerObj)
     if (!unwrappedReader) {
         return nullptr;
     }
+    MOZ_ASSERT(unwrappedReader->forAuthorCode() == ForAuthorCodeBool::No,
+               "C++ code should not touch readers created by scripts");
 
     return ::ReadableStreamDefaultReaderRead(cx, unwrappedReader);
 }

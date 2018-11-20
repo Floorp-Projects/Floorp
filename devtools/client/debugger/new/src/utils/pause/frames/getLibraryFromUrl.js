@@ -78,7 +78,8 @@ const libraryMap = [
   },
   {
     label: "Angular",
-    pattern: /angular/i
+    pattern: /angular/i,
+    contextPattern: /(zone\.js)/
   },
   {
     label: "Redux",
@@ -106,14 +107,34 @@ const libraryMap = [
   }
 ];
 
-export function getLibraryFromUrl(frame: Frame) {
+export function getLibraryFromUrl(frame: Frame, callStack: Array<Frame> = []) {
   // @TODO each of these fns calls getFrameUrl, just call it once
   // (assuming there's not more complex logic to identify a lib)
   const frameUrl = getFrameUrl(frame);
-  const matches = libraryMap.filter(o => frameUrl.match(o.pattern));
-  if (matches.length == 0) {
-    return null;
+
+  // Let's first check if the frame match a defined pattern.
+  let match = libraryMap.find(o => frameUrl.match(o.pattern));
+  if (match) {
+    return match.label;
   }
 
-  return matches[0].label;
+  // If it does not, it might still be one of the case where the file is used
+  // by a library but the name has not enough specificity. In such case, we want
+  // to only return the library name if there are frames matching the library
+  // pattern in the callStack (e.g. `zone.js` is used by Angular, but the name
+  //  could be quite common and return false positive if evaluated alone. So we
+  // only return Angular if there are other frames matching Angular).
+  match = libraryMap.find(
+    o => o.contextPattern && frameUrl.match(o.contextPattern)
+  );
+  if (match) {
+    const contextMatch = callStack.some(f =>
+      libraryMap.find(o => frameUrl.match(o.pattern))
+    );
+    if (contextMatch) {
+      return match.label;
+    }
+  }
+
+  return null;
 }

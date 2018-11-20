@@ -14,7 +14,7 @@ import {
 import { isGenerated, getFilename } from "../utils/source";
 import { getSelectedLocation } from "../utils/source-maps";
 
-import type { Source, Breakpoint, Location } from "../types";
+import type { Source, Breakpoint, BreakpointId, Location } from "../types";
 import type { SourcesMap } from "../reducers/types";
 
 export type BreakpointSources = Array<{
@@ -23,6 +23,7 @@ export type BreakpointSources = Array<{
 }>;
 
 export type FormattedBreakpoint = {|
+  id: BreakpointId,
   condition: ?string,
   disabled: boolean,
   text: string,
@@ -33,9 +34,10 @@ function formatBreakpoint(
   breakpoint: Breakpoint,
   selectedSource: Source
 ): FormattedBreakpoint {
-  const { condition, disabled } = breakpoint;
+  const { id, condition, disabled } = breakpoint;
 
   return {
+    id,
     condition,
     disabled,
     text:

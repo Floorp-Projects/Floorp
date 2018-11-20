@@ -14,6 +14,7 @@
 #include "uachelper.h"
 #include "pathhash.h"
 #include "mozilla/UniquePtr.h"
+#include "nsWindowsHelpers.h"
 
 // Needed for PathAppendW
 #include <shlwapi.h>
@@ -217,7 +218,6 @@ StartServiceCommand(int argc, LPCWSTR* argv)
  * Launch a service initiated action for a software update with the
  * specified arguments.
  *
- * @param  exePath The path of the executable to run
  * @param  argc    The total number of arguments in argv
  * @param  argv    An array of null terminated strings to pass to the exePath,
  *                 argv[0] must be the path to the updater.exe
@@ -227,8 +227,11 @@ DWORD
 LaunchServiceSoftwareUpdateCommand(int argc, LPCWSTR* argv)
 {
   // The service command is the same as the updater.exe command line except
-  // it has 2 extra args: 1) The Path to udpater.exe, and 2) the command
-  // being executed which is "software-update"
+  // it has 4 extra args:
+  // 0) The name of the service, automatically added by Windows
+  // 1) "MozillaMaintenance" (I think this is redundant with 0)
+  // 2) The command being executed, which is "software-update"
+  // 3) The path to updater.exe (from argv[0])
   LPCWSTR *updaterServiceArgv = new LPCWSTR[argc + 2];
   updaterServiceArgv[0] = L"MozillaMaintenance";
   updaterServiceArgv[1] = L"software-update";
@@ -304,12 +307,22 @@ GetUUIDTempFilePath(LPCWSTR basePath, LPCWSTR prefix, LPWSTR tmpPath)
 /**
  * Sets update.status to a specific failure code
  *
- * @param  updateDirPath The path of the update directory
+ * @param  updateDirPath   The path of the update directory
+ * @param  errorCode       Error code to set
+ * @param  userToken       Impersonation token to use
+ *
  * @return TRUE if successful
  */
 BOOL
-WriteStatusFailure(LPCWSTR updateDirPath, int errorCode)
+WriteStatusFailure(LPCWSTR updateDirPath,
+                   int     errorCode,
+                   nsAutoHandle& userToken)
 {
+  ImpersonationScope impersonated(userToken);
+  if (userToken && !impersonated) {
+    return FALSE;
+  }
+
   // The temp file is not removed on failure since there is client code that
   // will remove it.
   WCHAR tmpUpdateStatusFilePath[MAX_PATH + 1] = { L'\0' };

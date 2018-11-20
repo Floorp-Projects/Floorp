@@ -1635,3 +1635,9 @@ js::LogDtor(void* self, const char* type, uint32_t sz)
         fun(self, type, sz);
     }
 }
+
+JS_FRIEND_API uint64_t
+js::GetGCHeapUsageForObjectZone(JSObject* obj)
+{
+    return obj->zone()->usage.gcBytes();
+}

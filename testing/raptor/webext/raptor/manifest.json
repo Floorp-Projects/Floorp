@@ -13,10 +13,22 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.amazon.com/*",
+      "matches": [
+                  "*://*.apple.com/*",
+                  "*://*.amazon.com/*",
+                  "*://*.bing.com/*",
                   "*://*.facebook.com/*",
                   "*://*.google.com/*",
-                  "*://*.youtube.com/*"],
+                  "*://*.imdb.com/*",
+                  "*://*.imgur.com/*",
+                  "*://*.microsoft.com/*",
+                  "*://*.reddit.com/*",
+                  "*://*.vice.com/*",
+                  "*://*.wikia.com/*",
+                  "*://*.wikipedia.org/*",
+                  "*://*.youtube.com/*",
+                  "*://*.yandex.ru/*"
+                  ],
       "js": ["measure.js"]
     },
     {
