@@ -86,9 +86,8 @@ interface nsIFlavorDataProvider : nsISupports
     * @param  aTransferable (in parameter) the transferable we're being called for.
     * @param  aFlavor (in parameter) the flavor of data to retrieve
     * @param  aData the data. Some variant of class in nsISupportsPrimitives.idl
-    * @param  aDataLen the length of the data
     */
-  void getFlavorData(in nsITransferable aTransferable, in string aFlavor, out nsISupports aData, out unsigned long aDataLen);
+  void getFlavorData(in nsITransferable aTransferable, in string aFlavor, out nsISupports aData);
 };
 
 
@@ -132,7 +131,7 @@ interface nsITransferable : nsISupports
     * @param  aData the data. Some variant of class in nsISupportsPrimitives.idl
     * @param  aDataLen the length of the data
     */
-  void getTransferData ( in string aFlavor, out nsISupports aData, out unsigned long aDataLen ) ;
+  void getTransferData(in string aFlavor, out nsISupports aData);
 
   /**
     * Returns the best flavor in the transferable, given those that have
@@ -163,7 +162,7 @@ interface nsITransferable : nsISupports
     *         an nsIFile, or an nsIFlavorDataProvider (see above)
     * @param  aDataLen the length of the data, or 0 if passing a nsIFlavorDataProvider
     */
-  void setTransferData ( in string aFlavor, in nsISupports aData, in unsigned long aDataLen ) ;
+  void setTransferData(in string aFlavor, in nsISupports aData);
 
   /**
     * Add the data flavor, indicating that this transferable 

@@ -2165,7 +2165,7 @@ JSString::fillWithRepresentatives(JSContext* cx, HandleArrayObject array)
 }
 
 
-/*** Conversions *********************************************************************************/
+/*** Conversions ************************************************************/
 
 UniqueChars
 js::EncodeLatin1(JSContext* cx, JSString* str)

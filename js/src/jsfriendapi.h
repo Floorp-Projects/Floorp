@@ -2554,7 +2554,8 @@ NON_INTEGER_ATOM_TO_JSID(JSString* atom)
     return id;
 }
 
-/* All strings stored in jsids are atomized, but are not necessarily property names. */
+// All strings stored in jsids are atomized, but are not necessarily property
+// names.
 static MOZ_ALWAYS_INLINE bool
 JSID_IS_ATOM(jsid id)
 {

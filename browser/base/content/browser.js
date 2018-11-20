@@ -135,6 +135,8 @@ XPCOMUtils.defineLazyScriptGetter(this, ["DownloadsButton",
                                   "chrome://browser/content/downloads/indicator.js");
 XPCOMUtils.defineLazyScriptGetter(this, "gEditItemOverlay",
                                   "chrome://browser/content/places/editBookmark.js");
+XPCOMUtils.defineLazyScriptGetter(this, "SearchOneOffs",
+                                  "chrome://browser/content/search/search-one-offs.js");
 if (AppConstants.NIGHTLY_BUILD) {
   XPCOMUtils.defineLazyScriptGetter(this, "gWebRender",
                                     "chrome://browser/content/browser-webrender.js");
@@ -2504,12 +2506,11 @@ function readFromClipboard() {
       Services.clipboard.getData(trans, Services.clipboard.kGlobalClipboard);
 
     var data = {};
-    var dataLen = {};
-    trans.getTransferData("text/unicode", data, dataLen);
+    trans.getTransferData("text/unicode", data);
 
     if (data) {
       data = data.value.QueryInterface(Ci.nsISupportsString);
-      url = data.data.substring(0, dataLen.value / 2);
+      url = data.data;
     }
   } catch (ex) {
   }

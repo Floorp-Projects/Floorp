@@ -85,7 +85,7 @@ async function testCopyPaste (isXHTML) {
     transferable.addDataFlavor(mime);
     clipboard.getData(transferable, 1);
     var data = SpecialPowers.createBlankObject();
-    transferable.getTransferData(mime, data, {}) ;
+    transferable.getTransferData(mime, data) ;
     return data;
   }
   function testHtmlClipboardValue(mime, expected) {

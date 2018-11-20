@@ -37,7 +37,8 @@ InitIntlClass(JSContext* cx, JS::Handle<GlobalObject*> global);
  *     2 for en-GB, 1 for bn-IN
  *   minDays
  *     an integer in the range of 1 to 7 indicating the minimum number
- *     of days required in the first week of the year, e.g. 1 for en-US, 4 for de
+ *     of days required in the first week of the year, e.g. 1 for en-US,
+ *     4 for de
  *   weekendStart
  *     an integer in the range 1=Sunday to 7=Saturday indicating the day
  *     considered the beginning of a weekend, e.g. 7 for en-US, 7 for en-GB,

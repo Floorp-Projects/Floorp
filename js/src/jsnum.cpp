@@ -1330,10 +1330,8 @@ js::InitNumberClass(JSContext* cx, Handle<GlobalObject*> global)
         return nullptr;
     }
 
-    /*
-     * Our NaN must be one particular canonical value, because we rely on NaN
-     * encoding for our value representation.  See Value.h.
-     */
+    // Our NaN must be one particular canonical value, because we rely on NaN
+    // encoding for our value representation.  See Value.h.
     static const JSConstDoubleSpec number_constants[] = {
         // clang-format off
         {"NaN",               GenericNaN()               },
@@ -1351,7 +1349,7 @@ js::InitNumberClass(JSContext* cx, Handle<GlobalObject*> global)
         // clang-format on
     };
 
-    /* Add numeric constants (MAX_VALUE, NaN, &c.) to the Number constructor. */
+    // Add numeric constants (MAX_VALUE, NaN, &c.) to the Number constructor.
     if (!JS_DefineConstDoubles(cx, ctor, number_constants)) {
         return nullptr;
     }
@@ -1368,7 +1366,7 @@ js::InitNumberClass(JSContext* cx, Handle<GlobalObject*> global)
         return nullptr;
     }
 
-    /* Number.parseInt should be the same function object as global parseInt. */
+    // Number.parseInt should be the same function object as global parseInt.
     RootedId parseIntId(cx, NameToId(cx->names().parseInt));
     JSFunction* parseInt = DefineFunction(cx, global, parseIntId, num_parseInt, 2,
                                           JSPROP_RESOLVING);
@@ -1380,7 +1378,8 @@ js::InitNumberClass(JSContext* cx, Handle<GlobalObject*> global)
         return nullptr;
     }
 
-    /* Number.parseFloat should be the same function object as global parseFloat. */
+    // Number.parseFloat should be the same function object as global
+    // parseFloat.
     RootedId parseFloatId(cx, NameToId(cx->names().parseFloat));
     JSFunction* parseFloat = DefineFunction(cx, global, parseFloatId, num_parseFloat, 1,
                                             JSPROP_RESOLVING);
@@ -1395,7 +1394,7 @@ js::InitNumberClass(JSContext* cx, Handle<GlobalObject*> global)
     RootedValue valueNaN(cx, cx->runtime()->NaNValue);
     RootedValue valueInfinity(cx, cx->runtime()->positiveInfinityValue);
 
-    /* ES5 15.1.1.1, 15.1.1.2 */
+    // ES5 15.1.1.1, 15.1.1.2
     if (!NativeDefineDataProperty(cx, global, cx->names().NaN, valueNaN,
                                   JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_RESOLVING) ||
         !NativeDefineDataProperty(cx, global, cx->names().Infinity, valueInfinity,

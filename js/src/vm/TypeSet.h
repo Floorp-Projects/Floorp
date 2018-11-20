@@ -475,10 +475,14 @@ class TypeSet
         return (flags >> TYPE_FLAG_DEFINITE_SHIFT) - 1;
     }
 
-    /* Join two type sets into a new set. The result should not be modified further. */
+    // Join two type sets into a new set. The result should not be modified
+    // further.
     static TemporaryTypeSet* unionSets(TypeSet* a, TypeSet* b, LifoAlloc* alloc);
-    /* Return the intersection of the 2 TypeSets. The result should not be modified further */
+
+    // Return the intersection of the 2 TypeSets. The result should not be
+    // modified further.
     static TemporaryTypeSet* intersectSets(TemporaryTypeSet* a, TemporaryTypeSet* b, LifoAlloc* alloc);
+
     /*
      * Returns a copy of TypeSet a excluding/removing the types in TypeSet b.
      * TypeSet b can only contain primitives or be any object. No support for
@@ -871,26 +875,26 @@ class TemporaryTypeSet : public TypeSet
     Scalar::Type getTypedArrayType(CompilerConstraintList* constraints,
                                    TypedArraySharedness* sharedness = nullptr);
 
-    /* Whether all objects have JSCLASS_IS_DOMJSCLASS set. */
+    // Whether all objects have JSCLASS_IS_DOMJSCLASS set.
     bool isDOMClass(CompilerConstraintList* constraints, DOMObjectKind* kind);
 
-    /* Whether clasp->isCallable() is true for one or more objects in this set. */
+    // Whether clasp->isCallable() is true for one or more objects in this set.
     bool maybeCallable(CompilerConstraintList* constraints);
 
-    /* Whether clasp->emulatesUndefined() is true for one or more objects in this set. */
+    // Whether clasp->emulatesUndefined() is true for one or more objects in
+    // this set.
     bool maybeEmulatesUndefined(CompilerConstraintList* constraints);
 
-    /* Get the single value which can appear in this type set, otherwise nullptr. */
+    // Get the single value which can appear in this type set, otherwise
+    // nullptr.
     JSObject* maybeSingleton();
     ObjectKey* maybeSingleObject();
 
-    /* Whether any objects in the type set needs a barrier on id. */
+    // Whether any objects in the type set needs a barrier on id.
     bool propertyNeedsBarrier(CompilerConstraintList* constraints, jsid id);
 
-    /*
-     * Whether this set contains all types in other, except (possibly) the
-     * specified type.
-     */
+    // Whether this set contains all types in other, except (possibly) the
+    // specified type.
     bool filtersType(const TemporaryTypeSet* other, Type type) const;
 
     enum DoubleConversion

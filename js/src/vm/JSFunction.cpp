@@ -1095,7 +1095,8 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool isToSource)
         // NativeFunction when no source text is available.
         //
         // NativeFunction:
-        //   function PropertyName[~Yield,~Await]opt ( FormalParameters[~Yield,~Await] ) { [native code] }
+        //   function PropertyName[~Yield,~Await]opt (
+        //      FormalParameters[~Yield,~Await] ) { [native code] }
         //
         // Additionally, if |fun| is a well-known intrinsic object and is not
         // identified as an anonymous function, the portion of the returned

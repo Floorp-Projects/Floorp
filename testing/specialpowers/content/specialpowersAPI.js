@@ -1794,7 +1794,7 @@ SpecialPowersAPI.prototype = {
     Services.clipboard.getData(xferable, whichClipboard);
     var data = {};
     try {
-      xferable.getTransferData(flavor, data, {});
+      xferable.getTransferData(flavor, data);
     } catch (e) {}
     data = data.value || null;
     if (data == null)

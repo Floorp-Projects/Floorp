@@ -1866,7 +1866,10 @@ JS_IsNative(JSObject* obj);
 extern JS_PUBLIC_API JSObject*
 JS_NewObjectWithGivenProto(JSContext* cx, const JSClass* clasp, JS::Handle<JSObject*> proto);
 
-/** Creates a new plain object, like `new Object()`, with Object.prototype as [[Prototype]]. */
+/**
+ * Creates a new plain object, like `new Object()`, with Object.prototype as
+ * [[Prototype]].
+ */
 extern JS_PUBLIC_API JSObject*
 JS_NewPlainObject(JSContext* cx);
 
@@ -1885,7 +1888,7 @@ extern JS_PUBLIC_API bool
 JS_FreezeObject(JSContext* cx, JS::Handle<JSObject*> obj);
 
 
-/*** Property descriptors ************************************************************************/
+/*** Property descriptors ***************************************************/
 
 namespace JS {
 
@@ -2157,7 +2160,7 @@ FromPropertyDescriptor(JSContext* cx,
 } // namespace JS
 
 
-/*** Standard internal methods ********************************************************************
+/*** Standard internal methods **********************************************
  *
  * The functions below are the fundamental operations on objects.
  *
@@ -2738,7 +2741,7 @@ extern JS_PUBLIC_API JSObject*
 JS_New(JSContext* cx, JS::HandleObject ctor, const JS::HandleValueArray& args);
 
 
-/*** Other property-defining functions ***********************************************************/
+/*** Other property-defining functions **************************************/
 
 extern JS_PUBLIC_API JSObject*
 JS_DefineObject(JSContext* cx, JS::HandleObject obj, const char* name,

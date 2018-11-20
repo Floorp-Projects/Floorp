@@ -1979,6 +1979,8 @@ TypeAnalyzer::insertConversions()
     return true;
 }
 
+/* clang-format off */
+//
 // This function tries to emit Float32 specialized operations whenever it's possible.
 // MIR nodes are flagged as:
 // - Producers, when they can create Float32 that might need to be coerced into a Double.
@@ -2014,6 +2016,8 @@ TypeAnalyzer::insertConversions()
 // the algorithm on all phi uses, as a phi is a producer if all of its operands are producers.
 // 3 - Go through all commutative operations and ensure their inputs are all producers and their
 // uses are all consumers.
+//
+/* clang-format on */
 bool
 TypeAnalyzer::markPhiConsumers()
 {
@@ -3486,7 +3490,8 @@ ExtractMathSpace(MDefinition* ins)
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unknown TruncateKind");
 }
 
-// Extract a linear sum from ins, if possible (otherwise giving the sum 'ins + 0').
+// Extract a linear sum from ins, if possible (otherwise giving the
+// sum 'ins + 0').
 SimpleLinearSum
 jit::ExtractLinearSum(MDefinition* ins, MathSpace space)
 {

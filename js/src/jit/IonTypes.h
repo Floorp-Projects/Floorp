@@ -115,9 +115,10 @@ enum BailoutKind
 
     // Pretty specific case:
     //  - need a type barrier on a property write
-    //  - all but one of the observed types have property types that reflect the value
+    //  - all but one of the observed types have property types that reflect
+    //    the value
     //  - we need to guard that we're not given an object of that one other type
-    // also used for the unused GuardClass instruction
+    //    also used for the unused GuardClass instruction
     Bailout_ObjectIdentityOrTypeGuard,
 
     // Unbox expects a given type, bails out if it doesn't get it.

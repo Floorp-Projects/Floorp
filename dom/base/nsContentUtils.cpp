@@ -7755,8 +7755,7 @@ nsContentUtils::IPCTransferableToTransferable(const IPCDataTransfer& aDataTransf
       rv = dataWrapper->SetData(text);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper,
-                                  text.Length() * sizeof(char16_t));
+      rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper);
 
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (item.data().type() == IPCDataTransferData::TShmem) {
@@ -7766,7 +7765,7 @@ nsContentUtils::IPCTransferableToTransferable(const IPCDataTransfer& aDataTransf
                                                      getter_AddRefs(imageContainer));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        aTransferable->SetTransferData(item.flavor().get(), imageContainer, sizeof(nsISupports*));
+        aTransferable->SetTransferData(item.flavor().get(), imageContainer);
       } else {
         nsCOMPtr<nsISupportsCString> dataWrapper =
           do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
@@ -7779,7 +7778,7 @@ nsContentUtils::IPCTransferableToTransferable(const IPCDataTransfer& aDataTransf
         rv = dataWrapper->SetData(text);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper, text.Length());
+        rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper);
 
         NS_ENSURE_SUCCESS(rv, rv);
       }
@@ -7994,8 +7993,7 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
       }
 
       nsCOMPtr<nsISupports> data;
-      uint32_t dataLen = 0;
-      aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(data), &dataLen);
+      aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(data));
 
       nsCOMPtr<nsISupportsString> text = do_QueryInterface(data);
       nsCOMPtr<nsISupportsCString> ctext = do_QueryInterface(data);
@@ -8952,11 +8950,19 @@ nsContentUtils::StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
   bool disabled =
     StorageDisabledByAntiTrackingInternal(aWindow, aChannel, aPrincipal, aURI,
                                           &rejectedReason);
-  if (disabled && sAntiTrackingControlCenterUIEnabled && rejectedReason) {
+  if (sAntiTrackingControlCenterUIEnabled) {
     if (aWindow) {
-      AntiTrackingCommon::NotifyRejection(aWindow, rejectedReason);
+      AntiTrackingCommon::NotifyBlockingDecision(aWindow,
+                                                 disabled ?
+                                                   AntiTrackingCommon::BlockingDecision::eBlock :
+                                                   AntiTrackingCommon::BlockingDecision::eAllow,
+                                                 rejectedReason);
     } else if (aChannel) {
-      AntiTrackingCommon::NotifyRejection(aChannel, rejectedReason);
+      AntiTrackingCommon::NotifyBlockingDecision(aChannel,
+                                                 disabled ?
+                                                   AntiTrackingCommon::BlockingDecision::eBlock :
+                                                   AntiTrackingCommon::BlockingDecision::eAllow,
+                                                 rejectedReason);
     }
   }
   return disabled;

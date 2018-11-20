@@ -873,7 +873,8 @@ struct JSContext : public JS::RootingContext,
         return &jitStackLimitNoInterrupt;
     }
 
-    /* Futex state, used by Atomics.wait() and Atomics.wake() on the Atomics object */
+    // Futex state, used by Atomics.wait() and Atomics.wake() on the Atomics
+    // object.
     js::FutexThread fx;
 
     // Buffer for OSR from baseline to Ion. To avoid holding on to this for

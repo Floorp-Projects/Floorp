@@ -109,8 +109,8 @@
  *
  *   3) Do a GC now because correctness depends on some GC property. For
  *      example, CC_WAITING is where the embedding requires the mark bits
- *      to be set correct. Also, EVICT_NURSERY where we need to work on the tenured
- *      heap.
+ *      to be set correct. Also, EVICT_NURSERY where we need to work on the
+ *      tenured heap.
  *
  *   4) Do a GC because we are shutting down: e.g. SHUTDOWN_CC or DESTROY_*.
  *

@@ -643,8 +643,8 @@ ArrayBufferObject::changeContents(JSContext* cx, BufferContents newContents,
  *  - length only increases
  *  - 0 <= length <= maxSize (if present) <= boundsCheckLimit <= mappedSize
  *  - on ARM boundsCheckLimit must be a valid ARM immediate.
- *  - if maxSize is not specified, boundsCheckLimit/mappedSize may grow. They are
- *    otherwise constant.
+ *  - if maxSize is not specified, boundsCheckLimit/mappedSize may grow. They
+ *    are otherwise constant.
  *
  * NOTE: For asm.js on non-x64 we guarantee that
  *

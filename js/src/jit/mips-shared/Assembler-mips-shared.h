@@ -130,6 +130,7 @@ static constexpr uint32_t CodeAlignment = 8;
 // for SIMD is reached on all tier-1 platforms, this constant can be deleted.
 static constexpr bool SupportsSimd = false;
 
+/* clang-format off */
 // MIPS instruction types
 //                +---------------------------------------------------------------+
 //                |    6      |    5    |    5    |    5    |    5    |    6      |
@@ -145,6 +146,7 @@ static constexpr bool SupportsSimd = false;
 // Jump type      |  Opcode   |                    jump_target                    |
 //                +---------------------------------------------------------------+
 //                31 bit                                                      bit 0
+/* clang-format on */
 
 // MIPS instruction encoding constants.
 static const uint32_t OpcodeShift = 26;
