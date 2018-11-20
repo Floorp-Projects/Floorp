@@ -81,9 +81,7 @@ public:
   {
     mLength->Element()->DidChangeLengthList(mLength->mAttrEnum,
                                             mEmptyOrOldValue);
-    // Null check mLength->mList, since DidChangeLengthList can run script,
-    // potentially removing mLength from its list.
-    if (mLength->mList && mLength->mList->IsAnimating()) {
+    if (mLength->mList->IsAnimating()) {
       mLength->Element()->AnimationNeedsResample();
     }
   }
