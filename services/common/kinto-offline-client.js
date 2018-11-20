@@ -33,7 +33,7 @@ const global = this;
 var EXPORTED_SYMBOLS = ["Kinto"];
 
 /*
- * Version 12.2.4 - 8fb687a
+ * Version 12.2.0 - 266e100
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Kinto = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
@@ -71,15 +71,16 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGlobalGetters(global, ["fetch", "indexedDB"]);
-ChromeUtils.defineModuleGetter(global, "EventEmitter", "resource://gre/modules/EventEmitter.jsm"); // Use standalone kinto-http module landed in FFx.
+const {
+  EventEmitter
+} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm", {});
+const {
+  generateUUID
+} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator); // Use standalone kinto-http module landed in FFx.
 
-ChromeUtils.defineModuleGetter(global, "KintoHttpClient", "resource://services-common/kinto-http-client.js");
-XPCOMUtils.defineLazyGetter(global, "generateUUID", () => {
-  const {
-    generateUUID
-  } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-  return generateUUID;
-});
+const {
+  KintoHttpClient
+} = ChromeUtils.import("resource://services-common/kinto-http-client.js");
 
 class Kinto extends _KintoBase.default {
   static get adapters() {
@@ -489,13 +490,10 @@ function createListRequest(cid, store, filters, done) {
 
   if (filterFields.length == 0) {
     const request = store.index("cid").getAll(IDBKeyRange.only(cid));
-
     request.onsuccess = event => done(event.target.result);
-
     return request;
-  } // Introspect filters and check if they leverage an indexed field.
-
-
+  }
+  // Introspect filters and check if they leverage an indexed field.
   const indexField = filterFields.find(field => {
     return INDEXED_FIELDS.includes(field);
   });
@@ -508,12 +506,13 @@ function createListRequest(cid, store, filters, done) {
   } // If `indexField` was used already, don't filter again.
 
 
-  const remainingFilters = (0, _utils.omitKeys)(filters, [indexField]); // value specified in the filter (eg. `filters: { _status: ["created", "updated"] }`)
+  const remainingFilters = (0, _utils.omitKeys)(filters, indexField); // value specified in the filter (eg. `filters: { _status: ["created", "updated"] }`)
 
-  const value = filters[indexField]; // For the "id" field, use the primary key.
+  const value = filters[indexField];
+  // For the "id" field, use the primary key.
+  const indexStore = indexField == "id" ? store : store.index(indexField);
 
-  const indexStore = indexField == "id" ? store : store.index(indexField); // WHERE IN equivalent clause
-
+  // WHERE IN equivalent clause
   if (Array.isArray(value)) {
     if (value.length === 0) {
       return done([]);
@@ -524,14 +523,12 @@ function createListRequest(cid, store, filters, done) {
     const request = indexStore.openCursor(range);
     request.onsuccess = cursorHandlers.in(values, remainingFilters, done);
     return request;
-  } // If no filters on custom attribute, get all results in one bulk.
+  }
 
-
+  // If no filters on custom attribute, get all results in one bulk.
   if (remainingFilters.length == 0) {
     const request = indexStore.getAll(IDBKeyRange.only([cid, value]));
-
     request.onsuccess = event => done(event.target.result);
-
     return request;
   } // WHERE field = value clause
 
@@ -770,13 +767,10 @@ class IDB extends _base.default {
       };
       createListRequest(this.cid, store, filters, records => {
         // Store obtained records by id.
-        const preloaded = {};
-
-        for (const record of records) {
-          delete record["_cid"];
-          preloaded[record.id] = record;
-        }
-
+        const preloaded = records.reduce((acc, record) => {
+          acc[record.id] = (0, _utils.omitKeys)(record, ["_cid"]);
+          return acc;
+        }, {});
         runCallback(preloaded);
       });
     }, {
@@ -826,11 +820,7 @@ class IDB extends _base.default {
         createListRequest(this.cid, store, filters, _results => {
           // we have received all requested records that match the filters,
           // we now park them within current scope and hide the `_cid` attribute.
-          for (const result of _results) {
-            delete result["_cid"];
-          }
-
-          results = _results;
+          results = _results.map(r => (0, _utils.omitKeys)(r, ["_cid"]));
         });
       }); // The resulting list of records is sorted.
       // XXX: with some efforts, this could be fully implemented using IDB API.
@@ -895,21 +885,7 @@ class IDB extends _base.default {
   async loadDump(records) {
     try {
       await this.execute(transaction => {
-        // Since the put operations are asynchronous, we chain
-        // them together. The last one will be waited for the
-        // `transaction.oncomplete` callback. (see #execute())
-        let i = 0;
-        putNext();
-
-        function putNext() {
-          if (i == records.length) {
-            return;
-          } // On error, `transaction.onerror` is called.
-
-
-          transaction.update(records[i]).onsuccess = putNext;
-          ++i;
-        }
+        records.forEach(record => transaction.update(record));
       });
       const previousLastModified = await this.getLastModified();
       const lastModified = Math.max(...records.map(record => record.last_modified));
@@ -948,7 +924,7 @@ function transactionProxy(adapter, store, preloaded = []) {
     },
 
     update(record) {
-      return store.put({ ...record,
+      store.put({ ...record,
         _cid
       });
     },
@@ -3140,14 +3116,13 @@ function deepEqual(a, b) {
 
 
 function omitKeys(obj, keys = []) {
-  const result = { ...obj
-  };
+  return Object.keys(obj).reduce((acc, key) => {
+    if (!keys.includes(key)) {
+      acc[key] = obj[key];
+    }
 
-  for (const key of keys) {
-    delete result[key];
-  }
-
-  return result;
+    return acc;
+  }, {});
 }
 
 function arrayEqual(a, b) {
