@@ -1,15 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="18px" height="18px" viewBox="0 0 18 18" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 51.3 (57544) - http://www.bohemiancoding.com/sketch -->
-    <title>Group 7</title>
-    <desc>Created with Sketch.</desc>
-    <defs></defs>
-    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="Group-7" transform="translate(1.000000, 1.000000)">
-            <g id="Group-6">
-                <circle id="Oval-2" stroke="#0274E8" cx="8" cy="8" r="8"></circle>
-                <polygon id="Triangle" fill="#0274E8" transform="translate(9.000000, 8.000000) rotate(90.000000) translate(-9.000000, -8.000000) " points="9 5 13 11 5 11"></polygon>
-            </g>
-        </g>
-    </g>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+  <circle fill="none" stroke="#0274E8" cx="9" cy="9" r="8"/>
+  <path fill="#0274E8" d="M13 9l-6 4V5z"/>
 </svg>
