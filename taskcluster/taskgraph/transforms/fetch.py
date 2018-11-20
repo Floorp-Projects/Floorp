@@ -24,6 +24,7 @@ from ..util.cached_tasks import (
 )
 from ..util.schema import (
     Schema,
+    validate_schema,
 )
 from ..util.treeherder import (
     join_symbol,
@@ -31,6 +32,8 @@ from ..util.treeherder import (
 
 
 CACHE_TYPE = 'content.v1'
+
+transforms = TransformSequence()
 
 FETCH_SCHEMA = Schema({
     # Name of the task.
@@ -74,8 +77,15 @@ FETCH_SCHEMA = Schema({
     },
 })
 
-transforms = TransformSequence()
-transforms.add_validate(FETCH_SCHEMA)
+
+@transforms.add
+def validate(config, jobs):
+    for job in jobs:
+        validate_schema(
+            FETCH_SCHEMA, job,
+            'In fetch task {!r}:'.format(job.get('name', 'unknown')))
+
+        yield job
 
 
 @transforms.add
