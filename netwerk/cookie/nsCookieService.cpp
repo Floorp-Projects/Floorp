@@ -2269,7 +2269,6 @@ nsCookieService::SetCookieStringInternal(nsIURI                 *aHostURI,
     return;
   case STATUS_ACCEPTED: // Fallthrough
   case STATUS_ACCEPT_SESSION:
-    NotifyAccepted(aChannel);
     if (aIsForeign) {
       NotifyThirdParty(aHostURI, true, aChannel);
     }
@@ -2289,14 +2288,6 @@ nsCookieService::SetCookieStringInternal(nsIURI                 *aHostURI,
   }
 }
 
-void
-nsCookieService::NotifyAccepted(nsIChannel* aChannel)
-{
-  AntiTrackingCommon::NotifyBlockingDecision(aChannel,
-                                             AntiTrackingCommon::BlockingDecision::eAllow,
-                                             0);
-}
-
 // notify observers that a cookie was rejected due to the users' prefs.
 void
 nsCookieService::NotifyRejected(nsIURI *aHostURI, nsIChannel* aChannel,
@@ -2307,9 +2298,7 @@ nsCookieService::NotifyRejected(nsIURI *aHostURI, nsIChannel* aChannel,
     os->NotifyObservers(aHostURI, "cookie-rejected", nullptr);
   }
 
-  AntiTrackingCommon::NotifyBlockingDecision(aChannel,
-                                             AntiTrackingCommon::BlockingDecision::eBlock,
-                                             aRejectedReason);
+  AntiTrackingCommon::NotifyRejection(aChannel, aRejectedReason);
 }
 
 // notify observers that a third-party cookie was accepted/rejected
