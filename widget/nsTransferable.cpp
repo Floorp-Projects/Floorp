@@ -357,15 +357,14 @@ nsTransferable::GetAnyTransferData(nsACString& aFlavor,
 //
 NS_IMETHODIMP
 nsTransferable::SetTransferData(const char* aFlavor,
-                                nsISupports* aData,
-                                uint32_t aDataLen)
+                                nsISupports* aData)
 {
   MOZ_ASSERT(mInitialized);
 
   // first check our intrinsic flavors to see if one has been registered.
   if (Maybe<size_t> index = FindDataFlavor(aFlavor)) {
     DataStruct& data = mDataArray.ElementAt(index.value());
-    data.SetData(aData, aDataLen, mPrivateData);
+    data.SetData(aData, 0, mPrivateData);
     return NS_OK;
   }
 
@@ -381,7 +380,7 @@ nsTransferable::SetTransferData(const char* aFlavor,
         uint32_t ConvertedLen;
         mFormatConv->Convert(aFlavor,
                              aData,
-                             aDataLen,
+                             0,
                              data.GetFlavor().get(),
                              getter_AddRefs(ConvertedData),
                              &ConvertedLen);
@@ -394,7 +393,7 @@ nsTransferable::SetTransferData(const char* aFlavor,
   // Can't set data neither directly nor through converter. Just add this flavor
   // and try again
   if (NS_SUCCEEDED(AddDataFlavor(aFlavor))) {
-    return SetTransferData(aFlavor, aData, aDataLen);
+    return SetTransferData(aFlavor, aData);
   }
 
   return NS_ERROR_FAILURE;

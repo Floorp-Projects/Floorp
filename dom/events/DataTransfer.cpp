@@ -1076,8 +1076,7 @@ DataTransfer::GetTransferable(uint32_t aIndex, nsILoadContext* aLoadContext)
               strSupports->SetData(str);
 
               nsresult rv = transferable->SetTransferData(kCustomTypesMime,
-                                                          strSupports,
-                                                          totalCustomLength);
+                                                          strSupports);
               if (NS_FAILED(rv)) {
                 return nullptr;
               }
@@ -1117,8 +1116,7 @@ DataTransfer::GetTransferable(uint32_t aIndex, nsILoadContext* aLoadContext)
           continue;
         }
 
-        nsresult rv = transferable->SetTransferData(format, convertedData,
-                                                    lengthInBytes);
+        nsresult rv = transferable->SetTransferData(format, convertedData);
         if (NS_FAILED(rv)) {
           return nullptr;
         }
