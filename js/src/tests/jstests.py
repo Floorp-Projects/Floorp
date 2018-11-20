@@ -203,6 +203,8 @@ def parse_args():
                          type='choice', choices=['automation', 'none'],
                          help='Output format. Either automation or none'
                          ' (default %default).')
+    output_og.add_option('--log-wptreport', dest='wptreport', action='store',
+                         help='Path to write a Web Platform Tests report (wptreport)')
     op.add_option_group(output_og)
 
     special_og = OptionGroup(op, "Special",
