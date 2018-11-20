@@ -45,6 +45,7 @@ EnvironmentCoordinateFunctionScript(JSScript* script, jsbytecode* pc);
 
 /*** Environment objects *****************************************************/
 
+// clang-format off
 /*
  * [SMDOC] Environment Objects
  *
@@ -257,6 +258,7 @@ EnvironmentCoordinateFunctionScript(JSScript* script, jsbytecode* pc);
  *   LexicalEnvironmentObject
  *
  */
+// clang-format on
 
 class EnvironmentObject : public NativeObject
 {

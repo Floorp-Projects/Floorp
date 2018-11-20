@@ -543,6 +543,7 @@ IsPrologueBailout(const SnapshotIterator& iter, const ExceptionBailoutInfo* excI
            (!excInfo || !excInfo->propagatingIonExceptionForDebugMode());
 }
 
+/* clang-format off */
 // For every inline frame, we write out the following data:
 //
 //                      |      ...      |
@@ -618,7 +619,7 @@ IsPrologueBailout(const SnapshotIterator& iter, const ExceptionBailoutInfo* excI
 //                      +---------------+
 //                      |  ReturnAddr   | <-- return into ArgumentsRectifier after call
 //                      +===============+
-//
+/* clang-format on */
 static bool
 InitFromBailout(JSContext* cx, size_t frameNo,
                 HandleFunction fun, HandleScript script,

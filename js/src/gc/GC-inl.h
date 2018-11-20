@@ -286,6 +286,8 @@ class ZoneCellIter<TenuredCell> {
     }
 };
 
+/* clang-format off */
+//
 // Iterator over the cells in a Zone, where the GC type (JSString, JSObject) is
 // known, for a single AllocKind. Example usages:
 //
@@ -320,6 +322,7 @@ class ZoneCellIter<TenuredCell> {
 // by specializing on a GCType that is never allocated in the nursery, or
 // explicitly by passing in a trailing AutoAssertEmptyNursery argument.
 //
+/* clang-format on */
 template <typename GCType>
 class ZoneCellIter : public ZoneCellIter<TenuredCell> {
   public:

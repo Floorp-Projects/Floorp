@@ -17,6 +17,8 @@
 #include "vm/Printer.h"
 #include "vm/Scope.h"
 
+/* clang-format off */
+//
 // A few notes on lifetime of ParseNode trees:
 //
 // - All the `ParseNode` instances MUST BE explicitly allocated in the context's `LifoAlloc`.
@@ -36,6 +38,8 @@
 //   the parser.
 //
 // - Once the parser is deallocated, the `JSAtom` instances MAY be garbage-collected.
+//
+/* clang-format on */
 
 
 namespace js {
