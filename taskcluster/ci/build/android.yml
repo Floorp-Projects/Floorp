@@ -340,7 +340,7 @@ android-api-16/opt:
         - android-gradle-dependencies
         - android-ndk-linux
         - android-sdk-linux
-        - linux64-clang-6
+        - linux64-clang
         - linux64-rust-android
         - linux64-rust-size
         - linux64-cbindgen
@@ -394,7 +394,7 @@ android-api-16-without-google-play-services/opt:
         - android-gradle-dependencies
         - android-ndk-linux
         - android-sdk-linux
-        - linux64-clang-6
+        - linux64-clang
         - linux64-rust-android
         - linux64-rust-size
         - linux64-cbindgen
@@ -456,7 +456,7 @@ android-api-16-nightly/opt:
         - android-gradle-dependencies
         - android-ndk-linux
         - android-sdk-linux
-        - linux64-clang-6
+        - linux64-clang
         - linux64-rust-android
         - linux64-rust-size
         - linux64-cbindgen
@@ -513,7 +513,7 @@ android-aarch64/opt:
         - android-gradle-dependencies
         - android-ndk-linux
         - android-sdk-linux
-        - linux64-clang-6
+        - linux64-clang
         - linux64-rust-android
         - linux64-rust-size
         - linux64-cbindgen
@@ -575,7 +575,7 @@ android-aarch64-nightly/opt:
         - android-gradle-dependencies
         - android-ndk-linux
         - android-sdk-linux
-        - linux64-clang-6
+        - linux64-clang
         - linux64-rust-android
         - linux64-rust-size
         - linux64-sccache
