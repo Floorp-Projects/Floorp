@@ -475,6 +475,11 @@ void WindowBackBuffer::Release()
   mWidth = mHeight = 0;
 }
 
+void WindowBackBuffer::Clear()
+{
+  memset(mShmPool.GetImageData(), 0, mHeight * mWidth * BUFFER_BPP);
+}
+
 WindowBackBuffer::WindowBackBuffer(nsWaylandDisplay* aWaylandDisplay,
                                    int aWidth, int aHeight)
  : mShmPool(aWaylandDisplay, aWidth*aHeight*BUFFER_BPP)
@@ -674,15 +679,19 @@ WindowSurfaceWayland::GetWaylandBufferToDraw(int aWidth, int aHeight)
 }
 
 already_AddRefed<gfx::DrawTarget>
-WindowSurfaceWayland::LockWaylandBuffer(int aWidth, int aHeight)
+WindowSurfaceWayland::LockWaylandBuffer(int aWidth, int aHeight, bool aClearBuffer)
 {
   WindowBackBuffer* buffer = GetWaylandBufferToDraw(aWidth, aHeight);
-  if (buffer) {
-    return buffer->Lock();
+  if (!buffer) {
+    NS_WARNING("WindowSurfaceWayland::LockWaylandBuffer(): No buffer available");
+    return nullptr;
   }
 
-  NS_WARNING("WindowSurfaceWayland::LockWaylandBuffer(): No buffer available");
-  return nullptr;
+  if (aClearBuffer) {
+    buffer->Clear();
+  }
+
+  return buffer->Lock();
 }
 
 already_AddRefed<gfx::DrawTarget>
@@ -733,7 +742,8 @@ WindowSurfaceWayland::Lock(const LayoutDeviceIntRegion& aRegion)
 
   if (mDrawToWaylandBufferDirectly) {
     RefPtr<gfx::DrawTarget> dt = LockWaylandBuffer(screenRect.width,
-                                                   screenRect.height);
+                                                   screenRect.height,
+                                                   mWindow->WaylandSurfaceNeedsClear());
     if (dt) {
       return dt.forget();
     }
@@ -760,7 +770,8 @@ WindowSurfaceWayland::CommitImageSurfaceToWaylandBuffer(const LayoutDeviceIntReg
   }
 
   RefPtr<gfx::DrawTarget> dt = LockWaylandBuffer(screenRect.width,
-                                                 screenRect.height);
+                                                 screenRect.height,
+                                                 mWindow->WaylandSurfaceNeedsClear());
   RefPtr<gfx::SourceSurface> surf =
     gfx::Factory::CreateSourceSurfaceForCairoSurface(mImageSurface->CairoSurface(),
                                                      mImageSurface->GetSize(),

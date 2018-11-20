@@ -7323,6 +7323,17 @@ nsWindow::GetWaylandSurface()
   NS_WARNING("nsWindow::GetWaylandSurfaces(): We don't have any mContainer for drawing!");
   return nullptr;
 }
+
+bool
+nsWindow::WaylandSurfaceNeedsClear()
+{
+  if (mContainer) {
+    return moz_container_needs_clear(MOZ_CONTAINER(mContainer));
+  }
+
+  NS_WARNING("nsWindow::WaylandSurfaceNeedsClear(): We don't have any mContainer!");
+  return false;
+}
 #endif
 
 #ifdef MOZ_X11
