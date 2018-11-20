@@ -10,9 +10,6 @@ job-defaults:
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android-em-4.2-x86/opt:
-                    - android/android_common.py
-                    - android/androidx86.py
                 android-em.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
@@ -41,7 +38,6 @@ xpcshell:
         by-test-platform:
             linux32/debug: 12
             linux64/debug: 10
-            android-em-4.2-x86/opt: 6
             android-em-4.3-arm7-api-16/debug: 12
             macosx.*: 1
             windows.*: 1
