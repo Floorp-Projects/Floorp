@@ -100,7 +100,7 @@
     REAL_IF_INTL(Intl, InitIntlClass, CLASP(Intl)) \
     REAL_IF_BDATA(TypedObject, InitTypedObjectModuleObject, OCLASP(TypedObjectModule)) \
     REAL(Reflect,               InitReflect,            nullptr) \
-    REAL(WeakSet,               InitWeakSetClass,       OCLASP(WeakSet)) \
+    REAL(WeakSet,               InitViaClassSpec,       OCLASP(WeakSet)) \
     REAL(TypedArray,            InitViaClassSpec,       &js::TypedArrayObject::sharedTypedArrayPrototypeClass) \
     REAL(Atomics,               InitAtomicsClass,       OCLASP(Atomics)) \
     REAL(SavedFrame,            InitViaClassSpec,       &js::SavedFrame::class_) \
