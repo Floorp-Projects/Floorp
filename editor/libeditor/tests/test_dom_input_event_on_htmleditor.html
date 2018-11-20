@@ -63,6 +63,8 @@ function runTests() {
     var handler = function(aEvent) {
       is(aEvent.target, eventTarget,
          "input event is fired on unexpected element: " + aEvent.target.tagName);
+      ok(aEvent instanceof InputEvent,
+         "input event should be dispatched with InputEvent interface");
       ok(!aEvent.cancelable, "input event must not be cancelable");
       ok(aEvent.bubbles, "input event must be bubbles");
       if (SpecialPowers.getBoolPref("dom.event.highrestimestamp.enabled")) {
