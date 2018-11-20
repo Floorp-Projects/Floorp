@@ -270,9 +270,8 @@ nsTransferable::GetTransferData(const char* aFlavor,
     // Do we have a (lazy) data provider?
     if (nsCOMPtr<nsIFlavorDataProvider> dataProvider =
           do_QueryInterface(dataBytes)) {
-      uint32_t len;
       rv = dataProvider->GetFlavorData(this, aFlavor,
-                                       getter_AddRefs(dataBytes), &len);
+                                       getter_AddRefs(dataBytes));
       if (NS_FAILED(rv)) {
         dataBytes = nullptr;
         // The provider failed, fall into the converter code below.
@@ -298,11 +297,10 @@ nsTransferable::GetTransferData(const char* aFlavor,
         data.GetData(getter_AddRefs(dataBytes));
 
         // Do we have a (lazy) data provider?
-        uint32_t len;
         if (nsCOMPtr<nsIFlavorDataProvider> dataProvider =
               do_QueryInterface(dataBytes)) {
           rv = dataProvider->GetFlavorData(this, aFlavor,
-                                           getter_AddRefs(dataBytes), &len);
+                                           getter_AddRefs(dataBytes));
           if (NS_FAILED(rv)) {
             // Give up.
             return rv;
@@ -310,7 +308,7 @@ nsTransferable::GetTransferData(const char* aFlavor,
         }
 
         uint32_t dataLen;
-        return mFormatConv->Convert(data.GetFlavor().get(), dataBytes, len,
+        return mFormatConv->Convert(data.GetFlavor().get(), dataBytes, 0,
                                     aFlavor, aData, &dataLen);
       }
     }
