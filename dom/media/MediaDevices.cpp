@@ -83,16 +83,14 @@ class MediaDevices::EnumDevResolver
     nsTArray<nsCOMPtr<nsIMediaDevice>> devices;
     // Contain the fumes
     {
-      uint16_t vtype;
-      nsresult rv = aDevices->GetDataType(&vtype);
-      NS_ENSURE_SUCCESS(rv, rv);
+      uint16_t vtype = aDevices->GetDataType();
       if (vtype != nsIDataType::VTYPE_EMPTY_ARRAY) {
         nsIID elementIID;
         uint16_t elementType;
         void* rawArray;
         uint32_t arrayLen;
-        rv = aDevices->GetAsArray(&elementType, &elementIID, &arrayLen,
-                                  &rawArray);
+        nsresult rv = aDevices->GetAsArray(&elementType, &elementIID, &arrayLen,
+                                           &rawArray);
         NS_ENSURE_SUCCESS(rv, rv);
         if (elementType != nsIDataType::VTYPE_INTERFACE) {
           free(rawArray);
