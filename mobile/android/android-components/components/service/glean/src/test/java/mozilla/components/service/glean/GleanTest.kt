@@ -143,6 +143,7 @@ class GleanTest {
 
             val (metricsJsonData, metricsPath) = payloads.get("metrics")!!
             val metricsJson = JSONObject(metricsJsonData)
+            checkPingSchema(metricsJson)
             assertEquals(
                 "foo",
                 metricsJson.getJSONObject("metrics")

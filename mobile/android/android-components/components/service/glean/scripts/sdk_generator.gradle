@@ -4,8 +4,7 @@
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
-String GLEAN_PARSER_VERSION
-GLEAN_PARSER_VERSION = "0.6.0"
+String GLEAN_PARSER_VERSION = "0.7.0"
 
 /* This script runs a given Python module as a "main" module, like
  * `python -m module`. However, it first checks that the installed
@@ -49,7 +48,8 @@ envs {
     envsDirectory = new File(buildDir, 'envs')
     pipInstallOptions = "--trusted-host pypi.python.org --no-cache-dir"
 
-    // Setup a miniconda environment.
+    // Setup a miniconda environment. conda is used because it works
+    // non-interactively on Windows, unlike the other options
     conda "Miniconda3", "Miniconda3-latest", "64", ["glean_parser==${GLEAN_PARSER_VERSION}"]
 }
 
@@ -74,7 +74,7 @@ preBuild.dependsOn(createBuildDir)
 preBuild.finalizedBy("build_envs")
 
 // Generate the Metrics API
-android.applicationVariants.all { variant ->
+ext.gleanGenerateMetricsAPI = { variant ->
     def sourceOutputDir =  "$buildDir/telemetry/src/${variant.name}/kotlin"
     def generateKotlinAPI = task("generateMetricsSourceFor${variant.name.capitalize()}", type: Exec) {
         description = "Generate the Kotlin code for the Metrics API"
@@ -115,4 +115,8 @@ android.applicationVariants.all { variant ->
     // The added directory doesn't appear in the paths listed by the
     // `sourceSets` task, for reasons unknown.
     variant.registerJavaGeneratingTask(generateKotlinAPI, new File(sourceOutputDir))
+}
+
+if (android.hasProperty('applicationVariants')) {
+    android.applicationVariants.all(ext.gleanGenerateMetricsAPI)
 }
