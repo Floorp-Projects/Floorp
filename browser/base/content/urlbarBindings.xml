@@ -753,6 +753,17 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                   // Replace the engine with the selected one-off engine.
                   action.params.engineName = selectedOneOff.engine.name;
                 }
+                // If the selected result is an @alias offer -- an @alias with
+                // an empty query string -- then instead of loading the engine's
+                // empty search results page, put the @alias in the input so
+                // that the user can type a search query and search directly
+                // from the urlbar.
+                if (action.params.alias &&
+                    action.params.alias.startsWith("@") &&
+                    !action.params.searchQuery) {
+                  this.search(action.params.input);
+                  return;
+                }
                 const actionDetails = {
                   isSuggestion: !!action.params.searchSuggestion,
                   alias: action.params.alias,
