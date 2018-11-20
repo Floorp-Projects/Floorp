@@ -29,10 +29,10 @@ const TESTS = [ {
   buttonClick: "extra1"
 } ];
 
-async function runTest() {
+function runTest() {
   debugDump("entering");
 
-  await gAUS.setAutoUpdateIsEnabled(false);
+  setAppUpdateAutoSync(false);
   let url = URL_HTTP_UPDATE_XML + "?showDetails=1" + getVersionParams();
   setUpdateURL(url);
 
