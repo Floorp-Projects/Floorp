@@ -86,12 +86,14 @@ public:
   }
 
   /**
-   * @return false if the STARTUPINFOEXW::lpAttributeList was set to null
-   *               as expected based on the state of |this|;
-   *         true  if the STARTUPINFOEXW::lpAttributeList was set to
-   *               non-null;
+   * @return Some(false) if the STARTUPINFOEXW::lpAttributeList was set to null
+   *                     as expected based on the state of |this|;
+   *         Some(true)  if the STARTUPINFOEXW::lpAttributeList was set to
+   *                     non-null;
+   *         Nothing()   if something went wrong in the assignment and we should
+   *                     not proceed.
    */
-  LauncherResult<bool> AssignTo(STARTUPINFOEXW& aSiex)
+  Maybe<bool> AssignTo(STARTUPINFOEXW& aSiex)
   {
     ZeroMemory(&aSiex, sizeof(STARTUPINFOEXW));
 
@@ -109,16 +111,14 @@ public:
     }
 
     if (!numAttributes) {
-      return false;
+      return Some(false);
     }
 
     SIZE_T listSize = 0;
     if (!::InitializeProcThreadAttributeList(nullptr, numAttributes, 0,
-                                             &listSize)) {
-      DWORD err = ::GetLastError();
-      if (err != ERROR_INSUFFICIENT_BUFFER) {
-        return LAUNCHER_ERROR_FROM_WIN32(err);
-      }
+                                             &listSize) &&
+        ::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+      return Nothing();
     }
 
     auto buf = MakeUnique<char[]>(listSize);
@@ -128,7 +128,7 @@ public:
 
     if (!::InitializeProcThreadAttributeList(tmpList, numAttributes, 0,
                                              &listSize)) {
-      return LAUNCHER_ERROR_FROM_LAST();
+      return Nothing();
     }
 
     // Transfer buf to a ProcThreadAttributeListPtr - now that the list is
@@ -144,7 +144,7 @@ public:
                                        &mMitigationPolicies,
                                        sizeof(mMitigationPolicies), nullptr,
                                        nullptr)) {
-        return LAUNCHER_ERROR_FROM_LAST();
+        return Nothing();
       }
     }
 
@@ -154,14 +154,14 @@ public:
                                        mInheritableHandles.begin(),
                                        mInheritableHandles.length() * sizeof(HANDLE),
                                        nullptr, nullptr)) {
-        return LAUNCHER_ERROR_FROM_LAST();
+        return Nothing();
       }
     }
 
     mAttrList = std::move(attrList);
     aSiex.lpAttributeList = mAttrList.get();
     aSiex.StartupInfo.cb = sizeof(STARTUPINFOEXW);
-    return true;
+    return Some(true);
   }
 
 private:
