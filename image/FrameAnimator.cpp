@@ -496,10 +496,15 @@ FrameAnimator::RequestRefresh(AnimationState& aState,
   // We should only mark the composited frame as valid and reset the dirty rect
   // if we advanced (meaning the next frame was actually produced somehow), the
   // composited frame was previously invalid (so we may need to repaint
-  // everything) and the frame index is valid (to know we were doing blending
-  // on the main thread, instead of on the decoder threads in advance).
+  // everything) and either the frame index is valid (to know we were doing
+  // blending on the main thread, instead of on the decoder threads in advance),
+  // or the current frame is a full frame (blends off the main thread).
+  //
+  // If for some reason we forget to reset aState.mCompositedFrameInvalid, then
+  // GetCompositedFrame will fail, even if we have all the data available for
+  // display.
   if (currentFrameEndTime > aTime && aState.mCompositedFrameInvalid &&
-      mLastCompositedFrameIndex >= 0) {
+      (mLastCompositedFrameIndex >= 0 || currentFrame->IsFullFrame())) {
     aState.mCompositedFrameInvalid = false;
     ret.mDirtyRect = IntRect(IntPoint(0,0), mSize);
   }

@@ -8,38 +8,13 @@
 #define nsObserverList_h___
 
 #include "nsISupports.h"
-#include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsIObserver.h"
-#include "nsIWeakReference.h"
 #include "nsHashKeys.h"
+#include "nsMaybeWeakPtr.h"
 #include "nsSimpleEnumerator.h"
 #include "mozilla/Attributes.h"
-
-struct ObserverRef
-{
-  ObserverRef(const ObserverRef& aO) : isWeakRef(aO.isWeakRef), ref(aO.ref) {}
-  explicit ObserverRef(nsIObserver* aObserver) : isWeakRef(false), ref(aObserver) {}
-  explicit ObserverRef(nsIWeakReference* aWeak) : isWeakRef(true), ref(aWeak) {}
-
-  bool isWeakRef;
-  nsCOMPtr<nsISupports> ref;
-
-  nsIObserver* asObserver()
-  {
-    NS_ASSERTION(!isWeakRef, "Isn't a strong ref.");
-    return static_cast<nsIObserver*>((nsISupports*)ref);
-  }
-
-  nsIWeakReference* asWeak()
-  {
-    NS_ASSERTION(isWeakRef, "Isn't a weak ref.");
-    return static_cast<nsIWeakReference*>((nsISupports*)ref);
-  }
-
-  bool operator==(nsISupports* aRhs) const { return ref == aRhs; }
-};
 
 class nsObserverList : public nsCharPtrHashKey
 {
@@ -78,7 +53,7 @@ public:
   void AppendStrongObservers(nsCOMArray<nsIObserver>& aArray);
 
 private:
-  nsTArray<ObserverRef> mObservers;
+  nsMaybeWeakPtrArray<nsIObserver> mObservers;
 };
 
 class nsObserverEnumerator final : public nsSimpleEnumerator

@@ -17,6 +17,9 @@ var start = null;
 var divCount = 10000;
 var maxIterations = 600;
 
+// ensure contentful paint occurs
+document.body.innerHTML = "DisplayList mutate";
+
 for (var i = 0; i < divCount; i++) {
   var div = document.createElement("div");
   div.id = i;

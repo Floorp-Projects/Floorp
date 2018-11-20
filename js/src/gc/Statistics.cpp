@@ -357,18 +357,18 @@ Statistics::formatCompactSummaryMessage() const
                    zoneStats.collectedCompartmentCount, zoneStats.compartmentCount,
                    zoneStats.sweptCompartmentCount,
                    double(preBytes) / bytesPerMiB,
-                   counts[STAT_NEW_CHUNK] - counts[STAT_DESTROY_CHUNK],
-                   counts[STAT_NEW_CHUNK] + counts[STAT_DESTROY_CHUNK]);
+                   counts[COUNT_NEW_CHUNK] - counts[COUNT_DESTROY_CHUNK],
+                   counts[COUNT_NEW_CHUNK] + counts[COUNT_DESTROY_CHUNK]);
     if (!fragments.append(DuplicateString(buffer))) {
         return UniqueChars(nullptr);
     }
 
-    MOZ_ASSERT_IF(counts[STAT_ARENA_RELOCATED], gckind == GC_SHRINK);
+    MOZ_ASSERT_IF(counts[COUNT_ARENA_RELOCATED], gckind == GC_SHRINK);
     if (gckind == GC_SHRINK) {
         SprintfLiteral(buffer,
                        "Kind: %s; Relocated: %.3f MiB; ",
                        ExplainInvocationKind(gckind),
-                       double(ArenaSize * counts[STAT_ARENA_RELOCATED]) / bytesPerMiB);
+                       double(ArenaSize * counts[COUNT_ARENA_RELOCATED]) / bytesPerMiB);
         if (!fragments.append(DuplicateString(buffer))) {
             return UniqueChars(nullptr);
         }
@@ -482,14 +482,14 @@ Statistics::formatDetailedDescription() const
         zoneStats.collectedZoneCount, zoneStats.zoneCount, zoneStats.sweptZoneCount,
         zoneStats.collectedCompartmentCount, zoneStats.compartmentCount,
         zoneStats.sweptCompartmentCount,
-        getCount(STAT_MINOR_GC),
-        getCount(STAT_STOREBUFFER_OVERFLOW),
+        getCount(COUNT_MINOR_GC),
+        getCount(COUNT_STOREBUFFER_OVERFLOW),
         mmu20 * 100., mmu50 * 100.,
         t(sccTotal), t(sccLongest),
         double(preBytes) / bytesPerMiB,
-        getCount(STAT_NEW_CHUNK) - getCount(STAT_DESTROY_CHUNK),
-        getCount(STAT_NEW_CHUNK) + getCount(STAT_DESTROY_CHUNK),
-        double(ArenaSize * getCount(STAT_ARENA_RELOCATED)) / bytesPerMiB,
+        getCount(COUNT_NEW_CHUNK) - getCount(COUNT_DESTROY_CHUNK),
+        getCount(COUNT_NEW_CHUNK) + getCount(COUNT_DESTROY_CHUNK),
+        double(ArenaSize * getCount(COUNT_ARENA_RELOCATED)) / bytesPerMiB,
         thresholdBuffer);
 
     return DuplicateString(buffer);
@@ -704,8 +704,8 @@ Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json) const
     json.property("zones_collected", zoneStats.collectedZoneCount); // #6
     json.property("total_zones", zoneStats.zoneCount); // #7
     json.property("total_compartments", zoneStats.compartmentCount); // #8
-    json.property("minor_gcs", getCount(STAT_MINOR_GC)); // #9
-    uint32_t storebufferOverflows = getCount(STAT_STOREBUFFER_OVERFLOW);
+    json.property("minor_gcs", getCount(COUNT_MINOR_GC)); // #9
+    uint32_t storebufferOverflows = getCount(COUNT_STOREBUFFER_OVERFLOW);
     if (storebufferOverflows) {
         json.property("store_buffer_overflows", storebufferOverflows); // #10
     }
@@ -725,11 +725,11 @@ Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json) const
         json.property("nonincremental_reason", ExplainAbortReason(nonincrementalReason_)); // #16
     }
     json.property("allocated_bytes", preBytes); // #17
-    uint32_t addedChunks = getCount(STAT_NEW_CHUNK);
+    uint32_t addedChunks = getCount(COUNT_NEW_CHUNK);
     if (addedChunks) {
         json.property("added_chunks", addedChunks); // #18
     }
-    uint32_t removedChunks = getCount(STAT_DESTROY_CHUNK);
+    uint32_t removedChunks = getCount(COUNT_DESTROY_CHUNK);
     if (removedChunks) {
         json.property("removed_chunks", removedChunks); // #19
     }
@@ -807,6 +807,10 @@ Statistics::Statistics(JSRuntime* rt)
 {
     for (auto& count : counts) {
         count = 0;
+    }
+
+    for (auto& stat : stats) {
+        stat = 0;
     }
 
 #ifdef DEBUG
@@ -1077,7 +1081,7 @@ Statistics::endGC()
 void
 Statistics::beginNurseryCollection(JS::gcreason::Reason reason)
 {
-    count(STAT_MINOR_GC);
+    count(COUNT_MINOR_GC);
     startingMinorGCNumber = runtime->gc.minorGCCount();
     if (nurseryCollectionCallback) {
         (*nurseryCollectionCallback)(runtime->mainContextFromOwnThread(),
