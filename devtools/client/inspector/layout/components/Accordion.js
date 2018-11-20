@@ -71,7 +71,7 @@ class Accordion extends PureComponent {
         { className: "_header",
           onClick: event => this.handleHeaderClick(i, event) },
         span({ className: arrowClassName }),
-        item.header
+        span({ className: "truncate" }, item.header)
       ),
 
       (created[i] || opened[i]) ?

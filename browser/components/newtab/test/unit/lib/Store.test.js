@@ -8,7 +8,7 @@ describe("Store", () => {
   let store;
   let dbStub;
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     function ActivityStreamMessageChannel(options) {
       this.dispatch = options.dispatch;
       this.createChannel = sandbox.spy();

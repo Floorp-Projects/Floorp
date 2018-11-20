@@ -1907,3 +1907,279 @@ add_task(async function test_newer_local_moves() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
 });
+
+add_task(async function test_unchanged_newer_changed_older() {
+  let buf = await openMirror("unchanged_newer_changed_older");
+  let modified = new Date(Date.now() - 5000);
+
+  info("Set up mirror");
+  await PlacesUtils.bookmarks.update({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    dateAdded: new Date(modified.getTime() - 5000),
+  });
+  await PlacesUtils.bookmarks.update({
+    guid: PlacesUtils.bookmarks.toolbarGuid,
+    dateAdded: new Date(modified.getTime() - 5000),
+  });
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [{
+      guid: "folderAAAAAA",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      title: "A",
+      dateAdded: new Date(modified.getTime() - 5000),
+      lastModified: modified,
+    }, {
+      guid: "bookmarkBBBB",
+      url: "http://example.com/b",
+      title: "B",
+      dateAdded: new Date(modified.getTime() - 5000),
+      lastModified: modified,
+    }],
+  });
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.toolbarGuid,
+    children: [{
+      guid: "folderCCCCCC",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      title: "C",
+      dateAdded: new Date(modified.getTime() - 5000),
+      lastModified: modified,
+    }, {
+      guid: "bookmarkDDDD",
+      url: "http://example.com/d",
+      title: "D",
+      dateAdded: new Date(modified.getTime() - 5000),
+      lastModified: modified,
+    }],
+  });
+  await storeRecords(buf, shuffle([{
+    id: "menu",
+    type: "folder",
+    children: ["folderAAAAAA", "bookmarkBBBB"],
+    dateAdded: modified.getTime() - 5000,
+    modified: modified.getTime() / 1000,
+  }, {
+    id: "folderAAAAAA",
+    type: "folder",
+    title: "A",
+    dateAdded: modified.getTime() - 5000,
+    modified: modified.getTime() / 1000,
+  }, {
+    id: "bookmarkBBBB",
+    type: "bookmark",
+    title: "B",
+    bmkUri: "http://example.com/b",
+    dateAdded: modified.getTime() - 5000,
+    modified: modified.getTime() / 1000,
+  }, {
+    id: "toolbar",
+    type: "folder",
+    children: ["folderCCCCCC", "bookmarkDDDD"],
+    dateAdded: modified.getTime() - 5000,
+    modified: modified.getTime() / 1000,
+  }, {
+    id: "folderCCCCCC",
+    type: "folder",
+    title: "C",
+    dateAdded: modified.getTime() - 5000,
+    modified: modified.getTime() / 1000,
+  }, {
+    id: "bookmarkDDDD",
+    type: "bookmark",
+    title: "D",
+    bmkUri: "http://example.com/d",
+    dateAdded: modified.getTime() - 5000,
+    modified: modified.getTime() / 1000,
+  }]), { needsMerge: false });
+  await PlacesTestUtils.markBookmarksAsSynced();
+
+  // Even though the local menu is newer (local = 5s, remote = 9s; adding E
+  // updated the modified times of A and the menu), it's not *changed* locally,
+  // so we should merge remote children first.
+  info("Add A > E locally with newer time; delete A remotely with older time");
+  await PlacesUtils.bookmarks.insert({
+    guid: "bookmarkEEEE",
+    parentGuid: "folderAAAAAA",
+    url: "http://example.com/e",
+    title: "E",
+    index: 0,
+    dateAdded: new Date(modified.getTime() + 5000),
+    lastModified: new Date(modified.getTime() + 5000),
+  });
+  await storeRecords(buf, [{
+    id: "menu",
+    type: "folder",
+    children: ["bookmarkBBBB"],
+    dateAdded: modified.getTime() - 5000,
+    modified: modified.getTime() / 1000 + 1,
+  }, {
+    id: "folderAAAAAA",
+    deleted: true,
+  }]);
+
+  // Even though the remote toolbar is newer (local = 15s, remote = 10s), it's
+  // not changed remotely, so we should merge local children first.
+  info("Add C > F remotely with newer time; delete C locally with older time");
+  await storeRecords(buf, shuffle([{
+    id: "folderCCCCCC",
+    type: "folder",
+    title: "C",
+    children: ["bookmarkFFFF"],
+    dateAdded: modified.getTime() - 5000,
+    modified: modified.getTime() / 1000 + 5,
+  }, {
+    id: "bookmarkFFFF",
+    type: "bookmark",
+    title: "F",
+    bmkUri: "http://example.com/f",
+    dateAdded: modified.getTime() - 5000,
+    modified: modified.getTime() / 1000 + 5,
+  }]));
+  await PlacesUtils.bookmarks.remove("folderCCCCCC");
+  await PlacesUtils.bookmarks.update({
+    guid: PlacesUtils.bookmarks.toolbarGuid,
+    lastModified: new Date(modified.getTime() - 5000),
+    // Use `SOURCES.SYNC` to avoid bumping the change counter and flagging the
+    // local toolbar as modified.
+    source: PlacesUtils.bookmarks.SOURCES.SYNC,
+  });
+
+  info("Apply remote");
+  let changesToUpload = await buf.apply({
+    localTimeSeconds: modified.getTime() / 1000 + 10,
+    remoteTimeSeconds: modified.getTime() / 1000 + 10,
+  });
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+
+  deepEqual(changesToUpload, {
+    menu: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "menu",
+        type: "folder",
+        parentid: "places",
+        hasDupe: true,
+        parentName: "",
+        dateAdded: modified.getTime() - 5000,
+        children: ["bookmarkBBBB", "bookmarkEEEE"],
+        title: BookmarksMenuTitle,
+      },
+    },
+    toolbar: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "toolbar",
+        type: "folder",
+        parentid: "places",
+        hasDupe: true,
+        parentName: "",
+        dateAdded: modified.getTime() - 5000,
+        children: ["bookmarkDDDD", "bookmarkFFFF"],
+        title: BookmarksToolbarTitle,
+      },
+    },
+    // Upload E and F with new `parentid`.
+    bookmarkEEEE: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "bookmarkEEEE",
+        type: "bookmark",
+        parentid: "menu",
+        hasDupe: true,
+        parentName: BookmarksMenuTitle,
+        dateAdded: modified.getTime() + 5000,
+        bmkUri: "http://example.com/e",
+        title: "E",
+      },
+    },
+    bookmarkFFFF: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "bookmarkFFFF",
+        type: "bookmark",
+        parentid: "toolbar",
+        hasDupe: true,
+        parentName: BookmarksToolbarTitle,
+        dateAdded: modified.getTime() - 5000,
+        bmkUri: "http://example.com/f",
+        title: "F",
+      },
+    },
+    folderCCCCCC: {
+      tombstone: true,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "folderCCCCCC",
+        deleted: true,
+      },
+    },
+  }, "Should reupload menu, toolbar, E, F with new structure; tombstone for C");
+
+  await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
+    guid: PlacesUtils.bookmarks.rootGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    index: 0,
+    title: "",
+    children: [{
+      guid: PlacesUtils.bookmarks.menuGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 0,
+      title: BookmarksMenuTitle,
+      children: [{
+        guid: "bookmarkBBBB",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 0,
+        title: "B",
+        url: "http://example.com/b",
+      }, {
+        guid: "bookmarkEEEE",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 1,
+        title: "E",
+        url: "http://example.com/e",
+      }],
+    }, {
+      guid: PlacesUtils.bookmarks.toolbarGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 1,
+      title: BookmarksToolbarTitle,
+      children: [{
+        guid: "bookmarkDDDD",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 0,
+        title: "D",
+        url: "http://example.com/d",
+      }, {
+        guid: "bookmarkFFFF",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 1,
+        title: "F",
+        url: "http://example.com/f",
+      }],
+    }, {
+      guid: PlacesUtils.bookmarks.unfiledGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 3,
+      title: UnfiledBookmarksTitle,
+    }, {
+      guid: PlacesUtils.bookmarks.mobileGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 4,
+      title: MobileBookmarksTitle,
+    }],
+  }, "Should merge children of changed side first, even if they're older");
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});

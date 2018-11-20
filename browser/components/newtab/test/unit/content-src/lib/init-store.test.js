@@ -96,7 +96,7 @@ describe("initStore", () => {
 
       rehydrationMiddleware(store)(next)(requestAction);
 
-      next.reset();
+      next.resetHistory();
       rehydrationMiddleware(store)(next)({type: at.INIT});
       assert.calledWith(next, requestAction);
     });
@@ -123,7 +123,7 @@ describe("initStore", () => {
     it("should allow actions from main to go through after MERGE_STORE_ACTION has been received", () => {
       const next = sinon.spy();
       rehydrationMiddleware(store)(next)({type: MERGE_STORE_ACTION});
-      next.reset();
+      next.resetHistory();
 
       const action = ac.AlsoToOneContent({type: "FOO"}, 123);
       rehydrationMiddleware(store)(next)(action);
@@ -160,7 +160,7 @@ describe("initStore", () => {
 
         assert.notCalled(next);
         assert.equal(testStore._earlyActionQueue.length, 2);
-        next.reset();
+        next.resetHistory();
 
         // Receiving action from main would empty the queue
         queueEarlyMessageMiddleware(testStore)(next)(fromMainAction);
@@ -170,7 +170,7 @@ describe("initStore", () => {
         assert.equal(next.secondCall.args[0], action);
         assert.equal(next.thirdCall.args[0], action);
         assert.equal(testStore._earlyActionQueue.length, 0);
-        next.reset();
+        next.resetHistory();
 
         // New action should go through immediately
         queueEarlyMessageMiddleware(testStore)(next)(action);

@@ -46,6 +46,13 @@
   fill: var(--theme-comment-alt);
 }
 
+.accordion ._header .truncate {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .accordion ._content {
   border-bottom: 1px solid var(--theme-splitter-color);
   font-size: 11px;
@@ -63,3 +70,4 @@
   padding-inline-end: 1px;
   flex-shrink: 0;
 }
+

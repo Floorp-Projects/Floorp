@@ -1,3 +1,4 @@
+import {addLocaleData, IntlProvider} from "react-intl";
 import {actionCreators as ac} from "common/Actions.jsm";
 import {OUTGOING_MESSAGE_NAME as AS_GENERAL_OUTGOING_MESSAGE_NAME} from "content-src/lib/init-store";
 import {generateMessages} from "./rich-text-strings";
@@ -7,6 +8,7 @@ import {OnboardingMessage} from "./templates/OnboardingMessage/OnboardingMessage
 import React from "react";
 import ReactDOM from "react-dom";
 import {SnippetsTemplates} from "./templates/template-manifest";
+import {StartupOverlay} from "./templates/StartupOverlay/StartupOverlay";
 
 const INCOMING_MESSAGE_NAME = "ASRouter:parent-to-child";
 const OUTGOING_MESSAGE_NAME = "ASRouter:child-to-parent";
@@ -170,6 +172,9 @@ export class ASRouterUISurface extends React.PureComponent {
   }
 
   componentWillMount() {
+    // Add locale data for StartupOverlay because it uses react-intl
+    addLocaleData(global.document.documentElement.lang);
+
     const endpoint = ASRouterUtils.getPreviewEndpoint();
     ASRouterUtils.addListener(this.onMessageFromParent);
 
@@ -181,11 +186,23 @@ export class ASRouterUISurface extends React.PureComponent {
     }
   }
 
+  componentDidMount() {
+    if (this.props.document.location.href === "about:welcome") {
+      // Trigger the onboarding overlay slightly after the startup overlay is mounted,
+      // to ensure we don't flash the onboarding content before hand
+      ASRouterUtils.sendMessage({type: "TRIGGER", data: {trigger: {id: "showOnboarding"}}});
+    }
+  }
+
   componentWillUnmount() {
     ASRouterUtils.removeListener(this.onMessageFromParent);
   }
 
   renderSnippets() {
+    if (this.state.bundle.template === "onboarding" ||
+        this.state.message.template === "fxa_overlay") {
+      return null;
+    }
     const SnippetComponent = SnippetsTemplates[this.state.message.template];
     const {content} = this.state.message;
 
@@ -211,13 +228,31 @@ export class ASRouterUISurface extends React.PureComponent {
   }
 
   renderOnboarding() {
-    return (
-      <OnboardingMessage
-        {...this.state.bundle}
-        UISurface="NEWTAB_OVERLAY"
-        onAction={ASRouterUtils.executeAction}
-        onDoneButton={this.clearBundle(this.state.bundle.bundle)}
-        sendUserActionTelemetry={this.sendUserActionTelemetry} />);
+    if (this.state.bundle.template === "onboarding") {
+      return (
+        <OnboardingMessage
+          {...this.state.bundle}
+          UISurface="NEWTAB_OVERLAY"
+          onAction={ASRouterUtils.executeAction}
+          onDoneButton={this.clearBundle(this.state.bundle.bundle)}
+          sendUserActionTelemetry={this.sendUserActionTelemetry} />);
+    }
+    return null;
+  }
+
+  renderFirstRunOverlay() {
+    if (this.state.message.template === "fxa_overlay") {
+      global.document.body.classList.add("welcome", "hide-main");
+      return (
+        <IntlProvider locale={global.document.documentElement.lang} messages={global.gActivityStreamStrings}>
+          <StartupOverlay
+            onBlock={this.onBlockById(this.state.message.id)}
+            dispatch={this.props.activityStreamStore.dispatch}
+            store={this.props.activityStreamStore} />
+        </IntlProvider>
+      );
+    }
+    return null;
   }
 
   renderPreviewBanner() {
@@ -239,7 +274,9 @@ export class ASRouterUISurface extends React.PureComponent {
     return (
       <React.Fragment>
         {this.renderPreviewBanner()}
-        {bundle.template === "onboarding" ? this.renderOnboarding() : this.renderSnippets()}
+        {this.renderFirstRunOverlay()}
+        {this.renderOnboarding()}
+        {this.renderSnippets()}
       </React.Fragment>
     );
   }
@@ -262,14 +299,15 @@ export class ASRouterContent {
       global.document.body.appendChild(this.containerElement);
     }
 
-    ReactDOM.render(<ASRouterUISurface />, this.containerElement);
+    ReactDOM.render(<ASRouterUISurface activityStreamStore={this._activityStreamStore} />, this.containerElement);
   }
 
   _unmount() {
     ReactDOM.unmountComponentAtNode(this.containerElement);
   }
 
-  init() {
+  init(store) {
+    this._activityStreamStore = store;
     this._mount();
     this.initialized = true;
   }

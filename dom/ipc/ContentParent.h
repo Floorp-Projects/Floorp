@@ -535,6 +535,7 @@ public:
   virtual PContentPermissionRequestParent*
   AllocPContentPermissionRequestParent(const InfallibleTArray<PermissionRequest>& aRequests,
                                        const IPC::Principal& aPrincipal,
+                                       const IPC::Principal& aTopLevelPrincipal,
                                        const bool& aIsTrusted,
                                        const TabId& aTabId) override;
 

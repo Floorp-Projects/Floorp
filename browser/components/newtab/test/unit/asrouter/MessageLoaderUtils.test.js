@@ -232,7 +232,7 @@ describe("MessageLoaderUtils", () => {
     let installAddonStub;
     beforeEach(() => {
       globals = new GlobalOverrider();
-      sandbox = sinon.sandbox.create();
+      sandbox = sinon.createSandbox();
       getInstallStub = sandbox.stub();
       installAddonStub = sandbox.stub();
       globals.set("AddonManager", {

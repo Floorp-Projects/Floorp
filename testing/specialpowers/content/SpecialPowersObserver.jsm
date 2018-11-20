@@ -27,7 +27,6 @@ Services.scriptloader.loadSubScript("resource://specialpowers/SpecialPowersObser
 function SpecialPowersObserver() {
   this._isFrameScriptLoaded = false;
   this._messageManager = Services.mm;
-  this._serviceWorkerListener = null;
 }
 
 
@@ -110,32 +109,6 @@ SpecialPowersObserver.prototype.init = function() {
 
   obs.addObserver(this, "http-on-modify-request");
 
-  // We would like to check after each test that there are no left over
-  // ServiceWorkers still registered. However, because that check happens in
-  // the child process, we would have to do IPC after ever test to verify in
-  // the parent process (the source of truth for ServiceWorkers) that our
-  // invariants are correct. To avoid that, we send messages down to the
-  // children when to let them know when ServiceWorkers are registered or
-  // unregistered (and become idle!) to be able to quicky verify this.
-  // If this seems to be randomly failing, make sure that you're waiting for
-  // the unregister promise to resolve before calling SimpleTest.finish.
-  let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
-              .getService(Ci.nsIServiceWorkerManager);
-  let self = this;
-  this._serviceWorkerListener = {
-    cnt: 0,
-    onRegister() {
-      this.cnt++;
-      self.onRegister(this.cnt);
-    },
-
-    onUnregister() {
-      this.cnt--;
-      self.onUnregister(this.cnt);
-    },
-  };
-  swm.addListener(this._serviceWorkerListener);
-
   this._loadFrameScript();
 };
 
@@ -147,10 +120,6 @@ SpecialPowersObserver.prototype.uninit = function() {
     obs.removeObserver(this._registerObservers, element);
   });
   this._removeProcessCrashObservers();
-
-  let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
-              .getService(Ci.nsIServiceWorkerManager);
-  swm.removeListener(this._serviceWorkerListener);
 
   if (this._isFrameScriptLoaded) {
     this._messageManager.removeMessageListener("SPPrefService", this);
@@ -312,20 +281,4 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
       return this._receiveMessage(aMessage);
   }
   return undefined;
-};
-
-SpecialPowersObserver.prototype.onRegister = function(cnt) {
-  // Send a message for the transition from 0 => 1.
-  if (cnt === 1) {
-    this._sendAsyncMessage("SPServiceWorkerRegistered",
-      { registered: true });
-  }
-};
-
-SpecialPowersObserver.prototype.onUnregister = function(cnt) {
-  // Send a message for the transition from 1 => 0.
-  if (cnt === 0) {
-    this._sendAsyncMessage("SPServiceWorkerRegistered",
-      { registered: false });
-  }
 };

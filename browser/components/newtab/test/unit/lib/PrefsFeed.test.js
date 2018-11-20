@@ -13,7 +13,7 @@ describe("PrefsFeed", () => {
   let FAKE_PREFS;
   let sandbox;
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     FAKE_PREFS = new Map([["foo", 1], ["bar", 2]]);
     feed = new PrefsFeed(FAKE_PREFS);
     const storage = {
