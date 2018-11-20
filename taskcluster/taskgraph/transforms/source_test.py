@@ -1,4 +1,3 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
@@ -16,7 +15,6 @@ from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.job import job_description_schema
 from taskgraph.util.attributes import keymatch
 from taskgraph.util.schema import (
-    validate_schema,
     resolve_keyed_by,
 )
 from taskgraph.util.treeherder import join_symbol, split_symbol
@@ -72,12 +70,7 @@ def set_defaults(config, jobs):
         yield job
 
 
-@transforms.add
-def validate(config, jobs):
-    for job in jobs:
-        validate_schema(source_test_description_schema, job,
-                        "In job {!r}:".format(job['name']))
-        yield job
+transforms.add_validate(source_test_description_schema)
 
 
 @transforms.add

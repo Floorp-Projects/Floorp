@@ -13,7 +13,6 @@ from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.schema import (
-    validate_schema,
     optionally_keyed_by,
     resolve_keyed_by,
 )
@@ -22,8 +21,6 @@ from taskgraph.util.platforms import archive_format, executable_extension
 from taskgraph.util.workertypes import worker_type_implementation
 from taskgraph.transforms.job import job_description_schema
 from voluptuous import Any, Required, Optional
-
-transforms = TransformSequence()
 
 # Voluptuous uses marker objects as dictionary *keys*, but they are not
 # comparable, so we cast all of the keys back to regular strings
@@ -156,15 +153,8 @@ MOZHARNESS_EXPANSIONS = [
     'stub-installer-tag', 'sfx-stub', 'wsx-stub',
 ]
 
-
-@transforms.add
-def validate(config, jobs):
-    for job in jobs:
-        label = job.get('primary-dependency', object).__dict__.get('label', '?no-label?')
-        validate_schema(
-            packaging_description_schema, job,
-            "In packaging ({!r} kind) task for {!r}:".format(config.kind, label))
-        yield job
+transforms = TransformSequence()
+transforms.add_validate(packaging_description_schema)
 
 
 @transforms.add
