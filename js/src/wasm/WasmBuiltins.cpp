@@ -427,8 +427,8 @@ TruncateDoubleToInt64(double input)
 static uint64_t
 TruncateDoubleToUint64(double input)
 {
-    // Note: UINT64_MAX is not representable in double. It is actually UINT64_MAX + 1.
-    // Therefore also sending the failure value.
+    // Note: UINT64_MAX is not representable in double. It is actually
+    // UINT64_MAX + 1.  Therefore also sending the failure value.
     if (input >= double(UINT64_MAX) || input <= -1.0 || IsNaN(input)) {
         return 0x8000000000000000;
     }
@@ -914,8 +914,8 @@ PopulateTypedNatives(TypedNativeToFuncPtrMap* typedNatives)
 //
 // Thunks are inserted between wasm calls and the C++ callee and achieve two
 // things:
-//  - bridging the few differences between the internal wasm ABI and the external
-//    native ABI (viz. float returns on x86 and soft-fp ARM)
+//  - bridging the few differences between the internal wasm ABI and the
+//    external native ABI (viz. float returns on x86 and soft-fp ARM)
 //  - executing an exit prologue/epilogue which in turn allows any profiling
 //    iterator to see the full stack up to the wasm operation that called out
 //

@@ -6622,7 +6622,8 @@ MacroAssemblerARM::emitUnalignedLoad(const wasm::MemoryAccessDesc* access,
     // sequence:
     //
     //   ldrsb [x+3], tmp           // note signed load *if appropriate*
-    //   lsl dest, tmp lsl 24       // move high byte + sign bits into place; clear low bits
+    //   lsl dest, tmp lsl 24       // move high byte + sign bits into place;
+    //                              // clear low bits
     //   ldrb [x+2], tmp            // note unsigned load
     //   or dest, dest, tmp lsl 16  // add another byte
     //   ldrb [x+1], tmp            // ...

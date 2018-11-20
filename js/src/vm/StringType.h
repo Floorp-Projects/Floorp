@@ -100,9 +100,9 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  *    string (JSExternalString) can be created whose chars are managed by the
  *    JSAPI client.
  *
- *  - To avoid using two bytes per character for every string, string characters
- *    are stored as Latin1 instead of TwoByte if all characters are representable
- *    in Latin1.
+ *  - To avoid using two bytes per character for every string, string
+ *    characters are stored as Latin1 instead of TwoByte if all characters are
+ *    representable in Latin1.
  *
  *  - To avoid slow conversions from strings to integer indexes, we cache 16 bit
  *    unsigned indexes on strings representing such numbers.

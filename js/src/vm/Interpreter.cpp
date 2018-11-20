@@ -1852,8 +1852,9 @@ SetObjectElementOperation(JSContext* cx, HandleObject obj, HandleId id, HandleVa
                           HandleValue receiver, bool strict,
                           JSScript* script = nullptr, jsbytecode* pc = nullptr)
 {
-    // receiver != obj happens only at super[expr], where we expect to find the property
-    // People probably aren't building hashtables with |super| anyway.
+    // receiver != obj happens only at super[expr], where we expect to find the
+    // property. People probably aren't building hashtables with |super|
+    // anyway.
     TypeScript::MonitorAssign(cx, obj, id);
 
     if (obj->isNative() && JSID_IS_INT(id)) {

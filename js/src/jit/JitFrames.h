@@ -205,7 +205,8 @@ static const uintptr_t FRAMESIZE_MASK = (1 << FRAMESIZE_BITS) - 1;
 //      Local depth:    The number of bytes required to spill local variables.
 //      Argument depth: The number of bytes required to push arguments and make
 //                      a function call.
-//      Slack:          A frame may temporarily use extra stack to resolve cycles.
+//      Slack:          A frame may temporarily use extra stack to resolve
+//                      cycles.
 //
 // The (local + argument) depth determines the "fixed frame size". The fixed
 // frame size is the distance between the stack pointer and the frame header.
@@ -669,10 +670,12 @@ class IonOOLNativeExitFrameLayout
     }
 };
 
-// ProxyGetProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleValue vp)
-// ProxyCallProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleValue vp)
-// ProxySetProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleValue vp,
-//                  bool strict)
+// ProxyGetProperty(JSContext* cx, HandleObject proxy, HandleId id,
+//                  MutableHandleValue vp)
+// ProxyCallProperty(JSContext* cx, HandleObject proxy, HandleId id,
+//                   MutableHandleValue vp)
+// ProxySetProperty(JSContext* cx, HandleObject proxy, HandleId id,
+//                  MutableHandleValue vp, bool strict)
 class IonOOLProxyExitFrameLayout
 {
   protected: // only to silence a clang warning about unused private fields

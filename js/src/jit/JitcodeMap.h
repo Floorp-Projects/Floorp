@@ -1337,7 +1337,8 @@ class JitcodeRegionEntry
 
     //  byte 3    byte 2    byte 1    byte 0
     //  NNNN-NNNN NNNN-NNNN BBBB-BBBB BBBB-B111
-    //      Three-byte format.  nativeDelta in [0, 65535], pcDelta in [-4096, 4095]
+    //      Three-byte format.  nativeDelta in [0, 65535],
+    //                          pcDelta in [-4096, 4095]
     static const uint32_t ENC4_MASK = 0x7;
     static const uint32_t ENC4_MASK_VAL = 0x7;
 
