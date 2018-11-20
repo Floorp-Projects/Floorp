@@ -1892,13 +1892,11 @@ impl Device {
             sources,
         });
 
-        let u_transform = self.gl.get_uniform_location(pid, "uTransform");
-        let u_mode = self.gl.get_uniform_location(pid, "uMode");
-
+        // Use 0 for the uniforms as they are initialized by link_program.
         let program = Program {
             id: pid,
-            u_transform,
-            u_mode,
+            u_transform: 0,
+            u_mode: 0,
             init_state,
         };
 
