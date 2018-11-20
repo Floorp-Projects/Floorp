@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// This test checks the urlbar.highlightSearchAlias() function.
+// This test checks "@" search engine aliases ("token aliases") in the urlbar.
 
 "use strict";
 
@@ -170,6 +170,43 @@ add_task(async function nonHeuristicAliases() {
   }
 
   // Hide the popup.
+  EventUtils.synthesizeKey("KEY_Escape");
+  await promisePopupHidden(gURLBar.popup);
+});
+
+
+// Clicking on an @ alias in the popup should fill it in the urlbar input.
+add_task(async function clickAndFillAlias() {
+  // Do a search for "@" to show all the @ aliases.
+  gURLBar.search("@");
+  await promiseSearchComplete();
+
+  // Find our test engine in the results.  It's probably last, but for test
+  // robustness don't assume it is.
+  let testEngineItem;
+  for (let i = 0; !testEngineItem; i++) {
+    let item = await waitForAutocompleteResultAt(i);
+    let action = PlacesUtils.parseActionUrl(item.getAttribute("url"));
+    if (action && action.params.alias == ALIAS) {
+      testEngineItem = item;
+    }
+  }
+
+  // Click it.
+  let hiddenPromise = promisePopupHidden(gURLBar.popup);
+  EventUtils.synthesizeMouseAtCenter(testEngineItem, {});
+
+  // The popup will close and then open again with the new search string, which
+  // should be the test alias.
+  await hiddenPromise;
+  await promiseSearchComplete();
+  await promisePopupShown(gURLBar.popup);
+  assertAlias(true);
+
+  // The urlbar input value should be the alias followed by a space so that it's
+  // ready for the user to start typing.
+  Assert.equal(gURLBar.textValue, `${ALIAS} `);
+
   EventUtils.synthesizeKey("KEY_Escape");
   await promisePopupHidden(gURLBar.popup);
 });
