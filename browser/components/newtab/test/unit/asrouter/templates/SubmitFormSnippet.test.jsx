@@ -37,7 +37,7 @@ describe("SubmitFormSnippet", () => {
   }
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     onBlockStub = sandbox.stub();
   });
 

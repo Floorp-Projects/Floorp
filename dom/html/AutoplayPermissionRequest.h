@@ -45,13 +45,10 @@ public:
 private:
   AutoplayPermissionRequest(AutoplayPermissionManager* aManager,
                             nsGlobalWindowInner* aWindow,
-                            nsIPrincipal* aNodePrincipal,
-                            nsIEventTarget* aMainThreadTarget);
+                            nsIPrincipal* aNodePrincipal);
   ~AutoplayPermissionRequest();
 
   WeakPtr<AutoplayPermissionManager> mManager;
-
-  nsCOMPtr<nsIEventTarget> mMainThreadTarget;
 };
 
 } // namespace mozilla

@@ -24,7 +24,7 @@ describe("ASRouterPreferences", () => {
   beforeEach(() => {
     ASRouterPreferences = new _ASRouterPreferences();
 
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     addObserverStub = sandbox.stub(global.Services.prefs, "addObserver");
     stringPrefStub =  sandbox.stub(global.Services.prefs, "getStringPref");
     FAKE_PROVIDERS.forEach(provider => {

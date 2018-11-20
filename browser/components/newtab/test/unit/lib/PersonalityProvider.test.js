@@ -51,6 +51,19 @@ describe("Personality Provider", () => {
     NmfTextTaggerStub = globals.sandbox.stub();
     RecipeExecutorStub = globals.sandbox.stub();
 
+    globals.set("baseAttachmentsURL", new Promise(resolve => resolve("/")));
+
+    global.fetch = async server => ({
+      ok: true,
+      json: async () => {
+        if (server === "services.settings.server/") {
+          return {capabilities: {attachments: {base_url: ""}}};
+        }
+        return {};
+      },
+    });
+    globals.sandbox.stub(global.Services.prefs, "getCharPref").callsFake(pref => pref);
+
     ({PersonalityProvider} = injector({
       "lib/NaiveBayesTextTagger.jsm": {NaiveBayesTextTagger: NaiveBayesTextTaggerStub},
       "lib/NmfTextTagger.jsm": {NmfTextTagger: NmfTextTaggerStub},
@@ -108,6 +121,7 @@ describe("Personality Provider", () => {
       },
     };
   });
+
   afterEach(() => {
     globals.restore();
   });
@@ -177,9 +191,9 @@ describe("Personality Provider", () => {
   });
   describe("#remote-settings", () => {
     it("should return a remote setting for getFromRemoteSettings", async () => {
-      const settings = await instance.getFromRemoteSettings("test");
+      const settings = await instance.getFromRemoteSettings("attachment");
       assert.equal(typeof settings, "object");
-      assert.equal(settings.length, 0);
+      assert.equal(settings.length, 1);
     });
   });
   describe("#executor", () => {
@@ -202,8 +216,8 @@ describe("Personality Provider", () => {
       instance.modelKeys = ["nb_model_sports", "nmf_model_sports"];
 
       instance.getFromRemoteSettings = async name => [
-        {key: "nb_model_sports", data: {model_type: "nb"}},
-        {key: "nmf_model_sports", data: {model_type: "nmf", parent_tag: "nmf_sports_parent_tag"}},
+        {recordKey: "nb_model_sports", model_type: "nb"},
+        {recordKey: "nmf_model_sports", model_type: "nmf", parent_tag: "nmf_sports_parent_tag"},
       ];
 
       await instance.generateRecipeExecutor();
@@ -219,8 +233,8 @@ describe("Personality Provider", () => {
       instance.modelKeys = ["nb_model_sports"];
 
       instance.getFromRemoteSettings = async name => [
-        {key: "nb_model_sports", data: {model_type: "nb"}},
-        {key: "nmf_model_sports", data: {model_type: "nmf", parent_tag: "nmf_sports_parent_tag"}},
+        {recordKey: "nb_model_sports", model_type: "nb"},
+        {recordKey: "nmf_model_sports", model_type: "nmf", parent_tag: "nmf_sports_parent_tag"},
       ];
 
       await instance.generateRecipeExecutor();
@@ -236,7 +250,7 @@ describe("Personality Provider", () => {
       instance.modelKeys = ["nb_model_sports", "nmf_model_sports"];
 
       instance.getFromRemoteSettings = async name => [
-        {key: "nb_model_sports", data: {model_type: "nb"}},
+        {recordKey: "nb_model_sports", model_type: "nb"},
       ];
       await instance.generateRecipeExecutor();
       assert.calledOnce(RecipeExecutorStub);
@@ -256,8 +270,8 @@ describe("Personality Provider", () => {
       assert.calledWith(instance.getFromRemoteSettings, "personality-provider-recipe");
     });
     it("should not fetch a recipe on getRecipe if cached", async () => {
-      sinon.stub(instance, "getFromRemoteSettings").returns(Promise.resolve());
-      instance.recipe = ["blah"];
+      sinon.stub(instance, "getFromRemoteSettings").returns(Promise.resolve([]));
+      instance.recipes = ["blah"];
       await instance.getRecipe();
       assert.notCalled(instance.getFromRemoteSettings);
     });
@@ -339,6 +353,155 @@ describe("Personality Provider", () => {
       assert.equal(history.sql, `SELECT url, title, visit_count, frecency, last_visit_date, description\n    FROM moz_places\n    WHERE last_visit_date >= 1000000\n    AND last_visit_date < 1000000 AND IFNULL(requiredColumn, "") <> "" LIMIT 30000`);
       assert.equal(history.options.columns.length, 1);
       assert.equal(Object.keys(history.options.params).length, 0);
+    });
+  });
+  describe("#attachments", () => {
+    it("should sync remote settings collection from onSync", async () => {
+      sinon.stub(instance, "deleteAttachment").returns(Promise.resolve({}));
+      sinon.stub(instance, "maybeDownloadAttachment").returns(Promise.resolve({}));
+
+      await instance.onSync({
+        data: {
+          created: ["create-1", "create-2"],
+          updated: [
+            {old: "update-old-1", new: "update-new-1"},
+            {old: "update-old-2", new: "update-new-2"},
+          ],
+          deleted: ["delete-2", "delete-1"],
+        },
+      });
+
+      assert(instance.maybeDownloadAttachment.withArgs("create-1").calledOnce);
+      assert(instance.maybeDownloadAttachment.withArgs("create-2").calledOnce);
+      assert(instance.maybeDownloadAttachment.withArgs("update-new-1").calledOnce);
+      assert(instance.maybeDownloadAttachment.withArgs("update-new-2").calledOnce);
+
+      assert(instance.deleteAttachment.withArgs("delete-1").calledOnce);
+      assert(instance.deleteAttachment.withArgs("delete-2").calledOnce);
+      assert(instance.deleteAttachment.withArgs("update-old-1").calledOnce);
+      assert(instance.deleteAttachment.withArgs("update-old-2").calledOnce);
+    });
+    it("should write a file from _downloadAttachment", async () => {
+      const fetchStub = globals.sandbox.stub(global, "fetch").resolves({
+        ok: true,
+        arrayBuffer: async () => {},
+      });
+
+      const writeAtomicStub = globals.sandbox.stub(global.OS.File, "writeAtomic").resolves(Promise.resolve());
+      globals.sandbox.stub(global.OS.Path, "join").callsFake((first, second) => first + second);
+
+      globals.set("Uint8Array", class Uint8Array {});
+
+      await instance._downloadAttachment({attachment: {location: "location", filename: "filename"}});
+
+      const fetchArgs = fetchStub.firstCall.args;
+      assert.equal(fetchArgs[0], "/location");
+      const writeArgs = writeAtomicStub.firstCall.args;
+      assert.equal(writeArgs[0], "/filename");
+      assert.equal(writeArgs[2].tmpPath, "/filename.tmp");
+    });
+    it("should call reportError from _downloadAttachment if not valid response", async () => {
+      globals.sandbox.stub(global, "fetch").resolves({ok: false});
+      globals.sandbox.spy(global.Cu, "reportError");
+
+      await instance._downloadAttachment({attachment: {location: "location", filename: "filename"}});
+      assert.calledWith(Cu.reportError, "Failed to fetch /location: undefined");
+    });
+    it("should attempt _downloadAttachment three times for maybeDownloadAttachment", async () => {
+      let existsStub;
+      let statStub;
+      let attachmentStub;
+      sinon.stub(instance, "_downloadAttachment").returns(Promise.resolve());
+      sinon.stub(instance, "_getFileStr").returns(Promise.resolve("1"));
+      const makeDirStub = globals.sandbox.stub(global.OS.File, "makeDir").returns(Promise.resolve());
+      globals.sandbox.stub(global.OS.Path, "join").callsFake((first, second) => first + second);
+
+      existsStub = globals.sandbox.stub(global.OS.File, "exists").returns(Promise.resolve(true));
+      statStub = globals.sandbox.stub(global.OS.File, "stat").returns(Promise.resolve({size: "1"}));
+
+      attachmentStub = {
+        attachment: {
+          filename: "file",
+          hash: "30",
+          size: "1",
+        },
+      };
+
+      await instance.maybeDownloadAttachment(attachmentStub);
+      assert.calledWith(makeDirStub, "/");
+      assert.calledOnce(existsStub);
+      assert.calledOnce(statStub);
+      assert.calledOnce(instance._getFileStr);
+      assert.notCalled(instance._downloadAttachment);
+
+      instance._getFileStr.resetHistory();
+      existsStub.resetHistory();
+      statStub.resetHistory();
+
+      attachmentStub = {
+        attachment: {
+          filename: "file",
+          hash: "31",
+          size: "1",
+        },
+      };
+
+      await instance.maybeDownloadAttachment(attachmentStub);
+      assert.calledThrice(existsStub);
+      assert.calledThrice(statStub);
+      assert.calledThrice(instance._getFileStr);
+      assert.calledThrice(instance._downloadAttachment);
+    });
+    it("should remove attachments when calling deleteAttachment", async () => {
+      const makeDirStub = globals.sandbox.stub(global.OS.File, "makeDir").returns(Promise.resolve());
+      const removeStub = globals.sandbox.stub(global.OS.File, "remove").returns(Promise.resolve());
+      const removeEmptyDirStub = globals.sandbox.stub(global.OS.File, "removeEmptyDir").returns(Promise.resolve());
+      globals.sandbox.stub(global.OS.Path, "join").callsFake((first, second) => first + second);
+      await instance.deleteAttachment({attachment: {filename: "filename"}});
+      assert.calledOnce(makeDirStub);
+      assert.calledOnce(removeStub);
+      assert.calledOnce(removeEmptyDirStub);
+      assert.calledWith(removeStub, "/filename", {ignoreAbsent: true});
+    });
+    it("should return JSON when calling getAttachment", async () => {
+      sinon.stub(instance, "maybeDownloadAttachment").returns(Promise.resolve());
+      sinon.stub(instance, "_getFileStr").returns(Promise.resolve("{}"));
+      const reportErrorStub = globals.sandbox.stub(global.Cu, "reportError");
+      globals.sandbox.stub(global.OS.Path, "join").callsFake((first, second) => first + second);
+      const record = {attachment: {filename: "filename"}};
+      let returnValue = await instance.getAttachment(record);
+
+      assert.notCalled(reportErrorStub);
+      assert.calledOnce(instance._getFileStr);
+      assert.calledWith(instance._getFileStr, "/filename");
+      assert.calledOnce(instance.maybeDownloadAttachment);
+      assert.calledWith(instance.maybeDownloadAttachment, record);
+      assert.deepEqual(returnValue, {});
+
+      instance._getFileStr.restore();
+      sinon.stub(instance, "_getFileStr").returns(Promise.resolve({}));
+      returnValue = await instance.getAttachment(record);
+      assert.calledOnce(reportErrorStub);
+      assert.calledWith(reportErrorStub, "Failed to load /filename: JSON.parse: unexpected character at line 1 column 2 of the JSON data");
+      assert.deepEqual(returnValue, {});
+    });
+    it("should read and decode a file with _getFileStr", async () => {
+      global.OS.File.read = async path => {
+        if (path === "/filename") {
+          return "binaryData";
+        }
+        return "";
+      };
+      globals.set("gTextDecoder", {
+        decode: async binaryData => {
+          if (binaryData === "binaryData") {
+            return "binaryData";
+          }
+          return "";
+        },
+      });
+      const returnValue = await instance._getFileStr("/filename");
+      assert.equal(returnValue, "binaryData");
     });
   });
 });

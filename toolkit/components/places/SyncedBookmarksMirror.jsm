@@ -3913,28 +3913,49 @@ class BookmarkMerger {
    */
   async mergeChildListsIntoMergedNode(mergedNode, localNode, remoteNode) {
     if (localNode && remoteNode) {
-      if (localNode.newerThan(remoteNode)) {
-        // The folder exists locally and remotely, and the local node is newer.
-        // Walk and merge local children first, followed by remaining unmerged
-        // remote children.
-        await this.mergeLocalChildrenIntoMergedNode(mergedNode, localNode);
-        await this.mergeRemoteChildrenIntoMergedNode(mergedNode, remoteNode);
-      } else {
-        // The folder exists locally and remotely, and the remote node is newer.
-        // Merge remote children first, then remaining local children.
-        await this.mergeRemoteChildrenIntoMergedNode(mergedNode, remoteNode);
-        await this.mergeLocalChildrenIntoMergedNode(mergedNode, localNode);
+      if (localNode.needsMerge && remoteNode.needsMerge) {
+        // The folder exists locally and remotely, and changed on both sides.
+        // Compare timestamps to determine which children to merge first,
+        // followed by remaining unmerged children on the other side.
+        if (localNode.newerThan(remoteNode)) {
+          await this.mergeLocalChildrenIntoMergedNode(mergedNode, localNode);
+          await this.mergeRemoteChildrenIntoMergedNode(mergedNode, remoteNode);
+        } else {
+          await this.mergeRemoteChildrenIntoMergedNode(mergedNode, remoteNode);
+          await this.mergeLocalChildrenIntoMergedNode(mergedNode, localNode);
+        }
+        return;
       }
-    } else if (localNode) {
+
+      if (remoteNode.needsMerge) {
+        // The folder exists locally and remotely, and only changed remotely.
+        // Merge remote children first, followed by remaining local children.
+        await this.mergeRemoteChildrenIntoMergedNode(mergedNode, remoteNode);
+        await this.mergeLocalChildrenIntoMergedNode(mergedNode, localNode);
+        return;
+      }
+
+      // The folder exists locally and remotely, and only changed locally, or
+      // is unchanged on both sides. Merge local first, then remote.
+      await this.mergeLocalChildrenIntoMergedNode(mergedNode, localNode);
+      await this.mergeRemoteChildrenIntoMergedNode(mergedNode, remoteNode);
+      return;
+    }
+
+    if (localNode) {
       // The folder only exists locally, so no remote children to merge.
       await this.mergeLocalChildrenIntoMergedNode(mergedNode, localNode);
-    } else if (remoteNode) {
-      // The folder only exists remotely, so local children to merge.
-      await this.mergeRemoteChildrenIntoMergedNode(mergedNode, remoteNode);
-    } else {
-      // Should never happen.
-      throw new TypeError("Can't merge children for two nonexistent nodes");
+      return;
     }
+
+    if (remoteNode) {
+      // The folder only exists remotely, so no local children to merge.
+      await this.mergeRemoteChildrenIntoMergedNode(mergedNode, remoteNode);
+      return;
+    }
+
+    // Should never happen.
+    throw new TypeError("Can't merge children for two nonexistent nodes");
   }
 
   /**
@@ -4182,6 +4203,11 @@ class BookmarkMerger {
   async relocateRemoteOrphansToMergedNode(mergedNode, remoteNode) {
     let remoteOrphanNodes = [];
     for await (let remoteChildNode of yieldingIterator(remoteNode.children)) {
+      if (this.mergedGuids.has(remoteChildNode.guid)) {
+        MirrorLog.trace("Remote child ${remoteChildNode} can't be an orphan; " +
+                        "already merged", { remoteChildNode });
+        continue;
+      }
       let structureChange = await this.checkForLocalStructureChangeOfRemoteNode(
         mergedNode, remoteNode, remoteChildNode);
       if (structureChange == BookmarkMerger.STRUCTURE.MOVED ||
@@ -4226,6 +4252,11 @@ class BookmarkMerger {
   async relocateLocalOrphansToMergedNode(mergedNode, localNode) {
     let localOrphanNodes = [];
     for await (let localChildNode of yieldingIterator(localNode.children)) {
+      if (this.mergedGuids.has(localChildNode.guid)) {
+        MirrorLog.trace("Local child ${localChildNode} can't be an orphan; " +
+                        "already merged", { localChildNode });
+        continue;
+      }
       let structureChange = await this.checkForRemoteStructureChangeOfLocalNode(
         mergedNode, localNode, localChildNode);
       if (structureChange == BookmarkMerger.STRUCTURE.MOVED ||

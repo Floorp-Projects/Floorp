@@ -9,7 +9,6 @@ import {PrerenderData} from "common/PrerenderData.jsm";
 import React from "react";
 import {Search} from "content-src/components/Search/Search";
 import {Sections} from "content-src/components/Sections/Sections";
-import {StartupOverlay} from "content-src/components/StartupOverlay/StartupOverlay";
 
 const PrefsButton = injectIntl(props => (
   <div className="prefs-button">
@@ -42,9 +41,6 @@ export class _Base extends React.PureComponent {
   componentWillMount() {
     const {locale} = this.props;
     addLocaleDataForReactIntl(locale);
-    if (this.props.isFirstrun) {
-      global.document.body.classList.add("welcome", "hide-main");
-    }
   }
 
   componentDidMount() {
@@ -170,7 +166,6 @@ export class BaseContent extends React.PureComponent {
             <ConfirmDialog />
           </main>
         </div>
-        {this.props.isFirstrun && <StartupOverlay />}
       </div>);
   }
 }
