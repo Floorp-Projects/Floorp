@@ -934,6 +934,11 @@ public:
    */
   nsIEditor* GetEditor();
 
+  bool IsInputEventTarget() const
+  {
+    return IsSingleLineTextControl(false);
+  }
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void SetUserInput(const nsAString& aInput,
                     nsIPrincipal& aSubjectPrincipal);

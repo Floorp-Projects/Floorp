@@ -4484,7 +4484,7 @@ nsContentUtils::DispatchInputEvent(Element* aEventTargetElement,
     useInputEvent = true;
   } else if (HTMLInputElement* inputElement =
                HTMLInputElement::FromNode(aEventTargetElement)) {
-    if (inputElement->IsSingleLineTextControl()) {
+    if (inputElement->IsInputEventTarget()) {
       aTextEditor = inputElement->GetTextEditorWithoutCreation();
       useInputEvent = true;
     }

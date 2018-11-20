@@ -269,8 +269,13 @@ class ContentDelegateTest : BaseSessionTest() {
             arrayOf("document", "$('#iframe').contentDocument").map { doc ->
                 mainSession.evaluateJS("""new Promise(resolve =>
                 $doc.querySelector('${entry.key}').addEventListener(
-                    'input', event => resolve([event.target.value, '${entry.value}']),
-                    { once: true }))""").asJSPromise()
+                    'input', event => {
+                      let eventInterface =
+                        event instanceof InputEvent ? "InputEvent" :
+                        event instanceof UIEvent ? "UIEvent" :
+                        event instanceof Event ? "Event" : "Unknown";
+                      resolve([event.target.value, '${entry.value}', eventInterface]);
+                    }, { once: true }))""").asJSPromise()
             }
         }
 
@@ -348,8 +353,9 @@ class ContentDelegateTest : BaseSessionTest() {
         mainSession.textInput.autofill(autoFillValues)
 
         // Wait on the promises and check for correct values.
-        for ((actual, expected) in promises.map { it.value.asJSList<String>() }) {
+        for ((actual, expected, eventInterface) in promises.map { it.value.asJSList<String>() }) {
             assertThat("Auto-filled value must match", actual, equalTo(expected))
+            assertThat("input event should be dispatched with InputEvent interface", eventInterface, equalTo("InputEvent"))
         }
     }
 

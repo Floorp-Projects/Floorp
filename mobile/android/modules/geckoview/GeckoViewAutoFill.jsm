@@ -127,14 +127,7 @@ class GeckoViewAutoFill {
 
           if (element instanceof window.HTMLInputElement &&
               !element.disabled && element.parentElement) {
-            element.value = value;
-
-            // Fire both "input" and "change" events.
-            element.dispatchEvent(new element.ownerGlobal.Event(
-                "input", { bubbles: true }));
-            element.dispatchEvent(new element.ownerGlobal.Event(
-                "change", { bubbles: true }));
-
+            element.setUserInput(value);
             if (winUtils && element.value === value) {
               // Add highlighting for autofilled fields.
               winUtils.addManuallyManagedState(element, AUTOFILL_STATE);
