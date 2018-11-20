@@ -405,6 +405,10 @@ Realm::finishRoots()
 
     clearScriptCounts();
     clearScriptNames();
+
+#ifdef MOZ_VTUNE
+    scriptVTuneIdMap.reset();
+#endif
 }
 
 void
@@ -588,6 +592,17 @@ Realm::fixupScriptMapsAfterMovingGC()
             }
         }
     }
+
+#ifdef MOZ_VTUNE
+    if (scriptVTuneIdMap) {
+        for (ScriptVTuneIdMap::Enum e(*scriptVTuneIdMap); !e.empty(); e.popFront()) {
+            JSScript* script = e.front().key();
+            if (!IsAboutToBeFinalizedUnbarriered(&script) && script != e.front().key()) {
+                e.rekeyFront(script);
+            }
+        }
+    }
+#endif
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS
@@ -630,6 +645,18 @@ Realm::checkScriptMapsAfterMovingGC()
             MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
         }
     }
+
+# ifdef MOZ_VTUNE
+    if (scriptVTuneIdMap) {
+        for (auto r = scriptVTuneIdMap->all(); !r.empty(); r.popFront()) {
+            JSScript* script = r.front().key();
+            MOZ_ASSERT(script->realm() == this);
+            CheckGCThingAfterMovingGC(script);
+            auto ptr = scriptVTuneIdMap->lookup(script);
+            MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
+        }
+    }
+# endif // MOZ_VTUNE
 }
 #endif
 
