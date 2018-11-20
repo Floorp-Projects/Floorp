@@ -356,7 +356,7 @@ public:
   virtual void SetMaximum(uint32_t aValue) { mozilla::Unused << HandleUnsupported(); }
 
   // GetValue is used to get the value of the scalar when persisting it to JS.
-  virtual nsresult GetValue(const nsACString& aStoreName, nsCOMPtr<nsIVariant>& aResult) const = 0;
+  virtual nsresult GetValue(const nsACString& aStoreName, bool aClearStore, nsCOMPtr<nsIVariant>& aResult) = 0;
 
   // To measure the memory stats.
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -462,7 +462,7 @@ public:
   void AddValue(uint32_t aValue) final;
   ScalarResult SetMaximum(nsIVariant* aValue) final;
   void SetMaximum(uint32_t aValue) final;
-  nsresult GetValue(const nsACString& aStoreName, nsCOMPtr<nsIVariant>& aResult) const final;
+  nsresult GetValue(const nsACString& aStoreName, bool aClearStore, nsCOMPtr<nsIVariant>& aResult) final;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
 private:
@@ -558,7 +558,7 @@ ScalarUnsigned::SetMaximum(uint32_t aValue)
 }
 
 nsresult
-ScalarUnsigned::GetValue(const nsACString& aStoreName, nsCOMPtr<nsIVariant>& aResult) const
+ScalarUnsigned::GetValue(const nsACString& aStoreName, bool aClearStore, nsCOMPtr<nsIVariant>& aResult)
 {
   size_t storeIndex = 0;
   nsresult rv = StoreIndex(aStoreName, &storeIndex);
@@ -574,6 +574,10 @@ ScalarUnsigned::GetValue(const nsACString& aStoreName, nsCOMPtr<nsIVariant>& aRe
     return rv;
   }
   aResult = outVar.forget();
+  if (aClearStore) {
+    mStorage[storeIndex] = 0;
+    ClearValueInStore(storeIndex);
+  }
   return NS_OK;
 }
 
@@ -624,7 +628,7 @@ public:
 
   ScalarResult SetValue(nsIVariant* aValue) final;
   ScalarResult SetValue(const nsAString& aValue) final;
-  nsresult GetValue(const nsACString& aStoreName, nsCOMPtr<nsIVariant>& aResult) const final;
+  nsresult GetValue(const nsACString& aStoreName, bool aClearStore, nsCOMPtr<nsIVariant>& aResult) final;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
 private:
@@ -671,7 +675,7 @@ ScalarString::SetValue(const nsAString& aValue)
 }
 
 nsresult
-ScalarString::GetValue(const nsACString& aStoreName, nsCOMPtr<nsIVariant>& aResult) const
+ScalarString::GetValue(const nsACString& aStoreName, bool aClearStore, nsCOMPtr<nsIVariant>& aResult)
 {
   nsCOMPtr<nsIWritableVariant> outVar(new nsVariant());
   nsresult rv = outVar->SetAsAString(mStorage);
@@ -707,7 +711,7 @@ public:
 
   ScalarResult SetValue(nsIVariant* aValue) final;
   void SetValue(bool aValue) final;
-  nsresult GetValue(const nsACString& aStoreName, nsCOMPtr<nsIVariant>& aResult) const final;
+  nsresult GetValue(const nsACString& aStoreName, bool aClearStore, nsCOMPtr<nsIVariant>& aResult) final;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
 private:
@@ -748,7 +752,7 @@ ScalarBoolean::SetValue(bool aValue)
 }
 
 nsresult
-ScalarBoolean::GetValue(const nsACString& aStoreName, nsCOMPtr<nsIVariant>& aResult) const
+ScalarBoolean::GetValue(const nsACString& aStoreName, bool aClearStore, nsCOMPtr<nsIVariant>& aResult)
 {
   nsCOMPtr<nsIWritableVariant> outVar(new nsVariant());
   nsresult rv = outVar->SetAsBool(mStorage);
@@ -820,7 +824,7 @@ public:
 
   // GetValue is used to get the key-value pairs stored in the keyed scalar
   // when persisting it to JS.
-  nsresult GetValue(const nsACString& aStoreName, nsTArray<KeyValuePair>& aValues) const;
+  nsresult GetValue(const nsACString& aStoreName, bool aClearStorage, nsTArray<KeyValuePair>& aValues);
 
   // To measure the memory stats.
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
@@ -953,14 +957,18 @@ KeyedScalar::SetMaximum(const StaticMutexAutoLock& locker, const nsAString& aKey
  *         ScalarUnsigned).
  */
 nsresult
-KeyedScalar::GetValue(const nsACString& aStoreName, nsTArray<KeyValuePair>& aValues) const
+KeyedScalar::GetValue(const nsACString& aStoreName, bool aClearStorage, nsTArray<KeyValuePair>& aValues)
 {
   for (auto iter = mScalarKeys.ConstIter(); !iter.Done(); iter.Next()) {
     ScalarBase* scalar = static_cast<ScalarBase*>(iter.Data());
 
     // Get the scalar value.
     nsCOMPtr<nsIVariant> scalarValue;
-    nsresult rv = scalar->GetValue(aStoreName, scalarValue);
+    nsresult rv = scalar->GetValue(aStoreName, aClearStorage, scalarValue);
+    if (rv == NS_ERROR_NO_CONTENT) {
+      // No value for this store.
+      continue;
+    }
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1931,7 +1939,11 @@ internal_ScalarSnapshotter(const StaticMutexAutoLock& aLock,
       if (IsInDataset(info.dataset, aDataset)) {
         // Get the scalar value.
         nsCOMPtr<nsIVariant> scalarValue;
-        nsresult rv = scalar->GetValue(aStoreName, scalarValue);
+        nsresult rv = scalar->GetValue(aStoreName, aClearScalars, scalarValue);
+        if (rv == NS_ERROR_NO_CONTENT) {
+          // No value for this store. Proceed.
+          continue;
+        }
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -1983,7 +1995,7 @@ internal_KeyedScalarSnapshotter(const StaticMutexAutoLock& aLock,
       if (IsInDataset(info.dataset, aDataset)) {
         // Get the keys for this scalar.
         nsTArray<KeyedScalar::KeyValuePair> scalarKeyedData;
-        nsresult rv = scalar->GetValue(aStoreName, scalarKeyedData);
+        nsresult rv = scalar->GetValue(aStoreName, aClearScalars, scalarKeyedData);
         if (NS_FAILED(rv)) {
           return rv;
         }
