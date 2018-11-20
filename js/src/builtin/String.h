@@ -42,7 +42,7 @@ str_fromCodePoint(JSContext* cx, unsigned argc, Value* vp);
 extern bool
 str_fromCodePoint_one_arg(JSContext* cx, HandleValue code, MutableHandleValue rval);
 
-/* String methods exposed so they can be installed in the self-hosting global. */
+// String methods exposed so they can be installed in the self-hosting global.
 
 extern bool
 str_includes(JSContext* cx, unsigned argc, Value* vp);

@@ -2692,7 +2692,7 @@ CASE(JSOP_BINDNAME)
     }
     ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
 
-    /* Assigning to an undeclared name adds a property to the global object. */
+    // Assigning to an undeclared name adds a property to the global object.
     ReservedRooted<JSObject*> env(&rootObject1);
     if (!LookupNameUnqualified(cx, name, envChain, &env)) {
         goto error;

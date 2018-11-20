@@ -183,7 +183,8 @@ class WeakMap : public HashMap<Key, Value, MovableCellHasher<Key>, ZoneAllocPoli
         Base::compact();
     }
 
-    /* memberOf can be nullptr, which means that the map is not part of a JSObject. */
+    // memberOf can be nullptr, which means that the map is not part of a
+    // JSObject.
     void traceMappings(WeakMapTracer* tracer) override;
 
   protected:

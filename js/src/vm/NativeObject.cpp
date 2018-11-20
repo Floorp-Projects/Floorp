@@ -2505,7 +2505,8 @@ GetNonexistentProperty(JSContext* cx, HandleId id, IsNameLookup nameLookup, Muta
                                             JSMSG_UNDEFINED_PROP, bytes.get());
 }
 
-/* The NoGC version of GetNonexistentProperty, present only to make types line up. */
+// The NoGC version of GetNonexistentProperty, present only to make types line
+// up.
 bool
 GetNonexistentProperty(JSContext* cx, const jsid& id, IsNameLookup nameLookup,
                        FakeMutableHandle<Value> vp)

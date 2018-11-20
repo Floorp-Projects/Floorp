@@ -1118,7 +1118,8 @@ class NativeObject : public ShapedObject
         setSlot(index, v);
     }
 
-    /* For slots which are known to always be fixed, due to the way they are allocated. */
+    // For slots which are known to always be fixed, due to the way they are
+    // allocated.
 
     HeapSlot& getFixedSlotRef(uint32_t slot) {
         MOZ_ASSERT(slotIsFixed(slot));

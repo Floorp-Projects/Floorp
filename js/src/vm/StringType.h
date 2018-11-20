@@ -1166,8 +1166,8 @@ class JSFatInlineString : public JSInlineString
     template<typename CharT>
     static bool lengthFits(size_t length);
 
-    /* Only called by the GC for strings with the AllocKind::FAT_INLINE_STRING kind. */
-
+    // Only called by the GC for strings with the AllocKind::FAT_INLINE_STRING
+    // kind.
     MOZ_ALWAYS_INLINE void finalize(js::FreeOp* fop);
 };
 
@@ -1192,23 +1192,19 @@ class JSExternalString : public JSLinearString
         return d.s.u3.externalFinalizer;
     }
 
-    /*
-     * External chars are never allocated inline or in the nursery, so we can
-     * safely expose this without requiring an AutoCheckCannotGC argument.
-     */
+    // External chars are never allocated inline or in the nursery, so we can
+    // safely expose this without requiring an AutoCheckCannotGC argument.
     const char16_t* twoByteChars() const {
         return rawTwoByteChars();
     }
 
-    /* Only called by the GC for strings with the AllocKind::EXTERNAL_STRING kind. */
-
+    // Only called by the GC for strings with the AllocKind::EXTERNAL_STRING
+    // kind.
     inline void finalize(js::FreeOp* fop);
 
-    /*
-     * Free the external chars and allocate a new buffer, converting this to a
-     * flat string (which still lives in an AllocKind::EXTERNAL_STRING
-     * arena).
-     */
+    // Free the external chars and allocate a new buffer, converting this to a
+    // flat string (which still lives in an AllocKind::EXTERNAL_STRING
+    // arena).
     JSFlatString* ensureFlat(JSContext* cx);
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
