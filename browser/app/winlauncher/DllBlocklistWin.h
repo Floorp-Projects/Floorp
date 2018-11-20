@@ -9,11 +9,9 @@
 
 #include <windows.h>
 
-#include "LauncherResult.h"
-
 namespace mozilla {
 
-LauncherVoidResult InitializeDllBlocklistOOP(HANDLE aChildProcess);
+bool InitializeDllBlocklistOOP(HANDLE aChildProcess);
 
 } // namespace mozilla
 
