@@ -1,7 +1,0 @@
-Manifest-Version: 1.0
-
-Name: install.rdf
-Digest-Algorithms: MD5 SHA1
-MD5-Digest: 59ZQahS8eYm678dptqF2fQ==
-SHA1-Digest: fCpbSYnLdjYZpC1t1zwsEztrYA8=
-

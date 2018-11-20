@@ -31,18 +31,14 @@ nsresult nsPrintSession::Init()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPrintSession::GetRemotePrintJob(RemotePrintJobChild** aRemotePrintJob)
+RemotePrintJobChild*
+nsPrintSession::GetRemotePrintJob()
 {
-  MOZ_ASSERT(aRemotePrintJob);
-  RefPtr<RemotePrintJobChild> result = mRemotePrintJob;
-  result.forget(aRemotePrintJob);
-  return NS_OK;
+  return mRemotePrintJob;
 }
 
-NS_IMETHODIMP
+void
 nsPrintSession::SetRemotePrintJob(RemotePrintJobChild* aRemotePrintJob)
 {
   mRemotePrintJob = aRemotePrintJob;
-  return NS_OK;
 }

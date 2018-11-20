@@ -1,5 +1,6 @@
 // Common preferences file used by both unittest and perf harnesses.
 /* globals user_pref */
+user_pref("app.update.checkInstallTime", false);
 user_pref("app.update.disabledForTesting", true);
 user_pref("browser.chrome.guess_favicon", false);
 user_pref("browser.dom.window.dump.enabled", true);

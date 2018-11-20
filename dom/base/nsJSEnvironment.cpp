@@ -399,8 +399,7 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
   nsCOMPtr<nsPIDOMWindowInner> win(do_QueryInterface(aScriptGlobal));
   nsIDocShell *docShell = win ? win->GetDocShell() : nullptr;
   if (docShell) {
-    RefPtr<nsPresContext> presContext;
-    docShell->GetPresContext(getter_AddRefs(presContext));
+    RefPtr<nsPresContext> presContext = docShell->GetPresContext();
 
     static int32_t errorDepth; // Recursion prevention
     ++errorDepth;
@@ -449,8 +448,7 @@ public:
       AutoRestore<bool> recursionGuard(sHandlingScriptError);
       sHandlingScriptError = true;
 
-      RefPtr<nsPresContext> presContext;
-      win->GetDocShell()->GetPresContext(getter_AddRefs(presContext));
+      RefPtr<nsPresContext> presContext = win->GetDocShell()->GetPresContext();
 
       RootedDictionary<ErrorEventInit> init(rootingCx);
       init.mCancelable = true;

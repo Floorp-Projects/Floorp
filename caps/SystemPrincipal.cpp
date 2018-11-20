@@ -52,11 +52,10 @@ SystemPrincipal::GetScriptLocation(nsACString &aStr)
 // Methods implementing nsIPrincipal //
 ///////////////////////////////////////
 
-NS_IMETHODIMP
-SystemPrincipal::GetHashValue(uint32_t *result)
+uint32_t
+SystemPrincipal::GetHashValue()
 {
-    *result = NS_PTR_TO_INT32(this);
-    return NS_OK;
+    return NS_PTR_TO_INT32(this);
 }
 
 NS_IMETHODIMP

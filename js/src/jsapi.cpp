@@ -1862,19 +1862,13 @@ JS::RealmCreationOptionsRef(JSContext* cx)
 bool
 JS::RealmCreationOptions::getSharedMemoryAndAtomicsEnabled() const
 {
-#if defined(ENABLE_SHARED_ARRAY_BUFFER)
     return sharedMemoryAndAtomics_;
-#else
-    return false;
-#endif
 }
 
 JS::RealmCreationOptions&
 JS::RealmCreationOptions::setSharedMemoryAndAtomicsEnabled(bool flag)
 {
-#if defined(ENABLE_SHARED_ARRAY_BUFFER)
     sharedMemoryAndAtomics_ = flag;
-#endif
     return *this;
 }
 

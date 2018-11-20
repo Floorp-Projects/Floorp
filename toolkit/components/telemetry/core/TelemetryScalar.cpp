@@ -484,8 +484,7 @@ ScalarResult
 ScalarUnsigned::CheckInput(nsIVariant* aValue)
 {
   // If this is a floating point value/double, we will probably get truncated.
-  uint16_t type;
-  aValue->GetDataType(&type);
+  uint16_t type = aValue->GetDataType();
   if (type == nsIDataType::VTYPE_FLOAT ||
       type == nsIDataType::VTYPE_DOUBLE) {
     return ScalarResult::UnsignedTruncatedValue;
@@ -530,8 +529,7 @@ ScalarResult
 ScalarString::SetValue(nsIVariant* aValue)
 {
   // Check that we got the correct data type.
-  uint16_t type;
-  aValue->GetDataType(&type);
+  uint16_t type = aValue->GetDataType();
   if (type != nsIDataType::VTYPE_CHAR &&
       type != nsIDataType::VTYPE_WCHAR &&
       type != nsIDataType::VTYPE_CHAR_STR &&
@@ -610,8 +608,7 @@ ScalarResult
 ScalarBoolean::SetValue(nsIVariant* aValue)
 {
   // Check that we got the correct data type.
-  uint16_t type;
-  aValue->GetDataType(&type);
+  uint16_t type = aValue->GetDataType();
   if (type != nsIDataType::VTYPE_BOOL &&
       type != nsIDataType::VTYPE_INT8 &&
       type != nsIDataType::VTYPE_INT16 &&

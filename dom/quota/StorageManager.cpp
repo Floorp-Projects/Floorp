@@ -452,11 +452,7 @@ RequestResolver::GetStorageEstimate(nsIVariant* aResult)
   MOZ_ASSERT(aResult);
   MOZ_ASSERT(mType == Type::Estimate);
 
-#ifdef DEBUG
-  uint16_t dataType;
-  MOZ_ALWAYS_SUCCEEDS(aResult->GetDataType(&dataType));
-  MOZ_ASSERT(dataType == nsIDataType::VTYPE_INTERFACE_IS);
-#endif
+  MOZ_ASSERT(aResult->GetDataType() == nsIDataType::VTYPE_INTERFACE_IS);
 
   nsID* iid;
   nsCOMPtr<nsISupports> supports;
@@ -487,8 +483,7 @@ RequestResolver::GetPersisted(nsIVariant* aResult)
   MOZ_ASSERT(mType == Type::Persist || mType == Type::Persisted);
 
 #ifdef DEBUG
-  uint16_t dataType;
-  MOZ_ALWAYS_SUCCEEDS(aResult->GetDataType(&dataType));
+  uint16_t dataType = aResult->GetDataType();
 #endif
 
   if (mType == Type::Persist) {

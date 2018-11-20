@@ -1018,7 +1018,6 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
           }
 #endif
           case uint16_t(Op::ThreadPrefix): {
-#ifdef ENABLE_WASM_THREAD_OPS
             switch (op.b1) {
               case uint16_t(ThreadOp::Wake): {
                 LinearMemoryAddress<Nothing> addr;
@@ -1183,9 +1182,6 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
                 return iter.unrecognizedOpcode(&op);
             }
             break;
-#else
-            return iter.unrecognizedOpcode(&op);
-#endif  // ENABLE_WASM_THREAD_OPS
           }
           case uint16_t(Op::MozPrefix):
             return iter.unrecognizedOpcode(&op);
@@ -1612,7 +1608,6 @@ DecodeLimits(Decoder& d, Limits* limits, Shareable allowShared = Shareable::Fals
 
     limits->shared = Shareable::False;
 
-#ifdef ENABLE_WASM_THREAD_OPS
     if (allowShared == Shareable::True) {
         if ((flags & uint8_t(MemoryTableFlags::IsShared)) && !(flags & uint8_t(MemoryTableFlags::HasMaximum))) {
             return d.fail("maximum length required for shared memory");
@@ -1622,7 +1617,6 @@ DecodeLimits(Decoder& d, Limits* limits, Shareable allowShared = Shareable::Fals
                        ? Shareable::True
                        : Shareable::False;
     }
-#endif
 
     return true;
 }

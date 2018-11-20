@@ -113,32 +113,15 @@ GetBaseURI(bool aIsMainScript, WorkerPrivate* aWorkerPrivate)
 }
 
 nsresult
-ChannelFromScriptURL(nsIPrincipal* principal,
-                     nsIURI* baseURI,
-                     nsIDocument* parentDoc,
-                     WorkerPrivate* aWorkerPrivate,
-                     nsILoadGroup* loadGroup,
-                     nsIIOService* ios,
-                     nsIScriptSecurityManager* secMan,
-                     const nsAString& aScriptURL,
-                     const Maybe<ClientInfo>& aClientInfo,
-                     const Maybe<ServiceWorkerDescriptor>& aController,
-                     bool aIsMainScript,
-                     WorkerScriptType aWorkerScriptType,
-                     nsContentPolicyType aMainScriptContentPolicyType,
-                     nsLoadFlags aLoadFlags,
-                     bool aDefaultURIEncoding,
-                     nsIChannel** aChannel)
+ConstructURI(const nsAString& aScriptURL, nsIURI* baseURI,
+             nsIDocument* parentDoc, bool aDefaultURIEncoding,
+             nsIURI** aResult)
 {
-  AssertIsOnMainThread();
-
   nsresult rv;
-  nsCOMPtr<nsIURI> uri;
-
   if (aDefaultURIEncoding) {
-    rv = NS_NewURI(getter_AddRefs(uri), aScriptURL, nullptr, baseURI);
+    rv = NS_NewURI(aResult, aScriptURL, nullptr, baseURI);
   } else {
-    rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
+    rv = nsContentUtils::NewURIWithDocumentCharset(aResult,
                                                    aScriptURL, parentDoc,
                                                    baseURI);
   }
@@ -146,6 +129,29 @@ ChannelFromScriptURL(nsIPrincipal* principal,
   if (NS_FAILED(rv)) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
+  return NS_OK;
+}
+
+nsresult
+ChannelFromScriptURL(nsIPrincipal* principal,
+                     nsIDocument* parentDoc,
+                     WorkerPrivate* aWorkerPrivate,
+                     nsILoadGroup* loadGroup,
+                     nsIIOService* ios,
+                     nsIScriptSecurityManager* secMan,
+                     nsIURI* aScriptURL,
+                     const Maybe<ClientInfo>& aClientInfo,
+                     const Maybe<ServiceWorkerDescriptor>& aController,
+                     bool aIsMainScript,
+                     WorkerScriptType aWorkerScriptType,
+                     nsContentPolicyType aMainScriptContentPolicyType,
+                     nsLoadFlags aLoadFlags,
+                     nsIChannel** aChannel)
+{
+  AssertIsOnMainThread();
+
+  nsresult rv;
+  nsCOMPtr<nsIURI> uri = aScriptURL;
 
   // If we have the document, use it. Unfortunately, for dedicated workers
   // 'parentDoc' ends up being the parent document, which is not the document
@@ -1054,14 +1060,20 @@ private:
       // Only top level workers' main script use the document charset for the
       // script uri encoding. Otherwise, default encoding (UTF-8) is applied.
       bool useDefaultEncoding = !(!parentWorker && IsMainWorkerScript());
-      rv = ChannelFromScriptURL(principal, baseURI, parentDoc, mWorkerPrivate,
+      nsCOMPtr<nsIURI> url;
+      rv = ConstructURI(loadInfo.mURL, baseURI, parentDoc, useDefaultEncoding,
+                        getter_AddRefs(url));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      rv = ChannelFromScriptURL(principal, parentDoc, mWorkerPrivate,
                                 loadGroup, ios,
-                                secMan, loadInfo.mURL,
+                                secMan, url,
                                 mClientInfo, mController,
                                 IsMainWorkerScript(),
                                 mWorkerScriptType,
                                 mWorkerPrivate->ContentPolicyType(), loadFlags,
-                                useDefaultEncoding,
                                 getter_AddRefs(channel));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -1972,20 +1984,24 @@ public:
 
     mLoadInfo.mLoadGroup = mWorkerPrivate->GetLoadGroup();
 
+    // Nested workers use default uri encoding.
+    nsCOMPtr<nsIURI> url;
+    mResult = ConstructURI(mScriptURL, baseURI, parentDoc, true,
+                           getter_AddRefs(url));
+    NS_ENSURE_SUCCESS(mResult, true);
+
     Maybe<ClientInfo> clientInfo;
     clientInfo.emplace(mClientInfo);
 
     nsCOMPtr<nsIChannel> channel;
     mResult = workerinternals::
       ChannelFromScriptURLMainThread(mLoadInfo.mLoadingPrincipal,
-                                     baseURI, parentDoc,
+                                     parentDoc,
                                      mLoadInfo.mLoadGroup,
-                                     mScriptURL,
+                                     url,
                                      clientInfo,
                                      // Nested workers are always dedicated.
                                      nsIContentPolicy::TYPE_INTERNAL_WORKER,
-                                     // Nested workers use default uri encoding.
-                                     true,
                                      getter_AddRefs(channel));
     NS_ENSURE_SUCCESS(mResult, true);
 
@@ -2323,13 +2339,11 @@ namespace workerinternals {
 
 nsresult
 ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
-                               nsIURI* aBaseURI,
                                nsIDocument* aParentDoc,
                                nsILoadGroup* aLoadGroup,
-                               const nsAString& aScriptURL,
+                               nsIURI* aScriptURL,
                                const Maybe<ClientInfo>& aClientInfo,
                                nsContentPolicyType aMainScriptContentPolicyType,
-                               bool aDefaultURIEncoding,
                                nsIChannel** aChannel)
 {
   AssertIsOnMainThread();
@@ -2339,12 +2353,11 @@ ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
   NS_ASSERTION(secMan, "This should never be null!");
 
-  return ChannelFromScriptURL(aPrincipal, aBaseURI, aParentDoc, nullptr,
+  return ChannelFromScriptURL(aPrincipal, aParentDoc, nullptr,
                               aLoadGroup, ios, secMan, aScriptURL, aClientInfo,
                               Maybe<ServiceWorkerDescriptor>(),
                               true, WorkerScript, aMainScriptContentPolicyType,
-                              nsIRequest::LOAD_NORMAL, aDefaultURIEncoding,
-                              aChannel);
+                              nsIRequest::LOAD_NORMAL, aChannel);
 }
 
 nsresult

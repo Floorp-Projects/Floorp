@@ -7,14 +7,16 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Workers")
 
+DIRS += ['remoteworkers', 'sharedworkers']
+
 # Public stuff.
 EXPORTS.mozilla.dom += [
     'ChromeWorker.h',
-    'SharedWorker.h',
     'Worker.h',
     'WorkerCommon.h',
     'WorkerDebugger.h',
     'WorkerDebuggerManager.h',
+    'WorkerError.h',
     'WorkerHolder.h',
     'WorkerHolderToken.h',
     'WorkerLoadInfo.h',
@@ -31,6 +33,7 @@ EXPORTS.mozilla.dom.workerinternals += [
     'JSSettings.h',
     'Queue.h',
     'RuntimeService.h',
+    'ScriptLoader.h',
 ]
 
 XPIDL_MODULE = 'dom_workers'
@@ -48,7 +51,6 @@ UNIFIED_SOURCES += [
     'RegisterBindings.cpp',
     'RuntimeService.cpp',
     'ScriptLoader.cpp',
-    'SharedWorker.cpp',
     'Worker.cpp',
     'WorkerCSPEventListener.cpp',
     'WorkerDebugger.cpp',

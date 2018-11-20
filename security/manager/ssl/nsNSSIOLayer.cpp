@@ -406,18 +406,16 @@ nsNSSSocketInfo::SetEarlyDataAccepted(bool aAccepted)
   mEarlyDataAccepted = aAccepted;
 }
 
-NS_IMETHODIMP
-nsNSSSocketInfo::GetDenyClientCert(bool* aDenyClientCert)
+bool
+nsNSSSocketInfo::GetDenyClientCert()
 {
-  *aDenyClientCert = mDenyClientCert;
-  return NS_OK;
+  return  mDenyClientCert;
 }
 
-NS_IMETHODIMP
+void
 nsNSSSocketInfo::SetDenyClientCert(bool aDenyClientCert)
 {
   mDenyClientCert = aDenyClientCert;
-  return NS_OK;
 }
 
 NS_IMETHODIMP

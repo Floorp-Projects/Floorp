@@ -253,15 +253,12 @@ Cm.registerFactory(Components.ID("{26d32654-30c7-485d-b983-b4d2568aebba}"),
                    "@mozilla.org/addons/blocklist-prompt;1", factory);
 
 function createAddon(addon) {
-  return promiseInstallXPI({
-    name: addon.name,
-    id: addon.id,
-    version: addon.version,
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "3",
-      maxVersion: "3"}],
+  return promiseInstallWebExtension({
+    manifest: {
+      name: addon.name,
+      version: addon.version,
+      applications: {gecko: {id: addon.id}},
+    },
   });
 }
 

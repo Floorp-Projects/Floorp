@@ -1806,8 +1806,7 @@ void
 IMEContentObserver::IMENotificationSender::Dispatch(nsIDocShell* aDocShell)
 {
   if (XRE_IsContentProcess() && aDocShell) {
-    RefPtr<nsPresContext> presContext;
-    aDocShell->GetPresContext(getter_AddRefs(presContext));
+    RefPtr<nsPresContext> presContext = aDocShell->GetPresContext();
     if (presContext) {
       nsRefreshDriver* refreshDriver = presContext->RefreshDriver();
       if (refreshDriver) {

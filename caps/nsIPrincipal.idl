@@ -69,7 +69,7 @@ interface nsIPrincipal : nsISerializable
     /**
      * Returns a hash value for the principal.
      */
-    [noscript] readonly attribute unsigned long hashValue;
+    [notxpcom, nostdcall] readonly attribute unsigned long hashValue;
 
     /**
      * The codebase URI to which this principal pertains.  This is
