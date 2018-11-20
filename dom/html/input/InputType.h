@@ -130,6 +130,7 @@ protected:
    * @param aValue      String to set.
    * @param aFlags      See nsTextEditorState::SetValueFlags.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult SetValueInternal(const nsAString& aValue, uint32_t aFlags);
 
   /**
