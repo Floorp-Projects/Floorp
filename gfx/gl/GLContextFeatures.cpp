@@ -372,6 +372,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         GLESVersion::ES3,
         GLContext::ARB_map_buffer_range,
         {
+            GLContext::EXT_map_buffer_range,
             GLContext::Extensions_End
         }
     },

@@ -126,8 +126,19 @@ AsyncReadbackBufferOGL::MapAndCopyInto(DataSourceSurface* aSurface,
 
   ScopedPackState scopedPackState(mGL);
   Bind();
-  uint8_t* srcData = static_cast<uint8_t*>(
-    mGL->fMapBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, LOCAL_GL_READ_ONLY));
+
+  const uint8_t *srcData = nullptr;
+  if (mGL->IsSupported(GLFeature::map_buffer_range)) {
+    srcData = static_cast<uint8_t*>(
+      mGL->fMapBufferRange(
+        LOCAL_GL_PIXEL_PACK_BUFFER,
+        0,
+        aReadSize.height * aReadSize.width * 4,
+        LOCAL_GL_MAP_READ_BIT));
+  } else {
+    srcData = static_cast<uint8_t*>(
+      mGL->fMapBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, LOCAL_GL_READ_ONLY));
+  }
 
   if (!srcData) {
     return false;
@@ -141,7 +152,7 @@ AsyncReadbackBufferOGL::MapAndCopyInto(DataSourceSurface* aSurface,
   for (int32_t destRow = 0; destRow < aReadSize.height; destRow++) {
     // Turn srcData upside down during the copy.
     int32_t srcRow = aReadSize.height - 1 - destRow;
-    uint8_t* src = &srcData[srcRow * srcStride];
+    const uint8_t* src = &srcData[srcRow * srcStride];
     uint8_t* dest = &destData[destRow * destStride];
     SwizzleData(src, srcStride, SurfaceFormat::R8G8B8A8,
                 dest, destStride, destFormat, IntSize(aReadSize.width, 1));
