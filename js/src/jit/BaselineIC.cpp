@@ -1422,7 +1422,7 @@ DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame, ICUpdatedStub* stub, H
     RootedObject obj(cx, &objval.toObject());
 
     RootedId id(cx, stub->toCacheIR_Updated()->updateStubId());
-    MOZ_ASSERT(id != JSID_EMPTY);
+    MOZ_ASSERT(id.get() != JSID_EMPTY);
 
     // The group should match the object's group, except when the object is
     // an unboxed expando object: in that case, the group is the group of

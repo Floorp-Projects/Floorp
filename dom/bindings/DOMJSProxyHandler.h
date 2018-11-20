@@ -177,10 +177,11 @@ GetArrayIndexFromId(JSContext* cx, JS::Handle<jsid> id)
   // Much like js::IdIsIndex, except with a fast path for "length" and another
   // fast path for starting with a lowercase ascii char.  Is that second one
   // really needed?  I guess it is because StringIsArrayIndex is out of line...
+  // as of now, use id.get() instead of id otherwise operands mismatch error occurs.
   if (MOZ_LIKELY(JSID_IS_INT(id))) {
     return JSID_TO_INT(id);
   }
-  if (MOZ_LIKELY(id == s_length_id)) {
+  if (MOZ_LIKELY(id.get() == s_length_id)) {
     return UINT32_MAX;
   }
   if (MOZ_UNLIKELY(!JSID_IS_ATOM(id))) {
