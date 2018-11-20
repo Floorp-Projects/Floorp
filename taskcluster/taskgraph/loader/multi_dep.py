@@ -9,6 +9,7 @@ import copy
 from voluptuous import Required
 
 from ..task import Task
+from ..util.attributes import sorted_unique_list
 from ..util.schema import Schema
 
 schema = Schema({
@@ -66,6 +67,11 @@ def loader(kind, path, config, params, loaded_tasks):
         )
         if product:
             job.setdefault('shipping-product', product)
+        job.setdefault('attributes', {})['required_signoffs'] = sorted_unique_list(
+            *[task.attributes.get('required_signoffs', [])
+              for task in dep_tasks.values()
+              ]
+        )
 
         yield job
 
