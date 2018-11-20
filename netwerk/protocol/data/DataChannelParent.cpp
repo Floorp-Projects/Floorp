@@ -39,13 +39,6 @@ DataChannelParent::NotifyTrackingProtectionDisabled()
 }
 
 NS_IMETHODIMP
-DataChannelParent::NotifyCookieAllowed()
-{
-    // Nothing to do.
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 DataChannelParent::NotifyTrackingCookieBlocked(uint32_t aRejectedReason)
 {
     // Nothing to do.
