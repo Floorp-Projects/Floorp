@@ -370,7 +370,7 @@
 #endif
   </binding>
 
-  <binding id="tab" display="xul:button"
+  <binding id="tab"
            extends="chrome://global/content/bindings/general.xml#basetext">
     <content>
       <xul:hbox class="tab-middle box-inherit" xbl:inherits="align,dir,pack,orient,selected,visuallyselected" flex="1">
