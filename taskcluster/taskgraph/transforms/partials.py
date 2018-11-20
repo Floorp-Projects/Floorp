@@ -58,16 +58,13 @@ def make_task_description(config, jobs):
 
         dependent_kind = str(dep_job.kind)
         dependencies = {dependent_kind: dep_job.label}
-        signing_dependencies = dep_job.dependencies
-        # This is so we get the build task etc in our dependencies to
-        # have better beetmover support.
-        dependencies.update(signing_dependencies)
 
         attributes = copy_attributes_from_dependent_job(dep_job)
         locale = dep_job.attributes.get('locale')
         if locale:
             attributes['locale'] = locale
             treeherder['symbol'] = "p({})".format(locale)
+        attributes['shipping_phase'] = job['shipping-phase']
 
         build_locale = locale or 'en-US'
 
@@ -79,20 +76,12 @@ def make_task_description(config, jobs):
         if not builds:
             continue
 
-        signing_task = None
-        for dependency in sorted(dependencies.keys()):
-            if 'repackage-signing-l10n' in dependency:
-                signing_task = dependency
-                break
-            if 'repackage-signing' in dependency:
-                signing_task = dependency
-                break
-        signing_task_ref = '<{}>'.format(signing_task)
+        dep_task_ref = '<{}>'.format(dependent_kind)
 
         extra = {'funsize': {'partials': list()}}
         update_number = 1
         artifact_path = "{}{}".format(
-            get_taskcluster_artifact_prefix(dep_job, signing_task_ref, locale=locale),
+            get_taskcluster_artifact_prefix(dep_job, dep_task_ref, locale=locale),
             'target.complete.mar'
         )
         for build in sorted(builds):
