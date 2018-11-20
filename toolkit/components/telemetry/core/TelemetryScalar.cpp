@@ -444,10 +444,15 @@ class ScalarUnsigned : public ScalarBase
 public:
   using ScalarBase::SetValue;
 
-  ScalarUnsigned(const BaseScalarInfo& aInfo)
+  explicit ScalarUnsigned(const BaseScalarInfo& aInfo)
     : ScalarBase(aInfo)
-    , mStorage(0)
-  {};
+    , mStorage(aInfo.storeCount())
+  {
+    mStorage.SetLength(aInfo.storeCount());
+    for (auto& val: mStorage) {
+      val = 0;
+    }
+  };
 
   ~ScalarUnsigned() override = default;
 
@@ -461,7 +466,7 @@ public:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
 private:
-  uint32_t mStorage;
+  nsTArray<uint32_t> mStorage;
 
   ScalarResult CheckInput(nsIVariant* aValue);
 
@@ -478,16 +483,22 @@ ScalarUnsigned::SetValue(nsIVariant* aValue)
     return sr;
   }
 
-  if (NS_FAILED(aValue->GetAsUint32(&mStorage))) {
+  uint32_t value = 0;
+  if (NS_FAILED(aValue->GetAsUint32(&value))) {
     return ScalarResult::InvalidValue;
   }
+
+  SetValue(value);
   return sr;
 }
 
 void
 ScalarUnsigned::SetValue(uint32_t aValue)
 {
-  mStorage = aValue;
+  for (auto& val: mStorage) {
+    val = aValue;
+  }
+  SetValueInStores();
 }
 
 ScalarResult
@@ -503,14 +514,18 @@ ScalarUnsigned::AddValue(nsIVariant* aValue)
   if (NS_FAILED(rv)) {
     return ScalarResult::InvalidValue;
   }
-  mStorage += newAddend;
+
+  AddValue(newAddend);
   return sr;
 }
 
 void
 ScalarUnsigned::AddValue(uint32_t aValue)
 {
-  mStorage += aValue;
+  for (auto& val: mStorage) {
+    val += aValue;
+  }
+  SetValueInStores();
 }
 
 ScalarResult
@@ -526,25 +541,35 @@ ScalarUnsigned::SetMaximum(nsIVariant* aValue)
   if (NS_FAILED(rv)) {
     return ScalarResult::InvalidValue;
   }
-  if (newValue > mStorage) {
-    mStorage = newValue;
-  }
+
+  SetMaximum(newValue);
   return sr;
 }
 
 void
 ScalarUnsigned::SetMaximum(uint32_t aValue)
 {
-  if (aValue > mStorage) {
-    mStorage = aValue;
+  for (auto& val: mStorage) {
+    if (aValue > val) {
+      val = aValue;
+    }
   }
+  SetValueInStores();
 }
 
 nsresult
 ScalarUnsigned::GetValue(const nsACString& aStoreName, nsCOMPtr<nsIVariant>& aResult) const
 {
+  size_t storeIndex = 0;
+  nsresult rv = StoreIndex(aStoreName, &storeIndex);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (!HasValueInStore(storeIndex)) {
+    return NS_ERROR_NO_CONTENT;
+  }
   nsCOMPtr<nsIWritableVariant> outVar(new nsVariant());
-  nsresult rv = outVar->SetAsUint32(mStorage);
+  rv = outVar->SetAsUint32(mStorage[storeIndex]);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -555,7 +580,10 @@ ScalarUnsigned::GetValue(const nsACString& aStoreName, nsCOMPtr<nsIVariant>& aRe
 size_t
 ScalarUnsigned::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  return aMallocSizeOf(this);
+  size_t n = aMallocSizeOf(this);
+  n += ScalarBase::SizeOfExcludingThis(aMallocSizeOf);
+  n += mStorage.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  return n;
 }
 
 ScalarResult
