@@ -32,10 +32,8 @@ HeadlessClipboard::SetData(nsITransferable *aTransferable,
 
   // Only support plain text for now.
   nsCOMPtr<nsISupports> clip;
-  uint32_t len;
   nsresult rv = aTransferable->GetTransferData(kUnicodeMime,
-                                               getter_AddRefs(clip),
-                                               &len);
+                                               getter_AddRefs(clip));
   if (NS_FAILED(rv)) {
     return rv;
   }

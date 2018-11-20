@@ -475,7 +475,6 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
 
     nsresult rv;
     nsCOMPtr<nsISupports> item;
-    uint32_t len;
 
     GdkAtom selectionTarget = gtk_selection_data_get_target(aSelectionData);
 
@@ -484,8 +483,7 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
         // Try to convert our internal type into a text string.  Get
         // the transferable for this clipboard and try to get the
         // text/unicode type for it.
-        rv = trans->GetTransferData("text/unicode", getter_AddRefs(item),
-                                    &len);
+        rv = trans->GetTransferData("text/unicode", getter_AddRefs(item));
         if (!item || NS_FAILED(rv))
             return;
 
@@ -511,7 +509,7 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
         nsCOMPtr<nsISupports> imageItem;
         nsCOMPtr<imgIContainer> image;
         for (uint32_t i = 0; i < ArrayLength(imageMimeTypes); i++) {
-            rv = trans->GetTransferData(imageMimeTypes[i], getter_AddRefs(imageItem), &len);
+            rv = trans->GetTransferData(imageMimeTypes[i], getter_AddRefs(imageItem));
             image = do_QueryInterface(imageItem);
             if (image) {
                 break;
@@ -532,7 +530,7 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
     }
 
     if (selectionTarget == gdk_atom_intern(kHTMLMime, FALSE)) {
-        rv = trans->GetTransferData(kHTMLMime, getter_AddRefs(item), &len);
+        rv = trans->GetTransferData(kHTMLMime, getter_AddRefs(item));
         if (!item || NS_FAILED(rv)) {
             return;
         }
@@ -562,7 +560,7 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
     if (!target_name)
         return;
 
-    rv = trans->GetTransferData(target_name, getter_AddRefs(item), &len);
+    rv = trans->GetTransferData(target_name, getter_AddRefs(item));
     // nothing found?
     if (!item || NS_FAILED(rv)) {
         g_free(target_name);

@@ -132,7 +132,7 @@ interface nsITransferable : nsISupports
     * @param  aData the data. Some variant of class in nsISupportsPrimitives.idl
     * @param  aDataLen the length of the data
     */
-  void getTransferData ( in string aFlavor, out nsISupports aData, out unsigned long aDataLen ) ;
+  void getTransferData(in string aFlavor, out nsISupports aData);
 
   /**
     * Returns the best flavor in the transferable, given those that have
