@@ -271,8 +271,7 @@ PluginDocument::Print()
   nsIObjectFrame* objectFrame =
     do_QueryFrame(mPluginContent->GetPrimaryFrame());
   if (objectFrame) {
-    RefPtr<nsNPAPIPluginInstance> pi;
-    objectFrame->GetPluginInstance(getter_AddRefs(pi));
+    RefPtr<nsNPAPIPluginInstance> pi = objectFrame->GetPluginInstance();
     if (pi) {
       NPPrint npprint;
       npprint.mode = NP_FULL;

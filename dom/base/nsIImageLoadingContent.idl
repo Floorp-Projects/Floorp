@@ -71,7 +71,7 @@ interface nsIImageLoadingContent : imgINotificationObserver
    * the image was blocked.  This status always refers to the
    * CURRENT_REQUEST load.
    */
-  [noscript, infallible] readonly attribute short imageBlockingStatus;
+  [notxpcom, nostdcall] readonly attribute short imageBlockingStatus;
 
   /**
    * Used to register an image decoder observer.  Typically, this will
@@ -165,13 +165,6 @@ interface nsIImageLoadingContent : imgINotificationObserver
    * as false to revert ImageState() to its original behaviour.
    */
   [notxpcom, nostdcall] void forceImageState(in boolean aForce, in unsigned long long aState);
-
-  /**
-   * The intrinsic size and width of this content. May differ from actual image
-   * size due to things like responsive image density.
-   */
-  [noscript] readonly attribute unsigned long    naturalWidth;
-  [noscript] readonly attribute unsigned long    naturalHeight;
 
   /**
    * Called by layout to announce when the frame associated with this content

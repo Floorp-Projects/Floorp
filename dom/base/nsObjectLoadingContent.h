@@ -619,8 +619,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     };
 
     // Utility getter for getting our nsNPAPIPluginInstance in a safe way.
-    nsresult ScriptRequestPluginInstance(JSContext* aCx,
-                                         nsNPAPIPluginInstance** aResult);
+    nsNPAPIPluginInstance* ScriptRequestPluginInstance(JSContext* aCx);
 
     // Utility method for getting our plugin JSObject
     static nsresult GetPluginJSObject(JSContext *cx,
