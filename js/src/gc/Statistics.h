@@ -31,6 +31,8 @@ namespace gcstats {
 
 #include "gc/StatsPhasesGenerated.h"
 
+// Counts can be incremented with Statistics::count(). They're reset at the end
+// of a Major GC.
 enum Count {
     COUNT_NEW_CHUNK,
     COUNT_DESTROY_CHUNK,
@@ -44,6 +46,14 @@ enum Count {
     COUNT_ARENA_RELOCATED,
 
     COUNT_LIMIT
+};
+
+// Stats can be set with Statistics::setStat(). They're not reset automatically.
+enum Stat {
+    // Number of object types pretenured this minor GC.
+    STAT_OBJECT_GROUPS_PRETENURED,
+
+    STAT_LIMIT
 };
 
 struct ZoneGCStats
@@ -185,6 +195,14 @@ struct Statistics
 
     uint32_t getCount(Count s) const {
         return uint32_t(counts[s]);
+    }
+
+    void setStat(Stat s, uint32_t value) {
+        stats[s] = value;
+    }
+
+    uint32_t getStat(Stat s) const {
+        return stats[s];
     }
 
     void recordTrigger(double amount, double threshold) {
@@ -336,6 +354,11 @@ struct Statistics
                     COUNT_LIMIT,
                     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire,
                                     mozilla::recordreplay::Behavior::DontPreserve>> counts;
+
+    /* Other GC statistics. */
+    EnumeratedArray<Stat,
+                    STAT_LIMIT,
+                    uint32_t> stats;
 
     /*
      * These events cannot be kept in the above array, we need to take their
