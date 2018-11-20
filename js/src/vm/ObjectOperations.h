@@ -250,7 +250,7 @@ inline bool
 DeleteElement(JSContext* cx, JS::Handle<JSObject*> obj, uint32_t index,
               JS::ObjectOpResult& result);
 
-/*** SpiderMonkey nonstandard internal methods ***************************************************/
+/*** SpiderMonkey nonstandard internal methods ******************************/
 
 /**
  * If |obj| (underneath any functionally-transparent wrapper proxies) has as

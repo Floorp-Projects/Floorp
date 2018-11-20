@@ -2024,7 +2024,7 @@ JS::AssertObjectBelongsToCurrentThread(JSObject* obj)
 }
 
 
-/*** Standard internal methods *******************************************************************/
+/*** Standard internal methods **********************************************/
 
 JS_PUBLIC_API bool
 JS_GetPrototype(JSContext* cx, HandleObject obj, MutableHandleObject result)
