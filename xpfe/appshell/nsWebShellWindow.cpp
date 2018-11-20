@@ -712,8 +712,7 @@ bool nsWebShellWindow::ExecuteCloseHandler()
     nsCOMPtr<nsIContentViewer> contentViewer;
     mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
     if (contentViewer) {
-      RefPtr<nsPresContext> presContext;
-      contentViewer->GetPresContext(getter_AddRefs(presContext));
+      RefPtr<nsPresContext> presContext = contentViewer->GetPresContext();
 
       nsEventStatus status = nsEventStatus_eIgnore;
       WidgetMouseEvent event(true, eClose, nullptr,

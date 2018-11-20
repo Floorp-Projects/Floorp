@@ -33,7 +33,6 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
@@ -48,6 +47,7 @@
 #include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/PerformanceService.h"
+#include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
@@ -71,7 +71,6 @@
 #include "xpcpublic.h"
 
 #include "Principal.h"
-#include "SharedWorker.h"
 #include "WorkerDebuggerManager.h"
 #include "WorkerError.h"
 #include "WorkerLoadInfo.h"
@@ -1407,26 +1406,6 @@ RuntimeService::RegisterWorker(WorkerPrivate* aWorkerPrivate)
     else {
       domainInfo->mActiveWorkers.AppendElement(aWorkerPrivate);
     }
-
-    if (isSharedWorker) {
-#ifdef DEBUG
-      for (const UniquePtr<SharedWorkerInfo>& data : domainInfo->mSharedWorkerInfos) {
-         if (data->mScriptSpec == sharedWorkerScriptSpec &&
-             data->mName == aWorkerPrivate->WorkerName() &&
-             // We want to be sure that the window's principal subsumes the
-             // SharedWorker's principal and vice versa.
-             data->mWorkerPrivate->GetPrincipal()->Subsumes(aWorkerPrivate->GetPrincipal()) &&
-             aWorkerPrivate->GetPrincipal()->Subsumes(data->mWorkerPrivate->GetPrincipal())) {
-           MOZ_CRASH("We should not instantiate a new SharedWorker!");
-         }
-      }
-#endif
-
-      UniquePtr<SharedWorkerInfo> sharedWorkerInfo(
-        new SharedWorkerInfo(aWorkerPrivate, sharedWorkerScriptSpec,
-                             aWorkerPrivate->WorkerName()));
-      domainInfo->mSharedWorkerInfos.AppendElement(std::move(sharedWorkerInfo));
-    }
   }
 
   // From here on out we must call UnregisterWorker if something fails!
@@ -1482,20 +1461,6 @@ RuntimeService::RegisterWorker(WorkerPrivate* aWorkerPrivate)
 }
 
 void
-RuntimeService::RemoveSharedWorker(WorkerDomainInfo* aDomainInfo,
-                                   WorkerPrivate* aWorkerPrivate)
-{
-  for (uint32_t i = 0; i < aDomainInfo->mSharedWorkerInfos.Length(); ++i) {
-    const UniquePtr<SharedWorkerInfo>& data =
-      aDomainInfo->mSharedWorkerInfos[i];
-    if (data->mWorkerPrivate == aWorkerPrivate) {
-      aDomainInfo->mSharedWorkerInfos.RemoveElementAt(i);
-      break;
-    }
-  }
-}
-
-void
 RuntimeService::UnregisterWorker(WorkerPrivate* aWorkerPrivate)
 {
   aWorkerPrivate->AssertIsOnParentThread();
@@ -1537,10 +1502,6 @@ RuntimeService::UnregisterWorker(WorkerPrivate* aWorkerPrivate)
       domainInfo->mActiveWorkers.RemoveElement(aWorkerPrivate);
     }
 
-    if (aWorkerPrivate->IsSharedWorker()) {
-      RemoveSharedWorker(domainInfo, aWorkerPrivate);
-    }
-
     // See if there's a queued worker we can schedule.
     if (domainInfo->ActiveWorkerCount() < gMaxWorkersPerDomain &&
         !domainInfo->mQueuedWorkers.IsEmpty()) {
@@ -1570,10 +1531,9 @@ RuntimeService::UnregisterWorker(WorkerPrivate* aWorkerPrivate)
                                    aWorkerPrivate->CreationTimeStamp());
   }
 
-  if (aWorkerPrivate->IsSharedWorker() ||
-      aWorkerPrivate->IsServiceWorker()) {
+  if (aWorkerPrivate->IsSharedWorker()) {
     AssertIsOnMainThread();
-    aWorkerPrivate->CloseAllSharedWorkers();
+    aWorkerPrivate->GetRemoteWorkerController()->CloseWorkerOnMainThread();
   }
 
   if (parent) {
@@ -2209,12 +2169,8 @@ RuntimeService::CancelWorkersForWindow(nsPIDOMWindowInner* aWindow)
   if (!workers.IsEmpty()) {
     for (uint32_t index = 0; index < workers.Length(); index++) {
       WorkerPrivate*& worker = workers[index];
-
-      if (worker->IsSharedWorker()) {
-        worker->CloseSharedWorkersForWindow(aWindow);
-      } else {
-        worker->Cancel();
-      }
+      MOZ_ASSERT(!worker->IsSharedWorker());
+      worker->Cancel();
     }
   }
 }
@@ -2229,6 +2185,7 @@ RuntimeService::FreezeWorkersForWindow(nsPIDOMWindowInner* aWindow)
   GetWorkersForWindow(aWindow, workers);
 
   for (uint32_t index = 0; index < workers.Length(); index++) {
+    MOZ_ASSERT(!workers[index]->IsSharedWorker());
     workers[index]->Freeze(aWindow);
   }
 }
@@ -2243,6 +2200,7 @@ RuntimeService::ThawWorkersForWindow(nsPIDOMWindowInner* aWindow)
   GetWorkersForWindow(aWindow, workers);
 
   for (uint32_t index = 0; index < workers.Length(); index++) {
+    MOZ_ASSERT(!workers[index]->IsSharedWorker());
     workers[index]->Thaw(aWindow);
   }
 }
@@ -2257,6 +2215,7 @@ RuntimeService::SuspendWorkersForWindow(nsPIDOMWindowInner* aWindow)
   GetWorkersForWindow(aWindow, workers);
 
   for (uint32_t index = 0; index < workers.Length(); index++) {
+    MOZ_ASSERT(!workers[index]->IsSharedWorker());
     workers[index]->ParentWindowPaused();
   }
 }
@@ -2271,6 +2230,7 @@ RuntimeService::ResumeWorkersForWindow(nsPIDOMWindowInner* aWindow)
   GetWorkersForWindow(aWindow, workers);
 
   for (uint32_t index = 0; index < workers.Length(); index++) {
+    MOZ_ASSERT(!workers[index]->IsSharedWorker());
     workers[index]->ParentWindowResumed();
   }
 }
@@ -2288,192 +2248,6 @@ RuntimeService::PropagateFirstPartyStorageAccessGranted(nsPIDOMWindowInner* aWin
 
   for (uint32_t index = 0; index < workers.Length(); index++) {
     workers[index]->PropagateFirstPartyStorageAccessGranted();
-  }
-}
-
-nsresult
-RuntimeService::CreateSharedWorker(const GlobalObject& aGlobal,
-                                   const nsAString& aScriptURL,
-                                   const nsAString& aName,
-                                   SharedWorker** aSharedWorker)
-{
-  AssertIsOnMainThread();
-
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
-  MOZ_ASSERT(window);
-
-  // If the window is blocked from accessing storage, do not allow it
-  // to connect to a SharedWorker.  This would potentially allow it
-  // to communicate with other windows that do have storage access.
-  // Allow private browsing, however, as we handle that isolation
-  // via the principal.
-  auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
-  if (storageAllowed != nsContentUtils::StorageAccess::eAllow &&
-      storageAllowed != nsContentUtils::StorageAccess::ePrivateBrowsing) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  // Assert that the principal private browsing state matches the
-  // StorageAccess value.
-#ifdef  MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  if (storageAllowed == nsContentUtils::StorageAccess::ePrivateBrowsing) {
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-    nsCOMPtr<nsIPrincipal> principal = doc ? doc->NodePrincipal() : nullptr;
-    uint32_t privateBrowsingId = 0;
-    if (principal) {
-      MOZ_ALWAYS_SUCCEEDS(principal->GetPrivateBrowsingId(&privateBrowsingId));
-    }
-    MOZ_DIAGNOSTIC_ASSERT(privateBrowsingId != 0);
-  }
-#endif // MOZ_DIAGNOSTIC_ASSERT_ENABLED
-
-  JSContext* cx = aGlobal.Context();
-
-  WorkerLoadInfo loadInfo;
-  nsresult rv = WorkerPrivate::GetLoadInfo(cx, window, nullptr, aScriptURL,
-                                           false,
-                                           WorkerPrivate::OverrideLoadGroup,
-                                           WorkerTypeShared, &loadInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return CreateSharedWorkerFromLoadInfo(cx, &loadInfo, aScriptURL, aName,
-                                        aSharedWorker);
-}
-
-nsresult
-RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
-                                               WorkerLoadInfo* aLoadInfo,
-                                               const nsAString& aScriptURL,
-                                               const nsAString& aName,
-                                               SharedWorker** aSharedWorker)
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(aLoadInfo);
-  MOZ_ASSERT(aLoadInfo->mResolvedScriptURI);
-
-  RefPtr<WorkerPrivate> workerPrivate;
-  {
-    MutexAutoLock lock(mMutex);
-
-    nsCString scriptSpec;
-    nsresult rv = aLoadInfo->mResolvedScriptURI->GetSpec(scriptSpec);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    MOZ_DIAGNOSTIC_ASSERT(aLoadInfo->mPrincipal && aLoadInfo->mLoadingPrincipal);
-
-    WorkerDomainInfo* domainInfo;
-    if (mDomainMap.Get(aLoadInfo->mDomain, &domainInfo)) {
-      for (const UniquePtr<SharedWorkerInfo>& data : domainInfo->mSharedWorkerInfos) {
-        if (data->mScriptSpec == scriptSpec &&
-            data->mName == aName &&
-            // We want to be sure that the window's principal subsumes the
-            // SharedWorker's loading principal and vice versa.
-            aLoadInfo->mLoadingPrincipal->Subsumes(data->mWorkerPrivate->GetLoadingPrincipal()) &&
-            data->mWorkerPrivate->GetLoadingPrincipal()->Subsumes(aLoadInfo->mLoadingPrincipal)) {
-          workerPrivate = data->mWorkerPrivate;
-          break;
-        }
-      }
-    }
-  }
-
-  // Keep a reference to the window before spawning the worker. If the worker is
-  // a Shared/Service worker and the worker script loads and executes before
-  // the SharedWorker object itself is created before then WorkerScriptLoaded()
-  // will reset the loadInfo's window.
-  nsCOMPtr<nsPIDOMWindowInner> window = aLoadInfo->mWindow;
-
-  // shouldAttachToWorkerPrivate tracks whether our SharedWorker should actually
-  // get attached to the WorkerPrivate we're using.  It will become false if the
-  // WorkerPrivate already exists and its secure context state doesn't match
-  // what we want for the new SharedWorker.
-  bool shouldAttachToWorkerPrivate = true;
-  bool created = false;
-  ErrorResult rv;
-  if (!workerPrivate) {
-    workerPrivate =
-      WorkerPrivate::Constructor(aCx, aScriptURL, false,
-                                 WorkerTypeShared, aName, VoidCString(),
-                                 aLoadInfo, rv);
-    NS_ENSURE_TRUE(workerPrivate, rv.StealNSResult());
-
-    created = true;
-  } else {
-    // Check whether the secure context state matches.  The current realm
-    // of aCx is the realm of the SharedWorker constructor that was invoked,
-    // which is the realm of the document that will be hooked up to the worker,
-    // so that's what we want to check.
-    shouldAttachToWorkerPrivate =
-      workerPrivate->IsSecureContext() ==
-        JS::GetIsSecureContext(js::GetContextRealm(aCx));
-
-    // If we're attaching to an existing SharedWorker private, then we
-    // must update the overriden load group to account for our document's
-    // load group.
-    if (shouldAttachToWorkerPrivate) {
-      workerPrivate->UpdateOverridenLoadGroup(aLoadInfo->mLoadGroup);
-    }
-  }
-
-  // We don't actually care about this MessageChannel, but we use it to 'steal'
-  // its 2 connected ports.
-  RefPtr<MessageChannel> channel =
-    MessageChannel::Constructor(window->AsGlobal(), rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  RefPtr<SharedWorker> sharedWorker = new SharedWorker(window, workerPrivate,
-                                                       channel->Port1());
-
-  if (!shouldAttachToWorkerPrivate) {
-    // We're done here.  Just queue up our error event and return our
-    // dead-on-arrival SharedWorker.
-    RefPtr<AsyncEventDispatcher> errorEvent =
-      new AsyncEventDispatcher(sharedWorker,
-                               NS_LITERAL_STRING("error"),
-                               CanBubble::eNo);
-    errorEvent->PostDOMEvent();
-    sharedWorker.forget(aSharedWorker);
-    return NS_OK;
-  }
-
-  if (!workerPrivate->RegisterSharedWorker(sharedWorker, channel->Port2())) {
-    NS_WARNING("Worker is unreachable, this shouldn't happen!");
-    sharedWorker->Close();
-    return NS_ERROR_FAILURE;
-  }
-
-  // This is normally handled in RegisterWorker, but that wasn't called if the
-  // worker already existed.
-  if (!created) {
-    nsTArray<WorkerPrivate*>* windowArray;
-    if (!mWindowMap.Get(window, &windowArray)) {
-      windowArray = new nsTArray<WorkerPrivate*>(1);
-      mWindowMap.Put(window, windowArray);
-    }
-
-    if (!windowArray->Contains(workerPrivate)) {
-      windowArray->AppendElement(workerPrivate);
-    }
-  }
-
-  sharedWorker.forget(aSharedWorker);
-  return NS_OK;
-}
-
-void
-RuntimeService::ForgetSharedWorker(WorkerPrivate* aWorkerPrivate)
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(aWorkerPrivate);
-  MOZ_ASSERT(aWorkerPrivate->IsSharedWorker());
-
-  MutexAutoLock lock(mMutex);
-
-  WorkerDomainInfo* domainInfo;
-  if (mDomainMap.Get(aWorkerPrivate->Domain(), &domainInfo)) {
-    RemoveSharedWorker(domainInfo, aWorkerPrivate);
   }
 }
 

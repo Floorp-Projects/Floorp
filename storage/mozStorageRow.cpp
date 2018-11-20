@@ -118,8 +118,7 @@ Row::GetTypeOfIndex(uint32_t aIndex,
 {
   ENSURE_INDEX_VALUE(aIndex, mNumCols);
 
-  uint16_t type;
-  (void)mData.ObjectAt(aIndex)->GetDataType(&type);
+  uint16_t type = mData.ObjectAt(aIndex)->GetDataType();
   switch (type) {
     case nsIDataType::VTYPE_INT32:
     case nsIDataType::VTYPE_INT64:
@@ -213,8 +212,7 @@ Row::GetIsNull(uint32_t aIndex,
   ENSURE_INDEX_VALUE(aIndex, mNumCols);
   NS_ENSURE_ARG_POINTER(_isNull);
 
-  uint16_t type;
-  (void)mData.ObjectAt(aIndex)->GetDataType(&type);
+  uint16_t type = mData.ObjectAt(aIndex)->GetDataType();
   *_isNull = type == nsIDataType::VTYPE_EMPTY;
   return NS_OK;
 }

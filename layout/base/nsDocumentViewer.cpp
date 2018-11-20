@@ -412,9 +412,7 @@ private:
   bool ShouldAttachToTopLevel();
 
 protected:
-  // These return the current shell/prescontext etc.
-  nsIPresShell* GetPresShell();
-  nsPresContext* GetPresContext();
+  // Returns the current viewmanager.  Might be null.
   nsViewManager* GetViewManager();
 
   void DetachFromTopLevelWidget();
@@ -1235,18 +1233,16 @@ nsDocumentViewer::LoadComplete(nsresult aStatus)
   return rv;
 }
 
-NS_IMETHODIMP
-nsDocumentViewer::GetLoadCompleted(bool *aOutLoadCompleted)
+bool
+nsDocumentViewer::GetLoadCompleted()
 {
-  *aOutLoadCompleted = mLoaded;
-  return NS_OK;
+  return mLoaded;
 }
 
-NS_IMETHODIMP
-nsDocumentViewer::GetIsStopped(bool* aOutIsStopped)
+bool
+nsDocumentViewer::GetIsStopped()
 {
-  *aOutIsStopped = mStopped;
-  return NS_OK;
+  return mStopped;
 }
 
 NS_IMETHODIMP
@@ -1558,15 +1554,13 @@ AttachContainerRecurse(nsIDocShell* aShell)
     if (doc) {
       doc->SetContainer(static_cast<nsDocShell*>(aShell));
     }
-    RefPtr<nsPresContext> pc;
-    viewer->GetPresContext(getter_AddRefs(pc));
+    RefPtr<nsPresContext> pc = viewer->GetPresContext();
     if (pc) {
       pc->SetContainer(static_cast<nsDocShell*>(aShell));
       nsCOMPtr<nsILinkHandler> handler = do_QueryInterface(aShell);
       pc->SetLinkHandler(handler);
     }
-    nsCOMPtr<nsIPresShell> presShell;
-    viewer->GetPresShell(getter_AddRefs(presShell));
+    nsCOMPtr<nsIPresShell> presShell = viewer->GetPresShell();
     if (presShell) {
       presShell->SetForwardingContainer(WeakPtr<nsDocShell>());
     }
@@ -1728,13 +1722,11 @@ DetachContainerRecurse(nsIDocShell *aShell)
     if (doc) {
       doc->SetContainer(nullptr);
     }
-    RefPtr<nsPresContext> pc;
-    viewer->GetPresContext(getter_AddRefs(pc));
+    RefPtr<nsPresContext> pc = viewer->GetPresContext();
     if (pc) {
       pc->Detach();
     }
-    nsCOMPtr<nsIPresShell> presShell;
-    viewer->GetPresShell(getter_AddRefs(presShell));
+    nsCOMPtr<nsIPresShell> presShell = viewer->GetPresShell();
     if (presShell) {
       auto weakShell = static_cast<nsDocShell*>(aShell);
       presShell->SetForwardingContainer(weakShell);
@@ -2094,22 +2086,6 @@ nsDocumentViewer::GetViewManager()
 }
 
 NS_IMETHODIMP
-nsDocumentViewer::GetPresShell(nsIPresShell** aResult)
-{
-  nsIPresShell* shell = GetPresShell();
-  NS_IF_ADDREF(*aResult = shell);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::GetPresContext(nsPresContext** aResult)
-{
-  nsPresContext* pc = GetPresContext();
-  NS_IF_ADDREF(*aResult = pc);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocumentViewer::GetBounds(nsIntRect& aResult)
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
@@ -2117,15 +2093,13 @@ nsDocumentViewer::GetBounds(nsIntRect& aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocumentViewer::GetPreviousViewer(nsIContentViewer** aViewer)
+nsIContentViewer*
+nsDocumentViewer::GetPreviousViewer()
 {
-  *aViewer = mPreviousViewer;
-  NS_IF_ADDREF(*aViewer);
-  return NS_OK;
+  return mPreviousViewer;
 }
 
-NS_IMETHODIMP
+void
 nsDocumentViewer::SetPreviousViewer(nsIContentViewer* aViewer)
 {
   // NOTE:  |Show| sets |mPreviousViewer| to null without calling this
@@ -2145,8 +2119,10 @@ nsDocumentViewer::SetPreviousViewer(nsIContentViewer* aViewer)
     // It's very important that if this ever gets changed the code
     // before the RestorePresentation call in nsDocShell::InternalLoad
     // be changed accordingly.
-    nsCOMPtr<nsIContentViewer> prevViewer;
-    aViewer->GetPreviousViewer(getter_AddRefs(prevViewer));
+    //
+    // Make sure we hold a strong ref to prevViewer here, since we'll
+    // tell aViewer to drop it.
+    nsCOMPtr<nsIContentViewer> prevViewer = aViewer->GetPreviousViewer();
     if (prevViewer) {
       aViewer->SetPreviousViewer(nullptr);
       aViewer->Destroy();
@@ -2155,7 +2131,6 @@ nsDocumentViewer::SetPreviousViewer(nsIContentViewer* aViewer)
   }
 
   mPreviousViewer = aViewer;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2876,8 +2851,7 @@ NS_IMETHODIMP nsDocumentViewer::ScrollToNode(nsINode* aNode)
 {
   NS_ENSURE_ARG(aNode);
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
-  nsCOMPtr<nsIPresShell> presShell;
-  NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
 
   // Get the nsIContent interface, because that's what we need to
   // get the primary frame
@@ -3521,8 +3495,7 @@ nsDocumentViewer::GetContentSizeInternal(int32_t* aWidth, int32_t* aHeight,
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
 
-  nsCOMPtr<nsIPresShell> presShell;
-  GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   // Flush out all content and style updates. We can't use a resize reflow
@@ -3545,8 +3518,7 @@ nsDocumentViewer::GetContentSizeInternal(int32_t* aWidth, int32_t* aHeight,
                                         nsIPresShell::ResizeReflowOptions::eBSizeLimit);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<nsPresContext> presContext;
-  GetPresContext(getter_AddRefs(presContext));
+  RefPtr<nsPresContext> presContext = GetPresContext();
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
   // Protect against bogus returns here
@@ -3582,8 +3554,7 @@ NS_IMETHODIMP
 nsDocumentViewer::GetContentSizeConstrained(int32_t aMaxWidth, int32_t aMaxHeight,
                                             int32_t* aWidth, int32_t* aHeight)
 {
-  RefPtr<nsPresContext> presContext;
-  GetPresContext(getter_AddRefs(presContext));
+  RefPtr<nsPresContext> presContext = GetPresContext();
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
   nscoord maxWidth = NS_UNCONSTRAINEDSIZE;
@@ -3798,8 +3769,7 @@ nsDocViewerFocusListener::HandleEvent(Event* aEvent)
 {
   NS_ENSURE_STATE(mDocViewer);
 
-  nsCOMPtr<nsIPresShell> shell;
-  mDocViewer->GetPresShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIPresShell> shell = mDocViewer->GetPresShell();
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(shell);

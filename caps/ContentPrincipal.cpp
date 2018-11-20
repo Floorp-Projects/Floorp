@@ -339,13 +339,12 @@ ContentPrincipal::MayLoadInternal(nsIURI* aURI)
   return false;
 }
 
-NS_IMETHODIMP
-ContentPrincipal::GetHashValue(uint32_t* aValue)
+uint32_t
+ContentPrincipal::GetHashValue()
 {
   MOZ_ASSERT(mCodebase, "Need a codebase");
 
-  *aValue = nsScriptSecurityManager::HashPrincipalByOrigin(this);
-  return NS_OK;
+  return nsScriptSecurityManager::HashPrincipalByOrigin(this);
 }
 
 NS_IMETHODIMP

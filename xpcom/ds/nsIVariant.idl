@@ -64,7 +64,7 @@ struct nsIDataType
 [scriptable, uuid(81e4c2de-acac-4ad6-901a-b5fb1b851a0d)]
 interface nsIVariant : nsISupports
 {
-    [noscript] readonly attribute uint16_t     dataType;
+    [notxpcom,nostdcall] readonly attribute uint16_t     dataType;
 
     [noscript] uint8_t      getAsInt8();
     [noscript] int16_t      getAsInt16();

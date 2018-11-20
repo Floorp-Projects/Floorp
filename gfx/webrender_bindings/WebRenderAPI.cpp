@@ -381,8 +381,18 @@ WebRenderAPI::~WebRenderAPI()
 }
 
 void
+WebRenderAPI::UpdateDebugFlags(uint32_t aFlags)
+{
+  if (mDebugFlags.mBits != aFlags) {
+    mDebugFlags.mBits = aFlags;
+    wr_api_set_debug_flags(mDocHandle, mDebugFlags);
+  }
+}
+
+void
 WebRenderAPI::SendTransaction(TransactionBuilder& aTxn)
 {
+  UpdateDebugFlags(gfx::gfxVars::WebRenderDebugFlags());
   wr_api_send_transaction(mDocHandle, aTxn.Raw(), aTxn.UseSceneBuilderThread());
 }
 
@@ -441,6 +451,9 @@ WebRenderAPI::Readback(const TimeStamp& aStartTime,
             const Range<uint8_t>& mBuffer;
     };
 
+    // Disable debug flags during readback. See bug 1436020.
+    UpdateDebugFlags(0);
+
     layers::SynchronousTask task("Readback");
     auto event = MakeUnique<Readback>(&task, aStartTime, size, buffer);
     // This event will be passed from wr_backend thread to renderer thread. That
@@ -450,6 +463,8 @@ WebRenderAPI::Readback(const TimeStamp& aStartTime,
     RunOnRenderThread(std::move(event));
 
     task.Wait();
+
+    UpdateDebugFlags(gfx::gfxVars::WebRenderDebugFlags());
 }
 
 void

@@ -10734,7 +10734,6 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
         return false;
     }
 
-#ifdef ENABLE_SHARED_ARRAY_BUFFER
     if (const char* str = op.getStringOption("shared-memory")) {
         if (strcmp(str, "off") == 0) {
             enableSharedMemory = false;
@@ -10744,7 +10743,6 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
             return OptionFailure("shared-memory", str);
         }
     }
-#endif
 
 #if defined(JS_CODEGEN_ARM)
     if (const char* str = op.getStringOption("arm-hwcap")) {
@@ -11128,16 +11126,14 @@ main(int argc, char** argv, char** envp)
 #ifdef ENABLE_BIGINT
         || !op.addBoolOption('\0', "no-bigint", "Disable experimental BigInt support")
 #endif
-#ifdef ENABLE_SHARED_ARRAY_BUFFER
         || !op.addStringOption('\0', "shared-memory", "on/off",
                                "SharedArrayBuffer and Atomics "
-#  if SHARED_MEMORY_DEFAULT
+#if SHARED_MEMORY_DEFAULT
                                "(default: on, off to disable)"
-#  else
+#else
                                "(default: off, on to enable)"
-#  endif
-            )
 #endif
+            )
         || !op.addStringOption('\0', "spectre-mitigations", "on/off",
                                "Whether Spectre mitigations are enabled (default: off, on to enable)")
         || !op.addStringOption('\0', "cache-ir-stubs", "on/off/nobinary",

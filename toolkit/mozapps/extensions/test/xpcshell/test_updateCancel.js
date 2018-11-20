@@ -4,19 +4,10 @@
 
 // Test cancelling add-on update checks while in progress (bug 925389)
 
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
-Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-
-// Set up an HTTP server to respond to update requests
-ChromeUtils.import("resource://testing-common/httpd.js");
-
-const profileDir = gProfD.clone();
-profileDir.append("extensions");
 
 // Install one extension
 // Start download of update check (but delay HTTP response)
@@ -29,58 +20,82 @@ profileDir.append("extensions");
 // Create an addon update listener containing a promise
 // that resolves when the update is cancelled
 function makeCancelListener() {
-  let updated = PromiseUtils.defer();
+  let resolve, reject;
+  let promise = new Promise((_resolve, _reject) => {
+    resolve = _resolve;
+    reject = _reject;
+  });
+
   return {
     onUpdateAvailable(addon, install) {
-      updated.reject("Should not have seen onUpdateAvailable notification");
+      reject("Should not have seen onUpdateAvailable notification");
     },
 
     onUpdateFinished(aAddon, aError) {
       info("onUpdateCheckFinished: " + aAddon.id + " " + aError);
-      updated.resolve(aError);
+      resolve(aError);
     },
-    promise: updated.promise,
+    promise,
   };
 }
 
-// Set up the HTTP server so that we can control when it responds
-var httpReceived = PromiseUtils.defer();
-function dataHandler(aRequest, aResponse) {
-  aResponse.processAsync();
-  httpReceived.resolve([aRequest, aResponse]);
-}
-var testserver = new HttpServer();
-testserver.registerPathHandler("/data/test_update.json", dataHandler);
-testserver.start(-1);
-gPort = testserver.identity.primaryPort;
+let testserver = createHttpServer({hosts: ["example.com"]});
 
-// Set up an add-on for update check
-add_task(async function setup() {
-  await promiseWriteInstallRDFForExtension({
-    id: "addon1@tests.mozilla.org",
-    version: "1.0",
-    bootstrap: true,
-    updateURL: "http://localhost:" + gPort + "/data/test_update.json",
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1",
-    }],
-    name: "Test Addon 1",
-  }, profileDir);
+// Set up the HTTP server so that we can control when it responds
+let _httpResolve;
+function resetUpdateListener() {
+  return new Promise(resolve => { _httpResolve = resolve; });
+}
+
+testserver.registerPathHandler("/data/test_update.json", (req, resp) => {
+  resp.processAsync();
+  _httpResolve([req, resp]);
 });
+
+const UPDATE_RESPONSE = {
+  addons: {
+    "addon1@tests.mozilla.org": {
+      updates: [
+        {
+          version: "2.0",
+          update_link: "http://example.com/addons/test_update.xpi",
+          applications: {
+            gecko: {
+              strict_min_version: "1",
+              strict_max_version: "1",
+            },
+          },
+        },
+      ],
+    },
+  },
+};
 
 add_task(async function cancel_during_check() {
   await promiseStartupManager();
 
+  await promiseInstallWebExtension({
+    manifest: {
+      name: "Test Addon 1",
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: "addon1@tests.mozilla.org",
+          update_url: "http://example.com/data/test_update.json",
+        },
+      },
+    },
+  });
+
   let a1 = await promiseAddonByID("addon1@tests.mozilla.org");
   Assert.notEqual(a1, null);
 
+  let requestPromise = resetUpdateListener();
   let listener = makeCancelListener();
   a1.findUpdates(listener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
 
   // Wait for the http request to arrive
-  let [/* request */, response] = await httpReceived.promise;
+  let [/* request */, response] = await requestPromise;
 
   // cancelUpdate returns true if there is an update check in progress
   Assert.ok(a1.cancelUpdate());
@@ -89,24 +104,18 @@ add_task(async function cancel_during_check() {
   Assert.equal(AddonManager.UPDATE_STATUS_CANCELLED, updateResult);
 
   // Now complete the HTTP request
-  let file = do_get_cwd();
-  file.append("data");
-  file.append("test_update.json");
-  let data = new TextDecoder().decode(await OS.File.read(file.path));
-  response.write(data);
+  response.write(JSON.stringify(UPDATE_RESPONSE));
   response.finish();
 
   // trying to cancel again should return false, i.e. nothing to cancel
   Assert.ok(!a1.cancelUpdate());
-
-  await true;
 });
 
 // Test that update check is cancelled if the XPI provider shuts down while
 // the update check is in progress
 add_task(async function shutdown_during_check() {
   // Reset our HTTP listener
-  httpReceived = PromiseUtils.defer();
+  let requestPromise = resetUpdateListener();
 
   let a1 = await promiseAddonByID("addon1@tests.mozilla.org");
   Assert.notEqual(a1, null);
@@ -115,7 +124,7 @@ add_task(async function shutdown_during_check() {
   a1.findUpdates(listener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
 
   // Wait for the http request to arrive
-  let [/* request */, response] = await httpReceived.promise;
+  let [/* request */, response] = await requestPromise;
 
   await promiseShutdownManager();
 
@@ -123,12 +132,6 @@ add_task(async function shutdown_during_check() {
   Assert.equal(AddonManager.UPDATE_STATUS_CANCELLED, updateResult);
 
   // Now complete the HTTP request
-  let file = do_get_cwd();
-  file.append("data");
-  file.append("test_update.json");
-  let data = await loadFile(file.path);
-  response.write(data);
+  response.write(JSON.stringify(UPDATE_RESPONSE));
   response.finish();
-
-  await testserver.stop();
 });

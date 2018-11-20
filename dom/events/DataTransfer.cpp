@@ -1146,8 +1146,7 @@ DataTransfer::ConvertFromVariant(nsIVariant* aVariant,
   *aSupports = nullptr;
   *aLength = 0;
 
-  uint16_t type;
-  aVariant->GetDataType(&type);
+  uint16_t type = aVariant->GetDataType();
   if (type == nsIDataType::VTYPE_INTERFACE ||
       type == nsIDataType::VTYPE_INTERFACE_IS) {
     nsCOMPtr<nsISupports> data;

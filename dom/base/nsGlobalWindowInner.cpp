@@ -239,6 +239,7 @@
 #include "mozilla/dom/InstallTriggerBinding.h"
 #include "mozilla/dom/Report.h"
 #include "mozilla/dom/ReportingObserver.h"
+#include "mozilla/dom/SharedWorker.h"
 #include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerRegistration.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
@@ -1176,6 +1177,12 @@ nsGlobalWindowInner::FreeInnerObjects(bool aForDocumentOpen)
   // Kill all of the workers for this window.
   CancelWorkersForWindow(this);
 
+  nsTObserverArray<RefPtr<mozilla::dom::SharedWorker>>::ForwardIterator
+    iter(mSharedWorkers);
+  while (iter.HasMore()) {
+    iter.GetNext()->Close();
+  }
+
   if (mTimeoutManager) {
     mTimeoutManager->ClearAllTimeouts();
   }
@@ -1324,6 +1331,8 @@ nsGlobalWindowInner::FreeInnerObjects(bool aForDocumentOpen)
 
   mPerformance = nullptr;
 
+  mSharedWorkers.Clear();
+
 #ifdef MOZ_WEBSPEECH
   mSpeechSynthesis = nullptr;
 #endif
@@ -1434,7 +1443,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocation)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHistory)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCustomElements)
-
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSharedWorkers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalStorage)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSessionStorage)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mApplicationCache)
@@ -1528,6 +1537,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocation)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHistory)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCustomElements)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSharedWorkers)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocalStorage)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSessionStorage)
   if (tmp->mApplicationCache) {
@@ -5949,6 +5959,12 @@ nsGlobalWindowInner::Suspend()
 
   SuspendWorkersForWindow(this);
 
+  nsTObserverArray<RefPtr<mozilla::dom::SharedWorker>>::ForwardIterator
+    iter(mSharedWorkers);
+  while (iter.HasMore()) {
+    iter.GetNext()->Suspend();
+  }
+
   SuspendIdleRequests();
 
   mTimeoutManager->Suspend();
@@ -6010,6 +6026,12 @@ nsGlobalWindowInner::Resume()
   // after timeouts since workers may have queued events that can trigger
   // a setTimeout().
   ResumeWorkersForWindow(this);
+
+  nsTObserverArray<RefPtr<mozilla::dom::SharedWorker>>::ForwardIterator
+    iter(mSharedWorkers);
+  while (iter.HasMore()) {
+    iter.GetNext()->Resume();
+  }
 }
 
 bool
@@ -6043,6 +6065,12 @@ nsGlobalWindowInner::FreezeInternal()
   }
 
   FreezeWorkersForWindow(this);
+
+  nsTObserverArray<RefPtr<mozilla::dom::SharedWorker>>::ForwardIterator
+    iter(mSharedWorkers);
+  while (iter.HasMore()) {
+    iter.GetNext()->Freeze();
+  }
 
   mTimeoutManager->Freeze();
   if (mClientSource) {
@@ -6082,6 +6110,12 @@ nsGlobalWindowInner::ThawInternal()
   mTimeoutManager->Thaw();
 
   ThawWorkersForWindow(this);
+
+  nsTObserverArray<RefPtr<mozilla::dom::SharedWorker>>::ForwardIterator
+    iter(mSharedWorkers);
+  while (iter.HasMore()) {
+    iter.GetNext()->Thaw();
+  }
 
   NotifyDOMWindowThawed(this);
 }
@@ -7928,6 +7962,24 @@ nsGlobalWindowInner::GetIntlUtils(ErrorResult& aError)
   return mIntlUtils;
 }
 
+void
+nsGlobalWindowInner::StoreSharedWorker(SharedWorker* aSharedWorker)
+{
+  MOZ_ASSERT(aSharedWorker);
+  MOZ_ASSERT(!mSharedWorkers.Contains(aSharedWorker));
+
+  mSharedWorkers.AppendElement(aSharedWorker);
+}
+
+void
+nsGlobalWindowInner::ForgetSharedWorker(SharedWorker* aSharedWorker)
+{
+  MOZ_ASSERT(aSharedWorker);
+  MOZ_ASSERT(mSharedWorkers.Contains(aSharedWorker));
+
+  mSharedWorkers.RemoveElement(aSharedWorker);
+}
+
 mozilla::dom::TabGroup*
 nsPIDOMWindowInner::TabGroup()
 {
@@ -8065,6 +8117,20 @@ nsPIDOMWindowInner::GetAutoplayPermissionManager()
   RefPtr<mozilla::AutoplayPermissionManager> manager =
     window->mAutoplayPermissionManager;
   return manager.forget();
+}
+
+void
+nsPIDOMWindowInner::SaveStorageAccessGranted(const nsACString& aPermissionKey)
+{
+  if (!HasStorageAccessGranted(aPermissionKey)) {
+    mStorageAccessGranted.AppendElement(aPermissionKey);
+  }
+}
+
+bool
+nsPIDOMWindowInner::HasStorageAccessGranted(const nsACString& aPermissionKey)
+{
+  return mStorageAccessGranted.Contains(aPermissionKey);
 }
 
 // XXX: Can we define this in a header instead of here?

@@ -939,6 +939,7 @@ pref("gfx.webrender.blob.paint-flashing", false);
 
 // WebRender debugging utilities.
 pref("gfx.webrender.debug.texture-cache", false);
+pref("gfx.webrender.debug.texture-cache.clear-evicted", true);
 pref("gfx.webrender.debug.render-targets", false);
 pref("gfx.webrender.debug.alpha-primitives", false);
 pref("gfx.webrender.debug.profiler", false);
@@ -1373,6 +1374,10 @@ pref("privacy.popups.disable_from_plugins", 3);
 
 // Enable Paritioned LocalStorage for a list of hosts.
 pref("privacy.restrict3rdpartystorage.partitionedHosts", "accounts.google.com/o/oauth2/");
+
+// If a host is contained in this pref list, user-interaction is required
+// before granting the storage access permission.
+pref("privacy.restrict3rdpartystorage.userInteractionRequiredForHosts", "");
 
 // Excessive reporting of blocked popups can be a DOS vector,
 // by overloading the main process as popups get blocked and when

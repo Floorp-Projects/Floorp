@@ -19,6 +19,7 @@
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/Flex.h"
 #include "mozilla/dom/Grid.h"
+#include "mozilla/dom/Text.h"
 #include "mozilla/gfx/Matrix.h"
 #include "nsAtom.h"
 #include "nsCSSFrameConstructor.h"
@@ -159,36 +160,39 @@ using namespace mozilla::dom;
 
 using mozilla::gfx::Matrix4x4;
 
+// Verify sizes of nodes. We use a template rather than a direct static
+// assert so that the error message actually displays the sizes.
+// On 32 bit systems the actual allocated size varies a bit between
+// OSes/compilers.
 //
-// Verify sizes of elements on 64-bit platforms. This should catch most memory
-// regressions, and is easy to verify locally since most developers are on
-// 64-bit machines. We use a template rather than a direct static assert so
-// that the error message actually displays the sizes.
-//
-
 // We need different numbers on certain build types to deal with the owning
 // thread pointer that comes with the non-threadsafe refcount on
-// FragmentOrElement.
+// nsIContent.
 #ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
-#define EXTRA_DOM_ELEMENT_BYTES 8
+#define EXTRA_DOM_NODE_BYTES 8
 #else
-#define EXTRA_DOM_ELEMENT_BYTES 0
+#define EXTRA_DOM_NODE_BYTES 0
 #endif
 
-#define ASSERT_ELEMENT_SIZE(type, opt_size) \
-template<int a, int b> struct Check##type##Size \
+#define ASSERT_NODE_SIZE(type, opt_size_64, opt_size_32) \
+template<int a, int sizeOn64, int sizeOn32> struct Check##type##Size \
 { \
-  static_assert(sizeof(void*) != 8 || a == b, "DOM size changed"); \
+  static_assert((sizeof(void*) == 8 && a == sizeOn64) || \
+                (sizeof(void*) == 4 && a <= sizeOn32), "DOM size changed"); \
 }; \
-Check##type##Size<sizeof(type), opt_size + EXTRA_DOM_ELEMENT_BYTES> g##type##CES;
+Check##type##Size<sizeof(type), \
+                  opt_size_64 + EXTRA_DOM_NODE_BYTES, \
+                  opt_size_32 + EXTRA_DOM_NODE_BYTES> g##type##CES;
 
-// Note that mozjemalloc uses a 16 byte quantum, so 128 is a bin/bucket size.
-ASSERT_ELEMENT_SIZE(Element, 128);
-ASSERT_ELEMENT_SIZE(HTMLDivElement, 128);
-ASSERT_ELEMENT_SIZE(HTMLSpanElement, 128);
+// Note that mozjemalloc uses a 16 byte quantum, so 64, 80 and 128 are
+// bucket sizes.
+ASSERT_NODE_SIZE(Element, 128, 80);
+ASSERT_NODE_SIZE(HTMLDivElement, 128, 80);
+ASSERT_NODE_SIZE(HTMLSpanElement, 128, 80);
+ASSERT_NODE_SIZE(Text, 120, 64);
 
-#undef ASSERT_ELEMENT_SIZE
-#undef EXTRA_DOM_ELEMENT_BYTES
+#undef ASSERT_NODE_SIZE
+#undef EXTRA_DOM_NODE_BYTES
 
 nsAtom*
 nsIContent::DoGetID() const

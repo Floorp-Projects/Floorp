@@ -10,7 +10,7 @@
             }
           },
           "version": "4",
-          "update_link": "http://example.com/addons/blocklist_regexp1_1.xpi"
+          "update_link": "http://example.com/addons/blocklist_regexp_1.xpi"
         }
       ]
     },
@@ -24,7 +24,7 @@
             }
           },
           "version": "4",
-          "update_link": "http://example.com/addons/blocklist_hard1_1.xpi"
+          "update_link": "http://example.com/addons/blocklist_hard_1.xpi"
         }
       ]
     },

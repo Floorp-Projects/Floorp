@@ -100,11 +100,7 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
   nsCOMPtr<nsIPrintSession> session;
   nsresult rv = aSettings->GetPrintSession(getter_AddRefs(session));
   if (NS_SUCCEEDED(rv) && session) {
-    RefPtr<RemotePrintJobChild> remotePrintJob;
-    rv = session->GetRemotePrintJob(getter_AddRefs(remotePrintJob));
-    if (NS_SUCCEEDED(rv)) {
-      data->remotePrintJobChild() = remotePrintJob;
-    }
+    data->remotePrintJobChild() = session->GetRemotePrintJob();
   }
 
   aSettings->GetStartPageRange(&data->startPageRange());

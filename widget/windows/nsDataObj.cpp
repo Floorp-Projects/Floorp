@@ -343,12 +343,11 @@ HRESULT nsDataObj::CreateStream(IStream **outStream)
   pStream->AddRef();
 
   // query the requestingPrincipal from the transferable and add it to the new channel
-  nsCOMPtr<nsIPrincipal> requestingPrincipal;
-  mTransferable->GetRequestingPrincipal(getter_AddRefs(requestingPrincipal));
+  nsCOMPtr<nsIPrincipal> requestingPrincipal =
+    mTransferable->GetRequestingPrincipal();
   MOZ_ASSERT(requestingPrincipal, "can not create channel without a principal");
-  // default transferable content policy is nsIContentPolicy::TYPE_OTHER
-  uint32_t contentPolicyType = nsIContentPolicy::TYPE_OTHER;
-  mTransferable->GetContentPolicyType(&contentPolicyType);
+
+  uint32_t contentPolicyType = mTransferable->GetContentPolicyType();
   rv = pStream->Init(sourceURI, contentPolicyType, requestingPrincipal);
   if (NS_FAILED(rv))
   {

@@ -59,6 +59,10 @@ extern mozilla::Atomic<bool> fuzzingSafe;
 bool
 wasm::HasCompilerSupport(JSContext* cx)
 {
+#if !MOZ_LITTLE_ENDIAN || defined(JS_CODEGEN_NONE)
+    return false;
+#endif
+
     if (gc::SystemPageSize() > wasm::PageSize) {
         return false;
     }
@@ -75,16 +79,10 @@ wasm::HasCompilerSupport(JSContext* cx)
         return false;
     }
 
-#if !MOZ_LITTLE_ENDIAN
-    return false;
-#endif
-
-#ifdef ENABLE_WASM_THREAD_OPS
     // Wasm threads require 8-byte lock-free atomics.
     if (!jit::AtomicOperations::isLockfree8()) {
         return false;
     }
-#endif
 
 #ifdef JS_SIMULATOR
     if (!Simulator::supportsAtomics()) {
@@ -92,11 +90,7 @@ wasm::HasCompilerSupport(JSContext* cx)
     }
 #endif
 
-#if defined(JS_CODEGEN_NONE)
-    return false;
-#else
     return BaselineCanCompile() || IonCanCompile();
-#endif
 }
 
 // Return whether wasm compilation is allowed by prefs.  This check
@@ -589,7 +583,6 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
 
     limits->shared = Shareable::False;
 
-#ifdef ENABLE_WASM_THREAD_OPS
     if (allowShared == Shareable::True) {
         JSAtom* sharedAtom = Atomize(cx, "shared", strlen("shared"));
         if (!sharedAtom) {
@@ -621,7 +614,6 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
             }
         }
     }
-#endif
 
     return true;
 }

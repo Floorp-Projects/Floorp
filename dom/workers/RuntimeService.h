@@ -23,7 +23,6 @@ class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
-class SharedWorker;
 struct WorkerLoadInfo;
 class WorkerThread;
 
@@ -31,26 +30,12 @@ namespace workerinternals {
 
 class RuntimeService final : public nsIObserver
 {
-  struct SharedWorkerInfo
-  {
-    WorkerPrivate* mWorkerPrivate;
-    nsCString mScriptSpec;
-    nsString mName;
-
-    SharedWorkerInfo(WorkerPrivate* aWorkerPrivate,
-                     const nsACString& aScriptSpec,
-                     const nsAString& aName)
-    : mWorkerPrivate(aWorkerPrivate), mScriptSpec(aScriptSpec), mName(aName)
-    { }
-  };
-
   struct WorkerDomainInfo
   {
     nsCString mDomain;
     nsTArray<WorkerPrivate*> mActiveWorkers;
     nsTArray<WorkerPrivate*> mActiveServiceWorkers;
     nsTArray<WorkerPrivate*> mQueuedWorkers;
-    nsTArray<UniquePtr<SharedWorkerInfo>> mSharedWorkerInfos;
     uint32_t mChildWorkerCount;
 
     WorkerDomainInfo()
@@ -134,10 +119,6 @@ public:
   UnregisterWorker(WorkerPrivate* aWorkerPrivate);
 
   void
-  RemoveSharedWorker(WorkerDomainInfo* aDomainInfo,
-                     WorkerPrivate* aWorkerPrivate);
-
-  void
   CancelWorkersForWindow(nsPIDOMWindowInner* aWindow);
 
   void
@@ -154,15 +135,6 @@ public:
 
   void
   PropagateFirstPartyStorageAccessGranted(nsPIDOMWindowInner* aWindow);
-
-  nsresult
-  CreateSharedWorker(const GlobalObject& aGlobal,
-                     const nsAString& aScriptURL,
-                     const nsAString& aName,
-                     SharedWorker** aSharedWorker);
-
-  void
-  ForgetSharedWorker(WorkerPrivate* aWorkerPrivate);
 
   const NavigatorProperties&
   GetNavigatorProperties() const
@@ -266,13 +238,6 @@ private:
 
   static void
   ShutdownIdleThreads(nsITimer* aTimer, void* aClosure);
-
-  nsresult
-  CreateSharedWorkerFromLoadInfo(JSContext* aCx,
-                                 WorkerLoadInfo* aLoadInfo,
-                                 const nsAString& aScriptURL,
-                                 const nsAString& aName,
-                                 SharedWorker** aSharedWorker);
 };
 
 } // workerinternals namespace
