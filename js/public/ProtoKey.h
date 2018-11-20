@@ -91,7 +91,7 @@
     REAL(Uint8ClampedArray,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint8Clamped)) \
     REAL_IF_BIGINT(BigInt, InitViaClassSpec, OCLASP(BigInt)) \
     REAL(Proxy,                 InitProxyClass,         &js::ProxyClass) \
-    REAL(WeakMap,               InitWeakMapClass,       OCLASP(WeakMap)) \
+    REAL(WeakMap,               InitViaClassSpec,       OCLASP(WeakMap)) \
     REAL(Map,                   InitViaClassSpec,       OCLASP(Map)) \
     REAL(Set,                   InitViaClassSpec,       OCLASP(Set)) \
     REAL(DataView,              InitViaClassSpec,       OCLASP(DataView)) \
@@ -100,7 +100,7 @@
     REAL_IF_INTL(Intl, InitIntlClass, CLASP(Intl)) \
     REAL_IF_BDATA(TypedObject, InitTypedObjectModuleObject, OCLASP(TypedObjectModule)) \
     REAL(Reflect,               InitReflect,            nullptr) \
-    REAL(WeakSet,               InitWeakSetClass,       OCLASP(WeakSet)) \
+    REAL(WeakSet,               InitViaClassSpec,       OCLASP(WeakSet)) \
     REAL(TypedArray,            InitViaClassSpec,       &js::TypedArrayObject::sharedTypedArrayPrototypeClass) \
     REAL(Atomics,               InitAtomicsClass,       OCLASP(Atomics)) \
     REAL(SavedFrame,            InitViaClassSpec,       &js::SavedFrame::class_) \

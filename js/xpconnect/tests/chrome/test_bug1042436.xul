@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1042436
   SimpleTest.waitForExplicitFinish();
 
   var contentSb = Cu.Sandbox('http://www.example.com');
-  var nonXrayableObj = new contentSb.WeakMap();
+  var nonXrayableObj = contentSb.eval("new Map()[Symbol.iterator]()");
   nonXrayableObj.wrappedJSObject.someExpandoProperty = 42;
   nonXrayableObj.wrappedJSObject.someOtherExpandoProperty = 52;
 
