@@ -52,7 +52,8 @@ CallOrNewEmitter::emitNameCallee(JSAtom* name)
                       isCall()
                       ? NameOpEmitter::Kind::Call
                       : NameOpEmitter::Kind::Get);
-    if (!noe.emitGet()) {                             // CALLEE THIS
+    if (!noe.emitGet()) {
+        //                    [stack] CALLEE THIS
         return false;
     }
 
@@ -120,10 +121,12 @@ CallOrNewEmitter::emitSuperCallee()
 {
     MOZ_ASSERT(state_ == State::Start);
 
-    if (!bce_->emit1(JSOP_SUPERFUN)) {                // CALLEE
+    if (!bce_->emit1(JSOP_SUPERFUN)) {
+        //                    [stack] CALLEE
         return false;
     }
-    if (!bce_->emit1(JSOP_IS_CONSTRUCTING)) {         // CALLEE THIS
+    if (!bce_->emit1(JSOP_IS_CONSTRUCTING)) {
+        //                    [stack] CALLEE THIS
         return false;
     }
 
@@ -182,11 +185,13 @@ CallOrNewEmitter::emitThis()
     }
     if (needsThis) {
         if (isNew() || isSuperCall()) {
-            if (!bce_->emit1(JSOP_IS_CONSTRUCTING)) { // CALLEE THIS
+            if (!bce_->emit1(JSOP_IS_CONSTRUCTING)) {
+                //            [stack] CALLEE THIS
                 return false;
             }
         } else {
-            if (!bce_->emit1(JSOP_UNDEFINED)) {       // CALLEE THIS
+            if (!bce_->emit1(JSOP_UNDEFINED)) {
+                //            [stack] CALLEE THIS
                 return false;
             }
         }
@@ -246,18 +251,23 @@ CallOrNewEmitter::emitSpreadArgumentsTest()
         // operation.  See the comment in OptimizeSpreadCall in
         // Interpreter.cpp for the optimizable conditons.
 
+        //                    [stack] CALLEE THIS ARG0
+
         ifNotOptimizable_.emplace(bce_);
-        //                                            // CALLEE THIS ARG0
-        if (!bce_->emit1(JSOP_OPTIMIZE_SPREADCALL)) { // CALLEE THIS ARG0 OPTIMIZED
+        if (!bce_->emit1(JSOP_OPTIMIZE_SPREADCALL)) {
+            //                [stack] CALLEE THIS ARG0 OPTIMIZED
             return false;
         }
-        if (!bce_->emit1(JSOP_NOT)) {                 // CALLEE THIS ARG0 !OPTIMIZED
+        if (!bce_->emit1(JSOP_NOT)) {
+            //                [stack] CALLEE THIS ARG0 !OPTIMIZED
             return false;
         }
-        if (!ifNotOptimizable_->emitThen()) {         // CALLEE THIS ARG0
+        if (!ifNotOptimizable_->emitThen()) {
+            //                [stack] CALLEE THIS ARG0
             return false;
         }
-        if (!bce_->emit1(JSOP_POP)) {                 // CALLEE THIS
+        if (!bce_->emit1(JSOP_POP)) {
+            //                [stack] CALLEE THIS
             return false;
         }
     }
@@ -272,7 +282,8 @@ CallOrNewEmitter::emitEnd(uint32_t argc, const Maybe<uint32_t>& beginPos)
     MOZ_ASSERT(state_ == State::Arguments);
 
     if (isSingleSpreadRest()) {
-        if (!ifNotOptimizable_->emitEnd()) {          // CALLEE THIS ARR
+        if (!ifNotOptimizable_->emitEnd()) {
+            //                [stack] CALLEE THIS ARR
             return false;
         }
 
@@ -280,19 +291,22 @@ CallOrNewEmitter::emitEnd(uint32_t argc, const Maybe<uint32_t>& beginPos)
     }
     if (isNew() || isSuperCall()) {
         if (isSuperCall()) {
-            if (!bce_->emit1(JSOP_NEWTARGET)) {       // CALLEE THIS ARG.. NEW.TARGET
+            if (!bce_->emit1(JSOP_NEWTARGET)) {
+                //            [stack] CALLEE THIS ARG.. NEW.TARGET
                 return false;
             }
         } else {
             // Repush the callee as new.target
             uint32_t effectiveArgc = isSpread() ? 1 : argc;
             if (!bce_->emitDupAt(effectiveArgc + 1)) {
-                return false;                         // CALLEE THIS ARR CALLEE
+                //            [stack] CALLEE THIS ARR CALLEE
+                return false;
             }
         }
     }
     if (!isSpread()) {
-        if (!bce_->emitCall(op_, argc, beginPos)) {   // RVAL
+        if (!bce_->emitCall(op_, argc, beginPos)) {
+            //                [stack] RVAL
             return false;
         }
     } else {
@@ -301,7 +315,8 @@ CallOrNewEmitter::emitEnd(uint32_t argc, const Maybe<uint32_t>& beginPos)
                 return false;
             }
         }
-        if (!bce_->emit1(op_)) {                      // RVAL
+        if (!bce_->emit1(op_)) {
+            //                [stack] RVAL
             return false;
         }
     }

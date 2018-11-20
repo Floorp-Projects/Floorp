@@ -17,6 +17,7 @@
 #include "nsEnumeratorUtils.h"
 #include "xpcpublic.h"
 #include "mozilla/net/NeckoCommon.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
@@ -68,12 +69,11 @@ nsObserverService::CollectReports(nsIHandleReportCallback* aHandleReport,
     size_t topicNumWeakAlive = 0;
     size_t topicNumWeakDead = 0;
 
-    nsTArray<ObserverRef>& observers = observerList->mObservers;
+    nsMaybeWeakPtrArray<nsIObserver>& observers = observerList->mObservers;
     for (uint32_t i = 0; i < observers.Length(); i++) {
-      if (observers[i].isWeakRef) {
-        nsCOMPtr<nsIObserver> observerRef(
-          do_QueryReferent(observers[i].asWeak()));
-        if (observerRef) {
+      if (observers[i].IsWeak()) {
+        nsCOMPtr<nsIObserver> ref = observers[i].GetValue();
+        if (ref) {
           topicNumWeakAlive++;
         } else {
           topicNumWeakDead++;
@@ -158,10 +158,12 @@ nsObserverService::RegisterReporter()
 void
 nsObserverService::Shutdown()
 {
-  UnregisterWeakMemoryReporter(this);
+  if (mShuttingDown) {
+    return;
+  }
 
   mShuttingDown = true;
-
+  UnregisterWeakMemoryReporter(this);
   mObserverTopicTable.Clear();
 }
 
@@ -188,28 +190,24 @@ nsObserverService::Create(nsISupports* aOuter, const nsIID& aIID,
   return os->QueryInterface(aIID, aInstancePtr);
 }
 
-#define NS_ENSURE_VALIDCALL \
-    if (!NS_IsMainThread()) {                                     \
-        MOZ_CRASH("Using observer service off the main thread!"); \
-        return NS_ERROR_UNEXPECTED;                               \
-    }                                                             \
-    if (mShuttingDown) {                                          \
-        NS_ERROR("Using observer service after XPCOM shutdown!"); \
-        return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;                  \
-    }
-
-NS_IMETHODIMP
-nsObserverService::AddObserver(nsIObserver* aObserver, const char* aTopic,
-                               bool aOwnsWeak)
-{
-  LOG(("nsObserverService::AddObserver(%p: %s)",
-       (void*)aObserver, aTopic));
-
-  NS_ENSURE_VALIDCALL
-  if (NS_WARN_IF(!aObserver) || NS_WARN_IF(!aTopic)) {
-    return NS_ERROR_INVALID_ARG;
+nsresult
+nsObserverService::EnsureValidCall() const {
+  if (!NS_IsMainThread()) {
+    MOZ_CRASH("Using observer service off the main thread!");
+    return NS_ERROR_UNEXPECTED;
   }
 
+  if (mShuttingDown) {
+    NS_ERROR("Using observer service after XPCOM shutdown!");
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsObserverService::FilterHttpOnTopics(const char* aTopic)
+{
   // Specifically allow http-on-opening-request and http-on-stop-request in the
   // child process; see bug 1269765.
   if (mozilla::net::IsNeckoChild() && !strncmp(aTopic, "http-on-", 8) &&
@@ -226,6 +224,23 @@ nsObserverService::AddObserver(nsIObserver* aObserver, const char* aTopic,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsObserverService::AddObserver(nsIObserver* aObserver, const char* aTopic,
+                               bool aOwnsWeak)
+{
+  LOG(("nsObserverService::AddObserver(%p: %s, %s)",
+       (void*)aObserver, aTopic, aOwnsWeak ? "weak" : "strong"));
+
+  MOZ_TRY(EnsureValidCall());
+  if (NS_WARN_IF(!aObserver) || NS_WARN_IF(!aTopic)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  MOZ_TRY(FilterHttpOnTopics(aTopic));
+
   nsObserverList* observerList = mObserverTopicTable.PutEntry(aTopic);
   if (!observerList) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -239,7 +254,8 @@ nsObserverService::RemoveObserver(nsIObserver* aObserver, const char* aTopic)
 {
   LOG(("nsObserverService::RemoveObserver(%p: %s)",
        (void*)aObserver, aTopic));
-  NS_ENSURE_VALIDCALL
+
+  MOZ_TRY(EnsureValidCall());
   if (NS_WARN_IF(!aObserver) || NS_WARN_IF(!aTopic)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -249,8 +265,9 @@ nsObserverService::RemoveObserver(nsIObserver* aObserver, const char* aTopic)
     return NS_ERROR_FAILURE;
   }
 
-  /* This death grip is to protect against stupid consumers who call
-     RemoveObserver from their Destructor, see bug 485834/bug 325392. */
+  /* This death grip is needed to protect against consumers who call
+   * RemoveObserver from their Destructor thus potentially thus causing
+   * infinite recursion, see bug 485834/bug 325392. */
   nsCOMPtr<nsIObserver> kungFuDeathGrip(aObserver);
   return observerList->RemoveObserver(aObserver);
 }
@@ -259,7 +276,10 @@ NS_IMETHODIMP
 nsObserverService::EnumerateObservers(const char* aTopic,
                                       nsISimpleEnumerator** anEnumerator)
 {
-  NS_ENSURE_VALIDCALL
+  LOG(("nsObserverService::EnumerateObservers(%s)",
+       aTopic));
+
+  MOZ_TRY(EnsureValidCall());
   if (NS_WARN_IF(!anEnumerator) || NS_WARN_IF(!aTopic)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -280,7 +300,7 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports* aSubject,
 {
   LOG(("nsObserverService::NotifyObservers(%s)", aTopic));
 
-  NS_ENSURE_VALIDCALL
+  MOZ_TRY(EnsureValidCall());
   if (NS_WARN_IF(!aTopic)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -308,7 +328,7 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports* aSubject,
 NS_IMETHODIMP
 nsObserverService::UnmarkGrayStrongObservers()
 {
-  NS_ENSURE_VALIDCALL
+  MOZ_TRY(EnsureValidCall());
 
   nsCOMArray<nsIObserver> strongObservers;
   for (auto iter = mObserverTopicTable.Iter(); !iter.Done(); iter.Next()) {

@@ -4685,7 +4685,7 @@ pref("image.animated.decode-on-demand.recycle", true);
 
 // Whether we should generate full frames at decode time or partial frames which
 // are combined at display time (historical behavior and default).
-pref("image.animated.generate-full-frames", false);
+pref("image.animated.generate-full-frames", true);
 
 // Resume an animated image from the last displayed frame rather than
 // advancing when out of view.
