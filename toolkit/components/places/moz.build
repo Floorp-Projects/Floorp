@@ -16,7 +16,6 @@ XPIDL_MODULE = 'places'
 if CONFIG['MOZ_PLACES']:
     XPIDL_SOURCES += [
         'mozIAsyncHistory.idl',
-        'mozIAsyncLivemarks.idl',
         'mozIColorAnalyzer.idl',
         'mozIPlacesAutoComplete.idl',
         'mozIPlacesPendingOperation.idl',
@@ -77,7 +76,6 @@ if CONFIG['MOZ_PLACES']:
 
     EXTRA_COMPONENTS += [
         'ColorAnalyzer.js',
-        'nsLivemarkService.js',
         'nsPlacesExpiration.js',
         'nsTaggingService.js',
         'PageIconProtocolHandler.js',

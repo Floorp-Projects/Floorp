@@ -44,7 +44,7 @@ public:
               const nsAString& aType,
               const PointerEventInit& aParam);
 
-  int32_t PointerId();
+  int32_t PointerId(CallerType aCallerType);
   int32_t Width(CallerType aCallerType);
   int32_t Height(CallerType aCallerType);
   float Pressure(CallerType aCallerType);

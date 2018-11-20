@@ -43,7 +43,7 @@ add_task(async function run_test() {
   tagssvc.tagURI(uri5, ["bar cheese"]);
   tagssvc.tagURI(uri6, ["foo bar cheese"]);
 
-  // exclude livemark items, search for "item", should get one result
+  // Search for "item", should get one result
   var options = histsvc.getNewQueryOptions();
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
 

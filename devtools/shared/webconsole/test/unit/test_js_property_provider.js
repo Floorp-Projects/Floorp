@@ -98,6 +98,23 @@ function runChecks(dbgObject, environment, sandbox) {
     results = propertyProvider("this.");
     test_has_result(results, "testObject");
 
+    info("Test that suggestions are given for '(this).'");
+    results = propertyProvider("(this).");
+    test_has_result(results, "testObject");
+
+    info("Test that suggestions are given for deep 'this' properties access");
+    results = propertyProvider("(this).testObject.propA.");
+    test_has_result(results, "shift");
+
+    results = propertyProvider("(this).testObject.propA[");
+    test_has_result(results, `"shift"`);
+
+    results = propertyProvider("(this)['testObject']['propA'][");
+    test_has_result(results, `"shift"`);
+
+    results = propertyProvider("(this).testObject['propA'].");
+    test_has_result(results, "shift");
+
     info("Test that no suggestions are given for 'this.this'");
     results = propertyProvider("this.this");
     test_has_no_results(results);
@@ -178,31 +195,43 @@ function runChecks(dbgObject, environment, sandbox) {
   results = propertyProvider("[1,2,3].\n'foo'");
   test_has_no_results(results);
 
-  info("Test that suggestions are not given for numeric literals.");
-  results = propertyProvider("1.");
-  Assert.equal(null, results);
-
   info("Test that suggestions are not given for index that's out of bounds.");
   results = propertyProvider("testArray[10].");
   Assert.equal(null, results);
 
-  info("Test that no suggestions are given if an index is not numerical "
-       + "somewhere in the chain.");
-  results = propertyProvider("testArray[0]['propC'][0].");
-  Assert.equal(null, results);
-
-  results = propertyProvider("testObject['propA'][0].");
-  Assert.equal(null, results);
-
-  results = propertyProvider("testArray[0]['propC'].");
-  Assert.equal(null, results);
-
+  info("Test that invalid element access syntax does not return anything");
   results = propertyProvider("testArray[][1].");
   Assert.equal(null, results);
 
-  info("Test that suggestions are not given if there is an hyphen in the chain.");
+  info("Test that deep element access works.");
+  results = propertyProvider("testObject['propA'][0].");
+  test_has_result(results, "propB");
+
+  results = propertyProvider("testArray[1]['propC'].");
+  test_has_result(results, "shift");
+
+  results = propertyProvider("testArray[1].propC[0][");
+  test_has_result(results, `"trim"`);
+
+  results = propertyProvider("testArray[1].propC[0].");
+  test_has_result(results, "trim");
+
+  info("Test that suggestions are displayed when variable is wrapped in parens");
+  results = propertyProvider("(testObject)['propA'][0].");
+  test_has_result(results, "propB");
+
+  results = propertyProvider("(testArray)[1]['propC'].");
+  test_has_result(results, "shift");
+
+  results = propertyProvider("(testArray)[1].propC[0][");
+  test_has_result(results, `"trim"`);
+
+  results = propertyProvider("(testArray)[1].propC[0].");
+  test_has_result(results, "trim");
+
+  info("Test that suggestions are given if there is an hyphen in the chain.");
   results = propertyProvider("testHyphenated['prop-A'].");
-  Assert.equal(null, results);
+  test_has_result(results, "trim");
 
   info("Test that we have suggestions for generators.");
   const gen1Result = Cu.evalInSandbox("gen1.next().value", sandbox);

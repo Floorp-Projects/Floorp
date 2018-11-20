@@ -118,10 +118,6 @@ https://mismatch.untrusted.example.com:443	privileged,cert=untrusted
 https://untrusted-expired.example.com:443	privileged,cert=untrustedandexpired
 https://mismatch.untrusted-expired.example.com:443	privileged,cert=untrustedandexpired
 
-# This is here so that we don't load the default live bookmark over
-# the network in every test suite.
-http://fxfeeds.mozilla.com:80
-
 # Prevent safebrowsing tests from hitting the network for its-a-trap.html and
 # its-an-attack.html.
 http://www.itisatrap.org:80

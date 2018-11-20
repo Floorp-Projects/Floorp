@@ -43,6 +43,7 @@
 #include "mozilla/UniquePtr.h"
 #include "Units.h"
 #include "DOMIntersectionObserver.h"
+#include "nsContentUtils.h"
 
 class mozAutoDocUpdate;
 class nsIFrame;
@@ -1185,6 +1186,11 @@ public:
   void SetPointerCapture(int32_t aPointerId, ErrorResult& aError)
   {
     bool activeState = false;
+    if (nsContentUtils::ShouldResistFingerprinting(GetComposedDoc()) &&
+        aPointerId != PointerEventHandler::GetSpoofedPointerIdForRFP()) {
+      aError.Throw(NS_ERROR_DOM_INVALID_POINTER_ERR);
+      return;
+    }
     if (!PointerEventHandler::GetPointerInfo(aPointerId, activeState)) {
       aError.Throw(NS_ERROR_DOM_INVALID_POINTER_ERR);
       return;
@@ -1207,6 +1213,11 @@ public:
   void ReleasePointerCapture(int32_t aPointerId, ErrorResult& aError)
   {
     bool activeState = false;
+    if (nsContentUtils::ShouldResistFingerprinting(GetComposedDoc()) &&
+        aPointerId != PointerEventHandler::GetSpoofedPointerIdForRFP()) {
+      aError.Throw(NS_ERROR_DOM_INVALID_POINTER_ERR);
+      return;
+    }
     if (!PointerEventHandler::GetPointerInfo(aPointerId, activeState)) {
       aError.Throw(NS_ERROR_DOM_INVALID_POINTER_ERR);
       return;

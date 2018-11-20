@@ -96,8 +96,6 @@ var BookmarkPropertiesPanel = {
   _keyword: "",
   _postData: null,
   _charSet: "",
-  _feedURI: null,
-  _siteURI: null,
 
   _defaultInsertionPoint: null,
   _hiddenRows: [],
