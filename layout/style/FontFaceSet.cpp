@@ -34,6 +34,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsDeviceContext.h"
 #include "nsFontFaceLoader.h"
+#include "nsIClassOfService.h"
 #include "nsIConsoleService.h"
 #include "nsIContentPolicy.h"
 #include "nsIContentSecurityPolicy.h"
@@ -673,6 +674,11 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
   nsCOMPtr<nsISupportsPriority> priorityChannel(do_QueryInterface(channel));
   if (priorityChannel) {
     priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_HIGH);
+  }
+
+  nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
+  if (cos) {
+    cos->AddClassFlags(nsIClassOfService::TailForbidden);
   }
 
   rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), fontLoader, fontLoader);

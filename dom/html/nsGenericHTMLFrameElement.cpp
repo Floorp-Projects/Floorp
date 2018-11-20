@@ -323,8 +323,7 @@ nsGenericHTMLFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
           if (cur != val) {
             scrollable->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X, val);
             scrollable->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y, val);
-            RefPtr<nsPresContext> presContext;
-            docshell->GetPresContext(getter_AddRefs(presContext));
+            RefPtr<nsPresContext> presContext = docshell->GetPresContext();
             nsIPresShell* shell = presContext ? presContext->GetPresShell() : nullptr;
             nsIFrame* rootScroll = shell ? shell->GetRootScrollFrame() : nullptr;
             if (rootScroll) {
@@ -367,10 +366,10 @@ nsGenericHTMLFrameElement::AfterMaybeChangeAttr(int32_t aNamespaceID,
     if (aName == nsGkAtoms::src) {
       mSrcTriggeringPrincipal = nsContentUtils::GetAttrTriggeringPrincipal(
           this, aValue ? aValue->String() : EmptyString(), aMaybeScriptedPrincipal);
-      if (aValue && (!IsHTMLElement(nsGkAtoms::iframe) ||
-          !HasAttr(kNameSpaceID_None, nsGkAtoms::srcdoc))) {
-        // Don't propagate error here. The attribute was successfully set,
-        // that's what we should reflect.
+      if (!IsHTMLElement(nsGkAtoms::iframe) ||
+          !HasAttr(kNameSpaceID_None, nsGkAtoms::srcdoc)) {
+        // Don't propagate error here. The attribute was successfully
+        // set or removed; that's what we should reflect.
         LoadSrc();
       }
     } else if (aName == nsGkAtoms::name) {

@@ -424,15 +424,6 @@ Editor.prototype = {
 
     cm.on("gutterClick", (cmArg, line, gutter, ev) => {
       const lineOrOffset = !this.isWasm ? line : this.lineToWasmOffset(line);
-      const head = { line: line, ch: 0 };
-      const tail = { line: line, ch: this.getText(lineOrOffset).length };
-
-      // Shift-click on a gutter selects the whole line.
-      if (ev.shiftKey) {
-        cmArg.setSelection(head, tail);
-        return;
-      }
-
       this.emit("gutterClick", lineOrOffset, ev.button);
     });
 

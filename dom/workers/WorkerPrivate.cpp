@@ -19,8 +19,6 @@
 #include "mozilla/dom/ClientState.h"
 #include "mozilla/dom/Console.h"
 #include "mozilla/dom/DOMTypes.h"
-#include "mozilla/dom/ErrorEvent.h"
-#include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
@@ -32,6 +30,7 @@
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceStorageWorker.h"
 #include "mozilla/dom/PromiseDebugging.h"
+#include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/ThrottledEventQueue.h"
@@ -57,7 +56,6 @@
 #include "ScriptLoader.h"
 #include "mozilla/dom/ServiceWorkerEvents.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
-#include "SharedWorker.h"
 #include "WorkerCSPEventListener.h"
 #include "WorkerDebugger.h"
 #include "WorkerDebuggerManager.h"
@@ -886,39 +884,6 @@ StartsWithExplicit(nsACString& s)
 }
 #endif
 
-class MessagePortRunnable final : public WorkerRunnable
-{
-  MessagePortIdentifier mPortIdentifier;
-
-public:
-  MessagePortRunnable(WorkerPrivate* aWorkerPrivate, MessagePort* aPort)
-  : WorkerRunnable(aWorkerPrivate)
-  {
-    MOZ_ASSERT(aPort);
-    // In order to move the port from one thread to another one, we have to
-    // close and disentangle it. The output will be a MessagePortIdentifier that
-    // will be used to recreate a new MessagePort on the other thread.
-    aPort->CloneAndDisentangle(mPortIdentifier);
-  }
-
-private:
-  ~MessagePortRunnable()
-  { }
-
-  virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
-    return aWorkerPrivate->ConnectMessagePort(aCx, mPortIdentifier);
-  }
-
-  nsresult
-  Cancel() override
-  {
-    MessagePort::ForceClose(mPortIdentifier);
-    return WorkerRunnable::Cancel();
-  }
-};
-
 PRThread*
 PRThreadFromThread(nsIThread* aThread)
 {
@@ -1739,13 +1704,6 @@ WorkerPrivate::Notify(WorkerStatus aStatus)
     mParentStatus = aStatus;
   }
 
-  if (IsSharedWorker()) {
-    RuntimeService* runtime = RuntimeService::GetService();
-    MOZ_ASSERT(runtime);
-
-    runtime->ForgetSharedWorker(this);
-  }
-
   if (pending) {
 #ifdef DEBUG
     {
@@ -1779,35 +1737,6 @@ bool
 WorkerPrivate::Freeze(nsPIDOMWindowInner* aWindow)
 {
   AssertIsOnParentThread();
-
-  // Shared workers are only frozen if all of their owning documents are
-  // frozen. It can happen that mSharedWorkers is empty but this thread has
-  // not been unregistered yet.
-  if ((IsSharedWorker() || IsServiceWorker()) && !mSharedWorkers.IsEmpty()) {
-    AssertIsOnMainThread();
-
-    bool allFrozen = true;
-
-    for (uint32_t i = 0; i < mSharedWorkers.Length(); ++i) {
-      if (aWindow && mSharedWorkers[i]->GetOwner() == aWindow) {
-        // Calling Freeze() may change the refcount, ensure that the worker
-        // outlives this call.
-        RefPtr<SharedWorker> kungFuDeathGrip = mSharedWorkers[i];
-
-        kungFuDeathGrip->Freeze();
-      } else {
-        MOZ_ASSERT_IF(mSharedWorkers[i]->GetOwner() && aWindow,
-                      !SameCOMIdentity(mSharedWorkers[i]->GetOwner(), aWindow));
-        if (!mSharedWorkers[i]->IsFrozen()) {
-          allFrozen = false;
-        }
-      }
-    }
-
-    if (!allFrozen || mParentFrozen) {
-      return true;
-    }
-  }
 
   mParentFrozen = true;
 
@@ -1848,37 +1777,6 @@ bool
 WorkerPrivate::Thaw(nsPIDOMWindowInner* aWindow)
 {
   AssertIsOnParentThread();
-
-  // Shared workers are resumed if any of their owning documents are thawed.
-  // It can happen that mSharedWorkers is empty but this thread has not been
-  // unregistered yet.
-  if ((IsSharedWorker() || IsServiceWorker()) && !mSharedWorkers.IsEmpty()) {
-    AssertIsOnMainThread();
-
-    bool anyRunning = false;
-
-    for (uint32_t i = 0; i < mSharedWorkers.Length(); ++i) {
-      if (aWindow && mSharedWorkers[i]->GetOwner() == aWindow) {
-        // Calling Thaw() may change the refcount, ensure that the worker
-        // outlives this call.
-        RefPtr<SharedWorker> kungFuDeathGrip = mSharedWorkers[i];
-
-        kungFuDeathGrip->Thaw();
-        anyRunning = true;
-      } else {
-        MOZ_ASSERT_IF(mSharedWorkers[i]->GetOwner() && aWindow,
-                      !SameCOMIdentity(mSharedWorkers[i]->GetOwner(), aWindow));
-        if (!mSharedWorkers[i]->IsFrozen()) {
-          anyRunning = true;
-        }
-      }
-    }
-
-    if (!anyRunning || !mParentFrozen) {
-      return true;
-    }
-  }
-
   MOZ_ASSERT(mParentFrozen);
 
   mParentFrozen = false;
@@ -1920,8 +1818,8 @@ void
 WorkerPrivate::ParentWindowPaused()
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT_IF(IsDedicatedWorker(), mParentWindowPausedDepth == 0);
-  mParentWindowPausedDepth += 1;
+  MOZ_ASSERT(!mParentWindowPaused);
+  mParentWindowPaused = true;
 
   // This is called from WorkerPrivate construction, and we may not have
   // allocated mMainThreadDebuggeeEventTarget yet.
@@ -1936,12 +1834,8 @@ WorkerPrivate::ParentWindowResumed()
 {
   AssertIsOnMainThread();
 
-  MOZ_ASSERT(mParentWindowPausedDepth > 0);
-  MOZ_ASSERT_IF(IsDedicatedWorker(), mParentWindowPausedDepth == 1);
-  mParentWindowPausedDepth -= 1;
-  if (mParentWindowPausedDepth > 0) {
-    return;
-  }
+  MOZ_ASSERT(mParentWindowPaused);
+  mParentWindowPaused = false;
 
   {
     MutexAutoLock lock(mMutex);
@@ -1994,7 +1888,7 @@ WorkerPrivate::ModifyBusyCount(bool aIncrease)
 {
   AssertIsOnParentThread();
 
-  NS_ASSERTION(aIncrease || mBusyCount, "Mismatched busy count mods!");
+  MOZ_ASSERT(aIncrease || mBusyCount, "Mismatched busy count mods!");
 
   if (aIncrease) {
     mBusyCount++;
@@ -2188,232 +2082,6 @@ WorkerPrivate::MemoryPressure(bool aDummy)
   Unused << NS_WARN_IF(!runnable->Dispatch());
 }
 
-bool
-WorkerPrivate::RegisterSharedWorker(SharedWorker* aSharedWorker,
-                                    MessagePort* aPort)
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(aSharedWorker);
-  MOZ_ASSERT(IsSharedWorker());
-  MOZ_ASSERT(!mSharedWorkers.Contains(aSharedWorker));
-
-  if (IsSharedWorker()) {
-    RefPtr<MessagePortRunnable> runnable = new MessagePortRunnable(this, aPort);
-    if (!runnable->Dispatch()) {
-      return false;
-    }
-  }
-
-  mSharedWorkers.AppendElement(aSharedWorker);
-
-  // If there were other SharedWorker objects attached to this worker then they
-  // may all have been frozen and this worker would need to be thawed.
-  if (mSharedWorkers.Length() > 1 && IsFrozen() && !Thaw(nullptr)) {
-    return false;
-  }
-
-  return true;
-}
-
-void
-WorkerPrivate::BroadcastErrorToSharedWorkers(
-                                     JSContext* aCx,
-                                     const WorkerErrorReport* aReport,
-                                     bool aIsErrorEvent)
-{
-  AssertIsOnMainThread();
-
-  if (aIsErrorEvent && JSREPORT_IS_WARNING(aReport->mFlags)) {
-    // Don't fire any events anywhere.  Just log to console.
-    // XXXbz should we log to all the consoles of all the relevant windows?
-    MOZ_ASSERT(aReport);
-    WorkerErrorReport::LogErrorToConsole(*aReport, 0);
-    return;
-  }
-
-  AutoTArray<RefPtr<SharedWorker>, 10> sharedWorkers;
-  GetAllSharedWorkers(sharedWorkers);
-
-  if (sharedWorkers.IsEmpty()) {
-    return;
-  }
-
-  AutoTArray<WindowAction, 10> windowActions;
-
-  // First fire the error event at all SharedWorker objects. This may include
-  // multiple objects in a single window as well as objects in different
-  // windows.
-  for (size_t index = 0; index < sharedWorkers.Length(); index++) {
-    RefPtr<SharedWorker>& sharedWorker = sharedWorkers[index];
-
-    // May be null.
-    nsPIDOMWindowInner* window = sharedWorker->GetOwner();
-
-    RefPtr<Event> event;
-
-    if (aIsErrorEvent) {
-      RootedDictionary<ErrorEventInit> errorInit(aCx);
-      errorInit.mBubbles = false;
-      errorInit.mCancelable = true;
-      errorInit.mMessage = aReport->mMessage;
-      errorInit.mFilename = aReport->mFilename;
-      errorInit.mLineno = aReport->mLineNumber;
-      errorInit.mColno = aReport->mColumnNumber;
-
-      event = ErrorEvent::Constructor(sharedWorker, NS_LITERAL_STRING("error"),
-                                      errorInit);
-    } else {
-      event = Event::Constructor(sharedWorker, NS_LITERAL_STRING("error"),
-                                 EventInit());
-    }
-
-    if (!event) {
-      ThrowAndReport(window, NS_ERROR_UNEXPECTED);
-      continue;
-    }
-
-    event->SetTrusted(true);
-
-    ErrorResult res;
-    bool defaultActionEnabled =
-      sharedWorker->DispatchEvent(*event, CallerType::System, res);
-    if (res.Failed()) {
-      ThrowAndReport(window, res.StealNSResult());
-      continue;
-    }
-
-    if (!aIsErrorEvent) {
-      continue;
-    }
-
-    if (defaultActionEnabled) {
-      // Add the owning window to our list so that we will fire an error event
-      // at it later.
-      if (!windowActions.Contains(window)) {
-        windowActions.AppendElement(WindowAction(window));
-      }
-    } else {
-      size_t actionsIndex = windowActions.LastIndexOf(WindowAction(window));
-      if (actionsIndex != windowActions.NoIndex) {
-        // Any listener that calls preventDefault() will prevent the window from
-        // receiving the error event.
-        windowActions[actionsIndex].mDefaultAction = false;
-      }
-    }
-  }
-
-  // If there are no windows to consider further then we're done.
-  if (windowActions.IsEmpty()) {
-    return;
-  }
-
-  bool shouldLogErrorToConsole = true;
-
-  // Now fire error events at all the windows remaining.
-  for (uint32_t index = 0; index < windowActions.Length(); index++) {
-    WindowAction& windowAction = windowActions[index];
-
-    // If there is no window or the script already called preventDefault then
-    // skip this window.
-    if (!windowAction.mWindow || !windowAction.mDefaultAction) {
-      continue;
-    }
-
-    nsCOMPtr<nsIScriptGlobalObject> sgo =
-      do_QueryInterface(windowAction.mWindow);
-    MOZ_ASSERT(sgo);
-
-    MOZ_ASSERT(NS_IsMainThread());
-    RootedDictionary<ErrorEventInit> init(aCx);
-    init.mLineno = aReport->mLineNumber;
-    init.mFilename = aReport->mFilename;
-    init.mMessage = aReport->mMessage;
-    init.mCancelable = true;
-    init.mBubbles = true;
-
-    nsEventStatus status = nsEventStatus_eIgnore;
-    if (!sgo->HandleScriptError(init, &status)) {
-      ThrowAndReport(windowAction.mWindow, NS_ERROR_UNEXPECTED);
-      continue;
-    }
-
-    if (status == nsEventStatus_eConsumeNoDefault) {
-      shouldLogErrorToConsole = false;
-    }
-  }
-
-  // Finally log a warning in the console if no window tried to prevent it.
-  if (shouldLogErrorToConsole) {
-    MOZ_ASSERT(aReport);
-    WorkerErrorReport::LogErrorToConsole(*aReport, 0);
-  }
-}
-
-void
-WorkerPrivate::GetAllSharedWorkers(nsTArray<RefPtr<SharedWorker>>& aSharedWorkers)
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
-
-  if (!aSharedWorkers.IsEmpty()) {
-    aSharedWorkers.Clear();
-  }
-
-  for (uint32_t i = 0; i < mSharedWorkers.Length(); ++i) {
-    aSharedWorkers.AppendElement(mSharedWorkers[i]);
-  }
-}
-
-void
-WorkerPrivate::CloseSharedWorkersForWindow(nsPIDOMWindowInner* aWindow)
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
-  MOZ_ASSERT(aWindow);
-
-  bool someRemoved = false;
-
-  for (uint32_t i = 0; i < mSharedWorkers.Length();) {
-    if (mSharedWorkers[i]->GetOwner() == aWindow) {
-      mSharedWorkers[i]->Close();
-      mSharedWorkers.RemoveElementAt(i);
-      someRemoved = true;
-    } else {
-      MOZ_ASSERT(!SameCOMIdentity(mSharedWorkers[i]->GetOwner(), aWindow));
-      ++i;
-    }
-  }
-
-  if (!someRemoved) {
-    return;
-  }
-
-  // If there are still SharedWorker objects attached to this worker then they
-  // may all be frozen and this worker would need to be frozen. Otherwise,
-  // if that was the last SharedWorker then it's time to cancel this worker.
-
-  if (!mSharedWorkers.IsEmpty()) {
-    Freeze(nullptr);
-  } else {
-    Cancel();
-  }
-}
-
-void
-WorkerPrivate::CloseAllSharedWorkers()
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
-
-  for (uint32_t i = 0; i < mSharedWorkers.Length(); ++i) {
-    mSharedWorkers[i]->Close();
-  }
-
-  mSharedWorkers.Clear();
-
-  Cancel();
-}
-
 void
 WorkerPrivate::WorkerScriptLoaded()
 {
@@ -2524,50 +2192,6 @@ WorkerPrivate::UpdateOverridenLoadGroup(nsILoadGroup* aBaseLoadGroup)
   mLoadInfo.mInterfaceRequestor->MaybeAddTabChild(aBaseLoadGroup);
 }
 
-void
-WorkerPrivate::FlushReportsToSharedWorkers(nsIConsoleReportCollector* aReporter)
-{
-  AssertIsOnMainThread();
-
-  AutoTArray<RefPtr<SharedWorker>, 10> sharedWorkers;
-  AutoTArray<WindowAction, 10> windowActions;
-  GetAllSharedWorkers(sharedWorkers);
-
-  // First find out all the shared workers' window.
-  for (size_t index = 0; index < sharedWorkers.Length(); index++) {
-    RefPtr<SharedWorker>& sharedWorker = sharedWorkers[index];
-
-    // May be null.
-    nsPIDOMWindowInner* window = sharedWorker->GetOwner();
-
-    // Add the owning window to our list so that we will flush the reports later.
-    if (window && !windowActions.Contains(window)) {
-      windowActions.AppendElement(WindowAction(window));
-    }
-  }
-
-  bool reportErrorToBrowserConsole = true;
-
-  // Flush the reports.
-  for (uint32_t index = 0; index < windowActions.Length(); index++) {
-    WindowAction& windowAction = windowActions[index];
-
-    aReporter->FlushReportsToConsole(
-      windowAction.mWindow->WindowID(),
-      nsIConsoleReportCollector::ReportAction::Save);
-    reportErrorToBrowserConsole = false;
-  }
-
-  // Finally report to browser console if there is no any window or shared
-  // worker.
-  if (reportErrorToBrowserConsole) {
-    aReporter->FlushReportsToConsole(0);
-    return;
-  }
-
-  aReporter->ClearConsoleReports();
-}
-
 #ifdef DEBUG
 
 void
@@ -2646,7 +2270,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mCreationTimeStamp(TimeStamp::Now())
   , mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC)
   , mWorkerThreadAccessible(aParent)
-  , mParentWindowPausedDepth(0)
+  , mParentWindowPaused(false)
   , mPendingEventQueueClearing(false)
   , mCancelAllPendingRunnables(false)
   , mWorkerScriptExecutedSuccessfully(false)
@@ -2689,11 +2313,8 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
     // Our secure context state depends on the kind of worker we have.
     if (UsesSystemPrincipal() || IsServiceWorker()) {
       mIsSecureContext = true;
-    } else if (mLoadInfo.mWindow) {
-      // Shared and dedicated workers both inherit the loading window's secure
-      // context state.  Shared workers then prevent windows with a different
-      // secure context state from attaching to them.
-      mIsSecureContext = mLoadInfo.mWindow->IsSecureContext();
+    } else if (mLoadInfo.mSecureContext != WorkerLoadInfo::eNotSet) {
+      mIsSecureContext = mLoadInfo.mSecureContext == WorkerLoadInfo::eSecureContext;
     } else {
       MOZ_ASSERT_UNREACHABLE("non-chrome worker that is not a service worker "
                              "that has no parent and no associated window");
@@ -3056,6 +2677,10 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
       loadInfo.mStorageAllowed = access > nsContentUtils::StorageAccess::eDeny;
       loadInfo.mOriginAttributes = nsContentUtils::GetOriginAttributes(document);
       loadInfo.mParentController = globalWindow->GetController();
+      loadInfo.mSecureContext =
+        loadInfo.mWindow->IsSecureContext()
+          ? WorkerLoadInfo::eSecureContext
+          : WorkerLoadInfo::eInsecureContext;
     } else {
       // Not a window
       MOZ_ASSERT(isChrome);
@@ -3111,14 +2736,18 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
 
     // Top level workers' main script use the document charset for the script
     // uri encoding.
-    bool useDefaultEncoding = false;
+    nsCOMPtr<nsIURI> url;
+    rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(url),
+                                                   aScriptURL,
+                                                   document,
+                                                   loadInfo.mBaseURI);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
+
     rv = ChannelFromScriptURLMainThread(loadInfo.mLoadingPrincipal,
-                                        loadInfo.mBaseURI,
                                         document, loadInfo.mLoadGroup,
-                                        aScriptURL,
+                                        url,
                                         clientInfo,
                                         ContentPolicyType(aWorkerType),
-                                        useDefaultEncoding,
                                         getter_AddRefs(loadInfo.mChannel));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -5282,7 +4911,7 @@ WorkerPrivate::EndCTypesCall()
 
 bool
 WorkerPrivate::ConnectMessagePort(JSContext* aCx,
-                                  MessagePortIdentifier& aIdentifier)
+                                  const MessagePortIdentifier& aIdentifier)
 {
   AssertIsOnWorkerThread();
 
@@ -5447,6 +5076,24 @@ WorkerPrivate::GetPerformanceStorage()
   AssertIsOnMainThread();
   MOZ_ASSERT(mPerformanceStorage);
   return mPerformanceStorage;
+}
+
+void
+WorkerPrivate::SetRemoteWorkerController(RemoteWorkerChild* aController)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aController);
+  MOZ_ASSERT(!mRemoteWorkerController);
+
+  mRemoteWorkerController = aController;
+}
+
+RemoteWorkerChild*
+WorkerPrivate::GetRemoteWorkerController()
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(mRemoteWorkerController);
+  return mRemoteWorkerController;
 }
 
 NS_IMPL_ADDREF(WorkerPrivate::EventTarget)

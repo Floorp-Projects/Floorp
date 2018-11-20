@@ -389,12 +389,10 @@ nsImageLoadingContent::MaybeForceSyncDecoding(bool aPrepareNextRequest,
   }
 }
 
-NS_IMETHODIMP
-nsImageLoadingContent::GetImageBlockingStatus(int16_t* aStatus)
+int16_t
+nsImageLoadingContent::GetImageBlockingStatus()
 {
-  MOZ_ASSERT(aStatus, "Null out param");
-  *aStatus = ImageBlockingStatus();
-  return NS_OK;
+  return ImageBlockingStatus();
 }
 
 static void
@@ -1105,11 +1103,9 @@ nsImageLoadingContent::ForceImageState(bool aForce,
   mForcedImageState = EventStates(aState);
 }
 
-NS_IMETHODIMP
-nsImageLoadingContent::GetNaturalWidth(uint32_t* aNaturalWidth)
+uint32_t
+nsImageLoadingContent::NaturalWidth()
 {
-  NS_ENSURE_ARG_POINTER(aNaturalWidth);
-
   nsCOMPtr<imgIContainer> image;
   if (mCurrentRequest) {
     mCurrentRequest->GetImage(getter_AddRefs(image));
@@ -1117,19 +1113,15 @@ nsImageLoadingContent::GetNaturalWidth(uint32_t* aNaturalWidth)
 
   int32_t width;
   if (image && NS_SUCCEEDED(image->GetWidth(&width))) {
-    *aNaturalWidth = width;
-  } else {
-    *aNaturalWidth = 0;
+    return width;
   }
 
-  return NS_OK;
+  return 0;
 }
 
-NS_IMETHODIMP
-nsImageLoadingContent::GetNaturalHeight(uint32_t* aNaturalHeight)
+uint32_t
+nsImageLoadingContent::NaturalHeight()
 {
-  NS_ENSURE_ARG_POINTER(aNaturalHeight);
-
   nsCOMPtr<imgIContainer> image;
   if (mCurrentRequest) {
     mCurrentRequest->GetImage(getter_AddRefs(image));
@@ -1137,12 +1129,10 @@ nsImageLoadingContent::GetNaturalHeight(uint32_t* aNaturalHeight)
 
   int32_t height;
   if (image && NS_SUCCEEDED(image->GetHeight(&height))) {
-    *aNaturalHeight = height;
-  } else {
-    *aNaturalHeight = 0;
+    return height;
   }
 
-  return NS_OK;
+  return 0;
 }
 
 EventStates

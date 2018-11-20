@@ -225,11 +225,14 @@ FRAME_STATE_BIT(Generic, 42, NS_FRAME_FONT_INFLATION_FLOW_ROOT)
 FRAME_STATE_BIT(Generic, 43, NS_FRAME_SVG_LAYOUT)
 
 // This bit is set if a frame has a multi-column ancestor (i.e.
-// ColumnSetWrapperFrame) within the same block formatting context. A
-// top-level ColumnSetWrapperFrame doesn't have this bit set, whereas a
-// ColumnSetWrapperFrame nested inside a column does have this bit set. All
-// the children of the column-spans do not have this bit set because they
-// are in a new block formatting context created by column-spans.
+// ColumnSetWrapperFrame) within the same block formatting context. A top-level
+// ColumnSetWrapperFrame doesn't have this bit set, whereas a
+// ColumnSetWrapperFrame nested inside a column does have this bit set.
+//
+// All the children of the column-spanners or any other type of frames which
+// create their own block formatting context do not have this bit set because
+// they are not in the same block formatting context created by a multi-column
+// ancestor.
 FRAME_STATE_BIT(Generic, 44, NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)
 
 // Bits 45 is currently unused, but be kind and check with bug 1465474

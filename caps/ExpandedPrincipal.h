@@ -32,7 +32,7 @@ public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef() override { return nsJSPrincipals::AddRef(); };
   NS_IMETHOD_(MozExternalRefCountType) Release() override { return nsJSPrincipals::Release(); };
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
-  NS_IMETHOD GetHashValue(uint32_t* aHashValue) override;
+  uint32_t GetHashValue() override;
   NS_IMETHOD GetURI(nsIURI** aURI) override;
   NS_IMETHOD GetDomain(nsIURI** aDomain) override;
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;

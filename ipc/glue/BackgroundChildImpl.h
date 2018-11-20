@@ -114,6 +114,30 @@ protected:
   virtual bool
   DeallocPTemporaryIPCBlobChild(PTemporaryIPCBlobChild* aActor) override;
 
+  virtual mozilla::dom::PRemoteWorkerChild*
+  AllocPRemoteWorkerChild(const RemoteWorkerData& aData) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPRemoteWorkerConstructor(PRemoteWorkerChild* aActor,
+                               const RemoteWorkerData& aData) override;
+
+  virtual bool
+  DeallocPRemoteWorkerChild(mozilla::dom::PRemoteWorkerChild* aActor) override;
+
+  virtual mozilla::dom::PRemoteWorkerServiceChild*
+  AllocPRemoteWorkerServiceChild() override;
+
+  virtual bool
+  DeallocPRemoteWorkerServiceChild(mozilla::dom::PRemoteWorkerServiceChild* aActor) override;
+
+  virtual mozilla::dom::PSharedWorkerChild*
+  AllocPSharedWorkerChild(const mozilla::dom::RemoteWorkerData& aData,
+                          const uint64_t& aWindowID,
+                          const mozilla::dom::MessagePortIdentifier& aPortIdentifier) override;
+
+  virtual bool
+  DeallocPSharedWorkerChild(mozilla::dom::PSharedWorkerChild* aActor) override;
+
   virtual PFileDescriptorSetChild*
   AllocPFileDescriptorSetChild(const FileDescriptor& aFileDescriptor)
                                override;

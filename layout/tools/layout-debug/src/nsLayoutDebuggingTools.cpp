@@ -41,15 +41,13 @@ doc_viewer(nsIDocShell *aDocShell)
     return result.forget();
 }
 
-static already_AddRefed<nsIPresShell>
+static nsIPresShell*
 pres_shell(nsIDocShell *aDocShell)
 {
     nsCOMPtr<nsIContentViewer> cv = doc_viewer(aDocShell);
     if (!cv)
         return nullptr;
-    nsCOMPtr<nsIPresShell> result;
-    cv->GetPresShell(getter_AddRefs(result));
-    return result.forget();
+    return cv->GetPresShell();
 }
 
 static nsViewManager*

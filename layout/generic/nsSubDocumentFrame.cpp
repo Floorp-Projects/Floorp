@@ -1212,8 +1212,7 @@ EndSwapDocShellsForDocument(nsIDocument* aDocument, void*)
     nsCOMPtr<nsIContentViewer> cv;
     ds->GetContentViewer(getter_AddRefs(cv));
     while (cv) {
-      RefPtr<nsPresContext> pc;
-      cv->GetPresContext(getter_AddRefs(pc));
+      RefPtr<nsPresContext> pc = cv->GetPresContext();
       if (pc && pc->GetPresShell()) {
         pc->GetPresShell()->SetNeverPainting(ds->IsInvisible());
       }
@@ -1222,9 +1221,7 @@ EndSwapDocShellsForDocument(nsIDocument* aDocument, void*)
         nsView* v = cv->FindContainerView();
         dc->Init(v ? v->GetNearestWidget(nullptr) : nullptr);
       }
-      nsCOMPtr<nsIContentViewer> prev;
-      cv->GetPreviousViewer(getter_AddRefs(prev));
-      cv = prev;
+      cv = cv->GetPreviousViewer();
     }
   }
 

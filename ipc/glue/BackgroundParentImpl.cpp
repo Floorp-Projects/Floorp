@@ -35,6 +35,9 @@
 #include "mozilla/dom/ipc/TemporaryIPCBlobParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/dom/simpledb/ActorsParent.h"
+#include "mozilla/dom/RemoteWorkerParent.h"
+#include "mozilla/dom/RemoteWorkerServiceParent.h"
+#include "mozilla/dom/SharedWorkerParent.h"
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/MIDIManagerParent.h"
 #include "mozilla/dom/MIDIPortParent.h"
@@ -383,6 +386,73 @@ BackgroundParentImpl::DeallocPPendingIPCBlobParent(PPendingIPCBlobParent* aActor
   MOZ_ASSERT(aActor);
 
   delete aActor;
+  return true;
+}
+
+mozilla::dom::PRemoteWorkerParent*
+BackgroundParentImpl::AllocPRemoteWorkerParent(const RemoteWorkerData& aData)
+{
+  RefPtr<dom::RemoteWorkerParent> agent = new dom::RemoteWorkerParent();
+  return agent.forget().take();
+}
+
+bool
+BackgroundParentImpl::DeallocPRemoteWorkerParent(mozilla::dom::PRemoteWorkerParent* aActor)
+{
+  RefPtr<mozilla::dom::RemoteWorkerParent> actor =
+    dont_AddRef(static_cast<mozilla::dom::RemoteWorkerParent*>(aActor));
+  return true;
+}
+
+mozilla::dom::PRemoteWorkerServiceParent*
+BackgroundParentImpl::AllocPRemoteWorkerServiceParent()
+{
+  return new mozilla::dom::RemoteWorkerServiceParent();
+}
+
+IPCResult
+BackgroundParentImpl::RecvPRemoteWorkerServiceConstructor(PRemoteWorkerServiceParent* aActor)
+{
+  mozilla::dom::RemoteWorkerServiceParent* actor =
+    static_cast<mozilla::dom::RemoteWorkerServiceParent*>(aActor);
+  actor->Initialize();
+  return IPC_OK();
+}
+
+bool
+BackgroundParentImpl::DeallocPRemoteWorkerServiceParent(mozilla::dom::PRemoteWorkerServiceParent* aActor)
+{
+  delete aActor;
+  return true;
+}
+
+mozilla::dom::PSharedWorkerParent*
+BackgroundParentImpl::AllocPSharedWorkerParent(const mozilla::dom::RemoteWorkerData& aData,
+                                               const uint64_t& aWindowID,
+                                               const mozilla::dom::MessagePortIdentifier& aPortIdentifier)
+{
+  RefPtr<dom::SharedWorkerParent> agent =
+    new mozilla::dom::SharedWorkerParent();
+  return agent.forget().take();
+}
+
+IPCResult
+BackgroundParentImpl::RecvPSharedWorkerConstructor(PSharedWorkerParent* aActor,
+                                                   const mozilla::dom::RemoteWorkerData& aData,
+                                                   const uint64_t& aWindowID,
+                                                   const mozilla::dom::MessagePortIdentifier& aPortIdentifier)
+{
+  mozilla::dom::SharedWorkerParent* actor =
+    static_cast<mozilla::dom::SharedWorkerParent*>(aActor);
+  actor->Initialize(aData, aWindowID, aPortIdentifier);
+  return IPC_OK();
+}
+
+bool
+BackgroundParentImpl::DeallocPSharedWorkerParent(mozilla::dom::PSharedWorkerParent* aActor)
+{
+  RefPtr<mozilla::dom::SharedWorkerParent> actor =
+    dont_AddRef(static_cast<mozilla::dom::SharedWorkerParent*>(aActor));
   return true;
 }
 

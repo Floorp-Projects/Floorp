@@ -597,8 +597,7 @@ nsPluginFrame::CallSetWindow(bool aCheckIsHidden)
   nsresult rv = NS_ERROR_FAILURE;
   RefPtr<nsNPAPIPluginInstance> pi;
   if (!mInstanceOwner ||
-      NS_FAILED(rv = mInstanceOwner->GetInstance(getter_AddRefs(pi))) ||
-      !pi ||
+      !(pi = mInstanceOwner->GetInstance()) ||
       NS_FAILED(rv = mInstanceOwner->GetWindow(win)) ||
       !win)
     return rv;
@@ -1124,11 +1123,10 @@ nsPluginFrame::IsTransparentMode() const
   if (window->type != NPWindowTypeDrawable)
     return false;
 
-  nsresult rv;
-  RefPtr<nsNPAPIPluginInstance> pi;
-  rv = mInstanceOwner->GetInstance(getter_AddRefs(pi));
-  if (NS_FAILED(rv) || !pi)
+  RefPtr<nsNPAPIPluginInstance> pi = mInstanceOwner->GetInstance();
+  if (!pi) {
     return false;
+  }
 
   bool transparent = false;
   pi->IsTransparent(&transparent);
@@ -1230,9 +1228,10 @@ nsPluginFrame::PrintPlugin(gfxContext& aRenderingContext,
     return;
 
   // finally we can get our plugin instance
-  RefPtr<nsNPAPIPluginInstance> pi;
-  if (NS_FAILED(objectFrame->GetPluginInstance(getter_AddRefs(pi))) || !pi)
+  RefPtr<nsNPAPIPluginInstance> pi = objectFrame->GetPluginInstance();
+  if (!pi) {
     return;
+  }
 
   // now we need to setup the correct location for printing
   NPWindow window;
@@ -1697,16 +1696,14 @@ nsPluginFrame::WantsToHandleWheelEventAsDefaultAction() const
 #endif
 }
 
-nsresult
-nsPluginFrame::GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance)
+nsNPAPIPluginInstance*
+nsPluginFrame::GetPluginInstance()
 {
-  *aPluginInstance = nullptr;
-
   if (!mInstanceOwner) {
-    return NS_OK;
+    return nullptr;
   }
 
-  return mInstanceOwner->GetInstance(aPluginInstance);
+  return mInstanceOwner->GetInstance();
 }
 
 nsresult
@@ -1716,8 +1713,7 @@ nsPluginFrame::GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor)
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<nsNPAPIPluginInstance> inst;
-  mInstanceOwner->GetInstance(getter_AddRefs(inst));
+  RefPtr<nsNPAPIPluginInstance> inst = mInstanceOwner->GetInstance();
   if (!inst) {
     return NS_ERROR_FAILURE;
   }
@@ -1745,10 +1741,9 @@ nsPluginFrame::GetNextObjectFrame(nsPresContext* aPresContext, nsIFrame* aRoot)
   for (nsIFrame* child : aRoot->PrincipalChildList()) {
     nsIObjectFrame* outFrame = do_QueryFrame(child);
     if (outFrame) {
-      RefPtr<nsNPAPIPluginInstance> pi;
-      outFrame->GetPluginInstance(getter_AddRefs(pi));  // make sure we have a REAL plugin
-      if (pi)
+      if (outFrame->GetPluginInstance()) { // make sure we have a REAL plugin
         return outFrame;
+      }
     }
 
     outFrame = GetNextObjectFrame(aPresContext, child);

@@ -1238,7 +1238,7 @@ add_task(async function test_addonsAndPlugins() {
     updateDay: truncateToDays(SYSTEM_ADDON_INSTALL_DATE),
     signedState: undefined,
     isSystem: true,
-    isWebExtension: false,
+    isWebExtension: true,
     multiprocessCompatible: true,
   };
 

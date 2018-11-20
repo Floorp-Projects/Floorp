@@ -6628,14 +6628,11 @@ nsContentUtils::IsSubDocumentTabbable(nsIContent* aContent)
     return false;
   }
 
-  nsCOMPtr<nsIContentViewer> zombieViewer;
-  contentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
-
   // If there are 2 viewers for the current docshell, that
   // means the current document may be a zombie document.
   // While load and pageshow events are dispatched, zombie viewer is the old,
   // to be hidden document.
-  if (zombieViewer) {
+  if (contentViewer->GetPreviousViewer()) {
     bool inOnLoad = false;
     docShell->GetIsExecutingOnLoadHandler(&inOnLoad);
     return inOnLoad;
@@ -7154,8 +7151,7 @@ nsContentUtils::HasPluginWithUncontrolledEventDispatch(nsIContent* aContent)
     return false;
   }
 
-  RefPtr<nsNPAPIPluginInstance> plugin;
-  olc->GetPluginInstance(getter_AddRefs(plugin));
+  RefPtr<nsNPAPIPluginInstance> plugin = olc->GetPluginInstance();
   if (!plugin) {
     return false;
   }

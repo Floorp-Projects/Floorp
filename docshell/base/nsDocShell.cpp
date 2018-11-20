@@ -1115,62 +1115,48 @@ nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
          originIsFile && targetIsFile;
 }
 
-nsresult
-nsDocShell::GetEldestPresContext(nsPresContext** aPresContext)
+nsPresContext*
+nsDocShell::GetEldestPresContext()
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
-  *aPresContext = nullptr;
-
-  nsCOMPtr<nsIContentViewer> viewer = mContentViewer;
+  nsIContentViewer* viewer = mContentViewer;
   while (viewer) {
-    nsCOMPtr<nsIContentViewer> prevViewer;
-    viewer->GetPreviousViewer(getter_AddRefs(prevViewer));
+    nsIContentViewer* prevViewer = viewer->GetPreviousViewer();
     if (!prevViewer) {
-      return viewer->GetPresContext(aPresContext);
+      return viewer->GetPresContext();
     }
     viewer = prevViewer;
   }
 
-  return NS_OK;
+  return nullptr;
 }
 
-NS_IMETHODIMP
-nsDocShell::GetPresContext(nsPresContext** aPresContext)
+nsPresContext*
+nsDocShell::GetPresContext()
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
-  *aPresContext = nullptr;
-
   if (!mContentViewer) {
-    return NS_OK;
+    return nullptr;
   }
 
-  return mContentViewer->GetPresContext(aPresContext);
+  return mContentViewer->GetPresContext();
 }
 
-NS_IMETHODIMP_(nsIPresShell*)
+nsIPresShell*
 nsDocShell::GetPresShell()
 {
-  RefPtr<nsPresContext> presContext;
-  (void)GetPresContext(getter_AddRefs(presContext));
+  nsPresContext* presContext = GetPresContext();
   return presContext ? presContext->GetPresShell() : nullptr;
 }
 
-NS_IMETHODIMP
-nsDocShell::GetEldestPresShell(nsIPresShell** aPresShell)
+nsIPresShell*
+nsDocShell::GetEldestPresShell()
 {
-  nsresult rv = NS_OK;
-
-  NS_ENSURE_ARG_POINTER(aPresShell);
-  *aPresShell = nullptr;
-
-  RefPtr<nsPresContext> presContext;
-  (void)GetEldestPresContext(getter_AddRefs(presContext));
+  nsPresContext* presContext = GetEldestPresContext();
 
   if (presContext) {
-    NS_IF_ADDREF(*aPresShell = presContext->GetPresShell());
+    return presContext->GetPresShell();
   }
 
-  return rv;
+  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -3398,18 +3384,16 @@ nsDocShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsDocShell::SetChildOffset(int32_t aChildOffset)
 {
   mChildOffset = aChildOffset;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShell::GetChildOffset(int32_t* aChildOffset)
+int32_t
+nsDocShell::GetChildOffset()
 {
-  *aChildOffset = mChildOffset;
-  return NS_OK;
+  return mChildOffset;
 }
 
 NS_IMETHODIMP
@@ -3946,8 +3930,7 @@ nsDocShell::SetDeviceSizeIsPageSize(bool aValue)
 {
   if (mDeviceSizeIsPageSize != aValue) {
     mDeviceSizeIsPageSize = aValue;
-    RefPtr<nsPresContext> presContext;
-    GetPresContext(getter_AddRefs(presContext));
+    RefPtr<nsPresContext> presContext = GetPresContext();
     if (presContext) {
       presContext->MediaFeatureValuesChanged({
         MediaFeatureChangeReason::DeviceSizeIsPageSizeChange });
@@ -8108,8 +8091,10 @@ nsDocShell::RestoreFromHistory()
   // that's about to go away.
 
   if (mContentViewer) {
-    nsCOMPtr<nsIContentViewer> previousViewer;
-    mContentViewer->GetPreviousViewer(getter_AddRefs(previousViewer));
+    // Make sure to hold a strong ref to previousViewer here while we
+    // drop the reference to it from mContentViewer.
+    nsCOMPtr<nsIContentViewer> previousViewer =
+      mContentViewer->GetPreviousViewer();
     if (previousViewer) {
       mContentViewer->SetPreviousViewer(nullptr);
       previousViewer->Destroy();
@@ -8819,8 +8804,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 
     // Try to extract the canvas background color from the old
     // presentation shell, so we can use it for the next document.
-    nsCOMPtr<nsIPresShell> shell;
-    contentViewer->GetPresShell(getter_AddRefs(shell));
+    nsCOMPtr<nsIPresShell> shell = contentViewer->GetPresShell();
 
     if (shell) {
       bgcolor = shell->GetCanvasBackground();
@@ -8878,8 +8862,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 
   // Stuff the bgcolor from the old pres shell into the new
   // pres shell. This improves page load continuity.
-  nsCOMPtr<nsIPresShell> shell;
-  mContentViewer->GetPresShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIPresShell> shell = mContentViewer->GetPresShell();
 
   if (shell) {
     shell->SetCanvasBackground(bgcolor);
@@ -9999,12 +9982,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     // If not a zombie, don't stop content until data
     // starts arriving from the new URI...
 
-    nsCOMPtr<nsIContentViewer> zombieViewer;
-    if (mContentViewer) {
-      mContentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
-    }
-
-    if (zombieViewer ||
+    if ((mContentViewer && mContentViewer->GetPreviousViewer()) ||
         LOAD_TYPE_HAS_FLAGS(aLoadType, LOAD_FLAGS_STOP_CONTENT)) {
       rv = Stop(nsIWebNavigation::STOP_ALL);
     } else {
@@ -10039,12 +10017,12 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     // the case, we need to go ahead and force it into its shentry so we
     // can restore it.
     if (mContentViewer) {
-      nsCOMPtr<nsIContentViewer> prevViewer;
-      mContentViewer->GetPreviousViewer(getter_AddRefs(prevViewer));
+      nsCOMPtr<nsIContentViewer> prevViewer =
+        mContentViewer->GetPreviousViewer();
       if (prevViewer) {
 #ifdef DEBUG
-        nsCOMPtr<nsIContentViewer> prevPrevViewer;
-        prevViewer->GetPreviousViewer(getter_AddRefs(prevPrevViewer));
+        nsCOMPtr<nsIContentViewer> prevPrevViewer =
+          prevViewer->GetPreviousViewer();
         NS_ASSERTION(!prevPrevViewer, "Should never have viewer chain here");
 #endif
         nsCOMPtr<nsISHEntry> viewerEntry;
@@ -14084,11 +14062,9 @@ nsDocShell::SetDisplayMode(uint32_t aDisplayMode)
   if (aDisplayMode != mDisplayMode) {
     mDisplayMode = aDisplayMode;
 
-    RefPtr<nsPresContext> presContext;
-    if (NS_SUCCEEDED(GetPresContext(getter_AddRefs(presContext)))) {
-      presContext->MediaFeatureValuesChangedAllDocuments({
-        MediaFeatureChangeReason::DisplayModeChange });
-    }
+    RefPtr<nsPresContext> presContext = GetPresContext();
+    presContext->MediaFeatureValuesChangedAllDocuments({
+      MediaFeatureChangeReason::DisplayModeChange });
   }
 
   return NS_OK;

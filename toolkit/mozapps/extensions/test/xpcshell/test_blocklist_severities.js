@@ -121,15 +121,18 @@ var WindowWatcher = {
 MockRegistrar.register("@mozilla.org/embedcomp/window-watcher;1", WindowWatcher);
 
 function createAddon(addon) {
-  return promiseInstallXPI({
-    name: addon.name,
-    id: addon.id,
-    version: addon.version,
-    bootstrap: true,
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: addon.appVersion,
-      maxVersion: addon.appVersion}],
+  return promiseInstallWebExtension({
+    manifest: {
+      name: addon.name,
+      version: addon.version,
+      applications: {
+        gecko: {
+          id: addon.id,
+          strict_min_version: addon.appVersion,
+          strict_max_version: addon.appVersion,
+        },
+      },
+    },
   });
 }
 
@@ -181,7 +184,7 @@ function checkAddonState(addon, state) {
 }
 
 add_task(async function setup() {
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "3");
   await promiseStartupManager();
 
   for (let addon of ADDONS)
