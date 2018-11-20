@@ -129,10 +129,13 @@ class ThumbnailHelper final
     {
         nsCOMPtr<nsPIDOMWindowOuter> win = nsPIDOMWindowOuter::From(aWindow);
         nsCOMPtr<nsIDocShell> docShell = win->GetDocShell();
-        RefPtr<nsPresContext> presContext;
+ 
+        if (!docShell) {
+            return nullptr;
+        }
 
-        if (!docShell || NS_FAILED(docShell->GetPresContext(
-                getter_AddRefs(presContext))) || !presContext) {
+        RefPtr<nsPresContext> presContext = docShell->GetPresContext();
+        if (!presContext) {
             return nullptr;
         }
 

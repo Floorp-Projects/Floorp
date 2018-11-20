@@ -28,16 +28,6 @@ var ADDONS = [
   },
 ];
 
-var METADATA = {
-  version: "2.0",
-  bootstrap: true,
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "2",
-    maxVersion: "2",
-  }],
-};
-
 const gHaveSymlinks = AppConstants.platform != "win";
 
 
@@ -60,7 +50,7 @@ function promiseWriteFile(aFile, aData) {
 function checkAddonsExist() {
   for (let addon of ADDONS) {
     let file = addon.directory.clone();
-    file.append("install.rdf");
+    file.append("manifest.json");
     Assert.ok(file.exists());
   }
 }
@@ -97,9 +87,14 @@ async function run_proxy_tests() {
     addon.proxyFile = profileDir.clone();
     addon.proxyFile.append(addon.dirId || addon.id);
 
-    METADATA.id = addon.id;
-    METADATA.name = addon.id;
-    await promiseWriteInstallRDFToDir(METADATA, gTmpD);
+    let files = ExtensionTestCommon.generateFiles({
+      manifest: {
+        name: addon.id,
+        applications: {gecko: {id: addon.id}},
+      },
+    });
+    let path = OS.Path.join(gTmpD.path, addon.id);
+    await AddonTestUtils.promiseWriteFilesToDir(path, files);
 
     if (addon.type == "proxy") {
       await promiseWriteFile(addon.proxyFile, addon.directory.path);
@@ -173,25 +168,25 @@ async function run_proxy_tests() {
   }
 }
 
+// Check that symlinks are not followed out of a directory tree
+// when deleting an add-on.
 async function run_symlink_tests() {
-  // Check that symlinks are not followed out of a directory tree
-  // when deleting an add-on.
-
-  METADATA.id = "unpacked@test.mozilla.org";
-  METADATA.name = METADATA.id;
-  METADATA.unpack = "true";
+  const ID = "unpacked@test.mozilla.org";
 
   let tempDirectory = gTmpD.clone();
-  tempDirectory.append(METADATA.id);
+  tempDirectory.append(ID);
 
   let tempFile = tempDirectory.clone();
   tempFile.append("test.txt");
   tempFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
 
   let addonDirectory = profileDir.clone();
-  addonDirectory.append(METADATA.id);
+  addonDirectory.append(ID);
 
-  await promiseWriteInstallRDFToDir(METADATA, profileDir);
+  let files = ExtensionTestCommon.generateFiles({
+    manifest: {applications: {gecko: {id: ID}}},
+  });
+  await AddonTestUtils.promiseWriteFilesToDir(addonDirectory.path, files);
 
   let symlink = addonDirectory.clone();
   symlink.append(tempDirectory.leafName);
@@ -205,7 +200,7 @@ async function run_symlink_tests() {
 
   await promiseStartupManager();
 
-  let addon = await AddonManager.getAddonByID(METADATA.id);
+  let addon = await AddonManager.getAddonByID(ID);
   Assert.notEqual(addon, null);
 
   await addon.uninstall();

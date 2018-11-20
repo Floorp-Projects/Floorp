@@ -239,13 +239,6 @@ DomainSet::ContainsSuperDomain(nsIURI* aDomain, bool* aContains)
 
 }
 
-NS_IMETHODIMP
-DomainSet::GetType(uint32_t* aType)
-{
-    *aType = mType;
-    return NS_OK;
-}
-
 void
 DomainSet::CloneSet(InfallibleTArray<URIParams>* aDomains)
 {

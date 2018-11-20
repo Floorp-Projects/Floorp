@@ -111,10 +111,7 @@ nsSessionStoreUtils::ForEachNonDynamicChildFrame(mozIDOMWindowProxy* aWindow,
       continue;
     }
 
-    int32_t childOffset = 0;
-    rv = childDocShell->GetChildOffset(&childOffset);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    int32_t childOffset = childDocShell->GetChildOffset();
     aCallback->HandleFrame(item->GetWindow(), childOffset);
   }
 

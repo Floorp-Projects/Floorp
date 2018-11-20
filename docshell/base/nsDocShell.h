@@ -886,7 +886,7 @@ private: // member functions
   nsresult RefreshURIFromQueue();
   nsresult Embed(nsIContentViewer* aContentViewer,
                  const char* aCommand, nsISupports* aExtraInfo);
-  nsresult GetEldestPresContext(nsPresContext** aPresContext);
+  nsPresContext* GetEldestPresContext();
   nsresult CheckLoadingPermissions();
   nsresult PersistLayoutHistoryState();
   nsresult LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType);

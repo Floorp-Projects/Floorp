@@ -234,6 +234,10 @@ protected:
   // want a non-const nsIContent.
   virtual nsIContent* AsContent() = 0;
 
+  // Hooks for subclasses to call to get the intrinsic width and height.
+  uint32_t NaturalWidth();
+  uint32_t NaturalHeight();
+
   enum class ImageDecodingType : uint8_t {
     Auto,
     Async,

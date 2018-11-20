@@ -107,6 +107,7 @@ media/libtheora/.*
 media/libtremor/.*
 media/libvorbis/.*
 media/libvpx/.*
+media/libwebp/.*
 media/libyuv/.*
 media/mtransport/third_party/.*
 media/openmax_dl/.*

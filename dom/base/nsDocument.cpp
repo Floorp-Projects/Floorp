@@ -12915,7 +12915,7 @@ nsIDocument::SetUserHasInteracted()
     loadInfo->SetDocumentHasUserInteracted(true);
   }
 
-  MaybeAllowStorageForOpener();
+  MaybeAllowStorageForOpenerAfterUserInteraction();
 }
 
 void
@@ -12962,7 +12962,7 @@ nsIDocument::SetDocTreeHadPlayRevoked()
 }
 
 void
-nsIDocument::MaybeAllowStorageForOpener()
+nsIDocument::MaybeAllowStorageForOpenerAfterUserInteraction()
 {
   if (StaticPrefs::network_cookie_cookieBehavior() !=
         nsICookieService::BEHAVIOR_REJECT_TRACKER) {
@@ -13020,7 +13020,7 @@ nsIDocument::MaybeAllowStorageForOpener()
   // We don't care when the asynchronous work finishes here.
   Unused << AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(NodePrincipal(),
                                                                      openerInner,
-                                                                     AntiTrackingCommon::eHeuristic);
+                                                                     AntiTrackingCommon::eOpenerAfterUserInteraction);
 }
 
 namespace {

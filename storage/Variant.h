@@ -347,11 +347,9 @@ struct variant_blob_traits<uint8_t[], true>
 class NullVariant : public Variant_base
 {
 public:
-  NS_IMETHOD GetDataType(uint16_t *_type) override
+  uint16_t GetDataType() override
   {
-    NS_ENSURE_ARG_POINTER(_type);
-    *_type = nsIDataType::VTYPE_EMPTY;
-    return NS_OK;
+    return nsIDataType::VTYPE_EMPTY;
   }
 
   NS_IMETHOD GetAsAUTF8String(nsACString &_str) override
@@ -386,10 +384,9 @@ public:
     variant_storage_traits<DataType, Adopting>::storage_conversion(aData, &mData);
   }
 
-  NS_IMETHOD GetDataType(uint16_t *_type) override
+  uint16_t GetDataType() override
   {
-    *_type = variant_traits<DataType>::type();
-    return NS_OK;
+    return variant_traits<DataType>::type();
   }
   NS_IMETHOD GetAsInt32(int32_t *_integer) override
   {

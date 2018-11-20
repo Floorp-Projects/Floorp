@@ -139,11 +139,10 @@ NullPrincipal::GetScriptLocation(nsACString &aStr)
  * nsIPrincipal implementation
  */
 
-NS_IMETHODIMP
-NullPrincipal::GetHashValue(uint32_t *aResult)
+uint32_t
+NullPrincipal::GetHashValue()
 {
-  *aResult = (NS_PTR_TO_INT32(this) >> 2);
-  return NS_OK;
+  return (NS_PTR_TO_INT32(this) >> 2);
 }
 
 NS_IMETHODIMP

@@ -363,6 +363,15 @@ public:
                         const ContentParentId& aCpId,
                         bool aMarkedDestroying);
 
+  // This method can be called on any thread.
+  void
+  RegisterRemoteWorkerActor();
+
+  // This method _must_ be called on main-thread because it can start the
+  // shutting down of the content process.
+  void
+  UnregisterRemoveWorkerActor();
+
   void ReportChildAlreadyBlocked();
 
   bool RequestRunToCompletion();
@@ -1301,6 +1310,13 @@ private:
   // SIGSTOP), are still killed eventually.  This task enforces that
   // timer.
   nsCOMPtr<nsITimer> mForceKillTimer;
+
+  // Number of active remote workers. This value is increased when a
+  // RemoteWorkerParent actor is created for this ContentProcess and it is
+  // decreased when the actor is destroyed.
+  // It's touched on PBackground thread and on main-thread.
+  Atomic<uint32_t> mRemoteWorkerActors;
+
   // How many tabs we're waiting to finish their destruction
   // sequence.  Precisely, how many TabParents have called
   // NotifyTabDestroying() but not called NotifyTabDestroyed().

@@ -77,7 +77,7 @@ PaintFragment::Record(nsIDocShell* aDocShell,
   // Grab the presentation shell to render
   RefPtr<nsPresContext> presContext;
   if (aDocShell) {
-    aDocShell->GetPresContext(getter_AddRefs(presContext));
+    presContext = aDocShell->GetPresContext();
   }
   if (!presContext) {
     PF_LOG("Couldn't find PresContext.\n");

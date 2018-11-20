@@ -201,14 +201,6 @@ const BOOTSTRAP_MONITOR_BOOTSTRAP_JS = `
   ChromeUtils.import("resource://xpcshell-data/BootstrapMonitor.jsm").monitor(this);
 `;
 
-
-const EMPTY_BOOTSTRAP_JS = `
-  function startup() {}
-  function shutdown() {}
-  function install() {}
-  function uninstall() {}
-`;
-
 // Listens to messages from bootstrap.js telling us what add-ons were started
 // and stopped etc. and performs some sanity checks that only installed add-ons
 // are started etc.
@@ -573,7 +565,7 @@ function do_check_in_crash_annotation(aId, aVersion) {
   }
 
   if (!("Add-ons" in gAppInfo.annotations)) {
-    Assert.equal(false, true);
+    Assert.ok(false, "Cannot find Add-ons entry in crash annotations");
     return;
   }
 
@@ -703,8 +695,6 @@ function do_check_addon(aActualAddon, aExpectedAddon, aProperties) {
         break;
 
       case "developers":
-      case "translators":
-      case "contributors":
         Assert.equal(actualValue.length, expectedValue.length);
         for (let i = 0; i < actualValue.length; i++)
           do_check_author(actualValue[i], expectedValue[i]);
@@ -805,16 +795,6 @@ function isThemeInAddonsList(aDir, aId) {
 
 function isExtensionInBootstrappedList(aDir, aId) {
   return AddonTestUtils.addonsList.hasExtension(aDir, aId);
-}
-
-function check_startup_changes(aType, aIds) {
-  var ids = aIds.slice(0);
-  ids.sort();
-  var changes = AddonManager.getStartupChanges(aType);
-  changes = changes.filter(aEl => /@tests.mozilla.org$/.test(aEl));
-  changes.sort();
-
-  Assert.equal(JSON.stringify(ids), JSON.stringify(changes));
 }
 
 /**
@@ -1171,9 +1151,13 @@ function prepare_test(aExpectedEvents, aExpectedInstalls, aNext) {
   gNext = aNext;
 }
 
-function end_test() {
+function clearListeners() {
   AddonManager.removeAddonListener(AddonListener);
   AddonManager.removeInstallListener(InstallListener);
+}
+
+function end_test() {
+  clearListeners();
 }
 
 // Checks if all expected events have been seen and if so calls the callback

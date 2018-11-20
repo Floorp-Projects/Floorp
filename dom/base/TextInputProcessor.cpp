@@ -392,11 +392,7 @@ TextInputProcessor::BeginInputTransactionInternal(
   if (NS_WARN_IF(!docShell)) {
     return NS_ERROR_FAILURE;
   }
-  RefPtr<nsPresContext> presContext;
-  nsresult rv = docShell->GetPresContext(getter_AddRefs(presContext));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  RefPtr<nsPresContext> presContext = docShell->GetPresContext();
   if (NS_WARN_IF(!presContext)) {
     return NS_ERROR_FAILURE;
   }
@@ -445,6 +441,7 @@ TextInputProcessor::BeginInputTransactionInternal(
     }
   }
 
+  nsresult rv = NS_OK;
   if (aForTests) {
     bool isAPZAware = gfxPrefs::TestEventsAsyncEnabled();
     rv = dispatcher->BeginTestInputTransaction(this, isAPZAware);

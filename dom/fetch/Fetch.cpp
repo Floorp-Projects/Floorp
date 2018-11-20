@@ -33,6 +33,7 @@
 #include "mozilla/dom/MutableBlobStreamListener.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
+#include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -906,7 +907,7 @@ WorkerFetchResolver::FlushConsoleReport()
 
   if (worker->IsSharedWorker()) {
     // Flush to shared worker
-    worker->FlushReportsToSharedWorkers(mReporter);
+    worker->GetRemoteWorkerController()->FlushReportsOnMainThread(mReporter);
     return;
   }
 

@@ -9401,8 +9401,8 @@ nsHttpChannel::SetLoadGroupUserAgentOverride()
         // Don't overwrite the UA if it is already set (eg by an XHR with explicit UA).
         if (ua.IsEmpty()) {
             if (rc) {
-                rc->GetUserAgentOverride(ua);
-                SetRequestHeader(NS_LITERAL_CSTRING("User-Agent"), ua, false);
+                SetRequestHeader(NS_LITERAL_CSTRING("User-Agent"),
+                                 rc->GetUserAgentOverride(), false);
             } else {
                 gHttpHandler->OnUserAgentRequest(this);
             }
