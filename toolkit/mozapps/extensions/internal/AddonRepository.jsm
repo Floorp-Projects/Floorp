@@ -91,8 +91,7 @@ function convertHTMLToPlainText(html) {
   input.data = html.replace(/\n/g, "<br>");
 
   var output = {};
-  converter.convert("text/html", input, input.data.length, "text/unicode",
-                    output, {});
+  converter.convert("text/html", input, "text/unicode", output);
 
   if (output.value instanceof Ci.nsISupportsString)
     return output.value.data.replace(/\r\n/g, "\n");
