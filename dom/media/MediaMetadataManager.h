@@ -26,10 +26,11 @@ typedef MediaEventSourceExc<TimedMetadata> TimedMetadataEventSource;
 class TimedMetadata : public LinkedListElement<TimedMetadata> {
  public:
   TimedMetadata(const media::TimeUnit& aPublishTime,
-                nsAutoPtr<MetadataTags>&& aTags, nsAutoPtr<MediaInfo>&& aInfo)
-      : mPublishTime(aPublishTime),
-        mTags(std::move(aTags)),
-        mInfo(std::move(aInfo)) {}
+                UniquePtr<MetadataTags>&& aTags,
+                nsAutoPtr<MediaInfo>&& aInfo)
+    : mPublishTime(aPublishTime)
+    , mTags(std::move(aTags))
+    , mInfo(std::move(aInfo)) {}
 
   // Define our move constructor because we don't want to move the members of
   // LinkedListElement to change the list.
@@ -42,7 +43,7 @@ class TimedMetadata : public LinkedListElement<TimedMetadata> {
   media::TimeUnit mPublishTime;
   // The metadata. The ownership is transfered to the element when dispatching
   // to the main threads.
-  nsAutoPtr<MetadataTags> mTags;
+  UniquePtr<MetadataTags> mTags;
   // The media info, including the info of audio tracks and video tracks.
   // The ownership is transfered to MediaDecoder when dispatching to the
   // main thread.
