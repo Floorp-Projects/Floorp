@@ -392,12 +392,12 @@ void OggDemuxer::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials) {
   }
 }
 
-void OggDemuxer::FillTags(TrackInfo* aInfo, MetadataTags* aTags) {
+void OggDemuxer::FillTags(TrackInfo* aInfo, UniquePtr<MetadataTags>&& aTags) {
   if (!aTags) {
     return;
   }
-  nsAutoPtr<MetadataTags> tags(aTags);
-  for (auto iter = aTags->Iter(); !iter.Done(); iter.Next()) {
+  UniquePtr<MetadataTags> tags(std::move(aTags));
+  for (auto iter = tags->Iter(); !iter.Done(); iter.Next()) {
     aInfo->mTags.AppendElement(MetadataTag(iter.Key(), iter.Data()));
   }
 }
@@ -567,7 +567,7 @@ bool OggDemuxer::ReadOggChain(const media::TimeUnit& aLastEndTime) {
   OpusState* newOpusState = nullptr;
   VorbisState* newVorbisState = nullptr;
   FlacState* newFlacState = nullptr;
-  nsAutoPtr<MetadataTags> tags;
+  UniquePtr<MetadataTags> tags;
 
   if (HasVideo() || HasSkeleton() || !HasAudio()) {
     return false;

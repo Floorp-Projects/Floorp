@@ -199,14 +199,18 @@ protected:
 
 class SceneBuiltNotification: public wr::NotificationHandler {
 public:
-  explicit SceneBuiltNotification(TimeStamp aTxnStartTime)
-  : mTxnStartTime(aTxnStartTime)
+  explicit SceneBuiltNotification(WebRenderBridgeParent* aParent, wr::Epoch aEpoch, TimeStamp aTxnStartTime)
+  : mParent(aParent)
+  , mEpoch(aEpoch)
+  , mTxnStartTime(aTxnStartTime)
   {}
 
   virtual void Notify(wr::Checkpoint) override {
     auto startTime = this->mTxnStartTime;
+    RefPtr<WebRenderBridgeParent> parent = mParent;
+    wr::Epoch epoch = mEpoch;
     CompositorThreadHolder::Loop()->PostTask(
-      NS_NewRunnableFunction("SceneBuiltNotificationRunnable", [startTime]() {
+      NS_NewRunnableFunction("SceneBuiltNotificationRunnable", [parent, epoch, startTime]() {
         auto endTime = TimeStamp::Now();
 #ifdef MOZ_GECKO_PROFILER
         if (profiler_is_active()) {
@@ -236,9 +240,12 @@ public:
 #endif
         Telemetry::Accumulate(Telemetry::CONTENT_FULL_PAINT_TIME,
                               static_cast<uint32_t>((endTime - startTime).ToMilliseconds()));
+        parent->NotifySceneBuiltForEpoch(epoch, endTime);
       }));
   }
 protected:
+  RefPtr<WebRenderBridgeParent> mParent;
+  wr::Epoch mEpoch;
   TimeStamp mTxnStartTime;
 };
 
@@ -901,6 +908,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
                                           const bool& aContainsSVGGroup,
                                           const TimeStamp& aRefreshStartTime,
                                           const TimeStamp& aTxnStartTime,
+                                          const nsCString& aTxnURL,
                                           const TimeStamp& aFwdTime)
 {
   if (mDestroyed) {
@@ -985,6 +993,8 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     txn.Notify(
       wr::Checkpoint::SceneBuilt,
       MakeUnique<SceneBuiltNotification>(
+        this,
+        wrEpoch,
         aTxnStartTime
       )
     );
@@ -998,7 +1008,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   }
 
   HoldPendingTransactionId(wrEpoch, aTransactionId, aContainsSVGGroup,
-                           aRefreshStartTime, aTxnStartTime, aFwdTime, mIsFirstPaint);
+                           aRefreshStartTime, aTxnStartTime, aTxnURL, aFwdTime, mIsFirstPaint);
   mIsFirstPaint = false;
 
   if (!validTransaction) {
@@ -1006,7 +1016,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     // though DisplayList was not pushed to webrender.
     if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
       TimeStamp now = TimeStamp::Now();
-      cbp->NotifyPipelineRendered(mPipelineId, wrEpoch, now, now);
+      cbp->NotifyPipelineRendered(mPipelineId, wrEpoch, now, now, now);
     }
   }
 
@@ -1029,6 +1039,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
                                             const wr::IdNamespace& aIdNamespace,
                                             const TimeStamp& aRefreshStartTime,
                                             const TimeStamp& aTxnStartTime,
+                                            const nsCString& aTxnURL,
                                             const TimeStamp& aFwdTime)
 {
   if (mDestroyed) {
@@ -1112,6 +1123,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
                            false,
                            aRefreshStartTime,
                            aTxnStartTime,
+                           aTxnURL,
                            aFwdTime,
                            /* aIsFirstPaint */false,
                            /* aUseForTelemetry */scheduleComposite);
@@ -1124,7 +1136,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
     MOZ_ASSERT(mPendingTransactionIds.size() == 1);
     if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
       TimeStamp now = TimeStamp::Now();
-      cbp->NotifyPipelineRendered(mPipelineId, mWrEpoch, now, now);
+      cbp->NotifyPipelineRendered(mPipelineId, mWrEpoch, now, now, now);
     }
   }
 
@@ -1752,6 +1764,14 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
     // Render thread is busy, try next time.
     mCompositorScheduler->ScheduleComposition();
     mPreviousFrameTimeStamp = TimeStamp();
+
+    // Record that we skipped presenting a frame for
+    // all pending transactions that have finished scene building.
+    for (auto& id : mPendingTransactionIds) {
+      if (id.mSceneBuiltTime) {
+        id.mSkippedComposites++;
+      }
+    }
     return;
   }
   MaybeGenerateFrame(/* aForceGenerateFrame */ false);
@@ -1837,19 +1857,21 @@ WebRenderBridgeParent::HoldPendingTransactionId(const wr::Epoch& aWrEpoch,
                                                 bool aContainsSVGGroup,
                                                 const TimeStamp& aRefreshStartTime,
                                                 const TimeStamp& aTxnStartTime,
+                                                const nsCString& aTxnURL,
                                                 const TimeStamp& aFwdTime,
                                                 const bool aIsFirstPaint,
                                                 const bool aUseForTelemetry)
 {
   MOZ_ASSERT(aTransactionId > LastPendingTransactionId());
-  mPendingTransactionIds.push(PendingTransactionId(aWrEpoch,
-                                                   aTransactionId,
-                                                   aContainsSVGGroup,
-                                                   aRefreshStartTime,
-                                                   aTxnStartTime,
-                                                   aFwdTime,
-                                                   aIsFirstPaint,
-                                                   aUseForTelemetry));
+  mPendingTransactionIds.push_back(PendingTransactionId(aWrEpoch,
+                                                        aTransactionId,
+                                                        aContainsSVGGroup,
+                                                        aRefreshStartTime,
+                                                        aTxnStartTime,
+                                                        aTxnURL,
+                                                        aFwdTime,
+                                                        aIsFirstPaint,
+                                                        aUseForTelemetry));
 }
 
 TransactionId
@@ -1862,10 +1884,25 @@ WebRenderBridgeParent::LastPendingTransactionId()
   return id;
 }
 
+void
+WebRenderBridgeParent::NotifySceneBuiltForEpoch(const wr::Epoch& aEpoch, const TimeStamp& aEndTime)
+{
+  for (auto& id : mPendingTransactionIds) {
+    if (id.mEpoch.mHandle == aEpoch.mHandle) {
+      id.mSceneBuiltTime = aEndTime;
+      break;
+    }
+  }
+}
+
 TransactionId
-WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, const TimeStamp& aEndTime,
+WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch,
+                                                   const TimeStamp& aCompositeStartTime,
+                                                   const TimeStamp& aRenderStartTime,
+                                                   const TimeStamp& aEndTime,
                                                    UiCompositorControllerParent* aUiController,
-                                                   wr::RendererStats* aStats)
+                                                   wr::RendererStats* aStats,
+                                                   nsTArray<FrameStats>* aOutputStats)
 {
   TransactionId id{0};
   while (!mPendingTransactionIds.empty()) {
@@ -1891,10 +1928,26 @@ WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, cons
               StreamCommonProps("CONTENT_FRAME_TIME", aWriter, aProcessStartTime, aUniqueStacks);
             }
         };
-        profiler_add_marker_for_thread(profiler_current_thread_id(), "CONTENT_FRAME_TIME", MakeUnique<ContentFramePayload>(mPendingTransactionIds.front().mTxnStartTime,
+        profiler_add_marker_for_thread(profiler_current_thread_id(), "CONTENT_FRAME_TIME", MakeUnique<ContentFramePayload>(transactionId.mTxnStartTime,
                                                                                                                            aEndTime));
       }
 #endif
+
+      if (fracLatencyNorm > 200) {
+        aOutputStats->AppendElement(FrameStats(transactionId.mId,
+                                               aCompositeStartTime,
+                                               aRenderStartTime,
+                                               aEndTime,
+                                               fracLatencyNorm,
+                                               aStats ? (double(aStats->resource_upload_time) / 1000000.0) : 0.0,
+                                               aStats ? (double(aStats->gpu_cache_upload_time) / 1000000.0) : 0.0,
+                                               transactionId.mTxnStartTime,
+                                               transactionId.mRefreshStartTime,
+                                               transactionId.mFwdTime,
+                                               transactionId.mSceneBuiltTime,
+                                               transactionId.mSkippedComposites,
+                                               transactionId.mTxnURL));
+      }
 
       Telemetry::Accumulate(Telemetry::CONTENT_FRAME_TIME, fracLatencyNorm);
       if (fracLatencyNorm > 200) {
@@ -1935,7 +1988,7 @@ WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, cons
     }
 
     id = transactionId.mId;
-    mPendingTransactionIds.pop();
+    mPendingTransactionIds.pop_front();
   }
   return id;
 }

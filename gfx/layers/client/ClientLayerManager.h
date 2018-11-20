@@ -81,8 +81,8 @@ public:
   virtual int32_t GetMaxTextureSize() const override;
 
   virtual void SetDefaultTargetConfiguration(BufferMode aDoubleBuffering, ScreenRotation aRotation);
-  virtual bool BeginTransactionWithTarget(gfxContext* aTarget) override;
-  virtual bool BeginTransaction() override;
+  virtual bool BeginTransactionWithTarget(gfxContext* aTarget, const nsCString &aURL) override;
+  virtual bool BeginTransaction(const nsCString &aURL) override;
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override;
   virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
@@ -336,6 +336,7 @@ private:
 
   RefPtr<ShadowLayerForwarder> mForwarder;
   mozilla::TimeStamp mTransactionStart;
+  nsCString mURL;
 
   nsTArray<DidCompositeObserver*> mDidCompositeObservers;
 

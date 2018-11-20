@@ -47,6 +47,9 @@ namespace mozilla {
 namespace gl {
 class SkiaGLGlue;
 } // namespace gl
+namespace layers {
+class FrameStats;
+}
 namespace gfx {
 class DrawTarget;
 class SourceSurface;
@@ -299,6 +302,7 @@ public:
     virtual void GetAzureBackendInfo(mozilla::widget::InfoObject &aObj);
     void GetApzSupportInfo(mozilla::widget::InfoObject& aObj);
     void GetTilesSupportInfo(mozilla::widget::InfoObject& aObj);
+    void GetFrameStats(mozilla::widget::InfoObject& aObj);
 
     // Get the default content backend that will be used with the default
     // compositor. If the compositor is known when calling this function,
@@ -748,6 +752,8 @@ public:
     // you probably want to use gfxVars::UseWebRender() instead of this
     static bool WebRenderEnvvarEnabled();
 
+    void NotifyFrameStats(nsTArray<mozilla::layers::FrameStats>&& aFrameStats);
+
     virtual void
     OnMemoryPressure(mozilla::layers::MemoryPressureReason aWhy) override;
 protected:
@@ -913,6 +919,9 @@ private:
     mozilla::widget::GfxInfoCollector<gfxPlatform> mAzureCanvasBackendCollector;
     mozilla::widget::GfxInfoCollector<gfxPlatform> mApzSupportCollector;
     mozilla::widget::GfxInfoCollector<gfxPlatform> mTilesInfoCollector;
+    mozilla::widget::GfxInfoCollector<gfxPlatform> mFrameStatsCollector;
+
+    nsTArray<mozilla::layers::FrameStats> mFrameStats;
 
     RefPtr<mozilla::gfx::DrawEventRecorder> mRecorder;
     RefPtr<mozilla::gl::SkiaGLGlue> mSkiaGlue;

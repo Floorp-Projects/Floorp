@@ -126,7 +126,8 @@ WebRenderBridgeChild::EndTransaction(const wr::LayoutSize& aContentSize,
                                      const WebRenderScrollData& aScrollData,
                                      bool aContainsSVGGroup,
                                      const mozilla::TimeStamp& aRefreshStartTime,
-                                     const mozilla::TimeStamp& aTxnStartTime)
+                                     const mozilla::TimeStamp& aTxnStartTime,
+                                     const nsCString& aTxnURL)
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mIsInTransaction);
@@ -135,10 +136,7 @@ WebRenderBridgeChild::EndTransaction(const wr::LayoutSize& aContentSize,
   aDL.dl.inner.capacity = 0;
   aDL.dl.inner.data = nullptr;
 
-  TimeStamp fwdTime;
-#if defined(ENABLE_FRAME_LATENCY_LOG)
-  fwdTime = TimeStamp::Now();
-#endif
+  TimeStamp fwdTime = TimeStamp::Now();
 
   nsTArray<OpUpdateResource> resourceUpdates;
   nsTArray<RefCountedShmem> smallShmems;
@@ -149,7 +147,7 @@ WebRenderBridgeChild::EndTransaction(const wr::LayoutSize& aContentSize,
                            GetFwdTransactionId(), aTransactionId,
                            aContentSize, dlData, aDL.dl_desc, aScrollData,
                            resourceUpdates, smallShmems, largeShmems,
-                           mIdNamespace, aContainsSVGGroup, aRefreshStartTime, aTxnStartTime, fwdTime);
+                           mIdNamespace, aContainsSVGGroup, aRefreshStartTime, aTxnStartTime, aTxnURL, fwdTime);
 
   mParentCommands.Clear();
   mDestroyedActors.Clear();
@@ -163,15 +161,13 @@ WebRenderBridgeChild::EndEmptyTransaction(const FocusTarget& aFocusTarget,
                                           uint32_t aPaintSequenceNumber,
                                           TransactionId aTransactionId,
                                           const mozilla::TimeStamp& aRefreshStartTime,
-                                          const mozilla::TimeStamp& aTxnStartTime)
+                                          const mozilla::TimeStamp& aTxnStartTime,
+                                          const nsCString& aTxnURL)
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mIsInTransaction);
 
-  TimeStamp fwdTime;
-#if defined(ENABLE_FRAME_LATENCY_LOG)
-  fwdTime = TimeStamp::Now();
-#endif
+  TimeStamp fwdTime = TimeStamp::Now();
 
   nsTArray<OpUpdateResource> resourceUpdates;
   nsTArray<RefCountedShmem> smallShmems;
@@ -185,7 +181,7 @@ WebRenderBridgeChild::EndEmptyTransaction(const FocusTarget& aFocusTarget,
                              mParentCommands, mDestroyedActors,
                              GetFwdTransactionId(), aTransactionId,
                              resourceUpdates, smallShmems, largeShmems,
-                             mIdNamespace, aRefreshStartTime, aTxnStartTime, fwdTime);
+                             mIdNamespace, aRefreshStartTime, aTxnStartTime, aTxnURL, fwdTime);
   mParentCommands.Clear();
   mDestroyedActors.Clear();
   mIsInTransaction = false;

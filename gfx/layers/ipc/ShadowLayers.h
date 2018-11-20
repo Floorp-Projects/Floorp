@@ -259,6 +259,7 @@ public:
                       bool aIsRepeatTransaction,
                       const mozilla::TimeStamp& aRefreshStart,
                       const mozilla::TimeStamp& aTransactionStart,
+                      const nsCString& aURL,
                       bool* aSent);
 
   /**
