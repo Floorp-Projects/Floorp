@@ -4,6 +4,9 @@
 
 var EXPORTED_SYMBOLS = ["CanonicalJSON"];
 
+ChromeUtils.defineModuleGetter(this, "jsesc",
+                               "resource://gre/modules/third_party/jsesc/jsesc.js");
+
 var CanonicalJSON = {
   /**
    * Return the canonical JSON form of the passed source, sorting all the object
@@ -19,14 +22,10 @@ var CanonicalJSON = {
    * @usage
    *        CanonicalJSON.stringify(listOfRecords);
    **/
-  stringify: function stringify(source, jsescFn) {
-    if (typeof jsescFn != "function") {
-      const { jsesc } = ChromeUtils.import("resource://gre/modules/third_party/jsesc/jsesc.js", {});
-      jsescFn = jsesc;
-    }
+  stringify: function stringify(source) {
     if (Array.isArray(source)) {
       const jsonArray = source.map(x => typeof x === "undefined" ? null : x);
-      return "[" + jsonArray.map(item => stringify(item, jsescFn)).join(",") + "]";
+      return `[${jsonArray.map(stringify).join(",")}]`;
     }
 
     if (typeof source === "number") {
@@ -36,7 +35,7 @@ var CanonicalJSON = {
     }
 
     // Leverage jsesc library, mainly for unicode escaping.
-    const toJSON = (input) => jsescFn(input, {lowercaseHex: true, json: true});
+    const toJSON = (input) => jsesc(input, {lowercaseHex: true, json: true});
 
     if (typeof source !== "object" || source === null) {
       return toJSON(source);
@@ -54,7 +53,7 @@ var CanonicalJSON = {
       const jsonValue = value && value.toJSON ? value.toJSON() : value;
       const suffix = index !== lastIndex ? "," : "";
       const escapedKey = toJSON(key);
-      return serial + escapedKey + ":" + stringify(jsonValue, jsescFn) + suffix;
+      return serial + `${escapedKey}:${stringify(jsonValue)}${suffix}`;
     }, "{") + "}";
   },
 };
