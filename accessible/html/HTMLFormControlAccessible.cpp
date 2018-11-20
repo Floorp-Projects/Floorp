@@ -805,3 +805,121 @@ HTMLFigcaptionAccessible::RelationByType(RelationType aType) const
 
   return rel;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// HTMLProgressAccessible
+////////////////////////////////////////////////////////////////////////////////
+
+role
+HTMLProgressAccessible::NativeRole() const
+{
+  return roles::PROGRESSBAR;
+}
+
+uint64_t
+HTMLProgressAccessible::NativeState() const
+{
+  uint64_t state = LeafAccessible::NativeState();
+
+  // An undetermined progressbar (i.e. without a value) has a mixed state.
+  nsAutoString attrValue;
+  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value,
+                                 attrValue);
+  if (attrValue.IsEmpty()) {
+    state |= states::MIXED;
+  }
+
+  return state;
+}
+
+bool
+HTMLProgressAccessible::IsWidget() const
+{
+  return true;
+}
+
+void
+HTMLProgressAccessible::Value(nsString& aValue) const
+{
+  LeafAccessible::Value(aValue);
+  if (!aValue.IsEmpty()) {
+    return;
+  }
+
+  double maxValue = MaxValue();
+  if (IsNaN(maxValue) || maxValue == 0) {
+    return;
+  }
+
+  double curValue = CurValue();
+  if (IsNaN(curValue)) {
+    return;
+  }
+
+  // Treat the current value bigger than maximum as 100%.
+  double percentValue = (curValue < maxValue) ? (curValue / maxValue) * 100
+                                              : 100;
+
+  aValue.AppendFloat(percentValue);
+  aValue.Append('%');
+}
+
+double
+HTMLProgressAccessible::MaxValue() const
+{
+  double value = LeafAccessible::MaxValue();
+  if (!IsNaN(value)) {
+    return value;
+  }
+
+  nsAutoString strValue;
+  if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::max,
+                                     strValue)) {
+    nsresult result = NS_OK;
+    value = strValue.ToDouble(&result);
+    if (NS_SUCCEEDED(result)) {
+      return value;
+    }
+  }
+
+  return 1;
+}
+
+double
+HTMLProgressAccessible::MinValue() const
+{
+  double value = LeafAccessible::MinValue();
+  return IsNaN(value) ? 0 : value;
+}
+
+double
+HTMLProgressAccessible::Step() const
+{
+  double value = LeafAccessible::Step();
+  return IsNaN(value) ? 0 : value;
+}
+
+double
+HTMLProgressAccessible::CurValue() const
+{
+  double value = LeafAccessible::CurValue();
+  if (!IsNaN(value)) {
+    return value;
+  }
+
+  nsAutoString attrValue;
+  if (!mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value,
+                                      attrValue)) {
+    return UnspecifiedNaN<double>();
+  }
+
+  nsresult error = NS_OK;
+  value = attrValue.ToDouble(&error);
+  return NS_FAILED(error) ? UnspecifiedNaN<double>() : value;
+}
+
+bool
+HTMLProgressAccessible::SetCurValue(double aValue)
+{
+  return false; // progress meters are readonly.
+}
