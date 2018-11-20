@@ -67,8 +67,7 @@ nsClipboardProxy::GetData(nsITransferable *aTransferable, int32_t aWhichClipboar
       rv = dataWrapper->SetData(data);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper,
-                                          data.Length() * sizeof(char16_t));
+      rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper);
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (item.data().type() == IPCDataTransferData::TShmem) {
       // If this is an image, convert it into an nsIInputStream.
@@ -83,7 +82,7 @@ nsClipboardProxy::GetData(nsITransferable *aTransferable, int32_t aWhichClipboar
         NS_NewCStringInputStream(getter_AddRefs(stream),
                                  nsDependentCSubstring(data.get<char>(), data.Size<char>()));
 
-        rv = aTransferable->SetTransferData(flavor.get(), stream, sizeof(nsISupports*));
+        rv = aTransferable->SetTransferData(flavor.get(), stream);
         NS_ENSURE_SUCCESS(rv, rv);
       } else if (flavor.EqualsLiteral(kNativeHTMLMime) ||
                  flavor.EqualsLiteral(kRTFMime) ||
@@ -95,8 +94,7 @@ nsClipboardProxy::GetData(nsITransferable *aTransferable, int32_t aWhichClipboar
         rv = dataWrapper->SetData(nsDependentCSubstring(data.get<char>(), data.Size<char>()));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper,
-                                            data.Size<char>());
+        rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 

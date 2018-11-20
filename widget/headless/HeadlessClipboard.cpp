@@ -64,8 +64,7 @@ HeadlessClipboard::GetData(nsITransferable *aTransferable,
     return rv;
   }
   nsCOMPtr<nsISupports> genericDataWrapper = do_QueryInterface(dataWrapper);
-  uint32_t len = mClipboard->GetText().Length() * sizeof(char16_t);
-  rv = aTransferable->SetTransferData(kUnicodeMime, genericDataWrapper, len);
+  rv = aTransferable->SetTransferData(kUnicodeMime, genericDataWrapper);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
