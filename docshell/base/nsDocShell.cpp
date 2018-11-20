@@ -7557,12 +7557,6 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal)
   return CreateAboutBlankContentViewer(aPrincipal, nullptr);
 }
 
-NS_IMETHODIMP
-nsDocShell::ForceCreateAboutBlankContentViewer(nsIPrincipal* aPrincipal)
-{
-  return CreateAboutBlankContentViewer(aPrincipal, nullptr, true, false);
-}
-
 bool
 nsDocShell::CanSavePresentation(uint32_t aLoadType,
                                 nsIRequest* aNewRequest,
