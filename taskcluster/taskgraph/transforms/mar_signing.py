@@ -9,7 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.attributes import copy_attributes_from_dependent_job
+from taskgraph.util.attributes import copy_attributes_from_dependent_job, sorted_unique_list
 from taskgraph.util.scriptworker import (
     get_signing_cert_scope_per_platform,
     get_worker_type_for_scope,
@@ -110,6 +110,10 @@ def make_task_description(config, jobs):
         dependencies.update(signing_dependencies)
 
         attributes = copy_attributes_from_dependent_job(dep_job)
+        attributes['required_signoffs'] = sorted_unique_list(
+            attributes.get('required_signoffs', []),
+            job.pop('required_signoffs')
+        )
         attributes['shipping_phase'] = job['shipping-phase']
         if locale:
             attributes['locale'] = locale

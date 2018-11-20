@@ -163,6 +163,8 @@ beetmover_description_schema = schema.extend({
     # below transforms for defaults of various values.
     Optional('treeherder'): task_description_schema['treeherder'],
 
+    Optional('attributes'): task_description_schema['attributes'],
+
     # locale is passed only for l10n beetmoving
     Optional('locale'): basestring,
     Required('shipping-phase'): task_description_schema['shipping-phase'],
@@ -226,6 +228,7 @@ def make_task_description(config, jobs):
             dependencies["repackage-signing"] = upstream_deps[repackage_signing_name]
 
         attributes = copy_attributes_from_dependent_job(dep_job)
+        attributes.update(job.get('attributes', {}))
         if job.get('locale'):
             attributes['locale'] = job['locale']
 
