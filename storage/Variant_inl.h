@@ -29,12 +29,10 @@ inline NS_IMPL_QUERY_INTERFACE(
 //// nsIVariant
 
 inline
-NS_IMETHODIMP
-Variant_base::GetDataType(uint16_t *_type)
+uint16_t
+Variant_base::GetDataType()
 {
-  NS_ENSURE_ARG_POINTER(_type);
-  *_type = nsIDataType::VTYPE_VOID;
-  return NS_OK;
+  return nsIDataType::VTYPE_VOID;
 }
 
 inline
