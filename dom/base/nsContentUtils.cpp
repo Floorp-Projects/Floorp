@@ -7151,8 +7151,7 @@ nsContentUtils::HasPluginWithUncontrolledEventDispatch(nsIContent* aContent)
     return false;
   }
 
-  RefPtr<nsNPAPIPluginInstance> plugin;
-  olc->GetPluginInstance(getter_AddRefs(plugin));
+  RefPtr<nsNPAPIPluginInstance> plugin = olc->GetPluginInstance();
   if (!plugin) {
     return false;
   }
