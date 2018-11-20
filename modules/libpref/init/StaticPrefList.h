@@ -1126,7 +1126,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   "media.navigator.mediadatadecoder_h264_enabled",
    MediaNavigatorMediadatadecoderH264Enabled,
-  RelaxedAtomicBool, true
+  bool, false
 )
 #endif // MOZ_WEBRTC
 
