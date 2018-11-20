@@ -4712,7 +4712,7 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
             nsPresContext::AppUnitsToFloatCSSPixels(aRect.height));
   aThebesContext->NewPath();
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
-  aThebesContext->Rectangle(r, true);
+  aThebesContext->SnappedRectangle(r);
 #else
   aThebesContext->Rectangle(r);
 #endif

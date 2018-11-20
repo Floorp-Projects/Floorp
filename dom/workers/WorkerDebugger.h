@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_workers_WorkerDebugger_h
 #define mozilla_dom_workers_WorkerDebugger_h
 
+#include "mozilla/PerformanceTypes.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "nsIWorkerDebugger.h"
@@ -48,7 +49,7 @@ public:
    * Sends back a PerformanceInfo struct from the counters
    * in mWorkerPrivate. Counters are reset to zero after this call.
    */
-  PerformanceInfo
+  RefPtr<PerformanceInfoPromise>
   ReportPerformanceInfo();
 
 private:

@@ -451,37 +451,38 @@ extern JS_PUBLIC_API bool
 ReadableStreamError(JSContext* cx, HandleObject stream, HandleValue error);
 
 /**
- * Cancels the given ReadableStream reader's associated stream.
+ * C++ equivalent of `reader.cancel(reason)`
+ * (both <https://streams.spec.whatwg.org/#default-reader-cancel> and
+ * <https://streams.spec.whatwg.org/#byob-reader-cancel>).
  *
- * Throws a TypeError and returns false if the given reader isn't active.
- *
- * Asserts that |reader| is a ReadableStreamDefaultReader or
- * ReadableStreamBYOBReader object or an unwrappable wrapper for one.
+ * `reader` must be a stream reader created using `JS::ReadableStreamGetReader`
+ * or an unwrappable wrapper for one. (This function is meant to support using
+ * C++ to read from streams. It's not meant to allow C++ code to operate on
+ * readers created by scripts.)
  */
 extern JS_PUBLIC_API bool
 ReadableStreamReaderCancel(JSContext* cx, HandleObject reader, HandleValue reason);
 
 /**
- * Cancels the given ReadableStream reader's associated stream.
+ * C++ equivalent of `reader.releaseLock()`
+ * (both <https://streams.spec.whatwg.org/#default-reader-release-lock> and
+ * <https://streams.spec.whatwg.org/#byob-reader-release-lock>).
  *
- * Throws a TypeError and returns false if the given reader has pending
- * read or readInto (for default or byob readers, respectively) requests.
- *
- * Asserts that |reader| is a ReadableStreamDefaultReader or
- * ReadableStreamBYOBReader object or an unwrappable wrapper for one.
+ * `reader` must be a stream reader created using `JS::ReadableStreamGetReader`
+ * or an unwrappable wrapper for one.
  */
 extern JS_PUBLIC_API bool
 ReadableStreamReaderReleaseLock(JSContext* cx, HandleObject reader);
 
 /**
- * Requests a read from the reader's associated ReadableStream and returns the
- * resulting PromiseObject.
+ * C++ equivalent of the `reader.read()` method on default readers
+ * (<https://streams.spec.whatwg.org/#default-reader-read>).
  *
- * Returns a Promise that's resolved with the read result once available or
- * rejected immediately if the stream is errored or the operation failed.
+ * The result is a new Promise object, or null on OOM.
  *
- * Asserts that |reader| is a ReadableStreamDefaultReader object or an
- * unwrappable wrapper for one.
+ * `reader` must be the result of calling `JS::ReadableStreamGetReader` with
+ * `ReadableStreamReaderMode::Default` mode, or an unwrappable wrapper for such
+ * a reader.
  */
 extern JS_PUBLIC_API JSObject*
 ReadableStreamDefaultReaderRead(JSContext* cx, HandleObject reader);

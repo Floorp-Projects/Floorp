@@ -115,6 +115,13 @@ class ReadableStream : public NativeObject
     static const Class protoClass_;
 };
 
+/**
+ * Tells whether or not read() result objects inherit from Object.prototype.
+ * Generally, they should do so only if the reader was created by author code.
+ * See <https://streams.spec.whatwg.org/#readable-stream-create-read-result>.
+ */
+enum class ForAuthorCodeBool { No, Yes };
+
 class ReadableStreamReader : public NativeObject
 {
   public:
@@ -143,6 +150,7 @@ class ReadableStreamReader : public NativeObject
         Slot_Stream,
         Slot_Requests,
         Slot_ClosedPromise,
+        Slot_ForAuthorCode,
         SlotCount,
     };
 
@@ -150,6 +158,28 @@ class ReadableStreamReader : public NativeObject
     void setStream(JSObject* stream) { setFixedSlot(Slot_Stream, ObjectValue(*stream)); }
     void clearStream() { setFixedSlot(Slot_Stream, UndefinedValue()); }
     bool isClosed() { return !hasStream(); }
+
+    /**
+     * Tells whether this reader was created by author code.
+     *
+     * This returns Yes for readers created using `stream.getReader()`, and No
+     * for readers created for the internal use of algorithms like
+     * `stream.tee()` and `new Response(stream)`.
+     *
+     * The standard does not have this field. Instead, eight algorithms take a
+     * forAuthorCode parameter, and a [[forAuthorCode]] field is part of each
+     * read request. But the behavior is always equivalent to treating readers
+     * created by author code as having a bit set on them. We implement it that
+     * way for simplicity.
+     */
+    ForAuthorCodeBool forAuthorCode() const {
+        return getFixedSlot(Slot_ForAuthorCode).toBoolean()
+               ? ForAuthorCodeBool::Yes
+               : ForAuthorCodeBool::No;
+    }
+    void setForAuthorCode(ForAuthorCodeBool value) {
+        setFixedSlot(Slot_ForAuthorCode, BooleanValue(value == ForAuthorCodeBool::Yes));
+    }
 
     NativeObject* requests() const {
         return &getFixedSlot(Slot_Requests).toObject().as<NativeObject>();

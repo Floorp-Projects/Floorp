@@ -5,10 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsThreadUtils.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PerformanceUtils.h"
 #include "mozilla/PerformanceMetricsCollector.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerDebugger.h"
@@ -85,38 +87,34 @@ IPCTimeout::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* a
 // class AggregatedResults
 //
 AggregatedResults::AggregatedResults(nsID aUUID,
-                                     PerformanceMetricsCollector* aCollector,
-                                     dom::Promise* aPromise)
-  : mPromise(aPromise)
-  , mPendingResults(0)
+                                     PerformanceMetricsCollector* aCollector)
+  : mPendingResults(0)
   , mCollector(aCollector)
   , mUUID(aUUID)
 {
   MOZ_ASSERT(aCollector);
-  MOZ_ASSERT(aPromise);
   mIPCTimeout = IPCTimeout::CreateInstance(this);
 }
 
 void
 AggregatedResults::Abort(nsresult aReason)
 {
-  MOZ_ASSERT(mPromise);
+  MOZ_ASSERT(!mHolder.IsEmpty());
   MOZ_ASSERT(NS_FAILED(aReason));
   if (mIPCTimeout) {
     mIPCTimeout->Cancel();
     mIPCTimeout = nullptr;
   }
-  mPromise->MaybeReject(aReason);
-  mPromise = nullptr;
+  mHolder.Reject(aReason, __func__);
   mPendingResults = 0;
 }
 
 void
 AggregatedResults::ResolveNow()
 {
-  MOZ_ASSERT(mPromise);
+  MOZ_ASSERT(!mHolder.IsEmpty());
   LOG(("[%s] Early resolve", nsIDToCString(mUUID).get()));
-  mPromise->MaybeResolve(mData);
+  mHolder.Resolve(mData, __func__);
   mIPCTimeout = nullptr;
   mCollector->ForgetAggregatedResults(mUUID);
 }
@@ -124,7 +122,7 @@ AggregatedResults::ResolveNow()
 void
 AggregatedResults::AppendResult(const nsTArray<dom::PerformanceInfo>& aMetrics)
 {
-  if (!mPromise) {
+  if (mHolder.IsEmpty()) {
     // A previous call failed and the promise was already rejected
     return;
   }
@@ -160,6 +158,13 @@ AggregatedResults::AppendResult(const nsTArray<dom::PerformanceInfo>& aMetrics)
     data->mCounterId = result.counterId();
     data->mIsWorker = result.isWorker();
     data->mIsTopLevel = result.isTopLevel();
+    data->mMemoryInfo.mDomDom = result.memory().domDom();
+    data->mMemoryInfo.mDomStyle = result.memory().domStyle();
+    data->mMemoryInfo.mDomOther = result.memory().domOther();
+    data->mMemoryInfo.mGCHeapUsage = result.memory().GCHeapUsage();
+    data->mMemoryInfo.mMedia.mAudioSize = result.memory().media().audioSize();
+    data->mMemoryInfo.mMedia.mVideoSize = result.memory().media().videoSize();
+    data->mMemoryInfo.mMedia.mResourcesSize = result.memory().media().resourcesSize();
     data->mItems = items;
   }
 
@@ -173,7 +178,7 @@ AggregatedResults::AppendResult(const nsTArray<dom::PerformanceInfo>& aMetrics)
     mIPCTimeout->Cancel();
     mIPCTimeout = nullptr;
   }
-  mPromise->MaybeResolve(mData);
+  mHolder.Resolve(mData, __func__);
   mCollector->ForgetAggregatedResults(mUUID);
 }
 
@@ -182,6 +187,12 @@ AggregatedResults::SetNumResultsRequired(uint32_t aNumResultsRequired)
 {
   MOZ_ASSERT(!mPendingResults && aNumResultsRequired);
   mPendingResults = aNumResultsRequired;
+}
+
+RefPtr<RequestMetricsPromise>
+AggregatedResults::GetPromise()
+{
+  return mHolder.Ensure(__func__);
 }
 
 //
@@ -211,28 +222,26 @@ PerformanceMetricsCollector::ForgetAggregatedResults(const nsID& aUUID)
 }
 
 // static
-void
-PerformanceMetricsCollector::RequestMetrics(dom::Promise* aPromise)
+RefPtr<RequestMetricsPromise>
+PerformanceMetricsCollector::RequestMetrics()
 {
-  MOZ_ASSERT(aPromise);
   MOZ_ASSERT(XRE_IsParentProcess());
   RefPtr<PerformanceMetricsCollector> pmc = gInstance;
   if (!pmc) {
     pmc = new PerformanceMetricsCollector();
     gInstance = pmc;
   }
-  pmc->RequestMetricsInternal(aPromise);
+  return pmc->RequestMetricsInternal();
 }
 
-void
-PerformanceMetricsCollector::RequestMetricsInternal(dom::Promise* aPromise)
+RefPtr<RequestMetricsPromise>
+PerformanceMetricsCollector::RequestMetricsInternal()
 {
   // each request has its own UUID
   nsID uuid;
   nsresult rv = nsContentUtils::GenerateUUIDInPlace(uuid);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    aPromise->MaybeReject(rv);
-    return;
+    return RequestMetricsPromise::CreateAndReject(rv, __func__);
   }
 
   LOG(("[%s] Requesting Performance Metrics", nsIDToCString(uuid).get()));
@@ -240,16 +249,21 @@ PerformanceMetricsCollector::RequestMetricsInternal(dom::Promise* aPromise)
   // Getting all content processes
   nsTArray<ContentParent*> children;
   ContentParent::GetAll(children);
-
   uint32_t numChildren = children.Length();
-  LOG(("[%s] Expecting %d results back", nsIDToCString(uuid).get(), numChildren + 1));
 
   // keep track of all results in an AggregatedResults instance
-  UniquePtr<AggregatedResults> results = MakeUnique<AggregatedResults>(uuid, this, aPromise);
+  UniquePtr<AggregatedResults> results = MakeUnique<AggregatedResults>(uuid, this);
+  RefPtr<RequestMetricsPromise> promise = results->GetPromise();
 
-  // We want to get back as many results as children, plus the result
-  // from the content parent itself
-  results->SetNumResultsRequired(numChildren + 1);
+  // We want to get back as many results as children + one parent if needed
+  uint32_t numResultsRequired = children.Length();
+  nsTArray<RefPtr<PerformanceInfoPromise>> localPromises = CollectPerformanceInfo();
+  if (!localPromises.IsEmpty()) {
+    numResultsRequired++;
+  }
+
+  LOG(("[%s] Expecting %d results back", nsIDToCString(uuid).get(), numResultsRequired));
+  results->SetNumResultsRequired(numResultsRequired);
   mAggregatedResults.Put(uuid, std::move(results));
 
   // calling all content processes via IPDL (async)
@@ -257,16 +271,30 @@ PerformanceMetricsCollector::RequestMetricsInternal(dom::Promise* aPromise)
     if (NS_WARN_IF(!children[i]->SendRequestPerformanceMetrics(uuid))) {
       LOG(("[%s] Failed to send request to child %d", nsIDToCString(uuid).get(), i));
       mAggregatedResults.GetValue(uuid)->get()->Abort(NS_ERROR_FAILURE);
-      return;
+      return RequestMetricsPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
     }
+    LOG(("[%s] Request sent to child %d", nsIDToCString(uuid).get(), i));
+  }
+
+  nsTArray<RefPtr<PerformanceInfoPromise>> promises = CollectPerformanceInfo();
+  if (promises.IsEmpty()) {
+    return promise;
   }
 
   // collecting the current process PerformanceInfo
-  nsTArray<PerformanceInfo> info;
-  CollectPerformanceInfo(info);
-  DataReceived(uuid, info);
-}
+  PerformanceInfoPromise::All(NS_GetCurrentThread(), localPromises)
+    ->Then(NS_GetCurrentThread(),
+           __func__,
+           [uuid](const nsTArray<mozilla::dom::PerformanceInfo> aResult) {
+             LOG(("[%s] Local CollectPerformanceInfo promise resolved",
+                 nsIDToCString(uuid).get()));
+             DataReceived(uuid, aResult);
+           },
+           [](const nsresult aResult) {
+           });
 
+  return promise;
+}
 
 // static
 nsresult
@@ -299,7 +327,7 @@ PerformanceMetricsCollector::DataReceivedInternal(const nsID& aUUID,
   AggregatedResults* aggregatedResults = results->get();
   MOZ_ASSERT(aggregatedResults);
 
-  // If this is the last result, APpendResult() will trigger the deletion
+  // If this is the last result, AppendResult() will trigger the deletion
   // of this collector, nothing should be done after this line.
   aggregatedResults->AppendResult(aMetrics);
   return NS_OK;

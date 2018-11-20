@@ -408,7 +408,7 @@ function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
 function synthesizeTouch(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
 {
   var rect = aTarget.getBoundingClientRect();
-  synthesizeTouchAtPoint(rect.left + aOffsetX, rect.top + aOffsetY,
+  return synthesizeTouchAtPoint(rect.left + aOffsetX, rect.top + aOffsetY,
        aEvent, aWindow);
 }
 
@@ -480,6 +480,7 @@ function synthesizeMouseAtPoint(left, top, aEvent, aWindow = window)
 function synthesizeTouchAtPoint(left, top, aEvent, aWindow = window)
 {
   var utils = _getDOMWindowUtils(aWindow);
+  let defaultPrevented = false;
 
   if (utils) {
     var id = aEvent.id || utils.DEFAULT_TOUCH_POINTER_ID;
@@ -490,13 +491,14 @@ function synthesizeTouchAtPoint(left, top, aEvent, aWindow = window)
     var modifiers = _parseModifiers(aEvent, aWindow);
 
     if (("type" in aEvent) && aEvent.type) {
-      utils.sendTouchEvent(aEvent.type, [id], [left], [top], [rx], [ry], [angle], [force], 1, modifiers);
+      defaultPrevented = utils.sendTouchEvent(aEvent.type, [id], [left], [top], [rx], [ry], [angle], [force], 1, modifiers);
     }
     else {
       utils.sendTouchEvent("touchstart", [id], [left], [top], [rx], [ry], [angle], [force], 1, modifiers);
       utils.sendTouchEvent("touchend", [id], [left], [top], [rx], [ry], [angle], [force], 1, modifiers);
     }
   }
+  return defaultPrevented;
 }
 
 // Call synthesizeMouse with coordinates at the center of aTarget.

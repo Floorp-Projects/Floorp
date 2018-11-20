@@ -655,12 +655,11 @@ ChromeUtils::ClearRecentJSDevError(GlobalObject&)
 
 /* static */
 already_AddRefed<Promise>
-ChromeUtils::RequestPerformanceMetrics(GlobalObject& aGlobal,
-                                       ErrorResult& aRv)
+ChromeUtils::RequestPerformanceMetrics(GlobalObject& aGlobal, ErrorResult& aRv)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  // Creating a promise
+  // Creating a JS promise
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   MOZ_ASSERT(global);
   RefPtr<Promise> domPromise = Promise::Create(global, aRv);
@@ -668,9 +667,17 @@ ChromeUtils::RequestPerformanceMetrics(GlobalObject& aGlobal,
     return nullptr;
   }
   MOZ_ASSERT(domPromise);
+  RefPtr<nsISerialEventTarget> target =
+    global->EventTargetFor(TaskCategory::Performance);
 
   // requesting metrics, that will be returned into the promise
-  PerformanceMetricsCollector::RequestMetrics(domPromise);
+  PerformanceMetricsCollector::RequestMetrics()->Then(
+    target,
+    __func__,
+    [domPromise, target](nsTArray<dom::PerformanceInfoDictionary>&& aResults) {
+      domPromise->MaybeResolve(std::move(aResults));
+    },
+    [domPromise](const nsresult& aRv) { domPromise->MaybeReject(aRv); });
 
   // sending back the promise instance
   return domPromise.forget();

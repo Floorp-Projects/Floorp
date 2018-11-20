@@ -115,6 +115,7 @@ const WRITE_ERROR_CALLBACK_APP             = 37;
 const SERVICE_COULD_NOT_COPY_UPDATER       = 49;
 const SERVICE_STILL_APPLYING_TERMINATED    = 50;
 const SERVICE_STILL_APPLYING_NO_EXIT_CODE  = 51;
+const SERVICE_COULD_NOT_IMPERSONATE        = 58;
 const WRITE_ERROR_FILE_COPY                = 61;
 const WRITE_ERROR_DELETE_FILE              = 62;
 const WRITE_ERROR_OPEN_PATCH_FILE          = 63;
@@ -154,7 +155,8 @@ const SERVICE_ERRORS = [SERVICE_UPDATER_COULD_NOT_BE_STARTED,
                         SERVICE_INSTALLDIR_ERROR,
                         SERVICE_COULD_NOT_COPY_UPDATER,
                         SERVICE_STILL_APPLYING_TERMINATED,
-                        SERVICE_STILL_APPLYING_NO_EXIT_CODE];
+                        SERVICE_STILL_APPLYING_NO_EXIT_CODE,
+                        SERVICE_COULD_NOT_IMPERSONATE];
 
 // Error codes 80 through 99 are reserved for nsUpdateService.js and are not
 // defined in common/errors.h

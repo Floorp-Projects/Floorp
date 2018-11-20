@@ -6,6 +6,7 @@ const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PBM_PREF = "privacy.trackingprotection.pbmode.enabled";
 const TP_LIST_PREF = "urlclassifier.trackingTable";
 const NCB_PREF = "network.cookie.cookieBehavior";
+const CAT_PREF = "browser.contentblocking.category";
 
 requestLongerTimeout(2);
 
@@ -58,9 +59,10 @@ add_task(async function testContentBlockingMainCategory() {
   tpCheckbox.checked = true;
 
   // Select "Always" under "All Detected Trackers".
-  let always = doc.querySelector("#trackingProtectionMenu > radio[value=always]");
-  let private = doc.querySelector("#trackingProtectionMenu > radio[value=private]");
-  always.radioGroup.selectedItem = always;
+  let menu = doc.querySelector("#trackingProtectionMenu");
+  let always = doc.querySelector("#trackingProtectionMenu > menupopup > menuitem[value=always]");
+  let private = doc.querySelector("#trackingProtectionMenu > menupopup > menuitem[value=private]");
+  menu.selectedItem = always;
   ok(!private.selected, "The Only in private windows item should not be selected");
   ok(always.selected, "The Always item should be selected");
 
@@ -72,7 +74,7 @@ add_task(async function testContentBlockingMainCategory() {
   checkControlState(doc, alwaysEnabledControls, true);
 
   let promise = TestUtils.topicObserved("privacy-pane-tp-ui-updated");
-  EventUtils.synthesizeMouseAtCenter(tpCheckbox, {}, doc.defaultView);
+  tpCheckbox.click();
 
   await promise;
   ok(!tpCheckbox.checked, "The checkbox should now be unchecked");
@@ -88,12 +90,12 @@ add_task(async function testContentBlockingMainCategory() {
   // checked again...
   for (let i = 0; i < 3; ++i) {
     promise = TestUtils.topicObserved("privacy-pane-tp-ui-updated");
-    EventUtils.synthesizeMouseAtCenter(tpCheckbox, {}, doc.defaultView);
+    tpCheckbox.click();
 
     await promise;
     is(tpCheckbox.checked, i % 2 == 0, "The checkbox should now be unchecked");
-    ok(!private.selected, "The Only in private windows item should still not be selected");
-    ok(always.selected, "The Always item should still be selected");
+    is(private.selected, i % 2 == 0, "The Only in private windows item should be selected by default, when the checkbox is checked");
+    ok(!always.selected, "The Always item should no longer be selected");
   }
 
   gBrowser.removeCurrentTab();
@@ -103,8 +105,8 @@ add_task(async function testContentBlockingMainCategory() {
   }
 });
 
-// Tests that the content blocking "Restore Defaults" button does what it's supposed to.
-add_task(async function testContentBlockingRestoreDefaults() {
+// Tests that the content blocking "Standard" category radio sets the prefs to their default values.
+add_task(async function testContentBlockingStandardCategory() {
   let prefs = {
     [TP_LIST_PREF]: null,
     [TP_PREF]: null,
@@ -159,8 +161,8 @@ add_task(async function testContentBlockingRestoreDefaults() {
   await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
   let doc = gBrowser.contentDocument;
 
-  let contentBlockingRestoreDefaults = doc.getElementById("contentBlockingRestoreDefaults");
-  contentBlockingRestoreDefaults.click();
+  let standardRadioOption = doc.getElementById("standardRadio");
+  standardRadioOption.click();
 
   // TP prefs are reset async to check for extensions controlling them.
   await TestUtils.waitForCondition(() => !Services.prefs.prefHasUserValue(TP_PREF));
@@ -168,92 +170,72 @@ add_task(async function testContentBlockingRestoreDefaults() {
   for (let pref in prefs) {
     ok(!Services.prefs.prefHasUserValue(pref), `reset the pref ${pref}`);
   }
+  is(Services.prefs.getStringPref(CAT_PREF), "standard", `${CAT_PREF} has been set to standard`);
 
   gBrowser.removeCurrentTab();
 });
 
-// Tests that the content blocking "Restore Defaults" button does not restore prefs
-// that are controlled by extensions.
-add_task(async function testContentBlockingRestoreDefaultsSkipExtensionControlled() {
-  function background() {
-    browser.privacy.websites.trackingProtectionMode.set({value: "always"});
-  }
-
-  // Install an extension that sets Tracking Protection.
-  let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
-    manifest: {
-      name: "set_tp",
-      applications: {gecko: {id: "@set_tp"}},
-      permissions: ["privacy"],
-    },
-    background,
-  });
-
-  let resettable = {
-    [TP_LIST_PREF]: null,
-    [NCB_PREF]: null,
-  };
-
-  for (let pref in resettable) {
-    switch (Services.prefs.getPrefType(pref)) {
-    case Services.prefs.PREF_STRING:
-      resettable[pref] = Services.prefs.getCharPref(pref);
-      break;
-    case Services.prefs.PREF_INT:
-      resettable[pref] = Services.prefs.getIntPref(pref);
-      break;
-    default:
-      ok(false, `Unknown pref type for ${pref}`);
-    }
-  }
-
+// Tests that the content blocking "Strict" category radio sets the prefs to the expected values.
+add_task(async function testContentBlockingStrictCategory() {
+  Services.prefs.setBoolPref(TP_PREF, false);
+  Services.prefs.setBoolPref(TP_PBM_PREF, false);
+  Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN);
   Services.prefs.setStringPref(TP_LIST_PREF, "test-track-simple,base-track-digest256,content-track-digest256");
-  Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
-
-  for (let pref in resettable) {
-    switch (Services.prefs.getPrefType(pref)) {
-    case Services.prefs.PREF_STRING:
-      // Account for prefs that may have retained their default value
-      if (Services.prefs.getCharPref(pref) != resettable[pref]) {
-        ok(Services.prefs.prefHasUserValue(pref), `modified the pref ${pref}`);
-      }
-      break;
-    case Services.prefs.PREF_INT:
-      if (Services.prefs.getIntPref(pref) != resettable[pref]) {
-        ok(Services.prefs.prefHasUserValue(pref), `modified the pref ${pref}`);
-      }
-      break;
-    default:
-      ok(false, `Unknown pref type for ${pref}`);
-    }
-  }
-
-  await extension.startup();
-
-  await TestUtils.waitForCondition(() => Services.prefs.prefHasUserValue(TP_PREF));
-
-  let disabledControls = [
-    ".tracking-protection-ui .content-blocking-checkbox",
-    "#trackingProtectionMenu",
-    "[control=trackingProtectionMenu]",
-  ];
 
   await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
   let doc = gBrowser.contentDocument;
 
-  checkControlState(doc, disabledControls, false);
+  let strictRadioOption = doc.getElementById("strictRadio");
+  strictRadioOption.click();
 
-  let contentBlockingRestoreDefaults = doc.getElementById("contentBlockingRestoreDefaults");
-  contentBlockingRestoreDefaults.click();
+  // TP prefs are reset async to check for extensions controlling them.
+  await TestUtils.waitForCondition(() => Services.prefs.prefHasUserValue(TP_PREF));
 
-  for (let pref in resettable) {
-    ok(!Services.prefs.prefHasUserValue(pref), `reset the pref ${pref}`);
+  is(Services.prefs.getStringPref(CAT_PREF), "strict", `${CAT_PREF} has been set to strict`);
+  is(Services.prefs.getBoolPref(TP_PREF), true, `${TP_PREF} has been set to true`);
+  is(Services.prefs.getBoolPref(TP_PBM_PREF), true, `${TP_PBM_PREF} has been set to true`);
+  is(Services.prefs.getIntPref(NCB_PREF), Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN, `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN}`);
+  ok(!Services.prefs.prefHasUserValue(TP_LIST_PREF), `reset the pref ${TP_LIST_PREF}`);
+
+  gBrowser.removeCurrentTab();
+});
+
+// Tests that the content blocking "Custom" category behaves as expected.
+add_task(async function testContentBlockingCustomCategory() {
+  let prefs = [TP_LIST_PREF, TP_PREF, TP_PBM_PREF, NCB_PREF];
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  let doc = gBrowser.contentDocument;
+  let strictRadioOption = doc.getElementById("strictRadio");
+  let standardRadioOption = doc.getElementById("standardRadio");
+  let customRadioOption = doc.getElementById("customRadio");
+
+  standardRadioOption.click();
+  await TestUtils.waitForCondition(() => !Services.prefs.prefHasUserValue(TP_PREF));
+
+  customRadioOption.click();
+  await TestUtils.waitForCondition(() => Services.prefs.getStringPref(CAT_PREF) == "custom");
+  // The custom option does not force changes of any prefs, other than CAT_PREF, all other TP prefs should remain as they were for standard.
+  for (let pref of prefs) {
+    ok(!Services.prefs.prefHasUserValue(pref), `the pref ${pref} remains as default value`);
   }
+  is(Services.prefs.getStringPref(CAT_PREF), "custom", `${CAT_PREF} has been set to custom`);
 
-  ok(Services.prefs.prefHasUserValue(TP_PREF), "did not reset the TP pref");
+  strictRadioOption.click();
+  await TestUtils.waitForCondition(() => Services.prefs.prefHasUserValue(TP_PREF));
 
-  await extension.unload();
+  // Changing the TP_PREF should necessarily set CAT_PREF to "custom"
+  Services.prefs.setBoolPref(TP_PREF, false);
+  await TestUtils.waitForCondition(() => !Services.prefs.prefHasUserValue(TP_PREF));
+  is(Services.prefs.getStringPref(CAT_PREF), "custom", `${CAT_PREF} has been set to custom`);
+
+  strictRadioOption.click();
+  await TestUtils.waitForCondition(() => Services.prefs.getStringPref(CAT_PREF) == "strict");
+
+  // Changing the NCB_PREF should necessarily set CAT_PREF to "custom"
+  Services.prefs.setIntPref(NCB_PREF, 4);
+  await TestUtils.waitForCondition(() => !Services.prefs.prefHasUserValue(NCB_PREF));
+  is(Services.prefs.getStringPref(CAT_PREF), "custom", `${CAT_PREF} has been set to custom`);
 
   gBrowser.removeCurrentTab();
 });
@@ -270,57 +252,25 @@ function checkControlState(doc, controls, enabled) {
   }
 }
 
-// Checks that the controls for tracking protection are disabled when all TP prefs are off.
+// Checks that the menulists for tracking protection and cookie blocking are disabled when all TP prefs are off.
 add_task(async function testContentBlockingDependentTPControls() {
   SpecialPowers.pushPrefEnv({set: [
     [CB_TP_UI_PREF, true],
     [CB_RT_UI_PREF, true],
     [TP_PREF, false],
     [TP_PBM_PREF, false],
-    [NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
+    [NCB_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT],
+    [CAT_PREF, "custom"],
   ]});
 
   let disabledControls = [
     "#trackingProtectionMenu",
+    "#blockCookiesMenu",
   ];
 
   await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
   let doc = gBrowser.contentDocument;
-
   checkControlState(doc, disabledControls, false);
 
   gBrowser.removeCurrentTab();
 });
-
-// Checks that the warnings in the Content Blocking Third-Party Cookies section correctly appear based on
-// the selections in the Cookies and Site Data section.
-add_task(async function testContentBlockingThirdPartyCookiesWarning() {
-  await SpecialPowers.pushPrefEnv({set: [
-    [CB_TP_UI_PREF, true],
-    [CB_RT_UI_PREF, true],
-  ]});
-
-  let expectedDeckIndex = new Map([
-    [Ci.nsICookieService.BEHAVIOR_ACCEPT, 0],
-    [Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN, 0],
-    [Ci.nsICookieService.BEHAVIOR_REJECT, 1],
-    [Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN, 2],
-    [Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER, 0],
-  ]);
-
-  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
-  let doc = gBrowser.contentDocument;
-
-  let deck = doc.getElementById("blockCookiesCBDeck");
-
-  for (let obj of expectedDeckIndex) {
-    Services.prefs.setIntPref(NCB_PREF, obj[0]);
-
-    is(deck.selectedIndex, obj[1], "Correct deck index is being displayed");
-
-    Services.prefs.clearUserPref(NCB_PREF);
-  }
-
-  gBrowser.removeCurrentTab();
-});
-

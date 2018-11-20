@@ -6,15 +6,23 @@
 #ifndef PerformanceUtils_h
 #define PerformanceUtils_h
 
-#include "mozilla/dom/DOMTypes.h"   // defines PerformanceInfo
+#include "mozilla/PerformanceTypes.h"
 
 namespace mozilla {
 
 /**
- * Collects all performance info in the current process
- * and adds then in the aMetrics array
+ * Returns an array of promises to asynchronously collect all performance
+ * info in the current process.
  */
-void CollectPerformanceInfo(nsTArray<dom::PerformanceInfo>& aMetrics);
+nsTArray<RefPtr<PerformanceInfoPromise>>
+CollectPerformanceInfo();
+
+/**
+ * Asynchronously collects memory info for a given window
+ */
+RefPtr<MemoryPromise>
+CollectMemoryInfo(const nsCOMPtr<nsPIDOMWindowOuter>& aWindow,
+                  const RefPtr<AbstractThread>& aEventTarget);
 
 } // namespace mozilla
-#endif   // PerformanceUtils_h
+#endif // PerformanceUtils_h

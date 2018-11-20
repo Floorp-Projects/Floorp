@@ -37,6 +37,7 @@ async function init(aEvent) {
 
   // Include the build ID and display warning if this is an "a#" (nightly or aurora) build
   let versionField = document.getElementById("version");
+  versionField.textContent = AppConstants.MOZ_APP_VERSION_DISPLAY;
   let version = Services.appinfo.version;
   if (/a\d+$/.test(version)) {
     let buildID = Services.appinfo.appBuildID;
@@ -77,7 +78,7 @@ async function init(aEvent) {
         currentChannelText.hidden = true;
   }
 
-  if (AppConstants.MOZ_UPDATE_CHANNEL == "esr") {
+  if (AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")) {
     document.getElementById("release").hidden = false;
   }
   if (AppConstants.platform == "macosx") {

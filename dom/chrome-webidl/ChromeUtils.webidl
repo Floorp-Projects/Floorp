@@ -370,6 +370,21 @@ partial namespace ChromeUtils {
  * Dictionaries duplicating IPDL types in dom/ipc/DOMTypes.ipdlh
  * Used by requestPerformanceMetrics
  */
+
+dictionary MediaMemoryInfoDictionary {
+  unsigned long long audioSize = 0;
+  unsigned long long videoSize = 0;
+  unsigned long long resourcesSize = 0;
+};
+
+dictionary MemoryInfoDictionary {
+  unsigned long long domDom = 0;
+  unsigned long long domStyle = 0;
+  unsigned long long domOther = 0;
+  unsigned long long GCHeapUsage = 0;
+  required MediaMemoryInfoDictionary media;
+};
+
 dictionary CategoryDispatchDictionary
 {
   unsigned short category = 0;
@@ -384,6 +399,7 @@ dictionary PerformanceInfoDictionary {
   unsigned long long counterId = 0;
   boolean isWorker = false;
   boolean isTopLevel = false;
+  required MemoryInfoDictionary memoryInfo;
   sequence<CategoryDispatchDictionary> items = [];
 };
 

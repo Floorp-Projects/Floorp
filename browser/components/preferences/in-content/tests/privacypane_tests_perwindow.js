@@ -53,7 +53,7 @@ function test_dependent_elements(win) {
     ok(control, "the dependent controls should exist");
   });
   let independents = [
-    win.document.getElementById("blockCookies"),
+    win.document.getElementById("contentBlockingBlockCookiesCheckbox"),
   ];
   independents.forEach(function(control) {
     ok(control, "the independent controls should exist");
@@ -112,15 +112,14 @@ function test_dependent_elements(win) {
 
 function test_dependent_cookie_elements(win) {
   let deleteOnCloseCheckbox = win.document.getElementById("deleteOnClose");
-  let blockCookiesLabel = win.document.getElementById("blockCookiesLabel");
   let blockCookiesMenu = win.document.getElementById("blockCookiesMenu");
 
-  let controls = [blockCookiesLabel, blockCookiesMenu, deleteOnCloseCheckbox];
+  let controls = [blockCookiesMenu, deleteOnCloseCheckbox];
   controls.forEach(function(control) {
     ok(control, "the dependent cookie controls should exist");
   });
-  let blockcookies = win.document.getElementById("blockCookies");
-  ok(blockcookies, "the block cookies checkbox should exist");
+  let blockCookiesCheckbox = win.document.getElementById("contentBlockingBlockCookiesCheckbox");
+  ok(blockCookiesCheckbox, "the block cookies checkbox should exist");
 
   function expect_disabled(disabled, c = controls) {
     c.forEach(function(control) {
@@ -129,19 +128,19 @@ function test_dependent_cookie_elements(win) {
     });
   }
 
-  blockcookies.value = "disallow";
-  controlChanged(blockcookies);
+  blockCookiesCheckbox.checked = true;
+  controlChanged(blockCookiesCheckbox);
   expect_disabled(false);
 
-  blockcookies.value = "allow";
-  controlChanged(blockcookies);
-  expect_disabled(true, [blockCookiesLabel, blockCookiesMenu]);
+  blockCookiesCheckbox.checked = false;
+  controlChanged(blockCookiesCheckbox);
+  expect_disabled(true, [blockCookiesMenu]);
   expect_disabled(false, [deleteOnCloseCheckbox]);
 
   blockCookiesMenu.value = "always";
   controlChanged(blockCookiesMenu);
   expect_disabled(true, [deleteOnCloseCheckbox]);
-  expect_disabled(false, [blockCookiesLabel, blockCookiesMenu]);
+  expect_disabled(false, [blockCookiesMenu]);
 
   if (win.contentBlockingCookiesAndSiteDataRejectTrackersEnabled) {
     blockCookiesMenu.value = "trackers";
@@ -158,7 +157,7 @@ function test_dependent_cookie_elements(win) {
   historymode.value = "dontremember";
   controlChanged(historymode);
   expect_disabled(true, [deleteOnCloseCheckbox]);
-  expect_disabled(false, [blockCookiesLabel, blockCookiesMenu]);
+  expect_disabled(false, [blockCookiesMenu]);
 
   historymode.value = "remember";
   controlChanged(historymode);

@@ -74,14 +74,14 @@ export default function showContextMenu(props) {
     "breakpointMenuItem.addCondition2.accesskey"
   );
 
-  const otherBreakpoints = breakpoints.filter(b => b !== breakpoint);
+  const otherBreakpoints = breakpoints.filter(b => b.id !== breakpoint.id);
   const enabledBreakpoints = breakpoints.filter(b => !b.disabled);
   const disabledBreakpoints = breakpoints.filter(b => b.disabled);
   const otherEnabledBreakpoints = breakpoints.filter(
-    b => !b.disabled && b !== breakpoint
+    b => !b.disabled && b.id !== breakpoint.id
   );
   const otherDisabledBreakpoints = breakpoints.filter(
-    b => b.disabled && b !== breakpoint
+    b => b.disabled && b.id !== breakpoint.id
   );
 
   const deleteSelfItem = {
