@@ -9,7 +9,7 @@ buildscript {
     ext.geckoview_revision = '6226ce7f4038d566fe750b1d13f107146d137463'
     ext.geckoview_version = '64.0.20181112164519' // GV Beta 64_0b9
     ext.spotbugs_version = '3.1.4'
-    ext.mozilla_components_version = '0.31.0'
+    ext.mozilla_components_version = '0.32.0'
 
     repositories {
         google()
