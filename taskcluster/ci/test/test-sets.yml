@@ -79,6 +79,10 @@ talos:
 raptor-firefox:
     - raptor-tp6-1-firefox
     - raptor-tp6-2-firefox
+    - raptor-tp6-3-firefox
+    - raptor-tp6-4-firefox
+    - raptor-tp6-5-firefox
+    - raptor-tp6-6-firefox
     - raptor-speedometer-firefox
     - raptor-stylebench-firefox
     - raptor-motionmark-htmlsuite-firefox
@@ -90,6 +94,10 @@ raptor-firefox:
 raptor-chrome:
     - raptor-tp6-1-chrome
     - raptor-tp6-2-chrome
+    - raptor-tp6-3-chrome
+    - raptor-tp6-4-chrome
+    - raptor-tp6-5-chrome
+    - raptor-tp6-6-chrome
     - raptor-speedometer-chrome
     - raptor-stylebench-chrome
     - raptor-motionmark-htmlsuite-chrome
