@@ -898,8 +898,9 @@ nsDataObj::GetDib(const nsACString& inFlavor,
                   STGMEDIUM & aSTG)
 {
   ULONG result = E_FAIL;
+  uint32_t len = 0;
   nsCOMPtr<nsISupports> genericDataWrapper;
-  mTransferable->GetTransferData(PromiseFlatCString(inFlavor).get(), getter_AddRefs(genericDataWrapper));
+  mTransferable->GetTransferData(PromiseFlatCString(inFlavor).get(), getter_AddRefs(genericDataWrapper), &len);
   nsCOMPtr<imgIContainer> image ( do_QueryInterface(genericDataWrapper) );
   if ( image ) {
     nsCOMPtr<imgITools> imgTools = do_CreateInstance("@mozilla.org/image/tools;1");
@@ -1363,6 +1364,7 @@ HRESULT nsDataObj::GetPreferredDropEffect ( FORMATETC& aFE, STGMEDIUM& aSTG )
 HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGMEDIUM& aSTG)
 {
   void* data = nullptr;
+  uint32_t   len;
   
   // if someone asks for text/plain, look up text/unicode instead in the transferable.
   const char* flavorStr;
@@ -1374,11 +1376,9 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
 
   // NOTE: CreateDataFromPrimitive creates new memory, that needs to be deleted
   nsCOMPtr<nsISupports> genericDataWrapper;
-  mTransferable->GetTransferData(flavorStr, getter_AddRefs(genericDataWrapper));
-  if ( !genericDataWrapper )
+  mTransferable->GetTransferData(flavorStr, getter_AddRefs(genericDataWrapper), &len);
+  if ( !len )
     return E_FAIL;
-
-  uint32_t   len;
   nsPrimitiveHelpers::CreateDataFromPrimitive(
     nsDependentCString(flavorStr), genericDataWrapper, &data, &len);
   if ( !data )
@@ -1482,9 +1482,11 @@ HRESULT nsDataObj::GetFile(FORMATETC& aFE, STGMEDIUM& aSTG)
 HRESULT nsDataObj::DropFile(FORMATETC& aFE, STGMEDIUM& aSTG)
 {
   nsresult rv;
+  uint32_t len = 0;
   nsCOMPtr<nsISupports> genericDataWrapper;
 
-  mTransferable->GetTransferData(kFileMime, getter_AddRefs(genericDataWrapper));
+  mTransferable->GetTransferData(kFileMime, getter_AddRefs(genericDataWrapper),
+                                 &len);
   nsCOMPtr<nsIFile> file ( do_QueryInterface(genericDataWrapper) );
   if (!file)
     return E_FAIL;
@@ -1535,9 +1537,10 @@ HRESULT nsDataObj::DropImage(FORMATETC& aFE, STGMEDIUM& aSTG)
 {
   nsresult rv;
   if (!mCachedTempFile) {
+    uint32_t len = 0;
     nsCOMPtr<nsISupports> genericDataWrapper;
 
-    mTransferable->GetTransferData(kNativeImageMime, getter_AddRefs(genericDataWrapper));
+    mTransferable->GetTransferData(kNativeImageMime, getter_AddRefs(genericDataWrapper), &len);
     nsCOMPtr<imgIContainer> image(do_QueryInterface(genericDataWrapper));
     if (!image) 
       return E_FAIL;
@@ -1838,8 +1841,9 @@ nsDataObj :: ExtractShortcutURL ( nsString & outURL )
   NS_ASSERTION ( mTransferable, "We don't have a good transferable" );
   nsresult rv = NS_ERROR_FAILURE;
   
+  uint32_t len = 0;
   nsCOMPtr<nsISupports> genericURL;
-  if ( NS_SUCCEEDED(mTransferable->GetTransferData(kURLMime, getter_AddRefs(genericURL)))) {
+  if ( NS_SUCCEEDED(mTransferable->GetTransferData(kURLMime, getter_AddRefs(genericURL), &len)) ) {
     nsCOMPtr<nsISupportsString> urlObject ( do_QueryInterface(genericURL) );
     if ( urlObject ) {
       nsAutoString url;
@@ -1855,8 +1859,8 @@ nsDataObj :: ExtractShortcutURL ( nsString & outURL )
         rv = NS_OK;    
       }
     }
-  } else if ( NS_SUCCEEDED(mTransferable->GetTransferData(kURLDataMime, getter_AddRefs(genericURL))) ||
-              NS_SUCCEEDED(mTransferable->GetTransferData(kURLPrivateMime, getter_AddRefs(genericURL))) ) {
+  } else if ( NS_SUCCEEDED(mTransferable->GetTransferData(kURLDataMime, getter_AddRefs(genericURL), &len)) ||
+              NS_SUCCEEDED(mTransferable->GetTransferData(kURLPrivateMime, getter_AddRefs(genericURL), &len)) ) {
     nsCOMPtr<nsISupportsString> urlObject ( do_QueryInterface(genericURL) );
     if ( urlObject ) {
       nsAutoString url;
@@ -1888,8 +1892,9 @@ nsDataObj :: ExtractShortcutTitle ( nsString & outTitle )
   NS_ASSERTION ( mTransferable, "We'd don't have a good transferable" );
   nsresult rv = NS_ERROR_FAILURE;
   
+  uint32_t len = 0;
   nsCOMPtr<nsISupports> genericURL;
-  if ( NS_SUCCEEDED(mTransferable->GetTransferData(kURLMime, getter_AddRefs(genericURL)) )) {
+  if ( NS_SUCCEEDED(mTransferable->GetTransferData(kURLMime, getter_AddRefs(genericURL), &len)) ) {
     nsCOMPtr<nsISupportsString> urlObject ( do_QueryInterface(genericURL) );
     if ( urlObject ) {
       nsAutoString url;
@@ -1900,7 +1905,7 @@ nsDataObj :: ExtractShortcutTitle ( nsString & outTitle )
       int32_t lineIndex = url.FindChar ( '\n' );
       NS_ASSERTION ( lineIndex != -1, "Format for url flavor is <url> <linefeed> <page title>" );
       if ( lineIndex != -1 ) {
-        url.Mid ( outTitle, lineIndex + 1, url.Length() - (lineIndex + 1) );
+        url.Mid ( outTitle, lineIndex + 1, (len/2) - (lineIndex + 1) );
         rv = NS_OK;    
       }
     }
@@ -2096,7 +2101,8 @@ HRESULT nsDataObj::GetDownloadDetails(nsIURI **aSourceURI,
 
   // get the URI from the kFilePromiseURLMime flavor
   nsCOMPtr<nsISupports> urlPrimitive;
-  mTransferable->GetTransferData(kFilePromiseURLMime, getter_AddRefs(urlPrimitive));
+  uint32_t dataSize = 0;
+  mTransferable->GetTransferData(kFilePromiseURLMime, getter_AddRefs(urlPrimitive), &dataSize);
   nsCOMPtr<nsISupportsString> srcUrlPrimitive = do_QueryInterface(urlPrimitive);
   NS_ENSURE_TRUE(srcUrlPrimitive, E_FAIL);
   
@@ -2109,7 +2115,7 @@ HRESULT nsDataObj::GetDownloadDetails(nsIURI **aSourceURI,
 
   nsAutoString srcFileName;
   nsCOMPtr<nsISupports> fileNamePrimitive;
-  mTransferable->GetTransferData(kFilePromiseDestFilename, getter_AddRefs(fileNamePrimitive));
+  mTransferable->GetTransferData(kFilePromiseDestFilename, getter_AddRefs(fileNamePrimitive), &dataSize);
   nsCOMPtr<nsISupportsString> srcFileNamePrimitive = do_QueryInterface(fileNamePrimitive);
   if (srcFileNamePrimitive) {
     srcFileNamePrimitive->GetData(srcFileName);

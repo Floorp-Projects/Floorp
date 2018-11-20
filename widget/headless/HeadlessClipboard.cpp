@@ -32,8 +32,10 @@ HeadlessClipboard::SetData(nsITransferable *aTransferable,
 
   // Only support plain text for now.
   nsCOMPtr<nsISupports> clip;
+  uint32_t len;
   nsresult rv = aTransferable->GetTransferData(kUnicodeMime,
-                                               getter_AddRefs(clip));
+                                               getter_AddRefs(clip),
+                                               &len);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -64,7 +66,8 @@ HeadlessClipboard::GetData(nsITransferable *aTransferable,
     return rv;
   }
   nsCOMPtr<nsISupports> genericDataWrapper = do_QueryInterface(dataWrapper);
-  rv = aTransferable->SetTransferData(kUnicodeMime, genericDataWrapper);
+  uint32_t len = mClipboard->GetText().Length() * sizeof(char16_t);
+  rv = aTransferable->SetTransferData(kUnicodeMime, genericDataWrapper, len);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

@@ -731,12 +731,13 @@ function getTextFromClipboard() {
   Services.clipboard.getData(trans, Services.clipboard.kGlobalClipboard);
 
   var str = {};
-  trans.getTransferData("text/unicode", str);
+  var strLength = {};
+  trans.getTransferData("text/unicode", str, strLength);
 
   if (str)
     str = str.value.QueryInterface(Ci.nsISupportsString);
   if (str)
-    return str.data;
+    return str.data.substring(0, strLength.value / 2);
 
   return "";
 }

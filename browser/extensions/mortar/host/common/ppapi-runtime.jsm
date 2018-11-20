@@ -2618,7 +2618,8 @@ dump(`callFromJSON: < ${JSON.stringify(call)}\n`);
           Services.clipboard.getData(
             trans, Services.clipboard.kGlobalClipboard);
           let str = {};
-          trans.getTransferData("text/unicode", str);
+          let strLength = {};
+          trans.getTransferData("text/unicode", str, strLength);
           let pasteText = str.value.QueryInterface(Ci.nsISupportsString).data;
           return new String_PP_Var(pasteText);
         }
