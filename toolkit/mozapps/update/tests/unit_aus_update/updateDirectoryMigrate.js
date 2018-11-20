@@ -94,7 +94,7 @@ function getOldUpdateLog(aLogLeafName) {
 }
 
 function run_test() {
-  setupTestCommon();
+  setupTestCommon(null);
 
   debugDump("testing that the update directory is migrated after a successful update");
 

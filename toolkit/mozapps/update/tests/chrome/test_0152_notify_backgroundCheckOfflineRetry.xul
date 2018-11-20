@@ -27,13 +27,13 @@ const TESTS = [ {
 const NETWORK_ERROR_OFFLINE = 111;
 var gProxyPrefValue;
 
-async function runTest() {
+function runTest() {
   debugDump("entering");
 
   let url = URL_HTTP_UPDATE_XML + "?showDetails=1" + getVersionParams();
   setUpdateURL(url);
 
-  await gAUS.setAutoUpdateIsEnabled(false);
+  setAppUpdateAutoSync(false);
   Services.prefs.setBoolPref(PREF_APP_UPDATE_DISABLEDFORTESTING, false);
 
   Services.io.offline = true;

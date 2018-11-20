@@ -8,6 +8,7 @@
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+const PREF_APP_UPDATE_AUTO                       = "app.update.auto";
 const PREF_APP_UPDATE_BACKGROUNDERRORS           = "app.update.backgroundErrors";
 const PREF_APP_UPDATE_BACKGROUNDMAXERRORS        = "app.update.backgroundMaxErrors";
 const PREF_APP_UPDATE_CANCELATIONS               = "app.update.cancelations";
@@ -34,6 +35,8 @@ const PREFBRANCH_APP_PARTNER         = "app.partner.";
 const PREF_DISTRIBUTION_ID           = "distribution.id";
 const PREF_DISTRIBUTION_VERSION      = "distribution.version";
 const PREF_DISABLE_SECURITY          = "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
+
+const CONFIG_APP_UPDATE_AUTO         = "app.update.auto";
 
 const NS_APP_PROFILE_DIR_STARTUP   = "ProfDS";
 const NS_APP_USER_PROFILE_50_DIR   = "ProfD";
@@ -230,6 +233,40 @@ function writeVersionFile(aVersion) {
   let file = getUpdatesPatchDir();
   file.append(FILE_UPDATE_VERSION);
   writeFile(file, aVersion + "\n");
+}
+
+/**
+ * Synchronously writes the value of the app.update.auto setting to the update
+ * configuration file on Windows or to a user preference on other platforms.
+ * When the value passed to this function is null or undefined it will remove
+ * the configuration file on Windows or the user preference on other platforms.
+ *
+ * @param  aEnabled
+ *         Possible values are true, false, null, and undefined. When true or
+ *         false this value will be written for app.update.auto in the update
+ *         configuration file on Windows or to the user preference on other
+ *         platforms. When null or undefined the update configuration file will
+ *         be removed on Windows or the user preference will be removed on other
+ *         platforms.
+ */
+function setAppUpdateAutoSync(aEnabled) {
+  if (IS_WIN) {
+    let file = getUpdateConfigFile();
+    if (aEnabled === undefined || aEnabled === null) {
+      if (file.exists()) {
+        file.remove(false);
+      }
+    } else {
+      writeFile(file, "{\"" + CONFIG_APP_UPDATE_AUTO + "\":" +
+                      aEnabled.toString() + "}");
+    }
+  } else if (aEnabled === undefined || aEnabled === null) {
+    if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_AUTO)) {
+      Services.prefs.clearUserPref(PREF_APP_UPDATE_AUTO);
+    }
+  } else {
+    Services.prefs.setBoolPref(PREF_APP_UPDATE_AUTO, aEnabled);
+  }
 }
 
 /**
