@@ -166,7 +166,8 @@ public:
          !iter.Done(); iter.Next()) {
       if (iter.UserData()) {
         aSizes.mDOMOtherSize +=
-          iter.UserData()->second().ShallowSizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
+          aSizes.mState.mMallocSizeOf(iter.UserData()) +
+          iter.UserData()->second().ShallowSizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
       }
     }
   }
