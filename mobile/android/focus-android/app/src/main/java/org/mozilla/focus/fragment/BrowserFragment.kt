@@ -668,16 +668,15 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
     }
 
     internal fun showDownloadPromptDialog(download: Download) {
-        val fragmentManager = fragmentManager
+        val fragmentManager = childFragmentManager
 
-        if (fragmentManager!!.findFragmentByTag(DownloadDialogFragment.FRAGMENT_TAG) != null) {
+        if (fragmentManager.findFragmentByTag(DownloadDialogFragment.FRAGMENT_TAG) != null) {
             // We are already displaying a download dialog fragment (Probably a restored fragment).
             // No need to show another one.
             return
         }
 
         val downloadDialogFragment = DownloadDialogFragment.newInstance(download)
-        downloadDialogFragment.setTargetFragment(this@BrowserFragment, REQUEST_CODE_DOWNLOAD_DIALOG)
 
         try {
             downloadDialogFragment.show(fragmentManager, DownloadDialogFragment.FRAGMENT_TAG)
@@ -749,9 +748,9 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
     }
 
     internal fun showAddToHomescreenDialog(url: String, title: String) {
-        val fragmentManager = fragmentManager
+        val fragmentManager = childFragmentManager
 
-        if (fragmentManager!!.findFragmentByTag(AddToHomescreenDialogFragment.FRAGMENT_TAG) != null) {
+        if (fragmentManager.findFragmentByTag(AddToHomescreenDialogFragment.FRAGMENT_TAG) != null) {
             // We are already displaying a homescreen dialog fragment (Probably a restored fragment).
             // No need to show another one.
             return
@@ -763,12 +762,12 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             session.trackerBlockingEnabled,
             session.shouldRequestDesktopSite
         )
-        addToHomescreenDialogFragment.setTargetFragment(
-            this@BrowserFragment,
-            REQUEST_CODE_ADD_TO_HOMESCREEN_DIALOG)
 
         try {
-            addToHomescreenDialogFragment.show(fragmentManager, AddToHomescreenDialogFragment.FRAGMENT_TAG)
+            addToHomescreenDialogFragment.show(
+                fragmentManager,
+                AddToHomescreenDialogFragment.FRAGMENT_TAG
+            )
         } catch (e: IllegalStateException) {
             // It can happen that at this point in time the activity is already in the background
             // and onSaveInstanceState() has already been called. Fragment transactions are not
@@ -854,7 +853,7 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     private fun displayBiometricPromptIfNeeded() {
-        val fragmentManager = requireActivity().supportFragmentManager
+        val fragmentManager = childFragmentManager
 
         // Check that we need to auth and that the fragment isn't already displayed
         if (biometricController!!.needsAuth || openedFromExternalLink) {
@@ -867,12 +866,16 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
                 return
             }
 
-            biometricController!!.biometricFragment!!.setTargetFragment(
-                this@BrowserFragment, REQUEST_CODE_BIOMETRIC_PROMPT)
-            biometricController!!.biometricFragment!!.show(
-                fragmentManager,
-                BiometricAuthenticationDialogFragment.FRAGMENT_TAG
-            )
+            try {
+                biometricController!!.biometricFragment!!.show(
+                    fragmentManager,
+                    BiometricAuthenticationDialogFragment.FRAGMENT_TAG
+                )
+            } catch (e: IllegalStateException) {
+                // It can happen that at this point in time the activity is already in the background
+                // and onSaveInstanceState() has already been called. Fragment transactions are not
+                // allowed after that anymore.
+            }
         } else {
             view!!.alpha = 1f
         }
@@ -1476,9 +1479,6 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         private const val RESTORE_KEY_DOWNLOAD = "download"
 
         private const val INITIAL_PROGRESS = 5
-        private const val REQUEST_CODE_DOWNLOAD_DIALOG = 300
-        private const val REQUEST_CODE_ADD_TO_HOMESCREEN_DIALOG = 301
-        private const val REQUEST_CODE_BIOMETRIC_PROMPT = 302
 
         @JvmStatic
         fun createForSession(session: Session): BrowserFragment {

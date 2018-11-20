@@ -61,7 +61,7 @@ class DownloadDialogFragment : DialogFragment() {
     }
 
     private fun sendDownloadDialogButtonClicked(download: Download?, shouldDownload: Boolean) {
-        val listener = targetFragment as DownloadDialogListener?
+        val listener = parentFragment as DownloadDialogListener?
         listener?.onFinishDownloadDialog(download, shouldDownload)
         dismiss()
     }

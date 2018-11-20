@@ -89,7 +89,7 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
     }
 
     private fun biometricNewSessionButtonClicked() {
-        val listener = targetFragment as BiometricAuthenticationListener?
+        val listener = parentFragment as BiometricAuthenticationListener?
 
         if (openedFromExternalLink) {
             listener?.biometricCreateNewSessionWithLink()
@@ -111,7 +111,7 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
     }
 
     fun onAuthenticated() {
-        val listener = targetFragment as BiometricAuthenticationListener?
+        val listener = parentFragment as BiometricAuthenticationListener?
         if (listener != null) {
             listener.onAuthSuccess()
             dismiss()
