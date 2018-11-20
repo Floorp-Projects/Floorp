@@ -1,0 +1,85 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>BrowserMenuItem - android-components</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">android-components</a>&nbsp;/&nbsp;<a href="../index.html">mozilla.components.browser.menu</a>&nbsp;/&nbsp;<a href="./index.html">BrowserMenuItem</a><br/>
+<br/>
+<h1>BrowserMenuItem</h1>
+<code><span class="keyword">interface </span><span class="identifier">BrowserMenuItem</span></code> <a href="https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenuItem.kt#L12">(source)</a>
+<p>Interface to be implemented by menu items to be shown in the browser menu.</p>
+<h3>Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="visible.html">visible</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">val </span><span class="identifier">visible</span><span class="symbol">: </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
+<p>Lambda expression that returns true if this item should be shown in the menu. Returns false
+if this item should be hidden.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="bind.html">bind</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">bind</span><span class="symbol">(</span><span class="identifier" id="mozilla.components.browser.menu.BrowserMenuItem$bind(mozilla.components.browser.menu.BrowserMenu, android.view.View)/menu">menu</span><span class="symbol">:</span>&nbsp;<a href="../-browser-menu/index.html"><span class="identifier">BrowserMenu</span></a><span class="symbol">, </span><span class="identifier" id="mozilla.components.browser.menu.BrowserMenuItem$bind(mozilla.components.browser.menu.BrowserMenu, android.view.View)/view">view</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/android/view/View.html"><span class="identifier">View</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Called by the browser menu to display the data of this item using the passed view.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="get-layout-resource.html">getLayoutResource</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">getLayoutResource</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html"><span class="identifier">Int</span></a></code>
+<p>Returns the layout resource ID of the layout to be inflated for showing a menu item of this
+type.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../../mozilla.components.browser.menu.item/-browser-menu-item-toolbar/index.html">BrowserMenuItemToolbar</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">BrowserMenuItemToolbar</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">BrowserMenuItem</span></a></code>
+<p>A toolbar of buttons to show inside the browser menu.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.browser.menu.item/-simple-browser-menu-checkbox/index.html">SimpleBrowserMenuCheckbox</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SimpleBrowserMenuCheckbox</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">BrowserMenuItem</span></a></code>
+<p>A simple browser menu checkbox.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../../mozilla.components.browser.menu.item/-simple-browser-menu-item/index.html">SimpleBrowserMenuItem</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">SimpleBrowserMenuItem</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">BrowserMenuItem</span></a></code>
+<p>A simple browser menu item displaying text.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
