@@ -632,9 +632,6 @@ private: // member functions
   // at the parent.
   nsIPrincipal* GetInheritedPrincipal(bool aConsiderCurrentDocument);
 
-  nsresult CreatePrincipalFromReferrer(nsIURI* aReferrer,
-                                       nsIPrincipal** aResult);
-
   /**
    * Helper function that determines if channel is an HTTP POST.
    *

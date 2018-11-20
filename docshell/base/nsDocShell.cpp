@@ -9094,17 +9094,6 @@ nsDocShell::JustStartedNetworkLoad()
   return mDocumentRequest && mDocumentRequest != GetCurrentDocChannel();
 }
 
-nsresult
-nsDocShell::CreatePrincipalFromReferrer(nsIURI* aReferrer,
-                                        nsIPrincipal** aResult)
-{
-  nsCOMPtr<nsIPrincipal> prin =
-    BasePrincipal::CreateCodebasePrincipal(aReferrer, mOriginAttributes);
-  prin.forget(aResult);
-
-  return *aResult ? NS_OK : NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP
 nsDocShell::InternalLoad(nsIURI* aURI,
                          nsIURI* aOriginalURI,
