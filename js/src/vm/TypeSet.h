@@ -21,6 +21,7 @@
 
 #include "jit/IonTypes.h" // jit::MIRType
 #include "js/GCAnnotations.h" // JS_HAZ_GC_POINTER
+#include "js/Id.h"
 #include "js/TracingAPI.h" // JSTracer
 #include "js/TypeDecls.h" // IF_BIGINT
 #include "js/Utility.h" // UniqueChars
@@ -29,7 +30,6 @@
 #include "vm/TaggedProto.h" // js::TaggedProto
 
 struct JSContext;
-struct jsid;
 class JSObject;
 
 namespace JS {

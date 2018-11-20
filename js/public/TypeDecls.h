@@ -33,9 +33,9 @@ class JSScript;
 class JSString;
 struct JSFreeOp;
 
-struct jsid;
-
 namespace JS {
+
+struct PropertyKey;
 
 typedef unsigned char Latin1Char;
 
@@ -56,7 +56,7 @@ template <typename T> class Rooted;
 template <typename T> class PersistentRooted;
 
 typedef Handle<JSFunction*> HandleFunction;
-typedef Handle<jsid>        HandleId;
+typedef Handle<PropertyKey> HandleId;
 typedef Handle<JSObject*>   HandleObject;
 typedef Handle<JSScript*>   HandleScript;
 typedef Handle<JSString*>   HandleString;
@@ -64,10 +64,10 @@ typedef Handle<JS::Symbol*> HandleSymbol;
 #ifdef ENABLE_BIGINT
 typedef Handle<JS::BigInt*> HandleBigInt;
 #endif
-typedef Handle<Value>       HandleValue;
+typedef Handle<Value> HandleValue;
 
 typedef MutableHandle<JSFunction*> MutableHandleFunction;
-typedef MutableHandle<jsid>        MutableHandleId;
+typedef MutableHandle<PropertyKey> MutableHandleId;
 typedef MutableHandle<JSObject*>   MutableHandleObject;
 typedef MutableHandle<JSScript*>   MutableHandleScript;
 typedef MutableHandle<JSString*>   MutableHandleString;
@@ -85,11 +85,11 @@ typedef Rooted<JS::Symbol*>     RootedSymbol;
 #ifdef ENABLE_BIGINT
 typedef Rooted<JS::BigInt*>     RootedBigInt;
 #endif
-typedef Rooted<jsid>            RootedId;
+typedef Rooted<PropertyKey>     RootedId;
 typedef Rooted<JS::Value>       RootedValue;
 
 typedef PersistentRooted<JSFunction*> PersistentRootedFunction;
-typedef PersistentRooted<jsid>        PersistentRootedId;
+typedef PersistentRooted<PropertyKey> PersistentRootedId;
 typedef PersistentRooted<JSObject*>   PersistentRootedObject;
 typedef PersistentRooted<JSScript*>   PersistentRootedScript;
 typedef PersistentRooted<JSString*>   PersistentRootedString;
@@ -100,6 +100,8 @@ typedef PersistentRooted<JS::BigInt*> PersistentRootedBigInt;
 typedef PersistentRooted<Value>       PersistentRootedValue;
 
 } // namespace JS
+
+using jsid = JS::PropertyKey;
 
 #ifdef ENABLE_BIGINT
 #define IF_BIGINT(x, y) x
