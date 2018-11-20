@@ -195,13 +195,13 @@ a {
 }
 
 .message.info > .icon {
-  color: var(--console-output-icon-medium-color);
+  color: var(--console-output-icon-strong-color);
   background-image: url(chrome://devtools/skin/images/webconsole/info.svg);
 }
 
 .message.error > .icon {
   color: var(--console-output-icon-error-color);
-  background-image: url(chrome://devtools/skin/images/alert.svg);
+  background-image: url(chrome://devtools/skin/images/webconsole/error.svg);
 }
 
 .message.warn > .icon {
