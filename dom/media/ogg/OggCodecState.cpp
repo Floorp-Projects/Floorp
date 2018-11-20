@@ -95,7 +95,8 @@ bool OggCodecState::IsValidVorbisTagName(nsCString& aName) {
   return true;
 }
 
-bool OggCodecState::AddVorbisComment(MetadataTags* aTags, const char* aComment,
+bool OggCodecState::AddVorbisComment(UniquePtr<MetadataTags>& aTags,
+                                     const char* aComment,
                                      uint32_t aLength) {
   const char* div = (const char*)memchr(aComment, '=', aLength);
   if (!div) {
@@ -712,11 +713,10 @@ bool VorbisState::IsHeader(ogg_packet* aPacket) {
   return aPacket->bytes > 0 ? (aPacket->packet[0] & 0x1) : false;
 }
 
-MetadataTags* VorbisState::GetTags() {
-  MetadataTags* tags;
+UniquePtr<MetadataTags> VorbisState::GetTags() {
   NS_ASSERTION(mComment.user_comments, "no vorbis comment strings!");
   NS_ASSERTION(mComment.comment_lengths, "no vorbis comment lengths!");
-  tags = new MetadataTags;
+  auto tags = MakeUnique<MetadataTags>();
   for (int i = 0; i < mComment.comments; i++) {
     AddVorbisComment(tags, mComment.user_comments[i],
                      mComment.comment_lengths[i]);
@@ -967,10 +967,8 @@ bool OpusState::DecodeHeader(OggPacketPtr aPacket) {
 }
 
 /* Construct and return a tags hashmap from our internal array */
-MetadataTags* OpusState::GetTags() {
-  MetadataTags* tags;
-
-  tags = new MetadataTags;
+UniquePtr<MetadataTags> OpusState::GetTags() {
+  auto tags = MakeUnique<MetadataTags>();
   for (uint32_t i = 0; i < mParser->mTags.Length(); i++) {
     AddVorbisComment(tags, mParser->mTags[i].Data(),
                      mParser->mTags[i].Length());
@@ -1228,7 +1226,9 @@ nsresult FlacState::PageIn(ogg_page* aPage) {
 }
 
 // Return a hash table with tag metadata.
-MetadataTags* FlacState::GetTags() { return mParser.GetTags(); }
+UniquePtr<MetadataTags> FlacState::GetTags() {
+  return mParser.GetTags();
+}
 
 const TrackInfo* FlacState::GetInfo() const { return &mParser.mInfo; }
 
