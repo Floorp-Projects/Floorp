@@ -347,6 +347,10 @@ const Class QueueEntry::class_ = {
     JSCLASS_HAS_RESERVED_SLOTS(SlotCount)
 };
 
+/**
+ * TeeState objects implement the local variables in Streams spec 3.3.9
+ * ReadableStreamTee, which are accessed by several algorithms.
+ */
 class TeeState : public NativeObject
 {
   public:
@@ -1225,35 +1229,38 @@ ReadableStreamTee(JSContext* cx,
         return false;
     }
 
-    // Step 4: Let teeState be Record {[[closedOrErrored]]: false,
-    //                                 [[canceled1]]: false,
-    //                                 [[canceled2]]: false,
-    //                                 [[reason1]]: undefined,
-    //                                 [[reason2]]: undefined,
-    //                                 [[promise]]: a new promise}.
+    // Several algorithms close over the variables initialized in the next few
+    // steps, so we allocate them in an object, the TeeState. The algorithms
+    // also close over `stream` and `reader`, so TeeState gets a reference to
+    // the stream.
+    //
+    // Step 4: Let closedOrErrored be false.
+    // Step 5: Let canceled1 be false.
+    // Step 6: Let canceled2 be false.
+    // Step 7: Let reason1 be undefined.
+    // Step 8: Let reason2 be undefined.
+    // Step 9: Let branch1 be undefined.
+    // Step 10: Let branch2 be undefined.
+    // Step 11: Let cancelPromise be a new promise.
     Rooted<TeeState*> teeState(cx, TeeState::create(cx, unwrappedStream));
     if (!teeState) {
         return false;
     }
 
-    // Steps 5-10 omitted because our implementation works differently.
+    // Step 12: Let pullAlgorithm be the following steps: [...]
+    // Step 13: Let cancel1Algorithm be the following steps: [...]
+    // Step 14: Let cancel2Algorithm be the following steps: [...]
+    // Step 15: Let startAlgorithm be an algorithm that returns undefined.
+    //
+    // Implicit. Our implementation does not use objects to represent
+    // [[pullAlgorithm]], [[cancelAlgorithm]], and so on. Instead, we decide
+    // which one to perform based on class checks. For example, our
+    // implementation of ReadableStreamControllerCallPullIfNeeded checks
+    // whether the stream's underlyingSource is a TeeState object.
 
-    // Step 5: Let pull be a new ReadableStreamTee pull function.
-    // Step 6: Set pull.[[reader]] to reader, pull.[[teeState]] to teeState, and
-    //         pull.[[cloneForBranch2]] to cloneForBranch2.
-    // Step 7: Let cancel1 be a new ReadableStreamTee branch 1 cancel function.
-    // Step 8: Set cancel1.[[stream]] to stream and cancel1.[[teeState]] to
-    //         teeState.
-
-    // Step 9: Let cancel2 be a new ReadableStreamTee branch 2 cancel function.
-    // Step 10: Set cancel2.[[stream]] to stream and cancel2.[[teeState]] to
-    //          teeState.
-
-    // Step 11: Let underlyingSource1 be ! ObjectCreate(%ObjectPrototype%).
-    // Step 12: Perform ! CreateDataProperty(underlyingSource1, "pull", pull).
-    // Step 13: Perform ! CreateDataProperty(underlyingSource1, "cancel", cancel1).
-
-    // Step 14: Let branch1Stream be ! Construct(ReadableStream, underlyingSource1).
+    // Step 16: Set branch1 to
+    //          ! CreateReadableStream(startAlgorithm, pullAlgorithm,
+    //                                 cancel1Algorithm).
     RootedValue hwmValue(cx, NumberValue(1));
     RootedValue underlyingSource(cx, ObjectValue(*teeState));
     branch1Stream.set(ReadableStream::createDefaultStream(cx, underlyingSource,
@@ -1268,11 +1275,9 @@ ReadableStreamTee(JSContext* cx,
     branch1->setTeeBranch1();
     teeState->setBranch1(branch1);
 
-    // Step 15: Let underlyingSource2 be ! ObjectCreate(%ObjectPrototype%).
-    // Step 16: Perform ! CreateDataProperty(underlyingSource2, "pull", pull).
-    // Step 17: Perform ! CreateDataProperty(underlyingSource2, "cancel", cancel2).
-
-    // Step 18: Let branch2Stream be ! Construct(ReadableStream, underlyingSource2).
+    // Step 17: Set branch2 to
+    //          ! CreateReadableStream(startAlgorithm, pullAlgorithm,
+    //                                 cancel2Algorithm).
     branch2Stream.set(ReadableStream::createDefaultStream(cx, underlyingSource,
                                                           UndefinedHandleValue,
                                                           hwmValue));
@@ -1285,11 +1290,7 @@ ReadableStreamTee(JSContext* cx,
     branch2->setTeeBranch2();
     teeState->setBranch2(branch2);
 
-    // Step 19: Set pull.[[branch1]] to branch1Stream.[[readableStreamController]].
-    // Step 20: Set pull.[[branch2]] to branch2Stream.[[readableStreamController]].
-    // Our implementation stores the controllers on the TeeState instead.
-
-    // Step 21: Upon rejection of reader.[[closedPromise]] with reason r,
+    // Step 18: Upon rejection of reader.[[closedPromise]] with reason r, [...]
     RootedObject closedPromise(cx, reader->closedPromise());
 
     RootedObject onRejected(cx, NewHandler(cx, TeeReaderClosedHandler, teeState));
@@ -1301,7 +1302,7 @@ ReadableStreamTee(JSContext* cx,
         return false;
     }
 
-    // Step 22: Return « branch1, branch2 ».
+    // Step 19: Return « branch1, branch2 ».
     return true;
 }
 
