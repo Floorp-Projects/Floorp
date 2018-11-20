@@ -619,10 +619,12 @@ class ScalarString : public ScalarBase
 public:
   using ScalarBase::SetValue;
 
-  ScalarString(const BaseScalarInfo& aInfo)
+  explicit ScalarString(const BaseScalarInfo& aInfo)
     : ScalarBase(aInfo)
-    , mStorage(EmptyString())
-  {};
+    , mStorage(aInfo.storeCount())
+  {
+    mStorage.SetLength(aInfo.storeCount());
+  };
 
   ~ScalarString() override = default;
 
@@ -632,7 +634,7 @@ public:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
 private:
-  nsString mStorage;
+  nsTArray<nsString> mStorage;
 
   // Prevent copying.
   ScalarString(const ScalarString& aOther) = delete;
@@ -667,7 +669,11 @@ ScalarString::SetValue(nsIVariant* aValue)
 ScalarResult
 ScalarString::SetValue(const nsAString& aValue)
 {
-  mStorage = Substring(aValue, 0, kMaximumStringValueLength);
+  auto str = Substring(aValue, 0, kMaximumStringValueLength);
+  for (auto& val: mStorage) {
+    val.Assign(str);
+  }
+  SetValueInStores();
   if (aValue.Length() > kMaximumStringValueLength) {
     return ScalarResult::StringTooLong;
   }
@@ -678,9 +684,20 @@ nsresult
 ScalarString::GetValue(const nsACString& aStoreName, bool aClearStore, nsCOMPtr<nsIVariant>& aResult)
 {
   nsCOMPtr<nsIWritableVariant> outVar(new nsVariant());
-  nsresult rv = outVar->SetAsAString(mStorage);
+  size_t storeIndex = 0;
+  nsresult rv = StoreIndex(aStoreName, &storeIndex);
   if (NS_FAILED(rv)) {
     return rv;
+  }
+  if (!HasValueInStore(storeIndex)) {
+    return NS_ERROR_NO_CONTENT;
+  }
+  rv = outVar->SetAsAString(mStorage[storeIndex]);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (aClearStore) {
+    ClearValueInStore(storeIndex);
   }
   aResult = outVar.forget();
   return NS_OK;
@@ -690,7 +707,11 @@ size_t
 ScalarString::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
-  n+= mStorage.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  n += ScalarBase::SizeOfExcludingThis(aMallocSizeOf);
+  n += mStorage.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (auto& val: mStorage) {
+    n += val.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  }
   return n;
 }
 
