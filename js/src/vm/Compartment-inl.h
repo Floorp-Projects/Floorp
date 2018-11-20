@@ -241,40 +241,49 @@ UnwrapAndTypeCheckArgument(JSContext* cx,
 }
 
 /**
- * Unwrap a value of a known type.
+ * Unwrap an object of a known type.
  *
- * If `value` is an object of class T, this returns a pointer to that object.
- * If `value` is a wrapper for such an object, this tries to unwrap the object
- * and return a pointer to it. If access is denied, or `value` was a wrapper
- * but has been nuked, this reports an error and returns null.
+ * If `obj` is an object of class T, this returns a pointer to that object. If
+ * `obj` is a wrapper for such an object, this tries to unwrap the object and
+ * return a pointer to it. If access is denied, or `obj` was a wrapper but has
+ * been nuked, this reports an error and returns null.
  *
- * In all other cases, the behavior is undefined, so call this only if `value`
- * is known to have been initialized with an object of class T.
+ * In all other cases, the behavior is undefined, so call this only if `obj` is
+ * known to have been an object of class T, or a wrapper to a T, at some point.
  */
 template <class T>
 MOZ_MUST_USE T*
-UnwrapAndDowncastValue(JSContext* cx, const Value& value)
+UnwrapAndDowncastObject(JSContext* cx, JSObject* obj)
 {
     static_assert(!std::is_convertible<T*, Wrapper*>::value,
                   "T can't be a Wrapper type; this function discards wrappers");
 
-    JSObject* result = &value.toObject();
-    if (IsProxy(result)) {
-        if (JS_IsDeadWrapper(result)) {
+    if (IsProxy(obj)) {
+        if (JS_IsDeadWrapper(obj)) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
             return nullptr;
         }
 
         // It would probably be OK to do an unchecked unwrap here, but we allow
         // arbitrary security policies, so check anyway.
-        result = CheckedUnwrap(result);
-        if (!result) {
+        obj = CheckedUnwrap(obj);
+        if (!obj) {
             ReportAccessDenied(cx);
             return nullptr;
         }
     }
 
-    return &result->as<T>();
+    return &obj->as<T>();
+}
+
+/**
+ * Unwrap a value of a known type. See UnwrapAndDowncastObject.
+ */
+template <class T>
+inline MOZ_MUST_USE T*
+UnwrapAndDowncastValue(JSContext* cx, const Value& value)
+{
+    return UnwrapAndDowncastObject<T>(cx, &value.toObject());
 }
 
 /**
