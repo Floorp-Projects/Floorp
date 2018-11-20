@@ -320,15 +320,13 @@ void MediaEngineTabVideoSource::Draw() {
 
   nsCOMPtr<nsIPresShell> presShell;
   if (mWindow) {
-    RefPtr<nsPresContext> presContext;
     nsIDocShell* docshell = mWindow->GetDocShell();
     if (docshell) {
-      docshell->GetPresContext(getter_AddRefs(presContext));
+      presShell = docshell->GetPresShell();
     }
-    if (!presContext) {
+    if (!presShell) {
       return;
     }
-    presShell = presContext->PresShell();
   }
 
   RefPtr<layers::ImageContainer> container =
