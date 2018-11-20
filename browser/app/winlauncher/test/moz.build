@@ -6,7 +6,7 @@
 
 DisableStlWrapping()
 
-GeckoCppUnitTests(['TestNativeNt'])
+CppUnitTests(['TestNativeNt'])
 
 LOCAL_INCLUDES += [
     '/browser/app/winlauncher',
