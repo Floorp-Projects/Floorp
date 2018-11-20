@@ -43,18 +43,44 @@ describe("SendToDeviceSnippet", () => {
       onAction: sandbox.stub(),
       form_method: "POST",
     };
-    assert.jsonSchema(props.content, schema);
-    return mount(<SendToDeviceSnippet {...props} />);
+    const comp = mount(<SendToDeviceSnippet {...props} />);
+    // Check schema with the final props the component receives (including defaults)
+    assert.jsonSchema(comp.children().get(0).props.content, schema);
+    return comp;
   }
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     jsonResponse = {status: "ok"};
     fetchStub = sandbox.stub(global, "fetch")
       .returns(Promise.resolve({json: () => Promise.resolve(jsonResponse)}));
   });
   afterEach(() => {
     sandbox.restore();
+  });
+
+  it("should have the correct defaults", () => {
+    const defaults = {
+      id: "foo123",
+      onBlock() {},
+      content: {},
+      onDismiss: sandbox.stub(),
+      sendUserActionTelemetry: sandbox.stub(),
+      onAction: sandbox.stub(),
+      form_method: "POST",
+    };
+    const wrapper = mount(<SendToDeviceSnippet {...defaults} />);
+    // SendToDeviceSnippet is a wrapper around SubmitFormSnippet
+    const {props} = wrapper.children().get(0);
+
+    assert.propertyVal(props.content, "scene1_button_label", "Learn More");
+    assert.propertyVal(props.content, "scene2_dismiss_button_text", "Dismiss");
+    assert.propertyVal(props.content, "scene2_button_label", "Send");
+    assert.propertyVal(props.content, "scene2_input_placeholder", "YOUR EMAIL HERE");
+    assert.propertyVal(props.content, "locale", "en-US");
+    assert.propertyVal(props.content, "country", "us");
+    assert.propertyVal(props.content, "include_sms", false);
+    assert.propertyVal(props.content, "message_id_email", "");
   });
 
   describe("form input", () => {

@@ -233,13 +233,15 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
   LayoutDeviceToLayerScale res(mPresShell->GetResolution());
 
   if (mIsFirstPaint) {
+    ScreenIntSize compositionSize = GetCompositionSize(aDisplaySize);
+
     CSSToScreenScale defaultZoom;
     if (mRestoreResolution) {
       LayoutDeviceToLayerScale restoreResolution(mRestoreResolution.value());
       if (mRestoreDisplaySize) {
         CSSSize prevViewport = mDocument->GetViewportInfo(mRestoreDisplaySize.value()).GetSize();
         float restoreDisplayWidthChangeRatio = (mRestoreDisplaySize.value().width > 0)
-          ? (float)aDisplaySize.width / (float)mRestoreDisplaySize.value().width : 1.0f;
+          ? (float)compositionSize.width / (float)mRestoreDisplaySize.value().width : 1.0f;
 
         restoreResolution =
           ScaleResolutionWithDisplayWidth(restoreResolution,
@@ -254,7 +256,9 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
       defaultZoom = aViewportInfo.GetDefaultZoom();
       MVM_LOG("%p: default zoom from viewport is %f\n", this, defaultZoom.scale);
       if (!aViewportInfo.IsDefaultZoomValid()) {
-        defaultZoom = ComputeIntrinsicScale(aViewportInfo, aDisplaySize, aViewport);
+        defaultZoom = ComputeIntrinsicScale(aViewportInfo,
+                                            compositionSize,
+                                            aViewport);
       }
     }
     MOZ_ASSERT(aViewportInfo.GetMinZoom() <= defaultZoom &&
@@ -305,11 +309,11 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
     PixelCastJustification::ScreenIsParentLayerForRoot);
 }
 
-void
-MobileViewportManager::UpdateVisualViewportSize(const ScreenIntSize& aDisplaySize,
-                                                const CSSToScreenScale& aZoom)
+
+ScreenIntSize
+MobileViewportManager::GetCompositionSize(const ScreenIntSize& aDisplaySize) const
 {
-  ScreenSize compositionSize(aDisplaySize);
+  ScreenIntSize compositionSize(aDisplaySize);
   ScreenMargin scrollbars =
     LayoutDeviceMargin::FromAppUnits(
       nsLayoutUtils::ScrollbarAreaToExcludeFromCompositionBoundsFor(
@@ -321,6 +325,16 @@ MobileViewportManager::UpdateVisualViewportSize(const ScreenIntSize& aDisplaySiz
 
   compositionSize.width -= scrollbars.LeftRight();
   compositionSize.height -= scrollbars.TopBottom();
+
+  return compositionSize;
+}
+
+void
+MobileViewportManager::UpdateVisualViewportSize(const ScreenIntSize& aDisplaySize,
+                                                const CSSToScreenScale& aZoom)
+{
+  ScreenSize compositionSize = ScreenSize(GetCompositionSize(aDisplaySize));
+
   CSSSize compSize = compositionSize / aZoom;
   MVM_LOG("%p: Setting VVPS %s\n", this, Stringify(compSize).c_str());
   nsLayoutUtils::SetVisualViewportSize(mPresShell, compSize);
@@ -444,7 +458,6 @@ MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution)
   CSSSize oldSize = mMobileViewportSize;
 
   // Update internal state.
-  mIsFirstPaint = false;
   mMobileViewportSize = viewport;
 
   // Kick off a reflow.
@@ -453,4 +466,44 @@ MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution)
     nsPresContext::CSSPixelsToAppUnits(viewport.height),
     nsPresContext::CSSPixelsToAppUnits(oldSize.width),
     nsPresContext::CSSPixelsToAppUnits(oldSize.height));
+
+  // We are going to fit the content to the display width if the initial-scale
+  // is not specied and if the content is still wider than the display width.
+  ShrinkToDisplaySizeIfNeeded(viewportInfo, displaySize);
+
+  mIsFirstPaint = false;
+}
+
+void
+MobileViewportManager::ShrinkToDisplaySizeIfNeeded(
+  nsViewportInfo& aViewportInfo,
+  const ScreenIntSize& aDisplaySize)
+{
+  if (!gfxPrefs::APZAllowZooming()) {
+    // If the APZ is disabled, we don't scale down wider contents to fit them
+    // into device screen because users won't be able to zoom out the tiny
+    // contents.
+    return;
+  }
+
+  // We try to scale down the contents only IF the document has no initial-scale
+  // AND IF it's the initial paint AND IF it's not restored documents.
+  if (aViewportInfo.IsDefaultZoomValid() ||
+      !mIsFirstPaint || mRestoreResolution) {
+    return;
+  }
+
+  nsIScrollableFrame* rootScrollableFrame =
+    mPresShell->GetRootScrollFrameAsScrollable();
+  if (rootScrollableFrame) {
+    nsRect scrollableRect =
+      nsLayoutUtils::CalculateScrollableRectForFrame(rootScrollableFrame,
+                                                     nullptr);
+    CSSSize contentSize = CSSSize::FromAppUnits(scrollableRect.Size());
+    CSSToScreenScale zoom =
+      UpdateResolution(aViewportInfo, aDisplaySize, contentSize, Nothing());
+
+    MVM_LOG("%p: Adapted zoom is %f\n", this, zoom.scale);
+    UpdateVisualViewportSize(aDisplaySize, zoom);
+  }
 }

@@ -39,7 +39,7 @@ describe("ActivityStreamMessageChannel", () => {
   describe("portID validation", () => {
     let sandbox;
     beforeEach(() => {
-      sandbox = sinon.sandbox.create();
+      sandbox = sinon.createSandbox();
       sandbox.spy(global.Cu, "reportError");
     });
     afterEach(() => {
@@ -254,7 +254,7 @@ describe("ActivityStreamMessageChannel", () => {
     describe("#onMessage", () => {
       let sandbox;
       beforeEach(() => {
-        sandbox = sinon.sandbox.create();
+        sandbox = sinon.createSandbox();
         sandbox.spy(global.Cu, "reportError");
       });
       afterEach(() => sandbox.restore());

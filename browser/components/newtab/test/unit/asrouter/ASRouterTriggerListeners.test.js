@@ -17,7 +17,7 @@ describe("ASRouterTriggerListeners", () => {
   }
 
   beforeEach(async () => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     registerWindowNotificationStub = sandbox.stub(global.Services.ww, "registerNotification");
     unregisterWindoNotificationStub = sandbox.stub(global.Services.ww, "unregisterNotification");
     existingWindow = {gBrowser: {addTabsProgressListener: sandbox.stub(), removeTabsProgressListener: sandbox.stub()}};

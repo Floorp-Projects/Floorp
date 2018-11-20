@@ -8,7 +8,7 @@ describe("ActivityStreamStorage", () => {
   let indexedDB;
   let storage;
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     indexedDB = {
       open: sandbox.stub().resolves({}),
       deleteDatabase: sandbox.stub().resolves(),
