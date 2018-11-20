@@ -230,12 +230,10 @@ CheckAndGetExtensionForMime(const nsCString& aExtension,
 NS_IMETHODIMP
 nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable *aTransferable,
                                                  const char *aFlavor,
-                                                 nsISupports **aData,
-                                                 uint32_t *aDataLen)
+                                                 nsISupports **aData)
 {
-  NS_ENSURE_ARG_POINTER(aData && aDataLen);
+  NS_ENSURE_ARG_POINTER(aData);
   *aData = nullptr;
-  *aDataLen = 0;
 
   nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
 
@@ -345,7 +343,6 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable *aTransferable,
     // send back an nsIFile
     if (NS_SUCCEEDED(rv)) {
       CallQueryInterface(file, aData);
-      *aDataLen = sizeof(nsIFile*);
     }
   }
 
