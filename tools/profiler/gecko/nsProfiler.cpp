@@ -538,31 +538,6 @@ nsProfiler::GetAllFeatures(uint32_t* aCount, char*** aFeatureList)
 }
 
 NS_IMETHODIMP
-nsProfiler::GetStartParams(nsIProfilerStartParams** aRetVal)
-{
-  if (!profiler_is_active()) {
-    *aRetVal = nullptr;
-  } else {
-    int entries = 0;
-    double interval = 0;
-    uint32_t features = 0;
-    mozilla::Vector<const char*> filters;
-    profiler_get_start_params(&entries, &interval, &features, &filters);
-
-    nsTArray<nsCString> filtersArray;
-    for (uint32_t i = 0; i < filters.length(); ++i) {
-      filtersArray.AppendElement(filters[i]);
-    }
-
-    nsCOMPtr<nsIProfilerStartParams> startParams =
-      new nsProfilerStartParams(entries, interval, features, filtersArray);
-
-    startParams.forget(aRetVal);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsProfiler::GetBufferInfo(uint32_t* aCurrentPosition, uint32_t* aTotalSize,
                           uint32_t* aGeneration)
 {
