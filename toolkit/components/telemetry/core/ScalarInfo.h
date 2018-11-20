@@ -66,6 +66,8 @@ struct ScalarInfo : BaseScalarInfo {
     : BaseScalarInfo(aKind, aDataset, aRecordInProcess, aKeyed, aProducts)
     , name_offset(aNameOffset)
     , expiration_offset(aExpirationOffset)
+    , store_count(aStoreCount)
+    , store_offset(aStoreOffset)
   {}
 
   const char *name() const override;
