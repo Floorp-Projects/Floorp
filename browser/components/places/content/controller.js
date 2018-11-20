@@ -927,15 +927,15 @@ PlacesController.prototype = {
     if (!didSuppressNotifications)
       result.suppressNotifications = true;
 
-    function addData(type, index, feedURI) {
-      let wrapNode = PlacesUtils.wrapNode(node, type, feedURI);
+    function addData(type, index) {
+      let wrapNode = PlacesUtils.wrapNode(node, type);
       dt.mozSetDataAt(type, wrapNode, index);
     }
 
-    function addURIData(index, feedURI) {
-      addData(PlacesUtils.TYPE_X_MOZ_URL, index, feedURI);
-      addData(PlacesUtils.TYPE_UNICODE, index, feedURI);
-      addData(PlacesUtils.TYPE_HTML, index, feedURI);
+    function addURIData(index) {
+      addData(PlacesUtils.TYPE_X_MOZ_URL, index);
+      addData(PlacesUtils.TYPE_UNICODE, index);
+      addData(PlacesUtils.TYPE_HTML, index);
     }
 
     try {

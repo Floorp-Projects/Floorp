@@ -241,7 +241,6 @@
 @RESPATH@/components/nsURLFormatter.manifest
 @RESPATH@/components/nsURLFormatter.js
 @RESPATH@/components/toolkitplaces.manifest
-@RESPATH@/components/nsLivemarkService.js
 @RESPATH@/components/nsTaggingService.js
 @RESPATH@/components/UnifiedComplete.js
 @RESPATH@/components/nsPlacesExpiration.js

@@ -1,7 +1,3 @@
-# nsLivemarkService.js
-component {dca61eb5-c7cd-4df1-b0fb-d0722baba251} nsLivemarkService.js
-contract @mozilla.org/browser/livemark-service;2 {dca61eb5-c7cd-4df1-b0fb-d0722baba251}
-
 # nsTaggingService.js
 component {bbc23860-2553-479d-8b78-94d9038334f7} nsTaggingService.js
 contract @mozilla.org/browser/tagging-service;1 {bbc23860-2553-479d-8b78-94d9038334f7}

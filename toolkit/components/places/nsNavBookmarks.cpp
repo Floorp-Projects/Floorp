@@ -38,7 +38,6 @@ PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavBookmarks, gBookmarksService)
 
 #define BOOKMARKS_ANNO_PREFIX "bookmarks/"
 #define BOOKMARKS_TOOLBAR_FOLDER_ANNO NS_LITERAL_CSTRING(BOOKMARKS_ANNO_PREFIX "toolbarFolder")
-#define FEED_URI_ANNO NS_LITERAL_CSTRING("livemark/feedURI")
 #define SYNC_PARENT_ANNO "sync/parent"
 #define SQLITE_MAX_VARIABLE_NUMBER 999
 
@@ -819,18 +818,6 @@ nsNavBookmarks::CreateFolder(int64_t aParent, const nsACString& aTitle,
   }
 
   return NS_OK;
-}
-
-bool nsNavBookmarks::IsLivemark(int64_t aFolderId)
-{
-  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
-  NS_ENSURE_TRUE(annosvc, false);
-  bool isLivemark;
-  nsresult rv = annosvc->ItemHasAnnotation(aFolderId,
-                                           FEED_URI_ANNO,
-                                           &isLivemark);
-  NS_ENSURE_SUCCESS(rv, false);
-  return isLivemark;
 }
 
 nsresult
@@ -1722,13 +1709,6 @@ nsNavBookmarks::ProcessFolderNodeRow(
     }
   }
   else if (itemType == TYPE_FOLDER) {
-    // ExcludeReadOnlyFolders currently means "ExcludeLivemarks" (to be fixed in
-    // bug 1072833)
-    if (aOptions->ExcludeReadOnlyFolders()) {
-      if (IsLivemark(id))
-        return NS_OK;
-    }
-
     nsAutoCString title;
     bool isNull;
     rv = aRow->GetIsNull(nsNavHistory::kGetInfoIndex_Title, &isNull);

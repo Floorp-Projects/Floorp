@@ -59,9 +59,6 @@ var EXPORTED_SYMBOLS = ["PlacesTransactions"];
  * values:
  *  - url: a URL object, an nsIURI object, or a href.
  *  - urls: an array of urls, as above.
- *  - feedUrl: an url (as above), holding the url for a live bookmark.
- *  - siteUrl an url (as above), holding the url for the site with which
- *            a live bookmark is associated.
  *  - tag - a string.
  *  - tags: an array of strings.
  *  - guid, parentGuid, newParentGuid: a valid Places GUID string.
@@ -899,7 +896,7 @@ DefineTransaction.verifyInput = function(input,
 
 // Update the documentation at the top of this module if you add or
 // remove properties.
-DefineTransaction.defineInputProps(["url", "feedUrl", "siteUrl"],
+DefineTransaction.defineInputProps(["url"],
                                    DefineTransaction.urlValidate, null);
 DefineTransaction.defineInputProps(["guid", "parentGuid", "newParentGuid"],
                                    DefineTransaction.guidValidate);
@@ -1389,18 +1386,13 @@ PT.Remove.prototype = {
     }
 
     let removeThem = async function() {
-      let bmsToRemove = [];
-      for (let info of removedItems) {
-        if (info.annos &&
-            info.annos.some(anno => anno.name == PlacesUtils.LMANNO_FEEDURI)) {
-          await PlacesUtils.livemarks.removeLivemark({ guid: info.guid });
-        } else {
-          bmsToRemove.push({guid: info.guid});
-        }
-      }
-
-      if (bmsToRemove.length) {
-        await PlacesUtils.bookmarks.remove(bmsToRemove);
+      if (removedItems.length) {
+        // We have to pass just the guids as although remove() accepts full
+        // info items, promiseBookmarksTree returns dateAdded and lastModified
+        // as PRTime rather than date types.
+        await PlacesUtils.bookmarks.remove(removedItems.map(info => {
+          return { guid: info.guid};
+        }));
       }
     };
     await removeThem();
