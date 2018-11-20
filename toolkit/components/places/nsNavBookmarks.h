@@ -235,15 +235,6 @@ private:
 
   ~nsNavBookmarks();
 
-  /**
-   * Checks whether or not aFolderId points to a live bookmark.
-   *
-   * @param aFolderId
-   *        the item-id of the folder to check.
-   * @return true if aFolderId points to live bookmarks, false otherwise.
-   */
-  bool IsLivemark(int64_t aFolderId);
-
   nsresult AdjustIndices(int64_t aFolder,
                          int32_t aStartIndex,
                          int32_t aEndIndex,

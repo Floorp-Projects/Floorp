@@ -98,7 +98,6 @@
 #include "nsSVGUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsGkAtoms.h"
-#include "nsContentUtils.h"
 #include "ChildIterator.h"
 
 #include "nsIDOMEventListener.h"

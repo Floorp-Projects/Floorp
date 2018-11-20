@@ -31,6 +31,8 @@ ChromeUtils.defineModuleGetter(this, "FilterExpressions",
                                "resource://gre/modules/components-utils/FilterExpressions.jsm");
 ChromeUtils.defineModuleGetter(this, "pushBroadcastService",
                                "resource://gre/modules/PushBroadcastService.jsm");
+ChromeUtils.defineModuleGetter(this, "RemoteSettingsWorker",
+                               "resource://services-settings/RemoteSettingsWorker.jsm");
 
 const PREF_SETTINGS_DEFAULT_BUCKET     = "services.settings.default_bucket";
 const PREF_SETTINGS_BRANCH             = "services.settings.";
@@ -47,7 +49,7 @@ const PREF_SETTINGS_LOAD_DUMP          = "load_dump";
 // Telemetry update source identifier.
 const TELEMETRY_HISTOGRAM_KEY = "settings-changes-monitoring";
 
-const INVALID_SIGNATURE = "Invalid content/signature";
+const INVALID_SIGNATURE = "Invalid content signature";
 const MISSING_SIGNATURE = "Missing signature";
 
 XPCOMUtils.defineLazyGetter(this, "gPrefs", () => {
@@ -106,32 +108,8 @@ async function jexlFilterFunc(entry, environment) {
   return result ? entry : null;
 }
 
-
-function mergeChanges(collection, localRecords, changes) {
-  const records = {};
-  // Local records by id.
-  localRecords.forEach((record) => records[record.id] = collection.cleanLocalFields(record));
-  // All existing records are replaced by the version from the server.
-  changes.forEach((record) => records[record.id] = record);
-
-  return Object.values(records)
-    // Filter out deleted records.
-    .filter((record) => !record.deleted)
-    // Sort list by record id.
-    .sort((a, b) => {
-      if (a.id < b.id) {
-        return -1;
-      }
-      return a.id > b.id ? 1 : 0;
-    });
-}
-
-
 async function fetchCollectionMetadata(remote, collection, expectedTimestamp) {
   const client = new KintoHttpClient(remote);
-  //
-  // XXX: https://github.com/Kinto/kinto-http.js/issues/307
-  //
   const { signature } = await client.bucket(collection.bucket)
                                     .collection(collection.name)
                                     .getData({ query: { _expected: expectedTimestamp }});
@@ -221,33 +199,6 @@ async function fetchLatestChanges(url, lastEtag, expectedTimestamp) {
   }
 
   return {changes, currentEtag, serverTimeMillis, backoffSeconds};
-}
-
-/**
- * Load the the JSON file distributed with the release for this collection.
- * @param {String}  bucket
- * @param {String}  collection
- * @param {Object}  options
- * @param {boolean} options.ignoreMissing Do not throw an error if the file is missing.
- */
-async function loadDumpFile(bucket, collection, { ignoreMissing = true } = {}) {
-  const fileURI = `resource://app/defaults/settings/${bucket}/${collection}.json`;
-  let response;
-  try {
-    // Will throw NetworkError is folder/file is missing.
-    response = await fetch(fileURI);
-    if (!response.ok) {
-      throw new Error(`Could not read from '${fileURI}'`);
-    }
-    // Will throw if JSON is invalid.
-    return response.json();
-  } catch (e) {
-    // A missing file is reported as "NetworError" (see Bug 1493709)
-    if (!ignoreMissing || !/NetworkError/.test(e.message)) {
-      throw e;
-    }
-  }
-  return { data: [] };
 }
 
 
@@ -352,7 +303,7 @@ class RemoteSettingsClient {
   async get(options = {}) {
     // In Bug 1451031, we will do some jexl filtering to limit the list items
     // whose target is matched.
-    const { filters = {}, order } = options;
+    const { filters = {}, order = "" } = options; // not sorted by default.
     const c = await this.openCollection();
 
     const timestamp = await c.db.getLastModified();
@@ -360,8 +311,7 @@ class RemoteSettingsClient {
     // a packaged JSON dump.
     if (timestamp == null) {
       try {
-        const { data } = await loadDumpFile(this.bucketName, this.collectionName);
-        await c.loadDump(data);
+        await RemoteSettingsWorker.importJSONDump(this.bucketName, this.collectionName);
       } catch (e) {
         // Report but return an empty list since there will be no data anyway.
         Cu.reportError(e);
@@ -398,8 +348,7 @@ class RemoteSettingsClient {
       // cold start.
       if (!collectionLastModified && loadDump) {
         try {
-          const initialData = await loadDumpFile(this.bucketName, this.collectionName);
-          await collection.loadDump(initialData.data);
+          await RemoteSettingsWorker.importJSONDump(this.bucketName, this.collectionName);
           collectionLastModified = await collection.db.getLastModified();
         } catch (e) {
           // Report but go-on.
@@ -418,8 +367,13 @@ class RemoteSettingsClient {
       // If there is a `signerName` and collection signing is enforced, add a
       // hook for incoming changes that validates the signature.
       if (this.signerName && gVerifySignature) {
-        collection.hooks["incoming-changes"] = [(payload, collection) => {
-          return this._validateCollectionSignature(payload, collection, { expectedTimestamp });
+        collection.hooks["incoming-changes"] = [async (payload, collection) => {
+          await this._validateCollectionSignature(payload.changes,
+                                                  payload.lastModified,
+                                                  collection,
+                                                  { expectedTimestamp });
+          // In case the signature is valid, apply the changes locally.
+          return payload;
         }];
       }
 
@@ -439,7 +393,7 @@ class RemoteSettingsClient {
           throw new Error("Sync failed");
         }
       } catch (e) {
-        if (e.message == INVALID_SIGNATURE) {
+        if (e.message.includes(INVALID_SIGNATURE)) {
           // Signature verification failed during synchronzation.
           reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
           // if sync fails with a signature error, it's likely that our
@@ -448,7 +402,10 @@ class RemoteSettingsClient {
           // remote collection.
           const payload = await fetchRemoteCollection(collection, expectedTimestamp);
           try {
-            await this._validateCollectionSignature(payload, collection, { expectedTimestamp, ignoreLocal: true });
+            await this._validateCollectionSignature(payload.data,
+                                                    payload.last_modified,
+                                                    collection,
+                                                    { expectedTimestamp, ignoreLocal: true });
           } catch (e) {
             reportStatus = UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR;
             throw e;
@@ -456,7 +413,7 @@ class RemoteSettingsClient {
 
           // The signature is good (we haven't thrown).
           // Now we will Inspect what we had locally.
-          const { data: oldData } = await collection.list();
+          const { data: oldData } = await collection.list({ order: "" }); // no need to sort.
 
           // We build a sync result as if a diff-based sync was performed.
           syncResult = { created: [], updated: [], deleted: [] };
@@ -515,7 +472,7 @@ class RemoteSettingsClient {
       // If every changed entry is filtered, we don't even fire the event.
       if (created.length || updated.length || deleted.length) {
         // Read local collection of records (also filtered).
-        const { data: allData } = await collection.list();
+        const { data: allData } = await collection.list({ order: "" }); // no need to sort.
         const current = await this._filterEntries(allData);
         const payload = { data: { current, created, updated, deleted } };
         try {
@@ -545,8 +502,8 @@ class RemoteSettingsClient {
     }
   }
 
-  async _validateCollectionSignature(payload, collection, options = {}) {
-    const { expectedTimestamp, ignoreLocal } = options;
+  async _validateCollectionSignature(remoteRecords, timestamp, collection, options = {}) {
+    const { expectedTimestamp, ignoreLocal = false } = options;
     // this is a content-signature field from an autograph response.
     const signaturePayload = await fetchCollectionMetadata(gServerURL, collection, expectedTimestamp);
     if (!signaturePayload) {
@@ -559,30 +516,22 @@ class RemoteSettingsClient {
     const verifier = Cc["@mozilla.org/security/contentsignatureverifier;1"]
                        .createInstance(Ci.nsIContentSignatureVerifier);
 
-    let toSerialize;
-    if (ignoreLocal) {
-      toSerialize = {
-        last_modified: `${payload.last_modified}`,
-        data: payload.data,
-      };
-    } else {
-      const {data: localRecords} = await collection.list();
-      const records = mergeChanges(collection, localRecords, payload.changes);
-      toSerialize = {
-        last_modified: `${payload.lastModified}`,
-        data: records,
-      };
+    let localRecords = [];
+    if (!ignoreLocal) {
+      const { data } = await collection.list({ order: "" }); // no need to sort.
+      // Local fields are stripped to compute the collection signature (server does not have them).
+      localRecords = data.map(r => collection.cleanLocalFields(r));
     }
 
-    const serialized = CanonicalJSON.stringify(toSerialize);
-
-    if (verifier.verifyContentSignature(serialized, "p384ecdsa=" + signature,
-                                        certChain,
-                                        this.signerName)) {
-      // In case the hash is valid, apply the changes locally.
-      return payload;
+    const serialized = await RemoteSettingsWorker.canonicalStringify(localRecords,
+                                                                     remoteRecords,
+                                                                     timestamp);
+    if (!verifier.verifyContentSignature(serialized,
+                                         "p384ecdsa=" + signature,
+                                         certChain,
+                                         this.signerName)) {
+      throw new Error(INVALID_SIGNATURE + ` (${collection.bucket}/${collection.name})`);
     }
-    throw new Error(INVALID_SIGNATURE);
   }
 
   /**
@@ -628,7 +577,7 @@ async function hasLocalData(client) {
  */
 async function hasLocalDump(bucket, collection) {
   try {
-    await loadDumpFile(bucket, collection, {ignoreMissing: false});
+    await fetch(`resource://app/defaults/settings/${bucket}/${collection}.json`);
     return true;
   } catch (e) {
     return false;

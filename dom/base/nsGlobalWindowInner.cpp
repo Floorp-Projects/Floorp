@@ -2430,6 +2430,12 @@ nsGlobalWindowInner::GetWindowUtils(ErrorResult& aRv)
   FORWARD_TO_OUTER_OR_THROW(WindowUtils, (), aRv, nullptr);
 }
 
+bool
+nsGlobalWindowInner::HasOpenerForInitialContentBrowser()
+{
+  FORWARD_TO_OUTER(HasOpenerForInitialContentBrowser, (), false);
+}
+
 nsGlobalWindowInner::CallState
 nsGlobalWindowInner::ShouldReportForServiceWorkerScopeInternal(const nsACString& aScope,
                                                                bool* aResultOut)

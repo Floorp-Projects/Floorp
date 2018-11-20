@@ -1543,7 +1543,7 @@ XrayFindOwnPropertyInfo(JSContext* cx, JS::Handle<jsid> id,
                         const NativeProperties* nativeProperties)
 {
   if (MOZ_UNLIKELY(nativeProperties->iteratorAliasMethodIndex >= 0) &&
-      id == SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::iterator))) {
+      id.get() == SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::iterator))) {
     return nativeProperties->MethodPropertyInfos() +
            nativeProperties->iteratorAliasMethodIndex;
   }
@@ -1892,7 +1892,7 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
       return true;
     }
   } else if (type == eInterface) {
-    if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_PROTOTYPE)) {
+    if (id.get() == GetJSIDByIndex(cx, XPCJSContext::IDX_PROTOTYPE)) {
       return nativePropertyHooks->mPrototypeID == prototypes::id::_ID_Count ||
              ResolvePrototypeOrConstructor(cx, wrapper, obj,
                                            nativePropertyHooks->mPrototypeID,
@@ -1900,7 +1900,7 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                            desc, cacheOnHolder);
     }
 
-    if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_ISINSTANCE) &&
+    if (id.get() == GetJSIDByIndex(cx, XPCJSContext::IDX_ISINSTANCE) &&
         DOMIfaceAndProtoJSClass::FromJSClass(js::GetObjectClass(obj))->
           wantsInterfaceHasInstance) {
       cacheOnHolder = true;
@@ -1920,7 +1920,7 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
       return true;
     }
 
-    if (id == SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::hasInstance)) &&
+    if (id.get() == SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::hasInstance)) &&
         DOMIfaceAndProtoJSClass::FromJSClass(js::GetObjectClass(obj))->
           wantsInterfaceHasInstance) {
       cacheOnHolder = true;
@@ -1942,7 +1942,7 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
   } else {
     MOZ_ASSERT(IsInterfacePrototype(type));
 
-    if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_CONSTRUCTOR)) {
+    if (id.get() == GetJSIDByIndex(cx, XPCJSContext::IDX_CONSTRUCTOR)) {
       return nativePropertyHooks->mConstructorID == constructors::id::_ID_Count ||
              ResolvePrototypeOrConstructor(cx, wrapper, obj,
                                            nativePropertyHooks->mConstructorID,
