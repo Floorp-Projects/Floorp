@@ -64,6 +64,7 @@
 #include "MediaStreamAudioSourceNode.h"
 #include "MediaStreamGraph.h"
 #include "nsContentUtils.h"
+#include "nsIScriptError.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
@@ -151,12 +152,13 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow, bool aIsOffline,
       mIsShutDown(false),
       mCloseCalled(false),
       mSuspendCalled(false),
-      mIsDisconnecting(false) {
+      mIsDisconnecting(false),
+      mWasAllowedToStart(true) {
   bool mute = aWindow->AddAudioContext(this);
 
   // Note: AudioDestinationNode needs an AudioContext that must already be
   // bound to the window.
-  bool allowedToStart = AutoplayPolicy::IsAllowedToPlay(*this);
+  const bool allowedToStart = AutoplayPolicy::IsAllowedToPlay(*this);
   mDestination = new AudioDestinationNode(this, aIsOffline, allowedToStart,
                                           aNumberOfChannels, aLength);
 
@@ -165,13 +167,34 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow, bool aIsOffline,
     Mute();
   }
 
+  // If an AudioContext is not allowed to start, we would postpone its state
+  // transition from `suspended` to `running` until sites explicitly call
+  // AudioContext.resume() or AudioScheduledSourceNode.start().
   if (!allowedToStart) {
-    // Not allowed to start, delay the transition from `suspended` to `running`.
+    AUTOPLAY_LOG("AudioContext %p is not allowed to start", this);
+    mWasAllowedToStart = false;
     SuspendInternal(nullptr);
-    EnsureAutoplayRequested();
+    DispatchBlockedEvent();
   }
 
   FFTBlock::MainThreadInit();
+}
+
+void AudioContext::NotifyScheduledSourceNodeStarted() {
+  MOZ_ASSERT(NS_IsMainThread());
+  // Only try to start AudioContext when AudioContext was not allowed to start.
+  if (mWasAllowedToStart) {
+    return;
+  }
+
+  const bool isAllowedToPlay = AutoplayPolicy::IsAllowedToPlay(*this);
+  AUTOPLAY_LOG("Trying to start AudioContext %p, IsAllowedToPlay=%d",
+               this, isAllowedToPlay);
+  if (isAllowedToPlay) {
+    ResumeInternal();
+  } else {
+    EnsureAutoplayRequested();
+  }
 }
 
 void AudioContext::EnsureAutoplayRequested() {
@@ -186,18 +209,29 @@ void AudioContext::EnsureAutoplayRequested() {
     return;
   }
 
+  AUTOPLAY_LOG("AudioContext %p EnsureAutoplayRequested %p",
+               this, request.get());
   RefPtr<AudioContext> self = this;
   request->RequestWithPrompt()->Then(
       parent->AsGlobal()->AbstractMainThreadFor(TaskCategory::Other), __func__,
       [self, request](bool aApproved) {
         AUTOPLAY_LOG("%p Autoplay request approved request=%p", self.get(),
                      request.get());
+        self->mWasAllowedToStart = true;
         self->ResumeInternal();
       },
       [self, request](nsresult aError) {
         AUTOPLAY_LOG("%p Autoplay request denied request=%p", self.get(),
                      request.get());
+        self->mWasAllowedToStart = false;
         self->DispatchBlockedEvent();
+        nsIDocument* doc = self->GetParentObject() ?
+            self->GetParentObject()->GetExtantDoc() : nullptr;
+        nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                        NS_LITERAL_CSTRING("Media"),
+                                        doc,
+                                        nsContentUtils::eDOM_PROPERTIES,
+                                        "BlockAutoplayError");
       });
 }
 
@@ -943,18 +977,20 @@ already_AddRefed<Promise> AudioContext::Resume(ErrorResult& aRv) {
   mPendingResumePromises.AppendElement(promise);
 
   const bool isAllowedToPlay = AutoplayPolicy::IsAllowedToPlay(*this);
+  AUTOPLAY_LOG("Trying to resume AudioContext %p, IsAllowedToPlay=%d",
+               this, isAllowedToPlay);
   if (isAllowedToPlay) {
+    mWasAllowedToStart = true;
     ResumeInternal();
-  } else {
-    DispatchBlockedEvent();
+  } else if (!isAllowedToPlay && !mWasAllowedToStart) {
+    EnsureAutoplayRequested();
   }
 
-  AUTOPLAY_LOG("Resume AudioContext %p, IsAllowedToPlay=%d", this,
-               isAllowedToPlay);
   return promise.forget();
 }
 
 void AudioContext::ResumeInternal() {
+  AUTOPLAY_LOG("Allow to resume AudioContext %p", this);
   Destination()->Resume();
 
   nsTArray<MediaStream*> streams;
