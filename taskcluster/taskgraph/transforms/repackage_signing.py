@@ -12,6 +12,7 @@ import os
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
+from taskgraph.util.schema import validate_schema
 from taskgraph.util.scriptworker import (
     add_scope_prefix,
     get_signing_cert_scope_per_platform,
@@ -23,6 +24,8 @@ from voluptuous import Required, Optional
 # Voluptuous uses marker objects as dictionary *keys*, but they are not
 # comparable, so we cast all of the keys back to regular strings
 task_description_schema = {str(k): v for k, v in task_description_schema.schema.iteritems()}
+
+transforms = TransformSequence()
 
 repackage_signing_description_schema = schema.extend({
     Required('depname', default='repackage'): basestring,
@@ -40,8 +43,15 @@ SIGNING_FORMATS = {
     "target.installer.msi": ["sha2signcode"],
 }
 
-transforms = TransformSequence()
-transforms.add_validate(repackage_signing_description_schema)
+
+@transforms.add
+def validate(config, jobs):
+    for job in jobs:
+        label = job.get('primary-dependency', object).__dict__.get('label', '?no-label?')
+        validate_schema(
+            repackage_signing_description_schema, job,
+            "In repackage-signing ({!r} kind) task for {!r}:".format(config.kind, label))
+        yield job
 
 
 @transforms.add

@@ -109,7 +109,14 @@ job_description_schema = Schema({
 })
 
 transforms = TransformSequence()
-transforms.add_validate(job_description_schema)
+
+
+@transforms.add
+def validate(config, jobs):
+    for job in jobs:
+        validate_schema(job_description_schema, job,
+                        "In job {!r}:".format(job.get('name', job.get('label'))))
+        yield job
 
 
 @transforms.add
