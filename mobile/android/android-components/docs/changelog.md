@@ -40,6 +40,16 @@ permalink: /changelog/
 * **lib-fetch-okhttp**
   * 🆕 New component: `concept-fetch` implementation using [OkHttp](https://github.com/square/okhttp).
 
+* **browser-session**:
+  * Replace `DefaultSessionStorage` with a new configurable implementation called `SessionStorage`:
+
+  ```Kotlin
+  SessionStorage().autoSave(sessionManager)
+    .periodicallyInForeground(interval = 30, unit = TimeUnit.SECONDS)
+    .whenGoingToBackground()
+    .whenSessionsChange()
+  ```
+
 # 0.31.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.30.0...v0.31.0),
