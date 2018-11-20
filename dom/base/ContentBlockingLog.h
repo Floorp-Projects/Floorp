@@ -8,7 +8,9 @@
 #define mozilla_dom_ContentBlockingLog_h
 
 #include "mozilla/JSONWriter.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
@@ -30,7 +32,7 @@ class ContentBlockingLog final
   // Each element is a tuple of (type, blocked, repeatCount). The type values
   // come from the blocking types defined in nsIWebProgressListener.
   typedef nsTArray<LogEntry> OriginLog;
-  typedef Pair<bool, OriginLog> OriginData;
+  typedef Tuple<bool, Maybe<bool>, OriginLog> OriginData;
   typedef nsClassHashtable<nsStringHashKey, OriginData> OriginDataHashTable;
 
   struct StringWriteFunc : public JSONWriteFunc
@@ -59,10 +61,18 @@ public:
     if (entry) {
       auto& data = entry.Data();
       if (aType == nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT) {
-        data->first() = aBlocked;
+        Get<0>(*data) = aBlocked;
         return;
       }
-      auto& log = data->second();
+      if (aType == nsIWebProgressListener::STATE_COOKIES_LOADED) {
+        if (Get<1>(*data).isSome()) {
+          Get<1>(*data).ref() = aBlocked;
+        } else {
+          Get<1>(*data).emplace(aBlocked);
+        }
+        return;
+      }
+      auto& log = Get<2>(*data);
       if (!log.IsEmpty()) {
         auto& last = log.LastElement();
         if (last.mType == aType &&
@@ -80,11 +90,17 @@ public:
       log.AppendElement(LogEntry{aType, 1u, aBlocked});
     } else {
       entry.OrInsert([=] {
-        nsAutoPtr<OriginData> data(new OriginData(false, OriginLog()));
+        nsAutoPtr<OriginData> data(new OriginData(false, Maybe<bool>(), OriginLog()));
         if (aType == nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT) {
-          data->first() = true;
+          Get<0>(*data) = aBlocked;
+        } else if (aType == nsIWebProgressListener::STATE_COOKIES_LOADED) {
+          if (Get<1>(*data).isSome()) {
+            Get<1>(*data).ref() = aBlocked;
+          } else {
+            Get<1>(*data).emplace(aBlocked);
+          }
         } else {
-          data->second().AppendElement(LogEntry{aType, 1u, aBlocked});
+          Get<2>(*data).AppendElement(LogEntry{aType, 1u, aBlocked});
         }
         return data.forget();
       });
@@ -107,7 +123,7 @@ public:
 
       w.StartArrayProperty(NS_ConvertUTF16toUTF8(iter.Key()).get(), w.SingleLineStyle);
       auto& data = *iter.UserData();
-      if (data.first()) {
+      if (Get<0>(data)) {
         w.StartArrayElement(w.SingleLineStyle);
         {
           w.IntElement(nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT);
@@ -116,7 +132,16 @@ public:
         }
         w.EndArray();
       }
-      for (auto& item: data.second()) {
+      if (Get<1>(data).isSome()) {
+        w.StartArrayElement(w.SingleLineStyle);
+        {
+          w.IntElement(nsIWebProgressListener::STATE_COOKIES_LOADED);
+          w.BoolElement(Get<1>(data).value()); // blocked
+          w.IntElement(1);                     // repeat count
+        }
+        w.EndArray();
+      }
+      for (auto& item: Get<2>(data)) {
         w.StartArrayElement(w.SingleLineStyle);
         {
           w.IntElement(item.mType);
@@ -141,11 +166,16 @@ public:
       }
 
       if (aType == nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT) {
-        if (iter.UserData()->first()) {
+        if (Get<0>(*iter.UserData())) {
           return true;
         }
+      } else if (aType == nsIWebProgressListener::STATE_COOKIES_LOADED) {
+        if (Get<1>(*iter.UserData()).isSome()) {
+          return Get<1>(*iter.UserData()).value();
+        }
+        return true; // true means blocked, aka not loaded any cookies
       } else {
-        for (auto& item: iter.UserData()->second()) {
+        for (auto& item: Get<2>(*iter.UserData())) {
           if ((item.mType & aType) != 0) {
             return true;
           }
@@ -167,7 +197,7 @@ public:
       if (iter.UserData()) {
         aSizes.mDOMOtherSize +=
           aSizes.mState.mMallocSizeOf(iter.UserData()) +
-          iter.UserData()->second().ShallowSizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
+          Get<2>(*iter.UserData()).ShallowSizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
       }
     }
   }
