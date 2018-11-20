@@ -21,9 +21,6 @@ geckoview-junit:
         script: android_emulator_unittest.py
         config:
             by-test-platform:
-                android-em-4.2-x86/opt:
-                    - android/android_common.py
-                    - android/androidx86.py
                 android-em-7.0-x86/opt:
                     - android/android_common.py
                     - android/androidx86_7_0.py
