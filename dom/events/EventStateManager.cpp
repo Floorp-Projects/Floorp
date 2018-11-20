@@ -661,9 +661,13 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   case ePointerDown:
     if (aEvent->mMessage == ePointerDown) {
       PointerEventHandler::ImplicitlyCapturePointer(aTargetFrame, aEvent);
-      if (mouseEvent->inputSource != MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
-        NotifyTargetUserActivation(aEvent, aTargetContent);
-      }
+#ifndef MOZ_WIDGET_ANDROID
+      // Pointer events aren't enabled on Android yet, but when they
+      // are enabled, we should not activate on pointerdown, as that
+      // fires for touches that turn into moves on Android, and we don't
+      // want to gesture activate for scroll actions.
+      NotifyTargetUserActivation(aEvent, aTargetContent);
+#endif
     }
     MOZ_FALLTHROUGH;
   case ePointerMove: {
