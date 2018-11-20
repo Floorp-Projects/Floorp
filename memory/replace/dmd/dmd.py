@@ -219,15 +219,19 @@ def fixStackTraces(inputFilename, isZipped, opener):
     if bpsyms and os.path.exists(bpsyms):
         import fix_stack_using_bpsyms as fixModule
 
-        def fix(line): return fixModule.fixSymbols(line, bpsyms)
+        def fix(line):
+            return fixModule.fixSymbols(line, bpsyms, jsonEscape=True)
+
     elif sysname == 'Linux':
         import fix_linux_stack as fixModule
 
-        def fix(line): return fixModule.fixSymbols(line)
+        def fix(line): return fixModule.fixSymbols(line, jsonEscape=True)
+
     elif sysname == 'Darwin':
         import fix_macosx_stack as fixModule
 
-        def fix(line): return fixModule.fixSymbols(line)
+        def fix(line): return fixModule.fixSymbols(line, jsonEscape=True)
+
     else:
         fix = None  # there is no fix script for Windows
 
