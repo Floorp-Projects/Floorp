@@ -16,21 +16,29 @@ class GlobalObject;
 class WeakSetObject : public WeakCollectionObject
 {
   public:
-    static JSObject* initClass(JSContext* cx, Handle<GlobalObject*> global);
     static const Class class_;
+    static const Class protoClass_;
 
   private:
+    static const ClassSpec classSpec_;
+
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
 
     static WeakSetObject* create(JSContext* cx, HandleObject proto = nullptr);
     static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 
+    static MOZ_MUST_USE MOZ_ALWAYS_INLINE bool is(HandleValue v);
+
+    static MOZ_MUST_USE MOZ_ALWAYS_INLINE bool add_impl(JSContext* cx, const CallArgs& args);
+    static MOZ_MUST_USE bool add(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE MOZ_ALWAYS_INLINE bool delete_impl(JSContext* cx, const CallArgs& args);
+    static MOZ_MUST_USE bool delete_(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE MOZ_ALWAYS_INLINE bool has_impl(JSContext* cx, const CallArgs& args);
+    static MOZ_MUST_USE bool has(JSContext* cx, unsigned argc, Value* vp);
+
     static bool isBuiltinAdd(HandleValue add);
 };
-
-extern JSObject*
-InitWeakSetClass(JSContext* cx, Handle<GlobalObject*> global);
 
 } // namespace js
 
