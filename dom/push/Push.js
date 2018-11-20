@@ -49,6 +49,8 @@ Push.prototype = {
     this.initDOMRequestHelper(win);
 
     this._principal = win.document.nodePrincipal;
+
+    this._topLevelPrincipal = win.top.document.nodePrincipal;
   },
 
   __init: function(scope) {
@@ -190,6 +192,7 @@ Push.prototype = {
     let request = {
       types: typeArray,
       principal: this._principal,
+      topLevelrincipal: this._topLevelPrincipal,
       QueryInterface: ChromeUtils.generateQI([Ci.nsIContentPermissionRequest]),
       allow: allowCallback,
       cancel: cancelCallback,
