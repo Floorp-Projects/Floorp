@@ -244,7 +244,7 @@ WeakMap<K, V>::sweep()
 #endif
 }
 
-/* memberOf can be nullptr, which means that the map is not part of a JSObject. */
+// memberOf can be nullptr, which means that the map is not part of a JSObject.
 template <class K, class V>
 void
 WeakMap<K, V>::traceMappings(WeakMapTracer* tracer)

@@ -820,9 +820,9 @@ ReleaseAssertObjectHasNoWrappers(JSContext* cx, HandleObject target)
  *
  * A few rules:
  *
- * -   `origobj` and `target` must be two distinct objects of the same `JSClass`.
- *     Some classes may not support transplantation; WindowProxy objects and DOM
- *     nodes are OK.
+ * -   `origobj` and `target` must be two distinct objects of the same
+ *     `JSClass`.  Some classes may not support transplantation; WindowProxy
+ *     objects and DOM nodes are OK.
  *
  * -   `target` should be created specifically to be passed to this function.
  *     There must be no existing cross-compartment wrappers for it; ideally
@@ -2024,7 +2024,7 @@ JS::AssertObjectBelongsToCurrentThread(JSObject* obj)
 }
 
 
-/*** Standard internal methods *******************************************************************/
+/*** Standard internal methods **********************************************/
 
 JS_PUBLIC_API bool
 JS_GetPrototype(JSContext* cx, HandleObject obj, MutableHandleObject result)
@@ -3118,7 +3118,8 @@ JS_DeepFreezeObject(JSContext* cx, HandleObject obj)
     CHECK_THREAD(cx);
     cx->check(obj);
 
-    /* Assume that non-extensible objects are already deep-frozen, to avoid divergence. */
+    // Assume that non-extensible objects are already deep-frozen, to avoid
+    // divergence.
     bool extensible;
     if (!IsExtensible(cx, obj, &extensible)) {
         return false;
@@ -3131,7 +3132,7 @@ JS_DeepFreezeObject(JSContext* cx, HandleObject obj)
         return false;
     }
 
-    /* Walk slots in obj and if any value is a non-null object, seal it. */
+    // Walk slots in obj and if any value is a non-null object, seal it.
     if (obj->isNative()) {
         RootedNativeObject nobj(cx, &obj->as<NativeObject>());
         for (uint32_t i = 0, n = nobj->slotSpan(); i < n; ++i) {

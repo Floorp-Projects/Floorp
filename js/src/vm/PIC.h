@@ -152,19 +152,22 @@ struct ForOfPIC
      *  Array.prototype's shape (arrayProtoShape_)
      *      To ensure that Array.prototype has not been modified.
      *
-     *  ArrayIterator.prototype (arrayIteratorProto_)
-     *  ArrayIterator.prototype's shape (arrayIteratorProtoShape_)
+     *  ArrayIterator.prototype
+     *  ArrayIterator.prototype's shape
+     *      (arrayIteratorProto_, arrayIteratorProtoShape_)
      *      To ensure that an ArrayIterator.prototype has not been modified.
      *
-     *  Array.prototype's slot number for @@iterator (arrayProtoIteratorSlot_)
-     *  Array.prototype's canonical value for @@iterator (canonicalIteratorFunc_)
+     *  Array.prototype's slot number for @@iterator
+     *  Array.prototype's canonical value for @@iterator
+     *      (arrayProtoIteratorSlot_, canonicalIteratorFunc_)
      *      To quickly retrieve and ensure that the iterator constructor
      *      stored in the slot has not changed.
      *
-     *  ArrayIterator.prototype's slot number for 'next' (arrayIteratorProtoNextSlot_)
-     *  ArrayIterator.prototype's canonical value for 'next' (canonicalNextFunc_)
-     *      To quickly retrieve and ensure that the 'next' method for ArrayIterator
-     *      objects has not changed.
+     *  ArrayIterator.prototype's slot number for 'next'
+     *  ArrayIterator.prototype's canonical value for 'next'
+     *      (arrayIteratorProtoNextSlot_, canonicalNextFunc_)
+     *      To quickly retrieve and ensure that the 'next' method for
+     *      ArrayIterator objects has not changed.
      */
     class Chain : public BaseChain
     {

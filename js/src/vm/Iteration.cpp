@@ -190,7 +190,7 @@ EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags
     if (flags & JSITER_SYMBOLSONLY) {
         enumerateSymbols = true;
     } else {
-        /* Collect any dense elements from this object. */
+        // Collect any dense elements from this object.
         size_t firstElemIndex = props->length();
         size_t initlen = pobj->getDenseInitializedLength();
         const Value* vp = pobj->getDenseElements();
@@ -199,7 +199,8 @@ EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags
             if (vp->isMagic(JS_ELEMENTS_HOLE)) {
                 hasHoles = true;
             } else {
-                /* Dense arrays never get so large that i would not fit into an integer id. */
+                // Dense arrays never get so large that i would not fit into an
+                // integer id.
                 if (!Enumerate<CheckForDuplicates>(cx, pobj, INT_TO_JSID(i),
                                                    /* enumerable = */ true, flags, visited, props))
                 {
@@ -208,7 +209,8 @@ EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags
             }
         }
 
-        /* Collect any typed array or shared typed array elements from this object. */
+        // Collect any typed array or shared typed array elements from this
+        // object.
         if (pobj->is<TypedArrayObject>()) {
             size_t len = pobj->as<TypedArrayObject>().length();
             for (size_t i = 0; i < len; i++) {
@@ -593,7 +595,8 @@ js::GetPropertyKeys(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVecto
 static inline void
 RegisterEnumerator(ObjectRealm& realm, NativeIterator* ni)
 {
-    /* Register non-escaping native enumerators (for-in) with the current context. */
+    // Register non-escaping native enumerators (for-in) with the current
+    // context.
     ni->link(realm.enumerators);
 
     MOZ_ASSERT(!ni->isActive());
@@ -1112,7 +1115,7 @@ Realm::createIterResultTemplateObject(JSContext* cx, WithObjectPrototype withPro
     return templateObject;
 }
 
-/*** Iterator objects ****************************************************************************/
+/*** Iterator objects *******************************************************/
 
 size_t
 PropertyIteratorObject::sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf) const

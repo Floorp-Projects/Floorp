@@ -313,36 +313,35 @@ js::Nursery::leaveZealMode() {
 JSObject*
 js::Nursery::allocateObject(JSContext* cx, size_t size, size_t nDynamicSlots, const js::Class* clasp)
 {
-    /* Ensure there's enough space to replace the contents with a RelocationOverlay. */
+    // Ensure there's enough space to replace the contents with a
+    // RelocationOverlay.
     MOZ_ASSERT(size >= sizeof(RelocationOverlay));
 
-    /* Sanity check the finalizer. */
+    // Sanity check the finalizer.
     MOZ_ASSERT_IF(clasp->hasFinalize(), CanNurseryAllocateFinalizedClass(clasp) ||
                                         clasp->isProxy());
 
-    /* Make the object allocation. */
+    // Make the object allocation.
     JSObject* obj = static_cast<JSObject*>(allocate(size));
     if (!obj) {
         return nullptr;
     }
 
-    /* If we want external slots, add them. */
+    // If we want external slots, add them.
     HeapSlot* slots = nullptr;
     if (nDynamicSlots) {
         MOZ_ASSERT(clasp->isNative());
         slots = static_cast<HeapSlot*>(allocateBuffer(cx->zone(), nDynamicSlots * sizeof(HeapSlot)));
         if (!slots) {
-            /*
-             * It is safe to leave the allocated object uninitialized, since we
-             * do not visit unallocated things in the nursery.
-             */
+            // It is safe to leave the allocated object uninitialized, since we
+            // do not visit unallocated things in the nursery.
             return nullptr;
         }
     }
 
-    /* Store slots pointer directly in new object. If no dynamic slots were
-     * requested, caller must initialize slots_ field itself as needed. We
-     * don't know if the caller was a native object or not. */
+    // Store slots pointer directly in new object. If no dynamic slots were
+    // requested, caller must initialize slots_ field itself as needed. We
+    // don't know if the caller was a native object or not.
     if (nDynamicSlots) {
         static_cast<NativeObject*>(obj)->initSlots(slots);
     }
@@ -354,7 +353,8 @@ js::Nursery::allocateObject(JSContext* cx, size_t size, size_t nDynamicSlots, co
 Cell*
 js::Nursery::allocateString(Zone* zone, size_t size, AllocKind kind)
 {
-    /* Ensure there's enough space to replace the contents with a RelocationOverlay. */
+    // Ensure there's enough space to replace the contents with a
+    // RelocationOverlay.
     MOZ_ASSERT(size >= sizeof(RelocationOverlay));
 
     size_t allocSize = JS_ROUNDUP(sizeof(StringLayout) - 1 + size, CellAlignBytes);

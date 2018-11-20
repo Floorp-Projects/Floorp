@@ -100,8 +100,8 @@ struct EnterJITStack
 /*
  * This method generates a trampoline for a c++ function with the following
  * signature:
- *   void enter(void* code, int argc, Value* argv, InterpreterFrame* fp, CalleeToken
- *              calleeToken, JSObject* scopeChain, Value* vp)
+ *   void enter(void* code, int argc, Value* argv, InterpreterFrame* fp,
+ *              CalleeToken calleeToken, JSObject* scopeChain, Value* vp)
  *   ...using standard EABI calling convention
  */
 void
@@ -178,7 +178,8 @@ JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm)
     // r4 is now the aligned on the bottom of the list of arguments.
     static_assert(sizeof(JitFrameLayout) % JitStackAlignment == 0,
       "No need to consider the JitFrameLayout for aligning the stack");
-    // sp' = ~(JitStackAlignment - 1) & (sp - argc * sizeof(Value)) - sizeof(JitFrameLayout)
+    // sp' = ~(JitStackAlignment - 1) & (sp - argc * sizeof(Value))
+    //       - sizeof(JitFrameLayout)
     aasm->as_sub(sp, r4, Imm8(sizeof(JitFrameLayout)));
 
     // Get a copy of the number of args to use as a decrement counter, also set
@@ -1264,7 +1265,8 @@ JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm, Label* profi
         masm.loadPtr(Address(scratch2, RectifierFrameLayout::offsetOfReturnAddress()), scratch3);
         masm.storePtr(scratch3, lastProfilingCallSite);
 
-        // scratch3 := RectFrame + Rect-Descriptor.Size + RectifierFrameLayout::Size()
+        // scratch3 := RectFrame + Rect-Descriptor.Size +
+        //             RectifierFrameLayout::Size()
         masm.ma_add(scratch2, scratch1, scratch3);
         masm.add32(Imm32(RectifierFrameLayout::Size()), scratch3);
         masm.storePtr(scratch3, lastProfilingFrame);

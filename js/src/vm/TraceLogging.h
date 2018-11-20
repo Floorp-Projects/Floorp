@@ -44,9 +44,9 @@ namespace jit {
  *    case it will be fetched from TLS.
  *     - TraceLoggerForCurrentThread(cx);
  *
- * 2) Optionally create a TraceLoggerEvent for the text that needs to get logged. This
- *    step takes some time, so try to do this beforehand, outside the hot
- *    path and don't do unnecessary repetitions, since it will cripple
+ * 2) Optionally create a TraceLoggerEvent for the text that needs to get
+ *    logged. This step takes some time, so try to do this beforehand, outside
+ *    the hot path and don't do unnecessary repetitions, since it will cripple
  *    performance.
  *     - TraceLoggerEvent event(logger, "foo");
  *
@@ -90,9 +90,12 @@ class TraceLoggerEvent {
          * TraceLoggerTextId. The last bit decides how to read the payload.
          *
          * payload_ = [                   | 0 ]
-         *            ------------------------  = TraceLoggerEventPayload* (incl. last bit)
+         *             -----------------------
+         *             TraceLoggerEventPayload* (incl. last bit)
+         *
          * payload_ = [                   | 1 ]
-         *             -------------------      = TraceLoggerTextId (excl. last bit)
+         *             -------------------
+         *             TraceLoggerTextId (excl. last bit)
          */
         uintptr_t payload_;
 

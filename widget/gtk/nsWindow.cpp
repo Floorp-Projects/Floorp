@@ -7323,6 +7323,17 @@ nsWindow::GetWaylandSurface()
   NS_WARNING("nsWindow::GetWaylandSurfaces(): We don't have any mContainer for drawing!");
   return nullptr;
 }
+
+bool
+nsWindow::WaylandSurfaceNeedsClear()
+{
+  if (mContainer) {
+    return moz_container_needs_clear(MOZ_CONTAINER(mContainer));
+  }
+
+  NS_WARNING("nsWindow::WaylandSurfaceNeedsClear(): We don't have any mContainer!");
+  return false;
+}
 #endif
 
 #ifdef MOZ_X11
@@ -7440,46 +7451,4 @@ nsIWidget::CreateChildWindow()
 {
   nsCOMPtr<nsIWidget> window = new nsWindow();
   return window.forget();
-}
-
-bool
-nsWindow::GetTopLevelWindowActiveState(nsIFrame *aFrame)
-{
-  // Used by window frame and button box rendering. We can end up in here in
-  // the content process when rendering one of these moz styles freely in a
-  // page. Fail in this case, there is no applicable window focus state.
-  if (!XRE_IsParentProcess()) {
-    return false;
-  }
-  // All headless windows are considered active so they are painted.
-  if (gfxPlatform::IsHeadless()) {
-    return true;
-  }
-  // Get the widget. nsIFrame's GetNearestWidget walks up the view chain
-  // until it finds a real window.
-  nsWindow* window = static_cast<nsWindow*>(aFrame->GetNearestWidget());
-  if (!window) {
-    return false;
-  }
-
-  // Get our toplevel nsWindow.
-  if (!window->mIsTopLevel) {
-      GtkWidget *widget = window->GetMozContainerWidget();
-      if (!widget) {
-        return false;
-      }
-
-      GtkWidget *toplevelWidget = gtk_widget_get_toplevel(widget);
-      window = get_window_for_gtk_widget(toplevelWidget);
-      if (!window) {
-        return false;
-      }
-  }
-
-  GtkWidget* widget = window->GetGtkWidget();
-  if (widget) {
-      return !(gtk_widget_get_state_flags(widget) & GTK_STATE_FLAG_BACKDROP);
-  }
-
-  return false;
 }

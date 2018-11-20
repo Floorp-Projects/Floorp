@@ -34,8 +34,10 @@ class PCMappingSlotInfo
   public:
     // SlotInfo encoding:
     //  Bits 0 & 1: number of slots at top of stack which are unsynced.
-    //  Bits 2 & 3: SlotLocation of top slot value (only relevant if numUnsynced > 0).
-    //  Bits 3 & 4: SlotLocation of next slot value (only relevant if numUnsynced > 1).
+    //  Bits 2 & 3: SlotLocation of top slot value (only relevant if
+    //              numUnsynced > 0).
+    //  Bits 3 & 4: SlotLocation of next slot value (only relevant if
+    //              numUnsynced > 1).
     enum SlotLocation { SlotInR0 = 0, SlotInR1 = 1, SlotIgnore = 3 };
 
     PCMappingSlotInfo()

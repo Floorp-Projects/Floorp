@@ -208,7 +208,8 @@ class NewObjectCache
         *pentry = makeIndex(clasp, key, kind);
         Entry* entry = &entries[*pentry];
 
-        /* N.B. Lookups with the same clasp/key but different kinds map to different entries. */
+        // N.B. Lookups with the same clasp/key but different kinds map to
+        // different entries.
         return entry->clasp == clasp && entry->key == key;
     }
 

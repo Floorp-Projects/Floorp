@@ -86,7 +86,10 @@ typedef JS::GCVector<PropertyName*> PropertyNameVector;
 typedef JS::GCVector<Shape*>        ShapeVector;
 typedef JS::GCVector<JSString*>     StringVector;
 
-/** Interface substitute for Rooted<T> which does not root the variable's memory. */
+/**
+ * Interface substitute for Rooted<T> which does not root the variable's
+ * memory.
+ */
 template <typename T>
 class MOZ_RAII FakeRooted : public RootedBase<T, FakeRooted<T>>
 {
@@ -114,7 +117,10 @@ class MOZ_RAII FakeRooted : public RootedBase<T, FakeRooted<T>>
     FakeRooted(const FakeRooted&) = delete;
 };
 
-/** Interface substitute for MutableHandle<T> which is not required to point to rooted memory. */
+/**
+ * Interface substitute for MutableHandle<T> which is not required to point to
+ * rooted memory.
+ */
 template <typename T>
 class FakeMutableHandle : public js::MutableHandleBase<T, FakeMutableHandle<T>>
 {

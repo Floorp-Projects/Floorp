@@ -220,8 +220,10 @@ EffectiveAddressAnalysis::analyzeAsmJSHeapAccess(AsmJSMemoryAccess* ins)
 //   asmload(x + imm32)
 //   asmload(x << {0,1,2,3})
 //   asmload((x << {0,1,2,3}) + imm32)
-//   asmload((x << {0,1,2,3}) & mask)            (where mask is redundant with shift)
-//   asmload(((x << {0,1,2,3}) + imm32) & mask)  (where mask is redundant with shift + imm32)
+//   asmload((x << {0,1,2,3}) & mask)            (where mask is redundant
+//                                                with shift)
+//   asmload(((x << {0,1,2,3}) + imm32) & mask)  (where mask is redundant
+//                                                with shift + imm32)
 // into a single asmload instruction (and for asmstore too).
 //
 // Additionally, we should consider the general forms:

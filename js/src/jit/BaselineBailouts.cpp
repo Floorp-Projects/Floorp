@@ -379,8 +379,10 @@ struct BaselineStackBuilder
 
         // BaselineStub - Baseline calling into Ion.
         //  PrevFramePtr needs to point to the BaselineStubFrame's saved frame pointer.
-        //      STACK_START_ADDR + JitFrameLayout::Size() + PREV_FRAME_SIZE
-        //                      - BaselineStubFrameLayout::reverseOffsetOfSavedFramePtr()
+        //      STACK_START_ADDR
+        //          + JitFrameLayout::Size()
+        //          + PREV_FRAME_SIZE
+        //          - BaselineStubFrameLayout::reverseOffsetOfSavedFramePtr()
         if (type == FrameType::BaselineStub) {
             size_t offset = JitFrameLayout::Size() + topFrame->prevFrameLocalSize() +
                             BaselineStubFrameLayout::reverseOffsetOfSavedFramePtr();
@@ -543,6 +545,7 @@ IsPrologueBailout(const SnapshotIterator& iter, const ExceptionBailoutInfo* excI
            (!excInfo || !excInfo->propagatingIonExceptionForDebugMode());
 }
 
+/* clang-format off */
 // For every inline frame, we write out the following data:
 //
 //                      |      ...      |
@@ -618,7 +621,7 @@ IsPrologueBailout(const SnapshotIterator& iter, const ExceptionBailoutInfo* excI
 //                      +---------------+
 //                      |  ReturnAddr   | <-- return into ArgumentsRectifier after call
 //                      +===============+
-//
+/* clang-format on */
 static bool
 InitFromBailout(JSContext* cx, size_t frameNo,
                 HandleFunction fun, HandleScript script,

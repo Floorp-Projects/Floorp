@@ -465,10 +465,8 @@ TextEditor::CanPasteTransferable(nsITransferable* aTransferable)
   }
 
   nsCOMPtr<nsISupports> data;
-  uint32_t dataLen;
   nsresult rv = aTransferable->GetTransferData(kUnicodeMime,
-                                               getter_AddRefs(data),
-                                               &dataLen);
+                                               getter_AddRefs(data));
   if (NS_SUCCEEDED(rv) && data) {
     return true;
   }

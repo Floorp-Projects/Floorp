@@ -465,7 +465,7 @@ class Nursery
     typedef HashSet<void*, PointerHasher<void*>, SystemAllocPolicy> MallocedBuffersSet;
     MallocedBuffersSet mallocedBuffers;
 
-    /* A task structure used to free the malloced bufers on a background thread. */
+    // A task structure used to free the malloced bufers on a background thread.
     struct FreeMallocedBuffersTask;
     FreeMallocedBuffersTask* freeMallocedBuffersTask;
 

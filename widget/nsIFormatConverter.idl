@@ -39,8 +39,8 @@ interface nsIFormatConverter : nsISupports
     * @param  aFromFormatConverter flavor to convert to (destination own the memory)
     * @returns returns NS_OK if it was converted
     */
-  void convert ( in string aFromDataFlavor, in nsISupports aFromData, in unsigned long aDataLen,
-                   in string aToDataFlavor, out nsISupports aToData, out unsigned long aDataToLen ) ; 
+  void convert ( in string aFromDataFlavor, in nsISupports aFromData,
+                   in string aToDataFlavor, out nsISupports aToData ) ; 
 
 };
 

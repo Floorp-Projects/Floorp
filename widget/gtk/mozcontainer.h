@@ -73,6 +73,7 @@ struct _MozContainer
     struct wl_surface       *surface;
     struct wl_subsurface    *subsurface;
     struct wl_egl_window    *eglwindow;
+    gboolean                 needs_clear;
     gboolean                 parent_surface_committed;
     gulong                   parent_surface_committed_handler;
 #endif
@@ -100,6 +101,7 @@ void       moz_container_move          (MozContainer *container,
 struct wl_surface* moz_container_get_wl_surface(MozContainer *container);
 struct wl_egl_window* moz_container_get_wl_egl_window(MozContainer *container);
 gboolean moz_container_has_wl_egl_window(MozContainer *container);
+gboolean moz_container_needs_clear(MozContainer *container);
 #endif
 
 #endif /* __MOZ_CONTAINER_H__ */

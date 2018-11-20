@@ -5122,10 +5122,11 @@ IonBuilder::createThisScripted(MDefinition* callee, MDefinition* newTarget)
     //
     // This instruction MUST be idempotent: since it does not correspond to an
     // explicit operation in the bytecode, we cannot use resumeAfter().
-    // Getters may not override |prototype| fetching, so this operation is indeed idempotent.
+    // Getters may not override |prototype| fetching, so this operation is
+    // indeed idempotent.
     // - First try an idempotent property cache.
-    // - Upon failing idempotent property cache, we can't use a non-idempotent cache,
-    //   therefore we fallback to CallGetProperty
+    // - Upon failing idempotent property cache, we can't use a non-idempotent
+    //   cache, therefore we fallback to CallGetProperty
     //
     // Note: both CallGetProperty and GetPropertyCache can trigger a GC,
     //       and thus invalidation.
@@ -10400,7 +10401,7 @@ IonBuilder::commonPrototypeWithGetterSetter(TemporaryTypeSet* types, PropertyNam
     return foundProto;
 }
 
-void
+AbortReasonOr<Ok>
 IonBuilder::freezePropertiesForCommonPrototype(TemporaryTypeSet* types, PropertyName* name,
                                                JSObject* foundProto,
                                                bool allowEmptyTypesforGlobal/* = false*/)
@@ -10418,6 +10419,10 @@ IonBuilder::freezePropertiesForCommonPrototype(TemporaryTypeSet* types, Property
         }
 
         while (true) {
+            if (!alloc().ensureBallast()) {
+                return abort(AbortReason::Alloc);
+            }
+
             HeapTypeSetKey property = key->property(NameToId(name));
             MOZ_ALWAYS_TRUE(!property.isOwnProperty(constraints(), allowEmptyTypesforGlobal));
 
@@ -10430,9 +10435,10 @@ IonBuilder::freezePropertiesForCommonPrototype(TemporaryTypeSet* types, Property
             key = TypeSet::ObjectKey::get(key->proto().toObjectOrNull());
         }
     }
+    return Ok();
 }
 
-bool
+AbortReasonOr<bool>
 IonBuilder::testCommonGetterSetter(TemporaryTypeSet* types, PropertyName* name,
                                    bool isGetter, JSFunction* getterOrSetter,
                                    MDefinition** guard,
@@ -10454,7 +10460,7 @@ IonBuilder::testCommonGetterSetter(TemporaryTypeSet* types, PropertyName* name,
     // We can optimize the getter/setter, so freeze all involved properties to
     // ensure there isn't a lower shadowing getter or setter installed in the
     // future.
-    freezePropertiesForCommonPrototype(types, name, foundProto, guardGlobal);
+    MOZ_TRY(freezePropertiesForCommonPrototype(types, name, foundProto, guardGlobal));
 
     // Add a shape guard on the prototype we found the property on. The rest of
     // the prototype chain is guarded by TI freezes, except when name is a global
@@ -11517,9 +11523,10 @@ IonBuilder::getPropTryCommonGetter(bool* emitted, MDefinition* obj, PropertyName
             if (!isOwnProperty) {
                 // If it's not an own property, try to use TI to avoid shape guards.
                 // For own properties we use the path below.
-                canUseTIForGetter = testCommonGetterSetter(objTypes, name, /* isGetter = */ true,
-                                                           commonGetter, &guard,
-                                                           globalShape, &globalGuard);
+                MOZ_TRY_VAR(canUseTIForGetter,
+                            testCommonGetterSetter(objTypes, name, /* isGetter = */ true,
+                                                   commonGetter, &guard,
+                                                   globalShape, &globalGuard));
             }
             if (!canUseTIForGetter) {
                 // If it's an own property or type information is bad, we can still
@@ -11535,9 +11542,11 @@ IonBuilder::getPropTryCommonGetter(bool* emitted, MDefinition* obj, PropertyName
                                                               &commonGetter))
         {
             // Try to use TI to guard on this getter.
-            if (!testCommonGetterSetter(objTypes, name, /* isGetter = */ true,
-                                        commonGetter, &guard))
-            {
+            bool canUseTIForGetter = false;
+            MOZ_TRY_VAR(canUseTIForGetter,
+                        testCommonGetterSetter(objTypes, name, /* isGetter = */ true,
+                                               commonGetter, &guard));
+            if (!canUseTIForGetter) {
                 return Ok();
             }
         } else {
@@ -12182,8 +12191,9 @@ IonBuilder::setPropTryCommonSetter(bool* emitted, MDefinition* obj,
             if (!isOwnProperty) {
                 // If it's not an own property, try to use TI to avoid shape guards.
                 // For own properties we use the path below.
-                canUseTIForSetter = testCommonGetterSetter(objTypes, name, /* isGetter = */ false,
-                                                           commonSetter, &guard);
+                MOZ_TRY_VAR(canUseTIForSetter,
+                            testCommonGetterSetter(objTypes, name, /* isGetter = */ false,
+                                                   commonSetter, &guard));
             }
             if (!canUseTIForSetter) {
                 // If it's an own property or type information is bad, we can still
@@ -12199,9 +12209,11 @@ IonBuilder::setPropTryCommonSetter(bool* emitted, MDefinition* obj,
                                                               &commonSetter))
         {
             // Try to use TI to guard on this setter.
-            if (!testCommonGetterSetter(objTypes, name, /* isGetter = */ false,
-                                        commonSetter, &guard))
-            {
+            bool canUseTIForSetter = false;
+            MOZ_TRY_VAR(canUseTIForSetter,
+                        testCommonGetterSetter(objTypes, name, /* isGetter = */ false,
+                                               commonSetter, &guard));
+            if (!canUseTIForSetter) {
                 return Ok();
             }
         } else {

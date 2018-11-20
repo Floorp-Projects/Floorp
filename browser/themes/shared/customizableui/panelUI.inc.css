@@ -1203,6 +1203,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
   min-width: 7em;
   width: 7em;
   min-height: 37px;
+  max-height: 37px;
 }
 
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {

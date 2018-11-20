@@ -31,20 +31,21 @@ typedef Handle<ModuleObject*> HandleModuleObject;
 extern Shape*
 EnvironmentCoordinateToEnvironmentShape(JSScript* script, jsbytecode* pc);
 
-/* Return the name being accessed by the given ALIASEDVAR op. */
+// Return the name being accessed by the given ALIASEDVAR op.
 extern PropertyName*
 EnvironmentCoordinateName(EnvironmentCoordinateNameCache& cache, JSScript* script, jsbytecode* pc);
 
-/* Return the function script accessed by the given ALIASEDVAR op, or nullptr. */
+// Return the function script accessed by the given ALIASEDVAR op, or nullptr.
 extern JSScript*
 EnvironmentCoordinateFunctionScript(JSScript* script, jsbytecode* pc);
 
 
-/*** Environment objects *****************************************************/
+/*** Environment objects ****************************************************/
 
 
-/*** Environment objects *****************************************************/
+/*** Environment objects ****************************************************/
 
+// clang-format off
 /*
  * [SMDOC] Environment Objects
  *
@@ -257,6 +258,7 @@ EnvironmentCoordinateFunctionScript(JSScript* script, jsbytecode* pc);
  *   LexicalEnvironmentObject
  *
  */
+// clang-format on
 
 class EnvironmentObject : public NativeObject
 {
@@ -694,7 +696,7 @@ class RuntimeLexicalErrorObject : public EnvironmentObject
 };
 
 
-/*****************************************************************************/
+/****************************************************************************/
 
 // A environment iterator describes the active environments starting from an
 // environment, scope pair. This pair may be derived from the current point of
@@ -880,7 +882,7 @@ class LiveEnvironmentVal
 };
 
 
-/*****************************************************************************/
+/****************************************************************************/
 
 /*
  * Debug environment objects

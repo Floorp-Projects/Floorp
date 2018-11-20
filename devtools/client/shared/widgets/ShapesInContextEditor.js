@@ -38,8 +38,6 @@ class ShapesInContextEditor {
     this.state = state;
     // Reference to DOM node of the toggle icon for shapes highlighter.
     this.swatch = null;
-    // Reference to TextProperty where shape changes will be written.
-    this.textProperty = null;
 
     // Commit triggers expensive DOM changes in TextPropertyEditor.update()
     // so we debounce it.
@@ -51,6 +49,28 @@ class ShapesInContextEditor {
 
     this.highlighter.on("highlighter-event", this.onHighlighterEvent);
     this.ruleView.on("ruleview-changed", this.onRuleViewChanged);
+  }
+
+  /**
+   * Get the reference to the TextProperty where shape changes should be written.
+   *
+   * We can't rely on the TextProperty to be consistent while changing the value of an
+   * inline style because the fix for Bug 1467076 forces a full rebuild of TextProperties
+   * for the inline style's mock-CSS Rule in the Rule view.
+   *
+   * On |toggle()|, we store the target TextProperty index, property name and parent rule.
+   * Here, we use that index and property name to attempt to re-identify the correct
+   * TextProperty in the rule.
+   *
+   * @return {TextProperty|null}
+   */
+  get textProperty() {
+    if (!this.rule || !this.rule.textProps) {
+      return null;
+    }
+
+    const textProp = this.rule.textProps[this.textPropIndex];
+    return (textProp && textProp.name === this.textPropName) ? textProp : null;
   }
 
   /**
@@ -90,7 +110,12 @@ class ShapesInContextEditor {
       await this.hide();
     }
 
-    this.textProperty = prop;
+    // Save the target TextProperty's parent rule, index and property name for later
+    // re-identification of the TextProperty. @see |get textProperty()|.
+    this.rule = prop.rule;
+    this.textPropIndex = this.rule.textProps.indexOf(prop);
+    this.textPropName = prop.name;
+
     this.findSwatch();
     await this.show(node, options);
   }
@@ -131,7 +156,9 @@ class ShapesInContextEditor {
       this.swatch.classList.remove("active");
     }
     this.swatch = null;
-    this.textProperty = null;
+    this.rule = null;
+    this.textPropIndex = -1;
+    this.textPropName = null;
 
     this.emit("hide", { node: this.highlighterTargetNode });
     this.inspector.selection.off("detached-front", this.onNodeFrontChanged);
@@ -147,6 +174,10 @@ class ShapesInContextEditor {
    * swatch reference becomes invalid. Call this method to identify the current swatch.
    */
   findSwatch() {
+    if (!this.textProperty) {
+      return;
+    }
+
     const valueSpan = this.textProperty.editor.valueSpan;
     this.swatch = valueSpan.querySelector(".ruleview-shapeswatch");
     if (this.swatch) {
@@ -249,11 +280,15 @@ class ShapesInContextEditor {
   * view updated. Emits an event on HighlightersOverlay that is expected by
   * tests in order to check if the shape value has been correctly applied.
   */
-  onShapeValueUpdated() {
-    // When TextPropertyEditor updates, it replaces the previous swatch DOM node.
-    // Find and store the new one.
-    this.findSwatch();
-    this.inspector.highlighters.emit("shapes-highlighter-changes-applied");
+  async onShapeValueUpdated() {
+    if (this.textProperty) {
+      // When TextPropertyEditor updates, it replaces the previous swatch DOM node.
+      // Find and store the new one.
+      this.findSwatch();
+      this.inspector.highlighters.emit("shapes-highlighter-changes-applied");
+    } else {
+      await this.hide();
+    }
   }
 
   /**

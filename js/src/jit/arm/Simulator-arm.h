@@ -142,7 +142,8 @@ class Simulator
     // "call disasm(instr, 3)"
     void disasm(SimInstruction* instr, size_t n);
 
-    // Skip backwards m instructions before starting, then disassemble n instructions.
+    // Skip backwards m instructions before starting, then disassemble n
+    // instructions.
     // "call disasm(instr, 3, 7)"
     void disasm(SimInstruction* instr, size_t m, size_t n);
 
