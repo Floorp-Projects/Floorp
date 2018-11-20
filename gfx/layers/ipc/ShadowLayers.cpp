@@ -605,6 +605,7 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
                                      bool aIsRepeatTransaction,
                                      const mozilla::TimeStamp& aRefreshStart,
                                      const mozilla::TimeStamp& aTransactionStart,
+                                     const nsCString& aURL,
                                      bool* aSent)
 {
   *aSent = false;
@@ -747,6 +748,7 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
   info.isRepeatTransaction() = aIsRepeatTransaction;
   info.refreshStart() = aRefreshStart;
   info.transactionStart() = aTransactionStart;
+  info.url() = aURL;
 #if defined(ENABLE_FRAME_LATENCY_LOG)
   info.fwdTime() = TimeStamp::Now();
 #endif

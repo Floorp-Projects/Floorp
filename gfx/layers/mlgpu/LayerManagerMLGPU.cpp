@@ -188,7 +188,7 @@ LayerManagerMLGPU::SetRoot(Layer* aLayer)
 }
 
 bool
-LayerManagerMLGPU::BeginTransaction()
+LayerManagerMLGPU::BeginTransaction(const nsCString &aURL)
 {
   MOZ_ASSERT(!mTarget);
   return true;

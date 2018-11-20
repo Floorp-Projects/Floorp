@@ -720,13 +720,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   void createAboutBlankContentViewer(in nsIPrincipal aPrincipal);
 
   /**
-   * Like createAboutBlankContentViewer, but don't check for permit unload.
-   * Only used by special session history operation.
-   * @param aPrincipal the principal to use for the new document.
-   */
-  [noscript] void forceCreateAboutBlankContentViewer(in nsIPrincipal aPrincipal);
-
-  /**
    * Upon getting, returns the canonical encoding label of the document
    * currently loaded into this docshell.
    *

@@ -13,6 +13,7 @@ PYTHON_UNITTEST_MANIFESTS += [
     'mozhttpd/tests/manifest.ini',
     'mozinfo/tests/manifest.ini',
     'mozinstall/tests/manifest.ini',
+    'mozleak/tests/manifest.ini',
     'mozlog/tests/manifest.ini',
     'moznetwork/tests/manifest.ini',
     'mozprocess/tests/manifest.ini',

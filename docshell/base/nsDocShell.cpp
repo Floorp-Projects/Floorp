@@ -7569,12 +7569,6 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal)
   return CreateAboutBlankContentViewer(aPrincipal, nullptr);
 }
 
-NS_IMETHODIMP
-nsDocShell::ForceCreateAboutBlankContentViewer(nsIPrincipal* aPrincipal)
-{
-  return CreateAboutBlankContentViewer(aPrincipal, nullptr, true, false);
-}
-
 bool
 nsDocShell::CanSavePresentation(uint32_t aLoadType,
                                 nsIRequest* aNewRequest,
@@ -9104,17 +9098,6 @@ bool
 nsDocShell::JustStartedNetworkLoad()
 {
   return mDocumentRequest && mDocumentRequest != GetCurrentDocChannel();
-}
-
-nsresult
-nsDocShell::CreatePrincipalFromReferrer(nsIURI* aReferrer,
-                                        nsIPrincipal** aResult)
-{
-  nsCOMPtr<nsIPrincipal> prin =
-    BasePrincipal::CreateCodebasePrincipal(aReferrer, mOriginAttributes);
-  prin.forget(aResult);
-
-  return *aResult ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

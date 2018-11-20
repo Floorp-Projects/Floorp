@@ -37,7 +37,7 @@ public:
   void Destroy() override;
 
   // LayerManager methods
-  bool BeginTransaction() override;
+  bool BeginTransaction(const nsCString &aURL) override;
   void BeginTransactionWithDrawTarget(gfx::DrawTarget* aTarget, const gfx::IntRect& aRect) override;
   void SetRoot(Layer* aLayer) override;
   already_AddRefed<PaintedLayer> CreatePaintedLayer() override;

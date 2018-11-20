@@ -10,6 +10,7 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/webrender/webrender_ffi.h"
@@ -21,6 +22,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
+#include "mozilla/IntegerPrintfMacros.h"
 
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
@@ -490,6 +492,7 @@ gfxPlatform::gfxPlatform()
   , mAzureCanvasBackendCollector(this, &gfxPlatform::GetAzureBackendInfo)
   , mApzSupportCollector(this, &gfxPlatform::GetApzSupportInfo)
   , mTilesInfoCollector(this, &gfxPlatform::GetTilesSupportInfo)
+  , mFrameStatsCollector(this, &gfxPlatform::GetFrameStats)
   , mCompositorBackend(layers::LayersBackend::LAYERS_NONE)
   , mScreenDepth(0)
 {
@@ -3294,6 +3297,54 @@ gfxPlatform::GetTilesSupportInfo(mozilla::widget::InfoObject& aObj)
   IntSize tileSize = gfxVars::TileSize();
   aObj.DefineProperty("TileHeight", tileSize.height);
   aObj.DefineProperty("TileWidth", tileSize.width);
+}
+
+void
+gfxPlatform::GetFrameStats(mozilla::widget::InfoObject& aObj)
+{
+  uint32_t i = 0;
+  for (FrameStats& f : mFrameStats) {
+    nsPrintfCString name("Slow Frame #%02u", ++i);
+
+    nsPrintfCString value("Frame %" PRIu64 "(%s) CONTENT_FRAME_TIME %d - Transaction start %f, main-thread time %f, full paint time %f, Skipped composites %u, Composite start %f, Resource upload time %f, GPU cache upload time %f, Render time %f, Composite time %f",
+                          f.id().mId,
+                          f.url().get(),
+                          f.contentFrameTime(),
+                          (f.transactionStart() - f.refreshStart()).ToMilliseconds(),
+                          (f.fwdTime() - f.transactionStart()).ToMilliseconds(),
+                          f.sceneBuiltTime() ? (f.sceneBuiltTime() - f.transactionStart()).ToMilliseconds() : 0.0,
+                          f.skippedComposites(),
+                          (f.compositeStart() - f.refreshStart()).ToMilliseconds(),
+                          f.resourceUploadTime(),
+                          f.gpuCacheUploadTime(),
+                          (f.compositeEnd() - f.renderStart()).ToMilliseconds(),
+                          (f.compositeEnd() - f.compositeStart()).ToMilliseconds());
+    aObj.DefineProperty(name.get(), value.get());
+  }
+}
+
+class FrameStatsComparator
+{
+public:
+  bool Equals(const FrameStats& aA, const FrameStats& aB) const {
+    return aA.contentFrameTime() == aB.contentFrameTime();
+  }
+  // Reverse the condition here since we want the array sorted largest to smallest.
+  bool LessThan(const FrameStats& aA, const FrameStats& aB) const {
+    return aA.contentFrameTime() > aB.contentFrameTime();
+  }
+};
+
+void
+gfxPlatform::NotifyFrameStats(nsTArray<FrameStats>&& aFrameStats)
+{
+  FrameStatsComparator comp;
+  for (FrameStats& f : aFrameStats) {
+    mFrameStats.InsertElementSorted(f, comp);
+  }
+  if (mFrameStats.Length() > 10) {
+    mFrameStats.SetLength(10);
+  }
 }
 
 /*static*/ bool

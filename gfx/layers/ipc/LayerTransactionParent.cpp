@@ -189,7 +189,8 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
 
   {
     AutoResolveRefLayers resolve(mCompositorBridge->GetCompositionManager(this));
-    mLayerManager->BeginTransaction();
+    nsCString none;
+    mLayerManager->BeginTransaction(none);
   }
 
   // Not all edits require an update to the hit testing tree.
