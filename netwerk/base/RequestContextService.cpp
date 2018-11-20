@@ -186,40 +186,34 @@ RequestContext::RemoveBlockingTransaction(uint32_t *outval)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-RequestContext::GetSpdyPushCache(mozilla::net::SpdyPushCache **aSpdyPushCache)
+SpdyPushCache*
+RequestContext::GetSpdyPushCache()
 {
-  *aSpdyPushCache = mSpdyCache.get();
-  return NS_OK;
+  return mSpdyCache;
 }
 
-NS_IMETHODIMP
-RequestContext::SetSpdyPushCache(mozilla::net::SpdyPushCache *aSpdyPushCache)
+void
+RequestContext::SetSpdyPushCache(SpdyPushCache *aSpdyPushCache)
 {
   mSpdyCache = aSpdyPushCache;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-RequestContext::GetID(uint64_t *outval)
+uint64_t
+RequestContext::GetID()
 {
-  NS_ENSURE_ARG_POINTER(outval);
-  *outval = mID;
-  return NS_OK;
+  return mID;
 }
 
-NS_IMETHODIMP
-RequestContext::GetUserAgentOverride(nsACString& aUserAgentOverride)
+const nsACString&
+RequestContext::GetUserAgentOverride()
 {
-  aUserAgentOverride = mUserAgentOverride;
-  return NS_OK;
+  return mUserAgentOverride;
 }
 
-NS_IMETHODIMP
+void
 RequestContext::SetUserAgentOverride(const nsACString& aUserAgentOverride)
 {
   mUserAgentOverride = aUserAgentOverride;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
