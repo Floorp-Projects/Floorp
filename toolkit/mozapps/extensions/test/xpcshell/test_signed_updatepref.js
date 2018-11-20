@@ -3,29 +3,26 @@ Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 gUseRealCertChecks = true;
 
 const DATA = "data/signing_checks/";
-const ID = "test@tests.mozilla.org";
+const ID = "test@somewhere.com";
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-var gServer = new HttpServer();
-gServer.start();
+let testserver = createHttpServer({hosts: ["example.com"]});
 
-gServer.registerPathHandler("/update.rdf", function(request, response) {
-  let updateData = {};
-  updateData[ID] = [{
-    version: "2.0",
-    targetApplications: [{
-      id: "xpcshell@tests.mozilla.org",
-      minVersion: "4",
-      maxVersion: "6",
-    }],
-  }];
-
-  response.setStatusLine(request.httpVersion, 200, "OK");
-  response.write(createUpdateRDF(updateData));
+AddonTestUtils.registerJSON(testserver, "/update.json", {
+  addons: {
+    [ID]: {
+      version: "2.0",
+      applications: {
+        gecko: {
+          strict_min_version: "4",
+          strict_max_version: "6",
+        },
+      },
+    },
+  },
 });
 
-const SERVER = "127.0.0.1:" + gServer.identity.primaryPort;
-Services.prefs.setCharPref("extensions.update.background.url", "http://" + SERVER + "/update.rdf");
+Services.prefs.setCharPref("extensions.update.background.url",
+                           "http://example.com/update.json");
 
 function verifySignatures() {
   return new Promise(resolve => {
@@ -43,11 +40,6 @@ function verifySignatures() {
 
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "4", "4");
-
-  // Start and stop the manager to initialise everything in the profile before
-  // actual testing
-  await promiseStartupManager();
-  await promiseShutdownManager();
 });
 
 // Updating the pref without changing the app version won't disable add-ons
@@ -56,8 +48,8 @@ add_task(async function() {
   Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, false);
   await promiseStartupManager();
 
-  // Install the signed add-on
-  await promiseInstallAllFiles([do_get_file(DATA + "unsigned_bootstrap_2.xpi")]);
+  // Install an unsigned add-on
+  await promiseInstallFile(do_get_file(DATA + "unsigned.xpi"));
 
   let addon = await promiseAddonByID(ID);
   Assert.notEqual(addon, null);
@@ -107,8 +99,8 @@ add_task(async function() {
   Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, false);
   await promiseStartupManager();
 
-  // Install the signed add-on
-  await promiseInstallAllFiles([do_get_file(DATA + "unsigned_bootstrap_2.xpi")]);
+  // Install an unsigned add-on
+  await promiseInstallFile(do_get_file(DATA + "unsigned.xpi"));
 
   let addon = await promiseAddonByID(ID);
   Assert.notEqual(addon, null);
