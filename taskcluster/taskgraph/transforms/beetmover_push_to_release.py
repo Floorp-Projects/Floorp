@@ -8,9 +8,7 @@ Transform the beetmover-push-to-release task into a task description.
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import (
-     validate_schema, Schema,
-)
+from taskgraph.util.schema import Schema
 from taskgraph.util.scriptworker import (
     get_beetmover_bucket_scope, add_scope_prefix,
     get_worker_type_for_scope,
@@ -24,7 +22,6 @@ from voluptuous import Any, Required, Optional
 task_description_schema = {str(k): v for k, v in task_description_schema.schema.iteritems()}
 job_description_schema = {str(k): v for k, v in job_description_schema.schema.iteritems()}
 
-transforms = TransformSequence()
 
 taskref_or_string = Any(
     basestring,
@@ -47,14 +44,8 @@ beetmover_push_to_release_description_schema = Schema({
 })
 
 
-@transforms.add
-def validate(config, jobs):
-    for job in jobs:
-        label = job['name']
-        validate_schema(
-            beetmover_push_to_release_description_schema, job,
-            "In beetmover-push-to-release ({!r} kind) task for {!r}:".format(config.kind, label))
-        yield job
+transforms = TransformSequence()
+transforms.add_validate(beetmover_push_to_release_description_schema)
 
 
 @transforms.add
