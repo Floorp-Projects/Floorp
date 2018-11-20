@@ -2441,7 +2441,8 @@ done:
 static PRFileDesc*
 nsSSLIOLayerImportFD(PRFileDesc* fd,
                      nsNSSSocketInfo* infoObject,
-                     const char* host)
+                     const char* host,
+                     bool haveHTTPSProxy)
 {
   PRFileDesc* sslSock = SSL_ImportFD(nullptr, fd);
   if (!sslSock) {
@@ -2455,7 +2456,8 @@ nsSSLIOLayerImportFD(PRFileDesc* fd,
   // Disable this hook if we connect anonymously. See bug 466080.
   uint32_t flags = 0;
   infoObject->GetProviderFlags(&flags);
-  if (flags & nsISocketProvider::ANONYMOUS_CONNECT) {
+  // Provide the client cert to HTTPS proxy no matter if it is anonymous.
+  if (flags & nsISocketProvider::ANONYMOUS_CONNECT && !haveHTTPSProxy) {
       SSL_GetClientAuthDataHook(sslSock, nullptr, infoObject);
   } else {
       SSL_GetClientAuthDataHook(sslSock,
@@ -2701,10 +2703,15 @@ nsSSLIOLayerAddToSocket(int32_t family,
   }
 
   bool haveProxy = false;
+  bool haveHTTPSProxy = false;
   if (proxy) {
-    nsCString proxyHost;
+    nsAutoCString proxyHost;
     proxy->GetHost(proxyHost);
     haveProxy = !proxyHost.IsEmpty();
+    nsAutoCString type;
+    haveHTTPSProxy = haveProxy &&
+                     NS_SUCCEEDED(proxy->GetType(type)) &&
+                     type.EqualsLiteral("https");
   }
 
   // A plaintext observer shim is inserted so we can observe some protocol
@@ -2720,7 +2727,7 @@ nsSSLIOLayerAddToSocket(int32_t family,
     }
   }
 
-  PRFileDesc* sslSock = nsSSLIOLayerImportFD(fd, infoObject, host);
+  PRFileDesc* sslSock = nsSSLIOLayerImportFD(fd, infoObject, host, haveHTTPSProxy);
   if (!sslSock) {
     MOZ_ASSERT_UNREACHABLE("NSS: Error importing socket");
     goto loser;

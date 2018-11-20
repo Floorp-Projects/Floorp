@@ -1053,7 +1053,7 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams, const T& aPa
     gfxRect drawingRect =
       nsLayoutUtils::RectToGfxRect(aParams.borderArea,
                                    frame->PresContext()->AppUnitsPerDevPixel());
-    context.Rectangle(drawingRect, true);
+    context.SnappedRectangle(drawingRect);
     Color overlayColor(0.0f, 0.0f, 0.0f, 0.8f);
     if (maskUsage.shouldGenerateMaskLayer) {
       overlayColor.r = 1.0f; // red represents css positioned mask.

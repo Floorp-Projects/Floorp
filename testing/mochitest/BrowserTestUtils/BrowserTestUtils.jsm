@@ -1156,6 +1156,63 @@ var BrowserTestUtils = {
   },
 
   /**
+   *  Versions of EventUtils.jsm synthesizeTouch functions that synthesize a
+   *  touch event in a child process and return promises that resolve when the
+   *  event has fired and completed. Instead of a window, a browser is required
+   *  to be passed to this function.
+   *
+   * @param target
+   *        One of the following:
+   *        - a selector string that identifies the element to target. The syntax is as
+   *          for querySelector.
+   *        - An array of selector strings. Each selector after the first
+   *          selects for an element in the iframe specified by the previous
+   *          selector.
+   *        - a CPOW element (for easier test-conversion).
+   *        - a function to be run in the content process that returns the element to
+   *        target
+   *        - null, in which case the offset is from the content document's edge.
+   * @param {integer} offsetX
+   *        x offset from target's left bounding edge
+   * @param {integer} offsetY
+   *        y offset from target's top bounding edge
+   * @param {Object} event object
+   *        Additional arguments, similar to the EventUtils.jsm version
+   * @param {Browser} browser
+   *        Browser element, must not be null
+   *
+   * @returns {Promise}
+   * @resolves True if the touch event was cancelled.
+   */
+  synthesizeTouch(target, offsetX, offsetY, event, browser) {
+    return new Promise((resolve, reject) => {
+      let mm = browser.messageManager;
+      mm.addMessageListener("Test:SynthesizeTouchDone", function touchMsg(message) {
+        mm.removeMessageListener("Test:SynthesizeTouchDone", touchMsg);
+        if (message.data.hasOwnProperty("defaultPrevented")) {
+          resolve(message.data.defaultPrevented);
+        } else {
+          reject(new Error(message.data.error));
+        }
+      });
+
+      let cpowObject = null;
+      let targetFn = null;
+      if (typeof target == "function") {
+        targetFn = target.toString();
+        target = null;
+      } else if (typeof target != "string" && !Array.isArray(target)) {
+        cpowObject = target;
+        target = null;
+      }
+
+      mm.sendAsyncMessage("Test:SynthesizeTouch",
+                          {target, targetFn, x: offsetX, y: offsetY, event},
+                          {object: cpowObject});
+    });
+  },
+
+  /**
    * Wait for a message to be fired from a particular message manager
    *
    * @param {nsIMessageManager} messageManager

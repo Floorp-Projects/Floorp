@@ -625,9 +625,12 @@ public:
       return true;
     }
 
-    // contain: paint, which we should interpret as -moz-hidden-unscrollable
-    // by default.
-    if (aDisp->IsContainPaint()) {
+    // contain: paint, which we interpret as -moz-hidden-unscrollable
+    // Exception: for scrollframes, we don't need contain:paint to add any
+    // clipping, because the scrollable frame will already clip overflowing
+    // content, and because contain:paint should prevent all means of escaping
+    // that clipping (e.g. because it forms a fixed-pos containing block).
+    if (aDisp->IsContainPaint() && !aFrame->IsScrollFrame()) {
       return true;
     }
 

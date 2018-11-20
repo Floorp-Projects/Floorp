@@ -7,6 +7,7 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/TabGroup.h"
+#include "mozilla/PerformanceUtils.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "nsIDocShell.h"
@@ -68,7 +69,7 @@ DocGroup::~DocGroup()
   mTabGroup->mDocGroups.RemoveEntry(mKey);
 }
 
-PerformanceInfo
+RefPtr<PerformanceInfoPromise>
 DocGroup::ReportPerformanceInfo()
 {
   AssertIsOnMainThread();
@@ -83,6 +84,8 @@ DocGroup::ReportPerformanceInfo()
   uint64_t duration = 0;
   bool isTopLevel = false;
   nsCString host;
+  nsCOMPtr<nsPIDOMWindowOuter> top;
+  RefPtr<AbstractThread> mainThread;
 
   // iterating on documents until we find the top window
   for (const auto& document : *this) {
@@ -106,12 +109,13 @@ DocGroup::ReportPerformanceInfo()
     if (!outer) {
       continue;
     }
-    nsCOMPtr<nsPIDOMWindowOuter> top = outer->GetTop();
+    top = outer->GetTop();
     if (!top) {
       continue;
     }
     windowID = top->WindowID();
     isTopLevel = outer->IsTopLevelWindow();
+    mainThread = AbstractMainThreadFor(TaskCategory::Performance);
     break;
   }
 
@@ -130,8 +134,45 @@ DocGroup::ReportPerformanceInfo()
     }
   }
 
-  return PerformanceInfo(host, pid, windowID, duration, mPerformanceCounter->GetID(),
-                         false, isTopLevel, items);
+  if (!isTopLevel) {
+    return PerformanceInfoPromise::CreateAndResolve(
+      PerformanceInfo(host,
+                      pid,
+                      windowID,
+                      duration,
+                      mPerformanceCounter->GetID(),
+                      false,
+                      isTopLevel,
+                      PerformanceMemoryInfo(), // Empty memory info
+                      items),
+      __func__);
+  }
+
+  MOZ_ASSERT(mainThread);
+  RefPtr<DocGroup> self = this;
+
+  return CollectMemoryInfo(top, mainThread)
+    ->Then(mainThread,
+           __func__,
+           [self, host, pid, windowID, duration, isTopLevel, items](
+             const PerformanceMemoryInfo& aMemoryInfo) {
+             PerformanceInfo info =
+               PerformanceInfo(host,
+                               pid,
+                               windowID,
+                               duration,
+                               self->mPerformanceCounter->GetID(),
+                               false,
+                               isTopLevel,
+                               aMemoryInfo,
+                               items);
+
+             return PerformanceInfoPromise::CreateAndResolve(std::move(info),
+                                                             __func__);
+           },
+           [self](const nsresult rv) {
+             return PerformanceInfoPromise::CreateAndReject(rv, __func__);
+           });
 }
 
 nsresult

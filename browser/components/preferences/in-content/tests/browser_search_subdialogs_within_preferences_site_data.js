@@ -30,6 +30,6 @@ add_task(async function() {
 
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  await evaluateSearchResults("third-party", ["siteDataGroup", "trackingGroup"]);
+  await evaluateSearchResults("third-party", ["trackingGroup"]);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

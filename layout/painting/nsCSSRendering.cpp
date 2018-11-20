@@ -2543,7 +2543,7 @@ SetupImageLayerClip(nsCSSRendering::ImageLayerClipState& aClipState,
 
     aAutoSR->EnsureSaved(aCtx);
     aCtx->NewPath();
-    aCtx->Rectangle(bgAreaGfx, true);
+    aCtx->SnappedRectangle(bgAreaGfx);
     aCtx->Clip();
   }
 
@@ -2585,7 +2585,7 @@ DrawBackgroundColor(nsCSSRendering::ImageLayerClipState& aClipState,
   // table painting seems to depend on it.
   if (!aClipState.mHasRoundedCorners || aClipState.mCustomClip) {
     aCtx->NewPath();
-    aCtx->Rectangle(aClipState.mDirtyRectInDevPx, true);
+    aCtx->SnappedRectangle(aClipState.mDirtyRectInDevPx);
     aCtx->Fill();
     return;
   }
@@ -2606,7 +2606,7 @@ DrawBackgroundColor(nsCSSRendering::ImageLayerClipState& aClipState,
   gfxRect dirty = ThebesRect(bgAreaGfx).Intersect(aClipState.mDirtyRectInDevPx);
 
   aCtx->NewPath();
-  aCtx->Rectangle(dirty, true);
+  aCtx->SnappedRectangle(dirty);
   aCtx->Clip();
 
   if (aClipState.mHasAdditionalBGClipArea) {
@@ -2615,7 +2615,7 @@ DrawBackgroundColor(nsCSSRendering::ImageLayerClipState& aClipState,
     bgAdditionalAreaGfx.Round();
     gfxUtils::ConditionRect(bgAdditionalAreaGfx);
     aCtx->NewPath();
-    aCtx->Rectangle(bgAdditionalAreaGfx, true);
+    aCtx->SnappedRectangle(bgAdditionalAreaGfx);
     aCtx->Clip();
   }
 

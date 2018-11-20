@@ -1,75 +1,64 @@
-diff -Nru valgrind-3.13.0/debian/patches/05_fix-callgrind_control.patch valgrind-3.14.0.git20180806/debian/patches/05_fix-callgrind_control.patch
---- valgrind-3.13.0/debian/patches/05_fix-callgrind_control.patch	2017-07-24 08:41:05.000000000 +0900
-+++ valgrind-3.14.0.git20180806/debian/patches/05_fix-callgrind_control.patch	2018-08-10 16:00:19.142494503 +0900
-@@ -7,9 +7,9 @@
+diff -Nru valgrind-3.14.0/debian/changelog valgrind-3.14.0/debian/changelog
+--- valgrind-3.14.0/debian/changelog	2018-11-15 09:21:43.000000000 +0900
++++ valgrind-3.14.0/debian/changelog	2018-11-15 11:45:25.000000000 +0900
+@@ -1,3 +1,14 @@
++valgrind (1:3.14.0-1.deb7moz1) wheezy; urgency=medium
++
++  * Mozilla backport for wheezy.
++  * debian/control, debian/compat: Drop debhelper compat back to 7, which
++    requires adding back an explicit dependency on dh-autoreconf.
++  * debian/rules: Debhelper only defaulted to --parallel in compat >= 10, so
++    add --parallel back.
++  * debian/valgrind-mpi.install: Use non-multiarch path.
++
++ -- Mike Hommey <glandium@mozilla.com>  Thu, 15 Nov 2018 11:45:25 +0900
++
+ valgrind (1:3.14.0-1) unstable; urgency=medium
  
- --- a/callgrind/callgrind_control.in
- +++ b/callgrind/callgrind_control.in
--@@ -29,7 +29,7 @@
-+@@ -33,7 +33,7 @@
-    @pids = ();
--   open LIST, "vgdb $vgdbPrefixOption -l|";
-+   open LIST, $vgdb_exe . " $vgdbPrefixOption -l|";
-    while(<LIST>) {
- -      if (/^use --pid=(\d+) for \S*?valgrind\s+(.*?)\s*$/) {
- +      if (/^use --pid=(\d+) for \S*?valgrind\.bin\s+(.*?)\s*$/) {
-diff -Nru valgrind-3.13.0/debian/patches/07_fix-spelling-in-binary.patch valgrind-3.14.0.git20180806/debian/patches/07_fix-spelling-in-binary.patch
---- valgrind-3.13.0/debian/patches/07_fix-spelling-in-binary.patch	2017-07-24 08:41:05.000000000 +0900
-+++ valgrind-3.14.0.git20180806/debian/patches/07_fix-spelling-in-binary.patch	2018-08-10 16:01:46.110793537 +0900
-@@ -16,7 +16,7 @@
-            && VKI_S_ISREG(stat_buf.mode)
- --- a/coregrind/m_gdbserver/server.c
- +++ b/coregrind/m_gdbserver/server.c
--@@ -254,7 +254,7 @@
-+@@ -256,7 +256,7 @@
-  "    Valgrind internal host status/memory\n"
-  "  v.translate <addr> [<traceflags>]  : debug translation of <addr> with <traceflags>\n"
-  "    (default traceflags 0b00100000 : show after instrumentation)\n"
-@@ -27,7 +27,7 @@
-     case  1: /* v.set */
- --- a/VEX/priv/ir_defs.c
- +++ b/VEX/priv/ir_defs.c
--@@ -4643,7 +4643,7 @@
-+@@ -4698,7 +4698,7 @@
-     if (bb->stmts_used < 0 || bb->stmts_size < 8
-         || bb->stmts_used > bb->stmts_size)
-        /* this BB is so strange we can't even print it */
-@@ -60,7 +60,7 @@
-                  " N-plicated elts\n");
- --- a/coregrind/m_scheduler/scheduler.c
- +++ b/coregrind/m_scheduler/scheduler.c
--@@ -2147,7 +2147,7 @@
-+@@ -2208,7 +2208,7 @@
-        "to recompile such code, using the header files from this version of\n"
-        "Valgrind, and not any previous version.\n"
-        "\n"
-@@ -71,7 +71,7 @@
-        "   http://www.valgrind.org/support/bug_reports.html\n"
- --- a/coregrind/m_xtree.c
- +++ b/coregrind/m_xtree.c
--@@ -946,7 +946,7 @@
-+@@ -961,7 +961,7 @@
-        FP("n%u: %llu %s\n", n_groups, top_total, header->top_node_desc);
-  
-        /* Output depth 0 groups. */
-diff -Nru valgrind-3.13.0/debian/patches/09_fix-armhf-detect.patch valgrind-3.14.0.git20180806/debian/patches/09_fix-armhf-detect.patch
---- valgrind-3.13.0/debian/patches/09_fix-armhf-detect.patch	2017-07-24 08:41:05.000000000 +0900
-+++ valgrind-3.14.0.git20180806/debian/patches/09_fix-armhf-detect.patch	2018-08-10 16:02:01.462846319 +0900
-@@ -6,7 +6,7 @@
+   * New upstream release (Closes: #913208)
+diff -Nru valgrind-3.14.0/debian/compat valgrind-3.14.0/debian/compat
+--- valgrind-3.14.0/debian/compat	2018-11-15 09:21:43.000000000 +0900
++++ valgrind-3.14.0/debian/compat	2018-11-15 11:45:25.000000000 +0900
+@@ -1 +1 @@
+-11
++7
+diff -Nru valgrind-3.14.0/debian/control valgrind-3.14.0/debian/control
+--- valgrind-3.14.0/debian/control	2018-11-15 09:21:43.000000000 +0900
++++ valgrind-3.14.0/debian/control	2018-11-15 11:45:25.000000000 +0900
+@@ -2,7 +2,8 @@
+ Section: devel
+ Priority: optional
+ Maintainer: Alessandro Ghedini <ghedo@debian.org>
+-Build-Depends: debhelper (>= 11),
++Build-Depends: debhelper (>= 7.0.50~),
++ dh-autoreconf,
+  gdb,
+  gcc-multilib [amd64],
+  libc6-dev-i386 [amd64],
+diff -Nru valgrind-3.14.0/debian/rules valgrind-3.14.0/debian/rules
+--- valgrind-3.14.0/debian/rules	2018-11-15 09:21:43.000000000 +0900
++++ valgrind-3.14.0/debian/rules	2018-11-15 11:45:25.000000000 +0900
+@@ -11,7 +11,7 @@
+ LDFLAGS  = $(shell dpkg-buildflags --get LDFLAGS)
  
- --- a/configure.ac
- +++ b/configure.ac
--@@ -234,7 +234,7 @@
-+@@ -252,7 +252,7 @@
-          ARCH_MAX="s390x"
-          ;;
-  
-diff -Nru valgrind-3.13.0/debian/patches/series valgrind-3.14.0.git20180806/debian/patches/series
---- valgrind-3.13.0/debian/patches/series	2017-07-24 08:41:05.000000000 +0900
-+++ valgrind-3.14.0.git20180806/debian/patches/series	2018-08-10 15:59:43.434371705 +0900
-@@ -2,5 +2,4 @@
- 04_workaround-SIGSEGV-on-PPC.patch
- 05_fix-callgrind_control.patch
- 07_fix-spelling-in-binary.patch
--08_fix-spelling-in-manpage.patch
- 09_fix-armhf-detect.patch
+ %:
+-	dh $@ --with=autoreconf
++	dh $@ --parallel --with=autoreconf
+ 
+ override_dh_auto_configure:
+ 	dh_auto_configure -- --enable-tls CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
+@@ -20,7 +20,7 @@
+ 	: # do nothing for now
+ 
+ override_dh_auto_build:
+-	dh_auto_build
++	dh_auto_build --parallel
+ 	$(MAKE) -C docs FAQ.txt
+ 	$(MAKE) -C docs html-docs
+ 	$(MAKE) -C docs man-pages
+diff -Nru valgrind-3.14.0/debian/valgrind-mpi.install valgrind-3.14.0/debian/valgrind-mpi.install
+--- valgrind-3.14.0/debian/valgrind-mpi.install	2018-11-15 09:21:43.000000000 +0900
++++ valgrind-3.14.0/debian/valgrind-mpi.install	2018-11-15 11:45:25.000000000 +0900
+@@ -1 +1 @@
+-usr/lib/*/valgrind/libmpiwrap*
++usr/lib/valgrind/libmpiwrap*
