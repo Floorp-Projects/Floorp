@@ -286,5 +286,5 @@ interface nsIProtocolProxyService : nsISupports
      /**
       * True if there is a PAC download in progress.
       */
-    [noscript] readonly attribute boolean isPACLoading;
+    [notxpcom, nostdcall] readonly attribute boolean isPACLoading;
 };

@@ -881,7 +881,7 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
   // We need to find the correct principal to check the cookie permission. For
   // third-party contexts, we want to check if the top-level window has a custom
   // cookie permission.
-  nsIPrincipal* toplevelPrincipal = loadInfo->TopLevelPrincipal();
+  nsIPrincipal* toplevelPrincipal = loadInfo->GetTopLevelPrincipal();
 
   // If this is already the top-level window, we should use the loading
   // principal.
@@ -1006,13 +1006,13 @@ AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(nsIHttpChannel* aChannel
     return true;
   }
 
-  nsIPrincipal* parentPrincipal = loadInfo->TopLevelStorageAreaPrincipal();
+  nsIPrincipal* parentPrincipal = loadInfo->GetTopLevelStorageAreaPrincipal();
   if (!parentPrincipal) {
     LOG(("No top-level storage area principal at hand"));
 
     // parentPrincipal can be null if the parent window is not the top-level
     // window.
-    if (loadInfo->TopLevelPrincipal()) {
+    if (loadInfo->GetTopLevelPrincipal()) {
       LOG(("Parent window is the top-level window, bail out early"));
       return false;
     }
