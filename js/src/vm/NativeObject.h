@@ -1118,7 +1118,8 @@ class NativeObject : public ShapedObject
         setSlot(index, v);
     }
 
-    /* For slots which are known to always be fixed, due to the way they are allocated. */
+    // For slots which are known to always be fixed, due to the way they are
+    // allocated.
 
     HeapSlot& getFixedSlotRef(uint32_t slot) {
         MOZ_ASSERT(slotIsFixed(slot));
@@ -1552,7 +1553,7 @@ NativeObject::privateWriteBarrierPre(void** oldval)
 }
 
 
-/*** Standard internal methods *******************************************************************/
+/*** Standard internal methods **********************************************/
 
 /*
  * These functions should follow the algorithms in ES6 draft rev 29 section 9.1
@@ -1655,7 +1656,7 @@ extern bool
 NativeDeleteProperty(JSContext* cx, HandleNativeObject obj, HandleId id, ObjectOpResult& result);
 
 
-/*** SpiderMonkey nonstandard internal methods ***************************************************/
+/*** SpiderMonkey nonstandard internal methods ******************************/
 
 template <AllowGC allowGC>
 extern bool

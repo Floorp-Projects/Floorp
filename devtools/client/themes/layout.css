@@ -112,6 +112,10 @@
   background-size: 16px;
 }
 
+html[dir="rtl"] .flex-header-button-prev::before {
+  background-image: url("chrome://devtools/skin/images/arrowhead-right.svg");
+}
+
 .flex-header-content {
   display: flex;
   flex: 1;
@@ -198,13 +202,21 @@
   height: 16px;
 }
 
+html[dir="rtl"] .flex-item-list .devtools-button::after {
+  background-image: url(chrome://devtools/skin/images/arrowhead-left.svg);
+  right: unset;
+  left: 7px;
+}
+
 .flex-item-list .flex-item-index {
   font-size: 12px;
   font-weight: bold;
+  float: inline-start;
 }
 
 .flex-item-list .objectBox-node {
   padding-inline-start: 8px;
+  vertical-align: middle;
 }
 
 /**
@@ -236,6 +248,11 @@
 .flex-outline-container {
   display: flex;
   justify-content: center;
+  /* The flex outline is always drawn in ltr. Whether the UI of DevTools is in RTL or some
+     other writing mode doesn't have an impact on whether the outline should face left,
+     right, top or bottom. This should only be dictated by which direction does the flex
+     item currently face in the page. */
+  direction: ltr;
 }
 
 .flex-outline {
@@ -466,11 +483,15 @@
 .flex-item-sizing .name {
   font-weight: 600;
   grid-column: 1;
+  display: grid;
+  grid-template-columns: max-content max-content;
+  gap: .5em;
 }
 
 .flex-item-sizing .value {
   text-align: end;
   font-weight: 600;
+  direction: ltr;
 }
 
 .flex-item-sizing .value .unit {

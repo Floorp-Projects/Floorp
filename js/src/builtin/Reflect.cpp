@@ -18,7 +18,7 @@
 using namespace js;
 
 
-/*** Reflect methods *****************************************************************************/
+/*** Reflect methods ********************************************************/
 
 /* ES6 26.1.4 Reflect.deleteProperty (target, propertyKey) */
 static bool
@@ -217,7 +217,7 @@ static const JSFunctionSpec methods[] = {
 };
 
 
-/*** Setup **************************************************************************************/
+/*** Setup ******************************************************************/
 
 JSObject*
 js::InitReflect(JSContext* cx, Handle<GlobalObject*> global)

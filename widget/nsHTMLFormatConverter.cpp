@@ -102,15 +102,14 @@ nsHTMLFormatConverter::CanConvert(const char *aFromDataFlavor, const char *aToDa
 //XXX unicode out of the string. Lame lame lame.
 //
 NS_IMETHODIMP
-nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromData, uint32_t aDataLen,
-                               const char *aToDataFlavor, nsISupports **aToData, uint32_t *aDataToLen)
+nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromData,
+                               const char *aToDataFlavor, nsISupports **aToData)
 {
-  if ( !aToData || !aDataToLen )
+  if ( !aToData )
     return NS_ERROR_INVALID_ARG;
 
   nsresult rv = NS_OK;
   *aToData = nullptr;
-  *aDataToLen = 0;
 
   if ( !nsCRT::strcmp(aFromDataFlavor, kHTMLMime) ) {
     nsAutoCString toFlavor ( aToDataFlavor );
@@ -132,16 +131,12 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
       if (toFlavor.Equals(kHTMLMime)) {
         int32_t dataLen = dataStr.Length() * 2;
         nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor, dataStr.get(), dataLen, aToData );
-        if ( *aToData )
-          *aDataToLen = dataLen;
       } else {
         nsAutoString outStr;
         res = ConvertFromHTMLToUnicode(dataStr, outStr);
         if (NS_SUCCEEDED(res)) {
           int32_t dataLen = outStr.Length() * 2;
           nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor, outStr.get(), dataLen, aToData );
-          if ( *aToData )
-            *aDataToLen = dataLen;
         }
       }
     } // else if HTML or Unicode
@@ -150,8 +145,6 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
       if ( NS_SUCCEEDED(ConvertFromHTMLToAOLMail(dataStr, outStr)) ) {
         int32_t dataLen = outStr.Length() * 2;
         nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor, outStr.get(), dataLen, aToData );
-        if ( *aToData )
-          *aDataToLen = dataLen;
       }
     } // else if AOL mail
     else {

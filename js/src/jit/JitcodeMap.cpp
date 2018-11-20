@@ -1546,9 +1546,9 @@ JitcodeIonTable::findRegionEntry(uint32_t nativeOffset) const
             JitcodeRegionEntry nextEntry = regionEntry(i);
             MOZ_ASSERT(nextEntry.nativeOffset() >= previousEntry.nativeOffset());
 
-            // See note in binary-search code below about why we use '<=' here instead of
-            // '<'.  Short explanation: regions are closed at their ending addresses,
-            // and open at their starting addresses.
+            // See note in binary-search code below about why we use '<=' here
+            // instead of '<'.  Short explanation: regions are closed at their
+            // ending addresses, and open at their starting addresses.
             if (nativeOffset <= nextEntry.nativeOffset()) {
                 return i-1;
             }

@@ -456,11 +456,12 @@ JitRuntime::generateArgumentsRectifier(MacroAssembler& masm)
     masm.as_dsubu(t1, numArgsReg, s3);
 
     // Caller:
-    // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]] <- sp <- t2
+    // [arg2] [arg1] [this] [ [argc] [callee] [descr] [raddr] ] <- sp <- t2
     // '------ s3 -------'
     //
     // Rectifier frame:
-    // [undef] [undef] [undef] [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]]
+    // [undef] [undef] [undef] [arg2] [arg1] [this] [ [argc] [callee]
+    //                                                [descr] [raddr] ]
     // '-------- t1 ---------' '------- s3 -------'
 
     // Copy number of actual arguments into numActArgsReg
@@ -529,11 +530,12 @@ JitRuntime::generateArgumentsRectifier(MacroAssembler& masm)
     }
 
     // Caller:
-    // [arg2] [arg1] [this] [[argc] [callee] [descr] [raddr]] <- t2
+    // [arg2] [arg1] [this] [ [argc] [callee] [descr] [raddr] ] <- t2
     //
     //
     // Rectifier frame:
-    // [undef] [undef] [undef] [arg2] [arg1] [this] <- sp [[argc] [callee] [descr] [raddr]]
+    // [undef] [undef] [undef] [arg2] [arg1] [this] <- sp [ [argc] [callee]
+    //                                                      [descr] [raddr] ]
 
     // Construct sizeDescriptor.
     masm.subPtr(StackPointer, t2);
@@ -1205,7 +1207,8 @@ JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm, Label* profi
         masm.loadPtr(Address(scratch2, RectifierFrameLayout::offsetOfReturnAddress()), scratch3);
         masm.storePtr(scratch3, lastProfilingCallSite);
 
-        // scratch3 := RectFrame + Rect-Descriptor.Size + RectifierFrameLayout::Size()
+        // scratch3 := RectFrame + Rect-Descriptor.Size +
+        //             RectifierFrameLayout::Size()
         masm.as_daddu(scratch3, scratch2, scratch1);
         masm.addPtr(Imm32(RectifierFrameLayout::Size()), scratch3);
         masm.storePtr(scratch3, lastProfilingFrame);

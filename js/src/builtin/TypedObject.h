@@ -847,7 +847,8 @@ MOZ_MUST_USE bool ObjectIsOpaqueTypedObject(JSContext* cx, unsigned argc, Value*
  */
 MOZ_MUST_USE bool ObjectIsTransparentTypedObject(JSContext* cx, unsigned argc, Value* vp);
 
-/* Predicates on type descriptor objects.  In all cases, 'obj' must be a type descriptor. */
+// Predicates on type descriptor objects.  In all cases, 'obj' must be a type
+// descriptor.
 
 MOZ_MUST_USE bool TypeDescrIsSimpleType(JSContext*, unsigned argc, Value* vp);
 

@@ -79,6 +79,7 @@ using mozilla::PodCopy;
 // The following is a rough outline of the general struture of the tracing
 // internals.
 //
+/* clang-format off */
 //                                                                                              //
 //   .---------.    .---------.    .--------------------------.       .----------.              //
 //   |TraceEdge|    |TraceRoot|    |TraceManuallyBarrieredEdge|  ...  |TraceRange|   ... etc.   //
@@ -119,9 +120,10 @@ using mozilla::PodCopy;
 //     . . .   Static dispatch                                                                  //
 //     ======  Dispatch through a manual stack.                                                 //
 //                                                                                              //
+/* clang-format on */
 
 
-/*** Tracing Invariants **************************************************************************/
+/*** Tracing Invariants *****************************************************/
 
 #if defined(DEBUG)
 template<typename T>
@@ -396,7 +398,7 @@ js::gc::AssertRootMarkingPhase(JSTracer* trc)
 #endif
 
 
-/*** Tracing Interface ***************************************************************************/
+/*** Tracing Interface ******************************************************/
 
 template <typename T> T DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name);
 template <typename T> void DoMarking(GCMarker* gcmarker, T* thing);
@@ -597,7 +599,7 @@ js::gc::TraceRangeInternal(JSTracer* trc, size_t len, T* vec, const char* name)
 }
 
 
-/*** GC Marking Interface *************************************************************************/
+/*** GC Marking Interface ***************************************************/
 
 namespace js {
 
@@ -960,7 +962,7 @@ js::GCMarker::mark(T* thing)
 }
 
 
-/*** Inline, Eager GC Marking *********************************************************************/
+/*** Inline, Eager GC Marking ***********************************************/
 
 // Each of the eager, inline marking paths is directly preceeded by the
 // out-of-line, generic tracing code for comparison. Both paths must end up
@@ -1620,7 +1622,7 @@ VisitTraceList(F f, const int32_t* traceList, uint8_t* memory, Args&&... args)
 }
 
 
-/*** Mark-stack Marking ***************************************************************************/
+/*** Mark-stack Marking *****************************************************/
 
 bool
 GCMarker::markUntilBudgetExhaused(SliceBudget& budget)
@@ -2012,7 +2014,7 @@ GCMarker::restoreValueArray(const MarkStack::SavedValueArray& savedArray)
 }
 
 
-/*** Mark Stack ***********************************************************************************/
+/*** Mark Stack *************************************************************/
 
 static_assert(sizeof(MarkStack::TaggedPtr) == sizeof(uintptr_t),
               "A TaggedPtr should be the same size as a pointer");
@@ -2464,7 +2466,7 @@ MarkStackIter::saveValueArray(const MarkStack::SavedValueArray& savedArray)
 }
 
 
-/*** GCMarker *************************************************************************************/
+/*** GCMarker ***************************************************************/
 
 /*
  * ExpandWeakMaps: the GC is recomputing the liveness of WeakMap entries by
@@ -2727,7 +2729,7 @@ GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 }
 
 
-/*** Tenuring Tracer *****************************************************************************/
+/*** Tenuring Tracer ********************************************************/
 
 namespace js {
 template <typename T>
@@ -3322,7 +3324,7 @@ js::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src, AllocKind 
 }
 
 
-/*** IsMarked / IsAboutToBeFinalized **************************************************************/
+/*** IsMarked / IsAboutToBeFinalized ****************************************/
 
 template <typename T>
 static inline void
@@ -3502,7 +3504,7 @@ FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_INTERNAL_MARKING_FUNCTIONS)
 } /* namespace js */
 
 
-/*** Cycle Collector Barrier Implementation *******************************************************/
+/*** Cycle Collector Barrier Implementation *********************************/
 
 /*
  * The GC and CC are run independently. Consequently, the following sequence of

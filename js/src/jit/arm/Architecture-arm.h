@@ -284,6 +284,7 @@ class FloatRegisters
     static const uint32_t TotalPhys = 32;
     static uint32_t ActualTotalPhys();
 
+    /* clang-format off */
     // ARM float registers overlap in a way that for 1 double registers, in the
     // range d0-d15, we have 2 singles register in the range s0-s31. d16-d31
     // have no single register aliases.  The aliasing rule state that d{n}
@@ -315,6 +316,7 @@ class FloatRegisters
     //        |        d{n}       |
     //        | s{2n+1} |  s{2n}  |
     //
+    /* clang-format on */
     typedef uint64_t SetType;
     static const SetType AllSingleMask = (1ull << TotalSingle) - 1;
     static const SetType AllDoubleMask = ((1ull << TotalDouble) - 1) << TotalSingle;
@@ -557,10 +559,10 @@ class VFPRegister
     // to know if a register is available or not, as we have the following
     // relations:
     //
-    //   d0.alignedOrDominatedAliasedSet() ==
-    //       s0.alignedOrDominatedAliasedSet() | s1.alignedOrDominatedAliasedSet()
+    //  d0.alignedOrDominatedAliasedSet() ==
+    //      s0.alignedOrDominatedAliasedSet() | s1.alignedOrDominatedAliasedSet()
     //
-    //   s0.alignedOrDominatedAliasedSet() & s1.alignedOrDominatedAliasedSet() == 0
+    //  s0.alignedOrDominatedAliasedSet() & s1.alignedOrDominatedAliasedSet() == 0
     //
     SetType alignedOrDominatedAliasedSet() const {
         if (isSingle()) {
@@ -636,6 +638,7 @@ VFPRegister::AllocatableAsIndexableSet<RegTypeName::Float32>(SetType set)
 template <> inline VFPRegister::SetType
 VFPRegister::AllocatableAsIndexableSet<RegTypeName::Float64>(SetType set)
 {
+    /* clang-format off */
     // An allocatable float register set is represented as follow:
     //
     // uuuu uuuu uuuu uuuu dddd dddd dddd dddd ssss ssss ssss ssss ssss ssss ssss ssss
@@ -656,6 +659,7 @@ VFPRegister::AllocatableAsIndexableSet<RegTypeName::Float64>(SetType set)
     // double registers which do not have all the single register that compose
     // them. As d{n} bit is set when s{2n} is available, we only need to take
     // s{2n+1} into account.
+    /* clang-format on */
 
     // Convert  s7s6s5s4 s3s2s1s0  into  s7s5s3s1, for all s0-s31.
     SetType s2d = AllocatableAsIndexableSet<RegTypeName::Float32>(set);

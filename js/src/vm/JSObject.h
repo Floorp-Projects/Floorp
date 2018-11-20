@@ -33,7 +33,7 @@ namespace gc {
 class RelocationOverlay;
 } // namespace gc
 
-/******************************************************************************/
+/****************************************************************************/
 
 class GlobalObject;
 class NewObjectCache;

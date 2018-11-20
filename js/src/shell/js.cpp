@@ -9876,7 +9876,8 @@ dom_constructor(JSContext* cx, unsigned argc, JS::Value* vp)
 static bool
 InstanceClassHasProtoAtDepth(const Class* clasp, uint32_t protoID, uint32_t depth)
 {
-    /* There's only a single (fake) DOM object in the shell, so just return true. */
+    // There's only a single (fake) DOM object in the shell, so just return
+    // true.
     return true;
 }
 

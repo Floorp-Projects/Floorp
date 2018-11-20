@@ -229,7 +229,8 @@ ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
                         uint32_t aRejectedReason)
 {
   MOZ_ASSERT(aWindow && aURI);
-  MOZ_ASSERT(aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
+  MOZ_ASSERT(aRejectedReason == 0 ||
+             aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN ||
@@ -517,7 +518,7 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipa
     LOG_SPEC(("Tracking principal (%s) hasn't been interacted with before, "
               "refusing to add a first-party storage permission to access it",
               _spec), trackingURI);
-    NotifyRejection(aParentWindow, blockReason);
+    NotifyBlockingDecision(aParentWindow, BlockingDecision::eBlock, blockReason);
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
@@ -1261,17 +1262,27 @@ AntiTrackingCommon::IsOnContentBlockingAllowList(nsIURI* aTopWinURI,
 }
 
 /* static */ void
-AntiTrackingCommon::NotifyRejection(nsIChannel* aChannel,
-                                    uint32_t aRejectedReason)
+AntiTrackingCommon::NotifyBlockingDecision(nsIChannel* aChannel,
+                                           BlockingDecision aDecision,
+                                           uint32_t aRejectedReason)
 {
-  MOZ_ASSERT(aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
+  MOZ_ASSERT(aRejectedReason == 0 ||
+             aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN ||
              aRejectedReason == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
+  MOZ_ASSERT(aDecision == BlockingDecision::eBlock ||
+             aDecision == BlockingDecision::eAllow);
 
   if (!aChannel) {
     return;
+  }
+
+  // When we allow loads, collapse all cookie related reason codes into STATE_COOKIES_LOADED.
+  bool sendCookieLoadedNotification = false;
+  if (aRejectedReason != nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT) {
+    sendCookieLoadedNotification = true;
   }
 
   // Can be called in EITHER the parent or child process.
@@ -1280,7 +1291,12 @@ AntiTrackingCommon::NotifyRejection(nsIChannel* aChannel,
   if (parentChannel) {
     // This channel is a parent-process proxy for a child process request.
     // Tell the child process channel to do this instead.
-    parentChannel->NotifyTrackingCookieBlocked(aRejectedReason);
+    if (aDecision == BlockingDecision::eBlock) {
+      parentChannel->NotifyTrackingCookieBlocked(aRejectedReason);
+    } else {
+      // Ignore the code related to fastblock
+      parentChannel->NotifyCookieAllowed();
+    }
     return;
   }
 
@@ -1302,22 +1318,38 @@ AntiTrackingCommon::NotifyRejection(nsIChannel* aChannel,
   nsCOMPtr<nsIURI> uri;
   aChannel->GetURI(getter_AddRefs(uri));
 
-  pwin->NotifyContentBlockingState(aRejectedReason, aChannel, true, uri);
+  if (aDecision == BlockingDecision::eBlock) {
+    pwin->NotifyContentBlockingState(aRejectedReason, aChannel, true, uri);
 
-  ReportBlockingToConsole(pwin, uri, aRejectedReason);
+    ReportBlockingToConsole(pwin, uri, aRejectedReason);
+  }
+
+  if (sendCookieLoadedNotification) {
+    pwin->NotifyContentBlockingState(nsIWebProgressListener::STATE_COOKIES_LOADED,
+                                     aChannel, false, uri);
+  }
 }
 
 /* static */ void
-AntiTrackingCommon::NotifyRejection(nsPIDOMWindowInner* aWindow,
-                                    uint32_t aRejectedReason)
+AntiTrackingCommon::NotifyBlockingDecision(nsPIDOMWindowInner* aWindow,
+                                           BlockingDecision aDecision,
+                                           uint32_t aRejectedReason)
 {
   MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
+  MOZ_ASSERT(aRejectedReason == 0 ||
+             aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
              aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN ||
              aRejectedReason == nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
+  MOZ_ASSERT(aDecision == BlockingDecision::eBlock ||
+             aDecision == BlockingDecision::eAllow);
 
+  // When we allow loads, collapse all cookie related reason codes into STATE_COOKIES_LOADED.
+  bool sendCookieLoadedNotification = false;
+  if (aRejectedReason != nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT) {
+    sendCookieLoadedNotification = true;
+  }
 
   nsCOMPtr<nsPIDOMWindowOuter> pwin = GetTopWindow(aWindow);
   if (!pwin) {
@@ -1343,9 +1375,16 @@ AntiTrackingCommon::NotifyRejection(nsPIDOMWindowInner* aWindow,
   }
   nsIURI* uri = document->GetDocumentURI();
 
-  pwin->NotifyContentBlockingState(aRejectedReason, channel, true, uri);
+  if (aDecision == BlockingDecision::eBlock) {
+    pwin->NotifyContentBlockingState(aRejectedReason, channel, true, uri);
 
-  ReportBlockingToConsole(pwin, uri, aRejectedReason);
+    ReportBlockingToConsole(pwin, uri, aRejectedReason);
+  }
+
+  if (sendCookieLoadedNotification) {
+    pwin->NotifyContentBlockingState(nsIWebProgressListener::STATE_COOKIES_LOADED,
+                                     channel, false, uri);
+  }
 }
 
 /* static */ void

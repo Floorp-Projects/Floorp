@@ -87,6 +87,7 @@ class MediaStreamTrackSourceGetter : public nsISupports {
   virtual ~MediaStreamTrackSourceGetter() {}
 };
 
+// clang-format off
 /**
  * DOM wrapper for MediaStreams.
  *
@@ -176,13 +177,16 @@ class MediaStreamTrackSourceGetter : public nsISupports {
  *
  * DOMStream A
  *           Input        Owned          Playback
- *            t1 ---------> t1                      <- MediaStreamTrack X
- * (removed) (pointing to t1 in A) t2 ---------> t2 ------------> t2     <-
- * MediaStreamTrack Y \                                       (pointing to t2 in
- * A) \                    ------> t3     <- MediaStreamTrack Z \ / (pointing to
- * t1 in B) DOMStream B    \                / Input \      Owned   / Playback t1
- * ---^-----> t1 ---                  <- MediaStreamTrack Z (removed) \    \
- * (pointing to t1 in B)
+ *            t1 ---------> t1                      <- MediaStreamTrack X (removed)
+ *                                                     (pointing to t1 in A)
+ *            t2 ---------> t2 ------------> t2     <- MediaStreamTrack Y
+ *             \                                       (pointing to t2 in A)
+ *              \                    ------> t3     <- MediaStreamTrack Z
+ *               \                  /                  (pointing to t1 in B)
+ * DOMStream B    \                /
+ *           Input \      Owned   /      Playback
+ *            t1 ---^-----> t1 ---                  <- MediaStreamTrack Z (removed)
+ *              \    \                                 (pointing to t1 in B)
  *               \    \
  * DOMStream A'   \    \
  *           Input \    \ Owned          Playback
@@ -191,6 +195,7 @@ class MediaStreamTrackSourceGetter : public nsISupports {
  *                    ----> t2 ------------> t2     <- MediaStreamTrack Z'
  *                                                     (pointing to t2 in A')
  */
+// clang-format on
 class DOMMediaStream
     : public DOMEventTargetHelper,
       public dom::PrincipalChangeObserver<dom::MediaStreamTrack>,

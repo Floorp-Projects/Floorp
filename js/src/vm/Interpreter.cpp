@@ -620,7 +620,8 @@ js::CallFromStack(JSContext* cx, const CallArgs& args)
     return InternalCall(cx, static_cast<const AnyInvokeArgs&>(args));
 }
 
-// ES7 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 7.3.12 Call.
+// ES7 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93
+// 7.3.12 Call.
 bool
 js::Call(JSContext* cx, HandleValue fval, HandleValue thisv, const AnyInvokeArgs& args,
          MutableHandleValue rval)
@@ -1852,8 +1853,9 @@ SetObjectElementOperation(JSContext* cx, HandleObject obj, HandleId id, HandleVa
                           HandleValue receiver, bool strict,
                           JSScript* script = nullptr, jsbytecode* pc = nullptr)
 {
-    // receiver != obj happens only at super[expr], where we expect to find the property
-    // People probably aren't building hashtables with |super| anyway.
+    // receiver != obj happens only at super[expr], where we expect to find the
+    // property. People probably aren't building hashtables with |super|
+    // anyway.
     TypeScript::MonitorAssign(cx, obj, id);
 
     if (obj->isNative() && JSID_IS_INT(id)) {
@@ -2692,7 +2694,7 @@ CASE(JSOP_BINDNAME)
     }
     ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
 
-    /* Assigning to an undeclared name adds a property to the global object. */
+    // Assigning to an undeclared name adds a property to the global object.
     ReservedRooted<JSObject*> env(&rootObject1);
     if (!LookupNameUnqualified(cx, name, envChain, &env)) {
         goto error;

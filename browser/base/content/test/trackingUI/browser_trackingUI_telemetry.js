@@ -51,7 +51,7 @@ add_task(async function testShieldHistogram() {
   getShieldHistogram().clear();
 
   await promiseTabLoadEvent(tab, BENIGN_PAGE);
-  is(getShieldCounts()[0], 1, "Page loads without tracking");
+  is(getShieldCounts()[0], 2, "Page loads without tracking");
 
   await promiseTabLoadEvent(tab, TRACKING_PAGE);
   // Note that right now the shield histogram is not measuring what

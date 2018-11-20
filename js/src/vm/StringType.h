@@ -48,6 +48,7 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
 
 } /* namespace js */
 
+// clang-format off
 /*
  * [SMDOC] JavaScript Strings
  *
@@ -99,9 +100,9 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  *    string (JSExternalString) can be created whose chars are managed by the
  *    JSAPI client.
  *
- *  - To avoid using two bytes per character for every string, string characters
- *    are stored as Latin1 instead of TwoByte if all characters are representable
- *    in Latin1.
+ *  - To avoid using two bytes per character for every string, string
+ *    characters are stored as Latin1 instead of TwoByte if all characters are
+ *    representable in Latin1.
  *
  *  - To avoid slow conversions from strings to integer indexes, we cache 16 bit
  *    unsigned indexes on strings representing such numbers.
@@ -160,6 +161,7 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  * The ensureX() operations mutate 'this' in place to effectively the type to be
  * at least X (e.g., ensureLinear will change a JSRope to be a JSFlatString).
  */
+// clang-format on
 
 class JSString : public js::gc::Cell
 {
@@ -1166,8 +1168,8 @@ class JSFatInlineString : public JSInlineString
     template<typename CharT>
     static bool lengthFits(size_t length);
 
-    /* Only called by the GC for strings with the AllocKind::FAT_INLINE_STRING kind. */
-
+    // Only called by the GC for strings with the AllocKind::FAT_INLINE_STRING
+    // kind.
     MOZ_ALWAYS_INLINE void finalize(js::FreeOp* fop);
 };
 
@@ -1192,23 +1194,19 @@ class JSExternalString : public JSLinearString
         return d.s.u3.externalFinalizer;
     }
 
-    /*
-     * External chars are never allocated inline or in the nursery, so we can
-     * safely expose this without requiring an AutoCheckCannotGC argument.
-     */
+    // External chars are never allocated inline or in the nursery, so we can
+    // safely expose this without requiring an AutoCheckCannotGC argument.
     const char16_t* twoByteChars() const {
         return rawTwoByteChars();
     }
 
-    /* Only called by the GC for strings with the AllocKind::EXTERNAL_STRING kind. */
-
+    // Only called by the GC for strings with the AllocKind::EXTERNAL_STRING
+    // kind.
     inline void finalize(js::FreeOp* fop);
 
-    /*
-     * Free the external chars and allocate a new buffer, converting this to a
-     * flat string (which still lives in an AllocKind::EXTERNAL_STRING
-     * arena).
-     */
+    // Free the external chars and allocate a new buffer, converting this to a
+    // flat string (which still lives in an AllocKind::EXTERNAL_STRING
+    // arena).
     JSFlatString* ensureFlat(JSContext* cx);
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
@@ -1692,7 +1690,7 @@ JSString*
 SubstringKernel(JSContext* cx, HandleString str, int32_t beginInt, int32_t lengthInt);
 
 
-/*** Conversions *********************************************************************************/
+/*** Conversions ************************************************************/
 
 /*
  * Convert a string to a printable C string.

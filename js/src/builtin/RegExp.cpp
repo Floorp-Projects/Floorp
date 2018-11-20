@@ -50,7 +50,8 @@ js::CreateRegExpMatchResult(JSContext* cx, HandleString input, const MatchPairs&
      *  index:          start index for the match
      */
 
-    /* Get the templateObject that defines the shape and type of the output object */
+    // Get the templateObject that defines the shape and type of the output
+    // object.
     JSObject* templateObject = cx->realm()->regExps.getOrCreateMatchResultTemplateObject(cx);
     if (!templateObject) {
         return false;
@@ -59,19 +60,19 @@ js::CreateRegExpMatchResult(JSContext* cx, HandleString input, const MatchPairs&
     size_t numPairs = matches.length();
     MOZ_ASSERT(numPairs > 0);
 
-    /* Step 17. */
+    // Step 17.
     RootedArrayObject arr(cx, NewDenseFullyAllocatedArrayWithTemplate(cx, numPairs, templateObject));
     if (!arr) {
         return false;
     }
 
-    /* Steps 22-24.
-     * Store a Value for each pair. */
+    // Steps 22-24.
+    // Store a Value for each pair.
     for (size_t i = 0; i < numPairs; i++) {
         const MatchPair& pair = matches[i];
 
         if (pair.isUndefined()) {
-            MOZ_ASSERT(i != 0); /* Since we had a match, first pair must be present. */
+            MOZ_ASSERT(i != 0); // Since we had a match, first pair must be present.
             arr->setDenseInitializedLength(i + 1);
             arr->initDenseElement(i, UndefinedValue());
         } else {
@@ -84,12 +85,12 @@ js::CreateRegExpMatchResult(JSContext* cx, HandleString input, const MatchPairs&
         }
     }
 
-    /* Step 20 (reordered).
-     * Set the |index| property. */
+    // Step 20 (reordered).
+    // Set the |index| property.
     arr->setSlot(RegExpRealm::MatchResultObjectIndexSlot, Int32Value(matches[0].start));
 
-    /* Step 21 (reordered).
-     * Set the |input| property. */
+    // Step 21 (reordered).
+    // Set the |input| property.
     arr->setSlot(RegExpRealm::MatchResultObjectInputSlot, StringValue(input));
 
 #ifdef DEBUG
@@ -106,7 +107,7 @@ js::CreateRegExpMatchResult(JSContext* cx, HandleString input, const MatchPairs&
     MOZ_ASSERT(test == arr->getSlot(RegExpRealm::MatchResultObjectInputSlot));
 #endif
 
-    /* Step 25. */
+    // Step 25.
     rval.setObject(*arr);
     return true;
 }

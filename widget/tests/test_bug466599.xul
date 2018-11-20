@@ -66,12 +66,11 @@ function readFromClipboard()
   trans.addDataFlavor('text/html');
   clip.getData(trans,clipid.kGlobalClipboard);
   var str = new Object();
-  var strLength = new Object();
-  trans.getTransferData("text/html",str,strLength);
+  trans.getTransferData("text/html",str);
   if (str)
     str = str.value.QueryInterface(Ci.nsISupportsString);
   if (str)
-    pastetext = str.data.substring(0,strLength.value / 2);
+    pastetext = str.data;
   return pastetext;
 }
 

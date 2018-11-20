@@ -8696,13 +8696,15 @@ BytecodeEmitter::emitClass(ClassNode* classNode)
     //
     //   if defined <constructor> {
     //     if defined <BaseExpression> {
-    //       cons = DefineMethod(<constructor>, proto=homeObject, funProto=funProto);
+    //       cons = DefineMethod(<constructor>, proto=homeObject,
+    //                           funProto=funProto);
     //     } else {
     //       cons = DefineMethod(<constructor>, proto=homeObject);
     //     }
     //   } else {
     //     if defined <BaseExpression> {
-    //       cons = DefaultDerivedConstructor(proto=homeObject, funProto=funProto);
+    //       cons = DefaultDerivedConstructor(proto=homeObject,
+    //                                        funProto=funProto);
     //     } else {
     //       cons = DefaultConstructor(proto=homeObject);
     //     }

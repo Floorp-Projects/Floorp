@@ -22,7 +22,8 @@ using namespace js::jit;
 
 /* This method generates a trampoline on ARM64 for a c++ function with
  * the following signature:
- *   bool blah(void* code, int argc, Value* argv, JSObject* scopeChain, Value* vp)
+ *   bool blah(void* code, int argc, Value* argv,
+ *             JSObject* scopeChain, Value* vp)
  *   ...using standard AArch64 calling convention
  */
 void
@@ -968,7 +969,8 @@ JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm, Label* profi
         masm.storePtr(scratch2, lastProfilingCallSite);
 
         // Store return frame in lastProfilingFrame.
-        // scratch2 := masm.getStackPointer() + Descriptor.size*1 + JitFrameLayout::Size();
+        // scratch2 := masm.getStackPointer() + Descriptor.size*1 +
+        //             JitFrameLayout::Size();
         masm.Add(ARMRegister(scratch2, 64), masm.GetStackPointer64(), ARMRegister(scratch1, 64));
         masm.syncStackPtr();
         masm.addPtr(Imm32(JitFrameLayout::Size()), scratch2, scratch2);
@@ -1084,7 +1086,8 @@ JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm, Label* profi
         masm.loadPtr(Address(scratch2, RectifierFrameLayout::offsetOfReturnAddress()), scratch3);
         masm.storePtr(scratch3, lastProfilingCallSite);
 
-        // scratch3 := RectFrame + Rect-Descriptor.Size + RectifierFrameLayout::Size()
+        // scratch3 := RectFrame + Rect-Descriptor.Size +
+        //             RectifierFrameLayout::Size()
         masm.addPtr(scratch2, scratch1, scratch3);
         masm.add32(Imm32(RectifierFrameLayout::Size()), scratch3);
         masm.storePtr(scratch3, lastProfilingFrame);

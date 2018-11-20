@@ -29,7 +29,7 @@ using mozilla::NumberEqualsInt32;
 using JS::DoubleNaNValue;
 
 
-/*** HashableValue *******************************************************************************/
+/*** HashableValue **********************************************************/
 
 bool
 HashableValue::setValue(JSContext* cx, HandleValue v)
@@ -138,7 +138,7 @@ HashableValue::trace(JSTracer* trc) const
 }
 
 
-/*** MapIterator *********************************************************************************/
+/*** MapIterator ************************************************************/
 
 namespace {
 
@@ -410,7 +410,7 @@ MapIteratorObject::createResultPair(JSContext* cx)
 }
 
 
-/*** Map *****************************************************************************************/
+/*** Map ********************************************************************/
 
 const ClassOps MapObject::classOps_ = {
     nullptr, // addProperty
@@ -1037,7 +1037,7 @@ MapObject::clear(JSContext* cx, HandleObject obj)
 }
 
 
-/*** SetIterator *********************************************************************************/
+/*** SetIterator ************************************************************/
 
 static const ClassOps SetIteratorObjectClassOps = {
     nullptr, /* addProperty */
@@ -1268,7 +1268,7 @@ SetIteratorObject::createResult(JSContext* cx)
 }
 
 
-/*** Set *****************************************************************************************/
+/*** Set ********************************************************************/
 
 const ClassOps SetObject::classOps_ = {
     nullptr, // addProperty
@@ -1749,7 +1749,7 @@ SetObject::clear(JSContext* cx, unsigned argc, Value* vp)
     return CallNonGenericMethod(cx, is, clear_impl, args);
 }
 
-/*** JS static utility functions *********************************************/
+/*** JS static utility functions ********************************************/
 
 static bool
 forEach(const char* funcName, JSContext *cx, HandleObject obj, HandleValue callbackFn, HandleValue thisArg)
@@ -1840,7 +1840,7 @@ CallObjFunc(bool(*ObjFunc)(JSContext* cx, Iter kind,
     return true;
 }
 
-/*** JS public APIs **********************************************************/
+/*** JS public APIs *********************************************************/
 
 JS_PUBLIC_API JSObject*
 JS::NewMapObject(JSContext* cx)
