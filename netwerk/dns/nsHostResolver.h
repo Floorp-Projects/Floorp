@@ -135,8 +135,6 @@ protected:
     // but a request to refresh it will be made.
     mozilla::TimeStamp mGraceStart;
 
-    const nsCString mOriginSuffix;
-
     mozilla::net::ResolverMode mResolverMode;
 
     uint16_t  mResolving;  // counter of outstanding resolving calls
