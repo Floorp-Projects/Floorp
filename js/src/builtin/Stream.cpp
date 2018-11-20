@@ -359,8 +359,9 @@ class TeeState : public NativeObject
      * apart from ensuring that the values are properly wrapped before storing
      * them.
      *
-     * Promise is always created in TeeState::create below, so is guaranteed
-     * to be in the same compartment as the TeeState instance itself.
+     * CancelPromise is always created in TeeState::create below, so is
+     * guaranteed to be in the same compartment as the TeeState instance
+     * itself.
      *
      * Stream can be from another compartment. It is automatically wrapped
      * before storing it and unwrapped upon retrieval. That means that
@@ -374,7 +375,7 @@ class TeeState : public NativeObject
         Slot_Flags = 0,
         Slot_Reason1,
         Slot_Reason2,
-        Slot_Promise,
+        Slot_CancelPromise,
         Slot_Stream,
         Slot_Branch1,
         Slot_Branch2,
@@ -426,8 +427,8 @@ class TeeState : public NativeObject
         return getFixedSlot(Slot_Reason2);
     }
 
-    PromiseObject* promise() {
-        return &getFixedSlot(Slot_Promise).toObject().as<PromiseObject>();
+    PromiseObject* cancelPromise() {
+        return &getFixedSlot(Slot_CancelPromise).toObject().as<PromiseObject>();
     }
 
     ReadableStreamDefaultController* branch1() {
@@ -464,13 +465,13 @@ class TeeState : public NativeObject
             return nullptr;
         }
 
-        Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
-        if (!promise) {
+        Rooted<PromiseObject*> cancelPromise(cx, PromiseObject::createSkippingExecutor(cx));
+        if (!cancelPromise) {
             return nullptr;
         }
 
         state->setFixedSlot(Slot_Flags, Int32Value(0));
-        state->setFixedSlot(Slot_Promise, ObjectValue(*promise));
+        state->setFixedSlot(Slot_CancelPromise, ObjectValue(*cancelPromise));
         RootedObject wrappedStream(cx, unwrappedStream);
         if (!cx->compartment()->wrap(cx, &wrappedStream)) {
             return nullptr;
@@ -872,7 +873,7 @@ CLASS_SPEC(ReadableStream, 0, SlotCount, 0, 0, JS_NULL_CLASS_OPS);
 // Always inlined.
 
 // Streams spec, 3.3.2. AcquireReadableStreamDefaultReader ( stream )
-// Always inlined.
+// Always inlined. See CreateReadableStreamDefaultReader.
 
 // Streams spec, 3.3.3. CreateReadableStream ( startAlgorithm, pullAlgorithm, cancelAlgorithm [, highWaterMark [, sizeAlgorithm ] ] )
 // Not implemented.
@@ -1056,6 +1057,10 @@ ReadableStreamTee_Pull(JSContext* cx, Handle<TeeState*> unwrappedTeeState)
 
 /**
  * Cancel one branch of a tee'd stream with the given |reason_|.
+ *
+ * Streams spec, 3.3.9. ReadableStreamTee steps 13 and 14: "Let
+ * cancel1Algorithm/cancel2Algorithm be the following steps, taking a reason
+ * argument:"
  */
 static MOZ_MUST_USE JSObject*
 ReadableStreamTee_Cancel(JSContext* cx,
@@ -1063,7 +1068,6 @@ ReadableStreamTee_Cancel(JSContext* cx,
                          Handle<ReadableStreamDefaultController*> unwrappedBranch,
                          HandleValue reason)
 {
-    // Step 1: Let stream be F.[[stream]] and teeState be F.[[teeState]].
     Rooted<ReadableStream*> unwrappedStream(cx,
         UnwrapInternalSlot<ReadableStream>(cx, unwrappedTeeState, TeeState::Slot_Stream));
     if (!unwrappedStream) {
@@ -1072,8 +1076,8 @@ ReadableStreamTee_Cancel(JSContext* cx,
 
     bool bothBranchesCanceled = false;
 
-    // Step 2: Set teeState.[[canceled1]] to true.
-    // Step 3: Set teeState.[[reason1]] to reason.
+    // Step 13/14.a: Set canceled1/canceled2 to true.
+    // Step 13/14.b: Set reason1/reason2 to reason.
     {
         RootedValue unwrappedReason(cx, reason);
         {
@@ -1092,11 +1096,10 @@ ReadableStreamTee_Cancel(JSContext* cx,
         }
     }
 
-    // Step 4: If teeState.[[canceled1]] is true,
-    // Step 4: If teeState.[[canceled2]] is true,
+    // Step 13/14.c: If canceled2/canceled1 is true,
     if (bothBranchesCanceled) {
-        // Step a: Let compositeReason be
-        //         ! CreateArrayFromList(« teeState.[[reason1]], teeState.[[reason2]] »).
+        // Step 13/14.c.i: Let compositeReason be
+        //                 ! CreateArrayFromList(« reason1, reason2 »).
         RootedNativeObject compositeReason(cx, NewDenseFullyAllocatedArray(cx, 2));
         if (!compositeReason) {
             return nullptr;
@@ -1113,36 +1116,40 @@ ReadableStreamTee_Cancel(JSContext* cx,
         compositeReason->initDenseElement(1, reason2);
         RootedValue compositeReasonVal(cx, ObjectValue(*compositeReason));
 
-        // Step b: Let cancelResult be ! ReadableStreamCancel(stream, compositeReason).
+        // Step 13/14.c.ii: Let cancelResult be
+        //                  ! ReadableStreamCancel(stream, compositeReason).
+        // In our implementation, this can fail with OOM. The best course then
+        // is to reject cancelPromise with an OOM error.
         RootedObject cancelResult(cx,
             ::ReadableStreamCancel(cx, unwrappedStream, compositeReasonVal));
         {
-            Rooted<PromiseObject*> promise(cx, unwrappedTeeState->promise());
-            AutoRealm ar(cx, promise);
+            Rooted<PromiseObject*> cancelPromise(cx, unwrappedTeeState->cancelPromise());
+            AutoRealm ar(cx, cancelPromise);
 
             if (!cancelResult) {
-                if (!RejectPromiseWithPendingError(cx, promise)) {
+                // Handle the OOM case mentioned above.
+                if (!RejectPromiseWithPendingError(cx, cancelPromise)) {
                     return nullptr;
                 }
             } else {
-                // Step c: Resolve teeState.[[promise]] with cancelResult.
+                // Step 13/14.c.iii: Resolve cancelPromise with cancelResult.
                 RootedValue resultVal(cx, ObjectValue(*cancelResult));
                 if (!cx->compartment()->wrap(cx, &resultVal)) {
                     return nullptr;
                 }
-                if (!PromiseObject::resolve(cx, promise, resultVal)) {
+                if (!PromiseObject::resolve(cx, cancelPromise, resultVal)) {
                     return nullptr;
                 }
             }
         }
     }
 
-    // Step 5: Return teeState.[[promise]].
-    RootedObject promise(cx, unwrappedTeeState->promise());
-    if (!cx->compartment()->wrap(cx, &promise)) {
+    // Step 13/14.d: Return cancelPromise.
+    RootedObject cancelPromise(cx, unwrappedTeeState->cancelPromise());
+    if (!cx->compartment()->wrap(cx, &cancelPromise)) {
         return nullptr;
     }
-    return promise;
+    return cancelPromise;
 }
 
 static MOZ_MUST_USE bool
