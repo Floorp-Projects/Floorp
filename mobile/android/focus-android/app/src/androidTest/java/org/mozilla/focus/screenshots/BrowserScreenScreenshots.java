@@ -152,7 +152,7 @@ public class BrowserScreenScreenshots extends ScreenshotTest {
             Screengrab.screenshot("Suggestion_unavailable_dialog");
             onView(withId(R.id.dismiss_no_suggestions_message))
                     .perform(click());
-        } catch (AssertionError dne) { }
+        } catch (AssertionError dne) {}
 
         onView(withId(R.id.urlView))
                 .check(matches(isDisplayed()))
