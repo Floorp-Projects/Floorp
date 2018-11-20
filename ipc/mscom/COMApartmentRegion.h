@@ -43,6 +43,11 @@ public:
     return SUCCEEDED(mInitResult);
   }
 
+  HRESULT GetHResult() const
+  {
+    return mInitResult;
+  }
+
 private:
   COMApartmentRegion(const COMApartmentRegion&) = delete;
   COMApartmentRegion& operator=(const COMApartmentRegion&) = delete;
