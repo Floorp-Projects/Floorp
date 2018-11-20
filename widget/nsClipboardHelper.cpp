@@ -97,8 +97,7 @@ nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
   NS_ENSURE_TRUE(genericData, NS_ERROR_FAILURE);
 
   // set the transfer data
-  rv = trans->SetTransferData(kUnicodeMime, genericData,
-                              aString.Length() * 2);
+  rv = trans->SetTransferData(kUnicodeMime, genericData);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // put the transferable on the clipboard

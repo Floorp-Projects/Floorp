@@ -730,7 +730,7 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
       }
       
       NS_ASSERTION ( genericDataWrapper, "About to put null data into the transferable" );
-      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper, dataLen);
+      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper);
       res = NS_OK;
 
       // we found one, get out of the loop
