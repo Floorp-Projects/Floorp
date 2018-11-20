@@ -12,6 +12,7 @@ from __future__ import with_statement
 
 import bisect
 import collections
+import json
 import os
 import re
 import subprocess
@@ -187,7 +188,7 @@ def addressToSymbol(file, address, symbolsDir):
 line_re = re.compile("^(.*#\d+: )(.+)\[(.+) \+(0x[0-9A-Fa-f]+)\](.*)$")
 
 
-def fixSymbols(line, symbolsDir):
+def fixSymbols(line, symbolsDir, jsonEscape=False):
     result = line_re.match(line)
     if result is not None:
         (before, fn, file, address, after) = result.groups()
@@ -195,6 +196,8 @@ def fixSymbols(line, symbolsDir):
         symbol = addressToSymbol(file, address, symbolsDir)
         if not symbol:
             symbol = "%s + 0x%x" % (os.path.basename(file), address)
+        if jsonEscape:
+            symbol = json.dumps(symbol)[1:-1]   # [1:-1] strips the quotes
         return before + symbol + after + "\n"
     else:
         return line
