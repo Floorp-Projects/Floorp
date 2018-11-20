@@ -141,9 +141,7 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
   NS_ENSURE_ARG_MIN(aItemId, 1);
   NS_ENSURE_ARG(aValue);
 
-  uint16_t dataType;
-  nsresult rv = aValue->GetDataType(&dataType);
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint16_t dataType = aValue->GetDataType();
   BookmarkData bookmark;
 
   switch (dataType) {
@@ -155,7 +153,7 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
     case nsIDataType::VTYPE_UINT32:
     case nsIDataType::VTYPE_BOOL: {
       int32_t valueInt;
-      rv = aValue->GetAsInt32(&valueInt);
+      nsresult rv = aValue->GetAsInt32(&valueInt);
       if (NS_SUCCEEDED(rv)) {
         NS_ENSURE_SUCCESS(rv, rv);
         rv = SetAnnotationInt32Internal(aItemId, &bookmark, aName,
@@ -169,7 +167,7 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
     case nsIDataType::VTYPE_INT64:
     case nsIDataType::VTYPE_UINT64: {
       int64_t valueLong;
-      rv = aValue->GetAsInt64(&valueLong);
+      nsresult rv = aValue->GetAsInt64(&valueLong);
       if (NS_SUCCEEDED(rv)) {
         NS_ENSURE_SUCCESS(rv, rv);
         rv = SetAnnotationInt64Internal(aItemId, &bookmark, aName,
@@ -183,7 +181,7 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
     case nsIDataType::VTYPE_FLOAT:
     case nsIDataType::VTYPE_DOUBLE: {
       double valueDouble;
-      rv = aValue->GetAsDouble(&valueDouble);
+      nsresult rv = aValue->GetAsDouble(&valueDouble);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = SetAnnotationDoubleInternal(aItemId, &bookmark,
                                        aName, valueDouble, aFlags, aExpiration);
@@ -200,7 +198,7 @@ nsAnnotationService::SetItemAnnotation(int64_t aItemId,
     case nsIDataType::VTYPE_CSTRING:
     case nsIDataType::VTYPE_ASTRING: {
       nsAutoString stringValue;
-      rv = aValue->GetAsAString(stringValue);
+      nsresult rv = aValue->GetAsAString(stringValue);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = SetAnnotationStringInternal(aItemId, &bookmark, aName,
                                        stringValue, aFlags, aExpiration);

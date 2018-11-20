@@ -171,9 +171,7 @@ convertVariantToStorageVariant(nsIVariant* aVariant)
   if (!aVariant)
     return new NullVariant();
 
-  uint16_t dataType;
-  nsresult rv = aVariant->GetDataType(&dataType);
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  uint16_t dataType = aVariant->GetDataType();
 
   switch (dataType) {
     case nsIDataType::VTYPE_BOOL:
@@ -186,14 +184,14 @@ convertVariantToStorageVariant(nsIVariant* aVariant)
     case nsIDataType::VTYPE_INT64:
     case nsIDataType::VTYPE_UINT64: {
       int64_t v;
-      rv = aVariant->GetAsInt64(&v);
+      nsresult rv = aVariant->GetAsInt64(&v);
       NS_ENSURE_SUCCESS(rv, nullptr);
       return new IntegerVariant(v);
     }
     case nsIDataType::VTYPE_FLOAT:
     case nsIDataType::VTYPE_DOUBLE: {
       double v;
-      rv = aVariant->GetAsDouble(&v);
+      nsresult rv = aVariant->GetAsDouble(&v);
       NS_ENSURE_SUCCESS(rv, nullptr);
       return new FloatVariant(v);
     }
@@ -203,7 +201,7 @@ convertVariantToStorageVariant(nsIVariant* aVariant)
     case nsIDataType::VTYPE_UTF8STRING:
     case nsIDataType::VTYPE_CSTRING: {
       nsCString v;
-      rv = aVariant->GetAsAUTF8String(v);
+      nsresult rv = aVariant->GetAsAUTF8String(v);
       NS_ENSURE_SUCCESS(rv, nullptr);
       return new UTF8TextVariant(v);
     }
@@ -212,7 +210,7 @@ convertVariantToStorageVariant(nsIVariant* aVariant)
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
     case nsIDataType::VTYPE_ASTRING: {
       nsString v;
-      rv = aVariant->GetAsAString(v);
+      nsresult rv = aVariant->GetAsAString(v);
       NS_ENSURE_SUCCESS(rv, nullptr);
       return new TextVariant(v);
     }
@@ -222,7 +220,7 @@ convertVariantToStorageVariant(nsIVariant* aVariant)
       uint32_t len;
       void *rawArray;
       // Note this copies the array data.
-      rv = aVariant->GetAsArray(&type, &iid, &len, &rawArray);
+      nsresult rv = aVariant->GetAsArray(&type, &iid, &len, &rawArray);
       NS_ENSURE_SUCCESS(rv, nullptr);
       if (type == nsIDataType::VTYPE_UINT8) {
         std::pair<uint8_t *, int> v(static_cast<uint8_t *>(rawArray), len);

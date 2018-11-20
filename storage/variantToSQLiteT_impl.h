@@ -21,8 +21,7 @@ variantToSQLiteT(T aObj,
   if (!aValue)
     return sqlite3_T_null(aObj);
 
-  uint16_t valueType;
-  aValue->GetDataType(&valueType);
+  uint16_t valueType = aValue->GetDataType();
   switch (valueType) {
     case nsIDataType::VTYPE_INT8:
     case nsIDataType::VTYPE_INT16:

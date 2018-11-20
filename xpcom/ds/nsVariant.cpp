@@ -1208,15 +1208,11 @@ nsDiscriminatedUnion::ConvertToArray(uint16_t* aType, nsIID* aIID,
 nsresult
 nsDiscriminatedUnion::SetFromVariant(nsIVariant* aValue)
 {
-  uint16_t type;
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   Cleanup();
 
-  rv = aValue->GetDataType(&type);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  uint16_t type = aValue->GetDataType();
 
   switch (type) {
     CASE__SET_FROM_VARIANT_VTYPE_CAST(VTYPE_INT8, (uint8_t*), mInt8Value,
@@ -1617,11 +1613,10 @@ nsVariantBase::nsVariantBase()
 // For all the data getters we just forward to the static (and sharable)
 // 'ConvertTo' functions.
 
-NS_IMETHODIMP
-nsVariantBase::GetDataType(uint16_t* aDataType)
+uint16_t
+nsVariantBase::GetDataType()
 {
-  *aDataType = mData.GetType();
-  return NS_OK;
+  return mData.GetType();
 }
 
 NS_IMETHODIMP
