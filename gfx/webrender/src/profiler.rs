@@ -1252,6 +1252,13 @@ impl ChangeIndicator {
         self.counter = (self.counter + 1) % 15;
     }
 
+    const WIDTH : f32 = 20.0;
+    const HEIGHT: f32 = 10.0;
+
+    pub fn width() -> f32 {
+      ChangeIndicator::WIDTH * 16.0
+    }
+
     pub fn draw(
         &self,
         x: f32, y: f32,
@@ -1259,14 +1266,12 @@ impl ChangeIndicator {
         debug_renderer: &mut DebugRenderer
     ) {
         let margin = 0.0;
-        let w = 10.0;
-        let h = 5.0;
-        let tx = self.counter as f32 * w;
+        let tx = self.counter as f32 * ChangeIndicator::WIDTH;
         debug_renderer.add_quad(
             x - margin,
             y - margin,
-            x + 15.0 * w + margin,
-            y + h + margin,
+            x + 15.0 * ChangeIndicator::WIDTH + margin,
+            y + ChangeIndicator::HEIGHT + margin,
             ColorU::new(0, 0, 0, 150),
             ColorU::new(0, 0, 0, 150),
         );
@@ -1274,8 +1279,8 @@ impl ChangeIndicator {
         debug_renderer.add_quad(
             x + tx,
             y,
-            x + tx + w,
-            y + h,
+            x + tx + ChangeIndicator::WIDTH,
+            y + ChangeIndicator::HEIGHT,
             color,
             ColorU::new(25, 25, 25, 255),
         );
