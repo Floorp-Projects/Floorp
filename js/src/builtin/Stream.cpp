@@ -1179,26 +1179,29 @@ TeeReaderClosedHandler(JSContext* cx, unsigned argc, Value* vp)
     Rooted<TeeState*> teeState(cx, TargetFromHandler<TeeState>(args));
     HandleValue reason = args.get(0);
 
-    // Step a: If teeState.[[closedOrErrored]] is false, then:
+    // Step a: If closedOrErrored is false, then:
     if (!teeState->closedOrErrored()) {
-        // Step a.iii: Set teeState.[[closedOrErrored]] to true.
+        // Step a.iii: Set closedOrErrored to true.
         // Reordered to ensure that internal errors in the other steps don't
         // leave the teeState in an undefined state.
         teeState->setClosedOrErrored();
 
-        // Step a.i: Perform ! ReadableStreamDefaultControllerErrorIfNeeded(pull.[[branch1]], r).
+        // Step a.i: Perform ! ReadableStreamDefaultControllerErrorIfNeeded(
+        //           branch1.[[readableStreamController]], r).
         Rooted<ReadableStreamDefaultController*> branch1(cx, teeState->branch1());
         if (!ReadableStreamDefaultControllerErrorIfNeeded(cx, branch1, reason)) {
             return false;
         }
 
-        // Step a.ii: Perform ! ReadableStreamDefaultControllerErrorIfNeeded(pull.[[branch2]], r).
+        // Step a.ii: Perform ! ReadableStreamDefaultControllerErrorIfNeeded(
+        //            branch2.[[readableStreamController]], r).
         Rooted<ReadableStreamDefaultController*> branch2(cx, teeState->branch2());
         if (!ReadableStreamDefaultControllerErrorIfNeeded(cx, branch2, reason)) {
             return false;
         }
     }
 
+    args.rval().setUndefined();
     return true;
 }
 
