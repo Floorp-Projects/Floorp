@@ -290,6 +290,10 @@ function JSPropertyProvider({
   const lastCompletionCharIndex = Math.max(lastDotIndex, lastOpeningBracketIndex);
   const startQuoteRegex = /^('|"|`)/;
 
+  // AST representation of the expression before the last access char (`.` or `[`).
+  let astExpression;
+  let matchProp = completionPart.slice(lastCompletionCharIndex + 1).trimLeft();
+
   // Catch literals like [1,2,3] or "foo" and return the matches from
   // their prototypes.
   // Don't run this is a worker, migrating to acorn should allow this
@@ -305,29 +309,36 @@ function JSPropertyProvider({
     // Finding the last expression since we've sliced up until the dot.
     // If there were parse errors this won't exist.
     if (lastBody) {
-      const expression = lastBody.expression;
+      astExpression = lastBody.expression;
       let matchingObject;
 
-      if (expression.type === "ArrayExpression") {
+      if (astExpression.type === "ArrayExpression") {
         matchingObject = Array.prototype;
-      } else if (expression.type === "Literal" && typeof expression.value === "string") {
+      } else if (
+        astExpression.type === "Literal" &&
+        typeof astExpression.value === "string"
+      ) {
         matchingObject = String.prototype;
-      } else if (expression.type === "Literal" && Number.isFinite(expression.value)) {
+      } else if (
+        astExpression.type === "Literal" &&
+        Number.isFinite(astExpression.value)
+      ) {
         // The parser rightfuly indicates that we have a number in some cases (e.g. `1.`),
         // but we don't want to return Number proto properties in that case since
         // the result would be invalid (i.e. `1.toFixed()` throws).
         // So if the expression value is an integer, it should not end with `{Number}.`
         // (but the following are fine: `1..`, `(1.).`).
         if (
-          !Number.isInteger(expression.value) ||
+          !Number.isInteger(astExpression.value) ||
           /\d[^\.]{0}\.$/.test(completionPart) === false
         ) {
           matchingObject = Number.prototype;
+        } else {
+          return null;
         }
       }
 
       if (matchingObject) {
-        const matchProp = completionPart.slice(lastCompletionCharIndex + 1).trimLeft();
         let search = matchProp;
 
         let elementAccessQuote;
@@ -351,15 +362,26 @@ function JSPropertyProvider({
   }
 
   // We are completing a variable / a property lookup.
-  const properties = completionPart.split(".");
-  let matchProp;
-  if (isElementAccess) {
-    const lastPart = properties[properties.length - 1];
-    const openBracketIndex = lastPart.lastIndexOf("[");
-    matchProp = lastPart.substr(openBracketIndex + 1);
-    properties[properties.length - 1] = lastPart.substring(0, openBracketIndex);
+  let properties = [];
+
+  if (astExpression) {
+    if (lastCompletionCharIndex > -1) {
+      properties = getPropertiesFromAstExpression(astExpression);
+
+      if (properties === null) {
+        return null;
+      }
+    }
   } else {
-    matchProp = properties.pop().trimLeft();
+    properties = completionPart.split(".");
+    if (isElementAccess) {
+      const lastPart = properties[properties.length - 1];
+      const openBracketIndex = lastPart.lastIndexOf("[");
+      matchProp = lastPart.substr(openBracketIndex + 1);
+      properties[properties.length - 1] = lastPart.substring(0, openBracketIndex);
+    } else {
+      matchProp = properties.pop().trimLeft();
+    }
   }
 
   let search = matchProp;
@@ -416,8 +438,11 @@ function JSPropertyProvider({
   // We get the rest of the properties recursively starting from the
   // Debugger.Object that wraps the first property
   for (let [index, prop] of properties.entries()) {
-    prop = prop.trim();
-    if (!prop) {
+    if (typeof prop === "string") {
+      prop = prop.trim();
+    }
+
+    if (prop === undefined || prop === null || prop === "") {
       return null;
     }
 
@@ -449,22 +474,53 @@ function JSPropertyProvider({
     }
   }
 
+  const prepareReturnedObject = matches => {
+    if (isElementAccess) {
+      // If it's an element access, we need to wrap properties in quotes (either the one
+      // the user already typed, or `"`).
+      matches = wrapMatchesInQuotes(matches, elementAccessQuote);
+    }
+    return {isElementAccess, matchProp, matches};
+  };
+
   // If the final property is a primitive
   if (typeof obj != "object") {
-    return {
-      isElementAccess,
-      matchProp,
-      matches: getMatchedProps(obj, search),
-    };
+    return prepareReturnedObject(getMatchedProps(obj, search));
   }
 
-  let matches = getMatchedPropsInDbgObject(obj, search);
-  if (isElementAccess) {
-    // If it's an element access, we need to wrap properties in quotes (either the one
-    // the user already typed, or `"`).
-    matches = wrapMatchesInQuotes(matches, elementAccessQuote);
+  return prepareReturnedObject(getMatchedPropsInDbgObject(obj, search));
+}
+
+/**
+ * @param {Object} ast: An AST representing a property access (e.g. `foo.bar["baz"].x`)
+ * @returns {Array|null} An array representing the property access
+ *                       (e.g. ["foo", "bar", "baz", "x"]).
+ */
+function getPropertiesFromAstExpression(ast) {
+  let result = [];
+  if (!ast) {
+    return result;
   }
-  return {isElementAccess, matchProp, matches};
+  const {type, property, object, name} = ast;
+  if (type === "ThisExpression") {
+    result.unshift("this");
+  } else if (type === "Identifier" && name) {
+    result.unshift(name);
+  } else if (type === "MemberExpression") {
+    if (property) {
+      if (property.type === "Identifier" && property.name) {
+        result.unshift(property.name);
+      } else if (property.type === "Literal") {
+        result.unshift(property.value);
+      }
+    }
+    if (object) {
+      result = (getPropertiesFromAstExpression(object) || []).concat(result);
+    }
+  } else {
+    return null;
+  }
+  return result;
 }
 
 function wrapMatchesInQuotes(matches, quote = `"`) {
