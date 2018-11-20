@@ -13,15 +13,19 @@
 
 extern crate atomic_refcell;
 extern crate cssparser;
-#[macro_use] extern crate cstr;
+#[macro_use]
+extern crate cstr;
 extern crate geckoservo;
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 extern crate malloc_size_of;
 extern crate num_traits;
 extern crate selectors;
 extern crate smallvec;
-#[macro_use] extern crate size_of_test;
-#[macro_use] extern crate style;
+#[macro_use]
+extern crate size_of_test;
+#[macro_use]
+extern crate style;
 extern crate style_traits;
 
 #[cfg(target_pointer_width = "64")]

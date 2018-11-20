@@ -1078,7 +1078,7 @@ describe("Top Sites Feed", () => {
       assert.calledTwice(fakeNewTabUtils.pinnedLinks.pin);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site1, 2);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site2, 1);
-      fakeNewTabUtils.pinnedLinks.pin.reset();
+      fakeNewTabUtils.pinnedLinks.pin.resetHistory();
       feed.insert({data: {index: 2, site: site1, draggedFromIndex: 5}});
       assert.calledTwice(fakeNewTabUtils.pinnedLinks.pin);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site1, 2);

@@ -11,19 +11,26 @@ use style::gecko::global_style_data::GLOBAL_STYLE_DATA;
 use style::gecko_bindings::bindings;
 use style::gecko_bindings::bindings::Gecko_LoadStyleSheet;
 use style::gecko_bindings::structs::{Loader, LoaderReusableStyleSheets};
-use style::gecko_bindings::structs::{StyleSheet as DomStyleSheet, SheetLoadData, SheetLoadDataHolder};
+use style::gecko_bindings::structs::{
+    SheetLoadData, SheetLoadDataHolder, StyleSheet as DomStyleSheet,
+};
 use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasBoxFFI, OwnedOrNull};
 use style::gecko_bindings::sugar::refptr::RefPtr;
 use style::media_queries::MediaList;
 use style::parser::ParserContext;
 use style::shared_lock::{Locked, SharedRwLock};
+use style::stylesheets::import_rule::ImportSheet;
 use style::stylesheets::{ImportRule, Origin, StylesheetLoader as StyleStylesheetLoader};
 use style::stylesheets::{StylesheetContents, UrlExtraData};
-use style::stylesheets::import_rule::ImportSheet;
 use style::use_counters::UseCounters;
 use style::values::CssUrl;
 
-pub struct StylesheetLoader(*mut Loader, *mut DomStyleSheet, *mut SheetLoadData, *mut LoaderReusableStyleSheets);
+pub struct StylesheetLoader(
+    *mut Loader,
+    *mut DomStyleSheet,
+    *mut SheetLoadData,
+    *mut LoaderReusableStyleSheets,
+);
 
 impl StylesheetLoader {
     pub fn new(
@@ -51,19 +58,27 @@ impl StyleStylesheetLoader for StylesheetLoader {
         // so this raw pointer will still be valid.
 
         let child_sheet = unsafe {
-            Gecko_LoadStyleSheet(self.0,
-                                 self.1,
-                                 self.2,
-                                 self.3,
-                                 url.0.clone().into_strong(),
-                                 media.into_strong())
+            Gecko_LoadStyleSheet(
+                self.0,
+                self.1,
+                self.2,
+                self.3,
+                url.0.clone().into_strong(),
+                media.into_strong(),
+            )
         };
 
-        debug_assert!(!child_sheet.is_null(),
-                      "Import rules should always have a strong sheet");
+        debug_assert!(
+            !child_sheet.is_null(),
+            "Import rules should always have a strong sheet"
+        );
         let sheet = unsafe { GeckoStyleSheet::from_addrefed(child_sheet) };
         let stylesheet = ImportSheet::new(sheet);
-        Arc::new(lock.wrap(ImportRule { url, source_location, stylesheet }))
+        Arc::new(lock.wrap(ImportRule {
+            url,
+            source_location,
+            stylesheet,
+        }))
     }
 }
 
@@ -104,9 +119,9 @@ impl AsyncStylesheetParser {
 
         let use_counters = if self.should_record_use_counters {
             Some(Box::new(UseCounters::default()))
-         } else {
-             None
-         };
+        } else {
+            None
+        };
 
         // Note: Parallel CSS parsing doesn't report CSS errors. When errors are
         // being logged, Gecko prevents the parallel parsing path from running.
@@ -147,14 +162,18 @@ impl StyleStylesheetLoader for AsyncStylesheetParser {
         media: Arc<Locked<MediaList>>,
     ) -> Arc<Locked<ImportRule>> {
         let stylesheet = ImportSheet::new_pending(self.origin, self.quirks_mode);
-        let rule = Arc::new(lock.wrap(ImportRule { url: url.clone(), source_location, stylesheet }));
+        let rule = Arc::new(lock.wrap(ImportRule {
+            url: url.clone(),
+            source_location,
+            stylesheet,
+        }));
 
         unsafe {
             bindings::Gecko_LoadStyleSheetAsync(
                 self.load_data.get(),
                 url.0.into_strong(),
                 media.into_strong(),
-                rule.clone().into_strong()
+                rule.clone().into_strong(),
             );
         }
 

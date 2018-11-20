@@ -29,7 +29,7 @@ describe("SimpleSnippet", () => {
   }
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     onBlockStub = sandbox.stub();
     sendUserActionTelemetryStub = sandbox.stub();
   });

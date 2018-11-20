@@ -9,7 +9,7 @@ describe("_PerfService", () => {
   let fakePerfObj;
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     fakePerfObj = new FakePerformance();
     perfService = new _PerfService({performanceObj: fakePerfObj});
   });

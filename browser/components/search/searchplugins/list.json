@@ -803,6 +803,13 @@
         "searchDefault": "Yandex"
       }
     },
+    "trs": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "bing", "amazondotcom", "ddg", "wikipedia-es"
+        ]
+      }
+    },
     "uk": {
       "default": {
         "visibleDefaultEngines": [

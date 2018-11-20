@@ -15,7 +15,7 @@ const {intl} = intlProvider.getChildContext();
 export class GlobalOverrider {
   constructor() {
     this.originalGlobals = new Map();
-    this.sandbox = sinon.sandbox.create();
+    this.sandbox = sinon.createSandbox();
   }
 
   /**
