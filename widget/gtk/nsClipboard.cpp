@@ -236,8 +236,7 @@ nsClipboard::SetTransferableData(nsITransferable* aTransferable,
                                              aClipboardData,
                                              aClipboardDataLength,
                                              getter_AddRefs(wrapper));
-  aTransferable->SetTransferData(aFlavor.get(),
-                                 wrapper, aClipboardDataLength);
+  aTransferable->SetTransferData(aFlavor.get(), wrapper);
 }
 
 NS_IMETHODIMP
@@ -278,8 +277,7 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
                                   clipboardData,
                                   clipboardDataLength,
                                   NS_ASSIGNMENT_COPY);
-            aTransferable->SetTransferData(flavorStr.get(), byteStream,
-                                           sizeof(nsIInputStream*));
+            aTransferable->SetTransferData(flavorStr.get(), byteStream);
 
             mContext->ReleaseClipboardData(clipboardData);
             return NS_OK;
