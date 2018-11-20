@@ -4,17 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_DllBlocklistWin_h
-#define mozilla_DllBlocklistWin_h
-
-#include <windows.h>
-
-#include "LauncherResult.h"
+#include "ErrorHandler.h"
 
 namespace mozilla {
 
-LauncherVoidResult InitializeDllBlocklistOOP(HANDLE aChildProcess);
+void
+HandleLauncherError(const LauncherError& aError)
+{
+  // This is a placeholder error handler. We'll add telemetry and a fallback
+  // error log in future revisions.
+  WindowsError::UniqueString msg = aError.mError.AsString();
+  if (!msg) {
+    return;
+  }
+
+  ::MessageBoxW(nullptr, msg.get(), L"Firefox", MB_OK | MB_ICONERROR);
+}
 
 } // namespace mozilla
-
-#endif // mozilla_DllBlocklistWin_h
