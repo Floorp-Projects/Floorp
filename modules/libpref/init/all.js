@@ -228,8 +228,7 @@ pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_i
 // can limit the path.  E.g., "example.com/foo" means "example.com/foo*".  So,
 // if you need to limit under a directory, the path should end with "/" like
 // "example.com/foo/".  Note that this cannot limit port number for now.
-pref("dom.keyboardevent.keypress.hack.dispatch_non_printable_keys",
-     "medium.com/p/");
+pref("dom.keyboardevent.keypress.hack.dispatch_non_printable_keys", "");
 #else
 pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content", false);
 #endif
