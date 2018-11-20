@@ -9,19 +9,16 @@
 # the vast majority of cases.
 
 # When to use removed-files.in file to remove files and directories:
-# * Files and directories located in the installation's "distribution/" and
-#   "extensions/" directories that were added before Firefox 27. Files and
-#   directories located in these directories were not included in the
-#   application update file removals for a complete update prior to Firefox 27.
 # * Empty directories that were accidentally added to the installation
 #   directory.
-# * Third party files and directories that were added to the installation
-#   directory. Under normal circumstances this should only be done after release
-#   drivers have approved the removal of these third party files.
+# * Files and directories that were added to the installation directory after
+#   the build was completed (typically third party files). Under normal
+#   circumstances this should only be done after release drivers have approved
+#   the removal of these third party files.
 
 # If you are not sure whether a file or directory should be removed using the
-# removed-files.in file please contact one of the developers that work on
-# application update.
+# removed-files.in file please contact a developer that works on application
+# update.
 
 # Note: the "distribution/" and "browser/extensions/" directories should never
 # be removed recursively since these directories are used by Partner builds and
@@ -55,7 +52,7 @@
 # Due to Apple Mac OS X packaging requirements files that are in the same
 # directory on other platforms must be located in different directories on
 # Mac OS X. The following defines allow specifying the Mac OS X bundle
-# location which will also work on other platforms.
+# location and will use an empty string on other platforms.
 #
 # @DIR_MACOS@
 # Equals Contents/MacOS/ on Mac OS X and is an empty string on other platforms.
