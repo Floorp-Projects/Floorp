@@ -620,7 +620,8 @@ js::CallFromStack(JSContext* cx, const CallArgs& args)
     return InternalCall(cx, static_cast<const AnyInvokeArgs&>(args));
 }
 
-// ES7 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 7.3.12 Call.
+// ES7 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93
+// 7.3.12 Call.
 bool
 js::Call(JSContext* cx, HandleValue fval, HandleValue thisv, const AnyInvokeArgs& args,
          MutableHandleValue rval)
