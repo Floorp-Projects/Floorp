@@ -278,6 +278,7 @@ AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args, CompletionKind comple
 
 class MOZ_NON_TEMPORARY_CLASS PromiseLookup final
 {
+    // clang-format off
     /*
      * A PromiseLookup holds the following:
      *
@@ -303,6 +304,7 @@ class MOZ_NON_TEMPORARY_CLASS PromiseLookup final
      * constructor only initializes a |state_| field, that defines whether the
      * other fields are accessible.
      */
+    // clang-format on
 
     // Shape of matching Promise object.
     MOZ_INIT_OUTSIDE_CTOR Shape* promiseConstructorShape_;

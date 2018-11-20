@@ -366,7 +366,7 @@ TryAttachStub(const char *name, JSContext* cx, BaselineFrame* frame, ICFallbackS
 //
 
 
-//
+/* clang-format off */
 // The following data is kept in a temporary heap-allocated buffer, stored in
 // JitRuntime (high memory addresses at top, low at bottom):
 //
@@ -386,6 +386,7 @@ TryAttachStub(const char *name, JSContext* cx, BaselineFrame* frame, ICFallbackS
 //            +=================================+  --      <---- Low Address
 //
 // A pointer to the IonOsrTempData is returned.
+/* clang-format on */
 
 struct IonOsrTempData
 {
