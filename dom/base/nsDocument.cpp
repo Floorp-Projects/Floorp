@@ -7318,13 +7318,13 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     ScreenIntSize fakeDesktopSize = RoundedToInt(viewportSize * scaleToFit);
     return nsViewportInfo(fakeDesktopSize,
                           scaleToFit,
-                          /*allowZoom*/ true);
+                          nsViewportInfo::ZoomFlag::AllowZoom);
   }
 
   if (!nsLayoutUtils::ShouldHandleMetaViewport(this)) {
     return nsViewportInfo(aDisplaySize,
                           defaultScale,
-                          /*allowZoom*/ false);
+                          nsViewportInfo::ZoomFlag::DisallowZoom);
   }
 
   // In cases where the width of the CSS viewport is less than or equal to the width
@@ -7335,7 +7335,7 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
   case DisplayWidthHeight:
     return nsViewportInfo(aDisplaySize,
                           defaultScale,
-                          /*allowZoom*/ true);
+                          nsViewportInfo::ZoomFlag::AllowZoom);
   case Unknown:
   {
     nsAutoString viewport;
@@ -7355,7 +7355,7 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
           mViewportType = DisplayWidthHeight;
           return nsViewportInfo(aDisplaySize,
                                 defaultScale,
-                                /*allowZoom*/true);
+                                nsViewportInfo::ZoomFlag::AllowZoom);
         }
       }
 
@@ -7364,7 +7364,7 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
       if (handheldFriendly.EqualsLiteral("true")) {
         mViewportType = DisplayWidthHeight;
         return nsViewportInfo(aDisplaySize, defaultScale,
-                              /*allowZoom*/true);
+                              nsViewportInfo::ZoomFlag::AllowZoom);
       }
     }
 
@@ -7441,7 +7441,10 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     LayoutDeviceToScreenScale effectiveMinScale = mScaleMinFloat;
     LayoutDeviceToScreenScale effectiveMaxScale = mScaleMaxFloat;
     bool effectiveValidMaxScale = mValidMaxScale;
-    bool effectiveAllowZoom = mAllowZoom;
+
+    nsViewportInfo::ZoomFlag effectiveZoomFlag =
+      mAllowZoom ? nsViewportInfo::ZoomFlag::AllowZoom
+                 : nsViewportInfo::ZoomFlag::DisallowZoom;
     if (gfxPrefs::ForceUserScalable()) {
       // If the pref to force user-scalable is enabled, we ignore the values
       // from the meta-viewport tag for these properties and just assume they
@@ -7453,7 +7456,7 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
       effectiveMinScale = kViewportMinScale;
       effectiveMaxScale = kViewportMaxScale;
       effectiveValidMaxScale = true;
-      effectiveAllowZoom = true;
+      effectiveZoomFlag = nsViewportInfo::ZoomFlag::AllowZoom;
     }
 
     // Returns extend-zoom value which is MIN(mScaleFloat, mScaleMaxFloat).
@@ -7566,16 +7569,21 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     CSSToScreenScale scaleMinFloat = effectiveMinScale * layoutDeviceScale;
     CSSToScreenScale scaleMaxFloat = effectiveMaxScale * layoutDeviceScale;
 
-    const bool autoSize =
-      mMaxWidth == nsViewportInfo::DeviceSize ||
-      (mWidthStrEmpty &&
-       (mMaxHeight == nsViewportInfo::DeviceSize ||
-        mScaleFloat.scale == 1.0f)) ||
-      (!mWidthStrEmpty && mMaxWidth == nsViewportInfo::Auto && mMaxHeight < 0);
+    nsViewportInfo::AutoSizeFlag sizeFlag =
+      nsViewportInfo::AutoSizeFlag::FixedSize;
+    if (mMaxWidth == nsViewportInfo::DeviceSize ||
+        (mWidthStrEmpty &&
+         (mMaxHeight == nsViewportInfo::DeviceSize ||
+          mScaleFloat.scale == 1.0f)) ||
+         (!mWidthStrEmpty &&
+          mMaxWidth == nsViewportInfo::Auto &&
+          mMaxHeight < 0)) {
+      sizeFlag = nsViewportInfo::AutoSizeFlag::AutoSize;
+    }
 
     // FIXME: Resolving width and height should be done above 'Resolve width
     // value' and 'Resolve height value'.
-    if (autoSize) {
+    if (sizeFlag == nsViewportInfo::AutoSizeFlag::AutoSize) {
       size = displaySize;
     }
 
@@ -7603,7 +7611,8 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     }
 
     return nsViewportInfo(scaleFloat, scaleMinFloat, scaleMaxFloat, size,
-                          autoSize, effectiveAllowZoom);
+                          sizeFlag,
+                          effectiveZoomFlag);
   }
 }
 

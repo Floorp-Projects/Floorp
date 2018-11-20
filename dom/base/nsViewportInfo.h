@@ -24,13 +24,21 @@ static const mozilla::CSSIntSize kViewportMaxSize(10000, 10000);
 class MOZ_STACK_CLASS nsViewportInfo
 {
   public:
+    enum class AutoSizeFlag {
+      AutoSize,
+      FixedSize,
+    };
+    enum class ZoomFlag {
+      AllowZoom,
+      DisallowZoom,
+    };
     nsViewportInfo(const mozilla::ScreenIntSize& aDisplaySize,
                    const mozilla::CSSToScreenScale& aDefaultZoom,
-                   bool aAllowZoom) :
+                   ZoomFlag aZoomFlag) :
       mDefaultZoom(aDefaultZoom),
       mDefaultZoomValid(true),
       mAutoSize(true),
-      mAllowZoom(aAllowZoom)
+      mAllowZoom(aZoomFlag == ZoomFlag::AllowZoom)
     {
         mSize = mozilla::ScreenSize(aDisplaySize) / mDefaultZoom;
         mozilla::CSSToLayoutDeviceScale pixelRatio(1.0f);
@@ -43,15 +51,15 @@ class MOZ_STACK_CLASS nsViewportInfo
                    const mozilla::CSSToScreenScale& aMinZoom,
                    const mozilla::CSSToScreenScale& aMaxZoom,
                    const mozilla::CSSSize& aSize,
-                   bool aAutoSize,
-                   bool aAllowZoom) :
+                   AutoSizeFlag aAutoSizeFlag,
+                   ZoomFlag aZoomFlag) :
                      mDefaultZoom(aDefaultZoom),
                      mMinZoom(aMinZoom),
                      mMaxZoom(aMaxZoom),
                      mSize(aSize),
                      mDefaultZoomValid(true),
-                     mAutoSize(aAutoSize),
-                     mAllowZoom(aAllowZoom)
+                     mAutoSize(aAutoSizeFlag == AutoSizeFlag::AutoSize),
+                     mAllowZoom(aZoomFlag == ZoomFlag::AllowZoom)
     {
       ConstrainViewportValues();
     }
