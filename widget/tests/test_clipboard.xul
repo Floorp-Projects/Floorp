@@ -37,16 +37,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=948065
     trans.addDataFlavor("text/unicode");
     clipboard.getData(trans, Ci.nsIClipboard.kGlobalClipboard);
     let str = {};
-    let length = {};
     try {
-      trans.getTransferData('text/unicode', str, length);
+      trans.getTransferData('text/unicode', str);
     } catch (e) {
       str = '';
     }
     if (str) {
       str = str.value.QueryInterface(Ci.nsISupportsString);
       if (str) {
-        str = str.data.substring(0, length.value / 2);
+        str = str.data;
       }
     }
     return str;
