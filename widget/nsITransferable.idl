@@ -86,9 +86,8 @@ interface nsIFlavorDataProvider : nsISupports
     * @param  aTransferable (in parameter) the transferable we're being called for.
     * @param  aFlavor (in parameter) the flavor of data to retrieve
     * @param  aData the data. Some variant of class in nsISupportsPrimitives.idl
-    * @param  aDataLen the length of the data
     */
-  void getFlavorData(in nsITransferable aTransferable, in string aFlavor, out nsISupports aData, out unsigned long aDataLen);
+  void getFlavorData(in nsITransferable aTransferable, in string aFlavor, out nsISupports aData);
 };
 
 
