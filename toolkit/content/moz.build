@@ -169,9 +169,6 @@ with Files('tests/mochitest/*autocomplete*'):
 with Files('tests/mochitest/*mousecapture*'):
     BUG_COMPONENT = ('Core', 'Event Handling')
 
-with Files('tests/reftests/*progress*'):
-    BUG_COMPONENT = ('Toolkit', 'XUL Widgets')
-
 with Files('tests/reftests/*multiline*'):
     BUG_COMPONENT = ('Core', 'XBL')
 

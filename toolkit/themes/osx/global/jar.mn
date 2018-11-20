@@ -18,7 +18,6 @@ toolkit.jar:
 * skin/classic/global/notification.css
   skin/classic/global/netError.css
   skin/classic/global/popup.css
-  skin/classic/global/progressmeter.css
   skin/classic/global/radio.css
   skin/classic/global/richlistbox.css
   skin/classic/global/scrollbars.css                                 (nativescrollbars.css)
