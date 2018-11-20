@@ -11,6 +11,7 @@ from time import time
 
 from wptrunner.formatters import WptreportFormatter
 
+
 class WptreportHandler(object):
     def __init__(self, out):
         """
