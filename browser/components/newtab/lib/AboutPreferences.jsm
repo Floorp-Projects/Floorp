@@ -10,6 +10,8 @@ const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
+const HTML_NS = "http://www.w3.org/1999/xhtml";
+
 const PREFERENCES_LOADED_EVENT = "home-pane-loaded";
 
 // These "section" objects are formatted in a way to be similar to the ones from
@@ -162,11 +164,11 @@ this.AboutPreferences = class AboutPreferences {
     const contentsGroup = homeGroup.insertAdjacentElement("afterend", homeGroup.cloneNode());
     contentsGroup.id = "homeContentsGroup";
     contentsGroup.setAttribute("data-subcategory", "contents");
-    const caption = createAppend("caption", contentsGroup);
-    const captionLabel = createAppend("label", caption);
-    captionLabel.setAttribute("value", formatString("prefs_home_header"));
-    const description = createAppend("description", contentsGroup);
-    description.textContent = formatString("prefs_home_description");
+    createAppend("label", contentsGroup)
+      .appendChild(document.createElementNS(HTML_NS, "h2"))
+      .textContent = formatString("prefs_home_header");
+    createAppend("description", contentsGroup)
+      .textContent = formatString("prefs_home_description");
 
     // Add preferences for each section
     prefStructure.forEach(sectionData => {
