@@ -10,6 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
+from taskgraph.util.schema import validate_schema
 from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
                                          get_beetmover_action_scope,
                                          get_worker_type_for_scope)
@@ -141,7 +142,14 @@ beetmover_description_schema = schema.extend({
 })
 
 
-transforms.add_validate(beetmover_description_schema)
+@transforms.add
+def validate(config, jobs):
+    for job in jobs:
+        label = job.get('primary-dependency', object).__dict__.get('label', '?no-label?')
+        validate_schema(
+            beetmover_description_schema, job,
+            "In beetmover ({!r} kind) task for {!r}:".format(config.kind, label))
+        yield job
 
 
 @transforms.add

@@ -11,6 +11,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import (
     Schema,
+    validate_schema,
 )
 from taskgraph.util.taskcluster import get_artifact_path, get_artifact_url
 from voluptuous import (
@@ -18,6 +19,8 @@ from voluptuous import (
     Optional,
     Required,
 )
+
+transforms = TransformSequence()
 
 index_or_string = Any(
     basestring,
@@ -46,8 +49,14 @@ diff_description_schema = Schema({
     Optional('extra-args'): basestring,
 })
 
-transforms = TransformSequence()
-transforms.add_validate(diff_description_schema)
+
+@transforms.add
+def validate(config, tasks):
+    for task in tasks:
+        validate_schema(
+            diff_description_schema, task,
+            "In diff task {!r}:".format(task.get('name', 'unknown')))
+        yield task
 
 
 @transforms.add

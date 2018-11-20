@@ -10,6 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
+from taskgraph.util.schema import validate_schema
 from taskgraph.util.scriptworker import (
     get_balrog_server_scope, get_worker_type_for_scope
 )
@@ -20,6 +21,8 @@ from voluptuous import Any, Required, Optional
 # Voluptuous uses marker objects as dictionary *keys*, but they are not
 # comparable, so we cast all of the keys back to regular strings
 task_description_schema = {str(k): v for k, v in task_description_schema.schema.iteritems()}
+
+transforms = TransformSequence()
 
 # shortcut for a string where task references are allowed
 taskref_or_string = Any(
@@ -41,8 +44,15 @@ balrog_description_schema = schema.extend({
 })
 
 
-transforms = TransformSequence()
-transforms.add_validate(balrog_description_schema)
+@transforms.add
+def validate(config, jobs):
+    for job in jobs:
+        label = job.get('primary-dependency', object).__dict__.get('label', '?no-label?')
+        validate_schema(
+            balrog_description_schema, job,
+            "In balrog ({!r} kind) task for {!r}:".format(config.kind, label))
+
+        yield job
 
 
 @transforms.add
