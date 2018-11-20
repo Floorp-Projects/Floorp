@@ -17,6 +17,8 @@ using namespace dom;
 static bool sPointerEventEnabled = true;
 static bool sPointerEventImplicitCapture = false;
 
+Maybe<int32_t> PointerEventHandler::sSpoofedPointerId;
+
 class PointerInfo final
 {
 public:
@@ -100,6 +102,8 @@ PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent)
     // In this case we have to know information about available mouse pointers
     sActivePointersIds->Put(aEvent->pointerId,
                             new PointerInfo(false, aEvent->inputSource, true));
+
+    MaybeCacheSpoofedPointerID(aEvent->inputSource, aEvent->pointerId);
     break;
   case ePointerDown:
     // In this case we switch pointer to active state
@@ -107,6 +111,7 @@ PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent)
       sActivePointersIds->Put(pointerEvent->pointerId,
                               new PointerInfo(true, pointerEvent->inputSource,
                                               pointerEvent->mIsPrimary));
+      MaybeCacheSpoofedPointerID(pointerEvent->inputSource, pointerEvent->pointerId);
     }
     break;
   case ePointerCancel:
@@ -662,6 +667,18 @@ PointerEventHandler::DispatchGotOrLostPointerCaptureEvent(
 
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "DispatchGotOrLostPointerCaptureEvent failed");
+}
+
+/* static */ void
+PointerEventHandler::MaybeCacheSpoofedPointerID(uint16_t aInputSource,
+                                                uint32_t aPointerId)
+{
+  if (sSpoofedPointerId.isSome() ||
+      aInputSource != SPOOFED_POINTER_INTERFACE) {
+    return;
+  }
+
+  sSpoofedPointerId.emplace(aPointerId);
 }
 
 } // namespace mozilla
