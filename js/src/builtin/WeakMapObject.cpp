@@ -17,16 +17,16 @@
 
 using namespace js;
 
-MOZ_ALWAYS_INLINE bool
-IsWeakMap(HandleValue v)
+/* static */ MOZ_ALWAYS_INLINE bool
+WeakMapObject::is(HandleValue v)
 {
     return v.isObject() && v.toObject().is<WeakMapObject>();
 }
 
-MOZ_ALWAYS_INLINE bool
-WeakMap_has_impl(JSContext* cx, const CallArgs& args)
+/* static */ MOZ_ALWAYS_INLINE bool
+WeakMapObject::has_impl(JSContext* cx, const CallArgs& args)
 {
-    MOZ_ASSERT(IsWeakMap(args.thisv()));
+    MOZ_ASSERT(is(args.thisv()));
 
     if (!args.get(0).isObject()) {
         args.rval().setBoolean(false);
@@ -45,17 +45,17 @@ WeakMap_has_impl(JSContext* cx, const CallArgs& args)
     return true;
 }
 
-static bool
-WeakMap_has(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+WeakMapObject::has(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsWeakMap, WeakMap_has_impl>(cx, args);
+    return CallNonGenericMethod<WeakMapObject::is, WeakMapObject::has_impl>(cx, args);
 }
 
-MOZ_ALWAYS_INLINE bool
-WeakMap_get_impl(JSContext* cx, const CallArgs& args)
+/* static */ MOZ_ALWAYS_INLINE bool
+WeakMapObject::get_impl(JSContext* cx, const CallArgs& args)
 {
-    MOZ_ASSERT(IsWeakMap(args.thisv()));
+    MOZ_ASSERT(WeakMapObject::is(args.thisv()));
 
     if (!args.get(0).isObject()) {
         args.rval().setUndefined();
@@ -74,17 +74,17 @@ WeakMap_get_impl(JSContext* cx, const CallArgs& args)
     return true;
 }
 
-static bool
-WeakMap_get(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+WeakMapObject::get(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsWeakMap, WeakMap_get_impl>(cx, args);
+    return CallNonGenericMethod<WeakMapObject::is, WeakMapObject::get_impl>(cx, args);
 }
 
-MOZ_ALWAYS_INLINE bool
-WeakMap_delete_impl(JSContext* cx, const CallArgs& args)
+/* static */ MOZ_ALWAYS_INLINE bool
+WeakMapObject::delete_impl(JSContext* cx, const CallArgs& args)
 {
-    MOZ_ASSERT(IsWeakMap(args.thisv()));
+    MOZ_ASSERT(WeakMapObject::is(args.thisv()));
 
     if (!args.get(0).isObject()) {
         args.rval().setBoolean(false);
@@ -104,17 +104,17 @@ WeakMap_delete_impl(JSContext* cx, const CallArgs& args)
     return true;
 }
 
-static bool
-WeakMap_delete(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+WeakMapObject::delete_(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsWeakMap, WeakMap_delete_impl>(cx, args);
+    return CallNonGenericMethod<WeakMapObject::is, WeakMapObject::delete_impl>(cx, args);
 }
 
-MOZ_ALWAYS_INLINE bool
-WeakMap_set_impl(JSContext* cx, const CallArgs& args)
+/* static */ MOZ_ALWAYS_INLINE bool
+WeakMapObject::set_impl(JSContext* cx, const CallArgs& args)
 {
-    MOZ_ASSERT(IsWeakMap(args.thisv()));
+    MOZ_ASSERT(WeakMapObject::is(args.thisv()));
 
     if (!args.get(0).isObject()) {
         ReportNotObjectWithName(cx, "WeakMap key", args.get(0));
@@ -131,11 +131,11 @@ WeakMap_set_impl(JSContext* cx, const CallArgs& args)
     return true;
 }
 
-static bool
-WeakMap_set(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+WeakMapObject::set(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsWeakMap, WeakMap_set_impl>(cx, args);
+    return CallNonGenericMethod<WeakMapObject::is, WeakMapObject::set_impl>(cx, args);
 }
 
 bool
@@ -234,8 +234,8 @@ JS::SetWeakMapEntry(JSContext* cx, HandleObject mapObj, HandleObject key,
     return WeakCollectionPutEntryInternal(cx, rootedMap, key, val);
 }
 
-static bool
-WeakMap_construct(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+WeakMapObject::construct(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -283,49 +283,42 @@ const ClassOps WeakCollectionObject::classOps_ = {
     WeakCollection_trace
 };
 
+const ClassSpec WeakMapObject::classSpec_ = {
+    GenericCreateConstructor<WeakMapObject::construct, 0, gc::AllocKind::FUNCTION>,
+    GenericCreatePrototype<WeakMapObject>,
+    nullptr,
+    nullptr,
+    WeakMapObject::methods,
+    WeakMapObject::properties,
+};
+
 const Class WeakMapObject::class_ = {
     "WeakMap",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_WeakMap) |
     JSCLASS_BACKGROUND_FINALIZE,
-    &WeakCollectionObject::classOps_
+    &WeakCollectionObject::classOps_,
+    &WeakMapObject::classSpec_
 };
 
-static const JSFunctionSpec weak_map_methods[] = {
-    JS_FN("has",    WeakMap_has, 1, 0),
-    JS_FN("get",    WeakMap_get, 1, 0),
-    JS_FN("delete", WeakMap_delete, 1, 0),
-    JS_FN("set",    WeakMap_set, 2, 0),
+const Class WeakMapObject::protoClass_ = {
+    js_Object_str,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_WeakMap),
+    JS_NULL_CLASS_OPS,
+    &WeakMapObject::classSpec_
+};
+
+const JSPropertySpec WeakMapObject::properties[] = {
+    JS_STRING_SYM_PS(toStringTag, "WeakMap", JSPROP_READONLY),
+    JS_PS_END
+};
+
+const JSFunctionSpec WeakMapObject::methods[] = {
+    // clang-format off
+    JS_FN("has", has, 1, 0),
+    JS_FN("get", get, 1, 0),
+    JS_FN("delete", delete_, 1, 0),
+    JS_FN("set", set, 2, 0),
     JS_FS_END
+    // clang-format on
 };
-
-JSObject*
-js::InitWeakMapClass(JSContext* cx, Handle<GlobalObject*> global)
-{
-    RootedPlainObject proto(cx, NewBuiltinClassInstance<PlainObject>(cx));
-    if (!proto) {
-        return nullptr;
-    }
-
-    RootedFunction ctor(cx, GlobalObject::createConstructor(cx, WeakMap_construct,
-                                                            cx->names().WeakMap, 0));
-    if (!ctor) {
-        return nullptr;
-    }
-
-    if (!LinkConstructorAndPrototype(cx, ctor, proto)) {
-        return nullptr;
-    }
-
-    if (!DefinePropertiesAndFunctions(cx, proto, nullptr, weak_map_methods)) {
-        return nullptr;
-    }
-    if (!DefineToStringTag(cx, proto, cx->names().WeakMap)) {
-        return nullptr;
-    }
-
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_WeakMap, ctor, proto)) {
-        return nullptr;
-    }
-    return proto;
-}
