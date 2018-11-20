@@ -488,6 +488,7 @@ void OscillatorNode::Start(double aWhen, ErrorResult& aRv) {
                                   aWhen);
 
   MarkActive();
+  Context()->NotifyScheduledSourceNodeStarted();
 }
 
 void OscillatorNode::Stop(double aWhen, ErrorResult& aRv) {
