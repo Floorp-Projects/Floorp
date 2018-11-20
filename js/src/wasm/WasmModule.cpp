@@ -1150,7 +1150,16 @@ static bool MakeStructField(JSContext* cx, const ValType& v, bool isMutable,
                                                    Scalar::Float64);
       break;
     case ValType::Ref:
+      t = GlobalObject::getOrCreateReferenceTypeDescr(
+          cx, cx->global(), ReferenceType::TYPE_OBJECT);
+      break;
     case ValType::AnyRef:
+      // TODO/AnyRef-boxing: TYPE_OBJECT is not an appropriate representation
+      // for anyref in a structure.  So long as we box non-Object values in
+      // Objects, it is safe; however, boxing/unboxing operations on the JS
+      // side will be incorrect.  Once we use a tagged representation, using
+      // TYPE_OBJECT will be unsound.
+      ASSERT_ANYREF_IS_JSOBJECT;
       t = GlobalObject::getOrCreateReferenceTypeDescr(
           cx, cx->global(), ReferenceType::TYPE_OBJECT);
       break;

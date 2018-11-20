@@ -139,9 +139,17 @@ const FunctionTableElem& Table::getAnyFunc(uint32_t index) const {
   return functions_[index];
 }
 
-JSObject* Table::getAnyRef(uint32_t index) const {
+AnyRef Table::getAnyRef(uint32_t index) const {
   MOZ_ASSERT(!isFunction());
-  return objects_[index];
+  // TODO/AnyRef-boxing: With boxed immediates and strings, the write barrier
+  // is going to have to be more complicated.
+  ASSERT_ANYREF_IS_JSOBJECT;
+  return AnyRef::fromJSObject(objects_[index]);
+}
+
+const void* Table::getAnyRefLocForCompiledCode(uint32_t index) const {
+  MOZ_ASSERT(!isFunction());
+  return objects_[index].address();
 }
 
 void Table::setAnyFunc(uint32_t index, void* code, const Instance* instance) {
@@ -168,9 +176,12 @@ void Table::setAnyFunc(uint32_t index, void* code, const Instance* instance) {
   }
 }
 
-void Table::setAnyRef(uint32_t index, JSObject* new_obj) {
+void Table::setAnyRef(uint32_t index, AnyRef new_obj) {
   MOZ_ASSERT(!isFunction());
-  objects_[index] = new_obj;
+  // TODO/AnyRef-boxing: With boxed immediates and strings, the write barrier
+  // is going to have to be more complicated.
+  ASSERT_ANYREF_IS_JSOBJECT;
+  objects_[index] = new_obj.asJSObject();
 }
 
 void Table::setNull(uint32_t index) {
@@ -186,7 +197,7 @@ void Table::setNull(uint32_t index) {
       break;
     }
     case TableKind::AnyRef: {
-      objects_[index] = nullptr;
+      setAnyRef(index, AnyRef::null());
       break;
     }
     case TableKind::TypedFunction: {
@@ -217,7 +228,7 @@ void Table::copy(const Table& srcTable, uint32_t dstIndex, uint32_t srcIndex) {
       break;
     }
     case TableKind::AnyRef: {
-      objects_[dstIndex] = srcTable.objects_[srcIndex];
+      setAnyRef(dstIndex, srcTable.getAnyRef(srcIndex));
       break;
     }
     case TableKind::TypedFunction: {
