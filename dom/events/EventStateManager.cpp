@@ -4363,8 +4363,7 @@ EventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
     if (subdocFrame) {
       nsIDocShell* docshell = subdocFrame->GetDocShell();
       if (docshell) {
-        RefPtr<nsPresContext> presContext;
-        docshell->GetPresContext(getter_AddRefs(presContext));
+        RefPtr<nsPresContext> presContext = docshell->GetPresContext();
 
         if (presContext) {
           EventStateManager* kidESM = presContext->EventStateManager();

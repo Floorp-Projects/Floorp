@@ -290,8 +290,7 @@ FuzzingFunctions::SynthesizeKeyboardEvents(const GlobalObject&,
     return;
   }
 
-  RefPtr<nsPresContext> presContext;
-  docShell->GetPresContext(getter_AddRefs(presContext));
+  RefPtr<nsPresContext> presContext = docShell->GetPresContext();
   if (NS_WARN_IF(!presContext)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
