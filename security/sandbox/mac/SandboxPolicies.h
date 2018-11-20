@@ -209,8 +209,10 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
     (allow mach-lookup (global-name crashPort)))
   (if (string=? hasWindowServer "TRUE")
     (allow mach-lookup (global-name "com.apple.windowserver.active")))
-  (allow mach-lookup (global-name "com.apple.coreservices.launchservicesd"))
-  (allow mach-lookup (global-name "com.apple.lsd.mapdb"))
+  (allow mach-lookup
+    (global-name "com.apple.CoreServices.coreservicesd")
+    (global-name "com.apple.coreservices.launchservicesd")
+    (global-name "com.apple.lsd.mapdb"))
 
   (if (>= macosMinorVersion 13)
     (allow mach-lookup
