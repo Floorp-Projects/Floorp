@@ -7612,6 +7612,9 @@ nsIDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
 
     return nsViewportInfo(scaleFloat, scaleMinFloat, scaleMaxFloat, size,
                           sizeFlag,
+                          mValidScaleFloat
+                            ? nsViewportInfo::AutoScaleFlag::FixedScale
+                            : nsViewportInfo::AutoScaleFlag::AutoScale,
                           effectiveZoomFlag);
   }
 }
