@@ -18,8 +18,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
-
-#include "LauncherResult.h"
+#include "mozilla/Maybe.h"
 
 extern "C" {
 
@@ -569,7 +568,7 @@ RtlGetProcessHeap()
   return peb->Reserved4[1];
 }
 
-inline LauncherResult<DWORD>
+inline Maybe<DWORD>
 GetParentProcessId()
 {
   struct PROCESS_BASIC_INFORMATION
@@ -582,18 +581,17 @@ GetParentProcessId()
     ULONG_PTR InheritedFromUniqueProcessId;
   };
 
-  const HANDLE kCurrentProcess = reinterpret_cast<HANDLE>(-1);
   ULONG returnLength;
   PROCESS_BASIC_INFORMATION pbi = {};
-  NTSTATUS status = ::NtQueryInformationProcess(kCurrentProcess,
+  NTSTATUS status = ::NtQueryInformationProcess(::GetCurrentProcess(),
                                                 ProcessBasicInformation,
                                                 &pbi, sizeof(pbi),
                                                 &returnLength);
   if (!NT_SUCCESS(status)) {
-    return LAUNCHER_ERROR_FROM_NTSTATUS(status);
+    return Nothing();
   }
 
-  return static_cast<DWORD>(pbi.InheritedFromUniqueProcessId & 0xFFFFFFFF);
+  return Some(static_cast<DWORD>(pbi.InheritedFromUniqueProcessId & 0xFFFFFFFF));
 }
 
 } // namespace nt
