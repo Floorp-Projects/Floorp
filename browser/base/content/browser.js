@@ -2504,11 +2504,12 @@ function readFromClipboard() {
       Services.clipboard.getData(trans, Services.clipboard.kGlobalClipboard);
 
     var data = {};
-    trans.getTransferData("text/unicode", data);
+    var dataLen = {};
+    trans.getTransferData("text/unicode", data, dataLen);
 
     if (data) {
       data = data.value.QueryInterface(Ci.nsISupportsString);
-      url = data.data;
+      url = data.data.substring(0, dataLen.value / 2);
     }
   } catch (ex) {
   }

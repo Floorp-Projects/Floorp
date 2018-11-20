@@ -28,7 +28,7 @@ add_task(async function copyURL() {
     transferable.addDataFlavor(flavor);
     Services.clipboard.getData(transferable, Services.clipboard.kGlobalClipboard);
     let strObj = {};
-    transferable.getTransferData(flavor, strObj);
+    transferable.getTransferData(flavor, strObj, {});
     Assert.ok(!!strObj.value);
     strObj.value.QueryInterface(Ci.nsISupportsString);
     Assert.equal(strObj.value.data, gBrowser.selectedBrowser.currentURI.spec);

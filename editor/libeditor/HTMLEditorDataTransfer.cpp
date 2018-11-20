@@ -1585,6 +1585,7 @@ HTMLEditor::PasteInternal(int32_t aClipboardType,
   bool bHavePrivateHTMLFlavor = HavePrivateHTMLFlavor(clipboard);
   if (bHavePrivateHTMLFlavor) {
     nsCOMPtr<nsISupports> contextDataObj, infoDataObj;
+    uint32_t contextLen, infoLen;
     nsCOMPtr<nsISupportsString> textDataObj;
 
     nsCOMPtr<nsITransferable> contextTransferable =
@@ -1596,7 +1597,8 @@ HTMLEditor::PasteInternal(int32_t aClipboardType,
     contextTransferable->AddDataFlavor(kHTMLContext);
     clipboard->GetData(contextTransferable, aClipboardType);
     contextTransferable->GetTransferData(kHTMLContext,
-                                         getter_AddRefs(contextDataObj));
+                                         getter_AddRefs(contextDataObj),
+                                         &contextLen);
 
     nsCOMPtr<nsITransferable> infoTransferable =
       do_CreateInstance("@mozilla.org/widget/transferable;1");
@@ -1607,16 +1609,23 @@ HTMLEditor::PasteInternal(int32_t aClipboardType,
     infoTransferable->AddDataFlavor(kHTMLInfo);
     clipboard->GetData(infoTransferable, aClipboardType);
     infoTransferable->GetTransferData(kHTMLInfo,
-                                      getter_AddRefs(infoDataObj));
+                                      getter_AddRefs(infoDataObj),
+                                      &infoLen);
 
     if (contextDataObj) {
+      nsAutoString text;
       textDataObj = do_QueryInterface(contextDataObj);
-      textDataObj->GetData(contextStr);
+      textDataObj->GetData(text);
+      MOZ_ASSERT(text.Length() <= contextLen / 2);
+      contextStr.Assign(text.get(), contextLen / 2);
     }
 
     if (infoDataObj) {
+      nsAutoString text;
       textDataObj = do_QueryInterface(infoDataObj);
-      textDataObj->GetData(infoStr);
+      textDataObj->GetData(text);
+      MOZ_ASSERT(text.Length() <= infoLen / 2);
+      infoStr.Assign(text.get(), infoLen / 2);
     }
   }
 
@@ -1785,8 +1794,10 @@ HTMLEditor::CanPasteTransferable(nsITransferable* aTransferable)
 
   for (size_t i = 0; i < length; i++, flavors++) {
     nsCOMPtr<nsISupports> data;
+    uint32_t dataLen;
     nsresult rv = aTransferable->GetTransferData(*flavors,
-                                                 getter_AddRefs(data));
+                                                 getter_AddRefs(data),
+                                                 &dataLen);
     if (NS_SUCCEEDED(rv) && data) {
       return true;
     }

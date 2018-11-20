@@ -239,7 +239,7 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
       nsCOMPtr<nsISupports> genericDataWrapper;
       nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, clipboardDataPtrNoBOM, dataLength,
                                                  getter_AddRefs(genericDataWrapper));
-      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper);
+      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper, dataLength);
       free(clipboardDataPtr);
       break;
     }
@@ -269,7 +269,7 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
       nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, clipboardDataPtr, dataLength,
                                                  getter_AddRefs(genericDataWrapper));
 
-      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper);
+      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper, dataLength);
       free(clipboardDataPtr);
     }
     else if (flavorStr.EqualsLiteral(kJPEGImageMime) ||
@@ -336,7 +336,7 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
         NS_NewByteInputStream(getter_AddRefs(byteStream), (const char*)[encodedData bytes],
                                    [encodedData length], NS_ASSIGNMENT_COPY);
   
-        aTransferable->SetTransferData(flavorStr.get(), byteStream);
+        aTransferable->SetTransferData(flavorStr.get(), byteStream, sizeof(nsIInputStream*));
       }
 
       if (dest)
@@ -389,9 +389,10 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhi
         nsCString& flavorStr = flavors[i];
 
         nsCOMPtr<nsISupports> dataSupports;
-        rv = mTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(dataSupports));
+        uint32_t dataSize = 0;
+        rv = mTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(dataSupports), &dataSize);
         if (NS_SUCCEEDED(rv)) {
-          aTransferable->SetTransferData(flavorStr.get(), dataSupports);
+          aTransferable->SetTransferData(flavorStr.get(), dataSupports, dataSize);
           return NS_OK; // maybe try to fill in more types? Is there a point?
         }
       }
@@ -516,8 +517,9 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
     NSString *pboardType = nil;
 
     if (nsClipboard::IsStringType(flavorStr, &pboardType)) {
+      uint32_t dataSize = 0;
       nsCOMPtr<nsISupports> genericDataWrapper;
-      rv = aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(genericDataWrapper));
+      rv = aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(genericDataWrapper), &dataSize);
       if (NS_FAILED(rv)) {
         [pboardType release];
         continue;
@@ -540,8 +542,9 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       [pasteboardOutputDict setObject:nativeString forKey:pboardType];
     }
     else if (flavorStr.EqualsLiteral(kCustomTypesMime)) {
+      uint32_t dataSize = 0;
       nsCOMPtr<nsISupports> genericDataWrapper;
-      rv = aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(genericDataWrapper));
+      rv = aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(genericDataWrapper), &dataSize);
       if (NS_FAILED(rv)) {
         continue;
       }
@@ -561,8 +564,9 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
     else if (flavorStr.EqualsLiteral(kPNGImageMime) || flavorStr.EqualsLiteral(kJPEGImageMime) ||
              flavorStr.EqualsLiteral(kJPGImageMime) || flavorStr.EqualsLiteral(kGIFImageMime) ||
              flavorStr.EqualsLiteral(kNativeImageMime)) {
+      uint32_t dataSize = 0;
       nsCOMPtr<nsISupports> transferSupports;
-      aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(transferSupports));
+      aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(transferSupports), &dataSize);
 
       nsCOMPtr<imgIContainer> image(do_QueryInterface(transferSupports));
       if (!image) {
@@ -609,8 +613,9 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
         CFRelease(tiffData);
     }
     else if (flavorStr.EqualsLiteral(kFileMime)) {
+      uint32_t len = 0;
       nsCOMPtr<nsISupports> genericFile;
-      rv = aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(genericFile));
+      rv = aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(genericFile), &len);
       if (NS_FAILED(rv)) {
         continue;
       }
@@ -646,8 +651,9 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
                                forKey:urlPromiseContent];
     }
     else if (flavorStr.EqualsLiteral(kURLMime)) {
+      uint32_t len = 0;
       nsCOMPtr<nsISupports> genericURL;
-      rv = aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(genericURL));
+      rv = aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(genericURL), &len);
       nsCOMPtr<nsISupportsString> urlObject(do_QueryInterface(genericURL));
 
       nsAutoString url;
@@ -663,7 +669,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
 
         nsAutoString urlTitle;
         urlObject->GetData(urlTitle);
-        urlTitle.Mid(urlTitle, newlinePos + 1, urlTitle.Length() - (newlinePos + 1));
+        urlTitle.Mid(urlTitle, newlinePos + 1, len - (newlinePos + 1));
 
         nativeTitle =
           [NSString stringWithCharacters:

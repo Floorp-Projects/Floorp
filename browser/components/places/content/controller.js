@@ -965,7 +965,7 @@ PlacesController.prototype = {
       xferable.init(null);
       xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_PLACE_ACTION);
       this.clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
-      xferable.getTransferData(PlacesUtils.TYPE_X_MOZ_PLACE_ACTION, action);
+      xferable.getTransferData(PlacesUtils.TYPE_X_MOZ_PLACE_ACTION, action, {});
       [action, actionOwner] =
         action.value.QueryInterface(Ci.nsISupportsString).data.split(",");
     } catch (ex) {

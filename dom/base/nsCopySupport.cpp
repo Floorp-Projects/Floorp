@@ -415,7 +415,8 @@ nsCopySupport::ImageCopy(nsIImageLoadingContent* aImageElement,
 #endif
 
     // copy the image data onto the transferable
-    rv = trans->SetTransferData(kNativeImageMime, image);
+    rv = trans->SetTransferData(kNativeImageMime, image,
+                                sizeof(nsISupports*));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -453,7 +454,8 @@ static nsresult AppendString(nsITransferable *aTransferable,
   rv = aTransferable->AddDataFlavor(aFlavor);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return aTransferable->SetTransferData(aFlavor, data);
+  return aTransferable->SetTransferData(aFlavor, data,
+                                        aString.Length() * sizeof(char16_t));
 }
 
 static nsresult AppendDOMNode(nsITransferable *aTransferable,

@@ -393,9 +393,10 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
         nsCString& flavorStr = flavors[i];
 
         nsCOMPtr<nsISupports> dataSupports;
-        rv = currentTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(dataSupports));
+        uint32_t dataSize = 0;
+        rv = currentTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(dataSupports), &dataSize);
         if (NS_SUCCEEDED(rv)) {
-          aTransferable->SetTransferData(flavorStr.get(), dataSupports);
+          aTransferable->SetTransferData(flavorStr.get(), dataSupports, dataSize);
           return NS_OK; // maybe try to fill in more types? Is there a point?
         }
       }
@@ -442,7 +443,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
       if (NS_FAILED(rv))
         continue;
 
-      aTransferable->SetTransferData(flavorStr.get(), file);
+      aTransferable->SetTransferData(flavorStr.get(), file, dataLength);
       
       break;
     }
@@ -469,7 +470,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
       nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, clipboardDataPtr, dataLength,
                                                  getter_AddRefs(genericDataWrapper));
 
-      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper);
+      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper, sizeof(nsIInputStream*));
       free(clipboardDataPtr);
       break;
     }
@@ -535,7 +536,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
       nsCOMPtr<nsISupports> genericDataWrapper;
       nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, clipboardDataPtrNoBOM, dataLength,
                                                  getter_AddRefs(genericDataWrapper));
-      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper);
+      aTransferable->SetTransferData(flavorStr.get(), genericDataWrapper, dataLength);
       free(clipboardDataPtr);
       break;
     }
