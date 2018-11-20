@@ -8,20 +8,8 @@ Add indexes to repackage kinds
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import validate_schema
-from taskgraph.transforms.job import job_description_schema
 
 transforms = TransformSequence()
-
-
-@transforms.add
-def validate(config, jobs):
-    for job in jobs:
-        label = job['label']
-        validate_schema(
-            job_description_schema, job,
-            "In repackage-signing ({!r} kind) task for {!r}:".format(config.kind, label))
-        yield job
 
 
 @transforms.add
