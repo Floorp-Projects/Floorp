@@ -75,6 +75,7 @@ public:
   void Detach();
   bool IsAttached() { return mAttached; }
 
+  void Clear();
   bool Resize(int aWidth, int aHeight);
   bool SetImageDataFromBuffer(class WindowBackBuffer* aSourceBuffer);
 
@@ -118,7 +119,8 @@ public:
 private:
   WindowBackBuffer*         GetWaylandBufferToDraw(int aWidth, int aHeight);
 
-  already_AddRefed<gfx::DrawTarget> LockWaylandBuffer(int aWidth, int aHeight);
+  already_AddRefed<gfx::DrawTarget> LockWaylandBuffer(int aWidth, int aHeight,
+                                                      bool aClearBuffer);
   already_AddRefed<gfx::DrawTarget> LockImageSurface(const gfx::IntSize& aLockSize);
   bool                      CommitImageSurfaceToWaylandBuffer(const LayoutDeviceIntRegion& aRegion);
   void                      CommitWaylandBuffer();

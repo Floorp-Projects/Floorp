@@ -388,6 +388,7 @@ public:
 #ifdef MOZ_WAYLAND
     wl_display* GetWaylandDisplay();
     wl_surface* GetWaylandSurface();
+    bool WaylandSurfaceNeedsClear();
 #endif
     virtual void GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData) override;
 

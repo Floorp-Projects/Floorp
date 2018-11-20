@@ -213,6 +213,7 @@ moz_container_init (MozContainer *container)
       container->subsurface = nullptr;
       container->eglwindow = nullptr;
       container->parent_surface_committed = false;
+      container->needs_clear = true;
 
       GdkDisplay *gdk_display = gtk_widget_get_display(GTK_WIDGET(container));
       if (!GDK_IS_X11_DISPLAY(gdk_display)) {
@@ -266,8 +267,9 @@ moz_container_map_surface(MozContainer *container)
     if (GDK_IS_X11_DISPLAY(display))
         return false;
 
-    if (container->subsurface && container->surface)
+    if (container->subsurface && container->surface) {
         return true;
+    }
 
     if (!container->parent_surface_committed) {
         if (!container->parent_surface_committed_handler) {
@@ -313,6 +315,8 @@ moz_container_map_surface(MozContainer *container)
         wl_region* region = wl_compositor_create_region(compositor);
         wl_surface_set_input_region(container->surface, region);
         wl_region_destroy(region);
+
+        container->needs_clear = true;
     }
     return true;
 }
@@ -337,7 +341,6 @@ moz_container_unmap_surface(MozContainer *container)
     }
     container->parent_surface_committed = false;
 }
-
 #endif
 
 void
@@ -640,5 +643,13 @@ gboolean
 moz_container_has_wl_egl_window(MozContainer *container)
 {
     return container->eglwindow ? true : false;
+}
+
+gboolean
+moz_container_needs_clear(MozContainer *container)
+{
+    gboolean state = container->needs_clear;
+    container->needs_clear = false;
+    return state;
 }
 #endif
