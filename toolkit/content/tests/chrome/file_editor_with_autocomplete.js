@@ -287,7 +287,6 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         return true;
       }, popup: false, value: "Mozilla", searchString: "Mozilla",
       inputEvents: [
-        {inputType: "insertReplacementText"}, // TODO: We don't need to dispatch "input" event int this case because of not changing the value.
       ],
     },
     { description: "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): undo the word, but typed text shouldn't be canceled",

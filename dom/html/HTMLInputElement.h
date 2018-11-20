@@ -163,9 +163,11 @@ public:
   virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
 
   // Overriden nsIFormControl methods
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Reset() override;
   NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override;
   NS_IMETHOD SaveState() override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual bool RestoreState(PresState* aState) override;
   virtual bool AllowDrop() override;
   virtual bool IsDisabledForEvents(WidgetEvent* aEvent) override;
@@ -186,6 +188,7 @@ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult PreHandleEvent(EventChainVisitor& aVisitor) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult PostHandleEvent(
@@ -206,6 +209,7 @@ public:
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual void DoneCreatingElement() override;
 
   virtual EventStates IntrinsicState() const override;
@@ -233,7 +237,9 @@ public:
   NS_IMETHOD_(nsISelectionController*) GetSelectionController() override;
   NS_IMETHOD_(nsFrameSelection*) GetConstFrameSelection() override;
   NS_IMETHOD BindToFrame(nsTextControlFrame* aFrame) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD_(void) UnbindFromFrame(nsTextControlFrame* aFrame) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD CreateEditor() override;
   NS_IMETHOD_(void) UpdateOverlayTextVisibility(bool aNotify) override;
   NS_IMETHOD_(void) SetPreviewValue(const nsAString& aValue) override;
@@ -245,6 +251,7 @@ public:
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() override;
   NS_IMETHOD_(void) OnValueChanged(bool aNotify, bool aWasInteractiveUserChange) override;
   virtual void GetValueFromSetRangeText(nsAString& aValue) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult SetValueFromSetRangeText(const nsAString& aValue) override;
   NS_IMETHOD_(bool) HasCachedSelection() override;
 
@@ -284,6 +291,7 @@ public:
    */
   HTMLInputElement* GetSelectedRadioButton() const;
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLInputElement,
@@ -724,6 +732,7 @@ public:
     SetHTMLAttr(nsGkAtoms::value, aValue, aRv);
   }
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void SetValue(const nsAString& aValue, CallerType aCallerType,
                 ErrorResult& aRv);
   void GetValue(nsAString& aValue, CallerType aCallerType);
@@ -1019,10 +1028,12 @@ protected:
                         If previous value is unknown, aOldValue can be nullptr.
    * @param aFlags      See nsTextEditorState::SetValueFlags.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult SetValueInternal(const nsAString& aValue,
                             const nsAString* aOldValue,
                             uint32_t aFlags);
 
+  MOZ_CAN_RUN_SCRIPT
   nsresult SetValueInternal(const nsAString& aValue,
                             uint32_t aFlags)
   {
@@ -1210,6 +1221,7 @@ protected:
    * @note You should not call this method if GetValueMode() doesn't return
    * VALUE_MODE_VALUE.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult SetDefaultValueAsValue();
 
   void SetDirectionFromValue(bool aNotify);

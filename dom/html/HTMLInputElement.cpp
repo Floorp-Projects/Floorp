@@ -2344,6 +2344,10 @@ HTMLInputElement::SetUserInput(const nsAString& aValue,
     return;
   }
 
+  bool isInputEventDispatchedByTextEditorState =
+    GetValueMode() == VALUE_MODE_VALUE &&
+    IsSingleLineTextControl(false);
+
   nsresult rv =
     SetValueInternal(aValue,
       nsTextEditorState::eSetValue_BySetUserInput |
@@ -2351,9 +2355,11 @@ HTMLInputElement::SetUserInput(const nsAString& aValue,
       nsTextEditorState::eSetValue_MoveCursorToEndIfValueChanged);
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(this);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                       "Failed to dispatch input event");
+  if (!isInputEventDispatchedByTextEditorState) {
+    DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(this);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "Failed to dispatch input event");
+  }
 
   // If this element is not currently focused, it won't receive a change event for this
   // update through the normal channels. So fire a change event immediately, instead.
@@ -2810,6 +2816,11 @@ HTMLInputElement::SetValueInternal(const nsAString& aValue,
       }
 
       if (IsSingleLineTextControl(false)) {
+        // Note that if aFlags includes
+        // nsTextEditorState::eSetValue_BySetUserInput, "input" event is
+        // automatically dispatched by nsTextEditorState::SetValue().
+        // If you'd change condition of calling this method, you need to
+        // maintain SetUserInput() too.
         if (!mInputData.mState->SetValue(value, aOldValue, aFlags)) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
