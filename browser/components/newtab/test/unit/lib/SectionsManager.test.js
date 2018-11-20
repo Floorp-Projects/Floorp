@@ -18,7 +18,7 @@ describe("SectionsManager", () => {
   let storage;
 
   beforeEach(async () => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     globals = new GlobalOverrider();
     fakeServices = {prefs: {getBoolPref: sandbox.stub(), addObserver: sandbox.stub(), removeObserver: sandbox.stub()}};
     fakePlacesUtils = {history: {update: sinon.stub(), insert: sinon.stub()}};
@@ -394,7 +394,7 @@ describe("SectionsFeed", () => {
   let storage;
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     SectionsManager.sections.clear();
     SectionsManager.initialized = false;
     storage = {
@@ -662,7 +662,7 @@ describe("SectionsFeed", () => {
         meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
         type: "SET_PREF",
       });
-      feed.store.dispatch.reset();
+      feed.store.dispatch.resetHistory();
       feed.moveSection("topstories", +1);
       assert.calledOnce(feed.store.dispatch);
       assert.calledWith(feed.store.dispatch, {
@@ -680,7 +680,7 @@ describe("SectionsFeed", () => {
         meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
         type: "SET_PREF",
       });
-      feed.store.dispatch.reset();
+      feed.store.dispatch.resetHistory();
       feed.moveSection("highlights", -1);
       assert.calledOnce(feed.store.dispatch);
       assert.calledWith(feed.store.dispatch, {
@@ -698,7 +698,7 @@ describe("SectionsFeed", () => {
         meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
         type: "SET_PREF",
       });
-      feed.store.dispatch.reset();
+      feed.store.dispatch.resetHistory();
       feed.moveSection("topsites", +1);
       assert.calledOnce(feed.store.dispatch);
       assert.calledWith(feed.store.dispatch, {

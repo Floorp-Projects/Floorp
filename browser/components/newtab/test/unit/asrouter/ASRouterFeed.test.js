@@ -11,7 +11,7 @@ describe("ASRouterFeed", () => {
   let storage;
   beforeEach(() => {
     Router = new _ASRouter({providers: [FAKE_LOCAL_PROVIDER]});
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     storage = {
       get: sandbox.stub().returns(Promise.resolve([])),
       set: sandbox.stub().returns(Promise.resolve()),

@@ -24,7 +24,7 @@ const ONBOARDING_MESSAGES = async () => ([
       button_label: {string_id: "onboarding-button-label-try-now"},
       button_action: {type: "OPEN_PRIVATE_BROWSER_WINDOW"},
     },
-    trigger: {id: "firstRun"},
+    trigger: {id: "showOnboarding"},
   },
   {
     id: "ONBOARDING_2",
@@ -38,10 +38,10 @@ const ONBOARDING_MESSAGES = async () => ([
       button_label: {string_id: "onboarding-button-label-try-now"},
       button_action: {
         type: "OPEN_URL",
-        data: {args: "https://screenshots.firefox.com/#tour"},
+        data: {args: "https://screenshots.firefox.com/#tour", where: "tabshifted"},
       },
     },
-    trigger: {id: "firstRun"},
+    trigger: {id: "showOnboarding"},
   },
   {
     id: "ONBOARDING_3",
@@ -59,7 +59,7 @@ const ONBOARDING_MESSAGES = async () => ([
       },
     },
     targeting: "attributionData.campaign != 'non-fx-button' && attributionData.source != 'addons.mozilla.org'",
-    trigger: {id: "firstRun"},
+    trigger: {id: "showOnboarding"},
   },
   {
     id: "ONBOARDING_4",
@@ -73,11 +73,11 @@ const ONBOARDING_MESSAGES = async () => ([
       button_label: {string_id: "onboarding-button-label-try-now"},
       button_action: {
         type: "OPEN_URL",
-        data: {args: "https://addons.mozilla.org/en-US/firefox/addon/ghostery/"},
+        data: {args: "https://addons.mozilla.org/en-US/firefox/addon/ghostery/", where: "tabshifted"},
       },
     },
     targeting: "providerCohorts.onboarding == 'ghostery'",
-    trigger: {id: "firstRun"},
+    trigger: {id: "showOnboarding"},
   },
   {
     id: "ONBOARDING_5",
@@ -91,10 +91,16 @@ const ONBOARDING_MESSAGES = async () => ([
       button_label: {string_id: "onboarding-button-label-get-started"},
       button_action: {
         type: "OPEN_URL",
-        data: {args: await FxAccountsConfig.promiseEmailFirstURI("onboarding")},
+        data: {args: await FxAccountsConfig.promiseEmailFirstURI("onboarding"), where: "tabshifted"},
       },
     },
     targeting: "attributionData.campaign == 'non-fx-button' && attributionData.source == 'addons.mozilla.org'",
+    trigger: {id: "showOnboarding"},
+  },
+  {
+    id: "FXA_1",
+    template: "fxa_overlay",
+    targeting: "attributionData.campaign != 'non-fx-button' && attributionData.source != 'addons.mozilla.org'",
     trigger: {id: "firstRun"},
   },
 ]);
@@ -120,6 +126,11 @@ const OnboardingMessageProvider = {
     let translatedMessages = [];
     for (const msg of messages) {
       let translatedMessage = msg;
+      // If the message has no content, do not attempt to translate it
+      if (!msg.content) {
+        translatedMessages.push(msg);
+        continue;
+      }
       const [button_string, title_string, text_string] = await L10N.formatMessages([
         {id: msg.content.button_label.string_id},
         {id: msg.content.title.string_id},

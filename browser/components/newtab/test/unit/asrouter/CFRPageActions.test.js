@@ -31,7 +31,7 @@ describe("CFRPageActions", () => {
   ];
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     clock = sandbox.useFakeTimers();
 
     fakeRecommendation = {

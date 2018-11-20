@@ -70,7 +70,9 @@ public:
   {
     mNumber->Element()->DidChangeNumberList(mNumber->mAttrEnum,
                                             mEmptyOrOldValue);
-    if (mNumber->mList->IsAnimating()) {
+    // Null check mNumber->mList, since DidChangeNumberList can run script,
+    // potentially removing mNumber from its list.
+    if (mNumber->mList && mNumber->mList->IsAnimating()) {
       mNumber->Element()->AnimationNeedsResample();
     }
   }

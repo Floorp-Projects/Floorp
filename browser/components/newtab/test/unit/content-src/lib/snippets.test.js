@@ -13,7 +13,7 @@ import {reducers} from "common/Reducers.jsm";
 describe("SnippetsMap", () => {
   let snippetsMap;
   let dispatch;
-  let sandbox = sinon.sandbox.create();
+  let sandbox = sinon.createSandbox();
   let globals;
   beforeEach(() => {
     dispatch = sandbox.spy();
@@ -185,7 +185,7 @@ describe("SnippetsProvider", () => {
   let globals;
   let dispatch;
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     sandbox.stub(window, "fetch").returns(Promise.resolve(""));
     globals = new GlobalOverrider();
     globals.set("RPMAddMessageListener", sandbox.spy());
@@ -300,7 +300,7 @@ describe("SnippetsProvider", () => {
       await snippets.init({connect: false, appData: {version: 5, snippetsURL: "foo.com"}});
       assert.calledOnce(global.gSnippetsMap.clear);
 
-      global.gSnippetsMap.clear.reset();
+      global.gSnippetsMap.clear.resetHistory();
       global.gSnippetsMap.delete("snippets-cached-version");
       await snippets.init({connect: false, appData: {version: 5, snippetsURL: "foo.com"}});
       assert.calledOnce(global.gSnippetsMap.clear);
@@ -420,7 +420,7 @@ describe("addSnippetsSubscriber", () => {
   let snippets;
 
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
     store = createStore(combineReducers(reducers));
     sandbox.spy(store, "subscribe");
     ({snippets} = addSnippetsSubscriber(store));

@@ -129,12 +129,14 @@ class ContentPermissionRequestParent : public PContentPermissionRequestParent
   ContentPermissionRequestParent(const nsTArray<PermissionRequest>& aRequests,
                                  Element* aElement,
                                  const IPC::Principal& aPrincipal,
+                                 const IPC::Principal& aTopLevelPrincipal,
                                  const bool aIsHandlingUserInput);
   virtual ~ContentPermissionRequestParent();
 
   bool IsBeingDestroyed();
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsCOMPtr<nsIPrincipal> mTopLevelPrincipal;
   nsCOMPtr<Element> mElement;
   bool mIsHandlingUserInput;
   RefPtr<nsContentPermissionRequestProxy> mProxy;
@@ -150,11 +152,13 @@ class ContentPermissionRequestParent : public PContentPermissionRequestParent
 ContentPermissionRequestParent::ContentPermissionRequestParent(const nsTArray<PermissionRequest>& aRequests,
                                                                Element* aElement,
                                                                const IPC::Principal& aPrincipal,
+                                                               const IPC::Principal& aTopLevelPrincipal,
                                                                const bool aIsHandlingUserInput)
 {
   MOZ_COUNT_CTOR(ContentPermissionRequestParent);
 
   mPrincipal = aPrincipal;
+  mTopLevelPrincipal = aTopLevelPrincipal;
   mElement   = aElement;
   mRequests  = aRequests;
   mIsHandlingUserInput = aIsHandlingUserInput;
@@ -340,11 +344,13 @@ nsContentPermissionUtils::CreatePermissionArray(const nsACString& aType,
 nsContentPermissionUtils::CreateContentPermissionRequestParent(const nsTArray<PermissionRequest>& aRequests,
                                                                Element* aElement,
                                                                const IPC::Principal& aPrincipal,
+                                                               const IPC::Principal& aTopLevelPrincipal,
                                                                const bool aIsHandlingUserInput,
                                                                const TabId& aTabId)
 {
   PContentPermissionRequestParent* parent =
-    new ContentPermissionRequestParent(aRequests, aElement, aPrincipal, aIsHandlingUserInput);
+    new ContentPermissionRequestParent(aRequests, aElement, aPrincipal, aTopLevelPrincipal,
+                                       aIsHandlingUserInput);
   ContentPermissionRequestParentMap()[parent] = aTabId;
 
   return parent;
@@ -378,6 +384,10 @@ nsContentPermissionUtils::AskPermission(nsIContentPermissionRequest* aRequest,
     rv = aRequest->GetPrincipal(getter_AddRefs(principal));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsCOMPtr<nsIPrincipal> topLevelPrincipal;
+    rv = aRequest->GetTopLevelPrincipal(getter_AddRefs(topLevelPrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     bool isHandlingUserInput;
     rv = aRequest->GetIsHandlingUserInput(&isHandlingUserInput);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -390,6 +400,7 @@ nsContentPermissionUtils::AskPermission(nsIContentPermissionRequest* aRequest,
       req,
       permArray,
       IPC::Principal(principal),
+      IPC::Principal(topLevelPrincipal),
       isHandlingUserInput,
       child->GetTabId());
     ContentPermissionRequestChildMap()[req.get()] = child->GetTabId();
@@ -512,7 +523,27 @@ nsContentPermissionRequester::GetOnVisibilityChange(nsIContentPermissionRequestC
   return NS_OK;
 }
 
-NS_IMPL_CYCLE_COLLECTION(ContentPermissionRequestBase, mPrincipal, mWindow)
+static
+nsIPrincipal*
+GetTopLevelPrincipal(nsPIDOMWindowInner* aWindow)
+{
+  MOZ_ASSERT(aWindow);
+
+  nsPIDOMWindowOuter* top = aWindow->GetScriptableTop();
+  if (!top) {
+    return nullptr;
+  }
+
+  nsPIDOMWindowInner* inner = top->GetCurrentInnerWindow();
+  if (!inner) {
+    return nullptr;
+  }
+
+  return nsGlobalWindowInner::Cast(inner)->GetPrincipal();
+}
+
+NS_IMPL_CYCLE_COLLECTION(ContentPermissionRequestBase, mPrincipal,
+                         mTopLevelPrincipal, mWindow)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ContentPermissionRequestBase)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(nsISupports)
@@ -528,6 +559,9 @@ ContentPermissionRequestBase::ContentPermissionRequestBase(nsIPrincipal* aPrinci
                                                            const nsACString& aPrefName,
                                                            const nsACString& aType)
   : mPrincipal(aPrincipal)
+  , mTopLevelPrincipal(aWindow ?
+                         ::GetTopLevelPrincipal(aWindow) :
+                         nullptr)
   , mWindow(aWindow)
   , mRequester(aWindow ?
                  new nsContentPermissionRequester(aWindow) :
@@ -542,6 +576,13 @@ NS_IMETHODIMP
 ContentPermissionRequestBase::GetPrincipal(nsIPrincipal** aRequestingPrincipal)
 {
   NS_ADDREF(*aRequestingPrincipal = mPrincipal);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ContentPermissionRequestBase::GetTopLevelPrincipal(nsIPrincipal** aRequestingPrincipal)
+{
+  NS_ADDREF(*aRequestingPrincipal = mTopLevelPrincipal);
   return NS_OK;
 }
 
@@ -798,6 +839,18 @@ nsContentPermissionRequestProxy::GetPrincipal(nsIPrincipal * *aRequestingPrincip
   }
 
   NS_ADDREF(*aRequestingPrincipal = mParent->mPrincipal);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentPermissionRequestProxy::GetTopLevelPrincipal(nsIPrincipal * *aRequestingPrincipal)
+{
+  NS_ENSURE_ARG_POINTER(aRequestingPrincipal);
+  if (mParent == nullptr) {
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_ADDREF(*aRequestingPrincipal = mParent->mTopLevelPrincipal);
   return NS_OK;
 }
 
