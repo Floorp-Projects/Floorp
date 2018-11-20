@@ -13,24 +13,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=851780">Mozilla Bug 851780</a>
 <p id="display"></p>
 <div id="content">
-<input type="file" id="fileInput"></input>
-<textarea id="textarea" oninput="++textareaInput;"></textarea>
-<input type="text" id="input_text" oninput="++textInput[0];"></input>
-<input type="email" id="input_email" oninput="++textInput[1];"></input>
-<input type="search" id="input_search" oninput="++textInput[2];"></input>
-<input type="tel" id="input_tel" oninput="++textInput[3];"></input>
-<input type="url" id="input_url" oninput="++textInput[4];"></input>
-<input type="password" id="input_password" oninput="++textInput[5];"></input>
+<input type="file" id="fileInput">
+<textarea id="textarea"></textarea>
+<input type="text" id="input_text">
+<input type="email" id="input_email">
+<input type="search" id="input_search">
+<input type="tel" id="input_tel">
+<input type="url" id="input_url">
+<input type="password" id="input_password">
 
 <!-- "Non-text" inputs-->
-<input type="button" id="input_button" oninput="++NonTextInput[0];"></input>
-<input type="submit" id="input_submit" oninput="++NonTextInput[1];"></input>
-<input type="image" id="input_image" oninput="++NonTextInput[2];"></input>
-<input type="reset" id="input_reset" oninput="++NonTextInput[3];"></input>
-<input type="radio" id="input_radio" oninput="++NonTextInput[4];"></input>
-<input type="checkbox" id="input_checkbox" oninput="++NonTextInput[5];"></input>
-<input type="range" id="input_range" oninput="++rangeInput;"></input>
-<input type="number" id="input_number" oninput="++numberInput;"></input>
+<input type="button" id="input_button">
+<input type="submit" id="input_submit">
+<input type="image" id="input_image">
+<input type="reset" id="input_reset">
+<input type="radio" id="input_radio">
+<input type="checkbox" id="input_checkbox">
+<input type="range" id="input_range">
+<input type="number" id="input_number">
  
 </div>
 <pre id="test">
@@ -40,18 +40,73 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
 
   const isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
 
-  var textareaInput = 0;
+  function checkIfInputIsInputEvent(aEvent, aToDo, aDescription) {
+    if (aToDo) {
+      // Probably, key operation should fire "input" event with InputEvent interface.
+      // See https://github.com/w3c/input-events/issues/88
+      todo(aEvent instanceof InputEvent,
+         `"input" event should be dispatched with InputEvent interface ${aDescription}`);
+    } else {
+      ok(aEvent instanceof InputEvent,
+         `"input" event should be dispatched with InputEvent interface ${aDescription}`);
+    }
+    is(aEvent.cancelable, false,
+       `"input" event should be never cancelable ${aDescription}`);
+    is(aEvent.bubbles, true,
+       `"input" event should always bubble ${aDescription}`);
+  }
 
-  // Those are types were the input event apply.
+  function checkIfInputIsEvent(aEvent, aDescription) {
+    if (event.target.type === "checkbox" || event.target.type === "radio") {
+      todo(event instanceof Event && !(event instanceof UIEvent),
+           `"input" event should be dispatched with InputEvent interface ${aDescription}`);
+    } else {
+      ok(event instanceof Event && !(event instanceof UIEvent),
+         `"input" event should be dispatched with InputEvent interface ${aDescription}`);
+    }
+    is(aEvent.cancelable, false,
+       `"input" event should be never cancelable ${aDescription}`);
+    is(aEvent.bubbles, true,
+       `"input" event should always bubble ${aDescription}`);
+  }
+
+  var textareaInput = 0;
+  document.getElementById("textarea").oninput = (aEvent) => {
+    ++textareaInput;
+    checkIfInputIsInputEvent(aEvent, false, "on textarea element");
+  };
+
+  // These are the type were the input event apply.
   var textTypes = ["text", "email", "search", "tel", "url", "password"];
   var textInput = [0, 0, 0, 0, 0, 0];
+  for (let id of ["input_text", "input_email", "input_search", "input_tel", "input_url", "input_password"]) {
+    document.getElementById(id).oninput = (aEvent) => {
+      ++textInput[textTypes.indexOf(aEvent.target.type)];
+      checkIfInputIsInputEvent(aEvent, false, `on input element whose type is ${aEvent.target.type}`);
+    };
+  }
 
-  // Those are events were the input event does not apply.
+  // These are the type were the input event does not apply.
   var NonTextTypes = ["button", "submit", "image", "reset", "radio", "checkbox"];
   var NonTextInput = [0, 0, 0, 0, 0, 0];
+  for (let id of ["input_button", "input_submit", "input_image", "input_reset", "input_radio", "input_checkbox"]) {
+    document.getElementById(id).oninput = (aEvent) => {
+      ++NonTextInput[NonTextTypes.indexOf(aEvent.target.type)];
+      checkIfInputIsEvent(aEvent, `on input element whose type is ${aEvent.target.type}`);
+    };
+  }
 
   var rangeInput = 0;
+  document.getElementById("input_range").oninput = (aEvent) => {
+    ++rangeInput;
+    checkIfInputIsEvent(aEvent, "on input element whose type is range");
+  };
+
   var numberInput = 0;
+  document.getElementById("input_number").oninput = (aEvent) => {
+    ++numberInput;
+    checkIfInputIsInputEvent(aEvent, true, "on input element whose type is number");
+  };
 
   SimpleTest.waitForExplicitFinish();
   var MockFilePicker = SpecialPowers.MockFilePicker;
@@ -66,6 +121,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
 
     input.addEventListener("input", function (aEvent) {
       ok(true, "input event should have been dispatched on file input.");
+      checkIfInputIsEvent(aEvent, "on file input");
     });
 
     input.click();

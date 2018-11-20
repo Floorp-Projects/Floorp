@@ -29,11 +29,46 @@ SimpleTest.waitForFocus(function() {
     document.getElementById("textarea"),
   ];
   for (let editableElement of editableElements) {
+    function checkInputEvent(aEvent, aDescription) {
+      ok(aEvent instanceof InputEvent,
+         `"input" event should be dispatched with InputEvent interface ${aDescription}`);
+      is(aEvent.cancelable, false,
+         `"input" event should be never cancelable ${aDescription}`);
+      is(aEvent.bubbles, true,
+         `"input" event should always bubble ${aDescription}`);
+    }
+
+    let inputEvents = [];
+    function onInput(aEvent) {
+      inputEvents.push(aEvent);
+    }
+    editableElement.addEventListener("input", onInput);
+
     editableElement.focus();
+
+    inputEvents = [];
     synthesizeKey("a");
+    is(inputEvents.length, 1,
+       `Only one "input" event should be fired when inserting "a" with key on <${editableElement.tagName.toLowerCase()}> element`);
+    checkInputEvent(inputEvents[0], `when inserting "a" with key on <${editableElement.tagName.toLowerCase()}> element`);
+
+    inputEvents = [];
     synthesizeKey("c");
+    is(inputEvents.length, 1,
+       `Only one "input" event should be fired when inserting "c" with key on <${editableElement.tagName.toLowerCase()}> element`);
+    checkInputEvent(inputEvents[0], `when inserting "c" with key on <${editableElement.tagName.toLowerCase()}> element`);
+
+    inputEvents = [];
     synthesizeKey("KEY_ArrowLeft");
+    is(inputEvents.length, 0,
+       `No "input" event should be fired when pressing "ArrowLeft" key on <${editableElement.tagName.toLowerCase()}> element`);
+
+    inputEvents = [];
     synthesizeKey("b");
+    is(inputEvents.length, 1,
+       `Only one "input" event should be fired when inserting "b" with key on <${editableElement.tagName.toLowerCase()}> element`);
+    checkInputEvent(inputEvents[0], `when inserting "b" with key on <${editableElement.tagName.toLowerCase()}> element`);
+
     let editor = SpecialPowers.wrap(editableElement).editor;
     let transactionManager = editor.transactionManager;
     is(transactionManager.numberOfUndoItems, 2,
@@ -41,15 +76,30 @@ SimpleTest.waitForFocus(function() {
     // Defined as nsITextControlElement::DEFAULT_UNDO_CAP
     is(transactionManager.maxTransactionCount, 1000,
        editableElement.tagName + ": Initially, transaction manager should be able to have 1,000 undo items");
+
+    inputEvents = [];
     editableElement.value = "def";
+    is(inputEvents.length, 0,
+       `No "input" event should be fired when setting value of <${editableElement.tagName.toLowerCase()}> element`);
+
     is(transactionManager.numberOfUndoItems, 0,
        editableElement.tagName + ": After setting value, all undo items must be deleted");
     is(transactionManager.maxTransactionCount, 1000,
        editableElement.tagName + ": After setting value, maximum transaction count should be restored to the previous value");
+
+    inputEvents = [];
     synthesizeKey("a");
+    is(inputEvents.length, 1,
+       `Only one "input" event should be fired when inserting "a" with key again on <${editableElement.tagName.toLowerCase()}> element`);
+    checkInputEvent(inputEvents[0], `when inserting "a" with key again on <${editableElement.tagName.toLowerCase()}> element`);
+
+    inputEvents = [];
     synthesizeKey("z", { accelKey: true });
     is(editableElement.value, "def",
        editableElement.tagName + ": undo should work after setting value");
+    is(inputEvents.length, 1,
+       `Only one "input" event should be fired when undoing on <${editableElement.tagName.toLowerCase()}> element`);
+    checkInputEvent(inputEvents[0], `when undoing on <${editableElement.tagName.toLowerCase()}> element`);
 
     // Disable undo/redo.
     editor.enableUndo(0);
@@ -58,6 +108,8 @@ SimpleTest.waitForFocus(function() {
     editableElement.value = "hij";
     is(transactionManager.maxTransactionCount, 0,
        editableElement.tagName + ": Transaction manager should not be able to have undo items after setting value");
+
+    editableElement.removeEventListener("input", onInput);
   }
   SimpleTest.finish();
 });

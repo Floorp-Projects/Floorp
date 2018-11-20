@@ -102,14 +102,14 @@ async function runTests()
   target.setAttribute("timeout", 1);
   let tests1 = new nsDoTestsForEditorWithAutoComplete(
     "Testing on XUL textbox (asynchronously search)",
-    window, target, target.controller, is,
+    window, target, target.controller, is, todo_is,
     function() { return target.value; });
   await tests1.run();
 
   target.setAttribute("timeout", 0);
   let tests2 = new nsDoTestsForEditorWithAutoComplete(
         "Testing on XUL textbox (synchronously search)",
-        window, target, target.controller, is,
+        window, target, target.controller, is, todo_is,
         function() { return target.value; });
   await tests2.run();
 

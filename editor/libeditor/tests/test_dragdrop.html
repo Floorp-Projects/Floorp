@@ -24,6 +24,13 @@ SimpleTest.waitForExplicitFinish();
 var shouldClear = false;
 window.addEventListener("dragstart", function(event) { if (shouldClear) event.dataTransfer.clearData(); }, true);
 
+function checkInputEvent(aEvent, aExpectedTarget, aDescription) {
+  ok(aEvent instanceof InputEvent, `"input" event should be dispatched with InputEvent interface ${aDescription}`);
+  is(aEvent.cancelable, false, `"input" event should be never cancelable ${aDescription}`);
+  is(aEvent.bubbles, true, `"input" event should always bubble ${aDescription}`);
+  is(aEvent.target, aExpectedTarget, `"input" event should be fired on the <${aExpectedTarget.tagName.toLowerCase()}> element ${aDescription}`);
+}
+
 function doTest() {
   const htmlContextData = { type: "text/_moz_htmlcontext",
                             data: "<html><body></body></html>" };
@@ -39,56 +46,84 @@ function doTest() {
   var input = document.getElementById("input");
   var contenteditable = document.getElementById("contenteditable");
 
+  var inputEvents = [];
+  function onInput(event) {
+    inputEvents.push(event);
+  }
+  document.addEventListener("input", onInput);
+
   var selection = window.getSelection();
 
   // -------- Test dragging regular text
   selection.selectAllChildren(text);
+  inputEvents = [];
   var result = synthesizeDragStart(text, [[htmlContextData, htmlInfoData, htmlData,
                                            {type: "text/plain", data: "Some Text"}]], window, 40, 10);
   is(result, null, "Test dragging regular text");
+  is(inputEvents.length, 0,
+     'No "input" event should be fired when dragging from text in <span> element');
 
   // -------- Test dragging text from an <input>
   input.setSelectionRange(1, 4);
+  inputEvents = [];
   result = synthesizeDragStart(input, [[{type: "text/plain", data: "rag"}]], window, 25, 8);
   is(result, null, "Test dragging input");
+  is(inputEvents.length, 0,
+     'No "input" event should be fired when dragging from text in <input> element');
 
   // -------- Test dragging text from a <textarea>
   textarea.setSelectionRange(1, 7);
+  inputEvents = [];
   result = synthesizeDragStart(textarea, [[{type: "text/plain", data: "ome Te"}]], window, 25, 6);
   is(result, null, "Test dragging textarea");
   textarea.blur();
+  is(inputEvents.length, 0,
+     'No "input" event should be fired when dragging from text in <textarea> element');
 
   // -------- Test dragging text from a contenteditable
   selection.selectAllChildren(contenteditable.childNodes[1]);
+  inputEvents = [];
   result = synthesizeDragStart(contenteditable.childNodes[1],
                                [[htmlContextDataEditable, htmlInfoData,
                                 {type: "text/html", data: '<b id="bold">editable</b>' },
                                 {type: "text/plain", data: "editable"}]], window, 5, 6);
   is(result, null, "Test dragging contenteditable");
+  is(inputEvents.length, 0,
+     'No "input" event should be fired when dragging from text in contenteditable element');
   contenteditable.blur();
 
   // -------- Test dragging regular text of text/html to <input>
 
   selection.selectAllChildren(text);
   input.value = "";
+  inputEvents = [];
   synthesizeDrop(text, input, [], "copy");
   is(input.value, "Some Text", "Drag text/html onto input");
+  is(inputEvents.length, 1,
+     'Only one "input" events should be fired when dropping text/html into empty <input> element');
+  checkInputEvent(inputEvents[0], input, "when dropping text/html into empty <input> element");
 
   // -------- Test dragging regular text of text/html to disabled <input>
 
   selection.selectAllChildren(text);
   input.value = "";
   input.disabled = true;
+  inputEvents = [];
   synthesizeDrop(text, input, [], "copy");
   is(input.value, "", "Drag text/html onto disabled input");
+  is(inputEvents.length, 0,
+     'No "input" event should be fired when dropping on disabled <input> element');
   input.disabled = false;
 
   // -------- Test dragging regular text of text/html to readonly <input>
 
   selection.selectAllChildren(text);
   input.readOnly = true;
+  inputEvents = [];
   synthesizeDrop(text, input, [], "copy");
   is(input.value, "", "Drag text/html onto readonly input");
+  is(inputEvents.length, 0,
+     'No "input" event should be fired when dropping on readonly <input> element');
   input.readOnly = false;
 
   // -------- Test dragging regular text of text/html to <input>. This sets
@@ -98,16 +133,23 @@ function doTest() {
   shouldClear = true;
   selection.selectAllChildren(text);
   input.value = "";
+  inputEvents = [];
   synthesizeDrop(text, input, [[{type: "text/html", data: "Some <b>Bold<b> Text"}]], "copy");
   is(input.value, "", "Drag text/html onto input");
+  is(inputEvents.length, 0,
+     'No "input" event should be fired when dropping text/html into empty <input> element');
 
   // -------- Test dragging regular text of text/plain and text/html to <input>
 
   selection.selectAllChildren(text);
   input.value = "";
+  inputEvents = [];
   synthesizeDrop(text, input, [[{type: "text/html", data: "Some <b>Bold<b> Text"},
                                 {type: "text/plain", data: "Some Plain Text"}]], "copy");
   is(input.value, "Some Plain Text", "Drag text/html and text/plain onto input");
+  is(inputEvents.length, 1,
+     'Only one "input" events should be fired when dropping text/plain into empty <input> element');
+  checkInputEvent(inputEvents[0], input, "when dropping text/plain into empty <input> element");
 
   // -------- Test dragging regular text of text/plain to <textarea>
 
@@ -116,44 +158,63 @@ function doTest() {
 //  synthesizeDrop(text, textarea, [[{type: "text/plain", data: "Somewhat Longer Text"}]], "copy");
 //  is(textarea.value, "Somewhat Longer Text", "Drag text/plain onto textarea");
 
-  // -------- Test dragging special text type of text/plain to contenteditable
+  // -------- Test dragging special text type of text/plain to <input>
 
   selection.selectAllChildren(text);
+  inputEvents = [];
   synthesizeDrop(text, input, [[{type: "text/x-moz-text-internal", data: "Some Special Text"}]], "copy");
   is(input.value, "Some Plain Text", "Drag text/x-moz-text-internal onto input");
+  is(inputEvents.length, 0,
+     'No "input" event should be fired when dropping text/x-moz-text-internal into <input> element');
 
   // -------- Test dragging regular text of text/plain to contenteditable
 
   selection.selectAllChildren(text);
+  inputEvents = [];
   synthesizeDrop(text, contenteditable, [[{type: "text/plain", data: "Sample Text"}]], "copy");
   is(contenteditable.childNodes.length, 3, "Drag text/plain onto contenteditable child nodes");
   is(contenteditable.textContent, "This is some editable text.Sample Text",
                                   "Drag text/plain onto contenteditable text");
+  is(inputEvents.length, 1,
+     'Only one "input" events should be fired when dropping text/plain into contenteditable element');
+  checkInputEvent(inputEvents[0], contenteditable, "when dropping text/plain into contenteditable element");
 
   // -------- Test dragging regular text of text/html to contenteditable
 
   selection.selectAllChildren(text);
+  inputEvents = [];
   synthesizeDrop(text, contenteditable, [[{type: "text/html", data: "Sample <i>Italic</i> Text"}]], "copy");
   is(contenteditable.childNodes.length, 6, "Drag text/html onto contenteditable child nodes");
   is(contenteditable.childNodes[4].tagName, "I", "Drag text/html onto contenteditable italic");
   is(contenteditable.childNodes[4].textContent, "Italic", "Drag text/html onto contenteditable italic text");
+  is(inputEvents.length, 1,
+     'Only one "input" events should be fired when dropping text/html into contenteditable element');
+  checkInputEvent(inputEvents[0], contenteditable, "when dropping text/html into contenteditable element");
 
   // -------- Test dragging contenteditable to <input>
 
   selection.selectAllChildren(document.getElementById("bold"));
+  inputEvents = [];
   synthesizeDrop(bold, input, [[{type: "text/html", data: "<b>editable</b>"},
                                 {type: "text/plain", data: "editable"}]], "copy");
-  is(input.value, "Some Plain Texteditable", "Move text/html and text/plain from contenteditable onto input");
+  is(input.value, "Some Plain Texteditable", "Copy text/html and text/plain from contenteditable onto input");
+  is(inputEvents.length, 1,
+     'Only one "input" events should be fired when dragging from contenteditable to <input> element');
+  checkInputEvent(inputEvents[0], input, "when dragging from contenteditable to <input> element");
 
   // -------- Test dragging contenteditable to contenteditable
 
   shouldClear = false;
 
   selection.selectAllChildren(contenteditable.childNodes[4]);
+  inputEvents = [];
   synthesizeDrop(contenteditable.childNodes[4], contenteditable, [], "copy");
   is(contenteditable.childNodes.length, 7, "Move text/html and text/plain from contenteditable onto itself child nodes");
   is(contenteditable.childNodes[6].tagName, "I", "Move text/html and text/plain from contenteditable onto itself italic");
   is(contenteditable.childNodes[6].textContent, "Italic", "Move text/html and text/plain from contenteditable onto itself text");
+  is(inputEvents.length, 1,
+     'Only one "input" events should be fired when dragging (copy) in a contentediable element');
+  checkInputEvent(inputEvents[0], contenteditable, "when dragging (copy) in a contentediable element");
 
   // We'd test 'move' here as well as 'copy', but that requires knowledge of
   // the source of the drag which drag simulation doesn't provide.
@@ -165,9 +226,17 @@ function doTest() {
 
   var nonEditable = document.getElementById("noneditable");
   selection.selectAllChildren(nonEditable);
+  inputEvents = [];
   synthesizeDrop(nonEditable, document.getElementById("first"), [], "copy");
   is(document.getElementById("nestedce").textContent, " MiddleFirst letter Middle Last part",
      "Drag non-editable text/html onto contenteditable text");
+  todo_is(inputEvents.length, 1,
+     'Only one "input" events should be fired when dragging from inner non-editable element to a contentediable element');
+  if (inputEvents.length > 0) {
+    checkInputEvent(inputEvents[0], document.getElementById("nestedce"), "when dragging from inner non-editable element to a contentediable element");
+  }
+
+  document.removeEventListener("input", onInput);
 
   SimpleTest.finish();
 }

@@ -32,9 +32,15 @@ function handleSubmit() { // eslint-disable-line no-unused-vars
   SimpleTest.finish();
 }
 
-function handleInput() {
+function handleInput(aEvent) {
   info("Input");
   is(input.value, expectedValue, "Check input value");
+  todo(aEvent instanceof InputEvent,
+       '"input" event should be dispatched with InputEvent interface');
+  todo_is(aEvent.cancelable, false,
+          '"input" event should be never cancelable');
+  is(aEvent.bubbles, true,
+     '"input" event should always bubble');
   input.removeEventListener("input", handleInput, true);
   SimpleTest.finish();
 }

@@ -59,6 +59,16 @@ function onunload()
   SimpleTest.finish();
 }
 
+function checkInputEvent(aEvent, aIsComposing, aDescription) {
+  if (aEvent.type != "input") {
+    return;
+  }
+  ok(aEvent instanceof InputEvent, `${aDescription}"input" event should be dispatched with InputEvent interface`);
+  is(aEvent.cancelable, false, `${aDescription}"input" event should be never cancelable`);
+  is(aEvent.bubbles, true, `${aDescription}"input" event should always bubble`);
+  is(aEvent.isComposing, aIsComposing, `${aDescription}isComposing should be ${aIsComposing}`);
+}
+
 const kIsMac = (navigator.platform.indexOf("Mac") == 0);
 
 var iframe = document.getElementById("iframe");
@@ -222,6 +232,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[2] should be text");
   is(events[3].type, "input",
      description + "events[3] should be input");
+  checkInputEvent(events[3], true, description);
   TIP1.cancelComposition();
 
   // Let's check if beginInputTransaction() fails to steal the rights of TextEventDispatcher during commitComposition().
@@ -257,6 +268,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[1] should be compositionend");
   is(events[2].type, "input",
      description + "events[2] should be input");
+  checkInputEvent(events[2], false, description);
 
   // Let's check if beginInputTransaction() fails to steal the rights of TextEventDispatcher during commitCompositionWith("bar").
   events = [];
@@ -304,6 +316,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[3] should be compositionend");
   is(events[4].type, "input",
      description + "events[4] should be input");
+  checkInputEvent(events[4], false, description);
 
   // Let's check if beginInputTransaction() fails to steal the rights of TextEventDispatcher during cancelComposition().
   events = [];
@@ -346,6 +359,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[2] should be compositionend");
   is(events[3].type, "input",
      description + "events[3] should be input");
+  checkInputEvent(events[3], false, description);
 
   // Let's check if beginInputTransaction() fails to steal the rights of TextEventDispatcher during keydown() and keyup().
   events = [];
@@ -385,6 +399,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[1] should be keypress");
   is(events[2].type, "input",
      description + "events[2] should be input");
+  checkInputEvent(events[2], false, description);
   is(events[3].type, "keyup",
      description + "events[3] should be keyup");
 
@@ -442,6 +457,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[2] should be text");
   is(events[3].type, "input",
      description + "events[3] should be input");
+  checkInputEvent(events[3], true, description);
   TIP1.cancelComposition();
 
   // Let's check if beginInputTransactionForTests() fails to steal the rights of TextEventDispatcher during commitComposition().
@@ -477,6 +493,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[1] should be compositionend");
   is(events[2].type, "input",
      description + "events[2] should be input");
+  checkInputEvent(events[2], false, description);
 
   // Let's check if beginInputTransactionForTests() fails to steal the rights of TextEventDispatcher during commitCompositionWith("bar").
   events = [];
@@ -524,6 +541,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[3] should be compositionend");
   is(events[4].type, "input",
      description + "events[4] should be input");
+  checkInputEvent(events[4], false, description);
 
   // Let's check if beginInputTransactionForTests() fails to steal the rights of TextEventDispatcher during cancelComposition().
   events = [];
@@ -566,6 +584,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[2] should be compositionend");
   is(events[3].type, "input",
      description + "events[3] should be input");
+  checkInputEvent(events[3], false, description);
 
   // Let's check if beginInputTransactionForTests() fails to steal the rights of TextEventDispatcher during keydown() and keyup().
   events = [];
@@ -605,6 +624,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[1] should be keypress");
   is(events[2].type, "input",
      description + "events[2] should be input");
+  checkInputEvent(events[2], false, description);
   is(events[3].type, "keyup",
      description + "events[3] should be keyup");
 
@@ -692,6 +712,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[2] should be text");
   is(events[3].type, "input",
      description + "events[3] should be input");
+  checkInputEvent(events[3], true, description);
   TIP1.cancelComposition();
 
   // Let's check if beginInputTransaction() with another window fails to begin new input transaction with different TextEventDispatcher during commitComposition().
@@ -745,6 +766,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[1] should be compositionend");
   is(events[2].type, "input",
      description + "events[2] should be input");
+  checkInputEvent(events[2], false, description);
 
   // Let's check if beginInputTransaction() with another window fails to begin new input transaction with different TextEventDispatcher during commitCompositionWith("bar");.
   events = [];
@@ -822,6 +844,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[3] should be compositionend");
   is(events[4].type, "input",
      description + "events[4] should be input");
+  checkInputEvent(events[4], false, description);
 
   // Let's check if beginInputTransaction() with another window fails to begin new input transaction with different TextEventDispatcher during cancelComposition();.
   events = [];
@@ -888,6 +911,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[2] should be compositionend");
   is(events[3].type, "input",
      description + "events[3] should be input");
+  checkInputEvent(events[3], false, description);
 
   // Let's check if beginInputTransaction() with another window fails to begin new input transaction with different TextEventDispatcher during keydown() and keyup();.
   events = [];
@@ -951,6 +975,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[1] should be keypress");
   is(events[2].type, "input",
      description + "events[2] should be input");
+  checkInputEvent(events[2], false, description);
   is(events[3].type, "keyup",
      description + "events[3] should be keyup");
 
@@ -1038,6 +1063,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[2] should be text");
   is(events[3].type, "input",
      description + "events[3] should be input");
+  checkInputEvent(events[3], true, description);
   TIP1.cancelComposition();
 
   // Let's check if beginInputTransactionForTests() with another window fails to begin new input transaction with different TextEventDispatcher during commitComposition().
@@ -1091,6 +1117,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[1] should be compositionend");
   is(events[2].type, "input",
      description + "events[2] should be input");
+  checkInputEvent(events[2], false, description);
 
   // Let's check if beginInputTransactionForTests() with another window fails to begin new input transaction with different TextEventDispatcher during commitCompositionWith("bar");.
   events = [];
@@ -1168,6 +1195,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[3] should be compositionend");
   is(events[4].type, "input",
      description + "events[4] should be input");
+  checkInputEvent(events[4], false, description);
 
   // Let's check if beginInputTransactionForTests() with another window fails to begin new input transaction with different TextEventDispatcher during cancelComposition();.
   events = [];
@@ -1234,6 +1262,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[2] should be compositionend");
   is(events[3].type, "input",
      description + "events[3] should be input");
+  checkInputEvent(events[3], false, description);
 
   // Let's check if beginInputTransactionForTests() with another window fails to begin new input transaction with different TextEventDispatcher during keydown() and keyup();.
   events = [];
@@ -1297,6 +1326,7 @@ function runBeginInputTransactionMethodTests()
      description + "events[1] should be keypress");
   is(events[2].type, "input",
      description + "events[2] should be input");
+  checkInputEvent(events[2], false, description);
   is(events[3].type, "keyup",
      description + "events[3] should be keyup");
 
