@@ -3123,10 +3123,13 @@ BufferInstructionIterator::maybeSkipAutomaticInstructions()
 
 // Cases to be handled:
 // 1) no pools or branches in sight => return this+1
-// 2) branch to next instruction => return this+2, because a nop needed to be inserted into the stream.
-// 3) this+1 is an artificial guard for a pool => return first instruction after the pool
+// 2) branch to next instruction => return this+2, because a nop needed to be
+//    inserted into the stream.
+// 3) this+1 is an artificial guard for a pool => return first instruction
+//    after the pool
 // 4) this+1 is a natural guard => return the branch
-// 5) this is a branch, right before a pool => return first instruction after the pool
+// 5) this is a branch, right before a pool => return first instruction after
+//    the pool
 // in assembly form:
 // 1) add r0, r0, r0 <= this
 //    add r1, r1, r1 <= returned value
@@ -3139,12 +3142,15 @@ BufferInstructionIterator::maybeSkipAutomaticInstructions()
 //
 // 3) add r0, r0, r0 <= this
 //    b after_pool;
-//    .word 0xffff0002  # bit 15 being 0 indicates that the branch was not requested by the assembler
-//    0xdeadbeef        # the 2 indicates that there is 1 pool entry, and the pool header
+//    .word 0xffff0002  # bit 15 being 0 indicates that the branch was not
+//                      # requested by the assembler
+//    0xdeadbeef        # the 2 indicates that there is 1 pool entry, and the
+//                      # pool header
 //    add r4, r4, r4 <= returned value
 // 4) add r0, r0, r0 <= this
 //    b after_pool  <= returned value
-//    .word 0xffff8002  # bit 15 being 1 indicates that the branch was requested by the assembler
+//    .word 0xffff8002  # bit 15 being 1 indicates that the branch was
+//                      # requested by the assembler
 //    0xdeadbeef
 //    add r4, r4, r4
 // 5) b after_pool  <= this

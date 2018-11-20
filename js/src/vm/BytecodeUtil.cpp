@@ -2526,7 +2526,8 @@ js::DecompileArgument(JSContext* cx, int formalIndex, HandleValue v)
 extern bool
 js::IsValidBytecodeOffset(JSContext* cx, JSScript* script, size_t offset)
 {
-    // This could be faster (by following jump instructions if the target is <= offset).
+    // This could be faster (by following jump instructions if the target
+    // is <= offset).
     for (BytecodeRange r(cx, script); !r.empty(); r.popFront()) {
         size_t here = r.frontOffset();
         if (here >= offset) {

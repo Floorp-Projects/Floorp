@@ -3490,7 +3490,8 @@ ExtractMathSpace(MDefinition* ins)
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unknown TruncateKind");
 }
 
-// Extract a linear sum from ins, if possible (otherwise giving the sum 'ins + 0').
+// Extract a linear sum from ins, if possible (otherwise giving the
+// sum 'ins + 0').
 SimpleLinearSum
 jit::ExtractLinearSum(MDefinition* ins, MathSpace space)
 {

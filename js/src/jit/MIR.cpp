@@ -3614,7 +3614,8 @@ MUrsh::fallible() const
 static bool
 SafelyCoercesToDouble(MDefinition* op)
 {
-    // Strings and symbols are unhandled -- visitToDouble() doesn't support them yet.
+    // Strings and symbols are unhandled -- visitToDouble() doesn't support
+    // them yet.
     // Null is unhandled -- ToDouble(null) == 0, but (0 == null) is false.
     return SimpleArithOperand(op) && !op->mightBeType(MIRType::Null);
 }

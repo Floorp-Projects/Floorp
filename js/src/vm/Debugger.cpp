@@ -3351,8 +3351,8 @@ Debugger::traceIncomingCrossCompartmentEdges(JSTracer* trc)
 
 /*
  * This method has two tasks:
- *   1. Mark Debugger objects that are unreachable except for debugger hooks that
- *      may yet be called.
+ *   1. Mark Debugger objects that are unreachable except for debugger hooks
+ *      that may yet be called.
  *   2. Mark breakpoint handlers.
  *
  * This happens during the iterative part of the GC mark phase. This method

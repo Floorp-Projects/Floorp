@@ -4159,8 +4159,8 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     assumeStubFrame();
     bailoutReturnOffset_.bind(masm.currentOffset());
 
-    // Load passed-in ThisV into R1 just in case it's needed.  Need to do this before
-    // we leave the stub frame since that info will be lost.
+    // Load passed-in ThisV into R1 just in case it's needed.  Need to do this
+    // before we leave the stub frame since that info will be lost.
     // Current stack:  [...., ThisV, ActualArgc, CalleeToken, Descriptor ]
     masm.loadValue(Address(masm.getStackPointer(), 3 * sizeof(size_t)), R1);
 
@@ -4334,7 +4334,9 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
         // the resulting this object to.
         masm.pop(argcReg);
 
-        // Save "this" value back into pushed arguments on stack.  R0 can be clobbered after that.
+        // Save "this" value back into pushed arguments on stack. R0 can be
+        // clobbered after that.
+        //
         // Stack now looks like:
         //      [..., Callee, ThisV, Arg0V, ..., ArgNV, [NewTarget], StubFrameHeader ]
         if (isSpread_) {

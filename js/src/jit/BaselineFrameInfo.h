@@ -39,9 +39,9 @@ struct BytecodeInfo;
 //
 // For stack values, the following invariants hold (and are checked between ops):
 //
-// (1) If a value is synced (kind == Stack), all values below it must also be synced.
-//     In other words, values with kind other than Stack can only appear on top of the
-//     abstract stack.
+// (1) If a value is synced (kind == Stack), all values below it must also be
+//     synced. In other words, values with kind other than Stack can only appear
+//     on top of the abstract stack.
 //
 // (2) When we call a stub or IC, all values still on the stack must be synced.
 
