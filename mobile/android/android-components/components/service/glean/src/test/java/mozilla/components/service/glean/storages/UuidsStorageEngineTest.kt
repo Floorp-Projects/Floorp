@@ -6,6 +6,7 @@ package mozilla.components.service.glean.storages
 import android.content.Context
 import android.content.SharedPreferences
 import mozilla.components.service.glean.Lifetime
+import mozilla.components.service.glean.UuidMetricType
 import java.util.UUID
 
 import org.junit.Before
@@ -66,13 +67,18 @@ class UuidsStorageEngineTest {
         val storeNames = listOf("store1", "store2")
         val uuid = UUID.fromString("ce2adeb8-843a-4232-87a5-a099ed1e7bb3")
 
+        val metric = UuidMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Ping,
+            name = "uuid_metric",
+            sendInPings = storeNames
+        )
+
         // Record the uuid in the stores, without providing optional arguments.
         UuidsStorageEngine.record(
-                stores = storeNames,
-                category = "telemetry",
-                name = "uuid_metric",
-                lifetime = Lifetime.Ping,
-                value = uuid
+            metric,
+            value = uuid
         )
 
         // Check that the data was correctly set in each store.
@@ -95,13 +101,18 @@ class UuidsStorageEngineTest {
 
         val uuid = UUID.fromString("ce2adeb8-843a-4232-87a5-a099ed1e7bb3")
 
+        val metric = UuidMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Ping,
+            name = "uuid_metric",
+            sendInPings = storeNames
+        )
+
         // Record the uuid in the stores, without providing optional arguments.
         UuidsStorageEngine.record(
-                stores = storeNames,
-                category = "telemetry",
-                name = "uuid_metric",
-                lifetime = Lifetime.Ping,
-                value = uuid
+            metric,
+            value = uuid
         )
 
         // Get the snapshot from "store1" and clear it.
@@ -122,12 +133,17 @@ class UuidsStorageEngineTest {
     fun `Uuids are serialized in the correct JSON format`() {
         val testUUID = "ce2adeb8-843a-4232-87a5-a099ed1e7bb3"
 
+        val metric = UuidMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Ping,
+            name = "uuid_metric",
+            sendInPings = listOf("store1")
+        )
+
         // Record the string in the store, without providing optional arguments.
         UuidsStorageEngine.record(
-            stores = listOf("store1"),
-            category = "telemetry",
-            name = "uuid_metric",
-            lifetime = Lifetime.Ping,
+            metric,
             value = UUID.fromString(testUUID)
         )
 
@@ -148,11 +164,16 @@ class UuidsStorageEngineTest {
         val storageEngine = UuidsStorageEngineImplementation()
         storageEngine.applicationContext = RuntimeEnvironment.application
 
-        storageEngine.record(
-            stores = listOf("some_store", "other_store"),
+        val metric = UuidMetricType(
+            disabled = false,
             category = "telemetry",
-            name = "uuidMetric",
             lifetime = Lifetime.User,
+            name = "uuidMetric",
+            sendInPings = listOf("some_store", "other_store")
+        )
+
+        storageEngine.record(
+            metric,
             value = UUID.fromString(sampleUUID)
         )
 

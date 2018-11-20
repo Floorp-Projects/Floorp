@@ -50,10 +50,7 @@ data class UuidMetricType(
 
         // Delegate storing the event to the storage engine.
         UuidsStorageEngine.record(
-                stores = sendInPings,
-                category = category,
-                name = name,
-                lifetime = lifetime,
+                this,
                 value = value
         )
     }

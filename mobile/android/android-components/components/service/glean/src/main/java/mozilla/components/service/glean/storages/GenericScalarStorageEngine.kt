@@ -8,6 +8,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import mozilla.components.service.glean.Lifetime
+import mozilla.components.service.glean.CommonMetricData
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
 
@@ -169,10 +170,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
      * simple scalars to the internal storage.
      */
     protected fun recordScalar(
-        stores: List<String>,
-        category: String,
-        name: String,
-        lifetime: Lifetime,
+        metric: CommonMetricData,
         value: ScalarType
     ) {
         checkNotNull(applicationContext) { "No recording can take place without an application context" }
@@ -180,15 +178,19 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
         // Record a copy of the metric in all the needed stores.
         @SuppressLint("CommitPrefEdits")
         val userPrefs: SharedPreferences.Editor? =
-            if (lifetime == Lifetime.User) userLifetimeStorage.edit() else null
-        stores.forEach {
-            val storeData = dataStores[lifetime.ordinal].getOrPut(it) { mutableMapOf() }
+            if (metric.lifetime == Lifetime.User) userLifetimeStorage.edit() else null
+        metric.getStorageNames().forEach {
+            val storeData = dataStores[metric.lifetime.ordinal].getOrPut(it) { mutableMapOf() }
             // We support empty categories for enabling the internal use of metrics
             // when assembling pings in [PingMaker].
-            val entryName = if (category.isEmpty()) name else "$category.$name"
+            val entryName = if (metric.category.isEmpty()) {
+                metric.name
+            } else {
+                "${metric.category}.${metric.name}"
+            }
             storeData[entryName] = value
             // Persist data with "user" lifetime
-            if (lifetime == Lifetime.User) {
+            if (metric.lifetime == Lifetime.User) {
                 userPrefs?.putString("$it#$entryName", serializeSingleMetric(value))
             }
         }

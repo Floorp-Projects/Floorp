@@ -6,6 +6,7 @@ package mozilla.components.service.glean.storages
 import android.content.Context
 import android.content.SharedPreferences
 import mozilla.components.service.glean.Lifetime
+import mozilla.components.service.glean.StringMetricType
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.assertEquals
@@ -62,13 +63,18 @@ class StringsStorageEngineTest {
     fun `setValue() properly sets the value in all stores`() {
         val storeNames = listOf("store1", "store2")
 
+        val metric = StringMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Ping,
+            name = "string_metric",
+            sendInPings = storeNames
+        )
+
         // Record the string in the stores, without providing optional arguments.
         StringsStorageEngine.record(
-                stores = storeNames,
-                category = "telemetry",
-                name = "string_metric",
-                lifetime = Lifetime.Ping,
-                value = "test_string_object"
+            metric,
+            value = "test_string_object"
         )
 
         // Check that the data was correctly set in each store.
@@ -89,12 +95,17 @@ class StringsStorageEngineTest {
     fun `getSnapshot() correctly clears the stores`() {
         val storeNames = listOf("store1", "store2")
 
+        val metric = StringMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Ping,
+            name = "string_metric",
+            sendInPings = storeNames
+        )
+
         // Record the string in the stores, without providing optional arguments.
         StringsStorageEngine.record(
-            stores = storeNames,
-            category = "telemetry",
-            name = "string_metric",
-            lifetime = Lifetime.Ping,
+            metric,
             value = "test_string_value"
         )
 
@@ -114,12 +125,17 @@ class StringsStorageEngineTest {
 
     @Test
     fun `Strings are serialized in the correct JSON format`() {
+        val metric = StringMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Ping,
+            name = "string_metric",
+            sendInPings = listOf("store1")
+        )
+
         // Record the string in the store, without providing optional arguments.
         StringsStorageEngine.record(
-            stores = listOf("store1"),
-            category = "telemetry",
-            name = "string_metric",
-            lifetime = Lifetime.Ping,
+            metric,
             value = "test_string_value"
         )
 

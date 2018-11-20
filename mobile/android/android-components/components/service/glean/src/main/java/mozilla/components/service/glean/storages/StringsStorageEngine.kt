@@ -5,7 +5,7 @@
 package mozilla.components.service.glean.storages
 
 import android.annotation.SuppressLint
-import mozilla.components.service.glean.Lifetime
+import mozilla.components.service.glean.CommonMetricData
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -39,12 +39,9 @@ open class StringsStorageEngineImplementation(
      */
     @Synchronized
     fun record(
-        stores: List<String>,
-        category: String,
-        name: String,
-        lifetime: Lifetime,
+        metric: CommonMetricData,
         value: String
     ) {
-        super.recordScalar(stores, category, name, lifetime, value)
+        super.recordScalar(metric, value)
     }
 }

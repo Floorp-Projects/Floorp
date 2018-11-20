@@ -6,6 +6,7 @@ package mozilla.components.service.glean.storages
 
 import android.content.Context
 import android.content.SharedPreferences
+import mozilla.components.service.glean.CommonMetricData
 import mozilla.components.service.glean.Lifetime
 import mozilla.components.support.base.log.logger.Logger
 import org.junit.Assert.assertEquals
@@ -36,14 +37,21 @@ class GenericScalarStorageEngineTest {
         }
 
         fun record(
-            stores: List<String>,
-            category: String,
-            name: String,
-            lifetime: Lifetime,
+            metric: CommonMetricData,
             value: Int
         ) {
-            super.recordScalar(stores, category, name, lifetime, value)
+            super.recordScalar(metric, value)
         }
+    }
+
+    private data class GenericMetricType(
+        override val disabled: Boolean,
+        override val category: String,
+        override val lifetime: Lifetime,
+        override val name: String,
+        override val sendInPings: List<String>
+    ) : CommonMetricData {
+        override val defaultStorageDestinations: List<String> = listOf("metrics")
     }
 
     @Test
@@ -54,21 +62,31 @@ class GenericScalarStorageEngineTest {
         val storageEngine = MockScalarStorageEngine()
         storageEngine.applicationContext = RuntimeEnvironment.application
 
+        val metric1 = GenericMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.User,
+            name = "userLifetimeData",
+            sendInPings = listOf("store1")
+        )
+
         // Record a value with User lifetime
         storageEngine.record(
-            stores = listOf("store1"),
-            category = "telemetry",
-            name = "userLifetimeData",
-            lifetime = Lifetime.User,
+            metric1,
             value = dataUserLifetime
+        )
+
+        val metric2 = GenericMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Ping,
+            name = "pingLifetimeData",
+            sendInPings = listOf("store1")
         )
 
         // Record a value with Ping lifetime
         storageEngine.record(
-            stores = listOf("store1"),
-            category = "telemetry",
-            name = "pingLifetimeData",
-            lifetime = Lifetime.Ping,
+            metric2,
             value = dataPingLifetime
         )
 
@@ -92,12 +110,17 @@ class GenericScalarStorageEngineTest {
         val storageEngine = MockScalarStorageEngine()
         storageEngine.applicationContext = RuntimeEnvironment.application
 
+        val metric = GenericMetricType(
+            disabled = false,
+            category = "",
+            lifetime = Lifetime.Ping,
+            name = "noCategoryName",
+            sendInPings = listOf("store1")
+        )
+
         // Record a value with User lifetime
         storageEngine.record(
-            stores = listOf("store1"),
-            category = "",
-            name = "noCategoryName",
-            lifetime = Lifetime.Ping,
+            metric,
             value = 37
         )
 
@@ -131,12 +154,17 @@ class GenericScalarStorageEngineTest {
         val storageEngine = MockScalarStorageEngine()
         storageEngine.applicationContext = context
 
+        val metric = GenericMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.User,
+            name = "pingLifetimeData",
+            sendInPings = listOf("store1")
+        )
+
         // Record a value with Ping lifetime
         storageEngine.record(
-            stores = listOf("store1"),
-            category = "telemetry",
-            name = "pingLifetimeData",
-            lifetime = Lifetime.User,
+            metric,
             value = 37
         )
 
@@ -165,12 +193,17 @@ class GenericScalarStorageEngineTest {
         val storageEngine = MockScalarStorageEngine()
         storageEngine.applicationContext = context
 
+        val metric = GenericMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Ping,
+            name = "pingLifetimeData",
+            sendInPings = listOf("store1")
+        )
+
         // Record a value with Ping lifetime
         storageEngine.record(
-            stores = listOf("store1"),
-            category = "telemetry",
-            name = "pingLifetimeData",
-            lifetime = Lifetime.Ping,
+            metric,
             value = 37
         )
 
@@ -269,30 +302,45 @@ class GenericScalarStorageEngineTest {
 
         val stores = listOf("store1", "store2")
 
+        val metric1 = GenericMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.User,
+            name = "userLifetimeData",
+            sendInPings = stores
+        )
+
         // Record a value with User lifetime
         storageEngine.record(
-            stores = stores,
-            category = "telemetry",
-            name = "userLifetimeData",
-            lifetime = Lifetime.User,
+            metric1,
             value = 11
+        )
+
+        val metric2 = GenericMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "applicationLifetimeData",
+            sendInPings = stores
         )
 
         // Record a value with Application lifetime
         storageEngine.record(
-            stores = stores,
-            category = "telemetry",
-            name = "applicationLifetimeData",
-            lifetime = Lifetime.Application,
+            metric2,
             value = 7
+        )
+
+        val metric3 = GenericMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Ping,
+            name = "pingLifetimeData",
+            sendInPings = stores
         )
 
         // Record a value with Ping lifetime
         storageEngine.record(
-            stores = stores,
-            category = "telemetry",
-            name = "pingLifetimeData",
-            lifetime = Lifetime.Ping,
+            metric3,
             value = 2015
         )
 
@@ -323,21 +371,31 @@ class GenericScalarStorageEngineTest {
             val storageEngine = MockScalarStorageEngine()
             storageEngine.applicationContext = RuntimeEnvironment.application
 
+            val metric1 = GenericMetricType(
+                disabled = false,
+                category = "telemetry",
+                lifetime = Lifetime.User,
+                name = "userLifetimeData",
+                sendInPings = listOf("store1")
+            )
+
             // Record a value with User lifetime
             storageEngine.record(
-                stores = listOf("store1"),
-                category = "telemetry",
-                name = "userLifetimeData",
-                lifetime = Lifetime.User,
+                metric1,
                 value = 37
+            )
+
+            val metric2 = GenericMetricType(
+                disabled = false,
+                category = "telemetry",
+                lifetime = Lifetime.Application,
+                name = "applicationLifetimeData",
+                sendInPings = listOf("store1")
             )
 
             // Record a value with Application lifetime
             storageEngine.record(
-                stores = listOf("store1"),
-                category = "telemetry",
-                name = "applicationLifetimeData",
-                lifetime = Lifetime.Application,
+                metric2,
                 value = 85
             )
 

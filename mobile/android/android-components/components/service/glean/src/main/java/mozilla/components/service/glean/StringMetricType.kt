@@ -56,10 +56,7 @@ data class StringMetricType(
 
         // Delegate storing the string to the storage engine.
         StringsStorageEngine.record(
-            stores = getStorageNames(),
-            category = category,
-            name = name,
-            lifetime = lifetime,
+            this,
             value = truncatedValue
         )
     }

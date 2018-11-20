@@ -5,9 +5,9 @@
 package mozilla.components.service.glean.storages
 
 import android.annotation.SuppressLint
+import mozilla.components.service.glean.CommonMetricData
 import java.util.UUID
 
-import mozilla.components.service.glean.Lifetime
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -45,12 +45,9 @@ open class UuidsStorageEngineImplementation(
      */
     @Synchronized
     fun record(
-        stores: List<String>,
-        category: String,
-        name: String,
-        lifetime: Lifetime,
+        metric: CommonMetricData,
         value: UUID
     ) {
-        super.recordScalar(stores, category, name, lifetime, value)
+        super.recordScalar(metric, value)
     }
 }
