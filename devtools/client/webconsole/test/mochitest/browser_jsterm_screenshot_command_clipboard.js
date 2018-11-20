@@ -165,11 +165,9 @@ async function getImageSizeFromClipboard() {
 
   clip.getData(trans, clipid.kGlobalClipboard);
   const data = {};
-  const dataLength = {};
-  trans.getTransferData(flavor, data, dataLength);
+  trans.getTransferData(flavor, data);
 
   ok(data.value, "screenshot exists");
-  ok(dataLength.value > 0, "screenshot has length");
 
   let image = data.value;
 

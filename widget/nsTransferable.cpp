@@ -260,13 +260,11 @@ nsTransferable::FindDataFlavor(const char* aFlavor)
 //
 NS_IMETHODIMP
 nsTransferable::GetTransferData(const char* aFlavor,
-                                nsISupports** aData,
-                                uint32_t* aDataLen)
+                                nsISupports** aData)
 {
   MOZ_ASSERT(mInitialized);
 
   *aData = nullptr;
-  *aDataLen = 0;
 
   nsresult rv = NS_OK;
 
@@ -288,7 +286,6 @@ nsTransferable::GetTransferData(const char* aFlavor,
     }
 
     if (dataBytes) {
-      *aDataLen = len;
       dataBytes.forget(aData);
       return NS_OK;
     }
@@ -318,8 +315,9 @@ nsTransferable::GetTransferData(const char* aFlavor,
           }
         }
 
+        uint32_t dataLen;
         return mFormatConv->Convert(data.GetFlavor().get(), dataBytes, len,
-                                    aFlavor, aData, aDataLen);
+                                    aFlavor, aData, &dataLen);
       }
     }
   }
