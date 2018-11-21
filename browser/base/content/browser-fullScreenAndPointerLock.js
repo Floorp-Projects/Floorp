@@ -597,7 +597,13 @@ var FullScreen = {
         // Wait for at least a frame to give it a chance to be passed down to
         // the content.
         requestAnimationFrame(() => {
-          setTimeout(() => this.hideNavToolbox(aAnimate), 0);
+          setTimeout(() => {
+            // In the meantime, it's possible that we exited fullscreen somehow,
+            // so only hide the toolbox if we're still in fullscreen mode.
+            if (window.fullScreen) {
+              this.hideNavToolbox(aAnimate);
+            }
+          }, 0);
         });
         window.removeEventListener("keypress", retryHideNavToolbox);
         window.removeEventListener("click", retryHideNavToolbox);
