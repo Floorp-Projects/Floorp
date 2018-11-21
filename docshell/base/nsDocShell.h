@@ -196,7 +196,7 @@ public:
   // nsILinkHandler
   NS_IMETHOD OnLinkClick(nsIContent* aContent,
                          nsIURI* aURI,
-                         const char16_t* aTargetSpec,
+                         const nsAString& aTargetSpec,
                          const nsAString& aFileName,
                          nsIInputStream* aPostDataStream,
                          nsIInputStream* aHeadersDataStream,
@@ -205,7 +205,7 @@ public:
                          nsIPrincipal* aTriggeringPrincipal) override;
   NS_IMETHOD OnLinkClickSync(nsIContent* aContent,
                              nsIURI* aURI,
-                             const char16_t* aTargetSpec,
+                             const nsAString& aTargetSpec,
                              const nsAString& aFileName,
                              nsIInputStream* aPostDataStream = 0,
                              nsIInputStream* aHeadersDataStream = 0,
@@ -216,7 +216,7 @@ public:
                              nsIPrincipal* aTriggeringPrincipal = nullptr) override;
   NS_IMETHOD OnOverLink(nsIContent* aContent,
                         nsIURI* aURI,
-                        const char16_t* aTargetSpec) override;
+                        const nsAString& aTargetSpec) override;
   NS_IMETHOD OnLeaveLink() override;
 
   // Don't use NS_DECL_NSILOADCONTEXT because some of nsILoadContext's methods
