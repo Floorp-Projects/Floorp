@@ -187,12 +187,18 @@ public:
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
   virtual nsresult PreHandleEvent(EventChainVisitor& aVisitor) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult PostHandleEvent(
                      EventChainPostVisitor& aVisitor) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor);
+  MOZ_CAN_RUN_SCRIPT
   void StartRangeThumbDrag(WidgetGUIEvent* aEvent);
+  MOZ_CAN_RUN_SCRIPT
   void FinishRangeThumbDrag(WidgetGUIEvent* aEvent = nullptr);
+  MOZ_CAN_RUN_SCRIPT
   void CancelRangeThumbDrag(bool aIsForUserEvent = true);
+  MOZ_CAN_RUN_SCRIPT
   void SetValueOfRangeForUserEvent(Decimal aValue);
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -223,6 +229,7 @@ public:
   NS_IMETHOD_(bool) ValueChanged() const override;
   NS_IMETHOD_(void) GetTextEditorValue(nsAString& aValue, bool aIgnoreWrap) const override;
   NS_IMETHOD_(mozilla::TextEditor*) GetTextEditor() override;
+  NS_IMETHOD_(mozilla::TextEditor*) GetTextEditorWithoutCreation() override;
   NS_IMETHOD_(nsISelectionController*) GetSelectionController() override;
   NS_IMETHOD_(nsFrameSelection*) GetConstFrameSelection() override;
   NS_IMETHOD BindToFrame(nsTextControlFrame* aFrame) override;
@@ -891,12 +898,14 @@ public:
   };
   void StopNumberControlSpinnerSpin(SpinnerStopState aState =
                                       eAllowDispatchingEvents);
+  MOZ_CAN_RUN_SCRIPT
   void StepNumberControlForUserEvent(int32_t aDirection);
 
   /**
    * The callback function used by the nsRepeatService that we use to spin the
    * spinner for <input type=number>.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   static void HandleNumberControlSpin(void* aData);
 
   bool NumberSpinnerUpButtonIsDepressed() const
@@ -916,6 +925,7 @@ public:
    */
   nsIEditor* GetEditor();
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void SetUserInput(const nsAString& aInput,
                     nsIPrincipal& aSubjectPrincipal);
 
@@ -1054,6 +1064,7 @@ protected:
   /**
    * Called when an attribute has just been changed
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
@@ -1180,6 +1191,7 @@ protected:
   /**
    * Manages the internal data storage across type changes.
    */
+  MOZ_CAN_RUN_SCRIPT
   void HandleTypeChange(uint8_t aNewType, bool aNotify);
 
   /**

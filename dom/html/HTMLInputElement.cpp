@@ -251,16 +251,12 @@ public:
     Unused << NS_WARN_IF(NS_FAILED(DispatchEvents()));
   }
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult
   DispatchEvents()
   {
-    nsresult rv = NS_OK;
-    rv = nsContentUtils::DispatchTrustedEvent(mInputElement->OwnerDoc(),
-                                              static_cast<Element*>(mInputElement.get()),
-                                              NS_LITERAL_STRING("input"),
-                                              CanBubble::eYes,
-                                              Cancelable::eNo);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DispatchTrustedEvent failed");
+    nsresult rv = nsContentUtils::DispatchInputEvent(mInputElement);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to dispatch input event");
 
     rv = nsContentUtils::DispatchTrustedEvent(mInputElement->OwnerDoc(),
                                               static_cast<Element*>(mInputElement.get()),
@@ -595,7 +591,9 @@ public:
 
   NS_DECL_ISUPPORTS
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Update(const nsAString& aColor) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Done(const nsAString& aColor) override;
 
 private:
@@ -604,6 +602,7 @@ private:
    * If aTrustedUpdate is true, it will consider that aColor is a new value.
    * Otherwise, it will check that aColor is different from the current value.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult UpdateInternal(const nsAString& aColor, bool aTrustedUpdate);
 
   RefPtr<HTMLInputElement> mInput;
@@ -634,15 +633,14 @@ nsColorPickerShownCallback::UpdateInternal(const nsAString& aColor,
     }
   }
 
-  if (valueChanged) {
-    mValueChanged = true;
-    return nsContentUtils::DispatchTrustedEvent(mInput->OwnerDoc(),
-                                                static_cast<Element*>(mInput.get()),
-                                                NS_LITERAL_STRING("input"),
-                                                CanBubble::eYes,
-                                                Cancelable::eNo);
+  if (!valueChanged) {
+    return NS_OK;
   }
 
+  mValueChanged = true;
+  DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(mInput);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "Failed to dispatch input event");
   return NS_OK;
 }
 
@@ -2353,13 +2351,9 @@ HTMLInputElement::SetUserInput(const nsAString& aValue,
       nsTextEditorState::eSetValue_MoveCursorToEndIfValueChanged);
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  // FIXME: We're inconsistent about whether "input" events are cancelable or
-  // not.
-  nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
-                                       static_cast<Element*>(this),
-                                       NS_LITERAL_STRING("input"),
-                                       CanBubble::eYes,
-                                       Cancelable::eYes);
+  DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(this);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "Failed to dispatch input event");
 
   // If this element is not currently focused, it won't receive a change event for this
   // update through the normal channels. So fire a change event immediately, instead.
@@ -2388,6 +2382,16 @@ NS_IMETHODIMP_(TextEditor*)
 HTMLInputElement::GetTextEditor()
 {
   return GetTextEditorFromState();
+}
+
+NS_IMETHODIMP_(TextEditor*)
+HTMLInputElement::GetTextEditorWithoutCreation()
+{
+  nsTextEditorState* state = GetEditorState();
+  if (!state) {
+    return nullptr;
+  }
+  return state->GetTextEditorWithoutCreation();
 }
 
 NS_IMETHODIMP_(nsISelectionController*)
@@ -2735,7 +2739,7 @@ HTMLInputElement::SetFiles(FileList* aFiles)
 /* static */ void
 HTMLInputElement::HandleNumberControlSpin(void* aData)
 {
-  HTMLInputElement* input = static_cast<HTMLInputElement*>(aData);
+  RefPtr<HTMLInputElement> input = static_cast<HTMLInputElement*>(aData);
 
   NS_ASSERTION(input->mNumberControlSpinnerIsSpinning,
                "Should have called nsRepeatService::Stop()");
@@ -3750,12 +3754,9 @@ HTMLInputElement::CancelRangeThumbDrag(bool aIsForUserEvent)
     if (frame) {
       frame->UpdateForValueChange();
     }
-    RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(this,
-                               NS_LITERAL_STRING("input"),
-                               CanBubble::eYes,
-                               ChromeOnlyDispatch::eNo);
-    asyncDispatcher->RunDOMEventWhenSafe();
+    DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(this);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "Failed to dispatch input event");
   }
 }
 
@@ -3778,11 +3779,9 @@ HTMLInputElement::SetValueOfRangeForUserEvent(Decimal aValue)
   }
 
   if (GetValueAsDecimal() != oldValue) {
-    nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
-                                         static_cast<Element*>(this),
-                                         NS_LITERAL_STRING("input"),
-                                         CanBubble::eYes,
-                                         Cancelable::eNo);
+    DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(this);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "Failed to dispatch input event");
   }
 }
 
@@ -3877,11 +3876,9 @@ HTMLInputElement::StepNumberControlForUserEvent(int32_t aDirection)
   SetValueInternal(newVal, nsTextEditorState::eSetValue_BySetUserInput |
                            nsTextEditorState::eSetValue_Notify);
 
-  nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
-                                       static_cast<Element*>(this),
-                                       NS_LITERAL_STRING("input"),
-                                       CanBubble::eYes,
-                                       Cancelable::eNo);
+  DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(this);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "Failed to dispatch input event");
 }
 
 static bool
@@ -4091,9 +4088,9 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
       }
     } else {
       // Fire input event and then change event.
-      nsContentUtils::DispatchTrustedEvent<InternalEditorInputEvent>
-        (OwnerDoc(), static_cast<Element*>(this),
-         eEditorInput, CanBubble::eYes, Cancelable::eNo);
+      DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(this);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                           "Failed to dispatch input event");
 
       nsContentUtils::DispatchTrustedEvent<WidgetEvent>
         (OwnerDoc(), static_cast<Element*>(this),
