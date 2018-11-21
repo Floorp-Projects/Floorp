@@ -21,7 +21,6 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view: ruleView } = await openRuleView();
   const { document: doc, store } = selectChangesView(inspector);
-  const panel = doc.querySelector("#sidebar-panel-changes");
 
   await selectNode("div", inspector);
   const rule = getRuleViewRuleEditor(ruleView, 1).rule;
@@ -44,16 +43,12 @@ add_task(async function() {
   info("Wait for change to be tracked");
   await onTrackChange;
 
-  const removeDecl = panel.querySelectorAll(".declaration.diff-remove");
-  const addDecl = panel.querySelectorAll(".declaration.diff-add");
+  const removeDecl = getRemovedDeclarations(doc);
+  const addDecl = getAddedDeclarations(doc);
 
   is(removeDecl.length, 2, "Two declarations tracked as removed");
   is(addDecl.length, 1, "One declaration tracked as added");
   // Ensure changes to the second declaration were tracked after removing the first one.
-  is(addDecl.item(0).querySelector(".declaration-name").textContent, "display",
-    "Added declaration has updated property name"
-  );
-  is(addDecl.item(0).querySelector(".declaration-value").textContent, "flex",
-    "Added declaration has updated property value"
-  );
+  is(addDecl[0].property, "display", "Added declaration has updated property name");
+  is(addDecl[0].value, "flex", "Added declaration has updated property value");
 });

@@ -19,7 +19,6 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view: ruleView } = await openRuleView();
   const { document: doc, store } = selectChangesView(inspector);
-  const panel = doc.querySelector("#sidebar-panel-changes");
 
   await selectNode("div", inspector);
   const rule = getRuleViewRuleEditor(ruleView, 1).rule;
@@ -31,7 +30,7 @@ add_task(async function() {
   info("Wait for change to be tracked");
   await onTrackChange;
 
-  let removedDeclarations = panel.querySelectorAll(".diff-remove");
+  let removedDeclarations = getRemovedDeclarations(doc);
   is(removedDeclarations.length, 1, "Only one declaration was tracked as removed");
 
   onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
@@ -40,8 +39,8 @@ add_task(async function() {
   info("Wait for change to be tracked");
   await onTrackChange;
 
-  const addedDeclarations = panel.querySelectorAll(".diff-add");
-  removedDeclarations = panel.querySelectorAll(".diff-remove");
+  const addedDeclarations = getAddedDeclarations(doc);
+  removedDeclarations = getRemovedDeclarations(doc);
   is(addedDeclarations.length, 0, "No declarations were tracked as added");
   is(removedDeclarations.length, 0, "No declarations were tracked as removed");
 });
