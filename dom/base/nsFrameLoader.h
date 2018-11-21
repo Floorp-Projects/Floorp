@@ -199,9 +199,6 @@ public:
   bool ClampScrollPosition() const { return mClampScrollPosition; }
   void SetClampScrollPosition(bool aClamp);
 
-  bool ClipSubdocument() const { return mClipSubdocument; }
-  void SetClipSubdocument(bool aClip);
-
   bool DepthTooGreat() const { return mDepthTooGreat; }
 
   bool IsDead() const { return mDestroyCalled; }
@@ -301,7 +298,6 @@ public:
   mozilla::dom::ChromeMessageSender* GetFrameMessageManager() { return mMessageManager; }
 
   mozilla::dom::Element* GetOwnerContent() { return mOwnerContent; }
-  bool ShouldClipSubdocument() { return mClipSubdocument; }
 
   bool ShouldClampScrollPosition() { return mClampScrollPosition; }
 
@@ -497,7 +493,6 @@ private:
 
   bool mRemoteBrowserShown : 1;
   bool mRemoteFrame : 1;
-  bool mClipSubdocument : 1;
   bool mClampScrollPosition : 1;
   bool mObservingOwnerContent : 1;
 };

@@ -65,7 +65,10 @@ public:
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
 
-  virtual bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
+  bool ComputeCustomOverflow(nsOverflowAreas&) override
+  {
+    return false;
+  }
 
   /**
    * Adjust aReflowInput to account for scrollbars and pres shell
