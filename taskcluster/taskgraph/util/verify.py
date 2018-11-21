@@ -10,12 +10,15 @@ import re
 import os
 import sys
 
+import attr
+
 from .. import GECKO
 
 logger = logging.getLogger(__name__)
 base_path = os.path.join(GECKO, 'taskcluster', 'docs')
 
 
+@attr.s(frozen=True)
 class VerificationSequence(object):
     """
     Container for a sequence of verifications over a TaskGraph. Each
@@ -24,11 +27,10 @@ class VerificationSequence(object):
     time with no task but with the taskgraph and the same scratch_pad
     that was passed for each task.
     """
-    def __init__(self):
-        self.verifications = {}
+    _verifications = attr.ib(factory=dict)
 
     def __call__(self, graph_name, graph):
-        for verification in self.verifications.get(graph_name, []):
+        for verification in self._verifications.get(graph_name, []):
             scratch_pad = {}
             graph.for_each_task(verification, scratch_pad=scratch_pad)
             verification(None, graph, scratch_pad=scratch_pad)
@@ -36,7 +38,7 @@ class VerificationSequence(object):
 
     def add(self, graph_name):
         def wrap(func):
-            self.verifications.setdefault(graph_name, []).append(func)
+            self._verifications.setdefault(graph_name, []).append(func)
             return func
         return wrap
 

@@ -37,7 +37,7 @@ MAX_ROUTES = 10
 def amend_taskgraph(taskgraph, label_to_taskid, to_add):
     """Add the given tasks to the taskgraph, returning a new taskgraph"""
     new_tasks = taskgraph.tasks.copy()
-    new_edges = taskgraph.graph.edges.copy()
+    new_edges = set(taskgraph.graph.edges)
     for task in to_add:
         new_tasks[task.task_id] = task
         assert task.label not in label_to_taskid
