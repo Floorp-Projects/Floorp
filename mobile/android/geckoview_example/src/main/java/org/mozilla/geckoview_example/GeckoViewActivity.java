@@ -675,7 +675,7 @@ public class GeckoViewActivity extends AppCompatActivity {
             Log.d(LOGTAG, "onLoadRequest=" + request.uri +
                   " triggerUri=" + request.triggerUri +
                   " where=" + request.target +
-                  " isRedirect=" + request.isRedirect);
+                  " isUserTriggered=" + request.isUserTriggered);
 
             return GeckoResult.fromValue(AllowOrDeny.ALLOW);
         }
