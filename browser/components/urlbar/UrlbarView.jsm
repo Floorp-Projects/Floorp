@@ -146,7 +146,7 @@ class UrlbarView {
 
     let title = this._createElement("span");
     title.className = "urlbarView-title";
-    title.textContent = result.title || result.url;
+    title.textContent = result.title || result.payload.url;
     content.appendChild(title);
 
     let secondary = this._createElement("span");
@@ -156,7 +156,7 @@ class UrlbarView {
       secondary.textContent = "Switch to Tab";
     } else {
       secondary.classList.add("urlbarView-url");
-      secondary.textContent = result.url;
+      secondary.textContent = result.payload.url;
     }
     content.appendChild(secondary);
 
