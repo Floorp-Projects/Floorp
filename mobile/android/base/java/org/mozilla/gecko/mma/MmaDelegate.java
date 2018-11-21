@@ -84,11 +84,6 @@ public class MmaDelegate {
 
     public static void init(final Activity activity,
                             final MmaVariablesChangedListener remoteVariablesListener) {
-        ThreadUtils.postToUiThread(() -> {
-            if (isActivityAlive(activity)) {
-                registerInstalledPackagesReceiver(activity);
-            }
-        });
         applicationContext = activity.getApplicationContext();
         // Since user attributes are gathered in Fennec, not in MMA implementation,
         // we gather the information here then pass to mmaHelper.init()
@@ -106,6 +101,7 @@ public class MmaDelegate {
         mmaHelper.event(MmaDelegate.LAUNCH_BROWSER);
 
         activityName = activity.getLocalClassName();
+        registerInstalledPackagesReceiver(activity);
         notifyAboutPreviouslyInstalledPackages(activity);
 
         ThreadUtils.postToUiThread(new Runnable() {
@@ -304,30 +300,18 @@ public class MmaDelegate {
 
     private static void unregisterInstalledPackagesReceiver(@NonNull final Activity activity) {
         if (packageAddedReceiver != null) {
-            activity.unregisterReceiver(packageAddedReceiver);
+            try {
+                // TODO investigate why the receiver would not be registered - bug 1505685
+                activity.unregisterReceiver(packageAddedReceiver);
+            } catch (IllegalArgumentException e) {
+                if (AppConstants.RELEASE_OR_BETA) {
+                    Log.w(TAG, "bug 1505685", e);
+                } else {
+                   throw e;
+                }
+            }
             packageAddedReceiver = null;
         }
-    }
-
-    /**
-     * Check and return if the Activity is still alive.
-     *
-     * @param activity an instance of {@link Activity} to be checked if it is still alive.<br>
-     *                 Might be an already leaked instance.
-     * @return <code>true</code> if the Activity is still alive;<br>
-     *         <code>false</code> if the Activity is destroyed / in the process of being destroyed.
-     * @throws IllegalThreadStateException
-     *         if {@link AppConstants#RELEASE_OR_BETA} and called on another thread than Main
-     */
-    private static boolean isActivityAlive(@NonNull final Activity activity) throws IllegalThreadStateException {
-        // all lifecycle methods are run on Main
-        ThreadUtils.assertOnUiThread();
-
-        if (activity.isFinishing()) {
-            return false;
-        }
-
-        return true;
     }
 
     public interface MmaVariablesChangedListener {
