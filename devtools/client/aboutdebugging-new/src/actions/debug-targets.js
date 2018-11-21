@@ -54,9 +54,7 @@ function inspectDebugTarget({ type, id, front }) {
       }
       case DEBUG_TARGETS.EXTENSION: {
         if (runtimeType === RUNTIMES.NETWORK || runtimeType === RUNTIMES.USB) {
-          // runtimeDetails.client is a ClientWrapper instance, here we need to go back
-          // to the actual DevTools client. Confusion should be reduce after Bug 1506056.
-          const devtoolsClient = runtimeDetails.client.client;
+          const devtoolsClient = runtimeDetails.clientWrapper.client;
           await debugRemoteAddon(id, devtoolsClient);
         } else if (runtimeType === RUNTIMES.THIS_FIREFOX) {
           debugLocalAddon(id);
@@ -91,10 +89,10 @@ function installTemporaryExtension() {
 
 function pushServiceWorker(actor) {
   return async (_, getState) => {
-    const client = getCurrentClient(getState().runtimes);
+    const clientWrapper = getCurrentClient(getState().runtimes);
 
     try {
-      await client.request({ to: actor, type: "push" });
+      await clientWrapper.request({ to: actor, type: "push" });
     } catch (e) {
       console.error(e);
     }
@@ -103,10 +101,10 @@ function pushServiceWorker(actor) {
 
 function reloadTemporaryExtension(actor) {
   return async (_, getState) => {
-    const client = getCurrentClient(getState().runtimes);
+    const clientWrapper = getCurrentClient(getState().runtimes);
 
     try {
-      await client.request({ to: actor, type: "reload" });
+      await clientWrapper.request({ to: actor, type: "reload" });
     } catch (e) {
       console.error(e);
     }
@@ -127,10 +125,10 @@ function requestTabs() {
   return async (dispatch, getState) => {
     dispatch({ type: REQUEST_TABS_START });
 
-    const client = getCurrentClient(getState().runtimes);
+    const clientWrapper = getCurrentClient(getState().runtimes);
 
     try {
-      const { tabs } = await client.listTabs({ favicons: true });
+      const { tabs } = await clientWrapper.listTabs({ favicons: true });
 
       dispatch({ type: REQUEST_TABS_SUCCESS, tabs });
     } catch (e) {
@@ -144,10 +142,10 @@ function requestExtensions() {
     dispatch({ type: REQUEST_EXTENSIONS_START });
 
     const runtime = getCurrentRuntime(getState().runtimes);
-    const client = getCurrentClient(getState().runtimes);
+    const clientWrapper = getCurrentClient(getState().runtimes);
 
     try {
-      const { addons } = await client.listAddons();
+      const { addons } = await clientWrapper.listAddons();
       const extensions = addons.filter(a => a.debuggable);
       if (runtime.type !== RUNTIMES.THIS_FIREFOX) {
         // manifestURL can only be used when debugging local addons, remove this
@@ -174,10 +172,14 @@ function requestWorkers() {
   return async (dispatch, getState) => {
     dispatch({ type: REQUEST_WORKERS_START });
 
-    const client = getCurrentClient(getState().runtimes);
+    const clientWrapper = getCurrentClient(getState().runtimes);
 
     try {
-      const { otherWorkers, serviceWorkers, sharedWorkers } = await client.listWorkers();
+      const {
+        otherWorkers,
+        serviceWorkers,
+        sharedWorkers,
+      } = await clientWrapper.listWorkers();
 
       dispatch({
         type: REQUEST_WORKERS_SUCCESS,
@@ -193,10 +195,10 @@ function requestWorkers() {
 
 function startServiceWorker(actor) {
   return async (_, getState) => {
-    const client = getCurrentClient(getState().runtimes);
+    const clientWrapper = getCurrentClient(getState().runtimes);
 
     try {
-      await client.request({ to: actor, type: "start" });
+      await clientWrapper.request({ to: actor, type: "start" });
     } catch (e) {
       console.error(e);
     }

@@ -38,10 +38,10 @@ const {
   WATCH_RUNTIME_SUCCESS,
 } = require("../constants");
 
-async function getRuntimeInfo(runtime, client) {
+async function getRuntimeInfo(runtime, clientWrapper) {
   const { type } = runtime;
   const { brandName: name, channel, deviceName, version } =
-    await client.getDeviceDescription();
+    await clientWrapper.getDeviceDescription();
   const icon =
     (channel === "release" || channel === "beta" || channel === "aurora")
       ? `chrome://devtools/skin/images/aboutdebugging-firefox-${ channel }.svg`
@@ -68,17 +68,22 @@ function connectRuntime(id) {
     dispatch({ type: CONNECT_RUNTIME_START });
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
-      const { client, transportDetails } = await createClientForRuntime(runtime);
-      const info = await getRuntimeInfo(runtime, client);
+      const { clientWrapper, transportDetails } = await createClientForRuntime(runtime);
+      const info = await getRuntimeInfo(runtime, clientWrapper);
 
       const promptPrefName = RUNTIME_PREFERENCE.CONNECTION_PROMPT;
-      const connectionPromptEnabled = await client.getPreference(promptPrefName);
-      const runtimeDetails = { connectionPromptEnabled, client, info, transportDetails };
+      const connectionPromptEnabled = await clientWrapper.getPreference(promptPrefName);
+      const runtimeDetails = {
+        clientWrapper,
+        connectionPromptEnabled,
+        info,
+        transportDetails,
+      };
 
       if (runtime.type === RUNTIMES.USB) {
         // `closed` event will be emitted when disabling remote debugging
         // on the connected USB runtime.
-        client.addOneTimeListener("closed", onUSBDebuggerClientClosed);
+        clientWrapper.addOneTimeListener("closed", onUSBDebuggerClientClosed);
       }
 
       dispatch({
@@ -100,13 +105,13 @@ function disconnectRuntime(id) {
     dispatch({ type: DISCONNECT_RUNTIME_START });
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
-      const client = runtime.runtimeDetails.client;
+      const { clientWrapper } = runtime.runtimeDetails;
 
       if (runtime.type === RUNTIMES.USB) {
-        client.removeListener("closed", onUSBDebuggerClientClosed);
+        clientWrapper.removeListener("closed", onUSBDebuggerClientClosed);
       }
 
-      await client.close();
+      await clientWrapper.close();
 
       if (runtime.type === RUNTIMES.THIS_FIREFOX) {
         DebuggerServer.destroy();
@@ -130,11 +135,11 @@ function updateConnectionPromptSetting(connectionPromptEnabled) {
     dispatch({ type: UPDATE_CONNECTION_PROMPT_SETTING_START });
     try {
       const runtime = getCurrentRuntime(getState().runtimes);
-      const client = runtime.runtimeDetails.client;
+      const { clientWrapper } = runtime.runtimeDetails;
       const promptPrefName = RUNTIME_PREFERENCE.CONNECTION_PROMPT;
-      await client.setPreference(promptPrefName, connectionPromptEnabled);
+      await clientWrapper.setPreference(promptPrefName, connectionPromptEnabled);
       // Re-get actual value from the runtime.
-      connectionPromptEnabled = await client.getPreference(promptPrefName);
+      connectionPromptEnabled = await clientWrapper.getPreference(promptPrefName);
 
       dispatch({ type: UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
                  runtime, connectionPromptEnabled });
