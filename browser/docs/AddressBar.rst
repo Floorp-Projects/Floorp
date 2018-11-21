@@ -69,6 +69,8 @@ It is augmented as it progresses through the system, with various information:
     tokens; // {array} tokens extracted from the searchString, each token is an
             // object in the form {type, value}.
     results; // {array} list of UrlbarMatch objects.
+    preselected; // {boolean} whether the first match should be preselected.
+    autofill; // {boolean} whether the first match is an autofill match.
   }
 
 
@@ -300,13 +302,30 @@ properties, supported by all of the matches.
   UrlbarMatch {
     constructor(matchType, payload);
 
-    // Common properties:
     type: {integer} One of UrlbarUtils.MATCH_TYPE.
     source: {integer} One of UrlbarUtils.MATCH_SOURCE.
-    url: {string} The url pointed by this match.
     title: {string} A title that may be used as a label for this match.
+    icon: {string} Url of an icon for this match.
+    payload: {object} Object containing properties for the specific MATCH_TYPE.
   }
 
+The following MATCH_TYPEs are supported:
+
+.. highlight:: JavaScript
+.. code::
+
+    // Payload: { icon, url, userContextId }
+    TAB_SWITCH: 1,
+    // Payload: { icon, suggestion, keyword, query }
+    SEARCH: 2,
+    // Payload: { icon, url, title, tags }
+    URL: 3,
+    // Payload: { icon, url, keyword, postData }
+    KEYWORD: 4,
+    // Payload: { icon, keyword, title, content }
+    OMNIBOX: 5,
+    // Payload: { icon, url, device, title }
+    REMOTE_TAB: 6,
 
 Shared Modules
 ==============

@@ -48,24 +48,10 @@ class UrlbarMatch {
 
     // The payload contains match data. Some of the data is common across
     // multiple types, but most of it will vary.
-    if (!payload || (typeof payload != "object") || !payload.url) {
+    if (!payload || (typeof payload != "object")) {
       throw new Error("Invalid match payload");
     }
     this.payload = payload;
-  }
-
-  /**
-   * Returns a final destination for this match.
-   * Different kind of matches may have different ways to express this value,
-   * and this is a common getter for all of them.
-   * @returns {string} a url to load when this match is confirmed byt the user.
-   */
-  get url() {
-    switch (this.type) {
-      case UrlbarUtils.MATCH_TYPE.TAB_SWITCH:
-        return this.payload.url;
-    }
-    return "";
   }
 
   /**
@@ -73,6 +59,24 @@ class UrlbarMatch {
    * @returns {string} The label to show in a simplified title / url view.
    */
   get title() {
-    return "";
+    switch (this.type) {
+      case UrlbarUtils.MATCH_TYPE.TAB_SWITCH:
+      case UrlbarUtils.MATCH_TYPE.URL:
+      case UrlbarUtils.MATCH_TYPE.OMNIBOX:
+      case UrlbarUtils.MATCH_TYPE.REMOTE_TAB:
+        return this.payload.title || "";
+      case UrlbarUtils.MATCH_TYPE.SEARCH:
+        return this.payload.engine;
+      default:
+        return "";
+    }
+  }
+
+  /**
+   * Returns an icon url.
+   * @returns {string} url of the icon.
+   */
+  get icon() {
+    return this.payload.icon;
   }
 }
