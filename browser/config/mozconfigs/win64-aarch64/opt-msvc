@@ -1,0 +1,3 @@
+. "$topsrcdir/browser/config/mozconfigs/win64-aarch64/nightly"
+
+unset ENABLE_CLANG_PLUGIN
