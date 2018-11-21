@@ -37,7 +37,7 @@ namespace dom {
 
 class WorkerPrivate;
 
-struct WorkerLoadInfo
+struct WorkerLoadInfoData
 {
   // All of these should be released in WorkerPrivateParent::ForgetMainThreadObjects.
   nsCOMPtr<nsIURI> mBaseURI;
@@ -120,10 +120,21 @@ struct WorkerLoadInfo
     eSecureContext,
   } mSecureContext;
 
+  WorkerLoadInfoData();
+  WorkerLoadInfoData(WorkerLoadInfoData&& aOther) = default;
+
+  WorkerLoadInfoData&
+  operator=(WorkerLoadInfoData&& aOther) = default;
+};
+
+struct WorkerLoadInfo : WorkerLoadInfoData
+{
   WorkerLoadInfo();
+  WorkerLoadInfo(WorkerLoadInfo&& aOther) noexcept;
   ~WorkerLoadInfo();
 
-  void StealFrom(WorkerLoadInfo& aOther);
+  WorkerLoadInfo&
+  operator=(WorkerLoadInfo&& aOther) = default;
 
   nsresult
   SetPrincipalOnMainThread(nsIPrincipal* aPrincipal, nsILoadGroup* aLoadGroup);
