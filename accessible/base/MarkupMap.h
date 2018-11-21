@@ -430,7 +430,7 @@ MARKUPMAP(p,
 MARKUPMAP(
   progress,
   [](Element* aElement, Accessible* aContext) -> Accessible* {
-     return new HTMLProgressMeterAccessible(aElement, aContext->Document());
+     return new HTMLProgressAccessible(aElement, aContext->Document());
   },
   0
 )

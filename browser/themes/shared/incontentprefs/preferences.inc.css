@@ -28,10 +28,10 @@ groupbox[data-category] {
   margin: 0 0 32px;
 }
 
-caption {
+html|h2 {
   margin: 16px 0 4px;
   font-size: 1.14em;
-  font-weight: 600;
+  line-height: normal;
 }
 
 .header-name {

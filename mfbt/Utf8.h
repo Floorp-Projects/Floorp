@@ -233,8 +233,9 @@ Utf8AsUnsignedChars(const Utf8Unit* aUnits)
 }
 
 /** Returns true iff |aUnit| is an ASCII value. */
+template<>
 inline bool
-IsAscii(Utf8Unit aUnit)
+IsAscii<Utf8Unit>(Utf8Unit aUnit)
 {
   return IsAscii(aUnit.toUint8());
 }

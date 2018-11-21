@@ -312,7 +312,7 @@ interface nsIAccessibleRole : nsISupports
 
   /**
    * Represents a progress bar, dynamically showing the user the percent
-   * complete of an operation in progress. It is used for xul:progressmeter,
+   * complete of an operation in progress. It is used for html:progress,
    * role="progressbar".
    */
   const unsigned long ROLE_PROGRESSBAR = 48;

@@ -14,11 +14,6 @@ class TextEditor;
 namespace a11y {
 
 /**
- * Accessible for HTML progress element.
- */
-typedef ProgressMeterAccessible<1> HTMLProgressMeterAccessible;
-
-/**
  * Accessible for HTML input@type="radio" element.
  */
 class HTMLRadioButtonAccessible : public RadioButtonAccessible
@@ -268,6 +263,41 @@ public:
 
 protected:
   virtual ~HTMLFormAccessible() = default;
+};
+
+/**
+ * Accessible for HTML progress element.
+ */
+
+class HTMLProgressAccessible : public LeafAccessible
+{
+public:
+  HTMLProgressAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+    LeafAccessible(aContent, aDoc)
+  {
+    // Ignore 'ValueChange' DOM event in lieu of @value attribute change
+    // notifications.
+    mStateFlags |= eHasNumericValue | eIgnoreDOMUIEvent;
+    mType = eProgressType;
+  }
+
+  // Accessible
+  virtual void Value(nsString& aValue) const override;
+  virtual mozilla::a11y::role NativeRole() const override;
+  virtual uint64_t NativeState() const override;
+
+  // Value
+  virtual double MaxValue() const override;
+  virtual double MinValue() const override;
+  virtual double CurValue() const override;
+  virtual double Step() const override;
+  virtual bool SetCurValue(double aValue) override;
+
+  // Widgets
+  virtual bool IsWidget() const override;
+
+protected:
+  virtual ~HTMLProgressAccessible() {}
 };
 
 } // namespace a11y
