@@ -19,10 +19,8 @@
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/Unused.h"
-#include "nsBaseHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsString.h"
-#include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsITelemetry.h"
 #include "nsPrintfCString.h"
@@ -45,7 +43,6 @@ using mozilla::Telemetry::HistogramCount;
 using mozilla::Telemetry::HistogramIDByNameLookup;
 using mozilla::Telemetry::Common::LogToBrowserConsole;
 using mozilla::Telemetry::Common::RecordedProcessType;
-using mozilla::Telemetry::Common::AutoHashtable;
 using mozilla::Telemetry::Common::GetNameForProcessID;
 using mozilla::Telemetry::Common::GetIDForProcessName;
 using mozilla::Telemetry::Common::IsExpiredVersion;
@@ -235,10 +232,10 @@ class KeyedHistogram {
 public:
   KeyedHistogram(HistogramID id, const HistogramInfo& info, bool expired);
   ~KeyedHistogram();
-  nsresult GetHistogram(const nsCString& name, base::Histogram** histogram);
-  base::Histogram* GetHistogram(const nsCString& name);
+  nsresult GetHistogram(const nsCString& store, const nsCString& key, base::Histogram** histogram);
+  base::Histogram* GetHistogram(const nsCString& store, const nsCString& key);
   uint32_t GetHistogramType() const { return mHistogramInfo.histogramType; }
-  nsresult GetKeys(const StaticMutexAutoLock& aLock, nsTArray<nsCString>& aKeys);
+  nsresult GetKeys(const StaticMutexAutoLock& aLock, const nsCString& store, nsTArray<nsCString>& aKeys);
   // Note: unlike other methods, GetJSSnapshot is thread safe.
   nsresult GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj,
                          bool clearSubsession);
@@ -250,16 +247,19 @@ public:
 
   HistogramID GetHistogramID() const { return mId; }
 
-  bool IsEmpty() const { return mHistogramMap.IsEmpty(); }
+  bool IsEmpty() const;
 
   bool IsExpired() const { return mIsExpired; }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
 private:
-  typedef nsBaseHashtableET<nsCStringHashKey, base::Histogram*> KeyedHistogramEntry;
-  typedef AutoHashtable<KeyedHistogramEntry> KeyedHistogramMapType;
-  KeyedHistogramMapType mHistogramMap;
+  typedef nsClassHashtable<nsCStringHashKey, base::Histogram> KeyedHistogramMapType;
+  typedef nsClassHashtable<nsCStringHashKey, KeyedHistogramMapType> StoreMapType;
+
+  StoreMapType mStorage;
+  // A valid map if this histogram belongs to only the main store
+  KeyedHistogramMapType* mSingleStore;
 
   const HistogramID mId;
   const HistogramInfo& mHistogramInfo;
@@ -291,7 +291,6 @@ Histogram** gHistogramStorage;
 KeyedHistogram** gKeyedHistogramStorage;
 
 // To simplify logic below we use a single histogram instance for all expired histograms.
-base::Histogram* gExpiredBaseHistogram = nullptr;
 Histogram* gExpiredHistogram = nullptr;
 
 // The single placeholder for expired keyed histograms.
@@ -524,12 +523,6 @@ internal_IsEmpty(const StaticMutexAutoLock& aLock, const base::Histogram *h)
   return h->is_empty();
 }
 
-bool
-internal_IsExpired(const StaticMutexAutoLock& aLock, base::Histogram* h)
-{
-  return h == gExpiredBaseHistogram;
-}
-
 void
 internal_SetHistogramRecordingEnabled(const StaticMutexAutoLock& aLock,
                                       HistogramID id,
@@ -681,25 +674,11 @@ internal_CreateBaseHistogramInstance(const HistogramInfo& passedInfo, int bucket
     return nullptr;
   }
 
-  // To keep the code simple we map all the calls to expired histograms to the same histogram instance.
-  // We create that instance lazily when needed.
-  const bool isExpired = IsExpiredVersion(passedInfo.expiration());
+  // We don't actually store data for expired histograms at all.
+  MOZ_ASSERT(!IsExpiredVersion(passedInfo.expiration()));
+
   HistogramInfo info = passedInfo;
   const int* buckets = &gHistogramBucketLowerBounds[bucketsOffset];
-
-  if (isExpired) {
-    if (gExpiredBaseHistogram) {
-      return gExpiredBaseHistogram;
-    }
-
-    // The first values in gHistogramBucketLowerBounds are reserved for
-    // expired histograms.
-    buckets = gHistogramBucketLowerBounds;
-    info.min = 1;
-    info.max = 2;
-    info.bucketCount = 3;
-    info.histogramType = nsITelemetry::HISTOGRAM_LINEAR;
-  }
 
   base::Histogram::Flags flags = base::Histogram::kNoFlags;
   base::Histogram* h = nullptr;
@@ -723,10 +702,6 @@ internal_CreateBaseHistogramInstance(const HistogramInfo& passedInfo, int bucket
   default:
     MOZ_ASSERT(false, "Invalid histogram type");
     return nullptr;
-  }
-
-  if (isExpired) {
-    gExpiredBaseHistogram = h;
   }
 
   return h;
@@ -1173,31 +1148,53 @@ internal_ReflectKeyedHistogram(const KeyedHistogramSnapshotData& aSnapshot,
 }
 
 KeyedHistogram::KeyedHistogram(HistogramID id, const HistogramInfo& info, bool expired)
-  : mHistogramMap()
+  : mStorage()
+  , mSingleStore(nullptr)
   , mId(id)
   , mHistogramInfo(info)
   , mIsExpired(expired)
 {
+  if (IsExpired()) {
+    return;
+  }
+
+  if (info.is_single_store()) {
+    mSingleStore = new KeyedHistogramMapType;
+  } else {
+    for (uint32_t i = 0; i < info.store_count; i++) {
+      auto store = nsDependentCString(&gHistogramStringTable[gHistogramStoresTable[info.store_index + i]]);
+      mStorage.Put(store, new KeyedHistogramMapType);
+    }
+  }
 }
 
 KeyedHistogram::~KeyedHistogram()
 {
-  for (auto iter = mHistogramMap.Iter(); !iter.Done(); iter.Next()) {
-    base::Histogram* h = iter.Get()->mData;
-    if (h == gExpiredBaseHistogram) {
-      continue;
-    }
-    delete h;
-  }
-  mHistogramMap.Clear();
+  delete mSingleStore;
 }
 
 nsresult
-KeyedHistogram::GetHistogram(const nsCString& key, base::Histogram** histogram)
+KeyedHistogram::GetHistogram(const nsCString& store, const nsCString& key, base::Histogram** histogram)
 {
-  KeyedHistogramEntry* entry = mHistogramMap.GetEntry(key);
-  if (entry) {
-    *histogram = entry->mData;
+  if (IsExpired()) {
+    MOZ_ASSERT(false, "KeyedHistogram::GetHistogram called on an expired histogram.");
+    return NS_ERROR_FAILURE;
+  }
+
+  KeyedHistogramMapType* histogramMap;
+  bool found;
+
+  if (mSingleStore != nullptr) {
+    histogramMap = mSingleStore;
+  } else {
+    found = mStorage.Get(store, &histogramMap);
+    if (!found) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  found = histogramMap->Get(key, histogram);
+  if (found) {
     return NS_OK;
   }
 
@@ -1210,20 +1207,18 @@ KeyedHistogram::GetHistogram(const nsCString& key, base::Histogram** histogram)
   h->ClearFlags(base::Histogram::kUmaTargetedHistogramFlag);
   *histogram = h;
 
-  entry = mHistogramMap.PutEntry(key);
-  if (MOZ_UNLIKELY(!entry)) {
+  bool inserted = histogramMap->Put(key, h, mozilla::fallible);
+  if (MOZ_UNLIKELY(!inserted)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  entry->mData = h;
   return NS_OK;
 }
 
 base::Histogram*
-KeyedHistogram::GetHistogram(const nsCString& key)
+KeyedHistogram::GetHistogram(const nsCString& store, const nsCString& key)
 {
   base::Histogram* h = nullptr;
-  if (NS_FAILED(GetHistogram(key, &h))) {
+  if (NS_FAILED(GetHistogram(store, key, &h))) {
     return nullptr;
   }
   return h;
@@ -1233,6 +1228,11 @@ nsresult
 KeyedHistogram::Add(const nsCString& key, uint32_t sample,
                     ProcessID aProcessType)
 {
+  MOZ_ASSERT(XRE_IsParentProcess(), "Only add to keyed histograms in the parent process");
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_FAILURE;
+  }
+
   bool canRecordDataset = CanRecordDataset(mHistogramInfo.dataset,
                                            internal_CanRecordBase(),
                                            internal_CanRecordExtended());
@@ -1253,12 +1253,6 @@ KeyedHistogram::Add(const nsCString& key, uint32_t sample,
     return NS_OK;
   }
 
-  base::Histogram* histogram = GetHistogram(key);
-  MOZ_ASSERT(histogram);
-  if (!histogram) {
-    return NS_ERROR_FAILURE;
-  }
-
   // The internal representation of a base::Histogram's buckets uses `int`.
   // Clamp large values of `sample` to be INT_MAX so they continue to be treated
   // as large values (instead of negative ones).
@@ -1269,26 +1263,71 @@ KeyedHistogram::Add(const nsCString& key, uint32_t sample,
     sample = INT_MAX;
   }
 
-  histogram->Add(sample);
+  base::Histogram* histogram;
+  if (mSingleStore != nullptr) {
+    // We know there's only a single store, no need to look for a store
+    histogram = GetHistogram(VoidCString(), key);
+    if (!histogram) {
+      MOZ_ASSERT(false, "Missing histogram in single store.");
+      return NS_ERROR_FAILURE;
+    }
+
+    histogram->Add(sample);
+  } else {
+    for (uint32_t i = 0; i < mHistogramInfo.store_count; i++) {
+      auto store = nsDependentCString(&gHistogramStringTable[gHistogramStoresTable[mHistogramInfo.store_index + i]]);
+      base::Histogram* histogram = GetHistogram(store, key);
+      MOZ_ASSERT(histogram);
+      if (histogram) {
+        histogram->Add(sample);
+      } else {
+        return NS_ERROR_FAILURE;
+      }
+    }
+  }
+
   return NS_OK;
 }
 
 void
 KeyedHistogram::Clear()
 {
-  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(XRE_IsParentProcess(), "Only clear keyed histograms in the parent process");
   if (!XRE_IsParentProcess()) {
     return;
   }
 
-  for (auto iter = mHistogramMap.Iter(); !iter.Done(); iter.Next()) {
-    base::Histogram* h = iter.Get()->mData;
-    if (h == gExpiredBaseHistogram) {
-      continue;
-    }
-    delete h;
+  if (IsExpired()) {
+    return;
   }
-  mHistogramMap.Clear();
+
+  if (mSingleStore) {
+    mSingleStore->Clear();
+    return;
+  }
+
+  KeyedHistogramMapType* histogramMap;
+  bool found = mStorage.Get(NS_LITERAL_CSTRING("main"), &histogramMap);
+  if (!found) {
+    return;
+  }
+
+  histogramMap->Clear();
+}
+
+bool
+KeyedHistogram::IsEmpty() const
+{
+  if (mSingleStore != nullptr) {
+    return mSingleStore->IsEmpty();
+  }
+
+  KeyedHistogramMapType* histogramMap;
+  bool found = mStorage.Get(NS_LITERAL_CSTRING("main"), &histogramMap);
+  if (!found) {
+    return true;
+  }
+  return histogramMap->IsEmpty();
 }
 
 size_t
@@ -1296,19 +1335,42 @@ KeyedHistogram::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   size_t n = 0;
   n += aMallocSizeOf(this);
-  n += mHistogramMap.SizeOfIncludingThis(aMallocSizeOf);
+  /*
+   * In theory mStorage.SizeOfExcludingThis should included the data part of the map,
+   * but the numbers seemed low, so we are only taking the shallow size and do
+   * the iteration here.
+   */
+  n += mStorage.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (auto iter = mStorage.Iter(); !iter.Done(); iter.Next()) {
+    auto& h = iter.Data();
+    n += h->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  if (mSingleStore != nullptr) {
+    // base::Histogram doesn't have SizeOfExcludingThis, so we are overcounting the pointer here.
+    n += mSingleStore->SizeOfExcludingThis(aMallocSizeOf);
+  }
   return n;
 }
 
 nsresult
-KeyedHistogram::GetKeys(const StaticMutexAutoLock& aLock, nsTArray<nsCString>& aKeys)
+KeyedHistogram::GetKeys(const StaticMutexAutoLock& aLock, const nsCString& store, nsTArray<nsCString>& aKeys)
 {
-  if (!aKeys.SetCapacity(mHistogramMap.Count(), mozilla::fallible)) {
+  KeyedHistogramMapType* histogramMap;
+  if (mSingleStore != nullptr) {
+    histogramMap = mSingleStore;
+  } else {
+    bool found = mStorage.Get(store, &histogramMap);
+    if (!found) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  if (!aKeys.SetCapacity(histogramMap->Count(), mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  for (auto iter = mHistogramMap.Iter(); !iter.Done(); iter.Next()) {
-    if (!aKeys.AppendElement(iter.Get()->GetKey(), mozilla::fallible)) {
+  for (auto iter = histogramMap->Iter(); !iter.Done(); iter.Next()) {
+    if (!aKeys.AppendElement(iter.Key(), mozilla::fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
@@ -1327,8 +1389,9 @@ KeyedHistogram::GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj, bool cle
 
     // Take a snapshot of the data here, protected by the lock, and then,
     // outside of the lock protection, mirror it to a JS structure.
-    if (NS_FAILED(GetSnapshot(locker, dataSnapshot, clearSubsession))) {
-      return NS_ERROR_FAILURE;
+    nsresult rv = GetSnapshot(locker, dataSnapshot, clearSubsession);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
   }
 
@@ -1336,13 +1399,31 @@ KeyedHistogram::GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj, bool cle
   return internal_ReflectKeyedHistogram(dataSnapshot, gHistogramInfos[mId], cx, obj);
 }
 
+/**
+ * Return a histogram snapshot for the main store.
+ *
+ * If getting the snapshot succeeds, NS_OK is returned and `aSnapshot` contains the snapshot data.
+ * If the histogram is not available in the main store, NS_ERROR_NO_CONTENT is returned.
+ * For other errors, NS_ERROR_FAILURE is returned.
+ */
 nsresult
 KeyedHistogram::GetSnapshot(const StaticMutexAutoLock& aLock,
                             KeyedHistogramSnapshotData& aSnapshot, bool aClearSubsession)
 {
+  KeyedHistogramMapType* histogramMap;
+  if (mSingleStore != nullptr) {
+    histogramMap = mSingleStore;
+  } else {
+    bool found = mStorage.Get(NS_LITERAL_CSTRING("main"), &histogramMap);
+    if (!found) {
+      // Nothing in the main store is fine, it's just handled as empty
+      return NS_ERROR_NO_CONTENT;
+    }
+  }
+
   // Snapshot every key.
-  for (auto iter = mHistogramMap.ConstIter(); !iter.Done(); iter.Next()) {
-    base::Histogram* keyData = iter.Get()->mData;
+  for (auto iter = histogramMap->ConstIter(); !iter.Done(); iter.Next()) {
+    base::Histogram* keyData = iter.Data();
     if (!keyData) {
       return NS_ERROR_FAILURE;
     }
@@ -1353,7 +1434,7 @@ KeyedHistogram::GetSnapshot(const StaticMutexAutoLock& aLock,
     }
 
     // Append to the final snapshot.
-    aSnapshot.Put(iter.Get()->GetKey(), std::move(keySnapshot));
+    aSnapshot.Put(iter.Key(), std::move(keySnapshot));
   }
 
   if (aClearSubsession) {
@@ -1973,7 +2054,15 @@ internal_KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc,
       return false;
     }
 
-    if (!NS_SUCCEEDED(keyed->GetJSSnapshot(cx, snapshot, clearSubsession))) {
+    nsresult rv = keyed->GetJSSnapshot(cx, snapshot, clearSubsession);
+
+    // If the main store is not available, we return nothing and don't fail
+    if (rv == NS_ERROR_NO_CONTENT) {
+      args.rval().setUndefined();
+      return true;
+    }
+
+    if (!NS_SUCCEEDED(rv)) {
       JS_ReportErrorASCII(cx, "Failed to reflect keyed histograms");
       return false;
     }
@@ -1996,7 +2085,7 @@ internal_KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc,
 
     // Get data for the key we're looking for.
     base::Histogram* h = nullptr;
-    nsresult rv = keyed->GetHistogram(NS_ConvertUTF16toUTF8(key), &h);
+    nsresult rv = keyed->GetHistogram(NS_LITERAL_CSTRING("main"), NS_ConvertUTF16toUTF8(key), &h);
     if (NS_FAILED(rv)) {
       return false;
     }
@@ -2117,7 +2206,7 @@ internal_JSKeyedHistogram_Keys(JSContext *cx, unsigned argc, JS::Value *vp)
       return false;
     }
 
-    if (NS_FAILED(keyed->GetKeys(locker, keys))) {
+    if (NS_FAILED(keyed->GetKeys(locker, NS_LITERAL_CSTRING("main"), keys))) {
       return false;
     }
   }
@@ -2300,8 +2389,7 @@ void TelemetryHistogram::DeInitializeGlobalState()
   // FactoryGet `new`s Histograms for us, but requires us to manually delete.
   if (XRE_IsParentProcess()) {
     for (size_t i = 0; i < HistogramCount * size_t(ProcessID::Count); ++i) {
-      if (i < HistogramCount * size_t(ProcessID::Count)
-          && gKeyedHistogramStorage[i] != gExpiredKeyedHistogram) {
+      if (gKeyedHistogramStorage[i] != gExpiredKeyedHistogram) {
         delete gKeyedHistogramStorage[i];
       }
       if (gHistogramStorage[i] != gExpiredHistogram) {
@@ -2311,8 +2399,6 @@ void TelemetryHistogram::DeInitializeGlobalState()
     delete[] gHistogramStorage;
     delete[] gKeyedHistogramStorage;
   }
-  delete gExpiredBaseHistogram;
-  gExpiredBaseHistogram = nullptr;
   delete gExpiredHistogram;
   gExpiredHistogram = nullptr;
   delete gExpiredKeyedHistogram;
@@ -3470,20 +3556,21 @@ TelemetryHistogram::DeserializeKeyedHistograms(JSContext* aCx, JS::HandleValue a
         KeyedHistogram* keyed = internal_GetKeyedHistogramById(id, procID);
         MOZ_ASSERT(keyed);
 
-        if (!keyed) {
-          // Don't restore if we don't have a destination storage.
+        if (!keyed || keyed->IsExpired()) {
+          // Don't restore if we don't have a destination storage or the
+          // histogram is expired.
           continue;
         }
 
         // Get data for the key we're looking for.
         base::Histogram* h = nullptr;
-        if (NS_FAILED(keyed->GetHistogram(mozilla::Get<1>(histogramData), &h))) {
+        if (NS_FAILED(keyed->GetHistogram(NS_LITERAL_CSTRING("main"), mozilla::Get<1>(histogramData), &h))) {
           continue;
         }
         MOZ_ASSERT(h);
 
-        if (!h || internal_IsExpired(locker, h)) {
-          // Don't restore expired histograms.
+        if (!h) {
+          // Don't restore if we don't have a destination storage.
           continue;
         }
 
