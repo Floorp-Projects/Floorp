@@ -4,8 +4,10 @@
 
 "use strict";
 
+const { debugTarget } = require("./debug-target");
 const { runtime } = require("./runtime");
 
 module.exports = Object.assign({}, {
+  debugTarget,
   runtime,
 });

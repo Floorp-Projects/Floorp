@@ -8,6 +8,8 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const Types = require("../../types/index");
+
 /**
  * This component displays debug target.
  */
@@ -17,7 +19,7 @@ class DebugTargetItem extends PureComponent {
       actionComponent: PropTypes.any.isRequired,
       detailComponent: PropTypes.any.isRequired,
       dispatch: PropTypes.func.isRequired,
-      target: PropTypes.object.isRequired,
+      target: Types.debugTarget.isRequired,
     };
   }
 
