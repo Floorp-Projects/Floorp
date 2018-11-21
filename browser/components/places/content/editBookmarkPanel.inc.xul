@@ -94,6 +94,7 @@
                  autocompletesearch="places-tag-autocomplete"
                  autocompletepopup="PopupAutoComplete"
                  completedefaultindex="true"
+                 completeselectedindex="true"
                  tabscrolling="true"
                  placeholder="&editBookmarkOverlay.tagsEmptyDesc.label;"
                  onchange="gEditItemOverlay.onTagsFieldChange();"/>
