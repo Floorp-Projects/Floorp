@@ -2,9 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
-Transform the partials task into an actual task description.
+Transform the {partials,mar}-signing task into an actual task description.
 """
 from __future__ import absolute_import, print_function, unicode_literals
+
+import os
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -14,6 +16,7 @@ from taskgraph.util.scriptworker import (
 )
 from taskgraph.util.partials import get_balrog_platform_name, get_partials_artifacts
 from taskgraph.util.taskcluster import get_artifact_prefix
+from taskgraph.util.treeherder import join_symbol
 
 import logging
 logger = logging.getLogger(__name__)
@@ -21,7 +24,7 @@ logger = logging.getLogger(__name__)
 transforms = TransformSequence()
 
 
-def generate_upstream_artifacts(job, release_history, platform, locale=None):
+def generate_partials_artifacts(job, release_history, platform, locale=None):
     artifact_prefix = get_artifact_prefix(job)
     if locale:
         artifact_prefix = '{}/{}'.format(artifact_prefix, locale)
@@ -62,17 +65,36 @@ def generate_upstream_artifacts(job, release_history, platform, locale=None):
     return upstream_artifacts
 
 
+def generate_complete_artifacts(job):
+    upstream_artifacts = []
+    for artifact in job.release_artifacts:
+        basename = os.path.basename(artifact)
+        if basename.endswith('.complete.mar'):
+            upstream_artifacts.append({
+                "taskId": {"task-reference": '<{}>'.format(job.kind)},
+                "taskType": 'build',
+                "paths": [artifact],
+                "formats": ["autograph_hash_only_mar384"],
+            })
+
+    return upstream_artifacts
+
+
 @transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
         dep_job = job['primary-dependency']
+        locale = dep_job.attributes.get('locale')
 
         treeherder = job.get('treeherder', {})
-        treeherder.setdefault('symbol', 'ps(N)')
+        treeherder['symbol'] = join_symbol(
+            job.get('treeherder-group', 'ms'),
+            locale or 'N'
+        )
 
         dep_th_platform = dep_job.task.get('extra', {}).get(
             'treeherder', {}).get('machine', {}).get('platform', '')
-        label = job.get('label', "partials-signing-{}".format(dep_job.label))
+        label = job.get('label', "{}-{}".format(config.kind, dep_job.label))
         dep_th_platform = dep_job.task.get('extra', {}).get(
             'treeherder', {}).get('machine', {}).get('platform', '')
         treeherder.setdefault('platform',
@@ -88,14 +110,16 @@ def make_task_description(config, jobs):
         dependencies.update(signing_dependencies)
 
         attributes = copy_attributes_from_dependent_job(dep_job)
-        locale = dep_job.attributes.get('locale')
+        attributes['shipping_phase'] = job['shipping-phase']
         if locale:
             attributes['locale'] = locale
-            treeherder['symbol'] = 'ps({})'.format(locale)
 
         balrog_platform = get_balrog_platform_name(dep_th_platform)
-        upstream_artifacts = generate_upstream_artifacts(
-            dep_job, config.params['release_history'], balrog_platform, locale)
+        if config.kind == 'partials-signing':
+            upstream_artifacts = generate_partials_artifacts(
+                dep_job, config.params['release_history'], balrog_platform, locale)
+        else:
+            upstream_artifacts = generate_complete_artifacts(dep_job)
 
         build_platform = dep_job.attributes.get('build_platform')
         is_nightly = dep_job.attributes.get('nightly')
@@ -109,8 +133,8 @@ def make_task_description(config, jobs):
 
         task = {
             'label': label,
-            'description': "{} Partials".format(
-                dep_job.task["metadata"]["description"]),
+            'description': "{} {}".format(
+                dep_job.task["metadata"]["description"], job['description-suffix']),
             'worker-type': get_worker_type_for_scope(config, signing_cert_scope),
             'worker': {'implementation': 'scriptworker-signing',
                        'upstream-artifacts': upstream_artifacts,
