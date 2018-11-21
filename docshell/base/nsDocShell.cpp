@@ -480,6 +480,8 @@ nsDocShell::Create(BrowsingContext* aBrowsingContext)
   // If parent intercept is not enabled then we must forward to
   // the network controller from docshell.  We also enable if we're
   // in the parent process in order to support non-e10s configurations.
+  // Note: This check is duplicated in SharedWorkerInterfaceRequestor's
+  // constructor.
   if (!ServiceWorkerParentInterceptEnabled() || XRE_IsParentProcess()) {
     ds->mInterceptController = new ServiceWorkerInterceptController();
   }
