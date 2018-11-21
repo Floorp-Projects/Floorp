@@ -38,7 +38,7 @@ public class FennecNativeActions implements Actions {
         mInstr = instrumentation;
         mAsserter = asserter;
 
-        GeckoLoader.loadSQLiteLibs(activity);
+        GeckoLoader.loadSQLiteLibs(activity, activity.getApplication().getPackageResourcePath());
     }
 
     class GeckoEventExpecter implements RepeatedEventExpecter {

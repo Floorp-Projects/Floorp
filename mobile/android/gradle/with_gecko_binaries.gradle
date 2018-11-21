@@ -76,6 +76,13 @@ ext.configureVariantWithGeckoBinaries = { variant ->
     }
 
     def syncAssetsFromDistDir = task("syncAssetsFromDistDirFor${variant.name.capitalize()}", type: Sync) {
+        onlyIf {
+            if (source.empty) {
+                throw new StopExecutionException("Required assets not found in ${distDir}/assets.  Have you built and packaged?")
+            }
+            return true
+        }
+
         into("${project.buildDir}/moz.build/src/${variant.name}/assets")
         from("${distDir}/assets") {
             exclude 'omni.ja'
