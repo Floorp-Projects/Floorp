@@ -308,11 +308,11 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     const flex = this.currentNode.getAsFlexContainer();
 
     const oldCrossAxisDirection = this.crossAxisDirection;
-    this.crossAxisDirection = flex.crossAxisDirection;
+    this.crossAxisDirection = flex ? flex.crossAxisDirection : null;
     const newCrossAxisDirection = this.crossAxisDirection;
 
     const oldMainAxisDirection = this.mainAxisDirection;
-    this.mainAxisDirection = flex.mainAxisDirection;
+    this.mainAxisDirection = flex ? flex.mainAxisDirection : null;
     const newMainAxisDirection = this.mainAxisDirection;
 
     // Concatenate the axes to simplify conditionals.
