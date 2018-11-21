@@ -7,7 +7,6 @@ import logging
 import os
 import yaml
 import copy
-import attr
 
 from . import filter_tasks
 from .graph import Graph
@@ -21,7 +20,7 @@ from .util.verify import (
     verify_docs,
     verifications,
 )
-from .config import load_graph_config, GraphConfig
+from .config import load_graph_config
 
 logger = logging.getLogger(__name__)
 
@@ -32,13 +31,13 @@ class KindNotFound(Exception):
     """
 
 
-@attr.s(frozen=True)
 class Kind(object):
 
-    name = attr.ib(type=basestring)
-    path = attr.ib(type=basestring)
-    config = attr.ib(type=dict)
-    graph_config = attr.ib(type=GraphConfig)
+    def __init__(self, name, path, config, graph_config):
+        self.name = name
+        self.path = path
+        self.config = config
+        self.graph_config = graph_config
 
     def _get_loader(self):
         try:
