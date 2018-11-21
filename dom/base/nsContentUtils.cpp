@@ -11187,6 +11187,22 @@ nsContentUtils::IsURIInPrefList(nsIURI* aURI, const char* aPrefName)
 {
   MOZ_ASSERT(aPrefName);
 
+  nsAutoCString blackList;
+  Preferences::GetCString(aPrefName, blackList);
+  ToLowerCase(blackList);
+  return IsURIInList(aURI, blackList);
+}
+
+/* static */ bool
+nsContentUtils::IsURIInList(nsIURI* aURI, const nsCString& aBlackList)
+{
+#ifdef DEBUG
+  nsAutoCString blackListLowerCase(aBlackList);
+  ToLowerCase(blackListLowerCase);
+  MOZ_ASSERT(blackListLowerCase.Equals(aBlackList),
+             "The aBlackList argument should be lower-case");
+#endif
+
   if (!aURI) {
     return false;
   }
@@ -11205,10 +11221,7 @@ nsContentUtils::IsURIInPrefList(nsIURI* aURI, const char* aPrefName)
   }
   ToLowerCase(host);
 
-  nsAutoCString blackList;
-  Preferences::GetCString(aPrefName, blackList);
-  ToLowerCase(blackList);
-  if (blackList.IsEmpty()) {
+  if (aBlackList.IsEmpty()) {
     return false;
   }
 
@@ -11216,25 +11229,25 @@ nsContentUtils::IsURIInPrefList(nsIURI* aURI, const char* aPrefName)
   // If starts with "*.", it matches any sub-domains.
 
   for (;;) {
-    int32_t index = blackList.Find(host, false);
+    int32_t index = aBlackList.Find(host, false);
     if (index >= 0 &&
-        static_cast<uint32_t>(index) + host.Length() <= blackList.Length() &&
+        static_cast<uint32_t>(index) + host.Length() <= aBlackList.Length() &&
         // If start of the black list or next to ","?
-        (!index || blackList[index - 1] == ',')) {
+        (!index || aBlackList[index - 1] == ',')) {
       // If end of the black list or immediately before ","?
       size_t indexAfterHost = index + host.Length();
-      if (indexAfterHost == blackList.Length() ||
-          blackList[indexAfterHost] == ',') {
+      if (indexAfterHost == aBlackList.Length() ||
+          aBlackList[indexAfterHost] == ',') {
         return true;
       }
       // If next character is '/', we need to check the path too.
       // We assume the path in blacklist means "/foo" + "*".
-      if (blackList[indexAfterHost] == '/') {
-        int32_t endOfPath = blackList.Find(",", false, indexAfterHost);
+      if (aBlackList[indexAfterHost] == '/') {
+        int32_t endOfPath = aBlackList.Find(",", false, indexAfterHost);
         nsDependentCSubstring::size_type length =
           endOfPath < 0 ? static_cast<nsDependentCSubstring::size_type>(-1) :
                           endOfPath - indexAfterHost;
-        nsDependentCSubstring pathInBlackList(blackList,
+        nsDependentCSubstring pathInBlackList(aBlackList,
                                               indexAfterHost, length);
         nsAutoCString filePath;
         aURI->GetFilePath(filePath);
