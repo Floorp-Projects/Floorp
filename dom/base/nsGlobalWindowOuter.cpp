@@ -4703,6 +4703,7 @@ nsGlobalWindowOuter::PromptOuter(const nsAString& aMessage,
   // string. See bug #310037.
   nsAutoString fixedMessage, fixedInitial;
   nsContentUtils::StripNullChars(aMessage, fixedMessage);
+  nsContentUtils::PlatformToDOMLineBreaks(fixedMessage);
   nsContentUtils::StripNullChars(aInitial, fixedInitial);
 
   nsresult rv;
