@@ -205,25 +205,6 @@ nsWindowMediator::GetXULWindowEnumerator(const char16_t* inType, nsISimpleEnumer
 }
 
 NS_IMETHODIMP
-nsWindowMediator::GetZOrderDOMWindowEnumerator(
-            const char16_t *aWindowType, bool aFrontToBack,
-            nsISimpleEnumerator **_retval)
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  NS_ENSURE_ARG_POINTER(_retval);
-  NS_ENSURE_STATE(mReady);
-
-  RefPtr<nsAppShellWindowEnumerator> enumerator;
-  if (aFrontToBack)
-    enumerator = new nsASDOMWindowFrontToBackEnumerator(aWindowType, *this);
-  else
-    enumerator = new nsASDOMWindowBackToFrontEnumerator(aWindowType, *this);
-
-  enumerator.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWindowMediator::GetZOrderXULWindowEnumerator(
             const char16_t *aWindowType, bool aFrontToBack,
             nsISimpleEnumerator **_retval)

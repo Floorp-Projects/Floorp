@@ -63,9 +63,8 @@ modal.findModalDialogs = function(context) {
   // First check if there is a modal dialog already present for the
   // current browser window.
   for (let win of Services.wm.getEnumerator(null)) {
-    // Modal dialogs which do not have an opener set, we cannot detect
-    // as long as GetZOrderDOMWindowEnumerator doesn't work on Linux
-    // (Bug 156333).
+    // TODO: Use BrowserWindowTracker.getTopWindow for modal dialogs without
+    // an opener.
     if (win.document.documentURI === COMMON_DIALOG &&
         win.opener && win.opener === context.window) {
       return new modal.Dialog(() => context, Cu.getWeakReference(win));
