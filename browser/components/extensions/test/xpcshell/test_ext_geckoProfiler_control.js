@@ -19,6 +19,7 @@ let getExtension = () => {
           case "start":
             result = await browser.geckoProfiler.start({
               bufferSize: 10000,
+              windowLength: 20,
               interval: 0.5,
               features: ["js"],
               threads: ["GeckoMain"],

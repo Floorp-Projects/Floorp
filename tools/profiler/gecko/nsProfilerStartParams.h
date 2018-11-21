@@ -20,6 +20,7 @@ public:
   NS_DECL_NSIPROFILERSTARTPARAMS
 
   nsProfilerStartParams(uint32_t aEntries,
+                        const mozilla::Maybe<double>& aDuration,
                         double aInterval,
                         uint32_t aFeatures,
                         const nsTArray<nsCString>& aFilters);
@@ -27,6 +28,7 @@ public:
 private:
   virtual ~nsProfilerStartParams();
   uint32_t mEntries;
+  mozilla::Maybe<double> mDuration;
   double mInterval;
   uint32_t mFeatures;
   nsTArray<nsCString> mFilters;
