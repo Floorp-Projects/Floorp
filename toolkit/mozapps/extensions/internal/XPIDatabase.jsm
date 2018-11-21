@@ -102,7 +102,7 @@ const COMPATIBLE_BY_DEFAULT_TYPES = {
 
 // Properties to save in JSON file
 const PROP_JSON_FIELDS = ["id", "syncGUID", "version", "type",
-                          "isWebExtension", "updateURL", "optionsURL",
+                          "loader", "updateURL", "optionsURL",
                           "optionsType", "optionsBrowserStyle", "aboutURL",
                           "defaultLocale", "visible", "active", "userDisabled",
                           "appDisabled", "pendingUninstall", "installDate",
@@ -279,6 +279,10 @@ class AddonInternal {
   addedToDatabase() {
     this._key = `${this.location.name}:${this.id}`;
     this.inDatabase = true;
+  }
+
+  get isWebExtension() {
+    return this.loader == null;
   }
 
   get selectedLocale() {
@@ -1318,7 +1322,42 @@ this.XPIDatabase = {
         throw error;
       }
 
-      if (inputAddons.schemaVersion != DB_SCHEMA) {
+      if (inputAddons.schemaVersion == 27) {
+        // Types were translated in bug 857456.
+        for (let addon of inputAddons.addons) {
+          switch (addon.type) {
+            case "extension":
+            case "dictionary":
+            case "locale":
+            case "theme":
+              addon.loader = "bootstrap";
+              break;
+
+            case "webbextension":
+              addon.type = "extension";
+              addon.loader = null;
+              break;
+
+            case "webextension-dictionary":
+              addon.type = "dictionary";
+              addon.loader = null;
+              break;
+
+            case "webextension-langpack":
+              addon.type = "locale";
+              addon.loader = null;
+              break;
+
+            case "webextension-theme":
+              addon.type = "theme";
+              addon.loader = null;
+              break;
+
+            default:
+              logger.warn(`Not converting unknown addon type ${addon.type}`);
+          }
+        }
+      } else if (inputAddons.schemaVersion != DB_SCHEMA) {
         // For now, we assume compatibility for JSON data with a
         // mismatched schema version, though we throw away any fields we
         // don't know about (bug 902956)
