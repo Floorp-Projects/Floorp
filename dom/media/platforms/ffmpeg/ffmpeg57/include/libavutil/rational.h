@@ -40,9 +40,9 @@
 /**
  * rational number numerator/denominator
  */
-typedef struct AVRational {
-  int num;  ///< numerator
-  int den;  ///< denominator
+typedef struct AVRational{
+    int num; ///< numerator
+    int den; ///< denominator
 } AVRational;
 
 /**
@@ -50,9 +50,10 @@ typedef struct AVRational {
  * Useful for compilers that do not support compound literals.
  * @note  The return value is not reduced.
  */
-static inline AVRational av_make_q(int num, int den) {
-  AVRational r = {num, den};
-  return r;
+static inline AVRational av_make_q(int num, int den)
+{
+    AVRational r = { num, den };
+    return r;
 }
 
 /**
@@ -62,17 +63,13 @@ static inline AVRational av_make_q(int num, int den) {
  * @return 0 if a==b, 1 if a>b, -1 if a<b, and INT_MIN if one of the
  * values is of the form 0/0
  */
-static inline int av_cmp_q(AVRational a, AVRational b) {
-  const int64_t tmp = a.num * (int64_t)b.den - b.num * (int64_t)a.den;
+static inline int av_cmp_q(AVRational a, AVRational b){
+    const int64_t tmp= a.num * (int64_t)b.den - b.num * (int64_t)a.den;
 
-  if (tmp)
-    return (int)((tmp ^ a.den ^ b.den) >> 63) | 1;
-  else if (b.den && a.den)
-    return 0;
-  else if (a.num && b.num)
-    return (a.num >> 31) - (b.num >> 31);
-  else
-    return INT_MIN;
+    if(tmp) return (int)((tmp ^ a.den ^ b.den)>>63)|1;
+    else if(b.den && a.den) return 0;
+    else if(a.num && b.num) return (a.num>>31) - (b.num>>31);
+    else                    return INT_MIN;
 }
 
 /**
@@ -80,7 +77,9 @@ static inline int av_cmp_q(AVRational a, AVRational b) {
  * @param a rational to convert
  * @return (double) a
  */
-static inline double av_q2d(AVRational a) { return a.num / (double)a.den; }
+static inline double av_q2d(AVRational a){
+    return a.num / (double) a.den;
+}
 
 /**
  * Reduce a fraction.
@@ -92,8 +91,7 @@ static inline double av_q2d(AVRational a) { return a.num / (double)a.den; }
  * @param max the maximum allowed for dst_num & dst_den
  * @return 1 if exact, 0 otherwise
  */
-int av_reduce(int *dst_num, int *dst_den, int64_t num, int64_t den,
-              int64_t max);
+int av_reduce(int *dst_num, int *dst_den, int64_t num, int64_t den, int64_t max);
 
 /**
  * Multiply two rationals.
@@ -132,9 +130,10 @@ AVRational av_sub_q(AVRational b, AVRational c) av_const;
  * @param q value
  * @return 1 / q
  */
-static av_always_inline AVRational av_inv_q(AVRational q) {
-  AVRational r = {q.den, q.num};
-  return r;
+static av_always_inline AVRational av_inv_q(AVRational q)
+{
+    AVRational r = { q.den, q.num };
+    return r;
 }
 
 /**
@@ -158,7 +157,7 @@ int av_nearer_q(AVRational q, AVRational q1, AVRational q2);
  * @param q_list an array of rationals terminated by {0, 0}
  * @return the index of the nearest value found in the array
  */
-int av_find_nearest_q_idx(AVRational q, const AVRational *q_list);
+int av_find_nearest_q_idx(AVRational q, const AVRational* q_list);
 
 /**
  * Converts a AVRational to a IEEE 32bit float.
