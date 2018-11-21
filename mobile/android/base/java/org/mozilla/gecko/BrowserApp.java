@@ -894,6 +894,7 @@ public class BrowserApp extends GeckoApp
             @Override
             protected Void doInBackground(Void... params) {
                 super.doInBackground(params);
+                SwitchBoard.loadConfig(context, serverUrl, configStatuslistener);
                 if (GeckoPreferences.isMmaAvailableAndEnabled(context)) {
                     // Do LeanPlum start/init here
                     MmaDelegate.init(BrowserApp.this, variablesChangedListener);
