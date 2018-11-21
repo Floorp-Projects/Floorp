@@ -14,6 +14,6 @@ negative:
 features: [regexp-unicode-property-escapes]
 ---*/
 
-throw "Test262: This statement should not be evaluated.";
+$DONOTEVALUATE();
 
 /\P{Other_Default_Ignorable_Code_Point}/u;

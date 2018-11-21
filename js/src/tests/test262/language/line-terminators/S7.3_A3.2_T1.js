@@ -11,6 +11,7 @@ negative:
   type: SyntaxError
 ---*/
 
-throw "Test262: This statement should not be evaluated.";
+$DONOTEVALUATE();
 
-// single line comment  ??? (invalid)
+// single line comment
+ ??? (invalid)

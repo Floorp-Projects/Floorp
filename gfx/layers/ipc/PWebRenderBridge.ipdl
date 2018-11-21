@@ -23,6 +23,7 @@ using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::wr::BuiltDisplayListDescriptor from "mozilla/webrender/webrender_ffi.h";
 using mozilla::wr::IdNamespace from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::MaybeIdNamespace from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::ExternalImageKeyPair from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::layers::WebRenderScrollData from "mozilla/layers/WebRenderScrollData.h";
 using mozilla::layers::FocusTarget from "mozilla/layers/FocusTarget.h";
 using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
@@ -84,6 +85,7 @@ parent:
   sync ShutdownSync();
 child:
   async WrUpdated(IdNamespace aNewIdNamespace, TextureFactoryIdentifier textureFactoryIdentifier);
+  async WrReleasedImages(ExternalImageKeyPair[] pairs);
   async __delete__();
 };
 

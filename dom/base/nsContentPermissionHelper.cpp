@@ -724,6 +724,53 @@ ContentPermissionRequestBase::RequestDelayedTask(nsIEventTarget* aTarget,
   aTarget->Dispatch(r.forget());
 }
 
+nsresult
+TranslateChoices(JS::HandleValue aChoices,
+                 const nsTArray<PermissionRequest>& aPermissionRequests,
+                 nsTArray<PermissionChoice>& aTranslatedChoices)
+{
+  if (aChoices.isNullOrUndefined()) {
+    // No choice is specified.
+  } else if (aChoices.isObject()) {
+    // Iterate through all permission types.
+    for (uint32_t i = 0; i < aPermissionRequests.Length(); ++i) {
+      nsCString type = aPermissionRequests[i].type();
+
+      JS::Rooted<JSObject*> obj(RootingCx(), &aChoices.toObject());
+      obj = CheckedUnwrap(obj);
+      if (!obj) {
+        return NS_ERROR_FAILURE;
+      }
+
+      AutoJSAPI jsapi;
+      jsapi.Init();
+
+      JSContext* cx = jsapi.cx();
+      JSAutoRealm ar(cx, obj);
+
+      JS::Rooted<JS::Value> val(cx);
+
+      if (!JS_GetProperty(cx, obj, type.BeginReading(), &val) ||
+          !val.isString()) {
+        // no setting for the permission type, clear exception and skip it
+        jsapi.ClearException();
+      } else {
+        nsAutoJSString choice;
+        if (!choice.init(cx, val)) {
+          jsapi.ClearException();
+          return NS_ERROR_FAILURE;
+        }
+        aTranslatedChoices.AppendElement(PermissionChoice(type, choice));
+      }
+    }
+  } else {
+    MOZ_ASSERT(false, "SelectedChoices should be undefined or an JS object");
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
 } // namespace dom
 } // namespace mozilla
 
@@ -783,9 +830,7 @@ nsContentPermissionRequestProxy::nsContentPermissionRequestProxy(ContentPermissi
     NS_ASSERTION(mParent, "null parent");
 }
 
-nsContentPermissionRequestProxy::~nsContentPermissionRequestProxy()
-{
-}
+nsContentPermissionRequestProxy::~nsContentPermissionRequestProxy() = default;
 
 nsresult
 nsContentPermissionRequestProxy::Init(const nsTArray<PermissionRequest>& requests)
@@ -911,43 +956,9 @@ nsContentPermissionRequestProxy::Allow(JS::HandleValue aChoices)
   }
 
   nsTArray<PermissionChoice> choices;
-  if (aChoices.isNullOrUndefined()) {
-    // No choice is specified.
-  } else if (aChoices.isObject()) {
-    // Iterate through all permission types.
-    for (uint32_t i = 0; i < mPermissionRequests.Length(); ++i) {
-      nsCString type = mPermissionRequests[i].type();
-
-      JS::Rooted<JSObject*> obj(RootingCx(), &aChoices.toObject());
-      obj = CheckedUnwrap(obj);
-      if (!obj) {
-        return NS_ERROR_FAILURE;
-      }
-
-      AutoJSAPI jsapi;
-      jsapi.Init();
-
-      JSContext* cx = jsapi.cx();
-      JSAutoRealm ar(cx, obj);
-
-      JS::Rooted<JS::Value> val(cx);
-
-      if (!JS_GetProperty(cx, obj, type.BeginReading(), &val) ||
-          !val.isString()) {
-        // no setting for the permission type, clear exception and skip it
-        jsapi.ClearException();
-      } else {
-        nsAutoJSString choice;
-        if (!choice.init(cx, val)) {
-          jsapi.ClearException();
-          return NS_ERROR_FAILURE;
-        }
-        choices.AppendElement(PermissionChoice(type, choice));
-      }
-    }
-  } else {
-    MOZ_ASSERT(false, "SelectedChoices should be undefined or an JS object");
-    return NS_ERROR_FAILURE;
+  nsresult rv = TranslateChoices(aChoices, mPermissionRequests, choices);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   Unused << mParent->SendNotifyResult(true, choices);
