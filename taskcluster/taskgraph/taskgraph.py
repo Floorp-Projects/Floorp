@@ -7,10 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from .graph import Graph
 from .task import Task
 
-import attr
 
-
-@attr.s(frozen=True)
 class TaskGraph(object):
     """
     Representation of a task graph.
@@ -19,11 +16,10 @@ class TaskGraph(object):
     by label. TaskGraph instances should be treated as immutable.
     """
 
-    tasks = attr.ib()
-    graph = attr.ib()
-
-    def __attrs_post_init__(self):
-        assert set(self.tasks) == self.graph.nodes
+    def __init__(self, tasks, graph):
+        assert set(tasks) == graph.nodes
+        self.tasks = tasks
+        self.graph = graph
 
     def for_each_task(self, f, *args, **kwargs):
         for task_label in self.graph.visit_postorder():
@@ -40,6 +36,12 @@ class TaskGraph(object):
     def __iter__(self):
         "Iterate over tasks in undefined order"
         return self.tasks.itervalues()
+
+    def __repr__(self):
+        return "<TaskGraph graph={!r} tasks={!r}>".format(self.graph, self.tasks)
+
+    def __eq__(self, other):
+        return self.tasks == other.tasks and self.graph == other.graph
 
     def to_json(self):
         "Return a JSON-able object representing the task graph, as documented"

@@ -4,11 +4,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import attr
 import collections
 
 
-@attr.s(frozen=True)
 class Graph(object):
     """
     Generic representation of a directed acyclic graph with labeled edges
@@ -25,8 +23,22 @@ class Graph(object):
     node `left` to node `right..
     """
 
-    nodes = attr.ib(converter=frozenset)
-    edges = attr.ib(converter=frozenset)
+    def __init__(self, nodes, edges):
+        """
+        Create a graph.  Nodes and edges are both as described in the class
+        documentation.  Both values are used by reference, and should not be
+        modified after building a graph.
+        """
+        assert isinstance(nodes, set)
+        assert isinstance(edges, set)
+        self.nodes = nodes
+        self.edges = edges
+
+    def __eq__(self, other):
+        return self.nodes == other.nodes and self.edges == other.edges
+
+    def __repr__(self):
+        return "<Graph nodes={!r} edges={!r}>".format(self.nodes, self.edges)
 
     def transitive_closure(self, nodes, reverse=False):
         """
