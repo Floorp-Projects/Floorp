@@ -123,7 +123,9 @@ protected:
       : MouseListener(aFrame)
     {}
 
-    NS_DECL_NSIDOMEVENTLISTENER
+    // nsIDOMEventListener
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    NS_IMETHOD HandleEvent(mozilla::dom::Event* aEvent) override;
 
     nsresult GetBlobImplForWebkitDirectory(mozilla::dom::FileList* aFileList,
                                            mozilla::dom::BlobImpl** aBlobImpl);

@@ -68,10 +68,10 @@ async function confirmClear(selector) {
   info("Await for clearing input");
   let promise = new Promise(resolve =>
     document.querySelector(selector).addEventListener("input", (event) => {
-      todo(event instanceof InputEvent,
-           '"input" event should be dispatched with InputEvent interface');
-      todo_is(event.cancelable, false,
-              '"input" event should be never cancelable');
+      ok(event instanceof InputEvent,
+         '"input" event should be dispatched with InputEvent interface');
+      is(event.cancelable, false,
+         '"input" event should be never cancelable');
       is(event.bubbles, true,
          '"input" event should always bubble');
       resolve();

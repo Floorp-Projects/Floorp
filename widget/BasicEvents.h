@@ -510,7 +510,8 @@ private:
         mFlags.mBubbles = true;
         break;
       default:
-        if (mMessage == eResize) {
+        if (mMessage == eResize ||
+            mMessage == eEditorInput) {
           mFlags.mCancelable = false;
         } else {
           mFlags.mCancelable = true;
@@ -614,7 +615,8 @@ public:
 
   // If JS creates an event with unknown event type or known event type but
   // for different event interface, the event type is stored to this.
-  // NOTE: This is always used if the instance is a WidgetCommandEvent instance.
+  // NOTE: This is always used if the instance is a WidgetCommandEvent instance
+  //       or "input" event is dispatched with dom::Event class.
   RefPtr<nsAtom> mSpecifiedEventType;
 
   // nsAtom isn't available on non-main thread due to unsafe.  Therefore,

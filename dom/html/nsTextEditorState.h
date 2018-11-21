@@ -152,6 +152,7 @@ public:
   }
 
   mozilla::TextEditor* GetTextEditor();
+  mozilla::TextEditor* GetTextEditorWithoutCreation();
   nsISelectionController* GetSelectionController() const;
   nsFrameSelection* GetConstFrameSelection();
   nsresult BindToFrame(nsTextControlFrame* aFrame);

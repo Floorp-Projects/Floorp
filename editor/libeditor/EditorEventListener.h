@@ -63,11 +63,14 @@ protected:
 
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
   nsresult KeyDown(const WidgetKeyboardEvent* aKeyboardEvent);
+  MOZ_CAN_RUN_SCRIPT
   nsresult KeyUp(const WidgetKeyboardEvent* aKeyboardEvent);
 #endif
   nsresult KeyPress(WidgetKeyboardEvent* aKeyboardEvent);
+  MOZ_CAN_RUN_SCRIPT
   nsresult HandleChangeComposition(WidgetCompositionEvent* aCompositionEvent);
   nsresult HandleStartComposition(WidgetCompositionEvent* aCompositionEvent);
+  MOZ_CAN_RUN_SCRIPT
   void HandleEndComposition(WidgetCompositionEvent* aCompositionEvent);
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult MouseDown(dom::MouseEvent* aMouseEvent);

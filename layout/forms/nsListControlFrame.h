@@ -134,6 +134,7 @@ public:
    * Dispatch a DOM oninput and onchange event synchroniously.
    * @note This method might destroy the frame, pres shell and other objects.
    */
+  MOZ_CAN_RUN_SCRIPT
   void FireOnInputAndOnChange();
 
   /**
@@ -160,10 +161,13 @@ public:
    * @note These methods might destroy the frame, pres shell and other objects.
    */
   nsresult MouseDown(mozilla::dom::Event* aMouseEvent);
+  MOZ_CAN_RUN_SCRIPT
   nsresult MouseUp(mozilla::dom::Event* aMouseEvent);
   nsresult MouseMove(mozilla::dom::Event* aMouseEvent);
   nsresult DragMove(mozilla::dom::Event* aMouseEvent);
+  MOZ_CAN_RUN_SCRIPT
   nsresult KeyDown(mozilla::dom::Event* aKeyEvent);
+  MOZ_CAN_RUN_SCRIPT
   nsresult KeyPress(mozilla::dom::Event* aKeyEvent);
 
   /**
@@ -257,6 +261,7 @@ protected:
    * @note This method might destroy the frame, pres shell and other objects.
    * Returns false if calling it destroyed |this|.
    */
+  MOZ_CAN_RUN_SCRIPT
   bool UpdateSelection();
 
   /**
@@ -271,6 +276,7 @@ protected:
    * Toggles (show/hide) the combobox dropdown menu.
    * @note This method might destroy the frame, pres shell and other objects.
    */
+  MOZ_CAN_RUN_SCRIPT
   void DropDownToggleKey(mozilla::dom::Event* aKeyEvent);
 
   /**
@@ -378,6 +384,7 @@ protected:
   bool     HandleListSelection(mozilla::dom::Event * aDOMEvent,
                                int32_t selectedIndex);
   void     InitSelectionRange(int32_t aClickedIndex);
+  MOZ_CAN_RUN_SCRIPT
   void     PostHandleKeyEvent(int32_t aNewIndex, uint32_t aCharCode,
                               bool aIsShift, bool aIsControlOrMeta);
 

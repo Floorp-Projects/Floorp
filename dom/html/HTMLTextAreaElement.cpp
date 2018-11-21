@@ -224,6 +224,12 @@ HTMLTextAreaElement::GetTextEditor()
   return mState.GetTextEditor();
 }
 
+NS_IMETHODIMP_(TextEditor*)
+HTMLTextAreaElement::GetTextEditorWithoutCreation()
+{
+  return mState.GetTextEditorWithoutCreation();
+}
+
 NS_IMETHODIMP_(nsISelectionController*)
 HTMLTextAreaElement::GetSelectionController()
 {

@@ -64,7 +64,9 @@ public:
 
   // If there are some good name to create non-virtual Undo()/Redo() methods,
   // we should create them and those methods should just run them.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Undo(uint32_t aCount) final;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Redo(uint32_t aCount) final;
 
   NS_IMETHOD Cut() override;
@@ -205,6 +207,7 @@ public:
    * @param aCompositionChangeEvent     eCompositionChange event which should
    *                                    be handled in this editor.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult
   OnCompositionChange(WidgetCompositionEvent& aCompositionChangeEvent);
 
@@ -213,6 +216,7 @@ public:
    * event and it's followed by eCompositionEnd event and after
    * OnCompositionChange() is called.
    */
+  MOZ_CAN_RUN_SCRIPT
   void OnCompositionEnd(WidgetCompositionEvent& aCompositionEndEvent);
 
   /**
@@ -530,7 +534,7 @@ protected: // Shouldn't be used by friend classes
    */
   bool EnsureComposition(WidgetCompositionEvent& aCompositionEvent);
 
-  virtual already_AddRefed<nsIContent> GetInputEventTargetContent() override;
+  virtual already_AddRefed<Element> GetInputEventTargetElement() override;
 
 protected:
   mutable nsCOMPtr<nsIDocumentEncoder> mCachedDocumentEncoder;

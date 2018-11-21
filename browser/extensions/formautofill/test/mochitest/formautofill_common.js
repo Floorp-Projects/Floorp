@@ -115,16 +115,14 @@ function triggerAutofillAndCheckProfile(profile) {
     const checkFieldAutofilled = Promise.all([
       new Promise(resolve => element.addEventListener("input", (event) => {
         if (element.tagName == "INPUT" && element.type == "text") {
-          todo(event instanceof InputEvent,
-               `"input" event should be dispatched with InputEvent interface on ${element.tagName}`);
-          todo_is(event.cancelable, false,
-                  `"input" event should be never cancelable on ${element.tagName}`);
+          ok(event instanceof InputEvent,
+             `"input" event should be dispatched with InputEvent interface on ${element.tagName}`);
         } else {
           todo(event instanceof Event && !(event instanceof UIEvent),
                `"input" event should be dispatched with Event interface on ${element.tagName}`);
-          is(event.cancelable, false,
-             `"input" event should be never cancelable on ${element.tagName}`);
         }
+        is(event.cancelable, false,
+           `"input" event should be never cancelable on ${element.tagName}`);
         is(event.bubbles, true,
            `"input" event should always bubble on ${element.tagName}`);
         resolve();

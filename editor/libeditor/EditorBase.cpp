@@ -2142,56 +2142,6 @@ EditorBase::NotifySelectionChanged(nsIDocument* aDocument,
   return NS_OK;
 }
 
-class EditorInputEventDispatcher final : public Runnable
-{
-public:
-  EditorInputEventDispatcher(EditorBase* aEditorBase,
-                             nsIContent* aTarget,
-                             bool aIsComposing)
-    : Runnable("EditorInputEventDispatcher")
-    , mEditorBase(aEditorBase)
-    , mTarget(aTarget)
-    , mIsComposing(aIsComposing)
-  {
-  }
-
-  NS_IMETHOD Run() override
-  {
-    // Note that we don't need to check mDispatchInputEvent here.  We need
-    // to check it only when the editor requests to dispatch the input event.
-
-    if (!mTarget->IsInComposedDoc()) {
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsIPresShell> ps = mEditorBase->GetPresShell();
-    if (!ps) {
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsIWidget> widget = mEditorBase->GetWidget();
-    if (!widget) {
-      return NS_OK;
-    }
-
-    // Even if the change is caused by untrusted event, we need to dispatch
-    // trusted input event since it's a fact.
-    InternalEditorInputEvent inputEvent(true, eEditorInput, widget);
-    inputEvent.mTime = static_cast<uint64_t>(PR_Now() / 1000);
-    inputEvent.mIsComposing = mIsComposing;
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsresult rv =
-      ps->HandleEventWithTarget(&inputEvent, nullptr, mTarget, &status);
-    NS_ENSURE_SUCCESS(rv, NS_OK); // print the warning if error
-    return NS_OK;
-  }
-
-private:
-  RefPtr<EditorBase> mEditorBase;
-  nsCOMPtr<nsIContent> mTarget;
-  bool mIsComposing;
-};
-
 void
 EditorBase::NotifyEditorObservers(NotificationForEditorObservers aNotification)
 {
@@ -2252,19 +2202,15 @@ EditorBase::NotifyEditorObservers(NotificationForEditorObservers aNotification)
 void
 EditorBase::FireInputEvent()
 {
-  // We don't need to dispatch multiple input events if there is a pending
-  // input event.  However, it may have different event target.  If we resolved
-  // this issue, we need to manage the pending events in an array.  But it's
-  // overwork.  We don't need to do it for the very rare case.
-
-  nsCOMPtr<nsIContent> target = GetInputEventTargetContent();
-  NS_ENSURE_TRUE_VOID(target);
-
-  // NOTE: Don't refer IsIMEComposing() because it returns false even before
-  //       compositionend.  However, DOM Level 3 Events defines it should be
-  //       true after compositionstart and before compositionend.
-  nsContentUtils::AddScriptRunner(
-    new EditorInputEventDispatcher(this, target, !!GetComposition()));
+  RefPtr<Element> targetElement = GetInputEventTargetElement();
+  if (NS_WARN_IF(!targetElement)) {
+    return;
+  }
+  RefPtr<TextEditor> textEditor = AsTextEditor();
+  DebugOnly<nsresult> rvIgnored =
+    nsContentUtils::DispatchInputEvent(targetElement, textEditor);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+    "Failed to dispatch input event");
 }
 
 NS_IMETHODIMP

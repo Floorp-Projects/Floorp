@@ -95,19 +95,12 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
       if (aTest.inputEvents[i].todoInterfaceOnXUL && aInputEvents[i].target.tagName === "textbox") {
         this._todo_is(aInputEvents[i] instanceof this._window.InputEvent, true,
                       this._description + ", " + aTest.description + ': "input" event should be dispatched with InputEvent interface');
-        this._is(aInputEvents[i].cancelable, false,
-                 this._description + ", " + aTest.description + ': "input" event should be never cancelable');
-      } else if (aTest.inputEvents[i].inputType === "insertReplacementText") {
-        this._todo_is(aInputEvents[i] instanceof this._window.InputEvent, true,
-                      this._description + ", " + aTest.description + ': "input" event should be dispatched with InputEvent interface');
-        this._todo_is(aInputEvents[i].cancelable, false,
-                      this._description + ", " + aTest.description + ': "input" event should be never cancelable');
       } else {
         this._is(aInputEvents[i] instanceof this._window.InputEvent, true,
                  this._description + ", " + aTest.description + ': "input" event should be dispatched with InputEvent interface');
-        this._is(aInputEvents[i].cancelable, false,
-                 this._description + ", " + aTest.description + ': "input" event should be never cancelable');
       }
+      this._is(aInputEvents[i].cancelable, false,
+               this._description + ", " + aTest.description + ': "input" event should be never cancelable');
       this._is(aInputEvents[i].bubbles, true,
                this._description + ", " + aTest.description + ': "input" event should always bubble');
     }

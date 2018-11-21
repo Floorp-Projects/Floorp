@@ -123,6 +123,7 @@ class Dispatcher;
 class ErrorResult;
 class EventListenerManager;
 class HTMLEditor;
+class TextEditor;
 
 namespace dom {
 class ContentFrameMessageManager;
@@ -1377,9 +1378,12 @@ public:
   static void MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent);
 
   /**
-   * This method creates and dispatches a trusted event.
+   * These methods create and dispatch a trusted event.
    * Works only with events which can be created by calling
    * nsIDocument::CreateEvent() with parameter "Events".
+   * Note that don't use these methods for "input" event.  Use
+   * DispatchInputEvent() instead.
+   *
    * @param aDoc           The document which will be used to create the event.
    * @param aTarget        The target of the event, should be QIable to
    *                       EventTarget.
@@ -1437,6 +1441,26 @@ public:
                          aCanBubble, aCancelable, Trusted::eYes,
                          aDefaultAction, aOnlyChromeDispatch);
   }
+
+  /**
+   * This method dispatches "input" event with proper event class.  If it's
+   * unsafe to dispatch, this put the event into the script runner queue.
+   * Input Events spec defines as:
+   *   Input events are dispatched on elements that act as editing hosts,
+   *   including elements with the contenteditable attribute set, textarea
+   *   elements, and input elements that permit text input.
+   *
+   * @param aEventTarget        The event target element of the "input" event.
+   *                            Must not be nullptr.
+   * @param aTextEditor         Optional.  If this is called by editor,
+   *                            editor should set this.  Otherwise, leave
+   *                            nullptr.
+   */
+  MOZ_CAN_RUN_SCRIPT
+  static nsresult DispatchInputEvent(Element* aEventTarget);
+  MOZ_CAN_RUN_SCRIPT
+  static nsresult DispatchInputEvent(Element* aEventTarget,
+                                     mozilla::TextEditor* aTextEditor);
 
   /**
    * This method creates and dispatches a untrusted event.
