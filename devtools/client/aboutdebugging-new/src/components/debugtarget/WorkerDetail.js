@@ -17,15 +17,17 @@ const {
 
 const FieldPair = createFactory(require("./FieldPair"));
 
+const Types = require("../../types/index");
+
 /**
  * This component displays detail information for worker.
  */
 class WorkerDetail extends PureComponent {
   static get propTypes() {
     return {
-      target: PropTypes.object.isRequired,
       // Provided by wrapping the component with FluentReact.withLocalization.
       getString: PropTypes.func.isRequired,
+      target: Types.debugTarget.isRequired,
     };
   }
 

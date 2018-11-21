@@ -14,6 +14,8 @@ const Localized = createFactory(FluentReact.Localized);
 
 const DebugTargetItem = createFactory(require("./DebugTargetItem"));
 
+const Types = require("../../types/index");
+
 /**
  * This component displays list of debug target.
  */
@@ -24,7 +26,7 @@ class DebugTargetList extends PureComponent {
       detailComponent: PropTypes.any.isRequired,
       dispatch: PropTypes.func.isRequired,
       isCollapsed: PropTypes.bool.isRequired,
-      targets: PropTypes.arrayOf(PropTypes.object).isRequired,
+      targets: PropTypes.arrayOf(Types.debugTarget).isRequired,
     };
   }
 

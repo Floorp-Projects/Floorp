@@ -14,6 +14,7 @@ const Localized = createFactory(FluentReact.Localized);
 const InspectAction = createFactory(require("./InspectAction"));
 
 const Actions = require("../../actions/index");
+const Types = require("../../types/index");
 
 /**
  * This component provides components that inspect/reload/remove temporary extension.
@@ -22,7 +23,7 @@ class TemporaryExtensionAction extends PureComponent {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
-      target: PropTypes.object.isRequired,
+      target: Types.debugTarget.isRequired,
     };
   }
 
