@@ -14,6 +14,6 @@ negative:
 flags: [noStrict]
 ---*/
 
-throw "Test262: This statement should not be evaluated.";
+$DONOTEVALUATE();
 
 (function eval() {'use strict';});

@@ -9,6 +9,7 @@ description: >
   meaning await takes only 1 tick on the microtask queue.
 flags: [async]
 features: [async-functions]
+includes: [compareArray.js]
 ---*/
 
 const actual = [];

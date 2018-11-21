@@ -4,9 +4,10 @@
 /*---
 esid: prod-CharacterClassEscape
 description: >
-    Compare range for Whitespace class escape, \\s with flags ug
+    Compare range for whitespace class escape \s with flags ug
 info: |
-    This is a generated test, please checkout https://github.com/bocoup/test262-regexp-generator
+    This is a generated test. Please check out
+    https://github.com/bocoup/test262-regexp-generator
     for any changes.
 
     CharacterClassEscape[U] ::
@@ -18,7 +19,7 @@ info: |
         W
 
     21.2.2.12 CharacterClassEscape
-    
+
     The production CharacterClassEscape :: d evaluates as follows:
         Return the ten-element set of characters containing the characters 0 through 9 inclusive.
     The production CharacterClassEscape :: D evaluates as follows:
@@ -36,21 +37,31 @@ features: [String.fromCodePoint]
 includes: [regExpUtils.js]
 ---*/
 
-const str = buildString({loneCodePoints: [], ranges: [[0, 0x10FFFF]]});
+const str = buildString({
+    loneCodePoints: [
+        0x000020,
+        0x0000A0,
+        0x001680,
+        0x00202F,
+        0x00205F,
+        0x003000,
+        0x00FEFF,
+    ],
+    ranges: [
+        [0x000009, 0x00000D],
+        [0x002000, 0x00200A],
+        [0x002028, 0x002029],
+    ],
+});
 
 const re = /\s/ug;
-const matchingRange = /[\t-\r \xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]/ug;
 
 const errors = [];
 
-function matching(str) {
-    return str.replace(re, '') === str.replace(matchingRange, '');
-}
-
-if (!matching(str)) {
+if (!re.test(str)) {
     // Error, let's find out where
     for (const char of str) {
-        if (!matching(char)) {
+        if (!re.test(char)) {
             errors.push('0x' + char.codePointAt(0).toString(16));
         }
     }

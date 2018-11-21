@@ -4,7 +4,7 @@
 
 /*---
 info: |
-    Refer 13.1; 
+    Refer 13.1;
     It is a SyntaxError if the Identifier "eval" or the Identifier "arguments" occurs within a FormalParameterList
     of a strict mode FunctionDeclaration or FunctionExpression.
 es5id: 13.1-18-s
@@ -18,6 +18,6 @@ negative:
 flags: [noStrict]
 ---*/
 
-throw "Test262: This statement should not be evaluated.";
+$DONOTEVALUATE();
 
 (function (eval) { 'use strict'; });

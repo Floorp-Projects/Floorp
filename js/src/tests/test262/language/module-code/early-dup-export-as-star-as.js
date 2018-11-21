@@ -13,8 +13,8 @@ negative:
   type: SyntaxError
 ---*/
 
-throw "Test262: This statement should not be evaluated.";
+$DONOTEVALUATE();
 
 var x;
 export { x as z };
-export * as z from "early-dup-export-as-star-as.js";
+export * as z from './early-dup-export-as-star-as.js';
