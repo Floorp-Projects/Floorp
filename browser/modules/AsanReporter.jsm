@@ -163,6 +163,9 @@ function submitToServer(data) {
       // For internal testing purposes, an auth_token can be specified
       if (auth_token) {
         xhr.setRequestHeader("Authorization", "Token " + auth_token);
+      } else {
+        // Prevent privacy leaks
+        xhr.channel.loadFlags |= Ci.nsIRequest.LOAD_ANONYMOUS;
       }
 
       xhr.onreadystatechange = function() {
