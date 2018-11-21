@@ -262,6 +262,9 @@ class FindLastHitPhase final : public NavigationPhase
   // Endpoint of the search, nothing if the endpoint is the next checkpoint.
   Maybe<ExecutionPoint> mEnd;
 
+  // Whether the endpoint itself is considered to be part of the search space.
+  bool mIncludeEnd;
+
   // Counter that increases as we run forward, for ordering hits.
   size_t mCounter;
 
@@ -283,11 +286,12 @@ class FindLastHitPhase final : public NavigationPhase
   InfallibleVector<TrackedPosition, 4, UntrackedAllocPolicy> mTrackedPositions;
 
   const TrackedPosition& FindTrackedPosition(const BreakpointPosition& aPos);
+  void CheckForRegionEnd(const ExecutionPoint& aPoint);
   void OnRegionEnd();
 
 public:
   // Note: this always rewinds.
-  void Enter(const CheckpointId& aStart, const Maybe<ExecutionPoint>& aEnd);
+  void Enter(const CheckpointId& aStart, const Maybe<ExecutionPoint>& aEnd, bool aIncludeEnd);
 
   void ToString(nsAutoCString& aStr) override {
     aStr.AppendPrintf("FindLastHit");
@@ -571,13 +575,13 @@ PausedPhase::Resume(bool aForward)
       MOZ_RELEASE_ASSERT(start.mTemporary);
       start.mTemporary--;
     }
-    gNavigation->mFindLastHitPhase.Enter(start, Some(mPoint));
+    gNavigation->mFindLastHitPhase.Enter(start, Some(mPoint), /* aIncludeEnd = */ false);
   } else {
     // We can't rewind past the beginning of the replay.
     MOZ_RELEASE_ASSERT(mPoint.mCheckpoint != CheckpointId::First);
 
     CheckpointId start(mPoint.mCheckpoint - 1);
-    gNavigation->mFindLastHitPhase.Enter(start, Nothing());
+    gNavigation->mFindLastHitPhase.Enter(start, Nothing(), /* aIncludeEnd = */ false);
   }
   Unreachable();
 }
@@ -907,12 +911,14 @@ ReachBreakpointPhase::PositionHit(const ExecutionPoint& aPoint)
 ///////////////////////////////////////////////////////////////////////////////
 
 void
-FindLastHitPhase::Enter(const CheckpointId& aStart, const Maybe<ExecutionPoint>& aEnd)
+FindLastHitPhase::Enter(const CheckpointId& aStart, const Maybe<ExecutionPoint>& aEnd,
+                        bool aIncludeEnd)
 {
   MOZ_RELEASE_ASSERT(aEnd.isNothing() || aEnd.ref().HasPosition());
 
   mStart = aStart;
   mEnd = aEnd;
+  mIncludeEnd = aIncludeEnd;
   mCounter = 0;
   mTrackedPositions.clear();
 
@@ -962,9 +968,8 @@ FindLastHitPhase::AfterCheckpoint(const CheckpointId& aCheckpoint)
 void
 FindLastHitPhase::PositionHit(const ExecutionPoint& aPoint)
 {
-  if (mEnd.isSome() && mEnd.ref() == aPoint) {
-    OnRegionEnd();
-    Unreachable();
+  if (!mIncludeEnd) {
+    CheckForRegionEnd(aPoint);
   }
 
   ++mCounter;
@@ -975,6 +980,19 @@ FindLastHitPhase::PositionHit(const ExecutionPoint& aPoint)
       tracked.mLastHitCount = mCounter;
       break;
     }
+  }
+
+  if (mIncludeEnd) {
+    CheckForRegionEnd(aPoint);
+  }
+}
+
+void
+FindLastHitPhase::CheckForRegionEnd(const ExecutionPoint& aPoint)
+{
+  if (mEnd.isSome() && mEnd.ref() == aPoint) {
+    OnRegionEnd();
+    Unreachable();
   }
 }
 
@@ -1020,7 +1038,10 @@ FindLastHitPhase::OnRegionEnd()
       start.mTemporary--;
       ExecutionPoint end = gNavigation->LastTemporaryCheckpointLocation();
       if (end.HasPosition()) {
-        gNavigation->mFindLastHitPhase.Enter(start, Some(end));
+        // The temporary checkpoint comes immediately after its associated
+        // execution point. As we search backwards we need to look for hits at
+        // that execution point itself.
+        gNavigation->mFindLastHitPhase.Enter(start, Some(end), /* aIncludeEnd = */ true);
         Unreachable();
       } else {
         // The last temporary checkpoint may be at the same execution point as

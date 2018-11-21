@@ -14,6 +14,6 @@ negative:
 flags: [onlyStrict]
 ---*/
 
-throw "Test262: This statement should not be evaluated.";
+$DONOTEVALUATE();
 
 for (var eval in arrObj) { }
