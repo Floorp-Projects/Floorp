@@ -37,10 +37,10 @@ class GenericScalarStorageEngineTest {
         }
 
         fun record(
-            metric: CommonMetricData,
+            metricData: CommonMetricData,
             value: Int
         ) {
-            super.recordScalar(metric, value)
+            super.recordScalar(metricData, value)
         }
     }
 

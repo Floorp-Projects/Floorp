@@ -170,7 +170,7 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
      * simple scalars to the internal storage.
      */
     protected fun recordScalar(
-        metric: CommonMetricData,
+        metricData: CommonMetricData,
         value: ScalarType
     ) {
         checkNotNull(applicationContext) { "No recording can take place without an application context" }
@@ -178,19 +178,19 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
         // Record a copy of the metric in all the needed stores.
         @SuppressLint("CommitPrefEdits")
         val userPrefs: SharedPreferences.Editor? =
-            if (metric.lifetime == Lifetime.User) userLifetimeStorage.edit() else null
-        metric.getStorageNames().forEach {
-            val storeData = dataStores[metric.lifetime.ordinal].getOrPut(it) { mutableMapOf() }
+            if (metricData.lifetime == Lifetime.User) userLifetimeStorage.edit() else null
+        metricData.getStorageNames().forEach {
+            val storeData = dataStores[metricData.lifetime.ordinal].getOrPut(it) { mutableMapOf() }
             // We support empty categories for enabling the internal use of metrics
             // when assembling pings in [PingMaker].
-            val entryName = if (metric.category.isEmpty()) {
-                metric.name
+            val entryName = if (metricData.category.isEmpty()) {
+                metricData.name
             } else {
-                "${metric.category}.${metric.name}"
+                "${metricData.category}.${metricData.name}"
             }
             storeData[entryName] = value
             // Persist data with "user" lifetime
-            if (metric.lifetime == Lifetime.User) {
+            if (metricData.lifetime == Lifetime.User) {
                 userPrefs?.putString("$it#$entryName", serializeSingleMetric(value))
             }
         }

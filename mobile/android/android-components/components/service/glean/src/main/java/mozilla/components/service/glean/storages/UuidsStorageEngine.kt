@@ -37,17 +37,14 @@ open class UuidsStorageEngineImplementation(
     /**
      * Record a uuid in the desired stores.
      *
-     * @param stores the list of stores to record the uuid into
-     * @param category the category of the uuid
-     * @param name the name of the uuid
-     * @param lifetime the lifetime of the stored metric data
+     * @param metricData object with metric settings
      * @param value the uuid value to record
      */
     @Synchronized
     fun record(
-        metric: CommonMetricData,
+        metricData: CommonMetricData,
         value: UUID
     ) {
-        super.recordScalar(metric, value)
+        super.recordScalar(metricData, value)
     }
 }

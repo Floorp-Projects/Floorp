@@ -31,17 +31,14 @@ open class StringsStorageEngineImplementation(
     /**
      * Record a string in the desired stores.
      *
-     * @param stores the list of stores to record the string into
-     * @param category the category of the string
-     * @param name the name of the string
-     * @param lifetime the lifetime of the stored metric data
+     * @param metricData object with metric settings
      * @param value the string value to record
      */
     @Synchronized
     fun record(
-        metric: CommonMetricData,
+        metricData: CommonMetricData,
         value: String
     ) {
-        super.recordScalar(metric, value)
+        super.recordScalar(metricData, value)
     }
 }
