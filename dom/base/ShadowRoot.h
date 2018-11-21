@@ -98,7 +98,9 @@ public:
   // being connected.
   void Unbind();
 
-  // Only intended for UA widgets / special shadow roots.
+  // Only intended for UA widgets / special shadow roots, or for handling
+  // failure cases when adopting (see BlastSubtreeToPieces).
+  //
   // Forgets our shadow host and unbinds all our kids.
   void Unattach();
 
