@@ -10,6 +10,7 @@ description: >
   https://github.com/tc39/ecma262/pull/1250#issuecomment-401082195
 flags: [async]
 features: [async-functions]
+includes: [compareArray.js]
 ---*/
 
 let thenCallCount = 0;
