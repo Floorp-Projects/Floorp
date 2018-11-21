@@ -126,7 +126,8 @@ InputType::GetNonFileValueInternal(nsAString& aValue) const
 nsresult
 InputType::SetValueInternal(const nsAString& aValue, uint32_t aFlags)
 {
-  return mInputElement->SetValueInternal(aValue, aFlags);
+  RefPtr<mozilla::dom::HTMLInputElement> inputElement(mInputElement);
+  return inputElement->SetValueInternal(aValue, aFlags);
 }
 
 mozilla::Decimal

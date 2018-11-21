@@ -109,6 +109,13 @@
         </body>
       </method>
 
+      <method name="setUserInput">
+        <parameter name="value"/>
+        <body><![CDATA[
+          this.inputField.setUserInput(value);
+        ]]></body>
+      </method>
+
       <property name="controllers"    readonly="true" onget="return this.inputField.controllers"/>
       <property name="textLength"     readonly="true"
                                       onget="return this.inputField.textLength;"/>

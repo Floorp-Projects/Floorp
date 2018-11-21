@@ -459,11 +459,11 @@ nsFileControlFrame::DnDListener::HandleEvent(Event* aEvent)
         inputElement->SetFiles(fileList, true);
       }
 
-      nsContentUtils::DispatchTrustedEvent(inputElement->OwnerDoc(),
-                                           static_cast<nsINode*>(inputElement),
-                                           NS_LITERAL_STRING("input"),
-                                           CanBubble::eYes,
-                                           Cancelable::eNo);
+      RefPtr<TextEditor> textEditor;
+      DebugOnly<nsresult> rvIgnored =
+        nsContentUtils::DispatchInputEvent(inputElement);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                           "Failed to dispatch input event");
       nsContentUtils::DispatchTrustedEvent(inputElement->OwnerDoc(),
                                            static_cast<nsINode*>(inputElement),
                                            NS_LITERAL_STRING("change"),

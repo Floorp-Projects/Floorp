@@ -13,6 +13,8 @@ const Localized = createFactory(FluentReact.Localized);
 
 const FieldPair = createFactory(require("./FieldPair"));
 
+const Types = require("../../types/index");
+
 /**
  * This component displays detail information for extension.
  */
@@ -21,7 +23,7 @@ class ExtensionDetail extends PureComponent {
     return {
       // Provided by wrapping the component with FluentReact.withLocalization.
       getString: PropTypes.func.isRequired,
-      target: PropTypes.object.isRequired,
+      target: Types.debugTarget.isRequired,
     };
   }
 

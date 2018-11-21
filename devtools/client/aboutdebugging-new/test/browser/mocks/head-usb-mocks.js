@@ -35,7 +35,7 @@ class UsbMocks {
     this.runtimeClientFactoryMock = createRuntimeClientFactoryMock();
     this._clients = {};
     this.runtimeClientFactoryMock.createClientForRuntime = runtime => {
-      return { client: this._clients[runtime.id] };
+      return { clientWrapper: this._clients[runtime.id] };
     };
 
     // Add a client for THIS_FIREFOX, since about:debugging will start on the This Firefox

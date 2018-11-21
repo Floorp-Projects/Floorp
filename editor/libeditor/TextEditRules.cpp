@@ -956,6 +956,7 @@ TextEditRules::WillSetText(bool* aCancel,
   if (!IsPlaintextEditor() ||
       TextEditorRef().IsIMEComposing() ||
       TextEditorRef().IsUndoRedoEnabled() ||
+      TextEditorRef().GetEditAction() == EditAction::eReplaceText ||
       aMaxLength != -1) {
     // SetTextImpl only supports plain text editor without IME and
     // when we don't need to make it undoable.

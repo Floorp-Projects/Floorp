@@ -160,7 +160,8 @@ PromptFactory.prototype = {
   },
 
   _dispatchEvents: function(aElement) {
-    // Fire both "input" and "change" events for <select> and <input>.
+    // Fire both "input" and "change" events for <select> and <input> for
+    // date/time.
     aElement.dispatchEvent(new aElement.ownerGlobal.Event("input", { bubbles: true }));
     aElement.dispatchEvent(new aElement.ownerGlobal.Event("change", { bubbles: true }));
   },

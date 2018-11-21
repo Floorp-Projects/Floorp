@@ -281,7 +281,7 @@ this.SelectContentHelper.prototype = {
 
           // Fire input and change events when selected option changes
           if (this.initialSelection !== selectedOption) {
-            let inputEvent = new win.UIEvent("input", {
+            let inputEvent = new win.Event("input", {
               bubbles: true,
             });
             this.element.dispatchEvent(inputEvent);
