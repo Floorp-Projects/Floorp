@@ -662,10 +662,12 @@ var paymentDialogWrapper = {
                                      formAutofillStorage[collectionName];
 
       if (guid) {
-        // We only care to preserve old properties for credit cards,
-        // because credit cards don't get their full record sent to the
-        // unprivileged frame (the cc-number is excluded).
-        let preserveOldProperties = collectionName == "creditCards";
+        // We want to preserve old properties since the edit forms are often
+        // shown without all fields visible/enabled and we don't want those
+        // fields to be blanked upon saving. Examples of hidden/disabled fields:
+        // email, cc-number, mailing-address on the payer forms, and payer fields
+        // not requested in the payer form.
+        let preserveOldProperties = true;
         await collection.update(guid, record, preserveOldProperties);
       } else {
         responseMessage.guid = await collection.add(record);
