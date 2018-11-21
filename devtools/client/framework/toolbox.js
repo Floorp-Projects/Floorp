@@ -690,9 +690,6 @@ Toolbox.prototype = {
    * the source map worker.
    */
   get sourceMapService() {
-    if (!Services.prefs.getBoolPref("devtools.source-map.client-service.enabled")) {
-      return null;
-    }
     return this._createSourceMapService();
   },
 
