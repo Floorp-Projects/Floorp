@@ -254,23 +254,32 @@ class WebRenderBridgeParent::ScheduleSharedSurfaceRelease final
   : public wr::NotificationHandler
 {
 public:
-  ScheduleSharedSurfaceRelease()
+  explicit ScheduleSharedSurfaceRelease(WebRenderBridgeParent* aWrBridge)
+    : mWrBridge(aWrBridge)
+    , mSurfaces(20)
   { }
 
-  void Add(const wr::ExternalImageId& aId)
+  void Add(const wr::ImageKey& aKey,
+           const wr::ExternalImageId& aId)
   {
-    mSurfaces.AppendElement(aId);
+    mSurfaces.AppendElement(wr::ExternalImageKeyPair { aKey, aId });
   }
 
   void Notify(wr::Checkpoint) override
   {
-    for (const auto& id : mSurfaces) {
-      SharedSurfacesParent::Release(id);
-    }
+    CompositorThreadHolder::Loop()->PostTask(
+      NewRunnableMethod<nsTArray<wr::ExternalImageKeyPair>>(
+        "ObserveSharedSurfaceRelease",
+        mWrBridge,
+        &WebRenderBridgeParent::ObserveSharedSurfaceRelease,
+        std::move(mSurfaces)
+      )
+    );
   }
 
 private:
-  AutoTArray<wr::ExternalImageId, 20> mSurfaces;
+  RefPtr<WebRenderBridgeParent> mWrBridge;
+  nsTArray<wr::ExternalImageKeyPair> mSurfaces;
 };
 
 class MOZ_STACK_CLASS AutoWebRenderBridgeParentAsyncMessageSender
@@ -540,7 +549,8 @@ WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResour
   }
 
   if (scheduleRelease) {
-    aUpdates.Notify(wr::Checkpoint::FrameRendered, std::move(scheduleRelease));
+    aUpdates.Notify(wr::Checkpoint::FrameTexturesUpdated,
+                    std::move(scheduleRelease));
   }
   return true;
 }
@@ -695,9 +705,9 @@ WebRenderBridgeParent::UpdateExternalImage(wr::ExternalImageId aExtId,
     // previous external image ID. This can happen when an image is animated,
     // and it is changing the external image that the animation points to.
     if (!aScheduleRelease) {
-      aScheduleRelease = MakeUnique<ScheduleSharedSurfaceRelease>();
+      aScheduleRelease = MakeUnique<ScheduleSharedSurfaceRelease>(this);
     }
-    aScheduleRelease->Add(it->second);
+    aScheduleRelease->Add(aKey, it->second);
     it->second = aExtId;
   }
 
@@ -723,6 +733,17 @@ WebRenderBridgeParent::UpdateExternalImage(wr::ExternalImageId aExtId,
   data.PushBytes(Range<uint8_t>(map.GetData(), size.height * map.GetStride()));
   aResources.UpdateImageBuffer(keys[0], descriptor, data);
   return true;
+}
+
+void
+WebRenderBridgeParent::ObserveSharedSurfaceRelease(const nsTArray<wr::ExternalImageKeyPair>& aPairs)
+{
+  if (!mDestroyed) {
+    Unused << SendWrReleasedImages(aPairs);
+  }
+  for (const auto& pair : aPairs) {
+    SharedSurfacesParent::Release(pair.id);
+  }
 }
 
 mozilla::ipc::IPCResult

@@ -12,7 +12,7 @@ negative:
   type: ReferenceError
 ---*/
 
-throw "Test262: This statement should not be evaluated.";
+$DONOTEVALUATE();
 
 async function foo() {
   (await 1) = 1;

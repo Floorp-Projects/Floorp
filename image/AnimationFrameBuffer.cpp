@@ -221,11 +221,10 @@ AnimationFrameDiscardingQueue::AdvanceInternal()
   // We should never have advanced beyond the frame buffer.
   MOZ_ASSERT(mGetIndex < mSize);
 
-  // Unless we are recycling, we should have the current frame still in the
-  // display queue. Either way, we should at least have an entry in the queue
-  // which we need to consume.
-  MOZ_ASSERT(mRecycling || bool(mDisplay.front()));
+  // We should have the current frame still in the display queue. Either way,
+  // we should at least have an entry in the queue which we need to consume.
   MOZ_ASSERT(!mDisplay.empty());
+  MOZ_ASSERT(mDisplay.front());
   mDisplay.pop_front();
   MOZ_ASSERT(!mDisplay.empty());
   MOZ_ASSERT(mDisplay.front());
@@ -354,6 +353,11 @@ AnimationFrameRecyclingQueue::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
 void
 AnimationFrameRecyclingQueue::AdvanceInternal()
 {
+  // We only want to change the current frame index if we have advanced. This
+  // means either a higher frame index, or going back to the beginning.
+  // We should never have advanced beyond the frame buffer.
+  MOZ_ASSERT(mGetIndex < mSize);
+
   MOZ_ASSERT(!mDisplay.empty());
   MOZ_ASSERT(mDisplay.front());
 
@@ -388,7 +392,30 @@ AnimationFrameRecyclingQueue::AdvanceInternal()
   // Even if the frame itself isn't saved, we want the dirty rect to calculate
   // the recycle rect for future recycled frames.
   mRecycle.push_back(std::move(newEntry));
-  AnimationFrameDiscardingQueue::AdvanceInternal();
+  mDisplay.pop_front();
+  MOZ_ASSERT(!mDisplay.empty());
+  MOZ_ASSERT(mDisplay.front());
+
+  if (mDisplay.size() + mPending - 1 < mBatch) {
+    // If we have fewer frames than the batch size, then ask for more. If we
+    // do not have any pending, then we know that there is no active decoding.
+    //
+    // We limit the batch to avoid using the frame we just added to the queue.
+    // This gives other parts of the system time to switch to the new current
+    // frame, and maximize buffer reuse. In particular this is useful for
+    // WebRender which holds onto the previous frame for much longer.
+    size_t newPending = std::min(mPending + mBatch, mRecycle.size() - 1);
+    if (newPending == 0 && (mDisplay.size() <= 1 || mPending > 0)) {
+      // If we already have pending frames, then the decoder is active and we
+      // cannot go below one. If we are displaying the only frame we have, and
+      // there are none pending, then we must request at least one more frame to
+      // continue to animation, because we won't advance again without a new
+      // frame. This may cause us to skip recycling because the previous frame
+      // is still in use.
+      newPending = 1;
+    }
+    mPending = newPending;
+  }
 }
 
 bool

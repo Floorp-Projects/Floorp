@@ -113,6 +113,11 @@ private:
   RefPtr<VisibilityChangeListener> mListener;
 };
 
+nsresult
+TranslateChoices(JS::HandleValue aChoices,
+                 const nsTArray<PermissionRequest>& aPermissionRequests,
+                 nsTArray<PermissionChoice>& aTranslatedChoices);
+
 class ContentPermissionRequestBase : public nsIContentPermissionRequest
 {
 public:

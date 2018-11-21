@@ -813,6 +813,7 @@ function getInvalidLocaleArguments() {
     "u-nu-latn-cu-bob", // extension sequence without language
     "hans-cmn-cn", // "hans" could theoretically be a 4-letter language code,
                    // but those can't be followed by extlang codes.
+    "abcdefghi", // overlong language
     "cmn-hans-cn-u-u", // duplicate singleton
     "cmn-hans-cn-t-u-ca-u", // duplicate singleton
     "de-gregory-gregory", // duplicate variant

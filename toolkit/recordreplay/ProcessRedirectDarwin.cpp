@@ -198,6 +198,7 @@ namespace recordreplay {
         RR_Compose<RR_ScalarRval, RR_WriteBufferFixedSize<0, sizeof(mach_timebase_info_data_t)>>) \
   MACRO(mach_vm_allocate, nullptr, Preamble_mach_vm_allocate)    \
   MACRO(mach_vm_deallocate, nullptr, Preamble_mach_vm_deallocate) \
+  MACRO(mach_vm_map, nullptr, Preamble_mach_vm_map)              \
   MACRO(mach_vm_protect, nullptr, Preamble_mach_vm_protect)      \
   MACRO(rand, RR_ScalarRval)                                     \
   MACRO(realpath,                                                \
@@ -1492,6 +1493,26 @@ Preamble_mach_vm_deallocate(CallArguments* aArguments)
   auto& address = aArguments->Arg<1, void*>();
   auto& size = aArguments->Arg<2, size_t>();
   DeallocateMemory(address, size, MemoryKind::Tracked);
+  aArguments->Rval<size_t>() = KERN_SUCCESS;
+  return PreambleResult::Veto;
+}
+
+static PreambleResult
+Preamble_mach_vm_map(CallArguments* aArguments)
+{
+  if (IsRecording()) {
+    return PreambleResult::PassThrough;
+  } else if (AreThreadEventsPassedThrough()) {
+    // We should only reach this at startup, when initializing the graphics
+    // shared memory block.
+    MOZ_RELEASE_ASSERT(!HasSavedCheckpoint());
+    return PreambleResult::PassThrough;
+  }
+
+  auto size = aArguments->Arg<2, size_t>();
+  auto address = aArguments->Arg<1, void**>();
+
+  *address = AllocateMemory(size, MemoryKind::Tracked);
   aArguments->Rval<size_t>() = KERN_SUCCESS;
   return PreambleResult::Veto;
 }

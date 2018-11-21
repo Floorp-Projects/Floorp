@@ -2634,16 +2634,16 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
                 if (!units.get()) {
                     return xdr->fail(JS::TranscodeResult_Throw);
                 }
-                mozilla::recordreplay::NoteContentParse8(this, filename(), "application/javascript",
-                                                         units.get(), length());
+                mozilla::recordreplay::NoteContentParse(this, filename(), "application/javascript",
+                                                        units.get(), length());
             } else {
                 // UTF-16 source text.
                 ScriptSource::PinnedUnits<char16_t> units(xdr->cx(), this, holder, 0, length());
                 if (!units.get()) {
                     return xdr->fail(JS::TranscodeResult_Throw);
                 }
-                mozilla::recordreplay::NoteContentParse16(this, filename(), "application/javascript",
-                                                          units.get(), length());
+                mozilla::recordreplay::NoteContentParse(this, filename(), "application/javascript",
+                                                        units.get(), length());
             }
         }
     }

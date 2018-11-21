@@ -10,6 +10,6 @@ negative:
 flags: [module]
 ---*/
 
-throw "Test262: This statement should not be evaluated.";
+$DONOTEVALUATE();
 
 (class { static method() { import v from './decl-pos-import-class-expr-meth-static.js'; } });

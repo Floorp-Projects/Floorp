@@ -40,7 +40,9 @@ for (const [unitArgument, unitStrings] of Object.entries(units)) {
 
   verifyFormatParts(rtf.formatToParts(1000, unitArgument), [
     { "type": "literal", "value": "in " },
-    { "type": "integer", "value": "1,000", "unit": unitArgument },
+    { "type": "integer", "value": "1", "unit": unitArgument },
+    { "type": "group", "value": ",", "unit": unitArgument },
+    { "type": "integer", "value": "000", "unit": unitArgument },
     { "type": "literal", "value": ` ${plural}` },
   ], `formatToParts(1000, ${unitArgument})`);
 
@@ -89,9 +91,21 @@ for (const [unitArgument, unitStrings] of Object.entries(units)) {
   ], `formatToParts(-10, ${unitArgument})`);
 
   verifyFormatParts(rtf.formatToParts(-1000, unitArgument), [
-    { "type": "integer", "value": "1,000", "unit": unitArgument },
+    { "type": "integer", "value": "1", "unit": unitArgument },
+    { "type": "group", "value": ",", "unit": unitArgument },
+    { "type": "integer", "value": "000", "unit": unitArgument },
     { "type": "literal", "value": ` ${plural} ago` },
   ], `formatToParts(-1000, ${unitArgument})`);
+
+  verifyFormatParts(rtf.formatToParts(123456.78, unitArgument), [
+    { "type": "literal", "value": "in " },
+    { "type": "integer", "value": "123", "unit": unitArgument },
+    { "type": "group", "value": ",", "unit": unitArgument },
+    { "type": "integer", "value": "456", "unit": unitArgument },
+    { "type": "decimal", "value": ".", "unit": unitArgument },
+    { "type": "fraction", "value": "78", "unit": unitArgument },
+    { "type": "literal", "value": ` ${plural}` },
+  ], `formatToParts(123456.78, ${unitArgument})`);
 }
 
 reportCompare(0, 0);

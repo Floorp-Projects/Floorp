@@ -1,43 +1,21 @@
-// Disable update security
-Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
-
 gUseRealCertChecks = true;
 
-const DATA = "data/signing_checks/";
+const ID = "123456789012345678901234567890123456789012345678901@somewhere.com";
 
-const ID_63 = "123456789012345678901234567890123456789012345@tests.mozilla.org";
-const ID_64 = "1234567890123456789012345678901234567890123456@tests.mozilla.org";
-const ID_65 = "12345678901234567890123456789012345678901234568@tests.mozilla.org";
-
-add_task(async function setup() {
+// Tests that signature verification works correctly on an extension with
+// an ID that does not fit into a certificate CN field.
+add_task(async function test_long_id() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
   await promiseStartupManager();
-});
 
-// Installs the cases that should be working
-add_task(async function test_working() {
-  await promiseInstallAllFiles([do_get_file(DATA + "long_63_plain.xpi"),
-                                do_get_file(DATA + "long_64_plain.xpi"),
-                                do_get_file(DATA + "long_65_hash.xpi")]);
+  Assert.ok(ID.length > 64, "ID is > 64 characters");
 
-  let addons = await promiseAddonsByIDs([ID_63, ID_64, ID_65]);
+  await promiseInstallFile(do_get_file("data/signing_checks/long.xpi"));
+  let addon = await promiseAddonByID(ID);
 
-  for (let addon of addons) {
-    Assert.notEqual(addon, null);
-    Assert.ok(addon.signedState > AddonManager.SIGNEDSTATE_MISSING);
+  Assert.notEqual(addon, null, "Addon install properly");
+  Assert.ok(addon.signedState > AddonManager.SIGNEDSTATE_MISSING,
+            "Signature verification worked properly");
 
-    await addon.uninstall();
-  }
-});
-
-// Checks the cases that should be broken
-add_task(async function test_broken() {
-  let promises = [AddonManager.getInstallForFile(do_get_file(DATA + "long_63_hash.xpi")),
-                  AddonManager.getInstallForFile(do_get_file(DATA + "long_64_hash.xpi"))];
-  let installs = await Promise.all(promises);
-
-  for (let install of installs) {
-    Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
-    Assert.equal(install.error, AddonManager.ERROR_CORRUPT_FILE);
-  }
+  await addon.uninstall();
 });

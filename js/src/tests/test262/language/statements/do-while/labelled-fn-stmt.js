@@ -14,6 +14,6 @@ info: |
     of the language mode.
 ---*/
 
-throw "Test262: This statement should not be evaluated.";
+$DONOTEVALUATE();
 
 do label1: label2: function f() {} while (false)

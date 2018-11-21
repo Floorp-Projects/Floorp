@@ -41,6 +41,6 @@ assert.throws(TypeError, function() {
   setSeconds.call(args, arg);
 }, 'arguments exotic object');
 
-assert.sameValue(callCount, 0, 'validation preceeds input coercion');
+assert.sameValue(callCount, 0, 'validation precedes input coercion');
 
 reportCompare(0, 0);
