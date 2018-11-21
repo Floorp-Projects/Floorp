@@ -83,7 +83,7 @@ async function createTabMemoryFront() {
   };
   const target = await TargetFactory.forRemoteTab(options);
 
-  const memoryFront = target.getFront("memory");
+  const memoryFront = await target.getFront("memory");
   await memoryFront.attach();
 
   return { client, memoryFront };
@@ -109,7 +109,7 @@ async function createFullRuntimeMemoryFront() {
   };
   const target = await TargetFactory.forRemoteTab(options);
 
-  const memoryFront = target.getFront("memory");
+  const memoryFront = await target.getFront("memory");
   await memoryFront.attach();
 
   return { client, memoryFront };

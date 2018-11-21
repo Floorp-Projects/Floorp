@@ -30,7 +30,7 @@ async function setup(pageUrl) {
 
   const [, consoleClient] = await client.attachConsole(form.consoleActor, []);
 
-  const inspectedWindowFront = target.getFront("webExtensionInspectedWindow");
+  const inspectedWindowFront = await target.getFront("webExtensionInspectedWindow");
 
   return {
     client, form,

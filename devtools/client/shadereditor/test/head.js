@@ -153,7 +153,7 @@ function initBackend(aUrl) {
 
     await target.attach();
 
-    const front = target.getFront("webgl");
+    const front = await target.getFront("webgl");
     return { target, front };
   })();
 }

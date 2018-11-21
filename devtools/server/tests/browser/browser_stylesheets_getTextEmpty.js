@@ -11,7 +11,7 @@ const TEST_URI = "data:text/html;charset=utf-8," + encodeURIComponent(CONTENT);
 
 add_task(async function() {
   const target = await addTabTarget(TEST_URI);
-  const front = target.getFront("stylesheets");
+  const front = await target.getFront("stylesheets");
   ok(front, "The StyleSheetsFront was created.");
 
   const sheets = await front.getStyleSheets();

@@ -165,6 +165,9 @@ public:
   // information and origin attributes.
   nsresult SetupTriggeringPrincipal(const mozilla::OriginAttributes& aOriginAttributes);
 
+  void SetIsFromProcessingFrameAttributes() { mIsFromProcessingFrameAttributes = true; }
+  bool GetIsFromProcessingFrameAttributes() { return mIsFromProcessingFrameAttributes; }
+
   // When loading a document through nsDocShell::LoadURI(), a special set of
   // flags needs to be set based on other values in nsDocShellLoadState. This
   // function calculates those flags, before the LoadState is passed to
@@ -288,6 +291,10 @@ protected:
   // nsDocShell::InternalLoad, taken from the INTERNAL_LOAD consts in
   // nsIDocShell.idl
   uint32_t mDocShellInternalLoadFlags;
+
+  // This will be true if this load is triggered by attribute changes.
+  // See nsILoadInfo.isFromProcessingFrameAttributes
+  bool mIsFromProcessingFrameAttributes;
 };
 
 #endif /* nsDocShellLoadState_h__ */

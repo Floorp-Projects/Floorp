@@ -21,7 +21,7 @@ add_task(async function test_openTabs() {
     Assert.equal(provider, UrlbarProviderOpenTabs, "Got the expected provider");
     Assert.equal(match.type, UrlbarUtils.MATCH_TYPE.TAB_SWITCH,
                  "Got the expected match type");
-    Assert.equal(match.url, url, "Got the expected url");
+    Assert.equal(match.payload.url, url, "Got the expected url");
     Assert.equal(match.title, "", "Got the expected title");
   };
 

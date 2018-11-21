@@ -79,7 +79,7 @@ gfx/wrench/.*
 gfx/ycbcr/.*
 intl/hyphenation/hyphen/.*
 intl/icu/.*
-ipc/chromium/.*
+ipc/chromium/src/third_party/.*
 js/src/ctypes/libffi/.*
 js/src/dtoa.c.*
 js/src/jit/arm64/vixl/.*

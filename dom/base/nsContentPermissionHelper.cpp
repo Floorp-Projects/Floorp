@@ -939,7 +939,6 @@ nsContentPermissionRequestProxy::Cancel()
   nsTArray<PermissionChoice> emptyChoices;
 
   Unused << mParent->SendNotifyResult(false, emptyChoices);
-  mParent = nullptr;
   return NS_OK;
 }
 
@@ -963,7 +962,6 @@ nsContentPermissionRequestProxy::Allow(JS::HandleValue aChoices)
   }
 
   Unused << mParent->SendNotifyResult(true, choices);
-  mParent = nullptr;
   return NS_OK;
 }
 

@@ -12,7 +12,7 @@ add_task(async function() {
   const promise = new Promise(resolve => {
     target.onFront("accessibility", resolve);
   });
-  const getFrontFront = target.getFront("accessibility");
+  const getFrontFront = await target.getFront("accessibility");
   const onFrontFront = await promise;
   is(getFrontFront, onFrontFront, "got the front instantiated in the future and it's the same");
 

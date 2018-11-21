@@ -653,7 +653,7 @@ StyleEditorUI.prototype = {
           this.emit("editor-selected", showEditor);
 
           // Is there any CSS coverage markup to include?
-          const usage = this._target.getFront("cssUsage");
+          const usage = await this._target.getFront("cssUsage");
           if (usage == null) {
             return;
           }

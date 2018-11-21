@@ -17,7 +17,7 @@ Bug 1034648 - Tests whether a framerate recording can be cancelled.
 
 window.onload = async function() {
   const target = await getTargetForSelectedTab();
-  const front = target.getFront("framerate");
+  const front = await target.getFront("framerate");
   const TICK = 1000;
 
   await front.startRecording();
