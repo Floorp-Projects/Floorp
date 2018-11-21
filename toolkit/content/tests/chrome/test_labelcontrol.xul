@@ -10,9 +10,10 @@
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>  
 
-<label id="lab" control="ctl"/>
-<textbox id="ctl" value="Test"/>
-<checkbox id="chk" value="Checkbox"/>
+<label id="textbox-label" control="textbox" />
+<textbox id="textbox" value="Test"/>
+<label id="checkbox-label" control="checkbox" />
+<checkbox id="checkbox" value="Checkbox"/>
 
 <body xmlns="http://www.w3.org/1999/xhtml">
 <p id="display"></p>
@@ -29,10 +30,18 @@ SimpleTest.waitForExplicitFinish();
  
 function runTests()
 {
-  is($("lab").control, "ctl", "control");
-  is($("lab").labeledControlElement, $("ctl"), "labeledControlElement");
-  is($("ctl").labelElement, $("lab"), "labelElement");
-  is($("chk").labelElement.className, "checkbox-label", "labelElement");
+  let textbox = $("textbox");
+  let textboxLabel = $("textbox-label");
+  is(textboxLabel.control, "textbox", "textbox control");
+  is(textboxLabel.labeledControlElement, textbox, "textbox labeledControlElement");
+
+  let checkbox = $("checkbox");
+  let checkboxLabel = $("checkbox-label");
+  is(checkboxLabel.control, "checkbox", "checkbox control");
+  is(checkboxLabel.labeledControlElement, checkbox, "checkbox labeledControlElement");
+  is(checkbox.accessKey, "", "checkbox accessKey not set");
+  checkboxLabel.accessKey = "C";
+  is(checkbox.accessKey, "C", "checkbox accessKey set");
 
   SimpleTest.finish();
 }

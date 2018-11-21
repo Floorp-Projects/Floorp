@@ -52,9 +52,7 @@
       <property name="defaultValue" onset="this.inputField.defaultValue = val; return val;"
                                   onget="return this.inputField.defaultValue;"/>
       <property name="label"      onset="this.setAttribute('label', val); return val;"
-                                  onget="return this.getAttribute('label') ||
-                                                (this.labelElement ? this.labelElement.value :
-                                                 this.placeholder);"/>
+                                  onget="return this.getAttribute('label') || this.placeholder;" />
       <property name="placeholder" onset="this.inputField.placeholder = val; return val;"
                                   onget="return this.inputField.placeholder;"/>
       <property name="emptyText"  onset="this.placeholder = val; return val;"
