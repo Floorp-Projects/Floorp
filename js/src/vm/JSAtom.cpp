@@ -686,7 +686,10 @@ AtomizeAndCopyChars(JSContext* cx, const CharT* tbchars, size_t length, PinningB
         return nullptr;
     }
 
-    cx->atomMarking().inlinedMarkAtom(cx, atom);
+    if (MOZ_UNLIKELY(!cx->atomMarking().inlinedMarkAtomFallible(cx, atom))) {
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
 
     if (zonePtr &&
         MOZ_UNLIKELY(!zone->atomCache().add(*zonePtr, AtomStateEntry(atom, false))))

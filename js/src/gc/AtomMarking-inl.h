@@ -6,6 +6,7 @@
 
 #include "gc/AtomMarking.h"
 
+#include "mozilla/Assertions.h"
 #include "vm/Realm.h"
 
 #include "gc/Heap-inl.h"
@@ -34,9 +35,9 @@ ThingIsPermanent(JS::Symbol* symbol)
     return symbol->isWellKnownSymbol();
 }
 
-template <typename T>
-MOZ_ALWAYS_INLINE void
-AtomMarkingRuntime::inlinedMarkAtom(JSContext* cx, T* thing)
+template <typename T, bool Fallible>
+MOZ_ALWAYS_INLINE bool
+AtomMarkingRuntime::inlinedMarkAtomInternal(JSContext* cx, T* thing)
 {
     static_assert(mozilla::IsSame<T, JSAtom>::value ||
                   mozilla::IsSame<T, JS::Symbol>::value,
@@ -48,18 +49,24 @@ AtomMarkingRuntime::inlinedMarkAtom(JSContext* cx, T* thing)
 
     // The context's zone will be null during initialization of the runtime.
     if (!cx->zone()) {
-        return;
+        return true;
     }
     MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
     if (ThingIsPermanent(thing)) {
-        return;
+        return true;
     }
 
     size_t bit = GetAtomBit(cell);
     MOZ_ASSERT(bit / JS_BITS_PER_WORD < allocatedWords);
 
-    cx->zone()->markedAtoms().setBit(bit);
+    if (Fallible) {
+        if (!cx->zone()->markedAtoms().setBitFallible(bit)) {
+            return false;
+        }
+    } else {
+        cx->zone()->markedAtoms().setBit(bit);
+    }
 
     if (!cx->helperThread()) {
         // Trigger a read barrier on the atom, in case there is an incremental
@@ -73,6 +80,22 @@ AtomMarkingRuntime::inlinedMarkAtom(JSContext* cx, T* thing)
     // We don't have a JSTracer for this so manually handle the cases in which
     // an atom can reference other atoms.
     markChildren(cx, thing);
+
+    return true;
+}
+
+template <typename T>
+MOZ_ALWAYS_INLINE void
+AtomMarkingRuntime::inlinedMarkAtom(JSContext* cx, T* thing)
+{
+    MOZ_ALWAYS_TRUE((inlinedMarkAtomInternal<T, false>(cx, thing)));
+}
+
+template <typename T>
+MOZ_ALWAYS_INLINE bool
+AtomMarkingRuntime::inlinedMarkAtomFallible(JSContext* cx, T* thing)
+{
+    return inlinedMarkAtomInternal<T, true>(cx, thing);
 }
 
 } // namespace gc
