@@ -2881,7 +2881,6 @@ TEST_P(NewSdpTest, CheckMsid) {
   ASSERT_EQ(1U, semantics[1].msids.size());
   ASSERT_EQ("stream", semantics[1].msids[0]);
 
-
   const SdpMsidAttributeList& msids1 =
       mSdp->GetMediaSection(0).GetAttributeList().GetMsid();
   ASSERT_EQ(1U, msids1.mMsids.size());
@@ -2899,6 +2898,37 @@ TEST_P(NewSdpTest, CheckMsid) {
   ASSERT_EQ(1U, msids3.mMsids.size());
   ASSERT_EQ("noappdata", msids3.mMsids[0].identifier);
   ASSERT_EQ("", msids3.mMsids[0].appdata);
+}
+
+TEST_P(NewSdpTest, CheckManyMsidSemantics) {
+  if (::testing::get<0>(GetParam())) {return;}
+  std::ostringstream msid;
+  msid << "a=msid-semantic: foo";
+  for (size_t i = 0; i < SDP_MAX_MEDIA_STREAMS + 1; ++i) {
+    msid << " " << i;
+  }
+  msid << CRLF;
+
+  std::string offer =
+    "v=0" CRLF
+    "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+    "s=SIP Call" CRLF
+    "c=IN IP4 198.51.100.7" CRLF
+    "t=0 0" CRLF;
+  offer += msid.str();
+  offer +=
+    "m=video 56436 RTP/SAVPF 120" CRLF
+    "b=CT:1000" CRLF
+    "a=rtpmap:120 VP8/90000" CRLF;
+
+  ParseSdp(offer);
+  auto semantics = mSdp->GetAttributeList().GetMsidSemantic().mMsidSemantics;
+  ASSERT_EQ(1U, semantics.size());
+
+  // Only sipcc is limited by SDP_MAX_MEDIA_STREAMS, the Rust parser
+  // will parse all of the msids.
+  ASSERT_GE(semantics[0].msids.size(),
+            static_cast<size_t>(SDP_MAX_MEDIA_STREAMS));
 }
 
 TEST_P(NewSdpTest, CheckRid) {
@@ -2988,6 +3018,36 @@ TEST_P(NewSdpTest, CheckGroups) {
   ASSERT_EQ(2U, group3.tags.size());
   ASSERT_EQ("first", group3.tags[0]);
   ASSERT_EQ("third", group3.tags[1]);
+}
+
+TEST_P(NewSdpTest, CheckManyGroups) {
+  std::ostringstream bundle;
+  bundle << "a=group:BUNDLE";
+  for (size_t i = 0; i < SDP_MAX_MEDIA_STREAMS + 1; ++i) {
+    bundle << " " << i;
+  }
+  bundle << CRLF;
+
+  std::string offer =
+    "v=0" CRLF
+    "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+    "s=SIP Call" CRLF
+    "c=IN IP4 198.51.100.7" CRLF
+    "t=0 0" CRLF;
+  offer += bundle.str();
+  offer +=
+    "m=video 56436 RTP/SAVPF 120" CRLF
+    "b=CT:1000" CRLF
+    "a=rtpmap:120 VP8/90000" CRLF;
+
+  ParseSdp(offer);
+  const SdpGroupAttributeList& group = mSdp->GetAttributeList().GetGroup();
+  const SdpGroupAttributeList::Group& group1 = group.mGroups[0];
+  ASSERT_EQ(SdpGroupAttributeList::kBundle, group1.semantics);
+
+  // Only sipcc is limited by SDP_MAX_MEDIA_STREAMS, the Rust parser
+  // will parse all of the groups.
+  ASSERT_GE(group1.tags.size(), static_cast<size_t>(SDP_MAX_MEDIA_STREAMS));
 }
 
 // SDP from a basic A/V call with data channel FFX/FFX
