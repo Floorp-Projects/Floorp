@@ -17,9 +17,7 @@
 class nsAppShellWindowEnumerator;
 class nsASXULWindowEarlyToLateEnumerator;
 class nsASDOMWindowEarlyToLateEnumerator;
-class nsASDOMWindowFrontToBackEnumerator;
 class nsASXULWindowFrontToBackEnumerator;
-class nsASDOMWindowBackToFrontEnumerator;
 class nsASXULWindowBackToFrontEnumerator;
 class nsIWindowMediatorListener;
 struct nsWindowInfo;
@@ -32,9 +30,7 @@ class nsWindowMediator :
 friend class nsAppShellWindowEnumerator;
 friend class nsASXULWindowEarlyToLateEnumerator;
 friend class nsASDOMWindowEarlyToLateEnumerator;
-friend class nsASDOMWindowFrontToBackEnumerator;
 friend class nsASXULWindowFrontToBackEnumerator;
-friend class nsASDOMWindowBackToFrontEnumerator;
 friend class nsASXULWindowBackToFrontEnumerator;
 
 protected:

@@ -35,10 +35,10 @@ ReflowTracker.prototype = {
     this.listeners.clear();
   },
 
-  startTracking() {
+  async startTracking() {
     // Initialize reflow front if necessary.
     if (!this.reflowFront && this.target.form.reflowActor) {
-      this.reflowFront = this.target.getFront("reflow");
+      this.reflowFront = await this.target.getFront("reflow");
     }
 
     if (this.reflowFront) {

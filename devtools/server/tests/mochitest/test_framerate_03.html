@@ -21,7 +21,7 @@ const TOTAL_TIME = 5000;
 
 window.onload = async function() {
   const target = await getTargetForSelectedTab();
-  const front = target.getFront("framerate");
+  const front = await target.getFront("framerate");
 
   await front.startRecording();
   await waitFor(TOTAL_TIME);

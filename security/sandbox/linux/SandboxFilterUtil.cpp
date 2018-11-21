@@ -63,9 +63,10 @@ SandboxPolicyBase::EvaluateSyscall(int aSysno) const {
     }
 #endif // ANDROID
 #endif // __NR_socketcall
-#define DISPATCH_SOCKETCALL(sysnum, socketnum)                       \
-    case sysnum:                                                     \
-      return EvaluateSocketCall(socketnum, true).valueOr(InvalidSyscall())
+// clang-format off
+#define DISPATCH_SOCKETCALL(sysnum, socketnum) \
+  case sysnum:                                 \
+    return EvaluateSocketCall(socketnum, true).valueOr(InvalidSyscall())
 #ifdef __NR_socket
       DISPATCH_SOCKETCALL(__NR_socket,      SYS_SOCKET);
       DISPATCH_SOCKETCALL(__NR_bind,        SYS_BIND);
@@ -80,7 +81,7 @@ SandboxPolicyBase::EvaluateSyscall(int aSysno) const {
 #ifdef __NR_send
       DISPATCH_SOCKETCALL(__NR_send,        SYS_SEND);
       DISPATCH_SOCKETCALL(__NR_recv,        SYS_RECV);
-#endif // __NR_send
+#endif  // __NR_send
       DISPATCH_SOCKETCALL(__NR_sendto,      SYS_SENDTO);
       DISPATCH_SOCKETCALL(__NR_recvfrom,    SYS_RECVFROM);
       DISPATCH_SOCKETCALL(__NR_shutdown,    SYS_SHUTDOWN);
@@ -91,13 +92,13 @@ SandboxPolicyBase::EvaluateSyscall(int aSysno) const {
       DISPATCH_SOCKETCALL(__NR_accept4,     SYS_ACCEPT4);
       DISPATCH_SOCKETCALL(__NR_recvmmsg,    SYS_RECVMMSG);
       DISPATCH_SOCKETCALL(__NR_sendmmsg,    SYS_SENDMMSG);
-#endif // __NR_socket
+#endif  // __NR_socket
 #undef DISPATCH_SOCKETCALL
 #ifndef __NR_socketcall
 #ifndef ANDROID
-#define DISPATCH_SYSVCALL(sysnum, ipcnum)         \
-    case sysnum:                                  \
-      return EvaluateIpcCall(ipcnum).valueOr(InvalidSyscall())
+#define DISPATCH_SYSVCALL(sysnum, ipcnum) \
+  case sysnum:                            \
+    return EvaluateIpcCall(ipcnum).valueOr(InvalidSyscall())
       DISPATCH_SYSVCALL(__NR_semop,       SEMOP);
       DISPATCH_SYSVCALL(__NR_semget,      SEMGET);
       DISPATCH_SYSVCALL(__NR_semctl,      SEMCTL);
@@ -111,8 +112,9 @@ SandboxPolicyBase::EvaluateSyscall(int aSysno) const {
       DISPATCH_SYSVCALL(__NR_shmget,      SHMGET);
       DISPATCH_SYSVCALL(__NR_shmctl,      SHMCTL);
 #undef DISPATCH_SYSVCALL
-#endif // ANDROID
-#endif // __NR_socketcall
+#endif  // ANDROID
+#endif  // __NR_socketcall
+// clang-format on
   default:
     return InvalidSyscall();
   }

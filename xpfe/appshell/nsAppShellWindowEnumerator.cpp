@@ -325,45 +325,6 @@ nsWindowInfo *nsASXULWindowEarlyToLateEnumerator::FindNext()
 }
 
 //
-// nsASDOMWindowFrontToBackEnumerator
-//
-
-nsASDOMWindowFrontToBackEnumerator::nsASDOMWindowFrontToBackEnumerator(
-    const char16_t *aTypeString,
-    nsWindowMediator &aMediator) :
-      nsASDOMWindowEnumerator(aTypeString, aMediator)
-{
-  mCurrentPosition = aMediator.mTopmostWindow;
-  AdjustInitialPosition();
-}
-
-nsASDOMWindowFrontToBackEnumerator::~nsASDOMWindowFrontToBackEnumerator()
-{
-}
-
-nsWindowInfo *nsASDOMWindowFrontToBackEnumerator::FindNext()
-{
-  nsWindowInfo *info,
-               *listEnd;
-  bool          allWindows = mType.IsEmpty();
-
-  // see nsXULWindowEarlyToLateEnumerator::FindNext
-  if (!mCurrentPosition)
-    return nullptr;
-
-  info = mCurrentPosition->mLower;
-  listEnd = mWindowMediator->mTopmostWindow;
-
-  while (info != listEnd) {
-    if (allWindows || info->TypeEquals(mType))
-      return info;
-    info = info->mLower;
-  }
-
-  return nullptr;
-}
-
-//
 // nsASXULWindowFrontToBackEnumerator
 //
 
@@ -397,48 +358,6 @@ nsWindowInfo *nsASXULWindowFrontToBackEnumerator::FindNext()
     if (allWindows || info->TypeEquals(mType))
       return info;
     info = info->mLower;
-  }
-
-  return nullptr;
-}
-
-//
-// nsASDOMWindowBackToFrontEnumerator
-//
-
-nsASDOMWindowBackToFrontEnumerator::nsASDOMWindowBackToFrontEnumerator(
-    const char16_t *aTypeString,
-    nsWindowMediator &aMediator) :
-  nsASDOMWindowEnumerator(aTypeString, aMediator)
-{
-  mCurrentPosition = aMediator.mTopmostWindow ?
-                     aMediator.mTopmostWindow->mHigher : nullptr;
-  AdjustInitialPosition();
-}
-
-nsASDOMWindowBackToFrontEnumerator::~nsASDOMWindowBackToFrontEnumerator()
-{
-}
-
-nsWindowInfo *nsASDOMWindowBackToFrontEnumerator::FindNext()
-{
-  nsWindowInfo *info,
-               *listEnd;
-  bool          allWindows = mType.IsEmpty();
-
-  // see nsXULWindowEarlyToLateEnumerator::FindNext
-  if (!mCurrentPosition)
-    return nullptr;
-
-  info = mCurrentPosition->mHigher;
-  listEnd = mWindowMediator->mTopmostWindow;
-  if (listEnd)
-    listEnd = listEnd->mHigher;
-
-  while (info != listEnd) {
-    if (allWindows || info->TypeEquals(mType))
-      return info;
-    info = info->mHigher;
   }
 
   return nullptr;

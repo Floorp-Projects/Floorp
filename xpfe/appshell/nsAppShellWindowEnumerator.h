@@ -115,18 +115,6 @@ protected:
   virtual nsWindowInfo *FindNext() override;
 };
 
-class nsASDOMWindowFrontToBackEnumerator : public nsASDOMWindowEnumerator {
-
-public:
-  nsASDOMWindowFrontToBackEnumerator(const char16_t* aTypeString,
-                                     nsWindowMediator& inMediator);
-
-  virtual ~nsASDOMWindowFrontToBackEnumerator();
-
-protected:
-  virtual nsWindowInfo *FindNext() override;
-};
-
 class nsASXULWindowFrontToBackEnumerator : public nsASXULWindowEnumerator {
 
 public:
@@ -134,18 +122,6 @@ public:
                                      nsWindowMediator& inMediator);
 
   virtual ~nsASXULWindowFrontToBackEnumerator();
-
-protected:
-  virtual nsWindowInfo *FindNext() override;
-};
-
-class nsASDOMWindowBackToFrontEnumerator : public nsASDOMWindowEnumerator {
-
-public:
-  nsASDOMWindowBackToFrontEnumerator(const char16_t* aTypeString,
-                                     nsWindowMediator& inMediator);
-
-  virtual ~nsASDOMWindowBackToFrontEnumerator();
 
 protected:
   virtual nsWindowInfo *FindNext() override;

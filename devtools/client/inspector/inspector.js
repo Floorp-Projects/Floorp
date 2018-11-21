@@ -165,6 +165,7 @@ Inspector.prototype = {
       this._getCssProperties(),
       this._getPageStyle(),
       this._getDefaultSelection(),
+      this._getAccessibilityFront(),
     ]);
 
     return this._deferredOpen();
@@ -272,7 +273,7 @@ Inspector.prototype = {
       // Get the Changes front, then call a method on it, which will instantiate
       // the ChangesActor. We want the ChangesActor to be guaranteed available before
       // the user makes any changes.
-      this.changesFront = this.toolbox.target.getFront("changes");
+      this.changesFront = await this.toolbox.target.getFront("changes");
       this.changesFront.start();
     }
 
@@ -334,6 +335,11 @@ Inspector.prototype = {
     return initCssProperties(this.toolbox).then(cssProperties => {
       this._cssProperties = cssProperties;
     }, this._handleRejectionIfNotDestroyed);
+  },
+
+  _getAccessibilityFront: async function() {
+    this.accessibilityFront = await this.target.getFront("accessibility");
+    return this.accessibilityFront;
   },
 
   _getDefaultSelection: function() {
@@ -1680,10 +1686,9 @@ Inspector.prototype = {
       click: () => this.showAccessibilityProperties(),
       disabled: true,
     });
-    // Only attempt to determine if a11y props menu item needs to be enabled iff
+    // Only attempt to determine if a11y props menu item needs to be enabled if
     // AccessibilityFront is enabled.
-    const accessibilityFront = this.target.getFront("accessibility");
-    if (accessibilityFront.enabled) {
+    if (this.accessibilityFront.enabled) {
       this._updateA11YMenuItem(showA11YPropsItem);
     }
 
@@ -2297,7 +2302,7 @@ Inspector.prototype = {
       nodeActorID: this.selection.nodeFront.actorID,
       clipboard: clipboardEnabled,
     };
-    const screenshotFront = this.target.getFront("screenshot");
+    const screenshotFront = await this.target.getFront("screenshot");
     const screenshot = await screenshotFront.capture(args);
     await saveScreenshot(this.panelWin, args, screenshot);
   },

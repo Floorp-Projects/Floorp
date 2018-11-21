@@ -111,6 +111,8 @@ XPCOMUtils.defineLazyScriptGetter(this, ["CustomizationHandler", "AutoHideMenuba
                                   "chrome://browser/content/browser-customization.js");
 XPCOMUtils.defineLazyScriptGetter(this, ["PointerLock", "FullScreen"],
                                   "chrome://browser/content/browser-fullScreenAndPointerLock.js");
+XPCOMUtils.defineLazyScriptGetter(this, "gIdentityHandler",
+                                  "chrome://browser/content/browser-siteIdentity.js");
 XPCOMUtils.defineLazyScriptGetter(this, ["gGestureSupport", "gHistorySwipeAnimation"],
                                   "chrome://browser/content/browser-gestureSupport.js");
 XPCOMUtils.defineLazyScriptGetter(this, "gSafeBrowsing",
@@ -5308,7 +5310,7 @@ const AccessibilityRefreshBlocker = {
 var TabsProgressListener = {
   onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
     // Collect telemetry data about tab load times.
-    if (aWebProgress.isTopLevel && (!aRequest.originalURI || aRequest.originalURI.spec.scheme != "about")) {
+    if (aWebProgress.isTopLevel && (!aRequest.originalURI || aRequest.originalURI.scheme != "about")) {
       let stopwatchRunning = TelemetryStopwatch.running("FX_PAGE_LOAD_MS_2", aBrowser);
 
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {

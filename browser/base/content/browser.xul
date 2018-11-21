@@ -790,10 +790,10 @@ xmlns="http://www.w3.org/1999/xhtml"
         </vbox>
 
 #ifndef XP_MACOSX
-        <button class="accessibility-indicator titlebar-item"  tooltiptext="&accessibilityIndicator.tooltip;"
+        <button class="accessibility-indicator" tooltiptext="&accessibilityIndicator.tooltip;"
                 ordinal="1000"
                 aria-live="polite" skipintoolbarset="true"/>
-        <hbox class="private-browsing-indicator titlebar-item" skipintoolbarset="true"
+        <hbox class="private-browsing-indicator" skipintoolbarset="true"
               ordinal="1000"/>
 #endif
 

@@ -23,7 +23,7 @@ async function getTargetForSelectedTab() {
 
 async function startServerAndGetSelectedTabMemory() {
   const target = await getTargetForSelectedTab();
-  const memory = target.getFront("memory");
+  const memory = await target.getFront("memory");
   return {memory, target};
 }
 

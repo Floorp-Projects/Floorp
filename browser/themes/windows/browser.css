@@ -959,7 +959,7 @@ notification[value="translation"] {
 /* Prevent titlebar items (window caption buttons, private browsing indicator,
  * accessibility indicator, etc) from overlapping the nav bar's shadow on the
  * tab bar. */
-#TabsToolbar > .titlebar-item {
+#TabsToolbar > .titlebar-buttonbox-container {
   margin-bottom: @navbarTabsShadowSize@;
 }
 

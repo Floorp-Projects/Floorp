@@ -183,6 +183,10 @@ class AudioContext final : public DOMEventTargetHelper,
 
   bool IsRunning() const;
 
+  // Called when an AudioScheduledSourceNode started, this method might resume
+  // the AudioContext if it was not allowed to start.
+  void NotifyScheduledSourceNodeStarted();
+
   // Those three methods return a promise to content, that is resolved when an
   // (possibly long) operation is completed on the MSG (and possibly other)
   // thread(s). To avoid having to match the calls and asychronous result when
@@ -362,6 +366,8 @@ class AudioContext final : public DOMEventTargetHelper,
   // Suspend has been called with no following resume.
   bool mSuspendCalled;
   bool mIsDisconnecting;
+  // This flag stores the value of previous status of `allowed-to-start`.
+  bool mWasAllowedToStart;
 };
 
 static const dom::AudioContext::AudioContextId NO_AUDIO_CONTEXT = 0;
