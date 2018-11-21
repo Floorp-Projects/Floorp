@@ -15,23 +15,10 @@ ChromeUtils.defineModuleGetter(this, "RemoteSettings",
 ChromeUtils.defineModuleGetter(this, "SelectionChangedMenulist",
                                "resource:///modules/SelectionChangedMenulist.jsm");
 
-/* This dialog provides an interface for managing what language the browser is
- * displayed in.
- *
- * There is a list of "requested" locales and a list of "available" locales. The
- * requested locales must be installed and enabled. Available locales could be
- * installed and enabled, or fetched from the AMO language tools API.
- *
- * If a langpack is disabled, there is no way to determine what locale it is for and
- * it will only be listed as available if that locale is also available on AMO and
- * the user has opted to search for more languages.
- */
-
 async function installFromUrl(url, hash) {
   let install = await AddonManager.getInstallForURL(
     url, "application/x-xpinstall", hash);
-  await install.install();
-  return install.addon;
+  return install.install();
 }
 
 async function dictionaryIdsForLocale(locale) {
@@ -306,8 +293,8 @@ function compareItems(a, b) {
 
 var gBrowserLanguagesDialog = {
   _availableLocales: null,
-  _selectedLocales: null,
-  selectedLocales: null,
+  _requestedLocales: null,
+  requestedLocales: null,
 
   get downloadEnabled() {
     // Downloading langpacks isn't always supported, check the pref.
@@ -315,45 +302,34 @@ var gBrowserLanguagesDialog = {
   },
 
   beforeAccept() {
-    this.selected = this.getSelectedLocales();
+    this.requestedLocales = this.getRequestedLocales();
     return true;
   },
 
   async onLoad() {
-    // Maintain the previously selected locales even if we cancel out.
-    let {selected, search} = window.arguments[0] || {};
-    this.selectedLocales = selected;
+    // Maintain the previously requested locales even if we cancel out.
+    let {requesting, search} = window.arguments[0] || {};
+    this.requestedLocales = requesting;
 
-    // This is a list of available locales that the user selected. It's more
-    // restricted than the Intl notion of `requested` as it only contains
-    // locale codes for which we have matching locales available.
-    // The first time this dialog is opened, populate with appLocalesAsBCP47.
-    let selectedLocales = this.selectedLocales || Services.locale.appLocalesAsBCP47;
-    let selectedLocaleSet = new Set(selectedLocales);
-    let available = Services.locale.availableLocales;
-    let availableSet = new Set(available);
+    let requested = this.requestedLocales || Services.locale.requestedLocales;
+    let requestedSet = new Set(requested);
+    let available = Services.locale.availableLocales
+      .filter(locale => !requestedSet.has(locale));
 
-    // Filter selectedLocales since the user may select a locale when it is
-    // available and then disable it.
-    selectedLocales = selectedLocales.filter(locale => availableSet.has(locale));
-    // Nothing in available should be in selectedSet.
-    available = available.filter(locale => !selectedLocaleSet.has(locale));
-
-    this.initSelectedLocales(selectedLocales);
+    this.initRequestedLocales(requested);
     await this.initAvailableLocales(available, search);
-
     this.initialized = true;
   },
 
-  initSelectedLocales(selectedLocales) {
-    this._selectedLocales = new OrderedListBox({
-      richlistbox: document.getElementById("selectedLocales"),
+  initRequestedLocales(requested) {
+    this._requestedLocales = new OrderedListBox({
+      richlistbox: document.getElementById("requestedLocales"),
       upButton: document.getElementById("up"),
       downButton: document.getElementById("down"),
       removeButton: document.getElementById("remove"),
-      onRemove: (item) => this.selectedLocaleRemoved(item),
+      onRemove: (item) => this.requestedLocaleRemoved(item),
     });
-    this._selectedLocales.setItems(getLocaleDisplayInfo(selectedLocales));
+    this._requestedLocales.setItems(getLocaleDisplayInfo(requested));
   },
 
   async initAvailableLocales(available, search) {
@@ -406,23 +382,24 @@ var gBrowserLanguagesDialog = {
       this.availableLangpacks.set(target_locale, {url, hash});
     }
 
-    // Remove the installed locales from the available ones.
-    let installedLocales = new Set(Services.locale.availableLocales);
-    let notInstalledLocales = availableLangpacks
+    // Create a list of installed locales to hide.
+    let installedLocales = new Set([
+      ...Services.locale.requestedLocales,
+      ...Services.locale.availableLocales,
+    ]);
+
+    let availableLocales = availableLangpacks
       .filter(({target_locale}) => !installedLocales.has(target_locale))
       .map(lang => lang.target_locale);
-
-    // Create the rows for the remote locales.
-    let availableItems = getLocaleDisplayInfo(notInstalledLocales);
+    let availableItems = getLocaleDisplayInfo(availableLocales);
     availableItems.push({
       label: await document.l10n.formatValue("browser-languages-available-label"),
       className: "label-item",
       disabled: true,
       installed: false,
     });
-
-    // Remove the search option and add the remote locales.
     let items = this._availableLocales.items;
+    // Drop the search item.
     items.pop();
     items = items.concat(availableItems);
 
@@ -459,10 +436,10 @@ var gBrowserLanguagesDialog = {
   },
 
   requestLocalLanguage(item, available) {
-    this._selectedLocales.addItem(item);
-    let selectedCount = this._selectedLocales.items.length;
+    this._requestedLocales.addItem(item);
+    let requestedCount = this._requestedLocales.items.length;
     let availableCount = Services.locale.availableLocales.length;
-    if (selectedCount == availableCount) {
+    if (requestedCount == availableCount) {
       // Remove the installed label, they're all installed.
       this._availableLocales.items.shift();
       this._availableLocales.setItems(this._availableLocales.items);
@@ -474,22 +451,16 @@ var gBrowserLanguagesDialog = {
       "browser-languages-downloading");
 
     let {url, hash} = this.availableLangpacks.get(item.value);
-    let addon;
 
     try {
-      addon = await installFromUrl(url, hash);
+      await installFromUrl(url, hash);
     } catch (e) {
       this.showError();
       return;
     }
 
-    // If the add-on was previously installed, it might be disabled still.
-    if (addon.userDisabled) {
-      await addon.enable();
-    }
-
     item.installed = true;
-    this._selectedLocales.addItem(item);
+    this._requestedLocales.addItem(item);
     this._availableLocales.enableWithMessageId(
       "browser-languages-select-language");
 
@@ -523,11 +494,11 @@ var gBrowserLanguagesDialog = {
     document.getElementById("warning-message").hidden = true;
   },
 
-  getSelectedLocales() {
-    return this._selectedLocales.items.map(item => item.value);
+  getRequestedLocales() {
+    return this._requestedLocales.items.map(item => item.value);
   },
 
-  async selectedLocaleRemoved(item) {
+  async requestedLocaleRemoved(item) {
     this._availableLocales.addItem(item);
 
     // If the item we added is at the top of the list, it needs the label.
