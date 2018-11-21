@@ -178,32 +178,30 @@ public final class GeckoLoader {
     }
 
     private static void loadLibsSetupLocked(Context context) {
-        // setup the libs cache
         putenv("GRE_HOME=" + getGREDir(context).getPath());
-        putenv("MOZ_LINKER_CACHE=" + getCacheDir(context).getPath());
-        putenv("MOZ_LINKER_EXTRACT=1");
+        putenv("MOZ_ANDROID_LIBDIR=" + context.getApplicationInfo().nativeLibraryDir);
     }
 
     @RobocopTarget
-    public synchronized static void loadSQLiteLibs(final Context context, final String apkName) {
+    public synchronized static void loadSQLiteLibs(final Context context) {
         if (sSQLiteLibsLoaded) {
             return;
         }
 
         loadMozGlue(context);
         loadLibsSetupLocked(context);
-        loadSQLiteLibsNative(apkName);
+        loadSQLiteLibsNative();
         sSQLiteLibsLoaded = true;
     }
 
-    public synchronized static void loadNSSLibs(final Context context, final String apkName) {
+    public synchronized static void loadNSSLibs(final Context context) {
         if (sNSSLibsLoaded) {
             return;
         }
 
         loadMozGlue(context);
         loadLibsSetupLocked(context);
-        loadNSSLibsNative(apkName);
+        loadNSSLibsNative();
         sNSSLibsLoaded = true;
     }
 
@@ -464,9 +462,9 @@ public final class GeckoLoader {
         sMozGlueLoaded = true;
     }
 
-    public synchronized static void loadGeckoLibs(final Context context, final String apkName) {
+    public synchronized static void loadGeckoLibs(final Context context) {
         loadLibsSetupLocked(context);
-        loadGeckoLibsNative(apkName);
+        loadGeckoLibsNative();
     }
 
     @SuppressWarnings("serial")
@@ -492,9 +490,9 @@ public final class GeckoLoader {
 
     // These methods are implemented in mozglue/android/APKOpen.cpp
     public static native void nativeRun(String[] args, int prefsFd, int prefMapFd, int ipcFd, int crashFd, int crashAnnotationFd);
-    private static native void loadGeckoLibsNative(String apkName);
-    private static native void loadSQLiteLibsNative(String apkName);
-    private static native void loadNSSLibsNative(String apkName);
+    private static native void loadGeckoLibsNative();
+    private static native void loadSQLiteLibsNative();
+    private static native void loadNSSLibsNative();
     public static native boolean neonCompatible();
     public static native void suppressCrashDialog();
 }
