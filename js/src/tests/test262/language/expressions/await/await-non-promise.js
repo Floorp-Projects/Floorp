@@ -9,6 +9,7 @@ description: >
   will still get called.
 flags: [async]
 features: [async-functions]
+includes: [compareArray.js]
 ---*/
 
 const value = 1;

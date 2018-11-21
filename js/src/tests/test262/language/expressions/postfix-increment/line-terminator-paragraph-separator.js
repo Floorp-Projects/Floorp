@@ -12,7 +12,7 @@ negative:
   type: SyntaxError
 ---*/
 
-throw "Test262: This statement should not be evaluated.";
+$DONOTEVALUATE();
 
 x ++;
 // The preceding line contains an unprintable PARAGRAPH SEPARATOR character

@@ -564,8 +564,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
             originalLocation, "next", false, ncompletion
           );
           if (thread.dbg.replaying) {
+            const parentGeneratedLocation = thread.sources.getFrameLocation(parentFrame);
+            const parentOriginalLocation = thread.unsafeSynchronize(
+              thread.sources.getOriginalLocation(parentGeneratedLocation)
+            );
             const offsets =
-              thread._findReplayingStepOffsets(originalLocation, parentFrame,
+              thread._findReplayingStepOffsets(parentOriginalLocation, parentFrame,
                                                /* rewinding = */ false);
             parentFrame.setReplayingOnStep(onStep, offsets);
           } else {
