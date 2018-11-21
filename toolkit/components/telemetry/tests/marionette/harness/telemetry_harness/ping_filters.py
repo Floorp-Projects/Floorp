@@ -39,4 +39,4 @@ class MainPingReasonFilter(MainPingFilter):
 ANY_PING = PingFilter()
 MAIN_PING = MainPingFilter()
 MAIN_SHUTDOWN_PING = MainPingReasonFilter("shutdown")
-MAIN_ENVIRONMENT_CHANGE_PING = MainPingReasonFilter("environment_change")
+MAIN_ENVIRONMENT_CHANGE_PING = MainPingReasonFilter("environment-change")
