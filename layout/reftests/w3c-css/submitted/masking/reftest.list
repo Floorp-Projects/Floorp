@@ -21,7 +21,7 @@ fuzzy-if(skiaContent,0-1,0-30000) fuzzy-if(d2d,0-1,0-30000) == mask-mode-to-mask
 == mask-image-1b.html mask-image-1-ref.html
 random-if(gtkWidget) skip-if(winWidget&&/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == mask-image-1c.html mask-image-1-ref.html # bug 1365177
 == mask-image-1d.html mask-image-1-ref.html
-fuzzy-if(skiaContent||winWidget,0-1,0-20000) == mask-image-2.html mask-image-2-ref.html
+fuzzy-if(skiaContent||winWidget,0-1,0-20000) fuzzy-if(webrender,0-2,0-6823) == mask-image-2.html mask-image-2-ref.html
 == mask-image-3a.html mask-image-3-ref.html
 == mask-image-3b.html mask-image-3-ref.html
 fuzzy-if(skiaContent||winWidget,0-1,0-43) == mask-image-3c.html mask-image-3-ref.html
