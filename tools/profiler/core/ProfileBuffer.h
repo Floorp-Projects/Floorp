@@ -92,6 +92,8 @@ public:
                            const mozilla::TimeStamp& aProcessStartTime,
                            mozilla::Maybe<uint64_t>& aLastSample);
 
+  void DiscardSamplesBeforeTime(double aTime);
+
   void AddStoredMarker(ProfilerMarker* aStoredMarker);
 
   // The following method is not signal safe!

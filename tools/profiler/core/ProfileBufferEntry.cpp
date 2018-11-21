@@ -1608,5 +1608,50 @@ ProfileBuffer::DuplicateLastSample(int aThreadId,
   return true;
 }
 
+void
+ProfileBuffer::DiscardSamplesBeforeTime(double aTime)
+{
+  EntryGetter e(*this);
+  for (;;) {
+    // This block skips entries until we find the start of the next sample.
+    // This is useful in three situations.
+    //
+    // - The circular buffer overwrites old entries, so when we start parsing
+    //   we might be in the middle of a sample, and we must skip forward to the
+    //   start of the next sample.
+    //
+    // - We skip samples that don't have an appropriate ThreadId or Time.
+    //
+    // - We skip range Pause, Resume, CollectionStart, Marker, and CollectionEnd
+    //   entries between samples.
+    while (e.Has()) {
+      if (e.Get().IsThreadId()) {
+        break;
+      } else {
+        e.Next();
+      }
+    }
+
+    if (!e.Has()) {
+      break;
+    }
+
+    MOZ_RELEASE_ASSERT(e.Get().IsThreadId());
+    uint64_t sampleStartPos = e.CurPos();
+    e.Next();
+
+    if (e.Has() && e.Get().IsTime()) {
+      double sampleTime = e.Get().u.mDouble;
+
+      if (sampleTime >= aTime) {
+        // This is the first sample within the window of time that we want to keep.
+        // Throw away all samples before sampleStartPos and return.
+        mRangeStart = sampleStartPos;
+        return;
+      }
+    }
+  }
+}
+
 // END ProfileBuffer
 ////////////////////////////////////////////////////////////////////////
