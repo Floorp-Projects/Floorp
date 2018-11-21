@@ -215,6 +215,11 @@ interface nsIWebNavigation : nsISupports
   const unsigned long LOAD_FLAGS_FORCE_ALLOW_DATA_URI = 0x400000;
 
   /**
+   * This load is the result of an HTTP redirect.
+   */
+  const unsigned long LOAD_FLAGS_IS_REDIRECT = 0x800000;
+
+  /**
    * Loads a given URI.  This will give priority to loading the requested URI
    * in the object implementing	this interface.  If it can't be loaded here
    * however, the URI dispatcher will go through its normal process of content
