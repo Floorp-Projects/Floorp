@@ -96,9 +96,14 @@ public:
     return FromWin32Error(ERROR_UNIDENTIFIED_ERROR);
   }
 
-  explicit operator bool() const
+  bool IsSuccess() const
   {
     return SUCCEEDED(mHResult);
+  }
+
+  bool IsFailure() const
+  {
+    return FAILED(mHResult);
   }
 
   bool IsAvailableAsWin32Error() const

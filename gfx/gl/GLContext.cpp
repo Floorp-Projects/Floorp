@@ -139,6 +139,7 @@ static const char* const sExtensionNames[] = {
     "GL_EXT_framebuffer_object",
     "GL_EXT_framebuffer_sRGB",
     "GL_EXT_gpu_shader4",
+    "GL_EXT_map_buffer_range",
     "GL_EXT_multisampled_render_to_texture",
     "GL_EXT_occlusion_query_boolean",
     "GL_EXT_packed_depth_stencil",

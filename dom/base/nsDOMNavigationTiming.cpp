@@ -387,7 +387,7 @@ nsDOMNavigationTiming::NotifyNonBlankPaintForRootContentDocument()
   mNonBlankPaint = TimeStamp::Now();
 
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_is_active()) {
+  if (profiler_thread_is_being_profiled()) {
     TimeDuration elapsed = mNonBlankPaint - mNavigationStart;
     nsAutoCString spec;
     if (mLoadedURI) {
@@ -466,7 +466,7 @@ nsDOMNavigationTiming::NotifyDOMContentFlushedForRootContentDocument()
   mDOMContentFlushed = TimeStamp::Now();
 
 #ifdef MOZ_GECKO_PROFILER
-  if (profiler_is_active()) {
+  if (profiler_thread_is_being_profiled()) {
     TimeDuration elapsed = mDOMContentFlushed - mNavigationStart;
     nsAutoCString spec;
     if (mLoadedURI) {
