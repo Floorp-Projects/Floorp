@@ -229,6 +229,12 @@ HTMLEditor::InsertTableCellsWithTransaction(int32_t aNumberOfCellsToInsert,
       MOZ_ASSERT_UNREACHABLE("Invalid InsertPosition");
   }
 
+  AutoPlaceholderBatch treateAsOneTransaction(*this);
+  // Prevent auto insertion of BR in new cell until we're done
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::eInsertNode,
+                                      nsIEditor::eNext);
+
   // We control selection resetting after the insert.
   AutoSelectionSetterAfterTableEdit setCaret(*this, table,
                                              cellDataAtSelection.mCurrent.mRow,
