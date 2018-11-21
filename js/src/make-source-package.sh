@@ -68,13 +68,16 @@ case $cmd in
     fi
     ${MKDIR} -p ${tgtpath}/js/src
 
-    # copy LICENSE
-    cp ${TOPSRCDIR}/LICENSE ${tgtpath}/
+    # Top-level config and build files
+    cp -pPR \
+        ${TOPSRCDIR}/LICENSE \
+        ${TOPSRCDIR}/Makefile.in \
+        ${TOPSRCDIR}/configure.py \
+        ${TOPSRCDIR}/moz.build \
+        ${TOPSRCDIR}/moz.configure \
+        ${TOPSRCDIR}/test.mozbuild \
+        ${tgtpath}/
 
-    cp -pPR ${TOPSRCDIR}/configure.py \
-       ${TOPSRCDIR}/moz.configure \
-       ${TOPSRCDIR}/test.mozbuild \
-       ${tgtpath}/
 
     cp -pPR ${TOPSRCDIR}/js/app.mozbuild ${tgtpath}/js/
     cp -pPR ${TOPSRCDIR}/js/moz.configure ${tgtpath}/js/
@@ -88,14 +91,8 @@ case $cmd in
     ${MKDIR} -p ${tgtpath}/intl
     cp -pPR ${TOPSRCDIR}/intl/icu ${tgtpath}/intl/
 
-    # copy main moz.build and Makefile.in
-    cp -pPR ${TOPSRCDIR}/Makefile.in ${TOPSRCDIR}/moz.build ${tgtpath}/
-
     # copy nspr.
     cp -pPR ${TOPSRCDIR}/nsprpub ${tgtpath}/
-
-    # copy top-level build and config files.
-    cp -p ${TOPSRCDIR}/configure.py ${TOPSRCDIR}/moz.configure ${tgtpath}/
 
     # copy build and config directory.
     cp -pPR ${TOPSRCDIR}/build ${TOPSRCDIR}/config ${tgtpath}/
