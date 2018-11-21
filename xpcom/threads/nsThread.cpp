@@ -1255,7 +1255,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
           }
           mLastLongTaskEnd = now;
 #ifdef MOZ_GECKO_PROFILER
-          if (profiler_is_active()) {
+          if (profiler_thread_is_being_profiled()) {
               profiler_add_marker(
                 (priority != EventPriority::Idle) ? "LongTask" : "LongIdleTask",
                 MakeUnique<LongTaskMarkerPayload>(mCurrentEventStart, now));
