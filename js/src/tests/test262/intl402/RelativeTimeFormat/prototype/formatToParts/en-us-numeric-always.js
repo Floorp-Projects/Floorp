@@ -36,7 +36,9 @@ assert.sameValue(typeof rtf.formatToParts, "function", "formatToParts should be 
 for (const unit of units) {
   verifyFormatParts(rtf.formatToParts(1000, unit), [
     { "type": "literal", "value": "in " },
-    { "type": "integer", "value": "1,000", "unit": unit },
+    { "type": "integer", "value": "1", "unit": unit },
+    { "type": "group", "value": ",", "unit": unit },
+    { "type": "integer", "value": "000", "unit": unit },
     { "type": "literal", "value": ` ${unit}s` },
   ], `formatToParts(1000, ${unit})`);
 
@@ -85,9 +87,21 @@ for (const unit of units) {
   ], `formatToParts(-10, ${unit})`);
 
   verifyFormatParts(rtf.formatToParts(-1000, unit), [
-    { "type": "integer", "value": "1,000", "unit": unit },
+    { "type": "integer", "value": "1", "unit": unit },
+    { "type": "group", "value": ",", "unit": unit },
+    { "type": "integer", "value": "000", "unit": unit },
     { "type": "literal", "value": ` ${unit}s ago` },
   ], `formatToParts(-1000, ${unit})`);
+
+  verifyFormatParts(rtf.formatToParts(123456.78, unit), [
+    { "type": "literal", "value": "in " },
+    { "type": "integer", "value": "123", "unit": unit },
+    { "type": "group", "value": ",", "unit": unit },
+    { "type": "integer", "value": "456", "unit": unit },
+    { "type": "decimal", "value": ".", "unit": unit },
+    { "type": "fraction", "value": "78", "unit": unit },
+    { "type": "literal", "value": ` ${unit}s` },
+  ], `formatToParts(123456.78, ${unit})`);
 }
 
 reportCompare(0, 0);

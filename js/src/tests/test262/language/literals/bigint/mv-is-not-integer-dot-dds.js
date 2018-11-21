@@ -4,7 +4,7 @@
 
 /*---
 esid: sec-numeric-literal-static-semantics-early-errors
-description: > 
+description: >
   It is a Syntax Error if the MV is not an integer. (dot decimalDigits)
 info: |
   Static Semantics: BigInt Value
@@ -23,6 +23,6 @@ negative:
   type: SyntaxError
 ---*/
 
-throw "Test262: This statement should not be evaluated.";
+$DONOTEVALUATE();
 
 .0000000001n;

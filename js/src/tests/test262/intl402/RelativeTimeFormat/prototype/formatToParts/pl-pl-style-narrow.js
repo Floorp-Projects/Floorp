@@ -23,6 +23,7 @@ function always(s) {
     "many": s,
     "few": s,
     "one": s,
+    "other": s,
   }
 }
 
@@ -35,11 +36,13 @@ const units = {
     "many": "dni",
     "few": "dni",
     "one": "dzień",
+    "other": "dnia",
   },
   "week": {
     "many": "tyg.",
     "few": "tyg.",
     "one": "tydz.",
+    "other": "tyg.",
   },
   "month": always("mies."),
   "quarter": always("kw."),
@@ -47,6 +50,7 @@ const units = {
     "many": "lat",
     "few": "lata",
     "one": "rok",
+    "other": "roku",
   },
 };
 
@@ -59,7 +63,9 @@ assert.sameValue(typeof rtf.formatToParts, "function", "formatToParts should be 
 for (const [unitArgument, expected] of Object.entries(units)) {
   verifyFormatParts(rtf.formatToParts(1000, unitArgument), [
     { "type": "literal", "value": "za " },
-    { "type": "integer", "value": "1\u00a0000", "unit": unitArgument },
+    { "type": "integer", "value": "1", "unit": unitArgument },
+    { "type": "group", "value": "\u00a0", "unit": unitArgument },
+    { "type": "integer", "value": "000", "unit": unitArgument },
     { "type": "literal", "value": ` ${expected.many}` },
   ], `formatToParts(1000, ${unitArgument})`);
 
@@ -108,9 +114,21 @@ for (const [unitArgument, expected] of Object.entries(units)) {
   ], `formatToParts(-10, ${unitArgument})`);
 
   verifyFormatParts(rtf.formatToParts(-1000, unitArgument), [
-    { "type": "integer", "value": "1\u00a0000", "unit": unitArgument },
+    { "type": "integer", "value": "1", "unit": unitArgument },
+    { "type": "group", "value": "\u00a0", "unit": unitArgument },
+    { "type": "integer", "value": "000", "unit": unitArgument },
     { "type": "literal", "value": ` ${expected.many} temu` },
   ], `formatToParts(-1000, ${unitArgument})`);
+
+  verifyFormatParts(rtf.formatToParts(123456.78, unitArgument), [
+    { "type": "literal", "value": "za " },
+    { "type": "integer", "value": "123", "unit": unitArgument },
+    { "type": "group", "value": "\u00a0", "unit": unitArgument },
+    { "type": "integer", "value": "456", "unit": unitArgument },
+    { "type": "decimal", "value": ",", "unit": unitArgument },
+    { "type": "fraction", "value": "78", "unit": unitArgument },
+    { "type": "literal", "value": ` ${expected.other}` },
+  ], `formatToParts(123456.78, ${unitArgument})`);
 }
 
 reportCompare(0, 0);
