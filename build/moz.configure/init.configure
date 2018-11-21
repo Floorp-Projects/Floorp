@@ -1154,29 +1154,13 @@ set_config('MOZ_APP_VERSION', milestone.app_version)
 set_config('MOZ_APP_VERSION_DISPLAY', milestone.app_version_display)
 add_old_configure_assignment('MOZ_APP_VERSION', milestone.app_version)
 
-
-# The app update channel is 'default' when not supplied, and MOZILLA_OFFICIAL
-# is not set. When MOZILLA_OFFICIAL is set, the default is derived from
-# the application display version.
-@depends(milestone, mozilla_official)
-def default_update_channel(milestone, mozilla_official):
-    if not mozilla_official:
-        return 'default'
-    if milestone.is_release_or_beta:
-        if 'esr' in milestone.app_version_display:
-            return 'esr'
-        if 'b' in milestone.app_version_display:
-            return 'beta'
-        return 'release'
-    if milestone.is_nightly:
-        return 'nightly'
-    return 'default'
-
-
+# The app update channel is 'default' when not supplied. The value is used in
+# the application's confvars.sh (and is made available to a project specific
+# moz.configure).
 option('--enable-update-channel',
        nargs=1,
        help='Select application update channel',
-       default=default_update_channel)
+       default='default')
 
 
 @depends('--enable-update-channel')
