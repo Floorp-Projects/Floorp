@@ -191,8 +191,12 @@ impl SpatialNode {
         true
     }
 
-    pub fn mark_uninvertible(&mut self) {
+    pub fn mark_uninvertible(
+        &mut self,
+        state: &TransformUpdateState,
+    ) {
         self.invertible = false;
+        self.coordinate_system_id = state.current_coordinate_system_id;
         self.world_content_transform = LayoutToWorldFastTransform::identity();
         self.world_viewport_transform = LayoutToWorldFastTransform::identity();
     }
@@ -221,7 +225,7 @@ impl SpatialNode {
         // If any of our parents was not rendered, we are not rendered either and can just
         // quit here.
         if !state.invertible {
-            self.mark_uninvertible();
+            self.mark_uninvertible(state);
             return;
         }
 
@@ -233,7 +237,7 @@ impl SpatialNode {
         // translations which should be invertible.
         match self.node_type {
             SpatialNodeType::ReferenceFrame(info) if !info.invertible => {
-                self.mark_uninvertible();
+                self.mark_uninvertible(state);
                 return;
             }
             _ => self.invertible = true,
