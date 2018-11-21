@@ -11,6 +11,7 @@
 #include "nsCURILoader.h"
 #include "nsNetUtil.h"
 #include "nsIHttpChannel.h"
+#include "nsIWebNavigation.h"
 #include "nsIWebProgressListener2.h"
 
 #include "nsIServiceManager.h"
@@ -1446,7 +1447,8 @@ NS_IMETHODIMP nsDocLoader::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
     if (newURI) {
       const int where = nsIBrowserDOMWindow::OPEN_CURRENTWINDOW;
       bool loadURIHandled = false;
-      nsresult rv = delegate->LoadURI(newURI, where, /* flags */ 0,
+      nsresult rv = delegate->LoadURI(newURI, where,
+                                      nsIWebNavigation::LOAD_FLAGS_IS_REDIRECT,
                                       /* triggering principal */ nullptr,
                                       &loadURIHandled);
       if (NS_SUCCEEDED(rv) && loadURIHandled) {

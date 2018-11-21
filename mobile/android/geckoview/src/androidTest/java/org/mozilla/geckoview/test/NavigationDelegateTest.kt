@@ -234,6 +234,8 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("Target should not be null", request.target, notNullValue())
                 assertThat("Target should match", request.target,
                         equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
+                assertThat("Redirect flag is set", request.isRedirect,
+                        equalTo(forEachCall(false, true)))
                 return null
             }
         })
@@ -503,6 +505,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("Target should not be null", request.target, notNullValue())
                 assertThat("Target should match", request.target,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
+                assertThat("Redirect flag is not set", request.isRedirect, equalTo(false))
                 return null
             }
 
