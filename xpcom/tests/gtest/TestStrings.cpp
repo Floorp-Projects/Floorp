@@ -1402,73 +1402,73 @@ TEST_F(Strings, huge_capacity)
   if (sizeof(void*) >= 8) {
     EXPECT_TRUE(a.SetCapacity(1, fallible));
     EXPECT_FALSE(a.SetCapacity(nsString::size_type(-1)/2, fallible));
-    EXPECT_TRUE(a.SetCapacity(0, fallible));  // free the allocated memory
+    a.Truncate();  // free the allocated memory
 
     EXPECT_TRUE(b.SetCapacity(1, fallible));
     EXPECT_FALSE(b.SetCapacity(nsString::size_type(-1)/2 - 1, fallible));
-    EXPECT_TRUE(b.SetCapacity(0, fallible));
+    b.Truncate();
 
     EXPECT_TRUE(c.SetCapacity(1, fallible));
     EXPECT_FALSE(c.SetCapacity(nsString::size_type(-1)/2, fallible));
-    EXPECT_TRUE(c.SetCapacity(0, fallible));
+    c.Truncate();
 
     EXPECT_FALSE(d.SetCapacity(nsString::size_type(-1)/2 - 1, fallible));
     EXPECT_FALSE(d.SetCapacity(nsString::size_type(-1)/2, fallible));
-    EXPECT_TRUE(d.SetCapacity(0, fallible));
+    d.Truncate();
 
     EXPECT_FALSE(e.SetCapacity(nsString::size_type(-1)/4, fallible));
     EXPECT_FALSE(e.SetCapacity(nsString::size_type(-1)/4 + 1, fallible));
-    EXPECT_TRUE(e.SetCapacity(0, fallible));
+    e.Truncate();
 
     EXPECT_FALSE(f.SetCapacity(nsString::size_type(-1)/2, fallible));
-    EXPECT_TRUE(f.SetCapacity(0, fallible));
+    f.Truncate();
 
     EXPECT_FALSE(g.SetCapacity(nsString::size_type(-1)/4 + 1000, fallible));
     EXPECT_FALSE(g.SetCapacity(nsString::size_type(-1)/4 + 1001, fallible));
-    EXPECT_TRUE(g.SetCapacity(0, fallible));
+    g.Truncate();
 
     EXPECT_FALSE(h.SetCapacity(nsString::size_type(-1)/4+1, fallible));
     EXPECT_FALSE(h.SetCapacity(nsString::size_type(-1)/2, fallible));
-    EXPECT_TRUE(h.SetCapacity(0, fallible));
+    h.Truncate();
 
     EXPECT_TRUE(i.SetCapacity(1, fallible));
     EXPECT_TRUE(i.SetCapacity(nsString::size_type(-1)/4 - 1000, fallible));
     EXPECT_FALSE(i.SetCapacity(nsString::size_type(-1)/4 + 1, fallible));
-    EXPECT_TRUE(i.SetCapacity(0, fallible));
+    i.Truncate();
 
     EXPECT_TRUE(j.SetCapacity(nsString::size_type(-1)/4 - 1000, fallible));
     EXPECT_FALSE(j.SetCapacity(nsString::size_type(-1)/4 + 1, fallible));
-    EXPECT_TRUE(j.SetCapacity(0, fallible));
+    j.Truncate();
 
     EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/8 - 1000, fallible));
     EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/4 - 1001, fallible));
     EXPECT_TRUE(k.SetCapacity(nsString::size_type(-1)/4 - 998, fallible));
     EXPECT_FALSE(k.SetCapacity(nsString::size_type(-1)/4 + 1, fallible));
-    EXPECT_TRUE(k.SetCapacity(0, fallible));
+    k.Truncate();
 
     EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1)/8, fallible));
     EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1)/8 + 1, fallible));
     EXPECT_TRUE(l.SetCapacity(nsString::size_type(-1)/8 + 2, fallible));
-    EXPECT_TRUE(l.SetCapacity(0, fallible));
+    l.Truncate();
 
     EXPECT_TRUE(m.SetCapacity(nsString::size_type(-1)/8 + 1000, fallible));
     EXPECT_TRUE(m.SetCapacity(nsString::size_type(-1)/8 + 1001, fallible));
-    EXPECT_TRUE(m.SetCapacity(0, fallible));
+    m.Truncate();
 
     EXPECT_TRUE(n.SetCapacity(nsString::size_type(-1)/8+1, fallible));
     EXPECT_FALSE(n.SetCapacity(nsString::size_type(-1)/4, fallible));
-    EXPECT_TRUE(n.SetCapacity(0, fallible));
+    n.Truncate();
 
-    EXPECT_TRUE(n.SetCapacity(0, fallible));
+    n.Truncate();
     EXPECT_TRUE(n.SetCapacity((nsString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 2 - 2, fallible));
-    EXPECT_TRUE(n.SetCapacity(0, fallible));
+    n.Truncate();
     EXPECT_FALSE(n.SetCapacity((nsString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 2 - 1, fallible));
-    EXPECT_TRUE(n.SetCapacity(0, fallible));
-    EXPECT_TRUE(n1.SetCapacity(0, fallible));
+    n.Truncate();
+    n1.Truncate();
     EXPECT_TRUE(n1.SetCapacity((nsCString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 1 - 2, fallible));
-    EXPECT_TRUE(n1.SetCapacity(0, fallible));
+    n1.Truncate();
     EXPECT_FALSE(n1.SetCapacity((nsCString::size_type(-1)/2 - sizeof(nsStringBuffer)) / 1 - 1, fallible));
-    EXPECT_TRUE(n1.SetCapacity(0, fallible));
+    n1.Truncate();
   }
 }
 
