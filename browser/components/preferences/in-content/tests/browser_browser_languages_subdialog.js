@@ -10,7 +10,11 @@ AddonTestUtils.initMochitest(this);
 const BROWSER_LANGUAGES_URL = "chrome://browser/content/preferences/browserLanguages.xul";
 const DICTIONARY_ID_PL = "pl@dictionaries.addons.mozilla.org";
 
-function getManifestData(locale) {
+function langpackId(locale) {
+  return `langpack-${locale}@firefox.mozilla.org`;
+}
+
+function getManifestData(locale, version = "2.0") {
   return {
     langpack_id: locale,
     name: `${locale} Language Pack`,
@@ -26,11 +30,11 @@ function getManifestData(locale) {
     applications: {
       gecko: {
         strict_min_version: AppConstants.MOZ_APP_VERSION,
-        id: `langpack-${locale}@firefox.mozilla.org`,
+        id: langpackId(locale),
         strict_max_version: AppConstants.MOZ_APP_VERSION,
       },
     },
-    version: "1",
+    version,
     manifest_version: 2,
     sources: {
       browser: {
@@ -44,14 +48,18 @@ function getManifestData(locale) {
 let testLocales = ["fr", "pl", "he"];
 let testLangpacks;
 
+function createLangpack(locale, version) {
+    return AddonTestUtils.createTempXPIFile({
+      "manifest.json": getManifestData(locale, version),
+      [`browser/${locale}/branding/brand.ftl`]: "-brand-short-name = Firefox",
+    });
+}
+
 function createTestLangpacks() {
   if (!testLangpacks) {
     testLangpacks = Promise.all(testLocales.map(async locale => [
       locale,
-      await AddonTestUtils.createTempXPIFile({
-        "manifest.json": getManifestData(locale),
-        [`browser/${locale}/branding/brand.ftl`]: "-brand-short-name = Firefox",
-      }),
+      await createLangpack(locale),
     ]));
   }
   return testLangpacks;
@@ -59,6 +67,7 @@ function createTestLangpacks() {
 
 function createLocaleResult(target_locale, url) {
   return {
+    guid: langpackId(target_locale),
     type: "language",
     target_locale,
     current_compatible_version: {
@@ -164,6 +173,83 @@ async function openDialog(doc, search = false) {
     selected: dialogDoc.getElementById("selectedLocales"),
   };
 }
+
+add_task(async function testDisabledBrowserLanguages() {
+  let langpacksFile = await createLanguageToolsFile();
+  let langpacksUrl = Services.io.newFileURI(langpacksFile).spec;
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["intl.multilingual.enabled", true],
+      ["intl.multilingual.downloadEnabled", true],
+      ["intl.locale.requested", "en-US,pl,he,de"],
+      ["extensions.langpacks.signatures.required", false],
+      ["extensions.getAddons.langpacks.url", langpacksUrl],
+    ],
+  });
+
+  // Install an old pl langpack.
+  let oldLangpack = await createLangpack("pl", "1.0");
+  await AddonTestUtils.promiseInstallFile(oldLangpack);
+
+  // Install all the other available langpacks.
+  let pl;
+  let langpacks = await createTestLangpacks();
+  let addons = await Promise.all(langpacks.map(async ([locale, file]) => {
+    if (locale == "pl") {
+      pl = await AddonManager.getAddonByID(langpackId("pl"));
+      // Disable pl so it's removed from selected.
+      await pl.disable();
+      return pl;
+    }
+    let install = await AddonTestUtils.promiseInstallFile(file);
+    return install.addon;
+  }));
+
+
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+
+  let doc = gBrowser.contentDocument;
+  let {dialogDoc, available, selected} = await openDialog(doc);
+
+  // pl is not selected since it's disabled.
+  is(pl.userDisabled, true, "pl is disabled");
+  is(pl.version, "1.0", "pl is the old 1.0 version");
+  assertLocaleOrder(selected, "en-US,he");
+
+  // Only fr is enabled and not selected, so it's the only locale available.
+  assertAvailableLocales(available, ["fr"]);
+
+  // Search for more languages.
+  available.firstElementChild.lastElementChild.doCommand();
+  await waitForMutation(
+    available.firstElementChild,
+    {childList: true},
+    target =>
+      Array.from(available.firstElementChild.children)
+        .some(locale => locale.value == "pl"));
+
+  // pl is now available since it is available remotely.
+  assertAvailableLocales(available, ["fr", "pl"]);
+
+  // Add pl.
+  selectLocale("pl", available, dialogDoc);
+
+  // Wait for pl to be added, this should upgrade and enable the existing langpack.
+  await waitForMutation(
+    selected,
+    {childList: true},
+    target => selected.itemCount == 3);
+  assertLocaleOrder(selected, "pl,en-US,he");
+
+  // Find pl again since it's been upgraded.
+  pl = await AddonManager.getAddonByID(langpackId("pl"));
+  is(pl.userDisabled, false, "pl is now enabled");
+  is(pl.version, "2.0", "pl is upgraded to version 2.0");
+
+  await Promise.all(addons.map(addon => addon.uninstall()));
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
 
 add_task(async function testReorderingBrowserLanguages() {
   await SpecialPowers.pushPrefEnv({
