@@ -286,24 +286,13 @@ Relation
 XULGroupboxAccessible::RelationByType(RelationType aType) const
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
-  if (aType != RelationType::LABELLED_BY)
-    return rel;
 
-  // The label for xul:groupbox is generated from xul:label that is
-  // inside the anonymous content of the xul:caption.
-  // The xul:label has an accessible object but the xul:caption does not
-  uint32_t childCount = ChildCount();
-  for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
-    Accessible* childAcc = GetChildAt(childIdx);
-    if (childAcc->Role() == roles::LABEL) {
-      // Ensure that it's our label
-      Relation reverseRel = childAcc->RelationByType(RelationType::LABEL_FOR);
-      Accessible* testGroupbox = nullptr;
-      while ((testGroupbox = reverseRel.Next()))
-        if (testGroupbox == this) {
-          // The <label> points back to this groupbox
-          rel.AppendTarget(childAcc);
-        }
+  // The label for xul:groupbox is generated from the first xul:label
+  if (aType == RelationType::LABELLED_BY && ChildCount() > 0) {
+    Accessible* childAcc = GetChildAt(0);
+    if (childAcc->Role() == roles::LABEL &&
+        childAcc->GetContent()->IsXULElement(nsGkAtoms::label)) {
+      rel.AppendTarget(childAcc);
     }
   }
 

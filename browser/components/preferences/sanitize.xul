@@ -12,6 +12,7 @@
 
 <dialog id="SanitizeDialog" type="child"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         buttons="accept,cancel,help"
         persist="lastSelected screenX screenY"
         role="dialog"
@@ -38,7 +39,7 @@
   <description data-l10n-id="clear-data-settings-label"></description>
 
   <groupbox>
-    <caption><label data-l10n-id="history-section-label"></label></caption>
+    <label><html:h2 data-l10n-id="history-section-label"/></label>
     <grid flex="1">
       <columns>
         <column data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style"/>
@@ -65,7 +66,7 @@
     </grid>
   </groupbox>
   <groupbox>
-    <caption><label data-l10n-id="data-section-label"></label></caption>
+    <label><html:h2 data-l10n-id="data-section-label"/></label>
     <grid flex="1">
       <columns>
         <column data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style"/>

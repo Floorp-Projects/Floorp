@@ -51,7 +51,6 @@ load 386794-1.html
 load 387460-1.html
 load 395469-1.xhtml
 load 395469-2.xhtml
-load 398088-1.xul
 skip load 399712-1.html # sporadically times out (bug 473680)
 load 400763-1.html
 load 401993-1.html

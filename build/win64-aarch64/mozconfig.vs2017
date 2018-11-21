@@ -1,0 +1,47 @@
+if [ -z "${VSPATH}" ]; then
+    TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
+    VSPATH="$(cd ${TOOLTOOL_DIR} && pwd)/vs2017_15.9.0p5"
+fi
+
+if [ -d "${VSPATH}" ]; then
+    VSWINPATH="$(cd ${VSPATH} && pwd -W)"
+
+    export WINDOWSSDKDIR="${VSWINPATH}/SDK"
+    export WIN32_REDIST_DIR=${VSPATH}/VC/redist/onecore/arm64/Microsoft.VC141.CRT
+    export WIN_DIA_SDK_BIN_DIR="${VSPATH}/DIA SDK/bin/amd64"
+
+    win_sdk_version="10.0.17134.0"
+
+    # Need to run x86-64 host binaries.
+    export PATH="${VSPATH}/VC/bin/Hostx64/x64:${VSPATH}/SDK/bin/${win_sdk_version}/x64:${VSPATH}/VC/redist/x64/Microsoft.VC141.CRT:${VSPATH}/SDK/Redist/ucrt/DLLs/x64:${WIN_DIA_SDK_BIN_DIR}:${PATH}"
+
+    export INCLUDE="${VSPATH}/VC/include:${VSPATH}/VC/atlmfc/include:${VSPATH}/SDK/Include/${win_sdk_version}/ucrt:${VSPATH}/SDK/Include/${win_sdk_version}/shared:${VSPATH}/SDK/Include/${win_sdk_version}/um:${VSPATH}/SDK/Include/${win_sdk_version}/winrt"
+    export LIB="${VSPATH}/VC/lib/arm64:${VSPATH}/VC/atlmfc/lib/arm64:${VSPATH}/SDK/Lib/${win_sdk_version}/ucrt/arm64:${VSPATH}/SDK/Lib/${win_sdk_version}/um/arm64:${VSPATH}/DIA SDK/lib/amd64"
+
+    # We need to declare host and target tools separately.
+    arm_bin="${VSPATH}/VC/bin/Hostx64/arm64"
+    export CC="${arm_bin}/cl.exe"
+    export CXX="${arm_bin}/cl.exe"
+    export AS="${arm_bin}/armasm64.exe"
+    export LINKER="${arm_bin}/link.exe"
+
+    x64_bin="${VSPATH}/VC/bin/Hostx64/x64"
+    export HOST_CC="${x64_bin}/cl.exe"
+    export HOST_CXX="${x64_bin}/cl.exe"
+    export HOST_LINKER="${x64_bin}/link.exe"
+
+    # We provided LIB, above, but we also need to provide HOST_LDFLAGS so host
+    # links are not completely confused.  LIBPATH wants its argument with
+    # Windows-style drives.
+    libs=""
+    libs="${libs} -LIBPATH:${VSWINPATH}/VC/lib/x64"
+    libs="${libs} -LIBPATH:${VSWINPATH}/VC/atlmfc/lib/x64"
+    libs="${libs} -LIBPATH:${VSWINPATH}/SDK/Lib/${win_sdk_version}/um/x64"
+    libs="${libs} -LIBPATH:${VSWINPATH}/SDK/Lib/${win_sdk_version}/ucrt/x64"
+    export HOST_LDFLAGS="${libs}"
+
+    export WIN64_LINK="${VSPATH}/VC/bin/Hostx64/x64/link.exe"
+    export WIN64_LIB="${VSPATH}/VC/lib/x64:${VSPATH}/VC/atlmfc/lib/x64:${VSPATH}/SDK/Lib/${win_sdk_version}/ucrt/x64:${VSPATH}/SDK/Lib/${win_sdk_version}/um/x64:${VSPATH}/DIA SDK/lib/amd64"
+fi
+
+. $topsrcdir/build/mozconfig.vs-common

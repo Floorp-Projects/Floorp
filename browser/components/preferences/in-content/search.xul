@@ -9,8 +9,8 @@
     </hbox>
 
     <groupbox id="searchbarGroup" data-category="paneSearch">
-      <caption><label id="searchbarLabel" data-l10n-id="search-bar-header" /></caption>
-      <radiogroup id="searchBarVisibleGroup" aria-labelledby="searchbarLabel" preference="browser.search.widget.inNavBar">
+      <label control="searchBarVisibleGroup"><html:h2 data-l10n-id="search-bar-header"/></label>
+      <radiogroup id="searchBarVisibleGroup" preference="browser.search.widget.inNavBar">
         <radio id="searchBarHiddenRadio" value="false" data-l10n-id="search-bar-hidden"/>
         <image class="searchBarImage searchBarHiddenImage" role="presentation"/>
         <radio id="searchBarShownRadio" value="true" data-l10n-id="search-bar-shown"/>
@@ -20,7 +20,7 @@
 
     <!-- Default Search Engine -->
     <groupbox id="defaultEngineGroup" data-category="paneSearch">
-      <caption><label data-l10n-id="search-engine-default-header" /></caption>
+      <label><html:h2 data-l10n-id="search-engine-default-header" /></label>
       <description data-l10n-id="search-engine-default-desc" />
 
       <hbox id="browserDefaultSearchExtensionContent"
@@ -52,7 +52,7 @@
     </groupbox>
 
     <groupbox id="oneClickSearchProvidersGroup" data-category="paneSearch">
-      <caption><label data-l10n-id="search-one-click-header" /></caption>
+      <label><html:h2 data-l10n-id="search-one-click-header" /></label>
       <description data-l10n-id="search-one-click-desc" />
 
       <tree id="engineList" flex="1" rows="8" hidecolumnpicker="true" editable="true"

@@ -14,7 +14,8 @@
 <bindings id="addonBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-          xmlns:xbl="http://www.mozilla.org/xbl">
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml">
 
 
   <!-- Rating - displays current/average rating, allows setting user rating -->
@@ -129,8 +130,7 @@
       <xul:stack flex="1">
         <xul:hbox flex="1">
           <xul:hbox class="start-cap"/>
-          <xul:progressmeter anonid="progress" class="progress" flex="1"
-                             min="0" max="100"/>
+          <html:progress anonid="progress" class="progress" max="100"/>
           <xul:hbox class="end-cap"/>
         </xul:hbox>
         <xul:hbox class="status-container">
@@ -163,11 +163,11 @@
       </field>
 
       <property name="progress">
-        <getter><![CDATA[
-          return this._progress.value;
-        ]]></getter>
         <setter><![CDATA[
-          this._progress.value = val;
+          // This property is always updated after maxProgress.
+          if (this.getAttribute("mode") == "determined") {
+            this._progress.value = val;
+          }
           if (val == this._progress.max)
             this.setAttribute("complete", true);
           else
@@ -176,17 +176,14 @@
       </property>
 
       <property name="maxProgress">
-        <getter><![CDATA[
-          return this._progress.max;
-        ]]></getter>
         <setter><![CDATA[
           if (val == -1) {
-            this._progress.mode = "undetermined";
+            this.setAttribute("mode", "undetermined");
+            this._progress.removeAttribute("value");
           } else {
-            this._progress.mode = "determined";
-            this._progress.max = val;
+            this.setAttribute("mode", "determined");
+            this._progress.setAttribute("max", val);
           }
-          this.setAttribute("mode", this._progress.mode);
         ]]></setter>
       </property>
 

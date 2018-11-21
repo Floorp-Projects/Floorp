@@ -303,7 +303,7 @@ function scrollAndHighlight(subcategory) {
  */
 function getClosestDisplayedHeader(element) {
   let header = element.closest("groupbox");
-  let searchHeader = header.querySelector("caption.search-header");
+  let searchHeader = header.querySelector(".search-header");
   if (searchHeader && searchHeader.hidden &&
       header.previousSibling.classList.contains("subcategory")) {
     header = header.previousSibling;
