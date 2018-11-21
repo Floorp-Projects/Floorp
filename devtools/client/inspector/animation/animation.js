@@ -99,10 +99,8 @@ class AnimationInspector {
       toggleElementPicker,
     } = this;
 
-    const target = this.inspector.target;
     const direction = this.win.document.dir;
-    this.animationsFront = target.getFront("animations");
-    this.animationsFront.setWalkerActor(this.inspector.walker);
+    this._getAnimationsFront();
 
     this.animationsCurrentTimeListeners = [];
     this.isCurrentTimeSet = false;
@@ -148,6 +146,19 @@ class AnimationInspector {
     this.inspector.toolbox.on("select", this.onSidebarSelectionChanged);
   }
 
+  _getAnimationsFront() {
+    if (this.animationsFrontPromise) {
+      return this.animationsFrontPromise;
+    }
+    this.animationsFrontPromise = new Promise(async resolve => {
+      const target = this.inspector.target;
+      const front = await target.getFront("animations");
+      front.setWalkerActor(this.inspector.walker);
+      resolve(front);
+    });
+    return this.animationsFrontPromise;
+  }
+
   destroy() {
     this.setAnimationStateChangedListenerEnabled(false);
     this.inspector.off("new-root", this.onNavigate);
@@ -158,7 +169,9 @@ class AnimationInspector {
     this.inspector.toolbox.off("picker-stopped", this.onElementPickerStopped);
     this.inspector.toolbox.off("select", this.onSidebarSelectionChanged);
 
-    this.animationsFront.off("mutations", this.onAnimationsMutation);
+    this.animationsFrontPromise.then(front => {
+      front.off("mutations", this.onAnimationsMutation);
+    });
 
     if (this.simulatedAnimation) {
       this.simulatedAnimation.cancel();
@@ -197,7 +210,8 @@ class AnimationInspector {
   async doSetCurrentTimes(currentTime) {
     const { animations, timeScale } = this.state;
     currentTime = currentTime + timeScale.minStartTime;
-    await this.animationsFront.setCurrentTimes(animations, currentTime, true,
+    const animationsFront = await this.animationsFrontPromise;
+    await animationsFront.setCurrentTimes(animations, currentTime, true,
                                                { relativeToCreatedTime: true });
   }
 
@@ -369,16 +383,17 @@ class AnimationInspector {
 
     this.wasPanelVisibled = isPanelVisibled;
 
+    const animationsFront = await this.animationsFrontPromise;
     if (this.isPanelVisible()) {
       await this.update();
       this.onSidebarResized(null, this.inspector.getSidebarSize());
-      this.animationsFront.on("mutations", this.onAnimationsMutation);
+      animationsFront.on("mutations", this.onAnimationsMutation);
       this.inspector.on("new-root", this.onNavigate);
       this.inspector.selection.on("new-node-front", this.update);
       this.inspector.toolbox.on("inspector-sidebar-resized", this.onSidebarResized);
     } else {
       this.stopAnimationsCurrentTimeTimer();
-      this.animationsFront.off("mutations", this.onAnimationsMutation);
+      animationsFront.off("mutations", this.onAnimationsMutation);
       this.inspector.off("new-root", this.onNavigate);
       this.inspector.selection.off("new-node-front", this.update);
       this.inspector.toolbox.off("inspector-sidebar-resized", this.onSidebarResized);
@@ -449,7 +464,8 @@ class AnimationInspector {
     this.setAnimationStateChangedListenerEnabled(false);
 
     try {
-      await this.animationsFront.setPlaybackRates(animations, playbackRate);
+      const animationsFront = await this.animationsFrontPromise;
+      await animationsFront.setPlaybackRates(animations, playbackRate);
       animations = await this.updateAnimations(animations);
     } catch (e) {
       // Expected if we've already been destroyed or other node have been selected
@@ -480,16 +496,17 @@ class AnimationInspector {
       // If the server does not support pauseSome/playSome function, (which happens
       // when connected to server older than FF62), use pauseAll/playAll instead.
       // See bug 1456857.
+      const animationsFront = await this.animationsFrontPromise;
       if (this.hasPausePlaySome) {
         if (doPlay) {
-          await this.animationsFront.playSome(animations);
+          await animationsFront.playSome(animations);
         } else {
-          await this.animationsFront.pauseSome(animations);
+          await animationsFront.pauseSome(animations);
         }
       } else if (doPlay) {
-        await this.animationsFront.playAll();
+        await animationsFront.playAll();
       } else {
-        await this.animationsFront.pauseAll();
+        await animationsFront.pauseAll();
       }
 
       animations = await this.updateAnimations(animations);
@@ -638,9 +655,10 @@ class AnimationInspector {
     const done = this.inspector.updating("animationinspector");
 
     const selection = this.inspector.selection;
+    const animationsFront = await this.animationsFrontPromise;
     const animations =
       selection.isConnected() && selection.isElementNode()
-      ? await this.animationsFront.getAnimationPlayersForNode(selection.nodeFront)
+      ? await animationsFront.getAnimationPlayersForNode(selection.nodeFront)
       : [];
     this.updateState(animations);
     this.setAnimationStateChangedListenerEnabled(true);
