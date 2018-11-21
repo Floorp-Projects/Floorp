@@ -48,16 +48,29 @@ class EditAutofillForm {
   }
 
   /**
-   * Get inputs from the form.
+   * Get a record from the form suitable for a save/update in storage.
    * @returns {object}
    */
   buildFormObject() {
+    let initialObject = {};
+    if (this.hasMailingAddressFields) {
+      // Start with an empty string for each mailing-address field so that any
+      // fields hidden for the current country are blanked in the return value.
+      initialObject = {
+        "street-address": "",
+        "address-level3": "",
+        "address-level2": "",
+        "address-level1": "",
+        "postal-code": "",
+      };
+    }
+
     return Array.from(this._elements.form.elements).reduce((obj, input) => {
       if (!input.disabled) {
         obj[input.id] = input.value;
       }
       return obj;
-    }, {});
+    }, initialObject);
   }
 
   /**
@@ -158,6 +171,11 @@ class EditAddress extends EditAutofillForm {
     this.formatForm(record.country);
   }
 
+  get hasMailingAddressFields() {
+    let {addressFields} = this._elements.form.dataset;
+    return !addressFields || addressFields.trim().split(/\s+/).includes("mailing-address");
+  }
+
   /**
    * `mailing-address` is a special attribute token to indicate mailing fields + country.
    *
@@ -239,7 +257,11 @@ class EditAddress extends EditAutofillForm {
    * @param {Set} requiredFields Set of `fieldId` strings that mark which fields are required
    */
   arrangeFields(fieldsOrder, requiredFields) {
+    /**
+     * @see FormAutofillStorage.VALID_ADDRESS_FIELDS
+     */
     let fields = [
+      // `name` is a wrapper for the 3 name fields.
       "name",
       "organization",
       "street-address",
