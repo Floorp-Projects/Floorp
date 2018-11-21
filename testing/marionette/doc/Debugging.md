@@ -20,7 +20,7 @@ its log to stdout instead of file:
 It is common to use this in conjunction with an option to increase
 the Marionette log level:
 
-  % ./mach test --gecko-log - -vv TEST
+	% ./mach test --gecko-log - -vv TEST
 
 A single `-v` enables debug logging, and a double `-vv` enables
 trace logging.
