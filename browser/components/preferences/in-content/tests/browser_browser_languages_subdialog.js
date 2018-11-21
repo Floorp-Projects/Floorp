@@ -148,6 +148,7 @@ async function openDialog(doc, search = false) {
   let dialogLoaded = promiseLoadSubDialog(BROWSER_LANGUAGES_URL);
   if (search) {
     doc.getElementById("defaultBrowserLanguageSearch").doCommand();
+    doc.getElementById("defaultBrowserLanguage").firstElementChild.hidePopup();
   } else {
     doc.getElementById("manageBrowserLanguagesButton").doCommand();
   }
