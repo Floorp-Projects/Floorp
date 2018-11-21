@@ -242,14 +242,14 @@ def make_non_bmp_convert_macro(out_file, name, convert_map, codepoint_table):
         from_trail = entry['trail']
         to_trail = entry['trail'] + entry['length'] - 1
 
-        lines.append('    macro(0x{:x}, 0x{:x}, 0x{:x}, 0x{:x}, 0x{:x}, {:d})'.format(
+        lines.append('    MACRO(0x{:x}, 0x{:x}, 0x{:x}, 0x{:x}, 0x{:x}, {:d})'.format(
             from_code, to_code, lead, from_trail, to_trail, diff))
         comment.append('// {} .. {}'.format(codepoint_table.full_name(from_code),
                                             codepoint_table.full_name(to_code)))
 
     out_file.write('\n'.join(comment))
     out_file.write('\n')
-    out_file.write('#define FOR_EACH_NON_BMP_{}(macro) \\\n'.format(name))
+    out_file.write('#define FOR_EACH_NON_BMP_{}(MACRO) \\\n'.format(name))
     out_file.write(' \\\n'.join(lines))
     out_file.write('\n')
 
@@ -643,8 +643,8 @@ def make_non_bmp_file(version,
 #ifndef util_UnicodeNonBMP_h
 #define util_UnicodeNonBMP_h
 
-// |macro| receives the following arguments
-//   macro(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF)
+// |MACRO| receives the following arguments
+//   MACRO(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF)
 //     FROM:       code point where the range starts
 //     TO:         code point where the range ends
 //     LEAD:       common lead surrogate of FROM and TO
