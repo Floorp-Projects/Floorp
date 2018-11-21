@@ -746,6 +746,7 @@ class AccessibilityTest : BaseSessionTest() {
 
         val entryNode = createNodeInfo(rootNode.getChildId(1))
         assertThat("Second node is an entry", entryNode.className.toString(), equalTo("android.widget.EditText"))
+        assertThat("Entry has vieIdwResourceName of 'name'", entryNode.viewIdResourceName, equalTo("name"))
         assertThat("Entry value is text", entryNode.text.toString(), equalTo("Julie"))
         if (Build.VERSION.SDK_INT >= 19) {
             assertThat("Entry hint is label",
