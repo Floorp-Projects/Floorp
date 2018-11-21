@@ -63,7 +63,7 @@ HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
     case StyleAppearance::SpinnerUpbutton:
     case StyleAppearance::SpinnerDownbutton:
     case StyleAppearance::SpinnerTextfield:
-    case StyleAppearance::TextfieldMultiline:
+    case StyleAppearance::Textarea:
     case StyleAppearance::Menupopup:
     case StyleAppearance::MozGtkInfoBar:
       result.top = 1;
@@ -402,7 +402,7 @@ HeadlessThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::ScrollbarthumbHorizontal:
     case StyleAppearance::ScrollbarthumbVertical:
     case StyleAppearance::Textfield:
-    case StyleAppearance::TextfieldMultiline:
+    case StyleAppearance::Textarea:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistText:
     case StyleAppearance::MenulistTextfield:
