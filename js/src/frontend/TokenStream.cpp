@@ -1414,19 +1414,79 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::currentLineAndColumn(uint32_t* line, 
     anyChars.srcCoords.lineNumAndColumnIndex(offset, line, column);
 }
 
+template<>
+inline void
+SourceUnits<char16_t>::computeWindowOffsetAndLength(const char16_t* encodedWindow,
+                                                    size_t encodedTokenOffset,
+                                                    size_t* utf16TokenOffset,
+                                                    size_t encodedWindowLength,
+                                                    size_t* utf16WindowLength)
+{
+    MOZ_ASSERT_UNREACHABLE("shouldn't need to recompute for UTF-16");
+}
+
+template<>
+inline void
+SourceUnits<Utf8Unit>::computeWindowOffsetAndLength(const Utf8Unit* encodedWindow,
+                                                    size_t encodedTokenOffset,
+                                                    size_t* utf16TokenOffset,
+                                                    size_t encodedWindowLength,
+                                                    size_t* utf16WindowLength)
+{
+    MOZ_ASSERT(encodedTokenOffset <= encodedWindowLength,
+               "token offset must be within the window, and the two lambda "
+               "calls below presume this ordering of values");
+
+    const Utf8Unit* const encodedWindowEnd = encodedWindow + encodedWindowLength;
+
+    size_t i = 0;
+    auto ComputeUtf16Count = [&i, &encodedWindow](const Utf8Unit* limit) {
+        while (encodedWindow < limit) {
+            Utf8Unit lead = *encodedWindow++;
+            if (MOZ_LIKELY(IsAscii(lead))) {
+                // ASCII contributes a single UTF-16 code unit.
+                i++;
+                continue;
+            }
+
+            Maybe<char32_t> cp = DecodeOneUtf8CodePoint(lead, &encodedWindow, limit);
+            MOZ_ASSERT(cp.isSome(),
+                       "computed window should only contain valid UTF-8");
+
+            i += unicode::IsSupplementary(cp.value()) ? 2 : 1;
+        }
+
+        return i;
+    };
+
+    // Compute the token offset from |i == 0| and the initial |encodedWindow|.
+    const Utf8Unit* token = encodedWindow + encodedTokenOffset;
+    MOZ_ASSERT(token <= encodedWindowEnd);
+    *utf16TokenOffset = ComputeUtf16Count(token);
+
+    // Compute the window length, picking up from |i| and |encodedWindow| that,
+    // in general, were modified just above.
+    *utf16WindowLength = ComputeUtf16Count(encodedWindowEnd);
+}
+
 template<typename Unit>
 bool
 TokenStreamCharsBase<Unit>::addLineOfContext(ErrorMetadata* err, uint32_t offset)
 {
-    size_t windowStart = sourceUnits.findWindowStart(offset);
-    size_t windowEnd = sourceUnits.findWindowEnd(offset);
+    // Rename the variable to make meaning clearer: an offset into source units
+    // in Unit encoding.
+    size_t encodedOffset = offset;
 
-    size_t windowLength = windowEnd - windowStart;
-    MOZ_ASSERT(windowLength <= SourceUnits::WindowRadius * 2);
+    // These are also offsets into source units in Unit encoding.
+    size_t encodedWindowStart = sourceUnits.findWindowStart(encodedOffset);
+    size_t encodedWindowEnd = sourceUnits.findWindowEnd(encodedOffset);
+
+    size_t encodedWindowLength = encodedWindowEnd - encodedWindowStart;
+    MOZ_ASSERT(encodedWindowLength <= SourceUnits::WindowRadius * 2);
 
     // Don't add a useless "line" of context when the window ends up empty
     // because of an invalid encoding at the start of a line.
-    if (windowLength == 0) {
+    if (encodedWindowLength == 0) {
         MOZ_ASSERT(err->lineOfContext == nullptr,
                    "ErrorMetadata::lineOfContext must be null so we don't "
                    "have to set the lineLength/tokenOffset fields");
@@ -1439,10 +1499,14 @@ TokenStreamCharsBase<Unit>::addLineOfContext(ErrorMetadata* err, uint32_t offset
     // Thus we must clear |this->charBuffer| of prior work.
     this->charBuffer.clear();
 
-    const Unit* start = sourceUnits.codeUnitPtrAt(windowStart);
-    if (!fillCharBufferFromSourceNormalizingAsciiLineBreaks(start, start + windowLength)) {
+    const Unit* encodedWindow = sourceUnits.codeUnitPtrAt(encodedWindowStart);
+    if (!fillCharBufferFromSourceNormalizingAsciiLineBreaks(encodedWindow,
+                                                            encodedWindow + encodedWindowLength))
+    {
         return false;
     }
+
+    size_t utf16WindowLength = this->charBuffer.length();
 
     // The windowed string is null-terminated.
     if (!this->charBuffer.append('\0')) {
@@ -1454,8 +1518,47 @@ TokenStreamCharsBase<Unit>::addLineOfContext(ErrorMetadata* err, uint32_t offset
         return false;
     }
 
-    err->lineLength = windowLength;
-    err->tokenOffset = offset - windowStart;
+    size_t encodedTokenOffset = encodedOffset - encodedWindowStart;
+
+    MOZ_ASSERT(encodedTokenOffset <= encodedWindowLength,
+               "token offset must be inside the window");
+
+    // The length in UTF-8 code units of a code point is always greater than or
+    // equal to the same code point's length in UTF-16 code points.  ASCII code
+    // points are 1 unit in either encoding.  Code points in [U+0080, U+10000)
+    // are 2-3 UTF-8 code units to 1 UTF-16 code unit.  And code points in
+    // [U+10000, U+10FFFF] are 4 UTF-8 code units to 2 UTF-16 code units.
+    //
+    // Therefore, if encoded window length equals the length in UTF-16 (this is
+    // always the case for Unit=char16_t), the UTF-16 offsets are exactly the
+    // encoded offsets.  Otherwise we must convert offset/length from UTF-8 to
+    // UTF-16.
+    if (std::is_same<Unit, char16_t>::value) {
+        MOZ_ASSERT(utf16WindowLength == encodedWindowLength,
+                   "UTF-16 to UTF-16 shouldn't change window length");
+        err->tokenOffset = encodedTokenOffset;
+        err->lineLength = encodedWindowLength;
+    } else {
+        MOZ_ASSERT((std::is_same<Unit, Utf8Unit>::value),
+                   "should only see UTF-8 here");
+
+        bool simple = utf16WindowLength == encodedWindowLength;
+        MOZ_ASSERT(std::all_of(encodedWindow, encodedWindow + encodedWindowLength,
+                               IsAscii<Unit>) ==
+                   simple,
+                   "equal window lengths in UTF-8 should correspond only to "
+                   "wholly-ASCII text");
+
+        if (simple) {
+            err->tokenOffset = encodedTokenOffset;
+            err->lineLength = encodedWindowLength;
+        } else {
+            sourceUnits.computeWindowOffsetAndLength(encodedWindow,
+                                                     encodedTokenOffset, &err->tokenOffset,
+                                                     encodedWindowLength, &err->lineLength);
+        }
+    }
+
     return true;
 }
 
@@ -3188,7 +3291,7 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(char untilCh
                 // LineContinuation represents no code points, so don't append
                 // in this case.
                 if (codePoint != '\n') {
-                    if (!this->charBuffer.append(unit)) {
+                    if (!appendCodePointToCharBuffer(AssertedCast<char32_t>(codePoint))) {
                         return false;
                     }
                 }

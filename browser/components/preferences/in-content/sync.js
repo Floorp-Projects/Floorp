@@ -308,7 +308,8 @@ var gSyncPane = {
     if (state.displayName) {
       fxaLoginStatus.setAttribute("hasName", true);
       displayNameLabel.hidden = false;
-      displayNameLabel.textContent = state.displayName;
+      document.getElementById("fxaDisplayNameHeading").textContent =
+        state.displayName;
     } else {
       fxaLoginStatus.removeAttribute("hasName");
     }
