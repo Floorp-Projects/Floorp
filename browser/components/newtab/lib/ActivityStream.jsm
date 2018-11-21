@@ -211,26 +211,7 @@ const PREFS_CONFIG = new Map([
       enabled: true,
     }),
   }],
-  ["asrouter.providers.snippets", {
-    title: "Configuration for snippets provider",
-    value: JSON.stringify({
-      id: "snippets",
-      type: "remote",
-      url: "https://snippets.cdn.mozilla.net/%STARTPAGE_VERSION%/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/",
-      updateCycleInMs: ONE_HOUR_IN_MS * 4,
-      enabled: false,
-    }),
-  }],
-  ["asrouter.providers.cfr", {
-    title: "Configuration for CFR provider",
-    value: JSON.stringify({
-      id: "cfr",
-      type: "local",
-      localProvider: "CFRMessageProvider",
-      enabled: IS_NIGHTLY_OR_UNBRANDED_BUILD,
-      cohort: IS_NIGHTLY_OR_UNBRANDED_BUILD ? "nightly" : "",
-    }),
-  }],
+  // See browser/app/profile/firefox.js for other ASR preferences. They must be defined there to enable roll-outs.
 ]);
 
 // Array of each feed's FEEDS_CONFIG factory and values to add to PREFS_CONFIG
