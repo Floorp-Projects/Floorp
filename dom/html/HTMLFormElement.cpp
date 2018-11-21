@@ -751,7 +751,7 @@ HTMLFormElement::SubmitSubmission(HTMLFormSubmission* aFormSubmission)
     nsAutoString target;
     aFormSubmission->GetTarget(target);
     rv = linkHandler->OnLinkClickSync(this, actionURI,
-                                      target.get(),
+                                      target,
                                       VoidString(),
                                       postDataStream,
                                       nullptr, false,

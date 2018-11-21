@@ -5543,7 +5543,7 @@ nsContentUtils::TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
   }
 
   if (!aClick) {
-    handler->OnOverLink(aContent, aLinkURI, aTargetSpec.get());
+    handler->OnOverLink(aContent, aLinkURI, aTargetSpec);
     return;
   }
 
@@ -5576,7 +5576,7 @@ nsContentUtils::TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
     }
 
     handler->OnLinkClick(aContent, aLinkURI,
-                         fileName.IsVoid() ? aTargetSpec.get() : EmptyString().get(),
+                         fileName.IsVoid() ? aTargetSpec : EmptyString(),
                          fileName, nullptr, nullptr, EventStateManager::IsHandlingUserInput(),
                          aIsTrusted, aContent->NodePrincipal());
   }

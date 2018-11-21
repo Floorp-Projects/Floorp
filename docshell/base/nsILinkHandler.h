@@ -42,7 +42,7 @@ public:
    */
   NS_IMETHOD OnLinkClick(nsIContent* aContent,
                          nsIURI* aURI,
-                         const char16_t* aTargetSpec,
+                         const nsAString& aTargetSpec,
                          const nsAString& aFileName,
                          nsIInputStream* aPostDataStream,
                          nsIInputStream* aHeadersDataStream,
@@ -71,7 +71,7 @@ public:
    */
   NS_IMETHOD OnLinkClickSync(nsIContent* aContent,
                              nsIURI* aURI,
-                             const char16_t* aTargetSpec,
+                             const nsAString& aTargetSpec,
                              const nsAString& aFileName,
                              nsIInputStream* aPostDataStream = 0,
                              nsIInputStream* aHeadersDataStream = 0,
@@ -91,7 +91,7 @@ public:
    */
   NS_IMETHOD OnOverLink(nsIContent* aContent,
                         nsIURI* aURLSpec,
-                        const char16_t* aTargetSpec) = 0;
+                        const nsAString& aTargetSpec) = 0;
 
   /**
    * Process the mouse leaving a link.
