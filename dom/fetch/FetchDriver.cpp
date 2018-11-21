@@ -1477,7 +1477,9 @@ FetchDriver::SetRequestHeaders(nsIHttpChannel* aChannel) const
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  if (mRequest->ForceOriginHeader()) {
+  nsAutoCString method;
+  mRequest->GetMethod(method);
+  if (!method.EqualsLiteral("GET") && !method.EqualsLiteral("HEAD")) {
     nsAutoString origin;
     if (NS_SUCCEEDED(nsContentUtils::GetUTFOrigin(mPrincipal, origin))) {
       DebugOnly<nsresult> rv =
