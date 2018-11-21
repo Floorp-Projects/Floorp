@@ -776,6 +776,59 @@ add_task(async function test_field_validation_dom_popup() {
   form.remove();
 });
 
+add_task(async function test_hiddenMailingAddressFieldsCleared() {
+  let form = new AddressForm();
+  form.dataset.updateButtonLabel = "Update";
+  await form.promiseReady;
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  let address1 = deepClone(PTU.Addresses.TimBL);
+  address1.guid = "9864798564";
+
+  await form.requestStore.setState({
+    page: {
+      id: "address-page",
+    },
+    "address-page": {
+      guid: address1.guid,
+      selectedStateKey: ["selectedShippingAddress"],
+    },
+    savedAddresses: {
+      [address1.guid]: deepClone(address1),
+    },
+  });
+  await asyncElementRendered();
+
+  info("Change the country to hide address-level1");
+  fillField(form.form.querySelector("#country"), "DE");
+
+  let expectedRecord = Object.assign({}, address1, {
+    country: "DE",
+    // address-level1 & 3 aren't used for Germany so should be blanked.
+    "address-level1": "",
+    "address-level3": "",
+  });
+  delete expectedRecord.guid;
+  // The following were not shown so shouldn't be part of the message:
+  delete expectedRecord.email;
+
+  let messagePromise = promiseContentToChromeMessage("updateAutofillRecord");
+  form.saveButton.scrollIntoView();
+  synthesizeMouseAtCenter(form.saveButton, {});
+
+  let details = await messagePromise;
+  delete details.messageID;
+  is(details.collectionName, "addresses", "Check collectionName");
+  isDeeply(details, {
+    collectionName: "addresses",
+    guid: address1.guid,
+    messageType: "updateAutofillRecord",
+    record: expectedRecord,
+  }, "Check update event details for the message to chrome");
+
+  form.remove();
+});
 </script>
 
 </body>

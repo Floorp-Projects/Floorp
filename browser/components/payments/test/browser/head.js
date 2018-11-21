@@ -548,9 +548,12 @@ async function verifyCardNetwork(frame, aOptions = {}) {
   }, {options: aOptions});
 }
 
-async function submitAddressForm(frame, aAddress, aOptions = {}) {
+async function submitAddressForm(frame, aAddress, aOptions = {
+  nextPageId: "payment-summary",
+}) {
   await spawnPaymentDialogTask(frame, async (args) => {
     let {options = {}} = args;
+    let nextPageId = options.nextPageId || "payment-summary";
     let {
       PaymentTestUtils,
     } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
@@ -561,8 +564,8 @@ async function submitAddressForm(frame, aAddress, aOptions = {}) {
     content.document.querySelector("address-form button:last-of-type").click();
 
     let currState = await PaymentTestUtils.DialogContentUtils.waitForState(content, (state) => {
-      return state.page.id == "payment-summary";
-    }, "submitAddressForm: Switched back to payment-summary");
+      return state.page.id == nextPageId;
+    }, `submitAddressForm: Switched back to ${nextPageId}`);
 
     let savedCount = Object.keys(currState.savedAddresses).length;
     let tempCount = Object.keys(currState.tempAddresses).length;
@@ -617,8 +620,8 @@ async function navigateToAddCardPage(frame, aOptions = {
 
     // wait for card page
     await PaymentTestUtils.DialogContentUtils.waitForState(content, (state) => {
-      return state.page.id == "basic-card-page" && !state["basic-card-page"].guid;
-    }, "Check add page state");
+      return state.page.id == "basic-card-page";
+    }, "Check add/edit page state");
   }, aOptions);
 }
 
