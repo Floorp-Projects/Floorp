@@ -821,3 +821,85 @@ function removeSheet(window, url, type = "agent") {
   }
 }
 exports.removeSheet = removeSheet;
+
+/**
+ * Get the untransformed coordinates for a node.
+ *
+ * @param  {DOMNode} node
+ *         The node for which the DOMQuad is to be returned.
+ * @param  {String} region
+ *         The box model region to return: "content", "padding", "border" or
+ *         "margin".
+ * @return {DOMQuad}
+ *         A DOMQuad representation of the node.
+ */
+function getUntransformedQuad(node, region = "border") {
+  // Get the inverse transformation matrix for the node.
+  const matrix = node.getTransformToViewport();
+  const inverse = matrix.inverse();
+  const win = node.ownerGlobal;
+
+  // Get the adjusted quads for the node (including scroll offsets).
+  const quads = getAdjustedQuads(win, node, region, {
+    ignoreZoom: true,
+  });
+
+  // Create DOMPoints from the transformed node position.
+  const p1 = new DOMPoint(quads[0].p1.x, quads[0].p1.y);
+  const p2 = new DOMPoint(quads[0].p2.x, quads[0].p2.y);
+  const p3 = new DOMPoint(quads[0].p3.x, quads[0].p3.y);
+  const p4 = new DOMPoint(quads[0].p4.x, quads[0].p4.y);
+
+  // Apply the inverse transformation matrix to the points to get the
+  // untransformed points.
+  const ip1 = inverse.transformPoint(p1);
+  const ip2 = inverse.transformPoint(p2);
+  const ip3 = inverse.transformPoint(p3);
+  const ip4 = inverse.transformPoint(p4);
+
+  // Save the results in a DOMQuad.
+  const quad = new DOMQuad(
+    { x: ip1.x, y: ip1.y },
+    { x: ip2.x, y: ip2.y },
+    { x: ip3.x, y: ip3.y },
+    { x: ip4.x, y: ip4.y }
+  );
+
+  // Remove the border offsets because we include them when calculating
+  // offsets in the while loop.
+  const style = win.getComputedStyle(node);
+  const leftAdjustment = parseInt(style.borderLeftWidth, 10) || 0;
+  const topAdjustment = parseInt(style.borderTopWidth, 10) || 0;
+
+  quad.p1.x -= leftAdjustment;
+  quad.p2.x -= leftAdjustment;
+  quad.p3.x -= leftAdjustment;
+  quad.p4.x -= leftAdjustment;
+  quad.p1.y -= topAdjustment;
+  quad.p2.y -= topAdjustment;
+  quad.p3.y -= topAdjustment;
+  quad.p4.y -= topAdjustment;
+
+  // Calculate offsets.
+  while (node) {
+    const nodeStyle = win.getComputedStyle(node);
+    const borderLeftWidth = parseInt(nodeStyle.borderLeftWidth, 10) || 0;
+    const borderTopWidth = parseInt(nodeStyle.borderTopWidth, 10) || 0;
+    const leftOffset = node.offsetLeft - node.scrollLeft + borderLeftWidth;
+    const topOffset = node.offsetTop - node.scrollTop + borderTopWidth;
+
+    quad.p1.x += leftOffset;
+    quad.p2.x += leftOffset;
+    quad.p3.x += leftOffset;
+    quad.p4.x += leftOffset;
+    quad.p1.y += topOffset;
+    quad.p2.y += topOffset;
+    quad.p3.y += topOffset;
+    quad.p4.y += topOffset;
+
+    node = node.offsetParent;
+  }
+
+  return quad;
+}
+exports.getUntransformedQuad = getUntransformedQuad;

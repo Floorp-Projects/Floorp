@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
   UrlbarValueFormatter: "resource:///modules/UrlbarValueFormatter.jsm",
   UrlbarView: "resource:///modules/UrlbarView.jsm",
+  ExtensionSearchHandler: "resource://gre/modules/ExtensionSearchHandler.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "ClipboardHelper",
@@ -272,20 +273,19 @@ class UrlbarInput {
       postData: null,
       allowInheritPrincipal: false,
     };
-    let url = result.url;
 
     switch (result.type) {
       case UrlbarUtils.MATCH_TYPE.TAB_SWITCH: {
         // TODO: Implement handleRevert or equivalent on the input.
         // this.input.handleRevert();
-        let prevTab = this.browserWindow.gBrowser.selectedTab;
+        let prevTab = this.window.gBrowser.selectedTab;
         let loadOpts = {
           adoptIntoActiveWindow: UrlbarPrefs.get("switchTabs.adoptIntoActiveWindow"),
         };
 
-        if (this.browserWindow.switchToTabHavingURI(url, false, loadOpts) &&
+        if (this.window.switchToTabHavingURI(result.payload.url, false, loadOpts) &&
             prevTab.isEmpty) {
-          this.browserWindow.gBrowser.removeTab(prevTab);
+          this.window.gBrowser.removeTab(prevTab);
         }
         return;
 
@@ -295,11 +295,19 @@ class UrlbarInput {
         // might otherwise affect where we open - we always want to
         // open in the current tab.
         // where = "current";
-
       }
+      case UrlbarUtils.MATCH_TYPE.SEARCH:
+        // TODO: port _parseAndRecordSearchEngineLoad.
+        return;
+      case UrlbarUtils.MATCH_TYPE.OMNIBOX:
+        // Give the extension control of handling the command.
+        ExtensionSearchHandler.handleInputEntered(result.payload.keyword,
+                                                  result.payload.content,
+                                                  where);
+        return;
     }
 
-    this._loadURL(url, where, openParams);
+    this._loadURL(result.payload.url, where, openParams);
   }
 
   /**
@@ -308,7 +316,10 @@ class UrlbarInput {
    * @param {UrlbarMatch} result The result that was selected.
    */
   setValueFromResult(result) {
-    let val = result.url;
+    // FIXME: This is wrong, not all the matches have a url. For example
+    // extension matches will call into the extension code rather than loading
+    // a url. That means we likely can't use the url as our value.
+    let val = result.payload.url;
     let uri;
     try {
       uri = Services.io.newURI(val);
@@ -413,6 +424,8 @@ class UrlbarInput {
     }
 
     // If the value was filled by a search suggestion, just return it.
+    // FIXME: This is wrong, the new system doesn't return action urls, it
+    // should instead build this based on MATCH_TYPE.
     let action = this._parseActionUrl(this.value);
     if (action && action.type == "searchengine") {
       return selectedVal;
@@ -511,12 +524,12 @@ class UrlbarInput {
    *   If the principal may be inherited
    */
   _loadURL(url, openUILinkWhere, params) {
-    let browser = this.browserWindow.gBrowser.selectedBrowser;
+    let browser = this.window.gBrowser.selectedBrowser;
 
     // TODO: These should probably be set by the input field.
     // this.value = url;
     // browser.userTypedValue = url;
-    if (this.browserWindow.gInitialPages.includes(url)) {
+    if (this.window.gInitialPages.includes(url)) {
       browser.initialPageLoadedFromURLBar = url;
     }
     try {
@@ -535,7 +548,7 @@ class UrlbarInput {
       params.allowPinnedTabHostChange = true;
       params.allowPopups = url.startsWith("javascript:");
     } else {
-      params.initiatingDoc = this.browserWindow.document;
+      params.initiatingDoc = this.window.document;
     }
 
     // Focus the content area before triggering loads, since if the load
@@ -549,7 +562,7 @@ class UrlbarInput {
     }
 
     try {
-      this.browserWindow.openTrustedLinkIn(url, openUILinkWhere, params);
+      this.window.openTrustedLinkIn(url, openUILinkWhere, params);
     } catch (ex) {
       // This load can throw an exception in certain cases, which means
       // we'll want to replace the URL with the loaded URL:
@@ -583,7 +596,7 @@ class UrlbarInput {
       // pressed, open in current tab to allow ctrl-enter to canonize URL.
       where = "current";
     } else {
-      where = this.browserWindow.whereToOpenLink(event, false, false);
+      where = this.window.whereToOpenLink(event, false, false);
     }
     if (this.openInTab) {
       if (where == "current") {
@@ -595,7 +608,7 @@ class UrlbarInput {
     }
     if (where == "tab" &&
         reuseEmpty &&
-        this.browserWindow.gBrowser.selectedTab.isEmpty) {
+        this.window.gBrowser.selectedTab.isEmpty) {
       where = "current";
     }
     return where;

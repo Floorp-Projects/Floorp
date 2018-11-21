@@ -704,6 +704,8 @@ void AudioBufferSourceNode::Start(double aWhen, double aOffset,
   if (aWhen > 0.0) {
     ns->SetDoubleParameter(START, aWhen);
   }
+
+  Context()->NotifyScheduledSourceNodeStarted();
 }
 
 void AudioBufferSourceNode::Start(double aWhen, ErrorResult& aRv) {

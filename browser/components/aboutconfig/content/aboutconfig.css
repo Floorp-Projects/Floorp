@@ -32,7 +32,7 @@
 }
 
 #prefs > tr:hover {
-  background-color: var(--in-content-box-background-hover);
+  background-color: var(--in-content-item-hover);
 }
 
 #prefs > tr.has-user-value {

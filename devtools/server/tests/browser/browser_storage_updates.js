@@ -180,7 +180,7 @@ const TESTS = [
 
 add_task(async function() {
   const target = await addTabTarget(MAIN_DOMAIN + "storage-updates.html");
-  const front = target.getFront("storage");
+  const front = await target.getFront("storage");
 
   await front.listStores();
 

@@ -17,7 +17,7 @@ Bug 1007200 - Create a framerate actor
 
 window.onload = async function() {
   const target = await getTargetForSelectedTab();
-  const front = target.getFront("framerate");
+  const front = await target.getFront("framerate");
 
   const rawData = await front.stopRecording();
   ok(rawData, "There should be a recording available.");

@@ -62,9 +62,24 @@ var UrlbarUtils = {
 
   // Defines UrlbarMatch types.
   MATCH_TYPE: {
-    // Indicates an open tab.
-    // The payload is: { url, userContextId }
+    // An open tab.
+    // Payload: { icon, url, userContextId }
     TAB_SWITCH: 1,
+    // A search suggestion or engine.
+    // Payload: { icon, suggestion, keyword, query }
+    SEARCH: 2,
+    // A common url/title tuple, may be a bookmark with tags.
+    // Payload: { icon, url, title, tags }
+    URL: 3,
+    // A bookmark keyword.
+    // Payload: { icon, url, keyword, postData }
+    KEYWORD: 4,
+    // A WebExtension Omnibox match.
+    // Payload: { icon, keyword, title, content }
+    OMNIBOX: 5,
+    // A tab from another synced device.
+    // Payload: { url, icon, device, title }
+    REMOTE_TAB: 6,
   },
 
   // This defines the source of matches returned by a provider. Each provider
@@ -74,7 +89,7 @@ var UrlbarUtils = {
   MATCH_SOURCE: {
     BOOKMARKS: 1,
     HISTORY: 2,
-    SEARCHENGINE: 3,
+    SEARCH: 3,
     TABS: 4,
     OTHER_LOCAL: 5,
     OTHER_NETWORK: 6,

@@ -24,13 +24,13 @@ add_task(async function() {
     "The built-in profiler module should still be active.");
 
   const target1 = await addTabTarget(MAIN_DOMAIN + "doc_perf.html");
-  const firstFront = target1.getFront("performance");
+  const firstFront = await target1.getFront("performance");
   await firstFront.connect();
 
   await firstFront.startRecording();
 
   const target2 = await addTabTarget(MAIN_DOMAIN + "doc_perf.html");
-  const secondFront = target2.getFront("performance");
+  const secondFront = await target2.getFront("performance");
   await secondFront.connect();
 
   await secondFront.destroy();

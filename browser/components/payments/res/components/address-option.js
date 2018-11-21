@@ -31,6 +31,7 @@ export default class AddressOption extends ObservedPropertiesMixin(RichOption) {
     return [
       "address-level1",
       "address-level2",
+      "address-level3",
       "country",
       "email",
       "guid",

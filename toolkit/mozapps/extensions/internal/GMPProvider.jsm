@@ -54,7 +54,7 @@ const GMP_PLUGINS = [
     id:              WIDEVINE_ID,
     name:            "widevine_description",
     // Describe the purpose of both CDMs in the same way.
-    description:     "cdm_description",
+    description:     "cdm_description2",
     licenseURL:      "https://www.google.com/policies/privacy/",
     homepageURL:     "https://www.widevine.com/",
     isEME:           true,

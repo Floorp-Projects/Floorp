@@ -15,7 +15,7 @@ add_task(async function() {
   await SpecialPowers.pushPrefEnv({"set": [["privacy.reduceTimerPrecision", false]]});
   const target = await addTabTarget(MAIN_DOMAIN + "doc_perf.html");
 
-  const front = target.getFront("performance");
+  const front = await target.getFront("performance");
   await front.connect();
 
   // Perform the first recording...
