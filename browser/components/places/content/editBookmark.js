@@ -7,6 +7,9 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const MAX_FOLDER_ITEM_IN_MENU_LIST = 5;
 
 var gEditItemOverlay = {
+  // Array of PlacesTransactions accumulated by internal changes. It can be used
+  // to wait for completion.
+  transactionPromises: null,
   _observersAdded: false,
   _staticFoldersListBuilt: false,
 
@@ -195,6 +198,8 @@ var gEditItemOverlay = {
     // trying to init it again, or we could end up leaking due to observers.
     if (this.initialized)
       this.uninitPanel(false);
+
+    this.transactionPromises = [];
 
     let { parentGuid, isItem, isURI,
           isBookmark, bulkTagging, uris,
@@ -464,6 +469,7 @@ var gEditItemOverlay = {
 
     this._setPaneInfo(null);
     this._firstEditedField = "";
+    this.transactionPromises = [];
   },
 
   get selectedFolderGuid() {
@@ -511,27 +517,38 @@ var gEditItemOverlay = {
   // Adds and removes tags for one or more uris.
   _setTagsFromTagsInputField(aCurrentTags, aURIs) {
     let { removedTags, newTags } = this._getTagsChanges(aCurrentTags);
-    if (removedTags.length + newTags.length == 0)
+    if (removedTags.length + newTags.length == 0) {
       return false;
+    }
 
-    let setTags = async function() {
+    let setTags = async () => {
+      let promises = [];
       if (removedTags.length > 0) {
-        await PlacesTransactions.Untag({ urls: aURIs, tags: removedTags })
-                                .transact();
+        let promise = PlacesTransactions.Untag({ urls: aURIs, tags: removedTags })
+                                        .transact().catch(Cu.reportError);
+        this.transactionPromises.push(promise);
+        promises.push(promise);
       }
       if (newTags.length > 0) {
-        await PlacesTransactions.Tag({ urls: aURIs, tags: newTags })
-                                .transact();
+        let promise = PlacesTransactions.Tag({ urls: aURIs, tags: newTags })
+                                        .transact().catch(Cu.reportError);
+        this.transactionPromises.push(promise);
+        promises.push(promise);
+      }
+      // Don't use Promise.all because we want these to be executed in order.
+      for (let promise of promises) {
+        await promise;
       }
     };
 
     // Only in the library info-pane it's safe (and necessary) to batch these.
     // TODO bug 1093030: cleanup this mess when the bookmarksProperties dialog
     // and star UI code don't "run a batch in the background".
-    if (window.document.documentElement.id == "places")
-      PlacesTransactions.batch(setTags).catch(Cu.reportError);
-    else
-      setTags().catch(Cu.reportError);
+    if (window.document.documentElement.id == "places") {
+      PlacesTransactions.batch(setTags);
+    } else {
+      setTags();
+    }
     return true;
   },
 
@@ -597,13 +614,18 @@ var gEditItemOverlay = {
       if (title == oldTag) {
         this._paneInfo.title = tag;
       }
-      await PlacesTransactions.RenameTag({ oldTag, tag }).transact();
+      let promise = PlacesTransactions.RenameTag({ oldTag, tag }).transact();
+      this.transactionPromises.push(promise.catch(Cu.reportError));
+      await promise;
       return;
     }
 
     this._mayUpdateFirstEditField("namePicker");
-    await PlacesTransactions.EditTitle({ guid: this._paneInfo.itemGuid,
-                                         title: this._namePicker.value }).transact();
+    let promise = PlacesTransactions.EditTitle({ guid: this._paneInfo.itemGuid,
+                                                 title: this._namePicker.value })
+                                    .transact();
+    this.transactionPromises.push(promise.catch(Cu.reportError));
+    await promise;
   },
 
   onLocationFieldChange() {
@@ -622,8 +644,8 @@ var gEditItemOverlay = {
       return;
 
     let guid = this._paneInfo.itemGuid;
-    PlacesTransactions.EditUrl({ guid, url: newURI })
-                      .transact().catch(Cu.reportError);
+    this.transactionPromises.push(PlacesTransactions.EditUrl({ guid, url: newURI })
+                                                    .transact().catch(Cu.reportError));
   },
 
   onKeywordFieldChange() {
@@ -634,8 +656,8 @@ var gEditItemOverlay = {
     let keyword = this._keyword = this._keywordField.value;
     let postData = this._paneInfo.postData;
     let guid = this._paneInfo.itemGuid;
-    PlacesTransactions.EditKeyword({ guid, keyword, postData, oldKeyword })
-                      .transact().catch(Cu.reportError);
+    this.transactionPromises.push(PlacesTransactions.EditKeyword({ guid, keyword, postData, oldKeyword })
+                                                    .transact().catch(Cu.reportError));
   },
 
   toggleFolderTreeVisibility() {
@@ -717,10 +739,12 @@ var gEditItemOverlay = {
     let containerGuid = this._folderMenuList.selectedItem.folderGuid;
     if (this._paneInfo.parentGuid != containerGuid &&
         this._paneInfo.itemGuid != containerGuid) {
-      await PlacesTransactions.Move({
+      let promise = PlacesTransactions.Move({
         guid: this._paneInfo.itemGuid,
         newParentGuid: containerGuid,
       }).transact();
+      this.transactionPromises.push(promise.catch(Cu.reportError));
+      await promise;
 
       // Auto-show the bookmarks toolbar when adding / moving an item there.
       if (containerGuid == PlacesUtils.bookmarks.toolbarGuid) {
@@ -849,11 +873,13 @@ var gEditItemOverlay = {
 
     // XXXmano: add a separate "New Folder" string at some point...
     let title = this._element("newFolderButton").label;
-    let guid = await PlacesTransactions.NewFolder({
+    let promise = PlacesTransactions.NewFolder({
       parentGuid: ip.guid,
       title,
       index: await ip.getIndex(),
-    }).transact().catch(Cu.reportError);
+    }).transact();
+    this.transactionPromises.push(promise.catch(Cu.reportError));
+    let guid = await promise;
 
     this._folderTree.focus();
     this._folderTree.selectItems([ip.guid]);

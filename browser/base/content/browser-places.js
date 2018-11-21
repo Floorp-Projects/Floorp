@@ -286,7 +286,10 @@ var StarUI = {
       return;
     this._batchBlockingDeferred = PromiseUtils.defer();
     PlacesTransactions.batch(async () => {
+      // First await for the batch to be concluded.
       await this._batchBlockingDeferred.promise;
+      // And then for any pending promises added in the meanwhile.
+      await Promise.all(gEditItemOverlay.transactionPromises);
     });
     this._batching = true;
   },
