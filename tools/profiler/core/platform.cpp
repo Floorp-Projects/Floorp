@@ -2530,6 +2530,7 @@ locked_register_thread(PSLockRef aLock, const char* aName, void* aStackTop)
 
   if (ActivePS::Exists(aLock) &&
       ActivePS::ShouldProfileThread(aLock, info)) {
+    registeredThread->RacyRegisteredThread().SetIsBeingProfiled(true);
     nsCOMPtr<nsIEventTarget> eventTarget = registeredThread->GetEventTarget();
     ProfiledThreadData* profiledThreadData =
       ActivePS::AddLiveProfiledThread(aLock, registeredThread.get(),
@@ -3166,6 +3167,7 @@ locked_profiler_start(PSLockRef aLock, uint32_t aCapacity, double aInterval,
     RefPtr<ThreadInfo> info = registeredThread->Info();
 
     if (ActivePS::ShouldProfileThread(aLock, info)) {
+      registeredThread->RacyRegisteredThread().SetIsBeingProfiled(true);
       nsCOMPtr<nsIEventTarget> eventTarget = registeredThread->GetEventTarget();
       ProfiledThreadData* profiledThreadData =
         ActivePS::AddLiveProfiledThread(aLock, registeredThread.get(),
@@ -3333,6 +3335,7 @@ locked_profiler_stop(PSLockRef aLock)
     ActivePS::LiveProfiledThreads(aLock);
   for (auto& thread : liveProfiledThreads) {
     RegisteredThread* registeredThread = thread.mRegisteredThread;
+    registeredThread->RacyRegisteredThread().SetIsBeingProfiled(false);
     if (ActivePS::FeatureJS(aLock)) {
       registeredThread->StopJSSampling();
       RefPtr<ThreadInfo> info = registeredThread->Info();
