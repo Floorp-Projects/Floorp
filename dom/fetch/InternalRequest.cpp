@@ -31,7 +31,6 @@ InternalRequest::GetRequestConstructorCopy(nsIGlobalObject* aGlobal, ErrorResult
   copy->SetUnsafeRequest();
   copy->mBodyStream = mBodyStream;
   copy->mBodyLength = mBodyLength;
-  copy->mForceOriginHeader = true;
   // The "client" is not stored in our implementation. Fetch API users should
   // use the appropriate window/document/principal and other Gecko security
   // mechanisms as appropriate.
@@ -95,7 +94,6 @@ InternalRequest::InternalRequest(const nsACString& aURL,
   , mRedirectMode(RequestRedirect::Follow)
   , mMozErrors(false)
   , mAuthenticationFlag(false)
-  , mForceOriginHeader(false)
   , mPreserveContentCodings(false)
     // FIXME(nsm): This should be false by default, but will lead to the
     // algorithm never loading data: URLs right now. See Bug 1018872 about
@@ -137,7 +135,6 @@ InternalRequest::InternalRequest(const nsACString& aURL,
   , mIntegrity(aIntegrity)
   , mMozErrors(false)
   , mAuthenticationFlag(false)
-  , mForceOriginHeader(false)
   , mPreserveContentCodings(false)
     // FIXME See the above comment in the default constructor.
   , mSameOriginDataURL(true)
@@ -167,7 +164,6 @@ InternalRequest::InternalRequest(const InternalRequest& aOther)
   , mMozErrors(aOther.mMozErrors)
   , mFragment(aOther.mFragment)
   , mAuthenticationFlag(aOther.mAuthenticationFlag)
-  , mForceOriginHeader(aOther.mForceOriginHeader)
   , mPreserveContentCodings(aOther.mPreserveContentCodings)
   , mSameOriginDataURL(aOther.mSameOriginDataURL)
   , mSkipServiceWorker(aOther.mSkipServiceWorker)
