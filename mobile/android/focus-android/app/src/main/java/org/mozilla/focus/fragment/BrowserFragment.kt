@@ -1434,7 +1434,9 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
             val menu = menuWeakReference!!.get()
             menu?.updateLoading(loading)
 
-            hideFindInPage()
+            if (findInPageView?.visibility == View.VISIBLE) {
+                hideFindInPage()
+            }
         }
 
         override fun onUrlChanged(session: Session, url: String) {
