@@ -53,6 +53,7 @@ import org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.SessionFinder
 import org.mozilla.geckoview.WebRequestError
+import org.mozilla.geckoview.WebRequestError.ERROR_MALFORMED_URI
 import org.mozilla.geckoview.createMockedWebResponseInfo
 import org.robolectric.RobolectricTestRunner
 
@@ -758,6 +759,20 @@ class GeckoEngineSessionTest {
             assertTrue(value!!.contains("data:text/html;base64,"))
             GeckoResult.fromValue(null)
         }
+    }
+
+    @Test
+    fun onLoadErrorCallsInterceptorWithInvalidUri() {
+        val requestInterceptor: RequestInterceptor = mock()
+        val defaultSettings = DefaultSettings(requestInterceptor = requestInterceptor)
+        val engineSession = GeckoEngineSession(mock(), defaultSettings = defaultSettings)
+
+        engineSession.geckoSession.navigationDelegate.onLoadError(
+            engineSession.geckoSession,
+            null,
+            WebRequestError(ERROR_MALFORMED_URI, ERROR_CATEGORY_UNKNOWN)
+        )
+        verify(requestInterceptor).onErrorRequest(engineSession, ErrorType.ERROR_MALFORMED_URI, null)
     }
 
     @Test

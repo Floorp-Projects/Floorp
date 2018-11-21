@@ -278,7 +278,7 @@ class GeckoEngineSession(
 
         override fun onLoadError(
             session: GeckoSession?,
-            uri: String,
+            uri: String?,
             error: WebRequestError
         ): GeckoResult<String> {
             settings.requestInterceptor?.onErrorRequest(

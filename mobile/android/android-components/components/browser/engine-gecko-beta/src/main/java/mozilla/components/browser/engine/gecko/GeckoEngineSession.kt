@@ -276,7 +276,7 @@ class GeckoEngineSession(
 
         override fun onLoadError(
             session: GeckoSession?,
-            uri: String,
+            uri: String?,
             category: Int,
             error: Int
         ): GeckoResult<String> {

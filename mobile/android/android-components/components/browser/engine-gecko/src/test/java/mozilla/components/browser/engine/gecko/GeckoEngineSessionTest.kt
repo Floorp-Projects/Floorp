@@ -49,6 +49,7 @@ import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_IMAGE
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_NONE
 import org.mozilla.geckoview.GeckoSession.ContentDelegate.ELEMENT_TYPE_VIDEO
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.ERROR_CATEGORY_UNKNOWN
+import org.mozilla.geckoview.GeckoSession.NavigationDelegate.ERROR_MALFORMED_URI
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.ERROR_UNKNOWN
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation
 import org.mozilla.geckoview.GeckoSessionSettings
@@ -711,6 +712,21 @@ class GeckoEngineSessionTest {
             assertTrue(value!!.contains("data:text/html;base64,"))
             GeckoResult<String>(null)
         }
+    }
+
+    @Test
+    fun onLoadErrorCallsInterceptorWithInvalidUri() {
+        val requestInterceptor: RequestInterceptor = mock()
+        val defaultSettings = DefaultSettings(requestInterceptor = requestInterceptor)
+        val engineSession = GeckoEngineSession(mock(), defaultSettings = defaultSettings)
+
+        engineSession.geckoSession.navigationDelegate.onLoadError(
+                engineSession.geckoSession,
+                null,
+                ERROR_CATEGORY_UNKNOWN,
+                ERROR_MALFORMED_URI
+        )
+        verify(requestInterceptor).onErrorRequest(engineSession, ErrorType.ERROR_MALFORMED_URI, null)
     }
 
     @Test
