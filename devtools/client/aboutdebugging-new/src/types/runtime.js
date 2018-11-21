@@ -5,7 +5,7 @@
 "use strict";
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { ClientWrapper } = require("./modules/client-wrapper");
+const { ClientWrapper } = require("../modules/client-wrapper");
 
 const runtimeInfo = {
   // device name which is running the runtime,
