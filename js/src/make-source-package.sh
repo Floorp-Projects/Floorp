@@ -77,7 +77,7 @@ case $cmd in
     cp -pPR ${TOPSRCDIR}/js/moz.configure ${tgtpath}/js
     cp -pPR ${TOPSRCDIR}/js/ffi.configure ${tgtpath}/js
 
-    mkdir -p ${tgtpath}/taskcluster/taskgraph
+    ${MKDIR} -p ${tgtpath}/taskcluster/taskgraph
     cp -pPR ${TOPSRCDIR}/taskcluster/moz.build ${tgtpath}/taskcluster/
     cp -pPR ${TOPSRCDIR}/taskcluster/taskgraph/test ${tgtpath}/taskcluster/taskgraph/
 
@@ -89,7 +89,7 @@ case $cmd in
     cp -pPR ${TOPSRCDIR}/Makefile.in ${TOPSRCDIR}/moz.build ${tgtpath}
 
     # copy nspr.
-    cp -pPR ${SRCDIR}/../../nsprpub ${tgtpath}
+    cp -pPR ${TOPSRCDIR}/nsprpub ${tgtpath}
 
     # copy top-level build and config files.
     cp -p ${TOPSRCDIR}/configure.py ${TOPSRCDIR}/moz.configure ${tgtpath}
@@ -109,11 +109,11 @@ case $cmd in
 
     # put in js itself
     cp -pPR ${TOPSRCDIR}/mfbt ${tgtpath}
-    cp -p ${SRCDIR}/../moz.configure ${tgtpath}/js
-    cp -pPR ${SRCDIR}/../public ${tgtpath}/js
-    cp -pPR ${SRCDIR}/../rust ${tgtpath}/js
-    cp -pPR ${SRCDIR}/../examples ${tgtpath}/js
-    find ${SRCDIR} -mindepth 1 -maxdepth 1 -not -path ${STAGING} -a -not -name ${pkg} \
+    cp -p ${TOPSRCDIR}/js/moz.configure ${tgtpath}/js
+    cp -pPR ${TOPSRCDIR}/js/public ${tgtpath}/js
+    cp -pPR ${TOPSRCDIR}/js/rust ${tgtpath}/js
+    cp -pPR ${TOPSRCDIR}/js/examples ${tgtpath}/js
+    find ${TOPSRCDIR}/js/src -mindepth 1 -maxdepth 1 -not -path ${STAGING} -a -not -name ${pkg} \
         -exec cp -pPR {} ${tgtpath}/js/src \;
 
     cp -pPR \
