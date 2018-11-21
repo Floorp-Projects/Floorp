@@ -56,12 +56,19 @@ public class Environment {
         return BuildConfig.DEBUG_BUILD;
     }
 
-    public String getCPUArch() {
-        return BuildConfig.ANDROID_CPU_ARCH;
+    public boolean isX86() {
+        final String abi;
+        if (Build.VERSION.SDK_INT >= 21) {
+            abi = Build.SUPPORTED_ABIS[0];
+        } else {
+            abi = Build.CPU_ABI;
+        }
+
+        return abi.startsWith("x86");
     }
 
     public long getScaledTimeoutMillis() {
-        if ("x86".equals(getCPUArch())) {
+        if (isX86()) {
             return isEmulator() ? DEFAULT_X86_EMULATOR_TIMEOUT_MILLIS
                                 : DEFAULT_X86_DEVICE_TIMEOUT_MILLIS;
         }
