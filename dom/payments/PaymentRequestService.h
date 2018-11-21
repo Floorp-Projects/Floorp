@@ -50,7 +50,7 @@ private:
   CanMakePayment(const nsAString& aRequestId);
 
   nsresult
-  ShowPayment(const nsAString& aRequestId);
+  ShowPayment(const nsAString& aRequestId, bool aIsUpdating);
 
   bool
   IsBasicCardPayment(const nsAString& aRequestId);
