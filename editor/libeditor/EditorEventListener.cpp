@@ -1031,7 +1031,7 @@ EditorEventListener::HandleChangeComposition(
     return NS_OK;
   }
 
-  TextEditor* textEditor = editorBase->AsTextEditor();
+  RefPtr<TextEditor> textEditor = editorBase->AsTextEditor();
   return textEditor->OnCompositionChange(*aCompositionChangeEvent);
 }
 
@@ -1050,7 +1050,7 @@ EditorEventListener::HandleEndComposition(
   MOZ_ASSERT(!aCompositionEndEvent->DefaultPrevented(),
              "eCompositionEnd shouldn't be cancelable");
 
-  TextEditor* textEditor = editorBase->AsTextEditor();
+  RefPtr<TextEditor> textEditor = editorBase->AsTextEditor();
   textEditor->OnCompositionEnd(*aCompositionEndEvent);
 }
 

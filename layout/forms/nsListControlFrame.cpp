@@ -70,7 +70,10 @@ public:
   void SetFrame(nsListControlFrame *aFrame) { mFrame = aFrame; }
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMEVENTLISTENER
+
+  // nsIDOMEventListener
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  NS_IMETHOD HandleEvent(Event* aEvent) override;
 
 private:
   ~nsListEventListener() {}
@@ -1390,14 +1393,17 @@ nsListControlFrame::FireOnInputAndOnChange()
     }
   }
 
-  nsCOMPtr<nsIContent> content = mContent;
+  RefPtr<Element> element = Element::FromNodeOrNull(mContent);
+  if (NS_WARN_IF(!element)) {
+    return;
+  }
   // Dispatch the input event.
-  nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
-                                       NS_LITERAL_STRING("input"),
-                                       CanBubble::eYes,
-                                       Cancelable::eNo);
+  DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(element);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "Failed to dispatch input event");
+
   // Dispatch the change event.
-  nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
+  nsContentUtils::DispatchTrustedEvent(element->OwnerDoc(), element,
                                        NS_LITERAL_STRING("change"),
                                        CanBubble::eYes,
                                        Cancelable::eNo);

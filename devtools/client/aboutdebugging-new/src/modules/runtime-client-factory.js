@@ -16,7 +16,7 @@ async function createLocalClient() {
   DebuggerServer.registerAllActors();
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   await client.connect();
-  return { client: new ClientWrapper(client) };
+  return { clientWrapper: new ClientWrapper(client) };
 }
 
 async function createNetworkClient(host, port) {
@@ -24,7 +24,7 @@ async function createNetworkClient(host, port) {
   const transport = await DebuggerClient.socketConnect(transportDetails);
   const client = new DebuggerClient(transport);
   await client.connect();
-  return { client: new ClientWrapper(client), transportDetails };
+  return { clientWrapper: new ClientWrapper(client), transportDetails };
 }
 
 async function createUSBClient(socketPath) {

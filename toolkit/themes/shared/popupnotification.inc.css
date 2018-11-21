@@ -60,22 +60,21 @@
 .popup-notification-button {
   flex: 1;
   -moz-appearance: none;
-  background-color: transparent;
   color: inherit;
   margin: 0;
-  padding: 0;
   min-width: 0;
   min-height: 41px;
-  border: none;
   border-top: 1px solid var(--panel-separator-color);
 }
 
 .popup-notification-button:hover:not([disabled]) {
   background-color: var(--arrowpanel-dimmed);
+  color: inherit; /* override button.css on Linux */
 }
 
 .popup-notification-button:hover:active:not([disabled]) {
   background-color: var(--arrowpanel-dimmed-further);
+  color: inherit; /* override button.css on Mac */
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 

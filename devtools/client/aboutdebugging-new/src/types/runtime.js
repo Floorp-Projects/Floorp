@@ -5,7 +5,7 @@
 "use strict";
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { ClientWrapper } = require("./modules/client-wrapper");
+const { ClientWrapper } = require("../modules/client-wrapper");
 
 const runtimeInfo = {
   // device name which is running the runtime,
@@ -32,7 +32,7 @@ const runtimeTransportDetails = {
 
 const runtimeDetails = {
   // ClientWrapper built using a DebuggerClient for the runtime
-  client: PropTypes.instanceOf(ClientWrapper).isRequired,
+  clientWrapper: PropTypes.instanceOf(ClientWrapper).isRequired,
 
   // reflect devtools.debugger.prompt-connection preference of this runtime
   connectionPromptEnabled: PropTypes.bool.isRequired,

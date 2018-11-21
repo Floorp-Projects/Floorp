@@ -356,6 +356,7 @@ public:
   /**
    * ToggleTextDirection() toggles text-direction of the root element.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult ToggleTextDirection();
 
   /**
@@ -367,6 +368,7 @@ public:
     eLTR,
     eRTL,
   };
+  MOZ_CAN_RUN_SCRIPT
   void SwitchTextDirectionTo(TextDirection aTextDirection);
 
   /**
@@ -1732,7 +1734,9 @@ protected: // Called by helper classes.
    * can later merge, if needed.  Merging is unavailable between transaction
    * manager batches.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void BeginPlaceholderTransaction(nsAtom* aTransactionName);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void EndPlaceholderTransaction();
 
   void BeginUpdateViewBatch();
@@ -1768,6 +1772,8 @@ protected: // Shouldn't be used by friend classes
   virtual nsresult SelectAllInternal();
 
   nsresult DetermineCurrentDirection();
+
+  MOZ_CAN_RUN_SCRIPT
   void FireInputEvent();
 
   /**
@@ -1888,7 +1894,7 @@ protected: // Shouldn't be used by friend classes
   /**
    * Get the input event target. This might return null.
    */
-  virtual already_AddRefed<nsIContent> GetInputEventTargetContent() = 0;
+  virtual already_AddRefed<Element> GetInputEventTargetElement() = 0;
 
   /**
    * Return true if spellchecking should be enabled for this editor.
@@ -1950,6 +1956,7 @@ protected: // Shouldn't be used by friend classes
     eNotifyEditorObserversOfBefore,
     eNotifyEditorObserversOfCancel
   };
+  MOZ_CAN_RUN_SCRIPT
   void NotifyEditorObservers(NotificationForEditorObservers aNotification);
 
 private:

@@ -297,7 +297,7 @@ class FormAutofillSection {
         // Use case for multiple select is not considered here.
         if (!option.selected) {
           option.selected = true;
-          element.dispatchEvent(new element.ownerGlobal.UIEvent("input", {bubbles: true}));
+          element.dispatchEvent(new element.ownerGlobal.Event("input", {bubbles: true}));
           element.dispatchEvent(new element.ownerGlobal.Event("change", {bubbles: true}));
         }
         // Autofill highlight appears regardless if value is changed or not

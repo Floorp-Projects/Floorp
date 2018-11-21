@@ -61,6 +61,7 @@ public:
   }
 
   // nsIFormControl
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Reset() override;
   NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override;
   NS_IMETHOD SaveState() override;
@@ -83,10 +84,13 @@ public:
   NS_IMETHOD_(bool) ValueChanged() const override;
   NS_IMETHOD_(void) GetTextEditorValue(nsAString& aValue, bool aIgnoreWrap) const override;
   NS_IMETHOD_(mozilla::TextEditor*) GetTextEditor() override;
+  NS_IMETHOD_(mozilla::TextEditor*) GetTextEditorWithoutCreation() override;
   NS_IMETHOD_(nsISelectionController*) GetSelectionController() override;
   NS_IMETHOD_(nsFrameSelection*) GetConstFrameSelection() override;
   NS_IMETHOD BindToFrame(nsTextControlFrame* aFrame) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD_(void) UnbindFromFrame(nsTextControlFrame* aFrame) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD CreateEditor() override;
   NS_IMETHOD_(void) UpdateOverlayTextVisibility(bool aNotify) override;
   NS_IMETHOD_(bool) GetPlaceholderVisibility() override;
@@ -98,6 +102,7 @@ public:
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() override;
   NS_IMETHOD_(void) OnValueChanged(bool aNotify, bool aWasInteractiveUserChange) override;
   virtual void GetValueFromSetRangeText(nsAString& aValue) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult SetValueFromSetRangeText(const nsAString& aValue) override;
   NS_IMETHOD_(bool) HasCachedSelection() override;
 
@@ -127,6 +132,7 @@ public:
   virtual void DoneAddingChildren(bool aHaveNotified) override;
   virtual bool IsDoneAddingChildren() override;
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   nsresult CopyInnerTo(Element* aDest);
@@ -277,6 +283,7 @@ public:
   void GetDefaultValue(nsAString& aDefaultValue, ErrorResult& aError);
   void SetDefaultValue(const nsAString& aDefaultValue, ErrorResult& aError);
   void GetValue(nsAString& aValue);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void SetValue(const nsAString& aValue, ErrorResult& aError);
 
   uint32_t GetTextLength();
@@ -302,6 +309,12 @@ public:
     return mState.GetTextEditor();
   }
 
+  bool IsInputEventTarget() const
+  {
+    return true;
+  }
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void SetUserInput(const nsAString& aValue,
                     nsIPrincipal& aSubjectPrincipal);
 
@@ -358,6 +371,7 @@ protected:
    * @param aValue      String to set.
    * @param aFlags      See nsTextEditorState::SetValueFlags.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult SetValueInternal(const nsAString& aValue, uint32_t aFlags);
 
   /**

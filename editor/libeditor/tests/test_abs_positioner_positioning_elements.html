@@ -72,17 +72,38 @@ SimpleTest.waitForFocus(async function() {
       // XXX Perhaps, we need to add border-top-width here if you add new test to have thick border.
       const kPositionerY = -7;
 
+      let inputEventExpected = true;
+      function onInput(aEvent) {
+        if (!inputEventExpected) {
+          ok(false, "\"input\" event shouldn't be fired after stopping resizing");
+          return;
+        }
+        ok(aEvent instanceof InputEvent,
+           '"input" event should be dispatched with InputEvent interface');
+        is(aEvent.cancelable, false,
+           '"input" event should be never cancelable');
+        is(aEvent.bubbles, true,
+           '"input" event should always bubble');
+      }
+
+      content.addEventListener("input", onInput);
+
       // Click on the positioner.
       synthesizeMouse(target, kPositionerX, kPositionerY, {type: "mousedown"});
       // Drag it delta pixels.
       synthesizeMouse(target, kPositionerX + aDeltaX, kPositionerY + aDeltaY, {type: "mousemove"});
       // Release the mouse button
       synthesizeMouse(target, kPositionerX + aDeltaX, kPositionerY + aDeltaY, {type: "mouseup"});
+
+      inputEventExpected = false;
+
       // Move the mouse delta more pixels to the same direction to make sure that the
       // positioning operation has stopped.
       synthesizeMouse(target, kPositionerX + aDeltaX * 2, kPositionerY + aDeltaY * 2, {type: "mousemove"});
       // Click outside of the image to hide the positioner.
       synthesizeMouseAtCenter(outOfEditor, {});
+
+      content.removeEventListener("input", onInput);
 
       // Get the new dimensions for the absolute positioned element.
       let newRect = target.getBoundingClientRect();

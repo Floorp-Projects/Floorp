@@ -1183,3 +1183,137 @@ add_task(async function test_valid_os_smoketest() {
   Assert.ok(existingProbe in snapshot, `${existingProbe} should be recorded on ${AppConstants.platform}`);
   Assert.equal(snapshot[existingProbe].sum, 1);
 });
+
+add_task(async function test_multistore_individual_histogram() {
+  Telemetry.canRecordExtended = true;
+
+  let id;
+  let hist;
+  let snapshot;
+
+  id = "TELEMETRY_TEST_MAIN_ONLY";
+  hist = Telemetry.getHistogramById(id);
+  snapshot = hist.snapshot();
+  Assert.equal(0, snapshot.sum, `Histogram ${id} should be empty.`);
+  hist.add(1);
+  snapshot = hist.snapshot();
+  Assert.equal(1, snapshot.sum, `Histogram ${id} should have recorded one value.`);
+  hist.clear();
+  snapshot = hist.snapshot();
+  Assert.equal(0, snapshot.sum, `Histogram ${id} should be cleared.`);
+
+  id = "TELEMETRY_TEST_MULTIPLE_STORES";
+  hist = Telemetry.getHistogramById(id);
+  snapshot = hist.snapshot();
+  Assert.equal(0, snapshot.sum, `Histogram ${id} should be empty.`);
+  hist.add(1);
+  snapshot = hist.snapshot();
+  Assert.equal(1, snapshot.sum, `Histogram ${id} should have recorded one value.`);
+  hist.clear();
+  snapshot = hist.snapshot();
+  Assert.equal(0, snapshot.sum, `Histogram ${id} should be cleared.`);
+
+  // When sync only, then the snapshot will be empty on the main store
+  id = "TELEMETRY_TEST_SYNC_ONLY";
+  hist = Telemetry.getHistogramById(id);
+  snapshot = hist.snapshot();
+  Assert.equal(undefined, snapshot, `Histogram ${id} should not be in the 'main' storage`);
+  hist.add(1);
+  snapshot = hist.snapshot();
+  Assert.equal(undefined, snapshot, `Histogram ${id} should not be in the 'main' storage`);
+  hist.clear();
+  snapshot = hist.snapshot();
+  Assert.equal(undefined, snapshot, `Histogram ${id} should not be in the 'main' storage`);
+
+  id = "TELEMETRY_TEST_KEYED_MULTIPLE_STORES";
+  hist = Telemetry.getKeyedHistogramById(id);
+  snapshot = hist.snapshot();
+  Assert.deepEqual({}, snapshot, `Histogram ${id} should be empty.`);
+  hist.add("key-a", 1);
+  snapshot = hist.snapshot();
+  Assert.equal(1, snapshot["key-a"].sum, `Histogram ${id} should have recorded one value.`);
+  hist.clear();
+  snapshot = hist.snapshot();
+  Assert.deepEqual({}, snapshot, `Histogram ${id} should be cleared.`);
+
+  // When sync only, then the snapshot will be empty on the main store
+  id = "TELEMETRY_TEST_KEYED_SYNC_ONLY";
+  hist = Telemetry.getKeyedHistogramById(id);
+  snapshot = hist.snapshot();
+  Assert.equal(undefined, snapshot, `Histogram ${id} should not be in the 'main' storage`);
+  hist.add("key-a", 1);
+  snapshot = hist.snapshot();
+  Assert.equal(undefined, snapshot, `Histogram ${id} should not be in the 'main' storage`);
+  hist.clear();
+  snapshot = hist.snapshot();
+  Assert.equal(undefined, snapshot, `Histogram ${id} should not be in the 'main' storage`);
+});
+
+add_task(async function test_multistore_main_snapshot() {
+  Telemetry.canRecordExtended = true;
+  // Clear histograms
+  Telemetry.getSnapshotForHistograms("main", true);
+  Telemetry.getSnapshotForKeyedHistograms("main", true);
+
+  let id;
+  let hist;
+  let snapshot;
+
+  // Plain histograms
+
+  // Fill with data
+  id = "TELEMETRY_TEST_MAIN_ONLY";
+  hist = Telemetry.getHistogramById(id);
+  hist.add(1);
+
+  id = "TELEMETRY_TEST_MULTIPLE_STORES";
+  hist = Telemetry.getHistogramById(id);
+  hist.add(1);
+
+  id = "TELEMETRY_TEST_SYNC_ONLY";
+  hist = Telemetry.getHistogramById(id);
+  hist.add(1);
+
+  // Getting snapshot and clearing
+  snapshot = Telemetry.getSnapshotForHistograms("main", /* clear */ true).parent;
+  id = "TELEMETRY_TEST_MAIN_ONLY";
+  Assert.ok(id in snapshot, `${id} should be in a main store snapshot`);
+  id = "TELEMETRY_TEST_MULTIPLE_STORES";
+  Assert.ok(id in snapshot, `${id} should be in a main store snapshot`);
+  id = "TELEMETRY_TEST_SYNC_ONLY";
+  Assert.ok(!(id in snapshot), `${id} should not be in a main store snapshot`);
+
+  // Should be empty after clearing
+  snapshot = Telemetry.getSnapshotForHistograms("main", /* clear */ false).parent;
+  id = "TELEMETRY_TEST_MAIN_ONLY";
+  Assert.ok(!(id in snapshot), `${id} should not be in a main store snapshot`);
+  id = "TELEMETRY_TEST_MULTIPLE_STORES";
+  Assert.ok(!(id in snapshot), `${id} should not be in a main store snapshot`);
+  id = "TELEMETRY_TEST_SYNC_ONLY";
+  Assert.ok(!(id in snapshot), `${id} should not be in a main store snapshot`);
+
+  // Keyed histograms
+
+  // Fill with data
+  id = "TELEMETRY_TEST_KEYED_MULTIPLE_STORES";
+  hist = Telemetry.getKeyedHistogramById(id);
+  hist.add("key-a", 1);
+
+  id = "TELEMETRY_TEST_KEYED_SYNC_ONLY";
+  hist = Telemetry.getKeyedHistogramById(id);
+  hist.add("key-b", 1);
+
+  // Getting snapshot and clearing
+  snapshot = Telemetry.getSnapshotForKeyedHistograms("main", /* clear */ true).parent;
+  id = "TELEMETRY_TEST_KEYED_MULTIPLE_STORES";
+  Assert.ok(id in snapshot, `${id} should be in a main store snapshot`);
+  id = "TELEMETRY_TEST_KEYED_SYNC_ONLY";
+  Assert.ok(!(id in snapshot), `${id} should not be in a main store snapshot`);
+
+  // Should be empty after clearing
+  snapshot = Telemetry.getSnapshotForKeyedHistograms("main", /* clear */ false).parent;
+  id = "TELEMETRY_TEST_KEYED_MULTIPLE_STORES";
+  Assert.ok(!(id in snapshot), `${id} should not be in a main store snapshot`);
+  id = "TELEMETRY_TEST_KEYED_SYNC_ONLY";
+  Assert.ok(!(id in snapshot), `${id} should not be in a main store snapshot`);
+});

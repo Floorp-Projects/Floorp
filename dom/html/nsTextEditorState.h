@@ -152,10 +152,13 @@ public:
   }
 
   mozilla::TextEditor* GetTextEditor();
+  mozilla::TextEditor* GetTextEditorWithoutCreation();
   nsISelectionController* GetSelectionController() const;
   nsFrameSelection* GetConstFrameSelection();
   nsresult BindToFrame(nsTextControlFrame* aFrame);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void UnbindFromFrame(nsTextControlFrame* aFrame);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult PrepareEditor(const nsAString *aValue = nullptr);
   void InitializeKeyboardEventListeners();
 
@@ -181,9 +184,11 @@ public:
     // undo history.
     eSetValue_ForXUL                = 1 << 4,
   };
+  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE bool SetValue(const nsAString& aValue,
                              const nsAString* aOldValue,
                              uint32_t aFlags);
+  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE bool SetValue(const nsAString& aValue,
                              uint32_t aFlags)
   {
@@ -303,6 +308,7 @@ public:
   // Sync up our selection properties with our editor prior to being destroyed.
   // This will invoke UnbindFromFrame() to ensure that we grab whatever
   // selection state may be at the moment.
+  MOZ_CAN_RUN_SCRIPT
   void SyncUpSelectionPropertiesBeforeDestruction();
 
   // Get the selection range start and end points in our text.

@@ -61,10 +61,10 @@ SetEditorFlagsIfNecessary(EditorBase& aEditorBase, uint32_t aFlags)
   return aEditorBase.SetFlags(aFlags);
 }
 
-class MOZ_STACK_CLASS ValueSetter
+class MOZ_STACK_CLASS AutoInputEventSuppresser final
 {
 public:
-  explicit ValueSetter(TextEditor* aTextEditor)
+  explicit AutoInputEventSuppresser(TextEditor* aTextEditor)
     : mTextEditor(aTextEditor)
     // To protect against a reentrant call to SetValue, we check whether
     // another SetValue is already happening for this editor.  If it is,
@@ -73,7 +73,7 @@ public:
   {
     MOZ_ASSERT(aTextEditor);
   }
-  ~ValueSetter()
+  ~AutoInputEventSuppresser()
   {
     mTextEditor->SuppressDispatchingInputEvent(mOuterTransaction);
   }
@@ -1220,6 +1220,12 @@ nsTextEditorState::GetTextEditor()
     nsresult rv = PrepareEditor();
     NS_ENSURE_SUCCESS(rv, nullptr);
   }
+  return mTextEditor;
+}
+
+TextEditor*
+nsTextEditorState::GetTextEditorWithoutCreation()
+{
   return mTextEditor;
 }
 
@@ -2394,6 +2400,10 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
     return false;
   }
 
+  // mTextCtrlElement may be cleared when we dispatch an event so that
+  // we should keep grabbing it with local variable.
+  nsCOMPtr<nsITextControlElement> textControlElement(mTextCtrlElement);
+
   if (mTextEditor && mBoundFrame) {
     // The InsertText call below might flush pending notifications, which
     // could lead into a scheduled PrepareEditor to be called.  That will
@@ -2425,7 +2435,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
     // this is necessary to avoid infinite recursion
     if (!currentValue.Equals(newValue)) {
       RefPtr<TextEditor> textEditor = mTextEditor;
-      ValueSetter valueSetter(textEditor);
+      AutoInputEventSuppresser suppressInputEventDispatching(textEditor);
 
       nsCOMPtr<nsIDocument> document = textEditor->GetDocument();
       if (NS_WARN_IF(!document)) {
@@ -2448,8 +2458,6 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
           return true;
         }
 
-        valueSetter.Init();
-
         // get the flags, remove readonly, disabled and max-length,
         // set the value, restore flags
         {
@@ -2464,10 +2472,16 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
             // autocomplete, we need to replace the text as "insert string"
             // because undo should cancel only this operation (i.e., previous
             // transactions typed by user shouldn't be merged with this).
+            // In this case, we need to dispatch "input" event because
+            // web apps may need to know the user's operation.
             DebugOnly<nsresult> rv = textEditor->ReplaceTextAsAction(newValue);
             NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
               "Failed to set the new value");
           } else if (aFlags & eSetValue_ForXUL) {
+            // When setting value of XUL <textbox>, we shouldn't dispatch
+            // "input" event.
+            suppressInputEventDispatching.Init();
+
             // On XUL <textbox> element, we need to preserve existing undo
             // transactions.
             // XXX Do we really need to do such complicated optimization?
@@ -2505,6 +2519,10 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
                 "Failed to insert the new value");
             }
           } else {
+            // When setting value of <input>, we shouldn't dispatch "input"
+            // event.
+            suppressInputEventDispatching.Init();
+
             // On <input> or <textarea>, we shouldn't preserve existing undo
             // transactions because other browsers do not preserve them too
             // and not preserving transactions makes setting value faster.
@@ -2584,6 +2602,18 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
       if (mBoundFrame) {
         mBoundFrame->UpdateValueDisplay(true);
       }
+
+      // If this is called as part of user input, we need to dispatch "input"
+      // event since web apps may want to know the user operation.
+      if (aFlags & eSetValue_BySetUserInput) {
+        nsCOMPtr<Element> element = do_QueryInterface(textControlElement);
+        MOZ_ASSERT(element);
+        RefPtr<TextEditor> textEditor;
+        DebugOnly<nsresult> rvIgnored =
+          nsContentUtils::DispatchInputEvent(element, textEditor);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                             "Failed to dispatch input event");
+      }
     } else {
       // Even if our value is not actually changing, apparently we need to mark
       // our SelectionProperties dirty to make accessibility tests happy.
@@ -2600,8 +2630,10 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
     ValueWasChanged(!!mBoundFrame);
   }
 
-  mTextCtrlElement->OnValueChanged(/* aNotify = */ !!mBoundFrame,
-                                   /* aWasInteractiveUserChange = */ false);
+  // XXX Should we stop notifying "value changed" if mTextCtrlElement has
+  //     been cleared?
+  textControlElement->OnValueChanged(/* aNotify = */ !!mBoundFrame,
+                                     /* aWasInteractiveUserChange = */ false);
 
   return true;
 }
