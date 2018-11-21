@@ -105,24 +105,21 @@ class Toolbar extends PureComponent {
 
     return (
       dom.header(
-        { id: "toolbar" },
-        DeviceSelector({
-          devices,
-          onChangeDevice,
-          onResizeViewport,
-          onUpdateDeviceModal,
-          selectedDevice,
-          viewportId: viewport.id,
-        }),
-        leftAlignmentEnabled ?
-          dom.div({ className: "devtools-separator" })
-          :
-          null,
+        {
+          id: "toolbar",
+          className: leftAlignmentEnabled ? "left-aligned" : "",
+        },
         dom.div(
-          {
-            id: "toolbar-center-controls",
-            className: leftAlignmentEnabled ? "left-aligned" : "",
-          },
+          { id: "toolbar-center-controls" },
+          DeviceSelector({
+            devices,
+            onChangeDevice,
+            onResizeViewport,
+            onUpdateDeviceModal,
+            selectedDevice,
+            viewportId: viewport.id,
+          }),
+          dom.div({ className: "devtools-separator" }),
           ViewportDimension({
             onRemoveDeviceAssociation,
             onResizeViewport,
