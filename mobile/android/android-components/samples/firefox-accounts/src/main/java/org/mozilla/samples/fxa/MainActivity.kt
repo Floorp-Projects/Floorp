@@ -59,15 +59,15 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
                 return@async it
             }
             intent.extras?.getString("pairingUrl")?.let { pairingUrl ->
-                Config.custom(CONFIG_URL_PAIRING).await().use { config ->
-                    val acct = FirefoxAccount(config, CLIENT_ID, REDIRECT_URL)
+                Config.custom(CONFIG_URL_PAIRING, CLIENT_ID, REDIRECT_URL).await().use { config ->
+                    val acct = FirefoxAccount(config)
                     val url = acct.beginPairingFlow(pairingUrl, scopes).await()
                     openWebView(url)
                     return@async acct
                 }
             }
-            return@async Config.custom(CONFIG_URL).await().use { config ->
-                FirefoxAccount(config, CLIENT_ID, REDIRECT_URL)
+            return@async Config.custom(CONFIG_URL, CLIENT_ID, REDIRECT_URL).await().use { config ->
+                FirefoxAccount(config)
             }
         }
 

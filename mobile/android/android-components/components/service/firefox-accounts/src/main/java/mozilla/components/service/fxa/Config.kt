@@ -23,10 +23,13 @@ class Config internal constructor(internal val inner: InternalConfig) : AutoClos
     companion object {
         /**
          * Set up endpoints used in the production Firefox Accounts instance.
+         *
+         * @param client_id Client Id of the FxA relier
+         * @param redirect_uri Redirect Uri of the FxA relier
          */
-        fun release(): Deferred<Config> {
+        fun release(client_id: String, redirect_uri: String): Deferred<Config> {
             return GlobalScope.async(Dispatchers.IO) {
-                Config(InternalConfig.release())
+                Config(InternalConfig.release(client_id, redirect_uri))
             }
         }
 
@@ -34,10 +37,12 @@ class Config internal constructor(internal val inner: InternalConfig) : AutoClos
          * Set up endpoints used by a custom host for authentication
          *
          * @param content_base Hostname of the FxA auth service provider
+         * @param client_id Client Id of the FxA relier
+         * @param redirect_uri Redirect Uri of the FxA relier
          */
-        fun custom(content_base: String): Deferred<Config> {
+        fun custom(content_base: String, client_id: String, redirect_uri: String): Deferred<Config> {
             return GlobalScope.async(Dispatchers.IO) {
-                Config(InternalConfig.custom(content_base))
+                Config(InternalConfig.custom(content_base, client_id, redirect_uri))
             }
         }
     }
