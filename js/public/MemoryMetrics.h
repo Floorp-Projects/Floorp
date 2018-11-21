@@ -939,16 +939,19 @@ struct RuntimeStats
     //
     // - rtStats.gcHeapChunkTotal
     //   - decommitted bytes
-    //     - rtStats.gcHeapDecommittedArenas (decommitted arenas in non-empty chunks)
+    //     - rtStats.gcHeapDecommittedArenas
+    //         (decommitted arenas in non-empty chunks)
     //   - unused bytes
     //     - rtStats.gcHeapUnusedChunks (empty chunks)
     //     - rtStats.gcHeapUnusedArenas (empty arenas within non-empty chunks)
-    //     - rtStats.zTotals.unusedGCThings.totalSize() (empty GC thing slots within non-empty arenas)
+    //     - rtStats.zTotals.unusedGCThings.totalSize()
+    //         (empty GC thing slots within non-empty arenas)
     //   - used bytes
     //     - rtStats.gcHeapChunkAdmin
     //     - rtStats.zTotals.gcHeapArenaAdmin
     //     - rtStats.gcHeapGCThings (in-use GC things)
-    //       == rtStats.zTotals.sizeOfLiveGCThings() + rtStats.cTotals.sizeOfLiveGCThings()
+    //       == (rtStats.zTotals.sizeOfLiveGCThings() +
+    //           rtStats.cTotals.sizeOfLiveGCThings())
     //
     // It's possible that some arenas in empty chunks may be decommitted, but
     // we don't count those under rtStats.gcHeapDecommittedArenas because (a)
