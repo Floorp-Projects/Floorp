@@ -57,13 +57,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
   }
 
   function checkIfInputIsEvent(aEvent, aDescription) {
-    if (event.target.type === "checkbox" || event.target.type === "radio") {
-      todo(event instanceof Event && !(event instanceof UIEvent),
-           `"input" event should be dispatched with InputEvent interface ${aDescription}`);
-    } else {
-      ok(event instanceof Event && !(event instanceof UIEvent),
-         `"input" event should be dispatched with InputEvent interface ${aDescription}`);
-    }
+    ok(event instanceof Event && !(event instanceof UIEvent),
+       `"input" event should be dispatched with InputEvent interface ${aDescription}`);
     is(aEvent.cancelable, false,
        `"input" event should be never cancelable ${aDescription}`);
     is(aEvent.bubbles, true,

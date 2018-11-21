@@ -1460,10 +1460,10 @@ TextEditor::OnCompositionEnd(WidgetCompositionEvent& aCompositionEndEvent)
   NotifyEditorObservers(eNotifyEditorObserversOfEnd);
 }
 
-already_AddRefed<nsIContent>
-TextEditor::GetInputEventTargetContent()
+already_AddRefed<Element>
+TextEditor::GetInputEventTargetElement()
 {
-  nsCOMPtr<nsIContent> target = do_QueryInterface(mEventTarget);
+  nsCOMPtr<Element> target = do_QueryInterface(mEventTarget);
   return target.forget();
 }
 

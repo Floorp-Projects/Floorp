@@ -102,8 +102,12 @@ public:
    * Get the editor object associated with the text editor.
    * The return value is null if the control does not support an editor
    * (for example, if it is a checkbox.)
+   * Note that GetTextEditor() creates editor if it hasn't been created yet.
+   * If you need editor only when the editor is there, you should use
+   * GetTextEditorWithoutCreation().
    */
   NS_IMETHOD_(mozilla::TextEditor*) GetTextEditor() = 0;
+  NS_IMETHOD_(mozilla::TextEditor*) GetTextEditorWithoutCreation() = 0;
 
   /**
    * Get the selection controller object associated with the text editor.

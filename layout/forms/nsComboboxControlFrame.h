@@ -128,6 +128,7 @@ public:
    * @param aRepaint if true then force repaint (NOTE: we always force repaint currently)
    * @note This method might destroy |this|.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual void SetFocus(bool aOn, bool aRepaint) override;
 
   bool IsDroppedDown() { return mDroppedDown; }

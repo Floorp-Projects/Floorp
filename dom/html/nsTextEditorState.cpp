@@ -1223,6 +1223,12 @@ nsTextEditorState::GetTextEditor()
   return mTextEditor;
 }
 
+TextEditor*
+nsTextEditorState::GetTextEditorWithoutCreation()
+{
+  return mTextEditor;
+}
+
 nsISelectionController*
 nsTextEditorState::GetSelectionController() const
 {
