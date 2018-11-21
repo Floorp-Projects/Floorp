@@ -53,7 +53,7 @@ tasks:
 #
 # Creates the following task pipeline:
 #
-# Build -+--> Unit tests ----+- UI tests --> Preview release
+# Build -+--> Unit tests ----+- UI tests
 #         \-> Code quality -/
 #
 ###############################################################################
@@ -73,8 +73,6 @@ tasks:
         scopes:
           - queue:create-task:aws-provisioner-v1/github-worker
           - queue:scheduler-id:taskcluster-github
-          - secrets:get:project/focus/preview-key-store
-          - queue:route:index.project.focus.android.preview-builds
           - secrets:get:project/focus/firebase
           - secrets:get:project/focus/nimbledroid
         payload:
