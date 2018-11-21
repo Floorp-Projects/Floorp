@@ -330,7 +330,8 @@ def win64_cargo_linker(target, rustc_info, compiler_info, link, lib):
     # need to configure the linker it will use for host binaries (build scripts)
     # specially because the compiler configuration we use for the build is for
     # MSVC targeting 32-bit binaries.
-    if target.kernel == 'WINNT' and target.cpu == 'x86' and \
+    if target.kernel == 'WINNT' and \
+       target.cpu in ('x86', 'aarch64') and \
        compiler_info.type in ('msvc', 'clang-cl') and \
        rustc_info.host == 'x86_64-pc-windows-msvc' and link and lib:
         return True
