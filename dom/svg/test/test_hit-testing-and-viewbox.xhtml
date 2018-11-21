@@ -1,0 +1,82 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1486952
+-->
+<head>
+  <title>Test that hit-testing works after a viewBox update</title>
+
+  <style>
+    :hover { fill: lime; }
+  </style>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body onload="run()">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function run()
+{
+  const div = $('div');
+  const offsetX = div.offsetLeft;
+  const offsetY = div.offsetTop;
+  const outerRect = $('outerRect');
+  const innerRect = $('innerRect');
+  const outerSVG = $('outerSVG');
+  const innerSVG = $('innerSVG');
+  let got;
+
+  // Update the inner SVG viewBox to "move" the inner rectangle off its current
+  // position on screen:
+  innerSVG.setAttribute('viewBox', '-50 0 100 100');
+  got = document.elementFromPoint(offsetX + 300, offsetY + 50);
+  is(got, innerRect, 'Should hit inner rectangle (1)');
+
+  // Update the inner SVG viewBox again. (At the time of writing, a reflow is
+  // triggered the first time you change viewBox on an inner svg, so the
+  // previous test is expected to always pass. This next test will fail if we're
+  // updating overflows on the inner svg frame instead of its children).
+  innerSVG.setAttribute('viewBox', '0 -50 100 100');
+  got = document.elementFromPoint(offsetX + 200, offsetY + 150);
+  is(got, innerRect, 'Should hit inner rectangle (2)');
+
+  // Now update the outer SVG viewBox and confirm that both rectangles are
+  // registered.  (Note that in this case the overflow rectangle of the inner
+  // svg is the inner svg's viewport, so be sure to "move" the outer svg so that
+  // the "new" outer rectangle and inner svg are off the current outerRect
+  // union inner svg viewport - hit testing still works in that union.)
+  outerSVG.setAttribute('viewBox', '-400 0 800 200');
+  // Outer:
+  got = document.elementFromPoint(offsetX + 500, offsetY + 100);
+  is(got, outerRect, 'Should hit outer rectangle');
+  // Inner:
+  got = document.elementFromPoint(offsetX + 600, offsetY + 150);
+  is(got, innerRect, 'Should hit inner rectangle (3)');
+
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1486952">Mozilla Bug 1486952</a>
+<p id="display"></p>
+<div id="content">
+
+  <div width="100%" height="1" id="div"></div>
+  <svg xmlns="http://www.w3.org/2000/svg" id="outerSVG" width="800" height="200"
+       viewBox="0 0 800 200">
+    <rect x="50" y="50" width="100" height="100" fill="red" id="outerRect" />
+    <svg x="150" width="200" height="200" viewBox="0 0 100 100" id="innerSVG">
+      <rect width="50" height="50" fill="red" id="innerRect" />
+    </svg>
+  </svg>
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
