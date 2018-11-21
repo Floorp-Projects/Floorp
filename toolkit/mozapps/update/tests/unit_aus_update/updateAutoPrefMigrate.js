@@ -20,7 +20,7 @@ async function verifyPref(configFile, expectedValue) {
 }
 
 async function run_test() {
-  setupTestCommon();
+  setupTestCommon(null);
   standardInit();
 
   let configFile = getUpdateConfigFile();

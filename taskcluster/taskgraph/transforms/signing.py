@@ -10,7 +10,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
-from taskgraph.util.schema import validate_schema
 from taskgraph.util.scriptworker import (
     add_scope_prefix,
     get_signing_cert_scope_per_platform,
@@ -78,14 +77,7 @@ def set_defaults(config, jobs):
         yield job
 
 
-@transforms.add
-def validate(config, jobs):
-    for job in jobs:
-        label = job.get('primary-dependency', object).__dict__.get('label', '?no-label?')
-        validate_schema(
-            signing_description_schema, job,
-            "In signing ({!r} kind) task for {!r}:".format(config.kind, label))
-        yield job
+transforms.add_validate(signing_description_schema)
 
 
 @transforms.add

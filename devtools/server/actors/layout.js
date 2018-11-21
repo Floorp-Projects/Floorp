@@ -16,8 +16,10 @@ const { SHOW_ELEMENT } = require("devtools/shared/dom-node-filter-constants");
 const { getStringifiableFragments } =
   require("devtools/server/actors/utils/css-grid-utils");
 
-loader.lazyRequireGetter(this, "getCSSStyleRules", "devtools/shared/inspector/css-logic", true);
 loader.lazyRequireGetter(this, "CssLogic", "devtools/server/actors/inspector/css-logic", true);
+loader.lazyRequireGetter(this, "getCSSStyleRules", "devtools/shared/inspector/css-logic", true);
+loader.lazyRequireGetter(this, "isCssPropertyKnown", "devtools/server/actors/css-properties", true);
+loader.lazyRequireGetter(this, "parseDeclarations", "devtools/shared/css/parsing-utils", true);
 loader.lazyRequireGetter(this, "nodeConstants", "devtools/shared/dom-node-constants");
 
 /**
@@ -175,25 +177,49 @@ const FlexItemActor = ActorClassWithSpec(flexItemSpec, {
 
     if (isElementNode) {
       for (const name in properties) {
-        let value = "";
-        // Look first on the element style.
-        if (this.element.style &&
-            this.element.style[name] && this.element.style[name] !== "auto") {
-          value = this.element.style[name];
-        } else {
-          // And then on the rules that apply to the element.
-          // getCSSStyleRules returns rules from least to most specific, so override
-          // values as we find them.
-          const cssRules = getCSSStyleRules(this.element);
-          for (const rule of cssRules) {
-            const rulePropertyValue = rule.style.getPropertyValue(name);
-            if (rulePropertyValue && rulePropertyValue !== "auto") {
-              value = rulePropertyValue;
+        const values = [];
+        const cssRules = getCSSStyleRules(this.element);
+
+        for (const rule of cssRules) {
+        // For each rule, go through *all* properties, because there may be several of
+        // them in the same rule and some with !important flags (which would be more
+        // important even if placed before another property with the same name)
+          const declarations = parseDeclarations(isCssPropertyKnown, rule.style.cssText);
+
+          for (const declaration of declarations) {
+            if (declaration.name === name && declaration.value !== "auto") {
+              values.push({ value: declaration.value, priority: declaration.priority });
             }
           }
         }
 
-        properties[name] = value;
+        // Then go through the element style because it's usually more important, but
+        // might not be if there is a prior !important property
+        if (this.element.style && this.element.style[name] &&
+          this.element.style[name] !== "auto") {
+          values.push({
+            value: this.element.style.getPropertyValue(name),
+            priority: this.element.style.getPropertyPriority(name),
+          });
+        }
+
+        // Now that we have a list of all the property's rule values, go through all the
+        // values and show the property value with the highest priority. Therefore, show
+        // the last !important value. Otherwise, show the last value stored.
+        let rulePropertyValue = "";
+
+        if (values.length) {
+          const lastValueIndex = values.length - 1;
+          rulePropertyValue = values[lastValueIndex].value;
+
+          for (const { priority, value } of values) {
+            if (priority === "important") {
+              rulePropertyValue = `${value} !important`;
+            }
+          }
+        }
+
+        properties[name] = rulePropertyValue;
       }
     }
 

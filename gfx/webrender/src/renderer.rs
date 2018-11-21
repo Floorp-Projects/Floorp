@@ -2665,7 +2665,7 @@ impl Renderer {
                         ColorU::new(0, 110, 220, 255),
                         debug_renderer,
                     );
-                    x += 160.0;
+                    x += ChangeIndicator::width();
                 }
             }
 
@@ -2676,7 +2676,7 @@ impl Renderer {
                         ColorU::new(0, 220, 110, 255),
                         debug_renderer,
                     );
-                    x += 160.0;
+                    x += ChangeIndicator::width();
                 }
             }
 

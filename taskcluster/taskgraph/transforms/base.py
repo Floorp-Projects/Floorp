@@ -4,33 +4,41 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import attr
 
+from ..config import GraphConfig
+from ..parameters import Parameters
+from ..util.schema import Schema, validate_schema
+
+
+@attr.s(frozen=True)
 class TransformConfig(object):
-    """A container for configuration affecting transforms.  The `config`
-    argument to transforms is an instance of this class, possibly with
-    additional kind-specific attributes beyond those set here."""
-    def __init__(self, kind, path, config, params,
-                 kind_dependencies_tasks=None, graph_config=None):
-        # the name of the current kind
-        self.kind = kind
+    """
+    A container for configuration affecting transforms.  The `config` argument
+    to transforms is an instance of this class.
+    """
 
-        # the path to the kind configuration directory
-        self.path = path
+    # the name of the current kind
+    kind = attr.ib()
 
-        # the parsed contents of kind.yml
-        self.config = config
+    # the path to the kind configuration directory
+    path = attr.ib(type=basestring)
 
-        # the parameters for this task-graph generation run
-        self.params = params
+    # the parsed contents of kind.yml
+    config = attr.ib(type=dict)
 
-        # a list of all the tasks associated with the kind dependencies of the
-        # current kind
-        self.kind_dependencies_tasks = kind_dependencies_tasks
+    # the parameters for this task-graph generation run
+    params = attr.ib(type=Parameters)
 
-        # Global configuration of the taskgraph
-        self.graph_config = graph_config or {}
+    # a list of all the tasks associated with the kind dependencies of the
+    # current kind
+    kind_dependencies_tasks = attr.ib()
+
+    # Global configuration of the taskgraph
+    graph_config = attr.ib(type=GraphConfig)
 
 
+@attr.s()
 class TransformSequence(object):
     """
     Container for a sequence of transforms.  Each transform is represented as a
@@ -42,22 +50,38 @@ class TransformSequence(object):
     sequence.
     """
 
-    def __init__(self, transforms=None):
-        self.transforms = transforms or []
+    _transforms = attr.ib(factory=list)
 
     def __call__(self, config, items):
-        for xform in self.transforms:
+        for xform in self._transforms:
             items = xform(config, items)
             if items is None:
                 raise Exception("Transform {} is not a generator".format(xform))
         return items
 
-    def __repr__(self):
-        return '\n'.join(
-            ['TransformSequence(['] +
-            [repr(x) for x in self.transforms] +
-            ['])'])
-
     def add(self, func):
-        self.transforms.append(func)
+        self._transforms.append(func)
         return func
+
+    def add_validate(self, schema):
+        self.add(ValidateSchema(schema))
+
+
+@attr.s
+class ValidateSchema(object):
+    schema = attr.ib(type=Schema)
+
+    def __call__(self, config, tasks):
+        for task in tasks:
+            if 'name' in task:
+                error = "In {kind} kind task {name!r}:".format(
+                    kind=config.kind, name=task['name'])
+            elif 'label' in task:
+                error = "In job {label!r}:".format(label=task['label'])
+            elif 'primary-dependency' in task:
+                error = "In {kind} kind task for {dependency!r}:".format(
+                    kind=config.kind, dependency=task['primary-dependency'].label)
+            else:
+                error = "In unknown task:"
+            validate_schema(self.schema, task, error)
+            yield task
