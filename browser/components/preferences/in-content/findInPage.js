@@ -310,7 +310,7 @@ var gSearchResultsPane = {
       gotoPref("paneGeneral");
 
       // Hide some special second level headers in normal view
-      for (let element of document.querySelectorAll("caption.search-header")) {
+      for (let element of document.querySelectorAll(".search-header")) {
         element.hidden = true;
       }
     }

@@ -279,9 +279,7 @@
     <vbox id="securityPanel">
       <!-- Identity Section -->
       <groupbox>
-        <caption>
-          <label class="header" value="&securityView.identity.header;"/>
-        </caption>
+        <label class="header" value="&securityView.identity.header;"/>
         <grid>
           <columns>
             <column/>
@@ -326,9 +324,7 @@
 
       <!-- Privacy & History section -->
       <groupbox>
-        <caption>
-          <label class="header" value="&securityView.privacy.header;"/>
-        </caption>
+        <label class="header" value="&securityView.privacy.header;"/>
         <grid>
           <columns>
             <column flex="1"/>
@@ -373,9 +369,7 @@
 
       <!-- Technical Details section -->
       <groupbox>
-        <caption>
-          <label class="header" value="&securityView.technical.header;"/>
-        </caption>
+        <label class="header" value="&securityView.technical.header;"/>
         <label id="security-technical-shortform"/>
         <description id="security-technical-longform1"/>
         <description id="security-technical-longform2"/>

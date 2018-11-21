@@ -319,7 +319,7 @@ enum Role {
 
   /**
    * Represents a progress bar, dynamically showing the user the percent
-   * complete of an operation in progress. It is used for xul:progressmeter,
+   * complete of an operation in progress. It is used for html:progress,
    * role="progressbar".
    */
   PROGRESSBAR = 48,

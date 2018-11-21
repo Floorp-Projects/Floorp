@@ -27,7 +27,7 @@
   <separator class="thin"/>
 
   <groupbox>
-    <caption  data-l10n-id="remove-info"/>
+    <label data-l10n-id="remove-info"/>
 
     <hbox align="center">
       <label control="password" data-l10n-id="remove-password-old-password"/> 

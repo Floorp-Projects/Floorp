@@ -9,6 +9,7 @@
 
 <dialog id="ConnectionsDialog" type="child"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         data-l10n-id="connection-window"
         data-l10n-attrs="title, style"
         buttons="accept,cancel,help"
@@ -45,7 +46,7 @@
   </hbox>
 
   <groupbox>
-    <caption><label data-l10n-id="connection-proxy-configure" /></caption>
+    <label><html:h2 data-l10n-id="connection-proxy-configure"/></label>
 
     <radiogroup id="networkProxyType" preference="network.proxy.type"
                 onsyncfrompreference="return gConnectionsDialog.readProxyType();">

@@ -834,6 +834,7 @@ button.warning {
 }
 
 .download-progress .progress {
+  -moz-box-flex: 1;
   -moz-appearance: none;
   background-color: transparent;
   padding: 0;

@@ -314,7 +314,8 @@ StyleEditorUI.prototype = {
 
         const toolbox = gDevTools.getToolbox(this._target);
         const sourceMapService = toolbox.sourceMapService;
-        if (!sourceMapService) {
+
+        if (!sourceMapService || !Services.prefs.getBoolPref(PREF_ORIG_SOURCES)) {
           return editor;
         }
 

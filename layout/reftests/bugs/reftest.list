@@ -1260,7 +1260,6 @@ fails == 472020-2.xul 472020-2-ref.xul
 == 472769-2.html 472769-2-ref.html
 == 472769-3.html 472769-3-ref.html
 == 473847-1.xul 473847-1-ref.xul
-fuzzy-if(skiaContent,0-1,0-16) == 474336-1.xul 474336-1-ref.xul
 == 474417-1.html 474417-1-ref.html
 fuzzy-if(skiaContent,0-1,0-5) == 474472-1.html 474472-1-ref.html
 == 475986-1a.html 475986-1-ref.html

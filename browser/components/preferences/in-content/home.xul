@@ -22,7 +22,7 @@
 <groupbox id="homepageGroup"
           data-category="paneHome"
           hidden="true">
-  <caption><label data-l10n-id="home-new-windows-tabs-header"/></caption>
+  <label><html:h2 data-l10n-id="home-new-windows-tabs-header"/></label>
   <description data-l10n-id="home-new-windows-tabs-description2" />
 
   <hbox id="homepageAndNewWindowsOption">

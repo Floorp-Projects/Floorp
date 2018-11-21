@@ -32,7 +32,7 @@
 
   <hbox>
     <groupbox flex="1">
-      <caption><label data-l10n-id="colors-text-and-background"/></caption>
+      <label><html:h2 data-l10n-id="colors-text-and-background"/></label>
       <hbox align="center">
         <label data-l10n-id="colors-text-header" control="foregroundtextmenu"/>
         <spacer flex="1"/>
@@ -53,7 +53,7 @@
     </groupbox>
 
     <groupbox flex="1">
-      <caption><label data-l10n-id="colors-links-header"/></caption>
+      <label><html:h2 data-l10n-id="colors-links-header"/></label>
       <hbox align="center">
         <label data-l10n-id="colors-unvisited-links" control="unvisitedlinkmenu" />
         <spacer flex="1"/>

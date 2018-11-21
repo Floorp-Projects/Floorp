@@ -54,7 +54,7 @@
 
     <vbox flex="1">
       <groupbox id="groupbox">
-        <caption><label value="Some caption"/></caption>
+        <label value="Some caption"/>
         <checkbox label="some checkbox label" />
     </groupbox>
     </vbox>
