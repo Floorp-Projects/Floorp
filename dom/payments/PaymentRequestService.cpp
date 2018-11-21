@@ -279,7 +279,8 @@ PaymentRequestService::RequestPayment(const nsAString& aRequestId,
       break;
     }
     case IPCPaymentActionRequest::TIPCPaymentShowActionRequest: {
-      rv = ShowPayment(aRequestId);
+      const IPCPaymentShowActionRequest& action = aAction;
+      rv = ShowPayment(aRequestId, action.isUpdating());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -316,21 +317,18 @@ PaymentRequestService::RequestPayment(const nsAString& aRequestId,
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-
-      // mShowingRequest exists and it equals to the updated PaymentRequest
-      // Call UI::UpdatePayment
-      if (mShowingRequest && mShowingRequest == request) {
-        rv = LaunchUIAction(aRequestId, type);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-      } else {
-        // mShowingRequest does not equal to the updated PaymentRequest, try to
-        // show the updated one.
-        rv = ShowPayment(aRequestId);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
+      nsAutoString completeStatus;
+      rv = request->GetCompleteStatus(completeStatus);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      if (completeStatus.Equals(NS_LITERAL_STRING("initial"))) {
+        request->SetCompleteStatus(EmptyString());
+      }
+      MOZ_ASSERT(mShowingRequest && mShowingRequest == request);
+      rv = LaunchUIAction(aRequestId, type);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
       }
       break;
     }
@@ -516,7 +514,7 @@ PaymentRequestService::CanMakePayment(const nsAString& aRequestId)
 }
 
 nsresult
-PaymentRequestService::ShowPayment(const nsAString& aRequestId)
+PaymentRequestService::ShowPayment(const nsAString& aRequestId, bool aIsUpdating)
 {
   nsresult rv;
   RefPtr<payments::PaymentRequest> request;
@@ -526,6 +524,9 @@ PaymentRequestService::ShowPayment(const nsAString& aRequestId)
   }
   MOZ_ASSERT(request);
   request->SetState(payments::PaymentRequest::eInteractive);
+  if (aIsUpdating) {
+    request->SetCompleteStatus(NS_LITERAL_STRING("initial"));
+  }
 
   if (mShowingRequest || !CanMakePayment(aRequestId)) {
     uint32_t responseStatus;

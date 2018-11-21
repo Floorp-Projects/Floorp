@@ -664,7 +664,6 @@ PaymentRequest::PaymentRequest(nsPIDOMWindowInner* aWindow, const nsAString& aIn
   , mShippingAddress(nullptr)
   , mUpdating(false)
   , mRequestShipping(false)
-  , mDeferredShow(false)
   , mUpdateError(NS_OK)
   , mState(eCreated)
   , mIPC(nullptr)
@@ -756,7 +755,6 @@ PaymentRequest::Show(const Optional<OwningNonNull<Promise>>& aDetailsPromise,
   if (aDetailsPromise.WasPassed()) {
     aDetailsPromise.Value().AppendNativeHandler(this);
     mUpdating = true;
-    mDeferredShow = true;
   }
 
   RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
@@ -858,9 +856,7 @@ PaymentRequest::Abort(ErrorResult& aRv)
 
   RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
   MOZ_ASSERT(manager);
-  // It's possible to be called between show and its promise resolving.
-  nsresult rv = manager->AbortPayment(this, mDeferredShow);
-  mDeferredShow = false;
+  nsresult rv = manager->AbortPayment(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -905,8 +901,7 @@ PaymentRequest::RespondAbortPayment(bool aSuccess)
 }
 
 nsresult
-PaymentRequest::UpdatePayment(JSContext* aCx, const PaymentDetailsUpdate& aDetails,
-                              bool aDeferredShow)
+PaymentRequest::UpdatePayment(JSContext* aCx, const PaymentDetailsUpdate& aDetails)
 {
   NS_ENSURE_ARG_POINTER(aCx);
   if (mState != eInteractive) {
@@ -916,8 +911,7 @@ PaymentRequest::UpdatePayment(JSContext* aCx, const PaymentDetailsUpdate& aDetai
   if (NS_WARN_IF(!manager)) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = manager->UpdatePayment(aCx, this, aDetails, mRequestShipping,
-                                       aDeferredShow);
+  nsresult rv = manager->UpdatePayment(aCx, this, aDetails, mRequestShipping);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -925,7 +919,7 @@ PaymentRequest::UpdatePayment(JSContext* aCx, const PaymentDetailsUpdate& aDetai
 }
 
 void
-PaymentRequest::AbortUpdate(nsresult aRv, bool aDeferredShow)
+PaymentRequest::AbortUpdate(nsresult aRv)
 {
   MOZ_ASSERT(NS_FAILED(aRv));
 
@@ -935,7 +929,7 @@ PaymentRequest::AbortUpdate(nsresult aRv, bool aDeferredShow)
   // Close down any remaining user interface.
   RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
   MOZ_ASSERT(manager);
-  nsresult rv = manager->AbortPayment(this, aDeferredShow);
+  nsresult rv = manager->AbortPayment(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -1138,33 +1132,29 @@ PaymentRequest::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
   // Converting value to a PaymentDetailsUpdate dictionary
   PaymentDetailsUpdate details;
   if (!details.Init(aCx, aValue)) {
-    AbortUpdate(NS_ERROR_DOM_TYPE_ERR, mDeferredShow);
+    AbortUpdate(NS_ERROR_DOM_TYPE_ERR);
     JS_ClearPendingException(aCx);
     return;
   }
 
   nsresult rv = IsValidDetailsUpdate(details, mRequestShipping);
   if (NS_FAILED(rv)) {
-    AbortUpdate(rv, mDeferredShow);
+    AbortUpdate(rv);
     return;
   }
 
   // Update the PaymentRequest with the new details
-  if (NS_FAILED(UpdatePayment(aCx, details, mDeferredShow))) {
-    AbortUpdate(NS_ERROR_DOM_ABORT_ERR, mDeferredShow);
+  if (NS_FAILED(UpdatePayment(aCx, details))) {
+    AbortUpdate(NS_ERROR_DOM_ABORT_ERR);
     return;
   }
-
-  mDeferredShow = false;
 }
 
 void
 PaymentRequest::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {
-  MOZ_ASSERT(mDeferredShow);
   mUpdating = false;
-  AbortUpdate(NS_ERROR_DOM_ABORT_ERR, mDeferredShow);
-  mDeferredShow = false;
+  AbortUpdate(NS_ERROR_DOM_ABORT_ERR);
 }
 
 void
