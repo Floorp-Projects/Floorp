@@ -26,7 +26,7 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
 // List of available local providers, each is implemented in its own jsm module
 // and will track different queries internally by queryContext.
 var localProviderModules = {
-  UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
+  UrlbarProviderUnifiedComplete: "resource:///modules/UrlbarProviderUnifiedComplete.jsm",
 };
 
 // To improve dataflow and reduce UI work, when a match is added by a
@@ -181,7 +181,7 @@ class Query {
         break;
       }
       if (this._providerHasAcceptableSources(provider)) {
-        promises.push(provider.startQuery(this.context, this.add));
+        promises.push(provider.startQuery(this.context, this.add.bind(this)));
       }
     }
 
@@ -254,7 +254,7 @@ class Query {
 
     // Filter out javascript results for safety. The provider is supposed to do
     // it, but we don't want to risk leaking these out.
-    if (match.url.startsWith("javascript:") &&
+    if (match.payload.url && match.payload.url.startsWith("javascript:") &&
         !this.context.searchString.startsWith("javascript:") &&
         UrlbarPrefs.get("filter.javascript")) {
       return;
@@ -381,7 +381,7 @@ function getAcceptableMatchSources(context) {
           acceptedSources.push(source);
         }
         break;
-      case UrlbarUtils.MATCH_SOURCE.SEARCHENGINE:
+      case UrlbarUtils.MATCH_SOURCE.SEARCH:
         if (UrlbarPrefs.get("suggest.searches") &&
             (!restrictTokenType ||
              restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_SEARCH)) {

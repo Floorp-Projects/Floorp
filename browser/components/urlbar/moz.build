@@ -12,6 +12,7 @@ EXTRA_JS_MODULES += [
     'UrlbarPrefs.jsm',
     'UrlbarProviderOpenTabs.jsm',
     'UrlbarProvidersManager.jsm',
+    'UrlbarProviderUnifiedComplete.jsm',
     'UrlbarTokenizer.jsm',
     'UrlbarUtils.jsm',
     'UrlbarValueFormatter.jsm',

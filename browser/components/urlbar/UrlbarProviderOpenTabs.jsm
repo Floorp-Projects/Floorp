@@ -86,12 +86,16 @@ class ProviderOpenTabs {
 
   /**
    * Returns the type of this provider.
-   * @returns {integer} one of the types from UrlbarProvidersManager.TYPE.*
+   * @returns {integer} one of the types from UrlbarUtils.PROVIDER_TYPE.*
    */
   get type() {
     return UrlbarUtils.PROVIDER_TYPE.PROFILE;
   }
 
+  /**
+   * Returns the sources returned by this provider.
+   * @returns {array} one or multiple types from UrlbarUtils.MATCH_SOURCE.*
+   */
   get sources() {
     return [
       UrlbarUtils.MATCH_SOURCE.TABS,
@@ -139,10 +143,11 @@ class ProviderOpenTabs {
    * @returns {Promise} resolved when the query stops.
    */
   async startQuery(queryContext, addCallback) {
+    // Note: this is not actually expected to be used as an internal provider,
+    // because normal history search will already coalesce with the open tabs
+    // temp table to return proper frecency.
     // TODO:
     //  * properly search and handle tokens, this is just a mock for now.
-    //  * we won't search openTabs like this usually, the history search will
-    //  * coalesce the temp table with its data.
     logger.info(`Starting query for ${queryContext.searchString}`);
     let instance = {};
     this.queries.set(queryContext, instance);
