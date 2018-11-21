@@ -568,10 +568,9 @@ typedef enum sdp_srtp_crypto_suite_t_ {
 
 
 /* Max number of stream ids that can be grouped together */
-#define SDP_MAX_MEDIA_STREAMS 32
+#define SDP_MAX_MEDIA_STREAMS 128
 
 #define SDP_UNSUPPORTED         "Unsupported"
-#define SDP_MAX_LINE_LEN   256 /* Max len for SDP Line */
 
 #define SDP_MAX_PROFILE_VALUE  10
 #define SDP_MAX_LEVEL_VALUE    100
