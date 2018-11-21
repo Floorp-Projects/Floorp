@@ -78,6 +78,46 @@ case $cmd in
         ${TOPSRCDIR}/test.mozbuild \
         ${tgtpath}/
 
+    # Additional libraries (optionally) used by SpiderMonkey
+    cp -pPR \
+        ${TOPSRCDIR}/mfbt \
+        ${TOPSRCDIR}/nsprpub \
+        ${tgtpath}/
+
+    ${MKDIR} -p ${tgtpath}/intl
+    cp -pPR \
+        ${TOPSRCDIR}/intl/icu \
+        ${tgtpath}/intl/
+
+    ${MKDIR} -p ${tgtpath}/memory
+    cp -pPR \
+        ${TOPSRCDIR}/memory/moz.build \
+        ${TOPSRCDIR}/memory/build \
+        ${TOPSRCDIR}/memory/fallible \
+        ${TOPSRCDIR}/memory/mozalloc \
+        ${tgtpath}/memory/
+
+    ${MKDIR} -p ${tgtpath}/modules
+    cp -pPR \
+        ${TOPSRCDIR}/modules/fdlibm \
+        ${TOPSRCDIR}/modules/zlib \
+        ${tgtpath}/modules/
+
+    ${MKDIR} -p ${tgtpath}/mozglue
+    cp -pPR \
+        ${TOPSRCDIR}/mozglue/build \
+        ${TOPSRCDIR}/mozglue/misc \
+        ${TOPSRCDIR}/mozglue/moz.build \
+        ${tgtpath}/mozglue/
+
+    ${MKDIR} -p ${tgtpath}/tools/fuzzing
+    cp -pPR \
+        ${TOPSRCDIR}/tools/fuzzing/moz.build \
+        ${TOPSRCDIR}/tools/fuzzing/interface \
+        ${TOPSRCDIR}/tools/fuzzing/registry \
+        ${TOPSRCDIR}/tools/fuzzing/libfuzzer \
+        ${tgtpath}/tools/fuzzing/
+
 
     cp -pPR ${TOPSRCDIR}/js/app.mozbuild ${tgtpath}/js/
     cp -pPR ${TOPSRCDIR}/js/moz.configure ${tgtpath}/js/
@@ -87,13 +127,6 @@ case $cmd in
     cp -pPR ${TOPSRCDIR}/taskcluster/moz.build ${tgtpath}/taskcluster/
     cp -pPR ${TOPSRCDIR}/taskcluster/taskgraph/test ${tgtpath}/taskcluster/taskgraph/
 
-    # copy the embedded icu
-    ${MKDIR} -p ${tgtpath}/intl
-    cp -pPR ${TOPSRCDIR}/intl/icu ${tgtpath}/intl/
-
-    # copy nspr.
-    cp -pPR ${TOPSRCDIR}/nsprpub ${tgtpath}/
-
     # copy build and config directory.
     cp -pPR ${TOPSRCDIR}/build ${TOPSRCDIR}/config ${tgtpath}/
 
@@ -102,7 +135,6 @@ case $cmd in
     cp -pPR ${TOPSRCDIR}/.cargo/config.in ${tgtpath}/.cargo/
 
     # put in js itself
-    cp -pPR ${TOPSRCDIR}/mfbt ${tgtpath}/
     cp -p ${TOPSRCDIR}/js/moz.configure ${tgtpath}/js/
     cp -pPR ${TOPSRCDIR}/js/public ${tgtpath}/js/
     cp -pPR ${TOPSRCDIR}/js/rust ${tgtpath}/js/
@@ -128,13 +160,6 @@ case $cmd in
     cp -pPR \
         ${TOPSRCDIR}/testing/mozbase \
         ${tgtpath}/testing/
-    ${MKDIR} -p ${tgtpath}/modules
-    cp -pPR \
-       ${TOPSRCDIR}/modules/fdlibm \
-       ${tgtpath}/modules/
-    cp -pPR \
-        ${TOPSRCDIR}/modules/zlib \
-        ${tgtpath}/modules/
     ${MKDIR} -p ${tgtpath}/layout/tools/reftest
     cp -pPR \
         ${TOPSRCDIR}/layout/tools/reftest/reftest \
@@ -148,26 +173,6 @@ case $cmd in
     cp -pPR \
         ${TOPSRCDIR}/toolkit/crashreporter/tools/symbolstore.py \
         ${tgtpath}/toolkit/crashreporter/tools/
-    ${MKDIR} -p ${tgtpath}/mozglue
-    cp -pPR \
-        ${TOPSRCDIR}/mozglue/build \
-        ${TOPSRCDIR}/mozglue/misc \
-        ${TOPSRCDIR}/mozglue/moz.build \
-        ${tgtpath}/mozglue/
-    ${MKDIR} -p ${tgtpath}/memory
-    cp -pPR \
-        ${TOPSRCDIR}/memory/moz.build \
-        ${TOPSRCDIR}/memory/build \
-        ${TOPSRCDIR}/memory/fallible \
-        ${TOPSRCDIR}/memory/mozalloc \
-        ${tgtpath}/memory/
-    ${MKDIR} -p ${tgtpath}/tools/fuzzing
-    cp -pPR \
-        ${TOPSRCDIR}/tools/fuzzing/moz.build \
-        ${TOPSRCDIR}/tools/fuzzing/interface \
-        ${TOPSRCDIR}/tools/fuzzing/registry \
-        ${TOPSRCDIR}/tools/fuzzing/libfuzzer \
-        ${tgtpath}/tools/fuzzing/
 
     # Generate configure files to avoid build dependency on autoconf-2.13
     cp -pPR ${TOPSRCDIR}/js/src/configure.in ${tgtpath}/js/src/configure
