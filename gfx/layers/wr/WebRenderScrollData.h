@@ -69,8 +69,7 @@ public:
   void SetTransformIsPerspective(bool aTransformIsPerspective) { mTransformIsPerspective = aTransformIsPerspective; }
   bool GetTransformIsPerspective() const { return mTransformIsPerspective; }
 
-  void AddEventRegions(const EventRegions& aRegions) { mEventRegions.OrWith(aRegions); }
-  EventRegions GetEventRegions() const { return mEventRegions; }
+  EventRegions GetEventRegions() const { return EventRegions(); }
   void SetEventRegionsOverride(const EventRegionsOverride& aOverride) { mEventRegionsOverride = aOverride; }
   EventRegionsOverride GetEventRegionsOverride() const { return mEventRegionsOverride; }
 
@@ -113,7 +112,6 @@ private:
   gfx::Matrix4x4 mAncestorTransform;
   gfx::Matrix4x4 mTransform;
   bool mTransformIsPerspective;
-  EventRegions mEventRegions;
   LayerIntRegion mVisibleRegion;
   Maybe<LayersId> mReferentId;
   EventRegionsOverride mEventRegionsOverride;
@@ -234,7 +232,6 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData>
     WriteParam(aMsg, aParam.mAncestorTransform);
     WriteParam(aMsg, aParam.mTransform);
     WriteParam(aMsg, aParam.mTransformIsPerspective);
-    WriteParam(aMsg, aParam.mEventRegions);
     WriteParam(aMsg, aParam.mVisibleRegion);
     WriteParam(aMsg, aParam.mReferentId);
     WriteParam(aMsg, aParam.mEventRegionsOverride);
@@ -252,7 +249,6 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData>
         && ReadParam(aMsg, aIter, &aResult->mAncestorTransform)
         && ReadParam(aMsg, aIter, &aResult->mTransform)
         && ReadParam(aMsg, aIter, &aResult->mTransformIsPerspective)
-        && ReadParam(aMsg, aIter, &aResult->mEventRegions)
         && ReadParam(aMsg, aIter, &aResult->mVisibleRegion)
         && ReadParam(aMsg, aIter, &aResult->mReferentId)
         && ReadParam(aMsg, aIter, &aResult->mEventRegionsOverride)
