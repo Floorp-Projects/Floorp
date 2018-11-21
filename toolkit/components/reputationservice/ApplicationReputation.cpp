@@ -1422,29 +1422,6 @@ PendingLookup::SendRemoteQueryInternal()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  // If the blocklist or allowlist is empty (so we couldn't do local lookups),
-  // bail
-  {
-    nsAutoCString table;
-    NS_ENSURE_SUCCESS(Preferences::GetCString(PREF_DOWNLOAD_BLOCK_TABLE,
-                                              table),
-                      NS_ERROR_NOT_AVAILABLE);
-    if (table.IsEmpty()) {
-      LOG(("Blocklist is empty [this = %p]", this));
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-  }
-  {
-    nsAutoCString table;
-    NS_ENSURE_SUCCESS(Preferences::GetCString(PREF_DOWNLOAD_ALLOW_TABLE,
-                                              table),
-                      NS_ERROR_NOT_AVAILABLE);
-    if (table.IsEmpty()) {
-      LOG(("Allowlist is empty [this = %p]", this));
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-  }
-
   LOG(("Sending remote query for application reputation [this = %p]",
        this));
   // We did not find a local result, so fire off the query to the
