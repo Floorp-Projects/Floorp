@@ -85,12 +85,31 @@ SimpleTest.waitForFocus(async function() {
       let basePosX = rect.width * baseX;
       let basePosY = rect.height * baseY;
 
+      let inputEventExpected = true;
+      function onInput(aEvent) {
+        if (!inputEventExpected) {
+          ok(false, "\"input\" event shouldn't be fired after stopping resizing");
+          return;
+        }
+        ok(aEvent instanceof InputEvent,
+           '"input" event should be dispatched with InputEvent interface');
+        is(aEvent.cancelable, false,
+           '"input" event should be never cancelable');
+        is(aEvent.bubbles, true,
+           '"input" event should always bubble');
+      }
+
+      content.addEventListener("input", onInput);
+
       // Click on the correct resizer
       synthesizeMouse(target, basePosX, basePosY, {type: "mousedown"});
       // Drag it delta pixels to the right and bottom (or maybe left and top!)
       synthesizeMouse(target, basePosX + deltaX, basePosY + deltaY, {type: "mousemove"});
       // Release the mouse button
       synthesizeMouse(target, basePosX + deltaX, basePosY + deltaY, {type: "mouseup"});
+
+      inputEventExpected = false;
+
       // Move the mouse delta more pixels to the same direction to make sure that the
       // resize operation has stopped.
       synthesizeMouse(target, basePosX + deltaX * 2, basePosY + deltaY * 2, {type: "mousemove"});
@@ -104,6 +123,8 @@ SimpleTest.waitForFocus(async function() {
       let newRect = target.getBoundingClientRect();
       isfuzzy(newRect.width, rect.width + expectedDeltaX, 2, description + "The width should be increased by " + expectedDeltaX + " pixels");
       isfuzzy(newRect.height, rect.height + expectedDeltaY, 2, description + "The height should be increased by " + expectedDeltaY + "pixels");
+
+      content.removeEventListener("input", onInput);
     }
 
     // Account for changes in the resizing behavior when we're trying to preserve

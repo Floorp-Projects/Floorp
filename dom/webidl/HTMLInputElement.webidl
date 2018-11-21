@@ -192,6 +192,12 @@ interface MozEditableElement {
   [Pure, ChromeOnly]
   readonly attribute nsIEditor? editor;
 
+  // This is set to true if "input" event should be fired with InputEvent on
+  // the element.  Otherwise, i.e., if "input" event should be fired with
+  // Event, set to false.
+  [Func="IsChromeOrXBLOrUAWidget"]
+  readonly attribute boolean isInputEventTarget;
+
   // This is similar to set .value on nsIDOMInput/TextAreaElements, but handling
   // of the value change is closer to the normal user input, so 'change' event
   // for example will be dispatched when focusing out the element.

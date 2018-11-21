@@ -7048,6 +7048,11 @@ nsDOMAttributeMap::BlastSubtreeToPieces(nsINode* aNode)
         NS_ASSERTION(NS_SUCCEEDED(rv), "Uh-oh, UnsetAttr shouldn't fail!");
       }
     }
+
+    if (ShadowRoot* shadow = element->GetShadowRoot()) {
+      BlastSubtreeToPieces(shadow);
+      element->UnattachShadow();
+    }
   }
 
   while (aNode->HasChildren()) {

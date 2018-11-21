@@ -51,14 +51,14 @@ async function runTests() {
 
   let tests1 = new nsDoTestsForEditorWithAutoComplete(
     "Testing on HTML input (asynchronously search)",
-    window, target, formFillController.controller, is,
+    window, target, formFillController.controller, is, todo_is,
     function() { return target.value; });
   await tests1.run();
 
   target.setAttribute("timeout", 0);
   let tests2 = new nsDoTestsForEditorWithAutoComplete(
         "Testing on HTML input (synchronously search)",
-        window, target, formFillController.controller, is,
+        window, target, formFillController.controller, is, todo_is,
         function() { return target.value; });
   await tests2.run();
 

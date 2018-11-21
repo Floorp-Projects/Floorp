@@ -2328,6 +2328,9 @@ WebGLContext::GetVRFrame()
 already_AddRefed<layers::SharedSurfaceTextureClient>
 WebGLContext::GetVRFrame()
 {
+  if (!gl)
+      return nullptr;
+
   EnsureVRReady();
   /**
    * Swap buffers as though composition has occurred.
@@ -2336,9 +2339,6 @@ WebGLContext::GetVRFrame()
    */
   BeginComposition();
   EndComposition();
-
-  if (!gl)
-      return nullptr;
 
   gl::GLScreenBuffer* screen = gl->Screen();
   if (!screen)

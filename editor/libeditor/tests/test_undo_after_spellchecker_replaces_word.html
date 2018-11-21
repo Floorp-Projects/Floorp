@@ -21,24 +21,56 @@ SimpleTest.waitForFocus(() => {
 
   textarea.focus();
 
+  function checkInputEvent(aEvent, aDescription) {
+    ok(aEvent instanceof InputEvent,
+       `"input" event should be dispatched with InputEvent interface ${aDescription}`);
+    is(aEvent.cancelable, false,
+       `"input" event should be never cancelable ${aDescription}`);
+    is(aEvent.bubbles, true,
+       `"input" event should always bubble ${aDescription}`);
+  }
+
+  let inputEvents = [];
+  function onInput(aEvent) {
+    inputEvents.push(aEvent);
+  }
+
   SpecialPowers.Cu.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
   .onSpellCheck(textarea, () => {
     SimpleTest.executeSoon(() => {
+      textarea.addEventListener("input", onInput);
+
       let misspelledWord = inlineSpellChecker.getMisspelledWord(editor.rootElement.firstChild, 5);
       is(misspelledWord.startOffset, 4,
          "Misspelled word should start from 4");
       is(misspelledWord.endOffset, 7,
          "Misspelled word should end at 7");
+      inputEvents = [];
       inlineSpellChecker.replaceWord(editor.rootElement.firstChild, 5, "aux");
       is(textarea.value, "abc aux abc",
          "'abx' should be replaced with 'aux'");
+      is(inputEvents.length, 1,
+         'Only one "input" event should be fired when replacing a word with spellchecker');
+      checkInputEvent(inputEvents[0], "when replacing a word with spellchecker");
+
+      inputEvents = [];
       synthesizeKey("z", { accelKey: true });
       is(textarea.value, "abc abx abc",
          "'abx' should be restored by undo");
+      is(inputEvents.length, 1,
+         'Only one "input" event should be fired when undoing the replacing word');
+      checkInputEvent(inputEvents[0], "when undoing the replacing word");
+
+      inputEvents = [];
       synthesizeKey("z", { accelKey: true, shiftKey: true });
       is(textarea.value, "abc aux abc",
          "'aux' should be restored by redo");
+      is(inputEvents.length, 1,
+         'Only one "input" event should be fired when redoing the replacing word');
+      checkInputEvent(inputEvents[0], "when redoing the replacing word");
+
+      textarea.removeEventListener("input", onInput);
 
       SimpleTest.finish();
     });

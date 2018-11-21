@@ -53,15 +53,14 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view: ruleView } = await openRuleView();
   const { document: doc, store } = selectChangesView(inspector);
-  const panel = doc.querySelector("#sidebar-panel-changes");
 
   await selectNode("div", inspector);
   const rule = getRuleViewRuleEditor(ruleView, 1).rule;
   const prop = rule.textProps[0];
 
   let onTrackChange;
-  let removeValue;
-  let addValue;
+  let removeDecl;
+  let addDecl;
 
   for (const { value, add, remove } of VALUE_CHANGE_ITERATIONS) {
     onTrackChange = waitUntilAction(store, "TRACK_CHANGE");
@@ -71,25 +70,24 @@ add_task(async function() {
     info("Wait for the change to be tracked");
     await onTrackChange;
 
-    addValue = panel.querySelector(".diff-add .declaration-value");
-    removeValue = panel.querySelector(".diff-remove .declaration-value");
+    addDecl = getAddedDeclarations(doc);
+    removeDecl = getRemovedDeclarations(doc);
 
     if (add) {
-      is(addValue.textContent, add.value,
+      is(addDecl[0].value, add.value,
         `Added declaration has expected value: ${add.value}`);
-      is(panel.querySelectorAll(".diff-add").length, 1,
-        "Only one declaration was tracked as added.");
+      is(addDecl.length, 1, "Only one declaration was tracked as added.");
     } else {
-      ok(!addValue, `Added declaration was cleared`);
+      is(addDecl.length, 0, "Added declaration was cleared");
     }
 
     if (remove) {
-      is(removeValue.textContent, remove.value,
+      is(removeDecl[0].value, remove.value,
         `Removed declaration has expected value: ${remove.value}`);
-      is(panel.querySelectorAll(".diff-remove").length, 1,
+      is(removeDecl.length, 1,
         "Only one declaration was tracked as removed.");
     } else {
-      ok(!removeValue, `Removed declaration was cleared`);
+      is(removeDecl.length, 0, "Removed declaration was cleared");
     }
   }
 });

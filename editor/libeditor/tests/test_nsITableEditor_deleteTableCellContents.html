@@ -19,17 +19,38 @@ SimpleTest.waitForFocus(function() {
   let editor = document.getElementById("content");
   let selection = document.getSelection();
 
+  function checkInputEvent(aEvent, aDescription) {
+    ok(aEvent instanceof InputEvent,
+       `"input" event should be dispatched with InputEvent interface ${aDescription}`);
+    is(aEvent.cancelable, false,
+       `"input" event should be never cancelable ${aDescription}`);
+    is(aEvent.bubbles, true,
+       `"input" event should always bubble ${aDescription}`);
+  }
+
+  let inputEvents = [];
+  function onInput(aEvent) {
+    inputEvents.push(aEvent);
+  }
+  editor.addEventListener("input", onInput);
+
   selection.collapse(editor.firstChild, 0);
+  inputEvents = [];
   getTableEditor().deleteTableCellContents();
   is(editor.innerHTML, "out of table<table><tbody><tr><td>default content</td></tr></tbody></table>",
-     "nsITableEditor.deleteTableColumn() should do nothing if selection is not in <table>");
+     "nsITableEditor.deleteTableCellContents() should do nothing if selection is not in <table>");
+  is(inputEvents.length, 0,
+     'No "input" event should be fired when a call of nsITableEditor.deleteTableCellContents() does nothing');
 
   selection.removeAllRanges();
   try {
+    inputEvents = [];
     getTableEditor().deleteTableCellContents();
     ok(false, "getTableEditor().deleteTableCellContents() without selection ranges should throw exception");
   } catch (e) {
     ok(true, "getTableEditor().deleteTableCellContents() without selection ranges should throw exception");
+    is(inputEvents.length, 0,
+       'No "input" event should be fired when nsITableEditor.deleteTableCellContents() causes exception due to no selection range');
   }
 
   selection.removeAllRanges();
@@ -38,6 +59,7 @@ SimpleTest.waitForFocus(function() {
                        "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
                      "</table>";
   editor.focus();
+  inputEvents = [];
   let range = document.createRange();
   range.selectNode(document.getElementById("select"));
   selection.addRange(range);
@@ -47,6 +69,9 @@ SimpleTest.waitForFocus(function() {
                          "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.deleteTableCellContents() should replace the selected cell's text with <br> element");
+  is(inputEvents.length, 1,
+     'Only one "input" event should be fired when all text in a cell is selected');
+  checkInputEvent(inputEvents[0], "when all text in a cell is selected");
 
   selection.removeAllRanges();
   editor.innerHTML = "<table>" +
@@ -54,6 +79,7 @@ SimpleTest.waitForFocus(function() {
                        "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
                      "</table>";
   editor.focus();
+  inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select"));
   selection.addRange(range);
@@ -63,6 +89,9 @@ SimpleTest.waitForFocus(function() {
                          "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.deleteTableCellContents() should replace the selected cell's <ul> element with <br> element");
+  is(inputEvents.length, 1,
+     'Only one "input" event should be fired when <ul> element in a cell is selected');
+  checkInputEvent(inputEvents[0], "when <ul> element in a cell is selected");
 
   selection.removeAllRanges();
   editor.innerHTML = "<table>" +
@@ -70,6 +99,7 @@ SimpleTest.waitForFocus(function() {
                        '<tr><td id="select2">cell2-1</td><td>cell2-2</td></tr>' +
                      "</table>";
   editor.focus();
+  inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select1"));
   selection.addRange(range);
@@ -82,6 +112,9 @@ SimpleTest.waitForFocus(function() {
                          '<tr><td id="select2"><br></td><td>cell2-2</td></tr>' +
                        "</tbody></table>",
      "nsITableEditor.deleteTableCellContents() should replace the selected 2 cells' text with <br> element");
+  is(inputEvents.length, 1,
+     'Only one "input" event should be fired when 2 cell elements are selected');
+  checkInputEvent(inputEvents[0], "when 2 cell elements are selected");
 
   selection.removeAllRanges();
   editor.innerHTML = "<table>" +
@@ -89,6 +122,7 @@ SimpleTest.waitForFocus(function() {
                        '<tr><td id="select3">cell2-1</td><td id="select4">cell2-2</td></tr>' +
                      "</table>";
   editor.focus();
+  inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select1"));
   selection.addRange(range);
@@ -107,6 +141,9 @@ SimpleTest.waitForFocus(function() {
                          '<tr><td id="select3"><br></td><td id="select4"><br></td></tr>' +
                        "</tbody></table>",
      "nsITableEditor.deleteTableCellContents() should replace the selected 4 cells' text with <br> element");
+  is(inputEvents.length, 1,
+     'Only one "input" event should be fired when 4 cell elements are selected');
+  checkInputEvent(inputEvents[0], "when 4 cell elements are selected");
 
   selection.removeAllRanges();
   editor.innerHTML = "<table>" +
@@ -114,6 +151,7 @@ SimpleTest.waitForFocus(function() {
                        "<tr><td>cell2-2</td></tr>" +
                      "</table>";
   editor.focus();
+  inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select"));
   selection.addRange(range);
@@ -123,6 +161,9 @@ SimpleTest.waitForFocus(function() {
                          "<tr><td>cell2-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.deleteTableCellContents() should replace the selected cell's text with <br> element (even if the cell is row-spanning)");
+  is(inputEvents.length, 1,
+     'Only one "input" event should be fired when a cell element are selected (even if the cell is row-spanning)');
+  checkInputEvent(inputEvents[0], "when a cell element are selected (even if the cell is row-spanning)");
 
   selection.removeAllRanges();
   editor.innerHTML = "<table>" +
@@ -130,6 +171,7 @@ SimpleTest.waitForFocus(function() {
                        "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
                      "</table>";
   editor.focus();
+  inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select"));
   selection.addRange(range);
@@ -139,6 +181,9 @@ SimpleTest.waitForFocus(function() {
                           "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
                         "</tbody></table>",
      "nsITableEditor.deleteTableCellContents() should replace the selected cell's text with <br> element (even if the cell is column-spanning)");
+  is(inputEvents.length, 1,
+     'Only one "input" event should be fired when a cell element are selected (even if the cell is column-spanning)');
+  checkInputEvent(inputEvents[0], "when a cell element are selected (even if the cell is column-spanning)");
 
   selection.removeAllRanges();
   editor.innerHTML = "<table>" +
@@ -147,6 +192,7 @@ SimpleTest.waitForFocus(function() {
                      "</table>";
   editor.focus();
   editor.scrollTop; // Requires layout information.
+  inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
                              document.getElementById("select").firstChild, 0);
   getTableEditor().deleteTableCellContents();
@@ -155,6 +201,11 @@ SimpleTest.waitForFocus(function() {
                          "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.deleteTableCellContents() should replace a cell's text with <br> element when the cell contains selection range");
+  is(inputEvents.length, 1,
+     'Only one "input" event should be fired when the cell contains selection range');
+  checkInputEvent(inputEvents[0], "when the cell contains selection range");
+
+  editor.removeEventListener("input", onInput);
 
   SimpleTest.finish();
 });

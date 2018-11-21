@@ -266,7 +266,9 @@ const reducers = {
           return addDecl.index === decl.index;
         });
 
-        if (rule.remove[removeIndex] && rule.remove[removeIndex].value === decl.value) {
+        if (rule.remove[removeIndex] &&
+            rule.remove[removeIndex].value === decl.value &&
+            rule.remove[removeIndex].property === decl.property) {
           // Delete any previous remove operation which would be canceled out by this add.
           rule.remove.splice(removeIndex, 1);
         } else if (rule.add[addIndex]) {
