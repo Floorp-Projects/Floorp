@@ -319,7 +319,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.axes = `${this.mainAxisDirection} ${this.crossAxisDirection}`;
 
     const oldFlexData = this.flexData;
-    this.flexData = getFlexData(flex, this.win);
+    this.flexData = getFlexData(this.currentNode);
     const hasFlexDataChanged = compareFlexData(oldFlexData, this.flexData);
 
     const oldAlignItems = this.alignItemsValue;
@@ -563,8 +563,6 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     const zoom = getCurrentZoom(this.win);
     const canvasX = Math.round(this._canvasPosition.x * devicePixelRatio * zoom);
     const canvasY = Math.round(this._canvasPosition.y * devicePixelRatio * zoom);
-    const containerQuad = getUntransformedQuad(this.currentNode, "content");
-    const containerBounds = containerQuad.getBounds();
 
     this.ctx.save();
     this.ctx.translate(offset - canvasX, offset - canvasY);
@@ -574,15 +572,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
 
     for (const flexLine of this.flexData.lines) {
       for (const flexItem of flexLine.items) {
-        if (!flexItem.quad) {
-          continue;
-        }
-
-        const itemBounds = flexItem.quad.getBounds();
-        const left = itemBounds.left - containerBounds.left;
-        const top = itemBounds.top - containerBounds.top;
-        const right = itemBounds.right - containerBounds.left;
-        const bottom = itemBounds.bottom - containerBounds.top;
+        const { left, top, right, bottom } = flexItem.rect;
 
         clearRect(this.ctx, left, top, right, bottom, this.currentMatrix);
         drawRect(this.ctx, left, top, right, bottom, this.currentMatrix);
@@ -699,15 +689,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
       const { crossStart, crossSize } = flexLine;
 
       for (const flexItem of flexLine.items) {
-        if (!flexItem.quad) {
-          continue;
-        }
-
-        const itemBounds = flexItem.quad.getBounds();
-        const left = itemBounds.left - containerBounds.left;
-        const top = itemBounds.top - containerBounds.top;
-        const right = itemBounds.right - containerBounds.left;
-        const bottom = itemBounds.bottom - containerBounds.top;
+        const { left, top, right, bottom } = flexItem.rect;
 
         // Clear a rectangular are covering the alignment container.
         switch (this.axes) {
@@ -778,13 +760,15 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
 
 /**
  * Returns an object representation of the Flex data object and its array of FlexLine
- * and FlexItem objects along with the box quads of the flex items.
+ * and FlexItem objects along with the DOMRects of the flex items.
  *
- * @param  {Flex} flex
- *         The Flex data object.
+ * @param  {DOMNode} container
+ *         The flex container.
  * @return {Object|null} representation of the Flex data object.
  */
-function getFlexData(flex) {
+function getFlexData(container) {
+  const flex = container.getAsFlexContainer();
+
   if (!flex) {
     return null;
   }
@@ -806,12 +790,38 @@ function getFlexData(flex) {
             mainMaxSize: item.mainMaxSize,
             mainMinSize: item.mainMinSize,
             node: item.node,
-            quad: getUntransformedQuad(item.node, "border"),
+            rect: getRectFromFlexItemValues(item, container),
           };
         }),
       };
     }),
   };
+}
+
+/**
+ * Given a FlexItemValues, return a DOMRect representing the flex item taking
+ * into account its flex container's border and padding.
+ *
+ * @param  {FlexItemValues} item
+ *         The FlexItemValues for which we need the DOMRect.
+ * @param  {DOMNode}
+ *         Flex container containing the flex item.
+ * @return {DOMRect} representing the flex item.
+ */
+function getRectFromFlexItemValues(item, container) {
+  const rect = item.frameRect;
+  const domRect = new DOMRect(rect.x, rect.y, rect.width, rect.height);
+  const win = container.ownerGlobal;
+  const style = win.getComputedStyle(container);
+  const borderLeftWidth = parseInt(style.borderLeftWidth, 10) || 0;
+  const borderTopWidth = parseInt(style.borderTopWidth, 10) || 0;
+  const paddingLeft = parseInt(style.paddingLeft, 10) || 0;
+  const paddingTop = parseInt(style.paddingTop, 10) || 0;
+
+  domRect.x -= borderLeftWidth + paddingLeft;
+  domRect.y -= borderTopWidth + paddingTop;
+
+  return domRect;
 }
 
 /**
@@ -867,31 +877,15 @@ function compareFlexData(oldFlexData, newFlexData) {
         return true;
       }
 
-      // For now text node flex items do not have quads because we cannot get
-      // the untransformed position and dimensions of a text node
-      // (see https://bugzil.la/1505079).
-      if ((!oldItem.quad && newItem.quad) ||
-          (oldItem.quad && !newItem.quad)) {
-        return true;
-      }
+      const oldItemRect = oldItem.rect;
+      const newItemRect = newItem.rect;
 
-      if (!oldItem.quad && !newItem.quad) {
-        return false;
-      }
-
-      // There is now only ever one quad so we don't need to compare quad
-      // lengths... we can just check the bounds.
-      const oldItemBounds = oldItem.quad.getBounds();
-      const newItemBounds = newItem.quad.getBounds();
-
-      if (oldItemBounds.bottom !== newItemBounds.bottom ||
-          oldItemBounds.height !== newItemBounds.height ||
-          oldItemBounds.left !== newItemBounds.left ||
-          oldItemBounds.right !== newItemBounds.right ||
-          oldItemBounds.top !== newItemBounds.top ||
-          oldItemBounds.width !== newItemBounds.width ||
-          oldItemBounds.x !== newItemBounds.x ||
-          oldItemBounds.y !== newItemBounds.y) {
+      // We are using DOMRects so we only need to compare x, y, width and
+      // height (left, top, right and bottom are calculated from these values).
+      if (oldItemRect.x !== newItemRect.x ||
+          oldItemRect.y !== newItemRect.y ||
+          oldItemRect.width !== newItemRect.width ||
+          oldItemRect.height !== newItemRect.height) {
         return true;
       }
     }

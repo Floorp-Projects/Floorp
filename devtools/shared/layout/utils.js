@@ -834,14 +834,6 @@ exports.removeSheet = removeSheet;
  *         A DOMQuad representation of the node.
  */
 function getUntransformedQuad(node, region = "border") {
-  if (node.nodeType === node.TEXT_NODE) {
-    // For now ignore text node flex items because we cannot get the
-    // untransformed position and dimensions of a text node
-    // (see https://bugzil.la/1505079).
-
-    return null;
-  }
-
   // Get the inverse transformation matrix for the node.
   const matrix = node.getTransformToViewport();
   const inverse = matrix.inverse();
