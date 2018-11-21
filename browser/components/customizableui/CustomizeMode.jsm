@@ -167,8 +167,8 @@ CustomizeMode.prototype = {
     let lwthemeButton = this.$("customization-lwtheme-button");
     let lwthemeIcon = this.document.getAnonymousElementByAttribute(lwthemeButton,
                         "class", "button-icon");
-    let theme = LightweightThemeManager.currentTheme;
-    lwthemeIcon.style.backgroundImage = theme ? "url(" + theme.iconURL + ")" : "";
+    lwthemeIcon.style.backgroundImage = LightweightThemeManager.currentTheme ?
+      "url(" + LightweightThemeManager.currentTheme.iconURL + ")" : "";
   },
 
   setTab(aTab) {
@@ -344,7 +344,6 @@ CustomizeMode.prototype = {
       this._updateEmptyPaletteNotice();
 
       this._updateLWThemeButtonIcon();
-      Services.obs.addObserver(this, "lightweight-theme-changed");
 
       this._setupDownloadAutoHideToggle();
 
@@ -387,7 +386,6 @@ CustomizeMode.prototype = {
 
     this._teardownDownloadAutoHideToggle();
 
-    Services.obs.removeObserver(this, "lightweight-theme-changed");
     CustomizableUI.removeListener(this);
 
     this.document.removeEventListener("keypress", this);
@@ -1070,6 +1068,8 @@ CustomizeMode.prototype = {
 
       CustomizableUI.reset();
 
+      this._updateLWThemeButtonIcon();
+
       await this._wrapToolbarItems();
       this.populatePalette();
 
@@ -1092,6 +1092,8 @@ CustomizeMode.prototype = {
       await this._unwrapToolbarItems();
 
       CustomizableUI.undoReset();
+
+      this._updateLWThemeButtonIcon();
 
       await this._wrapToolbarItems();
       this.populatePalette();
@@ -1326,9 +1328,8 @@ CustomizeMode.prototype = {
     }
 
     let onThemeSelected = panel => {
-      // This causes us to call _onUIChange when the LWT actually changes,
-      // so the restore defaults / undo reset button is updated correctly.
-      this._nextThemeChangeUserTriggered = true;
+      this._updateLWThemeButtonIcon();
+      this._onUIChange();
       panel.hidePopup();
     };
 
@@ -1566,13 +1567,6 @@ CustomizeMode.prototype = {
           this._updateTitlebarCheckbox();
           this._updateDragSpaceCheckbox();
         }
-        break;
-      case "lightweight-theme-changed":
-        this._updateLWThemeButtonIcon();
-        if (this._nextThemeChangeUserTriggered) {
-          this._onUIChange();
-        }
-        this._nextThemeChangeUserTriggered = false;
         break;
     }
   },
