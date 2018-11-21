@@ -37,7 +37,7 @@
     </columns>
     <rows>
       <row>
-        <richlistbox id="requestedLocales"/>
+        <richlistbox id="selectedLocales"/>
         <vbox>
           <button id="up" class="action-button" disabled="true" data-l10n-id="languages-customize-moveup"/>
           <button id="down" class="action-button" disabled="true" data-l10n-id="languages-customize-movedown"/>
