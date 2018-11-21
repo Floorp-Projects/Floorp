@@ -10,31 +10,25 @@ AddonTestUtils.initMochitest(this);
 const BROWSER_LANGUAGES_URL = "chrome://browser/content/preferences/browserLanguages.xul";
 const DICTIONARY_ID_PL = "pl@dictionaries.addons.mozilla.org";
 
-function langpackId(locale) {
-  return `langpack-${locale}@firefox.mozilla.org`;
-}
-
-function getManifestData(locale, version = "2.0") {
+function getManifestData(locale) {
   return {
     langpack_id: locale,
     name: `${locale} Language Pack`,
     description: `${locale} Language pack`,
     languages: {
       [locale]: {
-        chrome_resources: {
-          "branding": `browser/chrome/${locale}/locale/branding/`,
-        },
+        chrome_resources: {},
         version: "1",
       },
     },
     applications: {
       gecko: {
         strict_min_version: AppConstants.MOZ_APP_VERSION,
-        id: langpackId(locale),
+        id: `langpack-${locale}@firefox.mozilla.org`,
         strict_max_version: AppConstants.MOZ_APP_VERSION,
       },
     },
-    version,
+    version: "1",
     manifest_version: 2,
     sources: {
       browser: {
@@ -48,18 +42,13 @@ function getManifestData(locale, version = "2.0") {
 let testLocales = ["fr", "pl", "he"];
 let testLangpacks;
 
-function createLangpack(locale, version) {
-    return AddonTestUtils.createTempXPIFile({
-      "manifest.json": getManifestData(locale, version),
-      [`browser/${locale}/branding/brand.ftl`]: "-brand-short-name = Firefox",
-    });
-}
-
 function createTestLangpacks() {
   if (!testLangpacks) {
     testLangpacks = Promise.all(testLocales.map(async locale => [
       locale,
-      await createLangpack(locale),
+      await AddonTestUtils.createTempXPIFile({
+        "manifest.json": getManifestData(locale),
+      }),
     ]));
   }
   return testLangpacks;
@@ -67,7 +56,6 @@ function createTestLangpacks() {
 
 function createLocaleResult(target_locale, url) {
   return {
-    guid: langpackId(target_locale),
     type: "language",
     target_locale,
     current_compatible_version: {
@@ -134,9 +122,9 @@ async function createDictionaryBrowseResults() {
 
 function assertLocaleOrder(list, locales) {
   is(list.itemCount, locales.split(",").length,
-     "The right number of locales are selected");
+     "The right number of locales are requested");
   is(Array.from(list.children).map(child => child.value).join(","),
-     locales, "The selected locales are in order");
+     locales, "The requested locales are in order");
 }
 
 function assertAvailableLocales(list, locales) {
@@ -149,7 +137,7 @@ function assertAvailableLocales(list, locales) {
   is(items[0].getAttribute("class"), "label-item", "The first row is a label");
 }
 
-function selectLocale(localeCode, available, dialogDoc) {
+function requestLocale(localeCode, available, dialogDoc) {
   let [locale] = Array.from(available.firstElementChild.children)
     .filter(item => item.value == localeCode);
   available.selectedItem = locale;
@@ -170,103 +158,18 @@ async function openDialog(doc, search = false) {
     dialog: dialogDoc.getElementById("BrowserLanguagesDialog"),
     dialogDoc,
     available: dialogDoc.getElementById("availableLocales"),
-    selected: dialogDoc.getElementById("selectedLocales"),
+    requested: dialogDoc.getElementById("requestedLocales"),
   };
 }
-
-add_task(async function testDisabledBrowserLanguages() {
-  let langpacksFile = await createLanguageToolsFile();
-  let langpacksUrl = Services.io.newFileURI(langpacksFile).spec;
-
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["intl.multilingual.enabled", true],
-      ["intl.multilingual.downloadEnabled", true],
-      ["intl.locale.requested", "en-US,pl,he,de"],
-      ["extensions.langpacks.signatures.required", false],
-      ["extensions.getAddons.langpacks.url", langpacksUrl],
-    ],
-  });
-
-  // Install an old pl langpack.
-  let oldLangpack = await createLangpack("pl", "1.0");
-  await AddonTestUtils.promiseInstallFile(oldLangpack);
-
-  // Install all the other available langpacks.
-  let pl;
-  let langpacks = await createTestLangpacks();
-  let addons = await Promise.all(langpacks.map(async ([locale, file]) => {
-    if (locale == "pl") {
-      pl = await AddonManager.getAddonByID(langpackId("pl"));
-      // Disable pl so it's removed from selected.
-      await pl.disable();
-      return pl;
-    }
-    let install = await AddonTestUtils.promiseInstallFile(file);
-    return install.addon;
-  }));
-
-
-  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-
-  let doc = gBrowser.contentDocument;
-  let {dialogDoc, available, selected} = await openDialog(doc);
-
-  // pl is not selected since it's disabled.
-  is(pl.userDisabled, true, "pl is disabled");
-  is(pl.version, "1.0", "pl is the old 1.0 version");
-  assertLocaleOrder(selected, "en-US,he");
-
-  // Only fr is enabled and not selected, so it's the only locale available.
-  assertAvailableLocales(available, ["fr"]);
-
-  // Search for more languages.
-  available.firstElementChild.lastElementChild.doCommand();
-  await waitForMutation(
-    available.firstElementChild,
-    {childList: true},
-    target =>
-      Array.from(available.firstElementChild.children)
-        .some(locale => locale.value == "pl"));
-
-  // pl is now available since it is available remotely.
-  assertAvailableLocales(available, ["fr", "pl"]);
-
-  // Add pl.
-  selectLocale("pl", available, dialogDoc);
-
-  // Wait for pl to be added, this should upgrade and enable the existing langpack.
-  await waitForMutation(
-    selected,
-    {childList: true},
-    target => selected.itemCount == 3);
-  assertLocaleOrder(selected, "pl,en-US,he");
-
-  // Find pl again since it's been upgraded.
-  pl = await AddonManager.getAddonByID(langpackId("pl"));
-  is(pl.userDisabled, false, "pl is now enabled");
-  is(pl.version, "2.0", "pl is upgraded to version 2.0");
-
-  await Promise.all(addons.map(addon => addon.uninstall()));
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
-});
 
 add_task(async function testReorderingBrowserLanguages() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["intl.multilingual.enabled", true],
       ["intl.multilingual.downloadEnabled", true],
-      ["intl.locale.requested", "en-US,pl,he,de"],
-      ["extensions.langpacks.signatures.required", false],
+      ["intl.locale.requested", "pl,en-US"],
     ],
   });
-
-  // Install all the available langpacks.
-  let langpacks = await createTestLangpacks();
-  let addons = await Promise.all(langpacks.map(async ([locale, file]) => {
-    let install = await AddonTestUtils.promiseInstallFile(file);
-    return install.addon;
-  }));
 
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
 
@@ -275,38 +178,37 @@ add_task(async function testReorderingBrowserLanguages() {
   is(messageBar.hidden, true, "The message bar is hidden at first");
 
   // Open the dialog.
-  let {dialog, dialogDoc, selected} = await openDialog(doc);
+  let {dialog, dialogDoc, requested} = await openDialog(doc);
 
-  // The initial order is set by the pref, filtered by available.
-  assertLocaleOrder(selected, "en-US,pl,he");
+  // The initial order is set by the pref.
+  assertLocaleOrder(requested, "pl,en-US");
 
   // Moving pl down changes the order.
-  selected.selectedItem = selected.querySelector("[value='pl']");
   dialogDoc.getElementById("down").doCommand();
-  assertLocaleOrder(selected, "en-US,he,pl");
+  assertLocaleOrder(requested, "en-US,pl");
 
   // Accepting the change shows the confirm message bar.
   let dialogClosed = BrowserTestUtils.waitForEvent(dialogDoc.documentElement, "dialogclosing");
   dialog.acceptDialog();
   await dialogClosed;
   is(messageBar.hidden, false, "The message bar is now visible");
-  is(messageBar.querySelector("button").getAttribute("locales"), "en-US,he,pl",
+  is(messageBar.querySelector("button").getAttribute("locales"), "en-US,pl",
      "The locales are set on the message bar button");
 
   // Open the dialog again.
   let newDialog = await openDialog(doc);
   dialog = newDialog.dialog;
   dialogDoc = newDialog.dialogDoc;
-  selected = newDialog.selected;
+  requested = newDialog.requested;
 
   // The initial order comes from the previous settings.
-  assertLocaleOrder(selected, "en-US,he,pl");
+  assertLocaleOrder(requested, "en-US,pl");
 
   // Select pl in the list.
-  selected.selectedItem = selected.querySelector("[value='pl']");
+  requested.selectedItem = requested.querySelector("[value='pl']");
   // Move pl back up.
   dialogDoc.getElementById("up").doCommand();
-  assertLocaleOrder(selected, "en-US,pl,he");
+  assertLocaleOrder(requested, "pl,en-US");
 
   // Accepting the change hides the confirm message bar.
   dialogClosed = BrowserTestUtils.waitForEvent(dialogDoc.documentElement, "dialogclosing");
@@ -314,12 +216,10 @@ add_task(async function testReorderingBrowserLanguages() {
   await dialogClosed;
   is(messageBar.hidden, true, "The message bar is hidden again");
 
-  await Promise.all(addons.map(addon => addon.uninstall()));
-
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
-add_task(async function testAddAndRemoveSelectedLanguages() {
+add_task(async function testAddAndRemoveRequestedLanguages() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["intl.multilingual.enabled", true],
@@ -342,28 +242,28 @@ add_task(async function testAddAndRemoveSelectedLanguages() {
   is(messageBar.hidden, true, "The message bar is hidden at first");
 
   // Open the dialog.
-  let {dialog, dialogDoc, available, selected} = await openDialog(doc);
+  let {dialog, dialogDoc, available, requested} = await openDialog(doc);
 
   // The initial order is set by the pref.
-  assertLocaleOrder(selected, "en-US");
+  assertLocaleOrder(requested, "en-US");
   assertAvailableLocales(available, ["fr", "pl", "he"]);
 
-  // Add pl and fr to selected.
-  selectLocale("pl", available, dialogDoc);
-  selectLocale("fr", available, dialogDoc);
+  // Add pl and fr to requested.
+  requestLocale("pl", available, dialogDoc);
+  requestLocale("fr", available, dialogDoc);
 
-  assertLocaleOrder(selected, "fr,pl,en-US");
+  assertLocaleOrder(requested, "fr,pl,en-US");
   assertAvailableLocales(available, ["he"]);
 
-  // Remove pl and fr from selected.
+  // Remove pl and fr from requested.
   dialogDoc.getElementById("remove").doCommand();
   dialogDoc.getElementById("remove").doCommand();
-  assertLocaleOrder(selected, "en-US");
+  assertLocaleOrder(requested, "en-US");
   assertAvailableLocales(available, ["fr", "pl", "he"]);
 
-  // Add he to selected.
-  selectLocale("he", available, dialogDoc);
-  assertLocaleOrder(selected, "he,en-US");
+  // Add he to requested.
+  requestLocale("he", available, dialogDoc);
+  assertLocaleOrder(requested, "he,en-US");
   assertAvailableLocales(available, ["pl", "fr"]);
 
   // Accepting the change shows the confirm message bar.
@@ -412,20 +312,21 @@ add_task(async function testInstallFromAMO() {
   is(messageBar.hidden, true, "The message bar is hidden at first");
 
   // Open the dialog.
-  let {dialog, dialogDoc, available, selected} = await openDialog(doc, true);
+  let {dialogDoc, available, requested} = await openDialog(doc, true);
 
   // Make sure the message bar is still hidden.
   is(messageBar.hidden, true, "The message bar is still hidden after searching");
 
-  if (available.itemCount == 1) {
+  let dropdown = dialogDoc.getElementById("availableLocales");
+  if (dropdown.itemCount == 1) {
     await waitForMutation(
-      available.firstElementChild,
+      dropdown.firstElementChild,
       {childList: true},
-      target => available.itemCount > 1);
+      target => dropdown.itemCount > 1);
   }
 
   // The initial order is set by the pref.
-  assertLocaleOrder(selected, "en-US");
+  assertLocaleOrder(requested, "en-US");
   assertAvailableLocales(available, ["fr", "he", "pl"]);
   is(Services.locale.availableLocales.join(","),
      "en-US", "There is only one installed locale");
@@ -435,17 +336,17 @@ add_task(async function testInstallFromAMO() {
   is(dicts.length, 0, "There are no installed dictionaries");
 
   // Add Polish, this will install the langpack.
-  selectLocale("pl", available, dialogDoc);
+  requestLocale("pl", available, dialogDoc);
 
   // Wait for the langpack to install and be added to the list.
-  let selectedLocales = dialogDoc.getElementById("selectedLocales");
+  let requestedLocales = dialogDoc.getElementById("requestedLocales");
   await waitForMutation(
-    selectedLocales,
+    requestedLocales,
     {childList: true},
-    target => selectedLocales.itemCount == 2);
+    target => requestedLocales.itemCount == 2);
 
   // Verify the list is correct.
-  assertLocaleOrder(selected, "pl,en-US");
+  assertLocaleOrder(requested, "pl,en-US");
   assertAvailableLocales(available, ["fr", "he"]);
   is(Services.locale.availableLocales.sort().join(","),
      "en-US,pl", "Polish is now installed");
@@ -460,31 +361,6 @@ add_task(async function testInstallFromAMO() {
 
     return done;
   });
-
-  // Move pl down the list, which prevents an error since it isn't valid.
-  dialogDoc.getElementById("down").doCommand();
-  assertLocaleOrder(selected, "en-US,pl");
-
-  // Test that disabling the langpack removes it from the list.
-  let dialogClosed = BrowserTestUtils.waitForEvent(dialogDoc.documentElement, "dialogclosing");
-  dialog.acceptDialog();
-  await dialogClosed;
-
-  // Disable the Polish langpack.
-  let langpack = await AddonManager.getAddonByID("langpack-pl@firefox.mozilla.org");
-  await langpack.disable();
-
-  ({dialogDoc, available, selected} = await openDialog(doc, true));
-
-  // Wait for the available langpacks to load.
-  if (available.itemCount == 1) {
-    await waitForMutation(
-      available.firstElementChild,
-      {childList: true},
-      target => available.itemCount > 1);
-  }
-  assertLocaleOrder(selected, "en-US");
-  assertAvailableLocales(available, ["fr", "he", "pl"]);
 
   // Uninstall the langpack and dictionary.
   let installs = await AddonManager.getAddonsByTypes(["locale", "dictionary"]);
