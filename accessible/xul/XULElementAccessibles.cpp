@@ -94,9 +94,11 @@ XULLabelAccessible::RelationByType(RelationType aType) const
   if (aType == RelationType::LABEL_FOR) {
     Accessible* parent = Parent();
     if (parent && parent->Role() == roles::GROUPING &&
-        parent->GetContent()->IsXULElement(nsGkAtoms::groupbox) &&
         parent->GetChildAt(0) == this) {
-      rel.AppendTarget(parent);
+      nsIContent* parentContent = parent->GetContent();
+      if (parentContent && parentContent->IsXULElement(nsGkAtoms::groupbox)) {
+        rel.AppendTarget(parent);
+      }
     }
   }
 

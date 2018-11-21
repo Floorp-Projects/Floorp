@@ -2436,10 +2436,6 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
                 auto srcBuf = GetScriptSource(cx, aRequest);
 
                 if (srcBuf) {
-                  if (recordreplay::IsRecordingOrReplaying()) {
-                    recordreplay::NoteContentParse16(this, options.filename(), "application/javascript",
-                                                     srcBuf->get(), srcBuf->length());
-                  }
                   rv = exec.CompileAndExec(options, *srcBuf, &script);
                 } else {
                   rv = NS_ERROR_OUT_OF_MEMORY;

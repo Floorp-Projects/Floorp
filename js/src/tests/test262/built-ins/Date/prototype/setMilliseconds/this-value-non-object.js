@@ -51,6 +51,6 @@ assert.throws(TypeError, function() {
   setMilliseconds.call(symbol, arg);
 }, 'symbol');
 
-assert.sameValue(callCount, 0, 'validation preceeds input coercion');
+assert.sameValue(callCount, 0, 'validation precedes input coercion');
 
 reportCompare(0, 0);

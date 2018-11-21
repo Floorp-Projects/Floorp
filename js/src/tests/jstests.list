@@ -485,6 +485,16 @@ skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-long
 skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-narrow.js
 skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-short.js
 
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1508684
+skip script test262/built-ins/RegExp/prototype/multiline/cross-realm.js
+skip script test262/built-ins/RegExp/prototype/global/cross-realm.js
+skip script test262/built-ins/RegExp/prototype/sticky/cross-realm.js
+skip script test262/built-ins/RegExp/prototype/ignoreCase/cross-realm.js
+skip script test262/built-ins/RegExp/prototype/unicode/cross-realm.js
+skip script test262/built-ins/RegExp/prototype/source/cross-realm.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1508684
+skip script test262/language/expressions/import.meta/syntax/invalid-assignment-target-update-expr.js
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #

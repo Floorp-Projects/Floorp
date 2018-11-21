@@ -443,6 +443,13 @@ frontend::SourceAwareCompiler<Unit>::createSourceAndParser(BytecodeCompiler& inf
         return false;
     }
 
+    // Note the contents of any compiled scripts when recording/replaying.
+    if (mozilla::recordreplay::IsRecordingOrReplaying()) {
+        mozilla::recordreplay::NoteContentParse(this, info.options.filename(),
+                                                "application/javascript",
+                                                sourceBuffer_.units(), sourceBuffer_.length());
+    }
+
     info.createUsedNames();
 
     if (info.canLazilyParse()) {
