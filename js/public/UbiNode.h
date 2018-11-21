@@ -183,7 +183,7 @@ using mozilla::Variant;
 template <typename T>
 using Vector = mozilla::Vector<T, 0, js::SystemAllocPolicy>;
 
-/*** ubi::StackFrame ******************************************************************************/
+/*** ubi::StackFrame **********************************************************/
 
 // Concrete JS::ubi::StackFrame instances backed by a live SavedFrame object
 // store their strings as JSAtom*, while deserialized stack frames from offline
@@ -842,7 +842,7 @@ class Node {
 using NodeSet = js::HashSet<Node, js::DefaultHasher<Node>, js::SystemAllocPolicy>;
 using NodeSetPtr = mozilla::UniquePtr<NodeSet, JS::DeletePolicy<NodeSet>>;
 
-/*** Edge and EdgeRange ***************************************************************************/
+/*** Edge and EdgeRange *******************************************************/
 
 using EdgeName = UniqueTwoByteChars;
 
@@ -955,7 +955,7 @@ class PreComputedEdgeRange : public EdgeRange {
     }
 };
 
-/*** RootList *************************************************************************************/
+/*** RootList *****************************************************************/
 
 // RootList is a class that can be pointed to by a |ubi::Node|, creating a
 // fictional root-of-roots which has edges to every GC root in the JS
@@ -1018,7 +1018,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API RootList {
 };
 
 
-/*** Concrete classes for ubi::Node referent types ************************************************/
+/*** Concrete classes for ubi::Node referent types ****************************/
 
 template<>
 class JS_PUBLIC_API Concrete<RootList> : public Base {

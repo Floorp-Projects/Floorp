@@ -12,8 +12,8 @@
  * Consumers define macros as follows:
  * MACRO(name, init, clasp)
  *   name:    The canonical name of the class.
- *   init:    Initialization function. These are |extern "C";|, and clients should use
- *            |extern "C" {}| as appropriate when using this macro.
+ *   init:    Initialization function. These are |extern "C";|, and clients
+ *            should use |extern "C" {}| as appropriate when using this macro.
  *   clasp:   The JSClass for this object, or "dummy" if it doesn't exist.
  *
  *
