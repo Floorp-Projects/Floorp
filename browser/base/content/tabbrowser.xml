@@ -1892,7 +1892,7 @@
     </handlers>
   </binding>
 
-  <binding id="tabbrowser-tab" display="xul:hbox"
+  <binding id="tabbrowser-tab"
            extends="chrome://global/content/bindings/tabbox.xml#tab">
     <content context="tabContextMenu">
       <xul:stack class="tab-stack" flex="1">
