@@ -66,7 +66,10 @@ class AtomMarkingRuntime
 
     // Version of markAtom that's always inlined, for performance-sensitive
     // callers.
+    template <typename T, bool Fallible>
+    MOZ_ALWAYS_INLINE bool inlinedMarkAtomInternal(JSContext* cx, T* thing);
     template <typename T> MOZ_ALWAYS_INLINE void inlinedMarkAtom(JSContext* cx, T* thing);
+    template <typename T> MOZ_ALWAYS_INLINE bool inlinedMarkAtomFallible(JSContext* cx, T* thing);
 
     void markId(JSContext* cx, jsid id);
     void markAtomValue(JSContext* cx, const Value& value);
