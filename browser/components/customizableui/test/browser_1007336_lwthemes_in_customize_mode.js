@@ -14,8 +14,15 @@ add_task(async function() {
   Services.prefs.clearUserPref("lightweightThemes.recommendedThemes");
 
   await startCustomizing();
+  // Check restore defaults button is disabled.
+  ok(document.getElementById("customization-reset-button").disabled,
+     "Reset button should start out disabled");
 
   let themesButton = document.getElementById("customization-lwtheme-button");
+  let themesButtonIcon = document.getAnonymousElementByAttribute(themesButton,
+      "class", "button-icon");
+  is(themesButtonIcon.style.backgroundImage, "",
+     `Button should show default theme thumbnail (empty string) - was: "${themesButtonIcon.style.backgroundImage}"`);
   let popup = document.getElementById("customization-lwtheme-menu");
 
   let popupShownPromise = popupShown(popup);
@@ -49,6 +56,12 @@ add_task(async function() {
   header.nextElementSibling.nextElementSibling.doCommand(); // Select light theme
   info("Clicked on light theme");
   await themeChangedPromise;
+
+  // Check restore defaults button is enabled.
+  ok(!document.getElementById("customization-reset-button").disabled,
+     "Reset button should not be disabled anymore");
+  ok((/light/i).test(themesButtonIcon.style.backgroundImage),
+     `Button should show light theme thumbnail - was: "${themesButtonIcon.style.backgroundImage}"`);
 
   popupShownPromise = popupShown(popup);
   EventUtils.synthesizeMouseAtCenter(themesButton, {});
