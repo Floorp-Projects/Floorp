@@ -12,7 +12,7 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
 const { PAGES, RUNTIMES } = require("../../constants");
-const Types = require("../../types");
+const Types = require("../../types/index");
 loader.lazyRequireGetter(this, "ADB_ADDON_STATES", "devtools/shared/adb/adb-addon", true);
 
 const SidebarItem = createFactory(require("./SidebarItem"));
