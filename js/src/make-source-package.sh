@@ -68,6 +68,9 @@ case $cmd in
     fi
     ${MKDIR} -p ${tgtpath}/js/src
 
+    # copy LICENSE
+    cp ${TOPSRCDIR}/LICENSE ${tgtpath}/
+
     cp -pPR ${TOPSRCDIR}/configure.py \
        ${TOPSRCDIR}/moz.configure \
        ${TOPSRCDIR}/test.mozbuild \
@@ -100,12 +103,6 @@ case $cmd in
     # copy cargo config
     ${MKDIR} -p ${tgtpath}/.cargo
     cp -pPR ${TOPSRCDIR}/.cargo/config.in ${tgtpath}/.cargo/
-
-    # generate configure files to avoid build dependency on autoconf-2.13
-    cp -PR ${TOPSRCDIR}/js/src/configure.in ${tgtpath}/js/src/configure
-    chmod a+x ${tgtpath}/js/src/configure
-    ${AUTOCONF} --localdir=${TOPSRCDIR}/js/src \
-        ${TOPSRCDIR}/js/src/old-configure.in >${tgtpath}/js/src/old-configure
 
     # put in js itself
     cp -pPR ${TOPSRCDIR}/mfbt ${tgtpath}/
@@ -175,7 +172,13 @@ case $cmd in
         ${TOPSRCDIR}/tools/fuzzing/libfuzzer \
         ${tgtpath}/tools/fuzzing/
 
-    # copy or create INSTALL
+    # Generate configure files to avoid build dependency on autoconf-2.13
+    cp -pPR ${TOPSRCDIR}/js/src/configure.in ${tgtpath}/js/src/configure
+    chmod a+x ${tgtpath}/js/src/configure
+    ${AUTOCONF} --localdir=${TOPSRCDIR}/js/src \
+        ${TOPSRCDIR}/js/src/old-configure.in >${tgtpath}/js/src/old-configure
+
+    # Copy or create INSTALL
     if [ -e ${STAGING}/INSTALL ]; then
         cp ${STAGING}/INSTALL ${tgtpath}/
     else
@@ -196,7 +199,7 @@ Building with default options may be performed as follows:
 INSTALL_EOF
     fi
 
-    # copy or create README
+    # Copy or create README
     if [ -e ${STAGING}/README ]; then
         cp ${STAGING}/README ${tgtpath}/
     else
@@ -212,10 +215,7 @@ MDN hosts the latest SpiderMonkey ${MOZJS_MAJOR_VERSION} release notes:
 README_EOF
     fi
 
-    # copy LICENSE
-    cp ${TOPSRCDIR}/LICENSE ${tgtpath}/
-
-    # copy patches dir, if it currently exists in STAGING
+    # Copy patches dir, if it currently exists in STAGING
     if [ -d ${STAGING}/patches ]; then
         cp -pPR ${STAGING}/patches ${tgtpath}/
     elif [ -d ${TOPSRCDIR}/patches ]; then
