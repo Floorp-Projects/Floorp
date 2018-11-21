@@ -67,15 +67,16 @@ class IntentProcessor(
         when {
             TextUtils.isEmpty(extraText.trim()) -> false
 
-            extraText.isUrl() -> {
-                val session = createSession(extraText, source = Source.ACTION_SEND)
-                sessionUseCases.loadUrl.invoke(extraText, session)
-                true
-            }
             else -> {
-                val session = createSession(extraText, source = Source.ACTION_SEND)
-                searchUseCases.defaultSearch.invoke(extraText, session)
-                true
+                val url = extraText.split(" ").find { it.isUrl() }
+                if (url != null) {
+                    val session = createSession(url, source = Source.ACTION_SEND)
+                    sessionUseCases.loadUrl.invoke(url, session)
+                    true
+                } else {
+                    searchUseCases.defaultSearch.invoke(extraText, Source.ACTION_SEND, openNewTab)
+                    true
+                }
             }
         }
     }

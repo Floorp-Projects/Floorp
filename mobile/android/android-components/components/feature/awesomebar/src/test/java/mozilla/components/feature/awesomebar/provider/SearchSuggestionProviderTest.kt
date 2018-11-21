@@ -20,6 +20,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
@@ -53,7 +54,7 @@ class SearchSuggestionProviderTest {
                 searchEngineManager,
                 SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
             ).defaultSearch)
-            doNothing().`when`(useCase).invoke(any(), any())
+            doNothing().`when`(useCase).invoke(anyString(), any<Session>())
 
             val provider = SearchSuggestionProvider(searchEngine, useCase)
 
@@ -76,11 +77,11 @@ class SearchSuggestionProviderTest {
                 assertEquals("firefox nightly", suggestion.chips[9].title)
                 assertEquals("firefox clear cache", suggestion.chips[10].title)
 
-                verify(useCase, never()).invoke(any(), any())
+                verify(useCase, never()).invoke(anyString(), any<Session>())
 
                 suggestion.onChipClicked!!.invoke(suggestion.chips[6])
 
-                verify(useCase).invoke(eq("firefox focus"), any())
+                verify(useCase).invoke(eq("firefox focus"), any<Session>())
             } finally {
                 server.shutdown()
             }

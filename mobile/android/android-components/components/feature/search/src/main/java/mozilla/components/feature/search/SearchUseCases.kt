@@ -18,7 +18,7 @@ class SearchUseCases(
     private val sessionManager: SessionManager
 ) {
 
-    class DefaultSearchUrlUseCase(
+    class DefaultSearchUseCase(
         private val context: Context,
         private val searchEngineManager: SearchEngineManager,
         private val sessionManager: SessionManager
@@ -32,16 +32,38 @@ class SearchUseCases(
          * is provided.
          */
         fun invoke(searchTerms: String, session: Session = sessionManager.selectedSessionOrThrow) {
-            val searchEngine = searchEngineManager.getDefaultSearchEngine(context)
-            val searchUrl = searchEngine.buildSearchUrl(searchTerms)
+            val searchUrl = searchEngineManager.getDefaultSearchEngine(context).buildSearchUrl(searchTerms)
 
             session.searchTerms = searchTerms
 
             sessionManager.getOrCreateEngineSession(session).loadUrl(searchUrl)
         }
+
+        /**
+         * Triggers a search on a new session, using the default search engine for the provided search terms.
+         *
+         * @param searchTerms the search terms.
+         * @param selected whether or not the new session should be selected, defaults to true.
+         * @param private whether or not the new session should be private, defaults to false.
+         * @param source the source of the new session.
+         */
+        fun invoke(
+            searchTerms: String,
+            source: Session.Source,
+            selected: Boolean = true,
+            private: Boolean = false
+        ) {
+            val searchUrl = searchEngineManager.getDefaultSearchEngine(context).buildSearchUrl(searchTerms)
+
+            val session = Session(searchUrl, private, source)
+            session.searchTerms = searchTerms
+
+            sessionManager.add(session, selected)
+            sessionManager.getOrCreateEngineSession(session).loadUrl(searchUrl)
+        }
     }
 
-    val defaultSearch: DefaultSearchUrlUseCase by lazy {
-        DefaultSearchUrlUseCase(context, searchEngineManager, sessionManager)
+    val defaultSearch: DefaultSearchUseCase by lazy {
+        DefaultSearchUseCase(context, searchEngineManager, sessionManager)
     }
 }

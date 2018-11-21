@@ -159,22 +159,36 @@ class IntentProcessorTest {
     }
 
     @Test
-    fun `load URL on ACTION_SEND if valid URL provided`() {
+    fun `load URL on ACTION_SEND if text contains URL`() {
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
 
         val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases)
 
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_SEND)
+
         `when`(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("http://mozilla.org")
-
         handler.process(intent)
-
         verify(engineSession).loadUrl("http://mozilla.org")
+
+        `when`(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("see http://getpocket.com")
+        handler.process(intent)
+        verify(engineSession).loadUrl("http://getpocket.com")
+
+        `when`(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("see http://mozilla.com and http://getpocket.com")
+        handler.process(intent)
+        verify(engineSession).loadUrl("http://mozilla.com")
     }
 
     @Test
     fun `perform search on ACTION_SEND if text (no URL) provided`() {
+        val engine = mock(Engine::class.java)
+        val sessionManager = spy(SessionManager(engine))
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+
+        val searchUseCases = SearchUseCases(RuntimeEnvironment.application, searchEngineManager, sessionManager)
+        val sessionUseCases = SessionUseCases(sessionManager)
+
         val searchTerms = "mozilla android"
         val searchUrl = "http://search-url.com?$searchTerms"
 
@@ -185,13 +199,13 @@ class IntentProcessorTest {
         `when`(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn(searchTerms)
 
         val searchEngine = mock(SearchEngine::class.java)
-        `when`(sessionManager.getOrCreateEngineSession(any())).thenReturn(engineSession)
         `when`(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
         `when`(searchEngineManager.getDefaultSearchEngine(RuntimeEnvironment.application)).thenReturn(searchEngine)
 
         handler.process(intent)
-
         verify(engineSession).loadUrl(searchUrl)
+        assertEquals(searchUrl, sessionManager.selectedSession?.url)
+        assertEquals(searchTerms, sessionManager.selectedSession?.searchTerms)
     }
 
     @Test

@@ -9,9 +9,12 @@ import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.support.test.any
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
@@ -21,10 +24,18 @@ import org.robolectric.RuntimeEnvironment
 @RunWith(RobolectricTestRunner::class)
 class SearchUseCasesTest {
 
-    private val searchEngine = mock(SearchEngine::class.java)
-    private val searchEngineManager = mock(SearchEngineManager::class.java)
-    private val sessionManager = mock(SessionManager::class.java)
-    private val useCases = SearchUseCases(RuntimeEnvironment.application, searchEngineManager, sessionManager)
+    private lateinit var searchEngine: SearchEngine
+    private lateinit var searchEngineManager: SearchEngineManager
+    private lateinit var sessionManager: SessionManager
+    private lateinit var useCases: SearchUseCases
+
+    @Before
+    fun setup() {
+        searchEngine = mock(SearchEngine::class.java)
+        searchEngineManager = mock(SearchEngineManager::class.java)
+        sessionManager = mock(SessionManager::class.java)
+        useCases = SearchUseCases(RuntimeEnvironment.application, searchEngineManager, sessionManager)
+    }
 
     @Test
     fun defaultSearch() {
@@ -41,6 +52,20 @@ class SearchUseCasesTest {
         useCases.defaultSearch.invoke(searchTerms, session)
 
         assertEquals(searchTerms, session.searchTerms)
+        verify(engineSession).loadUrl(searchUrl)
+    }
+
+    @Test
+    fun defaultSearchOnNewSession() {
+        val searchTerms = "mozilla android"
+        val searchUrl = "http://search-url.com?$searchTerms"
+
+        val engineSession = mock(EngineSession::class.java)
+        `when`(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
+        `when`(searchEngineManager.getDefaultSearchEngine(RuntimeEnvironment.application)).thenReturn(searchEngine)
+        `when`(sessionManager.getOrCreateEngineSession(any())).thenReturn(engineSession)
+
+        useCases.defaultSearch.invoke(searchTerms, Session.Source.NEW_TAB)
         verify(engineSession).loadUrl(searchUrl)
     }
 }
