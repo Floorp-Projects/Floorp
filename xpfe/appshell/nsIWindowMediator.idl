@@ -51,12 +51,6 @@ interface nsIWindowMediator: nsISupports
     *                     If null, all windows will be enumerated.
     * @param  aFrontToBack if true, the enumerator enumerates windows in order
     *                      from front to back. back to front if false.
-    * @return an enumerator of nsIDOMWindows
-    */
-  nsISimpleEnumerator getZOrderDOMWindowEnumerator(in wstring aWindowType,
-                        in boolean aFrontToBack);
-
-  /** Identical to getZOrderDOMWindowEnumerator except:
     * @return an enumerator of nsIXULWindows
     */
   nsISimpleEnumerator getZOrderXULWindowEnumerator(in wstring aWindowType,
