@@ -661,7 +661,10 @@ struct MOZ_STATIC_CLASS ClassOps
 /** Callback for the creation of constructor and prototype objects. */
 typedef JSObject* (*ClassObjectCreationOp)(JSContext* cx, JSProtoKey key);
 
-/** Callback for custom post-processing after class initialization via ClassSpec. */
+/**
+ * Callback for custom post-processing after class initialization via
+ * ClassSpec.
+ */
 typedef bool (*FinishClassInitOp)(JSContext* cx, JS::HandleObject ctor,
                                   JS::HandleObject proto);
 

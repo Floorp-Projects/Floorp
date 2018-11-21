@@ -418,7 +418,8 @@ ToSignedInteger<int32_t>(double d)
     // hybrid solution is faster on A9, but this pure integer solution is
     // notably faster for A8.
 
-    // %0 is the result register, and may alias either of the %[QR]1 registers.
+    // %0 is the result register, and may alias either of the %[QR]1
+    //    registers.
     // %Q4 holds the lower part of the mantissa.
     // %R4 holds the sign, exponent, and the upper part of the mantissa.
     // %1, %2 and %3 are used as temporary values.
@@ -435,8 +436,9 @@ ToSignedInteger<int32_t>(double d)
     //   We should return zero in the following special cases:
     //    - Exponent is 0x000 - 1023: +/-0 or subnormal.
     //    - Exponent is 0x7ff - 1023: +/-INFINITY or NaN
-    //      - This case is implicitly handled by the standard code path anyway,
-    //        as shifting the mantissa up by the exponent will result in '0'.
+    //      - This case is implicitly handled by the standard code path
+    //        anyway, as shifting the mantissa up by the exponent will
+    //        result in '0'.
     //
     // The result is composed of the mantissa, prepended with '1' and
     // bit-shifted left by the (decoded) exponent. Note that because the r1[20]
