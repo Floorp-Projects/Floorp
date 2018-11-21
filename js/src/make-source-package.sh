@@ -71,11 +71,11 @@ case $cmd in
     cp -pPR ${TOPSRCDIR}/configure.py \
        ${TOPSRCDIR}/moz.configure \
        ${TOPSRCDIR}/test.mozbuild \
-       ${tgtpath}
+       ${tgtpath}/
 
-    cp -pPR ${TOPSRCDIR}/js/app.mozbuild ${tgtpath}/js
-    cp -pPR ${TOPSRCDIR}/js/moz.configure ${tgtpath}/js
-    cp -pPR ${TOPSRCDIR}/js/ffi.configure ${tgtpath}/js
+    cp -pPR ${TOPSRCDIR}/js/app.mozbuild ${tgtpath}/js/
+    cp -pPR ${TOPSRCDIR}/js/moz.configure ${tgtpath}/js/
+    cp -pPR ${TOPSRCDIR}/js/ffi.configure ${tgtpath}/js/
 
     ${MKDIR} -p ${tgtpath}/taskcluster/taskgraph
     cp -pPR ${TOPSRCDIR}/taskcluster/moz.build ${tgtpath}/taskcluster/
@@ -83,23 +83,23 @@ case $cmd in
 
     # copy the embedded icu
     ${MKDIR} -p ${tgtpath}/intl
-    cp -pPR ${TOPSRCDIR}/intl/icu ${tgtpath}/intl
+    cp -pPR ${TOPSRCDIR}/intl/icu ${tgtpath}/intl/
 
     # copy main moz.build and Makefile.in
-    cp -pPR ${TOPSRCDIR}/Makefile.in ${TOPSRCDIR}/moz.build ${tgtpath}
+    cp -pPR ${TOPSRCDIR}/Makefile.in ${TOPSRCDIR}/moz.build ${tgtpath}/
 
     # copy nspr.
-    cp -pPR ${TOPSRCDIR}/nsprpub ${tgtpath}
+    cp -pPR ${TOPSRCDIR}/nsprpub ${tgtpath}/
 
     # copy top-level build and config files.
-    cp -p ${TOPSRCDIR}/configure.py ${TOPSRCDIR}/moz.configure ${tgtpath}
+    cp -p ${TOPSRCDIR}/configure.py ${TOPSRCDIR}/moz.configure ${tgtpath}/
 
     # copy build and config directory.
-    cp -pPR ${TOPSRCDIR}/build ${TOPSRCDIR}/config ${tgtpath}
+    cp -pPR ${TOPSRCDIR}/build ${TOPSRCDIR}/config ${tgtpath}/
 
     # copy cargo config
     ${MKDIR} -p ${tgtpath}/.cargo
-    cp -pPR ${TOPSRCDIR}/.cargo/config.in ${tgtpath}/.cargo
+    cp -pPR ${TOPSRCDIR}/.cargo/config.in ${tgtpath}/.cargo/
 
     # generate configure files to avoid build dependency on autoconf-2.13
     cp -PR ${TOPSRCDIR}/js/src/configure.in ${tgtpath}/js/src/configure
@@ -108,72 +108,72 @@ case $cmd in
         ${TOPSRCDIR}/js/src/old-configure.in >${tgtpath}/js/src/old-configure
 
     # put in js itself
-    cp -pPR ${TOPSRCDIR}/mfbt ${tgtpath}
-    cp -p ${TOPSRCDIR}/js/moz.configure ${tgtpath}/js
-    cp -pPR ${TOPSRCDIR}/js/public ${tgtpath}/js
-    cp -pPR ${TOPSRCDIR}/js/rust ${tgtpath}/js
-    cp -pPR ${TOPSRCDIR}/js/examples ${tgtpath}/js
+    cp -pPR ${TOPSRCDIR}/mfbt ${tgtpath}/
+    cp -p ${TOPSRCDIR}/js/moz.configure ${tgtpath}/js/
+    cp -pPR ${TOPSRCDIR}/js/public ${tgtpath}/js/
+    cp -pPR ${TOPSRCDIR}/js/rust ${tgtpath}/js/
+    cp -pPR ${TOPSRCDIR}/js/examples ${tgtpath}/js/
     find ${TOPSRCDIR}/js/src -mindepth 1 -maxdepth 1 -not -path ${STAGING} -a -not -name ${pkg} \
-        -exec cp -pPR {} ${tgtpath}/js/src \;
+        -exec cp -pPR {} ${tgtpath}/js/src/ \;
 
     cp -pPR \
         ${TOPSRCDIR}/python \
-        ${tgtpath}
+        ${tgtpath}/
     ${MKDIR} -p ${tgtpath}/third_party
     cp -pPR \
         ${TOPSRCDIR}/third_party/python \
-        ${tgtpath}/third_party
+        ${tgtpath}/third_party/
     cp -pPR \
         ${TOPSRCDIR}/third_party/rust \
-        ${tgtpath}/third_party
+        ${tgtpath}/third_party/
     ${MKDIR} -p ${tgtpath}/dom/bindings
     cp -pPR \
         ${TOPSRCDIR}/dom/bindings/mozwebidlcodegen \
-        ${tgtpath}/dom/bindings
+        ${tgtpath}/dom/bindings/
     ${MKDIR} -p ${tgtpath}/testing
     cp -pPR \
         ${TOPSRCDIR}/testing/mozbase \
-        ${tgtpath}/testing
+        ${tgtpath}/testing/
     ${MKDIR} -p ${tgtpath}/modules
     cp -pPR \
        ${TOPSRCDIR}/modules/fdlibm \
-       ${tgtpath}/modules/fdlibm
+       ${tgtpath}/modules/
     cp -pPR \
         ${TOPSRCDIR}/modules/zlib \
-        ${tgtpath}/modules/zlib
+        ${tgtpath}/modules/
     ${MKDIR} -p ${tgtpath}/layout/tools/reftest
     cp -pPR \
         ${TOPSRCDIR}/layout/tools/reftest/reftest \
-        ${tgtpath}/layout/tools/reftest
+        ${tgtpath}/layout/tools/reftest/
     ${MKDIR} -p ${tgtpath}/toolkit/mozapps/installer
     cp -pPR \
         ${TOPSRCDIR}/toolkit/mozapps/installer/package-name.mk \
         ${TOPSRCDIR}/toolkit/mozapps/installer/upload-files.mk \
-        ${tgtpath}/toolkit/mozapps/installer
+        ${tgtpath}/toolkit/mozapps/installer/
     ${MKDIR} -p ${tgtpath}/toolkit/crashreporter/tools
     cp -pPR \
         ${TOPSRCDIR}/toolkit/crashreporter/tools/symbolstore.py \
-        ${tgtpath}/toolkit/crashreporter/tools
+        ${tgtpath}/toolkit/crashreporter/tools/
     ${MKDIR} -p ${tgtpath}/mozglue
     cp -pPR \
         ${TOPSRCDIR}/mozglue/build \
         ${TOPSRCDIR}/mozglue/misc \
         ${TOPSRCDIR}/mozglue/moz.build \
-        ${tgtpath}/mozglue
+        ${tgtpath}/mozglue/
     ${MKDIR} -p ${tgtpath}/memory
     cp -pPR \
         ${TOPSRCDIR}/memory/moz.build \
         ${TOPSRCDIR}/memory/build \
         ${TOPSRCDIR}/memory/fallible \
         ${TOPSRCDIR}/memory/mozalloc \
-        ${tgtpath}/memory
+        ${tgtpath}/memory/
     ${MKDIR} -p ${tgtpath}/tools/fuzzing
     cp -pPR \
         ${TOPSRCDIR}/tools/fuzzing/moz.build \
         ${TOPSRCDIR}/tools/fuzzing/interface \
         ${TOPSRCDIR}/tools/fuzzing/registry \
         ${TOPSRCDIR}/tools/fuzzing/libfuzzer \
-        ${tgtpath}/tools/fuzzing
+        ${tgtpath}/tools/fuzzing/
 
     # remove *.pyc and *.pyo files if any
     find ${tgtpath} -type f -name "*.pyc" -o -name "*.pyo" |xargs rm -f
@@ -184,7 +184,7 @@ case $cmd in
 
     # copy or create INSTALL
     if [ -e ${STAGING}/INSTALL ]; then
-        cp ${STAGING}/INSTALL ${tgtpath}
+        cp ${STAGING}/INSTALL ${tgtpath}/
     else
         cat <<INSTALL_EOF >${tgtpath}/INSTALL
 Full build documentation for SpiderMonkey is hosted on MDN:
@@ -205,7 +205,7 @@ INSTALL_EOF
 
     # copy or create README
     if [ -e ${STAGING}/README ]; then
-        cp ${STAGING}/README ${tgtpath}
+        cp ${STAGING}/README ${tgtpath}/
     else
         cat <<README_EOF >${tgtpath}/README
 This directory contains SpiderMonkey ${MOZJS_MAJOR_VERSION}.
@@ -224,9 +224,9 @@ README_EOF
 
     # copy patches dir, if it currently exists in STAGING
     if [ -d ${STAGING}/patches ]; then
-        cp -pPR ${STAGING}/patches ${tgtpath}
+        cp -pPR ${STAGING}/patches ${tgtpath}/
     elif [ -d ${TOPSRCDIR}/patches ]; then
-        cp -pPR ${TOPSRCDIR}/patches ${tgtpath}
+        cp -pPR ${TOPSRCDIR}/patches ${tgtpath}/
     fi
 
     # Roll the tarball
