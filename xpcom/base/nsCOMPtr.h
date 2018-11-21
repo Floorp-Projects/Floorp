@@ -554,7 +554,6 @@ public:
     assert_validity();
     aSmartPtr.mRawPtr = nullptr;
     NSCAP_LOG_ASSIGNMENT(this, mRawPtr);
-    NSCAP_ASSERT_NO_QUERY_NEEDED();
   }
 
   template <class U>
@@ -733,7 +732,6 @@ public:
   nsCOMPtr<T>& operator=(nsCOMPtr<T>&& aRhs)
   {
     assign_assuming_AddRef(aRhs.forget().take());
-    NSCAP_ASSERT_NO_QUERY_NEEDED();
     return *this;
   }
 
