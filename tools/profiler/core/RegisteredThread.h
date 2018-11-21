@@ -23,6 +23,7 @@ public:
   explicit RacyRegisteredThread(int aThreadId)
     : mThreadId(aThreadId)
     , mSleep(AWAKE)
+    , mIsBeingProfiled(false)
   {
     MOZ_COUNT_CTOR(RacyRegisteredThread);
   }
@@ -32,10 +33,19 @@ public:
     MOZ_COUNT_DTOR(RacyRegisteredThread);
   }
 
+  void SetIsBeingProfiled(bool aIsBeingProfiled)
+  {
+    mIsBeingProfiled = aIsBeingProfiled;
+  }
+
+  bool IsBeingProfiled() const { return mIsBeingProfiled; }
+
   void AddPendingMarker(const char* aMarkerName,
                         mozilla::UniquePtr<ProfilerMarkerPayload> aPayload,
                         double aTime)
   {
+    // Note: We don't assert on mIsBeingProfiled, because it could have changed
+    // between the check in the caller and now.
     ProfilerMarker* marker =
       new ProfilerMarker(aMarkerName, mThreadId, std::move(aPayload), aTime);
     mPendingMarkers.insert(marker);
@@ -145,6 +155,12 @@ private:
   static const int SLEEPING_NOT_OBSERVED = 1;
   static const int SLEEPING_OBSERVED = 2;
   mozilla::Atomic<int> mSleep;
+
+  // Is this thread being profiled? (e.g., should markers be recorded?)
+  // Accesses to this atomic are not recorded by web replay as they may occur
+  // at non-deterministic points.
+  mozilla::Atomic<bool, mozilla::MemoryOrdering::Relaxed,
+                  recordreplay::Behavior::DontPreserve> mIsBeingProfiled;
 };
 
 // This class contains information that's relevant to a single thread only

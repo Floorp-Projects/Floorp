@@ -5,6 +5,7 @@
 "use strict";
 
 /* eslint-env mozilla/browser-window */
+/* globals XULCommandEvent */
 
 {
 

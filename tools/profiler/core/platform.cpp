@@ -2530,6 +2530,7 @@ locked_register_thread(PSLockRef aLock, const char* aName, void* aStackTop)
 
   if (ActivePS::Exists(aLock) &&
       ActivePS::ShouldProfileThread(aLock, info)) {
+    registeredThread->RacyRegisteredThread().SetIsBeingProfiled(true);
     nsCOMPtr<nsIEventTarget> eventTarget = registeredThread->GetEventTarget();
     ProfiledThreadData* profiledThreadData =
       ActivePS::AddLiveProfiledThread(aLock, registeredThread.get(),
@@ -3166,6 +3167,7 @@ locked_profiler_start(PSLockRef aLock, uint32_t aCapacity, double aInterval,
     RefPtr<ThreadInfo> info = registeredThread->Info();
 
     if (ActivePS::ShouldProfileThread(aLock, info)) {
+      registeredThread->RacyRegisteredThread().SetIsBeingProfiled(true);
       nsCOMPtr<nsIEventTarget> eventTarget = registeredThread->GetEventTarget();
       ProfiledThreadData* profiledThreadData =
         ActivePS::AddLiveProfiledThread(aLock, registeredThread.get(),
@@ -3333,6 +3335,7 @@ locked_profiler_stop(PSLockRef aLock)
     ActivePS::LiveProfiledThreads(aLock);
   for (auto& thread : liveProfiledThreads) {
     RegisteredThread* registeredThread = thread.mRegisteredThread;
+    registeredThread->RacyRegisteredThread().SetIsBeingProfiled(false);
     if (ActivePS::FeatureJS(aLock)) {
       registeredThread->StopJSSampling();
       RefPtr<ThreadInfo> info = registeredThread->Info();
@@ -3637,6 +3640,16 @@ profiler_thread_wake()
 }
 
 bool
+mozilla::profiler::detail::IsThreadBeingProfiled()
+{
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  const RacyRegisteredThread* racyRegisteredThread =
+    TLSRegisteredThread::RacyRegisteredThread();
+  return racyRegisteredThread && racyRegisteredThread->IsBeingProfiled();
+}
+
+bool
 profiler_thread_is_sleeping()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -3716,16 +3729,16 @@ racy_profiler_add_marker(const char* aMarkerName,
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  // We don't assert that RacyFeatures::IsActiveWithoutPrivacy() is true here,
-  // because it's possible that the result has changed since we tested it in
-  // the caller.
+  // We don't assert that RacyFeatures::IsActiveWithoutPrivacy() or
+  // RacyRegisteredThread::IsBeingProfiled() is true here, because it's
+  // possible that the result has changed since we tested it in the caller.
   //
   // Because of this imprecision it's possible to miss a marker or record one
   // we shouldn't. Either way is not a big deal.
 
   RacyRegisteredThread* racyRegisteredThread =
     TLSRegisteredThread::RacyRegisteredThread();
-  if (!racyRegisteredThread) {
+  if (!racyRegisteredThread || !racyRegisteredThread->IsBeingProfiled()) {
     return;
   }
 
