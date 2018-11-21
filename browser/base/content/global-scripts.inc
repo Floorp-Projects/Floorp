@@ -25,7 +25,6 @@ for (let script of [
   "chrome://browser/content/browser-places.js",
   "chrome://browser/content/browser-plugins.js",
   "chrome://browser/content/browser-sidebar.js",
-  "chrome://browser/content/browser-siteIdentity.js",
   "chrome://browser/content/browser-tabsintitlebar.js",
 
   "chrome://global/content/globalOverlay.js",
