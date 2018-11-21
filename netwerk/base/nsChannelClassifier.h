@@ -61,6 +61,9 @@ public:
 
     already_AddRefed<nsIChannel> GetChannel();
 
+    // Helper function to check a URI against the tracking skip URL whitelist
+    bool IsTrackingURLWhitelisted(nsIURI *aUri);
+
 private:
     // True if the channel is on the allow list.
     bool mIsAllowListed;
