@@ -116,6 +116,7 @@ input::placeholder {
 }
 
 textarea {
+  -moz-appearance: textarea;
   margin-block-start: 1px;
   margin-block-end: 1px;
   border: 2px inset ThreeDLightShadow;
@@ -133,7 +134,6 @@ textarea {
   vertical-align: text-bottom;
   cursor: text;
   resize: both;
-  -moz-appearance: textfield-multiline;
   text-indent: 0;
   -moz-user-select: text;
   text-shadow: none;
