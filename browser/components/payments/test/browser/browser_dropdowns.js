@@ -23,20 +23,20 @@ add_task(async function test_dropdown() {
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-      let addLink = content.document.querySelector("address-picker .add-link");
+      let addLink = content.document.querySelector("address-picker.shipping-related .add-link");
       is(addLink.textContent, "Add", "Add link text");
 
       addLink.click();
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page" && !state.page.guid;
+        return state.page.id == "shipping-address-page" && !state.page.guid;
       }, "Check add page state");
 
-      content.document.querySelector("#country").scrollIntoView();
+      content.document.querySelector("#shipping-address-page #country").scrollIntoView();
     });
 
     info("going to open the country <select>");
-    await BrowserTestUtils.synthesizeMouseAtCenter("#country", {}, frame);
+    await BrowserTestUtils.synthesizeMouseAtCenter("#shipping-address-page #country", {}, frame);
 
     let event = await popupshownPromise;
     let expectedPopupID = "ContentSelectDropdown";
