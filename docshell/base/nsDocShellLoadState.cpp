@@ -30,7 +30,6 @@ nsDocShellLoadState::nsDocShellLoadState()
   , mTypeHint(VoidCString())
   , mFileName(VoidString())
   , mDocShellInternalLoadFlags(0)
-  , mIsFromProcessingFrameAttributes(false)
 {
 }
 

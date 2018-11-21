@@ -110,7 +110,6 @@ struct LoadInfoArgs
   bool                        serviceWorkerTaintingSynthesized;
   bool                        documentHasUserInteracted;
   bool                        documentHasLoaded;
-  bool                        isFromProcessingFrameAttributes;
 };
 
 /**
