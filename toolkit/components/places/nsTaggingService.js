@@ -446,6 +446,7 @@ TagAutoCompleteSearch.prototype = {
     // regardless having matches.
     let result = Cc["@mozilla.org/autocomplete/simple-result;1"]
                    .createInstance(Ci.nsIAutoCompleteSimpleResult);
+    result.setDefaultIndex(0);
     result.setSearchString(searchString);
 
     let count = 0;
