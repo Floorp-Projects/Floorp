@@ -617,7 +617,8 @@ MozDocumentMatcher::Matches(const DocInfo& aDoc) const
   // matchAboutBlank is true and it has the null principal. In all other
   // cases, we test the URL of the principal that it inherits.
   if (mMatchAboutBlank && aDoc.IsTopLevel() &&
-      aDoc.URL().Spec().EqualsLiteral("about:blank") &&
+      (aDoc.URL().Spec().EqualsLiteral("about:blank") ||
+       aDoc.URL().Scheme() == nsGkAtoms::data) &&
       aDoc.Principal() && aDoc.Principal()->GetIsNullPrincipal()) {
     return true;
   }

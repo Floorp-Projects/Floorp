@@ -25,6 +25,10 @@ else
   . $topsrcdir/build/win32/mozconfig.vs-latest
 fi
 
+mk_export_correct_style CC
+mk_export_correct_style CXX
+mk_export_correct_style LINKER
+
 # PATH also needs to point to mozmake.exe, which can come from either
 # newer mozilla-build or tooltool.
 if ! which mozmake 2>/dev/null; then
