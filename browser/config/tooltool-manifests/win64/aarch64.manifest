@@ -1,0 +1,33 @@
+[
+  {
+    "size": 266240,
+    "digest": "bb345b0e700ffab4d09436981f14b5de84da55a3f18a7f09ebc4364a4488acdeab8d46f447b12ac70f2da1444a68b8ce8b8675f0dae2ccf845e966d1df0f0869",
+    "algorithm": "sha512",
+    "filename": "mozmake.exe"
+  },
+  {
+    "version": "Visual Studio 15.9 preview release 5",
+    "size": 621847510,
+    "visibility": "internal",
+    "digest": "eba775d85c32d3d0acab72804ba82f0d0180b419c6f01774bc520b7b5f74efd384a2569cb255866053d30e71c94363afee2042f1fad510c02525d5b282cbb3cf",
+    "algorithm": "sha512",
+    "filename": "vs2017_15.9.0p5.zip",
+    "unpack": true
+  },
+  {
+    "version": "makecab rev d2bc6797648b7a834782714a55d339d2fd4e58c8",
+    "algorithm": "sha512",
+    "visibility": "public",
+    "filename": "makecab.tar.bz2",
+    "unpack": true,
+    "digest": "196ac6a567c85559957dfe511c3d8654d23c94d5603259e19ccafe9d71e0e4ccee63ccc9a778f2699654b786cda54266108b7d4db543d01bb0b42545b4e6ec75",
+    "size": 297118
+  },
+  {
+    "size": 1516544,
+    "visibility": "public",
+    "digest": "cf84f9592059f1e0756370f44e0ad289b71569c235d2ec8c5958695cc57352d3b99b584fd119e73fc9593d1c4cca414985e71f567f777162471b6040ebc59d13",
+    "algorithm": "sha512",
+    "filename": "win32-minidump_stackwalk.exe"
+  }
+]
