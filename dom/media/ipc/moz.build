@@ -52,6 +52,11 @@ SOURCES += [
     'VideoDecoderParent.cpp',
 ]
 
+# so we can include nsMacUtilsImpl.h in RDDParent.cpp for sandboxing
+LOCAL_INCLUDES += [
+    '/xpcom/base',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 

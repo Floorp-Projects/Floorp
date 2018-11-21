@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Types.h"
 #include "mozilla/WindowsDllBlocklist.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
 
 #define MOZ_LITERAL_UNICODE_STRING(s) \
   { \
@@ -330,14 +331,17 @@ public:
     , mLength(aLength)
     , mTargetProcess(aTargetProcess)
     , mPrevProt(0)
+    , mError(WindowsError::CreateSuccess())
   {
-    ::VirtualProtectEx(aTargetProcess, aAddress, aLength, aProtFlags,
-                       &mPrevProt);
+    if (!::VirtualProtectEx(aTargetProcess, aAddress, aLength, aProtFlags,
+                            &mPrevProt)) {
+      mError = WindowsError::FromLastError();
+    }
   }
 
   ~AutoVirtualProtect()
   {
-    if (!mPrevProt) {
+    if (!mError) {
       return;
     }
 
@@ -347,7 +351,12 @@ public:
 
   explicit operator bool() const
   {
-    return !!mPrevProt;
+    return !!mError;
+  }
+
+  WindowsError GetError() const
+  {
+    return mError;
   }
 
   AutoVirtualProtect(const AutoVirtualProtect&) = delete;
@@ -356,13 +365,14 @@ public:
   AutoVirtualProtect& operator=(AutoVirtualProtect&&) = delete;
 
 private:
-  void*   mAddress;
-  size_t  mLength;
-  HANDLE  mTargetProcess;
-  DWORD   mPrevProt;
+  void*         mAddress;
+  size_t        mLength;
+  HANDLE        mTargetProcess;
+  DWORD         mPrevProt;
+  WindowsError  mError;
 };
 
-bool
+LauncherVoidResult
 InitializeDllBlocklistOOP(HANDLE aChildProcess)
 {
   mozilla::CrossProcessDllInterceptor intcpt(aChildProcess);
@@ -371,7 +381,7 @@ InitializeDllBlocklistOOP(HANDLE aChildProcess)
                                               "NtMapViewOfSection",
                                               &patched_NtMapViewOfSection);
   if (!ok) {
-    return false;
+    return LAUNCHER_ERROR_GENERIC();
   }
 
   // Because aChildProcess has just been created in a suspended state, its
@@ -386,19 +396,19 @@ InitializeDllBlocklistOOP(HANDLE aChildProcess)
   // safely make its ntdll calls.
   mozilla::nt::PEHeaders ourExeImage(::GetModuleHandleW(nullptr));
   if (!ourExeImage) {
-    return false;
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
   }
 
   PIMAGE_IMPORT_DESCRIPTOR impDesc = ourExeImage.GetIATForModule("ntdll.dll");
   if (!impDesc) {
-    return false;
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_INVALID_DATA);
   }
 
   // This is the pointer we need to write
   auto firstIatThunk = ourExeImage.template
     RVAToPtr<PIMAGE_THUNK_DATA>(impDesc->FirstThunk);
   if (!firstIatThunk) {
-    return false;
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_INVALID_DATA);
   }
 
   // Find the length by iterating through the table until we find a null entry
@@ -415,13 +425,13 @@ InitializeDllBlocklistOOP(HANDLE aChildProcess)
     AutoVirtualProtect prot(firstIatThunk, iatLength, PAGE_READWRITE,
                             aChildProcess);
     if (!prot) {
-      return false;
+      return LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(prot.GetError());
     }
 
     ok = !!::WriteProcessMemory(aChildProcess, firstIatThunk, firstIatThunk,
                                 iatLength, &bytesWritten);
     if (!ok) {
-      return false;
+      return LAUNCHER_ERROR_FROM_LAST();
     }
   }
 
@@ -429,7 +439,11 @@ InitializeDllBlocklistOOP(HANDLE aChildProcess)
   uint32_t newFlags = eDllBlocklistInitFlagWasBootstrapped;
   ok = !!::WriteProcessMemory(aChildProcess, &gBlocklistInitFlags, &newFlags,
                               sizeof(newFlags), &bytesWritten);
-  return ok;
+  if (!ok) {
+    return LAUNCHER_ERROR_FROM_LAST();
+  }
+
+  return Ok();
 }
 
 } // namespace mozilla

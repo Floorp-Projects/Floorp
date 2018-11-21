@@ -762,8 +762,12 @@ class MediaDecoderStateMachine::LoopingDecodingState
     if (ShouldDiscardLoopedAudioData()) {
       mMaster->mAudioDataRequest.DisconnectIfExists();
       DiscardLoopedAudioData();
+    }
+    if (HasDecodedLastAudioFrame()) {
       AudioQueue().Finish();
     }
+    mAudioDataRequest.DisconnectIfExists();
+    mAudioSeekRequest.DisconnectIfExists();
     DecodingState::Exit();
   }
 
@@ -888,6 +892,14 @@ class MediaDecoderStateMachine::LoopingDecodingState
     DiscardFramesFromTail(AudioQueue(), [&](int64_t aSampleTime) {
       return aSampleTime > mAudioLoopingOffset.ToMicroseconds();
     });
+  }
+
+  bool HasDecodedLastAudioFrame() const {
+    // when we're going to leave looping state and have got EOS before, we should
+    // mark audio queue as ended because we have got all data we need.
+    return mAudioDataRequest.Exists() ||
+           mAudioSeekRequest.Exists() ||
+           ShouldDiscardLoopedAudioData();
   }
 
   media::TimeUnit mAudioLoopingOffset = media::TimeUnit::Zero();

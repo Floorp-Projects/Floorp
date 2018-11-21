@@ -766,8 +766,11 @@ gTestDirsPartialSuccess = gTestDirsCommon.concat(gTestDirsPartialSuccess);
 
 /**
  * Helper function for setting up the test environment.
+ *
+ * @param  aAppUpdateAutoEnabled
+ *         See setAppUpdateAutoSync in shared.js for details.
  */
-function setupTestCommon() {
+function setupTestCommon(aAppUpdateAutoEnabled = false) {
   debugDump("start - general test setup");
 
   Assert.strictEqual(gTestID, undefined,
@@ -873,6 +876,8 @@ function setupTestCommon() {
       }
     }
   }
+
+  setAppUpdateAutoSync(aAppUpdateAutoEnabled);
 
   debugDump("finish - general test setup");
   return true;

@@ -679,6 +679,11 @@ nsDocShell::LoadURI(nsDocShellLoadState* aLoadState)
              "Should not have these flags set");
   MOZ_ASSERT(aLoadState->URI(), "Should have a valid URI to load");
 
+  if (mUseStrictSecurityChecks && !aLoadState->TriggeringPrincipal()) {
+    MOZ_ASSERT(false, "LoadURI must have a triggering principal");
+    return NS_ERROR_FAILURE;
+  }
+
   // Note: we allow loads to get through here even if mFiredUnloadEvent is
   // true; that case will get handled in LoadInternal or LoadHistoryEntry,
   // so we pass false as the second parameter to IsNavigationAllowed.
@@ -7299,9 +7304,8 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
           MaybeNotifyKeywordSearchLoading(keywordProviderName, keywordAsSent);
 
           nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-          nsCOMPtr<nsIPrincipal> triggeringPrincipal = loadInfo
-            ? loadInfo->TriggeringPrincipal()
-            : nsContentUtils::GetSystemPrincipal();
+          MOZ_ASSERT(loadInfo, "loadInfo is required on all channels");
+          nsCOMPtr<nsIPrincipal> triggeringPrincipal = loadInfo->TriggeringPrincipal();
           return LoadURI(newSpecW,             // URI string
                          LOAD_FLAGS_NONE,      // Load flags
                          nullptr,              // Referring URI

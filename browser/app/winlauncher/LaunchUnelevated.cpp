@@ -12,6 +12,8 @@
 #include "mozilla/RefPtr.h"
 #include "nsWindowsHelpers.h"
 
+#include "LauncherResult.h"
+
 // For _bstr_t and _variant_t
 #include <comdef.h>
 #include <comutil.h>
@@ -23,34 +25,36 @@
 #include <shlobj.h>
 #include <shobjidl.h>
 
-static mozilla::Maybe<TOKEN_ELEVATION_TYPE>
+static mozilla::LauncherResult<TOKEN_ELEVATION_TYPE>
 GetElevationType(const nsAutoHandle& aToken)
 {
   DWORD retLen;
   TOKEN_ELEVATION_TYPE elevationType;
   if (!::GetTokenInformation(aToken.get(), TokenElevationType, &elevationType,
                              sizeof(elevationType), &retLen)) {
-    return mozilla::Nothing();
+    return LAUNCHER_ERROR_FROM_LAST();
   }
 
-  return mozilla::Some(elevationType);
+  return elevationType;
 }
 
-static mozilla::Maybe<bool>
+static mozilla::LauncherResult<bool>
 IsHighIntegrity(const nsAutoHandle& aToken)
 {
   DWORD reqdLen;
   if (!::GetTokenInformation(aToken.get(), TokenIntegrityLevel, nullptr, 0,
-                             &reqdLen) &&
-      ::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
-    return mozilla::Nothing();
+                             &reqdLen)) {
+    DWORD err = ::GetLastError();
+    if (err != ERROR_INSUFFICIENT_BUFFER) {
+      return LAUNCHER_ERROR_FROM_WIN32(err);
+    }
   }
 
   auto buf = mozilla::MakeUnique<char[]>(reqdLen);
 
   if (!::GetTokenInformation(aToken.get(), TokenIntegrityLevel, buf.get(),
                              reqdLen, &reqdLen)) {
-    return mozilla::Nothing();
+    return LAUNCHER_ERROR_FROM_LAST();
   }
 
   auto tokenLabel = reinterpret_cast<PTOKEN_MANDATORY_LABEL>(buf.get());
@@ -58,18 +62,17 @@ IsHighIntegrity(const nsAutoHandle& aToken)
   DWORD subAuthCount = *::GetSidSubAuthorityCount(tokenLabel->Label.Sid);
   DWORD integrityLevel = *::GetSidSubAuthority(tokenLabel->Label.Sid,
                                                subAuthCount - 1);
-  return mozilla::Some(integrityLevel > SECURITY_MANDATORY_MEDIUM_RID);
+  return integrityLevel > SECURITY_MANDATORY_MEDIUM_RID;
 }
 
-static nsReturnRef<HANDLE>
+static mozilla::LauncherResult<HANDLE>
 GetMediumIntegrityToken(const nsAutoHandle& aProcessToken)
 {
-  nsAutoHandle empty;
-
   HANDLE rawResult;
   if (!::DuplicateTokenEx(aProcessToken.get(), 0, nullptr,
                           SecurityImpersonation, TokenPrimary, &rawResult)) {
-    return empty.out();
+
+    return LAUNCHER_ERROR_FROM_LAST();
   }
 
   nsAutoHandle result(rawResult);
@@ -78,7 +81,7 @@ GetMediumIntegrityToken(const nsAutoHandle& aProcessToken)
   DWORD mediumIlSidSize = sizeof(mediumIlSid);
   if (!::CreateWellKnownSid(WinMediumLabelSid, nullptr, mediumIlSid,
                             &mediumIlSidSize)) {
-    return empty.out();
+    return LAUNCHER_ERROR_FROM_LAST();
   }
 
   TOKEN_MANDATORY_LABEL integrityLevel = {};
@@ -87,10 +90,10 @@ GetMediumIntegrityToken(const nsAutoHandle& aProcessToken)
 
   if (!::SetTokenInformation(rawResult, TokenIntegrityLevel, &integrityLevel,
                              sizeof(integrityLevel))) {
-    return empty.out();
+    return LAUNCHER_ERROR_FROM_LAST();
   }
 
-  return result.out();
+  return result.disown();
 }
 
 namespace mozilla {
@@ -103,13 +106,13 @@ namespace mozilla {
 // those of the session.
 // See https://blogs.msdn.microsoft.com/oldnewthing/20131118-00/?p=2643
 
-bool
+LauncherVoidResult
 LaunchUnelevated(int aArgc, wchar_t* aArgv[])
 {
   // We require a single-threaded apartment to talk to Explorer.
   mscom::STARegion sta;
   if (!sta.IsValid()) {
-    return false;
+    return LAUNCHER_ERROR_FROM_HRESULT(sta.GetHResult());
   }
 
   // NB: Explorer is a local server, not an inproc server
@@ -118,7 +121,7 @@ LaunchUnelevated(int aArgc, wchar_t* aArgv[])
                                   CLSCTX_LOCAL_SERVER, IID_IShellWindows,
                                   getter_AddRefs(shellWindows));
   if (FAILED(hr)) {
-    return false;
+    return LAUNCHER_ERROR_FROM_HRESULT(hr);
   }
 
   // 1. Find the shell view for the desktop.
@@ -129,26 +132,26 @@ LaunchUnelevated(int aArgc, wchar_t* aArgv[])
   hr = shellWindows->FindWindowSW(&loc, &empty, SWC_DESKTOP, &hwnd,
                                   SWFO_NEEDDISPATCH, getter_AddRefs(dispDesktop));
   if (FAILED(hr)) {
-    return false;
+    return LAUNCHER_ERROR_FROM_HRESULT(hr);
   }
 
   RefPtr<IServiceProvider> servProv;
   hr = dispDesktop->QueryInterface(IID_IServiceProvider, getter_AddRefs(servProv));
   if (FAILED(hr)) {
-    return false;
+    return LAUNCHER_ERROR_FROM_HRESULT(hr);
   }
 
   RefPtr<IShellBrowser> browser;
   hr = servProv->QueryService(SID_STopLevelBrowser, IID_IShellBrowser,
                               getter_AddRefs(browser));
   if (FAILED(hr)) {
-    return false;
+    return LAUNCHER_ERROR_FROM_HRESULT(hr);
   }
 
   RefPtr<IShellView> activeShellView;
   hr = browser->QueryActiveShellView(getter_AddRefs(activeShellView));
   if (FAILED(hr)) {
-    return false;
+    return LAUNCHER_ERROR_FROM_HRESULT(hr);
   }
 
   // 2. Get the automation object for the desktop.
@@ -156,27 +159,27 @@ LaunchUnelevated(int aArgc, wchar_t* aArgv[])
   hr = activeShellView->GetItemObject(SVGIO_BACKGROUND, IID_IDispatch,
                                       getter_AddRefs(dispView));
   if (FAILED(hr)) {
-    return false;
+    return LAUNCHER_ERROR_FROM_HRESULT(hr);
   }
 
   RefPtr<IShellFolderViewDual> folderView;
   hr = dispView->QueryInterface(IID_IShellFolderViewDual,
                                 getter_AddRefs(folderView));
   if (FAILED(hr)) {
-    return false;
+    return LAUNCHER_ERROR_FROM_HRESULT(hr);
   }
 
   // 3. Get the interface to IShellDispatch2
   RefPtr<IDispatch> dispShell;
   hr = folderView->get_Application(getter_AddRefs(dispShell));
   if (FAILED(hr)) {
-    return false;
+    return LAUNCHER_ERROR_FROM_HRESULT(hr);
   }
 
   RefPtr<IShellDispatch2> shellDisp;
   hr = dispShell->QueryInterface(IID_IShellDispatch2, getter_AddRefs(shellDisp));
   if (FAILED(hr)) {
-    return false;
+    return LAUNCHER_ERROR_FROM_HRESULT(hr);
   }
 
   // 4. Now call IShellDispatch2::ShellExecute to ask Explorer to re-launch us.
@@ -184,7 +187,7 @@ LaunchUnelevated(int aArgc, wchar_t* aArgv[])
   // Omit argv[0] because ShellExecute doesn't need it in params
   UniquePtr<wchar_t[]> cmdLine(MakeCommandLine(aArgc - 1, aArgv + 1));
   if (!cmdLine) {
-    return false;
+    return LAUNCHER_ERROR_GENERIC();
   }
 
   _bstr_t exe(aArgv[0]);
@@ -193,10 +196,14 @@ LaunchUnelevated(int aArgc, wchar_t* aArgv[])
   _variant_t directory;
   _variant_t showCmd(SW_SHOWNORMAL);
   hr = shellDisp->ShellExecute(exe, args, operation, directory, showCmd);
-  return SUCCEEDED(hr);
+  if (FAILED(hr)) {
+    return LAUNCHER_ERROR_FROM_HRESULT(hr);
+  }
+
+  return Ok();
 }
 
-Maybe<ElevationState>
+LauncherResult<ElevationState>
 GetElevationState(mozilla::LauncherFlags aFlags, nsAutoHandle& aOutMediumIlToken)
 {
   aOutMediumIlToken.reset();
@@ -205,34 +212,40 @@ GetElevationState(mozilla::LauncherFlags aFlags, nsAutoHandle& aOutMediumIlToken
                            TOKEN_ADJUST_DEFAULT | TOKEN_ASSIGN_PRIMARY;
   HANDLE rawToken;
   if (!::OpenProcessToken(::GetCurrentProcess(), tokenFlags, &rawToken)) {
-    return Nothing();
+    return LAUNCHER_ERROR_FROM_LAST();
   }
 
   nsAutoHandle token(rawToken);
 
-  Maybe<TOKEN_ELEVATION_TYPE> elevationType = GetElevationType(token);
-  if (!elevationType) {
-    return Nothing();
+  LauncherResult<TOKEN_ELEVATION_TYPE> elevationType = GetElevationType(token);
+  if (elevationType.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(elevationType);
   }
 
-  switch (elevationType.value()) {
+  switch (elevationType.unwrap()) {
     case TokenElevationTypeLimited:
-      return Some(ElevationState::eNormalUser);
+      return ElevationState::eNormalUser;
     case TokenElevationTypeFull:
       // If we want to start a non-elevated browser process and wait on it,
       // we're going to need a medium IL token.
       if ((aFlags & (mozilla::LauncherFlags::eWaitForBrowser |
                      mozilla::LauncherFlags::eNoDeelevate)) ==
           mozilla::LauncherFlags::eWaitForBrowser) {
-        aOutMediumIlToken = GetMediumIntegrityToken(token);
+        LauncherResult<HANDLE> tokenResult =
+          GetMediumIntegrityToken(token);
+        if (tokenResult.isOk()) {
+          aOutMediumIlToken.own(tokenResult.unwrap());
+        } else {
+          return LAUNCHER_ERROR_FROM_RESULT(tokenResult);
+        }
       }
 
-      return Some(ElevationState::eElevated);
+      return ElevationState::eElevated;
     case TokenElevationTypeDefault:
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Was a new value added to the enumeration?");
-      return Nothing();
+      return LAUNCHER_ERROR_GENERIC();
   }
 
   // In this case, UAC is disabled. We do not yet know whether or not we are
@@ -240,20 +253,26 @@ GetElevationState(mozilla::LauncherFlags aFlags, nsAutoHandle& aOutMediumIlToken
   // ourselves in a non-elevated state via Explorer, as we would just end up in
   // an infinite loop of launcher processes re-launching themselves.
 
-  Maybe<bool> isHighIntegrity = IsHighIntegrity(token);
-  if (!isHighIntegrity) {
-    return Nothing();
+  LauncherResult<bool> isHighIntegrity = IsHighIntegrity(token);
+  if (isHighIntegrity.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(isHighIntegrity);
   }
 
-  if (!isHighIntegrity.value()) {
-    return Some(ElevationState::eNormalUser);
+  if (!isHighIntegrity.unwrap()) {
+    return ElevationState::eNormalUser;
   }
 
   if (!(aFlags & mozilla::LauncherFlags::eNoDeelevate)) {
-    aOutMediumIlToken = GetMediumIntegrityToken(token);
+    LauncherResult<HANDLE> tokenResult =
+      GetMediumIntegrityToken(token);
+    if (tokenResult.isOk()) {
+      aOutMediumIlToken.own(tokenResult.unwrap());
+    } else {
+      return LAUNCHER_ERROR_FROM_RESULT(tokenResult);
+    }
   }
 
-  return Some(ElevationState::eHighIntegrityNoUAC);
+  return ElevationState::eHighIntegrityNoUAC;
 }
 
 } // namespace mozilla

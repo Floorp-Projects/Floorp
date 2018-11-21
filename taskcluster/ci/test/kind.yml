@@ -33,3 +33,14 @@ jobs-from:
     - talos.yml
     - web-platform.yml
     - xpcshell.yml
+
+
+job-defaults:
+    require-signed-extensions:
+        by-release-type:
+            release|esr.*: true
+            beta:
+                by-test-platform:
+                    .*-devedition/.*: false
+                    default: true
+            default: false

@@ -19,7 +19,6 @@ from taskgraph.util.partners import (
 from taskgraph.util.schema import (
     optionally_keyed_by,
     resolve_keyed_by,
-    validate_schema,
 )
 from taskgraph.util.scriptworker import (
     add_scope_prefix,
@@ -39,8 +38,6 @@ logger = logging.getLogger(__name__)
 # Voluptuous uses marker objects as dictionary *keys*, but they are not
 # comparable, so we cast all of the keys back to regular strings
 task_description_schema = {str(k): v for k, v in task_description_schema.schema.iteritems()}
-
-transforms = TransformSequence()
 
 # shortcut for a string where task references are allowed
 taskref_or_string = Any(
@@ -63,17 +60,9 @@ beetmover_description_schema = schema.extend({
     Optional('shipping-product'): task_description_schema['shipping-product'],
 })
 
+transforms = TransformSequence()
 transforms.add(check_if_partners_enabled)
-
-
-@transforms.add
-def validate(config, jobs):
-    for job in jobs:
-        label = job.get('primary-dependency', object).__dict__.get('label', '?no-label?')
-        validate_schema(
-            beetmover_description_schema, job,
-            "In beetmover ({!r} kind) task for {!r}:".format(config.kind, label))
-        yield job
+transforms.add_validate(beetmover_description_schema)
 
 
 @transforms.add

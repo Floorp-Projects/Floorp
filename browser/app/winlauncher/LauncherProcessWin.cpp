@@ -25,6 +25,8 @@
 #include <processthreadsapi.h>
 
 #include "DllBlocklistWin.h"
+#include "ErrorHandler.h"
+#include "LauncherResult.h"
 #include "LaunchUnelevated.h"
 #include "ProcThreadAttributes.h"
 
@@ -34,7 +36,7 @@
  *
  * @return true if browser startup should proceed, otherwise false.
  */
-static bool
+static mozilla::LauncherVoidResult
 PostCreationSetup(HANDLE aChildProcess, HANDLE aChildMainThread,
                   const bool aIsSafeMode)
 {
@@ -42,7 +44,7 @@ PostCreationSetup(HANDLE aChildProcess, HANDLE aChildMainThread,
   // it is able to execute before ASAN itself has even initialized.
   // Also, the AArch64 build doesn't yet have a working interceptor.
 #if defined(MOZ_ASAN) || defined(_M_ARM64)
-  return true;
+  return mozilla::Ok();
 #else
   return mozilla::InitializeDllBlocklistOOP(aChildProcess);
 #endif // defined(MOZ_ASAN) || defined(_M_ARM64)
@@ -68,27 +70,6 @@ SetMitigationPolicies(mozilla::ProcThreadAttributes& aAttrs, const bool aIsSafeM
   if (mozilla::IsWin10AnniversaryUpdateOrLater()) {
     aAttrs.AddMitigationPolicy(PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON);
   }
-}
-
-static void
-ShowError(DWORD aError = ::GetLastError())
-{
-  if (aError == ERROR_SUCCESS) {
-    return;
-  }
-
-  LPWSTR rawMsgBuf = nullptr;
-  DWORD result = ::FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                                  FORMAT_MESSAGE_FROM_SYSTEM |
-                                  FORMAT_MESSAGE_IGNORE_INSERTS, nullptr,
-                                  aError, 0, reinterpret_cast<LPWSTR>(&rawMsgBuf),
-                                  0, nullptr);
-  if (!result) {
-    return;
-  }
-
-  ::MessageBoxW(nullptr, rawMsgBuf, L"Firefox", MB_OK | MB_ICONERROR);
-  ::LocalFree(rawMsgBuf);
 }
 
 static mozilla::LauncherFlags
@@ -166,53 +147,42 @@ MaybeBreakForBrowserDebugging()
 
 #if defined(MOZ_LAUNCHER_PROCESS)
 
-static bool
+static mozilla::LauncherResult<bool>
 IsSameBinaryAsParentProcess()
 {
-  mozilla::Maybe<DWORD> parentPid = mozilla::nt::GetParentProcessId();
-  if (!parentPid) {
-    // If NtQueryInformationProcess failed (in GetParentProcessId()),
-    // we should not behave as the launcher process because it will also
-    // likely to fail in child processes.
-    MOZ_CRASH("NtQueryInformationProcess failed");
+  mozilla::LauncherResult<DWORD> parentPid = mozilla::nt::GetParentProcessId();
+  if (parentPid.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(parentPid);
   }
 
   nsAutoHandle parentProcess(::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,
-                                           FALSE, parentPid.value()));
+                                           FALSE, parentPid.unwrap()));
   if (!parentProcess.get()) {
-    // If OpenProcess failed, the parent process may not be present,
-    // may be already terminated, etc. So we will have to behave as the
-    // launcher proces in this case.
-    return false;
+    return LAUNCHER_ERROR_FROM_LAST();
   }
 
   WCHAR parentExe[MAX_PATH + 1] = {};
   DWORD parentExeLen = mozilla::ArrayLength(parentExe);
   if (!::QueryFullProcessImageNameW(parentProcess.get(), PROCESS_NAME_NATIVE,
                                     parentExe, &parentExeLen)) {
-    // If QueryFullProcessImageNameW failed, we should not behave as the
-    // launcher process for the same reason as NtQueryInformationProcess.
-    MOZ_CRASH("QueryFullProcessImageNameW failed");
+    return LAUNCHER_ERROR_FROM_LAST();
   }
 
   WCHAR ourExe[MAX_PATH + 1] = {};
   DWORD ourExeOk = ::GetModuleFileNameW(nullptr, ourExe,
                                         mozilla::ArrayLength(ourExe));
   if (!ourExeOk || ourExeOk == mozilla::ArrayLength(ourExe)) {
-    // If GetModuleFileNameW failed, we should not behave as the launcher
-    // process for the same reason as NtQueryInformationProcess.
-    MOZ_CRASH("GetModuleFileNameW failed");
+    return LAUNCHER_ERROR_FROM_LAST();
   }
 
-  mozilla::Maybe<bool> isSame =
+  mozilla::WindowsErrorResult<bool> isSame =
     mozilla::DoPathsPointToIdenticalFile(parentExe, ourExe,
-                                         mozilla::eNtPath);
-  if (!isSame) {
-    // If DoPathsPointToIdenticalFile failed, we should not behave as the
-    // launcher process for the same reason as NtQueryInformationProcess.
-    MOZ_CRASH("DoPathsPointToIdenticalFile failed");
+                                         mozilla::PathType::eNtPath);
+  if (isSame.isErr()) {
+    return LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(isSame.unwrapErr());
   }
-  return isSame.value();
+
+  return isSame.unwrap();
 }
 
 #endif // defined(MOZ_LAUNCHER_PROCESS)
@@ -228,7 +198,12 @@ RunAsLauncherProcess(int& argc, wchar_t** argv)
   bool result = false;
 
 #if defined(MOZ_LAUNCHER_PROCESS)
-  result = !IsSameBinaryAsParentProcess();
+  LauncherResult<bool> isSame = IsSameBinaryAsParentProcess();
+  if (isSame.isOk()) {
+    result = !isSame.unwrap();
+  } else {
+    HandleLauncherError(isSame.unwrapErr());
+  }
 #endif // defined(MOZ_LAUNCHER_PROCESS)
 
   if (mozilla::EnvHasValue("MOZ_LAUNCHER_PROCESS")) {
@@ -268,37 +243,45 @@ LauncherMain(int argc, wchar_t* argv[])
   }
 
   if (!SetArgv0ToFullBinaryPath(argv)) {
-    ShowError();
+    HandleLauncherError(LAUNCHER_ERROR_GENERIC());
     return 1;
   }
 
   LauncherFlags flags = ProcessCmdLine(argc, argv);
 
   nsAutoHandle mediumIlToken;
-  Maybe<ElevationState> elevationState = GetElevationState(flags, mediumIlToken);
-  if (!elevationState) {
+  LauncherResult<ElevationState> elevationState = GetElevationState(flags, mediumIlToken);
+  if (elevationState.isErr()) {
+    HandleLauncherError(elevationState);
     return 1;
   }
 
   // If we're elevated, we should relaunch ourselves as a normal user.
   // Note that we only call LaunchUnelevated when we don't need to wait for the
   // browser process.
-  if (elevationState.value() == ElevationState::eElevated &&
+  if (elevationState.unwrap() == ElevationState::eElevated &&
       !(flags & (LauncherFlags::eWaitForBrowser | LauncherFlags::eNoDeelevate)) &&
       !mediumIlToken.get()) {
-    return !LaunchUnelevated(argc, argv);
+    LauncherVoidResult launchedUnelevated = LaunchUnelevated(argc, argv);
+    bool failed = launchedUnelevated.isErr();
+    if (failed) {
+      HandleLauncherError(launchedUnelevated);
+    }
+
+    return failed;
   }
 
   // Now proceed with setting up the parameters for process creation
   UniquePtr<wchar_t[]> cmdLine(MakeCommandLine(argc, argv));
   if (!cmdLine) {
+    HandleLauncherError(LAUNCHER_ERROR_GENERIC());
     return 1;
   }
 
   const Maybe<bool> isSafeMode = IsSafeModeRequested(argc, argv,
                                                      SafeModeFlag::NoKeyPressCheck);
   if (!isSafeMode) {
-    ShowError(ERROR_INVALID_PARAMETER);
+    HandleLauncherError(LAUNCHER_ERROR_FROM_WIN32(ERROR_INVALID_PARAMETER));
     return 1;
   }
 
@@ -316,15 +299,15 @@ LauncherMain(int argc, wchar_t* argv[])
   DWORD creationFlags = CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT;
 
   STARTUPINFOEXW siex;
-  Maybe<bool> attrsOk = attrs.AssignTo(siex);
-  if (!attrsOk) {
-    ShowError();
+  LauncherResult<bool> attrsOk = attrs.AssignTo(siex);
+  if (attrsOk.isErr()) {
+    HandleLauncherError(attrsOk);
     return 1;
   }
 
   BOOL inheritHandles = FALSE;
 
-  if (attrsOk.value()) {
+  if (attrsOk.unwrap()) {
     creationFlags |= EXTENDED_STARTUPINFO_PRESENT;
 
     if (attrs.HasInheritableHandles()) {
@@ -354,16 +337,23 @@ LauncherMain(int argc, wchar_t* argv[])
   }
 
   if (!createOk) {
-    ShowError();
+    HandleLauncherError(LAUNCHER_ERROR_FROM_LAST());
     return 1;
   }
 
   nsAutoHandle process(pi.hProcess);
   nsAutoHandle mainThread(pi.hThread);
 
-  if (!PostCreationSetup(process.get(), mainThread.get(), isSafeMode.value()) ||
-      ::ResumeThread(mainThread.get()) == static_cast<DWORD>(-1)) {
-    ShowError();
+  LauncherVoidResult setupResult =
+    PostCreationSetup(process.get(), mainThread.get(), isSafeMode.value());
+  if (setupResult.isErr()) {
+    HandleLauncherError(setupResult);
+    ::TerminateProcess(process.get(), 1);
+    return 1;
+  }
+
+  if (::ResumeThread(mainThread.get()) == static_cast<DWORD>(-1)) {
+    HandleLauncherError(LAUNCHER_ERROR_FROM_LAST());
     ::TerminateProcess(process.get(), 1);
     return 1;
   }
