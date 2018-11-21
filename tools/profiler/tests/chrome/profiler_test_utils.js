@@ -11,7 +11,8 @@ function startProfiler(settings) {
     settings.features,
     settings.features.length,
     settings.threads,
-    settings.threads.length
+    settings.threads.length,
+    settings.duration
   );
 
   info("Profiler has started");

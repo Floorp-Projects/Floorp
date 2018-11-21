@@ -30,10 +30,14 @@ ProfilerChild::RecvStart(const ProfilerInitParams& params)
     filterArray.AppendElement(params.filters()[i].get());
   }
 
-  profiler_start(params.entries(), params.interval(),
+  profiler_start(params.entries(),
+                 params.interval(),
                  params.features(),
                  filterArray.Elements(),
-                 filterArray.Length());
+                 filterArray.Length(),
+                 params.duration().type() == MaybeDuration::Tnull_t
+                   ? mozilla::Nothing()
+                   : mozilla::Some(params.duration().get_double()));
 
   return IPC_OK();
 }
@@ -47,8 +51,11 @@ ProfilerChild::RecvEnsureStarted(const ProfilerInitParams& params)
   }
 
   profiler_ensure_started(params.entries(), params.interval(),
-                          params.features(),
-                          filterArray.Elements(), filterArray.Length());
+                          params.features(), filterArray.Elements(),
+                          filterArray.Length(),
+                          params.duration().type() == MaybeDuration::Tnull_t
+                            ? mozilla::Nothing()
+                            : mozilla::Some(params.duration().get_double()));
 
   return IPC_OK();
 }

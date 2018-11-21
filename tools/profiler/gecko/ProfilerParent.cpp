@@ -137,15 +137,21 @@ ProfilerParent::Init()
   // child process, it's a good time to sync up the two profilers again.
 
   int entries = 0;
+  Maybe<double> duration = Nothing();
   double interval = 0;
   mozilla::Vector<const char*> filters;
   uint32_t features;
-  profiler_get_start_params(&entries, &interval, &features, &filters);
+  profiler_get_start_params(&entries, &duration, &interval, &features, &filters);
 
   if (entries != 0) {
     ProfilerInitParams ipcParams;
     ipcParams.enabled() = true;
     ipcParams.entries() = entries;
+    if (duration.isSome()) {
+      ipcParams.duration() = duration.value();
+    } else {
+      ipcParams.duration() = mozilla::null_t();
+    }
     ipcParams.interval() = interval;
     ipcParams.features() = features;
 
@@ -189,8 +195,15 @@ ProfilerParent::ProfilerStarted(nsIProfilerStartParams* aParams)
   }
 
   ProfilerInitParams ipcParams;
+  double duration;
   ipcParams.enabled() = true;
   aParams->GetEntries(&ipcParams.entries());
+  aParams->GetDuration(&duration);
+  if (duration > 0.0) {
+    ipcParams.duration() = duration;
+  } else {
+    ipcParams.duration() = mozilla::null_t();
+  }
   aParams->GetInterval(&ipcParams.interval());
   aParams->GetFeatures(&ipcParams.features());
   ipcParams.filters() = aParams->GetFilters();

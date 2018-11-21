@@ -108,7 +108,8 @@ nsProfiler::CanProfile(bool *aCanProfile)
 NS_IMETHODIMP
 nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
                           const char** aFeatures, uint32_t aFeatureCount,
-                          const char** aFilters, uint32_t aFilterCount)
+                          const char** aFilters, uint32_t aFilterCount,
+                          double aDuration)
 {
   if (mLockedForPrivateBrowsing) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -117,7 +118,8 @@ nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
   ResetGathering();
 
   uint32_t features = ParseFeaturesFromStringArray(aFeatures, aFeatureCount);
-  profiler_start(aEntries, aInterval, features, aFilters, aFilterCount);
+  Maybe<double> duration = aDuration > 0.0 ? Some(aDuration) : Nothing();
+  profiler_start(aEntries, aInterval, features, aFilters, aFilterCount, duration);
 
   return NS_OK;
 }
