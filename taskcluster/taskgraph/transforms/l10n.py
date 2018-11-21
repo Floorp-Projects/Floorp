@@ -16,7 +16,6 @@ from taskgraph.transforms.base import (
     TransformSequence,
 )
 from taskgraph.util.schema import (
-    validate_schema,
     optionally_keyed_by,
     resolve_keyed_by,
 )
@@ -214,12 +213,7 @@ def copy_in_useful_magic(config, jobs):
         yield job
 
 
-@transforms.add
-def validate_early(config, jobs):
-    for job in jobs:
-        validate_schema(l10n_description_schema, job,
-                        "In job {!r}:".format(job.get('name', 'unknown')))
-        yield job
+transforms.add_validate(l10n_description_schema)
 
 
 @transforms.add
@@ -375,12 +369,7 @@ def mh_options_replace_project(config, jobs):
         yield job
 
 
-@transforms.add
-def validate_again(config, jobs):
-    for job in jobs:
-        validate_schema(l10n_description_schema, job,
-                        "In job {!r}:".format(job.get('name', 'unknown')))
-        yield job
+transforms.add_validate(l10n_description_schema)
 
 
 @transforms.add

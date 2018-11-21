@@ -92,7 +92,7 @@ interface nsITelemetry : nsISupports
    * The returned structure looks like:
    *   { "process": { "category1.probe": 1,"category1.other_probe": false, ... }, ... }.
    *
-   * @param aStoreName The name of the store to snapshot. Ignored at the moment.
+   * @param aStoreName The name of the store to snapshot. Something like "main".
    * @param aClearStore Whether to clear out the scalars in the named store after snapshotting.
    * @param aFilterTest If true, `telemetry.test` scalars will be filtered out.
                         Filtered scalars are still cleared if `aClearStore` is true.
@@ -106,7 +106,7 @@ interface nsITelemetry : nsISupports
    * The returned structure looks like:
    *   { "process": { "category1.probe": { "key_1": 2, "key_2": 1, ... }, ... }, ... }
    *
-   * @param aStoreName The name of the store to snapshot. Ignored at the moment.
+   * @param aStoreName The name of the store to snapshot. Something like "main".
    * @param aClearStore Whether to clear out the keyed scalars in the named store after snapshotting.
    * @param aFilterTest If true, `telemetry.test` scalars will be filtered out.
                         Filtered scalars are still cleared if `aClearStore` is true.

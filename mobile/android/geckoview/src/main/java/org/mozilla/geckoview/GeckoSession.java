@@ -2593,6 +2593,14 @@ public class GeckoSession implements Parcelable {
          * @param session The GeckoSession that crashed.
          */
         void onCrash(GeckoSession session);
+
+        /**
+         * Notification that the first content composition has occurred.
+         * This callback is invoked for the first content composite after either
+         * a start or a restart of the compositor.
+         * @param session The GeckoSession that had a first paint event.
+         */
+        default void onFirstComposite(GeckoSession session) {}
     }
 
     public interface SelectionActionDelegate {
@@ -4114,6 +4122,10 @@ public class GeckoSession implements Parcelable {
             case FIRST_PAINT: {
                 if (mController != null) {
                     mController.onFirstPaint();
+                }
+                ContentDelegate delegate = mContentHandler.getDelegate();
+                if (delegate != null) {
+                    delegate.onFirstComposite(this);
                 }
                 break;
             }

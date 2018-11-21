@@ -11,14 +11,11 @@ import re
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
-from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema, validate_schema
+from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema
 from taskgraph.util.scriptworker import get_push_apk_scope
 from taskgraph.util.taskcluster import get_artifact_prefix
 
 from voluptuous import Optional, Required
-
-
-transforms = TransformSequence()
 
 # Voluptuous uses marker objects as dictionary *keys*, but they are not
 # comparable, so we cast all of the keys back to regular strings
@@ -51,16 +48,8 @@ REQUIRED_ARCHITECTURES = {
 }
 PLATFORM_REGEX = re.compile(r'build-signing-android-(\S+)-nightly')
 
-
-@transforms.add
-def validate_jobs_schema_transform_partial(config, jobs):
-    for job in jobs:
-        label = job.get('label', '?no-label?')
-        validate_schema(
-            push_apk_description_schema, job,
-            "In PushApk ({!r} kind) task for {!r}:".format(config.kind, label)
-        )
-        yield job
+transforms = TransformSequence()
+transforms.add_validate(push_apk_description_schema)
 
 
 @transforms.add

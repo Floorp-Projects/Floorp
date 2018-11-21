@@ -61,12 +61,6 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
           "dest": "app",
           "help": "name of the application we are testing (default: firefox)"
           }],
-        [["--branch-name"],
-         {"action": "store",
-          "dest": "branch",
-          "help": "branch running against. Used by Talos when running on try. "
-                  "See https://bugzilla.mozilla.org/show_bug.cgi?id=1357753#c3"
-          }],
         [["--is-release-build"],
          {"action": "store_true",
           "dest": "is_release_build",

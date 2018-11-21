@@ -10,18 +10,13 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
-from taskgraph.util.schema import validate_schema, resolve_keyed_by, optionally_keyed_by
+from taskgraph.util.schema import resolve_keyed_by, optionally_keyed_by
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Any, Required
 
-
-transforms = TransformSequence()
-
 task_description_schema = {str(k): v for k, v in task_description_schema.schema.iteritems()}
 
-
 transforms = TransformSequence()
-
 
 langpack_sign_push_description_schema = schema.extend({
     Required('label'): basestring,
@@ -51,14 +46,7 @@ def set_label(config, jobs):
         yield job
 
 
-@transforms.add
-def validate(config, jobs):
-    for job in jobs:
-        validate_schema(
-            langpack_sign_push_description_schema, job,
-            'In sign-and-push-langpacks ({} kind) task for {}:'.format(config.kind, job['label'])
-        )
-        yield job
+transforms.add_validate(langpack_sign_push_description_schema)
 
 
 @transforms.add

@@ -9,17 +9,13 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
-from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema, validate_schema
+from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema
 
 from voluptuous import Optional, Required
-
-
-transforms = TransformSequence()
 
 # Voluptuous uses marker objects as dictionary *keys*, but they are not
 # comparable, so we cast all of the keys back to regular strings
 task_description_schema = {str(k): v for k, v in task_description_schema.schema.iteritems()}
-
 
 push_snap_description_schema = Schema({
     Required('name'): basestring,
@@ -36,16 +32,8 @@ push_snap_description_schema = Schema({
     Optional('extra'): task_description_schema['extra'],
 })
 
-
-@transforms.add
-def validate_jobs_schema_transform(config, jobs):
-    for job in jobs:
-        label = job.get('label', '?no-label?')
-        validate_schema(
-            push_snap_description_schema, job,
-            "In release_snap_push ({!r} kind) task for {!r}:".format(config.kind, label)
-        )
-        yield job
+transforms = TransformSequence()
+transforms.add_validate(push_snap_description_schema)
 
 
 @transforms.add

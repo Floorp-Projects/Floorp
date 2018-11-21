@@ -646,6 +646,9 @@ public final class GeckoRuntimeSettings implements Parcelable {
     }
 
     private void flushLocales() {
+        if (mRequestedLocales == null) {
+            return;
+        }
         final GeckoBundle data = new GeckoBundle(1);
         data.putStringArray("requestedLocales", mRequestedLocales);
         EventDispatcher.getInstance().dispatch("GeckoView:SetLocale", data);

@@ -324,6 +324,7 @@ package org.mozilla.geckoview {
     method public void onContextMenu(org.mozilla.geckoview.GeckoSession, int, int, java.lang.String, int, java.lang.String);
     method public void onCrash(org.mozilla.geckoview.GeckoSession);
     method public void onExternalResponse(org.mozilla.geckoview.GeckoSession, org.mozilla.geckoview.GeckoSession.WebResponseInfo);
+    method public void onFirstComposite(org.mozilla.geckoview.GeckoSession);
     method public void onFocusRequest(org.mozilla.geckoview.GeckoSession);
     method public void onFullScreen(org.mozilla.geckoview.GeckoSession, boolean);
     method public void onTitleChange(org.mozilla.geckoview.GeckoSession, java.lang.String);

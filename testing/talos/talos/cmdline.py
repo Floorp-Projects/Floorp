@@ -60,8 +60,6 @@ def create_parser(mach_interface=False):
                 help="path to executable we are testing")
     add_arg('-t', '--title', default='qm-pxp01',
             help="Title of the test run")
-    add_arg('--branchName', dest="branch_name", default='',
-            help="Name of the branch we are testing on")
     add_arg('--browserWait', dest='browser_wait', default=5, type=int,
             help="Amount of time allowed for the browser to cleanly close")
     add_arg('-a', '--activeTests',

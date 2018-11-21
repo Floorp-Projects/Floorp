@@ -656,7 +656,8 @@ TelemetryImpl::GetSnapshotForScalars(const nsACString& aStoreName,
   unsigned int dataset = mCanRecordExtended ?
     nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN :
     nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT;
-  return TelemetryScalar::CreateSnapshots(dataset, aClearStore, aCx, 1, aResult, aFilterTest);
+  return TelemetryScalar::CreateSnapshots(dataset, aClearStore, aCx, 1, aResult,
+                                          aFilterTest, aStoreName);
 }
 
 NS_IMETHODIMP
@@ -669,7 +670,8 @@ TelemetryImpl::GetSnapshotForKeyedScalars(const nsACString& aStoreName,
   unsigned int dataset = mCanRecordExtended ?
     nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN :
     nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT;
-  return TelemetryScalar::CreateKeyedSnapshots(dataset, aClearStore, aCx, 1, aResult, aFilterTest);
+  return TelemetryScalar::CreateKeyedSnapshots(dataset, aClearStore, aCx, 1,
+                                               aResult, aFilterTest, aStoreName);
 }
 
 NS_IMETHODIMP
@@ -1726,7 +1728,9 @@ NS_IMETHODIMP
 TelemetryImpl::SnapshotScalars(unsigned int aDataset, bool aClearScalars, JSContext* aCx,
                                uint8_t optional_argc, JS::MutableHandleValue aResult)
 {
-  return TelemetryScalar::CreateSnapshots(aDataset, aClearScalars, aCx, optional_argc, aResult);
+  return TelemetryScalar::CreateSnapshots(aDataset, aClearScalars, aCx,
+                                          optional_argc, aResult, false,
+                                          NS_LITERAL_CSTRING("main"));
 }
 
 NS_IMETHODIMP
@@ -1755,7 +1759,8 @@ TelemetryImpl::SnapshotKeyedScalars(unsigned int aDataset, bool aClearScalars, J
                                     uint8_t optional_argc, JS::MutableHandleValue aResult)
 {
   return TelemetryScalar::CreateKeyedSnapshots(aDataset, aClearScalars, aCx, optional_argc,
-                                               aResult);
+                                               aResult, false,
+                                               NS_LITERAL_CSTRING("main"));
 }
 
 NS_IMETHODIMP
