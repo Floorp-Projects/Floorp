@@ -184,20 +184,13 @@ dom/encoding/**
 dom/events/**
 dom/fetch/**
 dom/file/**
-dom/filehandle/**
 dom/filesystem/**
 dom/flex/**
-dom/gamepad/**
-dom/geolocation/**
 dom/grid/**
 dom/html/**
-dom/imptests/**
-dom/interfaces/**
 dom/ipc/**
 dom/jsurl/**
-dom/locales/**
 dom/manifest/**
-dom/mathml/**
 dom/media/test/**
 dom/media/tests/**
 dom/media/webaudio/**
@@ -208,17 +201,14 @@ dom/network/**
 dom/notification/Notification*.*
 dom/notification/test/browser/**
 dom/notification/test/mochitest/**
-dom/offline/**
 dom/payments/**
 dom/performance/**
 dom/permission/**
 dom/plugins/test/mochitest/**
 dom/plugins/test/unit/**
-dom/power/**
 dom/promise/**
 dom/push/**
 dom/quota/**
-dom/res/**
 dom/security/test/cors/**
 dom/security/test/csp/**
 dom/security/test/general/**
@@ -227,21 +217,17 @@ dom/security/test/sri/**
 dom/security/test/unit/**
 dom/serviceworkers/**
 dom/smil/**
-dom/storage/**
 dom/svg/**
 dom/system/**
 dom/tests/browser/**
 dom/tests/html/**
-dom/tests/js/**
 dom/tests/mochitest/**
 dom/tests/unit/**
 dom/u2f/**
 dom/url/**
 dom/vr/**
 dom/webauthn/**
-dom/webbrowserpersist/**
 dom/webgpu/**
-dom/webidl/**
 dom/websocket/**
 dom/workers/**
 dom/worklet/**
@@ -253,6 +239,7 @@ dom/xul/**
 
 # Third-party
 dom/canvas/test/webgl-conf/**
+dom/imptests/**
 dom/media/webvtt/**
 
 # Third-party
