@@ -45,7 +45,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "0f19ffbf925a"
+        "revision": "aaea19208a48"
     },
     "bn-IN": {
         "platforms": [
@@ -117,7 +117,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "19bae65a1a99"
+        "revision": "74af9d928404"
     },
     "en-GB": {
         "platforms": [
@@ -189,7 +189,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "1469fe7c2112"
+        "revision": "115fd043c422"
     },
     "fr": {
         "platforms": [
@@ -201,7 +201,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "5abf9dd148b5"
+        "revision": "7a077eb453e7"
     },
     "ga-IE": {
         "platforms": [
@@ -255,7 +255,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "fbc5e1b2f7eb"
+        "revision": "ba155aa11618"
     },
     "hu": {
         "platforms": [
@@ -303,7 +303,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "317647e41e56"
+        "revision": "0009c05c7b37"
     },
     "kk": {
         "platforms": [
@@ -369,7 +369,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "3dd63f9025f8"
+        "revision": "3f967b049ed1"
     },
     "my": {
         "platforms": [
@@ -435,7 +435,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "2f4fc0fed42c"
+        "revision": "97dab5b5c90f"
     },
     "rm": {
         "platforms": [
@@ -513,7 +513,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "b1504f7af18d"
+        "revision": "b07e2b04c0dd"
     },
     "trs": {
         "platforms": [
@@ -567,7 +567,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "05f4cdaacf6d"
+        "revision": "4462a11284d9"
     },
     "zh-TW": {
         "platforms": [
