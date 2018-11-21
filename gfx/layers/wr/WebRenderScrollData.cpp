@@ -142,8 +142,7 @@ WebRenderLayerScrollData::Dump(const WebRenderScrollData& aOwner) const
   printf_stderr("  transform: %s perspective: %d visible: %s\n",
     Stringify(mTransform).c_str(), mTransformIsPerspective,
     Stringify(mVisibleRegion).c_str());
-  printf_stderr("  event regions: %s override: 0x%x\n",
-    Stringify(mEventRegions).c_str(), mEventRegionsOverride);
+  printf_stderr("  event regions override: 0x%x\n", mEventRegionsOverride);
   if (mReferentId) {
     printf_stderr("  ref layers id: 0x%" PRIx64 "\n", uint64_t(*mReferentId));
   }
