@@ -130,10 +130,6 @@ case $cmd in
     cp -pPR \
         ${TOPSRCDIR}/dom/bindings/mozwebidlcodegen \
         ${tgtpath}/dom/bindings
-    ${MKDIR} -p ${tgtpath}/media/webrtc/trunk/tools
-    cp -pPR \
-        ${TOPSRCDIR}/third_party/python/gyp \
-        ${tgtpath}/third_party/python
     ${MKDIR} -p ${tgtpath}/testing
     cp -pPR \
         ${TOPSRCDIR}/testing/mozbase \
