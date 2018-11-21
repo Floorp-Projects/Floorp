@@ -32,7 +32,7 @@ const runtimeTransportDetails = {
 
 const runtimeDetails = {
   // ClientWrapper built using a DebuggerClient for the runtime
-  client: PropTypes.instanceOf(ClientWrapper).isRequired,
+  clientWrapper: PropTypes.instanceOf(ClientWrapper).isRequired,
 
   // reflect devtools.debugger.prompt-connection preference of this runtime
   connectionPromptEnabled: PropTypes.bool.isRequired,

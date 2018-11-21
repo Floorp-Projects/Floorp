@@ -12,7 +12,7 @@ exports.getCurrentRuntime = getCurrentRuntime;
 
 function getCurrentClient(runtimesState) {
   const runtimeDetails = getCurrentRuntimeDetails(runtimesState);
-  return runtimeDetails ? runtimeDetails.client : null;
+  return runtimeDetails ? runtimeDetails.clientWrapper : null;
 }
 exports.getCurrentClient = getCurrentClient;
 
