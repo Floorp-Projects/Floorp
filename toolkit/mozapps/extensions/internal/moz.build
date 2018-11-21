@@ -8,6 +8,7 @@ EXTRA_JS_MODULES.addons += [
     'AddonRepository.jsm',
     'AddonSettings.jsm',
     'AddonUpdateChecker.jsm',
+    'BootstrapLoader.jsm',
     'Content.js',
     'GMPProvider.jsm',
     'LightweightThemeImageOptimizer.jsm',
