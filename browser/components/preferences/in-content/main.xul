@@ -27,7 +27,7 @@
 <groupbox id="startupGroup"
           data-category="paneGeneral"
           hidden="true">
-  <caption><label data-l10n-id="startup-header"/></caption>
+  <label><html:h2 data-l10n-id="startup-header"/></label>
 
 #ifdef MOZ_DEV_EDITION
   <vbox id="separateProfileBox">
@@ -74,7 +74,7 @@
 <!-- Tab preferences -->
 <groupbox data-category="paneGeneral"
           hidden="true">
-    <caption><label data-l10n-id="tabs-group-header"/></caption>
+    <label><html:h2 data-l10n-id="tabs-group-header"/></label>
 
     <checkbox id="ctrlTabRecentlyUsedOrder" data-l10n-id="ctrl-tab-recently-used-order"
               preference="browser.ctrlTab.recentlyUsedOrder"
@@ -138,7 +138,7 @@
 
 <!-- Fonts and Colors -->
 <groupbox id="fontsGroup" data-category="paneGeneral" hidden="true">
-  <caption><label data-l10n-id="fonts-and-colors-header"/></caption>
+  <label><html:h2 data-l10n-id="fonts-and-colors-header"/></label>
 
   <hbox id="fontSettings">
     <hbox align="center" flex="1">
@@ -280,7 +280,7 @@
 
 <!-- Languages -->
 <groupbox id="languagesGroup" data-category="paneGeneral" hidden="true">
-  <caption><label data-l10n-id="language-header"/></caption>
+  <label><html:h2 data-l10n-id="language-header"/></label>
 
   <vbox id="browserLanguagesBox" align="start" hidden="true">
     <description flex="1" controls="chooseBrowserLanguage" data-l10n-id="choose-browser-language-description"/>
@@ -353,7 +353,7 @@
 
 <!--Downloads-->
 <groupbox id="downloadsGroup" data-category="paneGeneral" hidden="true">
-  <caption><label data-l10n-id="download-header"/></caption>
+  <label><html:h2 data-l10n-id="download-header"/></label>
 
   <radiogroup id="saveWhere"
               preference="browser.download.useDownloadDir"
@@ -380,7 +380,7 @@
 </groupbox>
 
 <groupbox id="applicationsGroup" data-category="paneGeneral" hidden="true">
-  <caption><label data-l10n-id="applications-header"/></caption>
+  <label><html:h2 data-l10n-id="applications-header"/></label>
   <description data-l10n-id="applications-description"/>
   <textbox id="filter" flex="1"
            type="search"
@@ -403,7 +403,7 @@
 
 <!-- DRM Content -->
 <groupbox id="drmGroup" data-category="paneGeneral" data-subcategory="drm" hidden="true">
-  <caption><label data-l10n-id="drm-content-header"/></caption>
+  <label><html:h2 data-l10n-id="drm-content-header"/></label>
   <grid id="contentGrid2">
     <columns>
       <column flex="1"/>
@@ -435,7 +435,7 @@
 
 <!-- Update -->
 <groupbox id="updateApp" data-category="paneGeneral" hidden="true">
-  <caption class="search-header" hidden="true"><label data-l10n-id="update-application-title"/></caption>
+  <label class="search-header" hidden="true"><html:h2 data-l10n-id="update-application-title"/></label>
 
   <label data-l10n-id="update-application-description"/>
   <hbox align="center">
@@ -581,7 +581,7 @@
 
 <!-- Performance -->
 <groupbox id="performanceGroup" data-category="paneGeneral" hidden="true">
-  <caption class="search-header" hidden="true"><label data-l10n-id="performance-title"/></caption>
+  <label class="search-header" hidden="true"><html:h2 data-l10n-id="performance-title"/></label>
 
   <hbox align="center">
     <checkbox id="useRecommendedPerformanceSettings"
@@ -627,7 +627,7 @@
 
 <!-- Browsing -->
 <groupbox id="browsingGroup" data-category="paneGeneral" hidden="true">
-  <caption class="search-header" hidden="true"><label data-l10n-id="browsing-title"/></caption>
+  <label class="search-header" hidden="true"><html:h2 data-l10n-id="browsing-title"/></label>
 
   <checkbox id="useAutoScroll"
             data-l10n-id="browsing-use-autoscroll"
@@ -666,7 +666,7 @@
 
 <!-- Network Settings-->
 <groupbox id="connectionGroup" data-category="paneGeneral" hidden="true">
-  <caption class="search-header" hidden="true"><label data-l10n-id="network-settings-title"/></caption>
+  <label class="search-header" hidden="true"><html:h2 data-l10n-id="network-settings-title"/></label>
 
   <hbox align="center">
     <hbox align="center" flex="1">

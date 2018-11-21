@@ -59,8 +59,6 @@ asserts(0-1) load 464407-1.xhtml # Bugs 450974, 1267054, 718883
 load 467080.xul
 load 470063-1.html
 load 470272.html
-load 472189.xul
-load 475133.html
 load 538308-1.xul
 load 557174-1.xml
 load 564705-1.xul

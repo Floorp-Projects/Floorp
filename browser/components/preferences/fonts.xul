@@ -10,6 +10,7 @@
 
 <dialog id="FontsDialog" type="child"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         data-l10n-id="fonts-window"
         data-l10n-attrs="title"
         buttons="accept,cancel,help"
@@ -31,48 +32,46 @@
 
   <!-- Fonts for: [ Language ] -->
   <groupbox>
-    <caption>
-      <hbox align="center">
-        <label data-l10n-id="fonts-langgroup-header" control="selectLangs"/>
-      </hbox>
-      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-      <hbox>
-        <menulist id="selectLangs" preference="font.language.group"
-                  onsyncfrompreference="return gFontsDialog.readFontLanguageGroup();">
-          <menupopup>
-            <menuitem value="ar"              data-l10n-id="fonts-langgroup-arabic"/>
-            <menuitem value="x-armn"          data-l10n-id="fonts-langgroup-armenian"/>
-            <menuitem value="x-beng"          data-l10n-id="fonts-langgroup-bengali"/>
-            <menuitem value="zh-CN"           data-l10n-id="fonts-langgroup-simpl-chinese"/>
-            <menuitem value="zh-HK"           data-l10n-id="fonts-langgroup-trad-chinese-hk"/>
-            <menuitem value="zh-TW"           data-l10n-id="fonts-langgroup-trad-chinese"/>
-            <menuitem value="x-cyrillic"      data-l10n-id="fonts-langgroup-cyrillic"/>
-            <menuitem value="x-devanagari"    data-l10n-id="fonts-langgroup-devanagari"/>
-            <menuitem value="x-ethi"          data-l10n-id="fonts-langgroup-ethiopic"/>
-            <menuitem value="x-geor"          data-l10n-id="fonts-langgroup-georgian"/>
-            <menuitem value="el"              data-l10n-id="fonts-langgroup-el"/>
-            <menuitem value="x-gujr"          data-l10n-id="fonts-langgroup-gujarati"/>
-            <menuitem value="x-guru"          data-l10n-id="fonts-langgroup-gurmukhi"/>
-            <menuitem value="he"              data-l10n-id="fonts-langgroup-hebrew"/>
-            <menuitem value="ja"              data-l10n-id="fonts-langgroup-japanese"/>
-            <menuitem value="x-knda"          data-l10n-id="fonts-langgroup-kannada"/>
-            <menuitem value="x-khmr"          data-l10n-id="fonts-langgroup-khmer"/>
-            <menuitem value="ko"              data-l10n-id="fonts-langgroup-korean"/>
-            <menuitem value="x-western"       data-l10n-id="fonts-langgroup-latin"/>
-            <menuitem value="x-mlym"          data-l10n-id="fonts-langgroup-malayalam"/>
-            <menuitem value="x-math"          data-l10n-id="fonts-langgroup-math"/>
-            <menuitem value="x-orya"          data-l10n-id="fonts-langgroup-odia"/>
-            <menuitem value="x-sinh"          data-l10n-id="fonts-langgroup-sinhala"/>
-            <menuitem value="x-tamil"         data-l10n-id="fonts-langgroup-tamil"/>
-            <menuitem value="x-telu"          data-l10n-id="fonts-langgroup-telugu"/>
-            <menuitem value="th"              data-l10n-id="fonts-langgroup-thai"/>
-            <menuitem value="x-tibt"          data-l10n-id="fonts-langgroup-tibetan"/>
-            <menuitem value="x-cans"          data-l10n-id="fonts-langgroup-canadian"/>
-            <menuitem value="x-unicode"       data-l10n-id="fonts-langgroup-other"/>
-          </menupopup>
-        </menulist>
-      </hbox>
-    </caption>
+    <hbox align="center">
+      <label control="selectLangs"><html:h2 data-l10n-id="fonts-langgroup-header"/></label>
+    </hbox>
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <hbox>
+      <menulist id="selectLangs" preference="font.language.group"
+                onsyncfrompreference="return gFontsDialog.readFontLanguageGroup();">
+        <menupopup>
+          <menuitem value="ar"              data-l10n-id="fonts-langgroup-arabic"/>
+          <menuitem value="x-armn"          data-l10n-id="fonts-langgroup-armenian"/>
+          <menuitem value="x-beng"          data-l10n-id="fonts-langgroup-bengali"/>
+          <menuitem value="zh-CN"           data-l10n-id="fonts-langgroup-simpl-chinese"/>
+          <menuitem value="zh-HK"           data-l10n-id="fonts-langgroup-trad-chinese-hk"/>
+          <menuitem value="zh-TW"           data-l10n-id="fonts-langgroup-trad-chinese"/>
+          <menuitem value="x-cyrillic"      data-l10n-id="fonts-langgroup-cyrillic"/>
+          <menuitem value="x-devanagari"    data-l10n-id="fonts-langgroup-devanagari"/>
+          <menuitem value="x-ethi"          data-l10n-id="fonts-langgroup-ethiopic"/>
+          <menuitem value="x-geor"          data-l10n-id="fonts-langgroup-georgian"/>
+          <menuitem value="el"              data-l10n-id="fonts-langgroup-el"/>
+          <menuitem value="x-gujr"          data-l10n-id="fonts-langgroup-gujarati"/>
+          <menuitem value="x-guru"          data-l10n-id="fonts-langgroup-gurmukhi"/>
+          <menuitem value="he"              data-l10n-id="fonts-langgroup-hebrew"/>
+          <menuitem value="ja"              data-l10n-id="fonts-langgroup-japanese"/>
+          <menuitem value="x-knda"          data-l10n-id="fonts-langgroup-kannada"/>
+          <menuitem value="x-khmr"          data-l10n-id="fonts-langgroup-khmer"/>
+          <menuitem value="ko"              data-l10n-id="fonts-langgroup-korean"/>
+          <menuitem value="x-western"       data-l10n-id="fonts-langgroup-latin"/>
+          <menuitem value="x-mlym"          data-l10n-id="fonts-langgroup-malayalam"/>
+          <menuitem value="x-math"          data-l10n-id="fonts-langgroup-math"/>
+          <menuitem value="x-orya"          data-l10n-id="fonts-langgroup-odia"/>
+          <menuitem value="x-sinh"          data-l10n-id="fonts-langgroup-sinhala"/>
+          <menuitem value="x-tamil"         data-l10n-id="fonts-langgroup-tamil"/>
+          <menuitem value="x-telu"          data-l10n-id="fonts-langgroup-telugu"/>
+          <menuitem value="th"              data-l10n-id="fonts-langgroup-thai"/>
+          <menuitem value="x-tibt"          data-l10n-id="fonts-langgroup-tibetan"/>
+          <menuitem value="x-cans"          data-l10n-id="fonts-langgroup-canadian"/>
+          <menuitem value="x-unicode"       data-l10n-id="fonts-langgroup-other"/>
+        </menupopup>
+      </menulist>
+    </hbox>
 
     <grid>
       <columns>
@@ -254,7 +253,7 @@
 
   <!-- Text Encoding -->
   <groupbox>
-    <caption><label data-l10n-id="fonts-languages-fallback-header"/></caption>
+    <label><html:h2 data-l10n-id="fonts-languages-fallback-header"/></label>
     <description data-l10n-id="fonts-languages-fallback-desc"/>
     <hbox align="center">
       <label data-l10n-id="fonts-languages-fallback-label" control="DefaultCharsetList"/>

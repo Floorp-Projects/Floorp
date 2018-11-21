@@ -997,6 +997,76 @@ win64-msvc/opt:
         - win64-sccache
         - win64-node
 
+win64-aarch64-msvc/debug:
+    description: "AArch64 Win64 MSVC Debug"
+    index:
+        product: firefox
+        job-name: win64-aarch64-msvc-debug
+    treeherder:
+        platform: windows2012-aarch64/debug
+        symbol: Bmsvc
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/aarch64.manifest"
+            PERFHERDER_EXTRA_OPTIONS: msvc-aarch64
+    run:
+        using: mozharness
+        actions: [get-secrets, build]
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - builds/taskcluster_sub_win64/debug.py
+        extra-config:
+            mozconfig_platform: win64-aarch64
+        mozconfig-variant: debug-msvc
+    run-on-projects: ['mozilla-central', 'trunk', 'try']
+    toolchains:
+        - win64-clang-cl
+        - win64-aarch64-rust-nightly
+        - win64-cbindgen
+        - win64-sccache
+        - win64-node
+
+win64-aarch64-msvc/opt:
+    description: "AArch64 Win64 MSVC Opt"
+    index:
+        product: firefox
+        job-name: win64-aarch64-msvc-opt
+    treeherder:
+        platform: windows2012-aarch64/opt
+        symbol: Bmsvc
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/aarch64.manifest"
+            PERFHERDER_EXTRA_OPTIONS: msvc-aarch64
+    run:
+        using: mozharness
+        actions: [get-secrets, build]
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+        extra-config:
+            stage_platform: win64
+            mozconfig_platform: win64-aarch64
+        mozconfig-variant: opt-msvc
+    run-on-projects: ['mozilla-central', 'trunk', 'try']
+    toolchains:
+        - win64-clang-cl
+        - win64-aarch64-rust-nightly
+        - win64-cbindgen
+        - win64-sccache
+        - win64-node
+
 win32-mingwclang/opt:
     description: "Win32 MinGW-Clang Opt"
     index:

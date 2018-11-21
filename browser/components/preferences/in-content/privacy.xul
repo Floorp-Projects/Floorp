@@ -18,9 +18,7 @@
 
 <!-- Tracking / Content Blocking -->
 <groupbox id="trackingGroup" data-category="panePrivacy" hidden="true" aria-describedby="contentBlockingDescription">
-  <caption>
-    <label id="contentBlockingHeader" data-l10n-id="content-blocking-header"/>
-  </caption>
+  <label id="contentBlockingHeader"><html:h2 data-l10n-id="content-blocking-header"/></label>
   <vbox data-subcategory="trackingprotection">
     <hbox align="start">
       <image id="trackingProtectionShield"/>
@@ -205,7 +203,7 @@
 
 <!-- Site Data -->
 <groupbox id="siteDataGroup" data-category="panePrivacy" hidden="true" aria-describedby="totalSiteDataSize">
-  <caption><label data-l10n-id="sitedata-header"/></caption>
+  <label><html:h2 data-l10n-id="sitedata-header"/></label>
 
   <hbox data-subcategory="sitedata" align="baseline">
     <vbox flex="1">
@@ -268,7 +266,7 @@
 
 <!-- Passwords -->
 <groupbox id="passwordsGroup" orient="vertical" data-category="panePrivacy" hidden="true">
-  <caption><label data-l10n-id="logins-header"/></caption>
+  <label><html:h2 data-l10n-id="logins-header"/></label>
 
   <vbox id="passwordSettings">
     <hbox id="savePasswordsBox">
@@ -322,7 +320,7 @@
 
 <!-- History -->
 <groupbox id="historyGroup" data-category="panePrivacy" hidden="true">
-  <caption><label data-l10n-id="history-header"/></caption>
+  <label><html:h2 data-l10n-id="history-header"/></label>
   <hbox align="center">
     <label id="historyModeLabel"
            control="historyMode"
@@ -423,7 +421,7 @@
 <groupbox id="locationBarGroup"
           data-category="panePrivacy"
           hidden="true">
-  <caption><label data-l10n-id="addressbar-header"/></caption>
+  <label><html:h2 data-l10n-id="addressbar-header"/></label>
   <label id="locationBarSuggestionLabel" data-l10n-id="addressbar-suggest"/>
   <checkbox id="historySuggestion" data-l10n-id="addressbar-locbar-history-option"
             preference="browser.urlbar.suggest.history"/>
@@ -443,8 +441,8 @@
 </hbox>
 
 <!-- Permissions -->
-<groupbox id="permissionsGroup" data-category="panePrivacy" hidden="true" data-subcategory="permissions" aria-labelledby="permissionsGroupLabel">
-  <caption class="search-header" hidden="true"><label data-l10n-id="permissions-header" id="permissionsGroupLabel"/></caption>
+<groupbox id="permissionsGroup" data-category="panePrivacy" hidden="true" data-subcategory="permissions">
+  <label class="search-header" hidden="true"><html:h2 data-l10n-id="permissions-header"/></label>
 
   <grid>
     <columns>
@@ -673,8 +671,8 @@
   <label class="header-name" flex="1" data-l10n-id="collection-header"/>
 </hbox>
 
-<groupbox id="dataCollectionGroup" data-category="panePrivacy" hidden="true" aria-labelledby="dataCollectionGroupLabel">
-  <caption class="search-header" hidden="true"><label data-l10n-id="collection-header" id="dataCollectionGroupLabel"/></caption>
+<groupbox id="dataCollectionGroup" data-category="panePrivacy" hidden="true">
+  <label class="search-header" hidden="true"><html:h2 data-l10n-id="collection-header"/></label>
 
   <description>
     <label class="tail-with-learn-more" data-l10n-id="collection-description"/>
@@ -745,7 +743,7 @@
 
 <!-- addons, forgery (phishing) UI Security -->
 <groupbox id="browsingProtectionGroup" data-category="panePrivacy" hidden="true">
-  <caption><label data-l10n-id="security-browsing-protection"/></caption>
+  <label><html:h2 data-l10n-id="security-browsing-protection"/></label>
   <hbox align = "center">
     <checkbox id="enableSafeBrowsing"
               data-l10n-id="security-enable-safe-browsing"
@@ -763,7 +761,7 @@
 
 <!-- Certificates -->
 <groupbox id="certSelection" data-category="panePrivacy" hidden="true">
-  <caption><label data-l10n-id="certs-header"/></caption>
+  <label><html:h2 data-l10n-id="certs-header"/></label>
   <description id="CertSelectionDesc" control="certSelection" data-l10n-id="certs-personal-label"/>
 
   <!--
