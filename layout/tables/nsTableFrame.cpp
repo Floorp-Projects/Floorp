@@ -5282,12 +5282,17 @@ Perpendicular(mozilla::LogicalSide aSide1,
   return IsInline(aSide1) != IsInline(aSide2);
 }
 
+// Initial value indicating that BCCornerInfo's ownerStyle hasn't been set yet.
+#define BORDER_STYLE_UNSET 0xF
+
 // XXX allocate this as number-of-cols+1 instead of number-of-cols+1 * number-of-rows+1
 struct BCCornerInfo
 {
   BCCornerInfo() { ownerColor = 0; ownerWidth = subWidth = ownerElem = subSide =
                    subElem = hasDashDot = numSegs = bevel = 0; ownerSide = eLogicalSideBStart;
-                   ownerStyle = 0xFF; subStyle = NS_STYLE_BORDER_STYLE_SOLID;  }
+                   ownerStyle = BORDER_STYLE_UNSET;
+                   subStyle = NS_STYLE_BORDER_STYLE_SOLID; }
+
   void Set(mozilla::LogicalSide aSide,
            BCCellBorder  border);
 
@@ -5300,22 +5305,25 @@ struct BCCornerInfo
                             // to ownerSide
   uint32_t  ownerSide:2;    // LogicalSide (e.g eLogicalSideBStart, etc) of the border
                             // owning the corner relative to the corner
-  uint32_t  ownerElem:3;    // elem type (e.g. eTable, eGroup, etc) owning the corner
-  uint32_t  ownerStyle:8;   // border style of ownerElem
+  uint32_t  ownerElem:4;    // elem type (e.g. eTable, eGroup, etc) owning the corner
+  uint32_t  ownerStyle:4;   // border style of ownerElem
   uint32_t  subSide:2;      // side of border with subWidth relative to the corner
-  uint32_t  subElem:3;      // elem type (e.g. eTable, eGroup, etc) of sub owner
-  uint32_t  subStyle:8;     // border style of subElem
+  uint32_t  subElem:4;      // elem type (e.g. eTable, eGroup, etc) of sub owner
+  uint32_t  subStyle:4;     // border style of subElem
   uint32_t  hasDashDot:1;   // does a dashed, dotted segment enter the corner, they cannot be beveled
   uint32_t  numSegs:3;      // number of segments entering corner
   uint32_t  bevel:1;        // is the corner beveled (uses the above two fields together with subWidth)
-  // one bit is unused
+  // 7 bits are unused
 };
 
 void
 BCCornerInfo::Set(mozilla::LogicalSide aSide,
                   BCCellBorder  aBorder)
 {
-  ownerElem  = aBorder.owner;
+  // FIXME bug 1508921: We mask 4-bit BCBorderOwner enum to 3 bits to preserve
+  // buggy behavior found by the frame_above_rules_all.html mochitest.
+  ownerElem  = aBorder.owner & 0x7;
+
   ownerStyle = aBorder.style;
   ownerWidth = aBorder.width;
   ownerColor = aBorder.color;
@@ -5339,8 +5347,7 @@ void
 BCCornerInfo::Update(mozilla::LogicalSide aSide,
                      BCCellBorder  aBorder)
 {
-  bool existingWins = false;
-  if (0xFF == ownerStyle) { // initial value indiating that it hasn't been set yet
+  if (ownerStyle == BORDER_STYLE_UNSET) {
     Set(aSide, aBorder);
   }
   else {
@@ -5353,6 +5360,7 @@ BCCornerInfo::Update(mozilla::LogicalSide aSide,
 
     LogicalSide oldSide  = LogicalSide(ownerSide);
 
+    bool existingWins = false;
     tempBorder = CompareBorders(CELL_CORNER, oldBorder, aBorder, isInline, &existingWins);
 
     ownerElem  = tempBorder.owner;
