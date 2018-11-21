@@ -28,7 +28,12 @@ assert._isSameValue = function (a, b) {
 };
 
 assert.sameValue = function (actual, expected, message) {
-  if (assert._isSameValue(actual, expected)) {
+  try {
+    if (assert._isSameValue(actual, expected)) {
+      return;
+    }
+  } catch (error) {
+    $ERROR(message + ' (_isSameValue operation threw) ' + error);
     return;
   }
 
@@ -349,6 +354,10 @@ var $ERROR;
 $ERROR = function $ERROR(message) {
   throw new Test262Error(message);
 };
+
+function $DONOTEVALUATE() {
+  throw "Test262: This statement should not be evaluated.";
+}
 
 // file: test262-host.js
 // This Source Code Form is subject to the terms of the Mozilla Public

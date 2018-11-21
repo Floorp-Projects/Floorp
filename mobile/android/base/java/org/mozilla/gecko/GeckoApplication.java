@@ -445,7 +445,7 @@ public class GeckoApplication extends Application
             });
         }
 
-        AudioFocusAgent.getInstance().attachToContext(this);
+        ThreadUtils.postToUiThread(() -> AudioFocusAgent.getInstance().attachToContext(this));
     }
 
     private class EventListener implements BundleEventListener

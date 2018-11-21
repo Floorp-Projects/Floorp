@@ -14,6 +14,6 @@ negative:
 features: [regexp-unicode-property-escapes]
 ---*/
 
-throw "Test262: This statement should not be evaluated.";
+$DONOTEVALUATE();
 
 /\p{Expands_On_NFKD}/u;

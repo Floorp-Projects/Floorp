@@ -1,36 +1,6 @@
-commit b98c45ca5a46966bce1ac691d5f608beb36d5db7
-Author: Maya Lekova <apokalyptra@gmail.com>
-Date:   Wed Oct 17 22:10:09 2018 +0200
+commit 2726142bb97e4538703eda748c3b7300183bc66d
+Author: test262-automation <test262-automation@bocoup.com>
+Date:   Wed Nov 14 19:00:37 2018 +0000
 
-    AsyncFunction: Add tests ensuring the new 1-tick await behaviour (#1843)
-    
-    * AsyncFunction: Add tests ensuring the new 1-tick await behaviour
-    
-    This commit adds 3 tests ensuring the optimized behaviour of await
-    (see https://github.com/tc39/ecma262/pull/1250) in the following cases:
-    - async functions
-    - yielding from async generator functions
-    - for-await-of loops
-    
-    * AsyncFunction: Add tests ensuring the monkey-patched promises behaviour
-    
-    This commit adds 2 more tests ensuring the optimized behaviour of await
-    (see tc39/ecma262#1250) in the following cases:
-    - awaiting on a native promise with monkey-patched "then"
-    - awaiting on a non-native promise (a "thenable" object)
-    
-    * AsyncFunction: Add tests ensuring the non-native promises behaviour
-    
-    This commit adds 1 more tests ensuring the optimized behaviour of await
-    (see tc39/ecma262#1250) in the following cases:
-    - awaiting on a non-promise, non-thenable object
-    
-    It also renames the previous test for non-promise (a "thenable" object)
-    to distinguish from the new case.
-    
-    The commit adds checks for proper await/promises interleaving in the
-    aforementioned cases and includes a small code clean-up.
-    
-    * AsyncFunction: Refactor tests ensuring the new 1-tick await behaviour
-    
-    Gather all the tests to their appropriate folder and update copyright header.
+    [v8-test262-automation] Updated curation log with latest revision sha's from export and changed files.
+        sourceRevisionAtLastExport: ac250b9b targetRevisionAtLastExport: 6218e682b2

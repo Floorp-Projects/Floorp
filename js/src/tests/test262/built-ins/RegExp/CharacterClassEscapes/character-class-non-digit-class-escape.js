@@ -4,9 +4,10 @@
 /*---
 esid: prod-CharacterClassEscape
 description: >
-    Compare range for Non Digit class escape, \\D with flags g
+    Compare range for non-digit class escape \D with flags g
 info: |
-    This is a generated test, please checkout https://github.com/bocoup/test262-regexp-generator
+    This is a generated test. Please check out
+    https://github.com/bocoup/test262-regexp-generator
     for any changes.
 
     CharacterClassEscape[U] ::
@@ -18,7 +19,7 @@ info: |
         W
 
     21.2.2.12 CharacterClassEscape
-    
+
     The production CharacterClassEscape :: d evaluates as follows:
         Return the ten-element set of characters containing the characters 0 through 9 inclusive.
     The production CharacterClassEscape :: D evaluates as follows:
@@ -36,21 +37,22 @@ features: [String.fromCodePoint]
 includes: [regExpUtils.js]
 ---*/
 
-const str = buildString({loneCodePoints: [], ranges: [[0, 0xFFFF]]});
+const str = buildString({
+  loneCodePoints: [],
+  ranges: [
+      [0x000000, 0x00002F],
+      [0x00003A, 0x00FFFF],
+  ],
+});
 
 const re = /\D/g;
-const matchingRange = /[\0-\/:-\uFFFF]/g;
 
 const errors = [];
 
-function matching(str) {
-    return str.replace(re, '') === str.replace(matchingRange, '');
-}
-
-if (!matching(str)) {
+if (!re.test(str)) {
     // Error, let's find out where
     for (const char of str) {
-        if (!matching(char)) {
+        if (!re.test(char)) {
             errors.push('0x' + char.codePointAt(0).toString(16));
         }
     }
