@@ -41,6 +41,7 @@ add_task(async function test_add_link() {
     await navigateToAddAddressPage(frame, {
       addLinkSelector: "address-picker.payer-related .add-link",
       initialPageId: "payment-summary",
+      addressPageId: "payer-address-page",
       expectPersist: true,
     });
 
@@ -49,19 +50,20 @@ add_task(async function test_add_link() {
         PaymentTestUtils,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-      let title = content.document.querySelector("address-form h2");
+      let addressForm = content.document.querySelector("#payer-address-page");
+      let title = addressForm.querySelector("h2");
       is(title.textContent, "Add Payer Contact", "Page title should be set");
 
-      let saveButton = content.document.querySelector("address-form .save-button");
+      let saveButton = addressForm.querySelector(".save-button");
       is(saveButton.textContent, "Next", "Save button has the correct label");
 
       info("check that payer requested fields are marked as required");
       for (let selector of ["#given-name", "#family-name", "#email", "#tel"]) {
-        let element = content.document.querySelector(selector);
+        let element = addressForm.querySelector(selector);
         ok(element.required, selector + " should be required");
       }
 
-      let backButton = content.document.querySelector("address-form .back-button");
+      let backButton = addressForm.querySelector(".back-button");
       ok(content.isVisible(backButton),
          "Back button is visible on the payer address page");
       backButton.click();
@@ -72,7 +74,8 @@ add_task(async function test_add_link() {
     });
 
     await navigateToAddAddressPage(frame, {
-      addLinkSelector: "address-picker .add-link",
+      addLinkSelector: "address-picker.shipping-related .add-link",
+      addressPageId: "shipping-address-page",
       initialPageId: "payment-summary",
       expectPersist: true,
     });
@@ -82,15 +85,16 @@ add_task(async function test_add_link() {
         PaymentTestUtils,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-      let title = content.document.querySelector("address-form h2");
+      let addressForm = content.document.querySelector("#shipping-address-page");
+      let title = addressForm.querySelector("address-form h2");
       is(title.textContent, "Add Shipping Address", "Page title should be set");
 
-      let saveButton = content.document.querySelector("address-form .save-button");
+      let saveButton = addressForm.querySelector(".save-button");
       is(saveButton.textContent, "Next", "Save button has the correct label");
 
-      ok(!content.document.querySelector("#tel").required, "#tel should not be required");
+      ok(!addressForm.querySelector("#tel").required, "#tel should not be required");
 
-      let backButton = content.document.querySelector("address-form .back-button");
+      let backButton = addressForm.querySelector(".back-button");
       ok(content.isVisible(backButton),
          "Back button is visible on the payer address page");
       backButton.click();

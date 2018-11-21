@@ -44,16 +44,20 @@ add_task(async function test_hiddenFieldNotSaved() {
     }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
 
     let options = {
+      addLinkSelector: "address-picker.shipping-related .add-link",
+      initialPageId: "payment-summary",
+      addressPageId: "shipping-address-page",
       expectPersist: true,
       isEditing: false,
     };
-    await navigateToAddAddressPage(frame);
+    await navigateToAddAddressPage(frame, options);
     info("navigated to add address page");
     await fillInShippingAddressForm(frame, newAddress, options);
     info("filled in TimBL address");
 
     await spawnPaymentDialogTask(frame, async (args) => {
-      let countryField = content.document.getElementById("country");
+      let addressForm = content.document.getElementById("shipping-address-page");
+      let countryField = addressForm.querySelector("#country");
       await content.fillField(countryField, "DE");
     });
     info("changed selected country to Germany");
@@ -122,16 +126,18 @@ add_task(async function test_hiddenFieldRemovedWhenCountryChanged() {
       editLink.click();
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page" && !!state["address-page"].guid;
+        return state.page.id == "shipping-address-page" && !!state["shipping-address-page"].guid;
       }, "Check edit page state");
 
-      let countryField = content.document.getElementById("country");
+      let addressForm = content.document.getElementById("shipping-address-page");
+      let countryField = addressForm.querySelector("#country");
       await content.fillField(countryField, "DE");
       info("changed selected country to Germany");
     });
 
     let options = {
       isEditing: true,
+      addressPageId: "shipping-address-page",
     };
     await submitAddressForm(frame, null, options);
     await shippingAddressChangePromise;
@@ -180,14 +186,15 @@ add_task(async function test_hiddenNonShippingFieldsPreservedUponEdit() {
 
     await selectPaymentDialogShippingAddressByCountry(frame, "BR");
 
-    await navigateToAddAddressPage(frame, {
+    await navigateToAddShippingAddressPage(frame, {
       addLinkSelector: "address-picker[selected-state-key=\"selectedShippingAddress\"] .edit-link",
+      addressPageId: "shipping-address-page",
       initialPageId: "payment-summary",
     });
 
     await spawnPaymentDialogTask(frame, async () => {
       let givenNameField = content.document.querySelector(
-        "address-form #given-name"
+        "#shipping-address-page #given-name"
       );
       await content.fillField(givenNameField, "Timothy-edit");
     });
@@ -241,11 +248,12 @@ add_task(async function test_hiddenNonPayerFieldsPreservedUponEdit() {
     await navigateToAddAddressPage(frame, {
       addLinkSelector: "address-picker[selected-state-key=\"selectedPayerAddress\"] .edit-link",
       initialPageId: "payment-summary",
+      addressPageId: "payer-address-page",
     });
 
     info("Change the email address");
     await spawnPaymentDialogTask(frame, `async () => {
-      let emailField = content.document.querySelector("address-form #email");
+      let emailField = content.document.querySelector("#payer-address-page #email");
       await content.fillField(emailField, "new@example.com");
     }`);
 
@@ -303,11 +311,12 @@ add_task(async function test_hiddenNonBillingAddressFieldsPreservedUponEdit() {
     await navigateToAddAddressPage(frame, {
       addLinkSelector: ".billingAddressRow .edit-link",
       initialPageId: "basic-card-page",
+      addressPageId: "billing-address-page",
     });
 
     await spawnPaymentDialogTask(frame, `async () => {
       let givenNameField = content.document.querySelector(
-        "address-form #given-name"
+        "#billing-address-page #given-name"
       );
       await content.fillField(givenNameField, "Timothy-edit");
     }`);
