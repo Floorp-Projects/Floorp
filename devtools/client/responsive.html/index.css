@@ -82,7 +82,8 @@ body,
 #toolbar {
   background-color: var(--theme-tab-toolbar-background);
   border-bottom: 1px solid var(--theme-splitter-color);
-  display: flex;
+  display: grid;
+  grid-template-columns: auto min-content;
   width: 100%;
   min-height: 29px;
   -moz-user-select: none;
@@ -100,7 +101,7 @@ body,
   margin: 1px;
 }
 
-#toolbar-center-controls.left-aligned {
+#toolbar.left-aligned #toolbar-center-controls {
   justify-content: start;
 }
 
