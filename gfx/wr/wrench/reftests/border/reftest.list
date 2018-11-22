@@ -1,0 +1,28 @@
+platform(linux,mac) == border-clamp-corner-radius.yaml border-clamp-corner-radius.png
+== border-gradient-simple.yaml border-gradient-simple-ref.yaml
+platform(linux,mac) == border-gradient-nine-patch.yaml border-gradient-nine-patch.png
+== border-radial-gradient-simple.yaml border-radial-gradient-simple-ref.yaml
+platform(linux,mac) == border-radial-gradient-nine-patch.yaml border-radial-gradient-nine-patch.png
+== border-radii.yaml border-radii.png
+== border-none.yaml border-none-ref.yaml
+== border-invisible.yaml border-invisible-ref.yaml
+platform(linux,mac) == border-suite.yaml border-suite.png
+platform(linux,mac) fuzzy(1,57) == border-suite-2.yaml border-suite-2.png
+platform(linux,mac) == border-suite-3.yaml border-suite-3.png
+== border-double-simple.yaml border-double-simple-ref.yaml
+== border-double-simple-2.yaml border-double-simple-2-ref.yaml
+fuzzy(64,24) == border-groove-simple.yaml border-groove-simple-ref.yaml
+fuzzy(64,24) == border-ridge-simple.yaml border-ridge-simple-ref.yaml
+platform(linux,mac) fuzzy(1,2) == degenerate-curve.yaml degenerate-curve.png
+platform(linux,mac) == border-image.yaml border-image-ref.png
+== border-image-crash.yaml border-image-crash-ref.yaml
+== border-image-fill.yaml border-image-fill-ref.png
+== border-no-bogus-line.yaml border-no-bogus-line-ref.png
+platform(linux,mac) == dotted-corner-small-radius.yaml dotted-corner-small-radius.png
+== overlapping.yaml overlapping.png
+== zero-width.yaml blank.yaml
+platform(linux,mac) == small-dotted-border.yaml small-dotted-border.png
+== discontinued-dash.yaml discontinued-dash.png
+platform(linux,mac) == border-dashed-dotted-caching.yaml border-dashed-dotted-caching.png
+!= small-inset-outset.yaml small-inset-outset-notref.yaml
+== no-aa.yaml green-square.yaml

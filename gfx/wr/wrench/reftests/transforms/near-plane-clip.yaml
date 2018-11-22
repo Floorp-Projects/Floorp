@@ -1,0 +1,17 @@
+# Test the calculation for screen bounds for transformed primitives that cross the near plane.
+---
+root:
+  items:
+    -
+      bounds: [0, 0, 1000, 1000]
+      type: "stacking-context"
+      perspective: 200
+      items:
+        -
+          bounds: [0, 0, 1000, 1000]
+          type: "stacking-context"
+          transform: rotate-x(-30)
+          items:
+            -
+              bounds: [350, 200, 260, 300]
+              image: checkerboard(2, 16, 16)
