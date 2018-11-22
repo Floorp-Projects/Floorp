@@ -517,11 +517,11 @@ var pktUI = (function() {
     // -- Helper Functions -- //
 
     function getCurrentUrl() {
-        return getBrowser().currentURI.spec;
+        return gBrowser.currentURI.spec;
     }
 
     function getCurrentTitle() {
-        return getBrowser().contentTitle;
+        return gBrowser.contentTitle;
     }
 
     function getPanel() {
