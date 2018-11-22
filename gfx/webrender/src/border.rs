@@ -13,7 +13,6 @@ use gpu_types::{BorderInstance, BorderSegment, BrushFlags};
 use prim_store::{BorderSegmentInfo, BrushKind, BrushPrimitive, BrushSegment, BrushSegmentVec};
 use prim_store::{EdgeAaSegmentMask, PrimitiveContainer, ScrollNodeAndClipChain, BrushSegmentDescriptor};
 use render_task::{RenderTaskCacheKey, RenderTaskCacheKeyKind};
-use smallvec::SmallVec;
 use util::{lerp, RectHelpers};
 
 // Using 2048 as the maximum radius in device space before which we
@@ -606,7 +605,7 @@ fn create_border_segments(
     rect: &LayoutRect,
     border: &NormalBorder,
     widths: &LayoutSideOffsets,
-    border_segments: &mut SmallVec<[BorderSegmentInfo; 8]>,
+    border_segments: &mut Vec<BorderSegmentInfo>,
     brush_segments: &mut BrushSegmentVec,
 ) {
     let local_size_tl = LayoutSize::new(
@@ -938,7 +937,7 @@ fn add_corner_segment(
     segment: BorderSegment,
     edge_flags: EdgeAaSegmentMask,
     brush_segments: &mut BrushSegmentVec,
-    border_segments: &mut SmallVec<[BorderSegmentInfo; 8]>,
+    border_segments: &mut Vec<BorderSegmentInfo>,
     do_aa: bool,
 ) {
     if side0.color.a <= 0.0 && side1.color.a <= 0.0 {
@@ -996,7 +995,7 @@ fn add_edge_segment(
     segment: BorderSegment,
     edge_flags: EdgeAaSegmentMask,
     brush_segments: &mut BrushSegmentVec,
-    border_segments: &mut SmallVec<[BorderSegmentInfo; 8]>,
+    border_segments: &mut Vec<BorderSegmentInfo>,
     do_aa: bool,
 ) {
     if side.color.a <= 0.0 {
@@ -1121,7 +1120,7 @@ pub fn create_normal_border_prim(
     widths: LayoutSideOffsets,
 ) -> BrushPrimitive {
     let mut brush_segments = BrushSegmentVec::new();
-    let mut border_segments = SmallVec::new();
+    let mut border_segments = Vec::new();
 
     create_border_segments(
         local_rect,

@@ -26,7 +26,7 @@ use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, Primitiv
 use prim_store::{BrushKind, BrushPrimitive, PrimitiveInstance, PrimitiveDataInterner, PrimitiveKeyKind};
 use prim_store::{ImageSource, PrimitiveOpacity, PrimitiveKey, PrimitiveSceneData, PrimitiveInstanceKind};
 use prim_store::{BorderSource, PrimitiveContainer, PrimitiveDataHandle, PrimitiveStore, PrimitiveStoreStats};
-use prim_store::{OpacityBinding, ScrollNodeAndClipChain, PictureIndex, register_prim_chase_id};
+use prim_store::{ScrollNodeAndClipChain, PictureIndex, register_prim_chase_id, OpacityBindingIndex};
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
 use scene::{Scene, ScenePipeline, StackingContextHelpers};
@@ -2015,7 +2015,7 @@ impl<'a> DisplayListFlattener<'a> {
                 source: ImageSource::Default,
                 sub_rect,
                 visible_tiles: Vec::new(),
-                opacity_binding: OpacityBinding::new(),
+                opacity_binding_index: OpacityBindingIndex::INVALID,
             },
             None,
         );

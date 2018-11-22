@@ -681,7 +681,7 @@ pub struct BorderSegmentInfo {
 pub enum BorderSource {
     Image(ImageRequest),
     Border {
-        segments: SmallVec<[BorderSegmentInfo; 8]>,
+        segments: Vec<BorderSegmentInfo>,
         border: NormalBorder,
         widths: LayoutSideOffsets,
     },
@@ -690,7 +690,7 @@ pub enum BorderSource {
 pub enum BrushKind {
     Solid {
         color: ColorF,
-        opacity_binding: OpacityBinding,
+        opacity_binding_index: OpacityBindingIndex,
     },
     Image {
         request: ImageRequest,
@@ -700,7 +700,7 @@ pub enum BrushKind {
         color: ColorF,
         source: ImageSource,
         sub_rect: Option<DeviceIntRect>,
-        opacity_binding: OpacityBinding,
+        opacity_binding_index: OpacityBindingIndex,
         visible_tiles: Vec<VisibleImageTile>,
     },
     YuvImage {
@@ -762,7 +762,7 @@ impl BrushKind {
     pub fn new_solid(color: ColorF) -> BrushKind {
         BrushKind::Solid {
             color,
-            opacity_binding: OpacityBinding::new(),
+            opacity_binding_index: OpacityBindingIndex::INVALID,
         }
     }
 
@@ -771,7 +771,7 @@ impl BrushKind {
     pub fn new_border(
         mut border: NormalBorder,
         widths: LayoutSideOffsets,
-        segments: SmallVec<[BorderSegmentInfo; 8]>,
+        segments: Vec<BorderSegmentInfo>,
     ) -> BrushKind {
         // FIXME(emilio): Is this the best place to do this?
         border.normalize(&widths);
@@ -800,7 +800,7 @@ impl BrushKind {
             color,
             source: ImageSource::Default,
             sub_rect: None,
-            opacity_binding: OpacityBinding::new(),
+            opacity_binding_index: OpacityBindingIndex::INVALID,
             visible_tiles: Vec::new(),
         }
     }
@@ -1911,6 +1911,8 @@ impl PrimitiveInstance {
 pub type GlyphKeyStorage = storage::Storage<GlyphKey>;
 pub type TextRunIndex = storage::Index<TextRunPrimitive>;
 pub type TextRunStorage = storage::Storage<TextRunPrimitive>;
+pub type OpacityBindingIndex = storage::Index<OpacityBinding>;
+pub type OpacityBindingStorage = storage::Storage<OpacityBinding>;
 
 /// Contains various vecs of data that is used only during frame building,
 /// where we want to recycle the memory each new display list, to avoid constantly
@@ -1955,6 +1957,7 @@ pub struct PrimitiveStoreStats {
     primitive_count: usize,
     picture_count: usize,
     text_run_count: usize,
+    opacity_binding_count: usize,
 }
 
 impl PrimitiveStoreStats {
@@ -1963,6 +1966,7 @@ impl PrimitiveStoreStats {
             primitive_count: 0,
             picture_count: 0,
             text_run_count: 0,
+            opacity_binding_count: 0,
         }
     }
 }
@@ -1971,6 +1975,9 @@ pub struct PrimitiveStore {
     pub primitives: Vec<Primitive>,
     pub pictures: Vec<PicturePrimitive>,
     pub text_runs: TextRunStorage,
+
+    /// List of animated opacity bindings for a primitive.
+    pub opacity_bindings: OpacityBindingStorage,
 }
 
 impl PrimitiveStore {
@@ -1979,6 +1986,7 @@ impl PrimitiveStore {
             primitives: Vec::with_capacity(stats.primitive_count),
             pictures: Vec::with_capacity(stats.picture_count),
             text_runs: TextRunStorage::new(stats.text_run_count),
+            opacity_bindings: OpacityBindingStorage::new(stats.opacity_binding_count),
         }
     }
 
@@ -1987,6 +1995,7 @@ impl PrimitiveStore {
             primitive_count: self.primitives.len(),
             picture_count: self.pictures.len(),
             text_run_count: self.text_runs.len(),
+            opacity_binding_count: self.opacity_bindings.len(),
         }
     }
 
@@ -2047,6 +2056,17 @@ impl PrimitiveStore {
         PrimitiveIndex(prim_index)
     }
 
+    pub fn get_opacity_binding(
+        &self,
+        opacity_binding_index: OpacityBindingIndex,
+    ) -> f32 {
+        if opacity_binding_index == OpacityBindingIndex::INVALID {
+            1.0
+        } else {
+            self.opacity_bindings[opacity_binding_index].current
+        }
+    }
+
     // Internal method that retrieves the primitive index of a primitive
     // that can be the target for collapsing parent opacity filters into.
     fn get_opacity_collapse_prim(
@@ -2092,7 +2112,8 @@ impl PrimitiveStore {
                         match brush.kind {
                             // If we find a single rect or image, we can use that
                             // as the primitive to collapse the opacity into.
-                            BrushKind::Solid { .. } | BrushKind::Image { .. } => {
+                            BrushKind::Solid { .. } |
+                            BrushKind::Image { .. } => {
                                 return Some(prim_index)
                             }
                             BrushKind::Border { .. } |
@@ -2136,8 +2157,12 @@ impl PrimitiveStore {
                         // By this point, we know we should only have found a primitive
                         // that supports opacity collapse.
                         match brush.kind {
-                            BrushKind::Solid { ref mut opacity_binding, .. } |
-                            BrushKind::Image { ref mut opacity_binding, .. } => {
+                            BrushKind::Solid { ref mut opacity_binding_index, .. } |
+                            BrushKind::Image { ref mut opacity_binding_index, .. } => {
+                                if *opacity_binding_index == OpacityBindingIndex::INVALID {
+                                    *opacity_binding_index = self.opacity_bindings.push(OpacityBinding::new());
+                                }
+                                let opacity_binding = &mut self.opacity_bindings[*opacity_binding_index];
                                 opacity_binding.push(binding);
                             }
                             BrushKind::YuvImage { .. } |
@@ -2459,6 +2484,7 @@ impl PrimitiveStore {
                     frame_context,
                     frame_state,
                     display_list,
+                    &mut self.opacity_bindings,
                 );
             }
         }
@@ -3070,6 +3096,7 @@ impl PrimitiveInstance {
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
         display_list: &BuiltDisplayList,
+        opacity_bindings: &mut OpacityBindingStorage,
     ) {
         let mut is_tiled = false;
 
@@ -3088,7 +3115,7 @@ impl PrimitiveInstance {
                         color,
                         ref mut tile_spacing,
                         ref mut source,
-                        ref mut opacity_binding,
+                        opacity_binding_index,
                         ref mut visible_tiles,
                         ..
                     } => {
@@ -3100,7 +3127,11 @@ impl PrimitiveInstance {
                         // Set if we need to request the source image from the cache this frame.
                         if let Some(image_properties) = image_properties {
                             is_tiled = image_properties.tiling.is_some();
-                            opacity_binding.update(frame_context.scene_properties);
+                            let current_opacity = update_opacity_binding(
+                                opacity_bindings,
+                                opacity_binding_index,
+                                frame_context.scene_properties,
+                            );
 
                             if *tile_spacing != LayoutSize::zero() && !is_tiled {
                                 *source = ImageSource::Cache {
@@ -3284,7 +3315,7 @@ impl PrimitiveInstance {
                             }
 
                             if is_opaque {
-                                PrimitiveOpacity::from_alpha(opacity_binding.current * color.a)
+                                PrimitiveOpacity::from_alpha(current_opacity * color.a)
                             } else {
                                 PrimitiveOpacity::translucent()
                             }
@@ -3493,9 +3524,13 @@ impl PrimitiveInstance {
                             PrimitiveOpacity::translucent()
                         }
                     }
-                    BrushKind::Solid { ref color, ref mut opacity_binding, .. } => {
-                        opacity_binding.update(frame_context.scene_properties);
-                        PrimitiveOpacity::from_alpha(opacity_binding.current * color.a)
+                    BrushKind::Solid { ref color, opacity_binding_index, .. } => {
+                        let current_opacity = update_opacity_binding(
+                            opacity_bindings,
+                            opacity_binding_index,
+                            frame_context.scene_properties,
+                        );
+                        PrimitiveOpacity::from_alpha(current_opacity * color.a)
                     }
                 };
             }
@@ -3666,5 +3701,19 @@ fn get_line_decoration_sizes(
 
             Some((approx_period, h))
         }
+    }
+}
+
+fn update_opacity_binding(
+    opacity_bindings: &mut OpacityBindingStorage,
+    opacity_binding_index: OpacityBindingIndex,
+    scene_properties: &SceneProperties,
+) -> f32 {
+    if opacity_binding_index == OpacityBindingIndex::INVALID {
+        1.0
+    } else {
+        let binding = &mut opacity_bindings[opacity_binding_index];
+        binding.update(scene_properties);
+        binding.current
     }
 }
