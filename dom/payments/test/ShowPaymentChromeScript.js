@@ -6,15 +6,12 @@
 const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"].getService(Ci.nsIPaymentRequestService);
-let expectedCompleteStatus = null;
-let expectedShowAction = "accept";
-let expectedUpdateAction = "accept";
 
 function emitTestFail(message) {
-  sendAsyncMessage("test-fail", message);
+  sendAsyncMessage("test-fail", `${DummyUIService.testName}: ${message}`);
 }
 function emitTestPass(message) {
-  sendAsyncMessage("test-pass", message);
+  sendAsyncMessage("test-pass", `${DummyUIService.testName}: ${message}`);
 }
 
 const shippingAddress = Cc["@mozilla.org/dom/payments/payment-address;1"].
@@ -68,24 +65,29 @@ function rejectShow(requestId) {
 }
 
 function updateShow(requestId) {
-  if (expectedUpdateAction == "updateaddress") {
+  if (DummyUIService.expectedUpdateAction == "updateaddress") {
     paymentSrv.changeShippingAddress(requestId, shippingAddress);
-  } else if (expectedUpdateAction == "accept" || expectedUpdateAction == "error"){
+  } else if (DummyUIService.expectedUpdateAction == "accept" ||
+             DummyUIService.expectedUpdateAction == "error"){
     paymentSrv.changeShippingOption(requestId, "FastShipping");
   } else {
-    emitTestFail("Unknown expected update action: " + expectedUpdateAction);
+    emitTestFail("Unknown expected update action: " + DummyUIService.expectedUpdateAction);
   }
 }
 
 function showRequest(requestId) {
-  if (expectedShowAction == "accept") {
+  const request = paymentSrv.getPaymentRequestById(requestId);
+  if (request.completeStatus == "initial") {
+    return;
+  }
+  if (DummyUIService.expectedShowAction == "accept") {
     acceptShow(requestId);
-  } else if (expectedShowAction == "reject") {
+  } else if (DummyUIService.expectedShowAction == "reject") {
     rejectShow(requestId);
-  } else if (expectedShowAction == "update") {
+  } else if (DummyUIService.expectedShowAction == "update") {
     updateShow(requestId);
   } else {
-    emitTestFail("Unknown expected show action: " + expectedShowAction);
+    emitTestFail("Unknown expected show action: " + DummyUIService.expectedShowAction);
   }
 }
 
@@ -97,14 +99,14 @@ function abortRequest(requestId) {
 }
 
 function completeRequest(requestId) {
-  let payRequest = paymentSrv.getPaymentRequestById(requestId);
-  if (expectedCompleteStatus) {
-    if (payRequest.completeStatus == expectedCompleteStatus) {
+  let request = paymentSrv.getPaymentRequestById(requestId);
+  if (DummyUIService.expectedCompleteStatus) {
+    if (request.completeStatus == DummyUIService.expectedCompleteStatus) {
       emitTestPass("request.completeStatus matches expectation of " +
-                   expectedCompleteStatus);
+                   DummyUIService.expectedCompleteStatus);
     } else {
       emitTestFail("request.completeStatus incorrect. Expected " +
-                   expectedCompleteStatus + ", got " + payRequest.completeStatus);
+                   DummyUIService.expectedCompleteStatus + ", got " + request.completeStatus);
     }
   }
   let completeResponse = Cc["@mozilla.org/dom/payments/payment-complete-action-response;1"].
@@ -115,7 +117,10 @@ function completeRequest(requestId) {
 
 function updateRequest(requestId) {
   let request = paymentSrv.getPaymentRequestById(requestId);
-  if (expectedUpdateAction == "accept") {
+  if (request.completeStatus !== "") {
+    emitTestFail("request.completeStatus should be empty, but got '" + request.completeStatus + "'.");
+  }
+  if (DummyUIService.expectedUpdateAction == "accept") {
     if (request.paymentDetails.error != "") {
       emitTestFail("updatedDetails should not have errors(" + request.paymentDetails.error + ").");
     }
@@ -129,23 +134,27 @@ function updateRequest(requestId) {
       emitTestFail(shippingOption.label + " should be selected.");
     }
     acceptShow(requestId);
-  } else if (expectedUpdateAction == "error") {
+  } else if (DummyUIService.expectedUpdateAction == "error") {
     if (request.paymentDetails.error != "Update with Error") {
       emitTestFail("details.error should be 'Update with Error', but got " + request.paymentDetails.error + ".");
     }
     rejectShow(requestId);
-  } else if (expectedUpdateAction == "updateaddress") {
+  } else if (DummyUIService.expectedUpdateAction == "updateaddress") {
     if (request.paymentDetails.error != "") {
       emitTestFail("updatedDetails should not have errors(" + request.paymentDetails.error + ").");
     }
-    expectedUpdateAction = "accept";
+    DummyUIService.expectedUpdateAction = "accept";
     paymentSrv.changeShippingOption(requestId, "FastShipping");
   } else {
-    emitTestFail("Unknown expected update aciton: " + expectedUpdateAction);
+    emitTestFail("Unknown expected update aciton: " + DummyUIService.expectedUpdateAction);
   }
 }
 
 const DummyUIService = {
+  testName: "",
+  expectedCompleteStatus: null,
+  expectedShowAction: "accept",
+  expectedUpdateAction: "accept",
   showPayment: showRequest,
   abortPayment: abortRequest,
   completePayment: completeRequest,
@@ -214,48 +223,61 @@ function testShowResponseInit() {
   sendAsyncMessage("test-show-response-init-complete");
 }
 
-addMessageListener("set-simple-ui-service", function() {
-  expectedCompleteStatus = null;
-  expectedShowAction = "accept";
-  expectedUpdateAction = "accept";
+addMessageListener("set-simple-ui-service", function(testName) {
+  DummyUIService.testName = testName;
+  DummyUIService.expectedCompleteStatus = null;
+  DummyUIService.expectedShowAction = "accept";
+  DummyUIService.expectedUpdateAction = "accept";
+  sendAsyncMessage("set-simple-ui-service-complete");
 });
 
-addMessageListener("set-normal-ui-service", function() {
-  expectedCompleteStatus = null;
-  expectedShowAction = "update";
-  expectedUpdateAction = "updateaddress";
+addMessageListener("set-normal-ui-service", function(testName) {
+  DummyUIService.testName = testName;
+  DummyUIService.expectedCompleteStatus = null;
+  DummyUIService.expectedShowAction = "update";
+  DummyUIService.expectedUpdateAction = "updateaddress";
+  sendAsyncMessage("set-normal-ui-service-complete");
 });
 
-addMessageListener("set-reject-ui-service", function() {
-  expectedCompleteStatus = null;
-  expectedShowAction = "reject";
-  expectedUpdateAction = "accept";
+addMessageListener("set-reject-ui-service", function(testName) {
+  DummyUIService.testName = testName;
+  DummyUIService.expectedCompleteStatus = null;
+  DummyUIService.expectedShowAction = "reject";
+  DummyUIService.expectedUpdateAction = "error";
+  sendAsyncMessage("set-reject-ui-service-complete");
 });
 
-addMessageListener("set-update-with-ui-service", function() {
-  expectedCompleteStatus = null;
-  expectedShowAction = "update";
-  expectedUpdateAction = "accept";
+addMessageListener("set-update-with-ui-service", function(testName) {
+  DummyUIService.testName = testName;
+  DummyUIService.expectedCompleteStatus = null;
+  DummyUIService.expectedShowAction = "update";
+  DummyUIService.expectedUpdateAction = "accept";
+  sendAsyncMessage("set-update-with-ui-service-complete");
 });
 
-addMessageListener("set-update-with-error-ui-service", function() {
-  expectedCompleteStatus = null;
-  expectedShowAction = "update";
-  expectedUpdateAction = "error";
+addMessageListener("set-update-with-error-ui-service", function(testName) {
+  DummyUIService.testName = testName;
+  DummyUIService.expectedCompleteStatus = null;
+  DummyUIService.expectedShowAction = "update";
+  DummyUIService.expectedUpdateAction = "error";
+  sendAsyncMessage("set-update-with-error-ui-service-complete");
 });
 
 addMessageListener("test-show-response-init", testShowResponseInit);
 
 addMessageListener("set-complete-status-success", function() {
-  expectedCompleteStatus = "success";
+  DummyUIService.expectedCompleteStatus = "success";
+  sendAsyncMessage("set-complete-status-success-complete");
 });
 
 addMessageListener("set-complete-status-fail", function() {
-  expectedCompleteStatus = "fail";
+  DummyUIService.expectedCompleteStatus = "fail";
+  sendAsyncMessage("set-complete-status-fail-complete");
 });
 
 addMessageListener("set-complete-status-unknown", function() {
-  expectedCompleteStatus = "unknown";
+  DummyUIService.expectedCompleteStatus = "unknown";
+  sendAsyncMessage("set-complete-status-unknown-complete");
 });
 
 addMessageListener("teardown", function() {
