@@ -13,7 +13,7 @@ use clip::{ClipDataInterner, ClipDataUpdateList};
 use clip_scroll_tree::ClipScrollTree;
 use display_list_flattener::DisplayListFlattener;
 use internal_types::{FastHashMap, FastHashSet};
-use prim_store::{PrimitiveDataInterner, PrimitiveDataUpdateList};
+use prim_store::{PrimitiveDataInterner, PrimitiveDataUpdateList, PrimitiveStoreStats};
 use resource_cache::FontInstanceMap;
 use render_backend::DocumentView;
 use renderer::{PipelineInfo, SceneBuilderHooks};
@@ -180,6 +180,7 @@ impl DocumentResources {
 struct Document {
     scene: Scene,
     resources: DocumentResources,
+    prim_store_stats: PrimitiveStoreStats,
 }
 
 impl Document {
@@ -187,6 +188,7 @@ impl Document {
         Document {
             scene,
             resources: DocumentResources::new(),
+            prim_store_stats: PrimitiveStoreStats::empty(),
         }
     }
 }
@@ -326,6 +328,7 @@ impl SceneBuilder {
                     &self.config,
                     &mut new_scene,
                     &mut item.doc_resources,
+                    &PrimitiveStoreStats::empty(),
                 );
 
                 let clip_updates = item
@@ -357,6 +360,7 @@ impl SceneBuilder {
                 Document {
                     scene: item.scene,
                     resources: item.doc_resources,
+                    prim_store_stats: PrimitiveStoreStats::empty(),
                 },
             );
 
@@ -432,7 +436,11 @@ impl SceneBuilder {
                     &self.config,
                     &mut new_scene,
                     &mut doc.resources,
+                    &doc.prim_store_stats,
                 );
+
+                // Update the allocation stats for next scene
+                doc.prim_store_stats = frame_builder.prim_store.get_stats();
 
                 // Retrieve the list of updates from the clip interner.
                 let clip_updates = doc

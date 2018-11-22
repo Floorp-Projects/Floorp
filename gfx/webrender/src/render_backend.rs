@@ -30,7 +30,7 @@ use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use gpu_cache::GpuCache;
 use hit_test::{HitTest, HitTester};
 use internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
-use prim_store::PrimitiveDataStore;
+use prim_store::{PrimitiveDataStore, PrimitiveScratchBuffer};
 use profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
 use record::ApiRecordingReceiver;
 use renderer::{AsyncPropertySampler, PipelineInfo};
@@ -255,6 +255,11 @@ struct Document {
     has_built_scene: bool,
 
     resources: FrameResources,
+
+    /// Contains various vecs of data that is used only during frame building,
+    /// where we want to recycle the memory each new display list, to avoid constantly
+    /// re-allocating and moving memory around.
+    scratch: PrimitiveScratchBuffer,
 }
 
 impl Document {
@@ -286,6 +291,7 @@ impl Document {
             rendered_frame_is_valid: false,
             has_built_scene: false,
             resources: FrameResources::new(),
+            scratch: PrimitiveScratchBuffer::new(),
         }
     }
 
@@ -423,6 +429,7 @@ impl Document {
                 &mut resource_profile.gpu_cache,
                 &self.dynamic_properties,
                 &mut self.resources,
+                &mut self.scratch,
             );
             self.hit_tester = Some(frame_builder.create_hit_tester(
                 &self.clip_scroll_tree,
@@ -503,6 +510,7 @@ impl Document {
         self.hit_tester_is_valid = false;
 
         self.frame_builder = Some(built_scene.frame_builder);
+        self.scratch.recycle();
 
         let old_scrolling_states = self.clip_scroll_tree.drain();
         self.clip_scroll_tree = built_scene.clip_scroll_tree;
@@ -1589,6 +1597,7 @@ impl RenderBackend {
                 rendered_frame_is_valid: false,
                 has_built_scene: false,
                 resources: frame_resources,
+                scratch: PrimitiveScratchBuffer::new(),
             };
 
             let frame_name = format!("frame-{}-{}", (id.0).0, id.1);
