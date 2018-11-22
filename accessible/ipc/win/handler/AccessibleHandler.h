@@ -297,6 +297,10 @@ private:
 inline static BSTR
 CopyBSTR(BSTR aSrc)
 {
+  if (!aSrc) {
+    return nullptr;
+  }      
+  
   return ::SysAllocStringLen(aSrc, ::SysStringLen(aSrc));
 }
 
