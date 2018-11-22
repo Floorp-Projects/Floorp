@@ -29,8 +29,7 @@ impl Utf16Decoder {
     }
 
     pub fn additional_from_state(&self) -> usize {
-        1
-            + if self.lead_byte.is_some() { 1 } else { 0 }
+        1 + if self.lead_byte.is_some() { 1 } else { 0 }
             + if self.lead_surrogate == 0 { 0 } else { 2 }
     }
 
@@ -120,9 +119,9 @@ impl Utf16Decoder {
                 Some(lead) => {
                     self.lead_byte = None;
                     let code_unit = if self.be {
-                        (lead as u16) << 8 | b as u16
+                        u16::from(lead) << 8 | u16::from(b)
                     } else {
-                        (b as u16) << 8 | (lead as u16)
+                        u16::from(b) << 8 | u16::from(lead)
                     };
                     let high_bits = code_unit & 0xFC00u16;
                     if high_bits == 0xD800u16 {

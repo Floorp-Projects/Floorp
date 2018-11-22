@@ -56,7 +56,7 @@ impl UserDefinedDecoder {
                 destination_handle.write_ascii(b);
                 continue;
             }
-            destination_handle.write_upper_bmp((b as usize + 0xF700usize) as u16);
+            destination_handle.write_upper_bmp(u16::from(b) + 0xF700);
             continue;
         },
         self,
@@ -93,9 +93,9 @@ impl UserDefinedDecoder {
                 *to = {
                     let unit = *from;
                     if unit < 0x80 {
-                        unit as u16
+                        u16::from(unit)
                     } else {
-                        (unit as u16) + 0xF700
+                        u16::from(unit) + 0xF700
                     }
                 }
             });
@@ -120,11 +120,11 @@ impl UserDefinedDecoder {
         let src_ptr = src.as_ptr();
         let dst_ptr = dst.as_mut_ptr();
         for i in 0..simd_iterations {
-            let input = unsafe { load16_unaligned(src_ptr.offset((i * 16) as isize)) };
+            let input = unsafe { load16_unaligned(src_ptr.add(i * 16)) };
             let (first, second) = simd_unpack(input);
             unsafe {
-                store8_unaligned(dst_ptr.offset((i * 16) as isize), shift_upper(first));
-                store8_unaligned(dst_ptr.offset(((i * 16) + 8) as isize), shift_upper(second));
+                store8_unaligned(dst_ptr.add(i * 16), shift_upper(first));
+                store8_unaligned(dst_ptr.add((i * 16) + 8), shift_upper(second));
             }
         }
         let src_tail = &src[tail_start..length];
@@ -136,9 +136,9 @@ impl UserDefinedDecoder {
                 *to = {
                     let unit = *from;
                     if unit < 0x80 {
-                        unit as u16
+                        u16::from(unit)
                     } else {
-                        (unit as u16) + 0xF700
+                        u16::from(unit) + 0xF700
                     }
                 }
             });
@@ -182,7 +182,7 @@ impl UserDefinedEncoder {
                     destination_handle.written(),
                 );
             }
-            destination_handle.write_one((c as usize - 0xF700usize) as u8);
+            destination_handle.write_one((u32::from(c) - 0xF700) as u8);
             continue;
         },
         self,

@@ -41,7 +41,7 @@ impl ReplacementDecoder {
         // https://github.com/whatwg/encoding/issues/33
         if self.emitted || src.is_empty() {
             (DecoderResult::InputEmpty, src.len(), 0)
-        } else if dst.len() < 1 {
+        } else if dst.is_empty() {
             // Make sure there's room for the replacement character.
             (DecoderResult::OutputFull, 0, 0)
         } else {

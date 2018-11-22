@@ -76,3 +76,31 @@ On [Cortex-A57](https://stackoverflow.com/questions/45714535/performance-of-unal
 
 Currently, Aarch64 runs the generic ALU UTF-8 validation code that aligns
 reads. That's probably unnecessary on Aarch64. (SIMD was slower than ALU!)
+
+## Table-driven UTF-8 validation
+
+When there are at least four bytes left, read all four. With each byte
+index into tables corresponding to magic values indexable by byte in
+each position.
+
+In the value read from the table indexed by lead byte, encode the
+following in 16 bits: advance 2 bits (2, 3 or 4 bytes), 9 positional
+bits one of which is set to indicate the type of lead byte (8 valid
+types, in the 8 lowest bits, and invalid, ASCII would be tenth type),
+and the mask for extracting the payload bits from the lead byte
+(for conversion to UTF-16 or UTF-32).
+
+In the tables indexable by the trail bytes, in each positions
+corresponding byte the lead byte type, store 1 if the trail is
+invalid given the lead and 0 if valid given the lead.
+
+Use the low 8 bits of the of the 16 bits read from the first
+table to mask (bitwise AND) one positional bit from each of the 
+three other values. Bitwise OR the results together with the
+bit that is 1 if the lead is invalid. If the result is zero,
+the sequence is valid. Otherwise it's invalid.
+
+Use the advance to advance. In the conversion to UTF-16 or
+UTF-32 case, use the mast for extracting the meaningful
+bits from the lead byte to mask them from the lead. Shift
+left by 6 as many times as the advance indicates, etc.

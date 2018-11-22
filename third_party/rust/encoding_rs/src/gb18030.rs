@@ -61,19 +61,23 @@ impl Gb18030Decoder {
 
     fn extra_from_state(&self, byte_length: usize) -> Option<usize> {
         byte_length.checked_add(
-            self.pending.count() + match self.first {
-                None => 0,
-                Some(_) => 1,
-            } + match self.second {
-                None => 0,
-                Some(_) => 1,
-            } + match self.third {
-                None => 0,
-                Some(_) => 1,
-            } + match self.pending_ascii {
-                None => 0,
-                Some(_) => 1,
-            },
+            self.pending.count()
+                + match self.first {
+                    None => 0,
+                    Some(_) => 1,
+                }
+                + match self.second {
+                    None => 0,
+                    Some(_) => 1,
+                }
+                + match self.third {
+                    None => 0,
+                    Some(_) => 1,
+                }
+                + match self.pending_ascii {
+                    None => 0,
+                    Some(_) => 1,
+                },
         )
     }
 
@@ -257,9 +261,9 @@ impl Gb18030Decoder {
                 } else {
                     handle.write_bmp_excl_ascii(gb18030_range_decode(pointer as u16))
                 }
-            } else if pointer >= 189000 && pointer <= 1237575 {
+            } else if pointer >= 189_000 && pointer <= 1_237_575 {
                 // Astral
-                handle.write_astral((pointer - (189000usize - 0x10000usize)) as u32)
+                handle.write_astral((pointer - (189_000usize - 0x1_0000usize)) as u32)
             } else {
                 return (DecoderResult::Malformed(4, 0),
                         unread_handle_fourth.consumed(),
@@ -391,6 +395,40 @@ fn gbk_encode_non_unified(bmp: u16) -> Option<(usize, usize)> {
     None
 }
 
+#[cfg(not(feature = "fast-gb-hanzi-encode"))]
+#[inline(always)]
+fn encode_hanzi(bmp: u16, _: u16) -> (u8, u8) {
+    if let Some((lead, trail)) = gb2312_level1_hanzi_encode(bmp) {
+        (lead, trail)
+    } else if let Some(hanzi_pointer) = gb2312_level2_hanzi_encode(bmp) {
+        let hanzi_lead = (hanzi_pointer / 94) + (0xD8);
+        let hanzi_trail = (hanzi_pointer % 94) + 0xA1;
+        (hanzi_lead as u8, hanzi_trail as u8)
+    } else {
+        let (lead, gbk_trail) = if bmp < 0x72DC {
+            // Above GB2312
+            let pointer = gbk_top_ideograph_encode(bmp) as usize;
+            let lead = (pointer / 190) + 0x81;
+            let gbk_trail = pointer % 190;
+            (lead, gbk_trail)
+        } else {
+            // To the left of GB2312
+            let gbk_left_ideograph_pointer = gbk_left_ideograph_encode(bmp) as usize;
+            let lead = (gbk_left_ideograph_pointer / (190 - 94)) + (0x81 + 0x29);
+            let gbk_trail = gbk_left_ideograph_pointer % (190 - 94);
+            (lead, gbk_trail)
+        };
+        let offset = if gbk_trail < 0x3F { 0x40 } else { 0x41 };
+        (lead as u8, (gbk_trail + offset) as u8)
+    }
+}
+
+#[cfg(feature = "fast-gb-hanzi-encode")]
+#[inline(always)]
+fn encode_hanzi(_: u16, bmp_minus_unified_start: u16) -> (u8, u8) {
+    gbk_hanzi_encode(bmp_minus_unified_start)
+}
+
 pub struct Gb18030Encoder {
     extended: bool,
 }
@@ -447,33 +485,8 @@ impl Gb18030Encoder {
                 // CJK Unified Ideographs
                 // Can't fail now, since all are
                 // mapped.
-                // XXX Can we do something smarter
-                // than linear search for GB2312
-                // Level 2 Hanzi, which are almost
-                // Unicode-ordered?
-                if let Some((lead, trail)) = gb2312_level1_hanzi_encode(bmp) {
-                    handle.write_two(lead, trail)
-                } else if let Some(hanzi_pointer) = gb2312_level2_hanzi_encode(bmp) {
-                    let hanzi_lead = (hanzi_pointer / 94) + (0xD8);
-                    let hanzi_trail = (hanzi_pointer % 94) + 0xA1;
-                    handle.write_two(hanzi_lead as u8, hanzi_trail as u8)
-                } else {
-                    let (lead, gbk_trail) = if bmp < 0x72DC {
-                        // Above GB2312
-                        let pointer = gbk_top_ideograph_encode(bmp) as usize;
-                        let lead = (pointer / 190) + 0x81;
-                        let gbk_trail = pointer % 190;
-                        (lead, gbk_trail)
-                    } else {
-                        // To the left of GB2312
-                        let gbk_left_ideograph_pointer = gbk_left_ideograph_encode(bmp) as usize;
-                        let lead = (gbk_left_ideograph_pointer / (190 - 94)) + (0x81 + 0x29);
-                        let gbk_trail = gbk_left_ideograph_pointer % (190 - 94);
-                        (lead, gbk_trail)
-                    };
-                    let offset = if gbk_trail < 0x3F { 0x40 } else { 0x41 };
-                    handle.write_two(lead as u8, (gbk_trail + offset) as u8)
-                }
+                let (lead, trail) = encode_hanzi(bmp, bmp_minus_unified_start);
+                handle.write_two(lead, trail)
             } else if bmp == 0xE5E5 {
                 // It's not optimal to check for the unmappable
                 // and for euro at this stage, but getting
@@ -522,7 +535,7 @@ impl Gb18030Encoder {
                     handle.written(),
                 );
             }
-            let range_pointer = astral as usize + (189000usize - 0x10000usize);
+            let range_pointer = astral as usize + (189_000usize - 0x1_0000usize);
             let first = range_pointer / (10 * 126 * 10);
             let rem_first = range_pointer % (10 * 126 * 10);
             let second = rem_first / (10 * 126);

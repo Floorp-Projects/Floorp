@@ -289,7 +289,7 @@ impl VariantEncoder {
 }
 
 pub enum VariantEncoding {
-    SingleByte(&'static [u16; 128]),
+    SingleByte(&'static [u16; 128], u16, u8, u8),
     Utf8,
     Gbk,
     Gb18030,
@@ -307,7 +307,7 @@ pub enum VariantEncoding {
 impl VariantEncoding {
     pub fn new_variant_decoder(&self) -> VariantDecoder {
         match *self {
-            VariantEncoding::SingleByte(table) => SingleByteDecoder::new(table),
+            VariantEncoding::SingleByte(table, _, _, _) => SingleByteDecoder::new(table),
             VariantEncoding::Utf8 => Utf8Decoder::new(),
             VariantEncoding::Gbk | VariantEncoding::Gb18030 => Gb18030Decoder::new(),
             VariantEncoding::Big5 => Big5Decoder::new(),
@@ -324,7 +324,9 @@ impl VariantEncoding {
 
     pub fn new_encoder(&self, encoding: &'static Encoding) -> Encoder {
         match *self {
-            VariantEncoding::SingleByte(table) => SingleByteEncoder::new(encoding, table),
+            VariantEncoding::SingleByte(table, run_bmp_offset, run_byte_offset, run_length) => {
+                SingleByteEncoder::new(encoding, table, run_bmp_offset, run_byte_offset, run_length)
+            }
             VariantEncoding::Utf8 => Utf8Encoder::new(encoding),
             VariantEncoding::Gbk => Gb18030Encoder::new(encoding, false),
             VariantEncoding::Gb18030 => Gb18030Encoder::new(encoding, true),
@@ -337,6 +339,13 @@ impl VariantEncoding {
             VariantEncoding::Utf16Be | VariantEncoding::Replacement | VariantEncoding::Utf16Le => {
                 unreachable!()
             }
+        }
+    }
+
+    pub fn is_single_byte(&self) -> bool {
+        match *self {
+            VariantEncoding::SingleByte(_, _, _, _) | VariantEncoding::UserDefined => true,
+            _ => false,
         }
     }
 }
