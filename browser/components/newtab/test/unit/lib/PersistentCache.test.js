@@ -25,6 +25,9 @@ describe("PersistentCache", () => {
 
     cache = new PersistentCache(filename);
   });
+  afterEach(() => {
+    globals.restore();
+  });
 
   describe("#get", () => {
     it("tries to read the file on the first get", async () => {

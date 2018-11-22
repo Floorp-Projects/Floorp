@@ -69,9 +69,26 @@ const TEST_GLOBAL = {
       markPageAsTyped() {},
       removeObserver() {},
     },
+    "@mozilla.org/io/string-input-stream;1": {
+      createInstance() {
+        return {};
+      },
+    },
+    "@mozilla.org/security/hash;1": {
+      createInstance() {
+        return {
+          init() {},
+          updateFromStream() {},
+          finish() {
+            return "0";
+          },
+        };
+      },
+    },
     "@mozilla.org/updates/update-checker;1": {createInstance() {}},
   },
   Ci: {
+    nsICryptoHash: {},
     nsIHttpChannel: {REFERRER_POLICY_UNSAFE_URL: 5},
     nsITimer: {TYPE_ONE_SHOT: 1},
     nsIWebProgressListener: {LOCATION_CHANGE_SAME_DOCUMENT: 1},
@@ -89,6 +106,26 @@ const TEST_GLOBAL = {
     activityStreamProvider: {
       getTopFrecentSites: () => [],
       executePlacesQuery: async (sql, options) => ({sql, options}),
+    },
+  },
+  OS: {
+    File: {
+      writeAtomic() {},
+      makeDir() {},
+      stat() {},
+      exists() {},
+      remove() {},
+      removeEmptyDir() {},
+    },
+    Path: {
+      join() {
+        return "/";
+      },
+    },
+    Constants: {
+      Path: {
+        localProfileDir: "/",
+      },
     },
   },
   PlacesUtils: {
@@ -145,6 +182,7 @@ const TEST_GLOBAL = {
       setStringPref() {},
       getIntPref() {},
       getBoolPref() {},
+      getCharPref() {},
       setBoolPref() {},
       setIntPref() {},
       getBranch() {},
@@ -213,7 +251,17 @@ const TEST_GLOBAL = {
   EventEmitter,
   ShellService: {isDefaultBrowser: () => true},
   FilterExpressions: {eval() { return Promise.resolve(false); }},
-  RemoteSettings() { return {get() { return Promise.resolve([]); }}; },
+  RemoteSettings(name) {
+    return {
+      get() {
+        if (name === "attachment") {
+          return Promise.resolve([{attachment: {}}]);
+        }
+        return Promise.resolve([]);
+      },
+      on() {},
+    };
+  },
   Localization: class {},
 };
 overrider.set(TEST_GLOBAL);

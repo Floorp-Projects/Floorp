@@ -134,10 +134,15 @@ describe("Top Stories Feed", () => {
     });
     it("should report error for invalid configuration", () => {
       globals.sandbox.spy(global.Cu, "reportError");
-      sectionsManagerStub.sections.set("topstories", {options: {api_key_pref: "invalid"}});
+      sectionsManagerStub.sections.set("topstories", {
+        options: {
+          api_key_pref: "invalid",
+          stories_endpoint: "https://invalid.com/?apiKey=$apiKey",
+        },
+      });
       instance.init();
 
-      assert.called(Cu.reportError);
+      assert.calledWith(Cu.reportError, "Problem initializing top stories feed: An API key was specified but none configured: https://invalid.com/?apiKey=$apiKey");
     });
     it("should report error for missing api key", () => {
       globals.sandbox.spy(global.Cu, "reportError");
