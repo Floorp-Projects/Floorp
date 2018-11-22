@@ -407,6 +407,9 @@ function setupEnvironment() {
 
   var defaultMochitestPrefs = {
     'set': [
+      // We can't use the Fake H.264 GMP encoder with a real decoder until
+      // bug 1509012 is done. So force using the Fake H.264 GMP decoder for now.
+      ['media.navigator.mediadatadecoder_h264_enabled', false],
       ['media.peerconnection.enabled', true],
       ['media.peerconnection.identity.enabled', true],
       ['media.peerconnection.identity.timeout', 120000],
