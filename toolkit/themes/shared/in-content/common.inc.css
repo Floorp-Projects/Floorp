@@ -15,11 +15,16 @@
   --in-content-box-background-odd: rgba(12, 12, 13, 0.05); /* grey 90 a05 */
   --in-content-box-background-hover: #ededf0; /* grey 20 */
   --in-content-box-background-active: #d7d7db; /* grey 30 */
-  --in-content-box-border-color: #d7d7db; /* grey 30 */
+  --in-content-box-border-color: var(--grey-90-a30);
   --in-content-item-hover: rgba(69, 161, 255, 0.2); /* blue 40 a20 */
   --in-content-item-selected: #0a84ff;
   --in-content-border-highlight: #0a84ff;
   --in-content-border-focus: #0a84ff;
+  --in-content-border-hover: var(--grey-90-a50);
+  --in-content-border-active: var(--blue-50);
+  --in-content-border-active-shadow: var(--blue-50-a30);
+  --in-content-border-invalid: var(--red-50);
+  --in-content-border-invalid-shadow: var(--red-50-a30);
   --in-content-border-color: #d7d7db;
   --in-content-category-outline-focus: 1px dotted #0a84ff;
   --in-content-category-text: rgba(12,12,13);
@@ -50,6 +55,9 @@
   --grey-90-a10: rgba(12, 12, 13, 0.1);
   --grey-90-a20: rgba(12, 12, 13, 0.2);
   --grey-90-a30: rgba(12, 12, 13, 0.3);
+  --grey-90-a50: rgba(12, 12, 13, 0.5);
+  --red-50: #ff0039;
+  --red-50-a30: rgba(255, 0, 57, 0.3);
   --yellow-50: #ffe900;
   --yellow-90: #3e2800;
 
@@ -181,7 +189,7 @@ html|select:not([size]):not([multiple]) {
   text-overflow: ellipsis;
 }
 
-html|select:not([size]):not([multiple]):dir(rtl){
+html|select:not([size]):not([multiple]):dir(rtl) {
   background-position: left 3px center;
 }
 
@@ -283,7 +291,7 @@ html|*.numberbox-input::-moz-number-spin-up {
   background-image: url("chrome://global/skin/arrow/arrow-up.gif");
 }
 
-html|*.numberbox-input::-moz-number-spin-down  {
+html|*.numberbox-input::-moz-number-spin-down {
   border-radius: 0 0 1px 1px;
   background-image: url("chrome://global/skin/arrow/arrow-dn.gif");
 }
@@ -376,14 +384,14 @@ xul|textbox {
   border-radius: 2px;
   /* !important to override disabled styling from textbox.css. We reduce the
      opacity instead of changing colors. */
-  color: var(--in-content-text-color) !important;
+  color: inherit !important;
   background-color: var(--in-content-box-background) !important;
 }
 
 xul|textbox {
   min-height: 30px;
-  padding-right: 10px;
-  padding-left: 10px;
+  padding-right: 8px;
+  padding-left: 8px;
 }
 
 xul|textbox[type="number"] {
@@ -408,7 +416,15 @@ html|input[type="text"],
 html|textarea {
   font-family: inherit;
   font-size: inherit;
-  padding: 5px 10px;
+  padding: 5px 8px;
+}
+
+html|input[type="email"]:hover,
+html|input[type="tel"]:hover,
+html|input[type="text"]:hover,
+html|textarea:hover,
+xul|textbox:hover {
+  border-color: var(--in-content-border-hover);
 }
 
 html|input[type="email"]:focus,
@@ -416,7 +432,15 @@ html|input[type="tel"]:focus,
 html|input[type="text"]:focus,
 html|textarea:focus,
 xul|textbox[focused] {
-  border-color: var(--in-content-border-focus);
+  border-color: var(--in-content-border-active);
+  box-shadow: 0 0 0 3px var(--in-content-border-active-shadow);
+}
+
+html|input[type="email"]:-moz-ui-invalid,
+html|input[type="tel"]:-moz-ui-invalid,
+html|input[type="text"]:-moz-ui-invalid,
+html|textarea:-moz-ui-invalid {
+  border-color: var(--in-content-border-invalid);
 }
 
 /* Don't show the field error outlines and focus borders at the same time.
@@ -426,7 +450,7 @@ html|input[type="email"]:-moz-ui-invalid:focus,
 html|input[type="tel"]:-moz-ui-invalid:focus,
 html|input[type="text"]:-moz-ui-invalid:focus,
 html|textarea:-moz-ui-invalid:focus {
-  border-color: transparent;
+  box-shadow: 0 0 0 3px var(--in-content-border-invalid-shadow);
 }
 
 html|input[type="email"]:disabled,
@@ -434,7 +458,7 @@ html|input[type="tel"]:disabled,
 html|input[type="text"]:disabled,
 html|textarea:disabled,
 xul|textbox[disabled="true"] {
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 /* Links */

@@ -45,7 +45,7 @@ textbox[disabled="true"] {
   cursor: default;
   background-color: -moz-Dialog;
   color: GrayText;
-} 
+}
 
 textbox.plain {
   -moz-appearance: none !important;
