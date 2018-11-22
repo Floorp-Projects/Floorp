@@ -488,27 +488,6 @@ const Class cls::protoClass_ = { \
 
 /*** 3.2. Class ReadableStream **********************************************/
 
-/**
- * Streams spec, 3.2.3., steps 1-4.
- */
-ReadableStream*
-ReadableStream::createStream(JSContext* cx, HandleObject proto /* = nullptr */)
-{
-    Rooted<ReadableStream*> stream(cx, NewObjectWithClassProto<ReadableStream>(cx, proto));
-    if (!stream) {
-        return nullptr;
-    }
-
-    // Step 1: Set this.[[state]] to "readable".
-    // Step 2: Set this.[[reader]] and this.[[storedError]] to
-    //         undefined (implicit).
-    // Step 3: Set this.[[disturbed]] to false (implicit).
-    // Step 4: Set this.[[readableStreamController]] to undefined (implicit).
-    stream->initStateBits(Readable);
-
-    return stream;
-}
-
 static MOZ_MUST_USE ReadableStreamDefaultController*
 CreateReadableStreamDefaultController(JSContext* cx,
                                       Handle<ReadableStream*> stream,
@@ -525,7 +504,7 @@ ReadableStream::createDefaultStream(JSContext* cx, HandleValue underlyingSource,
                                     HandleObject proto /* = nullptr */)
 {
     // Steps 1-4.
-    Rooted<ReadableStream*> stream(cx, createStream(cx));
+    Rooted<ReadableStream*> stream(cx, create(cx));
     if (!stream) {
         return nullptr;
     }
@@ -551,7 +530,7 @@ ReadableStream*
 ReadableStream::createExternalSourceStream(JSContext* cx, void* underlyingSource,
                                            uint8_t flags, HandleObject proto /* = nullptr */)
 {
-    Rooted<ReadableStream*> stream(cx, createStream(cx, proto));
+    Rooted<ReadableStream*> stream(cx, create(cx, proto));
     if (!stream) {
         return nullptr;
     }
@@ -861,8 +840,33 @@ CLASS_SPEC(ReadableStream, 0, SlotCount, 0, 0, JS_NULL_CLASS_OPS);
 //                          [, highWaterMark [, autoAllocateChunkSize ] ] )
 // Not implemented.
 
-// Streams spec, 3.3.5. InitializeReadableStream ( stream )
-// Not implemented.
+/**
+ * Streams spec, 3.3.5. InitializeReadableStream ( stream )
+ */
+MOZ_MUST_USE /* static */ ReadableStream*
+ReadableStream::create(JSContext* cx, HandleObject proto /* = nullptr */)
+{
+    // In the spec, InitializeReadableStream is always passed a newly created
+    // ReadableStream object. We instead create it here and return it below.
+    Rooted<ReadableStream*> stream(cx, NewObjectWithClassProto<ReadableStream>(cx, proto));
+    if (!stream) {
+        return nullptr;
+    }
+
+    // Step 1: Set stream.[[state]] to "readable".
+    stream->initStateBits(Readable);
+    MOZ_ASSERT(stream->readable());
+
+    // Step 2: Set stream.[[reader]] and stream.[[storedError]] to
+    //         undefined (implicit).
+    MOZ_ASSERT(!stream->hasReader());
+    MOZ_ASSERT(stream->storedError().isUndefined());
+
+    // Step 3: Set stream.[[disturbed]] to false (done in step 1).
+    MOZ_ASSERT(!stream->disturbed());
+
+    return stream;
+}
 
 // Streams spec, 3.3.6. IsReadableStream ( x )
 // Using is<T> instead.
