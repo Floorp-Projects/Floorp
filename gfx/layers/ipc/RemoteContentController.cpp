@@ -304,6 +304,28 @@ RemoteContentController::NotifyFlushComplete()
 }
 
 void
+RemoteContentController::NotifyAsyncScrollbarDragInitiated(uint64_t aDragBlockId,
+                                                           const ScrollableLayerGuid::ViewID& aScrollId,
+                                                           ScrollDirection aDirection)
+{
+  if (MessageLoop::current() != mCompositorThread) {
+    // We have to send messages from the compositor thread
+    mCompositorThread->PostTask(NewRunnableMethod<uint64_t,
+                                                  ScrollableLayerGuid::ViewID,
+                                                  ScrollDirection>(
+      "layers::RemoteContentController::NotifyAsyncScrollbarDragInitiated",
+      this,
+      &RemoteContentController::NotifyAsyncScrollbarDragInitiated,
+      aDragBlockId, aScrollId, aDirection));
+    return;
+  }
+
+  if (mCanSend) {
+    Unused << SendNotifyAsyncScrollbarDragInitiated(aDragBlockId, aScrollId, aDirection);
+  }
+}
+
+void
 RemoteContentController::NotifyAsyncScrollbarDragRejected(const ScrollableLayerGuid::ViewID& aScrollId)
 {
   if (MessageLoop::current() != mCompositorThread) {

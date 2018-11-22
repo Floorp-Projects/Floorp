@@ -302,6 +302,25 @@ ChromeProcessController::NotifyFlushComplete()
 }
 
 void
+ChromeProcessController::NotifyAsyncScrollbarDragInitiated(uint64_t aDragBlockId,
+                                                           const ScrollableLayerGuid::ViewID& aScrollId,
+                                                           ScrollDirection aDirection)
+{
+  if (MessageLoop::current() != mUILoop) {
+    mUILoop->PostTask(NewRunnableMethod<uint64_t,
+                                        ScrollableLayerGuid::ViewID,
+                                        ScrollDirection>(
+      "layers::ChromeProcessController::NotifyAsyncScrollbarDragInitiated",
+      this,
+      &ChromeProcessController::NotifyAsyncScrollbarDragInitiated,
+      aDragBlockId, aScrollId, aDirection));
+    return;
+  }
+
+  APZCCallbackHelper::NotifyAsyncScrollbarDragInitiated(aDragBlockId, aScrollId, aDirection);
+}
+
+void
 ChromeProcessController::NotifyAsyncScrollbarDragRejected(const ScrollableLayerGuid::ViewID& aScrollId)
 {
   if (MessageLoop::current() != mUILoop) {

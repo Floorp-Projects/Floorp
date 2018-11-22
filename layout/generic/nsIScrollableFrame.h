@@ -536,6 +536,8 @@ public:
    */
   virtual bool DragScroll(mozilla::WidgetEvent* aEvent) = 0;
 
+  virtual void AsyncScrollbarDragInitiated(uint64_t aDragBlockId,
+                                           mozilla::layers::ScrollDirection aDirection) = 0;
   virtual void AsyncScrollbarDragRejected() = 0;
 
   /**

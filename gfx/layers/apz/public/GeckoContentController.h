@@ -8,6 +8,7 @@
 #define mozilla_layers_GeckoContentController_h
 
 #include "InputData.h"                  // for PinchGestureInput
+#include "LayersTypes.h"                // for ScrollDirection
 #include "Units.h"                      // for CSSPoint, CSSRect, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/DefineEnum.h"         // for MOZ_DEFINE_ENUM
@@ -156,7 +157,19 @@ public:
    */
   virtual void NotifyFlushComplete() = 0;
 
+  /**
+   * If the async scrollbar-drag initiation code kicks in on the APZ side, then
+   * we need to let content know that we are dragging the scrollbar. Otherwise,
+   * by the time the mousedown events is handled by content, the scrollthumb
+   * could already have been moved via a RequestContentRepaint message at a
+   * new scroll position, and the mousedown might end up triggering a click-to-
+   * scroll on where the thumb used to be.
+   */
+  virtual void NotifyAsyncScrollbarDragInitiated(uint64_t aDragBlockId,
+                                                 const ScrollableLayerGuid::ViewID& aScrollId,
+                                                 ScrollDirection aDirection) = 0;
   virtual void NotifyAsyncScrollbarDragRejected(const ScrollableLayerGuid::ViewID& aScrollId) = 0;
+
   virtual void NotifyAsyncAutoscrollRejected(const ScrollableLayerGuid::ViewID& aScrollId) = 0;
 
   virtual void CancelAutoscroll(const ScrollableLayerGuid& aGuid) = 0;

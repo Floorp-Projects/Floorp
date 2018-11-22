@@ -133,7 +133,12 @@ public:
   // scrolled frame.
   float GetThumbRatio() const;
 
-  // Notify the slider frame than an async scrollbar drag requested in
+  // Notify the slider frame that an async scrollbar drag was started on the
+  // APZ side without consulting the main thread. The block id is the APZ
+  // input block id of the mousedown that started the drag.
+  void AsyncScrollbarDragInitiated(uint64_t aDragBlockId);
+
+  // Notify the slider frame that an async scrollbar drag requested in
   // StartAPZDrag() was rejected by APZ, and the slider frame should
   // fall back to main-thread dragging.
   void AsyncScrollbarDragRejected();
@@ -209,6 +214,13 @@ private:
   // true if displayport suppression is active, for more performant
   // scrollbar-dragging behaviour.
   bool mSuppressionActive;
+
+  // If APZ initiated a scrollbar drag without main-thread involvement, it
+  // notifies us and this variable stores the input block id of the APZ input
+  // block that started the drag. This lets us handle the corresponding
+  // mousedown event properly, if it arrives after the scroll position has
+  // been shifted due to async scrollbar drag.
+  Maybe<uint64_t> mAPZDragInitiated;
 
   static bool gMiddlePref;
   static int32_t gSnapMultiplier;

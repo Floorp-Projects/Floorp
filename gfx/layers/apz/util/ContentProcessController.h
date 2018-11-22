@@ -62,6 +62,9 @@ public:
 
   void NotifyFlushComplete() override;
 
+  void NotifyAsyncScrollbarDragInitiated(uint64_t aDragBlockId,
+                                         const ScrollableLayerGuid::ViewID& aScrollId,
+                                         ScrollDirection aDirection) override;
   void NotifyAsyncScrollbarDragRejected(const ScrollableLayerGuid::ViewID& aScrollId) override;
 
   void NotifyAsyncAutoscrollRejected(const ScrollableLayerGuid::ViewID& aScrollId) override;
