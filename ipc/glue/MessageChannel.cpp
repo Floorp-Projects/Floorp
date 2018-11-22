@@ -634,8 +634,7 @@ MessageChannel::MessageChannel(const char* aName,
     mPeerPidSet(false),
     mPeerPid(-1),
     mIsPostponingSends(false),
-    mBuildIDsConfirmedMatch(false),
-    mIsSameThreadChannel(false)
+    mBuildIDsConfirmedMatch(false)
 {
     MOZ_COUNT_CTOR(ipc::MessageChannel);
 
@@ -965,35 +964,6 @@ MessageChannel::CommonThreadOpenInit(MessageChannel *aTargetChan, Side aSide)
 
     mLink = new ThreadLink(this, aTargetChan);
     mSide = aSide;
-}
-
-bool
-MessageChannel::OpenOnSameThread(MessageChannel* aTargetChan,
-                                 mozilla::ipc::Side aSide)
-{
-    CommonThreadOpenInit(aTargetChan, aSide);
-
-    Side oppSide = UnknownSide;
-    switch (aSide) {
-      case ChildSide: oppSide = ParentSide; break;
-      case ParentSide: oppSide = ChildSide; break;
-      case UnknownSide: break;
-    }
-    mIsSameThreadChannel = true;
-
-    // XXX(nika): Avoid setting up a monitor for same thread channels? We
-    // shouldn't need it.
-    mMonitor = new RefCountedMonitor();
-
-    mChannelState = ChannelOpening;
-    aTargetChan->CommonThreadOpenInit(this, oppSide);
-
-    aTargetChan->mIsSameThreadChannel = true;
-    aTargetChan->mMonitor = mMonitor;
-
-    mChannelState = ChannelConnected;
-    aTargetChan->mChannelState = ChannelConnected;
-    return true;
 }
 
 bool
@@ -1505,8 +1475,6 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     // Sanity checks.
     AssertWorkerThread();
     mMonitor->AssertNotCurrentThreadOwns();
-    MOZ_RELEASE_ASSERT(!mIsSameThreadChannel,
-                       "sync send over same-thread channel will deadlock!");
 
 #ifdef OS_WIN
     SyncStackFrame frame(this, false);
@@ -1712,8 +1680,6 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
     UniquePtr<Message> msg(aMsg);
     AssertWorkerThread();
     mMonitor->AssertNotCurrentThreadOwns();
-    MOZ_RELEASE_ASSERT(!mIsSameThreadChannel,
-                       "intr call send over same-thread channel will deadlock!");
 
 #ifdef OS_WIN
     SyncStackFrame frame(this, true);
@@ -2490,9 +2456,6 @@ MessageChannel::WaitForSyncNotify(bool /* aHandleWindowsMessages */)
     }
 #endif
 
-    MOZ_RELEASE_ASSERT(!mIsSameThreadChannel,
-                       "Wait on same-thread channel will deadlock!");
-
     TimeDuration timeout = (kNoTimeout == mTimeoutMs) ?
                            TimeDuration::Forever() :
                            TimeDuration::FromMilliseconds(mTimeoutMs);
@@ -2805,10 +2768,6 @@ MessageChannel::SynchronouslyClose()
     AssertWorkerThread();
     mMonitor->AssertCurrentThreadOwns();
     mLink->SendClose();
-
-    MOZ_RELEASE_ASSERT(!mIsSameThreadChannel || ChannelClosed == mChannelState,
-                       "same-thread channel failed to synchronously close?");
-
     while (ChannelClosed != mChannelState)
         mMonitor->Wait();
 }
