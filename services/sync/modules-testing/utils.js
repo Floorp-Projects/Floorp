@@ -275,10 +275,14 @@ function encryptPayload(cleartext) {
 var sumHistogram = function(name, options = {}) {
   let histogram = options.key ? Services.telemetry.getKeyedHistogramById(name) :
                   Services.telemetry.getHistogramById(name);
-  let snapshot = histogram.snapshot(options.key);
+  let snapshot = histogram.snapshot();
   let sum = -Infinity;
   if (snapshot) {
-    sum = snapshot.sum;
+    if (options.key && snapshot[options.key]) {
+      sum = snapshot[options.key].sum;
+    } else {
+      sum = snapshot.sum;
+    }
   }
   histogram.clear();
   return sum;
