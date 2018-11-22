@@ -503,6 +503,22 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
 
+  if (mAPZDragInitiated &&
+      *mAPZDragInitiated == InputAPZContext::GetInputBlockId() &&
+      aEvent->mMessage == eMouseDown) {
+    // If we get the mousedown after the APZ notification, then immediately
+    // switch into the state corresponding to an APZ thumb-drag. Note that
+    // we can't just do this in AsyncScrollbarDragInitiated() directly because
+    // the handling for this mousedown event in the presShell will reset the
+    // capturing content which makes isDraggingThumb() return false. We check
+    // the input block here to make sure that we correctly handle any ordering
+    // of {eMouseDown arriving, AsyncScrollbarDragInitiated() being called}.
+    mAPZDragInitiated = Nothing();
+    DragThumb(true);
+    mScrollingWithAPZ = true;
+    return NS_OK;
+  }
+
   // If a web page calls event.preventDefault() we still want to
   // scroll when scroll arrow is clicked. See bug 511075.
   if (!mContent->IsInNativeAnonymousSubtree() &&
@@ -1527,6 +1543,12 @@ nsSliderFrame::GetThumbRatio() const
   // is in the scrollframe's parent's space whereas the scrolled CSS pixels
   // are in the scrollframe's space).
   return mRatio / mozilla::AppUnitsPerCSSPixel();
+}
+
+void
+nsSliderFrame::AsyncScrollbarDragInitiated(uint64_t aDragBlockId)
+{
+  mAPZDragInitiated = Some(aDragBlockId);
 }
 
 void

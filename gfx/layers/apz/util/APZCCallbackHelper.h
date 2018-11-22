@@ -7,6 +7,7 @@
 #define mozilla_layers_APZCCallbackHelper_h
 
 #include "InputData.h"
+#include "LayersTypes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/APZUtils.h"
 #include "mozilla/layers/RepaintRequest.h"
@@ -186,6 +187,9 @@ public:
     /* Notify content that the repaint flush is complete. */
     static void NotifyFlushComplete(nsIPresShell* aShell);
 
+    static void NotifyAsyncScrollbarDragInitiated(uint64_t aDragBlockId,
+                                                  const ScrollableLayerGuid::ViewID& aScrollId,
+                                                  ScrollDirection aDirection);
     static void NotifyAsyncScrollbarDragRejected(const ScrollableLayerGuid::ViewID& aScrollId);
     static void NotifyAsyncAutoscrollRejected(const ScrollableLayerGuid::ViewID& aScrollId);
 

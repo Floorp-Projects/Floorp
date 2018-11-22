@@ -65,6 +65,9 @@ public:
   virtual void NotifyMozMouseScrollEvent(const ScrollableLayerGuid::ViewID& aScrollId,
                                          const nsString& aEvent) override;
   virtual void NotifyFlushComplete() override;
+  virtual void NotifyAsyncScrollbarDragInitiated(uint64_t aDragBlockId,
+                                                 const ScrollableLayerGuid::ViewID& aScrollId,
+                                                 ScrollDirection aDirection) override;
   virtual void NotifyAsyncScrollbarDragRejected(const ScrollableLayerGuid::ViewID& aScrollId) override;
   virtual void NotifyAsyncAutoscrollRejected(const ScrollableLayerGuid::ViewID& aScrollId) override;
   virtual void CancelAutoscroll(const ScrollableLayerGuid& aGuid) override;
