@@ -339,15 +339,6 @@ IsAnonymousFlexOrGridItem(const nsIFrame* aFrame)
          pseudoType == nsCSSAnonBoxes::anonymousGridItem();
 }
 
-// Returns true if aFrame is a flex/grid container.
-static inline bool
-IsFlexOrGridContainer(const nsIFrame* aFrame)
-{
-  const LayoutFrameType t = aFrame->Type();
-  return t == LayoutFrameType::FlexContainer ||
-         t == LayoutFrameType::GridContainer;
-}
-
 // Returns true IFF the given nsIFrame is a nsFlexContainerFrame and
 // represents a -webkit-{inline-}box or -moz-{inline-}box container.
 static inline bool
@@ -448,7 +439,7 @@ IsFrameForSVG(const nsIFrame* aFrame)
 static bool
 ShouldSuppressFloatingOfDescendants(nsIFrame* aFrame)
 {
-  return ::IsFlexOrGridContainer(aFrame) ||
+  return aFrame->IsFlexOrGridContainer() ||
     aFrame->IsXULBoxFrame() ||
     aFrame->IsFrameOfType(nsIFrame::eMathML);
 }
@@ -9296,7 +9287,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
   FrameConstructionItemList& aItems,
   nsIFrame* aParentFrame)
 {
-  if (aItems.IsEmpty() || !::IsFlexOrGridContainer(aParentFrame)) {
+  if (aItems.IsEmpty() || !aParentFrame->IsFlexOrGridContainer()) {
     return;
   }
 
@@ -9966,7 +9957,7 @@ static bool
 FrameWantsToBeInAnonymousItem(const nsIFrame* aContainerFrame,
                               const nsIFrame* aFrame)
 {
-  MOZ_ASSERT(::IsFlexOrGridContainer(aContainerFrame));
+  MOZ_ASSERT(aContainerFrame->IsFlexOrGridContainer());
 
   // Any line-participant frames (e.g. text) definitely want to be wrapped in
   // an anonymous flex/grid item.
@@ -9990,7 +9981,7 @@ VerifyGridFlexContainerChildren(nsIFrame* aParentFrame,
                                 const nsFrameList& aChildren)
 {
 #ifdef DEBUG
-  if (!::IsFlexOrGridContainer(aParentFrame)) {
+  if (!aParentFrame->IsFlexOrGridContainer()) {
     return;
   }
 
