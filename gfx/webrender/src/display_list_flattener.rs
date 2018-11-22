@@ -25,7 +25,7 @@ use internal_types::{FastHashMap, FastHashSet};
 use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PrimitiveList};
 use prim_store::{BrushKind, BrushPrimitive, PrimitiveInstance, PrimitiveDataInterner, PrimitiveKeyKind};
 use prim_store::{ImageSource, PrimitiveOpacity, PrimitiveKey, PrimitiveSceneData, PrimitiveInstanceKind};
-use prim_store::{BorderSource, PrimitiveContainer, PrimitiveDataHandle, PrimitiveStore};
+use prim_store::{BorderSource, PrimitiveContainer, PrimitiveDataHandle, PrimitiveStore, PrimitiveStoreStats};
 use prim_store::{OpacityBinding, ScrollNodeAndClipChain, PictureIndex, register_prim_chase_id};
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
@@ -170,6 +170,7 @@ impl<'a> DisplayListFlattener<'a> {
         frame_builder_config: &FrameBuilderConfig,
         new_scene: &mut Scene,
         resources: &mut DocumentResources,
+        prim_store_stats: &PrimitiveStoreStats,
     ) -> FrameBuilder {
         // We checked that the root pipeline is available on the render backend.
         let root_pipeline_id = scene.root_pipeline_id.unwrap();
@@ -190,7 +191,7 @@ impl<'a> DisplayListFlattener<'a> {
             pending_shadow_items: VecDeque::new(),
             sc_stack: Vec::new(),
             pipeline_clip_chain_stack: vec![ClipChainId::NONE],
-            prim_store: PrimitiveStore::new(),
+            prim_store: PrimitiveStore::new(&prim_store_stats),
             clip_store: ClipStore::new(),
             resources,
             prim_count_estimate: 0,

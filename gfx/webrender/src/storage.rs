@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use std::{iter::Extend, ops, marker::PhantomData};
+use util::recycle_vec;
 
 #[derive(Debug, Hash)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -58,14 +59,24 @@ pub struct Storage<T> {
 }
 
 impl<T> Storage<T> {
-    pub fn new() -> Self {
-        Storage { data: vec![] }
+    pub fn new(initial_capacity: usize) -> Self {
+        Storage {
+            data: Vec::with_capacity(initial_capacity),
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.data.len()
     }
 
     pub fn push(&mut self, t: T) -> Index<T> {
         let index = self.data.len();
         self.data.push(t);
         Index(index as u32, PhantomData)
+    }
+
+    pub fn recycle(&mut self) {
+        recycle_vec(&mut self.data);
     }
 
     pub fn extend<II: IntoIterator<Item=T>>(&mut self, iter: II) -> Range<T> {
