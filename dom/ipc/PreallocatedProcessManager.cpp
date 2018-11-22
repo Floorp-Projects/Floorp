@@ -48,7 +48,7 @@ private:
   static mozilla::StaticRefPtr<PreallocatedProcessManagerImpl> sSingleton;
 
   PreallocatedProcessManagerImpl();
-  ~PreallocatedProcessManagerImpl() {}
+  ~PreallocatedProcessManagerImpl();
   DISALLOW_EVIL_CONSTRUCTORS(PreallocatedProcessManagerImpl);
 
   void Init();
@@ -67,8 +67,13 @@ private:
 
   bool mEnabled;
   bool mShutdown;
+  bool mLaunchInProgress;
   RefPtr<ContentParent> mPreallocatedProcess;
   nsTHashtable<nsUint64HashKey> mBlockers;
+
+  bool IsEmpty() const {
+    return !mPreallocatedProcess && !mLaunchInProgress;
+  }
 };
 
 /* static */ StaticRefPtr<PreallocatedProcessManagerImpl>
@@ -92,7 +97,15 @@ NS_IMPL_ISUPPORTS(PreallocatedProcessManagerImpl, nsIObserver)
 PreallocatedProcessManagerImpl::PreallocatedProcessManagerImpl()
   : mEnabled(false)
   , mShutdown(false)
+  , mLaunchInProgress(false)
 {}
+
+PreallocatedProcessManagerImpl::~PreallocatedProcessManagerImpl()
+{
+  // This shouldn't happen, because the promise callbacks should
+  // hold strong references, but let't make absolutely sure:
+  MOZ_RELEASE_ASSERT(!mLaunchInProgress);
+}
 
 void
 PreallocatedProcessManagerImpl::Init()
@@ -179,6 +192,9 @@ PreallocatedProcessManagerImpl::Take()
 bool
 PreallocatedProcessManagerImpl::Provide(ContentParent* aParent)
 {
+  // This will take the already-running process even if there's a
+  // launch in progress; if that process hasn't been taken by the
+  // time the launch completes, the new process will be shut down.
   if (mEnabled && !mShutdown && !mPreallocatedProcess) {
     mPreallocatedProcess = aParent;
   }
@@ -220,7 +236,7 @@ PreallocatedProcessManagerImpl::RemoveBlocker(ContentParent* aParent)
   // it's possible for a short-lived process to be recycled through
   // Provide() and Take() before reaching RecvFirstIdle.)
   mBlockers.RemoveEntry(childID);
-  if (!mPreallocatedProcess && mBlockers.IsEmpty()) {
+  if (IsEmpty() && mBlockers.IsEmpty()) {
     AllocateAfterDelay();
   }
 }
@@ -230,7 +246,7 @@ PreallocatedProcessManagerImpl::CanAllocate()
 {
   return mEnabled &&
          mBlockers.IsEmpty() &&
-         !mPreallocatedProcess &&
+         IsEmpty() &&
          !mShutdown &&
          !ContentParent::IsMaxProcessCountReached(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
 }
@@ -267,14 +283,31 @@ void
 PreallocatedProcessManagerImpl::AllocateNow()
 {
   if (!CanAllocate()) {
-    if (mEnabled && !mShutdown && !mPreallocatedProcess && !mBlockers.IsEmpty()) {
+    if (mEnabled && !mShutdown && IsEmpty() && !mBlockers.IsEmpty()) {
       // If it's too early to allocate a process let's retry later.
       AllocateAfterDelay();
     }
     return;
   }
 
-  mPreallocatedProcess = ContentParent::PreallocateProcess();
+  RefPtr<PreallocatedProcessManagerImpl> self(this);
+  mLaunchInProgress = true;
+
+  ContentParent::PreallocateProcess()
+    ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+
+           [self, this](const RefPtr<ContentParent>& process) {
+             mLaunchInProgress = false;
+             if (CanAllocate()) {
+               mPreallocatedProcess = process;
+             } else {
+               process->ShutDownProcess(ContentParent::SEND_SHUTDOWN_MESSAGE);
+             }
+           },
+
+           [self, this](ContentParent::LaunchError err) {
+             mLaunchInProgress = false;
+           });
 }
 
 void
