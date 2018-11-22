@@ -296,7 +296,8 @@ KeyframeEffect::GetEffectiveAnimationOfProperty(nsCSSPropertyID aProperty,
 }
 
 nsCSSPropertyIDSet
-KeyframeEffect::GetPropertiesForCompositor(const EffectSet& aEffects) const
+KeyframeEffect::GetPropertiesForCompositor(EffectSet& aEffects,
+                                           const nsIFrame* aFrame) const
 {
   MOZ_ASSERT(
     &aEffects ==
@@ -314,9 +315,17 @@ KeyframeEffect::GetPropertiesForCompositor(const EffectSet& aEffects) const
     if (!compositorAnimatables.HasProperty(property.mProperty)) {
       continue;
     }
-    if (IsEffectiveProperty(aEffects, property.mProperty)) {
-      properties.AddProperty(property.mProperty);
+
+    AnimationPerformanceWarning::Type warning;
+    KeyframeEffect::MatchForCompositor matchResult =
+      IsMatchForCompositor(property.mProperty, aFrame, aEffects, warning);
+    if (matchResult ==
+          KeyframeEffect::MatchForCompositor::NoAndBlockThisProperty ||
+        matchResult == KeyframeEffect::MatchForCompositor::No) {
+      continue;
     }
+
+    properties.AddProperty(property.mProperty);
   }
   return properties;
 }

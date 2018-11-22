@@ -219,7 +219,13 @@ public:
   // NOTE: This function is basically called for all KeyframeEffects on an
   // element thus it takes |aEffects| to avoid multiple calls of
   // EffectSet::GetEffect().
-  nsCSSPropertyIDSet GetPropertiesForCompositor(const EffectSet& aEffects) const;
+  //
+  // NOTE(2): This function does NOT check that animations are permitted on
+  // |aFrame|. It is the responsibility of the caller to first call
+  // EffectCompositor::AllowCompositorAnimationsOnFrame for |aFrame|, or use
+  // nsLayoutUtils::GetAnimationPropertiesForCompositor instead.
+  nsCSSPropertyIDSet GetPropertiesForCompositor(EffectSet& aEffects,
+                                                const nsIFrame* aFrame) const;
 
   const InfallibleTArray<AnimationProperty>& Properties() const
   {
