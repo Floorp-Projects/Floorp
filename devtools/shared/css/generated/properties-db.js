@@ -2917,6 +2917,7 @@ exports.CSS_PROPERTIES = {
       "overflow-clip-box-block",
       "overflow-x",
       "overflow-y",
+      "overflow-anchor",
       "transition-duration",
       "transition-timing-function",
       "transition-property",
@@ -7643,6 +7644,20 @@ exports.CSS_PROPERTIES = {
       "visible"
     ]
   },
+  "overflow-anchor": {
+    "isInherited": false,
+    "subproperties": [
+      "overflow-anchor"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "none",
+      "unset"
+    ]
+  },
   "overflow-wrap": {
     "isInherited": true,
     "subproperties": [
@@ -9375,6 +9390,10 @@ exports.PREFERENCES = [
   [
     "-moz-osx-font-smoothing",
     "layout.css.osx-font-smoothing.enabled"
+  ],
+  [
+    "overflow-anchor",
+    "layout.css.scroll-anchoring.enabled"
   ],
   [
     "scrollbar-width",
