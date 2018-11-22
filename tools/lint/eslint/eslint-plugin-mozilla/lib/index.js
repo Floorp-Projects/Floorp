@@ -25,6 +25,7 @@ module.exports = {
     "frame-script": require("../lib/environments/frame-script.js"),
     "jsm": require("../lib/environments/jsm.js"),
     "simpletest": require("../lib/environments/simpletest.js"),
+    "privileged": require("../lib/environments/privileged.js"),
   },
   processors: {
     ".xml": require("../lib/processors/xbl-bindings"),
