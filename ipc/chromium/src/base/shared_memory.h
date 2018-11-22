@@ -43,6 +43,9 @@ class SharedMemory {
     SetHandle(init_handle, read_only);
   }
 
+  // Move constructor; transfers ownership.
+  SharedMemory(SharedMemory&& other);
+
   // Destructor.  Will close any open files.
   ~SharedMemory();
 
