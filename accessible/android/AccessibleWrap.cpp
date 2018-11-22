@@ -481,11 +481,9 @@ AccessibleWrap::ToBundle(const uint64_t aState,
     nodeInfo, "roleDescription", jni::StringParam(roleDescription));
   GECKOBUNDLE_PUT(nodeInfo, "geckoRole", jni::StringParam(geckoRole));
 
-  nsAutoString viewIdResourceName;
-  WrapperDOMNodeID(viewIdResourceName);
-  if (!viewIdResourceName.IsEmpty()) {
+  if (!aDOMNodeID.IsEmpty()) {
     GECKOBUNDLE_PUT(
-      nodeInfo, "viewIdResourceName", jni::StringParam(viewIdResourceName));
+      nodeInfo, "viewIdResourceName", jni::StringParam(aDOMNodeID));
   }
 
   nsIntRect bounds = Bounds();

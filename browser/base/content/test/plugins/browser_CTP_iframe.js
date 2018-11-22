@@ -29,11 +29,11 @@ add_task(async function() {
     let frame = content.document.getElementById("frame");
     let doc = frame.contentDocument;
     let plugin = doc.getElementById("test");
-    let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
+    let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
     Assert.ok(plugin && overlay.classList.contains("visible"),
       "Test 1, Plugin overlay should exist, not be hidden");
 
-    let closeIcon = doc.getAnonymousElementByAttribute(plugin, "anonid", "closeIcon");
+    let closeIcon = plugin.openOrClosedShadowRoot.getElementById("closeIcon");
     let bounds = closeIcon.getBoundingClientRect();
     let left = (bounds.left + bounds.right) / 2;
     let top = (bounds.top + bounds.bottom) / 2;

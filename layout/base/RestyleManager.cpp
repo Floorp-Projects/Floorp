@@ -1807,7 +1807,7 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
   auto maybeApplyChangeHint = [&](const Maybe<uint64_t>& aGeneration,
                                   DisplayItemType aDisplayItemType) -> bool {
     if (aGeneration && frameGeneration != *aGeneration) {
-      // If we have a transform layer bug don't have any transform style, we
+      // If we have a transform layer but don't have any transform style, we
       // probably just removed the transform but haven't destroyed the layer
       // yet. In this case we will typically add the appropriate change hint
       // (nsChangeHint_UpdateContainingBlock) when we compare styles so in
@@ -1854,6 +1854,14 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
     // setKeyframes or changing target element from other target which prevents
     // running on the compositor, etc.
     if (!aGeneration) {
+      nsChangeHint hintForDisplayItem =
+        LayerAnimationInfo::GetChangeHintFor(aDisplayItemType);
+      // We don't need to apply the corresponding change hint if we already have
+      // it.
+      if (NS_IsHintSubset(hintForDisplayItem, aHintForThisFrame)) {
+        return true;
+      }
+
       if (!effectiveAnimationProperties) {
         effectiveAnimationProperties.emplace(
           nsLayoutUtils::GetAnimationPropertiesForCompositor(aFrame));
@@ -1861,8 +1869,7 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
       const nsCSSPropertyIDSet& propertiesForDisplayItem =
         LayerAnimationInfo::GetCSSPropertiesFor(aDisplayItemType);
       if (effectiveAnimationProperties->Intersects(propertiesForDisplayItem)) {
-        hint |=
-          LayerAnimationInfo::GetChangeHintFor(aDisplayItemType);
+        hint |= hintForDisplayItem;
       }
     }
     return true;

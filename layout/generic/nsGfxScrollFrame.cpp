@@ -1163,10 +1163,6 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
-  if (mHelper.IsIgnoringViewportClipping()) {
-    aDesiredSize.mOverflowAreas.UnionWith(
-      state.mContentsOverflowAreas + mHelper.mScrolledFrame->GetPosition());
-  }
 
   mHelper.UpdateSticky();
   FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize, aReflowInput, aStatus);
@@ -2529,15 +2525,6 @@ static void AdjustViews(nsIFrame* aFrame)
   }
 }
 
-bool ScrollFrameHelper::IsIgnoringViewportClipping() const
-{
-  if (!mIsRoot)
-    return false;
-  nsSubDocumentFrame* subdocFrame = static_cast<nsSubDocumentFrame*>
-    (nsLayoutUtils::GetCrossDocParentFrame(mOuter->PresShell()->GetRootFrame()));
-  return subdocFrame && !subdocFrame->ShouldClipSubdocument();
-}
-
 void ScrollFrameHelper::MarkScrollbarsDirtyForReflow() const
 {
   nsIPresShell* presShell = mOuter->PresShell();
@@ -3442,7 +3429,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // because that call cannot create a displayport for root scroll frames,
   // and hence it cannot create an ignore scroll frame.
   bool ignoringThisScrollFrame =
-    aBuilder->GetIgnoreScrollFrame() == mOuter || IsIgnoringViewportClipping();
+    aBuilder->GetIgnoreScrollFrame() == mOuter;
 
   // Overflow clipping can never clip frames outside our subtree, so there
   // is no need to worry about whether we are a moving frame that might clip

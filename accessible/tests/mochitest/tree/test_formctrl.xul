@@ -62,7 +62,12 @@
           {
             role: ROLE_PUSHBUTTON,
             name: "hello",
-            children: [ ]
+            children: [
+              {
+                role: ROLE_LABEL,
+                name: "hello"
+              }
+            ]
           }
         ]
       };
@@ -77,7 +82,12 @@
           {
             role: ROLE_PUSHBUTTON,
             name: "hello",
-            children: [ ]
+            children: [
+              {
+                role: ROLE_LABEL,
+                name: "hello"
+              }
+            ]
           }
         ]
       };

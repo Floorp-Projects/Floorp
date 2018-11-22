@@ -35,6 +35,8 @@ balrog_description_schema = schema.extend({
     # below transforms for defaults of various values.
     Optional('treeherder'): task_description_schema['treeherder'],
 
+    Optional('attributes'): task_description_schema['attributes'],
+
     # Shipping product / phase
     Optional('shipping-product'): task_description_schema['shipping-product'],
     Optional('shipping-phase'): task_description_schema['shipping-phase'],

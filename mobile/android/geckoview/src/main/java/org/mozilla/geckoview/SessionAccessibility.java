@@ -372,6 +372,8 @@ public class SessionAccessibility {
 
             // SDK 18 and above
             if (Build.VERSION.SDK_INT >= 18) {
+                node.setViewIdResourceName(nodeInfo.getString("viewIdResourceName"));
+
                 if ((flags & FLAG_EDITABLE) != 0) {
                     node.addAction(AccessibilityNodeInfo.ACTION_SET_SELECTION);
                     node.addAction(AccessibilityNodeInfo.ACTION_CUT);

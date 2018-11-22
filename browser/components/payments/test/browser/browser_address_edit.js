@@ -137,18 +137,21 @@ add_task(async function test_edit_link() {
       editLink.click();
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page" && !!state["address-page"].guid;
+        return state.page.id == "shipping-address-page" && !!state["shipping-address-page"].guid;
       }, "Check edit page state");
 
-      let title = content.document.querySelector("address-form h2");
+      let addressForm = content.document.querySelector("#shipping-address-page");
+      ok(content.isVisible(addressForm), "Shipping address form is visible");
+
+      let title = addressForm.querySelector("h2");
       is(title.textContent, "Edit Shipping Address", "Page title should be set");
 
-      let saveButton = content.document.querySelector("address-form .save-button");
+      let saveButton = addressForm.querySelector(".save-button");
       is(saveButton.textContent, "Update", "Save button has the correct label");
     });
 
     let editOptions = {
-      checkboxSelector: "#address-page .persist-checkbox",
+      checkboxSelector: "#shipping-address-page .persist-checkbox",
       isEditing: true,
       expectPersist: true,
     };
@@ -217,8 +220,9 @@ add_task(async function test_add_payer_contact_name_email_link() {
 
     const addOptions = {
       addLinkSelector: "address-picker.payer-related .add-link",
-      checkboxSelector: "#address-page .persist-checkbox",
+      checkboxSelector: "#payer-address-page .persist-checkbox",
       initialPageId: "payment-summary",
+      addressPageId: "payer-address-page",
       expectPersist: true,
     };
 
@@ -235,15 +239,18 @@ add_task(async function test_add_payer_contact_name_email_link() {
     await navigateToAddAddressPage(frame, addOptions);
 
     await spawnPaymentDialogTask(frame, async () => {
-      let title = content.document.querySelector("address-form h2");
+      let addressForm = content.document.querySelector("#payer-address-page");
+      ok(content.isVisible(addressForm), "Payer address form is visible");
+
+      let title = addressForm.querySelector("address-form h2");
       is(title.textContent, "Add Payer Contact", "Page title should be set");
 
-      let saveButton = content.document.querySelector("address-form .save-button");
+      let saveButton = addressForm.querySelector("address-form .save-button");
       is(saveButton.textContent, "Next", "Save button has the correct label");
 
       info("check that non-payer requested fields are hidden");
       for (let selector of ["#organization", "#tel"]) {
-        let element = content.document.querySelector(selector);
+        let element = addressForm.querySelector(selector);
         ok(content.isHidden(element), selector + " should be hidden");
       }
     });
@@ -300,7 +307,9 @@ add_task(async function test_edit_payer_contact_name_email_phone_link() {
       "tel": "+15555551212",
     };
     const editOptions = {
-      checkboxSelector: "#address-page .persist-checkbox",
+      checkboxSelector: "#payer-address-page .persist-checkbox",
+      initialPageId: "payment-summary",
+      addressPageId: "payer-address-page",
       expectPersist: true,
       isEditing: true,
     };
@@ -321,18 +330,20 @@ add_task(async function test_edit_payer_contact_name_email_phone_link() {
       editLink.click();
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page" && !!state["address-page"].guid;
+        return state.page.id == "payer-address-page" && !!state["payer-address-page"].guid;
       }, "Check edit page state");
 
-      let title = content.document.querySelector("address-form h2");
+      let addressForm = content.document.querySelector("#payer-address-page");
+      ok(content.isVisible(addressForm), "Payer address form is visible");
+
+      let title = addressForm.querySelector("h2");
       is(title.textContent, "Edit Payer Contact", "Page title should be set");
 
-      let saveButton = content.document.querySelector("address-form .save-button");
+      let saveButton = addressForm.querySelector(".save-button");
       is(saveButton.textContent, "Update", "Save button has the correct label");
 
       info("check that non-payer requested fields are hidden");
-      let formElements =
-        content.document.querySelectorAll("address-form :-moz-any(input, select, textarea");
+      let formElements = addressForm.querySelectorAll(":-moz-any(input, select, textarea");
       let allowedFields = ["given-name", "additional-name", "family-name", "email", "tel"];
       for (let element of formElements) {
         let shouldBeVisible = allowedFields.includes(element.id);
@@ -345,7 +356,7 @@ add_task(async function test_edit_payer_contact_name_email_phone_link() {
 
       info("overwriting field values");
       for (let [key, val] of Object.entries(address)) {
-        let field = content.document.getElementById(key);
+        let field = addressForm.querySelector(`#${key}`);
         field.value = val + "1";
         ok(!field.disabled, `Field #${key} shouldn't be disabled`);
       }
@@ -499,12 +510,15 @@ add_task(async function test_private_persist_addresses() {
     // Emails aren't part of shipping addresses
     delete addressToAdd.email;
     const addOptions = {
-      checkboxSelector: "#address-page .persist-checkbox",
+      addLinkSelector: "address-picker.shipping-related .add-link",
+      checkboxSelector: "#shipping-address-page .persist-checkbox",
+      initialPageId: "payment-summary",
+      addressPageId: "shipping-address-page",
       expectPersist: false,
       isPrivate: true,
     };
 
-    await navigateToAddAddressPage(frame);
+    await navigateToAddAddressPage(frame, addOptions);
     await spawnPaymentDialogTask(frame, async () => {
       let {
         PaymentTestUtils: PTU,
@@ -611,7 +625,15 @@ add_task(async function test_countrySpecificFieldsGetRequiredness() {
       }
     );
 
-    await navigateToAddAddressPage(frame);
+    let addOptions = {
+      addLinkSelector: "address-picker.shipping-related .add-link",
+      checkboxSelector: "#shipping-address-page .persist-checkbox",
+      initialPageId: "payment-summary",
+      addressPageId: "shipping-address-page",
+      expectPersist: true,
+    };
+
+    await navigateToAddAddressPage(frame, addOptions);
 
     const EXPECTED_ADDRESS = {
       "country": "MO",
@@ -619,10 +641,10 @@ add_task(async function test_countrySpecificFieldsGetRequiredness() {
       "family-name": "Last",
       "street-address": "12345 FooFoo Bar",
     };
-    await fillInShippingAddressForm(frame, EXPECTED_ADDRESS);
-    await submitAddressForm(frame, EXPECTED_ADDRESS, {expectPersist: true});
+    await fillInShippingAddressForm(frame, EXPECTED_ADDRESS, addOptions);
+    await submitAddressForm(frame, EXPECTED_ADDRESS, addOptions);
 
-    await navigateToAddAddressPage(frame);
+    await navigateToAddAddressPage(frame, addOptions);
 
     await selectPaymentDialogShippingAddressByCountry(frame, "MO");
 
@@ -631,20 +653,21 @@ add_task(async function test_countrySpecificFieldsGetRequiredness() {
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-      let editLink = content.document.querySelector("address-picker .edit-link");
+      let editLink = content.document.querySelector("address-picker.shipping-related .edit-link");
       is(editLink.textContent, "Edit", "Edit link text");
 
       editLink.click();
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page" && !!state["address-page"].guid;
+        return state.page.id == "shipping-address-page" && !!state["shipping-address-page"].guid;
       }, "Check edit page state");
 
-      let provinceField = content.document.getElementById("address-level1");
+      let addressForm = content.document.getElementById("shipping-address-page");
+      let provinceField = addressForm.querySelector("#address-level1");
       let provinceContainer = provinceField.parentNode;
       is(provinceContainer.style.display, "none", "Province should be hidden for Macau");
 
-      let countryField = content.document.getElementById("country");
+      let countryField = addressForm.querySelector("#country");
       await content.fillField(countryField, "CA");
       info("changed selected country to Canada");
 
@@ -658,7 +681,7 @@ add_task(async function test_countrySpecificFieldsGetRequiredness() {
          "attr(fieldRequiredSymbol)",
          "Asterisk should be on Province");
 
-      let addressBackButton = content.document.querySelector("address-form .back-button");
+      let addressBackButton = addressForm.querySelector(".back-button");
       addressBackButton.click();
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {

@@ -409,8 +409,6 @@ public:
                         const nsRect& aContentArea,
                         const nsRect& aOldScrollArea);
 
-  bool IsIgnoringViewportClipping() const;
-
   void MarkScrollbarsDirtyForReflow() const;
 
   bool ShouldClampScrollPosition() const;
@@ -1016,9 +1014,6 @@ public:
   {
     mHelper.ClipLayerToDisplayPort(aLayer, aClip, aParameters);
   }
-  virtual bool IsIgnoringViewportClipping() const override {
-    return mHelper.IsIgnoringViewportClipping();
-  }
   virtual void MarkScrollbarsDirtyForReflow() const override {
     mHelper.MarkScrollbarsDirtyForReflow();
   }
@@ -1474,9 +1469,6 @@ public:
                                       const mozilla::DisplayItemClip* aClip,
                                       const ContainerLayerParameters& aParameters) const override {
     mHelper.ClipLayerToDisplayPort(aLayer, aClip, aParameters);
-  }
-  virtual bool IsIgnoringViewportClipping() const override {
-    return mHelper.IsIgnoringViewportClipping();
   }
   virtual void MarkScrollbarsDirtyForReflow() const override {
     mHelper.MarkScrollbarsDirtyForReflow();

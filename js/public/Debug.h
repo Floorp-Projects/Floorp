@@ -102,7 +102,8 @@ namespace dbg {
 //        }
 //        result = builder.newObject(cx);
 //        return result &&
-//               result.defineProperty(cx, "eventType", SafelyFetchType(eventObject)) &&
+//               result.defineProperty(cx, "eventType",
+//                                     SafelyFetchType(eventObject)) &&
 //               result.defineProperty(cx, "event", eventObject);
 //    }
 //

@@ -18,6 +18,8 @@ ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm");
 ChromeUtils.import("resource://gre/modules/Localization.jsm");
 ChromeUtils.defineModuleGetter(this, "CloudStorage",
   "resource://gre/modules/CloudStorage.jsm");
+ChromeUtils.defineModuleGetter(this, "SelectionChangedMenulist",
+                               "resource:///modules/SelectionChangedMenulist.jsm");
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   gAUS: ["@mozilla.org/updates/update-service;1", "nsIApplicationUpdateService"],
@@ -773,9 +775,6 @@ var gMainPane = {
       menuitem.setAttribute(
         "label", await document.l10n.formatValue("browser-languages-search"));
       menuitem.setAttribute("value", "search");
-      menuitem.addEventListener("command", () => {
-        gMainPane.showBrowserLanguages({search: true});
-      });
       fragment.appendChild(menuitem);
     }
 
@@ -784,6 +783,11 @@ var gMainPane = {
     menupopup.textContent = "";
     menupopup.appendChild(fragment);
     menulist.value = requesting;
+
+    // This will register the "command" listener.
+    new SelectionChangedMenulist(menulist, event => {
+      gMainPane.onBrowserLanguageChange(event);
+    });
 
     document.getElementById("browserLanguagesBox").hidden = false;
   },
@@ -865,6 +869,7 @@ var gMainPane = {
     let locale = event.target.value;
 
     if (locale == "search") {
+      gMainPane.showBrowserLanguages({search: true});
       return;
     } else if (locale == Services.locale.requestedLocale) {
       this.hideConfirmLanguageChangeMessageBar();

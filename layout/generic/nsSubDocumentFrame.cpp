@@ -448,9 +448,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   DisplayListClipState::AutoSaveRestore clipState(aBuilder);
-  if (ShouldClipSubdocument()) {
-    clipState.ClipContainingBlockDescendantsToContentBox(aBuilder, this);
-  }
+  clipState.ClipContainingBlockDescendantsToContentBox(aBuilder, this);
 
   nsIScrollableFrame *sf = presShell->GetRootScrollFrameAsScrollable();
   bool constructResolutionItem = subdocRootFrame &&
@@ -852,12 +850,6 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
-  if (!ShouldClipSubdocument()) {
-    nsIFrame* subdocRootFrame = GetSubdocumentRootFrame();
-    if (subdocRootFrame) {
-      aDesiredSize.mOverflowAreas.UnionWith(subdocRootFrame->GetOverflowAreas() + offset);
-    }
-  }
 
   FinishAndStoreOverflow(&aDesiredSize);
 
