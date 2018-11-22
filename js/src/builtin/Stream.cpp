@@ -2520,7 +2520,7 @@ const Class ReadableStreamController::class_ = {
     "ReadableStreamController"
 };
 
-CLASS_SPEC(ReadableStreamDefaultController, 4, SlotCount, ClassSpec::DontDefineConstructor, 0,
+CLASS_SPEC(ReadableStreamDefaultController, 0, SlotCount, ClassSpec::DontDefineConstructor, 0,
            JS_NULL_CLASS_OPS);
 
 /**
@@ -3454,7 +3454,7 @@ static const ClassOps ReadableByteStreamControllerClassOps = {
     nullptr,        /* trace   */
 };
 
-CLASS_SPEC(ReadableByteStreamController, 3, SlotCount, ClassSpec::DontDefineConstructor,
+CLASS_SPEC(ReadableByteStreamController, 0, SlotCount, ClassSpec::DontDefineConstructor,
            JSCLASS_BACKGROUND_FINALIZE, &ReadableByteStreamControllerClassOps);
 
 // Streams spec, 3.10.5.1. [[CancelSteps]] ()
