@@ -322,14 +322,6 @@ nsIFrame*
 NS_NewImageFrameForGeneratedContentIndex(nsIPresShell*, ComputedStyle*);
 
 
-#ifdef NOISY_FINDFRAME
-static int32_t FFWC_totalCount=0;
-static int32_t FFWC_doLoop=0;
-static int32_t FFWC_doSibling=0;
-static int32_t FFWC_recursions=0;
-static int32_t FFWC_nextInFlows=0;
-#endif
-
 // Returns true if aFrame is an anonymous flex/grid item.
 static inline bool
 IsAnonymousFlexOrGridItem(const nsIFrame* aFrame)
