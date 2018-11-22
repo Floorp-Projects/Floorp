@@ -525,6 +525,54 @@ describe("CFRPageActions", () => {
         // Should remove the recommendation
         assert.isFalse(CFRPageActions.RecommendationMap.has(fakeBrowser));
       });
+      it("should send right telemetry for BLOCK secondary action", async () => {
+        await pageAction._handleClick();
+        const blockAction = global.PopupNotifications.show.firstCall.args[5][1]; // eslint-disable-line prefer-destructuring
+
+        assert.deepEqual(blockAction.label, {value: "Secondary Button 2", attributes: {accesskey: "a"}});
+        sandbox.spy(pageAction, "hide");
+        sandbox.spy(pageAction, "_blockMessage");
+        CFRPageActions.RecommendationMap.set(fakeBrowser, {});
+        blockAction.callback();
+        assert.calledOnce(pageAction.hide);
+        assert.calledOnce(pageAction._blockMessage);
+        // Should send telemetry
+        assert.calledWith(dispatchStub, {
+          type: "DOORHANGER_TELEMETRY",
+          data: {
+            action: "cfr_user_event",
+            source: "CFR",
+            message_id: fakeRecommendation.id,
+            bucket_id: fakeRecommendation.content.bucket_id,
+            event: "BLOCK",
+          },
+        });
+        // Should remove the recommendation
+        assert.isFalse(CFRPageActions.RecommendationMap.has(fakeBrowser));
+      });
+      it("should send right telemetry for MANAGE secondary action", async () => {
+        await pageAction._handleClick();
+        const blockAction = global.PopupNotifications.show.firstCall.args[5][2]; // eslint-disable-line prefer-destructuring
+
+        assert.deepEqual(blockAction.label, {value: "Secondary Button 3", attributes: {accesskey: "g"}});
+        sandbox.spy(pageAction, "hide");
+        CFRPageActions.RecommendationMap.set(fakeBrowser, {});
+        blockAction.callback();
+        assert.calledOnce(pageAction.hide);
+        // Should send telemetry
+        assert.calledWith(dispatchStub, {
+          type: "DOORHANGER_TELEMETRY",
+          data: {
+            action: "cfr_user_event",
+            source: "CFR",
+            message_id: fakeRecommendation.id,
+            bucket_id: fakeRecommendation.content.bucket_id,
+            event: "MANAGE",
+          },
+        });
+        // Should remove the recommendation
+        assert.isFalse(CFRPageActions.RecommendationMap.has(fakeBrowser));
+      });
       it("should call PopupNotifications.show with the right arguments", async () => {
         await pageAction._handleClick();
         assert.calledWith(
