@@ -87,7 +87,7 @@ const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
-/* globals BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX, XPI_PERMISSION, XPIStates, isWebExtension, iterDirectory */
+/* globals BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX, XPI_PERMISSION, XPIStates, iterDirectory */
 const XPI_INTERNAL_SYMBOLS = [
   "BOOTSTRAP_REASONS",
   "KEY_APP_SYSTEM_ADDONS",
@@ -97,16 +97,11 @@ const XPI_INTERNAL_SYMBOLS = [
   "TEMPORARY_ADDON_SUFFIX",
   "XPI_PERMISSION",
   "XPIStates",
-  "isWebExtension",
   "iterDirectory",
 ];
 
 for (let name of XPI_INTERNAL_SYMBOLS) {
   XPCOMUtils.defineLazyGetter(this, name, () => XPIInternal[name]);
-}
-
-function isTheme(type) {
-  return XPIDatabase.isTheme(type);
 }
 
 /**
@@ -183,7 +178,6 @@ const TYPES = {
 const COMPATIBLE_BY_DEFAULT_TYPES = {
   extension: true,
   dictionary: true,
-  "webextension-dictionary": true,
 };
 
 // This is a random number array that can be used as "salt" when generating
@@ -454,8 +448,8 @@ async function loadManifestFromWebManifest(aUri, aPackage) {
   let addon = new AddonInternal();
   addon.id = bss.id;
   addon.version = manifest.version;
-  addon.type = extension.type === "extension" ?
-               "webextension" : `webextension-${extension.type}`;
+  addon.type = extension.type === "langpack" ? "locale" : extension.type;
+  addon.isWebExtension = true;
   addon.strictCompatibility = true;
   addon.internalName = null;
   addon.updateURL = bss.update_url;
@@ -467,7 +461,7 @@ async function loadManifestFromWebManifest(aUri, aPackage) {
   addon.startupData = extension.startupData;
   addon.hidden = manifest.hidden;
 
-  if (isTheme(addon.type) && await aPackage.hasResource("preview.png")) {
+  if (addon.type === "theme" && await aPackage.hasResource("preview.png")) {
     addon.previewImage = "preview.png";
   }
 
@@ -625,6 +619,7 @@ async function loadManifestFromRDF(aUri, aData, aPackage) {
       }
     }
   }
+  addon.isWebExtension = false;
 
   if (!(addon.type in TYPES))
     throw new Error("Install manifest specifies unknown type: " + addon.type);
@@ -654,7 +649,7 @@ async function loadManifestFromRDF(aUri, aData, aPackage) {
     // Convert legacy dictionaries into a format the WebExtension
     // dictionary loader can process.
     if (addon.type === "dictionary") {
-      addon.type = "webextension-dictionary";
+      addon.isWebExtension = true;
       let dictionaries = {};
       await aPackage.iterFiles(({path}) => {
         let match = /^dictionaries\/([^\/]+)\.dic$/.exec(path);
@@ -1561,7 +1556,7 @@ class AddonInstall {
                                  `Refusing to upgrade addon ${this.existingAddon.id} to different ID ${this.addon.id}`]);
         }
 
-        if (isWebExtension(this.existingAddon.type) && !isWebExtension(this.addon.type)) {
+        if (this.existingAddon.isWebExtension && !this.addon.isWebExtension) {
           return Promise.reject([AddonManager.ERROR_UNEXPECTED_ADDON_TYPE,
                                  "WebExtensions may not be updated to other extension types"]);
         }
@@ -1790,7 +1785,7 @@ class AddonInstall {
         XPIDatabase.recordAddonTelemetry(this.addon);
 
         // Notify providers that a new theme has been enabled.
-        if (isTheme(this.addon.type) && this.addon.active)
+        if (this.addon.type === "theme" && this.addon.active)
           AddonManagerPrivate.notifyAddonChanged(this.addon.id, this.addon.type);
       };
 
@@ -2499,7 +2494,7 @@ AddonInstallWrapper.prototype = {
   },
 
   get type() {
-    return XPIDatabase.getExternalType(installFor(this).type);
+    return installFor(this).type;
   },
 
   get iconURL() {
@@ -2653,7 +2648,7 @@ UpdateChecker.prototype = {
     let AUC = AddonUpdateChecker;
     let ignoreMaxVersion = false;
     // Ignore strict compatibility for dictionaries by default.
-    let ignoreStrictCompat = (this.addon.type == "webextension-dictionary");
+    let ignoreStrictCompat = (this.addon.type == "dictionary");
     if (!AddonManager.checkCompatibility) {
       ignoreMaxVersion = true;
       ignoreStrictCompat = true;
@@ -3857,7 +3852,7 @@ var XPIInstall = {
     let results = [...this.installs];
     if (aTypes) {
       results = results.filter(install => {
-        return aTypes.includes(XPIDatabase.getExternalType(install.type));
+        return aTypes.includes(install.type);
       });
     }
 
@@ -3952,7 +3947,7 @@ var XPIInstall = {
     AddonManagerPrivate.callAddonListeners("onInstalled", addon.wrapper);
 
     // Notify providers that a new theme has been enabled.
-    if (isTheme(addon.type))
+    if (addon.type === "theme")
       AddonManagerPrivate.notifyAddonChanged(addon.id, addon.type, false);
 
     return addon.wrapper;
@@ -4069,7 +4064,7 @@ var XPIInstall = {
     }
 
     // Notify any other providers that a new theme has been enabled
-    if (isTheme(aAddon.type) && aAddon.active)
+    if (aAddon.type === "theme" && aAddon.active)
       AddonManagerPrivate.notifyAddonChanged(null, aAddon.type);
   },
 
@@ -4110,7 +4105,7 @@ var XPIInstall = {
     }
 
     // Notify any other providers that this theme is now enabled again.
-    if (isTheme(aAddon.type) && aAddon.active)
+    if (aAddon.type === "theme" && aAddon.active)
       AddonManagerPrivate.notifyAddonChanged(aAddon.id, aAddon.type, false);
   },
 
