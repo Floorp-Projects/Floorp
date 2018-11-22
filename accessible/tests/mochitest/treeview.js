@@ -143,7 +143,6 @@ nsTreeView.prototype =
   isEditable: function isEditable(aRow, aCol) {
     return true;
   },
-  isSelectable: function isSelectable(aRow, aCol) {},
   setCellText: function setCellText(aRow, aCol, aValue) {
     var data = this.getDataForIndex(aRow);
     data.colsText[aCol.id] = aValue;

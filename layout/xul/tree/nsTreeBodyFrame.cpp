@@ -1880,14 +1880,6 @@ nsTreeBodyFrame::PrefillPropertyArray(int32_t aRowIndex, nsTreeColumn* aCol)
       selection->GetCurrentIndex(&currentIndex);
       if (aRowIndex == currentIndex)
         mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::current);
-
-      // active
-      if (aCol) {
-        RefPtr<nsTreeColumn> currentColumn;
-        selection->GetCurrentColumn(getter_AddRefs(currentColumn));
-        if (aCol == currentColumn)
-          mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::active);
-      }
     }
 
     // container or leaf

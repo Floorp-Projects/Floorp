@@ -258,7 +258,7 @@ nsTreeSelection::~nsTreeSelection()
     mSelectTimer->Cancel();
 }
 
-NS_IMPL_CYCLE_COLLECTION(nsTreeSelection, mTree, mCurrentColumn)
+NS_IMPL_CYCLE_COLLECTION(nsTreeSelection, mTree)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTreeSelection)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTreeSelection)
@@ -291,18 +291,14 @@ NS_IMETHODIMP nsTreeSelection::SetTree(nsITreeBoxObject * aTree)
 
 NS_IMETHODIMP nsTreeSelection::GetSingle(bool* aSingle)
 {
-  static Element::AttrValuesArray strings[] =
-    {nsGkAtoms::single, nsGkAtoms::cell, nsGkAtoms::text, nullptr};
-
   nsCOMPtr<nsIContent> content = GetContent();
   if (!content) {
     return NS_ERROR_NULL_POINTER;
   }
 
   *aSingle = content->IsElement() &&
-    content->AsElement()->FindAttrValueIn(kNameSpaceID_None,
-                                          nsGkAtoms::seltype,
-                                          strings, eCaseMatters) >= 0;
+    content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::seltype,
+                                      NS_LITERAL_STRING("single"), eCaseMatters);
 
   return NS_OK;
 }
@@ -654,40 +650,6 @@ NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(int32_t aIndex)
                                              DOMMenuItemInactive),
                              CanBubble::eYes, ChromeOnlyDispatch::eNo);
   return asyncDispatcher->PostDOMEvent();
-}
-
-NS_IMETHODIMP nsTreeSelection::GetCurrentColumn(nsTreeColumn** aCurrentColumn)
-{
-  NS_IF_ADDREF(*aCurrentColumn = mCurrentColumn);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsTreeSelection::SetCurrentColumn(nsTreeColumn* aCurrentColumn)
-{
-  if (!mTree) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  if (mCurrentColumn == aCurrentColumn) {
-    return NS_OK;
-  }
-
-  if (mCurrentColumn) {
-    if (mFirstRange)
-      mTree->InvalidateCell(mFirstRange->mMin, mCurrentColumn);
-    if (mCurrentIndex != -1)
-      mTree->InvalidateCell(mCurrentIndex, mCurrentColumn);
-  }
-
-  mCurrentColumn = aCurrentColumn;
-
-  if (mCurrentColumn) {
-    if (mFirstRange)
-      mTree->InvalidateCell(mFirstRange->mMin, mCurrentColumn);
-    if (mCurrentIndex != -1)
-      mTree->InvalidateCell(mCurrentIndex, mCurrentColumn);
-  }
-
-  return NS_OK;
 }
 
 #define ADD_NEW_RANGE(macro_range, macro_selection, macro_start, macro_end) \

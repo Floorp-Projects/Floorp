@@ -98,8 +98,6 @@ class nsTreeContentView final : public nsITreeView,
     }
     bool IsEditable(int32_t aRow, nsTreeColumn& aColumn,
                     mozilla::ErrorResult& aError);
-    bool IsSelectable(int32_t aRow, nsTreeColumn& aColumn,
-                      mozilla::ErrorResult& aError);
     void SetCellValue(int32_t aRow, nsTreeColumn& aColumn,
                       const nsAString& aValue, mozilla::ErrorResult& aError);
     void SetCellText(int32_t aRow, nsTreeColumn& aColumn,

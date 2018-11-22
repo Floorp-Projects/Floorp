@@ -136,7 +136,6 @@
         var cell = tbo.getCellAt(event.clientX, event.clientY);
 
         if (cell.childElt != "twisty") {
-          view.selection.currentColumn = cell.col;
           this.parentNode.startEditing(row, cell.col);
         }
 

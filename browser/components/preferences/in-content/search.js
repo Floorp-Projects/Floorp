@@ -667,7 +667,6 @@ EngineView.prototype = {
   selectionChanged() { },
   cycleCell(row, column) { },
   isEditable(index, column) { return column.id != "engineName"; },
-  isSelectable(index, column) { return false; },
   setCellValue(index, column, value) {
     if (column.id == "engineShown") {
       this._engineStore.engines[index].shown = value == "true";

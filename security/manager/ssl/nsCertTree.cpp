@@ -1146,13 +1146,6 @@ nsCertTree::IsEditable(int32_t row, nsTreeColumn* col, bool *_retval)
 }
 
 NS_IMETHODIMP
-nsCertTree::IsSelectable(int32_t row, nsTreeColumn* col, bool *_retval)
-{
-  *_retval = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsCertTree::SetCellValue(int32_t row, nsTreeColumn* col,
                          const nsAString& value)
 {
@@ -1404,4 +1397,3 @@ nsCertTree::CmpEmailCert(void *cache, nsIX509Cert *a, nsIX509Cert *b)
   // XXX we assume issuer org is always criterion 1
   return CmpBy(cache, a, b, sort_IssuerOrg, sort_Email, sort_CommonName);
 }
-

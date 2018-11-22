@@ -133,7 +133,6 @@ pageInfoTreeView.prototype = {
   selectionChanged() { },
   cycleCell(row, column) { },
   isEditable(row, column) { return false; },
-  isSelectable(row, column) { return false; },
   performAction(action) { },
   performActionOnCell(action, row, column) { },
 };

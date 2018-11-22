@@ -360,14 +360,6 @@ nsNSSASN1Tree::IsEditable(int32_t, nsTreeColumn*, bool* _retval)
 }
 
 NS_IMETHODIMP
-nsNSSASN1Tree::IsSelectable(int32_t, nsTreeColumn*, bool* _retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNSSASN1Tree::SetCellValue(int32_t, nsTreeColumn*, const nsAString&)
 {
   return NS_OK;
