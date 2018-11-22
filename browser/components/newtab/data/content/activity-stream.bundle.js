@@ -1404,6 +1404,7 @@ __webpack_require__.r(__webpack_exports__);
  */
 const RICH_TEXT_CONFIG = {
   "text": ["text", "scene1_text"],
+  "scene2_text": "scene2_text",
   "privacy_html": "scene2_privacy_html",
   "disclaimer_html": "scene2_disclaimer_html"
 };
@@ -5989,15 +5990,11 @@ class SubmitFormSnippet_SubmitFormSnippet extends external_React_default.a.PureC
         "p",
         null,
         external_React_default.a.createElement("input", { type: "checkbox", id: "id_privacy", name: "privacy", required: "required" }),
-        external_React_default.a.createElement(
-          "span",
-          null,
-          external_React_default.a.createElement(RichText, { text: content.scene2_privacy_html,
-            localization_id: "privacy_html",
-            links: content.links,
-            doNotAutoBlock: true,
-            sendClick: this.props.sendClick })
-        )
+        external_React_default.a.createElement(RichText, { text: content.scene2_privacy_html,
+          localization_id: "privacy_html",
+          links: content.links,
+          doNotAutoBlock: true,
+          sendClick: this.props.sendClick })
       )
     );
   }
@@ -6071,7 +6068,13 @@ class SubmitFormSnippet_SubmitFormSnippet extends external_React_default.a.PureC
         external_React_default.a.createElement(
           "p",
           null,
-          content.scene2_text
+          content.scene2_title ? external_React_default.a.createElement(
+            "h3",
+            { className: "scene2Title" },
+            content.scene2_title
+          ) : null,
+          " ",
+          external_React_default.a.createElement(RichText, { scene2_text: content.scene2_text, localization_id: "scene2_text" })
         )
       ),
       external_React_default.a.createElement(
@@ -6122,7 +6125,10 @@ const FXASignupSnippet = props => {
   const userAgent = window.navigator.userAgent.match(/Firefox\/([0-9]+)\./);
   const firefox_version = userAgent ? parseInt(userAgent[1], 10) : 0;
   const extendedContent = Object.assign({
-    form_action: "https://accounts.firefox.com/"
+    form_action: "https://accounts.firefox.com/",
+    scene1_button_label: "Learn More",
+    scene2_button_label: "Sign Me Up",
+    scene2_email_placeholder_text: "Your Email Here"
   }, props.content, {
     hidden_inputs: Object.assign({
       action: "email",
@@ -6148,12 +6154,14 @@ var NewsletterSnippet_extends = Object.assign || function (target) { for (var i 
 
 const NewsletterSnippet = props => {
   const extendedContent = Object.assign({
-    form_action: "https://basket.mozilla.org/subscribe.json"
+    form_action: "https://basket.mozilla.org/subscribe.json",
+    scene2_email_placeholder_text: "Your Email Here",
+    scene2_button_label: "Sign Me Up"
   }, props.content, {
     hidden_inputs: Object.assign({
       newsletters: props.content.scene2_newsletter || "mozilla-foundation",
       fmt: "H",
-      lang: "en-US",
+      lang: props.content.locale || "en-US",
       source_url: `https://snippets.mozilla.com/show/${props.id}`
     }, props.content.hidden_inputs)
   });
@@ -6229,12 +6237,31 @@ function processFormData(input, message) {
   return { formData, url };
 }
 
-const SendToDeviceSnippet = props => external_React_default.a.createElement(SubmitFormSnippet_SubmitFormSnippet, SendToDeviceSnippet_extends({}, props, {
-  form_method: "POST",
-  className: "send_to_device_snippet",
-  inputType: props.content.include_sms ? "text" : "email",
-  validateInput: props.content.include_sms ? validateInput : null,
-  processFormData: processFormData }));
+function addDefaultValues(props) {
+  return Object.assign({}, props, {
+    content: Object.assign({
+      scene1_button_label: "Learn More",
+      scene2_dismiss_button_text: "Dismiss",
+      scene2_button_label: "Send",
+      scene2_input_placeholder: "YOUR EMAIL HERE",
+      locale: "en-US",
+      country: "us",
+      message_id_email: "",
+      include_sms: false
+    }, props.content)
+  });
+}
+
+const SendToDeviceSnippet = props => {
+  const propsWithDefaults = addDefaultValues(props);
+
+  return external_React_default.a.createElement(SubmitFormSnippet_SubmitFormSnippet, SendToDeviceSnippet_extends({}, propsWithDefaults, {
+    form_method: "POST",
+    className: "send_to_device_snippet",
+    inputType: propsWithDefaults.content.include_sms ? "text" : "email",
+    validateInput: propsWithDefaults.content.include_sms ? validateInput : null,
+    processFormData: processFormData }));
+};
 // CONCATENATED MODULE: ./content-src/asrouter/templates/template-manifest.jsx
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SnippetsTemplates", function() { return SnippetsTemplates; });
 

@@ -6,6 +6,9 @@ export const FXASignupSnippet = props => {
   const firefox_version = userAgent ? parseInt(userAgent[1], 10) : 0;
   const extendedContent = {
     form_action: "https://accounts.firefox.com/",
+    scene1_button_label: "Learn More",
+    scene2_button_label: "Sign Me Up",
+    scene2_email_placeholder_text: "Your Email Here",
     ...props.content,
     hidden_inputs: {
       action: "email",
