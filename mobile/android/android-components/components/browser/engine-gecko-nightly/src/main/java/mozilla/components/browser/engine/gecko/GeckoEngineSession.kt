@@ -365,7 +365,7 @@ class GeckoEngineSession(
         override fun onExternalResponse(session: GeckoSession, response: GeckoSession.WebResponseInfo) {
             notifyObservers {
                 val fileName = response.filename
-                        ?: DownloadUtils.guessFileName(response.uri, null, null)
+                    ?: DownloadUtils.guessFileName("", response.uri, response.contentType)
                 onExternalResource(
                         url = response.uri,
                         contentLength = response.contentLength,

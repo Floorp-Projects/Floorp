@@ -1094,4 +1094,35 @@ class GeckoEngineSessionTest {
         assertFalse(oldGeckoSession.isOpen)
         assertTrue(engineSession.geckoSession != oldGeckoSession)
     }
+
+    @Test
+    fun whenOnExternalResponseDoNotProvideAFileNameMustProvideMeaningFulFileNameToTheSessionObserver() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        var meaningFulFileName = ""
+
+        val observer = object : EngineSession.Observer {
+            override fun onExternalResource(
+                url: String,
+                fileName: String,
+                contentLength: Long?,
+                contentType: String?,
+                cookie: String?,
+                userAgent: String?
+            ) {
+                meaningFulFileName = fileName
+            }
+        }
+        engineSession.register(observer)
+
+        val info: GeckoSession.WebResponseInfo = createMockedWebResponseInfo(
+            uri = "http://ipv4.download.thinkbroadband.com/1MB.zip",
+            contentLength = 0,
+            contentType = "",
+            filename = null
+        )
+
+        engineSession.geckoSession.contentDelegate.onExternalResponse(mock(), info)
+
+        assertEquals("1MB.zip", meaningFulFileName)
+    }
 }

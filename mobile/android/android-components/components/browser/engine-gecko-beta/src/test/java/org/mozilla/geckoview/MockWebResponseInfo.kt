@@ -21,7 +21,7 @@ fun createMockedWebResponseInfo(
     uri: String,
     contentType: String,
     contentLength: Long,
-    filename: String
+    filename: String?
 ): GeckoSession.WebResponseInfo {
     val session = object : GeckoSession(null) {
         fun createMockedWebResponseInfo(): WebResponseInfo {
