@@ -1381,6 +1381,11 @@ public class GeckoSession implements Parcelable {
     public static final int LOAD_FLAGS_ALLOW_POPUPS = 1 << 3;
 
     /**
+     * Bypass the URI classifier (content blocking and Safe Browsing).
+     */
+    public static final int LOAD_FLAGS_BYPASS_CLASSIFIER = 1 << 4;
+
+    /**
      * Load the given URI.
      * @param uri The URI of the resource to load.
      */

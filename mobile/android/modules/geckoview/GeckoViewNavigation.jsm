@@ -59,7 +59,7 @@ class GeckoViewNavigation extends GeckoViewModule {
 
         let navFlags = 0;
 
-        // These need to match the values in GeckoSession.LOAD_TYPE_*
+        // These need to match the values in GeckoSession.LOAD_FLAGS_*
         if (flags & (1 << 0)) {
           navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
         }
@@ -74,6 +74,10 @@ class GeckoViewNavigation extends GeckoViewModule {
 
         if (flags & (1 << 3)) {
           navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_POPUPS;
+        }
+
+        if (flags & (1 << 4)) {
+          navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER;
         }
 
         if (this.settings.useMultiprocess) {
