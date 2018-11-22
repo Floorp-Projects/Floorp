@@ -5,13 +5,13 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const PROVIDER_PREF = "browser.newtabpage.activity-stream.asrouter.messageProviders";
+const PROVIDER_PREF_BRANCH = "browser.newtabpage.activity-stream.asrouter.providers.";
 const DEVTOOLS_PREF = "browser.newtabpage.activity-stream.asrouter.devtoolsEnabled";
 
 const DEFAULT_STATE = {
   _initialized: false,
   _providers: null,
-  _providerPref: PROVIDER_PREF,
+  _providerPrefBranch: PROVIDER_PREF_BRANCH,
   _devtoolsEnabled: null,
   _devtoolsPref: DEVTOOLS_PREF,
 };
@@ -35,17 +35,24 @@ class _ASRouterPreferences {
   }
 
   _getProviderConfig() {
-    try {
-      return JSON.parse(Services.prefs.getStringPref(this._providerPref, ""));
-    } catch (e) {
-      Cu.reportError(`Could not parse ASRouter preference. Try resetting ${this._providerPref} in about:config.`);
-    }
-    return null;
+    const prefList = Services.prefs.getChildList(this._providerPrefBranch);
+    return prefList.reduce((filtered, pref) => {
+      let value;
+      try {
+        value = JSON.parse(Services.prefs.getStringPref(pref, ""));
+      } catch (e) {
+        Cu.reportError(`Could not parse ASRouter preference. Try resetting ${pref} in about:config.`);
+      }
+      if (value) {
+        filtered.push(value);
+      }
+      return filtered;
+    }, []);
   }
 
   get providers() {
     if (!this._initialized || this._providers === null) {
-      const config = this._getProviderConfig() || [];
+      const config = this._getProviderConfig();
       const providers = config.map(provider => Object.freeze(provider));
       if (this.devtoolsEnabled) {
         providers.unshift(TEST_PROVIDER);
@@ -58,26 +65,19 @@ class _ASRouterPreferences {
 
   enableOrDisableProvider(id, value) {
     const providers = this._getProviderConfig();
-    if (!providers) {
-      Cu.reportError(`Cannot enable/disable providers if ${this._providerPref} is unparseable.`);
-      return;
-    }
-    if (!providers.find(p => p.id === id)) {
-      Cu.reportError(`Cannot set enabled state for '${id}' because it does not exist in ${this._providerPref}`);
+    const config = providers.find(p => p.id === id);
+    if (!config) {
+      Cu.reportError(`Cannot set enabled state for '${id}' because the pref ${this._providerPrefBranch}${id} does not exist or is not correctly formatted.`);
       return;
     }
 
-    const newConfig = providers.map(provider => {
-      if (provider.id === id) {
-        return {...provider, enabled: value};
-      }
-      return provider;
-    });
-    Services.prefs.setStringPref(this._providerPref, JSON.stringify(newConfig));
+    Services.prefs.setStringPref(this._providerPrefBranch + id, JSON.stringify({...config, enabled: value}));
   }
 
   resetProviderPref() {
-    Services.prefs.clearUserPref(this._providerPref);
+    for (const pref of Services.prefs.getChildList(this._providerPrefBranch)) {
+      Services.prefs.clearUserPref(pref);
+    }
     for (const id of Object.keys(USER_PREFERENCES)) {
       Services.prefs.clearUserPref(USER_PREFERENCES[id]);
     }
@@ -101,14 +101,11 @@ class _ASRouterPreferences {
   }
 
   observe(aSubject, aTopic, aPrefName) {
-    switch (aPrefName) {
-      case this._providerPref:
-        this._providers = null;
-        break;
-      case this._devtoolsPref:
-        this._providers = null;
-        this._devtoolsEnabled = null;
-        break;
+    if (aPrefName && aPrefName.startsWith(this._providerPrefBranch)) {
+      this._providers = null;
+    } else if (aPrefName === this._devtoolsPref) {
+      this._providers = null;
+      this._devtoolsEnabled = null;
     }
     this._callbacks.forEach(cb => cb(aPrefName));
   }
@@ -132,7 +129,7 @@ class _ASRouterPreferences {
     if (this._initialized) {
       return;
     }
-    Services.prefs.addObserver(this._providerPref, this);
+    Services.prefs.addObserver(this._providerPrefBranch, this);
     Services.prefs.addObserver(this._devtoolsPref, this);
     for (const id of Object.keys(USER_PREFERENCES)) {
       Services.prefs.addObserver(USER_PREFERENCES[id], this);
@@ -142,7 +139,7 @@ class _ASRouterPreferences {
 
   uninit() {
     if (this._initialized) {
-      Services.prefs.removeObserver(this._providerPref, this);
+      Services.prefs.removeObserver(this._providerPrefBranch, this);
       Services.prefs.removeObserver(this._devtoolsPref, this);
       for (const id of Object.keys(USER_PREFERENCES)) {
         Services.prefs.removeObserver(USER_PREFERENCES[id], this);
