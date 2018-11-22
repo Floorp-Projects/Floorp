@@ -11,9 +11,12 @@ const { ActorRegistry } = require("devtools/server/actors/utils/actor-registry")
 const { TabSources } = require("devtools/server/actors/utils/TabSources");
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 
-var gTestGlobals = [];
+var gTestGlobals = new Set();
 DebuggerServer.addTestGlobal = function(global) {
-  gTestGlobals.push(global);
+  gTestGlobals.add(global);
+};
+DebuggerServer.removeTestGlobal = function(global) {
+  gTestGlobals.delete(global);
 };
 
 DebuggerServer.getTestGlobal = function(name) {

@@ -4,39 +4,16 @@
 
 "use strict";
 
-var gDebuggee;
-var gThreadClient;
-
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
-
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
 });
 
-add_task(async function run_test() {
-  await run_test_with_server(DebuggerServer);
-  await run_test_with_server(WorkerDebuggerServer);
-});
-
-async function run_test_with_server(server) {
-  initTestDebuggerServer(server);
-  const title = "test_enum_symbols";
-  gDebuggee = addTestGlobal(title, server);
-  gDebuggee.eval(function stopMe(arg) {
-    debugger;
-  }.toString());
-  const client = new DebuggerClient(server.connectPipe());
-  await client.connect();
-  [,, gThreadClient] = await attachTestTabAndResume(client, title);
-  await test_enum_symbols();
-  await client.close();
-}
-
-async function test_enum_symbols() {
+add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   await new Promise(function(resolve) {
-    gThreadClient.addOneTimeListener("paused", async function(event, packet) {
+    threadClient.addOneTimeListener("paused", async function(event, packet) {
       const [grip] = packet.frame.arguments;
-      const objClient = gThreadClient.pauseGrip(grip);
+      const objClient = threadClient.pauseGrip(grip);
       const {iterator} = await objClient.enumSymbols();
       const {ownSymbols} = await iterator.slice(0, iterator.count);
 
@@ -50,9 +27,12 @@ async function test_enum_symbols() {
         value: 1,
       }, "Got right property descriptor.");
 
-      await gThreadClient.resume();
+      await threadClient.resume();
       resolve();
     });
-    gDebuggee.eval(`stopMe(Object.defineProperty({}, Symbol("sym"), {value: 1}));`);
+    debuggee.eval(function stopMe(arg1) {
+      debugger;
+    }.toString());
+    debuggee.eval(`stopMe(Object.defineProperty({}, Symbol("sym"), {value: 1}));`);
   });
-}
+}));

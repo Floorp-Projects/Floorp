@@ -4,74 +4,47 @@
 
 "use strict";
 
-var gDebuggee;
-var gClient;
-var gThreadClient;
-var gCallback;
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
 
-function run_test() {
-  Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
-  });
-  run_test_with_server(DebuggerServer, function() {
-    run_test_with_server(WorkerDebuggerServer, do_test_finished);
-  });
-  do_test_pending();
-}
+add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
+  return new Promise(resolve => {
+    threadClient.addOneTimeListener("paused", function(event, packet) {
+      const args = packet.frame.arguments;
 
-function run_test_with_server(server, callback) {
-  gCallback = callback;
-  initTestDebuggerServer(server);
-  gDebuggee = addTestGlobal("test-grips", server);
-  gDebuggee.eval(function stopMe(arg1) {
-    debugger;
-  }.toString());
+      Assert.equal(args[0].class, "Object");
 
-  gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_object_grip();
-                           });
-  });
-}
-
-function test_object_grip() {
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    const args = packet.frame.arguments;
-
-    Assert.equal(args[0].class, "Object");
-
-    const objClient = gThreadClient.pauseGrip(args[0]);
-    objClient.getProperty("x", function(response) {
-      Assert.equal(response.descriptor.configurable, true);
-      Assert.equal(response.descriptor.enumerable, true);
-      Assert.equal(response.descriptor.writable, true);
-      Assert.equal(response.descriptor.value, 10);
-
-      objClient.getProperty("y", function(response) {
+      const objClient = threadClient.pauseGrip(args[0]);
+      objClient.getProperty("x", function(response) {
         Assert.equal(response.descriptor.configurable, true);
         Assert.equal(response.descriptor.enumerable, true);
         Assert.equal(response.descriptor.writable, true);
-        Assert.equal(response.descriptor.value, "kaiju");
+        Assert.equal(response.descriptor.value, 10);
 
-        objClient.getProperty("a", function(response) {
+        objClient.getProperty("y", function(response) {
           Assert.equal(response.descriptor.configurable, true);
           Assert.equal(response.descriptor.enumerable, true);
-          Assert.equal(response.descriptor.get.type, "object");
-          Assert.equal(response.descriptor.get.class, "Function");
-          Assert.equal(response.descriptor.set.type, "undefined");
+          Assert.equal(response.descriptor.writable, true);
+          Assert.equal(response.descriptor.value, "kaiju");
 
-          gThreadClient.resume(function() {
-            gClient.close().then(gCallback);
+          objClient.getProperty("a", function(response) {
+            Assert.equal(response.descriptor.configurable, true);
+            Assert.equal(response.descriptor.enumerable, true);
+            Assert.equal(response.descriptor.get.type, "object");
+            Assert.equal(response.descriptor.get.class, "Function");
+            Assert.equal(response.descriptor.set.type, "undefined");
+
+            threadClient.resume(resolve);
           });
         });
       });
     });
+
+    debuggee.eval(function stopMe(arg1) {
+      debugger;
+    }.toString());
+    debuggee.eval("stopMe({ x: 10, y: 'kaiju', get a() { return 42; } })");
   });
-
-  gDebuggee.eval("stopMe({ x: 10, y: 'kaiju', get a() { return 42; } })");
-}
-
+}));
