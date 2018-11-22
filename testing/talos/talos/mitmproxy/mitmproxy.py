@@ -35,7 +35,8 @@ POLICIES_CONTENT_ON = '''{
       "Mode": "manual",
       "HTTPProxy": "127.0.0.1:8080",
       "SSLProxy": "127.0.0.1:8080",
-      "Passthrough": "localhost, 127.0.0.1"
+      "Passthrough": "localhost, 127.0.0.1",
+      "Locked": true
     }
   }
 }'''
@@ -43,7 +44,8 @@ POLICIES_CONTENT_ON = '''{
 POLICIES_CONTENT_OFF = '''{
   "policies": {
     "Proxy": {
-      "Mode": "none"
+      "Mode": "none",
+      "Locked": false
     }
   }
 }'''

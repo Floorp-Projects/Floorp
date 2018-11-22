@@ -68,7 +68,8 @@ POLICIES_CONTENT_ON = '''{
       "Mode": "manual",
       "HTTPProxy": "%(host)s:8080",
       "SSLProxy": "%(host)s:8080",
-      "Passthrough": "localhost, 127.0.0.1, %(host)s"
+      "Passthrough": "localhost, 127.0.0.1, %(host)s",
+      "Locked": true
     }
   }
 }'''
@@ -76,7 +77,8 @@ POLICIES_CONTENT_ON = '''{
 POLICIES_CONTENT_OFF = '''{
   "policies": {
     "Proxy": {
-      "Mode": "none"
+      "Mode": "none",
+      "Locked": false
     }
   }
 }'''
