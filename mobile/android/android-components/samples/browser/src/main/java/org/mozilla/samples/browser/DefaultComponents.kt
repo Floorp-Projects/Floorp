@@ -34,7 +34,8 @@ open class DefaultComponents(private val applicationContext: Context) {
     // Engine
     open val engine: Engine by lazy {
         val settings = DefaultSettings(
-            requestInterceptor = SampleRequestInterceptor(applicationContext)
+            requestInterceptor = SampleRequestInterceptor(applicationContext),
+            supportMultipleWindows = true
         )
         SystemEngine(applicationContext, settings)
     }

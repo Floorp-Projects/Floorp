@@ -47,6 +47,10 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
     @Volatile internal var webFontsEnabled = true
     @Volatile internal var internalSettings: Settings? = null
 
+    // This is currently only used for window requests:
+    // TODO https://github.com/mozilla-mobile/android-components/issues/1195
+    @Volatile internal var webView: WebView? = null
+
     /**
      * See [EngineSession.loadUrl]
      */
@@ -184,7 +188,7 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
     }
 
     /**
-     * See [EngineSession.clearFindResults]
+     * See [EngineSession.clearFindMatches]
      */
     override fun clearFindMatches() {
         currentView()?.clearMatches()

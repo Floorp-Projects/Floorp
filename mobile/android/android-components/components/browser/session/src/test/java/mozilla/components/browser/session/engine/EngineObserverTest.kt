@@ -10,7 +10,11 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.permission.PermissionRequest
+
 import mozilla.components.concept.engine.prompt.PromptRequest
+
+import mozilla.components.concept.engine.window.WindowRequest
+
 import mozilla.components.support.base.observer.Consumable
 import org.junit.Assert
 import org.junit.Assert.assertEquals
@@ -301,5 +305,20 @@ class EngineObserverTest {
         assertTrue(session.promptRequest.isConsumed())
         observer.onPromptRequest(promptRequest)
         assertFalse(session.promptRequest.isConsumed())
+    }
+
+    @Test
+    fun engineSessionObserverWithWindowRequests() {
+        val windowRequest = mock(WindowRequest::class.java)
+        val session = Session("")
+        val observer = EngineObserver(session)
+
+        assertTrue(session.openWindowRequest.isConsumed())
+        observer.onOpenWindowRequest(windowRequest)
+        assertFalse(session.openWindowRequest.isConsumed())
+
+        assertTrue(session.closeWindowRequest.isConsumed())
+        observer.onCloseWindowRequest(windowRequest)
+        assertFalse(session.closeWindowRequest.isConsumed())
     }
 }

@@ -18,6 +18,7 @@ import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.session.CoordinateScrollingFeature
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.SessionFeature
+import mozilla.components.feature.session.WindowFeature
 import mozilla.components.feature.storage.HistoryTrackingFeature
 import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
@@ -35,6 +36,7 @@ class BrowserFragment : Fragment(), BackHandler {
     private lateinit var scrollFeature: CoordinateScrollingFeature
     private lateinit var contextMenuFeature: ContextMenuFeature
     private lateinit var promptFeature: PromptFeature
+    private lateinit var windowFeature: WindowFeature
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_browser, container, false)
@@ -93,6 +95,8 @@ class BrowserFragment : Fragment(), BackHandler {
                 view))
 
         promptFeature = PromptFeature(components.sessionManager, requireFragmentManager())
+
+        windowFeature = WindowFeature(components.engine, components.sessionManager)
     }
 
     private fun showTabs() {
@@ -108,6 +112,7 @@ class BrowserFragment : Fragment(), BackHandler {
         super.onStart()
 
         sessionFeature.start()
+        windowFeature.start()
         toolbarFeature.start()
         downloadsFeature.start()
         scrollFeature.start()
@@ -119,6 +124,7 @@ class BrowserFragment : Fragment(), BackHandler {
         super.onStop()
 
         sessionFeature.stop()
+        windowFeature.stop()
         toolbarFeature.stop()
         downloadsFeature.stop()
         scrollFeature.stop()
