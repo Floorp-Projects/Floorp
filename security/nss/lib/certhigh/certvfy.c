@@ -25,7 +25,7 @@
 #include "pkim.h"
 #include "pki3hack.h"
 #include "base.h"
-#include "keyhi.h"
+#include "keyi.h"
 
 /*
  * Check the validity times of a certificate
@@ -73,12 +73,38 @@ checkKeyParams(const SECAlgorithmID *sigAlgorithm, const SECKEYPublicKey *key)
                 return SECFailure;
             }
             return SECSuccess;
+
+        case SEC_OID_PKCS1_RSA_PSS_SIGNATURE: {
+            PORTCheapArenaPool tmpArena;
+            SECOidTag hashAlg;
+            SECOidTag maskHashAlg;
+
+            PORT_InitCheapArena(&tmpArena, DER_DEFAULT_CHUNKSIZE);
+            rv = sec_DecodeRSAPSSParams(&tmpArena.arena,
+                                        &sigAlgorithm->parameters,
+                                        &hashAlg, &maskHashAlg, NULL);
+            PORT_DestroyCheapArena(&tmpArena);
+            if (rv != SECSuccess) {
+                return SECFailure;
+            }
+
+            if (NSS_GetAlgorithmPolicy(hashAlg, &policyFlags) == SECSuccess &&
+                !(policyFlags & NSS_USE_ALG_IN_CERT_SIGNATURE)) {
+                PORT_SetError(SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
+                return SECFailure;
+            }
+            if (NSS_GetAlgorithmPolicy(maskHashAlg, &policyFlags) == SECSuccess &&
+                !(policyFlags & NSS_USE_ALG_IN_CERT_SIGNATURE)) {
+                PORT_SetError(SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
+                return SECFailure;
+            }
+        }
+        /* fall through to RSA key checking */
         case SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION:
         case SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION:
         case SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION:
         case SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION:
         case SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION:
-        case SEC_OID_PKCS1_RSA_PSS_SIGNATURE:
         case SEC_OID_ISO_SHA_WITH_RSA_SIGNATURE:
         case SEC_OID_ISO_SHA1_WITH_RSA_SIGNATURE:
             if (key->keyType != rsaKey && key->keyType != rsaPssKey) {
