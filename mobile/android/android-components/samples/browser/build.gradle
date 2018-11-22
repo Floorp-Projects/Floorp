@@ -112,7 +112,6 @@ dependencies {
     implementation project(':concept-storage')
 
     implementation project(':browser-engine-system')
-
     implementation project(':browser-search')
     implementation project(':browser-session')
     implementation project(':browser-tabstray')
@@ -120,6 +119,7 @@ dependencies {
     implementation project(':browser-menu')
     implementation project(':browser-storage-memory')
 
+    implementation project(':feature-contextmenu')
     implementation project(':feature-intent')
     implementation project(':feature-search')
     implementation project(':feature-session')

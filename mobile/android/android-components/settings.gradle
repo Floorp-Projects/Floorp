@@ -40,6 +40,7 @@ setupProject(':concept-storage', 'components/concept/storage', 'An abstract defi
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 setupProject(':feature-awesomebar', 'components/feature/awesomebar', 'Component connecting a concept-toolbar with a concept-awesomebar.')
+setupProject(':feature-contextmenu', 'components/feature/contextmenu', 'Component for displaying context menus for web content.')
 setupProject(':feature-customtabs', 'components/feature/customtabs', 'Component for providing custom tabs functionality.')
 setupProject(':feature-intent', 'components/feature/intent', 'Combining various feature components for intent processing.')
 setupProject(':feature-search', 'components/feature/search', 'Feature implementation connecting an engine implementation with the search module.')
