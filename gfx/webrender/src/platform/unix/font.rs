@@ -375,6 +375,7 @@ impl FontContext {
         slot: FT_GlyphSlot,
         font: &FontInstance,
         glyph: &GlyphKey,
+        scale: f32,
     ) -> FT_BBox {
         let mut cbox: FT_BBox = unsafe { mem::uninitialized() };
 
@@ -404,8 +405,8 @@ impl FontContext {
         // Convert to 26.6 fixed point format for FT.
         let (dx, dy) = font.get_subpx_offset(glyph);
         let (dx, dy) = (
-            (dx * 64.0 + 0.5) as FT_Pos,
-            -(dy * 64.0 + 0.5) as FT_Pos,
+            (dx / scale as f64 * 64.0 + 0.5) as FT_Pos,
+            -(dy / scale as f64 * 64.0 + 0.5) as FT_Pos,
         );
         cbox.xMin += dx;
         cbox.xMax += dx;
@@ -426,7 +427,8 @@ impl FontContext {
         slot: FT_GlyphSlot,
         font: &FontInstance,
         glyph: &GlyphKey,
-        use_transform: Option<f32>,
+        scale: f32,
+        use_transform: bool,
     ) -> Option<GlyphDimensions> {
         let format = unsafe { (*slot).format };
         let (mut left, mut top, mut width, mut height) = match format {
@@ -439,7 +441,7 @@ impl FontContext {
                 ) }
             }
             FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE => {
-                let cbox = self.get_bounding_box(slot, font, glyph);
+                let cbox = self.get_bounding_box(slot, font, glyph, scale);
                 (
                     (cbox.xMin >> 6) as i32,
                     (cbox.yMax >> 6) as i32,
@@ -450,7 +452,7 @@ impl FontContext {
             _ => return None,
         };
         let mut advance = unsafe { (*slot).metrics.horiAdvance as f32 / 64.0 };
-        if let Some(scale) = use_transform {
+        if use_transform {
             if scale != 1.0 {
                 let x0 = left as f32 * scale;
                 let x1 = width as f32 * scale + x0;
@@ -515,7 +517,7 @@ impl FontContext {
         key: &GlyphKey,
     ) -> Option<GlyphDimensions> {
         let slot = self.load_glyph(font, key);
-        slot.and_then(|(slot, scale)| self.get_glyph_dimensions_impl(slot, font, key, Some(scale)))
+        slot.and_then(|(slot, scale)| self.get_glyph_dimensions_impl(slot, font, key, scale, true))
     }
 
     fn choose_bitmap_size(&self, face: FT_Face, requested_size: f64) -> FT_Error {
@@ -555,12 +557,13 @@ impl FontContext {
         slot: FT_GlyphSlot,
         font: &FontInstance,
         key: &GlyphKey,
+        scale: f32,
     ) -> bool {
         // Get the subpixel offsets in FT 26.6 format.
         let (dx, dy) = font.get_subpx_offset(key);
         let (dx, dy) = (
-            (dx * 64.0 + 0.5) as FT_Pos,
-            -(dy * 64.0 + 0.5) as FT_Pos,
+            (dx / scale as f64 * 64.0 + 0.5) as FT_Pos,
+            -(dy / scale as f64 * 64.0 + 0.5) as FT_Pos,
         );
 
         // Move the outline curves to be at the origin, taking
@@ -620,7 +623,7 @@ impl FontContext {
         // Get dimensions of the glyph, to see if we need to rasterize it.
         // Don't apply scaling to the dimensions, as the glyph cache needs to know the actual
         // footprint of the glyph.
-        let dimensions = match self.get_glyph_dimensions_impl(slot, font, key, None) {
+        let dimensions = match self.get_glyph_dimensions_impl(slot, font, key, scale, false) {
             Some(val) => val,
             None => return GlyphRasterResult::LoadFailed,
         };
@@ -635,7 +638,7 @@ impl FontContext {
         match format {
             FT_Glyph_Format::FT_GLYPH_FORMAT_BITMAP => {}
             FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE => {
-                if !self.rasterize_glyph_outline(slot, font, key) {
+                if !self.rasterize_glyph_outline(slot, font, key, scale) {
                     return GlyphRasterResult::LoadFailed;
                 }
             }
