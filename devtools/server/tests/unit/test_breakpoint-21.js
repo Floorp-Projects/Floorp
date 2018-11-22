@@ -9,59 +9,35 @@
  * scripts, so you can set breakpoints on deeply nested scripts
  */
 
-var gDebuggee;
-var gClient;
-var gThreadClient;
-
-function run_test() {
-  run_test_with_server(DebuggerServer, function() {
-    run_test_with_server(WorkerDebuggerServer, do_test_finished);
-  });
-  do_test_pending();
-}
-
-function run_test_with_server(server, callback) {
-  initTestDebuggerServer(server);
-  gDebuggee = addTestGlobal("test-breakpoints", server);
-  gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient,
-                           "test-breakpoints",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test();
-                           });
-  });
-}
-
-const test = async function() {
+add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   // Populate the `ScriptStore` so that we only test that the script
   // is added through `onNewScript`
-  await getSources(gThreadClient);
+  await getSources(threadClient);
 
-  let packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
-  const source = gThreadClient.source(packet.frame.where.source);
+  let packet = await executeOnNextTickAndWaitForPause(() => {
+    evalCode(debuggee);
+  }, client);
+  const source = threadClient.source(packet.frame.where.source);
   const location = {
-    line: gDebuggee.line0 + 8,
+    line: debuggee.line0 + 8,
   };
 
   const [res, bpClient] = await setBreakpoint(source, location);
   ok(!res.error);
 
-  await resume(gThreadClient);
-  packet = await waitForPause(gClient);
+  await resume(threadClient);
+  packet = await waitForPause(client);
   Assert.equal(packet.type, "paused");
   Assert.equal(packet.why.type, "breakpoint");
   Assert.equal(packet.why.actors[0], bpClient.actor);
   Assert.equal(packet.frame.where.source.actor, source.actor);
   Assert.equal(packet.frame.where.line, location.line);
 
-  await resume(gThreadClient);
-  finishClient(gClient);
-};
+  await resume(threadClient);
+}));
 
 /* eslint-disable */
-function evalCode() {
+function evalCode(debuggee) {
   // Start a new script
   Cu.evalInSandbox(
     "var line0 = Error().lineNumber;\n(" + function () {
@@ -79,6 +55,6 @@ function evalCode() {
         })();
       })();
     } + ")()",
-    gDebuggee
+    debuggee
   );
 }
