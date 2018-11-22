@@ -477,14 +477,6 @@ skip script test262/built-ins/Reflect/ownKeys/return-on-corresponding-order-larg
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1473229
 skip include test262/intl402/RelativeTimeFormat/prototype/formatToParts/jstests.list
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1483545
-skip script test262/intl402/RelativeTimeFormat/prototype/format/en-us-numeric-always.js
-skip script test262/intl402/RelativeTimeFormat/prototype/format/en-us-numeric-auto.js
-skip script test262/intl402/RelativeTimeFormat/prototype/format/en-us-style-short.js
-skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-long.js
-skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-narrow.js
-skip script test262/intl402/RelativeTimeFormat/prototype/format/pl-pl-style-short.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1508684
 skip script test262/built-ins/RegExp/prototype/multiline/cross-realm.js
 skip script test262/built-ins/RegExp/prototype/global/cross-realm.js
