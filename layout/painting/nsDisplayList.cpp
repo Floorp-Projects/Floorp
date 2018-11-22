@@ -5307,8 +5307,8 @@ nsDisplayOutline::CreateWebRenderCommands(
 {
   ContainerLayerParameters parameter;
 
-  uint8_t outlineStyle = mFrame->Style()->StyleOutline()->mOutlineStyle;
-  if (outlineStyle == NS_STYLE_BORDER_STYLE_AUTO &&
+  StyleBorderStyle outlineStyle = mFrame->Style()->StyleOutline()->mOutlineStyle;
+  if (outlineStyle == StyleBorderStyle::Auto &&
       nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
     nsITheme* theme = mFrame->PresContext()->GetTheme();
     if (theme && theme->ThemeSupportsWidget(mFrame->PresContext(),

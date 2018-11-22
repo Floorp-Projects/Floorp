@@ -15,6 +15,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TypedEnumBits.h"
 #include "nsRegion.h"
+#include "nsStyleConsts.h"
 
 #include <stdio.h>            // FILE
 #include "mozilla/Logging.h"            // for PR_LOG
@@ -392,7 +393,7 @@ typedef gfx::Matrix4x4Typed<CSSTransformedLayerPixel, ParentLayerPixel> AsyncTra
 typedef Array<gfx::Color, 4> BorderColors;
 typedef Array<LayerSize, 4> BorderCorners;
 typedef Array<LayerCoord, 4> BorderWidths;
-typedef Array<uint8_t, 4> BorderStyles;
+typedef Array<StyleBorderStyle, 4> BorderStyles;
 
 typedef Maybe<LayerRect> MaybeLayerRect;
 

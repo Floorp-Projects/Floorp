@@ -195,13 +195,13 @@ nsColumnSetFrame::CreateBorderRenderers(nsTArray<nsCSSBorderRenderer>& aBorderRe
   WritingMode wm = GetWritingMode();
   bool isVertical = wm.IsVertical();
   const nsStyleColumn* colStyle = StyleColumn();
-  uint8_t ruleStyle;
+  StyleBorderStyle ruleStyle;
 
   // Per spec, inset => ridge and outset => groove
-  if (colStyle->mColumnRuleStyle == NS_STYLE_BORDER_STYLE_INSET)
-    ruleStyle = NS_STYLE_BORDER_STYLE_RIDGE;
-  else if (colStyle->mColumnRuleStyle == NS_STYLE_BORDER_STYLE_OUTSET)
-    ruleStyle = NS_STYLE_BORDER_STYLE_GROOVE;
+  if (colStyle->mColumnRuleStyle == StyleBorderStyle::Inset)
+    ruleStyle = StyleBorderStyle::Ridge;
+  else if (colStyle->mColumnRuleStyle == StyleBorderStyle::Outset)
+    ruleStyle = StyleBorderStyle::Groove;
   else
     ruleStyle = colStyle->mColumnRuleStyle;
 

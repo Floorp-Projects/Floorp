@@ -134,7 +134,7 @@ MerchantValidationEvent::ResolvedCallback(JSContext* aCx,
   // conformance, which is why at this point we throw a
   // NS_ERROR_DOM_NOT_SUPPORTED_ERR.
 
-  mRequest->AbortUpdate(NS_ERROR_DOM_NOT_SUPPORTED_ERR, false);
+  mRequest->AbortUpdate(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
   mRequest->SetUpdating(false);
 }
 
@@ -147,7 +147,7 @@ MerchantValidationEvent::RejectedCallback(JSContext* aCx,
     return;
   }
   mWaitForUpdate = false;
-  mRequest->AbortUpdate(NS_ERROR_DOM_ABORT_ERR, false);
+  mRequest->AbortUpdate(NS_ERROR_DOM_ABORT_ERR);
   mRequest->SetUpdating(false);
 }
 
