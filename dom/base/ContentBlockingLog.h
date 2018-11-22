@@ -173,7 +173,7 @@ public:
         if (Get<1>(*iter.UserData()).isSome()) {
           return Get<1>(*iter.UserData()).value();
         }
-        return true; // true means blocked, aka not loaded any cookies
+        return false; // false means not blocked, aka not loaded any cookies
       } else {
         for (auto& item: Get<2>(*iter.UserData())) {
           if ((item.mType & aType) != 0) {
