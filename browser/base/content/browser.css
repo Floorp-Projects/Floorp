@@ -364,10 +364,10 @@ toolbarpaletteitem {
 }
 %endif
 
-#main-window[inFullscreen][inDOMFullscreen] #navigator-toolbox,
-#main-window[inFullscreen][inDOMFullscreen] #fullscr-toggler,
-#main-window[inFullscreen][inDOMFullscreen] #sidebar-box,
-#main-window[inFullscreen][inDOMFullscreen] #sidebar-splitter,
+#main-window[inDOMFullscreen] #navigator-toolbox,
+#main-window[inDOMFullscreen] #fullscr-toggler,
+#main-window[inDOMFullscreen] #sidebar-box,
+#main-window[inDOMFullscreen] #sidebar-splitter,
 #main-window[inFullscreen]:not([OSXLionFullscreen]) toolbar:not([fullscreentoolbar=true]),
 #main-window[inFullscreen] .global-notificationbox {
   visibility: collapse;
