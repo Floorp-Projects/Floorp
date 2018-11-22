@@ -2990,6 +2990,7 @@ nsStyleDisplay::nsStyleDisplay(const nsPresContext* aContext)
       mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
       mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
       mOverscrollBehaviorY(StyleOverscrollBehavior::Auto),
+      mOverflowAnchor(StyleOverflowAnchor::Auto),
       mScrollSnapTypeX(StyleScrollSnapType::None),
       mScrollSnapTypeY(StyleScrollSnapType::None),
       mScrollSnapPointsX(eStyleUnit_None),
