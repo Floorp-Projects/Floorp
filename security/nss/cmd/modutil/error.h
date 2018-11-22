@@ -131,6 +131,7 @@ typedef enum {
     UNDEFAULT_SUCCESS_MSG,
     BROWSER_RUNNING_MSG,
     ABORTING_MSG,
+    P11_KIT_ENABLED_MSG,
 
     LAST_MSG /* must be last */
 } Message;

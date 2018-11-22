@@ -36,7 +36,8 @@ function getPausedMessage(visibleMessages, messages, executionPoint) {
   let pausedMessage = messages.get(visibleMessages[0]);
   for (const messageId of visibleMessages) {
     const message = messages.get(messageId);
-    if (executionPoint.progress >= message.executionPoint.progress &&
+    if (message.executionPoint &&
+        executionPoint.progress >= message.executionPoint.progress &&
         message.executionPoint.progress > pausedMessage.executionPoint.progress) {
       pausedMessage = message;
     }
