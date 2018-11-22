@@ -248,6 +248,7 @@ editor/libeditor/tests/browserscope/**
 # Third-party
 gfx/ots/**
 gfx/skia/**
+gfx/wr/**
 
 # intl/ exclusions
 intl/icu/**

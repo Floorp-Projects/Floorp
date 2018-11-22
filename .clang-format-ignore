@@ -76,9 +76,7 @@ gfx/qcms/.*
 gfx/sfntly/.*
 gfx/skia/.*
 gfx/vr/service/openvr/.*
-gfx/webrender/.*
-gfx/webrender_api/.*
-gfx/wrench/.*
+gfx/wr/.*
 gfx/ycbcr/.*
 intl/hyphenation/hyphen/.*
 intl/icu/.*
