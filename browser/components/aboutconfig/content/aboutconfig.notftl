@@ -4,5 +4,7 @@
 
 about-config-title = about:config
 
+about-config-pref-delete = Delete
+
 about-config-search =
     .placeholder = Search
