@@ -1,20 +1,29 @@
 import {filterAdult} from "lib/FilterAdult.jsm";
+import {GlobalOverrider} from "test/unit/utils";
 
 describe("filterAdult", () => {
   let hashStub;
   let hashValue;
+  let globals;
 
   beforeEach(() => {
+    globals = new GlobalOverrider();
     hashStub = {
       finish: sinon.stub().callsFake(() => hashValue),
       init: sinon.stub(),
       update: sinon.stub(),
     };
-    global.Cc["@mozilla.org/security/hash;1"] = {
-      createInstance() {
-        return hashStub;
+    globals.set("Cc", {
+      "@mozilla.org/security/hash;1": {
+        createInstance() {
+          return hashStub;
+        },
       },
-    };
+    });
+  });
+
+  afterEach(() => {
+    globals.restore();
   });
 
   it("should default to include on unexpected urls", () => {

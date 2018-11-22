@@ -15,6 +15,38 @@ const {RecipeExecutor} = ChromeUtils.import("resource://activity-stream/lib/Reci
 ChromeUtils.defineModuleGetter(this, "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm");
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+
+XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => new TextDecoder());
+
+XPCOMUtils.defineLazyGetter(this, "baseAttachmentsURL", async () => {
+  const server = Services.prefs.getCharPref("services.settings.server");
+  const serverInfo = await (await fetch(`${server}/`)).json();
+  const {capabilities: {attachments: {base_url}}} = serverInfo;
+  return base_url;
+});
+
+const PERSONALITY_PROVIDER_DIR = OS.Path.join(OS.Constants.Path.localProfileDir, "personality-provider");
+const RECIPE_NAME = "personality-provider-recipe";
+const MODELS_NAME = "personality-provider-models";
+
+function getHash(aStr) {
+  // return the two-digit hexadecimal code for a byte
+  let toHexString = charCode => (`0${charCode.toString(16)}`).slice(-2);
+  let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+  hasher.init(Ci.nsICryptoHash.SHA256);
+  let stringStream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
+  stringStream.data = aStr;
+  hasher.updateFromStream(stringStream, -1);
+
+  // convert the binary hash data to a hex string.
+  let binary = hasher.finish(false);
+  return Array.from(binary, (c, i) => toHexString(binary.charCodeAt(i))).join("").toLowerCase();
+}
+
 /**
  * V2 provider builds and ranks an interest profile (also called an “interest vector”) off the browse history.
  * This allows Firefox to classify pages into topics, by examining the text found on the page.
@@ -38,6 +70,97 @@ this.PersonalityProvider = class PersonalityProvider {
     this.scores = scores || {};
     this.interestConfig = this.scores.interestConfig;
     this.interestVector = this.scores.interestVector;
+    this.onSync = this.onSync.bind(this);
+    this.setupSyncAttachment(RECIPE_NAME);
+    this.setupSyncAttachment(MODELS_NAME);
+  }
+
+  async onSync(event) {
+    const {
+      data: {created, updated, deleted},
+    } = event;
+
+    // Remove every removed attachment.
+    const toRemove = deleted.concat(updated.map(u => u.old));
+    await Promise.all(toRemove.map(record => this.deleteAttachment(record)));
+
+    // Download every new/updated attachment.
+    const toDownload = created.concat(updated.map(u => u.new));
+    await Promise.all(toDownload.map(record => this.maybeDownloadAttachment(record)));
+  }
+
+  setupSyncAttachment(collection) {
+    RemoteSettings(collection).on("sync", this.onSync);
+  }
+
+  /**
+   * Downloads the attachment to disk assuming the dir already exists
+   * and any existing files matching the filename are clobbered.
+   */
+  async _downloadAttachment(record) {
+    const {attachment: {location, filename}} = record;
+    const remoteFilePath = (await baseAttachmentsURL) + location;
+    const localFilePath = OS.Path.join(PERSONALITY_PROVIDER_DIR, filename);
+    const headers = new Headers();
+    headers.set("Accept-Encoding", "gzip");
+    const resp = await fetch(remoteFilePath, {headers});
+    if (!resp.ok) {
+      Cu.reportError(`Failed to fetch ${remoteFilePath}: ${resp.status}`);
+      return;
+    }
+    const buffer = await resp.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    await OS.File.writeAtomic(localFilePath, bytes, {tmpPath: `${localFilePath}.tmp`});
+  }
+
+  /**
+   * Attempts to download the attachment, but only if it doesn't already exist.
+   */
+  async maybeDownloadAttachment(record, retries = 3) {
+    const {attachment: {filename, hash, size}} = record;
+    await OS.File.makeDir(PERSONALITY_PROVIDER_DIR);
+    const localFilePath = OS.Path.join(PERSONALITY_PROVIDER_DIR, filename);
+
+    let retry = 0;
+    while ((retry++ < retries) &&
+        (!await OS.File.exists(localFilePath) ||
+        (await OS.File.stat(localFilePath)).size !== size ||
+        getHash(await this._getFileStr(localFilePath)) !== hash)) {
+      await this._downloadAttachment(record);
+    }
+  }
+
+  async deleteAttachment(record) {
+    const {attachment: {filename}} = record;
+    await OS.File.makeDir(PERSONALITY_PROVIDER_DIR);
+    const path = OS.Path.join(PERSONALITY_PROVIDER_DIR, filename);
+
+    await OS.File.remove(path, {ignoreAbsent: true});
+    return OS.File.removeEmptyDir(PERSONALITY_PROVIDER_DIR, {ignoreAbsent: true});
+  }
+
+  /**
+   * Gets contents of the attachment if it already exists on file,
+   * and if not attempts to download it.
+   */
+  async getAttachment(record) {
+    const {attachment: {filename}} = record;
+    const filepath = OS.Path.join(PERSONALITY_PROVIDER_DIR, filename);
+
+    try {
+      await this.maybeDownloadAttachment(record);
+      return JSON.parse(await this._getFileStr(filepath));
+    } catch (error) {
+      Cu.reportError(`Failed to load ${filepath}: ${error.message}`);
+    }
+    return {};
+  }
+
+  // A helper function to read and decode a file, it isn't a stand alone function.
+  // If you use this, ensure you check the file exists and you have a try catch.
+  async _getFileStr(filepath) {
+    const binaryData = await OS.File.read(filepath);
+    return gTextDecoder.decode(binaryData);
   }
 
   async init(callback) {
@@ -71,7 +194,7 @@ this.PersonalityProvider = class PersonalityProvider {
 
   async getFromRemoteSettings(name) {
     const result = await RemoteSettings(name).get();
-    return result;
+    return Promise.all(result.map(async record => ({...await this.getAttachment(record), recordKey: record.key})));
   }
 
   /**
@@ -79,15 +202,15 @@ this.PersonalityProvider = class PersonalityProvider {
    * A Recipe is a set of instructions on how to processes a RecipeExecutor.
    */
   async getRecipe() {
-    if (!this.recipe || !this.recipe.length) {
+    if (!this.recipes || !this.recipes.length) {
       const start = perfService.absNow();
-      this.recipe = await this.getFromRemoteSettings("personality-provider-recipe");
+      this.recipes = await this.getFromRemoteSettings(RECIPE_NAME);
       this.dispatch(ac.PerfEvent({
         event: "PERSONALIZATION_V2_GET_RECIPE_DURATION",
         value: Math.round(perfService.absNow() - start),
       }));
     }
-    return this.recipe[0];
+    return this.recipes[0];
   }
 
   /**
@@ -100,20 +223,20 @@ this.PersonalityProvider = class PersonalityProvider {
       const startTaggers = perfService.absNow();
       let nbTaggers = [];
       let nmfTaggers = {};
-      const models = await this.getFromRemoteSettings("personality-provider-models");
+      const models = await this.getFromRemoteSettings(MODELS_NAME);
 
       if (models.length === 0) {
         return null;
       }
 
       for (let model of models) {
-        if (!model || !this.modelKeys.includes(model.key)) {
+        if (!this.modelKeys.includes(model.recordKey)) {
           continue;
         }
-        if (model.data.model_type === "nb") {
-          nbTaggers.push(new NaiveBayesTextTagger(model.data));
-        } else if (model.data.model_type === "nmf") {
-          nmfTaggers[model.data.parent_tag] = new NmfTextTagger(model.data);
+        if (model.model_type === "nb") {
+          nbTaggers.push(new NaiveBayesTextTagger(model));
+        } else if (model.model_type === "nmf") {
+          nmfTaggers[model.parent_tag] = new NmfTextTagger(model);
         }
       }
       this.dispatch(ac.PerfEvent({
