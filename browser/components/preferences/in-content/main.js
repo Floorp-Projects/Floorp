@@ -843,7 +843,8 @@ var gMainPane = {
   hideConfirmLanguageChangeMessageBar() {
     let messageBar = document.getElementById("confirmBrowserLanguage");
     messageBar.hidden = true;
-    messageBar.querySelector(".message-bar-button").removeAttribute("locales");
+    let contentContainer = messageBar.querySelector(".message-bar-content-container");
+    contentContainer.textContent = "";
     gMainPane.requestingLocales = null;
   },
 
