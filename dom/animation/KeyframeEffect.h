@@ -258,7 +258,8 @@ public:
   // When returning true, |aPerformanceWarning| stores the reason why
   // we shouldn't run the transform animations.
   bool ShouldBlockAsyncTransformAnimations(
-    const nsIFrame* aFrame, AnimationPerformanceWarning::Type& aPerformanceWarning) const;
+    const nsIFrame* aFrame,
+    AnimationPerformanceWarning::Type& aPerformanceWarning /* out */) const;
   bool HasGeometricProperties() const;
   bool AffectsGeometry() const override
   {
@@ -301,6 +302,27 @@ public:
     MOZ_ASSERT(hasProperty || result.IsNull());
     return result;
   }
+
+  enum class MatchForCompositor {
+    // This animation matches and should run on the compositor if possible.
+    Yes,
+    // This (not currently playing) animation matches and can be run on the
+    // compositor if there are other animations for this property that return
+    // 'Yes'.
+    IfNeeded,
+    // This animation does not match or can't be run on the compositor.
+    No,
+    // This animation does not match or can't be run on the compositor and,
+    // furthermore, its presence means we should not run any animations for this
+    // property on the compositor.
+    NoAndBlockThisProperty
+  };
+
+  MatchForCompositor IsMatchForCompositor(
+    nsCSSPropertyID aProperty,
+    const nsIFrame* aFrame,
+    const EffectSet& aEffects,
+    AnimationPerformanceWarning::Type& aPerformanceWarning /* out */) const;
 
   static bool HasComputedTimingChanged(
     const ComputedTiming& aComputedTiming,
@@ -437,7 +459,7 @@ private:
   // limitation is stored in |aOutPerformanceWarning|.
   static bool CanAnimateTransformOnCompositor(
     const nsIFrame* aFrame,
-    AnimationPerformanceWarning::Type& aPerformanceWarning);
+    AnimationPerformanceWarning::Type& aPerformanceWarning /* out */);
   static bool IsGeometricProperty(const nsCSSPropertyID aProperty);
 
   static const TimeDuration OverflowRegionRefreshInterval();
