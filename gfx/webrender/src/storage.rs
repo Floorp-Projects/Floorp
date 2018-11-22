@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::{iter::Extend, ops, marker::PhantomData};
+use std::{iter::Extend, ops, marker::PhantomData, u32};
 use util::recycle_vec;
 
 #[derive(Debug, Hash)]
@@ -15,13 +15,22 @@ pub struct Index<T>(u32, PhantomData<T>);
 impl<T> Clone for Index<T> {
     fn clone(&self) -> Self { *self }
 }
+
 impl<T> Copy for Index<T> {}
+
+impl<T> PartialEq for Index<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
 
 impl<T> Index<T> {
     fn new(idx: usize) -> Self {
         debug_assert!(idx < u32::max_value() as usize);
         Index(idx as u32, PhantomData)
     }
+
+    pub const INVALID: Index<T> = Index(u32::MAX, PhantomData);
 }
 
 #[derive(Debug)]

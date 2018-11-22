@@ -16,7 +16,7 @@ use gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, Trans
 use internal_types::{FastHashMap, SavedTargetIndex, TextureSource};
 use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureSurface};
 use prim_store::{BrushKind, BrushPrimitive, DeferredResolve};
-use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveInstanceKind};
+use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveInstanceKind, PrimitiveStore};
 use prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity};
 use prim_store::{BrushSegment, BorderSource, ClipMaskKind, ClipTaskIndex, PrimitiveDetails};
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskTree};
@@ -1261,7 +1261,9 @@ impl AlphaBatchBuilder {
                         }
 
                         match brush.kind {
-                            BrushKind::Image { alpha_type, request, ref opacity_binding, ref visible_tiles, .. } if !visible_tiles.is_empty() => {
+                            BrushKind::Image { alpha_type, request, opacity_binding_index, ref visible_tiles, .. } if !visible_tiles.is_empty() => {
+                                let opacity_binding = ctx.prim_store.get_opacity_binding(opacity_binding_index);
+
                                 for tile in visible_tiles {
                                     if let Some((batch_kind, textures, user_data, uv_rect_address)) = get_image_tile_params(
                                             ctx.resource_cache,
@@ -1269,7 +1271,7 @@ impl AlphaBatchBuilder {
                                             deferred_resolves,
                                             request.with_tile(tile.tile_offset),
                                             alpha_type,
-                                            get_shader_opacity(opacity_binding.current),
+                                            get_shader_opacity(opacity_binding),
                                     ) {
                                         let prim_cache_address = gpu_cache.get_address(&tile.handle);
                                         let prim_header = PrimitiveHeader {
@@ -1330,6 +1332,7 @@ impl AlphaBatchBuilder {
                                     gpu_cache,
                                     deferred_resolves,
                                     prim_instance,
+                                    ctx.prim_store,
                                 ) {
                                     let prim_header_index = prim_headers.push(&prim_header, z_id, params.prim_user_data);
                                     if prim_instance.is_chased() {
@@ -1691,9 +1694,10 @@ impl BrushPrimitive {
         gpu_cache: &mut GpuCache,
         deferred_resolves: &mut Vec<DeferredResolve>,
         prim_instance: &PrimitiveInstance,
+        prim_store: &PrimitiveStore,
     ) -> Option<BrushBatchParameters> {
         match self.kind {
-            BrushKind::Image { alpha_type, request, ref source, ref opacity_binding, .. } => {
+            BrushKind::Image { alpha_type, request, ref source, opacity_binding_index, .. } => {
                 let cache_item = match *source {
                     ImageSource::Default => {
                         resolve_image(
@@ -1720,6 +1724,7 @@ impl BrushPrimitive {
                     None
                 } else {
                     let textures = BatchTextures::color(cache_item.texture_id);
+                    let opacity_binding = prim_store.get_opacity_binding(opacity_binding_index);
 
                     Some(BrushBatchParameters::shared(
                         BrushBatchKind::Image(get_buffer_kind(cache_item.texture_id)),
@@ -1727,7 +1732,7 @@ impl BrushPrimitive {
                         [
                             ShaderColorMode::Image as i32 | ((alpha_type as i32) << 16),
                             RasterizationSpace::Local as i32,
-                            get_shader_opacity(opacity_binding.current),
+                            get_shader_opacity(opacity_binding),
                         ],
                         cache_item.uv_rect_handle.as_int(gpu_cache),
                     ))
@@ -1791,11 +1796,12 @@ impl BrushPrimitive {
                     }
                 }
             }
-            BrushKind::Solid { ref opacity_binding, .. } => {
+            BrushKind::Solid { opacity_binding_index, .. } => {
+                let opacity_binding = prim_store.get_opacity_binding(opacity_binding_index);
                 Some(BrushBatchParameters::shared(
                     BrushBatchKind::Solid,
                     BatchTextures::no_texture(),
-                    [get_shader_opacity(opacity_binding.current), 0, 0],
+                    [get_shader_opacity(opacity_binding), 0, 0],
                     0,
                 ))
             }
