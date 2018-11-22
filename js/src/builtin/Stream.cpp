@@ -3135,10 +3135,14 @@ SetUpReadableStreamDefaultController(JSContext* cx,
     stream->setController(controller);
 
     // Step 9: Let startResult be the result of performing startAlgorithm.
+    // If this is a tee stream, the startAlgorithm does nothing and returns
+    // undefined.
     RootedValue startResult(cx);
-    RootedValue controllerVal(cx, ObjectValue(*controller));
-    if (!InvokeOrNoop(cx, underlyingSource, cx->names().start, controllerVal, &startResult)) {
-        return false;
+    if (!underlyingSource.isObject() || !underlyingSource.toObject().is<TeeState>()) {
+        RootedValue controllerVal(cx, ObjectValue(*controller));
+        if (!InvokeOrNoop(cx, underlyingSource, cx->names().start, controllerVal, &startResult)) {
+            return false;
+        }
     }
 
     // Step 10: Let startPromise be a promise resolved with startResult.
