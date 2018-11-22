@@ -402,9 +402,12 @@ add_task(async function check_sync() {
 });
 
 add_task(async function check_provider_cohorts() {
-  await pushPrefs(["browser.newtabpage.activity-stream.asrouter.messageProviders", JSON.stringify([{id: "onboarding", messages: [], enabled: true, cohort: "foo"}, {id: "cfr", messages: [], cohort: "bar"}])]);
-  is(await ASRouterTargeting.Environment.providerCohorts.onboarding, "foo");
-  is(await ASRouterTargeting.Environment.providerCohorts.cfr, "bar");
+  await pushPrefs(["browser.newtabpage.activity-stream.asrouter.providers.onboarding", JSON.stringify({id: "onboarding", messages: [], enabled: true, cohort: "foo"})]);
+  await pushPrefs(["browser.newtabpage.activity-stream.asrouter.providers.cfr", JSON.stringify({id: "cfr", enabled: true, cohort: "bar"})]);
+  is(await ASRouterTargeting.Environment.providerCohorts.onboarding, "foo",
+    "should have cohort foo for onboarding");
+  is(await ASRouterTargeting.Environment.providerCohorts.cfr, "bar",
+    "should have cohort bar for cfr");
 });
 
 add_task(async function check_xpinstall_enabled() {

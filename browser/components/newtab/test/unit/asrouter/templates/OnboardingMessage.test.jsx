@@ -32,4 +32,3 @@ describe("OnboardingMessage", () => {
     messages.forEach(msg => assert.jsonSchema(msg.content, schema));
   });
 });
-
