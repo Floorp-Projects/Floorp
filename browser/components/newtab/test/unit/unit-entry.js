@@ -140,6 +140,7 @@ const TEST_GLOBAL = {
       removeObserver() {},
       getPrefType() {},
       clearUserPref() {},
+      getChildList() { return []; },
       getStringPref() {},
       setStringPref() {},
       getIntPref() {},
