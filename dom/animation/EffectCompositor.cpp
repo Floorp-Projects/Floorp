@@ -120,6 +120,41 @@ IsMatchForCompositor(const KeyframeEffect& aEffect,
          : MatchForCompositor::IfNeeded;
 }
 
+/* static */ bool
+EffectCompositor::AllowCompositorAnimationsOnFrame(
+  const nsIFrame* aFrame,
+  const EffectSet& aEffects,
+  AnimationPerformanceWarning::Type& aWarning /* out */)
+{
+  if (aFrame->RefusedAsyncAnimation()) {
+    return false;
+  }
+
+  if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
+    if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
+      nsCString message;
+      message.AppendLiteral("Performance warning: Async animations are "
+                            "disabled");
+      AnimationUtils::LogAsyncAnimationFailure(message);
+    }
+    return false;
+  }
+
+  // Disable async animations if we have a rendering observer that
+  // depends on our content (svg masking, -moz-element etc) so that
+  // it gets updated correctly.
+  nsIContent* content = aFrame->GetContent();
+  while (content) {
+    if (content->HasRenderingObservers()) {
+      aWarning = AnimationPerformanceWarning::Type::HasRenderingObserver;
+      return false;
+    }
+    content = content->GetParent();
+  }
+
+  return true;
+}
+
 // Helper function to factor out the common logic from
 // GetAnimationsForCompositor and HasAnimationsForCompositor.
 //
@@ -159,7 +194,16 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
     return false;
   }
 
-  if (aFrame->RefusedAsyncAnimation()) {
+  AnimationPerformanceWarning::Type warning =
+    AnimationPerformanceWarning::Type::None;
+  if (!EffectCompositor::AllowCompositorAnimationsOnFrame(aFrame,
+                                                          *effects,
+                                                          warning)) {
+    if (warning != AnimationPerformanceWarning::Type::None) {
+      EffectCompositor::SetPerformanceWarning(
+        aFrame, aProperty,
+        AnimationPerformanceWarning(warning));
+    }
     return false;
   }
 
@@ -177,31 +221,6 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
              "have bailed out at above the call to EffectSet::GetEffectSet");
   EffectCompositor::MaybeUpdateCascadeResults(pseudoElement->mElement,
                                               pseudoElement->mPseudoType);
-
-  if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
-    if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
-      nsCString message;
-      message.AppendLiteral("Performance warning: Async animations are "
-                            "disabled");
-      AnimationUtils::LogAsyncAnimationFailure(message);
-    }
-    return false;
-  }
-
-  // Disable async animations if we have a rendering observer that
-  // depends on our content (svg masking, -moz-element etc) so that
-  // it gets updated correctly.
-  nsIContent* content = aFrame->GetContent();
-  while (content) {
-    if (content->HasRenderingObservers()) {
-      EffectCompositor::SetPerformanceWarning(
-        aFrame, aProperty,
-        AnimationPerformanceWarning(
-          AnimationPerformanceWarning::Type::HasRenderingObserver));
-      return false;
-    }
-    content = content->GetParent();
-  }
 
   bool foundRunningAnimations = false;
   for (KeyframeEffect* effect : *effects) {
