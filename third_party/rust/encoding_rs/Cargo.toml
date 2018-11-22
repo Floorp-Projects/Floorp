@@ -12,14 +12,14 @@
 
 [package]
 name = "encoding_rs"
-version = "0.8.9"
+version = "0.8.12"
 authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
 description = "A Gecko-oriented implementation of the Encoding Standard"
 homepage = "https://docs.rs/encoding_rs/"
 documentation = "https://docs.rs/encoding_rs/"
 readme = "README.md"
 keywords = ["encoding", "web", "unicode", "charset"]
-categories = ["text-processing", "encoding", "web-programming", "email"]
+categories = ["text-processing", "encoding", "web-programming", "internationalization"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/hsivonen/encoding_rs"
 [profile.release]
@@ -44,6 +44,12 @@ version = "1.0"
 version = "1.0"
 
 [features]
+fast-big5-hanzi-encode = []
+fast-gb-hanzi-encode = []
+fast-hangul-encode = []
+fast-hanja-encode = []
+fast-kanji-encode = []
+fast-legacy-encode = ["fast-hangul-encode", "fast-hanja-encode", "fast-kanji-encode", "fast-gb-hanzi-encode", "fast-big5-hanzi-encode"]
 less-slow-big5-hanzi-encode = []
 less-slow-gb-hanzi-encode = []
 less-slow-kanji-encode = []
