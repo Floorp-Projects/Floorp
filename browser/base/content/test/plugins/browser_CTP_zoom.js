@@ -52,7 +52,7 @@ add_task(async function() {
     await ContentTask.spawn(gTestBrowser, { count }, async function(args) {
       let doc = content.document;
       let plugin = doc.getElementById("test");
-      let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
+      let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
       Assert.ok(overlay && overlay.classList.contains("visible"),
         "Overlay should be visible for zoom change count " + args.count);
     });
