@@ -630,7 +630,7 @@ TelemetryImpl::GetSnapshotForHistograms(const nsACString& aStoreName,
   unsigned int dataset = mCanRecordExtended ?
     nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN :
     nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT;
-  return TelemetryHistogram::CreateHistogramSnapshots(aCx, aResult, dataset, aClearStore, aFilterTest);
+  return TelemetryHistogram::CreateHistogramSnapshots(aCx, aResult, aStoreName, dataset, aClearStore, aFilterTest);
 }
 
 NS_IMETHODIMP
@@ -679,7 +679,7 @@ TelemetryImpl::SnapshotHistograms(unsigned int aDataset,
                                   bool aClearHistograms, JSContext* aCx,
                                   JS::MutableHandleValue aResult)
 {
-  return TelemetryHistogram::CreateHistogramSnapshots(aCx, aResult, aDataset,
+  return TelemetryHistogram::CreateHistogramSnapshots(aCx, aResult, NS_LITERAL_CSTRING("main"), aDataset,
                                                       aClearHistograms);
 }
 
