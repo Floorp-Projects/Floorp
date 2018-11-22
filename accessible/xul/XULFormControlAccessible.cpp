@@ -468,6 +468,20 @@ XULToolbarButtonAccessible::IsSeparator(Accessible* aAccessible)
                                                 nsGkAtoms::toolbarspring);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// XULToolbarButtonAccessible: Widgets
+
+bool
+XULToolbarButtonAccessible::IsAcceptableChild(nsIContent* aEl) const
+{
+  // In general XUL button has not accessible children. Nevertheless menu
+  // buttons can have popup accessibles (@type="menu" or columnpicker).
+  // Also: Toolbar buttons can have labels as children.
+  return aEl->IsXULElement(nsGkAtoms::menupopup) ||
+         aEl->IsXULElement(nsGkAtoms::popup) ||
+         aEl->IsXULElement(nsGkAtoms::label);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULToolbarAccessible

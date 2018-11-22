@@ -591,7 +591,7 @@ static void ToRTCIceCandidateStats(
     cand.mTimestamp.Construct(now);
     cand.mCandidateType.Construct(
         dom::RTCStatsIceCandidateType(candidate.type));
-    cand.mIpAddress.Construct(
+    cand.mAddress.Construct(
         NS_ConvertASCIItoUTF16(candidate.cand_addr.host.c_str()));
     cand.mPortNumber.Construct(candidate.cand_addr.port);
     cand.mTransport.Construct(

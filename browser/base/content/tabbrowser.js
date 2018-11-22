@@ -5,6 +5,8 @@
 
 /* eslint-env mozilla/browser-window */
 
+{ // start private scope for gBrowser
+
 /**
  * A set of known icons to use for internal pages. These are hardcoded so we can
  * start loading them faster than ContentLinkHandler would normally find them.
@@ -5251,6 +5253,8 @@ TabProgressListener.prototype.QueryInterface = ChromeUtils.generateQI(
   ["nsIWebProgressListener",
    "nsIWebProgressListener2",
    "nsISupportsWeakReference"]);
+
+} // end private scope for gBrowser
 
 var StatusPanel = {
   get panel() {

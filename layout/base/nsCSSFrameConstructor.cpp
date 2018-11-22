@@ -322,14 +322,6 @@ nsIFrame*
 NS_NewImageFrameForGeneratedContentIndex(nsIPresShell*, ComputedStyle*);
 
 
-#ifdef NOISY_FINDFRAME
-static int32_t FFWC_totalCount=0;
-static int32_t FFWC_doLoop=0;
-static int32_t FFWC_doSibling=0;
-static int32_t FFWC_recursions=0;
-static int32_t FFWC_nextInFlows=0;
-#endif
-
 // Returns true if aFrame is an anonymous flex/grid item.
 static inline bool
 IsAnonymousFlexOrGridItem(const nsIFrame* aFrame)
@@ -337,15 +329,6 @@ IsAnonymousFlexOrGridItem(const nsIFrame* aFrame)
   const nsAtom* pseudoType = aFrame->Style()->GetPseudo();
   return pseudoType == nsCSSAnonBoxes::anonymousFlexItem() ||
          pseudoType == nsCSSAnonBoxes::anonymousGridItem();
-}
-
-// Returns true if aFrame is a flex/grid container.
-static inline bool
-IsFlexOrGridContainer(const nsIFrame* aFrame)
-{
-  const LayoutFrameType t = aFrame->Type();
-  return t == LayoutFrameType::FlexContainer ||
-         t == LayoutFrameType::GridContainer;
 }
 
 // Returns true IFF the given nsIFrame is a nsFlexContainerFrame and
@@ -448,9 +431,9 @@ IsFrameForSVG(const nsIFrame* aFrame)
 static bool
 ShouldSuppressFloatingOfDescendants(nsIFrame* aFrame)
 {
-  return aFrame->IsFrameOfType(nsIFrame::eMathML) ||
+  return aFrame->IsFlexOrGridContainer() ||
     aFrame->IsXULBoxFrame() ||
-    ::IsFlexOrGridContainer(aFrame);
+    aFrame->IsFrameOfType(nsIFrame::eMathML);
 }
 
 /**
@@ -9296,7 +9279,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
   FrameConstructionItemList& aItems,
   nsIFrame* aParentFrame)
 {
-  if (aItems.IsEmpty() || !::IsFlexOrGridContainer(aParentFrame)) {
+  if (aItems.IsEmpty() || !aParentFrame->IsFlexOrGridContainer()) {
     return;
   }
 
@@ -9966,7 +9949,7 @@ static bool
 FrameWantsToBeInAnonymousItem(const nsIFrame* aContainerFrame,
                               const nsIFrame* aFrame)
 {
-  MOZ_ASSERT(::IsFlexOrGridContainer(aContainerFrame));
+  MOZ_ASSERT(aContainerFrame->IsFlexOrGridContainer());
 
   // Any line-participant frames (e.g. text) definitely want to be wrapped in
   // an anonymous flex/grid item.
@@ -9990,7 +9973,7 @@ VerifyGridFlexContainerChildren(nsIFrame* aParentFrame,
                                 const nsFrameList& aChildren)
 {
 #ifdef DEBUG
-  if (!::IsFlexOrGridContainer(aParentFrame)) {
+  if (!aParentFrame->IsFlexOrGridContainer()) {
     return;
   }
 
@@ -10120,13 +10103,9 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
                                 &haveFirstLineStyle);
   }
 
-  const bool isFlexOrGridContainer = ::IsFlexOrGridContainer(aFrame);
   // The logic here needs to match the logic in GetFloatContainingBlock()
-  // (Since we already have isFlexOrGridContainer, we check that eagerly instead
-  // of letting ShouldSuppressFloatingOfDescendants look it up redundantly.)
   nsFrameConstructorSaveState floatSaveState;
-  if (isFlexOrGridContainer ||
-      ShouldSuppressFloatingOfDescendants(aFrame)) {
+  if (ShouldSuppressFloatingOfDescendants(aFrame)) {
     aState.PushFloatContainingBlock(nullptr, floatSaveState);
   } else if (aFrame->IsFloatContainingBlock()) {
     aState.PushFloatContainingBlock(aFrame, floatSaveState);

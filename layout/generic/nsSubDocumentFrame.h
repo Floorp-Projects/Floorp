@@ -115,12 +115,6 @@ public:
   bool ReflowFinished() override;
   void ReflowCallbackCanceled() override;
 
-  bool ShouldClipSubdocument()
-  {
-    nsFrameLoader* frameLoader = FrameLoader();
-    return !frameLoader || frameLoader->ShouldClipSubdocument();
-  }
-
   bool ShouldClampScrollPosition()
   {
     nsFrameLoader* frameLoader = FrameLoader();

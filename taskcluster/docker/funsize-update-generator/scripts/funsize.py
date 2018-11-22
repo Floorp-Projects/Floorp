@@ -136,10 +136,6 @@ async def download(url, dest, mode=None):  # noqa: E999
                         log_interval = chunk_size * 1024
 
             log.debug('Downloaded %s bytes', bytes_downloaded)
-            if 'content-length' in resp.headers:
-                log.debug('Content-Length: %s bytes', resp.headers['content-length'])
-                if bytes_downloaded != int(resp.headers['content-length']):
-                    raise IOError('Unexpected number of bytes downloaded')
             if mode:
                 log.debug("chmod %o %s", mode, dest)
                 os.chmod(dest, mode)

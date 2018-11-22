@@ -36,12 +36,12 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page" &&
-               state["address-page"].selectedStateKey[0] == "selectedShippingAddress";
+        return state.page.id == "shipping-address-page";
       }, "Address page is shown first during on-boarding if there are no saved addresses");
 
+      let addressForm = content.document.querySelector("#shipping-address-page");
       info("Checking if the address page has been rendered");
-      let addressSaveButton = content.document.querySelector("address-form .save-button");
+      let addressSaveButton = addressForm.querySelector(".save-button");
       ok(content.isVisible(addressSaveButton), "Address save button is rendered");
       is(addressSaveButton.textContent, "Next",
          "Address save button has the correct label during onboarding");
@@ -53,17 +53,23 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
       ok(header.textContent, "Total Header contains text");
 
       info("Check if the page title is visible on the address page");
-      let addressPageTitle = content.document.querySelector("address-form h2");
+      let addressPageTitle = addressForm.querySelector("h2");
       ok(content.isVisible(addressPageTitle), "Address page title is visible");
       is(addressPageTitle.textContent, "Add Shipping Address",
          "Address page title is correctly shown");
 
-      let addressCancelButton = content.document.querySelector("address-form .cancel-button");
+      let addressCancelButton = addressForm.querySelector(".cancel-button");
       ok(content.isVisible(addressCancelButton),
          "The cancel button on the address page is visible");
     });
 
-    await fillInShippingAddressForm(frame, PTU.Addresses.TimBL2);
+    let addOptions = {
+      addLinkSelector: "address-picker.shipping-related .add-link",
+      initialPageId: "payment-summary",
+      addressPageId: "shipping-address-page",
+    };
+
+    await fillInShippingAddressForm(frame, PTU.Addresses.TimBL2, addOptions);
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
 
     await spawnPaymentDialogTask(frame, async function() {
@@ -165,8 +171,8 @@ add_task(async function test_onboarding_wizard_with_saved_addresses_and_saved_ca
         content.document.querySelector(button).click();
         if (button.startsWith("address")) {
           await PTU.DialogContentUtils.waitForState(content, (state) => {
-            return state.page.id == "address-page";
-          }, "Address page is shown");
+            return state.page.id == "shipping-address-page";
+          }, "Shipping address page is shown");
         } else {
           await PTU.DialogContentUtils.waitForState(content, (state) => {
             return state.page.id == "basic-card-page";
@@ -177,7 +183,7 @@ add_task(async function test_onboarding_wizard_with_saved_addresses_and_saved_ca
            "Total Header is hidden on the address/basic card page");
 
         if (button.startsWith("address")) {
-          content.document.querySelector("address-form .back-button").click();
+          content.document.querySelector("#shipping-address-page .back-button").click();
         } else {
           content.document.querySelector("basic-card-form .back-button").click();
         }
@@ -265,22 +271,30 @@ add_task(async function test_onboarding_wizard_without_saved_address_with_saved_
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       });
 
+    let addOptions = {
+      addLinkSelector: "address-picker.shipping-related .add-link",
+      checkboxSelector: "#shipping-address-page .persist-checkbox",
+      initialPageId: "payment-summary",
+      addressPageId: "shipping-address-page",
+      expectPersist: true,
+    };
+
     await spawnPaymentDialogTask(frame, async function() {
       let {
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page";
-      }, "Address page is shown first if there are saved addresses during on boarding");
+        return state.page.id == "shipping-address-page";
+      }, "Shipping address page is shown first if there are saved addresses during on boarding");
 
       info("Checking if the address page has been rendered");
-      let addressSaveButton = content.document.querySelector("address-form .save-button");
+      let addressForm = content.document.querySelector("#shipping-address-page");
+      let addressSaveButton = addressForm.querySelector(".save-button");
       ok(content.isVisible(addressSaveButton), "Address save button is rendered");
     });
 
-
-    await fillInShippingAddressForm(frame, PTU.Addresses.TimBL2);
+    await fillInShippingAddressForm(frame, PTU.Addresses.TimBL2, addOptions);
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
 
     await spawnPaymentDialogTask(frame, async function checkSavedAndCancelButton() {
@@ -324,25 +338,29 @@ add_task(async function test_onboarding_wizard_with_requestShipping_turned_off()
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page" &&
-               state["address-page"].selectedStateKey[0] == "basic-card-page" &&
-               state["address-page"].selectedStateKey[1] == "billingAddressGUID";
+        return state.page.id == "billing-address-page";
       // eslint-disable-next-line max-len
       }, "Billing address page is shown first during on-boarding if requestShipping is turned off");
 
       info("Checking if the billing address page has been rendered");
-      let addressSaveButton = content.document.querySelector("address-form .save-button");
+      let addressForm = content.document.querySelector("#billing-address-page");
+      let addressSaveButton = addressForm.querySelector(".save-button");
       ok(content.isVisible(addressSaveButton),
          "Address save button is rendered");
 
       info("Check if the page title is visible on the address page");
-      let addressPageTitle = content.document.querySelector("address-form h2");
+      let addressPageTitle = addressForm.querySelector("h2");
       ok(content.isVisible(addressPageTitle), "Address page title is visible");
       is(addressPageTitle.textContent, "Add Billing Address",
          "Address page title is correctly shown");
     });
 
-    await fillInBillingAddressForm(frame, PTU.Addresses.TimBL2);
+    let addOptions = {
+      initialPageId: "basic-card-page",
+      addressPageId: "billing-address-page",
+    };
+
+    await fillInBillingAddressForm(frame, PTU.Addresses.TimBL2, addOptions);
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
 
     await spawnPaymentDialogTask(frame, async function() {
@@ -445,23 +463,29 @@ add_task(async function test_back_button_on_basic_card_page_during_onboarding() 
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page";
+        return state.page.id == "billing-address-page";
       }, "Billing address page is shown first if there are no saved addresses " +
          "and requestShipping is false during on boarding");
       info("Checking if the address page has been rendered");
-      let addressSaveButton = content.document.querySelector("address-form .save-button");
+      let addressSaveButton = content.document.querySelector("#billing-address-page .save-button");
       ok(content.isVisible(addressSaveButton), "Address save button is rendered");
     });
 
-    await fillInBillingAddressForm(frame, PTU.Addresses.TimBL2);
+    let addOptions = {
+      addLinkSelector: "address-picker.billing-related .add-link",
+      checkboxSelector: "#billing-address-page .persist-checkbox",
+      initialPageId: "basic-card-page",
+      addressPageId: "billing-address-page",
+      expectPersist: true,
+    };
+
+    await fillInBillingAddressForm(frame, PTU.Addresses.TimBL2, addOptions);
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.clickPrimaryButton);
 
     await spawnPaymentDialogTask(frame, async function() {
       let {
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
-
-      let addressSaveButton = content.document.querySelector("address-form .save-button");
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "basic-card-page";
@@ -479,16 +503,17 @@ add_task(async function test_back_button_on_basic_card_page_during_onboarding() 
       basicCardBackButton.click();
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page" &&
-               state["address-page"].guid == state["basic-card-page"].billingAddressGUID;
-      }, "Address page is shown again");
+        return state.page.id == "billing-address-page" &&
+               state["billing-address-page"].guid == state["basic-card-page"].billingAddressGUID;
+      }, "Billing address page is shown again");
 
       info("Checking if the address page has been rendered");
-      addressSaveButton = content.document.querySelector("address-form .save-button");
+      let addressForm = content.document.querySelector("#billing-address-page");
+      let addressSaveButton = addressForm.querySelector(".save-button");
       ok(content.isVisible(addressSaveButton), "Address save button is rendered");
 
       info("Checking if the address saved in the last step is correctly loaded in the form");
-      field = content.document.getElementById("given-name");
+      field = addressForm.querySelector("#given-name");
       is(field.value, PTU.Addresses.TimBL2["given-name"],
          "Given name field value is correctly loaded");
 

@@ -64,7 +64,8 @@ enum JSValueType : uint8_t
 #endif
     JSVAL_TYPE_OBJECT              = 0x0c,
 
-    /* These never appear in a jsval; they are only provided as an out-of-band value. */
+    // These never appear in a jsval; they are only provided as an out-of-band
+    // value.
     JSVAL_TYPE_UNKNOWN             = 0x20,
     JSVAL_TYPE_MISSING             = 0x21
 };
@@ -279,16 +280,17 @@ CanonicalizeNaN(double d)
  *
  * - JS::Value has setX() and isX() members for X in
  *
- *     { Int32, Double, String, Symbol, BigInt, Boolean, Undefined, Null, Object, Magic }
+ *     { Int32, Double, String, Symbol, BigInt, Boolean, Undefined, Null,
+ *       Object, Magic }
  *
  *   JS::Value also contains toX() for each of the non-singleton types.
  *
- * - Magic is a singleton type whose payload contains either a JSWhyMagic "reason" for
- *   the magic value or a uint32_t value. By providing JSWhyMagic values when
- *   creating and checking for magic values, it is possible to assert, at
- *   runtime, that only magic values with the expected reason flow through a
- *   particular value. For example, if cx->exception has a magic value, the
- *   reason must be JS_GENERATOR_CLOSING.
+ * - Magic is a singleton type whose payload contains either a JSWhyMagic
+ *   "reason" for the magic value or a uint32_t value. By providing JSWhyMagic
+ *   values when creating and checking for magic values, it is possible to
+ *   assert, at runtime, that only magic values with the expected reason flow
+ *   through a particular value. For example, if cx->exception has a magic
+ *   value, the reason must be JS_GENERATOR_CLOSING.
  *
  * - The JS::Value operations are preferred.  The JSVAL_* operations remain for
  *   compatibility; they may be removed at some point.  These operations mostly

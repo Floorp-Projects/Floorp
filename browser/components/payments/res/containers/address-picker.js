@@ -230,26 +230,38 @@ export default class AddressPicker extends RichPicker {
   }
 
   onClick({target}) {
+    let pageId;
+    let currentState = this.requestStore.getState();
     let nextState = {
-      page: {
-        id: "address-page",
-      },
-      "address-page": {
-        addressFields: this.getAttribute("address-fields"),
-        selectedStateKey: this.selectedStateKey.split("|"),
-      },
+      page: {},
     };
+
+    switch (this.selectedStateKey) {
+      case "selectedShippingAddress":
+        pageId = "shipping-address-page";
+        break;
+      case "selectedPayerAddress":
+        pageId = "payer-address-page";
+        break;
+      case "basic-card-page|billingAddressGUID":
+        pageId = "billing-address-page";
+        break;
+      default: {
+        throw new Error("onClick, un-matched selectedStateKey: " +
+                        this.selectedStateKey);
+      }
+    }
+    nextState.page.id = pageId;
+    let addressFields = this.getAttribute("address-fields");
+    nextState[pageId] = { addressFields };
 
     switch (target) {
       case this.addLink: {
-        nextState["address-page"].guid = null;
-        nextState["address-page"].title = this.dataset.addAddressTitle;
+        nextState[pageId].guid = null;
         break;
       }
       case this.editLink: {
-        let currentState = this.requestStore.getState();
-        nextState["address-page"].guid = this.getCurrentValue(currentState);
-        nextState["address-page"].title = this.dataset.editAddressTitle;
+        nextState[pageId].guid = this.getCurrentValue(currentState);
         break;
       }
       default: {

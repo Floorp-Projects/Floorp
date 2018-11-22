@@ -133,13 +133,6 @@ interface FrameLoader {
                                     DOMString backgroundColor);
 
   /**
-   * If false, then the subdocument is not clipped to its CSS viewport, and the
-   * subdocument's viewport scrollbar(s) are not rendered.
-   * Defaults to true.
-   */
-  attribute boolean clipSubdocument;
-
-  /**
    * The element which owns this frame loader.
    *
    * For example, if this is a frame loader for an <iframe>, this attribute

@@ -146,13 +146,6 @@ ColumnSetWrapperFrame::AssertColumnSpanWrapperSubtreeIsSane(
              "::-moz-column-span-wrapper anonymous blocks cannot own "
              "other types of anonymous blocks!");
 
-  nsTArray<nsIContent*> anonKids;
-  nsContentUtils::AppendNativeAnonymousChildren(
-    aFrame->GetContent(), anonKids, 0);
-  MOZ_ASSERT(anonKids.IsEmpty(),
-             "We support only column-span on block and inline frame. They "
-             "should not create any native anonymous children.");
-
   for (const nsIFrame* child : aFrame->PrincipalChildList()) {
     AssertColumnSpanWrapperSubtreeIsSane(child);
   }
