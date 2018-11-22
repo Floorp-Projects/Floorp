@@ -36,6 +36,7 @@ Error RawAddModule(char *dbmodulespec, char *modulespec);
 Error RawListModule(char *modulespec);
 Error SetDefaultModule(char *moduleName, char *slotName, char *mechanisms);
 Error UnsetDefaultModule(char *moduleName, char *slotName, char *mechanisms);
+PRBool IsP11KitEnabled(void);
 void out_of_memory(void);
 
 #endif /*MODUTIL_H*/

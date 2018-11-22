@@ -64,7 +64,8 @@
         "RequireAnyClientCertificate-TLS1*":"Bug 1339387",
         "SendExtensionOnClientCertificate-TLS13":"Bug 1339392",
         "ALPNClient-Mismatch-TLS13":"NSS sends alerts in response to errors in protected handshake messages in the clear",
-        "P224-Server":"NSS doesn't support P-224"
+        "P224-Server":"NSS doesn't support P-224",
+        "ClientAuth-SHA1-Fallback*":"Boring wants us to fall back to SHA-1 if supported_signature_algorithms in CR is empty."
     },
     "ErrorMap" : {
         ":HANDSHAKE_FAILURE_ON_CLIENT_HELLO:":"SSL_ERROR_NO_CYPHER_OVERLAP",

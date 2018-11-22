@@ -258,7 +258,8 @@ Add one or multiple extensions that certutil cannot encode yet, by loading their
 
       <varlistentry>
         <term>-h tokenname</term>
-        <listitem><para>Specify the name of a token to use or act on. If not specified the default token is the internal database slot.</para></listitem>
+        <listitem><para>Specify the name of a token to use or act on. If not specified the default token is the internal database slot.</para>
+	<para>The name can also be a PKCS #11 URI. For example, the NSS internal certificate store can be unambiguously specified as "pkcs11:token=NSS%20Certificate%20DB". For details about the format, see RFC 7512.</para></listitem>
       </varlistentry>
 
      <varlistentry>
@@ -292,7 +293,8 @@ Add one or multiple extensions that certutil cannot encode yet, by loading their
 
       <varlistentry>
         <term>-n nickname</term>
-        <listitem><para>Specify the nickname of a certificate or key to list, create, add to a database, modify, or validate. Bracket the nickname string with quotation marks if it contains spaces.</para></listitem>
+        <listitem><para>Specify the nickname of a certificate or key to list, create, add to a database, modify, or validate. Bracket the nickname string with quotation marks if it contains spaces.</para>
+	<para>The nickname can also be a PKCS #11 URI. For example, if you have a certificate named "my-server-cert" on the internal certificate store, it can be unambiguously specified as "pkcs11:token=NSS%20Certificate%20DB;object=my-server-cert". For details about the format, see RFC 7512.</para></listitem>
       </varlistentry>
 
       <varlistentry>
@@ -1017,9 +1019,11 @@ certutil: Checking token "NSS Certificate DB" in slot "NSS User Private Key and 
 
     slot: NSS User Private Key and Certificate Services                  
    token: NSS Certificate DB
+     uri: pkcs11:token=NSS%20Certificate%20DB;manufacturer=Mozilla%20Foundation;serial=0000000000000000;model=NSS%203
 
     slot: NSS Internal Cryptographic Services                            
-   token: NSS Generic Crypto Services</programlisting>
+   token: NSS Generic Crypto Services
+     uri: pkcs11:token=NSS%20Generic%20Crypto%20Services;manufacturer=Mozilla%20Foundation;serial=0000000000000000;model=NSS%203</programlisting>
 
 	<para><command>Adding Certificates to the Database</command></para>
 	<para>

@@ -4774,6 +4774,10 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
         sid = ssl_ReferenceSID(ss->sec.ci.sid);
         SSL_TRC(3, ("%d: SSL3[%d]: using external resumption token in ClientHello",
                     SSL_GETPID(), ss->fd));
+    } else if (ss->sec.ci.sid && ss->statelessResume && type == client_hello_retry) {
+        /* If we are sending a second ClientHello, reuse the same SID
+         * as the original one. */
+        sid = ssl_ReferenceSID(ss->sec.ci.sid);
     } else if (!ss->opt.noCache) {
         /* We ignore ss->sec.ci.sid here, and use ssl_Lookup because Lookup
          * handles expired entries and other details.
@@ -6167,15 +6171,11 @@ ssl_PickClientSignatureScheme(sslSocket *ss, const SSLSignatureScheme *schemes,
 
     PORT_Assert(pubKey);
 
-    if (!isTLS13 && numSchemes == 0) {
-        /* If the server didn't provide any signature algorithms
-         * then let's assume they support SHA-1. */
-        rv = ssl_PickFallbackSignatureScheme(ss, pubKey);
-        SECKEY_DestroyPublicKey(pubKey);
-        return rv;
+    if (ss->version >= SSL_LIBRARY_VERSION_TLS_1_2) {
+        /* We should have already checked that a signature scheme was
+         * listed in the request. */
+        PORT_Assert(schemes && numSchemes > 0);
     }
-
-    PORT_Assert(schemes && numSchemes > 0);
 
     if (!isTLS13 &&
         (SECKEY_GetPublicKeyType(pubKey) == rsaKey ||
@@ -7326,6 +7326,11 @@ ssl3_HandleCertificateRequest(sslSocket *ss, PRUint8 *b, PRUint32 length)
         if (rv != SECSuccess) {
             PORT_SetError(SSL_ERROR_RX_MALFORMED_CERT_REQUEST);
             goto loser; /* malformed, alert has been sent */
+        }
+        if (signatureSchemeCount == 0) {
+            errCode = SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM;
+            desc = handshake_failure;
+            goto alert_loser;
         }
     }
 
