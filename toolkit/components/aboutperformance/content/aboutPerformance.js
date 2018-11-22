@@ -426,7 +426,7 @@ var State = {
     let tabs = {};
     for (let counter of counters) {
       let {items, host, pid, counterId, windowId, duration, isWorker,
-           isTopLevel} = counter;
+           memoryInfo, isTopLevel} = counter;
       // If a worker has a windowId of 0 or max uint64, attach it to the
       // browser UI (doc group with id 1).
       if (isWorker && (windowId == 18446744073709552000 || !windowId))
@@ -434,6 +434,17 @@ var State = {
       let dispatchCount = 0;
       for (let {count} of items) {
         dispatchCount += count;
+      }
+
+      let memory = 0;
+      for (let field in memoryInfo) {
+        if (field == "media") {
+          for (let mediaField of ["audioSize", "videoSize", "resourcesSize"]) {
+            memory += memoryInfo.media[mediaField];
+          }
+          continue;
+        }
+        memory += memoryInfo[field];
       }
 
       let tab;
@@ -444,13 +455,14 @@ var State = {
       if (id in tabs) {
         tab = tabs[id];
       } else {
-        tab = {windowId, host, dispatchCount: 0, duration: 0, children: []};
+        tab = {windowId, host, dispatchCount: 0, duration: 0, memory: 0, children: []};
         tabs[id] = tab;
       }
       tab.dispatchCount += dispatchCount;
       tab.duration += duration;
+      tab.memory += memory;
       if (!isTopLevel || isWorker) {
-        tab.children.push({host, isWorker, dispatchCount, duration,
+        tab.children.push({host, isWorker, dispatchCount, duration, memory,
                            counterId: pid + ":" + counterId});
       }
     }
@@ -468,7 +480,7 @@ var State = {
         if (id in tabs) {
           tab = tabs[id];
         } else {
-          tab = {windowId: 0, host: id, dispatchCount: 0, duration: 0, children: []};
+          tab = {windowId: 0, host: id, dispatchCount: 0, duration: 0, memory: 0, children: []};
           tabs[id] = tab;
         }
         tab.dispatchCount += dispatchCount;
@@ -669,8 +681,7 @@ var State = {
       }
       // For each subitem, create a new object including the deltas since the previous time.
       let children = tab.children.map(child => {
-        let {host, dispatchCount, duration, isWorker, counterId} = child;
-
+        let {host, dispatchCount, duration, memory, isWorker, counterId} = child;
         let dispatchesSincePrevious = dispatchCount;
         let durationSincePrevious = duration;
         if (prevChildren.has(counterId)) {
@@ -680,7 +691,7 @@ var State = {
           prevChildren.delete(counterId);
         }
 
-        return {host, dispatchCount, duration, isWorker,
+        return {host, dispatchCount, duration, isWorker, memory,
                 dispatchesSincePrevious, durationSincePrevious};
       });
 
@@ -714,7 +725,7 @@ var State = {
         durationSinceStartOfBuffer =
           duration - oldest.duration - (oldest.durationFromFormerChildren || 0);
       }
-      counters.push({id, name, image, type,
+      counters.push({id, name, image, type, memory: tab.memory,
                      totalDispatches: dispatches, totalDuration: duration,
                      durationSincePrevious, dispatchesSincePrevious,
                      durationSinceStartOfBuffer, dispatchesSinceStartOfBuffer,
@@ -1037,7 +1048,7 @@ var View = {
                                   {value: energyImpact});
     }
   },
-  appendRow(name, energyImpact, tooltip, type, image = "") {
+  appendRow(name, energyImpact, memory, tooltip, type, image = "") {
     let row = document.createElement("tr");
 
     let elt = document.createElement("td");
@@ -1067,6 +1078,24 @@ var View = {
 
     elt = document.createElement("td");
     this.displayEnergyImpact(elt, energyImpact);
+    row.appendChild(elt);
+
+    elt = document.createElement("td");
+    if (!memory) {
+      elt.textContent = "–";
+    } else {
+      let unit = "KB";
+      memory = Math.ceil(memory / 1024);
+      if (memory > 1024) {
+        memory = Math.ceil(memory / 1024 * 10) / 10;
+        unit = "MB";
+        if (memory > 1024) {
+          memory = Math.ceil(memory / 1024 * 100) / 100;
+          unit = "GB";
+        }
+      }
+      document.l10n.setAttributes(elt, "size-" + unit, {value: memory});
+    }
     row.appendChild(elt);
 
     if (tooltip)
@@ -1204,6 +1233,8 @@ var Control = {
       // If the mouse has been moved recently, update the data displayed
       // without moving any item to avoid the risk of users clicking an action
       // button for the wrong item.
+      // Memory use is unlikely to change dramatically within a few seconds, so
+      // it's probably fine to not update the Memory column in this case.
       if (Date.now() - this._lastMouseEvent < TIME_BEFORE_SORTING_AGAIN) {
         let energyImpactPerId = new Map();
         for (let {id, dispatchesSincePrevious,
@@ -1240,11 +1271,12 @@ var Control = {
 
       let counters = this._sortCounters(State.getCounters());
       for (let {id, name, image, type, totalDispatches, dispatchesSincePrevious,
-                totalDuration, durationSincePrevious, children} of counters) {
+                memory, totalDuration, durationSincePrevious, children} of counters) {
         let row =
           View.appendRow(name,
                          this._computeEnergyImpact(dispatchesSincePrevious,
                                                    durationSincePrevious),
+                         memory,
                          {totalDispatches, totalDuration: Math.ceil(totalDuration / 1000),
                           dispatchesSincePrevious,
                           durationSincePrevious: Math.ceil(durationSincePrevious / 1000)},
@@ -1307,6 +1339,7 @@ var Control = {
       View.appendRow(row.host,
                      this._computeEnergyImpact(row.dispatchesSincePrevious,
                                                row.durationSincePrevious),
+                     row.memory,
                      {totalDispatches: row.dispatchCount,
                       totalDuration: Math.ceil(row.duration / 1000),
                       dispatchesSincePrevious: row.dispatchesSincePrevious,
