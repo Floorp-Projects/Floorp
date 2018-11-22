@@ -70,6 +70,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 this.EXPORTED_SYMBOLS = ["GeckoDriver"];
 
 const APP_ID_FIREFOX = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
+const APP_ID_THUNDERBIRD = "{3550f703-e582-4d05-9a08-453d09bdfdc6}";
 
 const FRAME_SCRIPT = "chrome://marionette/content/listener.js";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -718,7 +719,16 @@ GeckoDriver.prototype.newSession = async function(cmd) {
   let browserListening = this.listeningPromise();
 
   let waitForWindow = function() {
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    let windowType;
+    switch (this.appId) {
+      case APP_ID_THUNDERBIRD:
+        windowType = "mail:3pane";
+        break;
+      default:
+        windowType = "navigator:browser";
+        break;
+    }
+    let win = Services.wm.getMostRecentWindow(windowType);
     if (!win) {
       // if the window isn't even created, just poll wait for it
       let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -3303,7 +3313,7 @@ GeckoDriver.prototype.quit = async function(cmd) {
 };
 
 GeckoDriver.prototype.installAddon = function(cmd) {
-  assert.firefox();
+  assert.desktop();
 
   let path = cmd.parameters.path;
   let temp = cmd.parameters.temporary || false;
