@@ -27,6 +27,12 @@ internal typealias GenericDataStorage<T> = MutableMap<String, T>
 internal typealias GenericStorageMap<T> = MutableMap<String, GenericDataStorage<T>>
 
 /**
+ * Defines the typealias for the combiner function to be used by
+ * [GenericScalarStorageEngine.recordScalar] when recording new values.
+ */
+internal typealias ScalarRecordingCombiner<T> = (currentValue: T?, newValue: T) -> T
+
+/**
  * A base class for 'scalar' like metrics. This allows sharing the common
  * store managing and lifetime behaviours.
  */
@@ -64,6 +70,20 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
      */
     protected fun serializeSingleMetric(value: ScalarType): String? {
         return value.toString()
+    }
+
+    /**
+     * Helper function to return the name of the stored metric.
+     * This is used to support empty categories.
+     */
+    protected fun getStoredName(metricData: CommonMetricData): String {
+        with(metricData) {
+            return if (category.isEmpty()) {
+                name
+            } else {
+                "$category.$name"
+            }
+        }
     }
 
     /**
@@ -167,11 +187,30 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
 
     /**
      * Helper function for the derived classes. It can be used to record
-     * simple scalars to the internal storage.
+     * simple scalars to the internal storage. Internally, this calls [recordScalar]
+     * with a custom `combine` function that only sets the new value.
+     *
+     * @param metricData the information about the metric
+     * @param value the new value
      */
     protected fun recordScalar(
         metricData: CommonMetricData,
         value: ScalarType
+    ) = recordScalar(metricData, value) { _, v -> v }
+
+    /**
+     * Helper function for the derived classes. It can be used to record
+     * simple scalars to the internal storage.
+     *
+     * @param metricData the information about the metric
+     * @param value the new value
+     * @param combine a lambda function to combine the currently stored value and
+     *        the new one; this allows to implement new behaviours such as adding.
+     */
+    protected fun recordScalar(
+        metricData: CommonMetricData,
+        value: ScalarType,
+        combine: ScalarRecordingCombiner<ScalarType>
     ) {
         checkNotNull(applicationContext) { "No recording can take place without an application context" }
 
@@ -183,15 +222,12 @@ abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
             val storeData = dataStores[metricData.lifetime.ordinal].getOrPut(it) { mutableMapOf() }
             // We support empty categories for enabling the internal use of metrics
             // when assembling pings in [PingMaker].
-            val entryName = if (metricData.category.isEmpty()) {
-                metricData.name
-            } else {
-                "${metricData.category}.${metricData.name}"
-            }
-            storeData[entryName] = value
+            val entryName = getStoredName(metricData)
+            val combinedValue = combine(storeData[entryName], value)
+            storeData[entryName] = combinedValue
             // Persist data with "user" lifetime
             if (metricData.lifetime == Lifetime.User) {
-                userPrefs?.putString("$it#$entryName", serializeSingleMetric(value))
+                userPrefs?.putString("$it#$entryName", serializeSingleMetric(combinedValue))
             }
         }
         userPrefs?.apply()
