@@ -162,14 +162,18 @@ export class Section extends React.PureComponent {
     // to avoid a flash of logged out state while we render.
     const isPocketLoggedInDefined = (isUserLoggedIn === true || isUserLoggedIn === false);
 
+    const hasTopics = topics && topics.length > 0;
+
     const shouldShowPocketCta = (id === "topstories" &&
       useCta && isUserLoggedIn === false);
 
     // Show topics only for top stories and if it has loaded with topics.
     // The classs .top-stories-bottom-container ensures content doesn't shift as things load.
-    const shouldShowTopics = (id === "topstories" &&
-      (topics && topics.length > 0) &&
+    const shouldShowTopics = (id === "topstories" && hasTopics &&
       ((useCta && isUserLoggedIn === true) || (!useCta && isPocketLoggedInDefined)));
+
+    // We use topics to determine language support for read more.
+    const shouldShowReadMore = read_more_endpoint && hasTopics;
 
     const realRows = rows.slice(0, maxCards);
 
@@ -246,7 +250,7 @@ export class Section extends React.PureComponent {
           <div className="top-stories-bottom-container">
             {shouldShowTopics && <Topics topics={this.props.topics} />}
             {shouldShowPocketCta && <PocketLoggedInCta />}
-            {read_more_endpoint &&
+            {shouldShowReadMore &&
               <MoreRecommendations read_more_endpoint={read_more_endpoint} />}
           </div>}
       </CollapsibleSection>
