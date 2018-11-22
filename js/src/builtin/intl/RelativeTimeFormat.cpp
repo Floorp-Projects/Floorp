@@ -301,12 +301,6 @@ js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp)
 
     double t = args[1].toNumber();
 
-    // ICU doesn't handle -0 well: work around this by converting it to +0.
-    // See: http://bugs.icu-project.org/trac/ticket/12936
-    if (IsNegativeZero(t)) {
-        t = +0.0;
-    }
-
     // Obtain a cached URelativeDateTimeFormatter object.
     constexpr auto RT_FORMAT_SLOT = RelativeTimeFormatObject::URELATIVE_TIME_FORMAT_SLOT;
     void* priv = relativeTimeFormat->getReservedSlot(RT_FORMAT_SLOT).toPrivate();
