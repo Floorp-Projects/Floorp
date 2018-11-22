@@ -145,6 +145,13 @@ def search_path(mozilla_dir, packages_txt):
                 for path in handle_package(package[1:]):
                     yield path
 
+        if package[0] in ('python2', 'python3'):
+            for_python3 = package[0].endswith('3')
+            is_python3 = sys.version_info[0] > 2
+            if is_python3 == for_python3:
+                for path in handle_package(package[1:]):
+                    yield path
+
         if package[0] == 'packages.txt':
             assert len(package) == 2
             for p in search_path(mozilla_dir, package[1]):

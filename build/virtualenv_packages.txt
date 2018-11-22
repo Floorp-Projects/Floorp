@@ -32,7 +32,8 @@ windows:mozilla.pth:third_party/python/psutil-cp27-none-win_amd64
 mozilla.pth:third_party/python/pylru
 mozilla.pth:third_party/python/which
 mozilla.pth:third_party/python/pystache
-mozilla.pth:third_party/python/pyyaml/lib
+python2:mozilla.pth:third_party/python/pyyaml/lib
+python3:mozilla.pth:third_party/python/pyyaml/lib3/
 mozilla.pth:third_party/python/requests
 mozilla.pth:third_party/python/requests-unixsocket
 mozilla.pth:third_party/python/scandir
