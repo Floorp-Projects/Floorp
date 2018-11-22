@@ -45,7 +45,7 @@
 :-moz-handler-vulnerable-no-update .hoverBox,
 :-moz-handler-blocked .hoverBox,
 :-moz-handler-crashed .hoverBox {
-  background-image: url(chrome://mozapps/skin/plugins/contentPluginStripe.png);
+  background-image: url(chrome://global/skin/plugins/contentPluginStripe.png);
 }
 
 html|a {
@@ -67,19 +67,19 @@ html|a {
 
 :-moz-handler-vulnerable-updatable .icon,
 :-moz-handler-vulnerable-no-update .icon {
-  background-image: url(chrome://mozapps/skin/plugins/contentPluginBlocked.png);
+  background-image: url(chrome://global/skin/plugins/contentPluginBlocked.png);
   -moz-user-focus: normal;
 }
 :-moz-handler-blocked .icon {
-  background-image: url(chrome://mozapps/skin/plugins/contentPluginBlocked.png);
+  background-image: url(chrome://global/skin/plugins/contentPluginBlocked.png);
 }
 :-moz-handler-clicktoplay .icon {
-  background-image: url(chrome://mozapps/skin/plugins/plugin.svg);
+  background-image: url(chrome://global/skin/plugins/plugin.svg);
   fill: var(--grey-10);
   -moz-user-focus: normal;
 }
 :-moz-handler-crashed .icon {
-  background-image: url(chrome://mozapps/skin/plugins/contentPluginCrashed.png);
+  background-image: url(chrome://global/skin/plugins/contentPluginCrashed.png);
 }
 
 .throbber {
@@ -144,7 +144,7 @@ html|a {
   display: inline-block;
   min-width: 16px;
   min-height: 16px;
-  background: url(chrome://mozapps/skin/plugins/pluginHelp-16.png) no-repeat;
+  background: url(chrome://global/skin/plugins/pluginHelp-16.png) no-repeat;
   cursor: pointer;
   float: left;
 }

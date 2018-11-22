@@ -26,6 +26,7 @@
   skin/classic/global/icons/question-64.png                (../../windows/global/icons/question-64.png)
   skin/classic/global/icons/search-textbox.svg             (../../windows/global/icons/search-textbox.svg)
   skin/classic/global/tree/columnpicker.gif                (../../windows/global/tree/columnpicker.gif)
+  skin/classic/global/plugins/pluginHelp-16.png            (../../windows/global/plugins/pluginHelp-16.png)
 
   skin/classic/mozapps/downloads/downloadButtons.png         (../../windows/mozapps/downloads/downloadButtons.png)
   skin/classic/mozapps/downloads/unknownContentType.css      (../../windows/mozapps/downloads/unknownContentType.css)
@@ -35,7 +36,6 @@
   skin/classic/mozapps/extensions/rating-not-won.png         (../../windows/mozapps/extensions/rating-not-won.png)
   skin/classic/mozapps/extensions/cancel.png                 (../../windows/mozapps/extensions/cancel.png)
   skin/classic/mozapps/handling/handling.css                 (../../windows/mozapps/handling/handling.css)
-  skin/classic/mozapps/plugins/pluginHelp-16.png             (../../windows/mozapps/plugins/pluginHelp-16.png)
   skin/classic/mozapps/profile/profileSelection.css          (../../windows/mozapps/profile/profileSelection.css)
   skin/classic/mozapps/update/downloadButtons.png            (../../windows/mozapps/update/downloadButtons.png)
 

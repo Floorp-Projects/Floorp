@@ -1327,7 +1327,7 @@ var Blocklist = {
           addonList.push({
             name: plugin.name,
             version: plugin.version,
-            icon: "chrome://mozapps/skin/plugins/pluginGeneric.svg",
+            icon: "chrome://global/skin/plugins/pluginGeneric.svg",
             disable: false,
             blocked: state == Ci.nsIBlocklistService.STATE_BLOCKED,
             item: plugin,
