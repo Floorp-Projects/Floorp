@@ -767,6 +767,84 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
   return NS_OK;
 }
 
+static const char* const WR_ROLLOUT_PREF = "gfx.webrender.all.qualified";
+static const char* const WR_ROLLOUT_PREF_DEFAULT =
+  "gfx.webrender.all.qualified.default";
+static const char* const WR_ROLLOUT_PREF_OVERRIDE =
+  "gfx.webrender.all.qualified.gfxPref-default-override";
+static const char* const WR_ROLLOUT_HW_QUALIFIED_OVERRIDE =
+  "gfx.webrender.all.qualified.hardware-override";
+static const char* const PROFILE_BEFORE_CHANGE_TOPIC = "profile-before-change";
+
+// If the "gfx.webrender.all.qualified" pref is true we want to enable
+// WebRender for qualified hardware. This pref may be set by the Normandy
+// Preference Rollout feature. The Normandy pref rollout code sets default
+// values on rolled out prefs on every startup. Default pref values are not
+// persisted; they only exist in memory for that session. Gfx starts up
+// before Normandy does. So it's too early to observe the WR qualified pref
+// changed by Normandy rollout on gfx startup. So we add a shutdown observer to
+// save the default value on shutdown, and read the saved value on startup
+// instead.
+class WrRolloutPrefShutdownSaver : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Observe(nsISupports*, const char* aTopic, const char16_t*) override
+  {
+    if (strcmp(PROFILE_BEFORE_CHANGE_TOPIC, aTopic) != 0) {
+      // Not the observer we're looking for, move along.
+      return NS_OK;
+    }
+
+    SaveRolloutPref();
+
+    // Shouldn't receive another notification, remove the observer.
+    RefPtr<WrRolloutPrefShutdownSaver> kungFuDeathGrip(this);
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    if (NS_WARN_IF(!observerService)) {
+      return NS_ERROR_FAILURE;
+    }
+    observerService->RemoveObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
+    return NS_OK;
+  }
+
+  static void AddShutdownObserver()
+  {
+    MOZ_ASSERT(XRE_IsParentProcess());
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    if (NS_WARN_IF(!observerService)) {
+      return;
+    }
+    RefPtr<WrRolloutPrefShutdownSaver> wrRolloutSaver =
+      new WrRolloutPrefShutdownSaver();
+    observerService->AddObserver(
+      wrRolloutSaver, PROFILE_BEFORE_CHANGE_TOPIC, false);
+  }
+
+private:
+  virtual ~WrRolloutPrefShutdownSaver() = default;
+
+  void SaveRolloutPref()
+  {
+    if (Preferences::HasUserValue(WR_ROLLOUT_PREF) ||
+        Preferences::GetType(WR_ROLLOUT_PREF) == nsIPrefBranch::PREF_INVALID) {
+      // Don't need to create a backup of default value, because either:
+      // 1. the user or the WR SHIELD study has set a user pref value, or
+      // 2. we've not had a default pref set by Normandy that needs to be saved
+      //    for reading before Normandy has started up.
+      return;
+    }
+
+    bool defaultValue =
+      Preferences::GetBool(WR_ROLLOUT_PREF, false, PrefValueKind::Default);
+    Preferences::SetBool(WR_ROLLOUT_PREF_DEFAULT, defaultValue);
+  }
+};
+
+NS_IMPL_ISUPPORTS(WrRolloutPrefShutdownSaver, nsIObserver)
 
 void
 gfxPlatform::Init()
@@ -811,6 +889,10 @@ gfxPlatform::Init()
         file->GetPath(path);
         gfxVars::SetGREDirectory(nsString(path));
       }
+    }
+
+    if (XRE_IsParentProcess()) {
+      WrRolloutPrefShutdownSaver::AddShutdownObserver();
     }
 
     // Drop a note in the crash report if we end up forcing an option that could
@@ -2693,48 +2775,69 @@ gfxPlatform::WebRenderEnvvarEnabled()
   return (env && *env == '1');
 }
 
-void
-gfxPlatform::InitWebRenderConfig()
+// If the "gfx.webrender.all.qualified" pref is true we want to enable
+// WebRender for qualifying hardware. The Normandy pref rollout code sets
+// default values on rolled out prefs on every startup, but Gfx starts up
+// before Normandy does. So it's too early to observe the WR qualified pref
+// default value changed by Normandy rollout here yet. So we have a shutdown
+// observer to save the default value on shutdown, and read the saved default
+// value here instead, and emulate the behavior of the pref system, with
+// respect to default/user values of the rollout pref.
+static bool
+CalculateWrQualifiedPrefValue()
 {
-  bool prefEnabled = WebRenderPrefEnabled();
-  bool envvarEnabled = WebRenderEnvvarEnabled();
+  auto clearPrefOnExit = MakeScopeExit([]() {
+    // Clear the mirror of the default value of the rollout pref on scope exit,
+    // if we have one. This ensures the user doesn't mess with the pref.
+    // If we need it again, we'll re-create it on shutdown.
+    Preferences::ClearUser(WR_ROLLOUT_PREF_DEFAULT);
+  });
 
-  // On Nightly:
-  //   WR? WR+   => means WR was enabled via gfx.webrender.all.qualified
-  //   WR! WR+   => means WR was enabled via gfx.webrender.{all,enabled} or envvar
-  // On Beta/Release:
-  //   WR? WR+   => means WR was enabled via gfx.webrender.all.qualified on qualified hardware
-  //   WR! WR+   => means WR was enabled via envvar, possibly on unqualified hardware.
-  // In all cases WR- means WR was not enabled, for one of many possible reasons.
-  ScopedGfxFeatureReporter reporter("WR", prefEnabled || envvarEnabled);
-  if (!XRE_IsParentProcess()) {
-    // Force-disable WebRender in recording/replaying child processes, which
-    // have their own compositor.
-    if (recordreplay::IsRecordingOrReplaying()) {
-      gfxVars::SetUseWebRender(false);
-    }
-
-    // The parent process runs through all the real decision-making code
-    // later in this function. For other processes we still want to report
-    // the state of the feature for crash reports.
-    if (gfxVars::UseWebRender()) {
-      reporter.SetSuccessful();
-    }
-    return;
+  if (!Preferences::HasUserValue(WR_ROLLOUT_PREF) &&
+      Preferences::HasUserValue(WR_ROLLOUT_PREF_DEFAULT)) {
+    // The user has not set a user pref, and we have a default value set by the
+    // shutdown observer. We should use that instead of the gfxPref's default,
+    // as if Normandy had a chance to set it before startup, that is the value
+    // gfxPrefs would return, rather than the default set by DECL_GFX_PREF.
+    return gfxPrefs::WebRenderAllQualifiedDefault();
   }
 
+  // We don't have a user value for the rollout pref, and we don't have the
+  // value of the rollout pref at last shutdown stored. So we should fallback
+  // to using whatever default is stored in the gfxPref. *But* if we're running
+  // under the Marionette pref rollout work-around test, we may want to override
+  // the default value expressed here, so we can test the "default disabled;
+  // rollout pref enabled" case.
+  if (Preferences::HasUserValue(WR_ROLLOUT_PREF_OVERRIDE)) {
+    return Preferences::GetBool(WR_ROLLOUT_PREF_OVERRIDE);
+  }
+  return gfxPrefs::WebRenderAllQualified();
+}
+
+static FeatureState&
+WebRenderHardwareQualificationStatus(bool aHasBattery, nsCString& aOutFailureId)
+{
   FeatureState& featureWebRenderQualified = gfxConfig::GetFeature(Feature::WEBRENDER_QUALIFIED);
   featureWebRenderQualified.EnableByDefault();
+
+  if (Preferences::HasUserValue(WR_ROLLOUT_HW_QUALIFIED_OVERRIDE)) {
+    if (!Preferences::GetBool(WR_ROLLOUT_HW_QUALIFIED_OVERRIDE)) {
+      featureWebRenderQualified.Disable(
+        FeatureStatus::Blocked,
+        "HW qualification pref override",
+        NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_QUALIFICATION_OVERRIDE"));
+    }
+    return featureWebRenderQualified;
+  }
+
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-  nsCString failureId;
   int32_t status;
-  if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBRENDER,
-                                             failureId, &status))) {
+  if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(
+        nsIGfxInfo::FEATURE_WEBRENDER, aOutFailureId, &status))) {
     if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
-      featureWebRenderQualified.Disable(FeatureStatus::Blocked,
-                                         "No qualified hardware",
-                                         failureId);
-    } else if (HasBattery()) {
+      featureWebRenderQualified.Disable(
+        FeatureStatus::Blocked, "No qualified hardware", aOutFailureId);
+    } else if (aHasBattery) {
       featureWebRenderQualified.Disable(FeatureStatus::Blocked,
                                          "Has battery",
                                          NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_HAS_BATTERY"));
@@ -2768,13 +2871,50 @@ gfxPlatform::InitWebRenderConfig()
                                        "gfxInfo is broken",
                                        NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_NO_GFX_INFO"));
   }
+  return featureWebRenderQualified;
+}
 
+void
+gfxPlatform::InitWebRenderConfig()
+{
+  bool prefEnabled = WebRenderPrefEnabled();
+  bool envvarEnabled = WebRenderEnvvarEnabled();
+
+  // On Nightly:
+  //   WR? WR+   => means WR was enabled via gfx.webrender.all.qualified
+  //   WR! WR+   => means WR was enabled via gfx.webrender.{all,enabled} or envvar
+  // On Beta/Release:
+  //   WR? WR+   => means WR was enabled via gfx.webrender.all.qualified on qualified hardware
+  //   WR! WR+   => means WR was enabled via envvar, possibly on unqualified hardware.
+  // In all cases WR- means WR was not enabled, for one of many possible reasons.
+  ScopedGfxFeatureReporter reporter("WR", prefEnabled || envvarEnabled);
+  if (!XRE_IsParentProcess()) {
+    // Force-disable WebRender in recording/replaying child processes, which
+    // have their own compositor.
+    if (recordreplay::IsRecordingOrReplaying()) {
+      gfxVars::SetUseWebRender(false);
+    }
+
+    // The parent process runs through all the real decision-making code
+    // later in this function. For other processes we still want to report
+    // the state of the feature for crash reports.
+    if (gfxVars::UseWebRender()) {
+      reporter.SetSuccessful();
+    }
+    return;
+  }
+
+  nsCString failureId;
+  FeatureState& featureWebRenderQualified =
+    WebRenderHardwareQualificationStatus(HasBattery(), failureId);
   FeatureState& featureWebRender = gfxConfig::GetFeature(Feature::WEBRENDER);
 
   featureWebRender.DisableByDefault(
       FeatureStatus::OptIn,
       "WebRender is an opt-in feature",
       NS_LITERAL_CSTRING("FEATURE_FAILURE_DEFAULT_OFF"));
+
+  const bool wrQualifiedAll = CalculateWrQualifiedPrefValue();
 
   // envvar works everywhere; we need this for testing in CI. Sadly this allows
   // beta/release to enable it on unqualified hardware, but at least this is
@@ -2789,7 +2929,7 @@ gfxPlatform::InitWebRenderConfig()
 #endif
 
   // gfx.webrender.all.qualified works on all channels
-  } else if (gfxPrefs::WebRenderAllQualified()) {
+  } else if (wrQualifiedAll) {
     if (featureWebRenderQualified.IsEnabled()) {
       featureWebRender.UserEnable("Qualified enabled by pref ");
     } else {
