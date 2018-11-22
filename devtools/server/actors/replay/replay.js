@@ -687,12 +687,17 @@ const gRequestHandlers = {
                value: "Recording divergence in getEnvironmentNames" }];
     }
 
-    const env = gPausedObjects.getObject(request.id);
-    const names = env.names();
+    try {
+      const env = gPausedObjects.getObject(request.id);
+      const names = env.names();
 
-    return names.map(name => {
-      return { name, value: convertValue(env.getVariable(name)) };
-    });
+      return names.map(name => {
+        return { name, value: convertValue(env.getVariable(name)) };
+      });
+    } catch (e) {
+      return [{name: "Unknown names",
+               value: "Exception thrown in getEnvironmentNames" }];
+    }
   },
 
   getFrame(request) {

@@ -225,22 +225,13 @@ SGN_End(SGNContext *cx, SECItem *result)
         PORT_Memset(&mech, 0, sizeof(mech));
 
         if (cx->params && cx->params->data) {
-            SECKEYRSAPSSParams params;
-
             arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
             if (!arena) {
                 rv = SECFailure;
                 goto loser;
             }
 
-            PORT_Memset(&params, 0, sizeof(params));
-            rv = SEC_QuickDERDecodeItem(arena, &params,
-                                        SECKEY_RSAPSSParamsTemplate,
-                                        cx->params);
-            if (rv != SECSuccess) {
-                goto loser;
-            }
-            rv = sec_RSAPSSParamsToMechanism(&mech, &params);
+            rv = sec_DecodeRSAPSSParamsToMechanism(arena, cx->params, &mech);
             if (rv != SECSuccess) {
                 goto loser;
             }

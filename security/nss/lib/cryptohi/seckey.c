@@ -2015,66 +2015,63 @@ sec_GetMgfTypeByOidTag(SECOidTag tag)
 }
 
 SECStatus
-sec_RSAPSSParamsToMechanism(CK_RSA_PKCS_PSS_PARAMS *mech,
-                            const SECKEYRSAPSSParams *params)
+sec_DecodeRSAPSSParams(PLArenaPool *arena,
+                       const SECItem *params,
+                       SECOidTag *retHashAlg, SECOidTag *retMaskHashAlg,
+                       unsigned long *retSaltLength)
 {
-    SECStatus rv = SECSuccess;
-    SECOidTag hashAlgTag;
+    SECKEYRSAPSSParams pssParams;
+    SECOidTag hashAlg;
+    SECOidTag maskHashAlg;
     unsigned long saltLength;
     unsigned long trailerField;
+    SECStatus rv;
 
-    PORT_Memset(mech, 0, sizeof(CK_RSA_PKCS_PSS_PARAMS));
+    PORT_Memset(&pssParams, 0, sizeof(pssParams));
+    rv = SEC_QuickDERDecodeItem(arena, &pssParams,
+                                SECKEY_RSAPSSParamsTemplate,
+                                params);
+    if (rv != SECSuccess) {
+        return rv;
+    }
 
-    if (params->hashAlg) {
-        hashAlgTag = SECOID_GetAlgorithmTag(params->hashAlg);
+    if (pssParams.hashAlg) {
+        hashAlg = SECOID_GetAlgorithmTag(pssParams.hashAlg);
     } else {
-        hashAlgTag = SEC_OID_SHA1; /* default, SHA-1 */
-    }
-    mech->hashAlg = sec_GetHashMechanismByOidTag(hashAlgTag);
-    if (mech->hashAlg == CKM_INVALID_MECHANISM) {
-        return SECFailure;
+        hashAlg = SEC_OID_SHA1; /* default, SHA-1 */
     }
 
-    if (params->maskAlg) {
-        SECAlgorithmID maskHashAlg;
-        SECOidTag maskHashAlgTag;
-        PORTCheapArenaPool tmpArena;
+    if (pssParams.maskAlg) {
+        SECAlgorithmID algId;
 
-        if (SECOID_GetAlgorithmTag(params->maskAlg) != SEC_OID_PKCS1_MGF1) {
+        if (SECOID_GetAlgorithmTag(pssParams.maskAlg) != SEC_OID_PKCS1_MGF1) {
             /* only MGF1 is known to PKCS#11 */
             PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
             return SECFailure;
         }
 
-        PORT_InitCheapArena(&tmpArena, DER_DEFAULT_CHUNKSIZE);
-        rv = SEC_QuickDERDecodeItem(&tmpArena.arena, &maskHashAlg,
+        rv = SEC_QuickDERDecodeItem(arena, &algId,
                                     SEC_ASN1_GET(SECOID_AlgorithmIDTemplate),
-                                    &params->maskAlg->parameters);
-        PORT_DestroyCheapArena(&tmpArena);
+                                    &pssParams.maskAlg->parameters);
         if (rv != SECSuccess) {
             return rv;
         }
-        maskHashAlgTag = SECOID_GetAlgorithmTag(&maskHashAlg);
-        mech->mgf = sec_GetMgfTypeByOidTag(maskHashAlgTag);
-        if (mech->mgf == 0) {
-            return SECFailure;
-        }
+        maskHashAlg = SECOID_GetAlgorithmTag(&algId);
     } else {
-        mech->mgf = CKG_MGF1_SHA1; /* default, MGF1 with SHA-1 */
+        maskHashAlg = SEC_OID_SHA1; /* default, MGF1 with SHA-1 */
     }
 
-    if (params->saltLength.data) {
-        rv = SEC_ASN1DecodeInteger((SECItem *)&params->saltLength, &saltLength);
+    if (pssParams.saltLength.data) {
+        rv = SEC_ASN1DecodeInteger((SECItem *)&pssParams.saltLength, &saltLength);
         if (rv != SECSuccess) {
             return rv;
         }
     } else {
         saltLength = 20; /* default, 20 */
     }
-    mech->sLen = saltLength;
 
-    if (params->trailerField.data) {
-        rv = SEC_ASN1DecodeInteger((SECItem *)&params->trailerField, &trailerField);
+    if (pssParams.trailerField.data) {
+        rv = SEC_ASN1DecodeInteger((SECItem *)&pssParams.trailerField, &trailerField);
         if (rv != SECSuccess) {
             return rv;
         }
@@ -2086,5 +2083,46 @@ sec_RSAPSSParamsToMechanism(CK_RSA_PKCS_PSS_PARAMS *mech,
         }
     }
 
-    return rv;
+    if (retHashAlg) {
+        *retHashAlg = hashAlg;
+    }
+    if (retMaskHashAlg) {
+        *retMaskHashAlg = maskHashAlg;
+    }
+    if (retSaltLength) {
+        *retSaltLength = saltLength;
+    }
+
+    return SECSuccess;
+}
+
+SECStatus
+sec_DecodeRSAPSSParamsToMechanism(PLArenaPool *arena,
+                                  const SECItem *params,
+                                  CK_RSA_PKCS_PSS_PARAMS *mech)
+{
+    SECOidTag hashAlg;
+    SECOidTag maskHashAlg;
+    unsigned long saltLength;
+    SECStatus rv;
+
+    rv = sec_DecodeRSAPSSParams(arena, params,
+                                &hashAlg, &maskHashAlg, &saltLength);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+
+    mech->hashAlg = sec_GetHashMechanismByOidTag(hashAlg);
+    if (mech->hashAlg == CKM_INVALID_MECHANISM) {
+        return SECFailure;
+    }
+
+    mech->mgf = sec_GetMgfTypeByOidTag(maskHashAlg);
+    if (mech->mgf == 0) {
+        return SECFailure;
+    }
+
+    mech->sLen = saltLength;
+
+    return SECSuccess;
 }

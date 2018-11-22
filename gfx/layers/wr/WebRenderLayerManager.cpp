@@ -364,8 +364,7 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
       // If we can't just swap the queue, we need to take the slow path and
       // send the update as a separate message. We don't need to schedule a
       // composite however because that will happen with EndTransaction.
-      WrBridge()->UpdateResources(mAsyncResourceUpdates.ref(),
-                                  /* aScheduleComposite */ false);
+      WrBridge()->UpdateResources(mAsyncResourceUpdates.ref());
     }
     mAsyncResourceUpdates.reset();
   }
@@ -761,8 +760,7 @@ WebRenderLayerManager::FlushAsyncResourceUpdates()
   }
 
   if (!IsDestroyed() && WrBridge()) {
-    WrBridge()->UpdateResources(mAsyncResourceUpdates.ref(),
-                                /* aScheduleComposite */ true);
+    WrBridge()->UpdateResources(mAsyncResourceUpdates.ref());
   }
 
   mAsyncResourceUpdates.reset();

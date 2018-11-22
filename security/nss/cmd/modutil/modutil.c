@@ -138,7 +138,11 @@ char* msgStrings[] = {
     "\ncorruption of your security databases. If the browser is currently running,"
     "\nyou should exit browser before continuing this operation. Type "
     "\n'q <enter>' to abort, or <enter> to continue: ",
-    "\nAborting...\n"
+    "\nAborting...\n",
+    "\nWARNING: Manually adding a module while p11-kit is enabled could cause"
+    "\nduplicate module registration in your security database. It is suggested "
+    "\nto configure the module through p11-kit configuration file instead.\n"
+    "\nType 'q <enter>' to abort, or <enter> to continue: "
 };
 
 /* Increment i if doing so would have i still be less than j.  If you
@@ -854,6 +858,28 @@ main(int argc, char* argv[])
     errcode = LoadMechanismList();
     if (errcode != SUCCESS) {
         goto loser;
+    }
+
+    /* Warn if we are adding a module while p11-kit is enabled in the
+     * database. */
+    if ((command == ADD_COMMAND || command == RAW_ADD_COMMAND) &&
+        IsP11KitEnabled()) {
+        char* response;
+
+        PR_fprintf(PR_STDOUT, msgStrings[P11_KIT_ENABLED_MSG]);
+        if (!PR_fgets(stdinbuf, STDINBUF_SIZE, PR_STDIN)) {
+            PR_fprintf(PR_STDERR, errStrings[STDIN_READ_ERR]);
+            errcode = STDIN_READ_ERR;
+            goto loser;
+        }
+        if ((response = strtok(stdinbuf, " \r\n\t"))) {
+            if (!PL_strcasecmp(response, "q")) {
+                PR_fprintf(PR_STDOUT, msgStrings[ABORTING_MSG]);
+                errcode = SUCCESS;
+                goto loser;
+            }
+        }
+        PR_fprintf(PR_STDOUT, "\n");
     }
 
     /* Execute the command */
