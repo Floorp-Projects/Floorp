@@ -4,67 +4,40 @@
 
 "use strict";
 
-var gDebuggee;
-var gClient;
-var gThreadClient;
-var gCallback;
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
 
-function run_test() {
-  Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
-  });
-  run_test_with_server(DebuggerServer, function() {
-    run_test_with_server(WorkerDebuggerServer, do_test_finished);
-  });
-  do_test_pending();
-}
+add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
+  return new Promise(resolve => {
+    threadClient.addOneTimeListener("paused", function(event, packet) {
+      const args = packet.frame.arguments;
 
-function run_test_with_server(server, callback) {
-  gCallback = callback;
-  initTestDebuggerServer(server);
-  gDebuggee = addTestGlobal("test-grips", server);
-  gDebuggee.eval(function stopMe(arg1) {
-    debugger;
-  }.toString());
+      Assert.equal(args[0].class, "Object");
 
-  gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-grips",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_object_grip();
-                           });
-  });
-}
+      const objClient = threadClient.pauseGrip(args[0]);
+      objClient.getPrototype(function(response) {
+        Assert.ok(response.prototype != undefined);
 
-function test_object_grip() {
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
-    const args = packet.frame.arguments;
+        const protoClient = threadClient.pauseGrip(response.prototype);
+        protoClient.getOwnPropertyNames(function(response) {
+          Assert.equal(response.ownPropertyNames.length, 2);
+          Assert.equal(response.ownPropertyNames[0], "b");
+          Assert.equal(response.ownPropertyNames[1], "c");
 
-    Assert.equal(args[0].class, "Object");
-
-    const objClient = gThreadClient.pauseGrip(args[0]);
-    objClient.getPrototype(function(response) {
-      Assert.ok(response.prototype != undefined);
-
-      const protoClient = gThreadClient.pauseGrip(response.prototype);
-      protoClient.getOwnPropertyNames(function(response) {
-        Assert.equal(response.ownPropertyNames.length, 2);
-        Assert.equal(response.ownPropertyNames[0], "b");
-        Assert.equal(response.ownPropertyNames[1], "c");
-
-        gThreadClient.resume(function() {
-          gClient.close().then(gCallback);
+          threadClient.resume(resolve);
         });
       });
     });
+
+    debuggee.eval(function stopMe(arg1) {
+      debugger;
+    }.toString());
+    debuggee.eval(function Constr() {
+      this.a = 1;
+    }.toString());
+    debuggee.eval(
+      "Constr.prototype = { b: true, c: 'foo' }; var o = new Constr(); stopMe(o)");
   });
-
-  gDebuggee.eval(function Constr() {
-    this.a = 1;
-  }.toString());
-  gDebuggee.eval(
-    "Constr.prototype = { b: true, c: 'foo' }; var o = new Constr(); stopMe(o)");
-}
-
+}));

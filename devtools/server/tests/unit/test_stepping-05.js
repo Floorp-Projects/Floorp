@@ -10,81 +10,52 @@
  * (bug 785689).
  */
 
-var gDebuggee;
-var gClient;
-var gCallback;
-
-Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
-
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
-});
-
-function run_test() {
-  run_test_with_server(DebuggerServer, function() {
-    run_test_with_server(WorkerDebuggerServer, do_test_finished);
-  });
-  do_test_pending();
-}
-function run_test_with_server(server, callback) {
-  gCallback = callback;
-  initTestDebuggerServer(server);
-  gDebuggee = addTestGlobal("test-stepping", server);
-  gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect(test_simple_stepping);
-}
-
-async function test_simple_stepping() {
-  const [attachResponse,, threadClient] = await attachTestTabAndResume(
-    gClient,
-    "test-stepping"
-  );
-
-  ok(!attachResponse.error, "Should not get an error attaching");
-
+add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   dumpn("Evaluating test code and waiting for first debugger statement");
-  await executeOnNextTickAndWaitForPause(evaluateTestCode, gClient);
+  await executeOnNextTickAndWaitForPause(() => evaluateTestCode(debuggee), client);
 
-  const step1 = await stepIn(gClient, threadClient);
+  const step1 = await stepIn(client, threadClient);
   equal(step1.type, "paused");
   equal(step1.frame.where.line, 3);
   equal(step1.why.type, "resumeLimit");
-  equal(gDebuggee.a, undefined);
-  equal(gDebuggee.b, undefined);
+  equal(debuggee.a, undefined);
+  equal(debuggee.b, undefined);
 
-  const step2 = await stepIn(gClient, threadClient);
+  const step2 = await stepIn(client, threadClient);
   equal(step2.type, "paused");
   equal(step2.frame.where.line, 4);
   equal(step2.why.type, "resumeLimit");
-  equal(gDebuggee.a, 1);
-  equal(gDebuggee.b, undefined);
+  equal(debuggee.a, 1);
+  equal(debuggee.b, undefined);
 
-  const step3 = await stepIn(gClient, threadClient);
+  const step3 = await stepIn(client, threadClient);
   equal(step3.type, "paused");
   equal(step3.frame.where.line, 4);
   equal(step3.why.type, "resumeLimit");
-  equal(gDebuggee.a, 1);
-  equal(gDebuggee.b, 2);
+  equal(debuggee.a, 1);
+  equal(debuggee.b, 2);
 
-  threadClient.stepIn(() => {
-    threadClient.addOneTimeListener("paused", (event, packet) => {
-      equal(packet.type, "paused");
-      // Before fixing bug 785689, the type was resumeLimit.
-      equal(packet.why.type, "debuggerStatement");
-      finishClient(gClient, gCallback);
+  await new Promise(resolve => {
+    threadClient.stepIn(() => {
+      threadClient.addOneTimeListener("paused", (event, packet) => {
+        equal(packet.type, "paused");
+        // Before fixing bug 785689, the type was resumeLimit.
+        equal(packet.why.type, "debuggerStatement");
+        resolve();
+      });
+      debuggee.eval("debugger;");
     });
-    gDebuggee.eval("debugger;");
   });
-}
+}));
 
-function evaluateTestCode() {
+function evaluateTestCode(debuggee) {
   /* eslint-disable */
   Cu.evalInSandbox(
     `                                   // 1                       
     debugger;                           // 2
     var a = 1;                          // 3
     var b = 2;`,                        // 4
-    gDebuggee,
+    debuggee,
     "1.8",
     "test_stepping-05-test-code.js",
     1

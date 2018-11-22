@@ -8,47 +8,24 @@
  * at the specified line.
  */
 
-var gDebuggee;
-var gClient;
-var gThreadClient;
-
-function run_test() {
-  run_test_with_server(DebuggerServer, function() {
-    run_test_with_server(WorkerDebuggerServer, do_test_finished);
-  });
-  do_test_pending();
-}
-
-function run_test_with_server(server, callback) {
-  initTestDebuggerServer(server);
-  gDebuggee = addTestGlobal("test-breakpoints", server);
-  gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient,
-                           "test-breakpoints",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test();
-                           });
-  });
-}
-
-const test = async function() {
+add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   // Populate the `ScriptStore` so that we only test that the script
   // is added through `onNewScript`
-  await getSources(gThreadClient);
+  await getSources(threadClient);
 
-  const packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
-  const source = gThreadClient.source(packet.frame.where.source);
+  const packet = await executeOnNextTickAndWaitForPause(() => {
+    evalCode(debuggee);
+  }, client);
+  const source = threadClient.source(packet.frame.where.source);
   const location = {
-    line: gDebuggee.line0 + 2,
+    line: debuggee.line0 + 2,
   };
 
   const [res ] = await setBreakpoint(source, location);
   ok(!res.error);
 
   const location2 = {
-    line: gDebuggee.line0 + 7,
+    line: debuggee.line0 + 7,
   };
 
   await source.setBreakpoint(location2).then(() => {
@@ -58,11 +35,10 @@ const test = async function() {
     ok(reason.message);
   });
 
-  await resume(gThreadClient);
-  finishClient(gClient);
-};
+  await resume(threadClient);
+}));
 
-function evalCode() {
+function evalCode(debuggee) {
   // Start a new script
   Cu.evalInSandbox(`
 var line0 = Error().lineNumber;
@@ -71,5 +47,5 @@ function some_function() {
 }
 debugger;
 // no breakpoint is allowed after the EOF (line0 + 6)
-`, gDebuggee);
+`, debuggee);
 }

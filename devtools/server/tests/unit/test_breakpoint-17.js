@@ -9,30 +9,6 @@
  * then remove one of them, we don't remove them both.
  */
 
-var gDebuggee;
-var gClient;
-var gThreadClient;
-var gCallback;
-
-function run_test() {
-  run_test_with_server(DebuggerServer, do_test_finished);
-  do_test_pending();
-}
-
-function run_test_with_server(server, callback) {
-  gCallback = callback;
-  initTestDebuggerServer(server);
-  gDebuggee = addTestGlobal("test-breakpoints", server);
-  gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect().then(function() {
-    attachTestTabAndResume(gClient, "test-breakpoints",
-                           function(response, targetFront, threadClient) {
-                             gThreadClient = threadClient;
-                             test_breakpoints_columns();
-                           });
-  });
-}
-
 const code =
 "(" + function(global) {
   global.foo = function() {
@@ -52,27 +28,36 @@ const secondLocation = {
   column: 18,
 };
 
-function test_breakpoints_columns() {
-  gClient.addOneTimeListener("paused", set_breakpoints);
-
-  Cu.evalInSandbox(code, gDebuggee, "1.8", "http://example.com/", 1);
-}
-
-function set_breakpoints(event, packet) {
-  let first, second;
-  const source = gThreadClient.source(packet.frame.where.source);
-
-  source.setBreakpoint(firstLocation).then(function([{ actualLocation },
-                                                     breakpointClient]) {
-    Assert.ok(!actualLocation, "Should not get an actualLocation");
-    first = breakpointClient;
-
-    source.setBreakpoint(secondLocation).then(function([{ actualLocation },
-                                                        breakpointClient]) {
-      Assert.ok(!actualLocation, "Should not get an actualLocation");
-      second = breakpointClient;
-
+add_task(threadClientTest(({ threadClient, debuggee, client }) => {
+  return new Promise(resolve => {
+    client.addOneTimeListener("paused", async (event, packet) => {
+      const [ first, second ] = await set_breakpoints(packet, threadClient);
       test_different_actors(first, second);
+      await test_remove_one(first, second, threadClient, debuggee, client);
+      resolve();
+    });
+
+    Cu.evalInSandbox(code, debuggee, "1.8", "http://example.com/", 1);
+  });
+}));
+
+function set_breakpoints(packet, threadClient) {
+  return new Promise(resolve => {
+    let first, second;
+    const source = threadClient.source(packet.frame.where.source);
+
+    source.setBreakpoint(firstLocation).then(function([{ actualLocation },
+                                                       breakpointClient]) {
+      Assert.ok(!actualLocation, "Should not get an actualLocation");
+      first = breakpointClient;
+
+      source.setBreakpoint(secondLocation).then(function([{ actualLocation },
+                                                          breakpointClient]) {
+        Assert.ok(!actualLocation, "Should not get an actualLocation");
+        second = breakpointClient;
+
+        resolve([first, second]);
+      });
     });
   });
 }
@@ -80,41 +65,42 @@ function set_breakpoints(event, packet) {
 function test_different_actors(first, second) {
   Assert.notEqual(first.actor, second.actor,
                   "Each breakpoint should have a different actor");
-  test_remove_one(first, second);
 }
 
-function test_remove_one(first, second) {
-  first.remove(function({error}) {
-    Assert.ok(!error, "Should not get an error removing a breakpoint");
+function test_remove_one(first, second, threadClient, debuggee, client) {
+  return new Promise(resolve => {
+    first.remove(function({error}) {
+      Assert.ok(!error, "Should not get an error removing a breakpoint");
 
-    let hitSecond;
-    gClient.addListener("paused", function _onPaused(event, {why, frame}) {
-      if (why.type == "breakpoint") {
-        hitSecond = true;
-        Assert.equal(why.actors.length, 1,
-                     "Should only be paused because of one breakpoint actor");
-        Assert.equal(why.actors[0], second.actor,
-                     "Should be paused because of the correct breakpoint actor");
-        Assert.equal(frame.where.line, secondLocation.line,
-                     "Should be at the right line");
-        Assert.equal(frame.where.column, secondLocation.column,
-                     "Should be at the right column");
-        gThreadClient.resume();
-        return;
-      }
+      let hitSecond;
+      client.addListener("paused", function _onPaused(event, {why, frame}) {
+        if (why.type == "breakpoint") {
+          hitSecond = true;
+          Assert.equal(why.actors.length, 1,
+                       "Should only be paused because of one breakpoint actor");
+          Assert.equal(why.actors[0], second.actor,
+                       "Should be paused because of the correct breakpoint actor");
+          Assert.equal(frame.where.line, secondLocation.line,
+                       "Should be at the right line");
+          Assert.equal(frame.where.column, secondLocation.column,
+                       "Should be at the right column");
+          threadClient.resume();
+          return;
+        }
 
-      if (why.type == "debuggerStatement") {
-        gClient.removeListener("paused", _onPaused);
-        Assert.ok(hitSecond,
-                  "We should still hit `second`, but not `first`.");
+        if (why.type == "debuggerStatement") {
+          client.removeListener("paused", _onPaused);
+          Assert.ok(hitSecond,
+                    "We should still hit `second`, but not `first`.");
 
-        gClient.close().then(gCallback);
-        return;
-      }
+          resolve();
+          return;
+        }
 
-      Assert.ok(false, "Should never get here");
+        Assert.ok(false, "Should never get here");
+      });
+
+      threadClient.resume(() => debuggee.foo());
     });
-
-    gThreadClient.resume(() => gDebuggee.foo());
   });
 }

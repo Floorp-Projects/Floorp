@@ -8,32 +8,18 @@
 // of numeric keys. (See Bug 1371936)
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
-
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
 });
 
-async function run_test() {
-  do_test_pending();
-  await run_test_with_server(DebuggerServer);
-  await run_test_with_server(WorkerDebuggerServer);
-  do_test_finished();
-}
-
-async function run_test_with_server(server) {
-  initTestDebuggerServer(server);
-  const debuggee = addTestGlobal("test-grips", server);
+add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   debuggee.eval(function stopMe(arg1) {
     debugger;
   }.toString());
 
-  const dbgClient = new DebuggerClient(server.connectPipe());
-  await dbgClient.connect();
-  const [,, threadClient] = await attachTestTabAndResume(dbgClient, "test-grips");
-
   // Currying test function so we don't have to pass the debuggee and clients
   const isArrayLike = object => test_object_grip_is_array_like(
-    debuggee, dbgClient, threadClient, object);
+    debuggee, client, threadClient, object);
 
   equal(await isArrayLike({}), false, "An empty object is not ArrayLike");
   equal(await isArrayLike({length: 0}), false,
@@ -54,9 +40,7 @@ async function run_test_with_server(server) {
   equal(await isArrayLike({0: "zero"}), true);
   equal(await isArrayLike({0: "zero", 1: "two"}), true);
   equal(await isArrayLike({0: "zero", 1: "one", 2: "two", length: 3}), true);
-
-  await dbgClient.close();
-}
+}));
 
 async function test_object_grip_is_array_like(debuggee, dbgClient, threadClient, object) {
   return new Promise((resolve, reject) => {
