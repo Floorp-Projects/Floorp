@@ -64,6 +64,9 @@ extern crate serde;
 #[macro_use]
 extern crate thread_profiler;
 
+#[macro_use]
+mod storage;
+
 mod batch;
 mod border;
 mod box_shadow;
