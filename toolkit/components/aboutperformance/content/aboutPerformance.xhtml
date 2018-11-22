@@ -176,6 +176,7 @@
 
       /* square background */
       .action-icon::before {
+        content: "";
         background-color: currentColor;
         opacity: 0;
       }
@@ -188,24 +189,28 @@
 
       /* icons */
       .action-icon::after {
-        content: ""; /* The ::after pseudo element isn't generated without
-                        specifying a value for this attribute. */
         -moz-context-properties: fill, fill-opacity;
         fill-opacity: 0;
         background-repeat: no-repeat;
         background-position: center;
         fill: currentColor;
+        line-height: 100%;
       }
       .addon-icon::after {
-        background-image: url("chrome://global/skin/icons/shortcut.svg");
-        background-size: 16px;
+        content: url("chrome://global/skin/icons/shortcut.svg");
+        top: 2px;
+        left: -11px;
+        width: 16px;
       }
       .addon-icon:dir(rtl)::after {
         transform: scaleX(-1);
       }
       .close-icon::after {
-        background-image: url("chrome://global/skin/icons/close.svg");
-        background-size: 24px;
+        content: url("chrome://global/skin/icons/close.svg");
+        height: 100%;
+        top: 0;
+        left: -13px;
+        transform: scale(1.2);
       }
 
       #dispatch-table > thead > tr > td {
@@ -251,13 +256,14 @@
       /* Putting the background image in a positioned pseudo element lets us
        * use CSS transforms on the background image, which we need for rtl. */
       .twisty::before {
+        content: url("chrome://global/skin/icons/twisty-collapsed.svg");
         position: absolute;
-        height: 100%;
+        display: block;
+        line-height: 50%;
+        top: 4px; /* Half the image's height */
         width: 100%;
         left: 0;
-        background-repeat: no-repeat;
-        background-position: center;
-        background-image: url("chrome://global/skin/icons/twisty-collapsed.svg");
+        text-align: center;
         -moz-context-properties: fill;
         fill: currentColor;
       }
@@ -265,7 +271,7 @@
         transform: scaleX(-1);
       }
       .twisty.open::before {
-        background-image: url("chrome://global/skin/icons/twisty-expanded.svg");
+        content: url("chrome://global/skin/icons/twisty-expanded.svg");
       }
       #dispatch-tbody > tr > td.indent {
         padding-inline-start: 88px;
