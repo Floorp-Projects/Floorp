@@ -489,11 +489,11 @@ const Class cls::protoClass_ = { \
 /*** 3.2. Class ReadableStream **********************************************/
 
 static MOZ_MUST_USE ReadableStreamDefaultController*
-CreateReadableStreamDefaultController(JSContext* cx,
-                                      Handle<ReadableStream*> stream,
-                                      HandleValue underlyingSource,
-                                      HandleValue size,
-                                      double highWaterMarkVal);
+SetUpReadableStreamDefaultController(JSContext* cx,
+                                     Handle<ReadableStream*> stream,
+                                     HandleValue underlyingSource,
+                                     HandleValue size,
+                                     double highWaterMarkVal);
 
 /**
  * Streams spec, 3.2.3., steps 1-4, 8.
@@ -518,8 +518,8 @@ ReadableStream::createDefaultStream(JSContext* cx, HandleValue underlyingSource,
     //                       « this, underlyingSource, size,
     //                         highWaterMark »).
     ReadableStreamDefaultController* controller =
-        CreateReadableStreamDefaultController(cx, stream, underlyingSource, size,
-                                              highWaterMark);
+        SetUpReadableStreamDefaultController(cx, stream, underlyingSource, size,
+                                             highWaterMark);
     if (!controller) {
         return nullptr;
     }
@@ -2292,89 +2292,6 @@ ControllerStartFailedHandler(JSContext* cx, unsigned argc, Value* vp)
 }
 
 /**
- * Streams spec, 3.8.3
- *      new ReadableStreamDefaultController ( stream, underlyingSource,
- *                                            size, highWaterMark )
- * Steps 3 - 11.
- *
- * Note: All arguments must be same-compartment with cx. ReadableStream
- * controllers are always created in the same compartment as the stream.
- */
-static MOZ_MUST_USE ReadableStreamDefaultController*
-CreateReadableStreamDefaultController(JSContext* cx,
-                                      Handle<ReadableStream*> stream,
-                                      HandleValue underlyingSource,
-                                      HandleValue size,
-                                      double highWaterMark)
-{
-    cx->check(stream, underlyingSource, size);
-    MOZ_ASSERT(highWaterMark >= 0);
-    MOZ_ASSERT(size.isUndefined() || IsCallable(size));
-
-    Rooted<ReadableStreamDefaultController*> controller(cx,
-        NewBuiltinClassInstance<ReadableStreamDefaultController>(cx));
-    if (!controller) {
-        return nullptr;
-    }
-
-    // Step 3: Set this.[[controlledReadableStream]] to stream.
-    controller->setStream(stream);
-
-    // Step 4: Set this.[[underlyingSource]] to underlyingSource.
-    controller->setUnderlyingSource(underlyingSource);
-
-    // Step 5: Perform ! ResetQueue(this).
-    if (!ResetQueue(cx, controller)) {
-        return nullptr;
-    }
-
-    // Step 6: Set this.[[started]], this.[[closeRequested]], this.[[pullAgain]],
-    //         and this.[[pulling]] to false.
-    controller->setFlags(0);
-
-    // Step 7: Let normalizedStrategy be
-    //         ? ValidateAndNormalizeQueuingStrategy(size, highWaterMark)
-    //         (implicit).
-
-    // Step 8: Set this.[[strategySize]] to normalizedStrategy.[[size]] and
-    //         this.[[strategyHWM]] to normalizedStrategy.[[highWaterMark]].
-    controller->setStrategySize(size);
-    controller->setStrategyHWM(highWaterMark);
-
-    // Step 9: Let controller be this (implicit).
-
-    // Step 10: Let startResult be
-    //          ? InvokeOrNoop(underlyingSource, "start", « this »).
-    RootedValue startResult(cx);
-    RootedValue controllerVal(cx, ObjectValue(*controller));
-    if (!InvokeOrNoop(cx, underlyingSource, cx->names().start, controllerVal, &startResult)) {
-        return nullptr;
-    }
-
-    // Step 11: Let startPromise be a promise resolved with startResult:
-    RootedObject startPromise(cx, PromiseObject::unforgeableResolve(cx, startResult));
-    if (!startPromise) {
-        return nullptr;
-    }
-
-    RootedObject onStartFulfilled(cx, NewHandler(cx, ControllerStartHandler, controller));
-    if (!onStartFulfilled) {
-        return nullptr;
-    }
-
-    RootedObject onStartRejected(cx, NewHandler(cx, ControllerStartFailedHandler, controller));
-    if (!onStartRejected) {
-        return nullptr;
-    }
-
-    if (!JS::AddPromiseReactions(cx, startPromise, onStartFulfilled, onStartRejected)) {
-        return nullptr;
-    }
-
-    return controller;
-}
-
-/**
  * Streams spec, 3.8.3.
  * new ReadableStreamDefaultController( stream, underlyingSource, size,
  *                                      highWaterMark )
@@ -3151,6 +3068,89 @@ ReadableStreamControllerGetDesiredSizeUnchecked(ReadableStreamController* contro
 
     // Step 5: Return controller.[[strategyHWM]] − controller.[[queueTotalSize]].
     return controller->strategyHWM() - controller->queueTotalSize();
+}
+
+/**
+ * Streams spec, 3.9.11.
+ *      SetUpReadableStreamDefaultController(stream, controller,
+ *          startAlgorithm, pullAlgorithm, cancelAlgorithm, highWaterMark,
+ *          sizeAlgorithm )
+ *
+ * Note: All arguments must be same-compartment with cx. ReadableStream
+ * controllers are always created in the same compartment as the stream.
+ */
+static MOZ_MUST_USE ReadableStreamDefaultController*
+SetUpReadableStreamDefaultController(JSContext* cx,
+                                     Handle<ReadableStream*> stream,
+                                     HandleValue underlyingSource,
+                                     HandleValue size,
+                                     double highWaterMark)
+{
+    cx->check(stream, underlyingSource, size);
+    MOZ_ASSERT(highWaterMark >= 0);
+    MOZ_ASSERT(size.isUndefined() || IsCallable(size));
+
+    Rooted<ReadableStreamDefaultController*> controller(cx,
+        NewBuiltinClassInstance<ReadableStreamDefaultController>(cx));
+    if (!controller) {
+        return nullptr;
+    }
+
+    // Step 3: Set this.[[controlledReadableStream]] to stream.
+    controller->setStream(stream);
+
+    // Step 4: Set this.[[underlyingSource]] to underlyingSource.
+    controller->setUnderlyingSource(underlyingSource);
+
+    // Step 5: Perform ! ResetQueue(this).
+    if (!ResetQueue(cx, controller)) {
+        return nullptr;
+    }
+
+    // Step 6: Set this.[[started]], this.[[closeRequested]], this.[[pullAgain]],
+    //         and this.[[pulling]] to false.
+    controller->setFlags(0);
+
+    // Step 7: Let normalizedStrategy be
+    //         ? ValidateAndNormalizeQueuingStrategy(size, highWaterMark)
+    //         (implicit).
+
+    // Step 8: Set this.[[strategySize]] to normalizedStrategy.[[size]] and
+    //         this.[[strategyHWM]] to normalizedStrategy.[[highWaterMark]].
+    controller->setStrategySize(size);
+    controller->setStrategyHWM(highWaterMark);
+
+    // Step 9: Let controller be this (implicit).
+
+    // Step 10: Let startResult be
+    //          ? InvokeOrNoop(underlyingSource, "start", « this »).
+    RootedValue startResult(cx);
+    RootedValue controllerVal(cx, ObjectValue(*controller));
+    if (!InvokeOrNoop(cx, underlyingSource, cx->names().start, controllerVal, &startResult)) {
+        return nullptr;
+    }
+
+    // Step 11: Let startPromise be a promise resolved with startResult:
+    RootedObject startPromise(cx, PromiseObject::unforgeableResolve(cx, startResult));
+    if (!startPromise) {
+        return nullptr;
+    }
+
+    RootedObject onStartFulfilled(cx, NewHandler(cx, ControllerStartHandler, controller));
+    if (!onStartFulfilled) {
+        return nullptr;
+    }
+
+    RootedObject onStartRejected(cx, NewHandler(cx, ControllerStartFailedHandler, controller));
+    if (!onStartRejected) {
+        return nullptr;
+    }
+
+    if (!JS::AddPromiseReactions(cx, startPromise, onStartFulfilled, onStartRejected)) {
+        return nullptr;
+    }
+
+    return controller;
 }
 
 
