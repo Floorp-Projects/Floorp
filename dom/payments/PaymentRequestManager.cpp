@@ -537,33 +537,25 @@ PaymentRequestManager::CanMakePayment(PaymentRequest* aRequest)
   nsAutoString requestId;
   aRequest->GetInternalId(requestId);
   IPCPaymentCanMakeActionRequest action(requestId);
-
   return SendRequestPayment(aRequest, action);
 }
 
 nsresult
 PaymentRequestManager::ShowPayment(PaymentRequest* aRequest)
 {
-  nsresult rv = NS_OK;
-  if (!aRequest->IsUpdating()) {
-    nsAutoString requestId;
-    aRequest->GetInternalId(requestId);
-    IPCPaymentShowActionRequest action(requestId);
-    rv = SendRequestPayment(aRequest, action);
-  }
-  return rv;
+  nsAutoString requestId;
+  aRequest->GetInternalId(requestId);
+  IPCPaymentShowActionRequest action(requestId, aRequest->IsUpdating());
+  return SendRequestPayment(aRequest, action);
 }
 
 nsresult
-PaymentRequestManager::AbortPayment(PaymentRequest* aRequest, bool aDeferredShow)
+PaymentRequestManager::AbortPayment(PaymentRequest* aRequest)
 {
   nsAutoString requestId;
   aRequest->GetInternalId(requestId);
   IPCPaymentAbortActionRequest action(requestId);
-
-  // If aDeferredShow is true, then show was called with a promise that was
-  // rejected. In that case, we need to remember that we called show earlier.
-  return SendRequestPayment(aRequest, action, aDeferredShow);
+  return SendRequestPayment(aRequest, action);
 }
 
 nsresult
@@ -585,7 +577,6 @@ PaymentRequestManager::CompletePayment(PaymentRequest* aRequest,
   nsAutoString requestId;
   aRequest->GetInternalId(requestId);
   IPCPaymentCompleteActionRequest action(requestId, completeStatusString);
-
   return SendRequestPayment(aRequest, action, false);
 }
 
@@ -593,8 +584,7 @@ nsresult
 PaymentRequestManager::UpdatePayment(JSContext* aCx,
                                      PaymentRequest* aRequest,
                                      const PaymentDetailsUpdate& aDetails,
-                                     bool aRequestShipping,
-                                     bool aDeferredShow)
+                                     bool aRequestShipping)
 {
   NS_ENSURE_ARG_POINTER(aCx);
   IPCPaymentDetails details;
@@ -613,10 +603,7 @@ PaymentRequestManager::UpdatePayment(JSContext* aCx,
   nsAutoString requestId;
   aRequest->GetInternalId(requestId);
   IPCPaymentUpdateActionRequest action(requestId, details, shippingOption);
-
-  // If aDeferredShow is true, then this call serves as the ShowUpdate call for
-  // this request.
-  return SendRequestPayment(aRequest, action, aDeferredShow);
+  return SendRequestPayment(aRequest, action, false);
 }
 
 nsresult

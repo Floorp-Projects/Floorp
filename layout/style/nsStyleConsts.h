@@ -306,18 +306,19 @@ enum class StyleImageLayerRepeat : uint8_t {
 #define NS_STYLE_BORDER_WIDTH_THICK             2
 // XXX chopping block #define NS_STYLE_BORDER_WIDTH_LENGTH_VALUE      3
 
-// See nsStyleBorder mBorderStyle
-#define NS_STYLE_BORDER_STYLE_NONE              0
-#define NS_STYLE_BORDER_STYLE_GROOVE            1
-#define NS_STYLE_BORDER_STYLE_RIDGE             2
-#define NS_STYLE_BORDER_STYLE_DOTTED            3
-#define NS_STYLE_BORDER_STYLE_DASHED            4
-#define NS_STYLE_BORDER_STYLE_SOLID             5
-#define NS_STYLE_BORDER_STYLE_DOUBLE            6
-#define NS_STYLE_BORDER_STYLE_INSET             7
-#define NS_STYLE_BORDER_STYLE_OUTSET            8
-#define NS_STYLE_BORDER_STYLE_HIDDEN            9
-#define NS_STYLE_BORDER_STYLE_AUTO              10 // for outline-style only
+enum class StyleBorderStyle : uint8_t {
+  None,
+  Groove,
+  Ridge,
+  Dotted,
+  Dashed,
+  Solid,
+  Double,
+  Inset,
+  Outset,
+  Hidden,
+  Auto,     // for outline-style only
+};
 
 // border-image-repeat
 enum class StyleBorderImageRepeat : uint8_t {

@@ -48,15 +48,14 @@ public:
 
   nsresult CanMakePayment(PaymentRequest* aRequest);
   nsresult ShowPayment(PaymentRequest* aRequest);
-  nsresult AbortPayment(PaymentRequest* aRequest, bool aDeferredShow);
+  nsresult AbortPayment(PaymentRequest* aRequest);
   nsresult CompletePayment(PaymentRequest* aRequest,
                            const PaymentComplete& aComplete,
                            bool aTimedOut = false);
   nsresult UpdatePayment(JSContext* aCx,
                          PaymentRequest* aRequest,
                          const PaymentDetailsUpdate& aDetails,
-                         bool aRequestShipping,
-                         bool aDeferredShow);
+                         bool aRequestShipping);
   nsresult ClosePayment(PaymentRequest* aRequest);
   nsresult RetryPayment(JSContext* aCx,
                         PaymentRequest* aRequest,
