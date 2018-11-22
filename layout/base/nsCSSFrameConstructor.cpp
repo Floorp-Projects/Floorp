@@ -448,9 +448,9 @@ IsFrameForSVG(const nsIFrame* aFrame)
 static bool
 ShouldSuppressFloatingOfDescendants(nsIFrame* aFrame)
 {
-  return aFrame->IsFrameOfType(nsIFrame::eMathML) ||
+  return ::IsFlexOrGridContainer(aFrame) ||
     aFrame->IsXULBoxFrame() ||
-    ::IsFlexOrGridContainer(aFrame);
+    aFrame->IsFrameOfType(nsIFrame::eMathML);
 }
 
 /**
@@ -10120,13 +10120,9 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
                                 &haveFirstLineStyle);
   }
 
-  const bool isFlexOrGridContainer = ::IsFlexOrGridContainer(aFrame);
   // The logic here needs to match the logic in GetFloatContainingBlock()
-  // (Since we already have isFlexOrGridContainer, we check that eagerly instead
-  // of letting ShouldSuppressFloatingOfDescendants look it up redundantly.)
   nsFrameConstructorSaveState floatSaveState;
-  if (isFlexOrGridContainer ||
-      ShouldSuppressFloatingOfDescendants(aFrame)) {
+  if (ShouldSuppressFloatingOfDescendants(aFrame)) {
     aState.PushFloatContainingBlock(nullptr, floatSaveState);
   } else if (aFrame->IsFloatContainingBlock()) {
     aState.PushFloatContainingBlock(aFrame, floatSaveState);
