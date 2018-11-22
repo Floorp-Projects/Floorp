@@ -2759,11 +2759,16 @@ class Section extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent
     // to avoid a flash of logged out state while we render.
     const isPocketLoggedInDefined = isUserLoggedIn === true || isUserLoggedIn === false;
 
+    const hasTopics = topics && topics.length > 0;
+
     const shouldShowPocketCta = id === "topstories" && useCta && isUserLoggedIn === false;
 
     // Show topics only for top stories and if it has loaded with topics.
     // The classs .top-stories-bottom-container ensures content doesn't shift as things load.
-    const shouldShowTopics = id === "topstories" && topics && topics.length > 0 && (useCta && isUserLoggedIn === true || !useCta && isPocketLoggedInDefined);
+    const shouldShowTopics = id === "topstories" && hasTopics && (useCta && isUserLoggedIn === true || !useCta && isPocketLoggedInDefined);
+
+    // We use topics to determine language support for read more.
+    const shouldShowReadMore = read_more_endpoint && hasTopics;
 
     const realRows = rows.slice(0, maxCards);
 
@@ -2842,7 +2847,7 @@ class Section extends react__WEBPACK_IMPORTED_MODULE_8___default.a.PureComponent
           { className: "top-stories-bottom-container" },
           shouldShowTopics && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_Topics_Topics__WEBPACK_IMPORTED_MODULE_9__["Topics"], { topics: this.props.topics }),
           shouldShowPocketCta && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_PocketLoggedInCta_PocketLoggedInCta__WEBPACK_IMPORTED_MODULE_7__["PocketLoggedInCta"], null),
-          read_more_endpoint && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_MoreRecommendations_MoreRecommendations__WEBPACK_IMPORTED_MODULE_6__["MoreRecommendations"], { read_more_endpoint: read_more_endpoint })
+          shouldShowReadMore && react__WEBPACK_IMPORTED_MODULE_8___default.a.createElement(content_src_components_MoreRecommendations_MoreRecommendations__WEBPACK_IMPORTED_MODULE_6__["MoreRecommendations"], { read_more_endpoint: read_more_endpoint })
         )
       )
     );
