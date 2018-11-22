@@ -991,7 +991,7 @@ static uint32_t GetCandidateIpAndTransportMask(const RTCIceCandidateStats *cand)
     res |= CANDIDATE_BITMASK_TCP;
   }
 
-  if (cand->mIpAddress.Value().FindChar(':') != -1) {
+  if (cand->mAddress.Value().FindChar(':') != -1) {
     res |= CANDIDATE_BITMASK_IPV6;
   }
 
@@ -1050,7 +1050,7 @@ static void StoreLongTermICEStatisticsImpl_m(
     if (!cand.mType.WasPassed() ||
         !cand.mCandidateType.WasPassed() ||
         !cand.mTransport.WasPassed() ||
-        !cand.mIpAddress.WasPassed() ||
+        !cand.mAddress.WasPassed() ||
         !cand.mComponentId.WasPassed()) {
       // Crash on debug, ignore this candidate otherwise.
       MOZ_CRASH();
