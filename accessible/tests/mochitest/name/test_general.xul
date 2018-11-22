@@ -158,6 +158,11 @@
 
 
       //////////////////////////////////////////////////////////////////////////
+      // name from label inside toolbar button
+      testName("toolbarbuttonwithlabel", "I am the button");
+
+
+      //////////////////////////////////////////////////////////////////////////
       // Name from children
 
       // ARIA role button is presented allowing the name calculation from
@@ -323,6 +328,7 @@
        tooltiptext="tooltiptext label"/>
 
   <!-- the name from @title of toolbaritem -->
+  <!-- and the name from label of a toolbarbutton -->
   <toolbar>
     <toolbaritem title="ooospspss">
       <textbox id="toolbaritem_textbox"
@@ -334,6 +340,9 @@
         </hbox>
       </textbox>
     </toolbaritem>
+    <toolbarbutton id="toolbarbuttonwithlabel">
+      <label flex="1">I am the button</label>
+    </toolbarbutton>
   </toolbar>
 
   <!-- name from children -->

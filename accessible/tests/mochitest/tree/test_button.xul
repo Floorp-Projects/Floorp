@@ -37,7 +37,10 @@
       var accTree = {
         role: ROLE_PUSHBUTTON,
         name: "hello",
-        children: [ ]
+        children: [ {
+          role: ROLE_LABEL,
+          name: "hello"
+        } ]
       };
       testAccessibleTree("button2", accTree);
 
