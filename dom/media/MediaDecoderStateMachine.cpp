@@ -756,6 +756,14 @@ class MediaDecoderStateMachine::LoopingDecodingState
     MOZ_ASSERT(mMaster->mLooping);
   }
 
+  void Enter() {
+    if (!mMaster->IsAudioDecoding()) {
+      SLOG("audio has ended, request the data again.");
+      RequestAudioDataFromStartPosition();
+    }
+    DecodingState::Enter();
+  }
+
   void Exit() override {
     mAudioDataRequest.DisconnectIfExists();
     mAudioSeekRequest.DisconnectIfExists();
@@ -796,29 +804,31 @@ class MediaDecoderStateMachine::LoopingDecodingState
       mMaster->mAudioDecodedDuration.emplace(mMaster->mDecodedAudioEndTime);
     }
 
-    SLOG(
-        "received EOS when seamless looping, starts seeking, "
-        "AudioLoopingOffset=[%" PRId64 "]",
-        mAudioLoopingOffset.ToMicroseconds());
+    SLOG("received EOS when seamless looping, starts seeking, "
+         "AudioLoopingOffset=[%" PRId64 "]",
+         mAudioLoopingOffset.ToMicroseconds());
+    RequestAudioDataFromStartPosition();
+  }
+
+ private:
+  void RequestAudioDataFromStartPosition() {
     Reader()->ResetDecode(TrackInfo::kAudioTrack);
     Reader()
         ->Seek(SeekTarget(media::TimeUnit::Zero(), SeekTarget::Accurate))
         ->Then(OwnerThread(), __func__,
                [this]() -> void {
                  mAudioSeekRequest.Complete();
-                 SLOG(
-                     "seeking completed, start to request first sample, "
-                     "queueing audio task - queued=%zu, decoder-queued=%zu",
-                     AudioQueue().GetSize(),
-                     Reader()->SizeOfAudioQueueInFrames());
+                 SLOG("seeking completed, start to request first sample, "
+                      "queueing audio task - queued=%zu, decoder-queued=%zu",
+                      AudioQueue().GetSize(),
+                      Reader()->SizeOfAudioQueueInFrames());
 
-                 Reader()
-                     ->RequestAudioData()
+                 Reader()->RequestAudioData()
                      ->Then(OwnerThread(), __func__,
                             [this](RefPtr<AudioData> aAudio) {
                               mAudioDataRequest.Complete();
-                              SLOG("got audio decoded sample [%" PRId64
-                                   ",%" PRId64 "]",
+                              SLOG("got audio decoded sample "
+                                   "[%" PRId64 ",%" PRId64 "]",
                                    aAudio->mTime.ToMicroseconds(),
                                    aAudio->GetEndTime().ToMicroseconds());
                               HandleAudioDecoded(aAudio);
@@ -836,7 +846,6 @@ class MediaDecoderStateMachine::LoopingDecodingState
         ->Track(mAudioSeekRequest);
   }
 
- private:
   void HandleError(const MediaResult& aError) {
     SLOG("audio looping failed, aError=%s", aError.ErrorName().get());
     MOZ_ASSERT(aError != NS_ERROR_DOM_MEDIA_END_OF_STREAM);
@@ -1897,6 +1906,7 @@ class MediaDecoderStateMachine::BufferingState
  *
  * Transition to:
  *   SEEKING if any seek request.
+ *   LOOPING_DECODING if MDSM enable looping.
  */
 class MediaDecoderStateMachine::CompletedState
     : public MediaDecoderStateMachine::StateObject {
@@ -1975,6 +1985,12 @@ class MediaDecoderStateMachine::CompletedState
   }
 
   State GetState() const override { return DECODER_STATE_COMPLETED; }
+
+  void HandleLoopingChanged() override {
+    if (mMaster->mLooping) {
+      SetDecodingState();
+    }
+  }
 
   void HandleAudioCaptured() override {
     // MediaSink is changed. Schedule Step() to check if we can start playback.
@@ -2205,7 +2221,6 @@ void MediaDecoderStateMachine::DecodeMetadataState::OnMetadataRead(
   mMaster->mSeamlessLoopingAllowed = StaticPrefs::MediaSeamlessLooping() &&
                                      mMaster->HasAudio() &&
                                      !mMaster->HasVideo();
-  mMaster->LoopingChanged();
 
   SetState<DecodingFirstFrameState>();
 }
@@ -2272,7 +2287,10 @@ void MediaDecoderStateMachine::DecodingState::Enter() {
     HandleVideoSuspendTimeout();
   }
 
-  if (!mMaster->IsVideoDecoding() && !mMaster->IsAudioDecoding()) {
+  // If decoding has ended and we are not in looping, we don't need to decode
+  // anything later.
+  if (!mMaster->IsVideoDecoding() && !mMaster->IsAudioDecoding() &&
+      !mMaster->mLooping) {
     SetState<CompletedState>();
     return;
   }
@@ -3489,6 +3507,7 @@ void MediaDecoderStateMachine::PreservesPitchChanged() {
 
 void MediaDecoderStateMachine::LoopingChanged() {
   MOZ_ASSERT(OnTaskQueue());
+  LOGV("LoopingChanged, looping=%d", mLooping.Ref());
   if (mSeamlessLoopingAllowed) {
     mStateObj->HandleLoopingChanged();
   }
