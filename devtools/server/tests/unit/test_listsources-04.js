@@ -10,39 +10,22 @@
 
 const {SourceNode} = require("source-map");
 
-function run_test() {
-  run_test_with_server(DebuggerServer, function() {
-    // Bug 1304144 - This test does not run in a worker because the
-    // `rpc` method which talks to the main thread does not work.
-    // run_test_with_server(WorkerDebuggerServer, do_test_finished);
-    do_test_finished();
-  });
-  do_test_pending();
-}
+add_task(threadClientTest(async ({ threadClient, debuggee }) => {
+  await threadClient.reconfigure({ useSourceMaps: true });
+  addSources(debuggee);
 
-function run_test_with_server(server, cb) {
-  (async function() {
-    initTestDebuggerServer(server);
-    const debuggee = addTestGlobal("test-sources", server);
-    const client = new DebuggerClient(server.connectPipe());
-    await client.connect();
-    const [,, threadClient] = await attachTestTabAndResume(client, "test-sources");
+  const res = await threadClient.getSources();
+  Assert.equal(res.sources.length, 3, "3 sources exist");
 
-    await threadClient.reconfigure({ useSourceMaps: true });
-    addSources(debuggee);
+  await threadClient.reconfigure({ useSourceMaps: false });
 
-    threadClient.getSources(async function(res) {
-      Assert.equal(res.sources.length, 3, "3 sources exist");
-
-      await threadClient.reconfigure({ useSourceMaps: false });
-
-      threadClient.getSources(function(res) {
-        Assert.equal(res.sources.length, 1, "1 source exist");
-        client.close().then(cb);
-      });
-    });
-  })();
-}
+  const res2 = await threadClient.getSources();
+  Assert.equal(res2.sources.length, 1, "1 source exist");
+}, {
+  // Bug 1304144 - This test does not run in a worker because the
+  // `rpc` method which talks to the main thread does not work.
+  doNotRunWorker: true,
+}));
 
 function addSources(debuggee) {
   let { code, map } = (new SourceNode(null, null, null, [

@@ -849,9 +849,11 @@ async function setupTestFromUrl(url) {
  *        Optional arguments to tweak test environment
  *        - JSPrincipal principal
  *          Principal to use for the debuggee.
+ *        - boolean doNotRunWorker
+ *          If true, do not run this tests in worker debugger context.
  */
 function threadClientTest(test, options = {}) {
-  let { principal } = options;
+  let { principal, doNotRunWorker } = options;
   if (!principal) {
     principal = systemPrincipal;
   }
@@ -891,7 +893,10 @@ function threadClientTest(test, options = {}) {
     dump(">>> Run thread client test against a regular DebuggerServer\n");
     await runThreadClientTestWithServer(DebuggerServer, test);
 
-    dump(">>> Run thread client test against a worker DebuggerServer\n");
-    await runThreadClientTestWithServer(WorkerDebuggerServer, test);
+    // Skip tests that fail in the worker context
+    if (!doNotRunWorker) {
+      dump(">>> Run thread client test against a worker DebuggerServer\n");
+      await runThreadClientTestWithServer(WorkerDebuggerServer, test);
+    }
   };
 }
