@@ -249,14 +249,10 @@ uint8_t
 nsStyleUI::GetEffectivePointerEvents(nsIFrame* aFrame) const
 {
   if (aFrame->GetContent() && !aFrame->GetContent()->GetParent()) {
-    // The root element has a cluster of frames associated with it
-    // (root scroll frame, canvas frame, the actual primary frame). Make
-    // those take their pointer-events value from the root element's primary
-    // frame.
-    nsIFrame* f = aFrame->GetContent()->GetPrimaryFrame();
-    if (f) {
-      return f->StyleUI()->mPointerEvents;
-    }
+    // The root frame is not allowed to have pointer-events: none, or else
+    // no frames could be hit test against and scrolling the viewport would
+    // not work.
+    return NS_STYLE_POINTER_EVENTS_AUTO;
   }
   return mPointerEvents;
 }
