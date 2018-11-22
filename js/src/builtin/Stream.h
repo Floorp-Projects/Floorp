@@ -105,7 +105,7 @@ class ReadableStream : public NativeObject
                                                       uint8_t flags, HandleObject proto = nullptr);
 
   private:
-    static MOZ_MUST_USE ReadableStream* createStream(JSContext* cx, HandleObject proto = nullptr);
+    static MOZ_MUST_USE ReadableStream* create(JSContext* cx, HandleObject proto = nullptr);
 
   public:
     static bool constructor(JSContext* cx, unsigned argc, Value* vp);
