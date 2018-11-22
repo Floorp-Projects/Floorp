@@ -643,6 +643,7 @@ class _ASRouter {
     let {state} = this;
     return state.messages.filter(item =>
       !state.messageBlockList.includes(item.id) &&
+      (!item.campaign || !state.messageBlockList.includes(item.campaign)) &&
       !state.providerBlockList.includes(item.provider)
     );
   }
@@ -799,10 +800,20 @@ class _ASRouter {
     const idsToBlock = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
 
     await this.setState(state => {
-      const messageBlockList = [...state.messageBlockList, ...idsToBlock];
-      // When a message is blocked, its impressions should be cleared as well
+      const messageBlockList = [...state.messageBlockList];
       const messageImpressions = {...state.messageImpressions};
-      idsToBlock.forEach(id => delete messageImpressions[id]);
+
+      idsToBlock.forEach(id => {
+        const message = state.messages.find(m => m.id === id);
+        const idToBlock = (message && message.campaign) ? message.campaign : id;
+        if (!messageBlockList.includes(idToBlock)) {
+          messageBlockList.push(idToBlock);
+        }
+
+        // When a message is blocked, its impressions should be cleared as well
+        delete messageImpressions[id];
+      });
+
       this._storage.set("messageBlockList", messageBlockList);
       return {messageBlockList, messageImpressions};
     });
@@ -960,7 +971,9 @@ class _ASRouter {
       case "UNBLOCK_MESSAGE_BY_ID":
         await this.setState(state => {
           const messageBlockList = [...state.messageBlockList];
-          messageBlockList.splice(messageBlockList.indexOf(action.data.id), 1);
+          const message = state.messages.find(m => m.id === action.data.id);
+          const idToUnblock = (message && message.campaign) ? message.campaign : action.data.id;
+          messageBlockList.splice(messageBlockList.indexOf(idToUnblock), 1);
           this._storage.set("messageBlockList", messageBlockList);
           return {messageBlockList};
         });
