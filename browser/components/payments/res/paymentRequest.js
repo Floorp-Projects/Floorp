@@ -143,28 +143,24 @@ var paymentRequest = {
     let shippingRequested = state.request.paymentOptions.requestShipping;
 
     // Onboarding wizard flow.
-    if (!hasSavedAddresses && (shippingRequested || !hasSavedCards)) {
+    if (!hasSavedAddresses && shippingRequested) {
       state.page = {
-        id: "address-page",
+        id: "shipping-address-page",
         onboardingWizard: true,
       };
 
-      state["address-page"] = {
-        addressFields: null,
+      state["shipping-address-page"] = {
         guid: null,
       };
+    } else if (!hasSavedAddresses && !hasSavedCards) {
+      state.page = {
+        id: "billing-address-page",
+        onboardingWizard: true,
+      };
 
-      if (shippingRequested) {
-        Object.assign(state["address-page"], {
-          selectedStateKey: ["selectedShippingAddress"],
-          title: paymentDialog.dataset.shippingAddressTitleAdd,
-        });
-      } else {
-        Object.assign(state["address-page"], {
-          selectedStateKey: ["basic-card-page", "billingAddressGUID"],
-          title: paymentDialog.dataset.billingAddressTitleAdd,
-        });
-      }
+      state["billing-address-page"] = {
+        guid: null,
+      };
     } else if (!hasSavedCards) {
       state.page = {
         id: "basic-card-page",

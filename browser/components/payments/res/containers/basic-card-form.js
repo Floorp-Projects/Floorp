@@ -334,7 +334,8 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
         let {
           page,
           request,
-          "address-page": addressPage,
+          "shipping-address-page": shippingAddressPage,
+          "billing-address-page": billingAddressPage,
           "basic-card-page": basicCardPage,
           selectedShippingAddress,
         } = currentState;
@@ -346,20 +347,25 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(PaymentRe
           },
         };
 
-        let addressPageState;
         if (page.onboardingWizard) {
           if (request.paymentOptions.requestShipping) {
-            addressPageState = Object.assign({}, addressPage, {guid: selectedShippingAddress});
+            shippingAddressPage = Object.assign({}, shippingAddressPage,
+                                                {guid: selectedShippingAddress});
+            Object.assign(nextState, {
+              "shipping-address-page": shippingAddressPage,
+            });
           } else {
-            addressPageState =
-              Object.assign({}, addressPage, {guid: basicCardPage.billingAddressGUID});
+            billingAddressPage =
+              Object.assign({}, billingAddressPage, {guid: basicCardPage.billingAddressGUID});
+            Object.assign(nextState, {
+              "billing-address-page": billingAddressPage,
+            });
           }
 
           let basicCardPageState = Object.assign({}, basicCardPage, {preserveFieldValues: true});
           delete basicCardPageState.persistCheckboxValue;
 
           Object.assign(nextState, {
-            "address-page": addressPageState,
             "basic-card-page": basicCardPageState,
           });
         }

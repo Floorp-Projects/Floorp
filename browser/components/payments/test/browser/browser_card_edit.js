@@ -88,8 +88,9 @@ async function add_link(aOptions = {}) {
 
     let addressOptions = Object.assign({}, aOptions, {
       addLinkSelector: ".billingAddressRow .add-link",
-      checkboxSelector: "#address-page .persist-checkbox",
+      checkboxSelector: "#billing-address-page .persist-checkbox",
       initialPageId: "basic-card-page",
+      addressPageId: "billing-address-page",
       expectPersist: aOptions.expectDefaultAddressPersist,
     });
     if (aOptions.hasOwnProperty("setAddressPersistCheckedValue")) {
@@ -106,7 +107,10 @@ async function add_link(aOptions = {}) {
       let title = content.document.querySelector("basic-card-form h2");
       let card = Object.assign({}, PTU.BasicCards.JaneMasterCard);
 
-      let addressTitle = content.document.querySelector("address-form h2");
+      let addressForm = content.document.querySelector("#billing-address-page");
+      ok(content.isVisible(addressForm), "Billing address page is visible");
+
+      let addressTitle = addressForm.querySelector("h2");
       is(addressTitle.textContent, "Add Billing Address",
          "Address on add address page should be correct");
 
@@ -116,7 +120,7 @@ async function add_link(aOptions = {}) {
         return total == 1;
       }, "Check card was not added when clicking the 'add' address button");
 
-      let addressBackButton = content.document.querySelector("address-form .back-button");
+      let addressBackButton = addressForm.querySelector(".back-button");
       addressBackButton.click();
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
@@ -483,14 +487,17 @@ add_task(async function test_edit_link() {
       let addressAddLink = content.document.querySelector(".billingAddressRow .add-link");
       addressAddLink.click();
       state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page" && !state["address-page"].guid;
+        return state.page.id == "billing-address-page" && !state["billing-address-page"].guid;
       }, "Clicking add button when the empty option is selected will go to 'add' page (no guid)");
 
-      let addressTitle = content.document.querySelector("address-form h2");
-      is(addressTitle.textContent, "Add Billing Address",
-         "Address on add address page should be correct");
+      let addressForm = content.document.querySelector("#billing-address-page");
+      ok(content.isVisible(addressForm), "Billing address form is showing");
 
-      let addressBackButton = content.document.querySelector("address-form .back-button");
+      let addressTitle = addressForm.querySelector("h2");
+      is(addressTitle.textContent, "Add Billing Address",
+         "Title on add address page should be correct");
+
+      let addressBackButton = addressForm.querySelector(".back-button");
       addressBackButton.click();
       state = await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "basic-card-page" && state["basic-card-page"].guid &&
@@ -502,10 +509,10 @@ add_task(async function test_edit_link() {
 
       addressEditLink.click();
       state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page" && state["address-page"].guid;
+        return state.page.id == "billing-address-page" && state["billing-address-page"].guid;
       }, "Clicking edit button with selected option will go to 'edit' page");
 
-      let countryPicker = content.document.querySelector("address-form #country");
+      let countryPicker = addressForm.querySelector("#country");
       is(countryPicker.value, PTU.Addresses.TimBL2.country, "The country value matches");
 
       addressBackButton.click();
@@ -525,7 +532,7 @@ add_task(async function test_edit_link() {
 
       addressEditLink.click();
       state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page" && state["address-page"].guid;
+        return state.page.id == "billing-address-page" && state["billing-address-page"].guid;
       }, "Check address page state (editing)");
 
       is(addressTitle.textContent, "Edit Billing Address",
@@ -551,12 +558,12 @@ add_task(async function test_edit_link() {
 
       addressEditLink.click();
       state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page" && state["address-page"].guid;
+        return state.page.id == "billing-address-page" && state["billing-address-page"].guid;
       }, "Check address page state (editing)");
 
       info("modify some address fields");
       for (let key of ["given-name", "tel", "organization", "street-address"]) {
-        let field = content.document.getElementById(key);
+        let field = addressForm.querySelector(`#${key}`);
         if (!field) {
           ok(false, `${key} field not found`);
         }
@@ -566,7 +573,7 @@ add_task(async function test_edit_link() {
         ok(!field.disabled, `Field #${key} shouldn't be disabled`);
       }
 
-      content.document.querySelector("address-form button.save-button").click();
+      addressForm.querySelector("button.save-button").click();
       state = await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "basic-card-page" && state["basic-card-page"].guid &&
                Object.keys(state.savedAddresses).length == 2;

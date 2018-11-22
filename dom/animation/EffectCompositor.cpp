@@ -62,62 +62,39 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(EffectCompositor, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(EffectCompositor, Release)
 
-namespace {
-enum class MatchForCompositor {
-  // This animation matches and should run on the compositor if possible.
-  Yes,
-  // This (not currently playing) animation matches and can be run on the
-  // compositor if there are other animations for this property that return
-  // 'Yes'.
-  IfNeeded,
-  // This animation does not match or can't be run on the compositor.
-  No,
-  // This animation does not match or can't be run on the compositor and,
-  // furthermore, its presence means we should not run any animations for this
-  // property on the compositor.
-  NoAndBlockThisProperty
-};
-}
-
-static MatchForCompositor
-IsMatchForCompositor(const KeyframeEffect& aEffect,
-                     nsCSSPropertyID aProperty,
-                     const nsIFrame* aFrame,
-                     const EffectSet& aEffects)
+/* static */ bool
+EffectCompositor::AllowCompositorAnimationsOnFrame(
+  const nsIFrame* aFrame,
+  const EffectSet& aEffects,
+  AnimationPerformanceWarning::Type& aWarning /* out */)
 {
-  const Animation* animation = aEffect.GetAnimation();
-  MOZ_ASSERT(animation);
-
-  if (!animation->IsRelevant()) {
-    return MatchForCompositor::No;
+  if (aFrame->RefusedAsyncAnimation()) {
+    return false;
   }
 
-  AnimationPerformanceWarning::Type warningType;
-  if (animation->ShouldBeSynchronizedWithMainThread(aProperty, aFrame,
-                                                    warningType)) {
-    EffectCompositor::SetPerformanceWarning(
-      aFrame, aProperty,
-      AnimationPerformanceWarning(warningType));
-    // For a given |aFrame|, we don't want some animations of |aProperty| to
-    // run on the compositor and others to run on the main thread, so if any
-    // need to be synchronized with the main thread, run them all there.
-    return MatchForCompositor::NoAndBlockThisProperty;
+  if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
+    if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
+      nsCString message;
+      message.AppendLiteral("Performance warning: Async animations are "
+                            "disabled");
+      AnimationUtils::LogAsyncAnimationFailure(message);
+    }
+    return false;
   }
 
-  if (!aEffect.HasEffectiveAnimationOfProperty(aProperty, aEffects)) {
-    return MatchForCompositor::No;
+  // Disable async animations if we have a rendering observer that
+  // depends on our content (svg masking, -moz-element etc) so that
+  // it gets updated correctly.
+  nsIContent* content = aFrame->GetContent();
+  while (content) {
+    if (content->HasRenderingObservers()) {
+      aWarning = AnimationPerformanceWarning::Type::HasRenderingObserver;
+      return false;
+    }
+    content = content->GetParent();
   }
 
-  // If we know that the animation is not visible, we don't need to send the
-  // animation to the compositor.
-  if (!aFrame->IsVisibleOrMayHaveVisibleDescendants() ||
-      aFrame->IsScrolledOutOfView()) {
-    return MatchForCompositor::NoAndBlockThisProperty;
-  }
-
-  return animation->IsPlaying()
-         ? MatchForCompositor::Yes
-         : MatchForCompositor::IfNeeded;
+  return true;
 }
 
 // Helper function to factor out the common logic from
@@ -159,7 +136,16 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
     return false;
   }
 
-  if (aFrame->RefusedAsyncAnimation()) {
+  AnimationPerformanceWarning::Type warning =
+    AnimationPerformanceWarning::Type::None;
+  if (!EffectCompositor::AllowCompositorAnimationsOnFrame(aFrame,
+                                                          *effects,
+                                                          warning)) {
+    if (warning != AnimationPerformanceWarning::Type::None) {
+      EffectCompositor::SetPerformanceWarning(
+        aFrame, aProperty,
+        AnimationPerformanceWarning(warning));
+    }
     return false;
   }
 
@@ -178,37 +164,20 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
   EffectCompositor::MaybeUpdateCascadeResults(pseudoElement->mElement,
                                               pseudoElement->mPseudoType);
 
-  if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
-    if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
-      nsCString message;
-      message.AppendLiteral("Performance warning: Async animations are "
-                            "disabled");
-      AnimationUtils::LogAsyncAnimationFailure(message);
-    }
-    return false;
-  }
-
-  // Disable async animations if we have a rendering observer that
-  // depends on our content (svg masking, -moz-element etc) so that
-  // it gets updated correctly.
-  nsIContent* content = aFrame->GetContent();
-  while (content) {
-    if (content->HasRenderingObservers()) {
-      EffectCompositor::SetPerformanceWarning(
-        aFrame, aProperty,
-        AnimationPerformanceWarning(
-          AnimationPerformanceWarning::Type::HasRenderingObserver));
-      return false;
-    }
-    content = content->GetParent();
-  }
-
   bool foundRunningAnimations = false;
   for (KeyframeEffect* effect : *effects) {
-    MatchForCompositor matchResult =
-      IsMatchForCompositor(*effect, aProperty, aFrame, *effects);
+    AnimationPerformanceWarning::Type effectWarning =
+      AnimationPerformanceWarning::Type::None;
+    KeyframeEffect::MatchForCompositor matchResult =
+      effect->IsMatchForCompositor(aProperty, aFrame, *effects, effectWarning);
+    if (effectWarning != AnimationPerformanceWarning::Type::None) {
+      EffectCompositor::SetPerformanceWarning(
+        aFrame, aProperty,
+        AnimationPerformanceWarning(effectWarning));
+    }
 
-    if (matchResult == MatchForCompositor::NoAndBlockThisProperty) {
+    if (matchResult ==
+          KeyframeEffect::MatchForCompositor::NoAndBlockThisProperty) {
       // For a given |aFrame|, we don't want some animations of |aProperty| to
       // run on the compositor and others to run on the main thread, so if any
       // need to be synchronized with the main thread, run them all there.
@@ -218,7 +187,7 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
       return false;
     }
 
-    if (matchResult == MatchForCompositor::No) {
+    if (matchResult == KeyframeEffect::MatchForCompositor::No) {
       continue;
     }
 
@@ -226,7 +195,7 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
       aMatches->AppendElement(effect->GetAnimation());
     }
 
-    if (matchResult == MatchForCompositor::Yes) {
+    if (matchResult == KeyframeEffect::MatchForCompositor::Yes) {
       foundRunningAnimations = true;
     }
   }

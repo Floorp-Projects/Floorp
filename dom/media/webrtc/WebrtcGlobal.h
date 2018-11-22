@@ -211,7 +211,7 @@ struct ParamTraits<mozilla::dom::RTCIceCandidateStats> {
     WriteParam(aMsg, aParam.mCandidateId);
     WriteParam(aMsg, aParam.mCandidateType);
     WriteParam(aMsg, aParam.mComponentId);
-    WriteParam(aMsg, aParam.mIpAddress);
+    WriteParam(aMsg, aParam.mAddress);
     WriteParam(aMsg, aParam.mMozLocalTransport);
     WriteParam(aMsg, aParam.mRelayProtocol);
     WriteParam(aMsg, aParam.mPortNumber);
@@ -224,7 +224,7 @@ struct ParamTraits<mozilla::dom::RTCIceCandidateStats> {
     if (!ReadParam(aMsg, aIter, &(aResult->mCandidateId)) ||
         !ReadParam(aMsg, aIter, &(aResult->mCandidateType)) ||
         !ReadParam(aMsg, aIter, &(aResult->mComponentId)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mIpAddress)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mAddress)) ||
         !ReadParam(aMsg, aIter, &(aResult->mMozLocalTransport)) ||
         !ReadParam(aMsg, aIter, &(aResult->mRelayProtocol)) ||
         !ReadParam(aMsg, aIter, &(aResult->mPortNumber)) ||

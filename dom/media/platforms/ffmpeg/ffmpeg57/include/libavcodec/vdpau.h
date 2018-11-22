@@ -30,6 +30,7 @@
  * Public libavcodec VDPAU header.
  */
 
+
 /**
  * @defgroup lavc_codec_hwaccel_vdpau VDPAU Decoder and Renderer
  * @ingroup lavc_codec_hwaccel
@@ -58,10 +59,10 @@
 
 #if FF_API_BUFS_VDPAU
 union AVVDPAUPictureInfo {
-  VdpPictureInfoH264 h264;
-  VdpPictureInfoMPEG1Or2 mpeg;
-  VdpPictureInfoVC1 vc1;
-  VdpPictureInfoMPEG4Part2 mpeg4;
+    VdpPictureInfoH264        h264;
+    VdpPictureInfoMPEG1Or2    mpeg;
+    VdpPictureInfoVC1          vc1;
+    VdpPictureInfoMPEG4Part2 mpeg4;
 };
 #endif
 
@@ -87,51 +88,55 @@ typedef int (*AVVDPAU_Render2)(struct AVCodecContext *, struct AVFrame *,
  * AVVDPAUContext.
  */
 typedef struct AVVDPAUContext {
-  /**
-   * VDPAU decoder handle
-   *
-   * Set by user.
-   */
-  VdpDecoder decoder;
+    /**
+     * VDPAU decoder handle
+     *
+     * Set by user.
+     */
+    VdpDecoder decoder;
 
-  /**
-   * VDPAU decoder render callback
-   *
-   * Set by the user.
-   */
-  VdpDecoderRender *render;
+    /**
+     * VDPAU decoder render callback
+     *
+     * Set by the user.
+     */
+    VdpDecoderRender *render;
 
 #if FF_API_BUFS_VDPAU
-  /**
-   * VDPAU picture information
-   *
-   * Set by libavcodec.
-   */
-  attribute_deprecated union AVVDPAUPictureInfo info;
+    /**
+     * VDPAU picture information
+     *
+     * Set by libavcodec.
+     */
+    attribute_deprecated
+    union AVVDPAUPictureInfo info;
 
-  /**
-   * Allocated size of the bitstream_buffers table.
-   *
-   * Set by libavcodec.
-   */
-  attribute_deprecated int bitstream_buffers_allocated;
+    /**
+     * Allocated size of the bitstream_buffers table.
+     *
+     * Set by libavcodec.
+     */
+    attribute_deprecated
+    int bitstream_buffers_allocated;
 
-  /**
-   * Useful bitstream buffers in the bitstream buffers table.
-   *
-   * Set by libavcodec.
-   */
-  attribute_deprecated int bitstream_buffers_used;
+    /**
+     * Useful bitstream buffers in the bitstream buffers table.
+     *
+     * Set by libavcodec.
+     */
+    attribute_deprecated
+    int bitstream_buffers_used;
 
-  /**
-   * Table of bitstream buffers.
-   * The user is responsible for freeing this buffer using av_freep().
-   *
-   * Set by libavcodec.
-   */
-  attribute_deprecated VdpBitstreamBuffer *bitstream_buffers;
+   /**
+     * Table of bitstream buffers.
+     * The user is responsible for freeing this buffer using av_freep().
+     *
+     * Set by libavcodec.
+     */
+    attribute_deprecated
+    VdpBitstreamBuffer *bitstream_buffers;
 #endif
-  AVVDPAU_Render2 render2;
+    AVVDPAU_Render2 render2;
 } AVVDPAUContext;
 
 /**
@@ -205,8 +210,8 @@ AVVDPAUContext *av_vdpau_alloc_context(void);
  *
  * @return 0 on success (non-negative), a negative AVERROR on failure.
  */
-attribute_deprecated int av_vdpau_get_profile(AVCodecContext *avctx,
-                                              VdpDecoderProfile *profile);
+attribute_deprecated
+int av_vdpau_get_profile(AVCodecContext *avctx, VdpDecoderProfile *profile);
 #endif
 
 #if FF_API_CAP_VDPAU
@@ -227,19 +232,19 @@ attribute_deprecated int av_vdpau_get_profile(AVCodecContext *avctx,
  * between the FFmpeg decoder and its clients.
  */
 struct vdpau_render_state {
-  VdpVideoSurface surface;  ///< Used as rendered surface, never changed.
+    VdpVideoSurface surface; ///< Used as rendered surface, never changed.
 
-  int state;  ///< Holds FF_VDPAU_STATE_* values.
+    int state; ///< Holds FF_VDPAU_STATE_* values.
 
-  /** picture parameter information for all supported codecs */
-  union AVVDPAUPictureInfo info;
+    /** picture parameter information for all supported codecs */
+    union AVVDPAUPictureInfo info;
 
-  /** Describe size/location of the compressed video data.
-      Set to 0 when freeing bitstream_buffers. */
-  int bitstream_buffers_allocated;
-  int bitstream_buffers_used;
-  /** The user is responsible for freeing this buffer using av_freep(). */
-  VdpBitstreamBuffer *bitstream_buffers;
+    /** Describe size/location of the compressed video data.
+        Set to 0 when freeing bitstream_buffers. */
+    int bitstream_buffers_allocated;
+    int bitstream_buffers_used;
+    /** The user is responsible for freeing this buffer using av_freep(). */
+    VdpBitstreamBuffer *bitstream_buffers;
 };
 #endif
 

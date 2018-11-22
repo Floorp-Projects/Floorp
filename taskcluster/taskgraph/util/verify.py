@@ -10,12 +10,15 @@ import re
 import os
 import sys
 
+import attr
+
 from .. import GECKO
 
 logger = logging.getLogger(__name__)
 base_path = os.path.join(GECKO, 'taskcluster', 'docs')
 
 
+@attr.s(frozen=True)
 class VerificationSequence(object):
     """
     Container for a sequence of verifications over a TaskGraph. Each
@@ -24,11 +27,10 @@ class VerificationSequence(object):
     time with no task but with the taskgraph and the same scratch_pad
     that was passed for each task.
     """
-    def __init__(self):
-        self.verifications = {}
+    _verifications = attr.ib(factory=dict)
 
     def __call__(self, graph_name, graph):
-        for verification in self.verifications.get(graph_name, []):
+        for verification in self._verifications.get(graph_name, []):
             scratch_pad = {}
             graph.for_each_task(verification, scratch_pad=scratch_pad)
             verification(None, graph, scratch_pad=scratch_pad)
@@ -36,7 +38,7 @@ class VerificationSequence(object):
 
     def add(self, graph_name):
         def wrap(func):
-            self.verifications.setdefault(graph_name, []).append(func)
+            self._verifications.setdefault(graph_name, []).append(func)
             return func
         return wrap
 
@@ -179,6 +181,33 @@ def verify_dependency_tiers(task, taskgraph, scratch_pad):
                         '{} (tier {}) cannot depend on {} (tier {})'
                         .format(task.label, printable_tier(tier),
                                 d, printable_tier(tiers[d])))
+
+
+@verifications.add('full_task_graph')
+def verify_required_signoffs(task, taskgraph, scratch_pad):
+    """
+    Task with required signoffs can't be dependencies of tasks with less
+    required signoffs.
+    """
+    all_required_signoffs = scratch_pad
+    if task is not None:
+        all_required_signoffs[task.label] = set(task.attributes.get('required_signoffs', []))
+    else:
+        def printable_signoff(signoffs):
+            if len(signoffs) == 1:
+                return 'required signoff {}'.format(*signoffs)
+            elif signoffs:
+                return 'required signoffs {}'.format(', '.join(signoffs))
+            else:
+                return 'no required signoffs'
+        for task in taskgraph.tasks.itervalues():
+            required_signoffs = all_required_signoffs[task.label]
+            for d in task.dependencies.itervalues():
+                if required_signoffs < all_required_signoffs[d]:
+                    raise Exception(
+                        '{} ({}) cannot depend on {} ({})'
+                        .format(task.label, printable_signoff(required_signoffs),
+                                d, printable_signoff(all_required_signoffs[d])))
 
 
 @verifications.add('optimized_task_graph')

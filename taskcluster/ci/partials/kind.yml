@@ -10,8 +10,8 @@ transforms:
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - repackage-signing
-   - repackage-signing-l10n
+   - repackage
+   - repackage-l10n
 
 only-for-attributes:
    - nightly

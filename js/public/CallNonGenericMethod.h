@@ -74,7 +74,8 @@ CallMethodIfWrapped(JSContext* cx, IsAcceptableThis test, NativeImpl impl, const
 //   answer_getAnswer(JSContext* cx, unsigned argc, JS::Value* vp)
 //   {
 //       JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-//       return JS::CallNonGenericMethod<IsAnswerObject, answer_getAnswer_impl>(cx, args);
+//       return JS::CallNonGenericMethod<IsAnswerObject,
+//                                       answer_getAnswer_impl>(cx, args);
 //   }
 //
 // Note that, because they are used as template arguments, the predicate

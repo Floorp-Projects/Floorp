@@ -30,6 +30,7 @@
  * Public libavcodec VDPAU header.
  */
 
+
 /**
  * @defgroup lavc_codec_hwaccel_vdpau VDPAU Decoder and Renderer
  * @ingroup lavc_codec_hwaccel
@@ -78,21 +79,21 @@ typedef int (*AVVDPAU_Render2)(struct AVCodecContext *, struct AVFrame *,
  * AVVDPAUContext.
  */
 typedef struct AVVDPAUContext {
-  /**
-   * VDPAU decoder handle
-   *
-   * Set by user.
-   */
-  VdpDecoder decoder;
+    /**
+     * VDPAU decoder handle
+     *
+     * Set by user.
+     */
+    VdpDecoder decoder;
 
-  /**
-   * VDPAU decoder render callback
-   *
-   * Set by the user.
-   */
-  VdpDecoderRender *render;
+    /**
+     * VDPAU decoder render callback
+     *
+     * Set by the user.
+     */
+    VdpDecoderRender *render;
 
-  AVVDPAU_Render2 render2;
+    AVVDPAU_Render2 render2;
 } AVVDPAUContext;
 
 /**
@@ -166,8 +167,8 @@ AVVDPAUContext *av_vdpau_alloc_context(void);
  *
  * @return 0 on success (non-negative), a negative AVERROR on failure.
  */
-attribute_deprecated int av_vdpau_get_profile(AVCodecContext *avctx,
-                                              VdpDecoderProfile *profile);
+attribute_deprecated
+int av_vdpau_get_profile(AVCodecContext *avctx, VdpDecoderProfile *profile);
 #endif
 
 /* @}*/

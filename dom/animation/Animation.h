@@ -336,7 +336,7 @@ public:
   bool ShouldBeSynchronizedWithMainThread(
     nsCSSPropertyID aProperty,
     const nsIFrame* aFrame,
-    AnimationPerformanceWarning::Type& aPerformanceWarning) const;
+    AnimationPerformanceWarning::Type& aPerformanceWarning /* out */) const;
 
   bool IsRelevant() const { return mIsRelevant; }
   void UpdateRelevance();

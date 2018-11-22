@@ -12,6 +12,8 @@ ChromeUtils.defineModuleGetter(this, "AddonRepository",
                                "resource://gre/modules/addons/AddonRepository.jsm");
 ChromeUtils.defineModuleGetter(this, "RemoteSettings",
                                "resource://services-settings/remote-settings.js");
+ChromeUtils.defineModuleGetter(this, "SelectionChangedMenulist",
+                               "resource:///modules/SelectionChangedMenulist.jsm");
 
 async function installFromUrl(url, hash) {
   let install = await AddonManager.getInstallForURL(
@@ -160,7 +162,8 @@ class SortedItemSelectList {
     this.compareFn = compareFn;
     this.items = [];
 
-    menulist.addEventListener("command", () => {
+    // This will register the "command" listener.
+    new SelectionChangedMenulist(this.menulist, () => {
       button.disabled = !menulist.selectedItem;
       if (menulist.selectedItem) {
         onChange(this.items[menulist.selectedIndex]);

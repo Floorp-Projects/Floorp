@@ -55,11 +55,11 @@ add_task(async function() {
   await ContentTask.spawn(gTestBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
-    let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
+    let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
     Assert.ok(overlay && overlay.classList.contains("visible"),
       "Test 18a, Plugin overlay should exist, not be hidden");
 
-    let updateLink = doc.getAnonymousElementByAttribute(plugin, "anonid", "checkForUpdatesLink");
+    let updateLink = plugin.openOrClosedShadowRoot.getElementById("checkForUpdatesLink");
     Assert.ok(updateLink.style.visibility != "hidden",
       "Test 18a, Plugin should have an update link");
   });
@@ -69,7 +69,7 @@ add_task(async function() {
   await ContentTask.spawn(gTestBrowser, {}, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
-    let updateLink = doc.getAnonymousElementByAttribute(plugin, "anonid", "checkForUpdatesLink");
+    let updateLink = plugin.openOrClosedShadowRoot.getElementById("checkForUpdatesLink");
     let bounds = updateLink.getBoundingClientRect();
     let left = (bounds.left + bounds.right) / 2;
     let top = (bounds.top + bounds.bottom) / 2;
@@ -94,7 +94,7 @@ add_task(async function() {
   await ContentTask.spawn(gTestBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
-    let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
+    let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
     Assert.ok(overlay && overlay.classList.contains("visible"),
       "Test 18b, Plugin overlay should exist, not be hidden");
   });
@@ -122,11 +122,11 @@ add_task(async function() {
   await ContentTask.spawn(gTestBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
-    let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
+    let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
     Assert.ok(overlay && overlay.classList.contains("visible"),
       "Test 18c, Plugin overlay should exist, not be hidden");
 
-    let updateLink = doc.getAnonymousElementByAttribute(plugin, "anonid", "checkForUpdatesLink");
+    let updateLink = plugin.openOrClosedShadowRoot.getElementById("checkForUpdatesLink");
     Assert.ok(updateLink && updateLink.style.display != "block",
       "Test 18c, Plugin should not have an update link");
   });

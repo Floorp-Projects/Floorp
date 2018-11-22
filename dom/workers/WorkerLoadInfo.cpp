@@ -84,7 +84,7 @@ SwapToISupportsArray(SmartPtr<T>& aSrc,
 
 } // anonymous
 
-WorkerLoadInfo::WorkerLoadInfo()
+WorkerLoadInfoData::WorkerLoadInfoData()
   : mLoadFlags(nsIRequest::LOAD_NORMAL)
   , mWindowID(UINT64_MAX)
   , mReferrerPolicy(net::RP_Unset)
@@ -97,71 +97,7 @@ WorkerLoadInfo::WorkerLoadInfo()
   , mFirstPartyStorageAccessGranted(false)
   , mServiceWorkersTestingInWindow(false)
   , mSecureContext(eNotSet)
-{
-  MOZ_COUNT_CTOR(WorkerLoadInfo);
-}
-
-WorkerLoadInfo::~WorkerLoadInfo()
-{
-  MOZ_COUNT_DTOR(WorkerLoadInfo);
-}
-
-void
-WorkerLoadInfo::StealFrom(WorkerLoadInfo& aOther)
-{
-  MOZ_ASSERT(!mBaseURI);
-  aOther.mBaseURI.swap(mBaseURI);
-
-  MOZ_ASSERT(!mResolvedScriptURI);
-  aOther.mResolvedScriptURI.swap(mResolvedScriptURI);
-
-  MOZ_ASSERT(!mPrincipal);
-  aOther.mPrincipal.swap(mPrincipal);
-
-  // mLoadingPrincipal can be null if this is a ServiceWorker.
-  aOther.mLoadingPrincipal.swap(mLoadingPrincipal);
-
-  MOZ_ASSERT(!mScriptContext);
-  aOther.mScriptContext.swap(mScriptContext);
-
-  MOZ_ASSERT(!mWindow);
-  aOther.mWindow.swap(mWindow);
-
-  MOZ_ASSERT(!mCSP);
-  aOther.mCSP.swap(mCSP);
-
-  MOZ_ASSERT(!mChannel);
-  aOther.mChannel.swap(mChannel);
-
-  MOZ_ASSERT(!mLoadGroup);
-  aOther.mLoadGroup.swap(mLoadGroup);
-
-  MOZ_ASSERT(!mInterfaceRequestor);
-  aOther.mInterfaceRequestor.swap(mInterfaceRequestor);
-
-  MOZ_ASSERT(!mPrincipalInfo);
-  mPrincipalInfo = aOther.mPrincipalInfo.forget();
-
-  mDomain = aOther.mDomain;
-  mOrigin = aOther.mOrigin;
-  mServiceWorkerCacheName = aOther.mServiceWorkerCacheName;
-  mServiceWorkerDescriptor = aOther.mServiceWorkerDescriptor;
-  mServiceWorkerRegistrationDescriptor = aOther.mServiceWorkerRegistrationDescriptor;
-  mLoadFlags = aOther.mLoadFlags;
-  mWindowID = aOther.mWindowID;
-  mReferrerPolicy = aOther.mReferrerPolicy;
-  mFromWindow = aOther.mFromWindow;
-  mEvalAllowed = aOther.mEvalAllowed;
-  mReportCSPViolations = aOther.mReportCSPViolations;
-  mXHRParamsAllowed = aOther.mXHRParamsAllowed;
-  mPrincipalIsSystem = aOther.mPrincipalIsSystem;
-  mStorageAllowed = aOther.mStorageAllowed;
-  mFirstPartyStorageAccessGranted = aOther.mFirstPartyStorageAccessGranted;
-  mServiceWorkersTestingInWindow = aOther.mServiceWorkersTestingInWindow;
-  mOriginAttributes = aOther.mOriginAttributes;
-  mParentController = aOther.mParentController;
-  mSecureContext = aOther.mSecureContext;
-}
+{}
 
 nsresult
 WorkerLoadInfo::SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
@@ -539,6 +475,22 @@ NS_IMPL_ADDREF(WorkerLoadInfo::InterfaceRequestor)
 NS_IMPL_RELEASE(WorkerLoadInfo::InterfaceRequestor)
 NS_IMPL_QUERY_INTERFACE(WorkerLoadInfo::InterfaceRequestor,
                         nsIInterfaceRequestor)
+
+WorkerLoadInfo::WorkerLoadInfo()
+{
+  MOZ_COUNT_CTOR(WorkerLoadInfo);
+}
+
+WorkerLoadInfo::WorkerLoadInfo(WorkerLoadInfo&& aOther) noexcept
+  : WorkerLoadInfoData(std::move(aOther))
+{
+  MOZ_COUNT_CTOR(WorkerLoadInfo);
+}
+
+WorkerLoadInfo::~WorkerLoadInfo()
+{
+  MOZ_COUNT_DTOR(WorkerLoadInfo);
+}
 
 } // dom namespace
 } // mozilla namespace

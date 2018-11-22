@@ -63,10 +63,10 @@ add_task(async function() {
   await ContentTask.spawn(gTestBrowser, config, async function(aConfig) {
     let doc = content.document;
     let plugin = doc.getElementById("plugin");
-    let pleaseSubmit = doc.getAnonymousElementByAttribute(plugin, "anonid", "pleaseSubmit");
-    let submitButton = doc.getAnonymousElementByAttribute(plugin, "anonid", "submitButton");
+    let pleaseSubmit = plugin.openOrClosedShadowRoot.getElementById("pleaseSubmit");
+    let submitButton = plugin.openOrClosedShadowRoot.getElementById("submitButton");
     // Test that we don't send the URL when urlOptIn is false.
-    doc.getAnonymousElementByAttribute(plugin, "anonid", "submitURLOptIn").checked = aConfig.urlOptIn;
+    plugin.openOrClosedShadowRoot.getElementById("submitURLOptIn").checked = aConfig.urlOptIn;
     submitButton.click();
     Assert.equal(content.getComputedStyle(pleaseSubmit).display == "block",
       aConfig.shouldSubmissionUIBeVisible, "The crash UI should be visible");
@@ -100,11 +100,11 @@ add_task(async function() {
   await ContentTask.spawn(gTestBrowser, config, async function(aConfig) {
     let doc = content.document;
     let plugin = doc.getElementById("plugin");
-    let pleaseSubmit = doc.getAnonymousElementByAttribute(plugin, "anonid", "pleaseSubmit");
-    let submitButton = doc.getAnonymousElementByAttribute(plugin, "anonid", "submitButton");
+    let pleaseSubmit = plugin.openOrClosedShadowRoot.getElementById("pleaseSubmit");
+    let submitButton = plugin.openOrClosedShadowRoot.getElementById("submitButton");
     // Test that we send the URL when urlOptIn is true.
-    doc.getAnonymousElementByAttribute(plugin, "anonid", "submitURLOptIn").checked = aConfig.urlOptIn;
-    doc.getAnonymousElementByAttribute(plugin, "anonid", "submitComment").value = aConfig.comment;
+    plugin.openOrClosedShadowRoot.getElementById("submitURLOptIn").checked = aConfig.urlOptIn;
+    plugin.openOrClosedShadowRoot.getElementById("submitComment").value = aConfig.comment;
     submitButton.click();
     Assert.equal(content.getComputedStyle(pleaseSubmit).display == "block",
       aConfig.shouldSubmissionUIBeVisible, "The crash UI should be visible");
@@ -171,7 +171,7 @@ add_task(async function() {
   await ContentTask.spawn(gTestBrowser, config, async function(aConfig) {
     let doc = content.document;
     let plugin = doc.getElementById("plugin");
-    let pleaseSubmit = doc.getAnonymousElementByAttribute(plugin, "anonid", "pleaseSubmit");
+    let pleaseSubmit = plugin.openOrClosedShadowRoot.getElementById("pleaseSubmit");
     Assert.equal(!!pleaseSubmit && content.getComputedStyle(pleaseSubmit).display == "block",
       aConfig.shouldSubmissionUIBeVisible, "Plugin crash UI should not be visible");
   });

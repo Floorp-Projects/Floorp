@@ -296,7 +296,8 @@ KeyframeEffect::GetEffectiveAnimationOfProperty(nsCSSPropertyID aProperty,
 }
 
 nsCSSPropertyIDSet
-KeyframeEffect::GetPropertiesForCompositor(const EffectSet& aEffects) const
+KeyframeEffect::GetPropertiesForCompositor(EffectSet& aEffects,
+                                           const nsIFrame* aFrame) const
 {
   MOZ_ASSERT(
     &aEffects ==
@@ -314,9 +315,17 @@ KeyframeEffect::GetPropertiesForCompositor(const EffectSet& aEffects) const
     if (!compositorAnimatables.HasProperty(property.mProperty)) {
       continue;
     }
-    if (IsEffectiveProperty(aEffects, property.mProperty)) {
-      properties.AddProperty(property.mProperty);
+
+    AnimationPerformanceWarning::Type warning;
+    KeyframeEffect::MatchForCompositor matchResult =
+      IsMatchForCompositor(property.mProperty, aFrame, aEffects, warning);
+    if (matchResult ==
+          KeyframeEffect::MatchForCompositor::NoAndBlockThisProperty ||
+        matchResult == KeyframeEffect::MatchForCompositor::No) {
+      continue;
     }
+
+    properties.AddProperty(property.mProperty);
   }
   return properties;
 }
@@ -1468,7 +1477,7 @@ KeyframeEffect::IsGeometricProperty(const nsCSSPropertyID aProperty)
 /* static */ bool
 KeyframeEffect::CanAnimateTransformOnCompositor(
   const nsIFrame* aFrame,
-  AnimationPerformanceWarning::Type& aPerformanceWarning)
+  AnimationPerformanceWarning::Type& aPerformanceWarning /* out */)
 {
   // Disallow OMTA for preserve-3d transform. Note that we check the style property
   // rather than Extend3DContext() since that can recurse back into this function
@@ -1500,7 +1509,7 @@ KeyframeEffect::CanAnimateTransformOnCompositor(
 bool
 KeyframeEffect::ShouldBlockAsyncTransformAnimations(
   const nsIFrame* aFrame,
-  AnimationPerformanceWarning::Type& aPerformanceWarning) const
+  AnimationPerformanceWarning::Type& aPerformanceWarning /* out */) const
 {
   EffectSet* effectSet =
     EffectSet::GetEffectSet(mTarget->mElement, mTarget->mPseudoType);
@@ -1528,8 +1537,7 @@ KeyframeEffect::ShouldBlockAsyncTransformAnimations(
 
     // Check for unsupported transform animations
     if (property.mProperty == eCSSProperty_transform) {
-      if (!CanAnimateTransformOnCompositor(aFrame,
-                                           aPerformanceWarning)) {
+      if (!CanAnimateTransformOnCompositor(aFrame, aPerformanceWarning)) {
         return true;
       }
     }
@@ -1852,6 +1860,43 @@ KeyframeEffect::UpdateEffectSet(EffectSet* aEffectSet) const
       }
     );
   }
+}
+
+KeyframeEffect::MatchForCompositor
+KeyframeEffect::IsMatchForCompositor(
+  nsCSSPropertyID aProperty,
+  const nsIFrame* aFrame,
+  const EffectSet& aEffects,
+  AnimationPerformanceWarning::Type& aPerformanceWarning /* out */) const
+{
+  MOZ_ASSERT(mAnimation);
+
+  if (!mAnimation->IsRelevant()) {
+    return KeyframeEffect::MatchForCompositor::No;
+  }
+
+  if (mAnimation->ShouldBeSynchronizedWithMainThread(aProperty, aFrame,
+                                                     aPerformanceWarning)) {
+    // For a given |aFrame|, we don't want some animations of |aProperty| to
+    // run on the compositor and others to run on the main thread, so if any
+    // need to be synchronized with the main thread, run them all there.
+    return KeyframeEffect::MatchForCompositor::NoAndBlockThisProperty;
+  }
+
+  if (!HasEffectiveAnimationOfProperty(aProperty, aEffects)) {
+    return KeyframeEffect::MatchForCompositor::No;
+  }
+
+  // If we know that the animation is not visible, we don't need to send the
+  // animation to the compositor.
+  if (!aFrame->IsVisibleOrMayHaveVisibleDescendants() ||
+      aFrame->IsScrolledOutOfView()) {
+    return KeyframeEffect::MatchForCompositor::NoAndBlockThisProperty;
+  }
+
+  return mAnimation->IsPlaying()
+         ? KeyframeEffect::MatchForCompositor::Yes
+         : KeyframeEffect::MatchForCompositor::IfNeeded;
 }
 
 } // namespace dom

@@ -339,8 +339,15 @@ nsLayoutUtils::GetAnimationPropertiesForCompositor(const nsIFrame* aFrame)
     return properties;
   }
 
+  AnimationPerformanceWarning::Type warning;
+  if (!EffectCompositor::AllowCompositorAnimationsOnFrame(aFrame,
+                                                          *effects,
+                                                          warning)) {
+    return properties;
+  }
+
   for (const KeyframeEffect* effect : *effects) {
-    properties |= effect->GetPropertiesForCompositor(*effects);
+    properties |= effect->GetPropertiesForCompositor(*effects, aFrame);
   }
 
   return properties;
