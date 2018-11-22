@@ -416,7 +416,7 @@ ScalarBase::StoreIndex(const nsACString& aStoreName, size_t* aStoreIndex) const
       *aStoreIndex = 0;
       return NS_OK;
     }
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_NO_CONTENT;
   }
 
   // Multiple stores. Linear scan to find one that matches aStoreName.
@@ -427,7 +427,7 @@ ScalarBase::StoreIndex(const nsACString& aStoreName, size_t* aStoreIndex) const
       return NS_OK;
     }
   }
-  return NS_ERROR_FAILURE;
+  return NS_ERROR_NO_CONTENT;
 }
 
 size_t
@@ -1996,6 +1996,9 @@ internal_ScalarSnapshotter(const StaticMutexAutoLock& aLock,
         processScalars.AppendElement(mozilla::MakeTuple(info.name(), scalarValue, info.kind));
       }
     }
+    if (processScalars.Length() == 0) {
+      aScalarsToReflect.Remove(iter.Key());
+    }
   }
   return NS_OK;
 }
@@ -2044,10 +2047,17 @@ internal_KeyedScalarSnapshotter(const StaticMutexAutoLock& aLock,
         if (NS_FAILED(rv)) {
           return rv;
         }
+        if (scalarKeyedData.Length() == 0) {
+          // Don't bother with empty keyed scalars.
+          continue;
+        }
         // Append it to our list.
         processScalars.AppendElement(
           mozilla::MakeTuple(info.name(), scalarKeyedData, info.kind));
       }
+    }
+    if (processScalars.Length() == 0) {
+      aScalarsToReflect.Remove(iter.Key());
     }
   }
   return NS_OK;
@@ -2093,12 +2103,6 @@ internal_GetScalarSnapshot(const StaticMutexAutoLock& aLock,
     return rv;
   }
 
-  if (aClearScalars) {
-    // The map already takes care of freeing the allocated memory.
-    gScalarStorageMap.Clear();
-    gDynamicBuiltinScalarStorageMap.Clear();
-  }
-
   return NS_OK;
 }
 
@@ -2140,12 +2144,6 @@ internal_GetKeyedScalarSnapshot(const StaticMutexAutoLock& aLock,
                                        aStoreName);
   if (NS_FAILED(rv)) {
     return rv;
-  }
-
-  if (aClearScalars) {
-    // The map already takes care of freeing the allocated memory.
-    gKeyedScalarStorageMap.Clear();
-    gDynamicBuiltinKeyedScalarStorageMap.Clear();
   }
 
   return NS_OK;
