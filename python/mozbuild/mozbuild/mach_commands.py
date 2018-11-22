@@ -2329,15 +2329,37 @@ class StaticAnalysis(MachCommandBase):
     @Command('clang-format',  category='misc', description='Run clang-format on current changes')
     @CommandArgument('--show', '-s', action='store_true', default=False,
                      help='Show diff output on instead of applying changes')
+    @CommandArgument('--assume-filename', '-a', nargs=1, default=None,
+                     help='This option is usually used in the context of hg-formatsource.'
+                          ' When reading from stdin, clang-format assumes this'
+                          ' filename to look for a style config file (with'
+                          ' -style=file) and to determine the language. When'
+                          ' specifying this option only one file should be used'
+                          ' as an input and the output will be forwarded to stdin.')
     @CommandArgument('--path', '-p', nargs='+', default=None,
                      help='Specify the path(s) to reformat')
-    def clang_format(self, show, path, verbose=False):
+    def clang_format(self, show, assume_filename, path, verbose=False):
         # Run clang-format or clang-format-diff on the local changes
         # or files/directories
         if path is not None:
             path = self._conv_to_abspath(path)
 
         os.chdir(self.topsrcdir)
+
+        # With assume_filename we want to have stdout clean since the result of the
+        # format will be redirected to stdout. Only in case of errror we
+        # write something to stdout.
+        # The call to _get_clang_tools is only to correctly set the paths.
+        if assume_filename:
+            from subprocess import check_output, CalledProcessError
+            try:
+                command = [os.path.join(self.topsrcdir, 'mach'), 'static-analysis', 'install', '--minimal-install']
+                check_output(command)
+            except CalledProcessError as e:
+                # Something wrong happend
+                print(
+                    "clang-format: An error occured while downloading the artifact for clang-format:\{}".format(e.output))
+                return e.returncode
 
         rc = self._get_clang_tools(verbose=verbose)
         if rc != 0:
@@ -2347,7 +2369,10 @@ class StaticAnalysis(MachCommandBase):
             return self._run_clang_format_diff(self._clang_format_diff,
                                                self._clang_format_path, show)
         else:
-            return self._run_clang_format_path(self._clang_format_path, show, path)
+            if assume_filename:
+                return self._run_clang_format_in_console(self._clang_format_path, path, assume_filename)
+
+        return self._run_clang_format_path(self._clang_format_path, show, path)
 
     def _verify_checker(self, item):
         check = item['name']
@@ -2738,7 +2763,7 @@ class StaticAnalysis(MachCommandBase):
             match_f = f
         return re.match(ignored_dir_re, match_f)
 
-    def _generate_path_list(self, paths):
+    def _generate_path_list(self, paths, verbose=True):
         path_to_third_party = os.path.join(self.topsrcdir, self._format_ignore_file)
         ignored_dir = []
         with open(path_to_third_party, 'r') as fh:
@@ -2757,7 +2782,8 @@ class StaticAnalysis(MachCommandBase):
         for f in paths:
             if self._is_ignored_path(ignored_dir_re, f):
                 # Early exit if we have provided an ignored directory
-                print("clang-format: Ignored third party code '{0}'".format(f))
+                if verbose:
+                    print("clang-format: Ignored third party code '{0}'".format(f))
                 continue
 
             if os.path.isdir(f):
@@ -2775,6 +2801,28 @@ class StaticAnalysis(MachCommandBase):
                     path_list.append(f)
 
         return path_list
+
+    def _run_clang_format_in_console(self, clang_format, paths, assume_filename):
+        path_list = self._generate_path_list(paths, False)
+
+        if path_list == [] and paths[0].endswith(self._format_include_extensions):
+            # This means we are dealing with a third party so just return it's content
+            with open(paths[0], 'r') as fin:
+                sys.stdout.write(fin.read().decode('utf8'))
+                return 0
+
+        # We use -assume-filename in order to better determine the path for
+        # the .clang-format when it is ran outside of the repo, for example
+        # by the extemssion hg-formatsource
+        args = [clang_format, "-assume-filename={}".format(assume_filename[0])]
+
+        process = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        with open(path_list[0], 'r') as fin:
+            process.stdin.write(fin.read())
+            output = process.communicate()[0]
+            process.stdin.close()
+            sys.stdout.write(output.decode('utf8'))
+            return 0
 
     def _run_clang_format_path(self, clang_format, show, paths):
         # Run clang-format on files or directories directly
