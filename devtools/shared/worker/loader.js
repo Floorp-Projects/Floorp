@@ -564,6 +564,7 @@ this.worker = new WorkerDebuggerLoader({
     "lazyRequireModule": lazyRequireModule,
     "retrieveConsoleEvents": this.retrieveConsoleEvents,
     "setConsoleEventHandler": this.setConsoleEventHandler,
+    "console": console,
   },
   loadSubScript: loadSubScript,
   modules: {
