@@ -6,12 +6,6 @@
 
 /* These styles affect only the bound element, not other page content. */
 .mainBox {
- --grey-10: #f9f9fa;
- --grey-60: #4a4a4f;
- --grey-70: #38383d;
-}
-
-.mainBox {
   font: message-box;
   font-size: 12px;
   text-align: center;
@@ -32,11 +26,16 @@
   height: 100%;
 }
 :-moz-handler-vulnerable-updatable .hoverBox:active,
-:-moz-handler-vulnerable-no-update .hoverBox:active {
+:-moz-handler-vulnerable-no-update .hoverBox:active,
+:-moz-handler-clicktoplay .hoverBox:active {
   background-color: rgb(65, 65, 65);
 }
 
+:-moz-handler-clicktoplay .hoverBox:active .msgTapToPlay,
+:-moz-handler-clicktoplay .hoverBox:active .msgClickToPlay,
+:-moz-handler-vulnerable-updatable .hoverBox:active .msgTapToPlay,
 :-moz-handler-vulnerable-updatable .hoverBox:active .msgClickToPlay,
+:-moz-handler-vulnerable-no-update .hoverBox:active .msgTapToPlay,
 :-moz-handler-vulnerable-no-update .hoverBox:active .msgClickToPlay {
   color: red;
 }
@@ -57,12 +56,10 @@ html|a {
   height: 48px;
   background-position: center;
   background-repeat: no-repeat;
-  background-size: contain;
   border: none;
   background-color: transparent;
   -moz-user-focus: ignore;
   margin-bottom: 6px;
-  -moz-context-properties: fill;
 }
 
 :-moz-handler-vulnerable-updatable .icon,
@@ -74,8 +71,7 @@ html|a {
   background-image: url(chrome://mozapps/skin/plugins/contentPluginBlocked.png);
 }
 :-moz-handler-clicktoplay .icon {
-  background-image: url(chrome://mozapps/skin/plugins/plugin.svg);
-  fill: var(--grey-10);
+  background-image: url(chrome://mozapps/skin/plugins/contentPluginActivate.png);
   -moz-user-focus: normal;
 }
 :-moz-handler-crashed .icon {
@@ -88,16 +84,21 @@ html|a {
   margin-left: 5px;
 }
 
-@media (min-resolution: 1.1dppx) {
-  .throbber {
-    background-image: url(chrome://global/skin/icons/loading@2x.png);
-    background-size: 16px;
+.msgTapToPlay,
+.msgClickToPlay {
+  text-decoration: underline;
+}
+
+@media (-moz-touch-enabled: 0) {
+  :-moz-handler-clicktoplay .msgTapToPlay {
+    display: none;
   }
 }
 
-/* on desktop, don't ever show the tap-to-play UI: that is for mobile only */
-:-moz-handler-clicktoplay .msgTapToPlay {
-  display: none;
+@media (-moz-touch-enabled) {
+  :-moz-handler-clicktoplay .msgClickToPlay {
+    display: none;
+  }
 }
 
 .submitStatus div {
@@ -155,27 +156,23 @@ html|a {
 
 .closeIcon {
   display: block;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   margin-top: 4px;
-  margin-inline-start: -24px;
+  margin-inline-start: -20px;
   margin-inline-end: 4px;
   border: none;
-  border-radius: 2px;
   background-color: transparent;
-  background-image: url(chrome://global/skin/icons/close.svg);
+  background-image: url("chrome://mozapps/skin/plugins/contentPluginClose.png");
   background-repeat: no-repeat;
-  -moz-context-properties: fill, fill-opacity;
-  fill-opacity: 0;
-  fill: var(--grey-10);
 }
 
 .closeIcon:hover {
-  fill-opacity: .1;
+  background-position: -16px 0;
 }
 
 .closeIcon:hover:active {
-  fill-opacity: .2;
+  background-position: -32px 0;
 }
 
 .action-link {
@@ -195,55 +192,4 @@ html|a {
 }
 :-moz-handler-vulnerable-updatable .action-link:active {
   background-color: #801409;
-}
-
-/* New Photon styling
- *
- * At the moment, these rules are written to only override
- * :-moz-handler-clicktoplay styling. Once we finish the
- * redesign for all cases, we can change the CSS directly
- * above instead of writing these super-specific rules.
- */
-:-moz-handler-clicktoplay .mainBox {
-  background-color: var(--grey-70);
-}
-
-:-moz-handler-clicktoplay .msgClickToPlay {
-  font-size: 13px;
-}
-
-:-moz-handler-clicktoplay .mainBox[sizing=blank] .hoverBox {
-  visibility: hidden;
-}
-
-:-moz-handler-clicktoplay .mainBox[sizing=tiny] .icon {
-  width: 16px;
-  height: 16px;
-}
-
-:-moz-handler-clicktoplay .mainBox[sizing=reduced] .icon {
-  width: 32px;
-  height: 32px;
-}
-
-:-moz-handler-clicktoplay .mainBox[sizing=blank] .closeIcon,
-:-moz-handler-clicktoplay .mainBox[sizing=tiny] .closeIcon,
-:-moz-handler-clicktoplay .mainBox[sizing=reduced] .closeIcon {
-  display: none;
-}
-
-:-moz-handler-clicktoplay .mainBox[notext] .msgClickToPlay {
-  display: none;
-}
-
-:-moz-handler-clicktoplay .mainBox[notext] .icon {
-  /* Override a `margin-bottom: 6px` now that .msgClickToPlay
-   * below the icon is no longer shown, in order to achieve
-   * a perfect vertical centering of the icon.
-   */
-  margin-bottom: 0;
-}
-
-:-moz-handler-clicktoplay .hoverBox:active {
-  background-color: var(--grey-60);
 }

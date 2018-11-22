@@ -75,7 +75,7 @@ add_task(async function() {
 
     for (let testcaseId of Object.keys(testcases)) {
       let plugin = doc.querySelector(`#${testcaseId} > object`);
-      let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
+      let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
       Assert.ok(overlay, `overlay exists in ${testcaseId}`);
 
       let expectations = testcases[testcaseId];

@@ -51,7 +51,7 @@ add_task(async function() {
       let plugin = testcase.querySelector("object");
       Assert.ok(plugin, `plugin exists in ${testcase.id}`);
 
-      let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
+      let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
       Assert.ok(overlay, `overlay exists in ${testcase.id}`);
 
       let expectedVisibility = (testcase.getAttribute("shouldshow") == "true");

@@ -200,12 +200,13 @@ add_task(async function test3d() {
                                                    "Shown");
   popupNotification.reshow();
   await promiseShown;
+  let doc = gPrivateWindow.document;
   for (let item of gPrivateWindow.PopupNotifications.panel.firstElementChild.children) {
-    let allowalways = item.openOrClosedShadowRoot.getElementById("allowalways");
+    let allowalways = doc.getAnonymousElementByAttribute(item, "anonid", "allowalways");
     ok(allowalways, "Test 3d, should have list item for allow always");
-    let allownow = item.openOrClosedShadowRoot.getElementById("allownow");
+    let allownow = doc.getAnonymousElementByAttribute(item, "anonid", "allownow");
     ok(allownow, "Test 3d, should have list item for allow now");
-    let block = item.openOrClosedShadowRoot.getElementById("block");
+    let block = doc.getAnonymousElementByAttribute(item, "anonid", "block");
     ok(block, "Test 3d, should have list item for block");
 
     if (item.action.pluginName === "Test") {
