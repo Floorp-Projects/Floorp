@@ -559,8 +559,14 @@ ReadableStream::constructor(JSContext* cx, unsigned argc, Value* vp)
         strategy = ObjectValue(*emptyObj);
     }
 
+    // Implicit in the spec: Set this to
+    //     OrdinaryCreateFromConstructor(NewTarget, ...).
     // Step 1: Perform ! InitializeReadableStream(this).
-    Rooted<ReadableStream*> stream(cx, ReadableStream::create(cx));
+    RootedObject proto(cx);
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+        return false;
+    }
+    Rooted<ReadableStream*> stream(cx, ReadableStream::create(cx, proto));
     if (!stream) {
         return false;
     }
@@ -698,7 +704,8 @@ ReadableStream_cancel(JSContext* cx, unsigned argc, Value* vp)
 static MOZ_MUST_USE ReadableStreamDefaultReader*
 CreateReadableStreamDefaultReader(JSContext* cx,
                                   Handle<ReadableStream*> unwrappedStream,
-                                  ForAuthorCodeBool forAuthorCode = ForAuthorCodeBool::No);
+                                  ForAuthorCodeBool forAuthorCode = ForAuthorCodeBool::No,
+                                  HandleObject proto = nullptr);
 
 /**
  * Streams spec, 3.2.5.3. getReader()
@@ -1784,10 +1791,11 @@ ReadableStreamReaderGenericInitialize(JSContext* cx,
 static MOZ_MUST_USE ReadableStreamDefaultReader*
 CreateReadableStreamDefaultReader(JSContext* cx,
                                   Handle<ReadableStream*> unwrappedStream,
-                                  ForAuthorCodeBool forAuthorCode)
+                                  ForAuthorCodeBool forAuthorCode,
+                                  HandleObject proto /* = nullptr */)
 {
     Rooted<ReadableStreamDefaultReader*> reader(cx,
-        NewBuiltinClassInstance<ReadableStreamDefaultReader>(cx));
+        NewObjectWithClassProto<ReadableStreamDefaultReader>(cx, proto));
     if (!reader) {
         return nullptr;
     }
@@ -1824,8 +1832,14 @@ ReadableStreamDefaultReader::constructor(JSContext* cx, unsigned argc, Value* vp
         return false;
     }
 
+    // Implicit in the spec: Find the prototype object to use.
+    RootedObject proto(cx);
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+        return false;
+    }
+
     // Step 1: If ! IsReadableStream(stream) is false, throw a TypeError
-    //         exception.
+    // exception.
     Rooted<ReadableStream*> unwrappedStream(cx,
         UnwrapAndTypeCheckArgument<ReadableStream>(cx,
                                                    args,
@@ -1835,7 +1849,8 @@ ReadableStreamDefaultReader::constructor(JSContext* cx, unsigned argc, Value* vp
         return false;
     }
 
-    RootedObject reader(cx, CreateReadableStreamDefaultReader(cx, unwrappedStream));
+    RootedObject reader(cx,
+        CreateReadableStreamDefaultReader(cx, unwrappedStream, ForAuthorCodeBool::Yes, proto));
     if (!reader) {
         return false;
     }
@@ -3819,28 +3834,53 @@ ReadableByteStreamControllerInvalidateBYOBRequest(JSContext* cx,
 
 /*** 6.1. Queuing strategies ************************************************/
 
+/**
+ * ECMA-262 7.3.4 CreateDataProperty(O, P, V)
+ */
+static MOZ_MUST_USE bool
+CreateDataProperty(JSContext* cx, HandleObject obj, HandlePropertyName key, HandleValue value,
+                   ObjectOpResult& result)
+{
+    RootedId id(cx, NameToId(key));
+    Rooted<PropertyDescriptor> desc(cx);
+    desc.setDataDescriptor(value, JSPROP_ENUMERATE);
+    return DefineProperty(cx, obj, id, desc, result);
+}
+
 // Streams spec, 6.1.2.2. new ByteLengthQueuingStrategy({ highWaterMark })
 bool
 js::ByteLengthQueuingStrategy::constructor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedObject strategy(cx, NewBuiltinClassInstance<ByteLengthQueuingStrategy>(cx));
+    if (!ThrowIfNotConstructing(cx, args, "ByteLengthQueuingStrategy")) {
+        return false;
+    }
+
+    // Implicit in the spec: Create the new strategy object.
+    RootedObject proto(cx);
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+        return false;
+    }
+    RootedObject strategy(cx, NewObjectWithClassProto<ByteLengthQueuingStrategy>(cx, proto));
     if (!strategy) {
         return false;
     }
 
+    // Implicit in the spec: Argument destructuring.
     RootedObject argObj(cx, ToObject(cx, args.get(0)));
     if (!argObj) {
         return false;
     }
-
     RootedValue highWaterMark(cx);
     if (!GetProperty(cx, argObj, argObj, cx->names().highWaterMark, &highWaterMark)) {
         return false;
     }
 
-    if (!SetProperty(cx, strategy, cx->names().highWaterMark, highWaterMark)) {
+    // Step 1: Perform ! CreateDataProperty(this, "highWaterMark",
+    //                                      highWaterMark).
+    ObjectOpResult ignored;
+    if (!CreateDataProperty(cx, strategy, cx->names().highWaterMark, highWaterMark, ignored)) {
         return false;
     }
 
@@ -3875,22 +3915,34 @@ js::CountQueuingStrategy::constructor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    Rooted<CountQueuingStrategy*> strategy(cx, NewBuiltinClassInstance<CountQueuingStrategy>(cx));
+    if (!ThrowIfNotConstructing(cx, args, "CountQueuingStrategy")) {
+        return false;
+    }
+
+    // Implicit in the spec: Create the new strategy object.
+    RootedObject proto(cx);
+    if (!GetPrototypeFromBuiltinConstructor(cx, args, &proto)) {
+        return false;
+    }
+    Rooted<CountQueuingStrategy*> strategy(cx,
+        NewObjectWithClassProto<CountQueuingStrategy>(cx, proto));
     if (!strategy) {
         return false;
     }
 
+    // Implicit in the spec: Argument destructuring.
     RootedObject argObj(cx, ToObject(cx, args.get(0)));
     if (!argObj) {
         return false;
     }
-
     RootedValue highWaterMark(cx);
     if (!GetProperty(cx, argObj, argObj, cx->names().highWaterMark, &highWaterMark)) {
         return false;
     }
 
-    if (!SetProperty(cx, strategy, cx->names().highWaterMark, highWaterMark)) {
+    // Step 1: Perform ! CreateDataProperty(this, "highWaterMark", highWaterMark).
+    ObjectOpResult ignored;
+    if (!CreateDataProperty(cx, strategy, cx->names().highWaterMark, highWaterMark, ignored)) {
         return false;
     }
 
