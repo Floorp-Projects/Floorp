@@ -695,15 +695,13 @@ class ContextMenuChild extends ActorChild {
 
     let node = aEvent.composedTarget;
 
-    // Set the node to containing <video>/<audio>/<embed>/<object> if the node
-    // is in the videocontrols/pluginProblem UA Widget.
+    // Set the node to containing <video>/<audio> if the node
+    // is in the videocontrols UA Widget.
     if (this.content.ShadowRoot) {
       let n = node;
       while (n) {
         if (n instanceof this.content.ShadowRoot) {
-          if (n.host instanceof this.content.HTMLMediaElement ||
-              n.host instanceof this.content.HTMLEmbedElement ||
-              n.host instanceof this.content.HTMLObjectElement) {
+          if (n.host instanceof this.content.HTMLMediaElement) {
             node = n.host;
             break;
           }

@@ -121,12 +121,8 @@ class PluginChild extends ActorChild {
   }
 
   getPluginUI(plugin, anonid) {
-    if (plugin.openOrClosedShadowRoot &&
-        plugin.openOrClosedShadowRoot.isUAWidget()) {
-      return plugin.openOrClosedShadowRoot.getElementById(anonid);
-    }
     return plugin.ownerDocument.
-      getAnonymousElementByAttribute(plugin, "anonid", anonid);
+           getAnonymousElementByAttribute(plugin, "anonid", anonid);
   }
 
   _getPluginInfo(pluginElement) {
@@ -636,8 +632,7 @@ class PluginChild extends ActorChild {
     let overlay = this.getPluginUI(plugin, "main");
     // Have to check that the target is not the link to update the plugin
     if (!(ChromeUtils.getClassName(event.originalTarget) === "HTMLAnchorElement") &&
-        event.originalTarget.getAttribute("anonid") != "closeIcon" &&
-        event.originalTarget.id != "closeIcon" &&
+        (event.originalTarget.getAttribute("anonid") != "closeIcon") &&
         !overlay.hasAttribute("dismissed") &&
         event.button == 0 &&
         event.isTrusted) {
