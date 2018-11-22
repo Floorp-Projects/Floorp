@@ -33,11 +33,14 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include "nsPrintfCString.h"
+#include "nsIObserverService.h"
 
-#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/ipc/EnvironmentMap.h"
 #include "mozilla/Omnijar.h"
+#include "mozilla/Services.h"
+#include "mozilla/SharedThreadPool.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/Telemetry.h"
 #include "ProtocolUtils.h"
 #include <sys/stat.h>
@@ -66,6 +69,7 @@
 #include "private/pprio.h"
 
 using mozilla::MonitorAutoLock;
+using mozilla::StaticMutexAutoLock;
 using mozilla::ipc::GeckoChildProcessHost;
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -486,25 +490,116 @@ GeckoChildProcessHost::GetChildLogName(const char* origLogName,
   buffer.AppendInt(mChildCounter);
 }
 
+namespace {
+// Windows needs a single dedicated thread for process launching,
+// because of thread-safety restrictions/assertions in the sandbox
+// code.  (This implementation isn't itself Windows-specific, so
+// the ifdef can be changed to test on other platforms.)
+#ifdef XP_WIN
+
+static mozilla::StaticMutex gIPCLaunchThreadMutex;
+static mozilla::StaticRefPtr<nsIThread> gIPCLaunchThread;
+
+class IPCLaunchThreadObserver final : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+protected:
+  virtual ~IPCLaunchThreadObserver() = default;
+};
+
+NS_IMPL_ISUPPORTS(IPCLaunchThreadObserver, nsIObserver, nsISupports)
+
+NS_IMETHODIMP
+IPCLaunchThreadObserver::Observe(nsISupports* aSubject,
+                                 const char* aTopic,
+                                 const char16_t* aData)
+{
+  MOZ_RELEASE_ASSERT(strcmp(aTopic, "xpcom-shutdown-threads") == 0);
+  StaticMutexAutoLock lock(gIPCLaunchThreadMutex);
+
+  nsresult rv = NS_OK;
+  if (gIPCLaunchThread) {
+    rv = gIPCLaunchThread->Shutdown();
+    gIPCLaunchThread = nullptr;
+  }
+  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
+  return rv;
+}
+
+static nsCOMPtr<nsIEventTarget>
+GetIPCLauncher()
+{
+  StaticMutexAutoLock lock(gIPCLaunchThreadMutex);
+  if (!gIPCLaunchThread) {
+    nsCOMPtr<nsIThread> thread;
+    nsresult rv =
+      NS_NewNamedThread(NS_LITERAL_CSTRING("IPC Launch"),
+                        getter_AddRefs(thread));
+    if (!NS_WARN_IF(NS_FAILED(rv))) {
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "GeckoChildProcessHost::GetIPCLauncher",
+        [] {
+          nsCOMPtr<nsIObserverService> obsService =
+            mozilla::services::GetObserverService();
+          nsCOMPtr<nsIObserver> obs = new IPCLaunchThreadObserver();
+          obsService->AddObserver(obs, "xpcom-shutdown-threads", false);
+        }));
+      gIPCLaunchThread = thread.forget();
+    }
+  }
+
+  nsCOMPtr<nsIEventTarget> thread = gIPCLaunchThread.get();
+  return thread;
+}
+
+#else // XP_WIN
+
+// Non-Windows platforms can use an on-demand thread pool.
+
+static nsCOMPtr<nsIEventTarget>
+GetIPCLauncher()
+{
+  nsCOMPtr<nsIEventTarget> pool =
+    mozilla::SharedThreadPool::Get(NS_LITERAL_CSTRING("IPC Launch"));
+  return pool;
+}
+
+#endif // XP_WIN
+} // anonymous namespace
+
 bool
 GeckoChildProcessHost::RunPerformAsyncLaunch(std::vector<std::string> aExtraOpts)
 {
+  // This (probably?) needs to happen on the I/O thread.
   InitializeChannel();
 
-  bool ok = PerformAsyncLaunch(aExtraOpts);
-  if (!ok) {
-    // WaitUntilConnected might be waiting for us to signal.
-    // If something failed let's set the error state and notify.
-    MonitorAutoLock lock(mMonitor);
-    mProcessState = PROCESS_ERROR;
-    mHandlePromise->Reject(LaunchError{}, __func__);
-    lock.Notify();
-    CHROMIUM_LOG(ERROR) << "Failed to launch " <<
-      XRE_ChildProcessTypeToString(mProcessType) << " subprocess";
-    Telemetry::Accumulate(Telemetry::SUBPROCESS_LAUNCH_FAILURE,
-      nsDependentCString(XRE_ChildProcessTypeToString(mProcessType)));
+  auto launcher = GetIPCLauncher();
+  if (NS_WARN_IF(!launcher)) {
+    return false;
   }
-  return ok;
+
+  // But the rest of this doesn't, and shouldn't block IPC messages:
+  nsresult rv = launcher->Dispatch(NS_NewRunnableFunction(
+    "ipc::GeckoChildProcessHost::PerformAsyncLaunch",
+    [this, aExtraOpts = std::move(aExtraOpts)]() {
+      bool ok = PerformAsyncLaunch(aExtraOpts);
+
+      if (!ok) {
+        // WaitUntilConnected might be waiting for us to signal.
+        // If something failed let's set the error state and notify.
+        MonitorAutoLock lock(mMonitor);
+        mProcessState = PROCESS_ERROR;
+        mHandlePromise->Reject(LaunchError{}, __func__);
+        lock.Notify();
+        CHROMIUM_LOG(ERROR) << "Failed to launch " <<
+          XRE_ChildProcessTypeToString(mProcessType) << " subprocess";
+        Telemetry::Accumulate(Telemetry::SUBPROCESS_LAUNCH_FAILURE,
+          nsDependentCString(XRE_ChildProcessTypeToString(mProcessType)));
+       }
+    }), NS_DISPATCH_NORMAL);
+  return !NS_WARN_IF(NS_FAILED(rv));
 }
 
 void
