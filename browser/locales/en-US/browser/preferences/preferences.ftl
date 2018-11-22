@@ -846,11 +846,11 @@ content-blocking-tracking-protection-trackers-label =
 content-blocking-tracking-protection-all-detected-trackers-label =
   .label = All Detected Trackers
   .accesskey = T
-content-blocking-tracking-protection-option-always =
-  .label = Always
+content-blocking-tracking-protection-option-all-windows =
+  .label = In all windows
   .accesskey = A
 content-blocking-tracking-protection-option-private =
-  .label = Only in private windows
+  .label = Only in Private Windows
   .accesskey = p
 content-blocking-tracking-protection-change-block-list = Change block list
 
