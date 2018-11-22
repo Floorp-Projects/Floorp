@@ -66,7 +66,8 @@ case $cmd in
     if [ -d ${tgtpath} ]; then
         echo "WARNING - dist tree ${tgtpath} already exists!"
     fi
-    ${MKDIR} -p ${tgtpath}/js/src
+
+    ${MKDIR} -p ${tgtpath}
 
     # Top-level config and build files
     cp -pPR \
@@ -172,15 +173,20 @@ case $cmd in
         ${tgtpath}/toolkit/mozapps/installer/
 
 
-    cp -pPR ${TOPSRCDIR}/js/app.mozbuild ${tgtpath}/js/
-    cp -pPR ${TOPSRCDIR}/js/moz.configure ${tgtpath}/js/
-    cp -pPR ${TOPSRCDIR}/js/ffi.configure ${tgtpath}/js/
+    # SpiderMonkey itself
 
-    # put in js itself
-    cp -p ${TOPSRCDIR}/js/moz.configure ${tgtpath}/js/
-    cp -pPR ${TOPSRCDIR}/js/public ${tgtpath}/js/
-    cp -pPR ${TOPSRCDIR}/js/rust ${tgtpath}/js/
-    cp -pPR ${TOPSRCDIR}/js/examples ${tgtpath}/js/
+    ${MKDIR} -p ${tgtpath}/js/src
+    cp -pPR \
+        ${TOPSRCDIR}/js/app.mozbuild \
+        ${TOPSRCDIR}/js/ffi.configure \
+        ${TOPSRCDIR}/js/moz.configure \
+        ${tgtpath}/js/
+    cp -pPR \
+        ${TOPSRCDIR}/js/examples \
+        ${TOPSRCDIR}/js/public \
+        ${TOPSRCDIR}/js/rust \
+        ${tgtpath}/js/
+
     find ${TOPSRCDIR}/js/src -mindepth 1 -maxdepth 1 -not -path ${STAGING} -a -not -name ${pkg} \
         -exec cp -pPR {} ${tgtpath}/js/src/ \;
 
