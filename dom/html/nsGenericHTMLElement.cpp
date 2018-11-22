@@ -1442,13 +1442,13 @@ nsGenericHTMLElement::MapImageBorderAttributeInto(const nsMappedAttributes* aAtt
   aDecls.SetPixelValueIfUnset(eCSSProperty_border_left_width, (float)val);
 
   aDecls.SetKeywordValueIfUnset(eCSSProperty_border_top_style,
-                                NS_STYLE_BORDER_STYLE_SOLID);
+                                StyleBorderStyle::Solid);
   aDecls.SetKeywordValueIfUnset(eCSSProperty_border_right_style,
-                                NS_STYLE_BORDER_STYLE_SOLID);
+                                StyleBorderStyle::Solid);
   aDecls.SetKeywordValueIfUnset(eCSSProperty_border_bottom_style,
-                                NS_STYLE_BORDER_STYLE_SOLID);
+                                StyleBorderStyle::Solid);
   aDecls.SetKeywordValueIfUnset(eCSSProperty_border_left_style,
-                                NS_STYLE_BORDER_STYLE_SOLID);
+                                StyleBorderStyle::Solid);
 
   aDecls.SetCurrentColorIfUnset(eCSSProperty_border_top_color);
   aDecls.SetCurrentColorIfUnset(eCSSProperty_border_right_color);
