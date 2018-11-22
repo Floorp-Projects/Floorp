@@ -11,6 +11,7 @@
 #include <stdint.h> // for UINT32_MAX, uintptr_t
 #include "IndexedDatabaseManager.h"
 #include "js/Date.h"
+#include "js/MemoryFunctions.h"
 #include "js/Value.h"
 #include "jsfriendapi.h"
 #include "mozilla/Casting.h"
