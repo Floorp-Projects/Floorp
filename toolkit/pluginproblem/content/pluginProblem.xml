@@ -18,7 +18,7 @@
 <binding id="pluginProblem" inheritstyle="false" chromeOnlyContent="true" bindToUntrustedContent="true">
     <resources>
         <stylesheet src="chrome://pluginproblem/content/pluginProblemContent.css"/>
-        <stylesheet src="chrome://mozapps/skin/plugins/pluginProblem.css"/>
+        <stylesheet src="chrome://global/skin/plugins/pluginProblem.css"/>
     </resources>
 
     <content>
