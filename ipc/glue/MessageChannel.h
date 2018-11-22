@@ -180,15 +180,6 @@ private:
     // in MessageChannel.cpp.
     bool Open(MessageChannel *aTargetChan, nsIEventTarget *aEventTarget, Side aSide);
 
-    // "Open" a connection to an actor on the current thread.
-    //
-    // Returns true if the transport layer was successfully connected,
-    // i.e., mChannelState == ChannelConnected.
-    //
-    // Same-thread channels may not perform synchronous or blocking message
-    // sends, to avoid deadlocks.
-    bool OpenOnSameThread(MessageChannel* aTargetChan, Side aSide);
-
     // Close the underlying transport channel.
     void Close();
 
@@ -573,20 +564,11 @@ private:
                            "not on worker thread!");
     }
 
-    // The "link" thread is either the I/O thread (ProcessLink), the other
-    // actor's work thread (ThreadLink), or the worker thread (same-thread
-    // channels).
+    // The "link" thread is either the I/O thread (ProcessLink) or the
+    // other actor's work thread (ThreadLink).  In either case, it is
+    // NOT our worker thread.
     void AssertLinkThread() const
     {
-        if (mIsSameThreadChannel) {
-            // If we're a same-thread channel, we have to be on our worker
-            // thread.
-            AssertWorkerThread();
-            return;
-        }
-
-        // If we aren't a same-thread channel, our "link" thread is _not_ our
-        // worker thread!
         MOZ_ASSERT(mWorkerThread, "Channel hasn't been opened yet");
         MOZ_RELEASE_ASSERT(mWorkerThread != GetCurrentVirtualThread(),
                            "on worker thread but should not be!");
@@ -879,10 +861,6 @@ private:
     std::vector<UniquePtr<Message>> mPostponedSends;
 
     bool mBuildIDsConfirmedMatch;
-
-    // If this is true, both ends of this message channel have event targets
-    // on the same thread.
-    bool mIsSameThreadChannel;
 };
 
 void
