@@ -117,7 +117,8 @@ function onPluginCrashed(aEvent) {
 
   let submitButton = document.getAnonymousElementByAttribute(aEvent.target,
                                                              "class",
-                                                             "submitButton");
+                                                             "submitButton") ||
+                     aEvent.target.openOrClosedShadowRoot.getElementById("submitButton");
   // try to submit this report
   sendMouseEvent({type:'click'}, submitButton, window);
 }
