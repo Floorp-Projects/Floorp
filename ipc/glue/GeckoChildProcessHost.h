@@ -72,8 +72,6 @@ public:
   bool SyncLaunch(StringVector aExtraOpts=StringVector(),
                   int32_t timeoutMs=0);
 
-  virtual void OnProcessHandleReady(ProcessHandle aProcessHandle);
-  virtual void OnProcessLaunchError();
   virtual void OnChannelConnected(int32_t peer_pid) override;
   virtual void OnMessageReceived(IPC::Message&& aMsg) override;
   virtual void OnChannelError() override;
