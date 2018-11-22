@@ -514,6 +514,7 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                      const bool& aApplyConversion,
                                      const ResourceTimingStruct& aTiming)
 {
+  AUTO_PROFILER_LABEL("HttpChannelChild::RecvOnStartRequest", NETWORK);
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
   // stage, as they are set in the listener's OnStartRequest.
@@ -1093,6 +1094,7 @@ HttpChannelChild::DoOnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
                                     nsIInputStream* aStream,
                                     uint64_t offset, uint32_t count)
 {
+  AUTO_PROFILER_LABEL("HttpChannelChild::DoOnDataAvailable", NETWORK);
   LOG(("HttpChannelChild::DoOnDataAvailable [this=%p]\n", this));
   if (mCanceled)
     return;
@@ -1292,6 +1294,7 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
 void
 HttpChannelChild::DoPreOnStopRequest(nsresult aStatus)
 {
+  AUTO_PROFILER_LABEL("HttpChannelChild::DoPreOnStopRequest", NETWORK);
   LOG(("HttpChannelChild::DoPreOnStopRequest [this=%p status=%" PRIx32 "]\n",
        this, static_cast<uint32_t>(aStatus)));
   mIsPending = false;
@@ -1331,6 +1334,7 @@ HttpChannelChild::CollectOMTTelemetry()
 void
 HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest, nsresult aChannelStatus, nsISupports* aContext)
 {
+  AUTO_PROFILER_LABEL("HttpChannelChild::DoOnStopRequest", NETWORK);
   LOG(("HttpChannelChild::DoOnStopRequest [this=%p]\n", this));
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mIsPending);
@@ -1414,6 +1418,7 @@ void
 HttpChannelChild::OnProgress(const int64_t& progress,
                              const int64_t& progressMax)
 {
+  AUTO_PROFILER_LABEL("HttpChannelChild::OnProgress", NETWORK);
   LOG(("HttpChannelChild::OnProgress [this=%p progress=%" PRId64 "/%" PRId64 "]\n",
        this, progress, progressMax));
 
@@ -1461,6 +1466,7 @@ HttpChannelChild::ProcessOnStatus(const nsresult& aStatus)
 void
 HttpChannelChild::OnStatus(const nsresult& status)
 {
+  AUTO_PROFILER_LABEL("HttpChannelChild::OnStatus", NETWORK);
   LOG(("HttpChannelChild::OnStatus [this=%p status=%" PRIx32 "]\n",
        this, static_cast<uint32_t>(status)));
 
@@ -1547,6 +1553,7 @@ HttpChannelChild::CleanupBackgroundChannel()
 {
   MutexAutoLock lock(mBgChildMutex);
 
+  AUTO_PROFILER_LABEL("HttpChannelChild::CleanupBackgroundChannel", NETWORK);
   LOG(("HttpChannelChild::CleanupBackgroundChannel [this=%p bgChild=%p]\n",
        this, mBgChild.get()));
 
@@ -3795,6 +3802,7 @@ HttpChannelChild::ResetInterception()
 void
 HttpChannelChild::TrySendDeletingChannel()
 {
+  AUTO_PROFILER_LABEL("HttpChannelChild::TrySendDeletingChannel", NETWORK);
   if (!mDeletingChannelSent.compareExchange(false, true)) {
     // SendDeletingChannel is already sent.
     return;
