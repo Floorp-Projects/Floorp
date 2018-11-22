@@ -9,40 +9,22 @@
  * caught exceptions, but not uncaught ones.
  */
 
-var gDebuggee;
-var gClient;
-
-function run_test() {
-  do_test_pending();
-  run_test_with_server(DebuggerServer, function() {
-    run_test_with_server(WorkerDebuggerServer, do_test_finished);
-  });
-}
-
-function run_test_with_server(server, callback) {
-  initTestDebuggerServer(server);
-  gDebuggee = addTestGlobal("test-pausing", server);
-  gClient = new DebuggerClient(server.connectPipe());
-  gClient.connect(test_pause_frame);
-}
-
-async function test_pause_frame() {
-  const [,, threadClient] = await attachTestTabAndResume(gClient, "test-pausing");
-  await executeOnNextTickAndWaitForPause(evaluateTestCode, gClient);
-
-  evaluateTestCode();
+add_task(threadClientTest(async ({ threadClient, client, debuggee }) => {
+  await executeOnNextTickAndWaitForPause(() => evaluateTestCode(debuggee), client);
 
   threadClient.pauseOnExceptions(true, true);
   await resume(threadClient);
-  const paused = await waitForPause(gClient);
+  const paused = await waitForPause(client);
   Assert.equal(paused.why.type, "exception");
   equal(paused.frame.where.line, 6, "paused at throw");
 
   await resume(threadClient);
-  finishClient(gClient);
-}
+}, {
+  // Bug 1508289, exception tests fails in worker scope
+  doNotRunWorker: true,
+}));
 
-function evaluateTestCode() {
+function evaluateTestCode(debuggee) {
   /* eslint-disable */
   try {
   Cu.evalInSandbox(`                    // 1
@@ -52,7 +34,7 @@ function evaluateTestCode() {
    } catch (e) {}                       // 5
    throw "bar";                         // 6  
   `,                                    // 7
-    gDebuggee,
+    debuggee,
     "1.8",
     "test_pause_exceptions-03.js",
     1
