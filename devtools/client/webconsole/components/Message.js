@@ -127,7 +127,7 @@ class Message extends Component {
 
     return MessageIcon({
       level,
-      onRewindClick: serviceContainer.canRewind()
+      onRewindClick: (serviceContainer.canRewind() && executionPoint)
         ? () => serviceContainer.jumpToExecutionPoint(executionPoint, messageId)
         : null,
     });

@@ -2,12 +2,12 @@
 .\"     Title: PK12UTIL
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 27 October 2017
+.\"      Date:  5 October 2017
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "PK12UTIL" "1" "27 October 2017" "nss-tools" "NSS Security Tools"
+.TH "PK12UTIL" "1" "5 October 2017" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -113,6 +113,8 @@ Specify the desired length of the symmetric key to be used to encrypt the certif
 \-n certname
 .RS 4
 Specify the nickname of the cert and private key to export\&.
+.sp
+The nickname can also be a PKCS #11 URI\&. For example, if you have a certificate named "my\-server\-cert" on the internal certificate store, it can be unambiguously specified as "pkcs11:token=NSS%20Certificate%20DB;object=my\-server\-cert"\&. For details about the format, see RFC 7512\&.
 .RE
 .PP
 \-P prefix

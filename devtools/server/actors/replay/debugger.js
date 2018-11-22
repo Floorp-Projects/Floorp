@@ -402,6 +402,13 @@ ReplayDebugger.prototype = {
     }
   },
 
+  // Clear OnStep and OnPop hooks for all frames.
+  replayClearSteppingHooks() {
+    this._clearMatchingBreakpoints(
+      ({position}) => position.kind == "OnStep" || position.kind == "OnPop"
+    );
+  },
+
   /////////////////////////////////////////////////////////
   // Script methods
   /////////////////////////////////////////////////////////
@@ -765,21 +772,11 @@ ReplayDebuggerFrame.prototype = {
   },
 
   set onStep(handler) {
-    if (handler) {
-      // Use setReplayingOnStep instead.
-      NotAllowed();
-    }
-    this._clearOnStepBreakpoints();
-  },
-
-  _clearOnStepBreakpoints() {
-    this._dbg._clearMatchingBreakpoints(
-      ({position}) => this._positionMatches(position, "OnStep")
-    );
+    // Use setReplayingOnStep or replayClearSteppingHooks instead.
+    NotAllowed();
   },
 
   setReplayingOnStep(handler, offsets) {
-    this._clearOnStepBreakpoints();
     offsets.forEach(offset => {
       this._dbg._setBreakpoint(
         () => { handler.call(this._dbg.getNewestFrame()); },
@@ -807,9 +804,8 @@ ReplayDebuggerFrame.prototype = {
         { kind: "OnPop", script: this._data.script, frameIndex: this._data.index },
         handler);
     } else {
-      this._dbg._clearMatchingBreakpoints(
-        ({position}) => this._positionMatches(position, "OnPop")
-      );
+      // Use replayClearSteppingHooks instead.
+      NotAllowed();
     }
   },
 
