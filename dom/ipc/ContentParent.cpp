@@ -1617,9 +1617,7 @@ ContentParent::OnChannelConnected(int32_t pid)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-#ifndef ASYNC_CONTENTPROC_LAUNCH
   SetOtherProcessId(pid);
-#endif
 
 #if defined(ANDROID) || defined(LINUX)
   // Check nice preference
@@ -1643,11 +1641,6 @@ ContentParent::OnChannelConnected(int32_t pid)
       setpriority(PRIO_PROCESS, pid, getpriority(PRIO_PROCESS, pid) + nice);
     }
   }
-#endif
-
-#if defined(MOZ_CODE_COVERAGE) && defined(ASYNC_CONTENTPROC_LAUNCH)
-  Unused << SendShareCodeCoverageMutex(
-              CodeCoverageHandler::Get()->GetMutexHandle(pid));
 #endif
 }
 
@@ -2319,12 +2312,7 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
     extraArgs.push_back(NS_ConvertUTF16toUTF8(mRecordingFile).get());
   }
 
-  SetOtherProcessId(kInvalidProcessId, ProcessIdState::ePending);
-#ifdef ASYNC_CONTENTPROC_LAUNCH
-  if (!mSubprocess->Launch(extraArgs)) {
-#else
   if (!mSubprocess->LaunchAndWaitForProcessHandle(extraArgs)) {
-#endif
     NS_ERROR("failed to launch child in the parent");
     MarkAsDead();
     return false;
@@ -2333,9 +2321,6 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   // See also ActorDestroy.
   mSelfRef = this;
 
-#ifdef ASYNC_CONTENTPROC_LAUNCH
-  OpenWithAsyncPid(mSubprocess->GetChannel());
-#else
   base::ProcessId procId =
     base::GetProcId(mSubprocess->GetChildProcessHandle());
   Open(mSubprocess->GetChannel(), procId);
@@ -2343,7 +2328,6 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
   Unused << SendShareCodeCoverageMutex(
               CodeCoverageHandler::Get()->GetMutexHandle(procId));
 #endif
-#endif // ASYNC_CONTENTPROC_LAUNCH
 
   InitInternal(aInitialPriority);
 
@@ -2421,7 +2405,7 @@ ContentParent::ContentParent(ContentParent* aOpener,
 
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   bool isFile = mRemoteType.EqualsLiteral(FILE_REMOTE_TYPE);
-  mSubprocess = new ContentProcessHost(this, isFile);
+  mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content, isFile);
 
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
   // sEarlySandboxInit is statically initialized to false.
