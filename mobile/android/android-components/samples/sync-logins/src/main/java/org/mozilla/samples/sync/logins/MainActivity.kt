@@ -67,9 +67,8 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
                         .getString(FXA_STATE_KEY, "")
                 FirefoxAccount.fromJSONString(savedJSON)
             } catch (e: FxaException) {
-                Config.custom(CONFIG_URL).await().use { config ->
-                    FirefoxAccount(config, CLIENT_ID, REDIRECT_URL)
-                }
+                val config = Config(CONFIG_URL, CLIENT_ID, REDIRECT_URL)
+                FirefoxAccount(config)
             }
         }
 
