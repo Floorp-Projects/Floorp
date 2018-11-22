@@ -87,6 +87,7 @@ struct IPCPaymentCanMakeActionRequest
 struct IPCPaymentShowActionRequest
 {
   nsString requestId;
+  bool isUpdating;
 };
 
 struct IPCPaymentAbortActionRequest

@@ -452,28 +452,28 @@ static inline wr::LayoutTransform ToLayoutTransform(const gfx::Matrix4x4Typed<S,
   return transform;
 }
 
-static inline wr::BorderStyle ToBorderStyle(const uint8_t& style)
+static inline wr::BorderStyle ToBorderStyle(const StyleBorderStyle& style)
 {
   switch (style) {
-  case NS_STYLE_BORDER_STYLE_NONE:
+  case StyleBorderStyle::None:
     return wr::BorderStyle::None;
-  case NS_STYLE_BORDER_STYLE_SOLID:
+  case StyleBorderStyle::Solid:
     return wr::BorderStyle::Solid;
-  case NS_STYLE_BORDER_STYLE_DOUBLE:
+  case StyleBorderStyle::Double:
     return wr::BorderStyle::Double;
-  case NS_STYLE_BORDER_STYLE_DOTTED:
+  case StyleBorderStyle::Dotted:
     return wr::BorderStyle::Dotted;
-  case NS_STYLE_BORDER_STYLE_DASHED:
+  case StyleBorderStyle::Dashed:
     return wr::BorderStyle::Dashed;
-  case NS_STYLE_BORDER_STYLE_HIDDEN:
+  case StyleBorderStyle::Hidden:
     return wr::BorderStyle::Hidden;
-  case NS_STYLE_BORDER_STYLE_GROOVE:
+  case StyleBorderStyle::Groove:
     return wr::BorderStyle::Groove;
-  case NS_STYLE_BORDER_STYLE_RIDGE:
+  case StyleBorderStyle::Ridge:
     return wr::BorderStyle::Ridge;
-  case NS_STYLE_BORDER_STYLE_INSET:
+  case StyleBorderStyle::Inset:
     return wr::BorderStyle::Inset;
-  case NS_STYLE_BORDER_STYLE_OUTSET:
+  case StyleBorderStyle::Outset:
     return wr::BorderStyle::Outset;
   default:
     MOZ_ASSERT(false);
@@ -481,7 +481,7 @@ static inline wr::BorderStyle ToBorderStyle(const uint8_t& style)
   return wr::BorderStyle::None;
 }
 
-static inline wr::BorderSide ToBorderSide(const gfx::Color& color, const uint8_t& style)
+static inline wr::BorderSide ToBorderSide(const gfx::Color& color, const StyleBorderStyle& style)
 {
   wr::BorderSide bs;
   bs.color = ToColorF(color);
