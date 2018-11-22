@@ -54,7 +54,7 @@ static constexpr nsUConvProp nonParticipatingDomains[] = {
 
 NS_IMPL_ISUPPORTS(FallbackEncoding, nsIObserver)
 
-FallbackEncoding* FallbackEncoding::sInstance = nullptr;
+StaticRefPtr<FallbackEncoding> FallbackEncoding::sInstance;
 bool FallbackEncoding::sGuessFallbackFromTopLevelDomain = true;
 bool FallbackEncoding::sFallbackToUTF8ForFile = false;
 
@@ -174,7 +174,6 @@ FallbackEncoding::Shutdown()
   if (obs) {
     obs->RemoveObserver(sInstance, "intl:requested-locales-changed");
   }
-  delete FallbackEncoding::sInstance;
   FallbackEncoding::sInstance = nullptr;
 }
 
