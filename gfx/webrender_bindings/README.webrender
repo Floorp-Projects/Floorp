@@ -33,7 +33,7 @@ actually land the update into the tree.
 Option A:
    Use a script to do the update for you. This will usually work, if you satisfy
    all the assumptions the script is making. The script can be found at
-   https://github.com/staktrace/moz-scripts/blob/master/try-latest-webrender.sh
+   https://github.com/staktrace/wrupdater/blob/master/try-latest-webrender.sh
    and contains documentation on how to use it. Read the documentation carefully
    before trying to use it.
 
@@ -45,18 +45,16 @@ Option B:
    roughly:
    - Update your mozilla-central checkout to the latest code on mozilla-central.
    - Check out and update the webrender repo to the version you want
-   - Copy over the webrender, webrender_api, and part of the wrench folders into
-     gfx/. The best way to do this is to simply delete the gfx/webrender,
-     gfx/webrender_api, and gfx/wrench folders and use |cp -R| to copy them in
-     again from the webrender repo, and then delete the gfx/wrench/reftests,
-     gfx/wrench/benchmarks, and gfx/wrench/script folders. Update the revision
-     in gfx/webrender_bindings/revision.txt file with the git changeset hash.
+   - Copy over the webrender repo to gfx/wr. The easiest way to do this is
+     simply delete gfx/wr, and use |cp -R| to copy it back, and then delete the
+     gfx/wr/.git/ subfolder. Update the revision in
+     gfx/webrender_bindings/revision.txt file with the git changeset hash.
    - If you need to modify webrender_bindings/Cargo.toml file, do so now. Changes
      at this step usually consist of:
      (a) Updating version numbers. Go through the version numbers of ALL the
          dependencies in the Cargo.toml file (webrender, euclid, etc.) and make
          sure the version numbers listed match what's in the new
-         gfx/webrender/Cargo.toml and gfx/webrender_api/Cargo.toml files.
+         gfx/wr/webrender/Cargo.toml and gfx/wr/webrender_api/Cargo.toml files.
      (b) Turning on or off any new features that were added in upstream WR. This
          used to happen a lot but is pretty rare now.
    - Go to toolkit/library/rust and run |cargo update -p webrender -p webrender_api|.
