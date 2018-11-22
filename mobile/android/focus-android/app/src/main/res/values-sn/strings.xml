@@ -144,7 +144,7 @@
   <string name="external_app_prompt">Unogona kusiya %1$s kuti ugovhura zvinoenda kuna %2$s.</string>
   <string name="external_app_prompt_no_app_title">Tsvaga app inokwanisa kuvhura link</string>
   <string name="external_app_prompt_no_app">Tashaiwa app mufoni yako inokwanisa kuvhura link. Unokwanisa kusiya %1$s kuti ugotsaga %2$s kune app inozvikwanisa.</string>
-  <string name="external_multiple_apps_matched_exit">Wafunga kusiya kutsvaga pachako?</string>
+  <string name="external_multiple_apps_matched_exit">Wafunga kusiya kutsvaga pachivande?</string>
   <string name="download_snackbar_finished">%1$s zvapera</string>
   <string name="download_snackbar_open">Vhura</string>
   <string name="download_dialog_warning"><![CDATA["Zvawatora painternet "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">zvichange zvichiripo</b>" pauchatsvaira %1$s nhorondo."]]></string>

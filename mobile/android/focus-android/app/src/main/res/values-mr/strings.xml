@@ -6,6 +6,7 @@
   <string name="urlbar_hint">शोधा किंवा पत्ता द्या</string>
   <string name="teaser">स्वयंचलित खाजगी ब्राउझिंग.\nब्राउझ करा. मिटवा. पुन: करा.</string>
   <string name="feedback_erase">आपला ब्राउझिंग इतिहास मिटवला आहे.</string>
+  <string name="feedback_erase_custom_tab">टॅबचा ब्राउझिंग इतिहास मिटविला गेला आहे.</string>
   <string name="search_hint">%1$s करिता शोधा</string>
   <string name="menu_share">शेअर करा…</string>
   <string name="menu_report_site_issue">साइट समस्येचा अहवाल द्या</string>
@@ -18,6 +19,9 @@
   <string name="menu_help">मदत</string>
   <string name="menu_rights">आपले अधिकार</string>
   <string name="menu_trackers_blocked_title">मागोवा यंत्रणा अडवली</string>
+  <string name="menu_trackers_blocked_subtitle">हे बंद केल्याने कदाचित काही साईट समस्या सुटू शकतील</string>
+  <string name="menu_content_blocking">मजकूर अवरोधन</string>
+  <string name="menu_content_blocking_subtitle">साईट ठीक करण्यासाठी बंद करा</string>
   <string name="menu_custom_tab_branding">%1$s द्वारे समर्थित</string>
   <string name="share_dialog_title">याद्वारे शेअर करा</string>
   <string name="notification_erase_text">ब्राउझिंग इतिहास खोडा</string>
@@ -25,6 +29,8 @@
   <string name="notification_action_erase_and_open">खोडा व उघडा</string>
   <string name="shortcut_erase_short_label">खोडा</string>
   <string name="shortcut_erase_long_label">ब्राउझिंग इतिहास खोडा</string>
+  <string name="shortcut_erase_and_open_short_label">मिटवा आणि उघडा</string>
+  <string name="shortcut_erase_and_open_long_label">मिटवा आणि %1$s उघडा</string>
   <string name="text_selection_search_action">गुप्ततेने शोधा</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#2310;&#2346;&#2354;&#2381;&#2351;&#2366;&#2354;&#2366; &#2344;&#2367;&#2351;&#2306;&#2340;&#2381;&#2352;&#2339; &#2342;&#2375;&#2340;&#2379;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2326;&#2366;&#2332;&#2327;&#2368; &#2348;&#2381;&#2352;&#2366;&#2313;&#2333;&#2352; &#2350;&#2381;&#2361;&#2339;&#2370;&#2344; &#2357;&#2366;&#2346;&#2352;&#2366;:\n<ul>\n<li>&#2309;&#2305;&#2346; &#2350;&#2343;&#2381;&#2351;&#2375;&#2330; &#2358;&#2379;&#2343; &#2357; &#2348;&#2381;&#2352;&#2366;&#2313;&#2333; &#2325;&#2352;&#2366;</li>\n<li>&#2350;&#2366;&#2327;&#2379;&#2357;&#2366; &#2351;&#2306;&#2340;&#2381;&#2352;&#2339;&#2366; &#2309;&#2337;&#2357;&#2366;(&#2325;&#2367;&#2306;&#2357;&#2366; &#2360;&#2375;&#2335;&#2367;&#2306;&#2327; &#2348;&#2342;&#2354;&#2370;&#2344; &#2350;&#2366;&#2327;&#2379;&#2357;&#2366; &#2351;&#2306;&#2340;&#2381;&#2352;&#2339;&#2375;&#2354;&#2366; &#2346;&#2352;&#2357;&#2366;&#2344;&#2327;&#2368; &#2342;&#2381;&#2351;&#2366;)</li>\n<li>&#2325;&#2369;&#2325;&#2368;&#2332;, &#2360;&#2352;&#2381;&#2330; &#2357; &#2348;&#2381;&#2352;&#2366;&#2314;&#2333;&#2367;&#2306;&#2327; &#2311;&#2340;&#2367;&#2361;&#2366;&#2360; &#2344;&#2359;&#2381;&#2335; &#2325;&#2352;&#2339;&#2381;&#2351;&#2366;&#2360;&#2366;&#2336;&#2368; &#2326;&#2379;&#2337;&#2370;&#2344; &#2335;&#2366;&#2325;&#2366;</li>\n</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla &#2344;&#2375; &#2313;&#2340;&#2381;&#2346;&#2366;&#2342;&#2367;&#2340; &#2325;&#2375;&#2354;&#2366; &#2310;&#2361;&#2375;. &#2326;&#2369;&#2354;&#2375; &#2357; &#2360;&#2369;&#2343;&#2371;&#2338; &#2311;&#2306;&#2335;&#2352;&#2344;&#2375;&#2335; &#2332;&#2379;&#2346;&#2366;&#2360;&#2339;&#2375; &#2310;&#2350;&#2330;&#2375; &#2343;&#2381;&#2351;&#2375;&#2351; &#2310;&#2361;&#2375;.<br/>\n<a href="%2$s">&#2309;&#2343;&#2367;&#2325; &#2332;&#2366;&#2339;&#2370;&#2344; &#2328;&#2381;&#2351;&#2366;</a></p>]]></string>
   <string name="preference_privacy_and_security_header">गोपनीयता आणि सुरक्षा</string>
@@ -35,17 +41,26 @@
   <string name="preference_category_web_content">वेब मजकूर</string>
   <string name="preference_category_switching_apps">अँप बदलताना</string>
   <string name="preference_category_general">सर्वसाधारण</string>
+  <string name="preference_general_summary">पूर्वनिर्धारित ब्राउझर, टॅब, भाषा</string>
   <string name="preference_category_data_collection_use">माहिती संकलन आणि वापर</string>
   <string name="preference_category_search">शोधा</string>
   <string name="preference_show_search_suggestions">शोध सूचना मिळवा</string>
   <string name="preference_show_search_suggestions_summary">आपण जे पत्ता पट्टी मध्ये टाईप कराल ते %1$s आपल्या शोध इंजिनला पाठवेल</string>
   <string name="preference_search_engine_default">पूर्वनिर्धारीत</string>
+  <string name="preference_search_engine_label">शोध इंजिन</string>
   <string name="preference_state_on">चालू</string>
   <string name="preference_state_off">बंद</string>
   <string name="preference_subitem_autocomplete">URL स्वयंपूर्ण</string>
+  <string name="preference_switch_autocomplete_topsites">टॉप साईट करिता</string>
+  <string name="preference_autocomplete_topsite_summary">450 हुन अधिक लोकप्रिय URL पत्ता पट्टीमध्ये स्वयंपूर्ण करणे सक्षम करा.</string>
+  <string name="preference_switch_autocomplete_user_list">आपण जोडलेल्या साईट करिता</string>
+  <string name="preference_autocomplete_user_list_summary">450 हुन अधिक लोकप्रिय URL पत्ता पट्टीमध्ये स्वयंपूर्ण करणे सक्षम करा.</string>
+  <string name="preference_category_autocomplete_manage_sites">साईट व्यवस्थापित करा</string>
+  <string name="preference_autocomplete_subitem_manage_sites">साईट व्यवस्थापित करा</string>
   <string name="preference_autocomplete_action_add">+ सानुकूल URL जोडा</string>
   <string name="preference_autocomplete_title_add">सानुकूल URL जोडा</string>
   <string name="custom_autocomplete_quick_add">सानुकूल URL जोडा</string>
+  <string name="add_custom_autocomplete_label">स्वयंपूर्ण करण्यासाठी दुवा जोडा</string>
   <string name="preference_category_cookies">कूकीज आणि संकेतस्थळाची माहिती</string>
   <string name="preference_category_data_choices">माहिती पर्याय</string>
   <string name="preference_autocomplete_title_remove">सानुकूल URLs काढा</string>
@@ -72,6 +87,7 @@
   <string name="preference_privacy_block_content_summary2">सक्षम करण्यामुळे काही पृष्ठ अनपेक्षितरित्या वागू शकतात</string>
   <string name="preference_privacy_category_cookies">कुकीज अवरोधित करा</string>
   <string name="preference_privacy_should_block_cookies_no_option">नाही</string>
+  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">केवळ तृतीय-पक्ष ट्रॅकर कुकीज अवरोधित करा</string>
   <string name="preference_privacy_should_block_cookies_third_party_only_option">केवळ तृतीय-पक्षाच्या कुकीज अवरोधित करा</string>
   <string name="preference_privacy_should_block_cookies_yes_option">हो</string>
   <string name="preference_security_biometric">अँप उघडण्यासाठी बोटाचा ठसा वापरा</string>
@@ -115,6 +131,7 @@
   <string name="accessibility_announcement_loading">लोड करत आहे</string>
   <string name="accessibility_announcement_loading_finished">वेबसाइट लोड केली</string>
   <string name="content_description_menu">आणखी पर्याय</string>
+  <string name="indicator_content_description_menu">अधिक पर्याय बटण</string>
   <string name="content_description_forward">पुढे नेव्हिगेट करा</string>
   <string name="content_description_reload">वेबसाइट रीलोड करा</string>
   <string name="content_description_back">मागे नॅव्हिगेट करा</string>
@@ -151,6 +168,7 @@
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">\n<li>&#2361;&#2368; &#2360;&#2352;&#2381;&#2357;&#2381;&#2361;&#2352; &#2330;&#2381;&#2351;&#2366; &#2360;&#2306;&#2352;&#2330;&#2344;&#2375;&#2330;&#2368; &#2360;&#2350;&#2360;&#2381;&#2351;&#2366; &#2309;&#2360;&#2370; &#2358;&#2325;&#2340;&#2375;, &#2325;&#2367;&#2306;&#2357;&#2366; &#2325;&#2379;&#2339;&#2368;&#2340;&#2352;&#2368; &#2361;&#2366; &#2360;&#2352;&#2381;&#2357;&#2381;&#2361;&#2352; &#2309;&#2360;&#2354;&#2381;&#2351;&#2366;&#2330;&#2366; &#2310;&#2357; &#2310;&#2339;&#2340; &#2309;&#2360;&#2370; &#2358;&#2325;&#2340;&#2375;.</li>\n<li>&#2310;&#2346;&#2339; &#2351;&#2366;&#2346;&#2370;&#2352;&#2381;&#2357;&#2368; &#2351;&#2366; &#2360;&#2352;&#2381;&#2357;&#2381;&#2361;&#2352; &#2354;&#2366; &#2360;&#2306;&#2346;&#2352;&#2381;&#2325; &#2325;&#2375;&#2354;&#2366; &#2309;&#2360;&#2375;&#2354; &#2340;&#2352; &#2361;&#2368; &#2340;&#2366;&#2340;&#2381;&#2346;&#2369;&#2352;&#2340;&#2368; &#2360;&#2350;&#2360;&#2381;&#2351;&#2366; &#2309;&#2360;&#2370; &#2358;&#2325;&#2340;&#2375; &#2310;&#2339;&#2367; &#2310;&#2346;&#2339; &#2346;&#2369;&#2344;&#2381;&#2361;&#2366; &#2346;&#2381;&#2352;&#2351;&#2340;&#2381;&#2344; &#2325;&#2352;&#2369; &#2358;&#2325;&#2340;&#2366;.</li>\n</ul>]]></string>
   <string name="error_generic_title">अरेरे</string>
   <string name="error_generic_message">काही कारणास्तव आम्ही हे पृष्ठ लोड करू शकत नाही.</string>
+  <string name="contextmenu_open_in_app">ॲप सोबत उघडा</string>
   <string name="contextmenu_link_share">दुवा शेअर करा</string>
   <string name="contextmenu_link_copy">दुवा पत्ता कॉपी करा</string>
   <string name="contextmenu_image_share">प्रतिमा शेअर करा</string>
@@ -224,4 +242,10 @@
   <string name="tip_autocomplete_url">सर्वात जास्त वापरलेल्या साईट च्या URL स्वयंपूर्ण करा\nकोणतीही URL पत्ता पट्टी मध्ये दीर्घकाळ दाबून धरा</string>
   <string name="tip_open_in_new_tab">एका नवीन टॅबमध्ये एक दुवा उघडा\n एका पृष्ठावर कोणताही दुवा दीर्घ-दाबून ठेवा</string>
   <string name="tip_request_desktop">याऐवजी पूर्ण डेस्कटॉप साईट पाहायची का?%1$s मेनू &gt; डेस्कटॉप साईटची विनंती करा</string>
+  <string name="tip_disable_tips2">आरंभ पटलावर सूचना बंद करा</string>
+  <string name="tip_explain_allowlist">विश्वसनीय साईट?\n परवानगीसूची आपल्याला माहिती आणि विश्वास असलेल्या साईट करिता ट्रॅकिंग संरक्षण अक्षम करते.</string>
+  <string name="new_tab_opened_snackbar">नवीन टॅब उघडले</string>
+  <string name="open_new_tab_snackbar">स्विच करा</string>
+  <string name="preference_open_new_tab">नवीन टॅबमध्ये दुवा त्वरित स्विच करा</string>
+  <string name="preference_category_safe_browsing">आपले ब्राउझिंग सुरक्षित असो</string>
 </resources>

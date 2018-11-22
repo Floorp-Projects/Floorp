@@ -18,7 +18,7 @@
   <string name="menu_about">Giới thiệu</string>
   <string name="menu_help">Trợ giúp</string>
   <string name="menu_rights">Quyền lợi của bạn</string>
-  <string name="menu_trackers_blocked_title">Số lượng theo dõi bị chặn</string>
+  <string name="menu_trackers_blocked_title">Trình theo dõi đã chặn</string>
   <string name="menu_trackers_blocked_subtitle">Tắt tính năng này có thể khắc phục một số vấn đề về trang web</string>
   <string name="menu_content_blocking">Chặn nội dung</string>
   <string name="menu_content_blocking_subtitle">Tắt để khắc phục lỗi một số trang web</string>
@@ -137,7 +137,7 @@
   <string name="content_description_back">Điều hướng lùi</string>
   <string name="content_description_stop">Dừng tải trang web</string>
   <string name="content_description_customtab_exit">Quay về ứng dụng trước đó</string>
-  <string name="content_description_trackers_blocked">Số trình theo dõi bị chặn</string>
+  <string name="content_description_trackers_blocked">Số trình theo dõi đã chặn</string>
   <string name="content_description_blocking_switch">Chặn theo dõi</string>
   <string name="your_rights">Quyền lợi của bạn</string>
   <string name="external_app_prompt_title">Mở đường dẫn trong ứng dụng khác</string>
