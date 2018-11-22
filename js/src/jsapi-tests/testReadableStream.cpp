@@ -7,6 +7,7 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/Stream.h"
 #include "jsapi-tests/tests.h"
 
 using namespace JS;
