@@ -154,6 +154,7 @@ enum class GridLineSide
 struct nsGridContainerFrame::TrackSize
 {
   enum StateBits : uint16_t {
+    // clang-format off
     eAutoMinSizing =              0x1,
     eMinContentMinSizing =        0x2,
     eMaxContentMinSizing =        0x4,
@@ -173,6 +174,7 @@ struct nsGridContainerFrame::TrackSize
     eBreakBefore =              0x800,
     eFitContent =              0x1000,
     eInfinitelyGrowable =      0x2000,
+    // clang-format on
   };
 
   StateBits Initialize(nscoord aPercentageBasis,
@@ -534,6 +536,7 @@ struct nsGridContainerFrame::GridItemInfo
    * Item state per axis.
    */
   enum StateBits : uint8_t {
+    // clang-format off
     eIsFlexing =              0x1, // does the item span a flex track?
     eFirstBaseline =          0x2, // participate in 'first baseline' alignment?
     // ditto 'last baseline', mutually exclusive w. eFirstBaseline
@@ -550,6 +553,7 @@ struct nsGridContainerFrame::GridItemInfo
     // Clamp per https://drafts.csswg.org/css-grid/#min-size-auto
     eClampMarginBoxMinSize = 0x40,
     eIsSubgrid =             0x80,
+    // clang-format on
   };
 
   explicit GridItemInfo(nsIFrame* aFrame,

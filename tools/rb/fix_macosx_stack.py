@@ -8,11 +8,12 @@
 # NS_FormatCodeAddress(), which on Mac often lack a file name and a line
 # number.
 
-import subprocess
-import sys
-import re
+import json
 import os
 import pty
+import re
+import subprocess
+import sys
 import termios
 
 
@@ -113,7 +114,7 @@ line_re = re.compile("^(.*#\d+: )(.+)\[(.+) \+(0x[0-9A-Fa-f]+)\](.*)$")
 atos_name_re = re.compile("^(.+) \(in ([^)]+)\) \((.+)\)$")
 
 
-def fixSymbols(line):
+def fixSymbols(line, jsonEscape=False):
     result = line_re.match(line)
     if result is not None:
         (before, fn, file, address, after) = result.groups()
@@ -136,6 +137,9 @@ def fixSymbols(line):
                 if (name.startswith("_Z")):
                     name = cxxfilt(name)
                 info = "%s (%s, in %s)" % (name, fileline, library)
+
+            if jsonEscape:
+                info = json.dumps(info)[1:-1]   # [1:-1] strips the quotes
 
             nl = '\n' if line[-1] == '\n' else ''
             return before + info + after + nl

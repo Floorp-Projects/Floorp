@@ -108,7 +108,7 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, StyleAppearance aAppearance)
   if (aAppearance == StyleAppearance::MenulistTextfield ||
       aAppearance == StyleAppearance::NumberInput ||
       aAppearance == StyleAppearance::Textfield ||
-      aAppearance == StyleAppearance::TextfieldMultiline ||
+      aAppearance == StyleAppearance::Textarea ||
       aAppearance == StyleAppearance::Searchfield ||
       aAppearance == StyleAppearance::Listbox) {
     return flags;
@@ -348,7 +348,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
           aAppearance == StyleAppearance::Button ||
           aAppearance == StyleAppearance::MenulistTextfield ||
           aAppearance == StyleAppearance::Textfield ||
-          aAppearance == StyleAppearance::TextfieldMultiline ||
+          aAppearance == StyleAppearance::Textarea ||
           aAppearance == StyleAppearance::Listbox ||
           aAppearance == StyleAppearance::Menulist ||
           (aAppearance == StyleAppearance::MenulistButton &&
