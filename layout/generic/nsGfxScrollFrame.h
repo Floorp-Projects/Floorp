@@ -508,6 +508,8 @@ public:
 
   bool DragScroll(WidgetEvent* aEvent);
 
+  void AsyncScrollbarDragInitiated(uint64_t aDragBlockId,
+                                   mozilla::layers::ScrollDirection aDirection);
   void AsyncScrollbarDragRejected();
 
   bool IsRootScrollFrameOfDocument() const { return mIsRoot; }
@@ -1115,6 +1117,11 @@ public:
     return mHelper.DragScroll(aEvent);
   }
 
+  virtual void AsyncScrollbarDragInitiated(uint64_t aDragBlockId,
+                                           mozilla::layers::ScrollDirection aDirection) override {
+    return mHelper.AsyncScrollbarDragInitiated(aDragBlockId, aDirection);
+  }
+
   virtual void AsyncScrollbarDragRejected() override {
     return mHelper.AsyncScrollbarDragRejected();
   }
@@ -1577,6 +1584,11 @@ public:
 
   virtual bool DragScroll(mozilla::WidgetEvent* aEvent) override {
     return mHelper.DragScroll(aEvent);
+  }
+
+  virtual void AsyncScrollbarDragInitiated(uint64_t aDragBlockId,
+                                           mozilla::layers::ScrollDirection aDirection) override {
+    return mHelper.AsyncScrollbarDragInitiated(aDragBlockId, aDirection);
   }
 
   virtual void AsyncScrollbarDragRejected() override {

@@ -79,6 +79,15 @@ APZChild::RecvNotifyFlushComplete()
 }
 
 mozilla::ipc::IPCResult
+APZChild::RecvNotifyAsyncScrollbarDragInitiated(const uint64_t& aDragBlockId,
+                                                const ViewID& aScrollId,
+                                                const ScrollDirection& aDirection)
+{
+  mController->NotifyAsyncScrollbarDragInitiated(aDragBlockId, aScrollId, aDirection);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 APZChild::RecvNotifyAsyncScrollbarDragRejected(const ViewID& aScrollId)
 {
   mController->NotifyAsyncScrollbarDragRejected(aScrollId);

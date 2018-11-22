@@ -715,6 +715,9 @@ private:
   void PrintAPZCInfo(const ScrollNode& aLayer,
                      const AsyncPanZoomController* apzc);
 
+  void NotifyScrollbarDragInitiated(uint64_t aDragBlockId,
+                                    const ScrollableLayerGuid& aGuid,
+                                    ScrollDirection aDirection) const;
   void NotifyScrollbarDragRejected(const ScrollableLayerGuid& aGuid) const;
   void NotifyAutoscrollRejected(const ScrollableLayerGuid& aGuid) const;
 

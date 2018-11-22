@@ -40,6 +40,9 @@ public:
 
   mozilla::ipc::IPCResult RecvNotifyFlushComplete() override;
 
+  mozilla::ipc::IPCResult RecvNotifyAsyncScrollbarDragInitiated(const uint64_t& aDragBlockId,
+                                                                const ViewID& aScrollId,
+                                                                const ScrollDirection& aDirection) override;
   mozilla::ipc::IPCResult RecvNotifyAsyncScrollbarDragRejected(const ViewID& aScrollId) override;
 
   mozilla::ipc::IPCResult RecvNotifyAsyncAutoscrollRejected(const ViewID& aScrollId) override;

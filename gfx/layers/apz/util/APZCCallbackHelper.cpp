@@ -942,6 +942,17 @@ APZCCallbackHelper::IsScrollInProgress(nsIScrollableFrame* aFrame)
 }
 
 /* static */ void
+APZCCallbackHelper::NotifyAsyncScrollbarDragInitiated(uint64_t aDragBlockId,
+                                                      const ScrollableLayerGuid::ViewID& aScrollId,
+                                                      ScrollDirection aDirection)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (nsIScrollableFrame* scrollFrame = nsLayoutUtils::FindScrollableFrameFor(aScrollId)) {
+    scrollFrame->AsyncScrollbarDragInitiated(aDragBlockId, aDirection);
+  }
+}
+
+/* static */ void
 APZCCallbackHelper::NotifyAsyncScrollbarDragRejected(const ScrollableLayerGuid::ViewID& aScrollId)
 {
   MOZ_ASSERT(NS_IsMainThread());

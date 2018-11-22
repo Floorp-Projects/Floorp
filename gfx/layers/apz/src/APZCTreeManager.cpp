@@ -851,6 +851,17 @@ APZCTreeManager::StopAutoscroll(const ScrollableLayerGuid& aGuid)
 }
 
 void
+APZCTreeManager::NotifyScrollbarDragInitiated(uint64_t aDragBlockId,
+                                              const ScrollableLayerGuid& aGuid,
+                                              ScrollDirection aDirection) const
+{
+  RefPtr<GeckoContentController> controller =
+    GetContentController(aGuid.mLayersId);
+  MOZ_ASSERT(controller);
+  controller->NotifyAsyncScrollbarDragInitiated(aDragBlockId, aGuid.mScrollId, aDirection);
+}
+
+void
 APZCTreeManager::NotifyScrollbarDragRejected(const ScrollableLayerGuid& aGuid) const
 {
   RefPtr<GeckoContentController> controller =
@@ -1895,6 +1906,8 @@ APZCTreeManager::SetupScrollbarDrag(MouseInput& aMouseInput,
     // to do this before calling ConfirmDragBlock() since that can
     // potentially process and consume the block.
     dragBlock->SetContentResponse(false);
+
+    NotifyScrollbarDragInitiated(dragBlockId, aApzc->GetGuid(), *thumbData.mDirection);
 
     mInputQueue->ConfirmDragBlock(
         dragBlockId, aApzc,

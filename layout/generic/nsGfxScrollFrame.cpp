@@ -6685,21 +6685,52 @@ ScrollFrameHelper::DragScroll(WidgetEvent* aEvent)
   return willScroll;
 }
 
-static void
-AsyncScrollbarDragRejected(nsIFrame* aScrollbar)
+static nsSliderFrame*
+GetSliderFrame(nsIFrame* aScrollbarFrame)
 {
-  if (!aScrollbar) {
-    return;
+  if (!aScrollbarFrame) {
+    return nullptr;
   }
 
-  for (nsIFrame::ChildListIterator childLists(aScrollbar);
+  for (nsIFrame::ChildListIterator childLists(aScrollbarFrame);
        !childLists.IsDone();
        childLists.Next()) {
     for (nsIFrame* frame : childLists.CurrentList()) {
       if (nsSliderFrame* sliderFrame = do_QueryFrame(frame)) {
-        sliderFrame->AsyncScrollbarDragRejected();
+        return sliderFrame;
       }
     }
+  }
+  return nullptr;
+}
+
+static void
+AsyncScrollbarDragInitiated(uint64_t aDragBlockId, nsIFrame* aScrollbar)
+{
+  if (nsSliderFrame* sliderFrame = GetSliderFrame(aScrollbar)) {
+    sliderFrame->AsyncScrollbarDragInitiated(aDragBlockId);
+  }
+}
+
+void
+ScrollFrameHelper::AsyncScrollbarDragInitiated(uint64_t aDragBlockId,
+                                               ScrollDirection aDirection)
+{
+  switch (aDirection) {
+    case ScrollDirection::eVertical:
+      ::AsyncScrollbarDragInitiated(aDragBlockId, mVScrollbarBox);
+      break;
+    case ScrollDirection::eHorizontal:
+      ::AsyncScrollbarDragInitiated(aDragBlockId, mHScrollbarBox);
+      break;
+  }
+}
+
+static void
+AsyncScrollbarDragRejected(nsIFrame* aScrollbar)
+{
+  if (nsSliderFrame* sliderFrame = GetSliderFrame(aScrollbar)) {
+    sliderFrame->AsyncScrollbarDragRejected();
   }
 }
 

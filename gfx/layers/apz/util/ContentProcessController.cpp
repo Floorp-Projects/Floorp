@@ -87,6 +87,14 @@ ContentProcessController::NotifyFlushComplete()
 }
 
 void
+ContentProcessController::NotifyAsyncScrollbarDragInitiated(uint64_t aDragBlockId,
+                                                            const ScrollableLayerGuid::ViewID& aScrollId,
+                                                            ScrollDirection aDirection)
+{
+  APZCCallbackHelper::NotifyAsyncScrollbarDragInitiated(aDragBlockId, aScrollId, aDirection);
+}
+
+void
 ContentProcessController::NotifyAsyncScrollbarDragRejected(const ScrollableLayerGuid::ViewID& aScrollId)
 {
   APZCCallbackHelper::NotifyAsyncScrollbarDragRejected(aScrollId);
