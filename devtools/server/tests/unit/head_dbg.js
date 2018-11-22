@@ -845,15 +845,24 @@ async function setupTestFromUrl(url) {
  *          A reference to a ThreadClient instance that is attached to the debuggee.
  *        - DebuggerClient client
  *          A reference to the DebuggerClient used to communicated with the RDP server.
+ * @param Object options
+ *        Optional arguments to tweak test environment
+ *        - JSPrincipal principal
+ *          Principal to use for the debuggee.
  */
-function threadClientTest(test) {
+function threadClientTest(test, options = {}) {
+  let { principal } = options;
+  if (!principal) {
+    principal = systemPrincipal;
+  }
+
   async function runThreadClientTestWithServer(server, test) {
     // Setup a server and connect a client to it.
     initTestDebuggerServer(server);
 
     // Create a custom debuggee and register it to the server.
     // We are using a custom Sandbox as debuggee.
-    const debuggee = Cu.Sandbox(systemPrincipal);
+    const debuggee = Cu.Sandbox(principal);
     const scriptName = "debuggee.js";
     debuggee.__name = scriptName;
     server.addTestGlobal(debuggee);
