@@ -11,6 +11,7 @@
   }
   :root[tabsintitlebar] #titlebar {
     --lwt-toolbarbutton-icon-fill: currentColor;
+    --toolbarbutton-icon-fill-opacity: .7;
   }
 }
 
