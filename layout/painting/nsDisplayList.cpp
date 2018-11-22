@@ -731,6 +731,42 @@ AddAnimationsForProperty(nsIFrame* aFrame,
   }
 }
 
+static uint64_t
+AddAnimationsForWebRender(
+  nsDisplayItem* aItem,
+  nsCSSPropertyID aProperty,
+  mozilla::layers::WebRenderLayerManager* aManager,
+  nsDisplayListBuilder* aDisplayListBuilder)
+{
+  RefPtr<WebRenderAnimationData> animationData =
+    aManager->CommandBuilder()
+      .CreateOrRecycleWebRenderUserData<WebRenderAnimationData>(aItem);
+  AnimationInfo& animationInfo = animationData->GetAnimationInfo();
+  AddAnimationsForProperty(aItem->Frame(),
+                           aDisplayListBuilder,
+                           aItem,
+                           aProperty,
+                           animationInfo,
+                           Send::Immediate,
+                           layers::LayersBackend::LAYERS_WR);
+  animationInfo.StartPendingAnimations(aManager->GetAnimationReadyTime());
+
+  // Note that animationsId can be 0 (uninitialized in AnimationInfo) if there
+  // are no active animations.
+  uint64_t animationsId = animationInfo.GetCompositorAnimationsId();
+  if (!animationInfo.GetAnimations().IsEmpty()) {
+    OpAddCompositorAnimations anim(
+      CompositorAnimations(animationInfo.GetAnimations(), animationsId));
+    aManager->WrBridge()->AddWebRenderParentCommand(anim);
+    aManager->AddActiveCompositorAnimationId(animationsId);
+  } else if (animationsId) {
+    aManager->AddCompositorAnimationsIdForDiscard(animationsId);
+    animationsId = 0;
+  }
+
+  return animationsId;
+}
+
 static bool
 GenerateAndPushTextMask(nsIFrame* aFrame,
                         gfxContext* aContext,
@@ -6744,36 +6780,14 @@ nsDisplayOpacity::CreateWebRenderCommands(
 {
   float* opacityForSC = &mOpacity;
 
-  RefPtr<WebRenderAnimationData> animationData =
-    aManager->CommandBuilder()
-      .CreateOrRecycleWebRenderUserData<WebRenderAnimationData>(this);
-  AnimationInfo& animationInfo = animationData->GetAnimationInfo();
-  AddAnimationsForProperty(Frame(),
-                           aDisplayListBuilder,
-                           this,
-                           eCSSProperty_opacity,
-                           animationInfo,
-                           Send::Immediate,
-                           layers::LayersBackend::LAYERS_WR);
-  animationInfo.StartPendingAnimations(aManager->GetAnimationReadyTime());
-
-  // Note that animationsId can be 0 (uninitialized in AnimationInfo) if there
-  // are no active animations.
-  uint64_t animationsId = animationInfo.GetCompositorAnimationsId();
-  wr::WrAnimationProperty prop;
-
-  if (!animationInfo.GetAnimations().IsEmpty()) {
-    prop.id = animationsId;
-    prop.effect_type = wr::WrAnimationType::Opacity;
-
-    OpAddCompositorAnimations anim(
-      CompositorAnimations(animationInfo.GetAnimations(), animationsId));
-    aManager->WrBridge()->AddWebRenderParentCommand(anim);
-    aManager->AddActiveCompositorAnimationId(animationsId);
-  } else if (animationsId) {
-    aManager->AddCompositorAnimationsIdForDiscard(animationsId);
-    animationsId = 0;
-  }
+  uint64_t animationsId = AddAnimationsForWebRender(this,
+                                                    eCSSProperty_opacity,
+                                                    aManager,
+                                                    aDisplayListBuilder);
+  wr::WrAnimationProperty prop {
+    wr::WrAnimationType::Opacity,
+    animationsId,
+  };
 
   nsTArray<mozilla::wr::WrFilterOp> filters;
   StackingContextHelper sc(aSc,
@@ -8829,36 +8843,14 @@ nsDisplayTransform::CreateWebRenderCommands(
     transformForSC = nullptr;
   }
 
-  RefPtr<WebRenderAnimationData> animationData =
-    aManager->CommandBuilder()
-      .CreateOrRecycleWebRenderUserData<WebRenderAnimationData>(this);
-
-  AnimationInfo& animationInfo = animationData->GetAnimationInfo();
-  AddAnimationsForProperty(Frame(),
-                           aDisplayListBuilder,
-                           this,
-                           eCSSProperty_transform,
-                           animationInfo,
-                           Send::Immediate,
-                           layers::LayersBackend::LAYERS_WR);
-  animationInfo.StartPendingAnimations(aManager->GetAnimationReadyTime());
-
-  // Note that animationsId can be 0 (uninitialized in AnimationInfo) if there
-  // are no active animations.
-  uint64_t animationsId = animationInfo.GetCompositorAnimationsId();
-  wr::WrAnimationProperty prop;
-  if (!animationInfo.GetAnimations().IsEmpty()) {
-    prop.id = animationsId;
-    prop.effect_type = wr::WrAnimationType::Transform;
-
-    OpAddCompositorAnimations anim(
-      CompositorAnimations(animationInfo.GetAnimations(), animationsId));
-    aManager->WrBridge()->AddWebRenderParentCommand(anim);
-    aManager->AddActiveCompositorAnimationId(animationsId);
-  } else if (animationsId) {
-    aManager->AddCompositorAnimationsIdForDiscard(animationsId);
-    animationsId = 0;
-  }
+  uint64_t animationsId = AddAnimationsForWebRender(this,
+                                                    eCSSProperty_transform,
+                                                    aManager,
+                                                    aDisplayListBuilder);
+  wr::WrAnimationProperty prop {
+    wr::WrAnimationType::Transform,
+    animationsId,
+  };
 
   nsTArray<mozilla::wr::WrFilterOp> filters;
   Maybe<nsDisplayTransform*> deferredTransformItem;
