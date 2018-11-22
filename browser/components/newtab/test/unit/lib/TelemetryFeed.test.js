@@ -26,6 +26,7 @@ describe("TelemetryFeed", () => {
   let clock;
   let fakeHomePageUrl;
   let fakeHomePage;
+  let fakeExtensionSettingsStore;
   class PingCentre {sendPing() {} uninit() {}}
   class UTEventReporting {sendUserEvent() {} sendSessionEndEvent() {} uninit() {}}
   class PerfService {
@@ -56,6 +57,12 @@ describe("TelemetryFeed", () => {
         return fakeHomePageUrl;
       },
     };
+    fakeExtensionSettingsStore = {
+      initialize() {
+        return Promise.resolve();
+      },
+      getSetting() {},
+    };
     sandbox.spy(global.Cu, "reportError");
     globals.set("gUUIDGenerator", {generateUUID: () => FAKE_UUID});
     globals.set("aboutNewTabService", {
@@ -63,6 +70,7 @@ describe("TelemetryFeed", () => {
       newTabURL: "",
     });
     globals.set("HomePage", fakeHomePage);
+    globals.set("ExtensionSettingsStore", fakeExtensionSettingsStore);
     globals.set("PingCentre", PingCentre);
     globals.set("UTEventReporting", UTEventReporting);
     sandbox.stub(ASRouterPreferences, "providers").get(() => FAKE_ROUTER_MESSAGE_PROVIDER);
@@ -975,11 +983,7 @@ describe("TelemetryFeed", () => {
       globals.set("Services", Object.assign({}, Services, {prefs: {getBoolPref: key => fakePrefs[key]}}));
       // Services.prefs = {getBoolPref: key => fakePrefs[key]};
     });
-    it("should send correct event data for about:{home,newtab} set to custom URL", async () => {
-      globals.set("aboutNewTabService", {
-        overridden: true,
-        newTabURL: "https://searchprovider.com",
-      });
+    it("should send correct event data for about:home set to custom URL", async () => {
       fakeHomePageUrl = "https://searchprovider.com";
       instance._prefs.set(TELEMETRY_PREF, true);
       instance._classifySite = () => Promise.resolve("other");
@@ -990,6 +994,22 @@ describe("TelemetryFeed", () => {
       assert.equal(sendEvent.firstCall.args[0].event, "PAGE_TAKEOVER_DATA");
       assert.deepEqual(sendEvent.firstCall.args[0].value, {
         home_url_category: "other",
+      });
+      assert.validate(sendEvent.firstCall.args[0], UserEventPing);
+    });
+    it("should send correct event data for about:newtab set to custom URL", async () => {
+      globals.set("aboutNewTabService", {
+        overridden: true,
+        newTabURL: "https://searchprovider.com",
+      });
+      instance._prefs.set(TELEMETRY_PREF, true);
+      instance._classifySite = () => Promise.resolve("other");
+      const sendEvent = sandbox.stub(instance, "sendEvent");
+
+      await instance.sendPageTakeoverData();
+      assert.calledOnce(sendEvent);
+      assert.equal(sendEvent.firstCall.args[0].event, "PAGE_TAKEOVER_DATA");
+      assert.deepEqual(sendEvent.firstCall.args[0].value, {
         newtab_url_category: "other",
       });
       assert.validate(sendEvent.firstCall.args[0], UserEventPing);
@@ -1000,6 +1020,22 @@ describe("TelemetryFeed", () => {
 
       await instance.sendPageTakeoverData();
       assert.notCalled(sendEvent);
+    });
+    it("should send home_extension_id and newtab_extension_id when appropriate", async () => {
+      const ID = "{abc-foo-bar}";
+      fakeExtensionSettingsStore.getSetting = () => ({id: ID});
+      instance._prefs.set(TELEMETRY_PREF, true);
+      instance._classifySite = () => Promise.resolve("other");
+      const sendEvent = sandbox.stub(instance, "sendEvent");
+
+      await instance.sendPageTakeoverData();
+      assert.calledOnce(sendEvent);
+      assert.equal(sendEvent.firstCall.args[0].event, "PAGE_TAKEOVER_DATA");
+      assert.deepEqual(sendEvent.firstCall.args[0].value, {
+        home_extension_id: ID,
+        newtab_extension_id: ID,
+      });
+      assert.validate(sendEvent.firstCall.args[0], UserEventPing);
     });
   });
 });
