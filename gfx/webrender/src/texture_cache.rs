@@ -710,6 +710,7 @@ impl TextureCache {
 
         // Install the new eviction notice for this update, if applicable.
         entry.eviction_notice = eviction_notice.cloned();
+        entry.uv_rect_kind = uv_rect_kind;
 
         // Invalidate the contents of the resource rect in the GPU cache.
         // This ensures that the update_gpu_cache below will add
