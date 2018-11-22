@@ -1272,4 +1272,34 @@ TEST_P(TlsConnectGenericResumption, ConnectResumeClientAuth) {
   SendReceive();
 }
 
+TEST_F(TlsConnectStreamTls13, ExternalTokenAfterHrr) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  Connect();
+  SendReceive();
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  ExpectResumption(RESUME_TICKET);
+
+  static const std::vector<SSLNamedGroup> groups = {ssl_grp_ec_secp384r1,
+                                                    ssl_grp_ec_secp521r1};
+  server_->ConfigNamedGroups(groups);
+
+  StartConnect();
+  ASSERT_TRUE(client_->MaybeSetResumptionToken());
+
+  client_->Handshake();  // Send ClientHello.
+  server_->Handshake();  // Process ClientHello, send HelloRetryRequest.
+
+  auto& token = client_->GetResumptionToken();
+  SECStatus rv =
+      SSL_SetResumptionToken(client_->ssl_fd(), token.data(), token.size());
+  ASSERT_EQ(SECFailure, rv);
+  ASSERT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
+
+  Handshake();
+  CheckConnected();
+  SendReceive();
+}
+
 }  // namespace nss_test

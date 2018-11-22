@@ -718,6 +718,86 @@ TEST_F(TlsConnectStreamTls13, RetryStatelessDamageSecondClientHello) {
   client_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
 }
 
+// Stream because SSL_SendSessionTicket only supports that.
+TEST_F(TlsConnectStreamTls13, SecondClientHelloSendSameTicket) {
+  // This simulates the scenario described at:
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1481271#c7
+  //
+  // Here two connections are interleaved.  Tickets are issued on one
+  // connection.  A HelloRetryRequest is triggered on the second connection,
+  // meaning that there are two ClientHellos.  We need to check that both
+  // ClientHellos have the same ticket, even if a new ticket is issued on the
+  // other connection in the meantime.
+  //
+  // Connection 1: <handshake>
+  // Connection 1: S->C: NST=X
+  // Connection 2: C->S: CH [PSK_ID=X]
+  // Connection 1: S->C: NST=Y
+  // Connection 2: S->C: HRR
+  // Connection 2: C->S: CH [PSK_ID=Y]
+
+  // Connection 1, send a ticket after handshake is complete.
+  ConfigureSessionCache(RESUME_TICKET, RESUME_TICKET);
+
+  Connect();
+
+  // Set this token so that RetryHelloWithToken() will check that this
+  // is the token that it receives in the HelloRetryRequest callback.
+  EXPECT_EQ(SECSuccess,
+            SSL_SendSessionTicket(server_->ssl_fd(), kApplicationToken,
+                                  sizeof(kApplicationToken)));
+  SendReceive(50);
+
+  // Connection 2, trigger HRR.
+  auto client2 =
+      std::make_shared<TlsAgent>(client_->name(), TlsAgent::CLIENT, variant_);
+  auto server2 =
+      std::make_shared<TlsAgent>(server_->name(), TlsAgent::SERVER, variant_);
+
+  client2->SetPeer(server2);
+  server2->SetPeer(client2);
+
+  client_.swap(client2);
+  server_.swap(server2);
+
+  ConfigureSessionCache(RESUME_TICKET, RESUME_TICKET);
+
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+
+  client_->StartConnect();
+  server_->StartConnect();
+
+  size_t cb_called = 0;
+  EXPECT_EQ(SECSuccess,
+            SSL_HelloRetryRequestCallback(server_->ssl_fd(),
+                                          RetryHelloWithToken, &cb_called));
+  client_->Handshake();  // Send ClientHello.
+  server_->Handshake();  // Process ClientHello, send HelloRetryRequest.
+
+  EXPECT_EQ(1U, cb_called) << "callback should be called once here";
+
+  // Connection 1, send another ticket.
+  client_.swap(client2);
+  server_.swap(server2);
+
+  // If the client uses this token, RetryHelloWithToken() will fail the test.
+  const uint8_t kAnotherApplicationToken[] = {0x92, 0x44, 0x01};
+  EXPECT_EQ(SECSuccess,
+            SSL_SendSessionTicket(server_->ssl_fd(), kAnotherApplicationToken,
+                                  sizeof(kAnotherApplicationToken)));
+  SendReceive(60);
+
+  // Connection 2, continue the handshake.
+  // The client should use kApplicationToken, not kAnotherApplicationToken.
+  client_.swap(client2);
+  server_.swap(server2);
+
+  client_->Handshake();
+  server_->Handshake();
+
+  EXPECT_EQ(2U, cb_called) << "callback should be called twice here";
+}
+
 // Read the cipher suite from the HRR and disable it on the identified agent.
 static void DisableSuiteFromHrr(
     std::shared_ptr<TlsAgent>& agent,

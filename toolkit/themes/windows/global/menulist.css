@@ -21,9 +21,6 @@ menulist {
 .menulist-label-box {
   -moz-box-align: center;
   -moz-box-pack: center;
-  border: 1px solid transparent;
-  background-color: transparent;
-  color: inherit;
 }
 
 .menulist-label {
@@ -38,7 +35,7 @@ menulist:focus:not([open="true"]) > .menulist-label-box {
 }
 
 menulist:-moz-focusring:not([open="true"]) > .menulist-label-box {
-  border: 1px dotted ThreeDDarkShadow;
+  outline: 1px dotted;
 }
 
 /* ..... disabled state ..... */

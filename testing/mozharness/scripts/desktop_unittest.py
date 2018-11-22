@@ -399,7 +399,11 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
             # Ignore chunking if we have user specified test paths
             if not (self.verify_enabled or self.per_test_coverage):
                 if os.environ.get('MOZHARNESS_TEST_PATHS'):
-                    base_cmd.extend(os.environ['MOZHARNESS_TEST_PATHS'].split(':'))
+                    test_paths = os.environ['MOZHARNESS_TEST_PATHS'].split(':')
+                    if suite_category == 'reftest':
+                        test_paths = [os.path.join(dirs['abs_reftest_dir'], 'tests', p)
+                                      for p in test_paths]
+                    base_cmd.extend(test_paths)
                 elif c.get('total_chunks') and c.get('this_chunk'):
                     base_cmd.extend(['--total-chunks', c['total_chunks'],
                                      '--this-chunk', c['this_chunk']])
@@ -795,7 +799,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                 }
                 if isinstance(suites[suite], dict):
                     options_list = suites[suite].get('options', [])
-                    if self.verify_enabled or self.per_test_coverage:
+                    if (self.verify_enabled or self.per_test_coverage or
+                        os.environ.get('MOZHARNESS_TEST_PATHS')):
+                        # Ignore tests list in modes where we are running specific tests.
                         tests_list = []
                     else:
                         tests_list = suites[suite].get('tests', [])

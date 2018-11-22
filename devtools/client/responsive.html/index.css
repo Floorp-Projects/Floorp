@@ -152,25 +152,7 @@ body,
 }
 
 #device-selector {
-  align-self: center;
-  background-position: right 4px center;
   margin-inline-start: 4px;
-  padding-left: 0;
-  width: 8em;
-}
-
-#device-selector .title {
-  width: 85%;
-}
-
-#device-pixel-ratio-menu {
-  width: 6em;
-  /* `max-width` is here to keep the UI compact if the device pixel ratio changes to a
-     repeating decimal value.  This can happen if you zoom the UI (Cmd + Plus / Minus on
-     macOS for example). */
-  max-width: 8em;
-  background-position: right 4px center;
-  padding-left: 0;
 }
 
 #viewports-container {
