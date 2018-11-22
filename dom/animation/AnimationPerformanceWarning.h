@@ -19,6 +19,7 @@ namespace mozilla {
 struct AnimationPerformanceWarning
 {
   enum class Type : uint8_t {
+    None,
     ContentTooLarge,
     ContentTooLargeArea,
     TransformBackfaceVisibilityHidden,
@@ -32,12 +33,16 @@ struct AnimationPerformanceWarning
   };
 
   explicit AnimationPerformanceWarning(Type aType)
-    : mType(aType) { }
+    : mType(aType)
+  {
+    MOZ_ASSERT(mType != Type::None);
+  }
 
   AnimationPerformanceWarning(Type aType,
                               std::initializer_list<int32_t> aParams)
     : mType(aType)
   {
+    MOZ_ASSERT(mType != Type::None);
     // FIXME:  Once std::initializer_list::size() become a constexpr function,
     // we should use static_assert here.
     MOZ_ASSERT(aParams.size() <= kMaxParamsForLocalization,
