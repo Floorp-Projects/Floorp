@@ -488,12 +488,12 @@ const Class cls::protoClass_ = { \
 
 /*** 3.2. Class ReadableStream **********************************************/
 
-static MOZ_MUST_USE ReadableStreamDefaultController*
+static MOZ_MUST_USE bool
 SetUpReadableStreamDefaultController(JSContext* cx,
                                      Handle<ReadableStream*> stream,
                                      HandleValue underlyingSource,
-                                     HandleValue size,
-                                     double highWaterMarkVal);
+                                     double highWaterMarkVal,
+                                     HandleValue size);
 
 /**
  * Streams spec, 3.2.3., steps 1-4, 8.
@@ -517,13 +517,9 @@ ReadableStream::createDefaultStream(JSContext* cx, HandleValue underlyingSource,
     //           ? Construct(ReadableStreamDefaultController,
     //                       « this, underlyingSource, size,
     //                         highWaterMark »).
-    ReadableStreamDefaultController* controller =
-        SetUpReadableStreamDefaultController(cx, stream, underlyingSource, size,
-                                             highWaterMark);
-    if (!controller) {
+    if (!SetUpReadableStreamDefaultController(cx, stream, underlyingSource, highWaterMark, size)) {
         return nullptr;
     }
-    stream->setController(controller);
     return stream;
 }
 
@@ -3076,81 +3072,98 @@ ReadableStreamControllerGetDesiredSizeUnchecked(ReadableStreamController* contro
  *          startAlgorithm, pullAlgorithm, cancelAlgorithm, highWaterMark,
  *          sizeAlgorithm )
  *
+ * The standard algorithm takes a `controller` argument which must be a new,
+ * blank object. This implementation creates a new controller instead.
+ *
+ * The standard algorithm takes startAlgorithm, pullAlgorithm, and
+ * cancelAlgorithm as separate arguments. We will do the same, but for now all
+ * of them are passed as a single underlyingSource argument--with a few
+ * user-visible differences in behavior (bug 1507943).
+ *
  * Note: All arguments must be same-compartment with cx. ReadableStream
  * controllers are always created in the same compartment as the stream.
  */
-static MOZ_MUST_USE ReadableStreamDefaultController*
+static MOZ_MUST_USE bool
 SetUpReadableStreamDefaultController(JSContext* cx,
                                      Handle<ReadableStream*> stream,
                                      HandleValue underlyingSource,
-                                     HandleValue size,
-                                     double highWaterMark)
+                                     double highWaterMark,
+                                     HandleValue size)
 {
     cx->check(stream, underlyingSource, size);
     MOZ_ASSERT(highWaterMark >= 0);
     MOZ_ASSERT(size.isUndefined() || IsCallable(size));
 
+    // Done elsewhere in the standard: Create the new controller.
     Rooted<ReadableStreamDefaultController*> controller(cx,
         NewBuiltinClassInstance<ReadableStreamDefaultController>(cx));
     if (!controller) {
-        return nullptr;
+        return false;
     }
 
-    // Step 3: Set this.[[controlledReadableStream]] to stream.
+    // Step 1: Assert: stream.[[readableStreamController]] is undefined.
+    MOZ_ASSERT(!stream->hasController());
+
+    // Step 2: Set controller.[[controlledReadableStream]] to stream.
     controller->setStream(stream);
 
-    // Step 4: Set this.[[underlyingSource]] to underlyingSource.
-    controller->setUnderlyingSource(underlyingSource);
-
-    // Step 5: Perform ! ResetQueue(this).
+    // Step 3: Set controller.[[queue]] and controller.[[queueTotalSize]] to
+    //         undefined (implicit), then perform ! ResetQueue(controller).
     if (!ResetQueue(cx, controller)) {
-        return nullptr;
+        return false;
     }
 
-    // Step 6: Set this.[[started]], this.[[closeRequested]], this.[[pullAgain]],
-    //         and this.[[pulling]] to false.
+    // Step 4: Set controller.[[started]], controller.[[closeRequested]],
+    //         controller.[[pullAgain]], and controller.[[pulling]] to false.
     controller->setFlags(0);
 
-    // Step 7: Let normalizedStrategy be
-    //         ? ValidateAndNormalizeQueuingStrategy(size, highWaterMark)
-    //         (implicit).
-
-    // Step 8: Set this.[[strategySize]] to normalizedStrategy.[[size]] and
-    //         this.[[strategyHWM]] to normalizedStrategy.[[highWaterMark]].
+    // Step 5: Set controller.[[strategySizeAlgorithm]] to sizeAlgorithm
+    //         and controller.[[strategyHWM]] to highWaterMark.
     controller->setStrategySize(size);
     controller->setStrategyHWM(highWaterMark);
 
-    // Step 9: Let controller be this (implicit).
+    // Step 6: Set controller.[[pullAlgorithm]] to pullAlgorithm.
+    // Step 7: Set controller.[[cancelAlgorithm]] to cancelAlgorithm.
+    //
+    // For the moment, these algorithms are represented using the
+    // underlyingSource (bug 1507943). For example, when the underlying source
+    // is a TeeState, we use the ReadableStreamTee algorithms for pulling and
+    // canceling.
+    controller->setUnderlyingSource(underlyingSource);
 
-    // Step 10: Let startResult be
-    //          ? InvokeOrNoop(underlyingSource, "start", « this »).
+    // Step 8: Set stream.[[readableStreamController]] to controller.
+    stream->setController(controller);
+
+    // Step 9: Let startResult be the result of performing startAlgorithm.
     RootedValue startResult(cx);
     RootedValue controllerVal(cx, ObjectValue(*controller));
     if (!InvokeOrNoop(cx, underlyingSource, cx->names().start, controllerVal, &startResult)) {
-        return nullptr;
+        return false;
     }
 
-    // Step 11: Let startPromise be a promise resolved with startResult:
+    // Step 10: Let startPromise be a promise resolved with startResult.
     RootedObject startPromise(cx, PromiseObject::unforgeableResolve(cx, startResult));
     if (!startPromise) {
-        return nullptr;
+        return false;
     }
 
+    // Step 11: Upon fulfillment of startPromise, [...]
+    // Step 12: Upon rejection of startPromise with reason r, [...]
     RootedObject onStartFulfilled(cx, NewHandler(cx, ControllerStartHandler, controller));
     if (!onStartFulfilled) {
-        return nullptr;
+        return false;
     }
 
     RootedObject onStartRejected(cx, NewHandler(cx, ControllerStartFailedHandler, controller));
     if (!onStartRejected) {
-        return nullptr;
+        return false;
     }
 
     if (!JS::AddPromiseReactions(cx, startPromise, onStartFulfilled, onStartRejected)) {
-        return nullptr;
+        return false;
     }
 
-    return controller;
+    return true;
 }
 
 
