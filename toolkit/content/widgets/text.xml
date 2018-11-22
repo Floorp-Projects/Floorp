@@ -24,6 +24,21 @@
         <parameter name="firstTime"/>
         <body>
           <![CDATA[
+            var control = this.labeledControlElement;
+            if (!control) {
+              var bindingParent = document.getBindingParent(this);
+              if ("accessKey" in bindingParent) {
+                control = bindingParent; // For controls that make the <label> an anon child
+              }
+            }
+            if (control) {
+              control.labelElement = this;
+              var controlAccessKey = control.getAttribute("accesskey");
+              if (controlAccessKey) {
+                this.setAttribute("accesskey", controlAccessKey);
+              }
+            }
+
             var accessKey = this.accessKey;
             // No need to remove existing formatting the first time.
             if (firstTime && !accessKey)
@@ -73,7 +88,7 @@
             }
 
             var labelText = this.textContent;
-            if (!accessKey || !labelText) {
+            if (!accessKey || !labelText || !control) {
               return;
             }
             var accessKeyIndex = -1;
@@ -180,12 +195,16 @@
       <property name="accessKey">
         <getter>
           <![CDATA[
-            return this.getAttribute("accesskey");
+            var accessKey = this.getAttribute("accesskey");
+            return accessKey ? accessKey[0] : null;
           ]]>
         </getter>
         <setter>
           <![CDATA[
-            this.setAttribute("accesskey", val);
+            // If this label already has an accesskey attribute store it here as well
+            if (this.hasAttribute("accesskey")) {
+              this.setAttribute("accesskey", val);
+            }
             var control = this.labeledControlElement;
             if (control) {
               control.setAttribute("accesskey", val);
@@ -202,7 +221,12 @@
       <property name="control" onget="return this.getAttribute('control');">
         <setter>
           <![CDATA[
+            var control = this.labeledControlElement;
+            if (control) {
+              control.labelElement = null; // No longer pointed to be this label
+            }
             this.setAttribute("control", val);
+            this.formatAccessKey(false);
             return val;
           ]]>
         </setter>
