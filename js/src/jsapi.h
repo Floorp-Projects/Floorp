@@ -34,7 +34,6 @@
 #include "js/GCVector.h"
 #include "js/HashTable.h"
 #include "js/Id.h"
-#include "js/MemoryFunctions.h"
 #include "js/OffThreadScriptCompilation.h"
 #include "js/Principals.h"
 #include "js/Realm.h"
@@ -48,6 +47,8 @@
 #include "js/Vector.h"
 
 /************************************************************************/
+
+struct JSFreeOp;
 
 namespace JS {
 
@@ -162,22 +163,6 @@ class HandleValueArray
 };
 
 }  /* namespace JS */
-
-/************************************************************************/
-
-struct JSFreeOp {
-  protected:
-    JSRuntime*  runtime_;
-
-    explicit JSFreeOp(JSRuntime* rt)
-      : runtime_(rt) { }
-
-  public:
-    JSRuntime* runtime() const {
-        MOZ_ASSERT(runtime_);
-        return runtime_;
-    }
-};
 
 /* Callbacks and their arguments. */
 
