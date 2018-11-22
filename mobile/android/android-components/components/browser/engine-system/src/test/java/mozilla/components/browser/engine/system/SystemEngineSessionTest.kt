@@ -261,6 +261,7 @@ class SystemEngineSessionTest {
         `when`(webViewSettings.allowContentAccess).thenReturn(true)
         `when`(webViewSettings.allowFileAccess).thenReturn(true)
         `when`(webViewSettings.mediaPlaybackRequiresUserGesture).thenReturn(true)
+        `when`(webViewSettings.supportMultipleWindows()).thenReturn(false)
 
         val webView = mock(WebView::class.java)
         `when`(webView.context).thenReturn(RuntimeEnvironment.application)
@@ -328,6 +329,10 @@ class SystemEngineSessionTest {
         engineSession.settings.horizontalScrollBarEnabled = false
         verify(webView).isHorizontalScrollBarEnabled = false
 
+        assertFalse(engineSession.settings.supportMultipleWindows)
+        engineSession.settings.supportMultipleWindows = true
+        verify(webViewSettings).setSupportMultipleWindows(true)
+
         assertTrue(engineSession.webFontsEnabled)
         assertTrue(engineSession.settings.webFontsEnabled)
         engineSession.settings.webFontsEnabled = false
@@ -360,7 +365,8 @@ class SystemEngineSessionTest {
                 mediaPlaybackRequiresUserGesture = false,
                 javaScriptCanOpenWindowsAutomatically = true,
                 displayZoomControls = false,
-                loadWithOverviewMode = true)
+                loadWithOverviewMode = true,
+                supportMultipleWindows = true)
         val engineSession = spy(SystemEngineSession(defaultSettings))
         val webView = mock(WebView::class.java)
         `when`(webView.context).thenReturn(RuntimeEnvironment.application)
@@ -377,6 +383,7 @@ class SystemEngineSessionTest {
         verify(webViewSettings).javaScriptCanOpenWindowsAutomatically = true
         verify(webViewSettings).displayZoomControls = false
         verify(webViewSettings).loadWithOverviewMode = true
+        verify(webViewSettings).setSupportMultipleWindows(true)
         verify(engineSession).enableTrackingProtection(EngineSession.TrackingProtectionPolicy.all())
         assertFalse(engineSession.webFontsEnabled)
     }

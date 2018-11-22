@@ -108,6 +108,11 @@ abstract class Settings {
      * Setting to control whether or not remote debugging is enabled.
      */
     open var remoteDebuggingEnabled: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether or not multiple windows are supported.
+     */
+    open var supportMultipleWindows: Boolean by UnsupportedSetting()
 }
 
 /**
@@ -131,7 +136,8 @@ data class DefaultSettings(
     override var allowContentAccess: Boolean = true,
     override var verticalScrollBarEnabled: Boolean = true,
     override var horizontalScrollBarEnabled: Boolean = true,
-    override var remoteDebuggingEnabled: Boolean = false
+    override var remoteDebuggingEnabled: Boolean = false,
+    override var supportMultipleWindows: Boolean = false
 ) : Settings()
 
 class UnsupportedSetting<T> {

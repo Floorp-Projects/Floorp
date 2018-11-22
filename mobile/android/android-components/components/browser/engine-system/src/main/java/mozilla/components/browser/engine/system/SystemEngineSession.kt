@@ -243,6 +243,7 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
             override var userAgentString by WebSetting(s::getUserAgentString, s::setUserAgentString)
             override var displayZoomControls by WebSetting(s::getDisplayZoomControls, s::setDisplayZoomControls)
             override var loadWithOverviewMode by WebSetting(s::getLoadWithOverviewMode, s::setLoadWithOverviewMode)
+            override var supportMultipleWindows by WebSetting(s::supportMultipleWindows, s::setSupportMultipleWindows)
             override var allowFileAccessFromFileURLs by WebSetting(
                     s::getAllowFileAccessFromFileURLs, s::setAllowFileAccessFromFileURLs)
             override var allowUniversalAccessFromFileURLs by WebSetting(
@@ -292,6 +293,7 @@ class SystemEngineSession(private val defaultSettings: Settings? = null) : Engin
                 verticalScrollBarEnabled = it.verticalScrollBarEnabled
                 horizontalScrollBarEnabled = it.horizontalScrollBarEnabled
                 userAgentString = it.userAgentString
+                supportMultipleWindows = it.supportMultipleWindows
             }
         }
 
