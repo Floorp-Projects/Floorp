@@ -101,12 +101,11 @@ export class SubmitFormSnippet extends React.PureComponent {
     return (<label className="privacyNotice" htmlFor="id_privacy">
         <p>
           <input type="checkbox" id="id_privacy" name="privacy" required="required" />
-          <span><RichText text={content.scene2_privacy_html}
+          <RichText text={content.scene2_privacy_html}
             localization_id="privacy_html"
             links={content.links}
             doNotAutoBlock={true}
             sendClick={this.props.sendClick} />
-          </span>
         </p>
       </label>);
   }
@@ -150,7 +149,11 @@ export class SubmitFormSnippet extends React.PureComponent {
     return (<SnippetBase {...this.props} className={containerClass} footerDismiss={true}>
         {content.scene2_icon ? <div className="scene2Icon"><img src={content.scene2_icon} /></div> : null}
         <div className="message">
-          <p>{content.scene2_text}</p>
+          <p>
+            {content.scene2_title ? <h3 className="scene2Title">{content.scene2_title}</h3> : null}
+            {" "}
+            <RichText scene2_text={content.scene2_text} localization_id="scene2_text" />
+          </p>
         </div>
         <form action={content.form_action} method={this.props.form_method} onSubmit={this.handleSubmit} ref="form">
           {this.renderHiddenFormInputs()}

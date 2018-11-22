@@ -27,11 +27,30 @@ function processFormData(input, message) {
   return {formData, url};
 }
 
-export const SendToDeviceSnippet = props => (
-  <SubmitFormSnippet {...props}
+function addDefaultValues(props) {
+  return {
+    ...props,
+    content: {
+      scene1_button_label: "Learn More",
+      scene2_dismiss_button_text: "Dismiss",
+      scene2_button_label: "Send",
+      scene2_input_placeholder: "YOUR EMAIL HERE",
+      locale: "en-US",
+      country: "us",
+      message_id_email: "",
+      include_sms: false,
+      ...props.content,
+    },
+  };
+}
+
+export const SendToDeviceSnippet = props => {
+  const propsWithDefaults = addDefaultValues(props);
+
+  return (<SubmitFormSnippet {...propsWithDefaults}
     form_method="POST"
     className="send_to_device_snippet"
-    inputType={props.content.include_sms ? "text" : "email"}
-    validateInput={props.content.include_sms ? validateInput : null}
-    processFormData={processFormData} />
-);
+    inputType={propsWithDefaults.content.include_sms ? "text" : "email"}
+    validateInput={propsWithDefaults.content.include_sms ? validateInput : null}
+    processFormData={processFormData} />);
+};

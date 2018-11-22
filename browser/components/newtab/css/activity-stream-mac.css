@@ -1899,7 +1899,7 @@ a.firstrun-link {
 .ASRouterButton {
   font-weight: bold;
   white-space: nowrap;
-  border-radius: 4px;
+  border-radius: 2px;
   border: 1px solid var(--newtab-border-secondary-color);
   background-color: var(--newtab-button-secondary-color);
   font-family: inherit;
@@ -1926,8 +1926,8 @@ a.firstrun-link {
   right: 0;
   background-color: var(--newtab-snippets-background-color);
   color: var(--newtab-text-primary-color);
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 14px;
+  line-height: 20px;
   border-top: 1px solid var(--newtab-snippets-hairline-color);
   box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2);
   display: flex;
@@ -1938,6 +1938,10 @@ a.firstrun-link {
     text-decoration: underline; }
     [lwt-newtab-brighttext] .SnippetBaseContainer a {
       font-weight: bold; }
+  .SnippetBaseContainer input[type='checkbox'] {
+    margin-inline-start: 0;
+    height: 16px;
+    width: 16px; }
   .SnippetBaseContainer .innerWrapper {
     margin: 0 auto;
     display: flex;
@@ -2139,17 +2143,31 @@ a.firstrun-link {
   flex-direction: column;
   flex: 1 1 100%;
   width: 100%; }
+  .SubmitFormSnippet .disclaimerText {
+    margin: 20px 0 0;
+    font-size: 12px; }
+  .SubmitFormSnippet p {
+    margin: 0; }
   .SubmitFormSnippet.send_to_device_snippet {
     text-align: center; }
     .SubmitFormSnippet.send_to_device_snippet .message {
-      font-size: 16px; }
+      font-size: 16px;
+      margin-bottom: 20px; }
   .SubmitFormSnippet .ASRouterButton.primary {
     flex: 1 1 0; }
+    .SubmitFormSnippet .ASRouterButton.primary[type='submit'] {
+      font-weight: normal; }
   .SubmitFormSnippet .scene2Icon {
-    width: 100%; }
+    width: 100%;
+    margin-bottom: 20px; }
     .SubmitFormSnippet .scene2Icon img {
       width: 98px;
       display: inline-block; }
+  .SubmitFormSnippet .scene2Title {
+    font-size: inherit;
+    margin: 0;
+    font-weight: bold;
+    display: inline; }
   .SubmitFormSnippet form {
     display: flex;
     flex-direction: column;
@@ -2157,14 +2175,15 @@ a.firstrun-link {
   .SubmitFormSnippet .message {
     font-size: 14px;
     align-self: stretch;
-    flex: 0 0 100%; }
-    .SubmitFormSnippet .message p {
-      margin-top: 0; }
+    flex: 0 0 100%;
+    margin-bottom: 10px; }
   .SubmitFormSnippet .privacyNotice {
+    font-size: 12px;
     color: var(--newtab-text-secondary-color);
+    margin-top: 10px;
     flex: 0 0 100%; }
-    .SubmitFormSnippet .privacyNotice p {
-      margin-bottom: 0; }
+    .SubmitFormSnippet .privacyNotice span {
+      vertical-align: top; }
   .SubmitFormSnippet .innerWrapper {
     max-width: 670px;
     flex-wrap: wrap;
@@ -2183,12 +2202,12 @@ a.firstrun-link {
       width: 100%;
       text-align: right; }
   .SubmitFormSnippet input.mainInput {
-    border-radius: 3px;
+    border-radius: 2px;
     background-color: var(--newtab-textbox-background-color);
     border: 1px solid var(--newtab-textbox-border);
     padding: 0 8px;
     height: 100%;
-    font-size: 15px;
+    font-size: 14px;
     width: 50%; }
     .SubmitFormSnippet input.mainInput:focus {
       border: 1px solid var(--newtab-textbox-focus-color);
@@ -2315,21 +2334,22 @@ a.firstrun-link {
     content: none; }
 
 .EOYSnippetForm {
-  margin-top: 12px;
+  margin: 10px 0 8px;
   align-self: start;
-  font-size: 12px;
+  font-size: 14px;
   display: flex;
   align-items: center; }
   .EOYSnippetForm .donation-amount,
   .EOYSnippetForm .donation-form-url {
     white-space: nowrap;
     font-size: 14px;
-    padding: 5px 14px;
+    padding: 8px 20px;
     border-radius: 2px; }
   .EOYSnippetForm .donation-amount {
     color: #0C0C0D;
     margin-inline-end: 18px;
     border: 1px solid #B1B1B3;
+    padding: 5px 14px;
     background: #F9F9FA;
     cursor: pointer; }
   .EOYSnippetForm input[type='radio'] {
@@ -2341,9 +2361,14 @@ a.firstrun-link {
       border: 1px solid #4A4A4F; }
   .EOYSnippetForm .monthly-checkbox-container {
     width: 100%; }
+    .EOYSnippetForm .monthly-checkbox-container input[type='checkbox'] {
+      width: 24px;
+      height: 24px; }
+    .EOYSnippetForm .monthly-checkbox-container label {
+      vertical-align: super; }
   .EOYSnippetForm .donation-form-url {
     margin-inline-start: 18px;
-    background-color: #0C99D5;
+    background-color: var(--newtab-button-primary-color);
     border: 0;
     color: #FFF;
     align-self: flex-end;
