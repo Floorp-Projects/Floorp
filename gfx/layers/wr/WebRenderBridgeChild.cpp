@@ -96,8 +96,7 @@ WebRenderBridgeChild::BeginTransaction()
 }
 
 void
-WebRenderBridgeChild::UpdateResources(wr::IpcResourceUpdateQueue& aResources,
-                                      bool aScheduleComposite /* = false */)
+WebRenderBridgeChild::UpdateResources(wr::IpcResourceUpdateQueue& aResources)
 {
   if (!IPCOpen()) {
     aResources.Clear();
@@ -114,7 +113,7 @@ WebRenderBridgeChild::UpdateResources(wr::IpcResourceUpdateQueue& aResources,
   aResources.Flush(resourceUpdates, smallShmems, largeShmems);
 
   this->SendUpdateResources(resourceUpdates, smallShmems,
-                            largeShmems, aScheduleComposite);
+                            largeShmems);
 }
 
 void

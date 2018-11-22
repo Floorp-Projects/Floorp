@@ -749,8 +749,7 @@ WebRenderBridgeParent::ObserveSharedSurfaceRelease(const nsTArray<wr::ExternalIm
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvUpdateResources(nsTArray<OpUpdateResource>&& aResourceUpdates,
                                            nsTArray<RefCountedShmem>&& aSmallShmems,
-                                           nsTArray<ipc::Shmem>&& aLargeShmems,
-                                           const bool& aScheduleComposite)
+                                           nsTArray<ipc::Shmem>&& aLargeShmems)
 {
   if (mDestroyed) {
     wr::IpcResourceUpdateQueue::ReleaseShmems(this, aSmallShmems);
@@ -768,11 +767,6 @@ WebRenderBridgeParent::RecvUpdateResources(nsTArray<OpUpdateResource>&& aResourc
 
   if (!success) {
     return IPC_FAIL(this, "Invalid WebRender resource data shmem or address.");
-  }
-
-  if (aScheduleComposite) {
-    txn.InvalidateRenderedFrame();
-    ScheduleGenerateFrame();
   }
 
   mApi->SendTransaction(txn);
