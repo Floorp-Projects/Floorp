@@ -19,19 +19,17 @@ MediaDataDecoderCodec::CreateEncoder(
 MediaDataDecoderCodec::CreateDecoder(
   webrtc::VideoCodecType aCodecType)
 {
-  if (!StaticPrefs::MediaNavigatorMediadatadecoderEnabled() &&
-      !StaticPrefs::MediaNavigatorMediadatadecoderH264Enabled()) {
-    return nullptr;
-  }
-
   switch (aCodecType) {
     case webrtc::VideoCodecType::kVideoCodecVP8:
     case webrtc::VideoCodecType::kVideoCodecVP9:
-      if (!StaticPrefs::MediaNavigatorMediadatadecoderEnabled()) {
+      if (!StaticPrefs::MediaNavigatorMediadatadecoderVPXEnabled()) {
         return nullptr;
       }
-      MOZ_FALLTHROUGH;
+      break;
     case webrtc::VideoCodecType::kVideoCodecH264:
+      if (!StaticPrefs::MediaNavigatorMediadatadecoderH264Enabled()) {
+        return nullptr;
+      }
       break;
     default:
       return nullptr;
