@@ -32,6 +32,10 @@
       testStates("radio-disabledradiogroup", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
       testStates("button", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
       testStates("button-disabled", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
+      testStates("checkbutton",
+                 STATE_FOCUSABLE | STATE_CHECKABLE | STATE_PRESSED);
+      testStates("fakecheckbutton", STATE_FOCUSABLE | STATE_PRESSED, 0, 
+                 STATE_CHECKABLE);
       testStates("combobox", STATE_FOCUSABLE | STATE_HASPOPUP, 0, STATE_UNAVAILABLE);
       testStates("combobox-disabled", STATE_UNAVAILABLE | STATE_HASPOPUP, 0, STATE_FOCUSABLE);
       testStates("listbox", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
@@ -89,6 +93,9 @@
 
     <button id="button" value="button"/>
     <button id="button-disabled" disabled="true" value="button"/>
+    <button id="checkbutton" type="checkbox" checked="true" 
+            value="checkbutton" />
+    <button id="fakecheckbutton" checked="true" value="fakecheckbutton" />
 
     <menulist id="combobox">
       <menupopup>
