@@ -17,10 +17,11 @@
   background-image: none;
 }
 
-body[dir="rtl"] .description-wrapper {
+.description-wrapper:dir(rtl) {
   background-position: right center;
 }
-body[dir="rtl"] #tabsToggle:after {
+
+#tabsToggle:dir(rtl):after {
   background-position: left center;
 }
 
