@@ -2515,6 +2515,52 @@ telemetry.test:
       - 'main'
       - 'sync'
 
+  multiple_stores_string:
+    bug_numbers:
+      - 1498164
+    description: >
+      This is a test string type with multiple stores.
+    expires: never
+    kind: string
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - 'main'
+      - 'sync'
+
+  multiple_stores_bool:
+    bug_numbers:
+      - 1498164
+    description: >
+      This is a test bool type with multiple stores.
+    expires: never
+    kind: boolean
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - 'main'
+      - 'sync'
+
+  multiple_stores_keyed:
+    bug_numbers:
+      - 1498164
+    description: >
+      This is a test keyed uint type with multiple stores.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - 'main'
+      - 'sync'
+
 # NOTE: Please don't add new definitions below this point. Consider adding
 # them earlier in the file and leave the telemetry.test category as the last
 # one for readability.
