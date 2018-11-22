@@ -36,7 +36,7 @@
       <property name="accessKey">
         <getter>
           <![CDATA[
-            return this.getAttribute("accesskey");
+            return this.labelElement ? this.labelElement.accessKey : this.getAttribute("accesskey");
           ]]>
         </getter>
         <setter>
@@ -45,14 +45,15 @@
             this.setAttribute("accesskey", val);
             // If there is a label, change the accesskey on the labelElement
             // if it's also set there
-            let labelElement = document.getElementsByAttribute("control", this.id)[0];
-            if (labelElement) {
-              labelElement.setAttribute("accesskey", val);
+            if (this.labelElement) {
+              this.labelElement.accessKey = val;
             }
             return val;
           ]]>
         </setter>
       </property>
+
+      <field name="labelElement"/>
     </implementation>
   </binding>
 
