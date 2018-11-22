@@ -445,7 +445,7 @@ var gPluginHandler = {
 
     // Configure the notification bar
     let priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-    let iconURL = "chrome://global/skin/plugins/pluginGeneric.svg";
+    let iconURL = "chrome://mozapps/skin/plugins/pluginGeneric.svg";
     let reloadLabel = gNavigatorBundle.getString("crashedpluginsMessage.reloadButton.label");
     let reloadKey   = gNavigatorBundle.getString("crashedpluginsMessage.reloadButton.accesskey");
 

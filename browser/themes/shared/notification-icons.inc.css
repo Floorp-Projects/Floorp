@@ -253,12 +253,12 @@ html|*#webRTC-previewVideo {
 /* PLUGINS */
 
 .plugin-icon {
-  list-style-image: url(chrome://global/skin/plugins/plugin.svg);
+  list-style-image: url(chrome://mozapps/skin/plugins/plugin.svg);
   transition: fill 1.5s;
 }
 
 .plugin-icon.blocked-permission-icon {
-  list-style-image: url(chrome://global/skin/plugins/plugin-blocked.svg);
+  list-style-image: url(chrome://mozapps/skin/plugins/plugin-blocked.svg);
 }
 
 #plugin-icon-badge {
@@ -289,7 +289,7 @@ html|*#webRTC-previewVideo {
 }
 
 .plugin-blocked > .plugin-icon {
-  list-style-image: url(chrome://global/skin/plugins/plugin-blocked.svg);
+  list-style-image: url(chrome://mozapps/skin/plugins/plugin-blocked.svg);
   fill: #d92215 !important;
 }
 
