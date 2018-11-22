@@ -5,8 +5,8 @@
   right: 0;
   background-color: var(--newtab-snippets-background-color);
   color: var(--newtab-text-primary-color);
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 14px;
+  line-height: 20px;
   border-top: 1px solid var(--newtab-snippets-hairline-color);
   box-shadow: $shadow-secondary;
   display: flex;
@@ -19,6 +19,14 @@
 
     [lwt-newtab-brighttext] & {
       font-weight: bold;
+    }
+  }
+
+  input {
+    &[type='checkbox'] {
+      margin-inline-start: 0;
+      height: 16px;
+      width: 16px;
     }
   }
 

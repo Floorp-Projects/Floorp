@@ -1,7 +1,7 @@
 .EOYSnippetForm {
-  margin-top: 12px;
+  margin: 10px 0 8px;
   align-self: start;
-  font-size: 12px;
+  font-size: 14px;
   display: flex;
   align-items: center;
 
@@ -9,7 +9,7 @@
   .donation-form-url {
     white-space: nowrap;
     font-size: 14px;
-    padding: 5px 14px;
+    padding: 8px 20px;
     border-radius: 2px;
   }
 
@@ -17,6 +17,7 @@
     color: $grey-90;
     margin-inline-end: 18px;
     border: 1px solid $grey-40;
+    padding: 5px 14px;
     background: $grey-10;
     cursor: pointer;
   }
@@ -36,11 +37,22 @@
 
   .monthly-checkbox-container {
     width: 100%;
+
+    input {
+      &[type='checkbox'] {
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    label {
+      vertical-align: super;
+    }
   }
 
   .donation-form-url {
     margin-inline-start: 18px;
-    background-color: $snippets-donation-button-bg;
+    background-color: var(--newtab-button-primary-color);
     border: 0;
     color: $white;
     align-self: flex-end;

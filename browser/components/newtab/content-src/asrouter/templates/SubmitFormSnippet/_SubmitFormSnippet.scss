@@ -3,27 +3,49 @@
   flex: 1 1 100%;
   width: 100%;
 
+  .disclaimerText {
+    margin: 20px 0 0;
+    font-size: 12px;
+  }
+
+  p {
+    margin: 0;
+  }
+
   &.send_to_device_snippet {
     text-align: center;
 
     .message {
       font-size: 16px;
+      margin-bottom: 20px;
     }
   }
 
   .ASRouterButton {
     &.primary {
       flex: 1 1 0;
+
+      &[type='submit'] {
+        font-weight: normal;
+      }
     }
   }
 
   .scene2Icon {
     width: 100%;
+    margin-bottom: 20px;
 
     img {
       width: 98px;
       display: inline-block;
     }
+  }
+
+  .scene2Title {
+    font-size: inherit;
+    margin: 0;
+    font-weight: bold;
+    display: inline;
   }
 
   form {
@@ -36,18 +58,17 @@
     font-size: 14px;
     align-self: stretch;
     flex: 0 0 100%;
-
-    p {
-      margin-top: 0;
-    }
+    margin-bottom: 10px;
   }
 
   .privacyNotice {
+    font-size: 12px;
     color: var(--newtab-text-secondary-color);
+    margin-top: 10px;
     flex: 0 0 100%;
 
-    p {
-      margin-bottom: 0;
+    span {
+      vertical-align: top;
     }
   }
 
@@ -76,12 +97,12 @@
 
   input {
     &.mainInput {
-      border-radius: 3px;
+      border-radius: 2px;
       background-color: var(--newtab-textbox-background-color);
       border: $input-border;
       padding: 0 8px;
       height: 100%;
-      font-size: 15px;
+      font-size: 14px;
       width: 50%;
 
       &:focus {
