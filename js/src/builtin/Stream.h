@@ -7,6 +7,7 @@
 #ifndef builtin_Stream_h
 #define builtin_Stream_h
 
+#include "js/Stream.h"
 #include "builtin/Promise.h"
 #include "vm/NativeObject.h"
 

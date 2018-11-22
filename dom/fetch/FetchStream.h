@@ -9,6 +9,7 @@
 
 #include "Fetch.h"
 #include "jsapi.h"
+#include "js/Stream.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIObserver.h"
 #include "nsISupportsImpl.h"

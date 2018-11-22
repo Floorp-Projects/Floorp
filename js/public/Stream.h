@@ -52,8 +52,11 @@
 #ifndef js_Stream_h
 #define js_Stream_h
 
+#include <stddef.h>
+
 #include "jstypes.h"
 
+#include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 
 namespace JS {
@@ -489,4 +492,4 @@ ReadableStreamDefaultReaderRead(JSContext* cx, HandleObject reader);
 
 } // namespace JS
 
-#endif // js_Realm_h
+#endif // js_Stream_h

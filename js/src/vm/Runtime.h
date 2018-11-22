@@ -36,6 +36,7 @@
 #ifdef DEBUG
 # include "js/Proxy.h" // For AutoEnterPolicy
 #endif
+#include "js/Stream.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
