@@ -24,6 +24,15 @@ function resetBlocklist(aCallback) {
   Services.prefs.setCharPref("extensions.blocklist.url", _originalBlocklistURL);
 }
 
+function getPluginUI(plugin, anonid) {
+  if (plugin.openOrClosedShadowRoot &&
+      plugin.openOrClosedShadowRoot.isUAWidget()) {
+    return plugin.openOrClosedShadowRoot.getElementById(anonid);
+  }
+  return plugin.ownerDocument.
+    getAnonymousElementByAttribute(plugin, "anonid", anonid);
+}
+
 add_task(async function() {
   SpecialPowers.pushPrefEnv({"set": [
     ["plugins.click_to_play", true],
@@ -58,13 +67,13 @@ add_task(async function() {
 
   let pluginEl = get_addon_element(managerWindow, testPluginId);
   pluginEl.parentNode.ensureElementIsVisible(pluginEl);
-  let enableButton = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "enable-btn");
+  let enableButton = getPluginUI(pluginEl, "enable-btn");
   is_element_hidden(enableButton, "part3: enable button should not be visible");
-  let disableButton = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "disable-btn");
+  let disableButton = getPluginUI(pluginEl, "disable-btn");
   is_element_hidden(disableButton, "part3: disable button should not be visible");
-  let menu = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "state-menulist");
+  let menu = getPluginUI(pluginEl, "state-menulist");
   is_element_visible(menu, "part3: state menu should be visible");
-  let askToActivateItem = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "ask-to-activate-menuitem");
+  let askToActivateItem = getPluginUI(pluginEl, "ask-to-activate-menuitem");
   is(menu.selectedItem, askToActivateItem, "part3: state menu should have 'Ask To Activate' selected");
 
   let pluginTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gHttpTestRoot + "plugin_test.html");
@@ -75,7 +84,7 @@ add_task(async function() {
 
   BrowserTestUtils.removeTab(pluginTab);
 
-  let alwaysActivateItem = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "always-activate-menuitem");
+  let alwaysActivateItem = getPluginUI(pluginEl, "always-activate-menuitem");
   menu.selectedItem = alwaysActivateItem;
   alwaysActivateItem.doCommand();
 
@@ -92,7 +101,7 @@ add_task(async function() {
 
   BrowserTestUtils.removeTab(pluginTab);
 
-  let neverActivateItem = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "never-activate-menuitem");
+  let neverActivateItem = getPluginUI(pluginEl, "never-activate-menuitem");
   menu.selectedItem = neverActivateItem;
   neverActivateItem.doCommand();
 
@@ -156,7 +165,7 @@ add_task(async function() {
 
   pluginEl = get_addon_element(managerWindow, testPluginId);
   pluginEl.parentNode.ensureElementIsVisible(pluginEl);
-  menu = managerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "state-menulist");
+  menu = getPluginUI(pluginEl, "state-menulist");
   is(menu.disabled, true, "part12: state menu should be disabled");
 
   EventUtils.synthesizeMouseAtCenter(pluginEl, {}, managerWindow);

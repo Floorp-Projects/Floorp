@@ -96,10 +96,8 @@ add_task(async function() {
       } catch (e) {
       }
 
-      let doc = plugin.ownerDocument;
-
-      let getUI = (anonid) => {
-        return doc.getAnonymousElementByAttribute(plugin, "anonid", anonid);
+      let getUI = (id) => {
+        return plugin.openOrClosedShadowRoot.getElementById(id);
       };
 
       // Now wait until the plugin crash report UI shows itself, which is
