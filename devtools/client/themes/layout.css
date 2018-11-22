@@ -494,6 +494,16 @@ html[dir="rtl"] .flex-item-list .devtools-button::after {
   gap: .5em;
 }
 
+.flex-item-sizing .flexibility .name,
+.flex-item-sizing .max .name,
+.flex-item-sizing .min .name {
+  color: var(--theme-highlight-red);
+}
+
+.flex-item-sizing .base .name {
+  color: var(--theme-highlight-blue);
+}
+
 .flex-item-sizing .value {
   text-align: end;
   font-weight: 600;
