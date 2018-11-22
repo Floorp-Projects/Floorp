@@ -8,7 +8,8 @@
  * browser-plugins.js (near where this file is mentioned). */
 html|object:not([width]), html|object[width=""],
 html|embed:not([width]), html|embed[width=""],
-html|applet:not([width]), html|applet[width=""] {
+html|applet:not([width]), html|applet[width=""],
+:host(:not([width])), :host([width=""]) {
   width: 240px;
 }
 
@@ -16,20 +17,29 @@ html|applet:not([width]), html|applet[width=""] {
  * browser-plugins.js (near where this file is mentioned). */
 html|object:not([height]), html|object[height=""],
 html|embed:not([height]), html|embed[height=""],
-html|applet:not([height]), html|applet[height=""] {
+html|applet:not([height]), html|applet[height=""],
+:host(:not([width])), :host([width=""]) {
   height: 200px;
 }
 
 :-moz-handler-clicktoplay .mainBox,
 :-moz-handler-vulnerable-updatable .mainBox,
 :-moz-handler-vulnerable-no-update .mainBox,
-:-moz-handler-blocked .mainBox {
+:-moz-handler-blocked .mainBox,
+:host(:-moz-handler-clicktoplay) .mainBox,
+:host(:-moz-handler-vulnerable-updatable) .mainBox,
+:host(:-moz-handler-vulnerable-no-update) .mainBox,
+:host(:-moz-handler-blocked) .mainBox {
   -moz-user-focus: normal;
 }
 :-moz-handler-clicktoplay .mainBox:focus,
 :-moz-handler-vulnerable-updatable .mainBox:focus,
 :-moz-handler-vulnerable-no-update .mainBox:focus,
-:-moz-handler-blocked .mainBox:focus {
+:-moz-handler-blocked .mainBox:focus,
+:host(:-moz-handler-clicktoplay) .mainBox:focus,
+:host(:-moz-handler-vulnerable-updatable) .mainBox:focus,
+:host(:-moz-handler-vulnerable-no-update) .mainBox:focus,
+:host(:-moz-handler-blocked) .mainBox:focus {
   outline: 1px dotted;
 }
 
@@ -72,7 +82,10 @@ html|applet:not([height]), html|applet[height=""] {
 
 :-moz-handler-clicktoplay .hoverBox,
 :-moz-handler-vulnerable-updatable .hoverBox,
-:-moz-handler-vulnerable-no-update .hoverBox {
+:-moz-handler-vulnerable-no-update .hoverBox,
+:host(:-moz-handler-clicktoplay) .hoverBox,
+:host(:-moz-handler-vulnerable-updatable) .hoverBox,
+:host(:-moz-handler-vulnerable-no-update) .hoverBox {
   cursor: pointer;
 }
 
@@ -94,7 +107,15 @@ html|applet:not([height]), html|applet[height=""] {
 :-moz-handler-vulnerable-no-update .msgVulnerabilityStatus,
 :-moz-handler-vulnerable-no-update .msgClickToPlay,
 :-moz-handler-blocked .msgBlocked,
-:-moz-handler-crashed .msgCrashed {
+:-moz-handler-crashed .msgCrashed,
+:host(:-moz-handler-clicktoplay) .msgClickToPlay,
+:host(:-moz-handler-vulnerable-updatable) .msgVulnerabilityStatus,
+:host(:-moz-handler-vulnerable-updatable) .msgCheckForUpdates,
+:host(:-moz-handler-vulnerable-updatable) .msgClickToPlay,
+:host(:-moz-handler-vulnerable-no-update) .msgVulnerabilityStatus,
+:host(:-moz-handler-vulnerable-no-update) .msgClickToPlay,
+:host(:-moz-handler-blocked) .msgBlocked,
+:host(:-moz-handler-crashed) .msgCrashed {
   display: block;
 }
 
