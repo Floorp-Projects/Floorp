@@ -322,9 +322,11 @@ Listing of PKCS #11 Modules
 
          slot: NSS Internal Cryptographic Services                            
         token: NSS Generic Crypto Services
+	  uri: pkcs11:token=NSS%20Generic%20Crypto%20Services;manufacturer=Mozilla%20Foundation;serial=0000000000000000;model=NSS%203
 
          slot: NSS User Private Key and Certificate Services                  
         token: NSS Certificate DB
+	  uri: pkcs11:token=NSS%20Certificate%20DB;manufacturer=Mozilla%20Foundation;serial=0000000000000000;model=NSS%203
 -----------------------------------------------------------</programlisting>
 	<para>Passing a specific module name with the <option>-list</option> returns details information about the module itself, like supported cipher mechanisms, version numbers, serial numbers, and other information about the module and the token it is loaded on. For example:</para>
 <programlisting> modutil -list "NSS Internal PKCS #11 Module" -dbdir sql:/home/my/sharednssdb
