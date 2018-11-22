@@ -8,14 +8,17 @@
 #define mozilla_dom_FallbackEncoding_h_
 
 #include "mozilla/NotNull.h"
+#include "mozilla/StaticPtr.h"
 #include "nsIObserver.h"
 #include "nsString.h"
+#include "nsWeakReference.h"
 
 namespace mozilla {
 class Encoding;
 namespace dom {
 
 class FallbackEncoding : public nsIObserver
+                       , nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
@@ -75,7 +78,7 @@ private:
   /**
    * The fallback cache.
    */
-  static FallbackEncoding* sInstance;
+  static StaticRefPtr<FallbackEncoding> sInstance;
 
   FallbackEncoding();
   virtual ~FallbackEncoding() {};
