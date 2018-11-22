@@ -572,7 +572,9 @@ description#identity-popup-content-verifier,
   display: none;
   height: 32px;
   background-color: var(--arrowpanel-dimmed);
-  color: inherit;
+  /* !important to override -moz-mac-buttonactivetext from applying on :active on mac
+   and -moz-buttonhovertext from applying on :hover on linux. */
+  color: inherit !important;
   margin-inline-end: 8px;
 }
 
@@ -589,16 +591,16 @@ description#identity-popup-content-verifier,
 }
 
 #tracking-action-block {
-  background-color: #8000d7;
-  color: #fff;
+  background-color: #0060df;
+  color: #fff !important;
 }
 
 #tracking-action-block:hover {
-  background-color: #7100be;
+  background-color: #003eaa;
 }
 
 #tracking-action-block:hover:active {
-  background-color: #6200a4;
+  background-color: #002275;
 }
 
 #tracking-action-block .button-icon {
