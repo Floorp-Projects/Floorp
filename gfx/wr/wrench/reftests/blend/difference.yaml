@@ -1,0 +1,13 @@
+---
+root:
+  items:
+        - type: rect
+          bounds: [0, 0, 100, 100]
+          color: green
+        - type: stacking-context
+          bounds: [0, 0, 100, 100]
+          mix-blend-mode: difference
+          items:
+            - type: rect
+              bounds: [0, 0, 100, 100]
+              color: green
