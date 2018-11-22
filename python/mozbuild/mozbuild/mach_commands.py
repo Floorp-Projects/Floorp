@@ -2284,14 +2284,19 @@ class StaticAnalysis(MachCommandBase):
     @CommandArgument('--skip-cache', action='store_true',
                      help='Skip all local caches to force re-fetching the helper tool.',
                      default=False)
-    def install(self, source=None, skip_cache=False, verbose=False):
+    @CommandArgument('--force', action='store_true',
+                     help='Force re-install even though the tool exists in mozbuild.',
+                     default=False)
+    @CommandArgument('--minimal-install', action='store_true', help='Download only clang based tool.',
+                     default=False)
+    def install(self, source=None, skip_cache=False, force=False, minimal_install=False, verbose=False):
         self._set_log_level(verbose)
-        rc = self._get_clang_tools(force=True, skip_cache=skip_cache,
+        rc = self._get_clang_tools(force=force, skip_cache=skip_cache,
                                    source=source, verbose=verbose)
-        if rc == 0:
+        if rc == 0 and not minimal_install:
             # XXX ignore the return code because if it fails or not, infer is
             # not mandatory, but clang-tidy is
-            self._get_infer(force=True, skip_cache=skip_cache, verbose=verbose)
+            self._get_infer(force=force, skip_cache=skip_cache, verbose=verbose)
         return rc
 
     @StaticAnalysisSubCommand('static-analysis', 'clear-cache',
