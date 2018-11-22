@@ -92,7 +92,7 @@ public:
                       DrawTarget* aDrawTarget,
                       const Rect& aDirtyRect,
                       Rect& aOuterRect,
-                      const uint8_t* aBorderStyles,
+                      const mozilla::StyleBorderStyle* aBorderStyles,
                       const Float* aBorderWidths,
                       RectCornerRadii& aBorderRadii,
                       const nscolor* aBorderColors,
@@ -139,7 +139,7 @@ private:
   Rect mInnerRect;
 
   // the style and size of the border
-  uint8_t mBorderStyles[4];
+  mozilla::StyleBorderStyle mBorderStyles[4];
   Float mBorderWidths[4];
   RectCornerRadii mBorderRadii;
 
@@ -160,13 +160,13 @@ private:
   bool AreBorderSideFinalStylesSame(uint8_t aSides);
 
   // For the given style, is the given corner a solid color?
-  bool IsSolidCornerStyle(uint8_t aStyle, mozilla::Corner aCorner);
+  bool IsSolidCornerStyle(mozilla::StyleBorderStyle aStyle, mozilla::Corner aCorner);
 
   // For the given corner, is the given corner mergeable into one dot?
   bool IsCornerMergeable(mozilla::Corner aCorner);
 
   // For the given solid corner, what color style should be used?
-  BorderColorStyle BorderColorStyleForSolidCorner(uint8_t aStyle,
+  BorderColorStyle BorderColorStyleForSolidCorner(mozilla::StyleBorderStyle aStyle,
                                                   mozilla::Corner aCorner);
 
   //

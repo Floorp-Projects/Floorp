@@ -143,9 +143,8 @@ public:
   nsresult UpdateShippingOption(const nsAString& aShippingOption);
 
   nsresult UpdatePayment(JSContext* aCx,
-                         const PaymentDetailsUpdate& aDetails,
-                         bool aDeferredShow);
-  void AbortUpdate(nsresult aRv, bool aDeferredShow);
+                         const PaymentDetailsUpdate& aDetails);
+  void AbortUpdate(nsresult aRv);
 
   void SetShippingType(const Nullable<PaymentShippingType>& aShippingType);
   Nullable<PaymentShippingType> GetShippingType() const;
@@ -209,10 +208,6 @@ protected:
   // Whether shipping was requested. This models [[options]].requestShipping,
   // but we don't actually store the full [[options]] internal slot.
   bool mRequestShipping;
-
-  // True if the user passed a promise to show, causing us to defer telling the
-  // front end about it.
-  bool mDeferredShow;
 
   // The error is set in AbortUpdate(). The value is NS_OK by default.
   nsresult mUpdateError;
