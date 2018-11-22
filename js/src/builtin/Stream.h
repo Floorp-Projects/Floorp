@@ -97,17 +97,10 @@ class ReadableStream : public NativeObject
 
     bool locked() const;
 
-  public:
-    static ReadableStream* createDefaultStream(JSContext* cx, HandleValue underlyingSource,
-                                               HandleValue size, double highWaterMark,
-                                               HandleObject proto = nullptr);
+    static MOZ_MUST_USE ReadableStream* create(JSContext* cx, HandleObject proto = nullptr);
     static ReadableStream* createExternalSourceStream(JSContext* cx, void* underlyingSource,
                                                       uint8_t flags, HandleObject proto = nullptr);
 
-  private:
-    static MOZ_MUST_USE ReadableStream* create(JSContext* cx, HandleObject proto = nullptr);
-
-  public:
     static bool constructor(JSContext* cx, unsigned argc, Value* vp);
     static const ClassSpec classSpec_;
     static const Class class_;

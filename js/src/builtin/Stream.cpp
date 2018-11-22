@@ -495,34 +495,6 @@ SetUpReadableStreamDefaultController(JSContext* cx,
                                      double highWaterMarkVal,
                                      HandleValue size);
 
-/**
- * Streams spec, 3.2.3., steps 1-4, 8.
- */
-ReadableStream*
-ReadableStream::createDefaultStream(JSContext* cx, HandleValue underlyingSource,
-                                    HandleValue size, double highWaterMark,
-                                    HandleObject proto /* = nullptr */)
-{
-    cx->check(underlyingSource, size, proto);
-    MOZ_ASSERT(size.isUndefined() || IsCallable(size));
-    MOZ_ASSERT(highWaterMark >= 0);
-
-    // Steps 1-4.
-    Rooted<ReadableStream*> stream(cx, create(cx));
-    if (!stream) {
-        return nullptr;
-    }
-
-    // Step 8.b: Set this.[[readableStreamController]] to
-    //           ? Construct(ReadableStreamDefaultController,
-    //                       « this, underlyingSource, size,
-    //                         highWaterMark »).
-    if (!SetUpReadableStreamDefaultController(cx, stream, underlyingSource, highWaterMark, size)) {
-        return nullptr;
-    }
-    return stream;
-}
-
 static MOZ_MUST_USE ReadableByteStreamController*
 CreateExternalReadableByteStreamController(JSContext* cx, Handle<ReadableStream*> stream,
                                            void* underlyingSource);
@@ -588,7 +560,10 @@ ReadableStream::constructor(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // Step 1: Perform ! InitializeReadableStream(this).
-    // This is moved down to step 7.d.
+    Rooted<ReadableStream*> stream(cx, ReadableStream::create(cx));
+    if (!stream) {
+        return false;
+    }
 
     // Step 2: Let size be ? GetV(strategy, "size").
     RootedValue size(cx);
@@ -648,9 +623,9 @@ ReadableStream::constructor(JSContext* cx, unsigned argc, Value* vp)
         // Step 7.d: Perform
         //           ? SetUpReadableStreamDefaultControllerFromUnderlyingSource(
         //           this, underlyingSource, highWaterMark, sizeAlgorithm).
-        Rooted<ReadableStream*> stream(cx,
-            createDefaultStream(cx, underlyingSource, size, highWaterMark));
-        if (!stream) {
+        if (!SetUpReadableStreamDefaultController(cx, stream, underlyingSource,
+                                                  highWaterMark, size))
+        {
             return false;
         }
 
@@ -858,10 +833,51 @@ CLASS_SPEC(ReadableStream, 0, SlotCount, 0, 0, JS_NULL_CLASS_OPS);
 // Streams spec, 3.3.2. AcquireReadableStreamDefaultReader ( stream )
 // Always inlined. See CreateReadableStreamDefaultReader.
 
-// Streams spec, 3.3.3. CreateReadableStream (
-//                          startAlgorithm, pullAlgorithm, cancelAlgorithm
-//                          [, highWaterMark [, sizeAlgorithm ] ] )
-// Not implemented.
+/**
+ * Streams spec, 3.3.3. CreateReadableStream (
+ *                          startAlgorithm, pullAlgorithm, cancelAlgorithm
+ *                          [, highWaterMark [, sizeAlgorithm ] ] )
+ *
+ * The start/pull/cancelAlgorithm arguments are represented as a single
+ * underlyingSource argument; see SetUpReadableStreamDefaultController().
+ */
+MOZ_MUST_USE ReadableStream*
+CreateReadableStream(JSContext* cx,
+                     HandleValue underlyingSource,
+                     double highWaterMark = 1,
+                     HandleValue sizeAlgorithm = UndefinedHandleValue,
+                     HandleObject proto = nullptr)
+{
+
+    cx->check(underlyingSource, sizeAlgorithm, proto);
+    MOZ_ASSERT(sizeAlgorithm.isUndefined() || IsCallable(sizeAlgorithm));
+
+    // Step 1: If highWaterMark was not passed, set it to 1 (implicit).
+    // Step 2: If sizeAlgorithm was not passed, set it to an algorithm that returns 1 (implicit).
+    // Step 3: Assert: ! IsNonNegativeNumber(highWaterMark) is true.
+    MOZ_ASSERT(highWaterMark >= 0);
+
+    // Step 4: Let stream be ObjectCreate(the original value of ReadableStream's prototype property).
+    // Step 5: Perform ! InitializeReadableStream(stream).
+    Rooted<ReadableStream*> stream(cx, ReadableStream::create(cx, proto));
+    if (!stream) {
+        return nullptr;
+    }
+
+    // Step 6: Let controller be ObjectCreate(the original value of
+    //         ReadableStreamDefaultController's prototype property).
+    // Step 7: Perform ? SetUpReadableStreamDefaultController(stream,
+    //         controller, startAlgorithm, pullAlgorithm, cancelAlgorithm,
+    //         highWaterMark, sizeAlgorithm).
+    if (!SetUpReadableStreamDefaultController(cx, stream, underlyingSource, highWaterMark,
+                                              sizeAlgorithm))
+    {
+        return nullptr;
+    }
+
+    // Step 8: Return stream.
+    return stream;
+}
 
 // Streams spec, 3.3.4. CreateReadableByteStream (
 //                          startAlgorithm, pullAlgorithm, cancelAlgorithm
@@ -1270,8 +1286,7 @@ ReadableStreamTee(JSContext* cx,
     //          ! CreateReadableStream(startAlgorithm, pullAlgorithm,
     //                                 cancel1Algorithm).
     RootedValue underlyingSource(cx, ObjectValue(*teeState));
-    branch1Stream.set(ReadableStream::createDefaultStream(cx, underlyingSource,
-                                                          UndefinedHandleValue, 1));
+    branch1Stream.set(CreateReadableStream(cx, underlyingSource));
     if (!branch1Stream) {
         return false;
     }
@@ -1284,8 +1299,7 @@ ReadableStreamTee(JSContext* cx,
     // Step 17: Set branch2 to
     //          ! CreateReadableStream(startAlgorithm, pullAlgorithm,
     //                                 cancel2Algorithm).
-    branch2Stream.set(ReadableStream::createDefaultStream(cx, underlyingSource,
-                                                          UndefinedHandleValue, 1));
+    branch2Stream.set(CreateReadableStream(cx, underlyingSource));
     if (!branch2Stream) {
         return false;
     }
@@ -4234,7 +4248,7 @@ JS::NewReadableDefaultStreamObject(JSContext* cx,
     }
     RootedValue sourceVal(cx, ObjectValue(*source));
     RootedValue sizeVal(cx, size ? ObjectValue(*size) : UndefinedValue());
-    return ReadableStream::createDefaultStream(cx, sourceVal, sizeVal, highWaterMark, proto);
+    return CreateReadableStream(cx, sourceVal, highWaterMark, sizeVal);
 }
 
 JS_PUBLIC_API JSObject*
