@@ -58,6 +58,7 @@ typedef struct _MozContainerClass MozContainerClass;
  * present in wayland-devel < 1.12
  */
 #ifdef MOZ_WAYLAND
+struct wl_subcompositor;
 struct wl_surface;
 struct wl_subsurface;
 #endif
@@ -68,6 +69,7 @@ struct _MozContainer
     GList         *children;
 
 #ifdef MOZ_WAYLAND
+    struct wl_subcompositor *subcompositor;
     struct wl_surface       *surface;
     struct wl_subsurface    *subsurface;
     struct wl_egl_window    *eglwindow;

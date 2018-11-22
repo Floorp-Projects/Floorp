@@ -9,12 +9,38 @@
 
 #include <prthread.h>
 #include "mozilla/gfx/Types.h"
-#include "nsWaylandDisplay.h"
 
 #define  BACK_BUFFER_NUM 2
 
 namespace mozilla {
 namespace widget {
+
+// Our general connection to Wayland display server,
+// holds our display connection and runs event loop.
+class nsWaylandDisplay : public nsISupports {
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+public:
+  explicit nsWaylandDisplay(wl_display *aDisplay);
+
+  wl_shm*             GetShm();
+  void                SetShm(wl_shm* aShm)   { mShm = aShm; };
+
+  wl_display*         GetDisplay()           { return mDisplay; };
+  wl_event_queue*     GetEventQueue()        { return mEventQueue; };
+  gfx::SurfaceFormat  GetSurfaceFormat()     { return mFormat; };
+  bool                DisplayLoop();
+  bool                Matches(wl_display *aDisplay);
+
+private:
+  virtual ~nsWaylandDisplay();
+
+  PRThread*           mThreadId;
+  gfx::SurfaceFormat  mFormat;
+  wl_shm*             mShm;
+  wl_event_queue*     mEventQueue;
+  wl_display*         mDisplay;
+};
 
 // Allocates and owns shared memory for Wayland drawing surface
 class WaylandShmPool {
@@ -62,11 +88,6 @@ public:
     return aBuffer->mWidth == mWidth && aBuffer->mHeight == mHeight;
   }
 
-  static gfx::SurfaceFormat GetSurfaceFormat()
-  {
-    return mFormat;
-  }
-
 private:
   void Create(int aWidth, int aHeight);
   void Release();
@@ -81,7 +102,6 @@ private:
   int                 mHeight;
   bool                mAttached;
   nsWaylandDisplay*   mWaylandDisplay;
-  static gfx::SurfaceFormat mFormat;
 };
 
 // WindowSurfaceWayland is an abstraction for wl_surface
