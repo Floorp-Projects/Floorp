@@ -2131,7 +2131,11 @@ ReadableStreamReaderGenericRelease(JSContext* cx, Handle<ReadableStreamReader*> 
     }
 
     // Step 2: Assert: reader.[[ownerReadableStream]].[[reader]] is reader.
-    MOZ_ASSERT(UnwrapReaderFromStreamNoThrow(unwrappedStream) == unwrappedReader);
+#ifdef DEBUG
+    // The assertion is weakened a bit to allow for nuked wrappers.
+    ReadableStreamReader* unwrappedReader2 = UnwrapReaderFromStreamNoThrow(unwrappedStream);
+    MOZ_ASSERT_IF(unwrappedReader2, unwrappedReader2 == unwrappedReader);
+#endif
 
     // Create an exception to reject promises with below. We don't have a
     // clean way to do this, unfortunately.
