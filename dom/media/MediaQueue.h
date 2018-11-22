@@ -40,12 +40,16 @@ class MediaQueue : private nsDeque {
 
   inline void Push(T* aItem) {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    MOZ_ASSERT(!mEndOfStream);
     MOZ_ASSERT(aItem);
     NS_ADDREF(aItem);
     MOZ_ASSERT(aItem->GetEndTime() >= aItem->mTime);
     nsDeque::Push(aItem);
     mPushEvent.Notify(RefPtr<T>(aItem));
+    // Pushing new data after queue has ended means that the stream is active
+    // again, so we should not mark it as ended.
+    if (mEndOfStream) {
+      mEndOfStream = false;
+    }
   }
 
   inline already_AddRefed<T> PopFront() {
