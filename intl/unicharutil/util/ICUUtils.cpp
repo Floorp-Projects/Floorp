@@ -145,6 +145,9 @@ ICUUtils::ParseNumber(nsAString& aValue,
     UErrorCode status = U_ZERO_ERROR;
     AutoCloseUNumberFormat format(unum_open(UNUM_DECIMAL, nullptr, 0,
                                             langTag.get(), nullptr, &status));
+    if (!LocaleNumberGroupingIsEnabled()) {
+      unum_setAttribute(format.rwget(), UNUM_GROUPING_USED, UBool(0));
+    }
     int32_t parsePos = 0;
     static_assert(sizeof(UChar) == 2 && sizeof(nsAString::char_type) == 2,
                   "Unexpected character size - the following cast is unsafe");

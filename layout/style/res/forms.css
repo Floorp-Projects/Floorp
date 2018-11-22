@@ -116,6 +116,7 @@ input::placeholder {
 }
 
 textarea {
+  -moz-appearance: textarea;
   margin-block-start: 1px;
   margin-block-end: 1px;
   border: 2px inset ThreeDLightShadow;
@@ -126,20 +127,20 @@ textarea {
   color: -moz-FieldText;
   font: medium -moz-fixed;
   text-rendering: optimizeLegibility;
-  text-align: start;
-  text-transform: none;
-  word-spacing: normal;
-  letter-spacing: normal;
   vertical-align: text-bottom;
   cursor: text;
   resize: both;
-  -moz-appearance: textfield-multiline;
-  text-indent: 0;
   -moz-user-select: text;
-  text-shadow: none;
   white-space: pre-wrap;
   word-wrap: break-word;
   overflow-clip-box: content-box;
+  /* A few properties that we don't want to inherit by default: */
+  text-align: initial;
+  text-indent: initial;
+  text-shadow: initial;
+  text-transform: initial;
+  word-spacing: initial;
+  letter-spacing: initial;
 }
 
 textarea > scrollbar {

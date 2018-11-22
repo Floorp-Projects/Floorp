@@ -340,7 +340,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
       // to see whether to draw in the focused state.
       if (aAppearance == StyleAppearance::NumberInput ||
           aAppearance == StyleAppearance::Textfield ||
-          aAppearance == StyleAppearance::TextfieldMultiline ||
+          aAppearance == StyleAppearance::Textarea ||
           aAppearance == StyleAppearance::MenulistTextfield ||
           aAppearance == StyleAppearance::SpinnerTextfield ||
           aAppearance == StyleAppearance::RadioContainer ||
@@ -602,7 +602,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
   case StyleAppearance::Textfield:
     aGtkWidgetType = MOZ_GTK_ENTRY;
     break;
-  case StyleAppearance::TextfieldMultiline:
+  case StyleAppearance::Textarea:
 #ifdef MOZ_WIDGET_GTK
     aGtkWidgetType = MOZ_GTK_TEXT_VIEW;
 #else
@@ -1978,7 +1978,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case StyleAppearance::MenulistTextfield:
   case StyleAppearance::NumberInput:
   case StyleAppearance::Textfield:
-  case StyleAppearance::TextfieldMultiline:
+  case StyleAppearance::Textarea:
   case StyleAppearance::Range:
   case StyleAppearance::RangeThumb:
   case StyleAppearance::ScaleHorizontal:

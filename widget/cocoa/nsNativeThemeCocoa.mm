@@ -3461,7 +3461,7 @@ nsNativeThemeCocoa::ComputeWidgetInfo(nsIFrame* aFrame,
       return Some(WidgetInfo::ScrollCorner(
         ComputeScrollbarParams(aFrame, false)));
 
-    case StyleAppearance::TextfieldMultiline:
+    case StyleAppearance::Textarea:
       return Some(WidgetInfo::MultilineTextField(
         eventState.HasState(NS_EVENT_STATE_FOCUS)));
 
@@ -3913,7 +3913,7 @@ nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
       return false;
     }
 
-    case StyleAppearance::TextfieldMultiline: {
+    case StyleAppearance::Textarea: {
       if (eventState.HasState(NS_EVENT_STATE_FOCUS)) {
         // We can't draw the focus ring using webrender, so fall back to regular
         // drawing if we're focused.
@@ -4069,7 +4069,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
       break;
     }
 
-    case StyleAppearance::TextfieldMultiline:
+    case StyleAppearance::Textarea:
       result.SizeTo(1, 1, 1, 1);
       break;
 
@@ -4171,7 +4171,7 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext,
     case StyleAppearance::Toolbarbutton:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
-    case StyleAppearance::TextfieldMultiline:
+    case StyleAppearance::Textarea:
     case StyleAppearance::Searchfield:
     case StyleAppearance::Listbox:
     // NOTE: if you change Menulist and MenulistButton to behave differently,
@@ -4322,7 +4322,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
     case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
-    case StyleAppearance::TextfieldMultiline:
+    case StyleAppearance::Textarea:
     case StyleAppearance::Searchfield:
     {
       // at minimum, we should be tall enough for 9pt text.
@@ -4659,7 +4659,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case StyleAppearance::Statusbar:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
-    case StyleAppearance::TextfieldMultiline:
+    case StyleAppearance::Textarea:
     case StyleAppearance::Searchfield:
     case StyleAppearance::Toolbox:
     //case StyleAppearance::Toolbarbutton:
@@ -4820,7 +4820,7 @@ nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(StyleAppearance aAppear
     case StyleAppearance::Textfield:
     case StyleAppearance::Treeview:
     case StyleAppearance::Treeline:
-    case StyleAppearance::TextfieldMultiline:
+    case StyleAppearance::Textarea:
     case StyleAppearance::Listbox:
     case StyleAppearance::Resizer:
       return false;
