@@ -140,6 +140,12 @@
     "minbytes": 0,
     "maxbytes": 65536
   },
+  "c:\\windows\\system32\\setupapi.dll": {
+    "mincount": 0,
+    "maxcount": 8,
+    "minbytes": 0,
+    "maxbytes": 87040
+  },
   "c:\\windows\\system32\\spool\\drivers\\color": {
     "mincount": 0,
     "maxcount": 2,
