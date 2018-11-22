@@ -3581,7 +3581,7 @@ nsDisplaySolidColor::CreateWebRenderCommands(
   nsDisplayListBuilder* aDisplayListBuilder)
 {
   LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
-    GetPaintRect(), mFrame->PresContext()->AppUnitsPerDevPixel());
+    mBounds, mFrame->PresContext()->AppUnitsPerDevPixel());
   wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(bounds);
 
   aBuilder.PushRect(roundedRect,
