@@ -8,7 +8,13 @@
    --diff-add-text-color: #54983f;
    --diff-remove-background-color: #fbf2f5;
    --diff-remove-text-color: #bf7173;
-   --diff-level-offset: 15px;
+   --diff-level: 0;
+   --diff-level-offset: 10px;
+   /*
+    Minimum padding so content on the first level (zero) isn't touching the edge. Added
+    and removed lines will re-declare this to add extra padding to clear the +/- icons.
+   */
+   --diff-level-min-offset: 5px;
  }
 
 #sidebar-panel-changes {
@@ -31,29 +37,17 @@
   overflow: hidden;
 }
 
-#sidebar-panel-changes .rule .level {
+#sidebar-panel-changes .level {
   padding-top: 3px;
   padding-right: 5px;
   padding-bottom: 3px;
-  padding-left: var(--diff-level-offset);
+  padding-left: calc(var(--diff-level-min-offset) +
+                     var(--diff-level-offset) * var(--diff-level));
   position: relative;
 }
 
-#sidebar-panel-changes .rule > .rule .level {
-  padding-left: calc(var(--diff-level-offset) * 2);
-}
-
-#sidebar-panel-changes .rule > .rule > .rule .level {
-  padding-left: calc(var(--diff-level-offset) * 3);
-}
-
-#sidebar-panel-changes .rule > .rule > .rule > .rule .level {
-  padding-left: calc(var(--diff-level-offset) * 4);
-}
-
-#sidebar-panel-changes .rule .selector:not(.diff-remove):not(.diff-add),
-#sidebar-panel-changes .rule .bracket-close:not(.diff-remove):not(.diff-add) {
-  margin-left: calc(-1 * var(--diff-level-offset) + 5px);
+#sidebar-panel-changes .selector {
+  word-wrap: break-word;
 }
 
 #sidebar-panel-changes .rule .bracket-open {
@@ -69,8 +63,13 @@
   margin-left: 5px;
 }
 
+.diff-add,
+.diff-remove {
+  --diff-level-min-offset: 15px;
+}
+
 .diff-add::before,
-.diff-remove::before{
+.diff-remove::before {
   position: absolute;
   left: 5px;
 }

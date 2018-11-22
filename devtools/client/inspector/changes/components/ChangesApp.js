@@ -63,7 +63,7 @@ class ChangesApp extends PureComponent {
     return [removals, additions];
   }
 
-  renderRule(ruleId, rule, rules) {
+  renderRule(ruleId, rule, rules, level = 0) {
     const selector = rule.selector;
 
     if (this.renderedRules.includes(ruleId)) {
@@ -84,6 +84,9 @@ class ChangesApp extends PureComponent {
       {
         key: ruleId,
         className: "rule devtools-monospace",
+        style: {
+          "--diff-level": level,
+        },
       },
       dom.div(
         {
@@ -93,9 +96,9 @@ class ChangesApp extends PureComponent {
         selector,
         dom.span({ className: "bracket-open" }, "{")
       ),
-      // Render any nested child rules if they are present.
-      rule.children.length > 0 && rule.children.map(childRuleId => {
-        return this.renderRule(childRuleId, rules[childRuleId], rules);
+      // Render any nested child rules if they exist.
+      rule.children.map(childRuleId => {
+        return this.renderRule(childRuleId, rules[childRuleId], rules, level + 1);
       }),
       // Render any changed CSS declarations.
       this.renderDeclarations(rule.remove, rule.add),
