@@ -736,40 +736,6 @@ nsTreeContentView::IsEditable(int32_t aRow, nsTreeColumn* aCol, bool* _retval)
   return rv.StealNSResult();
 }
 
-bool
-nsTreeContentView::IsSelectable(int32_t aRow, nsTreeColumn& aColumn,
-                                ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return false;
-  }
-
-  Row* row = mRows[aRow].get();
-
-  nsIContent* realRow =
-    nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
-  if (realRow) {
-    Element* cell = GetCell(realRow, aColumn);
-    if (cell && cell->AttrValueIs(kNameSpaceID_None, nsGkAtoms::selectable,
-                                  nsGkAtoms::_false, eCaseMatters)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-NS_IMETHODIMP
-nsTreeContentView::IsSelectable(int32_t aRow, nsTreeColumn* aCol, bool* _retval)
-{
-  NS_ENSURE_ARG(aCol);
-
-  ErrorResult rv;
-  *_retval = IsSelectable(aRow, *aCol, rv);
-  return rv.StealNSResult();
-}
-
 void
 nsTreeContentView::SetCellValue(int32_t aRow, nsTreeColumn& aColumn,
                                 const nsAString& aValue, ErrorResult& aError)

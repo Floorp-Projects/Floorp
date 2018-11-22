@@ -69,7 +69,6 @@ public:
   bool Primary() const { return mIsPrimary; }
   bool Cycler() const { return mIsCycler; }
   bool Editable() const { return mIsEditable; }
-  bool Selectable() const { return mIsSelectable; }
   int16_t Type() const { return mType; }
 
   nsTreeColumn* GetNext() const { return mNext; }
@@ -108,7 +107,6 @@ protected:
   bool IsPrimary() { return mIsPrimary; }
   bool IsCycler() { return mIsCycler; }
   bool IsEditable() { return mIsEditable; }
-  bool IsSelectable() { return mIsSelectable; }
   bool Overflow() { return mOverflow; }
 
   int16_t GetType() { return mType; }
@@ -138,7 +136,6 @@ private:
   bool mIsPrimary;
   bool mIsCycler;
   bool mIsEditable;
-  bool mIsSelectable;
   bool mOverflow;
 
   int16_t mType;

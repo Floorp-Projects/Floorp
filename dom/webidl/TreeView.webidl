@@ -19,7 +19,7 @@ interface TreeView
   [SetterThrows]
   attribute nsITreeSelection? selection;
 
-  /** 
+  /**
    * A whitespace delimited list of properties.  For each property X the view
    * gives back will cause the pseudoclasses  ::-moz-tree-cell(x),
    * ::-moz-tree-row(x), ::-moz-tree-twisty(x), ::-moz-tree-image(x),
@@ -38,7 +38,7 @@ interface TreeView
    */
   [Throws]
   DOMString getCellProperties(long row, TreeColumn column);
-  
+
   /**
    * Called to get properties to paint a column background.  For shading the sort
    * column, etc.
@@ -55,7 +55,7 @@ interface TreeView
   boolean isContainerOpen(long row);
   [Throws]
   boolean isContainerEmpty(long row);
- 
+
   /**
    * isSeparator is used to determine if the row is a separator.
    * A value of true will result in the tree drawing a horizontal separator.
@@ -69,7 +69,7 @@ interface TreeView
    * to affect drop feedback.
    */
   boolean isSorted();
-  
+
   const short DROP_BEFORE = -1;
   const short DROP_ON = 0;
   const short DROP_AFTER = 1;
@@ -108,7 +108,7 @@ interface TreeView
 
   /**
    * The level is an integer value that represents
-   * the level of indentation.  It is multiplied by the width specified in the 
+   * the level of indentation.  It is multiplied by the width specified in the
    * :moz-tree-indentation pseudoelement to compute the exact indendation.
    */
   [Throws]
@@ -131,7 +131,7 @@ interface TreeView
 
   /**
    * The text for a given cell.  If a column consists only of an image, then
-   * the empty string is returned.  
+   * the empty string is returned.
    */
   [Throws]
   DOMString getCellText(long row, TreeColumn column);
@@ -141,7 +141,7 @@ interface TreeView
    */
   [Throws]
   void setTree(TreeBoxObject? tree);
-  
+
   /**
    * Called on the view when an item is opened or closed.
    */
@@ -163,22 +163,14 @@ interface TreeView
    * Called on the view when a cell in a non-selectable cycling column (e.g., unread/flag/etc.) is clicked.
    */
   void cycleCell(long row, TreeColumn column);
-  
+
   /**
    * isEditable is called to ask the view if the cell contents are editable.
-   * A value of true will result in the tree popping up a text field when 
+   * A value of true will result in the tree popping up a text field when
    * the user tries to inline edit the cell.
    */
   [Throws]
   boolean isEditable(long row, TreeColumn column);
-
-  /**
-   * isSelectable is called to ask the view if the cell is selectable.
-   * This method is only called if the selection style is |cell| or |text|.
-   * XXXvarga shouldn't this be called isCellSelectable?
-   */
-  [Throws]
-  boolean isSelectable(long row, TreeColumn column);
 
   /**
    * setCellValue is called when the value of the cell has been set by the user.
@@ -189,7 +181,7 @@ interface TreeView
 
   /**
    * setCellText is called when the contents of the cell have been edited by the user.
-   */   
+   */
   [Throws]
   void setCellText(long row, TreeColumn column, DOMString value);
 

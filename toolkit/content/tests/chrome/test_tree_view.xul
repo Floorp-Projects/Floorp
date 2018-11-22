@@ -6,8 +6,8 @@
   -->
 <window title="Tree" onload="init()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>  
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
 <script src="tree_shared.js"/>
 
@@ -33,7 +33,6 @@ var view =
   isContainerEmpty: function(row) { return false; },
   isSeparator: function(row) { return false; },
   isSorted: function(row) { return false; },
-  isSelectable: function(row, column) { return true; },
   isEditable: function(row, column) { return row != 2 || column.index != 1; },
   getParentIndex: function(row, column) { return -1; },
   getLevel: function(row) { return 0; },
@@ -113,4 +112,3 @@ SimpleTest.waitForExplicitFinish();
 </script>
 
 </window>
-

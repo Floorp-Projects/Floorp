@@ -19,12 +19,10 @@ interface TreeColumn {
   readonly attribute boolean primary;
   readonly attribute boolean cycler;
   readonly attribute boolean editable;
-  readonly attribute boolean selectable;
 
   const short TYPE_TEXT                = 1;
   const short TYPE_CHECKBOX            = 2;
-  const short TYPE_PROGRESSMETER       = 3;
-  const short TYPE_PASSWORD            = 4;
+  const short TYPE_PASSWORD            = 3;
   readonly attribute short type;
 
   TreeColumn? getNext();
