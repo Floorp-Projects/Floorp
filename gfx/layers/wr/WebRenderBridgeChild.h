@@ -66,8 +66,7 @@ public:
 
   void AddWebRenderParentCommand(const WebRenderParentCommand& aCmd);
 
-  void UpdateResources(wr::IpcResourceUpdateQueue& aResources,
-                       bool aScheduleComposite = false);
+  void UpdateResources(wr::IpcResourceUpdateQueue& aResources);
   void BeginTransaction();
   void EndTransaction(const wr::LayoutSize& aContentSize,
                       wr::BuiltDisplayList& dl,
