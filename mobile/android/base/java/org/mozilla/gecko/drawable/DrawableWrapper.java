@@ -153,7 +153,9 @@ public class DrawableWrapper extends Drawable {
 
     @Override
     public boolean setVisible(boolean visible, boolean restart) {
-        return mWrapped.setVisible(visible, restart);
+        final boolean superChanged = super.setVisible(visible, restart);
+        final boolean changed = mWrapped.setVisible(visible, restart);
+        return superChanged | changed;
     }
 
     @Override
