@@ -9,7 +9,6 @@
 
 #ifdef MOZ_X11
 
-#include <glib.h>
 #include "WindowSurfaceX11.h"
 #include "gfxXlibSurface.h"
 #include "gfxImageSurface.h"

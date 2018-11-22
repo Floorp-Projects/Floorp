@@ -130,11 +130,17 @@ public:
     void TransferFastTrackClipboard(int aClipboardRequestNumber,
                                     GtkSelectionData *aSelectionData);
 
+    void InitDataDeviceManager(wl_registry *registry, uint32_t id, uint32_t version);
+    void InitPrimarySelectionDataDeviceManager(wl_registry *registry, uint32_t id);
+    void InitSeat(wl_registry *registry, uint32_t id, uint32_t version, void *data);
     virtual ~nsRetrievalContextWayland() override;
 
 private:
     bool                        mInitialized;
-    nsWaylandDisplay*           mDisplay;
+    wl_display                 *mDisplay;
+    wl_seat                    *mSeat;
+    wl_data_device_manager     *mDataDeviceManager;
+    gtk_primary_selection_device_manager *mPrimarySelectionDataDeviceManager;
 
     // Data offers provided by Wayland data device
     GHashTable*                 mActiveOffers;

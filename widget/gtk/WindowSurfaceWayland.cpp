@@ -4,24 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsWaylandDisplay.h"
 #include "WindowSurfaceWayland.h"
 
+#include "base/message_loop.h"          // for MessageLoop
+#include "base/task.h"                  // for NewRunnableMethod, etc
 #include "nsPrintfCString.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Tools.h"
 #include "gfxPlatform.h"
 #include "mozcontainer.h"
 #include "nsTArray.h"
-#include "base/message_loop.h"          // for MessageLoop
-#include "base/task.h"                  // for NewRunnableMethod, etc
+#include "mozilla/StaticMutex.h"
+#include "mozwayland/mozwayland.h"
 
 #include <sys/mman.h>
+#include <assert.h>
 #include <fcntl.h>
 #include <errno.h>
-
-namespace mozilla {
-namespace widget {
 
 /*
   Wayland multi-thread rendering scheme
@@ -132,8 +131,202 @@ handle to wayland compositor by WindowBackBuffer/WindowSurfaceWayland
 (wl_buffer/wl_surface).
 */
 
+namespace mozilla {
+namespace widget {
+
 #define BUFFER_BPP 4
-gfx::SurfaceFormat WindowBackBuffer::mFormat = gfx::SurfaceFormat::B8G8R8A8;
+#define MAX_DISPLAY_CONNECTIONS 2
+
+static nsWaylandDisplay* gWaylandDisplays[MAX_DISPLAY_CONNECTIONS];
+static StaticMutex gWaylandDisplaysMutex;
+
+// Each thread which is using wayland connection (wl_display) has to operate
+// its own wl_event_queue. Main Firefox thread wl_event_queue is handled
+// by Gtk main loop, other threads/wl_event_queue has to be handled by us.
+//
+// nsWaylandDisplay is our interface to wayland compositor. It provides wayland
+// global objects as we need (wl_display, wl_shm) and operates wl_event_queue on
+// compositor (not the main) thread.
+static nsWaylandDisplay* WaylandDisplayGet(wl_display *aDisplay);
+static void WaylandDisplayRelease(wl_display *aDisplay);
+static void WaylandDisplayLoop(wl_display *aDisplay);
+
+// TODO: Bug 1467125 - We need to integrate wl_display_dispatch_queue_pending() with
+// compositor event loop.
+#define EVENT_LOOP_DELAY (1000/240)
+
+// Get WaylandDisplay for given wl_display and actual calling thread.
+static nsWaylandDisplay*
+WaylandDisplayGetLocked(wl_display *aDisplay, const StaticMutexAutoLock&)
+{
+  for (auto& display: gWaylandDisplays) {
+    if (display && display->Matches(aDisplay)) {
+      NS_ADDREF(display);
+      return display;
+    }
+  }
+
+  for (auto& display: gWaylandDisplays) {
+    if (display == nullptr) {
+      display = new nsWaylandDisplay(aDisplay);
+      NS_ADDREF(display);
+      return display;
+    }
+  }
+
+  MOZ_CRASH("There's too many wayland display conections!");
+  return nullptr;
+}
+
+static nsWaylandDisplay*
+WaylandDisplayGet(wl_display *aDisplay)
+{
+  StaticMutexAutoLock lock(gWaylandDisplaysMutex);
+  return WaylandDisplayGetLocked(aDisplay, lock);
+}
+
+static bool
+WaylandDisplayReleaseLocked(wl_display *aDisplay,
+                            const StaticMutexAutoLock&)
+{
+  for (auto& display: gWaylandDisplays) {
+    if (display && display->Matches(aDisplay)) {
+      int rc = display->Release();
+      if (rc == 0) {
+        display = nullptr;
+      }
+      return true;
+    }
+  }
+  MOZ_ASSERT(false, "Missing nsWaylandDisplay for this thread!");
+  return false;
+}
+
+static void
+WaylandDisplayRelease(wl_display *aDisplay)
+{
+  StaticMutexAutoLock lock(gWaylandDisplaysMutex);
+  WaylandDisplayReleaseLocked(aDisplay, lock);
+}
+
+static void
+WaylandDisplayLoopLocked(wl_display* aDisplay,
+                         const StaticMutexAutoLock&)
+{
+  for (auto& display: gWaylandDisplays) {
+    if (display && display->Matches(aDisplay)) {
+      if (display->DisplayLoop()) {
+        MessageLoop::current()->PostDelayedTask(
+            NewRunnableFunction("WaylandDisplayLoop",
+                               &WaylandDisplayLoop,
+                               aDisplay),
+            EVENT_LOOP_DELAY);
+      }
+      break;
+    }
+  }
+}
+
+static void
+WaylandDisplayLoop(wl_display* aDisplay)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  StaticMutexAutoLock lock(gWaylandDisplaysMutex);
+  WaylandDisplayLoopLocked(aDisplay, lock);
+}
+
+static void
+global_registry_handler(void *data, wl_registry *registry, uint32_t id,
+                        const char *interface, uint32_t version)
+{
+  if (strcmp(interface, "wl_shm") == 0) {
+    auto interface = reinterpret_cast<nsWaylandDisplay *>(data);
+    auto shm = static_cast<wl_shm*>(
+        wl_registry_bind(registry, id, &wl_shm_interface, 1));
+    wl_proxy_set_queue((struct wl_proxy *)shm, interface->GetEventQueue());
+    interface->SetShm(shm);
+  }
+}
+
+static void
+global_registry_remover(void *data, wl_registry *registry, uint32_t id)
+{
+}
+
+static const struct wl_registry_listener registry_listener = {
+  global_registry_handler,
+  global_registry_remover
+};
+
+wl_shm*
+nsWaylandDisplay::GetShm()
+{
+  MOZ_ASSERT(mThreadId == PR_GetCurrentThread());
+
+  if (!mShm) {
+    // wl_shm is not provided by Gtk so we need to query wayland directly
+    // See weston/simple-shm.c and create_display() for reference.
+    wl_registry* registry = wl_display_get_registry(mDisplay);
+    wl_registry_add_listener(registry, &registry_listener, this);
+
+    wl_proxy_set_queue((struct wl_proxy *)registry, mEventQueue);
+    if (mEventQueue) {
+      wl_display_roundtrip_queue(mDisplay, mEventQueue);
+    } else {
+      wl_display_roundtrip(mDisplay);
+    }
+
+    MOZ_RELEASE_ASSERT(mShm, "Wayland registry query failed!");
+  }
+
+  return(mShm);
+}
+
+bool
+nsWaylandDisplay::DisplayLoop()
+{
+  wl_display_dispatch_queue_pending(mDisplay, mEventQueue);
+  return true;
+}
+
+bool
+nsWaylandDisplay::Matches(wl_display *aDisplay)
+{
+  return mThreadId == PR_GetCurrentThread() && aDisplay == mDisplay;
+}
+
+NS_IMPL_ISUPPORTS(nsWaylandDisplay, nsISupports);
+
+nsWaylandDisplay::nsWaylandDisplay(wl_display *aDisplay)
+  : mThreadId(PR_GetCurrentThread())
+  // gfx::SurfaceFormat::B8G8R8A8 is a basic Wayland format
+  // and is always present.
+  // TODO: Provide also format without alpha (Bug 1470126).
+  , mFormat(gfx::SurfaceFormat::B8G8R8A8)
+  , mShm(nullptr)
+  , mDisplay(aDisplay)
+{
+  if (NS_IsMainThread()) {
+    // Use default event queue in main thread operated by Gtk+.
+    mEventQueue = nullptr;
+  } else {
+    mEventQueue = wl_display_create_queue(mDisplay);
+    MessageLoop::current()->PostTask(NewRunnableFunction(
+        "WaylandDisplayLoop", &WaylandDisplayLoop, mDisplay));
+  }
+}
+
+nsWaylandDisplay::~nsWaylandDisplay()
+{
+  MOZ_ASSERT(mThreadId == PR_GetCurrentThread());
+  // Owned by Gtk+, we don't need to release
+  mDisplay = nullptr;
+
+  if (mEventQueue) {
+    wl_event_queue_destroy(mEventQueue);
+    mEventQueue = nullptr;
+  }
+}
 
 int
 WaylandShmPool::CreateTemporaryFile(int aSize)
@@ -351,7 +544,7 @@ WindowBackBuffer::Lock()
   return gfxPlatform::CreateDrawTargetForData(static_cast<unsigned char*>(mShmPool.GetImageData()),
                                               lockSize,
                                               BUFFER_BPP * mWidth,
-                                              mFormat);
+                                              mWaylandDisplay->GetSurfaceFormat());
 }
 
 static void
@@ -369,7 +562,7 @@ static const struct wl_callback_listener frame_listener = {
 
 WindowSurfaceWayland::WindowSurfaceWayland(nsWindow *aWindow)
   : mWindow(aWindow)
-  , mWaylandDisplay(WaylandDisplayGet())
+  , mWaylandDisplay(WaylandDisplayGet(aWindow->GetWaylandDisplay()))
   , mWaylandBuffer(nullptr)
   , mFrameCallback(nullptr)
   , mLastCommittedSurface(nullptr)
@@ -417,9 +610,9 @@ WindowSurfaceWayland::~WindowSurfaceWayland()
     mDisplayThreadMessageLoop->PostTask(
       NewRunnableFunction("WaylandDisplayRelease",
                           &WaylandDisplayRelease,
-                          mWaylandDisplay));
+                          mWaylandDisplay->GetDisplay()));
   } else {
-    WaylandDisplayRelease(mWaylandDisplay);
+    WaylandDisplayRelease(mWaylandDisplay->GetDisplay());
   }
 }
 
@@ -507,7 +700,7 @@ WindowSurfaceWayland::LockImageSurface(const gfx::IntSize& aLockSize)
   if (!mImageSurface || mImageSurface->CairoStatus() ||
       !(aLockSize <= mImageSurface->GetSize())) {
     mImageSurface = new gfxImageSurface(aLockSize,
-        SurfaceFormatToImageFormat(WindowBackBuffer::GetSurfaceFormat()));
+        SurfaceFormatToImageFormat(mWaylandDisplay->GetSurfaceFormat()));
     if (mImageSurface->CairoStatus()) {
       return nullptr;
     }
@@ -516,7 +709,7 @@ WindowSurfaceWayland::LockImageSurface(const gfx::IntSize& aLockSize)
   return gfxPlatform::CreateDrawTargetForData(mImageSurface->Data(),
                                               mImageSurface->GetSize(),
                                               mImageSurface->Stride(),
-                                              WindowBackBuffer::GetSurfaceFormat());
+                                              mWaylandDisplay->GetSurfaceFormat());
 }
 
 /*
