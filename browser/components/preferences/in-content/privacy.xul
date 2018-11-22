@@ -138,7 +138,7 @@
                     <menulist id="trackingProtectionMenu">
                       <menupopup>
                         <menuitem data-l10n-id="content-blocking-tracking-protection-option-private" value="private"/>
-                        <menuitem data-l10n-id="content-blocking-tracking-protection-option-always" value="always"/>
+                        <menuitem data-l10n-id="content-blocking-tracking-protection-option-all-windows" value="always"/>
                       </menupopup>
                     </menulist>
                   </vbox>
