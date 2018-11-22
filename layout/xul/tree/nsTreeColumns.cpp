@@ -202,10 +202,6 @@ nsTreeColumn::Invalidate(ErrorResult& aRv)
     mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::editable,
                           nsGkAtoms::_true, eCaseMatters);
 
-  mIsSelectable =
-    !mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::selectable,
-                           nsGkAtoms::_false, eCaseMatters);
-
   mOverflow =
     mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::overflow,
                           nsGkAtoms::_true, eCaseMatters);

@@ -187,12 +187,12 @@ treechildren::-moz-tree-cell-text(selected, editing) {
   color: inherit;
 }
 
-treechildren::-moz-tree-cell(active, selected, focus, editing) {
+treechildren::-moz-tree-cell(selected, focus, editing) {
   background-color: transparent;
   border: none;
 }
 
-treechildren::-moz-tree-cell-text(active, selected, editing) {
+treechildren::-moz-tree-cell-text(selected, editing) {
   opacity: 0;
 }
 

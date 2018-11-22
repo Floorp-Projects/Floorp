@@ -108,7 +108,6 @@ var view = {
   selectionChanged() {},
   cycleCell(row, col) {},
   isEditable(row, col) { return false; },
-  isSelectable(row, col) { return false; },
   setCellValue(row, col, value) {},
   setCellText(row, col, value) {},
   performAction(action) {},

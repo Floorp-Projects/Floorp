@@ -24,7 +24,7 @@ interface nsITreeView : nsISupports
    */
   attribute nsITreeSelection selection;
 
-  /** 
+  /**
    * A whitespace delimited list of properties.  For each property X the view
    * gives back will cause the pseudoclasses  ::-moz-tree-cell(x),
    * ::-moz-tree-row(x), ::-moz-tree-twisty(x), ::-moz-tree-image(x),
@@ -41,7 +41,7 @@ interface nsITreeView : nsISupports
    *  cell.
    */
   AString getCellProperties(in long row, in TreeColumn col);
-  
+
   /**
    * Called to get properties to paint a column background.  For shading the sort
    * column, etc.
@@ -55,7 +55,7 @@ interface nsITreeView : nsISupports
   boolean isContainer(in long index);
   boolean isContainerOpen(in long index);
   boolean isContainerEmpty(in long index);
- 
+
   /**
    * isSeparator is used to determine if the row at index is a separator.
    * A value of true will result in the tree drawing a horizontal separator.
@@ -68,7 +68,7 @@ interface nsITreeView : nsISupports
    * to affect drop feedback.
    */
   boolean isSorted();
-  
+
   const short DROP_BEFORE = -1;
   const short DROP_ON = 0;
   const short DROP_AFTER = 1;
@@ -103,7 +103,7 @@ interface nsITreeView : nsISupports
 
   /**
    * The level is an integer value that represents
-   * the level of indentation.  It is multiplied by the width specified in the 
+   * the level of indentation.  It is multiplied by the width specified in the
    * :moz-tree-indentation pseudoelement to compute the exact indendation.
    */
   long getLevel(in long index);
@@ -123,7 +123,7 @@ interface nsITreeView : nsISupports
 
   /**
    * The text for a given cell.  If a column consists only of an image, then
-   * the empty string is returned.  
+   * the empty string is returned.
    */
   AString getCellText(in long row, in TreeColumn col);
 
@@ -131,7 +131,7 @@ interface nsITreeView : nsISupports
    * Called during initialization to link the view to the front end box object.
    */
   void setTree(in nsITreeBoxObject tree);
-  
+
   /**
    * Called on the view when an item is opened or closed.
    */
@@ -152,20 +152,13 @@ interface nsITreeView : nsISupports
    * Called on the view when a cell in a non-selectable cycling column (e.g., unread/flag/etc.) is clicked.
    */
   void cycleCell(in long row, in TreeColumn col);
-  
+
   /**
    * isEditable is called to ask the view if the cell contents are editable.
-   * A value of true will result in the tree popping up a text field when 
+   * A value of true will result in the tree popping up a text field when
    * the user tries to inline edit the cell.
    */
   boolean isEditable(in long row, in TreeColumn col);
-
-  /**
-   * isSelectable is called to ask the view if the cell is selectable.
-   * This method is only called if the selection style is |cell| or |text|.
-   * XXXvarga shouldn't this be called isCellSelectable?
-   */
-  boolean isSelectable(in long row, in TreeColumn col);
 
   /**
    * setCellValue is called when the value of the cell has been set by the user.
@@ -175,7 +168,7 @@ interface nsITreeView : nsISupports
 
   /**
    * setCellText is called when the contents of the cell have been edited by the user.
-   */   
+   */
   void setCellText(in long row, in TreeColumn col, in AString value);
 
   /**
