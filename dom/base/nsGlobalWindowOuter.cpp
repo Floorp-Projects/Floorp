@@ -5394,6 +5394,11 @@ nsGlobalWindowOuter::NotifyContentBlockingState(unsigned aState,
     state &= ~aState;
   }
 
+  if (state == oldState) {
+    // Avoid dispatching repeated notifications when nothing has changed
+    return;
+  }
+
   eventSink->OnSecurityChange(aChannel, oldState, state, doc->GetContentBlockingLog());
 }
 
