@@ -9,6 +9,7 @@ about-performance-title = Task Manager
 column-name = Name
 column-type = Type
 column-energy-impact = Energy Impact
+column-memory = Memory
 
 ## Special values for the Name column
 ghost-windows = Recently closed tabs
@@ -33,6 +34,14 @@ type-other = Other
 energy-impact-high = High ({ $value })
 energy-impact-medium = Medium ({ $value })
 energy-impact-low = Low ({ $value })
+
+## Values for the Memory column
+##
+## Variables:
+##   $value (Number) - How much memory is used
+size-KB = { $value } KB
+size-MB = { $value } MB
+size-GB = { $value } GB
 
 ## Tooltips for the action buttons
 close-tab =
