@@ -1332,9 +1332,8 @@ var PanelView = class extends AssociatedToNode {
         if (element.closest("[hidden]")) {
           continue;
         }
-
         // Take the label for toolbarbuttons; it only exists on those elements.
-        element = element.multilineLabel || element;
+        element = element.labelElement || element;
 
         let bounds = element.getBoundingClientRect();
         let previous = gMultiLineElementsMap.get(element);
