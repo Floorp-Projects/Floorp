@@ -12,6 +12,15 @@
 import json
 import subprocess
 import sys
+import os.path
+
+if (not os.path.isfile("../encoding/encodings.json")) or (not os.path.isfile("../encoding/indexes.json")):
+  sys.stderr.write("This script needs a clone of https://github.com/whatwg/encoding/ (preferably at revision f381389) next to the encoding_rs directory.\n");
+  sys.exit(-1)
+
+if not os.path.isfile("../encoding_c/src/lib.rs"):
+  sys.stderr.write("This script also writes the generated parts of the encoding_c crate and needs a clone of https://github.com/hsivonen/encoding_c next to the encoding_rs directory.\n");
+  sys.exit(-1)
 
 def cmp_from_end(one, other):
   c = cmp(len(one), len(other))
@@ -52,9 +61,12 @@ def static_u16_table(name, data):
   ''')
 
 def static_u16_table_from_indexable(name, data, item, feature):
-  data_file.write('''#[cfg(feature = "%s")]
+  data_file.write('''#[cfg(all(
+    feature = "less-slow-%s",
+    not(feature = "fast-%s")
+))]
 static %s: [u16; %d] = [
-  ''' % (feature, name, len(data)))
+  ''' % (feature, feature, name, len(data)))
 
   for i in xrange(len(data)):
     data_file.write('0x%04X,\n' % data[i][item])
@@ -64,12 +76,30 @@ static %s: [u16; %d] = [
   ''')
 
 def static_u8_pair_table_from_indexable(name, data, item, feature):
+  data_file.write('''#[cfg(all(
+    feature = "less-slow-%s",
+    not(feature = "fast-%s")
+))]
+static %s: [[u8; 2]; %d] = [
+  ''' % (feature, feature, name, len(data)))
+
+  for i in xrange(len(data)):
+    data_file.write('[0x%02X, 0x%02X],\n' % data[i][item])
+
+  data_file.write('''];
+
+  ''')
+
+def static_u8_pair_table(name, data, feature):
   data_file.write('''#[cfg(feature = "%s")]
 static %s: [[u8; 2]; %d] = [
   ''' % (feature, name, len(data)))
 
   for i in xrange(len(data)):
-    data_file.write('[0x%02X, 0x%02X],\n' % data[i][item])
+    pair = data[i]
+    if not pair:
+      pair = (0, 0)
+    data_file.write('[0x%02X, 0x%02X],\n' % pair)
 
   data_file.write('''];
 
@@ -167,6 +197,46 @@ encoding_by_alias_code_page = {
   51949: "EUC-KR",
 }
 
+# The position in the index (0 is the first index entry,
+# i.e. byte value 0x80) that starts the longest run of
+# consecutive code points. Must not be in the first
+# quadrant. If the character to be encoded is not in this
+# run, the part of the index after the run is searched
+# forward. Then the part of the index from 32 to the start
+# of the run. The first quadrant is searched last.
+#
+# If there is no obviously most useful longest run,
+# the index here is just used to affect the search order.
+start_of_longest_run_in_single_byte = {
+  "IBM866": 96, # 0 would be longest, but we don't want to start in the first quadrant
+  "windows-874": 33,
+  "windows-1250": 92,
+  "windows-1251": 64,
+  "windows-1252": 32,
+  "windows-1253": 83,
+  "windows-1254": 95,
+  "windows-1255": 96,
+  "windows-1256": 65,
+  "windows-1257": 95, # not actually longest
+  "windows-1258": 95, # not actually longest
+  "macintosh": 106, # useless
+  "x-mac-cyrillic": 96,
+  "KOI8-R": 64, # not actually longest
+  "KOI8-U": 64, # not actually longest
+  "ISO-8859-2": 95, # not actually longest
+  "ISO-8859-3": 95, # not actually longest
+  "ISO-8859-4": 95, # not actually longest
+  "ISO-8859-5": 46,
+  "ISO-8859-6": 65,
+  "ISO-8859-7": 83,
+  "ISO-8859-8": 96,
+  "ISO-8859-10": 90, # not actually longest
+  "ISO-8859-13": 95, # not actually longest
+  "ISO-8859-14": 95,
+  "ISO-8859-15": 63,
+  "ISO-8859-16": 95, # not actually longest
+}
+
 #
 
 for group in data:
@@ -201,6 +271,25 @@ for label in labels:
     longest_label_length = len(label.label)
     longest_label = label.label
 
+def longest_run_for_single_byte(name):
+  if name == u"ISO-8859-8-I":
+    name = u"ISO-8859-8"
+  index = indexes[name.lower()]
+  run_byte_offset = start_of_longest_run_in_single_byte[name]
+  run_bmp_offset = index[run_byte_offset]
+  previous_code_point = run_bmp_offset
+  run_length = 1
+  while True:
+    i = run_byte_offset + run_length
+    if i == len(index):
+      break
+    code_point = index[i]
+    if previous_code_point + 1 != code_point:
+      break
+    previous_code_point = code_point
+    run_length += 1
+  return (run_bmp_offset, run_byte_offset, run_length)
+
 def is_single_byte(name):
   for encoding in single_byte:
     if name == encoding["name"]:
@@ -217,11 +306,11 @@ def read_non_generated(path):
 
   generated_begin_index = full.find(generated_begin)
   if generated_begin_index < 0:
-    print "Can't find generated code start marker in %s. Exiting." % path
+    sys.stderr.write("Can't find generated code start marker in %s. Exiting.\n" % path)
     sys.exit(-1)
   generated_end_index = full.find(generated_end)
   if generated_end_index < 0:
-    print "Can't find generated code end marker in %s. Exiting." % path
+    sys.stderr.write("Can't find generated code end marker in %s. Exiting.\n" % path)
     sys.exit(-1)
 
   return (full[0:generated_begin_index + len(generated_begin)],
@@ -242,7 +331,8 @@ const LONGEST_LABEL_LENGTH: usize = %d; // %s
 for name in preferred:
   variant = None
   if is_single_byte(name):
-    variant = "SingleByte(data::%s_DATA)" % to_constant_name(u"iso-8859-8" if name == u"ISO-8859-8-I" else name)
+    (run_bmp_offset, run_byte_offset, run_length) = longest_run_for_single_byte(name)
+    variant = "SingleByte(&data::SINGLE_BYTE_DATA.%s, 0x%04X, %d, %d)" % (to_snake_name(u"iso-8859-8" if name == u"ISO-8859-8-I" else name), run_bmp_offset, run_byte_offset, run_length)
   else:
     variant = to_camel_name(name)
 
@@ -323,19 +413,15 @@ def null_to_zero(code_point):
     code_point = 0
   return code_point
 
-data_file = open("src/data.rs", "w")
-data_file.write('''// Copyright 2015-2016 Mozilla Foundation. See the COPYRIGHT
-// file at the top-level directory of this distribution.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
+(data_rs_begin, data_rs_end) = read_non_generated("src/data.rs")
 
-// THIS IS A GENERATED FILE. PLEASE DO NOT EDIT.
+data_file = open("src/data.rs", "w")
+data_file.write(data_rs_begin)
+data_file.write('''
 // Instead, please regenerate using generate-encoding-data.py
 
+#[repr(align(64))] // Align to cache lines
+pub struct SingleByteData {
 ''')
 
 # Single-byte
@@ -345,13 +431,29 @@ for encoding in single_byte:
   if name == u"ISO-8859-8-I":
     continue
 
-  data_file.write('''pub const %s_DATA: &'static [u16; 128] = &[
-''' % to_constant_name(name))
+  data_file.write('''    pub %s: [u16; 128],
+''' % to_snake_name(name))
+
+data_file.write('''}
+
+pub static SINGLE_BYTE_DATA: SingleByteData = SingleByteData {
+''')
+
+for encoding in single_byte:
+  name = encoding["name"]
+  if name == u"ISO-8859-8-I":
+    continue
+
+  data_file.write('''    %s: [
+''' % to_snake_name(name))
 
   for code_point in indexes[name.lower()]:
     data_file.write('0x%04X,\n' % null_to_zero(code_point))
 
-  data_file.write('''];
+  data_file.write('''],
+''')
+
+data_file.write('''};
 
 ''')
 
@@ -374,7 +476,8 @@ for code_point in index[942:19782]:
 for j in xrange(32 - (len(astralness) % 32)):
   astralness.append(0)
 
-data_file.write('''static BIG5_ASTRALNESS: [u32; %d] = [
+data_file.write('''#[cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
+static BIG5_ASTRALNESS: [u32; %d] = [
 ''' % (len(astralness) / 32))
 
 i = 0
@@ -408,8 +511,23 @@ level1_hanzi_pairs.append((0x5188, (0xC8, 0xA2)))
 level1_hanzi_pairs.append((0x9FB1, (0xC8, 0xA3)))
 level1_hanzi_pairs.sort(key=lambda x: x[0])
 
-static_u16_table_from_indexable("BIG5_LEVEL1_HANZI_CODE_POINTS", level1_hanzi_pairs, 0, "less-slow-big5-hanzi-encode")
-static_u8_pair_table_from_indexable("BIG5_LEVEL1_HANZI_BYTES", level1_hanzi_pairs, 1, "less-slow-big5-hanzi-encode")
+static_u16_table_from_indexable("BIG5_LEVEL1_HANZI_CODE_POINTS", level1_hanzi_pairs, 0, "big5-hanzi-encode")
+static_u8_pair_table_from_indexable("BIG5_LEVEL1_HANZI_BYTES", level1_hanzi_pairs, 1, "big5-hanzi-encode")
+
+# Fast Unified Ideograph encode
+big5_unified_ideograph_bytes = [None] * (0x9FCC - 0x4E00)
+for row in xrange(0x7E - 0x20):
+  for column in xrange(157):
+    pointer = 5024 + column + (row * 157)
+    code_point = index[pointer]
+    if code_point and code_point >= 0x4E00 and code_point <= 0x9FCB:
+      unified_offset = code_point - 0x4E00
+      unified_lead = 0xA1 + row
+      unified_trail = (0x40 if column < 0x3F else 0x62) + column
+      if code_point == 0x5341 or code_point == 0x5345 or not big5_unified_ideograph_bytes[unified_offset]:
+        big5_unified_ideograph_bytes[unified_offset] = (unified_lead, unified_trail)
+
+static_u8_pair_table("BIG5_UNIFIED_IDEOGRAPH_BYTES", big5_unified_ideograph_bytes, "fast-big5-hanzi-encode")
 
 # JIS0208
 
@@ -550,8 +668,23 @@ for i in xrange(len(level1_kanji_index)):
   level1_kanji_pairs.append((level1_kanji_index[i], (lead, trail)))
 level1_kanji_pairs.sort(key=lambda x: x[0])
 
-static_u16_table_from_indexable("JIS0208_LEVEL1_KANJI_CODE_POINTS", level1_kanji_pairs, 0, "less-slow-kanji-encode")
-static_u8_pair_table_from_indexable("JIS0208_LEVEL1_KANJI_SHIFT_JIS_BYTES", level1_kanji_pairs, 1, "less-slow-kanji-encode")
+static_u16_table_from_indexable("JIS0208_LEVEL1_KANJI_CODE_POINTS", level1_kanji_pairs, 0, "kanji-encode")
+static_u8_pair_table_from_indexable("JIS0208_LEVEL1_KANJI_SHIFT_JIS_BYTES", level1_kanji_pairs, 1, "kanji-encode")
+
+# Fast encoder table for Kanji
+kanji_bytes = [None] * (0x9FA1 - 0x4E00)
+for pointer in xrange(len(index)):
+  code_point = index[pointer]
+  if code_point and code_point >= 0x4E00 and code_point <= 0x9FA0:
+    (lead, trail) = divmod(pointer, 188)
+    lead += 0x81 if lead < 0x1F else 0xC1
+    trail += 0x40 if trail < 0x3F else 0x41
+    # unset the high bit of lead if IBM Kanji
+    if pointer >= 8272:
+      lead = lead & 0x7F
+    kanji_bytes[code_point - 0x4E00] = (lead, trail)
+
+static_u8_pair_table("JIS0208_KANJI_BYTES", kanji_bytes, "fast-kanji-encode")
 
 # ISO-2022-JP half-width katakana
 
@@ -727,6 +860,28 @@ static_u16_table("KSX1001_OTHER_POINTERS", pointers)
 # Omit the last offset, because the end of the last line
 # is unmapped, so we don't want to look at it.
 static_u16_table("KSX1001_OTHER_UNSORTED_OFFSETS", offsets[:-1])
+
+# Fast Hangul and Hanja encode
+hangul_bytes = [None] * (0xD7A4 - 0xAC00)
+hanja_unified_bytes = [None] * (0x9F9D - 0x4E00)
+hanja_compatibility_bytes = [None] * (0xFA0C - 0xF900)
+for row in xrange(0x7D):
+  for column in xrange(190):
+    pointer = column + (row * 190)
+    code_point = index[pointer]
+    if code_point:
+      lead = 0x81 + row
+      trail = 0x41 + column
+      if code_point >= 0xAC00 and code_point < 0xD7A4:
+        hangul_bytes[code_point - 0xAC00] = (lead, trail)
+      elif code_point >= 0x4E00 and code_point < 0x9F9D:
+        hanja_unified_bytes[code_point - 0x4E00] = (lead, trail)
+      elif code_point >= 0xF900 and code_point < 0xFA0C:
+        hanja_compatibility_bytes[code_point - 0xF900] = (lead, trail)
+
+static_u8_pair_table("CP949_HANGUL_BYTES", hangul_bytes, "fast-hangul-encode")
+static_u8_pair_table("KSX1001_UNIFIED_HANJA_BYTES", hanja_unified_bytes, "fast-hanja-encode")
+static_u8_pair_table("KSX1001_COMPATIBILITY_HANJA_BYTES", hanja_compatibility_bytes, "fast-hanja-encode")
 
 # JIS 0212
 
@@ -927,502 +1082,23 @@ for i in xrange(len(level1_hanzi_index)):
   level1_hanzi_pairs.append((level1_hanzi_index[i], (hanzi_lead, hanzi_trail)))
 level1_hanzi_pairs.sort(key=lambda x: x[0])
 
-static_u16_table_from_indexable("GB2312_LEVEL1_HANZI_CODE_POINTS", level1_hanzi_pairs, 0, "less-slow-gb-hanzi-encode")
-static_u8_pair_table_from_indexable("GB2312_LEVEL1_HANZI_BYTES", level1_hanzi_pairs, 1, "less-slow-gb-hanzi-encode")
+static_u16_table_from_indexable("GB2312_LEVEL1_HANZI_CODE_POINTS", level1_hanzi_pairs, 0, "gb-hanzi-encode")
+static_u8_pair_table_from_indexable("GB2312_LEVEL1_HANZI_BYTES", level1_hanzi_pairs, 1, "gb-hanzi-encode")
 
-data_file.write('''#[inline(always)]
-fn map_with_ranges(haystack: &[u16], other: &[u16], needle: u16) -> u16 {
-    debug_assert_eq!(haystack.len(), other.len());
-    match haystack.binary_search(&needle) {
-        Ok(i) => other[i],
-        Err(i) => other[i - 1] + (needle - haystack[i - 1]),
-    }
-}
+# Fast Hanzi encoder table
+hanzi_bytes = [None] * (0x9FA7 - 0x4E00)
+for row in xrange(126):
+  for column in xrange(190):
+    pointer = column + (row * 190)
+    code_point = index[pointer]
+    if code_point and code_point >= 0x4E00 and code_point <= 0x9FA6:
+      hanzi_lead = 0x81 + row
+      hanzi_trail = column + (0x40 if column < 0x3F else 0x41)
+      hanzi_bytes[code_point - 0x4E00] = (hanzi_lead, hanzi_trail)
 
-#[inline(always)]
-fn map_with_unsorted_ranges(haystack: &[u16], other: &[u16], needle: u16) -> Option<u16> {
-    debug_assert_eq!(haystack.len() + 1, other.len());
-    for i in 0..haystack.len() {
-        let start = other[i];
-        let end = other[i + 1];
-        let length = end - start;
-        let offset = needle.wrapping_sub(haystack[i]);
-        if offset < length {
-            return Some(start + offset);
-        }
-    }
-    None
-}
+static_u8_pair_table("GBK_HANZI_BYTES", hanzi_bytes, "fast-gb-hanzi-encode")
 
-#[inline(always)]
-pub fn position(haystack: &[u16], needle: u16) -> Option<usize> {
-    haystack.iter().position(|&x| x == needle)
-}
-
-#[inline(always)]
-pub fn gb18030_range_decode(pointer: u16) -> u16 {
-    map_with_ranges(&GB18030_RANGE_POINTERS[..],
-                    &GB18030_RANGE_OFFSETS[..],
-                    pointer)
-}
-
-#[inline(always)]
-pub fn gb18030_range_encode(bmp: u16) -> usize {
-    if bmp == 0xE7C7 {
-        return 7457;
-    }
-    map_with_ranges(&GB18030_RANGE_OFFSETS[..], &GB18030_RANGE_POINTERS[..], bmp) as usize
-}
-
-#[inline(always)]
-pub fn gbk_top_ideograph_decode(pointer: u16) -> u16 {
-    map_with_ranges(&GBK_TOP_IDEOGRAPH_POINTERS[..],
-                    &GBK_TOP_IDEOGRAPH_OFFSETS[..],
-                    pointer)
-}
-
-#[inline(always)]
-pub fn gbk_top_ideograph_encode(bmp: u16) -> u16 {
-    map_with_ranges(&GBK_TOP_IDEOGRAPH_OFFSETS[..],
-                    &GBK_TOP_IDEOGRAPH_POINTERS[..],
-                    bmp)
-}
-
-#[inline(always)]
-pub fn gbk_left_ideograph_decode(pointer: u16) -> u16 {
-    map_with_ranges(&GBK_LEFT_IDEOGRAPH_POINTERS[..],
-                    &GBK_LEFT_IDEOGRAPH_OFFSETS[..],
-                    pointer)
-}
-
-#[inline(always)]
-pub fn gbk_left_ideograph_encode(bmp: u16) -> u16 {
-    map_with_ranges(&GBK_LEFT_IDEOGRAPH_OFFSETS[..],
-                    &GBK_LEFT_IDEOGRAPH_POINTERS[..],
-                    bmp)
-}
-
-#[inline(always)]
-pub fn cp949_top_hangul_decode(pointer: u16) -> u16 {
-    map_with_ranges(&CP949_TOP_HANGUL_POINTERS[..],
-                    &CP949_TOP_HANGUL_OFFSETS[..],
-                    pointer)
-}
-
-#[inline(always)]
-pub fn cp949_top_hangul_encode(bmp: u16) -> u16 {
-    map_with_ranges(&CP949_TOP_HANGUL_OFFSETS[..],
-                    &CP949_TOP_HANGUL_POINTERS[..],
-                    bmp)
-}
-
-#[inline(always)]
-pub fn cp949_left_hangul_decode(pointer: u16) -> u16 {
-    map_with_ranges(&CP949_LEFT_HANGUL_POINTERS[..],
-                    &CP949_LEFT_HANGUL_OFFSETS[..],
-                    pointer)
-}
-
-#[inline(always)]
-pub fn cp949_left_hangul_encode(bmp: u16) -> u16 {
-    map_with_ranges(&CP949_LEFT_HANGUL_OFFSETS[..],
-                    &CP949_LEFT_HANGUL_POINTERS[..],
-                    bmp)
-}
-
-#[inline(always)]
-pub fn gbk_other_decode(pointer: u16) -> u16 {
-    map_with_ranges(&GBK_OTHER_POINTERS[..GBK_OTHER_POINTERS.len() - 1],
-                    &GBK_OTHER_UNSORTED_OFFSETS[..],
-                    pointer)
-}
-
-#[inline(always)]
-pub fn gbk_other_encode(bmp: u16) -> Option<u16> {
-    map_with_unsorted_ranges(&GBK_OTHER_UNSORTED_OFFSETS[..],
-                             &GBK_OTHER_POINTERS[..],
-                             bmp)
-}
-
-#[inline(always)]
-pub fn gb2312_other_decode(pointer: u16) -> u16 {
-    map_with_ranges(&GB2312_OTHER_POINTERS[..GB2312_OTHER_POINTERS.len() - 1],
-                    &GB2312_OTHER_UNSORTED_OFFSETS[..],
-                    pointer)
-}
-
-#[inline(always)]
-pub fn gb2312_other_encode(bmp: u16) -> Option<u16> {
-    map_with_unsorted_ranges(&GB2312_OTHER_UNSORTED_OFFSETS[..],
-                             &GB2312_OTHER_POINTERS[..],
-                             bmp)
-}
-
-#[cfg(not(feature = "less-slow-gb-hanzi-encode"))]
-#[inline(always)]
-pub fn gb2312_level1_hanzi_encode(bmp: u16) -> Option<(u8, u8)> {
-    position(&GB2312_HANZI[..(94 * (0xD8 - 0xB0) - 5)], bmp).map(|hanzi_pointer| {
-        let hanzi_lead = (hanzi_pointer / 94) + 0xB0;
-        let hanzi_trail = (hanzi_pointer % 94) + 0xA1;
-        (hanzi_lead as u8, hanzi_trail as u8)
-    })
-}
-
-#[cfg(feature = "less-slow-gb-hanzi-encode")]
-#[inline(always)]
-pub fn gb2312_level1_hanzi_encode(bmp: u16) -> Option<(u8, u8)> {
-    match GB2312_LEVEL1_HANZI_CODE_POINTS.binary_search(&bmp) {
-        Ok(i) => {
-            let pair = &GB2312_LEVEL1_HANZI_BYTES[i];
-            Some((pair[0], pair[1]))
-        }
-        Err(_) => None,
-    }
-}
-
-#[inline(always)]
-pub fn gb2312_level2_hanzi_encode(bmp: u16) -> Option<usize> {
-    // TODO: optimize
-    position(&GB2312_HANZI[(94 * (0xD8 - 0xB0))..], bmp)
-}
-
-#[inline(always)]
-pub fn ksx1001_other_decode(pointer: u16) -> u16 {
-    map_with_ranges(&KSX1001_OTHER_POINTERS[..KSX1001_OTHER_POINTERS.len() - 1],
-                    &KSX1001_OTHER_UNSORTED_OFFSETS[..],
-                    pointer)
-}
-
-#[inline(always)]
-pub fn ksx1001_other_encode(bmp: u16) -> Option<u16> {
-    map_with_unsorted_ranges(&KSX1001_OTHER_UNSORTED_OFFSETS[..],
-                             &KSX1001_OTHER_POINTERS[..],
-                             bmp)
-}
-
-#[cfg(not(feature = "less-slow-kanji-encode"))]
-#[inline(always)]
-pub fn jis0208_level1_kanji_shift_jis_encode(bmp: u16) -> Option<(u8, u8)> {
-    position(&JIS0208_LEVEL1_KANJI[..], bmp).map(|kanji_pointer| {
-        let pointer = 1410 + kanji_pointer;
-        let lead = pointer / 188;
-        let lead_offset = if lead < 0x1F {
-            0x81
-        } else {
-            0xC1
-        };
-        let trail = pointer % 188;
-        let trail_offset = if trail < 0x3F {
-            0x40
-        } else {
-            0x41
-        };
-        ((lead + lead_offset) as u8, (trail + trail_offset) as u8)
-    })
-}
-
-#[cfg(feature = "less-slow-kanji-encode")]
-#[inline(always)]
-pub fn jis0208_level1_kanji_shift_jis_encode(bmp: u16) -> Option<(u8, u8)> {
-    match JIS0208_LEVEL1_KANJI_CODE_POINTS.binary_search(&bmp) {
-        Ok(i) => {
-            let pair = &JIS0208_LEVEL1_KANJI_SHIFT_JIS_BYTES[i];
-            Some((pair[0], pair[1]))
-        }
-        Err(_) => None,
-    }
-}
-
-#[cfg(not(feature = "less-slow-kanji-encode"))]
-#[inline(always)]
-pub fn jis0208_level1_kanji_euc_jp_encode(bmp: u16) -> Option<(u8, u8)> {
-    position(&JIS0208_LEVEL1_KANJI[..], bmp).map(|kanji_pointer| {
-        let lead = (kanji_pointer / 94) + 0xB0;
-        let trail = (kanji_pointer % 94) + 0xA1;
-        (lead as u8, trail as u8)
-    })
-}
-
-#[cfg(feature = "less-slow-kanji-encode")]
-#[inline(always)]
-pub fn jis0208_level1_kanji_euc_jp_encode(bmp: u16) -> Option<(u8, u8)> {
-    jis0208_level1_kanji_shift_jis_encode(bmp).map(|(shift_jis_lead, shift_jis_trail)| {
-        let mut lead = shift_jis_lead as usize;
-        if shift_jis_lead >= 0xA0 {
-            lead -= 0xC1 - 0x81;
-        }
-        // The next line would overflow u8. Letting it go over allows us to
-        // subtract fewer times.
-        lead <<= 1;
-        // Bring it back to u8 range
-        lead -= 0x61;
-        let trail = if shift_jis_trail >= 0x9F {
-            lead += 1;
-            shift_jis_trail + (0xA1 - 0x9F)
-        } else if shift_jis_trail < 0x7F {
-            shift_jis_trail + (0xA1 - 0x40)
-        } else {
-            shift_jis_trail + (0xA1 - 0x41)
-        };
-        (lead as u8, trail)
-    })
-}
-
-#[cfg(not(feature = "less-slow-kanji-encode"))]
-#[inline(always)]
-pub fn jis0208_level1_kanji_iso_2022_jp_encode(bmp: u16) -> Option<(u8, u8)> {
-    position(&JIS0208_LEVEL1_KANJI[..], bmp).map(|kanji_pointer| {
-        let lead = (kanji_pointer / 94) + (0xB0 - 0x80);
-        let trail = (kanji_pointer % 94) + 0x21;
-        (lead as u8, trail as u8)
-    })
-}
-
-#[cfg(feature = "less-slow-kanji-encode")]
-#[inline(always)]
-pub fn jis0208_level1_kanji_iso_2022_jp_encode(bmp: u16) -> Option<(u8, u8)> {
-    jis0208_level1_kanji_shift_jis_encode(bmp).map(|(shift_jis_lead, shift_jis_trail)| {
-        let mut lead = shift_jis_lead as usize;
-        if shift_jis_lead >= 0xA0 {
-            lead -= 0xC1 - 0x81;
-        }
-        // The next line would overflow u8. Letting it go over allows us to
-        // subtract fewer times.
-        lead <<= 1;
-        // Bring it back to u8 range
-        lead -= 0xE1;
-        let trail = if shift_jis_trail >= 0x9F {
-            lead += 1;
-            shift_jis_trail - (0x9F - 0x21)
-        } else if shift_jis_trail < 0x7F {
-            shift_jis_trail - (0x40 - 0x21)
-        } else {
-            shift_jis_trail - (0x41 - 0x21)
-        };
-        (lead as u8, trail)
-    })
-}
-
-#[inline(always)]
-pub fn jis0208_level2_and_additional_kanji_encode(bmp: u16) -> Option<usize> {
-    // TODO: optimize
-    position(&JIS0208_LEVEL2_AND_ADDITIONAL_KANJI[..], bmp)
-}
-
-pub fn jis0208_symbol_decode(pointer: usize) -> Option<u16> {
-    let mut i = 0;
-    while i < JIS0208_SYMBOL_TRIPLES.len() {
-        let start = JIS0208_SYMBOL_TRIPLES[i] as usize;
-        let length = JIS0208_SYMBOL_TRIPLES[i + 1] as usize;
-        let pointer_minus_start = pointer.wrapping_sub(start);
-        if pointer_minus_start < length {
-            let offset = JIS0208_SYMBOL_TRIPLES[i + 2] as usize;
-            return Some(JIS0208_SYMBOLS[pointer_minus_start + offset]);
-        }
-        i += 3;
-    }
-    None
-}
-
-/// Prefers Shift_JIS pointers for the three symbols that are in both ranges.
-#[inline(always)]
-pub fn jis0208_symbol_encode(bmp: u16) -> Option<usize> {
-    let mut i = 0;
-    while i < JIS0208_SYMBOL_TRIPLES.len() {
-        let pointer_start = JIS0208_SYMBOL_TRIPLES[i] as usize;
-        let length = JIS0208_SYMBOL_TRIPLES[i + 1] as usize;
-        let symbol_start = JIS0208_SYMBOL_TRIPLES[i + 2] as usize;
-        let symbol_end = symbol_start + length;
-        let mut symbol_pos = symbol_start;
-        while symbol_pos < symbol_end {
-            if JIS0208_SYMBOLS[symbol_pos] == bmp {
-                return Some(symbol_pos - symbol_start + pointer_start);
-            }
-            symbol_pos += 1;
-        }
-        i += 3;
-    }
-    None
-}
-
-#[inline(always)]
-pub fn ibm_symbol_encode(bmp: u16) -> Option<usize> {
-    position(&JIS0208_SYMBOLS[IBM_SYMBOL_START..IBM_SYMBOL_END], bmp)
-        .map(|x| x + IBM_SYMBOL_POINTER_START)
-}
-
-#[inline(always)]
-pub fn jis0208_range_decode(pointer: usize) -> Option<u16> {
-    let mut i = 0;
-    while i < JIS0208_RANGE_TRIPLES.len() {
-        let start = JIS0208_RANGE_TRIPLES[i] as usize;
-        let length = JIS0208_RANGE_TRIPLES[i + 1] as usize;
-        let pointer_minus_start = pointer.wrapping_sub(start);
-        if pointer_minus_start < length {
-            let offset = JIS0208_RANGE_TRIPLES[i + 2] as usize;
-            return Some((pointer_minus_start + offset) as u16);
-        }
-        i += 3;
-    }
-    None
-}
-
-#[inline(always)]
-pub fn jis0208_range_encode(bmp: u16) -> Option<usize> {
-    let mut i = 0;
-    while i < JIS0208_RANGE_TRIPLES.len() {
-        let start = JIS0208_RANGE_TRIPLES[i + 2] as usize;
-        let length = JIS0208_RANGE_TRIPLES[i + 1] as usize;
-        let bmp_minus_start = (bmp as usize).wrapping_sub(start);
-        if bmp_minus_start < length {
-            let offset = JIS0208_RANGE_TRIPLES[i] as usize;
-            return Some(bmp_minus_start + offset);
-        }
-        i += 3;
-    }
-    None
-}
-
-pub fn jis0212_accented_decode(pointer: usize) -> Option<u16> {
-    let mut i = 0;
-    while i < JIS0212_ACCENTED_TRIPLES.len() {
-        let start = JIS0212_ACCENTED_TRIPLES[i] as usize;
-        let length = JIS0212_ACCENTED_TRIPLES[i + 1] as usize;
-        let pointer_minus_start = pointer.wrapping_sub(start);
-        if pointer_minus_start < length {
-            let offset = JIS0212_ACCENTED_TRIPLES[i + 2] as usize;
-            let candidate = JIS0212_ACCENTED[pointer_minus_start + offset];
-            if candidate == 0 {
-                return None;
-            }
-            return Some(candidate);
-        }
-        i += 3;
-    }
-    None
-}
-
-#[inline(always)]
-pub fn big5_is_astral(rebased_pointer: usize) -> bool {
-    (BIG5_ASTRALNESS[rebased_pointer >> 5] & (1 << (rebased_pointer & 0x1F))) != 0
-}
-
-#[inline(always)]
-pub fn big5_low_bits(rebased_pointer: usize) -> u16 {
-    if rebased_pointer < BIG5_LOW_BITS.len() {
-        BIG5_LOW_BITS[rebased_pointer]
-    } else {
-        0
-    }
-}
-
-#[inline(always)]
-pub fn big5_astral_encode(low_bits: u16) -> Option<usize> {
-    match low_bits {
-        0x00CC => Some(11205 - 942),
-        0x008A => Some(11207 - 942),
-        0x7607 => Some(11213 - 942),
-        _ => {
-            let mut i = 18997 - 942;
-            while i < BIG5_LOW_BITS.len() - 1 {
-                if BIG5_LOW_BITS[i] == low_bits && big5_is_astral(i) {
-                    return Some(i);
-                }
-                i += 1;
-            }
-            None
-        }
-    }
-}
-
-#[cfg(not(feature = "less-slow-big5-hanzi-encode"))]
-#[inline(always)]
-pub fn big5_level1_hanzi_encode(bmp: u16) -> Option<(u8, u8)> {
-    if super::in_inclusive_range16(bmp, 0x4E00, 0x9FB1) {
-        if let Some(hanzi_pointer) = position(&BIG5_LOW_BITS[(5495 - 942)..(10951 - 942)], bmp) {
-            let lead = hanzi_pointer / 157 + 0xA4;
-            let remainder = hanzi_pointer % 157;
-            let trail = if remainder < 0x3F {
-                remainder + 0x40
-            } else {
-                remainder + 0x62
-            };
-            return Some((lead as u8, trail as u8));
-        }
-        match bmp {
-            0x4E5A => {
-                return Some((0xC8, 0x7B));
-            }
-            0x5202 => {
-                return Some((0xC8, 0x7D));
-            }
-            0x9FB0 => {
-                return Some((0xC8, 0xA1));
-            }
-            0x5188 => {
-                return Some((0xC8, 0xA2));
-            }
-            0x9FB1 => {
-                return Some((0xC8, 0xA3));
-            }
-            _ => {
-                return None;
-            }
-        }
-    }
-    None
-}
-
-#[cfg(feature = "less-slow-big5-hanzi-encode")]
-#[inline(always)]
-pub fn big5_level1_hanzi_encode(bmp: u16) -> Option<(u8, u8)> {
-    if super::in_inclusive_range16(bmp, 0x4E00, 0x9FB1) {
-        match BIG5_LEVEL1_HANZI_CODE_POINTS.binary_search(&bmp) {
-            Ok(i) => {
-                let pair = &BIG5_LEVEL1_HANZI_BYTES[i];
-                Some((pair[0], pair[1]))
-            }
-            Err(_) => None,
-        }
-    } else {
-        None
-    }
-}
-
-#[inline(always)]
-pub fn big5_box_encode(bmp: u16) -> Option<usize> {
-    position(&BIG5_LOW_BITS[(18963 - 942)..(18992 - 942)], bmp).map(|x| x + 18963)
-}
-
-#[inline(always)]
-pub fn big5_other_encode(bmp: u16) -> Option<usize> {
-    if 0x4491 == bmp {
-        return Some(11209);
-    }
-    if let Some(pos) = position(&BIG5_LOW_BITS[(5024 - 942)..(5466 - 942)], bmp) {
-        return Some(pos + 5024);
-    }
-    if let Some(pos) = position(&BIG5_LOW_BITS[(10896 - 942)..(11205 - 942)], bmp) {
-        return Some(pos + 10896);
-    }
-    if let Some(pos) = position(&BIG5_LOW_BITS[(11254 - 942)..(18963 - 942)], bmp) {
-        return Some(pos + 11254);
-    }
-    let mut i = 18996 - 942;
-    while i < BIG5_LOW_BITS.len() {
-        if BIG5_LOW_BITS[i] == bmp && !big5_is_astral(i) {
-            return Some(i + 942);
-        }
-        i += 1;
-    }
-    None
-}
-
-#[inline(always)]
-pub fn mul_94(lead: u8) -> usize {
-    lead as usize * 94
-}
-''')
+data_file.write(data_rs_end)
 
 data_file.close()
 
@@ -1568,7 +1244,7 @@ write_variant_method("encode_from_utf8_raw", True, [("src", "&str"),
 variant_file.write('''}
 
 pub enum VariantEncoding {
-    SingleByte(&'static [u16; 128]),''')
+    SingleByte(&'static [u16; 128], u16, u8, u8),''')
 
 for encoding in multi_byte:
   variant_file.write("%s,\n" % to_camel_name(encoding["name"]))
@@ -1578,7 +1254,7 @@ variant_file.write('''}
 impl VariantEncoding {
     pub fn new_variant_decoder(&self) -> VariantDecoder {
         match *self {
-            VariantEncoding::SingleByte(table) => SingleByteDecoder::new(table),
+            VariantEncoding::SingleByte(table, _, _, _) => SingleByteDecoder::new(table),
             VariantEncoding::Utf8 => Utf8Decoder::new(),
             VariantEncoding::Gbk | VariantEncoding::Gb18030 => Gb18030Decoder::new(),
             VariantEncoding::Big5 => Big5Decoder::new(),
@@ -1595,7 +1271,7 @@ impl VariantEncoding {
 
     pub fn new_encoder(&self, encoding: &'static Encoding) -> Encoder {
         match *self {
-            VariantEncoding::SingleByte(table) => SingleByteEncoder::new(encoding, table),
+            VariantEncoding::SingleByte(table, run_bmp_offset, run_byte_offset, run_length) => SingleByteEncoder::new(encoding, table, run_bmp_offset, run_byte_offset, run_length),
             VariantEncoding::Utf8 => Utf8Encoder::new(encoding),
             VariantEncoding::Gbk => Gb18030Encoder::new(encoding, false),
             VariantEncoding::Gb18030 => Gb18030Encoder::new(encoding, true),
@@ -1607,6 +1283,13 @@ impl VariantEncoding {
             VariantEncoding::UserDefined => UserDefinedEncoder::new(encoding),
             VariantEncoding::Utf16Be | VariantEncoding::Replacement |
             VariantEncoding::Utf16Le => unreachable!(),
+        }
+    }
+
+    pub fn is_single_byte(&self) -> bool {
+        match *self {
+            VariantEncoding::SingleByte(_, _, _, _) | VariantEncoding::UserDefined => true,
+            _ => false,
         }
     }
 }
@@ -1653,7 +1336,7 @@ for name in preferred:
     continue;
   if is_single_byte(name):
     single_byte_file.write("""
-        decode_single_byte(%s, %s_DATA);""" % (to_constant_name(name), to_constant_name(name)))
+        decode_single_byte(%s, &data::SINGLE_BYTE_DATA.%s);""" % (to_constant_name(name), to_snake_name(name)))
 
 single_byte_file.write("""
     }
@@ -1666,7 +1349,7 @@ for name in preferred:
     continue;
   if is_single_byte(name):
     single_byte_file.write("""
-        encode_single_byte(%s, %s_DATA);""" % (to_constant_name(name), to_constant_name(name)))
+        encode_single_byte(%s, &data::SINGLE_BYTE_DATA.%s);""" % (to_constant_name(name), to_snake_name(name)))
 
 
 single_byte_file.write("""
@@ -1748,25 +1431,48 @@ utf_8_file.write(utf_8_rs_begin)
 utf_8_file.write("""
 // Instead, please regenerate using generate-encoding-data.py
 
-/// Bit is 1 if the trail is invalid.
-pub static UTF8_TRAIL_INVALID: [u8; 256] = [""")
+pub static UTF8_DATA: Utf8Data = Utf8Data {
+    table: [
+""")
 
 for i in range(256):
-  combined = 0
+  combined = (1 << 2) # invalid lead
   if i < 0x80 or i > 0xBF:
-    combined |= (1 << 3)
+    combined |= (1 << 3) # normal trail
   if i < 0xA0 or i > 0xBF:
-    combined |= (1 << 4)
+    combined |= (1 << 4) # three-byte special lower bound
   if i < 0x80 or i > 0x9F:
-    combined |= (1 << 5)
+    combined |= (1 << 5) # three-byte special upper bound
   if i < 0x90 or i > 0xBF:
-    combined |= (1 << 6)
+    combined |= (1 << 6) # four-byte special lower bound
   if i < 0x80 or i > 0x8F:
-    combined |= (1 << 7)
+    combined |= (1 << 7) # four-byte special upper bound
   utf_8_file.write("%d," % combined)
 
+for i in range(128, 256):
+  lane = (1 << 2) # invalid lead
+  if i >= 0xC2 and i <= 0xDF:
+    lane = (1 << 3) # normal trail
+  elif i == 0xE0:
+    lane = (1 << 4) # three-byte special lower bound
+  elif i >= 0xE1 and i <= 0xEC:
+    lane = (1 << 3) # normal trail
+  elif i == 0xED:
+    lane = (1 << 5) # three-byte special upper bound
+  elif i >= 0xEE and i <= 0xEF:
+    lane = (1 << 3) # normal trail
+  elif i == 0xF0:
+    lane = (1 << 6) # four-byte special lower bound
+  elif i >= 0xF1 and i <= 0xF3:
+    lane = (1 << 3) # normal trail
+  elif i == 0xF4:
+    lane = (1 << 7) # four-byte special upper bound
+  utf_8_file.write("%d," % lane)
+
 utf_8_file.write("""
-];
+    ],
+};
+
 """)
 
 utf_8_file.write(utf_8_rs_end)

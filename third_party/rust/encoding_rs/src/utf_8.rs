@@ -7,12 +7,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#[cfg(feature = "parallel-utf8")]
-extern crate rayon;
-
 use super::*;
 use ascii::ascii_to_basic_latin;
 use ascii::basic_latin_to_ascii;
+use ascii::validate_ascii;
 use handles::*;
 use variant::*;
 
@@ -34,111 +32,211 @@ cfg_if!{
     }
 }
 
-// Keep this cfg_if in sync with whether the utf_8_core module is defined in lib.rs.
-cfg_if! {
-    // When running 32-bit ARM code on Raspberry Pi 3, which has a 64-bit CPU,
-    // this is a pessimization for non-Latin, non-CJK scripts. However, this
-    // optimization seems to work across scripts when running 32-bit ARM code
-    // on a 32-bit ARM CPU (particularly good on Exynos 5) and when running
-    // 64-bit ARM code on a 64-bit ARM CPU.
-    if #[cfg(any(all(feature = "simd-accel", target_feature = "sse2"), all(target_endian = "little", target_arch = "aarch64"), all(target_endian = "little", target_arch = "arm")))] {
-        use utf_8_core::run_utf8_validation;
-    } else {
-        use ::std::str::Utf8Error;
-        #[inline(always)]
-        fn run_utf8_validation(v: &[u8]) -> Result<&str, Utf8Error> {
-            ::std::str::from_utf8(v)
-        }
-    }
+#[repr(align(64))] // Align to cache lines
+pub struct Utf8Data {
+    pub table: [u8; 384],
 }
-
-pub const UTF8_NORMAL_TRAIL: u8 = 1 << 3;
-
-pub const UTF8_THREE_BYTE_SPECIAL_LOWER_BOUND_TRAIL: u8 = 1 << 4;
-
-pub const UTF8_THREE_BYTE_SPECIAL_UPPER_BOUND_TRAIL: u8 = 1 << 5;
-
-pub const UTF8_FOUR_BYTE_SPECIAL_LOWER_BOUND_TRAIL: u8 = 1 << 6;
-
-pub const UTF8_FOUR_BYTE_SPECIAL_UPPER_BOUND_TRAIL: u8 = 1 << 7;
 
 // BEGIN GENERATED CODE. PLEASE DO NOT EDIT.
 // Instead, please regenerate using generate-encoding-data.py
 
-/// Bit is 1 if the trail is invalid.
-pub static UTF8_TRAIL_INVALID: [u8; 256] = [
-    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 80, 80, 80, 80, 80, 80,
-    80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 144, 144, 144, 144, 144, 144, 144, 144, 144, 144, 144,
-    144, 144, 144, 144, 144, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160,
-    160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 160, 248,
-    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-    248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
-    248, 248, 248, 248, 248, 248,
-];
+pub static UTF8_DATA: Utf8Data = Utf8Data {
+    table: [
+        252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252,
+        252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252,
+        252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252,
+        252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252,
+        252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252,
+        252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252,
+        252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252,
+        252, 252, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 148, 148, 148,
+        148, 148, 148, 148, 148, 148, 148, 148, 148, 148, 148, 148, 148, 164, 164, 164, 164, 164,
+        164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164, 164,
+        164, 164, 164, 164, 164, 164, 164, 164, 164, 252, 252, 252, 252, 252, 252, 252, 252, 252,
+        252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252,
+        252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252,
+        252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252, 252,
+        252, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+        8, 8, 8, 8, 8, 8, 8, 16, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 32, 8, 8, 64, 8, 8, 8, 128, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    ],
+};
+
 // END GENERATED CODE
 
-#[cfg(feature = "parallel-utf8")]
-#[cfg_attr(feature = "cargo-clippy", allow(never_loop))]
-pub fn utf8_valid_up_to(bytes: &[u8]) -> usize {
-    let mut len = bytes.len();
-    // The purpose of the outer loop is to avoid recursion when the attempt
-    // to find the split point discovers and over-long sequence.
+pub fn utf8_valid_up_to(src: &[u8]) -> usize {
+    // This algorithm differs from the UTF-8 validation algorithm, but making
+    // this one consistent with that one makes this slower for reasons I don't
+    // understand.
+    let mut read = 0;
     'outer: loop {
-        // This magic number has been determined on i7-4770 with SSE2 enabled.
-        // It's very likely that the number should be different when different
-        // ISA is used for ASCII acceleration. The number has been chosen
-        // to optimize the all-ASCII case. With mostly non-ASCII, the number
-        // should be much smaller, but that would pessimize the all-ASCII case,
-        // which we are trying to optimize here.
-        if len < 290000 {
-            return match run_utf8_validation(&bytes[..len]) {
-                Ok(_) => bytes.len(),
-                Err(e) => e.valid_up_to(),
-            };
-        }
-        let mid = len >> 1;
-        let mut adjusted = mid;
-        let mut i = 0;
-        'inner: loop {
-            // No need to check for `adjusted` reaching `len` because we
-            // already know that `len` is way larger than `(len / 2) + 4`.
-            if i == 3 {
-                // `mid` landed inside an overlong sequence.
-                len = mid;
-                continue 'outer;
+        let mut byte = {
+            let src_remaining = &src[read..];
+            match validate_ascii(src_remaining) {
+                None => {
+                    return src.len();
+                }
+                Some((non_ascii, consumed)) => {
+                    read += consumed;
+                    non_ascii
+                }
             }
-            if (bytes[adjusted] & 0xC0) != 0x80 {
+        };
+        // Check for the longest sequence to avoid checking twice for the
+        // multi-byte sequences. This can't overflow with 64-bit address space,
+        // because full 64 bits aren't in use. In the 32-bit PAE case, for this
+        // to overflow would mean that the source slice would be so large that
+        // the address space of the process would not have space for any code.
+        // Therefore, the slice cannot be so long that this would overflow.
+        if unsafe { likely(read + 4 <= src.len()) } {
+            'inner: loop {
+                // At this point, `byte` is not included in `read`, because we
+                // don't yet know that a) the UTF-8 sequence is valid and b) that there
+                // is output space if it is an astral sequence.
+                // We know, thanks to `ascii_to_basic_latin` that there is output
+                // space for at least one UTF-16 code unit, so no need to check
+                // for output space in the BMP cases.
+                // Inspecting the lead byte directly is faster than what the
+                // std lib does!
+                if unsafe { likely(in_inclusive_range8(byte, 0xC2, 0xDF)) } {
+                    // Two-byte
+                    let second = unsafe { *(src.get_unchecked(read + 1)) };
+                    if !in_inclusive_range8(second, 0x80, 0xBF) {
+                        break 'outer;
+                    }
+                    read += 2;
+
+                    // Next lead (manually inlined)
+                    if unsafe { likely(read + 4 <= src.len()) } {
+                        byte = unsafe { *(src.get_unchecked(read)) };
+                        if byte < 0x80 {
+                            read += 1;
+                            continue 'outer;
+                        }
+                        continue 'inner;
+                    }
+                    break 'inner;
+                }
+                if unsafe { likely(byte < 0xF0) } {
+                    'three: loop {
+                        // Three-byte
+                        let second = unsafe { *(src.get_unchecked(read + 1)) };
+                        let third = unsafe { *(src.get_unchecked(read + 2)) };
+                        if ((UTF8_DATA.table[usize::from(second)]
+                            & unsafe { *(UTF8_DATA.table.get_unchecked(byte as usize + 0x80)) })
+                            | (third >> 6))
+                            != 2
+                        {
+                            break 'outer;
+                        }
+                        read += 3;
+
+                        // Next lead (manually inlined)
+                        if unsafe { likely(read + 4 <= src.len()) } {
+                            byte = unsafe { *(src.get_unchecked(read)) };
+                            if in_inclusive_range8(byte, 0xE0, 0xEF) {
+                                continue 'three;
+                            }
+                            if unsafe { likely(byte < 0x80) } {
+                                read += 1;
+                                continue 'outer;
+                            }
+                            continue 'inner;
+                        }
+                        break 'inner;
+                    }
+                }
+                // Four-byte
+                let second = unsafe { *(src.get_unchecked(read + 1)) };
+                let third = unsafe { *(src.get_unchecked(read + 2)) };
+                let fourth = unsafe { *(src.get_unchecked(read + 3)) };
+                if (u16::from(
+                    UTF8_DATA.table[usize::from(second)]
+                        & unsafe { *(UTF8_DATA.table.get_unchecked(byte as usize + 0x80)) },
+                ) | u16::from(third >> 6)
+                    | (u16::from(fourth & 0xC0) << 2))
+                    != 0x202
+                {
+                    break 'outer;
+                }
+                read += 4;
+
+                // Next lead
+                if unsafe { likely(read + 4 <= src.len()) } {
+                    byte = unsafe { *(src.get_unchecked(read)) };
+                    if byte < 0x80 {
+                        read += 1;
+                        continue 'outer;
+                    }
+                    continue 'inner;
+                }
                 break 'inner;
             }
-            adjusted += 1;
-            i += 1;
         }
-        let (head, tail) = bytes[..len].split_at(adjusted);
-        let (head_valid_up_to, tail_valid_up_to) =
-            rayon::join(|| utf8_valid_up_to(head), || utf8_valid_up_to(tail));
-        if head_valid_up_to == adjusted {
-            return adjusted + tail_valid_up_to;
+        // We can't have a complete 4-byte sequence, but we could still have
+        // one to three shorter sequences.
+        'tail: loop {
+            // >= is better for bound check elision than ==
+            if read >= src.len() {
+                break 'outer;
+            }
+            byte = src[read];
+            // At this point, `byte` is not included in `read`, because we
+            // don't yet know that a) the UTF-8 sequence is valid and b) that there
+            // is output space if it is an astral sequence.
+            // Inspecting the lead byte directly is faster than what the
+            // std lib does!
+            if byte < 0x80 {
+                read += 1;
+                continue 'tail;
+            }
+            if in_inclusive_range8(byte, 0xC2, 0xDF) {
+                // Two-byte
+                let new_read = read + 2;
+                if new_read > src.len() {
+                    break 'outer;
+                }
+                let second = src[read + 1];
+                if !in_inclusive_range8(second, 0x80, 0xBF) {
+                    break 'outer;
+                }
+                read += 2;
+                continue 'tail;
+            }
+            // We need to exclude valid four byte lead bytes, because
+            // `UTF8_DATA.second_mask` covers
+            if byte < 0xF0 {
+                // Three-byte
+                let new_read = read + 3;
+                if new_read > src.len() {
+                    break 'outer;
+                }
+                let second = src[read + 1];
+                let third = src[read + 2];
+                if ((UTF8_DATA.table[usize::from(second)]
+                    & unsafe { *(UTF8_DATA.table.get_unchecked(byte as usize + 0x80)) })
+                    | (third >> 6))
+                    != 2
+                {
+                    break 'outer;
+                }
+                read += 3;
+                // `'tail` handles sequences shorter than 4, so
+                // there can't be another sequence after this one.
+                break 'outer;
+            }
+            break 'outer;
         }
-        return head_valid_up_to;
     }
+    read
 }
 
-#[cfg(not(feature = "parallel-utf8"))]
-pub fn utf8_valid_up_to(bytes: &[u8]) -> usize {
-    match run_utf8_validation(bytes) {
-        Ok(_) => bytes.len(),
-        Err(e) => e.valid_up_to(),
-    }
-}
-
-#[cfg_attr(feature = "cargo-clippy", allow(never_loop, cyclomatic_complexity))]
+#[cfg_attr(
+    feature = "cargo-clippy",
+    allow(never_loop, cyclomatic_complexity)
+)]
 pub fn convert_utf8_to_utf16_up_to_invalid(src: &[u8], dst: &mut [u16]) -> (usize, usize) {
     // This algorithm differs from the UTF-8 validation algorithm, but making
     // this one consistent with that one makes this slower for reasons I don't
@@ -166,8 +264,12 @@ pub fn convert_utf8_to_utf16_up_to_invalid(src: &[u8], dst: &mut [u16]) -> (usiz
             }
         };
         // Check for the longest sequence to avoid checking twice for the
-        // multi-byte sequences.
-        if read + 4 <= src.len() {
+        // multi-byte sequences. This can't overflow with 64-bit address space,
+        // because full 64 bits aren't in use. In the 32-bit PAE case, for this
+        // to overflow would mean that the source slice would be so large that
+        // the address space of the process would not have space for any code.
+        // Therefore, the slice cannot be so long that this would overflow.
+        if unsafe { likely(read + 4 <= src.len()) } {
             'inner: loop {
                 // At this point, `byte` is not included in `read`, because we
                 // don't yet know that a) the UTF-8 sequence is valid and b) that there
@@ -175,278 +277,183 @@ pub fn convert_utf8_to_utf16_up_to_invalid(src: &[u8], dst: &mut [u16]) -> (usiz
                 // We know, thanks to `ascii_to_basic_latin` that there is output
                 // space for at least one UTF-16 code unit, so no need to check
                 // for output space in the BMP cases.
-                // Matching directly on the lead byte is faster than what the
+                // Inspecting the lead byte directly is faster than what the
                 // std lib does!
-                match byte {
-                    0...0x7F => {
-                        // ASCII: write and go back to SIMD.
-                        dst[written] = byte as u16;
+                if unsafe { likely(in_inclusive_range8(byte, 0xC2, 0xDF)) } {
+                    // Two-byte
+                    let second = unsafe { *(src.get_unchecked(read + 1)) };
+                    if !in_inclusive_range8(second, 0x80, 0xBF) {
+                        break 'outer;
+                    }
+                    unsafe {
+                        *(dst.get_unchecked_mut(written)) =
+                            ((u16::from(byte) & 0x1F) << 6) | (u16::from(second) & 0x3F)
+                    };
+                    read += 2;
+                    written += 1;
+
+                    // Next lead (manually inlined)
+                    if written == dst.len() {
+                        break 'outer;
+                    }
+                    if unsafe { likely(read + 4 <= src.len()) } {
+                        byte = unsafe { *(src.get_unchecked(read)) };
+                        if byte < 0x80 {
+                            unsafe { *(dst.get_unchecked_mut(written)) = u16::from(byte) };
+                            read += 1;
+                            written += 1;
+                            continue 'outer;
+                        }
+                        continue 'inner;
+                    }
+                    break 'inner;
+                }
+                if unsafe { likely(byte < 0xF0) } {
+                    'three: loop {
+                        // Three-byte
+                        let second = unsafe { *(src.get_unchecked(read + 1)) };
+                        let third = unsafe { *(src.get_unchecked(read + 2)) };
+                        if ((UTF8_DATA.table[usize::from(second)]
+                            & unsafe { *(UTF8_DATA.table.get_unchecked(byte as usize + 0x80)) })
+                            | (third >> 6))
+                            != 2
+                        {
+                            break 'outer;
+                        }
+                        let point = ((u16::from(byte) & 0xF) << 12)
+                            | ((u16::from(second) & 0x3F) << 6)
+                            | (u16::from(third) & 0x3F);
+                        unsafe { *(dst.get_unchecked_mut(written)) = point };
+                        read += 3;
+                        written += 1;
+
+                        // Next lead (manually inlined)
+                        if written == dst.len() {
+                            break 'outer;
+                        }
+                        if unsafe { likely(read + 4 <= src.len()) } {
+                            byte = unsafe { *(src.get_unchecked(read)) };
+                            if in_inclusive_range8(byte, 0xE0, 0xEF) {
+                                continue 'three;
+                            }
+                            if unsafe { likely(byte < 0x80) } {
+                                unsafe { *(dst.get_unchecked_mut(written)) = u16::from(byte) };
+                                read += 1;
+                                written += 1;
+                                continue 'outer;
+                            }
+                            continue 'inner;
+                        }
+                        break 'inner;
+                    }
+                }
+                // Four-byte
+                if written + 1 == dst.len() {
+                    break 'outer;
+                }
+                let second = unsafe { *(src.get_unchecked(read + 1)) };
+                let third = unsafe { *(src.get_unchecked(read + 2)) };
+                let fourth = unsafe { *(src.get_unchecked(read + 3)) };
+                if (u16::from(
+                    UTF8_DATA.table[usize::from(second)]
+                        & unsafe { *(UTF8_DATA.table.get_unchecked(byte as usize + 0x80)) },
+                ) | u16::from(third >> 6)
+                    | (u16::from(fourth & 0xC0) << 2))
+                    != 0x202
+                {
+                    break 'outer;
+                }
+                let point = ((u32::from(byte) & 0x7) << 18)
+                    | ((u32::from(second) & 0x3F) << 12)
+                    | ((u32::from(third) & 0x3F) << 6)
+                    | (u32::from(fourth) & 0x3F);
+                unsafe { *(dst.get_unchecked_mut(written)) = (0xD7C0 + (point >> 10)) as u16 };
+                unsafe {
+                    *(dst.get_unchecked_mut(written + 1)) = (0xDC00 + (point & 0x3FF)) as u16
+                };
+                read += 4;
+                written += 2;
+
+                // Next lead
+                if written == dst.len() {
+                    break 'outer;
+                }
+                if unsafe { likely(read + 4 <= src.len()) } {
+                    byte = unsafe { *(src.get_unchecked(read)) };
+                    if byte < 0x80 {
+                        unsafe { *(dst.get_unchecked_mut(written)) = u16::from(byte) };
                         read += 1;
                         written += 1;
                         continue 'outer;
                     }
-                    0xC2...0xDF => {
-                        // Two-byte
-                        let second = src[read + 1];
-                        if (UTF8_TRAIL_INVALID[second as usize] & UTF8_NORMAL_TRAIL) != 0 {
-                            break 'outer;
-                        }
-                        let point = (((byte as u32) & 0x1Fu32) << 6) | (second as u32 & 0x3Fu32);
-                        dst[written] = point as u16;
-                        read += 2;
-                        written += 1;
-                    }
-                    0xE1...0xEC | 0xEE...0xEF => {
-                        // Three-byte normal
-                        let second = src[read + 1];
-                        let third = src[read + 2];
-                        if ((UTF8_TRAIL_INVALID[second as usize] & UTF8_NORMAL_TRAIL)
-                            | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL))
-                            != 0
-                        {
-                            break 'outer;
-                        }
-                        let point = (((byte as u32) & 0xFu32) << 12)
-                            | ((second as u32 & 0x3Fu32) << 6)
-                            | (third as u32 & 0x3Fu32);
-                        dst[written] = point as u16;
-                        read += 3;
-                        written += 1;
-                    }
-                    0xE0 => {
-                        // Three-byte special lower bound
-                        let second = src[read + 1];
-                        let third = src[read + 2];
-                        if ((UTF8_TRAIL_INVALID[second as usize]
-                            & UTF8_THREE_BYTE_SPECIAL_LOWER_BOUND_TRAIL)
-                            | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL))
-                            != 0
-                        {
-                            break 'outer;
-                        }
-                        let point = (((byte as u32) & 0xFu32) << 12)
-                            | ((second as u32 & 0x3Fu32) << 6)
-                            | (third as u32 & 0x3Fu32);
-                        dst[written] = point as u16;
-                        read += 3;
-                        written += 1;
-                    }
-                    0xED => {
-                        // Three-byte special upper bound
-                        let second = src[read + 1];
-                        let third = src[read + 2];
-                        if ((UTF8_TRAIL_INVALID[second as usize]
-                            & UTF8_THREE_BYTE_SPECIAL_UPPER_BOUND_TRAIL)
-                            | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL))
-                            != 0
-                        {
-                            break 'outer;
-                        }
-                        let point = (((byte as u32) & 0xFu32) << 12)
-                            | ((second as u32 & 0x3Fu32) << 6)
-                            | (third as u32 & 0x3Fu32);
-                        dst[written] = point as u16;
-                        read += 3;
-                        written += 1;
-                    }
-                    0xF1...0xF3 => {
-                        // Four-byte normal
-                        if written + 1 == dst.len() {
-                            break 'outer;
-                        }
-                        let second = src[read + 1];
-                        let third = src[read + 2];
-                        let fourth = src[read + 3];
-                        if ((UTF8_TRAIL_INVALID[second as usize] & UTF8_NORMAL_TRAIL)
-                            | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL)
-                            | (UTF8_TRAIL_INVALID[fourth as usize] & UTF8_NORMAL_TRAIL))
-                            != 0
-                        {
-                            break 'outer;
-                        }
-                        let point = (((byte as u32) & 0x7u32) << 18)
-                            | ((second as u32 & 0x3Fu32) << 12)
-                            | ((third as u32 & 0x3Fu32) << 6)
-                            | (fourth as u32 & 0x3Fu32);
-                        dst[written] = (0xD7C0 + (point >> 10)) as u16;
-                        dst[written + 1] = (0xDC00 + (point & 0x3FF)) as u16;
-                        read += 4;
-                        written += 2;
-                    }
-                    0xF0 => {
-                        // Four-byte special lower bound
-                        if written + 1 == dst.len() {
-                            break 'outer;
-                        }
-                        let second = src[read + 1];
-                        let third = src[read + 2];
-                        let fourth = src[read + 3];
-                        if ((UTF8_TRAIL_INVALID[second as usize]
-                            & UTF8_FOUR_BYTE_SPECIAL_LOWER_BOUND_TRAIL)
-                            | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL)
-                            | (UTF8_TRAIL_INVALID[fourth as usize] & UTF8_NORMAL_TRAIL))
-                            != 0
-                        {
-                            break 'outer;
-                        }
-                        let point = (((byte as u32) & 0x7u32) << 18)
-                            | ((second as u32 & 0x3Fu32) << 12)
-                            | ((third as u32 & 0x3Fu32) << 6)
-                            | (fourth as u32 & 0x3Fu32);
-                        dst[written] = (0xD7C0 + (point >> 10)) as u16;
-                        dst[written + 1] = (0xDC00 + (point & 0x3FF)) as u16;
-                        read += 4;
-                        written += 2;
-                    }
-                    0xF4 => {
-                        // Four-byte special upper bound
-                        if written + 1 == dst.len() {
-                            break 'outer;
-                        }
-                        let second = src[read + 1];
-                        let third = src[read + 2];
-                        let fourth = src[read + 3];
-                        if ((UTF8_TRAIL_INVALID[second as usize]
-                            & UTF8_FOUR_BYTE_SPECIAL_UPPER_BOUND_TRAIL)
-                            | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL)
-                            | (UTF8_TRAIL_INVALID[fourth as usize] & UTF8_NORMAL_TRAIL))
-                            != 0
-                        {
-                            break 'outer;
-                        }
-                        let point = (((byte as u32) & 0x7u32) << 18)
-                            | ((second as u32 & 0x3Fu32) << 12)
-                            | ((third as u32 & 0x3Fu32) << 6)
-                            | (fourth as u32 & 0x3Fu32);
-                        dst[written] = (0xD7C0 + (point >> 10)) as u16;
-                        dst[written + 1] = (0xDC00 + (point & 0x3FF)) as u16;
-                        read += 4;
-                        written += 2;
-                    }
-                    _ => {
-                        // Invalid lead
-                        break 'outer;
-                    }
+                    continue 'inner;
                 }
-                if written == dst.len() {
-                    break 'outer;
-                }
-                if read + 4 > src.len() {
-                    if read == src.len() {
-                        break 'outer;
-                    }
-                    byte = src[read];
-                    break 'inner;
-                }
-                byte = src[read];
-                continue 'inner;
+                break 'inner;
             }
         }
         // We can't have a complete 4-byte sequence, but we could still have
-        // a complete shorter sequence.
-
-        // At this point, `byte` is not included in `read`, because we
-        // don't yet know that a) the UTF-8 sequence is valid and b) that there
-        // is output space if it is an astral sequence.
-        // We know, thanks to `ascii_to_basic_latin` that there is output
-        // space for at least one UTF-16 code unit, so no need to check
-        // for output space in the BMP cases.
-        // Matching directly on the lead byte is faster than what the
-        // std lib does!
-        match byte {
-            0...0x7F => {
-                // ASCII: write and go back to SIMD.
-                dst[written] = byte as u16;
+        // one to three shorter sequences.
+        'tail: loop {
+            // >= is better for bound check elision than ==
+            if read >= src.len() || written >= src.len() {
+                break 'outer;
+            }
+            byte = src[read];
+            // At this point, `byte` is not included in `read`, because we
+            // don't yet know that a) the UTF-8 sequence is valid and b) that there
+            // is output space if it is an astral sequence.
+            // Inspecting the lead byte directly is faster than what the
+            // std lib does!
+            if byte < 0x80 {
+                dst[written] = u16::from(byte);
                 read += 1;
                 written += 1;
-                continue 'outer;
+                continue 'tail;
             }
-            0xC2...0xDF => {
+            if in_inclusive_range8(byte, 0xC2, 0xDF) {
                 // Two-byte
                 let new_read = read + 2;
                 if new_read > src.len() {
                     break 'outer;
                 }
                 let second = src[read + 1];
-                if (UTF8_TRAIL_INVALID[second as usize] & UTF8_NORMAL_TRAIL) != 0 {
+                if !in_inclusive_range8(second, 0x80, 0xBF) {
                     break 'outer;
                 }
-                let point = (((byte as u32) & 0x1Fu32) << 6) | (second as u32 & 0x3Fu32);
-                dst[written] = point as u16;
-                read = new_read;
+                dst[written] = ((u16::from(byte) & 0x1F) << 6) | (u16::from(second) & 0x3F);
+                read += 2;
                 written += 1;
+                continue 'tail;
             }
-            0xE1...0xEC | 0xEE...0xEF => {
-                // Three-byte normal
+            // We need to exclude valid four byte lead bytes, because
+            // `UTF8_DATA.second_mask` covers
+            if byte < 0xF0 {
+                // Three-byte
                 let new_read = read + 3;
                 if new_read > src.len() {
                     break 'outer;
                 }
                 let second = src[read + 1];
                 let third = src[read + 2];
-                if ((UTF8_TRAIL_INVALID[second as usize] & UTF8_NORMAL_TRAIL)
-                    | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL))
-                    != 0
+                if ((UTF8_DATA.table[usize::from(second)]
+                    & unsafe { *(UTF8_DATA.table.get_unchecked(byte as usize + 0x80)) })
+                    | (third >> 6))
+                    != 2
                 {
                     break 'outer;
                 }
-                let point = (((byte as u32) & 0xFu32) << 12)
-                    | ((second as u32 & 0x3Fu32) << 6)
-                    | (third as u32 & 0x3Fu32);
-                dst[written] = point as u16;
-                read = new_read;
+                let point = ((u16::from(byte) & 0xF) << 12)
+                    | ((u16::from(second) & 0x3F) << 6)
+                    | (u16::from(third) & 0x3F);
+                dst[written] = point;
+                read += 3;
                 written += 1;
-            }
-            0xE0 => {
-                // Three-byte special lower bound
-                let new_read = read + 3;
-                if new_read > src.len() {
-                    break 'outer;
-                }
-                let second = src[read + 1];
-                let third = src[read + 2];
-                if ((UTF8_TRAIL_INVALID[second as usize]
-                    & UTF8_THREE_BYTE_SPECIAL_LOWER_BOUND_TRAIL)
-                    | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL))
-                    != 0
-                {
-                    break 'outer;
-                }
-                let point = (((byte as u32) & 0xFu32) << 12)
-                    | ((second as u32 & 0x3Fu32) << 6)
-                    | (third as u32 & 0x3Fu32);
-                dst[written] = point as u16;
-                read = new_read;
-                written += 1;
-            }
-            0xED => {
-                // Three-byte special upper bound
-                let new_read = read + 3;
-                if new_read > src.len() {
-                    break 'outer;
-                }
-                let second = src[read + 1];
-                let third = src[read + 2];
-                if ((UTF8_TRAIL_INVALID[second as usize]
-                    & UTF8_THREE_BYTE_SPECIAL_UPPER_BOUND_TRAIL)
-                    | (UTF8_TRAIL_INVALID[third as usize] & UTF8_NORMAL_TRAIL))
-                    != 0
-                {
-                    break 'outer;
-                }
-                let point = (((byte as u32) & 0xFu32) << 12)
-                    | ((second as u32 & 0x3Fu32) << 6)
-                    | (third as u32 & 0x3Fu32);
-                dst[written] = point as u16;
-                read = new_read;
-                written += 1;
-            }
-            _ => {
-                // Invalid lead or 4-byte lead
+                // `'tail` handles sequences shorter than 4, so
+                // there can't be another sequence after this one.
                 break 'outer;
             }
+            break 'outer;
         }
-        break 'outer;
     }
     (read, written)
 }
@@ -534,7 +541,7 @@ impl Utf8Decoder {
                 }
                 if b < 0xE0u8 {
                     self.bytes_needed = 1;
-                    self.code_point = b as u32 & 0x1F;
+                    self.code_point = u32::from(b) & 0x1F;
                     continue;
                 }
                 if b < 0xF0u8 {
@@ -544,7 +551,7 @@ impl Utf8Decoder {
                         self.upper_boundary = 0x9Fu8;
                     }
                     self.bytes_needed = 2;
-                    self.code_point = b as u32 & 0xF;
+                    self.code_point = u32::from(b) & 0xF;
                     continue;
                 }
                 if b < 0xF5u8 {
@@ -554,7 +561,7 @@ impl Utf8Decoder {
                         self.upper_boundary = 0x8Fu8;
                     }
                     self.bytes_needed = 3;
-                    self.code_point = b as u32 & 0x7;
+                    self.code_point = u32::from(b) & 0x7;
                     continue;
                 }
                 return (
@@ -579,7 +586,7 @@ impl Utf8Decoder {
             }
             self.lower_boundary = 0x80u8;
             self.upper_boundary = 0xBFu8;
-            self.code_point = (self.code_point << 6) | (b as u32 & 0x3F);
+            self.code_point = (self.code_point << 6) | (u32::from(b) & 0x3F);
             self.bytes_seen += 1;
             if self.bytes_seen != self.bytes_needed {
                 continue;
@@ -683,7 +690,8 @@ impl Utf8Encoder {
                         unsafe {
                             *(dst.get_unchecked_mut(written)) = (unit >> 12) as u8 | 0xE0u8;
                             written += 1;
-                            *(dst.get_unchecked_mut(written)) = ((unit & 0xFC0) >> 6) as u8 | 0x80u8;
+                            *(dst.get_unchecked_mut(written)) =
+                                ((unit & 0xFC0) >> 6) as u8 | 0x80u8;
                             written += 1;
                             *(dst.get_unchecked_mut(written)) = (unit & 0x3F) as u8 | 0x80u8;
                             written += 1;
@@ -709,19 +717,22 @@ impl Utf8Encoder {
                         }
                         let second = src[read];
                         let second_minus_low_surrogate_start = second.wrapping_sub(0xDC00);
-                        if unsafe { likely(second_minus_low_surrogate_start <= (0xDFFF - 0xDC00)) } {
+                        if unsafe { likely(second_minus_low_surrogate_start <= (0xDFFF - 0xDC00)) }
+                        {
                             // The next code unit is a low surrogate. Advance position.
                             read += 1;
-                            let astral = ((unit as u32) << 10) + second as u32
+                            let astral = (u32::from(unit) << 10) + u32::from(second)
                                 - (((0xD800u32 << 10) - 0x10000u32) + 0xDC00u32);
                             unsafe {
                                 *(dst.get_unchecked_mut(written)) = (astral >> 18) as u8 | 0xF0u8;
                                 written += 1;
-                                *(dst.get_unchecked_mut(written)) = ((astral & 0x3F000u32) >> 12) as u8 | 0x80u8;
+                                *(dst.get_unchecked_mut(written)) =
+                                    ((astral & 0x3F000u32) >> 12) as u8 | 0x80u8;
                                 written += 1;
-                                *(dst.get_unchecked_mut(written)) = ((astral & 0xFC0u32) >> 6) as u8 | 0x80u8;
+                                *(dst.get_unchecked_mut(written)) =
+                                    ((astral & 0xFC0u32) >> 6) as u8 | 0x80u8;
                                 written += 1;
-                                *(dst.get_unchecked_mut(written)) = (astral & 0x3Fu32) as u8 | 0x80u8;
+                                *(dst.get_unchecked_mut(written)) = (astral & 0x3F) as u8 | 0x80u8;
                                 written += 1;
                             }
                             break;
@@ -774,22 +785,18 @@ impl Utf8Encoder {
         dst: &mut [u8],
         _last: bool,
     ) -> (EncoderResult, usize, usize) {
-        let mut to_write = src.len();
+        let bytes = src.as_bytes();
+        let mut to_write = bytes.len();
         if to_write <= dst.len() {
-            unsafe {
-                ::std::ptr::copy_nonoverlapping(src.as_ptr(), dst.as_mut_ptr(), to_write);
-            }
+            (&mut dst[..to_write]).copy_from_slice(bytes);
             return (EncoderResult::InputEmpty, to_write, to_write);
         }
         to_write = dst.len();
         // Move back until we find a UTF-8 sequence boundary.
-        let bytes = src.as_bytes();
         while (bytes[to_write] & 0xC0) == 0x80 {
             to_write -= 1;
         }
-        unsafe {
-            ::std::ptr::copy_nonoverlapping(src.as_ptr(), dst.as_mut_ptr(), to_write);
-        }
+        (&mut dst[..to_write]).copy_from_slice(&bytes[..to_write]);
         (EncoderResult::OutputFull, to_write, to_write)
     }
 }

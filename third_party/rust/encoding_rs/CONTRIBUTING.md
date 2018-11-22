@@ -28,7 +28,9 @@ taken as a waiver of copyright notice.
 Please do not contribute implementations of encodings that are not specified
 in the [Encoding Standard](https://encoding.spec.whatwg.org/).
 
-For example, an implementation of UTF-7 would be explicitly not welcome.
+For example, an implementation of UTF-7 is explicitly out of scope for this
+crate and is, therefore, provided by the [charset](https://crates.io/crates/charset)
+crate instead.
 
 ## Compatibility with Stable Rust
 

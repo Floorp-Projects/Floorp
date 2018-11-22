@@ -75,6 +75,12 @@ a `std::io::Read`, decode it into UTF-8 and presenting the result via
 `std::io::Read`. The [`encoding_rs_io`](https://crates.io/crates/encoding_rs_io)
 crate provides that capability.
 
+## Decoding Email
+
+For decoding character encodings that occur in email, use the
+[`charset`](https://crates.io/crates/charset) crate instead of using this
+one directly. (It wraps this crate and adds UTF-7 decoding.)
+
 ## Licensing
 
 Please see the file named
@@ -105,7 +111,7 @@ These bindings do not cover the `mem` module.
 
 ## Optional features
 
-There are currently three optional cargo features:
+There are currently these optional cargo features:
 
 ### `simd-accel`
 
@@ -121,6 +127,8 @@ Enabling this feature breaks the build unless the target is x86 with SSE2
 use an x86 target without SSE2, i.e. `i586` in `rustup` terms), ARMv7 or
 thumbv7 with NEON (`-C target_feature=+neon`), x86_64 or Aarch64.
 
+Used by Firefox.
+
 ### `serde`
 
 Enables support for serializing and deserializing `&'static Encoding`-typed
@@ -128,27 +136,134 @@ struct fields using [Serde][1].
 
 [1]: https://serde.rs/
 
+Not used by Firefox.
+
+### `fast-legacy-encode`
+
+A catch-all option for enabling the fastest legacy encode options. _Does not
+affect decode speed or UTF-8 encode speed._
+
+At present, this option is equivalent to enabling the following options:
+ * `fast-hangul-encode`
+ * `fast-hanja-encode`
+ * `fast-kanji-encode`
+ * `fast-gb-hanzi-encode`
+ * `fast-big5-hanzi-encode`
+
+Adds 176 KB to the binary size.
+
+Not used by Firefox.
+
+### `fast-hangul-encode`
+
+Changes encoding precomposed Hangul syllables into EUC-KR from binary
+search over the decode-optimized tables to lookup by index making Korean
+plain-text encode about 4 times as fast as without this option.
+
+Adds 20 KB to the binary size.
+
+Does _not_ affect decode speed.
+
+Not used by Firefox.
+
+### `fast-hanja-encode`
+
+Changes encoding of Hanja into EUC-KR from linear search over the
+decode-optimized table to lookup by index. Since Hanja is practically absent
+in modern Korean text, this option doesn't affect perfomance in the common
+case and mainly makes sense if you want to make your application resilient
+agaist denial of service by someone intentionally feeding it a lot of Hanja
+to encode into EUC-KR.
+
+Adds 40 KB to the binary size.
+
+Does _not_ affect decode speed.
+
+Not used by Firefox.
+
+### `fast-kanji-encode`
+
+Changes encoding of Kanji into Shift_JIS, EUC-JP and ISO-2022-JP from linear
+search over the decode-optimized tables to lookup by index making Japanese
+plain-text encode to legacy encodings 30 to 50 times as fast as without this
+option (about 2 times as fast as with `less-slow-kanji-encode`).
+
+Takes precedence over `less-slow-kanji-encode`.
+
+Adds 36 KB to the binary size (24 KB compared to `less-slow-kanji-encode`).
+
+Does _not_ affect decode speed.
+
+Not used by Firefox.
+
 ### `less-slow-kanji-encode`
 
 Makes JIS X 0208 Level 1 Kanji (the most common Kanji in Shift_JIS, EUC-JP and
-ISO-2022-JP) encode less slow (binary search instead of linear search) at the
-expense of binary size. (Does _not_ affect decode speed.)
+ISO-2022-JP) encode less slow (binary search instead of linear search) making
+Japanese plain-text encode to legacy encodings 14 to 23 times as fast as
+without this option.
+
+Adds 12 KB to the binary size.
+
+Does _not_ affect decode speed.
+
+Not used by Firefox.
+
+### `fast-gb-hanzi-encode`
+
+Changes encoding of Hanzi in the CJK Unified Ideographs block into GBK and
+gb18030 from linear search over a part the decode-optimized tables followed
+by a binary search over another part of the decode-optimized tables to lookup
+by index making Simplified Chinese plain-text encode to the legacy encodings
+100 to 110 times as fast as without this option (about 2.5 times as fast as
+with `less-slow-gb-hanzi-encode`).
+
+Takes precedence over `less-slow-gb-hanzi-encode`.
+
+Adds 36 KB to the binary size (24 KB compared to `less-slow-gb-hanzi-encode`).
+
+Does _not_ affect decode speed.
 
 Not used by Firefox.
 
 ### `less-slow-gb-hanzi-encode`
 
 Makes GB2312 Level 1 Hanzi (the most common Hanzi in gb18030 and GBK) encode
-less slow (binary search instead of linear search) at the expense of binary
-size. (Does _not_ affect decode speed.)
+less slow (binary search instead of linear search) making Simplified Chinese
+plain-text encode to the legacy encodings about 40 times as fast as without
+this option.
+
+Adds 12 KB to the binary size.
+
+Does _not_ affect decode speed.
+
+Not used by Firefox.
+
+### `fast-big5-hanzi-encode`
+
+Changes encoding of Hanzi in the CJK Unified Ideographs block into Big5 from
+linear search over a part the decode-optimized tables to lookup by index
+making Traditional Chinese plain-text encode to Big5 105 to 125 times as fast
+as without this option (about 3 times as fast as with
+`less-slow-big5-hanzi-encode`).
+
+Takes precedence over `less-slow-big5-hanzi-encode`.
+
+Adds 40 KB to the binary size (20 KB compared to `less-slow-big5-hanzi-encode`).
+
+Does _not_ affect decode speed.
 
 Not used by Firefox.
 
 ### `less-slow-big5-hanzi-encode`
 
 Makes Big5 Level 1 Hanzi (the most common Hanzi in Big5) encode less slow
-(binary search instead of linear search) at the expense of binary size. (Does
-_not_ affect decode speed.)
+(binary search instead of linear search) making Traditional Chinese
+plain-text encode to Big5 about 36 times as fast as without this option.
+
+Adds 20 KB to the binary size.
+
+Does _not_ affect decode speed.
 
 Not used by Firefox.
 
@@ -156,29 +271,26 @@ Not used by Firefox.
 
 For decoding to UTF-16, the goal is to perform at least as well as Gecko's old
 uconv. For decoding to UTF-8, the goal is to perform at least as well as
-rust-encoding.
+rust-encoding. These goals have been achieved.
 
 Encoding to UTF-8 should be fast. (UTF-8 to UTF-8 encode should be equivalent
 to `memcpy` and UTF-16 to UTF-8 should be fast.)
 
-Speed is a non-goal when encoding to legacy encodings. Encoding to legacy
-encodings should not be optimized for speed at the expense of code size as long
-as form submission and URL parsing in Gecko don't become noticeably too slow
-in real-world use.
+Speed is a non-goal when encoding to legacy encodings. By default, encoding to
+legacy encodings should not be optimized for speed at the expense of code size
+as long as form submission and URL parsing in Gecko don't become noticeably
+too slow in real-world use.
 
-In the interest of binary size, by default, encoding_rs does not have any
-encode-specific data tables. Therefore, encoders search the decode-optimized
-data tables. This is a linear search in most cases. As a result, encode to
-legacy encodings varies from slow to extremely slow relative to other
-libraries. Still, with realistic work loads, this seemed fast enough
-not to be user-visibly slow on Raspberry Pi 3 (which stood in for a phone
-for testing) in the Web-exposed encoder use cases.
+In the interest of binary size, by default, encoding_rs does not have
+encode-specific data tables beyond 32 bits of encode-specific data for each
+single-byte encoding. Therefore, encoders search the decode-optimized data
+tables. This is a linear search in most cases. As a result, by default, encode
+to legacy encodings varies from slow to extremely slow relative to other
+libraries. Still, with realistic work loads, this seemed fast enough not to be
+user-visibly slow on Raspberry Pi 3 (which stood in for a phone for testing)
+in the Web-exposed encoder use cases.
 
-See the cargo features above for optionally making Kanji and Hanzi legacy
-encode a bit less slow.
-
-Actually fast options for legacy encode may be added in the future, but there
-do not appear to be pressing use cases.
+See the cargo features above for optionally making CJK legacy encode fast.
 
 A framework for measuring performance is [available separately][2].
 
@@ -187,15 +299,15 @@ A framework for measuring performance is [available separately][2].
 ## Rust Version Compatibility
 
 It is a goal to support the latest stable Rust, the latest nightly Rust and
-the version of Rust that's used for Firefox Nightly (currently 1.25.0).
+the version of Rust that's used for Firefox Nightly (currently 1.29.0).
 These are tested on Travis.
 
 Additionally, beta and the oldest known to work Rust version (currently
-1.21.0) are tested on Travis. The oldest Rust known to work is tested as
+1.29.0) are tested on Travis. The oldest Rust known to work is tested as
 a canary so that when the oldest known to work no longer works, the change
 can be documented here. At this time, there is no firm commitment to support
 a version older than what's required by Firefox. The oldest supported Rust
-is expected to move forward rapidly when `stdsimd` can replace the `simd`
+is expected to move forward rapidly when `packed_simd` can replace the `simd`
 crate without performance regression.
 
 ## Compatibility with rust-encoding
@@ -206,6 +318,19 @@ encoding_rs is
 (cannot be uploaded to crates.io). The compatibility layer was originally
 written with the assuption that Firefox would need it, but it is not currently
 used in Firefox.
+
+## Regenerating Generated Code
+
+To regenerate the generated code:
+
+ * Have Python 2 installed.
+ * Clone [`https://github.com/hsivonen/encoding_c`](https://github.com/hsivonen/encoding_c)
+   next to the `encoding_rs` directory.
+ * Clone [`https://github.com/whatwg/encoding`](https://github.com/whatwg/encoding)
+   next to the `encoding_rs` directory.
+ * Checkout revision `f381389` of the `encoding` repo.
+ * With the `encoding_rs` directory as the working directory, run
+   `python generate-encoding-data.py`.
 
 ## Roadmap
 
@@ -231,17 +356,52 @@ used in Firefox.
 - [ ] ~Parallelize UTF-8 validation using [Rayon](https://github.com/nikomatsakis/rayon).~
       (This turned out to be a pessimization in the ASCII case due to memory bandwidth reasons.)
 - [x] Provide an XPCOM/MFBT-flavored C++ API.
-- [ ] Investigate accelerating single-byte encode with a single fast-tracked
+- [x] Investigate accelerating single-byte encode with a single fast-tracked
       range per encoding.
 - [x] Replace uconv with encoding_rs in Gecko.
 - [x] Implement the rust-encoding API in terms of encoding_rs.
 - [x] Add SIMD acceleration for Aarch64.
 - [x] Investigate the use of NEON on 32-bit ARM.
-- [ ] Investigate Björn Höhrmann's lookup table acceleration for UTF-8 as
-      adapted to Rust in rust-encoding.
-- [ ] Add actually fast CJK encode options.
+- [ ] ~Investigate Björn Höhrmann's lookup table acceleration for UTF-8 as
+      adapted to Rust in rust-encoding.~
+- [x] Add actually fast CJK encode options.
+- [ ] Investigate [Bob Steagall's lookup table acceleration for UTF-8](https://github.com/BobSteagall/CppNow2018/blob/master/FastConversionFromUTF-8/Fast%20Conversion%20From%20UTF-8%20with%20C%2B%2B%2C%20DFAs%2C%20and%20SSE%20Intrinsics%20-%20Bob%20Steagall%20-%20C%2B%2BNow%202018.pdf).
 
 ## Release Notes
+
+### 0.8.12
+
+* Removed the `clippy::` prefix from clippy lint names.
+
+### 0.8.11
+
+* Changed minimum Rust requirement to 1.29.0 (for the ability to refer
+  to the interior of a `static` when defining another `static`).
+* Explicitly aligned the lookup tables for single-byte encodings and
+  UTF-8 to cache lines in the hope of freeing up one cache line for
+  other data. (Perhaps the tables were already aligned and this is
+  placebo.)
+* Added 32 bits of encode-oriented data for each single-byte encoding.
+  The change was performance-neutral for non-Latin1-ish Latin legacy
+  encodings, improved Latin1-ish and Arabic legacy encode speed
+  somewhat (new speed is 2.4x the old speed for German, 2.3x for
+  Arabic, 1.7x for Portuguese and 1.4x for French) and improved
+  non-Latin1, non-Arabic legacy single-byte encode a lot (7.2x for
+  Thai, 6x for Greek, 5x for Russian, 4x for Hebrew).
+* Added compile-time options for fast CJK legacy encode options (at
+  the cost of binary size (up to 176 KB) and run-time memory usage).
+  These options still retain the overall code structure instead of
+  rewriting the CJK encoders totally, so the speed isn't as good as
+  what could be achieved by using even more memory / making the
+  binary even langer.
+* Made UTF-8 decode and validation faster.
+* Added method `is_single_byte()` on `Encoding`.
+* Added `mem::decode_latin1()` and `mem::encode_latin1_lossy()`.
+
+### 0.8.10
+
+* Disabled a unit test that tests a panic condition when the assertion
+  being tested is disabled.
 
 ### 0.8.9
 

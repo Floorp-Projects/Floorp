@@ -7,8 +7,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg_attr(feature = "cargo-clippy", allow(doc_markdown, inline_always, new_ret_no_self))]
-#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.9")]
+#![cfg_attr(
+    feature = "cargo-clippy",
+    allow(
+        doc_markdown,
+        inline_always,
+        new_ret_no_self
+    )
+)]
+#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.12")]
 
 //! encoding_rs is a Gecko-oriented Free Software / Open Source implementation
 //! of the [Encoding Standard](https://encoding.spec.whatwg.org/) in Rust.
@@ -82,10 +89,7 @@
 //! // Very short output buffer to demonstrate the output buffer getting full.
 //! // Normally, you'd use something like `[0u8; 2048]`.
 //! let mut buffer_bytes = [0u8; 8];
-//! // Rust doesn't allow us to stack-allocate a `mut str` without `unsafe`.
-//! let mut buffer: &mut str = unsafe {
-//!     std::mem::transmute(&mut buffer_bytes[..])
-//! };
+//! let mut buffer: &mut str = std::str::from_utf8_mut(&mut buffer_bytes[..]).unwrap();
 //!
 //! // How many bytes in the buffer currently hold significant data.
 //! let mut bytes_in_buffer = 0usize;
@@ -231,16 +235,17 @@
 //! performance, the decoder for ISO-2022-JP optimizes for ease/clarity
 //! of implementation.
 //!
-//! Despite the focus on the Web, encoding_rs may well be useful for decoding
-//! email, although you'll need to implement UTF-7 decoding and label handling
-//! by other means. (Due to the Web focus, patches to add UTF-7 are unwelcome
-//! in encoding_rs itself.) Also, despite the browser focus, the hope is that
-//! non-browser applications that wish to consume Web content or submit Web
-//! forms in a Web-compatible way will find encoding_rs useful. While
-//! encoding_rs does not try to match Windows behavior, many of the encodings
-//! are close enough to legacy encodings implemented by Windows that
-//! applications that need to consume data in legacy Windows encodins may
-//! find encoding_rs useful.
+//! Despite the browser focus, the hope is that non-browser applications
+//! that wish to consume Web content or submit Web forms in a Web-compatible
+//! way will find encoding_rs useful. While encoding_rs does not try to match
+//! Windows behavior, many of the encodings are close enough to legacy
+//! encodings implemented by Windows that applications that need to consume
+//! data in legacy Windows encodins may find encoding_rs useful.
+//!
+//! For decoding email, UTF-7 support is needed (unfortunately) in additition
+//! to the encodings defined in the Encoding Standard. The
+//! [charset](https://crates.io/crates/charset) wraps encoding_rs and adds
+//! UTF-7 decoding for email purposes.
 //!
 //! # Streaming & Non-Streaming; Rust & C/C++
 //!
@@ -660,22 +665,21 @@
 //! for discussion about the UTF-16 family.
 
 #![cfg_attr(
-    feature = "simd-accel", feature(cfg_target_feature, platform_intrinsics, core_intrinsics)
+    feature = "simd-accel",
+    feature(platform_intrinsics, core_intrinsics)
 )]
 
 #[macro_use]
 extern crate cfg_if;
 
-#[cfg(
-    all(
-        feature = "simd-accel",
-        any(
-            target_feature = "sse2",
-            all(target_endian = "little", target_arch = "aarch64"),
-            all(target_endian = "little", target_feature = "neon")
-        )
+#[cfg(all(
+    feature = "simd-accel",
+    any(
+        target_feature = "sse2",
+        all(target_endian = "little", target_arch = "aarch64"),
+        all(target_endian = "little", target_feature = "neon")
     )
-)]
+))]
 extern crate simd;
 
 #[cfg(feature = "serde")]
@@ -692,26 +696,15 @@ extern crate serde_json;
 #[macro_use]
 mod macros;
 
-#[cfg(
-    all(
-        feature = "simd-accel",
-        any(
-            target_feature = "sse2",
-            all(target_endian = "little", target_arch = "aarch64"),
-            all(target_endian = "little", target_feature = "neon")
-        )
-    )
-)]
-mod simd_funcs;
-
-#[cfg(
+#[cfg(all(
+    feature = "simd-accel",
     any(
-        all(feature = "simd-accel", target_feature = "sse2"),
+        target_feature = "sse2",
         all(target_endian = "little", target_arch = "aarch64"),
-        all(target_endian = "little", target_arch = "arm")
+        all(target_endian = "little", target_feature = "neon")
     )
-)]
-mod utf_8_core;
+))]
+mod simd_funcs;
 
 #[cfg(test)]
 mod testing;
@@ -934,7 +927,7 @@ pub static GBK: &'static Encoding = &GBK_INIT;
 /// items.
 pub static IBM866_INIT: Encoding = Encoding {
     name: "IBM866",
-    variant: VariantEncoding::SingleByte(data::IBM866_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.ibm866, 0x0440, 96, 16),
 };
 
 /// The IBM866 encoding.
@@ -1004,7 +997,7 @@ pub static ISO_2022_JP: &'static Encoding = &ISO_2022_JP_INIT;
 /// items.
 pub static ISO_8859_10_INIT: Encoding = Encoding {
     name: "ISO-8859-10",
-    variant: VariantEncoding::SingleByte(data::ISO_8859_10_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.iso_8859_10, 0x00DA, 90, 6),
 };
 
 /// The ISO-8859-10 encoding.
@@ -1038,7 +1031,7 @@ pub static ISO_8859_10: &'static Encoding = &ISO_8859_10_INIT;
 /// items.
 pub static ISO_8859_13_INIT: Encoding = Encoding {
     name: "ISO-8859-13",
-    variant: VariantEncoding::SingleByte(data::ISO_8859_13_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.iso_8859_13, 0x00DF, 95, 1),
 };
 
 /// The ISO-8859-13 encoding.
@@ -1072,7 +1065,7 @@ pub static ISO_8859_13: &'static Encoding = &ISO_8859_13_INIT;
 /// items.
 pub static ISO_8859_14_INIT: Encoding = Encoding {
     name: "ISO-8859-14",
-    variant: VariantEncoding::SingleByte(data::ISO_8859_14_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.iso_8859_14, 0x00DF, 95, 17),
 };
 
 /// The ISO-8859-14 encoding.
@@ -1106,7 +1099,7 @@ pub static ISO_8859_14: &'static Encoding = &ISO_8859_14_INIT;
 /// items.
 pub static ISO_8859_15_INIT: Encoding = Encoding {
     name: "ISO-8859-15",
-    variant: VariantEncoding::SingleByte(data::ISO_8859_15_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.iso_8859_15, 0x00BF, 63, 65),
 };
 
 /// The ISO-8859-15 encoding.
@@ -1139,7 +1132,7 @@ pub static ISO_8859_15: &'static Encoding = &ISO_8859_15_INIT;
 /// items.
 pub static ISO_8859_16_INIT: Encoding = Encoding {
     name: "ISO-8859-16",
-    variant: VariantEncoding::SingleByte(data::ISO_8859_16_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.iso_8859_16, 0x00DF, 95, 4),
 };
 
 /// The ISO-8859-16 encoding.
@@ -1173,7 +1166,7 @@ pub static ISO_8859_16: &'static Encoding = &ISO_8859_16_INIT;
 /// items.
 pub static ISO_8859_2_INIT: Encoding = Encoding {
     name: "ISO-8859-2",
-    variant: VariantEncoding::SingleByte(data::ISO_8859_2_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.iso_8859_2, 0x00DF, 95, 1),
 };
 
 /// The ISO-8859-2 encoding.
@@ -1205,7 +1198,7 @@ pub static ISO_8859_2: &'static Encoding = &ISO_8859_2_INIT;
 /// items.
 pub static ISO_8859_3_INIT: Encoding = Encoding {
     name: "ISO-8859-3",
-    variant: VariantEncoding::SingleByte(data::ISO_8859_3_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.iso_8859_3, 0x00DF, 95, 4),
 };
 
 /// The ISO-8859-3 encoding.
@@ -1237,7 +1230,7 @@ pub static ISO_8859_3: &'static Encoding = &ISO_8859_3_INIT;
 /// items.
 pub static ISO_8859_4_INIT: Encoding = Encoding {
     name: "ISO-8859-4",
-    variant: VariantEncoding::SingleByte(data::ISO_8859_4_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.iso_8859_4, 0x00DF, 95, 1),
 };
 
 /// The ISO-8859-4 encoding.
@@ -1269,7 +1262,7 @@ pub static ISO_8859_4: &'static Encoding = &ISO_8859_4_INIT;
 /// items.
 pub static ISO_8859_5_INIT: Encoding = Encoding {
     name: "ISO-8859-5",
-    variant: VariantEncoding::SingleByte(data::ISO_8859_5_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.iso_8859_5, 0x040E, 46, 66),
 };
 
 /// The ISO-8859-5 encoding.
@@ -1301,7 +1294,7 @@ pub static ISO_8859_5: &'static Encoding = &ISO_8859_5_INIT;
 /// items.
 pub static ISO_8859_6_INIT: Encoding = Encoding {
     name: "ISO-8859-6",
-    variant: VariantEncoding::SingleByte(data::ISO_8859_6_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.iso_8859_6, 0x0621, 65, 26),
 };
 
 /// The ISO-8859-6 encoding.
@@ -1334,7 +1327,7 @@ pub static ISO_8859_6: &'static Encoding = &ISO_8859_6_INIT;
 /// items.
 pub static ISO_8859_7_INIT: Encoding = Encoding {
     name: "ISO-8859-7",
-    variant: VariantEncoding::SingleByte(data::ISO_8859_7_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.iso_8859_7, 0x03A3, 83, 44),
 };
 
 /// The ISO-8859-7 encoding.
@@ -1371,7 +1364,7 @@ pub static ISO_8859_7: &'static Encoding = &ISO_8859_7_INIT;
 /// items.
 pub static ISO_8859_8_INIT: Encoding = Encoding {
     name: "ISO-8859-8",
-    variant: VariantEncoding::SingleByte(data::ISO_8859_8_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.iso_8859_8, 0x05D0, 96, 27),
 };
 
 /// The ISO-8859-8 encoding.
@@ -1406,7 +1399,7 @@ pub static ISO_8859_8: &'static Encoding = &ISO_8859_8_INIT;
 /// items.
 pub static ISO_8859_8_I_INIT: Encoding = Encoding {
     name: "ISO-8859-8-I",
-    variant: VariantEncoding::SingleByte(data::ISO_8859_8_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.iso_8859_8, 0x05D0, 96, 27),
 };
 
 /// The ISO-8859-8-I encoding.
@@ -1441,7 +1434,7 @@ pub static ISO_8859_8_I: &'static Encoding = &ISO_8859_8_I_INIT;
 /// items.
 pub static KOI8_R_INIT: Encoding = Encoding {
     name: "KOI8-R",
-    variant: VariantEncoding::SingleByte(data::KOI8_R_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.koi8_r, 0x044E, 64, 1),
 };
 
 /// The KOI8-R encoding.
@@ -1473,7 +1466,7 @@ pub static KOI8_R: &'static Encoding = &KOI8_R_INIT;
 /// items.
 pub static KOI8_U_INIT: Encoding = Encoding {
     name: "KOI8-U",
-    variant: VariantEncoding::SingleByte(data::KOI8_U_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.koi8_u, 0x044E, 64, 1),
 };
 
 /// The KOI8-U encoding.
@@ -1673,7 +1666,7 @@ pub static GB18030: &'static Encoding = &GB18030_INIT;
 /// items.
 pub static MACINTOSH_INIT: Encoding = Encoding {
     name: "macintosh",
-    variant: VariantEncoding::SingleByte(data::MACINTOSH_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.macintosh, 0x00CD, 106, 3),
 };
 
 /// The macintosh encoding.
@@ -1742,7 +1735,7 @@ pub static REPLACEMENT: &'static Encoding = &REPLACEMENT_INIT;
 /// items.
 pub static WINDOWS_1250_INIT: Encoding = Encoding {
     name: "windows-1250",
-    variant: VariantEncoding::SingleByte(data::WINDOWS_1250_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.windows_1250, 0x00DC, 92, 2),
 };
 
 /// The windows-1250 encoding.
@@ -1774,7 +1767,7 @@ pub static WINDOWS_1250: &'static Encoding = &WINDOWS_1250_INIT;
 /// items.
 pub static WINDOWS_1251_INIT: Encoding = Encoding {
     name: "windows-1251",
-    variant: VariantEncoding::SingleByte(data::WINDOWS_1251_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.windows_1251, 0x0410, 64, 64),
 };
 
 /// The windows-1251 encoding.
@@ -1806,7 +1799,7 @@ pub static WINDOWS_1251: &'static Encoding = &WINDOWS_1251_INIT;
 /// items.
 pub static WINDOWS_1252_INIT: Encoding = Encoding {
     name: "windows-1252",
-    variant: VariantEncoding::SingleByte(data::WINDOWS_1252_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.windows_1252, 0x00A0, 32, 96),
 };
 
 /// The windows-1252 encoding.
@@ -1839,7 +1832,7 @@ pub static WINDOWS_1252: &'static Encoding = &WINDOWS_1252_INIT;
 /// items.
 pub static WINDOWS_1253_INIT: Encoding = Encoding {
     name: "windows-1253",
-    variant: VariantEncoding::SingleByte(data::WINDOWS_1253_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.windows_1253, 0x03A3, 83, 44),
 };
 
 /// The windows-1253 encoding.
@@ -1873,7 +1866,7 @@ pub static WINDOWS_1253: &'static Encoding = &WINDOWS_1253_INIT;
 /// items.
 pub static WINDOWS_1254_INIT: Encoding = Encoding {
     name: "windows-1254",
-    variant: VariantEncoding::SingleByte(data::WINDOWS_1254_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.windows_1254, 0x00DF, 95, 17),
 };
 
 /// The windows-1254 encoding.
@@ -1906,7 +1899,7 @@ pub static WINDOWS_1254: &'static Encoding = &WINDOWS_1254_INIT;
 /// items.
 pub static WINDOWS_1255_INIT: Encoding = Encoding {
     name: "windows-1255",
-    variant: VariantEncoding::SingleByte(data::WINDOWS_1255_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.windows_1255, 0x05D0, 96, 27),
 };
 
 /// The windows-1255 encoding.
@@ -1940,7 +1933,7 @@ pub static WINDOWS_1255: &'static Encoding = &WINDOWS_1255_INIT;
 /// items.
 pub static WINDOWS_1256_INIT: Encoding = Encoding {
     name: "windows-1256",
-    variant: VariantEncoding::SingleByte(data::WINDOWS_1256_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.windows_1256, 0x0621, 65, 22),
 };
 
 /// The windows-1256 encoding.
@@ -1972,7 +1965,7 @@ pub static WINDOWS_1256: &'static Encoding = &WINDOWS_1256_INIT;
 /// items.
 pub static WINDOWS_1257_INIT: Encoding = Encoding {
     name: "windows-1257",
-    variant: VariantEncoding::SingleByte(data::WINDOWS_1257_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.windows_1257, 0x00DF, 95, 1),
 };
 
 /// The windows-1257 encoding.
@@ -2005,7 +1998,7 @@ pub static WINDOWS_1257: &'static Encoding = &WINDOWS_1257_INIT;
 /// items.
 pub static WINDOWS_1258_INIT: Encoding = Encoding {
     name: "windows-1258",
-    variant: VariantEncoding::SingleByte(data::WINDOWS_1258_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.windows_1258, 0x00DF, 95, 4),
 };
 
 /// The windows-1258 encoding.
@@ -2042,7 +2035,7 @@ pub static WINDOWS_1258: &'static Encoding = &WINDOWS_1258_INIT;
 /// items.
 pub static WINDOWS_874_INIT: Encoding = Encoding {
     name: "windows-874",
-    variant: VariantEncoding::SingleByte(data::WINDOWS_874_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.windows_874, 0x0E01, 33, 58),
 };
 
 /// The windows-874 encoding.
@@ -2075,7 +2068,7 @@ pub static WINDOWS_874: &'static Encoding = &WINDOWS_874_INIT;
 /// items.
 pub static X_MAC_CYRILLIC_INIT: Encoding = Encoding {
     name: "x-mac-cyrillic",
-    variant: VariantEncoding::SingleByte(data::X_MAC_CYRILLIC_DATA),
+    variant: VariantEncoding::SingleByte(&data::SINGLE_BYTE_DATA.x_mac_cyrillic, 0x0430, 96, 31),
 };
 
 /// The x-mac-cyrillic encoding.
@@ -2848,6 +2841,20 @@ impl Encoding {
         !(self == REPLACEMENT || self == UTF_16BE || self == UTF_16LE || self == ISO_2022_JP)
     }
 
+    /// Checks whether this encoding maps one byte to one Basic Multilingual
+    /// Plane code point (i.e. byte length equals decoded UTF-16 length) and
+    /// vice versa (for mappable characters).
+    ///
+    /// `true` iff this encoding is on the list of [Legacy single-byte
+    /// encodings](https://encoding.spec.whatwg.org/#legacy-single-byte-encodings)
+    /// in the spec or x-user-defined.
+    ///
+    /// Available via the C wrapper.
+    #[inline]
+    pub fn is_single_byte(&'static self) -> bool {
+        self.variant.is_single_byte()
+    }
+
     /// Checks whether the bytes 0x00...0x7F map mostly to the characters
     /// U+0000...U+007F and vice versa.
     #[inline]
@@ -3002,7 +3009,7 @@ impl Encoding {
                 ascii_valid_up_to(bytes)
             };
             if valid_up_to == bytes.len() {
-                let str: &str = unsafe { std::mem::transmute(bytes) };
+                let str: &str = unsafe { std::str::from_utf8_unchecked(bytes) };
                 return (Cow::Borrowed(str), false);
             }
             let decoder = self.new_decoder_without_bom_handling();
@@ -3094,7 +3101,7 @@ impl Encoding {
         if self == UTF_8 {
             let valid_up_to = utf8_valid_up_to(bytes);
             if valid_up_to == bytes.len() {
-                let str: &str = unsafe { std::mem::transmute(bytes) };
+                let str: &str = unsafe { std::str::from_utf8_unchecked(bytes) };
                 return Some(Cow::Borrowed(str));
             }
             return None;
@@ -3106,7 +3113,7 @@ impl Encoding {
                 ascii_valid_up_to(bytes)
             };
             if valid_up_to == bytes.len() {
-                let str: &str = unsafe { std::mem::transmute(bytes) };
+                let str: &str = unsafe { std::str::from_utf8_unchecked(bytes) };
                 return Some(Cow::Borrowed(str));
             }
             let decoder = self.new_decoder_without_bom_handling();
@@ -3114,7 +3121,8 @@ impl Encoding {
                 checked_add(
                     valid_up_to,
                     decoder.max_utf8_buffer_length_without_replacement(bytes.len() - valid_up_to),
-                ).unwrap(),
+                )
+                .unwrap(),
             );
             unsafe {
                 let vec = string.as_mut_vec();
@@ -3201,8 +3209,9 @@ impl Encoding {
             (checked_add(
                 valid_up_to,
                 encoder.max_buffer_length_from_utf8_if_no_unmappables(string.len() - valid_up_to),
-            )).unwrap()
-                .next_power_of_two(),
+            ))
+            .unwrap()
+            .next_power_of_two(),
         );
         unsafe {
             vec.set_len(valid_up_to);
@@ -3394,7 +3403,7 @@ impl<'de> Deserialize<'de> for &'static Encoding {
 }
 
 /// Tracks the life cycle of a decoder from BOM sniffing to conversion to end.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Copy, Clone)]
 enum DecoderLifeCycle {
     /// The decoder has seen no input yet.
     AtStart,
@@ -3423,6 +3432,7 @@ enum DecoderLifeCycle {
 }
 
 /// Communicate the BOM handling mode.
+#[derive(Debug, Copy, Clone)]
 enum BomHandling {
     /// Don't handle the BOM
     Off,
@@ -3887,7 +3897,7 @@ impl Decoder {
         dst: &mut str,
         last: bool,
     ) -> (CoderResult, usize, usize, bool) {
-        let bytes: &mut [u8] = unsafe { std::mem::transmute(dst) };
+        let bytes: &mut [u8] = unsafe { dst.as_bytes_mut() };
         let (result, read, written, replaced) = self.decode_to_utf8(src, bytes, last);
         let len = bytes.len();
         let mut trail = written;
@@ -3977,7 +3987,7 @@ impl Decoder {
         dst: &mut str,
         last: bool,
     ) -> (DecoderResult, usize, usize) {
-        let bytes: &mut [u8] = unsafe { std::mem::transmute(dst) };
+        let bytes: &mut [u8] = unsafe { dst.as_bytes_mut() };
         let (result, read, written) = self.decode_to_utf8_without_replacement(src, bytes, last);
         let len = bytes.len();
         let mut trail = written;
@@ -4217,7 +4227,7 @@ pub enum EncoderResult {
 
 impl EncoderResult {
     fn unmappable_from_bmp(bmp: u16) -> EncoderResult {
-        EncoderResult::Unmappable(::std::char::from_u32(bmp as u32).unwrap())
+        EncoderResult::Unmappable(::std::char::from_u32(u32::from(bmp)).unwrap())
     }
 }
 
@@ -4688,13 +4698,13 @@ fn write_ncr(unmappable: char, dst: &mut [u8]) -> usize {
     // len is the number of decimal digits needed to represent unmappable plus
     // 3 (the length of "&#" and ";").
     let mut number = unmappable as u32;
-    let len = if number >= 1000000u32 {
+    let len = if number >= 1_000_000u32 {
         10usize
-    } else if number >= 100000u32 {
+    } else if number >= 100_000u32 {
         9usize
-    } else if number >= 10000u32 {
+    } else if number >= 10_000u32 {
         8usize
-    } else if number >= 1000u32 {
+    } else if number >= 1_000u32 {
         7usize
     } else if number >= 100u32 {
         6usize
@@ -5635,4 +5645,48 @@ mod tests {
         assert_eq!(debincoded, demo);
     }
 
+    #[test]
+    fn test_is_single_byte() {
+        assert!(!BIG5.is_single_byte());
+        assert!(!EUC_JP.is_single_byte());
+        assert!(!EUC_KR.is_single_byte());
+        assert!(!GB18030.is_single_byte());
+        assert!(!GBK.is_single_byte());
+        assert!(!REPLACEMENT.is_single_byte());
+        assert!(!SHIFT_JIS.is_single_byte());
+        assert!(!UTF_8.is_single_byte());
+        assert!(!UTF_16BE.is_single_byte());
+        assert!(!UTF_16LE.is_single_byte());
+        assert!(!ISO_2022_JP.is_single_byte());
+
+        assert!(IBM866.is_single_byte());
+        assert!(ISO_8859_2.is_single_byte());
+        assert!(ISO_8859_3.is_single_byte());
+        assert!(ISO_8859_4.is_single_byte());
+        assert!(ISO_8859_5.is_single_byte());
+        assert!(ISO_8859_6.is_single_byte());
+        assert!(ISO_8859_7.is_single_byte());
+        assert!(ISO_8859_8.is_single_byte());
+        assert!(ISO_8859_10.is_single_byte());
+        assert!(ISO_8859_13.is_single_byte());
+        assert!(ISO_8859_14.is_single_byte());
+        assert!(ISO_8859_15.is_single_byte());
+        assert!(ISO_8859_16.is_single_byte());
+        assert!(ISO_8859_8_I.is_single_byte());
+        assert!(KOI8_R.is_single_byte());
+        assert!(KOI8_U.is_single_byte());
+        assert!(MACINTOSH.is_single_byte());
+        assert!(WINDOWS_874.is_single_byte());
+        assert!(WINDOWS_1250.is_single_byte());
+        assert!(WINDOWS_1251.is_single_byte());
+        assert!(WINDOWS_1252.is_single_byte());
+        assert!(WINDOWS_1253.is_single_byte());
+        assert!(WINDOWS_1254.is_single_byte());
+        assert!(WINDOWS_1255.is_single_byte());
+        assert!(WINDOWS_1256.is_single_byte());
+        assert!(WINDOWS_1257.is_single_byte());
+        assert!(WINDOWS_1258.is_single_byte());
+        assert!(X_MAC_CYRILLIC.is_single_byte());
+        assert!(X_USER_DEFINED.is_single_byte());
+    }
 }

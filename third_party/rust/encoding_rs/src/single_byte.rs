@@ -9,6 +9,7 @@
 
 use super::*;
 use ascii::*;
+use data::position;
 use handles::*;
 use variant::*;
 
@@ -154,8 +155,8 @@ impl SingleByteDecoder {
         'outermost: loop {
             match unsafe {
                 ascii_to_basic_latin(
-                    src.as_ptr().offset(converted as isize),
-                    dst.as_mut_ptr().offset(converted as isize),
+                    src.as_ptr().add(converted),
+                    dst.as_mut_ptr().add(converted),
                     length - converted,
                 )
             } {
@@ -207,7 +208,7 @@ impl SingleByteDecoder {
                             // byte unconditionally instead of trying to unread it
                             // to make it part of the next SIMD stride.
                             unsafe {
-                                *(dst.get_unchecked_mut(converted)) = b as u16;
+                                *(dst.get_unchecked_mut(converted)) = u16::from(b);
                             }
                             converted += 1;
                             if b < 60 {
@@ -230,13 +231,27 @@ impl SingleByteDecoder {
 
 pub struct SingleByteEncoder {
     table: &'static [u16; 128],
+    run_bmp_offset: usize,
+    run_byte_offset: usize,
+    run_length: usize,
 }
 
 impl SingleByteEncoder {
-    pub fn new(encoding: &'static Encoding, data: &'static [u16; 128]) -> Encoder {
+    pub fn new(
+        encoding: &'static Encoding,
+        data: &'static [u16; 128],
+        run_bmp_offset: u16,
+        run_byte_offset: u8,
+        run_length: u8,
+    ) -> Encoder {
         Encoder::new(
             encoding,
-            VariantEncoder::SingleByte(SingleByteEncoder { table: data }),
+            VariantEncoder::SingleByte(SingleByteEncoder {
+                table: data,
+                run_bmp_offset: run_bmp_offset as usize,
+                run_byte_offset: run_byte_offset as usize,
+                run_length: run_length as usize,
+            }),
         )
     }
 
@@ -254,54 +269,64 @@ impl SingleByteEncoder {
         Some(byte_length)
     }
 
+    #[inline(always)]
     fn encode_u16(&self, code_unit: u16) -> Option<u8> {
-        // We search the quadrants in reverse order, but we search forward
-        // within each quadrant. For Windows and ISO encodings, this is
-        // generally faster than just searching the whole table backwards.
-        // (Exceptions: English, German, Czech.) This order is also OK for
-        // KOI encodings. For IBM and Mac encodings, this order is bad,
-        // but we don't really need to optimize for those encodings anyway.
+        // First, we see if the code unit falls into a run of consecutive
+        // code units that can be mapped by offset. This is very efficient
+        // for most non-Latin encodings as well as Latin1-ish encodings.
+        //
+        // For encodings that don't fit this pattern, the run (which may
+        // have the length of just one) just establishes the starting point
+        // for the next rule.
+        //
+        // Next, we do a forward linear search in the part of the index
+        // after the run. Even in non-Latin1-ish Latin encodings (except
+        // macintosh), the lower case letters are here.
+        //
+        // Next, we search the third quadrant up to the start of the run
+        // (upper case letters in Latin encodings except macintosh, in
+        // Greek and in KOI encodings) and then the second quadrant,
+        // except if the run stared before the third quadrant, we search
+        // the second quadrant up to the run.
+        //
+        // Last, we search the first quadrant, which has unused controls
+        // or punctuation in most encodings. This is bad for macintosh
+        // and IBM866, but those are rare.
 
-        // In Windows and ISO encodings, the fourth quadrant holds most of the
-        // lower-case letters for bicameral scripts as well as the Hebrew
-        // letters. There are some Thai letters and combining marks as well as
-        // Thai numerals here. (In KOI8-R, the upper-case letters are here.)
-        for i in 96..128 {
-            if self.table[i] == code_unit {
-                return Some((i + 128) as u8);
-            }
+        // Run of consecutive units
+        let unit_as_usize = code_unit as usize;
+        let offset = unit_as_usize.wrapping_sub(self.run_bmp_offset);
+        if offset < self.run_length {
+            return Some((128 + self.run_byte_offset + offset) as u8);
         }
 
-        // In Windows and ISO encodings, the third quadrant holds most of the
-        // upper-case letters for bicameral scripts as well as most of the
-        // Arabic letters. Searching this quadrant first would be better for
-        // Arabic. There are a number of Thai letters and combining marks here.
-        // (In KOI8-R, the lower-case letters are here.)
-        for i in 64..96 {
-            if self.table[i] == code_unit {
-                return Some((i + 128) as u8);
-            }
+        // Search after the run
+        let tail_start = self.run_byte_offset + self.run_length;
+        if let Some(pos) = position(&self.table[tail_start..], code_unit) {
+            return Some((128 + tail_start + pos) as u8);
         }
 
-        // In Windows and ISO encodings, the second quadrant hold most of the
-        // Thai letters. In other scripts, there tends to be symbols here.
-        // Even though the two quadrants above are relevant for Thai, for Thai
-        // it would likely be optimal to search this quadrant first. :-(
-        for i in 32..64 {
-            if self.table[i] == code_unit {
-                return Some((i + 128) as u8);
+        if self.run_byte_offset >= 64 {
+            // Search third quadrant before the run
+            if let Some(pos) = position(&self.table[64..self.run_byte_offset], code_unit) {
+                return Some(((128 + 64) + pos) as u8);
             }
+
+            // Search second quadrant
+            if let Some(pos) = position(&self.table[32..64], code_unit) {
+                return Some(((128 + 32) + pos) as u8);
+            }
+        } else if let Some(pos) = position(&self.table[32..self.run_byte_offset], code_unit) {
+            // windows-1252, windows-874, ISO-8859-15 and ISO-8859-5
+            // Search second quadrant before the run
+            return Some(((128 + 32) + pos) as u8);
         }
 
-        // The first quadrant is useless in ISO encodings. In Windows encodings,
-        // there is useful punctuation here that might warrant searching
-        // before the symbols in the second quadrant, but the second quadrant
-        // is searched before this one for the benefit of Thai.
-        for i in 0..32 {
-            if self.table[i] == code_unit {
-                return Some((i + 128) as u8);
-            }
+        // Search first quadrant
+        if let Some(pos) = position(&self.table[..32], code_unit) {
+            return Some((128 + pos) as u8);
         }
+
         None
     }
 
@@ -345,8 +370,8 @@ impl SingleByteEncoder {
         'outermost: loop {
             match unsafe {
                 basic_latin_to_ascii(
-                    src.as_ptr().offset(converted as isize),
-                    dst.as_mut_ptr().offset(converted as isize),
+                    src.as_ptr().add(converted),
+                    dst.as_mut_ptr().add(converted),
                     length - converted,
                 )
             } {
@@ -379,7 +404,7 @@ impl SingleByteEncoder {
                                         );
                                     }
                                     let second =
-                                        unsafe { *src.get_unchecked(converted + 1) } as u32;
+                                        u32::from(unsafe { *src.get_unchecked(converted + 1) });
                                     if second & 0xFC00u32 != 0xDC00u32 {
                                         return (
                                             EncoderResult::Unmappable('\u{FFFD}'),
@@ -389,9 +414,9 @@ impl SingleByteEncoder {
                                     }
                                     // The next code unit is a low surrogate.
                                     let astral: char = unsafe {
-                                        ::std::mem::transmute(
-                                            ((non_ascii as u32) << 10) + second
-                                                - (((0xD800u32 << 10) - 0x10000u32) + 0xDC00u32),
+                                        ::std::char::from_u32_unchecked(
+                                            (u32::from(non_ascii) << 10) + second
+                                                - (((0xD800u32 << 10) - 0x1_0000u32) + 0xDC00u32),
                                         )
                                     };
                                     return (
@@ -408,10 +433,8 @@ impl SingleByteEncoder {
                                         converted,
                                     );
                                 }
-                                let thirty_two = non_ascii as u32;
-                                let bmp: char = unsafe { ::std::mem::transmute(thirty_two) };
                                 return (
-                                    EncoderResult::Unmappable(bmp),
+                                    EncoderResult::unmappable_from_bmp(non_ascii),
                                     converted + 1, // +1 `for non_ascii`
                                     converted,
                                 );
@@ -464,7 +487,6 @@ impl SingleByteEncoder {
 
 #[cfg(test)]
 mod tests {
-    use super::super::data::*;
     use super::super::testing::*;
     use super::super::*;
 
@@ -603,64 +625,64 @@ mod tests {
 
     #[test]
     fn test_single_byte_decode() {
-        decode_single_byte(IBM866, IBM866_DATA);
-        decode_single_byte(ISO_8859_10, ISO_8859_10_DATA);
-        decode_single_byte(ISO_8859_13, ISO_8859_13_DATA);
-        decode_single_byte(ISO_8859_14, ISO_8859_14_DATA);
-        decode_single_byte(ISO_8859_15, ISO_8859_15_DATA);
-        decode_single_byte(ISO_8859_16, ISO_8859_16_DATA);
-        decode_single_byte(ISO_8859_2, ISO_8859_2_DATA);
-        decode_single_byte(ISO_8859_3, ISO_8859_3_DATA);
-        decode_single_byte(ISO_8859_4, ISO_8859_4_DATA);
-        decode_single_byte(ISO_8859_5, ISO_8859_5_DATA);
-        decode_single_byte(ISO_8859_6, ISO_8859_6_DATA);
-        decode_single_byte(ISO_8859_7, ISO_8859_7_DATA);
-        decode_single_byte(ISO_8859_8, ISO_8859_8_DATA);
-        decode_single_byte(KOI8_R, KOI8_R_DATA);
-        decode_single_byte(KOI8_U, KOI8_U_DATA);
-        decode_single_byte(MACINTOSH, MACINTOSH_DATA);
-        decode_single_byte(WINDOWS_1250, WINDOWS_1250_DATA);
-        decode_single_byte(WINDOWS_1251, WINDOWS_1251_DATA);
-        decode_single_byte(WINDOWS_1252, WINDOWS_1252_DATA);
-        decode_single_byte(WINDOWS_1253, WINDOWS_1253_DATA);
-        decode_single_byte(WINDOWS_1254, WINDOWS_1254_DATA);
-        decode_single_byte(WINDOWS_1255, WINDOWS_1255_DATA);
-        decode_single_byte(WINDOWS_1256, WINDOWS_1256_DATA);
-        decode_single_byte(WINDOWS_1257, WINDOWS_1257_DATA);
-        decode_single_byte(WINDOWS_1258, WINDOWS_1258_DATA);
-        decode_single_byte(WINDOWS_874, WINDOWS_874_DATA);
-        decode_single_byte(X_MAC_CYRILLIC, X_MAC_CYRILLIC_DATA);
+        decode_single_byte(IBM866, &data::SINGLE_BYTE_DATA.ibm866);
+        decode_single_byte(ISO_8859_10, &data::SINGLE_BYTE_DATA.iso_8859_10);
+        decode_single_byte(ISO_8859_13, &data::SINGLE_BYTE_DATA.iso_8859_13);
+        decode_single_byte(ISO_8859_14, &data::SINGLE_BYTE_DATA.iso_8859_14);
+        decode_single_byte(ISO_8859_15, &data::SINGLE_BYTE_DATA.iso_8859_15);
+        decode_single_byte(ISO_8859_16, &data::SINGLE_BYTE_DATA.iso_8859_16);
+        decode_single_byte(ISO_8859_2, &data::SINGLE_BYTE_DATA.iso_8859_2);
+        decode_single_byte(ISO_8859_3, &data::SINGLE_BYTE_DATA.iso_8859_3);
+        decode_single_byte(ISO_8859_4, &data::SINGLE_BYTE_DATA.iso_8859_4);
+        decode_single_byte(ISO_8859_5, &data::SINGLE_BYTE_DATA.iso_8859_5);
+        decode_single_byte(ISO_8859_6, &data::SINGLE_BYTE_DATA.iso_8859_6);
+        decode_single_byte(ISO_8859_7, &data::SINGLE_BYTE_DATA.iso_8859_7);
+        decode_single_byte(ISO_8859_8, &data::SINGLE_BYTE_DATA.iso_8859_8);
+        decode_single_byte(KOI8_R, &data::SINGLE_BYTE_DATA.koi8_r);
+        decode_single_byte(KOI8_U, &data::SINGLE_BYTE_DATA.koi8_u);
+        decode_single_byte(MACINTOSH, &data::SINGLE_BYTE_DATA.macintosh);
+        decode_single_byte(WINDOWS_1250, &data::SINGLE_BYTE_DATA.windows_1250);
+        decode_single_byte(WINDOWS_1251, &data::SINGLE_BYTE_DATA.windows_1251);
+        decode_single_byte(WINDOWS_1252, &data::SINGLE_BYTE_DATA.windows_1252);
+        decode_single_byte(WINDOWS_1253, &data::SINGLE_BYTE_DATA.windows_1253);
+        decode_single_byte(WINDOWS_1254, &data::SINGLE_BYTE_DATA.windows_1254);
+        decode_single_byte(WINDOWS_1255, &data::SINGLE_BYTE_DATA.windows_1255);
+        decode_single_byte(WINDOWS_1256, &data::SINGLE_BYTE_DATA.windows_1256);
+        decode_single_byte(WINDOWS_1257, &data::SINGLE_BYTE_DATA.windows_1257);
+        decode_single_byte(WINDOWS_1258, &data::SINGLE_BYTE_DATA.windows_1258);
+        decode_single_byte(WINDOWS_874, &data::SINGLE_BYTE_DATA.windows_874);
+        decode_single_byte(X_MAC_CYRILLIC, &data::SINGLE_BYTE_DATA.x_mac_cyrillic);
     }
 
     #[test]
     fn test_single_byte_encode() {
-        encode_single_byte(IBM866, IBM866_DATA);
-        encode_single_byte(ISO_8859_10, ISO_8859_10_DATA);
-        encode_single_byte(ISO_8859_13, ISO_8859_13_DATA);
-        encode_single_byte(ISO_8859_14, ISO_8859_14_DATA);
-        encode_single_byte(ISO_8859_15, ISO_8859_15_DATA);
-        encode_single_byte(ISO_8859_16, ISO_8859_16_DATA);
-        encode_single_byte(ISO_8859_2, ISO_8859_2_DATA);
-        encode_single_byte(ISO_8859_3, ISO_8859_3_DATA);
-        encode_single_byte(ISO_8859_4, ISO_8859_4_DATA);
-        encode_single_byte(ISO_8859_5, ISO_8859_5_DATA);
-        encode_single_byte(ISO_8859_6, ISO_8859_6_DATA);
-        encode_single_byte(ISO_8859_7, ISO_8859_7_DATA);
-        encode_single_byte(ISO_8859_8, ISO_8859_8_DATA);
-        encode_single_byte(KOI8_R, KOI8_R_DATA);
-        encode_single_byte(KOI8_U, KOI8_U_DATA);
-        encode_single_byte(MACINTOSH, MACINTOSH_DATA);
-        encode_single_byte(WINDOWS_1250, WINDOWS_1250_DATA);
-        encode_single_byte(WINDOWS_1251, WINDOWS_1251_DATA);
-        encode_single_byte(WINDOWS_1252, WINDOWS_1252_DATA);
-        encode_single_byte(WINDOWS_1253, WINDOWS_1253_DATA);
-        encode_single_byte(WINDOWS_1254, WINDOWS_1254_DATA);
-        encode_single_byte(WINDOWS_1255, WINDOWS_1255_DATA);
-        encode_single_byte(WINDOWS_1256, WINDOWS_1256_DATA);
-        encode_single_byte(WINDOWS_1257, WINDOWS_1257_DATA);
-        encode_single_byte(WINDOWS_1258, WINDOWS_1258_DATA);
-        encode_single_byte(WINDOWS_874, WINDOWS_874_DATA);
-        encode_single_byte(X_MAC_CYRILLIC, X_MAC_CYRILLIC_DATA);
+        encode_single_byte(IBM866, &data::SINGLE_BYTE_DATA.ibm866);
+        encode_single_byte(ISO_8859_10, &data::SINGLE_BYTE_DATA.iso_8859_10);
+        encode_single_byte(ISO_8859_13, &data::SINGLE_BYTE_DATA.iso_8859_13);
+        encode_single_byte(ISO_8859_14, &data::SINGLE_BYTE_DATA.iso_8859_14);
+        encode_single_byte(ISO_8859_15, &data::SINGLE_BYTE_DATA.iso_8859_15);
+        encode_single_byte(ISO_8859_16, &data::SINGLE_BYTE_DATA.iso_8859_16);
+        encode_single_byte(ISO_8859_2, &data::SINGLE_BYTE_DATA.iso_8859_2);
+        encode_single_byte(ISO_8859_3, &data::SINGLE_BYTE_DATA.iso_8859_3);
+        encode_single_byte(ISO_8859_4, &data::SINGLE_BYTE_DATA.iso_8859_4);
+        encode_single_byte(ISO_8859_5, &data::SINGLE_BYTE_DATA.iso_8859_5);
+        encode_single_byte(ISO_8859_6, &data::SINGLE_BYTE_DATA.iso_8859_6);
+        encode_single_byte(ISO_8859_7, &data::SINGLE_BYTE_DATA.iso_8859_7);
+        encode_single_byte(ISO_8859_8, &data::SINGLE_BYTE_DATA.iso_8859_8);
+        encode_single_byte(KOI8_R, &data::SINGLE_BYTE_DATA.koi8_r);
+        encode_single_byte(KOI8_U, &data::SINGLE_BYTE_DATA.koi8_u);
+        encode_single_byte(MACINTOSH, &data::SINGLE_BYTE_DATA.macintosh);
+        encode_single_byte(WINDOWS_1250, &data::SINGLE_BYTE_DATA.windows_1250);
+        encode_single_byte(WINDOWS_1251, &data::SINGLE_BYTE_DATA.windows_1251);
+        encode_single_byte(WINDOWS_1252, &data::SINGLE_BYTE_DATA.windows_1252);
+        encode_single_byte(WINDOWS_1253, &data::SINGLE_BYTE_DATA.windows_1253);
+        encode_single_byte(WINDOWS_1254, &data::SINGLE_BYTE_DATA.windows_1254);
+        encode_single_byte(WINDOWS_1255, &data::SINGLE_BYTE_DATA.windows_1255);
+        encode_single_byte(WINDOWS_1256, &data::SINGLE_BYTE_DATA.windows_1256);
+        encode_single_byte(WINDOWS_1257, &data::SINGLE_BYTE_DATA.windows_1257);
+        encode_single_byte(WINDOWS_1258, &data::SINGLE_BYTE_DATA.windows_1258);
+        encode_single_byte(WINDOWS_874, &data::SINGLE_BYTE_DATA.windows_874);
+        encode_single_byte(X_MAC_CYRILLIC, &data::SINGLE_BYTE_DATA.x_mac_cyrillic);
     }
     // END GENERATED CODE
 

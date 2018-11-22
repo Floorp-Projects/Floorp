@@ -77,10 +77,10 @@ impl EucJpDecoder {
             // and Katakana (10% acconding to Lunde).
             if jis0208_lead_minus_offset == 0x03 && trail_minus_offset < 0x53 {
                 // Hiragana
-                handle.write_upper_bmp(0x3041 + trail_minus_offset as u16)
+                handle.write_upper_bmp(0x3041 + u16::from(trail_minus_offset))
             } else if jis0208_lead_minus_offset == 0x04 && trail_minus_offset < 0x56 {
                 // Katakana
-                handle.write_upper_bmp(0x30A1 + trail_minus_offset as u16)
+                handle.write_upper_bmp(0x30A1 + u16::from(trail_minus_offset))
             } else if trail_minus_offset > (0xFE - 0xA1) {
                 if byte < 0x80 {
                     return (
@@ -95,7 +95,7 @@ impl EucJpDecoder {
                     handle.written(),
                 );
             } else {
-                let pointer = mul_94(jis0208_lead_minus_offset) + trail_minus_offset as usize;
+                let pointer = mul_94(jis0208_lead_minus_offset) + usize::from(trail_minus_offset);
                 let level1_pointer = pointer.wrapping_sub(1410);
                 if level1_pointer < JIS0208_LEVEL1_KANJI.len() {
                     handle.write_upper_bmp(JIS0208_LEVEL1_KANJI[level1_pointer])
@@ -160,7 +160,7 @@ impl EucJpDecoder {
                     handle.written(),
                 );
             }
-            let pointer = mul_94(jis0212_lead_minus_offset) + trail_minus_offset as usize;
+            let pointer = mul_94(jis0212_lead_minus_offset) + usize::from(trail_minus_offset);
             let pointer_minus_kanji = pointer.wrapping_sub(1410);
             if pointer_minus_kanji < JIS0212_KANJI.len() {
                 handle.write_upper_bmp(JIS0212_KANJI[pointer_minus_kanji])
@@ -202,7 +202,7 @@ impl EucJpDecoder {
                     handle.written(),
                 );
             }
-            handle.write_upper_bmp(0xFF61 + trail_minus_offset as u16)
+            handle.write_upper_bmp(0xFF61 + u16::from(trail_minus_offset))
         },
         self,
         non_ascii,
@@ -215,6 +215,33 @@ impl EucJpDecoder {
         source,
         handle
     );
+}
+
+#[cfg(feature = "fast-kanji-encode")]
+#[inline(always)]
+fn encode_kanji(bmp: u16) -> Option<(u8, u8)> {
+    jis0208_kanji_euc_jp_encode(bmp)
+}
+
+#[cfg(not(feature = "fast-kanji-encode"))]
+#[inline(always)]
+fn encode_kanji(bmp: u16) -> Option<(u8, u8)> {
+    if 0x4EDD == bmp {
+        // Ideograph on the symbol row!
+        Some((0xA1, 0xB8))
+    } else if let Some((lead, trail)) = jis0208_level1_kanji_euc_jp_encode(bmp) {
+        Some((lead, trail))
+    } else if let Some(pos) = jis0208_level2_and_additional_kanji_encode(bmp) {
+        let lead = (pos / 94) + 0xD0;
+        let trail = (pos % 94) + 0xA1;
+        Some((lead as u8, trail as u8))
+    } else if let Some(pos) = position(&IBM_KANJI[..], bmp) {
+        let lead = (pos / 94) + 0xF9;
+        let trail = (pos % 94) + 0xA1;
+        Some((lead as u8, trail as u8))
+    } else {
+        None
+    }
 }
 
 pub struct EucJpEncoder;
@@ -245,19 +272,8 @@ impl EucJpEncoder {
             if bmp_minus_hiragana < 0x53 {
                 handle.write_two(0xA4, 0xA1 + bmp_minus_hiragana as u8)
             } else if in_inclusive_range16(bmp, 0x4E00, 0x9FA0) {
-                if 0x4EDD == bmp {
-                    // Ideograph on the symbol row!
-                    handle.write_two(0xA1, 0xB8)
-                } else if let Some((lead, trail)) = jis0208_level1_kanji_euc_jp_encode(bmp) {
+                if let Some((lead, trail)) = encode_kanji(bmp) {
                     handle.write_two(lead, trail)
-                } else if let Some(pos) = jis0208_level2_and_additional_kanji_encode(bmp) {
-                    let lead = (pos / 94) + 0xD0;
-                    let trail = (pos % 94) + 0xA1;
-                    handle.write_two(lead as u8, trail as u8)
-                } else if let Some(pos) = position(&IBM_KANJI[..], bmp) {
-                    let lead = (pos / 94) + 0xF9;
-                    let trail = (pos % 94) + 0xA1;
-                    handle.write_two(lead as u8, trail as u8)
                 } else {
                     return (
                         EncoderResult::unmappable_from_bmp(bmp),
