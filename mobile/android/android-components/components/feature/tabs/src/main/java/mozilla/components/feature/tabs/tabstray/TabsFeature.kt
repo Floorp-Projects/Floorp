@@ -29,8 +29,8 @@ class TabsFeature(
     @VisibleForTesting
     internal var interactor = TabsTrayInteractor(
         tabsTray,
-        tabsUseCases.selectSession,
-        tabsUseCases.removeSession,
+        tabsUseCases.selectTab,
+        tabsUseCases.removeTab,
         closeTabsTray)
 
     fun start() {

@@ -5,6 +5,7 @@
 package mozilla.components.feature.tabs.toolbar
 
 import android.util.TypedValue
+import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.ViewGroup
 import mozilla.components.browser.session.Session
@@ -29,7 +30,10 @@ class TabCounterToolbarButton(
         val view = TabCounter(parent.context).apply {
             reference = WeakReference(this)
             setCount(sessionManager.sessions.size)
-            setOnClickListener { showTabs.invoke() }
+            setOnClickListener {
+                it.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                showTabs.invoke()
+            }
             contentDescription = parent.context.getString(R.string.mozac_feature_tabs_toolbar_tabs_button)
         }
 

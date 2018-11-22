@@ -48,10 +48,22 @@ class TabsUseCases(
          *
          * @param url The URL to be loaded in the new tab.
          * @param selectTab True (default) if the new tab should be selected immediately.
+         * @param startLoading True (default) if the new tab should start loading immediately.
          */
-        fun invoke(url: String, selectTab: Boolean = true) {
+        fun invoke(
+            url: String,
+            selectTab: Boolean = true,
+            startLoading: Boolean = true,
+            parent: Session? = null
+        ): Session {
             val session = Session(url, false, Source.NEW_TAB)
-            sessionManager.add(session, selected = selectTab)
+            sessionManager.add(session, selected = selectTab, parent = parent)
+
+            if (startLoading) {
+                sessionManager.getOrCreateEngineSession(session).loadUrl(url)
+            }
+
+            return session
         }
     }
 
@@ -64,14 +76,25 @@ class TabsUseCases(
          * @param url The URL to be loaded in the new tab.
          * @param selectTab True (default) if the new tab should be selected immediately.
          */
-        fun invoke(url: String, selectTab: Boolean = true) {
+        fun invoke(
+            url: String,
+            selectTab: Boolean = true,
+            startLoading: Boolean = true,
+            parent: Session? = null
+        ): Session {
             val session = Session(url, true, Source.NEW_TAB)
-            sessionManager.add(session, selected = selectTab)
+            sessionManager.add(session, selected = selectTab, parent = parent)
+
+            if (startLoading) {
+                sessionManager.getOrCreateEngineSession(session).loadUrl(url)
+            }
+
+            return session
         }
     }
 
-    val selectSession: SelectTabUseCase by lazy { SelectTabUseCase(sessionManager) }
-    val removeSession: RemoveTabUseCase by lazy { RemoveTabUseCase(sessionManager) }
-    val addSession: AddNewTabUseCase by lazy { AddNewTabUseCase(sessionManager) }
-    val addPrivateSession: AddNewPrivateTabUseCase by lazy { AddNewPrivateTabUseCase(sessionManager) }
+    val selectTab: SelectTabUseCase by lazy { SelectTabUseCase(sessionManager) }
+    val removeTab: RemoveTabUseCase by lazy { RemoveTabUseCase(sessionManager) }
+    val addTab: AddNewTabUseCase by lazy { AddNewTabUseCase(sessionManager) }
+    val addPrivateTab: AddNewPrivateTabUseCase by lazy { AddNewPrivateTabUseCase(sessionManager) }
 }
