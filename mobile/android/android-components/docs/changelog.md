@@ -20,6 +20,20 @@ permalink: /changelog/
 * **feature-session**
   * Introducing `CoordinateScrollingFeature` a new feature to coordinate scrolling behavior between an `EngineView` and the view that you specify. For a full example take a look at its usages in [Sample Browser](https://github.com/mozilla-mobile/android-components/tree/master/samples/browser).
 
+* **feature-tabs**
+  * Added a filter to `TabsFeature` to allow you to choose which sessions to show in the TabsTray. This is particularly useful if you want to filter out private tabs based on some UI interaction:
+
+  ```kotlin
+  val tabsFeature = TabsFeature(
+    tabsTray,
+    sessionManager,
+    closeTabsTray = closeTabs()
+  )
+  tabsFeature.filterTabs {
+    it.private
+  }
+  ```
+
 * **engine-gecko,engine-gecko-beta and engine-gecko-nightly**
   * Fixing bug #1333. This issue didn't allow to use a `GeckoEngineSession` after sending a crash report.
 
@@ -50,7 +64,7 @@ permalink: /changelog/
 * **browser-session**:
   * Replace `DefaultSessionStorage` with a new configurable implementation called `SessionStorage`:
 
-  ```Kotlin
+  ```kotlin
   SessionStorage().autoSave(sessionManager)
     .periodicallyInForeground(interval = 30, unit = TimeUnit.SECONDS)
     .whenGoingToBackground()

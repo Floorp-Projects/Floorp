@@ -16,6 +16,8 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.anyInt
+import org.mockito.Mockito.anyList
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
@@ -218,6 +220,37 @@ class TabsTrayPresenterTest {
         assertTrue(closed)
 
         presenter.stop()
+    }
+
+    @Test
+    fun `presenter calls update and display sessions when calculating diff`() {
+        val sessionManager = SessionManager(engine = mock())
+
+        sessionManager.add(Session("https://www.mozilla.org"))
+        sessionManager.add(Session("https://getpocket.com"))
+
+        val tabsTray: MockedTabsTray = spy(MockedTabsTray())
+        val presenter = TabsTrayPresenter(tabsTray, sessionManager, mock())
+
+        presenter.calculateDiffAndUpdateTabsTray()
+
+        verify(tabsTray).displaySessions(anyList(), anyInt())
+        verify(tabsTray).updateSessions(anyList(), anyInt())
+    }
+
+    @Test
+    fun `presenter invokes session filtering`() {
+        val sessionManager = SessionManager(engine = mock())
+
+        sessionManager.add(Session("https://www.mozilla.org"))
+        sessionManager.add(Session("https://getpocket.com", private = true))
+
+        val tabsTray: MockedTabsTray = spy(MockedTabsTray())
+        val presenter = TabsTrayPresenter(tabsTray, sessionManager, mock(), { it.private })
+
+        presenter.calculateDiffAndUpdateTabsTray()
+
+        assertTrue(tabsTray.displaySessionsList?.size == 1)
     }
 }
 
