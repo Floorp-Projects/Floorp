@@ -119,20 +119,62 @@ case $cmd in
         ${tgtpath}/tools/fuzzing/
 
 
+    # Build system and dependencies
+    cp -pPR \
+        ${TOPSRCDIR}/build \
+        ${TOPSRCDIR}/config \
+        ${TOPSRCDIR}/python \
+        ${tgtpath}/
+
+    ${MKDIR} -p ${tgtpath}/.cargo
+    cp -pPR \
+        ${TOPSRCDIR}/.cargo/config.in \
+        ${tgtpath}/.cargo/
+
+    ${MKDIR} -p ${tgtpath}/third_party
+    cp -pPR \
+        ${TOPSRCDIR}/third_party/python \
+        ${TOPSRCDIR}/third_party/rust \
+        ${tgtpath}/third_party/
+
+    ${MKDIR} -p ${tgtpath}/dom/bindings
+    cp -pPR \
+        ${TOPSRCDIR}/dom/bindings/mozwebidlcodegen \
+        ${tgtpath}/dom/bindings/
+
+    ${MKDIR} -p ${tgtpath}/layout/tools/reftest
+    cp -pPR \
+        ${TOPSRCDIR}/layout/tools/reftest/reftest \
+        ${tgtpath}/layout/tools/reftest/
+
+    ${MKDIR} -p ${tgtpath}/testing
+    cp -pPR \
+        ${TOPSRCDIR}/testing/mozbase \
+        ${tgtpath}/testing/
+
+    ${MKDIR} -p ${tgtpath}/taskcluster/taskgraph
+    cp -pPR \
+        ${TOPSRCDIR}/taskcluster/moz.build \
+        ${tgtpath}/taskcluster/
+    cp -pPR \
+        ${TOPSRCDIR}/taskcluster/taskgraph/test \
+        ${tgtpath}/taskcluster/taskgraph/
+
+    ${MKDIR} -p ${tgtpath}/toolkit/crashreporter/tools
+    cp -pPR \
+        ${TOPSRCDIR}/toolkit/crashreporter/tools/symbolstore.py \
+        ${tgtpath}/toolkit/crashreporter/tools/
+
+    ${MKDIR} -p ${tgtpath}/toolkit/mozapps/installer
+    cp -pPR \
+        ${TOPSRCDIR}/toolkit/mozapps/installer/package-name.mk \
+        ${TOPSRCDIR}/toolkit/mozapps/installer/upload-files.mk \
+        ${tgtpath}/toolkit/mozapps/installer/
+
+
     cp -pPR ${TOPSRCDIR}/js/app.mozbuild ${tgtpath}/js/
     cp -pPR ${TOPSRCDIR}/js/moz.configure ${tgtpath}/js/
     cp -pPR ${TOPSRCDIR}/js/ffi.configure ${tgtpath}/js/
-
-    ${MKDIR} -p ${tgtpath}/taskcluster/taskgraph
-    cp -pPR ${TOPSRCDIR}/taskcluster/moz.build ${tgtpath}/taskcluster/
-    cp -pPR ${TOPSRCDIR}/taskcluster/taskgraph/test ${tgtpath}/taskcluster/taskgraph/
-
-    # copy build and config directory.
-    cp -pPR ${TOPSRCDIR}/build ${TOPSRCDIR}/config ${tgtpath}/
-
-    # copy cargo config
-    ${MKDIR} -p ${tgtpath}/.cargo
-    cp -pPR ${TOPSRCDIR}/.cargo/config.in ${tgtpath}/.cargo/
 
     # put in js itself
     cp -p ${TOPSRCDIR}/js/moz.configure ${tgtpath}/js/
@@ -142,37 +184,6 @@ case $cmd in
     find ${TOPSRCDIR}/js/src -mindepth 1 -maxdepth 1 -not -path ${STAGING} -a -not -name ${pkg} \
         -exec cp -pPR {} ${tgtpath}/js/src/ \;
 
-    cp -pPR \
-        ${TOPSRCDIR}/python \
-        ${tgtpath}/
-    ${MKDIR} -p ${tgtpath}/third_party
-    cp -pPR \
-        ${TOPSRCDIR}/third_party/python \
-        ${tgtpath}/third_party/
-    cp -pPR \
-        ${TOPSRCDIR}/third_party/rust \
-        ${tgtpath}/third_party/
-    ${MKDIR} -p ${tgtpath}/dom/bindings
-    cp -pPR \
-        ${TOPSRCDIR}/dom/bindings/mozwebidlcodegen \
-        ${tgtpath}/dom/bindings/
-    ${MKDIR} -p ${tgtpath}/testing
-    cp -pPR \
-        ${TOPSRCDIR}/testing/mozbase \
-        ${tgtpath}/testing/
-    ${MKDIR} -p ${tgtpath}/layout/tools/reftest
-    cp -pPR \
-        ${TOPSRCDIR}/layout/tools/reftest/reftest \
-        ${tgtpath}/layout/tools/reftest/
-    ${MKDIR} -p ${tgtpath}/toolkit/mozapps/installer
-    cp -pPR \
-        ${TOPSRCDIR}/toolkit/mozapps/installer/package-name.mk \
-        ${TOPSRCDIR}/toolkit/mozapps/installer/upload-files.mk \
-        ${tgtpath}/toolkit/mozapps/installer/
-    ${MKDIR} -p ${tgtpath}/toolkit/crashreporter/tools
-    cp -pPR \
-        ${TOPSRCDIR}/toolkit/crashreporter/tools/symbolstore.py \
-        ${tgtpath}/toolkit/crashreporter/tools/
 
     # Generate configure files to avoid build dependency on autoconf-2.13
     cp -pPR ${TOPSRCDIR}/js/src/configure.in ${tgtpath}/js/src/configure
