@@ -17,7 +17,7 @@ uuid = { version = "0.6", features = ["v4"] }
 fxhash = "0.2.1"
 
 [dependencies.webrender]
-path = "../webrender"
+path = "../wr/webrender"
 version = "0.57.2"
 default-features = false
 features = ["capture", "serialize_program"]

@@ -20,24 +20,19 @@ members = [
 # of the workspace and their dev-dependencies won't be included.
 exclude = [
   # Exclude third-party code vendored into mozilla-central.
-  "gfx/webrender",
-  "gfx/webrender_api",
-  "gfx/webrender_bindings",
   "servo",
   "third_party/rust",
 
-  # Excluded because this is a standalone tool for developers and not intended
-  # to be built as part of mozilla-central and is not shipped to users.
-  "gfx/wrench",
-
   # Excluded because these crates have their own Cargo workspaces so they can't
   # be included in the top-level one.
+  "gfx/wr",
   "media/audioipc",
   "media/cubeb-rs",
 
   # Excluded because they are used only as dependencies, not top-level targets,
   # so we don't need to vendor their dev-dependencies.
   "dom/webauthn/u2f-hid-rs",
+  "gfx/webrender_bindings",
   "media/mp4parse-rust/mp4parse",
   "media/mp4parse-rust/mp4parse_capi",
   "media/mp4parse-rust/mp4parse_fallible",
