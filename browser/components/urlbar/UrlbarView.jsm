@@ -57,20 +57,7 @@ class UrlbarView {
   open() {
     this.panel.removeAttribute("hidden");
 
-    let panelDirection = this.panel.style.direction;
-    if (!panelDirection) {
-      panelDirection = this.panel.style.direction =
-        this.window.getComputedStyle(this.urlbar.textbox).direction;
-    }
-
-    // Make the panel span the width of the window.
-    let documentRect =
-      this._getBoundsWithoutFlushing(this.document.documentElement);
-    let width = documentRect.right - documentRect.left;
-    this.panel.setAttribute("width", width);
-
-    // Subtract two pixels for left and right borders on the panel.
-    this._mainContainer.style.maxWidth = (width - 2) + "px";
+    this._alignPanel();
 
     // TODO: Search one off buttons are a stub right now.
     //       We'll need to set them up properly.
@@ -120,6 +107,48 @@ class UrlbarView {
 
   _createElement(name) {
     return this.document.createElementNS("http://www.w3.org/1999/xhtml", name);
+  }
+
+  _alignPanel() {
+    // Make the panel span the width of the window.
+    let documentRect =
+      this._getBoundsWithoutFlushing(this.document.documentElement);
+    let width = documentRect.right - documentRect.left;
+    this.panel.setAttribute("width", width);
+
+    // Subtract two pixels for left and right borders on the panel.
+    this._mainContainer.style.maxWidth = (width - 2) + "px";
+
+    // Keep the popup items' site icons aligned with the urlbar's identity
+    // icon if it's not too far from the edge of the window.  We define
+    // "too far" as "more than 30% of the window's width AND more than
+    // 250px".
+    let isRTL = this.document.documentElement.matches(":-moz-locale-dir(rtl)");
+    let boundToCheck = isRTL ? "right" : "left";
+    let inputRect = this._getBoundsWithoutFlushing(this.urlbar.textbox);
+    let startOffset = Math.abs(inputRect[boundToCheck] - documentRect[boundToCheck]);
+    let alignSiteIcons = startOffset / width <= 0.3 || startOffset <= 250;
+    if (alignSiteIcons) {
+      // Calculate the end margin if we have a start margin.
+      let boundToCheckEnd = isRTL ? "left" : "right";
+      let endOffset = Math.abs(inputRect[boundToCheckEnd] -
+                               documentRect[boundToCheckEnd]);
+      if (endOffset > startOffset * 2) {
+        // Provide more space when aligning would result in an unbalanced
+        // margin. This allows the location bar to be moved to the start
+        // of the navigation toolbar to reclaim space for results.
+        endOffset = startOffset;
+      }
+      let identityIcon = this.document.getElementById("identity-icon");
+      let identityRect = this._getBoundsWithoutFlushing(identityIcon);
+      let start = isRTL ? documentRect.right - identityRect.right : identityRect.left;
+
+      this.panel.style.setProperty("--item-padding-start", Math.round(start) + "px");
+      this.panel.style.setProperty("--item-padding-end", Math.round(endOffset) + "px");
+    } else {
+      this.panel.style.removeProperty("--item-padding-start");
+      this.panel.style.removeProperty("--item-padding-end");
+    }
   }
 
   _addRow(resultIndex) {
