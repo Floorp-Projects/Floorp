@@ -223,18 +223,6 @@ function getFile(path, base = null) {
 }
 
 /**
- * Helper function that determines whether an addon of a certain type is a
- * WebExtension.
- *
- * @param {string} type
- *        The add-on type to check.
- * @returns {boolean}
- */
-function isWebExtension(type) {
-  return type == "webextension" || type == "webextension-theme";
-}
-
-/**
  * Returns true if the given file, based on its name, should be treated
  * as an XPI. If the file does not have an appropriate extension, it is
  * assumed to be an unpacked add-on.
@@ -375,6 +363,7 @@ const JSON_FIELDS = Object.freeze([
   "dependencies",
   "enabled",
   "file",
+  "isWebExtension",
   "lastModifiedTime",
   "path",
   "runInSafeMode",
@@ -458,6 +447,7 @@ class XPIState {
     let json = {
       dependencies: this.dependencies,
       enabled: this.enabled,
+      isWebExtension: this.isWebExtension,
       lastModifiedTime: this.lastModifiedTime,
       path: this.relativePath,
       runInSafeMode: this.runInSafeMode,
@@ -531,6 +521,7 @@ class XPIState {
 
     this.version = aDBAddon.version;
     this.type = aDBAddon.type;
+    this.isWebExtension = aDBAddon.isWebExtension;
     if (aDBAddon.startupData) {
       this.startupData = aDBAddon.startupData;
     }
@@ -1521,7 +1512,8 @@ class BootstrapScope {
     if (Services.appinfo.inSafeMode && !runInSafeMode)
       return null;
 
-    if (addon.type == "extension" && aMethod == "startup") {
+    if (!addon.isWebExtension && addon.type == "extension" &&
+        aMethod == "startup") {
       logger.debug(`Registering manifest for ${this.file.path}`);
       Components.manager.addBootstrappedManifestLocation(this.file);
     }
@@ -1632,12 +1624,24 @@ class BootstrapScope {
 
     logger.debug(`Loading bootstrap scope from ${this.file.path}`);
 
-    if (isWebExtension(this.addon.type)) {
-      this.scope = Extension.getBootstrapScope(this.addon.id, this.file);
-    } else if (this.addon.type === "webextension-langpack") {
-      this.scope = Langpack.getBootstrapScope(this.addon.id, this.file);
-    } else if (this.addon.type === "webextension-dictionary") {
-      this.scope = Dictionary.getBootstrapScope(this.addon.id, this.file);
+    if (this.addon.isWebExtension) {
+      switch (this.addon.type) {
+        case "extension":
+        case "theme":
+          this.scope = Extension.getBootstrapScope(this.addon.id, this.file);
+          break;
+
+        case "locale":
+          this.scope = Langpack.getBootstrapScope(this.addon.id, this.file);
+          break;
+
+        case "dictionary":
+          this.scope = Dictionary.getBootstrapScope(this.addon.id, this.file);
+          break;
+
+        default:
+          throw new Error(`Unknown webextension type ${this.addon.type}`);
+      }
     } else {
       let uri = getURIForResourceInFile(this.file, "bootstrap.js").spec;
 
@@ -1833,7 +1837,7 @@ class BootstrapScope {
     let reason = XPIInstall.newVersionReason(this.addon.version, newAddon.version);
     let extraArgs = {oldVersion: this.addon.version, newVersion: newAddon.version};
 
-    let callUpdate = isWebExtension(this.addon.type) && isWebExtension(newAddon.type);
+    let callUpdate = this.addon.isWebExtension && newAddon.isWebExtension;
 
     await this._uninstall(reason, callUpdate, extraArgs);
 
@@ -2668,7 +2672,7 @@ var XPIProvider = {
         updateDate: addon.lastModifiedTime,
         scope,
         isSystem,
-        isWebExtension: isWebExtension(addon),
+        isWebExtension: addon.isWebExtension,
       });
     }
 
@@ -2745,7 +2749,6 @@ var XPIInternal = {
   awaitPromise,
   canRunInSafeMode,
   getURIForResourceInFile,
-  isWebExtension,
   isXPI,
   iterDirectory,
 };
