@@ -154,6 +154,9 @@ public:
 
   // nsXULToolbarButtonAccessible
   static bool IsSeparator(Accessible* aAccessible);
+
+  // Widgets
+  virtual bool IsAcceptableChild(nsIContent* aEl) const override;
 };
 
 /**

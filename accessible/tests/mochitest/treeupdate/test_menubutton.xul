@@ -35,10 +35,21 @@
 
       this.invoke = function openMenu_invoke()
       {
-        var tree =
-          { PUSHBUTTON: [
-            { MENUPOPUP: [ ] }
-          ] };
+        var tree = {};
+        if (this.button.name === "toolbarbutton") {
+          tree = 
+            { PUSHBUTTON: [
+              { MENUPOPUP: [ ] },
+              { LABEL: [
+                { TEXT_LEAF: [ ] }
+              ] }
+            ] };
+        } else {
+          tree = 
+            { PUSHBUTTON: [
+              { MENUPOPUP: [ ] }
+            ] };     
+        }
         testAccessibleTree(this.button, tree);
 
         this.__proto__.invoke();
@@ -46,13 +57,27 @@
 
       this.finalCheck = function openMenu_finalCheck()
       {
-        var tree =
-          { PUSHBUTTON: [
-            { MENUPOPUP: [
-              { role: menuItemRole, children: [ ] },
-              { role: menuItemRole, children: [ ] }
-            ] }
-          ] };
+        var tree = {};
+        if (this.button.name === "toolbarbutton") {
+          tree =
+            { PUSHBUTTON: [
+              { MENUPOPUP: [
+                { role: menuItemRole, children: [ ] },
+                { role: menuItemRole, children: [ ] }
+              ] },
+              { LABEL: [
+                { TEXT_LEAF: [ ] }
+              ] }
+            ] };
+        } else {
+          tree =
+            { PUSHBUTTON: [
+              { MENUPOPUP: [
+                { role: menuItemRole, children: [ ] },
+                { role: menuItemRole, children: [ ] }
+              ] }
+            ] };
+        }
         testAccessibleTree(this.button, tree);
 
         synthesizeKey("KEY_Escape");
