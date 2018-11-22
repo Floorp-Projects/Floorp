@@ -153,7 +153,7 @@ enum RTCStatsIceCandidateType {
 dictionary RTCIceCandidateStats : RTCStats {
   DOMString componentId;
   DOMString candidateId;
-  DOMString ipAddress;
+  DOMString address;
   DOMString transport;
   DOMString mozLocalTransport; // obsoleted by relayProtocol
   DOMString relayProtocol;
