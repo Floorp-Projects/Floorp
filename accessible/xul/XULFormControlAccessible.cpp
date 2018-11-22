@@ -100,11 +100,13 @@ XULButtonAccessible::NativeState() const
     xulButtonElement->GetType(type);
     if (type.EqualsLiteral("checkbox") || type.EqualsLiteral("radio")) {
       state |= states::CHECKABLE;
-      bool checked = false;
-      xulButtonElement->GetChecked(&checked);
-      if (checked) {
-        state |= states::PRESSED;
-      }
+    }
+    // Some buttons can have their checked state set without being of type
+    // checkbox or radio. Expose the pressed state unconditionally.
+    bool checked = false;
+    xulButtonElement->GetChecked(&checked);
+    if (checked) {
+      state |= states::PRESSED;
     }
   }
 
