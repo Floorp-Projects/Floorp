@@ -1322,15 +1322,10 @@ impl TextRunPrimitive {
         // If subpixel AA is disabled due to the backing surface the glyphs
         // are being drawn onto, disable it (unless we are using the
         // specifial subpixel mode that estimates background color).
-        if !allow_subpixel_aa && self.used_font.bg_color.a == 0 {
+        if (!allow_subpixel_aa && self.used_font.bg_color.a == 0) ||
+            // If using local space glyphs, we don't want subpixel AA.
+            !transform_glyphs {
             self.used_font.disable_subpixel_aa();
-        }
-
-        // If using local space glyphs, we don't want subpixel AA
-        // or positioning.
-        if !transform_glyphs {
-            self.used_font.disable_subpixel_aa();
-            self.used_font.disable_subpixel_position();
         }
 
         cache_dirty

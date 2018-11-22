@@ -453,8 +453,8 @@ impl FontContext {
                 m12: shape.skew_y,
                 m21: shape.skew_x,
                 m22: shape.scale_y,
-                dx: x_offset as f32,
-                dy: y_offset as f32,
+                dx: (x_offset / scale) as f32,
+                dy: (y_offset / scale) as f32,
             })
         } else {
             None
