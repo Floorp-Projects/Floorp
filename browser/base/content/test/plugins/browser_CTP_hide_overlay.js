@@ -33,8 +33,8 @@ add_task(async function() {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
-    let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    let closeIcon = doc.getAnonymousElementByAttribute(plugin, "anonid", "closeIcon");
+    let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
+    let closeIcon = plugin.openOrClosedShadowRoot.getElementById("closeIcon");
     let bounds = closeIcon.getBoundingClientRect();
     let left = (bounds.left + bounds.right) / 2;
     let top = (bounds.top + bounds.bottom) / 2;
@@ -59,8 +59,8 @@ add_task(async function() {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let doc = content.document;
     let plugin = doc.getElementById("test");
-    let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    let closeIcon = doc.getAnonymousElementByAttribute(plugin, "anonid", "closeIcon");
+    let overlay = plugin.openOrClosedShadowRoot.getElementById("main");
+    let closeIcon = plugin.openOrClosedShadowRoot.getElementById("closeIcon");
     let closeIconBounds = closeIcon.getBoundingClientRect();
     let overlayBounds = overlay.getBoundingClientRect();
     let overlayLeft = (overlayBounds.left + overlayBounds.right) / 2;

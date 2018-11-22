@@ -56,10 +56,10 @@ class UAWidgetsChild extends ActorChild {
         uri = "chrome://global/content/elements/datetimebox.js";
         widgetName = "DateTimeBoxWidget";
         break;
-      case "applet":
       case "embed":
       case "object":
-        // TODO (pluginProblems)
+        uri = "chrome://global/content/elements/pluginProblem.js";
+        widgetName = "PluginProblemWidget";
         break;
       case "marquee":
         uri = "chrome://global/content/elements/marquee.js";
