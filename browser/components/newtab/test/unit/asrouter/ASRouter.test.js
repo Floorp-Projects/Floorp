@@ -343,6 +343,19 @@ describe("ASRouter", () => {
       assert.calledOnce(targetStub.sendAsyncMessage);
       assert.equal(Router.state.lastMessageId, ALL_MESSAGE_IDS[0]);
     });
+    it("should not return a message from a blocked campaign", async () => {
+      // Block all messages except the first
+      await Router.setState(() => ({
+        messages: [{id: "foo", campaign: "foocampaign"}, {id: "bar"}],
+        messageBlockList: ["foocampaign"],
+      }));
+      const targetStub = {sendAsyncMessage: sandbox.stub()};
+
+      await Router.sendNextMessage(targetStub);
+
+      assert.calledOnce(targetStub.sendAsyncMessage);
+      assert.equal(Router.state.lastMessageId, "bar");
+    });
     it("should not return a message from a blocked provider", async () => {
       // There are only two providers; block the FAKE_LOCAL_PROVIDER, leaving
       // only FAKE_REMOTE_PROVIDER unblocked, which provides only one message
@@ -510,6 +523,19 @@ describe("ASRouter", () => {
         assert.isTrue(Router.state.messageBlockList.includes("foo"));
         assert.calledWith(channel.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "CLEAR_MESSAGE", data: {id: "foo"}});
       });
+      it("should add the campaign to the messageBlockList instead of id if .campaign is specified and not select messages of that campaign again", async () => {
+        await Router.setState({
+          messages: [
+            {id: "1", campaign: "foocampaign"},
+            {id: "2", campaign: "foocampaign"},
+          ],
+        });
+        const msg = fakeAsyncMessage({type: "BLOCK_MESSAGE_BY_ID", data: {id: "1"}});
+        await Router.onMessage(msg);
+
+        assert.isTrue(Router.state.messageBlockList.includes("foocampaign"));
+        assert.isEmpty(Router._getUnblockedMessages());
+      });
       it("should not broadcast CLEAR_MESSAGE if preventDismiss is true", async () => {
         const msg = fakeAsyncMessage({type: "BLOCK_MESSAGE_BY_ID", data: {id: "foo", preventDismiss: true}});
         await Router.onMessage(msg);
@@ -559,6 +585,14 @@ describe("ASRouter", () => {
         await Router.onMessage(fakeAsyncMessage({type: "UNBLOCK_MESSAGE_BY_ID", data: {id: "foo"}}));
 
         assert.isFalse(Router.state.messageBlockList.includes("foo"));
+      });
+      it("should remove the campaign from the messageBlockList if it is defined", async () => {
+        await Router.setState({messages: [{id: "1", campaign: "foo"}]});
+        await Router.onMessage(fakeAsyncMessage({type: "BLOCK_MESSAGE_BY_ID", data: {id: "1"}}));
+        assert.isTrue(Router.state.messageBlockList.includes("foo"), "blocklist has campaign id");
+        await Router.onMessage(fakeAsyncMessage({type: "UNBLOCK_MESSAGE_BY_ID", data: {id: "1"}}));
+
+        assert.isFalse(Router.state.messageBlockList.includes("foo"), "campaign id removed from blocklist");
       });
       it("should save the messageBlockList", async () => {
         await Router.onMessage(fakeAsyncMessage({type: "UNBLOCK_MESSAGE_BY_ID", data: {id: "foo"}}));
