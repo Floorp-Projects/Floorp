@@ -44,7 +44,7 @@ function runTest(test) {
   elem.focus();
   elem.select();
   sendString(test.inputWithGrouping);
-  checkIsValid(elem, `${desc} with grouping separator`);
+  checkIsInvalid(elem, `${desc} with grouping separator`);
   sendChar("a");
   checkIsInvalid(elem, `${desc} with grouping separator`);
 

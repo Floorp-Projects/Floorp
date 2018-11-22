@@ -743,7 +743,7 @@ mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(StyleAppearance a
     case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
-    case StyleAppearance::TextfieldMultiline:
+    case StyleAppearance::Textarea:
     case StyleAppearance::FocusOutline:
       return Some(eUXEdit);
     case StyleAppearance::Tooltip:
@@ -967,7 +967,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
     case StyleAppearance::MenulistTextfield:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
-    case StyleAppearance::TextfieldMultiline: {
+    case StyleAppearance::Textarea: {
       EventStates eventState = GetContentState(aFrame, aAppearance);
 
       /* Note: the NOSCROLL type has a rounded corner in each corner.  The more
@@ -1886,7 +1886,7 @@ RENDER_AGAIN:
   else if (aAppearance == StyleAppearance::MenulistTextfield ||
            aAppearance == StyleAppearance::NumberInput ||
            aAppearance == StyleAppearance::Textfield ||
-           aAppearance == StyleAppearance::TextfieldMultiline) {
+           aAppearance == StyleAppearance::Textarea) {
     if (aAppearance == StyleAppearance::MenulistTextfield &&
         state != TFS_EDITBORDER_FOCUSED) {
       // We want 'menulist-textfield' to behave like 'textfield', except we
@@ -2099,7 +2099,7 @@ nsNativeThemeWin::GetWidgetBorder(nsDeviceContext* aContext,
   if (aFrame && (aAppearance == StyleAppearance::MenulistTextfield ||
                  aAppearance == StyleAppearance::NumberInput ||
                  aAppearance == StyleAppearance::Textfield ||
-                 aAppearance == StyleAppearance::TextfieldMultiline)) {
+                 aAppearance == StyleAppearance::Textarea)) {
     nsIContent* content = aFrame->GetContent();
     if (content && content->IsHTMLElement()) {
       // We need to pad textfields by 1 pixel, since the caret will draw
@@ -2200,7 +2200,7 @@ nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
   if (aAppearance == StyleAppearance::MenulistTextfield ||
       aAppearance == StyleAppearance::NumberInput ||
       aAppearance == StyleAppearance::Textfield ||
-      aAppearance == StyleAppearance::TextfieldMultiline ||
+      aAppearance == StyleAppearance::Textarea ||
       aAppearance == StyleAppearance::Menulist)
   {
     // If we have author-specified padding for these elements, don't do the
@@ -2218,7 +2218,7 @@ nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
   if (aAppearance == StyleAppearance::MenulistTextfield ||
       aAppearance == StyleAppearance::NumberInput ||
       aAppearance == StyleAppearance::Textfield ||
-      aAppearance == StyleAppearance::TextfieldMultiline) {
+      aAppearance == StyleAppearance::Textarea) {
     aResult->top = aResult->bottom = 2;
     aResult->left = aResult->right = 2;
     ScaleForFrameDPI(aResult, aFrame);
@@ -2866,7 +2866,7 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
     case StyleAppearance::Button:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
-    case StyleAppearance::TextfieldMultiline:
+    case StyleAppearance::Textarea:
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio:
     case StyleAppearance::Range:
@@ -2959,7 +2959,7 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsDeviceContext* aContext,
     case StyleAppearance::Tab:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
-    case StyleAppearance::TextfieldMultiline:
+    case StyleAppearance::Textarea:
     case StyleAppearance::FocusOutline:
       result.top = result.left = result.bottom = result.right = 2;
       break;
@@ -3127,7 +3127,7 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIFrame* aFrame,
     case StyleAppearance::Treeview:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
-    case StyleAppearance::TextfieldMultiline:
+    case StyleAppearance::Textarea:
     case StyleAppearance::MenulistTextfield:      
     case StyleAppearance::Statusbar:
     case StyleAppearance::Statusbarpanel:      
@@ -3387,7 +3387,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame,
     case StyleAppearance::NumberInput:
     case StyleAppearance::FocusOutline:
     case StyleAppearance::Textfield:
-    case StyleAppearance::TextfieldMultiline:
+    case StyleAppearance::Textarea:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistTextfield:
     case StyleAppearance::Range:
@@ -3819,7 +3819,7 @@ RENDER_AGAIN:
     // Draw controls with 2px 3D inset border
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
-    case StyleAppearance::TextfieldMultiline:
+    case StyleAppearance::Textarea:
     case StyleAppearance::Listbox:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistTextfield: {
@@ -4187,7 +4187,7 @@ nsNativeThemeWin::GetWidgetNativeDrawingFlags(StyleAppearance aAppearance)
     case StyleAppearance::NumberInput:
     case StyleAppearance::FocusOutline:
     case StyleAppearance::Textfield:
-    case StyleAppearance::TextfieldMultiline:
+    case StyleAppearance::Textarea:
 
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistTextfield:
