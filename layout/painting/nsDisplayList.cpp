@@ -454,13 +454,17 @@ SetAnimatable(nsCSSPropertyID aProperty,
   }
 }
 
+enum class Send {
+  NextTransaction,
+  Immediate,
+};
 static void
 AddAnimationForProperty(nsIFrame* aFrame,
                         const AnimationProperty& aProperty,
                         dom::Animation* aAnimation,
                         AnimationInfo& aAnimationInfo,
                         AnimationData& aData,
-                        bool aPending)
+                        Send aSendFlag)
 {
   MOZ_ASSERT(aAnimation->GetEffect(),
              "Should not be adding an animation without an effect");
@@ -474,8 +478,9 @@ AddAnimationForProperty(nsIFrame* aFrame,
              " one later");
 
   layers::Animation* animation =
-    aPending ? aAnimationInfo.AddAnimationForNextTransaction()
-             : aAnimationInfo.AddAnimation();
+    (aSendFlag == Send::NextTransaction)
+      ? aAnimationInfo.AddAnimationForNextTransaction()
+      : aAnimationInfo.AddAnimation();
 
   const TimingParams& timing = aAnimation->GetEffect()->SpecifiedTiming();
 
@@ -580,10 +585,10 @@ AddAnimationsForProperty(nsIFrame* aFrame,
                          nsDisplayItem* aItem,
                          nsCSSPropertyID aProperty,
                          AnimationInfo& aAnimationInfo,
-                         bool aPending,
-                         bool aIsForWebRender)
+                         Send aSendFlag,
+                         layers::LayersBackend aLayersBackend)
 {
-  if (aPending) {
+  if (aSendFlag == Send::NextTransaction) {
     aAnimationInfo.ClearAnimationsForNextTransaction();
   } else {
     aAnimationInfo.ClearAnimations();
@@ -642,7 +647,7 @@ AddAnimationsForProperty(nsIFrame* aFrame,
     float scaleX = 1.0f;
     float scaleY = 1.0f;
     bool hasPerspectiveParent = false;
-    if (aIsForWebRender) {
+    if (aLayersBackend == layers::LayersBackend::LAYERS_WR) {
       // leave origin empty, because we are sending it separately on the
       // stacking context that we are pushing to WR, and WR will automatically
       // include it when picking up the animated transform values
@@ -721,7 +726,7 @@ AddAnimationsForProperty(nsIFrame* aFrame,
     }
 
     AddAnimationForProperty(
-      aFrame, *property, anim, aAnimationInfo, data, aPending);
+      aFrame, *property, anim, aAnimationInfo, data, aSendFlag);
     keyframeEffect->SetIsRunningOnCompositor(aProperty, true);
   }
 }
@@ -833,10 +838,13 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
     return;
   }
 
-  bool pending = !aBuilder;
+  Send sendFlag = !aBuilder
+                  ? Send::NextTransaction
+                  : Send::Immediate;
   AnimationInfo& animationInfo = aLayer->GetAnimationInfo();
   AddAnimationsForProperty(
-    aFrame, aBuilder, aItem, aProperty, animationInfo, pending, false);
+    aFrame, aBuilder, aItem, aProperty, animationInfo, sendFlag,
+    layers::LayersBackend::LAYERS_CLIENT);
   animationInfo.TransferMutatedFlagToLayer(aLayer);
 }
 
@@ -6745,8 +6753,8 @@ nsDisplayOpacity::CreateWebRenderCommands(
                            this,
                            eCSSProperty_opacity,
                            animationInfo,
-                           false,
-                           true);
+                           Send::Immediate,
+                           layers::LayersBackend::LAYERS_WR);
   animationInfo.StartPendingAnimations(aManager->GetAnimationReadyTime());
 
   // Note that animationsId can be 0 (uninitialized in AnimationInfo) if there
@@ -8831,8 +8839,8 @@ nsDisplayTransform::CreateWebRenderCommands(
                            this,
                            eCSSProperty_transform,
                            animationInfo,
-                           false,
-                           true);
+                           Send::Immediate,
+                           layers::LayersBackend::LAYERS_WR);
   animationInfo.StartPendingAnimations(aManager->GetAnimationReadyTime());
 
   // Note that animationsId can be 0 (uninitialized in AnimationInfo) if there
