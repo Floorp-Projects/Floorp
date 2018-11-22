@@ -557,8 +557,8 @@ impl FontContext {
             &ct_font,
             transform.as_ref(),
             glyph,
-            x_offset,
-            y_offset,
+            x_offset / scale,
+            y_offset / scale,
             extra_strikes as f64 * pixel_step,
         );
         if metrics.rasterized_width == 0 || metrics.rasterized_height == 0 {
@@ -648,8 +648,8 @@ impl FontContext {
 
             // CG Origin is bottom left, WR is top left. Need -y offset
             let mut draw_origin = CGPoint {
-                x: -metrics.rasterized_left as f64 + x_offset,
-                y: metrics.rasterized_descent as f64 - y_offset,
+                x: -metrics.rasterized_left as f64 + x_offset / scale,
+                y: metrics.rasterized_descent as f64 - y_offset / scale,
             };
 
             if let Some(transform) = transform {
