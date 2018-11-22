@@ -212,7 +212,13 @@ void
 PreallocatedProcessManagerImpl::RemoveBlocker(ContentParent* aParent)
 {
   uint64_t childID = aParent->ChildID();
-  MOZ_ASSERT(mBlockers.Contains(childID));
+  // This used to assert that the blocker existed, but preallocated
+  // processes aren't blockers anymore because it's not useful and
+  // interferes with async launch, and it's simpler if content
+  // processes don't need to remember whether they were preallocated.
+  // (And preallocated processes can't AddBlocker when taken, because
+  // it's possible for a short-lived process to be recycled through
+  // Provide() and Take() before reaching RecvFirstIdle.)
   mBlockers.RemoveEntry(childID);
   if (!mPreallocatedProcess && mBlockers.IsEmpty()) {
     AllocateAfterDelay();
