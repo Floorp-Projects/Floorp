@@ -260,6 +260,12 @@ class VirtualenvManager(object):
         !windows -- This denotes that the action should only be taken when run
             on non-Windows systems.
 
+        python3 -- This denotes that the action should only be taken when run
+            on Python 3.
+
+        python2 -- This denotes that the action should only be taken when run
+            on python 2.
+
         Note that the Python interpreter running this function should be the
         one from the virtualenv. If it is the system Python or if the
         environment is not configured properly, packages could be installed
@@ -333,6 +339,13 @@ class VirtualenvManager(object):
                 for_win = not package[0].startswith('!')
                 is_win = sys.platform == 'win32'
                 if is_win == for_win:
+                    handle_package(package[1:])
+                return True
+
+            if package[0] in ('python2', 'python3'):
+                for_python3 = package[0].endswith('3')
+                is_python3 = sys.version_info[0] > 2
+                if is_python3 == for_python3:
                     handle_package(package[1:])
                 return True
 
