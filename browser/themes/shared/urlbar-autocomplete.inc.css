@@ -4,6 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
+%filter substitution
+%define urlbarViewPadding 5px
+%define urlbarViewIconMarginEnd .6em
+%define urlbarViewFaviconOffset (@urlbarViewPadding@ + 16px /* action icon width */ + @urlbarViewIconMarginEnd@)
+
 :root {
   --autocomplete-popup-background: -moz-field;
   --autocomplete-popup-color: -moz-fieldtext;
@@ -34,13 +39,15 @@
 }
 
 .urlbarView-results {
-  padding: 5px;
+  padding: @urlbarViewPadding@;
   white-space: nowrap;
 }
 
 .urlbarView-row {
-  padding: 7px 50px;
   border-radius: 2px;
+  padding: 7px;
+  padding-inline-start: calc(var(--item-padding-start, calc(7px + @urlbarViewFaviconOffset@)) - @urlbarViewFaviconOffset@);
+  padding-inline-end: var(--item-padding-end, 7px);
 }
 
 .urlbarView-row-inner {
@@ -67,7 +74,7 @@
   vertical-align: middle;
   width: 16px;
   height: 16px;
-  margin-inline-end: .6em;
+  margin-inline-end: @urlbarViewIconMarginEnd@;
   background-repeat: no-repeat;
   background-size: contain;
   -moz-context-properties: fill, fill-opacity;
