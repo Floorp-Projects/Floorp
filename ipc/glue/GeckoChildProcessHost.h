@@ -188,12 +188,12 @@ protected:
 private:
   DISALLOW_EVIL_CONSTRUCTORS(GeckoChildProcessHost);
 
-  // Does the actual work for AsyncLaunch, on the IO thread.
-  // (TODO, bug 1487287: move this to its own thread(s).)
+  // Does the actual work for AsyncLaunch; run in a thread pool
+  // (or, on Windows, a dedicated thread).
   bool PerformAsyncLaunch(StringVector aExtraOpts);
 
-  // Also called on the I/O thread; creates channel, launches, and
-  // consolidates error handling.
+  // Called on the I/O thread; creates channel, dispatches
+  // PerformAsyncLaunch, and consolidates error handling.
   bool RunPerformAsyncLaunch(StringVector aExtraOpts);
 
   enum class BinaryPathType {
