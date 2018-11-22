@@ -4,44 +4,8 @@
 
 "use strict";
 
-var gDebuggee;
-var gThreadClient;
-
-Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
-
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
-});
-
-function run_test() {
-  run_test_with_server(DebuggerServer, function() {
-    run_test_with_server(WorkerDebuggerServer, do_test_finished);
-  });
-  do_test_pending();
-}
-
-async function run_test_with_server(server, callback) {
-  initTestDebuggerServer(server);
-  const principals = [
-    ["test-grips-system-principal", systemPrincipal, systemPrincipalTests],
-    ["test-grips-null-principal", null, nullPrincipalTests],
-  ];
-  for (const [title, principal, tests] of principals) {
-    gDebuggee = Cu.Sandbox(principal);
-    gDebuggee.__name = title;
-    server.addTestGlobal(gDebuggee);
-    gDebuggee.eval(function stopMe(arg1, arg2) {
-      debugger;
-    }.toString());
-    const client = new DebuggerClient(server.connectPipe());
-    await client.connect();
-    const [,, threadClient] = await attachTestTabAndResume(client, title);
-    gThreadClient = threadClient;
-    await test_unsafe_grips(principal, tests);
-    await client.close();
-  }
-  callback();
-}
+// Run test_unsafe_grips twice, one against a system principal debuggee
+// and another time with a null principal debuggee
 
 // The following tests work like this:
 // - The specified code is evaluated in a system principal.
@@ -223,10 +187,13 @@ function descriptor(descr) {
   }, descr);
 }
 
-async function test_unsafe_grips(principal, tests) {
+async function test_unsafe_grips({ threadClient, debuggee, client }, tests, principal) {
+  debuggee.eval(function stopMe(arg1, arg2) {
+    debugger;
+  }.toString());
   for (let data of tests) {
     await new Promise(function(resolve) {
-      gThreadClient.addOneTimeListener("paused", async function(event, packet) {
+      threadClient.addOneTimeListener("paused", async function(event, packet) {
         const [objGrip, inheritsGrip] = packet.frame.arguments;
         for (const grip of [objGrip, inheritsGrip]) {
           const isUnsafe = grip === objGrip;
@@ -238,7 +205,7 @@ async function test_unsafe_grips(principal, tests) {
 
           check_grip(grip, data, isUnsafe);
 
-          let objClient = gThreadClient.pauseGrip(grip);
+          let objClient = threadClient.pauseGrip(grip);
           let response, slice;
 
           response = await objClient.getPrototypeAndProperties();
@@ -281,7 +248,7 @@ async function test_unsafe_grips(principal, tests) {
             // class because the object is callable (despite not being a Function object).
             // So the grip class is changed in order to test the object.js method.
             grip.class = "Function";
-            objClient = gThreadClient.pauseGrip(grip);
+            objClient = threadClient.pauseGrip(grip);
             try {
               response = await objClient.getParameterNames();
               ok(true, "getParameterNames passed. DebuggerObject.class is 'Function'"
@@ -293,7 +260,7 @@ async function test_unsafe_grips(principal, tests) {
           }
         }
 
-        await gThreadClient.resume();
+        await threadClient.resume();
         resolve();
       });
 
@@ -303,12 +270,12 @@ async function test_unsafe_grips(principal, tests) {
       const sandbox = Cu.Sandbox(systemPrincipal);
       Object.assign(sandbox, {Services, systemPrincipal, Cu});
       sandbox.eval(data.code);
-      gDebuggee.obj = sandbox.obj;
+      debuggee.obj = sandbox.obj;
       const inherits = `Object.create(obj, {
         x: {value: 1},
         [Symbol.for("x")]: {value: 2}
       })`;
-      gDebuggee.eval(`stopMe(obj, ${inherits});`);
+      debuggee.eval(`stopMe(obj, ${inherits});`);
       ok(sandbox.eval(data.afterTest), "Check after test passes");
     });
   }
@@ -392,3 +359,13 @@ function check_display_string(str, data, isUnsafe) {
     strictEqual(str, "[object Object]", "The object stringifies correctly.");
   }
 }
+
+// threadClientTest uses systemPrincipal by default, but let's be explicit here.
+add_task(threadClientTest(options => {
+  return test_unsafe_grips(options, systemPrincipalTests, "system");
+}, { principal: systemPrincipal }));
+
+const nullPrincipal = Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);
+add_task(threadClientTest(options => {
+  return test_unsafe_grips(options, nullPrincipalTests, "null");
+}, { principal: nullPrincipal }));
