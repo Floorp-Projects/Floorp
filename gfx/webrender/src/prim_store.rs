@@ -35,7 +35,7 @@ use std::{cmp, fmt, mem, ops, u32, usize};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use storage;
 use tiling::SpecialRenderPasses;
-use util::{ScaleOffset, MatrixHelpers, MaxRect};
+use util::{ScaleOffset, MatrixHelpers, MaxRect, recycle_vec};
 use util::{pack_as_float, project_rect, raster_rect_to_device_pixels};
 use smallvec::SmallVec;
 
@@ -1342,7 +1342,7 @@ impl TextRunPrimitive {
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskTree,
         special_render_passes: &mut SpecialRenderPasses,
-        glyph_keys: &mut GlyphKeyStorage,
+        scratch: &mut PrimitiveScratchBuffer,
     ) {
         let cache_dirty = self.update_font_instance(
             specified_font,
@@ -1355,7 +1355,7 @@ impl TextRunPrimitive {
         if self.glyph_keys_range.is_empty() || cache_dirty {
             let subpx_dir = self.used_font.get_subpx_dir();
 
-            self.glyph_keys_range = glyph_keys.extend(
+            self.glyph_keys_range = scratch.glyph_keys.extend(
                 glyphs.iter().map(|src| {
                     let world_offset = self.used_font.transform.transform(&src.point);
                     let device_offset = device_pixel_scale.transform_point(&world_offset);
@@ -1365,7 +1365,7 @@ impl TextRunPrimitive {
 
         resource_cache.request_glyphs(
             self.used_font.clone(),
-            &glyph_keys[self.glyph_keys_range],
+            &scratch.glyph_keys[self.glyph_keys_range],
             gpu_cache,
             render_tasks,
             special_render_passes,
@@ -1912,39 +1912,82 @@ pub type GlyphKeyStorage = storage::Storage<GlyphKey>;
 pub type TextRunIndex = storage::Index<TextRunPrimitive>;
 pub type TextRunStorage = storage::Storage<TextRunPrimitive>;
 
-pub struct PrimitiveStore {
-    pub primitives: Vec<Primitive>,
-    pub pictures: Vec<PicturePrimitive>,
-
-    /// Written during primitive preparation, and read during
-    /// batching. Contains a list of clip mask instance parameters
+/// Contains various vecs of data that is used only during frame building,
+/// where we want to recycle the memory each new display list, to avoid constantly
+/// re-allocating and moving memory around. Written during primitive preparation,
+/// and read during batching.
+pub struct PrimitiveScratchBuffer {
+    /// Contains a list of clip mask instance parameters
     /// per segment generated.
-    /// TODO(gw): We should be able to completely remove this once
-    ///           the batching and prepare_prim passes are unified.
     pub clip_mask_instances: Vec<ClipMaskKind>,
 
+    /// List of glyphs keys that are allocated by each
+    /// text run instance.
     pub glyph_keys: GlyphKeyStorage,
-    pub text_runs: TextRunStorage,
 }
 
-impl PrimitiveStore {
-    pub fn new() -> PrimitiveStore {
-        PrimitiveStore {
-            primitives: Vec::new(),
-            pictures: Vec::new(),
+impl PrimitiveScratchBuffer {
+    pub fn new() -> Self {
+        PrimitiveScratchBuffer {
             clip_mask_instances: Vec::new(),
-
-            glyph_keys: GlyphKeyStorage::new(),
-            text_runs: TextRunStorage::new(),
+            glyph_keys: GlyphKeyStorage::new(0),
         }
     }
 
-    pub fn reset_clip_instances(&mut self) {
+    pub fn recycle(&mut self) {
+        recycle_vec(&mut self.clip_mask_instances);
+        self.glyph_keys.recycle();
+    }
+
+    pub fn begin_frame(&mut self) {
         // Clear the clip mask tasks for the beginning of the frame. Append
         // a single kind representing no clip mask, at the ClipTaskIndex::INVALID
         // location.
         self.clip_mask_instances.clear();
         self.clip_mask_instances.push(ClipMaskKind::None)
+    }
+}
+
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Clone, Debug)]
+pub struct PrimitiveStoreStats {
+    primitive_count: usize,
+    picture_count: usize,
+    text_run_count: usize,
+}
+
+impl PrimitiveStoreStats {
+    pub fn empty() -> Self {
+        PrimitiveStoreStats {
+            primitive_count: 0,
+            picture_count: 0,
+            text_run_count: 0,
+        }
+    }
+}
+
+pub struct PrimitiveStore {
+    pub primitives: Vec<Primitive>,
+    pub pictures: Vec<PicturePrimitive>,
+    pub text_runs: TextRunStorage,
+}
+
+impl PrimitiveStore {
+    pub fn new(stats: &PrimitiveStoreStats) -> PrimitiveStore {
+        PrimitiveStore {
+            primitives: Vec::with_capacity(stats.primitive_count),
+            pictures: Vec::with_capacity(stats.picture_count),
+            text_runs: TextRunStorage::new(stats.text_run_count),
+        }
+    }
+
+    pub fn get_stats(&self) -> PrimitiveStoreStats {
+        PrimitiveStoreStats {
+            primitive_count: self.primitives.len(),
+            picture_count: self.pictures.len(),
+            text_run_count: self.text_runs.len(),
+        }
     }
 
     pub fn create_picture(
@@ -2340,7 +2383,6 @@ impl PrimitiveStore {
                 frame_state,
                 &clip_node_collector,
                 &mut self.primitives,
-                &mut self.clip_mask_instances,
             );
 
             if prim_instance.is_chased() {
@@ -2609,7 +2651,7 @@ impl PrimitiveStore {
                     frame_state.gpu_cache,
                     frame_state.render_tasks,
                     frame_state.special_render_passes,
-                    &mut self.glyph_keys,
+                    frame_state.scratch,
                 );
             }
             (
@@ -2925,7 +2967,6 @@ impl PrimitiveInstance {
         frame_state: &mut FrameBuildingState,
         clip_node_collector: &Option<ClipNodeCollector>,
         primitives: &mut [Primitive],
-        clip_mask_instances: &mut Vec<ClipMaskKind>,
     ) -> bool {
         let brush = match self.kind {
             PrimitiveInstanceKind::Picture { .. } |
@@ -2963,7 +3004,7 @@ impl PrimitiveInstance {
         // Set where in the clip mask instances array the clip mask info
         // can be found for this primitive. Each segment will push the
         // clip mask information for itself in update_clip_task below.
-        self.clip_task_index = ClipTaskIndex(clip_mask_instances.len() as _);
+        self.clip_task_index = ClipTaskIndex(frame_state.scratch.clip_mask_instances.len() as _);
 
         // If we only built 1 segment, there is no point in re-running
         // the clip chain builder. Instead, just use the clip chain
@@ -2979,7 +3020,7 @@ impl PrimitiveInstance {
                 frame_context,
                 frame_state,
             );
-            clip_mask_instances.push(clip_mask_kind);
+            frame_state.scratch.clip_mask_instances.push(clip_mask_kind);
         } else {
             for segment in &mut segment_desc.segments {
                 // Build a clip chain for the smaller segment rect. This will
@@ -3012,7 +3053,7 @@ impl PrimitiveInstance {
                     frame_context,
                     frame_state,
                 );
-                clip_mask_instances.push(clip_mask_kind);
+                frame_state.scratch.clip_mask_instances.push(clip_mask_kind);
             }
         }
 
@@ -3490,7 +3531,6 @@ impl PrimitiveInstance {
         frame_state: &mut FrameBuildingState,
         clip_node_collector: &Option<ClipNodeCollector>,
         primitives: &mut [Primitive],
-        clip_mask_instances: &mut Vec<ClipMaskKind>,
     ) {
         if self.is_chased() {
             println!("\tupdating clip task with pic rect {:?}", clip_chain.pic_clip_rect);
@@ -3513,7 +3553,6 @@ impl PrimitiveInstance {
             frame_state,
             clip_node_collector,
             primitives,
-            clip_mask_instances,
         ) {
             if self.is_chased() {
                 println!("\tsegment tasks have been created for clipping");
@@ -3546,8 +3585,8 @@ impl PrimitiveInstance {
                         clip_task_id, device_rect);
                 }
                 // Set the global clip mask instance for this primitive.
-                let clip_task_index = ClipTaskIndex(clip_mask_instances.len() as _);
-                clip_mask_instances.push(ClipMaskKind::Mask(clip_task_id));
+                let clip_task_index = ClipTaskIndex(frame_state.scratch.clip_mask_instances.len() as _);
+                frame_state.scratch.clip_mask_instances.push(ClipMaskKind::Mask(clip_task_id));
                 self.clip_task_index = clip_task_index;
                 frame_state.surfaces[surface_index.0].tasks.push(clip_task_id);
             }

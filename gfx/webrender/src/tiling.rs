@@ -18,7 +18,7 @@ use internal_types::{CacheTextureId, FastHashMap, SavedTargetIndex, TextureSourc
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
 use picture::SurfaceInfo;
-use prim_store::{PrimitiveStore, DeferredResolve};
+use prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
 use profiler::FrameProfileCounters;
 use render_backend::{FrameId, FrameResources};
 use render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
@@ -52,6 +52,7 @@ pub struct RenderTargetContext<'a, 'rc> {
     pub clip_scroll_tree: &'a ClipScrollTree,
     pub resources: &'a FrameResources,
     pub surfaces: &'a [SurfaceInfo],
+    pub scratch: &'a PrimitiveScratchBuffer,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]

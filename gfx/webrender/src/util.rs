@@ -773,3 +773,15 @@ where
         }
     }
 }
+
+/// Clear a vector for re-use, while retaining the backing memory buffer. May shrink the buffer
+/// if it's currently much larger than was actually used.
+pub fn recycle_vec<T>(vec: &mut Vec<T>) {
+    if vec.capacity() > 2 * vec.len() {
+        // Reduce capacity of the buffer if it is a lot larger than it needs to be. This prevents
+        // a frame with exceptionally large allocations to cause subsequent frames to retain
+        // more memory than they need.
+        vec.shrink_to_fit();
+    }
+    vec.clear();
+}
