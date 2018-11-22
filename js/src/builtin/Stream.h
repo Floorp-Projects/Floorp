@@ -99,7 +99,7 @@ class ReadableStream : public NativeObject
 
   public:
     static ReadableStream* createDefaultStream(JSContext* cx, HandleValue underlyingSource,
-                                               HandleValue size, HandleValue highWaterMark,
+                                               HandleValue size, double highWaterMark,
                                                HandleObject proto = nullptr);
     static ReadableStream* createExternalSourceStream(JSContext* cx, void* underlyingSource,
                                                       uint8_t flags, HandleObject proto = nullptr);
