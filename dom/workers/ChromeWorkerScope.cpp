@@ -7,6 +7,7 @@
 #include "ChromeWorkerScope.h"
 
 #include "jsapi.h"
+#include "js/MemoryFunctions.h"
 
 #include "nsXPCOM.h"
 #include "nsNativeCharsetUtils.h"

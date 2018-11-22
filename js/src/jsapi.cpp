@@ -60,6 +60,7 @@
 #include "js/Initialization.h"
 #include "js/JSON.h"
 #include "js/LocaleSensitive.h"
+#include "js/MemoryFunctions.h"
 #include "js/Proxy.h"
 #include "js/SliceBudget.h"
 #include "js/SourceText.h"

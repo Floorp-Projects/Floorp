@@ -37,6 +37,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/Conversions.h"
+#include "js/MemoryFunctions.h"
 #include "js/Utility.h"
 #include "xpcpublic.h"
 
