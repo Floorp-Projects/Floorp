@@ -5423,10 +5423,19 @@ var TabContextMenu = {
     let allSelectedTabsAdjacent = selectedTabs.every((element, index, array) => {
       return array.length > index + 1 ? element._tPos + 1 == array[index + 1]._tPos : true;
     });
-    contextMoveTabToEnd.disabled = selectedTabs[selectedTabs.length - 1]._tPos == gBrowser.visibleTabs.length - 1 &&
+    let contextTabIsSelected = this.contextTab.multiselected;
+    let visibleTabs = gBrowser.visibleTabs;
+    let lastVisibleTab = visibleTabs[visibleTabs.length - 1];
+    let tabsToMove = contextTabIsSelected ? selectedTabs : [this.contextTab];
+    let lastTabToMove = tabsToMove[tabsToMove.length - 1];
+    let isLastPinnedTab = lastTabToMove.pinned &&
+      (!lastTabToMove.nextElementSibling || !lastTabToMove.nextElementSibling.pinned);
+    contextMoveTabToEnd.disabled = (lastTabToMove == lastVisibleTab || isLastPinnedTab) &&
                                    allSelectedTabsAdjacent;
     let contextMoveTabToStart = document.getElementById("context_moveToStart");
-    contextMoveTabToStart.disabled = selectedTabs[0]._tPos == 0 && allSelectedTabsAdjacent;
+    let isFirstTab = tabsToMove[0] == visibleTabs[0] ||
+                     tabsToMove[0] == visibleTabs[gBrowser._numPinnedTabs];
+    contextMoveTabToStart.disabled = isFirstTab && allSelectedTabsAdjacent;
 
     // Hide the "Duplicate Tab" if there is a selection present
     let contextDuplicateTab = document.getElementById("context_duplicateTab");
