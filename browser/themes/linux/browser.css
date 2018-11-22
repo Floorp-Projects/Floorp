@@ -638,11 +638,11 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   :root[tabsintitlebar][sizemode="normal"] > #navigator-toolbox > #titlebar {
     -moz-appearance: -moz-window-titlebar;
   }
-  :root[tabsintitlebar] > #navigator-toolbox > #titlebar:-moz-lwtheme {
+  :root[tabsintitlebar]:not([inDOMFullscreen]) > #navigator-toolbox > #titlebar:-moz-lwtheme {
     visibility: hidden;
   }
-  :root[tabsintitlebar] #toolbar-menubar:-moz-lwtheme,
-  :root[tabsintitlebar] #TabsToolbar:-moz-lwtheme {
+  :root[tabsintitlebar]:not([inDOMFullscreen]) #toolbar-menubar:-moz-lwtheme,
+  :root[tabsintitlebar]:not([inDOMFullscreen]) #TabsToolbar:-moz-lwtheme {
     visibility: visible;
   }
 
