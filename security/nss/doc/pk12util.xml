@@ -114,7 +114,8 @@
 
       <varlistentry>
         <term>-n certname</term>
-        <listitem><para>Specify the nickname of the cert and private key to export.</para></listitem>
+        <listitem><para>Specify the nickname of the cert and private key to export.</para>
+	<para>The nickname can also be a PKCS #11 URI. For example, if you have a certificate named "my-server-cert" on the internal certificate store, it can be unambiguously specified as "pkcs11:token=NSS%20Certificate%20DB;object=my-server-cert". For details about the format, see RFC 7512.</para></listitem>
       </varlistentry>
 
       <varlistentry>

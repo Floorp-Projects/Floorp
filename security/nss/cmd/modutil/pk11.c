@@ -259,6 +259,55 @@ getStringFromFlags(unsigned long flags, const MaskString array[], int elements)
     return buf;
 }
 
+static PRBool
+IsP11KitProxyModule(SECMODModule *module)
+{
+    CK_INFO modinfo;
+    static const char p11KitManufacturerID[33] =
+        "PKCS#11 Kit                     ";
+    static const char p11KitLibraryDescription[33] =
+        "PKCS#11 Kit Proxy Module        ";
+
+    if (PK11_GetModInfo(module, &modinfo) == SECSuccess &&
+        PORT_Memcmp(modinfo.manufacturerID,
+                    p11KitManufacturerID,
+                    sizeof(modinfo.manufacturerID)) == 0 &&
+        PORT_Memcmp(modinfo.libraryDescription,
+                    p11KitLibraryDescription,
+                    sizeof(modinfo.libraryDescription)) == 0) {
+        return PR_TRUE;
+    }
+
+    return PR_FALSE;
+}
+
+PRBool
+IsP11KitEnabled(void)
+{
+    SECMODListLock *lock;
+    SECMODModuleList *mlp;
+    PRBool found = PR_FALSE;
+
+    lock = SECMOD_GetDefaultModuleListLock();
+    if (!lock) {
+        PR_fprintf(PR_STDERR, errStrings[NO_LIST_LOCK_ERR]);
+        return found;
+    }
+
+    SECMOD_GetReadLock(lock);
+
+    mlp = SECMOD_GetDefaultModuleList();
+    for (; mlp != NULL; mlp = mlp->next) {
+        if (IsP11KitProxyModule(mlp->module)) {
+            found = PR_TRUE;
+            break;
+        }
+    }
+
+    SECMOD_ReleaseReadLock(lock);
+    return found;
+}
+
 /**********************************************************************
  *
  * A d d M o d u l e

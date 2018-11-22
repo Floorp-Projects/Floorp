@@ -257,25 +257,13 @@ sec_DecodeSigAlg(const SECKEYPublicKey *key, SECOidTag sigAlg,
             break;
         case SEC_OID_PKCS1_RSA_PSS_SIGNATURE:
             if (param && param->data) {
-                SECKEYRSAPSSParams pssParam;
-                arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-                if (arena == NULL) {
-                    return SECFailure;
-                }
-                PORT_Memset(&pssParam, 0, sizeof pssParam);
-                rv = SEC_QuickDERDecodeItem(arena, &pssParam,
-                                            SECKEY_RSAPSSParamsTemplate,
-                                            param);
-                if (rv != SECSuccess) {
-                    PORT_FreeArena(arena, PR_FALSE);
-                    return rv;
-                }
-                if (pssParam.hashAlg) {
-                    *hashalg = SECOID_GetAlgorithmTag(pssParam.hashAlg);
-                } else {
-                    *hashalg = SEC_OID_SHA1; /* default, SHA-1 */
-                }
-                PORT_FreeArena(arena, PR_FALSE);
+                PORTCheapArenaPool tmpArena;
+
+                PORT_InitCheapArena(&tmpArena, DER_DEFAULT_CHUNKSIZE);
+                rv = sec_DecodeRSAPSSParams(&tmpArena.arena, param,
+                                            hashalg, NULL, NULL);
+                PORT_DestroyCheapArena(&tmpArena);
+
                 /* only accept hash algorithms */
                 if (HASH_GetHashTypeByOidTag(*hashalg) == HASH_AlgNULL) {
                     /* error set by HASH_GetHashTypeByOidTag */
@@ -658,27 +646,17 @@ VFY_EndWithSignature(VFYContext *cx, SECItem *sig)
             if (cx->encAlg == SEC_OID_PKCS1_RSA_PSS_SIGNATURE) {
                 CK_RSA_PKCS_PSS_PARAMS mech;
                 SECItem mechItem = { siBuffer, (unsigned char *)&mech, sizeof(mech) };
-                SECKEYRSAPSSParams params;
-                PLArenaPool *arena;
+                PORTCheapArenaPool tmpArena;
 
-                arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-                if (arena == NULL) {
-                    return SECFailure;
-                }
-
-                PORT_Memset(&params, 0, sizeof(params));
-                rv = SEC_QuickDERDecodeItem(arena, &params,
-                                            SECKEY_RSAPSSParamsTemplate,
-                                            cx->params);
-                if (rv != SECSuccess) {
-                    PORT_FreeArena(arena, PR_FALSE);
-                    return SECFailure;
-                }
-                rv = sec_RSAPSSParamsToMechanism(&mech, &params);
-                PORT_FreeArena(arena, PR_FALSE);
+                PORT_InitCheapArena(&tmpArena, DER_DEFAULT_CHUNKSIZE);
+                rv = sec_DecodeRSAPSSParamsToMechanism(&tmpArena.arena,
+                                                       cx->params,
+                                                       &mech);
+                PORT_DestroyCheapArena(&tmpArena);
                 if (rv != SECSuccess) {
                     return SECFailure;
                 }
+
                 rsasig.data = cx->u.buffer;
                 rsasig.len = SECKEY_SignatureLen(cx->key);
                 if (rsasig.len == 0) {
