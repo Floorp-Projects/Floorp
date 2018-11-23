@@ -25,7 +25,7 @@
 #include "nsGkAtoms.h"
 #include "PrincipalChangeObserver.h"
 #include "nsStubMutationObserver.h"
-#include "MediaSegment.h" // for PrincipalHandle
+#include "MediaSegment.h" // for PrincipalHandle, GraphTime
 
 // X.h on Linux #defines CurrentTime as 0L, so we have to #undef it here.
 #ifdef CurrentTime
@@ -848,7 +848,6 @@ protected:
   class MediaLoadListener;
   class MediaStreamTracksAvailableCallback;
   class MediaStreamTrackListener;
-  class StreamListener;
   class VideoFrameListener;
   class ShutdownObserver;
 
@@ -934,6 +933,12 @@ protected:
    */
   enum { REMOVING_SRC_STREAM = 0x1 };
   void UpdateSrcMediaStreamPlaying(uint32_t aFlags = 0);
+
+  /**
+   * mSrcStream's graph's CurrentTime() has been updated. It might be time to
+   * fire "timeupdate".
+   */
+  void UpdateSrcStreamTime();
 
   /**
    * Called by our DOMMediaStream::TrackListener when a new MediaStreamTrack has
@@ -1430,9 +1435,13 @@ protected:
   // True once mSrcStream's initial set of tracks are known.
   bool mSrcStreamTracksAvailable = false;
 
-  // If non-negative, the time we should return for currentTime while playing
-  // mSrcStream.
-  double mSrcStreamPausedCurrentTime = -1;
+  // If different from GRAPH_TIME_MAX, the time we should return for
+  // currentTime while playing mSrcStream.
+  GraphTime mSrcStreamPausedGraphTime = GRAPH_TIME_MAX;
+
+  // The offset in GraphTime that this media element started playing the
+  // playback stream of mSrcStream.
+  GraphTime mSrcStreamGraphTimeOffset = 0;
 
   // True once PlaybackEnded() is called and we're playing a MediaStream.
   // Reset to false if we start playing mSrcStream again.
@@ -1445,9 +1454,6 @@ protected:
   // writing to.
   nsTArray<OutputMediaStream> mOutputStreams;
 
-  // Holds a reference to the MediaStreamListener attached to mSrcStream's
-  // playback stream.
-  RefPtr<StreamListener> mMediaStreamListener;
   // Holds a reference to the size-getting track listener attached to
   // mSelectedVideoStreamTrack.
   RefPtr<VideoFrameListener> mVideoFrameListener;

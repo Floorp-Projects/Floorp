@@ -545,6 +545,8 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
   already_AddRefed<MediaInputPort> ConnectToCaptureStream(
       uint64_t aWindowId, MediaStream* aMediaStream);
 
+  Watchable<GraphTime>& CurrentTime() override;
+
   class StreamSet {
    public:
     class iterator {
@@ -879,6 +881,18 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
    */
   bool mCanRunMessagesSynchronously;
 #endif
+
+  /**
+   * The graph's main-thread observable graph time.
+   * Updated by the stable state runnable after each iteration.
+   */
+  Watchable<GraphTime> mMainThreadGraphTime;
+
+  /**
+   * Set based on mProcessedTime at end of iteration.
+   * Read by stable state runnable on main thread. Protected by mMonitor.
+   */
+  GraphTime mNextMainThreadGraphTime = 0;
 };
 
 }  // namespace mozilla
