@@ -188,20 +188,30 @@ void MediaStreamGraphImpl::UpdateCurrentTimeForStreams(
         MediaStreamListener* l = stream->mListeners[j];
         l->NotifyOutput(this, mProcessedTime);
       }
+    }
 
-      for (StreamTracks::TrackIter track(stream->mTracks); !track.IsEnded();
-           track.Next()) {
-        if (track->IsEnded() &&
-            track->GetEnd() <=
-                stream->GraphTimeToStreamTime(mStateComputedTime) &&
-            !track->NotifiedEnded()) {
+    for (StreamTracks::TrackIter track(stream->mTracks); !track.IsEnded();
+         track.Next()) {
+      StreamTime streamCurrentTime =
+          stream->GraphTimeToStreamTime(mStateComputedTime);
+      if (track->IsEnded() && track->GetEnd() <= streamCurrentTime) {
+        if (!track->NotifiedEnded()) {
           // Playout of this track ended and listeners have not been notified.
+          track->NotifyEnded();
           for (const TrackBound<MediaStreamTrackListener>& listener :
                stream->mTrackListeners) {
             if (listener.mTrackID == track->GetID()) {
-              track->NotifyEnded();
+              listener.mListener->NotifyOutput(this, track->GetEnd());
               listener.mListener->NotifyEnded();
             }
+          }
+        }
+      } else {
+        for (const TrackBound<MediaStreamTrackListener>& listener :
+             stream->mTrackListeners) {
+          if (listener.mTrackID == track->GetID()) {
+            listener.mListener->NotifyOutput(
+                this, streamCurrentTime - track->GetStart());
           }
         }
       }
