@@ -181,7 +181,6 @@ class AudioSegment;
 class DirectMediaStreamTrackListener;
 class MediaInputPort;
 class MediaStreamGraphImpl;
-class MediaStreamListener;
 class MediaStreamTrackListener;
 class MediaStreamVideoSink;
 class ProcessedMediaStream;
@@ -320,8 +319,6 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
   virtual void Suspend();
   virtual void Resume();
   // Events will be dispatched by calling methods of aListener.
-  virtual void AddListener(MediaStreamListener* aListener);
-  virtual void RemoveListener(MediaStreamListener* aListener);
   virtual void AddTrackListener(MediaStreamTrackListener* aListener,
                                 TrackID aTrackID);
   virtual void RemoveTrackListener(MediaStreamTrackListener* aListener,
@@ -433,8 +430,6 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
   void AddVideoOutputImpl(already_AddRefed<MediaStreamVideoSink> aSink,
                           TrackID aID);
   void RemoveVideoOutputImpl(MediaStreamVideoSink* aSink, TrackID aID);
-  void AddListenerImpl(already_AddRefed<MediaStreamListener> aListener);
-  void RemoveListenerImpl(MediaStreamListener* aListener);
 
   /**
    * Removes all direct listeners and signals to them that they have been
@@ -581,7 +576,6 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
   // We record the last played video frame to avoid playing the frame again
   // with a different frame id.
   VideoFrame mLastPlayedVideoFrame;
-  nsTArray<RefPtr<MediaStreamListener>> mListeners;
   nsTArray<TrackBound<MediaStreamTrackListener>> mTrackListeners;
   nsTArray<MainThreadMediaStreamListener*> mMainThreadListeners;
   // List of disabled TrackIDs and their associated disabled mode.
@@ -631,21 +625,12 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
    */
   bool mNotifiedFinished;
   /**
-   * When true, the last NotifyBlockingChanged delivered to the listeners
-   * indicated that the stream is blocked.
-   */
-  bool mNotifiedBlocked;
-  /**
    * True if some data can be present by this stream if/when it's unblocked.
    * Set by the stream itself on the MediaStreamGraph thread. Only changes
    * from false to true once a stream has data, since we won't
    * unblock it until there's more data.
    */
   bool mHasCurrentData;
-  /**
-   * True if mHasCurrentData is true and we've notified listeners.
-   */
-  bool mNotifiedHasCurrentData;
 
   // Main-thread views of state
   StreamTime mMainThreadCurrentTime;
@@ -696,8 +681,8 @@ class SourceMediaStream : public MediaStream {
 
   // Call these on any thread.
   /**
-   * Call all MediaStreamListeners to request new data via the NotifyPull API
-   * (if enabled).
+   * Call all MediaStreamTrackListeners to request new data via the NotifyPull
+   * API (if enabled).
    * aDesiredUpToTime (in): end time of new data requested.
    *
    * Returns true if new data is about to be added.
@@ -708,14 +693,6 @@ class SourceMediaStream : public MediaStream {
    * Extract any state updates pending in the stream, and apply them.
    */
   void ExtractPendingInput(GraphTime aCurrentTime);
-
-  /**
-   * These add/remove DirectListeners, which allow bypassing the graph and any
-   * synchronization delays for e.g. PeerConnection, which wants the data ASAP
-   * and lets the far-end handle sync and playout timing.
-   */
-  void NotifyListenersEventImpl(MediaStreamGraphEvent aEvent);
-  void NotifyListenersEvent(MediaStreamGraphEvent aEvent);
 
   enum {
     ADDTRACK_QUEUED = 0x01  // Queue track add until FinishAddTracks()
@@ -1322,7 +1299,7 @@ class MediaStreamGraph {
    * Dispatches a runnable that will run on the main thread after all
    * main-thread stream state has been next updated.
    *
-   * Should only be called during MediaStreamListener callbacks or during
+   * Should only be called during MediaStreamTrackListener callbacks or during
    * ProcessedMediaStream::ProcessInput().
    *
    * Note that if called during shutdown the runnable will be ignored and

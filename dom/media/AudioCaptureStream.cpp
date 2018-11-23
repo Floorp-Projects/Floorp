@@ -30,10 +30,7 @@ namespace mozilla {
 static const uint32_t MONO = 1;
 
 AudioCaptureStream::AudioCaptureStream(TrackID aTrackId)
-    : ProcessedMediaStream(),
-      mTrackId(aTrackId),
-      mStarted(false),
-      mTrackCreated(false) {
+    : ProcessedMediaStream(), mTrackId(aTrackId), mStarted(false) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_COUNT_CTOR(AudioCaptureStream);
   mMixer.AddCallback(this);
@@ -66,17 +63,6 @@ void AudioCaptureStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
 
   uint32_t inputCount = mInputs.Length();
   StreamTracks::Track* track = EnsureTrack(mTrackId);
-  // Notify the DOM everything is in order.
-  if (!mTrackCreated) {
-    for (uint32_t i = 0; i < mListeners.Length(); i++) {
-      MediaStreamListener* l = mListeners[i];
-      AudioSegment tmp;
-      l->NotifyQueuedTrackChanges(Graph(), mTrackId, 0,
-                                  TrackEventCommand::TRACK_EVENT_CREATED, tmp);
-      l->NotifyFinishedTrackCreation(Graph());
-    }
-    mTrackCreated = true;
-  }
 
   if (IsFinishedOnGraphThread()) {
     return;
