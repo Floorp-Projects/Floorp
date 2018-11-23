@@ -144,12 +144,16 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
     }
     BufferReader reader(cenc);
     writer->mCrypto.mValid = true;
-    writer->mCrypto.mIVSize = ivSize;
 
     CencSampleEncryptionInfoEntry* sampleInfo = GetSampleEncryptionEntry();
     if (sampleInfo) {
+      // Use sample group information if present, this supersedes track level
+      // information.
       writer->mCrypto.mKeyId.AppendElements(sampleInfo->mKeyId);
+      ivSize = sampleInfo->mIVSize;
     }
+
+    writer->mCrypto.mIVSize = ivSize;
 
     if (!reader.ReadArray(writer->mCrypto.mIV, ivSize)) {
       return nullptr;
