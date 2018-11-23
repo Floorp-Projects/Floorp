@@ -126,12 +126,13 @@ class SystemEngineView @JvmOverloads constructor(
             }
         }
 
-        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+        override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
             url?.let {
                 currentUrl = url
                 session?.internalNotifyObservers {
                     onLoadingStateChange(true)
                     onLocationChange(it)
+                    onNavigationStateChange(view.canGoBack(), view.canGoForward())
                 }
             }
         }

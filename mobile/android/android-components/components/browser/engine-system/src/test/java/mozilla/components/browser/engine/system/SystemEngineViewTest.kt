@@ -81,7 +81,7 @@ class SystemEngineViewTest {
             }
         })
 
-        engineView.currentWebView.webViewClient.onPageStarted(null, "https://wiki.mozilla.org/", null)
+        engineView.currentWebView.webViewClient.onPageStarted(mock(), "https://wiki.mozilla.org/", null)
         assertEquals(true, observedLoadingState)
         assertEquals(observedUrl, "https://wiki.mozilla.org/")
 
@@ -228,6 +228,30 @@ class SystemEngineViewTest {
 
         engineView.currentWebView.webViewClient.onPageStarted(webView, "https://www.firefox.com/", null)
         assertEquals("https://www.firefox.com/", engineView.currentUrl)
+    }
+
+    @Test
+    fun `WebView client notifies navigation state changes`() {
+        val engineSession = SystemEngineSession()
+
+        val engineView = SystemEngineView(RuntimeEnvironment.application)
+        val observer: EngineSession.Observer = mock()
+        val webView: WebView = mock()
+        `when`(webView.canGoBack()).thenReturn(true)
+        `when`(webView.canGoForward()).thenReturn(true)
+
+        // This sets the currentUrl.
+        engineView.currentWebView.webViewClient.onPageStarted(webView, "https://www.mozilla.org/", null)
+
+        // No observers notified when session isn't rendered.
+        engineSession.register(observer)
+        verify(observer, never()).onNavigationStateChange(true, true)
+
+        // Observers notified.
+        engineView.render(engineSession)
+
+        engineView.currentWebView.webViewClient.onPageStarted(webView, "https://www.mozilla.org/", null)
+        verify(observer).onNavigationStateChange(true, true)
     }
 
     @Test
