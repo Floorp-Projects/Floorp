@@ -347,7 +347,8 @@ namespace recordreplay {
   MACRO(CFUUIDCreateString, RR_ScalarRval)                       \
   MACRO(CFUUIDGetUUIDBytes, RR_ComplexScalarRval, nullptr, Middleman_CFTypeArg<0>) \
   MACRO(CGAffineTransformConcat, RR_OversizeRval<sizeof(CGAffineTransform)>) \
-  MACRO(CGBitmapContextCreateImage, RR_ScalarRval)               \
+  MACRO(CGBitmapContextCreateImage, RR_ScalarRval, nullptr,      \
+        Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_CreateCFTypeRval>) \
   MACRO(CGBitmapContextCreateWithData,                           \
         RR_Compose<RR_ScalarRval, RR_CGBitmapContextCreateWithData>, nullptr, \
         Middleman_CGBitmapContextCreateWithData)                 \
@@ -360,14 +361,32 @@ namespace recordreplay {
   MACRO(CGColorSpaceCreateDeviceRGB, RR_ScalarRval, nullptr, Middleman_CreateCFTypeRval) \
   MACRO(CGColorSpaceCreatePattern, RR_ScalarRval)                \
   MACRO(CGColorSpaceRelease, RR_ScalarRval, nullptr, nullptr, Preamble_Veto<0>) \
-  MACRO(CGContextBeginTransparencyLayerWithRect)                 \
-  MACRO(CGContextClipToRects, RR_ScalarRval, nullptr,            \
+  MACRO(CGContextAddPath, nullptr, nullptr,                      \
+        Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_CFTypeArg<1>>) \
+  MACRO(CGContextBeginTransparencyLayerWithRect, nullptr, nullptr, \
+        Middleman_Compose<Middleman_CFTypeArg<0>,                \
+                          Middleman_StackArgumentData<sizeof(CGRect)>, \
+                          Middleman_CFTypeArg<1>>)               \
+  MACRO(CGContextClipToRect, nullptr, nullptr,                   \
+        Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_StackArgumentData<sizeof(CGRect)>>) \
+  MACRO(CGContextClipToRects, nullptr, nullptr,                  \
         Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_Buffer<1, 2, CGRect>>) \
   MACRO(CGContextConcatCTM, nullptr, nullptr,                    \
         Middleman_Compose<Middleman_CFTypeArg<0>,                \
                           Middleman_StackArgumentData<sizeof(CGAffineTransform)>>) \
-  MACRO(CGContextDrawImage, RR_FlushCGContext<0>)                \
-  MACRO(CGContextEndTransparencyLayer)                           \
+  MACRO(CGContextDrawImage, RR_FlushCGContext<0>, nullptr,       \
+        Middleman_Compose<Middleman_CFTypeArg<0>,                \
+                          Middleman_StackArgumentData<sizeof(CGRect)>, \
+                          Middleman_CFTypeArg<1>,                \
+                          Middleman_FlushCGContext<0>>)          \
+  MACRO(CGContextDrawLinearGradient, RR_FlushCGContext<0>, nullptr, \
+        Middleman_Compose<Middleman_CFTypeArg<0>,                \
+                          Middleman_CFTypeArg<1>,                \
+                          Middleman_StackArgumentData<2 * sizeof(CGPoint)>, \
+                          Middleman_FlushCGContext<0>>)          \
+  MACRO(CGContextEndTransparencyLayer, nullptr, nullptr, Middleman_CFTypeArg<0>) \
+  MACRO(CGContextFillPath, RR_FlushCGContext<0>, nullptr,        \
+        Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_FlushCGContext<0>>) \
   MACRO(CGContextFillRect, RR_FlushCGContext<0>, nullptr,        \
         Middleman_Compose<Middleman_CFTypeArg<0>,                \
                           Middleman_StackArgumentData<sizeof(CGRect)>, \
@@ -375,9 +394,11 @@ namespace recordreplay {
   MACRO(CGContextGetClipBoundingBox, RR_OversizeRval<sizeof(CGRect)>) \
   MACRO(CGContextGetCTM, RR_OversizeRval<sizeof(CGAffineTransform)>) \
   MACRO(CGContextGetType, RR_ScalarRval)                         \
-  MACRO(CGContextGetUserSpaceToDeviceSpaceTransform, RR_OversizeRval<sizeof(CGAffineTransform)>) \
+  MACRO(CGContextGetUserSpaceToDeviceSpaceTransform, RR_OversizeRval<sizeof(CGAffineTransform)>, nullptr, \
+        Middleman_Compose<Middleman_CFTypeArg<1>, Middleman_OversizeRval<sizeof(CGAffineTransform)>>) \
   MACRO(CGContextRestoreGState, nullptr, Preamble_CGContextRestoreGState, \
         Middleman_UpdateCFTypeArg<0>)                            \
+  MACRO(CGContextRotateCTM, nullptr, nullptr, Middleman_UpdateCFTypeArg<0>) \
   MACRO(CGContextSaveGState, nullptr, nullptr, Middleman_UpdateCFTypeArg<0>) \
   MACRO(CGContextSetAllowsFontSubpixelPositioning, nullptr, nullptr, \
         Middleman_UpdateCFTypeArg<0>)                            \
@@ -391,7 +412,12 @@ namespace recordreplay {
         Middleman_Compose<Middleman_UpdateCFTypeArg<0>,          \
                           Middleman_StackArgumentData<sizeof(CGAffineTransform)>>) \
   MACRO(CGContextSetGrayFillColor, nullptr, nullptr, Middleman_UpdateCFTypeArg<0>) \
-  MACRO(CGContextSetRGBFillColor)                                \
+  MACRO(CGContextSetRGBFillColor, nullptr, nullptr,              \
+        Middleman_Compose<Middleman_UpdateCFTypeArg<0>,          \
+                           Middleman_StackArgumentData<sizeof(CGFloat)>>) \
+  MACRO(CGContextSetRGBStrokeColor, nullptr, nullptr,            \
+        Middleman_Compose<Middleman_UpdateCFTypeArg<0>,          \
+                          Middleman_StackArgumentData<sizeof(CGFloat)>>) \
   MACRO(CGContextSetShouldAntialias, nullptr, nullptr, Middleman_UpdateCFTypeArg<0>) \
   MACRO(CGContextSetShouldSmoothFonts, nullptr, nullptr, Middleman_UpdateCFTypeArg<0>) \
   MACRO(CGContextSetShouldSubpixelPositionFonts, nullptr, nullptr, Middleman_UpdateCFTypeArg<0>) \
@@ -401,6 +427,10 @@ namespace recordreplay {
         Middleman_Compose<Middleman_UpdateCFTypeArg<0>,          \
                           Middleman_StackArgumentData<sizeof(CGAffineTransform)>>) \
   MACRO(CGContextScaleCTM, nullptr, nullptr, Middleman_UpdateCFTypeArg<0>) \
+  MACRO(CGContextStrokeLineSegments, RR_FlushCGContext<0>, nullptr, \
+        Middleman_Compose<Middleman_CFTypeArg<0>,                \
+                          Middleman_Buffer<1, 2, CGPoint>,       \
+                          Middleman_FlushCGContext<0>>)          \
   MACRO(CGContextTranslateCTM, nullptr, nullptr, Middleman_UpdateCFTypeArg<0>) \
   MACRO(CGDataProviderCreateWithData, RR_Compose<RR_ScalarRval, RR_CGDataProviderCreateWithData>, \
         nullptr, Middleman_CGDataProviderCreateWithData)         \
@@ -440,14 +470,23 @@ namespace recordreplay {
   MACRO(CGFontGetLeading, RR_ScalarRval, nullptr, Middleman_CFTypeArg<0>) \
   MACRO(CGFontGetUnitsPerEm, RR_ScalarRval, nullptr, Middleman_CFTypeArg<0>) \
   MACRO(CGFontGetXHeight, RR_ScalarRval, nullptr, Middleman_CFTypeArg<0>) \
+  MACRO(CGGradientCreateWithColorComponents, RR_ScalarRval, nullptr, \
+        Middleman_Compose<Middleman_CFTypeArg<0>,                \
+                          Middleman_Buffer<1, 3, CGFloat>,       \
+                          Middleman_Buffer<2, 3, CGFloat>,       \
+                          Middleman_CreateCFTypeRval>)           \
   MACRO(CGImageGetHeight, RR_ScalarRval)                         \
   MACRO(CGImageGetWidth, RR_ScalarRval)                          \
-  MACRO(CGImageRelease, RR_ScalarRval)                           \
+  MACRO(CGImageRelease, RR_ScalarRval, nullptr, nullptr, Preamble_Veto<0>) \
   MACRO(CGMainDisplayID, RR_ScalarRval)                          \
   MACRO(CGPathAddPath)                                           \
   MACRO(CGPathApply, nullptr, Preamble_CGPathApply)              \
   MACRO(CGPathContainsPoint, RR_ScalarRval)                      \
   MACRO(CGPathCreateMutable, RR_ScalarRval)                      \
+  MACRO(CGPathCreateWithRoundedRect, RR_ScalarRval, nullptr,     \
+        Middleman_Compose<Middleman_StackArgumentData<sizeof(CGRect)>, \
+                          Middleman_BufferFixedSize<0, sizeof(CGAffineTransform)>, \
+                          Middleman_CreateCFTypeRval>)           \
   MACRO(CGPathGetBoundingBox, RR_OversizeRval<sizeof(CGRect)>)   \
   MACRO(CGPathGetCurrentPoint, RR_ComplexFloatRval)              \
   MACRO(CGPathIsEmpty, RR_ScalarRval)                            \
@@ -575,19 +614,58 @@ namespace recordreplay {
   MACRO(GetEventAttributes, RR_ScalarRval)                       \
   MACRO(GetEventDispatcherTarget, RR_ScalarRval)                 \
   MACRO(GetEventKind, RR_ScalarRval)                             \
-  MACRO(HIThemeDrawButton, RR_ScalarRval)                        \
-  MACRO(HIThemeDrawFrame, RR_ScalarRval)                         \
-  MACRO(HIThemeDrawGroupBox, RR_ScalarRval)                      \
-  MACRO(HIThemeDrawGrowBox, RR_ScalarRval)                       \
-  MACRO(HIThemeDrawMenuBackground, RR_ScalarRval)                \
-  MACRO(HIThemeDrawMenuItem, RR_ScalarRval)                      \
-  MACRO(HIThemeDrawMenuSeparator, RR_ScalarRval)                 \
-  MACRO(HIThemeDrawSeparator, RR_ScalarRval)                     \
-  MACRO(HIThemeDrawTabPane, RR_ScalarRval)                       \
-  MACRO(HIThemeDrawTrack, RR_ScalarRval)                         \
+  MACRO(HIThemeDrawButton,                                       \
+        RR_Compose<RR_WriteBufferFixedSize<4, sizeof(HIRect)>, RR_ScalarRval>, nullptr, \
+        Middleman_Compose<Middleman_BufferFixedSize<0, sizeof(HIRect)>, \
+                          Middleman_BufferFixedSize<1, sizeof(HIThemeButtonDrawInfo)>, \
+                          Middleman_UpdateCFTypeArg<2>,          \
+                          Middleman_WriteBufferFixedSize<4, sizeof(HIRect)>>) \
+  MACRO(HIThemeDrawFrame, RR_ScalarRval, nullptr,                \
+        Middleman_Compose<Middleman_BufferFixedSize<0, sizeof(HIRect)>, \
+                          Middleman_BufferFixedSize<1, sizeof(HIThemeFrameDrawInfo)>, \
+                          Middleman_UpdateCFTypeArg<2>>)         \
+  MACRO(HIThemeDrawGroupBox, RR_ScalarRval, nullptr,             \
+        Middleman_Compose<Middleman_BufferFixedSize<0, sizeof(HIRect)>, \
+                          Middleman_BufferFixedSize<1, sizeof(HIThemeGroupBoxDrawInfo)>, \
+                          Middleman_UpdateCFTypeArg<2>>)         \
+  MACRO(HIThemeDrawGrowBox, RR_ScalarRval, nullptr,              \
+        Middleman_Compose<Middleman_BufferFixedSize<0, sizeof(HIPoint)>, \
+                          Middleman_BufferFixedSize<1, sizeof(HIThemeGrowBoxDrawInfo)>, \
+                          Middleman_UpdateCFTypeArg<2>>)         \
+  MACRO(HIThemeDrawMenuBackground, RR_ScalarRval, nullptr,       \
+        Middleman_Compose<Middleman_BufferFixedSize<0, sizeof(HIRect)>, \
+                          Middleman_BufferFixedSize<1, sizeof(HIThemeMenuDrawInfo)>, \
+                          Middleman_UpdateCFTypeArg<2>>)         \
+  MACRO(HIThemeDrawMenuItem,                                     \
+        RR_Compose<RR_WriteBufferFixedSize<5, sizeof(HIRect)>, RR_ScalarRval>, nullptr, \
+        Middleman_Compose<Middleman_BufferFixedSize<0, sizeof(HIRect)>, \
+                          Middleman_BufferFixedSize<1, sizeof(HIRect)>, \
+                          Middleman_BufferFixedSize<2, sizeof(HIThemeMenuItemDrawInfo)>, \
+                          Middleman_UpdateCFTypeArg<3>,          \
+                          Middleman_WriteBufferFixedSize<5, sizeof(HIRect)>>) \
+  MACRO(HIThemeDrawMenuSeparator, RR_ScalarRval, nullptr,        \
+        Middleman_Compose<Middleman_BufferFixedSize<0, sizeof(HIRect)>, \
+                          Middleman_BufferFixedSize<1, sizeof(HIRect)>, \
+                          Middleman_BufferFixedSize<2, sizeof(HIThemeMenuItemDrawInfo)>, \
+                          Middleman_UpdateCFTypeArg<3>>)         \
+  MACRO(HIThemeDrawSeparator, RR_ScalarRval, nullptr,            \
+        Middleman_Compose<Middleman_BufferFixedSize<0, sizeof(HIRect)>, \
+                          Middleman_BufferFixedSize<1, sizeof(HIThemeSeparatorDrawInfo)>, \
+                          Middleman_UpdateCFTypeArg<2>>)         \
+  MACRO(HIThemeDrawTabPane, RR_ScalarRval, nullptr,              \
+        Middleman_Compose<Middleman_BufferFixedSize<0, sizeof(HIRect)>, \
+                          Middleman_BufferFixedSize<1, sizeof(HIThemeTabPaneDrawInfo)>, \
+                          Middleman_UpdateCFTypeArg<2>>)         \
+  MACRO(HIThemeDrawTrack, RR_ScalarRval, nullptr,                \
+        Middleman_Compose<Middleman_BufferFixedSize<0, sizeof(HIThemeTrackDrawInfo)>, \
+                          Middleman_BufferFixedSize<1, sizeof(HIRect)>, \
+                          Middleman_UpdateCFTypeArg<2>>)         \
   MACRO(HIThemeGetGrowBoxBounds,                                 \
-        RR_Compose<RR_ScalarRval, RR_WriteBufferFixedSize<2, sizeof(HIRect)>>) \
-  MACRO(HIThemeSetFill, RR_ScalarRval)                           \
+        RR_Compose<RR_ScalarRval, RR_WriteBufferFixedSize<2, sizeof(HIRect)>>, nullptr, \
+        Middleman_Compose<Middleman_BufferFixedSize<0, sizeof(HIPoint)>, \
+                          Middleman_BufferFixedSize<1, sizeof(HIThemeGrowBoxDrawInfo)>, \
+                          Middleman_WriteBufferFixedSize<2, sizeof(HIRect)>>) \
+  MACRO(HIThemeSetFill, RR_ScalarRval, nullptr, Middleman_UpdateCFTypeArg<2>) \
   MACRO(IORegistryEntrySearchCFProperty, RR_ScalarRval)          \
   MACRO(LSCopyAllHandlersForURLScheme, RR_ScalarRval)            \
   MACRO(LSCopyApplicationForMIMEType,                            \
@@ -606,9 +684,9 @@ namespace recordreplay {
                                    RR_WriteOptionalBufferFixedSize<3, sizeof(CFURLRef)>>) \
   MACRO(NSClassFromString, RR_ScalarRval, nullptr,               \
         Middleman_Compose<Middleman_CFTypeArg<0>, Middleman_CFTypeRval>) \
-  MACRO(NSRectFill)                                              \
+  MACRO(NSRectFill, nullptr, nullptr, Middleman_NoOp)            \
   MACRO(NSSearchPathForDirectoriesInDomains, RR_ScalarRval)      \
-  MACRO(NSSetFocusRingStyle, RR_ScalarRval)                      \
+  MACRO(NSSetFocusRingStyle, nullptr, nullptr, Middleman_NoOp)   \
   MACRO(NSTemporaryDirectory, RR_ScalarRval)                     \
   MACRO(OSSpinLockLock, nullptr, Preamble_OSSpinLockLock)        \
   MACRO(ReleaseEvent, RR_ScalarRval)                             \
@@ -754,14 +832,28 @@ Middleman_ObjCInput(MiddlemanCallContext& aCx, id* aThingPtr)
 
     // List of the Objective C classes which messages might be sent to directly.
     static const char* gStaticClasses[] = {
-      "NSAutoreleasePool",
+      // Standard classes.
+      "NSBezierPath",
+      "NSButtonCell",
       "NSColor",
+      "NSComboBoxCell",
       "NSDictionary",
+      "NSGraphicsContext",
       "NSFont",
       "NSFontManager",
+      "NSLevelIndicatorCell",
       "NSNumber",
+      "NSPopUpButtonCell",
+      "NSProgressBarCell",
       "NSString",
       "NSWindow",
+
+      // Gecko defined classes.
+      "CellDrawView",
+      "CheckboxCell",
+      "RadioButtonCell",
+      "SearchFieldCellWithFocusRing",
+      "ToolbarSearchFieldCellWithFocusRing",
     };
 
     // Watch for messages sent to particular classes.
@@ -1673,15 +1765,20 @@ RR_objc_msgSend(Stream& aEvents, CallArguments* aArguments, ErrorType* aError)
 static PreambleResult
 MiddlemanPreamble_objc_msgSend(CallArguments* aArguments)
 {
+  auto obj = aArguments->Arg<0, id>();
   auto message = aArguments->Arg<1, const char*>();
+
+  // Fake object value which allows null checks in the caller to pass.
+  static const size_t FakeId = 1;
 
   // Ignore uses of NSAutoreleasePool after diverging from the recording.
   // These are not performed in the middleman because the middleman has its
   // own autorelease pool, and because the middleman can process calls from
   // multiple threads which will cause these messages to behave differently.
-  if (!strcmp(message, "alloc") ||
+  // release messages are also ignored, as for CFRelease.
+  if ((!strcmp(message, "alloc") && obj == (id) objc_lookUpClass("NSAutoreleasePool")) ||
+      (!strcmp(message, "init") && obj == (id) FakeId) ||
       !strcmp(message, "drain") ||
-      !strcmp(message, "init") ||
       !strcmp(message, "release")) {
     // Fake a return value in case the caller null checks it.
     aArguments->Rval<size_t>() = 1;
@@ -1705,6 +1802,30 @@ Middleman_PerformSelector(MiddlemanCallContext& aCx)
     if (strcmp(str, "appearanceNamed:")) {
       aCx.MarkAsFailed();
       return;
+    }
+  }
+
+  Middleman_AutoreleaseCFTypeRval(aCx);
+}
+
+static void
+Middleman_DictionaryWithObjectsAndKeys(MiddlemanCallContext& aCx)
+{
+  // Copy over all possible stack arguments.
+  Middleman_StackArgumentData<CallArguments::NumStackArguments * sizeof(size_t)>(aCx);
+
+  if (aCx.AccessPreface()) {
+    // Advance through the arguments until there is a null value. If there are
+    // too many arguments for the underlying CallArguments, we will safely
+    // crash when we hit their extent.
+    for (size_t i = 2;; i += 2) {
+      auto& value = aCx.mArguments->Arg<id>(i);
+      if (!value) {
+        break;
+      }
+      auto& key = aCx.mArguments->Arg<id>(i + 1);
+      Middleman_ObjCInput(aCx, &value);
+      Middleman_ObjCInput(aCx, &key);
     }
   }
 
@@ -1757,23 +1878,80 @@ struct ObjCMessageInfo
 {
   const char* mMessage;
   MiddlemanCallFn mMiddlemanCall;
+  bool mUpdatesObject;
 };
 
 // All Objective C messages that can be called in the middleman, and hooks for
-// capturing any inputs and outputs other than the object and message.
+// capturing any inputs and outputs other than the object, message, and scalar
+// arguments / return values.
 static ObjCMessageInfo gObjCMiddlemanCallMessages[] = {
+  // Generic
+  { "alloc", Middleman_CreateCFTypeRval },
+  { "init", Middleman_AutoreleaseCFTypeRval },
   { "performSelector:withObject:", Middleman_PerformSelector },
   { "respondsToSelector:", Middleman_CString<2> },
+
+  // NSAppearance
+  { "_drawInRect:context:options:",
+    Middleman_Compose<Middleman_StackArgumentData<sizeof(CGRect)>,
+                      Middleman_CFTypeArg<2>,
+                      Middleman_CFTypeArg<3>> },
 
   // NSArray
   { "count" },
   { "objectAtIndex:", Middleman_AutoreleaseCFTypeRval },
 
+  // NSBezierPath
+  { "addClip", Middleman_NoOp, true },
+  { "bezierPathWithRoundedRect:xRadius:yRadius:", Middleman_AutoreleaseCFTypeRval },
+
+  // NSCell
+  { "drawFocusRingMaskWithFrame:inView:",
+    Middleman_Compose<Middleman_CFTypeArg<2>, Middleman_StackArgumentData<sizeof(CGRect)>> },
+  { "drawWithFrame:inView:",
+    Middleman_Compose<Middleman_CFTypeArg<2>, Middleman_StackArgumentData<sizeof(CGRect)>> },
+  { "initTextCell:",
+    Middleman_Compose<Middleman_CFTypeArg<2>, Middleman_AutoreleaseCFTypeRval> },
+  { "initTextCell:pullsDown:",
+    Middleman_Compose<Middleman_CFTypeArg<2>, Middleman_AutoreleaseCFTypeRval> },
+  { "setAllowsMixedState:", Middleman_NoOp, true },
+  { "setBezeled:", Middleman_NoOp, true },
+  { "setBezelStyle:", Middleman_NoOp, true },
+  { "setButtonType:", Middleman_NoOp, true },
+  { "setControlSize:", Middleman_NoOp, true },
+  { "setControlTint:", Middleman_NoOp, true },
+  { "setCriticalValue:", Middleman_NoOp, true },
+  { "setDoubleValue:", Middleman_NoOp, true },
+  { "setEditable:", Middleman_NoOp, true },
+  { "setEnabled:", Middleman_NoOp, true },
+  { "setFocusRingType:", Middleman_NoOp, true },
+  { "setHighlighted:", Middleman_NoOp, true },
+  { "setHighlightsBy:", Middleman_NoOp, true },
+  { "setHorizontal:", Middleman_NoOp, true },
+  { "setIndeterminate:", Middleman_NoOp, true },
+  { "setMax:", Middleman_NoOp, true },
+  { "setMaxValue:", Middleman_NoOp, true },
+  { "setMinValue:", Middleman_NoOp, true },
+  { "setPlaceholderString:", Middleman_NoOp, true },
+  { "setPullsDown:", Middleman_NoOp, true },
+  { "setShowsFirstResponder:", Middleman_NoOp, true },
+  { "setState:", Middleman_NoOp, true },
+  { "setValue:", Middleman_NoOp, true },
+  { "setWarningValue:", Middleman_NoOp, true },
+  { "showsFirstResponder" },
+
   // NSColor
+  { "alphaComponent" },
+  { "colorWithDeviceRed:green:blue:alpha:",
+    Middleman_Compose<Middleman_StackArgumentData<sizeof(CGFloat)>, Middleman_AutoreleaseCFTypeRval> },
   { "currentControlTint" },
+  { "set", Middleman_NoOp, true },
 
   // NSDictionary
+  { "dictionaryWithObjectsAndKeys:", Middleman_DictionaryWithObjectsAndKeys },
   { "dictionaryWithObjects:forKeys:count:", Middleman_DictionaryWithObjects },
+  { "mutableCopy", Middleman_AutoreleaseCFTypeRval },
+  { "setObject:forKey:", Middleman_Compose<Middleman_CFTypeArg<2>, Middleman_CFTypeArg<3>>, true },
 
   // NSFont
   { "boldSystemFontOfSize:", Middleman_AutoreleaseCFTypeRval },
@@ -1790,6 +1968,15 @@ static ObjCMessageInfo gObjCMiddlemanCallMessages[] = {
   // NSFontManager
   { "availableMembersOfFontFamily:", Middleman_Compose<Middleman_CFTypeArg<2>, Middleman_AutoreleaseCFTypeRval> },
   { "sharedFontManager", Middleman_AutoreleaseCFTypeRval },
+
+  // NSGraphicsContext
+  { "currentContext", Middleman_AutoreleaseCFTypeRval },
+  { "graphicsContextWithGraphicsPort:flipped:",
+    Middleman_Compose<Middleman_CFTypeArg<2>, Middleman_AutoreleaseCFTypeRval> },
+  { "graphicsPort", Middleman_AutoreleaseCFTypeRval },
+  { "restoreGraphicsState" },
+  { "saveGraphicsState" },
+  { "setCurrentContext:", Middleman_CFTypeArg<2> },
 
   // NSNumber
   { "numberWithBool:", Middleman_AutoreleaseCFTypeRval },
@@ -1814,16 +2001,20 @@ static ObjCMessageInfo gObjCMiddlemanCallMessages[] = {
 static void
 Middleman_objc_msgSend(MiddlemanCallContext& aCx)
 {
-  auto& object = aCx.mArguments->Arg<0, id>();
   auto message = aCx.mArguments->Arg<1, const char*>();
 
   for (const ObjCMessageInfo& info : gObjCMiddlemanCallMessages) {
     if (!strcmp(info.mMessage, message)) {
-      if (aCx.AccessPreface()) {
-        Middleman_ObjCInput(aCx, &object);
+      if (info.mUpdatesObject) {
+        Middleman_UpdateCFTypeArg<0>(aCx);
+      } else {
+        Middleman_CFTypeArg<0>(aCx);
       }
       if (info.mMiddlemanCall && !aCx.mFailed) {
         info.mMiddlemanCall(aCx);
+      }
+      if (child::CurrentRepaintCannotFail() && aCx.mFailed) {
+        child::ReportFatalError(Nothing(), "Middleman message failure: %s\n", message);
       }
       return;
     }
@@ -1831,6 +2022,9 @@ Middleman_objc_msgSend(MiddlemanCallContext& aCx)
 
   if (aCx.mPhase == MiddlemanCallPhase::ReplayPreface) {
     aCx.MarkAsFailed();
+    if (child::CurrentRepaintCannotFail()) {
+      child::ReportFatalError(Nothing(), "Could not perform middleman message: %s\n", message);
+    }
   }
 }
 

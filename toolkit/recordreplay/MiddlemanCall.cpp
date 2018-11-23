@@ -44,6 +44,8 @@ GatherDependentCalls(InfallibleVector<MiddlemanCall*>& aOutgoingCalls, Middleman
   MOZ_RELEASE_ASSERT(!aCall->mSent);
   aCall->mSent = true;
 
+  const Redirection& redirection = gRedirections[aCall->mCallId];
+
   CallArguments arguments;
   aCall->mArguments.CopyTo(&arguments);
 
@@ -51,8 +53,12 @@ GatherDependentCalls(InfallibleVector<MiddlemanCall*>& aOutgoingCalls, Middleman
 
   MiddlemanCallContext cx(aCall, &arguments, MiddlemanCallPhase::ReplayInput);
   cx.mDependentCalls = &dependentCalls;
-  gRedirections[aCall->mCallId].mMiddlemanCall(cx);
+  redirection.mMiddlemanCall(cx);
   if (cx.mFailed) {
+    if (child::CurrentRepaintCannotFail()) {
+      child::ReportFatalError(Nothing(), "Middleman call input failed: %s\n",
+                              redirection.mName);
+    }
     return false;
   }
 
@@ -91,6 +97,10 @@ SendCallToMiddleman(size_t aCallId, CallArguments* aArguments, bool aDiverged)
     if (cx.mFailed) {
       delete newCall;
       gMiddlemanCalls.popBack();
+      if (child::CurrentRepaintCannotFail()) {
+        child::ReportFatalError(Nothing(), "Middleman call preface failed: %s\n",
+                                redirection.mName);
+      }
       return false;
     }
   }
