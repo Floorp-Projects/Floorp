@@ -28,7 +28,7 @@ implementation "org.mozilla.components:service-firefox-accounts:{latest-version}
 > This tutorial is for version 0.15 of the FxA client.
 
 First you need some OAuth information. Generate a `client_id`, `redirectUrl` and find out the scopes for your application.
-See Firefox Account documentation for that. 
+See Firefox Account documentation for that.
 
 Once you have the OAuth info, you can start adding `FxAClient` to your Android project.
 As part of the OAuth flow your application will be opening up a WebView or a Custom Tab.
@@ -55,12 +55,10 @@ Then you can write the following:
 account = getAuthenticatedAccount()
 if (account == null) {
   // Start authentication flow
-  account = async {
-    // Note: Config implements autoclosable
-    Config.custom(CONFIG_URL).await().use { config -> 
-        FirefoxAccount(config, CLIENT_ID, REDIRECT_URL) 
-    }.await()
-  }
+  val config = Config(CONFIG_URL, CLIENT_ID, REDIRECT_URL)
+  // Some helpers such as Config.release(CLIENT_ID, REDIRECT_URL)
+  // are also provided for well-known Firefox Accounts servers.
+  account = FirefoxAccount(config)
 }
 
 fun getAuthenticatedAccount(): FirefoxAccount? {
@@ -75,7 +73,7 @@ fun getAuthenticatedAccount(): FirefoxAccount? {
 }
 ```
 
-The code above checks if you have some existing state for FxA, otherwise it configures it. This involves fetching a configuration from the server, which is done asynchronously. All asynchronous methods on `FirefoxAccount` and `Config` are executed on `Dispatchers.IO`'s dedicated thread pool. They return `Deferred` which is Kotlin's non-blocking cancellable Future type. 
+The code above checks if you have some existing state for FxA, otherwise it configures it. All asynchronous methods on `FirefoxAccount` are executed on `Dispatchers.IO`'s dedicated thread pool. They return `Deferred` which is Kotlin's non-blocking cancellable Future type.
 
 Once the configuration is available and an account instance was created, the authentication flow can be started:
 
