@@ -326,7 +326,7 @@ ThreadEventName(ThreadEvent aEvent)
   case ThreadEvent::CallStart: break;
   }
   size_t callId = (size_t) aEvent - (size_t) ThreadEvent::CallStart;
-  return gRedirections[callId].mName;
+  return GetRedirection(callId).mName;
 }
 
 int

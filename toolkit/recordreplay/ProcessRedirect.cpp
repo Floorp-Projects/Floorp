@@ -53,7 +53,7 @@ extern "C" {
 __attribute__((used)) int
 RecordReplayInterceptCall(int aCallId, CallArguments* aArguments)
 {
-  Redirection& redirection = gRedirections[aCallId];
+  Redirection& redirection = GetRedirection(aCallId);
 
   // Call the preamble to see if this call needs special handling, even when
   // events have been passed through.
@@ -738,22 +738,6 @@ CopyInstructions(const char* aName, uint8_t* aIpStart, uint8_t* aIpEnd,
   return ip;
 }
 
-// Get the instruction pointer to use as the address of the base function for a
-// redirection.
-static uint8_t*
-FunctionStartAddress(Redirection& aRedirection)
-{
-  uint8_t* addr = static_cast<uint8_t*>(dlsym(RTLD_DEFAULT, aRedirection.mName));
-  if (!addr)
-    return nullptr;
-
-  if (addr[0] == 0xFF && addr[1] == 0x25) {
-    return *(uint8_t**)(addr + 6 + *reinterpret_cast<int32_t*>(addr + 2));
-  }
-
-  return addr;
-}
-
 // Generate code to set %rax and enter RecordReplayRedirectCall.
 static uint8_t*
 GenerateRedirectStub(Assembler& aAssembler, size_t aCallId)
@@ -909,34 +893,6 @@ Redirect(size_t aCallId, Redirection& aRedirection, Assembler& aAssembler, bool 
   AddClobberPatch(functionStart + ShortJumpBytes, nro);
 }
 
-void
-EarlyInitializeRedirections()
-{
-  for (size_t i = 0;; i++) {
-    Redirection& redirection = gRedirections[i];
-    if (!redirection.mName) {
-      break;
-    }
-    MOZ_RELEASE_ASSERT(!redirection.mBaseFunction);
-    MOZ_RELEASE_ASSERT(!redirection.mOriginalFunction);
-
-    redirection.mBaseFunction = FunctionStartAddress(redirection);
-    redirection.mOriginalFunction = redirection.mBaseFunction;
-
-    if (redirection.mBaseFunction && IsRecordingOrReplaying()) {
-      // We will get confused if we try to redirect the same address in multiple places.
-      for (size_t j = 0; j < i; j++) {
-        if (gRedirections[j].mBaseFunction == redirection.mBaseFunction) {
-          PrintSpew("Redirection %s shares the same address as %s, skipping.\n",
-                    redirection.mName, gRedirections[j].mName);
-          redirection.mBaseFunction = nullptr;
-          break;
-        }
-      }
-    }
-  }
-}
-
 bool
 InitializeRedirections()
 {
@@ -944,20 +900,15 @@ InitializeRedirections()
 
   {
     Assembler assembler;
+    size_t numRedirections = NumRedirections();
 
-    for (size_t i = 0;; i++) {
-      Redirection& redirection = gRedirections[i];
-      if (!redirection.mName) {
-        break;
-      }
+    for (size_t i = 0; i < numRedirections; i++) {
+      Redirection& redirection = GetRedirection(i);
       Redirect(i, redirection, assembler, /* aFirstPass = */ true);
     }
 
-    for (size_t i = 0;; i++) {
-      Redirection& redirection = gRedirections[i];
-      if (!redirection.mName) {
-        break;
-      }
+    for (size_t i = 0; i < numRedirections; i++) {
+      Redirection& redirection = GetRedirection(i);
       Redirect(i, redirection, assembler, /* aFirstPass = */ false);
     }
   }

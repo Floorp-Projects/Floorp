@@ -2501,12 +2501,65 @@ Preamble_OSSpinLockLock(CallArguments* aArguments)
 #define MAKE_REDIRECTION_ENTRY(aName, ...)          \
   { #aName, nullptr, nullptr, __VA_ARGS__ },
 
-Redirection gRedirections[] = {
+static Redirection gRedirections[] = {
   FOR_EACH_REDIRECTION(MAKE_REDIRECTION_ENTRY)
-  { }
 };
 
 #undef MAKE_REDIRECTION_ENTRY
+
+size_t
+NumRedirections()
+{
+  return ArrayLength(gRedirections);
+}
+
+Redirection&
+GetRedirection(size_t aCallId)
+{
+  MOZ_RELEASE_ASSERT(aCallId < ArrayLength(gRedirections));
+  return gRedirections[aCallId];
+}
+
+// Get the instruction pointer to use as the address of the base function for a
+// redirection.
+static uint8_t*
+FunctionStartAddress(Redirection& aRedirection)
+{
+  uint8_t* addr = static_cast<uint8_t*>(dlsym(RTLD_DEFAULT, aRedirection.mName));
+  if (!addr)
+    return nullptr;
+
+  if (addr[0] == 0xFF && addr[1] == 0x25) {
+    return *(uint8_t**)(addr + 6 + *reinterpret_cast<int32_t*>(addr + 2));
+  }
+
+  return addr;
+}
+
+void
+EarlyInitializeRedirections()
+{
+  for (size_t i = 0; i < ArrayLength(gRedirections); i++) {
+    Redirection& redirection = gRedirections[i];
+    MOZ_RELEASE_ASSERT(!redirection.mBaseFunction);
+    MOZ_RELEASE_ASSERT(!redirection.mOriginalFunction);
+
+    redirection.mBaseFunction = FunctionStartAddress(redirection);
+    redirection.mOriginalFunction = redirection.mBaseFunction;
+
+    if (redirection.mBaseFunction && IsRecordingOrReplaying()) {
+      // We will get confused if we try to redirect the same address in multiple places.
+      for (size_t j = 0; j < i; j++) {
+        if (gRedirections[j].mBaseFunction == redirection.mBaseFunction) {
+          PrintSpew("Redirection %s shares the same address as %s, skipping.\n",
+                    redirection.mName, gRedirections[j].mName);
+          redirection.mBaseFunction = nullptr;
+          break;
+        }
+      }
+    }
+  }
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Direct system call API
