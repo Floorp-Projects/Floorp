@@ -652,6 +652,11 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
    * Number of active MediaInputPorts
    */
   int32_t mPortCount;
+  /**
+   * Runnables to run after the next update to main thread state, but that are
+   * still waiting for the next iteration to finish.
+   */
+  nsTArray<nsCOMPtr<nsIRunnable>> mPendingUpdateRunnables;
 
   /**
    * Devices to use for cubeb input & output, or nullptr for default device.
