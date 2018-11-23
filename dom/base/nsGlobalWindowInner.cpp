@@ -4390,17 +4390,6 @@ nsGlobalWindowInner::GetExistingListenerManager() const
 // nsGlobalWindowInner::nsPIDOMWindow
 //*****************************************************************************
 
-nsPIDOMWindowOuter*
-nsGlobalWindowInner::GetPrivateRoot()
-{
-  nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-  if (!outer) {
-    NS_WARNING("No outer window available!");
-    return nullptr;
-  }
-  return outer->GetPrivateRoot();
-}
-
 Location*
 nsGlobalWindowInner::GetLocation()
 {
