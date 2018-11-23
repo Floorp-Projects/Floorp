@@ -339,9 +339,6 @@ public:
 
   nsresult PostHandleEvent(mozilla::EventChainPostVisitor& aVisitor) override;
 
-  // nsPIDOMWindow
-  virtual nsPIDOMWindowOuter* GetPrivateRoot() override;
-
   // Outer windows only.
   virtual bool IsTopLevelWindowActive() override;
 
