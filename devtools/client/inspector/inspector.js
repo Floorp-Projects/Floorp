@@ -2483,7 +2483,7 @@ Inspector.prototype = {
    */
   onShowBoxModelHighlighterForNode(nodeFront, options) {
     const toolbox = this.toolbox;
-    toolbox.highlighterUtils.highlightNodeFront(nodeFront, options);
+    toolbox.highlighter.highlight(nodeFront, options);
   },
 
   /**
