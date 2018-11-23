@@ -461,7 +461,7 @@ WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResour
         if (!reader.Read(op.bytes(), bytes)) {
           return false;
         }
-        aUpdates.UpdateBlobImage(op.key(), op.descriptor(), bytes, wr::ToDeviceIntRect(op.dirtyRect()));
+        aUpdates.UpdateBlobImage(op.key(), op.descriptor(), bytes, wr::ToLayoutIntRect(op.dirtyRect()));
         break;
       }
       case OpUpdateResource::TOpSetImageVisibleArea: {
@@ -532,6 +532,11 @@ WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResour
       case OpUpdateResource::TOpDeleteImage: {
         const auto& op = cmd.get_OpDeleteImage();
         DeleteImage(op.key(), aUpdates);
+        break;
+      }
+      case OpUpdateResource::TOpDeleteBlobImage: {
+        const auto& op = cmd.get_OpDeleteBlobImage();
+        aUpdates.DeleteBlobImage(op.key());
         break;
       }
       case OpUpdateResource::TOpDeleteFont: {

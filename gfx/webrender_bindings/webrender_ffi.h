@@ -137,4 +137,15 @@ extern "C" {
 void record_telemetry_time(mozilla::wr::TelemetryProbe aProbe, uint64_t aTimeNs);
 }
 
+namespace mozilla {
+namespace wr {
+
+// Cast a blob image key into a regular image for use in
+// a display item.
+inline ImageKey AsImageKey(BlobImageKey aKey) { return aKey._0; }
+
+} // namespace wr
+} // namespace mozilla
+
+
 #endif // WR_h

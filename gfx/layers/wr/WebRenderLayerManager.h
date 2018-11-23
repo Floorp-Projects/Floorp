@@ -134,7 +134,9 @@ public:
   // adds an imagekey to a list of keys that will be discarded on the next
   // transaction or destruction
   void AddImageKeyForDiscard(wr::ImageKey);
+  void AddBlobImageKeyForDiscard(wr::BlobImageKey);
   void DiscardImages();
+  void DiscardImagesInTransaction(wr::IpcResourceUpdateQueue& aResourceUpdates);
   void DiscardLocalImages();
 
   wr::IpcResourceUpdateQueue& AsyncResourceUpdates();
@@ -189,6 +191,7 @@ private:
 private:
   nsIWidget* MOZ_NON_OWNING_REF mWidget;
   nsTArray<wr::ImageKey> mImageKeysToDelete;
+  nsTArray<wr::BlobImageKey> mBlobImageKeysToDelete;
 
   // Set of compositor animation ids for which there are active animations (as
   // of the last transaction) on the compositor side.

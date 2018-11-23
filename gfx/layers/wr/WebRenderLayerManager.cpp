@@ -108,7 +108,7 @@ WebRenderLayerManager::DoDestroy(bool aIsSync)
 
   if (WrBridge()) {
     // Just clear ImageKeys, they are deleted during WebRenderAPI destruction.
-    mImageKeysToDelete.Clear();
+    DiscardLocalImages();
     // CompositorAnimations are cleared by WebRenderBridgeParent.
     mDiscardedCompositorAnimationsIds.Clear();
     WrBridge()->Destroy(aIsSync);
@@ -369,11 +369,7 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
     mAsyncResourceUpdates.reset();
   }
 
-  for (const auto& key : mImageKeysToDelete) {
-    resourceUpdates.DeleteImage(key);
-  }
-  mImageKeysToDelete.Clear();
-
+  DiscardImagesInTransaction(resourceUpdates);
   WrBridge()->RemoveExpiredFontKeys(resourceUpdates);
 
   // Skip the synchronization for buffer since we also skip the painting during
@@ -483,13 +479,29 @@ WebRenderLayerManager::AddImageKeyForDiscard(wr::ImageKey key)
 }
 
 void
+WebRenderLayerManager::AddBlobImageKeyForDiscard(wr::BlobImageKey key)
+{
+  mBlobImageKeysToDelete.AppendElement(key);
+}
+
+void
+WebRenderLayerManager::DiscardImagesInTransaction(wr::IpcResourceUpdateQueue& aResources)
+{
+  for (const auto& key : mImageKeysToDelete) {
+    aResources.DeleteImage(key);
+  }
+  for (const auto& key : mBlobImageKeysToDelete) {
+    aResources.DeleteBlobImage(key);
+  }
+  mImageKeysToDelete.Clear();
+  mBlobImageKeysToDelete.Clear();
+}
+
+void
 WebRenderLayerManager::DiscardImages()
 {
   wr::IpcResourceUpdateQueue resources(WrBridge());
-  for (const auto& key : mImageKeysToDelete) {
-    resources.DeleteImage(key);
-  }
-  mImageKeysToDelete.Clear();
+  DiscardImagesInTransaction(resources);
   WrBridge()->UpdateResources(resources);
 }
 
@@ -532,6 +544,7 @@ WebRenderLayerManager::DiscardLocalImages()
   // This is useful in empty / failed transactions where we created
   // image keys but didn't tell the parent about them yet.
   mImageKeysToDelete.Clear();
+  mBlobImageKeysToDelete.Clear();
 }
 
 void

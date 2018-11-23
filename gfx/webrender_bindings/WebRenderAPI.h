@@ -107,7 +107,7 @@ public:
                 const ImageDescriptor& aDescriptor,
                 wr::Vec<uint8_t>& aBytes);
 
-  void AddBlobImage(wr::ImageKey aKey,
+  void AddBlobImage(wr::BlobImageKey aKey,
                     const ImageDescriptor& aDescriptor,
                     wr::Vec<uint8_t>& aBytes);
 
@@ -125,10 +125,10 @@ public:
                          const ImageDescriptor& aDescriptor,
                          wr::Vec<uint8_t>& aBytes);
 
-  void UpdateBlobImage(wr::ImageKey aKey,
+  void UpdateBlobImage(wr::BlobImageKey aKey,
                        const ImageDescriptor& aDescriptor,
                        wr::Vec<uint8_t>& aBytes,
-                       const wr::DeviceIntRect& aDirtyRect);
+                       const wr::LayoutIntRect& aDirtyRect);
 
   void UpdateExternalImage(ImageKey aKey,
                            const ImageDescriptor& aDescriptor,
@@ -143,9 +143,11 @@ public:
                                         const wr::DeviceIntRect& aDirtyRect,
                                         uint8_t aChannelIndex = 0);
 
-  void SetImageVisibleArea(ImageKey aKey, const wr::DeviceIntRect& aArea);
+  void SetImageVisibleArea(BlobImageKey aKey, const wr::DeviceIntRect& aArea);
 
   void DeleteImage(wr::ImageKey aKey);
+
+  void DeleteBlobImage(wr::BlobImageKey aKey);
 
   void AddRawFont(wr::FontKey aKey, wr::Vec<uint8_t>& aBytes, uint32_t aIndex);
 
