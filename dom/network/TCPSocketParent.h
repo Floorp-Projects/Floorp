@@ -36,7 +36,6 @@ protected:
   virtual ~TCPSocketParentBase();
 
   RefPtr<TCPSocket> mSocket;
-  bool mIPCOpen;
 };
 
 class TCPSocketParent : public mozilla::net::PTCPSocketParent

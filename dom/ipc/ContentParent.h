@@ -288,7 +288,7 @@ public:
 #endif
 
   // Let managees query if it is safe to send messages.
-  bool IsDestroyed() const { return !mIPCOpen; }
+  bool IsDestroyed() const { return !IPCOpen(); }
 
   virtual mozilla::ipc::IPCResult RecvCreateChildProcess(const IPCTabContext& aContext,
                                                          const hal::ProcessPriority& aPriority,
@@ -1351,7 +1351,6 @@ private:
   bool mCalledKillHard;
   bool mCreatedPairedMinidumps;
   bool mShutdownPending;
-  bool mIPCOpen;
 
   // True if the input event queue on the main thread of the content process is
   // enabled.

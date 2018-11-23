@@ -2441,10 +2441,11 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
   ChildLoadInfoForwarderArgs loadInfoForwarder;
   LoadInfoToChildLoadInfoForwarder(newChannelLoadInfo, &loadInfoForwarder);
 
-  if (mIPCOpen)
+  if (mIPCOpen) {
     SendRedirect2Verify(result, *headerTuples, loadInfoForwarder, loadFlags,
                         referrerPolicy, referrerURI, redirectURI,
                         corsPreflightArgs, chooseAppcache);
+  }
 
   return NS_OK;
 }

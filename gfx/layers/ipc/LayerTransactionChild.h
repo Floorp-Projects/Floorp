@@ -33,7 +33,9 @@ public:
    */
   void Destroy();
 
-  bool IPCOpen() const { return mIPCOpen && !mDestroyed; }
+  bool IPCOpen() const {
+    return mozilla::ipc::IProtocol::IPCOpen() && !mDestroyed;
+  }
   bool IsDestroyed() const { return mDestroyed; }
 
   void SetForwarder(ShadowLayerForwarder* aForwarder)
@@ -50,7 +52,6 @@ public:
 protected:
   explicit LayerTransactionChild(const LayersId& aId)
     : mForwarder(nullptr)
-    , mIPCOpen(false)
     , mDestroyed(false)
     , mId(aId)
   {}
@@ -59,19 +60,14 @@ protected:
   void ActorDestroy(ActorDestroyReason why) override;
 
   void AddIPDLReference() {
-    MOZ_ASSERT(mIPCOpen == false);
-    mIPCOpen = true;
     AddRef();
   }
   void ReleaseIPDLReference() {
-    MOZ_ASSERT(mIPCOpen == true);
-    mIPCOpen = false;
     Release();
   }
   friend class CompositorBridgeChild;
 
   ShadowLayerForwarder* mForwarder;
-  bool mIPCOpen;
   bool mDestroyed;
   LayersId mId;
 };
