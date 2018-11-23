@@ -121,7 +121,6 @@ struct MediaPlaybackEvent {
     PlaybackProgressed,
     PlaybackEnded,
     SeekStarted,
-    Loop,
     Invalidate,
     EnterVideoSuspend,
     ExitVideoSuspend,
