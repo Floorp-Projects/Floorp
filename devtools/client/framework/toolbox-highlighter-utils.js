@@ -186,7 +186,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * @param {Object} options
    * @return A promise that resolves when the node has been highlighted
    */
-  const highlightNodeFront = exported.highlightNodeFront = requireInspector(
+  exported.highlightNodeFront = requireInspector(
   async function(nodeFront, options = {}) {
     if (!nodeFront) {
       return;
@@ -196,33 +196,6 @@ exports.getHighlighterUtils = function(toolbox) {
     await toolbox.highlighter.showBoxModel(nodeFront, options);
 
     toolbox.emit("node-highlight", nodeFront);
-  });
-
-  /**
-   * This is a convenience method in case you don't have a nodeFront but a
-   * valueGrip. This is often the case with VariablesView properties.
-   * This method will simply translate the grip into a nodeFront and call
-   * highlightNodeFront, so it has the same signature.
-   * @see highlightNodeFront
-   */
-  exported.highlightDomValueGrip =
-    requireInspector(async function(valueGrip, options = {}) {
-      const nodeFront = await gripToNodeFront(valueGrip);
-      if (nodeFront) {
-        await highlightNodeFront(nodeFront, options);
-      } else {
-        throw new Error("The ValueGrip passed could not be translated to a NodeFront");
-      }
-    });
-
-  /**
-   * Translate a debugger value grip into a node front usable by the inspector
-   * @param {ValueGrip}
-   * @return a promise that resolves to the node front when done
-   */
-  const gripToNodeFront = exported.gripToNodeFront = requireInspector(
-  async function(grip) {
-    return toolbox.walker.getNodeActorFromObjectActor(grip.actor);
   });
 
   /**
