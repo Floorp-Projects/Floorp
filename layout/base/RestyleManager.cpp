@@ -667,11 +667,9 @@ static void SyncViewsAndInvalidateDescendants(nsIFrame* aFrame,
 static void StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint);
 
 /**
- * To handle nsChangeHint_ChildrenOnlyTransform we must iterate over the child
- * frames of the SVG frame concerned. This helper function is used to find that
- * SVG frame when we encounter nsChangeHint_ChildrenOnlyTransform to ensure
- * that we iterate over the intended children, since sometimes we end up
- * handling that hint while processing hints for one of the SVG frame's
+ * This helper function is used to find the correct SVG frame to target when we
+ * encounter nsChangeHint_ChildrenOnlyTransform; needed since sometimes we end
+ * up handling that hint while processing hints for one of the SVG frame's
  * ancestor frames.
  *
  * The reason that we sometimes end up trying to process the hint for an
@@ -681,8 +679,7 @@ static void StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint);
  * on what nsCSSRendering::FindBackground returns, since the background style
  * may have been propagated up to an ancestor frame. Processing hints using an
  * ancestor frame is fine in general, but nsChangeHint_ChildrenOnlyTransform is
- * a special case since it is intended to update the children of a specific
- * frame.
+ * a special case since it is intended to update a specific frame.
  */
 static nsIFrame*
 GetFrameForChildrenOnlyTransformHint(nsIFrame* aFrame)
@@ -1688,30 +1685,47 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
                     nsChangeHint_UpdatePostTransformOverflow);
         }
         if (hint & nsChangeHint_ChildrenOnlyTransform) {
-          // The overflow areas of the child frames need to be updated:
+          // We need to update overflows. The correct frame(s) to update depends
+          // on whether the ChangeHint came from an outer or an inner svg.
           nsIFrame* hintFrame = GetFrameForChildrenOnlyTransformHint(frame);
-          nsIFrame* childFrame = hintFrame->PrincipalChildList().FirstChild();
           NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrIBSplitSibling(frame),
                        "SVG frames should not have continuations "
                        "or ib-split siblings");
           NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrIBSplitSibling(hintFrame),
                        "SVG frames should not have continuations "
                        "or ib-split siblings");
-          for ( ; childFrame; childFrame = childFrame->GetNextSibling()) {
-            MOZ_ASSERT(childFrame->IsFrameOfType(nsIFrame::eSVG),
-                       "Not expecting non-SVG children");
-            // If |childFrame| is dirty or has dirty children, we don't bother
+          if (hintFrame->IsSVGOuterSVGAnonChildFrame()) {
+            // The children only transform of an outer svg frame is applied to
+            // the outer svg's anonymous child frame (instead of to the
+            // anonymous child's children).
+
+            // If |hintFrame| is dirty or has dirty children, we don't bother
             // updating overflows since that will happen when it's reflowed.
-            if (!(childFrame->GetStateBits() &
+            if (!(hintFrame->GetStateBits() &
                   (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
-              mOverflowChangedTracker.AddFrame(childFrame,
-                                        OverflowChangedTracker::CHILDREN_CHANGED);
+              mOverflowChangedTracker.AddFrame(hintFrame,
+                                       OverflowChangedTracker::CHILDREN_CHANGED);
             }
-            NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrIBSplitSibling(childFrame),
-                         "SVG frames should not have continuations "
-                         "or ib-split siblings");
-            NS_ASSERTION(childFrame->GetParent() == hintFrame,
-                         "SVG child frame not expected to have different parent");
+          } else {
+            // The children only transform is applied to the child frames of an
+            // inner svg frame, so update the child overflows.
+            nsIFrame* childFrame = hintFrame->PrincipalChildList().FirstChild();
+            for ( ; childFrame; childFrame = childFrame->GetNextSibling()) {
+              MOZ_ASSERT(childFrame->IsFrameOfType(nsIFrame::eSVG),
+                         "Not expecting non-SVG children");
+              // If |childFrame| is dirty or has dirty children, we don't bother
+              // updating overflows since that will happen when it's reflowed.
+              if (!(childFrame->GetStateBits() &
+                    (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
+                mOverflowChangedTracker.AddFrame(childFrame,
+                                       OverflowChangedTracker::CHILDREN_CHANGED);
+              }
+              NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrIBSplitSibling(childFrame),
+                           "SVG frames should not have continuations "
+                           "or ib-split siblings");
+              NS_ASSERTION(childFrame->GetParent() == hintFrame,
+                        "SVG child frame not expected to have different parent");
+            }
           }
         }
         // If |frame| is dirty or has dirty children, we don't bother updating
