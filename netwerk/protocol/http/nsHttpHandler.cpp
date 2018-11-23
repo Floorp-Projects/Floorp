@@ -16,7 +16,6 @@
 #include "nsHttpAuthCache.h"
 #include "nsStandardURL.h"
 #include "nsIDOMWindow.h"
-#include "nsINetworkProperties.h"
 #include "nsIHttpChannel.h"
 #include "nsIStandardURL.h"
 #include "LoadContextInfo.h"
@@ -69,6 +68,7 @@
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Navigator.h"
+#include "mozilla/dom/network/Connection.h"
 
 #include "nsNSSComponent.h"
 
@@ -2655,21 +2655,13 @@ nsHttpHandler::TickleWifi(nsIInterfaceRequestor *cb)
     if (!navigator)
         return;
 
-    nsCOMPtr<nsINetworkProperties> networkProperties =
-        navigator->GetNetworkProperties();
+    RefPtr<dom::network::Connection> networkProperties =
+        navigator->GetConnection(IgnoreErrors());
     if (!networkProperties)
         return;
 
-    uint32_t gwAddress;
-    bool isWifi;
-    nsresult rv;
-
-    rv = networkProperties->GetDhcpGateway(&gwAddress);
-    if (NS_SUCCEEDED(rv))
-        rv = networkProperties->GetIsWifi(&isWifi);
-    if (NS_FAILED(rv))
-        return;
-
+    uint32_t gwAddress = networkProperties->GetDhcpGateway();
+    bool isWifi = networkProperties->GetIsWifi();
     if (!gwAddress || !isWifi)
         return;
 

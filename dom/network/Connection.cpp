@@ -22,13 +22,9 @@ namespace dom {
 
 namespace network {
 
-NS_IMPL_QUERY_INTERFACE_INHERITED(Connection, DOMEventTargetHelper,
-                                  nsINetworkProperties)
-
 // Don't use |Connection| alone, since that confuses nsTraceRefcnt since
 // we're not the only class with that name.
-NS_IMPL_ADDREF_INHERITED(dom::network::Connection, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(dom::network::Connection, DOMEventTargetHelper)
+NS_IMPL_ISUPPORTS_INHERITED0(dom::network::Connection, DOMEventTargetHelper)
 
 Connection::Connection(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
@@ -57,26 +53,6 @@ Connection::Shutdown()
 
   mBeenShutDown = true;
   ShutdownInternal();
-}
-
-NS_IMETHODIMP
-Connection::GetIsWifi(bool* aIsWifi)
-{
-  NS_ENSURE_ARG_POINTER(aIsWifi);
-  NS_ASSERT_OWNINGTHREAD(Connection);
-
-  *aIsWifi = mIsWifi;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Connection::GetDhcpGateway(uint32_t* aGW)
-{
-  NS_ENSURE_ARG_POINTER(aGW);
-  NS_ASSERT_OWNINGTHREAD(Connection);
-
-  *aGW = mDHCPGateway;
-  return NS_OK;
 }
 
 JSObject*

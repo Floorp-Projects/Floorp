@@ -1435,12 +1435,6 @@ Navigator::RequestMIDIAccess(const MIDIOptions& aOptions,
   return accessMgr->RequestMIDIAccess(mWindow, aOptions, aRv);
 }
 
-nsINetworkProperties*
-Navigator::GetNetworkProperties()
-{
-  return GetConnection(IgnoreErrors());
-}
-
 network::Connection*
 Navigator::GetConnection(ErrorResult& aRv)
 {

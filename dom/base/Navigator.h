@@ -23,7 +23,6 @@ class nsPluginArray;
 class nsMimeTypeArray;
 class nsPIDOMWindowInner;
 class nsIDOMNavigatorSystemMessages;
-class nsINetworkProperties;
 class nsIPrincipal;
 class nsIURI;
 
@@ -183,7 +182,6 @@ public:
   bool IsWebVRContentDetected() const;
   bool IsWebVRContentPresenting() const;
   void RequestVRPresentation(VRDisplay& aDisplay);
-  nsINetworkProperties* GetNetworkProperties();
   already_AddRefed<Promise> RequestMIDIAccess(const MIDIOptions& aOptions, ErrorResult& aRv);
 
   Presentation* GetPresentation(ErrorResult& aRv);
