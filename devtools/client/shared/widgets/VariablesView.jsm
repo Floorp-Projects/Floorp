@@ -2761,7 +2761,7 @@ Variable.prototype = extend(Scope.prototype, {
 
       let nodeFront = this._nodeFront;
       if (!nodeFront) {
-        nodeFront = await this.toolbox.walker.getNodeActorFromObjectActor(this._valueGrip.actor);
+        nodeFront = await this.toolbox.walker.gripToNodeFront(this._valueGrip);
       }
 
       if (nodeFront) {
@@ -2779,18 +2779,13 @@ Variable.prototype = extend(Scope.prototype, {
    * In case this variable is a DOMNode and part of a variablesview that has been
    * linked to the toolbox's inspector, then highlight the corresponding node
    */
-  highlightDomNode: function() {
+  highlightDomNode: async function() {
     if (this.toolbox) {
-      if (this._nodeFront) {
-        // If the nodeFront has been retrieved before, no need to ask the server
-        // again for it
-        this.toolbox.highlighterUtils.highlightNodeFront(this._nodeFront);
-        return;
+      await this.toolbox.initInspector();
+      if (!this._nodeFront) {
+        this.nodeFront = await this.toolbox.walker.gripToNodeFront(this._valueGrip);
       }
-
-      this.toolbox.highlighterUtils.highlightDomValueGrip(this._valueGrip).then(front => {
-        this._nodeFront = front;
-      });
+      await this.toolbox.highlighter.highlight(this._nodeFront);
     }
   },
 
@@ -2800,7 +2795,7 @@ Variable.prototype = extend(Scope.prototype, {
    */
   unhighlightDomNode: function() {
     if (this.toolbox) {
-      this.toolbox.highlighterUtils.unhighlight();
+      this.toolbox.highlighter.unhighlight();
     }
   },
 

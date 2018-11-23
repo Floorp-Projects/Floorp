@@ -7303,19 +7303,6 @@ void nsWindow::GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInit
 }
 
 #ifdef MOZ_WAYLAND
-wl_display*
-nsWindow::GetWaylandDisplay()
-{
-  // Available as of GTK 3.8+
-  static auto sGdkWaylandDisplayGetWlDisplay =
-      (wl_display *(*)(GdkDisplay *))
-      dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_display");
-
-  GdkDisplay* gdkDisplay = gdk_display_get_default();
-  return mIsX11Display ? nullptr :
-                         sGdkWaylandDisplayGetWlDisplay(gdkDisplay);
-}
-
 wl_surface*
 nsWindow::GetWaylandSurface()
 {

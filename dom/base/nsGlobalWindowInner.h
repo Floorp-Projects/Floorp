@@ -339,12 +339,6 @@ public:
 
   nsresult PostHandleEvent(mozilla::EventChainPostVisitor& aVisitor) override;
 
-  // nsPIDOMWindow
-  virtual nsPIDOMWindowOuter* GetPrivateRoot() override;
-
-  // Outer windows only.
-  virtual bool IsTopLevelWindowActive() override;
-
   virtual PopupControlState GetPopupControlState() const override;
 
   void Suspend();
@@ -385,9 +379,6 @@ public:
   virtual nsresult SetNewDocument(nsIDocument *aDocument,
                                   nsISupports *aState,
                                   bool aForceReuseInnerWindow) override;
-
-  virtual void SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
-                               bool aOriginalOpener) override;
 
   virtual void MaybeUpdateTouchState() override;
 
@@ -513,10 +504,6 @@ public:
   virtual void EnableOrientationChangeListener() override;
   virtual void DisableOrientationChangeListener() override;
 #endif
-
-  virtual uint32_t GetSerial() override {
-    return mSerial;
-  }
 
   void AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const;
 
@@ -1430,10 +1417,12 @@ protected:
   uint32_t mSuspendDepth;
   uint32_t mFreezeDepth;
 
+#ifdef DEBUG
+  uint32_t mSerial;
+#endif
+
   // the method that was used to focus mFocusedNode
   uint32_t mFocusMethod;
-
-  uint32_t mSerial;
 
   // The current idle request callback handle
   uint32_t mIdleRequestCallbackCounter;

@@ -2379,7 +2379,7 @@ Toolbox.prototype = {
     // Only enable frame highlighting when the top level document is targeted
     if (this.rootFrameSelected) {
       const frameActor = await this.walker.getNodeActorFromWindowID(frameId);
-      this.highlighterUtils.highlightNodeFront(frameActor);
+      this.highlighter.highlight(frameActor);
     }
   },
 

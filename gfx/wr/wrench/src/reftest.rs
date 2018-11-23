@@ -395,7 +395,8 @@ impl<'a> ReftestHarness<'a> {
 
         if let Some(expected_draw_calls) = t.expected_draw_calls {
             if expected_draw_calls != stats.total_draw_calls {
-                println!("REFTEST TEST-UNEXPECTED-FAIL | {}/{} | expected_draw_calls",
+                println!("REFTEST TEST-UNEXPECTED-FAIL | {} | {}/{} | expected_draw_calls",
+                    t,
                     stats.total_draw_calls,
                     expected_draw_calls
                 );
@@ -405,7 +406,8 @@ impl<'a> ReftestHarness<'a> {
         }
         if let Some(expected_alpha_targets) = t.expected_alpha_targets {
             if expected_alpha_targets != stats.alpha_target_count {
-                println!("REFTEST TEST-UNEXPECTED-FAIL | {}/{} | alpha_target_count",
+                println!("REFTEST TEST-UNEXPECTED-FAIL | {} | {}/{} | alpha_target_count",
+                    t,
                     stats.alpha_target_count,
                     expected_alpha_targets
                 );
@@ -415,7 +417,8 @@ impl<'a> ReftestHarness<'a> {
         }
         if let Some(expected_color_targets) = t.expected_color_targets {
             if expected_color_targets != stats.color_target_count {
-                println!("REFTEST TEST-UNEXPECTED-FAIL | {}/{} | color_target_count",
+                println!("REFTEST TEST-UNEXPECTED-FAIL | {} | {}/{} | color_target_count",
+                    t,
                     stats.color_target_count,
                     expected_color_targets
                 );

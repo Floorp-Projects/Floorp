@@ -321,10 +321,9 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
   nsCOMPtr<nsPIWindowRoot> winRoot = do_QueryInterface(aTarget);
   if (winRoot) {
     if (nsCOMPtr<nsPIDOMWindowOuter> window = winRoot->GetWindow()) {
-      nsPIDOMWindowInner* innerWindow = window->GetCurrentInnerWindow();
-      NS_ENSURE_TRUE(innerWindow, NS_ERROR_UNEXPECTED);
+      NS_ENSURE_TRUE(window->GetCurrentInnerWindow(), NS_ERROR_UNEXPECTED);
 
-      boundGlobal = do_QueryInterface(innerWindow->GetPrivateRoot());
+      boundGlobal = do_QueryInterface(window->GetPrivateRoot());
     }
   }
   else boundGlobal = do_QueryInterface(aTarget);

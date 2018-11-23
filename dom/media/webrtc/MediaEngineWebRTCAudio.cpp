@@ -191,11 +191,13 @@ nsresult MediaEngineWebRTCMicrophoneSource::Reconfigure(
 void MediaEngineWebRTCMicrophoneSource::Pull(
     const RefPtr<const AllocationHandle>&,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-    StreamTime aDesiredTime, const PrincipalHandle& aPrincipalHandle) {
+    StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
+    const PrincipalHandle& aPrincipalHandle) {
   // If pull is enabled, it means that the audio input is not open, and we
   // should fill it out with silence. This is the only method called on the
   // MSG thread.
-  mInputProcessing->Pull(aStream, aTrackID, aDesiredTime, aPrincipalHandle);
+  mInputProcessing->Pull(aStream, aTrackID, aEndOfAppendedData, aDesiredTime,
+                         aPrincipalHandle);
 }
 
 void MediaEngineWebRTCMicrophoneSource::UpdateAECSettings(
@@ -471,16 +473,19 @@ nsresult MediaEngineWebRTCMicrophoneSource::Deallocate(
 
   if (mStream && IsTrackIDExplicit(mTrackID)) {
     RefPtr<MediaStream> sourceStream = mStream;
-    RefPtr<MediaStreamGraphImpl> graphImpl = mStream->GraphImpl();
     RefPtr<AudioInputProcessing> inputProcessing = mInputProcessing;
     NS_DispatchToMainThread(media::NewRunnableFrom(
-        [graph = std::move(graphImpl), stream = std::move(sourceStream),
+        [stream = std::move(sourceStream),
          audioInputProcessing = std::move(inputProcessing),
          trackID = mTrackID]() mutable {
-          if (graph) {
-            graph->AppendMessage(MakeUnique<EndTrackMessage>(
-                stream, audioInputProcessing, trackID));
+          if (stream->IsDestroyed()) {
+            // This stream has already been destroyed on main thread by its
+            // DOMMediaStream. No cleanup left to do.
+            return NS_OK;
           }
+          MOZ_ASSERT(stream->GraphImpl());
+          stream->GraphImpl()->AppendMessage(MakeUnique<EndTrackMessage>(
+              stream, audioInputProcessing, trackID));
           return NS_OK;
         }));
   }
@@ -525,7 +530,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::SetTrack(
 
   AudioSegment* segment = new AudioSegment();
 
-  aStream->AddAudioTrack(aTrackID, aStream->GraphRate(), 0, segment,
+  aStream->AddAudioTrack(aTrackID, aStream->GraphRate(), segment,
                          SourceMediaStream::ADDTRACK_QUEUED);
 
   LOG(("Stream %p registered for microphone capture", aStream.get()));
@@ -794,23 +799,18 @@ void AudioInputProcessing::Start() { mEnabled = true; }
 void AudioInputProcessing::Stop() { mEnabled = false; }
 
 void AudioInputProcessing::Pull(const RefPtr<SourceMediaStream>& aStream,
-                                TrackID aTrackID, StreamTime aDesiredTime,
+                                TrackID aTrackID, StreamTime aEndOfAppendedData,
+                                StreamTime aDesiredTime,
                                 const PrincipalHandle& aPrincipalHandle) {
   TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaStream %p track %i", aStream.get(),
                                aTrackID);
-  StreamTime delta;
 
   if (mEnded) {
     return;
   }
 
-  delta = aDesiredTime - aStream->GetEndOfAppendedData(aTrackID);
-
-  if (delta < 0) {
-    LOG_FRAMES(
-        ("Not appending silence; %" PRId64 " frames already buffered", -delta));
-    return;
-  }
+  StreamTime delta = aDesiredTime - aEndOfAppendedData;
+  MOZ_ASSERT(delta > 0);
 
   if (!mLiveFramesAppended || !mLiveSilenceAppended) {
     // These are the iterations after starting or resuming audio capture.

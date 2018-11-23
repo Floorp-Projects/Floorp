@@ -825,21 +825,13 @@ MediaPipeline::CheckTransportStates()
   }
 }
 
-nsresult
+void
 MediaPipeline::SendPacket(MediaPacket& packet)
 {
   ASSERT_ON_THREAD(mStsThread);
   MOZ_ASSERT(mRtpState == TransportLayer::TS_OPEN);
   MOZ_ASSERT(!mTransportId.empty());
-  nsresult rv = mTransportHandler->SendPacket(mTransportId, packet);
-
-  if (NS_FAILED(rv)) {
-    MOZ_LOG(gMediaPipelineLog, LogLevel::Error,
-            ("Failed write on stream %s", mDescription.c_str()));
-    return NS_BASE_STREAM_CLOSED;
-  }
-
-  return NS_OK;
+  mTransportHandler->SendPacket(mTransportId, packet);
 }
 
 void
@@ -1450,7 +1442,7 @@ MediaPipeline::PipelineTransport::SendRtpPacket(const uint8_t* aData, size_t aLe
   return NS_OK;
 }
 
-nsresult
+void
 MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
   nsAutoPtr<MediaPacket> aPacket)
 {
@@ -1458,15 +1450,15 @@ MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
 
   ASSERT_ON_THREAD(mStsThread);
   if (!mPipeline) {
-    return NS_OK; // Detached
+    return; // Detached
   }
 
   if (isRtp && mPipeline->mRtpState != TransportLayer::TS_OPEN) {
-    return NS_OK;
+    return;
   }
 
   if (!isRtp && mPipeline->mRtcpState != TransportLayer::TS_OPEN) {
-    return NS_OK;
+    return;
   }
 
   MediaPacket packet(std::move(*aPacket));
@@ -1497,7 +1489,7 @@ MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
            mPipeline->mDescription.c_str(),
            (isRtp ? "RTP" : "RTCP")));
 
-  return mPipeline->SendPacket(packet);
+  mPipeline->SendPacket(packet);
 }
 
 nsresult
@@ -1644,14 +1636,13 @@ MediaPipelineTransmit::PipelineListener::SetCurrentFrames(
   NewData(aSegment);
 }
 
-class GenericReceiveListener : public MediaStreamListener
+class GenericReceiveListener : public MediaStreamTrackListener
 {
 public:
   explicit GenericReceiveListener(dom::MediaStreamTrack* aTrack)
     : mTrack(aTrack)
     , mTrackId(aTrack->GetInputTrackId())
     , mSource(mTrack->GetInputStream()->AsSourceStream())
-    , mPlayedTicks(0)
     , mPrincipalHandle(PRINCIPAL_HANDLE_NONE)
     , mListening(false)
     , mMaybeTrackNeedsUnmute(true)
@@ -1671,10 +1662,9 @@ public:
                mTrack->AsVideoStreamTrack());
 
     if (mTrack->AsAudioStreamTrack()) {
-      mSource->AddAudioTrack(
-          mTrackId, aRate, 0, new AudioSegment());
+      mSource->AddAudioTrack(mTrackId, aRate, new AudioSegment());
     } else if (mTrack->AsVideoStreamTrack()) {
-      mSource->AddTrack(mTrackId, 0, new VideoSegment());
+      mSource->AddTrack(mTrackId, new VideoSegment());
     }
     MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
             ("GenericReceiveListener added %s track %d (%p) to stream %p",
@@ -1684,7 +1674,7 @@ public:
              mSource.get()));
 
     mSource->AdvanceKnownTracksTime(STREAM_TIME_MAX);
-    mSource->AddListener(this);
+    mSource->AddTrackListener(this, mTrackId);
   }
 
   void AddSelf()
@@ -1727,7 +1717,7 @@ public:
     MOZ_LOG(gMediaPipelineLog, LogLevel::Debug, ("GenericReceiveListener ending track"));
 
     // This breaks the cycle with the SourceMediaStream
-    mSource->RemoveListener(this);
+    mSource->RemoveTrackListener(this, mTrackId);
     mSource->EndTrack(mTrackId);
   }
 
@@ -1768,7 +1758,6 @@ protected:
   RefPtr<dom::MediaStreamTrack> mTrack;
   const TrackID mTrackId;
   const RefPtr<SourceMediaStream> mSource;
-  TrackTicks mPlayedTicks;
   PrincipalHandle mPrincipalHandle;
   bool mListening;
   Atomic<bool> mMaybeTrackNeedsUnmute;
@@ -1810,12 +1799,14 @@ public:
     , mTaskQueue(
         new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
                       "AudioPipelineListener"))
+    , mPlayedTicks(0)
   {
     AddTrackToSource(mRate);
   }
 
-  // Implement MediaStreamListener
+  // Implement MediaStreamTrackListener
   void NotifyPull(MediaStreamGraph* aGraph,
+                  StreamTime aEndOfAppendedData,
                   StreamTime aDesiredTime) override
   {
     NotifyPullImpl(aDesiredTime);
@@ -1923,6 +1914,7 @@ private:
   // audio is resampled to the graph rate.
   const TrackRate mRate;
   const RefPtr<TaskQueue> mTaskQueue;
+  TrackTicks mPlayedTicks;
 };
 
 MediaPipelineReceiveAudio::MediaPipelineReceiveAudio(
@@ -2001,29 +1993,23 @@ public:
     AddTrackToSource();
   }
 
-  // Implement MediaStreamListener
-  void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) override
+  // Implement MediaStreamTrackListener
+  void NotifyPull(MediaStreamGraph* aGraph,
+                  StreamTime aEndOfAppendedData,
+                  StreamTime aDesiredTime) override
   {
     TRACE_AUDIO_CALLBACK_COMMENT("Track %i", mTrackId);
     MutexAutoLock lock(mMutex);
 
     RefPtr<Image> image = mImage;
-    StreamTime delta = aDesiredTime - mPlayedTicks;
+    StreamTime delta = aDesiredTime - aEndOfAppendedData;
+    MOZ_ASSERT(delta > 0);
 
-    // Don't append if we've already provided a frame that supposedly
-    // goes past the current aDesiredTime Doing so means a negative
-    // delta and thus messes up handling of the graph
-    if (delta > 0) {
-      VideoSegment segment;
-      IntSize size = image ? image->GetSize() : IntSize(mWidth, mHeight);
-      segment.AppendFrame(image.forget(), delta, size, mPrincipalHandle);
-      // Handle track not actually added yet or removed/finished
-      if (!mSource->AppendToTrack(mTrackId, &segment)) {
-        MOZ_LOG(gMediaPipelineLog, LogLevel::Error, ("AppendToTrack failed"));
-        return;
-      }
-      mPlayedTicks = aDesiredTime;
-    }
+    VideoSegment segment;
+    IntSize size = image ? image->GetSize() : IntSize(mWidth, mHeight);
+    segment.AppendFrame(image.forget(), delta, size, mPrincipalHandle);
+    DebugOnly<bool> appended = mSource->AppendToTrack(mTrackId, &segment);
+    MOZ_ASSERT(appended);
   }
 
   // Accessors for external writes from the renderer

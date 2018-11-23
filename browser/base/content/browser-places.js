@@ -532,14 +532,7 @@ var PlacesCommandHook = {
 
   searchBookmarks() {
     focusAndSelectUrlBar();
-    for (let char of ["*", " "]) {
-      let code = char.charCodeAt(0);
-      gURLBar.inputField.dispatchEvent(new KeyboardEvent("keypress", {
-        keyCode: code,
-        charCode: code,
-        bubbles: true,
-      }));
-    }
+    gURLBar.typeRestrictToken(UrlbarTokenizer.RESTRICT.BOOKMARK);
   },
 };
 

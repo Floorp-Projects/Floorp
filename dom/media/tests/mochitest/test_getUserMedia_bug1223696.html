@@ -15,39 +15,39 @@
     visible: true
   });
 
-  runTest(() => Promise.resolve()
-    .then(() => getUserMedia({audio:true, video: true})).then(stream => {
-      info("Test addTrack()ing a video track to an audio-only gUM stream");
+  runTest(async function() {
+    const stream = await getUserMedia({audio:true, video: true});
+    info("Test addTrack()ing a video track to an audio-only gUM stream");
 
-      var video = createMediaElement("video", "test_video_track");
-      video.srcObject = stream;
-      video.play();
+    const video = createMediaElement("video", "test_video_track");
+    video.srcObject = stream;
+    video.play();
 
-      var h = new CaptureStreamTestHelper2D();
-      var removedTrack = stream.getVideoTracks()[0];
-      stream.removeTrack(removedTrack);
-      video.onloadeddata = () => {
-        info("loadeddata");
-        var canvas = document.createElement("canvas");
-        canvas.getContext("2d");
-        var canvasStream = canvas.captureStream();
-        setInterval(() => h.drawColor(canvas, h.grey), 1000);
+    await haveEvent(video, "loadeddata", wait(5000, new Error("Timeout")));
+    info("loadeddata");
 
-        stream.addTrack(canvasStream.getVideoTracks()[0]);
+    const removedTrack = stream.getVideoTracks()[0];
+    stream.removeTrack(removedTrack);
 
-        checkMediaStreamContains(stream, [stream.getAudioTracks()[0],
-                                          canvasStream.getVideoTracks()[0]]);
-      };
+    const h = new CaptureStreamTestHelper2D();
+    const emitter = new VideoFrameEmitter(h.grey, h.grey);
+    emitter.start();
 
-      return listenUntil(video, "loadeddata", () => true)
-        .then(() => h.pixelMustBecome(video, h.grey, {
-          threshold: 5,
-          infoString: "The canvas track should be rendered by the media element",
-        }))
-        .then(() => {
-          [removedTrack, ...stream.getAudioTracks()].forEach(t => t.stop());
-        });
-    }));
+    stream.addTrack(emitter.stream().getVideoTracks()[0]);
+
+    checkMediaStreamContains(stream, [stream.getAudioTracks()[0],
+                                      emitter.stream().getVideoTracks()[0]]);
+
+    await h.pixelMustBecome(video, h.grey, {
+      threshold: 5,
+      infoString: "The canvas track should be rendered by the media element",
+    });
+
+    emitter.stop();
+    for (const t of [removedTrack, ...stream.getAudioTracks()]) {
+      t.stop();
+    }
+  });
 </script>
 </pre>
 </body>

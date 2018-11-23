@@ -437,11 +437,11 @@ add_task(async function test_InvalidPingType() {
 
   for (let type of TYPES) {
     let histogram = Telemetry.getKeyedHistogramById("TELEMETRY_INVALID_PING_TYPE_SUBMITTED");
-    Assert.equal(histogram.snapshot(type).sum, 0,
+    Assert.ok(!(type in histogram.snapshot()),
                  "Should not have counted this invalid ping yet: " + type);
     Assert.ok(promiseRejects(TelemetryController.submitExternalPing(type, {})),
               "Ping type should have been rejected.");
-    Assert.equal(histogram.snapshot(type).sum, 1,
+    Assert.equal(histogram.snapshot()[type].sum, 1,
                  "Should have counted this as an invalid ping type.");
   }
 });

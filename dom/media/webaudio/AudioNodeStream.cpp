@@ -571,13 +571,6 @@ void AudioNodeStream::AdvanceOutputSegment() {
   AudioSegment tmpSegment;
   tmpSegment.AppendAndConsumeChunk(&copyChunk);
 
-  for (uint32_t j = 0; j < mListeners.Length(); ++j) {
-    MediaStreamListener* l = mListeners[j];
-    // Notify MediaStreamListeners.
-    l->NotifyQueuedTrackChanges(Graph(), AUDIO_TRACK, segment->GetDuration(),
-                                TrackEventCommand::TRACK_EVENT_NONE,
-                                tmpSegment);
-  }
   for (TrackBound<MediaStreamTrackListener>& b : mTrackListeners) {
     // Notify MediaStreamTrackListeners.
     if (b.mTrackID != AUDIO_TRACK) {
@@ -597,21 +590,6 @@ void AudioNodeStream::AdvanceOutputSegment() {
 void AudioNodeStream::FinishOutput() {
   StreamTracks::Track* track = EnsureTrack(AUDIO_TRACK);
   track->SetEnded();
-
-  for (uint32_t j = 0; j < mListeners.Length(); ++j) {
-    MediaStreamListener* l = mListeners[j];
-    AudioSegment emptySegment;
-    l->NotifyQueuedTrackChanges(
-        Graph(), AUDIO_TRACK, track->GetSegment()->GetDuration(),
-        TrackEventCommand::TRACK_EVENT_ENDED, emptySegment);
-  }
-  for (TrackBound<MediaStreamTrackListener>& b : mTrackListeners) {
-    // Notify MediaStreamTrackListeners.
-    if (b.mTrackID != AUDIO_TRACK) {
-      continue;
-    }
-    b.mListener->NotifyEnded();
-  }
 }
 
 void AudioNodeStream::AddInput(MediaInputPort* aPort) {

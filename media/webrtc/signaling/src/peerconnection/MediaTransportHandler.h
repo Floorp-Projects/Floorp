@@ -13,6 +13,11 @@
 #include "nricectx.h" // Need some enums
 #include "nsDOMNavigationTiming.h" // DOMHighResTimeStamp
 
+// For RTCStatsQueryPromise typedef
+#include "signaling/src/peerconnection/PeerConnectionImpl.h"
+
+#include "nsString.h"
+
 #include <map>
 #include <string>
 #include <set>
@@ -25,6 +30,7 @@ class NrIceMediaStream;
 class NrIceResolver;
 class SdpFingerprintAttributeList; // TODO(bug 1494311) Use IPC type
 class TransportFlow;
+class RTCStatsQuery;
 
 namespace dom {
 struct RTCConfiguration;
@@ -34,8 +40,8 @@ struct RTCStatsReportInternal;
 // Base-class, makes some testing easier
 class MediaTransportBase {
   public:
-    virtual nsresult SendPacket(const std::string& aTransportId,
-                                MediaPacket& aPacket) = 0;
+    virtual void SendPacket(const std::string& aTransportId,
+                            MediaPacket& aPacket) = 0;
 
     virtual TransportLayer::State GetState(const std::string& aTransportId,
                                            bool aRtcp) const = 0;
@@ -61,7 +67,7 @@ class MediaTransportHandler : public MediaTransportBase,
 
     // We will probably be able to move the proxy lookup stuff into
     // this class once we move mtransport to its own process.
-    nsresult SetProxyServer(NrSocketProxyConfig&& aProxyConfig);
+    void SetProxyServer(NrSocketProxyConfig&& aProxyConfig);
 
     void EnsureProvisionalTransport(const std::string& aTransportId,
                                     const std::string& aLocalUfrag,
@@ -79,49 +85,51 @@ class MediaTransportHandler : public MediaTransportBase,
                            const nsTArray<NrIceStunAddr>& aStunAddrs);
 
 
-    nsresult ActivateTransport(const std::string& aTransportId,
-                               const std::string& aLocalUfrag,
-                               const std::string& aLocalPwd,
-                               size_t aComponentCount,
-                               const std::string& aUfrag,
-                               const std::string& aPassword,
-                               const std::vector<std::string>& aCandidateList,
-                               // TODO(bug 1494311): Use an IPC type.
-                               RefPtr<DtlsIdentity> aDtlsIdentity,
-                               bool aDtlsClient,
-                               // TODO(bug 1494311): Use IPC type
-                               const SdpFingerprintAttributeList& aFingerprints,
-                               bool aPrivacyRequested);
+    void ActivateTransport(const std::string& aTransportId,
+                           const std::string& aLocalUfrag,
+                           const std::string& aLocalPwd,
+                           size_t aComponentCount,
+                           const std::string& aUfrag,
+                           const std::string& aPassword,
+                           const std::vector<std::string>& aCandidateList,
+                           // TODO(bug 1494311): Use an IPC type.
+                           RefPtr<DtlsIdentity> aDtlsIdentity,
+                           bool aDtlsClient,
+                           // TODO(bug 1494311): Use IPC type
+                           const SdpFingerprintAttributeList& aFingerprints,
+                           bool aPrivacyRequested);
 
     void RemoveTransportsExcept(const std::set<std::string>& aTransportIds);
 
-    nsresult StartIceChecks(bool aIsControlling,
-                            bool aIsOfferer,
-                            const std::vector<std::string>& aIceOptions);
+    void StartIceChecks(bool aIsControlling,
+                        bool aIsOfferer,
+                        const std::vector<std::string>& aIceOptions);
 
-    nsresult AddIceCandidate(const std::string& aTransportId,
-                             const std::string& aCandidate);
+    void AddIceCandidate(const std::string& aTransportId,
+                         const std::string& aCandidate);
 
     void UpdateNetworkState(bool aOnline);
 
-    nsresult SendPacket(const std::string& aTransportId,
-                        MediaPacket& aPacket) override;
+    void SendPacket(const std::string& aTransportId,
+                    MediaPacket& aPacket) override;
 
     // TODO(bug 1494312): Figure out how this fits with an async API. Maybe we
     // cache on the content process.
     TransportLayer::State GetState(const std::string& aTransportId,
                                    bool aRtcp) const override;
 
-    // TODO(bug 1494312): Stats stuff needs to be async.
-    void GetAllIceStats(bool internalStats,
-                        DOMHighResTimeStamp now,
-                        dom::RTCStatsReportInternal* report);
+    RefPtr<RTCStatsQueryPromise> GetIceStats(
+        UniquePtr<RTCStatsQuery>&& aQuery);
 
-    // TODO(bug 1494312): Stats stuff needs to be async.
-    void GetIceStats(const std::string& aTransportId,
-                     bool internalStats,
-                     DOMHighResTimeStamp now,
-                     dom::RTCStatsReportInternal* report);
+    typedef MozPromise<dom::Sequence<nsString>, nsresult, true>
+      IceLogPromise;
+
+    static RefPtr<IceLogPromise> GetIceLog(const nsCString& aPattern);
+
+    static void ClearIceLog();
+
+    static void EnterPrivateMode();
+    static void ExitPrivateMode();
 
     // TODO(bug 1494311) Use IPC type
     struct CandidateInfo {
@@ -165,7 +173,6 @@ class MediaTransportHandler : public MediaTransportBase,
     RefPtr<TransportFlow> GetTransportFlow(const std::string& aId,
                                            bool aIsRtcp) const;
     void GetIceStats(const NrIceMediaStream& aStream,
-                     bool aInternalStats,
                      DOMHighResTimeStamp aNow,
                      dom::RTCStatsReportInternal* aReport) const;
 

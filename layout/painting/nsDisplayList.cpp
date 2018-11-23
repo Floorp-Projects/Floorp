@@ -818,6 +818,9 @@ GenerateAndPushTextMask(nsIFrame* aFrame,
 
   // Create a mask surface.
   RefPtr<DrawTarget> sourceTarget = sourceCtx->GetDrawTarget();
+  if (!sourceTarget->CanCreateSimilarDrawTarget(drawRect.Size(), SurfaceFormat::A8)) {
+    return false;
+  }
   RefPtr<DrawTarget> maskDT = sourceTarget->CreateClippedDrawTarget(
     drawRect.Size(), maskTransform * currentMatrix, SurfaceFormat::A8);
   if (!maskDT || !maskDT->IsValid()) {

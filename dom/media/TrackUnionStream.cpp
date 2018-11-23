@@ -93,7 +93,6 @@ void TrackUnionStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
     if (!stream->HasCurrentData()) {
       allHaveCurrentData = false;
     }
-    bool trackAdded = false;
     for (StreamTracks::TrackIter tracks(stream->GetStreamTracks());
          !tracks.IsEnded(); tracks.Next()) {
       bool found = false;
@@ -118,16 +117,10 @@ void TrackUnionStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
       }
       if (!found && inputs[i]->AllowCreationOf(tracks->GetID())) {
         bool trackFinished = false;
-        trackAdded = true;
         uint32_t mapIndex = AddTrack(inputs[i], tracks.get(), aFrom);
         CopyTrackData(tracks.get(), mapIndex, aFrom, aTo, &trackFinished);
         mappedTracksFinished.AppendElement(trackFinished);
         mappedTracksWithMatchingInputTracks.AppendElement(true);
-      }
-    }
-    if (trackAdded) {
-      for (MediaStreamListener* l : mListeners) {
-        l->NotifyFinishedTrackCreation(Graph());
       }
     }
   }
@@ -210,12 +203,6 @@ uint32_t TrackUnionStream::AddTrack(MediaInputPort* aPort,
 
   nsAutoPtr<MediaSegment> segment;
   segment = aTrack->GetSegment()->CreateEmptyClone();
-  for (uint32_t j = 0; j < mListeners.Length(); ++j) {
-    MediaStreamListener* l = mListeners[j];
-    l->NotifyQueuedTrackChanges(Graph(), id, outputStart,
-                                TrackEventCommand::TRACK_EVENT_CREATED,
-                                *segment, aPort->GetSource(), aTrack->GetID());
-  }
   segment->AppendNullData(outputStart);
   StreamTracks::Track* track =
       &mTracks.AddTrack(id, outputStart, segment.forget());
@@ -264,21 +251,6 @@ void TrackUnionStream::EndTrack(uint32_t aIndex) {
   if (!outputTrack || outputTrack->IsEnded()) return;
   STREAM_LOG(LogLevel::Debug, ("TrackUnionStream %p ending track %d", this,
                                outputTrack->GetID()));
-  for (uint32_t j = 0; j < mListeners.Length(); ++j) {
-    MediaStreamListener* l = mListeners[j];
-    StreamTime offset = outputTrack->GetSegment()->GetDuration();
-    nsAutoPtr<MediaSegment> segment;
-    segment = outputTrack->GetSegment()->CreateEmptyClone();
-    l->NotifyQueuedTrackChanges(Graph(), outputTrack->GetID(), offset,
-                                TrackEventCommand::TRACK_EVENT_ENDED, *segment,
-                                mTrackMap[aIndex].mInputPort->GetSource(),
-                                mTrackMap[aIndex].mInputTrackID);
-  }
-  for (TrackBound<MediaStreamTrackListener>& b : mTrackListeners) {
-    if (b.mTrackID == outputTrack->GetID()) {
-      b.mListener->NotifyEnded();
-    }
-  }
   outputTrack->SetEnded();
 }
 
@@ -345,16 +317,6 @@ void TrackUnionStream::CopyTrackData(StreamTracks::Track* aInputTrack,
       }
     }
     ApplyTrackDisabling(outputTrack->GetID(), segment);
-    for (uint32_t j = 0; j < mListeners.Length(); ++j) {
-      MediaStreamListener* l = mListeners[j];
-      // Separate Audio and Video.
-      if (segment->GetType() == MediaSegment::AUDIO) {
-        l->NotifyQueuedAudioData(Graph(), outputTrack->GetID(), outputStart,
-                                 *static_cast<AudioSegment*>(segment),
-                                 map->mInputPort->GetSource(),
-                                 map->mInputTrackID);
-      }
-    }
     for (TrackBound<MediaStreamTrackListener>& b : mTrackListeners) {
       if (b.mTrackID != outputTrack->GetID()) {
         continue;

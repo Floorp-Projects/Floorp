@@ -8,6 +8,7 @@
 #ifndef __nsLookAndFeel
 #define __nsLookAndFeel
 
+#include "X11UndefineNone.h"
 #include "nsXPLookAndFeel.h"
 #include "nsCOMPtr.h"
 #include "gfxFont.h"

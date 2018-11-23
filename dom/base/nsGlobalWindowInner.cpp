@@ -918,8 +918,10 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter *aOuterWindow)
     mHasSeenGamepadInput(false),
     mSuspendDepth(0),
     mFreezeDepth(0),
-    mFocusMethod(0),
+#ifdef DEBUG
     mSerial(0),
+#endif
+    mFocusMethod(0),
     mIdleRequestCallbackCounter(1),
     mIdleRequestExecutor(nullptr),
     mDialogAbuseCount(0),
@@ -977,8 +979,6 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter *aOuterWindow)
   // to create the entropy collector, so we should
   // try to get one until we succeed.
 
-  mSerial = nsContentUtils::InnerOrOuterWindowCreated();
-
   static bool sFirstTime = true;
   if (sFirstTime) {
     sFirstTime = false;
@@ -1000,6 +1000,8 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter *aOuterWindow)
   }
 
 #ifdef DEBUG
+  mSerial = nsContentUtils::InnerOrOuterWindowCreated();
+
   if (!PR_GetEnv("MOZ_QUIET")) {
     printf_stderr("++DOMWINDOW == %d (%p) [pid = %d] [serial = %d] [outer = %p]\n",
                   nsContentUtils::GetCurrentInnerOrOuterWindowCount(),
@@ -1934,13 +1936,6 @@ nsGlobalWindowInner::ExecutionReady()
 }
 
 void
-nsGlobalWindowInner::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
-                                     bool aOriginalOpener)
-{
-  FORWARD_TO_OUTER_VOID(SetOpenerWindow, (aOpener, aOriginalOpener));
-}
-
-void
 nsGlobalWindowInner::UpdateParentTarget()
 {
   // NOTE: This method is identical to
@@ -2718,23 +2713,13 @@ nsPIDOMWindowInner::HasOpenWebSockets() const
          (mTopInnerWindow && mTopInnerWindow->mNumOfOpenWebSockets);
 }
 
-bool
-nsPIDOMWindowInner::GetAudioCaptured() const
-{
-  return mAudioCaptured;
-}
-
-nsresult
+void
 nsPIDOMWindowInner::SetAudioCapture(bool aCapture)
 {
-  mAudioCaptured = aCapture;
-
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (service) {
     service->SetWindowAudioCaptured(GetOuterWindow(), mWindowID, aCapture);
   }
-
-  return NS_OK;
 }
 
 // nsISpeechSynthesisGetter
@@ -3261,7 +3246,7 @@ nsGlobalWindowInner::SetOpener(JSContext* aCx, JS::Handle<JS::Value> aOpener,
                                ErrorResult& aError)
 {
   if (aOpener.isNull()) {
-    SetOpenerWindow(nullptr, false);
+    FORWARD_TO_OUTER_VOID(SetOpenerWindow, (nullptr, false));
     return;
   }
 
@@ -4405,17 +4390,6 @@ nsGlobalWindowInner::GetExistingListenerManager() const
 // nsGlobalWindowInner::nsPIDOMWindow
 //*****************************************************************************
 
-nsPIDOMWindowOuter*
-nsGlobalWindowInner::GetPrivateRoot()
-{
-  nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-  if (!outer) {
-    NS_WARNING("No outer window available!");
-    return nullptr;
-  }
-  return outer->GetPrivateRoot();
-}
-
 Location*
 nsGlobalWindowInner::GetLocation()
 {
@@ -4424,15 +4398,6 @@ nsGlobalWindowInner::GetLocation()
   }
 
   return mLocation;
-}
-
-bool
-nsGlobalWindowInner::IsTopLevelWindowActive()
-{
-  if (GetOuterWindowInternal()) {
-    return GetOuterWindowInternal()->IsTopLevelWindowActive();
-  }
-  return false;
 }
 
 void
@@ -8174,7 +8139,6 @@ nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter *aOuterWindow)
   mMayHaveMouseEnterLeaveEventListener(false),
   mMayHavePointerEnterLeaveEventListener(false),
   mMayHaveTextEventListenerInDefaultGroup(false),
-  mAudioCaptured(false),
   mOuterWindow(aOuterWindow),
   // Make sure no actual window ends up with mWindowID == 0
   mWindowID(NextWindowID()), mHasNotifiedGlobalCreated(false),

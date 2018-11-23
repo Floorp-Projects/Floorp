@@ -201,10 +201,9 @@ public:
   void Add(uint32_t sample);
 
   /**
-   * Clear the main store for this histogram.
-   * TODO(bug 1498173): Add clearing of specific store.
+   * Clear the named store for this histogram.
    */
-  void Clear();
+  void Clear(const nsACString& store);
 
   /**
    * Get the histogram instance from the named store.
@@ -232,22 +231,24 @@ class KeyedHistogram {
 public:
   KeyedHistogram(HistogramID id, const HistogramInfo& info, bool expired);
   ~KeyedHistogram();
-  nsresult GetHistogram(const nsCString& store, const nsCString& key, base::Histogram** histogram);
-  base::Histogram* GetHistogram(const nsCString& store, const nsCString& key);
+  nsresult GetHistogram(const nsCString& aStore, const nsCString& key, base::Histogram** histogram);
+  base::Histogram* GetHistogram(const nsCString& aStore, const nsCString& key);
   uint32_t GetHistogramType() const { return mHistogramInfo.histogramType; }
   nsresult GetKeys(const StaticMutexAutoLock& aLock, const nsCString& store, nsTArray<nsCString>& aKeys);
   // Note: unlike other methods, GetJSSnapshot is thread safe.
   nsresult GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj,
+                         const nsACString& aStore,
                          bool clearSubsession);
   nsresult GetSnapshot(const StaticMutexAutoLock& aLock,
+                       const nsACString& aStore,
                        KeyedHistogramSnapshotData& aSnapshot, bool aClearSubsession);
 
   nsresult Add(const nsCString& key, uint32_t aSample, ProcessID aProcessType);
-  void Clear();
+  void Clear(const nsACString& aStore);
 
   HistogramID GetHistogramID() const { return mId; }
 
-  bool IsEmpty() const;
+  bool IsEmpty(const nsACString& aStore) const;
 
   bool IsExpired() const { return mIsExpired; }
 
@@ -906,6 +907,7 @@ internal_ShouldReflectHistogram(const StaticMutexAutoLock& aLock, base::Histogra
  * Helper function to get a snapshot of the histograms.
  *
  * @param {aLock} the lock proof.
+ * @param {aStore} the name of the store to snapshot.
  * @param {aDataset} the dataset for which the snapshot is being requested.
  * @param {aClearSubsession} whether or not to clear the data after
  *        taking the snapshot.
@@ -916,6 +918,7 @@ internal_ShouldReflectHistogram(const StaticMutexAutoLock& aLock, base::Histogra
  */
 nsresult
 internal_GetHistogramsSnapshot(const StaticMutexAutoLock& aLock,
+                               const nsACString& aStore,
                                unsigned int aDataset,
                                bool aClearSubsession,
                                bool aIncludeGPU,
@@ -955,8 +958,7 @@ internal_GetHistogramsSnapshot(const StaticMutexAutoLock& aLock,
       }
 
       base::Histogram *h = nullptr;
-      NS_NAMED_LITERAL_CSTRING(store, "main");
-      if (!w->GetHistogram(store, &h)) {
+      if (!w->GetHistogram(aStore, &h)) {
         continue;
       }
 
@@ -1050,7 +1052,7 @@ Histogram::Add(uint32_t sample)
 }
 
 void
-Histogram::Clear()
+Histogram::Clear(const nsACString& store)
 {
   MOZ_ASSERT(XRE_IsParentProcess(), "Only clear histograms in the parent process");
   if (!XRE_IsParentProcess()) {
@@ -1058,14 +1060,16 @@ Histogram::Clear()
   }
 
   if (mSingleStore != nullptr) {
-    mSingleStore->Clear();
+    if (store.EqualsASCII("main")) {
+      mSingleStore->Clear();
+    }
   } else {
     base::Histogram* h = nullptr;
-    bool found = GetHistogram(NS_LITERAL_CSTRING("main"), &h);
+    bool found = GetHistogram(store, &h);
     if (!found) {
       return;
     }
-    MOZ_ASSERT(h, "Should have found a valid histogram in the main store");
+    MOZ_ASSERT(h, "Should have found a valid histogram in the named store");
 
     h->Clear();
   }
@@ -1080,8 +1084,12 @@ Histogram::GetHistogram(const nsACString& store, base::Histogram** h)
   }
 
   if (mSingleStore != nullptr){
-    *h = mSingleStore;
-    return true;
+    if (store.EqualsASCII("main")) {
+      *h = mSingleStore;
+      return true;
+    }
+
+    return false;
   }
 
   return mStorage.Get(store, h);
@@ -1174,7 +1182,7 @@ KeyedHistogram::~KeyedHistogram()
 }
 
 nsresult
-KeyedHistogram::GetHistogram(const nsCString& store, const nsCString& key, base::Histogram** histogram)
+KeyedHistogram::GetHistogram(const nsCString& aStore, const nsCString& key, base::Histogram** histogram)
 {
   if (IsExpired()) {
     MOZ_ASSERT(false, "KeyedHistogram::GetHistogram called on an expired histogram.");
@@ -1187,7 +1195,7 @@ KeyedHistogram::GetHistogram(const nsCString& store, const nsCString& key, base:
   if (mSingleStore != nullptr) {
     histogramMap = mSingleStore;
   } else {
-    found = mStorage.Get(store, &histogramMap);
+    found = mStorage.Get(aStore, &histogramMap);
     if (!found) {
       return NS_ERROR_FAILURE;
     }
@@ -1215,10 +1223,10 @@ KeyedHistogram::GetHistogram(const nsCString& store, const nsCString& key, base:
 }
 
 base::Histogram*
-KeyedHistogram::GetHistogram(const nsCString& store, const nsCString& key)
+KeyedHistogram::GetHistogram(const nsCString& aStore, const nsCString& key)
 {
   base::Histogram* h = nullptr;
-  if (NS_FAILED(GetHistogram(store, key, &h))) {
+  if (NS_FAILED(GetHistogram(aStore, key, &h))) {
     return nullptr;
   }
   return h;
@@ -1265,8 +1273,7 @@ KeyedHistogram::Add(const nsCString& key, uint32_t sample,
 
   base::Histogram* histogram;
   if (mSingleStore != nullptr) {
-    // We know there's only a single store, no need to look for a store
-    histogram = GetHistogram(VoidCString(), key);
+    histogram = GetHistogram(NS_LITERAL_CSTRING("main"), key);
     if (!histogram) {
       MOZ_ASSERT(false, "Missing histogram in single store.");
       return NS_ERROR_FAILURE;
@@ -1290,7 +1297,7 @@ KeyedHistogram::Add(const nsCString& key, uint32_t sample,
 }
 
 void
-KeyedHistogram::Clear()
+KeyedHistogram::Clear(const nsACString& aStore)
 {
   MOZ_ASSERT(XRE_IsParentProcess(), "Only clear keyed histograms in the parent process");
   if (!XRE_IsParentProcess()) {
@@ -1302,12 +1309,14 @@ KeyedHistogram::Clear()
   }
 
   if (mSingleStore) {
-    mSingleStore->Clear();
+    if (aStore.EqualsASCII("main")) {
+      mSingleStore->Clear();
+    }
     return;
   }
 
   KeyedHistogramMapType* histogramMap;
-  bool found = mStorage.Get(NS_LITERAL_CSTRING("main"), &histogramMap);
+  bool found = mStorage.Get(aStore, &histogramMap);
   if (!found) {
     return;
   }
@@ -1316,14 +1325,18 @@ KeyedHistogram::Clear()
 }
 
 bool
-KeyedHistogram::IsEmpty() const
+KeyedHistogram::IsEmpty(const nsACString& aStore) const
 {
   if (mSingleStore != nullptr) {
-    return mSingleStore->IsEmpty();
+    if (aStore.EqualsASCII("main")) {
+      return mSingleStore->IsEmpty();
+    }
+
+    return true;
   }
 
   KeyedHistogramMapType* histogramMap;
-  bool found = mStorage.Get(NS_LITERAL_CSTRING("main"), &histogramMap);
+  bool found = mStorage.Get(aStore, &histogramMap);
   if (!found) {
     return true;
   }
@@ -1379,7 +1392,7 @@ KeyedHistogram::GetKeys(const StaticMutexAutoLock& aLock, const nsCString& store
 }
 
 nsresult
-KeyedHistogram::GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj, bool clearSubsession)
+KeyedHistogram::GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj, const nsACString& aStore, bool clearSubsession)
 {
   // Get a snapshot of the data.
   KeyedHistogramSnapshotData dataSnapshot;
@@ -1389,7 +1402,7 @@ KeyedHistogram::GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj, bool cle
 
     // Take a snapshot of the data here, protected by the lock, and then,
     // outside of the lock protection, mirror it to a JS structure.
-    nsresult rv = GetSnapshot(locker, dataSnapshot, clearSubsession);
+    nsresult rv = GetSnapshot(locker, aStore, dataSnapshot, clearSubsession);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1400,21 +1413,26 @@ KeyedHistogram::GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj, bool cle
 }
 
 /**
- * Return a histogram snapshot for the main store.
+ * Return a histogram snapshot for the named store.
  *
  * If getting the snapshot succeeds, NS_OK is returned and `aSnapshot` contains the snapshot data.
- * If the histogram is not available in the main store, NS_ERROR_NO_CONTENT is returned.
+ * If the histogram is not available in the named store, NS_ERROR_NO_CONTENT is returned.
  * For other errors, NS_ERROR_FAILURE is returned.
  */
 nsresult
 KeyedHistogram::GetSnapshot(const StaticMutexAutoLock& aLock,
+                            const nsACString& aStore,
                             KeyedHistogramSnapshotData& aSnapshot, bool aClearSubsession)
 {
   KeyedHistogramMapType* histogramMap;
   if (mSingleStore != nullptr) {
+    if (!aStore.EqualsASCII("main")) {
+      return NS_ERROR_NO_CONTENT;
+    }
+
     histogramMap = mSingleStore;
   } else {
-    bool found = mStorage.Get(NS_LITERAL_CSTRING("main"), &histogramMap);
+    bool found = mStorage.Get(aStore, &histogramMap);
     if (!found) {
       // Nothing in the main store is fine, it's just handled as empty
       return NS_ERROR_NO_CONTENT;
@@ -1438,7 +1456,7 @@ KeyedHistogram::GetSnapshot(const StaticMutexAutoLock& aLock,
   }
 
   if (aClearSubsession) {
-    Clear();
+    Clear(aStore);
   }
 
   return NS_OK;
@@ -1462,6 +1480,7 @@ KeyedHistogram::GetSnapshot(const StaticMutexAutoLock& aLock,
  */
 nsresult
 internal_GetKeyedHistogramsSnapshot(const StaticMutexAutoLock& aLock,
+                                    const nsACString& aStore,
                                     unsigned int aDataset,
                                     bool aClearSubsession,
                                     bool aIncludeGPU,
@@ -1495,21 +1514,21 @@ internal_GetKeyedHistogramsSnapshot(const StaticMutexAutoLock& aLock,
       KeyedHistogram* keyed = internal_GetKeyedHistogramById(id,
                                                              ProcessID(process),
                                                              /* instantiate = */ false);
-      if (!keyed || (aSkipEmpty && keyed->IsEmpty()) || keyed->IsExpired()) {
+      if (!keyed || (aSkipEmpty && keyed->IsEmpty(aStore)) || keyed->IsExpired()) {
         continue;
       }
 
       const char* name = info.name();
       if (aFilterTest && strncmp(TEST_HISTOGRAM_PREFIX, name, strlen(TEST_HISTOGRAM_PREFIX)) == 0) {
         if (aClearSubsession) {
-          keyed->Clear();
+          keyed->Clear(aStore);
         }
         continue;
       }
 
       // Take a snapshot of the keyed histogram data!
       KeyedHistogramSnapshotData snapshot;
-      if (!NS_SUCCEEDED(keyed->GetSnapshot(aLock, snapshot, aClearSubsession))) {
+      if (!NS_SUCCEEDED(keyed->GetSnapshot(aLock, aStore, snapshot, aClearSubsession))) {
         return NS_ERROR_FAILURE;
       }
 
@@ -1619,7 +1638,7 @@ internal_AccumulateChildKeyed(const StaticMutexAutoLock& aLock, ProcessID aProce
 }
 
 void
-internal_ClearHistogram(const StaticMutexAutoLock& aLock, HistogramID id)
+internal_ClearHistogram(const StaticMutexAutoLock& aLock, HistogramID id, const nsACString& aStore)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
   if (!XRE_IsParentProcess()) {
@@ -1631,7 +1650,7 @@ internal_ClearHistogram(const StaticMutexAutoLock& aLock, HistogramID id)
     for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
       KeyedHistogram* kh = internal_GetKeyedHistogramById(id, static_cast<ProcessID>(process), /* instantiate = */ false);
       if (kh) {
-        kh->Clear();
+        kh->Clear(aStore);
       }
     }
   } else {
@@ -1639,7 +1658,7 @@ internal_ClearHistogram(const StaticMutexAutoLock& aLock, HistogramID id)
     for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
       Histogram* h = internal_GetHistogramById(aLock, id, static_cast<ProcessID>(process), /* instantiate = */ false);
       if (h) {
-        h->Clear();
+        h->Clear(aStore);
       }
     }
   }
@@ -1847,6 +1866,44 @@ internal_JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
   return true;
 }
 
+/**
+ * Extract the store name from JavaScript function arguments.
+ * The first and only argument needs to be an object with a "store" property.
+ * If no arguments are given it defaults to "main".
+ */
+nsresult
+internal_JS_StoreFromObjectArgument(JSContext *cx, const JS::CallArgs& args, nsAutoString& aStoreName)
+{
+  if (args.length() == 0) {
+    aStoreName.AssignLiteral("main");
+  } else if (args.length() == 1) {
+    if (!args[0].isObject()) {
+      JS_ReportErrorASCII(cx, "Expected object argument.");
+      return NS_ERROR_FAILURE;
+    }
+
+    JS::RootedValue storeValue(cx);
+    JS::RootedObject argsObject(cx, &args[0].toObject());
+    if (!JS_GetProperty(cx, argsObject, "store", &storeValue)) {
+      JS_ReportErrorASCII(cx, "Expected object argument to have property 'store'.");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsAutoJSString store;
+    if (!storeValue.isString() || !store.init(cx, storeValue)) {
+      JS_ReportErrorASCII(cx, "Expected object argument's 'store' property to be a string.");
+      return NS_ERROR_FAILURE;
+    }
+
+    aStoreName.Assign(store);
+  } else {
+    JS_ReportErrorASCII(cx, "Expected at most one argument.");
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
 bool
 internal_JSHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
 {
@@ -1863,6 +1920,12 @@ internal_JSHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
   MOZ_ASSERT(data);
   HistogramID id = data->histogramId;
 
+  nsAutoString storeName;
+  nsresult rv = internal_JS_StoreFromObjectArgument(cx, args, storeName);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
   HistogramSnapshotData dataSnapshot;
   {
     StaticMutexAutoLock locker(gTelemetryHistogramMutex);
@@ -1873,9 +1936,8 @@ internal_JSHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
     // However, changing this requires some broader changes to callers.
     Histogram* w = internal_GetHistogramById(locker, id, ProcessID::Parent);
     base::Histogram *h = nullptr;
-    NS_NAMED_LITERAL_CSTRING(store, "main");
-    if (!w->GetHistogram(store, &h)) {
-      // When it's not in the 'main' store, let's skip the snapshot completely,
+    if (!w->GetHistogram(NS_ConvertUTF16toUTF8(storeName), &h)) {
+      // When it's not in the named store, let's skip the snapshot completely,
       // but don't fail
       args.rval().setUndefined();
       return true;
@@ -1918,6 +1980,12 @@ internal_JSHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
   JSHistogramData* data = static_cast<JSHistogramData*>(JS_GetPrivate(obj));
   MOZ_ASSERT(data);
 
+  nsAutoString storeName;
+  nsresult rv = internal_JS_StoreFromObjectArgument(cx, args, storeName);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
   // This function should always return |undefined| and never fail but
   // rather report failures using the console.
   args.rval().setUndefined();
@@ -1927,7 +1995,7 @@ internal_JSHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
     StaticMutexAutoLock locker(gTelemetryHistogramMutex);
 
     MOZ_ASSERT(internal_IsHistogramEnumId(id));
-    internal_ClearHistogram(locker, id);
+    internal_ClearHistogram(locker, id, NS_ConvertUTF16toUTF8(storeName));
   }
 
   return true;
@@ -1948,8 +2016,8 @@ internal_WrapAndReturnHistogram(HistogramID id, JSContext *cx,
   // by the same thread that runs this function.
   if (!(JS_DefineFunction(cx, obj, "add", internal_JSHistogram_Add, 1, 0)
         && JS_DefineFunction(cx, obj, "snapshot",
-                             internal_JSHistogram_Snapshot, 0, 0)
-        && JS_DefineFunction(cx, obj, "clear", internal_JSHistogram_Clear, 0, 0))) {
+                             internal_JSHistogram_Snapshot, 1, 0)
+        && JS_DefineFunction(cx, obj, "clear", internal_JSHistogram_Clear, 1, 0))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2046,67 +2114,29 @@ internal_KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc,
     return false;
   }
 
-  // No argument was passed, so snapshot all the keys.
-  if (args.length() == 0) {
-    JS::RootedObject snapshot(cx, JS_NewPlainObject(cx));
-    if (!snapshot) {
-      JS_ReportErrorASCII(cx, "Failed to create object");
-      return false;
-    }
-
-    nsresult rv = keyed->GetJSSnapshot(cx, snapshot, clearSubsession);
-
-    // If the main store is not available, we return nothing and don't fail
-    if (rv == NS_ERROR_NO_CONTENT) {
-      args.rval().setUndefined();
-      return true;
-    }
-
-    if (!NS_SUCCEEDED(rv)) {
-      JS_ReportErrorASCII(cx, "Failed to reflect keyed histograms");
-      return false;
-    }
-
-    args.rval().setObject(*snapshot);
-    return true;
-  }
-
-  // One argument was passed. If it's a string, use it as a key
-  // and just snapshot the data for that key.
-  nsAutoJSString key;
-  if (!args[0].isString() || !key.init(cx, args[0])) {
-    JS_ReportErrorASCII(cx, "Not a string");
+  nsAutoString storeName;
+  nsresult rv;
+  rv = internal_JS_StoreFromObjectArgument(cx, args, storeName);
+  if (NS_FAILED(rv)) {
     return false;
-  }
-
-  HistogramSnapshotData dataSnapshot;
-  {
-    StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-
-    // Get data for the key we're looking for.
-    base::Histogram* h = nullptr;
-    nsresult rv = keyed->GetHistogram(NS_LITERAL_CSTRING("main"), NS_ConvertUTF16toUTF8(key), &h);
-    if (NS_FAILED(rv)) {
-      return false;
-    }
-
-    // Take a snapshot of the data here, protected by the lock, and then,
-    // outside of the lock protection, mirror it to a JS structure
-    if (NS_FAILED(internal_GetHistogramAndSamples(locker, h, dataSnapshot))) {
-      return false;
-    }
   }
 
   JS::RootedObject snapshot(cx, JS_NewPlainObject(cx));
   if (!snapshot) {
+    JS_ReportErrorASCII(cx, "Failed to create object");
     return false;
   }
 
-  if (NS_FAILED(internal_ReflectHistogramAndSamples(cx,
-                                                    snapshot,
-                                                    gHistogramInfos[id],
-                                                    dataSnapshot))) {
-    JS_ReportErrorASCII(cx, "Failed to reflect histogram");
+  rv = keyed->GetJSSnapshot(cx, snapshot, NS_ConvertUTF16toUTF8(storeName), clearSubsession);
+
+  // If the store is not available, we return nothing and don't fail
+  if (rv == NS_ERROR_NO_CONTENT) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  if (!NS_SUCCEEDED(rv)) {
+    JS_ReportErrorASCII(cx, "Failed to reflect keyed histograms");
     return false;
   }
 
@@ -2191,6 +2221,12 @@ internal_JSKeyedHistogram_Keys(JSContext *cx, unsigned argc, JS::Value *vp)
   MOZ_ASSERT(data);
   HistogramID id = data->histogramId;
 
+  nsAutoString storeName;
+  nsresult rv = internal_JS_StoreFromObjectArgument(cx, args, storeName);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
   nsTArray<nsCString> keys;
   {
     StaticMutexAutoLock locker(gTelemetryHistogramMutex);
@@ -2206,7 +2242,7 @@ internal_JSKeyedHistogram_Keys(JSContext *cx, unsigned argc, JS::Value *vp)
       return false;
     }
 
-    if (NS_FAILED(keyed->GetKeys(locker, NS_LITERAL_CSTRING("main"), keys))) {
+    if (NS_FAILED(keyed->GetKeys(locker, NS_ConvertUTF16toUTF8(storeName), keys))) {
       return false;
     }
   }
@@ -2260,6 +2296,12 @@ internal_JSKeyedHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
   // rather report failures using the console.
   args.rval().setUndefined();
 
+  nsAutoString storeName;
+  nsresult rv = internal_JS_StoreFromObjectArgument(cx, args, storeName);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
   KeyedHistogram* keyed = nullptr;
   {
     MOZ_ASSERT(internal_IsHistogramEnumId(id));
@@ -2274,7 +2316,7 @@ internal_JSKeyedHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
       return true;
     }
 
-    keyed->Clear();
+    keyed->Clear(NS_ConvertUTF16toUTF8(storeName));
   }
 
   return true;
@@ -2295,9 +2337,9 @@ internal_WrapAndReturnKeyedHistogram(HistogramID id, JSContext *cx,
         && JS_DefineFunction(cx, obj, "snapshot",
                              internal_JSKeyedHistogram_Snapshot, 1, 0)
         && JS_DefineFunction(cx, obj, "keys",
-                             internal_JSKeyedHistogram_Keys, 0, 0)
+                             internal_JSKeyedHistogram_Keys, 1, 0)
         && JS_DefineFunction(cx, obj, "clear",
-                             internal_JSKeyedHistogram_Clear, 0, 0))) {
+                             internal_JSKeyedHistogram_Clear, 1, 0))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2789,6 +2831,7 @@ TelemetryHistogram::GetHistogramName(HistogramID id)
 nsresult
 TelemetryHistogram::CreateHistogramSnapshots(JSContext* aCx,
                                              JS::MutableHandleValue aResult,
+                                             const nsACString& aStore,
                                              unsigned int aDataset,
                                              bool aClearSubsession,
                                              bool aFilterTest)
@@ -2808,6 +2851,7 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext* aCx,
   {
     StaticMutexAutoLock locker(gTelemetryHistogramMutex);
     nsresult rv = internal_GetHistogramsSnapshot(locker,
+                                                 aStore,
                                                  aDataset,
                                                  aClearSubsession,
                                                  includeGPUProcess,
@@ -2857,6 +2901,7 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext* aCx,
 nsresult
 TelemetryHistogram::GetKeyedHistogramSnapshots(JSContext* aCx,
                                                JS::MutableHandleValue aResult,
+                                               const nsACString& aStore,
                                                unsigned int aDataset,
                                                bool aClearSubsession,
                                                bool aFilterTest)
@@ -2877,6 +2922,7 @@ TelemetryHistogram::GetKeyedHistogramSnapshots(JSContext* aCx,
   {
     StaticMutexAutoLock locker(gTelemetryHistogramMutex);
     nsresult rv = internal_GetKeyedHistogramsSnapshot(locker,
+                                                      aStore,
                                                       aDataset,
                                                       aClearSubsession,
                                                       includeGPUProcess,
@@ -3145,6 +3191,7 @@ TelemetryHistogram::SerializeHistograms(mozilla::JSONWriter& aWriter)
     // record the right subset, so this will only return "prerelease" if
     // it was recorded.
     if (NS_FAILED(internal_GetHistogramsSnapshot(locker,
+                                                 NS_LITERAL_CSTRING("main"),
                                                  nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN,
                                                  false /* aClearSubsession */,
                                                  includeGPUProcess,
@@ -3193,6 +3240,7 @@ TelemetryHistogram::SerializeKeyedHistograms(mozilla::JSONWriter& aWriter)
     // record the right subset, so this will only return "prerelease" if
     // it was recorded.
     if (NS_FAILED(internal_GetKeyedHistogramsSnapshot(locker,
+                                                      NS_LITERAL_CSTRING("main"),
                                                       nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN,
                                                       false /* aClearSubsession */,
                                                       includeGPUProcess,

@@ -32,6 +32,8 @@
 
 #include "DataChannelLog.h"
 
+#define DATACHANNEL_LOG(args) LOG(args)
+
 #include "nsServiceManagerUtils.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
@@ -54,7 +56,6 @@
 #include "mediapacket.h"
 #endif
 
-#define DATACHANNEL_LOG(args) LOG(args)
 #include "DataChannel.h"
 #include "DataChannelProtocol.h"
 
@@ -869,15 +870,13 @@ DataChannelConnection::SctpDtlsInput(const std::string& aTransportId,
   usrsctp_conninput(static_cast<void *>(this), packet.data(), packet.len(), 0);
 }
 
-int
+void
 DataChannelConnection::SendPacket(nsAutoPtr<MediaPacket> packet)
 {
   //LOG(("%p: SCTP/DTLS sent %ld bytes", this, len));
   if (!mTransportId.empty()) {
-    nsresult rv = mTransportHandler->SendPacket(mTransportId, *packet);
-    return NS_FAILED(rv) ? 1 : 0;
+    mTransportHandler->SendPacket(mTransportId, *packet);
   }
-  return 0;
 }
 
 /* static */

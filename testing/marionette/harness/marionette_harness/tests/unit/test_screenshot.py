@@ -135,22 +135,8 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
             return [rect.width, rect.height];
             """))
 
-    def open_dialog(self, url=None, width=None, height=None):
-        if url is None:
-            url = "chrome://marionette/content/test_dialog.xul"
-
-        def opener():
-            features = "chrome"
-            if height is not None:
-                features += ",height={}".format(height)
-            if width is not None:
-                features += ",width={}".format(width)
-
-            self.marionette.execute_script("""
-                window.openDialog(arguments[0], "", arguments[1]);
-                """, script_args=[url, features])
-
-        return self.open_window(opener)
+    def open_dialog(self):
+        return self.open_chrome_window("chrome://marionette/content/test_dialog.xul")
 
     def test_capture_different_context(self):
         """Check that screenshots in content and chrome are different."""

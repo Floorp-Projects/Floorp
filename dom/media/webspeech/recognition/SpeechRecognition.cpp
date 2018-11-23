@@ -9,6 +9,7 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 
+#include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SpeechRecognitionBinding.h"
@@ -20,7 +21,6 @@
 #include "mozilla/StaticPrefs.h"
 
 #include "AudioSegment.h"
-#include "DOMMediaStream.h"
 #include "MediaEnginePrefs.h"
 #include "endpointer.h"
 
@@ -33,6 +33,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "nsQueryObject.h"
+#include "SpeechTrackListener.h"
 
 #include <algorithm>
 
@@ -103,7 +104,7 @@ already_AddRefed<nsISpeechRecognitionService> GetSpeechRecognitionService(
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(SpeechRecognition, DOMEventTargetHelper,
-                                   mDOMStream, mSpeechGrammarList)
+                                   mTrack, mSpeechGrammarList)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SpeechRecognition)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
@@ -136,6 +137,8 @@ SpeechRecognition::SpeechRecognition(nsPIDOMWindowInner* aOwnerWindow)
       Preferences::GetInt(PREFERENCE_ENDPOINTER_SILENCE_LENGTH, 3 * 1000000));
   Reset();
 }
+
+SpeechRecognition::~SpeechRecognition() = default;
 
 bool SpeechRecognition::StateBetween(FSMState begin, FSMState end) {
   return mCurrentState >= begin && mCurrentState <= end;
@@ -499,7 +502,7 @@ void SpeechRecognition::AbortSilently(SpeechEvent* aEvent) {
     mRecognitionService->Abort();
   }
 
-  if (mDOMStream) {
+  if (mTrack) {
     StopRecording();
   }
 
@@ -521,16 +524,16 @@ void SpeechRecognition::NotifyError(SpeechEvent* aEvent) {
  * Event triggers and other functions *
  **************************************/
 NS_IMETHODIMP
-SpeechRecognition::StartRecording(DOMMediaStream* aDOMStream) {
+SpeechRecognition::StartRecording(RefPtr<AudioStreamTrack>& aTrack) {
   // hold a reference so that the underlying stream
   // doesn't get Destroy()'ed
-  mDOMStream = aDOMStream;
+  mTrack = aTrack;
 
-  if (NS_WARN_IF(!mDOMStream->GetPlaybackStream())) {
+  if (NS_WARN_IF(mTrack->Ended())) {
     return NS_ERROR_UNEXPECTED;
   }
-  mSpeechListener = new SpeechStreamListener(this);
-  mDOMStream->GetPlaybackStream()->AddListener(mSpeechListener);
+  mSpeechListener = new SpeechTrackListener(this);
+  mTrack->AddListener(mSpeechListener);
 
   mEndpointer.StartSession();
 
@@ -541,11 +544,13 @@ SpeechRecognition::StartRecording(DOMMediaStream* aDOMStream) {
 NS_IMETHODIMP
 SpeechRecognition::StopRecording() {
   // we only really need to remove the listener explicitly when testing,
-  // as our JS code still holds a reference to mDOMStream and only assigning
+  // as our JS code still holds a reference to mTrack and only assigning
   // it to nullptr isn't guaranteed to free the stream and the listener.
-  mDOMStream->GetPlaybackStream()->RemoveListener(mSpeechListener);
+  mStream->UnregisterTrackListener(this);
+  mTrack->RemoveListener(mSpeechListener);
+  mStream = nullptr;
   mSpeechListener = nullptr;
-  mDOMStream = nullptr;
+  mTrack = nullptr;
 
   mEndpointer.EndSession();
   DispatchTrustedEvent(NS_LITERAL_STRING("audioend"));
@@ -659,7 +664,16 @@ void SpeechRecognition::Start(const Optional<NonNull<DOMMediaStream>>& aStream,
   constraints.mAudio.SetAsBoolean() = true;
 
   if (aStream.WasPassed()) {
-    StartRecording(&aStream.Value());
+    mStream = &aStream.Value();
+    mStream->RegisterTrackListener(this);
+    nsTArray<RefPtr<AudioStreamTrack>> tracks;
+    mStream->GetAudioTracks(tracks);
+    for (const RefPtr<AudioStreamTrack>& track : tracks) {
+      if (!track->Ended()) {
+        NotifyTrackAdded(track);
+        break;
+      }
+    }
   } else {
     AutoNoJSAPI nojsapi;
     MediaManager* manager = MediaManager::Get();
@@ -759,6 +773,24 @@ void SpeechRecognition::Abort() {
   NS_DispatchToMainThread(event);
 }
 
+void SpeechRecognition::NotifyTrackAdded(
+    const RefPtr<MediaStreamTrack>& aTrack) {
+  if (mTrack) {
+    return;
+  }
+
+  RefPtr<AudioStreamTrack> audioTrack = aTrack->AsAudioStreamTrack();
+  if (!audioTrack) {
+    return;
+  }
+
+  if (audioTrack->Ended()) {
+    return;
+  }
+
+  StartRecording(audioTrack);
+}
+
 void SpeechRecognition::DispatchError(EventType aErrorType,
                                       SpeechRecognitionErrorCode aErrorCode,
                                       const nsAString& aMessage) {
@@ -843,7 +875,7 @@ AudioSegment* SpeechRecognition::CreateAudioSegment(
 
 void SpeechRecognition::FeedAudioData(already_AddRefed<SharedBuffer> aSamples,
                                       uint32_t aDuration,
-                                      MediaStreamListener* aProvider,
+                                      MediaStreamTrackListener* aProvider,
                                       TrackRate aTrackRate) {
   NS_ASSERTION(!NS_IsMainThread(),
                "FeedAudioData should not be called in the main thread");
@@ -921,6 +953,16 @@ const char* SpeechRecognition::GetName(SpeechEvent* aEvent) {
   return names[aEvent->mType];
 }
 
+SpeechEvent::SpeechEvent(SpeechRecognition* aRecognition,
+                         SpeechRecognition::EventType aType)
+    : Runnable("dom::SpeechEvent"),
+      mAudioSegment(nullptr),
+      mRecognitionResultList(nullptr),
+      mError(nullptr),
+      mRecognition(aRecognition),
+      mType(aType),
+      mTrackRate(0) {}
+
 SpeechEvent::~SpeechEvent() { delete mAudioSegment; }
 
 NS_IMETHODIMP
@@ -939,7 +981,15 @@ SpeechRecognition::GetUserMediaSuccessCallback::OnSuccess(
   if (!stream) {
     return NS_ERROR_NO_INTERFACE;
   }
-  mRecognition->StartRecording(stream);
+  mRecognition->mStream = stream;
+  mRecognition->mStream->RegisterTrackListener(mRecognition);
+  nsTArray<RefPtr<AudioStreamTrack>> tracks;
+  mRecognition->mStream->GetAudioTracks(tracks);
+  for (const RefPtr<AudioStreamTrack>& track : tracks) {
+    if (!track->Ended()) {
+      mRecognition->NotifyTrackAdded(track);
+    }
+  }
   return NS_OK;
 }
 

@@ -16,6 +16,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
 });
 
+XPCOMUtils.defineLazyServiceGetter(this, "quotaManagerService",
+                                   "@mozilla.org/dom/quota-manager-service;1",
+                                   "nsIQuotaManagerService");
+
 // The userContextID reserved for the extension storage (its purpose is ensuring that the IndexedDB
 // storage used by the browser.storage.local API is not directly accessible from the extension code,
 // it is defined and reserved as "userContextIdInternal.webextStorageLocal" in ContextualIdentityService.jsm).
@@ -355,7 +359,7 @@ async function migrateJSONFileData(extension, storagePrincipal) {
   }
 
   try {
-    idbConn = await ExtensionStorageLocalIDB.openForPrincipal(storagePrincipal);
+    idbConn = await ExtensionStorageIDB.open(storagePrincipal, extension.hasPermission("unlimitedStorage"));
     hasEmptyIDB = await idbConn.isEmpty();
 
     if (!hasEmptyIDB) {
@@ -615,6 +619,19 @@ this.ExtensionStorageIDB = {
     return this.selectedBackendPromises.get(extension);
   },
 
+  persist(storagePrincipal) {
+    return new Promise((resolve, reject) => {
+      const request = quotaManagerService.persist(storagePrincipal);
+      request.callback = () => {
+        if (request.resultCode === Cr.NS_OK) {
+          resolve();
+        } else {
+          reject(new Error(`Failed to persist storage for principal: ${storagePrincipal.originNoSuffix}`));
+        }
+      };
+    });
+  },
+
   /**
    * Open a connection to the IDB storage.local db for a given extension.
    * given extension.
@@ -622,12 +639,18 @@ this.ExtensionStorageIDB = {
    * @param {nsIPrincipal} storagePrincipal
    *        The "internally reserved" extension storagePrincipal to be used to create
    *        the ExtensionStorageLocalIDB instance.
+   * @param {boolean} persisted
+   *        A boolean which indicates if the storage should be set into persistent mode.
    *
    * @returns {Promise<ExtensionStorageLocalIDB>}
    *          Return a promise which resolves to the opened IDB connection.
    */
-  open(storagePrincipal) {
-    return ExtensionStorageLocalIDB.openForPrincipal(storagePrincipal);
+  open(storagePrincipal, persisted) {
+    if (!storagePrincipal) {
+      return Promise.reject(new Error("Unexpected empty principal"));
+    }
+    let setPersistentMode = persisted ? this.persist(storagePrincipal) : Promise.resolve();
+    return setPersistentMode.then(() => ExtensionStorageLocalIDB.openForPrincipal(storagePrincipal));
   },
 
   addOnChangedListener(extensionId, listener) {

@@ -17,13 +17,8 @@ class TestAnonymousNodes(WindowManagerMixin, MarionetteTestCase):
         super(TestAnonymousNodes, self).setUp()
         self.marionette.set_context("chrome")
 
-        def open_window_with_js():
-            self.marionette.execute_script("""
-              window.open('chrome://marionette/content/test_anonymous_content.xul',
-                          'foo', 'chrome,centerscreen');
-            """)
-
-        new_window = self.open_window(trigger=open_window_with_js)
+        url = "chrome://marionette/content/test_anonymous_content.xul"
+        new_window = self.open_chrome_window(url)
         self.marionette.switch_to_window(new_window)
 
     def tearDown(self):

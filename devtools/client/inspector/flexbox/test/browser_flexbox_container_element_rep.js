@@ -20,7 +20,7 @@ add_task(async function() {
   ok(flexContainerRep, "The flex container element rep is rendered.");
 
   info("Listen to node-highlight event and mouse over the rep");
-  const onHighlight = toolbox.once("node-highlight");
+  const onHighlight = toolbox.highlighter.once("node-highlight");
   EventUtils.synthesizeMouse(flexContainerRep, 10, 5, {type: "mouseover"},
     doc.defaultView);
   const nodeFront = await onHighlight;

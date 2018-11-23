@@ -378,12 +378,7 @@ PeerConnectionMedia::StartIceChecks_s(
     }
   }
 
-  nsresult rv = mTransportHandler->StartIceChecks(aIsControlling,
-                                                  aIsOfferer,
-                                                  attributes);
-  if (NS_FAILED(rv)) {
-    CSFLogError(LOGTAG, "%s: couldn't start ICE", __FUNCTION__ );
-  }
+  mTransportHandler->StartIceChecks(aIsControlling, aIsOfferer, attributes);
 }
 
 bool

@@ -60,7 +60,7 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
   nsresult Deallocate(const RefPtr<const AllocationHandle>& aHandle) override;
   void Pull(const RefPtr<const AllocationHandle>& aHandle,
             const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-            StreamTime aDesiredTime,
+            StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
             const PrincipalHandle& aPrincipalHandle) override;
 
   uint32_t GetBestFitnessDistance(
@@ -129,7 +129,7 @@ class MediaEngineDefaultAudioSource : public MediaEngineSource {
                               const PrincipalHandle& aPrincipalHandle);
   void Pull(const RefPtr<const AllocationHandle>& aHandle,
             const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-            StreamTime aDesiredTime,
+            StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
             const PrincipalHandle& aPrincipalHandle) override;
 
   bool IsFake() const override { return true; }
