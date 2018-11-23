@@ -343,11 +343,6 @@ public:
   void NotifyMediaTrackDisabled(MediaTrack* aTrack);
 
   /**
-   * Called when tracks become available to the source media stream.
-   */
-  void NotifyMediaStreamTracksAvailable(DOMMediaStream* aStream);
-
-  /**
    * Called when a captured MediaStreamTrack is stopped so we can clean up its
    * MediaInputPort.
    */
@@ -821,7 +816,6 @@ protected:
   class ChannelLoader;
   class ErrorSink;
   class MediaLoadListener;
-  class MediaStreamTracksAvailableCallback;
   class MediaStreamTrackListener;
   class VideoFrameListener;
   class ShutdownObserver;
