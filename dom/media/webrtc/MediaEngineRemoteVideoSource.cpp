@@ -264,7 +264,7 @@ nsresult MediaEngineRemoteVideoSource::SetTrack(
     mTrackID = aTrackID;
     mPrincipal = aPrincipal;
   }
-  aStream->AddTrack(aTrackID, 0, new VideoSegment(),
+  aStream->AddTrack(aTrackID, new VideoSegment(),
                     SourceMediaStream::ADDTRACK_QUEUED);
   return NS_OK;
 }
