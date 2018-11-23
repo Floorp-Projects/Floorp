@@ -1434,6 +1434,10 @@ protected:
   // mSrcStream.
   double mSrcStreamPausedCurrentTime = -1;
 
+  // True once PlaybackEnded() is called and we're playing a MediaStream.
+  // Reset to false if we start playing mSrcStream again.
+  bool mSrcStreamPlaybackEnded = false;
+
   // Holds a reference to the stream connecting this stream to the capture sink.
   RefPtr<MediaInputPort> mCaptureStreamPort;
 
