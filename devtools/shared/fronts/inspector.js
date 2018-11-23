@@ -172,13 +172,14 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
     impl: "_querySelector",
   }),
 
-  getNodeActorFromObjectActor: custom(function(objectActorID) {
-    return this._getNodeActorFromObjectActor(objectActorID).then(response => {
-      return response ? response.node : null;
-    });
-  }, {
-    impl: "_getNodeActorFromObjectActor",
-  }),
+  gripToNodeFront: async function(grip) {
+    const response = await this.getNodeActorFromObjectActor(grip.actor);
+    const nodeFront = response ? response.node : null;
+    if (!nodeFront) {
+      throw new Error("The ValueGrip passed could not be translated to a NodeFront");
+    }
+    return nodeFront;
+  },
 
   getNodeActorFromWindowID: custom(function(windowID) {
     return this._getNodeActorFromWindowID(windowID).then(response => {
