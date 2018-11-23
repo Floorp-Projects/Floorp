@@ -76,13 +76,13 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             "action": "store",
             "dest": "headless_width",
             "default": "1600",
-            "help": "Specify headless fake screen width (default: 1600)."}
+            "help": "Specify headless virtual screen width (default: 1600)."}
          ],
         [["--headless-height"], {
             "action": "store",
             "dest": "headless_height",
             "default": "1200",
-            "help": "Specify headless fake screen height (default: 1200)."}
+            "help": "Specify headless virtual screen height (default: 1200)."}
          ],
         [["--single-stylo-traversal"], {
             "action": "store_true",
