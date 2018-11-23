@@ -83,6 +83,7 @@ intl/icu/.*
 ipc/chromium/src/third_party/.*
 js/src/ctypes/libffi/.*
 js/src/dtoa.c.*
+js/src/editline/.*
 js/src/jit/arm64/vixl/.*
 js/src/vtune/disable_warnings.h
 js/src/vtune/ittnotify.h
