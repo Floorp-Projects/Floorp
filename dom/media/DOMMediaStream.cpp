@@ -57,6 +57,18 @@ static bool ContainsLiveTracks(
   return false;
 }
 
+void MediaStreamTrackSourceGetter::FinishOnNextInactive(
+    RefPtr<DOMMediaStream>& aStream) {
+  if (mFinishedOnInactive) {
+    return;
+  }
+
+  mFinishedOnInactive = true;
+
+  // We notify now with a dummy track in case there are no live tracks.
+  aStream->NotifyTrackRemoved(nullptr);
+}
+
 DOMMediaStream::TrackPort::TrackPort(MediaInputPort* aInputPort,
                                      MediaStreamTrack* aTrack,
                                      const InputPortOwnership aOwnership)
@@ -249,33 +261,12 @@ class DOMMediaStream::PlaybackStreamListener : public MediaStreamListener {
                           &DOMMediaStream::NotifyTracksCreated));
   }
 
-  void DoNotifyFinished() {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (!mStream) {
-      return;
-    }
-
-    mStream->GetPlaybackStream()->Graph()->AbstractMainThread()->Dispatch(
-        NewRunnableMethod("DOMMediaStream::NotifyFinished", mStream,
-                          &DOMMediaStream::NotifyFinished));
-  }
-
   // The methods below are called on the MediaStreamGraph thread.
 
   void NotifyFinishedTrackCreation(MediaStreamGraph* aGraph) override {
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(NewRunnableMethod(
         "DOMMediaStream::PlaybackStreamListener::DoNotifyFinishedTrackCreation",
         this, &PlaybackStreamListener::DoNotifyFinishedTrackCreation));
-  }
-
-  void NotifyEvent(MediaStreamGraph* aGraph,
-                   MediaStreamGraphEvent event) override {
-    if (event == MediaStreamGraphEvent::EVENT_FINISHED) {
-      aGraph->DispatchToMainThreadAfterStreamStateUpdate(NewRunnableMethod(
-          "DOMMediaStream::PlaybackStreamListener::DoNotifyFinished", this,
-          &PlaybackStreamListener::DoNotifyFinished));
-    }
   }
 
  private:
@@ -372,7 +363,6 @@ DOMMediaStream::DOMMediaStream(nsPIDOMWindowInner* aWindow,
       mTracksCreated(false),
       mNotifiedOfMediaStreamGraphShutdown(false),
       mActive(false),
-      mSetInactiveOnFinish(false),
       mCORSMode(CORS_NONE) {
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
@@ -836,8 +826,6 @@ TrackRate DOMMediaStream::GraphRate() {
   return 0;
 }
 
-void DOMMediaStream::SetInactiveOnFinish() { mSetInactiveOnFinish = true; }
-
 void DOMMediaStream::InitSourceStream(MediaStreamGraph* aGraph) {
   InitInputStreamCommon(aGraph->CreateSourceStream(), aGraph);
   InitOwnedStreamCommon(aGraph);
@@ -1190,21 +1178,6 @@ void DOMMediaStream::NotifyTracksCreated() {
   CheckTracksAvailable();
 }
 
-void DOMMediaStream::NotifyFinished() {
-  if (!mSetInactiveOnFinish) {
-    return;
-  }
-
-  if (!mActive) {
-    // This can happen if the stream never became active.
-    return;
-  }
-
-  MOZ_ASSERT(!ContainsLiveTracks(mTracks));
-  mActive = false;
-  NotifyInactive();
-}
-
 void DOMMediaStream::NotifyActive() {
   LOG(LogLevel::Info, ("DOMMediaStream %p NotifyActive(). ", this));
 
@@ -1297,25 +1270,33 @@ void DOMMediaStream::NotifyTrackRemoved(
     const RefPtr<MediaStreamTrack>& aTrack) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  aTrack->RemoveConsumer(mPlaybackTrackListener);
-  aTrack->RemovePrincipalChangeObserver(this);
+  if (aTrack) {
+    // aTrack may be null to allow HTMLMediaElement::MozCaptureStream streams
+    // to be played until the source media element has ended. The source media
+    // element will then call NotifyTrackRemoved(nullptr) to signal that we can
+    // go inactive, regardless of the timing of the last track ending.
 
-  for (int32_t i = mTrackListeners.Length() - 1; i >= 0; --i) {
-    mTrackListeners[i]->NotifyTrackRemoved(aTrack);
+    aTrack->RemoveConsumer(mPlaybackTrackListener);
+    aTrack->RemovePrincipalChangeObserver(this);
+
+    for (int32_t i = mTrackListeners.Length() - 1; i >= 0; --i) {
+      mTrackListeners[i]->NotifyTrackRemoved(aTrack);
+    }
+
+    // Don't call RecomputePrincipal here as the track may still exist in the
+    // playback stream in the MediaStreamGraph. It will instead be called when
+    // the track has been confirmed removed by the graph. See
+    // BlockPlaybackTrack().
+
+    if (!mActive) {
+      NS_ASSERTION(false, "Shouldn't remove a live track if already inactive");
+      return;
+    }
   }
 
-  // Don't call RecomputePrincipal here as the track may still exist in the
-  // playback stream in the MediaStreamGraph. It will instead be called when the
-  // track has been confirmed removed by the graph. See BlockPlaybackTrack().
-
-  if (!mActive) {
-    NS_ASSERTION(false, "Shouldn't remove a live track if already inactive");
-    return;
-  }
-
-  if (mSetInactiveOnFinish) {
+  if (mTrackSourceGetter && !mTrackSourceGetter->FinishedOnInactive()) {
     // For compatibility with mozCaptureStream we in some cases do not go
-    // inactive until the playback stream finishes.
+    // inactive until the track source lets us.
     return;
   }
 
