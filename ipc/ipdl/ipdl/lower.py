@@ -487,8 +487,8 @@ def errfnSentinel(rvalue=ExprLiteral.FALSE):
     return inner
 
 
-def _destroyMethod():
-    return ExprVar('ActorDestroy')
+def _destroyInternalMethod():
+    return ExprVar('ActorDestroyInternal')
 
 
 def errfnUnreachable(msg):
@@ -3269,21 +3269,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 params=[Decl(actortype, 'aActor')],
                 ret=Type.BOOL, methodspec=MethodSpec.PURE)))
 
-        # ActorDestroy() method; default is no-op
-        if self.side == 'parent':
-            methodspec = MethodSpec.PURE
-        else:
-            methodspec = MethodSpec.VIRTUAL
-
-        self.cls.addstmts([
-            Whitespace.NL,
-            MethodDefn(MethodDecl(
-                _destroyMethod().name,
-                params=[Decl(_DestroyReason.Type(), 'aWhy')],
-                ret=Type.VOID, methodspec=methodspec)),
-            Whitespace.NL
-        ])
-
         if ptype.isToplevel():
             # void ProcessingError(code); default to no-op
             processingerror = MethodDefn(
@@ -3664,7 +3649,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         destroysubtree.addstmts([Whitespace('// Finally, destroy "us".\n',
                                             indent=1),
-                                 StmtExpr(ExprCall(_destroyMethod(),
+                                 StmtExpr(ExprCall(_destroyInternalMethod(),
                                                    args=[whyvar]))
                                  ])
 

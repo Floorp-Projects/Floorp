@@ -596,6 +596,9 @@ IProtocol::SetManagerAndRegister(IProtocol* aManager)
   aManager->Register(this);
 
   mState->SetIPCChannel(aManager->GetIPCChannel());
+
+  // Note that our actor has been opened.
+  ActorOpenedInternal();
 }
 
 void
@@ -608,6 +611,9 @@ IProtocol::SetManagerAndRegister(IProtocol* aManager, int32_t aId)
   aManager->RegisterID(this, aId);
 
   mState->SetIPCChannel(aManager->GetIPCChannel());
+
+  // Note that our actor has been opened.
+  ActorOpenedInternal();
 }
 
 void
@@ -751,6 +757,7 @@ IToplevelProtocol::Open(mozilla::ipc::Transport* aTransport,
                         mozilla::ipc::Side aSide)
 {
   SetOtherProcessId(aOtherPid);
+  ActorOpenedInternal();
   return GetIPCChannel()->Open(aTransport, aThread, aSide);
 }
 
@@ -760,6 +767,7 @@ IToplevelProtocol::Open(MessageChannel* aChannel,
                         mozilla::ipc::Side aSide)
 {
   SetOtherProcessId(base::GetCurrentProcId());
+  ActorOpenedInternal();
   return GetIPCChannel()->Open(aChannel, aMessageLoop->SerialEventTarget(), aSide);
 }
 
@@ -769,6 +777,7 @@ IToplevelProtocol::Open(MessageChannel* aChannel,
                         mozilla::ipc::Side aSide)
 {
   SetOtherProcessId(base::GetCurrentProcId());
+  ActorOpenedInternal();
   return GetIPCChannel()->Open(aChannel, aEventTarget, aSide);
 }
 
@@ -777,6 +786,7 @@ IToplevelProtocol::OpenWithAsyncPid(mozilla::ipc::Transport* aTransport,
                                     MessageLoop* aThread,
                                     mozilla::ipc::Side aSide)
 {
+  ActorOpenedInternal();
   return GetIPCChannel()->Open(aTransport, aThread, aSide);
 }
 
@@ -784,6 +794,7 @@ bool
 IToplevelProtocol::OpenOnSameThread(MessageChannel* aChannel, Side aSide)
 {
   SetOtherProcessId(base::GetCurrentProcId());
+  ActorOpenedInternal();
   return GetIPCChannel()->OpenOnSameThread(aChannel, aSide);
 }
 
@@ -816,6 +827,9 @@ IToplevelProtocol::ToplevelState::Register(IProtocol* aRouted)
   mActorMap.AddWithID(aRouted, id);
   aRouted->SetId(id);
 
+  // Inform our actor that it has been opened.
+  aRouted->ActorOpenedInternal();
+
   // Inherit our event target from our manager.
   if (IProtocol* manager = aRouted->Manager()) {
     MutexAutoLock lock(mEventTargetMutex);
@@ -833,6 +847,10 @@ IToplevelProtocol::ToplevelState::RegisterID(IProtocol* aRouted,
 {
   mActorMap.AddWithID(aRouted, aId);
   aRouted->SetId(aId);
+
+  // Inform our actor that it has been opened.
+  aRouted->ActorOpenedInternal();
+
   return aId;
 }
 
@@ -1047,6 +1065,7 @@ IToplevelProtocol::ToplevelState::SetEventTargetForActor(IProtocol* aActor,
   // Register the actor early. When it's registered again, it will keep the same
   // ID.
   int32_t id = Register(aActor);
+  // XXX(nika): Register already calls SetId?
   aActor->SetId(id);
 
   MutexAutoLock lock(mEventTargetMutex);
