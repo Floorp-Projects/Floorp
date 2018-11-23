@@ -227,28 +227,10 @@ var ContentBlocking = {
   PREF_REPORT_BREAKAGE_ENABLED: "browser.contentblocking.reportBreakage.enabled",
   PREF_REPORT_BREAKAGE_URL: "browser.contentblocking.reportBreakage.url",
   PREF_INTRO_COUNT_CB: "browser.contentblocking.introCount",
-  PREF_CB_CATEGORY: "browser.contentblocking.category",
-  // The prefs inside CATEGORY_PREFS set expected behavior for each CB category.
-  // A null value means that pref is default.
-  CATEGORY_PREFS: {
-    strict: [
-      [TrackingProtection.PREF_TRACKING_TABLE, null],
-      [ThirdPartyCookies.PREF_ENABLED, Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN],
-      [TrackingProtection.PREF_ENABLED_IN_PRIVATE_WINDOWS, true],
-      [TrackingProtection.PREF_ENABLED_GLOBALLY, true],
-    ],
-    standard: [
-      [TrackingProtection.PREF_TRACKING_TABLE, null],
-      [ThirdPartyCookies.PREF_ENABLED, null],
-      [TrackingProtection.PREF_ENABLED_IN_PRIVATE_WINDOWS, null],
-      [TrackingProtection.PREF_ENABLED_GLOBALLY, null],
-    ],
-  },
   content: null,
   icon: null,
   activeTooltipText: null,
   disabledTooltipText: null,
-  switchingCategory: false,
 
   get prefIntroCount() {
     return this.PREF_INTRO_COUNT_CB;
@@ -342,14 +324,6 @@ var ContentBlocking = {
       gNavigatorBundle.getString("trackingProtection.icon.activeTooltip");
     this.disabledTooltipText =
       gNavigatorBundle.getString("trackingProtection.icon.disabledTooltip");
-
-    this.matchCBCategory = this.matchCBCategory.bind(this);
-    this.updateCBCategory = this.updateCBCategory.bind(this);
-    this.matchCBCategory();
-    Services.prefs.addObserver(TrackingProtection.PREF_ENABLED_GLOBALLY, this.matchCBCategory);
-    Services.prefs.addObserver(TrackingProtection.PREF_ENABLED_IN_PRIVATE_WINDOWS, this.matchCBCategory);
-    Services.prefs.addObserver(ThirdPartyCookies.PREF_ENABLED, this.matchCBCategory);
-    Services.prefs.addObserver(this.PREF_CB_CATEGORY, this.updateCBCategory);
   },
 
   uninit() {
@@ -360,10 +334,6 @@ var ContentBlocking = {
     }
 
     Services.prefs.removeObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
-    Services.prefs.removeObserver(TrackingProtection.PREF_ENABLED_GLOBALLY, this.matchCBCategory);
-    Services.prefs.removeObserver(TrackingProtection.PREF_ENABLED_IN_PRIVATE_WINDOWS, this.matchCBCategory);
-    Services.prefs.removeObserver(ThirdPartyCookies.PREF_ENABLED, this.matchCBCategory);
-    Services.prefs.removeObserver(this.PREF_CB_CATEGORY, this.updateCBCategory);
   },
 
   hideIdentityPopupAndReload() {
@@ -639,90 +609,5 @@ var ContentBlocking = {
     UITour.initForBrowser(gBrowser.selectedBrowser, window);
     UITour.showInfo(window, panelTarget, introTitle, introDescription, undefined, buttons,
                     { closeButtonCallback: () => this.dontShowIntroPanelAgain() });
-  },
-
-  /**
-   * Checks if CB prefs match perfectly with one of our pre-defined categories.
-   */
-  prefsMatch(category) {
-    // The category pref must be either unset, or match.
-    if (Services.prefs.prefHasUserValue(this.PREF_CB_CATEGORY) &&
-        Services.prefs.getStringPref(this.PREF_CB_CATEGORY) != category) {
-      return false;
-    }
-    for (let [pref, value] of this.CATEGORY_PREFS[category]) {
-      if (!value) {
-        if (Services.prefs.prefHasUserValue(pref)) {
-          return false;
-        }
-      } else {
-        let prefType = Services.prefs.getPrefType(pref);
-        if ((prefType == Services.prefs.PREF_BOOL && Services.prefs.getBoolPref(pref) != value) ||
-            (prefType == Services.prefs.PREF_INT && Services.prefs.getIntPref(pref) != value) ||
-            (prefType == Services.prefs.PREF_STRING && Services.prefs.getStringPref(pref) != value)) {
-          return false;
-        }
-      }
-    }
-    return true;
-  },
-
-  async matchCBCategory() {
-    if (this.switchingCategory) {
-      return;
-    }
-    // If PREF_CB_CATEGORY is not set match users to a Content Blocking category. Check if prefs fit
-    // perfectly into strict or standard, otherwise match with custom. If PREF_CB_CATEGORY has previously been set,
-    // a change of one of these prefs necessarily puts us in "custom".
-    if (this.prefsMatch("standard")) {
-      Services.prefs.setStringPref(this.PREF_CB_CATEGORY, "standard");
-    } else if (this.prefsMatch("strict")) {
-      Services.prefs.setStringPref(this.PREF_CB_CATEGORY, "strict");
-    } else {
-      Services.prefs.setStringPref(this.PREF_CB_CATEGORY, "custom");
-    }
-  },
-
-  updateCBCategory() {
-    if (this.switchingCategory) {
-      return;
-    }
-    // Turn on switchingCategory flag, to ensure that when the individual prefs that change as a result
-    // of the category change do not trigger yet another category change.
-    this.switchingCategory = true;
-    let value = Services.prefs.getStringPref(this.PREF_CB_CATEGORY);
-    this.setPrefsToCategory(value);
-    this.switchingCategory = false;
-  },
-
-  /**
-   * Sets all user-exposed content blocking preferences to values that match the selected category.
-   */
-  setPrefsToCategory(category) {
-    // Leave prefs as they were if we are switching to "custom" category.
-    if (category == "custom") {
-      return;
-    }
-
-    for (let [pref, value] of this.CATEGORY_PREFS[category]) {
-      // this.setPrefIfNotLocked(pref[0], pref[1]);
-      if (!Services.prefs.prefIsLocked(pref)) {
-        if (!value) {
-          Services.prefs.clearUserPref(pref);
-        } else {
-          switch (Services.prefs.getPrefType(pref)) {
-          case Services.prefs.PREF_BOOL:
-            Services.prefs.setBoolPref(pref, value);
-            break;
-          case Services.prefs.PREF_INT:
-            Services.prefs.setIntPref(pref, value);
-            break;
-          case Services.prefs.PREF_STRING:
-            Services.prefs.setStringPref(pref, value);
-            break;
-          }
-        }
-      }
-    }
   },
 };
