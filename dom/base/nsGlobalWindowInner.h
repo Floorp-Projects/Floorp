@@ -1241,6 +1241,11 @@ public:
   // area.
   nsIPrincipal* GetTopLevelStorageAreaPrincipal();
 
+  // This method is called if this window loads a 3rd party tracking resource
+  // and the storage is just been granted. The window can reset the partitioned
+  // storage objects and switch to the first party cookie jar.
+  void StorageAccessGranted();
+
 protected:
   static void NotifyDOMWindowDestroyed(nsGlobalWindowInner* aWindow);
   void NotifyWindowIDDestroyed(const char* aTopic);
