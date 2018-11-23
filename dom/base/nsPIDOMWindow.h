@@ -569,13 +569,6 @@ public:
   virtual void SetHasGamepadEventListener(bool aHasGamepad = true) = 0;
 
   /**
-   * NOTE! This function *will* be called on multiple threads so the
-   * implementation must not do any AddRef/Release or other actions that will
-   * mutate internal state.
-   */
-  virtual uint32_t GetSerial() = 0;
-
-  /**
    * Return the window id of this window
    */
   uint64_t WindowID() const { return mWindowID; }
@@ -1098,13 +1091,6 @@ public:
    * DialogArgumentsHolder representing the JS value passed to showModalDialog.
    */
   virtual nsresult SetArguments(nsIArray *aArguments) = 0;
-
-  /**
-   * NOTE! This function *will* be called on multiple threads so the
-   * implementation must not do any AddRef/Release or other actions that will
-   * mutate internal state.
-   */
-  virtual uint32_t GetSerial() = 0;
 
   /**
    * Return the window id of this window
