@@ -702,12 +702,12 @@ class SourceMediaStream : public MediaStream {
    *
    * Returns true if new data is about to be added.
    */
-  bool PullNewData(StreamTime aDesiredUpToTime);
+  bool PullNewData(GraphTime aDesiredUpToTime);
 
   /**
    * Extract any state updates pending in the stream, and apply them.
    */
-  void ExtractPendingInput();
+  void ExtractPendingInput(GraphTime aCurrentTime);
 
   /**
    * These add/remove DirectListeners, which allow bypassing the graph and any
@@ -721,21 +721,19 @@ class SourceMediaStream : public MediaStream {
     ADDTRACK_QUEUED = 0x01  // Queue track add until FinishAddTracks()
   };
   /**
-   * Add a new track to the stream starting at the given base time (which
-   * must be greater than or equal to the last time passed to
-   * AdvanceKnownTracksTime). Takes ownership of aSegment. aSegment should
-   * contain data starting after aStart.
+   * Add a new track to the stream starting at the stream's current time
+   * (which must be greater than or equal to the last time passed to
+   * AdvanceKnownTracksTime). Takes ownership of aSegment.
    */
-  void AddTrack(TrackID aID, StreamTime aStart, MediaSegment* aSegment,
-                uint32_t aFlags = 0) {
-    AddTrackInternal(aID, GraphRate(), aStart, aSegment, aFlags);
+  void AddTrack(TrackID aID, MediaSegment* aSegment, uint32_t aFlags = 0) {
+    AddTrackInternal(aID, GraphRate(), aSegment, aFlags);
   }
 
   /**
    * Like AddTrack, but resamples audio from aRate to the graph rate.
    */
-  void AddAudioTrack(TrackID aID, TrackRate aRate, StreamTime aStart,
-                     AudioSegment* aSegment, uint32_t aFlags = 0);
+  void AddAudioTrack(TrackID aID, TrackRate aRate, AudioSegment* aSegment,
+                     uint32_t aFlags = 0);
 
   /**
    * Call after a series of AddTrack or AddAudioTrack calls to implement
@@ -832,7 +830,6 @@ class SourceMediaStream : public MediaStream {
     // MediaStreamGraph's.
     nsAutoRef<SpeexResamplerState> mResampler;
     int mResamplerChannelCount;
-    StreamTime mStart;
     // End-time of data already flushed to the track (excluding mData)
     StreamTime mEndOfFlushedData;
     // Each time the track updates are flushed to the media graph thread,
@@ -854,8 +851,8 @@ class SourceMediaStream : public MediaStream {
   void RemoveDirectTrackListenerImpl(DirectMediaStreamTrackListener* aListener,
                                      TrackID aTrackID) override;
 
-  void AddTrackInternal(TrackID aID, TrackRate aRate, StreamTime aStart,
-                        MediaSegment* aSegment, uint32_t aFlags);
+  void AddTrackInternal(TrackID aID, TrackRate aRate, MediaSegment* aSegment,
+                        uint32_t aFlags);
 
   TrackData* FindDataForTrack(TrackID aID) {
     mMutex.AssertCurrentThreadOwns();

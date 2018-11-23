@@ -192,12 +192,12 @@ DecodedStreamData::DecodedStreamData(
   // Initialize tracks.
   if (aInit.mInfo.HasAudio()) {
     audioTrack = aInit.mInfo.mAudio.mTrackId;
-    mStream->AddAudioTrack(audioTrack, aInit.mInfo.mAudio.mRate, 0,
+    mStream->AddAudioTrack(audioTrack, aInit.mInfo.mAudio.mRate,
                            new AudioSegment());
   }
   if (aInit.mInfo.HasVideo()) {
     videoTrack = aInit.mInfo.mVideo.mTrackId;
-    mStream->AddTrack(videoTrack, 0, new VideoSegment());
+    mStream->AddTrack(videoTrack, new VideoSegment());
   }
 
   mOutputStreamManager->Connect(mStream, audioTrack, videoTrack);

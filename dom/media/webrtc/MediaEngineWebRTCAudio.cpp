@@ -527,7 +527,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::SetTrack(
 
   AudioSegment* segment = new AudioSegment();
 
-  aStream->AddAudioTrack(aTrackID, aStream->GraphRate(), 0, segment,
+  aStream->AddAudioTrack(aTrackID, aStream->GraphRate(), segment,
                          SourceMediaStream::ADDTRACK_QUEUED);
 
   LOG(("Stream %p registered for microphone capture", aStream.get()));

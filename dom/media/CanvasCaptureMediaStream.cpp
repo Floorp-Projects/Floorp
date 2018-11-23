@@ -113,7 +113,7 @@ OutputStreamDriver::OutputStreamDriver(SourceMediaStream* aSourceStream,
           new TrackListener(aTrackId, aPrincipalHandle, aSourceStream)) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mSourceStream);
-  mSourceStream->AddTrack(aTrackId, 0, new VideoSegment());
+  mSourceStream->AddTrack(aTrackId, new VideoSegment());
   mSourceStream->AddTrackListener(mTrackListener, aTrackId);
   mSourceStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
   mSourceStream->SetPullEnabled(true);

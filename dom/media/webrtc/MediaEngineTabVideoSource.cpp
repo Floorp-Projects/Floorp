@@ -206,7 +206,7 @@ nsresult MediaEngineTabVideoSource::SetTrack(
   MOZ_ASSERT(IsTrackIDExplicit(aTrackID));
   mStream = aStream;
   mTrackID = aTrackID;
-  mStream->AddTrack(mTrackID, 0, new VideoSegment());
+  mStream->AddTrack(mTrackID, new VideoSegment());
   return NS_OK;
 }
 
