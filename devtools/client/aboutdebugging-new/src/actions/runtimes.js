@@ -40,7 +40,7 @@ const {
 
 async function getRuntimeInfo(runtime, clientWrapper) {
   const { type } = runtime;
-  const { brandName: name, channel, deviceName, version } =
+  const { name, channel, deviceName, version } =
     await clientWrapper.getDeviceDescription();
   const icon =
     (channel === "release" || channel === "beta" || channel === "aurora")
