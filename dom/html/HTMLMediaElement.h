@@ -869,6 +869,8 @@ protected:
     bool mCapturingDecoder;
     bool mCapturingMediaStream;
 
+    RefPtr<CaptureStreamTrackSourceGetter> mTrackSourceGetter;
+
     // The following members are keeping state for a captured MediaDecoder.
     // Tracks that were created on main thread before MediaDecoder fed them
     // to the MediaStreamGraph.

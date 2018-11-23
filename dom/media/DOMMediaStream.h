@@ -78,13 +78,30 @@ class MediaStreamTrackSourceGetter : public nsISupports {
   NS_DECL_CYCLE_COLLECTION_CLASS(MediaStreamTrackSourceGetter)
 
  public:
-  MediaStreamTrackSourceGetter() {}
+  explicit MediaStreamTrackSourceGetter(bool aFinishedOnInactive = true)
+      : mFinishedOnInactive(aFinishedOnInactive) {}
 
   virtual already_AddRefed<dom::MediaStreamTrackSource>
   GetMediaStreamTrackSource(TrackID aInputTrackID) = 0;
 
+  bool FinishedOnInactive() { return mFinishedOnInactive; }
+
+  /**
+   * Called by the source to signal to aStream that it should go inactive
+   * the next time there are no live tracks. This could be now if there are no
+   * live tracks currently.
+   *
+   * This is a temporary measure to allow HTMLMediaElement::MozCaptureStream
+   * to not end playback prematurely after stream.finished became stream.active.
+   * This will be removed in bug 1302379.
+   */
+  void FinishOnNextInactive(RefPtr<DOMMediaStream>& aStream);
+
  protected:
   virtual ~MediaStreamTrackSourceGetter() {}
+
+ private:
+  bool mFinishedOnInactive;
 };
 
 // clang-format off
@@ -201,6 +218,7 @@ class DOMMediaStream
       public dom::PrincipalChangeObserver<dom::MediaStreamTrack>,
       public RelativeTimeline {
   friend class dom::MediaStreamTrack;
+  friend class MediaStreamTrackSourceGetter;
   typedef dom::MediaStreamTrack MediaStreamTrack;
   typedef dom::AudioStreamTrack AudioStreamTrack;
   typedef dom::VideoStreamTrack VideoStreamTrack;
@@ -435,11 +453,6 @@ class DOMMediaStream
    */
   bool IsFinished() const;
 
-  /**
-   * Becomes inactive only when the playback stream has finished.
-   */
-  void SetInactiveOnFinish();
-
   TrackRate GraphRate();
 
   /**
@@ -593,9 +606,6 @@ class DOMMediaStream
   // created.
   void NotifyTracksCreated();
 
-  // Called when our playback stream has finished in the MediaStreamGraph.
-  void NotifyFinished();
-
   // Dispatches NotifyActive() to all registered track listeners.
   void NotifyActive();
 
@@ -707,11 +717,6 @@ class DOMMediaStream
 
   // True if this stream has live tracks.
   bool mActive;
-
-  // True if this stream only sets mActive to false when its playback stream
-  // finishes. This is a hack to maintain legacy functionality for playing a
-  // HTMLMediaElement::MozCaptureStream(). See bug 1302379.
-  bool mSetInactiveOnFinish;
 
  private:
   void NotifyPrincipalChanged();
