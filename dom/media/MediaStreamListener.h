@@ -147,6 +147,10 @@ class MediaStreamTrackListener {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaStreamTrackListener)
 
  public:
+  virtual void NotifyPull(MediaStreamGraph* aGraph,
+                          StreamTime aEndOfAppendedData,
+                          StreamTime aDesiredTime) {}
+
   virtual void NotifyQueuedChanges(MediaStreamGraph* aGraph,
                                    StreamTime aTrackOffset,
                                    const MediaSegment& aQueuedMedia) {}
