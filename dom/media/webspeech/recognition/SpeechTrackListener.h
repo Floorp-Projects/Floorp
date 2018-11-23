@@ -19,19 +19,15 @@ namespace dom {
 
 class SpeechRecognition;
 
-class SpeechStreamListener : public MediaStreamListener {
+class SpeechTrackListener : public MediaStreamTrackListener {
  public:
-  explicit SpeechStreamListener(SpeechRecognition* aRecognition);
-  ~SpeechStreamListener();
+  explicit SpeechTrackListener(SpeechRecognition* aRecognition);
+  ~SpeechTrackListener();
 
-  void NotifyQueuedAudioData(MediaStreamGraph* aGraph, TrackID aID,
-                             StreamTime aTrackOffset,
-                             const AudioSegment& aQueuedMedia,
-                             MediaStream* aInputStream,
-                             TrackID aInputTrackID) override;
+  void NotifyQueuedChanges(MediaStreamGraph* aGraph, StreamTime aTrackOffset,
+                           const MediaSegment& aQueuedMedia) override;
 
-  void NotifyEvent(MediaStreamGraph* aGraph,
-                   MediaStreamGraphEvent event) override;
+  void NotifyEnded() override;
 
  private:
   template <typename SampleFormatType>
