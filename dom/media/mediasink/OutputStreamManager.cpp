@@ -13,6 +13,9 @@
 
 namespace mozilla {
 
+#define LOG(level, msg, ...) \
+  MOZ_LOG(gMediaDecoderLog, level, (msg, ##__VA_ARGS__))
+
 class DecodedStreamTrackSource : public dom::MediaStreamTrackSource {
  public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -102,6 +105,10 @@ void OutputStreamData::AddTrack(TrackID aTrackID, MediaSegment::Type aType,
                                 bool aAsyncAddTrack) {
   MOZ_ASSERT(NS_IsMainThread());
 
+  LOG(LogLevel::Debug, "Adding output %s track with id %d to MediaStream %p%s",
+      aType == MediaSegment::AUDIO ? "audio" : "video", aTrackID,
+      mDOMStream.get(), aAsyncAddTrack ? " (async)" : "");
+
   RefPtr<dom::MediaStreamTrackSource> source = new DecodedStreamTrackSource(
       mManager, this, aTrackID, aPrincipal, aCORSMode, mAbstractMainThread);
   RefPtr<dom::MediaStreamTrack> track =
@@ -119,6 +126,9 @@ void OutputStreamData::AddTrack(TrackID aTrackID, MediaSegment::Type aType,
 
 void OutputStreamData::RemoveTrack(TrackID aTrackID) {
   MOZ_ASSERT(NS_IsMainThread());
+
+  LOG(LogLevel::Debug, "Removing output track with id %d from MediaStream %p",
+      aTrackID, mDOMStream.get());
 
   RefPtr<dom::MediaStreamTrack> track =
       mDOMStream->FindOwnedDOMTrack(mInputStream, aTrackID);
@@ -162,6 +172,8 @@ void OutputStreamManager::Add(DOMMediaStream* aDOMStream) {
   // All streams must belong to the same graph.
   MOZ_ASSERT(mSourceStream->Graph() == aDOMStream->GetInputStream()->Graph());
 
+  LOG(LogLevel::Info, "Adding MediaStream %p", aDOMStream);
+
   OutputStreamData* p = mStreams
                             .AppendElement(new OutputStreamData(
                                 this, mAbstractMainThread, aDOMStream))
@@ -174,6 +186,8 @@ void OutputStreamManager::Add(DOMMediaStream* aDOMStream) {
 void OutputStreamManager::Remove(DOMMediaStream* aDOMStream) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mSourceStream->IsDestroyed());
+
+  LOG(LogLevel::Info, "Removing MediaStream %p", aDOMStream);
 
   mStreams.ApplyIf(
       aDOMStream, 0, StreamComparator(),
@@ -224,6 +238,9 @@ void OutputStreamManager::AddTrack(TrackID aTrackID, MediaSegment::Type aType) {
   MOZ_ASSERT(!mSourceStream->IsDestroyed());
   MOZ_ASSERT(!HasTrack(aTrackID));
 
+  LOG(LogLevel::Info, "Adding %s track with id %d",
+      aType == MediaSegment::AUDIO ? "audio" : "video", aTrackID);
+
   mLiveTracks.AppendElement(MakePair(aTrackID, aType));
   for (const auto& data : mStreams) {
     data->AddTrack(aTrackID, aType, mPrincipal, mCORSMode, true);
@@ -233,6 +250,7 @@ void OutputStreamManager::AddTrack(TrackID aTrackID, MediaSegment::Type aType) {
 void OutputStreamManager::RemoveTrack(TrackID aTrackID) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mSourceStream->IsDestroyed());
+  LOG(LogLevel::Info, "Removing track with id %d", aTrackID);
   DebugOnly<bool> rv = mLiveTracks.RemoveElement(aTrackID, TrackIDComparator());
   MOZ_ASSERT(rv);
   for (const auto& data : mStreams) {
@@ -312,5 +330,7 @@ void OutputStreamManager::SetPlaying(bool aPlaying) {
     mSourceStream->Suspend();
   }
 }
+
+#undef LOG
 
 }  // namespace mozilla
