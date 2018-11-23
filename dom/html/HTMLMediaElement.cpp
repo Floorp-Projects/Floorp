@@ -6588,9 +6588,10 @@ HTMLMediaElement::AddRemoveSelfReference()
   // boolean expression.
   bool needSelfReference =
     !mShuttingDown && ownerDoc->IsActive() &&
-    (mDelayingLoadEvent || (!mPaused && mDecoder && !mDecoder->IsEnded()) ||
-     (!mPaused && mSrcStream && !mSrcStream->IsFinished()) ||
-     (mDecoder && mDecoder->IsSeeking()) || CanActivateAutoplay() ||
+    (mDelayingLoadEvent ||
+     (!mPaused && !Ended()) ||
+     (mDecoder && mDecoder->IsSeeking()) ||
+     CanActivateAutoplay() ||
      (mMediaSource ? mProgressTimer : mNetworkState == NETWORK_LOADING));
 
   if (needSelfReference != mHasSelfReference) {
