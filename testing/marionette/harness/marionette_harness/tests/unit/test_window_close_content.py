@@ -35,15 +35,7 @@ class TestCloseWindow(WindowManagerMixin, MarionetteTestCase):
 
     @skip_if_mobile("Interacting with chrome windows not available for Fennec")
     def test_close_chrome_window_for_non_browser_window(self):
-
-        def open_window_with_js():
-            with self.marionette.using_context("chrome"):
-                self.marionette.execute_script("""
-                  window.open('chrome://marionette/content/test.xul',
-                              'foo', 'chrome,centerscreen');
-                """)
-
-        win = self.open_window(trigger=open_window_with_js)
+        win = self.open_chrome_window("chrome://marionette/content/test.xul")
         self.marionette.switch_to_window(win)
 
         self.assertIn(win, self.marionette.chrome_window_handles)
