@@ -601,16 +601,9 @@ void AudioNodeStream::FinishOutput() {
   for (uint32_t j = 0; j < mListeners.Length(); ++j) {
     MediaStreamListener* l = mListeners[j];
     AudioSegment emptySegment;
-    l->NotifyQueuedTrackChanges(
-        Graph(), AUDIO_TRACK, track->GetSegment()->GetDuration(),
-        TrackEventCommand::TRACK_EVENT_ENDED, emptySegment);
-  }
-  for (TrackBound<MediaStreamTrackListener>& b : mTrackListeners) {
-    // Notify MediaStreamTrackListeners.
-    if (b.mTrackID != AUDIO_TRACK) {
-      continue;
-    }
-    b.mListener->NotifyEnded();
+    l->NotifyQueuedTrackChanges(Graph(), AUDIO_TRACK, track->GetEnd(),
+                                TrackEventCommand::TRACK_EVENT_ENDED,
+                                emptySegment);
   }
 }
 

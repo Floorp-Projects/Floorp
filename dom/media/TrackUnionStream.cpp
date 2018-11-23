@@ -274,11 +274,6 @@ void TrackUnionStream::EndTrack(uint32_t aIndex) {
                                 mTrackMap[aIndex].mInputPort->GetSource(),
                                 mTrackMap[aIndex].mInputTrackID);
   }
-  for (TrackBound<MediaStreamTrackListener>& b : mTrackListeners) {
-    if (b.mTrackID == outputTrack->GetID()) {
-      b.mListener->NotifyEnded();
-    }
-  }
   outputTrack->SetEnded();
 }
 
