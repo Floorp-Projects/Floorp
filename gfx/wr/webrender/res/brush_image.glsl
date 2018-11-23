@@ -73,6 +73,9 @@ void brush_vs(
 
     RectWithSize local_rect = prim_rect;
     vec2 stretch_size = image_data.stretch_size;
+    if (stretch_size.x < 0.0) {
+        stretch_size = local_rect.size;
+    }
 
     // If this segment should interpolate relative to the
     // segment, modify the parameters for that.

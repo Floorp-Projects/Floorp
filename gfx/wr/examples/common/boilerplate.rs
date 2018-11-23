@@ -179,6 +179,8 @@ pub fn main_wrapper<E: Example>(
         renderer.set_external_image_handler(external_image_handler);
     }
 
+    renderer.toggle_debug_flags(webrender::DebugFlags::TEXTURE_CACHE_DBG);
+
     let epoch = Epoch(0);
     let pipeline_id = PipelineId(0, 0);
     let layout_size = framebuffer_size.to_f32() / euclid::TypedScale::new(device_pixel_ratio);
@@ -195,7 +197,7 @@ pub fn main_wrapper<E: Example>(
     );
     txn.set_display_list(
         epoch,
-        None,
+        Some(ColorF::new(0.3, 0.0, 0.0, 1.0)),
         layout_size,
         builder.finalize(),
         true,
@@ -293,7 +295,7 @@ pub fn main_wrapper<E: Example>(
             );
             txn.set_display_list(
                 epoch,
-                None,
+                Some(ColorF::new(0.3, 0.0, 0.0, 1.0)),
                 layout_size,
                 builder.finalize(),
                 true,
