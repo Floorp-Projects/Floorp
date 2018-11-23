@@ -64,6 +64,7 @@ use device::query::GpuProfiler;
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use record::ApiRecordingReceiver;
 use render_backend::{FrameId, RenderBackend};
+use render_task::ClearMode;
 use scene_builder::{SceneBuilder, LowPrioritySceneBuilder};
 use shade::{Shaders, WrShaders};
 use smallvec::SmallVec;
@@ -3207,6 +3208,22 @@ impl Renderer {
 
             self.device.clear_target(clear_color, depth_clear, clear_rect);
 
+            // If this color target requires any tasks to be pre-cleared,
+            // go through and do that now.
+            for &task_id in &target.color_clears {
+                let task = &render_tasks[task_id];
+                let (rect, _) = task.get_target_rect();
+                let color = match task.clear_mode {
+                    ClearMode::Color(color) => color.to_array(),
+                    _ => unreachable!(),
+                };
+                self.device.clear_target(
+                    Some(color),
+                    None,
+                    Some(rect),
+                );
+            }
+
             if depth_clear.is_some() {
                 self.device.disable_depth_write();
             }
@@ -3459,6 +3476,38 @@ impl Renderer {
                 self.device.bind_external_draw_target(fbo_id);
                 self.device.blit_render_target(src_rect, dest_rect);
                 handler.unlock(output.pipeline_id);
+            }
+        }
+
+        // At the end of rendering a target, blit across any cache tiles
+        // to the texture cache for use on subsequent frames.
+        if !target.tile_blits.is_empty() {
+            let _timer = self.gpu_profile.start_timer(GPU_TAG_BLIT);
+
+            self.device.bind_read_target(draw_target.into());
+
+            for blit in &target.tile_blits {
+                let texture = self.texture_resolver
+                    .resolve(&blit.target.texture_id)
+                    .expect("BUG: invalid target texture");
+
+                self.device.bind_draw_target(DrawTarget::Texture {
+                    texture,
+                    layer: blit.target.texture_layer as usize,
+                    with_depth: false,
+                });
+
+                let src_rect = DeviceIntRect::new(
+                    blit.offset,
+                    blit.target.uv_rect.size.to_i32(),
+                );
+
+                let dest_rect = blit.target.uv_rect.to_i32();
+
+                self.device.blit_render_target(
+                    src_rect,
+                    dest_rect,
+                );
             }
         }
     }

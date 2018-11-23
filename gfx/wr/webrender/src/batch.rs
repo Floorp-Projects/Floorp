@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntPoint, DeviceIntSize};
-use api::{ExternalImageType, FilterOp, ImageRendering};
-use api::{YuvColorSpace, YuvFormat, PictureRect, ColorDepth};
+use api::{ExternalImageType, FilterOp, ImageRendering, LayoutRect, LayoutSize};
+use api::{YuvColorSpace, YuvFormat, PictureRect, ColorDepth, LayoutPoint};
 use clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use glyph_rasterizer::GlyphFormat;
@@ -32,6 +32,9 @@ use util::{TransformedRectKind};
 // Special sentinel value recognized by the shader. It is considered to be
 // a dummy task that doesn't mask out anything.
 const OPAQUE_TASK_ADDRESS: RenderTaskAddress = RenderTaskAddress(0x7fff);
+
+/// Used to signal there are no segments provided with this primitive.
+const INVALID_SEGMENT_INDEX: i32 = 0xffff;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -894,12 +897,104 @@ impl AlphaBatchBuilder {
 
                 match picture.raster_config {
                     Some(ref raster_config) => {
-                        let surface = ctx.surfaces[raster_config.surface_index.0]
-                            .surface
-                            .as_ref()
-                            .expect("bug: surface must be allocated by now");
                         match raster_config.composite_mode {
+                            PictureCompositeMode::TileCache { .. } => {
+
+                                // Step through each tile in the cache, and draw it with an image
+                                // brush primitive if visible.
+
+                                let kind = BatchKind::Brush(
+                                    BrushBatchKind::Image(ImageBufferKind::Texture2DArray)
+                                );
+
+                                let tile_cache = picture.tile_cache.as_ref().unwrap();
+
+                                for y in 0 .. tile_cache.tile_rect.size.height {
+                                    for x in 0 .. tile_cache.tile_rect.size.width {
+                                        let i = y * tile_cache.tile_rect.size.width + x;
+                                        let tile = &tile_cache.tiles[i as usize];
+
+                                        // Check if the tile is visible.
+                                        if !tile.is_visible {
+                                            continue;
+                                        }
+
+                                        // Get the local rect of the tile.
+                                        let tile_rect = LayoutRect::new(
+                                            LayoutPoint::new(
+                                                (tile_cache.tile_rect.origin.x + x) as f32 * tile_cache.local_tile_size.width,
+                                                (tile_cache.tile_rect.origin.y + y) as f32 * tile_cache.local_tile_size.height,
+                                            ),
+                                            LayoutSize::new(
+                                                tile_cache.local_tile_size.width,
+                                                tile_cache.local_tile_size.height,
+                                            ),
+                                        );
+
+                                        // Construct a local clip rect that ensures we only draw pixels where
+                                        // the local bounds of the picture extend to within the edge tiles.
+                                        let local_clip_rect = prim_instance
+                                            .combined_local_clip_rect
+                                            .intersection(&picture.local_rect)
+                                            .expect("bug: invalid picture local rect");
+
+                                        let prim_header = PrimitiveHeader {
+                                            local_rect: tile_rect,
+                                            local_clip_rect,
+                                            task_address,
+                                            specific_prim_address: prim_cache_address,
+                                            clip_task_address,
+                                            transform_id,
+                                        };
+
+                                        let prim_header_index = prim_headers.push(&prim_header, z_id, [
+                                            ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
+                                            RasterizationSpace::Local as i32,
+                                            get_shader_opacity(1.0),
+                                        ]);
+
+                                        let cache_item = ctx
+                                            .resource_cache
+                                            .get_texture_cache_item(&tile.handle);
+
+                                        let key = BatchKey::new(
+                                            kind,
+                                            non_segmented_blend_mode,
+                                            BatchTextures::color(cache_item.texture_id),
+                                        );
+
+                                        let uv_rect_address = gpu_cache
+                                            .get_address(&cache_item.uv_rect_handle)
+                                            .as_int();
+
+                                        let instance = BrushInstance {
+                                            prim_header_index,
+                                            clip_task_address,
+                                            segment_index: INVALID_SEGMENT_INDEX,
+                                            edge_flags: EdgeAaSegmentMask::empty(),
+                                            brush_flags: BrushFlags::empty(),
+                                            user_data: uv_rect_address,
+                                        };
+
+                                        // Instead of retrieving the batch once and adding each tile instance,
+                                        // use this API to get an appropriate batch for each tile, since
+                                        // the batch textures may be different. The batch list internally
+                                        // caches the current batch if the key hasn't changed.
+                                        let batch = self.batch_list.set_params_and_get_batch(
+                                            key,
+                                            bounding_rect,
+                                            z_id,
+                                        );
+
+                                        batch.push(PrimitiveInstanceData::from(instance));
+                                    }
+                                }
+                            }
                             PictureCompositeMode::Filter(filter) => {
+                                let surface = ctx.surfaces[raster_config.surface_index.0]
+                                    .surface
+                                    .as_ref()
+                                    .expect("bug: surface must be allocated by now");
                                 assert!(filter.is_visible());
                                 match filter {
                                     FilterOp::Blur(..) => {
@@ -1117,6 +1212,10 @@ impl AlphaBatchBuilder {
                                 }
                             }
                             PictureCompositeMode::MixBlend(mode) => {
+                                let surface = ctx.surfaces[raster_config.surface_index.0]
+                                    .surface
+                                    .as_ref()
+                                    .expect("bug: surface must be allocated by now");
                                 let cache_task_id = surface.resolve_render_task_id();
                                 let backdrop_id = picture.secondary_render_task_id.expect("no backdrop!?");
 
@@ -1156,6 +1255,10 @@ impl AlphaBatchBuilder {
                                 );
                             }
                             PictureCompositeMode::Blit => {
+                                let surface = ctx.surfaces[raster_config.surface_index.0]
+                                    .surface
+                                    .as_ref()
+                                    .expect("bug: surface must be allocated by now");
                                 let cache_task_id = surface.resolve_render_task_id();
                                 let kind = BatchKind::Brush(
                                     BrushBatchKind::Image(ImageBufferKind::Texture2DArray)

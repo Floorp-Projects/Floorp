@@ -300,7 +300,7 @@ impl SurfaceDescriptor {
                     raster_spatial_node_index,
                     surface_spatial_node_index,
                     clip_scroll_tree,
-                ).into();
+                ).expect("bug: unable to get coord mapping").into();
 
                 if let TransformKey::ScaleOffset(ref mut key) = key {
                     if raster_spatial_node.coordinate_system_id == surface_spatial_node.coordinate_system_id {
@@ -325,7 +325,7 @@ impl SurfaceDescriptor {
                 raster_spatial_node_index,
                 *spatial_node_index,
                 clip_scroll_tree,
-            ).into();
+            ).expect("bug: unable to get coord mapping").into();
         }
     }
 }
