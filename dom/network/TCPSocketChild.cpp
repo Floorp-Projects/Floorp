@@ -69,7 +69,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TCPSocketChildBase)
 NS_INTERFACE_MAP_END
 
 TCPSocketChildBase::TCPSocketChildBase()
-: mIPCOpen(false)
 {
   mozilla::HoldJSObjects(this);
 }
@@ -82,7 +81,7 @@ TCPSocketChildBase::~TCPSocketChildBase()
 NS_IMETHODIMP_(MozExternalRefCountType) TCPSocketChild::Release(void)
 {
   nsrefcnt refcnt = TCPSocketChildBase::Release();
-  if (refcnt == 1 && mIPCOpen) {
+  if (refcnt == 1 && IPCOpen()) {
     PTCPSocketChild::SendRequestDelete();
     return 1;
   }
@@ -138,8 +137,6 @@ TCPSocketChild::SendWindowlessOpenBind(nsITCPSocketCallback* aSocket,
 void
 TCPSocketChildBase::ReleaseIPDLReference()
 {
-  MOZ_ASSERT(mIPCOpen);
-  mIPCOpen = false;
   mSocket = nullptr;
   this->Release();
 }
@@ -147,8 +144,6 @@ TCPSocketChildBase::ReleaseIPDLReference()
 void
 TCPSocketChildBase::AddIPDLReference()
 {
-  MOZ_ASSERT(!mIPCOpen);
-  mIPCOpen = true;
   this->AddRef();
 }
 

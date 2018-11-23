@@ -44,10 +44,8 @@ private:
   VRLayerChild();
   virtual ~VRLayerChild();
   void ClearSurfaces();
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   RefPtr<dom::HTMLCanvasElement> mCanvasElement;
-  bool mIPCOpen;
 
   // AddIPDLReference and ReleaseIPDLReference are only to be called by CreateIPDLActor
   // and DestroyIPDLActor, respectively. We intentionally make them private to prevent misuse.

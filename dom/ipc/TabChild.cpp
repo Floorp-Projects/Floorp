@@ -411,7 +411,6 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mUniqueId(aTabId)
   , mHasSiblings(false)
   , mIsTransparent(false)
-  , mIPCOpen(false)
   , mParentIsActive(false)
   , mDidSetRealShowInfo(false)
   , mDidLoadURLInit(false)
@@ -626,8 +625,6 @@ TabChild::Init(mozIDOMWindowProxy* aParent)
         }
       });
   mAPZEventState = new APZEventState(mPuppetWidget, std::move(callback));
-
-  mIPCOpen = true;
 
   // Recording/replaying processes use their own compositor.
   if (recordreplay::IsRecordingOrReplaying()) {
@@ -1039,8 +1036,6 @@ TabChild::DestroyWindow()
 void
 TabChild::ActorDestroy(ActorDestroyReason why)
 {
-  mIPCOpen = false;
-
   DestroyWindow();
 
   if (mTabChildMessageManager) {

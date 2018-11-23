@@ -68,7 +68,6 @@ CookieServiceChild::CookieServiceChild()
   , mThirdPartySession(false)
   , mThirdPartyNonsecureSession(false)
   , mLeaveSecureAlone(true)
-  , mIPCOpen(false)
 {
   NS_ASSERTION(IsNeckoChild(), "not a child process");
 
@@ -85,8 +84,6 @@ CookieServiceChild::CookieServiceChild()
 
   // Create a child PCookieService actor.
   gNeckoChild->SendPCookieServiceConstructor(this);
-
-  mIPCOpen = true;
 
   mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
   NS_ASSERTION(mTLDService, "couldn't get TLDService");
@@ -157,15 +154,9 @@ CookieServiceChild::~CookieServiceChild()
 }
 
 void
-CookieServiceChild::ActorDestroy(ActorDestroyReason why)
-{
-  mIPCOpen = false;
-}
-
-void
 CookieServiceChild::TrackCookieLoad(nsIChannel *aChannel)
 {
-  if (!mIPCOpen) {
+  if (!IPCOpen()) {
     return;
   }
 
@@ -652,7 +643,7 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
   }
 
   // Asynchronously call the parent.
-  if (mIPCOpen) {
+  if (IPCOpen()) {
     SendSetCookieString(hostURIParams, channelURIParams,
                         isForeign, isTrackingResource,
                         firstPartyStorageAccessGranted, cookieString,

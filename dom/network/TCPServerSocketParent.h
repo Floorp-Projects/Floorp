@@ -48,7 +48,6 @@ private:
 
   PNeckoParent* mNeckoParent;
   RefPtr<TCPServerSocket> mServerSocket;
-  bool mIPCOpen;
 };
 
 } // namespace dom

@@ -23,7 +23,6 @@ namespace dom {
 NS_IMPL_ISUPPORTS(UDPSocketChildBase, nsIUDPSocketChild)
 
 UDPSocketChildBase::UDPSocketChildBase()
-: mIPCOpen(false)
 {
 }
 
@@ -34,8 +33,6 @@ UDPSocketChildBase::~UDPSocketChildBase()
 void
 UDPSocketChildBase::ReleaseIPDLReference()
 {
-  MOZ_ASSERT(mIPCOpen);
-  mIPCOpen = false;
   mSocket = nullptr;
   this->Release();
 }
@@ -43,15 +40,13 @@ UDPSocketChildBase::ReleaseIPDLReference()
 void
 UDPSocketChildBase::AddIPDLReference()
 {
-  MOZ_ASSERT(!mIPCOpen);
-  mIPCOpen = true;
   this->AddRef();
 }
 
 NS_IMETHODIMP_(MozExternalRefCountType) UDPSocketChild::Release(void)
 {
   nsrefcnt refcnt = UDPSocketChildBase::Release();
-  if (refcnt == 1 && mIPCOpen) {
+  if (refcnt == 1 && IPCOpen()) {
     PUDPSocketChild::SendRequestDelete();
     return 1;
   }

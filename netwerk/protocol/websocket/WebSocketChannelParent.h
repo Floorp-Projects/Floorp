@@ -61,7 +61,6 @@ class WebSocketChannelParent : public PWebSocketParent,
   nsCOMPtr<nsIAuthPromptProvider> mAuthProvider;
   nsCOMPtr<nsIWebSocketChannel> mChannel;
   nsCOMPtr<nsILoadContext> mLoadContext;
-  bool mIPCOpen;
 
   uint32_t mSerial;
 };

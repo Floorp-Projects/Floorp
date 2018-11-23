@@ -30,13 +30,11 @@ NS_IMPL_ISUPPORTS(UDPSocketParent, nsIUDPSocketListener)
 
 UDPSocketParent::UDPSocketParent(PBackgroundParent* aManager)
   : mBackgroundManager(aManager)
-  , mIPCOpen(true)
 {
 }
 
 UDPSocketParent::UDPSocketParent(PNeckoParent* aManager)
   : mBackgroundManager(nullptr)
-  , mIPCOpen(true)
 {
 }
 
@@ -510,8 +508,6 @@ UDPSocketParent::RecvRequestDelete()
 void
 UDPSocketParent::ActorDestroy(ActorDestroyReason why)
 {
-  MOZ_ASSERT(mIPCOpen);
-  mIPCOpen = false;
   if (mSocket) {
     mSocket->Close();
   }
@@ -524,7 +520,7 @@ NS_IMETHODIMP
 UDPSocketParent::OnPacketReceived(nsIUDPSocket* aSocket, nsIUDPMessage* aMessage)
 {
   // receiving packet from remote host, forward the message content to child process
-  if (!mIPCOpen) {
+  if (!IPCOpen()) {
     return NS_OK;
   }
 
@@ -577,7 +573,7 @@ NS_IMETHODIMP
 UDPSocketParent::OnStopListening(nsIUDPSocket* aSocket, nsresult aStatus)
 {
   // underlying socket is dead, send state update to child process
-  if (mIPCOpen) {
+  if (IPCOpen()) {
     mozilla::Unused << SendCallbackClosed();
   }
   return NS_OK;
@@ -586,7 +582,7 @@ UDPSocketParent::OnStopListening(nsIUDPSocket* aSocket, nsresult aStatus)
 void
 UDPSocketParent::FireInternalError(uint32_t aLineNo)
 {
-  if (!mIPCOpen) {
+  if (!IPCOpen()) {
     return;
   }
 

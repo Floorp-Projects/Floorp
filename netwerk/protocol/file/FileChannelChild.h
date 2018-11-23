@@ -33,8 +33,6 @@ private:
   ~FileChannelChild() = default;;
 
   void AddIPDLReference();
-
-  bool mIPCOpen;
 };
 
 } // namespace net

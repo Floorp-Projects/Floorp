@@ -40,7 +40,6 @@ protected:
   virtual ~TCPSocketChildBase();
 
   nsCOMPtr<nsITCPSocketCallback> mSocket;
-  bool mIPCOpen;
 };
 
 class TCPSocketChild : public mozilla::net::PTCPSocketChild
