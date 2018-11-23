@@ -1710,6 +1710,20 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           }
         ]]></body>
       </method>
+
+      <method name="typeRestrictToken">
+        <parameter name="char"/>
+        <body><![CDATA[
+          for (let c of [char, " "]) {
+            let code = c.charCodeAt(0);
+            gURLBar.inputField.dispatchEvent(new KeyboardEvent("keypress", {
+              keyCode: code,
+              charCode: code,
+              bubbles: true,
+            }));
+          }
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
@@ -2493,8 +2507,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               this.input.formatValue();
 
               // Also, hide the one-off search buttons if the user is using, or
-              // starting to use, an "@engine" search engine alias.
-              this.toggleOneOffSearches(this.input.value.trim()[0] != "@");
+              // starting to use, an "@engine" search engine alias, or typed
+              // only the search restriction character.
+              let trimmedValue = this.input.value.trim();
+              this.toggleOneOffSearches(
+                trimmedValue[0] != "@" &&
+                (trimmedValue[0] != UrlbarTokenizer.RESTRICT.SEARCH ||
+                 trimmedValue.length != 1)
+              );
             }
 
             // If this is the first time we get the result from the current

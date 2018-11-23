@@ -302,20 +302,8 @@ add_task(async function restrictToken() {
     search: `${UrlbarTokenizer.RESTRICT.SEARCH} hello`,
     searchParam: "enable-actions",
     matches: [
-      // TODO (bug 1177895) This is wrong.
       makeSearchMatch(`${UrlbarTokenizer.RESTRICT.SEARCH} hello`,
-                      { engineName: ENGINE_NAME, heuristic: true }),
-      {
-        uri: makeActionURI(("searchengine"), {
-          engineName: ENGINE_NAME,
-          input: "hello",
-          searchQuery: "hello",
-          searchSuggestion: "hello",
-        }),
-        title: ENGINE_NAME,
-        style: ["action", "searchengine", "suggestion"],
-        icon: "",
-      },
+                      { searchQuery: "hello", engineName: ENGINE_NAME, heuristic: true }),
       {
         uri: makeActionURI(("searchengine"), {
           engineName: ENGINE_NAME,
@@ -338,6 +326,53 @@ add_task(async function restrictToken() {
         style: ["action", "searchengine", "suggestion"],
         icon: "",
       },
+    ],
+  });
+
+  // Typing the search restriction char shows only the Search Engine entry with
+  // no query.
+  await check_autocomplete({
+    search: UrlbarTokenizer.RESTRICT.SEARCH,
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch(UrlbarTokenizer.RESTRICT.SEARCH,
+                      { searchQuery: "", engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+  // Also if followed by multiple spaces.
+  await check_autocomplete({
+    search: UrlbarTokenizer.RESTRICT.SEARCH + "  ",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch(UrlbarTokenizer.RESTRICT.SEARCH + "  ",
+                      { searchQuery: "", engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+  // Also if followed by a single char.
+  await check_autocomplete({
+    search: UrlbarTokenizer.RESTRICT.SEARCH + "a",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch(UrlbarTokenizer.RESTRICT.SEARCH + "a",
+                      { searchQuery: "a", engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+  // Also if followed by a space and single char.
+  await check_autocomplete({
+    search: UrlbarTokenizer.RESTRICT.SEARCH + " a",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch(UrlbarTokenizer.RESTRICT.SEARCH + " a",
+                      { searchQuery: "a", engineName: ENGINE_NAME, heuristic: true }),
+    ],
+  });
+  // Any other restriction char allows to search for it.
+  await check_autocomplete({
+    search: UrlbarTokenizer.RESTRICT.OPENPAGE,
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE,
+                      { engineName: ENGINE_NAME, heuristic: true }),
     ],
   });
 

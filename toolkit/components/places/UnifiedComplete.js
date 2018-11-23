@@ -3,6 +3,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* eslint complexity: ["error", 50] */
 
 "use strict";
 
@@ -613,8 +614,20 @@ function Search(searchString, searchParam, autocompleteListener,
                           parseInt(userContextId[1], 10) :
                           Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
 
-  this._searchTokens =
-    this.filterTokens(getUnfilteredSearchTokens(this._searchString));
+  let unfilteredTokens = getUnfilteredSearchTokens(this._searchString);
+
+  // We handle any leading restriction character specially, in particular for
+  // a search restriction we also handle the case where there's no space before
+  // the query, like "?porcupine".
+  if (unfilteredTokens.length > 1 &&
+      this._trimmedOriginalSearchString.startsWith(unfilteredTokens[0]) &&
+      Object.values(UrlbarTokenizer.RESTRICT).includes(unfilteredTokens[0])) {
+    this._leadingRestrictionToken = unfilteredTokens[0];
+  } else if (this._trimmedOriginalSearchString.startsWith(UrlbarTokenizer.RESTRICT.SEARCH)) {
+    this._leadingRestrictionToken = UrlbarTokenizer.RESTRICT.SEARCH;
+  }
+
+  this._searchTokens = this.filterTokens(unfilteredTokens);
 
   // The heuristic token is the first filtered search token, but only when it's
   // actually the first thing in the search string.  If a prefix or restriction
@@ -895,12 +908,21 @@ Search.prototype = {
       if (!this.pending)
         return;
 
-      // If the heuristic result is a search engine result with a token alias
-      // and an empty query, then we're done.  We want to show only that single
-      // result as a clear hint that the user can continue typing to search.
-      if (this._searchEngineAliasMatch &&
-          this._searchEngineAliasMatch.isTokenAlias &&
-          !this._searchEngineAliasMatch.query) {
+      // If the heuristic result is a search engine result with an empty query
+      // and we have either a token alias or the search restriction char, then
+      // we're done.  We want to show only that single result as a clear hint
+      // that the user can continue typing to search.
+      // For the restriction character case, also consider a single char query
+      // or just the char itself, anyway we don't return search suggestions
+      // unless at least 2 chars have been typed. Thus "?__" and "? a" should
+      // finish here, while "?aa" should continue.
+      let emptyQueryTokenAlias = this._searchEngineAliasMatch &&
+                                  this._searchEngineAliasMatch.isTokenAlias &&
+                                  !this._searchEngineAliasMatch.query;
+      let emptySearchRestriction = this._trimmedOriginalSearchString.length <= 3 &&
+                                   this._leadingRestrictionToken == UrlbarTokenizer.RESTRICT.SEARCH &&
+                                   /\s*\S?$/.test(this._trimmedOriginalSearchString);
+      if (emptySearchRestriction || emptyQueryTokenAlias) {
         this._cleanUpNonCurrentMatches(null, false);
         this._autocompleteSearch.finishSearch(true);
         return;
@@ -1574,10 +1596,11 @@ Search.prototype = {
     if (!engine || !this.pending) {
       return false;
     }
-    this._addSearchEngineMatch({
-      engine,
-      query: this._originalSearchString,
-    });
+    // Strip a leading restriction char.
+    let query = this._leadingRestrictionToken ?
+      substringAfter(this._trimmedOriginalSearchString, this._leadingRestrictionToken).trim() :
+      this._trimmedOriginalSearchString;
+    this._addSearchEngineMatch({ engine, query });
     return true;
   },
 
