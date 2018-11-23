@@ -13107,8 +13107,9 @@
   "CONTENT_FRAME_TIME": {
     "record_in_processes": ["main", "gpu"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "rhunt@mozilla.com"],
-    "bug_numbers": [1470528],
-    "expires_in_version": "66",
+    "bug_numbers": [1470528, 1509536],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 5000,
     "n_buckets": 50,
@@ -13117,8 +13118,9 @@
   "CONTENT_FRAME_TIME_WITH_SVG": {
     "record_in_processes": ["main", "gpu"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "mwoodrow@mozilla.com"],
-    "bug_numbers": [1483549],
-    "expires_in_version": "66",
+    "bug_numbers": [1483549, 1509536],
+    "expires_in_version": "70",
+    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 5000,
     "n_buckets": 50,
