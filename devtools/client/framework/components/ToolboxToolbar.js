@@ -257,7 +257,10 @@ class ToolboxToolbar extends Component {
         className: `devtools-button command-button ${isChecked ? "checked" : ""}`,
         ref: "frameMenuButton",
         title: description,
-        onCloseButton: toolbox.highlighterUtils.unhighlight,
+        onCloseButton: async () => {
+          await toolbox.initInspector();
+          toolbox.highlighter.unhighlight();
+        },
       },
       this.createFrameList
     );

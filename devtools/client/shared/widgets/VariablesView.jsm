@@ -2781,10 +2781,11 @@ Variable.prototype = extend(Scope.prototype, {
    */
   highlightDomNode: async function() {
     if (this.toolbox) {
+      await this.toolbox.initInspector();
       if (!this._nodeFront) {
         this.nodeFront = await this.toolbox.walker.gripToNodeFront(this._valueGrip);
       }
-      await this.toolbox.highlighterUtils.highlightNodeFront(this._nodeFront);
+      await this.toolbox.highlighter.highlight(this._nodeFront);
     }
   },
 
@@ -2794,7 +2795,7 @@ Variable.prototype = extend(Scope.prototype, {
    */
   unhighlightDomNode: function() {
     if (this.toolbox) {
-      this.toolbox.highlighterUtils.unhighlight();
+      this.toolbox.highlighter.unhighlight();
     }
   },
 

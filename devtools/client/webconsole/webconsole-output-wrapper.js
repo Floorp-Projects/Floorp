@@ -213,12 +213,13 @@ WebConsoleOutputWrapper.prototype = {
             if (!this.toolbox.highlighter) {
               return null;
             }
+            await this.toolbox.initInspector();
             const nodeFront = await this.toolbox.walker.gripToNodeFront(grip);
-            return this.toolbox.highlighterUtils.highlightNodeFront(nodeFront, options);
+            return this.toolbox.highlighter.highlight(nodeFront, options);
           },
           unHighlightDomElement: (forceHide = false) => {
-            return this.toolbox.highlighterUtils
-              ? this.toolbox.highlighterUtils.unhighlight(forceHide)
+            return this.toolbox.highlighter
+              ? this.toolbox.highlighter.unhighlight(forceHide)
               : null;
           },
           openNodeInInspector: async (grip) => {

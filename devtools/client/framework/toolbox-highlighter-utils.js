@@ -5,7 +5,6 @@
 "use strict";
 
 const promise = require("promise");
-const flags = require("devtools/shared/flags");
 
 /**
  * Client-side highlighter shared module.
@@ -37,10 +36,6 @@ exports.getHighlighterUtils = function(toolbox) {
 
   // Is the highlighter currently in pick mode
   let isPicking = false;
-
-  // Is the box model already displayed, used to prevent dispatching
-  // unnecessary requests, especially during toolbox shutdown
-  let isNodeFrontHighlighted = false;
 
   /**
    * Release this utils, nullifying the references to the toolbox
@@ -177,50 +172,6 @@ exports.getHighlighterUtils = function(toolbox) {
     cancelPicker();
     toolbox.win.focus();
   }
-
-  /**
-   * Show the box model highlighter on a node in the content page.
-   * The node needs to be a NodeFront, as defined by the inspector actor
-   * @see devtools/server/actors/inspector/inspector.js
-   * @param {NodeFront} nodeFront The node to highlight
-   * @param {Object} options
-   * @return A promise that resolves when the node has been highlighted
-   */
-  exported.highlightNodeFront = requireInspector(
-  async function(nodeFront, options = {}) {
-    if (!nodeFront) {
-      return;
-    }
-
-    isNodeFrontHighlighted = true;
-    await toolbox.highlighter.showBoxModel(nodeFront, options);
-
-    toolbox.emit("node-highlight", nodeFront);
-  });
-
-  /**
-   * Hide the highlighter.
-   * @param {Boolean} forceHide Only really matters in test mode (when
-   * flags.testing is true). In test mode, hovering over several nodes
-   * in the markup view doesn't hide/show the highlighter to ease testing. The
-   * highlighter stays visible at all times, except when the mouse leaves the
-   * markup view, which is when this param is passed to true
-   * @return a promise that resolves when the highlighter is hidden
-   */
-  exported.unhighlight = async function(forceHide = false) {
-    forceHide = forceHide || !flags.testing;
-
-    if (isNodeFrontHighlighted && forceHide && toolbox.highlighter) {
-      isNodeFrontHighlighted = false;
-      await toolbox.highlighter.hideBoxModel();
-    }
-
-    // unhighlight is called when destroying the toolbox, which means that by
-    // now, the toolbox reference might have been nullified already.
-    if (toolbox) {
-      toolbox.emit("node-unhighlight");
-    }
-  };
 
   /**
    * If the main, box-model, highlighter isn't enough, or if multiple highlighters

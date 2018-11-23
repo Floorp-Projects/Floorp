@@ -56,7 +56,7 @@ add_task(async function() {
   const container = doc.getElementById("inspector-breadcrumbs");
 
   const button = container.querySelector("button[checked]");
-  const onHighlight = toolbox.once("node-highlight");
+  const onHighlight = toolbox.highlighter.once("node-highlight");
   button.click();
   await onHighlight;
 
