@@ -743,11 +743,12 @@ class SourceMediaStream : public MediaStream {
 
   /**
    * Append media data to a track. Ownership of aSegment remains with the
-   * caller, but aSegment is emptied. Returns false if the data was not appended
-   * because no such track exists or the stream was already finished.
+   * caller, but aSegment is emptied. Returns 0 if the data was not appended
+   * because no such track exists or the stream was already finished. Returns
+   * the duration of the appended data in the graph's track rate otherwise.
    */
-  virtual bool AppendToTrack(TrackID aID, MediaSegment* aSegment,
-                             MediaSegment* aRawSegment = nullptr);
+  virtual StreamTime AppendToTrack(TrackID aID, MediaSegment* aSegment,
+                                   MediaSegment* aRawSegment = nullptr);
   /**
    * Get the stream time of the end of the data that has been appended so far.
    * Can be called from any thread but won't be useful if it can race with
