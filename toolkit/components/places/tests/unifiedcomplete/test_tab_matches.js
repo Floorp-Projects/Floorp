@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var gTabRestrictChar = "%";
-
 add_task(async function test_tab_matches() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
 
@@ -130,9 +128,10 @@ add_task(async function test_tab_matches() {
   info("tab match search with restriction character");
   addOpenPages(uri1, 1);
   await check_autocomplete({
-    search: gTabRestrictChar + " abc",
+    search: UrlbarTokenizer.RESTRICT.OPENPAGE + " abc",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch(gTabRestrictChar + " abc", { heuristic: true }),
+    matches: [ makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE + " abc",
+                               { heuristic: true, searchQuery: "abc" }),
                makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }) ],
   });
 
@@ -146,17 +145,18 @@ add_task(async function test_tab_matches() {
 
   info("tab match with not-addable pages and restriction character");
   await check_autocomplete({
-    search: gTabRestrictChar + " mozilla",
+    search: UrlbarTokenizer.RESTRICT.OPENPAGE + " mozilla",
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch(gTabRestrictChar + " mozilla", { heuristic: true }),
+    matches: [ makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE + " mozilla",
+                               { heuristic: true, searchQuery: "mozilla" }),
                makeSwitchToTabMatch("about:mozilla") ],
   });
 
   info("tab match with not-addable pages and only restriction character");
   await check_autocomplete({
-    search: gTabRestrictChar,
+    search: UrlbarTokenizer.RESTRICT.OPENPAGE,
     searchParam: "enable-actions",
-    matches: [ makeSearchMatch(gTabRestrictChar, { heuristic: true }),
+    matches: [ makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE, { heuristic: true }),
                makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
                makeSwitchToTabMatch("about:mozilla"),
                makeSwitchToTabMatch("data:text/html,test") ],
