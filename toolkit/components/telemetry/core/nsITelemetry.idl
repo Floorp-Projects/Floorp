@@ -78,7 +78,7 @@ interface nsITelemetry : nsISupports
    * The returned structure looks like:
    *   { "process": { "name1": { "key_1": histogramData1, "key_2": histogramData2 }, ...}, ... }
    *
-   * @param aStoreName The name of the store to snapshot. Ignored at the moment.
+   * @param aStoreName The name of the store to snapshot. Something like "main".
    * @param aClearStore Whether to clear out the keyed histograms in the named store after snapshotting.
    * @param aFilterTest If true, `TELEMETRY_TEST_` histograms will be filtered out.
                         Filtered histograms are still cleared if `aClearStore` is true.
@@ -308,11 +308,17 @@ interface nsITelemetry : nsISupports
    *
    * @param id - unique identifier from TelemetryHistograms.h
    * The returned object has the following functions:
-   *   add(string key, [optional] int) - Add an int value to the histogram for that key. If no histogram for that key exists yet, it is created.
-   *   snapshot([optional] string key) - If key is provided, returns a snapshot for the histogram with that key or null. If key is not provided, returns the snapshots of all the registered keys in the form {key1: snapshot1, key2: snapshot2, ...}.
-   *   keys() - Returns an array with the string keys of the currently registered histograms
-   *   clear() - Clears the registered histograms from this.
-   *             This is intended to be only used in tests.
+   *   add(string key, [optional] int) - Add an int value to the histogram for that key.
+                                         If no histogram for that key exists yet, it is created.
+   *   snapshot([optional] {store}) - Returns the snapshots of all the registered keys in the form
+                                      {key1: snapshot1, key2: snapshot2, ...} in the specified store.
+   *                                  Defaults to the "main" store.
+   *   keys([optional] {store}) - Returns an array with the string keys of the currently registered
+                                  histograms in the given store.
+                                  Defaults to "main".
+   *   clear([optional] {store}) - Clears the registered histograms from this.
+   *                               Defaults to the "main" store.
+   *                               Note: This is intended to be only used in tests.
    */
   [implicit_jscontext]
   jsval getKeyedHistogramById(in ACString id);
