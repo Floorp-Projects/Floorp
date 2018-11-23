@@ -98,7 +98,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "MediaStreamGraph.h"
 #include "DOMMediaStream.h"
-#include "rlogconnector.h"
 #include "WebrtcGlobalInformation.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/EventDispatcher.h"
@@ -336,12 +335,11 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , connectStr(nullptr)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  auto log = RLogConnector::CreateInstance();
   if (aGlobal) {
     mWindow = do_QueryInterface(aGlobal->GetAsSupports());
     if (IsPrivateBrowsing(mWindow)) {
       mPrivateWindow = true;
-      log->EnterPrivateMode();
+      MediaTransportHandler::EnterPrivateMode();
     }
     mWindow->AddPeerConnection();
     mActiveOnWindow = true;
@@ -374,11 +372,7 @@ PeerConnectionImpl::~PeerConnectionImpl()
   }
 
   if (mPrivateWindow) {
-    auto * log = RLogConnector::GetInstance();
-    if (log) {
-      log->ExitPrivateMode();
-    }
-    mPrivateWindow = false;
+    MediaTransportHandler::ExitPrivateMode();
   }
   if (PeerConnectionCtx::isActive()) {
     PeerConnectionCtx::GetInstance()->mPeerConnections.erase(mHandle);

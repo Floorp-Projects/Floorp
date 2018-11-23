@@ -16,6 +16,8 @@
 // For RTCStatsQueryPromise typedef
 #include "signaling/src/peerconnection/PeerConnectionImpl.h"
 
+#include "nsString.h"
+
 #include <map>
 #include <string>
 #include <set>
@@ -118,6 +120,16 @@ class MediaTransportHandler : public MediaTransportBase,
 
     RefPtr<RTCStatsQueryPromise> GetIceStats(
         UniquePtr<RTCStatsQuery>&& aQuery);
+
+    typedef MozPromise<dom::Sequence<nsString>, nsresult, true>
+      IceLogPromise;
+
+    static RefPtr<IceLogPromise> GetIceLog(const nsCString& aPattern);
+
+    static void ClearIceLog();
+
+    static void EnterPrivateMode();
+    static void ExitPrivateMode();
 
     // TODO(bug 1494311) Use IPC type
     struct CandidateInfo {
