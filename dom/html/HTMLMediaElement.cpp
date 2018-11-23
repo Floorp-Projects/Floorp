@@ -2606,6 +2606,7 @@ HTMLMediaElement::NotifyMediaStreamTracksAvailable(DOMMediaStream* aStream)
     NotifyOwnerDocumentActivityChanged();
   }
 
+  FirstFrameLoaded();
   UpdateReadyStateInternal();
 }
 
@@ -5188,69 +5189,39 @@ class HTMLMediaElement::StreamListener : public MediaStreamListener
 public:
   StreamListener(HTMLMediaElement* aElement, const char* aName)
     : mElement(aElement)
-    , mHaveCurrentData(false)
-    , mFinished(false)
     , mMutex(aName)
     , mPendingNotifyOutput(false)
   {
   }
+
   void Forget()
   {
-    if (mElement) {
-      HTMLMediaElement* element = mElement;
-      mElement = nullptr;
-      element->UpdateReadyStateInternal();
-    }
+    mElement = nullptr;
   }
 
   // Main thread
 
-  MediaDecoderOwner::NextFrameStatus NextFrameStatus()
-  {
-    if (!mElement || !mHaveCurrentData || mFinished) {
-      return MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
-    }
-    return MediaDecoderOwner::NEXT_FRAME_AVAILABLE;
-  }
-
   void DoNotifyOutput()
   {
+    MOZ_ASSERT(NS_IsMainThread());
     {
       MutexAutoLock lock(mMutex);
       mPendingNotifyOutput = false;
     }
-    if (mElement && mHaveCurrentData) {
-      RefPtr<HTMLMediaElement> kungFuDeathGrip = mElement;
-      kungFuDeathGrip->FireTimeUpdate(true);
+    if (mElement && mElement->ReadyState() >= HAVE_CURRENT_DATA) {
+      mElement->FireTimeUpdate(true);
     }
-  }
-  void DoNotifyHaveCurrentData()
-  {
-    mHaveCurrentData = true;
-    if (mElement) {
-      RefPtr<HTMLMediaElement> kungFuDeathGrip = mElement;
-      kungFuDeathGrip->FirstFrameLoaded();
-      kungFuDeathGrip->UpdateReadyStateInternal();
-    }
-    DoNotifyOutput();
   }
 
-  // These notifications run on the media graph thread so we need to
+  // This notification runs on the media graph thread so we need to
   // dispatch events to the main thread.
-  virtual void NotifyHasCurrentData(MediaStreamGraph* aGraph) override
-  {
-    MutexAutoLock lock(mMutex);
-    aGraph->DispatchToMainThreadAfterStreamStateUpdate(NewRunnableMethod(
-      "dom::HTMLMediaElement::StreamListener::DoNotifyHaveCurrentData",
-      this,
-      &StreamListener::DoNotifyHaveCurrentData));
-  }
   virtual void NotifyOutput(MediaStreamGraph* aGraph,
                             GraphTime aCurrentTime) override
   {
     MutexAutoLock lock(mMutex);
-    if (mPendingNotifyOutput)
+    if (mPendingNotifyOutput) {
       return;
+    }
     mPendingNotifyOutput = true;
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(
       NewRunnableMethod("dom::HTMLMediaElement::StreamListener::DoNotifyOutput",
@@ -5261,8 +5232,6 @@ public:
 private:
   // These fields may only be accessed on the main thread
   HTMLMediaElement* mElement;
-  bool mHaveCurrentData;
-  bool mFinished;
 
   // mMutex protects the fields below; they can be accessed on any thread
   Mutex mMutex;
@@ -5334,6 +5303,7 @@ public:
       mElement->mMediaStreamListener->Forget();
     }
     mElement->PlaybackEnded();
+    mElement->UpdateReadyStateInternal();
   }
 
 protected:
@@ -7649,8 +7619,12 @@ HTMLMediaElement::NextFrameStatus()
 {
   if (mDecoder) {
     return mDecoder->NextFrameStatus();
-  } else if (mMediaStreamListener) {
-    return mMediaStreamListener->NextFrameStatus();
+  }
+  if (mSrcStream) {
+    if (mSrcStreamTracksAvailable && !mSrcStreamPlaybackEnded) {
+      return NEXT_FRAME_AVAILABLE;
+    }
+    return NEXT_FRAME_UNAVAILABLE;
   }
   return NEXT_FRAME_UNINITIALIZED;
 }
