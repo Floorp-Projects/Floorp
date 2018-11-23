@@ -300,32 +300,7 @@ public:
 
   void GetEMEInfo(nsString& aEMEInfo);
 
-  // An interface for observing principal changes on the media elements
-  // MediaDecoder. This will also be notified if the active CORSMode changes.
-  class DecoderPrincipalChangeObserver
-  {
-  public:
-    virtual void NotifyDecoderPrincipalChanged() = 0;
-  };
-
-  /**
-   * Add a DecoderPrincipalChangeObserver to this media element.
-   *
-   * Ownership of the DecoderPrincipalChangeObserver remains with the caller,
-   * and it's the caller's responsibility to remove the observer before it dies.
-   */
-  void AddDecoderPrincipalChangeObserver(DecoderPrincipalChangeObserver* aObserver);
-
-  /**
-   * Remove an added DecoderPrincipalChangeObserver from this media element.
-   *
-   * Returns true if it was successfully removed.
-   */
-  bool RemoveDecoderPrincipalChangeObserver(DecoderPrincipalChangeObserver* aObserver);
-
   class StreamCaptureTrackSource;
-  class DecoderCaptureTrackSource;
-  class CaptureStreamTrackSourceGetter;
 
   // Update the visual size of the media. Called from the decoder on the
   // main thread when/if the size changes.
@@ -868,13 +843,6 @@ protected:
     bool mCapturingDecoder;
     bool mCapturingMediaStream;
 
-    RefPtr<CaptureStreamTrackSourceGetter> mTrackSourceGetter;
-
-    // The following members are keeping state for a captured MediaDecoder.
-    // Tracks that were created on main thread before MediaDecoder fed them
-    // to the MediaStreamGraph.
-    nsTArray<RefPtr<MediaStreamTrack>> mPreCreatedTracks;
-
     // The following members are keeping state for a captured MediaStream.
     nsTArray<Pair<nsString, RefPtr<MediaInputPort>>> mTrackPorts;
   };
@@ -1412,10 +1380,6 @@ protected:
   // The DocGroup-specific AbstractThread::MainThread() of this HTML element.
   RefPtr<AbstractThread> mAbstractMainThread;
 
-  // Observers listening to changes to the mDecoder principal.
-  // Used by streams captured from this element.
-  nsTArray<DecoderPrincipalChangeObserver*> mDecoderPrincipalChangeObservers;
-
   // A reference to the VideoFrameContainer which contains the current frame
   // of video to display.
   RefPtr<VideoFrameContainer> mVideoFrameContainer;
@@ -1435,8 +1399,8 @@ protected:
   // True once mSrcStream's initial set of tracks are known.
   bool mSrcStreamTracksAvailable = false;
 
-  // If different from GRAPH_TIME_MAX, the time we should return for
-  // currentTime while playing mSrcStream.
+  // While mPaused is true and mSrcStream is set, this is the value to use for
+  // CurrentTime(). Otherwise this is set to GRAPH_TIME_MAX.
   GraphTime mSrcStreamPausedGraphTime = GRAPH_TIME_MAX;
 
   // The offset in GraphTime that this media element started playing the
@@ -1453,6 +1417,9 @@ protected:
   // Holds references to the DOM wrappers for the MediaStreams that we're
   // writing to.
   nsTArray<OutputMediaStream> mOutputStreams;
+
+  // The next track id to use for a captured MediaDecoder.
+  TrackID mNextAvailableMediaDecoderOutputTrackID = 1;
 
   // Holds a reference to the size-getting track listener attached to
   // mSelectedVideoStreamTrack.

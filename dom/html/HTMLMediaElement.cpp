@@ -594,139 +594,6 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLMediaElement::StreamCaptureTrackSource,
                                    mCapturedTrackSource,
                                    mOwningStream)
 
-class HTMLMediaElement::DecoderCaptureTrackSource
-  : public MediaStreamTrackSource
-  , public DecoderPrincipalChangeObserver
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DecoderCaptureTrackSource,
-                                           MediaStreamTrackSource)
-
-  explicit DecoderCaptureTrackSource(HTMLMediaElement* aElement)
-    : MediaStreamTrackSource(
-        nsCOMPtr<nsIPrincipal>(aElement->GetCurrentPrincipal()).get(),
-        nsString())
-    , mElement(aElement)
-  {
-    MOZ_ASSERT(mElement);
-    mElement->AddDecoderPrincipalChangeObserver(this);
-  }
-
-  void Destroy() override
-  {
-    if (mElement) {
-      DebugOnly<bool> res =
-        mElement->RemoveDecoderPrincipalChangeObserver(this);
-      NS_ASSERTION(res,
-                   "Removing decoder principal changed observer failed. "
-                   "Had it already been removed?");
-      mElement = nullptr;
-    }
-  }
-
-  MediaSourceEnum GetMediaSource() const override
-  {
-    return MediaSourceEnum::Other;
-  }
-
-  CORSMode GetCORSMode() const override
-  {
-    if (!mElement) {
-      MOZ_ASSERT(false, "Should always have an element if in use");
-      return CORS_NONE;
-    }
-
-    return mElement->GetCORSMode();
-  }
-
-  void Stop() override
-  {
-    // We don't notify the source that a track was stopped since it will keep
-    // producing tracks until the element ends. The decoder also needs the
-    // tracks it created to be live at the source since the decoder's clock is
-    // based on MediaStreams during capture.
-  }
-
-  void Disable() override {}
-
-  void Enable() override {}
-
-  void NotifyDecoderPrincipalChanged() override
-  {
-    nsCOMPtr<nsIPrincipal> newPrincipal = mElement->GetCurrentPrincipal();
-    if (nsContentUtils::CombineResourcePrincipals(&mPrincipal, newPrincipal)) {
-      PrincipalChanged();
-    }
-  }
-
-protected:
-  virtual ~DecoderCaptureTrackSource() = default;
-
-  RefPtr<HTMLMediaElement> mElement;
-};
-
-NS_IMPL_ADDREF_INHERITED(HTMLMediaElement::DecoderCaptureTrackSource,
-                         MediaStreamTrackSource)
-NS_IMPL_RELEASE_INHERITED(HTMLMediaElement::DecoderCaptureTrackSource,
-                          MediaStreamTrackSource)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
-  HTMLMediaElement::DecoderCaptureTrackSource)
-NS_INTERFACE_MAP_END_INHERITING(MediaStreamTrackSource)
-NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLMediaElement::DecoderCaptureTrackSource,
-                                   MediaStreamTrackSource,
-                                   mElement)
-
-class HTMLMediaElement::CaptureStreamTrackSourceGetter
-  : public MediaStreamTrackSourceGetter
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CaptureStreamTrackSourceGetter,
-                                           MediaStreamTrackSourceGetter)
-
-  explicit CaptureStreamTrackSourceGetter(HTMLMediaElement* aElement)
-    : MediaStreamTrackSourceGetter(false)
-    , mElement(aElement)
-  {
-  }
-
-  already_AddRefed<dom::MediaStreamTrackSource> GetMediaStreamTrackSource(
-    TrackID aInputTrackID) override
-  {
-    if (mElement && mElement->mSrcStream) {
-      NS_ERROR("Captured media element playing a stream adds tracks explicitly "
-               "on main thread.");
-      return nullptr;
-    }
-
-    // We can return a new source each time here, even for different streams,
-    // since the sources don't keep any internal state and all of them call
-    // through to the same HTMLMediaElement.
-    // If this changes (after implementing Stop()?) we'll have to ensure we
-    // return the same source for all requests to the same TrackID, and only
-    // have one getter.
-    return do_AddRef(new DecoderCaptureTrackSource(mElement));
-  }
-
-protected:
-  virtual ~CaptureStreamTrackSourceGetter() = default;
-
-  RefPtr<HTMLMediaElement> mElement;
-};
-
-NS_IMPL_ADDREF_INHERITED(HTMLMediaElement::CaptureStreamTrackSourceGetter,
-                         MediaStreamTrackSourceGetter)
-NS_IMPL_RELEASE_INHERITED(HTMLMediaElement::CaptureStreamTrackSourceGetter,
-                          MediaStreamTrackSourceGetter)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
-  HTMLMediaElement::CaptureStreamTrackSourceGetter)
-NS_INTERFACE_MAP_END_INHERITING(MediaStreamTrackSourceGetter)
-NS_IMPL_CYCLE_COLLECTION_INHERITED(
-  HTMLMediaElement::CaptureStreamTrackSourceGetter,
-  MediaStreamTrackSourceGetter,
-  mElement)
-
 /**
  * There is a reference cycle involving this class: MediaLoadListener
  * holds a reference to the HTMLMediaElement, which holds a reference
@@ -1727,8 +1594,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLMediaElement,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mErrorSink->mError)
   for (uint32_t i = 0; i < tmp->mOutputStreams.Length(); ++i) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutputStreams[i].mStream)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutputStreams[i].mTrackSourceGetter)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutputStreams[i].mPreCreatedTracks)
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPlayed);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTextTrackManager)
@@ -1762,7 +1627,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioChannelWrapper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mErrorSink->mError)
   for (OutputMediaStream& s : tmp->mOutputStreams) {
-    s.mTrackSourceGetter->FinishOnNextInactive(s.mStream);
+    s.mStream->SetFinishedOnInactive(true);
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputStreams)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPlayed)
@@ -1979,13 +1844,9 @@ HTMLMediaElement::ShutdownDecoder()
   if (mMediaSource) {
     mMediaSource->CompletePendingTransactions();
   }
-  for (OutputMediaStream& out : mOutputStreams) {
-    if (!out.mCapturingDecoder) {
-      continue;
-    }
-    out.mNextAvailableTrackID = std::max<TrackID>(
-      mDecoder->NextAvailableTrackIDFor(out.mStream->GetInputStream()),
-      out.mNextAvailableTrackID);
+  if (!mOutputStreams.IsEmpty()) {
+    mNextAvailableMediaDecoderOutputTrackID =
+      mDecoder->GetNextOutputStreamTrackID();
   }
   mDecoder->Shutdown();
   DDUNLINKCHILD(mDecoder.get());
@@ -3537,11 +3398,9 @@ HTMLMediaElement::CaptureStreamInternal(StreamCaptureBehavior aFinishBehavior,
   }
 
   OutputMediaStream* out = mOutputStreams.AppendElement();
-  out->mTrackSourceGetter =
-    new CaptureStreamTrackSourceGetter(this);
   nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
-  out->mStream = DOMMediaStream::CreateTrackUnionStreamAsInput(
-    window, aGraph, out->mTrackSourceGetter);
+  out->mStream = DOMMediaStream::CreateTrackUnionStreamAsInput(window, aGraph);
+  out->mStream->SetFinishedOnInactive(false);
   out->mFinishWhenEnded =
     aFinishBehavior == StreamCaptureBehavior::FINISH_WHEN_ENDED;
   out->mCapturingAudioOnly =
@@ -3568,10 +3427,7 @@ HTMLMediaElement::CaptureStreamInternal(StreamCaptureBehavior aFinishBehavior,
 
   if (mDecoder) {
     out->mCapturingDecoder = true;
-    mDecoder->AddOutputStream(
-      out->mStream->GetInputStream()->AsProcessedStream(),
-      out->mNextAvailableTrackID,
-      aFinishBehavior == StreamCaptureBehavior::FINISH_WHEN_ENDED);
+    mDecoder->AddOutputStream(out->mStream);
   } else if (mSrcStream) {
     out->mCapturingMediaStream = true;
   }
@@ -3580,31 +3436,6 @@ HTMLMediaElement::CaptureStreamInternal(StreamCaptureBehavior aFinishBehavior,
     // Do not expose the tracks until we have metadata.
     RefPtr<DOMMediaStream> result = out->mStream;
     return result.forget();
-  }
-
-  if (mDecoder) {
-    if (HasAudio()) {
-      TrackID audioTrackId = out->mNextAvailableTrackID++;
-      RefPtr<MediaStreamTrackSource> trackSource =
-        out->mTrackSourceGetter->GetMediaStreamTrackSource(audioTrackId);
-      RefPtr<MediaStreamTrack> track = out->mStream->CreateDOMTrack(
-        audioTrackId, MediaSegment::AUDIO, trackSource);
-      out->mPreCreatedTracks.AppendElement(track);
-      out->mStream->AddTrackInternal(track);
-      LOG(LogLevel::Debug,
-          ("Created audio track %d for captured decoder", audioTrackId));
-    }
-    if (IsVideo() && HasVideo() && !out->mCapturingAudioOnly) {
-      TrackID videoTrackId = out->mNextAvailableTrackID++;
-      RefPtr<MediaStreamTrackSource> trackSource =
-        out->mTrackSourceGetter->GetMediaStreamTrackSource(videoTrackId);
-      RefPtr<MediaStreamTrack> track = out->mStream->CreateDOMTrack(
-        videoTrackId, MediaSegment::VIDEO, trackSource);
-      out->mPreCreatedTracks.AppendElement(track);
-      out->mStream->AddTrackInternal(track);
-      LOG(LogLevel::Debug,
-          ("Created video track %d for captured decoder", videoTrackId));
-    }
   }
 
   if (mSrcStream) {
@@ -5132,6 +4963,14 @@ HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder)
 #endif
   }
 
+  // Set CORSMode now before any streams are added. It won't change over time.
+  mDecoder->SetOutputStreamCORSMode(mCORSMode);
+
+  if (!mOutputStreams.IsEmpty()) {
+    mDecoder->SetNextOutputStreamTrackID(
+      mNextAvailableMediaDecoderOutputTrackID);
+  }
+
   for (OutputMediaStream& ms : mOutputStreams) {
     if (ms.mCapturingMediaStream) {
       MOZ_ASSERT(!ms.mCapturingDecoder);
@@ -5139,9 +4978,7 @@ HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder)
     }
 
     ms.mCapturingDecoder = true;
-    aDecoder->AddOutputStream(ms.mStream->GetInputStream()->AsProcessedStream(),
-                              ms.mNextAvailableTrackID,
-                              ms.mFinishWhenEnded);
+    aDecoder->AddOutputStream(ms.mStream);
   }
 
   if (mMediaKeys) {
@@ -5730,10 +5567,12 @@ HTMLMediaElement::PlaybackEnded()
   for (int32_t i = mOutputStreams.Length() - 1; i >= 0; --i) {
     if (mOutputStreams[i].mFinishWhenEnded) {
       LOG(LogLevel::Debug,
-          ("Playback ended. Removing output stream %p",
+          ("Playback ended. Letting output stream %p go inactive",
            mOutputStreams[i].mStream.get()));
-      mOutputStreams[i].mTrackSourceGetter->FinishOnNextInactive(
-        mOutputStreams[i].mStream);
+      mOutputStreams[i].mStream->SetFinishedOnInactive(true);
+      if (mOutputStreams[i].mCapturingDecoder) {
+        mDecoder->RemoveOutputStream(mOutputStreams[i].mStream);
+      }
       mOutputStreams.RemoveElementAt(i);
     }
   }
@@ -6597,25 +6436,6 @@ HTMLMediaElement::NotifyDecoderPrincipalChanged()
   RefPtr<nsIPrincipal> principal = GetCurrentPrincipal();
 
   mDecoder->UpdateSameOriginStatus(!principal || IsCORSSameOrigin());
-
-  for (DecoderPrincipalChangeObserver* observer :
-       mDecoderPrincipalChangeObservers) {
-    observer->NotifyDecoderPrincipalChanged();
-  }
-}
-
-void
-HTMLMediaElement::AddDecoderPrincipalChangeObserver(
-  DecoderPrincipalChangeObserver* aObserver)
-{
-  mDecoderPrincipalChangeObservers.AppendElement(aObserver);
-}
-
-bool
-HTMLMediaElement::RemoveDecoderPrincipalChangeObserver(
-  DecoderPrincipalChangeObserver* aObserver)
-{
-  return mDecoderPrincipalChangeObservers.RemoveElement(aObserver);
 }
 
 void
@@ -7794,13 +7614,11 @@ HTMLMediaElement::AudioCaptureStreamChange(bool aCapture)
 
       for (uint32_t i = 0; i < mOutputStreams.Length(); i++) {
         if (mOutputStreams[i].mStream->GetPlaybackStream() == ps) {
-          mOutputStreams[i].mTrackSourceGetter->FinishOnNextInactive(
-            mOutputStreams[i].mStream);
+          mDecoder->RemoveOutputStream(mOutputStreams[i].mStream);
           mOutputStreams.RemoveElementAt(i);
           break;
         }
       }
-      mDecoder->RemoveOutputStream(ps);
     }
     mCaptureStreamPort->Destroy();
     mCaptureStreamPort = nullptr;
@@ -8125,21 +7943,6 @@ HTMLMediaElement::RemoveMediaTracks()
   }
 
   mMediaTracksConstructed = false;
-
-  for (OutputMediaStream& ms : mOutputStreams) {
-    if (!ms.mCapturingDecoder) {
-      continue;
-    }
-    for (RefPtr<MediaStreamTrack>& t : ms.mPreCreatedTracks) {
-      if (t->Ended()) {
-        continue;
-      }
-      mAbstractMainThread->Dispatch(NewRunnableMethod(
-        "dom::HTMLMediaElement::RemoveMediaTracks",
-        t, &MediaStreamTrack::OverrideEnded));
-    }
-    ms.mPreCreatedTracks.Clear();
-  }
 }
 
 class MediaElementGMPCrashHelper : public GMPCrashHelper

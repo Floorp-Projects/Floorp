@@ -57,18 +57,6 @@ static bool ContainsLiveTracks(
   return false;
 }
 
-void MediaStreamTrackSourceGetter::FinishOnNextInactive(
-    RefPtr<DOMMediaStream>& aStream) {
-  if (mFinishedOnInactive) {
-    return;
-  }
-
-  mFinishedOnInactive = true;
-
-  // We notify now with a dummy track in case there are no live tracks.
-  aStream->NotifyTrackRemoved(nullptr);
-}
-
 DOMMediaStream::TrackPort::TrackPort(MediaInputPort* aInputPort,
                                      MediaStreamTrack* aTrack,
                                      const InputPortOwnership aOwnership)
@@ -116,13 +104,6 @@ NS_IMPL_CYCLE_COLLECTION(DOMMediaStream::TrackPort, mTrack)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMMediaStream::TrackPort, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMMediaStream::TrackPort, Release)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaStreamTrackSourceGetter)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(MediaStreamTrackSourceGetter)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaStreamTrackSourceGetter)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-NS_IMPL_CYCLE_COLLECTION_0(MediaStreamTrackSourceGetter)
-
 /**
  * Listener registered on the Owned stream to detect added and ended owned
  * tracks for keeping the list of MediaStreamTracks in sync with the tracks
@@ -153,32 +134,13 @@ class DOMMediaStream::OwnedStreamListener : public MediaStreamListener {
       return;
     }
 
-    // Track had not been created on main thread before, create it now.
-    NS_WARNING_ASSERTION(
-        !mStream->mTracks.IsEmpty(),
+    // Track must exist on main thread before it's added to the graph.
+    MOZ_RELEASE_ASSERT(
+        false,
         "A new track was detected on the input stream; creating a "
         "corresponding "
         "MediaStreamTrack. Initial tracks should be added manually to "
         "immediately and synchronously be available to JS.");
-    RefPtr<MediaStreamTrackSource> source;
-    if (mStream->mTrackSourceGetter) {
-      source = mStream->mTrackSourceGetter->GetMediaStreamTrackSource(aTrackID);
-    }
-    if (!source) {
-      NS_ASSERTION(false,
-                   "Dynamic track created without an explicit TrackSource");
-      nsPIDOMWindowInner* window = mStream->GetParentObject();
-      nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
-      nsIPrincipal* principal = doc ? doc->NodePrincipal() : nullptr;
-      source = new BasicTrackSource(principal);
-    }
-
-    RefPtr<MediaStreamTrack> newTrack =
-        mStream->CreateDOMTrack(aTrackID, aType, source);
-    aGraph->AbstractMainThread()->Dispatch(
-        NewRunnableMethod<RefPtr<MediaStreamTrack>>(
-            "DOMMediaStream::AddTrackInternal", mStream,
-            &DOMMediaStream::AddTrackInternal, newTrack));
   }
 
   void DoNotifyTrackEnded(MediaStreamGraph* aGraph, MediaStream* aInputStream,
@@ -317,7 +279,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DOMMediaStream,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwnedTracks)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTracks)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsumersToKeepAlive)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTrackSourceGetter)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPlaybackTrackListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mVideoPrincipal)
@@ -329,7 +290,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DOMMediaStream,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwnedTracks)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTracks)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsumersToKeepAlive)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTrackSourceGetter)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPlaybackTrackListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVideoPrincipal)
@@ -351,18 +311,17 @@ NS_IMPL_RELEASE_INHERITED(DOMAudioNodeMediaStream, DOMMediaStream)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMAudioNodeMediaStream)
 NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
 
-DOMMediaStream::DOMMediaStream(nsPIDOMWindowInner* aWindow,
-                               MediaStreamTrackSourceGetter* aTrackSourceGetter)
+DOMMediaStream::DOMMediaStream(nsPIDOMWindowInner* aWindow)
     : mWindow(aWindow),
       mInputStream(nullptr),
       mOwnedStream(nullptr),
       mPlaybackStream(nullptr),
       mTracksPendingRemoval(0),
-      mTrackSourceGetter(aTrackSourceGetter),
       mPlaybackTrackListener(MakeAndAddRef<PlaybackTrackListener>(this)),
       mTracksCreated(false),
       mNotifiedOfMediaStreamGraphShutdown(false),
       mActive(false),
+      mFinishedOnInactive(true),
       mCORSMode(CORS_NONE) {
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
@@ -475,9 +434,7 @@ JSObject* DOMMediaStream::WrapObject(JSContext* aCx,
     return nullptr;
   }
 
-  // Streams created from JS cannot have dynamically created tracks.
-  MediaStreamTrackSourceGetter* getter = nullptr;
-  RefPtr<DOMMediaStream> newStream = new DOMMediaStream(ownerWindow, getter);
+  auto newStream = MakeRefPtr<DOMMediaStream>(ownerWindow);
 
   for (MediaStreamTrack& track : aTracks) {
     if (!newStream->GetPlaybackStream()) {
@@ -682,51 +639,11 @@ void DOMMediaStream::RemoveTrack(MediaStreamTrack& aTrack) {
   LOG(LogLevel::Debug, ("DOMMediaStream %p Removed track %p", this, &aTrack));
 }
 
-class ClonedStreamSourceGetter : public MediaStreamTrackSourceGetter {
- public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ClonedStreamSourceGetter,
-                                           MediaStreamTrackSourceGetter)
-
-  explicit ClonedStreamSourceGetter(DOMMediaStream* aStream)
-      : mStream(aStream) {}
-
-  already_AddRefed<MediaStreamTrackSource> GetMediaStreamTrackSource(
-      TrackID aInputTrackID) override {
-    MediaStreamTrack* sourceTrack =
-        mStream->FindOwnedDOMTrack(mStream->GetOwnedStream(), aInputTrackID);
-    MOZ_RELEASE_ASSERT(sourceTrack);
-
-    return do_AddRef(&sourceTrack->GetSource());
-  }
-
- protected:
-  virtual ~ClonedStreamSourceGetter() {}
-
-  RefPtr<DOMMediaStream> mStream;
-};
-
-NS_IMPL_ADDREF_INHERITED(ClonedStreamSourceGetter, MediaStreamTrackSourceGetter)
-NS_IMPL_RELEASE_INHERITED(ClonedStreamSourceGetter,
-                          MediaStreamTrackSourceGetter)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ClonedStreamSourceGetter)
-NS_INTERFACE_MAP_END_INHERITING(MediaStreamTrackSourceGetter)
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ClonedStreamSourceGetter,
-                                   MediaStreamTrackSourceGetter, mStream)
-
 already_AddRefed<DOMMediaStream> DOMMediaStream::Clone() {
-  return CloneInternal(TrackForwardingOption::CURRENT);
-}
-
-already_AddRefed<DOMMediaStream> DOMMediaStream::CloneInternal(
-    TrackForwardingOption aForwarding) {
-  RefPtr<DOMMediaStream> newStream =
-      new DOMMediaStream(GetParentObject(), new ClonedStreamSourceGetter(this));
+  auto newStream = MakeRefPtr<DOMMediaStream>(GetParentObject());
 
   LOG(LogLevel::Info,
-      ("DOMMediaStream %p created clone %p, forwarding %s tracks", this,
-       newStream.get(),
-       aForwarding == TrackForwardingOption::ALL ? "all" : "current"));
+      ("DOMMediaStream %p created clone %p", this, newStream.get()));
 
   MOZ_RELEASE_ASSERT(mPlaybackStream);
   MOZ_RELEASE_ASSERT(mPlaybackStream->Graph());
@@ -749,27 +666,6 @@ already_AddRefed<DOMMediaStream> DOMMediaStream::CloneInternal(
          &track, newStream.get()));
     RefPtr<MediaStreamTrack> trackClone =
         newStream->CloneDOMTrack(track, allocatedTrackID++);
-  }
-
-  if (aForwarding == TrackForwardingOption::ALL) {
-    // Set up an input port from our input stream to the new DOM stream's owned
-    // stream, to allow for dynamically added tracks at the source to appear in
-    // the clone. The clone may treat mInputStream as its own mInputStream but
-    // ownership remains with us.
-    newStream->mInputStream = mInputStream;
-    if (mInputStream) {
-      // We have already set up track-locked input ports for all existing DOM
-      // tracks, so now we need to block those in the generic input port to
-      // avoid ending up with double instances of them.
-      nsTArray<TrackID> tracksToBlock;
-      for (const RefPtr<TrackPort>& info : mOwnedTracks) {
-        tracksToBlock.AppendElement(info->GetTrack()->mTrackID);
-      }
-
-      newStream->mInputStream->RegisterUser();
-      newStream->mOwnedPort = newStream->mOwnedStream->AllocateInputPort(
-          mInputStream, TRACK_ANY, TRACK_ANY, 0, 0, &tracksToBlock);
-    }
   }
 
   return newStream.forget();
@@ -899,19 +795,15 @@ void DOMMediaStream::InitPlaybackStreamCommon(MediaStreamGraph* aGraph) {
 }
 
 already_AddRefed<DOMMediaStream> DOMMediaStream::CreateSourceStreamAsInput(
-    nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph,
-    MediaStreamTrackSourceGetter* aTrackSourceGetter) {
-  RefPtr<DOMMediaStream> stream =
-      new DOMMediaStream(aWindow, aTrackSourceGetter);
+    nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph) {
+  auto stream = MakeRefPtr<DOMMediaStream>(aWindow);
   stream->InitSourceStream(aGraph);
   return stream.forget();
 }
 
 already_AddRefed<DOMMediaStream> DOMMediaStream::CreateTrackUnionStreamAsInput(
-    nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph,
-    MediaStreamTrackSourceGetter* aTrackSourceGetter) {
-  RefPtr<DOMMediaStream> stream =
-      new DOMMediaStream(aWindow, aTrackSourceGetter);
+    nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph) {
+  auto stream = MakeRefPtr<DOMMediaStream>(aWindow);
   stream->InitTrackUnionStream(aGraph);
   return stream.forget();
 }
@@ -920,9 +812,7 @@ already_AddRefed<DOMMediaStream>
 DOMMediaStream::CreateAudioCaptureStreamAsInput(nsPIDOMWindowInner* aWindow,
                                                 nsIPrincipal* aPrincipal,
                                                 MediaStreamGraph* aGraph) {
-  // Audio capture doesn't create tracks dynamically
-  MediaStreamTrackSourceGetter* getter = nullptr;
-  RefPtr<DOMMediaStream> stream = new DOMMediaStream(aWindow, getter);
+  auto stream = MakeRefPtr<DOMMediaStream>(aWindow);
   stream->InitAudioCaptureStream(aPrincipal, aGraph);
   return stream.forget();
 }
@@ -1223,6 +1113,20 @@ void DOMMediaStream::UnregisterTrackListener(TrackListener* aListener) {
   mTrackListeners.RemoveElement(aListener);
 }
 
+void DOMMediaStream::SetFinishedOnInactive(bool aFinishedOnInactive) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mFinishedOnInactive == aFinishedOnInactive) {
+    return;
+  }
+
+  mFinishedOnInactive = aFinishedOnInactive;
+
+  if (mFinishedOnInactive && !ContainsLiveTracks(mTracks)) {
+    NotifyTrackRemoved(nullptr);
+  }
+}
+
 void DOMMediaStream::NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1294,9 +1198,7 @@ void DOMMediaStream::NotifyTrackRemoved(
     }
   }
 
-  if (mTrackSourceGetter && !mTrackSourceGetter->FinishedOnInactive()) {
-    // For compatibility with mozCaptureStream we in some cases do not go
-    // inactive until the track source lets us.
+  if (!mFinishedOnInactive) {
     return;
   }
 
@@ -1346,7 +1248,7 @@ void DOMMediaStream::NotifyPlaybackTrackBlocked() {
 
 DOMAudioNodeMediaStream::DOMAudioNodeMediaStream(nsPIDOMWindowInner* aWindow,
                                                  AudioNode* aNode)
-    : DOMMediaStream(aWindow, nullptr), mStreamNode(aNode) {}
+    : DOMMediaStream(aWindow), mStreamNode(aNode) {}
 
 DOMAudioNodeMediaStream::~DOMAudioNodeMediaStream() {}
 

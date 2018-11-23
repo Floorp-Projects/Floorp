@@ -19,6 +19,7 @@
 #include "MediaStreamGraph.h"
 #include "SeekTarget.h"
 #include "TimeUnits.h"
+#include "TrackID.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/MozPromise.h"
@@ -40,6 +41,7 @@ class MediaMemoryInfo;
 }
 
 class AbstractThread;
+class DOMMediaStream;
 class FrameStatistics;
 class VideoFrameContainer;
 class MediaFormatReader;
@@ -165,16 +167,22 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // replaying after the input as ended. In the latter case, the new source is
   // not connected to streams created by captureStreamUntilEnded.
 
+  // Sets the CORSMode for MediaStreamTracks that will be created by us.
+  void SetOutputStreamCORSMode(CORSMode aCORSMode);
+
   // Add an output stream. All decoder output will be sent to the stream.
   // The stream is initially blocked. The decoder is responsible for unblocking
   // it while it is playing back.
-  virtual void AddOutputStream(ProcessedMediaStream* aStream,
-                               TrackID aNextAvailableTrackID,
-                               bool aFinishWhenEnded);
+  void AddOutputStream(DOMMediaStream* aStream);
   // Remove an output stream added with AddOutputStream.
-  virtual void RemoveOutputStream(MediaStream* aStream);
-  // The next TrackID that can be used without risk of a collision.
-  virtual TrackID NextAvailableTrackIDFor(MediaStream* aOutputStream) const;
+  void RemoveOutputStream(DOMMediaStream* aStream);
+
+  // Set the TrackID to be used as the initial id by the next DecodedStream
+  // sink.
+  void SetNextOutputStreamTrackID(TrackID aNextTrackID);
+  // Get the next TrackID to be allocated by DecodedStream,
+  // or the last set TrackID if there is no DecodedStream sink.
+  TrackID GetNextOutputStreamTrackID();
 
   // Return the duration of the video in seconds.
   virtual double GetDuration();
@@ -613,10 +621,6 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // passed to MediaStreams when this is true.
   Canonical<bool> mSameOriginMedia;
 
-  // An identifier for the principal of the media. Used to track when
-  // main-thread induced principal changes get reflected on MSG thread.
-  Canonical<PrincipalHandle> mMediaPrincipalHandle;
-
   // We can allow video decoding in background when we match some special
   // conditions, eg. when the cursor is hovering over the tab. This observer is
   // used to listen the related events.
@@ -635,9 +639,6 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   AbstractCanonical<PlayState>* CanonicalPlayState() { return &mPlayState; }
   AbstractCanonical<bool>* CanonicalSameOriginMedia() {
     return &mSameOriginMedia;
-  }
-  AbstractCanonical<PrincipalHandle>* CanonicalMediaPrincipalHandle() {
-    return &mMediaPrincipalHandle;
   }
 
  private:
