@@ -27,6 +27,7 @@ class PerformancePanel {
   async _doOpen() {
     this.panelWin.gToolbox = this.toolbox;
     this.panelWin.gTarget = this.target;
+    const actorVersion = this.target.getTrait("perfActorVersion");
 
     const [perfFront, preferenceFront] = await Promise.all([
       this.target.client.mainRoot.getFront("perf"),
@@ -35,7 +36,7 @@ class PerformancePanel {
 
     this.isReady = true;
     this.emit("ready");
-    this.panelWin.gInit(perfFront, preferenceFront);
+    this.panelWin.gInit(perfFront, preferenceFront, actorVersion);
     return this;
   }
 

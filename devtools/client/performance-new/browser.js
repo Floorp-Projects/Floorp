@@ -120,11 +120,16 @@ async function _getIntPref(preferenceFront, prefName, defaultValue) {
  *                                 of the object and how it gets defined.
  */
 async function getRecordingPreferences(preferenceFront, defaultSettings = {}) {
-  const [ entries, interval, features, threads ] = await Promise.all([
+  const [ entries, duration, interval, features, threads ] = await Promise.all([
     _getIntPref(
       preferenceFront,
       `devtools.performance.recording.entries`,
       defaultSettings.entries
+    ),
+    _getIntPref(
+      preferenceFront,
+      `devtools.performance.recording.window-length`,
+      defaultSettings.duration
     ),
     _getIntPref(
       preferenceFront,
@@ -145,7 +150,7 @@ async function getRecordingPreferences(preferenceFront, defaultSettings = {}) {
 
   // The pref stores the value in usec.
   const newInterval = interval / 1000;
-  return { entries, interval: newInterval, features, threads };
+  return { entries, duration, interval: newInterval, features, threads };
 }
 
 /**
@@ -161,6 +166,10 @@ async function setRecordingPreferences(preferenceFront, settings) {
     preferenceFront.setIntPref(
       `devtools.performance.recording.entries`,
       settings.entries
+    ),
+    preferenceFront.setIntPref(
+      `devtools.performance.recording.window-length`,
+      settings.duration
     ),
     preferenceFront.setIntPref(
       `devtools.performance.recording.interval`,
