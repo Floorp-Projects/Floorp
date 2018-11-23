@@ -536,6 +536,9 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipa
   // Let's store the permission in the current parent window.
   topInnerWindow->SaveStorageAccessGranted(permissionKey);
 
+  // Let's inform the parent window.
+  parentWindow->StorageAccessGranted();
+
   nsIChannel* channel =
     pwin->GetCurrentInnerWindow()->GetExtantDoc()->GetChannel();
 

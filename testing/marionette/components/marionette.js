@@ -324,6 +324,7 @@ class MarionetteParentProcess {
       case "profile-after-change":
         Services.obs.addObserver(this, "command-line-startup");
         Services.obs.addObserver(this, "sessionstore-windows-restored");
+        Services.obs.addObserver(this, "mail-startup-done");
         Services.obs.addObserver(this, "toplevel-window-ready");
 
         for (let [pref, value] of EnvironmentPrefs.from(ENV_PRESERVE_PREFS)) {
@@ -376,6 +377,12 @@ class MarionetteParentProcess {
             Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
           }
         }, {once: true});
+        break;
+
+      // Thunderbird only, instead of sessionstore-windows-restored.
+      case "mail-startup-done":
+        this.finalUIStartup = true;
+        this.init();
         break;
 
       case "sessionstore-windows-restored":
