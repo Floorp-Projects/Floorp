@@ -572,9 +572,6 @@ class DOMMediaStream
   nsresult DispatchTrackEvent(const nsAString& aName,
                               const RefPtr<MediaStreamTrack>& aTrack);
 
-  class OwnedStreamListener;
-  friend class OwnedStreamListener;
-
   class PlaybackStreamListener;
   friend class PlaybackStreamListener;
 
@@ -634,10 +631,6 @@ class DOMMediaStream
   // Number of MediaStreamTracks that have been removed on main thread but are
   // waiting to be removed on MediaStreamGraph thread.
   size_t mTracksPendingRemoval;
-
-  // Listener tracking changes to mOwnedStream. We use this to notify the
-  // MediaStreamTracks we own about state changes.
-  RefPtr<OwnedStreamListener> mOwnedListener;
 
   // Listener tracking changes to mPlaybackStream. This drives state changes
   // in this DOMMediaStream and notifications to mTrackListeners.
