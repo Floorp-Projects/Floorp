@@ -25,6 +25,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsDragService.h"
 #include "mozwayland/mozwayland.h"
+#include "nsWaylandDisplay.h"
 
 #include "imgIContainer.h"
 
@@ -514,7 +515,7 @@ nsRetrievalContextWayland::AddDragAndDropDataOffer(wl_data_offer *aDropDataOffer
     NS_ASSERTION(dataOffer, "We're missing drag and drop data offer!");
     if (dataOffer) {
         g_hash_table_remove(mActiveOffers, aDropDataOffer);
-        mDragContext = new nsWaylandDragContext(dataOffer, mDisplay);
+        mDragContext = new nsWaylandDragContext(dataOffer, mDisplay->GetDisplay());
     }
 }
 
@@ -704,72 +705,12 @@ gtk_primary_selection_device_listener primary_selection_device_listener = {
 bool
 nsRetrievalContextWayland::HasSelectionSupport(void)
 {
-    return mPrimarySelectionDataDeviceManager != nullptr;
+    return mDisplay->GetPrimarySelectionDeviceManager() != nullptr;
 }
-
-void
-nsRetrievalContextWayland::InitDataDeviceManager(wl_registry *registry,
-                                                 uint32_t id,
-                                                 uint32_t version)
-{
-    int data_device_manager_version = MIN (version, 3);
-    mDataDeviceManager = (wl_data_device_manager *)wl_registry_bind(registry, id,
-        &wl_data_device_manager_interface, data_device_manager_version);
-}
-
-void
-nsRetrievalContextWayland::InitPrimarySelectionDataDeviceManager(
-  wl_registry *registry, uint32_t id)
-{
-    mPrimarySelectionDataDeviceManager =
-        (gtk_primary_selection_device_manager *)wl_registry_bind(registry, id,
-            &gtk_primary_selection_device_manager_interface, 1);
-}
-
-void
-nsRetrievalContextWayland::InitSeat(wl_registry *registry,
-                                    uint32_t id, uint32_t version,
-                                    void *data)
-{
-    mSeat = (wl_seat*)wl_registry_bind(registry, id, &wl_seat_interface, 1);
-}
-
-static void
-gdk_registry_handle_global(void               *data,
-                           struct wl_registry *registry,
-                           uint32_t            id,
-                           const char         *interface,
-                           uint32_t            version)
-{
-    nsRetrievalContextWayland *context =
-        static_cast<nsRetrievalContextWayland*>(data);
-
-    if (strcmp (interface, "wl_data_device_manager") == 0) {
-        context->InitDataDeviceManager(registry, id, version);
-    } else if (strcmp(interface, "wl_seat") == 0) {
-        context->InitSeat(registry, id, version, data);
-    } else if (strcmp (interface, "gtk_primary_selection_device_manager") == 0) {
-        context->InitPrimarySelectionDataDeviceManager(registry, id);
-    }
-}
-
-static void
-gdk_registry_handle_global_remove(void               *data,
-                                 struct wl_registry *registry,
-                                 uint32_t            id)
-{
-}
-
-static const struct wl_registry_listener clipboard_registry_listener = {
-    gdk_registry_handle_global,
-    gdk_registry_handle_global_remove
-};
 
 nsRetrievalContextWayland::nsRetrievalContextWayland(void)
   : mInitialized(false)
-  , mSeat(nullptr)
-  , mDataDeviceManager(nullptr)
-  , mPrimarySelectionDataDeviceManager(nullptr)
+  , mDisplay(WaylandDisplayGet())
   , mActiveOffers(g_hash_table_new(NULL, NULL))
   , mClipboardOffer(nullptr)
   , mPrimaryOffer(nullptr)
@@ -778,38 +719,18 @@ nsRetrievalContextWayland::nsRetrievalContextWayland(void)
   , mClipboardData(nullptr)
   , mClipboardDataLength(0)
 {
-    // Available as of GTK 3.8+
-    static auto sGdkWaylandDisplayGetWlDisplay =
-        (wl_display *(*)(GdkDisplay *))
-        dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_display");
-
-    mDisplay = sGdkWaylandDisplayGetWlDisplay(gdk_display_get_default());
-    wl_registry_add_listener(wl_display_get_registry(mDisplay),
-                             &clipboard_registry_listener, this);
-    // Call wl_display_roundtrip() twice to make sure all
-    // callbacks are processed.
-    wl_display_roundtrip(mDisplay);
-    wl_display_roundtrip(mDisplay);
-
-    // mSeat/mDataDeviceManager should be set now by
-    // gdk_registry_handle_global() as a response to
-    // wl_registry_add_listener() call.
-    if (!mDataDeviceManager || !mSeat)
-        return;
-
     wl_data_device *dataDevice =
-        wl_data_device_manager_get_data_device(mDataDeviceManager, mSeat);
+        wl_data_device_manager_get_data_device(mDisplay->GetDataDeviceManager(),
+                                               mDisplay->GetSeat());
     wl_data_device_add_listener(dataDevice, &data_device_listener, this);
-    // We have to call wl_display_roundtrip() twice otherwise data_offer_listener
-    // may not be processed because it's called from data_device_data_offer
-    // callback.
-    wl_display_roundtrip(mDisplay);
-    wl_display_roundtrip(mDisplay);
 
-    if (mPrimarySelectionDataDeviceManager) {
+
+    gtk_primary_selection_device_manager* manager =
+        mDisplay->GetPrimarySelectionDeviceManager();
+    if (manager) {
         gtk_primary_selection_device *primaryDataDevice =
-            gtk_primary_selection_device_manager_get_device(mPrimarySelectionDataDeviceManager,
-                                                            mSeat);
+            gtk_primary_selection_device_manager_get_device(manager,
+                                                            mDisplay->GetSeat());
         gtk_primary_selection_device_add_listener(primaryDataDevice,
             &primary_selection_device_listener, this);
     }
@@ -833,6 +754,7 @@ nsRetrievalContextWayland::~nsRetrievalContextWayland(void)
 {
     g_hash_table_foreach_remove(mActiveOffers, offer_hash_remove, nullptr);
     g_hash_table_destroy(mActiveOffers);
+    WaylandDisplayRelease(mDisplay);
 }
 
 GdkAtom*
@@ -925,7 +847,7 @@ nsRetrievalContextWayland::GetClipboardData(const char* aMimeType,
             mClipboardData = nullptr;
             mClipboardDataLength = 0;
         } else {
-            mClipboardData = dataOffer->GetData(mDisplay,
+            mClipboardData = dataOffer->GetData(mDisplay->GetDisplay(),
                 aMimeType, &mClipboardDataLength);
         }
     }
