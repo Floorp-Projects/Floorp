@@ -269,6 +269,10 @@ void EarlyInitializeRedirections();
 // gInitializationFailureMessage.
 bool InitializeRedirections();
 
+// Platform specific function called after setting up redirections in recording
+// or replaying processes.
+void LateInitializeRedirections();
+
 // Functions for saving or restoring system error codes.
 static inline ErrorType SaveError() { return errno; }
 static inline void RestoreError(ErrorType aError) { errno = aError; }
@@ -286,17 +290,8 @@ OriginalFunction(size_t aCallId)
   return GetRedirection(aCallId).mOriginalFunction;
 }
 
-#define TokenPaste(aFirst, aSecond) aFirst ## aSecond
-
-// Call the original function for a call event ID with a particular ABI and any
-// number of arguments.
-#define OriginalCallABI(aName, aReturnType, aABI, ...)          \
-  TokenPaste(CallFunction, aABI) <aReturnType>                  \
-    (OriginalFunction(CallEvent_ ##aName), ##__VA_ARGS__)
-
-// Call the original function for a call event ID with the default ABI.
-#define OriginalCall(aName, aReturnType, ...)                   \
-  OriginalCallABI(aName, aReturnType, DEFAULTABI, ##__VA_ARGS__)
+// Get the address of the original function by name.
+void* OriginalFunction(const char* aName);
 
 static inline ThreadEvent
 CallIdToThreadEvent(size_t aCallId)
@@ -305,7 +300,7 @@ CallIdToThreadEvent(size_t aCallId)
 }
 
 void
-RecordReplayInvokeCall(size_t aCallId, CallArguments* aArguments);
+RecordReplayInvokeCall(void* aFunction, CallArguments* aArguments);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Callback Redirections

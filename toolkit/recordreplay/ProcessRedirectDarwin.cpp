@@ -718,6 +718,47 @@ enum CallEvent {                                \
 #undef MAKE_CALL_EVENT
 
 ///////////////////////////////////////////////////////////////////////////////
+// Original functions
+///////////////////////////////////////////////////////////////////////////////
+
+// Specify all the redirections for which the original function (with its
+// normal non-redirected semantics) is needed.
+#define FOR_EACH_ORIGINAL_FUNCTION(MACRO)                               \
+  MACRO(__workq_kernreturn)                                             \
+  MACRO(CFDataGetLength)                                                \
+  MACRO(CGPathApply)                                                    \
+  MACRO(close)                                                          \
+  MACRO(lseek)                                                          \
+  MACRO(mach_absolute_time)                                             \
+  MACRO(mmap)                                                           \
+  MACRO(mprotect)                                                       \
+  MACRO(munmap)                                                         \
+  MACRO(objc_msgSend)                                                   \
+  MACRO(open)                                                           \
+  MACRO(OSSpinLockLock)                                                 \
+  MACRO(pipe)                                                           \
+  MACRO(PL_HashTableDestroy)                                            \
+  MACRO(pthread_cond_wait)                                              \
+  MACRO(pthread_cond_timedwait)                                         \
+  MACRO(pthread_cond_timedwait_relative_np)                             \
+  MACRO(pthread_create)                                                 \
+  MACRO(pthread_mutex_destroy)                                          \
+  MACRO(pthread_mutex_init)                                             \
+  MACRO(pthread_mutex_lock)                                             \
+  MACRO(pthread_mutex_trylock)                                          \
+  MACRO(pthread_mutex_unlock)                                           \
+  MACRO(read)                                                           \
+  MACRO(start_wqthread)                                                 \
+  MACRO(write)
+
+#define DECLARE_ORIGINAL_FUNCTION(aName)        \
+  static void* gOriginal_ ##aName;
+
+  FOR_EACH_ORIGINAL_FUNCTION(DECLARE_ORIGINAL_FUNCTION)
+
+#undef DECLARE_ORIGINAL_FUNCTION
+
+///////////////////////////////////////////////////////////////////////////////
 // Callbacks
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1076,7 +1117,7 @@ Preamble_mmap(CallArguments* aArguments)
       // For fixed allocations, make sure this memory region is mapped and zero.
       if (!HasSavedCheckpoint()) {
         // Make sure this memory region is writable.
-        OriginalCall(mprotect, int, address, size, PROT_READ | PROT_WRITE | PROT_EXEC);
+        CallFunction<int>(gOriginal_mprotect, address, size, PROT_READ | PROT_WRITE | PROT_EXEC);
       }
       memset(address, 0, size);
       memory = address;
@@ -1090,7 +1131,7 @@ Preamble_mmap(CallArguments* aArguments)
     // then this is no problem, but after saving a checkpoint we have to make
     // sure that protection flags are what we expect them to be.
     int newProt = HasSavedCheckpoint() ? (PROT_READ | PROT_EXEC) : prot;
-    memory = OriginalCall(mmap, void*, address, size, newProt, flags, fd, offset);
+    memory = CallFunction<void*>(gOriginal_mmap, address, size, newProt, flags, fd, offset);
 
     if (flags & MAP_FIXED) {
       MOZ_RELEASE_ASSERT(memory == address);
@@ -1244,7 +1285,7 @@ Preamble___workq_kernreturn(CallArguments* aArguments)
   // Make sure we know this thread exists.
   Thread::Current();
 
-  RecordReplayInvokeCall(CallEvent___workq_kernreturn, aArguments);
+  RecordReplayInvokeCall(gOriginal___workq_kernreturn, aArguments);
   return PreambleResult::Veto;
 }
 
@@ -1259,7 +1300,7 @@ Preamble_start_wqthread(CallArguments* aArguments)
     Thread::WaitForeverNoIdle();
   }
 
-  RecordReplayInvokeCall(CallEvent_start_wqthread, aArguments);
+  RecordReplayInvokeCall(gOriginal_start_wqthread, aArguments);
   return PreambleResult::Veto;
 }
 
@@ -1271,7 +1312,7 @@ static void
 DirectLockMutex(pthread_mutex_t* aMutex)
 {
   AutoPassThroughThreadEvents pt;
-  ssize_t rv = OriginalCall(pthread_mutex_lock, ssize_t, aMutex);
+  ssize_t rv = CallFunction<ssize_t>(gOriginal_pthread_mutex_lock, aMutex);
   MOZ_RELEASE_ASSERT(rv == 0);
 }
 
@@ -1279,7 +1320,7 @@ static void
 DirectUnlockMutex(pthread_mutex_t* aMutex)
 {
   AutoPassThroughThreadEvents pt;
-  ssize_t rv = OriginalCall(pthread_mutex_unlock, ssize_t, aMutex);
+  ssize_t rv = CallFunction<ssize_t>(gOriginal_pthread_mutex_unlock, aMutex);
   MOZ_RELEASE_ASSERT(rv == 0);
 }
 
@@ -1338,7 +1379,7 @@ Preamble_pthread_cond_wait(CallArguments* aArguments)
   auto& mutex = aArguments->Arg<1, pthread_mutex_t*>();
   aArguments->Rval<ssize_t>() =
     WaitForCvar(mutex, cond, false,
-                [=]() { return OriginalCall(pthread_cond_wait, ssize_t, cond, mutex); });
+                [=]() { return CallFunction<ssize_t>(gOriginal_pthread_cond_wait, cond, mutex); });
   return PreambleResult::Veto;
 }
 
@@ -1350,8 +1391,8 @@ Preamble_pthread_cond_timedwait(CallArguments* aArguments)
   auto& timeout = aArguments->Arg<2, timespec*>();
   aArguments->Rval<ssize_t>() =
     WaitForCvar(mutex, cond, true,
-                [=]() { return OriginalCall(pthread_cond_timedwait, ssize_t,
-                                            cond, mutex, timeout); });
+                [=]() { return CallFunction<ssize_t>(gOriginal_pthread_cond_timedwait,
+                                                     cond, mutex, timeout); });
   return PreambleResult::Veto;
 }
 
@@ -1363,8 +1404,8 @@ Preamble_pthread_cond_timedwait_relative_np(CallArguments* aArguments)
   auto& timeout = aArguments->Arg<2, timespec*>();
   aArguments->Rval<ssize_t>() =
     WaitForCvar(mutex, cond, true,
-                [=]() { return OriginalCall(pthread_cond_timedwait_relative_np, ssize_t,
-                                            cond, mutex, timeout); });
+                [=]() { return CallFunction<ssize_t>(gOriginal_pthread_cond_timedwait_relative_np,
+                                                     cond, mutex, timeout); });
   return PreambleResult::Veto;
 }
 
@@ -1421,7 +1462,7 @@ Preamble_pthread_mutex_init(CallArguments* aArguments)
   auto& attr = aArguments->Arg<1, pthread_mutexattr_t*>();
 
   Lock::New(mutex);
-  aArguments->Rval<ssize_t>() = OriginalCall(pthread_mutex_init, ssize_t, mutex, attr);
+  aArguments->Rval<ssize_t>() = CallFunction<ssize_t>(gOriginal_pthread_mutex_init, mutex, attr);
   return PreambleResult::Veto;
 }
 
@@ -1431,7 +1472,7 @@ Preamble_pthread_mutex_destroy(CallArguments* aArguments)
   auto& mutex = aArguments->Arg<0, pthread_mutex_t*>();
 
   Lock::Destroy(mutex);
-  aArguments->Rval<ssize_t>() = OriginalCall(pthread_mutex_destroy, ssize_t, mutex);
+  aArguments->Rval<ssize_t>() = CallFunction<ssize_t>(gOriginal_pthread_mutex_destroy, mutex);
   return PreambleResult::Veto;
 }
 
@@ -1443,13 +1484,13 @@ Preamble_pthread_mutex_lock(CallArguments* aArguments)
   Lock* lock = Lock::Find(mutex);
   if (!lock) {
     AutoEnsurePassThroughThreadEventsUseStackPointer pt;
-    aArguments->Rval<ssize_t>() = OriginalCall(pthread_mutex_lock, ssize_t, mutex);
+    aArguments->Rval<ssize_t>() = CallFunction<ssize_t>(gOriginal_pthread_mutex_lock, mutex);
     return PreambleResult::Veto;
   }
   ssize_t rv = 0;
   if (IsRecording()) {
     AutoPassThroughThreadEvents pt;
-    rv = OriginalCall(pthread_mutex_lock, ssize_t, mutex);
+    rv = CallFunction<ssize_t>(gOriginal_pthread_mutex_lock, mutex);
   }
   rv = RecordReplayValue(rv);
   MOZ_RELEASE_ASSERT(rv == 0 || rv == EDEADLK);
@@ -1471,13 +1512,13 @@ Preamble_pthread_mutex_trylock(CallArguments* aArguments)
   Lock* lock = Lock::Find(mutex);
   if (!lock) {
     AutoEnsurePassThroughThreadEvents pt;
-    aArguments->Rval<ssize_t>() = OriginalCall(pthread_mutex_trylock, ssize_t, mutex);
+    aArguments->Rval<ssize_t>() = CallFunction<ssize_t>(gOriginal_pthread_mutex_trylock, mutex);
     return PreambleResult::Veto;
   }
   ssize_t rv = 0;
   if (IsRecording()) {
     AutoPassThroughThreadEvents pt;
-    rv = OriginalCall(pthread_mutex_trylock, ssize_t, mutex);
+    rv = CallFunction<ssize_t>(gOriginal_pthread_mutex_trylock, mutex);
   }
   rv = RecordReplayValue(rv);
   MOZ_RELEASE_ASSERT(rv == 0 || rv == EBUSY);
@@ -1499,7 +1540,7 @@ Preamble_pthread_mutex_unlock(CallArguments* aArguments)
   Lock* lock = Lock::Find(mutex);
   if (!lock) {
     AutoEnsurePassThroughThreadEventsUseStackPointer pt;
-    aArguments->Rval<ssize_t>() = OriginalCall(pthread_mutex_unlock, ssize_t, mutex);
+    aArguments->Rval<ssize_t>() = CallFunction<ssize_t>(gOriginal_pthread_mutex_unlock, mutex);
     return PreambleResult::Veto;
   }
   lock->Exit();
@@ -1568,7 +1609,7 @@ Preamble_mach_absolute_time(CallArguments* aArguments)
   // This function might be called through OSSpinLock while setting gTlsThreadKey.
   Thread* thread = Thread::GetByStackPointer(&thread);
   if (!thread || thread->PassThroughEvents()) {
-    aArguments->Rval<uint64_t>() = OriginalCall(mach_absolute_time, uint64_t);
+    aArguments->Rval<uint64_t>() = CallFunction<uint64_t>(gOriginal_mach_absolute_time);
     return PreambleResult::Veto;
   }
   return PreambleResult::Redirect;
@@ -1674,7 +1715,7 @@ Preamble_PL_HashTableDestroy(CallArguments* aArguments)
   auto& table = aArguments->Arg<0, PLHashTable*>();
 
   void* priv = table->allocPriv;
-  OriginalCall(PL_HashTableDestroy, void, table);
+  CallFunction<void>(gOriginal_PL_HashTableDestroy, table);
   DestroyPLHashTableCallbacks(priv);
   return PreambleResult::Veto;
 }
@@ -1709,7 +1750,7 @@ Preamble_objc_msgSend(CallArguments* aArguments)
         !strcmp(message, "nextEventMatchingMask:untilDate:inMode:dequeue:"))
     {
       PassThroughThreadEventsAllowCallbacks([&]() {
-          RecordReplayInvokeCall(CallEvent_objc_msgSend, aArguments);
+          RecordReplayInvokeCall(gOriginal_objc_msgSend, aArguments);
         });
       RecordReplayBytes(&aArguments->Rval<size_t>(), sizeof(size_t));
       return PreambleResult::Veto;
@@ -2092,7 +2133,7 @@ RR_CFDataGetBytePtr(Stream& aEvents, CallArguments* aArguments, ErrorType* aErro
 
   size_t len = 0;
   if (IsRecording()) {
-    len = OriginalCall(CFDataGetLength, size_t, aArguments->Arg<0, CFDataRef>());
+    len = CallFunction<size_t>(gOriginal_CFDataGetLength, aArguments->Arg<0, CFDataRef>());
   }
   aEvents.RecordOrReplayValue(&len);
   if (IsReplaying()) {
@@ -2416,7 +2457,7 @@ Preamble_CGPathApply(CallArguments* aArguments)
   RegisterCallbackData(data);
   PassThroughThreadEventsAllowCallbacks([&]() {
       CallbackWrapperData wrapperData(function, data);
-      OriginalCall(CGPathApply, void, path, &wrapperData, CGPathApplierFunctionWrapper);
+      CallFunction<void>(gOriginal_CGPathApply, path, &wrapperData, CGPathApplierFunctionWrapper);
     });
   RemoveCallbackData(data);
 
@@ -2489,7 +2530,7 @@ Preamble_OSSpinLockLock(CallArguments* aArguments)
   // so make sure events are passed through here. Note that we don't have to
   // redirect OSSpinLockUnlock, as it doesn't have these issues.
   AutoEnsurePassThroughThreadEventsUseStackPointer pt;
-  OriginalCall(OSSpinLockLock, void, lock);
+  CallFunction<void>(gOriginal_OSSpinLockLock, lock);
 
   return PreambleResult::Veto;
 }
@@ -2551,14 +2592,27 @@ EarlyInitializeRedirections()
       // We will get confused if we try to redirect the same address in multiple places.
       for (size_t j = 0; j < i; j++) {
         if (gRedirections[j].mBaseFunction == redirection.mBaseFunction) {
-          PrintSpew("Redirection %s shares the same address as %s, skipping.\n",
-                    redirection.mName, gRedirections[j].mName);
           redirection.mBaseFunction = nullptr;
           break;
         }
       }
     }
   }
+
+  // Bind the gOriginal functions to their redirections' base addresses until we
+  // finish installing redirections.
+  LateInitializeRedirections();
+}
+
+void
+LateInitializeRedirections()
+{
+#define INIT_ORIGINAL_FUNCTION(aName)        \
+  gOriginal_ ##aName = OriginalFunction(#aName);
+
+  FOR_EACH_ORIGINAL_FUNCTION(INIT_ORIGINAL_FUNCTION)
+
+#undef INIT_ORIGINAL_FUNCTION
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2575,9 +2629,9 @@ SymbolNameRaw(void* aPtr)
 void*
 DirectAllocateMemory(void* aAddress, size_t aSize)
 {
-  void* res = OriginalCall(mmap, void*,
-                           aAddress, aSize, PROT_READ | PROT_WRITE | PROT_EXEC,
-                           MAP_ANON | MAP_PRIVATE, -1, 0);
+  void* res = CallFunction<void*>(gOriginal_mmap, aAddress, aSize,
+                                  PROT_READ | PROT_WRITE | PROT_EXEC,
+                                  MAP_ANON | MAP_PRIVATE, -1, 0);
   MOZ_RELEASE_ASSERT(res && res != (void*)-1);
   return res;
 }
@@ -2585,7 +2639,7 @@ DirectAllocateMemory(void* aAddress, size_t aSize)
 void
 DirectDeallocateMemory(void* aAddress, size_t aSize)
 {
-  ssize_t rv = OriginalCall(munmap, int, aAddress, aSize);
+  ssize_t rv = CallFunction<int>(gOriginal_munmap, aAddress, aSize);
   MOZ_RELEASE_ASSERT(rv >= 0);
 }
 
@@ -2593,8 +2647,8 @@ void
 DirectWriteProtectMemory(void* aAddress, size_t aSize, bool aExecutable,
                          bool aIgnoreFailures /* = false */)
 {
-  ssize_t rv = OriginalCall(mprotect, int, aAddress, aSize,
-                            PROT_READ | (aExecutable ? PROT_EXEC : 0));
+  ssize_t rv = CallFunction<int>(gOriginal_mprotect, aAddress, aSize,
+                                 PROT_READ | (aExecutable ? PROT_EXEC : 0));
   MOZ_RELEASE_ASSERT(aIgnoreFailures || rv == 0);
 }
 
@@ -2602,8 +2656,8 @@ void
 DirectUnprotectMemory(void* aAddress, size_t aSize, bool aExecutable,
                       bool aIgnoreFailures /* = false */)
 {
-  ssize_t rv = OriginalCall(mprotect, int, aAddress, aSize,
-                            PROT_READ | PROT_WRITE | (aExecutable ? PROT_EXEC : 0));
+  ssize_t rv = CallFunction<int>(gOriginal_mprotect, aAddress, aSize,
+                                 PROT_READ | PROT_WRITE | (aExecutable ? PROT_EXEC : 0));
   MOZ_RELEASE_ASSERT(aIgnoreFailures || rv == 0);
 }
 
@@ -2611,7 +2665,7 @@ void
 DirectSeekFile(FileHandle aFd, uint64_t aOffset)
 {
   static_assert(sizeof(uint64_t) == sizeof(off_t), "off_t should have 64 bits");
-  ssize_t rv = HANDLE_EINTR(OriginalCall(lseek, int, aFd, aOffset, SEEK_SET));
+  ssize_t rv = HANDLE_EINTR(CallFunction<int>(gOriginal_lseek, aFd, aOffset, SEEK_SET));
   MOZ_RELEASE_ASSERT(rv >= 0);
 }
 
@@ -2620,7 +2674,7 @@ DirectOpenFile(const char* aFilename, bool aWriting)
 {
   int flags = aWriting ? (O_WRONLY | O_CREAT | O_TRUNC) : O_RDONLY;
   int perms = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-  int fd = HANDLE_EINTR(OriginalCall(open, int, aFilename, flags, perms));
+  int fd = HANDLE_EINTR(CallFunction<int>(gOriginal_open, aFilename, flags, perms));
   MOZ_RELEASE_ASSERT(fd > 0);
   return fd;
 }
@@ -2628,7 +2682,7 @@ DirectOpenFile(const char* aFilename, bool aWriting)
 void
 DirectCloseFile(FileHandle aFd)
 {
-  ssize_t rv = HANDLE_EINTR(OriginalCall(close, int, aFd));
+  ssize_t rv = HANDLE_EINTR(CallFunction<int>(gOriginal_close, aFd));
   MOZ_RELEASE_ASSERT(rv >= 0);
 }
 
@@ -2642,7 +2696,7 @@ DirectDeleteFile(const char* aFilename)
 void
 DirectWrite(FileHandle aFd, const void* aData, size_t aSize)
 {
-  ssize_t rv = HANDLE_EINTR(OriginalCall(write, int, aFd, aData, aSize));
+  ssize_t rv = HANDLE_EINTR(CallFunction<int>(gOriginal_write, aFd, aData, aSize));
   MOZ_RELEASE_ASSERT((size_t) rv == aSize);
 }
 
@@ -2658,7 +2712,7 @@ DirectRead(FileHandle aFd, void* aData, size_t aSize)
   // Clear the memory in case it is write protected by the memory snapshot
   // mechanism.
   memset(aData, 0, aSize);
-  ssize_t rv = HANDLE_EINTR(OriginalCall(read, int, aFd, aData, aSize));
+  ssize_t rv = HANDLE_EINTR(CallFunction<int>(gOriginal_read, aFd, aData, aSize));
   MOZ_RELEASE_ASSERT(rv >= 0);
   return (size_t) rv;
 }
@@ -2667,7 +2721,7 @@ void
 DirectCreatePipe(FileHandle* aWriteFd, FileHandle* aReadFd)
 {
   int fds[2];
-  ssize_t rv = OriginalCall(pipe, int, fds);
+  ssize_t rv = CallFunction<int>(gOriginal_pipe, fds);
   MOZ_RELEASE_ASSERT(rv >= 0);
   *aWriteFd = fds[1];
   *aReadFd = fds[0];
@@ -2687,7 +2741,7 @@ InitializeCurrentTime()
 double
 CurrentTime()
 {
-  return OriginalCall(mach_absolute_time, int64_t) * gAbsoluteToNanosecondsRate / 1000.0;
+  return CallFunction<int64_t>(gOriginal_mach_absolute_time) * gAbsoluteToNanosecondsRate / 1000.0;
 }
 
 void
@@ -2706,7 +2760,8 @@ DirectSpawnThread(void (*aFunction)(void*), void* aArgument)
   MOZ_RELEASE_ASSERT(rv == 0);
 
   pthread_t pthread;
-  rv = OriginalCall(pthread_create, int, &pthread, &attr, (void* (*)(void*)) aFunction, aArgument);
+  rv = CallFunction<int>(gOriginal_pthread_create,
+                         &pthread, &attr, (void* (*)(void*)) aFunction, aArgument);
   MOZ_RELEASE_ASSERT(rv == 0);
 
   rv = pthread_attr_destroy(&attr);

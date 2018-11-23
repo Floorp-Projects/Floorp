@@ -39,7 +39,7 @@ CallPreambleHook(PreambleFn aPreamble, size_t aCallId, CallArguments* aArguments
     return true;
   case PreambleResult::PassThrough: {
     AutoEnsurePassThroughThreadEvents pt;
-    RecordReplayInvokeCall(aCallId, aArguments);
+    RecordReplayInvokeCall(OriginalFunction(aCallId), aArguments);
     return true;
   }
   case PreambleResult::Redirect:
@@ -120,7 +120,7 @@ RecordReplayInterceptCall(int aCallId, CallArguments* aArguments)
     // from being flushed in case we end up blocking.
     res.reset();
     thread->SetPassThrough(true);
-    RecordReplayInvokeCall(aCallId, aArguments);
+    RecordReplayInvokeCall(redirection.mOriginalFunction, aArguments);
     thread->SetPassThrough(false);
     res.emplace(thread);
   }
@@ -287,9 +287,9 @@ __asm(
 } // extern "C"
 
 MOZ_NEVER_INLINE void
-RecordReplayInvokeCall(size_t aCallId, CallArguments* aArguments)
+RecordReplayInvokeCall(void* aFunction, CallArguments* aArguments)
 {
-  RecordReplayInvokeCallRaw(aArguments, OriginalFunction(aCallId));
+  RecordReplayInvokeCallRaw(aArguments, aFunction);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -951,6 +951,19 @@ InitializeRedirections()
   }
 
   return true;
+}
+
+void*
+OriginalFunction(const char* aName)
+{
+  size_t numRedirections = NumRedirections();
+  for (size_t i = 0; i < numRedirections; i++) {
+    const Redirection& redirection = GetRedirection(i);
+    if (!strcmp(aName, redirection.mName)) {
+      return redirection.mOriginalFunction;
+    }
+  }
+  MOZ_CRASH("OriginalFunction: unknown redirection");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
