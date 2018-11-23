@@ -341,7 +341,7 @@ struct DIGroup
   // The current bounds of the blob image, relative to
   // the top-left of the mLayerBounds.
   IntRect mImageBounds;
-  Maybe<wr::ImageKey> mKey;
+  Maybe<wr::BlobImageKey> mKey;
   std::vector<RefPtr<SourceSurface>> mExternalSurfaces;
   std::vector<RefPtr<ScaledFont>> mFonts;
 
@@ -378,7 +378,7 @@ struct DIGroup
   {
     if (mKey) {
       MOZ_RELEASE_ASSERT(aForce || mInvalidRect.IsEmpty());
-      aManager->AddImageKeyForDiscard(mKey.value());
+      aManager->AddBlobImageKeyForDiscard(mKey.value());
       mKey = Nothing();
     }
     mFonts.clear();
@@ -634,7 +634,7 @@ struct DIGroup
       GP("Not repainting group because it's empty\n");
       GP("End EndGroup\n");
       if (mKey) {
-        aResources.SetImageVisibleArea(
+        aResources.SetBlobImageVisibleArea(
           mKey.value(),
           ViewAs<ImagePixel>(mPaintRect, PixelCastJustification::LayerIsImage));
         PushImage(aBuilder, bounds);
@@ -688,8 +688,8 @@ struct DIGroup
     if (!mKey) {
       if (!hasItems) // we don't want to send a new image that doesn't have any items in it
         return;
-      wr::ImageKey key = aWrManager->WrBridge()->GetNextImageKey();
-      GP("No previous key making new one %d\n", key.mHandle);
+      wr::BlobImageKey key = wr::BlobImageKey { aWrManager->WrBridge()->GetNextImageKey() };
+      GP("No previous key making new one %d\n", key._0.mHandle);
       wr::ImageDescriptor descriptor(dtSize, 0, dt->GetFormat(), opacity);
       MOZ_RELEASE_ASSERT(bytes.length() > sizeof(size_t));
       if (!aResources.AddBlobImage(key, descriptor, bytes)) {
@@ -708,7 +708,7 @@ struct DIGroup
     }
     mFonts = std::move(fonts);
     mInvalidRect.SetEmpty();
-    aResources.SetImageVisibleArea(
+    aResources.SetBlobImageVisibleArea(
       mKey.value(),
       ViewAs<ImagePixel>(mPaintRect, PixelCastJustification::LayerIsImage));
     PushImage(aBuilder, bounds);
@@ -733,7 +733,7 @@ struct DIGroup
     aBuilder.SetHitTestInfo(mScrollId, hitInfo);
     aBuilder.PushImage(dest, dest, !backfaceHidden,
                        wr::ToImageRendering(sampleFilter),
-                       mKey.value());
+                       wr::AsImageKey(mKey.value()));
     aBuilder.ClearHitTestInfo();
   }
 
@@ -1602,13 +1602,13 @@ WebRenderCommandBuilder::PopOverrideForASR(const ActiveScrolledRoot* aASR)
 
 Maybe<wr::ImageKey>
 WebRenderCommandBuilder::CreateImageKey(nsDisplayItem* aItem,
-                                        ImageContainer* aContainer,
-                                        mozilla::wr::DisplayListBuilder& aBuilder,
-                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
-                                        mozilla::wr::ImageRendering aRendering,
-                                        const StackingContextHelper& aSc,
-                                        gfx::IntSize& aSize,
-                                        const Maybe<LayoutDeviceRect>& aAsyncImageBounds)
+                                            ImageContainer* aContainer,
+                                            mozilla::wr::DisplayListBuilder& aBuilder,
+                                            mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                            mozilla::wr::ImageRendering aRendering,
+                                            const StackingContextHelper& aSc,
+                                            gfx::IntSize& aSize,
+                                            const Maybe<LayoutDeviceRect>& aAsyncImageBounds)
 {
   RefPtr<WebRenderImageData> imageData = CreateOrRecycleWebRenderUserData<WebRenderImageData>(aItem);
   MOZ_ASSERT(imageData);
@@ -1953,7 +1953,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
     needPaint = !invalidRegion.IsEmpty();
   }
 
-  if (needPaint || !fallbackData->GetKey()) {
+  if (needPaint || !fallbackData->GetImageKey()) {
     nsAutoPtr<nsDisplayItemGeometry> newGeometry;
     newGeometry = aItem->AllocateGeometry(aDisplayListBuilder);
     fallbackData->SetGeometry(std::move(newGeometry));
@@ -1996,17 +1996,17 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
 
       if (isInvalidated) {
         Range<uint8_t> bytes((uint8_t *)recorder->mOutputStream.mData, recorder->mOutputStream.mLength);
-        wr::ImageKey key = mManager->WrBridge()->GetNextImageKey();
+        wr::BlobImageKey key = wr::BlobImageKey { mManager->WrBridge()->GetNextImageKey() };
         wr::ImageDescriptor descriptor(dtSize.ToUnknownSize(), 0, dt->GetFormat(), opacity);
         if (!aResources.AddBlobImage(key, descriptor, bytes)) {
           return nullptr;
         }
-        fallbackData->SetKey(key);
+        fallbackData->SetBlobImageKey(key);
         fallbackData->SetFonts(fonts);
       } else {
         // If there is no invalidation region and we don't have a image key,
         // it means we don't need to push image for the item.
-        if (!fallbackData->GetKey().isSome()) {
+        if (!fallbackData->GetBlobImageKey().isSome()) {
           return nullptr;
         }
       }
@@ -2040,7 +2040,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
         } else {
           // If there is no invalidation region and we don't have a image key,
           // it means we don't need to push image for the item.
-          if (!fallbackData->GetKey().isSome()) {
+          if (!fallbackData->GetImageKey().isSome()) {
             return nullptr;
           }
         }
@@ -2061,7 +2061,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
   // Update current bounds to fallback data
   fallbackData->SetBounds(paintBounds);
 
-  MOZ_ASSERT(fallbackData->GetKey());
+  MOZ_ASSERT(fallbackData->GetImageKey());
 
   return fallbackData.forget();
 }
@@ -2083,7 +2083,7 @@ WebRenderCommandBuilder::BuildWrMaskImage(nsDisplayItem* aItem,
   }
 
   wr::WrImageMask imageMask;
-  imageMask.image = fallbackData->GetKey().value();
+  imageMask.image = fallbackData->GetImageKey().value();
   imageMask.rect = wr::ToRoundedLayoutRect(imageRect);
   imageMask.repeat = false;
   return Some(imageMask);
@@ -2110,7 +2110,7 @@ WebRenderCommandBuilder::PushItemAsImage(nsDisplayItem* aItem,
                      dest,
                      !aItem->BackfaceIsHidden(),
                      wr::ToImageRendering(sampleFilter),
-                     fallbackData->GetKey().value());
+                     fallbackData->GetImageKey().value());
   return true;
 }
 

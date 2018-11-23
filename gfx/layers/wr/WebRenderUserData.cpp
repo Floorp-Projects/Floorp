@@ -217,15 +217,6 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer,
   return mKey;
 }
 
-void
-WebRenderImageData::SetKey(const wr::ImageKey& aKey)
-{
-  MOZ_ASSERT_IF(mKey, mKey.value() != aKey);
-  ClearImageKey();
-  mKey = Some(aKey);
-  mOwnsKey = true;
-}
-
 already_AddRefed<ImageClient>
 WebRenderImageData::GetImageClient()
 {
@@ -317,6 +308,35 @@ void
 WebRenderFallbackData::SetGeometry(nsAutoPtr<nsDisplayItemGeometry> aGeometry)
 {
   mGeometry = aGeometry;
+}
+
+void
+WebRenderFallbackData::SetBlobImageKey(const wr::BlobImageKey& aKey)
+{
+  ClearImageKey();
+  mBlobKey = Some(aKey);
+  mOwnsKey = true;
+}
+
+Maybe<wr::ImageKey>
+WebRenderFallbackData::GetImageKey()
+{
+  if (mBlobKey) {
+    return Some(wr::AsImageKey(mBlobKey.value()));
+  }
+
+  return mKey;
+}
+
+void
+WebRenderFallbackData::ClearImageKey()
+{
+  if (mBlobKey && mOwnsKey) {
+    mWRManager->AddBlobImageKeyForDiscard(mBlobKey.value());
+  }
+  mBlobKey.reset();
+
+  WebRenderImageData::ClearImageKey();
 }
 
 WebRenderAnimationData::WebRenderAnimationData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem)

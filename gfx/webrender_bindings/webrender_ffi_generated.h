@@ -997,7 +997,7 @@ struct ByteSlice {
 
 using TileOffset = TypedPoint2D<int32_t, TileCoordinate>;
 
-using DeviceIntRect = TypedRect<int32_t, DevicePixel>;
+using LayoutIntRect = TypedRect<int32_t, LayoutPixel>;
 
 struct MutByteSlice {
   uint8_t *buffer;
@@ -1073,6 +1073,17 @@ struct WrExternalImageHandler {
   }
 };
 
+// An opaque identifier describing a blob image registered with WebRender.
+// This is used as a handle to reference blob images, and can be used as an
+// image in display items.
+struct BlobImageKey {
+  ImageKey _0;
+
+  bool operator==(const BlobImageKey& aOther) const {
+    return _0 == aOther._0;
+  }
+};
+
 struct WrImageDescriptor {
   ImageFormat format;
   int32_t width;
@@ -1088,6 +1099,8 @@ struct WrImageDescriptor {
            opacity == aOther.opacity;
   }
 };
+
+using DeviceIntRect = TypedRect<int32_t, DevicePixel>;
 
 struct WrTransformProperty {
   uint64_t id;
@@ -1619,7 +1632,7 @@ extern bool wr_moz2d_render_cb(ByteSlice aBlob,
                                ImageFormat aFormat,
                                const uint16_t *aTileSize,
                                const TileOffset *aTileOffset,
-                               const DeviceIntRect *aDirtyRect,
+                               const LayoutIntRect *aDirtyRect,
                                MutByteSlice aOutput);
 
 extern void wr_notifier_external_event(WrWindowId aWindowId,
@@ -1695,7 +1708,7 @@ WR_FUNC;
 
 WR_INLINE
 void wr_resource_updates_add_blob_image(Transaction *aTxn,
-                                        WrImageKey aImageKey,
+                                        BlobImageKey aImageKey,
                                         const WrImageDescriptor *aDescriptor,
                                         WrVecU8 *aBytes)
 WR_FUNC;
@@ -1745,6 +1758,11 @@ void wr_resource_updates_clear(Transaction *aTxn)
 WR_FUNC;
 
 WR_INLINE
+void wr_resource_updates_delete_blob_image(Transaction *aTxn,
+                                           BlobImageKey aKey)
+WR_FUNC;
+
+WR_INLINE
 void wr_resource_updates_delete_font(Transaction *aTxn,
                                      WrFontKey aKey)
 WR_FUNC;
@@ -1760,17 +1778,17 @@ void wr_resource_updates_delete_image(Transaction *aTxn,
 WR_FUNC;
 
 WR_INLINE
-void wr_resource_updates_set_image_visible_area(Transaction *aTxn,
-                                                WrImageKey aKey,
-                                                const DeviceIntRect *aArea)
+void wr_resource_updates_set_blob_image_visible_area(Transaction *aTxn,
+                                                     BlobImageKey aKey,
+                                                     const DeviceIntRect *aArea)
 WR_FUNC;
 
 WR_INLINE
 void wr_resource_updates_update_blob_image(Transaction *aTxn,
-                                           WrImageKey aImageKey,
+                                           BlobImageKey aImageKey,
                                            const WrImageDescriptor *aDescriptor,
                                            WrVecU8 *aBytes,
-                                           DeviceIntRect aDirtyRect)
+                                           LayoutIntRect aDirtyRect)
 WR_FUNC;
 
 WR_INLINE

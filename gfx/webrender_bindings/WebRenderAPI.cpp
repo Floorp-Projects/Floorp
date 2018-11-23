@@ -636,7 +636,7 @@ TransactionBuilder::AddImage(ImageKey key, const ImageDescriptor& aDescriptor,
 }
 
 void
-TransactionBuilder::AddBlobImage(ImageKey key, const ImageDescriptor& aDescriptor,
+TransactionBuilder::AddBlobImage(BlobImageKey key, const ImageDescriptor& aDescriptor,
                                  wr::Vec<uint8_t>& aBytes)
 {
   wr_resource_updates_add_blob_image(mTxn,
@@ -683,10 +683,10 @@ TransactionBuilder::UpdateImageBuffer(ImageKey aKey,
 }
 
 void
-TransactionBuilder::UpdateBlobImage(ImageKey aKey,
+TransactionBuilder::UpdateBlobImage(BlobImageKey aKey,
                                     const ImageDescriptor& aDescriptor,
                                     wr::Vec<uint8_t>& aBytes,
-                                    const wr::DeviceIntRect& aDirtyRect)
+                                    const wr::LayoutIntRect& aDirtyRect)
 {
   wr_resource_updates_update_blob_image(mTxn,
                                         aKey,
@@ -728,16 +728,22 @@ TransactionBuilder::UpdateExternalImageWithDirtyRect(ImageKey aKey,
 }
 
 void
-TransactionBuilder::SetImageVisibleArea(ImageKey aKey,
+TransactionBuilder::SetImageVisibleArea(BlobImageKey aKey,
                                         const wr::DeviceIntRect& aArea)
 {
-  wr_resource_updates_set_image_visible_area(mTxn, aKey, &aArea);
+  wr_resource_updates_set_blob_image_visible_area(mTxn, aKey, &aArea);
 }
 
 void
 TransactionBuilder::DeleteImage(ImageKey aKey)
 {
   wr_resource_updates_delete_image(mTxn, aKey);
+}
+
+void
+TransactionBuilder::DeleteBlobImage(BlobImageKey aKey)
+{
+  wr_resource_updates_delete_blob_image(mTxn, aKey);
 }
 
 void

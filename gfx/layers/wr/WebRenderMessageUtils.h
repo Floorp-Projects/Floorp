@@ -76,6 +76,12 @@ struct ParamTraits<mozilla::wr::ImageKey>
 };
 
 template<>
+struct ParamTraits<mozilla::wr::BlobImageKey>
+  : public PlainOldDataSerializer<mozilla::wr::BlobImageKey>
+{
+};
+
+template<>
 struct ParamTraits<mozilla::wr::FontKey>
   : public PlainOldDataSerializer<mozilla::wr::FontKey>
 {

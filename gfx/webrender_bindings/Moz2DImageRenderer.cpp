@@ -323,7 +323,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
                                 gfx::SurfaceFormat aFormat,
                                 const uint16_t *aTileSize,
                                 const mozilla::wr::TileOffset *aTileOffset,
-                                const mozilla::wr::DeviceIntRect *aDirtyRect,
+                                const mozilla::wr::LayoutIntRect *aDirtyRect,
                                 Range<uint8_t> aOutput)
 {
   AUTO_PROFILER_TRACING("WebRender", "RasterizeSingleBlob");
@@ -486,7 +486,7 @@ bool wr_moz2d_render_cb(const mozilla::wr::ByteSlice blob,
                         mozilla::wr::ImageFormat aFormat,
                         const uint16_t *aTileSize,
                         const mozilla::wr::TileOffset *aTileOffset,
-                        const mozilla::wr::DeviceIntRect *aDirtyRect,
+                        const mozilla::wr::LayoutIntRect *aDirtyRect,
                         mozilla::wr::MutByteSlice output)
 {
   return mozilla::wr::Moz2DRenderCallback(mozilla::wr::ByteSliceToRange(blob),
