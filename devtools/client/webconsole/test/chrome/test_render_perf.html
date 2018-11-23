@@ -182,6 +182,7 @@ window.onload = async function() {
   // From https://github.com/devtools-html/perf.html/blob/b73eb73df04c7df51464fa50eeadef3dc7f5d4e2/docs/gecko-profile-format.md#L21
   const settings = {
     entries: 100000000,
+    duration: 20,
     interval: 1,
     features: ["js"],
     threads: ["GeckoMain"],
@@ -192,7 +193,8 @@ window.onload = async function() {
     settings.features,
     settings.features.length,
     settings.threads,
-    settings.threads.length
+    settings.threads.length,
+    settings.duration
   );
   info("Profiler has started");
 
