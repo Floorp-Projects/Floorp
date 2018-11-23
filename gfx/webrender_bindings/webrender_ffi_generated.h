@@ -287,8 +287,8 @@ struct LayoutPixel;
 // one per OS window), and all instances share the same thread.
 struct Renderer;
 
-// Offset in number of tiles.
-struct Tiles;
+// Unit for tile coordinates.
+struct TileCoordinate;
 
 // Represents the work associated to a transaction before scene building.
 struct Transaction;
@@ -987,7 +987,7 @@ struct ByteSlice {
   }
 };
 
-using TileOffset = TypedPoint2D<int32_t, Tiles>;
+using TileOffset = TypedPoint2D<int32_t, TileCoordinate>;
 
 using DeviceIntRect = TypedRect<int32_t, DevicePixel>;
 
