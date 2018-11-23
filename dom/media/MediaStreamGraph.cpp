@@ -313,14 +313,22 @@ bool MediaStreamGraphImpl::AudioTrackPresent() {
       break;
     }
 
-    if (!StreamTracks::TrackIter(stream->GetStreamTracks(), MediaSegment::AUDIO)
-             .IsEnded()) {
-      audioTrackPresent = true;
+    for (StreamTracks::TrackIter it(stream->GetStreamTracks()); !it.IsEnded();
+         it.Next()) {
+      if (it->GetType() == MediaSegment::AUDIO && !it->NotifiedEnded()) {
+        audioTrackPresent = true;
+        break;
+      }
+    }
+
+    if (audioTrackPresent) {
       break;
     }
 
     if (SourceMediaStream* source = stream->AsSourceStream()) {
-      audioTrackPresent = source->HasPendingAudioTrack();
+      if (source->HasPendingAudioTrack()) {
+        audioTrackPresent = true;
+      }
     }
 
     if (audioTrackPresent) {
