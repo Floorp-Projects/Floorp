@@ -434,16 +434,6 @@ public:
                                   bool aForceReuseInnerWindow) = 0;
 
   /**
-   * Set the opener window.  aOriginalOpener is true if and only if this is the
-   * original opener for the window.  That is, it can only be true at most once
-   * during the life cycle of a window, and then only the first time
-   * SetOpenerWindow is called.  It might never be true, of course, if the
-   * window does not have an opener when it's created.
-   */
-  virtual void SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
-                               bool aOriginalOpener) = 0;
-
-  /**
    * Call this to indicate that some node (this window, its document,
    * or content in that document) has a paint event listener.
    */
