@@ -247,7 +247,7 @@ private:
 
 #ifdef SCTP_DTLS_SUPPORTED
   static void DTLSConnectThread(void *data);
-  int SendPacket(nsAutoPtr<MediaPacket> packet);
+  void SendPacket(nsAutoPtr<MediaPacket> packet);
   void SctpDtlsInput(const std::string& aTransportId, MediaPacket& packet);
   static int SctpDtlsOutput(void *addr, void *buffer, size_t length, uint8_t tos, uint8_t set_df);
 #endif

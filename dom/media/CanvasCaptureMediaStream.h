@@ -46,11 +46,11 @@ class OutputStreamFrameListener;
  *                                                  |
  *                                                  | SetImage()
  *                                                  v
- *                                         ___________________
- *                                        |   StreamListener  |
- * ---------------------------------------| (All image access |----------------
- *     === MediaStreamGraph Thread ===    |   Mutex Guarded)  |
- *                                        |___________________|
+ *                                         ____________________
+ *                                        |Stream/TrackListener|
+ * ---------------------------------------| (All image access  |---------------
+ *     === MediaStreamGraph Thread ===    |   Mutex Guarded)   |
+ *                                        |____________________|
  *                                              ^       |
  *                                 NotifyPull() |       | AppendToTrack()
  *                                              |       v
@@ -80,6 +80,12 @@ class OutputStreamDriver : public FrameCaptureListener {
   void SetImage(const RefPtr<layers::Image>& aImage, const TimeStamp& aTime);
 
   /*
+   * Ends the track in mSourceStream when we know there won't be any more images
+   * requested for it.
+   */
+  void EndTrack();
+
+  /*
    * Makes sure any internal resources this driver is holding that may create
    * reference cycles are released.
    */
@@ -88,10 +94,11 @@ class OutputStreamDriver : public FrameCaptureListener {
  protected:
   virtual ~OutputStreamDriver();
   class StreamListener;
+  class TrackListener;
 
  private:
-  RefPtr<SourceMediaStream> mSourceStream;
-  RefPtr<StreamListener> mStreamListener;
+  const RefPtr<SourceMediaStream> mSourceStream;
+  const RefPtr<TrackListener> mTrackListener;
 };
 
 class CanvasCaptureMediaStream : public DOMMediaStream {

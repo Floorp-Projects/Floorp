@@ -47,7 +47,7 @@ async function testGuideOnLayoutHover(elt, expectedRegion, inspector) {
     elt.ownerDocument.defaultView);
 
   info("Waiting for the node-highlight event from the toolbox");
-  await inspector.toolbox.once("node-highlight");
+  await inspector.highlighter.once("node-highlight");
 
   // Wait for the next event tick to make sure the remaining part of the
   // test is executed after finishing synthesizing mouse event.

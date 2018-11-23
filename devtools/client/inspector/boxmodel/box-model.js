@@ -199,8 +199,7 @@ BoxModel.prototype = {
       return;
     }
 
-    const toolbox = this.inspector.toolbox;
-    toolbox.highlighterUtils.unhighlight();
+    this.inspector.highlighter.unhighlight();
   },
 
   /**
@@ -338,10 +337,8 @@ BoxModel.prototype = {
       return;
     }
 
-    const toolbox = this.inspector.toolbox;
     const nodeFront = this.inspector.selection.nodeFront;
-
-    toolbox.highlighterUtils.highlightNodeFront(nodeFront, options);
+    this.inspector.highlighter.highlight(nodeFront, options);
   },
 
   /**

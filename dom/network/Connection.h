@@ -11,7 +11,6 @@
 #include "mozilla/dom/NetworkInformationBinding.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsINetworkProperties.h"
 
 namespace mozilla {
 
@@ -26,12 +25,9 @@ class WorkerPrivate;
 namespace network {
 
 class Connection : public DOMEventTargetHelper
-                 , public nsINetworkProperties
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSINETWORKPROPERTIES
-  NS_DECL_OWNINGTHREAD
 
   static Connection*
   CreateForWindow(nsPIDOMWindowInner* aWindow);
@@ -51,6 +47,19 @@ public:
   {
     return nsContentUtils::ShouldResistFingerprinting() ?
              static_cast<ConnectionType>(ConnectionType::Unknown) : mType;
+  }
+
+  bool GetIsWifi()
+  {
+    NS_ASSERT_OWNINGTHREAD(Connection);
+
+    return mIsWifi;
+  }
+  uint32_t GetDhcpGateway()
+  {
+    NS_ASSERT_OWNINGTHREAD(Connection);
+
+    return mDHCPGateway;
   }
 
   IMPL_EVENT_HANDLER(typechange)

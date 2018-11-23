@@ -70,7 +70,7 @@ pub struct FrameBuildingContext<'a> {
     pub device_pixel_scale: DevicePixelScale,
     pub scene_properties: &'a SceneProperties,
     pub pipelines: &'a FastHashMap<PipelineId, Arc<ScenePipeline>>,
-    pub world_rect: WorldRect,
+    pub screen_world_rect: WorldRect,
     pub clip_scroll_tree: &'a ClipScrollTree,
     pub max_local_clip: LayoutRect,
 }
@@ -95,7 +95,6 @@ pub struct PictureContext {
     pub pic_index: PictureIndex,
     pub pipeline_id: PipelineId,
     pub apply_local_clip_rect: bool,
-    pub inflation_factor: f32,
     pub allow_subpixel_aa: bool,
     pub is_passthrough: bool,
     pub raster_space: RasterSpace,
@@ -103,6 +102,7 @@ pub struct PictureContext {
     pub raster_spatial_node_index: SpatialNodeIndex,
     /// The surface that this picture will render on.
     pub surface_index: SurfaceIndex,
+    pub dirty_world_rect: WorldRect,
 }
 
 /// Mutable state of a picture that gets modified when
@@ -203,13 +203,13 @@ impl FrameBuilder {
 
         const MAX_CLIP_COORD: f32 = 1.0e9;
 
-        let world_rect = (self.screen_rect.to_f32() / device_pixel_scale).round_out();
+        let screen_world_rect = (self.screen_rect.to_f32() / device_pixel_scale).round_out();
 
         let frame_context = FrameBuildingContext {
             device_pixel_scale,
             scene_properties,
             pipelines,
-            world_rect,
+            screen_world_rect,
             clip_scroll_tree,
             max_local_clip: LayoutRect::new(
                 LayoutPoint::new(-MAX_CLIP_COORD, -MAX_CLIP_COORD),
@@ -222,7 +222,8 @@ impl FrameBuilder {
         let root_surface = SurfaceInfo::new(
             ROOT_SPATIAL_NODE_INDEX,
             ROOT_SPATIAL_NODE_INDEX,
-            world_rect,
+            0.0,
+            screen_world_rect,
             clip_scroll_tree,
         );
         surfaces.push(root_surface);
@@ -240,6 +241,9 @@ impl FrameBuilder {
             self.root_pic_index,
             &mut pic_update_state,
             &frame_context,
+            resource_cache,
+            &resources.prim_data_store,
+            &self.clip_store,
         );
 
         let mut frame_state = FrameBuildingState {
@@ -298,6 +302,8 @@ impl FrameBuilder {
             child_tasks,
             UvRectKind::Rect,
             root_spatial_node_index,
+            None,
+            Vec::new(),
         );
 
         let render_task_id = frame_state.render_tasks.add(root_render_task);

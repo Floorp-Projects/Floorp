@@ -108,6 +108,7 @@ class MediaSink;
 class AbstractThread;
 class AudioSegment;
 class DecodedStream;
+class DOMMediaStream;
 class OutputStreamManager;
 class ReaderProxy;
 class TaskQueue;
@@ -187,11 +188,25 @@ class MediaDecoderStateMachine
 
   RefPtr<MediaDecoder::DebugInfoPromise> RequestDebugInfo();
 
-  void AddOutputStream(ProcessedMediaStream* aStream,
-                       TrackID aNextAvailableTrackID, bool aFinishWhenEnded);
-  // Remove an output stream added with AddOutputStream.
-  void RemoveOutputStream(MediaStream* aStream);
-  TrackID NextAvailableTrackIDFor(MediaStream* aOutputStream) const;
+  void SetOutputStreamPrincipal(const nsCOMPtr<nsIPrincipal>& aPrincipal);
+  void SetOutputStreamCORSMode(CORSMode aCORSMode);
+  // If an OutputStreamManager does not exist, one will be created and tracks
+  // matching aLoadedInfo will be created ahead of being created by the
+  // DecodedStream sink.
+  void EnsureOutputStreamManager(MediaStreamGraph* aGraph,
+                                 const Maybe<MediaInfo>& aLoadedInfo);
+  // Add an output stream to the output stream manager. The manager must have
+  // been created through EnsureOutputStreamManager() before this.
+  void AddOutputStream(DOMMediaStream* aStream);
+  // Remove an output stream added with AddOutputStream. If the last output
+  // stream was removed, we will also tear down the OutputStreamManager.
+  void RemoveOutputStream(DOMMediaStream* aStream);
+  // Set the TrackID to be used as the initial id by the next DecodedStream
+  // sink.
+  void SetNextOutputStreamTrackID(TrackID aNextTrackID);
+  // Get the next TrackID to be allocated by DecodedStream,
+  // or the last set TrackID if there is no DecodedStream sink.
+  TrackID GetNextOutputStreamTrackID();
 
   // Seeks to the decoder to aTarget asynchronously.
   RefPtr<MediaDecoder::SeekPromise> InvokeSeek(const SeekTarget& aTarget);
@@ -307,7 +322,10 @@ class MediaDecoderStateMachine
   // constructor immediately after the task queue is created.
   void InitializationTask(MediaDecoder* aDecoder);
 
-  void SetAudioCaptured(bool aCaptured);
+  // Sets the audio-captured state and recreates the media sink if needed.
+  // A manager must be passed in if setting the audio-captured state to true.
+  void SetAudioCaptured(bool aCaptured,
+                        OutputStreamManager* aManager = nullptr);
 
   RefPtr<MediaDecoder::SeekPromise> Seek(const SeekTarget& aTarget);
 
@@ -427,7 +445,9 @@ class MediaDecoderStateMachine
   media::MediaSink* CreateAudioSink();
 
   // Always create mediasink which contains an AudioSink or StreamSink inside.
-  already_AddRefed<media::MediaSink> CreateMediaSink(bool aAudioCaptured);
+  // A manager must be passed in if aAudioCaptured is true.
+  already_AddRefed<media::MediaSink> CreateMediaSink(
+      bool aAudioCaptured, OutputStreamManager* aManager = nullptr);
 
   // Stops the media sink and shut it down.
   // The decoder monitor must be held with exactly one lock count.
@@ -657,7 +677,18 @@ class MediaDecoderStateMachine
   DelayedScheduler mVideoDecodeSuspendTimer;
 
   // Data about MediaStreams that are being fed by the decoder.
-  const RefPtr<OutputStreamManager> mOutputStreamManager;
+  // Main thread only.
+  RefPtr<OutputStreamManager> mOutputStreamManager;
+
+  // Principal used by output streams. Main thread only.
+  nsCOMPtr<nsIPrincipal> mOutputStreamPrincipal;
+
+  // CORSMode used by output streams. Main thread only.
+  CORSMode mOutputStreamCORSMode = CORS_NONE;
+
+  // The next TrackID to be used when a DecodedStream allocates a track.
+  // Main thread only.
+  TrackID mNextOutputStreamTrackID = 1;
 
   // Track the current video decode mode.
   VideoDecodeMode mVideoDecodeMode;
@@ -716,10 +747,6 @@ class MediaDecoderStateMachine
   // True if the media is same-origin with the element. Data can only be
   // passed to MediaStreams when this is true.
   Mirror<bool> mSameOriginMedia;
-
-  // An identifier for the principal of the media. Used to track when
-  // main-thread induced principal changes get reflected on MSG thread.
-  Mirror<PrincipalHandle> mMediaPrincipalHandle;
 
   // Duration of the media. This is guaranteed to be non-null after we finish
   // decoding the first frame.

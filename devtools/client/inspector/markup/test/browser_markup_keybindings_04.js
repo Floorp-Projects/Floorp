@@ -40,7 +40,7 @@ function assertNodeSelected(inspector, tagName) {
 }
 
 function selectPreviousNodeWithArrowUp(inspector) {
-  const onNodeHighlighted = inspector.toolbox.once("node-highlight");
+  const onNodeHighlighted = inspector.highlighter.once("node-highlight");
   const onUpdated = inspector.once("inspector-updated");
   EventUtils.synthesizeKey("KEY_ArrowUp");
   return Promise.all([onUpdated, onNodeHighlighted]);

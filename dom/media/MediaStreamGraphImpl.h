@@ -256,7 +256,7 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
 
   /**
    * For use during ProcessedMediaStream::ProcessInput() or
-   * MediaStreamListener callbacks, when graph state cannot be changed.
+   * MediaStreamTrackListener callbacks, when graph state cannot be changed.
    * Schedules |aMessage| to run after processing, at a time when graph state
    * can be changed.  Graph thread.
    */
@@ -340,10 +340,6 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
   StreamTime GraphTimeToStreamTimeWithBlocking(const MediaStream* aStream,
                                                GraphTime aTime) const;
 
-  /**
-   * Call NotifyHaveCurrentData on aStream's listeners.
-   */
-  void NotifyHasCurrentData(MediaStream* aStream);
   /**
    * If aStream needs an audio stream but doesn't have one, create it.
    * If aStream doesn't need an audio stream but has one, destroy it.
@@ -545,6 +541,8 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
   already_AddRefed<MediaInputPort> ConnectToCaptureStream(
       uint64_t aWindowId, MediaStream* aMediaStream);
 
+  Watchable<GraphTime>& CurrentTime() override;
+
   class StreamSet {
    public:
     class iterator {
@@ -650,6 +648,11 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
    * Number of active MediaInputPorts
    */
   int32_t mPortCount;
+  /**
+   * Runnables to run after the next update to main thread state, but that are
+   * still waiting for the next iteration to finish.
+   */
+  nsTArray<nsCOMPtr<nsIRunnable>> mPendingUpdateRunnables;
 
   /**
    * Devices to use for cubeb input & output, or nullptr for default device.
@@ -879,6 +882,18 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
    */
   bool mCanRunMessagesSynchronously;
 #endif
+
+  /**
+   * The graph's main-thread observable graph time.
+   * Updated by the stable state runnable after each iteration.
+   */
+  Watchable<GraphTime> mMainThreadGraphTime;
+
+  /**
+   * Set based on mProcessedTime at end of iteration.
+   * Read by stable state runnable on main thread. Protected by mMonitor.
+   */
+  GraphTime mNextMainThreadGraphTime = 0;
 };
 
 }  // namespace mozilla

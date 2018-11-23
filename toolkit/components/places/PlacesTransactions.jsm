@@ -723,23 +723,6 @@ function checkProperty(obj, prop, required, checkFn) {
   return !required;
 }
 
-DefineTransaction.annotationObjectValidate = function(obj) {
-  if (obj &&
-      checkProperty(obj, "name", true, v => typeof(v) == "string" && v.length > 0) &&
-      checkProperty(obj, "expires", false, Number.isInteger) &&
-      checkProperty(obj, "flags", false, Number.isInteger) &&
-      checkProperty(obj, "value", false, isPrimitive) ) {
-    // Nothing else should be set
-    let validKeys = ["name", "value", "flags", "expires"];
-    if (Object.keys(obj).every(k => validKeys.includes(k))) {
-      // Annotations objects are passed through to the backend, to avoid memory
-      // leaks, we must clone the object.
-      return {...obj};
-    }
-  }
-  throw new Error("Invalid annotation object");
-};
-
 DefineTransaction.childObjectValidate = function(obj) {
   if (obj &&
       checkProperty(obj, "title", false, v => typeof(v) == "string") &&
@@ -908,14 +891,11 @@ DefineTransaction.defineInputProps(["keyword", "oldKeyword", "oldTag", "tag",
 DefineTransaction.defineInputProps(["index", "newIndex"],
                                    DefineTransaction.indexValidate,
                                    PlacesUtils.bookmarks.DEFAULT_INDEX);
-DefineTransaction.defineInputProps(["annotation"],
-                                   DefineTransaction.annotationObjectValidate);
 DefineTransaction.defineInputProps(["child"],
                                    DefineTransaction.childObjectValidate);
 DefineTransaction.defineArrayInputProp("guids", "guid");
 DefineTransaction.defineArrayInputProp("urls", "url");
 DefineTransaction.defineArrayInputProp("tags", "tag");
-DefineTransaction.defineArrayInputProp("annotations", "annotation");
 DefineTransaction.defineArrayInputProp("children", "child");
 DefineTransaction.defineArrayInputProp("excludingAnnotations",
                                        "excludingAnnotation");
@@ -1034,9 +1014,9 @@ var PT = PlacesTransactions;
  * When this transaction is executed, it's resolved to the new bookmark's GUID.
  */
 PT.NewBookmark = DefineTransaction(["parentGuid", "url"],
-                                   ["index", "title", "annotations", "tags"]);
+                                   ["index", "title", "tags"]);
 PT.NewBookmark.prototype = Object.seal({
-  async execute({ parentGuid, url, index, title, annotations, tags }) {
+  async execute({ parentGuid, url, index, title, tags }) {
     let info = { parentGuid, index, url, title };
     // Filter tags to exclude already existing ones.
     if (tags.length > 0) {
@@ -1047,11 +1027,6 @@ PT.NewBookmark.prototype = Object.seal({
 
     async function createItem() {
       info = await PlacesUtils.bookmarks.insert(info);
-      if (annotations.length > 0) {
-        let itemId = await PlacesUtils.promiseItemId(info.guid);
-        PlacesUtils.setAnnotationsForItem(itemId, annotations,
-          Ci.nsINavBookmarksService.SOURCE_DEFAULT, true);
-      }
       if (tags.length > 0) {
         PlacesUtils.tagging.tagURI(Services.io.newURI(url.href), tags);
       }
@@ -1083,9 +1058,9 @@ PT.NewBookmark.prototype = Object.seal({
  * When this transaction is executed, it's resolved to the new folder's GUID.
  */
 PT.NewFolder = DefineTransaction(["parentGuid", "title"],
-                                 ["index", "annotations", "children"]);
+                                 ["index", "children"]);
 PT.NewFolder.prototype = Object.seal({
-  async execute({ parentGuid, title, index, annotations, children }) {
+  async execute({ parentGuid, title, index, children }) {
     let folderGuid;
     let info = {
       children: [{
@@ -1121,12 +1096,6 @@ PT.NewFolder.prototype = Object.seal({
       if (index != PlacesUtils.bookmarks.DEFAULT_INDEX) {
         bmInfo[0].index = index;
         bmInfo = await PlacesUtils.bookmarks.update(bmInfo[0]);
-      }
-
-      if (annotations.length > 0) {
-        let itemId = await PlacesUtils.promiseItemId(folderGuid);
-        PlacesUtils.setAnnotationsForItem(itemId, annotations,
-          Ci.nsINavBookmarksService.SOURCE_DEFAULT, true);
       }
     }
     await createItem();

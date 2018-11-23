@@ -21,7 +21,7 @@ const expectedStyle = (w, h, z) =>
 
 add_task(async function() {
   const {inspector, testActor} = await openInspectorForURL(TEST_URL);
-  const highlighterUtils = inspector.toolbox.highlighterUtils;
+  const highlighter = inspector.highlighter;
 
   const div = await getNodeFront("div", inspector);
 
@@ -30,7 +30,7 @@ add_task(async function() {
     await testActor.zoomPageTo(level, false);
 
     info("Highlight the test node");
-    await highlighterUtils.highlightNodeFront(div);
+    await highlighter.highlight(div);
 
     const isVisible = await testActor.isHighlighting();
     ok(isVisible, `The highlighter is visible at zoom level ${level}`);
@@ -45,7 +45,7 @@ add_task(async function() {
       "The style attribute of the root element is correct");
 
     info("Unhighlight the node");
-    await highlighterUtils.unhighlight();
+    await highlighter.unhighlight();
   }
 });
 

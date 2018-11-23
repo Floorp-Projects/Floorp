@@ -480,6 +480,7 @@ void
 NrIceCtx::InitializeGlobals(bool allow_loopback,
                             bool tcp_enabled,
                             bool allow_link_local) {
+  RLogConnector::CreateInstance();
   // Initialize the crypto callbacks and logging stuff
   if (!initialized) {
     NR_reg_init(NR_REG_MODE_LOCAL);
@@ -790,6 +791,27 @@ NrIceStats NrIceCtx::Destroy() {
       Telemetry::Accumulate(
           Telemetry::WEBRTC_ICE_ANSWERER_ABORT_TIME,
           time_delta.ToMilliseconds());
+    }
+
+    unsigned char rate_limit_bit_pattern = 0;
+    if (!mozilla::nr_socket_short_term_violation_time().IsNull() &&
+        mozilla::nr_socket_short_term_violation_time() >= ice_start_time_) {
+      rate_limit_bit_pattern |= 1;
+    }
+    if (!mozilla::nr_socket_long_term_violation_time().IsNull() &&
+        mozilla::nr_socket_long_term_violation_time() >= ice_start_time_) {
+      rate_limit_bit_pattern |= 2;
+    }
+
+    if (connection_state_ == ICE_CTX_FAILED) {
+      Telemetry::Accumulate(
+          Telemetry::WEBRTC_STUN_RATE_LIMIT_EXCEEDED_BY_TYPE_GIVEN_FAILURE,
+          rate_limit_bit_pattern);
+    } else if (connection_state_ == ICE_CTX_CONNECTED ||
+               connection_state_ == ICE_CTX_COMPLETED) {
+      Telemetry::Accumulate(
+          Telemetry::WEBRTC_STUN_RATE_LIMIT_EXCEEDED_BY_TYPE_GIVEN_SUCCESS,
+          rate_limit_bit_pattern);
     }
   }
 

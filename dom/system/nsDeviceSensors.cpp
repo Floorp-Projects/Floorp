@@ -246,8 +246,9 @@ WindowCannotReceiveSensorEvent (nsPIDOMWindowInner* aWindow)
     return true;
   }
 
-  bool disabled = aWindow->GetOuterWindow()->IsBackground() ||
-    !aWindow->IsTopLevelWindowActive();
+  nsPIDOMWindowOuter* windowOuter = aWindow->GetOuterWindow();
+  bool disabled = windowOuter->IsBackground() ||
+    !windowOuter->IsTopLevelWindowActive();
   if (disabled) {
     return true;
   }

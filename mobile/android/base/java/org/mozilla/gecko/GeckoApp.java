@@ -1206,10 +1206,9 @@ public abstract class GeckoApp extends GeckoActivity
                 // If we are doing a restore, send the parsed session data to Gecko.
                 if (!mIsRestoringActivity) {
                     getAppEventDispatcher().dispatch("Session:Restore", restoreMessage);
+                    // Make sure sessionstore.old is either updated or deleted as necessary.
+                    getProfile().updateSessionFile(mShouldRestore);
                 }
-
-                // Make sure sessionstore.old is either updated or deleted as necessary.
-                getProfile().updateSessionFile(mShouldRestore);
             }
         });
 

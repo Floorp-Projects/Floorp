@@ -130,10 +130,8 @@ EventTooltip.prototype = {
       header.appendChild(filename);
 
       if (!listener.hide.debugger) {
-        const debuggerIcon = doc.createElementNS(XHTML_NS, "img");
+        const debuggerIcon = doc.createElementNS(XHTML_NS, "div");
         debuggerIcon.className = "event-tooltip-debugger-icon";
-        debuggerIcon.setAttribute("src",
-          "chrome://devtools/skin/images/jump-definition.svg");
         const openInDebugger = L10N.getStr("eventsTooltip.openInDebugger");
         debuggerIcon.setAttribute("title", openInDebugger);
         header.appendChild(debuggerIcon);

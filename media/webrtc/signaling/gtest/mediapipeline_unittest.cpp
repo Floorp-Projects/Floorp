@@ -52,9 +52,9 @@ public:
     mMainThreadDestroyed = true;
   }
 
-  virtual bool AppendToTrack(TrackID aID, MediaSegment* aSegment, MediaSegment *aRawSegment = nullptr) override
+  virtual StreamTime AppendToTrack(TrackID aID, MediaSegment* aSegment, MediaSegment *aRawSegment = nullptr) override
   {
-    return true;
+    return aSegment->GetDuration();
   }
 };
 
@@ -92,7 +92,7 @@ class FakeAudioStreamTrack : public mozilla::dom::AudioStreamTrack {
 public:
 
   FakeAudioStreamTrack()
-    : AudioStreamTrack(new DOMMediaStream(nullptr, nullptr), 0, 1,
+    : AudioStreamTrack(new DOMMediaStream(nullptr), 0, 1,
                        new FakeMediaStreamTrackSource())
     , mMutex("Fake AudioStreamTrack")
     , mStop(false)
@@ -117,11 +117,6 @@ public:
   {
     mozilla::MutexAutoLock lock(mMutex);
     mListeners.push_back(aListener);
-  }
-
-  virtual already_AddRefed<mozilla::dom::MediaStreamTrack> CloneInternal(DOMMediaStream* aOwningStream, TrackID aTrackID) override
-  {
-    return RefPtr<MediaStreamTrack>(new FakeAudioStreamTrack).forget();
   }
 
   private:
@@ -188,11 +183,10 @@ class LoopbackTransport : public MediaTransportBase {
     peer_ = nullptr;
   }
 
-  nsresult SendPacket(const std::string& aTransportId,
-                      MediaPacket& aPacket) override
+  void SendPacket(const std::string& aTransportId,
+                  MediaPacket& aPacket) override
   {
     peer_->SignalPacketReceived(aTransportId, aPacket);
-    return NS_OK;
   }
 
   TransportLayer::State GetState(const std::string& aTransportId,

@@ -98,7 +98,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "MediaStreamGraph.h"
 #include "DOMMediaStream.h"
-#include "rlogconnector.h"
 #include "WebrtcGlobalInformation.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/EventDispatcher.h"
@@ -233,16 +232,13 @@ const nsIID nsISupportsWeakReference::COMTypeInfo<nsSupportsWeakReference, void>
 namespace mozilla {
 
 RTCStatsQuery::RTCStatsQuery(bool internal) :
-  failed(false),
   internalStats(internal),
   grabAllLevels(false),
   now(0.0) {
 }
 
 RTCStatsQuery::~RTCStatsQuery() {
-  MOZ_ASSERT(NS_IsMainThread());
 }
-
 
 NS_IMPL_ISUPPORTS0(PeerConnectionImpl)
 
@@ -339,12 +335,11 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , connectStr(nullptr)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  auto log = RLogConnector::CreateInstance();
   if (aGlobal) {
     mWindow = do_QueryInterface(aGlobal->GetAsSupports());
     if (IsPrivateBrowsing(mWindow)) {
       mPrivateWindow = true;
-      log->EnterPrivateMode();
+      MediaTransportHandler::EnterPrivateMode();
     }
     mWindow->AddPeerConnection();
     mActiveOnWindow = true;
@@ -377,11 +372,7 @@ PeerConnectionImpl::~PeerConnectionImpl()
   }
 
   if (mPrivateWindow) {
-    auto * log = RLogConnector::GetInstance();
-    if (log) {
-      log->ExitPrivateMode();
-    }
-    mPrivateWindow = false;
+    MediaTransportHandler::ExitPrivateMode();
   }
   if (PeerConnectionCtx::isActive()) {
     PeerConnectionCtx::GetInstance()->mPeerConnections.erase(mHandle);
@@ -1667,22 +1658,19 @@ NS_IMETHODIMP
 PeerConnectionImpl::GetStats(MediaStreamTrack *aSelector) {
   PC_AUTO_ENTER_API_CALL(true);
 
-  if (!mMedia) {
-    // Since we zero this out before the d'tor, we should check.
-    return NS_ERROR_UNEXPECTED;
-  }
+  GetStats(aSelector, false)->Then(
+      GetMainThreadSerialEventTarget(),
+      __func__,
+      [handle = mHandle] (UniquePtr<RTCStatsQuery>&& aQuery) {
+        DeliverStatsReportToPCObserver_m(
+            handle, NS_OK, nsAutoPtr<RTCStatsQuery>(aQuery.release()));
+      },
+      [handle = mHandle] (nsresult aError) {
+        DeliverStatsReportToPCObserver_m(
+            handle, aError, nsAutoPtr<RTCStatsQuery>());
+      }
+    );
 
-  nsAutoPtr<RTCStatsQuery> query(new RTCStatsQuery(false));
-
-  nsresult rv = BuildStatsQuery_m(aSelector, query.get());
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  RUN_ON_THREAD(mSTSThread,
-                WrapRunnableNM(&PeerConnectionImpl::GetStatsForPCObserver_s,
-                               mHandle,
-                               query),
-                NS_DISPATCH_NORMAL);
   return NS_OK;
 }
 
@@ -2883,6 +2871,40 @@ PeerConnectionImpl::UpdateDefaultCandidate(const std::string& defaultAddr,
                                        transportId);
 }
 
+RefPtr<RTCStatsQueryPromise>
+PeerConnectionImpl::GetStats(dom::MediaStreamTrack* aSelector,
+                             bool aInternalStats)
+{
+  UniquePtr<RTCStatsQuery> query(new RTCStatsQuery(aInternalStats));
+  nsresult rv = BuildStatsQuery_m(aSelector, query.get());
+  if (NS_FAILED(rv)) {
+    return RTCStatsQueryPromise::CreateAndReject(rv, __func__);
+  }
+
+  nsTArray<RefPtr<MediaPipeline>> pipelines;
+  // Gather up pipelines from mMedia so they may be inspected on STS
+  mMedia->GetTransmitPipelinesMatching(aSelector, &pipelines);
+  mMedia->GetReceivePipelinesMatching(aSelector, &pipelines);
+  if (!pipelines.Length()) {
+    CSFLogError(LOGTAG,
+        "%s: Found no pipelines matching selector.",
+        __FUNCTION__);
+  }
+
+  return InvokeAsync(
+      mSTSThread,
+      __func__,
+      [transportHandler = mMedia->mTransportHandler,
+       pipelines,
+       aQuery = std::move(query)] () mutable
+      {
+        return PeerConnectionImpl::ExecuteStatsQuery_s(std::move(aQuery),
+                                                       pipelines,
+                                                       transportHandler);
+      }
+    );
+}
+
 nsresult
 PeerConnectionImpl::BuildStatsQuery_m(
     mozilla::dom::MediaStreamTrack *aSelector,
@@ -2892,21 +2914,10 @@ PeerConnectionImpl::BuildStatsQuery_m(
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (!mThread) {
-    CSFLogError(LOGTAG, "Could not build stats query, no MainThread");
-    return NS_ERROR_UNEXPECTED;
-  }
-
   nsresult rv = GetTimeSinceEpoch(&(query->now));
   if (NS_FAILED(rv)) {
     CSFLogError(LOGTAG, "Could not build stats query, could not get timestamp");
     return rv;
-  }
-
-  query->media = mMedia;
-  if (!query->media) {
-    CSFLogError(LOGTAG, "Could not build stats query, no ice_ctx");
-    return NS_ERROR_UNEXPECTED;
   }
 
   // We do not use the pcHandle here, since that's risky to expose to content.
@@ -2915,7 +2926,6 @@ PeerConnectionImpl::BuildStatsQuery_m(
       query->now);
 
   query->iceStartTime = mIceStartTime;
-  query->failed = isFailed(mIceConnectionState);
   query->report->mIceRestarts.Construct(mIceRestartCount);
   query->report->mIceRollbacks.Construct(mIceRollbackCount);
 
@@ -2941,14 +2951,6 @@ PeerConnectionImpl::BuildStatsQuery_m(
     }
   }
 
-  // Gather up pipelines from mMedia so they may be inspected on STS
-  mMedia->GetTransmitPipelinesMatching(aSelector, &query->pipelines);
-  mMedia->GetReceivePipelinesMatching(aSelector, &query->pipelines);
-  if (!query->pipelines.Length()) {
-    CSFLogError(LOGTAG,
-        "%s: Found no pipelines matching selector.",
-        __FUNCTION__);
-  }
   if (aSelector) {
     query->transportId = mMedia->GetTransportIdMatching(*aSelector);
   }
@@ -2957,24 +2959,25 @@ PeerConnectionImpl::BuildStatsQuery_m(
     query->grabAllLevels = true;
   }
 
-  return rv;
+  return NS_OK;
 }
 
-nsresult
-PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
-
-  ASSERT_ON_THREAD(query->media->GetSTSThread());
-
+RefPtr<RTCStatsQueryPromise>
+PeerConnectionImpl::ExecuteStatsQuery_s(
+    UniquePtr<RTCStatsQuery>&& query,
+    const nsTArray<RefPtr<MediaPipeline>>& aPipelines,
+    const RefPtr<MediaTransportHandler>& aTransportHandler)
+{
   // Gather stats from pipelines provided (can't touch mMedia + stream on STS)
 
-  for (size_t p = 0; p < query->pipelines.Length(); ++p) {
-    MOZ_ASSERT(query->pipelines[p]);
-    MOZ_ASSERT(query->pipelines[p]->Conduit());
-    if (!query->pipelines[p] || !query->pipelines[p]->Conduit()) {
+  for (size_t p = 0; p < aPipelines.Length(); ++p) {
+    MOZ_ASSERT(aPipelines[p]);
+    MOZ_ASSERT(aPipelines[p]->Conduit());
+    if (!aPipelines[p] || !aPipelines[p]->Conduit()) {
       // continue if we don't have a valid conduit
       continue;
     }
-    const MediaPipeline& mp = *query->pipelines[p];
+    const MediaPipeline& mp = *aPipelines[p];
     bool isAudio = (mp.Conduit()->type() == MediaSessionConduit::AUDIO);
     nsString kind = isAudio ?
         NS_LITERAL_STRING("audio") : NS_LITERAL_STRING("video");
@@ -3186,39 +3189,7 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
     }
   }
 
-  if (query->media->mTransportHandler) {
-    if (query->grabAllLevels) {
-      query->media->mTransportHandler->GetAllIceStats(query->internalStats,
-                                                      query->now,
-                                                      query->report);
-    } else {
-      query->media->mTransportHandler->GetIceStats(query->transportId,
-                                                   query->internalStats,
-                                                   query->now,
-                                                   query->report);
-    }
-  }
-
-  return NS_OK;
-}
-
-void PeerConnectionImpl::GetStatsForPCObserver_s(
-    const std::string& pcHandle, // The Runnable holds the memory
-    nsAutoPtr<RTCStatsQuery> query) {
-
-  MOZ_ASSERT(query);
-  MOZ_ASSERT(query->media);
-  ASSERT_ON_THREAD(query->media->GetSTSThread());
-
-  nsresult rv = PeerConnectionImpl::ExecuteStatsQuery_s(query.get());
-
-  NS_DispatchToMainThread(
-      WrapRunnableNM(
-          &PeerConnectionImpl::DeliverStatsReportToPCObserver_m,
-          pcHandle,
-          rv,
-          query),
-      NS_DISPATCH_NORMAL);
+  return aTransportHandler->GetIceStats(std::move(query));
 }
 
 void PeerConnectionImpl::DeliverStatsReportToPCObserver_m(

@@ -203,7 +203,11 @@ impl<'a> DisplayListFlattener<'a> {
             &root_pipeline.viewport_size,
             &root_pipeline.content_size,
         );
-        flattener.flatten_root(root_pipeline, &root_pipeline.viewport_size);
+
+        flattener.flatten_root(
+            root_pipeline,
+            &root_pipeline.viewport_size,
+        );
 
         debug_assert!(flattener.sc_stack.is_empty());
 
@@ -241,7 +245,11 @@ impl<'a> DisplayListFlattener<'a> {
             .get(items)
     }
 
-    fn flatten_root(&mut self, pipeline: &'a ScenePipeline, frame_size: &LayoutSize) {
+    fn flatten_root(
+        &mut self,
+        pipeline: &'a ScenePipeline,
+        frame_size: &LayoutSize,
+    ) {
         let pipeline_id = pipeline.pipeline_id;
         let reference_frame_info = self.simple_scroll_and_clip_chain(
             &ClipId::root_reference_frame(pipeline_id),
@@ -262,6 +270,8 @@ impl<'a> DisplayListFlattener<'a> {
 
         // For the root pipeline, there's no need to add a full screen rectangle
         // here, as it's handled by the framebuffer clear.
+        // TODO(gw): In future, we can probably remove this code completely and handle
+        //           it as part of the tile cache background color clearing.
         if self.scene.root_pipeline_id != Some(pipeline_id) {
             if let Some(pipeline) = self.scene.pipelines.get(&pipeline_id) {
                 if let Some(bg_color) = pipeline.background_color {
@@ -499,7 +509,10 @@ impl<'a> DisplayListFlattener<'a> {
             ScrollSensitivity::ScriptAndInputEvents,
         );
 
-        self.flatten_root(pipeline, &iframe_rect.size);
+        self.flatten_root(
+            pipeline,
+            &iframe_rect.size,
+        );
 
         self.pipeline_clip_chain_stack.pop();
     }

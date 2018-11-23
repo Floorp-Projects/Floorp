@@ -994,6 +994,12 @@ BrowserGlue.prototype = {
     os.removeObserver(this, "xpi-signature-changed");
     os.removeObserver(this, "sync-ui-state:update");
     os.removeObserver(this, "shield-init-complete");
+
+    Services.prefs.removeObserver("privacy.trackingprotection.enabled", this._matchCBCategory);
+    Services.prefs.removeObserver("privacy.trackingprotection.pbmode.enabled", this._matchCBCategory);
+    Services.prefs.removeObserver("urlclassifier.trackingTable", this._matchCBCategory);
+    Services.prefs.removeObserver("network.cookie.cookieBehavior", this._matchCBCategory);
+    Services.prefs.removeObserver(ContentBlockingCategoriesPrefs.PREF_CB_CATEGORY, this._updateCBCategory);
   },
 
   // runs on startup, before the first command line handler is invoked
@@ -1364,6 +1370,21 @@ BrowserGlue.prototype = {
 
     // Set the default favicon size for UI views that use the page-icon protocol.
     PlacesUtils.favicons.setDefaultIconURIPreferredSize(16 * aWindow.devicePixelRatio);
+
+    this._matchCBCategory();
+    Services.prefs.addObserver("privacy.trackingprotection.enabled", this._matchCBCategory);
+    Services.prefs.addObserver("privacy.trackingprotection.pbmode.enabled", this._matchCBCategory);
+    Services.prefs.addObserver("urlclassifier.trackingTable", this._matchCBCategory);
+    Services.prefs.addObserver("network.cookie.cookieBehavior", this._matchCBCategory);
+    Services.prefs.addObserver(ContentBlockingCategoriesPrefs.PREF_CB_CATEGORY, this._updateCBCategory);
+  },
+
+  _matchCBCategory() {
+    ContentBlockingCategoriesPrefs.matchCBCategory();
+  },
+
+  _updateCBCategory() {
+    ContentBlockingCategoriesPrefs.updateCBCategory();
   },
 
   _recordContentBlockingTelemetry() {
@@ -2955,6 +2976,111 @@ BrowserGlue.prototype = {
                                           Ci.nsISupportsWeakReference]),
 
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(BrowserGlue),
+};
+
+var ContentBlockingCategoriesPrefs = {
+  PREF_CB_CATEGORY: "browser.contentblocking.category",
+  // The prefs inside CATEGORY_PREFS set expected value for each CB category.
+  // A null value means that pref is default.
+  CATEGORY_PREFS: {
+    strict: [
+      ["urlclassifier.trackingTable", null],
+      ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN],
+      ["privacy.trackingprotection.pbmode.enabled", true],
+      ["privacy.trackingprotection.enabled", true],
+    ],
+    standard: [
+      ["urlclassifier.trackingTable", null],
+      ["network.cookie.cookieBehavior", null],
+      ["privacy.trackingprotection.pbmode.enabled", null],
+      ["privacy.trackingprotection.enabled", null],
+    ],
+  },
+  switchingCategory: false,
+
+  /**
+   * Checks if CB prefs match perfectly with one of our pre-defined categories.
+   */
+  prefsMatch(category) {
+    // The category pref must be either unset, or match.
+    if (Services.prefs.prefHasUserValue(this.PREF_CB_CATEGORY) &&
+        Services.prefs.getStringPref(this.PREF_CB_CATEGORY) != category) {
+      return false;
+    }
+    for (let [pref, value] of this.CATEGORY_PREFS[category]) {
+      if (!value) {
+        if (Services.prefs.prefHasUserValue(pref)) {
+          return false;
+        }
+      } else {
+        let prefType = Services.prefs.getPrefType(pref);
+        if ((prefType == Services.prefs.PREF_BOOL && Services.prefs.getBoolPref(pref) != value) ||
+            (prefType == Services.prefs.PREF_INT && Services.prefs.getIntPref(pref) != value) ||
+            (prefType == Services.prefs.PREF_STRING && Services.prefs.getStringPref(pref) != value)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  },
+
+  matchCBCategory() {
+    if (this.switchingCategory) {
+      return;
+    }
+    // If PREF_CB_CATEGORY is not set match users to a Content Blocking category. Check if prefs fit
+    // perfectly into strict or standard, otherwise match with custom. If PREF_CB_CATEGORY has previously been set,
+    // a change of one of these prefs necessarily puts us in "custom".
+    if (this.prefsMatch("standard")) {
+      Services.prefs.setStringPref(this.PREF_CB_CATEGORY, "standard");
+    } else if (this.prefsMatch("strict")) {
+      Services.prefs.setStringPref(this.PREF_CB_CATEGORY, "strict");
+    } else {
+      Services.prefs.setStringPref(this.PREF_CB_CATEGORY, "custom");
+    }
+  },
+
+  updateCBCategory() {
+    if (this.switchingCategory) {
+      return;
+    }
+    // Turn on switchingCategory flag, to ensure that when the individual prefs that change as a result
+    // of the category change do not trigger yet another category change.
+    this.switchingCategory = true;
+    let value = Services.prefs.getStringPref(this.PREF_CB_CATEGORY);
+    this.setPrefsToCategory(value);
+    this.switchingCategory = false;
+  },
+
+  /**
+   * Sets all user-exposed content blocking preferences to values that match the selected category.
+   */
+  setPrefsToCategory(category) {
+    // Leave prefs as they were if we are switching to "custom" category.
+    if (category == "custom") {
+      return;
+    }
+
+    for (let [pref, value] of this.CATEGORY_PREFS[category]) {
+      if (!Services.prefs.prefIsLocked(pref)) {
+        if (!value) {
+          Services.prefs.clearUserPref(pref);
+        } else {
+          switch (Services.prefs.getPrefType(pref)) {
+          case Services.prefs.PREF_BOOL:
+            Services.prefs.setBoolPref(pref, value);
+            break;
+          case Services.prefs.PREF_INT:
+            Services.prefs.setIntPref(pref, value);
+            break;
+          case Services.prefs.PREF_STRING:
+            Services.prefs.setStringPref(pref, value);
+            break;
+          }
+        }
+      }
+    }
+  },
 };
 
 /**

@@ -209,19 +209,22 @@ WebConsoleOutputWrapper.prototype = {
             });
           },
           sourceMapService: this.toolbox ? this.toolbox.sourceMapURLService : null,
-          highlightDomElement: (grip, options = {}) => {
-            return this.toolbox.highlighterUtils
-              ? this.toolbox.highlighterUtils.highlightDomValueGrip(grip, options)
-              : null;
+          highlightDomElement: async (grip, options = {}) => {
+            if (!this.toolbox.highlighter) {
+              return null;
+            }
+            await this.toolbox.initInspector();
+            const nodeFront = await this.toolbox.walker.gripToNodeFront(grip);
+            return this.toolbox.highlighter.highlight(nodeFront, options);
           },
           unHighlightDomElement: (forceHide = false) => {
-            return this.toolbox.highlighterUtils
-              ? this.toolbox.highlighterUtils.unhighlight(forceHide)
+            return this.toolbox.highlighter
+              ? this.toolbox.highlighter.unhighlight(forceHide)
               : null;
           },
           openNodeInInspector: async (grip) => {
             const onSelectInspector = this.toolbox.selectTool("inspector", "inspect_dom");
-            const onGripNodeToFront = this.toolbox.highlighterUtils.gripToNodeFront(grip);
+            const onGripNodeToFront = this.toolbox.walker.gripToNodeFront(grip);
             const [
               front,
               inspector,

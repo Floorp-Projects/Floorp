@@ -54,7 +54,11 @@ class StreamTracks {
    */
   class Track final {
     Track(TrackID aID, StreamTime aStart, MediaSegment* aSegment)
-        : mStart(aStart), mSegment(aSegment), mID(aID), mEnded(false) {
+        : mStart(aStart),
+          mSegment(aSegment),
+          mID(aID),
+          mEnded(false),
+          mNotifiedEnded(false) {
       MOZ_COUNT_CTOR(Track);
 
       NS_ASSERTION(aID > TRACK_NONE, "Bad track ID");
@@ -79,8 +83,13 @@ class StreamTracks {
     StreamTime GetStart() const { return mStart; }
     StreamTime GetEnd() const { return mSegment->GetDuration(); }
     MediaSegment::Type GetType() const { return mSegment->GetType(); }
+    bool NotifiedEnded() const { return mNotifiedEnded; }
 
     void SetEnded() { mEnded = true; }
+    void NotifyEnded() {
+      MOZ_ASSERT(mEnded);
+      mNotifiedEnded = true;
+    }
     void AppendFrom(Track* aTrack) {
       NS_ASSERTION(!mEnded, "Can't append to ended track");
       NS_ASSERTION(aTrack->mID == mID, "IDs must match");
@@ -119,6 +128,8 @@ class StreamTracks {
     TrackID mID;
     // True when the track ends with the data in mSegment
     bool mEnded;
+    // True after NotifiedEnded() has been called.
+    bool mNotifiedEnded;
   };
 
   class MOZ_STACK_CLASS CompareTracksByID final {
@@ -189,7 +200,7 @@ class StreamTracks {
       NS_WARNING(
           "Adding track to StreamTracks that should have no more tracks");
     } else {
-      NS_ASSERTION(mTracksKnownTime <= aStart, "Start time too early");
+      // NS_ASSERTION(mTracksKnownTime <= aStart, "Start time too early");
     }
     return *track;
   }

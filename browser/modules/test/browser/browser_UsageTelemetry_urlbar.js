@@ -197,7 +197,7 @@ add_task(async function test_simpleQuery() {
     URLBAR_SELECTED_RESULT_TYPES.searchengine,
     "FX_URLBAR_SELECTED_RESULT_TYPE");
 
-  let resultIndexByType = resultIndexByTypeHist.snapshot("searchengine");
+  let resultIndexByType = resultIndexByTypeHist.snapshot().searchengine;
   checkHistogramResults(resultIndexByType,
     0,
     "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
@@ -252,7 +252,7 @@ add_task(async function test_searchAlias() {
     URLBAR_SELECTED_RESULT_TYPES.searchengine,
     "FX_URLBAR_SELECTED_RESULT_TYPE");
 
-  let resultIndexByType = resultIndexByTypeHist.snapshot("searchengine");
+  let resultIndexByType = resultIndexByTypeHist.snapshot().searchengine;
   checkHistogramResults(resultIndexByType,
     0,
     "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
@@ -338,7 +338,7 @@ add_task(async function test_oneOff_enter() {
     URLBAR_SELECTED_RESULT_TYPES.searchengine,
     "FX_URLBAR_SELECTED_RESULT_TYPE");
 
-  let resultIndexByType = resultIndexByTypeHist.snapshot("searchengine");
+  let resultIndexByType = resultIndexByTypeHist.snapshot().searchengine;
   checkHistogramResults(resultIndexByType,
     0,
     "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");
@@ -450,7 +450,7 @@ add_task(async function test_suggestion_click() {
       URLBAR_SELECTED_RESULT_TYPES.searchsuggestion,
       "FX_URLBAR_SELECTED_RESULT_TYPE");
 
-    let resultIndexByType = resultIndexByTypeHist.snapshot("searchsuggestion");
+    let resultIndexByType = resultIndexByTypeHist.snapshot().searchsuggestion;
     checkHistogramResults(resultIndexByType,
       3,
       "FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE");

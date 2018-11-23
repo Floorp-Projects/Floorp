@@ -41,6 +41,8 @@ runTest(async () => {
     captureStreamElement.srcObject = gUMVideoElement.mozCaptureStream();
     captureStreamElement.play();
 
+    await h.checkVideoPlaying(captureStreamElement);
+
     // Adding a dummy audio track to the stream will keep a consuming media
     // element from ending.
     // We could also solve it by repeatedly play()ing or autoplay, but then we
@@ -49,7 +51,6 @@ runTest(async () => {
     let osc = createOscillatorStream(new AudioContext(), 1000);
     captureStreamElement.srcObject.addTrack(osc.getTracks()[0]);
 
-    await h.checkVideoPlaying(captureStreamElement);
     info("Video flowing. Pausing.");
     gUMVideoElement.pause();
     await h.checkVideoPaused(captureStreamElement, { time: pausedTimeout });

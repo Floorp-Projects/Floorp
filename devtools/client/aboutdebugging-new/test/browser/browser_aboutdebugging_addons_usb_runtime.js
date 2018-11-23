@@ -19,8 +19,8 @@ add_task(async function() {
   const { document, tab } = await openAboutDebugging();
 
   const usbClient = usbMocks.createRuntime(RUNTIME_ID, {
-    appName: RUNTIME_APP_NAME,
     deviceName: RUNTIME_DEVICE_NAME,
+    name: RUNTIME_APP_NAME,
   });
   usbMocks.emitUpdate();
 

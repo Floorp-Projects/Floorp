@@ -25,7 +25,7 @@
 #include "nsGkAtoms.h"
 #include "PrincipalChangeObserver.h"
 #include "nsStubMutationObserver.h"
-#include "MediaSegment.h" // for PrincipalHandle
+#include "MediaSegment.h" // for PrincipalHandle, GraphTime
 
 // X.h on Linux #defines CurrentTime as 0L, so we have to #undef it here.
 #ifdef CurrentTime
@@ -300,32 +300,7 @@ public:
 
   void GetEMEInfo(nsString& aEMEInfo);
 
-  // An interface for observing principal changes on the media elements
-  // MediaDecoder. This will also be notified if the active CORSMode changes.
-  class DecoderPrincipalChangeObserver
-  {
-  public:
-    virtual void NotifyDecoderPrincipalChanged() = 0;
-  };
-
-  /**
-   * Add a DecoderPrincipalChangeObserver to this media element.
-   *
-   * Ownership of the DecoderPrincipalChangeObserver remains with the caller,
-   * and it's the caller's responsibility to remove the observer before it dies.
-   */
-  void AddDecoderPrincipalChangeObserver(DecoderPrincipalChangeObserver* aObserver);
-
-  /**
-   * Remove an added DecoderPrincipalChangeObserver from this media element.
-   *
-   * Returns true if it was successfully removed.
-   */
-  bool RemoveDecoderPrincipalChangeObserver(DecoderPrincipalChangeObserver* aObserver);
-
   class StreamCaptureTrackSource;
-  class DecoderCaptureTrackSource;
-  class CaptureStreamTrackSourceGetter;
 
   // Update the visual size of the media. Called from the decoder on the
   // main thread when/if the size changes.
@@ -366,11 +341,6 @@ public:
    * AudioTrack is disabled or a VideoTrack is unselected.
    */
   void NotifyMediaTrackDisabled(MediaTrack* aTrack);
-
-  /**
-   * Called when tracks become available to the source media stream.
-   */
-  void NotifyMediaStreamTracksAvailable(DOMMediaStream* aStream);
 
   /**
    * Called when a captured MediaStreamTrack is stopped so we can clean up its
@@ -846,10 +816,8 @@ protected:
   class ChannelLoader;
   class ErrorSink;
   class MediaLoadListener;
-  class MediaStreamTracksAvailableCallback;
   class MediaStreamTrackListener;
-  class StreamListener;
-  class StreamSizeListener;
+  class VideoFrameListener;
   class ShutdownObserver;
 
   MediaDecoderOwner::NextFrameStatus NextFrameStatus();
@@ -868,11 +836,6 @@ protected:
     bool mCapturingAudioOnly;
     bool mCapturingDecoder;
     bool mCapturingMediaStream;
-
-    // The following members are keeping state for a captured MediaDecoder.
-    // Tracks that were created on main thread before MediaDecoder fed them
-    // to the MediaStreamGraph.
-    nsTArray<RefPtr<MediaStreamTrack>> mPreCreatedTracks;
 
     // The following members are keeping state for a captured MediaStream.
     nsTArray<Pair<nsString, RefPtr<MediaInputPort>>> mTrackPorts;
@@ -932,6 +895,12 @@ protected:
    */
   enum { REMOVING_SRC_STREAM = 0x1 };
   void UpdateSrcMediaStreamPlaying(uint32_t aFlags = 0);
+
+  /**
+   * mSrcStream's graph's CurrentTime() has been updated. It might be time to
+   * fire "timeupdate".
+   */
+  void UpdateSrcStreamTime();
 
   /**
    * Called by our DOMMediaStream::TrackListener when a new MediaStreamTrack has
@@ -1405,10 +1374,6 @@ protected:
   // The DocGroup-specific AbstractThread::MainThread() of this HTML element.
   RefPtr<AbstractThread> mAbstractMainThread;
 
-  // Observers listening to changes to the mDecoder principal.
-  // Used by streams captured from this element.
-  nsTArray<DecoderPrincipalChangeObserver*> mDecoderPrincipalChangeObservers;
-
   // A reference to the VideoFrameContainer which contains the current frame
   // of video to display.
   RefPtr<VideoFrameContainer> mVideoFrameContainer;
@@ -1428,9 +1393,17 @@ protected:
   // True once mSrcStream's initial set of tracks are known.
   bool mSrcStreamTracksAvailable = false;
 
-  // If non-negative, the time we should return for currentTime while playing
-  // mSrcStream.
-  double mSrcStreamPausedCurrentTime = -1;
+  // While mPaused is true and mSrcStream is set, this is the value to use for
+  // CurrentTime(). Otherwise this is set to GRAPH_TIME_MAX.
+  GraphTime mSrcStreamPausedGraphTime = GRAPH_TIME_MAX;
+
+  // The offset in GraphTime that this media element started playing the
+  // playback stream of mSrcStream.
+  GraphTime mSrcStreamGraphTimeOffset = 0;
+
+  // True once PlaybackEnded() is called and we're playing a MediaStream.
+  // Reset to false if we start playing mSrcStream again.
+  bool mSrcStreamPlaybackEnded = false;
 
   // Holds a reference to the stream connecting this stream to the capture sink.
   RefPtr<MediaInputPort> mCaptureStreamPort;
@@ -1439,13 +1412,13 @@ protected:
   // writing to.
   nsTArray<OutputMediaStream> mOutputStreams;
 
-  // Holds a reference to the MediaStreamListener attached to mSrcStream's
-  // playback stream.
-  RefPtr<StreamListener> mMediaStreamListener;
-  // Holds a reference to the size-getting MediaStreamListener attached to
-  // mSrcStream.
-  RefPtr<StreamSizeListener> mMediaStreamSizeListener;
-  // The selected video stream track which contained mMediaStreamSizeListener.
+  // The next track id to use for a captured MediaDecoder.
+  TrackID mNextAvailableMediaDecoderOutputTrackID = 1;
+
+  // Holds a reference to the size-getting track listener attached to
+  // mSelectedVideoStreamTrack.
+  RefPtr<VideoFrameListener> mVideoFrameListener;
+  // The currently selected video stream track.
   RefPtr<VideoStreamTrack> mSelectedVideoStreamTrack;
 
   const RefPtr<ShutdownObserver> mShutdownObserver;
@@ -1758,7 +1731,7 @@ protected:
 
   RefPtr<VideoTrackList> mVideoTrackList;
 
-  nsAutoPtr<MediaStreamTrackListener> mMediaStreamTrackListener;
+  UniquePtr<MediaStreamTrackListener> mMediaStreamTrackListener;
 
   // The principal guarding mVideoFrameContainer access when playing a
   // MediaStream.

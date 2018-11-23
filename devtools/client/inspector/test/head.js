@@ -328,7 +328,7 @@ var hoverContainer = async function(selector, inspector) {
   const nodeFront = await getNodeFront(selector, inspector);
   const container = getContainerForNodeFront(nodeFront, inspector);
 
-  const highlit = inspector.toolbox.once("node-highlight");
+  const highlit = inspector.highlighter.once("node-highlight");
   EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mousemove"},
     inspector.markup.doc.defaultView);
   return highlit;

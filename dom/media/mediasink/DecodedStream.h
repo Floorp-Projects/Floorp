@@ -16,6 +16,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/StateMirroring.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
@@ -40,8 +41,7 @@ class DecodedStream : public media::MediaSink {
                 MediaQueue<AudioData>& aAudioQueue,
                 MediaQueue<VideoData>& aVideoQueue,
                 OutputStreamManager* aOutputStreamManager,
-                const bool& aSameOrigin,
-                const PrincipalHandle& aPrincipalHandle);
+                const bool& aSameOrigin);
 
   // MediaSink functions.
   const PlaybackParams& GetPlaybackParams() const override;
@@ -65,6 +65,7 @@ class DecodedStream : public media::MediaSink {
   void Stop() override;
   bool IsStarted() const override;
   bool IsPlaying() const override;
+  void Shutdown() override;
 
   nsCString GetDebugInfo() override;
 
@@ -76,16 +77,20 @@ class DecodedStream : public media::MediaSink {
     return media::TimeUnit::FromMicroseconds(aTime);
   }
   void DestroyData(UniquePtr<DecodedStreamData> aData);
-  void AdvanceTracks();
   void SendAudio(double aVolume, bool aIsSameOrigin,
                  const PrincipalHandle& aPrincipalHandle);
   void SendVideo(bool aIsSameOrigin, const PrincipalHandle& aPrincipalHandle);
+  StreamTime SentDuration();
+  void AdvanceTracks();
   void SendData();
   void NotifyOutput(int64_t aTime);
+  void NotifyTrackEnd(StreamTime aEndTime);
 
   void AssertOwnerThread() const {
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   }
+
+  void PlayingChanged();
 
   void ConnectListener();
   void DisconnectListener();
@@ -103,17 +108,20 @@ class DecodedStream : public media::MediaSink {
   /*
    * Worker thread only members.
    */
+  WatchManager<DecodedStream> mWatchManager;
   UniquePtr<DecodedStreamData> mData;
-  RefPtr<GenericPromise> mFinishPromise;
+  RefPtr<GenericPromise> mAudioEndPromise;
+  RefPtr<GenericPromise> mVideoEndPromise;
 
-  bool mPlaying;
-  const bool& mSameOrigin;                  // valid until Shutdown() is called.
-  const PrincipalHandle& mPrincipalHandle;  // valid until Shutdown() is called.
+  Watchable<bool> mPlaying;
+  const bool& mSameOrigin;  // valid until Shutdown() is called.
+  Mirror<PrincipalHandle> mPrincipalHandle;
 
   PlaybackParams mParams;
 
   media::NullableTimeUnit mStartTime;
   media::TimeUnit mLastOutputTime;
+  StreamTime mStreamTimeOffset = 0;
   MediaInfo mInfo;
 
   MediaQueue<AudioData>& mAudioQueue;

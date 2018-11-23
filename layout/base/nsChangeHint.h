@@ -111,8 +111,8 @@ enum nsChangeHint : uint32_t {
   nsChangeHint_UpdateParentOverflow = 1 << 14,
 
   /**
-   * The children-only transform of an SVG frame changed, requiring the
-   * overflow rects of the frame's immediate children to be updated.
+   * The children-only transform of an SVG frame changed, requiring overflows to
+   * be updated.
    */
   nsChangeHint_ChildrenOnlyTransform = 1 << 15,
 
