@@ -54,6 +54,7 @@ pub struct RenderTaskId {
     pub index: u32,
 
     #[cfg(debug_assertions)]
+    #[cfg_attr(feature = "replay", serde(default = "FrameId::first"))]
     frame_id: FrameId,
 }
 
