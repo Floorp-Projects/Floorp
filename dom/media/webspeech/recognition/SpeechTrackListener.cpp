@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SpeechStreamListener.h"
+#include "SpeechTrackListener.h"
 
 #include "SpeechRecognition.h"
 #include "nsProxyRelease.h"
@@ -12,18 +12,17 @@
 namespace mozilla {
 namespace dom {
 
-SpeechStreamListener::SpeechStreamListener(SpeechRecognition* aRecognition)
+SpeechTrackListener::SpeechTrackListener(SpeechRecognition* aRecognition)
     : mRecognition(aRecognition) {}
 
-SpeechStreamListener::~SpeechStreamListener() {
-  NS_ReleaseOnMainThreadSystemGroup("SpeechStreamListener::mRecognition",
+SpeechTrackListener::~SpeechTrackListener() {
+  NS_ReleaseOnMainThreadSystemGroup("SpeechTrackListener::mRecognition",
                                     mRecognition.forget());
 }
 
-void SpeechStreamListener::NotifyQueuedAudioData(
-    MediaStreamGraph* aGraph, TrackID aID, StreamTime aTrackOffset,
-    const AudioSegment& aQueuedMedia, MediaStream* aInputStream,
-    TrackID aInputTrackID) {
+void SpeechTrackListener::NotifyQueuedChanges(
+    MediaStreamGraph* aGraph, StreamTime aTrackOffset,
+    const MediaSegment& aQueuedMedia) {
   AudioSegment* audio = const_cast<AudioSegment*>(
       static_cast<const AudioSegment*>(&aQueuedMedia));
 
@@ -63,10 +62,10 @@ void SpeechStreamListener::NotifyQueuedAudioData(
 }
 
 template <typename SampleFormatType>
-void SpeechStreamListener::ConvertAndDispatchAudioChunk(int aDuration,
-                                                        float aVolume,
-                                                        SampleFormatType* aData,
-                                                        TrackRate aTrackRate) {
+void SpeechTrackListener::ConvertAndDispatchAudioChunk(int aDuration,
+                                                       float aVolume,
+                                                       SampleFormatType* aData,
+                                                       TrackRate aTrackRate) {
   RefPtr<SharedBuffer> samples(SharedBuffer::Create(aDuration * 1 *  // channel
                                                     sizeof(int16_t)));
 
@@ -76,8 +75,7 @@ void SpeechStreamListener::ConvertAndDispatchAudioChunk(int aDuration,
   mRecognition->FeedAudioData(samples.forget(), aDuration, this, aTrackRate);
 }
 
-void SpeechStreamListener::NotifyEvent(MediaStreamGraph* aGraph,
-                                       MediaStreamGraphEvent event) {
+void SpeechTrackListener::NotifyEnded() {
   // TODO dispatch SpeechEnd event so services can be informed
 }
 
