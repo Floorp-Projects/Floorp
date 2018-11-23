@@ -7986,6 +7986,25 @@ nsGlobalWindowInner::ForgetSharedWorker(SharedWorker* aSharedWorker)
   mSharedWorkers.RemoveElement(aSharedWorker);
 }
 
+void
+nsGlobalWindowInner::StorageAccessGranted()
+{
+  // If we have a partitioned localStorage, it's time to replace it with a real
+  // one in order to receive notifications.
+
+  if (mLocalStorage &&
+      mLocalStorage->Type() == Storage::ePartitionedLocalStorage) {
+    IgnoredErrorResult error;
+    GetLocalStorage(error);
+    if (NS_WARN_IF(error.Failed())) {
+      return;
+    }
+
+    MOZ_ASSERT(mLocalStorage &&
+               mLocalStorage->Type() == Storage::eLocalStorage);
+  }
+}
+
 mozilla::dom::TabGroup*
 nsPIDOMWindowInner::TabGroup()
 {
