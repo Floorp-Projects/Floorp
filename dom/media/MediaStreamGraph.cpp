@@ -1120,6 +1120,7 @@ void MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate) {
           stream->GraphTimeToStreamTime(mProcessedTime);
       update->mNextMainThreadFinished = stream->mNotifiedFinished;
     }
+    mNextMainThreadGraphTime = mProcessedTime;
     if (!mPendingUpdateRunnables.IsEmpty()) {
       mUpdateRunnables.AppendElements(std::move(mPendingUpdateRunnables));
     }
@@ -1662,6 +1663,8 @@ void MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG) {
       }
     }
     mStreamUpdates.Clear();
+
+    mMainThreadGraphTime = mNextMainThreadGraphTime;
 
     if (mCurrentTaskMessageQueue.IsEmpty()) {
       if (LifecycleStateRef() == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP &&
@@ -3334,7 +3337,8 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
       ,
       mCanRunMessagesSynchronously(false)
 #endif
-{
+      ,
+      mMainThreadGraphTime(0, "MediaStreamGraphImpl::mMainThreadGraphTime") {
   if (mRealtime) {
     if (aDriverRequested == AUDIO_THREAD_DRIVER) {
       // Always start with zero input channels.
@@ -4003,6 +4007,11 @@ void MediaStreamGraph::DispatchToMainThreadAfterStreamStateUpdate(
   AssertOnGraphThreadOrNotRunning();
   *mPendingUpdateRunnables.AppendElement() =
       AbstractMainThread()->CreateDirectTaskDrainer(std::move(aRunnable));
+}
+
+Watchable<mozilla::GraphTime>& MediaStreamGraphImpl::CurrentTime() {
+  MOZ_ASSERT(NS_IsMainThread());
+  return mMainThreadGraphTime;
 }
 
 }  // namespace mozilla

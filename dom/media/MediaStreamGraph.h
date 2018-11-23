@@ -14,6 +14,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/StateWatching.h"
 #include "mozilla/TaskQueue.h"
 #include "nsAutoPtr.h"
 #include "nsAutoRef.h"
@@ -1343,6 +1344,12 @@ class MediaStreamGraph {
   void AssertOnGraphThreadOrNotRunning() const {
     MOZ_ASSERT(OnGraphThreadOrNotRunning());
   }
+
+  /**
+   * Returns a watchable of the graph's main-thread observable graph time.
+   * Main thread only.
+   */
+  virtual Watchable<GraphTime>& CurrentTime() = 0;
 
  protected:
   explicit MediaStreamGraph(TrackRate aSampleRate) : mSampleRate(aSampleRate) {
