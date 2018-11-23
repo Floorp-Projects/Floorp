@@ -44,7 +44,7 @@ GatherDependentCalls(InfallibleVector<MiddlemanCall*>& aOutgoingCalls, Middleman
   MOZ_RELEASE_ASSERT(!aCall->mSent);
   aCall->mSent = true;
 
-  const Redirection& redirection = gRedirections[aCall->mCallId];
+  const Redirection& redirection = GetRedirection(aCall->mCallId);
 
   CallArguments arguments;
   aCall->mArguments.CopyTo(&arguments);
@@ -77,7 +77,7 @@ SendCallToMiddleman(size_t aCallId, CallArguments* aArguments, bool aDiverged)
 {
   MOZ_RELEASE_ASSERT(IsReplaying());
 
-  const Redirection& redirection = gRedirections[aCallId];
+  const Redirection& redirection = GetRedirection(aCallId);
   MOZ_RELEASE_ASSERT(redirection.mMiddlemanCall);
 
   MonitorAutoLock lock(*gMonitor);
@@ -142,7 +142,7 @@ SendCallToMiddleman(size_t aCallId, CallArguments* aArguments, bool aDiverged)
       call->mArguments.CopyTo(&oldArguments);
       MiddlemanCallContext cx(call, &oldArguments, MiddlemanCallPhase::ReplayOutput);
       cx.mReplayOutputIsOld = true;
-      gRedirections[call->mCallId].mMiddlemanCall(cx);
+      GetRedirection(call->mCallId).mMiddlemanCall(cx);
     }
   }
 
@@ -166,7 +166,7 @@ ProcessMiddlemanCall(const char* aInputData, size_t aInputSize,
     MiddlemanCall* call = new MiddlemanCall();
     call->DecodeInput(inputStream);
 
-    const Redirection& redirection = gRedirections[call->mCallId];
+    const Redirection& redirection = GetRedirection(call->mCallId);
     MOZ_RELEASE_ASSERT(redirection.mMiddlemanCall);
 
     CallArguments arguments;
@@ -223,7 +223,7 @@ ResetMiddlemanCalls()
       call->mArguments.CopyTo(&arguments);
 
       MiddlemanCallContext cx(call, &arguments, MiddlemanCallPhase::MiddlemanRelease);
-      gRedirections[call->mCallId].mMiddlemanCall(cx);
+      GetRedirection(call->mCallId).mMiddlemanCall(cx);
 
       delete call;
     }
