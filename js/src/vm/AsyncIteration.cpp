@@ -18,7 +18,6 @@
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/List-inl.h"
-#include "vm/NativeObject-inl.h"
 
 using namespace js;
 
@@ -339,17 +338,17 @@ AsyncGeneratorObject::enqueueRequest(JSContext* cx, Handle<AsyncGeneratorObject*
             return true;
         }
 
-        RootedNativeObject queue(cx, NewList(cx));
+        Rooted<ListObject*> queue(cx, ListObject::create(cx));
         if (!queue) {
             return false;
         }
 
         RootedValue requestVal(cx, ObjectValue(*asyncGenObj->singleQueueRequest()));
-        if (!AppendToList(cx, queue, requestVal)) {
+        if (!queue->append(cx, requestVal)) {
             return false;
         }
         requestVal = ObjectValue(*request);
-        if (!AppendToList(cx, queue, requestVal)) {
+        if (!queue->append(cx, requestVal)) {
             return false;
         }
 
@@ -357,9 +356,9 @@ AsyncGeneratorObject::enqueueRequest(JSContext* cx, Handle<AsyncGeneratorObject*
         return true;
     }
 
-    RootedNativeObject queue(cx, asyncGenObj->queue());
+    Rooted<ListObject*> queue(cx, asyncGenObj->queue());
     RootedValue requestVal(cx, ObjectValue(*request));
-    return AppendToList(cx, queue, requestVal);
+    return queue->append(cx, requestVal);
 }
 
 /* static */ AsyncGeneratorRequest*
@@ -371,8 +370,8 @@ AsyncGeneratorObject::dequeueRequest(JSContext* cx, Handle<AsyncGeneratorObject*
         return request;
     }
 
-    RootedNativeObject queue(cx, asyncGenObj->queue());
-    return ShiftFromList<AsyncGeneratorRequest>(cx, queue);
+    Rooted<ListObject*> queue(cx, asyncGenObj->queue());
+    return &queue->popFirstAs<AsyncGeneratorRequest>(cx);
 }
 
 /* static */ AsyncGeneratorRequest*
@@ -382,7 +381,7 @@ AsyncGeneratorObject::peekRequest(Handle<AsyncGeneratorObject*> asyncGenObj)
         return asyncGenObj->singleQueueRequest();
     }
 
-    return PeekList<AsyncGeneratorRequest>(asyncGenObj->queue());
+    return &asyncGenObj->queue()->getAs<AsyncGeneratorRequest>(0);
 }
 
 const Class AsyncGeneratorRequest::class_ = {

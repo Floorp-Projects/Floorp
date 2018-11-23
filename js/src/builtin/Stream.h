@@ -9,8 +9,8 @@
 
 #include "js/Stream.h"
 #include "builtin/Promise.h"
+#include "vm/List.h"
 #include "vm/NativeObject.h"
-
 
 namespace js {
 
@@ -175,8 +175,8 @@ class ReadableStreamReader : public NativeObject
         setFixedSlot(Slot_ForAuthorCode, BooleanValue(value == ForAuthorCodeBool::Yes));
     }
 
-    NativeObject* requests() const {
-        return &getFixedSlot(Slot_Requests).toObject().as<NativeObject>();
+    ListObject* requests() const {
+        return &getFixedSlot(Slot_Requests).toObject().as<ListObject>();
     }
     void clearRequests() { setFixedSlot(Slot_Requests, UndefinedValue()); }
 
@@ -219,7 +219,7 @@ class StreamController : public NativeObject
         SlotCount
     };
 
-    NativeObject* queue() const { return &getFixedSlot(Slot_Queue).toObject().as<NativeObject>(); }
+    ListObject* queue() const { return &getFixedSlot(Slot_Queue).toObject().as<ListObject>(); }
     double queueTotalSize() const { return getFixedSlot(Slot_TotalSize).toNumber(); }
     void setQueueTotalSize(double size) { setFixedSlot(Slot_TotalSize, NumberValue(size)); }
 };
@@ -349,8 +349,8 @@ class ReadableByteStreamController : public ReadableStreamController
 
     Value byobRequest() const { return getFixedSlot(Slot_BYOBRequest); }
     void clearBYOBRequest() { setFixedSlot(Slot_BYOBRequest, JS::UndefinedValue()); }
-    NativeObject* pendingPullIntos() const {
-        return &getFixedSlot(Slot_PendingPullIntos).toObject().as<NativeObject>();
+    ListObject* pendingPullIntos() const {
+        return &getFixedSlot(Slot_PendingPullIntos).toObject().as<ListObject>();
     }
     Value autoAllocateChunkSize() const { return getFixedSlot(Slot_AutoAllocateSize); }
     void setAutoAllocateChunkSize(const Value & size) {
