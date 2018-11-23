@@ -24,9 +24,8 @@ namespace dom {
 
 class OutputStreamDriver::StreamListener : public MediaStreamListener {
  public:
-  explicit StreamListener(OutputStreamDriver* aDriver, TrackID aTrackId,
-                          PrincipalHandle aPrincipalHandle,
-                          SourceMediaStream* aSourceStream)
+  StreamListener(TrackID aTrackId, const PrincipalHandle& aPrincipalHandle,
+                 SourceMediaStream* aSourceStream)
       : mEnded(false),
         mSourceStream(aSourceStream),
         mTrackId(aTrackId),
@@ -67,15 +66,12 @@ class OutputStreamDriver::StreamListener : public MediaStreamListener {
     }
   }
 
-  void NotifyEvent(MediaStreamGraph* aGraph,
-                   MediaStreamGraphEvent aEvent) override {
-    if (aEvent == MediaStreamGraphEvent::EVENT_REMOVED) {
-      EndStream();
-      mSourceStream->EndAllTrackAndFinish();
+  void Forget() {
+    EndStream();
+    mSourceStream->EndAllTrackAndFinish();
 
-      MutexAutoLock lock(mMutex);
-      mImage = nullptr;
-    }
+    MutexAutoLock lock(mMutex);
+    mImage = nullptr;
   }
 
  protected:
@@ -93,17 +89,33 @@ class OutputStreamDriver::StreamListener : public MediaStreamListener {
   TimeStamp mImageTime;
 };
 
+class OutputStreamDriver::TrackListener : public MediaStreamTrackListener {
+ public:
+  explicit TrackListener(const RefPtr<StreamListener>& aStreamListener)
+      : mStreamListener(aStreamListener) {}
+
+  void NotifyRemoved() override { mStreamListener->Forget(); }
+
+ protected:
+  ~TrackListener() = default;
+
+ private:
+  const RefPtr<StreamListener> mStreamListener;
+};
+
 OutputStreamDriver::OutputStreamDriver(SourceMediaStream* aSourceStream,
                                        const TrackID& aTrackId,
                                        const PrincipalHandle& aPrincipalHandle)
     : FrameCaptureListener(),
       mSourceStream(aSourceStream),
       mStreamListener(
-          new StreamListener(this, aTrackId, aPrincipalHandle, aSourceStream)) {
+          new StreamListener(aTrackId, aPrincipalHandle, aSourceStream)),
+      mTrackListener(new TrackListener(mStreamListener)) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mSourceStream);
   mSourceStream->AddListener(mStreamListener);
   mSourceStream->AddTrack(aTrackId, 0, new VideoSegment());
+  mSourceStream->AddTrackListener(mTrackListener, aTrackId);
   mSourceStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
   mSourceStream->SetPullEnabled(true);
 

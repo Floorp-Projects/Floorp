@@ -46,11 +46,11 @@ class OutputStreamFrameListener;
  *                                                  |
  *                                                  | SetImage()
  *                                                  v
- *                                         ___________________
- *                                        |   StreamListener  |
- * ---------------------------------------| (All image access |----------------
- *     === MediaStreamGraph Thread ===    |   Mutex Guarded)  |
- *                                        |___________________|
+ *                                         ____________________
+ *                                        |Stream/TrackListener|
+ * ---------------------------------------| (All image access  |---------------
+ *     === MediaStreamGraph Thread ===    |   Mutex Guarded)   |
+ *                                        |____________________|
  *                                              ^       |
  *                                 NotifyPull() |       | AppendToTrack()
  *                                              |       v
@@ -88,10 +88,12 @@ class OutputStreamDriver : public FrameCaptureListener {
  protected:
   virtual ~OutputStreamDriver();
   class StreamListener;
+  class TrackListener;
 
  private:
   RefPtr<SourceMediaStream> mSourceStream;
   RefPtr<StreamListener> mStreamListener;
+  RefPtr<TrackListener> mTrackListener;
 };
 
 class CanvasCaptureMediaStream : public DOMMediaStream {
