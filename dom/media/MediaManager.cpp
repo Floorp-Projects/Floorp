@@ -223,9 +223,14 @@ using media::Refcountable;
 
 static Atomic<bool> sHasShutdown;
 
+class SourceTrackListener;
+
 struct DeviceState {
-  DeviceState(const RefPtr<MediaDevice>& aDevice, bool aOffWhileDisabled)
-      : mOffWhileDisabled(aOffWhileDisabled), mDevice(aDevice) {
+  DeviceState(const RefPtr<MediaDevice>& aDevice, bool aOffWhileDisabled,
+              RefPtr<SourceTrackListener> aListener)
+      : mOffWhileDisabled(aOffWhileDisabled),
+        mDevice(aDevice),
+        mListener(std::move(aListener)) {
     MOZ_ASSERT(mDevice);
   }
 
@@ -264,6 +269,10 @@ struct DeviceState {
   // The underlying device we keep state for. Always non-null.
   // Threadsafe access, but see method declarations for individual constraints.
   const RefPtr<MediaDevice> mDevice;
+
+  // The track listener for the track hooked up to mDevice.
+  // Main thread only.
+  RefPtr<SourceTrackListener> mListener;
 };
 
 /**
@@ -424,19 +433,14 @@ class SourceListener : public SupportsWeakPtr<SourceListener> {
    * Called on MediaStreamGraph thread when MSG asks us for more data from
    * input devices.
    */
-  void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime);
+  void Pull(TrackID aTrackID, StreamTime aEndOfAppendedData,
+            StreamTime aDesiredTime);
 
   /**
-   * Called on main thread after MediaStreamGraph notifies us that our
-   * MediaStream was marked finish in the graph.
+   * Called on main thread after MediaStreamGraph notifies us that one of our
+   * track listeners was removed as listener from its track in the graph.
    */
-  void NotifyFinished();
-
-  /**
-   * Called on main thread after MediaStreamGraph notifies us that we
-   * were removed as listener from the MediaStream in the graph.
-   */
-  void NotifyRemoved();
+  void NotifyRemoved(TrackID aTrackID);
 
   bool Activated() const { return mStream; }
 
@@ -456,70 +460,6 @@ class SourceListener : public SupportsWeakPtr<SourceListener> {
   PrincipalHandle GetPrincipalHandle() const;
 
  private:
-  /**
-   * Wrapper class for the MediaStreamListener part of SourceListener.
-   *
-   * This is required since MediaStreamListener and SupportsWeakPtr
-   * both implement refcounting.
-   */
-  class SourceStreamListener : public MediaStreamListener {
-   public:
-    explicit SourceStreamListener(SourceListener* aSourceListener)
-        : mSourceListener(aSourceListener) {}
-
-    void NotifyPull(MediaStreamGraph* aGraph,
-                    StreamTime aDesiredTime) override {
-      mSourceListener->NotifyPull(aGraph, aDesiredTime);
-    }
-
-    void NotifyEvent(MediaStreamGraph* aGraph,
-                     MediaStreamGraphEvent aEvent) override {
-      nsCOMPtr<nsIEventTarget> target;
-
-      switch (aEvent) {
-        case MediaStreamGraphEvent::EVENT_FINISHED:
-          target = GetMainThreadEventTarget();
-          if (NS_WARN_IF(!target)) {
-            NS_ASSERTION(false,
-                         "Mainthread not available; running on current thread");
-            // Ensure this really *was* MainThread (NS_GetCurrentThread won't
-            // work)
-            MOZ_RELEASE_ASSERT(mSourceListener->mMainThreadCheck ==
-                               GetCurrentVirtualThread());
-            mSourceListener->NotifyFinished();
-            return;
-          }
-          target->Dispatch(NewRunnableMethod("SourceListener::NotifyFinished",
-                                             mSourceListener,
-                                             &SourceListener::NotifyFinished),
-                           NS_DISPATCH_NORMAL);
-          break;
-        case MediaStreamGraphEvent::EVENT_REMOVED:
-          target = GetMainThreadEventTarget();
-          if (NS_WARN_IF(!target)) {
-            NS_ASSERTION(false,
-                         "Mainthread not available; running on current thread");
-            // Ensure this really *was* MainThread (NS_GetCurrentThread won't
-            // work)
-            MOZ_RELEASE_ASSERT(mSourceListener->mMainThreadCheck ==
-                               GetCurrentVirtualThread());
-            mSourceListener->NotifyRemoved();
-            return;
-          }
-          target->Dispatch(NewRunnableMethod("SourceListener::NotifyRemoved",
-                                             mSourceListener,
-                                             &SourceListener::NotifyRemoved),
-                           NS_DISPATCH_NORMAL);
-          break;
-        default:
-          break;
-      }
-    }
-
-   private:
-    RefPtr<SourceListener> mSourceListener;
-  };
-
   virtual ~SourceListener() = default;
 
   /**
@@ -537,16 +477,15 @@ class SourceListener : public SupportsWeakPtr<SourceListener> {
   // true after this listener has had all devices stopped. MainThread only.
   bool mStopped;
 
-  // true after the stream this listener is listening to has finished in the
-  // MediaStreamGraph. MainThread only.
-  bool mFinished;
-
   // true after this listener has been removed from its MediaStream.
   // MainThread only.
   bool mRemoved;
 
   // never ever indirect off this; just for assertions
   PRThread* mMainThreadCheck;
+
+  // For access to mMainThreadCheck
+  friend class SourceTrackListener;
 
   // Set in Register() on main thread, then read from any thread.
   PrincipalHandle mPrincipalHandle;
@@ -558,12 +497,50 @@ class SourceListener : public SupportsWeakPtr<SourceListener> {
   // No locking needed as they're set on Activate() and never assigned to again.
   UniquePtr<DeviceState> mAudioDeviceState;
   UniquePtr<DeviceState> mVideoDeviceState;
-  RefPtr<SourceMediaStream> mStream;             // threadsafe refcnt
-  RefPtr<SourceStreamListener> mStreamListener;  // threadsafe refcnt
+  RefPtr<SourceMediaStream> mStream;  // threadsafe refcnt
 };
 
 /**
- * This class represents a WindowID and handles all MediaStreamListeners
+ * Wrapper class for the MediaStreamTrackListener part of SourceListener.
+ *
+ * This is required since MediaStreamTrackListener and SupportsWeakPtr
+ * both implement refcounting.
+ */
+class SourceTrackListener : public MediaStreamTrackListener {
+ public:
+  SourceTrackListener(SourceListener* aSourceListener, TrackID aTrackID)
+      : mSourceListener(aSourceListener), mTrackID(aTrackID) {}
+
+  void NotifyPull(MediaStreamGraph* aGraph, StreamTime aEndOfAppendedData,
+                  StreamTime aDesiredTime) override {
+    mSourceListener->Pull(mTrackID, aEndOfAppendedData, aDesiredTime);
+  }
+
+  void NotifyEnded() override { NotifyRemoved(); }
+
+  void NotifyRemoved() override {
+    nsCOMPtr<nsIEventTarget> target = GetMainThreadEventTarget();
+    if (NS_WARN_IF(!target)) {
+      NS_ASSERTION(false,
+                   "Mainthread not available; running on current thread");
+      // Ensure this really *was* MainThread (NS_GetCurrentThread won't work)
+      MOZ_RELEASE_ASSERT(mSourceListener->mMainThreadCheck ==
+                         GetCurrentVirtualThread());
+      mSourceListener->NotifyRemoved(mTrackID);
+      return;
+    }
+    target->Dispatch(NewRunnableMethod<TrackID>(
+        "SourceListener::NotifyRemoved", mSourceListener,
+        &SourceListener::NotifyRemoved, mTrackID));
+  }
+
+ private:
+  const RefPtr<SourceListener> mSourceListener;
+  const TrackID mTrackID;
+};
+
+/**
+ * This class represents a WindowID and handles all MediaStreamTrackListeners
  * (here subclassed as SourceListeners) used to feed GetUserMedia source
  * streams. It proxies feedback from them into messages for browser chrome.
  * The SourceListeners are used to Start() and Stop() the underlying
@@ -1105,13 +1082,15 @@ nsresult MediaDevice::Deallocate() {
 }
 
 void MediaDevice::Pull(const RefPtr<SourceMediaStream>& aStream,
-                       TrackID aTrackID, StreamTime aDesiredTime,
+                       TrackID aTrackID, StreamTime aEndOfAppendedData,
+                       StreamTime aDesiredTime,
                        const PrincipalHandle& aPrincipal) {
   // This is on the graph thread, but mAllocationHandle is safe since we never
   // change it after it's been set, which is guaranteed to happen before
   // registering the listener for pulls.
   MOZ_ASSERT(mSource);
-  mSource->Pull(mAllocationHandle, aStream, aTrackID, aDesiredTime, aPrincipal);
+  mSource->Pull(mAllocationHandle, aStream, aTrackID, aEndOfAppendedData,
+                aDesiredTime, aPrincipal);
 }
 
 dom::MediaSourceEnum MediaDevice::GetMediaSource() const {
@@ -4122,7 +4101,6 @@ bool MediaManager::IsActivelyCapturingOrHasAPermission(uint64_t aWindowId) {
 
 SourceListener::SourceListener()
     : mStopped(false),
-      mFinished(false),
       mRemoved(false),
       mMainThreadCheck(nullptr),
       mPrincipalHandle(PRINCIPAL_HANDLE_NONE),
@@ -4153,14 +4131,15 @@ void SourceListener::Activate(SourceMediaStream* aStream,
 
   mMainThreadCheck = GetCurrentVirtualThread();
   mStream = aStream;
-  mStreamListener = new SourceStreamListener(this);
   if (aAudioDevice) {
     mAudioDeviceState = MakeUnique<DeviceState>(
         aAudioDevice,
         aAudioDevice->GetMediaSource() == dom::MediaSourceEnum::Microphone &&
             Preferences::GetBool(
                 "media.getusermedia.microphone.off_while_disabled.enabled",
-                true));
+                true),
+        MakeRefPtr<SourceTrackListener>(this, kAudioTrack));
+    mStream->AddTrackListener(mAudioDeviceState->mListener, kAudioTrack);
   }
 
   if (aVideoDevice) {
@@ -4168,10 +4147,10 @@ void SourceListener::Activate(SourceMediaStream* aStream,
         aVideoDevice,
         aVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Camera &&
             Preferences::GetBool(
-                "media.getusermedia.camera.off_while_disabled.enabled", true));
+                "media.getusermedia.camera.off_while_disabled.enabled", true),
+        MakeRefPtr<SourceTrackListener>(this, kVideoTrack));
+    mStream->AddTrackListener(mVideoDeviceState->mListener, kVideoTrack);
   }
-
-  mStream->AddListener(mStreamListener);
 }
 
 RefPtr<SourceListener::InitPromise> SourceListener::InitializeAsync() {
@@ -4304,11 +4283,6 @@ void SourceListener::Stop() {
   if (mVideoDeviceState && !mVideoDeviceState->mStopped) {
     StopTrack(kVideoTrack);
   }
-
-  MediaManager::PostTask(NewTaskFrom([source = mStream]() {
-    MOZ_ASSERT(MediaManager::IsInMediaThread());
-    source->EndAllTrackAndFinish();
-  }));
 }
 
 void SourceListener::Remove() {
@@ -4325,8 +4299,7 @@ void SourceListener::Remove() {
     return;
   }
 
-  LOG(("SourceListener %p removed on purpose, mFinished = %d", this,
-       (int)mFinished));
+  LOG(("SourceListener %p removed on purpose", this));
   mRemoved = true;  // RemoveListener is async, avoid races
   mWindowListener = nullptr;
 
@@ -4337,9 +4310,20 @@ void SourceListener::Remove() {
     // without a listener attached - that wouldn't produce data and would be
     // illegal to the graph.
     mStream->SetPullEnabled(false);
-    mStream->RemoveListener(mStreamListener);
+    if (mAudioDeviceState) {
+      mStream->RemoveTrackListener(mAudioDeviceState->mListener, kAudioTrack);
+    }
+    if (mVideoDeviceState) {
+      mStream->RemoveTrackListener(mVideoDeviceState->mListener, kVideoTrack);
+    }
   }
-  mStreamListener = nullptr;
+
+  if (mAudioDeviceState) {
+    mAudioDeviceState->mListener = nullptr;
+  }
+  if (mVideoDeviceState) {
+    mVideoDeviceState->mListener = nullptr;
+  }
 }
 
 void SourceListener::StopTrack(TrackID aTrackID) {
@@ -4592,44 +4576,35 @@ SourceMediaStream* SourceListener::GetSourceStream() {
   return mStream;
 }
 
-// Proxy NotifyPull() to sources
-void SourceListener::NotifyPull(MediaStreamGraph* aGraph,
-                                StreamTime aDesiredTime) {
-  if (mAudioDeviceState) {
-    mAudioDeviceState->mDevice->Pull(mStream, kAudioTrack, aDesiredTime,
-                                     mPrincipalHandle);
-  }
-  if (mVideoDeviceState) {
-    mVideoDeviceState->mDevice->Pull(mStream, kVideoTrack, aDesiredTime,
-                                     mPrincipalHandle);
-  }
+// Proxy Pull() to the right source
+void SourceListener::Pull(TrackID aTrackID, StreamTime aEndOfAppendedData,
+                          StreamTime aDesiredTime) {
+  DeviceState& state = GetDeviceStateFor(aTrackID);
+  state.mDevice->Pull(mStream, aTrackID, aEndOfAppendedData, aDesiredTime,
+                      mPrincipalHandle);
 }
 
-void SourceListener::NotifyFinished() {
+void SourceListener::NotifyRemoved(TrackID aTrackID) {
   MOZ_ASSERT(NS_IsMainThread());
-  mFinished = true;
-  if (!mWindowListener) {
-    // Removed explicitly before finished.
+  LOG(("Track %d for SourceListener %p removed", aTrackID, this));
+
+  StopTrack(aTrackID);
+
+  if (!mStopped) {
+    // There are more live tracks that need to be stopped before removal.
     return;
   }
 
-  LOG(("SourceListener %p NotifyFinished", this));
-
-  Stop();  // we know it's been activated
-  mWindowListener->Remove(this);
-}
-
-void SourceListener::NotifyRemoved() {
-  MOZ_ASSERT(NS_IsMainThread());
-  LOG(("SourceListener removed, mFinished = %d", (int)mFinished));
-  mRemoved = true;
-
-  if (Activated() && !mFinished) {
-    NotifyFinished();
+  if (!mWindowListener) {
+    // Removed explicitly before MSG's notification.
+    return;
   }
 
-  mWindowListener = nullptr;
-  mStreamListener = nullptr;
+  mWindowListener->Remove(this);
+
+  MOZ_ASSERT(!mWindowListener);
+  MOZ_ASSERT_IF(mAudioDeviceState, !mAudioDeviceState->mListener);
+  MOZ_ASSERT_IF(mVideoDeviceState, !mVideoDeviceState->mListener);
 }
 
 bool SourceListener::CapturingVideo() const {

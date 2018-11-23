@@ -45,7 +45,7 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
 
   void Pull(const RefPtr<const AllocationHandle>& aHandle,
             const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-            StreamTime aDesiredTime,
+            StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
             const PrincipalHandle& aPrincipalHandle) override;
 
   uint32_t GetBestFitnessDistance(

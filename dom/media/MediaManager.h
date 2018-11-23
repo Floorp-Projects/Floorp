@@ -100,7 +100,8 @@ class MediaDevice : public nsIMediaDevice {
   nsresult Deallocate();
 
   void Pull(const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-            StreamTime aDesiredTime, const PrincipalHandle& aPrincipal);
+            StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
+            const PrincipalHandle& aPrincipal);
 
   void GetSettings(dom::MediaTrackSettings& aOutSettings) const;
 
