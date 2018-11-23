@@ -5,7 +5,6 @@
 "use strict";
 
 const promise = require("promise");
-const flags = require("devtools/shared/flags");
 
 /**
  * Client-side highlighter shared module.
@@ -37,10 +36,6 @@ exports.getHighlighterUtils = function(toolbox) {
 
   // Is the highlighter currently in pick mode
   let isPicking = false;
-
-  // Is the box model already displayed, used to prevent dispatching
-  // unnecessary requests, especially during toolbox shutdown
-  let isNodeFrontHighlighted = false;
 
   /**
    * Release this utils, nullifying the references to the toolbox
@@ -177,77 +172,6 @@ exports.getHighlighterUtils = function(toolbox) {
     cancelPicker();
     toolbox.win.focus();
   }
-
-  /**
-   * Show the box model highlighter on a node in the content page.
-   * The node needs to be a NodeFront, as defined by the inspector actor
-   * @see devtools/server/actors/inspector/inspector.js
-   * @param {NodeFront} nodeFront The node to highlight
-   * @param {Object} options
-   * @return A promise that resolves when the node has been highlighted
-   */
-  const highlightNodeFront = exported.highlightNodeFront = requireInspector(
-  async function(nodeFront, options = {}) {
-    if (!nodeFront) {
-      return;
-    }
-
-    isNodeFrontHighlighted = true;
-    await toolbox.highlighter.showBoxModel(nodeFront, options);
-
-    toolbox.emit("node-highlight", nodeFront);
-  });
-
-  /**
-   * This is a convenience method in case you don't have a nodeFront but a
-   * valueGrip. This is often the case with VariablesView properties.
-   * This method will simply translate the grip into a nodeFront and call
-   * highlightNodeFront, so it has the same signature.
-   * @see highlightNodeFront
-   */
-  exported.highlightDomValueGrip =
-    requireInspector(async function(valueGrip, options = {}) {
-      const nodeFront = await gripToNodeFront(valueGrip);
-      if (nodeFront) {
-        await highlightNodeFront(nodeFront, options);
-      } else {
-        throw new Error("The ValueGrip passed could not be translated to a NodeFront");
-      }
-    });
-
-  /**
-   * Translate a debugger value grip into a node front usable by the inspector
-   * @param {ValueGrip}
-   * @return a promise that resolves to the node front when done
-   */
-  const gripToNodeFront = exported.gripToNodeFront = requireInspector(
-  async function(grip) {
-    return toolbox.walker.getNodeActorFromObjectActor(grip.actor);
-  });
-
-  /**
-   * Hide the highlighter.
-   * @param {Boolean} forceHide Only really matters in test mode (when
-   * flags.testing is true). In test mode, hovering over several nodes
-   * in the markup view doesn't hide/show the highlighter to ease testing. The
-   * highlighter stays visible at all times, except when the mouse leaves the
-   * markup view, which is when this param is passed to true
-   * @return a promise that resolves when the highlighter is hidden
-   */
-  exported.unhighlight = async function(forceHide = false) {
-    forceHide = forceHide || !flags.testing;
-
-    if (isNodeFrontHighlighted && forceHide && toolbox.highlighter) {
-      isNodeFrontHighlighted = false;
-      await toolbox.highlighter.hideBoxModel();
-    }
-
-    // unhighlight is called when destroying the toolbox, which means that by
-    // now, the toolbox reference might have been nullified already.
-    if (toolbox) {
-      toolbox.emit("node-unhighlight");
-    }
-  };
 
   /**
    * If the main, box-model, highlighter isn't enough, or if multiple highlighters

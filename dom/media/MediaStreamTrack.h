@@ -41,6 +41,7 @@ namespace dom {
 class AudioStreamTrack;
 class VideoStreamTrack;
 class MediaStreamError;
+class TrackSink;
 enum class CallerType : uint32_t;
 
 /**
@@ -86,8 +87,20 @@ class MediaStreamTrackSource : public nsISupports {
      */
     virtual bool Enabled() const = 0;
 
+    /**
+     * Called when the principal of the MediaStreamTrackSource where this sink
+     * is registered has changed.
+     */
     virtual void PrincipalChanged() = 0;
+
+    /**
+     * Called when the muted state of the MediaStreamTrackSource where this sink
+     * is registered has changed.
+     */
     virtual void MutedChanged(bool aNewState) = 0;
+
+   protected:
+    virtual ~Sink() = default;
   };
 
   MediaStreamTrackSource(nsIPrincipal* aPrincipal, const nsString& aLabel)
@@ -338,7 +351,7 @@ class MediaStreamTrackConsumer
  * Class representing a track in a DOMMediaStream.
  */
 class MediaStreamTrack : public DOMEventTargetHelper,
-                         public MediaStreamTrackSource::Sink {
+                         public SupportsWeakPtr<MediaStreamTrack> {
   // DOMMediaStream owns MediaStreamTrack instances, and requires access to
   // some internal state, e.g., GetInputStream(), GetOwnedStream().
   friend class mozilla::DOMMediaStream;
@@ -349,7 +362,7 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   friend class mozilla::SourceStreamInfo;
   friend class mozilla::RemoteSourceStreamInfo;
 
-  class PrincipalHandleListener;
+  class MSGListener;
 
  public:
   /**
@@ -364,6 +377,8 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaStreamTrack,
                                            DOMEventTargetHelper)
+
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(MediaStreamTrack)
 
   nsPIDOMWindowInner* GetParentObject() const;
   JSObject* WrapObject(JSContext* aCx,
@@ -381,7 +396,7 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   virtual void GetLabel(nsAString& aLabel, CallerType /* aCallerType */) {
     GetSource().GetLabel(aLabel);
   }
-  bool Enabled() const override { return mEnabled; }
+  bool Enabled() const { return mEnabled; }
   void SetEnabled(bool aEnabled);
   bool Muted() { return mMuted; }
   void Stop();
@@ -424,10 +439,9 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   nsIPrincipal* GetPrincipal() const { return mPrincipal; }
 
   /**
-   * Called by the PrincipalHandleListener when this track's PrincipalHandle
-   * changes on the MediaStreamGraph thread. When the PrincipalHandle matches
-   * the pending principal we know that the principal change has propagated to
-   * consumers.
+   * Called by the MSGListener when this track's PrincipalHandle changes on
+   * the MediaStreamGraph thread. When the PrincipalHandle matches the pending
+   * principal we know that the principal change has propagated to consumers.
    */
   void NotifyPrincipalHandleChanged(const PrincipalHandle& aPrincipalHandle);
 
@@ -462,26 +476,15 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   // need to surface this to content.
   void AssignId(const nsAString& aID) { mID = aID; }
 
-  // Implementation of MediaStreamTrackSource::Sink
+  /**
+   * Called when mSource's principal has changed.
+   */
+  void PrincipalChanged();
 
   /**
-   * Keep the track source alive. This track and any clones are controlling the
-   * lifetime of the source by being registered as its sinks.
+   * Called when mSource's muted state has changed.
    */
-  bool KeepsSourceAlive() const override { return true; }
-
-  void PrincipalChanged() override;
-
-  /**
-   * 4.3.1 Life-cycle and Media flow - Media flow
-   * To set a track's muted state to newState, the User Agent MUST run the
-   * following steps:
-   *  1. Let track be the MediaStreamTrack in question.
-   *  2. Set track's muted attribute to newState.
-   *  3. If newState is true let eventName be mute, otherwise unmute.
-   *  4. Fire a simple event named eventName on track.
-   */
-  void MutedChanged(bool aNewState) override;
+  void MutedChanged(bool aNewState);
 
   /**
    * Add a PrincipalChangeObserver to this track.
@@ -594,10 +597,11 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   TrackID mTrackID;
   TrackID mInputTrackID;
   RefPtr<MediaStreamTrackSource> mSource;
+  const UniquePtr<TrackSink> mSink;
   RefPtr<MediaStreamTrack> mOriginalTrack;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIPrincipal> mPendingPrincipal;
-  RefPtr<PrincipalHandleListener> mPrincipalHandleListener;
+  RefPtr<MSGListener> mMSGListener;
   // Keep tracking MediaStreamTrackListener and DirectMediaStreamTrackListener,
   // so we can remove them in |Destory|.
   nsTArray<RefPtr<MediaStreamTrackListener>> mTrackListeners;

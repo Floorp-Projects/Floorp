@@ -66,6 +66,8 @@ pub struct GlyphFetchResult {
 // we don't need to go through and update
 // various CPU-side structures.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct CacheItem {
     pub texture_id: TextureSource,
     pub uv_rect_handle: GpuCacheHandle,
@@ -408,7 +410,7 @@ pub struct ResourceCache {
     state: State,
     current_frame_id: FrameId,
 
-    texture_cache: TextureCache,
+    pub texture_cache: TextureCache,
 
     // TODO(gw): We should expire (parts of) this cache semi-regularly!
     cached_glyph_dimensions: GlyphDimensionsCache,
@@ -877,6 +879,32 @@ impl ResourceCache {
             None => {
                 warn!("Delete the non-exist key");
                 debug!("key={:?}", image_key);
+            }
+        }
+    }
+
+    /// Check if an image has changed since it was last requested.
+    pub fn is_image_dirty(
+        &self,
+        image_key: ImageKey,
+    ) -> bool {
+        match self.cached_images.try_get(&image_key) {
+            Some(ImageResult::UntiledAuto(ref info)) => {
+                info.dirty_rect.is_some()
+            }
+            Some(ImageResult::Multi(ref entries)) => {
+                for (_, entry) in &entries.resources {
+                    if entry.dirty_rect.is_some() {
+                        return true;
+                    }
+                }
+                false
+            }
+            Some(ImageResult::Err(..)) => {
+                false
+            }
+            None => {
+                true
             }
         }
     }

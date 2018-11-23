@@ -117,3 +117,53 @@ class WindowManagerMixin(object):
                 message="Window with handle '{}'' did not finish loading".format(new_window))
 
             return new_window
+
+    def open_chrome_window(self, url):
+        """Open a new chrome window with the specified chrome URL.
+
+        Can be replaced with "WebDriver:NewWindow" once the command
+        supports opening generic chrome windows beside browsers (bug 1507771).
+        """
+        def open_with_js():
+            with self.marionette.using_context("chrome"):
+                self.marionette.execute_async_script("""
+                  let [url, resolve] = arguments;
+
+                  function waitForEvent(target, type, args) {
+                    return new Promise(resolve => {
+                      let params = Object.assign({once: true}, args);
+                      target.addEventListener(type, event => {
+                        dump(`** Received DOM event ${event.type} for ${event.target}\n`);
+                        resolve();
+                      }, params);
+                    });
+                  }
+
+                  function waitForFocus(win) {
+                    return Promise.all([
+                      waitForEvent(win, "activate"),
+                      waitForEvent(win, "focus", {capture: true}),
+                    ]);
+                  }
+
+                  (async function() {
+                    // Open a window, wait for it to receive focus
+                    let win = window.openDialog(url, null, "chrome,centerscreen");
+
+                    // Bug 1509380 - Missing focus/activate event when Firefox is not
+                    // the top-most application. As such wait for the next tick, and
+                    // manually focus the newly opened window.
+                    win.setTimeout(() => win.focus(), 0);
+
+                    await waitForFocus(win);
+
+                    // Now refocus our original window and wait for that to happen.
+                    let focused = waitForFocus(window);
+                    window.focus();
+                    await focused;
+
+                    resolve();
+                  })();
+                """, script_args=(url,))
+
+        return self.open_window(trigger=open_with_js)

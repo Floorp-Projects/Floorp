@@ -160,7 +160,7 @@ class Accessible extends Component {
       return;
     }
 
-    gToolbox.highlighterUtils.highlightNodeFront(nodeFront);
+    gToolbox.highlighter.highlight(nodeFront);
   }
 
   hideHighlighter() {
@@ -168,7 +168,7 @@ class Accessible extends Component {
       return;
     }
 
-    gToolbox.highlighterUtils.unhighlight();
+    gToolbox.highlighter.unhighlight();
   }
 
   showAccessibleHighlighter(accessible) {

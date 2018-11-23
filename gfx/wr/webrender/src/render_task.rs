@@ -4,7 +4,7 @@
 
 use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceSize, DeviceIntSideOffsets};
 use api::{DevicePixelScale, ImageDescriptor, ImageFormat};
-use api::{LineStyle, LineOrientation, LayoutSize};
+use api::{LineStyle, LineOrientation, LayoutSize, ColorF};
 #[cfg(feature = "pathfinder")]
 use api::FontRenderMode;
 use border::{BorderCornerCacheKey, BorderEdgeCacheKey};
@@ -54,6 +54,7 @@ pub struct RenderTaskId {
     pub index: u32,
 
     #[cfg(debug_assertions)]
+    #[cfg_attr(feature = "replay", serde(default = "FrameId::first"))]
     frame_id: FrameId,
 }
 
@@ -253,6 +254,14 @@ pub struct ClipRegionTask {
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct TileBlit {
+    pub target: CacheItem,
+    pub offset: DeviceIntPoint,
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PictureTask {
     pub pic_index: PictureIndex,
     pub can_merge: bool,
@@ -260,6 +269,7 @@ pub struct PictureTask {
     pub uv_rect_handle: GpuCacheHandle,
     pub root_spatial_node_index: SpatialNodeIndex,
     uv_rect_kind: UvRectKind,
+    pub blits: Vec<TileBlit>,
 }
 
 #[derive(Debug)]
@@ -371,7 +381,7 @@ pub enum RenderTaskKind {
     LineDecoration(LineDecorationTask),
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum ClearMode {
@@ -381,6 +391,7 @@ pub enum ClearMode {
 
     // Applicable to color targets only.
     Transparent,
+    Color(ColorF),
 }
 
 #[derive(Debug)]
@@ -421,6 +432,8 @@ impl RenderTask {
         children: Vec<RenderTaskId>,
         uv_rect_kind: UvRectKind,
         root_spatial_node_index: SpatialNodeIndex,
+        clear_color: Option<ColorF>,
+        blits: Vec<TileBlit>,
     ) -> Self {
         let size = match location {
             RenderTaskLocation::Dynamic(_, size) => size,
@@ -433,6 +446,11 @@ impl RenderTask {
         let can_merge = size.width as f32 >= unclipped_size.width &&
                         size.height as f32 >= unclipped_size.height;
 
+        let clear_mode = match clear_color {
+            Some(color) => ClearMode::Color(color),
+            None => ClearMode::Transparent,
+        };
+
         RenderTask {
             location,
             children,
@@ -443,8 +461,9 @@ impl RenderTask {
                 uv_rect_handle: GpuCacheHandle::new(),
                 uv_rect_kind,
                 root_spatial_node_index,
+                blits,
             }),
-            clear_mode: ClearMode::Transparent,
+            clear_mode,
             saved_index: None,
         }
     }

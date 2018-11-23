@@ -55,8 +55,11 @@ auto MediaStreamTrackSource::ApplyConstraints(
 }
 
 /**
- * PrincipalHandleListener monitors changes in PrincipalHandle of the media
- * flowing through the MediaStreamGraph.
+ * MSGListener monitors state changes of the media flowing through the
+ * MediaStreamGraph.
+ *
+ *
+ * For changes to PrincipalHandle the following applies:
  *
  * When the main thread principal for a MediaStreamTrack changes, its principal
  * will be set to the combination of the previous principal and the new one.
@@ -73,14 +76,11 @@ auto MediaStreamTrackSource::ApplyConstraints(
  * will be a combination of its old principal and all the new ones until the
  * latest main thread principal matches the PrincipalHandle on the MSG thread.
  */
-class MediaStreamTrack::PrincipalHandleListener
-    : public MediaStreamTrackListener {
+class MediaStreamTrack::MSGListener : public MediaStreamTrackListener {
  public:
-  explicit PrincipalHandleListener(MediaStreamTrack* aTrack) : mTrack(aTrack) {}
-
-  void Forget() {
-    MOZ_ASSERT(NS_IsMainThread());
-    mTrack = nullptr;
+  explicit MSGListener(MediaStreamTrack* aTrack)
+      : mGraph(aTrack->GraphImpl()), mTrack(aTrack) {
+    MOZ_ASSERT(mGraph);
   }
 
   void DoNotifyPrincipalHandleChanged(
@@ -97,17 +97,79 @@ class MediaStreamTrack::PrincipalHandleListener
   void NotifyPrincipalHandleChanged(
       MediaStreamGraph* aGraph,
       const PrincipalHandle& aNewPrincipalHandle) override {
-    aGraph->DispatchToMainThreadAfterStreamStateUpdate(
+    mGraph->DispatchToMainThreadAfterStreamStateUpdate(
         NewRunnableMethod<StoreCopyPassByConstLRef<PrincipalHandle>>(
-            "dom::MediaStreamTrack::PrincipalHandleListener::"
+            "dom::MediaStreamTrack::MSGListener::"
             "DoNotifyPrincipalHandleChanged",
-            this, &PrincipalHandleListener::DoNotifyPrincipalHandleChanged,
+            this, &MSGListener::DoNotifyPrincipalHandleChanged,
             aNewPrincipalHandle));
   }
 
+  void NotifyRemoved() override {
+    // `mTrack` is a WeakPtr and must be destroyed on main thread.
+    // We dispatch ourselves to main thread here in case the MediaStreamGraph
+    // is holding the last reference to us.
+    mGraph->DispatchToMainThreadAfterStreamStateUpdate(
+        NS_NewRunnableFunction("MediaStreamTrack::MSGListener::mTrackReleaser",
+                               [self = RefPtr<MSGListener>(this)]() {}));
+  }
+
+  void DoNotifyEnded() {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!mTrack) {
+      return;
+    }
+
+    mGraph->AbstractMainThread()->Dispatch(
+        NewRunnableMethod("MediaStreamTrack::OverrideEnded", mTrack.get(),
+                          &MediaStreamTrack::OverrideEnded));
+  }
+
+  void NotifyEnded() override {
+    mGraph->DispatchToMainThreadAfterStreamStateUpdate(
+        NewRunnableMethod("MediaStreamTrack::MSGListener::DoNotifyEnded", this,
+                          &MSGListener::DoNotifyEnded));
+  }
+
  protected:
-  // These fields may only be accessed on the main thread
-  MediaStreamTrack* mTrack;
+  const RefPtr<MediaStreamGraphImpl> mGraph;
+
+  // Main thread only.
+  WeakPtr<MediaStreamTrack> mTrack;
+};
+
+class TrackSink : public MediaStreamTrackSource::Sink {
+ public:
+  explicit TrackSink(MediaStreamTrack* aTrack) : mTrack(aTrack) {}
+
+  /**
+   * Keep the track source alive. This track and any clones are controlling the
+   * lifetime of the source by being registered as its sinks.
+   */
+  bool KeepsSourceAlive() const override { return true; }
+
+  bool Enabled() const override {
+    if (!mTrack) {
+      return false;
+    }
+    return mTrack->Enabled();
+  }
+
+  void PrincipalChanged() override {
+    if (mTrack) {
+      mTrack->PrincipalChanged();
+    }
+  }
+
+  void MutedChanged(bool aNewState) override {
+    if (mTrack) {
+      mTrack->MutedChanged(aNewState);
+    }
+  }
+
+ private:
+  WeakPtr<MediaStreamTrack> mTrack;
 };
 
 MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
@@ -118,16 +180,17 @@ MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
       mTrackID(aTrackID),
       mInputTrackID(aInputTrackID),
       mSource(aSource),
+      mSink(MakeUnique<TrackSink>(this)),
       mPrincipal(aSource->GetPrincipal()),
       mReadyState(MediaStreamTrackState::Live),
       mEnabled(true),
       mMuted(false),
       mConstraints(aConstraints) {
-  GetSource().RegisterSink(this);
+  GetSource().RegisterSink(mSink.get());
 
   if (GetOwnedStream()) {
-    mPrincipalHandleListener = new PrincipalHandleListener(this);
-    AddListener(mPrincipalHandleListener);
+    mMSGListener = new MSGListener(this);
+    AddListener(mMSGListener);
   }
 
   nsresult rv;
@@ -148,15 +211,15 @@ MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
 MediaStreamTrack::~MediaStreamTrack() { Destroy(); }
 
 void MediaStreamTrack::Destroy() {
+  mReadyState = MediaStreamTrackState::Ended;
   if (mSource) {
-    mSource->UnregisterSink(this);
+    mSource->UnregisterSink(mSink.get());
   }
-  if (mPrincipalHandleListener) {
+  if (mMSGListener) {
     if (GetOwnedStream()) {
-      RemoveListener(mPrincipalHandleListener);
+      RemoveListener(mMSGListener);
     }
-    mPrincipalHandleListener->Forget();
-    mPrincipalHandleListener = nullptr;
+    mMSGListener = nullptr;
   }
   // Remove all listeners -- avoid iterating over the list we're removing from
   const nsTArray<RefPtr<MediaStreamTrackListener>> trackListeners(
@@ -238,7 +301,7 @@ void MediaStreamTrack::Stop() {
     return;
   }
 
-  mSource->UnregisterSink(this);
+  mSource->UnregisterSink(mSink.get());
 
   MOZ_ASSERT(mOwningStream,
              "Every MediaStreamTrack needs an owning DOMMediaStream");
@@ -371,6 +434,16 @@ void MediaStreamTrack::NotifyPrincipalHandleChanged(
 void MediaStreamTrack::MutedChanged(bool aNewState) {
   MOZ_ASSERT(NS_IsMainThread());
 
+  /**
+   * 4.3.1 Life-cycle and Media flow - Media flow
+   * To set a track's muted state to newState, the User Agent MUST run the
+   * following steps:
+   *  1. Let track be the MediaStreamTrack in question.
+   *  2. Set track's muted attribute to newState.
+   *  3. If newState is true let eventName be mute, otherwise unmute.
+   *  4. Fire a simple event named eventName on track.
+   */
+
   if (mMuted == aNewState) {
     MOZ_ASSERT_UNREACHABLE("Muted state didn't actually change");
     return;
@@ -430,10 +503,9 @@ void MediaStreamTrack::RemoveConsumer(MediaStreamTrackConsumer* aConsumer) {
 
 already_AddRefed<MediaStreamTrack> MediaStreamTrack::Clone() {
   // MediaStreamTracks are currently governed by streams, so we need a dummy
-  // DOMMediaStream to own our track clone. The dummy will never see any
-  // dynamically created tracks (no input stream) so no need for a SourceGetter.
+  // DOMMediaStream to own our track clone.
   RefPtr<DOMMediaStream> newStream =
-      new DOMMediaStream(mOwningStream->GetParentObject(), nullptr);
+      new DOMMediaStream(mOwningStream->GetParentObject());
 
   MediaStreamGraph* graph = Graph();
   newStream->InitOwnedStreamCommon(graph);
@@ -449,7 +521,7 @@ void MediaStreamTrack::SetReadyState(MediaStreamTrackState aState) {
 
   if (mReadyState == MediaStreamTrackState::Live &&
       aState == MediaStreamTrackState::Ended && mSource) {
-    mSource->UnregisterSink(this);
+    mSource->UnregisterSink(mSink.get());
   }
 
   mReadyState = aState;
@@ -469,7 +541,12 @@ void MediaStreamTrack::OverrideEnded() {
     return;
   }
 
-  mSource->UnregisterSink(this);
+  mSource->UnregisterSink(mSink.get());
+
+  if (mMSGListener) {
+    RemoveListener(mMSGListener);
+  }
+  mMSGListener = nullptr;
 
   mReadyState = MediaStreamTrackState::Ended;
 

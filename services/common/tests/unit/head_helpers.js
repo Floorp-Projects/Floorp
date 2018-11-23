@@ -160,7 +160,7 @@ function getUptakeTelemetrySnapshot(key) {
   const TELEMETRY_HISTOGRAM_ID = "UPTAKE_REMOTE_CONTENT_RESULT_1";
   return Services.telemetry
            .getKeyedHistogramById(TELEMETRY_HISTOGRAM_ID)
-           .snapshot(key);
+           .snapshot()[key];
 }
 
 function checkUptakeTelemetry(snapshot1, snapshot2, expectedIncrements) {
@@ -168,8 +168,8 @@ function checkUptakeTelemetry(snapshot1, snapshot2, expectedIncrements) {
   for (const label of LABELS) {
     const key = LABELS.indexOf(label);
     const expected = expectedIncrements[label] || 0;
-    let value1 = snapshot1.values[key] || 0;
-    let value2 = snapshot2.values[key] || 0;
+    let value1 = (snapshot1 && snapshot1.values[key]) || 0;
+    let value2 = (snapshot2 && snapshot2.values[key]) || 0;
     const actual = value2 - value1;
     equal(expected, actual, `check histogram values for ${label}`);
   }

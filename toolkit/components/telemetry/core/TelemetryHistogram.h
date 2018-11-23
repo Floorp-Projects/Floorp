@@ -68,11 +68,15 @@ const char*
 GetHistogramName(mozilla::Telemetry::HistogramID id);
 
 nsresult
-CreateHistogramSnapshots(JSContext* aCx, JS::MutableHandleValue aResult, unsigned int aDataset,
+CreateHistogramSnapshots(JSContext* aCx, JS::MutableHandleValue aResult,
+                         const nsACString& aStore,
+                         unsigned int aDataset,
                          bool aClearSubsession, bool aFilterTest=false);
 
 nsresult
-GetKeyedHistogramSnapshots(JSContext *aCx, JS::MutableHandleValue aResult, unsigned int aDataset,
+GetKeyedHistogramSnapshots(JSContext *aCx, JS::MutableHandleValue aResult,
+                           const nsACString& aStore,
+                           unsigned int aDataset,
                            bool aClearSubsession, bool aFilterTest=false);
 
 size_t

@@ -17,6 +17,8 @@
 namespace mozilla {
 namespace widget {
 
+using namespace mozilla::gfx;
+
 // gfxImageSurface pixel format configuration.
 #define SHAPED_IMAGE_SURFACE_BPP            4
 #ifdef IS_BIG_ENDIAN

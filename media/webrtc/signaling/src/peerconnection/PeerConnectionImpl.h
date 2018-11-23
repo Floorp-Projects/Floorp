@@ -86,7 +86,7 @@ typedef NS_ConvertUTF8toUTF16 PCObserverString;
 #if defined(__cplusplus) && __cplusplus >= 201103L
 typedef struct Timecard Timecard;
 #else
-#include "timecard.h"
+#include "signaling/src/common/time_profiling/timecard.h"
 #endif
 
 // To preserve blame, convert nsresult to ErrorResult with wrappers. These macros
@@ -129,25 +129,21 @@ class PCUuidGenerator : public mozilla::JsepUuidGenerator {
 class RTCStatsQuery {
   public:
     explicit RTCStatsQuery(bool internalStats);
+    RTCStatsQuery(RTCStatsQuery&& aOrig) = default;
     ~RTCStatsQuery();
 
     nsAutoPtr<mozilla::dom::RTCStatsReportInternal> report;
-    std::string error;
     // A timestamp to help with telemetry.
     mozilla::TimeStamp iceStartTime;
-    // Just for convenience, maybe integrate into the report later
-    bool failed;
 
-  private:
-    friend class PeerConnectionImpl;
-    std::string pcName;
     bool internalStats;
-    nsTArray<RefPtr<mozilla::MediaPipeline>> pipelines;
     std::string transportId;
-    RefPtr<PeerConnectionMedia> media;
     bool grabAllLevels;
     DOMHighResTimeStamp now;
 };
+
+typedef MozPromise<UniquePtr<RTCStatsQuery>, nsresult, true>
+  RTCStatsQueryPromise;
 
 // Enter an API call and check that the state is OK,
 // the PC isn't closed, etc.
@@ -544,11 +540,8 @@ public:
   // initialize telemetry for when calls start
   void startCallTelem();
 
-  nsresult BuildStatsQuery_m(
-      mozilla::dom::MediaStreamTrack *aSelector,
-      RTCStatsQuery *query);
-
-  static nsresult ExecuteStatsQuery_s(RTCStatsQuery *query);
+  RefPtr<RTCStatsQueryPromise> GetStats(
+      dom::MediaStreamTrack* aSelector, bool aInternalStats);
 
   // for monitoring changes in track ownership
   // PeerConnectionMedia can't do it because it doesn't know about principals
@@ -566,6 +559,14 @@ private:
   virtual ~PeerConnectionImpl();
   PeerConnectionImpl(const PeerConnectionImpl&rhs);
   PeerConnectionImpl& operator=(PeerConnectionImpl);
+  nsresult BuildStatsQuery_m(
+      mozilla::dom::MediaStreamTrack *aSelector,
+      RTCStatsQuery *query);
+  static RefPtr<RTCStatsQueryPromise> ExecuteStatsQuery_s(
+    UniquePtr<RTCStatsQuery>&& query,
+    const nsTArray<RefPtr<MediaPipeline>>& aPipelines,
+    const RefPtr<MediaTransportHandler>& aTransportHandler);
+
   nsresult CalculateFingerprint(const std::string& algorithm,
                                 std::vector<uint8_t>* fingerprint) const;
   nsresult ConfigureJsepSessionCodecs();
@@ -615,10 +616,6 @@ private:
       JsepTransceiver* aJsepTransceiver,
       dom::MediaStreamTrack* aSendTrack,
       ErrorResult& aRv);
-
-  static void GetStatsForPCObserver_s(
-      const std::string& pcHandle,
-      nsAutoPtr<RTCStatsQuery> query);
 
   // Sends an RTCStatsReport to JS. Must run on main thread.
   static void DeliverStatsReportToPCObserver_m(
@@ -681,7 +678,7 @@ private:
   std::string mName;
 
   // The target to run stuff on
-  nsCOMPtr<nsIEventTarget> mSTSThread;
+  nsCOMPtr<nsISerialEventTarget> mSTSThread;
 
   // DataConnection that's used to get all the DataChannels
   RefPtr<mozilla::DataChannelConnection> mDataConnection;

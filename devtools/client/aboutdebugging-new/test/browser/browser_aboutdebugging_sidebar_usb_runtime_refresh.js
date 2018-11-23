@@ -23,8 +23,8 @@ add_task(async function() {
 
   info("Create a first runtime and connect to it");
   usbMocks.createRuntime(RUNTIME_ID, {
-    appName: RUNTIME_APP_NAME,
     deviceName: RUNTIME_DEVICE_NAME,
+    name: RUNTIME_APP_NAME,
   });
   usbMocks.emitUpdate();
 

@@ -455,7 +455,7 @@ MarkupView.prototype = {
    *         requests queued up
    */
   _showBoxModel: function(nodeFront) {
-    return this.toolbox.highlighterUtils.highlightNodeFront(nodeFront)
+    return this.toolbox.highlighter.highlight(nodeFront)
       .catch(this._handleRejectionIfNotDestroyed);
   },
 
@@ -463,13 +463,13 @@ MarkupView.prototype = {
    * Hide the box model highlighter on a given node front
    *
    * @param  {Boolean} forceHide
-   *         See toolbox-highlighter-utils/unhighlight
+   *         See highlighterFront method `unhighlight`
    * @return {Promise} Resolves when the highlighter for this nodeFront is
    *         hidden, taking into account that there could already be highlighter
    *         requests queued up
    */
   _hideBoxModel: function(forceHide) {
-    return this.toolbox.highlighterUtils.unhighlight(forceHide)
+    return this.toolbox.highlighter.unhighlight(forceHide)
       .catch(this._handleRejectionIfNotDestroyed);
   },
 

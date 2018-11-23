@@ -21,7 +21,7 @@ use picture::SurfaceInfo;
 use prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
 use profiler::FrameProfileCounters;
 use render_backend::{FrameId, FrameResources};
-use render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
+use render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind, TileBlit};
 use render_task::{BlurTask, ClearMode, GlyphTask, RenderTaskLocation, RenderTaskTree, ScalingTask};
 use resource_cache::ResourceCache;
 use std::{cmp, usize, f32, i32, mem};
@@ -387,6 +387,8 @@ pub struct ColorRenderTarget {
     pub blits: Vec<BlitJob>,
     // List of frame buffer outputs for this render target.
     pub outputs: Vec<FrameOutput>,
+    pub tile_blits: Vec<TileBlit>,
+    pub color_clears: Vec<RenderTaskId>,
     allocator: Option<TextureAllocator>,
     alpha_tasks: Vec<RenderTaskId>,
     screen_size: DeviceIntSize,
@@ -414,6 +416,8 @@ impl RenderTarget for ColorRenderTarget {
             allocator: size.map(TextureAllocator::new),
             outputs: Vec::new(),
             alpha_tasks: Vec::new(),
+            color_clears: Vec::new(),
+            tile_blits: Vec::new(),
             screen_size,
         }
     }
@@ -432,6 +436,17 @@ impl RenderTarget for ColorRenderTarget {
 
         for task_id in &self.alpha_tasks {
             let task = &render_tasks[*task_id];
+
+            match task.clear_mode {
+                ClearMode::One |
+                ClearMode::Zero => {
+                    panic!("bug: invalid clear mode for color task");
+                }
+                ClearMode::Transparent => {}
+                ClearMode::Color(..) => {
+                    self.color_clears.push(*task_id);
+                }
+            }
 
             match task.kind {
                 RenderTaskKind::Picture(ref pic_task) => {
@@ -457,6 +472,16 @@ impl RenderTarget for ColorRenderTarget {
                         pic_task.root_spatial_node_index,
                         z_generator,
                     );
+
+                    for blit in &pic_task.blits {
+                        self.tile_blits.push(TileBlit {
+                            target: blit.target.clone(),
+                            offset: DeviceIntPoint::new(
+                                blit.offset.x + target_rect.origin.x,
+                                blit.offset.y + target_rect.origin.y,
+                            ),
+                        })
+                    }
 
                     if let Some(batch_container) = batch_builder.build(&mut merged_batches) {
                         self.alpha_batch_containers.push(batch_container);
@@ -641,6 +666,7 @@ impl RenderTarget for AlphaRenderTarget {
                 self.zero_clears.push(task_id);
             }
             ClearMode::One => {}
+            ClearMode::Color(..) |
             ClearMode::Transparent => {
                 panic!("bug: invalid clear mode for alpha task");
             }

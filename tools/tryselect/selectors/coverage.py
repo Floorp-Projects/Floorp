@@ -354,7 +354,8 @@ def run_coverage_try(templates={}, full=False, parameters=None,
         print('ERROR Could not find any tests or chunks to run.')
         return 1
 
-    all_tasks = generate_tasks(parameters, full, root=build.topsrcdir)
+    tg = generate_tasks(parameters, full, root=build.topsrcdir)
+    all_tasks = tg.tasks.keys()
 
     tasks_by_chunks = filter_tasks_by_chunks(all_tasks, test_chunks)
     tasks_by_path = filter_tasks_by_paths(all_tasks, test_files)

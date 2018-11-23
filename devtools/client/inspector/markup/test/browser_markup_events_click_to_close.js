@@ -69,7 +69,7 @@ add_task(async function() {
   await onShown;
 
   info("Click on the computed view tab");
-  const onHighlighterHidden = toolbox.once("node-unhighlight");
+  const onHighlighterHidden = toolbox.highlighter.once("node-unhighlight");
   const onTabComputedViewSelected = inspector.sidebar.once("computedview-selected");
   const computedViewTab = inspector.panelDoc.querySelector("#computedview-tab");
   EventUtils.synthesizeMouseAtCenter(computedViewTab, {},

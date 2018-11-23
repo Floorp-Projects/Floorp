@@ -3,12 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var TabsInTitlebar = {
+var TabsInTitlebar;
+
+{ // start private TabsInTitlebar scope
+
+TabsInTitlebar = {
   init() {
     this._readPref();
     Services.prefs.addObserver(this._prefName, this);
 
-    gDragSpaceObserver.init();
+    dragSpaceObserver.init();
     this._initialized = true;
     this._update();
   },
@@ -87,20 +91,13 @@ var TabsInTitlebar = {
 
   uninit() {
     Services.prefs.removeObserver(this._prefName, this);
-    gDragSpaceObserver.uninit();
+    dragSpaceObserver.uninit();
   },
 };
 
-function onTitlebarMaxClick() {
-  if (window.windowState == window.STATE_MAXIMIZED)
-    window.restore();
-  else
-    window.maximize();
-}
-
 // Adds additional drag space to the window by listening to
 // the corresponding preference.
-var gDragSpaceObserver = {
+let dragSpaceObserver = {
   pref: "browser.tabs.extraDragSpace",
 
   init() {
@@ -120,3 +117,12 @@ var gDragSpaceObserver = {
     }
   },
 };
+
+} // end private TabsInTitlebar scope
+
+function onTitlebarMaxClick() {
+  if (window.windowState == window.STATE_MAXIMIZED)
+    window.restore();
+  else
+    window.maximize();
+}

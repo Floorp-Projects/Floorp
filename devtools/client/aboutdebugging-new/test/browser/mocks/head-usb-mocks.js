@@ -69,7 +69,7 @@ class UsbMocks {
    * @param {Object} optional object used to create the fake runtime & device
    *        - deviceName: {String} Device name
    *        - shortName: {String} Short name for the device
-   *        - appName: {String} Application name, for instance "Firefox"
+   *        - name: {String} Application name, for instance "Firefox"
    *        - channel: {String} Release channel, for instance "release", "nightly"
    *        - version: {String} Version, for instance "63.0a"
    *        - socketPath: {String} (should only be used for connecting, so not here)
@@ -89,7 +89,7 @@ class UsbMocks {
     const mockUsbClient = createClientMock();
     mockUsbClient.getDeviceDescription = () => {
       return {
-        brandName: runtimeInfo.appName || "TestBrand",
+        name: runtimeInfo.name || "TestBrand",
         channel: runtimeInfo.channel || "release",
         version: runtimeInfo.version || "1.0",
       };

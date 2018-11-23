@@ -24,6 +24,8 @@ void brush_vs(
 #define BRUSH_FLAG_SEGMENT_REPEAT_Y             8
 #define BRUSH_FLAG_TEXEL_RECT                  16
 
+#define INVALID_SEGMENT_INDEX                   0xffff
+
 void main(void) {
     // Load the brush instance from vertex attributes.
     int prim_header_address = aData.x;
@@ -35,12 +37,20 @@ void main(void) {
     PrimitiveHeader ph = fetch_prim_header(prim_header_address);
 
     // Fetch the segment of this brush primitive we are drawing.
-    int segment_address = ph.specific_prim_address +
-                          VECS_PER_SPECIFIC_BRUSH +
-                          segment_index * VECS_PER_SEGMENT;
+    vec4 segment_data;
+    RectWithSize segment_rect;
+    if (segment_index == INVALID_SEGMENT_INDEX) {
+        segment_rect = ph.local_rect;
+        segment_data = vec4(0.0);
+    } else {
+        int segment_address = ph.specific_prim_address +
+                              VECS_PER_SPECIFIC_BRUSH +
+                              segment_index * VECS_PER_SEGMENT;
 
-    vec4[2] segment_data = fetch_from_gpu_cache_2(segment_address);
-    RectWithSize local_segment_rect = RectWithSize(segment_data[0].xy, segment_data[0].zw);
+        vec4[2] segment_info = fetch_from_gpu_cache_2(segment_address);
+        segment_rect = RectWithSize(segment_info[0].xy, segment_info[0].zw);
+        segment_data = segment_info[1];
+    }
 
     VertexInfo vi;
 
@@ -53,7 +63,7 @@ void main(void) {
     // Write the normal vertex information out.
     if (transform.is_axis_aligned) {
         vi = write_vertex(
-            local_segment_rect,
+            segment_rect,
             ph.local_clip_rect,
             ph.z,
             transform,
@@ -74,7 +84,7 @@ void main(void) {
         bvec4 edge_mask = notEqual(edge_flags & ivec4(1, 2, 4, 8), ivec4(0));
 
         vi = write_transform_vertex(
-            local_segment_rect,
+            segment_rect,
             ph.local_rect,
             ph.local_clip_rect,
             mix(vec4(0.0), vec4(1.0), edge_mask),
@@ -103,12 +113,12 @@ void main(void) {
         vi,
         ph.specific_prim_address,
         ph.local_rect,
-        local_segment_rect,
+        segment_rect,
         ivec4(ph.user_data, segment_user_data),
         transform.m,
         pic_task,
         brush_flags,
-        segment_data[1]
+        segment_data
     );
 }
 #endif

@@ -375,13 +375,8 @@ class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
 
     @skip_if_mobile("New windows not supported in Fennec")
     def test_unmarshal_element_collection(self):
-
-        def open_window_with_js():
-            self.marionette.execute_script(
-                "window.open('chrome://marionette/content/test.xul', 'xul', 'chrome');")
-
         try:
-            win = self.open_window(trigger=open_window_with_js)
+            win = self.open_chrome_window("chrome://marionette/content/test.xul")
             self.marionette.switch_to_window(win)
 
             expected = self.marionette.find_elements(By.TAG_NAME, "textbox")

@@ -49,7 +49,7 @@ add_task(async function() {
   await assertHighlighterShownOnTextNode("body", 14);
 
   function hoverContainer(container) {
-    const promise = inspector.toolbox.once("node-highlight");
+    const promise = inspector.highlighter.once("node-highlight");
 
     container.tagLine.scrollIntoView();
     EventUtils.synthesizeMouse(container.tagLine, 2, 2, {type: "mousemove"},
