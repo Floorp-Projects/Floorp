@@ -13,6 +13,9 @@
 #include "nricectx.h" // Need some enums
 #include "nsDOMNavigationTiming.h" // DOMHighResTimeStamp
 
+// For RTCStatsQueryPromise typedef
+#include "signaling/src/peerconnection/PeerConnectionImpl.h"
+
 #include <map>
 #include <string>
 #include <set>
@@ -25,6 +28,7 @@ class NrIceMediaStream;
 class NrIceResolver;
 class SdpFingerprintAttributeList; // TODO(bug 1494311) Use IPC type
 class TransportFlow;
+class RTCStatsQuery;
 
 namespace dom {
 struct RTCConfiguration;
@@ -112,14 +116,8 @@ class MediaTransportHandler : public MediaTransportBase,
     TransportLayer::State GetState(const std::string& aTransportId,
                                    bool aRtcp) const override;
 
-    // TODO(bug 1494312): Stats stuff needs to be async.
-    void GetAllIceStats(DOMHighResTimeStamp now,
-                        dom::RTCStatsReportInternal* report);
-
-    // TODO(bug 1494312): Stats stuff needs to be async.
-    void GetIceStats(const std::string& aTransportId,
-                     DOMHighResTimeStamp now,
-                     dom::RTCStatsReportInternal* report);
+    RefPtr<RTCStatsQueryPromise> GetIceStats(
+        UniquePtr<RTCStatsQuery>&& aQuery);
 
     // TODO(bug 1494311) Use IPC type
     struct CandidateInfo {

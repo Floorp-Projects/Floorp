@@ -540,24 +540,15 @@ MediaTransportHandler::GetState(const std::string& aTransportId,
   return TransportLayer::TS_NONE;
 }
 
-void
-MediaTransportHandler::GetAllIceStats(DOMHighResTimeStamp aNow,
-                                      dom::RTCStatsReportInternal* aReport)
+RefPtr<RTCStatsQueryPromise>
+MediaTransportHandler::GetIceStats(UniquePtr<RTCStatsQuery>&& aQuery)
 {
   for (const auto& stream : mIceCtx->GetStreams()) {
-    GetIceStats(*stream, aNow, aReport);
+    if (aQuery->grabAllLevels || aQuery->transportId == stream->GetId()) {
+      GetIceStats(*stream, aQuery->now, aQuery->report);
+    }
   }
-}
-
-void
-MediaTransportHandler::GetIceStats(const std::string& aTransportId,
-                                   DOMHighResTimeStamp aNow,
-                                   dom::RTCStatsReportInternal* aReport)
-{
-  auto stream = mIceCtx->GetStream(aTransportId);
-  if (stream) {
-    GetIceStats(*stream, aNow, aReport);
-  }
+  return RTCStatsQueryPromise::CreateAndResolve(std::move(aQuery), __func__);
 }
 
 static void ToRTCIceCandidateStats(
