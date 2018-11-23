@@ -184,34 +184,31 @@ delete_mapping(const char *name)
 }
 
 static UniquePtr<char[]>
-getAPKLibraryName(const char* apkName, const char* libraryName)
+getUnpackedLibraryName(const char* libraryName)
 {
-#define APK_ASSETS_PATH "!/assets/" ANDROID_CPU_ARCH "/"
-  size_t filenameLength = strlen(apkName) +
-    sizeof(APK_ASSETS_PATH) + 	// includes \0 terminator
-    strlen(libraryName);
-  auto file = MakeUnique<char[]>(filenameLength);
-  snprintf(file.get(), filenameLength, "%s" APK_ASSETS_PATH "%s",
-	   apkName, libraryName);
+  static const char *libdir = getenv("MOZ_ANDROID_LIBDIR");
+
+  size_t len = strlen(libdir) + 1 /* path separator */ + strlen(libraryName) + 1; /* null terminator */
+  auto file = MakeUnique<char[]>(len);
+  snprintf(file.get(), len, "%s/%s", libdir, libraryName);
   return file;
-#undef APK_ASSETS_PATH
 }
 
 static void*
-dlopenAPKLibrary(const char* apkName, const char* libraryName)
+dlopenLibrary(const char* libraryName)
 {
-  return __wrap_dlopen(getAPKLibraryName(apkName, libraryName).get(), RTLD_GLOBAL | RTLD_LAZY);
+  return __wrap_dlopen(getUnpackedLibraryName(libraryName).get(), RTLD_GLOBAL | RTLD_LAZY);
 }
 
 static mozglueresult
-loadGeckoLibs(const char *apkName)
+loadGeckoLibs()
 {
   TimeStamp t0 = TimeStamp::Now();
   struct rusage usage1_thread, usage1;
   getrusage(RUSAGE_THREAD, &usage1_thread);
   getrusage(RUSAGE_SELF, &usage1);
 
-  gBootstrap = GetBootstrap(getAPKLibraryName(apkName, "libxul.so").get());
+  gBootstrap = GetBootstrap(getUnpackedLibraryName("libxul.so").get());
   if (!gBootstrap) {
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't get a handle to libxul!");
     return FAILURE;
@@ -240,20 +237,20 @@ loadGeckoLibs(const char *apkName)
   return SUCCESS;
 }
 
-static mozglueresult loadNSSLibs(const char *apkName);
+static mozglueresult loadNSSLibs();
 
 static mozglueresult
-loadSQLiteLibs(const char *apkName)
+loadSQLiteLibs()
 {
   if (sqlite_handle)
     return SUCCESS;
 
 #ifdef MOZ_FOLD_LIBS
-  if (loadNSSLibs(apkName) != SUCCESS)
+  if (loadNSSLibs() != SUCCESS)
     return FAILURE;
 #else
 
-  sqlite_handle = dlopenAPKLibrary(apkName, "libmozsqlite3.so");
+  sqlite_handle = dlopenLibrary("libmozsqlite3.so");
   if (!sqlite_handle) {
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't get a handle to libmozsqlite3!");
     return FAILURE;
@@ -265,17 +262,17 @@ loadSQLiteLibs(const char *apkName)
 }
 
 static mozglueresult
-loadNSSLibs(const char *apkName)
+loadNSSLibs()
 {
   if (nss_handle && nspr_handle && plc_handle)
     return SUCCESS;
 
-  nss_handle = dlopenAPKLibrary(apkName, "libnss3.so");
+  nss_handle = dlopenLibrary("libnss3.so");
 
 #ifndef MOZ_FOLD_LIBS
-  nspr_handle = dlopenAPKLibrary(apkName, "libnspr4.so");
+  nspr_handle = dlopenLibrary("libnspr4.so");
 
-  plc_handle = dlopenAPKLibrary(apkName, "libplc4.so");
+  plc_handle = dlopenLibrary("libplc4.so");
 #endif
 
   if (!nss_handle) {
@@ -299,58 +296,34 @@ loadNSSLibs(const char *apkName)
 }
 
 extern "C" APKOPEN_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_loadGeckoLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName)
+Java_org_mozilla_gecko_mozglue_GeckoLoader_loadGeckoLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass)
 {
   jenv->GetJavaVM(&sJavaVM);
 
-  const char* str;
-  // XXX: java doesn't give us true UTF8, we should figure out something
-  // better to do here
-  str = jenv->GetStringUTFChars(jApkName, nullptr);
-  if (str == nullptr)
-    return;
-
-  int res = loadGeckoLibs(str);
+  int res = loadGeckoLibs();
   if (res != SUCCESS) {
     JNI_Throw(jenv, "java/lang/Exception", "Error loading gecko libraries");
   }
-  jenv->ReleaseStringUTFChars(jApkName, str);
 }
 
 extern "C" APKOPEN_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_loadSQLiteLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName) {
-  const char* str;
-  // XXX: java doesn't give us true UTF8, we should figure out something
-  // better to do here
-  str = jenv->GetStringUTFChars(jApkName, nullptr);
-  if (str == nullptr)
-    return;
-
+Java_org_mozilla_gecko_mozglue_GeckoLoader_loadSQLiteLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass) {
   __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Load sqlite start\n");
-  mozglueresult rv = loadSQLiteLibs(str);
+  mozglueresult rv = loadSQLiteLibs();
   if (rv != SUCCESS) {
       JNI_Throw(jenv, "java/lang/Exception", "Error loading sqlite libraries");
   }
   __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Load sqlite done\n");
-  jenv->ReleaseStringUTFChars(jApkName, str);
 }
 
 extern "C" APKOPEN_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_loadNSSLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName) {
-  const char* str;
-  // XXX: java doesn't give us true UTF8, we should figure out something
-  // better to do here
-  str = jenv->GetStringUTFChars(jApkName, nullptr);
-  if (str == nullptr)
-    return;
-
+Java_org_mozilla_gecko_mozglue_GeckoLoader_loadNSSLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass) {
   __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Load nss start\n");
-  mozglueresult rv = loadNSSLibs(str);
+  mozglueresult rv = loadNSSLibs();
   if (rv != SUCCESS) {
     JNI_Throw(jenv, "java/lang/Exception", "Error loading nss libraries");
   }
   __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Load nss done\n");
-  jenv->ReleaseStringUTFChars(jApkName, str);
 }
 
 static char**
@@ -422,22 +395,13 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv *jenv, jclass jc, jo
 extern "C" APKOPEN_EXPORT mozglueresult
 ChildProcessInit(int argc, char* argv[])
 {
-  int i;
-  for (i = 0; i < (argc - 1); i++) {
-    if (strcmp(argv[i], "-greomni"))
-      continue;
-
-    i = i + 1;
-    break;
-  }
-
-  if (loadNSSLibs(argv[i]) != SUCCESS) {
+  if (loadNSSLibs() != SUCCESS) {
     return FAILURE;
   }
-  if (loadSQLiteLibs(argv[i]) != SUCCESS) {
+  if (loadSQLiteLibs() != SUCCESS) {
     return FAILURE;
   }
-  if (loadGeckoLibs(argv[i]) != SUCCESS) {
+  if (loadGeckoLibs() != SUCCESS) {
     return FAILURE;
   }
 
