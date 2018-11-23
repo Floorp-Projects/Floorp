@@ -175,7 +175,7 @@ nsresult MediaEngineDefaultVideoSource::SetTrack(
     mStream = aStream;
     mTrackID = aTrackID;
   }
-  aStream->AddTrack(aTrackID, 0, new VideoSegment(),
+  aStream->AddTrack(aTrackID, new VideoSegment(),
                     SourceMediaStream::ADDTRACK_QUEUED);
   return NS_OK;
 }
@@ -437,7 +437,7 @@ nsresult MediaEngineDefaultAudioSource::SetTrack(
   // AddAudioTrack will take ownership of segment
   mStream = aStream;
   mTrackID = aTrackID;
-  aStream->AddAudioTrack(aTrackID, aStream->GraphRate(), 0, new AudioSegment(),
+  aStream->AddAudioTrack(aTrackID, aStream->GraphRate(), new AudioSegment(),
                          SourceMediaStream::ADDTRACK_QUEUED);
   return NS_OK;
 }

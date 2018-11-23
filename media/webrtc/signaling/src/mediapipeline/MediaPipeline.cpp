@@ -1670,10 +1670,9 @@ public:
                mTrack->AsVideoStreamTrack());
 
     if (mTrack->AsAudioStreamTrack()) {
-      mSource->AddAudioTrack(
-          mTrackId, aRate, 0, new AudioSegment());
+      mSource->AddAudioTrack(mTrackId, aRate, new AudioSegment());
     } else if (mTrack->AsVideoStreamTrack()) {
-      mSource->AddTrack(mTrackId, 0, new VideoSegment());
+      mSource->AddTrack(mTrackId, new VideoSegment());
     }
     MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
             ("GenericReceiveListener added %s track %d (%p) to stream %p",

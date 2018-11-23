@@ -1225,7 +1225,7 @@ void MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions) {
   for (MediaStream* stream : mStreams) {
     if (SourceMediaStream* is = stream->AsSourceStream()) {
       ensureNextIteration |= is->PullNewData(aEndBlockingDecisions);
-      is->ExtractPendingInput();
+      is->ExtractPendingInput(mStateComputedTime);
     }
     if (stream->mFinished) {
       // The stream's not suspended, and since it's finished, underruns won't
@@ -2635,7 +2635,7 @@ void SourceMediaStream::SetPullEnabled(bool aEnabled) {
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, aEnabled));
 }
 
-bool SourceMediaStream::PullNewData(StreamTime aDesiredUpToTime) {
+bool SourceMediaStream::PullNewData(GraphTime aDesiredUpToTime) {
   TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaStream %p", this);
   MutexAutoLock lock(mMutex);
   if (!mPullEnabled || mFinished) {
@@ -2677,11 +2677,12 @@ bool SourceMediaStream::PullNewData(StreamTime aDesiredUpToTime) {
   return true;
 }
 
-void SourceMediaStream::ExtractPendingInput() {
+void SourceMediaStream::ExtractPendingInput(GraphTime aCurrentTime) {
   MutexAutoLock lock(mMutex);
 
   bool finished = mFinishPending;
   bool shouldNotifyTrackCreated = false;
+  StreamTime streamCurrentTime = GraphTimeToStreamTime(aCurrentTime);
 
   for (int32_t i = mUpdateTracks.Length() - 1; i >= 0; --i) {
     SourceMediaStream::TrackData* data = &mUpdateTracks[i];
@@ -2692,7 +2693,7 @@ void SourceMediaStream::ExtractPendingInput() {
     // So it is not combined with the manipulating of aStream->mTracks part.
     StreamTime offset =
         (data->mCommands & SourceMediaStream::TRACK_CREATE)
-            ? data->mStart
+            ? streamCurrentTime
             : mTracks.FindTrack(data->mID)->GetSegment()->GetDuration();
 
     // Audio case.
@@ -2746,11 +2747,12 @@ void SourceMediaStream::ExtractPendingInput() {
       LOG(LogLevel::Debug,
           ("%p: SourceMediaStream %p creating track %d, start %" PRId64
            ", initial end %" PRId64,
-           GraphImpl(), this, data->mID, int64_t(data->mStart),
+           GraphImpl(), this, data->mID, int64_t(streamCurrentTime),
            int64_t(segment->GetDuration())));
 
       data->mEndOfFlushedData += segment->GetDuration();
-      mTracks.AddTrack(data->mID, data->mStart, segment);
+      segment->InsertNullDataAtStart(streamCurrentTime);
+      mTracks.AddTrack(data->mID, streamCurrentTime, segment);
       // The track has taken ownership of data->mData, so let's replace
       // data->mData with an empty clone.
       data->mData = segment->CreateEmptyClone();
@@ -2790,7 +2792,6 @@ void SourceMediaStream::ExtractPendingInput() {
 }
 
 void SourceMediaStream::AddTrackInternal(TrackID aID, TrackRate aRate,
-                                         StreamTime aStart,
                                          MediaSegment* aSegment,
                                          uint32_t aFlags) {
   MutexAutoLock lock(mMutex);
@@ -2803,8 +2804,7 @@ void SourceMediaStream::AddTrackInternal(TrackID aID, TrackRate aRate,
   data->mID = aID;
   data->mInputRate = aRate;
   data->mResamplerChannelCount = 0;
-  data->mStart = aStart;
-  data->mEndOfFlushedData = aStart;
+  data->mEndOfFlushedData = 0;
   data->mCommands = TRACK_CREATE;
   data->mData = aSegment;
   ResampleAudioToGraphSampleRate(data, aSegment);
@@ -2814,9 +2814,8 @@ void SourceMediaStream::AddTrackInternal(TrackID aID, TrackRate aRate,
 }
 
 void SourceMediaStream::AddAudioTrack(TrackID aID, TrackRate aRate,
-                                      StreamTime aStart, AudioSegment* aSegment,
-                                      uint32_t aFlags) {
-  AddTrackInternal(aID, aRate, aStart, aSegment, aFlags);
+                                      AudioSegment* aSegment, uint32_t aFlags) {
+  AddTrackInternal(aID, aRate, aSegment, aFlags);
 }
 
 void SourceMediaStream::FinishAddTracks() {
