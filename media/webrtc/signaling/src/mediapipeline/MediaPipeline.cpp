@@ -1644,14 +1644,13 @@ MediaPipelineTransmit::PipelineListener::SetCurrentFrames(
   NewData(aSegment);
 }
 
-class GenericReceiveListener : public MediaStreamListener
+class GenericReceiveListener : public MediaStreamTrackListener
 {
 public:
   explicit GenericReceiveListener(dom::MediaStreamTrack* aTrack)
     : mTrack(aTrack)
     , mTrackId(aTrack->GetInputTrackId())
     , mSource(mTrack->GetInputStream()->AsSourceStream())
-    , mPlayedTicks(0)
     , mPrincipalHandle(PRINCIPAL_HANDLE_NONE)
     , mListening(false)
     , mMaybeTrackNeedsUnmute(true)
@@ -1684,7 +1683,7 @@ public:
              mSource.get()));
 
     mSource->AdvanceKnownTracksTime(STREAM_TIME_MAX);
-    mSource->AddListener(this);
+    mSource->AddTrackListener(this, mTrackId);
   }
 
   void AddSelf()
@@ -1727,7 +1726,7 @@ public:
     MOZ_LOG(gMediaPipelineLog, LogLevel::Debug, ("GenericReceiveListener ending track"));
 
     // This breaks the cycle with the SourceMediaStream
-    mSource->RemoveListener(this);
+    mSource->RemoveTrackListener(this, mTrackId);
     mSource->EndTrack(mTrackId);
   }
 
@@ -1768,7 +1767,6 @@ protected:
   RefPtr<dom::MediaStreamTrack> mTrack;
   const TrackID mTrackId;
   const RefPtr<SourceMediaStream> mSource;
-  TrackTicks mPlayedTicks;
   PrincipalHandle mPrincipalHandle;
   bool mListening;
   Atomic<bool> mMaybeTrackNeedsUnmute;
@@ -1810,12 +1808,14 @@ public:
     , mTaskQueue(
         new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
                       "AudioPipelineListener"))
+    , mPlayedTicks(0)
   {
     AddTrackToSource(mRate);
   }
 
-  // Implement MediaStreamListener
+  // Implement MediaStreamTrackListener
   void NotifyPull(MediaStreamGraph* aGraph,
+                  StreamTime aEndOfAppendedData,
                   StreamTime aDesiredTime) override
   {
     NotifyPullImpl(aDesiredTime);
@@ -1923,6 +1923,7 @@ private:
   // audio is resampled to the graph rate.
   const TrackRate mRate;
   const RefPtr<TaskQueue> mTaskQueue;
+  TrackTicks mPlayedTicks;
 };
 
 MediaPipelineReceiveAudio::MediaPipelineReceiveAudio(
@@ -2001,29 +2002,23 @@ public:
     AddTrackToSource();
   }
 
-  // Implement MediaStreamListener
-  void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) override
+  // Implement MediaStreamTrackListener
+  void NotifyPull(MediaStreamGraph* aGraph,
+                  StreamTime aEndOfAppendedData,
+                  StreamTime aDesiredTime) override
   {
     TRACE_AUDIO_CALLBACK_COMMENT("Track %i", mTrackId);
     MutexAutoLock lock(mMutex);
 
     RefPtr<Image> image = mImage;
-    StreamTime delta = aDesiredTime - mPlayedTicks;
+    StreamTime delta = aDesiredTime - aEndOfAppendedData;
+    MOZ_ASSERT(delta > 0);
 
-    // Don't append if we've already provided a frame that supposedly
-    // goes past the current aDesiredTime Doing so means a negative
-    // delta and thus messes up handling of the graph
-    if (delta > 0) {
-      VideoSegment segment;
-      IntSize size = image ? image->GetSize() : IntSize(mWidth, mHeight);
-      segment.AppendFrame(image.forget(), delta, size, mPrincipalHandle);
-      // Handle track not actually added yet or removed/finished
-      if (!mSource->AppendToTrack(mTrackId, &segment)) {
-        MOZ_LOG(gMediaPipelineLog, LogLevel::Error, ("AppendToTrack failed"));
-        return;
-      }
-      mPlayedTicks = aDesiredTime;
-    }
+    VideoSegment segment;
+    IntSize size = image ? image->GetSize() : IntSize(mWidth, mHeight);
+    segment.AppendFrame(image.forget(), delta, size, mPrincipalHandle);
+    DebugOnly<bool> appended = mSource->AppendToTrack(mTrackId, &segment);
+    MOZ_ASSERT(appended);
   }
 
   // Accessors for external writes from the renderer
