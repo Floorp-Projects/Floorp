@@ -46,6 +46,9 @@ class Callbacks private constructor() {
 
         override fun onCrash(session: GeckoSession) {
         }
+
+        override fun onFirstComposite(session: GeckoSession) {
+        }
     }
 
     interface NavigationDelegate : GeckoSession.NavigationDelegate {

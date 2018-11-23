@@ -501,6 +501,11 @@ public class GeckoViewActivity extends AppCompatActivity {
             session.open(sGeckoRuntime);
             session.loadUri(DEFAULT_URL);
         }
+
+        @Override
+        public void onFirstComposite(final GeckoSession session) {
+            Log.d(LOGTAG, "onFirstComposite");
+        }
     }
 
     private class ExampleProgressDelegate implements GeckoSession.ProgressDelegate {
