@@ -195,7 +195,7 @@ def get_raptor_test_list(args, oskey):
             next_test['page_cycles'] = args.page_cycles
             LOG.info("set page-cycles to %d as specified on cmd line" % args.page_cycles)
         else:
-            if next_test['page_cycles'] > max_page_cycles:
+            if int(next_test['page_cycles']) > max_page_cycles:
                 next_test['page_cycles'] = max_page_cycles
                 LOG.info("page-cycles set to %d" % next_test['page_cycles'])
         # if --page-timeout was provided on the command line, use that instead of INI
