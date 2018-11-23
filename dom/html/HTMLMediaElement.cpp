@@ -5272,31 +5272,43 @@ public:
 
   void NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack) override
   {
+    if (!mElement) {
+      return;
+    }
     mElement->NotifyMediaStreamTrackAdded(aTrack);
   }
 
   void NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack) override
   {
+    if (!mElement) {
+      return;
+    }
     mElement->NotifyMediaStreamTrackRemoved(aTrack);
   }
 
   void NotifyActive() override
   {
+    if (!mElement) {
+      return;
+    }
     LOG(LogLevel::Debug,
         ("%p, mSrcStream %p became active",
-         mElement,
+         mElement.get(),
          mElement->mSrcStream.get()));
     mElement->CheckAutoplayDataReady();
   }
 
   void NotifyInactive() override
   {
+    if (!mElement) {
+      return;
+    }
     if (mElement->IsPlaybackEnded()) {
       return;
     }
     LOG(LogLevel::Debug,
         ("%p, mSrcStream %p became inactive",
-         mElement,
+         mElement.get(),
          mElement->mSrcStream.get()));
     MOZ_ASSERT(!mElement->mSrcStream->Active());
     if (mElement->mMediaStreamListener) {
@@ -5307,7 +5319,7 @@ public:
   }
 
 protected:
-  HTMLMediaElement* const mElement;
+  const WeakPtr<HTMLMediaElement> mElement;
 };
 
 void
@@ -5404,8 +5416,8 @@ HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
   }
 
   mSrcStream->OnTracksAvailable(new MediaStreamTracksAvailableCallback(this));
-  mMediaStreamTrackListener = new MediaStreamTrackListener(this);
-  mSrcStream->RegisterTrackListener(mMediaStreamTrackListener);
+  mMediaStreamTrackListener = MakeUnique<MediaStreamTrackListener>(this);
+  mSrcStream->RegisterTrackListener(mMediaStreamTrackListener.get());
 
   mSrcStream->AddPrincipalChangeObserver(this);
   mSrcStreamVideoPrincipal = mSrcStream->GetVideoPrincipal();
@@ -5434,7 +5446,7 @@ HTMLMediaElement::EndSrcMediaStreamPlayback()
   mSelectedVideoStreamTrack = nullptr;
   mVideoFrameListener = nullptr;
 
-  mSrcStream->UnregisterTrackListener(mMediaStreamTrackListener);
+  mSrcStream->UnregisterTrackListener(mMediaStreamTrackListener.get());
   mMediaStreamTrackListener = nullptr;
   mSrcStreamTracksAvailable = false;
 
