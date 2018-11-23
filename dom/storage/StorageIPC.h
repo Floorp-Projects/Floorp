@@ -178,8 +178,6 @@ private:
 
   // Status of the remote database
   nsresult mStatus;
-
-  bool mIPCOpen;
 };
 
 class LocalStorageCacheParent final
@@ -238,8 +236,6 @@ public:
 
   void AddIPDLReference();
   void ReleaseIPDLReference();
-
-  bool IPCOpen() { return mIPCOpen; }
 
 public:
   // Fake cache class receiving async callbacks from DB thread, sending
@@ -367,9 +363,6 @@ private:
 
   ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
-
-  // True when IPC channel is open and Send*() methods are OK to use.
-  bool mIPCOpen;
 };
 
 PBackgroundLocalStorageCacheParent*

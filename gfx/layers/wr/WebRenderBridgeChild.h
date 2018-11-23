@@ -113,7 +113,9 @@ public:
    * to be sent from the parent side.
    */
   void Destroy(bool aIsSync);
-  bool IPCOpen() const { return mIPCOpen && !mDestroyed; }
+  bool IPCOpen() const {
+    return mozilla::ipc::IProtocol::IPCOpen() && !mDestroyed;
+  }
   bool IsDestroyed() const { return mDestroyed; }
 
   uint32_t GetNextResourceId() { return ++mResourceId; }
@@ -213,13 +215,9 @@ private:
   mozilla::ipc::IPCResult RecvWrReleasedImages(nsTArray<wr::ExternalImageKeyPair>&& aPairs) override;
 
   void AddIPDLReference() {
-    MOZ_ASSERT(mIPCOpen == false);
-    mIPCOpen = true;
     AddRef();
   }
   void ReleaseIPDLReference() {
-    MOZ_ASSERT(mIPCOpen == true);
-    mIPCOpen = false;
     Release();
   }
 
@@ -235,7 +233,6 @@ private:
   wr::PipelineId mPipelineId;
   WebRenderLayerManager* mManager;
 
-  bool mIPCOpen;
   bool mDestroyed;
 
   uint32_t mFontKeysDeleted;

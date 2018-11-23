@@ -26,16 +26,12 @@ NS_INTERFACE_MAP_END
 void
 TCPServerSocketParent::ReleaseIPDLReference()
 {
-  MOZ_ASSERT(mIPCOpen);
-  mIPCOpen = false;
   this->Release();
 }
 
 void
 TCPServerSocketParent::AddIPDLReference()
 {
-  MOZ_ASSERT(!mIPCOpen);
-  mIPCOpen = true;
   this->AddRef();
 }
 
@@ -44,7 +40,6 @@ TCPServerSocketParent::TCPServerSocketParent(PNeckoParent* neckoParent,
                                              uint16_t aBacklog,
                                              bool aUseArrayBuffers)
 : mNeckoParent(neckoParent)
-, mIPCOpen(false)
 {
   mServerSocket = new TCPServerSocket(nullptr, aLocalPort, aUseArrayBuffers, aBacklog);
   mServerSocket->SetServerBridgeParent(this);

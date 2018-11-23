@@ -129,23 +129,18 @@ private:
 void
 StorageDBChild::AddIPDLReference()
 {
-  MOZ_ASSERT(!mIPCOpen, "Attempting to retain multiple IPDL references");
-  mIPCOpen = true;
   AddRef();
 }
 
 void
 StorageDBChild::ReleaseIPDLReference()
 {
-  MOZ_ASSERT(mIPCOpen, "Attempting to release non-existent IPDL reference");
-  mIPCOpen = false;
   Release();
 }
 
 StorageDBChild::StorageDBChild(LocalStorageManager* aManager)
   : mManager(aManager)
   , mStatus(NS_OK)
-  , mIPCOpen(false)
 {
 }
 
@@ -248,7 +243,7 @@ StorageDBChild::Shutdown()
 void
 StorageDBChild::AsyncPreload(LocalStorageCacheBridge* aCache, bool aPriority)
 {
-  if (mIPCOpen) {
+  if (IPCOpen()) {
     // Adding ref to cache for the time of preload.  This ensures a reference to
     // to the cache and that all keys will load into this cache object.
     mLoadingCaches.PutEntry(aCache);
@@ -263,7 +258,7 @@ StorageDBChild::AsyncPreload(LocalStorageCacheBridge* aCache, bool aPriority)
 void
 StorageDBChild::AsyncGetUsage(StorageUsageBridge* aUsage)
 {
-  if (mIPCOpen) {
+  if (IPCOpen()) {
     SendAsyncGetUsage(aUsage->OriginScope());
   }
 }
@@ -276,7 +271,7 @@ StorageDBChild::SyncPreload(LocalStorageCacheBridge* aCache, bool aForceSync)
     return;
   }
 
-  if (!mIPCOpen) {
+  if (!IPCOpen()) {
     aCache->LoadDone(NS_ERROR_UNEXPECTED);
     return;
   }
@@ -302,7 +297,7 @@ StorageDBChild::AsyncAddItem(LocalStorageCacheBridge* aCache,
                              const nsAString& aKey,
                              const nsAString& aValue)
 {
-  if (NS_FAILED(mStatus) || !mIPCOpen) {
+  if (NS_FAILED(mStatus) || !IPCOpen()) {
     return mStatus;
   }
 
@@ -317,7 +312,7 @@ StorageDBChild::AsyncUpdateItem(LocalStorageCacheBridge* aCache,
                                 const nsAString& aKey,
                                 const nsAString& aValue)
 {
-  if (NS_FAILED(mStatus) || !mIPCOpen) {
+  if (NS_FAILED(mStatus) || !IPCOpen()) {
     return mStatus;
   }
 
@@ -331,7 +326,7 @@ nsresult
 StorageDBChild::AsyncRemoveItem(LocalStorageCacheBridge* aCache,
                                 const nsAString& aKey)
 {
-  if (NS_FAILED(mStatus) || !mIPCOpen) {
+  if (NS_FAILED(mStatus) || !IPCOpen()) {
     return mStatus;
   }
 
@@ -343,7 +338,7 @@ StorageDBChild::AsyncRemoveItem(LocalStorageCacheBridge* aCache,
 nsresult
 StorageDBChild::AsyncClear(LocalStorageCacheBridge* aCache)
 {
-  if (NS_FAILED(mStatus) || !mIPCOpen) {
+  if (NS_FAILED(mStatus) || !IPCOpen()) {
     return mStatus;
   }
 
@@ -607,16 +602,12 @@ NS_IMPL_RELEASE(StorageDBParent)
 void
 StorageDBParent::AddIPDLReference()
 {
-  MOZ_ASSERT(!mIPCOpen, "Attempting to retain multiple IPDL references");
-  mIPCOpen = true;
   AddRef();
 }
 
 void
 StorageDBParent::ReleaseIPDLReference()
 {
-  MOZ_ASSERT(mIPCOpen, "Attempting to release non-existent IPDL reference");
-  mIPCOpen = false;
   Release();
 }
 
@@ -626,7 +617,6 @@ namespace {
 
 StorageDBParent::StorageDBParent(const nsString& aProfilePath)
   : mProfilePath(aProfilePath)
-  , mIPCOpen(false)
 {
   AssertIsOnBackgroundThread();
 
@@ -844,7 +834,7 @@ StorageDBParent::RecvAsyncAddItem(const nsCString& aOriginSuffix,
     storageThread->AsyncAddItem(NewCache(aOriginSuffix, aOriginNoSuffix),
                                 aKey,
                                 aValue);
-  if (NS_FAILED(rv) && mIPCOpen) {
+  if (NS_FAILED(rv) && IPCOpen()) {
     mozilla::Unused << SendError(rv);
   }
 
@@ -866,7 +856,7 @@ StorageDBParent::RecvAsyncUpdateItem(const nsCString& aOriginSuffix,
     storageThread->AsyncUpdateItem(NewCache(aOriginSuffix, aOriginNoSuffix),
                                    aKey,
                                    aValue);
-  if (NS_FAILED(rv) && mIPCOpen) {
+  if (NS_FAILED(rv) && IPCOpen()) {
     mozilla::Unused << SendError(rv);
   }
 
@@ -886,7 +876,7 @@ StorageDBParent::RecvAsyncRemoveItem(const nsCString& aOriginSuffix,
   nsresult rv =
     storageThread->AsyncRemoveItem(NewCache(aOriginSuffix, aOriginNoSuffix),
                                    aKey);
-  if (NS_FAILED(rv) && mIPCOpen) {
+  if (NS_FAILED(rv) && IPCOpen()) {
     mozilla::Unused << SendError(rv);
   }
 
@@ -904,7 +894,7 @@ StorageDBParent::RecvAsyncClear(const nsCString& aOriginSuffix,
 
   nsresult rv =
     storageThread->AsyncClear(NewCache(aOriginSuffix, aOriginNoSuffix));
-  if (NS_FAILED(rv) && mIPCOpen) {
+  if (NS_FAILED(rv) && IPCOpen()) {
     mozilla::Unused << SendError(rv);
   }
 
@@ -980,7 +970,7 @@ StorageDBParent::Observe(const nsCString& aTopic,
                          const nsString& aOriginAttributesPattern,
                          const nsCString& aOriginScope)
 {
-  if (mIPCOpen) {
+  if (IPCOpen()) {
     mozilla::Unused <<
       SendObserve(aTopic, aOriginAttributesPattern, aOriginScope);
   }

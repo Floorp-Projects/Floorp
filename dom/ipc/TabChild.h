@@ -588,8 +588,6 @@ public:
   LayoutDeviceIntPoint GetClientOffset() const { return mClientOffset; }
   LayoutDeviceIntPoint GetChromeOffset() const { return mChromeOffset; };
 
-  bool IPCOpen() const { return mIPCOpen; }
-
   bool ParentIsActive() const
   {
     return mParentIsActive;
@@ -852,7 +850,6 @@ private:
 
   bool mIsTransparent;
 
-  bool mIPCOpen;
   bool mParentIsActive;
   CSSSize mUnscaledInnerSize;
   bool mDidSetRealShowInfo;

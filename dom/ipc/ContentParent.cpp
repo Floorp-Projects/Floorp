@@ -1484,7 +1484,7 @@ ContentParent::ShutDownProcess(ShutDownMethod aMethod)
       }
     }
 
-    if (mIPCOpen && !mShutdownPending) {
+    if (IPCOpen() && !mShutdownPending) {
       // Stop sending input events with input priority when shutting down.
       SetInputPriorityEventEnabled(false);
       if (SendShutdown()) {
@@ -1686,10 +1686,6 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
     mForceKillTimer->Cancel();
     mForceKillTimer = nullptr;
   }
-
-  // Signal shutdown completion regardless of error state, so we can
-  // finish waiting in the xpcom-shutdown/profile-before-change observer.
-  mIPCOpen = false;
 
   if (mHangMonitorActor) {
     ProcessHangMonitor::RemoveProcess(mHangMonitorActor);
@@ -1944,7 +1940,7 @@ ContentParent::NotifyTabDestroying(const TabId& aTabId,
 void
 ContentParent::StartForceKillTimer()
 {
-  if (mForceKillTimer || !mIPCOpen) {
+  if (mForceKillTimer || !IPCOpen()) {
     return;
   }
 
@@ -2401,7 +2397,6 @@ ContentParent::ContentParent(ContentParent* aOpener,
   , mCalledKillHard(false)
   , mCreatedPairedMinidumps(false)
   , mShutdownPending(false)
-  , mIPCOpen(true)
   , mIsRemoteInputEventQueueEnabled(false)
   , mIsInputPriorityEventEnabled(false)
   , mHangMonitorActor(nullptr)
@@ -2906,7 +2901,7 @@ ContentParent::IsInputEventQueueSupported()
 void
 ContentParent::OnVarChanged(const GfxVarUpdate& aVar)
 {
-  if (!mIPCOpen) {
+  if (!IPCOpen()) {
     return;
   }
   Unused << SendVarUpdate(aVar);
@@ -3140,7 +3135,7 @@ ContentParent::Observe(nsISupports* aSubject,
     // Wait for shutdown to complete, so that we receive any shutdown
     // data (e.g. telemetry) from the child before we quit.
     // This loop terminate prematurely based on mForceKillTimer.
-    SpinEventLoopUntil([&]() { return !mIPCOpen || mCalledKillHard; });
+    SpinEventLoopUntil([&]() { return !IPCOpen() || mCalledKillHard; });
     NS_ASSERTION(!mSubprocess, "Close should have nulled mSubprocess");
   }
 

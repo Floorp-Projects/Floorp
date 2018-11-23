@@ -104,7 +104,6 @@ private:
   // FIXME: replace with IPDL states (bug 536319)
   enum WyciwygChannelChildState mState;
 
-  bool mIPCOpen;
   bool mSentAppData;
   RefPtr<ChannelEventQueue> mEventQ;
 

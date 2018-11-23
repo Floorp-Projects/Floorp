@@ -47,7 +47,6 @@ protected:
   virtual ~DNSRequestChild() {}
 
   virtual mozilla::ipc::IPCResult RecvLookupCompleted(const DNSRequestResponse& reply) override;
-  virtual void ActorDestroy(ActorDestroyReason why) override;
 
   nsCOMPtr<nsIDNSListener>     mListener;
   nsCOMPtr<nsIEventTarget>     mTarget;
@@ -63,7 +62,6 @@ protected:
   uint16_t                     mType;
   const OriginAttributes       mOriginAttributes;
   uint16_t                     mFlags;
-  bool                         mIPCOpen;
 };
 
 } // namespace net

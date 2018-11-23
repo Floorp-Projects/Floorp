@@ -133,7 +133,6 @@ protected:
 private:
   nsCOMPtr<nsIInputStream> mUploadStream;
 
-  bool mIPCOpen;
   RefPtr<ChannelEventQueue> mEventQ;
 
   // If nsUnknownDecoder is involved we queue onDataAvailable (and possibly

@@ -15,8 +15,7 @@ using namespace layers;
 namespace gfx {
 
 VRLayerParent::VRLayerParent(uint32_t aVRDisplayID, const uint32_t aGroup)
-  : mIPCOpen(true)
-  , mVRDisplayID(aVRDisplayID)
+  : mVRDisplayID(aVRDisplayID)
   , mGroup(aGroup)
 {
 }
@@ -34,12 +33,6 @@ VRLayerParent::RecvDestroy()
 }
 
 void
-VRLayerParent::ActorDestroy(ActorDestroyReason aWhy)
-{
-  mIPCOpen = false;
-}
-
-void
 VRLayerParent::Destroy()
 {
   if (mVRDisplayID) {
@@ -53,7 +46,7 @@ VRLayerParent::Destroy()
     mVRDisplayID = 0;
   }
 
-  if (mIPCOpen) {
+  if (IPCOpen()) {
     Unused << PVRLayerParent::Send__delete__(this);
   }
 }
