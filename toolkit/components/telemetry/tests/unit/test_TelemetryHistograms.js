@@ -129,7 +129,7 @@ add_task(async function test_parameterCountsKeyed() {
     let h = Telemetry.getKeyedHistogramById(id);
     h.clear();
     h.add("key");
-    Assert.equal(h.snapshot("key").sum, 0, "Calling add('key') without a value should only log an error.");
+    Assert.deepEqual(h.snapshot(), {}, "Calling add('key') without a value should only log an error.");
     h.clear();
   }
 });
@@ -509,7 +509,7 @@ add_task(async function test_keyed_count_histogram() {
     testKeys.push(key);
 
     Assert.deepEqual(h.keys().sort(), testKeys);
-    Assert.deepEqual(h.snapshot(key), testHistograms[i]);
+    Assert.deepEqual(h.snapshot()[key], testHistograms[i]);
     Assert.deepEqual(h.snapshot(), testSnapShot);
   }
 
@@ -537,7 +537,7 @@ add_task(async function test_keyed_count_histogram() {
 
   // Test leaving out the value argument. That should increment by 1.
   h.add("key");
-  Assert.equal(h.snapshot("key").sum, 1);
+  Assert.equal(h.snapshot().key.sum, 1);
 });
 
 add_task(async function test_keyed_categorical_histogram() {
@@ -610,39 +610,39 @@ add_task(async function test_keyed_histogram_recording() {
   let h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT");
   h.clear();
   h.add(TEST_KEY, 1);
-  Assert.equal(h.snapshot(TEST_KEY).sum, 0);
+  Assert.ok(!(TEST_KEY in h.snapshot()));
 
   // Check that only base histograms are recorded.
   Telemetry.canRecordBase = true;
   h.add(TEST_KEY, 1);
-  Assert.equal(h.snapshot(TEST_KEY).sum, 1,
+  Assert.equal(h.snapshot()[TEST_KEY].sum, 1,
                "The keyed histogram should record the correct value.");
 
   // Extended set keyed histograms should not be recorded.
   h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTIN");
   h.clear();
   h.add(TEST_KEY, 1);
-  Assert.equal(h.snapshot(TEST_KEY).sum, 0,
+  Assert.ok(!(TEST_KEY in h.snapshot()),
                "The keyed histograms should not record any data.");
 
   // Check that extended histograms are recorded when required.
   Telemetry.canRecordExtended = true;
 
   h.add(TEST_KEY, 1);
-  Assert.equal(h.snapshot(TEST_KEY).sum, 1,
+  Assert.equal(h.snapshot()[TEST_KEY].sum, 1,
                   "The runtime keyed histogram should record the correct value.");
 
   h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTIN");
   h.clear();
   h.add(TEST_KEY, 1);
-  Assert.equal(h.snapshot(TEST_KEY).sum, 1,
+  Assert.equal(h.snapshot()[TEST_KEY].sum, 1,
                "The keyed histogram should record the correct value.");
 
   // Check that base histograms are still being recorded.
   h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT");
   h.clear();
   h.add(TEST_KEY, 1);
-  Assert.equal(h.snapshot(TEST_KEY).sum, 1);
+  Assert.equal(h.snapshot()[TEST_KEY].sum, 1);
 });
 
 add_task(async function test_histogram_recording_enabled() {
@@ -704,18 +704,18 @@ add_task(async function test_keyed_histogram_recording_enabled() {
 
   h.clear();
   h.add(TEST_KEY, 1);
-  Assert.equal(h.snapshot(TEST_KEY).sum, 1,
+  Assert.equal(h.snapshot()[TEST_KEY].sum, 1,
     "Keyed histogram add should record by default");
 
   Telemetry.setHistogramRecordingEnabled("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT", false);
   h.add(TEST_KEY, 1);
-  Assert.equal(h.snapshot(TEST_KEY).sum, 1,
+  Assert.equal(h.snapshot()[TEST_KEY].sum, 1,
     "Keyed histogram add should not record when recording is disabled");
 
   Telemetry.setHistogramRecordingEnabled("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT", true);
   h.clear();
   h.add(TEST_KEY, 1);
-  Assert.equal(h.snapshot(TEST_KEY).sum, 1,
+  Assert.equal(h.snapshot()[TEST_KEY].sum, 1,
     "Keyed histogram add should record when recording is re-enabled");
 
   // Check that a histogram with recording disabled by default behaves correctly
@@ -723,18 +723,18 @@ add_task(async function test_keyed_histogram_recording_enabled() {
   h.clear();
 
   h.add(TEST_KEY, 1);
-  Assert.equal(h.snapshot(TEST_KEY).sum, 0,
+  Assert.ok(!(TEST_KEY in h.snapshot()),
     "Keyed histogram add should not record by default for histograms which don't record by default");
 
   Telemetry.setHistogramRecordingEnabled("TELEMETRY_TEST_KEYED_COUNT_INIT_NO_RECORD", true);
   h.add(TEST_KEY, 1);
-  Assert.equal(h.snapshot(TEST_KEY).sum, 1,
+  Assert.equal(h.snapshot()[TEST_KEY].sum, 1,
     "Keyed histogram add should record when recording is enabled");
 
   // Restore to disabled
   Telemetry.setHistogramRecordingEnabled("TELEMETRY_TEST_KEYED_COUNT_INIT_NO_RECORD", false);
   h.add(TEST_KEY, 1);
-  Assert.equal(h.snapshot(TEST_KEY).sum, 1,
+  Assert.equal(h.snapshot()[TEST_KEY].sum, 1,
     "Keyed histogram add should not record when recording is disabled");
 });
 
@@ -947,14 +947,11 @@ add_task(async function test_keyed_count_multiple_samples() {
   // Keep the valid values in front of invalid to check if it is simply accumulating as
   // it's traversing the array and throwing upon first invalid value. That should not happen.
   h.add(key, valid.concat(invalid));
-  let s1 = h.snapshot(key);
-  Assert.equal(s1.sum, 0);
-  // Ensure that no accumulations of 0-like values took place.
-  // These accumulations won't increase the sum.
-  Assert.deepEqual({}, s1.values);
+  let s1 = h.snapshot();
+  Assert.ok(!(key in s1));
 
   h.add(key, valid);
-  let s2 = h.snapshot(key);
+  let s2 = h.snapshot()[key];
   Assert.deepEqual(s2.values, {0: 4, 1: 0});
   Assert.equal(s2.sum, 5);
 });
@@ -969,12 +966,11 @@ add_task(async function test_keyed_categorical_multiple_samples() {
   // At least one invalid parameter, so no accumulation should happen here
   // Valid values in front of invalid.
   h.add(key, valid.concat(invalid));
-  let s1 = h.snapshot(key);
-  Assert.equal(s1.sum, 0);
-  Assert.deepEqual({}, s1.values);
+  let s1 = h.snapshot();
+  Assert.ok(!(key in s1));
 
   h.add(key, valid);
-  let snapshot = h.snapshot(key);
+  let snapshot = h.snapshot()[key];
   Assert.equal(snapshot.sum, 6);
   Assert.deepEqual(Object.values(snapshot.values), [3, 2, 2, 0]);
 });
@@ -990,12 +986,11 @@ add_task(async function test_keyed_boolean_multiple_samples() {
   // At least one invalid parameter, so no accumulation should happen here
   // Valid values in front of invalid.
   h.add(key, valid.concat(invalid));
-  let s1 = h.snapshot(key);
-  Assert.equal(s1.sum, 0);
-  Assert.deepEqual({}, s1.values);
+  let s1 = h.snapshot();
+  Assert.ok(!(key in s1));
 
   h.add(key, valid);
-  let s = h.snapshot(key);
+  let s = h.snapshot()[key];
   Assert.deepEqual(s.values, {0: 2, 1: 3, 2: 0});
   Assert.equal(s.sum, 3);
 });
@@ -1013,12 +1008,11 @@ add_task(async function test_keyed_linear_multiple_samples() {
   // At least one invalid paramater, so no accumulations.
   // Valid values in front of invalid.
    h.add(key, valid.concat(invalid));
-   let s1 = h.snapshot(key);
-   Assert.equal(s1.sum, 0);
-   Assert.deepEqual({}, s1.values);
+   let s1 = h.snapshot();
+   Assert.ok(!(key in s1));
 
   h.add(key, valid);
-  let s2 = h.snapshot(key);
+  let s2 = h.snapshot()[key];
   // Values >= INT32_MAX are accumulated as INT32_MAX - 1
   Assert.equal(s2.sum, valid.reduce((acc, cur) => acc + cur) - 3);
   Assert.deepEqual(s2.range, [1, 250000]);
