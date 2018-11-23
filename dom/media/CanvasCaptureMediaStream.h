@@ -80,6 +80,12 @@ class OutputStreamDriver : public FrameCaptureListener {
   void SetImage(const RefPtr<layers::Image>& aImage, const TimeStamp& aTime);
 
   /*
+   * Ends the track in mSourceStream when we know there won't be any more images
+   * requested for it.
+   */
+  void EndTrack();
+
+  /*
    * Makes sure any internal resources this driver is holding that may create
    * reference cycles are released.
    */
@@ -91,9 +97,8 @@ class OutputStreamDriver : public FrameCaptureListener {
   class TrackListener;
 
  private:
-  RefPtr<SourceMediaStream> mSourceStream;
-  RefPtr<StreamListener> mStreamListener;
-  RefPtr<TrackListener> mTrackListener;
+  const RefPtr<SourceMediaStream> mSourceStream;
+  const RefPtr<TrackListener> mTrackListener;
 };
 
 class CanvasCaptureMediaStream : public DOMMediaStream {
