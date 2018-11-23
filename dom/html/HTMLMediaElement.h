@@ -849,7 +849,7 @@ protected:
   class MediaStreamTracksAvailableCallback;
   class MediaStreamTrackListener;
   class StreamListener;
-  class StreamSizeListener;
+  class VideoFrameListener;
   class ShutdownObserver;
 
   MediaDecoderOwner::NextFrameStatus NextFrameStatus();
@@ -1448,10 +1448,10 @@ protected:
   // Holds a reference to the MediaStreamListener attached to mSrcStream's
   // playback stream.
   RefPtr<StreamListener> mMediaStreamListener;
-  // Holds a reference to the size-getting MediaStreamListener attached to
-  // mSrcStream.
-  RefPtr<StreamSizeListener> mMediaStreamSizeListener;
-  // The selected video stream track which contained mMediaStreamSizeListener.
+  // Holds a reference to the size-getting track listener attached to
+  // mSelectedVideoStreamTrack.
+  RefPtr<VideoFrameListener> mVideoFrameListener;
+  // The currently selected video stream track.
   RefPtr<VideoStreamTrack> mSelectedVideoStreamTrack;
 
   const RefPtr<ShutdownObserver> mShutdownObserver;

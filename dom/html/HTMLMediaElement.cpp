@@ -398,20 +398,25 @@ public:
  * This listener observes the first video frame to arrive with a non-empty size,
  * and calls HTMLMediaElement::UpdateInitialMediaSize() with that size.
  */
-class HTMLMediaElement::StreamSizeListener
+class HTMLMediaElement::VideoFrameListener
   : public DirectMediaStreamTrackListener
 {
 public:
-  explicit StreamSizeListener(HTMLMediaElement* aElement)
+  explicit VideoFrameListener(HTMLMediaElement* aElement)
     : mElement(aElement)
     , mMainThreadEventTarget(aElement->MainThreadEventTarget())
     , mInitialSizeFound(false)
   {
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mElement);
     MOZ_ASSERT(mMainThreadEventTarget);
   }
 
-  void Forget() { mElement = nullptr; }
+  void Forget()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    mElement = nullptr;
+  }
 
   void ReceivedSize(gfx::IntSize aSize)
   {
@@ -421,8 +426,7 @@ public:
       return;
     }
 
-    RefPtr<HTMLMediaElement> deathGrip = mElement;
-    deathGrip->UpdateInitialMediaSize(aSize);
+    mElement->UpdateInitialMediaSize(aSize);
   }
 
   void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
@@ -447,9 +451,9 @@ public:
         // not the stream. Events reflecting stream or track state should be
         // dispatched so their order is preserved.
         mMainThreadEventTarget->Dispatch(NewRunnableMethod<gfx::IntSize>(
-          "dom::HTMLMediaElement::StreamSizeListener::ReceivedSize",
+          "dom::HTMLMediaElement::VideoFrameListener::ReceivedSize",
           this,
-          &StreamSizeListener::ReceivedSize,
+          &VideoFrameListener::ReceivedSize,
           c->mFrame.GetIntrinsicSize()));
         return;
       }
@@ -458,7 +462,7 @@ public:
 
 private:
   // These fields may only be accessed on the main thread
-  HTMLMediaElement* mElement;
+  WeakPtr<HTMLMediaElement> mElement;
   // We hold mElement->MainThreadEventTarget() here because the mElement could
   // be reset in Forget().
   nsCOMPtr<nsISerialEventTarget> mMainThreadEventTarget;
@@ -2014,11 +2018,11 @@ HTMLMediaElement::AbortExistingLoads()
 
   bool fireTimeUpdate = false;
 
-  // We need to remove StreamSizeListener before VideoTracks get emptied.
-  if (mMediaStreamSizeListener) {
-    mSelectedVideoStreamTrack->RemoveDirectListener(mMediaStreamSizeListener);
-    mMediaStreamSizeListener->Forget();
-    mMediaStreamSizeListener = nullptr;
+  // We need to remove VideoFrameListener before VideoTracks get emptied.
+  if (mVideoFrameListener) {
+    mSelectedVideoStreamTrack->RemoveDirectListener(mVideoFrameListener);
+    mVideoFrameListener->Forget();
+    mVideoFrameListener = nullptr;
   }
 
   // When aborting the existing loads, empty the objects in audio track list and
@@ -2454,7 +2458,7 @@ HTMLMediaElement::NotifyMediaTrackEnabled(MediaTrack* aTrack)
   if (mSrcStream) {
     if (aTrack->AsVideoTrack()) {
       MOZ_ASSERT(!mSelectedVideoStreamTrack);
-      MOZ_ASSERT(!mMediaStreamSizeListener);
+      MOZ_ASSERT(!mVideoFrameListener);
 
       mSelectedVideoStreamTrack = aTrack->AsVideoTrack()->GetVideoStreamTrack();
       VideoFrameContainer* container = GetVideoFrameContainer();
@@ -2466,8 +2470,8 @@ HTMLMediaElement::NotifyMediaTrackEnabled(MediaTrack* aTrack)
         // MediaInfo uses dummy values of 1 for width and height to
         // mark video as valid. We need a new stream size listener
         // if size is 0x0 or 1x1.
-        mMediaStreamSizeListener = new StreamSizeListener(this);
-        mSelectedVideoStreamTrack->AddDirectListener(mMediaStreamSizeListener);
+        mVideoFrameListener = new VideoFrameListener(this);
+        mSelectedVideoStreamTrack->AddDirectListener(mVideoFrameListener);
       }
     }
 
@@ -2525,11 +2529,11 @@ HTMLMediaElement::NotifyMediaTrackDisabled(MediaTrack* aTrack)
   } else if (aTrack->AsVideoTrack()) {
     if (mSrcStream) {
       MOZ_ASSERT(mSelectedVideoStreamTrack);
-      if (mSelectedVideoStreamTrack && mMediaStreamSizeListener) {
+      if (mSelectedVideoStreamTrack && mVideoFrameListener) {
         mSelectedVideoStreamTrack->RemoveDirectListener(
-          mMediaStreamSizeListener);
-        mMediaStreamSizeListener->Forget();
-        mMediaStreamSizeListener = nullptr;
+          mVideoFrameListener);
+        mVideoFrameListener->Forget();
+        mVideoFrameListener = nullptr;
       }
       VideoFrameContainer* container = GetVideoFrameContainer();
       if (mSrcStreamIsPlaying && container) {
@@ -5408,7 +5412,7 @@ void
 HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
 {
   NS_ASSERTION(!mSrcStream && !mMediaStreamListener &&
-                 !mMediaStreamSizeListener,
+                 !mVideoFrameListener,
                "Should have been ended already");
 
   mSrcStream = aStream;
@@ -5450,15 +5454,15 @@ HTMLMediaElement::EndSrcMediaStreamPlayback()
 
   UpdateSrcMediaStreamPlaying(REMOVING_SRC_STREAM);
 
-  if (mMediaStreamSizeListener) {
+  if (mVideoFrameListener) {
     MOZ_ASSERT(mSelectedVideoStreamTrack);
     if (mSelectedVideoStreamTrack) {
-      mSelectedVideoStreamTrack->RemoveDirectListener(mMediaStreamSizeListener);
+      mSelectedVideoStreamTrack->RemoveDirectListener(mVideoFrameListener);
     }
-    mMediaStreamSizeListener->Forget();
+    mVideoFrameListener->Forget();
   }
   mSelectedVideoStreamTrack = nullptr;
-  mMediaStreamSizeListener = nullptr;
+  mVideoFrameListener = nullptr;
 
   mSrcStream->UnregisterTrackListener(mMediaStreamTrackListener);
   mMediaStreamTrackListener = nullptr;
@@ -6731,7 +6735,7 @@ HTMLMediaElement::UpdateInitialMediaSize(const nsIntSize& aSize)
     UpdateMediaSize(aSize);
   }
 
-  if (!mMediaStreamSizeListener) {
+  if (!mVideoFrameListener) {
     return;
   }
 
@@ -6740,9 +6744,9 @@ HTMLMediaElement::UpdateInitialMediaSize(const nsIntSize& aSize)
     return;
   }
 
-  mSelectedVideoStreamTrack->RemoveDirectListener(mMediaStreamSizeListener);
-  mMediaStreamSizeListener->Forget();
-  mMediaStreamSizeListener = nullptr;
+  mSelectedVideoStreamTrack->RemoveDirectListener(mVideoFrameListener);
+  mVideoFrameListener->Forget();
+  mVideoFrameListener = nullptr;
 }
 
 void
