@@ -480,6 +480,7 @@ void
 NrIceCtx::InitializeGlobals(bool allow_loopback,
                             bool tcp_enabled,
                             bool allow_link_local) {
+  RLogConnector::CreateInstance();
   // Initialize the crypto callbacks and logging stuff
   if (!initialized) {
     NR_reg_init(NR_REG_MODE_LOCAL);

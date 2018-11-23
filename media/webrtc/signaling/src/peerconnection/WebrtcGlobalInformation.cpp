@@ -30,8 +30,8 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/RefPtr.h"
 
-#include "rlogconnector.h"
 #include "runnable_utils.h"
+#include "MediaTransportHandler.h"
 #include "PeerConnectionCtx.h"
 #include "PeerConnectionImpl.h"
 
@@ -295,23 +295,18 @@ OnStatsReport_m(WebrtcGlobalChild* aThisChild,
 
 static void OnGetLogging_m(WebrtcGlobalChild* aThisChild,
                            const int aRequestId,
-                           nsAutoPtr<std::deque<std::string>> aLogList)
+                           Sequence<nsString>&& aLogList)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (!aLogList.IsEmpty()) {
+    aLogList.AppendElement(NS_LITERAL_STRING("+++++++ END ++++++++"), fallible);
+  }
 
   if (aThisChild) {
     // Add this log to the collection of logs and call into
     // the next content process.
-    Sequence<nsString> nsLogs;
-
-    if (!aLogList->empty()) {
-      for (auto& line : *aLogList) {
-        nsLogs.AppendElement(NS_ConvertUTF8toUTF16(line.c_str()), fallible);
-      }
-      nsLogs.AppendElement(NS_LITERAL_STRING("+++++++ END ++++++++"), fallible);
-    }
-
-    Unused << aThisChild->SendGetLogResult(aRequestId, nsLogs);
+    Unused << aThisChild->SendGetLogResult(aRequestId, aLogList);
     return;
   }
 
@@ -325,36 +320,9 @@ static void OnGetLogging_m(WebrtcGlobalChild* aThisChild,
     return;
   }
 
-  if (!aLogList->empty()) {
-    for (auto& line : *aLogList) {
-      request->mResult.AppendElement(NS_ConvertUTF8toUTF16(line.c_str()),
-                                     fallible);
-    }
-    request->mResult.AppendElement(NS_LITERAL_STRING("+++++++ END ++++++++"),
-                                   fallible);
-  }
-
+  request->mResult.AppendElements(std::move(aLogList), fallible);
   request->Complete();
   LogRequest::Delete(aRequestId);
-}
-
-static void GetLogging_s(WebrtcGlobalChild* aThisChild,
-                         const int aRequestId,
-                         const std::string& aPattern)
-{
-  // Request log while not on the main thread.
-  RLogConnector* logs = RLogConnector::GetInstance();
-  nsAutoPtr<std::deque<std::string>> result(new std::deque<std::string>);
-  // Might not exist yet.
-  if (logs) {
-    logs->Filter(aPattern, 0, result);
-  }
-  // Return to main thread to complete processing.
-  NS_DispatchToMainThread(WrapRunnableNM(&OnGetLogging_m,
-                                         aThisChild,
-                                         aRequestId,
-                                         result),
-                          NS_DISPATCH_NORMAL);
 }
 
 static void
@@ -500,7 +468,7 @@ RunLogQuery(const nsCString& aPattern,
             const int aRequestId)
 {
   nsresult rv;
-  nsCOMPtr<nsIEventTarget> stsThread =
+  nsCOMPtr<nsISerialEventTarget> stsThread =
     do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
 
   if (NS_FAILED(rv)) {
@@ -510,22 +478,25 @@ RunLogQuery(const nsCString& aPattern,
     return NS_ERROR_FAILURE;
   }
 
-  rv = RUN_ON_THREAD(stsThread,
-                     WrapRunnableNM(&GetLogging_s,
-                                    aThisChild,
-                                    aRequestId,
-                                    aPattern.get()),
-                     NS_DISPATCH_NORMAL);
-  return rv;
-}
+  InvokeAsync(
+      stsThread,
+      __func__,
+      [aPattern] () {
+        return MediaTransportHandler::GetIceLog(aPattern);
+      }
+    )->Then(
+      GetMainThreadSerialEventTarget(),
+      __func__,
+      [aRequestId, aThisChild] (Sequence<nsString>&& aLogLines) {
+        OnGetLogging_m(aThisChild, aRequestId, std::move(aLogLines));
+      },
+      [aRequestId, aThisChild] (nsresult aError) {
+        OnGetLogging_m(
+            aThisChild, aRequestId, Sequence<nsString>());
+      }
+    );
 
-static void ClearLogs_s()
-{
-  // Make call off main thread.
-  RLogConnector* logs = RLogConnector::GetInstance();
-  if (logs) {
-    logs->Clear();
-  }
+  return NS_OK;
 }
 
 static nsresult
@@ -543,7 +514,7 @@ RunLogClear()
   }
 
   return RUN_ON_THREAD(stsThread,
-                       WrapRunnableNM(&ClearLogs_s),
+                       WrapRunnableNM(&MediaTransportHandler::ClearIceLog),
                        NS_DISPATCH_NORMAL);
 }
 
@@ -828,24 +799,12 @@ WebrtcGlobalChild::RecvGetLogRequest(const int& aRequestId,
     return IPC_OK();
   }
 
-  nsresult rv;
-  nsCOMPtr<nsIEventTarget> stsThread =
-    do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+  nsresult rv = RunLogQuery(aPattern, this, aRequestId);
 
-  if (NS_SUCCEEDED(rv) && stsThread) {
-    // this is a singleton, so we shouldn't need to hold a ref for the
-    // request (and can't just add a ref here anyways)
-    rv = RUN_ON_THREAD(stsThread,
-                       WrapRunnableNM(&GetLogging_s, this, aRequestId, aPattern.get()),
-                       NS_DISPATCH_NORMAL);
-
-    if (NS_SUCCEEDED(rv)) {
-      return IPC_OK();
-    }
+  if (NS_FAILED(rv)) {
+    Sequence<nsString> empty_log;
+    SendGetLogResult(aRequestId, empty_log);
   }
-
-  Sequence<nsString> empty_log;
-  SendGetLogResult(aRequestId, empty_log);
 
   return IPC_OK();
 }
