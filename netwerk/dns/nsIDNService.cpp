@@ -26,6 +26,10 @@ const bool kIDNA2008_TransitionalProcessing = false;
 #include "ICUUtils.h"
 #include "unicode/uscript.h"
 
+static const char16_t sBlocklistChars[] = {
+#include "IDNCharacterBlocklist.inc"
+};
+
 using namespace mozilla::unicode;
 using mozilla::Preferences;
 
@@ -38,16 +42,30 @@ static const char kACEPrefix[] = "xn--";
 
 //-----------------------------------------------------------------------------
 
-#define NS_NET_PREF_IDNBLACKLIST    "network.IDN.blacklist_chars"
+#define NS_NET_PREF_EXTRAALLOWED "network.IDN.extra_allowed_chars"
+#define NS_NET_PREF_EXTRABLOCKED "network.IDN.extra_blocked_chars"
 #define NS_NET_PREF_SHOWPUNYCODE    "network.IDN_show_punycode"
 #define NS_NET_PREF_IDNWHITELIST    "network.IDN.whitelist."
 #define NS_NET_PREF_IDNUSEWHITELIST "network.IDN.use_whitelist"
 #define NS_NET_PREF_IDNRESTRICTION  "network.IDN.restriction_profile"
 
-inline bool isOnlySafeChars(const nsString& in, const nsString& blacklist)
+static inline bool
+isOnlySafeChars(const nsString& in, const nsTArray<char16_t>& aBlockList)
 {
-  return (blacklist.IsEmpty() ||
-          in.FindCharInSet(blacklist) == kNotFound);
+  if (aBlockList.IsEmpty()) {
+    return true;
+  }
+  const char16_t* cur = in.BeginReading();
+  const char16_t* end = in.EndReading();
+
+  for (; cur < end; ++cur) {
+    size_t unused;
+    if (mozilla::BinarySearch(aBlockList, 0, aBlockList.Length(), *cur,
+                              &unused)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -60,7 +78,8 @@ NS_IMPL_ISUPPORTS(nsIDNService,
                   nsISupportsWeakReference)
 
 static const char* gCallbackPrefs[] = {
-  NS_NET_PREF_IDNBLACKLIST,
+  NS_NET_PREF_EXTRAALLOWED,
+  NS_NET_PREF_EXTRABLOCKED,
   NS_NET_PREF_SHOWPUNYCODE,
   NS_NET_PREF_IDNRESTRICTION,
   NS_NET_PREF_IDNUSEWHITELIST,
@@ -78,8 +97,33 @@ nsresult nsIDNService::Init()
 
   Preferences::RegisterPrefixCallbacks(PrefChanged, gCallbackPrefs, this);
   prefsChanged(nullptr);
+  InitializeBlocklist();
 
   return NS_OK;
+}
+
+void
+nsIDNService::InitializeBlocklist()
+{
+  mIDNBlocklist.Clear();
+  mIDNBlocklist.AppendElements(sBlocklistChars,
+                               mozilla::ArrayLength(sBlocklistChars));
+  nsAutoString extraAllowed;
+  nsresult rv = Preferences::GetString(NS_NET_PREF_EXTRAALLOWED, extraAllowed);
+
+  if (NS_SUCCEEDED(rv) && !extraAllowed.IsEmpty()) {
+    mIDNBlocklist.RemoveElementsBy([&](char16_t c) {
+      return extraAllowed.FindChar(c, 0) != -1;
+    });
+  }
+
+  nsAutoString extraBlocked;
+  rv = Preferences::GetString(NS_NET_PREF_EXTRABLOCKED, extraBlocked);
+  if (NS_SUCCEEDED(rv) && !extraBlocked.IsEmpty()) {
+    mIDNBlocklist.AppendElements(
+      static_cast<const char16_t*>(extraBlocked.Data()), extraBlocked.Length());
+    mIDNBlocklist.Sort();
+  }
 }
 
 void nsIDNService::prefsChanged(const char *pref)
@@ -87,15 +131,11 @@ void nsIDNService::prefsChanged(const char *pref)
   MOZ_ASSERT(NS_IsMainThread());
   mLock.AssertCurrentThreadOwns();
 
-  if (!pref || NS_LITERAL_CSTRING(NS_NET_PREF_IDNBLACKLIST).Equals(pref)) {
-    nsAutoCString blacklist;
-    nsresult rv = Preferences::GetCString(NS_NET_PREF_IDNBLACKLIST,
-                                          blacklist);
-    if (NS_SUCCEEDED(rv)) {
-      CopyUTF8toUTF16(blacklist, mIDNBlacklist);
-    } else {
-      mIDNBlacklist.Truncate();
-    }
+  if (pref && NS_LITERAL_CSTRING(NS_NET_PREF_EXTRAALLOWED).Equals(pref)) {
+    InitializeBlocklist();
+  }
+  if (pref && NS_LITERAL_CSTRING(NS_NET_PREF_EXTRABLOCKED).Equals(pref)) {
+    InitializeBlocklist();
   }
   if (!pref || NS_LITERAL_CSTRING(NS_NET_PREF_SHOWPUNYCODE).Equals(pref)) {
     bool val;
@@ -723,7 +763,7 @@ bool nsIDNService::isLabelSafe(const nsAString &label)
     mLock.AssertCurrentThreadOwns();
   }
 
-  if (!isOnlySafeChars(PromiseFlatString(label), mIDNBlacklist)) {
+  if (!isOnlySafeChars(PromiseFlatString(label), mIDNBlocklist)) {
     return false;
   }
 
