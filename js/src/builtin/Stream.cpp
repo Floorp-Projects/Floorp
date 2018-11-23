@@ -173,7 +173,7 @@ inline static MOZ_MUST_USE bool
 SetNewList(JSContext* cx, HandleNativeObject unwrappedContainer, uint32_t slot)
 {
     AutoRealm ar(cx, unwrappedContainer);
-    NativeObject* list = NewList(cx);
+    ListObject* list = ListObject::create(cx);
     if (!list) {
         return false;
     }
@@ -1488,8 +1488,8 @@ ReadableStreamCloseInternal(JSContext* cx, Handle<ReadableStream*> unwrappedStre
 
         // Step a: Repeat for each readRequest that is an element of
         //         reader.[[readRequests]],
-        RootedNativeObject unwrappedReadRequests(cx, unwrappedReader->requests());
-        uint32_t len = unwrappedReadRequests->getDenseInitializedLength();
+        Rooted<ListObject*> unwrappedReadRequests(cx, unwrappedReader->requests());
+        uint32_t len = unwrappedReadRequests->length();
         RootedObject readRequest(cx);
         RootedObject resultObj(cx);
         RootedValue resultVal(cx);
@@ -1497,7 +1497,7 @@ ReadableStreamCloseInternal(JSContext* cx, Handle<ReadableStream*> unwrappedStre
             // Step i: Resolve readRequest.[[promise]] with
             //         ! ReadableStreamCreateReadResult(undefined, true,
             //                                          readRequest.[[forAuthorCode]]).
-            readRequest = &unwrappedReadRequests->getDenseElement(i).toObject();
+            readRequest = &unwrappedReadRequests->getAs<JSObject>(i);
             if (!cx->compartment()->wrap(cx, &readRequest)) {
                 return false;
             }
@@ -1615,13 +1615,13 @@ ReadableStreamErrorInternal(JSContext* cx, Handle<ReadableStream*> unwrappedStre
     // Steps 7,8: (Identical in our implementation.)
     // Step a: Repeat for each readRequest that is an element of
     //         reader.[[readRequests]],
-    RootedNativeObject unwrappedReadRequests(cx, unwrappedReader->requests());
+    Rooted<ListObject*> unwrappedReadRequests(cx, unwrappedReader->requests());
     RootedObject readRequest(cx);
     RootedValue val(cx);
-    uint32_t len = unwrappedReadRequests->getDenseInitializedLength();
+    uint32_t len = unwrappedReadRequests->length();
     for (uint32_t i = 0; i < len; i++) {
         // Step i: Reject readRequest.[[promise]] with e.
-        val = unwrappedReadRequests->getDenseElement(i);
+        val = unwrappedReadRequests->get(i);
         readRequest = &val.toObject();
 
         // Responses have to be created in the compartment from which the
@@ -1706,8 +1706,8 @@ ReadableStreamFulfillReadOrReadIntoRequest(JSContext* cx,
     // Step 3: Remove readIntoRequest from reader.[[readIntoRequests]], shifting
     //         all other elements downward (so that the second becomes the first,
     //         and so on).
-    RootedNativeObject unwrappedReadIntoRequests(cx, unwrappedReader->requests());
-    RootedObject readIntoRequest(cx, ShiftFromList<JSObject>(cx, unwrappedReadIntoRequests));
+    Rooted<ListObject*> unwrappedReadIntoRequests(cx, unwrappedReader->requests());
+    RootedObject readIntoRequest(cx, &unwrappedReadIntoRequests->popFirstAs<JSObject>(cx));
     MOZ_ASSERT(readIntoRequest);
     if (!cx->compartment()->wrap(cx, &readIntoRequest)) {
         return false;
@@ -1746,7 +1746,7 @@ ReadableStreamGetNumReadRequests(ReadableStream* stream)
         return 0;
     }
 
-    return reader->requests()->getDenseInitializedLength();
+    return reader->requests()->length();
 }
 
 /**
@@ -1983,9 +1983,8 @@ ReadableStreamDefaultReader_releaseLock(JSContext* cx, unsigned argc, Value* vp)
     // Step 3: If this.[[readRequests]] is not empty, throw a TypeError exception.
     Value val = reader->getFixedSlot(ReadableStreamReader::Slot_Requests);
     if (!val.isUndefined()) {
-        NativeObject* readRequests = &val.toObject().as<NativeObject>();
-        uint32_t len = readRequests->getDenseInitializedLength();
-        if (len != 0) {
+        ListObject* readRequests = &val.toObject().as<ListObject>();
+        if (readRequests->length() != 0) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                       JSMSG_READABLESTREAMREADER_NOT_EMPTY,
                                       "releaseLock");
@@ -2539,15 +2538,15 @@ ReadableStreamControllerCancelSteps(JSContext* cx,
 
     // Step 1 of 3.10.5.1: If this.[[pendingPullIntos]] is not empty,
     if (!unwrappedController->is<ReadableStreamDefaultController>()) {
-        RootedNativeObject unwrappedPendingPullIntos(cx,
+        Rooted<ListObject*> unwrappedPendingPullIntos(cx,
             unwrappedController->as<ReadableByteStreamController>().pendingPullIntos());
 
-        if (unwrappedPendingPullIntos->getDenseInitializedLength() != 0) {
+        if (unwrappedPendingPullIntos->length() != 0) {
             // Step a: Let firstDescriptor be the first element of
             //         this.[[pendingPullIntos]].
             PullIntoDescriptor* unwrappedDescriptor =
                 UnwrapAndDowncastObject<PullIntoDescriptor>(
-                    cx, PeekList<JSObject>(unwrappedPendingPullIntos));
+                    cx, &unwrappedPendingPullIntos->get(0).toObject());
             if (!unwrappedDescriptor) {
                 return nullptr;
             }
@@ -2631,13 +2630,13 @@ ReadableStreamDefaultControllerPullSteps(JSContext* cx,
     Rooted<ReadableStream*> unwrappedStream(cx, unwrappedController->stream());
 
     // Step 2: If this.[[queue]] is not empty,
-    RootedNativeObject unwrappedQueue(cx);
+    Rooted<ListObject*> unwrappedQueue(cx);
     RootedValue val(cx, unwrappedController->getFixedSlot(StreamController::Slot_Queue));
     if (val.isObject()) {
-        unwrappedQueue = &val.toObject().as<NativeObject>();
+        unwrappedQueue = &val.toObject().as<ListObject>();
     }
 
-    if (unwrappedQueue && unwrappedQueue->getDenseInitializedLength() != 0) {
+    if (unwrappedQueue && unwrappedQueue->length() != 0) {
         // Step a: Let chunk be ! DequeueValue(this.[[queue]]).
         RootedValue chunk(cx);
         if (!DequeueValue(cx, unwrappedController, &chunk)) {
@@ -2646,9 +2645,7 @@ ReadableStreamDefaultControllerPullSteps(JSContext* cx,
 
         // Step b: If this.[[closeRequested]] is true and this.[[queue]] is empty,
         //         perform ! ReadableStreamClose(stream).
-        if (unwrappedController->closeRequested() &&
-            unwrappedQueue->getDenseInitializedLength() == 0)
-        {
+        if (unwrappedController->closeRequested() && unwrappedQueue->length() == 0) {
             if (!ReadableStreamCloseInternal(cx, unwrappedStream)) {
                 return nullptr;
             }
@@ -2926,8 +2923,8 @@ ReadableStreamDefaultControllerClose(JSContext* cx,
 
     // Step 5: If controller.[[queue]] is empty, perform
     //         ! ReadableStreamClose(stream).
-    RootedNativeObject unwrappedQueue(cx, unwrappedController->queue());
-    if (unwrappedQueue->getDenseInitializedLength() == 0) {
+    Rooted<ListObject*> unwrappedQueue(cx, unwrappedController->queue());
+    if (unwrappedQueue->length() == 0) {
         return ReadableStreamCloseInternal(cx, unwrappedStream);
     }
 
@@ -3520,10 +3517,10 @@ ReadableByteStreamControllerPullSteps(JSContext* cx,
             // Step 3.c: Remove entry from this.[[queue]], shifting all other
             //           elements downward (so that the second becomes the
             //           first, and so on).
-            RootedNativeObject unwrappedQueue(cx, unwrappedController->queue());
+            Rooted<ListObject*> unwrappedQueue(cx, unwrappedController->queue());
             Rooted<ByteStreamChunk*> unwrappedEntry(cx,
                 UnwrapAndDowncastObject<ByteStreamChunk>(
-                    cx, ShiftFromList<JSObject>(cx, unwrappedQueue)));
+                    cx, &unwrappedQueue->popFirstAs<JSObject>(cx)));
             if (!unwrappedEntry) {
                 return nullptr;
             }
@@ -3718,13 +3715,13 @@ ReadableByteStreamControllerClose(JSContext* cx,
     }
 
     // Step 5: If controller.[[pendingPullIntos]] is not empty,
-    RootedNativeObject unwrappedPendingPullIntos(cx, unwrappedController->pendingPullIntos());
-    if (unwrappedPendingPullIntos->getDenseInitializedLength() != 0) {
+    Rooted<ListObject*> unwrappedPendingPullIntos(cx, unwrappedController->pendingPullIntos());
+    if (unwrappedPendingPullIntos->length() != 0) {
         // Step a: Let firstPendingPullInto be the first element of
         //         controller.[[pendingPullIntos]].
         Rooted<PullIntoDescriptor*> unwrappedFirstPendingPullInto(cx,
             UnwrapAndDowncastObject<PullIntoDescriptor>(
-                cx, PeekList<JSObject>(unwrappedPendingPullIntos)));
+                cx, &unwrappedPendingPullIntos->get(0).toObject()));
         if (!unwrappedFirstPendingPullInto) {
             return false;
         }
@@ -3990,13 +3987,13 @@ DequeueValue(JSContext* cx, Handle<ReadableStreamController*> unwrappedContainer
     // Step 1: Assert: container has [[queue]] and [[queueTotalSize]] internal
     //         slots (implicit).
     // Step 2: Assert: queue is not empty.
-    RootedNativeObject unwrappedQueue(cx, unwrappedContainer->queue());
-    MOZ_ASSERT(unwrappedQueue->getDenseInitializedLength() > 0);
+    Rooted<ListObject*> unwrappedQueue(cx, unwrappedContainer->queue());
+    MOZ_ASSERT(unwrappedQueue->length() > 0);
 
     // Step 3. Let pair be the first element of queue.
     // Step 4. Remove pair from queue, shifting all other elements downward
     //         (so that the second becomes the first, and so on).
-    Rooted<QueueEntry*> unwrappedPair(cx, ShiftFromList<QueueEntry>(cx, unwrappedQueue));
+    Rooted<QueueEntry*> unwrappedPair(cx, &unwrappedQueue->popFirstAs<QueueEntry>(cx));
     MOZ_ASSERT(unwrappedPair);
 
     // Step 5: Set container.[[queueTotalSize]] to
@@ -4053,7 +4050,7 @@ EnqueueValueWithSize(JSContext* cx,
     //         element of container.[[queue]].
     {
         AutoRealm ar(cx, unwrappedContainer);
-        RootedNativeObject queue(cx, unwrappedContainer->queue());
+        Rooted<ListObject*> queue(cx, unwrappedContainer->queue());
         RootedValue wrappedVal(cx, value);
         if (!cx->compartment()->wrap(cx, &wrappedVal)) {
             return false;
@@ -4064,7 +4061,7 @@ EnqueueValueWithSize(JSContext* cx,
             return false;
         }
         RootedValue val(cx, ObjectValue(*entry));
-        if (!AppendToList(cx, queue, val)) {
+        if (!queue->append(cx, val)) {
             return false;
         }
     }
@@ -4110,15 +4107,15 @@ AppendToListAtSlot(JSContext* cx,
                    uint32_t slot,
                    HandleObject obj)
 {
-    RootedNativeObject list(cx,
-        &unwrappedContainer->getFixedSlot(slot).toObject().as<NativeObject>());
+    Rooted<ListObject*> list(cx,
+        &unwrappedContainer->getFixedSlot(slot).toObject().as<ListObject>());
 
     AutoRealm ar(cx, list);
     RootedValue val(cx, ObjectValue(*obj));
     if (!cx->compartment()->wrap(cx, &val)) {
         return false;
     }
-    return AppendToList(cx, list, val);
+    return list->append(cx, val);
 }
 
 

@@ -11,6 +11,7 @@
 #include "vm/GeneratorObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
+#include "vm/List.h"
 
 namespace js {
 
@@ -214,10 +215,10 @@ class AsyncGeneratorObject : public NativeObject
         return &getFixedSlot(Slot_QueueOrRequest).toObject().as<AsyncGeneratorRequest>();
     }
 
-    NativeObject* queue() const {
-        return &getFixedSlot(Slot_QueueOrRequest).toObject().as<NativeObject>();
+    ListObject* queue() const {
+        return &getFixedSlot(Slot_QueueOrRequest).toObject().as<ListObject>();
     }
-    void setQueue(JSObject* queue_) {
+    void setQueue(ListObject* queue_) {
         setFixedSlot(Slot_QueueOrRequest, ObjectValue(*queue_));
     }
 
