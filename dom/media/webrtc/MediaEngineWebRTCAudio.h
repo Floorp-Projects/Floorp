@@ -56,7 +56,7 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
 
   void Pull(const RefPtr<const AllocationHandle>& aHandle,
             const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-            StreamTime aDesiredTime,
+            StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
             const PrincipalHandle& aPrincipalHandle) override;
 
   /**
@@ -150,7 +150,8 @@ class AudioInputProcessing : public AudioDataListener {
                        const PrincipalHandle& aPrincipalHandle);
 
   void Pull(const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-            StreamTime aDesiredTime, const PrincipalHandle& aPrincipalHandle);
+            StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
+            const PrincipalHandle& aPrincipalHandle);
 
   void NotifyOutputData(MediaStreamGraphImpl* aGraph, AudioDataValue* aBuffer,
                         size_t aFrames, TrackRate aRate,
@@ -281,8 +282,10 @@ class MediaEngineWebRTCAudioCaptureSource : public MediaEngineSource {
 
   void Pull(const RefPtr<const AllocationHandle>& aHandle,
             const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-            StreamTime aDesiredTime,
-            const PrincipalHandle& aPrincipalHandle) override {}
+            StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
+            const PrincipalHandle& aPrincipalHandle) override {
+    MOZ_ASSERT_UNREACHABLE("Should never have to append silence");
+  }
 
   dom::MediaSourceEnum GetMediaSource() const override {
     return dom::MediaSourceEnum::AudioCapture;

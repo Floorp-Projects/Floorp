@@ -234,7 +234,8 @@ nsresult MediaEngineTabVideoSource::Start(
 void MediaEngineTabVideoSource::Pull(
     const RefPtr<const AllocationHandle>& aHandle,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-    StreamTime aDesiredTime, const PrincipalHandle& aPrincipalHandle) {
+    StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
+    const PrincipalHandle& aPrincipalHandle) {
   TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaStream %p track %i", aStream.get(),
                                aTrackID);
   VideoSegment segment;
@@ -253,10 +254,8 @@ void MediaEngineTabVideoSource::Pull(
     }
   }
 
-  StreamTime delta = aDesiredTime - aStream->GetEndOfAppendedData(aTrackID);
-  if (delta <= 0) {
-    return;
-  }
+  StreamTime delta = aDesiredTime - aEndOfAppendedData;
+  MOZ_ASSERT(delta > 0);
 
   // nullptr images are allowed
   segment.AppendFrame(image.forget(), delta, imageSize, aPrincipalHandle);

@@ -248,11 +248,11 @@ class MediaEngineSourceInterface {
   /**
    * Pulls data from the MediaEngineSource into the track.
    *
-   * Driven by MediaStreamListener::NotifyPull.
+   * Driven by MediaStreamTrackListener::NotifyPull.
    */
   virtual void Pull(const RefPtr<const AllocationHandle>& aHandle,
                     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-                    StreamTime aDesiredTime,
+                    StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
                     const PrincipalHandle& aPrincipalHandle) = 0;
 };
 
