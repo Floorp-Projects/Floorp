@@ -3,9 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.defineModuleGetter(this, "Blocklist",
-                               "resource://gre/modules/Blocklist.jsm");
-
 var gPluginHandler = {
   PREF_SESSION_PERSIST_MINUTES: "plugin.sessionPermissionNow.intervalInMinutes",
   PREF_PERSISTENT_DAYS: "plugin.persistentPermissionAlways.intervalInDays",
@@ -85,6 +82,7 @@ var gPluginHandler = {
   // Callback for user clicking on the link in a click-to-play plugin
   // (where the plugin has an update)
   async openPluginUpdatePage(pluginTag) {
+    let { Blocklist } = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", {});
     let url = await Blocklist.getPluginBlockURL(pluginTag);
     openTrustedLinkIn(url, "tab");
   },
