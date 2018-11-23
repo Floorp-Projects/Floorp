@@ -1934,13 +1934,6 @@ nsGlobalWindowInner::ExecutionReady()
 }
 
 void
-nsGlobalWindowInner::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
-                                     bool aOriginalOpener)
-{
-  FORWARD_TO_OUTER_VOID(SetOpenerWindow, (aOpener, aOriginalOpener));
-}
-
-void
 nsGlobalWindowInner::UpdateParentTarget()
 {
   // NOTE: This method is identical to
@@ -3261,7 +3254,7 @@ nsGlobalWindowInner::SetOpener(JSContext* aCx, JS::Handle<JS::Value> aOpener,
                                ErrorResult& aError)
 {
   if (aOpener.isNull()) {
-    SetOpenerWindow(nullptr, false);
+    FORWARD_TO_OUTER_VOID(SetOpenerWindow, (nullptr, false));
     return;
   }
 

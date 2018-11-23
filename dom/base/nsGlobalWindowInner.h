@@ -386,9 +386,6 @@ public:
                                   nsISupports *aState,
                                   bool aForceReuseInnerWindow) override;
 
-  virtual void SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
-                               bool aOriginalOpener) override;
-
   virtual void MaybeUpdateTouchState() override;
 
   // Inner windows only.
