@@ -1562,6 +1562,9 @@ class MediaStreamGraphShutDownRunnable : public Runnable {
       stream->RemoveAllListenersImpl();
     }
 
+    MOZ_ASSERT(mGraph->mUpdateRunnables.IsEmpty());
+    mGraph->mPendingUpdateRunnables.Clear();
+
     mGraph->mForceShutdownTicket = nullptr;
 
     // We can't block past the final LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION
@@ -4004,7 +4007,8 @@ already_AddRefed<MediaInputPort> MediaStreamGraphImpl::ConnectToCaptureStream(
 void MediaStreamGraph::DispatchToMainThreadAfterStreamStateUpdate(
     already_AddRefed<nsIRunnable> aRunnable) {
   AssertOnGraphThreadOrNotRunning();
-  *mPendingUpdateRunnables.AppendElement() =
+  *static_cast<MediaStreamGraphImpl*>(this)
+       ->mPendingUpdateRunnables.AppendElement() =
       AbstractMainThread()->CreateDirectTaskDrainer(std::move(aRunnable));
 }
 

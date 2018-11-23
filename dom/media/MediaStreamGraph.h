@@ -1324,8 +1324,11 @@ class MediaStreamGraph {
    *
    * Should only be called during MediaStreamListener callbacks or during
    * ProcessedMediaStream::ProcessInput().
+   *
+   * Note that if called during shutdown the runnable will be ignored and
+   * released on main thread.
    */
-  virtual void DispatchToMainThreadAfterStreamStateUpdate(
+  void DispatchToMainThreadAfterStreamStateUpdate(
       already_AddRefed<nsIRunnable> aRunnable);
 
   /**
@@ -1359,9 +1362,6 @@ class MediaStreamGraph {
   // which case we must be on the main thread).
   bool OnGraphThreadOrNotRunning() const;
   bool OnGraphThread() const;
-
-  // Media graph thread only
-  nsTArray<nsCOMPtr<nsIRunnable>> mPendingUpdateRunnables;
 
   /**
    * Sample rate at which this graph runs. For real time graphs, this is
