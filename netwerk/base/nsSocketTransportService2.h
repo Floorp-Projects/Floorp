@@ -83,7 +83,7 @@ private:
 //-----------------------------------------------------------------------------
 
 class nsSocketTransportService final : public nsPISocketTransportService
-                                     , public nsIEventTarget
+                                     , public nsISerialEventTarget
                                      , public nsIThreadObserver
                                      , public nsIRunnable
                                      , public nsIObserver
