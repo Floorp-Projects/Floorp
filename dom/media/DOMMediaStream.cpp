@@ -143,28 +143,6 @@ class DOMMediaStream::OwnedStreamListener : public MediaStreamListener {
         "immediately and synchronously be available to JS.");
   }
 
-  void DoNotifyTrackEnded(MediaStreamGraph* aGraph, MediaStream* aInputStream,
-                          TrackID aInputTrackID, TrackID aTrackID) {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (!mStream) {
-      return;
-    }
-
-    RefPtr<MediaStreamTrack> track =
-        mStream->FindOwnedDOMTrack(aInputStream, aInputTrackID, aTrackID);
-    NS_ASSERTION(track,
-                 "Owned MediaStreamTracks must be known by the DOMMediaStream");
-    if (track) {
-      LOG(LogLevel::Debug, ("DOMMediaStream %p MediaStreamTrack %p ended at "
-                            "the source. Marking it ended.",
-                            mStream, track.get()));
-      aGraph->AbstractMainThread()->Dispatch(
-          NewRunnableMethod("dom::MediaStreamTrack::OverrideEnded", track,
-                            &MediaStreamTrack::OverrideEnded));
-    }
-  }
-
   void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
                                 StreamTime aTrackOffset,
                                 TrackEventCommand aTrackEvents,
@@ -178,13 +156,6 @@ class DOMMediaStream::OwnedStreamListener : public MediaStreamListener {
               "DOMMediaStream::OwnedStreamListener::DoNotifyTrackCreated", this,
               &OwnedStreamListener::DoNotifyTrackCreated, aGraph, aID,
               aQueuedMedia.GetType(), aInputStream, aInputTrackID));
-    } else if (aTrackEvents & TrackEventCommand::TRACK_EVENT_ENDED) {
-      aGraph->DispatchToMainThreadAfterStreamStateUpdate(
-          NewRunnableMethod<MediaStreamGraph*, RefPtr<MediaStream>, TrackID,
-                            TrackID>(
-              "DOMMediaStream::OwnedStreamListener::DoNotifyTrackEnded", this,
-              &OwnedStreamListener::DoNotifyTrackEnded, aGraph, aInputStream,
-              aInputTrackID, aID));
     }
   }
 
