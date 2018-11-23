@@ -24,10 +24,13 @@
       video.play();
 
       var h = new CaptureStreamTestHelper2D();
-      var removedTrack = stream.getVideoTracks()[0];
-      stream.removeTrack(removedTrack);
+      var removedTrack;
       video.onloadeddata = () => {
         info("loadeddata");
+
+        removedTrack = stream.getVideoTracks()[0];
+        stream.removeTrack(removedTrack);
+
         var canvas = document.createElement("canvas");
         canvas.getContext("2d");
         var canvasStream = canvas.captureStream();
