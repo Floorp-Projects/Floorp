@@ -2629,6 +2629,21 @@ bool SourceMediaStream::PullNewData(StreamTime aDesiredUpToTime) {
       l->NotifyPull(GraphImpl(), t);
     }
   }
+  for (const TrackData& track : mUpdateTracks) {
+    if (track.mCommands & TrackEventCommand::TRACK_EVENT_ENDED) {
+      continue;
+    }
+    current = track.mEndOfFlushedData + track.mData->GetDuration();
+    if (t <= current) {
+      continue;
+    }
+    MutexAutoUnlock unlock(mMutex);
+    for (TrackBound<MediaStreamTrackListener>& l : mTrackListeners) {
+      if (l.mTrackID == track.mID) {
+        l.mListener->NotifyPull(Graph(), current, t);
+      }
+    }
+  }
   return true;
 }
 

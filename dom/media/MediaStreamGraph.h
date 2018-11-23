@@ -673,7 +673,7 @@ class SourceMediaStream : public MediaStream {
 
   /**
    * Enable or disable pulling. When pulling is enabled, NotifyPull
-   * gets called on MediaStreamListeners for this stream during the
+   * gets called on MediaStream/TrackListeners for this stream during the
    * MediaStreamGraph control loop. Pulling is initially disabled.
    * Due to unavoidable race conditions, after a call to SetPullEnabled(false)
    * it is still possible for a NotifyPull to occur.
