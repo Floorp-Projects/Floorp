@@ -61,12 +61,6 @@ class Pledge;
     }                                                \
   }
 
-class OnTracksAvailableCallback {
- public:
-  virtual ~OnTracksAvailableCallback() {}
-  virtual void NotifyTracksAvailable(DOMMediaStream* aStream) = 0;
-};
-
 /**
 
 // clang-format off
@@ -492,16 +486,6 @@ class DOMMediaStream
   already_AddRefed<MediaStreamTrack> CloneDOMTrack(MediaStreamTrack& aTrack,
                                                    TrackID aCloneTrackID);
 
-  // When the initial set of tracks has been added, run
-  // aCallback->NotifyTracksAvailable.
-  // It is allowed to do anything, including run script.
-  // aCallback may run immediately during this call if tracks are already
-  // available!
-  // We only care about track additions, we'll fire the notification even if
-  // some of the tracks have been removed.
-  // Takes ownership of aCallback.
-  void OnTracksAvailable(OnTracksAvailableCallback* aCallback);
-
   /**
    * Add an nsISupports object that this stream will keep alive as long as
    * the stream itself is alive.
@@ -550,12 +534,6 @@ class DOMMediaStream
   // it has to be initiated before the playback stream.
   void InitPlaybackStreamCommon(MediaStreamGraph* aGraph);
 
-  void CheckTracksAvailable();
-
-  // Called when MediaStreamGraph has finished an iteration where tracks were
-  // created.
-  void NotifyTracksCreated();
-
   // Dispatches NotifyActive() to all registered track listeners.
   void NotifyActive();
 
@@ -571,9 +549,6 @@ class DOMMediaStream
   // Dispatches "addtrack" or "removetrack".
   nsresult DispatchTrackEvent(const nsAString& aName,
                               const RefPtr<MediaStreamTrack>& aTrack);
-
-  class PlaybackStreamListener;
-  friend class PlaybackStreamListener;
 
   class PlaybackTrackListener;
   friend class PlaybackTrackListener;
@@ -632,14 +607,8 @@ class DOMMediaStream
   // waiting to be removed on MediaStreamGraph thread.
   size_t mTracksPendingRemoval;
 
-  // Listener tracking changes to mPlaybackStream. This drives state changes
-  // in this DOMMediaStream and notifications to mTrackListeners.
-  RefPtr<PlaybackStreamListener> mPlaybackListener;
-
   // Listener tracking when live MediaStreamTracks in mTracks end.
   RefPtr<PlaybackTrackListener> mPlaybackTrackListener;
-
-  nsTArray<nsAutoPtr<OnTracksAvailableCallback>> mRunOnTracksAvailable;
 
   // Set to true after MediaStreamGraph has created tracks for mPlaybackStream.
   bool mTracksCreated;
