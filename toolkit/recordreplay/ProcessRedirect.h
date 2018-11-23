@@ -114,25 +114,33 @@ public:
 // expected, per the requirements of the System V x64 ABI.
 struct CallArguments : public CallRegisterArguments
 {
+  // The maximum number of stack arguments that can be captured.
+  static const size_t NumStackArguments = 64;
+
 protected:
-  size_t stack[64]; // 104
-                    // Size: 616
+  size_t stack[NumStackArguments]; // 104
+                                   // Size: 616
 
 public:
-  template <size_t Index, typename T>
-  T& Arg() {
+  template <typename T>
+  T& Arg(size_t aIndex) {
     static_assert(sizeof(T) == sizeof(size_t), "Size must match");
     static_assert(IsFloatingPoint<T>::value == false, "FloatArg NYI");
-    static_assert(Index < 70, "Bad index");
-    switch (Index) {
+    MOZ_RELEASE_ASSERT(aIndex < 70);
+    switch (aIndex) {
     case 0: return (T&)arg0;
     case 1: return (T&)arg1;
     case 2: return (T&)arg2;
     case 3: return (T&)arg3;
     case 4: return (T&)arg4;
     case 5: return (T&)arg5;
-    default: return (T&)stack[Index - 6];
+    default: return (T&)stack[aIndex - 6];
     }
+  }
+
+  template <size_t Index, typename T>
+  T& Arg() {
+    return Arg<T>(Index);
   }
 
   template <size_t Offset>
