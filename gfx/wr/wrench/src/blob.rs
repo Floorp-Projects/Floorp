@@ -8,13 +8,11 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
 use webrender::api::*;
-use webrender::intersect_for_tile;
-use euclid::size2;
 
 // Serialize/deserialize the blob.
 
-pub fn serialize_blob(color: ColorU) -> Vec<u8> {
-    vec![color.r, color.g, color.b, color.a]
+pub fn serialize_blob(color: ColorU) -> Arc<Vec<u8>> {
+    Arc::new(vec![color.r, color.g, color.b, color.a])
 }
 
 fn deserialize_blob(blob: &[u8]) -> Result<ColorU, ()> {
@@ -38,12 +36,11 @@ fn render_blob(
     color: ColorU,
     descriptor: &BlobImageDescriptor,
     tile: Option<(TileSize, TileOffset)>,
-    dirty_rect: Option<DeviceIntRect>,
+    dirty_rect: &BlobDirtyRect,
 ) -> BlobImageResult {
     // Allocate storage for the result. Right now the resource cache expects the
     // tiles to have have no stride or offset.
-    let buf_size = descriptor.size.width *
-        descriptor.size.height *
+    let buf_size = descriptor.rect.size.area() *
         descriptor.format.bytes_per_pixel();
     let mut texels = vec![0u8; (buf_size) as usize];
 
@@ -54,23 +51,19 @@ fn render_blob(
         None => true,
     };
 
-    let mut dirty_rect = dirty_rect.unwrap_or(DeviceIntRect::new(
-        descriptor.offset.to_i32(),
-        descriptor.size,
-    ));
+    let dirty_rect = dirty_rect.to_subrect_of(&descriptor.rect);
 
-    if let Some((tile_size, tile)) = tile {
-        dirty_rect = intersect_for_tile(dirty_rect, size2(tile_size as i32, tile_size as i32),
-                                        tile_size, tile)
-            .expect("empty rects should be culled by webrender");
-    }
+    // We want the dirty rect local to the tile rather than the whole image.
+    let tx: BlobToDeviceTranslation = (-descriptor.rect.origin.to_vector()).into();
 
-    for y in dirty_rect.min_y() .. dirty_rect.max_y() {
-        for x in dirty_rect.min_x() .. dirty_rect.max_x() {
+    let rasterized_rect = tx.transform_rect(&dirty_rect);
+
+    for y in rasterized_rect.min_y() .. rasterized_rect.max_y() {
+        for x in rasterized_rect.min_x() .. rasterized_rect.max_x() {
             // Apply the tile's offset. This is important: all drawing commands should be
             // translated by this offset to give correct results with tiled blob images.
-            let x2 = x + descriptor.offset.x as i32;
-            let y2 = y + descriptor.offset.y as i32;
+            let x2 = x + descriptor.rect.origin.x;
+            let y2 = y + descriptor.rect.origin.y;
 
             // Render a simple checkerboard pattern
             let checker = if (x2 % 20 >= 10) != (y2 % 20 >= 10) {
@@ -84,13 +77,14 @@ fn render_blob(
             match descriptor.format {
                 ImageFormat::BGRA8 => {
                     let a = color.a * checker + tc;
-                    texels[((y * descriptor.size.width + x) * 4 + 0) as usize] = premul(color.b * checker + tc, a);
-                    texels[((y * descriptor.size.width + x) * 4 + 1) as usize] = premul(color.g * checker + tc, a);
-                    texels[((y * descriptor.size.width + x) * 4 + 2) as usize] = premul(color.r * checker + tc, a);
-                    texels[((y * descriptor.size.width + x) * 4 + 3) as usize] = a;
+                    let pixel_offset = ((y * descriptor.rect.size.width + x) * 4) as usize;
+                    texels[pixel_offset + 0] = premul(color.b * checker + tc, a);
+                    texels[pixel_offset + 1] = premul(color.g * checker + tc, a);
+                    texels[pixel_offset + 2] = premul(color.r * checker + tc, a);
+                    texels[pixel_offset + 3] = a;
                 }
                 ImageFormat::R8 => {
-                    texels[(y * descriptor.size.width + x) as usize] = color.a * checker + tc;
+                    texels[(y * descriptor.rect.size.width + x) as usize] = color.a * checker + tc;
                 }
                 _ => {
                     return Err(BlobImageError::Other(
@@ -103,7 +97,7 @@ fn render_blob(
 
     Ok(RasterizedBlobImage {
         data: Arc::new(texels),
-        rasterized_rect: dirty_rect,
+        rasterized_rect,
     })
 }
 
@@ -120,7 +114,7 @@ impl BlobCallbacks {
 }
 
 pub struct CheckerboardRenderer {
-    image_cmds: HashMap<ImageKey, (ColorU, Option<TileSize>)>,
+    image_cmds: HashMap<BlobImageKey, (ColorU, Option<TileSize>)>,
     callbacks: Arc<Mutex<BlobCallbacks>>,
 }
 
@@ -134,18 +128,18 @@ impl CheckerboardRenderer {
 }
 
 impl BlobImageHandler for CheckerboardRenderer {
-    fn add(&mut self, key: ImageKey, cmds: Arc<BlobImageData>, tile_size: Option<TileSize>) {
+    fn add(&mut self, key: BlobImageKey, cmds: Arc<BlobImageData>, tile_size: Option<TileSize>) {
         self.image_cmds
             .insert(key, (deserialize_blob(&cmds[..]).unwrap(), tile_size));
     }
 
-    fn update(&mut self, key: ImageKey, cmds: Arc<BlobImageData>, _dirty_rect: Option<DeviceIntRect>) {
+    fn update(&mut self, key: BlobImageKey, cmds: Arc<BlobImageData>, _dirty_rect: &BlobDirtyRect) {
         // Here, updating is just replacing the current version of the commands with
         // the new one (no incremental updates).
         self.image_cmds.get_mut(&key).unwrap().0 = deserialize_blob(&cmds[..]).unwrap();
     }
 
-    fn delete(&mut self, key: ImageKey) {
+    fn delete(&mut self, key: BlobImageKey) {
         self.image_cmds.remove(&key);
     }
 
@@ -175,11 +169,11 @@ struct Command {
     color: ColorU,
     descriptor: BlobImageDescriptor,
     tile: Option<(TileSize, TileOffset)>,
-    dirty_rect: Option<DeviceIntRect>
+    dirty_rect: BlobDirtyRect,
 }
 
 struct Rasterizer {
-    image_cmds: HashMap<ImageKey, (ColorU, Option<TileSize>)>,
+    image_cmds: HashMap<BlobImageKey, (ColorU, Option<TileSize>)>,
 }
 
 impl AsyncBlobImageRasterizer for Rasterizer {
@@ -205,7 +199,7 @@ impl AsyncBlobImageRasterizer for Rasterizer {
         ).collect();
 
         requests.iter().map(|cmd| {
-            (cmd.request, render_blob(cmd.color, &cmd.descriptor, cmd.tile, cmd.dirty_rect))
+            (cmd.request, render_blob(cmd.color, &cmd.descriptor, cmd.tile, &cmd.dirty_rect))
         }).collect()
     }
 }

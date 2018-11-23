@@ -8,9 +8,10 @@ extern crate serde_bytes;
 
 use font::{FontInstanceKey, FontInstanceData, FontKey, FontTemplate};
 use std::sync::Arc;
-use {DevicePoint, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use {IdNamespace, TileOffset, TileSize};
-use euclid::size2;
+use {DeviceIntPoint, DeviceIntRect, DeviceIntSize, LayoutIntRect};
+use {BlobDirtyRect, IdNamespace, TileOffset, TileSize};
+use euclid::{size2, TypedRect, num::Zero};
+use std::ops::{Add, Sub};
 
 /// An opaque identifier describing an image registered with WebRender.
 /// This is used as a handle to reference images, and is used as the
@@ -26,6 +27,20 @@ impl ImageKey {
     /// Mints a new ImageKey. The given ID must be unique.
     pub fn new(namespace: IdNamespace, key: u32) -> Self {
         ImageKey(namespace, key)
+    }
+}
+
+/// An opaque identifier describing a blob image registered with WebRender.
+/// This is used as a handle to reference blob images, and can be used as an
+/// image in display items.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub struct BlobImageKey(pub ImageKey);
+
+impl BlobImageKey {
+    /// Interpret this blob image as an image for a display item.
+    pub fn as_image(&self) -> ImageKey {
+        self.0
     }
 }
 
@@ -228,9 +243,6 @@ pub enum ImageData {
     /// A simple series of bytes, provided by the embedding and owned by WebRender.
     /// The format is stored out-of-band, currently in ImageDescriptor.
     Raw(#[serde(with = "serde_image_data_raw")] Arc<Vec<u8>>),
-    /// An series of commands that can be rasterized into an image via an
-    /// embedding-provided callback.
-    Blob(#[serde(with = "serde_image_data_raw")] Arc<BlobImageData>),
     /// An image owned by the embedding, and referenced by WebRender. This may
     /// take the form of a texture or a heap-allocated buffer.
     External(ExternalImageData),
@@ -261,34 +273,6 @@ impl ImageData {
     pub fn new_shared(bytes: Arc<Vec<u8>>) -> Self {
         ImageData::Raw(bytes)
     }
-
-    /// Mints a new Blob ImageData.
-    pub fn new_blob_image(commands: BlobImageData) -> Self {
-        ImageData::Blob(Arc::new(commands))
-    }
-
-    /// Returns true if this ImageData represents a blob.
-    #[inline]
-    pub fn is_blob(&self) -> bool {
-        match *self {
-            ImageData::Blob(_) => true,
-            _ => false,
-        }
-    }
-
-    /// Returns true if this variant of ImageData should go through the texture
-    /// cache.
-    #[inline]
-    pub fn uses_texture_cache(&self) -> bool {
-        match *self {
-            ImageData::External(ref ext_data) => match ext_data.image_type {
-                ExternalImageType::TextureHandle(_) => false,
-                ExternalImageType::Buffer => true,
-            },
-            ImageData::Blob(_) => true,
-            ImageData::Raw(_) => true,
-        }
-    }
 }
 
 /// The resources exposed by the resource cache available for use by the blob rasterizer.
@@ -297,8 +281,6 @@ pub trait BlobImageResources {
     fn get_font_data(&self, key: FontKey) -> &FontTemplate;
     /// Returns the `FontInstanceData` for the given key, if found.
     fn get_font_instance_data(&self, key: FontInstanceKey) -> Option<FontInstanceData>;
-    /// Returns the image metadata and backing store for the given key, if found.
-    fn get_image(&self, key: ImageKey) -> Option<(&ImageData, &ImageDescriptor)>;
 }
 
 /// A handler on the render backend that can create rasterizer objects which will
@@ -319,13 +301,13 @@ pub trait BlobImageHandler: Send {
     );
 
     /// Register a blob image.
-    fn add(&mut self, key: ImageKey, data: Arc<BlobImageData>, tiling: Option<TileSize>);
+    fn add(&mut self, key: BlobImageKey, data: Arc<BlobImageData>, tiling: Option<TileSize>);
 
     /// Update an already registered blob image.
-    fn update(&mut self, key: ImageKey, data: Arc<BlobImageData>, dirty_rect: Option<DeviceIntRect>);
+    fn update(&mut self, key: BlobImageKey, data: Arc<BlobImageData>, dirty_rect: &BlobDirtyRect);
 
     /// Delete an already registered blob image.
-    fn delete(&mut self, key: ImageKey);
+    fn delete(&mut self, key: BlobImageKey);
 
     /// A hook to let the handler clean up any state related to a font which the resource
     /// cache is about to delete.
@@ -365,7 +347,100 @@ pub struct BlobImageParams {
     /// the entire image when only a portion is updated.
     ///
     /// If set to None the entire image is rasterized.
-    pub dirty_rect: Option<DeviceIntRect>,
+    pub dirty_rect: BlobDirtyRect,
+}
+
+/// The possible states of a Dirty rect.
+///
+/// This exists because people kept getting confused with `Option<Rect>`.
+#[derive(Debug, Serialize, Deserialize)]
+pub enum DirtyRect<T: Copy, U> {
+    /// Everything is Dirty, equivalent to Partial(image_bounds)
+    All,
+    /// Some specific amount is dirty
+    Partial(TypedRect<T, U>)
+}
+
+impl<T, U> DirtyRect<T, U>
+where
+    T: Copy + Clone
+        + PartialOrd + PartialEq
+        + Add<T, Output = T>
+        + Sub<T, Output = T>
+        + Zero
+{
+    /// Creates an empty DirtyRect (indicating nothing is invalid)
+    pub fn empty() -> Self {
+        DirtyRect::Partial(TypedRect::zero())
+    }
+
+    /// Returns whether the dirty rect is empty
+    pub fn is_empty(&self) -> bool {
+        match self {
+            DirtyRect::All => false,
+            DirtyRect::Partial(rect) => rect.is_empty(),
+        }
+    }
+
+    /// Replaces self with the empty rect and returns the old value.
+    pub fn replace_with_empty(&mut self) -> Self {
+        ::std::mem::replace(self, DirtyRect::empty())
+    }
+
+    /// Maps over the contents of Partial.
+    pub fn map<F>(self, func: F) -> Self
+        where F: FnOnce(TypedRect<T, U>) -> TypedRect<T, U>,
+    {
+        use DirtyRect::*;
+
+        match self {
+            All        => All,
+            Partial(rect) => Partial(func(rect)),
+        }
+    }
+
+    /// Unions the dirty rects.
+    pub fn union(&self, other: &Self) -> Self {
+        use DirtyRect::*;
+
+        match (*self, *other) {
+            (All, _) | (_, All)        => All,
+            (Partial(rect1), Partial(rect2)) => Partial(rect1.union(&rect2)),
+        }
+    }
+
+    /// Intersects the dirty rects.
+    pub fn intersection(&self, other: &Self) -> Self {
+        use DirtyRect::*;
+
+        match (*self, *other) {
+            (All, rect) | (rect, All)  => rect,
+            (Partial(rect1), Partial(rect2)) => Partial(rect1.intersection(&rect2)
+                                                                   .unwrap_or(TypedRect::zero()))
+        }
+    }
+
+    /// Converts the dirty rect into a subrect of the given one via intersection.
+    pub fn to_subrect_of(&self, rect: &TypedRect<T, U>) -> TypedRect<T, U> {
+        use DirtyRect::*;
+
+        match *self {
+            All              => *rect,
+            Partial(dirty_rect) => dirty_rect.intersection(rect)
+                                               .unwrap_or(TypedRect::zero()),
+        }
+    }
+}
+
+impl<T: Copy, U> Copy for DirtyRect<T, U> {}
+impl<T: Copy, U> Clone for DirtyRect<T, U> {
+    fn clone(&self) -> Self { *self }
+}
+
+impl<T: Copy, U> From<TypedRect<T, U>> for DirtyRect<T, U> {
+    fn from(rect: TypedRect<T, U>) -> Self {
+        DirtyRect::Partial(rect)
+    }
 }
 
 /// Backing store for blob image command streams.
@@ -378,11 +453,9 @@ pub type BlobImageResult = Result<RasterizedBlobImage, BlobImageError>;
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct BlobImageDescriptor {
-    /// Size in device pixels of the blob's output image.
-    pub size: DeviceIntSize,
-    /// When tiling, offset point in device pixels of this tile in the full
-    /// image. Generally (0, 0) outside of tiling.
-    pub offset: DevicePoint,
+    /// Surface of the image or tile to render in the same coordinate space as
+    /// the drawing commands.
+    pub rect: LayoutIntRect,
     /// Format for the data in the backing store.
     pub format: ImageFormat,
 }
@@ -390,7 +463,8 @@ pub struct BlobImageDescriptor {
 /// Representation of a rasterized blob image. This is obtained by passing
 /// `BlobImageData` to the embedding via the rasterization callback.
 pub struct RasterizedBlobImage {
-    /// The bounding rectangle for this blob image.
+    /// The rectangle that was rasterized in device pixels, relative to the
+    /// image or tile.
     pub rasterized_rect: DeviceIntRect,
     /// Backing store. The format is stored out of band in `BlobImageDescriptor`.
     pub data: Arc<Vec<u8>>,
@@ -412,7 +486,7 @@ pub enum BlobImageError {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct BlobImageRequest {
     /// Unique handle to the image.
-    pub key: ImageKey,
+    pub key: BlobImageKey,
     /// Tiling offset in number of tiles, if applicable.
     ///
     /// `None` if the image will not be tiled.

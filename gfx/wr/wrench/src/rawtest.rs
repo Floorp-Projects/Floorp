@@ -94,11 +94,11 @@ impl<'a> RawtestHarness<'a> {
         let layout_size = LayoutSize::new(800., 800.);
         let mut txn = Transaction::new();
 
-        let blob_img = self.wrench.api.generate_image_key();
-        txn.add_image(
+        let blob_img = self.wrench.api.generate_blob_image_key();
+        txn.add_blob_image(
             blob_img,
             ImageDescriptor::new(151, 56, ImageFormat::BGRA8, true, false),
-            ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
+            blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
             Some(128),
         );
 
@@ -113,7 +113,7 @@ impl<'a> RawtestHarness<'a> {
             size(151.0, 56.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
-            blob_img,
+            blob_img.as_image(),
             ColorF::WHITE,
         );
 
@@ -127,7 +127,7 @@ impl<'a> RawtestHarness<'a> {
         // Leaving a tiled blob image in the resource cache
         // confuses the `test_capture`. TODO: remove this
         txn = Transaction::new();
-        txn.delete_image(blob_img);
+        txn.delete_blob_image(blob_img);
         self.wrench.api.update_resources(txn.resource_updates);
     }
 
@@ -149,11 +149,11 @@ impl<'a> RawtestHarness<'a> {
         let layout_size = LayoutSize::new(800., 800.);
         let mut txn = Transaction::new();
 
-        let blob_img = self.wrench.api.generate_image_key();
-        txn.add_image(
+        let blob_img = self.wrench.api.generate_blob_image_key();
+        txn.add_blob_image(
             blob_img,
             ImageDescriptor::new(1510, 111256, ImageFormat::BGRA8, false, false),
-            ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
+            blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
             Some(31),
         );
 
@@ -180,10 +180,10 @@ impl<'a> RawtestHarness<'a> {
             image_size,
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
-            blob_img,
+            blob_img.as_image(),
             ColorF::WHITE,
         );
-        txn.set_image_visible_area(
+        txn.set_blob_image_visible_area(
             blob_img,
             DeviceIntRect {
                 origin: point2(0, 111256 / 30),
@@ -235,7 +235,7 @@ impl<'a> RawtestHarness<'a> {
         // Leaving a tiled blob image in the resource cache
         // confuses the `test_capture`. TODO: remove this
         txn = Transaction::new();
-        txn.delete_image(blob_img);
+        txn.delete_blob_image(blob_img);
         self.wrench.api.update_resources(txn.resource_updates);
 
         *self.wrench.callbacks.lock().unwrap() = blob::BlobCallbacks::new();
@@ -265,8 +265,8 @@ impl<'a> RawtestHarness<'a> {
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
         let mut txn = Transaction::new();
 
-        let blob_img1 = self.wrench.api.generate_image_key();
-        txn.add_image(
+        let blob_img1 = self.wrench.api.generate_blob_image_key();
+        txn.add_blob_image(
             blob_img1,
             ImageDescriptor::new(
                 image_size.width as i32,
@@ -275,7 +275,7 @@ impl<'a> RawtestHarness<'a> {
                 false,
                 false
             ),
-            ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
+            blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
             Some(100),
         );
 
@@ -285,7 +285,7 @@ impl<'a> RawtestHarness<'a> {
             image_size,
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
-            blob_img1,
+            blob_img1.as_image(),
             ColorF::WHITE,
         );
 
@@ -295,8 +295,8 @@ impl<'a> RawtestHarness<'a> {
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
         let mut txn = Transaction::new();
 
-        let blob_img2 = self.wrench.api.generate_image_key();
-        txn.add_image(
+        let blob_img2 = self.wrench.api.generate_blob_image_key();
+        txn.add_blob_image(
             blob_img2,
             ImageDescriptor::new(
                 image_size.width as i32,
@@ -305,12 +305,12 @@ impl<'a> RawtestHarness<'a> {
                 false,
                 false
             ),
-            ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
+            blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
             Some(100),
         );
         // Set a visible rectangle that is too small.
         // This will force sync rasterization of the missing tiles during frame building.
-        txn.set_image_visible_area(blob_img2, DeviceIntRect {
+        txn.set_blob_image_visible_area(blob_img2, DeviceIntRect {
             origin: point2(200, 200),
             size: size2(80, 80),
         });
@@ -321,7 +321,7 @@ impl<'a> RawtestHarness<'a> {
             image_size,
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
-            blob_img2,
+            blob_img2.as_image(),
             ColorF::WHITE,
         );
 
@@ -331,8 +331,8 @@ impl<'a> RawtestHarness<'a> {
         assert!(pixels1 == pixels2);
 
         txn = Transaction::new();
-        txn.delete_image(blob_img1);
-        txn.delete_image(blob_img2);
+        txn.delete_blob_image(blob_img1);
+        txn.delete_blob_image(blob_img2);
         self.wrench.api.update_resources(txn.resource_updates);
     }
 
@@ -354,11 +354,11 @@ impl<'a> RawtestHarness<'a> {
         let mut txn = Transaction::new();
         let layout_size = LayoutSize::new(800., 800.);
 
-        let blob_img = self.wrench.api.generate_image_key();
-        txn.add_image(
+        let blob_img = self.wrench.api.generate_blob_image_key();
+        txn.add_blob_image(
             blob_img,
             ImageDescriptor::new(1510, 1510, ImageFormat::BGRA8, false, false),
-            ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
+            blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
             None,
         );
 
@@ -375,7 +375,7 @@ impl<'a> RawtestHarness<'a> {
             image_size,
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
-            blob_img,
+            blob_img.as_image(),
             ColorF::WHITE,
         );
 
@@ -400,7 +400,7 @@ impl<'a> RawtestHarness<'a> {
             image_size,
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
-            blob_img,
+            blob_img.as_image(),
             ColorF::WHITE,
         );
 
@@ -410,11 +410,11 @@ impl<'a> RawtestHarness<'a> {
 
         let mut txn = Transaction::new();
 
-        txn.update_image(
+        txn.update_blob_image(
             blob_img,
             ImageDescriptor::new(1510, 1510, ImageFormat::BGRA8, false, false),
-            ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
-            Some(rect(10, 10, 100, 100)),
+            blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
+            &rect(10, 10, 100, 100).into(),
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
@@ -430,7 +430,7 @@ impl<'a> RawtestHarness<'a> {
             image_size,
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
-            blob_img,
+            blob_img.as_image(),
             ColorF::WHITE,
         );
 
@@ -445,7 +445,7 @@ impl<'a> RawtestHarness<'a> {
         // Leaving a tiled blob image in the resource cache
         // confuses the `test_capture`. TODO: remove this
         txn = Transaction::new();
-        txn.delete_image(blob_img);
+        txn.delete_blob_image(blob_img);
         self.wrench.api.update_resources(txn.resource_updates);
     }
 
@@ -465,11 +465,11 @@ impl<'a> RawtestHarness<'a> {
         {
             let api = &self.wrench.api;
 
-            blob_img = api.generate_image_key();
-            txn.add_image(
+            blob_img = api.generate_blob_image_key();
+            txn.add_blob_image(
                 blob_img,
                 ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
-                ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
+                blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
                 None,
             );
         }
@@ -491,7 +491,7 @@ impl<'a> RawtestHarness<'a> {
             size(0.0, 0.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
-            blob_img,
+            blob_img.as_image(),
             ColorF::WHITE,
         );
 
@@ -514,7 +514,7 @@ impl<'a> RawtestHarness<'a> {
             size(0.0, 0.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
-            blob_img,
+            blob_img.as_image(),
             ColorF::WHITE,
         );
 
@@ -553,18 +553,18 @@ impl<'a> RawtestHarness<'a> {
         let (blob_img, blob_img2) = {
             let api = &self.wrench.api;
 
-            blob_img = api.generate_image_key();
-            txn.add_image(
+            blob_img = api.generate_blob_image_key();
+            txn.add_blob_image(
                 blob_img,
                 ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
-                ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
+                blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
                 None,
             );
-            blob_img2 = api.generate_image_key();
-            txn.add_image(
+            blob_img2 = api.generate_blob_image_key();
+            txn.add_blob_image(
                 blob_img2,
                 ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
-                ImageData::new_blob_image(blob::serialize_blob(ColorU::new(80, 50, 150, 255))),
+                blob::serialize_blob(ColorU::new(80, 50, 150, 255)),
                 None,
             );
             (blob_img, blob_img2)
@@ -599,7 +599,7 @@ impl<'a> RawtestHarness<'a> {
                 size(0.0, 0.0),
                 ImageRendering::Auto,
                 AlphaType::PremultipliedAlpha,
-                blob_img,
+                blob_img.as_image(),
                 ColorF::WHITE,
             );
             builder.push_image(
@@ -608,7 +608,7 @@ impl<'a> RawtestHarness<'a> {
                 size(0.0, 0.0),
                 ImageRendering::Auto,
                 AlphaType::PremultipliedAlpha,
-                blob_img2,
+                blob_img2.as_image(),
                 ColorF::WHITE,
             );
         };
@@ -623,17 +623,17 @@ impl<'a> RawtestHarness<'a> {
 
         // update and redraw both images
         let mut txn = Transaction::new();
-        txn.update_image(
+        txn.update_blob_image(
             blob_img,
             ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
-            ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
-            Some(rect(100, 100, 100, 100)),
+            blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
+            &rect(100, 100, 100, 100).into(),
         );
-        txn.update_image(
+        txn.update_blob_image(
             blob_img2,
             ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
-            ImageData::new_blob_image(blob::serialize_blob(ColorU::new(59, 50, 150, 255))),
-            Some(rect(100, 100, 100, 100)),
+            blob::serialize_blob(ColorU::new(59, 50, 150, 255)),
+            &rect(100, 100, 100, 100).into(),
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
@@ -644,11 +644,11 @@ impl<'a> RawtestHarness<'a> {
 
         // only update the first image
         let mut txn = Transaction::new();
-        txn.update_image(
+        txn.update_blob_image(
             blob_img,
             ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
-            ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 150, 150, 255))),
-            Some(rect(200, 200, 100, 100)),
+            blob::serialize_blob(ColorU::new(50, 150, 150, 255)),
+            &rect(200, 200, 100, 100).into(),
         );
 
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
@@ -679,11 +679,11 @@ impl<'a> RawtestHarness<'a> {
         let mut txn = Transaction::new();
 
         let blob_img = {
-            let img = self.wrench.api.generate_image_key();
-            txn.add_image(
+            let img = self.wrench.api.generate_blob_image_key();
+            txn.add_blob_image(
                 img,
                 ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
-                ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
+                blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
                 None,
             );
             img
@@ -699,7 +699,7 @@ impl<'a> RawtestHarness<'a> {
             size(0.0, 0.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
-            blob_img,
+            blob_img.as_image(),
             ColorF::WHITE,
         );
 
@@ -710,11 +710,11 @@ impl<'a> RawtestHarness<'a> {
 
         // draw the blob image a second time after updating it with the same color
         let mut txn = Transaction::new();
-        txn.update_image(
+        txn.update_blob_image(
             blob_img,
             ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
-            ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
-            Some(rect(100, 100, 100, 100)),
+            blob::serialize_blob(ColorU::new(50, 50, 150, 255)),
+            &rect(100, 100, 100, 100).into(),
         );
 
         // make a new display list that refers to the first image
@@ -726,7 +726,7 @@ impl<'a> RawtestHarness<'a> {
             size(0.0, 0.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
-            blob_img,
+            blob_img.as_image(),
             ColorF::WHITE,
         );
 
@@ -735,11 +735,11 @@ impl<'a> RawtestHarness<'a> {
 
         // draw the blob image a third time after updating it with a different color
         let mut txn = Transaction::new();
-        txn.update_image(
+        txn.update_blob_image(
             blob_img,
             ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
-            ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 150, 150, 255))),
-            Some(rect(200, 200, 100, 100)),
+            blob::serialize_blob(ColorU::new(50, 150, 150, 255)),
+            &rect(200, 200, 100, 100).into(),
         );
 
         // make a new display list that refers to the first image
@@ -751,7 +751,7 @@ impl<'a> RawtestHarness<'a> {
             size(0.0, 0.0),
             ImageRendering::Auto,
             AlphaType::PremultipliedAlpha,
-            blob_img,
+            blob_img.as_image(),
             ColorF::WHITE,
         );
 

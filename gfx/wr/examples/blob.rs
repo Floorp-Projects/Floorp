@@ -17,7 +17,8 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 use webrender::api::{self, DisplayListBuilder, DocumentId, PipelineId, RenderApi, Transaction};
-use webrender::api::{ColorF, DeviceIntRect, DeviceIntPoint};
+use webrender::api::ColorF;
+use webrender::euclid::size2;
 
 // This example shows how to implement a very basic BlobImageHandler that can only render
 // a checkerboard pattern.
@@ -28,8 +29,8 @@ type ImageRenderingCommands = api::ColorU;
 // Serialize/deserialize the blob.
 // For real usecases you should probably use serde rather than doing it by hand.
 
-fn serialize_blob(color: api::ColorU) -> Vec<u8> {
-    vec![color.r, color.g, color.b, color.a]
+fn serialize_blob(color: api::ColorU) -> Arc<Vec<u8>> {
+    Arc::new(vec![color.r, color.g, color.b, color.a])
 }
 
 fn deserialize_blob(blob: &[u8]) -> Result<ImageRenderingCommands, ()> {
@@ -50,9 +51,13 @@ fn render_blob(
 ) -> api::BlobImageResult {
     let color = *commands;
 
+    // Note: This implementation ignores the dirty rect which isn't incorrect
+    // but is a missed optimization.
+
     // Allocate storage for the result. Right now the resource cache expects the
     // tiles to have have no stride or offset.
-    let mut texels = Vec::with_capacity((descriptor.size.width * descriptor.size.height * 4) as usize);
+    let bpp = 4;
+    let mut texels = Vec::with_capacity((descriptor.rect.size.area() * bpp) as usize);
 
     // Generate a per-tile pattern to see it in the demo. For a real use case it would not
     // make sense for the rendered content to depend on its tile.
@@ -61,12 +66,15 @@ fn render_blob(
         None => true,
     };
 
-    for y in 0 .. descriptor.size.height {
-        for x in 0 .. descriptor.size.width {
+    let [w, h] = descriptor.rect.size.to_array();
+    let offset = descriptor.rect.origin;
+
+    for y in 0..h {
+        for x in 0..w {
             // Apply the tile's offset. This is important: all drawing commands should be
             // translated by this offset to give correct results with tiled blob images.
-            let x2 = x + descriptor.offset.x as i32;
-            let y2 = y + descriptor.offset.y as i32;
+            let x2 = x + offset.x;
+            let y2 = y + offset.y;
 
             // Render a simple checkerboard pattern
             let checker = if (x2 % 20 >= 10) != (y2 % 20 >= 10) {
@@ -98,10 +106,7 @@ fn render_blob(
 
     Ok(api::RasterizedBlobImage {
         data: Arc::new(texels),
-        rasterized_rect: DeviceIntRect {
-            origin: DeviceIntPoint::origin(),
-            size: descriptor.size,
-        },
+        rasterized_rect: size2(w, h).into(),
     })
 }
 
@@ -117,7 +122,7 @@ struct CheckerboardRenderer {
     // case the command list is a simple 32 bits value and would be cheap to clone before sending
     // to the workers. But in a more realistic scenario the commands would typically be bigger
     // and more expensive to clone, so let's pretend it is also the case here.
-    image_cmds: HashMap<api::ImageKey, Arc<ImageRenderingCommands>>,
+    image_cmds: HashMap<api::BlobImageKey, Arc<ImageRenderingCommands>>,
 }
 
 impl CheckerboardRenderer {
@@ -130,19 +135,19 @@ impl CheckerboardRenderer {
 }
 
 impl api::BlobImageHandler for CheckerboardRenderer {
-    fn add(&mut self, key: api::ImageKey, cmds: Arc<api::BlobImageData>, _: Option<api::TileSize>) {
+    fn add(&mut self, key: api::BlobImageKey, cmds: Arc<api::BlobImageData>, _: Option<api::TileSize>) {
         self.image_cmds
             .insert(key, Arc::new(deserialize_blob(&cmds[..]).unwrap()));
     }
 
-    fn update(&mut self, key: api::ImageKey, cmds: Arc<api::BlobImageData>, _dirty_rect: Option<api::DeviceIntRect>) {
+    fn update(&mut self, key: api::BlobImageKey, cmds: Arc<api::BlobImageData>, _dirty_rect: &api::BlobDirtyRect) {
         // Here, updating is just replacing the current version of the commands with
         // the new one (no incremental updates).
         self.image_cmds
             .insert(key, Arc::new(deserialize_blob(&cmds[..]).unwrap()));
     }
 
-    fn delete(&mut self, key: api::ImageKey) {
+    fn delete(&mut self, key: api::BlobImageKey) {
         self.image_cmds.remove(&key);
     }
 
@@ -165,7 +170,7 @@ impl api::BlobImageHandler for CheckerboardRenderer {
 
 struct Rasterizer {
     workers: Arc<ThreadPool>,
-    image_cmds: HashMap<api::ImageKey, Arc<ImageRenderingCommands>>,
+    image_cmds: HashMap<api::BlobImageKey, Arc<ImageRenderingCommands>>,
 }
 
 impl api::AsyncBlobImageRasterizer for Rasterizer {
@@ -198,19 +203,19 @@ impl Example for App {
         _pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
-        let blob_img1 = api.generate_image_key();
-        txn.add_image(
+        let blob_img1 = api.generate_blob_image_key();
+        txn.add_blob_image(
             blob_img1,
             api::ImageDescriptor::new(500, 500, api::ImageFormat::BGRA8, true, false),
-            api::ImageData::new_blob_image(serialize_blob(api::ColorU::new(50, 50, 150, 255))),
+            serialize_blob(api::ColorU::new(50, 50, 150, 255)),
             Some(128),
         );
 
-        let blob_img2 = api.generate_image_key();
-        txn.add_image(
+        let blob_img2 = api.generate_blob_image_key();
+        txn.add_blob_image(
             blob_img2,
             api::ImageDescriptor::new(200, 200, api::ImageFormat::BGRA8, true, false),
-            api::ImageData::new_blob_image(serialize_blob(api::ColorU::new(50, 150, 50, 255))),
+            serialize_blob(api::ColorU::new(50, 150, 50, 255)),
             None,
         );
 
@@ -232,7 +237,7 @@ impl Example for App {
             api::LayoutSize::new(0.0, 0.0),
             api::ImageRendering::Auto,
             api::AlphaType::PremultipliedAlpha,
-            blob_img1,
+            blob_img1.as_image(),
             ColorF::WHITE,
         );
 
@@ -243,7 +248,7 @@ impl Example for App {
             api::LayoutSize::new(0.0, 0.0),
             api::ImageRendering::Auto,
             api::AlphaType::PremultipliedAlpha,
-            blob_img2,
+            blob_img2.as_image(),
             ColorF::WHITE,
         );
 

@@ -93,7 +93,7 @@ impl RonFrameWriter {
                 ResourceUpdate::AddImage(ref img) => {
                     let bytes = match img.data {
                         ImageData::Raw(ref v) => (**v).clone(),
-                        ImageData::External(_) | ImageData::Blob(_) => {
+                        ImageData::External(_) => {
                             return;
                         }
                     };
@@ -118,13 +118,16 @@ impl RonFrameWriter {
                             data.path = None;
                             data.bytes = Some((**bytes).clone());
                         } else {
-                            // Other existing image types only make sense within the gecko integration.
                             println!(
                                 "Wrench only supports updating buffer images ({}).",
                                 "ignoring update commands"
                             );
                         }
                     }
+                }
+                ResourceUpdate::AddBlobImage(..)
+                | ResourceUpdate::UpdateBlobImage(..) => {
+                    println!("Blob images not supported (ignoring command).");
                 }
                 ResourceUpdate::DeleteImage(img) => {
                     self.images.remove(&img);
@@ -141,7 +144,7 @@ impl RonFrameWriter {
                 ResourceUpdate::DeleteFont(_) => {}
                 ResourceUpdate::AddFontInstance(_) => {}
                 ResourceUpdate::DeleteFontInstance(_) => {}
-                ResourceUpdate::SetImageVisibleArea(..) => {}
+                ResourceUpdate::SetBlobImageVisibleArea(..) => {}
             }
         }
     }

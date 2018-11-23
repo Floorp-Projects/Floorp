@@ -120,7 +120,7 @@ impl JsonFrameWriter {
                     );
                     let bytes = match img.data {
                         ImageData::Raw(ref v) => (**v).clone(),
-                        ImageData::External(_) | ImageData::Blob(_) => {
+                        ImageData::External(_) => {
                             return;
                         }
                     };
@@ -154,6 +154,10 @@ impl JsonFrameWriter {
                         }
                     }
                 }
+                ResourceUpdate::AddBlobImage(..)
+                | ResourceUpdate::UpdateBlobImage(..) => {
+                    println!("Blob images not supported (ignoring command).");
+                }
                 ResourceUpdate::DeleteImage(img) => {
                     self.images.remove(&img);
                 }
@@ -177,7 +181,7 @@ impl JsonFrameWriter {
                     );
                 }
                 ResourceUpdate::DeleteFontInstance(_) => {}
-                ResourceUpdate::SetImageVisibleArea(..) => {}
+                ResourceUpdate::SetBlobImageVisibleArea(..) => {}
             }
         }
     }
