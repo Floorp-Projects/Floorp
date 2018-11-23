@@ -880,13 +880,12 @@ DisplayListBuilder::PushStackingContext(const wr::LayoutRect& aBounds,
   }
 
   const wr::LayoutTransform* maybePerspective = aPerspective ? &perspective : nullptr;
-  const size_t* maybeClipNodeId = aClipNodeId ? &aClipNodeId->id : nullptr;
   WRDL_LOG("PushStackingContext b=%s t=%s\n", mWrState, Stringify(aBounds).c_str(),
       aTransform ? Stringify(*aTransform).c_str() : "none");
 
   bool outIsReferenceFrame = false;
   uintptr_t outReferenceFrameId = 0;
-  wr_dp_push_stacking_context(mWrState, aBounds, maybeClipNodeId, aAnimation,
+  wr_dp_push_stacking_context(mWrState, aBounds, aClipNodeId, aAnimation,
                               aOpacity, maybeTransform, aTransformStyle,
                               maybePerspective, aMixBlendMode,
                               aFilters.Elements(), aFilters.Length(),
@@ -906,13 +905,9 @@ wr::WrClipChainId
 DisplayListBuilder::DefineClipChain(const Maybe<wr::WrClipChainId>& aParent,
                                     const nsTArray<wr::WrClipId>& aClips)
 {
-  nsTArray<size_t> clipIds;
-  for (wr::WrClipId id : aClips) {
-    clipIds.AppendElement(id.id);
-  }
   uint64_t clipchainId = wr_dp_define_clipchain(mWrState,
       aParent ? &(aParent->id) : nullptr,
-      clipIds.Elements(), clipIds.Length());
+      aClips.Elements(), aClips.Length());
   WRDL_LOG("DefineClipChain id=%" PRIu64 " p=%s clips=%zu\n", mWrState,
       clipchainId,
       aParent ? Stringify(aParent->id).c_str() : "(nil)",
@@ -927,7 +922,7 @@ DisplayListBuilder::DefineClip(const Maybe<wr::WrClipId>& aParentId,
                                const wr::WrImageMask* aMask)
 {
   size_t clip_id = wr_dp_define_clip(mWrState,
-      aParentId ? &(aParentId->id) : nullptr,
+      aParentId.ptrOr(nullptr),
       aClipRect,
       aComplex ? aComplex->Elements() : nullptr,
       aComplex ? aComplex->Length() : 0,
@@ -944,7 +939,7 @@ void
 DisplayListBuilder::PushClip(const wr::WrClipId& aClipId)
 {
   WRDL_LOG("PushClip id=%zu\n", mWrState, aClipId.id);
-  wr_dp_push_clip(mWrState, aClipId.id);
+  wr_dp_push_clip(mWrState, aClipId);
 }
 
 void
@@ -984,7 +979,7 @@ Maybe<wr::WrClipId>
 DisplayListBuilder::GetScrollIdForDefinedScrollLayer(layers::ScrollableLayerGuid::ViewID aViewId) const
 {
   if (aViewId == layers::ScrollableLayerGuid::NULL_SCROLL_ID) {
-    return Some(wr::WrClipId::RootScrollNode());
+    return Some(wr::RootScrollNode());
   }
 
   auto it = mScrollIds.find(aViewId);
@@ -1010,7 +1005,7 @@ DisplayListBuilder::DefineScrollLayer(const layers::ScrollableLayerGuid::ViewID&
   size_t numericScrollId = wr_dp_define_scroll_layer(
       mWrState,
       aViewId,
-      aParentId ? &(aParentId->id) : nullptr,
+      aParentId.ptrOr(nullptr),
       aContentRect,
       aClipRect);
 
@@ -1032,7 +1027,7 @@ DisplayListBuilder::PushClipAndScrollInfo(const wr::WrClipId* aScrollId,
   if (aScrollId) {
     WRDL_LOG("PushClipAndScroll s=%zu c=%s\n", mWrState, aScrollId->id,
         aClipChainId ? Stringify(aClipChainId->id).c_str() : "none");
-    wr_dp_push_clip_and_scroll_info(mWrState, aScrollId->id,
+    wr_dp_push_clip_and_scroll_info(mWrState, *aScrollId,
         aClipChainId ? &(aClipChainId->id) : nullptr);
   }
   mClipChainLeaf = aClipChainLeaf;

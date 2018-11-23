@@ -634,6 +634,14 @@ struct TypedPoint2D {
 
 using WorldPoint = TypedPoint2D<float, WorldPixel>;
 
+struct WrClipId {
+  uintptr_t id;
+
+  bool operator==(const WrClipId& aOther) const {
+    return id == aOther.id;
+  }
+};
+
 struct WrDebugFlags {
   uint32_t mBits;
 
@@ -1293,7 +1301,7 @@ WR_FUNC;
 
 WR_INLINE
 uintptr_t wr_dp_define_clip(WrState *aState,
-                            const uintptr_t *aParentId,
+                            const WrClipId *aParentId,
                             LayoutRect aClipRect,
                             const ComplexClipRegion *aComplex,
                             uintptr_t aComplexCount,
@@ -1303,14 +1311,14 @@ WR_FUNC;
 WR_INLINE
 uint64_t wr_dp_define_clipchain(WrState *aState,
                                 const uint64_t *aParentClipchainId,
-                                const uintptr_t *aClips,
+                                const WrClipId *aClips,
                                 uintptr_t aClipsCount)
 WR_FUNC;
 
 WR_INLINE
 uintptr_t wr_dp_define_scroll_layer(WrState *aState,
                                     uint64_t aScrollId,
-                                    const uintptr_t *aParentId,
+                                    const WrClipId *aParentId,
                                     LayoutRect aContentRect,
                                     LayoutRect aClipRect)
 WR_FUNC;
@@ -1430,12 +1438,12 @@ WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_clip(WrState *aState,
-                     uintptr_t aClipId)
+                     WrClipId aClipId)
 WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_clip_and_scroll_info(WrState *aState,
-                                     uintptr_t aScrollId,
+                                     WrClipId aScrollId,
                                      const uint64_t *aClipChainId)
 WR_FUNC;
 
@@ -1510,7 +1518,7 @@ WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_scroll_layer(WrState *aState,
-                             uintptr_t aScrollId)
+                             WrClipId aScrollId)
 WR_FUNC;
 
 WR_INLINE
@@ -1524,7 +1532,7 @@ WR_FUNC;
 WR_INLINE
 void wr_dp_push_stacking_context(WrState *aState,
                                  LayoutRect aBounds,
-                                 const uintptr_t *aClipNodeId,
+                                 const WrClipId *aClipNodeId,
                                  const WrAnimationProperty *aAnimation,
                                  const float *aOpacity,
                                  const LayoutTransform *aTransform,

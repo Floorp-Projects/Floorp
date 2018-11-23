@@ -1831,7 +1831,7 @@ pub extern "C" fn wr_dp_clear_save(state: &mut WrState) {
 #[no_mangle]
 pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                               bounds: LayoutRect,
-                                              clip_node_id: *const usize,
+                                              clip_node_id: *const WrClipId,
                                               animation: *const WrAnimationProperty,
                                               opacity: *const f32,
                                               transform: *const LayoutTransform,
@@ -1957,7 +1957,7 @@ pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_define_clipchain(state: &mut WrState,
                                          parent_clipchain_id: *const u64,
-                                         clips: *const usize,
+                                         clips: *const WrClipId,
                                          clips_count: usize)
                                          -> u64 {
     debug_assert!(unsafe { is_in_main_thread() });
@@ -1974,7 +1974,7 @@ pub extern "C" fn wr_dp_define_clipchain(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_define_clip(state: &mut WrState,
-                                    parent_id: *const usize,
+                                    parent_id: *const WrClipId,
                                     clip_rect: LayoutRect,
                                     complex: *const ComplexClipRegion,
                                     complex_count: usize,
@@ -1999,7 +1999,7 @@ pub extern "C" fn wr_dp_define_clip(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
-                                  clip_id: usize) {
+                                  clip_id: WrClipId) {
     debug_assert!(unsafe { is_in_main_thread() });
     state.frame_builder.dl_builder.push_clip_id(unpack_clip_id(clip_id, state.pipeline_id));
 }
@@ -2036,7 +2036,7 @@ pub extern "C" fn wr_dp_define_sticky_frame(state: &mut WrState,
 #[no_mangle]
 pub extern "C" fn wr_dp_define_scroll_layer(state: &mut WrState,
                                             scroll_id: u64,
-                                            parent_id: *const usize,
+                                            parent_id: *const WrClipId,
                                             content_rect: LayoutRect,
                                             clip_rect: LayoutRect)
                                             -> usize {
@@ -2070,7 +2070,7 @@ pub extern "C" fn wr_dp_define_scroll_layer(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
-                                          scroll_id: usize) {
+                                          scroll_id: WrClipId) {
     debug_assert!(unsafe { is_in_main_thread() });
     let clip_id = unpack_clip_id(scroll_id, state.pipeline_id);
     state.frame_builder.dl_builder.push_clip_id(clip_id);
@@ -2084,7 +2084,7 @@ pub extern "C" fn wr_dp_pop_scroll_layer(state: &mut WrState) {
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_clip_and_scroll_info(state: &mut WrState,
-                                                  scroll_id: usize,
+                                                  scroll_id: WrClipId,
                                                   clip_chain_id: *const u64) {
     debug_assert!(unsafe { is_in_main_thread() });
 
@@ -2703,9 +2703,15 @@ fn pack_clip_id(id: ClipId) -> usize {
     return (id << 1) + type_value;
 }
 
-fn unpack_clip_id(id: usize, pipeline_id: PipelineId) -> ClipId {
-    let type_value = id & 0b01;
-    let id = id >> 1;
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct WrClipId {
+    id: usize
+}
+
+fn unpack_clip_id(id: WrClipId, pipeline_id: PipelineId) -> ClipId {
+    let type_value = id.id & 0b01;
+    let id = id.id >> 1;
 
     match type_value {
         0 => ClipId::Spatial(id, pipeline_id),

@@ -828,34 +828,7 @@ static inline wr::WrFilterOpType ToWrFilterOpType(uint32_t type) {
   return wr::WrFilterOpType::Grayscale;
 }
 
-// Corresponds to an "internal" webrender clip id. That is, a
-// ClipId::Clip(x,pipeline_id) maps to a WrClipId{x}. We use a struct wrapper
-// instead of a typedef so that this is a distinct type from ids generated
-// by scroll and position:sticky nodes and the compiler will catch accidental
-// conversions between them.
-struct WrClipId {
-  size_t id;
-
-  bool operator==(const WrClipId& other) const {
-    return id == other.id;
-  }
-
-  bool operator!=(const WrClipId& other) const {
-    return !(*this == other);
-  }
-
-  static WrClipId RootScrollNode();
-
-  // Helper struct that allows this class to be used as a key in
-  // std::unordered_map like so:
-  //   std::unordered_map<WrClipId, ValueType, WrClipId::HashFn> myMap;
-  struct HashFn {
-    std::size_t operator()(const WrClipId& aKey) const
-    {
-      return std::hash<size_t>{}(aKey.id);
-    }
-  };
-};
+extern WrClipId RootScrollNode();
 
 // Corresponds to a clip id for a clip chain in webrender. Similar to
 // WrClipId but a separate struct so we don't get them mixed up in C++.
@@ -911,5 +884,15 @@ static inline wr::SyntheticItalics DegreesToSyntheticItalics(float aDegrees) {
 
 } // namespace wr
 } // namespace mozilla
+
+namespace std
+{
+    template<> struct hash<mozilla::wr::WrClipId>
+    {
+        std::size_t operator()(mozilla::wr::WrClipId const& aKey) const noexcept {
+          return std::hash<size_t>{}(aKey.id);
+        }
+    };
+}
 
 #endif /* GFX_WEBRENDERTYPES_H */
