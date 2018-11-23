@@ -362,7 +362,7 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   friend class mozilla::SourceStreamInfo;
   friend class mozilla::RemoteSourceStreamInfo;
 
-  class PrincipalHandleListener;
+  class MSGListener;
 
  public:
   /**
@@ -439,10 +439,9 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   nsIPrincipal* GetPrincipal() const { return mPrincipal; }
 
   /**
-   * Called by the PrincipalHandleListener when this track's PrincipalHandle
-   * changes on the MediaStreamGraph thread. When the PrincipalHandle matches
-   * the pending principal we know that the principal change has propagated to
-   * consumers.
+   * Called by the MSGListener when this track's PrincipalHandle changes on
+   * the MediaStreamGraph thread. When the PrincipalHandle matches the pending
+   * principal we know that the principal change has propagated to consumers.
    */
   void NotifyPrincipalHandleChanged(const PrincipalHandle& aPrincipalHandle);
 
@@ -602,7 +601,7 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   RefPtr<MediaStreamTrack> mOriginalTrack;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIPrincipal> mPendingPrincipal;
-  RefPtr<PrincipalHandleListener> mPrincipalHandleListener;
+  RefPtr<MSGListener> mMSGListener;
   // Keep tracking MediaStreamTrackListener and DirectMediaStreamTrackListener,
   // so we can remove them in |Destory|.
   nsTArray<RefPtr<MediaStreamTrackListener>> mTrackListeners;

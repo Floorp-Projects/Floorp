@@ -55,8 +55,11 @@ auto MediaStreamTrackSource::ApplyConstraints(
 }
 
 /**
- * PrincipalHandleListener monitors changes in PrincipalHandle of the media
- * flowing through the MediaStreamGraph.
+ * MSGListener monitors state changes of the media flowing through the
+ * MediaStreamGraph.
+ *
+ *
+ * For changes to PrincipalHandle the following applies:
  *
  * When the main thread principal for a MediaStreamTrack changes, its principal
  * will be set to the combination of the previous principal and the new one.
@@ -73,10 +76,9 @@ auto MediaStreamTrackSource::ApplyConstraints(
  * will be a combination of its old principal and all the new ones until the
  * latest main thread principal matches the PrincipalHandle on the MSG thread.
  */
-class MediaStreamTrack::PrincipalHandleListener
-    : public MediaStreamTrackListener {
+class MediaStreamTrack::MSGListener : public MediaStreamTrackListener {
  public:
-  explicit PrincipalHandleListener(MediaStreamTrack* aTrack)
+  explicit MSGListener(MediaStreamTrack* aTrack)
       : mGraph(aTrack->GraphImpl()), mTrack(aTrack) {
     MOZ_ASSERT(mGraph);
   }
@@ -97,9 +99,9 @@ class MediaStreamTrack::PrincipalHandleListener
       const PrincipalHandle& aNewPrincipalHandle) override {
     mGraph->DispatchToMainThreadAfterStreamStateUpdate(
         NewRunnableMethod<StoreCopyPassByConstLRef<PrincipalHandle>>(
-            "dom::MediaStreamTrack::PrincipalHandleListener::"
+            "dom::MediaStreamTrack::MSGListener::"
             "DoNotifyPrincipalHandleChanged",
-            this, &PrincipalHandleListener::DoNotifyPrincipalHandleChanged,
+            this, &MSGListener::DoNotifyPrincipalHandleChanged,
             aNewPrincipalHandle));
   }
 
@@ -107,9 +109,27 @@ class MediaStreamTrack::PrincipalHandleListener
     // `mTrack` is a WeakPtr and must be destroyed on main thread.
     // We dispatch ourselves to main thread here in case the MediaStreamGraph
     // is holding the last reference to us.
-    mGraph->DispatchToMainThreadAfterStreamStateUpdate(NS_NewRunnableFunction(
-        "MediaStreamTrack::PrincipleHandleListener::mTrackReleaser",
-        [self = RefPtr<PrincipalHandleListener>(this)]() {}));
+    mGraph->DispatchToMainThreadAfterStreamStateUpdate(
+        NS_NewRunnableFunction("MediaStreamTrack::MSGListener::mTrackReleaser",
+                               [self = RefPtr<MSGListener>(this)]() {}));
+  }
+
+  void DoNotifyEnded() {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!mTrack) {
+      return;
+    }
+
+    mGraph->AbstractMainThread()->Dispatch(
+        NewRunnableMethod("MediaStreamTrack::OverrideEnded", mTrack.get(),
+                          &MediaStreamTrack::OverrideEnded));
+  }
+
+  void NotifyEnded() override {
+    mGraph->DispatchToMainThreadAfterStreamStateUpdate(
+        NewRunnableMethod("MediaStreamTrack::MSGListener::DoNotifyEnded", this,
+                          &MSGListener::DoNotifyEnded));
   }
 
  protected:
@@ -169,8 +189,8 @@ MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
   GetSource().RegisterSink(mSink.get());
 
   if (GetOwnedStream()) {
-    mPrincipalHandleListener = new PrincipalHandleListener(this);
-    AddListener(mPrincipalHandleListener);
+    mMSGListener = new MSGListener(this);
+    AddListener(mMSGListener);
   }
 
   nsresult rv;
@@ -195,11 +215,11 @@ void MediaStreamTrack::Destroy() {
   if (mSource) {
     mSource->UnregisterSink(mSink.get());
   }
-  if (mPrincipalHandleListener) {
+  if (mMSGListener) {
     if (GetOwnedStream()) {
-      RemoveListener(mPrincipalHandleListener);
+      RemoveListener(mMSGListener);
     }
-    mPrincipalHandleListener = nullptr;
+    mMSGListener = nullptr;
   }
   // Remove all listeners -- avoid iterating over the list we're removing from
   const nsTArray<RefPtr<MediaStreamTrackListener>> trackListeners(
@@ -523,10 +543,10 @@ void MediaStreamTrack::OverrideEnded() {
 
   mSource->UnregisterSink(mSink.get());
 
-  if (mPrincipalHandleListener) {
-    RemoveListener(mPrincipalHandleListener);
+  if (mMSGListener) {
+    RemoveListener(mMSGListener);
   }
-  mPrincipalHandleListener = nullptr;
+  mMSGListener = nullptr;
 
   mReadyState = MediaStreamTrackState::Ended;
 
