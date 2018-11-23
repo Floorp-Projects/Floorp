@@ -30,7 +30,8 @@ ChromeUtils.defineModuleGetter(this, "SelectionChangedMenulist",
 async function installFromUrl(url, hash) {
   let install = await AddonManager.getInstallForURL(
     url, "application/x-xpinstall", hash);
-  return install.install();
+  await install.install();
+  return install.addon;
 }
 
 async function dictionaryIdsForLocale(locale) {
@@ -473,12 +474,18 @@ var gBrowserLanguagesDialog = {
       "browser-languages-downloading");
 
     let {url, hash} = this.availableLangpacks.get(item.value);
+    let addon;
 
     try {
-      await installFromUrl(url, hash);
+      addon = await installFromUrl(url, hash);
     } catch (e) {
       this.showError();
       return;
+    }
+
+    // If the add-on was previously installed, it might be disabled still.
+    if (addon.userDisabled) {
+      await addon.enable();
     }
 
     item.installed = true;
