@@ -134,6 +134,7 @@ RecordReplayInterface_Initialize(int aArgc, char* aArgv[])
     fprintf(stderr, "Initialization Failure: %s\n", gInitializationFailureMessage);
   }
 
+  LateInitializeRedirections();
   Thread::InitializeThreads();
 
   Thread* thread = Thread::GetById(MainThreadId);
