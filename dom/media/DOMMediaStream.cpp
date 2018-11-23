@@ -105,66 +105,6 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMMediaStream::TrackPort, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMMediaStream::TrackPort, Release)
 
 /**
- * Listener registered on the Owned stream to detect added and ended owned
- * tracks for keeping the list of MediaStreamTracks in sync with the tracks
- * added and ended directly at the source.
- */
-class DOMMediaStream::OwnedStreamListener : public MediaStreamListener {
- public:
-  explicit OwnedStreamListener(DOMMediaStream* aStream) : mStream(aStream) {}
-
-  void Forget() { mStream = nullptr; }
-
-  void DoNotifyTrackCreated(MediaStreamGraph* aGraph, TrackID aTrackID,
-                            MediaSegment::Type aType, MediaStream* aInputStream,
-                            TrackID aInputTrackID) {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (!mStream) {
-      return;
-    }
-
-    MediaStreamTrack* track =
-        mStream->FindOwnedDOMTrack(aInputStream, aInputTrackID, aTrackID);
-
-    if (track) {
-      LOG(LogLevel::Debug, ("DOMMediaStream %p Track %d from owned stream %p "
-                            "bound to MediaStreamTrack %p.",
-                            mStream, aTrackID, aInputStream, track));
-      return;
-    }
-
-    // Track must exist on main thread before it's added to the graph.
-    MOZ_RELEASE_ASSERT(
-        false,
-        "A new track was detected on the input stream; creating a "
-        "corresponding "
-        "MediaStreamTrack. Initial tracks should be added manually to "
-        "immediately and synchronously be available to JS.");
-  }
-
-  void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                StreamTime aTrackOffset,
-                                TrackEventCommand aTrackEvents,
-                                const MediaSegment& aQueuedMedia,
-                                MediaStream* aInputStream,
-                                TrackID aInputTrackID) override {
-    if (aTrackEvents & TrackEventCommand::TRACK_EVENT_CREATED) {
-      aGraph->DispatchToMainThreadAfterStreamStateUpdate(
-          NewRunnableMethod<MediaStreamGraph*, TrackID, MediaSegment::Type,
-                            RefPtr<MediaStream>, TrackID>(
-              "DOMMediaStream::OwnedStreamListener::DoNotifyTrackCreated", this,
-              &OwnedStreamListener::DoNotifyTrackCreated, aGraph, aID,
-              aQueuedMedia.GetType(), aInputStream, aInputTrackID));
-    }
-  }
-
- private:
-  // These fields may only be accessed on the main thread
-  DOMMediaStream* mStream;
-};
-
-/**
  * Listener registered on the Playback stream to detect when tracks end and when
  * all new tracks this iteration have been created - for when several tracks are
  * queued by the source and committed all at once.
@@ -314,13 +254,6 @@ DOMMediaStream::~DOMMediaStream() { Destroy(); }
 
 void DOMMediaStream::Destroy() {
   LOG(LogLevel::Debug, ("DOMMediaStream %p Being destroyed.", this));
-  if (mOwnedListener) {
-    if (mOwnedStream) {
-      mOwnedStream->RemoveListener(mOwnedListener);
-    }
-    mOwnedListener->Forget();
-    mOwnedListener = nullptr;
-  }
   if (mPlaybackListener) {
     if (mPlaybackStream) {
       mPlaybackStream->RemoveListener(mPlaybackListener);
@@ -743,10 +676,6 @@ void DOMMediaStream::InitOwnedStreamCommon(MediaStreamGraph* aGraph) {
   if (mInputStream) {
     mOwnedPort = mOwnedStream->AllocateInputPort(mInputStream);
   }
-
-  // Setup track listeners
-  mOwnedListener = new OwnedStreamListener(this);
-  mOwnedStream->AddListener(mOwnedListener);
 }
 
 void DOMMediaStream::InitPlaybackStreamCommon(MediaStreamGraph* aGraph) {
