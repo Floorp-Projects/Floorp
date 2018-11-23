@@ -1112,44 +1112,6 @@ static const MediaTrackConstraints& GetInvariant(
 }
 
 /**
- * This class is only needed since fake tracks are added dynamically.
- * Instead of refactoring to add them explicitly we let the DOMMediaStream
- * query us for the source as they become available.
- * Since they are used only for testing the API surface, we make them very
- * simple.
- */
-class FakeTrackSourceGetter : public MediaStreamTrackSourceGetter {
- public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FakeTrackSourceGetter,
-                                           MediaStreamTrackSourceGetter)
-
-  explicit FakeTrackSourceGetter(nsIPrincipal* aPrincipal)
-      : mPrincipal(aPrincipal) {}
-
-  already_AddRefed<dom::MediaStreamTrackSource> GetMediaStreamTrackSource(
-      TrackID aInputTrackID) override {
-    NS_ASSERTION(kAudioTrack != aInputTrackID,
-                 "Only fake tracks should appear dynamically");
-    NS_ASSERTION(kVideoTrack != aInputTrackID,
-                 "Only fake tracks should appear dynamically");
-    return do_AddRef(new BasicTrackSource(mPrincipal));
-  }
-
- protected:
-  virtual ~FakeTrackSourceGetter() {}
-
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-};
-
-NS_IMPL_ADDREF_INHERITED(FakeTrackSourceGetter, MediaStreamTrackSourceGetter)
-NS_IMPL_RELEASE_INHERITED(FakeTrackSourceGetter, MediaStreamTrackSourceGetter)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FakeTrackSourceGetter)
-NS_INTERFACE_MAP_END_INHERITING(MediaStreamTrackSourceGetter)
-NS_IMPL_CYCLE_COLLECTION_INHERITED(FakeTrackSourceGetter,
-                                   MediaStreamTrackSourceGetter, mPrincipal)
-
-/**
  * Creates a MediaStream, attaches a listener and fires off a success callback
  * to the DOM with the stream. We also pass in the error callback so it can
  * be released correctly.
@@ -1401,8 +1363,7 @@ class GetUserMediaStreamRunnable : public Runnable {
       // fake tracks. Apart from them gUM never adds tracks dynamically.
       domStream = new nsMainThreadPtrHolder<DOMMediaStream>(
           "GetUserMediaStreamRunnable::DOMMediaStreamMainThreadHolder",
-          DOMMediaStream::CreateSourceStreamAsInput(
-              window, msg, new FakeTrackSourceGetter(principal)));
+          DOMMediaStream::CreateSourceStreamAsInput(window, msg));
       stream = domStream->GetInputStream()->AsSourceStream();
 
       if (mAudioDevice) {

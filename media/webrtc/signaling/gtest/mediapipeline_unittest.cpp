@@ -92,7 +92,7 @@ class FakeAudioStreamTrack : public mozilla::dom::AudioStreamTrack {
 public:
 
   FakeAudioStreamTrack()
-    : AudioStreamTrack(new DOMMediaStream(nullptr, nullptr), 0, 1,
+    : AudioStreamTrack(new DOMMediaStream(nullptr), 0, 1,
                        new FakeMediaStreamTrackSource())
     , mMutex("Fake AudioStreamTrack")
     , mStop(false)
@@ -117,11 +117,6 @@ public:
   {
     mozilla::MutexAutoLock lock(mMutex);
     mListeners.push_back(aListener);
-  }
-
-  virtual already_AddRefed<mozilla::dom::MediaStreamTrack> CloneInternal(DOMMediaStream* aOwningStream, TrackID aTrackID) override
-  {
-    return RefPtr<MediaStreamTrack>(new FakeAudioStreamTrack).forget();
   }
 
   private:
