@@ -170,7 +170,7 @@ detekt {
     version = "1.0.0.RC9.2"
     input = files("$projectDir/components", "$projectDir/buildSrc", "$projectDir/samples")
     config = files("$projectDir/config/detekt.yml")
-    filters = ".*test.*,.*/resources/.*,.*/tmp/.*"
+    filters = ".*test.*,.*/resources/.*,.*/tmp/.*,.*/build/.*"
     baseline = file("$projectDir/config/detekt-baseline.xml")
 
     reports {
