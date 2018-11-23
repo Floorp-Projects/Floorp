@@ -275,6 +275,7 @@ UNIFIED_SOURCES += [
     'vm/JSONParser.cpp',
     'vm/JSONPrinter.cpp',
     'vm/JSScript.cpp',
+    'vm/List.cpp',
     'vm/MemoryMetrics.cpp',
     'vm/NativeObject.cpp',
     'vm/ObjectGroup.cpp',
