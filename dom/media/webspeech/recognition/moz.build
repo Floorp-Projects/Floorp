@@ -18,7 +18,7 @@ EXPORTS.mozilla.dom += [
     'SpeechRecognitionAlternative.h',
     'SpeechRecognitionResult.h',
     'SpeechRecognitionResultList.h',
-    'SpeechStreamListener.h',
+    'SpeechTrackListener.h',
 ]
 
 if CONFIG['MOZ_WEBSPEECH_TEST_BACKEND']:
@@ -36,7 +36,7 @@ UNIFIED_SOURCES += [
     'SpeechRecognitionAlternative.cpp',
     'SpeechRecognitionResult.cpp',
     'SpeechRecognitionResultList.cpp',
-    'SpeechStreamListener.cpp',
+    'SpeechTrackListener.cpp',
 ]
 
 if CONFIG['MOZ_WEBSPEECH_TEST_BACKEND']:
