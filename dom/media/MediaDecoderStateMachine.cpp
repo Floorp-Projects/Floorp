@@ -3772,6 +3772,7 @@ void MediaDecoderStateMachine::EnsureOutputStreamManager(
   if (mOutputStreamManager) {
     return;
   }
+  LOG("Starting output track allocations at id %d", mNextOutputStreamTrackID);
   mOutputStreamManager = new OutputStreamManager(
       aGraph->CreateSourceStream(), mNextOutputStreamTrackID,
       mOutputStreamPrincipal, mOutputStreamCORSMode, mAbstractMainThread);
@@ -3782,10 +3783,12 @@ void MediaDecoderStateMachine::EnsureOutputStreamManager(
   if (aLoadedInfo->HasAudio()) {
     mOutputStreamManager->AddTrack(mirroredTrackIDAllocation++,
                                    MediaSegment::AUDIO);
+    LOG("Pre-created audio track with id %d", mirroredTrackIDAllocation - 1);
   }
   if (aLoadedInfo->HasVideo()) {
     mOutputStreamManager->AddTrack(mirroredTrackIDAllocation++,
                                    MediaSegment::VIDEO);
+    LOG("Pre-created video track with id %d", mirroredTrackIDAllocation - 1);
   }
 }
 
