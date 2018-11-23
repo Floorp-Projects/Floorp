@@ -196,8 +196,7 @@ public:
   void MuteAudioContexts();
   void UnmuteAudioContexts();
 
-  bool GetAudioCaptured() const;
-  nsresult SetAudioCapture(bool aCapture);
+  void SetAudioCapture(bool aCapture);
 
   mozilla::dom::Performance* GetPerformance();
 
@@ -681,8 +680,6 @@ protected:
   // Only for telemetry probe so that you can remove this after the
   // telemetry stops working.
   bool mMayHaveTextEventListenerInDefaultGroup;
-
-  bool mAudioCaptured;
 
   // Our inner window's outer window.
   nsCOMPtr<nsPIDOMWindowOuter> mOuterWindow;
