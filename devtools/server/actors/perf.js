@@ -6,6 +6,7 @@
 const protocol = require("devtools/shared/protocol");
 const { ActorClassWithSpec, Actor } = protocol;
 const { perfSpec } = require("devtools/shared/specs/perf");
+const { DEFAULT_WINDOW_LENGTH } = require("devtools/shared/performance-new/common");
 const { Ci } = require("chrome");
 const Services = require("Services");
 
@@ -54,6 +55,8 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
     // to be tweaked or made configurable as needed.
     const settings = {
       entries: options.entries || 1000000,
+      duration: options.duration !== undefined
+        ? options.duration : DEFAULT_WINDOW_LENGTH,
       interval: options.interval || 1,
       features: options.features ||
         ["js", "stackwalk", "responsiveness", "threads", "leaf"],
@@ -68,7 +71,8 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
         settings.features,
         settings.features.length,
         settings.threads,
-        settings.threads.length
+        settings.threads.length,
+        settings.duration
       );
     } catch (e) {
       // In case any errors get triggered, bailout with a false.
@@ -153,7 +157,7 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
         break;
       case "profiler-started":
         const param = subject.QueryInterface(Ci.nsIProfilerStartParams);
-        this.emit(topic, param.entries, param.interval, param.features);
+        this.emit(topic, param.entries, param.interval, param.features, param.duration);
         break;
       case "profiler-stopped":
         this.emit(topic);

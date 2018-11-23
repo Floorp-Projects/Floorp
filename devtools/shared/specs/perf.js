@@ -14,6 +14,7 @@ const perfDescription = {
       entries: Arg(0, "number"),
       interval: Arg(1, "number"),
       features: Arg(2, "number"),
+      duration: Arg(3, "nullable:number"),
     },
     "profiler-stopped": {
       type: "profiler-stopped",
@@ -30,6 +31,7 @@ const perfDescription = {
     startProfiler: {
       request: {
         entries: Option(0, "number"),
+        duration: Option(0, "nullable:number"),
         interval: Option(0, "number"),
         features: Option(0, "array:string"),
         threads: Option(0, "array:string"),

@@ -190,6 +190,7 @@ function createPerfComponent() {
     store.dispatch(actions.initializeStore({
       perfFront: perfFrontMock,
       receiveProfile: receiveProfileMock,
+      actorVersion: 1,
       recordingSettingsFromPreferences: selectors.getRecordingSettings(store.getState()),
       setRecordingPreferences: recordingPreferencesMock,
     }));

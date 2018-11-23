@@ -17,14 +17,15 @@ add_task(async function() {
   is(await front.isActive(), false,
     "The profiler is not active yet.");
 
-  front.once("profiler-started", (entries, interval, features) => {
+  front.once("profiler-started", (entries, interval, features, duration) => {
     is(entries, 1000, "Should apply entries by startProfiler");
     is(interval, 0.1, "Should apply interval by startProfiler");
     is(features, 0x202, "Should apply features by startProfiler");
+    is(duration, 2, "Should apply duration by startProfiler");
   });
 
   // Start the profiler.
-  await front.startProfiler({ entries: 1000, interval: 0.1,
+  await front.startProfiler({ entries: 1000, duration: 2, interval: 0.1,
                               features: ["js", "stackwalk"] });
 
   is(await front.isActive(), true, "The profiler is active.");

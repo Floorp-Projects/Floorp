@@ -25,6 +25,14 @@ const recordingState = {
 
 const UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 
+// Window Length accepts a numerical value between 1-N. We also need to put an
+// infinite number at the end of the window length slider. Therefore, the max
+// value pretends like it's infinite in the slider.
+// The maximum value of window length is 300 seconds. And because of the working
+// mechanism of `makeExponentialScale` the next value is 400, so we are treating
+// 400 as infinity.
+const INFINITE_WINDOW_LENGTH = 400;
+
 /**
  * Linearly interpolate between values.
  * https://en.wikipedia.org/wiki/Linear_interpolation
@@ -180,4 +188,5 @@ module.exports = {
   scaleRangeWithClamping,
   calculateOverhead,
   recordingState,
+  INFINITE_WINDOW_LENGTH,
 };
