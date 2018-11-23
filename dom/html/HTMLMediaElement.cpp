@@ -2449,21 +2449,6 @@ HTMLMediaElement::NotifyMediaTrackDisabled(MediaTrack* aTrack)
 }
 
 void
-HTMLMediaElement::NotifyMediaStreamTracksAvailable(DOMMediaStream* aStream)
-{
-  if (!mSrcStream || mSrcStream != aStream) {
-    return;
-  }
-
-  LOG(LogLevel::Debug, ("MediaElement %p MediaStream tracks available", this));
-
-  mSrcStreamTracksAvailable = true;
-
-  FirstFrameLoaded();
-  UpdateReadyStateInternal();
-}
-
-void
 HTMLMediaElement::DealWithFailedElement(nsIContent* aSourceElement)
 {
   if (mShuttingDown) {
@@ -5014,29 +4999,6 @@ HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder)
   return NS_OK;
 }
 
-class HTMLMediaElement::MediaStreamTracksAvailableCallback
-  : public OnTracksAvailableCallback
-{
-public:
-  explicit MediaStreamTracksAvailableCallback(HTMLMediaElement* aElement)
-    : OnTracksAvailableCallback()
-    , mElement(aElement)
-  {
-  }
-  virtual void NotifyTracksAvailable(DOMMediaStream* aStream) override
-  {
-    NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-
-    if (!mElement) {
-      return;
-    }
-    mElement->NotifyMediaStreamTracksAvailable(aStream);
-  }
-
-private:
-  WeakPtr<HTMLMediaElement> mElement;
-};
-
 class HTMLMediaElement::MediaStreamTrackListener
   : public DOMMediaStream::TrackListener
 {
@@ -5203,7 +5165,6 @@ HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
     NotifyMediaStreamTrackAdded(track);
   }
 
-  mSrcStream->OnTracksAvailable(new MediaStreamTracksAvailableCallback(this));
   mMediaStreamTrackListener = MakeUnique<MediaStreamTrackListener>(this);
   mSrcStream->RegisterTrackListener(mMediaStreamTrackListener.get());
 
@@ -5214,7 +5175,7 @@ HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
   ChangeDelayLoadStatus(false);
   CheckAutoplayDataReady();
 
-  // FirstFrameLoaded() will be called when the stream has current data.
+  // FirstFrameLoaded() will be called when the stream has tracks.
 }
 
 void
@@ -5323,6 +5284,24 @@ HTMLMediaElement::NotifyMediaStreamTrackAdded(
   }
 
   UpdateReadyStateInternal();
+
+  if (!mSrcStreamTracksAvailable) {
+    mAbstractMainThread->Dispatch(NS_NewRunnableFunction(
+      "HTMLMediaElement::NotifyMediaStreamTrackAdded->FirstFrameLoaded",
+      [this, self = RefPtr<HTMLMediaElement>(this), stream = mSrcStream]()
+      {
+        if (!mSrcStream || mSrcStream != stream) {
+          return;
+        }
+
+        LOG(LogLevel::Debug, ("MediaElement %p MediaStream tracks available", this));
+
+        mSrcStreamTracksAvailable = true;
+
+        FirstFrameLoaded();
+        UpdateReadyStateInternal();
+      }));
+  }
 }
 
 void
