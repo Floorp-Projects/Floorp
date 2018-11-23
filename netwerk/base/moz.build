@@ -69,7 +69,6 @@ XPIDL_SOURCES += [
     'nsINetworkLinkService.idl',
     'nsINetworkPredictor.idl',
     'nsINetworkPredictorVerifier.idl',
-    'nsINetworkProperties.idl',
     'nsINullChannel.idl',
     'nsIParentChannel.idl',
     'nsIParentRedirectingChannel.idl',
