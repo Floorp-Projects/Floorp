@@ -273,7 +273,7 @@ GetMiddlemanCallValue(size_t aId)
 }
 
 bool
-Middleman_SystemInput(MiddlemanCallContext& aCx, const void** aThingPtr)
+MM_SystemInput(MiddlemanCallContext& aCx, const void** aThingPtr)
 {
   MOZ_RELEASE_ASSERT(aCx.AccessPreface());
 
@@ -329,7 +329,7 @@ MangleSystemValue(const void* aValue, bool aFromRecording)
 }
 
 void
-Middleman_SystemOutput(MiddlemanCallContext& aCx, const void** aOutput, bool aUpdating)
+MM_SystemOutput(MiddlemanCallContext& aCx, const void** aOutput, bool aUpdating)
 {
   if (!*aOutput) {
     if (aCx.mPhase == MiddlemanCallPhase::MiddlemanOutput) {

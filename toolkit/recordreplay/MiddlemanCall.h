@@ -356,7 +356,7 @@ void ResetMiddlemanCalls();
 // Capture the contents of an input buffer at BufferArg with element count at CountArg.
 template <size_t BufferArg, size_t CountArg, typename ElemType = char>
 static inline void
-Middleman_Buffer(MiddlemanCallContext& aCx)
+MM_Buffer(MiddlemanCallContext& aCx)
 {
   if (aCx.AccessPreface()) {
     auto& buffer = aCx.mArguments->Arg<BufferArg, void*>();
@@ -368,7 +368,7 @@ Middleman_Buffer(MiddlemanCallContext& aCx)
 // Capture the contents of a fixed size input buffer.
 template <size_t BufferArg, size_t ByteSize>
 static inline void
-Middleman_BufferFixedSize(MiddlemanCallContext& aCx)
+MM_BufferFixedSize(MiddlemanCallContext& aCx)
 {
   if (aCx.AccessPreface()) {
     auto& buffer = aCx.mArguments->Arg<BufferArg, void*>();
@@ -381,7 +381,7 @@ Middleman_BufferFixedSize(MiddlemanCallContext& aCx)
 // Capture a C string argument.
 template <size_t StringArg>
 static inline void
-Middleman_CString(MiddlemanCallContext& aCx)
+MM_CString(MiddlemanCallContext& aCx)
 {
   if (aCx.AccessPreface()) {
     auto& buffer = aCx.mArguments->Arg<StringArg, char*>();
@@ -394,7 +394,7 @@ Middleman_CString(MiddlemanCallContext& aCx)
 // Capture the data written to an output buffer at BufferArg with element count at CountArg.
 template <size_t BufferArg, size_t CountArg, typename ElemType>
 static inline void
-Middleman_WriteBuffer(MiddlemanCallContext& aCx)
+MM_WriteBuffer(MiddlemanCallContext& aCx)
 {
   auto& buffer = aCx.mArguments->Arg<BufferArg, void*>();
   auto count = aCx.mArguments->Arg<CountArg, size_t>();
@@ -404,7 +404,7 @@ Middleman_WriteBuffer(MiddlemanCallContext& aCx)
 // Capture the data written to a fixed size output buffer.
 template <size_t BufferArg, size_t ByteSize>
 static inline void
-Middleman_WriteBufferFixedSize(MiddlemanCallContext& aCx)
+MM_WriteBufferFixedSize(MiddlemanCallContext& aCx)
 {
   auto& buffer = aCx.mArguments->Arg<BufferArg, void*>();
   aCx.ReadOrWriteOutputBuffer(&buffer, ByteSize);
@@ -413,15 +413,15 @@ Middleman_WriteBufferFixedSize(MiddlemanCallContext& aCx)
 // Capture return values that are too large for register storage.
 template <size_t ByteSize>
 static inline void
-Middleman_OversizeRval(MiddlemanCallContext& aCx)
+MM_OversizeRval(MiddlemanCallContext& aCx)
 {
-  Middleman_WriteBufferFixedSize<0, ByteSize>(aCx);
+  MM_WriteBufferFixedSize<0, ByteSize>(aCx);
 }
 
 // Capture a byte count of stack argument data.
 template <size_t ByteSize>
 static inline void
-Middleman_StackArgumentData(MiddlemanCallContext& aCx)
+MM_StackArgumentData(MiddlemanCallContext& aCx)
 {
   if (aCx.AccessPreface()) {
     auto stack = aCx.mArguments->StackAddress<0>();
@@ -430,17 +430,17 @@ Middleman_StackArgumentData(MiddlemanCallContext& aCx)
 }
 
 static inline void
-Middleman_NoOp(MiddlemanCallContext& aCx)
+MM_NoOp(MiddlemanCallContext& aCx)
 {
 }
 
 template <MiddlemanCallFn Fn0,
           MiddlemanCallFn Fn1,
-          MiddlemanCallFn Fn2 = Middleman_NoOp,
-          MiddlemanCallFn Fn3 = Middleman_NoOp,
-          MiddlemanCallFn Fn4 = Middleman_NoOp>
+          MiddlemanCallFn Fn2 = MM_NoOp,
+          MiddlemanCallFn Fn3 = MM_NoOp,
+          MiddlemanCallFn Fn4 = MM_NoOp>
 static inline void
-Middleman_Compose(MiddlemanCallContext& aCx)
+MM_Compose(MiddlemanCallContext& aCx)
 {
   Fn0(aCx);
   Fn1(aCx);
@@ -452,11 +452,11 @@ Middleman_Compose(MiddlemanCallContext& aCx)
 // Helper for capturing inputs that are produced by other middleman calls.
 // Returns false in the ReplayInput or MiddlemanInput phases if the input
 // system value could not be found.
-bool Middleman_SystemInput(MiddlemanCallContext& aCx, const void** aThingPtr);
+bool MM_SystemInput(MiddlemanCallContext& aCx, const void** aThingPtr);
 
 // Helper for capturing output system values that might be consumed by other
 // middleman calls.
-void Middleman_SystemOutput(MiddlemanCallContext& aCx, const void** aOutput, bool aUpdating = false);
+void MM_SystemOutput(MiddlemanCallContext& aCx, const void** aOutput, bool aUpdating = false);
 
 } // namespace recordreplay
 } // namespace mozilla
