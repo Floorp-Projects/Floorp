@@ -6070,8 +6070,10 @@ HTMLMediaElement::UpdateReadyStateInternal()
     return;
   }
 
-  if (IsVideo() && HasVideo() && !IsPlaybackEnded() && GetImageContainer() &&
-      !GetImageContainer()->HasCurrentImage()) {
+  if (IsVideo() &&
+      VideoTracks() && !VideoTracks()->IsEmpty() &&
+      !IsPlaybackEnded() &&
+      GetImageContainer() && !GetImageContainer()->HasCurrentImage()) {
     // Don't advance if we are playing video, but don't have a video frame.
     // Also, if video became available after advancing to HAVE_CURRENT_DATA
     // while we are still playing, we need to revert to HAVE_METADATA until
