@@ -15,7 +15,7 @@ use api::{DevicePixelScale, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestFlags, HitTestResult};
 use api::{IdNamespace, LayoutPoint, PipelineId, RenderNotifier, SceneMsg, ScrollClamping};
 use api::{MemoryReport, VoidPtrToSizeFn};
-use api::{ScrollLocation, ScrollNodeState, TransactionMsg, ResourceUpdate, ImageKey};
+use api::{ScrollLocation, ScrollNodeState, TransactionMsg, ResourceUpdate, BlobImageKey};
 use api::{NotificationRequest, Checkpoint};
 use api::channel::{MsgReceiver, Payload};
 #[cfg(feature = "capture")]
@@ -1393,19 +1393,15 @@ impl RenderBackend {
     }
 }
 
-fn get_blob_image_updates(updates: &[ResourceUpdate]) -> Vec<ImageKey> {
+fn get_blob_image_updates(updates: &[ResourceUpdate]) -> Vec<BlobImageKey> {
     let mut requests = Vec::new();
     for update in updates {
         match *update {
-            ResourceUpdate::AddImage(ref img) => {
-                if img.data.is_blob() {
-                    requests.push(img.key);
-                }
+            ResourceUpdate::AddBlobImage(ref img) => {
+                requests.push(img.key);
             }
-            ResourceUpdate::UpdateImage(ref img) => {
-                if img.data.is_blob() {
-                    requests.push(img.key);
-                }
+            ResourceUpdate::UpdateBlobImage(ref img) => {
+                requests.push(img.key);
             }
             _ => {}
         }

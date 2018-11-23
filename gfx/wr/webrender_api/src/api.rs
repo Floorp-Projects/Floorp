@@ -11,11 +11,13 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::os::raw::c_void;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::u32;
 use {BuiltDisplayList, BuiltDisplayListDescriptor, ColorF, DeviceIntPoint, DeviceIntRect};
 use {DeviceIntSize, ExternalScrollId, FontInstanceKey, FontInstanceOptions};
 use {FontInstancePlatformOptions, FontKey, FontVariation, GlyphDimensions, GlyphIndex, ImageData};
-use {ImageDescriptor, ImageKey, ItemTag, LayoutPoint, LayoutSize, LayoutTransform, LayoutVector2D};
+use {ImageDescriptor, ItemTag, LayoutPoint, LayoutSize, LayoutTransform, LayoutVector2D};
+use {BlobDirtyRect, ImageDirtyRect, ImageKey, BlobImageKey, BlobImageData};
 use {NativeFontHandle, WorldPoint};
 
 pub type TileSize = u16;
@@ -26,8 +28,10 @@ pub type DocumentLayer = i8;
 pub enum ResourceUpdate {
     AddImage(AddImage),
     UpdateImage(UpdateImage),
+    AddBlobImage(AddBlobImage),
+    UpdateBlobImage(UpdateBlobImage),
     DeleteImage(ImageKey),
-    SetImageVisibleArea(ImageKey, DeviceIntRect),
+    SetBlobImageVisibleArea(BlobImageKey, DeviceIntRect),
     AddFont(AddFont),
     DeleteFont(FontKey),
     AddFontInstance(AddFontInstance),
@@ -321,13 +325,13 @@ impl Transaction {
         key: ImageKey,
         descriptor: ImageDescriptor,
         data: ImageData,
-        dirty_rect: Option<DeviceIntRect>,
+        dirty_rect: &ImageDirtyRect,
     ) {
         self.resource_updates.push(ResourceUpdate::UpdateImage(UpdateImage {
             key,
             descriptor,
             data,
-            dirty_rect,
+            dirty_rect: *dirty_rect,
         }));
     }
 
@@ -335,8 +339,46 @@ impl Transaction {
         self.resource_updates.push(ResourceUpdate::DeleteImage(key));
     }
 
-    pub fn set_image_visible_area(&mut self, key: ImageKey, area: DeviceIntRect) {
-        self.resource_updates.push(ResourceUpdate::SetImageVisibleArea(key, area))
+    pub fn add_blob_image(
+        &mut self,
+        key: BlobImageKey,
+        descriptor: ImageDescriptor,
+        data: Arc<BlobImageData>,
+        tiling: Option<TileSize>,
+    ) {
+        self.resource_updates.push(
+            ResourceUpdate::AddBlobImage(AddBlobImage {
+                key,
+                descriptor,
+                data,
+                tiling,
+            })
+        );
+    }
+
+    pub fn update_blob_image(
+        &mut self,
+        key: BlobImageKey,
+        descriptor: ImageDescriptor,
+        data: Arc<BlobImageData>,
+        dirty_rect: &BlobDirtyRect,
+    ) {
+        self.resource_updates.push(
+            ResourceUpdate::UpdateBlobImage(UpdateBlobImage {
+                key,
+                descriptor,
+                data,
+                dirty_rect: *dirty_rect,
+            })
+        );
+    }
+
+    pub fn delete_blob_image(&mut self, key: BlobImageKey) {
+        self.resource_updates.push(ResourceUpdate::DeleteImage(key.as_image()));
+    }
+
+    pub fn set_blob_image_visible_area(&mut self, key: BlobImageKey, area: DeviceIntRect) {
+        self.resource_updates.push(ResourceUpdate::SetBlobImageVisibleArea(key, area))
     }
 
     pub fn add_raw_font(&mut self, key: FontKey, bytes: Vec<u8>, index: u32) {
@@ -464,7 +506,25 @@ pub struct UpdateImage {
     pub key: ImageKey,
     pub descriptor: ImageDescriptor,
     pub data: ImageData,
-    pub dirty_rect: Option<DeviceIntRect>,
+    pub dirty_rect: ImageDirtyRect,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct AddBlobImage {
+    pub key: BlobImageKey,
+    pub descriptor: ImageDescriptor,
+    //#[serde(with = "serde_image_data_raw")]
+    pub data: Arc<BlobImageData>,
+    pub tiling: Option<TileSize>,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct UpdateBlobImage {
+    pub key: BlobImageKey,
+    pub descriptor: ImageDescriptor,
+    //#[serde(with = "serde_image_data_raw")]
+    pub data: Arc<BlobImageData>,
+    pub dirty_rect: BlobDirtyRect,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -1009,6 +1069,11 @@ impl RenderApi {
     pub fn generate_image_key(&self) -> ImageKey {
         let new_id = self.next_unique_id();
         ImageKey::new(self.namespace_id, new_id)
+    }
+
+    /// Creates a `BlobImageKey`.
+    pub fn generate_blob_image_key(&self) -> BlobImageKey {
+        BlobImageKey(self.generate_image_key())
     }
 
     /// Add/remove/update resources such as images and fonts.
