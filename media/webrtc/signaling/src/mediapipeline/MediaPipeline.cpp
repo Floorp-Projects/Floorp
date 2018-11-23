@@ -825,21 +825,13 @@ MediaPipeline::CheckTransportStates()
   }
 }
 
-nsresult
+void
 MediaPipeline::SendPacket(MediaPacket& packet)
 {
   ASSERT_ON_THREAD(mStsThread);
   MOZ_ASSERT(mRtpState == TransportLayer::TS_OPEN);
   MOZ_ASSERT(!mTransportId.empty());
-  nsresult rv = mTransportHandler->SendPacket(mTransportId, packet);
-
-  if (NS_FAILED(rv)) {
-    MOZ_LOG(gMediaPipelineLog, LogLevel::Error,
-            ("Failed write on stream %s", mDescription.c_str()));
-    return NS_BASE_STREAM_CLOSED;
-  }
-
-  return NS_OK;
+  mTransportHandler->SendPacket(mTransportId, packet);
 }
 
 void
@@ -1450,7 +1442,7 @@ MediaPipeline::PipelineTransport::SendRtpPacket(const uint8_t* aData, size_t aLe
   return NS_OK;
 }
 
-nsresult
+void
 MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
   nsAutoPtr<MediaPacket> aPacket)
 {
@@ -1458,15 +1450,15 @@ MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
 
   ASSERT_ON_THREAD(mStsThread);
   if (!mPipeline) {
-    return NS_OK; // Detached
+    return; // Detached
   }
 
   if (isRtp && mPipeline->mRtpState != TransportLayer::TS_OPEN) {
-    return NS_OK;
+    return;
   }
 
   if (!isRtp && mPipeline->mRtcpState != TransportLayer::TS_OPEN) {
-    return NS_OK;
+    return;
   }
 
   MediaPacket packet(std::move(*aPacket));
@@ -1497,7 +1489,7 @@ MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
            mPipeline->mDescription.c_str(),
            (isRtp ? "RTP" : "RTCP")));
 
-  return mPipeline->SendPacket(packet);
+  mPipeline->SendPacket(packet);
 }
 
 nsresult
