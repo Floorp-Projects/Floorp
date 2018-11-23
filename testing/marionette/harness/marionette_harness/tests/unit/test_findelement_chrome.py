@@ -18,13 +18,7 @@ class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
 
         self.marionette.set_context("chrome")
 
-        def open_window_with_js():
-            self.marionette.execute_script("""
-              window.open('chrome://marionette/content/test.xul',
-                          'foo', 'chrome,centerscreen');
-            """)
-
-        win = self.open_window(open_window_with_js)
+        win = self.open_chrome_window("chrome://marionette/content/test.xul")
         self.marionette.switch_to_window(win)
 
     def tearDown(self):
