@@ -4400,15 +4400,6 @@ nsGlobalWindowInner::GetLocation()
   return mLocation;
 }
 
-bool
-nsGlobalWindowInner::IsTopLevelWindowActive()
-{
-  if (GetOuterWindowInternal()) {
-    return GetOuterWindowInternal()->IsTopLevelWindowActive();
-  }
-  return false;
-}
-
 void
 nsGlobalWindowInner::MaybeUpdateTouchState()
 {

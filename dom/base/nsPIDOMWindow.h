@@ -371,8 +371,6 @@ public:
   virtual nsresult UnregisterIdleObserver(
     mozilla::dom::MozIdleObserver& aIdleObserver) = 0;
 
-  virtual bool IsTopLevelWindowActive() = 0;
-
   mozilla::dom::EventTarget* GetParentTarget()
   {
     if (!mParentTarget) {
