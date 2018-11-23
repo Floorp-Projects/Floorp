@@ -32,6 +32,20 @@ NTSTATUS NTAPI NtWriteFileGather(HANDLE, HANDLE, PIO_APC_ROUTINE, PVOID,
 NTSTATUS NTAPI NtQueryFullAttributesFile(POBJECT_ATTRIBUTES, PVOID);
 NTSTATUS NTAPI LdrLoadDll(PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileName, PHANDLE handle);
 NTSTATUS NTAPI LdrUnloadDll(HMODULE);
+
+enum SECTION_INHERIT
+{
+  ViewShare = 1,
+  ViewUnmap = 2
+};
+
+NTSTATUS NTAPI
+NtMapViewOfSection(HANDLE aSection, HANDLE aProcess, PVOID* aBaseAddress,
+                   ULONG_PTR aZeroBits, SIZE_T aCommitSize,
+                   PLARGE_INTEGER aSectionOffset, PSIZE_T aViewSize,
+                   SECTION_INHERIT aInheritDisposition, ULONG aAllocationType,
+                   ULONG aProtectionFlags);
+
 // These pointers are disguised as PVOID to avoid pulling in obscure headers
 PVOID NTAPI LdrResolveDelayLoadedAPI(PVOID, PVOID, PVOID, PVOID, PVOID, ULONG);
 void CALLBACK ProcessCaretEvents(HWINEVENTHOOK, DWORD, HWND, LONG, LONG, DWORD, DWORD);
@@ -82,11 +96,11 @@ template <typename CallableT>
 bool TestFunction(CallableT aFunc);
 
 #define DEFINE_TEST_FUNCTION(calling_convention) \
-  template <typename R, typename... Args, typename... TestArgs> \
-  bool TestFunction(WindowsDllInterceptor::FuncHookType<R (calling_convention *)(Args...)>&& aFunc, \
+  template <template <typename I, typename F> class FuncHookT, typename InterceptorT, typename R, typename... Args, typename... TestArgs> \
+  bool TestFunction(FuncHookT<InterceptorT, R (calling_convention *)(Args...)>&& aFunc, \
                     bool (* aPred)(R), TestArgs... aArgs) \
   { \
-    using FuncHookType = WindowsDllInterceptor::FuncHookType<R (calling_convention *)(Args...)>; \
+    using FuncHookType = FuncHookT<InterceptorT, R (calling_convention *)(Args...)>; \
     using ArgTuple = Tuple<Args...>; \
     using Indices = std::index_sequence_for<Args...>; \
     ArgTuple fakeArgs{ std::forward<TestArgs>(aArgs)... }; \
@@ -94,11 +108,11 @@ bool TestFunction(CallableT aFunc);
   } \
   \
   /* Specialization for functions returning void */ \
-  template <typename... Args, typename PredicateT, typename... TestArgs> \
-  bool TestFunction(WindowsDllInterceptor::FuncHookType<void (calling_convention *)(Args...)>&& aFunc, \
+  template <template <typename I, typename F> class FuncHookT, typename InterceptorT, typename... Args, typename PredicateT, typename... TestArgs> \
+  bool TestFunction(FuncHookT<InterceptorT, void (calling_convention *)(Args...)>&& aFunc, \
                     PredicateT&& aPred, TestArgs... aArgs) \
   { \
-    using FuncHookType = WindowsDllInterceptor::FuncHookType<void (calling_convention *)(Args...)>; \
+    using FuncHookType = FuncHookT<InterceptorT, void (calling_convention *)(Args...)>; \
     using ArgTuple = Tuple<Args...>; \
     using Indices = std::index_sequence_for<Args...>; \
     ArgTuple fakeArgs{ std::forward<TestArgs>(aArgs)... }; \
@@ -121,11 +135,11 @@ DEFINE_TEST_FUNCTION(__fastcall)
 
 // Test the hooked function against the supplied predicate
 template <typename OrigFuncT, typename PredicateT, typename... Args>
-bool CheckHook(WindowsDllInterceptor::FuncHookType<OrigFuncT> &aOrigFunc,
+bool CheckHook(OrigFuncT &aOrigFunc,
                const char* aDllName, const char* aFuncName, PredicateT&& aPred,
                Args... aArgs)
 {
-  if (TestFunction(std::forward<WindowsDllInterceptor::FuncHookType<OrigFuncT>>(aOrigFunc), std::forward<PredicateT>(aPred), std::forward<Args>(aArgs)...)) {
+  if (TestFunction(std::forward<OrigFuncT>(aOrigFunc), std::forward<PredicateT>(aPred), std::forward<Args>(aArgs)...)) {
     printf("TEST-PASS | WindowsDllInterceptor | "
            "Executed hooked function %s from %s\n", aFuncName, aDllName);
     return true;
@@ -399,6 +413,70 @@ bool ShouldTestTipTsf()
   return true;
 }
 
+#if defined(_M_X64)
+
+// Use VMSharingPolicyUnique for the TenByteInterceptor, as it needs to
+// reserve its trampoline memory in a special location.
+using TenByteInterceptor =
+  mozilla::interceptor::WindowsDllInterceptor<
+    mozilla::interceptor::VMSharingPolicyUnique<
+      mozilla::interceptor::MMPolicyInProcess,
+      mozilla::interceptor::kDefaultTrampolineSize>>;
+
+static TenByteInterceptor::FuncHookType<decltype(&::NtMapViewOfSection)>
+  orig_NtMapViewOfSection;
+
+#endif // defined(_M_X64)
+
+bool
+TestTenByteDetour()
+{
+#if defined(_M_X64)
+  auto pNtMapViewOfSection =
+    reinterpret_cast<decltype(&::NtMapViewOfSection)>(
+      ::GetProcAddress(::GetModuleHandleW(L"ntdll.dll"), "NtMapViewOfSection"));
+  if (!pNtMapViewOfSection) {
+    printf("TEST-FAILED | WindowsDllInterceptor | "
+           "Failed to resolve ntdll!NtMapViewOfSection\n");
+    return false;
+  }
+
+  { // Scope for tenByteInterceptor
+    TenByteInterceptor tenByteInterceptor;
+    tenByteInterceptor.TestOnlyDetourInit(L"ntdll.dll",
+      mozilla::interceptor::DetourFlags::eTestOnlyForce10BytePatch);
+    if (!orig_NtMapViewOfSection.SetDetour(tenByteInterceptor,
+                                           "NtMapViewOfSection", nullptr)) {
+      printf("TEST-FAILED | WindowsDllInterceptor | "
+             "Failed to hook ntdll!NtMapViewOfSection via 10-byte patch\n");
+      return false;
+    }
+
+    auto pred = &Predicates<decltype(&::NtMapViewOfSection)>::Ignore<((NTSTATUS)0)>;
+
+    if (!CheckHook(orig_NtMapViewOfSection, "ntdll.dll", "NtMapViewOfSection", pred)) {
+      // CheckHook has already printed the error message for us
+      return false;
+    }
+  }
+
+  // Now ensure that our hook cleanup worked
+  NTSTATUS status = pNtMapViewOfSection(nullptr, nullptr, nullptr, 0, 0, nullptr,
+                                        nullptr, ((SECTION_INHERIT)0), 0, 0);
+  if (NT_SUCCESS(status)) {
+    printf("TEST-FAILED | WindowsDllInterceptor | "
+           "Unexpected successful call to ntdll!NtMapViewOfSection after removing 10-byte hook\n");
+    return false;
+  }
+
+  printf("TEST-PASS | WindowsDllInterceptor | "
+         "Successfully unhooked ntdll!NtMapViewOfSection via 10-byte patch\n");
+  return true;
+#else
+  return true;
+#endif
+}
+
 extern "C"
 int wmain(int argc, wchar_t* argv[])
 {
@@ -537,7 +615,8 @@ int wmain(int argc, wchar_t* argv[])
       TEST_HOOK(sspicli.dll, FreeCredentialsHandle, NotEquals, SEC_E_OK) &&
 
       TEST_DETOUR_SKIP_EXEC(kernel32.dll, BaseThreadInitThunk) &&
-      TEST_DETOUR_SKIP_EXEC(ntdll.dll, LdrLoadDll)) {
+      TEST_DETOUR_SKIP_EXEC(ntdll.dll, LdrLoadDll) &&
+      TestTenByteDetour()) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
 
     LARGE_INTEGER end, freq;
