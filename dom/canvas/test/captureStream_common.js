@@ -128,12 +128,8 @@ CaptureStreamTestHelper.prototype = {
       if (aborted) {
         throw await cancel;
       }
-      try {
-        if (test(this.getPixel(video, offsetX, offsetY, width, height))) {
-          return;
-        }
-      } catch (e) {
-        info("Waiting for pixel but no video available: " + e + "\n" + e.stack);
+      if (test(this.getPixel(video, offsetX, offsetY, width, height))) {
+        return;
       }
     }
   },
