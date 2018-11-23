@@ -348,18 +348,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     RefPtr<Session> mSession;
   };
 
-  // To ensure that MediaRecorder has tracks to record.
-  class TracksAvailableCallback : public OnTracksAvailableCallback {
-   public:
-    explicit TracksAvailableCallback(Session* aSession) : mSession(aSession) {}
-
-    virtual void NotifyTracksAvailable(DOMMediaStream* aStream) {
-      mSession->MediaStreamReady(aStream);
-    }
-
-   private:
-    RefPtr<Session> mSession;
-  };
   // Main thread task.
   // To delete RecordingSession object.
   class DestroyRunnable : public Runnable {
@@ -475,11 +463,11 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   friend class EncoderErrorNotifierRunnable;
   friend class PushBlobRunnable;
   friend class DestroyRunnable;
-  friend class TracksAvailableCallback;
 
  public:
   Session(MediaRecorder* aRecorder, int32_t aTimeSlice)
       : mRecorder(aRecorder),
+        mMediaStreamReady(false),
         mTimeSlice(aTimeSlice),
         mRunningState(RunningState::Idling) {
     MOZ_ASSERT(NS_IsMainThread());
@@ -501,10 +489,22 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     LOG(LogLevel::Warning,
         ("Session.NotifyTrackAdded %p Raising error due to track set change",
          this));
-    DoSessionEndTask(NS_ERROR_ABORT);
+    if (mMediaStreamReady) {
+      DoSessionEndTask(NS_ERROR_ABORT);
+    }
+
+    NS_DispatchToMainThread(
+        NewRunnableMethod("MediaRecorder::Session::MediaStreamReady", this,
+                          &Session::MediaStreamReady));
+    return;
   }
 
   void NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack) override {
+    if (!mMediaStreamReady) {
+      // We haven't chosen the track set to record yet.
+      return;
+    }
+
     if (aTrack->Ended()) {
       // TrackEncoder will pickup tracks that end itself.
       return;
@@ -531,9 +531,14 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       // attached to MediaEncoder. This allows `recorder.start()` before any
       // tracks are available. We have supported this historically and have
       // mochitests assuming this behavior.
-      TracksAvailableCallback* tracksAvailableCallback =
-          new TracksAvailableCallback(this);
-      domStream->OnTracksAvailable(tracksAvailableCallback);
+      mMediaStream = domStream;
+      mMediaStream->RegisterTrackListener(this);
+      nsTArray<RefPtr<MediaStreamTrack>> tracks(2);
+      mMediaStream->GetTracks(tracks);
+      for (const auto& track : tracks) {
+        // Notify of existing tracks, as the stream doesn't do this by itself.
+        NotifyTrackAdded(track);
+      }
       return;
     }
 
@@ -704,19 +709,23 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     }
   }
 
-  void MediaStreamReady(DOMMediaStream* aStream) {
-    MOZ_RELEASE_ASSERT(aStream);
+  void MediaStreamReady() {
+    if (!mMediaStream) {
+      // Already shut down. This can happen because MediaStreamReady is async.
+      return;
+    }
+
+    if (mMediaStreamReady) {
+      return;
+    }
 
     if (!mRunningState.isOk() ||
         mRunningState.unwrap() != RunningState::Idling) {
       return;
     }
 
-    mMediaStream = aStream;
-    aStream->RegisterTrackListener(this);
-
     nsTArray<RefPtr<mozilla::dom::MediaStreamTrack>> tracks;
-    aStream->GetTracks(tracks);
+    mMediaStream->GetTracks(tracks);
     uint8_t trackTypes = 0;
     int32_t audioTracks = 0;
     int32_t videoTracks = 0;
@@ -738,6 +747,14 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       }
     }
 
+    if (trackTypes == 0) {
+      MOZ_ASSERT(audioTracks == 0);
+      MOZ_ASSERT(videoTracks == 0);
+      return;
+    }
+
+    mMediaStreamReady = true;
+
     if (audioTracks > 1 || videoTracks > 1) {
       // When MediaRecorder supports multiple tracks, we should set up a single
       // MediaInputPort from the input stream, and let main thread check
@@ -752,20 +769,17 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       return;
     }
 
-    NS_ASSERTION(trackTypes != 0,
-                 "TracksAvailableCallback without any tracks available");
-
     // Check that we may access the tracks' content.
     if (!MediaStreamTracksPrincipalSubsumes()) {
-      LOG(LogLevel::Warning, ("Session.NotifyTracksAvailable MediaStreamTracks "
+      LOG(LogLevel::Warning, ("Session.MediaTracksReady MediaStreamTracks "
                               "principal check failed"));
       DoSessionEndTask(NS_ERROR_DOM_SECURITY_ERR);
       return;
     }
 
     LOG(LogLevel::Debug,
-        ("Session.NotifyTracksAvailable track type = (%d)", trackTypes));
-    InitEncoder(trackTypes, aStream->GraphRate());
+        ("Session.MediaTracksReady track type = (%d)", trackTypes));
+    InitEncoder(trackTypes, mMediaStream->GraphRate());
   }
 
   void ConnectMediaStreamTrack(MediaStreamTrack& aTrack) {
@@ -1162,6 +1176,9 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
 
   // Stream currently recorded.
   RefPtr<DOMMediaStream> mMediaStream;
+
+  // True after we have decided on the track set to use for the recording.
+  bool mMediaStreamReady;
 
   // Tracks currently recorded. This should be a subset of mMediaStream's track
   // set.
