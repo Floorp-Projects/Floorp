@@ -200,7 +200,7 @@ class StreamTracks {
       NS_WARNING(
           "Adding track to StreamTracks that should have no more tracks");
     } else {
-      NS_ASSERTION(mTracksKnownTime <= aStart, "Start time too early");
+      // NS_ASSERTION(mTracksKnownTime <= aStart, "Start time too early");
     }
     return *track;
   }
