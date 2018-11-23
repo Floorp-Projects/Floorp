@@ -490,10 +490,6 @@ public:
                              bool aBlocked,
                              nsIURI* aURIHint) override;
 
-  virtual uint32_t GetSerial() override {
-    return mSerial;
-  }
-
   void AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const;
 
   void AllowScriptsToClose()
@@ -1133,9 +1129,9 @@ protected:
 
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
 
+#ifdef DEBUG
   uint32_t mSerial;
 
-#ifdef DEBUG
   bool mSetOpenerWindowCalled;
   nsCOMPtr<nsIURI> mLastOpenedURI;
 #endif
