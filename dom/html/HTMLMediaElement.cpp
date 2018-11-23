@@ -1945,7 +1945,7 @@ bool
 HTMLMediaElement::Ended()
 {
   return (mDecoder && mDecoder->IsEnded()) ||
-         (mSrcStream && !mSrcStream->Active());
+         (mSrcStream && mSrcStreamPlaybackEnded);
 }
 
 void
@@ -5318,6 +5318,9 @@ public:
 
   void NotifyInactive() override
   {
+    if (mElement->IsPlaybackEnded()) {
+      return;
+    }
     LOG(LogLevel::Debug,
         ("%p, mSrcStream %p became inactive",
          mElement,
@@ -5357,6 +5360,7 @@ HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags)
        mSrcStream.get()));
 
   if (shouldPlay) {
+    mSrcStreamPlaybackEnded = false;
     mSrcStreamPausedCurrentTime = -1;
 
     mMediaStreamListener =
@@ -5800,6 +5804,7 @@ HTMLMediaElement::PlaybackEnded()
   if (mSrcStream) {
     LOG(LogLevel::Debug,
         ("%p, got duration by reaching the end of the resource", this));
+    mSrcStreamPlaybackEnded = true;
     DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   }
 
@@ -6612,7 +6617,13 @@ HTMLMediaElement::IsPlaybackEnded() const
   // TODO:
   //   the current playback position is equal to the effective end of the media
   //   resource. See bug 449157.
-  return mReadyState >= HAVE_METADATA && mDecoder && mDecoder->IsEnded();
+  if (mDecoder) {
+    return mReadyState >= HAVE_METADATA && mDecoder->IsEnded();
+  } else if (mSrcStream) {
+    return mReadyState >= HAVE_METADATA && mSrcStreamPlaybackEnded;
+  } else {
+    return false;
+  }
 }
 
 already_AddRefed<nsIPrincipal>
