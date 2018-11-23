@@ -158,6 +158,9 @@ class MediaStreamTrackListener {
   virtual void NotifyPrincipalHandleChanged(
       MediaStreamGraph* aGraph, const PrincipalHandle& aNewPrincipalHandle) {}
 
+  virtual void NotifyOutput(MediaStreamGraph* aGraph,
+                            StreamTime aCurrentTrackTime) {}
+
   virtual void NotifyEnded() {}
 
   virtual void NotifyRemoved() {}
