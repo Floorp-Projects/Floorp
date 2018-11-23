@@ -23,6 +23,9 @@
 // Logging stuff
 #include "CSFLog.h"
 
+// For fetching ICE logging
+#include "rlogconnector.h"
+
 // DTLS
 #include "signaling/src/sdp/SdpAttribute.h"
 
@@ -549,6 +552,51 @@ MediaTransportHandler::GetIceStats(UniquePtr<RTCStatsQuery>&& aQuery)
     }
   }
   return RTCStatsQueryPromise::CreateAndResolve(std::move(aQuery), __func__);
+}
+
+/* static */
+RefPtr<MediaTransportHandler::IceLogPromise>
+MediaTransportHandler::GetIceLog(const nsCString& aPattern)
+{
+  RLogConnector* logs = RLogConnector::GetInstance();
+  nsAutoPtr<std::deque<std::string>> result(new std::deque<std::string>);
+  // Might not exist yet.
+  if (logs) {
+    logs->Filter(aPattern.get(), 0, result);
+  }
+  dom::Sequence<nsString> converted;
+  for (auto& line : *result) {
+    converted.AppendElement(NS_ConvertUTF8toUTF16(line.c_str()), fallible);
+  }
+  return IceLogPromise::CreateAndResolve(std::move(converted), __func__);
+}
+
+/* static */
+void
+MediaTransportHandler::ClearIceLog()
+{
+  RLogConnector* logs = RLogConnector::GetInstance();
+  if (logs) {
+    logs->Clear();
+  }
+}
+
+/* static */
+void
+MediaTransportHandler::EnterPrivateMode()
+{
+  RLogConnector::CreateInstance()->EnterPrivateMode();
+}
+
+/* static */
+void
+MediaTransportHandler::ExitPrivateMode()
+{
+  auto* log = RLogConnector::GetInstance();
+  MOZ_ASSERT(log);
+  if (log) {
+    log->ExitPrivateMode();
+  }
 }
 
 static void ToRTCIceCandidateStats(
