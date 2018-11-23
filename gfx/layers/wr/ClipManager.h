@@ -119,8 +119,7 @@ private:
   // be multiple different "Y" clips (in case of nested cache overrides), which
   // is why we need a stack.
   std::unordered_map<wr::WrClipId,
-                     std::stack<wr::WrClipId>,
-                     wr::WrClipId::HashFn> mASROverride;
+                     std::stack<wr::WrClipId>> mASROverride;
 
   // This holds some clip state for a single nsDisplayItem
   struct ItemClips {
