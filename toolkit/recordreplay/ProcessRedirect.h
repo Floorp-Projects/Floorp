@@ -256,10 +256,11 @@ struct Redirection
   PreambleFn mMiddlemanPreamble;
 };
 
-// All platform specific redirections, indexed by the call event.
-extern Redirection gRedirections[];
+// Platform specific methods describing the set of redirections.
+size_t NumRedirections();
+Redirection& GetRedirection(size_t aCallId);
 
-// Do early initialization of redirections. This is done on both
+// Platform specific early initialization of redirections. This is done on both
 // recording/replaying and middleman processes, and allows OriginalCall() to
 // work in either case.
 void EarlyInitializeRedirections();
@@ -282,7 +283,7 @@ DefineAllCallFunctions(DEFAULTABI)
 static inline void*
 OriginalFunction(size_t aCallId)
 {
-  return gRedirections[aCallId].mOriginalFunction;
+  return GetRedirection(aCallId).mOriginalFunction;
 }
 
 #define TokenPaste(aFirst, aSecond) aFirst ## aSecond
