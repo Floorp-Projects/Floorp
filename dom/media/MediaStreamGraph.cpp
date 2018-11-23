@@ -188,6 +188,23 @@ void MediaStreamGraphImpl::UpdateCurrentTimeForStreams(
         MediaStreamListener* l = stream->mListeners[j];
         l->NotifyOutput(this, mProcessedTime);
       }
+
+      for (StreamTracks::TrackIter track(stream->mTracks); !track.IsEnded();
+           track.Next()) {
+        if (track->IsEnded() &&
+            track->GetEnd() <=
+                stream->GraphTimeToStreamTime(mStateComputedTime) &&
+            !track->NotifiedEnded()) {
+          // Playout of this track ended and listeners have not been notified.
+          for (const TrackBound<MediaStreamTrackListener>& listener :
+               stream->mTrackListeners) {
+            if (listener.mTrackID == track->GetID()) {
+              track->NotifyEnded();
+              listener.mListener->NotifyEnded();
+            }
+          }
+        }
+      }
     }
 
     // The stream is fully finished when all of its track data has been played
@@ -2710,9 +2727,6 @@ void SourceMediaStream::ExtractPendingInput() {
         continue;
       }
       b.mListener->NotifyQueuedChanges(GraphImpl(), offset, *data->mData);
-      if (data->mCommands & SourceMediaStream::TRACK_END) {
-        b.mListener->NotifyEnded();
-      }
     }
     if (data->mCommands & SourceMediaStream::TRACK_CREATE) {
       MediaSegment* segment = data->mData.forget();
