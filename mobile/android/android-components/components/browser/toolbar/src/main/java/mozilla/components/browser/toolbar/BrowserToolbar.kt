@@ -388,14 +388,7 @@ class BrowserToolbar @JvmOverloads constructor(
         @DrawableRes background: Int = 0,
         val padding: Padding = DEFAULT_PADDING,
         listener: () -> Unit
-    ) : Toolbar.ActionButton(imageDrawable, contentDescription, visible, background, padding, listener) {
-
-        override fun createView(parent: ViewGroup): View {
-            return super.createView(parent).apply {
-                setPadding(padding)
-            }
-        }
-    }
+    ) : Toolbar.ActionButton(imageDrawable, contentDescription, visible, background, padding, listener)
 
     /**
      * An action button with two states, selected and unselected. When the button is pressed, the
@@ -431,14 +424,7 @@ class BrowserToolbar @JvmOverloads constructor(
         background,
         padding,
         listener
-    ) {
-
-        override fun createView(parent: ViewGroup): View {
-            return super.createView(parent).apply {
-                setPadding(padding)
-            }
-        }
-    }
+    )
 
     /**
      * An action that either shows an active button or an inactive button based on the provided
