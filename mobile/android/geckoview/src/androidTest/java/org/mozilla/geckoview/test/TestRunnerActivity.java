@@ -105,6 +105,10 @@ public class TestRunnerActivity extends Activity {
                 sRuntime.shutdown();
             }
         }
+
+        @Override
+        public void onFirstComposite(final GeckoSession session) {
+        }
     };
 
     private GeckoSession createSession() {

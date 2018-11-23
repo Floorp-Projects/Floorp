@@ -2600,7 +2600,7 @@ public class GeckoSession implements Parcelable {
          * a start or a restart of the compositor.
          * @param session The GeckoSession that had a first paint event.
          */
-        default void onFirstComposite(GeckoSession session) {}
+        void onFirstComposite(GeckoSession session);
     }
 
     public interface SelectionActionDelegate {

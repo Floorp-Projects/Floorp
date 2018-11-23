@@ -264,7 +264,7 @@ public class MediaElement {
          * @param mediaState The playback state of the media.
          *                   One of the {@link #MEDIA_STATE_PLAY MEDIA_STATE_*} flags.
          */
-        default void onPlaybackStateChange(MediaElement mediaElement, @MediaStateFlags int mediaState) {}
+        void onPlaybackStateChange(MediaElement mediaElement, @MediaStateFlags int mediaState);
 
         /**
          * The readiness state of the media has changed.
@@ -273,7 +273,7 @@ public class MediaElement {
          * @param readyState The readiness state of the media.
          *                   One of the {@link #MEDIA_READY_STATE_HAVE_NOTHING MEDIA_READY_STATE_*} flags.
          */
-        default void onReadyStateChange(MediaElement mediaElement, @ReadyStateFlags int readyState) {}
+        void onReadyStateChange(MediaElement mediaElement, @ReadyStateFlags int readyState);
 
         /**
          * The media metadata has loaded or changed.
@@ -281,7 +281,7 @@ public class MediaElement {
          * @param mediaElement A reference to the MediaElement that dispatched the event.
          * @param metaData The MetaData values of the media.
          */
-        default void onMetadataChange(MediaElement mediaElement, Metadata metaData) {}
+        void onMetadataChange(MediaElement mediaElement, Metadata metaData);
 
         /**
          * Indicates that a loading operation is in progress for the media.
@@ -289,7 +289,7 @@ public class MediaElement {
          * @param mediaElement A reference to the MediaElement that dispatched the event.
          * @param progressInfo Information about the load progress and buffered ranges.
          */
-        default void onLoadProgress(MediaElement mediaElement, LoadProgressInfo progressInfo) {}
+        void onLoadProgress(MediaElement mediaElement, LoadProgressInfo progressInfo);
 
         /**
          * The media audio volume has changed.
@@ -298,7 +298,7 @@ public class MediaElement {
          * @param volume The volume of the media.
          * @param muted True if the media is muted.
          */
-        default void onVolumeChange(MediaElement mediaElement, double volume, boolean muted) {}
+        void onVolumeChange(MediaElement mediaElement, double volume, boolean muted);
 
         /**
          * The current playback time has changed. This event is usually dispatched every 250ms.
@@ -306,7 +306,7 @@ public class MediaElement {
          * @param mediaElement A reference to the MediaElement that dispatched the event.
          * @param time The current playback time in seconds.
          */
-        default void onTimeChange(MediaElement mediaElement, double time) {}
+        void onTimeChange(MediaElement mediaElement, double time);
 
         /**
          * The media playback speed has changed.
@@ -314,7 +314,7 @@ public class MediaElement {
          * @param mediaElement A reference to the MediaElement that dispatched the event.
          * @param rate The current playback rate. A value of 1.0 indicates normal speed.
          */
-        default void onPlaybackRateChange(MediaElement mediaElement, double rate) {}
+        void onPlaybackRateChange(MediaElement mediaElement, double rate);
 
         /**
          * A media element has entered or exited fullscreen mode.
@@ -322,7 +322,7 @@ public class MediaElement {
          * @param mediaElement A reference to the MediaElement that dispatched the event.
          * @param fullscreen True if the media has entered full screen mode.
          */
-        default void onFullscreenChange(MediaElement mediaElement, boolean fullscreen) {}
+        void onFullscreenChange(MediaElement mediaElement, boolean fullscreen);
 
         /**
          * An error has occurred.
@@ -331,7 +331,7 @@ public class MediaElement {
          * @param errorCode The error code.
          *                  One of the {@link #MEDIA_ERROR_NETWORK_NO_SOURCE MEDIA_ERROR_*} flags.
          */
-        default void onError(MediaElement mediaElement, @MediaErrorFlags int errorCode) {}
+        void onError(MediaElement mediaElement, @MediaErrorFlags int errorCode);
     }
 
     /* package */ long getVideoId() {
