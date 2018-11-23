@@ -353,6 +353,11 @@ pref("devtools.responsive.showUserAgentInput", false);
 
 // Enable new about:debugging.
 pref("devtools.aboutdebugging.new-enabled", false);
+// Enable the network location feature.
+pref("devtools.aboutdebugging.network", false);
+// Enable the wifi feature.
+pref("devtools.aboutdebugging.wifi", false);
+// Stringified array of network locations that users can connect to.
 pref("devtools.aboutdebugging.network-locations", "[]");
 // Debug target pane collapse/expand settings.
 pref("devtools.aboutdebugging.collapsibilities.installedExtension", false);
