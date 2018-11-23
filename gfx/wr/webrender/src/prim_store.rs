@@ -3717,3 +3717,22 @@ fn update_opacity_binding(
         binding.current
     }
 }
+
+#[test]
+#[cfg(target_os = "linux")]
+fn test_struct_sizes() {
+    // The sizes of these structures are critical for performance on a number of
+    // talos stress tests. If you get a failure here on CI, there's two possibilities:
+    // (a) You made a structure smaller than it currently is. Great work! Update the
+    //     test expectations and move on.
+    // (b) You made a structure larger. This is not necessarily a problem, but should only
+    //     be done with care, and after checking if talos performance regresses badly.
+    assert_eq!(mem::size_of::<PrimitiveContainer>(), 256, "PrimitiveContainer size changed");
+    assert_eq!(mem::size_of::<PrimitiveInstance>(), 120, "PrimitiveInstance size changed");
+    assert_eq!(mem::size_of::<PrimitiveInstanceKind>(), 16, "PrimitiveInstanceKind size changed");
+    assert_eq!(mem::size_of::<PrimitiveTemplate>(), 176, "PrimitiveTemplate size changed");
+    assert_eq!(mem::size_of::<PrimitiveTemplateKind>(), 112, "PrimitiveTemplateKind size changed");
+    assert_eq!(mem::size_of::<PrimitiveKey>(), 152, "PrimitiveKey size changed");
+    assert_eq!(mem::size_of::<PrimitiveKeyKind>(), 112, "PrimitiveKeyKind size changed");
+    assert_eq!(mem::size_of::<Primitive>(), 280, "Primitive size changed");
+}
