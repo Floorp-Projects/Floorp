@@ -52,9 +52,9 @@ public:
     mMainThreadDestroyed = true;
   }
 
-  virtual bool AppendToTrack(TrackID aID, MediaSegment* aSegment, MediaSegment *aRawSegment = nullptr) override
+  virtual StreamTime AppendToTrack(TrackID aID, MediaSegment* aSegment, MediaSegment *aRawSegment = nullptr) override
   {
-    return true;
+    return aSegment->GetDuration();
   }
 };
 
