@@ -13,12 +13,13 @@
 //! in the context of coordinate systems.
 
 use app_units::Au;
-use euclid::{Length, TypedRect, TypedScale, TypedSize2D, TypedTransform3D};
+use euclid::{Length, TypedRect, TypedScale, TypedSize2D, TypedTransform3D, TypedTranslation2D};
 use euclid::{TypedPoint2D, TypedPoint3D, TypedVector2D, TypedVector3D, TypedSideOffsets2D};
+use DirtyRect;
 
 /// Geometry in the coordinate system of the render target (screen or intermediate
 /// surface) in physical pixels.
-#[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
 pub struct DevicePixel;
 
 pub type DeviceIntRect = TypedRect<i32, DevicePixel>;
@@ -75,6 +76,10 @@ pub type LayoutVector3D = TypedVector3D<f32, LayoutPixel>;
 pub type LayoutSize = TypedSize2D<f32, LayoutPixel>;
 pub type LayoutSideOffsets = TypedSideOffsets2D<f32, LayoutPixel>;
 
+pub type LayoutIntRect = TypedRect<i32, LayoutPixel>;
+pub type LayoutIntPoint = TypedPoint2D<i32, LayoutPixel>;
+pub type LayoutIntSize = TypedSize2D<i32, LayoutPixel>;
+
 /// Geometry in the document's coordinate space (logical pixels).
 #[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct WorldPixel;
@@ -118,6 +123,11 @@ pub type LayoutPointAu = TypedPoint2D<Au, LayoutPixel>;
 pub type LayoutRectAu = TypedRect<Au, LayoutPixel>;
 pub type LayoutSizeAu = TypedSize2D<Au, LayoutPixel>;
 pub type LayoutVector2DAu = TypedVector2D<Au, LayoutPixel>;
+
+pub type ImageDirtyRect = DirtyRect<i32, DevicePixel>;
+pub type BlobDirtyRect = DirtyRect<i32, LayoutPixel>;
+
+pub type BlobToDeviceTranslation = TypedTranslation2D<i32, LayoutPixel, DevicePixel>;
 
 /// Stores two coordinates in texel space. The coordinates
 /// are stored in texel coordinates because the texture atlas
