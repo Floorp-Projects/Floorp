@@ -8,7 +8,7 @@
 
 #include "AllocationHandle.h"
 #include "AudioDeviceInfo.h"
-#include "MediaStreamGraph.h"
+#include "MediaStreamGraphImpl.h"
 #include "MediaTimer.h"
 #include "mozilla/dom/MediaStreamTrack.h"
 #include "mozilla/dom/MediaDeviceInfo.h"
@@ -1151,41 +1151,76 @@ class GetUserMediaStreamRunnable : public Runnable {
 
   ~GetUserMediaStreamRunnable() {}
 
-  class TracksAvailableCallback : public OnTracksAvailableCallback {
+  class TracksCreatedListener : public MediaStreamTrackListener {
    public:
-    TracksAvailableCallback(
+    TracksCreatedListener(
         MediaManager* aManager,
         const nsMainThreadPtrHandle<MediaManager::GetUserMediaSuccessCallback>&
             aSuccess,
-        const RefPtr<GetUserMediaWindowListener>& aWindowListener,
-        DOMMediaStream* aStream)
+        GetUserMediaWindowListener* aWindowListener, DOMMediaStream* aStream,
+        MediaStreamTrack* aTrack)
         : mWindowListener(aWindowListener),
           mOnSuccess(aSuccess),
           mManager(aManager),
-          mStream(aStream) {}
-    void NotifyTracksAvailable(DOMMediaStream* aStream) override {
-      // We're on the main thread, so no worries here.
-      if (!mManager->IsWindowListenerStillActive(mWindowListener)) {
+          mGraph(aTrack->GraphImpl()),
+          mStream(new nsMainThreadPtrHolder<DOMMediaStream>(
+              "TracksCreatedListener::mStream", aStream)),
+          mTrack(new nsMainThreadPtrHolder<MediaStreamTrack>(
+              "TracksCreatedListener::mTrack", aTrack)) {}
+    void NotifyOutput(MediaStreamGraph* aGraph,
+                      StreamTime aCurrentTrackTime) override {
+      // It's enough to know that one of the tracks have output, as both tracks
+      // are guaranteed to be created in the graph at this point.
+
+      if (mDispatchedTracksCreated) {
         return;
       }
+      mDispatchedTracksCreated = true;
+      nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+          "TracksCreatedListener::NotifyOutput Notifier",
+          [self = RefPtr<TracksCreatedListener>(this), this]() {
+            mTrack->RemoveListener(this);
 
-      // This is safe since we're on main-thread, and the windowlist can only
-      // be invalidated from the main-thread (see OnNavigation)
-      LOG(("Returning success for getUserMedia()"));
-      CallOnSuccess(mOnSuccess, *aStream);
+            if (!mManager->IsWindowListenerStillActive(mWindowListener)) {
+              return;
+            }
+
+            // This is safe since we're on main-thread, and the windowlist can
+            // only be invalidated from the main-thread (see OnNavigation)
+            LOG(("Returning success for getUserMedia()"));
+            CallOnSuccess(mOnSuccess, *mStream);
+          });
+      // DispatchToMainThreadAfterStreamStateUpdate will make the runnable run
+      // in stable state. But since the runnable runs JS we need to make a
+      // double dispatch.
+      mGraph->DispatchToMainThreadAfterStreamStateUpdate(NS_NewRunnableFunction(
+          "TracksCreatedListener::NotifyOutput Stable State Notifier",
+          [graph = mGraph, r = std::move(r)]() mutable {
+            graph->Dispatch(r.forget());
+          }));
     }
-    RefPtr<GetUserMediaWindowListener> mWindowListener;
-    nsMainThreadPtrHandle<MediaManager::GetUserMediaSuccessCallback> mOnSuccess;
-    RefPtr<MediaManager> mManager;
-    // Keep the DOMMediaStream alive until the NotifyTracksAvailable callback
-    // has fired, otherwise we might immediately destroy the DOMMediaStream and
+    void NotifyRemoved() override {
+      mGraph->Dispatch(NS_NewRunnableFunction(
+          "TracksCreatedListener::NotifyRemoved CycleBreaker",
+          [self = RefPtr<TracksCreatedListener>(this)]() {
+            self->mTrack->RemoveListener(self);
+          }));
+    }
+    const RefPtr<GetUserMediaWindowListener> mWindowListener;
+    const nsMainThreadPtrHandle<MediaManager::GetUserMediaSuccessCallback>
+        mOnSuccess;
+    const RefPtr<MediaManager> mManager;
+    const RefPtr<MediaStreamGraphImpl> mGraph;
+    // Keep the DOMMediaStream alive until the success callback has been called,
+    // otherwise we might immediately destroy the DOMMediaStream and
     // shut down the underlying MediaStream prematurely.
-    // This creates a cycle which is broken when NotifyTracksAvailable
-    // is fired (which will happen unless the browser shuts down,
-    // since we only add this callback when we've successfully appended
-    // the desired tracks in the MediaStreamGraph) or when
-    // DOMMediaStream::NotifyMediaStreamGraphShutdown is called.
-    RefPtr<DOMMediaStream> mStream;
+    // This creates a cycle which is broken when we're destroyed, i.e., either
+    // when we've called the success callback and thus removed the listener from
+    // the graph, or on graph shutdown.
+    nsMainThreadPtrHandle<DOMMediaStream> mStream;
+    nsMainThreadPtrHandle<MediaStreamTrack> mTrack;
+    // Graph thread only.
+    bool mDispatchedTracksCreated = false;
   };
 
   NS_IMETHOD
@@ -1210,7 +1245,7 @@ class GetUserMediaStreamRunnable : public Runnable {
     MediaStreamGraph* msg = MediaStreamGraph::GetInstance(
         graphDriverType, window, MediaStreamGraph::REQUEST_DEFAULT_SAMPLE_RATE);
 
-    nsMainThreadPtrHandle<DOMMediaStream> domStream;
+    RefPtr<DOMMediaStream> domStream;
     RefPtr<SourceMediaStream> stream;
     // AudioCapture is a special case, here, in the sense that we're not really
     // using the audio source and the SourceMediaStream, which acts as
@@ -1226,10 +1261,8 @@ class GetUserMediaStreamRunnable : public Runnable {
       // not a problem here, we got explicit user content.
       nsCOMPtr<nsIPrincipal> principal =
           window->GetExtantDoc()->NodePrincipal();
-      domStream = new nsMainThreadPtrHolder<DOMMediaStream>(
-          "GetUserMediaStreamRunnable::AudioCaptureDOMStreamMainThreadHolder",
-          DOMMediaStream::CreateAudioCaptureStreamAsInput(window, principal,
-                                                          msg));
+      domStream = DOMMediaStream::CreateAudioCaptureStreamAsInput(
+          window, principal, msg);
 
       stream = msg->CreateSourceStream();  // Placeholder
       msg->RegisterCaptureStreamForWindow(
@@ -1361,9 +1394,7 @@ class GetUserMediaStreamRunnable : public Runnable {
       // Normal case, connect the source stream to the track union stream to
       // avoid us blocking. Pass a simple TrackSourceGetter for potential
       // fake tracks. Apart from them gUM never adds tracks dynamically.
-      domStream = new nsMainThreadPtrHolder<DOMMediaStream>(
-          "GetUserMediaStreamRunnable::DOMMediaStreamMainThreadHolder",
-          DOMMediaStream::CreateSourceStreamAsInput(window, msg));
+      domStream = DOMMediaStream::CreateSourceStreamAsInput(window, msg);
       stream = domStream->GetInputStream()->AsSourceStream();
 
       if (mAudioDevice) {
@@ -1413,13 +1444,11 @@ class GetUserMediaStreamRunnable : public Runnable {
     mWindowListener->Activate(mSourceListener, stream, mAudioDevice,
                               mVideoDevice);
 
-    // Note: includes JS callbacks; must be released on MainThread
-    typedef Refcountable<UniquePtr<TracksAvailableCallback>> Callback;
-    nsMainThreadPtrHandle<Callback> callback(new nsMainThreadPtrHolder<
-                                             Callback>(
-        "GetUserMediaStreamRunnable::TracksAvailableCallbackMainThreadHolder",
-        MakeAndAddRef<Callback>(new TracksAvailableCallback(
-            mManager, mOnSuccess, mWindowListener, domStream))));
+    nsTArray<RefPtr<MediaStreamTrack>> tracks(2);
+    domStream->GetTracks(tracks);
+    RefPtr<MediaStreamTrack> track = tracks[0];
+    auto tracksCreatedListener = MakeRefPtr<TracksCreatedListener>(
+        mManager, mOnSuccess, mWindowListener, domStream, track);
 
     // Dispatch to the media thread to ask it to start the sources,
     // because that can take a while.
@@ -1428,15 +1457,13 @@ class GetUserMediaStreamRunnable : public Runnable {
     // is discarded.
     mSourceListener->InitializeAsync()->Then(
         GetMainThreadSerialEventTarget(), __func__,
-        [manager = mManager, domStream, callback,
-         windowListener = mWindowListener]() {
+        [manager = mManager, windowListener = mWindowListener, track,
+         tracksCreatedListener]() {
           LOG(
               ("GetUserMediaStreamRunnable::Run: starting success callback "
                "following InitializeAsync()"));
           // Initiating and starting devices succeeded.
-          // onTracksAvailableCallback must be added to domStream on main
-          // thread.
-          domStream->OnTracksAvailable(callback->release());
+          track->AddListener(tracksCreatedListener);
           windowListener->ChromeAffectingStateChanged();
           manager->SendPendingGUMRequest();
         },
