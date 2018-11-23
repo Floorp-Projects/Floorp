@@ -33,7 +33,7 @@ Assign_WrVecU8(wr::WrVecU8& aVec, mozilla::ipc::ByteBuf&& aOther)
 }
 
 /*static*/ WrClipId
-WrClipId::RootScrollNode() {
+RootScrollNode() {
   return WrClipId { wr_root_scroll_node_id() };
 }
 
