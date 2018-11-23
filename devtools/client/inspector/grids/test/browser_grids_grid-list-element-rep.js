@@ -30,7 +30,7 @@ add_task(async function() {
   elementRep.scrollIntoView();
 
   info("Listen to node-highlight event and mouse over the widget");
-  const onHighlight = toolbox.once("node-highlight");
+  const onHighlight = toolbox.highlighter.once("node-highlight");
   EventUtils.synthesizeMouse(elementRep, 10, 5, {type: "mouseover"}, doc.defaultView);
   const nodeFront = await onHighlight;
 
