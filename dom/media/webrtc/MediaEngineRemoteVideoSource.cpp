@@ -462,7 +462,8 @@ webrtc::CaptureCapability MediaEngineRemoteVideoSource::GetCapability(
 void MediaEngineRemoteVideoSource::Pull(
     const RefPtr<const AllocationHandle>& aHandle,
     const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
-    StreamTime aDesiredTime, const PrincipalHandle& aPrincipalHandle) {
+    StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
+    const PrincipalHandle& aPrincipalHandle) {
   TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaStream %p track %i", aStream.get(),
                                aTrackID);
   MutexAutoLock lock(mMutex);
@@ -473,10 +474,8 @@ void MediaEngineRemoteVideoSource::Pull(
 
   MOZ_ASSERT(mState == kStarted || mState == kStopped);
 
-  StreamTime delta = aDesiredTime - aStream->GetEndOfAppendedData(aTrackID);
-  if (delta <= 0) {
-    return;
-  }
+  StreamTime delta = aDesiredTime - aEndOfAppendedData;
+  MOZ_ASSERT(delta > 0);
 
   VideoSegment segment;
   RefPtr<layers::Image> image = mImage;
