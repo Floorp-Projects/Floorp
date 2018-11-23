@@ -173,7 +173,10 @@ class SessionStorageTest {
     @Test
     fun `AutoSave - when going to background`() {
         runBlocking {
-            val lifecycle = LifecycleRegistry(mock(LifecycleOwner::class.java))
+            // Keep the "owner" in scope to avoid it getting garbage collected and therefore lifecycle events
+            // not getting propagated (See #1428).
+            val owner = mock(LifecycleOwner::class.java)
+            val lifecycle = LifecycleRegistry(owner)
 
             val snapshot: SessionManager.Snapshot = mock()
             val sessionManager: SessionManager = mock()
@@ -198,7 +201,7 @@ class SessionStorageTest {
 
             lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
 
-            autoSave.saveJob?.join()
+            autoSave.saveJob!!.join()
 
             verify(sessionStorage).save(snapshot)
         }
