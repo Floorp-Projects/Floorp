@@ -742,8 +742,6 @@ ChunkPool::push(Chunk* chunk)
     }
     head_ = chunk;
     ++count_;
-
-    MOZ_ASSERT(verify());
 }
 
 Chunk*
@@ -764,7 +762,6 @@ ChunkPool::remove(Chunk* chunk)
     chunk->info.next = chunk->info.prev = nullptr;
     --count_;
 
-    MOZ_ASSERT(verify());
     return chunk;
 }
 
@@ -952,9 +949,7 @@ Chunk::updateChunkListAfterFree(JSRuntime* rt, const AutoLockGC& lock)
         rt->gc.fullChunks(lock).remove(this);
         rt->gc.availableChunks(lock).push(this);
     } else if (!unused()) {
-        MOZ_ASSERT(!rt->gc.fullChunks(lock).contains(this));
         MOZ_ASSERT(rt->gc.availableChunks(lock).contains(this));
-        MOZ_ASSERT(!rt->gc.emptyChunks(lock).contains(this));
     } else {
         MOZ_ASSERT(unused());
         rt->gc.availableChunks(lock).remove(this);

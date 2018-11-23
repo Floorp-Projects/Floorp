@@ -2826,9 +2826,7 @@ js::gc::StoreBuffer::SlotsEdge::trace(TenuringTracer& mover) const
         return;
     }
 
-    if (IsInsideNursery(obj)) {
-        return;
-    }
+    MOZ_ASSERT(!IsInsideNursery(obj), "obj shouldn't live in nursery.");
 
     if (kind() == ElementKind) {
         uint32_t initLen = obj->getDenseInitializedLength();
