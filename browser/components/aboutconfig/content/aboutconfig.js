@@ -5,14 +5,17 @@
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
+let gDefaultBranch = Services.prefs.getDefaultBranch("");
 let gPrefArray;
 
 function onLoad() {
   gPrefArray = Services.prefs.getChildList("").map(function(name) {
+    let hasUserValue = Services.prefs.prefHasUserValue(name);
     let pref = {
       name,
       value: Preferences.get(name),
-      hasUserValue: Services.prefs.prefHasUserValue(name),
+      hasUserValue,
+      hasDefaultValue: hasUserValue ? prefHasDefaultValue(name) : true,
     };
     // Try in case it's a localized string.
     // Throws an exception if there is no equivalent value in the localized files for the pref.
@@ -36,6 +39,16 @@ function onLoad() {
   });
 
   document.getElementById("prefs").appendChild(createPrefsFragment(gPrefArray));
+  document.getElementById("prefs").addEventListener("click", (event) => {
+    if (event.target.localName != "button") {
+      return;
+    }
+    let prefRow = event.target.closest("tr");
+    let prefName = prefRow.getAttribute("aria-label");
+    Services.prefs.clearUserPref(prefName);
+    gPrefArray.splice(gPrefArray.findIndex(pref => pref.name == prefName), 1);
+    prefRow.remove();
+  });
 }
 
 function filterPrefs() {
@@ -68,7 +81,32 @@ function createPrefsFragment(prefArray) {
     valueCell.textContent = pref.value;
     row.appendChild(valueCell);
 
+    let buttonCell = document.createElement("td");
+    if (!pref.hasDefaultValue) {
+      let button = document.createElement("button");
+      document.l10n.setAttributes(button, "about-config-pref-delete");
+      buttonCell.appendChild(button);
+    }
+    row.appendChild(buttonCell);
+
     fragment.appendChild(row);
   }
   return fragment;
+}
+
+function prefHasDefaultValue(name) {
+  try {
+    switch (Services.prefs.getPrefType(name)) {
+      case Ci.nsIPrefBranch.PREF_STRING:
+        gDefaultBranch.getStringPref(name);
+        return true;
+      case Ci.nsIPrefBranch.PREF_INT:
+        gDefaultBranch.getIntPref(name);
+        return true;
+      case Ci.nsIPrefBranch.PREF_BOOL:
+        gDefaultBranch.getBoolPref(name);
+        return true;
+    }
+  } catch (ex) {}
+  return false;
 }
