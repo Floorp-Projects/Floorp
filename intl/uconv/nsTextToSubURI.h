@@ -23,8 +23,8 @@ private:
                                const nsCString& aURI,
                                nsAString &_retval);
 
-  // Characters from the pref "network.IDN.blacklist_chars", or a built-in
-  // fallback if reading the pref fails.
+  // Characters defined in netwerk/dns/IDNCharacterBlocklist.inc or via the
+  // network.IDN.extra_allowed_chars and network.IDN.extra_blocked_chars prefs.
   nsTArray<char16_t> mUnsafeChars;
 };
 

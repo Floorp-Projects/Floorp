@@ -27,7 +27,7 @@ interface nsITextToSubURI : nsISupports
    *  <li> In case of a conversion error, the URI fragment (escaped) is
    *       assumed to be in UTF-8 and converted to AString (UTF-16)
    *  <li> In case of successful conversion any resulting character listed
-   *       in network.IDN.blacklist_chars (except space) is escaped
+   *       in netwerk/dns/IDNCharacterBlocklist.inc (except space) is escaped
    *  <li> Always succeeeds (callers don't need to do error checking)
    * </ul>
    *
