@@ -104,49 +104,6 @@ NS_IMPL_CYCLE_COLLECTION(DOMMediaStream::TrackPort, mTrack)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMMediaStream::TrackPort, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMMediaStream::TrackPort, Release)
 
-/**
- * Listener registered on the Playback stream to detect when tracks end and when
- * all new tracks this iteration have been created - for when several tracks are
- * queued by the source and committed all at once.
- */
-class DOMMediaStream::PlaybackStreamListener : public MediaStreamListener {
- public:
-  explicit PlaybackStreamListener(DOMMediaStream* aStream) : mStream(aStream) {}
-
-  void Forget() {
-    MOZ_ASSERT(NS_IsMainThread());
-    mStream = nullptr;
-  }
-
-  void DoNotifyFinishedTrackCreation() {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (!mStream) {
-      return;
-    }
-
-    // The owned stream listener adds its tracks after another main thread
-    // dispatch. We have to do the same to notify of created tracks to stay
-    // in sync. (Or NotifyTracksCreated is called before tracks are added).
-    MOZ_ASSERT(mStream->GetPlaybackStream());
-    mStream->GetPlaybackStream()->Graph()->AbstractMainThread()->Dispatch(
-        NewRunnableMethod("DOMMediaStream::NotifyTracksCreated", mStream,
-                          &DOMMediaStream::NotifyTracksCreated));
-  }
-
-  // The methods below are called on the MediaStreamGraph thread.
-
-  void NotifyFinishedTrackCreation(MediaStreamGraph* aGraph) override {
-    aGraph->DispatchToMainThreadAfterStreamStateUpdate(NewRunnableMethod(
-        "DOMMediaStream::PlaybackStreamListener::DoNotifyFinishedTrackCreation",
-        this, &PlaybackStreamListener::DoNotifyFinishedTrackCreation));
-  }
-
- private:
-  // These fields may only be accessed on the main thread
-  DOMMediaStream* mStream;
-};
-
 class DOMMediaStream::PlaybackTrackListener : public MediaStreamTrackConsumer {
  public:
   explicit PlaybackTrackListener(DOMMediaStream* aStream) : mStream(aStream) {}
@@ -254,13 +211,6 @@ DOMMediaStream::~DOMMediaStream() { Destroy(); }
 
 void DOMMediaStream::Destroy() {
   LOG(LogLevel::Debug, ("DOMMediaStream %p Being destroyed.", this));
-  if (mPlaybackListener) {
-    if (mPlaybackStream) {
-      mPlaybackStream->RemoveListener(mPlaybackListener);
-    }
-    mPlaybackListener->Forget();
-    mPlaybackListener = nullptr;
-  }
   for (const RefPtr<TrackPort>& info : mTracks) {
     // We must remove ourselves from each track's principal change observer list
     // before we die. CC may have cleared info->mTrack so guard against it.
@@ -292,7 +242,6 @@ void DOMMediaStream::Destroy() {
     mInputStream->UnregisterUser();
     mInputStream = nullptr;
   }
-  mRunOnTracksAvailable.Clear();
   mTrackListeners.Clear();
 }
 
@@ -686,9 +635,6 @@ void DOMMediaStream::InitPlaybackStreamCommon(MediaStreamGraph* aGraph) {
     mPlaybackPort = mPlaybackStream->AllocateInputPort(mOwnedStream);
   }
 
-  mPlaybackListener = new PlaybackStreamListener(this);
-  mPlaybackStream->AddListener(mPlaybackListener);
-
   LOG(LogLevel::Debug, ("DOMMediaStream %p Initiated with mInputStream=%p, "
                         "mOwnedStream=%p, mPlaybackStream=%p",
                         this, mInputStream, mOwnedStream, mPlaybackStream));
@@ -953,21 +899,6 @@ DOMMediaStream::TrackPort* DOMMediaStream::FindPlaybackTrackPort(
   return FindTrackPortAmongTracks(aTrack, mTracks);
 }
 
-void DOMMediaStream::OnTracksAvailable(OnTracksAvailableCallback* aRunnable) {
-  if (mNotifiedOfMediaStreamGraphShutdown) {
-    // No more tracks will ever be added, so just delete the callback now.
-    delete aRunnable;
-    return;
-  }
-  mRunOnTracksAvailable.AppendElement(aRunnable);
-  CheckTracksAvailable();
-}
-
-void DOMMediaStream::NotifyTracksCreated() {
-  mTracksCreated = true;
-  CheckTracksAvailable();
-}
-
 void DOMMediaStream::NotifyActive() {
   LOG(LogLevel::Info, ("DOMMediaStream %p NotifyActive(). ", this));
 
@@ -983,18 +914,6 @@ void DOMMediaStream::NotifyInactive() {
   MOZ_ASSERT(!mActive);
   for (int32_t i = mTrackListeners.Length() - 1; i >= 0; --i) {
     mTrackListeners[i]->NotifyInactive();
-  }
-}
-
-void DOMMediaStream::CheckTracksAvailable() {
-  if (!mTracksCreated) {
-    return;
-  }
-  nsTArray<nsAutoPtr<OnTracksAvailableCallback>> callbacks;
-  callbacks.SwapElements(mRunOnTracksAvailable);
-
-  for (uint32_t i = 0; i < callbacks.Length(); ++i) {
-    callbacks[i]->NotifyTracksAvailable(this);
   }
 }
 
