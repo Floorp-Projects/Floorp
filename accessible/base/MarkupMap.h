@@ -42,6 +42,14 @@ MARKUPMAP(blockquote,
           New_HyperText,
           roles::BLOCKQUOTE)
 
+MARKUPMAP(
+  button,
+  [](Element* aElement, Accessible* aContext) -> Accessible* {
+     return new HTMLButtonAccessible(aElement, aContext->Document());
+  },
+  0
+)
+
 MARKUPMAP(dd,
           New_HTMLDtOrDd<HyperTextAccessibleWrap>,
           roles::DEFINITION)
@@ -85,6 +93,14 @@ MARKUPMAP(
   },
   roles::FIGURE,
   Attr(xmlroles, figure)
+)
+
+MARKUPMAP(
+  fieldset,
+  [](Element* aElement, Accessible* aContext) -> Accessible* {
+     return new HTMLGroupboxAccessible(aElement, aContext->Document());
+  },
+  0
 )
 
 MARKUPMAP(
@@ -134,6 +150,14 @@ MARKUPMAP(h5,
 MARKUPMAP(h6,
           New_HyperText,
           roles::HEADING)
+
+MARKUPMAP(
+  hr,
+  [](Element* aElement, Accessible* aContext) -> Accessible* {
+     return new HTMLHRAccessible(aElement, aContext->Document());
+  },
+  0
+)
 
 MARKUPMAP(
   input,
