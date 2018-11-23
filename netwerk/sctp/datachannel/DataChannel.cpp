@@ -32,6 +32,8 @@
 
 #include "DataChannelLog.h"
 
+#define DATACHANNEL_LOG(args) LOG(args)
+
 #include "nsServiceManagerUtils.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
@@ -54,7 +56,6 @@
 #include "mediapacket.h"
 #endif
 
-#define DATACHANNEL_LOG(args) LOG(args)
 #include "DataChannel.h"
 #include "DataChannelProtocol.h"
 

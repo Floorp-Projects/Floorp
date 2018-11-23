@@ -184,8 +184,6 @@ void PeerConnectionCtx::Destroy() {
   StopWebRtcLog();
 }
 
-typedef Vector<nsAutoPtr<RTCStatsQuery>> RTCStatsQueries;
-
 // Telemetry reporting every second after start of first call.
 // The threading model around the media pipelines is weird:
 // - The pipelines are containers,
@@ -203,156 +201,109 @@ FindId(const Sequence<RTCInboundRTPStreamStats>& aArray,
   return aArray.NoIndex;
 }
 
-static auto
-FindId(const nsTArray<nsAutoPtr<RTCStatsReportInternal>>& aArray,
-       const nsString &aId) -> decltype(aArray.Length()) {
-  for (decltype(aArray.Length()) i = 0; i < aArray.Length(); i++) {
-    if (aArray[i]->mPcid == aId) {
-      return i;
-    }
-  }
-  return aArray.NoIndex;
-}
-
-static void
-FreeOnMain_m(nsAutoPtr<RTCStatsQueries> aQueryList) {
-  MOZ_ASSERT(NS_IsMainThread());
-}
-
-static void
-EverySecondTelemetryCallback_s(nsAutoPtr<RTCStatsQueries> aQueryList) {
+void
+PeerConnectionCtx::DeliverStats(RTCStatsQuery& aQuery)
+{
   using namespace Telemetry;
 
-  if(!PeerConnectionCtx::isActive()) {
-    return;
+  std::unique_ptr<dom::RTCStatsReportInternal> report(aQuery.report.forget());
+  // First, get reports from a second ago, if any, for calculations below
+  std::unique_ptr<dom::RTCStatsReportInternal> lastReport;
+  {
+    auto i = mLastReports.find(report->mPcid);
+    if (i != mLastReports.end()) {
+      lastReport = std::move(i->second);
+    }
   }
-  PeerConnectionCtx *ctx = PeerConnectionCtx::GetInstance();
 
-  for (auto & q : *aQueryList) {
-    PeerConnectionImpl::ExecuteStatsQuery_s(q);
-    auto& r = *q->report;
-    if (r.mInboundRTPStreamStats.WasPassed()) {
-      // First, get reports from a second ago, if any, for calculations below
-      const Sequence<RTCInboundRTPStreamStats> *lastInboundStats = nullptr;
-      {
-        auto i = FindId(ctx->mLastReports, r.mPcid);
-        if (i != ctx->mLastReports.NoIndex) {
-          lastInboundStats = &ctx->mLastReports[i]->mInboundRTPStreamStats.Value();
+  if (report->mInboundRTPStreamStats.WasPassed()) {
+    // Then, look for the things we want telemetry on
+    for (auto& s : report->mInboundRTPStreamStats.Value()) {
+      bool isAudio = (s.mId.Value().Find("audio") != -1);
+      if (s.mPacketsLost.WasPassed() && s.mPacketsReceived.WasPassed() &&
+          (s.mPacketsLost.Value() + s.mPacketsReceived.Value()) != 0) {
+        HistogramID id;
+        if (s.mIsRemote) {
+          id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_PACKETLOSS_RATE :
+                         WEBRTC_VIDEO_QUALITY_OUTBOUND_PACKETLOSS_RATE;
+        } else {
+          id = isAudio ? WEBRTC_AUDIO_QUALITY_INBOUND_PACKETLOSS_RATE :
+                         WEBRTC_VIDEO_QUALITY_INBOUND_PACKETLOSS_RATE;
         }
+        // *1000 so we can read in 10's of a percent (permille)
+        Accumulate(id,
+                   (s.mPacketsLost.Value() * 1000) /
+                   (s.mPacketsLost.Value() + s.mPacketsReceived.Value()));
       }
-      // Then, look for the things we want telemetry on
-      auto& array = r.mInboundRTPStreamStats.Value();
-      for (decltype(array.Length()) i = 0; i < array.Length(); i++) {
-        auto& s = array[i];
-        bool isAudio = (s.mId.Value().Find("audio") != -1);
-        if (s.mPacketsLost.WasPassed() && s.mPacketsReceived.WasPassed() &&
-            (s.mPacketsLost.Value() + s.mPacketsReceived.Value()) != 0) {
-          HistogramID id;
-          if (s.mIsRemote) {
-            id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_PACKETLOSS_RATE :
-                           WEBRTC_VIDEO_QUALITY_OUTBOUND_PACKETLOSS_RATE;
-          } else {
-            id = isAudio ? WEBRTC_AUDIO_QUALITY_INBOUND_PACKETLOSS_RATE :
-                           WEBRTC_VIDEO_QUALITY_INBOUND_PACKETLOSS_RATE;
-          }
-          // *1000 so we can read in 10's of a percent (permille)
-          Accumulate(id,
-                     (s.mPacketsLost.Value() * 1000) /
-                     (s.mPacketsLost.Value() + s.mPacketsReceived.Value()));
+      if (s.mJitter.WasPassed()) {
+        HistogramID id;
+        if (s.mIsRemote) {
+          id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_JITTER :
+                         WEBRTC_VIDEO_QUALITY_OUTBOUND_JITTER;
+        } else {
+          id = isAudio ? WEBRTC_AUDIO_QUALITY_INBOUND_JITTER :
+                         WEBRTC_VIDEO_QUALITY_INBOUND_JITTER;
         }
-        if (s.mJitter.WasPassed()) {
-          HistogramID id;
-          if (s.mIsRemote) {
-            id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_JITTER :
-                           WEBRTC_VIDEO_QUALITY_OUTBOUND_JITTER;
-          } else {
-            id = isAudio ? WEBRTC_AUDIO_QUALITY_INBOUND_JITTER :
-                           WEBRTC_VIDEO_QUALITY_INBOUND_JITTER;
-          }
-          Accumulate(id, s.mJitter.Value());
-        }
-        if (s.mRoundTripTime.WasPassed()) {
-          MOZ_ASSERT(s.mIsRemote);
-          HistogramID id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_RTT :
-                                     WEBRTC_VIDEO_QUALITY_OUTBOUND_RTT;
-          Accumulate(id, s.mRoundTripTime.Value());
-        }
-        if (lastInboundStats && s.mBytesReceived.WasPassed()) {
-          auto& laststats = *lastInboundStats;
-          auto i = FindId(laststats, s.mId.Value());
-          if (i != laststats.NoIndex) {
-            auto& lasts = laststats[i];
-            if (lasts.mBytesReceived.WasPassed()) {
-              auto delta_ms = int32_t(s.mTimestamp.Value() -
-                                      lasts.mTimestamp.Value());
-              // In theory we're called every second, so delta *should* be in that range.
-              // Small deltas could cause errors due to division
-              if (delta_ms > 500 && delta_ms < 60000) {
-                HistogramID id;
-                if (s.mIsRemote) {
-                  id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_BANDWIDTH_KBITS :
-                                 WEBRTC_VIDEO_QUALITY_OUTBOUND_BANDWIDTH_KBITS;
-                } else {
-                  id = isAudio ? WEBRTC_AUDIO_QUALITY_INBOUND_BANDWIDTH_KBITS :
-                                 WEBRTC_VIDEO_QUALITY_INBOUND_BANDWIDTH_KBITS;
-                }
-                Accumulate(id, ((s.mBytesReceived.Value() -
-                                 lasts.mBytesReceived.Value()) * 8) / delta_ms);
+        Accumulate(id, s.mJitter.Value());
+      }
+      if (s.mRoundTripTime.WasPassed()) {
+        MOZ_ASSERT(s.mIsRemote);
+        HistogramID id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_RTT :
+                                   WEBRTC_VIDEO_QUALITY_OUTBOUND_RTT;
+        Accumulate(id, s.mRoundTripTime.Value());
+      }
+      if (lastReport && lastReport->mInboundRTPStreamStats.WasPassed() &&
+          s.mBytesReceived.WasPassed()) {
+        auto& laststats = lastReport->mInboundRTPStreamStats.Value();
+        auto i = FindId(laststats, s.mId.Value());
+        if (i != laststats.NoIndex) {
+          auto& lasts = laststats[i];
+          if (lasts.mBytesReceived.WasPassed()) {
+            auto delta_ms = int32_t(s.mTimestamp.Value() -
+                                    lasts.mTimestamp.Value());
+            // In theory we're called every second, so delta *should* be in that range.
+            // Small deltas could cause errors due to division
+            if (delta_ms > 500 && delta_ms < 60000) {
+              HistogramID id;
+              if (s.mIsRemote) {
+                id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_BANDWIDTH_KBITS :
+                               WEBRTC_VIDEO_QUALITY_OUTBOUND_BANDWIDTH_KBITS;
+              } else {
+                id = isAudio ? WEBRTC_AUDIO_QUALITY_INBOUND_BANDWIDTH_KBITS :
+                               WEBRTC_VIDEO_QUALITY_INBOUND_BANDWIDTH_KBITS;
               }
-              // We could accumulate values until enough time has passed
-              // and then Accumulate() but this isn't that important.
+              Accumulate(id, ((s.mBytesReceived.Value() -
+                               lasts.mBytesReceived.Value()) * 8) / delta_ms);
             }
+            // We could accumulate values until enough time has passed
+            // and then Accumulate() but this isn't that important.
           }
         }
       }
     }
   }
-  // Steal and hang on to reports for the next second
-  ctx->mLastReports.Clear();
-  for (auto & q : *aQueryList) {
-    ctx->mLastReports.AppendElement(q->report.forget()); // steal avoids copy
-  }
-  // Container must be freed back on main thread
-  NS_DispatchToMainThread(WrapRunnableNM(&FreeOnMain_m, aQueryList),
-                          NS_DISPATCH_NORMAL);
+
+  mLastReports[report->mPcid] = std::move(report);
 }
 
 void
 PeerConnectionCtx::EverySecondTelemetryCallback_m(nsITimer* timer, void *closure) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(PeerConnectionCtx::isActive());
-  auto ctx = static_cast<PeerConnectionCtx*>(closure);
-  if (ctx->mPeerConnections.empty()) {
-    return;
-  }
-  nsresult rv;
-  nsCOMPtr<nsIEventTarget> stsThread =
-      do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  MOZ_ASSERT(stsThread);
 
-  nsAutoPtr<RTCStatsQueries> queries(new RTCStatsQueries);
-  for (auto p = ctx->mPeerConnections.begin();
-        p != ctx->mPeerConnections.end(); ++p) {
-    if (p->second->HasMedia()) {
-      if (!queries->append(nsAutoPtr<RTCStatsQuery>(new RTCStatsQuery(true)))) {
-        return;
-      }
-      if (NS_WARN_IF(NS_FAILED(p->second->BuildStatsQuery_m(nullptr, // all tracks
-                                                            queries->back())))) {
-        queries->popBack();
-      } else {
-        MOZ_ASSERT(queries->back()->report);
-      }
+  for (auto& idAndPc : GetInstance()->mPeerConnections) {
+    if (idAndPc.second->HasMedia()) {
+      idAndPc.second->GetStats(nullptr, true)->Then(
+          GetMainThreadSerialEventTarget(),
+          __func__,
+          [=] (UniquePtr<RTCStatsQuery>&& aQuery) {
+            if(PeerConnectionCtx::isActive()) {
+              PeerConnectionCtx::GetInstance()->DeliverStats(*aQuery);
+            }
+          },
+          [=] (nsresult aError) {}
+        );
     }
-  }
-  if (!queries->empty()) {
-    rv = RUN_ON_THREAD(stsThread,
-                       WrapRunnableNM(&EverySecondTelemetryCallback_s, queries),
-                       NS_DISPATCH_NORMAL);
-    NS_ENSURE_SUCCESS_VOID(rv);
   }
 }
 

@@ -6,6 +6,7 @@
 #define peerconnectionctx_h___h__
 
 #include <string>
+#include <map>
 
 #include "WebrtcGlobalChild.h"
 
@@ -79,12 +80,11 @@ class PeerConnectionCtx {
 
   nsCOMPtr<nsITimer> mTelemetryTimer;
 
-public:
-  // TODO(jib): If we ever enable move semantics on std::map...
-  //std::map<nsString,nsAutoPtr<mozilla::dom::RTCStatsReportInternal>> mLastReports;
-  nsTArray<nsAutoPtr<mozilla::dom::RTCStatsReportInternal>> mLastReports;
 private:
 
+  void DeliverStats(RTCStatsQuery& aQuery);
+
+  std::map<nsString,std::unique_ptr<mozilla::dom::RTCStatsReportInternal>> mLastReports;
   // We cannot form offers/answers properly until the Gecko Media Plugin stuff
   // has been initted, which is a complicated mess of thread dispatches,
   // including sync dispatches to main. So, we need to be able to queue up

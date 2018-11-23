@@ -239,22 +239,23 @@ static PeerConnectionCtx* GetPeerConnectionCtx()
 static void
 OnStatsReport_m(WebrtcGlobalChild* aThisChild,
                 const int aRequestId,
-                nsAutoPtr<RTCStatsQueries> aQueryList)
+                nsTArray<UniquePtr<RTCStatsQuery>>&& aQueryList)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aQueryList);
 
   if (aThisChild) {
     Stats stats;
 
     // Copy stats generated for the currently active PeerConnections
-    for (auto&& query : *aQueryList) {
-      stats.AppendElement(*(query->report));
+    for (auto& query : aQueryList) {
+      if (query) {
+        stats.AppendElement(*query->report);
+      }
     }
     // Reports saved for closed/destroyed PeerConnections
     auto ctx = PeerConnectionCtx::GetInstance();
     if (ctx) {
-      for (auto&& pc : ctx->mStatsForClosedPeerConnections) {
+      for (auto& pc : ctx->mStatsForClosedPeerConnections) {
         stats.AppendElement(pc);
       }
     }
@@ -273,8 +274,11 @@ OnStatsReport_m(WebrtcGlobalChild* aThisChild,
     return;
   }
 
-  for (auto&& query : *aQueryList) {
-    request->mResult.mReports.Value().AppendElement(*(query->report), fallible);
+  for (auto& query : aQueryList) {
+    if (query) {
+      request->mResult.mReports.Value().AppendElement(
+          *(query->report), fallible);
+    }
   }
 
   // Reports saved for closed/destroyed PeerConnections
@@ -287,29 +291,6 @@ OnStatsReport_m(WebrtcGlobalChild* aThisChild,
 
   request->Complete();
   StatsRequest::Delete(aRequestId);
-}
-
-static void
-GetAllStats_s(WebrtcGlobalChild* aThisChild,
-              const int aRequestId,
-              nsAutoPtr<RTCStatsQueries> aQueryList)
-{
-  MOZ_ASSERT(aQueryList);
-  // The call to PeerConnetionImpl must happen from a runnable
-  // dispatched on the STS thread.
-
-  // Get stats from active connections.
-  for (auto&& query : *aQueryList) {
-    PeerConnectionImpl::ExecuteStatsQuery_s(query);
-  }
-
-  // After the RTCStatsQueries have been filled in, control must return
-  // to the main thread before their eventual destruction.
-  NS_DispatchToMainThread(WrapRunnableNM(&OnStatsReport_m,
-                                         aThisChild,
-                                         aRequestId,
-                                         aQueryList),
-                          NS_DISPATCH_NORMAL);
 }
 
 static void OnGetLogging_m(WebrtcGlobalChild* aThisChild,
@@ -376,65 +357,49 @@ static void GetLogging_s(WebrtcGlobalChild* aThisChild,
                           NS_DISPATCH_NORMAL);
 }
 
-static nsresult
-BuildStatsQueryList(
-  const std::map<const std::string, PeerConnectionImpl *>& aPeerConnections,
-  const nsAString& aPcIdFilter,
-  RTCStatsQueries* queries)
-{
-  nsresult rv;
-
-  for (auto&& pc : aPeerConnections) {
-    MOZ_ASSERT(pc.second);
-    if (aPcIdFilter.IsEmpty() ||
-        aPcIdFilter.EqualsASCII(pc.second->GetIdAsAscii().c_str())) {
-      if (pc.second->HasMedia()) {
-        if (!queries->append(nsAutoPtr<RTCStatsQuery>(new RTCStatsQuery(true)))) {
-	  return NS_ERROR_OUT_OF_MEMORY;
-	}
-        rv = pc.second->BuildStatsQuery_m(nullptr, queries->back()); // all tracks
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-        MOZ_ASSERT(queries->back()->report);
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-static nsresult
+static void
 RunStatsQuery(
   const std::map<const std::string, PeerConnectionImpl *>& aPeerConnections,
   const nsAString& aPcIdFilter,
   WebrtcGlobalChild* aThisChild,
   const int aRequestId)
 {
-  nsAutoPtr<RTCStatsQueries> queries(new RTCStatsQueries);
-  nsresult rv = BuildStatsQueryList(aPeerConnections, aPcIdFilter, queries);
+  nsTArray<RefPtr<RTCStatsQueryPromise>> promises;
 
-  if (NS_FAILED(rv)) {
-    return rv;
+  for (auto& idAndPc : aPeerConnections) {
+    MOZ_ASSERT(idAndPc.second);
+    PeerConnectionImpl& pc = *idAndPc.second;
+    if (aPcIdFilter.IsEmpty() ||
+        aPcIdFilter.EqualsASCII(pc.GetIdAsAscii().c_str())) {
+      if (pc.HasMedia()) {
+        promises.AppendElement(
+          pc.GetStats(nullptr, true)->Then(
+            GetMainThreadSerialEventTarget(),
+            __func__,
+            [=] (UniquePtr<RTCStatsQuery>&& aQuery) {
+              return RTCStatsQueryPromise::CreateAndResolve(
+                  std::move(aQuery), __func__);
+            },
+            [=] (nsresult aError) {
+              // Ignore errors! Just resolve with a nullptr.
+              return RTCStatsQueryPromise::CreateAndResolve(
+                  UniquePtr<RTCStatsQuery>(), __func__);
+            }
+          )
+        );
+      }
+    }
   }
 
-  nsCOMPtr<nsIEventTarget> stsThread =
-    do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
-
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!stsThread) {
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = RUN_ON_THREAD(stsThread,
-                     WrapRunnableNM(&GetAllStats_s,
-                                    aThisChild,
-                                    aRequestId,
-                                    queries),
-                     NS_DISPATCH_NORMAL);
-  return rv;
+  RTCStatsQueryPromise::All(GetMainThreadSerialEventTarget(), promises)->Then(
+      GetMainThreadSerialEventTarget(),
+      __func__,
+      [aThisChild, aRequestId] (
+        nsTArray<UniquePtr<RTCStatsQuery>>&& aQueries) {
+        OnStatsReport_m(aThisChild, aRequestId, std::move(aQueries));
+      },
+      [=] (nsresult) {MOZ_CRASH();}
+    );
 }
 
 void ClearClosedStats()
@@ -516,23 +481,17 @@ WebrtcGlobalInformation::GetAllStats(
   // No content resident PeerConnectionCtx instances.
   // Check this process.
   PeerConnectionCtx* ctx = GetPeerConnectionCtx();
-  nsresult rv;
 
   if (ctx) {
-    rv = RunStatsQuery(ctx->mGetPeerConnections(),
-                       filter, nullptr, request->mRequestId);
-
-    if (NS_FAILED(rv)) {
-      StatsRequest::Delete(request->mRequestId);
-    }
+    RunStatsQuery(ctx->mGetPeerConnections(),
+                  filter, nullptr, request->mRequestId);
   } else {
     // Just send back an empty report.
-    rv = NS_OK;
     request->Complete();
     StatsRequest::Delete(request->mRequestId);
   }
 
-  aRv = rv;
+  aRv = NS_OK;
 }
 
 static nsresult
@@ -721,7 +680,6 @@ WebrtcGlobalParent::RecvGetStatsResult(const int& aRequestId,
                                        nsTArray<RTCStatsReportInternal>&& Stats)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsresult rv = NS_OK;
 
   StatsRequest* request = StatsRequest::Get(aRequestId);
 
@@ -730,7 +688,7 @@ WebrtcGlobalParent::RecvGetStatsResult(const int& aRequestId,
     return IPC_FAIL_NO_REASON(this);
   }
 
-  for (auto&& s : Stats) {
+  for (auto& s : Stats) {
     request->mResult.mReports.Value().AppendElement(s, fallible);
   }
 
@@ -747,17 +705,14 @@ WebrtcGlobalParent::RecvGetStatsResult(const int& aRequestId,
   PeerConnectionCtx* ctx = GetPeerConnectionCtx();
 
   if (ctx) {
-    rv = RunStatsQuery(ctx->mGetPeerConnections(),
-                       request->mPcIdFilter, nullptr, aRequestId);
+    RunStatsQuery(ctx->mGetPeerConnections(),
+                  request->mPcIdFilter, nullptr, aRequestId);
   } else {
     // No instance in the process, return the collections as is
     request->Complete();
     StatsRequest::Delete(aRequestId);
   }
 
-  if (NS_FAILED(rv)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
   return IPC_OK();
 }
 
@@ -844,11 +799,7 @@ WebrtcGlobalChild::RecvGetStatsRequest(const int& aRequestId,
   PeerConnectionCtx* ctx = GetPeerConnectionCtx();
 
   if (ctx) {
-    nsresult rv = RunStatsQuery(ctx->mGetPeerConnections(),
-                                aPcIdFilter, this, aRequestId);
-    if (NS_FAILED(rv)) {
-      return IPC_FAIL_NO_REASON(this);
-    }
+    RunStatsQuery(ctx->mGetPeerConnections(), aPcIdFilter, this, aRequestId);
     return IPC_OK();
   }
 
@@ -1000,12 +951,11 @@ static uint32_t GetCandidateIpAndTransportMask(const RTCIceCandidateStats *cand)
 
 static void StoreLongTermICEStatisticsImpl_m(
     nsresult result,
-    nsAutoPtr<RTCStatsQuery> query) {
+    RTCStatsQuery* query) {
 
   using namespace Telemetry;
 
   if (NS_FAILED(result) ||
-      !query->error.empty() ||
       !query->report->mIceCandidateStats.WasPassed()) {
     return;
   }
@@ -1197,47 +1147,6 @@ static void StoreLongTermICEStatisticsImpl_m(
   }
 }
 
-static void GetStatsForLongTermStorage_s(
-    nsAutoPtr<RTCStatsQuery> query) {
-
-  MOZ_ASSERT(query);
-
-  nsresult rv = PeerConnectionImpl::ExecuteStatsQuery_s(query.get());
-
-  // Check whether packets were dropped due to rate limiting during
-  // this call. (These calls must be made on STS)
-  unsigned char rate_limit_bit_pattern = 0;
-  if (!mozilla::nr_socket_short_term_violation_time().IsNull() &&
-      !query->iceStartTime.IsNull() &&
-      mozilla::nr_socket_short_term_violation_time() >= query->iceStartTime) {
-    rate_limit_bit_pattern |= 1;
-  }
-  if (!mozilla::nr_socket_long_term_violation_time().IsNull() &&
-      !query->iceStartTime.IsNull() &&
-      mozilla::nr_socket_long_term_violation_time() >= query->iceStartTime) {
-    rate_limit_bit_pattern |= 2;
-  }
-
-  if (query->failed) {
-    Telemetry::Accumulate(
-        Telemetry::WEBRTC_STUN_RATE_LIMIT_EXCEEDED_BY_TYPE_GIVEN_FAILURE,
-        rate_limit_bit_pattern);
-  } else {
-    Telemetry::Accumulate(
-        Telemetry::WEBRTC_STUN_RATE_LIMIT_EXCEEDED_BY_TYPE_GIVEN_SUCCESS,
-        rate_limit_bit_pattern);
-  }
-
-  // Even if Telemetry::Accumulate is threadsafe, we still need to send the
-  // query back to main, since that is where it must be destroyed.
-  NS_DispatchToMainThread(
-      WrapRunnableNM(
-          &StoreLongTermICEStatisticsImpl_m,
-          rv,
-          query),
-      NS_DISPATCH_NORMAL);
-}
-
 void WebrtcGlobalInformation::StoreLongTermICEStatistics(
     PeerConnectionImpl& aPc) {
   Telemetry::Accumulate(Telemetry::WEBRTC_ICE_FINAL_CONNECTION_STATE,
@@ -1249,16 +1158,16 @@ void WebrtcGlobalInformation::StoreLongTermICEStatistics(
     return;
   }
 
-  nsAutoPtr<RTCStatsQuery> query(new RTCStatsQuery(true));
-
-  nsresult rv = aPc.BuildStatsQuery_m(nullptr, query.get());
-
-  NS_ENSURE_SUCCESS_VOID(rv);
-
-  RUN_ON_THREAD(aPc.GetSTSThread(),
-                WrapRunnableNM(&GetStatsForLongTermStorage_s,
-                               query),
-                NS_DISPATCH_NORMAL);
+  aPc.GetStats(nullptr, true)->Then(
+      GetMainThreadSerialEventTarget(),
+      __func__,
+      [=] (UniquePtr<RTCStatsQuery>&& aQuery) {
+        StoreLongTermICEStatisticsImpl_m(NS_OK, aQuery.get());
+      },
+      [=] (nsresult aError) {
+        StoreLongTermICEStatisticsImpl_m(aError, nullptr);
+      }
+    );
 }
 
 } // namespace dom
