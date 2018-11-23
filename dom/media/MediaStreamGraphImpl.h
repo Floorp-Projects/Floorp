@@ -256,7 +256,7 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
 
   /**
    * For use during ProcessedMediaStream::ProcessInput() or
-   * MediaStreamListener callbacks, when graph state cannot be changed.
+   * MediaStreamTrackListener callbacks, when graph state cannot be changed.
    * Schedules |aMessage| to run after processing, at a time when graph state
    * can be changed.  Graph thread.
    */
@@ -340,10 +340,6 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
   StreamTime GraphTimeToStreamTimeWithBlocking(const MediaStream* aStream,
                                                GraphTime aTime) const;
 
-  /**
-   * Call NotifyHaveCurrentData on aStream's listeners.
-   */
-  void NotifyHasCurrentData(MediaStream* aStream);
   /**
    * If aStream needs an audio stream but doesn't have one, create it.
    * If aStream doesn't need an audio stream but has one, destroy it.

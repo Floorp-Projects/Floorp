@@ -20,7 +20,7 @@ class CaptureTask::MediaStreamEventListener : public MediaStreamTrackListener {
   explicit MediaStreamEventListener(CaptureTask* aCaptureTask)
       : mCaptureTask(aCaptureTask){};
 
-  // MediaStreamListener methods.
+  // MediaStreamTrackListener methods.
   void NotifyEnded() override {
     if (!mCaptureTask->mImageGrabbedOrTrackEnd) {
       mCaptureTask->PostTrackEndEvent();
