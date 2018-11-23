@@ -183,11 +183,10 @@ class LoopbackTransport : public MediaTransportBase {
     peer_ = nullptr;
   }
 
-  nsresult SendPacket(const std::string& aTransportId,
-                      MediaPacket& aPacket) override
+  void SendPacket(const std::string& aTransportId,
+                  MediaPacket& aPacket) override
   {
     peer_->SignalPacketReceived(aTransportId, aPacket);
-    return NS_OK;
   }
 
   TransportLayer::State GetState(const std::string& aTransportId,

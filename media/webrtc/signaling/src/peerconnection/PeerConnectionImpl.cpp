@@ -3188,12 +3188,10 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
 
   if (query->media->mTransportHandler) {
     if (query->grabAllLevels) {
-      query->media->mTransportHandler->GetAllIceStats(query->internalStats,
-                                                      query->now,
+      query->media->mTransportHandler->GetAllIceStats(query->now,
                                                       query->report);
     } else {
       query->media->mTransportHandler->GetIceStats(query->transportId,
-                                                   query->internalStats,
                                                    query->now,
                                                    query->report);
     }
