@@ -10269,6 +10269,23 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   }
 
   if (IsFrame()) {
+    bool doesNotReturnData = false;
+    NS_URIChainHasFlags(aURI, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
+                        &doesNotReturnData);
+
+    if (doesNotReturnData) {
+      // If this is an iframe, it must have a parent. Let's count the
+      // no-data-URL telemetry on the parent document, because probably this one
+      // is an about page.
+      nsCOMPtr<nsIDocShellTreeItem> parent;
+      GetSameTypeParent(getter_AddRefs(parent));
+      MOZ_ASSERT(parent);
+
+      nsIDocument* parentDocument = parent->GetDocument();
+      if (parentDocument) {
+        parentDocument->SetDocumentAndPageUseCounter(eUseCounter_custom_no_data_URL);
+      }
+    }
 
     MOZ_ASSERT(aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_IFRAME ||
                aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_FRAME,
