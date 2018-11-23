@@ -19,6 +19,7 @@ use std::mem;
 use std::os::raw::{c_void, c_char};
 use std::ptr;
 use std::sync::Arc;
+use std::i32;
 use std;
 
 #[cfg(target_os = "windows")]
@@ -68,7 +69,7 @@ fn dump_index(blob: &[u8]) -> () {
 /// Handles the interpretation and rasterization of gecko-based (moz2d) WR blob images.
 pub struct Moz2dBlobImageHandler {
     workers: Arc<ThreadPool>,
-    blob_commands: HashMap<ImageKey, BlobCommand>,
+    blob_commands: HashMap<BlobImageKey, BlobCommand>,
 }
 
 /// Transmute some bytes into a value.
@@ -271,12 +272,6 @@ impl Box2d {
     }
 }
 
-impl From<DeviceIntRect> for Box2d {
-    fn from(rect: DeviceIntRect) -> Self {
-        Box2d{ x1: rect.min_x(), y1: rect.min_y(), x2: rect.max_x(), y2: rect.max_y() }
-    }
-}
-
 /// Provides an API for looking up the display items in a blob image by bounds, yielding items
 /// with equal bounds in their original relative ordering.
 ///
@@ -441,7 +436,7 @@ struct BlobCommand {
     request: BlobImageRequest,
     descriptor: BlobImageDescriptor,
     commands: Arc<BlobImageData>,
-    dirty_rect: Option<DeviceIntRect>,
+    dirty_rect: BlobDirtyRect,
     tile_size: Option<TileSize>,
 }
 
@@ -450,7 +445,7 @@ struct Moz2dBlobRasterizer {
     /// Pool of rasterizers.
     workers: Arc<ThreadPool>,
     /// Blobs to rasterize.
-    blob_commands: HashMap<ImageKey, BlobCommand>,
+    blob_commands: HashMap<BlobImageKey, BlobCommand>,
 }
 
 struct GeckoProfilerMarker {
@@ -514,30 +509,36 @@ impl AsyncBlobImageRasterizer for Moz2dBlobRasterizer {
 
 fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
     let descriptor = job.descriptor;
-    let buf_size = (descriptor.size.width
-        * descriptor.size.height
+    let buf_size = (descriptor.rect.size.width
+        * descriptor.rect.size.height
         * descriptor.format.bytes_per_pixel()) as usize;
 
     let mut output = vec![0u8; buf_size];
 
+    let dirty_rect = match job.dirty_rect {
+        DirtyRect::Partial(rect) => Some(rect),
+        DirtyRect::All => None,
+    };
+
     let result = unsafe {
         if wr_moz2d_render_cb(
             ByteSlice::new(&job.commands[..]),
-            descriptor.size.width,
-            descriptor.size.height,
+            descriptor.rect.size.width,
+            descriptor.rect.size.height,
             descriptor.format,
             job.tile_size.as_ref(),
             job.request.tile.as_ref(),
-            job.dirty_rect.as_ref(),
+            dirty_rect.as_ref(),
             MutByteSlice::new(output.as_mut_slice()),
         ) {
+            // We want the dirty rect local to the tile rather than the whole image.
+            // TODO(nical): move that up and avoid recomupting the tile bounds in the callback
+            let dirty_rect = job.dirty_rect.to_subrect_of(&descriptor.rect);
+            let tx: BlobToDeviceTranslation = (-descriptor.rect.origin.to_vector()).into();
+            let rasterized_rect = tx.transform_rect(&dirty_rect);
+
             Ok(RasterizedBlobImage {
-                rasterized_rect: job.dirty_rect.unwrap_or(
-                    DeviceIntRect {
-                        origin: DeviceIntPoint::origin(),
-                        size: descriptor.size,
-                    }
-                ),
+                rasterized_rect,
                 data: Arc::new(output),
             })
         } else {
@@ -549,7 +550,7 @@ fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
 }
 
 impl BlobImageHandler for Moz2dBlobImageHandler {
-    fn add(&mut self, key: ImageKey, data: Arc<BlobImageData>, tile_size: Option<TileSize>) {
+    fn add(&mut self, key: BlobImageKey, data: Arc<BlobImageData>, tile_size: Option<TileSize>) {
         {
             let index = BlobReader::new(&data);
             assert!(index.reader.has_more());
@@ -557,18 +558,32 @@ impl BlobImageHandler for Moz2dBlobImageHandler {
         self.blob_commands.insert(key, BlobCommand { data: Arc::clone(&data), tile_size });
     }
 
-    fn update(&mut self, key: ImageKey, data: Arc<BlobImageData>, dirty_rect: Option<DeviceIntRect>) {
+    fn update(&mut self, key: BlobImageKey, data: Arc<BlobImageData>, dirty_rect: &BlobDirtyRect) {
         match self.blob_commands.entry(key) {
             hash_map::Entry::Occupied(mut e) => {
                 let command = e.get_mut();
-                command.data = Arc::new(merge_blob_images(&command.data, &data,
-                                                       dirty_rect.unwrap().into()));
+                let dirty_rect = if let DirtyRect::Partial(rect) = *dirty_rect {
+                    Box2d {
+                        x1: rect.min_x(),
+                        y1: rect.min_y(),
+                        x2: rect.max_x(),
+                        y2: rect.max_y(),
+                    }
+                } else {
+                    Box2d {
+                        x1: i32::MIN,
+                        y1: i32::MIN,
+                        x2: i32::MAX,
+                        y2: i32::MAX,
+                    }
+                };
+                command.data = Arc::new(merge_blob_images(&command.data, &data, dirty_rect));
             }
             _ => { panic!("missing image key"); }
         }
     }
 
-    fn delete(&mut self, key: ImageKey) {
+    fn delete(&mut self, key: BlobImageKey) {
         self.blob_commands.remove(&key);
     }
 

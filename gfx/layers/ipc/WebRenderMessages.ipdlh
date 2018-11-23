@@ -22,6 +22,7 @@ using mozilla::wr::MaybeFontInstancePlatformOptions from "mozilla/webrender/WebR
 using mozilla::wr::FontInstanceKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::FontKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::BlobImageKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::gfx::MaybeIntSize from "mozilla/gfx/Point.h";
 using mozilla::LayoutDeviceRect from "Units.h";
@@ -117,7 +118,7 @@ struct OpAddBlobImage {
   ImageDescriptor descriptor;
   OffsetRange bytes;
   uint16_t tiling;
-  ImageKey key;
+  BlobImageKey key;
 };
 
 struct OpUpdateImage {
@@ -129,13 +130,13 @@ struct OpUpdateImage {
 struct OpUpdateBlobImage {
   ImageDescriptor descriptor;
   OffsetRange bytes;
-  ImageKey key;
+  BlobImageKey key;
   ImageIntRect dirtyRect;
 };
 
 struct OpSetImageVisibleArea {
   ImageIntRect area;
-  ImageKey key;
+  BlobImageKey key;
 };
 
 struct OpUpdateExternalImage {
@@ -146,6 +147,10 @@ struct OpUpdateExternalImage {
 
 struct OpDeleteImage {
   ImageKey key;
+};
+
+struct OpDeleteBlobImage {
+  BlobImageKey key;
 };
 
 struct OpAddRawFont {
@@ -184,6 +189,7 @@ union OpUpdateResource {
   OpUpdateBlobImage;
   OpSetImageVisibleArea;
   OpDeleteImage;
+  OpDeleteBlobImage;
   OpAddRawFont;
   OpAddFontDescriptor;
   OpDeleteFont;

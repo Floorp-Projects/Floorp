@@ -1420,14 +1420,14 @@ pub extern "C" fn wr_resource_updates_add_image(
 #[no_mangle]
 pub extern "C" fn wr_resource_updates_add_blob_image(
     txn: &mut Transaction,
-    image_key: WrImageKey,
+    image_key: BlobImageKey,
     descriptor: &WrImageDescriptor,
     bytes: &mut WrVecU8,
 ) {
-    txn.add_image(
+    txn.add_blob_image(
         image_key,
         descriptor.into(),
-        ImageData::new_blob_image(bytes.flush_into_vec()),
+        Arc::new(bytes.flush_into_vec()),
         if descriptor.format == ImageFormat::BGRA8 { Some(256) } else { None }
     );
 }
@@ -1466,17 +1466,17 @@ pub extern "C" fn wr_resource_updates_update_image(
         key,
         descriptor.into(),
         ImageData::new(bytes.flush_into_vec()),
-        None
+        &DirtyRect::All,
     );
 }
 
 #[no_mangle]
-pub extern "C" fn wr_resource_updates_set_image_visible_area(
+pub extern "C" fn wr_resource_updates_set_blob_image_visible_area(
     txn: &mut Transaction,
-    key: WrImageKey,
+    key: BlobImageKey,
     area: &DeviceIntRect,
 ) {
-    txn.set_image_visible_area(key, *area);
+    txn.set_blob_image_visible_area(key, *area);
 }
 
 #[no_mangle]
@@ -1498,7 +1498,7 @@ pub extern "C" fn wr_resource_updates_update_external_image(
                 image_type: image_type.to_wr(),
             }
         ),
-        None
+        &DirtyRect::All,
     );
 }
 
@@ -1522,23 +1522,23 @@ pub extern "C" fn wr_resource_updates_update_external_image_with_dirty_rect(
                 image_type: image_type.to_wr(),
             }
         ),
-        Some(dirty_rect)
+        &DirtyRect::Partial(dirty_rect)
     );
 }
 
 #[no_mangle]
 pub extern "C" fn wr_resource_updates_update_blob_image(
     txn: &mut Transaction,
-    image_key: WrImageKey,
+    image_key: BlobImageKey,
     descriptor: &WrImageDescriptor,
     bytes: &mut WrVecU8,
-    dirty_rect: DeviceIntRect,
+    dirty_rect: LayoutIntRect,
 ) {
-    txn.update_image(
+    txn.update_blob_image(
         image_key,
         descriptor.into(),
-        ImageData::new_blob_image(bytes.flush_into_vec()),
-        Some(dirty_rect)
+        Arc::new(bytes.flush_into_vec()),
+        &DirtyRect::Partial(dirty_rect)
     );
 }
 
@@ -1548,6 +1548,14 @@ pub extern "C" fn wr_resource_updates_delete_image(
     key: WrImageKey
 ) {
     txn.delete_image(key);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_resource_updates_delete_blob_image(
+    txn: &mut Transaction,
+    key: BlobImageKey
+) {
+    txn.delete_blob_image(key);
 }
 
 #[no_mangle]
@@ -2680,7 +2688,7 @@ extern "C" {
                                format: ImageFormat,
                                tile_size: Option<&u16>,
                                tile_offset: Option<&TileOffset>,
-                               dirty_rect: Option<&DeviceIntRect>,
+                               dirty_rect: Option<&LayoutIntRect>,
                                output: MutByteSlice)
                                -> bool;
 }

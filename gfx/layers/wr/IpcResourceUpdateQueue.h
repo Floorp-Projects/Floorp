@@ -91,7 +91,7 @@ public:
                 const ImageDescriptor& aDescriptor,
                 Range<uint8_t> aBytes);
 
-  bool AddBlobImage(wr::ImageKey aKey,
+  bool AddBlobImage(wr::BlobImageKey aKey,
                     const ImageDescriptor& aDescriptor,
                     Range<uint8_t> aBytes);
 
@@ -106,7 +106,7 @@ public:
                          const ImageDescriptor& aDescriptor,
                          Range<uint8_t> aBytes);
 
-  bool UpdateBlobImage(wr::ImageKey aKey,
+  bool UpdateBlobImage(wr::BlobImageKey aKey,
                        const ImageDescriptor& aDescriptor,
                        Range<uint8_t> aBytes,
                        ImageIntRect aDirtyRect);
@@ -115,9 +115,11 @@ public:
                            ImageKey aKey,
                            ImageIntRect aDirtyRect);
 
-  void SetImageVisibleArea(ImageKey aKey, const ImageIntRect& aArea);
+  void SetBlobImageVisibleArea(BlobImageKey aKey, const ImageIntRect& aArea);
 
   void DeleteImage(wr::ImageKey aKey);
+
+  void DeleteBlobImage(wr::BlobImageKey aKey);
 
   bool AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes, uint32_t aIndex);
 

@@ -363,6 +363,17 @@ static inline wr::DeviceIntRect ToDeviceIntRect(const mozilla::ImageIntRect& rec
   return r;
 }
 
+// TODO: should be const LayoutDeviceIntRect instead of ImageIntRect
+static inline wr::LayoutIntRect ToLayoutIntRect(const mozilla::ImageIntRect& rect)
+{
+  wr::LayoutIntRect r;
+  r.origin.x = rect.X();
+  r.origin.y = rect.Y();
+  r.size.width = rect.Width();
+  r.size.height = rect.Height();
+  return r;
+}
+
 static inline wr::LayoutRect ToLayoutRect(const mozilla::LayoutDeviceIntRect& rect)
 {
   return ToLayoutRect(IntRectToRect(rect));
