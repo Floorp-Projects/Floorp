@@ -2863,11 +2863,11 @@ void SourceMediaStream::AdvanceTimeVaryingValuesToCurrentTime(
   mTracks.ForgetUpTo(aCurrentTime - mTracksStartTime);
 }
 
-bool SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment,
-                                      MediaSegment* aRawSegment) {
+StreamTime SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment,
+                                            MediaSegment* aRawSegment) {
   MutexAutoLock lock(mMutex);
   // ::EndAllTrackAndFinished() can end these before the sources notice
-  bool appended = false;
+  StreamTime appended = 0;
   auto graph = GraphImpl();
   if (!mFinished && graph) {
     TrackData* track = FindDataForTrack(aID);
@@ -2886,8 +2886,8 @@ bool SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment,
 
       // Must notify first, since AppendFrom() will empty out aSegment
       NotifyDirectConsumers(track, aRawSegment ? aRawSegment : aSegment);
+      appended = aSegment->GetDuration();
       track->mData->AppendFrom(aSegment);  // note: aSegment is now dead
-      appended = true;
       GraphImpl()->EnsureNextIteration();
     } else {
       aSegment->Clear();
