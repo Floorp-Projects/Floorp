@@ -1323,10 +1323,14 @@ add_task(async function test_multistore_argument_handling() {
   // Clear histograms
   Telemetry.getSnapshotForHistograms("main", true);
   Telemetry.getSnapshotForHistograms("sync", true);
+  Telemetry.getSnapshotForKeyedHistograms("main", true);
+  Telemetry.getSnapshotForKeyedHistograms("sync", true);
 
   let id;
   let hist;
   let snapshot;
+
+  // Plain Histograms
 
   id = "TELEMETRY_TEST_MULTIPLE_STORES";
   hist = Telemetry.getHistogramById(id);
@@ -1342,6 +1346,41 @@ add_task(async function test_multistore_argument_handling() {
 
   snapshot = hist.snapshot({store: "sync"});
   Assert.equal(37, snapshot.sum, `${id} should not have been cleared in the sync store`);
+
+  Assert.throws(() => hist.snapshot(2, "or", "more", "arguments"),
+    /one argument/, "snapshot should check argument count");
+  Assert.throws(() => hist.snapshot(2),
+    /object argument/, "snapshot should check argument type");
+  Assert.throws(() => hist.snapshot({}),
+    /property/, "snapshot should check for object property");
+  Assert.throws(() => hist.snapshot({store: 1}),
+    /string/, "snapshot should check object property's type");
+
+  Assert.throws(() => hist.clear(2, "or", "more", "arguments"),
+    /one argument/, "clear should check argument count");
+  Assert.throws(() => hist.clear(2),
+    /object argument/, "clear should check argument type");
+  Assert.throws(() => hist.clear({}),
+    /property/, "clear should check for object property");
+  Assert.throws(() => hist.clear({store: 1}),
+    /string/, "clear should check object property's type");
+
+  // Keyed Histogram
+
+  id = "TELEMETRY_TEST_KEYED_MULTIPLE_STORES";
+  hist = Telemetry.getKeyedHistogramById(id);
+  hist.add("key-1", 37);
+
+  // No argument
+  snapshot = hist.snapshot();
+  Assert.equal(37, snapshot["key-1"].sum, `${id} should be in a default store snapshot`);
+
+  hist.clear();
+  snapshot = hist.snapshot();
+  Assert.ok(!("key-1" in snapshot), `${id} should be cleared in the default store`);
+
+  snapshot = hist.snapshot({store: "sync"});
+  Assert.equal(37, snapshot["key-1"].sum, `${id} should not have been cleared in the sync store`);
 
   Assert.throws(() => hist.snapshot(2, "or", "more", "arguments"),
     /one argument/, "snapshot should check argument count");
@@ -1405,6 +1444,49 @@ add_task(async function test_multistore_sync_snapshot() {
   Assert.ok(id in snapshot, `${id} should be in a sync store snapshot`);
 });
 
+add_task(async function test_multistore_keyed_sync_snapshot() {
+  Telemetry.canRecordExtended = true;
+  // Clear histograms
+  Telemetry.getSnapshotForKeyedHistograms("main", true);
+  Telemetry.getSnapshotForKeyedHistograms("sync", true);
+
+  let id;
+  let hist;
+  let snapshot;
+
+  // Plain histograms
+
+  // Fill with data
+  id = "TELEMETRY_TEST_KEYED_LINEAR";
+  hist = Telemetry.getKeyedHistogramById(id);
+  hist.add("key-1", 1);
+
+  id = "TELEMETRY_TEST_KEYED_MULTIPLE_STORES";
+  hist = Telemetry.getKeyedHistogramById(id);
+  hist.add("key-1", 1);
+
+  id = "TELEMETRY_TEST_KEYED_SYNC_ONLY";
+  hist = Telemetry.getKeyedHistogramById(id);
+  hist.add("key-1", 1);
+
+  // Getting snapshot and clearing
+  snapshot = Telemetry.getSnapshotForKeyedHistograms("main", /* clear */ true).parent;
+  id = "TELEMETRY_TEST_KEYED_LINEAR";
+  Assert.ok(id in snapshot, `${id} should be in a main store snapshot`);
+  id = "TELEMETRY_TEST_KEYED_MULTIPLE_STORES";
+  Assert.ok(id in snapshot, `${id} should be in a main store snapshot`);
+  id = "TELEMETRY_TEST_KEYED_SYNC_ONLY";
+  Assert.ok(!(id in snapshot), `${id} should not be in a main store snapshot`);
+
+  snapshot = Telemetry.getSnapshotForKeyedHistograms("sync", /* clear */ true).parent;
+  id = "TELEMETRY_TEST_KEYED_LINEAR";
+  Assert.ok(!(id in snapshot), `${id} should not be in a sync store snapshot`);
+  id = "TELEMETRY_TEST_KEYED_MULTIPLE_STORES";
+  Assert.ok(id in snapshot, `${id} should be in a sync store snapshot`);
+  id = "TELEMETRY_TEST_KEYED_SYNC_ONLY";
+  Assert.ok(id in snapshot, `${id} should be in a sync store snapshot`);
+});
+
 add_task(async function test_multistore_plain_individual_snapshot() {
   Telemetry.canRecordExtended = true;
   // Clear histograms
@@ -1462,4 +1544,68 @@ add_task(async function test_multistore_plain_individual_snapshot() {
   hist.clear({store: "sync"});
   Assert.deepEqual(undefined, hist.snapshot({store: "main"}));
   Assert.deepEqual(0, hist.snapshot({store: "sync"}).sum);
+});
+
+add_task(async function test_multistore_keyed_individual_snapshot() {
+  Telemetry.canRecordExtended = true;
+  // Clear histograms
+  Telemetry.getSnapshotForKeyedHistograms("main", true);
+  Telemetry.getSnapshotForKeyedHistograms("sync", true);
+
+  let id;
+  let hist;
+
+  id = "TELEMETRY_TEST_KEYED_LINEAR";
+  hist = Telemetry.getKeyedHistogramById(id);
+
+  hist.add("key-1", 37);
+  Assert.deepEqual(37, hist.snapshot({store: "main"})["key-1"].sum);
+  Assert.deepEqual(undefined, hist.snapshot({store: "sync"}));
+
+  hist.clear({store: "main"});
+  Assert.deepEqual({}, hist.snapshot({store: "main"}));
+  Assert.deepEqual(undefined, hist.snapshot({store: "sync"}));
+
+  hist.add("key-1", 4);
+  hist.clear({store: "sync"});
+  Assert.deepEqual(4, hist.snapshot({store: "main"})["key-1"].sum);
+  Assert.deepEqual(undefined, hist.snapshot({store: "sync"}));
+
+  id = "TELEMETRY_TEST_KEYED_MULTIPLE_STORES";
+  hist = Telemetry.getKeyedHistogramById(id);
+
+  hist.add("key-1", 37);
+  Assert.deepEqual(37, hist.snapshot({store: "main"})["key-1"].sum);
+  Assert.deepEqual(37, hist.snapshot({store: "sync"})["key-1"].sum);
+
+  hist.clear({store: "main"});
+  Assert.deepEqual({}, hist.snapshot({store: "main"}));
+  Assert.deepEqual(37, hist.snapshot({store: "sync"})["key-1"].sum);
+
+  hist.add("key-1", 3);
+  Assert.deepEqual(3, hist.snapshot({store: "main"})["key-1"].sum);
+  Assert.deepEqual(40, hist.snapshot({store: "sync"})["key-1"].sum);
+
+  hist.clear({store: "sync"});
+  Assert.deepEqual(3, hist.snapshot({store: "main"})["key-1"].sum);
+  Assert.deepEqual({}, hist.snapshot({store: "sync"}));
+
+  id = "TELEMETRY_TEST_KEYED_SYNC_ONLY";
+  hist = Telemetry.getKeyedHistogramById(id);
+
+  hist.add("key-1", 37);
+  Assert.deepEqual(undefined, hist.snapshot({store: "main"}));
+  Assert.deepEqual(37, hist.snapshot({store: "sync"})["key-1"].sum);
+
+  hist.clear({store: "main"});
+  Assert.deepEqual(undefined, hist.snapshot({store: "main"}));
+  Assert.deepEqual(37, hist.snapshot({store: "sync"})["key-1"].sum);
+
+  hist.add("key-1", 3);
+  Assert.deepEqual(undefined, hist.snapshot({store: "main"}));
+  Assert.deepEqual(40, hist.snapshot({store: "sync"})["key-1"].sum);
+
+  hist.clear({store: "sync"});
+  Assert.deepEqual(undefined, hist.snapshot({store: "main"}));
+  Assert.deepEqual({}, hist.snapshot({store: "sync"}));
 });
