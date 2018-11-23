@@ -84,16 +84,7 @@ def package_fennec_apk(inputs=[], omni_ja=None,
     for assets_dir in assets_dirs:
         finder = FileFinder(assets_dir)
         for p, f in finder.find('**'):
-            compress = None  # Take default from Jarrer.
-            if p.endswith('.so'):
-                # Asset libraries are special.
-                if f.open().read(5)[1:] == '7zXZ':
-                    print('%s is already compressed' % p)
-                    # We need to store (rather than deflate) compressed libraries
-                    # (even if we don't compress them ourselves).
-                    compress = False
-
-            add(mozpath.join('assets', p), f, compress=compress)
+            add(mozpath.join('assets', p), f)
 
     for lib_dir in lib_dirs:
         finder = FileFinder(lib_dir)
