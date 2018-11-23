@@ -67,84 +67,88 @@ runTest(async function() {
   // TODO: We would like to be able to perform an arbitrary number of gUM calls
   // at once, but issues with pulse and audio IPC mean on some systems we're
   // limited to as few as 2 concurrent calls. To avoid issues we chunk test runs
-  // to only two calls at a time. The while and the splice lines can be removed,
-  // and allConstraintCombinations can be renamed to constraintCombinations once
-  // this issue is resolved. See bug 1480489
+  // to only two calls at a time. The while, splice and GC lines can be removed,
+  // the extra scope removed and allConstraintCombinations can be renamed to
+  // constraintCombinations once this issue is resolved. See bug 1480489.
   while (allConstraintCombinations.length) {
-    let constraintCombinations = allConstraintCombinations.splice(0, 2);
-    // Array to store objects that associate information used in our test such as
-    // constraints, iframes, gum streams, and various promises.
-    let testCases = [];
+    {
+      let constraintCombinations = allConstraintCombinations.splice(0, 2);
+      // Array to store objects that associate information used in our test such as
+      // constraints, iframes, gum streams, and various promises.
+      let testCases = [];
 
-    for (let constraints of constraintCombinations) {
-      let testCase = {requestedConstraints: constraints};
-      // Provide an id for logging, labeling related elements.
-      testCase.id = `testCase.` +
-                    `e=${constraints.echoCancellation}.` +
-                    `g=${constraints.noiseSuppression}.` +
-                    `n=${constraints.noiseSuppression}`;
-      testCases.push(testCase);
-      testCase.iframe = document.createElement("iframe");
-      testCase.iframeLoadedPromise = new Promise((resolve, reject) => {
-        testCase.iframe.onload = () => { resolve(); };
-      });
-      document.body.appendChild(testCase.iframe);
+      for (let constraints of constraintCombinations) {
+        let testCase = {requestedConstraints: constraints};
+        // Provide an id for logging, labeling related elements.
+        testCase.id = `testCase.` +
+                      `e=${constraints.echoCancellation}.` +
+                      `g=${constraints.noiseSuppression}.` +
+                      `n=${constraints.noiseSuppression}`;
+        testCases.push(testCase);
+        testCase.iframe = document.createElement("iframe");
+        testCase.iframeLoadedPromise = new Promise((resolve, reject) => {
+          testCase.iframe.onload = () => { resolve(); };
+        });
+        document.body.appendChild(testCase.iframe);
+      }
+      is(testCases.length,
+        constraintCombinations.length,
+        "Should have created a testcase for each constraint");
+
+      // Wait for all iframes to be loaded
+      await Promise.all(testCases.map(tc => tc.iframeLoadedPromise));
+
+      // Start a tone at our top level page so the gUM calls will record something
+      // should we wish to verify their recording in future.
+      let tone = new LoopbackTone(new AudioContext, TEST_AUDIO_FREQ);
+      tone.start();
+
+      // One by one see if we can grab a gUM stream per iframe
+      for (let testCase of testCases) {
+        // Use normal gUM rather than our test helper as the test harness was
+        // not made to be used inside iframes.
+        testCase.gumStream =
+          await testCase.iframe.contentWindow.navigator.mediaDevices.getUserMedia({audio: testCase.requestedConstraints})
+          .catch(e => Promise.reject(`getUserMedia calls should not fail! Failed at ${testCase.id} with: ${e}!`));
+        let differenceString = getConstraintDifferenceString(
+          testCase.requestedConstraints,
+          testCase.gumStream.getAudioTracks()[0].getSettings());
+        ok(!differenceString,
+          `gUM stream for ${testCase.id} should have the same constraints as were ` +
+          `requested from gUM. Differences: ${differenceString}`);
+      }
+
+      // Once all streams are collected, make sure the constraints haven't been
+      // mutated by another gUM call.
+      for (let testCase of testCases) {
+        let differenceString = getConstraintDifferenceString(
+          testCase.requestedConstraints,
+          testCase.gumStream.getAudioTracks()[0].getSettings());
+        ok(!differenceString,
+          `gUM stream for ${testCase.id} should not have had constraints altered after ` +
+          `all gUM calls are done. Differences: ${differenceString}`);
+      }
+
+      // We do not currently have tests to verify the behaviour of the different
+      // constraints. Once we do we should do further verification here. See
+      // bug 1406372, bug 1406376, and bug 1406377.
+
+      for (let testCase of testCases) {
+        let testAudio = createMediaElement("audio", `testAudio.${testCase.id}`);
+        let playback = new MediaStreamPlayback(testAudio, testCase.gumStream);
+        await playback.playMediaWithoutStoppingTracks(false);
+      }
+
+      // Stop the tracks for each stream, we left them running above via
+      // playMediaWithoutStoppingTracks to make sure they can play concurrently.
+      for (let testCase of testCases) {
+        testCase.gumStream.getTracks().map(t => t.stop());
+        document.body.removeChild(testCase.iframe);
+      }
+
+      tone.stop();
     }
-    is(testCases.length,
-      constraintCombinations.length,
-      "Should have created a testcase for each constraint");
-
-    // Wait for all iframes to be loaded
-    await Promise.all(testCases.map(tc => tc.iframeLoadedPromise));
-
-    // Start a tone at our top level page so the gUM calls will record something
-    // should we wish to verify their recording in future.
-    let tone = new LoopbackTone(new AudioContext, TEST_AUDIO_FREQ);
-    tone.start();
-
-    // One by one see if we can grab a gUM stream per iframe
-    for (let testCase of testCases) {
-      // Use normal gUM rather than our test helper as the test harness was
-      // not made to be used inside iframes.
-      testCase.gumStream =
-        await testCase.iframe.contentWindow.navigator.mediaDevices.getUserMedia({audio: testCase.requestedConstraints})
-        .catch(e => Promise.reject(`getUserMedia calls should not fail! Failed at ${testCase.id} with: ${e}!`));
-      let differenceString = getConstraintDifferenceString(
-        testCase.requestedConstraints,
-        testCase.gumStream.getAudioTracks()[0].getSettings());
-      ok(!differenceString,
-        `gUM stream for ${testCase.id} should have the same constraints as were ` +
-        `requested from gUM. Differences: ${differenceString}`);
-    }
-
-    // Once all streams are collected, make sure the constraints haven't been
-    // mutated by another gUM call.
-    for (let testCase of testCases) {
-      let differenceString = getConstraintDifferenceString(
-        testCase.requestedConstraints,
-        testCase.gumStream.getAudioTracks()[0].getSettings());
-      ok(!differenceString,
-        `gUM stream for ${testCase.id} should not have had constraints altered after ` +
-        `all gUM calls are done. Differences: ${differenceString}`);
-    }
-
-    // We do not currently have tests to verify the behaviour of the different
-    // constraints. Once we do we should do further verification here. See
-    // bug 1406372, bug 1406376, and bug 1406377.
-
-    for (let testCase of testCases) {
-      let testAudio = createMediaElement("audio", `testAudio.${testCase.id}`);
-      let playback = new MediaStreamPlayback(testAudio, testCase.gumStream);
-      await playback.playMediaWithoutStoppingTracks(false);
-    }
-
-    // Stop the tracks for each stream, we left them running above via
-    // playMediaWithoutStoppingTracks to make sure they can play concurrently.
-    for (let testCase of testCases) {
-      testCase.gumStream.getTracks().map(t => t.stop());
-    }
-
-    tone.stop();
+    await new Promise(r => SpecialPowers.exactGC(r));
   }
 });
 </script>
