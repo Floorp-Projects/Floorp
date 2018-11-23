@@ -19,19 +19,16 @@
   overflow: auto;
 }
 
-#sidebar-panel-changes .source[open] {
-  padding-bottom: 10px;
-}
-
 #sidebar-panel-changes .href {
-  background: var(--theme-sidebar-background);
+  color: var(--theme-toolbar-color);
+  background: var(--theme-toolbar-background);
   border-top: 1px solid var(--theme-splitter-color);
   border-bottom: 1px solid var(--theme-splitter-color);
-  padding: 5px;
+  padding: 4px;
+  font-size: 12px;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
-  cursor: pointer;
 }
 
 #sidebar-panel-changes .rule .level {

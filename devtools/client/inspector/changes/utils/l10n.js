@@ -9,4 +9,5 @@ const L10N = new LocalizationHelper("devtools/client/locales/changes.properties"
 
 module.exports = {
   getStr: (...args) => L10N.getStr(...args),
+  getFormatStr: (...args) => L10N.getFormatStr(...args),
 };

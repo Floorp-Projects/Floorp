@@ -10,6 +10,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const CSSDeclaration = createFactory(require("./CSSDeclaration"));
+const { getSourceForDisplay } = require("../utils/changes-utils");
 const { getStr } = require("../utils/l10n");
 
 class ChangesApp extends PureComponent {
@@ -82,7 +83,7 @@ class ChangesApp extends PureComponent {
     return dom.div(
       {
         key: ruleId,
-        className: "rule",
+        className: "rule devtools-monospace",
       },
       dom.div(
         {
@@ -105,21 +106,21 @@ class ChangesApp extends PureComponent {
   renderDiff(changes = {}) {
     // Render groups of style sources: stylesheets and element style attributes.
     return Object.entries(changes).map(([sourceId, source]) => {
-      const href = source.href || `inline stylesheet #${source.index}`;
-      const rules = source.rules;
+      const path = getSourceForDisplay(source);
+      const { href, rules } = source;
 
-      return dom.details(
+      return dom.div(
         {
           key: sourceId,
-          className: "source devtools-monospace",
-          open: true,
+          className: "source",
         },
-        dom.summary(
+        dom.div(
           {
             className: "href",
             title: href,
           },
-          href),
+          path
+        ),
         // Render changed rules within this source.
         Object.entries(rules).map(([ruleId, rule]) => {
           return this.renderRule(ruleId, rule, rules);
