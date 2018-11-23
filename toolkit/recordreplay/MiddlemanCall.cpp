@@ -177,7 +177,7 @@ ProcessMiddlemanCall(const char* aInputData, size_t aInputSize,
       redirection.mMiddlemanCall(cx);
     }
 
-    RecordReplayInvokeCall(call->mCallId, &arguments);
+    RecordReplayInvokeCall(redirection.mBaseFunction, &arguments);
 
     {
       MiddlemanCallContext cx(call, &arguments, MiddlemanCallPhase::MiddlemanOutput);
