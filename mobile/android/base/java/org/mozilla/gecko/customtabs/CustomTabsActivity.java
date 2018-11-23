@@ -723,6 +723,10 @@ public class CustomTabsActivity extends AppCompatActivity
         // Won't happen, as we don't use e10s in Fennec
     }
 
+    @Override
+    public void onFirstComposite(final GeckoSession session) {
+    }
+
     @Override // ActionModePresenter
     public void startActionMode(final ActionMode.Callback callback) {
         endActionMode();

@@ -373,6 +373,10 @@ public class WebAppActivity extends AppCompatActivity
         // Won't happen, as we don't use e10s in Fennec
     }
 
+    @Override
+    public void onFirstComposite(final GeckoSession session) {
+    }
+
     @Override // GeckoSession.ContentDelegate
     public void onFullScreen(GeckoSession session, boolean fullScreen) {
         updateFullScreenContent(fullScreen);
