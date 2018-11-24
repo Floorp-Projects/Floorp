@@ -9,6 +9,7 @@
 #include "nsITextToSubURI.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "mozilla/net/IDNBlocklistUtils.h"
 
 class nsTextToSubURI: public nsITextToSubURI
 {
@@ -25,7 +26,7 @@ private:
 
   // Characters defined in netwerk/dns/IDNCharacterBlocklist.inc or via the
   // network.IDN.extra_allowed_chars and network.IDN.extra_blocked_chars prefs.
-  nsTArray<char16_t> mUnsafeChars;
+  nsTArray<mozilla::net::BlocklistRange> mIDNBlocklist;
 };
 
 #endif // nsTextToSubURI_h__
