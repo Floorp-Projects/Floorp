@@ -2264,8 +2264,10 @@ class ADBDevice(ADBCommand):
                         pid_i = i
                 if user_i != -1 and pid_i != -1:
                     break
-                self._logger.error('get_process_list: %s' % header)
-                if attempt >= max_attempts:
+                # if this isn't the final attempt, don't print this as an error
+                if attempt < max_attempts:
+                    self._logger.info('get_process_list: attempt: %d %s' % (attempt, header))
+                else:
                     raise ADBError('get_process_list: Unknown format: %s: %s' % (
                         header, adb_process))
             ret = []
