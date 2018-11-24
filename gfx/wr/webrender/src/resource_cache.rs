@@ -1942,14 +1942,13 @@ impl ResourceCache {
                     entry.insert(short_path);
                 }
                 CachedImageData::Blob => {
-                    assert_eq!(template.tiling, None);
                     let blob_request_params = &[
                         BlobImageParams {
                             request: BlobImageRequest {
                                 key: BlobImageKey(key),
                                 //TODO: support tiled blob images
                                 // https://github.com/servo/webrender/issues/2236
-                                tile: None,
+                                tile: template.tiling.map(|_| TileOffset::origin()),
                             },
                             descriptor: BlobImageDescriptor {
                                 rect: blob_size(desc.size).into(),
@@ -1959,11 +1958,24 @@ impl ResourceCache {
                         }
                     ];
 
-                    let blob_handler = self.blob_image_handler.as_mut().unwrap();
-                    blob_handler.prepare_resources(&self.resources, blob_request_params);
-                    let mut rasterizer = blob_handler.create_blob_rasterizer();
-                    let (_, result) = rasterizer.rasterize(blob_request_params, false).pop().unwrap();
-                    let result = result.expect("Blob rasterization failed");
+                    let requires_tiling = match template.tiling {
+                        Some(tile_size) => desc.size.width > tile_size as i32 || desc.size.height > tile_size as i32,
+                        None => false,
+                    };
+
+                    let result = if requires_tiling {
+                        warn!("Tiled blob images aren't supported yet");
+                        RasterizedBlobImage {
+                            rasterized_rect: desc.size.into(),
+                            data: Arc::new(vec![0; desc.compute_total_size() as usize])
+                        }
+                    } else {
+                        let blob_handler = self.blob_image_handler.as_mut().unwrap();
+                        blob_handler.prepare_resources(&self.resources, blob_request_params);
+                        let mut rasterizer = blob_handler.create_blob_rasterizer();
+                        let (_, result) = rasterizer.rasterize(blob_request_params, false).pop().unwrap();
+                        result.expect("Blob rasterization failed")
+                    };
 
                     assert_eq!(result.rasterized_rect.size, desc.size);
                     assert_eq!(result.data.len(), desc.compute_total_size() as usize);
