@@ -17,6 +17,7 @@
 #include "nsID.h"
 #include "mozilla/Assertions.h"
 #include "jsapi.h"
+#include "js/Symbol.h"
 #include "js/Value.h"
 #include "nsString.h"
 #include "nsTArray.h"

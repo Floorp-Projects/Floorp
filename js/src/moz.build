@@ -156,6 +156,7 @@ EXPORTS.js += [
     '../public/Stream.h',
     '../public/StructuredClone.h',
     '../public/SweepingAPI.h',
+    '../public/Symbol.h',
     '../public/TraceKind.h',
     '../public/TraceLoggerAPI.h',
     '../public/TracingAPI.h',
