@@ -66,6 +66,7 @@
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
+#include "js/Symbol.h"
 #include "js/Utility.h"
 #include "js/Wrapper.h"
 #include "util/CompleteFile.h"

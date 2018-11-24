@@ -1,6 +1,7 @@
 #include "gdb-tests.h"
 #include "jsapi.h"
 
+#include "js/Symbol.h"
 #ifdef ENABLE_BIGINT
 #include "vm/BigIntType.h"
 #endif
