@@ -1,0 +1,27 @@
+# General options
+
+option('bitdepths',
+    type: 'array',
+    choices: ['8', '10'],
+    description: 'Enable only specified bitdepths')
+
+option('build_asm',
+    type: 'boolean',
+    value: true,
+    description: 'Build asm files, if available')
+
+option('build_tools',
+    type: 'boolean',
+    value: true,
+    description: 'Build dav1d cli tools')
+
+option('build_tests',
+    type: 'boolean',
+    value: true,
+    description: 'Build dav1d tests')
+
+option('fuzzing_engine',
+    type: 'combo',
+    choices : ['none', 'libfuzzer', 'oss-fuzz'],
+    value: 'none',
+    description: 'Select the fuzzing engine')
