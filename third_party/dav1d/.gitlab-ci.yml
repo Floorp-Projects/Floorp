@@ -1,0 +1,104 @@
+stages:
+    - build
+
+build-debian:
+    image: registry.videolan.org:5000/dav1d-debian-unstable:20180928151533
+    stage: build
+    tags:
+        - debian
+        - amd64
+    script:
+        - env CFLAGS='-Werror' meson build --buildtype release
+        - ninja -C build
+        - cd build && meson test -v
+
+build-debian-static:
+    image: registry.videolan.org:5000/dav1d-debian-unstable:20180928151533
+    stage: build
+    tags:
+        - debian
+        - amd64
+    script:
+        - env CFLAGS='-Werror' meson build --buildtype release --default-library static
+        - ninja -C build
+        - cd build && meson test -v
+
+build-win32:
+    image: registry.videolan.org:5000/dav1d-debian-unstable:20180928151533
+    stage: build
+    tags:
+        - win32
+    script:
+        - env CFLAGS='-Werror'
+            meson build --buildtype release
+                        --libdir lib
+                        --prefix "$(pwd)/build/dav1d_install"
+                        --cross-file /opt/crossfiles/i686-w64-mingw32.meson
+                        -Ddefault_library=both
+        - ninja -C build
+        - ninja -C build install
+    artifacts:
+        name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+        paths:
+            - build/dav1d_install/
+        expire_in: 1 week
+
+build-win64:
+    image: registry.videolan.org:5000/dav1d-debian-unstable:20180928151533
+    stage: build
+    tags:
+        - win64
+    script:
+        - env CFLAGS='-Werror'
+            meson build --buildtype release
+                        --libdir lib
+                        --prefix "$(pwd)/build/dav1d_install"
+                        --cross-file /opt/crossfiles/x86_64-w64-mingw32.meson
+                        -Ddefault_library=both
+        - ninja -C build
+        - ninja -C build install
+    artifacts:
+        name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+        paths:
+            - build/dav1d_install/
+        expire_in: 1 week
+
+build-debian-aarch64:
+    stage: build
+    tags:
+        - aarch64
+        - debian
+    script:
+        - env CFLAGS='-Werror' meson build --buildtype release
+        - ninja -C build
+        - cd build && meson test -v
+
+build-debian-aarch64-clang-5:
+    stage: build
+    tags:
+        - aarch64
+        - clang5
+        - debian
+    script:
+        - env CC=clang-5.0 CFLAGS='-integrated-as' meson build --buildtype release
+        - ninja -C build
+        - cd build && meson test -v
+
+build-macos:
+    stage: build
+    tags:
+        - macos
+    script:
+        - env CFLAGS='-Werror' meson build --buildtype release -Ddefault_library=both
+        - ninja -C build
+        - cd build && meson test -v
+
+build-debian-werror:
+    image: dav1d-debian-aarch64:201810240631
+    stage: build
+    tags:
+        - aarch64
+        - debian
+    script:
+        - env CC='clang-7' CFLAGS='-Werror' meson build -Dbuild_tests=false
+        - ninja -C build

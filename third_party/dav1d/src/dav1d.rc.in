@@ -1,0 +1,30 @@
+#define VERSION_NUMBER @VERSION_MAJOR@,@VERSION_MINOR@,@VERSION_REVISION@,@VERSION_EXTRA@
+#define VERSION_NUMBER_STR "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_REVISION@.@VERSION_EXTRA@"
+
+#include <windows.h>
+
+1 VERSIONINFO
+FILETYPE VFT_DLL
+FILEOS VOS_NT_WINDOWS32
+PRODUCTVERSION VERSION_NUMBER
+FILEVERSION VERSION_NUMBER
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    BEGIN
+      VALUE "CompanyName", "VideoLAN"
+      VALUE "ProductName", "dav1d"
+      VALUE "ProductVersion", VERSION_NUMBER_STR
+      VALUE "FileVersion", VERSION_NUMBER_STR
+      VALUE "FileDescription", "dav1d AV1 decoder"
+      VALUE "InternalName", "dav1d"
+      VALUE "OriginalFilename", "libdav1d.dll"
+      VALUE "LegalCopyright", "Copyright \251 @COPYRIGHT_YEARS@ VideoLAN and dav1d Authors"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1252
+  END
+END
