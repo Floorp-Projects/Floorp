@@ -17,6 +17,7 @@
 #include "nsIURI.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Unused.h"
 #include "nsPIDOMWindow.h"
 
 NS_IMPL_ISUPPORTS(ThirdPartyUtil, mozIThirdPartyUtil)
@@ -191,9 +192,10 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel,
   nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
     do_QueryInterface(aChannel);
   if (httpChannelInternal) {
-    uint32_t flags;
-    rv = httpChannelInternal->GetThirdPartyFlags(&flags);
-    NS_ENSURE_SUCCESS(rv, rv);
+    uint32_t flags = 0;
+    // Avoid checking the return value here since some channel implementations
+    // may return NS_ERROR_NOT_IMPLEMENTED.
+    mozilla::Unused << httpChannelInternal->GetThirdPartyFlags(&flags);
 
     doForce = (flags & nsIHttpChannelInternal::THIRD_PARTY_FORCE_ALLOW);
 
@@ -228,10 +230,18 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel,
         // Check if the channel itself is third-party to its own requestor.
         // Unforunately, we have to go through the loading principal.
         nsCOMPtr<nsIURI> parentURI;
-        loadInfo->LoadingPrincipal()->GetURI(getter_AddRefs(parentURI));
-        rv = IsThirdPartyInternal(channelDomain, parentURI, &parentIsThird);
-        if (NS_FAILED(rv))
-          return rv;
+        rv = loadInfo->LoadingPrincipal()->GetURI(getter_AddRefs(parentURI));
+        if (NS_SUCCEEDED(rv) && parentURI) {
+          // We may have a principal like the system principal here which does
+          // not have a URI.
+          rv = IsThirdPartyInternal(channelDomain, parentURI, &parentIsThird);
+          if (NS_FAILED(rv)) {
+            return rv;
+          }
+        } else {
+          NS_WARNING("Found a principal with no URI, assuming third-party request");
+          parentIsThird = true;
+        }
       }
     } else {
       NS_WARNING("Found channel with no loadinfo, assuming third-party request");
