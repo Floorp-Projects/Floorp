@@ -120,14 +120,14 @@ class MozTabbox extends MozXULElement {
         break;
       case event.DOM_VK_PAGE_UP:
         if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey &&
-          this.tabs) {
+            this.tabs) {
           this.tabs.advanceSelectedTab(-1, true);
           event.preventDefault();
         }
         break;
       case event.DOM_VK_PAGE_DOWN:
         if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey &&
-          this.tabs) {
+            this.tabs) {
           this.tabs.advanceSelectedTab(1, true);
           event.preventDefault();
         }
