@@ -20,6 +20,7 @@
 #include "AccessCheck.h"
 #include "js/JSON.h"
 #include "js/StableStringChars.h"
+#include "js/Symbol.h"
 #include "jsfriendapi.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
