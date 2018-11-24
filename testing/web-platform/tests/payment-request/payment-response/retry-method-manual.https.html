@@ -56,7 +56,7 @@ function callCompleteWhileRetrying(button) {
     const { response } = await getPaymentRequestResponse();
     const retryPromise = response.retry();
     const completePromise1 = response.complete("success");
-    const completePromise2 = response.complete("failure");
+    const completePromise2 = response.complete("fail");
     assert_not_equals(
       completePromise1,
       completePromise2,
