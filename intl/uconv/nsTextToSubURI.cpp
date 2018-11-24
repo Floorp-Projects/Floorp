@@ -14,10 +14,6 @@
 
 using namespace mozilla;
 
-static const char16_t sNetworkIDNBlocklistChars[] = {
-#include "../../netwerk/dns/IDNCharacterBlocklist.inc"
-};
-
 nsTextToSubURI::~nsTextToSubURI()
 {
 }
@@ -117,7 +113,6 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset,
                                                 const nsACString &aURIFragment,
                                                 nsAString &_retval)
 {
-  nsresult rv;
   nsAutoCString unescapedSpec;
   // skip control octets (0x00 - 0x1f and 0x7f) when unescaping
   NS_UnescapeURL(PromiseFlatCString(aURIFragment),
@@ -134,33 +129,22 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset,
   }
 
   // If there are any characters that are unsafe for URIs, reescape those.
-  if (mUnsafeChars.IsEmpty()) {
-    mUnsafeChars.AppendElements(
-      sNetworkIDNBlocklistChars, ArrayLength(sNetworkIDNBlocklistChars));
-
-    nsAutoString extraAllowed;
-    Preferences::GetString("network.IDN.extra_allowed_chars",
-                           extraAllowed);
+  if (mIDNBlocklist.IsEmpty()) {
+    mozilla::net::InitializeBlocklist(mIDNBlocklist);
     // we allow SPACE and IDEOGRAPHIC SPACE in this method
-    extraAllowed.Append(u' ');
-    extraAllowed.Append(0x3000);
-    mUnsafeChars.RemoveElementsBy([&](char16_t c) {
-      return extraAllowed.FindChar(c, 0) != -1;
-    });
-
-    nsAutoString extraBlocked;
-    rv = Preferences::GetString("network.IDN.extra_blocked_chars",
-                                extraBlocked);
-    if (NS_SUCCEEDED(rv) && !extraBlocked.IsEmpty()) {
-      mUnsafeChars.AppendElements(
-        static_cast<const char16_t*>(extraBlocked.Data()),
-        extraBlocked.Length());
-      mUnsafeChars.Sort();
-    }
+    mozilla::net::RemoveCharFromBlocklist(u' ', mIDNBlocklist);
+    mozilla::net::RemoveCharFromBlocklist(0x3000, mIDNBlocklist);
   }
+
+  MOZ_ASSERT(!mIDNBlocklist.IsEmpty());
   const nsPromiseFlatString& unescapedResult = PromiseFlatString(_retval);
   nsString reescapedSpec;
-  _retval = NS_EscapeURL(unescapedResult, mUnsafeChars, reescapedSpec);
+  _retval =
+    NS_EscapeURL(unescapedResult,
+                 [&](char16_t aChar) -> bool {
+                   return mozilla::net::CharInBlocklist(aChar, mIDNBlocklist);
+                 },
+                 reescapedSpec);
 
   return NS_OK;
 }

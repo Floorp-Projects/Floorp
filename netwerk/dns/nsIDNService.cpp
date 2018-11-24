@@ -26,11 +26,8 @@ const bool kIDNA2008_TransitionalProcessing = false;
 #include "ICUUtils.h"
 #include "unicode/uscript.h"
 
-static const char16_t sBlocklistChars[] = {
-#include "IDNCharacterBlocklist.inc"
-};
-
 using namespace mozilla::unicode;
+using namespace mozilla::net;
 using mozilla::Preferences;
 
 //-----------------------------------------------------------------------------
@@ -50,18 +47,16 @@ static const char kACEPrefix[] = "xn--";
 #define NS_NET_PREF_IDNRESTRICTION  "network.IDN.restriction_profile"
 
 static inline bool
-isOnlySafeChars(const nsString& in, const nsTArray<char16_t>& aBlockList)
+isOnlySafeChars(const nsString& in, const nsTArray<BlocklistRange>& aBlocklist)
 {
-  if (aBlockList.IsEmpty()) {
+  if (aBlocklist.IsEmpty()) {
     return true;
   }
   const char16_t* cur = in.BeginReading();
   const char16_t* end = in.EndReading();
 
   for (; cur < end; ++cur) {
-    size_t unused;
-    if (mozilla::BinarySearch(aBlockList, 0, aBlockList.Length(), *cur,
-                              &unused)) {
+    if (CharInBlocklist(*cur, aBlocklist)) {
       return false;
     }
   }
@@ -97,33 +92,9 @@ nsresult nsIDNService::Init()
 
   Preferences::RegisterPrefixCallbacks(PrefChanged, gCallbackPrefs, this);
   prefsChanged(nullptr);
-  InitializeBlocklist();
+  InitializeBlocklist(mIDNBlocklist);
 
   return NS_OK;
-}
-
-void
-nsIDNService::InitializeBlocklist()
-{
-  mIDNBlocklist.Clear();
-  mIDNBlocklist.AppendElements(sBlocklistChars,
-                               mozilla::ArrayLength(sBlocklistChars));
-  nsAutoString extraAllowed;
-  nsresult rv = Preferences::GetString(NS_NET_PREF_EXTRAALLOWED, extraAllowed);
-
-  if (NS_SUCCEEDED(rv) && !extraAllowed.IsEmpty()) {
-    mIDNBlocklist.RemoveElementsBy([&](char16_t c) {
-      return extraAllowed.FindChar(c, 0) != -1;
-    });
-  }
-
-  nsAutoString extraBlocked;
-  rv = Preferences::GetString(NS_NET_PREF_EXTRABLOCKED, extraBlocked);
-  if (NS_SUCCEEDED(rv) && !extraBlocked.IsEmpty()) {
-    mIDNBlocklist.AppendElements(
-      static_cast<const char16_t*>(extraBlocked.Data()), extraBlocked.Length());
-    mIDNBlocklist.Sort();
-  }
 }
 
 void nsIDNService::prefsChanged(const char *pref)
@@ -132,10 +103,10 @@ void nsIDNService::prefsChanged(const char *pref)
   mLock.AssertCurrentThreadOwns();
 
   if (pref && NS_LITERAL_CSTRING(NS_NET_PREF_EXTRAALLOWED).Equals(pref)) {
-    InitializeBlocklist();
+    InitializeBlocklist(mIDNBlocklist);
   }
   if (pref && NS_LITERAL_CSTRING(NS_NET_PREF_EXTRABLOCKED).Equals(pref)) {
-    InitializeBlocklist();
+    InitializeBlocklist(mIDNBlocklist);
   }
   if (!pref || NS_LITERAL_CSTRING(NS_NET_PREF_SHOWPUNYCODE).Equals(pref)) {
     bool val;
