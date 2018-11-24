@@ -29,6 +29,7 @@ EXPORTS.mozilla.net += [
     'DNSListenerProxy.h',
     'DNSRequestChild.h',
     'DNSRequestParent.h',
+    'IDNBlocklistUtils.h',
     'PDNSParams.h',
     'TRRService.h',
 ]
@@ -45,6 +46,7 @@ UNIFIED_SOURCES += [
     'DNSRequestChild.cpp',
     'DNSRequestParent.cpp',
     'GetAddrInfo.cpp',
+    'IDNBlocklistUtils.cpp',
     'nsDNSService2.cpp',
     'nsIDNService.cpp',
     'punycode.c',
