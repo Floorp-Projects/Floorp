@@ -82,6 +82,7 @@ def test_conditional():
     assert test_obj.prefs == {"a": "b", "c": "d"}
     assert test_obj.expected() == "FAIL"
 
+
 def test_metadata_lsan_stack_depth():
     tests = make_mock_manifest(("test", "a", 10), ("test", "a/b", 10))
 
@@ -92,12 +93,12 @@ def test_metadata_lsan_stack_depth():
                                                     url_base="")
 
     test = tests[2][2].pop()
-    test_obj = wpttest.from_manifest(test, [], test_metadata.get_test(test.id))
+    test_obj = wpttest.from_manifest(tests, test, [], test_metadata.get_test(test.id))
 
     assert test_obj.lsan_max_stack_depth == 42
 
     test = tests[1][2].pop()
-    test_obj = wpttest.from_manifest(test, [], test_metadata.get_test(test.id))
+    test_obj = wpttest.from_manifest(tests, test, [], test_metadata.get_test(test.id))
 
     assert test_obj.lsan_max_stack_depth is None
 
@@ -115,6 +116,6 @@ def test_metadata_lsan_stack_depth():
     ]
 
     test = tests[0][2].pop()
-    test_obj = wpttest.from_manifest(test, inherit_metadata, test_metadata.get_test(test.id))
+    test_obj = wpttest.from_manifest(tests, test, inherit_metadata, test_metadata.get_test(test.id))
 
     assert test_obj.lsan_max_stack_depth == 42

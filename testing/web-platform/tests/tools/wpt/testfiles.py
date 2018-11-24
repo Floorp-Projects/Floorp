@@ -264,8 +264,8 @@ def affected_testfiles(files_changed, skip_tests, manifest_path=None):
                 for interface in interfaces_changed_names:
                     regex = '[\'"]' + interface + '(\\.idl)?[\'"]'
                     if re.search(regex, file_contents):
-                        affected_testfiles.add(test_full_path)
-                        break
+                        return True
+        return False
 
     for root, dirs, fnames in os.walk(wpt_root):
         # Walk top_level_subdir looking for test files containing either the
