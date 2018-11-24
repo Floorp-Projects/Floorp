@@ -318,8 +318,32 @@ IsThirdParty(nsIChannel* aChannel, bool* aResult)
   // from being detected as third-party.
   bool isThirdPartyChannel = true;
   bool isThirdPartyWindow = true;
-  thirdPartyUtil->IsThirdPartyURI(chanURI, topWinURI, &isThirdPartyWindow);
-  thirdPartyUtil->IsThirdPartyChannel(aChannel, nullptr, &isThirdPartyChannel);
+  if (topWinURI) { // IsThirdPartyURI() will fail if passed a null URI.
+    rv = thirdPartyUtil->IsThirdPartyURI(chanURI, topWinURI, &isThirdPartyWindow);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      if (LOG_ENABLED()) {
+        nsAutoCString spec;
+        chanURI->GetAsciiSpec(spec);
+        spec.Truncate(std::min(spec.Length(), sMaxSpecLength));
+        LOG(("IsThirdPartyURI failed (%s)",
+             spec.get()));
+      }
+      return rv;
+    }
+  }
+  rv = thirdPartyUtil->IsThirdPartyChannel(aChannel, nullptr, &isThirdPartyChannel);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (LOG_ENABLED()) {
+      nsCOMPtr<nsIURI> uri;
+      aChannel->GetURI(getter_AddRefs(uri));
+      nsAutoCString spec;
+      chanURI->GetAsciiSpec(spec);
+      spec.Truncate(std::min(spec.Length(), sMaxSpecLength));
+      LOG(("IsThirdPartyChannel failed (%s)",
+           spec.get()));
+    }
+    return rv;
+  }
 
   *aResult = isThirdPartyWindow && isThirdPartyChannel;
   return NS_OK;
