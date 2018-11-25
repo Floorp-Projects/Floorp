@@ -2737,7 +2737,8 @@ PresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame)
   // Make sure that there is a reflow root ancestor of |aFrame| that's
   // in mDirtyRoots already.
   while (aFrame && (aFrame->GetStateBits() & NS_FRAME_HAS_DIRTY_CHILDREN)) {
-    if (((aFrame->GetStateBits() & NS_FRAME_REFLOW_ROOT) ||
+    if ((aFrame->HasAnyStateBits(NS_FRAME_REFLOW_ROOT |
+                                 NS_FRAME_DYNAMIC_REFLOW_ROOT) ||
          !aFrame->GetParent()) &&
         mDirtyRoots.Contains(aFrame)) {
       return;
@@ -2821,8 +2822,9 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
         break;
     }
 
-#define FRAME_IS_REFLOW_ROOT(_f)                   \
-  ((_f->GetStateBits() & NS_FRAME_REFLOW_ROOT) &&  \
+#define FRAME_IS_REFLOW_ROOT(_f)                                              \
+  (_f->HasAnyStateBits(NS_FRAME_REFLOW_ROOT |                                 \
+                       NS_FRAME_DYNAMIC_REFLOW_ROOT) &&                       \
    (_f != subtreeRoot || !targetNeedsReflowFromParent))
 
 
