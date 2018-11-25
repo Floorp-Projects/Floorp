@@ -29,8 +29,8 @@ window.gActivityStreamStrings = {
   "menu_action_show_file_linux": "Open Containing Folder",
   "menu_action_show_file_default": "បង្ហាញ​ឯកសារ",
   "menu_action_open_file": "បើកឯកសារ",
-  "menu_action_copy_download_link": "Copy Download Link",
-  "menu_action_go_to_download_page": "Go to Download Page",
+  "menu_action_copy_download_link": "ចម្លង​តំណ​ទាញ​យក",
+  "menu_action_go_to_download_page": "ទៅ​កាន់​ទំព័រ​ទាញ​យក",
   "menu_action_remove_download": "Remove from History",
   "search_button": "ស្វែងរក",
   "search_header": "{search_engine_name} ស្វែងរក",
@@ -75,7 +75,7 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "ប្រធានបទកំពុងពេញនិយម៖",
   "pocket_read_even_more": "មើលរឿងរ៉ាវច្រើនទៀត",
   "pocket_more_reccommendations": "More Recommendations",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "របៀប​ដែល​វា​ដំណើរការ",
   "pocket_cta_button": "Get Pocket",
   "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
   "highlights_empty_state": "ចាប់ផ្តើមការរុករក ហើយយើងនឹងបង្ហាញអត្ថបទ វីដេអូ និងទំព័រដ៏អស្ចារ្យផ្សេងទៀតដែលអ្នកបានមើល ឬបានចំណាំនៅទីនេះ។",
@@ -107,5 +107,6 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Privacy Notice",
   "firstrun_continue_to_login": "បន្ត",
   "firstrun_skip_login": "Skip this step",
-  "context_menu_title": "Open menu"
+  "context_menu_title": "បើក​ម៉ឺនុយ",
+  "pocket_learn_more": "ស្វែងយល់​បន្ថែម"
 };
