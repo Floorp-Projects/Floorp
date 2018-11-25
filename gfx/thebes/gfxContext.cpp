@@ -1021,6 +1021,12 @@ gfxContext::GetDeviceOffset() const
   return CurrentState().deviceOffset;
 }
 
+void
+gfxContext::SetDeviceOffset(const Point& aOffset)
+{
+  CurrentState().deviceOffset = aOffset;
+}
+
 Matrix
 gfxContext::GetDeviceTransform() const
 {

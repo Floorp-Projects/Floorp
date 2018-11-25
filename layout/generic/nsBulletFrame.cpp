@@ -579,7 +579,7 @@ BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
   PaintTextToContext(aItem->Frame(), captureCtx, aItem->IsSubpixelAADisabled());
   textDrawer->TerminateShadows();
 
-  return !textDrawer->HasUnsupportedFeatures();
+  return textDrawer->Finish();
 }
 
 class nsDisplayBullet final : public nsDisplayItem {
