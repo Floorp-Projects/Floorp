@@ -14,6 +14,7 @@
 #include "mozilla/webrender/RenderCompositor.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/layers/SynchronousTask.h"
+#include "TextDrawTarget.h"
 
 #define WRDL_LOG(...)
 //#define WRDL_LOG(...) printf_stderr("WRDL(%p): " __VA_ARGS__)
@@ -1404,6 +1405,27 @@ Maybe<layers::ScrollableLayerGuid::ViewID>
 DisplayListBuilder::FixedPosScrollTargetTracker::GetScrollTargetForASR(const ActiveScrolledRoot* aAsr)
 {
   return aAsr == mAsr ? Some(mScrollId) : Nothing();
+}
+
+already_AddRefed<gfxContext>
+DisplayListBuilder::GetTextContext(wr::IpcResourceUpdateQueue& aResources,
+                                   const layers::StackingContextHelper& aSc,
+                                   layers::WebRenderLayerManager* aManager,
+                                   nsDisplayItem* aItem,
+                                   nsRect& aBounds,
+                                   const gfx::Point& aDeviceOffset)
+{
+  if (!mCachedTextDT) {
+    mCachedTextDT = new layout::TextDrawTarget(*this, aResources, aSc, aManager, aItem, aBounds);
+    mCachedContext = gfxContext::CreateOrNull(mCachedTextDT, aDeviceOffset);
+  } else {
+    mCachedTextDT->Reinitialize(aResources, aSc, aManager, aItem, aBounds);
+    mCachedContext->SetDeviceOffset(aDeviceOffset);
+    mCachedContext->SetMatrix(Matrix());
+  }
+
+  RefPtr<gfxContext> tmp = mCachedContext;
+  return tmp.forget();
 }
 
 } // namespace wr
