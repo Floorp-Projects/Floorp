@@ -68,15 +68,25 @@ $hover-transition-duration: 150ms;
     }
   }
 
-  @media (max-width: $break-point-medium) {
+  .hide-for-narrow {
+    display: none;
+  }
+
+  @media (min-width: $break-point-medium) {
+    .hide-for-narrow {
+      display: inline-block;
+    }
+  }
+
+  @media (min-width: $break-point-large) {
     .hide-for-narrow {
       display: none;
     }
   }
 
-  @media (min-width: $break-point-large) and (max-width: $break-point-widest) {
+  @media (min-width: $break-point-widest) {
     .hide-for-narrow {
-      display: none;
+      display: inline-block;
     }
   }
 

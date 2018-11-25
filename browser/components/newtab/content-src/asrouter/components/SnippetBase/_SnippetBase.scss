@@ -1,5 +1,8 @@
 .SnippetBaseContainer {
   position: fixed;
+  // Make sure ASR snippets show on top of legacy snippets
+  // This can happen when ASR preview is used with legacy snippets
+  z-index: 2;
   bottom: 0;
   left: 0;
   right: 0;
@@ -15,7 +18,10 @@
   a {
     cursor: pointer;
     color: var(--newtab-link-primary-color);
-    text-decoration: underline;
+
+    &:hover {
+      text-decoration: underline;
+    }
 
     [lwt-newtab-brighttext] & {
       font-weight: bold;
@@ -42,9 +48,9 @@
       padding-inline-end: $section-horizontal-padding;
     }
 
-    max-width: $wrapper-max-width-large;
+    max-width: $wrapper-max-width-large + ($section-horizontal-padding * 2);
     @media (min-width: $break-point-widest) {
-      max-width: $wrapper-max-width-widest;
+      max-width: $wrapper-max-width-widest + ($section-horizontal-padding * 2);
     }
   }
 

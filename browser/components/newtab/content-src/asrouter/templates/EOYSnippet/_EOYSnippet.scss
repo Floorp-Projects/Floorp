@@ -27,10 +27,16 @@
       opacity: 0;
       margin-inline-end: -18px;
 
-      &:checked+.donation-amount {
+      &:checked + .donation-amount {
         background: $grey-50;
         color: $white;
         border: 1px solid $grey-60;
+      }
+
+      // accessibility
+      &:checked:focus + .donation-amount,
+      &:not(:checked):focus + .donation-amount {
+        border: 1px dotted var(--newtab-link-primary-color);
       }
     }
   }
@@ -52,11 +58,7 @@
 
   .donation-form-url {
     margin-inline-start: 18px;
-    background-color: var(--newtab-button-primary-color);
-    border: 0;
-    color: $white;
     align-self: flex-end;
     display: flex;
-    cursor: pointer;
   }
 }
