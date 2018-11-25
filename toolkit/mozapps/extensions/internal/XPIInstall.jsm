@@ -154,11 +154,6 @@ const KEY_APP_PROFILE                 = "app-profile";
 const DIR_STAGE                       = "staged";
 const DIR_TRASH                       = "trash";
 
-const COMPATIBLE_BY_DEFAULT_TYPES = {
-  extension: true,
-  dictionary: true,
-};
-
 // This is a random number array that can be used as "salt" when generating
 // an automatic ID based on the directory path of an add-on. It will prevent
 // someone from creating an ID for a permanent add-on that could be replaced
@@ -2428,8 +2423,7 @@ UpdateChecker.prototype = {
     if (!AddonManager.checkCompatibility) {
       ignoreMaxVersion = true;
       ignoreStrictCompat = true;
-    } else if (this.addon.type in COMPATIBLE_BY_DEFAULT_TYPES &&
-               !AddonManager.strictCompatibility &&
+    } else if (!AddonManager.strictCompatibility &&
                !this.addon.strictCompatibility) {
       ignoreMaxVersion = true;
     }

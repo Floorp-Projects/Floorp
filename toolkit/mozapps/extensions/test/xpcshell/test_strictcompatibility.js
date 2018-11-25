@@ -8,22 +8,16 @@
 
 // The `compatbile` array defines which of the tests below the add-on
 // should be compatible in. It's pretty gross.
-const ADDONS = {
+const ADDONS = [
   // Always compatible
-  "addon1@tests.mozilla.org": {
-    "install.rdf": {
+  {
+    manifest: {
       id: "addon1@tests.mozilla.org",
-      version: "1.0",
-      name: "Test 1",
-      bootstrap: true,
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
         maxVersion: "1",
       }],
-    },
-    expected: {
-      strictCompatibility: false,
     },
     compatible: {
       nonStrict: true,
@@ -32,20 +26,14 @@ const ADDONS = {
   },
 
   // Incompatible in strict compatibility mode
-  "addon2@tests.mozilla.org": {
-    "install.rdf": {
+  {
+    manifest: {
       id: "addon2@tests.mozilla.org",
-      version: "1.0",
-      name: "Test 2",
-      bootstrap: true,
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "0.7",
         maxVersion: "0.8",
       }],
-    },
-    expected: {
-      strictCompatibility: false,
     },
     compatible: {
       nonStrict: true,
@@ -54,21 +42,15 @@ const ADDONS = {
   },
 
   // Opt-in to strict compatibility - always incompatible
-  "addon4@tests.mozilla.org": {
-    "install.rdf": {
-      id: "addon4@tests.mozilla.org",
-      version: "1.0",
-      name: "Test 4",
-      bootstrap: true,
+  {
+    manifest: {
+      id: "addon3@tests.mozilla.org",
       strictCompatibility: true,
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "0.8",
         maxVersion: "0.9",
       }],
-    },
-    expected: {
-      strictCompatibility: true,
     },
     compatible: {
       nonStrict: false,
@@ -78,20 +60,14 @@ const ADDONS = {
 
   // Addon from the future - would be marked as compatibile-by-default,
   // but minVersion is higher than the app version
-  "addon5@tests.mozilla.org": {
-    "install.rdf": {
-      id: "addon5@tests.mozilla.org",
-      version: "1.0",
-      name: "Test 5",
-      bootstrap: true,
+  {
+    manifest: {
+      id: "addon4@tests.mozilla.org",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "3",
         maxVersion: "5",
       }],
-    },
-    expected: {
-      strictCompatibility: false,
     },
     compatible: {
       nonStrict: false,
@@ -99,68 +75,35 @@ const ADDONS = {
     },
   },
 
-  // Extremely old addon - maxVersion is less than the minimum compat version
-  // set in extensions.minCompatibleVersion
-  "addon6@tests.mozilla.org": {
-    "install.rdf": {
-      id: "addon6@tests.mozilla.org",
-      version: "1.0",
-      name: "Test 6",
-      bootstrap: true,
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "0.1",
-        maxVersion: "0.2",
-      }],
-    },
-    expected: {
-      strictCompatibility: false,
-    },
-    compatible: {
-      nonStrict: true,
-      strict: false,
-    },
-  },
-
   // Dictionary - compatible even in strict compatibility mode
-  "addon7@tests.mozilla.org": {
-    "install.rdf": {
-      id: "addon7@tests.mozilla.org",
-      version: "1.0",
-      name: "Test 7",
-      type: "64",
+  {
+    manifest: {
+      id: "addon5@tests.mozilla.org",
+      type: "dictionary",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "0.8",
         maxVersion: "0.9",
       }],
     },
-    expected: {
-      strictCompatibility: false,
-    },
     compatible: {
       nonStrict: true,
       strict: true,
     },
   },
-};
-
-const IDS = Object.keys(ADDONS);
-
-const profileDir = gProfD.clone();
-profileDir.append("extensions");
+];
 
 async function checkCompatStatus(strict, index) {
   info(`Checking compat status for test ${index}\n`);
 
   equal(AddonManager.strictCompatibility, strict);
 
-  let addons = await getAddons(IDS);
-  for (let [id, addon] of Object.entries(ADDONS)) {
-    checkAddon(id, addons.get(id), {
-      ...addon.expected,
-      isCompatible: addon.compatible[index],
-      appDisabled: !addon.compatible[index],
+  for (let test of ADDONS) {
+    let {id} = test.manifest;
+    let addon = await promiseAddonByID(id);
+    checkAddon(id, addon, {
+      isCompatible: test.compatible[index],
+      appDisabled: !test.compatible[index],
     });
   }
 }
@@ -168,8 +111,9 @@ async function checkCompatStatus(strict, index) {
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  for (let addon of Object.values(ADDONS)) {
-    await promiseWriteInstallRDFForExtension(addon["install.rdf"], profileDir);
+  for (let addon of ADDONS) {
+    let xpi = await createAddon(addon.manifest);
+    await manuallyInstall(xpi, AddonTestUtils.profileExtensions, addon.manifest.id);
   }
 
   await promiseStartupManager();
@@ -191,14 +135,11 @@ add_task(async function test_2() {
   await checkCompatStatus(true, "strict");
 });
 
-const CHECK_COMPAT_ADDONS = {
-  "cc-addon1@tests.mozilla.org": {
-    "install.rdf": {
-      // Cannot be enabled as it has no target app info for the applciation
+const CHECK_COMPAT_ADDONS = [
+  // Cannot be enabled as it has no target app info for the applciation
+  {
+    manifest: {
       id: "cc-addon1@tests.mozilla.org",
-      version: "1.0",
-      name: "Test 1",
-      bootstrap: true,
       targetApplications: [{
         id: "unknown@tests.mozilla.org",
         minVersion: "1",
@@ -209,14 +150,12 @@ const CHECK_COMPAT_ADDONS = {
     canOverride: false,
   },
 
-  "cc-addon2@tests.mozilla.org": {
-    "install.rdf": {
-      // Always appears incompatible but can be enabled if compatibility checking is
-      // disabled
+
+  // Always appears incompatible but can be enabled if compatibility checking is
+  // disabled
+  {
+    manifest: {
       id: "cc-addon2@tests.mozilla.org",
-      version: "1.0",
-      name: "Test 2",
-      bootstrap: true,
       targetApplications: [{
         id: "toolkit@mozilla.org",
         minVersion: "1",
@@ -227,13 +166,10 @@ const CHECK_COMPAT_ADDONS = {
     canOverride: true,
   },
 
-  "cc-addon4@tests.mozilla.org": {
-    "install.rdf": {
-      // Always compatible and enabled
-      id: "cc-addon4@tests.mozilla.org",
-      version: "1.0",
-      name: "Test 4",
-      bootstrap: true,
+  // Always compatible and enabled
+  {
+    manifest: {
+      id: "cc-addon3@tests.mozilla.org",
       targetApplications: [{
         id: "toolkit@mozilla.org",
         minVersion: "1",
@@ -243,13 +179,10 @@ const CHECK_COMPAT_ADDONS = {
     compatible: true,
   },
 
-  "cc-addon5@tests.mozilla.org": {
-    "install.rdf": {
-      // Always compatible and enabled
-      id: "cc-addon5@tests.mozilla.org",
-      version: "1.0",
-      name: "Test 5",
-      bootstrap: true,
+  // Always compatible and enabled
+  {
+    manifest: {
+      id: "cc-addon4@tests.mozilla.org",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
@@ -258,17 +191,15 @@ const CHECK_COMPAT_ADDONS = {
     },
     compatible: true,
   },
-};
-
-const CHECK_COMPAT_IDS = Object.keys(CHECK_COMPAT_ADDONS);
+];
 
 async function checkCompatOverrides(overridden) {
-  let addons = await getAddons(CHECK_COMPAT_IDS);
-
-  for (let [id, addon] of Object.entries(CHECK_COMPAT_ADDONS)) {
-    checkAddon(id, addons.get(id), {
-      isCompatible: addon.compatible,
-      isActive: addon.compatible || (overridden && addon.canOverride),
+  for (let test of CHECK_COMPAT_ADDONS) {
+    let {id} = test.manifest;
+    let addon = await promiseAddonByID(id);
+    checkAddon(id, addon, {
+      isCompatible: test.compatible,
+      isActive: test.compatible || (overridden && test.canOverride),
     });
   }
 }
@@ -283,8 +214,10 @@ add_task(async function setupCheckCompat() {
   Object.assign(AddonTestUtils.appInfo,
                 {version: "2.2.3", platformVersion: "2"});
 
-  for (let addon of Object.values(CHECK_COMPAT_ADDONS)) {
-    await promiseWriteInstallRDFForExtension(addon["install.rdf"], profileDir);
+  for (let addon of CHECK_COMPAT_ADDONS) {
+    let {manifest} = addon;
+    let xpi = await createAddon(manifest);
+    await manuallyInstall(xpi, AddonTestUtils.profileExtensions, manifest.id);
   }
   await promiseRestartManager("2.2.3");
 });
@@ -329,3 +262,4 @@ add_task(async function test_compat_overrides_4() {
 
   await checkCompatOverrides(false);
 });
+
