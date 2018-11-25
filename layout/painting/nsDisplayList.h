@@ -7712,7 +7712,6 @@ public:
   void RestoreState() override
   {
     nsDisplayItem::RestoreState();
-    mIsFrameSelected.reset();
   }
 
   nsDisplayItemGeometry* AllocateGeometry(
