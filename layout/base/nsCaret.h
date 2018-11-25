@@ -182,6 +182,7 @@ class nsCaret final : public nsISelectionListener
                                                CaretAssociationHint aFrameHint,
                                                uint8_t aBidiLevel,
                                                nsIFrame** aReturnFrame,
+                                               nsIFrame** aReturnUnadjustedFrame,
                                                int32_t* aReturnOffset);
     static nsRect GetGeometryForFrame(nsIFrame* aFrame,
                                       int32_t   aFrameOffset,
@@ -191,11 +192,14 @@ class nsCaret final : public nsISelectionListener
     // of aSelection. If aOverrideNode and aOverride are provided, use them
     // instead.
     // @param aFrameOffset return the frame offset if non-null.
+    // @param aUnadjustedFrame return the original frame that the selection is
+    // targeting, without any adjustment for painting.
     // @return the frame of the focus node.
     static nsIFrame* GetFrameAndOffset(mozilla::dom::Selection* aSelection,
                                        nsINode* aOverrideNode,
                                        int32_t aOverrideOffset,
-                                       int32_t* aFrameOffset);
+                                       int32_t* aFrameOffset,
+                                       nsIFrame** aUnadjustedFrame = nullptr);
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 

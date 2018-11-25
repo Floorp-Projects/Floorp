@@ -1141,12 +1141,6 @@ public:
      * allocation bucket size, at the cost of some complexity.
      */
     mozilla::UniquePtr<mozilla::LinkedList<nsRange>> mCommonAncestorRanges;
-
-    /**
-     * Number of descendant nodes in the uncomposed document that have been
-     * explicitly set as editable.
-     */
-    uint32_t mEditableDescendantCount;
   };
 
   /**
@@ -1182,28 +1176,11 @@ public:
     nsWrapperCache::UnsetFlags(aFlagsToUnset);
   }
 
-  void ChangeEditableDescendantCount(int32_t aDelta);
-
-  /**
-   * Returns the count of descendant nodes in the uncomposed
-   * document that are explicitly set as editable.
-   */
-  uint32_t EditableDescendantCount();
-
-  /**
-   * Sets the editable descendant count to 0. The editable
-   * descendant count only counts explicitly editable nodes
-   * that are in the uncomposed document so this method
-   * should be called when nodes are are removed from it.
-   */
-  void ResetEditableDescendantCount();
-
   void SetEditableFlag(bool aEditable)
   {
     if (aEditable) {
       SetFlags(NODE_IS_EDITABLE);
-    }
-    else {
+    } else {
       UnsetFlags(NODE_IS_EDITABLE);
     }
   }
