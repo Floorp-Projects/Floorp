@@ -50,6 +50,22 @@ MARKUPMAP(
   0
 )
 
+MARKUPMAP(
+  caption,
+  [](Element* aElement, Accessible* aContext) -> Accessible* {
+     if (aContext->IsTable()) {
+       dom::HTMLTableElement* tableEl =
+         dom::HTMLTableElement::FromNode(aContext->GetContent());
+       if (tableEl && tableEl == aElement->GetParent() &&
+           tableEl->GetCaption() == aElement) {
+         return new HTMLCaptionAccessible(aElement, aContext->Document());
+       }
+     }
+     return nullptr;
+  },
+  0
+)
+
 MARKUPMAP(dd,
           New_HTMLDtOrDd<HyperTextAccessibleWrap>,
           roles::DEFINITION)

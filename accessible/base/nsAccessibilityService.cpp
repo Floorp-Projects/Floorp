@@ -69,6 +69,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/HTMLTableElement.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "nsDeckFrame.h"
