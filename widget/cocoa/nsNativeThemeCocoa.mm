@@ -4972,12 +4972,16 @@ nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame, WidgetType aWidgetTy
   case StyleAppearance::ScrollbarSmall:
   case StyleAppearance::Scrollbar:
   case StyleAppearance::Scrollcorner: {
+    // We don't use custom scrollbars when using overlay scrollbars.
+    if (nsLookAndFeel::UseOverlayScrollbars()) {
+      return eTransparent;
+    }
     const nsStyleUI* ui = nsLayoutUtils::StyleForScrollbar(aFrame)->StyleUI();
     StyleComplexColor trackColor = ui->mScrollbarTrackColor;
-    if (!trackColor.IsAuto()) {
-      return trackColor.MaybeTransparent() ? eTransparent : eOpaque;
+    if (!trackColor.IsAuto() && trackColor.MaybeTransparent()) {
+      return eTransparent;
     }
-    return nsLookAndFeel::UseOverlayScrollbars() ? eTransparent : eOpaque;
+    return eOpaque;
   }
 
   case StyleAppearance::Statusbar:
