@@ -95,11 +95,6 @@ const PENDING_INSTALL_METADATA =
      "updateDate", "applyBackgroundUpdates", "compatibilityOverrides",
      "installTelemetryInfo"];
 
-const COMPATIBLE_BY_DEFAULT_TYPES = {
-  extension: true,
-  dictionary: true,
-};
-
 // Properties to save in JSON file
 const PROP_JSON_FIELDS = ["id", "syncGUID", "version", "type",
                           "loader", "updateURL", "optionsURL",
@@ -445,10 +440,8 @@ class AddonInternal {
     // Only extensions and dictionaries can be compatible by default; themes
     // and language packs always use strict compatibility checking.
     // Dictionaries are compatible by default unless requested by the dictinary.
-    if (this.type in COMPATIBLE_BY_DEFAULT_TYPES &&
-        !this.strictCompatibility &&
-        (!AddonManager.strictCompatibility ||
-         this.type == "dictionary")) {
+    if (!this.strictCompatibility &&
+        (!AddonManager.strictCompatibility || this.type == "dictionary")) {
 
       // The repository can specify compatibility overrides.
       // Note: For now, only blacklisting is supported by overrides.

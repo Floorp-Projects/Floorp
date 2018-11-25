@@ -672,9 +672,15 @@ var AddonTestUtils = {
         callback = callback.wrappedJSObject;
 
         try {
-          let manifestURI = this.getManifestURI(file);
-
-          let id = await this.getIDFromManifest(manifestURI);
+          let id;
+          try {
+            let manifestURI = this.getManifestURI(file);
+            id = await this.getIDFromManifest(manifestURI);
+          } catch (err) {
+            if (file.leafName.endsWith(".xpi")) {
+              id = file.leafName.slice(0, -4);
+            }
+          }
 
           let fakeCert = {commonName: id};
           if (this.usePrivilegedSignatures) {
