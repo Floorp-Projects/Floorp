@@ -425,6 +425,7 @@ public:
     void PopGroupAndBlend();
 
     mozilla::gfx::Point GetDeviceOffset() const;
+    void SetDeviceOffset(const mozilla::gfx::Point& aOffset);
 
 #ifdef MOZ_DUMP_PAINTING
     /**

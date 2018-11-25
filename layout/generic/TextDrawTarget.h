@@ -56,8 +56,31 @@ public:
                           layers::WebRenderLayerManager* aManager,
                           nsDisplayItem* aItem,
                           nsRect& aBounds)
-    : mBuilder(aBuilder), mResources(aResources), mSc(aSc), mManager(aManager)
+    : mBuilder(aBuilder)
   {
+    Reinitialize(aResources, aSc, aManager, aItem, aBounds);
+  }
+
+  // Prevent this from being copied
+  TextDrawTarget(const TextDrawTarget& src) = delete;
+  TextDrawTarget& operator=(const TextDrawTarget&) = delete;
+
+  ~TextDrawTarget()
+  {
+  }
+
+  void Reinitialize(wr::IpcResourceUpdateQueue& aResources,
+                    const layers::StackingContextHelper& aSc,
+                    layers::WebRenderLayerManager* aManager,
+                    nsDisplayItem* aItem,
+                    nsRect& aBounds)
+  {
+    mResources = &aResources;
+    mSc = &aSc;
+    mManager = aManager;
+    mHasUnsupportedFeatures = false;
+    mHasShadows = false;
+
     SetPermitSubpixelAA(!aItem->IsSubpixelAADisabled());
 
     // Compute clip/bounds
@@ -71,6 +94,7 @@ public:
     // antialiased pixels beyond the measured text extents.
     layoutClipRect.Inflate(1);
     mSize = IntSize::Ceil(layoutClipRect.Width(), layoutClipRect.Height());
+    mClipStack.ClearAndRetainStorage();
     mClipStack.AppendElement(layoutClipRect);
 
     mBackfaceVisible = !aItem->BackfaceIsHidden();
@@ -78,21 +102,17 @@ public:
     mBuilder.Save();
   }
 
-  // Prevent this from being copied
-  TextDrawTarget(const TextDrawTarget& src) = delete;
-  TextDrawTarget& operator=(const TextDrawTarget&) = delete;
-
-  ~TextDrawTarget()
-  {
-    if (mHasUnsupportedFeatures) {
-      mBuilder.Restore();
-    } else {
-      mBuilder.ClearSave();
-    }
-  }
 
   void FoundUnsupportedFeature() { mHasUnsupportedFeatures = true; }
-  bool HasUnsupportedFeatures() { return mHasUnsupportedFeatures; }
+
+  bool Finish() {
+    if (mHasUnsupportedFeatures) {
+      mBuilder.Restore();
+      return false;
+    }
+    mBuilder.ClearSave();
+    return true;
+  }
 
   wr::FontInstanceFlags GetWRGlyphFlags() const { return mWRGlyphFlags; }
   void SetWRGlyphFlags(wr::FontInstanceFlags aFlags) { mWRGlyphFlags = aFlags; }
@@ -174,7 +194,7 @@ public:
     glyphOptions.render_mode = wr::ToFontRenderMode(aOptions.mAntialiasMode, GetPermitSubpixelAA());
     glyphOptions.flags = mWRGlyphFlags;
 
-    mManager->WrBridge()->PushGlyphs(mBuilder, glyphs, aFont, color, mSc,
+    mManager->WrBridge()->PushGlyphs(mBuilder, glyphs, aFont, color, *mSc,
                                      mBoundsRect, ClipRect(), mBackfaceVisible,
                                      &glyphOptions);
   }
@@ -316,7 +336,7 @@ public:
     wr::ImageKey key = mManager->WrBridge()->GetNextImageKey();
     wr::ImageDescriptor desc(aSize, aStride, aFormat);
     Range<uint8_t> bytes(const_cast<uint8_t*>(aData), aStride * aSize.height);
-    if (mResources.AddImage(key, desc, bytes)) {
+    if (mResources->AddImage(key, desc, bytes)) {
         return Some(key);
     }
     return Nothing();
@@ -352,14 +372,14 @@ private:
 
   // Things used to push to webrender
   wr::DisplayListBuilder& mBuilder;
-  wr::IpcResourceUpdateQueue& mResources;
-  const layers::StackingContextHelper& mSc;
+  wr::IpcResourceUpdateQueue* mResources;
+  const layers::StackingContextHelper* mSc;
   layers::WebRenderLayerManager* mManager;
 
   // Computed facts
   IntSize mSize;
   wr::LayoutRect mBoundsRect;
-  nsTArray<LayoutDeviceRect> mClipStack;
+  AutoTArray<LayoutDeviceRect, 3> mClipStack;
   bool mBackfaceVisible;
 
   wr::FontInstanceFlags mWRGlyphFlags = {0};

@@ -5129,12 +5129,11 @@ nsDisplayText::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
   gfx::Point deviceOffset = LayoutDevicePoint::FromAppUnits(
       mBounds.TopLeft(), appUnitsPerDevPixel).ToUnknownPoint();
 
-  RefPtr<TextDrawTarget> textDrawer = new TextDrawTarget(aBuilder, aResources, aSc, aManager, this, mBounds);
-  RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer, deviceOffset);
+  RefPtr<gfxContext> textDrawer = aBuilder.GetTextContext(aResources, aSc, aManager, this, mBounds, deviceOffset);
 
-  RenderToContext(captureCtx, aDisplayListBuilder, true);
+  RenderToContext(textDrawer, aDisplayListBuilder, true);
 
-  return !textDrawer->HasUnsupportedFeatures();
+  return textDrawer->GetTextDrawer()->Finish();
 }
 
 void
