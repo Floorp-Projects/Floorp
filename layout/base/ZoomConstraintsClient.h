@@ -9,6 +9,7 @@
 
 #include "mozilla/layers/ScrollableLayerGuid.h"
 #include "mozilla/Maybe.h"
+#include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
 #include "nsIObserver.h"
 
