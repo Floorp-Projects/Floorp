@@ -44,6 +44,7 @@ dependencies {
     implementation project(':support-ktx')
     implementation project(':support-base')
 
+    testImplementation Dependencies.testing_androidx
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito

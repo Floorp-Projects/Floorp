@@ -4,7 +4,14 @@
 
 package mozilla.components.service.glean
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
+import mozilla.components.service.glean.net.HttpPingUploader
+import mozilla.components.service.glean.storages.EventsStorageEngine
+import mozilla.components.service.glean.storages.ExperimentsStorageEngine
+import mozilla.components.service.glean.storages.StringsStorageEngine
+import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -12,30 +19,20 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-
-import java.util.UUID
-import org.json.JSONObject
-
+import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
-
-import mozilla.components.service.glean.net.HttpPingUploader
-import mozilla.components.service.glean.storages.EventsStorageEngine
-import mozilla.components.service.glean.storages.ExperimentsStorageEngine
-import mozilla.components.service.glean.storages.StringsStorageEngine
-
-import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import java.io.File
+import java.util.UUID
 
 @RunWith(RobolectricTestRunner::class)
 class GleanTest {
     @Before
     fun setup() {
         Glean.initialize(
-            applicationContext = RuntimeEnvironment.application
+            applicationContext = ApplicationProvider.getApplicationContext()
         )
     }
 
@@ -164,7 +161,10 @@ class GleanTest {
     @Test
     fun `initialize() must not crash the app if Glean's data dir is messed up`() {
         // Remove the Glean's data directory.
-        val gleanDir = File(RuntimeEnvironment.application.applicationInfo.dataDir, Glean.GLEAN_DATA_DIR)
+        val gleanDir = File(
+            ApplicationProvider.getApplicationContext<Context>().applicationInfo.dataDir,
+            Glean.GLEAN_DATA_DIR
+        )
         assertTrue(gleanDir.deleteRecursively())
 
         // Create a file in its place.
@@ -172,7 +172,7 @@ class GleanTest {
 
         // Try to init Glean: it should not crash.
         Glean.initialize(
-            applicationContext = RuntimeEnvironment.application
+            applicationContext = ApplicationProvider.getApplicationContext()
         )
 
         // Clean up after this, so that other tests don't fail.

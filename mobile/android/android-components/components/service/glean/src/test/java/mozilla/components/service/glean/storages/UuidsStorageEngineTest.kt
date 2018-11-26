@@ -5,30 +5,29 @@ package mozilla.components.service.glean.storages
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.Lifetime
 import mozilla.components.service.glean.UuidMetricType
-import java.util.UUID
-
-import org.junit.Before
-import org.junit.Test
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
+import java.util.UUID
 
 @RunWith(RobolectricTestRunner::class)
 class UuidsStorageEngineTest {
 
     @Before
     fun setUp() {
-        UuidsStorageEngine.applicationContext = RuntimeEnvironment.application
+        UuidsStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
         // Clear the stored "user" preferences between tests.
-        RuntimeEnvironment.application
+        ApplicationProvider.getApplicationContext<Context>()
             .getSharedPreferences(UuidsStorageEngine.javaClass.simpleName, Context.MODE_PRIVATE)
             .edit()
             .clear()
@@ -162,7 +161,7 @@ class UuidsStorageEngineTest {
         val sampleUUID = "decaffde-caff-d3ca-ffd3-caffd3caffd3"
 
         val storageEngine = UuidsStorageEngineImplementation()
-        storageEngine.applicationContext = RuntimeEnvironment.application
+        storageEngine.applicationContext = ApplicationProvider.getApplicationContext()
 
         val metric = UuidMetricType(
             disabled = false,
@@ -178,7 +177,7 @@ class UuidsStorageEngineTest {
         )
 
         // Check that the persisted shared prefs contains the expected data.
-        val storedData = RuntimeEnvironment.application
+        val storedData = ApplicationProvider.getApplicationContext<Context>()
             .getSharedPreferences(storageEngine.javaClass.simpleName, Context.MODE_PRIVATE)
             .all
 

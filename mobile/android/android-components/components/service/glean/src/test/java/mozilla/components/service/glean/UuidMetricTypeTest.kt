@@ -5,26 +5,24 @@
 package mozilla.components.service.glean
 
 import android.content.Context
-import java.util.UUID
-
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.storages.UuidsStorageEngine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
-import org.junit.Test
-
 import org.junit.Before
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
+import java.util.UUID
 
 @RunWith(RobolectricTestRunner::class)
 class UuidMetricTypeTest {
 
     @Before
     fun setUp() {
-        UuidsStorageEngine.applicationContext = RuntimeEnvironment.application
+        UuidsStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
         // Clear the stored "user" preferences between tests.
-        RuntimeEnvironment.application
+        ApplicationProvider.getApplicationContext<Context>()
             .getSharedPreferences(UuidsStorageEngine.javaClass.simpleName, Context.MODE_PRIVATE)
             .edit()
             .clear()

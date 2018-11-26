@@ -7,8 +7,9 @@ private object Versions {
     const val kotlin = "1.3.10"
     const val coroutines = "1.0.1"
 
+    const val androidx_test = "1.0.0"
     const val junit = "4.12"
-    const val robolectric = "4.0-alpha-3"
+    const val robolectric = "4.0.2"
     const val mockito = "2.23.0"
 
     const val mockwebserver = "3.10.0"
@@ -41,6 +42,7 @@ object Dependencies {
     const val kotlin_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.coroutines}"
     const val kotlin_reflect = "org.jetbrains.kotlin:kotlin-reflect:${Versions.kotlin}"
 
+    const val testing_androidx = "androidx.test:core:${Versions.androidx_test}"
     const val testing_junit = "junit:junit:${Versions.junit}"
     const val testing_robolectric = "org.robolectric:robolectric:${Versions.robolectric}"
     const val testing_mockito = "org.mockito:mockito-core:${Versions.mockito}"

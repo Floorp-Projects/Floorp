@@ -41,7 +41,6 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
-import org.robolectric.shadows.ShadowBitmap
 import java.lang.reflect.Modifier
 
 @RunWith(RobolectricTestRunner::class)
@@ -672,7 +671,7 @@ class SystemEngineSessionTest {
         `when`(engineSession.currentView()).thenReturn(webView)
         assertNull(engineSession.captureThumbnail())
 
-        `when`(webView.drawingCache).thenReturn(ShadowBitmap.createBitmap(10, 10, Bitmap.Config.RGB_565))
+        `when`(webView.drawingCache).thenReturn(Bitmap.createBitmap(10, 10, Bitmap.Config.RGB_565))
         assertNotNull(engineSession.captureThumbnail())
     }
 

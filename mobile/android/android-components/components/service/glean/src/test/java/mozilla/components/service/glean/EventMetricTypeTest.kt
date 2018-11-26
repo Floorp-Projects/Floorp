@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean
 
+import android.os.SystemClock
 import mozilla.components.service.glean.storages.EventsStorageEngine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -13,7 +14,6 @@ import org.junit.Test
 import org.junit.Before
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.shadows.ShadowSystemClock
 
 @RunWith(RobolectricTestRunner::class)
 class EventMetricTypeTest {
@@ -53,7 +53,7 @@ class EventMetricTypeTest {
         click.record("buttonA")
 
         val expectedTimeSinceStart: Long = 37
-        ShadowSystemClock.sleep(expectedTimeSinceStart)
+        SystemClock.sleep(expectedTimeSinceStart)
 
         click.record("buttonB")
 

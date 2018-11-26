@@ -3,13 +3,13 @@
 
 package mozilla.components.service.glean.storages
 
+import android.os.SystemClock
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.shadows.ShadowSystemClock
 
 @RunWith(RobolectricTestRunner::class)
 class EventsStorageEngineTest {
@@ -76,7 +76,7 @@ class EventsStorageEngineTest {
         val expectedTimeSinceStart: Long = 37
 
         // Sleep a bit Record the event in the store.
-        ShadowSystemClock.sleep(expectedTimeSinceStart)
+        SystemClock.sleep(expectedTimeSinceStart)
         EventsStorageEngine.record(
                 stores = listOf("store1"),
                 category = "telemetry",

@@ -4,6 +4,7 @@
 
 package mozilla.components.support.base.log.logger
 
+import android.os.SystemClock
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.LogSink
 import mozilla.components.support.test.mock
@@ -14,7 +15,6 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.shadows.ShadowSystemClock
 
 @RunWith(RobolectricTestRunner::class)
 class LoggerTest {
@@ -153,7 +153,7 @@ class LoggerTest {
 
         logger.measure("testing") {
             // Pretend to do something
-            ShadowSystemClock.sleep(10)
+            SystemClock.sleep(10)
         }
 
         verify(sink).log(
