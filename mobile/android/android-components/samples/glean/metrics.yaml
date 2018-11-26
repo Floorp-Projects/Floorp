@@ -4,7 +4,7 @@
 
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
-browser_engagement:
+browser.engagement:
   click:
     type: event
     description: >
