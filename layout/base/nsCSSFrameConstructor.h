@@ -18,6 +18,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ScrollStyles.h"
+#include "mozilla/UniquePtr.h"
 
 #include "nsCOMPtr.h"
 #include "nsILayoutHistoryState.h"
