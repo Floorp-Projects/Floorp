@@ -22,6 +22,7 @@ import mozilla.components.service.glean.ping.PingMaker
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
+import mozilla.components.service.glean.metrics.Baseline
 import mozilla.components.support.base.log.logger.Logger
 import java.io.File
 
@@ -63,11 +64,6 @@ object Glean {
     private var metricsEnabled = true
 
     /**
-     * The instance holding lazy references to the Glean's core metrics.
-     */
-    private val gleanInternalMetrics by lazy { GleanInternalMetrics() }
-
-    /**
      * Initialize glean.
      *
      * A LifecycleObserver will be added to send pings when the application goes
@@ -85,6 +81,8 @@ object Glean {
         initialized = true
 
         initializeCoreMetrics(applicationContext)
+
+        Baseline.os.set("Android")
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(gleanLifecycleObserver)
     }
@@ -184,7 +182,7 @@ object Glean {
         // one-time only metrics.
         val firstRunDetector = FileFirstRunDetector(gleanDataDir)
         if (firstRunDetector.isFirstRun()) {
-            gleanInternalMetrics.clientId.generateAndSet()
+            GleanInternalMetrics.clientId.generateAndSet()
         }
     }
 
