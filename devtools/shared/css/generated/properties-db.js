@@ -1358,7 +1358,6 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "-moz-none",
-      "-moz-text",
       "all",
       "auto",
       "inherit",
@@ -2750,7 +2749,6 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "-moz-none",
-      "-moz-text",
       "all",
       "auto",
       "inherit",

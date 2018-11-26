@@ -9,15 +9,6 @@
   cursor: text;
 }
 
-*|*:-moz-read-write :-moz-read-only {
-  -moz-user-select: all;
-}
-
-*|*:-moz-read-only > :-moz-read-write {
-  /* override the above -moz-user-select: all rule. */
-  -moz-user-select: -moz-text;
-}
-
 input:-moz-read-write > .anonymous-div:-moz-read-only,
 textarea:-moz-read-write > .anonymous-div:-moz-read-only {
   -moz-user-select: text;
@@ -100,7 +91,7 @@ input[contenteditable="true"][type="hidden"] {
 }
 
 label:-moz-read-write {
-    -moz-user-select: all;
+  -moz-user-select: all;
 }
 
 *|*::-moz-display-comboboxcontrol-frame {
