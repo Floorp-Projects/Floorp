@@ -391,6 +391,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   DateTimePickerParent: "resource://gre/modules/DateTimePickerParent.jsm",
+  Discovery: "resource:///modules/Discovery.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   Feeds: "resource:///modules/Feeds.jsm",
   FileSource: "resource://gre/modules/L10nRegistry.jsm",
@@ -1671,6 +1672,10 @@ BrowserGlue.prototype = {
         LiveBookmarkMigrator.migrate().catch(Cu.reportError);
       });
     }
+
+    Services.tm.idleDispatchToMainThread(() => {
+      Discovery.update();
+    });
   },
 
   /**
@@ -3041,7 +3046,7 @@ var ContentBlockingCategoriesPrefs = {
   },
 
   updateCBCategory() {
-    if (this.switchingCategory) {
+    if (this.switchingCategory || !Services.prefs.prefHasUserValue(this.PREF_CB_CATEGORY)) {
       return;
     }
     // Turn on switchingCategory flag, to ensure that when the individual prefs that change as a result

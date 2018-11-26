@@ -62,15 +62,6 @@
             <label id="content-blocking-label"
                    class="identity-popup-headline"
                    flex="1">&contentBlocking.title;</label>
-            <hbox id="identity-popup-content-blocking-disabled-label">
-              <image/>
-              <label id="identity-popup-content-blocking-disabled-label-exception"
-                     value="&contentBlocking.disabled.label;"
-                     tooltiptext="&contentBlocking.exception.tooltip;"/>
-              <label id="identity-popup-content-blocking-disabled-label-global"
-                     value="&contentBlocking.disabled.label;"
-                     tooltiptext="&contentBlocking.disabled.tooltip;"/>
-            </hbox>
             <toolbarbutton id="tracking-protection-preferences-button"
                            class="identity-popup-preferences-button subviewbutton"
                            oncommand="ContentBlocking.openPreferences('identityPopup-TP-preferencesButton'); gIdentityHandler.recordClick('cb_prefs_button');" />

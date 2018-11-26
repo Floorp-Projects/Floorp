@@ -13,12 +13,14 @@ include PBackgroundSharedTypes;
 include NeckoChannelParams;
 include IPCServiceWorkerDescriptor;
 include IPCStream;
+include PBrowserOrId;
 
 include "mozilla/net/NeckoMessageUtils.h";
 
 using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
 using struct mozilla::net::ResourceTimingStruct from "mozilla/net/TimingStruct.h";
+using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
 
 namespace mozilla {
 namespace net {
@@ -29,8 +31,9 @@ protocol PHttpChannel
   manager PNecko;
 
 parent:
-  // Note: channels are opened during construction, so no open method here:
-  // see PNecko.ipdl
+  async AsyncOpen(PBrowserOrId browser,
+                  SerializedLoadContext loadContext,
+                  HttpChannelCreationArgs args);
 
   async SetClassOfService(uint32_t cos);
 

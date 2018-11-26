@@ -25,9 +25,7 @@ public:
   static void InitNeckoChild();
 
 protected:
-  virtual PHttpChannelChild*
-    AllocPHttpChannelChild(const PBrowserOrId&, const SerializedLoadContext&,
-                           const HttpChannelCreationArgs& aOpenArgs) override;
+  virtual PHttpChannelChild* AllocPHttpChannelChild() override;
   virtual bool DeallocPHttpChannelChild(PHttpChannelChild*) override;
 
   virtual PStunAddrsRequestChild* AllocPStunAddrsRequestChild() override;

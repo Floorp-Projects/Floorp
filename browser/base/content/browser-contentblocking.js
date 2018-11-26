@@ -227,6 +227,7 @@ var ContentBlocking = {
   PREF_REPORT_BREAKAGE_ENABLED: "browser.contentblocking.reportBreakage.enabled",
   PREF_REPORT_BREAKAGE_URL: "browser.contentblocking.reportBreakage.url",
   PREF_INTRO_COUNT_CB: "browser.contentblocking.introCount",
+  PREF_CB_CATEGORY: "browser.contentblocking.category",
   content: null,
   icon: null,
   activeTooltipText: null,
@@ -324,6 +325,9 @@ var ContentBlocking = {
       gNavigatorBundle.getString("trackingProtection.icon.activeTooltip");
     this.disabledTooltipText =
       gNavigatorBundle.getString("trackingProtection.icon.disabledTooltip");
+    this.updateCBCategoryLabel = this.updateCBCategoryLabel.bind(this);
+    this.updateCBCategoryLabel();
+    Services.prefs.addObserver(this.PREF_CB_CATEGORY, this.updateCBCategoryLabel);
   },
 
   uninit() {
@@ -334,6 +338,29 @@ var ContentBlocking = {
     }
 
     Services.prefs.removeObserver(this.PREF_ANIMATIONS_ENABLED, this.updateAnimationsEnabled);
+    Services.prefs.removeObserver(this.PREF_CB_CATEGORY, this.updateCBCategoryLabel);
+  },
+
+  updateCBCategoryLabel() {
+    if (!Services.prefs.prefHasUserValue(this.PREF_CB_CATEGORY)) {
+      // Fallback to not setting a label, it's preferable to not set a label than to set an incorrect one.
+      return;
+    }
+    let button = document.getElementById("tracking-protection-preferences-button");
+    let label;
+    let category = Services.prefs.getStringPref(this.PREF_CB_CATEGORY);
+    switch (category) {
+    case ("standard"):
+      label = gNavigatorBundle.getString("contentBlocking.category.standard");
+      break;
+    case ("strict"):
+      label = gNavigatorBundle.getString("contentBlocking.category.strict");
+      break;
+    case ("custom"):
+      label = gNavigatorBundle.getString("contentBlocking.category.custom");
+      break;
+    }
+    button.label = label;
   },
 
   hideIdentityPopupAndReload() {
