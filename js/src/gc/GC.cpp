@@ -5009,7 +5009,8 @@ js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session)
         for (GCZonesIter zone(runtime); !zone.done(); zone.next()) {
             zone->changeGCState(Zone::Mark, Zone::MarkGray);
         }
-        gc->marker.setMarkColorGray();
+
+        AutoSetMarkColor setColorGray(gc->marker, MarkColor::Gray);
 
         gc->markAllGrayReferences(gcstats::PhaseKind::SWEEP_MARK_GRAY);
         gc->markAllWeakReferences(gcstats::PhaseKind::SWEEP_MARK_GRAY_WEAK);
@@ -5019,7 +5020,6 @@ js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session)
             zone->changeGCState(Zone::MarkGray, Zone::Mark);
         }
         MOZ_ASSERT(gc->marker.isDrained());
-        gc->marker.setMarkColorBlack();
     }
 
     /* Take a copy of the non-incremental mark state and restore the original. */
@@ -5635,7 +5635,8 @@ GCRuntime::endMarkingSweepGroup(FreeOp* fop, SliceBudget& budget)
     for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
         zone->changeGCState(Zone::Mark, Zone::MarkGray);
     }
-    marker.setMarkColorGray();
+
+    AutoSetMarkColor setColorGray(marker, MarkColor::Gray);
 
     // Mark incoming gray pointers from previously swept compartments.
     markIncomingCrossCompartmentPointers(MarkColor::Gray);
@@ -5650,7 +5651,6 @@ GCRuntime::endMarkingSweepGroup(FreeOp* fop, SliceBudget& budget)
         zone->changeGCState(Zone::MarkGray, Zone::Mark);
     }
     MOZ_ASSERT(marker.isDrained());
-    marker.setMarkColorBlack();
 
     // We must not yield after this point before we start sweeping the group.
     safeToYield = false;
