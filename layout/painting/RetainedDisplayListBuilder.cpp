@@ -235,21 +235,53 @@ AnyContentAncestorModified(nsIFrame* aFrame, nsIFrame* aStopAtFrame = nullptr)
   return false;
 }
 
+static Maybe<const ActiveScrolledRoot*>
+SelectContainerASR(const DisplayItemClipChain* aClipChain,
+                   const ActiveScrolledRoot* aItemASR,
+                   Maybe<const ActiveScrolledRoot*>& aContainerASR)
+{
+  const ActiveScrolledRoot* itemClipASR = aClipChain
+                                        ? aClipChain->mASR
+                                        : nullptr;
+
+  const ActiveScrolledRoot* finiteBoundsASR =
+    ActiveScrolledRoot::PickDescendant(itemClipASR, aItemASR);
+
+  if (!aContainerASR) {
+    return Some(finiteBoundsASR);
+  }
+
+  return Some(ActiveScrolledRoot::PickAncestor(
+    *aContainerASR, finiteBoundsASR));
+}
+
 static void
 UpdateASR(nsDisplayItem* aItem, Maybe<const ActiveScrolledRoot*>& aContainerASR)
 {
-  if (!aContainerASR) {
+  Maybe<const ActiveScrolledRoot*> asr;
+
+  if (aItem->HasHitTestInfo()) {
+    const HitTestInfo& info =
+      static_cast<nsDisplayHitTestInfoItem*>(aItem)->GetHitTestInfo();
+    asr = SelectContainerASR(info.mClipChain, info.mASR, aContainerASR);
+  } else {
+    asr = aContainerASR;
+  }
+
+  if (!asr) {
     return;
   }
 
   nsDisplayWrapList* wrapList = aItem->AsDisplayWrapList();
   if (!wrapList) {
-    aItem->SetActiveScrolledRoot(aContainerASR.value());
+    aItem->SetActiveScrolledRoot(*asr);
     return;
   }
 
   wrapList->SetActiveScrolledRoot(ActiveScrolledRoot::PickAncestor(
-    wrapList->GetFrameActiveScrolledRoot(), aContainerASR.value()));
+    wrapList->GetFrameActiveScrolledRoot(), *asr));
+
+  wrapList->UpdateHitTestInfoActiveScrolledRoot(*asr);
 }
 
 void
@@ -468,18 +500,8 @@ public:
 
   void UpdateContainerASR(nsDisplayItem* aItem)
   {
-    const ActiveScrolledRoot* itemClipASR =
-      aItem->GetClipChain() ? aItem->GetClipChain()->mASR : nullptr;
-
-    const ActiveScrolledRoot* finiteBoundsASR =
-      ActiveScrolledRoot::PickDescendant(itemClipASR,
-                                         aItem->GetActiveScrolledRoot());
-    if (!mContainerASR) {
-      mContainerASR = Some(finiteBoundsASR);
-    } else {
-      mContainerASR = Some(ActiveScrolledRoot::PickAncestor(
-        mContainerASR.value(), finiteBoundsASR));
-    }
+    mContainerASR = SelectContainerASR(
+      aItem->GetClipChain(), aItem->GetActiveScrolledRoot(), mContainerASR);
   }
 
   MergedListIndex AddNewNode(
