@@ -84,6 +84,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/Opaque.h"
+#include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ReentrancyGuard.h"
 #include "mozilla/TypeTraits.h"
@@ -1168,7 +1169,7 @@ public:
   {
     MOZ_ASSERT(!isLive());
     mKeyHash = aHashNumber;
-    new (valuePtr()) T(std::forward<Args>(aArgs)...);
+    new (KnownNotNull, valuePtr()) T(std::forward<Args>(aArgs)...);
     MOZ_ASSERT(isLive());
   }
 };
@@ -1655,7 +1656,7 @@ public:
                      : aAllocPolicy.template maybe_pod_malloc<Entry>(aCapacity);
     if (table) {
       for (uint32_t i = 0; i < aCapacity; i++) {
-        new (&table[i]) Entry();
+        new (KnownNotNull, &table[i]) Entry();
       }
     }
     return table;

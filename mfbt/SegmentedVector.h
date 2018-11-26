@@ -26,6 +26,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/TypeTraits.h"
 
 #include <new>  // for placement new
@@ -100,7 +101,7 @@ class SegmentedVector : private AllocPolicy
       // Pre-increment mLength so that the bounds-check in operator[] passes.
       mLength++;
       T* elem = &(*this)[mLength - 1];
-      new (elem) T(std::forward<U>(aU));
+      new (KnownNotNull, elem) T(std::forward<U>(aU));
     }
 
     void PopLast()
@@ -171,7 +172,7 @@ public:
       if (!last) {
         return false;
       }
-      new (last) Segment();
+      new (KnownNotNull, last) Segment();
       mSegments.insertBack(last);
     }
     last->Append(std::forward<U>(aU));
