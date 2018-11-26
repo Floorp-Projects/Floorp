@@ -125,17 +125,17 @@ tasks:
           # quickly, but sometimes a storm of action tasks lands.  Then we
           # want, from highest to lowest:
           # - cron tasks (time-sensitive) (low)
-          # - decision tasks (minimize user-visible delay) (very-low)
-          # - action tasks (avoid interfering with the other two) (lowest)
+          # - action tasks (avoid interfering with the other two) (very-low)
+          # - decision tasks (minimize user-visible delay) (lowest)
           # SCM levels all use different workerTypes, so there is no need for priority
           # between levels; "low" is the highest priority available at all levels, and
           # nothing runs at any higher priority on these workerTypes.
           $if: "tasks_for == 'cron'"
           then: low
           else:
-            $if: "tasks_for == 'hg-push'"
+            $if: "tasks_for == 'action'"
             then: very-low
-            else: lowest  # tasks_for == 'action'
+            else: lowest  # tasks_for == 'hg-push'
         retries: 5
 
         payload:
