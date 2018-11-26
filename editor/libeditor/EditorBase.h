@@ -715,14 +715,76 @@ protected: // AutoEditActionDataSetter, this shouldn't be accessed by friends.
     const RefPtr<Selection>& SelectionRefPtr() const { return mSelection; }
     EditAction GetEditAction() const { return mEditAction; }
 
-    void SetTopLevelEditSubAction(EditSubAction aEditSubAction)
+    void SetTopLevelEditSubAction(EditSubAction aEditSubAction,
+                                  EDirection aDirection = eNone)
     {
       mTopLevelEditSubAction = aEditSubAction;
+      switch (mTopLevelEditSubAction) {
+        case EditSubAction::eInsertNode:
+        case EditSubAction::eCreateNode:
+        case EditSubAction::eSplitNode:
+        case EditSubAction::eInsertText:
+        case EditSubAction::eInsertTextComingFromIME:
+        case EditSubAction::eSetTextProperty:
+        case EditSubAction::eRemoveTextProperty:
+        case EditSubAction::eRemoveAllTextProperties:
+        case EditSubAction::eSetText:
+        case EditSubAction::eInsertLineBreak:
+        case EditSubAction::eInsertParagraphSeparator:
+        case EditSubAction::eCreateOrChangeList:
+        case EditSubAction::eIndent:
+        case EditSubAction::eOutdent:
+        case EditSubAction::eSetOrClearAlignment:
+        case EditSubAction::eCreateOrRemoveBlock:
+        case EditSubAction::eRemoveList:
+        case EditSubAction::eCreateOrChangeDefinitionList:
+        case EditSubAction::eInsertElement:
+        case EditSubAction::eInsertQuotation:
+        case EditSubAction::ePasteHTMLContent:
+        case EditSubAction::eInsertHTMLSource:
+        case EditSubAction::eSetPositionToAbsolute:
+        case EditSubAction::eSetPositionToStatic:
+        case EditSubAction::eDecreaseZIndex:
+        case EditSubAction::eIncreaseZIndex:
+          MOZ_ASSERT(aDirection == eNext);
+          mDirectionOfTopLevelEditSubAction = eNext;
+          break;
+        case EditSubAction::eJoinNodes:
+        case EditSubAction::eDeleteText:
+          MOZ_ASSERT(aDirection == ePrevious);
+          mDirectionOfTopLevelEditSubAction = ePrevious;
+          break;
+        case EditSubAction::eUndo:
+        case EditSubAction::eRedo:
+        case EditSubAction::eComputeTextToOutput:
+        case EditSubAction::eCreateBogusNode:
+        case EditSubAction::eNone:
+          MOZ_ASSERT(aDirection == eNone);
+          mDirectionOfTopLevelEditSubAction = eNone;
+          break;
+        case EditSubAction::eReplaceHeadWithHTMLSource:
+          // NOTE: Not used with AutoTopLevelEditSubActionNotifier.
+          mDirectionOfTopLevelEditSubAction = eNone;
+          break;
+        case EditSubAction::eDeleteNode:
+        case EditSubAction::eDeleteSelectedContent:
+          // Unfortunately, eDeleteNode and eDeleteSelectedContent is used with
+          // any direction.  We might have specific sub-action for each
+          // direction, but there are some points referencing
+          // eDeleteSelectedContent so that we should keep storing direction
+          // as-is for now.
+          mDirectionOfTopLevelEditSubAction = aDirection;
+          break;
+      }
     }
     EditSubAction GetTopLevelEditSubAction() const
     {
       MOZ_ASSERT(CanHandle());
       return mTopLevelEditSubAction;
+    }
+    EDirection GetDirectionOfTopLevelEditSubAction() const
+    {
+      return mDirectionOfTopLevelEditSubAction;
     }
 
   private:
@@ -734,6 +796,7 @@ protected: // AutoEditActionDataSetter, this shouldn't be accessed by friends.
     AutoEditActionDataSetter* mParentData;
     EditAction mEditAction;
     EditSubAction mTopLevelEditSubAction;
+    EDirection mDirectionOfTopLevelEditSubAction;
 
     AutoEditActionDataSetter() = delete;
     AutoEditActionDataSetter(const AutoEditActionDataSetter& aOther) = delete;
@@ -793,6 +856,16 @@ protected: // May be called by friends.
   {
     return mEditActionData ? mEditActionData->GetTopLevelEditSubAction() :
                              EditSubAction::eNone;
+  }
+
+  /**
+   * GetDirectionOfTopLevelEditSubAction() returns direction which user
+   * intended for doing the edit sub-action.
+   */
+  EDirection GetDirectionOfTopLevelEditSubAction() const
+  {
+    return mEditActionData ?
+       mEditActionData->GetDirectionOfTopLevelEditSubAction() : eNone;
   }
 
   /**
@@ -2247,8 +2320,6 @@ protected:
   // Nesting count for batching.
   int32_t mPlaceholderBatch;
 
-  // The top level edit sub-action's direction.
-  EDirection mDirection;
   // -1 = not initialized
   int8_t mDocDirtyState;
   // A Tristate value.

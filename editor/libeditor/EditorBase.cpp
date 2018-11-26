@@ -161,7 +161,6 @@ EditorBase::EditorBase()
   , mFlags(0)
   , mUpdateCount(0)
   , mPlaceholderBatch(0)
-  , mDirection(eNone)
   , mDocDirtyState(-1)
   , mSpellcheckCheckboxState(eTriUnset)
   , mAllowsTransactionsToChangeSelection(true)
@@ -1712,7 +1711,7 @@ EditorBase::DeleteNodeWithTransaction(nsINode& aNode)
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::eCreateNode,
+                                      *this, EditSubAction::eDeleteNode,
                                       nsIEditor::ePrevious);
 
   if (mRules && mRules->AsHTMLEditRules()) {
@@ -2410,18 +2409,14 @@ EditorBase::OnStartToHandleTopLevelEditSubAction(
               nsIEditor::EDirection aDirection)
 {
   MOZ_ASSERT(IsEditActionDataAvailable());
-
-  mEditActionData->SetTopLevelEditSubAction(aEditSubAction);
-  mDirection = aDirection;
+  mEditActionData->SetTopLevelEditSubAction(aEditSubAction, aDirection);
 }
 
 void
 EditorBase::OnEndHandlingTopLevelEditSubAction()
 {
   MOZ_ASSERT(IsEditActionDataAvailable());
-
-  mEditActionData->SetTopLevelEditSubAction(EditSubAction::eNone);
-  mDirection = eNone;
+  mEditActionData->SetTopLevelEditSubAction(EditSubAction::eNone, eNone);
 }
 
 NS_IMETHODIMP
@@ -5238,12 +5233,15 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
       mEditAction = aEditAction;
     }
     mTopLevelEditSubAction = mParentData->mTopLevelEditSubAction;
+    mDirectionOfTopLevelEditSubAction =
+      mParentData->mDirectionOfTopLevelEditSubAction;
   } else {
     mSelection = mEditorBase.GetSelection();
     if (NS_WARN_IF(!mSelection)) {
       return;
     }
     mEditAction = aEditAction;
+    mDirectionOfTopLevelEditSubAction = eNone;
   }
   mEditorBase.mEditActionData = this;
 }
