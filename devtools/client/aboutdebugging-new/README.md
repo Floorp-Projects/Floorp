@@ -81,6 +81,7 @@ If you have any questions about the code, features, planning, the active team is
 - engineering: Belén Albeza (:ladybenko)
 - engineering: Daisuke Akatsuka (:daisuke)
 - engineering: Julian Descottes (:jdescottes)
+- engineering: Ola Gasidlo (:ola))
 - engineering management: Soledad Penadés (:sole)
 - product management: Harald Kischner (:digitarald)
 
