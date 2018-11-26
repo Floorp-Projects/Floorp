@@ -34,9 +34,9 @@ import org.hamcrest.Matchers.*
 import org.junit.Test
 import org.junit.Before
 import org.junit.After
+import org.junit.Ignore
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 
 const val DISPLAY_WIDTH = 480
 const val DISPLAY_HEIGHT = 640
@@ -501,7 +501,7 @@ class AccessibilityTest : BaseSessionTest() {
         return screenRect.contains(nodeBounds)
     }
 
-    @ReuseSession(false)
+    @Ignore // Bug 1506276 - We need to reliably wait for APZC here, and it's not trivial.
     @Test fun testScroll() {
         var nodeId = View.NO_ID
         sessionRule.session.loadString(
