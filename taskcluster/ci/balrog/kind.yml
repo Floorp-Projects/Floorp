@@ -5,16 +5,22 @@
 loader: taskgraph.loader.single_dep:loader
 
 transforms:
-   - taskgraph.transforms.name_sanity:transforms
-   - taskgraph.transforms.balrog_submit:transforms
-   - taskgraph.transforms.scriptworker:add_balrog_scopes
-   - taskgraph.transforms.task:transforms
+    - taskgraph.transforms.name_sanity:transforms
+    - taskgraph.transforms.balrog_submit:transforms
+    - taskgraph.transforms.scriptworker:add_balrog_scopes
+    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - beetmover
-   - beetmover-l10n
-   - beetmover-repackage
+    - beetmover
+    - beetmover-l10n
+    - beetmover-repackage
 
 only-for-attributes:
-   - nightly
-   - signed
+    - nightly
+    - signed
+
+job-template:
+    update-no-wnp:
+        by-release-type:
+            nightly: false
+            default: true

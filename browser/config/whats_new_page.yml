@@ -1,0 +1,57 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+- type: product-details
+  # %LOCALE% is automatically replaced by Balrog.
+  url: "https://www.mozilla.org/%LOCALE%/{product}/{version}/releasenotes/"
+- type: show-url
+  # yamllint disable-line rule:line-length
+  url: "https://www.mozilla.org/%LOCALE%/{product}/{version}/whatsnew/?oldversion=%OLD_VERSION%"
+  conditions:
+      blob-types: [wnp]
+      release-types: [release, release-rc]
+      products: [firefox]
+      update-channel: release
+      # e.g.: ["<61.0"]. {version.major_number} reflects the current version.
+      # This is done by taskgraph.
+      versions: ["<{version.major_number}.0"]
+      locales:
+          - az
+          - be
+          - cak
+          - cy
+          - da
+          - de
+          - dsb
+          - en-CA
+          - en-GB
+          - en-US
+          - es-AR
+          - et
+          - fr
+          - hi-IN
+          - hsb
+          - hu
+          - ia
+          - id
+          - it
+          - ka
+          - lij
+          - lt
+          - ms
+          - nb-NO
+          - nl
+          - pl
+          - pt-PT
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sv-SE
+          - th
+          - tr
+          - zh-CN
+          - zh-TW
