@@ -280,7 +280,7 @@ bool
 SharedSurface_SurfaceTexture::ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor)
 {
     *out_descriptor =
-        layers::SurfaceTextureDescriptor(mSurface->GetHandle(),
+        layers::SurfaceTextureDescriptor(mSurface->GetImageHandle(),
                                          mSize,
                                          gfx::SurfaceFormat::R8G8B8A8,
                                          false /* NOT continuous */,

@@ -36,6 +36,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
     private AtomicInteger mUseCount;
     private boolean mFinalized;
 
+    private int mUpstream;
     private NativeGLBlitHelper mBlitter;
 
     private GeckoSurfaceTexture(int handle) {
@@ -112,6 +113,9 @@ import org.mozilla.gecko.mozglue.JNIObject;
     @WrapForJNI
     public synchronized void updateTexImage() {
         try {
+            if (mUpstream != 0) {
+                SurfaceAllocator.sync(mUpstream);
+            }
             super.updateTexImage();
             if (mListener != null) {
                 mListener.onUpdateTexImage();
@@ -123,6 +127,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
 
     @Override
     public synchronized void release() {
+        mUpstream = 0;
         if (mBlitter != null) {
             mBlitter.disposeNative();
         }
@@ -280,6 +285,10 @@ import org.mozilla.gecko.mozglue.JNIObject;
         }
     }
 
+    /* package */ void track(int upstream) {
+        mUpstream = upstream;
+    }
+
     /* package */ synchronized void configureSnapshot(GeckoSurface target, int width, int height) {
         mBlitter = NativeGLBlitHelper.create(mHandle, target, width, height);
     }
@@ -294,7 +303,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
     }
 
     @WrapForJNI
-    public static class NativeGLBlitHelper extends JNIObject {
+    public static final class NativeGLBlitHelper extends JNIObject {
         public native static NativeGLBlitHelper create(int textureHandle,
                                                        GeckoSurface targetSurface,
                                                        int width,
