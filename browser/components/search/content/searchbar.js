@@ -464,6 +464,11 @@ class MozSearchbar extends MozXULElement {
         return;
       }
 
+      // Ignore clicks on menu items in the input's context menu.
+      if (event.originalTarget.localName == "menuitem") {
+        return;
+      }
+
       let isIconClick = event.originalTarget.classList.contains("searchbar-search-button");
 
       // Ignore clicks on the icon if they were made to close the popup
