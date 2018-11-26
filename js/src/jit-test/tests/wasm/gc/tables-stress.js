@@ -13,7 +13,7 @@ for ( let prefix of ['', '(table $prefix 0 32 anyfunc)']) {
          (local $last i32)
          (local $iters i32)
          (local $tmp anyref)
-         (set_local $last (table.grow $tbl (i32.const 1) (ref.null anyref)))
+         (set_local $last (table.grow $tbl (i32.const 1) (ref.null)))
          (table.set $tbl (get_local $last) (call $item))
          (loop $iter_continue
            (set_local $i (i32.const 0))
