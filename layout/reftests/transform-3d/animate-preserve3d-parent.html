@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html class="reftest-wait reftest-no-flush">
+<html class="reftest-wait">
 <title>Testcase, bug 1176969</title>
 <style>
 
@@ -17,6 +17,8 @@ body { padding: 50px }
   height: 200px; width: 200px;
   border: 1px solid black;
   transform-style: preserve-3d;
+  /* use a -99.9s delay to start at 99.9% and then move to 0% */
+  animation: spin 100s -99.9s linear 2 paused;
 }
 
 #child {
@@ -37,6 +39,14 @@ body { padding: 50px }
 
 <script>
 
+document.getElementById("parent").addEventListener("animationstart", StartListener);
+
+function StartListener(event) {
+  var test = document.getElementById("parent");
+  test.style.animationPlayState = 'running';
+  test.addEventListener("animationiteration", IterationListener);
+}
+
 function IterationListener(event) {
   setTimeout(RemoveReftestWait, 0);
 }
@@ -44,13 +54,5 @@ function IterationListener(event) {
 function RemoveReftestWait() {
   document.documentElement.classList.remove("reftest-wait");
 }
-
-document.addEventListener('MozReftestInvalidate', () => {
-  const test = document.getElementById("parent");
-  test.addEventListener("animationiteration", IterationListener);
-
-  /* use a -99.9s delay to start at 99.9% and then move to 0% */
-  test.style.animation = 'spin 100s -99.9s linear 2';
-}, false);
 
 </script>

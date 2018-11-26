@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html class="reftest-wait reftest-no-flush">
+<html class="reftest-wait">
 <title>Testcase, bug 1176969</title>
 <style>
 
@@ -17,6 +17,8 @@ body { padding: 50px }
   height: 200px; width: 200px;
   border: 1px solid black;
   transform-style: preserve-3d;
+  /* use a -99.9s delay to start at 99.9% and then move to 0% */
+  animation: spin 100s -99.9s linear 2;
 }
 
 @keyframes noop {
@@ -27,6 +29,7 @@ body { padding: 50px }
   height: 100px; width: 100px; margin: 50px;
   background: yellow;
   box-shadow: 3px 3px olive;
+  animation: noop infinite 10s linear;
 }
 
 </style>
@@ -40,6 +43,9 @@ body { padding: 50px }
 
 <script>
 
+document.getElementById("parent")
+        .addEventListener("animationiteration", IterationListener);
+
 function IterationListener(event) {
   setTimeout(RemoveReftestWait, 0);
 }
@@ -47,14 +53,5 @@ function IterationListener(event) {
 function RemoveReftestWait() {
   document.documentElement.classList.remove("reftest-wait");
 }
-
-document.addEventListener('MozReftestInvalidate', () => {
-  const parentElement = document.getElementById('parent');
-  parentElement.addEventListener('animationiteration', IterationListener);
-
-  /* use a -99.9s delay to start at 99.9% and then move to 0% */
-  parentElement.style.animation = 'spin 100s -99.9s linear 2';
-  child.style.animation = 'noop infinite 10s linear';
-}, false);
 
 </script>
