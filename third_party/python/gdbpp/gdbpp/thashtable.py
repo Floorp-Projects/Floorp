@@ -104,9 +104,11 @@ class thashtable_printer(object):
             return
 
         # The table capacity is tracked "cleverly" in terms of how many bits
-        # the hash needs to be shifted.  CapacityFromHashShift calculates the
-        # actual entry capacity via ((uint32_t)1 << (kHashBits - mHashShift));
-        capacity = 1 << (table['kHashBits'] - table['mHashShift'])
+        # the hash needs to be shifted.  CapacityFromHashShift calculates this
+        # quantity, but may be inlined, so we replicate the calculation here.
+        hashType = gdb.lookup_type('mozilla::HashNumber')
+        hashBits = hashType.sizeof * 8
+        capacity = 1 << (hashBits - table['mHashShift'])
 
         # Pierce generation-tracking EntryStore class to get at buffer.  The
         # class instance always exists, but this char* may be null.
