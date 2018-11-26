@@ -34,6 +34,7 @@ extern crate hashmap_core;
 extern crate alloc;
 
 pub use binary_reader::BinaryReader;
+pub use binary_reader::Range;
 use binary_reader::SectionHeader;
 
 pub use parser::LocalName;
@@ -41,7 +42,6 @@ pub use parser::NameEntry;
 pub use parser::Parser;
 pub use parser::ParserInput;
 pub use parser::ParserState;
-pub use parser::Range;
 pub use parser::RelocEntry;
 pub use parser::WasmDecoder;
 
