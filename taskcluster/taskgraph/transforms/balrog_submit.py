@@ -9,7 +9,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
-from taskgraph.util.schema import validate_schema, Schema
+from taskgraph.util.schema import (
+    validate_schema, Schema,
+    optionally_keyed_by, resolve_keyed_by,
+)
 from taskgraph.util.scriptworker import (
     get_balrog_server_scope, get_worker_type_for_scope
 )
@@ -35,6 +38,12 @@ balrog_description_schema = Schema({
     # unique label to describe this balrog task, defaults to balrog-{dep.label}
     Optional('label'): basestring,
 
+
+    Optional(
+        'update-no-wnp',
+        description="Whether the parallel `-No-WNP` blob should be updated as well.",
+    ): optionally_keyed_by('release-type', bool),
+
     # treeherder is allowed here to override any defaults we use for beetmover.  See
     # taskcluster/taskgraph/transforms/task.py for the schema details, and the
     # below transforms for defaults of various values.
@@ -54,6 +63,25 @@ def validate(config, jobs):
             balrog_description_schema, job,
             "In balrog ({!r} kind) task for {!r}:".format(config.kind, label))
 
+        yield job
+
+
+@transforms.add
+def handle_keyed_by(config, jobs):
+    """Resolve fields that can be keyed by platform, etc."""
+    fields = [
+        "update-no-wnp",
+    ]
+    for job in jobs:
+        label = job.get('dependent-task', object).__dict__.get('label', '?no-label?')
+        for field in fields:
+            resolve_keyed_by(
+                item=job, field=field, item_name=label,
+                **{
+                    'project': config.params['project'],
+                    'release-type': config.params['release_type'],
+                }
+            )
         yield job
 
 
@@ -111,6 +139,7 @@ def make_task_description(config, jobs):
                 'implementation': 'balrog',
                 'upstream-artifacts': upstream_artifacts,
                 'balrog-action': 'submit-locale',
+                'suffixes': ['', '-No-WNP'] if job.get('update-no-wnp') else [''],
             },
             'dependencies': {'beetmover': dep_job.label},
             'attributes': attributes,

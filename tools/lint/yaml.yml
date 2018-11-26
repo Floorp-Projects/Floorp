@@ -3,6 +3,7 @@ yamllint:
     description: YAML linter
     include:
         - .cron.yml
+        - browser/config/
         - python/mozlint/
         - security/nss/.taskcluster.yml
         - taskcluster
