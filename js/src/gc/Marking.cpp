@@ -2550,7 +2550,6 @@ GCMarker::reset()
         MOZ_ASSERT(markLaterArenas);
         unmarkedArenaStackTop = arena->getNextDelayedMarking();
         arena->unsetDelayedMarking();
-        arena->markOverflow = 0;
 
 #ifdef DEBUG
         markLaterArenas--;
@@ -2672,9 +2671,6 @@ GCMarker::leaveWeakMarkingMode()
 void
 GCMarker::markDelayedChildren(Arena* arena)
 {
-    MOZ_ASSERT(arena->markOverflow);
-    arena->markOverflow = 0;
-
     JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
 
     // Whether we need to mark children of gray or black cells in the arena
