@@ -328,7 +328,7 @@ public class CrashReporterActivity extends AppCompatActivity
         backgroundSendReport();
     }
 
-    private String getProfileName(@Nullable File profileDir) throws GeckoProfileDirectories.NoMozillaDirectoryException {
+    private @Nullable String getProfileName(@Nullable File profileDir) throws GeckoProfileDirectories.NoMozillaDirectoryException {
         final File mozillaDir = GeckoProfileDirectories.getMozillaDirectory(this);
         final INIParser parser = GeckoProfileDirectories.getProfilesINI(mozillaDir);
         String profileName = null;
@@ -339,6 +339,9 @@ public class CrashReporterActivity extends AppCompatActivity
                 final String path = section.getStringProperty("Path");
                 final boolean isRelative = (section.getIntProperty("IsRelative") == 1);
 
+                if (path == null) {
+                    continue;
+                }
                 if ((isRelative && path.equals(profileDir.getName())) ||
                     path.equals(profileDir.getPath())) {
                     profileName = section.getStringProperty("Name");
