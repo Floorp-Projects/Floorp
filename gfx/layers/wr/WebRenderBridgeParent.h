@@ -295,6 +295,11 @@ private:
   void SetAPZSampleTime();
 
   wr::Epoch GetNextWrEpoch();
+  // This function is expected to be used when GetNextWrEpoch() is called,
+  // but TransactionBuilder does not have resource updates nor display list.
+  // In this case, ScheduleGenerateFrame is not triggered via SceneBuilder.
+  // Then we want to rollback WrEpoch. See Bug 1490117.
+  void RollbackWrEpoch();
 
   void FlushSceneBuilds();
   void FlushFrameGeneration();
