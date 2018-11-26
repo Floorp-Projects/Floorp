@@ -1181,7 +1181,7 @@ FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
 
     bool tryNewTarget(BinaryNodeType* newTarget);
 
-    BinaryNodeType importExpr(YieldHandling yieldHandling);
+    BinaryNodeType importExpr(YieldHandling yieldHandling, bool allowCallSyntax);
 
     CodeNodeType methodDefinition(uint32_t toStringStart, PropertyType propType,
                                   HandleAtom funName);
