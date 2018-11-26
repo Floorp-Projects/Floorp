@@ -715,6 +715,16 @@ protected: // AutoEditActionDataSetter, this shouldn't be accessed by friends.
     const RefPtr<Selection>& SelectionRefPtr() const { return mSelection; }
     EditAction GetEditAction() const { return mEditAction; }
 
+    void SetTopLevelEditSubAction(EditSubAction aEditSubAction)
+    {
+      mTopLevelEditSubAction = aEditSubAction;
+    }
+    EditSubAction GetTopLevelEditSubAction() const
+    {
+      MOZ_ASSERT(CanHandle());
+      return mTopLevelEditSubAction;
+    }
+
   private:
     EditorBase& mEditorBase;
     RefPtr<Selection> mSelection;
@@ -723,6 +733,7 @@ protected: // AutoEditActionDataSetter, this shouldn't be accessed by friends.
     // the DOM tree.  In such case, we need to handle edit action separately.
     AutoEditActionDataSetter* mParentData;
     EditAction mEditAction;
+    EditSubAction mTopLevelEditSubAction;
 
     AutoEditActionDataSetter() = delete;
     AutoEditActionDataSetter(const AutoEditActionDataSetter& aOther) = delete;
@@ -765,6 +776,23 @@ protected: // May be called by friends.
   {
     return mEditActionData ? mEditActionData->GetEditAction() :
                              EditAction::eNone;
+  }
+
+  /**
+   * GetTopLevelEditSubAction() returns the top level edit sub-action.
+   * For example, if selected content is being replaced with inserted text,
+   * while removing selected content, the top level edit sub-action may be
+   * EditSubAction::eDeleteSelectedContent.  However, while inserting new
+   * text, the top level edit sub-action may be EditSubAction::eInsertText.
+   * So, this result means what we are doing right now unless you're looking
+   * for a case which the method is called via mutation event listener or
+   * selectionchange event listener which are fired while handling the edit
+   * sub-action.
+   */
+  EditSubAction GetTopLevelEditSubAction() const
+  {
+    return mEditActionData ? mEditActionData->GetTopLevelEditSubAction() :
+                             EditSubAction::eNone;
   }
 
   /**
@@ -1699,7 +1727,7 @@ protected: // Called by helper classes.
 
   /**
    * OnStartToHandleTopLevelEditSubAction() is called when
-   * mTopLevelEditSubAction is EditSubAction::eNone and somebody starts to
+   * GetTopLevelEditSubAction() is EditSubAction::eNone and somebody starts to
    * handle aEditSubAction.
    *
    * @param aEditSubAction      Top level edit sub action which will be
@@ -1712,7 +1740,7 @@ protected: // Called by helper classes.
 
   /**
    * OnEndHandlingTopLevelEditSubAction() is called after
-   * mTopLevelEditSubAction is handled.
+   * SetTopLevelEditSubAction() is handled.
    */
   virtual void OnEndHandlingTopLevelEditSubAction();
 
@@ -2076,11 +2104,11 @@ protected: // helper classes which may be used by friends
       , mDoNothing(false)
     {
       MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-      // mTopLevelEditSubAction will already be set if this is nested call
+      // The top level edit sub action has already be set if this is nested call
       // XXX Looks like that this is not aware of unexpected nested edit action
       //     handling via selectionchange event listener or mutation event
       //     listener.
-      if (!mEditorBase.mTopLevelEditSubAction) {
+      if (!mEditorBase.GetTopLevelEditSubAction()) {
         mEditorBase.OnStartToHandleTopLevelEditSubAction(aEditSubAction,
                                                          aDirection);
       } else {
@@ -2218,8 +2246,6 @@ protected:
 
   // Nesting count for batching.
   int32_t mPlaceholderBatch;
-  // The top level edit sub-action.
-  EditSubAction mTopLevelEditSubAction;
 
   // The top level edit sub-action's direction.
   EDirection mDirection;

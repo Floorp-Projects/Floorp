@@ -3757,7 +3757,7 @@ HTMLEditor::DoContentInserted(nsIContent* aChild,
                         &HTMLEditor::NotifyRootChanged));
   }
   // We don't need to handle our own modifications
-  else if (!mTopLevelEditSubAction && container->IsEditable()) {
+  else if (!GetTopLevelEditSubAction() && container->IsEditable()) {
     if (IsMozEditorBogusNode(aChild)) {
       // Ignore insertion of the bogus node
       return;
@@ -3806,7 +3806,8 @@ HTMLEditor::ContentRemoved(nsIContent* aChild,
                         this,
                         &HTMLEditor::NotifyRootChanged));
   // We don't need to handle our own modifications
-  } else if (!mTopLevelEditSubAction && aChild->GetParentNode()->IsEditable()) {
+  } else if (!GetTopLevelEditSubAction() &&
+             aChild->GetParentNode()->IsEditable()) {
     if (aChild && IsMozEditorBogusNode(aChild)) {
       // Ignore removal of the bogus node
       return;
@@ -3832,10 +3833,9 @@ HTMLEditor::OnStartToHandleTopLevelEditSubAction(
     return;
   }
 
-  MOZ_ASSERT(mTopLevelEditSubAction == aEditSubAction);
+  MOZ_ASSERT(GetTopLevelEditSubAction() == aEditSubAction);
   MOZ_ASSERT(mDirection == aDirection);
-  DebugOnly<nsresult> rv =
-    rules->BeforeEdit(mTopLevelEditSubAction, mDirection);
+  DebugOnly<nsresult> rv = rules->BeforeEdit(aEditSubAction, mDirection);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
     "HTMLEditRules::BeforeEdit() failed to handle something");
 }
@@ -3848,11 +3848,11 @@ HTMLEditor::OnEndHandlingTopLevelEditSubAction()
 
   // post processing
   DebugOnly<nsresult> rv =
-    rules ? rules->AfterEdit(mTopLevelEditSubAction, mDirection) : NS_OK;
+    rules ? rules->AfterEdit(GetTopLevelEditSubAction(), mDirection) : NS_OK;
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
     "HTMLEditRules::AfterEdit() failed to handle something");
   EditorBase::OnEndHandlingTopLevelEditSubAction();
-  MOZ_ASSERT(!mTopLevelEditSubAction);
+  MOZ_ASSERT(!GetTopLevelEditSubAction());
   MOZ_ASSERT(mDirection == eNone);
 }
 
