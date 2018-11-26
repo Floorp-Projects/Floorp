@@ -192,13 +192,13 @@ const reducers = {
     change = { ...defaults, ...change };
     state = cloneState(state);
 
-    const { type, href, index } = change.source;
+    const { type, href, index, isFramed } = change.source;
     const { selector, ancestors, ruleIndex, type: changeType } = change;
     const sourceId = getSourceHash(change.source);
     const ruleId = getRuleHash({ selector, ancestors, ruleIndex });
 
     // Copy or create object identifying the source (styelsheet/element) for this change.
-    const source = Object.assign({}, state[sourceId], { type, href, index });
+    const source = Object.assign({}, state[sourceId], { type, href, index, isFramed });
     // Copy or create collection of all rules ever changed in this source.
     const rules = Object.assign({}, source.rules);
     // Refrence or create object identifying the rule for this change.

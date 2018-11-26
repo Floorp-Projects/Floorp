@@ -13,19 +13,19 @@ const { getFormatStr, getStr } = require("./l10n");
 *        Information about a stylesheet or element style attribute:
 *        {
 *          type:  {String}
-*                 One of "stylesheet" or "element".
+*                 One of "stylesheet", "inline" or "element".
 *          index: {Number|String}
 *                 Position of the styleshet in the list of stylesheets in the document.
 *                 If `type` is "element", `index` is the generated selector which
 *                 uniquely identifies the element in the document.
-*          href:  {String|null}
-*                 URL of the stylesheet or of the document when `type` is "element".
-*                 If the stylesheet is inline, `href` is null.
+*          href:  {String}
+*                 URL of the stylesheet or of the document when `type` is "element" or
+*                 "inline".
 *        }
 * @return {String}
 */
 function getSourceHash(source) {
-  const { type, index, href = "inline" } = source;
+  const { type, index, href } = source;
 
   return `${type}${index}${href}`;
 }
@@ -76,13 +76,12 @@ function getSourceForDisplay(source) {
     case "element":
       href = getStr("changes.elementStyleLabel");
       break;
+    case "inline":
+      href = getFormatStr("changes.inlineStyleSheetLabel", `#${source.index}`);
+      break;
     case "stylesheet":
-      if (source.href) {
-        const url = new URL(source.href);
-        href = url.pathname.substring(url.pathname.lastIndexOf("/") + 1);
-      } else {
-        href = getFormatStr("changes.inlineStyleSheetLabel", `#${source.index}`);
-      }
+      const url = new URL(source.href);
+      href = url.pathname.substring(url.pathname.lastIndexOf("/") + 1);
       break;
   }
 
