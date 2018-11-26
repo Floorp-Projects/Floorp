@@ -30,43 +30,35 @@ class TelemetryHelpers {
     Services.telemetry.canRecordExtended = this.oldCanRecord;
 
     // Clear histograms, scalars and Telemetry Events.
-    this.clearHistograms(Services.telemetry.snapshotHistograms);
-    this.clearHistograms(Services.telemetry.snapshotKeyedHistograms);
+    this.clearHistograms(Services.telemetry.getSnapshotForHistograms);
+    this.clearHistograms(Services.telemetry.getSnapshotForKeyedHistograms);
     Services.telemetry.clearScalars();
     Services.telemetry.clearEvents();
   }
 
   /**
-   * Clears both OPTIN and OPTOUT versions of Telemetry Histograms.
-   *
    * @param {Function} snapshotFunc
    *        The function used to take the snapshot. This can be one of the
    *        following:
-   *          - Services.telemetry.snapshotHistograms
-   *          - Services.telemetry.snapshotKeyedHistograms
+   *          - Services.telemetry.getSnapshotForHistograms
+   *          - Services.telemetry.getSnapshotForKeyedHistograms
    *
-   *        `snapshotFunc(OPTIN, true, true)` should clear the histograms but this
+   *        `snapshotFunc("main", true)` should clear the histograms but this
    *        only deletes seemingly random histograms, hence this method.
    */
   clearHistograms(snapshotFunc) {
-    // Although most of our Telemetry probes are OPTOUT, OPTIN includes all OPTIN
-    // *and* OPTOUT data.
-    const OPTIN = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
-    const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
     const tel = Services.telemetry;
 
-    for (const optInOut of [OPTIN, OPTOUT]) {
-      const snapshot = snapshotFunc(optInOut, true, false).parent;
-      const histKeys = Object.keys(snapshot);
+    const snapshot = snapshotFunc("main", true).parent;
+    const histKeys = Object.keys(snapshot);
 
-      for (const getHistogram of [tel.getHistogramById, tel.getKeyedHistogramById]) {
-        for (const key of histKeys) {
-          try {
-            getHistogram(key).clear();
-          } catch (e) {
-            // Some histograms may have already been cleaned up by the system so we
-            // swallow the "histogram does not exist" error silently here.
-          }
+    for (const getHistogram of [tel.getHistogramById, tel.getKeyedHistogramById]) {
+      for (const key of histKeys) {
+        try {
+          getHistogram(key).clear();
+        } catch (e) {
+          // Some histograms may have already been cleaned up by the system so we
+          // swallow the "histogram does not exist" error silently here.
         }
       }
     }
@@ -89,10 +81,6 @@ class TelemetryHelpers {
    *         "keyedscalar" - Telemetry type is a keyed scalar.
    */
   checkTelemetry(histId, key, expected, checkType) {
-    // Although most of our Telemetry probes are OPTOUT, OPTIN includes all OPTIN
-    // *and* OPTOUT data.
-    const OPTIN = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
-
     let actual;
     let msg;
 
@@ -128,13 +116,13 @@ class TelemetryHelpers {
         break;
       case "scalar":
         const scalars =
-          Services.telemetry.snapshotScalars(OPTIN, false).parent;
+          Services.telemetry.getSnapshotForScalars("main", false).parent;
 
         is(scalars[histId], expected, `${histId} correct`);
         break;
       case "keyedscalar":
         const keyedScalars =
-          Services.telemetry.snapshotKeyedScalars(OPTIN, false).parent;
+          Services.telemetry.getSnapshotForKeyedScalars("main", false).parent;
         const value = keyedScalars[histId][key];
 
         msg = key ? `${histId}["${key}"] correct.` : `${histId} correct.`;
@@ -152,19 +140,15 @@ class TelemetryHelpers {
    *         Optionally limits results to histogram ids starting with prefix.
    */
   generateTelemetryTests(prefix = "") {
-    // Although most of our Telemetry probes are OPTOUT, OPTIN includes all OPTIN
-    // *and* OPTOUT data.
-    const OPTIN = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
-
     // Get all histograms and scalars
     const histograms =
-      Services.telemetry.snapshotHistograms(OPTIN, true, false).parent;
+      Services.telemetry.getSnapshotForHistograms("main", true).parent;
     const keyedHistograms =
-      Services.telemetry.snapshotKeyedHistograms(OPTIN, true, false).parent;
+      Services.telemetry.getSnapshotForKeyedHistograms("main", true).parent;
     const scalars =
-      Services.telemetry.snapshotScalars(OPTIN, false).parent;
+      Services.telemetry.getSnapshotForScalars("main", false).parent;
     const keyedScalars =
-      Services.telemetry.snapshotKeyedScalars(OPTIN, false).parent;
+      Services.telemetry.getSnapshotForKeyedScalars("main", false).parent;
     const allHistograms = Object.assign({},
                                         histograms,
                                         keyedHistograms,
@@ -217,7 +201,7 @@ class TelemetryHelpers {
    * Generates the inner contents of a test's checkTelemetry() method.
    *
    * @param {HistogramSnapshot} snapshot
-   *        A snapshot of a telemetry chart obtained via snapshotHistograms or
+   *        A snapshot of a telemetry chart obtained via getSnapshotForHistograms or
    *        similar.
    * @param {String} key
    *        Only used for keyed histograms. This is the key we are interested in

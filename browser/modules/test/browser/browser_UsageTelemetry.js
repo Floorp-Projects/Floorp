@@ -117,10 +117,9 @@ add_task(async function test_subsessionSplit() {
   // Remove a tab.
   BrowserTestUtils.removeTab(openedTabs.pop());
 
-  // Simulate a subsession split by clearing the scalars (via |snapshotScalars|) and
+  // Simulate a subsession split by clearing the scalars (via |getSnapshotForScalars|) and
   // notifying the subsession split topic.
-  Services.telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
-                                     true /* clearScalars */);
+  Services.telemetry.getSnapshotForScalars("main", true /* clearScalars */);
   Services.obs.notifyObservers(null, TELEMETRY_SUBSESSION_TOPIC);
 
   // After a subsession split, only the MAX_CONCURRENT_* scalars must be available
