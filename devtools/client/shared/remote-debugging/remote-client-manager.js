@@ -29,7 +29,6 @@ class RemoteClientManager {
   setClient(id, type, { client, transportDetails }) {
     const key = this._getKey(id, type);
     this._clients.set(key, { client, transportDetails });
-
     client.addOneTimeListener("closed", this._onClientClosed);
   }
 
@@ -47,6 +46,13 @@ class RemoteClientManager {
   removeClient(id, type) {
     const key = this._getKey(id, type);
     this._removeClientByKey(key);
+  }
+
+  removeAllClients() {
+    const keys = [...this._clients.keys()];
+    for (const key of keys) {
+      this._removeClientByKey(key);
+    }
   }
 
   getRemoteId(id, type) {

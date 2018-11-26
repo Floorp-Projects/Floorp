@@ -32,6 +32,10 @@ registerCleanupFunction(async function() {
   }
   const { ADB } = require("devtools/shared/adb/adb");
   await ADB.kill();
+
+  const { remoteClientManager } =
+    require("devtools/client/shared/remote-debugging/remote-client-manager");
+  await remoteClientManager.removeAllClients();
 });
 
 /**
