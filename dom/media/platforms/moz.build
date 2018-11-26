@@ -15,6 +15,7 @@ EXPORTS += [
     'MediaTelemetryConstants.h',
     'PDMFactory.h',
     'PlatformDecoderModule.h',
+    'PlatformEncoderModule.h',
     'ReorderQueue.h',
     'SimpleMap.h',
     'wrappers/MediaChangeMonitor.h',
