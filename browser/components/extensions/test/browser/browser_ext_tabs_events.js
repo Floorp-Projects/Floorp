@@ -374,8 +374,9 @@ add_task(async function testTabCreateRelated() {
 });
 
 add_task(async function testLastTabRemoval() {
+  const CLOSE_WINDOW_PREF = "browser.tabs.closeWindowWithLastTab";
   await SpecialPowers.pushPrefEnv({set: [
-    ["browser.tabs.closeWindowWithLastTab", false],
+    [CLOSE_WINDOW_PREF, false],
   ]});
 
   async function background() {
@@ -409,4 +410,82 @@ add_task(async function testLastTabRemoval() {
 
   await extension.unload();
   await BrowserTestUtils.closeWindow(newWin);
+  SpecialPowers.clearUserPref(CLOSE_WINDOW_PREF);
+});
+
+add_task(async function testTabActivationEvent() {
+  async function background() {
+    function makeExpectable() {
+      let expectation = null, resolver = null;
+      const expectable = param => {
+        if (expectation === null) {
+          browser.test.fail("unexpected call to expectable");
+        } else {
+          try {
+            resolver(expectation(param));
+          } catch (e) {
+            resolver(Promise.reject(e));
+          } finally {
+            expectation = null;
+          }
+        }
+      };
+      expectable.expect = e => {
+        expectation = e;
+        return new Promise(r => { resolver = r; });
+      };
+      return expectable;
+    }
+    try {
+      const listener = makeExpectable();
+      browser.tabs.onActivated.addListener(listener);
+
+      const [, {tabs: [tab1]}] = await Promise.all([
+        listener.expect(info => {
+          browser.test.assertEq(undefined, info.previousTabId, "previousTabId should not be defined when window is first opened");
+        }),
+        browser.windows.create({url: "about:blank"}),
+      ]);
+      const [, tab2] = await Promise.all([
+        listener.expect(info => {
+          browser.test.assertEq(tab1.id, info.previousTabId, "Got expected previousTabId");
+        }),
+        browser.tabs.create({url: "about:blank"}),
+      ]);
+
+      await Promise.all([
+        listener.expect(info => {
+          browser.test.assertEq(tab1.id, info.tabId, "Got expected tabId");
+          browser.test.assertEq(tab2.id, info.previousTabId, "Got expected previousTabId");
+        }),
+        browser.tabs.update(tab1.id, {active: true}),
+      ]);
+
+      await Promise.all([
+        listener.expect(info => {
+          browser.test.assertEq(tab2.id, info.tabId, "Got expected tabId");
+          browser.test.assertEq(undefined, info.previousTabId, "previousTabId should not be defined when previous tab was closed");
+        }),
+        browser.tabs.remove(tab1.id),
+      ]);
+
+      await browser.tabs.remove(tab2.id);
+
+      browser.test.notifyPass("tabs-events");
+    } catch (e) {
+      browser.test.fail(`${e} :: ${e.stack}`);
+      browser.test.notifyFail("tabs-events");
+    }
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+    },
+    background,
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("tabs-events");
+  await extension.unload();
 });
