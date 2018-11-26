@@ -84,6 +84,10 @@ TextEditor::TextEditor()
   , mCaretStyle(0)
 #endif
 {
+  // printf("Size of TextEditor: %zu\n", sizeof(TextEditor));
+  static_assert(sizeof(TextEditor) <= 512,
+    "TextEditor instance should be allocatable in the quantum class bins");
+
   // check the "single line editor newline handling"
   // and "caret behaviour in selection" prefs
   GetDefaultEditorPrefs(mNewlineHandling, mCaretStyle);
