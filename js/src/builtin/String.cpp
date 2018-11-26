@@ -136,15 +136,22 @@ Escape(JSContext* cx, const CharT* chars, uint32_t length, InlineCharBuffer<Lati
             continue;
         }
 
+        /*
+         * newlength is incremented below by at most 5 and at this point it must
+         * be a valid string length, so this should never overflow uint32_t.
+         */
+        static_assert(JSString::MAX_LENGTH < UINT32_MAX - 5,
+                      "Adding 5 to valid string length should not overflow");
+
+        MOZ_ASSERT(newLength <= JSString::MAX_LENGTH);
+
         /* The character will be encoded as %XX or %uXXXX. */
         newLength += (ch < 256) ? 2 : 5;
 
-        /*
-         * newlength is incremented by at most 5 on each iteration, so worst
-         * case newlength == length * 6. This can't overflow.
-         */
-        static_assert(JSString::MAX_LENGTH < UINT32_MAX / 6,
-                      "newlength must not overflow");
+        if (MOZ_UNLIKELY(newLength > JSString::MAX_LENGTH)) {
+            ReportAllocationOverflow(cx);
+            return false;
+        }
     }
 
     if (newLength == length) {
