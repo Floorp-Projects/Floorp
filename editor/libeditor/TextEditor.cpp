@@ -2179,8 +2179,8 @@ TextEditor::OnStartToHandleTopLevelEditSubAction(
   }
 
   MOZ_ASSERT(GetTopLevelEditSubAction() == aEditSubAction);
-  MOZ_ASSERT(mDirection == aDirection);
-  DebugOnly<nsresult> rv = rules->BeforeEdit(aEditSubAction, mDirection);
+  MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() == aDirection);
+  DebugOnly<nsresult> rv = rules->BeforeEdit(aEditSubAction, aDirection);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
     "TextEditRules::BeforeEdit() failed to handle something");
 }
@@ -2193,12 +2193,13 @@ TextEditor::OnEndHandlingTopLevelEditSubAction()
 
   // post processing
   DebugOnly<nsresult> rv =
-    rules ? rules->AfterEdit(GetTopLevelEditSubAction(), mDirection) : NS_OK;
+    rules ? rules->AfterEdit(GetTopLevelEditSubAction(),
+                             GetDirectionOfTopLevelEditSubAction()) : NS_OK;
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
     "TextEditRules::AfterEdit() failed to handle something");
   EditorBase::OnEndHandlingTopLevelEditSubAction();
   MOZ_ASSERT(!GetTopLevelEditSubAction());
-  MOZ_ASSERT(mDirection == eNone);
+  MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() == eNone);
 }
 
 nsresult
