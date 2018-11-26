@@ -421,17 +421,18 @@ class TaskClusterImagesProvider(MachCommandBase):
             self.virtualenv_manager.install_pip_package('zstandard==0.9.0')
 
     @Command('taskcluster-load-image', category="ci",
-             description="Load a pre-built Docker image")
+             description="Load a pre-built Docker image. Note that you need to "
+                         "have docker installed and running for this to work.")
     @CommandArgument('--task-id',
-                     help="Load the image at public/image.tar.zst in this task,"
+                     help="Load the image at public/image.tar.zst in this task, "
                           "rather than searching the index")
     @CommandArgument('-t', '--tag',
                      help="tag that the image should be loaded as. If not "
                           "image will be loaded with tag from the tarball",
                      metavar="name:tag")
     @CommandArgument('image_name', nargs='?',
-                     help="Load the image of this name based on the current"
-                          "contents of the tree (as built for mozilla-central"
+                     help="Load the image of this name based on the current "
+                          "contents of the tree (as built for mozilla-central "
                           "or mozilla-inbound)")
     def load_image(self, image_name, task_id, tag):
         self._ensure_zstd()
