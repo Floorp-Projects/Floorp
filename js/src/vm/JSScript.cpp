@@ -1703,17 +1703,24 @@ ScriptSource::units(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
 
     MOZ_ASSERT(data.is<Compressed<Unit>>());
 
-    // Determine which chunk(s) we are interested in, and the offsets within
-    // these chunks.
-    size_t firstChunk, lastChunk;
-    size_t firstChunkOffset, lastChunkOffset;
-    MOZ_ASSERT(len > 0);
-    Compressor::toChunkOffset(begin * sizeof(Unit), &firstChunk, &firstChunkOffset);
-    Compressor::toChunkOffset((begin + len) * sizeof(Unit), &lastChunk, &lastChunkOffset);
-
+    // Determine first/last chunks, the offset (in bytes) into the first chunk
+    // of the requested units, and the number of bytes in the last chunk.
+    //
+    // Note that first and last chunk sizes are miscomputed and *must not be
+    // used* when the first chunk is the last chunk.
+    size_t firstChunk, firstChunkOffset, firstChunkSize;
+    size_t lastChunk, lastChunkSize;
+    Compressor::rangeToChunkAndOffset(begin * sizeof(Unit), (begin + len) * sizeof(Unit),
+                                      &firstChunk, &firstChunkOffset, &firstChunkSize,
+                                      &lastChunk, &lastChunkSize);
+    MOZ_ASSERT(firstChunk <= lastChunk);
     MOZ_ASSERT(firstChunkOffset % sizeof(Unit) == 0);
+    MOZ_ASSERT(firstChunkSize % sizeof(Unit) == 0);
+
     size_t firstUnit = firstChunkOffset / sizeof(Unit);
 
+    // Directly return units within a single chunk.  UncompressedSourceCache
+    // and |holder| will hold the units alive past function return.
     if (firstChunk == lastChunk) {
         const Unit* units = chunkUnits<Unit>(cx, holder, firstChunk);
         if (!units) {
@@ -1723,40 +1730,50 @@ ScriptSource::units(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
         return units + firstUnit;
     }
 
-    // We need multiple chunks. Allocate a buffer to hold |len| units and copy
-    // uncompressed units from the chunks into it.  We use chunkUnits() so we
-    // benefit from chunk caching by UncompressedSourceCache.
-
-    MOZ_ASSERT(firstChunk < lastChunk);
-
+    // Otherwise the units span multiple chunks.  Copy successive chunks'
+    // decompressed units into freshly-allocated memory to return.
     EntryUnits<Unit> decompressed(js_pod_malloc<Unit>(len));
     if (!decompressed) {
         JS_ReportOutOfMemory(cx);
         return nullptr;
     }
 
-    size_t totalLengthInBytes = length() * sizeof(Unit);
-    Unit* cursor = decompressed.get();
+    Unit* cursor;
 
-    for (size_t i = firstChunk; i <= lastChunk; i++) {
+    {
+        // |AutoHoldEntry| is single-shot, and a holder successfully filled in
+        // by |chunkUnits| must be destroyed before another can be used.  Thus
+        // we can't use |holder| with |chunkUnits| when |chunkUnits| is used
+        // with multiple chunks, and we must use and destroy distinct, fresh
+        // holders for each chunk.
+        UncompressedSourceCache::AutoHoldEntry firstHolder;
+        const Unit* units = chunkUnits<Unit>(cx, firstHolder, firstChunk);
+        if (!units) {
+            return nullptr;
+        }
+
+        cursor = std::copy_n(units + firstUnit, firstChunkSize / sizeof(Unit),
+                             decompressed.get());
+    }
+
+    for (size_t i = firstChunk + 1; i < lastChunk; i++) {
         UncompressedSourceCache::AutoHoldEntry chunkHolder;
         const Unit* units = chunkUnits<Unit>(cx, chunkHolder, i);
         if (!units) {
             return nullptr;
         }
 
-        size_t numUnits = Compressor::chunkSize(totalLengthInBytes, i) / sizeof(Unit);
-        if (i == firstChunk) {
-            MOZ_ASSERT(firstUnit < numUnits);
-            units += firstUnit;
-            numUnits -= firstUnit;
-        } else if (i == lastChunk) {
-            size_t numUnitsNew = lastChunkOffset / sizeof(Unit);
-            MOZ_ASSERT(numUnitsNew <= numUnits);
-            numUnits = numUnitsNew;
+        cursor = std::copy_n(units, Compressor::CHUNK_SIZE / sizeof(Unit), cursor);
+    }
+
+    {
+        UncompressedSourceCache::AutoHoldEntry lastHolder;
+        const Unit* units = chunkUnits<Unit>(cx, lastHolder, lastChunk);
+        if (!units) {
+            return nullptr;
         }
-        mozilla::PodCopy(cursor, units, numUnits);
-        cursor += numUnits;
+
+        cursor = std::copy_n(units, lastChunkSize / sizeof(Unit), cursor);
     }
 
     MOZ_ASSERT(PointerRangeSize(decompressed.get(), cursor) == len);
