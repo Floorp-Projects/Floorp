@@ -1,4 +1,3 @@
-// |reftest| skip -- dynamic-import is not supported
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/ns-set-same-values-no-strict.case
 // - src/dynamic-import/namespace/promise.template

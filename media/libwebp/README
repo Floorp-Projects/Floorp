@@ -4,7 +4,7 @@
           \__\__/\____/\_____/__/ ____  ___
                 / _/ /    \    \ /  _ \/ _/
                /  \_/   / /   \ \   __/  \__
-               \____/____/\_____/_____/____/v1.0.0
+               \____/____/\_____/_____/____/v1.0.1
 
 Description:
 ============
@@ -402,12 +402,14 @@ Options are:
   -nofilter .... disable in-loop filtering
   -dither <int>  dithering strength (0..100), default=50
   -noalphadither disable alpha plane dithering
+  -usebgcolor .. display background color
   -mt .......... use multi-threading
   -info ........ print info
   -h ........... this help message
 
 Keyboard shortcuts:
   'c' ................ toggle use of color profile
+  'b' ................ toggle background color display
   'i' ................ overlay file information
   'd' ................ disable blending & disposal (debug)
   'q' / 'Q' / ESC .... quit
@@ -469,6 +471,9 @@ Per-frame options (only used for subsequent images input):
 
 example: img2webp -loop 2 in0.png -lossy in1.jpg
                   -d 80 in2.tiff -o out.webp
+
+Note: if a single file name is passed as the argument, the arguments will be
+tokenized from this file. The file name must not start with the character '-'.
 
 Animated GIF conversion:
 ========================

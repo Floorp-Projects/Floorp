@@ -19,6 +19,7 @@
 #include "gfxSkipChars.h"
 #include "gfxTextRun.h"
 #include "nsDisplayList.h"
+#include "nsFontMetrics.h"
 #include "JustificationUtils.h"
 #include "RubyUtils.h"
 
@@ -670,9 +671,17 @@ public:
    */
   void NotifyNativeAnonymousTextnodeChange(uint32_t aOldLength);
 
+  void SetInflatedFontMetrics(nsFontMetrics* aMetrics) {
+    mFontMetrics = aMetrics;
+  }
+  nsFontMetrics* InflatedFontMetrics() const {
+    return mFontMetrics;
+  }
+
 protected:
   virtual ~nsTextFrame();
 
+  RefPtr<nsFontMetrics> mFontMetrics;
   RefPtr<gfxTextRun> mTextRun;
   nsTextFrame* mNextContinuation;
   // The key invariant here is that mContentOffset never decreases along

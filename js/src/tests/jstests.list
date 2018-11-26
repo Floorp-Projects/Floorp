@@ -425,6 +425,10 @@ skip script test262/language/expressions/prefix-decrement/target-newtarget.js
 skip script test262/language/expressions/prefix-decrement/target-cover-newtarget.js
 skip script test262/language/expressions/prefix-decrement/non-simple.js
 skip script test262/language/asi/S7.9_A5.7_T1.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-asssignmenttargettype-reference-error-1-update-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-asssignmenttargettype-reference-error-2-update-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-asssignmenttargettype-reference-error-3-update-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-asssignmenttargettype-reference-error-4-update-expression.js
 
 # Dependent on evalInWorker, setSharedArrayBuffer, and
 # getSharedArrayBuffer, plus the test cases can't actually run in the
