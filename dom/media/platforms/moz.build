@@ -89,13 +89,13 @@ if CONFIG['MOZ_APPLEMEDIA']:
   ]
   UNIFIED_SOURCES += [
       'apple/AppleATDecoder.cpp',
-      'apple/AppleCMLinker.cpp',
       'apple/AppleDecoderModule.cpp',
       'apple/AppleVTDecoder.cpp',
-      'apple/AppleVTLinker.cpp',
   ]
   OS_LIBS += [
       '-framework AudioToolbox',
+      '-framework CoreMedia',
+      '-framework VideoToolbox',
   ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

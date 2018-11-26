@@ -7,13 +7,15 @@
 #ifndef mozilla_AppleVTDecoder_h
 #define mozilla_AppleVTDecoder_h
 
+#include <CoreFoundation/CFDictionary.h>  // For CFDictionaryRef
+#include <CoreMedia/CoreMedia.h>          // For CMVideoFormatDescriptionRef
+#include <VideoToolbox/VideoToolbox.h>    // For VTDecompressionSessionRef
+
 #include "PlatformDecoderModule.h"
 #include "mozilla/Atomics.h"
 #include "nsIThread.h"
 #include "ReorderQueue.h"
 #include "TimeUnits.h"
-
-#include "VideoToolbox/VideoToolbox.h"
 
 namespace mozilla {
 
