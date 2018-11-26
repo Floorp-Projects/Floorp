@@ -17,12 +17,15 @@
 #include "mozilla/Logging.h"
 #include "VideoUtils.h"
 #include "gfxPlatform.h"
+#include "MacIOSurfaceImage.h"
 
 #define LOG(...) DDMOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, __VA_ARGS__)
 #define LOGEX(_this, ...) \
   DDMOZ_LOGEX(_this, sPDMLog, mozilla::LogLevel::Debug, __VA_ARGS__)
 
 namespace mozilla {
+
+using namespace layers;
 
 AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig, TaskQueue* aTaskQueue,
                                layers::ImageContainer* aImageContainer,
