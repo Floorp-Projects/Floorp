@@ -47,12 +47,22 @@ def find_node_paths():
     return paths
 
 
-def check_executable_version(exe):
+def check_executable_version(exe, wrap_call_with_node=True):
     """Determine the version of a Node executable by invoking it.
 
     May raise ``subprocess.CalledProcessError`` or ``ValueError`` on failure.
     """
-    out = subprocess.check_output([exe, "--version"]).lstrip('v').rstrip()
+    out = None
+    # npm may be a script, so we must call it with node.
+    if wrap_call_with_node:
+        binary, _ = find_node_executable()
+        if binary:
+            out = subprocess.check_output([binary, exe, "--version"]).lstrip('v').rstrip()
+
+    # If we can't find node, or we don't need to wrap it, fallback to calling
+    # direct.
+    if not out:
+        out = subprocess.check_output([exe, "--version"]).lstrip('v').rstrip()
     return StrictVersion(out)
 
 
@@ -102,10 +112,10 @@ def find_npm_executable(min_version=NPM_MIN_VERSION):
     version tuple. Both tuple entries will be None if a Node executable
     could not be resolved.
     """
-    return find_executable(["npm"], min_version)
+    return find_executable(["npm"], min_version, True)
 
 
-def find_executable(names, min_version):
+def find_executable(names, min_version, use_node_for_version_check=False):
     paths = find_node_paths()
 
     found_exe = None
@@ -124,7 +134,7 @@ def find_executable(names, min_version):
         # We always verify we can invoke the executable and its version is
         # sane.
         try:
-            version = check_executable_version(exe)
+            version = check_executable_version(exe, use_node_for_version_check)
         except (subprocess.CalledProcessError, ValueError):
             continue
 
