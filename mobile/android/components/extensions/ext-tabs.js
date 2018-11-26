@@ -336,7 +336,7 @@ this.tabs = class extends ExtensionAPI {
               // Not sure what to do here? Which tab should we select?
             }
           }
-          // FIXME: highlighted/selected, muted, pinned, openerTabId
+          // FIXME: highlighted/selected, muted, pinned, openerTabId, successorTabId
 
           return tabManager.convert(nativeTab);
         },
