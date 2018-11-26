@@ -593,7 +593,6 @@ Arena::finalize(FreeOp* fop, AllocKind thingKind, size_t thingSize)
     MOZ_ASSERT(thingKind == getAllocKind());
     MOZ_ASSERT(thingSize == getThingSize());
     MOZ_ASSERT(!hasDelayedMarking);
-    MOZ_ASSERT(!markOverflow);
 
     uint_fast16_t firstThing = firstThingOffset(thingKind);
     uint_fast16_t firstThingOrSuccessorOfLastMarkedThing = firstThing;
@@ -2207,7 +2206,6 @@ void
 GCMarker::delayMarkingChildren(const void* thing)
 {
     const TenuredCell* cell = TenuredCell::fromPointer(thing);
-    cell->arena()->markOverflow = 1;
     delayMarkingArena(cell->arena());
 }
 
@@ -2432,7 +2430,6 @@ RelocateArena(Arena* arena, SliceBudget& sliceBudget)
 {
     MOZ_ASSERT(arena->allocated());
     MOZ_ASSERT(!arena->hasDelayedMarking);
-    MOZ_ASSERT(!arena->markOverflow);
     MOZ_ASSERT(arena->bufferedCells()->isEmpty());
 
     Zone* zone = arena->zone;
