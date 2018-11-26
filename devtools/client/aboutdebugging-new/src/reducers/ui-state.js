@@ -14,7 +14,7 @@ const {
 } = require("../constants");
 
 function UiState(locations = [], debugTargetCollapsibilities = {},
-                 networkEnabled = false, wifiEnabled = false) {
+                 networkEnabled = false, wifiEnabled = false, showSystemAddons = false) {
   return {
     adbAddonStatus: null,
     debugTargetCollapsibilities,
@@ -22,6 +22,7 @@ function UiState(locations = [], debugTargetCollapsibilities = {},
     networkEnabled,
     networkLocations: locations,
     selectedPage: null,
+    showSystemAddons,
     wifiEnabled,
   };
 }
