@@ -1,5 +1,6 @@
 
 Changes made to pristine libpng source by mozilla.org developers.
+Update the 'release' field in moz.yaml when you update this file.
 
 2018/09/14  -- Synced with libpng-1.6.35 (bug #1491467).
 
