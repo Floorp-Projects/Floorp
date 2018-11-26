@@ -411,7 +411,7 @@ android.applicationVariants.all { variant ->
         classpath = variant.javaCompile.classpath
 
         excludeFilter = file("findbugs-exclude.xml")
-        dependsOn "assemble${variant.name.capitalize()}"
+        dependsOn "bundleAppClasses${variant.name.capitalize()}"
 
         reports {
             html.enabled = true // HTML reports for humans.
@@ -435,7 +435,7 @@ android.applicationVariants.all { variant ->
         classpath = variant.javaCompile.classpath
 
         excludeFilter = file("findbugs-exclude.xml")
-        dependsOn "assemble${variant.name.capitalize()}"
+        dependsOn "bundleAppClasses${variant.name.capitalize()}"
 
         reports {
             xml.enabled = true // XML reports for machines.
