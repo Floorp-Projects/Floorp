@@ -21,14 +21,11 @@ class RemoteClientManager {
    *        Remote runtime id (see devtools/client/aboutdebugging-new/src/types).
    * @param {String} type
    *        Remote runtime type (see devtools/client/aboutdebugging-new/src/types).
-   * @param {Object}
-   *        - client: {DebuggerClient}
-   *        - transportDetails: {Object} typically a host object ({hostname, port}) that
-   *          allows consumers to easily find the connection information for this client.
+   * @param {DebuggerClient} client
    */
-  setClient(id, type, { client, transportDetails }) {
+  setClient(id, type, client) {
     const key = this._getKey(id, type);
-    this._clients.set(key, { client, transportDetails });
+    this._clients.set(key, client);
     client.addOneTimeListener("closed", this._onClientClosed);
   }
 
@@ -70,7 +67,7 @@ class RemoteClientManager {
 
   _removeClientByKey(key) {
     if (this.hasClient(key)) {
-      this.getClient(key).client.removeListener("closed", this._onClientClosed);
+      this.getClient(key).removeListener("closed", this._onClientClosed);
       this._clients.delete(key);
     }
   }
@@ -80,8 +77,7 @@ class RemoteClientManager {
    */
   _onClientClosed() {
     const closedClientKeys = [...this._clients.keys()].filter(key => {
-      const clientInfo = this._clients.get(key);
-      return clientInfo.client._closed;
+      return this._clients.get(key)._closed;
     });
 
     for (const key of closedClientKeys) {
