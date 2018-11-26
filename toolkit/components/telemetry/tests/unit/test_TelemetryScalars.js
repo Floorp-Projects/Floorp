@@ -532,7 +532,7 @@ add_task(async function test_keyed_max_keys() {
   });
 
   // Check that there are exactly 100 keys in KEYED_EXCEED_SCALAR
-  let snapshot = Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+  let snapshot = Telemetry.getSnapshotForKeyedScalars("main", false);
   Assert.equal(100, Object.keys(snapshot.parent[KEYED_UINT_SCALAR]).length,
              "The keyed scalar must contain all the 100 keys.");
 
