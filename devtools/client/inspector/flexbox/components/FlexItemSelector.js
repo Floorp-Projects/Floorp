@@ -35,6 +35,8 @@ class FlexItemSelector extends PureComponent {
   }
 
   onShowFlexItemMenu(event) {
+    event.stopPropagation();
+
     const {
       flexItem,
       flexItems,
