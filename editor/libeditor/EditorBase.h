@@ -2342,14 +2342,21 @@ protected:
   RefPtr<IMEContentObserver> mIMEContentObserver;
 
   // Listens to all low level actions on the doc.
-  typedef AutoTArray<OwningNonNull<nsIEditActionListener>, 5>
+  // Edit action listener is currently used by highlighter of the findbar and
+  // the spellchecker.  So, we should reserve only 2 items.
+  typedef AutoTArray<OwningNonNull<nsIEditActionListener>, 2>
             AutoActionListenerArray;
   AutoActionListenerArray mActionListeners;
   // Just notify once per high level change.
-  typedef AutoTArray<OwningNonNull<nsIEditorObserver>, 3>
+  // Editor observer is used only by legacy addons for Thunderbird and
+  // BlueGriffon.  So, we don't need to reserve the space for them.
+  typedef AutoTArray<OwningNonNull<nsIEditorObserver>, 0>
             AutoEditorObserverArray;
   AutoEditorObserverArray mEditorObservers;
   // Listen to overall doc state (dirty or not, just created, etc.).
+  // Document state listener is currently used by EditingSession and
+  // BlueGriffon so that reserving only one is enough (although, this is not
+  // necessary for TextEditor).
   typedef AutoTArray<OwningNonNull<nsIDocumentStateListener>, 1>
             AutoDocumentStateListenerArray;
   AutoDocumentStateListenerArray mDocStateListeners;
