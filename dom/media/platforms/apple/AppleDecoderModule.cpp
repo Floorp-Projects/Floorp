@@ -7,7 +7,7 @@
 #include "AppleATDecoder.h"
 #include "AppleDecoderModule.h"
 #include "AppleVTDecoder.h"
-#include "MacIOSurfaceImage.h"
+#include "mozilla/gfx/MacIOSurface.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
