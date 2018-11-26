@@ -9,7 +9,6 @@
 #include "mozilla/DebugOnly.h"
 
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ContentPrincipal.h"
 #include "mozilla/Pair.h"

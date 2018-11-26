@@ -8,7 +8,6 @@
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
 
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 #include "xpcpublic.h"

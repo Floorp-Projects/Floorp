@@ -15,7 +15,6 @@
 
 #include "mozilla/ipc/ProtocolUtils.h"
 
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/recordreplay/ChildIPC.h"

@@ -7,7 +7,6 @@
 
 #include "WrapperAnswer.h"
 #include "JavaScriptLogging.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "xpcprivate.h"

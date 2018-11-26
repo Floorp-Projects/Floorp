@@ -15,7 +15,6 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/dom/asmjscache/PAsmJSCacheEntryChild.h"
 #include "mozilla/dom/asmjscache/PAsmJSCacheEntryParent.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/QuotaManager.h"

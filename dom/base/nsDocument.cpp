@@ -62,6 +62,7 @@
 
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/FeaturePolicy.h"

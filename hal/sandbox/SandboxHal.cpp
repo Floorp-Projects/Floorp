@@ -7,7 +7,6 @@
 #include "Hal.h"
 #include "HalLog.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
 #include "mozilla/hal_sandbox/PHalParent.h"
 #include "mozilla/dom/TabParent.h"

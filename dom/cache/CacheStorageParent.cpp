@@ -7,7 +7,6 @@
 #include "mozilla/dom/cache/CacheStorageParent.h"
 
 #include "mozilla/Unused.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/cache/CacheOpParent.h"
 #include "mozilla/dom/cache/ManagerId.h"
