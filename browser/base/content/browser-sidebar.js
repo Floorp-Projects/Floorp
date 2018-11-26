@@ -131,7 +131,7 @@ var SidebarUI = {
     }, {once: true});
 
     // Combine start/end position with ltr/rtl to set the label in the popup appropriately.
-    let label = this._positionStart == this.isRTL ?
+    let label = this._positionStart == RTL_UI ?
                   gNavigatorBundle.getString("sidebar.moveToLeft") :
                   gNavigatorBundle.getString("sidebar.moveToRight");
     this._reversePositionButton.setAttribute("label", label);
@@ -523,6 +523,3 @@ var SidebarUI = {
 // available for both startDelayedLoad and init.
 XPCOMUtils.defineLazyPreferenceGetter(SidebarUI, "_positionStart",
   SidebarUI.POSITION_START_PREF, true, SidebarUI.setPosition.bind(SidebarUI));
-XPCOMUtils.defineLazyGetter(SidebarUI, "isRTL", () => {
-  return getComputedStyle(document.documentElement).direction == "rtl";
-});
