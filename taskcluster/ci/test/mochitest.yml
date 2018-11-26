@@ -341,10 +341,7 @@ mochitest-webgl1-core:
     description: "Mochitest webgl1-core run"
     suite: mochitest/mochitest-webgl1-core
     treeherder-symbol: M(gl1c)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ccov/.*: []  # Do not run on Windows ccov, see bug 1419475.
-            default: built-projects
+    run-on-projects: built-projects
     virtualization: virtual-with-gpu
     e10s:
         by-test-platform:
@@ -365,10 +362,7 @@ mochitest-webgl1-ext:
     description: "Mochitest webgl1-ext run"
     suite: mochitest/mochitest-webgl1-ext
     treeherder-symbol: M(gl1e)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ccov/.*: []  # Do not run on Windows ccov, see bug 1419475.
-            default: built-projects
+    run-on-projects: built-projects
     virtualization: virtual-with-gpu
     e10s:
         by-test-platform:
@@ -388,10 +382,7 @@ mochitest-webgl2-core:
     description: "Mochitest webgl2-core run"
     suite: mochitest/mochitest-webgl2-core
     treeherder-symbol: M(gl2c)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ccov/.*: []  # Do not run on Windows ccov, see bug 1419475.
-            default: built-projects
+    run-on-projects: built-projects
     virtualization: virtual-with-gpu
     e10s:
         by-test-platform:
@@ -411,10 +402,7 @@ mochitest-webgl2-ext:
     description: "Mochitest webgl2-ext run"
     suite: mochitest/mochitest-webgl2-ext
     treeherder-symbol: M(gl2e)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ccov/.*: []  # Do not run on Windows ccov, see bug 1419475.
-            default: built-projects
+    run-on-projects: built-projects
     virtualization: virtual-with-gpu
     chunks: 4
     e10s:
@@ -436,10 +424,7 @@ mochitest-webgl2-deqp:
     description: "Mochitest webgl2-deqp run"
     suite: mochitest/mochitest-webgl2-deqp
     treeherder-symbol: M(gl2d)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ccov/.*: []  # Do not run on Windows ccov, see bug 1419475.
-            default: []  # Don't run this for now.
+    run-on-projects: []  # Don't run this for now.
     virtualization: virtual-with-gpu
     chunks: 4
     e10s:
