@@ -26,7 +26,7 @@
 #include "prtpool.h"
 #include "nsAlgorithm.h"
 #include "nss.h"
-#include "key.h"
+#include "keyhi.h"
 #include "ssl.h"
 #include "sslproto.h"
 #include "plhash.h"

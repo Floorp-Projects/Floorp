@@ -124,7 +124,10 @@ class Header extends PureComponent {
         flexItemShown ?
           dom.button({
             className: "flex-header-button-prev devtools-button",
-            onClick: () => setSelectedNode(nodeFront),
+            onClick: e => {
+              e.stopPropagation();
+              setSelectedNode(nodeFront);
+            },
           })
           :
           null,

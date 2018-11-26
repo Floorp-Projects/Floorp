@@ -1794,3 +1794,8 @@ pref("toolkit.coverage.endpoint.base", "https://coverage.mozilla.org");
 #if defined(NIGHTLY_BUILD) && defined(MOZ_LIBPRIO)
 pref("prio.enabled", true);
 #endif
+
+// Discovery prefs
+pref("browser.discovery.enabled", false);
+pref("browser.discovery.containers.enabled", true);
+pref("browser.discovery.sites", "addons.mozilla.org");

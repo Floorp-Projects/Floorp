@@ -21,6 +21,10 @@ ChromeUtils.defineModuleGetter(this, "CommonUtils",
 ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "CryptoHash", () => {
+  return Components.Constructor("@mozilla.org/security/hash;1", "nsICryptoHash", "initWithString");
+});
+
 XPCOMUtils.defineLazyGetter(this, "gDatareportingPath", () => {
   return OS.Path.join(OS.Constants.Path.profileDir, "datareporting");
 });
@@ -82,6 +86,10 @@ var ClientID = Object.freeze({
     return ClientIDImpl.getCachedClientID();
   },
 
+  async getClientIdHash() {
+    return ClientIDImpl.getClientIdHash();
+  },
+
   /**
    * Set a specific client id asynchronously, writing it to disk
    * and updating the cached version.
@@ -118,6 +126,7 @@ var ClientID = Object.freeze({
 
 var ClientIDImpl = {
   _clientID: null,
+  _clientIDHash: null,
   _loadClientIdTask: null,
   _saveClientIdTask: null,
   _removeClientIdTask: null,
@@ -243,6 +252,16 @@ var ClientIDImpl = {
     return id;
   },
 
+  async getClientIdHash() {
+    if (!this._clientIDHash) {
+      let byteArr = new TextEncoder().encode(await this.getClientID());
+      let hash = new CryptoHash("sha256");
+      hash.update(byteArr, byteArr.length);
+      this._clientIDHash = CommonUtils.bytesAsHex(hash.finish(false));
+    }
+    return this._clientIDHash;
+  },
+
   /*
    * Resets the provider. This is for testing only.
    */
@@ -250,6 +269,7 @@ var ClientIDImpl = {
     await this._loadClientIdTask;
     await this._saveClientIdTask;
     this._clientID = null;
+    this._clientIDHash = null;
   },
 
   async setClientID(id) {
@@ -265,6 +285,7 @@ var ClientIDImpl = {
   async _doRemoveClientID() {
     // Reset stored id.
     this._clientID = null;
+    this._clientIDHash = null;
 
     // Clear the client id from the preference cache.
     Services.prefs.clearUserPref(PREF_CACHED_CLIENTID);
@@ -308,6 +329,7 @@ var ClientIDImpl = {
     }
 
     this._clientID = id;
+    this._clientIDHash = null;
     Services.prefs.setStringPref(PREF_CACHED_CLIENTID, this._clientID);
     return true;
   },

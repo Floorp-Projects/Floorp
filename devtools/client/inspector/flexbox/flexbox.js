@@ -18,6 +18,7 @@ loader.lazyRequireGetter(this, "parseURL", "devtools/client/shared/source-utils"
 loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
 
 const FLEXBOX_COLOR = "#9400FF";
+const TELEMETRY_ELEMENT_TYPE_DISPLAYED = "DEVTOOLS_FLEXINSPECTOR_ELEMENT_TYPE_DISPLAYED";
 
 class FlexboxInspector {
   constructor(inspector, window) {
@@ -400,6 +401,28 @@ class FlexboxInspector {
   }
 
   /**
+   * Track usage of the tool via telemetry.
+   *
+   * @param  {Boolean} isContainerInfoShown
+   *         Whether the flex container accordion is displayed.
+   * @param  {Boolean} isItemInfoShown
+   *         Whether the flex item accordion is displayed.
+   */
+  sendTelemetryProbes(isContainerInfoShown, isItemInfoShown) {
+    const { telemetry } = this.inspector;
+
+    // Log the type of element being shown now (it can either be a container, or an item
+    // or both at the same time, but can never be none of these since this function is
+    // only ever called when something is being displayed).
+    let elementType = isContainerInfoShown ? "container" : "item";
+    if (isContainerInfoShown && isItemInfoShown) {
+      elementType = "both";
+    }
+
+    telemetry.getHistogramById(TELEMETRY_ELEMENT_TYPE_DISPLAYED).add(elementType);
+  }
+
+  /**
    * Updates the flexbox panel by dispatching the new flexbox data. This is called when
    * the layout view becomes visible or a new node is selected and needs to be update
    * with new flexbox data.
@@ -463,6 +486,10 @@ class FlexboxInspector {
         flexItemContainer,
         highlighted,
       }));
+
+      const isContainerInfoShown = !flexItemShown || !!flexItemContainer;
+      const isItemInfoShown = !!flexItemShown || !!flexItemContainer;
+      this.sendTelemetryProbes(isContainerInfoShown, isItemInfoShown);
     } catch (e) {
       // This call might fail if called asynchrously after the toolbox is finished
       // closing.

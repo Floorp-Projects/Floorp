@@ -74,9 +74,7 @@ void NeckoChild::InitNeckoChild()
 }
 
 PHttpChannelChild*
-NeckoChild::AllocPHttpChannelChild(const PBrowserOrId& browser,
-                                   const SerializedLoadContext& loadContext,
-                                   const HttpChannelCreationArgs& aOpenArgs)
+NeckoChild::AllocPHttpChannelChild()
 {
   // We don't allocate here: instead we always use IPDL constructor that takes
   // an existing HttpChildChannel
