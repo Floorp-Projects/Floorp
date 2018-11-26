@@ -254,6 +254,7 @@ a {
   flex-shrink: 0;
   color: var(--frame-link-source);
   margin-inline-start: 5px;
+  margin-inline-end: 10px;
 }
 
 .stack-trace {
