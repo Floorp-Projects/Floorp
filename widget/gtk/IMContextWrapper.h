@@ -25,6 +25,22 @@ class nsWindow;
 namespace mozilla {
 namespace widget {
 
+/**
+ * KeyHandlingState is result of IMContextWrapper::OnKeyEvent().
+ */
+enum class KeyHandlingState {
+    // The native key event has not been handled by IMContextWrapper.
+    eNotHandled,
+    // The native key event was handled by IMContextWrapper.
+    eHandled,
+    // The native key event has not been handled by IMContextWrapper,
+    // but eKeyDown or eKeyUp event has been dispatched.
+    eNotHandledButEventDispatched,
+    // The native key event has not been handled by IMContextWrapper,
+    // but eKeyDown or eKeyUp event has been dispatched and consumed.
+    eNotHandledButEventConsumed,
+};
+
 class IMContextWrapper final : public TextEventDispatcherListener
 {
 public:
@@ -88,8 +104,8 @@ public:
      *                                      this class doesn't dispatch
      *                                      keyboard event anymore.
      */
-    bool OnKeyEvent(nsWindow* aWindow, GdkEventKey* aEvent,
-                    bool aKeyboardEventWasDispatched = false);
+    KeyHandlingState OnKeyEvent(nsWindow* aWindow, GdkEventKey* aEvent,
+                                bool aKeyboardEventWasDispatched = false);
 
     // IME related nsIWidget methods.
     nsresult EndIMEComposition(nsWindow* aCaller);
@@ -431,6 +447,9 @@ protected:
     // for the native event.  If so, MaybeDispatchKeyEventAsProcessedByIME()
     // won't dispatch keyboard event anymore.
     bool mKeyboardEventWasDispatched;
+    // Whether the keyboard event which as dispatched at setting
+    // mKeyboardEventWasDispatched to true was consumed or not.
+    bool mKeyboardEventWasConsumed;
     // mIsDeletingSurrounding is true while OnDeleteSurroundingNative() is
     // trying to delete the surrounding text.
     bool mIsDeletingSurrounding;
