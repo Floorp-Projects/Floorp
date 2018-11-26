@@ -38,17 +38,31 @@ function onLoad() {
     }
   });
 
-  document.getElementById("prefs").appendChild(createPrefsFragment(gPrefArray));
   document.getElementById("prefs").addEventListener("click", (event) => {
     if (event.target.localName != "button") {
       return;
     }
     let prefRow = event.target.closest("tr");
     let prefName = prefRow.getAttribute("aria-label");
-    Services.prefs.clearUserPref(prefName);
-    gPrefArray.splice(gPrefArray.findIndex(pref => pref.name == prefName), 1);
-    prefRow.remove();
+    let button = event.target.closest("button");
+    if (button.classList.contains("button-reset")) {
+      // Reset pref and update gPrefArray.
+      Services.prefs.clearUserPref(prefName);
+      let pref = gPrefArray.find(p => p.name == prefName);
+      pref.value = Preferences.get(prefName);
+      pref.hasUserValue = false;
+      // Update UI.
+      prefRow.textContent = "";
+      prefRow.classList.remove("has-user-value");
+      prefRow.appendChild(getPrefRow(pref));
+    } else {
+      Services.prefs.clearUserPref(prefName);
+      gPrefArray.splice(gPrefArray.findIndex(pref => pref.name == prefName), 1);
+      prefRow.remove();
+    }
   });
+
+  document.getElementById("prefs").appendChild(createPrefsFragment(gPrefArray));
 }
 
 function filterPrefs() {
@@ -67,31 +81,41 @@ function createPrefsFragment(prefArray) {
     }
     row.setAttribute("aria-label", pref.name);
 
-    let nameCell = document.createElement("td");
-    // Add <wbr> behind dots to prevent line breaking in random mid-word places.
-    let parts = pref.name.split(".");
-    for (let i = 0; i < parts.length - 1; i++) {
-      nameCell.append(parts[i] + ".", document.createElement("wbr"));
-    }
-    nameCell.append(parts[parts.length - 1]);
-    row.appendChild(nameCell);
-
-    let valueCell = document.createElement("td");
-    valueCell.classList.add("cell-value");
-    valueCell.textContent = pref.value;
-    row.appendChild(valueCell);
-
-    let buttonCell = document.createElement("td");
-    if (!pref.hasDefaultValue) {
-      let button = document.createElement("button");
-      document.l10n.setAttributes(button, "about-config-pref-delete");
-      buttonCell.appendChild(button);
-    }
-    row.appendChild(buttonCell);
-
+    row.appendChild(getPrefRow(pref));
     fragment.appendChild(row);
   }
   return fragment;
+}
+
+function getPrefRow(pref) {
+  let rowFragment = document.createDocumentFragment();
+  let nameCell = document.createElement("td");
+  // Add <wbr> behind dots to prevent line breaking in random mid-word places.
+  let parts = pref.name.split(".");
+  for (let i = 0; i < parts.length - 1; i++) {
+    nameCell.append(parts[i] + ".", document.createElement("wbr"));
+  }
+  nameCell.append(parts[parts.length - 1]);
+  rowFragment.appendChild(nameCell);
+
+  let valueCell = document.createElement("td");
+  valueCell.classList.add("cell-value");
+  valueCell.textContent = pref.value;
+  rowFragment.appendChild(valueCell);
+
+  let buttonCell = document.createElement("td");
+  if (pref.hasUserValue) {
+    let button = document.createElement("button");
+    if (!pref.hasDefaultValue) {
+      document.l10n.setAttributes(button, "about-config-pref-delete");
+    } else {
+      document.l10n.setAttributes(button, "about-config-pref-reset");
+      button.className = "button-reset";
+    }
+    buttonCell.appendChild(button);
+  }
+  rowFragment.appendChild(buttonCell);
+  return rowFragment;
 }
 
 function prefHasDefaultValue(name) {

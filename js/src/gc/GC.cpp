@@ -593,7 +593,6 @@ Arena::finalize(FreeOp* fop, AllocKind thingKind, size_t thingSize)
     MOZ_ASSERT(thingKind == getAllocKind());
     MOZ_ASSERT(thingSize == getThingSize());
     MOZ_ASSERT(!hasDelayedMarking);
-    MOZ_ASSERT(!markOverflow);
 
     uint_fast16_t firstThing = firstThingOffset(thingKind);
     uint_fast16_t firstThingOrSuccessorOfLastMarkedThing = firstThing;
@@ -2207,7 +2206,6 @@ void
 GCMarker::delayMarkingChildren(const void* thing)
 {
     const TenuredCell* cell = TenuredCell::fromPointer(thing);
-    cell->arena()->markOverflow = 1;
     delayMarkingArena(cell->arena());
 }
 
@@ -2432,7 +2430,6 @@ RelocateArena(Arena* arena, SliceBudget& sliceBudget)
 {
     MOZ_ASSERT(arena->allocated());
     MOZ_ASSERT(!arena->hasDelayedMarking);
-    MOZ_ASSERT(!arena->markOverflow);
     MOZ_ASSERT(arena->bufferedCells()->isEmpty());
 
     Zone* zone = arena->zone;
@@ -5009,7 +5006,8 @@ js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session)
         for (GCZonesIter zone(runtime); !zone.done(); zone.next()) {
             zone->changeGCState(Zone::Mark, Zone::MarkGray);
         }
-        gc->marker.setMarkColorGray();
+
+        AutoSetMarkColor setColorGray(gc->marker, MarkColor::Gray);
 
         gc->markAllGrayReferences(gcstats::PhaseKind::SWEEP_MARK_GRAY);
         gc->markAllWeakReferences(gcstats::PhaseKind::SWEEP_MARK_GRAY_WEAK);
@@ -5019,7 +5017,6 @@ js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session)
             zone->changeGCState(Zone::MarkGray, Zone::Mark);
         }
         MOZ_ASSERT(gc->marker.isDrained());
-        gc->marker.setMarkColorBlack();
     }
 
     /* Take a copy of the non-incremental mark state and restore the original. */
@@ -5635,7 +5632,8 @@ GCRuntime::endMarkingSweepGroup(FreeOp* fop, SliceBudget& budget)
     for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
         zone->changeGCState(Zone::Mark, Zone::MarkGray);
     }
-    marker.setMarkColorGray();
+
+    AutoSetMarkColor setColorGray(marker, MarkColor::Gray);
 
     // Mark incoming gray pointers from previously swept compartments.
     markIncomingCrossCompartmentPointers(MarkColor::Gray);
@@ -5650,7 +5648,6 @@ GCRuntime::endMarkingSweepGroup(FreeOp* fop, SliceBudget& budget)
         zone->changeGCState(Zone::MarkGray, Zone::Mark);
     }
     MOZ_ASSERT(marker.isDrained());
-    marker.setMarkColorBlack();
 
     // We must not yield after this point before we start sweeping the group.
     safeToYield = false;
@@ -7473,6 +7470,13 @@ GCRuntime::incrementalSlice(SliceBudget& budget, JS::gcreason::Reason reason,
             return IncrementalResult::Ok;
         }
 
+        /* If we needed delayed marking for gray roots, then collect until done. */
+        if (isIncremental && !hasValidGrayRootsBuffer()) {
+            budget.makeUnlimited();
+            isIncremental = false;
+            stats().nonincremental(AbortReason::GrayRootBufferingFailed);
+        }
+
         if (!destroyingRuntime) {
             pushZealSelectedObjects();
         }
@@ -7487,13 +7491,6 @@ GCRuntime::incrementalSlice(SliceBudget& budget, JS::gcreason::Reason reason,
 
       case State::Mark:
         AutoGCRooter::traceAllWrappers(rt->mainContextFromOwnThread(), &marker);
-
-        // If we needed delayed marking for gray roots, then collect until done.
-        if (isIncremental && !hasValidGrayRootsBuffer()) {
-            budget.makeUnlimited();
-            isIncremental = false;
-            stats().nonincremental(AbortReason::GrayRootBufferingFailed);
-        }
 
         if (markUntilBudgetExhaused(budget, gcstats::PhaseKind::MARK) == NotFinished) {
             break;

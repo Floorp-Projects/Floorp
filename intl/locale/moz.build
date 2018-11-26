@@ -65,7 +65,6 @@ RESOURCE_FILES += [
 
 prefixes = (
     'encodingsgroups',
-    'langGroups',
 )
 
 for prefix in prefixes:
