@@ -787,6 +787,15 @@ protected: // AutoEditActionDataSetter, this shouldn't be accessed by friends.
       return mDirectionOfTopLevelEditSubAction;
     }
 
+    SelectionState& SavedSelectionRef()
+    {
+      return mParentData ? mParentData->SavedSelectionRef() : mSavedSelection;
+    }
+    const SelectionState& SavedSelectionRef() const
+    {
+      return mParentData ? mParentData->SavedSelectionRef() : mSavedSelection;
+    }
+
   private:
     EditorBase& mEditorBase;
     RefPtr<Selection> mSelection;
@@ -794,6 +803,10 @@ protected: // AutoEditActionDataSetter, this shouldn't be accessed by friends.
     // from mutation event listener which is run while editor changes
     // the DOM tree.  In such case, we need to handle edit action separately.
     AutoEditActionDataSetter* mParentData;
+
+    // Cached selection for AutoSelectionRestorer.
+    SelectionState mSavedSelection;
+
     EditAction mEditAction;
     EditSubAction mTopLevelEditSubAction;
     EDirection mDirectionOfTopLevelEditSubAction;
@@ -866,6 +879,21 @@ protected: // May be called by friends.
   {
     return mEditActionData ?
        mEditActionData->GetDirectionOfTopLevelEditSubAction() : eNone;
+  }
+
+  /**
+   * SavedSelection() returns reference to saved selection which are
+   * stored by AutoSelectionRestorer.
+   */
+  SelectionState& SavedSelectionRef()
+  {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return mEditActionData->SavedSelectionRef();
+  }
+  const SelectionState& SavedSelectionRef() const
+  {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return mEditActionData->SavedSelectionRef();
   }
 
   /**
@@ -2305,8 +2333,6 @@ protected:
             AutoDocumentStateListenerArray;
   AutoDocumentStateListenerArray mDocStateListeners;
 
-  // Cached selection for AutoSelectionRestorer.
-  SelectionState mSavedSel;
   // Utility class object for maintaining preserved ranges.
   RangeUpdater mRangeUpdater;
 
