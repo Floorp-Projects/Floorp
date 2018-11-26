@@ -14,31 +14,6 @@
 
 using namespace mozilla;
 
-// Fallback value for the pref "network.IDN.blacklist_chars".
-// UnEscapeURIForUI allows unescaped space; other than that, this is
-// the same as the default "network.IDN.blacklist_chars" value.
-static const char16_t sNetworkIDNBlacklistChars[] =
-{
-  // clang-format off
-/*0x0020,*/
-          0x00A0, 0x00BC, 0x00BD, 0x00BE, 0x01C3, 0x02D0, 0x0337,
-  0x0338, 0x0589, 0x058A, 0x05C3, 0x05F4, 0x0609, 0x060A, 0x066A, 0x06D4,
-  0x0701, 0x0702, 0x0703, 0x0704, 0x115F, 0x1160, 0x1735, 0x2000,
-  0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x2008,
-  0x2009, 0x200A, 0x200B, 0x200E, 0x200F, 0x2010, 0x2019, 0x2024, 0x2027, 0x2028,
-  0x2029, 0x202A, 0x202B, 0x202C, 0x202D, 0x202E, 0x202F, 0x2039,
-  0x203A, 0x2041, 0x2044, 0x2052, 0x205F, 0x2153, 0x2154, 0x2155,
-  0x2156, 0x2157, 0x2158, 0x2159, 0x215A, 0x215B, 0x215C, 0x215D,
-  0x215E, 0x215F, 0x2215, 0x2236, 0x23AE, 0x2571, 0x29F6, 0x29F8,
-  0x2AFB, 0x2AFD, 0x2FF0, 0x2FF1, 0x2FF2, 0x2FF3, 0x2FF4, 0x2FF5,
-  0x2FF6, 0x2FF7, 0x2FF8, 0x2FF9, 0x2FFA, 0x2FFB, /*0x3000,*/ 0x3002,
-  0x3014, 0x3015, 0x3033, 0x30A0, 0x3164, 0x321D, 0x321E, 0x33AE, 0x33AF,
-  0x33C6, 0x33DF, 0xA789, 0xFE14, 0xFE15, 0xFE3F, 0xFE5D, 0xFE5E,
-  0xFEFF, 0xFF0E, 0xFF0F, 0xFF61, 0xFFA0, 0xFFF9, 0xFFFA, 0xFFFB,
-  0xFFFC, 0xFFFD
-  // clang-format on
-};
-
 nsTextToSubURI::~nsTextToSubURI()
 {
 }
@@ -154,29 +129,22 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset,
   }
 
   // If there are any characters that are unsafe for URIs, reescape those.
-  if (mUnsafeChars.IsEmpty()) {
-    nsAutoString blacklist;
-    nsresult rv = mozilla::Preferences::GetString("network.IDN.blacklist_chars",
-                                                  blacklist);
-    if (NS_SUCCEEDED(rv)) {
-      // we allow SPACE and IDEOGRAPHIC SPACE in this method
-      blacklist.StripChars(u" \u3000");
-      mUnsafeChars.AppendElements(static_cast<const char16_t*>(blacklist.Data()),
-                                  blacklist.Length());
-    } else {
-      NS_WARNING("Failed to get the 'network.IDN.blacklist_chars' preference");
-    }
-    // We check IsEmpty() intentionally here because an empty (or just spaces)
-    // pref value is likely a mistake/error of some sort.
-    if (mUnsafeChars.IsEmpty()) {
-      mUnsafeChars.AppendElements(sNetworkIDNBlacklistChars,
-                                  mozilla::ArrayLength(sNetworkIDNBlacklistChars));
-    }
-    mUnsafeChars.Sort();
+  if (mIDNBlocklist.IsEmpty()) {
+    mozilla::net::InitializeBlocklist(mIDNBlocklist);
+    // we allow SPACE and IDEOGRAPHIC SPACE in this method
+    mozilla::net::RemoveCharFromBlocklist(u' ', mIDNBlocklist);
+    mozilla::net::RemoveCharFromBlocklist(0x3000, mIDNBlocklist);
   }
+
+  MOZ_ASSERT(!mIDNBlocklist.IsEmpty());
   const nsPromiseFlatString& unescapedResult = PromiseFlatString(_retval);
   nsString reescapedSpec;
-  _retval = NS_EscapeURL(unescapedResult, mUnsafeChars, reescapedSpec);
+  _retval =
+    NS_EscapeURL(unescapedResult,
+                 [&](char16_t aChar) -> bool {
+                   return mozilla::net::CharInBlocklist(aChar, mIDNBlocklist);
+                 },
+                 reescapedSpec);
 
   return NS_OK;
 }

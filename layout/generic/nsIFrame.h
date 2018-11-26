@@ -3288,6 +3288,7 @@ public:
    */
   nsresult GetFrameFromDirection(nsDirection aDirection, bool aVisual,
                                  bool aJumpLines, bool aScrollViewStop,
+                                 bool aForceEditableRegion,
                                  nsIFrame** aOutFrame, int32_t* aOutOffset,
                                  bool* aOutJumpedLine, bool* aOutMovedOverNonSelectableText);
 

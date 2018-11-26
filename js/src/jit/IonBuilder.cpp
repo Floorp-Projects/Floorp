@@ -10928,12 +10928,16 @@ IonBuilder::improveThisTypesForCall()
 
     MOZ_ASSERT(*pc == JSOP_CALLPROP || *pc == JSOP_CALLELEM);
 
-    // Ensure |this| has types {object, null/undefined}.
+    // Ensure |this| has types {object, null/undefined}. For simplicity don't
+    // optimize if the callee is a Phi (this can happen in rare cases after
+    // inlining a scripted getter).
     MDefinition* thisDef = current->peek(-2);
+    MDefinition* calleeDef = current->peek(-1);
     if (thisDef->type() != MIRType::Value ||
         !thisDef->mightBeType(MIRType::Object) ||
         !thisDef->resultTypeSet() ||
-        !thisDef->resultTypeSet()->objectOrSentinel())
+        !thisDef->resultTypeSet()->objectOrSentinel() ||
+        calleeDef->isPhi())
     {
         return Ok();
     }
@@ -10951,7 +10955,7 @@ IonBuilder::improveThisTypesForCall()
     // FilterTypeSetPolicy::adjustInputs will insert an infallible Unbox(Object)
     // for the input. Don't hoist this unbox above the getprop or getelem
     // operation.
-    filter->setDependency(current->peek(-1)->toInstruction());
+    filter->setDependency(calleeDef);
     return Ok();
 }
 

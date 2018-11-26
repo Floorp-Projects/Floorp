@@ -13,6 +13,7 @@
 #include "nsWeakReference.h"
 
 #include "unicode/uidna.h"
+#include "mozilla/net/IDNBlocklistUtils.h"
 
 #include "nsString.h"
 
@@ -164,7 +165,7 @@ private:
   UIDNA* mIDNA;
 
   // We use this mutex to guard access to:
-  // |mIDNBlacklist|, |mShowPunycode|, |mRestrictionProfile|,
+  // |mIDNBlocklist|, |mShowPunycode|, |mRestrictionProfile|,
   // |mIDNUseWhitelist|.
   //
   // These members can only be updated on the main thread and
@@ -173,7 +174,7 @@ private:
   mozilla::Mutex mLock;
 
   // guarded by mLock
-  nsString mIDNBlacklist;
+  nsTArray<mozilla::net::BlocklistRange> mIDNBlocklist;
 
   /**
    * Flag set by the pref network.IDN_show_punycode. When it is true,

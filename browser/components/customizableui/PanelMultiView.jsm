@@ -391,10 +391,6 @@ var PanelMultiView = class extends AssociatedToNode {
     this._panel.addEventListener("popuppositioned", this);
     this._panel.addEventListener("popuphidden", this);
     this._panel.addEventListener("popupshown", this);
-    let cs = this.window.getComputedStyle(this.document.documentElement);
-    // Set CSS-determined attributes now to prevent a layout flush when we do
-    // it when transitioning between panels.
-    this._dir = cs.direction;
 
     // Proxy these public properties and methods, as used elsewhere by various
     // parts of the browser, to this instance.
@@ -930,7 +926,7 @@ var PanelMultiView = class extends AssociatedToNode {
     details.phase = TRANSITION_PHASES.PREPARE;
 
     // The 'magic' part: build up the amount of pixels to move right or left.
-    let moveToLeft = (this._dir == "rtl" && !reverse) || (this._dir == "ltr" && reverse);
+    let moveToLeft = (this.window.RTL_UI && !reverse) || (!this.window.RTL_UI && reverse);
     let deltaX = prevPanelView.knownWidth;
     let deepestNode = reverse ? previousViewNode : viewNode;
 
@@ -1094,7 +1090,7 @@ var PanelMultiView = class extends AssociatedToNode {
         // already showing and stop listening when the panel is hidden, we
         // always have at least one view open.
         let currentView = this.openViews[this.openViews.length - 1];
-        currentView.keyNavigation(aEvent, this._dir);
+        currentView.keyNavigation(aEvent);
         break;
       case "mousemove":
         this.openViews.forEach(panelView => panelView.clearNavigation());
@@ -1521,10 +1517,8 @@ var PanelView = class extends AssociatedToNode {
    * method will return early if it is invoked during a sliding transition.
    *
    * @param {KeyEvent} event
-   * @param {String} dir
-   *        Direction for arrow navigation, either "ltr" or "rtl".
    */
-  keyNavigation(event, dir) {
+  keyNavigation(event) {
     if (!this.active) {
       return;
     }
@@ -1562,8 +1556,8 @@ var PanelView = class extends AssociatedToNode {
       case "ArrowLeft":
       case "ArrowRight": {
         stop();
-        if ((dir == "ltr" && keyCode == "ArrowLeft") ||
-            (dir == "rtl" && keyCode == "ArrowRight")) {
+        if ((!this.window.RTL_UI && keyCode == "ArrowLeft") ||
+            (this.window.RTL_UI && keyCode == "ArrowRight")) {
           this.node.panelMultiView.goBack();
           break;
         }

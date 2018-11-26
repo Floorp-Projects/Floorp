@@ -99,12 +99,14 @@ AdjustCaretFrameForLineEnd(nsIFrame** aFrame, int32_t* aOffset)
   for (nsIFrame* f = line->mFirstChild; count > 0; --count, f = f->GetNextSibling())
   {
     nsIFrame* r = CheckForTrailingTextFrameRecursive(f, *aFrame);
-    if (r == *aFrame)
+    if (r == *aFrame) {
       return;
-    if (r)
-    {
+    }
+    if (r) {
+      // We found our frame, but we may not be able to properly paint the caret if
+      // -moz-user-modify differs from our actual frame.
+      MOZ_ASSERT(r->IsTextFrame(), "Expected text frame");
       *aFrame = r;
-      NS_ASSERTION(r->IsTextFrame(), "Expected text frame");
       *aOffset = (static_cast<nsTextFrame*>(r))->GetContentEnd();
       return;
     }
@@ -380,8 +382,13 @@ nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
 nsIFrame*
 nsCaret::GetFrameAndOffset(Selection* aSelection,
                            nsINode* aOverrideNode, int32_t aOverrideOffset,
-                           int32_t* aFrameOffset)
+                           int32_t* aFrameOffset,
+                           nsIFrame** aUnadjustedFrame)
 {
+  if (aUnadjustedFrame) {
+    *aUnadjustedFrame = nullptr;
+  }
+
   nsINode* focusNode;
   int32_t focusOffset;
 
@@ -405,11 +412,11 @@ nsCaret::GetFrameAndOffset(Selection* aSelection,
   nsIFrame* frame;
   nsresult rv = nsCaret::GetCaretFrameForNodeOffset(
       frameSelection, contentNode, focusOffset,
-      frameSelection->GetHint(), bidiLevel, &frame, aFrameOffset);
+      frameSelection->GetHint(), bidiLevel, &frame, aUnadjustedFrame,
+      aFrameOffset);
   if (NS_FAILED(rv) || !frame) {
     return nullptr;
   }
-
   return frame;
 }
 
@@ -493,16 +500,26 @@ nsCaret::GetPaintGeometry(nsRect* aRect)
   CheckSelectionLanguageChange();
 
   int32_t frameOffset;
+  nsIFrame* unadjustedFrame = nullptr;
   nsIFrame* frame = GetFrameAndOffset(GetSelection(),
-      mOverrideContent, mOverrideOffset, &frameOffset);
+      mOverrideContent, mOverrideOffset, &frameOffset, &unadjustedFrame);
+  MOZ_ASSERT(!!frame == !!unadjustedFrame);
   if (!frame) {
     return nullptr;
   }
 
-  // now we have a frame, check whether it's appropriate to show the caret here
-  const nsStyleUI* ui = frame->StyleUI();
+  // Now we have a frame, check whether it's appropriate to show the caret here.
+  // Note we need to check the unadjusted frame, otherwise consider the
+  // following case:
+  //
+  //   <div contenteditable><span contenteditable=false>Text   </span><br>
+  //
+  // Where the selection is targeting the <br>. We want to display the caret,
+  // since the <br> we're focused at is editable, but we do want to paint it at
+  // the adjusted frame offset, so that we can see the collapsed whitespace.
+  const nsStyleUI* ui = unadjustedFrame->StyleUI();
   if ((!mIgnoreUserModify && ui->mUserModify == StyleUserModify::ReadOnly) ||
-      frame->IsContentDisabled()) {
+      unadjustedFrame->IsContentDisabled()) {
     return nullptr;
   }
 
@@ -645,6 +662,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsFrameSelection*    aFrameSelection,
                                     CaretAssociationHint aFrameHint,
                                     nsBidiLevel          aBidiLevel,
                                     nsIFrame**           aReturnFrame,
+                                    nsIFrame**           aReturnUnadjustedFrame,
                                     int32_t*             aReturnOffset)
 {
   if (!aFrameSelection)
@@ -665,6 +683,10 @@ nsCaret::GetCaretFrameForNodeOffset(nsFrameSelection*    aFrameSelection,
   if (!theFrame)
     return NS_ERROR_FAILURE;
 
+  if (aReturnUnadjustedFrame) {
+    *aReturnUnadjustedFrame = theFrame;
+  }
+
   // if theFrame is after a text frame that's logically at the end of the line
   // (e.g. if theFrame is a <br> frame), then put the caret at the end of
   // that text frame instead. This way, the caret will be positioned as if
@@ -677,8 +699,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsFrameSelection*    aFrameSelection,
   // ------------------
   // NS_STYLE_DIRECTION_LTR : LTR or Default
   // NS_STYLE_DIRECTION_RTL
-  if (theFrame->PresContext()->BidiEnabled())
-  {
+  if (theFrame->PresContext()->BidiEnabled()) {
     // If there has been a reflow, take the caret Bidi level to be the level of the current frame
     if (aBidiLevel & BIDI_LEVEL_UNDEFINED) {
       aBidiLevel = theFrame->GetEmbeddingLevel();

@@ -3865,9 +3865,8 @@ window._gBrowser = {
   },
 
   moveTabOver(aEvent) {
-    let direction = window.getComputedStyle(document.documentElement).direction;
-    if ((direction == "ltr" && aEvent.keyCode == KeyEvent.DOM_VK_RIGHT) ||
-        (direction == "rtl" && aEvent.keyCode == KeyEvent.DOM_VK_LEFT)) {
+    if ((!RTL_UI && aEvent.keyCode == KeyEvent.DOM_VK_RIGHT) ||
+        (RTL_UI && aEvent.keyCode == KeyEvent.DOM_VK_LEFT)) {
       this.moveTabForward();
     } else {
       this.moveTabBackward();
@@ -4244,7 +4243,7 @@ window._gBrowser = {
         case "}".charCodeAt(0):
           offset = -1;
         case "{".charCodeAt(0):
-          if (window.getComputedStyle(document.documentElement).direction == "ltr")
+          if (!RTL_UI)
             offset *= -1;
           this.tabContainer.advanceSelectedTab(offset, true);
           aEvent.preventDefault();
@@ -5328,15 +5327,14 @@ var StatusPanel = {
 
   getMouseTargetRect() {
     let container = this.panel.parentNode;
-    let alignRight = document.documentElement.matches(":-moz-locale-dir(rtl)");
     let panelRect = window.windowUtils.getBoundsWithoutFlushing(this.panel);
     let containerRect = window.windowUtils.getBoundsWithoutFlushing(container);
 
     return {
       top:    panelRect.top,
       bottom: panelRect.bottom,
-      left:   alignRight ? containerRect.right - panelRect.width : containerRect.left,
-      right:  alignRight ? containerRect.right : containerRect.left + panelRect.width,
+      left:   RTL_UI ? containerRect.right - panelRect.width : containerRect.left,
+      right:  RTL_UI ? containerRect.right : containerRect.left + panelRect.width,
     };
   },
 

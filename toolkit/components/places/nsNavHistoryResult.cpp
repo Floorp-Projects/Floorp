@@ -806,9 +806,6 @@ nsNavHistoryContainerResultNode::SetAsParentOfNode(nsNavHistoryResultNode* aNode
     if (mOptions->ExcludeQueries()) {
       container->mOptions->SetExcludeQueries(true);
     }
-    if (mOptions->ExcludeReadOnlyFolders()) {
-      container->mOptions->SetExcludeReadOnlyFolders(true);
-    }
     if (aNode->IsFolder() && mOptions->AsyncEnabled()) {
       container->mOptions->SetAsyncEnabled(true);
     }
@@ -3309,8 +3306,7 @@ nsNavHistoryFolderResultNode::StartIncrementalUpdate()
   // indices from the bookmark service will not be valid
 
   if (!mOptions->ExcludeItems() &&
-      !mOptions->ExcludeQueries() &&
-      !mOptions->ExcludeReadOnlyFolders()) {
+      !mOptions->ExcludeQueries()) {
     // easy case: we are visible, always do incremental update
     if (mExpanded || AreChildrenVisible())
       return true;
