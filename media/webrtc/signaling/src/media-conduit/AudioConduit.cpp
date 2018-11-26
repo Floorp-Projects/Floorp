@@ -110,17 +110,7 @@ bool WebrtcAudioConduit::SetLocalSSRCs(const std::vector<unsigned int> & aSSRCs)
 
   mRecvChannelProxy->SetLocalSSRC(aSSRCs[0]);
 
-  bool wasTransmitting = mEngineTransmitting;
-  if (StopTransmitting() != kMediaConduitNoError) {
-    return false;
-  }
-
-  if (wasTransmitting) {
-    if (StartTransmitting() != kMediaConduitNoError) {
-      return false;
-    }
-  }
-  return true;
+  return RecreateSendStreamIfExists();
 }
 
 std::vector<unsigned int> WebrtcAudioConduit::GetLocalSSRCs() {
@@ -136,27 +126,7 @@ bool WebrtcAudioConduit::SetRemoteSSRC(unsigned int ssrc) {
   }
   mRecvStreamConfig.rtp.remote_ssrc = ssrc;
 
-  bool wasReceiving = mEngineReceiving;
-  if (StopReceiving() != kMediaConduitNoError) {
-    return false;
-  }
-
-  {
-    MutexAutoLock lock(mMutex);
-    // On the next StartReceiving() or ConfigureRecvMediaCodec, force
-    // building a new RecvStream to switch SSRCs.
-    DeleteRecvStream();
-    if (!wasReceiving) {
-      return true;
-    }
-    MediaConduitErrorCode rval = CreateRecvStream();
-    if (rval != kMediaConduitNoError) {
-      CSFLogError(LOGTAG, "%s Start Receive Error %d ", __FUNCTION__, rval);
-      return false;
-    }
-  }
-  return (StartReceiving() == kMediaConduitNoError);
-
+  return RecreateRecvStreamIfExists();
 }
 
 bool WebrtcAudioConduit::GetRemoteSSRC(unsigned int* ssrc) {
@@ -197,7 +167,7 @@ bool WebrtcAudioConduit::GetSendPacketTypeStats(
   webrtc::RtcpPacketTypeCounter* aPacketCounts)
 {
   ASSERT_ON_THREAD(mStsThread);
-  if (!mEngineTransmitting) {
+  if (!mSendStream) {
     return false;
   }
   return mSendChannelProxy->GetRTCPPacketTypeCounters(*aPacketCounts);
@@ -534,29 +504,25 @@ MediaConduitErrorCode
 WebrtcAudioConduit::SetLocalRTPExtensions(LocalDirection aDirection,
                                           const RtpExtList& extensions)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   CSFLogDebug(LOGTAG, "%s direction: %s", __FUNCTION__,
               MediaSessionConduit::LocalDirectionToString(aDirection).c_str());
-  MOZ_ASSERT(NS_IsMainThread());
 
   bool isSend = aDirection == LocalDirection::kSend;
-  if (isSend) {
-    mSendStreamConfig.rtp.extensions.clear();
-  } else {
-    mRecvStreamConfig.rtp.extensions.clear();
-  }
+  RtpExtList filteredExtensions;
+
+  int ssrcAudioLevelId = -1;
+  int csrcAudioLevelId = -1;
+  int midId = -1;
+
   for(const auto& extension : extensions) {
     // ssrc-audio-level RTP header extension
     if (extension.uri == webrtc::RtpExtension::kAudioLevelUri) {
-      if (isSend) {
-        mSendStreamConfig.rtp.extensions.push_back(
-          webrtc::RtpExtension(extension.uri, extension.id));
-        mSendChannelProxy->SetSendAudioLevelIndicationStatus(true, extension.id);
-      } else {
-        mRecvStreamConfig.rtp.extensions.push_back(
-          webrtc::RtpExtension(extension.uri, extension.id));
-        mRecvChannelProxy->SetReceiveAudioLevelIndicationStatus(true, extension.id);
-      }
+      ssrcAudioLevelId = extension.id;
+      filteredExtensions.push_back(webrtc::RtpExtension(
+            extension.uri, extension.id));
     }
+
     // csrc-audio-level RTP header extension
     if (extension.uri == webrtc::RtpExtension::kCsrcAudioLevelUri) {
       if (isSend) {
@@ -564,18 +530,50 @@ WebrtcAudioConduit::SetLocalRTPExtensions(LocalDirection aDirection,
                     " can not send CSRC audio levels.", __FUNCTION__);
         return kMediaConduitMalformedArgument;
       }
-      mRecvStreamConfig.rtp.extensions.push_back(
-        webrtc::RtpExtension(extension.uri, extension.id));
-      mRecvChannelProxy->SetReceiveCsrcAudioLevelIndicationStatus(true, extension.id);
+      csrcAudioLevelId = extension.id;
+      filteredExtensions.push_back(webrtc::RtpExtension(
+            extension.uri, extension.id));
     }
+
     // MID RTP header extension
-    if (aDirection == LocalDirection::kSend &&
-        extension.uri == webrtc::RtpExtension::kMIdUri) {
-        mSendStreamConfig.rtp.extensions.push_back(
-          webrtc::RtpExtension(extension.uri, extension.id));
-        mSendChannelProxy->SetSendMIDStatus(true, extension.id);
+    if (extension.uri == webrtc::RtpExtension::kMIdUri) {
+      if (!isSend) {
+        // TODO(bug 1405495): Why do we error out for csrc-audio-level, but not
+        // mid?
+        continue;
+      }
+      midId = extension.id;
+      filteredExtensions.push_back(webrtc::RtpExtension(
+            extension.uri, extension.id));
     }
   }
+
+  auto& currentExtensions = isSend ?
+    mSendStreamConfig.rtp.extensions : mRecvStreamConfig.rtp.extensions;
+  if (filteredExtensions == currentExtensions) {
+    return kMediaConduitNoError;
+  }
+
+  currentExtensions = filteredExtensions;
+
+  if (isSend) {
+    mSendChannelProxy->SetSendAudioLevelIndicationStatus(
+        ssrcAudioLevelId != -1, ssrcAudioLevelId);
+    mSendChannelProxy->SetSendMIDStatus(midId != -1, midId);
+  } else {
+    mRecvChannelProxy->SetReceiveAudioLevelIndicationStatus(
+        ssrcAudioLevelId != -1, ssrcAudioLevelId);
+    mRecvChannelProxy->SetReceiveCsrcAudioLevelIndicationStatus(
+        csrcAudioLevelId != -1, csrcAudioLevelId);
+    // TODO(bug 1405495): recv mid support
+  }
+
+  if (isSend) {
+    RecreateSendStreamIfExists();
+  } else {
+    RecreateRecvStreamIfExists();
+  }
+
   return kMediaConduitNoError;
 }
 
@@ -838,8 +836,9 @@ WebrtcAudioConduit::StopTransmittingLocked()
 
   if(mEngineTransmitting)
   {
+    MOZ_ASSERT(mSendStream);
     CSFLogDebug(LOGTAG, "%s Engine Already Sending. Attemping to Stop ", __FUNCTION__);
-    DeleteSendStream();
+    mSendStream->Stop();
     mEngineTransmitting = false;
   }
 
@@ -852,12 +851,17 @@ WebrtcAudioConduit::StartTransmittingLocked()
   MOZ_ASSERT(NS_IsMainThread());
   mMutex.AssertCurrentThreadOwns();
 
-  if (!mEngineTransmitting) {
-    CreateSendStream();
-    mCall->Call()->SignalChannelNetworkState(webrtc::MediaType::AUDIO, webrtc::kNetworkUp);
-    mSendStream->Start();
-    mEngineTransmitting = true;
+  if (mEngineTransmitting) {
+    return kMediaConduitNoError;
   }
+
+  if (!mSendStream) {
+    CreateSendStream();
+  }
+
+  mCall->Call()->SignalChannelNetworkState(webrtc::MediaType::AUDIO, webrtc::kNetworkUp);
+  mSendStream->Start();
+  mEngineTransmitting = true;
 
   return kMediaConduitNoError;
 }
@@ -868,7 +872,8 @@ WebrtcAudioConduit::StopReceivingLocked()
   MOZ_ASSERT(NS_IsMainThread());
   mMutex.AssertCurrentThreadOwns();
 
-  if(mEngineReceiving && mRecvStream) {
+  if(mEngineReceiving) {
+    MOZ_ASSERT(mRecvStream);
     mRecvStream->Stop();
     mEngineReceiving = false;
   }
@@ -886,7 +891,10 @@ WebrtcAudioConduit::StartReceivingLocked()
     return kMediaConduitNoError;
   }
 
-  CreateRecvStream();
+  if (!mRecvStream) {
+    CreateRecvStream();
+  }
+
   mCall->Call()->SignalChannelNetworkState(webrtc::MediaType::AUDIO, webrtc::kNetworkUp);
   mRecvStream->Start();
   mEngineReceiving = true;
@@ -1063,6 +1071,7 @@ WebrtcAudioConduit::DeleteRecvStream()
   mMutex.AssertCurrentThreadOwns();
   if (mRecvStream) {
     mRecvStream->Stop();
+    mEngineReceiving = false;
     mCall->Call()->DestroyAudioReceiveStream(mRecvStream);
     mRecvStream = nullptr;
   }
@@ -1082,6 +1091,46 @@ WebrtcAudioConduit::CreateRecvStream()
   }
 
   return kMediaConduitNoError;
+}
+
+bool
+WebrtcAudioConduit::RecreateSendStreamIfExists()
+{
+  MutexAutoLock lock(mMutex);
+  bool wasTransmitting = mEngineTransmitting;
+  bool hadSendStream = mSendStream;
+  DeleteSendStream();
+
+  if (wasTransmitting) {
+    if (StartTransmittingLocked() != kMediaConduitNoError) {
+      return false;
+    }
+  } else if (hadSendStream) {
+    if (CreateSendStream() != kMediaConduitNoError) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool
+WebrtcAudioConduit::RecreateRecvStreamIfExists()
+{
+  MutexAutoLock lock(mMutex);
+  bool wasReceiving = mEngineReceiving;
+  bool hadRecvStream = mRecvStream;
+  DeleteRecvStream();
+
+  if (wasReceiving) {
+    if (StartReceivingLocked() != kMediaConduitNoError) {
+      return false;
+    }
+  } else if (hadRecvStream) {
+    if (CreateRecvStream() != kMediaConduitNoError) {
+      return false;
+    }
+  }
+  return true;
 }
 
 MediaConduitErrorCode

@@ -297,6 +297,9 @@ private:
   MediaConduitErrorCode CreateRecvStream();
   void DeleteRecvStream();
 
+  bool RecreateSendStreamIfExists();
+  bool RecreateRecvStreamIfExists();
+
   MediaConduitErrorCode CreateChannels();
   virtual void DeleteChannels();
 
