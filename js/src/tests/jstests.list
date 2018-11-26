@@ -505,7 +505,6 @@ skip script test262/language/expressions/dynamic-import/eval-export-dflt-expr-in
 skip script test262/language/expressions/dynamic-import/for-await-resolution-and-error.js
 skip script test262/language/expressions/dynamic-import/eval-export-dflt-cls-named.js
 skip script test262/language/expressions/dynamic-import/eval-export-dflt-expr-gen-anon.js
-skip script test262/language/expressions/dynamic-import/indirect-resolution.js
 skip script test262/language/expressions/dynamic-import/eval-export-dflt-expr-cls-named.js
 skip script test262/language/expressions/dynamic-import/for-await-resolution-and-error-agen.js
 skip script test262/language/expressions/dynamic-import/eval-export-dflt-expr-fn-anon.js
