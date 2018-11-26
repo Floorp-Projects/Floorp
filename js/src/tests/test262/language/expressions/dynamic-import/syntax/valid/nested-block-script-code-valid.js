@@ -1,4 +1,4 @@
-// |reftest| skip -- dynamic-import is not supported
+// |reftest| 
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/script-code-valid.case
 // - src/dynamic-import/syntax/valid/nested-block.template

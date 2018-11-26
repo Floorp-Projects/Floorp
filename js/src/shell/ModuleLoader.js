@@ -24,6 +24,8 @@ const StringPrototypeLastIndexOf = String.prototype.lastIndexOf;
 const StringPrototypeStartsWith = String.prototype.startsWith;
 const StringPrototypeSubstring = String.prototype.substring;
 const ErrorClass = Error;
+const PromiseClass = Promise;
+const PromiseResolve = Promise.resolve;
 
 const JAVASCRIPT_SCHEME = "javascript:";
 
@@ -214,6 +216,17 @@ const ReflectLoader = new class {
         }
         metaObject.url = path;
     }
+
+    dynamicImport(referencingInfo, specifier, promise) {
+        ReflectApply(PromiseResolve, PromiseClass, [])
+            .then(_ => {
+                let path = ReflectLoader.resolve(specifier, referencingInfo);
+                ReflectLoader.loadAndExecute(path);
+                finishDynamicModuleImport(referencingInfo, specifier, promise);
+            }).catch(err => {
+                abortDynamicModuleImport(referencingInfo, specifier, promise, err);
+            });
+    }
 };
 
 setModuleLoadHook((path) => ReflectLoader.importRoot(path));
@@ -228,13 +241,7 @@ setModuleMetadataHook((module, metaObject) => {
 });
 
 setModuleDynamicImportHook((referencingInfo, specifier, promise) => {
-    try {
-        let path = ReflectLoader.resolve(specifier, referencingInfo);
-        ReflectLoader.loadAndExecute(path);
-        finishDynamicModuleImport(referencingInfo, specifier, promise);
-    } catch (err) {
-        abortDynamicModuleImport(referencingInfo, specifier, promise, err);
-    }
+    ReflectLoader.dynamicImport(referencingInfo, specifier, promise);
 });
 
 }
