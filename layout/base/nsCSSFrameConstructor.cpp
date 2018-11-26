@@ -1035,8 +1035,7 @@ nsFrameConstructorState::~nsFrameConstructorState()
   if (!mPendingBindings.isEmpty()) {
     nsBindingManager* bindingManager = mPresShell->GetDocument()->BindingManager();
     do {
-      nsAutoPtr<PendingBinding> pendingBinding;
-      pendingBinding = mPendingBindings.popFirst();
+      UniquePtr<PendingBinding> pendingBinding(mPendingBindings.popFirst());
       bindingManager->AddToAttachedQueue(pendingBinding->mBinding);
     } while (!mPendingBindings.isEmpty());
     mCurrentPendingBindingInsertionPoint = nullptr;
@@ -3455,10 +3454,9 @@ nsCSSFrameConstructor::ConstructTextFrame(const FrameConstructionData* aData,
   // We never need to create a view for a text frame.
 
   if (newFrame->IsGeneratedContentFrame()) {
-    nsAutoPtr<nsGenConInitializer> initializer;
-    initializer =
+    UniquePtr<nsGenConInitializer> initializer(
       static_cast<nsGenConInitializer*>(
-        aContent->UnsetProperty(nsGkAtoms::genConInitializerProperty));
+        aContent->UnsetProperty(nsGkAtoms::genConInitializerProperty)));
     if (initializer) {
       if (initializer->mNode->InitTextFrame(initializer->mList,
               FindAncestorWithGeneratedContentPseudo(newFrame), newFrame)) {
