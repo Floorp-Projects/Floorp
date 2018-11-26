@@ -15,7 +15,6 @@ import kotlinx.android.synthetic.main.fragment_browser.*
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
-import mozilla.components.feature.downloads.SimpleDownloadDialogFragment.DownloadDialogListener
 import mozilla.components.feature.session.CoordinateScrollingFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.storage.HistoryTrackingFeature
@@ -25,7 +24,7 @@ import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import org.mozilla.samples.browser.ext.components
 
-class BrowserFragment : Fragment(), BackHandler, DownloadDialogListener {
+class BrowserFragment : Fragment(), BackHandler {
     private lateinit var sessionFeature: SessionFeature
     private lateinit var toolbarFeature: ToolbarFeature
     private lateinit var toolbarAutocompleteFeature: ToolbarAutocompleteFeature

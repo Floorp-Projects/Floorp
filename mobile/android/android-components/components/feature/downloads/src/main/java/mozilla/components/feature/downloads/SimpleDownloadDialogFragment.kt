@@ -22,17 +22,8 @@ import mozilla.components.feature.downloads.R.string.mozac_feature_downloads_dia
  * It is composed by a title, a negative and a positive bottoms. When the positive button is clicked
  * the download it triggered.
  *
- * Consumers must implement the [DownloadDialogListener] interface on their Activity/Fragment to ensure
- * that they will get notified on positiveButtonClick and negativeButtonClick events after
- * activity/fragment is recreated.
- *
- * If you are using this class from a [android.support.v4.app.Fragment] you must use a childFragmentManager or you
- * will get a [ClassCastException].
  */
 class SimpleDownloadDialogFragment : DownloadDialogFragment() {
-
-    @VisibleForTesting
-    internal var buttonsListener: DownloadDialogListener? = null
 
     @VisibleForTesting
     internal var testingContext: Context? = null
@@ -55,25 +46,13 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
                 .setTitle(dialogTitleText)
                 .setMessage(fileName)
                 .setPositiveButton(positiveButtonText) { _, _ ->
-                    buttonsListener?.onPositiveButtonClick()
                     onStartDownload()
                 }
                 .setNegativeButton(negativeButtonText) { _, _ ->
-                    buttonsListener?.onNegativeButtonClick()
+                    dismiss()
                 }
                 .setCancelable(cancelable)
                 .create()
-        }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        buttonsListener = context as? DownloadDialogListener
-        buttonsListener = buttonsListener ?: parentFragment as? DownloadDialogListener
-
-        if (buttonsListener == null) {
-            throw ClassCastException("$context must implement DownloadDialogListener")
         }
     }
 
@@ -121,10 +100,5 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
 
     private fun requireBundle(): Bundle {
         return arguments ?: throw IllegalStateException("Fragment " + this + " arguments is not set.")
-    }
-
-    interface DownloadDialogListener {
-        fun onPositiveButtonClick() = Unit
-        fun onNegativeButtonClick() = Unit
     }
 }

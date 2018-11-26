@@ -153,31 +153,6 @@ Customizing SimpleDownloadDialogFragment.
         downloadsFeature.start()
   ```
 
-### Things to keep in mind:
-
-:squirrel: You must implement the DownloadDialogListener interface to ensure that you will get notified notify on positiveButtonClick and negativeButtonClick events after activity/fragment recreations, if you don't do that you will get a ClassCastException.
-
-```kotlin
-    interface DownloadDialogListener {
-        fun onPositiveButtonClick() = Unit
-        fun onNegativeButtonClick() = Unit
-    }
-  ```
-
-🕵️ If you are using SimpleDownloadDialogFragment class from a  Fragment you must use a childFragmentManager you will get a ClassCastException.
-
-```kotlin
-        val dialog = SimpleDownloadDialogFragment.newInstance()
-
-        downloadsFeature = DownloadsFeature(
-            requireContext(),
-            sessionManager = components.sessionManager,
-            fragmentManager = childFragmentManager,
-            dialog = dialog
-        )
-
-        downloadsFeature.start()
-  ```
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public
