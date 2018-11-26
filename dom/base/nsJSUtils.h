@@ -227,7 +227,7 @@ inline bool
 AssignJSString(JSContext *cx, T &dest, JSString *s)
 {
   size_t len = JS::GetStringLength(s);
-  static_assert(js::MaxStringLength < (1 << 28),
+  static_assert(js::MaxStringLength < (1 << 30),
                 "Shouldn't overflow here or in SetCapacity");
   if (MOZ_UNLIKELY(!dest.SetLength(len, mozilla::fallible))) {
     JS_ReportOutOfMemory(cx);
@@ -240,7 +240,7 @@ inline void
 AssignJSFlatString(nsAString &dest, JSFlatString *s)
 {
   size_t len = js::GetFlatStringLength(s);
-  static_assert(js::MaxStringLength < (1 << 28),
+  static_assert(js::MaxStringLength < (1 << 30),
                 "Shouldn't overflow here or in SetCapacity");
   dest.SetLength(len);
   js::CopyFlatStringChars(dest.BeginWriting(), s, len);
