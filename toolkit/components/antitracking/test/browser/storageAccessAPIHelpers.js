@@ -98,6 +98,7 @@ async function callRequestStorageAccess(callback) {
   is(hasAccess, success,
      "Should " + (success ? "" : "not ") + "have storage access now");
   if (success && rejectTrackers &&
+      window.location.search != "?disableWaitUntilPermission" &&
       origin != "https://another-tracking.example.net") {
     // Wait until the permission is visible in our process to avoid race
     // conditions.
