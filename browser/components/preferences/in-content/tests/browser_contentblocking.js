@@ -1,7 +1,5 @@
 /* eslint-env webextensions */
 
-const CB_TP_UI_PREF = "browser.contentblocking.trackingprotection.ui.enabled";
-const CB_RT_UI_PREF = "browser.contentblocking.rejecttrackers.ui.enabled";
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PBM_PREF = "privacy.trackingprotection.pbmode.enabled";
 const TP_LIST_PREF = "urlclassifier.trackingTable";
@@ -255,8 +253,6 @@ function checkControlState(doc, controls, enabled) {
 // Checks that the menulists for tracking protection and cookie blocking are disabled when all TP prefs are off.
 add_task(async function testContentBlockingDependentTPControls() {
   SpecialPowers.pushPrefEnv({set: [
-    [CB_TP_UI_PREF, true],
-    [CB_RT_UI_PREF, true],
     [TP_PREF, false],
     [TP_PBM_PREF, false],
     [NCB_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT],

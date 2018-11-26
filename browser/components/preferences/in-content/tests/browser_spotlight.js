@@ -51,10 +51,6 @@ add_task(async function test_form_autofill_section() {
 });
 
 add_task(async function test_change_cookie_settings() {
-  await SpecialPowers.pushPrefEnv({set: [
-    ["browser.contentblocking.trackingprotection.ui.enabled", true],
-    ["browser.contentblocking.rejecttrackers.ui.enabled", true],
-  ]});
   let prefs = await openPreferencesViaOpenPreferencesAPI("privacy-trackingprotection", {leaveOpen: true});
   is(prefs.selectedPane, "panePrivacy", "Privacy pane is selected by default");
   let doc = gBrowser.contentDocument;
