@@ -688,9 +688,6 @@ private:
     // Called on untail when tailed because of being a tracking resource.
     nsresult ConnectOnTailUnblock();
 
-    // Check if current channel should be canceled by FastBlock rules.
-    bool CheckFastBlocked();
-
     nsCString mUsername;
 
     // If non-null, warnings should be reported to this object.
