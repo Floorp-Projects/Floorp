@@ -1,4 +1,4 @@
-// |reftest| skip module -- dynamic-import is not supported
+// |reftest| module
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/eval-script-code-target.case
 // - src/dynamic-import/catch/nested-function.template

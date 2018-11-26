@@ -401,6 +401,7 @@ description#identity-popup-content-verifier,
 
 #identity-popup-content-blocking-category-tracking-protection {
   /* Overwrite toolbarbutton styles */
+  -moz-appearance: none;
   margin: 0;
   padding-inline-start: 0;
 }

@@ -289,6 +289,7 @@ nsCSPContext::~nsCSPContext()
 NS_IMETHODIMP
 nsCSPContext::GetPolicyString(uint32_t aIndex, nsAString& outStr)
 {
+  outStr.Truncate();
   if (aIndex >= mPolicies.Length()) {
     return NS_ERROR_ILLEGAL_VALUE;
   }

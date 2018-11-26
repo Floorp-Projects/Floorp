@@ -62,12 +62,12 @@ public:
   /**
    * Create a FilterDescription for the supplied filter. All coordinates in
    * the description are in filter space.
-   * @param aFilterInputIsTainted Describes whether the SourceImage / SourceAlpha
-   *   input is tainted. This affects whether feDisplacementMap will respect
-   *   the filter input as its map input, and it affects the IsTainted() state
-   *   on the filter primitives in the FilterDescription. "Tainted" is a term
-   *   from the filters spec and means security-sensitive content, i.e. pixels
-   *   that JS should not be able to read in any way.
+   * @param aFilterInputIsTainted Describes whether the SourceImage /
+   *   SourceAlpha input is tainted. This affects whether feDisplacementMap
+   *   will respect the filter input as its map input, and it affects the
+   *   IsTainted() state on the filter primitives in the FilterDescription.
+   *   "Tainted" is a term from the filters spec and means security-sensitive
+   *   content, i.e. pixels that JS should not be able to read in any way.
    * @param aOutAdditionalImages Will contain additional images needed to
    *   render the filter (from feImage primitives).
    * @return A FilterDescription describing the filter.
@@ -95,8 +95,8 @@ public:
   /**
    * Returns the post-filter area that could be dirtied when the given
    * pre-filter area of aFilteredFrame changes.
-   * @param aPreFilterDirtyRegion The pre-filter area of aFilteredFrame that has
-   *   changed, relative to aFilteredFrame, in app units.
+   * @param aPreFilterDirtyRegion The pre-filter area of aFilteredFrame that
+   *   has changed, relative to aFilteredFrame, in app units.
    */
   static nsRegion GetPostFilterDirtyArea(nsIFrame *aFilteredFrame,
                                          const nsRegion& aPreFilterDirtyRegion);
@@ -138,9 +138,9 @@ private:
    * @param aTargetContent The filtered element itself.
    * @param aMetrics The metrics to resolve SVG lengths against.
    * @param aFilterChain The list of filters to apply.
-   * @param aFilterInputIsTainted Describes whether the SourceImage / SourceAlpha
-   *   input is tainted. This affects whether feDisplacementMap will respect
-   *   the filter input as its map input.
+   * @param aFilterInputIsTainted Describes whether the SourceImage /
+   *   SourceAlpha input is tainted. This affects whether feDisplacementMap
+   *   will respect the filter input as its map input.
    * @param aPaintCallback [optional] The callback that Render() should use to
    *   paint. Only required if you will call Render().
    * @param aPaintTransform The transform to apply to convert to

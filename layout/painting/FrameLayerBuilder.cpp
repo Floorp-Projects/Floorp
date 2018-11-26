@@ -5741,7 +5741,6 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
       layer->GetUserData(&gPaintedDisplayItemLayerUserData));
   RefPtr<BasicLayerManager> tempManager;
   nsIntRect intClip;
-  bool hasClip = false;
   if (aItem.mLayerState != LAYER_NONE) {
     if (aItem.mDisplayItemData) {
       tempManager = aItem.mDisplayItemData->mInactiveManager;
@@ -5902,10 +5901,6 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
       }
 
       invalid.ScaleRoundOut(paintedData->mXScale, paintedData->mYScale);
-
-      if (hasClip) {
-        invalid.And(invalid, intClip);
-      }
 
       InvalidatePostTransformRegion(
         layer, invalid, GetTranslationForPaintedLayer(layer));

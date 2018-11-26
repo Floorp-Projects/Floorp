@@ -1,4 +1,3 @@
-// |reftest| skip -- dynamic-import is not supported
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/returns-thenable.case
 // - src/dynamic-import/default/nested-arrow.template
