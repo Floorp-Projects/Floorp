@@ -918,7 +918,7 @@ DisplayListBuilder::DefineClipChain(const Maybe<wr::WrClipChainId>& aParent,
   WRDL_LOG("DefineClipChain id=%" PRIu64 " p=%s clips=%zu\n", mWrState,
       clipchainId,
       aParent ? Stringify(aParent->id).c_str() : "(nil)",
-      clipIds.Length());
+      aClips.Length());
   return wr::WrClipChainId{ clipchainId };
 }
 

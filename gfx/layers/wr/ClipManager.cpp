@@ -335,7 +335,7 @@ ClipManager::DefineClipChain(const DisplayItemClipChain* aChain,
                              int32_t aAppUnitsPerDevPixel,
                              const StackingContextHelper& aSc)
 {
-  nsTArray<wr::WrClipId> clipIds;
+  AutoTArray<wr::WrClipId, 6> clipIds;
   // Iterate through the clips in the current item's clip chain, define them
   // in WR, and put their IDs into |clipIds|.
   for (const DisplayItemClipChain* chain = aChain; chain; chain = chain->mParent) {
