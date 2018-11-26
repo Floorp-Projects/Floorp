@@ -169,8 +169,9 @@ class UrlbarView {
     actionIcon.className = "urlbarView-action-icon";
     content.appendChild(actionIcon);
 
-    let favicon = this._createElement("span");
+    let favicon = this._createElement("img");
     favicon.className = "urlbarView-favicon";
+    favicon.src = result.payload.icon || "chrome://mozapps/skin/places/defaultFavicon.svg";
     content.appendChild(favicon);
 
     let title = this._createElement("span");
