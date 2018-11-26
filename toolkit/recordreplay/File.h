@@ -197,6 +197,7 @@ private:
                     ShouldCopy aCopy);
   void EnsureInputBallast(size_t aSize);
   void Flush(bool aTakeLock);
+  const char* ReadInputString();
 
   static size_t BallastMaxSize();
 };
