@@ -19,9 +19,9 @@ private object Versions {
     const val lifecycle = "1.1.1"
 
     const val dokka = "0.9.16"
-    const val android_gradle_plugin = "3.1.4"
+    const val android_gradle_plugin = "3.2.1"
     const val maven_gradle_plugin = "2.1"
-    const val lint = "26.1.3"
+    const val lint = "26.2.1"
 
     const val jna = "4.5.2"
 
