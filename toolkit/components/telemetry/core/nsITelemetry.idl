@@ -116,25 +116,6 @@ interface nsITelemetry : nsISupports
   jsval getSnapshotForKeyedScalars(in ACString aStoreName, in boolean aClearStore, [optional] in boolean aFilterTest);
 
   /**
-   * Serializes the histograms from the given dataset to a JSON-style object.
-   * The returned structure looks like:
-   *   { "process": { "name1": histogramData1, "name2": histogramData2 }, ... }
-   *
-   * Each histogram is represented in a packed format and has the following properties:
-   *   bucket_count - Number of buckets of this histogram
-   *   histogram_type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR, HISTOGRAM_BOOLEAN,
-   *                    HISTOGRAM_FLAG, HISTOGRAM_COUNT, or HISTOGRAM_CATEGORICAL
-   *   sum - sum of the bucket contents
-   *   range - A 2-item array of minimum and maximum bucket size
-   *   values - Map from bucket to the bucket's count
-   *
-   * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
-   * @param aClear Whether to clear out the histograms after snapshotting
-   */
-  [implicit_jscontext]
-  jsval snapshotHistograms(in uint32_t aDataset, in boolean aClear);
-
-  /**
    * The amount of time, in milliseconds, that the last session took
    * to shutdown.  Reads as 0 to indicate failure.
    */
@@ -293,17 +274,6 @@ interface nsITelemetry : nsISupports
   jsval getHistogramById(in ACString id);
 
   /**
-   * Serializes the keyed histograms from the given dataset to a JSON-style object.
-   * The returned structure looks like:
-   *   { process1: {name1: {histogramData1}, name2:{histogramData2}...}}
-   *
-   * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
-   * @param aClear Whether to clear out the keyed histograms after snapshotting
-   */
-  [implicit_jscontext]
-  jsval snapshotKeyedHistograms(in uint32_t aDataset, in boolean aClear);
-
-  /**
    * Create and return a histogram registered in TelemetryHistograms.h.
    *
    * @param id - unique identifier from TelemetryHistograms.h
@@ -450,17 +420,6 @@ interface nsITelemetry : nsISupports
   void scalarSetMaximum(in ACString aName, in jsval aValue);
 
   /**
-   * Serializes the scalars from the given dataset to a JSON-style object and resets them.
-   * The returned structure looks like:
-   *   {"process": {"category1.probe":1,"category1.other_probe":false,...}, ... }.
-   *
-   * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
-   * @param [aClear=false] Whether to clear out the scalars after snapshotting.
-   */
-  [implicit_jscontext, optional_argc]
-  jsval snapshotScalars(in uint32_t aDataset, [optional] in boolean aClear);
-
-  /**
    * Adds the value to the given keyed scalar.
    *
    * @param aName The scalar name.
@@ -490,18 +449,6 @@ interface nsITelemetry : nsISupports
    */
   [implicit_jscontext]
   void keyedScalarSetMaximum(in ACString aName, in AString aKey, in jsval aValue);
-
-  /**
-   * Serializes the keyed scalars from the given dataset to a JSON-style object and
-   * resets them.
-   * The returned structure looks like:
-   *   { "process": { "category1.probe": { "key_1": 2, "key_2": 1, ... }, ... }, ... }
-   *
-   * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
-   * @param [aClear=false] Whether to clear out the scalars after snapshotting.
-   */
-  [implicit_jscontext, optional_argc]
-  jsval snapshotKeyedScalars(in uint32_t aDataset, [optional] in boolean aClear);
 
   /**
    * Resets all the stored scalars. This is intended to be only used in tests.
