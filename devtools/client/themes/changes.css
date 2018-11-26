@@ -26,12 +26,19 @@
 }
 
 #sidebar-panel-changes .href {
+  display: flex;
+  align-items: center;
   color: var(--theme-toolbar-color);
   background: var(--theme-toolbar-background);
   border-top: 1px solid var(--theme-splitter-color);
   border-bottom: 1px solid var(--theme-splitter-color);
   padding: 4px;
   font-size: 12px;
+}
+
+#sidebar-panel-changes .href span {
+  /* Allows trimming of flex item with overflow ellipsis within the flex container */
+  min-width: 0;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;

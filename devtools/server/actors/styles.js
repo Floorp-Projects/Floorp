@@ -110,6 +110,10 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     return this.inspector.conn;
   },
 
+  get ownerWindow() {
+    return this.inspector.targetActor.window;
+  },
+
   form: function(detail) {
     if (detail === "actorid") {
       return this.actorID;
@@ -1127,6 +1131,8 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         href: this.rawNode.baseURI,
         // Element style attributes don't have a rule index; use the generated selector.
         index: data.selector,
+        // Whether the element lives in a different frame than the host document.
+        isFramed: this.rawNode.ownerGlobal !== this.pageStyle.ownerWindow,
       };
       data.ruleIndex = 0;
     } else {
@@ -1134,9 +1140,12 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         ? this.rawRule.keyText
         : this.rawRule.selectorText;
       data.source = {
-        type: "stylesheet",
-        href: this.sheetActor.href,
+        // Inline stylesheets have a null href; Use window URL instead.
+        type: this.sheetActor.href ? "stylesheet" : "inline",
+        href: this.sheetActor.href || this.sheetActor.window.location.toString(),
         index: this.sheetActor.styleSheetIndex,
+        // Whether the stylesheet lives in a different frame than the host document.
+        isFramed: this.sheetActor.ownerWindow !== this.sheetActor.window,
       };
       // Used to differentiate between changes to rules with identical selectors.
       data.ruleIndex = this._ruleIndex;
