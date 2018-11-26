@@ -1220,6 +1220,11 @@ pub extern "C" fn wr_transaction_is_empty(txn: &Transaction) -> bool {
 }
 
 #[no_mangle]
+pub extern "C" fn wr_transaction_resource_updates_is_empty(txn: &Transaction) -> bool {
+    txn.resource_updates.is_empty()
+}
+
+#[no_mangle]
 pub extern "C" fn wr_transaction_notify(txn: &mut Transaction, when: Checkpoint, event: usize) {
     struct GeckoNotification(usize);
     impl NotificationHandler for GeckoNotification {
