@@ -1085,14 +1085,14 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
     // const so that we can move this structure all the way to the desired
     // destination.
     UpdateAPZScrollOffsets(std::move(const_cast<ScrollUpdatesMap&>(aUpdates)), aPaintSequenceNumber);
-    scheduleComposite = true;
   }
 
   wr::TransactionBuilder txn;
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
-  if (!aResourceUpdates.IsEmpty()) {
-    scheduleComposite = true;
-  }
+
+  // Update WrEpoch for UpdateResources() and ProcessWebRenderParentCommands().
+  // WrEpoch is used to manage ExternalImages lifetimes in AsyncImagePipelineManager.
+  Unused << GetNextWrEpoch();
 
   if (!UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems, txn)) {
     return IPC_FAIL(this, "Failed to deserialize resource updates");
@@ -1100,23 +1100,32 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
 
   if (!aCommands.IsEmpty()) {
     mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
-    wr::Epoch wrEpoch = GetNextWrEpoch();
-    txn.UpdateEpoch(mPipelineId, wrEpoch);
     if (!ProcessWebRenderParentCommands(aCommands, txn)) {
       return IPC_FAIL(this, "Invalid parent command found");
     }
-    if (ShouldParentObserveEpoch()) {
-      txn.Notify(
-        wr::Checkpoint::SceneBuilt,
-        MakeUnique<ScheduleObserveLayersUpdate>(
-          mCompositorBridge,
-          GetLayersId(),
-          mChildLayersObserverEpoch,
-          true
-        )
-      );
-    }
+  }
 
+  if (ShouldParentObserveEpoch()) {
+    txn.Notify(
+      wr::Checkpoint::SceneBuilt,
+      MakeUnique<ScheduleObserveLayersUpdate>(
+        mCompositorBridge,
+        GetLayersId(),
+        mChildLayersObserverEpoch,
+        true
+      )
+    );
+  }
+
+  if (txn.IsResourceUpdatesEmpty()) {
+    // If TransactionBuilder does not have resource updates nor display list,
+    // ScheduleGenerateFrame is not triggered via SceneBuilder and there is no
+    // need to update WrEpoch.
+    // Then we want to rollback WrEpoch. See Bug 1490117.
+    RollbackWrEpoch();
+  } else {
+    // There are resource updates, then we update Epoch of transaction.
+    txn.UpdateEpoch(mPipelineId, mWrEpoch);
     scheduleComposite = true;
   }
 
@@ -1149,6 +1158,10 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
                            /* aUseForTelemetry */scheduleComposite);
 
   if (scheduleComposite) {
+    // This is actually not necessary, since ScheduleGenerateFrame() is triggered
+    // via SceneBuilder thread. But if we remove it, it causes talos regression.
+    // The SceneBuilder thread seems not trigger next vsync right away.
+    // For now, we call ScheduleGenerateFrame() here.
     ScheduleGenerateFrame();
   } else if (sendDidComposite) {
     // The only thing in the pending transaction id queue should be the entry
@@ -2229,6 +2242,13 @@ WebRenderBridgeParent::GetNextWrEpoch()
   MOZ_RELEASE_ASSERT(mWrEpoch.mHandle != UINT32_MAX);
   mWrEpoch.mHandle++;
   return mWrEpoch;
+}
+
+void
+WebRenderBridgeParent::RollbackWrEpoch()
+{
+  MOZ_RELEASE_ASSERT(mWrEpoch.mHandle != 0);
+  mWrEpoch.mHandle--;
 }
 
 void
