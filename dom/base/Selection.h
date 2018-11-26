@@ -206,11 +206,7 @@ public:
     return mAnchorFocusRange;
   }
 
-  nsDirection GetDirection() const
-  {
-    return mDirection;
-  }
-
+  nsDirection  GetDirection(){return mDirection;}
   void         SetDirection(nsDirection aDir){mDirection = aDir;}
   nsresult     SetAnchorFocusToRange(nsRange *aRange);
   void         ReplaceAnchorFocusRange(nsRange *aRange);
@@ -240,22 +236,22 @@ public:
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL methods
-  nsINode* GetAnchorNode() const
+  nsINode* GetAnchorNode()
   {
     const RangeBoundary& anchor = AnchorRef();
     return anchor.IsSet() ? anchor.Container() : nullptr;
   }
-  uint32_t AnchorOffset() const
+  uint32_t AnchorOffset()
   {
     const RangeBoundary& anchor = AnchorRef();
     return anchor.IsSet() ? anchor.Offset() : 0;
   }
-  nsINode* GetFocusNode() const
+  nsINode* GetFocusNode()
   {
     const RangeBoundary& focus = FocusRef();
     return focus.IsSet() ? focus.Container() : nullptr;
   }
-  uint32_t FocusOffset() const
+  uint32_t FocusOffset()
   {
     const RangeBoundary& focus = FocusRef();
     return focus.IsSet() ? focus.Offset() : 0;
@@ -272,8 +268,8 @@ public:
     return focus.IsSet() ? focus.GetChildAtOffset() : nullptr;
   }
 
-  const RangeBoundary& AnchorRef() const;
-  const RangeBoundary& FocusRef() const;
+  const RangeBoundary& AnchorRef();
+  const RangeBoundary& FocusRef();
 
   /*
    * IsCollapsed -- is the whole selection just one point, or unset?
@@ -478,9 +474,6 @@ public:
   void AddSelectionChangeBlocker();
   void RemoveSelectionChangeBlocker();
   bool IsBlockingSelectionChangeEvents() const;
-
-  // Whether this selection is focused in an editable element.
-  bool IsEditorSelection() const;
 
   /**
    * Set the painting style for the range. The range must be a range in

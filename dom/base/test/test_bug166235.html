@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816298
 <p id="test2">This<span style="-moz-user-select: none;"><span style="-moz-user-select: text"> text should</span> NOT</span> be copied.</p>
 <p id="test3">This text should<span style="-moz-user-select: -moz-none;"> NOT</span> be copied.</p>
 <p id="test4">This<span style="-moz-user-select: -moz-none;"><span style="-moz-user-select: text"> text should</span> NOT</span> be copied.</p>
-<p id="test5">This<span style="-moz-user-select: all"> text should</span> be copied.</p>
+<p id="test5">This<span style="-moz-user-select: all"> text<span style="-moz-user-select: none"> should</span></span> be copied.</p>
 <div id="content" style="display: none">
   
 </div>
@@ -107,7 +107,7 @@ var clipboardHTML = [
   '<p id=\"test2\">This<span style=\"-moz-user-select: text\"> text should</span> be copied.</p>',
   '<p id=\"test3\">This text should be copied.</p>',
   '<p id=\"test4\">This<span style=\"-moz-user-select: text\"> text should</span> be copied.</p>',
-  '<p id=\"test5\">This<span style=\"-moz-user-select: all\"> text should</span> be copied.</p>',
+  '<p id=\"test5\">This<span style=\"-moz-user-select: all\"> text<span style=\"-moz-user-select: none\"> should</span></span> be copied.</p>',
 ];
 
 // expected results for clipboard text/unicode
@@ -127,7 +127,7 @@ var innerHTMLStrings = [
   'This<span style=\"-moz-user-select: none;\"><span style=\"-moz-user-select: text\"> text should</span> NOT</span> be copied.',
   'This text should<span style=\"-moz-user-select: -moz-none;\"> NOT</span> be copied.',
   'This<span style=\"-moz-user-select: -moz-none;\"><span style=\"-moz-user-select: text\"> text should</span> NOT</span> be copied.',
-  'This<span style=\"-moz-user-select: all\"> text should</span> be copied.',
+  'This<span style=\"-moz-user-select: all\"> text<span style=\"-moz-user-select: none\"> should</span></span> be copied.',
 ];
 
 // expected results for pasting into a TEXTAREA
