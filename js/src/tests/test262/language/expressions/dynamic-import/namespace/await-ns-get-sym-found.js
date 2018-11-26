@@ -1,4 +1,3 @@
-// |reftest| skip -- dynamic-import is not supported
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/ns-get-sym-found.case
 // - src/dynamic-import/namespace/await.template

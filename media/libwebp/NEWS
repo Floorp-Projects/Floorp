@@ -1,3 +1,15 @@
+- 11/2/2018: version 1.0.1
+  This is a binary compatible release.
+  * lossless encoder speedups
+  * big-endian fix for alpha decoding (issue #393)
+  * gif2webp fix for loop count=65535 transcode (issue #382)
+  * further security related hardening in libwebp & libwebpmux
+    (issues #383, #385, #386, #387, #388, #391)
+    (oss-fuzz #9099, #9100, #9105, #9106, #9111, #9112, #9119, #9123, #9170,
+              #9178, #9179, #9183, #9186, #9191, #9364, #9417, #9496, #10349,
+              #10423, #10634, #10700, #10838, #10922, #11021, #11088, #11152)
+  * miscellaneous bug & build fixes (issues #381, #394, #396, #397, #400)
+
 - 4/2/2018: version 1.0.0
   This is a binary compatible release.
   * lossy encoder improvements to avoid chroma shifts in various circumstances

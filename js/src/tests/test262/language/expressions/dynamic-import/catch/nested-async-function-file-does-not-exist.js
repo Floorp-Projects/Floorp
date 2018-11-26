@@ -1,4 +1,3 @@
-// |reftest| skip -- dynamic-import is not supported
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/file-does-not-exist.case
 // - src/dynamic-import/catch/nested-async-function.template

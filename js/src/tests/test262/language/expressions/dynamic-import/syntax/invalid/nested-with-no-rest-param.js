@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- dynamic-import is not supported
+// |reftest| error:SyntaxError
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/no-rest-param.case
 // - src/dynamic-import/syntax/invalid/nested-with.template

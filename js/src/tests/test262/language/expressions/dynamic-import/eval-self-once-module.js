@@ -1,4 +1,4 @@
-// |reftest| skip module -- dynamic-import is not supported
+// |reftest| module
 // Copyright (C) 2018 Rick Waldron. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
