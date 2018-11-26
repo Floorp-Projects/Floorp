@@ -1539,9 +1539,7 @@ pref("dom.storage_access.enabled", true);
 #endif
 
 // Define a set of default features for the Content Blocking UI.
-pref("browser.contentblocking.trackingprotection.ui.enabled", true);
 pref("browser.contentblocking.trackingprotection.control-center.ui.enabled", true);
-pref("browser.contentblocking.rejecttrackers.ui.enabled", true);
 pref("browser.contentblocking.rejecttrackers.control-center.ui.enabled", true);
 
 // Enable the Report Breakage UI on Nightly and Beta but not on Release yet.
