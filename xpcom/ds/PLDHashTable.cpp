@@ -127,8 +127,9 @@ PLDHashTable::StubOps()
 static bool
 SizeOfEntryStore(uint32_t aCapacity, uint32_t aEntrySize, uint32_t* aNbytes)
 {
-  uint64_t nbytes64 = uint64_t(aCapacity) * uint64_t(aEntrySize);
-  *aNbytes = aCapacity * aEntrySize;
+  uint32_t slotSize = aEntrySize + sizeof(PLDHashNumber);
+  uint64_t nbytes64 = uint64_t(aCapacity) * uint64_t(slotSize);
+  *aNbytes = aCapacity * slotSize;
   return uint64_t(*aNbytes) == nbytes64;   // returns false on overflow
 }
 
@@ -306,24 +307,11 @@ PLDHashTable::MatchSlotKeyhash(Slot& aSlot, const PLDHashNumber aKeyHash)
   return (aSlot.KeyHash() & ~kCollisionFlag) == aKeyHash;
 }
 
-/* static */ bool
-PLDHashTable::MatchEntryKeyhash(const PLDHashEntryHdr* aEntry,
-                                const PLDHashNumber aKeyHash)
-{
-  return (aEntry->mKeyHash & ~kCollisionFlag) == aKeyHash;
-}
-
 // Compute the address of the indexed entry in table.
 auto
 PLDHashTable::SlotForIndex(uint32_t aIndex) const -> Slot
 {
-  return mEntryStore.SlotForIndex(aIndex, mEntrySize);
-}
-
-PLDHashEntryHdr*
-PLDHashTable::AddressEntry(uint32_t aIndex) const
-{
-  return SlotForIndex(aIndex).ToEntry();
+  return mEntryStore.SlotForIndex(aIndex, mEntrySize, CapacityFromHashShift());
 }
 
 PLDHashTable::~PLDHashTable()
@@ -617,7 +605,7 @@ PLDHashTable::Add(const void* aKey, const mozilla::fallible_t&)
                                   [&](Slot& found) -> Slot { return found; },
                                   [&]() -> Slot {
                                     MOZ_CRASH("Nope");
-                                    return Slot(nullptr);
+                                    return Slot(nullptr, nullptr);
                                   });
   if (!slot.IsLive()) {
     // Initialize the slot, indicating that it's no longer free.
@@ -692,7 +680,7 @@ PLDHashTable::RemoveEntry(PLDHashEntryHdr* aEntry)
 void
 PLDHashTable::RawRemove(PLDHashEntryHdr* aEntry)
 {
-  Slot slot(aEntry);
+  Slot slot(mEntryStore.SlotForPLDHashEntry(aEntry, Capacity(), mEntrySize));
   RawRemove(slot);
 }
 
@@ -776,8 +764,10 @@ PLDHashTable::Iterator::Iterator(Iterator&& aOther)
 
 PLDHashTable::Iterator::Iterator(PLDHashTable* aTable)
   : mTable(aTable)
-  , mLimit(mTable->mEntryStore.SlotForIndex(mTable->Capacity(), mTable->mEntrySize))
-  , mCurrent(mTable->mEntryStore.SlotForIndex(0, mTable->mEntrySize))
+  , mLimit(mTable->mEntryStore.SlotForIndex(mTable->Capacity(), mTable->mEntrySize,
+                                            mTable->Capacity()))
+  , mCurrent(mTable->mEntryStore.SlotForIndex(0, mTable->mEntrySize,
+                                              mTable->Capacity()))
   , mNexts(0)
   , mNextsLimit(mTable->EntryCount())
   , mHaveRemoved(false)
@@ -791,8 +781,9 @@ PLDHashTable::Iterator::Iterator(PLDHashTable* aTable)
       mTable->Capacity() > 0) {
     // Start iterating at a random entry. It would be even more chaotic to
     // iterate in fully random order, but that's harder.
-    uint32_t i = ChaosMode::randomUint32LessThan(mTable->Capacity());
-    mCurrent = mTable->mEntryStore.SlotForIndex(i, mTable->mEntrySize);
+    uint32_t capacity = mTable->CapacityFromHashShift();
+    uint32_t i = ChaosMode::randomUint32LessThan(capacity);
+    mCurrent = mTable->mEntryStore.SlotForIndex(i, mTable->mEntrySize, capacity);
   }
 
   // Advance to the first live entry, if there is one.
@@ -828,7 +819,8 @@ PLDHashTable::Iterator::MoveToNextEntry()
   mCurrent.Next(mEntrySize);
   if (mCurrent == mLimit) {
     // We wrapped around.  Possible due to chaos mode.
-    mCurrent = mTable->mEntryStore.SlotForIndex(0, mEntrySize);
+    mCurrent = mTable->mEntryStore.SlotForIndex(0, mEntrySize,
+                                                mTable->CapacityFromHashShift());
   }
 }
 
