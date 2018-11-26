@@ -966,9 +966,6 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY contentBlocking.title "Content Blocking">
 <!ENTITY contentBlocking.detected "Blockable content detected on this site.">
 <!ENTITY contentBlocking.notDetected "No blockable content detected on this page.">
-<!ENTITY contentBlocking.disabled.label "Disabled">
-<!ENTITY contentBlocking.disabled.tooltip "You have disabled Content Blocking.">
-<!ENTITY contentBlocking.exception.tooltip "You have disabled Content Blocking for this site.">
 
 <!ENTITY contentBlocking.trackingProtection3.label "Trackers">
 <!-- LOCALIZATION NOTE (contentBlocking.trackingProtection.allowed.label):
