@@ -49,6 +49,15 @@ class RemoteClientManager {
     this._removeClientByKey(key);
   }
 
+  getRemoteId(id, type) {
+    return encodeURIComponent(this._getKey(id, type));
+  }
+
+  getClientByRemoteId(remoteId) {
+    const key = decodeURIComponent(remoteId);
+    return this._clients.get(key);
+  }
+
   _getKey(id, type) {
     return id + "-" + type;
   }
