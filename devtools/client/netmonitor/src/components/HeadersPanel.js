@@ -125,14 +125,14 @@ class HeadersPanel extends Component {
   renderSummary(label, value) {
     return (
       div({ className: "tabpanel-summary-container headers-summary" },
-        div({
-          className: "tabpanel-summary-label headers-summary-label",
-        }, label),
-        input({
-          className: "tabpanel-summary-value textbox-input devtools-monospace",
-          readOnly: true,
-          value,
-        }),
+        div({ className: "tabpanel-summary-labelvalue"},
+          span({ className: "tabpanel-summary-label headers-summary-label"},
+            label
+          ),
+          span({ className: "tabpanel-summary-value textbox-input devtools-monospace"},
+            value
+          ),
+        ),
       )
     );
   }

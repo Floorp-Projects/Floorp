@@ -180,9 +180,9 @@ add_task(async function() {
     EventUtils.sendMouseEvent({ type: "mouseover" }, statusCode);
     await waitUntil(() => statusCode.title);
 
-    is(summaryValues[0].value, correctUri,
+    is(summaryValues[0].textContent, correctUri,
       "The url summary value is incorrect.");
-    is(summaryValues[1].value, method, "The method summary value is incorrect.");
+    is(summaryValues[1].textContent, method, "The method summary value is incorrect.");
     is(statusCode.dataset.code, status,
       "The status summary code is incorrect.");
     is(statusCode.getAttribute("title"), status + " " + statusText,
