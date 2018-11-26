@@ -120,7 +120,6 @@ public:
   uint16_t ResultType() const { return mResultType; }
   bool ExcludeItems() const { return mExcludeItems; }
   bool ExcludeQueries() const { return mExcludeQueries; }
-  bool ExcludeReadOnlyFolders() const { return mExcludeReadOnlyFolders; }
   bool ExpandQueries() const { return mExpandQueries; }
   bool IncludeHidden() const { return mIncludeHidden; }
   uint32_t MaxResults() const { return mMaxResults; }
@@ -142,7 +141,6 @@ private:
   uint16_t mResultType;
   bool mExcludeItems;
   bool mExcludeQueries;
-  bool mExcludeReadOnlyFolders;
   bool mExpandQueries;
   bool mIncludeHidden;
   uint32_t mMaxResults;

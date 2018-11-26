@@ -315,8 +315,6 @@ public:
    */
   Element* GetRoot() const { return mRootElement; }
 
-  RangeUpdater& RangeUpdaterRef() { return mRangeUpdater; }
-
   /**
    * Set or unset TextInputListener.  If setting non-nullptr when the editor
    * already has a TextInputListener, this will crash in debug build.
@@ -715,6 +713,96 @@ protected: // AutoEditActionDataSetter, this shouldn't be accessed by friends.
     const RefPtr<Selection>& SelectionRefPtr() const { return mSelection; }
     EditAction GetEditAction() const { return mEditAction; }
 
+    void SetTopLevelEditSubAction(EditSubAction aEditSubAction,
+                                  EDirection aDirection = eNone)
+    {
+      mTopLevelEditSubAction = aEditSubAction;
+      switch (mTopLevelEditSubAction) {
+        case EditSubAction::eInsertNode:
+        case EditSubAction::eCreateNode:
+        case EditSubAction::eSplitNode:
+        case EditSubAction::eInsertText:
+        case EditSubAction::eInsertTextComingFromIME:
+        case EditSubAction::eSetTextProperty:
+        case EditSubAction::eRemoveTextProperty:
+        case EditSubAction::eRemoveAllTextProperties:
+        case EditSubAction::eSetText:
+        case EditSubAction::eInsertLineBreak:
+        case EditSubAction::eInsertParagraphSeparator:
+        case EditSubAction::eCreateOrChangeList:
+        case EditSubAction::eIndent:
+        case EditSubAction::eOutdent:
+        case EditSubAction::eSetOrClearAlignment:
+        case EditSubAction::eCreateOrRemoveBlock:
+        case EditSubAction::eRemoveList:
+        case EditSubAction::eCreateOrChangeDefinitionList:
+        case EditSubAction::eInsertElement:
+        case EditSubAction::eInsertQuotation:
+        case EditSubAction::ePasteHTMLContent:
+        case EditSubAction::eInsertHTMLSource:
+        case EditSubAction::eSetPositionToAbsolute:
+        case EditSubAction::eSetPositionToStatic:
+        case EditSubAction::eDecreaseZIndex:
+        case EditSubAction::eIncreaseZIndex:
+          MOZ_ASSERT(aDirection == eNext);
+          mDirectionOfTopLevelEditSubAction = eNext;
+          break;
+        case EditSubAction::eJoinNodes:
+        case EditSubAction::eDeleteText:
+          MOZ_ASSERT(aDirection == ePrevious);
+          mDirectionOfTopLevelEditSubAction = ePrevious;
+          break;
+        case EditSubAction::eUndo:
+        case EditSubAction::eRedo:
+        case EditSubAction::eComputeTextToOutput:
+        case EditSubAction::eCreateBogusNode:
+        case EditSubAction::eNone:
+          MOZ_ASSERT(aDirection == eNone);
+          mDirectionOfTopLevelEditSubAction = eNone;
+          break;
+        case EditSubAction::eReplaceHeadWithHTMLSource:
+          // NOTE: Not used with AutoTopLevelEditSubActionNotifier.
+          mDirectionOfTopLevelEditSubAction = eNone;
+          break;
+        case EditSubAction::eDeleteNode:
+        case EditSubAction::eDeleteSelectedContent:
+          // Unfortunately, eDeleteNode and eDeleteSelectedContent is used with
+          // any direction.  We might have specific sub-action for each
+          // direction, but there are some points referencing
+          // eDeleteSelectedContent so that we should keep storing direction
+          // as-is for now.
+          mDirectionOfTopLevelEditSubAction = aDirection;
+          break;
+      }
+    }
+    EditSubAction GetTopLevelEditSubAction() const
+    {
+      MOZ_ASSERT(CanHandle());
+      return mTopLevelEditSubAction;
+    }
+    EDirection GetDirectionOfTopLevelEditSubAction() const
+    {
+      return mDirectionOfTopLevelEditSubAction;
+    }
+
+    SelectionState& SavedSelectionRef()
+    {
+      return mParentData ? mParentData->SavedSelectionRef() : mSavedSelection;
+    }
+    const SelectionState& SavedSelectionRef() const
+    {
+      return mParentData ? mParentData->SavedSelectionRef() : mSavedSelection;
+    }
+
+    RangeUpdater& RangeUpdaterRef()
+    {
+      return mParentData ? mParentData->RangeUpdaterRef() : mRangeUpdater;
+    }
+    const RangeUpdater& RangeUpdaterRef() const
+    {
+      return mParentData ? mParentData->RangeUpdaterRef() : mRangeUpdater;
+    }
+
   private:
     EditorBase& mEditorBase;
     RefPtr<Selection> mSelection;
@@ -722,7 +810,16 @@ protected: // AutoEditActionDataSetter, this shouldn't be accessed by friends.
     // from mutation event listener which is run while editor changes
     // the DOM tree.  In such case, we need to handle edit action separately.
     AutoEditActionDataSetter* mParentData;
+
+    // Cached selection for AutoSelectionRestorer.
+    SelectionState mSavedSelection;
+
+    // Utility class object for maintaining preserved ranges.
+    RangeUpdater mRangeUpdater;
+
     EditAction mEditAction;
+    EditSubAction mTopLevelEditSubAction;
+    EDirection mDirectionOfTopLevelEditSubAction;
 
     AutoEditActionDataSetter() = delete;
     AutoEditActionDataSetter(const AutoEditActionDataSetter& aOther) = delete;
@@ -765,6 +862,59 @@ protected: // May be called by friends.
   {
     return mEditActionData ? mEditActionData->GetEditAction() :
                              EditAction::eNone;
+  }
+
+  /**
+   * GetTopLevelEditSubAction() returns the top level edit sub-action.
+   * For example, if selected content is being replaced with inserted text,
+   * while removing selected content, the top level edit sub-action may be
+   * EditSubAction::eDeleteSelectedContent.  However, while inserting new
+   * text, the top level edit sub-action may be EditSubAction::eInsertText.
+   * So, this result means what we are doing right now unless you're looking
+   * for a case which the method is called via mutation event listener or
+   * selectionchange event listener which are fired while handling the edit
+   * sub-action.
+   */
+  EditSubAction GetTopLevelEditSubAction() const
+  {
+    return mEditActionData ? mEditActionData->GetTopLevelEditSubAction() :
+                             EditSubAction::eNone;
+  }
+
+  /**
+   * GetDirectionOfTopLevelEditSubAction() returns direction which user
+   * intended for doing the edit sub-action.
+   */
+  EDirection GetDirectionOfTopLevelEditSubAction() const
+  {
+    return mEditActionData ?
+       mEditActionData->GetDirectionOfTopLevelEditSubAction() : eNone;
+  }
+
+  /**
+   * SavedSelection() returns reference to saved selection which are
+   * stored by AutoSelectionRestorer.
+   */
+  SelectionState& SavedSelectionRef()
+  {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return mEditActionData->SavedSelectionRef();
+  }
+  const SelectionState& SavedSelectionRef() const
+  {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return mEditActionData->SavedSelectionRef();
+  }
+
+  RangeUpdater& RangeUpdaterRef()
+  {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return mEditActionData->RangeUpdaterRef();
+  }
+  const RangeUpdater& RangeUpdaterRef() const
+  {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return mEditActionData->RangeUpdaterRef();
   }
 
   /**
@@ -1699,7 +1849,7 @@ protected: // Called by helper classes.
 
   /**
    * OnStartToHandleTopLevelEditSubAction() is called when
-   * mTopLevelEditSubAction is EditSubAction::eNone and somebody starts to
+   * GetTopLevelEditSubAction() is EditSubAction::eNone and somebody starts to
    * handle aEditSubAction.
    *
    * @param aEditSubAction      Top level edit sub action which will be
@@ -1712,7 +1862,7 @@ protected: // Called by helper classes.
 
   /**
    * OnEndHandlingTopLevelEditSubAction() is called after
-   * mTopLevelEditSubAction is handled.
+   * SetTopLevelEditSubAction() is handled.
    */
   virtual void OnEndHandlingTopLevelEditSubAction();
 
@@ -2076,11 +2226,11 @@ protected: // helper classes which may be used by friends
       , mDoNothing(false)
     {
       MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-      // mTopLevelEditSubAction will already be set if this is nested call
+      // The top level edit sub action has already be set if this is nested call
       // XXX Looks like that this is not aware of unexpected nested edit action
       //     handling via selectionchange event listener or mutation event
       //     listener.
-      if (!mEditorBase.mTopLevelEditSubAction) {
+      if (!mEditorBase.GetTopLevelEditSubAction()) {
         mEditorBase.OnStartToHandleTopLevelEditSubAction(aEditSubAction,
                                                          aDirection);
       } else {
@@ -2192,22 +2342,24 @@ protected:
   RefPtr<IMEContentObserver> mIMEContentObserver;
 
   // Listens to all low level actions on the doc.
-  typedef AutoTArray<OwningNonNull<nsIEditActionListener>, 5>
+  // Edit action listener is currently used by highlighter of the findbar and
+  // the spellchecker.  So, we should reserve only 2 items.
+  typedef AutoTArray<OwningNonNull<nsIEditActionListener>, 2>
             AutoActionListenerArray;
   AutoActionListenerArray mActionListeners;
   // Just notify once per high level change.
-  typedef AutoTArray<OwningNonNull<nsIEditorObserver>, 3>
+  // Editor observer is used only by legacy addons for Thunderbird and
+  // BlueGriffon.  So, we don't need to reserve the space for them.
+  typedef AutoTArray<OwningNonNull<nsIEditorObserver>, 0>
             AutoEditorObserverArray;
   AutoEditorObserverArray mEditorObservers;
   // Listen to overall doc state (dirty or not, just created, etc.).
+  // Document state listener is currently used by EditingSession and
+  // BlueGriffon so that reserving only one is enough (although, this is not
+  // necessary for TextEditor).
   typedef AutoTArray<OwningNonNull<nsIDocumentStateListener>, 1>
             AutoDocumentStateListenerArray;
   AutoDocumentStateListenerArray mDocStateListeners;
-
-  // Cached selection for AutoSelectionRestorer.
-  SelectionState mSavedSel;
-  // Utility class object for maintaining preserved ranges.
-  RangeUpdater mRangeUpdater;
 
   // Number of modifications (for undo/redo stack).
   uint32_t mModCount;
@@ -2218,11 +2370,7 @@ protected:
 
   // Nesting count for batching.
   int32_t mPlaceholderBatch;
-  // The top level edit sub-action.
-  EditSubAction mTopLevelEditSubAction;
 
-  // The top level edit sub-action's direction.
-  EDirection mDirection;
   // -1 = not initialized
   int8_t mDocDirtyState;
   // A Tristate value.

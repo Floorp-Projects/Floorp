@@ -119,6 +119,7 @@ nsPeekOffsetStruct::nsPeekOffsetStruct(nsSelectionAmount aAmount,
                                        bool aIsKeyboardSelect,
                                        bool aVisual,
                                        bool aExtend,
+                                       ForceEditableRegion aForceEditableRegion,
                                        EWordMovementType aWordMovementType)
   : mAmount(aAmount)
   , mDirection(aDirection)
@@ -130,6 +131,7 @@ nsPeekOffsetStruct::nsPeekOffsetStruct(nsSelectionAmount aAmount,
   , mIsKeyboardSelect(aIsKeyboardSelect)
   , mVisual(aVisual)
   , mExtend(aExtend)
+  , mForceEditableRegion(aForceEditableRegion == ForceEditableRegion::Yes)
   , mResultContent()
   , mResultFrame(nullptr)
   , mContentOffset(0)
@@ -706,12 +708,8 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
     return NS_ERROR_NULL_POINTER;
 
   int32_t scrollFlags = Selection::SCROLL_FOR_CARET_MOVE;
-  nsINode* focusNode = sel->GetFocusNode();
-  if (focusNode &&
-      (focusNode->IsEditable() ||
-       (focusNode->IsElement() &&
-        focusNode->AsElement()->State().
-          HasState(NS_EVENT_STATE_MOZ_READWRITE)))) {
+  const bool isEditorSelection = sel->IsEditorSelection();
+  if (isEditorSelection) {
     // If caret moves in editor, it should cause scrolling even if it's in
     // overflow: hidden;.
     scrollFlags |= Selection::SCROLL_OVERFLOW_HIDDEN;
@@ -779,11 +777,14 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
   if (NS_FAILED(result) || !frame)
     return NS_FAILED(result) ? result : NS_ERROR_FAILURE;
 
+  const auto forceEditableRegion = isEditorSelection
+    ? nsPeekOffsetStruct::ForceEditableRegion::Yes
+    : nsPeekOffsetStruct::ForceEditableRegion::No;
   //set data using mLimiter to stop on scroll views.  If we have a limiter then we stop peeking
   //when we hit scrollable views.  If no limiter then just let it go ahead
   nsPeekOffsetStruct pos(aAmount, eDirPrevious, offsetused, desiredPos,
                          true, mLimiter != nullptr, true, visualMovement,
-                         aContinueSelection);
+                         aContinueSelection, forceEditableRegion);
 
   nsBidiDirection paraDir = nsBidiPresUtils::ParagraphDirection(frame);
 
@@ -945,7 +946,7 @@ nsFrameSelection::GetPrevNextBidiLevels(nsIContent*        aNode,
   int32_t offset;
   bool jumpedLine, movedOverNonSelectableText;
   nsresult rv = currentFrame->GetFrameFromDirection(direction, false,
-                                                    aJumpLines, true,
+                                                    aJumpLines, true, false,
                                                     &newFrame, &offset, &jumpedLine,
                                                     &movedOverNonSelectableText);
   if (NS_FAILED(rv))

@@ -12,6 +12,7 @@
 #include "nscore.h"
 #include "nsError.h"
 #include "nsString.h"
+#include <functional>
 
 /**
  * Valid mask values for nsEscape
@@ -211,14 +212,14 @@ NS_EscapeURL(const nsAString& aStr, uint32_t aFlags, nsAString& aResult);
 /**
  * Percent-escapes all characters in aStr that occurs in aForbidden.
  * @param aStr the input URL string
- * @param aForbidden the characters that should be escaped if found in aStr
- * @note that aForbidden MUST be sorted (low to high)
+ * @param aFunction returns true for characters that should be escaped
  * @param aResult the result if some characters were escaped
  * @return aResult if some characters were escaped, or aStr otherwise (aResult
  *         is unmodified in that case)
  */
 const nsAString&
-NS_EscapeURL(const nsString& aStr, const nsTArray<char16_t>& aForbidden,
+NS_EscapeURL(const nsString& aStr,
+             const std::function<bool(char16_t)>& aFunction,
              nsAString& aResult);
 
 /**

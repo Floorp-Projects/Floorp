@@ -1226,7 +1226,7 @@
 
     <handlers>
       <handler event="click" button="0"><![CDATA[
-        let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
+        let baseURL = this.Services.urlFormatter.formatURLPref("app.support.baseURL");
         window.openTrustedLinkIn(baseURL + "insecure-password", "tab", {
           relatedToCurrent: true,
         });
@@ -1245,7 +1245,7 @@
         <getter><![CDATA[
           if (!this.__learnMoreString) {
             this.__learnMoreString =
-              Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties").
+              this.Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties").
               GetStringFromName("insecureFieldWarningLearnMore");
           }
           return this.__learnMoreString;
@@ -1352,6 +1352,24 @@
         ]]>
       </constructor>
 
+      <property name="Services" readonly="true">
+        <getter><![CDATA[
+          let module = {};
+          if (window.Services) {
+            module.Services = window.Services;
+          } else {
+            ChromeUtils.import("resource://gre/modules/Services.jsm", module);
+          }
+          Object.defineProperty(this, "Services", {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: module.Services,
+          });
+          return module.Services;
+        ]]></getter>
+      </property>
+
       <method name="_cleanup">
         <body>
         <![CDATA[
@@ -1391,7 +1409,7 @@
       <property name="_stringBundle">
         <getter><![CDATA[
           if (!this.__stringBundle) {
-            this.__stringBundle = Services.strings.createBundle("chrome://global/locale/autocomplete.properties");
+            this.__stringBundle = this.Services.strings.createBundle("chrome://global/locale/autocomplete.properties");
           }
           return this.__stringBundle;
         ]]></getter>
@@ -1739,7 +1757,7 @@
         <parameter name="url"/>
         <body>
           <![CDATA[
-          return Services.textToSubURI.unEscapeURIForUI("UTF-8", url);
+          return this.Services.textToSubURI.unEscapeURIForUI("UTF-8", url);
           ]]>
         </body>
       </method>
@@ -1961,7 +1979,7 @@
           if (!title) {
             titleLooksLikeUrl = true;
             try {
-              let uri = Services.io.newURI(originalUrl);
+              let uri = this.Services.io.newURI(originalUrl);
               // Not all valid URLs have a domain.
               if (uri.host)
                 title = uri.host;

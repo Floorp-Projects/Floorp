@@ -74,7 +74,7 @@ TextEditor::PrepareToInsertContent(const EditorDOMPoint& aPointToInsert,
 
   EditorDOMPoint pointToInsert(aPointToInsert);
   if (aDoDeleteSelection) {
-    AutoTrackDOMPoint tracker(mRangeUpdater, &pointToInsert);
+    AutoTrackDOMPoint tracker(RangeUpdaterRef(), &pointToInsert);
     nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;

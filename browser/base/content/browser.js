@@ -163,6 +163,10 @@ if (AppConstants.MOZ_CRASHREPORTER) {
                                      "nsICrashReporter");
 }
 
+XPCOMUtils.defineLazyGetter(this, "RTL_UI", () => {
+  return document.documentElement.matches(":-moz-locale-dir(rtl)");
+});
+
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle("chrome://browser/locale/browser.properties");
 });

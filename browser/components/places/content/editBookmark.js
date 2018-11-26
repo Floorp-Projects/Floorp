@@ -680,7 +680,7 @@ var gEditItemOverlay = {
       // the editable mode set on this tree, together with its collapsed state
       // breaks the view.
       const FOLDER_TREE_PLACE_URI =
-        "place:excludeItems=1&excludeQueries=1&excludeReadOnlyFolders=1&type=" +
+        "place:excludeItems=1&excludeQueries=1&type=" +
         Ci.nsINavHistoryQueryOptions.RESULTS_AS_ROOTS_QUERY;
       this._folderTree.place = FOLDER_TREE_PLACE_URI;
 
