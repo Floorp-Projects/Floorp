@@ -28,6 +28,12 @@ class UsbMocks {
       return this._runtimes;
     };
 
+    // refreshUSBRuntimes normally starts scan, which should ultimately fire the
+    // "runtime-list-updated" event.
+    this.usbRuntimesMock.refreshUSBRuntimes = () => {
+      this.emitUpdate();
+    };
+
     // Prepare a fake observer to be able to emit events from this mock.
     this._observerMock = addObserverMock(this.usbRuntimesMock);
 
