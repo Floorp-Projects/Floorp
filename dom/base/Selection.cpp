@@ -488,22 +488,6 @@ Selection::GetInterlinePosition(ErrorResult& aRv)
   return mFrameSelection->GetHint() == CARET_ASSOCIATE_AFTER;
 }
 
-bool
-Selection::IsEditorSelection() const
-{
-  nsINode* focusNode = GetFocusNode();
-  if (!focusNode) {
-    return false;
-  }
-
-  if (focusNode->IsEditable()) {
-    return true;
-  }
-
-  auto* element = Element::FromNode(focusNode);
-  return element && element->State().HasState(NS_EVENT_STATE_MOZ_READWRITE);
-}
-
 Nullable<int16_t>
 Selection::GetCaretBidiLevel(mozilla::ErrorResult& aRv) const
 {
@@ -783,7 +767,7 @@ NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_ADDREF(Selection)
 NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE(Selection)
 
 const RangeBoundary&
-Selection::AnchorRef() const
+Selection::AnchorRef()
 {
   if (!mAnchorFocusRange) {
     static RangeBoundary sEmpty;
@@ -798,7 +782,7 @@ Selection::AnchorRef() const
 }
 
 const RangeBoundary&
-Selection::FocusRef() const
+Selection::FocusRef()
 {
   if (!mAnchorFocusRange) {
     static RangeBoundary sEmpty;
@@ -1573,7 +1557,6 @@ Selection::GetPrimaryOrCaretFrameForNodeOffset(nsIContent* aContent,
     return nsCaret::GetCaretFrameForNodeOffset(mFrameSelection,
                                                aContent, aOffset, hint,
                                                caretBidiLevel, aReturnFrame,
-                                               /* aReturnUnadjustedFrame = */ nullptr,
                                                aOffsetUsed);
   }
 

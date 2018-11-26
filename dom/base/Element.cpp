@@ -1639,6 +1639,21 @@ Element::GetElementsWithGrid(nsTArray<RefPtr<Element>>& aElements)
   }
 }
 
+/**
+ * Returns the count of descendants (inclusive of aContent) in
+ * the uncomposed document that are explicitly set as editable.
+ */
+static uint32_t
+EditableInclusiveDescendantCount(nsIContent* aContent)
+{
+  auto htmlElem = nsGenericHTMLElement::FromNode(aContent);
+  if (htmlElem) {
+    return htmlElem->EditableInclusiveDescendantCount();
+  }
+
+  return aContent->EditableDescendantCount();
+}
+
 nsresult
 Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                     nsIContent* aBindingParent)
@@ -1787,6 +1802,8 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     SetDirOnBind(this, aParent);
   }
 
+  uint32_t editableDescendantCount = 0;
+
   UpdateEditableState(false);
 
   // If we had a pre-existing XBL binding, we might have anonymous children that
@@ -1809,6 +1826,30 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
        child = child->GetNextSibling()) {
     rv = child->BindToTree(aDocument, this, aBindingParent);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    editableDescendantCount += EditableInclusiveDescendantCount(child);
+  }
+
+  if (aDocument) {
+    // Update our editable descendant count because we don't keep track of it
+    // for content that is not in the uncomposed document.
+    MOZ_ASSERT(EditableDescendantCount() == 0);
+    ChangeEditableDescendantCount(editableDescendantCount);
+
+    if (!hadParent) {
+      uint32_t editableDescendantChange = EditableInclusiveDescendantCount(this);
+      if (editableDescendantChange != 0) {
+        // If we are binding a subtree root to the document, we need to update
+        // the editable descendant count of all the ancestors.
+        // But we don't cross Shadow DOM boundary.
+        // (The expected behavior with Shadow DOM is unclear)
+        nsIContent* parent = GetParent();
+        while (parent && parent->IsElement()) {
+          parent->ChangeEditableDescendantCount(editableDescendantChange);
+          parent = parent->GetParent();
+        }
+      }
+    }
   }
 
   nsNodeUtils::ParentChainChanged(this);
@@ -1950,6 +1991,19 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   }
 
   if (aNullParent) {
+    if (GetParent() && GetParent()->IsInUncomposedDoc()) {
+      // Update the editable descendant count in the ancestors before we
+      // lose the reference to the parent.
+      int32_t editableDescendantChange = -1 * EditableInclusiveDescendantCount(this);
+      if (editableDescendantChange != 0) {
+        nsIContent* parent = GetParent();
+        while (parent) {
+          parent->ChangeEditableDescendantCount(editableDescendantChange);
+          parent = parent->GetParent();
+        }
+      }
+    }
+
     if (IsRootOfNativeAnonymousSubtree()) {
       nsNodeUtils::NativeAnonymousChildListChange(this, true);
     }
@@ -2003,6 +2057,10 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
       }
     }
   }
+
+  // Editable descendant count only counts descendants that
+  // are in the uncomposed document.
+  ResetEditableDescendantCount();
 
   if (aNullParent || !mParent->IsInShadowTree()) {
     UnsetFlags(NODE_IS_IN_SHADOW_TREE);
