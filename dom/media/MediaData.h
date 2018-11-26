@@ -546,6 +546,7 @@ class MediaRawDataWriter {
   MOZ_MUST_USE bool SetSize(size_t aSize);
   // Add aData at the beginning of buffer.
   MOZ_MUST_USE bool Prepend(const uint8_t* aData, size_t aSize);
+  MOZ_MUST_USE bool Append(const uint8_t* aData, size_t aSize);
   // Replace current content with aData.
   MOZ_MUST_USE bool Replace(const uint8_t* aData, size_t aSize);
   // Clear the memory buffer. Will set target mData and mSize to 0.
