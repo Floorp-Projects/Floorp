@@ -3088,9 +3088,11 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
     //      because IME may send a key event synchronously and consume the
     //      original event.
     bool IMEWasEnabled = false;
+    KeyHandlingState handlingState = KeyHandlingState::eNotHandled;
     if (mIMContext) {
         IMEWasEnabled = mIMContext->IsEnabled();
-        if (mIMContext->OnKeyEvent(this, aEvent)) {
+        handlingState = mIMContext->OnKeyEvent(this, aEvent);
+        if (handlingState == KeyHandlingState::eHandled) {
             return TRUE;
         }
     }
@@ -3109,9 +3111,12 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
     // KEYDOWN -> KEYPRESS -> KEYUP -> KEYDOWN -> KEYPRESS -> KEYUP...
 
     bool isKeyDownCancelled = false;
-    if (DispatchKeyDownOrKeyUpEvent(aEvent, false, &isKeyDownCancelled) &&
-        (MOZ_UNLIKELY(mIsDestroyed) || isKeyDownCancelled)) {
-        return TRUE;
+    if (handlingState == KeyHandlingState::eNotHandled) {
+        if (DispatchKeyDownOrKeyUpEvent(aEvent, false, &isKeyDownCancelled) &&
+            (MOZ_UNLIKELY(mIsDestroyed) || isKeyDownCancelled)) {
+            return TRUE;
+        }
+        handlingState = KeyHandlingState::eNotHandledButEventDispatched;
     }
 
     // If a keydown event handler causes to enable IME, i.e., it moves
@@ -3120,7 +3125,8 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
     if (!IMEWasEnabled && mIMContext && mIMContext->IsEnabled()) {
         // Notice our keydown event was already dispatched.  This prevents
         // unnecessary DOM keydown event in the editor.
-        if (mIMContext->OnKeyEvent(this, aEvent, true)) {
+        handlingState =  mIMContext->OnKeyEvent(this, aEvent, true);
+        if (handlingState == KeyHandlingState::eHandled) {
             return TRUE;
         }
     }
@@ -3246,8 +3252,11 @@ nsWindow::OnKeyReleaseEvent(GdkEventKey* aEvent)
 {
     LOGFOCUS(("OnKeyReleaseEvent [%p]\n", (void *)this));
 
-    if (mIMContext && mIMContext->OnKeyEvent(this, aEvent)) {
-        return TRUE;
+    if (mIMContext) {
+        KeyHandlingState handlingState = mIMContext->OnKeyEvent(this, aEvent);
+        if (handlingState != KeyHandlingState::eNotHandled) {
+            return TRUE;
+        }
     }
 
     bool isCancelled = false;
