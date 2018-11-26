@@ -1,4 +1,3 @@
-// |reftest| skip -- dynamic-import is not supported
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/instn-iee-err-ambiguous-import.case
 // - src/dynamic-import/catch/nested-async-generator-return-await.template

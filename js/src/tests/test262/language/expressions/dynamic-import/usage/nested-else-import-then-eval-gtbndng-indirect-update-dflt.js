@@ -1,4 +1,3 @@
-// |reftest| skip -- dynamic-import is not supported
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/eval-gtbndng-indirect-update-dflt.case
 // - src/dynamic-import/default/nested-else.template
