@@ -425,6 +425,10 @@ skip script test262/language/expressions/prefix-decrement/target-newtarget.js
 skip script test262/language/expressions/prefix-decrement/target-cover-newtarget.js
 skip script test262/language/expressions/prefix-decrement/non-simple.js
 skip script test262/language/asi/S7.9_A5.7_T1.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-asssignmenttargettype-reference-error-1-update-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-asssignmenttargettype-reference-error-2-update-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-asssignmenttargettype-reference-error-3-update-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/invalid-asssignmenttargettype-reference-error-4-update-expression.js
 
 # Dependent on evalInWorker, setSharedArrayBuffer, and
 # getSharedArrayBuffer, plus the test cases can't actually run in the
@@ -487,6 +491,49 @@ skip script test262/built-ins/RegExp/prototype/source/cross-realm.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1508684
 skip script test262/language/expressions/import.meta/syntax/invalid-assignment-target-update-expr.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1508672
+skip script test262/language/expressions/dynamic-import/for-await-resolution-and-error-agen-yield.js
+skip script test262/language/expressions/dynamic-import/eval-export-dflt-expr-fn-named.js
+skip script test262/language/expressions/dynamic-import/imported-self-update.js
+skip script test262/language/expressions/dynamic-import/eval-export-dflt-cls-name-meth.js
+skip script test262/language/expressions/dynamic-import/eval-self-once-module.js
+skip script test262/language/expressions/dynamic-import/eval-export-dflt-expr-gen-named.js
+skip script test262/language/expressions/dynamic-import/eval-export-dflt-cls-anon.js
+skip script test262/language/expressions/dynamic-import/eval-export-dflt-expr-cls-name-meth.js
+skip script test262/language/expressions/dynamic-import/eval-export-dflt-expr-in.js
+skip script test262/language/expressions/dynamic-import/for-await-resolution-and-error.js
+skip script test262/language/expressions/dynamic-import/eval-export-dflt-cls-named.js
+skip script test262/language/expressions/dynamic-import/eval-export-dflt-expr-gen-anon.js
+skip script test262/language/expressions/dynamic-import/indirect-resolution.js
+skip script test262/language/expressions/dynamic-import/eval-export-dflt-expr-cls-named.js
+skip script test262/language/expressions/dynamic-import/for-await-resolution-and-error-agen.js
+skip script test262/language/expressions/dynamic-import/eval-export-dflt-expr-fn-anon.js
+skip script test262/language/expressions/dynamic-import/double-error-resolution-promise.js
+skip script test262/language/expressions/dynamic-import/double-error-resolution.js
+skip script test262/language/expressions/dynamic-import/eval-export-dflt-expr-cls-anon.js
+skip script test262/language/expressions/dynamic-import/namespace/default-property-not-set-own.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-function-return-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-with-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-async-arrow-function-return-await-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/top-level-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-if-braceless-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-async-arrow-function-await-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-if-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-async-function-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-block-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-else-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-async-gen-await-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-with-expression-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-function-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-while-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-block-labeled-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-else-braceless-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-async-function-return-await-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-arrow-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-arrow-assignment-expression-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-async-function-await-no-new-call-expression.js
+skip script test262/language/expressions/dynamic-import/syntax/invalid/nested-do-while-no-new-call-expression.js
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
