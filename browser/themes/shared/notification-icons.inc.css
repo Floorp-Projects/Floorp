@@ -32,7 +32,9 @@
 }
 
 .popup-notification-icon[popupid="persistent-storage"],
-.persistent-storage-icon {
+.popup-notification-icon[popupid="storage-access"],
+.persistent-storage-icon,
+.storage-access-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/persistent-storage.svg);
 }
 
@@ -71,6 +73,24 @@
 
 .autoplay-media-icon.blocked-permission-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/autoplay-media-blocked.svg);
+}
+
+.storage-access-notification-content {
+  color: var(--panel-disabled-color);
+  font-style: italic;
+  margin-top: 15px;
+}
+
+.storage-access-notification-content .text-link {
+  color: -moz-nativehyperlinktext;
+}
+
+.storage-access-notification-content .text-link:hover {
+  text-decoration: underline;
+}
+
+#storage-access-notification .popup-notification-body-container {
+  padding: 20px;
 }
 
 .popup-notification-icon[popupid="indexedDB-permissions-prompt"],
