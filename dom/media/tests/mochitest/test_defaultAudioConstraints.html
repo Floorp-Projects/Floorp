@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+createHTML({
+  title: "Test that the audio constraints that observe at the audio constraints we expect.",
+  bug: "1509842"
+});
+
+runTest(async () => {
+  let audioDevice = SpecialPowers.getCharPref("media.audio_loopback_dev", "");
+  if (!audioDevice) {
+    ok(false, "No device set by framework. Try --use-test-media-devices");
+    return;
+  }
+
+  // Get a gUM track with the default settings, check that they are what we
+  // expect.
+  let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  let track = stream.getAudioTracks()[0];
+  let defaultConstraints = track.getSettings();
+
+  is(defaultConstraints.echoCancellation, true,
+      "Echo cancellation should be ON by default.");
+  is(defaultConstraints.noiseSuppression, true,
+      "Noise suppression should be ON by default.");
+  is(defaultConstraints.autoGainControl, true,
+      "Automatic gain control should be ON by default.");
+
+  track.stop();
+});
+</script>
+</pre>
+</body>
+</html>
