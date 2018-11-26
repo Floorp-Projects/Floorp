@@ -53,6 +53,7 @@ class StackType
           case TypeCode::F64:
           case TypeCode::AnyRef:
           case TypeCode::Ref:
+          case TypeCode::NullRef:
           case TypeCode::Limit:
             return true;
           default:
@@ -63,15 +64,16 @@ class StackType
 
   public:
     enum Code {
-        I32    = uint8_t(ValType::I32),
-        I64    = uint8_t(ValType::I64),
-        F32    = uint8_t(ValType::F32),
-        F64    = uint8_t(ValType::F64),
+        I32     = uint8_t(ValType::I32),
+        I64     = uint8_t(ValType::I64),
+        F32     = uint8_t(ValType::F32),
+        F64     = uint8_t(ValType::F64),
 
-        AnyRef = uint8_t(ValType::AnyRef),
-        Ref    = uint8_t(ValType::Ref),
+        AnyRef  = uint8_t(ValType::AnyRef),
+        Ref     = uint8_t(ValType::Ref),
+        NullRef = uint8_t(ValType::NullRef),
 
-        Any    = uint8_t(TypeCode::Limit),
+        TVar    = uint8_t(TypeCode::Limit),
     };
 
     StackType() : tc_(InvalidPackedTypeCode()) {}
@@ -102,9 +104,9 @@ class StackType
         return UnpackTypeCodeType(tc_) == TypeCode::Ref;
     }
 
-    bool isRefOrAnyRef() const {
+    bool isReference() const {
         TypeCode tc = UnpackTypeCodeType(tc_);
-        return tc == TypeCode::Ref || tc == TypeCode::AnyRef;
+        return tc == TypeCode::Ref || tc == TypeCode::AnyRef || tc == TypeCode::NullRef;
     }
 
     bool operator ==(const StackType& that) const {
@@ -128,7 +130,7 @@ class StackType
 static inline ValType
 NonAnyToValType(StackType type)
 {
-    MOZ_ASSERT(type != StackType::Any);
+    MOZ_ASSERT(type != StackType::TVar);
     return ValType(type.packed());
 }
 
@@ -295,7 +297,7 @@ class TypeAndValue
     Value value_;
 
   public:
-    TypeAndValue() : type_(StackType::Any), value_() {}
+    TypeAndValue() : type_(StackType::TVar), value_() {}
     explicit TypeAndValue(StackType type)
       : type_(type), value_()
     {}
@@ -329,7 +331,7 @@ class TypeAndValue<Nothing>
     StackType type_;
 
   public:
-    TypeAndValue() : type_(StackType::Any) {}
+    TypeAndValue() : type_(StackType::TVar) {}
     explicit TypeAndValue(StackType type) : type_(type) {}
     explicit TypeAndValue(ValType type) : type_(StackType(type)) {}
     TypeAndValue(StackType type, Nothing value) : type_(type) {}
@@ -439,9 +441,6 @@ class MOZ_STACK_CLASS OpIter : private Policy
         controlStack_.back().setPolymorphicBase();
     }
 
-    inline bool IsPrefixOf(StackType a, StackType b);
-    inline bool IsSubtypeOf(StackType one, StackType two);
-    inline bool Unify(StackType observed, StackType expected, StackType* result);
     inline bool Join(StackType one, StackType two, StackType* result);
 
   public:
@@ -544,7 +543,7 @@ class MOZ_STACK_CLASS OpIter : private Policy
     MOZ_MUST_USE bool readI64Const(int64_t* i64);
     MOZ_MUST_USE bool readF32Const(float* f32);
     MOZ_MUST_USE bool readF64Const(double* f64);
-    MOZ_MUST_USE bool readRefNull(ValType* type);
+    MOZ_MUST_USE bool readRefNull();
     MOZ_MUST_USE bool readCall(uint32_t* calleeIndex, ValueVector* argValues);
     MOZ_MUST_USE bool readCallIndirect(uint32_t* funcTypeIndex, uint32_t* tableIndex, Value* callee,
                                        ValueVector* argValues);
@@ -631,52 +630,6 @@ class MOZ_STACK_CLASS OpIter : private Policy
 
 template <typename Policy>
 inline bool
-OpIter<Policy>::IsPrefixOf(StackType a, StackType b)
-{
-    const StructType& other = env_.types[a.refTypeIndex()].structType();
-    return env_.types[b.refTypeIndex()].structType().hasPrefix(other);
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::IsSubtypeOf(StackType one, StackType two)
-{
-    MOZ_ASSERT(one.isRefOrAnyRef());
-    MOZ_ASSERT(two.isRefOrAnyRef());
-    return one == two || two == StackType::AnyRef || (one.isRef() && IsPrefixOf(two, one));
-}
-
-template <typename Policy>
-inline bool
-OpIter<Policy>::Unify(StackType observed, StackType expected, StackType* result)
-{
-    if (MOZ_LIKELY(observed == expected)) {
-        *result = observed;
-        return true;
-    }
-
-    if (observed == StackType::Any) {
-        *result = expected;
-        return true;
-    }
-
-    if (expected == StackType::Any) {
-        *result = observed;
-        return true;
-    }
-
-    if (env_.gcTypesEnabled() == HasGcTypes::True && observed.isRefOrAnyRef() &&
-        expected.isRefOrAnyRef() && IsSubtypeOf(observed, expected))
-    {
-        *result = expected;
-        return true;
-    }
-
-    return false;
-}
-
-template <typename Policy>
-inline bool
 OpIter<Policy>::Join(StackType one, StackType two, StackType* result)
 {
     if (MOZ_LIKELY(one == two)) {
@@ -684,23 +637,23 @@ OpIter<Policy>::Join(StackType one, StackType two, StackType* result)
         return true;
     }
 
-    if (one == StackType::Any) {
+    if (one == StackType::TVar) {
         *result = two;
         return true;
     }
 
-    if (two == StackType::Any) {
+    if (two == StackType::TVar) {
         *result = one;
         return true;
     }
 
-    if (env_.gcTypesEnabled() == HasGcTypes::True && one.isRefOrAnyRef() && two.isRefOrAnyRef()) {
-        if (IsSubtypeOf(two, one)) {
+    if (env_.gcTypesEnabled() == HasGcTypes::True && one.isReference() && two.isReference()) {
+        if (env_.isRefSubtypeOf(NonAnyToValType(two), NonAnyToValType(one))) {
             *result = one;
             return true;
         }
 
-        if (IsSubtypeOf(one, two)) {
+        if (env_.isRefSubtypeOf(NonAnyToValType(one), NonAnyToValType(two))) {
             *result = two;
             return true;
         }
@@ -746,7 +699,7 @@ OpIter<Policy>::fail_ctx(const char* fmt, const char* context)
 
 // This function pops exactly one value from the stack, yielding Any types in
 // various cases and therefore making it the caller's responsibility to do the
-// right thing for StackType::Any. Prefer (pop|top)WithType.
+// right thing for StackType::TVar. Prefer (pop|top)WithType.
 template <typename Policy>
 inline bool
 OpIter<Policy>::popAnyType(StackType* type, Value* value)
@@ -758,7 +711,7 @@ OpIter<Policy>::popAnyType(StackType* type, Value* value)
         // If the base of this block's stack is polymorphic, then we can pop a
         // dummy value of any type; it won't be used since we're in unreachable code.
         if (block.polymorphicBase()) {
-            *type = StackType::Any;
+            *type = StackType::TVar;
             *value = Value();
 
             // Maintain the invariant that, after a pop, there is always memory
@@ -822,9 +775,16 @@ OpIter<Policy>::popWithType(StackType expectedType, Value* value)
 
     TypeAndValue<Value> tv = valueStack_.popCopy();
 
-    StackType _;
-    if (MOZ_UNLIKELY(!Unify(tv.type(), expectedType, &_))) {
-        return typeMismatch(tv.type(), expectedType);
+    StackType observedType = tv.type();
+    if (!(MOZ_LIKELY(observedType == expectedType) ||
+          observedType == StackType::TVar ||
+          expectedType == StackType::TVar ||
+          (env_.gcTypesEnabled() == HasGcTypes::True &&
+           observedType.isReference() && expectedType.isReference() &&
+           env_.isRefSubtypeOf(NonAnyToValType(observedType),
+                               NonAnyToValType(expectedType)))))
+    {
+        return typeMismatch(observedType, expectedType);
     }
 
     *value = tv.value();
@@ -878,8 +838,19 @@ OpIter<Policy>::topWithType(ValType expectedType, Value* value)
 
     TypeAndValue<Value>& tv = valueStack_.back();
 
-    if (MOZ_UNLIKELY(!Unify(tv.type(), StackType(expectedType), &tv.typeRef()))) {
-        return typeMismatch(tv.type(), StackType(expectedType));
+    StackType observed = tv.type();
+    StackType expected = StackType(expectedType);
+
+    if (!MOZ_UNLIKELY(observed == expected)) {
+        if (observed == StackType::TVar ||
+            (env_.gcTypesEnabled() == HasGcTypes::True &&
+             observed.isReference() && expected.isReference() &&
+             env_.isRefSubtypeOf(NonAnyToValType(observed), expectedType)))
+        {
+            tv.typeRef() = expected;
+        } else {
+            return typeMismatch(observed, expected);
+        }
     }
 
     *value = tv.value();
@@ -1707,14 +1678,11 @@ OpIter<Policy>::readF64Const(double* f64)
 
 template <typename Policy>
 inline bool
-OpIter<Policy>::readRefNull(ValType* type)
+OpIter<Policy>::readRefNull()
 {
     MOZ_ASSERT(Classify(op_) == OpKind::RefNull);
-    if (!readReferenceType(type, "ref.null")) {
-        return false;
-    }
 
-    return push(StackType(*type));
+    return push(StackType(ValType::NullRef));
 }
 
 template <typename Policy>

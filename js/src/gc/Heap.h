@@ -240,21 +240,13 @@ class Arena
 
   public:
     /*
-     * When collecting we sometimes need to keep an auxillary list of arenas,
-     * for which we use the following fields. This happens for several reasons:
-     *
-     * When recursive marking uses too much stack, the marking is delayed and
-     * the corresponding arenas are put into a stack. To distinguish the bottom
-     * of the stack from the arenas not present in the stack we use the
-     * markOverflow flag to tag arenas on the stack.
-     *
-     * To minimize the size of the header fields we record the next linkage as
-     * address() >> ArenaShift and pack it with the allocKind and the flags.
+     * When recursive marking uses too much stack we delay marking of
+     * arenas and link them into a list for later processing. This
+     * uses the following fields.
      */
     size_t hasDelayedMarking : 1;
-    size_t markOverflow : 1;
-    size_t auxNextLink : JS_BITS_PER_WORD - 8 - 1 - 1;
-    static_assert(ArenaShift >= 8 + 1 + 1,
+    size_t auxNextLink : JS_BITS_PER_WORD - 8 - 1;
+    static_assert(ArenaShift >= 8 + 1,
                   "Arena::auxNextLink packing assumes that ArenaShift has "
                   "enough bits to cover allocKind and hasDelayedMarking.");
 
@@ -304,7 +296,6 @@ class Arena
         zone = nullptr;
         allocKind = size_t(AllocKind::LIMIT);
         hasDelayedMarking = 0;
-        markOverflow = 0;
         auxNextLink = 0;
         bufferedCells_ = nullptr;
     }

@@ -19,7 +19,6 @@ js::gc::Arena::init(JS::Zone* zoneArg, AllocKind kind, const AutoLockGC& lock)
     MOZ_ASSERT(!zone);
     MOZ_ASSERT(!allocated());
     MOZ_ASSERT(!hasDelayedMarking);
-    MOZ_ASSERT(!markOverflow);
     MOZ_ASSERT(!auxNextLink);
 
     MOZ_MAKE_MEM_UNDEFINED(this, ArenaSize);
@@ -27,7 +26,6 @@ js::gc::Arena::init(JS::Zone* zoneArg, AllocKind kind, const AutoLockGC& lock)
     zone = zoneArg;
     allocKind = size_t(kind);
     hasDelayedMarking = 0;
-    markOverflow = 0;
     auxNextLink = 0;
     if (zone->isAtomsZone()) {
         zone->runtimeFromAnyThread()->gc.atomMarking.registerArena(this, lock);
