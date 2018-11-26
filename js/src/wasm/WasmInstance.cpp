@@ -140,6 +140,8 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
           }
           case ValType::I64:
             MOZ_CRASH("unhandled type in callImport");
+          case ValType::NullRef:
+            MOZ_CRASH("NullRef not expressible");
         }
     }
 
@@ -204,12 +206,13 @@ Instance::callImport(JSContext* cx, uint32_t funcImportIndex, unsigned argc, con
     for (uint32_t i = 0; i < numKnownArgs; i++) {
         TypeSet::Type type = TypeSet::UnknownType();
         switch (importArgs[i].code()) {
-          case ValType::I32:    type = TypeSet::Int32Type(); break;
-          case ValType::F32:    type = TypeSet::DoubleType(); break;
-          case ValType::F64:    type = TypeSet::DoubleType(); break;
-          case ValType::Ref:    MOZ_CRASH("case guarded above");
-          case ValType::AnyRef: MOZ_CRASH("case guarded above");
-          case ValType::I64:    MOZ_CRASH("NYI");
+          case ValType::I32:     type = TypeSet::Int32Type(); break;
+          case ValType::F32:     type = TypeSet::DoubleType(); break;
+          case ValType::F64:     type = TypeSet::DoubleType(); break;
+          case ValType::Ref:     MOZ_CRASH("case guarded above");
+          case ValType::AnyRef:  MOZ_CRASH("case guarded above");
+          case ValType::I64:     MOZ_CRASH("NYI");
+          case ValType::NullRef: MOZ_CRASH("NullRef not expressible");
         }
         if (!TypeScript::ArgTypes(script, i)->hasType(type)) {
             return true;
@@ -1093,7 +1096,7 @@ Instance::tracePrivate(JSTracer* trc)
 
     for (const GlobalDesc& global : code().metadata().globals) {
         // Indirect anyref global get traced by the owning WebAssembly.Global.
-        if (!global.type().isRefOrAnyRef() || global.isConstant() || global.isIndirect()) {
+        if (!global.type().isReference() || global.isConstant() || global.isIndirect()) {
             continue;
         }
         GCPtrObject* obj = (GCPtrObject*)(globalData() + global.offset());
@@ -1204,6 +1207,9 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
             }
             break;
           }
+          case ValType::NullRef: {
+            MOZ_CRASH("NullRef not expressible");
+          }
         }
     }
 
@@ -1261,6 +1267,8 @@ Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args)
         retObj = *(JSObject**)retAddr;
         expectsObject = true;
         break;
+      case ExprType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
       case ExprType::Limit:
         MOZ_CRASH("Limit");
     }
