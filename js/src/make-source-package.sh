@@ -143,7 +143,7 @@ case $cmd in
        ${TOPSRCDIR}/modules/fdlibm \
        ${tgtpath}/modules/fdlibm
     cp -pPR \
-        ${TOPSRCDIR}/modules/zlib/src/ \
+        ${TOPSRCDIR}/modules/zlib \
         ${tgtpath}/modules/zlib
     ${MKDIR} -p ${tgtpath}/layout/tools/reftest
     cp -pPR \
