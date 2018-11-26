@@ -488,7 +488,7 @@ class TabTracker extends TabTrackerBase {
             // If the tab is already be destroyed, do nothing.
             return;
           }
-          this.emitActivated(nativeTab);
+          this.emitActivated(nativeTab, event.detail.previousTab);
         });
         break;
 
@@ -571,11 +571,14 @@ class TabTracker extends TabTrackerBase {
    *
    * @param {NativeTab} nativeTab
    *        The tab element which has been activated.
+   * @param {NativeTab} previousTab
+   *        The tab element which was previously activated.
    * @private
    */
-  emitActivated(nativeTab) {
+  emitActivated(nativeTab, previousTab = undefined) {
     this.emit("tab-activated", {
       tabId: this.getId(nativeTab),
+      previousTabId: previousTab && !previousTab.closing ? this.getId(previousTab) : undefined,
       windowId: windowTracker.getId(nativeTab.ownerGlobal)});
   }
 
