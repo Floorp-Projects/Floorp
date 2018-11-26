@@ -40,7 +40,7 @@ import org.mozilla.telemetry.ping.TelemetryMobileMetricsPingBuilder
 import org.mozilla.telemetry.schedule.jobscheduler.JobSchedulerTelemetryScheduler
 import org.mozilla.telemetry.serialize.JSONPingSerializer
 import org.mozilla.telemetry.storage.FileTelemetryStorage
-import java.net.URI
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -333,7 +333,7 @@ object TelemetryWrapper {
 
     @JvmStatic
     fun addLoadToHistogram(url: String, newLoadTime: Long) {
-        domainMap.add(UrlUtils.stripCommonSubdomains(URI(url).host))
+        domainMap.add(UrlUtils.stripCommonSubdomains(URL(url).host))
         numUri++
         var histogramLoadIndex = (newLoadTime / BUCKET_SIZE_MS).toInt()
 

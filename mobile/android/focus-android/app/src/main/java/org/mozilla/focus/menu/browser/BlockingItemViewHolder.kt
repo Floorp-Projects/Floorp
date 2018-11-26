@@ -16,8 +16,8 @@ import org.mozilla.focus.R
 import org.mozilla.focus.exceptions.ExceptionDomains
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import java.net.URI
-import java.net.URISyntaxException
+import java.net.MalformedURLException
+import java.net.URL
 
 internal class BlockingItemViewHolder(itemView: View, private val fragment: BrowserFragment) :
     BrowserMenuViewHolder(itemView), CompoundButton.OnCheckedChangeListener {
@@ -62,8 +62,8 @@ internal class BlockingItemViewHolder(itemView: View, private val fragment: Brow
 
         val url = fragment.url
         val host = try {
-            URI(url).host
-        } catch (e: URISyntaxException) {
+            URL(url).host
+        } catch (e: MalformedURLException) {
             url
         } ?: url
 
