@@ -33,7 +33,7 @@ add_task(async function() {
   is(referrerPolicyHeader.textContent === "Referrer Policy:",
   true, "\"Referrer Policy\" header is displayed in the header panel.");
 
-  is(referrerPolicyValue.value === "no-referrer-when-downgrade",
+  is(referrerPolicyValue.textContent === "no-referrer-when-downgrade",
   true, "The referrer policy value is reflected correctly.");
 
   return teardown(monitor);
