@@ -40,7 +40,8 @@ class FlexItem extends PureComponent {
       dom.button(
         {
           className: "devtools-button devtools-monospace",
-          onClick: () => {
+          onClick: e => {
+            e.stopPropagation();
             setSelectedNode(nodeFront);
             onHideBoxModelHighlighter();
           },

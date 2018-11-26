@@ -5022,11 +5022,11 @@ public:
 
   bool CanApplyOpacity() const final
   {
-    nsTextFrame* f = static_cast<nsTextFrame*>(mFrame);
-    if (f->IsSelected()) {
+    if (IsSelected()) {
       return false;
     }
 
+    nsTextFrame* f = static_cast<nsTextFrame*>(mFrame);
     const nsStyleText* textStyle = f->StyleText();
     if (textStyle->mTextShadow) {
       return false;
@@ -7020,12 +7020,12 @@ nsTextFrame::PaintText(const PaintTextParams& aParams,
     return;
 
   PropertyProvider provider(this, iter, nsTextFrame::eInflated, mFontMetrics);
-  if (aItem.mIsFrameSelected.isNothing()) {
-    aItem.mIsFrameSelected.emplace(IsSelected());
-  }
+
+  const bool isSelected = aItem.IsSelected();
+
   // Trim trailing whitespace, unless we're painting a selection highlight,
   // which should include trailing spaces if present (bug 1146754).
-  provider.InitializeForDisplay(!aItem.mIsFrameSelected.value());
+  provider.InitializeForDisplay(!isSelected);
 
   const bool reversed = mTextRun->IsInlineReversed();
   const bool verticalRun = mTextRun->IsVertical();
@@ -7069,7 +7069,7 @@ nsTextFrame::PaintText(const PaintTextParams& aParams,
   textPaintStyle.SetResolveColors(!aParams.callbacks);
 
   // Fork off to the (slower) paint-with-selection path if necessary.
-  if (aItem.mIsFrameSelected.value() &&
+  if (isSelected &&
       (aParams.IsPaintBGColor() || ShouldDrawSelection(this->GetParent()))) {
     MOZ_ASSERT(aOpacity == 1.0f, "We don't support opacity with selections!");
     gfxSkipCharsIterator tmp(provider.GetStart());

@@ -62,17 +62,13 @@ struct IDXGIAdapter1;
  * not backed by a HDC this will get the HDC for the screen device context
  * instead.
  */
-class MOZ_STACK_CLASS DCFromDrawTarget final
+class MOZ_STACK_CLASS DCForMetrics final
 {
 public:
-    explicit DCFromDrawTarget(mozilla::gfx::DrawTarget& aDrawTarget);
+    explicit DCForMetrics();
 
-    ~DCFromDrawTarget() {
-        if (mNeedsRelease) {
-            ReleaseDC(nullptr, mDC);
-        } else {
-            RestoreDC(mDC, -1);
-        }
+    ~DCForMetrics() {
+        ReleaseDC(nullptr, mDC);
     }
 
     operator HDC () {
@@ -81,7 +77,6 @@ public:
 
 private:
     HDC mDC;
-    bool mNeedsRelease;
 };
 
 // ClearType parameters set by running ClearType tuner

@@ -126,8 +126,8 @@ var PermissionPromptPrototype = {
   /**
    * If the nsIPermissionManager is being queried and written
    * to for this permission request, set this to the key to be
-   * used. If this is undefined, user permissions will not be
-   * read from or written to.
+   * used. If this is undefined, no integration with temporary
+   * permissions infrastructure will be provided.
    *
    * Note that if a permission is set, in any follow-up
    * prompting within the expiry window of that permission,
@@ -136,6 +136,16 @@ var PermissionPromptPrototype = {
    */
   get permissionKey() {
     return undefined;
+  },
+
+  /**
+   * If true, user permissions will be read from and written to.
+   * When this is false, we still provide integration with
+   * infrastructure such as temporary permissions. permissionKey should
+   * still return a valid name in those cases for that integration to work.
+   */
+  get usePermissionManager() {
+    return true;
   },
 
   /**
@@ -271,7 +281,8 @@ var PermissionPromptPrototype = {
       return;
     }
 
-    if (this.permissionKey) {
+    if (this.usePermissionManager &&
+        this.permissionKey) {
       // If we're reading and setting permissions, then we need
       // to check to see if we already have a permission setting
       // for this particular principal.
@@ -306,6 +317,19 @@ var PermissionPromptPrototype = {
       // are expired permission states.
       this.browser.dispatchEvent(new this.browser.ownerGlobal
                                          .CustomEvent("PermissionStateChange"));
+    } else if (this.permissionKey) {
+      // If we're reading a permission which already has a temporary value,
+      // see if we can use the temporary value.
+      let {state} = SitePermissions.get(null,
+                                        this.permissionKey,
+                                        this.browser);
+
+      if (state == SitePermissions.BLOCK) {
+        // TODO: Add support for showGloballyBlocked
+
+        this.cancel();
+        return;
+      }
     }
 
     let chromeWin = this.browser.ownerGlobal;
@@ -325,7 +349,8 @@ var PermissionPromptPrototype = {
             promptAction.callback();
           }
 
-          if (this.permissionKey) {
+          if (this.usePermissionManager &&
+              this.permissionKey) {
             if ((state && state.checkboxChecked && state.source != "esc-press") ||
                 promptAction.scope == SitePermissions.SCOPE_PERSISTENT) {
               // Permanently store permission.
@@ -356,6 +381,18 @@ var PermissionPromptPrototype = {
               this.allow();
             } else {
               this.cancel();
+            }
+          } else if (this.permissionKey) {
+            // TODO: Add support for permitTemporaryAllow
+            if (promptAction.action == SitePermissions.BLOCK) {
+              // Temporarily store BLOCK permissions.
+              // We don't consider subframes when storing temporary
+              // permissions on a tab, thus storing ALLOW could be exploited.
+              SitePermissions.set(null,
+                                  this.permissionKey,
+                                  promptAction.action,
+                                  SitePermissions.SCOPE_TEMPORARY,
+                                  this.browser);
             }
           }
         },

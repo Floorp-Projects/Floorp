@@ -84,6 +84,9 @@ class TabBar(UIBaseLib):
 
         :param exceptions: Optional, list of :class:`Tab` instances not to close.
         """
+        if exceptions is None:
+            exceptions = []
+
         # Get handles from tab exceptions, and find those which can be closed
         for tab in self.tabs:
             if tab not in exceptions:

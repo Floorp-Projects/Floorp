@@ -34,7 +34,7 @@ async function startTest() {
     video1.srcObject = stream;
     video2.srcObject = stream;
 
-    video1.onplaying = () => video1.pause();
+    video1.onloadeddata = () => video1.pause();
 
     let v1PausedImageData;
     let v2PausedImageData;

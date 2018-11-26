@@ -65,7 +65,6 @@ function testBenignPage() {
   ok(BrowserTestUtils.is_hidden(ContentBlocking.iconBox), "icon box is hidden");
   ok(hidden("#tracking-action-block"), "blockButton is hidden");
   ok(hidden("#tracking-action-unblock"), "unblockButton is hidden");
-  ok(hidden("#identity-popup-content-blocking-disabled-label"), "disabled label is not visible");
 
   ok(!hidden("#identity-popup-content-blocking-not-detected"), "blocking not detected label is visible");
   ok(hidden("#identity-popup-content-blocking-detected"), "blocking detected label is hidden");
@@ -86,7 +85,6 @@ function testBenignPageWithException() {
   ok(!BrowserTestUtils.is_hidden(ContentBlocking.iconBox), "icon box is not hidden");
   ok(!hidden("#tracking-action-block"), "blockButton is visible");
   ok(hidden("#tracking-action-unblock"), "unblockButton is hidden");
-  ok(!hidden("#identity-popup-content-blocking-disabled-label"), "disabled label is visible");
 
   ok(!hidden("#identity-popup-content-blocking-not-detected"), "blocking not detected label is visible");
   ok(hidden("#identity-popup-content-blocking-detected"), "blocking detected label is hidden");
@@ -175,7 +173,6 @@ function testTrackingPageUnblocked(blockedByTP, window) {
   ok(BrowserTestUtils.is_visible(ContentBlocking.iconBox), "icon box is visible");
   ok(!hidden("#tracking-action-block"), "blockButton is visible");
   ok(hidden("#tracking-action-unblock"), "unblockButton is hidden");
-  ok(!hidden("#identity-popup-content-blocking-disabled-label"), "disabled label is visible");
 
   ok(hidden("#identity-popup-content-blocking-not-detected"), "blocking not detected label is hidden");
   ok(!hidden("#identity-popup-content-blocking-detected"), "blocking detected label is visible");
