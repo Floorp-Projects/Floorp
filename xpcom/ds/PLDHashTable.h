@@ -13,6 +13,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h" // for MOZ_ALWAYS_INLINE
 #include "mozilla/fallible.h"
+#include "mozilla/FunctionTypeTraits.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
@@ -222,6 +223,54 @@ private:
 class PLDHashTable
 {
 private:
+  // A slot represents a cached hash value and its associated entry stored
+  // in the hash table.  While they currently belong to the same object,
+  // PLDHashEntryHdr, they do not necessarily need to be contiguous in memory,
+  // and this abstraction helps enforce the separation between the two.
+  struct Slot
+  {
+    Slot(PLDHashEntryHdr* aEntry)
+      : mEntry(aEntry)
+    {}
+
+    Slot(const Slot&) = default;
+    Slot(Slot&& aOther)
+      : mEntry(aOther.mEntry)
+    {}
+
+    Slot& operator=(Slot&& aOther) {
+      this->~Slot();
+      new (this) Slot(std::move(aOther));
+      return *this;
+    }
+
+    bool operator==(const Slot& aOther)
+    {
+      return mEntry == aOther.mEntry;
+    }
+
+    PLDHashNumber KeyHash() const { return mEntry->mKeyHash; }
+    void SetKeyHash(PLDHashNumber aHash) { mEntry->mKeyHash = aHash; }
+
+    PLDHashEntryHdr* ToEntry() const { return mEntry; }
+
+    bool IsFree() const { return KeyHash() == 0; }
+    bool IsRemoved() const { return KeyHash() == 1; }
+    bool IsLive() const { return KeyHash() >= 2; }
+
+    void MarkFree() { mEntry->mKeyHash = 0; }
+    void MarkRemoved() { mEntry->mKeyHash = 1; }
+    void MarkColliding() { mEntry->mKeyHash |= kCollisionFlag; }
+
+    void Next(uint32_t aEntrySize) {
+      char* p = reinterpret_cast<char*>(mEntry);
+      p += aEntrySize;
+      mEntry = reinterpret_cast<PLDHashEntryHdr*>(p);
+    }
+  private:
+    PLDHashEntryHdr* mEntry;
+  };
+
   // This class maintains the invariant that every time the entry store is
   // changed, the generation is updated.
   //
@@ -234,6 +283,9 @@ private:
   private:
     char* mEntryStore;
 
+    PLDHashEntryHdr* EntryAt(uint32_t aIndex, uint32_t aEntrySize) const {
+      return reinterpret_cast<PLDHashEntryHdr*>(Get() + aIndex * aEntrySize);
+    }
   public:
     EntryStore() : mEntryStore(nullptr) {}
 
@@ -244,6 +296,24 @@ private:
     }
 
     char* Get() const { return mEntryStore; }
+    Slot SlotForIndex(uint32_t aIndex, uint32_t aEntrySize) const {
+      return Slot(EntryAt(aIndex, aEntrySize));
+    }
+
+    template<typename F>
+    void ForEachSlot(uint32_t aCapacity, uint32_t aEntrySize, F&& aFunc) {
+      ForEachSlot(Get(), aCapacity, aEntrySize, std::move(aFunc));
+    }
+
+    template<typename F>
+    static void ForEachSlot(char* aStore, uint32_t aCapacity, uint32_t aEntrySize,
+                            F&& aFunc) {
+      Slot slot(reinterpret_cast<PLDHashEntryHdr*>(aStore));
+      for (size_t i = 0; i < aCapacity; ++i) {
+        aFunc(slot);
+        slot.Next(aEntrySize);
+      }
+    }
 
     void Set(char* aEntryStore, uint16_t* aGeneration)
     {
@@ -467,10 +537,8 @@ public:
     PLDHashEntryHdr* Get() const
     {
       MOZ_ASSERT(!Done());
-
-      PLDHashEntryHdr* entry = reinterpret_cast<PLDHashEntryHdr*>(mCurrent);
-      MOZ_ASSERT(EntryIsLive(entry));
-      return entry;
+      MOZ_ASSERT(mCurrent.IsLive());
+      return mCurrent.ToEntry();
     }
 
     // Advance to the next entry.
@@ -484,8 +552,8 @@ public:
     PLDHashTable* mTable;             // Main table pointer.
 
   private:
-    char* mLimit;                     // One past the last entry.
-    char* mCurrent;                   // Pointer to the current entry.
+    Slot mLimit;                      // One past the last entry.
+    Slot mCurrent;                    // Pointer to the current entry.
     uint32_t mNexts;                  // Number of Next() calls.
     uint32_t mNextsLimit;             // Next() call limit.
 
@@ -541,8 +609,10 @@ private:
   void Hash2(PLDHashNumber aHash,
              uint32_t& aHash2Out, uint32_t& aSizeMaskOut) const;
 
+  static bool MatchSlotKeyhash(Slot& aSlot, const PLDHashNumber aHash);
   static bool MatchEntryKeyhash(const PLDHashEntryHdr* aEntry,
                                 const PLDHashNumber aHash);
+  Slot SlotForIndex(uint32_t aIndex) const;
   PLDHashEntryHdr* AddressEntry(uint32_t aIndex) const;
 
   // We store mHashShift rather than sizeLog2 to optimize the collision-free
@@ -556,14 +626,18 @@ private:
 
   enum SearchReason { ForSearchOrRemove, ForAdd };
 
-  template <SearchReason Reason>
-  PLDHashEntryHdr* NS_FASTCALL
-    SearchTable(const void* aKey, PLDHashNumber aKeyHash) const;
+  // Avoid using bare `Success` and `Failure`, as those names are commonly
+  // defined as macros.
+  template <SearchReason Reason, typename PLDSuccess, typename PLDFailure>
+  auto
+  SearchTable(const void* aKey, PLDHashNumber aKeyHash,
+              PLDSuccess&& aSucess, PLDFailure&& aFailure) const;
 
-  PLDHashEntryHdr* FindFreeEntry(PLDHashNumber aKeyHash) const;
+  Slot FindFreeSlot(PLDHashNumber aKeyHash) const;
 
   bool ChangeTable(int aDeltaLog2);
 
+  void RawRemove(Slot& aSlot);
   void ShrinkIfAppropriate();
 
   PLDHashTable(const PLDHashTable& aOther) = delete;
