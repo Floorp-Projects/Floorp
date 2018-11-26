@@ -74,10 +74,7 @@ function runtimesReducer(state = RuntimesState(), action) {
   switch (action.type) {
     case CONNECT_RUNTIME_SUCCESS: {
       const { id, runtimeDetails, type } = action.runtime;
-      remoteClientManager.setClient(id, type, {
-        client: runtimeDetails.clientWrapper.client,
-        transportDetails: runtimeDetails.transportDetails,
-      });
+      remoteClientManager.setClient(id, type, runtimeDetails.clientWrapper.client);
       return _updateRuntimeById(id, { runtimeDetails }, state);
     }
 
