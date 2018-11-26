@@ -75,6 +75,12 @@ class nsIPresShell;
  */
 struct MOZ_STACK_CLASS nsPeekOffsetStruct
 {
+  enum class ForceEditableRegion
+  {
+    No,
+    Yes,
+  };
+
   nsPeekOffsetStruct(nsSelectionAmount aAmount,
                      nsDirection aDirection,
                      int32_t aStartOffset,
@@ -84,6 +90,7 @@ struct MOZ_STACK_CLASS nsPeekOffsetStruct
                      bool aIsKeyboardSelect,
                      bool aVisual,
                      bool aExtend,
+                     ForceEditableRegion = ForceEditableRegion::No,
                      mozilla::EWordMovementType aWordMovementType = mozilla::eDefaultBehavior);
 
   // Note: Most arguments (input and output) are only used with certain values
@@ -142,6 +149,10 @@ struct MOZ_STACK_CLASS nsPeekOffsetStruct
   // mExtend: Whether the selection is being extended or moved.
   bool mExtend;
 
+  // mForceEditableRegion: If true, the offset has to end up in an editable
+  // node, otherwise we'll keep searching.
+  const bool mForceEditableRegion;
+
   /*** Output arguments ***/
 
   // mResultContent: Content reached as a result of the peek.
@@ -149,7 +160,7 @@ struct MOZ_STACK_CLASS nsPeekOffsetStruct
 
   // mResultFrame: Frame reached as a result of the peek.
   //               Used with: eSelectCharacter, eSelectWord.
-  nsIFrame *mResultFrame;
+  nsIFrame* mResultFrame;
 
   // mContentOffset: Offset into content reached as a result of the peek.
   int32_t mContentOffset;
