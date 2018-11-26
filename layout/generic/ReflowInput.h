@@ -963,6 +963,7 @@ protected:
   void InitCBReflowInput();
   void InitResizeFlags(nsPresContext* aPresContext,
                        mozilla::LayoutFrameType aFrameType);
+  void InitDynamicReflowRoot();
 
   void InitConstraints(nsPresContext* aPresContext,
                        const mozilla::LogicalSize& aContainingBlockSize,
