@@ -708,7 +708,7 @@ add_task(async function test_customMerchantValidity_billingAddressForm() {
   await form.requestStore.setState({
     request: {
       paymentDetails: {
-        paymentMethod: {
+        paymentMethodErrors: {
           billingAddress: {
             addressLine: "Billing Street address needs to start with a D",
             city: "Billing City needs to start with a B",
@@ -753,7 +753,7 @@ add_task(async function test_merchantPayerAddressErrors() {
     },
     request: {
       paymentDetails: {
-        payer: {
+        payerErrors: {
           email: "Email must be @mozilla.org",
           name: "Name needs to start with a W",
           phone: "Telephone needs to start with a 1",
@@ -771,7 +771,7 @@ add_task(async function test_merchantPayerAddressErrors() {
 
   function checkValidationMessage(selector, property) {
     is(form.form.querySelector(selector).validationMessage,
-       state.request.paymentDetails.payer[property],
+       state.request.paymentDetails.payerErrors[property],
        "Validation message should match for " + selector);
   }
 
@@ -786,7 +786,7 @@ add_task(async function test_merchantPayerAddressErrors() {
   await form.requestStore.setState({
     request: {
       paymentDetails: {
-        payer: {},
+        payerErrors: {},
       },
       paymentOptions: {},
     },

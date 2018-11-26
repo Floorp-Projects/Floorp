@@ -53,8 +53,8 @@ let REQUEST_1 = {
         },
       },
     ],
-    payer: {},
-    paymentMethod: {},
+    payerErrors: {},
+    paymentMethodErrors: {},
     shippingAddressErrors: {},
     shippingOptions: [
       {
@@ -135,8 +135,8 @@ let REQUEST_2 = {
         },
       },
     ],
-    payer: {},
-    paymentMethod: {},
+    payerErrors: {},
+    paymentMethoErrors: {},
     shippingAddressErrors: {},
     shippingOptions: [
       {
@@ -487,7 +487,7 @@ let buttonActions = {
   setBasicCardErrors() {
     let request = Object.assign({}, requestStore.getState().request);
     request.paymentDetails = Object.assign({}, requestStore.getState().request.paymentDetails);
-    request.paymentDetails.paymentMethod = {
+    request.paymentDetails.paymentMethodErrors = {
       cardNumber: "",
       cardholderName: "",
       cardSecurityCode: "",
@@ -530,7 +530,7 @@ let buttonActions = {
   setPayerErrors() {
     let request = Object.assign({}, requestStore.getState().request);
     request.paymentDetails = Object.assign({}, requestStore.getState().request.paymentDetails);
-    request.paymentDetails.payer = {
+    request.paymentDetails.payerErrors = {
       email: "Only @mozilla.com emails are supported",
       name: "Payer name must start with M",
       phone: "Payer area codes must start with 1",
