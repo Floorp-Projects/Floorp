@@ -310,9 +310,8 @@ PLDHashTable::MatchEntryKeyhash(const PLDHashEntryHdr* aEntry,
 PLDHashEntryHdr*
 PLDHashTable::AddressEntry(uint32_t aIndex) const
 {
-  return const_cast<PLDHashEntryHdr*>(
-    reinterpret_cast<const PLDHashEntryHdr*>(
-      mEntryStore.Get() + aIndex * mEntrySize));
+  return reinterpret_cast<PLDHashEntryHdr*>(
+      mEntryStore.Get() + aIndex * mEntrySize);
 }
 
 PLDHashTable::~PLDHashTable()

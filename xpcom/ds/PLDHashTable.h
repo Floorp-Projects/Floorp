@@ -243,8 +243,7 @@ private:
       mEntryStore = nullptr;
     }
 
-    char* Get() { return mEntryStore; }
-    const char* Get() const { return mEntryStore; }
+    char* Get() const { return mEntryStore; }
 
     void Set(char* aEntryStore, uint16_t* aGeneration)
     {
