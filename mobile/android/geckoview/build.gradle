@@ -461,3 +461,4 @@ apply plugin: 'org.mozilla.apilint'
 
 // TODO: Change this to `org` after hiding org.mozilla.gecko
 apiLint.packageFilter = 'org.mozilla.geckoview'
+apiLint.changelogFileName = 'CHANGELOG.md'
