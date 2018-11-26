@@ -71,9 +71,7 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(HTTP_CHANNEL_PARENT_IID)
 
-  HttpChannelParent(const dom::PBrowserOrId& iframeEmbedding,
-                    nsILoadContext* aLoadContext,
-                    PBOverrideStatus aStatus);
+  HttpChannelParent();
 
   MOZ_MUST_USE bool Init(const HttpChannelCreationArgs& aOpenArgs);
 
@@ -233,6 +231,10 @@ protected:
   // Called to notify the parent channel to not send any more IPC messages.
   virtual mozilla::ipc::IPCResult RecvDeletingChannel() override;
   virtual mozilla::ipc::IPCResult RecvFinishInterceptedRedirect() override;
+  virtual mozilla::ipc::IPCResult RecvAsyncOpen(
+    const PBrowserOrId& aBrowser,
+    const SerializedLoadContext& aSerialized,
+    const HttpChannelCreationArgs& aOpenArgs) override;
 
 private:
   void UpdateAndSerializeSecurityInfo(nsACString& aSerializedSecurityInfoOut);
