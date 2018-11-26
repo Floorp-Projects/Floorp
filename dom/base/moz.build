@@ -373,6 +373,7 @@ UNIFIED_SOURCES += [
     'Selection.cpp',
     'SelectionChangeEventDispatcher.cpp',
     'ShadowRoot.cpp',
+    'StorageAccessPermissionRequest.cpp',
     'StructuredCloneBlob.cpp',
     'StructuredCloneHolder.cpp',
     'StructuredCloneTester.cpp',

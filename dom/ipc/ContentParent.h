@@ -1248,8 +1248,10 @@ public:
 
   virtual mozilla::ipc::IPCResult
   RecvFirstPartyStorageAccessGrantedForOrigin(const Principal& aParentPrincipal,
+                                              const Principal& aTrackingPrincipal,
                                               const nsCString& aTrackingOrigin,
                                               const nsCString& aGrantedOrigin,
+                                              const bool& aAnySite,
                                               FirstPartyStorageAccessGrantedForOriginResolver&& aResolver) override;
 
   virtual mozilla::ipc::IPCResult
