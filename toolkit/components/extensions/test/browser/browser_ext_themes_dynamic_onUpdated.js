@@ -19,46 +19,46 @@ add_task(async function test_on_updated() {
 
       const theme1 = {
         "images": {
-          "headerURL": "image1.png",
+          "theme_frame": "image1.png",
         },
         "colors": {
-          "accentcolor": ACCENT_COLOR_1,
-          "textcolor": TEXT_COLOR_1,
+          "frame": ACCENT_COLOR_1,
+          "tab_background_text": TEXT_COLOR_1,
         },
       };
 
       const theme2 = {
         "images": {
-          "headerURL": "image2.png",
+          "theme_frame": "image2.png",
         },
         "colors": {
-          "accentcolor": ACCENT_COLOR_2,
-          "textcolor": TEXT_COLOR_2,
+          "frame": ACCENT_COLOR_2,
+          "tab_background_text": TEXT_COLOR_2,
         },
       };
 
       function testTheme1(returnedTheme) {
         browser.test.assertTrue(
-          returnedTheme.images.headerURL.includes("image1.png"),
-          "Theme 1 header URL should be applied");
+          returnedTheme.images.theme_frame.includes("image1.png"),
+          "Theme 1 theme_frame image should be applied");
         browser.test.assertEq(
-          ACCENT_COLOR_1, returnedTheme.colors.accentcolor,
-          "Theme 1 accent color should be applied");
+          ACCENT_COLOR_1, returnedTheme.colors.frame,
+          "Theme 1 frame color should be applied");
         browser.test.assertEq(
-          TEXT_COLOR_1, returnedTheme.colors.textcolor,
-          "Theme 1 text color should be applied");
+          TEXT_COLOR_1, returnedTheme.colors.tab_background_text,
+          "Theme 1 tab_background_text color should be applied");
       }
 
       function testTheme2(returnedTheme) {
         browser.test.assertTrue(
-          returnedTheme.images.headerURL.includes("image2.png"),
-          "Theme 2 header URL should be applied");
+          returnedTheme.images.theme_frame.includes("image2.png"),
+          "Theme 2 theme_frame image should be applied");
         browser.test.assertEq(
-          ACCENT_COLOR_2, returnedTheme.colors.accentcolor,
-          "Theme 2 accent color should be applied");
+          ACCENT_COLOR_2, returnedTheme.colors.frame,
+          "Theme 2 frame color should be applied");
         browser.test.assertEq(
-          TEXT_COLOR_2, returnedTheme.colors.textcolor,
-          "Theme 2 text color should be applied");
+          TEXT_COLOR_2, returnedTheme.colors.tab_background_text,
+          "Theme 2 tab_background_text color should be applied");
       }
 
       const firstWin = await browser.windows.getCurrent();

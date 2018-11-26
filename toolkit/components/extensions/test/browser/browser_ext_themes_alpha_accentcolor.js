@@ -1,15 +1,15 @@
 "use strict";
 
-add_task(async function test_alpha_accentcolor() {
+add_task(async function test_alpha_frame_color() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "theme": {
         "images": {
-          "headerURL": "image1.png",
+          "theme_frame": "image1.png",
         },
         "colors": {
-          "accentcolor": "rgba(230, 128, 0, 0.1)",
-          "textcolor": TEXT_COLOR,
+          "frame": "rgba(230, 128, 0, 0.1)",
+          "tab_background_text": TEXT_COLOR,
         },
       },
     },

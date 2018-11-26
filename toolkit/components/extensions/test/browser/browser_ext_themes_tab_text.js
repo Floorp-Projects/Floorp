@@ -9,11 +9,11 @@ add_task(async function test_support_tab_text_property_css_color() {
     manifest: {
       "theme": {
         "images": {
-          "headerURL": "image1.png",
+          "theme_frame": "image1.png",
         },
         "colors": {
-          "accentcolor": ACCENT_COLOR,
-          "textcolor": TEXT_COLOR,
+          "frame": ACCENT_COLOR,
+          "tab_background_text": TEXT_COLOR,
           "tab_text": TAB_TEXT_COLOR,
         },
       },
@@ -40,11 +40,11 @@ add_task(async function test_support_tab_text_chrome_array() {
     manifest: {
       "theme": {
         "images": {
-          "headerURL": "image1.png",
+          "theme_frame": "image1.png",
         },
         "colors": {
-          "accentcolor": FRAME_COLOR,
-          "textcolor": TAB_BACKGROUND_TEXT_COLOR,
+          "frame": FRAME_COLOR,
+          "tab_background_text": TAB_BACKGROUND_TEXT_COLOR,
           "tab_text": TAB_TEXT_COLOR,
         },
       },
