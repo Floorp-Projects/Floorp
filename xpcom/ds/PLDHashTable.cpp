@@ -728,6 +728,7 @@ PLDHashTable::Iterator::Iterator(Iterator&& aOther)
   , mNexts(aOther.mNexts)
   , mNextsLimit(aOther.mNextsLimit)
   , mHaveRemoved(aOther.mHaveRemoved)
+  , mEntrySize(aOther.mEntrySize)
 {
   // No need to change |mChecker| here.
   aOther.mTable = nullptr;
@@ -736,6 +737,7 @@ PLDHashTable::Iterator::Iterator(Iterator&& aOther)
   aOther.mNexts = 0;
   aOther.mNextsLimit = 0;
   aOther.mHaveRemoved = false;
+  aOther.mEntrySize = 0;
 }
 
 PLDHashTable::Iterator::Iterator(PLDHashTable* aTable)
@@ -745,6 +747,7 @@ PLDHashTable::Iterator::Iterator(PLDHashTable* aTable)
   , mNexts(0)
   , mNextsLimit(mTable->EntryCount())
   , mHaveRemoved(false)
+  , mEntrySize(aTable->mEntrySize)
 {
 #ifdef DEBUG
   mTable->mChecker.StartReadOp();
@@ -788,7 +791,7 @@ PLDHashTable::Iterator::IsOnNonLiveEntry() const
 MOZ_ALWAYS_INLINE void
 PLDHashTable::Iterator::MoveToNextEntry()
 {
-  mCurrent += mTable->mEntrySize;
+  mCurrent += mEntrySize;
   if (mCurrent == mLimit) {
     mCurrent = mTable->mEntryStore.Get();  // Wrap-around. Possible due to Chaos Mode.
   }
