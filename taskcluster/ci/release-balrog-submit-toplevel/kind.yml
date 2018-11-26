@@ -8,6 +8,7 @@ transforms:
    - taskgraph.transforms.release:run_on_releases
    - taskgraph.transforms.release_deps:transforms
    - taskgraph.transforms.scriptworker:add_balrog_scopes
+   - taskgraph.transforms.balrog_toplevel:transforms
    - taskgraph.transforms.task:transforms
 
 job-defaults:
@@ -25,6 +26,7 @@ job-defaults:
          by-release-level:
             production: download.mozilla.org
             staging: bouncer-bouncer-releng.stage.mozaws.net
+   whats-new-config: browser/config/whats_new_page.yml
 
 jobs:
    firefox:
