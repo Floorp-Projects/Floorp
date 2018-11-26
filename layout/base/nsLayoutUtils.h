@@ -1389,7 +1389,7 @@ public:
    * If aFrame is an out of flow frame, return its placeholder, otherwise
    * return its parent.
    */
-  static nsIFrame* GetParentOrPlaceholderFor(const nsIFrame* aFrame);
+  static nsIFrame* GetParentOrPlaceholderFor(nsIFrame* aFrame);
 
   /**
    * If aFrame is an out of flow frame, return its placeholder, otherwise

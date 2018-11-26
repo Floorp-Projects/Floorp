@@ -4681,16 +4681,10 @@ EditorBase::InitializeSelection(EventTarget* aFocusEventTarget)
   if (NS_WARN_IF(!caret)) {
     return NS_ERROR_FAILURE;
   }
+  caret->SetIgnoreUserModify(false);
   caret->SetSelection(SelectionRefPtr());
   selectionController->SetCaretReadOnly(IsReadonly());
   selectionController->SetCaretEnabled(true);
-  // NOTE(emilio): It's important for this call to be after
-  // SetCaretEnabled(true), since that would override mIgnoreUserModify to true.
-  //
-  // Also, make sure to always ignore it for designMode, since that effectively
-  // overrides everything and we allow to edit stuff with
-  // contenteditable="false" subtrees in such a document.
-  caret->SetIgnoreUserModify(targetNode->OwnerDoc()->HasFlag(NODE_IS_EDITABLE));
 
   // Init selection
   selectionController->SetDisplaySelection(
@@ -4778,10 +4772,6 @@ EditorBase::FinalizeSelection()
 
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_INITIALIZED);
-
-  if (RefPtr<nsCaret> caret = presShell->GetCaret()) {
-    caret->SetIgnoreUserModify(true);
-  }
 
   selectionController->SetCaretEnabled(false);
 
