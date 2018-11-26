@@ -134,6 +134,11 @@ function disallowCertOverridesIfNeeded() {
       let stsReturnButtonText = document.getElementById("stsReturnButtonText").textContent;
       document.getElementById("returnButton").textContent = stsReturnButtonText;
       document.getElementById("advancedPanelReturnButton").textContent = stsReturnButtonText;
+
+      let stsMitmWhatCanYouDoAboutIt3 =
+        document.getElementById("stsMitmWhatCanYouDoAboutIt3").innerHTML;
+      // eslint-disable-next-line no-unsanitized/property
+      document.getElementById("mitmWhatCanYouDoAboutIt3").innerHTML = stsMitmWhatCanYouDoAboutIt3;
     }
   }
 }
