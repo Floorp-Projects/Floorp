@@ -211,7 +211,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EditorBase)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocStateListeners)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEventTarget)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPlaceholderTransaction)
- NS_IMPL_CYCLE_COLLECTION_UNLINK(mSavedSel);
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRangeUpdater);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -236,7 +235,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EditorBase)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEventTarget)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEventListener)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPlaceholderTransaction)
- NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSavedSel);
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRangeUpdater);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -2297,7 +2295,7 @@ EditorBase::OutputToString(const nsAString& aFormatType,
 bool
 EditorBase::ArePreservingSelection()
 {
-  return !(mSavedSel.IsEmpty());
+  return IsEditActionDataAvailable() && !SavedSelectionRef().IsEmpty();
 }
 
 void
@@ -2305,8 +2303,8 @@ EditorBase::PreserveSelectionAcrossActions()
 {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  mSavedSel.SaveSelection(SelectionRefPtr());
-  mRangeUpdater.RegisterSelectionState(mSavedSel);
+  SavedSelectionRef().SaveSelection(SelectionRefPtr());
+  mRangeUpdater.RegisterSelectionState(SavedSelectionRef());
 }
 
 nsresult
@@ -2314,10 +2312,10 @@ EditorBase::RestorePreservedSelection()
 {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (mSavedSel.IsEmpty()) {
+  if (SavedSelectionRef().IsEmpty()) {
     return NS_ERROR_FAILURE;
   }
-  mSavedSel.RestoreSelection(SelectionRefPtr());
+  SavedSelectionRef().RestoreSelection(SelectionRefPtr());
   StopPreservingSelection();
   return NS_OK;
 }
@@ -2325,8 +2323,10 @@ EditorBase::RestorePreservedSelection()
 void
 EditorBase::StopPreservingSelection()
 {
-  mRangeUpdater.DropSelectionState(mSavedSel);
-  mSavedSel.MakeEmpty();
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  mRangeUpdater.DropSelectionState(SavedSelectionRef());
+  SavedSelectionRef().MakeEmpty();
 }
 
 NS_IMETHODIMP
@@ -5189,7 +5189,8 @@ EditorBase::AutoSelectionRestorer::AutoSelectionRestorer(
 {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   if (aEditorBase.ArePreservingSelection()) {
-    // We already have initialized mSavedSel, so this must be nested call.
+    // We already have initialized mParentData::mSavedSelection, so this must
+    // be nested call.
     return;
   }
   MOZ_ASSERT(aEditorBase.IsEditActionDataAvailable());
