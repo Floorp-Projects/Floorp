@@ -214,6 +214,8 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
    *     when a computed property has been modified by a style included
    *     by `filter`.
    *   `onlyMatched`: true if unmatched properties shouldn't be included.
+   *   `filterProperties`: An array of properties names that you would like
+   *     returned.
    *
    * @returns a JSON blob with the following form:
    *   {
