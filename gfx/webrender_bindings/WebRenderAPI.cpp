@@ -237,6 +237,12 @@ TransactionBuilder::IsEmpty() const
   return wr_transaction_is_empty(mTxn);
 }
 
+bool
+TransactionBuilder::IsResourceUpdatesEmpty() const
+{
+  return wr_transaction_resource_updates_is_empty(mTxn);
+}
+
 void
 TransactionBuilder::SetWindowParameters(const LayoutDeviceIntSize& aWindowSize,
                                         const LayoutDeviceIntRect& aDocumentRect)
