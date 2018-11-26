@@ -8907,7 +8907,7 @@ GeneralParser<ParseHandler, Unit>::memberExpr(YieldHandling yieldHandling,
             return null();
         }
     } else if (tt == TokenKind::Import) {
-        lhs = importExpr(yieldHandling);
+        lhs = importExpr(yieldHandling, allowCallSyntax);
         if (!lhs) {
             return null();
         }
@@ -10272,7 +10272,7 @@ GeneralParser<ParseHandler, Unit>::tryNewTarget(BinaryNodeType* newTarget)
 
 template <class ParseHandler, typename Unit>
 typename ParseHandler::BinaryNodeType
-GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling)
+GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling, bool allowCallSyntax)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Import));
 
@@ -10306,7 +10306,7 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling)
         }
 
         return handler.newImportMeta(importHolder, metaHolder);
-    } else if (next == TokenKind::LeftParen) {
+    } else if (next == TokenKind::LeftParen && allowCallSyntax) {
         Node arg = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
         if (!arg) {
             return null();

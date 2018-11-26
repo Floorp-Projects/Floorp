@@ -1,4 +1,3 @@
-// |reftest| skip -- dynamic-import is not supported
 // Copyright (C) 2018 Leo Balter. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -27,7 +26,7 @@ info: |
         5. Return namespace.
 ---*/
 
-import('./default-property-not-set-own.js').then(ns => {
+import('./empty_FIXTURE.js').then(ns => {
 
     assert.sameValue(Object.prototype.hasOwnProperty.call(ns, 'default'), false);
 
