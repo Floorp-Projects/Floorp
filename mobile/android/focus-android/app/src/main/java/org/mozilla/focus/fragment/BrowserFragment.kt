@@ -101,6 +101,7 @@ import org.mozilla.focus.widget.FloatingEraseButton
 import org.mozilla.focus.widget.FloatingSessionsButton
 import java.lang.ref.WeakReference
 import java.net.URI
+import java.net.URISyntaxException
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -1437,7 +1438,11 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
         }
 
         override fun onUrlChanged(session: Session, url: String) {
-            val host = URI(url).host
+            val host = try {
+                URI(url).host
+            } catch (e: URISyntaxException) {
+                url
+            }
             val isException =
                 host != null && ExceptionDomains.load(requireContext()).contains(host)
             getWebView()?.setBlockingEnabled(!isException)
