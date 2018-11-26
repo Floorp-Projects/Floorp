@@ -5328,12 +5328,8 @@ BaselineCompiler::emit_JSOP_CHECKCLASSHERITAGE()
 bool
 BaselineCompiler::emit_JSOP_INITHOMEOBJECT()
 {
-    frame.syncStack(0);
-
-    // Load HomeObject off stack
-    unsigned skipOver = GET_UINT8(pc);
-    MOZ_ASSERT(frame.stackDepth() >= skipOver + 2);
-    masm.loadValue(frame.addressOfStackValue(frame.peek(-2 - skipOver)), R0);
+    // Load HomeObject in R0.
+    frame.popRegsAndSync(1);
 
     // Load function off stack
     Register func = R2.scratchReg();

@@ -920,14 +920,14 @@
      * Initialize the home object for functions with super bindings.
      *
      * This opcode takes the function and the object to be the home object,
-     * does the set, and leaves both on the stack.
+     * does the set, and leaves the function on the stack.
      *
      *   Category: Literals
      *   Type: Object
-     *   Operands: uint8_t n
-     *   Stack: homeObject, [...n], fun => homeObject, [...n], fun
+     *   Operands:
+     *   Stack: fun, homeObject => fun
      */ \
-    MACRO(JSOP_INITHOMEOBJECT, 92, "inithomeobject", NULL, 2, 2, 2, JOF_UINT8) \
+    MACRO(JSOP_INITHOMEOBJECT, 92, "inithomeobject", NULL, 1, 2, 1, JOF_BYTE) \
     /*
      * Initialize a named property in an object literal, like '{a: x}'.
      *
