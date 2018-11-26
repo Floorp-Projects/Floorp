@@ -849,9 +849,6 @@ var AddonTestUtils = {
     Cu.unload("resource://gre/modules/addons/XPIDatabase.jsm");
     Cu.unload("resource://gre/modules/addons/XPIInstall.jsm");
 
-    // XXX
-    Cu.unload("resource://gre/modules/addons/BootstrapLoader.jsm");
-
     let ExtensionScope = ChromeUtils.import("resource://gre/modules/Extension.jsm", null);
     ChromeUtils.defineModuleGetter(ExtensionScope, "XPIProvider",
                                    "resource://gre/modules/addons/XPIProvider.jsm");

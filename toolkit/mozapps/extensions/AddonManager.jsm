@@ -780,10 +780,6 @@ var AddonManagerInternal = {
         }
       }
 
-      // XXX temporary
-      ChromeUtils.import("resource://gre/modules/addons/BootstrapLoader.jsm");
-      AddonManager.addExternalExtensionLoader(BootstrapLoader);
-
       // Load any providers registered in the category manager
       for (let {entry, value: url} of Services.catMan.enumerateCategory(CATEGORY_PROVIDER_MODULE)) {
         try {
