@@ -84,6 +84,7 @@ When an entry has a file attached to it, it has an ``attachment`` attribute, whi
     data.filter(d => d.attachment)
         .forEach(async ({ attachment: { url, filename, size } }) => {
           if (size < OS.freeDiskSpace) {
+            // Planned feature, see Bug 1501214
             await downloadLocally(url, filename);
           }
         });
@@ -124,7 +125,7 @@ It is submitted to a single :ref:`keyed histogram <histogram-type-keyed>` whose 
 Create new remote settings
 ==========================
 
-Staff members can create new kinds of remote settings, following `this documentation <https://mana.mozilla.org/wiki/pages/viewpage.action?pageId=66655528>`_.
+Staff members can create new kinds of remote settings, following `this documentation <https://remote-settings.readthedocs.io/en/latest/getting-started.html>`_.
 
 It basically consists in:
 
@@ -137,6 +138,24 @@ And once done:
 
 #. Create, modify or delete entries and let reviewers approve the changes
 #. Wait for Firefox to pick-up the changes for your settings key
+
+
+Advanced Options
+================
+
+``filterFunc``: custom filtering function
+-----------------------------------------
+
+By default, the entries returned by ``.get()`` are filtered based on the JEXL expression result from the ``filter_expression`` field. The ``filterFunc`` option allows to execute a custom filter (async) function, that should return the record (modified or not) if kept or a falsy value if filtered out.
+
+.. code-block:: javascript
+
+    RemoteSettings("a-collection", {
+      filterFunc: (record, environment) => {
+        const { enabled, ...entry } = record;
+        return enabled ? entry : null;
+      }
+    });
 
 
 Debugging and testing
@@ -202,19 +221,15 @@ For further documentation in collection API, checkout the `kinto.js library <htt
 Inspect local data
 ------------------
 
-The internal IndexedDBs of remote settings can be accessed via the Storage Inspector in the `browser toolbox <https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox>`_.
+The internal IndexedDB of Remote Settings can be accessed via the Storage Inspector in the `browser toolbox <https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox>`_.
 
-For example, the local data of the ``"key"`` collection can be accessed in the ``main/key`` IndexedDB store at *Browser Toolbox* > *Storage* > *IndexedDB* > *chrome* > *main/key*.
+For example, the local data of the ``"key"`` collection can be accessed in the ``remote-settings`` database at *Browser Toolbox* > *Storage* > *IndexedDB* > *chrome*, in the ``records`` store.
 
 
-\about:remotesettings
----------------------
+Remote Settings Dev Tools
+-------------------------
 
-The ``about:remotesettings`` extension provides some tooling to inspect synchronization statuses, to change the remote server or to switch to *preview* mode in order to sign-off pending changes. `More information on the dedicated repository <https://github.com/leplatrem/aboutremotesettings>`_.
-
-.. note::
-
-    With `Bug 1406036 <https://bugzilla.mozilla.org/show_bug.cgi?id=1406036>`_, about:remotesettings will be available natively.
+The Remote Settings Dev Tools extension provides some tooling to inspect synchronization statuses, to change the remote server or to switch to *preview* mode in order to sign-off pending changes. `More information on the dedicated repository <https://github.com/mozilla/remote-settings-devtools>`_.
 
 
 About blocklists
