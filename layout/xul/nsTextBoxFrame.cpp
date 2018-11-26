@@ -374,7 +374,7 @@ nsDisplayXULTextBox::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aB
   Paint(aDisplayListBuilder, captureCtx);
   textDrawer->TerminateShadows();
 
-  return !textDrawer->HasUnsupportedFeatures();
+  return textDrawer->Finish();
 }
 
 nsRect

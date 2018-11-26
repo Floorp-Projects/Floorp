@@ -253,21 +253,30 @@ this.TopStoriesFeed = class TopStoriesFeed {
     const scoreStart = perfService.absNow();
     const calcResult = items
       .filter(s => !NewTabUtils.blockedLinks.isBlocked({"url": s.url}))
-      .map(s => ({
-        "guid": s.id,
-        "hostname": s.domain || shortURL(Object.assign({}, s, {url: s.url})),
-        "type": (Date.now() - (s.published_timestamp * 1000)) <= STORIES_NOW_THRESHOLD ? "now" : "trending",
-        "context": s.context,
-        "icon": s.icon,
-        "title": s.title,
-        "description": s.excerpt,
-        "image": this.normalizeUrl(s.image_src),
-        "referrer": this.stories_referrer,
-        "url": s.url,
-        "min_score": s.min_score || 0,
-        "score": this.personalized && this.affinityProvider ? this.affinityProvider.calculateItemRelevanceScore(s) : s.item_score || 1,
-        "spoc_meta": this.show_spocs ? {campaign_id: s.campaign_id, caps: s.caps} : {},
-      }))
+      .map(s => {
+        let mapped = {
+          "guid": s.id,
+          "hostname": s.domain || shortURL(Object.assign({}, s, {url: s.url})),
+          "type": (Date.now() - (s.published_timestamp * 1000)) <= STORIES_NOW_THRESHOLD ? "now" : "trending",
+          "context": s.context,
+          "icon": s.icon,
+          "title": s.title,
+          "description": s.excerpt,
+          "image": this.normalizeUrl(s.image_src),
+          "referrer": this.stories_referrer,
+          "url": s.url,
+          "min_score": s.min_score || 0,
+          "score": this.personalized && this.affinityProvider ? this.affinityProvider.calculateItemRelevanceScore(s) : s.item_score || 1,
+          "spoc_meta": this.show_spocs ? {campaign_id: s.campaign_id, caps: s.caps} : {},
+        };
+
+        // Very old cached spocs may not contain an `expiration_timestamp` property
+        if (s.expiration_timestamp) {
+          mapped.expiration_timestamp = s.expiration_timestamp;
+        }
+
+        return mapped;
+      })
       .sort(this.personalized ? this.compareScore : (a, b) => 0);
 
     this.dispatchRelevanceScore(scoreStart);
@@ -401,29 +410,43 @@ this.TopStoriesFeed = class TopStoriesFeed {
     this.store.dispatch(ac.OnlyToOneContent(action, target));
   }
 
+  filterSpocs() {
+    if (!this.shouldShowSpocs()) {
+      return [];
+    }
+
+    if (Math.random() > this.spocsPerNewTabs) {
+      return [];
+    }
+
+    if (!this.spocs || !this.spocs.length) {
+      // We have stories but no spocs so there's nothing to do and this update can be
+      // removed from the queue.
+      return [];
+    }
+
+    // Filter spocs based on frequency caps
+    const impressions = this.readImpressionsPref(SPOC_IMPRESSION_TRACKING_PREF);
+    let spocs = this.spocs.filter(s => this.isBelowFrequencyCap(impressions, s));
+
+    // Filter out expired spocs based on `expiration_timestamp`
+    spocs = spocs.filter(spoc => {
+      // If cached data is so old it doesn't contain this property, assume the spoc is ok to show
+      if (!(`expiration_timestamp` in spoc)) {
+        return true;
+      }
+      // `expiration_timestamp` is the number of seconds elapsed since January 1, 1970 00:00:00 UTC
+      return spoc.expiration_timestamp * 1000 > Date.now();
+    });
+
+    return spocs;
+  }
+
   maybeAddSpoc(target) {
     const updateContent = () => {
-      if (!this.shouldShowSpocs()) {
-        this.dispatchSpocDone(target);
-        return false;
-      }
-      if (Math.random() > this.spocsPerNewTabs) {
-        this.dispatchSpocDone(target);
-        return false;
-      }
-      if (!this.spocs || !this.spocs.length) {
-        // We have stories but no spocs so there's nothing to do and this update can be
-        // removed from the queue.
-        this.dispatchSpocDone(target);
-        return false;
-      }
-
-      // Filter spocs based on frequency caps
-      const impressions = this.readImpressionsPref(SPOC_IMPRESSION_TRACKING_PREF);
-      const spocs = this.spocs.filter(s => this.isBelowFrequencyCap(impressions, s));
+      let spocs = this.filterSpocs();
 
       if (!spocs.length) {
-        // There's currently no spoc left to display
         this.dispatchSpocDone(target);
         return false;
       }
