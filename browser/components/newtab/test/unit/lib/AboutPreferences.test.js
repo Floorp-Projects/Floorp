@@ -134,6 +134,7 @@ describe("AboutPreferences Feed", () => {
       document: {
         createXULElement: sandbox.stub().returns(node),
         createProcessingInstruction: sandbox.stub(),
+        createElementNS: sandbox.stub().callsFake((NS, el) => document.createElement(el)),
         getElementById: sandbox.stub().returns(node),
         insertBefore: sandbox.stub().returnsArg(0),
       },
