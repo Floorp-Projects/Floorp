@@ -47,7 +47,10 @@ function getUiState() {
   const locations = getNetworkLocations();
   const networkEnabled = Services.prefs.getBoolPref(PREFERENCES.NETWORK_ENABLED, false);
   const wifiEnabled = Services.prefs.getBoolPref(PREFERENCES.WIFI_ENABLED, false);
-  return new UiState(locations, collapsibilities, networkEnabled, wifiEnabled);
+  const showSystemAddons = Services.prefs.getBoolPref(PREFERENCES.SHOW_SYSTEM_ADDONS,
+    false);
+  return new UiState(locations, collapsibilities, networkEnabled, wifiEnabled,
+    showSystemAddons);
 }
 
 exports.configureStore = configureStore;
