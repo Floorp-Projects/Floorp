@@ -282,6 +282,7 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY urlbar.persistentStorageNotificationAnchor.tooltip     "Store data in Persistent Storage">
 <!ENTITY urlbar.remoteControlNotificationAnchor.tooltip   "Browser is under remote control">
 <!ENTITY urlbar.webAuthnAnchor.tooltip                    "Open Web Authentication panel">
+<!ENTITY urlbar.storageAccessAnchor.tooltip               "Open browsing activity permission panel">
 
 <!ENTITY urlbar.webRTCShareDevicesNotificationAnchor.tooltip      "Manage sharing your camera and/or microphone with the site">
 <!ENTITY urlbar.webRTCShareMicrophoneNotificationAnchor.tooltip   "Manage sharing your microphone with the site">
