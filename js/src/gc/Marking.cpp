@@ -2560,6 +2560,38 @@ GCMarker::reset()
     MOZ_ASSERT(!markLaterArenas);
 }
 
+void
+GCMarker::setMarkColor(gc::MarkColor newColor)
+{
+    if (color == newColor) {
+        return;
+    }
+    if (newColor == gc::MarkColor::Black) {
+        setMarkColorBlack();
+    } else {
+        setMarkColorGray();
+    }
+}
+
+void
+GCMarker::setMarkColorGray()
+{
+    MOZ_ASSERT(isDrained());
+    MOZ_ASSERT(color == gc::MarkColor::Black);
+    MOZ_ASSERT(runtime()->gc.state() == State::Sweep);
+
+    color = gc::MarkColor::Gray;
+}
+
+void
+GCMarker::setMarkColorBlack()
+{
+    MOZ_ASSERT(isDrained());
+    MOZ_ASSERT(color == gc::MarkColor::Gray);
+    MOZ_ASSERT(runtime()->gc.state() == State::Sweep);
+
+    color = gc::MarkColor::Black;
+}
 
 template <typename T>
 void
