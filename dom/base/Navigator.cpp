@@ -93,7 +93,6 @@
 #if defined(XP_LINUX)
 #include "mozilla/Hal.h"
 #endif
-#include "mozilla/dom/ContentChild.h"
 
 #include "mozilla/EMEUtils.h"
 #include "mozilla/DetailedPromise.h"

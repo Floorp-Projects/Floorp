@@ -9,7 +9,6 @@
 
 #include "nsIObserver.h"
 #include "VideoEngine.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/camera/PCamerasParent.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/ShmemPool.h"

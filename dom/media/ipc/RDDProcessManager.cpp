@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "RDDProcessManager.h"
 
+#include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/RemoteDecoderManagerParent.h"
 #include "mozilla/StaticPrefs.h"
-#include "mozilla/dom/ContentParent.h"
 
 #include "nsAppRunner.h"
 #include "nsContentUtils.h"

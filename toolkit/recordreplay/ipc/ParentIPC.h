@@ -8,7 +8,6 @@
 #define mozilla_recordreplay_ParentIPC_h
 
 #include "base/shared_memory.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/ipc/ProtocolUtils.h"
