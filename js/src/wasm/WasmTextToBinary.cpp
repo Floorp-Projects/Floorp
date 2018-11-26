@@ -3880,19 +3880,7 @@ ParseStructNarrow(WasmParseContext& c, bool inParens)
 static AstExpr*
 ParseRefNull(WasmParseContext& c)
 {
-    WasmToken token;
-    AstValType vt;
-
-    if (!ParseValType(c, &vt)) {
-        return nullptr;
-    }
-
-    if (!vt.isRefType()) {
-        c.ts.generateError(token, "ref.null requires ref type", c.error);
-        return nullptr;
-    }
-
-    return new(c.lifo) AstRefNull(vt);
+    return new(c.lifo) AstRefNull();
 }
 
 static AstExpr*
@@ -5782,7 +5770,7 @@ ResolveStructNarrow(Resolver& r, AstStructNarrow& s)
 static bool
 ResolveRefNull(Resolver& r, AstRefNull& s)
 {
-    return ResolveType(r, s.baseType());
+    return true;
 }
 
 static bool
@@ -6736,8 +6724,7 @@ EncodeStructNarrow(Encoder& e, AstStructNarrow& s)
 static bool
 EncodeRefNull(Encoder& e, AstRefNull& s)
 {
-    return e.writeOp(Op::RefNull) &&
-           e.writeValType(s.baseType().type());
+    return e.writeOp(Op::RefNull);
 }
 
 static bool

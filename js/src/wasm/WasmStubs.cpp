@@ -180,6 +180,8 @@ StoreABIReturn(MacroAssembler& masm, const FuncExport& fe, Register argv)
       case ExprType::AnyRef:
         masm.storePtr(ReturnReg, Address(argv, 0));
         break;
+      case ExprType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
       case ExprType::Limit:
         MOZ_CRASH("Limit");
     }
@@ -797,6 +799,8 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
         break;
       case ExprType::I64:
         MOZ_CRASH("unexpected return type when calling from ion to wasm");
+      case ExprType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
       case ExprType::Limit:
         MOZ_CRASH("Limit");
     }
@@ -1009,6 +1013,8 @@ wasm::GenerateDirectCallFromJit(MacroAssembler& masm,
       case wasm::ExprType::AnyRef:
       case wasm::ExprType::I64:
         MOZ_CRASH("unexpected return type when calling from ion to wasm");
+      case wasm::ExprType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
       case wasm::ExprType::Limit:
         MOZ_CRASH("Limit");
     }
@@ -1349,6 +1355,8 @@ GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.loadPtr(argv, ReturnReg);
         break;
+      case ExprType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
       case ExprType::Limit:
         MOZ_CRASH("Limit");
     }
@@ -1522,6 +1530,8 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
       case ExprType::AnyRef:
         MOZ_CRASH("anyref returned by import (jit exit) NYI");
         break;
+      case ExprType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
       case ExprType::Limit:
         MOZ_CRASH("Limit");
     }

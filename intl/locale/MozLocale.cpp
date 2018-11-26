@@ -134,19 +134,19 @@ Locale::AsString() const
   return tag;
 }
 
-const nsACString&
+const nsCString&
 Locale::GetLanguage() const
 {
   return mLanguage;
 }
 
-const nsACString&
+const nsCString&
 Locale::GetScript() const
 {
   return mScript;
 }
 
-const nsACString&
+const nsCString&
 Locale::GetRegion() const
 {
   return mRegion;
