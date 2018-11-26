@@ -8,8 +8,6 @@ const { ADB } = require("devtools/shared/adb/adb");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { DebuggerServer } = require("devtools/server/main");
 const { ClientWrapper } = require("./client-wrapper");
-const { remoteClientManager } =
-  require("devtools/client/shared/remote-debugging/remote-client-manager");
 
 const { RUNTIMES } = require("../constants");
 
@@ -18,14 +16,15 @@ async function createLocalClient() {
   DebuggerServer.registerAllActors();
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   await client.connect();
-  return new ClientWrapper(client);
+  return { clientWrapper: new ClientWrapper(client) };
 }
 
 async function createNetworkClient(host, port) {
-  const transport = await DebuggerClient.socketConnect({ host, port });
+  const transportDetails = { host, port };
+  const transport = await DebuggerClient.socketConnect(transportDetails);
   const client = new DebuggerClient(transport);
   await client.connect();
-  return new ClientWrapper(client);
+  return { clientWrapper: new ClientWrapper(client), transportDetails };
 }
 
 async function createUSBClient(socketPath) {
@@ -34,13 +33,10 @@ async function createUSBClient(socketPath) {
 }
 
 async function createClientForRuntime(runtime) {
-  const { extra, id, type } = runtime;
+  const { extra, type } = runtime;
 
   if (type === RUNTIMES.THIS_FIREFOX) {
     return createLocalClient();
-  } else if (remoteClientManager.hasClient(id, type)) {
-    const client = remoteClientManager.getClient(id, type);
-    return new ClientWrapper(client);
   } else if (type === RUNTIMES.NETWORK) {
     const { host, port } = extra.connectionParameters;
     return createNetworkClient(host, port);

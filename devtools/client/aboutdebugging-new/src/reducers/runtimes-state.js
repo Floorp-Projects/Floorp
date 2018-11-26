@@ -19,9 +19,6 @@ const {
   findRuntimeById,
 } = require("../modules/runtimes-state-helper");
 
-const { remoteClientManager } =
-  require("devtools/client/shared/remote-debugging/remote-client-manager");
-
 // Map between known runtime types and nodes in the runtimes state.
 const TYPE_TO_RUNTIMES_KEY = {
   [RUNTIMES.THIS_FIREFOX]: "thisFirefoxRuntimes",
@@ -73,14 +70,12 @@ function _updateRuntimeById(runtimeId, updatedRuntime, state) {
 function runtimesReducer(state = RuntimesState(), action) {
   switch (action.type) {
     case CONNECT_RUNTIME_SUCCESS: {
-      const { id, runtimeDetails, type } = action.runtime;
-      remoteClientManager.setClient(id, type, runtimeDetails.clientWrapper.client);
+      const { id, runtimeDetails } = action.runtime;
       return _updateRuntimeById(id, { runtimeDetails }, state);
     }
 
     case DISCONNECT_RUNTIME_SUCCESS: {
-      const { id, type } = action.runtime;
-      remoteClientManager.removeClient(id, type);
+      const { id } = action.runtime;
       return _updateRuntimeById(id, { runtimeDetails: null }, state);
     }
 
@@ -117,8 +112,8 @@ function runtimesReducer(state = RuntimesState(), action) {
       const { runtimes } = action;
       const usbRuntimes = runtimes.map(runtime => {
         const existingRuntime = findRuntimeById(runtime.id, state);
-        const existingRuntimeDetails = existingRuntime ?
-          existingRuntime.runtimeDetails : null;
+        const existingRuntimeDetails =
+          existingRuntime ? existingRuntime.runtimeDetails : null;
 
         return {
           id: runtime.id,
