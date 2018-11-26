@@ -3046,7 +3046,7 @@ var ContentBlockingCategoriesPrefs = {
   },
 
   updateCBCategory() {
-    if (this.switchingCategory) {
+    if (this.switchingCategory || !Services.prefs.prefHasUserValue(this.PREF_CB_CATEGORY)) {
       return;
     }
     // Turn on switchingCategory flag, to ensure that when the individual prefs that change as a result
