@@ -68,7 +68,7 @@ class MachCommands(MachCommandBase):
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_assemble_app(self, args):
         ret = self.gradle(self.substs['GRADLE_ANDROID_APP_TASKS'] +
-                          ['-x', 'lint', '--continue'] + args, verbose=True)
+                          ['-x', 'lint'] + args, verbose=True)
 
         return ret
 
@@ -140,7 +140,7 @@ class MachCommands(MachCommandBase):
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_test(self, args):
         ret = self.gradle(self.substs['GRADLE_ANDROID_TEST_TASKS'] +
-                          ["--continue"] + args, verbose=True)
+                          args, verbose=True)
 
         ret |= self._parse_android_test_results('public/app/unittest',
                                                 'gradle/build/mobile/android/app',
@@ -240,7 +240,7 @@ class MachCommands(MachCommandBase):
         self.android_test([enable_ccov])
 
         self.gradle(self.substs['GRADLE_ANDROID_TEST_CCOV_REPORT_TASKS'] +
-                    ['--continue', enable_ccov] + args, verbose=True)
+                    [enable_ccov] + args, verbose=True)
         self._process_jacoco_reports()
         return 0
 
@@ -268,7 +268,7 @@ class MachCommands(MachCommandBase):
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_lint(self, args):
         ret = self.gradle(self.substs['GRADLE_ANDROID_LINT_TASKS'] +
-                          ["--continue"] + args, verbose=True)
+                          args, verbose=True)
 
         # Android Lint produces both HTML and XML reports.  Visit the
         # XML report(s) to report errors and link to the HTML
@@ -316,7 +316,7 @@ class MachCommands(MachCommandBase):
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_checkstyle(self, args):
         ret = self.gradle(self.substs['GRADLE_ANDROID_CHECKSTYLE_TASKS'] +
-                          ["--continue"] + args, verbose=True)
+                          args, verbose=True)
 
         # Checkstyle produces both HTML and XML reports.  Visit the
         # XML report(s) to report errors and link to the HTML
@@ -372,7 +372,7 @@ class MachCommands(MachCommandBase):
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_findbugs(self, dryrun=False, args=[]):
         ret = self.gradle(self.substs['GRADLE_ANDROID_FINDBUGS_TASKS'] +
-                          ["--continue"] + args, verbose=True)
+                          args, verbose=True)
 
         # Findbug produces both HTML and XML reports.  Visit the
         # XML report(s) to report errors and link to the HTML
@@ -443,7 +443,7 @@ class MachCommands(MachCommandBase):
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_archive_classfiles(self, args):
         self.gradle(self.substs['GRADLE_ANDROID_ARCHIVE_COVERAGE_ARTIFACTS_TASKS'] +
-                    ["--continue"] + args, verbose=True)
+                    args, verbose=True)
 
         return 0
 
@@ -453,7 +453,7 @@ class MachCommands(MachCommandBase):
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_archive_geckoview(self, args):
         ret = self.gradle(
-            self.substs['GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS'] + ["--continue"] + args,
+            self.substs['GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS'] + args,
             verbose=True)
 
         if ret != 0:
@@ -617,8 +617,11 @@ class MachCommands(MachCommandBase):
         # https://discuss.gradle.org/t/unmappable-character-for-encoding-ascii-when-building-a-utf-8-project/10692/11  # NOQA: E501
         # and especially https://stackoverflow.com/a/21755671.
 
+        if self.substs.get('MOZ_AUTOMATION'):
+            gradle_flags += ['--console=plain']
+
         return self.run_process(
-            [self.substs['GRADLE']] + gradle_flags + ['--console=plain'] + args,
+            [self.substs['GRADLE']] + gradle_flags + args,
             append_env={
                 'GRADLE_OPTS': '-Dfile.encoding=utf-8',
                 'JAVA_HOME': java_home,
