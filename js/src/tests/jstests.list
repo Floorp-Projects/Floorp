@@ -492,13 +492,6 @@ skip script test262/built-ins/RegExp/prototype/source/cross-realm.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1508684
 skip script test262/language/expressions/import.meta/syntax/invalid-assignment-target-update-expr.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1508672
-skip script test262/language/expressions/dynamic-import/for-await-resolution-and-error-agen-yield.js
-skip script test262/language/expressions/dynamic-import/for-await-resolution-and-error.js
-skip script test262/language/expressions/dynamic-import/for-await-resolution-and-error-agen.js
-skip script test262/language/expressions/dynamic-import/double-error-resolution-promise.js
-skip script test262/language/expressions/dynamic-import/double-error-resolution.js
-
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
 ###########################################################
