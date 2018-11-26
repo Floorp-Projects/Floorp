@@ -14,6 +14,7 @@ EXPORTS += [
     'AllocationPolicy.h',
     'MediaTelemetryConstants.h',
     'PDMFactory.h',
+    'PEMFactory.h',
     'PlatformDecoderModule.h',
     'PlatformEncoderModule.h',
     'ReorderQueue.h',
@@ -34,6 +35,7 @@ UNIFIED_SOURCES += [
     'agnostic/WAVDecoder.cpp',
     'AllocationPolicy.cpp',
     'PDMFactory.cpp',
+    'PEMFactory.cpp',
     'wrappers/MediaChangeMonitor.cpp',
     'wrappers/MediaDataDecoderProxy.cpp'
 ]
@@ -86,10 +88,12 @@ if CONFIG['MOZ_OMX']:
 if CONFIG['MOZ_APPLEMEDIA']:
   EXPORTS += [
       'apple/AppleDecoderModule.h',
+      'apple/AppleEncoderModule.h',
   ]
   UNIFIED_SOURCES += [
       'apple/AppleATDecoder.cpp',
       'apple/AppleDecoderModule.cpp',
+      'apple/AppleEncoderModule.cpp',
       'apple/AppleVTDecoder.cpp',
       'apple/AppleVTEncoder.cpp',
   ]
