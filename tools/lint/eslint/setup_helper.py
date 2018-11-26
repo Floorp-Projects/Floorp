@@ -92,6 +92,10 @@ def eslint_setup(should_clobber=False):
     if not npm_path:
         return 1
 
+    node_path, _ = find_node_executable()
+    if not node_path:
+        return 1
+
     extra_parameters = ["--loglevel=error"]
 
     package_lock_json_path = os.path.join(get_project_root(), "package-lock.json")
@@ -102,10 +106,10 @@ def eslint_setup(should_clobber=False):
     npm_is_older_version = version < StrictVersion("5.8.0").version
 
     if npm_is_older_version:
-        cmd = [npm_path, "install"]
+        cmd = [node_path, npm_path, "install"]
         shutil.copy2(package_lock_json_path, package_lock_json_tmp_path)
     else:
-        cmd = [npm_path, "ci"]
+        cmd = [node_path, npm_path, "ci"]
 
     cmd.extend(extra_parameters)
     print("Installing eslint for mach using \"%s\"..." % (" ".join(cmd)))
