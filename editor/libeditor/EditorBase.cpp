@@ -161,7 +161,6 @@ EditorBase::EditorBase()
   , mFlags(0)
   , mUpdateCount(0)
   , mPlaceholderBatch(0)
-  , mTopLevelEditSubAction(EditSubAction::eNone)
   , mDirection(eNone)
   , mDocDirtyState(-1)
   , mSpellcheckCheckboxState(eTriUnset)
@@ -260,7 +259,7 @@ EditorBase::Init(nsIDocument& aDocument,
                  uint32_t aFlags,
                  const nsAString& aValue)
 {
-  MOZ_ASSERT(mTopLevelEditSubAction == EditSubAction::eNone,
+  MOZ_ASSERT(GetTopLevelEditSubAction() == EditSubAction::eNone,
              "Initializing during an edit action is an error");
 
   // First only set flags, but other stuff shouldn't be initialized now.
@@ -2410,14 +2409,18 @@ EditorBase::OnStartToHandleTopLevelEditSubAction(
               EditSubAction aEditSubAction,
               nsIEditor::EDirection aDirection)
 {
-  mTopLevelEditSubAction = aEditSubAction;
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  mEditActionData->SetTopLevelEditSubAction(aEditSubAction);
   mDirection = aDirection;
 }
 
 void
 EditorBase::OnEndHandlingTopLevelEditSubAction()
 {
-  mTopLevelEditSubAction = EditSubAction::eNone;
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  mEditActionData->SetTopLevelEditSubAction(EditSubAction::eNone);
   mDirection = eNone;
 }
 
@@ -5223,6 +5226,7 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
                                         EditAction aEditAction)
   : mEditorBase(const_cast<EditorBase&>(aEditorBase))
   , mParentData(aEditorBase.mEditActionData)
+  , mTopLevelEditSubAction(EditSubAction::eNone)
 {
   // If we're nested edit action, copies necessary data from the parent.
   if (mParentData) {
@@ -5233,6 +5237,7 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
     if (aEditAction != EditAction::eNotEditing) {
       mEditAction = aEditAction;
     }
+    mTopLevelEditSubAction = mParentData->mTopLevelEditSubAction;
   } else {
     mSelection = mEditorBase.GetSelection();
     if (NS_WARN_IF(!mSelection)) {
