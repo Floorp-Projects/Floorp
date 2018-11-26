@@ -103,8 +103,8 @@ add_task(async function test_per_window_ntp_theme() {
 
       const darkTextTheme = {
         colors: {
-          accentcolor: "#add8e6",
-          textcolor: "#000",
+          frame: "#add8e6",
+          tab_background_text: "#000",
           ntp_background: "#add8e6",
           ntp_text: "#000",
         },
@@ -112,8 +112,8 @@ add_task(async function test_per_window_ntp_theme() {
 
       const brightTextTheme = {
         colors: {
-          accentcolor: "#00008b",
-          textcolor: "#add8e6",
+          frame: "#00008b",
+          tab_background_text: "#add8e6",
           ntp_background: "#00008b",
           ntp_text: "#add8e6",
         },

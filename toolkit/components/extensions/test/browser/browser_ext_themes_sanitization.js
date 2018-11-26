@@ -8,9 +8,9 @@ add_task(async function test_sanitization_invalid() {
     manifest: {
       "theme": {
         "colors": {
-          "accentcolor": ACCENT_COLOR,
-          "textcolor": TEXT_COLOR,
-          "toolbar_text": "ntimsfavoriteblue",
+          "frame": ACCENT_COLOR,
+          "tab_background_text": TEXT_COLOR,
+          "bookmark_text": "ntimsfavoriteblue",
         },
       },
     },
@@ -34,9 +34,9 @@ add_task(async function test_sanitization_css_variables() {
     manifest: {
       "theme": {
         "colors": {
-          "accentcolor": ACCENT_COLOR,
-          "textcolor": TEXT_COLOR,
-          "toolbar_text": "var(--arrowpanel-dimmed)",
+          "frame": ACCENT_COLOR,
+          "tab_background_text": TEXT_COLOR,
+          "bookmark_text": "var(--arrowpanel-dimmed)",
         },
       },
     },
@@ -60,8 +60,8 @@ add_task(async function test_sanitization_transparent() {
     manifest: {
       "theme": {
         "colors": {
-          "accentcolor": ACCENT_COLOR,
-          "textcolor": TEXT_COLOR,
+          "frame": ACCENT_COLOR,
+          "tab_background_text": TEXT_COLOR,
           "toolbar_top_separator": "transparent",
         },
       },
@@ -79,14 +79,14 @@ add_task(async function test_sanitization_transparent() {
   await extension.unload();
 });
 
-add_task(async function test_sanitization_transparent_accentcolor() {
-  // This test checks whether transparent accentcolor falls back to white.
+add_task(async function test_sanitization_transparent_frame_color() {
+  // This test checks whether transparent frame color falls back to white.
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "theme": {
         "colors": {
-          "accentcolor": "transparent",
-          "textcolor": TEXT_COLOR,
+          "frame": "transparent",
+          "tab_background_text": TEXT_COLOR,
         },
       },
     },
@@ -104,14 +104,14 @@ add_task(async function test_sanitization_transparent_accentcolor() {
   await extension.unload();
 });
 
-add_task(async function test_sanitization_transparent_textcolor() {
+add_task(async function test_sanitization_transparent_tab_background_text_color() {
   // This test checks whether transparent textcolor falls back to black.
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "theme": {
         "colors": {
-          "accentcolor": ACCENT_COLOR,
-          "textcolor": "transparent",
+          "frame": ACCENT_COLOR,
+          "tab_background_text": "transparent",
         },
       },
     },
