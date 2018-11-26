@@ -6,6 +6,7 @@
 
 #include "InputBlockState.h"
 
+#include "APZUtils.h"
 #include "AsyncPanZoomController.h"         // for AsyncPanZoomController
 #include "ScrollAnimationPhysics.h"         // for kScrollSeriesTimeoutMs
 #include "gfxPrefs.h"                       // for gfxPrefs
@@ -907,6 +908,29 @@ TouchBlockState::UpdateSlopState(const MultiTouchInput& aInput,
     }
   }
   return mInSlop;
+}
+
+Maybe<ScrollDirection>
+TouchBlockState::GetBestGuessPanDirection(const MultiTouchInput& aInput)
+{
+  if (aInput.mType != MultiTouchInput::MULTITOUCH_MOVE ||
+      aInput.mTouches.Length() != 1) {
+    return Nothing();
+  }
+  ScreenPoint vector = aInput.mTouches[0].mScreenPoint - mSlopOrigin;
+  double angle = atan2(vector.y, vector.x); // range [-pi, pi]
+  angle = fabs(angle); // range [0, pi]
+
+  double angleThreshold = TouchActionAllowsPanningXY()
+      ? gfxPrefs::APZAxisLockAngle()
+      : gfxPrefs::APZAllowedDirectPanAngle();
+  if (apz::IsCloseToHorizontal(angle, angleThreshold)) {
+    return Some(ScrollDirection::eHorizontal);
+  }
+  if (apz::IsCloseToVertical(angle, angleThreshold)) {
+    return Some(ScrollDirection::eVertical);
+  }
+  return Nothing();
 }
 
 uint32_t
