@@ -381,7 +381,7 @@ HTMLEditRules::BeforeEdit(EditSubAction aEditSubAction,
     nsCOMPtr<nsINode> selEndNode = mRangeItem->mEndContainer;
 
     // Register with range updater to track this as we perturb the doc
-    HTMLEditorRef().mRangeUpdater.RegisterRangeItem(mRangeItem);
+    HTMLEditorRef().RangeUpdaterRef().RegisterRangeItem(mRangeItem);
 
     // Clear deletion state bool
     mDidDeleteSelection = false;
@@ -458,7 +458,7 @@ HTMLEditRules::AfterEdit(EditSubAction aEditSubAction,
     // modify the DOM tree nor Selection.
 
     // Free up selectionState range item
-    HTMLEditorRef().mRangeUpdater.DropRangeItem(mRangeItem);
+    HTMLEditorRef().RangeUpdaterRef().DropRangeItem(mRangeItem);
 
     // Reset the contenteditable count to its previous value
     if (mRestoreContentEditableCount) {
@@ -1470,7 +1470,8 @@ HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
   NS_NAMED_LITERAL_STRING(newlineStr, LFSTR);
 
   {
-    AutoTrackDOMPoint tracker(HTMLEditorRef().mRangeUpdater, &pointToInsert);
+    AutoTrackDOMPoint tracker(HTMLEditorRef().RangeUpdaterRef(),
+                              &pointToInsert);
 
     // for efficiency, break out the pre case separately.  This is because
     // its a lot cheaper to search the input string for only newlines than
@@ -2812,7 +2813,7 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
 
       EditorDOMPoint selPoint(startPoint);
       {
-        AutoTrackDOMPoint tracker(HTMLEditorRef().mRangeUpdater, &selPoint);
+        AutoTrackDOMPoint tracker(HTMLEditorRef().RangeUpdaterRef(), &selPoint);
         if (NS_WARN_IF(!leftNode) ||
             NS_WARN_IF(!leftNode->IsContent()) ||
             NS_WARN_IF(!rightNode) ||
@@ -2895,7 +2896,7 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
 
       EditorDOMPoint selPoint(startPoint);
       {
-        AutoTrackDOMPoint tracker(HTMLEditorRef().mRangeUpdater, &selPoint);
+        AutoTrackDOMPoint tracker(HTMLEditorRef().RangeUpdaterRef(), &selPoint);
         if (NS_WARN_IF(!leftNode->IsContent()) ||
             NS_WARN_IF(!rightNode->IsContent())) {
           return NS_ERROR_FAILURE;
@@ -2965,9 +2966,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
 
   {
     // Track location of where we are deleting
-    AutoTrackDOMPoint startTracker(HTMLEditorRef().mRangeUpdater,
+    AutoTrackDOMPoint startTracker(HTMLEditorRef().RangeUpdaterRef(),
                                    address_of(startNode), &startOffset);
-    AutoTrackDOMPoint endTracker(HTMLEditorRef().mRangeUpdater,
+    AutoTrackDOMPoint endTracker(HTMLEditorRef().RangeUpdaterRef(),
                                  address_of(endNode), &endOffset);
     // We are handling all ranged deletions directly now.
     *aHandled = true;
@@ -3147,9 +3148,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
 
   // We might have left only collapsed whitespace in the start/end nodes
   {
-    AutoTrackDOMPoint startTracker(HTMLEditorRef().mRangeUpdater,
+    AutoTrackDOMPoint startTracker(HTMLEditorRef().RangeUpdaterRef(),
                                    address_of(startNode), &startOffset);
-    AutoTrackDOMPoint endTracker(HTMLEditorRef().mRangeUpdater,
+    AutoTrackDOMPoint endTracker(HTMLEditorRef().RangeUpdaterRef(),
                                  address_of(endNode), &endOffset);
 
     nsresult rv = DeleteNodeIfCollapsedText(*startNode);
@@ -3391,7 +3392,7 @@ HTMLEditRules::TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
 
     {
       // We can't just track rightBlock because it's an Element.
-      AutoTrackDOMPoint tracker(HTMLEditorRef().mRangeUpdater,
+      AutoTrackDOMPoint tracker(HTMLEditorRef().RangeUpdaterRef(),
                                 &atRightBlockChild);
       rv = WSRunObject::ScrubBlockBoundary(&HTMLEditorRef(),
                                            WSRunObject::kAfterBlock,
@@ -3490,7 +3491,8 @@ HTMLEditRules::TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
     {
       // We can't just track leftBlock because it's an Element, so track
       // something else.
-      AutoTrackDOMPoint tracker(HTMLEditorRef().mRangeUpdater, &leftBlockChild);
+      AutoTrackDOMPoint tracker(HTMLEditorRef().RangeUpdaterRef(),
+                                &leftBlockChild);
       rv = WSRunObject::ScrubBlockBoundary(&HTMLEditorRef(),
                                            WSRunObject::kBeforeBlock,
                                            leftBlock, leftBlockChild.Offset());
@@ -7370,7 +7372,7 @@ HTMLEditRules::GetNodesForOperation(
     for (auto& rangeItem : rangeItemArray) {
       rangeItem = new RangeItem();
       rangeItem->StoreRange(aArrayOfRanges[0]);
-      HTMLEditorRef().mRangeUpdater.RegisterRangeItem(rangeItem);
+      HTMLEditorRef().RangeUpdaterRef().RegisterRangeItem(rangeItem);
       aArrayOfRanges.RemoveElementAt(0);
     }
     // Now bust up inlines.
@@ -7382,7 +7384,7 @@ HTMLEditRules::GetNodesForOperation(
     }
     // Then unregister the ranges
     for (auto& item : rangeItemArray) {
-      HTMLEditorRef().mRangeUpdater.DropRangeItem(item);
+      HTMLEditorRef().RangeUpdaterRef().DropRangeItem(item);
       RefPtr<nsRange> range = item->GetRange();
       if (range) {
         aArrayOfRanges.AppendElement(range);

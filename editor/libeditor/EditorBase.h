@@ -315,8 +315,6 @@ public:
    */
   Element* GetRoot() const { return mRootElement; }
 
-  RangeUpdater& RangeUpdaterRef() { return mRangeUpdater; }
-
   /**
    * Set or unset TextInputListener.  If setting non-nullptr when the editor
    * already has a TextInputListener, this will crash in debug build.
@@ -796,6 +794,15 @@ protected: // AutoEditActionDataSetter, this shouldn't be accessed by friends.
       return mParentData ? mParentData->SavedSelectionRef() : mSavedSelection;
     }
 
+    RangeUpdater& RangeUpdaterRef()
+    {
+      return mParentData ? mParentData->RangeUpdaterRef() : mRangeUpdater;
+    }
+    const RangeUpdater& RangeUpdaterRef() const
+    {
+      return mParentData ? mParentData->RangeUpdaterRef() : mRangeUpdater;
+    }
+
   private:
     EditorBase& mEditorBase;
     RefPtr<Selection> mSelection;
@@ -806,6 +813,9 @@ protected: // AutoEditActionDataSetter, this shouldn't be accessed by friends.
 
     // Cached selection for AutoSelectionRestorer.
     SelectionState mSavedSelection;
+
+    // Utility class object for maintaining preserved ranges.
+    RangeUpdater mRangeUpdater;
 
     EditAction mEditAction;
     EditSubAction mTopLevelEditSubAction;
@@ -894,6 +904,17 @@ protected: // May be called by friends.
   {
     MOZ_ASSERT(IsEditActionDataAvailable());
     return mEditActionData->SavedSelectionRef();
+  }
+
+  RangeUpdater& RangeUpdaterRef()
+  {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return mEditActionData->RangeUpdaterRef();
+  }
+  const RangeUpdater& RangeUpdaterRef() const
+  {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    return mEditActionData->RangeUpdaterRef();
   }
 
   /**
@@ -2332,9 +2353,6 @@ protected:
   typedef AutoTArray<OwningNonNull<nsIDocumentStateListener>, 1>
             AutoDocumentStateListenerArray;
   AutoDocumentStateListenerArray mDocStateListeners;
-
-  // Utility class object for maintaining preserved ranges.
-  RangeUpdater mRangeUpdater;
 
   // Number of modifications (for undo/redo stack).
   uint32_t mModCount;
