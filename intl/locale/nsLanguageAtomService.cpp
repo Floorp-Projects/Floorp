@@ -183,7 +183,7 @@ nsLanguageAtomService::GetUncachedLanguageGroup(nsAtom* aLanguage) const
       langGroup = NS_Atomize(langStr);
       return langGroup.forget();
     }
-  } else if (!langStr.IsEmpty()) {
+  } else {
     // If the lang code can be parsed as BCP47, look up its (likely) script
     Locale loc(langStr);
     if (loc.IsWellFormed()) {
