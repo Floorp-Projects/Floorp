@@ -131,8 +131,8 @@ public:
                          nsIPaymentDetails** aDetails);
   nsresult Update(nsIPaymentDetails* aDetails, const bool aRequestShipping);
   const nsString& GetShippingAddressErrors() const;
-  const nsString& GetPayer() const;
-  const nsString& GetPaymentMethod() const;
+  const nsString& GetPayerErrors() const;
+  const nsString& GetPaymentMethodErrors() const;
   nsresult UpdateErrors(const nsAString& aError,
                         const nsAString& aPayerErrors,
                         const nsAString& aPaymentMethodErrors,
