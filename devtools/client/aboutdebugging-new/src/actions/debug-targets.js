@@ -6,8 +6,6 @@
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 const { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
-const { remoteClientManager } =
-  require("devtools/client/shared/remote-debugging/remote-client-manager");
 
 const { l10n } = require("../modules/l10n");
 
@@ -46,10 +44,9 @@ function inspectDebugTarget(type, id) {
       case DEBUG_TARGETS.TAB: {
         // Open tab debugger in new window.
         if (runtimeType === RUNTIMES.NETWORK || runtimeType === RUNTIMES.USB) {
-          // Pass the remote id from the client manager so that about:devtools-toolbox can
-          // retrieve the connected client directly.
-          const remoteId = remoteClientManager.getRemoteId(runtime.id, runtime.type);
-          window.open(`about:devtools-toolbox?type=tab&id=${id}&remoteId=${remoteId}`);
+          const { host, port } = runtimeDetails.transportDetails;
+          window.open(`about:devtools-toolbox?type=tab&id=${id}` +
+                      `&host=${host}&port=${port}`);
         } else if (runtimeType === RUNTIMES.THIS_FIREFOX) {
           window.open(`about:devtools-toolbox?type=tab&id=${id}`);
         }

@@ -32,10 +32,6 @@ registerCleanupFunction(async function() {
   }
   const { ADB } = require("devtools/shared/adb/adb");
   await ADB.kill();
-
-  const { remoteClientManager } =
-    require("devtools/client/shared/remote-debugging/remote-client-manager");
-  await remoteClientManager.removeAllClients();
 });
 
 /**
@@ -50,37 +46,19 @@ async function openAboutDebugging(page, win) {
   await enableNewAboutDebugging();
 
   info("opening about:debugging");
-
   const tab = await addTab("about:debugging", { window: win });
   const browser = tab.linkedBrowser;
   const document = browser.contentDocument;
   const window = browser.contentWindow;
-  await waitForInitialDispatch(window);
+  const { AboutDebugging } = window;
 
-  return { tab, document, window };
-}
-
-async function reloadAboutDebugging(tab) {
-  info("reload about:debugging");
-
-  await refreshTab(tab);
-  const browser = tab.linkedBrowser;
-  const document = browser.contentDocument;
-  const window = browser.contentWindow;
-  await waitForInitialDispatch(window);
-
-  return document;
-}
-
-function waitForInitialDispatch(win) {
-  info("wait for the initial about debugging actions to be dispatched");
-
-  const { AboutDebugging } = win;
-  return Promise.all([
+  await Promise.all([
     waitForDispatch(AboutDebugging.store, "REQUEST_EXTENSIONS_SUCCESS"),
     waitForDispatch(AboutDebugging.store, "REQUEST_TABS_SUCCESS"),
     waitForDispatch(AboutDebugging.store, "REQUEST_WORKERS_SUCCESS"),
   ]);
+
+  return { tab, document, window };
 }
 
 /**
