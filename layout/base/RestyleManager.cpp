@@ -54,6 +54,7 @@
 #endif
 
 using namespace mozilla::dom;
+using namespace mozilla::layers;
 
 namespace mozilla {
 
