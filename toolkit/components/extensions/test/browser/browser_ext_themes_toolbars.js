@@ -10,9 +10,11 @@ add_task(async function test_support_toolbar_property() {
     manifest: {
       "theme": {
         "colors": {
-          "accentcolor": ACCENT_COLOR,
-          "textcolor": TEXT_COLOR,
+          "frame": ACCENT_COLOR,
+          "tab_background_text": TEXT_COLOR,
           "toolbar": TOOLBAR_COLOR,
+          // NOTE: this property is going to be removed on Firefox 69
+          // (and bookmark_text is going to replace it).
           "toolbar_text": TOOLBAR_TEXT_COLOR,
         },
       },

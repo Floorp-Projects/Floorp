@@ -87,8 +87,8 @@ add_task(async function test_support_ntp_colors() {
     await BrowserTestUtils.withNewTab({gBrowser, url}, async browser => {
       await test_ntp_theme({
         colors: {
-          accentcolor: ACCENT_COLOR,
-          textcolor: TEXT_COLOR,
+          frame: ACCENT_COLOR,
+          tab_background_text: TEXT_COLOR,
           ntp_background: "#add8e6",
           ntp_text: "#00008b",
         },
@@ -96,8 +96,8 @@ add_task(async function test_support_ntp_colors() {
 
       await test_ntp_theme({
         colors: {
-          accentcolor: ACCENT_COLOR,
-          textcolor: TEXT_COLOR,
+          frame: ACCENT_COLOR,
+          tab_background_text: TEXT_COLOR,
           ntp_background: "#00008b",
           ntp_text: "#add8e6",
         },
