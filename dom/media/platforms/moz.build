@@ -91,6 +91,10 @@ if CONFIG['MOZ_APPLEMEDIA']:
       'apple/AppleATDecoder.cpp',
       'apple/AppleDecoderModule.cpp',
       'apple/AppleVTDecoder.cpp',
+      'apple/AppleVTEncoder.cpp',
+  ]
+  LOCAL_INCLUDES += [
+      '/media/libyuv/libyuv/include',
   ]
   OS_LIBS += [
       '-framework AudioToolbox',
