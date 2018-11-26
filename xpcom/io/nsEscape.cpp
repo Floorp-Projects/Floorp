@@ -480,15 +480,15 @@ NS_EscapeURL(const nsAString& aStr, uint32_t aFlags, nsAString& aResult)
 }
 
 // Starting at aStr[aStart] find the first index in aStr that matches any
-// character in aForbidden. Return false if not found.
+// character that is forbidden by aFunction. Return false if not found.
 static bool
-FindFirstMatchFrom(const nsString& aStr, size_t aStart,
-                   const nsTArray<char16_t>& aForbidden, size_t* aIndex)
+FindFirstMatchFrom(const nsString& aStr,
+                   size_t aStart,
+                   const std::function<bool(char16_t)>& aFunction,
+                   size_t* aIndex)
 {
-  const size_t len = aForbidden.Length();
   for (size_t j = aStart, l = aStr.Length(); j < l; ++j) {
-    size_t unused;
-    if (mozilla::BinarySearch(aForbidden, 0, len, aStr[j], &unused)) {
+    if (aFunction(aStr[j])) {
       *aIndex = j;
       return true;
     }
@@ -497,13 +497,14 @@ FindFirstMatchFrom(const nsString& aStr, size_t aStart,
 }
 
 const nsAString&
-NS_EscapeURL(const nsString& aStr, const nsTArray<char16_t>& aForbidden,
+NS_EscapeURL(const nsString& aStr,
+             const std::function<bool(char16_t)>& aFunction,
              nsAString& aResult)
 {
   bool didEscape = false;
   for (size_t i = 0, strLen = aStr.Length(); i < strLen; ) {
     size_t j;
-    if (MOZ_UNLIKELY(FindFirstMatchFrom(aStr, i, aForbidden, &j))) {
+    if (MOZ_UNLIKELY(FindFirstMatchFrom(aStr, i, aFunction, &j))) {
       if (i == 0) {
         didEscape = true;
         aResult.Truncate();

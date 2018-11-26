@@ -550,36 +550,45 @@ HTMLEditor::SetInlinePropertyOnNode(nsIContent& aNode,
 }
 
 nsresult
-HTMLEditor::SplitStyleAboveRange(nsRange* inRange,
+HTMLEditor::SplitStyleAboveRange(nsRange* aRange,
                                  nsAtom* aProperty,
                                  nsAtom* aAttribute)
 {
-  NS_ENSURE_TRUE(inRange, NS_ERROR_NULL_POINTER);
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
-  nsCOMPtr<nsINode> startNode = inRange->GetStartContainer();
-  int32_t startOffset = inRange->StartOffset();
-  nsCOMPtr<nsINode> endNode = inRange->GetEndContainer();
-  int32_t endOffset = inRange->EndOffset();
+  if (NS_WARN_IF(!aRange)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsINode> startNode = aRange->GetStartContainer();
+  int32_t startOffset = aRange->StartOffset();
+  nsCOMPtr<nsINode> endNode = aRange->GetEndContainer();
+  int32_t endOffset = aRange->EndOffset();
 
   nsCOMPtr<nsINode> origStartNode = startNode;
 
   // split any matching style nodes above the start of range
   {
-    AutoTrackDOMPoint tracker(mRangeUpdater, address_of(endNode), &endOffset);
+    AutoTrackDOMPoint tracker(RangeUpdaterRef(),
+                              address_of(endNode), &endOffset);
     nsresult rv =
       SplitStyleAbovePoint(address_of(startNode), &startOffset, aProperty,
                            aAttribute);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   // second verse, same as the first...
   nsresult rv =
     SplitStyleAbovePoint(address_of(endNode), &endOffset, aProperty,
                          aAttribute);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // reset the range
-  rv = inRange->SetStartAndEnd(startNode, startOffset, endNode, endOffset);
+  rv = aRange->SetStartAndEnd(startNode, startOffset, endNode, endOffset);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -664,6 +673,8 @@ HTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode,
                        nsAtom* aProperty,
                        nsAtom* aAttribute)
 {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   nsCOMPtr<nsIContent> leftNode, rightNode;
   nsresult rv = SplitStyleAbovePoint(aNode, aOffset, aProperty,
                                      aAttribute, getter_AddRefs(leftNode),
@@ -742,7 +753,7 @@ HTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode,
       // RemoveStyleInside() could remove any and all of those nodes, so I
       // have to use the range tracking system to find the right spot to put
       // selection.
-      AutoTrackDOMPoint tracker(mRangeUpdater,
+      AutoTrackDOMPoint tracker(RangeUpdaterRef(),
                                 address_of(newSelParent), &newSelOffset);
       rv = RemoveStyleInside(*leftNode, aProperty, aAttribute);
       NS_ENSURE_SUCCESS(rv, rv);

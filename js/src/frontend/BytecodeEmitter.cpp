@@ -5851,7 +5851,8 @@ BytecodeEmitter::emitAsyncWrapper(unsigned index, bool needsHomeObject, bool isA
     //                    // classObj classCtor classProto
     //   (emitted code)   // classObj classCtor classProto unwrapped wrapped
     //   swap             // classObj classCtor classProto wrapped unwrapped
-    //   inithomeobject 1 // classObj classCtor classProto wrapped unwrapped
+    //   dupat 2          // classObj classCtor classProto wrapped unwrapped classProto
+    //   inithomeobject   // classObj classCtor classProto wrapped unwrapped
     //                    //   initialize the home object of unwrapped
     //                    //   with classProto here
     //   pop              // classObj classCtor classProto wrapped
@@ -7902,7 +7903,10 @@ BytecodeEmitter::emitPropertyList(ListNode* obj, MutableHandlePlainObject objp, 
                     return false;
                 }
             }
-            if (!emit2(JSOP_INITHOMEOBJECT, isIndex + isAsync)) {
+            if (!emitDupAt(1 + isIndex + isAsync)) {
+                return false;
+            }
+            if (!emit1(JSOP_INITHOMEOBJECT)) {
                 return false;
             }
             if (isAsync) {
@@ -8806,7 +8810,11 @@ BytecodeEmitter::emitClass(ClassNode* classNode)
             return false;
         }
         if (constructor->funbox()->needsHomeObject()) {
-            if (!emit2(JSOP_INITHOMEOBJECT, 0)) {
+            if (!emitDupAt(1)) {
+                //            [stack] ... HOMEOBJ CONSTRUCTOR HOMEOBJ
+                return false;
+            }
+            if (!emit1(JSOP_INITHOMEOBJECT)) {
                 //            [stack] ... HOMEOBJ CONSTRUCTOR
                 return false;
             }

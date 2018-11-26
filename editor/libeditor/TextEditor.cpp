@@ -84,6 +84,10 @@ TextEditor::TextEditor()
   , mCaretStyle(0)
 #endif
 {
+  // printf("Size of TextEditor: %zu\n", sizeof(TextEditor));
+  static_assert(sizeof(TextEditor) <= 512,
+    "TextEditor instance should be allocatable in the quantum class bins");
+
   // check the "single line editor newline handling"
   // and "caret behaviour in selection" prefs
   GetDefaultEditorPrefs(mNewlineHandling, mCaretStyle);
@@ -2178,10 +2182,9 @@ TextEditor::OnStartToHandleTopLevelEditSubAction(
     return;
   }
 
-  MOZ_ASSERT(mTopLevelEditSubAction == aEditSubAction);
-  MOZ_ASSERT(mDirection == aDirection);
-  DebugOnly<nsresult> rv =
-    rules->BeforeEdit(mTopLevelEditSubAction, mDirection);
+  MOZ_ASSERT(GetTopLevelEditSubAction() == aEditSubAction);
+  MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() == aDirection);
+  DebugOnly<nsresult> rv = rules->BeforeEdit(aEditSubAction, aDirection);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
     "TextEditRules::BeforeEdit() failed to handle something");
 }
@@ -2194,12 +2197,13 @@ TextEditor::OnEndHandlingTopLevelEditSubAction()
 
   // post processing
   DebugOnly<nsresult> rv =
-    rules ? rules->AfterEdit(mTopLevelEditSubAction, mDirection) : NS_OK;
+    rules ? rules->AfterEdit(GetTopLevelEditSubAction(),
+                             GetDirectionOfTopLevelEditSubAction()) : NS_OK;
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
     "TextEditRules::AfterEdit() failed to handle something");
   EditorBase::OnEndHandlingTopLevelEditSubAction();
-  MOZ_ASSERT(!mTopLevelEditSubAction);
-  MOZ_ASSERT(mDirection == eNone);
+  MOZ_ASSERT(!GetTopLevelEditSubAction());
+  MOZ_ASSERT(GetDirectionOfTopLevelEditSubAction() == eNone);
 }
 
 nsresult

@@ -82,12 +82,6 @@
   fill-opacity: 0.6;
 }
 
-.urlbarView-favicon {
-  border-radius: 8px;
-  background: currentcolor;
-  opacity: 0.6;
-}
-
 .urlbarView-row[action=switch-to-tab] > .urlbarView-row-inner > .urlbarView-action-icon {
   background-image: url(chrome://browser/skin/tab.svg);
 }

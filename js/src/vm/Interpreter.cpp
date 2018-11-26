@@ -4724,19 +4724,18 @@ END_CASE(JSOP_OBJWITHPROTO)
 
 CASE(JSOP_INITHOMEOBJECT)
 {
-    unsigned skipOver = GET_UINT8(REGS.pc);
-    MOZ_ASSERT(REGS.stackDepth() >= skipOver + 2);
+    MOZ_ASSERT(REGS.stackDepth() >= 2);
 
     /* Load the function to be initialized */
-    ReservedRooted<JSFunction*> func(&rootFunction0, &REGS.sp[-1].toObject().as<JSFunction>());
+    ReservedRooted<JSFunction*> func(&rootFunction0, &REGS.sp[-2].toObject().as<JSFunction>());
     MOZ_ASSERT(func->allowSuperProperty());
 
     /* Load the home object */
-    ReservedRooted<JSObject*> obj(&rootObject0);
-    obj = &REGS.sp[int(-2 - skipOver)].toObject();
+    ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-1].toObject());
     MOZ_ASSERT(obj->is<PlainObject>() || obj->is<UnboxedPlainObject>() || obj->is<JSFunction>());
 
     func->setExtendedSlot(FunctionExtended::METHOD_HOMEOBJECT_SLOT, ObjectValue(*obj));
+    REGS.sp--;
 }
 END_CASE(JSOP_INITHOMEOBJECT)
 

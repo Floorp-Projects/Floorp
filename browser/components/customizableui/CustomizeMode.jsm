@@ -1630,13 +1630,6 @@ CustomizeMode.prototype = {
     return this.window.windowUtils.getBoundsWithoutFlushing(element);
   },
 
-  get _dir() {
-    if (!this.__dir) {
-      this.__dir = this.window.getComputedStyle(this.document.documentElement).direction;
-    }
-    return this.__dir;
-  },
-
   _onDragStart(aEvent) {
     __dumpDragData(aEvent);
     let item = aEvent.target;
@@ -1765,13 +1758,13 @@ CustomizeMode.prototype = {
           let itemRect = this._getBoundsWithoutFlushing(dragOverItem);
           let dropTargetCenter = itemRect.left + (itemRect.width / 2);
           let existingDir = dragOverItem.getAttribute("dragover");
-          let dirFactor = this._dir == "ltr" ? 1 : -1;
+          let dirFactor = this.window.RTL_UI ? -1 : 1;
           if (existingDir == "before") {
             dropTargetCenter += (parseInt(dragOverItem.style.borderInlineStartWidth) || 0) / 2 * dirFactor;
           } else {
             dropTargetCenter -= (parseInt(dragOverItem.style.borderInlineEndWidth) || 0) / 2 * dirFactor;
           }
-          let before = this._dir == "ltr" ? aEvent.clientX < dropTargetCenter : aEvent.clientX > dropTargetCenter;
+          let before = this.window.RTL_UI ? aEvent.clientX > dropTargetCenter : aEvent.clientX < dropTargetCenter;
           dragValue = before ? "before" : "after";
         } else if (targetAreaType == "menu-panel") {
           let itemRect = this._getBoundsWithoutFlushing(dragOverItem);
@@ -2482,8 +2475,8 @@ CustomizeMode.prototype = {
     function updatePlayers() {
       if (keydown) {
         let p1Adj = 1;
-        if ((keydown == 37 && !isRTL) ||
-            (keydown == 39 && isRTL)) {
+        if ((keydown == 37 && !window.RTL_UI) ||
+            (keydown == 39 && window.RTL_UI)) {
           p1Adj = -1;
         }
         p1 += p1Adj * 10 * keydownAdj;
@@ -2518,7 +2511,7 @@ CustomizeMode.prototype = {
     }
 
     function draw() {
-      let xAdj = isRTL ? -1 : 1;
+      let xAdj = window.RTL_UI ? -1 : 1;
       elements["wp-player1"].style.transform = "translate(" + (xAdj * p1) + "px, -37px)";
       elements["wp-player2"].style.transform = "translate(" + (xAdj * p2) + "px, " + gameSide + "px)";
       elements["wp-ball"].style.transform = "translate(" + (xAdj * ball[0]) + "px, " + ball[1] + "px)";
@@ -2527,7 +2520,7 @@ CustomizeMode.prototype = {
       if (score >= winScore) {
         let arena = elements.arena;
         let image = "url(chrome://browser/skin/customizableui/whimsy.png)";
-        let position = `${(isRTL ? gameSide : 0) + (xAdj * ball[0]) - 10}px ${ball[1] - 10}px`;
+        let position = `${(window.RTL_UI ? gameSide : 0) + (xAdj * ball[0]) - 10}px ${ball[1] - 10}px`;
         let repeat = "no-repeat";
         let size = "20px";
         if (arena.style.backgroundImage) {
@@ -2628,7 +2621,6 @@ CustomizeMode.prototype = {
     let elements = {
       arena: document.getElementById("customization-pong-arena"),
     };
-    let isRTL = document.documentElement.matches(":-moz-locale-dir(rtl)");
 
     document.addEventListener("keydown", onkeydown);
     document.addEventListener("keyup", onkeyup);

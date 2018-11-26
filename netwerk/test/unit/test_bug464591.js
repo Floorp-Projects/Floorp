@@ -27,7 +27,7 @@ let prefData =
   ];
 
  let prefIdnBlackList = {
-      name: "network.IDN.blacklist_chars",
+      name: "network.IDN.extra_blocked_chars",
       minimumList: "\u2215\u0430\u2044",
   };
 
