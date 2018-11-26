@@ -1005,8 +1005,7 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const FuncType& funcType,
             if (env.gcTypesEnabled() == HasGcTypes::False) {
                 return iter.unrecognizedOpcode(&op);
             }
-            ValType unusedType;
-            CHECK(iter.readRefNull(&unusedType));
+            CHECK(iter.readRefNull());
             break;
           }
           case uint16_t(Op::RefIsNull): {
@@ -1452,14 +1451,18 @@ DecodeGCFeatureOptInSection(Decoder& d, ModuleEnvironment* env)
     // https://github.com/lars-t-hansen/moz-gc-experiments
     //
     // Version 1 is complete.
-    // Version 2 is in progress, currently backward compatible with version 1.
+    // Version 2 is in progress.
 
     switch (version) {
       case 1:
+        return d.fail("Wasm GC feature version 1 is no longer supported by this engine.\n"
+                      "The current version is 2, which is not backward-compatible:\n"
+                      " - The old encoding of ref.null is no longer accepted.");
       case 2:
         break;
       default:
-        return d.fail("unsupported version of the gc feature");
+        return d.fail("The specified Wasm GC feature version is unknown.\n"
+                      "The current version is 2.");
     }
 
     env->gcFeatureOptIn = HasGcTypes::True;
@@ -1979,8 +1982,7 @@ DecodeMemorySection(Decoder& d, ModuleEnvironment* env)
 }
 
 static bool
-DecodeInitializerExpression(Decoder& d, HasGcTypes gcTypesEnabled, const GlobalDescVector& globals,
-                            ValType expected, uint32_t numTypes, InitExpr* init)
+DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env, ValType expected, InitExpr* init)
 {
     OpBytes op;
     if (!d.readOp(&op)) {
@@ -2021,28 +2023,18 @@ DecodeInitializerExpression(Decoder& d, HasGcTypes gcTypesEnabled, const GlobalD
         break;
       }
       case uint16_t(Op::RefNull): {
-        if (gcTypesEnabled == HasGcTypes::False) {
+        if (env->gcTypesEnabled() == HasGcTypes::False) {
             return d.fail("unexpected initializer expression");
         }
-        uint8_t valType;
-        uint32_t refTypeIndex;
-        if (!d.readValType(&valType, &refTypeIndex)) {
-            return false;
+        if (!expected.isReference()) {
+            return d.fail("type mismatch: initializer type and expected type don't match");
         }
-        if (valType == uint8_t(ValType::AnyRef)) {
-            *init = InitExpr(LitVal(ValType::AnyRef, nullptr));
-        } else if (valType == uint8_t(ValType::Ref)) {
-            if (refTypeIndex >= numTypes) {
-                return d.fail("invalid reference type for ref.null");
-            }
-            *init = InitExpr(LitVal(ValType(ValType::Ref, refTypeIndex), nullptr));
-        } else {
-            return d.fail("expected anyref/ref as type for ref.null");
-        }
+        *init = InitExpr(LitVal(expected, nullptr));
         break;
       }
       case uint16_t(Op::GetGlobal): {
         uint32_t i;
+        const GlobalDescVector& globals = env->globals;
         if (!d.readVarU32(&i)) {
             return d.fail("failed to read get_global index in initializer expression");
         }
@@ -2052,7 +2044,17 @@ DecodeInitializerExpression(Decoder& d, HasGcTypes gcTypesEnabled, const GlobalD
         if (!globals[i].isImport() || globals[i].isMutable()) {
             return d.fail("initializer expression must reference a global immutable import");
         }
-        *init = InitExpr(i, globals[i].type());
+        if (expected.isReference()) {
+            if (!(env->gcTypesEnabled() == HasGcTypes::True &&
+                  globals[i].type().isReference() &&
+                  env->isRefSubtypeOf(globals[i].type(), expected)))
+            {
+                return d.fail("type mismatch: initializer type and expected type don't match");
+            }
+            *init = InitExpr(i, expected);
+        } else {
+            *init = InitExpr(i, globals[i].type());
+        }
         break;
       }
       default: {
@@ -2106,9 +2108,7 @@ DecodeGlobalSection(Decoder& d, ModuleEnvironment* env)
         }
 
         InitExpr initializer;
-        if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, type,
-                                         env->types.length(), &initializer))
-        {
+        if (!DecodeInitializerExpression(d, env, type, &initializer)) {
             return false;
         }
 
@@ -2360,9 +2360,7 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
             initializerKind == InitializerKind::ActiveWithIndex)
         {
             InitExpr offset;
-            if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, ValType::I32,
-                                             env->types.length(), &offset))
-            {
+            if (!DecodeInitializerExpression(d, env, ValType::I32, &offset)) {
                 return false;
             }
             seg->offsetIfActive.emplace(offset);
@@ -2619,9 +2617,7 @@ DecodeDataSection(Decoder& d, ModuleEnvironment* env)
             initializerKind == InitializerKind::ActiveWithIndex)
         {
             InitExpr segOffset;
-            if (!DecodeInitializerExpression(d, env->gcTypesEnabled(), env->globals, ValType::I32,
-                                             env->types.length(), &segOffset))
-            {
+            if (!DecodeInitializerExpression(d, env, ValType::I32, &segOffset)) {
                 return false;
             }
             seg.offsetIfActive.emplace(segOffset);

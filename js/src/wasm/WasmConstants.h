@@ -67,6 +67,9 @@ enum class TypeCode
     // Special code representing the block signature ()->()
     BlockVoid                            = 0x40,  // SLEB128(-0x40)
 
+    // Type designator for null - unofficial, will not appear in the binary format
+    NullRef                              = 0x39,
+
     Limit                                = 0x80
 };
 

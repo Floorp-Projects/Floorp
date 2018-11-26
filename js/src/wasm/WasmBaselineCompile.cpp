@@ -1087,6 +1087,7 @@ BaseLocalIter::settle()
             mirType_ = ToMIRType(locals_[index_]);
             frameOffset_ = pushLocal(MIRTypeToSize(mirType_));
             break;
+          case ValType::NullRef:
           default:
             MOZ_CRASH("Compiler bug: Unexpected local type");
         }
@@ -1164,7 +1165,6 @@ class BaseStackFrame
 
     static constexpr uint32_t ChunkSize = 8 * sizeof(void*);
     static constexpr uint32_t InitialChunk = ChunkSize;
-    static constexpr uint32_t ChunkCutoff = ChunkSize + InitialChunk;
 #endif
 
     MacroAssembler& masm;
@@ -1483,6 +1483,12 @@ class BaseStackFrame
         return StackHeight(currentFramePushed());
     }
 
+    // The current height of the dynamic part of the stack area (ie, the backing
+    // store for the evaluation stack), zero-based.
+    uint32_t dynamicHeight() const {
+        return currentFramePushed() - localSize_;
+    }
+
     // Set the frame height.
     void setStackHeight(StackHeight amount) {
 #ifdef RABALDR_CHUNKY_STACK
@@ -1579,6 +1585,8 @@ class BaseStackFrame
     // Before branching to an outer control label, pop the execution stack to
     // the level expected by that region, but do not update masm.framePushed()
     // as that will happen as compilation leaves the block.
+    //
+    // Note these operate directly on the stack pointer register.
 
     void popStackBeforeBranch(StackHeight destStackHeight) {
         uint32_t framePushedHere = masm.framePushed();
@@ -1597,22 +1605,26 @@ class BaseStackFrame
     // Before exiting a nested control region, pop the execution stack
     // to the level expected by the nesting region, and free the
     // stack.
+    //
+    // Note this operates on the stack height, which is not the same as the
+    // stack pointer on chunky-stack systems; the stack pointer may or may not
+    // change on such systems.
 
     void popStackOnBlockExit(StackHeight destStackHeight, bool deadCode) {
-        uint32_t framePushedHere = masm.framePushed();
-        uint32_t framePushedThere = framePushedForHeight(destStackHeight);
-        if (framePushedHere > framePushedThere) {
+        uint32_t stackHeightHere = currentFramePushed();
+        uint32_t stackHeightThere = destStackHeight.height;
+        if (stackHeightHere > stackHeightThere) {
 #ifdef RABALDR_CHUNKY_STACK
             if (deadCode) {
                 setStackHeight(destStackHeight);
             } else {
-                popChunkyBytes(framePushedHere - framePushedThere);
+                popChunkyBytes(stackHeightHere - stackHeightThere);
             }
 #else
             if (deadCode) {
-                masm.setFramePushed(framePushedThere);
+                masm.setFramePushed(stackHeightThere);
             } else {
-                masm.freeStack(framePushedHere - framePushedThere);
+                masm.freeStack(stackHeightHere - stackHeightThere);
             }
 #endif
         }
@@ -2194,6 +2206,7 @@ class BaseCompiler final : public BaseCompilerInterface
             needI64(joinRegI64_);
             break;
           case ExprType::AnyRef:
+          case ExprType::NullRef:
           case ExprType::Ref:
             needRef(joinRegPtr_);
             break;
@@ -2210,6 +2223,7 @@ class BaseCompiler final : public BaseCompilerInterface
             freeI64(joinRegI64_);
             break;
           case ExprType::AnyRef:
+          case ExprType::NullRef:
           case ExprType::Ref:
             freeRef(joinRegPtr_);
             break;
@@ -2232,6 +2246,7 @@ class BaseCompiler final : public BaseCompilerInterface
             needF64(joinRegF64_);
             break;
           case ExprType::Ref:
+          case ExprType::NullRef:
           case ExprType::AnyRef:
             needRef(joinRegPtr_);
             break;
@@ -2255,6 +2270,7 @@ class BaseCompiler final : public BaseCompilerInterface
             freeF64(joinRegF64_);
             break;
           case ExprType::Ref:
+          case ExprType::NullRef:
           case ExprType::AnyRef:
             freeRef(joinRegPtr_);
             break;
@@ -3222,6 +3238,7 @@ class BaseCompiler final : public BaseCompilerInterface
             return Some(AnyReg(popF32(joinRegF32_)));
           }
           case ExprType::Ref:
+          case ExprType::NullRef:
           case ExprType::AnyRef: {
             DebugOnly<Stk::Kind> k(stk_.back().kind());
             MOZ_ASSERT(k == Stk::RegisterRef || k == Stk::ConstRef || k == Stk::MemRef ||
@@ -3259,6 +3276,7 @@ class BaseCompiler final : public BaseCompilerInterface
             needF64(joinRegF64_);
             return Some(AnyReg(joinRegF64_));
           case ExprType::Ref:
+          case ExprType::NullRef:
           case ExprType::AnyRef:
             MOZ_ASSERT(isAvailableRef(joinRegPtr_));
             needRef(joinRegPtr_);
@@ -3410,6 +3428,22 @@ class BaseCompiler final : public BaseCompilerInterface
             }
         }
     }
+
+    void assertStackInvariants() const {
+        size_t size = 0;
+        for (const Stk& v : stk_) {
+            switch (v.kind()) {
+              case Stk::MemRef: size += BaseStackFrame::StackSizeOfPtr;    break;
+              case Stk::MemI32: size += BaseStackFrame::StackSizeOfPtr;    break;
+              case Stk::MemI64: size += BaseStackFrame::StackSizeOfInt64;  break;
+              case Stk::MemF64: size += BaseStackFrame::StackSizeOfDouble; break;
+              case Stk::MemF32: size += BaseStackFrame::StackSizeOfFloat;  break;
+              default:          MOZ_ASSERT(!v.isMem());                    break;
+            }
+        }
+        MOZ_ASSERT(size == fr.dynamicHeight());
+    }
+
 #endif
 
     ////////////////////////////////////////////////////////////
@@ -3539,6 +3573,7 @@ class BaseCompiler final : public BaseCompilerInterface
           case ExprType::AnyRef:
             masm.storePtr(RegPtr(ReturnReg), resultsAddress);
             break;
+          case ExprType::NullRef:
           default:
             MOZ_CRASH("Function return type");
         }
@@ -3567,6 +3602,7 @@ class BaseCompiler final : public BaseCompilerInterface
           case ExprType::AnyRef:
             masm.loadPtr(resultsAddress, RegPtr(ReturnReg));
             break;
+          case ExprType::NullRef:
           default:
             MOZ_CRASH("Function return type");
         }
@@ -3857,6 +3893,8 @@ class BaseCompiler final : public BaseCompilerInterface
             }
             break;
           }
+          case ValType::NullRef:
+            MOZ_CRASH("NullRef not expressible");
           default:
             MOZ_CRASH("Function argument type");
         }
@@ -7419,7 +7457,7 @@ BaseCompiler::sniffConditionalControlCmp(Cond compareOp, ValType operandType)
 #endif
 
     // No optimization for pointer compares yet.
-    if (operandType.isRefOrAnyRef()) {
+    if (operandType.isReference()) {
         return false;
     }
 
@@ -8039,6 +8077,7 @@ BaseCompiler::doReturn(ExprType type, bool popStack)
         break;
       }
       case ExprType::Ref:
+      case ExprType::NullRef:
       case ExprType::AnyRef: {
         RegPtr rv = popRef(RegPtr(ReturnReg));
         returnCleanup(popStack);
@@ -8118,6 +8157,8 @@ BaseCompiler::pushReturnedIfNonVoid(const FunctionCall& call, ExprType type)
         pushRef(rv);
         break;
       }
+      case ExprType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
       default:
         MOZ_CRASH("Function return type");
     }
@@ -8464,6 +8505,7 @@ BaseCompiler::emitGetLocal()
       case ValType::AnyRef:
         pushLocalRef(slot);
         break;
+      case ValType::NullRef:
       default:
         MOZ_CRASH("Local variable type");
     }
@@ -8537,6 +8579,7 @@ BaseCompiler::emitSetOrTeeLocal(uint32_t slot)
         }
         break;
       }
+      case ValType::NullRef:
       default:
         MOZ_CRASH("Local variable type");
     }
@@ -8596,6 +8639,7 @@ BaseCompiler::emitGetGlobal()
             pushF64(value.f64());
             break;
           case ValType::Ref:
+          case ValType::NullRef:
           case ValType::AnyRef:
             pushRef(intptr_t(value.ptr()));
             break;
@@ -8642,6 +8686,8 @@ BaseCompiler::emitGetGlobal()
         pushRef(rv);
         break;
       }
+      case ValType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
       default:
         MOZ_CRASH("Global variable type");
         break;
@@ -8706,6 +8752,8 @@ BaseCompiler::emitSetGlobal()
         freeRef(rv);
         break;
       }
+      case ValType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
       default:
         MOZ_CRASH("Global variable type");
         break;
@@ -9104,6 +9152,7 @@ BaseCompiler::emitSelect()
         break;
       }
       case ValType::Ref:
+      case ValType::NullRef:
       case ValType::AnyRef: {
         RegPtr r, rs;
         pop2xRef(&r, &rs);
@@ -9306,8 +9355,7 @@ BaseCompiler::emitCurrentMemory()
 bool
 BaseCompiler::emitRefNull()
 {
-    ValType type;
-    if (!iter_.readRefNull(&type)) {
+    if (!iter_.readRefNull()) {
         return false;
     }
 
@@ -10015,6 +10063,8 @@ BaseCompiler::emitStructNew()
             masm.bind(&skipBarrier);
             break;
           }
+          case ValType::NullRef:
+            MOZ_CRASH("NullRef not expressible");
           default: {
             MOZ_CRASH("Unexpected field type");
           }
@@ -10090,8 +10140,11 @@ BaseCompiler::emitStructGet()
           pushRef(r);
           break;
       }
+      case ValType::NullRef: {
+        MOZ_CRASH("NullRef not expressible");
+      }
       default: {
-          MOZ_CRASH("Unexpected field type");
+        MOZ_CRASH("Unexpected field type");
       }
     }
 
@@ -10125,7 +10178,7 @@ BaseCompiler::emitStructSet()
     // Reserve this register early if we will need it so that it is not taken by
     // rr or rp.
     RegPtr valueAddr;
-    if (structType.fields_[fieldIndex].type.isRefOrAnyRef()) {
+    if (structType.fields_[fieldIndex].type.isReference()) {
         valueAddr = RegPtr(PreBarrierReg);
         needRef(valueAddr);
     }
@@ -10147,6 +10200,8 @@ BaseCompiler::emitStructSet()
       case ValType::AnyRef:
         rr = popRef();
         break;
+      case ValType::NullRef:
+        MOZ_CRASH("NullRef not expressible");
       default:
         MOZ_CRASH("Unexpected field type");
     }
@@ -10185,11 +10240,15 @@ BaseCompiler::emitStructSet()
         break;
       }
       case ValType::Ref:
-      case ValType::AnyRef:
+      case ValType::AnyRef: {
         masm.computeEffectiveAddress(Address(rp, offs), valueAddr);
         emitBarrieredStore(Some(rp), valueAddr, rr);// Consumes valueAddr
         freeRef(rr);
         break;
+      }
+      case ValType::NullRef: {
+        MOZ_CRASH("NullRef not expressible");
+      }
       default: {
         MOZ_CRASH("Unexpected field type");
       }
@@ -10257,6 +10316,7 @@ BaseCompiler::emitBody()
 
 #ifdef DEBUG
         performRegisterLeakCheck();
+        assertStackInvariants();
 #endif
 
 #define emitBinary(doEmit, type) \

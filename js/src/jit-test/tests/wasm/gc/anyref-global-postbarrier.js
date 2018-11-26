@@ -10,11 +10,11 @@ function Baguette(calories) {
 // Ensure the baseline compiler sync's before the postbarrier.
 (function() {
     wasmEvalText(`(module
-        (gc_feature_opt_in 1)
-        (global (mut anyref) (ref.null anyref))
+        (gc_feature_opt_in 2)
+        (global (mut anyref) (ref.null))
         (func (export "f")
             get_global 0
-            ref.null anyref
+            ref.null
             set_global 0
             set_global 0
         )
@@ -22,16 +22,16 @@ function Baguette(calories) {
 })();
 
 let exportsPlain = wasmEvalText(`(module
-    (gc_feature_opt_in 1)
+    (gc_feature_opt_in 2)
     (global i32 (i32.const 42))
-    (global $g (mut anyref) (ref.null anyref))
+    (global $g (mut anyref) (ref.null))
     (func (export "set") (param anyref) get_local 0 set_global $g)
     (func (export "get") (result anyref) get_global $g)
 )`).exports;
 
 let exportsObj = wasmEvalText(`(module
-    (gc_feature_opt_in 1)
-    (global $g (export "g") (mut anyref) (ref.null anyref))
+    (gc_feature_opt_in 2)
+    (global $g (export "g") (mut anyref) (ref.null))
     (func (export "set") (param anyref) get_local 0 set_global $g)
     (func (export "get") (result anyref) get_global $g)
 )`).exports;

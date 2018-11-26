@@ -308,23 +308,19 @@ JS_FOR_EACH_TRACEKIND(IMPL_CHECK_TRACED_THING);
 
 static bool UnmarkGrayGCThing(JSRuntime* rt, JS::GCCellPtr thing);
 
-static bool
-ShouldTraceCrossCompartment(JSTracer* trc, JSObject* src, Cell* cell)
+static inline bool
+ShouldMarkCrossCompartment(GCMarker* marker, JSObject* src, Cell* dstCell)
 {
-    if (!trc->isMarkingTracer()) {
-        return true;
-    }
+    MarkColor color = marker->markColor();
 
-    MarkColor color = GCMarker::fromTracer(trc)->markColor();
-
-    if (!cell->isTenured()) {
+    if (!dstCell->isTenured()) {
         MOZ_ASSERT(color == MarkColor::Black);
         return false;
     }
-    TenuredCell& tenured = cell->asTenured();
+    TenuredCell& dst = dstCell->asTenured();
 
-    JS::Zone* zone = tenured.zone();
-    if (!src->zone()->isGCMarking() && !zone->isGCMarking()) {
+    JS::Zone* dstZone = dst.zone();
+    if (!src->zone()->isGCMarking() && !dstZone->isGCMarking()) {
         return false;
     }
 
@@ -336,25 +332,35 @@ ShouldTraceCrossCompartment(JSTracer* trc, JSObject* src, Cell* cell)
          * source and destination of the cross-compartment edge should be gray,
          * but the source was marked black by the write barrier.
          */
-        if (tenured.isMarkedGray()) {
-            MOZ_ASSERT(!zone->isCollecting());
-            UnmarkGrayGCThing(trc->runtime(), JS::GCCellPtr(cell, cell->getTraceKind()));
+        if (dst.isMarkedGray()) {
+            MOZ_ASSERT(!dstZone->isCollecting());
+            UnmarkGrayGCThing(marker->runtime(), JS::GCCellPtr(&dst, dst.getTraceKind()));
         }
-        return zone->isGCMarking();
+        return dstZone->isGCMarking();
     } else {
-        if (zone->isGCMarkingBlack()) {
+        if (dstZone->isGCMarkingBlack()) {
             /*
              * The destination compartment is being not being marked gray now,
              * but it will be later, so record the cell so it can be marked gray
              * at the appropriate time.
              */
-            if (!tenured.isMarkedAny()) {
+            if (!dst.isMarkedAny()) {
                 DelayCrossCompartmentGrayMarking(src);
             }
             return false;
         }
-        return zone->isGCMarkingGray();
+        return dstZone->isGCMarkingGray();
     }
+}
+
+static bool
+ShouldTraceCrossCompartment(JSTracer* trc, JSObject* src, Cell* dstCell)
+{
+    if (!trc->isMarkingTracer()) {
+        return true;
+    }
+
+    return ShouldMarkCrossCompartment(GCMarker::fromTracer(trc), src, dstCell);
 }
 
 static bool
@@ -2544,7 +2550,6 @@ GCMarker::reset()
         MOZ_ASSERT(markLaterArenas);
         unmarkedArenaStackTop = arena->getNextDelayedMarking();
         arena->unsetDelayedMarking();
-        arena->markOverflow = 0;
 
 #ifdef DEBUG
         markLaterArenas--;
@@ -2554,6 +2559,38 @@ GCMarker::reset()
     MOZ_ASSERT(!markLaterArenas);
 }
 
+void
+GCMarker::setMarkColor(gc::MarkColor newColor)
+{
+    if (color == newColor) {
+        return;
+    }
+    if (newColor == gc::MarkColor::Black) {
+        setMarkColorBlack();
+    } else {
+        setMarkColorGray();
+    }
+}
+
+void
+GCMarker::setMarkColorGray()
+{
+    MOZ_ASSERT(isDrained());
+    MOZ_ASSERT(color == gc::MarkColor::Black);
+    MOZ_ASSERT(runtime()->gc.state() == State::Sweep);
+
+    color = gc::MarkColor::Gray;
+}
+
+void
+GCMarker::setMarkColorBlack()
+{
+    MOZ_ASSERT(isDrained());
+    MOZ_ASSERT(color == gc::MarkColor::Gray);
+    MOZ_ASSERT(runtime()->gc.state() == State::Sweep);
+
+    color = gc::MarkColor::Black;
+}
 
 template <typename T>
 void
@@ -2634,9 +2671,6 @@ GCMarker::leaveWeakMarkingMode()
 void
 GCMarker::markDelayedChildren(Arena* arena)
 {
-    MOZ_ASSERT(arena->markOverflow);
-    arena->markOverflow = 0;
-
     JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
 
     // Whether we need to mark children of gray or black cells in the arena

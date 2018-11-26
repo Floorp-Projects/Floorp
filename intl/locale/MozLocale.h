@@ -67,9 +67,9 @@ class Locale {
       : Locale(nsDependentCString(aLocale))
       { };
 
-    const nsACString& GetLanguage() const;
-    const nsACString& GetScript() const;
-    const nsACString& GetRegion() const;
+    const nsCString& GetLanguage() const;
+    const nsCString& GetScript() const;
+    const nsCString& GetRegion() const;
     const nsTArray<nsCString>& GetVariants() const;
 
     /**
