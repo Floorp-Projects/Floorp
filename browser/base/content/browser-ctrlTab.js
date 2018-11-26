@@ -430,7 +430,6 @@ var ctrlTab = {
   onKeyDown(event) {
     if (event.keyCode != event.DOM_VK_TAB ||
         !event.ctrlKey ||
-        !this.isOpen && event.shiftKey ||
         event.altKey ||
         event.metaKey) {
       return;
@@ -441,14 +440,20 @@ var ctrlTab = {
 
     if (this.isOpen) {
       this.advanceFocus(!event.shiftKey);
-    } else {
-      let tabs = gBrowser.visibleTabs;
-      if (tabs.length > 2) {
-        this.open();
-      } else if (tabs.length == 2) {
-        let index = tabs[0].selected ? 1 : 0;
-        gBrowser.selectedTab = tabs[index];
-      }
+      return;
+    }
+
+    if (event.shiftKey) {
+      this.showAllTabs();
+      return;
+    }
+
+    let tabs = gBrowser.visibleTabs;
+    if (tabs.length > 2) {
+      this.open();
+    } else if (tabs.length == 2) {
+      let index = tabs[0].selected ? 1 : 0;
+      gBrowser.selectedTab = tabs[index];
     }
   },
 
@@ -593,13 +598,5 @@ var ctrlTab = {
     // as Shift+Ctrl+Tab will be handled by the tab bar.
     document.getElementById("menu_showAllTabs").hidden = !enable;
     document.getElementById("menu_viewPopup")[toggleEventListener]("popupshowing", this);
-
-    // Also disable the <key> to ensure Shift+Ctrl+Tab never triggers
-    // Show All Tabs.
-    var key_showAllTabs = document.getElementById("key_showAllTabs");
-    if (enable)
-      key_showAllTabs.removeAttribute("disabled");
-    else
-      key_showAllTabs.setAttribute("disabled", "true");
   },
 };
