@@ -1215,12 +1215,12 @@ public:
   void FlushRepaintForNewInputBlock();
 
   /**
-   * Given the number of touch points in an input event and touch block they
-   * belong to, check if the event can result in a panning/zooming behavior.
+   * Given an input event and the touch block it belongs to, check if the
+   * event can lead to a panning/zooming behavior.
    * This is primarily used to figure out when to dispatch the pointercancel
    * event for the pointer events spec.
    */
-  bool ArePointerEventsConsumable(TouchBlockState* aBlock, uint32_t aTouchPoints);
+  bool ArePointerEventsConsumable(TouchBlockState* aBlock, const MultiTouchInput& aInput);
 
   /**
    * Clear internal state relating to touch input handling.

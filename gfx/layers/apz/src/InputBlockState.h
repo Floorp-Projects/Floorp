@@ -485,6 +485,13 @@ public:
                        bool aApzcCanConsumeEvents);
 
   /**
+   * Based on the slop origin and the given input event, return a best guess
+   * as to the pan direction of this touch block. Returns Nothing() if no guess
+   * can be made.
+   */
+  Maybe<ScrollDirection> GetBestGuessPanDirection(const MultiTouchInput& aInput);
+
+  /**
    * Returns the number of touch points currently active.
    */
   uint32_t GetActiveTouchCount() const;
