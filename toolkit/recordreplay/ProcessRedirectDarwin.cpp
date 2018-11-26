@@ -906,6 +906,9 @@ Preamble_getenv(CallArguments* aArguments)
     return PreambleResult::Veto;
   }
 
+  // Include the environment variable being checked in an assertion, to make it
+  // easier to debug recording mismatches involving getenv.
+  RecordReplayAssert("getenv %s", env);
   return PreambleResult::Redirect;
 }
 
