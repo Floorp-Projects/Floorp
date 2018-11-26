@@ -20,8 +20,68 @@ static constexpr nsUConvProp encodingsGroups[] = {
 #include "encodingsgroups.properties.h"
 };
 
-static constexpr nsUConvProp kLangGroups[] = {
-#include "langGroups.properties.h"
+// List of mozilla internal x-* tags that map to themselves (see bug 256257)
+static constexpr const char* kLangGroups[] = {
+  // This list must be sorted!
+  "x-armn",
+  "x-cyrillic",
+  "x-devanagari",
+  "x-geor",
+  "x-math",
+  "x-tamil",
+  "x-unicode",
+  "x-western"
+  // These self-mappings are not necessary unless somebody use them to specify
+  // lang in (X)HTML/XML documents, which they shouldn't. (see bug 256257)
+  // x-beng=x-beng
+  // x-cans=x-cans
+  // x-ethi=x-ethi
+  // x-guru=x-guru
+  // x-gujr=x-gujr
+  // x-khmr=x-khmr
+  // x-mlym=x-mlym
+};
+
+// Map ISO 15924 script codes from BCP47 lang tag to mozilla's langGroups.
+static constexpr struct {
+  const char* mTag;
+  nsAtom*     mAtom;
+} kScriptLangGroup[] =
+{
+  // This list must be sorted by script code!
+  { "Arab", nsGkAtoms::ar },
+  { "Armn", nsGkAtoms::x_armn },
+  { "Beng", nsGkAtoms::x_beng },
+  { "Cans", nsGkAtoms::x_cans },
+  { "Cyrl", nsGkAtoms::x_cyrillic },
+  { "Deva", nsGkAtoms::x_devanagari },
+  { "Ethi", nsGkAtoms::x_ethi },
+  { "Geok", nsGkAtoms::x_geor },
+  { "Geor", nsGkAtoms::x_geor },
+  { "Grek", nsGkAtoms::el },
+  { "Gujr", nsGkAtoms::x_gujr },
+  { "Guru", nsGkAtoms::x_guru },
+  { "Hang", nsGkAtoms::ko },
+  { "Hani", nsGkAtoms::Japanese },
+  { "Hans", nsGkAtoms::Chinese },
+  // Hant is special-cased in code
+  // Hant=zh-HK
+  // Hant=zh-TW
+  { "Hebr", nsGkAtoms::he },
+  { "Hira", nsGkAtoms::Japanese },
+  { "Jpan", nsGkAtoms::Japanese },
+  { "Kana", nsGkAtoms::Japanese },
+  { "Khmr", nsGkAtoms::x_khmr },
+  { "Knda", nsGkAtoms::x_knda },
+  { "Kore", nsGkAtoms::ko },
+  { "Latn", nsGkAtoms::x_western },
+  { "Mlym", nsGkAtoms::x_mlym },
+  { "Orya", nsGkAtoms::x_orya },
+  { "Sinh", nsGkAtoms::x_sinh },
+  { "Taml", nsGkAtoms::x_tamil },
+  { "Telu", nsGkAtoms::x_telu },
+  { "Thai", nsGkAtoms::th },
+  { "Tibt", nsGkAtoms::x_tibt }
 };
 
 // static
@@ -111,24 +171,48 @@ nsLanguageAtomService::GetUncachedLanguageGroup(nsAtom* aLanguage) const
   aLanguage->ToUTF8String(langStr);
   ToLowerCase(langStr);
 
-  nsAutoCString langGroupStr;
-  nsresult res =
-    nsUConvPropertySearch::SearchPropertyValue(kLangGroups,
-                                               ArrayLength(kLangGroups),
-                                               langStr, langGroupStr);
-  while (NS_FAILED(res)) {
-    int32_t hyphen = langStr.RFindChar('-');
-    if (hyphen <= 0) {
-      langGroupStr.AssignLiteral("x-unicode");
-      break;
+  RefPtr<nsAtom> langGroup;
+  if (langStr[0] == 'x' && langStr[1] == '-') {
+    // Internal x-* langGroup codes map to themselves (see bug 256257)
+    size_t unused;
+    if (BinarySearchIf(kLangGroups, 0, ArrayLength(kLangGroups),
+                       [&langStr](const char* tag) -> int {
+                         return langStr.Compare(tag);
+                       },
+                       &unused)) {
+      langGroup = NS_Atomize(langStr);
+      return langGroup.forget();
     }
-    langStr.Truncate(hyphen);
-    res = nsUConvPropertySearch::SearchPropertyValue(kLangGroups,
-                                                     ArrayLength(kLangGroups),
-                                                     langStr, langGroupStr);
+  } else {
+    // If the lang code can be parsed as BCP47, look up its (likely) script
+    Locale loc(langStr);
+    if (loc.IsWellFormed()) {
+      if (loc.GetScript().IsEmpty()) {
+        loc.AddLikelySubtags();
+      }
+      if (loc.GetScript().EqualsLiteral("Hant")) {
+        if (loc.GetRegion().EqualsLiteral("HK")) {
+          langGroup = nsGkAtoms::HongKongChinese;
+        } else {
+          langGroup = nsGkAtoms::Taiwanese;
+        }
+        return langGroup.forget();
+      } else {
+        size_t foundIndex;
+        const nsCString& script = loc.GetScript();
+        if (BinarySearchIf(kScriptLangGroup, 0, ArrayLength(kScriptLangGroup),
+                           [script](const auto& entry) -> int {
+                             return script.Compare(entry.mTag);
+                           },
+                           &foundIndex)) {
+          langGroup = kScriptLangGroup[foundIndex].mAtom;
+          return langGroup.forget();
+        }
+      }
+    }
   }
 
-  RefPtr<nsAtom> langGroup = NS_Atomize(langGroupStr);
-
+  // Fall back to x-unicode if no match was found
+  langGroup = nsGkAtoms::Unicode;
   return langGroup.forget();
 }
