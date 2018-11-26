@@ -110,7 +110,7 @@ class ChangesApp extends PureComponent {
     // Render groups of style sources: stylesheets and element style attributes.
     return Object.entries(changes).map(([sourceId, source]) => {
       const path = getSourceForDisplay(source);
-      const { href, rules } = source;
+      const { href, rules, isFramed } = source;
 
       return dom.div(
         {
@@ -122,7 +122,8 @@ class ChangesApp extends PureComponent {
             className: "href",
             title: href,
           },
-          path
+          dom.span({}, path),
+          isFramed && this.renderFrameBadge(href)
         ),
         // Render changed rules within this source.
         Object.entries(rules).map(([ruleId, rule]) => {
@@ -130,6 +131,16 @@ class ChangesApp extends PureComponent {
         })
       );
     });
+  }
+
+  renderFrameBadge(href = "") {
+    return dom.span(
+      {
+        className: "inspector-badge",
+        title: href,
+      },
+      getStr("changes.iframeLabel")
+    );
   }
 
   renderEmptyState() {
