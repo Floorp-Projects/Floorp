@@ -45,7 +45,8 @@ async function testPrompt(Prompt) {
     let mockRequest = makeMockPermissionRequest(browser);
     let principal = mockRequest.principal;
     let TestPrompt = new Prompt(mockRequest);
-    let permissionKey = TestPrompt.permissionKey;
+    let permissionKey = TestPrompt.usePermissionManager &&
+                        TestPrompt.permissionKey;
 
     registerCleanupFunction(function() {
       SitePermissions.remove(principal.URI, permissionKey);
