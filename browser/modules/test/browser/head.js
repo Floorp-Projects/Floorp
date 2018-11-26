@@ -181,6 +181,7 @@ function makeMockPermissionRequest(browser) {
   let result = {
     types,
     principal: browser.contentPrincipal,
+    topLevelPrincipal: browser.contentPrincipal,
     requester: null,
     _cancelled: false,
     cancel() {
