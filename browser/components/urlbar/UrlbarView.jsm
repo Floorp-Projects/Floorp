@@ -123,14 +123,13 @@ class UrlbarView {
     // icon if it's not too far from the edge of the window.  We define
     // "too far" as "more than 30% of the window's width AND more than
     // 250px".
-    let isRTL = this.document.documentElement.matches(":-moz-locale-dir(rtl)");
-    let boundToCheck = isRTL ? "right" : "left";
+    let boundToCheck = this.window.RTL_UI ? "right" : "left";
     let inputRect = this._getBoundsWithoutFlushing(this.urlbar.textbox);
     let startOffset = Math.abs(inputRect[boundToCheck] - documentRect[boundToCheck]);
     let alignSiteIcons = startOffset / width <= 0.3 || startOffset <= 250;
     if (alignSiteIcons) {
       // Calculate the end margin if we have a start margin.
-      let boundToCheckEnd = isRTL ? "left" : "right";
+      let boundToCheckEnd = this.window.RTL_UI ? "left" : "right";
       let endOffset = Math.abs(inputRect[boundToCheckEnd] -
                                documentRect[boundToCheckEnd]);
       if (endOffset > startOffset * 2) {
@@ -141,7 +140,9 @@ class UrlbarView {
       }
       let identityIcon = this.document.getElementById("identity-icon");
       let identityRect = this._getBoundsWithoutFlushing(identityIcon);
-      let start = isRTL ? documentRect.right - identityRect.right : identityRect.left;
+      let start = this.window.RTL_UI ?
+                    documentRect.right - identityRect.right :
+                    identityRect.left;
 
       this.panel.style.setProperty("--item-padding-start", Math.round(start) + "px");
       this.panel.style.setProperty("--item-padding-end", Math.round(endOffset) + "px");
