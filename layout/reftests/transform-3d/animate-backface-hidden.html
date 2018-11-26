@@ -16,6 +16,8 @@ body { padding: 50px }
   background: blue;
   height: 200px; width: 200px;
   backface-visibility: hidden;
+  /* use a -99.9s delay to start at 99.9% and then move to 0% */
+  animation: flip 100s -99.9s linear 2 paused;
 }
 
 </style>
@@ -25,6 +27,15 @@ body { padding: 50px }
 
 <script>
 
+document.getElementById("test")
+        .addEventListener("animationstart", StartListener);
+
+function StartListener(event) {
+  var test = document.getElementById("test");
+  test.style.animationPlayState = 'running';
+  test.addEventListener("animationiteration", IterationListener);
+}
+
 function IterationListener(event) {
   setTimeout(RemoveReftestWait, 0);
 }
@@ -32,14 +43,5 @@ function IterationListener(event) {
 function RemoveReftestWait() {
   document.documentElement.classList.remove("reftest-wait");
 }
-
-document.addEventListener('MozReftestInvalidate', () => {
-  test.addEventListener("animationstart", () => {
-    test.style.animationPlayState = 'running';
-    test.addEventListener("animationiteration", IterationListener);
-  });
-  /* use a -99.9s delay to start at 99.9% and then move to 0% */
-  test.style.animation = 'flip 100s -99.9s linear 2 paused';
-}, false);
 
 </script>
