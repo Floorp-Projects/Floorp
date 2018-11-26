@@ -1,4 +1,3 @@
-// |reftest| skip -- dynamic-import is not supported
 'use strict';
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/ns-set-same-values-strict.case

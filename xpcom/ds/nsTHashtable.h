@@ -451,7 +451,7 @@ bool
 nsTHashtable<EntryType>::s_MatchEntry(const PLDHashEntryHdr* aEntry,
                                       const void* aKey)
 {
-  return ((const EntryType*)aEntry)->KeyEquals(
+  return (static_cast<const EntryType*>(aEntry))->KeyEquals(
     static_cast<KeyTypePointer>(aKey));
 }
 

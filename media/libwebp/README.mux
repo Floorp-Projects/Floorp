@@ -1,7 +1,7 @@
 ﻿          __   __  ____  ____  ____  __ __  _     __ __
          /  \\/  \/  _ \/  _ \/  _ \/  \  \/ \___/_ / _\
          \       /   __/  _  \   __/      /  /  (_/  /__
-          \__\__/\_____/_____/__/  \__//_/\_____/__/___/v1.0.0
+          \__\__/\_____/_____/__/  \__//_/\_____/__/___/v1.0.1
 
 
 Description:
@@ -210,6 +210,35 @@ Code example:
 
 For a detailed AnimEncoder API reference, please refer to the header file
 (src/webp/mux.h).
+
+AnimDecoder API:
+================
+This AnimDecoder API allows decoding (possibly) animated WebP images.
+
+Code Example:
+
+  WebPAnimDecoderOptions dec_options;
+  WebPAnimDecoderOptionsInit(&dec_options);
+  // Tune 'dec_options' as needed.
+  WebPAnimDecoder* dec = WebPAnimDecoderNew(webp_data, &dec_options);
+  WebPAnimInfo anim_info;
+  WebPAnimDecoderGetInfo(dec, &anim_info);
+  for (uint32_t i = 0; i < anim_info.loop_count; ++i) {
+    while (WebPAnimDecoderHasMoreFrames(dec)) {
+      uint8_t* buf;
+      int timestamp;
+      WebPAnimDecoderGetNext(dec, &buf, &timestamp);
+      // ... (Render 'buf' based on 'timestamp').
+      // ... (Do NOT free 'buf', as it is owned by 'dec').
+    }
+    WebPAnimDecoderReset(dec);
+  }
+  const WebPDemuxer* demuxer = WebPAnimDecoderGetDemuxer(dec);
+  // ... (Do something using 'demuxer'; e.g. get EXIF/XMP/ICC data).
+  WebPAnimDecoderDelete(dec);
+
+For a detailed AnimDecoder API reference, please refer to the header file
+(src/webp/demux.h).
 
 
 Bugs:

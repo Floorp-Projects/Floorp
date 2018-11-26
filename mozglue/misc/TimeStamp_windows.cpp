@@ -162,19 +162,15 @@ PerformanceCounter()
   LARGE_INTEGER pc;
   ::QueryPerformanceCounter(&pc);
 
-  // As an experiment, we want to have a monotonicity sentinel
-  // even if the TSC is reported as stable.
-  if (true || !sHasStableTSC) {
-    // This is a simple go-backward protection for faulty hardware
-    AutoCriticalSection lock(&sTimeStampLock);
+  // QueryPerformanceCounter may slightly jitter (not be 100% monotonic.)
+  // This is a simple go-backward protection for such a faulty hardware.
+  AutoCriticalSection lock(&sTimeStampLock);
 
-    static decltype(LARGE_INTEGER::QuadPart) last;
-    if (last > pc.QuadPart) {
-      return last * 1000ULL;
-    }
-    last = pc.QuadPart;
+  static decltype(LARGE_INTEGER::QuadPart) last;
+  if (last > pc.QuadPart) {
+    return last * 1000ULL;
   }
-
+  last = pc.QuadPart;
   return pc.QuadPart * 1000ULL;
 }
 
