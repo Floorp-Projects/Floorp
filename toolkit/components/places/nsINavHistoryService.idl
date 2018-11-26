@@ -1024,13 +1024,6 @@ interface nsINavHistoryQueryOptions : nsISupports
   attribute boolean excludeQueries;
 
   /**
-   * DO NOT USE THIS API. IT'LL BE REMOVED IN BUG 1072833.
-   *
-   * Set to true to exclude live bookmarks from the query results.
-   */
-  attribute boolean excludeReadOnlyFolders;
-
-  /**
    * When set, allows items with "place:" URIs to appear as containers,
    * with the container's contents filled in from the stored query.
    * If not set, these will appear as normal items. Doesn't do anything if
