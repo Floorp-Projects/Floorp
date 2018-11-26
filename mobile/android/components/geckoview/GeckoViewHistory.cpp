@@ -11,7 +11,6 @@
 
 #include "mozilla/ClearOnShutdown.h"
 
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Link.h"

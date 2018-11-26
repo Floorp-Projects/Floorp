@@ -11,6 +11,7 @@
 #include "PuppetWidget.h"
 #include "nsIContent.h"
 
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextComposition.h"

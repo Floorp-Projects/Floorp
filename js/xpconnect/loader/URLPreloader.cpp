@@ -31,8 +31,6 @@
 #include "nsZipArchive.h"
 #include "xpcpublic.h"
 
-#include "mozilla/dom/ContentChild.h"
-
 #undef DELAYED_STARTUP_TOPIC
 #define DELAYED_STARTUP_TOPIC "sessionstore-windows-restored"
 

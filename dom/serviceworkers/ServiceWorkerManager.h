@@ -45,6 +45,7 @@ class PrincipalInfo;
 
 namespace dom {
 
+class ContentParent;
 class ServiceWorkerInfo;
 class ServiceWorkerJobQueue;
 class ServiceWorkerManagerChild;

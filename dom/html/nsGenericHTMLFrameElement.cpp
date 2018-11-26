@@ -6,7 +6,6 @@
 
 #include "nsGenericHTMLFrameElement.h"
 
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/XULFrameElement.h"
 #include "mozilla/Preferences.h"

@@ -9,7 +9,6 @@
 #include "base/message_loop.h"
 #include "base/task.h"
 #include "MainThreadUtils.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZCTreeManagerParent.h"  // for APZCTreeManagerParent
