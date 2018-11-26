@@ -10,7 +10,6 @@
 #include "mozilla/dom/Text.h"
 
 #include "gfxContext.h"
-#include "nsAutoPtr.h"
 #include "nsFontMetrics.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"

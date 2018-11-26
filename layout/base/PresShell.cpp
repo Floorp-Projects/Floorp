@@ -63,7 +63,6 @@
 #include "nsRange.h"
 #include "nsWindowSizes.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsReadableUtils.h"
 #include "nsIPageSequenceFrame.h"
 #include "nsIPermissionManager.h"
