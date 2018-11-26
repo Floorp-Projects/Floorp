@@ -93,7 +93,7 @@ ImplCycleCollectionUnlink(SelectionState& aField)
   ImplCycleCollectionUnlink(aField.mArray);
 }
 
-class RangeUpdater final
+class MOZ_STACK_CLASS RangeUpdater final
 {
 public:
   RangeUpdater();
@@ -140,30 +140,9 @@ public:
                    nsINode* aNewParent, int32_t aNewOffset);
 
 private:
-  friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
-                                          RangeUpdater&,
-                                          const char*,
-                                          uint32_t);
-  friend void ImplCycleCollectionUnlink(RangeUpdater& aField);
-
   nsTArray<RefPtr<RangeItem>> mArray;
   bool mLock;
 };
-
-inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            RangeUpdater& aField,
-                            const char* aName,
-                            uint32_t aFlags = 0)
-{
-  ImplCycleCollectionTraverse(aCallback, aField.mArray, aName, aFlags);
-}
-
-inline void
-ImplCycleCollectionUnlink(RangeUpdater& aField)
-{
-  ImplCycleCollectionUnlink(aField.mArray);
-}
 
 /**
  * Helper class for using SelectionState.  Stack based class for doing
