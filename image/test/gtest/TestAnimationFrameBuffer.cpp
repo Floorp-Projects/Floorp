@@ -27,6 +27,9 @@ CreateEmptyFrame(const IntSize& aSize = IntSize(1, 1),
   EXPECT_TRUE(NS_SUCCEEDED(rv));
   RawAccessFrameRef frameRef = frame->RawAccessRef();
   frame->SetRawAccessOnly();
+  // Normally the blend animation filter would set the dirty rect, but since
+  // we aren't producing an actual animation here, we need to fake it.
+  frame->SetDirtyRect(aFrameRect);
   frame->Finish();
   return frame.forget();
 }
@@ -105,16 +108,13 @@ VerifyAdvance(AnimationFrameBuffer& aQueue,
   if (aQueue.IsRecycling()) {
     const AnimationFrameRecyclingQueue& queue =
       *static_cast<AnimationFrameRecyclingQueue*>(&aQueue);
+    EXPECT_FALSE(queue.Recycle().back().mDirtyRect.IsEmpty());
+    EXPECT_TRUE(queue.Recycle().back().mDirtyRect.Contains(oldFrame->GetDirtyRect()));
+    EXPECT_EQ(totalRecycled + 1, queue.Recycle().size());
     if (oldFrame->ShouldRecycle()) {
       EXPECT_EQ(oldFrame.get(), queue.Recycle().back().mFrame.get());
-      EXPECT_FALSE(queue.Recycle().back().mDirtyRect.IsEmpty());
-      EXPECT_FALSE(queue.Recycle().back().mRecycleRect.IsEmpty());
-      EXPECT_EQ(totalRecycled + 1, queue.Recycle().size());
     } else {
-      EXPECT_EQ(totalRecycled, queue.Recycle().size());
-      if (!queue.Recycle().empty()) {
-        EXPECT_NE(oldFrame.get(), queue.Recycle().back().mFrame.get());
-      }
+      EXPECT_EQ(nullptr, queue.Recycle().back().mFrame.get());
     }
   }
 }
@@ -584,7 +584,7 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingLoop)
   // All the frames we inserted should have been recycleable.
   ASSERT_FALSE(buffer.Recycle().empty());
   while (!buffer.Recycle().empty()) {
-    IntRect expectedRect = buffer.Recycle().front().mRecycleRect;
+    IntRect expectedRect(0, 0, 1, 1);
     RefPtr<imgFrame> expectedFrame = buffer.Recycle().front().mFrame;
     EXPECT_FALSE(expectedRect.IsEmpty());
     EXPECT_TRUE(expectedFrame.get() != nullptr);
@@ -645,4 +645,110 @@ TEST_F(ImageAnimationFrameBuffer, RecyclingReset)
   const imgFrame* firstFrame = retained.Frames()[0].get();
   AnimationFrameRecyclingQueue buffer(std::move(retained));
   TestDiscardingQueueReset(buffer, firstFrame, kThreshold, kBatch, kStartFrame);
+}
+
+TEST_F(ImageAnimationFrameBuffer, RecyclingRect)
+{
+  const size_t kThreshold = 5;
+  const size_t kBatch = 2;
+  const size_t kStartFrame = 0;
+  const IntSize kImageSize(100, 100);
+  AnimationFrameRetainedBuffer retained(kThreshold, kBatch, kStartFrame);
+
+  // Let's get to the recycling state while marking all of the frames as not
+  // recyclable, just like AnimationFrameBuffer / the decoders would do.
+  RefPtr<imgFrame> frame;
+  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
+  AnimationFrameBuffer::InsertStatus status = retained.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::CONTINUE, status);
+
+  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
+  status = retained.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::CONTINUE, status);
+
+  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
+  status = retained.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::CONTINUE, status);
+
+  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
+  status = retained.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
+
+  VerifyAdvance(retained, 1, false);
+  VerifyAdvance(retained, 2, true);
+  VerifyAdvance(retained, 3, false);
+
+  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
+  status = retained.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::DISCARD_CONTINUE, status);
+
+  AnimationFrameRecyclingQueue buffer(std::move(retained));
+
+  // The first frame is now the candidate for recycling. Since it was marked as
+  // not recyclable, we should get nothing.
+  VerifyAdvance(buffer, 4, false);
+
+  IntRect recycleRect;
+  EXPECT_FALSE(buffer.Recycle().empty());
+  RawAccessFrameRef frameRef = buffer.RecycleFrame(recycleRect);
+  EXPECT_FALSE(frameRef);
+  EXPECT_TRUE(recycleRect.IsEmpty());
+  EXPECT_TRUE(buffer.Recycle().empty());
+
+  // Insert a recyclable partial frame. Its dirty rect shouldn't matter since
+  // the previous frame was not recyclable.
+  frame = CreateEmptyFrame(kImageSize, IntRect(0, 0, 25, 25));
+  status = buffer.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
+
+  VerifyAdvance(buffer, 5, true);
+  EXPECT_FALSE(buffer.Recycle().empty());
+  frameRef = buffer.RecycleFrame(recycleRect);
+  EXPECT_FALSE(frameRef);
+  EXPECT_TRUE(recycleRect.IsEmpty());
+  EXPECT_TRUE(buffer.Recycle().empty());
+
+  // Insert a recyclable partial frame. Its dirty rect should match the recycle
+  // rect since it is the only frame in the buffer.
+  frame = CreateEmptyFrame(kImageSize, IntRect(25, 0, 50, 50));
+  status = buffer.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
+
+  VerifyAdvance(buffer, 6, true);
+  EXPECT_FALSE(buffer.Recycle().empty());
+  frameRef = buffer.RecycleFrame(recycleRect);
+  EXPECT_TRUE(frameRef);
+  EXPECT_EQ(IntRect(25, 0, 50, 50), recycleRect);
+  EXPECT_TRUE(buffer.Recycle().empty());
+
+  // Insert the last frame and mark us as complete. The next recycled frame is
+  // producing the first frame again, so we should use the first frame refresh
+  // area instead of its dirty rect.
+  frame = CreateEmptyFrame(kImageSize, IntRect(10, 10, 60, 10));
+  status = buffer.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
+
+  bool continueDecoding = buffer.MarkComplete(IntRect(0, 0, 75, 50));
+  EXPECT_FALSE(continueDecoding);
+
+  VerifyAdvance(buffer, 7, true);
+  EXPECT_FALSE(buffer.Recycle().empty());
+  frameRef = buffer.RecycleFrame(recycleRect);
+  EXPECT_TRUE(frameRef);
+  EXPECT_EQ(IntRect(0, 0, 75, 50), recycleRect);
+  EXPECT_TRUE(buffer.Recycle().empty());
+
+  // Now let's reinsert the first frame. The recycle rect should still be the
+  // first frame refresh area instead of the dirty rect of the first frame (e.g.
+  // the full frame).
+  frame = CreateEmptyFrame(kImageSize, IntRect(IntPoint(0, 0), kImageSize), false);
+  status = buffer.Insert(std::move(frame));
+  EXPECT_EQ(AnimationFrameBuffer::InsertStatus::YIELD, status);
+
+  VerifyAdvance(buffer, 0, true);
+  EXPECT_FALSE(buffer.Recycle().empty());
+  frameRef = buffer.RecycleFrame(recycleRect);
+  EXPECT_TRUE(frameRef);
+  EXPECT_EQ(IntRect(0, 0, 75, 50), recycleRect);
+  EXPECT_TRUE(buffer.Recycle().empty());
 }
