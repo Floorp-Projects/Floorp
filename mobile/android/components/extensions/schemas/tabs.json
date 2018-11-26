@@ -101,7 +101,8 @@
           "isArticle": {"type": "boolean", "optional": true, "description": "Whether the document in the tab can be rendered in reader mode."},
           "isInReaderMode": {"type": "boolean", "optional": true, "description": "Whether the document in the tab is being rendered in reader mode."},
           "sharingState": {"$ref": "SharingState", "optional": true, "description": "Current tab sharing state for screen, microphone and camera."},
-          "attention": {"type": "boolean", "optional": true, "description": "Whether the tab is drawing attention."}
+          "attention": {"type": "boolean", "optional": true, "description": "Whether the tab is drawing attention."},
+          "successorTabId": {"type": "integer", "optional": true, "minimum": -1, "description": "The ID of this tab's successor, if any; $(ref:tabs.TAB_ID_NONE) otherwise."}
         }
       },
       {

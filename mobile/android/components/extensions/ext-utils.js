@@ -550,6 +550,10 @@ class Tab extends TabBase {
     return "complete";
   }
 
+  get successorTabId() {
+    return -1;
+  }
+
   get width() {
     return this.browser.clientWidth;
   }
