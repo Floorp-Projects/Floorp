@@ -449,15 +449,12 @@ public:
     RecycleEntry(RecycleEntry&& aOther)
       : mFrame(std::move(aOther.mFrame))
       , mDirtyRect(aOther.mDirtyRect)
-      , mRecycleRect(aOther.mRecycleRect)
-    {
-    }
+    { }
 
     RecycleEntry& operator=(RecycleEntry&& aOther)
     {
       mFrame = std::move(aOther.mFrame);
       mDirtyRect = aOther.mDirtyRect;
-      mRecycleRect = aOther.mRecycleRect;
       return *this;
     }
 
@@ -466,8 +463,6 @@ public:
 
     RefPtr<imgFrame> mFrame;   // The frame containing the buffer to recycle.
     gfx::IntRect mDirtyRect;   // The dirty rect of the frame itself.
-    gfx::IntRect mRecycleRect; // The dirty rect between the recycled frame and
-                               // the future frame that will be written to it.
   };
 
   const std::deque<RecycleEntry>& Recycle() const { return mRecycle; }
@@ -488,6 +483,11 @@ protected:
   /// The first frame refresh area. This is used instead of the dirty rect for
   /// the last frame when transitioning back to the first frame.
   gfx::IntRect mFirstFrameRefreshArea;
+
+  /// Force recycled frames to use the first frame refresh area as their dirty
+  /// rect. This is used when we are recycling frames from the end of an
+  /// animation to produce frames at the beginning of an animation.
+  bool mForceUseFirstFrameRefreshArea;
 };
 
 } // namespace image
