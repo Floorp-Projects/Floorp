@@ -21,7 +21,6 @@
 #include "nsIDocument.h"
 
 #include "nsError.h"
-#include "nsAutoPtr.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "ChildIterator.h"
 
