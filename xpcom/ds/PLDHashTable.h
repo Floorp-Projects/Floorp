@@ -491,6 +491,7 @@ public:
     uint32_t mNextsLimit;             // Next() call limit.
 
     bool mHaveRemoved;                // Have any elements been removed?
+    uint8_t mEntrySize;               // Size of entries.
 
     bool IsOnNonLiveEntry() const;
     void MoveToNextEntry();
