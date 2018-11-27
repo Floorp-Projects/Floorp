@@ -378,7 +378,8 @@ class RemoteReftest(RefTest):
                                                            xrePath=options.xrePath,
                                                            debuggerInfo=debuggerInfo,
                                                            symbolsPath=symbolsPath,
-                                                           timeout=timeout)
+                                                           timeout=timeout,
+                                                           e10s=options.e10s)
 
         self.cleanup(profile.profile)
         return status

@@ -38,7 +38,7 @@ class RemoteAutomation(Automation):
 
     def runApp(self, testURL, env, app, profileDir, extraArgs,
                utilityPath=None, xrePath=None, debuggerInfo=None, symbolsPath=None,
-               timeout=-1, maxTime=None, **kwargs):
+               timeout=-1, maxTime=None, e10s=True, **kwargs):
         """
         Run the app, log the duration it took to execute, return the status code.
         Kills the app if it runs for longer than |maxTime| seconds, or outputs nothing
@@ -59,7 +59,7 @@ class RemoteAutomation(Automation):
         self.lastTestSeen = "remoteautomation.py"
         self.launchApp([cmd] + args,
                        env=self.environment(env=env, crashreporter=not debuggerInfo),
-                       **self.processArgs)
+                       e10s=e10s, **self.processArgs)
 
         self.log.info("remoteautomation.py | Application pid: %d", self.pid)
 
@@ -258,7 +258,7 @@ class RemoteAutomation(Automation):
             pass
         return app, args
 
-    def launchApp(self, cmd, env=None, messageLogger=None, counts=None):
+    def launchApp(self, cmd, env=None, e10s=True, messageLogger=None, counts=None):
         self.messageLogger = messageLogger
         self.stdoutlen = 0
 
@@ -290,8 +290,8 @@ class RemoteAutomation(Automation):
                 args = args[:-1]
             if 'geckoview' in self.appName:
                 activity = "TestRunnerActivity"
-                self.device.launch_activity(self.appName, activity, e10s=True, moz_env=env,
-                                            extra_args=args, url=url)
+                self.device.launch_activity(self.appName, activity_name=activity, e10s=e10s,
+                                            moz_env=env, extra_args=args, url=url)
             else:
                 self.device.launch_fennec(self.appName, moz_env=env, extra_args=args, url=url)
 
