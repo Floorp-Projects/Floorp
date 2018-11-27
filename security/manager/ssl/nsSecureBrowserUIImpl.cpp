@@ -185,10 +185,6 @@ nsSecureBrowserUIImpl::CheckForBlockedContent()
     mState |= STATE_BLOCKED_TRACKING_CONTENT;
   }
 
-  if (docShell->GetHasSlowTrackingContentBlocked()) {
-    mState |= STATE_BLOCKED_SLOW_TRACKING_CONTENT;
-  }
-
   if (docShell->GetHasTrackingContentLoaded()) {
     mState |= STATE_LOADED_TRACKING_CONTENT;
   }
