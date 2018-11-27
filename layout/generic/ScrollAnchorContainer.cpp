@@ -63,6 +63,14 @@ static void SetAnchorFlags(const nsIFrame* aScrolledFrame,
   }
   MOZ_ASSERT(frame,
              "The anchor node should be a descendant of the scroll frame");
+  // If needed, invalidate the frame so that we start/stop highlighting the
+  // anchor
+  if (StaticPrefs::layout_css_scroll_anchoring_highlight()) {
+    for (nsIFrame* frame = aAnchorNode->FirstContinuation(); !!frame;
+         frame = frame->GetNextContinuation()) {
+      frame->InvalidateFrame();
+    }
+  }
 }
 
 /**
