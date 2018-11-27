@@ -14,9 +14,17 @@ import org.mozilla.fxaclient.internal.FirefoxAccount as InternalFxAcct
 import org.mozilla.fxaclient.internal.FxaException.Unauthorized as Unauthorized
 
 /**
+ * Facilitates testing consumers of FirefoxAccount.
+ */
+interface FirefoxAccountShaped {
+    fun getAccessToken(singleScope: String): Deferred<AccessTokenInfo>
+    fun getTokenServerEndpointURL(): String
+}
+
+/**
  * FirefoxAccount represents the authentication state of a client.
  */
-class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : AutoCloseable {
+class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : AutoCloseable, FirefoxAccountShaped {
 
     private val job = Job()
     private val scope = CoroutineScope(Dispatchers.IO) + job
@@ -84,7 +92,9 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : A
     /**
      * Fetches the token server endpoint, for authentication using the SAML bearer flow.
      */
-    fun getTokenServerEndpointURL(): String = inner.getTokenServerEndpointURL()
+    override fun getTokenServerEndpointURL(): String {
+        return inner.getTokenServerEndpointURL()
+    }
 
     /**
      * Authenticates the current account using the code and state parameters fetched from the
@@ -105,7 +115,7 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : A
      * @throws Unauthorized We couldn't provide an access token for this scope.
      * The caller should then start the OAuth Flow again with the desired scope.
      */
-    fun getAccessToken(singleScope: String): Deferred<AccessTokenInfo> {
+    override fun getAccessToken(singleScope: String): Deferred<AccessTokenInfo> {
         return scope.async {
             inner.getAccessToken(singleScope).let { AccessTokenInfo.fromInternal(it) }
         }
