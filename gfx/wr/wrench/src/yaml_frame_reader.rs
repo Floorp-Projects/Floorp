@@ -178,7 +178,8 @@ fn generate_solid_color_image(
 
 fn is_image_opaque(format: ImageFormat, bytes: &[u8]) -> bool {
     match format {
-        ImageFormat::BGRA8 => {
+        ImageFormat::BGRA8 |
+        ImageFormat::RGBA8 => {
             let mut is_opaque = true;
             for i in 0 .. (bytes.len() / 4) {
                 if bytes[i * 4 + 3] != 255 {

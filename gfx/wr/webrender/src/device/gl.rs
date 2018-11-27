@@ -2627,6 +2627,13 @@ impl Device {
                     pixel_type: gl::UNSIGNED_BYTE,
                 }
             },
+            ImageFormat::RGBA8 => {
+                FormatDesc {
+                    internal: gl::RGBA8,
+                    external: gl::RGBA,
+                    pixel_type: gl::UNSIGNED_BYTE,
+                }
+            },
             ImageFormat::RGBAF32 => FormatDesc {
                 internal: gl::RGBA32F,
                 external: gl::RGBA,
@@ -2783,6 +2790,7 @@ impl<'a> UploadTarget<'a> {
             ImageFormat::R8 => (gl::RED, 1, gl::UNSIGNED_BYTE),
             ImageFormat::R16 => (gl::RED, 2, gl::UNSIGNED_SHORT),
             ImageFormat::BGRA8 => (self.bgra_format, 4, gl::UNSIGNED_BYTE),
+            ImageFormat::RGBA8 => (gl::RGBA, 4, gl::UNSIGNED_BYTE),
             ImageFormat::RG8 => (gl::RG, 2, gl::UNSIGNED_BYTE),
             ImageFormat::RGBAF32 => (gl::RGBA, 16, gl::FLOAT),
             ImageFormat::RGBAI32 => (gl::RGBA_INTEGER, 16, gl::INT),
