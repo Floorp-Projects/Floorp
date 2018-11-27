@@ -216,6 +216,20 @@ const RootFront = protocol.FrontClassWithSpec(rootSpec, {
   }),
 
   /**
+   * Fetch the target front for a given add-on.
+   * This is just an helper on top of `listAddons` request.
+   *
+   * @param object filter
+   *        A dictionary object with following attribute:
+   *         - id: used to match the add-on to connect to.
+   */
+  async getAddon({ id }) {
+    const addons = await this.listAddons();
+    const addonTargetFront = addons.find(addon => addon.id === id);
+    return addonTargetFront;
+  },
+
+  /**
    * Test request that returns the object passed as first argument.
    *
    * `echo` is special as all the property of the given object have to be passed
