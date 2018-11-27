@@ -6,6 +6,7 @@
 const {addonTargetSpec} = require("devtools/shared/specs/targets/addon");
 const protocol = require("devtools/shared/protocol");
 const {custom} = protocol;
+loader.lazyRequireGetter(this, "BrowsingContextTargetFront", "devtools/shared/fronts/targets/browsing-context", true);
 
 const AddonTargetFront = protocol.FrontClassWithSpec(addonTargetSpec, {
   initialize: function(client) {
@@ -45,6 +46,24 @@ const AddonTargetFront = protocol.FrontClassWithSpec(addonTargetSpec, {
            !this.isWebExtension &&
            !this.isAPIExtension;
   },
+
+  /**
+   * Returns the actual target front for web extensions.
+   *
+   * AddonTargetActor is used for WebExtensions, but this isn't the final target actor
+   * we want to use for it. AddonTargetActor only expose metadata about the Add-on, like
+   * its name, type, ... Instead, we want to use a WebExtensionTargetActor, which
+   * inherits from BrowsingContextTargetActor. This connect method is used to retrive
+   * the final target actor to use.
+   */
+  connect: custom(async function() {
+    const { form } = await this._connect();
+    const front = new BrowsingContextTargetFront(this.client, form);
+    this.manage(front);
+    return front;
+  }, {
+    impl: "_connect",
+  }),
 
   attach: custom(async function() {
     const response = await this._attach();
