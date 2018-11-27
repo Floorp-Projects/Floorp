@@ -113,6 +113,7 @@ UNIFIED_SOURCES += [
     'testUTF8.cpp',
     'testWasmLEB128.cpp',
     'testWeakMap.cpp',
+    'testWindowNonConfigurable.cpp',
     'testXDR.cpp',
 ]
 
