@@ -330,8 +330,8 @@ def filter_tasks_by_chunks(tasks, chunks):
 
         if selected_task is None:
             print('Warning: no task found for chunk', platform, chunk)
-
-        selected_tasks.add(selected_task)
+        else:
+            selected_tasks.add(selected_task)
 
     return list(selected_tasks)
 
