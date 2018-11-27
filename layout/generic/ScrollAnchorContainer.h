@@ -72,6 +72,12 @@ class ScrollAnchorContainer final {
   void ApplyAdjustments();
 
   /**
+   * Notify the scroll anchor container that it should suppress any scroll
+   * adjustment that may happen after the next layout flush.
+   */
+  void SuppressAdjustments();
+
+  /**
    * Notify this scroll anchor container that its anchor node should be
    * invalidated and recomputed at the next available opportunity.
    */
@@ -135,6 +141,8 @@ class ScrollAnchorContainer final {
   bool mAnchorNodeIsDirty : 1;
   // True if we are applying a scroll anchor adjustment
   bool mApplyingAnchorAdjustment : 1;
+  // True if we should suppress anchor adjustments
+  bool mSuppressAnchorAdjustment : 1;
 };
 
 }  // namespace layout
