@@ -3194,6 +3194,8 @@ SearchService.prototype = {
     "[https]opensearch.startwebsearch.com/bing-search.xml",
     "[https]opensearch.webstartsearch.com/bing-search.xml",
     "[https]opensearch.webofsearch.com/bing-search.xml",
+    "[profile]/searchplugins/Yahoo! Powered.xml",
+    "[profile]/searchplugins/yahoo! powered.xml",
   ],
 
   _addEngineToStore: function SRCH_SVC_addEngineToStore(aEngine) {
