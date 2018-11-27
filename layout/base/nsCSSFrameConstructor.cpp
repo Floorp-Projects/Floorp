@@ -6217,14 +6217,14 @@ nsCSSFrameConstructor::AppendFramesToParent(nsFrameConstructorState&       aStat
     // didn't want to stop at the block part of the split when figuring out
     // initial parent, because that could screw up float parenting; it's easier
     // to do this little fixup here instead.
-    if (aFrameList.NotEmpty() && !aFrameList.FirstChild()->IsInlineOutside()) {
+    if (aFrameList.NotEmpty() && aFrameList.FirstChild()->IsBlockOutside()) {
       // See whether our trailing inline is empty
       nsIFrame* firstContinuation = aParentFrame->FirstContinuation();
       if (firstContinuation->PrincipalChildList().IsEmpty()) {
         // Our trailing inline is empty.  Collect our starting blocks from
         // aFrameList, get the right parent frame for them, and put them in.
         nsFrameList blockKids =
-          aFrameList.Split([](nsIFrame* f) { return f->IsInlineOutside();} );
+          aFrameList.Split([](nsIFrame* f) { return !f->IsBlockOutside();} );
         NS_ASSERTION(blockKids.NotEmpty(), "No blocks?");
 
         nsContainerFrame* prevBlock = GetIBSplitPrevSibling(firstContinuation);
@@ -6237,7 +6237,7 @@ nsCSSFrameConstructor::AppendFramesToParent(nsFrameConstructorState&       aStat
 
     // We want to put some of the frames into this inline frame.
     nsFrameList inlineKids =
-      aFrameList.Split([](nsIFrame* f) { return !f->IsInlineOutside(); });
+      aFrameList.Split([](nsIFrame* f) { return f->IsBlockOutside(); });
 
     if (!inlineKids.IsEmpty()) {
       AppendFrames(aParentFrame, kPrincipalList, inlineKids);
@@ -11587,7 +11587,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   nsFrameList::FrameLinkEnumerator firstBlockEnumerator(childItems);
   if (!aItem.mIsAllInline) {
     firstBlockEnumerator.Find(
-      [](nsIFrame* aFrame) { return !aFrame->IsInlineOutside(); });
+      [](nsIFrame* aFrame) { return aFrame->IsBlockOutside(); });
   }
 
   if (aItem.mIsAllInline || firstBlockEnumerator.AtEnd()) {
@@ -11648,7 +11648,7 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
     // On entry to this loop aChildItems is not empty and the first frame in it
     // is block-level.
     MOZ_ASSERT(aChildItems.NotEmpty(), "Should have child items");
-    MOZ_ASSERT(!aChildItems.FirstChild()->IsInlineOutside(),
+    MOZ_ASSERT(aChildItems.FirstChild()->IsBlockOutside(),
                "Must have list starting with block");
 
     // The initial run of blocks belongs to an anonymous block that we create
@@ -11660,7 +11660,7 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
     // Find the first non-block child which defines the end of our block kids
     // and the start of our next inline's kids
     nsFrameList blockKids =
-      aChildItems.Split([](nsIFrame* f) { return f->IsInlineOutside(); });
+      aChildItems.Split([](nsIFrame* f) { return !f->IsBlockOutside(); });
 
     if (!StaticPrefs::layout_css_column_span_enabled() ||
         !aInitialInline->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
@@ -11702,7 +11702,7 @@ nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
 
     if (aChildItems.NotEmpty()) {
       nsFrameList inlineKids =
-        aChildItems.Split([](nsIFrame* f) { return !f->IsInlineOutside(); });
+        aChildItems.Split([](nsIFrame* f) { return f->IsBlockOutside(); });
       MoveChildrenTo(aInitialInline, inlineFrame, inlineKids);
     }
 
