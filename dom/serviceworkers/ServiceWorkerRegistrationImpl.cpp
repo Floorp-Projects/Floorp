@@ -26,6 +26,7 @@
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerPrivate.h"
 #include "ServiceWorkerRegistration.h"
+#include "ServiceWorkerUnregisterCallback.h"
 
 #include "nsIDocument.h"
 #include "nsIServiceWorkerManager.h"
@@ -393,44 +394,6 @@ private:
 };
 
 NS_IMPL_ISUPPORTS(SWRUpdateRunnable::TimerCallback, nsITimerCallback)
-
-class UnregisterCallback final : public nsIServiceWorkerUnregisterCallback
-{
-  RefPtr<GenericPromise::Private> mPromise;
-
-public:
-  NS_DECL_ISUPPORTS
-
-  UnregisterCallback()
-    : mPromise(new GenericPromise::Private(__func__))
-  {
-  }
-
-  NS_IMETHOD
-  UnregisterSucceeded(bool aState) override
-  {
-    mPromise->Resolve(aState, __func__);
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  UnregisterFailed() override
-  {
-    mPromise->Reject(NS_ERROR_DOM_SECURITY_ERR, __func__);
-    return NS_OK;
-  }
-
-  RefPtr<GenericPromise>
-  Promise() const
-  {
-    return mPromise;
-  }
-
-private:
-  ~UnregisterCallback() = default;
-};
-
-NS_IMPL_ISUPPORTS(UnregisterCallback, nsIServiceWorkerUnregisterCallback)
 
 class WorkerUnregisterCallback final : public nsIServiceWorkerUnregisterCallback
 {
