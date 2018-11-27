@@ -26,6 +26,8 @@ import java.util.HashMap;
 
 public class TestRunnerActivity extends Activity {
     private static final String LOGTAG = "TestRunnerActivity";
+    private static final String ERROR_PAGE =
+            "<!DOCTYPE html><head><title>Error</title></head><body>Error!</body></html>";
 
     static GeckoRuntime sRuntime;
 
@@ -65,7 +67,8 @@ public class TestRunnerActivity extends Activity {
 
         @Override
         public GeckoResult<String> onLoadError(GeckoSession session, String uri, WebRequestError error) {
-            return null;
+
+            return GeckoResult.fromValue("data:text/html," + ERROR_PAGE);
         }
     };
 
@@ -169,12 +172,9 @@ public class TestRunnerActivity extends Activity {
                     .crashHandler(TestCrashHandler.class);
 
             sRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
-            sRuntime.setDelegate(new GeckoRuntime.Delegate() {
-                @Override
-                public void onShutdown() {
-                    mKillProcessOnDestroy = true;
-                    finish();
-                }
+            sRuntime.setDelegate(() -> {
+                mKillProcessOnDestroy = true;
+                finish();
             });
         }
 
