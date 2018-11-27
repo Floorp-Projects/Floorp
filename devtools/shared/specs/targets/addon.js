@@ -23,6 +23,10 @@ const addonTargetSpec = generateActorSpec({
       },
       response: RetVal("json"),
     },
+    reload: {
+      request: {},
+      response: {},
+    },
     push: {
       request: {},
       response: RetVal("json"),
