@@ -3385,9 +3385,8 @@ nsDocumentViewer::GetHintCharset()
   if(kCharsetUninitialized == mHintCharsetSource) {
     return nullptr;
   }
-  // this can't possibly be right.  we can't set a value just because somebody
-  // got a related value!
-  // mHintCharsetSource = kCharsetUninitialized;
+  // this can't possibly be right.  we can't set a value just because somebody got a related value!
+  //mHintCharsetSource = kCharsetUninitialized;
   return mHintCharset;
 }
 

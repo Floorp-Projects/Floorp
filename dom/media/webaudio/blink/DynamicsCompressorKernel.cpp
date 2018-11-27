@@ -276,8 +276,7 @@ void DynamicsCompressorKernel::process(float* sourceChannels[],
     float y4 = releaseFrames * releaseZone4;
 
     // All of these coefficients were derived for 4th order polynomial curve fitting where the y values
-    // match the evenly spaced x values as follows:
-    //  (y1 : x == 0, y2 : x == 1, y3 : x == 2, y4 : x == 3)
+    // match the evenly spaced x values as follows: (y1 : x == 0, y2 : x == 1, y3 : x == 2, y4 : x == 3)
     float kA = 0.9999999999999998f*y1 + 1.8432219684323923e-16f*y2 - 1.9373394351676423e-16f*y3 + 8.824516011816245e-18f*y4;
     float kB = -1.5788320352845888f*y1 + 2.3305837032074286f*y2 - 0.9141194204840429f*y3 + 0.1623677525612032f*y4;
     float kC = 0.5334142869106424f*y1 - 1.272736789213631f*y2 + 0.9258856042207512f*y3 - 0.18656310191776226f*y4;

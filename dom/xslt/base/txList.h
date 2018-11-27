@@ -135,8 +135,7 @@ public:
     void* remove();
 
     /**
-     * Resets the current location within the txList to the beginning of the
-     * txList
+     * Resets the current location within the txList to the beginning of the txList
     **/
     void reset();
 

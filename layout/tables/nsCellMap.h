@@ -323,14 +323,13 @@ public:
     * cellmap
     *
     * @param aMap               - reference to the table cell map
-    * @param aCellFrame         - a pointer to the cellframe which will be
-    *                             appended to the row
+    * @param aCellFrame         - a pointer to the cellframe which will be appended
+    *                             to the row
     * @param aRowIndex          - to this row the celldata entry will be added
     * @param aRebuildIfNecessay - if a cell spans into a row below it might be
-    *                             necesserary to rebuild the cellmap as this
-    *                             rowspan might overlap another cell.
-    * @param aDamageArea        - area in cellmap coordinates which have been
-    *                             updated.
+    *                             necesserary to rebuild the cellmap as this rowspan
+    *                             might overlap another cell.
+    * @param aDamageArea        - area in cellmap coordinates which have been updated.
     * @param aColToBeginSearch  - if not null contains the column number where
     *                             the search for a empty or dead cell in the
     *                             row should start

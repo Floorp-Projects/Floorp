@@ -4337,8 +4337,8 @@ nsTableFrame::ColumnHasCellSpacingBefore(int32_t aColIndex) const
  *  2) the widest border with a style that is not NONE wins
  *  3) the border styles are ranked in this order, highest to lowest precedence:
  *     double, solid, dashed, dotted, ridge, outset, groove, inset
- *  4) borders that are of equal width and style (differ only in color) have
- *     this precedence: cell, row, rowgroup, col, colgroup, table
+ *  4) borders that are of equal width and style (differ only in color) have this precedence:
+ *     cell, row, rowgroup, col, colgroup, table
  *  5) if all border styles are NONE, then that's the computed border style.
  *******************************************************************************/
 
