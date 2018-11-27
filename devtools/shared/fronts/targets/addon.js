@@ -8,12 +8,29 @@ const protocol = require("devtools/shared/protocol");
 const {custom} = protocol;
 
 const AddonTargetFront = protocol.FrontClassWithSpec(addonTargetSpec, {
-  initialize: function(client, form) {
-    protocol.Front.prototype.initialize.call(this, client, form);
+  initialize: function(client) {
+    protocol.Front.prototype.initialize.call(this, client);
 
     this.client = client;
 
     this.traits = {};
+  },
+
+  form(json) {
+    this.actorID = json.actor;
+
+    // Save the full form for Target class usage.
+    // Do not use `form` name to avoid colliding with protocol.js's `form` method
+    this.targetForm = json;
+
+    // We used to manipulate the form rather than the front itself.
+    // Expose all form attributes to ease accessing them.
+    for (const name in json) {
+      if (name == "actor") {
+        continue;
+      }
+      this[name] = json[name];
+    }
   },
 
   attach: custom(async function() {
