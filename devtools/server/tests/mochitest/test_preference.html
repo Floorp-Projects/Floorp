@@ -27,75 +27,73 @@ function runTests() {
 
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
-    client.listTabs().then(function onListTabs(response) {
-      return client.mainRoot.getFront("preference");
-    }).then(function(p) {
-      const prefs = {};
+    return client.mainRoot.getFront("preference");
+  }).then(function(p) {
+    const prefs = {};
 
-      const localPref = {
-        boolPref: true,
-        intPref: 0x1234,
-        charPref: "Hello World",
+    const localPref = {
+      boolPref: true,
+      intPref: 0x1234,
+      charPref: "Hello World",
+    };
+
+    function checkValues() {
+      is(prefs.boolPref, localPref.boolPref, "read/write bool pref");
+      is(prefs.intPref, localPref.intPref, "read/write int pref");
+      is(prefs.charPref, localPref.charPref, "read/write string pref");
+
+      ["test.all.bool", "test.all.int", "test.all.string"].forEach(function(key) {
+        let expectedValue;
+        switch (Services.prefs.getPrefType(key)) {
+          case Ci.nsIPrefBranch.PREF_STRING:
+            expectedValue = Services.prefs.getCharPref(key);
+            break;
+          case Ci.nsIPrefBranch.PREF_INT:
+            expectedValue = Services.prefs.getIntPref(key);
+            break;
+          case Ci.nsIPrefBranch.PREF_BOOL:
+            expectedValue = Services.prefs.getBoolPref(key);
+            break;
+          default:
+            ok(false, "unexpected pref type (" + key + ")");
+            break;
+        }
+
+        is(prefs.allPrefs[key].value, expectedValue,
+           "valid preference value (" + key + ")");
+        is(prefs.allPrefs[key].hasUserValue, Services.prefs.prefHasUserValue(key),
+           "valid hasUserValue (" + key + ")");
+      });
+
+      ["test.bool", "test.int", "test.string"].forEach(function(key) {
+        ok(!prefs.allPrefs.hasOwnProperty(key), "expect no pref (" + key + ")");
+        is(Services.prefs.getPrefType(key), Ci.nsIPrefBranch.PREF_INVALID,
+           "pref (" + key + ") is clear");
+      });
+
+      client.close().then(() => {
+        DebuggerServer.destroy();
+        SimpleTest.finish();
+      });
+    }
+
+    function updatePrefsProperty(key) {
+      return function(value) {
+        prefs[key] = value;
       };
+    }
 
-      function checkValues() {
-        is(prefs.boolPref, localPref.boolPref, "read/write bool pref");
-        is(prefs.intPref, localPref.intPref, "read/write int pref");
-        is(prefs.charPref, localPref.charPref, "read/write string pref");
-
-        ["test.all.bool", "test.all.int", "test.all.string"].forEach(function(key) {
-          let expectedValue;
-          switch (Services.prefs.getPrefType(key)) {
-            case Ci.nsIPrefBranch.PREF_STRING:
-              expectedValue = Services.prefs.getCharPref(key);
-              break;
-            case Ci.nsIPrefBranch.PREF_INT:
-              expectedValue = Services.prefs.getIntPref(key);
-              break;
-            case Ci.nsIPrefBranch.PREF_BOOL:
-              expectedValue = Services.prefs.getBoolPref(key);
-              break;
-            default:
-              ok(false, "unexpected pref type (" + key + ")");
-              break;
-          }
-
-          is(prefs.allPrefs[key].value, expectedValue,
-             "valid preference value (" + key + ")");
-          is(prefs.allPrefs[key].hasUserValue, Services.prefs.prefHasUserValue(key),
-             "valid hasUserValue (" + key + ")");
-        });
-
-        ["test.bool", "test.int", "test.string"].forEach(function(key) {
-          ok(!prefs.allPrefs.hasOwnProperty(key), "expect no pref (" + key + ")");
-          is(Services.prefs.getPrefType(key), Ci.nsIPrefBranch.PREF_INVALID,
-             "pref (" + key + ") is clear");
-        });
-
-        client.close().then(() => {
-          DebuggerServer.destroy();
-          SimpleTest.finish();
-        });
-      }
-
-      function updatePrefsProperty(key) {
-        return function(value) {
-          prefs[key] = value;
-        };
-      }
-
-      p.getAllPrefs().then(updatePrefsProperty("allPrefs"))
-      .then(() => p.setBoolPref("test.bool", localPref.boolPref))
-      .then(() => p.setIntPref("test.int", localPref.intPref))
-      .then(() => p.setCharPref("test.string", localPref.charPref))
-      .then(() => p.getBoolPref("test.bool")).then(updatePrefsProperty("boolPref"))
-      .then(() => p.getIntPref("test.int")).then(updatePrefsProperty("intPref"))
-      .then(() => p.getCharPref("test.string")).then(updatePrefsProperty("charPref"))
-      .then(() => p.clearUserPref("test.bool"))
-      .then(() => p.clearUserPref("test.int"))
-      .then(() => p.clearUserPref("test.string"))
-      .then(checkValues);
-    });
+    p.getAllPrefs().then(updatePrefsProperty("allPrefs"))
+    .then(() => p.setBoolPref("test.bool", localPref.boolPref))
+    .then(() => p.setIntPref("test.int", localPref.intPref))
+    .then(() => p.setCharPref("test.string", localPref.charPref))
+    .then(() => p.getBoolPref("test.bool")).then(updatePrefsProperty("boolPref"))
+    .then(() => p.getIntPref("test.int")).then(updatePrefsProperty("intPref"))
+    .then(() => p.getCharPref("test.string")).then(updatePrefsProperty("charPref"))
+    .then(() => p.clearUserPref("test.bool"))
+    .then(() => p.clearUserPref("test.int"))
+    .then(() => p.clearUserPref("test.string"))
+    .then(checkValues);
   });
 }
 
