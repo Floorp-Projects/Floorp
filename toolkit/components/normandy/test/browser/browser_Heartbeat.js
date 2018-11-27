@@ -82,7 +82,7 @@ add_task(async function() {
   const notificationBox = targetWindow.gHighPriorityNotificationBox;
 
   const preCount = notificationBox.allNotifications.length;
-  const hb = new Heartbeat(targetWindow, sandboxManager, {
+  const hb = new Heartbeat(targetWindow, {
     testing: true,
     flowId: "test",
     message: "test",
@@ -128,7 +128,7 @@ add_task(async function() {
 add_task(async function() {
   const targetWindow = Services.wm.getMostRecentWindow("navigator:browser");
   const notificationBox = targetWindow.gHighPriorityNotificationBox;
-  const hb = new Heartbeat(targetWindow, sandboxManager, {
+  const hb = new Heartbeat(targetWindow, {
     testing: true,
     flowId: "test",
     message: "test",
@@ -170,7 +170,7 @@ add_task(async function() {
 add_task(async function() {
   const targetWindow = await BrowserTestUtils.openNewBrowserWindow();
 
-  const hb = new Heartbeat(targetWindow, sandboxManager, {
+  const hb = new Heartbeat(targetWindow, {
     testing: true,
     flowId: "test",
     message: "test",
