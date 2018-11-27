@@ -15,7 +15,6 @@ EXPORTS += [
     'CTPolicyEnforcer.h',
     'CTVerifyResult.h',
     'SignedCertificateTimestamp.h',
-    'SignedTreeHead.h',
 ]
 
 UNIFIED_SOURCES += [

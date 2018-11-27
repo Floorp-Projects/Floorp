@@ -20,7 +20,6 @@
 #include "mozpkix/pkixcheck.h"
 #include "mozpkix/pkixutil.h"
 #include "SignedCertificateTimestamp.h"
-#include "SignedTreeHead.h"
 
 namespace mozilla { namespace ct {
 
@@ -106,16 +105,6 @@ const char kTestSCTSignatureData[] =
 const char kTestSCTPrecertSignatureData[] =
     "30450220482f6751af35dba65436be1fd6640f3dbf9a41429495924530288fa3e5e23e0602"
     "2100e4edc0db3ac572b1e2f5e8ab6a680653987dcf41027dfeffa105519d89edbf08";
-
-// For the sample STH
-const char kSampleSTHSHA256RootHash[] =
-    "726467216167397babca293dca398e4ce6b621b18b9bc42f30c900d1f92ac1e4";
-const char kSampleSTHTreeHeadSignature[] =
-    "0403004730450220365a91a2a88f2b9332f41d8959fa7086da7e6d634b7b089bc9da066426"
-    "6c7a20022100e38464f3c0fd066257b982074f7ac87655e0c8f714768a050b4be9a7b441cb"
-    "d3";
-const size_t kSampleSTHTreeSize = 21u;
-const uint64_t kSampleSTHTimestamp = 1396877277237u;
 
 // test-embedded-cert.pem
 const char kTestEmbeddedCertData[] =
@@ -631,40 +620,6 @@ Buffer
 GetDefaultIssuerKeyHash()
 {
   return HexToBytes(kDefaultIssuerKeyHash);
-}
-
-// A sample, valid STH
-void
-GetSampleSignedTreeHead(SignedTreeHead& sth)
-{
-  sth.version = SignedTreeHead::Version::V1;
-  sth.timestamp = kSampleSTHTimestamp;
-  sth.treeSize = kSampleSTHTreeSize;
-  sth.sha256RootHash = GetSampleSTHSHA256RootHash();
-  GetSampleSTHTreeHeadDecodedSignature(sth.signature);
-}
-
-Buffer
-GetSampleSTHSHA256RootHash()
-{
-  return HexToBytes(kSampleSTHSHA256RootHash);
-}
-
-Buffer
-GetSampleSTHTreeHeadSignature()
-{
-  return HexToBytes(kSampleSTHTreeHeadSignature);
-}
-
-void
-GetSampleSTHTreeHeadDecodedSignature(DigitallySigned& signature)
-{
-  Buffer ths = HexToBytes(kSampleSTHTreeHeadSignature);
-  Input thsInput;
-  ASSERT_EQ(Success, thsInput.Init(ths.data(), ths.size()));
-  Reader thsReader(thsInput);
-  ASSERT_EQ(Success, DecodeDigitallySigned(thsReader, signature));
-  ASSERT_TRUE(thsReader.AtEnd());
 }
 
 Buffer
