@@ -63,10 +63,10 @@ AddonDebugger.prototype = {
 
     yield this.client.connect();
 
-    const addonTargetActor = yield getAddonActorForId(this.client, addonId);
+    const addonTargetFront = yield this.client.mainRoot.getAddon({ id: addonId });
 
     const targetOptions = {
-      form: addonTargetActor,
+      activeTab: addonTargetFront,
       client: this.client,
       chrome: true,
     };
