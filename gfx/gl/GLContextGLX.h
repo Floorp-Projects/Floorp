@@ -41,7 +41,7 @@ public:
                           GLXFBConfig* const out_config, int* const out_visid,
                           bool aWebRender);
 
-    ~GLContextGLX();
+    ~GLContextGLX() override;
 
     virtual GLContextType GetContextType() const override { return GLContextType::GLX; }
 

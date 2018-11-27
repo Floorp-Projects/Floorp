@@ -11,14 +11,6 @@
 namespace mozilla {
 namespace gl {
 
-#ifdef DEBUG
-bool
-IsContextCurrent(GLContext* gl)
-{
-    return gl->IsCurrent();
-}
-#endif
-
 /* ScopedGLState - Wraps glEnable/glDisable. **********************************/
 
 // Use |newState = true| to enable, |false| to disable.

@@ -34,7 +34,6 @@ protected:
     {
         MOZ_ASSERT(&ScopedGLWrapper<Derived>::Unwrap == &Derived::Unwrap);
         MOZ_ASSERT(&Derived::UnwrapImpl);
-        MOZ_ASSERT(IsContextCurrent(mGL));
     }
 
     virtual ~ScopedGLWrapper() {
@@ -45,7 +44,6 @@ protected:
 public:
     void Unwrap() {
         MOZ_ASSERT(!mIsUnwrapped);
-        MOZ_ASSERT(IsContextCurrent(mGL));
 
         Derived* derived = static_cast<Derived*>(this);
         derived->UnwrapImpl();
@@ -222,7 +220,7 @@ public:
     }
 
     GLuint FB() const {
-        MOZ_ASSERT(IsComplete());
+        MOZ_GL_ASSERT(mGL, IsComplete());
         return mFB;
     }
 
