@@ -98,6 +98,7 @@ dictionary PaymentOptions {
   boolean             requestPayerEmail = false;
   boolean             requestPayerPhone = false;
   boolean             requestShipping = false;
+  boolean             requestBillingAddress = false;
   PaymentShippingType shippingType = "shipping";
 };
 

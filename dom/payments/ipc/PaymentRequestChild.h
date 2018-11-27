@@ -41,6 +41,11 @@ protected:
                         const nsString& aPayerEmail,
                         const nsString& aPayerPhone) override;
 
+  mozilla::ipc::IPCResult
+  RecvChangePaymentMethod(const nsString& aRequestId,
+                          const nsString& aMethodName,
+                          const IPCMethodChangeDetails& aMethodDetails) override;
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
 private:

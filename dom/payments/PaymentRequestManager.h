@@ -67,11 +67,13 @@ public:
                                  const IPCPaymentAddress& aAddress);
   nsresult ChangeShippingOption(PaymentRequest* aRequest,
                                 const nsAString& aOption);
-
   nsresult ChangePayerDetail(PaymentRequest* aRequest,
                              const nsAString& aPayerName,
                              const nsAString& aPayerEmail,
                              const nsAString& aPayerPhone);
+  nsresult ChangePaymentMethod(PaymentRequest* aRequest,
+                               const nsAString& aMethodName,
+                               const IPCMethodChangeDetails& aMethodDetails);
 
   bool IsRegionSupported(const nsAString& region) const;
 
