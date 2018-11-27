@@ -80,7 +80,7 @@ enum class ColorDepth : uint8_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
-enum class ExtendMode : uint32_t {
+enum class ExtendMode : uint8_t {
   Clamp,
   Repeat,
 
