@@ -20,7 +20,7 @@ use internal_types::FastHashSet;
 use plane_split::{Clipper, Polygon, Splitter};
 use prim_store::{PictureIndex, PrimitiveInstance, SpaceMapper, VisibleFace, PrimitiveInstanceKind};
 use prim_store::{get_raster_rects, PrimitiveDataInterner, PrimitiveDataStore, CoordinateSpaceMapping};
-use prim_store::{PrimitiveDetails, BrushKind, Primitive, OpacityBindingStorage};
+use prim_store::{PrimitiveDetails, BrushKind, Primitive, OpacityBindingStorage, PrimitiveTemplateKind};
 use render_task::{ClearMode, RenderTask, RenderTaskCacheEntryHandle, TileBlit};
 use render_task::{RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskId, RenderTaskLocation};
 use resource_cache::ResourceCache;
@@ -382,11 +382,17 @@ impl TileCache {
         self.reconfigure_tiles_if_required(x0, y0, x1, y1);
 
         // Build the list of resources that this primitive has dependencies on.
-        let mut is_cacheable = true;
         let mut opacity_bindings: SmallVec<[(PropertyBindingId, f32); 4]> = SmallVec::new();
         let mut clip_chain_spatial_nodes: SmallVec<[SpatialNodeIndex; 8]> = SmallVec::new();
         let mut image_keys: SmallVec<[ImageKey; 8]> = SmallVec::new();
         let mut current_clip_chain_id = prim_instance.clip_chain_id;
+
+        // Some primitives can not be cached (e.g. external video images)
+        let is_cacheable = prim_instance.is_cacheable(
+            primitives,
+            prim_data_store,
+            resource_cache,
+        );
 
         match prim_instance.kind {
             PrimitiveInstanceKind::Picture { pic_index } => {
@@ -400,12 +406,6 @@ impl TileCache {
             }
             PrimitiveInstanceKind::LegacyPrimitive { prim_index } => {
                 let prim = &primitives[prim_index.0];
-
-                // Some primitives can not be cached (e.g. external video images)
-                is_cacheable = prim_instance.is_cacheable(
-                    &prim.details,
-                    resource_cache,
-                );
 
                 match prim.details {
                     PrimitiveDetails::Brush(ref brush) => {
@@ -424,9 +424,6 @@ impl TileCache {
 
                                 image_keys.push(request.key);
                             }
-                            BrushKind::YuvImage { ref yuv_key, .. } => {
-                                image_keys.extend_from_slice(yuv_key);
-                            }
                             BrushKind::RadialGradient { .. } |
                             BrushKind::LinearGradient { .. } => {
                             }
@@ -439,6 +436,16 @@ impl TileCache {
                 for binding in &opacity_binding.bindings {
                     if let PropertyBinding::Binding(key, default) = binding {
                         opacity_bindings.push((key.id, *default));
+                    }
+                }
+            }
+            PrimitiveInstanceKind::YuvImage { .. } => {
+                match prim_data.kind {
+                    PrimitiveTemplateKind::YuvImage { ref yuv_key, .. } => {
+                        image_keys.extend_from_slice(yuv_key);
+                    }
+                    _ => {
+                        unreachable!();
                     }
                 }
             }

@@ -2093,22 +2093,17 @@ impl<'a> DisplayListFlattener<'a> {
             YuvData::InterleavedYCbCr(plane_0) => [plane_0, ImageKey::DUMMY, ImageKey::DUMMY],
         };
 
-        let prim = BrushPrimitive::new(
-            BrushKind::YuvImage {
-                yuv_key,
-                format,
-                color_depth,
-                color_space,
-                image_rendering,
-            },
-            None,
-        );
-
         self.add_primitive(
             clip_and_scroll,
             info,
             Vec::new(),
-            PrimitiveContainer::Brush(prim),
+            PrimitiveContainer::YuvImage {
+                color_depth,
+                yuv_key,
+                format,
+                color_space,
+                image_rendering,
+            },
         );
     }
 

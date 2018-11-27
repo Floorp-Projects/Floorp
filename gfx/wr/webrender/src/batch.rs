@@ -15,10 +15,10 @@ use gpu_types::{PrimitiveInstanceData, RasterizationSpace, GlyphInstance};
 use gpu_types::{PrimitiveHeader, PrimitiveHeaderIndex, TransformPaletteId, TransformPalette};
 use internal_types::{FastHashMap, SavedTargetIndex, TextureSource};
 use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureSurface};
-use prim_store::{BrushKind, BrushPrimitive, DeferredResolve, PrimitiveTemplateKind};
+use prim_store::{BrushKind, BrushPrimitive, DeferredResolve, PrimitiveTemplateKind, PrimitiveDataStore};
 use prim_store::{EdgeAaSegmentMask, ImageSource, PrimitiveInstanceKind, PrimitiveStore};
 use prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
-use prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex, PrimitiveDetails};
+use prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex, PrimitiveDetails, Primitive};
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskTree};
 use renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
 use renderer::BLOCKS_PER_UV_RECT;
@@ -906,6 +906,7 @@ impl AlphaBatchBuilder {
                                 PrimitiveInstanceKind::NormalBorder { .. } |
                                 PrimitiveInstanceKind::ImageBorder { .. } |
                                 PrimitiveInstanceKind::Rectangle { .. } |
+                                PrimitiveInstanceKind::YuvImage { .. } |
                                 PrimitiveInstanceKind::Clear => {
                                     unreachable!();
                                 }
@@ -1411,7 +1412,6 @@ impl AlphaBatchBuilder {
                             BrushKind::Image { ref visible_tiles, .. } => !visible_tiles.is_empty(),
                             BrushKind::LinearGradient { ref visible_tiles, .. } => !visible_tiles.is_empty(),
                             BrushKind::RadialGradient { ref visible_tiles, .. } => !visible_tiles.is_empty(),
-                            _ => false,
                         }
                     }
                 };
@@ -1670,6 +1670,116 @@ impl AlphaBatchBuilder {
                 self.add_segmented_prim_to_batch(
                     segments,
                     opacity,
+                    &batch_params,
+                    specified_blend_mode,
+                    non_segmented_blend_mode,
+                    prim_header_index,
+                    clip_task_address,
+                    bounding_rect,
+                    transform_kind,
+                    render_tasks,
+                    z_id,
+                    prim_instance.clip_task_index,
+                    ctx,
+                );
+            }
+            (
+                PrimitiveInstanceKind::YuvImage { segment_instance_index, .. },
+                PrimitiveTemplateKind::YuvImage { format, yuv_key, image_rendering, color_depth, color_space, .. }
+            ) => {
+                let mut textures = BatchTextures::no_texture();
+                let mut uv_rect_addresses = [0; 3];
+
+                //yuv channel
+                let channel_count = format.get_plane_num();
+                debug_assert!(channel_count <= 3);
+                for channel in 0 .. channel_count {
+                    let image_key = yuv_key[channel];
+
+                    let cache_item = resolve_image(
+                        ImageRequest {
+                            key: image_key,
+                            rendering: *image_rendering,
+                            tile: None,
+                        },
+                        ctx.resource_cache,
+                        gpu_cache,
+                        deferred_resolves,
+                    );
+
+                    if cache_item.texture_id == TextureSource::Invalid {
+                        warn!("Warnings: skip a PrimitiveKind::YuvImage");
+                        return;
+                    }
+
+                    textures.colors[channel] = cache_item.texture_id;
+                    uv_rect_addresses[channel] = cache_item.uv_rect_handle.as_int(gpu_cache);
+                }
+
+                // All yuv textures should be the same type.
+                let buffer_kind = get_buffer_kind(textures.colors[0]);
+                assert!(
+                    textures.colors[1 .. format.get_plane_num()]
+                        .iter()
+                        .all(|&tid| buffer_kind == get_buffer_kind(tid))
+                );
+
+                let kind = BrushBatchKind::YuvImage(
+                    buffer_kind,
+                    *format,
+                    *color_depth,
+                    *color_space,
+                );
+
+                let batch_params = BrushBatchParameters::shared(
+                    kind,
+                    textures,
+                    [
+                        uv_rect_addresses[0],
+                        uv_rect_addresses[1],
+                        uv_rect_addresses[2],
+                    ],
+                    0,
+                );
+
+                let specified_blend_mode = BlendMode::PremultipliedAlpha;
+
+                let non_segmented_blend_mode = if !prim_data.opacity.is_opaque ||
+                    prim_instance.clip_task_index != ClipTaskIndex::INVALID ||
+                    transform_kind == TransformedRectKind::Complex
+                {
+                    specified_blend_mode
+                } else {
+                    BlendMode::None
+                };
+
+                debug_assert!(*segment_instance_index != SegmentInstanceIndex::INVALID);
+                let (prim_cache_address, segments) = if *segment_instance_index == SegmentInstanceIndex::UNUSED {
+                    (gpu_cache.get_address(&prim_data.gpu_cache_handle), None)
+                } else {
+                    let segment_instance = &ctx.scratch.segment_instances[*segment_instance_index];
+                    let segments = Some(&ctx.scratch.segments[segment_instance.segments_range]);
+                    (gpu_cache.get_address(&segment_instance.gpu_cache_handle), segments)
+                };
+
+                let prim_header = PrimitiveHeader {
+                    local_rect: prim_data.prim_rect,
+                    local_clip_rect: prim_instance.combined_local_clip_rect,
+                    task_address,
+                    specific_prim_address: prim_cache_address,
+                    clip_task_address,
+                    transform_id,
+                };
+
+                let prim_header_index = prim_headers.push(
+                    &prim_header,
+                    z_id,
+                    batch_params.prim_user_data,
+                );
+
+                self.add_segmented_prim_to_batch(
+                    segments,
+                    prim_data.opacity,
                     &batch_params,
                     specified_blend_mode,
                     non_segmented_blend_mode,
@@ -2089,62 +2199,6 @@ impl BrushPrimitive {
                     0,
                 ))
             }
-            BrushKind::YuvImage { format, yuv_key, image_rendering, color_depth, color_space } => {
-                let mut textures = BatchTextures::no_texture();
-                let mut uv_rect_addresses = [0; 3];
-
-                //yuv channel
-                let channel_count = format.get_plane_num();
-                debug_assert!(channel_count <= 3);
-                for channel in 0 .. channel_count {
-                    let image_key = yuv_key[channel];
-
-                    let cache_item = resolve_image(
-                        ImageRequest {
-                            key: image_key,
-                            rendering: image_rendering,
-                            tile: None,
-                        },
-                        resource_cache,
-                        gpu_cache,
-                        deferred_resolves,
-                    );
-
-                    if cache_item.texture_id == TextureSource::Invalid {
-                        warn!("Warnings: skip a PrimitiveKind::YuvImage");
-                        return None;
-                    }
-
-                    textures.colors[channel] = cache_item.texture_id;
-                    uv_rect_addresses[channel] = cache_item.uv_rect_handle.as_int(gpu_cache);
-                }
-
-                // All yuv textures should be the same type.
-                let buffer_kind = get_buffer_kind(textures.colors[0]);
-                assert!(
-                    textures.colors[1 .. format.get_plane_num()]
-                        .iter()
-                        .all(|&tid| buffer_kind == get_buffer_kind(tid))
-                );
-
-                let kind = BrushBatchKind::YuvImage(
-                    buffer_kind,
-                    format,
-                    color_depth,
-                    color_space,
-                );
-
-                Some(BrushBatchParameters::shared(
-                    kind,
-                    textures,
-                    [
-                        uv_rect_addresses[0],
-                        uv_rect_addresses[1],
-                        uv_rect_addresses[2],
-                    ],
-                    0,
-                ))
-            }
         }
     }
 }
@@ -2163,7 +2217,6 @@ impl PrimitiveInstance {
                             AlphaType::Alpha => BlendMode::Alpha,
                         }
                     }
-                    BrushKind::YuvImage { .. } |
                     BrushKind::RadialGradient { .. } |
                     BrushKind::LinearGradient { .. } => {
                         BlendMode::PremultipliedAlpha
@@ -2175,18 +2228,39 @@ impl PrimitiveInstance {
 
     pub fn is_cacheable(
         &self,
-        details: &PrimitiveDetails,
-        resource_cache: &ResourceCache
+        primitives: &[Primitive],
+        prim_data_store: &PrimitiveDataStore,
+        resource_cache: &ResourceCache,
     ) -> bool {
-        let image_key = match *details {
-            PrimitiveDetails::Brush(BrushPrimitive { kind: BrushKind::Image{ request, ..  }, .. }) => {
-                request.key
+        let image_key = match self.kind {
+            PrimitiveInstanceKind::LegacyPrimitive { prim_index, .. } => {
+                let prim = &primitives[prim_index.0];
+                match prim.details {
+                    PrimitiveDetails::Brush(BrushPrimitive { kind: BrushKind::Image{ request, ..  }, .. }) => {
+                        request.key
+                    }
+                    PrimitiveDetails::Brush(_) => {
+                        return true
+                    }
+                }
             }
-            PrimitiveDetails::Brush(BrushPrimitive { kind: BrushKind::YuvImage{ yuv_key, .. }, .. }) => {
-                yuv_key[0]
+            PrimitiveInstanceKind::YuvImage { .. } => {
+                let prim_data = &prim_data_store[self.prim_data_handle];
+                match prim_data.kind {
+                    PrimitiveTemplateKind::YuvImage { ref yuv_key, .. } => {
+                        yuv_key[0]
+                    }
+                    _ => unreachable!(),
+                }
             }
-            PrimitiveDetails::Brush(_) => {
-                return true
+            PrimitiveInstanceKind::Picture { .. } |
+            PrimitiveInstanceKind::TextRun { .. } |
+            PrimitiveInstanceKind::LineDecoration { .. } |
+            PrimitiveInstanceKind::NormalBorder { .. } |
+            PrimitiveInstanceKind::ImageBorder { .. } |
+            PrimitiveInstanceKind::Rectangle { .. } |
+            PrimitiveInstanceKind::Clear => {
+                return true;
             }
         };
         match resource_cache.get_image_properties(image_key) {
