@@ -344,14 +344,6 @@ DebuggerClient.prototype = {
     return this.mainRoot.listTabs(options);
   },
 
-  /*
-   * This function exists only to preserve DebuggerClient's interface;
-   * new code should say 'client.mainRoot.listAddons()'.
-   */
-  listAddons: function() {
-    return this.mainRoot.listAddons();
-  },
-
   getTab: function(filter) {
     return this.mainRoot.getTab(filter);
   },
