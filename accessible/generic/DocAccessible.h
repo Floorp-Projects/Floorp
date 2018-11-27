@@ -643,7 +643,7 @@ protected:
    */
   union {
     // ARIA attribute value
-    nsAtom* mARIAAttrOldValue;
+    const nsAtom* mARIAAttrOldValue;
 
     // True if the accessible state bit was on
     bool mStateBitWasOn;

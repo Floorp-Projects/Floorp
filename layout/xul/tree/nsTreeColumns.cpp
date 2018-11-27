@@ -18,6 +18,7 @@
 #include "mozilla/dom/TreeColumnsBinding.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // Column class that caches all the info about our column.
 nsTreeColumn::nsTreeColumn(nsTreeColumns* aColumns, dom::Element* aElement)

@@ -4,7 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/MappedDeclarations.h"
+#include "MappedDeclarations.h"
+
+#include "nsAttrValue.h"
+#include "nsIDocument.h"
+#include "nsPresContext.h"
 
 namespace mozilla {
 

@@ -22,7 +22,7 @@
 #include "mozilla/TextEvents.h"
 
 using namespace mozilla;
-
+using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS(nsButtonBoxFrame::nsButtonBoxListener, nsIDOMEventListener)
 

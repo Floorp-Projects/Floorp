@@ -11,6 +11,7 @@
 
 #include "mozilla/gfx/Types.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/ServoStyleConsts.h"
 #include "mozilla/ServoTypes.h"
 #include "nsColor.h"
 #include "nsCSSPropertyID.h"

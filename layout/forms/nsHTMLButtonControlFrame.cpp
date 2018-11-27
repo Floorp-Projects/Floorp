@@ -8,6 +8,7 @@
 
 #include "nsContainerFrame.h"
 #include "nsIFormControlFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
 #include "nsButtonFrameRenderer.h"
