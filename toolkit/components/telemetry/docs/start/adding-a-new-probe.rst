@@ -120,9 +120,12 @@ Test coverage
 
 Any data collection that you need to base decisions on needs to have test coverage. Using JS, you can access the recorded values for your data collection. You can use the following functions:
 
-- for scalars, `snapshotScalars() <https://dxr.mozilla.org/mozilla-central/rev/720b9177c6856c1c4339d0fac1bf5149c0d53950/toolkit/components/telemetry/nsITelemetry.idl#444>`_ or `snapshotKeyedScalars() <https://dxr.mozilla.org/mozilla-central/rev/720b9177c6856c1c4339d0fac1bf5149c0d53950/toolkit/components/telemetry/nsITelemetry.idl#487>`_
-- `histogram.snapshot()` for `histograms <https://dxr.mozilla.org/mozilla-central/rev/720b9177c6856c1c4339d0fac1bf5149c0d53950/services/fxaccounts/tests/xpcshell/test_accounts.js#236-237>`_ or `keyed histograms <https://dxr.mozilla.org/mozilla-central/rev/720b9177c6856c1c4339d0fac1bf5149c0d53950/browser/components/search/test/browser_healthreport.js#39-42>`_
-- for events, `snapshotBuiltinEvents() <https://dxr.mozilla.org/mozilla-central/rev/720b9177c6856c1c4339d0fac1bf5149c0d53950/browser/modules/test/browser/browser_UsageTelemetry_content.js#83-85>`_
+- for scalars, `getSnapshotForScalars() <https://searchfox.org/mozilla-central/rev/f997bd6bbfc4773e774fdb6cd010142370d186f9/toolkit/components/telemetry/core/nsITelemetry.idl#90-102>`_
+  or `getSnapshotForKeyedScalars() <https://searchfox.org/mozilla-central/rev/f997bd6bbfc4773e774fdb6cd010142370d186f9/toolkit/components/telemetry/core/nsITelemetry.idl#104-116>`_
+- for histograms, `getSnapshotForHistograms() <https://searchfox.org/mozilla-central/rev/f997bd6bbfc4773e774fdb6cd010142370d186f9/toolkit/components/telemetry/core/nsITelemetry.idl#54-74>`_
+  or `getSnapshotForKeyedHistograms() <https://searchfox.org/mozilla-central/rev/f997bd6bbfc4773e774fdb6cd010142370d186f9/toolkit/components/telemetry/core/nsITelemetry.idl#76-88>`_
+   * Optionally, histogram objects have a `snapshot() <https://searchfox.org/mozilla-central/rev/f997bd6bbfc4773e774fdb6cd010142370d186f9/toolkit/components/telemetry/core/nsITelemetry.idl#285-287,313-315>`_ method.
+- for events, `snapshotEvents() <https://searchfox.org/mozilla-central/rev/f997bd6bbfc4773e774fdb6cd010142370d186f9/toolkit/components/telemetry/core/nsITelemetry.idl#542-558>`_
 
 If you need to test that pings were correctly passed to Telemetry, you can use `TelemetryArchiveTesting <https://dxr.mozilla.org/mozilla-central/search?q=TelemetryArchiveTesting&redirect=false>`_.
 
