@@ -127,6 +127,8 @@ HarnessErrorList = [
     {'substr': 'PROCESS-CRASH', 'level': ERROR, },
     {'regex': re.compile('''ERROR: (Address|Leak)Sanitizer'''), 'level': ERROR, },
     {'regex': re.compile('''thread '([^']+)' panicked'''), 'level': ERROR, },
+    {'substr': 'pure virtual method called', 'level': ERROR, },
+    {'substr': 'Pure virtual function called!', 'level': ERROR, },
 ]
 
 LogcatErrorList = [
