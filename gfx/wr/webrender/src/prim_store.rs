@@ -6,7 +6,7 @@ use api::{AlphaType, BorderRadius, BuiltDisplayList, ClipMode, ColorF, PictureRe
 use api::{DeviceIntRect, DeviceIntSize, DevicePixelScale, ExtendMode, DeviceRect, LayoutSideOffsetsAu};
 use api::{FilterOp, GlyphInstance, GradientStop, ImageKey, ImageRendering, ItemRange, TileOffset, RepeatMode};
 use api::{RasterSpace, LayoutPoint, LayoutRect, LayoutSideOffsets, LayoutSize, LayoutToWorldTransform};
-use api::{LayoutVector2D, PremultipliedColorF, PropertyBinding, Shadow, YuvColorSpace, YuvFormat, LayoutRectAu};
+use api::{LayoutVector2D, PremultipliedColorF, PropertyBinding, Shadow, YuvColorSpace, YuvFormat};
 use api::{DeviceIntSideOffsets, WorldPixel, BoxShadowClipMode, NormalBorder, WorldRect, LayoutToWorldScale};
 use api::{PicturePixel, RasterPixel, ColorDepth, LineStyle, LineOrientation, LayoutSizeAu, AuHelpers, LayoutVector2DAu};
 use app_units::Au;
@@ -34,7 +34,7 @@ use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use resource_cache::{ImageProperties, ImageRequest, ResourceCache};
 use scene::SceneProperties;
 use segment::SegmentBuilder;
-use std::{cmp, fmt, mem, ops, u32, usize};
+use std::{cmp, fmt, hash, mem, ops, u32, usize};
 #[cfg(debug_assertions)]
 use std::sync::atomic::{AtomicUsize, Ordering};
 use storage;
@@ -391,11 +391,52 @@ pub enum PrimitiveKeyKind {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Clone, PartialEq)]
+pub struct RectangleKey {
+    x: f32,
+    y: f32,
+    w: f32,
+    h: f32,
+}
+
+impl Eq for RectangleKey {}
+
+impl hash::Hash for RectangleKey {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.x.to_bits().hash(state);
+        self.y.to_bits().hash(state);
+        self.w.to_bits().hash(state);
+        self.h.to_bits().hash(state);
+    }
+}
+
+impl From<RectangleKey> for LayoutRect {
+    fn from(key: RectangleKey) -> LayoutRect {
+        LayoutRect {
+            origin: LayoutPoint::new(key.x, key.y),
+            size: LayoutSize::new(key.w, key.h),
+        }
+    }
+}
+
+impl From<LayoutRect> for RectangleKey {
+    fn from(rect: LayoutRect) -> RectangleKey {
+        RectangleKey {
+            x: rect.origin.x,
+            y: rect.origin.y,
+            w: rect.size.width,
+            h: rect.size.height,
+        }
+    }
+}
+
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct PrimitiveKey {
     pub is_backface_visible: bool,
-    pub prim_rect: LayoutRectAu,
-    pub clip_rect: LayoutRectAu,
+    pub prim_rect: RectangleKey,
+    pub clip_rect: RectangleKey,
     pub kind: PrimitiveKeyKind,
 }
 
@@ -408,8 +449,8 @@ impl PrimitiveKey {
     ) -> Self {
         PrimitiveKey {
             is_backface_visible,
-            prim_rect: prim_rect.to_au(),
-            clip_rect: clip_rect.to_au(),
+            prim_rect: prim_rect.into(),
+            clip_rect: clip_rect.into(),
             kind,
         }
     }
@@ -616,8 +657,8 @@ pub struct PrimitiveTemplate {
 
 impl From<PrimitiveKey> for PrimitiveTemplate {
     fn from(item: PrimitiveKey) -> Self {
-        let prim_rect = LayoutRect::from_au(item.prim_rect);
-        let clip_rect = LayoutRect::from_au(item.clip_rect);
+        let prim_rect = item.prim_rect.into();
+        let clip_rect = item.clip_rect.into();
         let kind = item.kind.into_template(&prim_rect);
 
         PrimitiveTemplate {
