@@ -616,9 +616,6 @@ public class BrowserApp extends GeckoApp
     public void onCreate(Bundle savedInstanceState) {
         final Context appContext = getApplicationContext();
 
-        final Intent killerIntent = new Intent(this, FennecKiller.class);
-        startService(killerIntent);
-
         showSplashScreen = true;
 
         safeStartingIntent = new SafeIntent(getIntent());
@@ -1025,6 +1022,9 @@ public class BrowserApp extends GeckoApp
         if (mIsAbortingAppLaunch) {
             return;
         }
+
+        final Intent killerIntent = new Intent(this, FennecKiller.class);
+        startService(killerIntent);
 
         if (!mHasResumed) {
             getAppEventDispatcher().unregisterUiThreadListener(this, "Prompt:ShowTop");
