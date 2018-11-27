@@ -121,6 +121,77 @@ namespace jit {
     _(CallNumberToString)                 \
     _(WrapResult)
 
+
+// [SMDDOC] CacheIR Value Representation and Tracking
+//
+// While compiling an IC stub the CacheIR compiler needs to keep track of the
+// physical location for each logical piece of data we care about, as well as
+// ensure that in the case of a stub failing, we are able to restore the input
+// state so that a subsequent stub can attempt to provide a value.
+//
+// OperandIds are created in the CacheIR front-end to keep track of values that
+// are passed between CacheIR ops during the execution of a given CacheIR stub.
+// In the CacheRegisterAllocator these OperandIds are given OperandLocations,
+// that represent the physical location of the OperandId at a given point in
+// time during CacheRegister allocation.
+//
+// In the CacheRegisterAllocator physical locations include the stack, and
+// registers, as well as whether or not the value has been unboxed or not.
+// Constants are also represented separately to provide for on-demand
+// materialization.
+//
+// Intra-op Register allocation:
+//
+// During the emission of a CacheIR op, code can ask the CacheRegisterAllocator
+// for access to a particular OperandId, and the register allocator will
+// generate the required code to fill that request.
+//
+// There are also a number of RAII classes that interact with the register
+// allocator, in order to provide access to more registers than just those
+// provided for by the OperandIds.
+//
+// - AutoOutputReg: The register which will hold the output value of the stub.
+// - AutoScratchReg: By default, an arbitrary scratch register, however a
+//   specific register can be requested.
+// - AutoScratchRegMaybeOutput: Any arbitrary scratch register, but the output
+//   register may be used as well.
+//
+// These RAII classes take ownership of a register for the duration of their
+// lifetime so they can be used for computation or output. The register
+// allocator can spill values with OperandLocations in order to try to ensure
+// that a register is made available for use.
+//
+// If a specific register is required (via AutoScratchRegister), it should be
+// the first register acquired, as the register rallocator will be unable to
+// allocate the fixed register if the current op is using it for something else.
+//
+// If no register can be provided after attempting to spill, a
+// MOZ_RELEASE_ASSERT ensures the browser will crash. The register allocator is
+// not provided enough information in its current design to insert spills and
+// fills at arbitrary locations, and so it can fail to find an allocation
+// solution. However, this will only happen within the implementation of an
+// operand emitter, and because the cache register allocator is mostly
+// determinstic, so long as the operand id emitter is tested, this won't
+// suddenly crop up in an arbitrary webpage. It's worth noting the most
+// difficult platform to support is x86-32, because it has the least number of
+// registers available.
+//
+// FailurePaths checkpoint the state of the register allocator so that the input
+// state can be recomputed from the current state before jumping to the next
+// stub in the IC chain. An important invariant is that the FailurePath must be
+// allocated for each op after all the manipulation of OperandLocations has
+// happened, so that its recording is correct.
+//
+// Inter-op Register Allocation:
+//
+// The RAII register management classes are RAII because all register state
+// outside the OperandLocations is reset before the compilation of each
+// individual CacheIR op. This means that you cannot rely on a value surviving
+// between ops, even if you use the ability of AutoScratchRegister to name a
+// specific register. Values that need to be preserved between ops must be given
+// an OperandId.
+
+
 // Represents a Value on the Baseline frame's expression stack. Slot 0 is the
 // value on top of the stack (the most recently pushed value), slot 1 is the
 // value pushed before that, etc.
