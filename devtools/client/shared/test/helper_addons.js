@@ -35,19 +35,6 @@ function addTemporaryAddon(path) {
   return AddonManager.installTemporaryAddon(addonFile);
 }
 
-function getAddonActorForId(client, addonId) {
-  info("Get addon actor for ID: " + addonId);
-  const deferred = getDeferredPromise().defer();
-
-  client.listAddons().then(response => {
-    const addonTargetActor = response.addons.filter(grip => grip.id == addonId).pop();
-    info("got addon actor for ID: " + addonId);
-    deferred.resolve(addonTargetActor);
-  });
-
-  return deferred.promise;
-}
-
 function removeAddon(addon) {
   info("Removing addon.");
 
