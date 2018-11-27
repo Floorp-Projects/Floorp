@@ -97,7 +97,11 @@ class ClientWrapper {
   }
 
   async listAddons() {
-    return this.client.listAddons();
+    return this.client.mainRoot.listAddons();
+  }
+
+  async getAddon({ id }) {
+    return this.client.mainRoot.getAddon({ id });
   }
 
   async listWorkers() {
