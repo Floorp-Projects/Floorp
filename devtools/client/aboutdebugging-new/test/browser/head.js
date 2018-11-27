@@ -162,7 +162,7 @@ function findSidebarItemByText(text, document) {
   });
 }
 
-async function connectToRuntime(deviceName, appName, document) {
+async function connectToRuntime(deviceName, document) {
   info(`Wait until the sidebar item for ${deviceName} appears`);
   await waitUntil(() => findSidebarItemByText(deviceName, document));
   const sidebarItem = findSidebarItemByText(deviceName, document);
@@ -172,11 +172,14 @@ async function connectToRuntime(deviceName, appName, document) {
   info("Click on the connect button and wait until it disappears");
   connectButton.click();
   await waitUntil(() => !sidebarItem.querySelector(".js-connect-button"));
+}
 
+async function selectRuntime(deviceName, name, document) {
+  const sidebarItem = findSidebarItemByText(deviceName, document);
   sidebarItem.querySelector(".js-sidebar-link").click();
 
   await waitUntil(() => {
     const runtimeInfo = document.querySelector(".js-runtime-info");
-    return runtimeInfo.textContent.includes(appName);
+    return runtimeInfo.textContent.includes(name);
   });
 }
