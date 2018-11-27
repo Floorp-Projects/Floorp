@@ -1053,6 +1053,11 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
   AddAndRemoveImageAssociations(this, oldLayers, newLayers);
 
   if (aOldComputedStyle) {
+    // Detect style changes that should trigger a scroll anchor adjustment
+    // suppression.
+    // https://drafts.csswg.org/css-scroll-anchoring/#suppression-triggers
+    bool needAnchorSuppression = false;
+
     // If we detect a change on margin, padding or border, we store the old
     // values on the frame itself between now and reflow, so if someone
     // calls GetUsed(Margin|Border|Padding)() before the next reflow, we
@@ -1062,17 +1067,21 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
     nsMargin newValue(0, 0, 0, 0);
     const nsStyleMargin* oldMargin = aOldComputedStyle->PeekStyleMargin();
     if (oldMargin && oldMargin->GetMargin(oldValue)) {
-      if ((!StyleMargin()->GetMargin(newValue) || oldValue != newValue) &&
-          !HasProperty(UsedMarginProperty())) {
-        AddProperty(UsedMarginProperty(), new nsMargin(oldValue));
+      if (!StyleMargin()->GetMargin(newValue) || oldValue != newValue) {
+        if (!HasProperty(UsedMarginProperty())) {
+          AddProperty(UsedMarginProperty(), new nsMargin(oldValue));
+        }
+        needAnchorSuppression = true;
       }
     }
 
     const nsStylePadding* oldPadding = aOldComputedStyle->PeekStylePadding();
     if (oldPadding && oldPadding->GetPadding(oldValue)) {
-      if ((!StylePadding()->GetPadding(newValue) || oldValue != newValue) &&
-          !HasProperty(UsedPaddingProperty())) {
-        AddProperty(UsedPaddingProperty(), new nsMargin(oldValue));
+      if (!StylePadding()->GetPadding(newValue) || oldValue != newValue) {
+        if (!HasProperty(UsedPaddingProperty())) {
+          AddProperty(UsedPaddingProperty(), new nsMargin(oldValue));
+        }
+        needAnchorSuppression = true;
       }
     }
 
@@ -1083,6 +1092,31 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
       if (oldValue != newValue && !HasProperty(UsedBorderProperty())) {
         AddProperty(UsedBorderProperty(), new nsMargin(oldValue));
       }
+    }
+
+    if (mInScrollAnchorChain) {
+      const nsStylePosition* oldPosition =
+          aOldComputedStyle->PeekStylePosition();
+      if (oldPosition &&
+          (oldPosition->mOffset != StylePosition()->mOffset ||
+           oldPosition->mWidth != StylePosition()->mWidth ||
+           oldPosition->mMinWidth != StylePosition()->mMinWidth ||
+           oldPosition->mMaxWidth != StylePosition()->mMaxWidth ||
+           oldPosition->mHeight != StylePosition()->mHeight ||
+           oldPosition->mMinHeight != StylePosition()->mMinHeight ||
+           oldPosition->mMaxHeight != StylePosition()->mMaxHeight)) {
+        needAnchorSuppression = true;
+      }
+
+      const nsStyleDisplay* oldDisp = aOldComputedStyle->PeekStyleDisplay();
+      if (oldDisp && (oldDisp->mPosition != StyleDisplay()->mPosition ||
+                      oldDisp->TransformChanged(*StyleDisplay()))) {
+        needAnchorSuppression = true;
+      }
+    }
+
+    if (mInScrollAnchorChain && needAnchorSuppression) {
+      ScrollAnchorContainer::FindFor(this)->SuppressAdjustments();
     }
   }
 
