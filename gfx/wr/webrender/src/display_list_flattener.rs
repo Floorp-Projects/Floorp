@@ -152,9 +152,6 @@ pub struct DisplayListFlattener<'a> {
     /// shared (interned) data between display lists.
     resources: &'a mut DocumentResources,
 
-    /// The estimated count of primtives we expect to encounter during flattening.
-    prim_count_estimate: usize,
-
     /// The root picture index for this flattener. This is the picture
     /// to start the culling phase from.
     pub root_pic_index: PictureIndex,
@@ -194,7 +191,6 @@ impl<'a> DisplayListFlattener<'a> {
             prim_store: PrimitiveStore::new(&prim_store_stats),
             clip_store: ClipStore::new(),
             resources,
-            prim_count_estimate: 0,
             root_pic_index: PictureIndex(0),
         };
 
@@ -285,9 +281,6 @@ impl<'a> DisplayListFlattener<'a> {
                 }
             }
         }
-
-        self.prim_count_estimate += pipeline.display_list.prim_count_estimate();
-        self.prim_store.primitives.reserve(self.prim_count_estimate);
 
         self.flatten_items(&mut pipeline.display_list.iter(), pipeline_id, LayoutVector2D::zero());
 
