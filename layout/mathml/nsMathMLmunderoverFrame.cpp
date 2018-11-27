@@ -15,7 +15,8 @@
 using namespace mozilla;
 
 //
-// <munderover> -- attach an underscript-overscript pair to a base - implementation
+// <munderover> -- attach an underscript-overscript pair to a base
+//                 implementation
 // <mover> -- attach an overscript to a base - implementation
 // <munder> -- attach an underscript to a base - implementation
 //

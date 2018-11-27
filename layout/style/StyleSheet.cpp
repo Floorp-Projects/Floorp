@@ -986,9 +986,11 @@ StyleSheet::CreateEmptyChildSheet(
 // conditions hold:
 //
 // (1) The pref is off.
-// (2) The browser is recording CSS errors (which parallel parsing can't handle).
-// (3) The stylesheet is a chrome stylesheet, since those can use -moz-bool-pref,
-//     which needs to access the pref service, which is not threadsafe.
+// (2) The browser is recording CSS errors (which parallel parsing can't
+//     handle).
+// (3) The stylesheet is a chrome stylesheet, since those can use
+//     -moz-bool-pref, which needs to access the pref service, which is
+//     not threadsafe.
 static bool
 AllowParallelParse(css::Loader* aLoader, nsIURI* aSheetURI)
 {

@@ -1640,7 +1640,8 @@ ResolveAutoFlexBasisFromRatio(FlexItem& aFlexItem,
              "Should only be called to resolve an 'auto' flex-basis");
   // If the flex item has ...
   //  - an intrinsic aspect ratio,
-  //  - a [used] flex-basis of 'main-size' [auto?] [We have this, if we're here.]
+  //  - a [used] flex-basis of 'main-size' [auto?]
+  //    [We have this, if we're here.]
   //  - a definite cross size
   // then the flex base size is calculated from its inner cross size and the
   // flex item’s intrinsic aspect ratio.
