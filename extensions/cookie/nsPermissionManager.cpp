@@ -2575,30 +2575,15 @@ nsPermissionManager::GetPermissionHashKey(nsIURI* aURI,
 
 NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
 {
-  nsTArray<RefPtr<nsIPermission>> array;
-  nsresult rv = GetAllWithTypePrefix(NS_LITERAL_CSTRING(""), array);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCOMArray<nsIPermission> comArray;
-  comArray.SetCapacity(array.Length());
-  for (size_t i = 0; i < array.Length(); i++) {
-    comArray.AppendElement(array[i].forget());
-  }
-
-  return NS_NewArrayEnumerator(aEnum, comArray, NS_GET_IID(nsIPermission));
-}
-
-NS_IMETHODIMP nsPermissionManager::GetAllWithTypePrefix(const nsACString& aPrefix,
-                                                        nsTArray<RefPtr<nsIPermission>>& aResult)
-{
-  aResult.Clear();
   if (XRE_IsContentProcess()) {
-    NS_WARNING("nsPermissionManager's getAllWithTypePrefix is not available in the "
+    NS_WARNING("nsPermissionManager's enumerator is not available in the "
                "content process, as not all permissions may be available.");
+    *aEnum = nullptr;
     return NS_ERROR_NOT_AVAILABLE;
   }
+
+  // roll an nsCOMArray of all our permissions, then hand out an enumerator
+  nsCOMArray<nsIPermission> array;
 
   for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
     PermissionHashKey* entry = iter.Get();
@@ -2610,11 +2595,6 @@ NS_IMETHODIMP nsPermissionManager::GetAllWithTypePrefix(const nsACString& aPrefi
         continue;
       }
 
-      if (!aPrefix.IsEmpty() &&
-          !StringBeginsWith(mTypeArray.ElementAt(permEntry.mType), aPrefix)) {
-        continue;
-      }
-
       nsCOMPtr<nsIPrincipal> principal;
       nsresult rv = GetPrincipalFromOrigin(entry->GetKey()->mOrigin,
                                            getter_AddRefs(principal));
@@ -2622,7 +2602,7 @@ NS_IMETHODIMP nsPermissionManager::GetAllWithTypePrefix(const nsACString& aPrefi
         continue;
       }
 
-      RefPtr<nsIPermission> permission =
+      nsCOMPtr<nsIPermission> permission =
         nsPermission::Create(principal,
                              mTypeArray.ElementAt(permEntry.mType),
                              permEntry.mPermission,
@@ -2631,11 +2611,11 @@ NS_IMETHODIMP nsPermissionManager::GetAllWithTypePrefix(const nsACString& aPrefi
       if (NS_WARN_IF(!permission)) {
         continue;
       }
-      aResult.AppendElement(std::move(permission));
+      array.AppendObject(permission);
     }
   }
 
-  return NS_OK;
+  return NS_NewArrayEnumerator(aEnum, array, NS_GET_IID(nsIPermission));
 }
 
 NS_IMETHODIMP nsPermissionManager::GetAllForURI(nsIURI* aURI, nsISimpleEnumerator **aEnum)
