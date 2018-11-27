@@ -38,10 +38,6 @@ StaticPresData::Get()
 StaticPresData::StaticPresData()
 {
   mLangService = nsLanguageAtomService::GetService();
-
-  mBorderWidthTable[NS_STYLE_BORDER_WIDTH_THIN] = nsPresContext::CSSPixelsToAppUnits(1);
-  mBorderWidthTable[NS_STYLE_BORDER_WIDTH_MEDIUM] = nsPresContext::CSSPixelsToAppUnits(3);
-  mBorderWidthTable[NS_STYLE_BORDER_WIDTH_THICK] = nsPresContext::CSSPixelsToAppUnits(5);
 }
 
 #define MAKE_FONT_PREF_KEY(_pref, _s0, _s1) \

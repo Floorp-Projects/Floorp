@@ -257,7 +257,6 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     , mInitialized(false)
 #endif
 {
-  PodZero(&mBorderWidthTable);
 #ifdef DEBUG
   PodZero(&mLayoutPhaseCount);
 #endif

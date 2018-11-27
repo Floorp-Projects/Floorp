@@ -93,12 +93,6 @@ public:
   static StaticPresData* Get();
 
   /**
-   * This table maps border-width enums 'thin', 'medium', 'thick'
-   * to actual nscoord values.
-   */
-  const nscoord* GetBorderWidthTable() { return mBorderWidthTable; }
-
-  /**
    * Given a language, get the language group name, which can
    * be used as an argument to LangGroupFontPrefs::Initialize()
    *
@@ -188,7 +182,6 @@ private:
   ~StaticPresData() {}
 
   nsLanguageAtomService* mLangService;
-  nscoord mBorderWidthTable[3];
   LangGroupFontPrefs mStaticLangGroupFontPrefs;
 };
 

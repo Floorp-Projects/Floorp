@@ -1386,8 +1386,6 @@ protected:
   bool mFontGroupCacheDirty;
   nsTHashtable<nsRefPtrHashKey<nsAtom>> mLanguagesUsed;
 
-  nscoord               mBorderWidthTable[3];
-
   uint32_t              mInterruptChecksToSkip;
 
   // Counters for tests and tools that want to detect frame construction

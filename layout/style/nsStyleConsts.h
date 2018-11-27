@@ -300,12 +300,6 @@ enum class StyleImageLayerRepeat : uint8_t {
 #define NS_STYLE_BORDER_COLLAPSE                0
 #define NS_STYLE_BORDER_SEPARATE                1
 
-// Possible enumerated specified values of border-*-width, used by nsCSSMargin
-#define NS_STYLE_BORDER_WIDTH_THIN              0
-#define NS_STYLE_BORDER_WIDTH_MEDIUM            1
-#define NS_STYLE_BORDER_WIDTH_THICK             2
-// XXX chopping block #define NS_STYLE_BORDER_WIDTH_LENGTH_VALUE      3
-
 enum class StyleBorderStyle : uint8_t {
   None,
   Groove,
