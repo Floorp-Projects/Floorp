@@ -209,11 +209,10 @@ PremultiplyFallback(const uint8_t* aSrc, int32_t aSrcGap,
       if (aSwapRB) {
         rb = (rb >> 16) | (rb << 16);
       }
-      // Approximate the multiply by alpha and divide by 255 which is
-      // essentially:
+      // Approximate the multiply by alpha and divide by 255 which is essentially:
       // c = c*a + 255; c = (c + (c >> 8)) >> 8;
-      // However, we omit the final >> 8 to fold it with the final shift into
-      // place depending on desired output format.
+      // However, we omit the final >> 8 to fold it with the final shift into place
+      // depending on desired output format.
       rb = rb*a + 0x00FF00FF;
       rb = (rb + ((rb >> 8) & 0x00FF00FF)) & 0xFF00FF00;
 

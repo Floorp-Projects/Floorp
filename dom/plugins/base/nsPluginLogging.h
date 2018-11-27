@@ -31,9 +31,8 @@
 // 2. You can combine logs and levels by separating them with a comma:
 //    My favorite Win32 Example: SET MOZ_LOG=Plugin:5,PluginNPP:5,PluginNPN:5
 
-// 3. Instead of output going to the console, you can log to a file.
-//    Additionally, set the MOZ_LOG_FILE environment variable to point to the
-//    full path of a file.
+// 3. Instead of output going to the console, you can log to a file. Additionally, set the
+//    MOZ_LOG_FILE environment variable to point to the full path of a file.
 //    My favorite Win32 Example: SET MOZ_LOG_FILE=c:\temp\pluginLog.txt
 
 // 4. For complete information see the Gecko Developer guide:

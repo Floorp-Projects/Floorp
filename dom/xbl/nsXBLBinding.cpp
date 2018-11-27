@@ -97,7 +97,7 @@ static const JSClass gPrototypeJSClass = {
     &gPrototypeJSClassOps
 };
 
-// Implementation //////////////////////////////////////////////////////////////
+// Implementation /////////////////////////////////////////////////////////////////
 
 // Constructors/Destructors
 nsXBLBinding::nsXBLBinding(nsXBLPrototypeBinding* aBinding)
@@ -808,7 +808,7 @@ nsXBLBinding::GetServoStyles() const
   return mPrototypeBinding->GetServoStyles();
 }
 
-// Internal helper methods /////////////////////////////////////////////////////
+// Internal helper methods ////////////////////////////////////////////////////////////////
 
 // Get or create a WeakMap object on a given XBL-hosting global.
 //

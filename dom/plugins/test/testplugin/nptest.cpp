@@ -2456,8 +2456,7 @@ convertPointY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVaria
 static bool
 streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
-  // .streamTest(url, doPost, postData, writeCallback, notifyCallback,
-  //             redirectCallback, allowRedirects, postFile = false)
+  // .streamTest(url, doPost, postData, writeCallback, notifyCallback, redirectCallback, allowRedirects, postFile = false)
   if (!(7 <= argCount && argCount <= 8))
     return false;
 

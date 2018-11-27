@@ -1055,8 +1055,7 @@ GfxMatrixToCGAffineTransform(const Matrix &m)
  * We cannot cancel out (2) and (3) as we have to apply the clips and transforms
  * of DrawTargetSkia between (2) and (3).
  *
- * Consider the example letter P, drawn at (0, 20) in CG coordinates in a
- * (100, 100) rect.
+ * Consider the example letter P, drawn at (0, 20) in CG coordinates in a (100, 100) rect.
  * Again, going right to left of the transforms. We'd get:
  *
  * 1) The letter P drawn at (0, -20) due to the inversion of the Y axis
