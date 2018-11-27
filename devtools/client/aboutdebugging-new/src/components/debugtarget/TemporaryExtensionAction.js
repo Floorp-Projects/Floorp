@@ -29,7 +29,7 @@ class TemporaryExtensionAction extends PureComponent {
 
   reload() {
     const { dispatch, target } = this.props;
-    dispatch(Actions.reloadTemporaryExtension(target.details.actor));
+    dispatch(Actions.reloadTemporaryExtension(target.id));
   }
 
   remove() {
