@@ -13,6 +13,10 @@ import kotlinx.coroutines.plus
 import mozilla.appservices.logins.DatabaseLoginsStorage
 import mozilla.appservices.logins.LoginsStorage
 import mozilla.appservices.logins.MemoryLoginsStorage
+import mozilla.components.concept.storage.SyncError
+import mozilla.components.concept.storage.SyncOk
+import mozilla.components.concept.storage.SyncStatus
+import mozilla.components.concept.storage.SyncableStore
 
 /**
  * This type contains the set of information required to successfully
@@ -274,6 +278,57 @@ open class AsyncLoginsStorageAdapter<T : LoginsStorage>(private val wrapped: T) 
          */
         fun inMemory(items: List<ServerPassword>): AsyncLoginsStorageAdapter<MemoryLoginsStorage> {
             return AsyncLoginsStorageAdapter(MemoryLoginsStorage(items))
+        }
+    }
+}
+
+/**
+ * Wraps [AsyncLoginsStorage] instance along with a lazy encryption key.
+ *
+ * This helper class lives here and not alongside [AsyncLoginsStorage] because we don't want to
+ * force a `service-sync-logins` dependency (which has a heavy native library dependency) on
+ * consumers of [FirefoxSyncFeature].
+ */
+data class SyncableLoginsStore(
+    val store: AsyncLoginsStorage,
+    val key: () -> Deferred<String>
+) : SyncableStore<SyncUnlockInfo> {
+    override suspend fun sync(authInfo: SyncUnlockInfo): SyncStatus {
+        return try {
+            withUnlocked {
+                it.sync(authInfo).await()
+                SyncOk
+            }
+        } catch (e: LoginsStorageException) {
+            SyncError(e)
+        }
+    }
+
+    /**
+     * Run some [block] which operates over an unlocked instance of [AsyncLoginsStorage].
+     * Database is locked once [block] is done.
+     *
+     * @throws [InvalidKeyException] if the provided [key] isn't valid.
+     */
+    suspend fun <T> withUnlocked(block: suspend (AsyncLoginsStorage) -> T): T {
+        // Instead of synchronizing on 'store' let's be optimistic and just swallow mismatched locks.
+
+        if (store.isLocked()) {
+            try {
+                store.unlock(key().await()).await()
+            } catch (e: MismatchedLockException) {
+                // Oh well, it's already unlocked!
+            }
+        }
+
+        try {
+            return block(store)
+        } finally {
+            try {
+                store.lock().await()
+            } catch (e: MismatchedLockException) {
+                // Oh well, it's already locked!
+            }
         }
     }
 }
