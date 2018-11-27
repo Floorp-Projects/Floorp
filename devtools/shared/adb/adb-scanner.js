@@ -5,11 +5,12 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const { Devices } = require("devtools/shared/apps/Devices.jsm");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { RuntimeTypes } =
   require("devtools/client/webide/modules/runtime-types");
 const { ADB } = require("devtools/shared/adb/adb");
+const { Devices } = require("devtools/shared/adb/Devices.jsm");
+
 loader.lazyRequireGetter(this, "Device", "devtools/shared/adb/adb-device");
 
 class ADBScanner extends EventEmitter {
