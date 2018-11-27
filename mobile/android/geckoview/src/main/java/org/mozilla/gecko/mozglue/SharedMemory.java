@@ -55,7 +55,7 @@ public class SharedMemory implements Parcelable {
 
     @Override
     public int describeContents() {
-        return 0;
+        return CONTENTS_FILE_DESCRIPTOR;
     }
 
     @Override

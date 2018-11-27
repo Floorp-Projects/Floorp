@@ -149,6 +149,7 @@
 #include "nsIFragmentContentSink.h"
 #include "nsContainerFrame.h"
 #include "nsIHTMLDocument.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIIdleService.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIInterfaceRequestor.h"
@@ -8971,9 +8972,14 @@ nsContentUtils::IsThirdPartyWindowOrChannel(nsPIDOMWindowInner* aWindow,
   bool thirdParty = false;
 
   if (aWindow) {
-    Unused << thirdPartyUtil->IsThirdPartyWindow(aWindow->GetOuterWindow(),
-                                                 aURI,
-                                                 &thirdParty);
+    nsresult rv = thirdPartyUtil->IsThirdPartyWindow(aWindow->GetOuterWindow(),
+                                                     aURI,
+                                                     &thirdParty);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // Ideally we would do something similar to the channel code path here,
+      // but existing code depends on this behaviour.
+      return false;
+    }
   }
 
   if (aChannel) {
@@ -8981,9 +8987,32 @@ nsContentUtils::IsThirdPartyWindowOrChannel(nsPIDOMWindowInner* aWindow,
     // use nsILoadInfo.isThirdPartyContext.  That nsILoadInfo property only
     // indicates if the parent loading window is third party or not.  We
     // want to check the channel URI against the loading principal as well.
-    Unused << thirdPartyUtil->IsThirdPartyChannel(aChannel,
-                                                  nullptr,
-                                                  &thirdParty);
+    nsresult rv = thirdPartyUtil->IsThirdPartyChannel(aChannel,
+                                                      nullptr,
+                                                      &thirdParty);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // Assume third-party in case of failure
+      thirdParty = true;
+    }
+
+    // We check isThirdPartyWindow to expand the list of domains that are
+    // considered first party (e.g., if facebook.com includes an iframe from
+    // fatratgames.com, all subsources included in that iframe are considered
+    // third-party with isThirdPartyChannel, even if they are not third-party
+    // w.r.t.  facebook.com), and isThirdPartyChannel to prevent top-level
+    // navigations from being detected as third-party.
+    bool isThirdPartyWindow = true;
+    nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(aChannel, &rv);
+    if (NS_SUCCEEDED(rv) && chan) {
+      nsCOMPtr<nsIURI> topWinURI;
+      rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
+      if (NS_SUCCEEDED(rv) && topWinURI) {
+        rv = thirdPartyUtil->IsThirdPartyURI(aURI, topWinURI, &isThirdPartyWindow);
+        if (NS_SUCCEEDED(rv)) {
+          thirdParty = thirdParty && isThirdPartyWindow;
+        }
+      }
+    }
   }
 
   return thirdParty;

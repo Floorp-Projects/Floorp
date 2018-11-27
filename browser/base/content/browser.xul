@@ -977,6 +977,8 @@ xmlns="http://www.w3.org/1999/xhtml"
                          tooltiptext="&urlbar.midiNotificationAnchor.tooltip;"/>
                   <image id="webauthn-notification-icon" class="notification-anchor-icon" role="button"
                          tooltiptext="&urlbar.webAuthnAnchor.tooltip;"/>
+                  <image id="storage-access-notification-icon" class="notification-anchor-icon storage-access-icon" role="button"
+                         tooltiptext="&urlbar.storageAccessAnchor.tooltip;"/>
                 </box>
                 <image id="connection-icon"/>
                 <image id="extension-icon"/>

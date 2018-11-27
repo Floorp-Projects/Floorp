@@ -121,6 +121,10 @@ add_task(async function test_tab_contextmenu_fxa_disabled() {
   [...document.querySelectorAll(".sync-ui-item")].forEach(e => e.hidden = false);
 });
 
+add_task(async function teardown() {
+  Weave.Service.clientsEngine.getClientType.restore();
+});
+
 async function openTabContextMenu(openSubmenuId = null) {
   const contextMenu = document.getElementById("tabContextMenu");
   is(contextMenu.state, "closed", "checking if popup is closed");

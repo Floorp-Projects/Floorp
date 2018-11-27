@@ -966,7 +966,15 @@ var gIdentityHandler = {
 
     let hasBlockedPopupIndicator = false;
     for (let permission of permissions) {
+      if (permission.id == "storage-access") {
+        // Ignore storage access permissions here, they are made visible inside
+        // the Content Blocking UI.
+        continue;
+      }
       let item = this._createPermissionItem(permission);
+      if (!item) {
+        continue;
+      }
       this._permissionList.appendChild(item);
 
       if (permission.id == "popup" &&
@@ -1035,7 +1043,11 @@ var gIdentityHandler = {
     let nameLabel = document.createXULElement("label");
     nameLabel.setAttribute("flex", "1");
     nameLabel.setAttribute("class", "identity-popup-permission-label");
-    nameLabel.textContent = SitePermissions.getPermissionLabel(aPermission.id);
+    let label = SitePermissions.getPermissionLabel(aPermission.id);
+    if (label === null) {
+      return null;
+    }
+    nameLabel.textContent = label;
     let nameLabelId = "identity-popup-permission-label-" + aPermission.id;
     nameLabel.setAttribute("id", nameLabelId);
 

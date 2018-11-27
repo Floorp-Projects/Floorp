@@ -64,7 +64,7 @@ def path_total(data, path):
 
         # Make sure the value is sane. A misbehaving reporter could lead to
         # negative values.
-        assert unclassified >= 0
+        assert unclassified >= 0, "heap-unclassified was negative: %d" % unclassified
 
         return unclassified
 

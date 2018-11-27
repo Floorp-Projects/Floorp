@@ -26,8 +26,14 @@ PATH_MAPPINGS = {
 if __name__ == '__main__':
     cli = CLI()
     debug_args, interactive = cli.debugger_arguments()
+    runner_args = cli.runner_args()
 
     build = MozbuildObject.from_environment()
+
+    binary = runner_args.get('binary')
+    if not binary:
+        binary = build.get_binary_path(where="staged-package")
+
     path_mappings = {
         k: os.path.join(build.topsrcdir, v)
         for k, v in PATH_MAPPINGS.items()
@@ -86,8 +92,7 @@ if __name__ == '__main__':
 
         # Run Firefox a first time to initialize its profile
         runner = FirefoxRunner(profile=profile,
-                               binary=build.get_binary_path(
-                                   where="staged-package"),
+                               binary=binary,
                                cmdargs=['data:text/html,<script>Quitter.quit()</script>'],
                                env=env)
         runner.start()
@@ -100,8 +105,7 @@ if __name__ == '__main__':
 
         cmdargs = ["http://localhost:%d/index.html" % PORT]
         runner = FirefoxRunner(profile=profile,
-                               binary=build.get_binary_path(
-                                   where="staged-package"),
+                               binary=binary,
                                cmdargs=cmdargs,
                                env=env)
         runner.start(debug_args=debug_args, interactive=interactive)

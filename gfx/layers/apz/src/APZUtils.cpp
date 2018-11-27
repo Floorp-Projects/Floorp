@@ -40,6 +40,18 @@ CalculatePendingDisplayPort(const FrameMetrics& aFrameMetrics,
       aFrameMetrics, aVelocity);
 }
 
+/*static*/ bool
+IsCloseToHorizontal(float aAngle, float aThreshold)
+{
+  return (aAngle < aThreshold || aAngle > (M_PI - aThreshold));
+}
+
+/*static*/ bool
+IsCloseToVertical(float aAngle, float aThreshold)
+{
+  return (fabs(aAngle - (M_PI / 2)) < aThreshold);
+}
+
 } // namespace apz
 } // namespace layers
 } // namespace mozilla

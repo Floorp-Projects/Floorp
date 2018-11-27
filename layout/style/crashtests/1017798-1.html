@@ -109,7 +109,8 @@ window.GaiaSwitch = (function(win) {
     '</label>';
 
   // Register and return the constructor
-  return document.registerElement('gaia-switch', { prototype: proto });
+  win.customElements.define('gaia-switch', GaiaSwitch);
+  return GaiaSwitch;
 })(window);
 </script>
 <body>

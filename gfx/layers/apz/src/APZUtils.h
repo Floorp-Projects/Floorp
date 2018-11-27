@@ -131,6 +131,16 @@ void InitializeGlobalState();
 const ScreenMargin CalculatePendingDisplayPort(const FrameMetrics& aFrameMetrics,
                                                const ParentLayerPoint& aVelocity);
 
+/**
+ * Is aAngle within the given threshold of the horizontal axis?
+ * @param aAngle an angle in radians in the range [0, pi]
+ * @param aThreshold an angle in radians in the range [0, pi/2]
+ */
+bool IsCloseToHorizontal(float aAngle, float aThreshold);
+
+// As above, but for the vertical axis.
+bool IsCloseToVertical(float aAngle, float aThreshold);
+
 } // namespace apz
 
 } // namespace layers

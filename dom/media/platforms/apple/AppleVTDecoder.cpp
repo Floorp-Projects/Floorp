@@ -4,13 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <CoreFoundation/CFString.h>
-
 #include "AppleVTDecoder.h"
-#include "AppleCMLinker.h"
+
 #include "AppleDecoderModule.h"
 #include "AppleUtils.h"
-#include "AppleVTLinker.h"
 #include "MacIOSurfaceImage.h"
 #include "MediaData.h"
 #include "mozilla/ArrayUtils.h"
@@ -20,12 +17,15 @@
 #include "mozilla/Logging.h"
 #include "VideoUtils.h"
 #include "gfxPlatform.h"
+#include "MacIOSurfaceImage.h"
 
 #define LOG(...) DDMOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, __VA_ARGS__)
 #define LOGEX(_this, ...) \
   DDMOZ_LOGEX(_this, sPDMLog, mozilla::LogLevel::Debug, __VA_ARGS__)
 
 namespace mozilla {
+
+using namespace layers;
 
 AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig, TaskQueue* aTaskQueue,
                                layers::ImageContainer* aImageContainer,
@@ -459,19 +459,18 @@ MediaResult AppleVTDecoder::InitializeSession() {
                        RESULT_DETAIL("Couldn't create decompression session!"));
   }
 
-  if (AppleVTLinker::skPropUsingHWAccel) {
-    CFBooleanRef isUsingHW = nullptr;
-    rv = VTSessionCopyProperty(mSession, AppleVTLinker::skPropUsingHWAccel,
-                               kCFAllocatorDefault, &isUsingHW);
-    if (rv != noErr) {
-      LOG("AppleVTDecoder: system doesn't support hardware acceleration");
-    }
-    mIsHardwareAccelerated = rv == noErr && isUsingHW == kCFBooleanTrue;
-    LOG("AppleVTDecoder: %s hardware accelerated decoding",
-        mIsHardwareAccelerated ? "using" : "not using");
-  } else {
-    LOG("AppleVTDecoder: couldn't determine hardware acceleration status.");
+  CFBooleanRef isUsingHW = nullptr;
+  rv = VTSessionCopyProperty(
+      mSession,
+      kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder,
+      kCFAllocatorDefault, &isUsingHW);
+  if (rv != noErr) {
+    LOG("AppleVTDecoder: system doesn't support hardware acceleration");
   }
+  mIsHardwareAccelerated = rv == noErr && isUsingHW == kCFBooleanTrue;
+  LOG("AppleVTDecoder: %s hardware accelerated decoding",
+      mIsHardwareAccelerated ? "using" : "not using");
+
   return NS_OK;
 }
 
@@ -488,9 +487,10 @@ CFDictionaryRef AppleVTDecoder::CreateDecoderExtensions() {
       kCFAllocatorDefault, atomsKey, atomsValue, ArrayLength(atomsKey),
       &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 
-  const void* extensionKeys[] = {kCVImageBufferChromaLocationBottomFieldKey,
-                                 kCVImageBufferChromaLocationTopFieldKey,
-                                 AppleCMLinker::skPropExtensionAtoms};
+  const void* extensionKeys[] = {
+      kCVImageBufferChromaLocationBottomFieldKey,
+      kCVImageBufferChromaLocationTopFieldKey,
+      kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms};
 
   const void* extensionValues[] = {kCVImageBufferChromaLocation_Left,
                                    kCVImageBufferChromaLocation_Left, atoms};
@@ -504,11 +504,8 @@ CFDictionaryRef AppleVTDecoder::CreateDecoderExtensions() {
 }
 
 CFDictionaryRef AppleVTDecoder::CreateDecoderSpecification() {
-  if (!AppleVTLinker::skPropEnableHWAccel) {
-    return nullptr;
-  }
-
-  const void* specKeys[] = {AppleVTLinker::skPropEnableHWAccel};
+  const void* specKeys[] = {
+      kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder};
   const void* specValues[1];
   if (AppleDecoderModule::sCanUseHardwareVideoDecoder) {
     specValues[0] = kCFBooleanTrue;

@@ -40,6 +40,7 @@
 
 #include "AndroidBridge.h"
 #include "AndroidBridgeUtilities.h"
+#include "AndroidSurfaceTexture.h"
 #include "GeneratedJNINatives.h"
 #include <android/log.h>
 #include <pthread.h>
@@ -438,6 +439,7 @@ nsAppShell::nsAppShell()
         mozilla::widget::Telemetry::Init();
         mozilla::widget::WebExecutorSupport::Init();
         nsWindow::InitNatives();
+        mozilla::gl::AndroidSurfaceTexture::Init();
 
         if (jni::IsFennec()) {
             BrowserLocaleManagerSupport::Init();

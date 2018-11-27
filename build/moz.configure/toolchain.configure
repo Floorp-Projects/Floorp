@@ -126,10 +126,12 @@ nasm = check_prog('NASM', ['nasm'], allow_missing=True)
 @depends_if(nasm)
 @checking('nasm version')
 def nasm_version(nasm):
-    version = check_cmd_output(
-        nasm, '-v',
-        onerror=lambda: die('Failed to get nasm version.')
-    ).splitlines()[0].split()[2]
+    (retcode, stdout, _) = get_cmd_output(nasm, '-v')
+    if retcode:
+        # mac stub binary
+        return None
+
+    version = stdout.splitlines()[0].split()[2]
     return Version(version)
 
 

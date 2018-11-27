@@ -284,6 +284,7 @@
 #include "NodeUbiReporting.h"
 #include "nsICookieService.h"
 #include "mozilla/net/RequestContextService.h"
+#include "StorageAccessPermissionRequest.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -13906,7 +13907,7 @@ nsIDocument::RequestStorageAccess(mozilla::ErrorResult& aRv)
   }
 
   // Step 1. If the document already has been granted access, resolve.
-  nsPIDOMWindowInner* inner = GetInnerWindow();
+  nsCOMPtr<nsPIDOMWindowInner> inner = GetInnerWindow();
   RefPtr<nsGlobalWindowOuter> outer;
   if (inner) {
     outer = nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
@@ -13976,10 +13977,9 @@ nsIDocument::RequestStorageAccess(mozilla::ErrorResult& aRv)
     return promise.forget();
   }
 
-  bool granted = true;
-  bool isTrackingWindow = false;
   if (StaticPrefs::network_cookie_cookieBehavior() ==
-        nsICookieService::BEHAVIOR_REJECT_TRACKER) {
+        nsICookieService::BEHAVIOR_REJECT_TRACKER &&
+      inner) {
     // Only do something special for third-party tracking content.
     if (nsContentUtils::StorageDisabledByAntiTracking(this, nullptr)) {
       // Note: If this has returned true, the top-level document is guaranteed
@@ -13996,33 +13996,68 @@ nsIDocument::RequestStorageAccess(mozilla::ErrorResult& aRv)
                                    isOnAllowList)),
                     !isOnAllowList);
 
-      isTrackingWindow = true;
-      // TODO: prompt for permission
+      auto performFinalChecks = [inner] () -> RefPtr<AntiTrackingCommon::StorageAccessFinalCheckPromise> {
+          RefPtr<AntiTrackingCommon::StorageAccessFinalCheckPromise::Private> p =
+            new AntiTrackingCommon::StorageAccessFinalCheckPromise::Private(__func__);
+          RefPtr<StorageAccessPermissionRequest> sapr =
+            StorageAccessPermissionRequest::Create(inner,
+              // Allow
+              [p] { p->Resolve(false, __func__); },
+              // Allow on any site
+              [p] { p->Resolve(true, __func__); },
+              // Block
+              [p] { p->Reject(false, __func__); });
+
+          typedef ContentPermissionRequestBase::PromptResult PromptResult;
+          PromptResult pr = sapr->CheckPromptPrefs();
+          bool onAnySite = false;
+          if (pr == PromptResult::Pending) {
+            // Also check our custom pref for the "Allow on any site" case
+            if (Preferences::GetBool("dom.storage_access.prompt.testing", false) &&
+                Preferences::GetBool("dom.storage_access.prompt.testing.allowonanysite", false)) {
+              pr = PromptResult::Granted;
+              onAnySite = true;
+            }
+          }
+
+          if (pr != PromptResult::Pending) {
+            MOZ_ASSERT_IF(pr != PromptResult::Granted,
+                          pr == PromptResult::Denied);
+            if (pr == PromptResult::Granted) {
+              return AntiTrackingCommon::StorageAccessFinalCheckPromise::
+                CreateAndResolve(onAnySite, __func__);
+            }
+            return AntiTrackingCommon::StorageAccessFinalCheckPromise::
+              CreateAndReject(false, __func__);
+          }
+
+          sapr->RequestDelayedTask(inner->EventTargetFor(TaskCategory::Other),
+                                   ContentPermissionRequestBase::DelayedTaskType::Request);
+          return p.forget();
+        };
+      AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
+          NodePrincipal(),
+          inner,
+          AntiTrackingCommon::eStorageAccessAPI,
+          performFinalChecks)->Then(GetCurrentThreadSerialEventTarget(), __func__,
+                   [outer, promise] {
+                     // Step 10. Grant the document access to cookies and store that fact for
+                     //          the purposes of future calls to hasStorageAccess() and
+                     //          requestStorageAccess().
+                     outer->SetHasStorageAccess(true);
+                     promise->MaybeResolveWithUndefined();
+                   },
+                   [outer, promise] {
+                     outer->SetHasStorageAccess(false);
+                     promise->MaybeRejectWithUndefined();
+                   });
+
+      return promise.forget();
     }
   }
 
-  // Step 10. Grant the document access to cookies and store that fact for
-  //          the purposes of future calls to hasStorageAccess() and
-  //          requestStorageAccess().
-  if (granted && inner) {
-    if (isTrackingWindow) {
-      AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(NodePrincipal(),
-                                                               inner,
-                                                               AntiTrackingCommon::eStorageAccessAPI)
-        ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-               [outer, promise] (bool) {
-                 outer->SetHasStorageAccess(true);
-                 promise->MaybeResolveWithUndefined();
-               },
-               [outer, promise] (bool) {
-                 outer->SetHasStorageAccess(false);
-                 promise->MaybeRejectWithUndefined();
-               });
-    } else {
-      outer->SetHasStorageAccess(true);
-      promise->MaybeResolveWithUndefined();
-    }
-  }
+  outer->SetHasStorageAccess(true);
+  promise->MaybeResolveWithUndefined();
   return promise.forget();
 }
 
