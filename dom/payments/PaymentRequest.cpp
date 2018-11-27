@@ -1047,8 +1047,23 @@ PaymentRequest::DispatchPaymentMethodChangeEvent(const nsAString& aMethodName,
                                                  const ChangeDetails& aMethodDetails)
 {
   MOZ_ASSERT(ReadyForUpdate());
-  // TODO: create and dispatch a PaymentMethodChangeEvent
-  return NS_OK;
+
+  PaymentMethodChangeEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+
+  RefPtr<PaymentMethodChangeEvent> event =
+    PaymentMethodChangeEvent::Constructor(this,
+                                          NS_LITERAL_STRING("paymentmethodchange"),
+                                          init);
+  event->SetTrusted(true);
+  event->SetMethodName(aMethodName);
+  event->SetMethodDetails(aMethodDetails);
+  event->SetRequest(this);
+
+  ErrorResult rv;
+  DispatchEvent(*event, rv);
+  return rv.StealNSResult();
 }
 
 already_AddRefed<PaymentAddress>

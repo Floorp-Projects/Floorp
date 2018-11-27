@@ -42,15 +42,17 @@ public:
     ErrorResult& aRv);
 
   void GetMethodName(nsAString& aMethodName);
+  void SetMethodName(const nsAString& aMethodName);
 
   void GetMethodDetails(JSContext* cx, JS::MutableHandle<JSObject*> retval);
+  void SetMethodDetails(const ChangeDetails& aMethodDetails);
 
 protected:
   void init(const PaymentMethodChangeEventInit& aEventInitDict);
   ~PaymentMethodChangeEvent();
 
 private:
-  JS::Heap<JSObject*> mMethodDetails;
+  ChangeDetails mMethodDetails;
   nsString mMethodName;
 };
 
