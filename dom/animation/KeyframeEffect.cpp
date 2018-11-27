@@ -1894,23 +1894,6 @@ KeyframeEffect::IsMatchForCompositor(
     return KeyframeEffect::MatchForCompositor::NoAndBlockThisProperty;
   }
 
-  if (aProperty == eCSSProperty_background_color) {
-    if (!StaticPrefs::gfx_omta_background_color()) {
-      return KeyframeEffect::MatchForCompositor::No;
-    }
-
-    if (nsIContent* content = aFrame->GetContent()) {
-      RefPtr<layers::LayerManager> layerManager =
-        nsContentUtils::LayerManagerForContent(content);
-      if (layerManager &&
-          layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
-        // Bug 1510030: We don't yet support background-color animations on the
-        // compositor for WebRender.
-        return KeyframeEffect::MatchForCompositor::No;
-      }
-    }
-  }
-
   return mAnimation->IsPlaying()
          ? KeyframeEffect::MatchForCompositor::Yes
          : KeyframeEffect::MatchForCompositor::IfNeeded;

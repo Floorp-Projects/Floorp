@@ -78,10 +78,6 @@ struct AnimationValue
 
   float GetOpacity() const;
 
-  // Returns nscolor value in this AnimationValue.
-  // Currently only background-color is supported.
-  nscolor GetColor(nscolor aForegroundColor) const;
-
   // Return the transform list as a RefPtr.
   already_AddRefed<const nsCSSValueSharedList> GetTransformList() const;
 

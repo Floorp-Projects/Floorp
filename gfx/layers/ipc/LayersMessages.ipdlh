@@ -19,7 +19,6 @@ using struct mozilla::gfx::Color from "mozilla/gfx/2D.h";
 using struct mozilla::gfx::Point3D from "mozilla/gfx/Point.h";
 using mozilla::gfx::IntPoint from "mozilla/gfx/Point.h";
 using class mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
-using nscolor from "nsColor.h";
 using nscoord from "nsCoord.h";
 using struct nsRect from "nsRect.h";
 using struct nsPoint from "nsPoint.h";
@@ -161,7 +160,6 @@ union MaybeTimeDuration {
 union Animatable {
   null_t;
   float;
-  nscolor;
   TransformFunction[];
 };
 
@@ -567,7 +565,6 @@ union MaybeTransform {
 
 union OMTAValue {
   null_t;
-  nscolor;
   float;
   Matrix4x4;
 };

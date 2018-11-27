@@ -1117,7 +1117,7 @@ nsComputedDOMStyle::DoGetBottom()
   return GetOffsetWidthFor(eSideBottom);
 }
 
-/* static */ void
+void
 nsComputedDOMStyle::SetToRGBAColor(nsROCSSPrimitiveValue* aValue,
                                    nscolor aColor)
 {

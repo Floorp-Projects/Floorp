@@ -494,18 +494,6 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
-#ifdef RELEASE_OR_BETA
-# define PREF_VALUE false
-#else
-# define PREF_VALUE true
-#endif
-VARCACHE_PREF(
-  "gfx.omta.background-color",
-   gfx_omta_background_color,
-  bool, PREF_VALUE
-)
-#undef PREF_VALUE
-
 //---------------------------------------------------------------------------
 // HTML5 parser prefs
 //---------------------------------------------------------------------------
