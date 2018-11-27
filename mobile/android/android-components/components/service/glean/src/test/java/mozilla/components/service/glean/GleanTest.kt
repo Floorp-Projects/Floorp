@@ -148,8 +148,8 @@ class GleanTest {
                     .getString("telemetry.string_metric")
             )
             assertNull(metricsJson.opt("events"))
-            assertNotNull(metricsJson.opt("experiments"))
             assertNotNull(metricsJson.opt("ping_info"))
+            assertNotNull(metricsJson.getJSONObject("ping_info").opt("experiments"))
             assert(
                 metricsPath.startsWith("/submit/glean/metrics/${Glean.SCHEMA_VERSION}/")
             )

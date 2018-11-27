@@ -7,6 +7,7 @@ package mozilla.components.service.glean.ping
 import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.BuildConfig
 import mozilla.components.service.glean.storages.StorageEngineManager
+import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.org.json.mergeWith
 import org.json.JSONException
@@ -43,6 +44,8 @@ internal class PingMaker(
         val pingInfo = JSONObject()
         pingInfo.put("ping_type", pingName)
         pingInfo.put("telemetry_sdk_build", BuildConfig.LIBRARY_VERSION)
+
+        pingInfo.put("experiments", ExperimentsStorageEngine.getSnapshotAsJSON("", false))
 
         // TODO this section is still missing real app_build, seq and experiments.
         // These fields will be added by bug 1497894 when 1499756 and 1501318 land.
