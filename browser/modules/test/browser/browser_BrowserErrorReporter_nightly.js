@@ -448,7 +448,8 @@ add_task(async function testScalars() {
   fetchStub.rejects(new Error("Could not report"));
   await reporter.handleMessage(createScriptError({message: "Maybe name?"}));
 
-  const scalars = Services.telemetry.getSnapshotForScalars("main", false).parent;
+  const optin = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
+  const scalars = Services.telemetry.snapshotScalars(optin, false).parent;
   is(
     scalars[TELEMETRY_ERROR_COLLECTED],
     3,

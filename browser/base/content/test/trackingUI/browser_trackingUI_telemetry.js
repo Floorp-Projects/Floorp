@@ -36,7 +36,8 @@ add_task(async function setup() {
     Services.telemetry.getHistogramById("TRACKING_PROTECTION_ENABLED").snapshot().values;
   is(enabledCounts[0], 1, "TP was not enabled on start up");
 
-  let scalars = Services.telemetry.getSnapshotForScalars("main", false).parent;
+  let scalars = Services.telemetry.snapshotScalars(
+    Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT, false).parent;
 
   is(scalars["contentblocking.exceptions"], 0, "no CB exceptions at startup");
 });
