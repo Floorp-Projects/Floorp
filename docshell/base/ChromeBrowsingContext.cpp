@@ -74,6 +74,20 @@ void ChromeBrowsingContext::UnregisterWindowGlobal(
     WindowGlobalParent* aGlobal) {
   MOZ_ASSERT(mWindowGlobals.Contains(aGlobal), "Global not registered!");
   mWindowGlobals.RemoveEntry(aGlobal);
+
+  // Our current window global should be in our mWindowGlobals set. If it's not
+  // anymore, clear that reference.
+  if (aGlobal == mCurrentWindowGlobal) {
+    mCurrentWindowGlobal = nullptr;
+  }
+}
+
+void ChromeBrowsingContext::SetCurrentWindowGlobal(
+    WindowGlobalParent* aGlobal) {
+  MOZ_ASSERT(mWindowGlobals.Contains(aGlobal), "Global not registered!");
+
+  // TODO: This should probably assert that the processes match.
+  mCurrentWindowGlobal = aGlobal;
 }
 
 JSObject* ChromeBrowsingContext::WrapObject(JSContext* aCx,
