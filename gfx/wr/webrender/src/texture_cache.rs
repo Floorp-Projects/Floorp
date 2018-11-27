@@ -953,6 +953,12 @@ impl TextureCache {
     ) -> bool {
         let mut allowed_in_shared_cache = true;
 
+        // TODO(sotaro): For now, anything that requests RGBA8 just fails to allocate
+        // in a texture page, and gets a standalone texture.
+        if descriptor.format == ImageFormat::RGBA8 {
+            allowed_in_shared_cache = false;
+        }
+
         // TODO(gw): For now, anything that requests nearest filtering and isn't BGRA8
         //           just fails to allocate in a texture page, and gets a standalone
         //           texture. This is probably rare enough that it can be fixed up later.
