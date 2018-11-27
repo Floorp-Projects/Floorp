@@ -128,9 +128,15 @@ export function getLibraryFromUrl(frame: Frame, callStack: Array<Frame> = []) {
     o => o.contextPattern && frameUrl.match(o.contextPattern)
   );
   if (match) {
-    const contextMatch = callStack.some(f =>
-      libraryMap.find(o => frameUrl.match(o.pattern))
-    );
+    const contextMatch = callStack.some(f => {
+      const url = getFrameUrl(f);
+      if (!url) {
+        return false;
+      }
+
+      return libraryMap.some(o => url.match(o.pattern));
+    });
+
     if (contextMatch) {
       return match.label;
     }
