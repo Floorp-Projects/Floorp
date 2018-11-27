@@ -179,6 +179,26 @@ public:
   virtual already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter) = 0;
 
   /**
+   * Get whether this content is C++-generated anonymous content
+   * @see nsIAnonymousContentCreator
+   * @return whether this content is anonymous
+   */
+  bool IsRootOfNativeAnonymousSubtree() const
+  {
+    NS_ASSERTION(!HasFlag(NODE_IS_NATIVE_ANONYMOUS_ROOT) ||
+                 (HasFlag(NODE_IS_ANONYMOUS_ROOT) &&
+                  HasFlag(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE)),
+                 "Some flags seem to be missing!");
+    return HasFlag(NODE_IS_NATIVE_ANONYMOUS_ROOT);
+  }
+
+  bool IsRootOfChromeAccessOnlySubtree() const
+  {
+    return HasFlag(NODE_IS_NATIVE_ANONYMOUS_ROOT |
+                   NODE_IS_ROOT_OF_CHROME_ONLY_ACCESS);
+  }
+
+  /**
    * Makes this content anonymous
    * @see nsIAnonymousContentCreator
    */

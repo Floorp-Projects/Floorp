@@ -1233,26 +1233,6 @@ public:
   }
 
   /**
-   * Get whether this node is C++-generated anonymous content
-   * @see nsIAnonymousContentCreator
-   * @return whether this content is anonymous
-   */
-  bool IsRootOfNativeAnonymousSubtree() const
-  {
-    NS_ASSERTION(!HasFlag(NODE_IS_NATIVE_ANONYMOUS_ROOT) ||
-                 (HasFlag(NODE_IS_ANONYMOUS_ROOT) &&
-                  HasFlag(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE)),
-                 "Some flags seem to be missing!");
-    return HasFlag(NODE_IS_NATIVE_ANONYMOUS_ROOT);
-  }
-
-  bool IsRootOfChromeAccessOnlySubtree() const
-  {
-    return HasFlag(NODE_IS_NATIVE_ANONYMOUS_ROOT |
-                   NODE_IS_ROOT_OF_CHROME_ONLY_ACCESS);
-  }
-
-  /**
    * Returns true if |this| node is the common ancestor of the start/end
    * nodes of a Range in a Selection or a descendant of such a common ancestor.
    * This node is definitely not selected when |false| is returned, but it may
