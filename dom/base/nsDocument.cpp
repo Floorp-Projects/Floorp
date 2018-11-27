@@ -1496,8 +1496,6 @@ nsIDocument::nsIDocument()
     mServoRestyleRootDirtyBits(0),
     mThrowOnDynamicMarkupInsertionCounter(0),
     mIgnoreOpensDuringUnloadCounter(0),
-    mNumTrackersFound(0),
-    mNumTrackersBlocked(0),
     mDocLWTheme(Doc_Theme_Uninitialized),
     mSavedResolution(1.0f)
 {

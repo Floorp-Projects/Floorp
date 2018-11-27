@@ -212,9 +212,6 @@ private:
   bool                             mIsPreflight;
   bool                             mLoadTriggeredFromExternal;
   bool                             mServiceWorkerTaintingSynthesized;
-
-  bool                             mIsTracker;
-  bool                             mIsTrackerBlocked;
   bool                             mDocumentHasUserInteracted;
   bool                             mDocumentHasLoaded;
 
