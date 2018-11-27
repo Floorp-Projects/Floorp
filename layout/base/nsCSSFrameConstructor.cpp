@@ -2772,7 +2772,8 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
     mDocElementContainingBlock is the parent of mRootElementFrame
       (i.e. nsCanvasFrame or nsRootBoxFrame)
 
-    mPageSequenceFrame is the nsSimplePageSequenceFrame, or null if there isn't one
+    mPageSequenceFrame is the nsSimplePageSequenceFrame,
+    or null if there isn't one
   */
 
   // --------- CREATE ROOT FRAME -------
@@ -2783,8 +2784,8 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
   //
   // The root frame serves two purposes:
   // - reserves space for any margins needed for the document element's frame
-  // - renders the document element's background. This ensures the background covers
-  //   the entire canvas as specified by the CSS2 spec
+  // - renders the document element's background. This ensures the background
+  //   covers the entire canvas as specified by the CSS2 spec
 
   nsPresContext* presContext = mPresShell->GetPresContext();
   bool isPaginated = presContext->IsRootPaginatedDocument();
@@ -4445,8 +4446,8 @@ nsCSSFrameConstructor::FinishBuildingScrollFrame(nsContainerFrame* aScrollFrame,
 }
 
 /**
- * Called to wrap a gfx scrollframe around a frame. The hierarchy will look like this
- *
+ * Called to wrap a gfx scrollframe around a frame. The hierarchy will look like
+ * this
  * ------- for gfx scrollbars ------
  *
  *
@@ -4459,22 +4460,27 @@ nsCSSFrameConstructor::FinishBuildingScrollFrame(nsContainerFrame* aScrollFrame,
  *-----------------------------------
  * LEGEND:
  *
- * ScrollFrame: This is a frame that manages gfx cross platform frame based scrollbars.
+ * ScrollFrame: This is a frame that manages gfx cross platform frame based
+ * scrollbars.
  *
  * @param aContent the content node of the child to wrap.
+ *
  * @param aScrolledFrame The frame of the content to wrap. This should not be
- *                    Initialized. This method will initialize it with a scrolled pseudo
- *                    and no nsIContent. The content will be attached to the scrollframe
- *                    returned.
- * @param aContentStyle the style that has already been resolved for the content
- *                      being passed in.
+ *                       Initialized. This method will initialize it with a
+ *                       scrolled pseudo and no nsIContent. The content will be
+ *                       attached to the scrollframe returned.
  *
- * @param aParentFrame The parent to attach the scroll frame to
+ * @param aContentStyle  the style that has already been resolved for the content
+ *                       being passed in.
  *
- * @param aNewFrame The new scrollframe or gfx scrollframe that we create. It will contain the
- *                  scrolled frame you passed in. (returned)
+ * @param aParentFrame   The parent to attach the scroll frame to
+ *
+ * @param aNewFrame The new scrollframe or gfx scrollframe that we create. It
+ *                  will contain the scrolled frame you passed in. (returned)
  *                  If this is not null, we'll just use it
- * @param aScrolledContentStyle the style that was resolved for the scrolled frame. (returned)
+ *
+ * @param aScrolledContentStyle the style that was resolved for the scrolled
+                                frame. (returned)
  */
 void
 nsCSSFrameConstructor::BuildScrollFrame(nsFrameConstructorState& aState,

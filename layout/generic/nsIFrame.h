@@ -53,18 +53,19 @@
 
 /**
  * New rules of reflow:
- * 1. you get a WillReflow() followed by a Reflow() followed by a DidReflow() in order
- *    (no separate pass over the tree)
- * 2. it's the parent frame's responsibility to size/position the child's view (not
- *    the child frame's responsibility as it is today) during reflow (and before
- *    sending the DidReflow() notification)
- * 3. positioning of child frames (and their views) is done on the way down the tree,
- *    and sizing of child frames (and their views) on the way back up
- * 4. if you move a frame (outside of the reflow process, or after reflowing it),
- *    then you must make sure that its view (or its child frame's views) are re-positioned
- *    as well. It's reasonable to not position the view until after all reflowing the
- *    entire line, for example, but the frame should still be positioned and sized (and
- *    the view sized) during the reflow (i.e., before sending the DidReflow() notification)
+ * 1. you get a WillReflow() followed by a Reflow() followed by a DidReflow() in
+ *    order (no separate pass over the tree)
+ * 2. it's the parent frame's responsibility to size/position the child's view
+ *    (not the child frame's responsibility as it is today) during reflow (and
+ *    before sending the DidReflow() notification)
+ * 3. positioning of child frames (and their views) is done on the way down the
+ *    tree, and sizing of child frames (and their views) on the way back up
+ * 4. if you move a frame (outside of the reflow process, or after reflowing
+ *    it), then you must make sure that its view (or its child frame's views)
+ *    are re-positioned as well. It's reasonable to not position the view until
+ *    after all reflowing the entire line, for example, but the frame should
+ *    still be positioned and sized (and the view sized) during the reflow
+ *    (i.e., before sending the DidReflow() notification)
  * 5. the view system handles moving of widgets, i.e., it's not our problem
  */
 
@@ -3276,14 +3277,19 @@ public:
   /**
    *  called to find the previous/next non-anonymous selectable leaf frame.
    *  @param aDirection [in] the direction to move in (eDirPrevious or eDirNext)
-   *  @param aVisual [in] whether bidi caret behavior is visual (true) or logical (false)
+   *  @param aVisual [in] whether bidi caret behavior is visual (true) or
+   *                      logical (false)
    *  @param aJumpLines [in] whether to allow jumping across line boundaries
-   *  @param aScrollViewStop [in] whether to stop when reaching a scroll frame boundary
+   *  @param aScrollViewStop [in] whether to stop when reaching a scroll frame
+                                  boundary
    *  @param aOutFrame [out] the previous/next selectable leaf frame
-   *  @param aOutOffset [out] 0 indicates that we arrived at the beginning of the output frame;
+   *  @param aOutOffset [out] 0 indicates that we arrived at the beginning of
+                              the output frame;
    *                          -1 indicates that we arrived at its end.
-   *  @param aOutJumpedLine [out] whether this frame and the returned frame are on different lines
-   *  @param aOutMovedOverNonSelectableText [out] whether we jumped over a non-selectable
+   *  @param aOutJumpedLine [out] whether this frame and the returned frame
+                                  are on different lines
+   *  @param aOutMovedOverNonSelectableText [out] whether we jumped over a
+                                                  non-selectable
    *                                              frame during the search
    */
   nsresult GetFrameFromDirection(nsDirection aDirection, bool aVisual,
@@ -3293,13 +3299,16 @@ public:
                                  bool* aOutJumpedLine, bool* aOutMovedOverNonSelectableText);
 
   /**
-   *  called to see if the children of the frame are visible from indexstart to index end.
-   *  this does not change any state. returns true only if the indexes are valid and any of
-   *  the children are visible.  for textframes this index is the character index.
+   *  called to see if the children of the frame are visible from indexstart
+   *  to index end.
+   *  this does not change any state. returns true only if the indexes are
+   *  valid and any of the children are visible.  for textframes this index is
+   *  the character index.
    *  if aStart = aEnd result will be false
    *  @param aStart start index of first child from 0-N (number of children)
    *  @param aEnd   end index of last child from 0-N
-   *  @param aRecurse should this frame talk to siblings to get to the contents other children?
+   *  @param aRecurse should this frame talk to siblings to get to the contents
+   *                  other children?
    *  @param aFinished did this frame have the aEndIndex? or is there more work to do
    *  @param _retval  return value true or false. false = range is not rendered.
    */
@@ -4348,7 +4357,8 @@ protected:
    * Can we stop inside this frame when we're skipping non-rendered whitespace?
    * @param  aForward [in] Are we moving forward (or backward) in content order.
    * @param  aOffset [in/out] At what offset into the frame to start looking.
-   *         on output - what offset was reached (whether or not we found a place to stop).
+   *         on output - what offset was reached (whether or not we found a place to
+   *         stop).
    * @return STOP: An appropriate offset was found within this frame,
    *         and is given by aOffset.
    *         CONTINUE: Not found within this frame, need to try the next frame.
@@ -4431,8 +4441,8 @@ protected:
 
   /**
    * Search for the first paragraph boundary before or after the given position
-   * @param  aPos See description in nsFrameSelection.h. The following fields are
-   *              used by this method:
+   * @param  aPos See description in nsFrameSelection.h. The following fields
+   *              are used by this method:
    *              Input: mDirection
    *              Output: mResultContent, mContentOffset
    */

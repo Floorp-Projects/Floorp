@@ -805,7 +805,8 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
 
   GetParent()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
 
-  //printf("FramesetFrame2::Reflow %X (%d,%d) \n", this, aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight());
+  // printf("FramesetFrame2::Reflow %X (%d,%d) \n", this,
+  // aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight());
   // Always get the size so that the caller knows how big we are
   GetDesiredSize(aPresContext, aReflowInput, aDesiredSize);
 

@@ -55,6 +55,7 @@ nsMathMLmpaddedFrame::InheritAutomaticData(nsIFrame* aParent)
 void
 nsMathMLmpaddedFrame::ProcessAttributes()
 {
+  // clang-format off
   /*
   parse the attributes
 
@@ -64,6 +65,7 @@ nsMathMLmpaddedFrame::ProcessAttributes()
   lspace = [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | h-unit | namedspace)
   voffset= [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | v-unit | namedspace)
   */
+  // clang-format on
 
   nsAutoString value;
 
