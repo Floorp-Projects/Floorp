@@ -114,25 +114,33 @@ public:
 // expected, per the requirements of the System V x64 ABI.
 struct CallArguments : public CallRegisterArguments
 {
+  // The maximum number of stack arguments that can be captured.
+  static const size_t NumStackArguments = 64;
+
 protected:
-  size_t stack[64]; // 104
-                    // Size: 616
+  size_t stack[NumStackArguments]; // 104
+                                   // Size: 616
 
 public:
-  template <size_t Index, typename T>
-  T& Arg() {
+  template <typename T>
+  T& Arg(size_t aIndex) {
     static_assert(sizeof(T) == sizeof(size_t), "Size must match");
     static_assert(IsFloatingPoint<T>::value == false, "FloatArg NYI");
-    static_assert(Index < 70, "Bad index");
-    switch (Index) {
+    MOZ_RELEASE_ASSERT(aIndex < 70);
+    switch (aIndex) {
     case 0: return (T&)arg0;
     case 1: return (T&)arg1;
     case 2: return (T&)arg2;
     case 3: return (T&)arg3;
     case 4: return (T&)arg4;
     case 5: return (T&)arg5;
-    default: return (T&)stack[Index - 6];
+    default: return (T&)stack[aIndex - 6];
     }
+  }
+
+  template <size_t Index, typename T>
+  T& Arg() {
+    return Arg<T>(Index);
   }
 
   template <size_t Offset>
@@ -248,10 +256,11 @@ struct Redirection
   PreambleFn mMiddlemanPreamble;
 };
 
-// All platform specific redirections, indexed by the call event.
-extern Redirection gRedirections[];
+// Platform specific methods describing the set of redirections.
+size_t NumRedirections();
+Redirection& GetRedirection(size_t aCallId);
 
-// Do early initialization of redirections. This is done on both
+// Platform specific early initialization of redirections. This is done on both
 // recording/replaying and middleman processes, and allows OriginalCall() to
 // work in either case.
 void EarlyInitializeRedirections();
@@ -259,6 +268,10 @@ void EarlyInitializeRedirections();
 // Set up all platform specific redirections, or fail and set
 // gInitializationFailureMessage.
 bool InitializeRedirections();
+
+// Platform specific function called after setting up redirections in recording
+// or replaying processes.
+void LateInitializeRedirections();
 
 // Functions for saving or restoring system error codes.
 static inline ErrorType SaveError() { return errno; }
@@ -274,20 +287,11 @@ DefineAllCallFunctions(DEFAULTABI)
 static inline void*
 OriginalFunction(size_t aCallId)
 {
-  return gRedirections[aCallId].mOriginalFunction;
+  return GetRedirection(aCallId).mOriginalFunction;
 }
 
-#define TokenPaste(aFirst, aSecond) aFirst ## aSecond
-
-// Call the original function for a call event ID with a particular ABI and any
-// number of arguments.
-#define OriginalCallABI(aName, aReturnType, aABI, ...)          \
-  TokenPaste(CallFunction, aABI) <aReturnType>                  \
-    (OriginalFunction(CallEvent_ ##aName), ##__VA_ARGS__)
-
-// Call the original function for a call event ID with the default ABI.
-#define OriginalCall(aName, aReturnType, ...)                   \
-  OriginalCallABI(aName, aReturnType, DEFAULTABI, ##__VA_ARGS__)
+// Get the address of the original function by name.
+void* OriginalFunction(const char* aName);
 
 static inline ThreadEvent
 CallIdToThreadEvent(size_t aCallId)
@@ -296,7 +300,7 @@ CallIdToThreadEvent(size_t aCallId)
 }
 
 void
-RecordReplayInvokeCall(size_t aCallId, CallArguments* aArguments);
+RecordReplayInvokeCall(void* aFunction, CallArguments* aArguments);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Callback Redirections

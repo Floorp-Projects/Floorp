@@ -134,6 +134,7 @@ RecordReplayInterface_Initialize(int aArgc, char* aArgv[])
     fprintf(stderr, "Initialization Failure: %s\n", gInitializationFailureMessage);
   }
 
+  LateInitializeRedirections();
   Thread::InitializeThreads();
 
   Thread* thread = Thread::GetById(MainThreadId);
@@ -326,7 +327,7 @@ ThreadEventName(ThreadEvent aEvent)
   case ThreadEvent::CallStart: break;
   }
   size_t callId = (size_t) aEvent - (size_t) ThreadEvent::CallStart;
-  return gRedirections[callId].mName;
+  return GetRedirection(callId).mName;
 }
 
 int
@@ -354,6 +355,8 @@ RecordReplayInterface_InternalRecordReplayAssert(const char* aFormat, va_list aA
   char text[1024];
   VsprintfLiteral(text, aFormat, aArgs);
 
+  // This must be kept in sync with Stream::RecordOrReplayThreadEvent, which
+  // peeks at the input string written after the thread event.
   thread->Events().RecordOrReplayThreadEvent(ThreadEvent::Assert);
   thread->Events().CheckInput(text);
 }
