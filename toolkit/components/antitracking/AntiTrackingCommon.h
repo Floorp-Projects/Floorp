@@ -93,11 +93,14 @@ public:
   //   Ex: example.net import tracker.com/script.js which does opens a popup and
   //   the user interacts with it. tracker.com is allowed when loaded by
   //   example.net.
-  typedef MozPromise<bool, bool, false> StorageAccessGrantPromise;
+  typedef MozPromise<bool, bool, true> StorageAccessFinalCheckPromise;
+  typedef std::function<RefPtr<StorageAccessFinalCheckPromise>()> PerformFinalChecks;
+  typedef MozPromise<bool, bool, true> StorageAccessGrantPromise;
   static MOZ_MUST_USE RefPtr<StorageAccessGrantPromise>
   AddFirstPartyStorageAccessGrantedFor(nsIPrincipal* aPrincipal,
                                        nsPIDOMWindowInner* aParentWindow,
-                                       StorageAccessGrantedReason aReason);
+                                       StorageAccessGrantedReason aReason,
+                                       const PerformFinalChecks& aPerformFinalChecks = nullptr);
 
   // Returns true if the permission passed in is a storage access permission
   // for the passed in principal argument.
@@ -111,11 +114,13 @@ public:
   HasUserInteraction(nsIPrincipal* aPrincipal);
 
   // For IPC only.
-  static void
+  typedef MozPromise<nsresult, bool, true> FirstPartyStorageAccessGrantPromise;
+  static RefPtr<FirstPartyStorageAccessGrantPromise>
   SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(nsIPrincipal* aPrincipal,
+                                                             nsIPrincipal* aTrackingPrinciapl,
                                                              const nsCString& aParentOrigin,
                                                              const nsCString& aGrantedOrigin,
-                                                             FirstPartyStorageAccessGrantedForOriginResolver&& aResolver);
+                                                             bool aAnySite);
 
   enum ContentBlockingAllowListPurpose {
     eStorageChecks,

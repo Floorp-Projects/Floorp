@@ -414,14 +414,6 @@ impl TileCache {
                             // TODO(gw): In future, we might be able to completely remove
                             //           opacity collapsing support. It's of limited use
                             //           once we have full picture caching.
-                            BrushKind::Solid { opacity_binding_index, .. } => {
-                                let opacity_binding = &opacity_binding_store[opacity_binding_index];
-                                for binding in &opacity_binding.bindings {
-                                    if let PropertyBinding::Binding(key, default) = binding {
-                                        opacity_bindings.push((key.id, *default));
-                                    }
-                                }
-                            }
                             BrushKind::Image { opacity_binding_index, ref request, .. } => {
                                 let opacity_binding = &opacity_binding_store[opacity_binding_index];
                                 for binding in &opacity_binding.bindings {
@@ -436,16 +428,25 @@ impl TileCache {
                                 image_keys.extend_from_slice(yuv_key);
                             }
                             BrushKind::RadialGradient { .. } |
-                            BrushKind::LinearGradient { .. } |
-                            BrushKind::Border { .. } => {
+                            BrushKind::LinearGradient { .. } => {
                             }
                         }
                     }
                 }
             }
+            PrimitiveInstanceKind::Rectangle { opacity_binding_index, .. } => {
+                let opacity_binding = &opacity_binding_store[opacity_binding_index];
+                for binding in &opacity_binding.bindings {
+                    if let PropertyBinding::Binding(key, default) = binding {
+                        opacity_bindings.push((key.id, *default));
+                    }
+                }
+            }
             PrimitiveInstanceKind::TextRun { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } |
-            PrimitiveInstanceKind::Clear => {
+            PrimitiveInstanceKind::Clear |
+            PrimitiveInstanceKind::NormalBorder { .. } |
+            PrimitiveInstanceKind::ImageBorder { .. } => {
                 // These don't contribute dependencies
             }
         }

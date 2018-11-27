@@ -37,6 +37,11 @@ add_task(async function test_autoplay_permission_prompt() {
   Services.prefs.clearUserPref("media.autoplay.default");
 });
 
+// Tests that AutoplayPermissionPrompt works as expected
+add_task(async function test_storage_access_permission_prompt() {
+  await testPrompt(PermissionUI.StorageAccessPermissionPrompt);
+});
+
 async function testPrompt(Prompt) {
   await BrowserTestUtils.withNewTab({
     gBrowser,
@@ -49,7 +54,9 @@ async function testPrompt(Prompt) {
                         TestPrompt.permissionKey;
 
     registerCleanupFunction(function() {
-      SitePermissions.remove(principal.URI, permissionKey);
+      if (permissionKey) {
+        SitePermissions.remove(principal.URI, permissionKey);
+      }
     });
 
     let shownPromise =
@@ -60,9 +67,12 @@ async function testPrompt(Prompt) {
       PopupNotifications.getNotification(TestPrompt.notificationID, browser);
     Assert.ok(notification, "Should have gotten the notification");
 
-    let curPerm = SitePermissions.get(principal.URI, permissionKey, browser);
-    Assert.equal(curPerm.state, SitePermissions.UNKNOWN,
-                 "Should be no permission set to begin with.");
+    let curPerm;
+    if (permissionKey) {
+      curPerm = SitePermissions.get(principal.URI, permissionKey, browser);
+      Assert.equal(curPerm.state, SitePermissions.UNKNOWN,
+                   "Should be no permission set to begin with.");
+    }
 
     // First test denying the permission request without the checkbox checked.
     let popupNotification = getPopupNotificationNode();
@@ -70,24 +80,29 @@ async function testPrompt(Prompt) {
 
     let isNotificationPrompt = Prompt == PermissionUI.DesktopNotificationPermissionPrompt;
     let isPersistentStoragePrompt = Prompt == PermissionUI.PersistentStoragePermissionPrompt;
+    let isStorageAccessPrompt = Prompt == PermissionUI.StorageAccessPermissionPrompt;
 
-    let expectedSecondaryActionsCount = isNotificationPrompt || isPersistentStoragePrompt ? 2 : 1;
+    let expectedSecondaryActionsCount = isNotificationPrompt ||
+                                        isPersistentStoragePrompt ||
+                                        isStorageAccessPrompt ? 2 : 1;
     Assert.equal(notification.secondaryActions.length, expectedSecondaryActionsCount,
                  "There should only be " + expectedSecondaryActionsCount + " secondary action(s)");
     await clickSecondaryAction();
-    curPerm = SitePermissions.get(principal.URI, permissionKey, browser);
-    Assert.deepEqual(curPerm, {
-                       state: SitePermissions.BLOCK,
-                       scope: SitePermissions.SCOPE_TEMPORARY,
-                     }, "Should have denied the action temporarily");
+    if (permissionKey) {
+      curPerm = SitePermissions.get(principal.URI, permissionKey, browser);
+      Assert.deepEqual(curPerm, {
+                         state: SitePermissions.BLOCK,
+                         scope: SitePermissions.SCOPE_TEMPORARY,
+                       }, "Should have denied the action temporarily");
 
-    Assert.ok(mockRequest._cancelled,
-              "The request should have been cancelled");
-    Assert.ok(!mockRequest._allowed,
-              "The request should not have been allowed");
+      Assert.ok(mockRequest._cancelled,
+                "The request should have been cancelled");
+      Assert.ok(!mockRequest._allowed,
+                "The request should not have been allowed");
 
-    SitePermissions.remove(principal.URI, permissionKey, browser);
-    mockRequest._cancelled = false;
+      SitePermissions.remove(principal.URI, permissionKey, browser);
+      mockRequest._cancelled = false;
+    }
 
     // Bring the PopupNotification back up now...
     shownPromise =
@@ -108,18 +123,22 @@ async function testPrompt(Prompt) {
     Assert.equal(notification.secondaryActions.length, expectedSecondaryActionsCount,
                  "There should only be " + expectedSecondaryActionsCount + " secondary action(s)");
     await clickSecondaryAction(secondaryActionToClickIndex);
-    curPerm = SitePermissions.get(principal.URI, permissionKey);
-    Assert.deepEqual(curPerm, {
-                       state: SitePermissions.BLOCK,
-                       scope: SitePermissions.SCOPE_PERSISTENT,
-                     }, "Should have denied the action permanently");
-    Assert.ok(mockRequest._cancelled,
-              "The request should have been cancelled");
-    Assert.ok(!mockRequest._allowed,
-              "The request should not have been allowed");
+    if (permissionKey) {
+      curPerm = SitePermissions.get(principal.URI, permissionKey);
+      Assert.deepEqual(curPerm, {
+                         state: SitePermissions.BLOCK,
+                         scope: SitePermissions.SCOPE_PERSISTENT,
+                       }, "Should have denied the action permanently");
+      Assert.ok(mockRequest._cancelled,
+                "The request should have been cancelled");
+      Assert.ok(!mockRequest._allowed,
+                "The request should not have been allowed");
+    }
 
-    SitePermissions.remove(principal.URI, permissionKey);
-    mockRequest._cancelled = false;
+    if (permissionKey) {
+      SitePermissions.remove(principal.URI, permissionKey);
+      mockRequest._cancelled = false;
+    }
 
     // Bring the PopupNotification back up now...
     shownPromise =
@@ -132,15 +151,17 @@ async function testPrompt(Prompt) {
     popupNotification.checkbox.checked = true;
 
     await clickMainAction();
-    curPerm = SitePermissions.get(principal.URI, permissionKey);
-    Assert.deepEqual(curPerm, {
-                       state: SitePermissions.ALLOW,
-                       scope: SitePermissions.SCOPE_PERSISTENT,
-                     }, "Should have allowed the action permanently");
-    Assert.ok(!mockRequest._cancelled,
-              "The request should not have been cancelled");
-    Assert.ok(mockRequest._allowed,
-              "The request should have been allowed");
+    if (permissionKey) {
+      curPerm = SitePermissions.get(principal.URI, permissionKey);
+      Assert.deepEqual(curPerm, {
+                         state: SitePermissions.ALLOW,
+                         scope: SitePermissions.SCOPE_PERSISTENT,
+                       }, "Should have allowed the action permanently");
+      Assert.ok(!mockRequest._cancelled,
+                "The request should not have been cancelled");
+      Assert.ok(mockRequest._allowed,
+                "The request should have been allowed");
+    }
   });
 }
 

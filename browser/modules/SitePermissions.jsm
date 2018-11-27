@@ -355,7 +355,7 @@ var SitePermissions = {
    *             (e.g. SitePermissions.ALLOW)
    *           - scope: a constant representing how long the permission will
    *             be kept.
-   *           - label: the localized label
+   *           - label: the localized label, or null if none is available.
    */
   getAllPermissionDetailsForBrowser(browser) {
     return this.getAllForBrowser(browser).map(({id, scope, state}) =>
@@ -653,9 +653,18 @@ var SitePermissions = {
    * @param {string} permissionID
    *        The permission to get the label for.
    *
-   * @return {String} the localized label.
+   * @return {String} the localized label or null if none is available.
    */
   getPermissionLabel(permissionID) {
+    if (!(permissionID in gPermissionObject)) {
+      // Permission can't be found.
+      return null;
+    }
+    if ("labelID" in gPermissionObject[permissionID] &&
+        gPermissionObject[permissionID].labelID === null) {
+      // Permission doesn't support having a label.
+      return null;
+    }
     let labelID = gPermissionObject[permissionID].labelID || permissionID;
     return gStringBundle.GetStringFromName("permission." + labelID + ".label");
   },
@@ -851,6 +860,13 @@ var gPermissionObject = {
 
   "midi-sysex": {
     exactHostMatch: true,
+  },
+
+  "storage-access": {
+    labelID: null,
+    getDefault() {
+      return SitePermissions.UNKNOWN;
+    },
   },
 };
 

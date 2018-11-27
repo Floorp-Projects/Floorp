@@ -123,6 +123,7 @@ pub type LayoutPointAu = TypedPoint2D<Au, LayoutPixel>;
 pub type LayoutRectAu = TypedRect<Au, LayoutPixel>;
 pub type LayoutSizeAu = TypedSize2D<Au, LayoutPixel>;
 pub type LayoutVector2DAu = TypedVector2D<Au, LayoutPixel>;
+pub type LayoutSideOffsetsAu = TypedSideOffsets2D<Au, LayoutPixel>;
 
 pub type ImageDirtyRect = DirtyRect<i32, DevicePixel>;
 pub type BlobDirtyRect = DirtyRect<i32, LayoutPixel>;
@@ -229,6 +230,26 @@ impl AuHelpers<LayoutRectAu> for LayoutRect {
         LayoutRectAu::new(
             self.origin.to_au(),
             self.size.to_au(),
+        )
+    }
+}
+
+impl AuHelpers<LayoutSideOffsetsAu> for LayoutSideOffsets {
+    fn from_au(offsets: LayoutSideOffsetsAu) -> Self {
+        LayoutSideOffsets::new(
+            offsets.top.to_f32_px(),
+            offsets.right.to_f32_px(),
+            offsets.bottom.to_f32_px(),
+            offsets.left.to_f32_px(),
+        )
+    }
+
+    fn to_au(&self) -> LayoutSideOffsetsAu {
+        LayoutSideOffsetsAu::new(
+            Au::from_f32_px(self.top),
+            Au::from_f32_px(self.right),
+            Au::from_f32_px(self.bottom),
+            Au::from_f32_px(self.left),
         )
     }
 }

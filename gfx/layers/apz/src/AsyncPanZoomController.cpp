@@ -524,22 +524,6 @@ static bool IsHighMemSystem()
   return gIsHighMemSystem;
 }
 
-/**
- * Is aAngle within the given threshold of the horizontal axis?
- * @param aAngle an angle in radians in the range [0, pi]
- * @param aThreshold an angle in radians in the range [0, pi/2]
- */
-static bool IsCloseToHorizontal(float aAngle, float aThreshold)
-{
-  return (aAngle < aThreshold || aAngle > (M_PI - aThreshold));
-}
-
-// As above, but for the vertical axis.
-static bool IsCloseToVertical(float aAngle, float aThreshold)
-{
-  return (fabs(aAngle - (M_PI / 2)) < aThreshold);
-}
-
 // Counter used to give each APZC a unique id
 static uint32_t sAsyncPanZoomControllerCount = 0;
 
@@ -971,33 +955,49 @@ AsyncPanZoomController::GetSecondTapTolerance() const
 }
 
 bool
-AsyncPanZoomController::ArePointerEventsConsumable(TouchBlockState* aBlock, uint32_t aTouchPoints) {
-  if (aTouchPoints == 0) {
+AsyncPanZoomController::ArePointerEventsConsumable(TouchBlockState* aBlock, const MultiTouchInput& aInput) {
+  uint32_t touchPoints = aInput.mTouches.Length();
+  if (touchPoints == 0) {
     // Cant' do anything with zero touch points
     return false;
   }
 
-  // This logic is simplified, erring on the side of returning true
-  // if we're not sure. It's safer to pretend that we can consume the
-  // event and then not be able to than vice-versa.
+  // This logic is simplified, erring on the side of returning true if we're
+  // not sure. It's safer to pretend that we can consume the event and then
+  // not be able to than vice-versa. But at the same time, we should try hard
+  // to return an accurate result, because returning true can trigger a
+  // pointercancel event to web content, which can break certain features
+  // that are using touch-action and handling the pointermove events.
+  //
   // We could probably enhance this logic to determine things like "we're
   // not pannable, so we can only zoom in, and the zoom is already maxed
   // out, so we're not zoomable either" but no need for that at this point.
 
-  bool pannable = aBlock->GetOverscrollHandoffChain()->CanBePanned(this);
-  bool zoomable = mZoomConstraints.mAllowZoom;
+  bool pannableX = aBlock->TouchActionAllowsPanningX() &&
+      aBlock->GetOverscrollHandoffChain()->CanScrollInDirection(this, ScrollDirection::eHorizontal);
+  bool pannableY = aBlock->TouchActionAllowsPanningY() &&
+      aBlock->GetOverscrollHandoffChain()->CanScrollInDirection(this, ScrollDirection::eVertical);
 
-  pannable &= (aBlock->TouchActionAllowsPanningX() || aBlock->TouchActionAllowsPanningY());
-  zoomable &= (aBlock->TouchActionAllowsPinchZoom());
+  bool pannable;
 
-  // XXX once we fix bug 1031443, consumable should be assigned
-  // pannable || zoomable if aTouchPoints > 1.
-  bool consumable = (aTouchPoints == 1 ? pannable : zoomable);
-  if (!consumable) {
-    return false;
+  Maybe<ScrollDirection> panDirection = aBlock->GetBestGuessPanDirection(aInput);
+  if (panDirection == Some(ScrollDirection::eVertical)) {
+    pannable = pannableY;
+  } else if (panDirection == Some(ScrollDirection::eHorizontal)) {
+    pannable = pannableX;
+  } else {
+    // If we don't have a guessed pan direction, err on the side of returning true.
+    pannable = pannableX || pannableY;
   }
 
-  return true;
+  if (touchPoints == 1) {
+    return pannable;
+  }
+
+  bool zoomable = mZoomConstraints.mAllowZoom;
+  zoomable &= (aBlock->TouchActionAllowsPinchZoom());
+
+  return pannable || zoomable;
 }
 
 nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
@@ -2765,10 +2765,10 @@ void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle) {
     overscrollHandoffChain->CanScrollInDirection(this, ScrollDirection::eVertical);
   if (GetCurrentTouchBlock()->TouchActionAllowsPanningXY()) {
     if (canScrollHorizontal && canScrollVertical) {
-      if (IsCloseToHorizontal(aAngle, gfxPrefs::APZAxisLockAngle())) {
+      if (apz::IsCloseToHorizontal(aAngle, gfxPrefs::APZAxisLockAngle())) {
         mY.SetAxisLocked(true);
         SetState(PANNING_LOCKED_X);
-      } else if (IsCloseToVertical(aAngle, gfxPrefs::APZAxisLockAngle())) {
+      } else if (apz::IsCloseToVertical(aAngle, gfxPrefs::APZAxisLockAngle())) {
         mX.SetAxisLocked(true);
         SetState(PANNING_LOCKED_Y);
       } else {
@@ -2782,7 +2782,7 @@ void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle) {
   } else if (GetCurrentTouchBlock()->TouchActionAllowsPanningX()) {
     // Using bigger angle for panning to keep behavior consistent
     // with IE.
-    if (IsCloseToHorizontal(aAngle, gfxPrefs::APZAllowedDirectPanAngle())) {
+    if (apz::IsCloseToHorizontal(aAngle, gfxPrefs::APZAllowedDirectPanAngle())) {
       mY.SetAxisLocked(true);
       SetState(PANNING_LOCKED_X);
       mPanDirRestricted = true;
@@ -2792,7 +2792,7 @@ void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle) {
       SetState(NOTHING);
     }
   } else if (GetCurrentTouchBlock()->TouchActionAllowsPanningY()) {
-    if (IsCloseToVertical(aAngle, gfxPrefs::APZAllowedDirectPanAngle())) {
+    if (apz::IsCloseToVertical(aAngle, gfxPrefs::APZAllowedDirectPanAngle())) {
       mX.SetAxisLocked(true);
       SetState(PANNING_LOCKED_Y);
       mPanDirRestricted = true;
@@ -2823,12 +2823,12 @@ void AsyncPanZoomController::HandlePanning(double aAngle) {
 
   if (!canScrollHorizontal || !canScrollVertical) {
     SetState(PANNING);
-  } else if (IsCloseToHorizontal(aAngle, gfxPrefs::APZAxisLockAngle())) {
+  } else if (apz::IsCloseToHorizontal(aAngle, gfxPrefs::APZAxisLockAngle())) {
     mY.SetAxisLocked(true);
     if (canScrollHorizontal) {
       SetState(PANNING_LOCKED_X);
     }
-  } else if (IsCloseToVertical(aAngle, gfxPrefs::APZAxisLockAngle())) {
+  } else if (apz::IsCloseToVertical(aAngle, gfxPrefs::APZAxisLockAngle())) {
     mX.SetAxisLocked(true);
     if (canScrollVertical) {
       SetState(PANNING_LOCKED_Y);
@@ -2849,12 +2849,12 @@ void AsyncPanZoomController::HandlePanningUpdate(const ScreenPoint& aPanDistance
 
     if (fabs(aPanDistance.x) > breakThreshold || fabs(aPanDistance.y) > breakThreshold) {
       if (mState == PANNING_LOCKED_X) {
-        if (!IsCloseToHorizontal(angle, gfxPrefs::APZAxisBreakoutAngle())) {
+        if (!apz::IsCloseToHorizontal(angle, gfxPrefs::APZAxisBreakoutAngle())) {
           mY.SetAxisLocked(false);
           SetState(PANNING);
         }
       } else if (mState == PANNING_LOCKED_Y) {
-        if (!IsCloseToVertical(angle, gfxPrefs::APZAxisBreakoutAngle())) {
+        if (!apz::IsCloseToVertical(angle, gfxPrefs::APZAxisBreakoutAngle())) {
           mX.SetAxisLocked(false);
           SetState(PANNING);
         }

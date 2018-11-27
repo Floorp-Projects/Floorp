@@ -25,6 +25,7 @@ function SpecialPowers(window, mm) {
   this._encounteredCrashDumpFiles = [];
   this._unexpectedCrashDumpFiles = { };
   this._crashDumpDir = null;
+  this._serviceWorkerRegistered = false;
   this.DOMWindowUtils = bindDOMWindowUtils(window);
   Object.defineProperty(this, "Components", {
       configurable: true, enumerable: true, value: this.getFullComponents(),
@@ -42,7 +43,8 @@ function SpecialPowers(window, mm) {
                            "SPPrefService",
                            "SPProcessCrashService",
                            "SPSetTestPluginEnabledState",
-                           "SPCleanUpSTSData"];
+                           "SPCleanUpSTSData",
+                           "SPCheckServiceWorkers"];
 
   this.SP_ASYNC_MESSAGES = ["SpecialPowers.Focus",
                             "SpecialPowers.Quit",
@@ -57,6 +59,7 @@ function SpecialPowers(window, mm) {
                             "SPRequestDumpCoverageCounters",
                             "SPRequestResetCoverageCounters"];
   mm.addMessageListener("SPPingService", this._messageListener);
+  mm.addMessageListener("SPServiceWorkerRegistered", this._messageListener);
   mm.addMessageListener("SpecialPowers.FilesCreated", this._messageListener);
   mm.addMessageListener("SpecialPowers.FilesError", this._messageListener);
   let self = this;
@@ -142,6 +145,10 @@ SpecialPowers.prototype._messageReceived = function(aMessage) {
           this._grandChildFrameMM.sendAsyncMessage("SPPingService", { op: "pong" });
         }
       }
+      break;
+
+    case "SPServiceWorkerRegistered":
+      this._serviceWorkerRegistered = aMessage.data.registered;
       break;
 
     case "SpecialPowers.FilesCreated":
@@ -234,9 +241,25 @@ SpecialPowers.prototype.nestedFrameSetup = function() {
 };
 
 SpecialPowers.prototype.isServiceWorkerRegistered = function() {
-  var swm = Cc["@mozilla.org/serviceworkers/manager;1"]
-              .getService(Ci.nsIServiceWorkerManager);
-  return swm.getAllRegistrations().length != 0;
+  // For the time being, if parent_intercept is false, we can assume that
+  // ServiceWorkers registered by the current test are all known to the SWM in
+  // this process.
+  if (!Services.prefs.getBoolPref("dom.serviceWorkers.parent_intercept", false)) {
+    let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
+                .getService(Ci.nsIServiceWorkerManager);
+    return swm.getAllRegistrations().length != 0;
+  }
+
+  // Please see the comment in SpecialPowersObserver.jsm above
+  // this._serviceWorkerListener's assignment for what this returns.
+  if (this._serviceWorkerRegistered) {
+    // This test registered at least one service worker. Send a synchronous
+    // call to the parent to make sure that it called unregister on all of its
+    // service workers.
+    return this._sendSyncMessage("SPCheckServiceWorkers")[0].hasWorkers;
+  }
+
+  return false;
 };
 
 // Attach our API to the window.

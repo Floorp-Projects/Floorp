@@ -419,6 +419,10 @@ bool MediaRawDataWriter::Prepend(const uint8_t* aData, size_t aSize) {
   return mTarget->mBuffer.Prepend(aData, aSize);
 }
 
+bool MediaRawDataWriter::Append(const uint8_t* aData, size_t aSize) {
+  return mTarget->mBuffer.Append(aData, aSize);
+}
+
 bool MediaRawDataWriter::Replace(const uint8_t* aData, size_t aSize) {
   return mTarget->mBuffer.Replace(aData, aSize);
 }

@@ -136,6 +136,8 @@ class AsyncTabSwitcher {
     this._useDumpForLogging = false;
     this._logInit = false;
 
+    this._tabSwitchStopWatchRunning = false;
+
     this.window.addEventListener("MozAfterPaint", this);
     this.window.addEventListener("MozLayerTreeReady", this);
     this.window.addEventListener("MozLayerTreeCleared", this);
@@ -435,6 +437,7 @@ class AsyncTabSwitcher {
             // the parent process might not even get MozAfterPaint delivered for it), so just
             // give up measuring this for now. :(
             TelemetryStopwatch.cancel("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
+            this._tabSwitchStopWatchRunning = false;
           }
 
           this.tabbrowser._adjustFocusAfterTabSwitch(showTab);
@@ -740,10 +743,12 @@ class AsyncTabSwitcher {
   onPaint(event) {
     if (this.switchPaintId != -1 &&
         event.transactionId >= this.switchPaintId) {
-      let time = TelemetryStopwatch.timeElapsed("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
-      if (time != -1) {
-        TelemetryStopwatch.finish("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
-        this.log("DEBUG: tab switch time including compositing = " + time);
+      if (this._tabSwitchStopWatchRunning) {
+        let time = TelemetryStopwatch.timeElapsed("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
+        if (time != -1) {
+          TelemetryStopwatch.finish("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
+          this.log("DEBUG: tab switch time including compositing = " + time);
+        }
       }
       this.addMarker("AsyncTabSwitch:Composited");
       this.switchPaintId = -1;
@@ -1075,8 +1080,11 @@ class AsyncTabSwitcher {
     TelemetryStopwatch.cancel("FX_TAB_SWITCH_TOTAL_E10S_MS", this.window);
     TelemetryStopwatch.start("FX_TAB_SWITCH_TOTAL_E10S_MS", this.window);
 
-    TelemetryStopwatch.cancel("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
+    if (this._tabSwitchStopWatchRunning) {
+      TelemetryStopwatch.cancel("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
+    }
     TelemetryStopwatch.start("FX_TAB_SWITCH_COMPOSITE_E10S_MS", this.window);
+    this._tabSwitchStopWatchRunning = true;
     this.addMarker("AsyncTabSwitch:Start");
     this.switchInProgress = true;
   }

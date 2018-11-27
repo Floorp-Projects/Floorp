@@ -1157,8 +1157,10 @@ parent:
      * granted to have access to aGrantedOrigin when loaded by aParentPrincipal.
      */
     async FirstPartyStorageAccessGrantedForOrigin(Principal aParentPrincipal,
+                                                  Principal aTrackingPrincipal,
                                                   nsCString aTrackingOrigin,
-                                                  nsCString aGrantedOrigin)
+                                                  nsCString aGrantedOrigin,
+                                                  bool aAnySite)
           returns (bool unused);
 
     async StoreUserInteractionAsPermission(Principal aPrincipal);

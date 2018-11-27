@@ -35,9 +35,6 @@ class AppleDecoderModule : public PlatformDecoderModule {
 
  private:
   static bool sInitialized;
-  static bool sIsCoreMediaAvailable;
-  static bool sIsVTAvailable;
-  static bool sIsVTHWAvailable;
 };
 
 }  // namespace mozilla

@@ -6010,14 +6010,23 @@ ContentParent::RecvBHRThreadHang(const HangDetails& aDetails)
 
 mozilla::ipc::IPCResult
 ContentParent::RecvFirstPartyStorageAccessGrantedForOrigin(const Principal& aParentPrincipal,
+                                                           const Principal& aTrackingPrincipal,
                                                            const nsCString& aTrackingOrigin,
                                                            const nsCString& aGrantedOrigin,
+                                                           const bool& aAnySite,
                                                            FirstPartyStorageAccessGrantedForOriginResolver&& aResolver)
 {
   AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(aParentPrincipal,
+                                                                                 aTrackingPrincipal,
                                                                                  aTrackingOrigin,
                                                                                  aGrantedOrigin,
-                                                                                 std::move(aResolver));
+                                                                                 aAnySite)
+    ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+           [aResolver = std::move(aResolver)]
+           (AntiTrackingCommon::FirstPartyStorageAccessGrantPromise::ResolveOrRejectValue&& aValue) {
+             bool success = aValue.IsResolve() && NS_SUCCEEDED(aValue.ResolveValue());
+             aResolver(success);
+           });
   return IPC_OK();
 }
 

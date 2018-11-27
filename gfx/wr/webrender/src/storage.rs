@@ -31,6 +31,7 @@ impl<T> Index<T> {
     }
 
     pub const INVALID: Index<T> = Index(u32::MAX, PhantomData);
+    pub const UNUSED: Index<T> = Index(u32::MAX-1, PhantomData);
 }
 
 #[derive(Debug)]
@@ -76,6 +77,10 @@ impl<T> Storage<T> {
 
     pub fn len(&self) -> usize {
         self.data.len()
+    }
+
+    pub fn clear(&mut self) {
+        self.data.clear();
     }
 
     pub fn push(&mut self, t: T) -> Index<T> {

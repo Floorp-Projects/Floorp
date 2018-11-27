@@ -132,12 +132,12 @@
                 <hbox class="custom-option">
                   <checkbox id="contentBlockingTrackingProtectionCheckbox"
                             class="content-blocking-checkbox" flex="1"
-                            data-l10n-id="content-blocking-tracking-protection-trackers-label"
+                            data-l10n-id="content-blocking-trackers-label"
                             aria-describedby="contentBlockingCustomDesc"/>
                   <vbox>
                     <menulist id="trackingProtectionMenu">
                       <menupopup>
-                        <menuitem data-l10n-id="content-blocking-tracking-protection-option-private" value="private"/>
+                        <menuitem data-l10n-id="content-blocking-option-private" value="private"/>
                         <menuitem data-l10n-id="content-blocking-tracking-protection-option-all-windows" value="always"/>
                       </menupopup>
                     </menulist>
@@ -163,10 +163,10 @@
                                 onsyncfrompreference="return gPrivacyPane.readBlockCookiesFrom();"
                                 onsynctopreference="return gPrivacyPane.writeBlockCookiesFrom();">
                         <menupopup>
-                          <menuitem data-l10n-id="sitedata-block-trackers-option" value="trackers"/>
-                          <menuitem data-l10n-id="sitedata-block-unvisited-option" value="unvisited"/>
-                          <menuitem data-l10n-id="sitedata-block-all-third-party-option" value="all-third-parties"/>
-                          <menuitem data-l10n-id="sitedata-block-all-option" value="always"/>
+                          <menuitem data-l10n-id="sitedata-option-block-trackers" value="trackers"/>
+                          <menuitem data-l10n-id="sitedata-option-block-unvisited" value="unvisited"/>
+                          <menuitem data-l10n-id="sitedata-option-block-all-third-party" value="all-third-parties"/>
+                          <menuitem data-l10n-id="sitedata-option-block-all" value="always"/>
                         </menupopup>
                       </menulist>
                     </hbox>
