@@ -2633,8 +2633,7 @@ nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv)
   nsCOMPtr<nsINode> referenceNode;
   nsCOMPtr<nsINode> referenceParentNode = tStartContainer;
 
-  RefPtr<Text> startTextNode =
-    tStartContainer ? tStartContainer->GetAsText() : nullptr;
+  RefPtr<Text> startTextNode = tStartContainer->GetAsText();
   nsCOMPtr<nsINodeList> tChildList;
   if (startTextNode) {
     referenceParentNode = tStartContainer->GetParentNode();
