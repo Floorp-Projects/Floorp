@@ -17,22 +17,36 @@ const val DB_NAME = "places.sqlite"
  */
 internal object RustPlacesConnection : Connection {
     @GuardedBy("this")
-    private var placesConnection: PlacesConnection? = null
+    private var cachedConnection: PlacesConnection? = null
 
-    fun init(parentDir: File, encryptionString: String?) = synchronized(this) {
-        if (placesConnection == null) {
-            placesConnection = PlacesConnection(File(parentDir, DB_NAME).canonicalPath, encryptionString)
+    /**
+     * Creates a long-lived [PlacesConnection].
+     * @param parentDir Location of the parent directory in which database is/will be stored.
+     * @param encryptionString Optional encryption key; if used, database will be encrypted at rest.
+     */
+    fun createLongLivedConnection(parentDir: File, encryptionString: String? = null) = synchronized(this) {
+        if (cachedConnection == null) {
+            cachedConnection = newConnection(parentDir, encryptionString)
         }
     }
 
+    /**
+     * Creates a new [PlacesConnection] instance. Caller is responsible for closing it.
+     * @param parentDir Location of the parent directory in which database is/will be stored.
+     * @param encryptionString Optional encryption key; if used, database will be encrypted at rest.
+     */
+    fun newConnection(parentDir: File, encryptionString: String? = null): PlacesConnection = synchronized(this) {
+        return PlacesConnection(File(parentDir, DB_NAME).canonicalPath, encryptionString)
+    }
+
     override fun api(): PlacesAPI = synchronized(this) {
-        requireNotNull(placesConnection) { "RustPlacesConnection must be initialized before use" }
-        return placesConnection!!
+        requireNotNull(cachedConnection) { "createLongLivedConnection must have been called before use" }
+        return cachedConnection!!
     }
 
     override fun close() = synchronized(this) {
-        requireNotNull(placesConnection) { "RustPlacesConnection must be initialized before use" }
-        placesConnection!!.close()
+        requireNotNull(cachedConnection) { "createLongLivedConnection must have been called before use" }
+        cachedConnection!!.close()
     }
 }
 

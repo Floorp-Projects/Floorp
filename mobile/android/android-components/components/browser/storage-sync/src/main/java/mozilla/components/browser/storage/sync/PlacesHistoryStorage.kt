@@ -28,10 +28,11 @@ const val AUTOCOMPLETE_SOURCE_NAME = "placesHistory"
  */
 open class PlacesHistoryStorage(context: Context) : HistoryStorage {
     private val scope by lazy { CoroutineScope(Dispatchers.IO) }
+    private val storageDir by lazy { context.filesDir }
 
     @VisibleForTesting
     internal open val places: Connection by lazy {
-        RustPlacesConnection.init(context.filesDir, null)
+        RustPlacesConnection.createLongLivedConnection(storageDir)
         RustPlacesConnection
     }
 
