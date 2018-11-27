@@ -81,7 +81,7 @@ class ADBScanner extends EventEmitter {
     const model = await adbDevice.getModel();
     const socketPaths = await adbDevice.getRuntimeSocketPaths();
     for (const socketPath of socketPaths) {
-      const runtime = new FirefoxOnAndroidRuntime(adbDevice, model, socketPath);
+      const runtime = new AdbRuntime(adbDevice, model, socketPath);
       dumpn("Found " + runtime.name);
       this._runtimes.push(runtime);
     }
@@ -96,13 +96,13 @@ class ADBScanner extends EventEmitter {
   }
 }
 
-function Runtime(adbDevice, model, socketPath) {
+function AdbRuntime(adbDevice, model, socketPath) {
   this._adbDevice = adbDevice;
   this._model = model;
   this._socketPath = socketPath;
 }
 
-Runtime.prototype = {
+AdbRuntime.prototype = {
   type: RuntimeTypes.USB,
   connect(connection) {
     return ADB.prepareTCPConnection(this._socketPath).then(port => {
@@ -116,13 +116,7 @@ Runtime.prototype = {
   },
 };
 
-function FirefoxOnAndroidRuntime(adbDevice, model, socketPath) {
-  Runtime.call(this, adbDevice, model, socketPath);
-}
-
-FirefoxOnAndroidRuntime.prototype = Object.create(Runtime.prototype);
-
-FirefoxOnAndroidRuntime.prototype._channel = function() {
+AdbRuntime.prototype._channel = function() {
   const packageName = this._packageName();
 
   switch (packageName) {
@@ -141,7 +135,7 @@ FirefoxOnAndroidRuntime.prototype._channel = function() {
   }
 };
 
-FirefoxOnAndroidRuntime.prototype._packageName = function() {
+AdbRuntime.prototype._packageName = function() {
   // If using abstract socket address, it is "@org.mozilla.firefox/..."
   // If using path base socket, it is "/data/data/<package>...""
   // Until Fennec 62 only supports path based UNIX domain socket, but
@@ -151,19 +145,19 @@ FirefoxOnAndroidRuntime.prototype._packageName = function() {
     this._socketPath.split("/")[3];
 };
 
-Object.defineProperty(FirefoxOnAndroidRuntime.prototype, "shortName", {
+Object.defineProperty(AdbRuntime.prototype, "shortName", {
   get() {
     return `Firefox ${this._channel()}`;
   },
 });
 
-Object.defineProperty(FirefoxOnAndroidRuntime.prototype, "deviceName", {
+Object.defineProperty(AdbRuntime.prototype, "deviceName", {
   get() {
     return this._model || this._adbDevice.id;
   },
 });
 
-Object.defineProperty(FirefoxOnAndroidRuntime.prototype, "name", {
+Object.defineProperty(AdbRuntime.prototype, "name", {
   get() {
     const channel = this._channel();
     return "Firefox " + channel + " on Android (" + this.deviceName + ")";
