@@ -1112,4 +1112,23 @@ class GeckoEngineSessionTest {
 
         assertEquals("1MB.zip", meaningFulFileName)
     }
+
+    @Test
+    fun `Closing engine session should close underlying gecko session`() {
+        val geckoSession = mockGeckoSession()
+
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        engineSession.geckoSession = geckoSession
+
+        engineSession.close()
+
+        verify(geckoSession).close()
+    }
+
+    private fun mockGeckoSession(): GeckoSession {
+        val session = mock(GeckoSession::class.java)
+        `when`(session.settings).thenReturn(
+            mock(GeckoSessionSettings::class.java))
+        return session
+    }
 }

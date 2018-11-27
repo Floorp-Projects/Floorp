@@ -232,6 +232,15 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.close].
+     */
+    override fun close() {
+        super.close()
+
+        geckoSession.close()
+    }
+
+    /**
      * NavigationDelegate implementation for forwarding callbacks to observers of the session.
      */
     @Suppress("ComplexMethod")

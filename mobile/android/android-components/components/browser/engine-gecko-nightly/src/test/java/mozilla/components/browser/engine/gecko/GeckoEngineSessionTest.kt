@@ -1117,24 +1117,6 @@ class GeckoEngineSessionTest {
         verifyZeroInteractions(observer)
     }
 
-    private fun mockGeckoSession(): GeckoSession {
-        val session = mock(GeckoSession::class.java)
-        `when`(session.settings).thenReturn(
-                mock(GeckoSessionSettings::class.java))
-        return session
-    }
-
-    private fun mockLoadRequest(uri: String): GeckoSession.NavigationDelegate.LoadRequest {
-        val constructor = GeckoSession.NavigationDelegate.LoadRequest::class.java.getDeclaredConstructor(
-            String::class.java,
-            String::class.java,
-            Int::class.java,
-            Int::class.java)
-        constructor.isAccessible = true
-
-        return constructor.newInstance(uri, uri, 0, 0)
-    }
-
     @Test
     fun `after onCrash get called geckoSession must be reset`() {
         val runtime = mock(GeckoRuntime::class.java)
@@ -1178,5 +1160,34 @@ class GeckoEngineSessionTest {
         engineSession.geckoSession.contentDelegate.onExternalResponse(mock(), info)
 
         assertEquals("1MB.zip", meaningFulFileName)
+    }
+
+    @Test
+    fun `Closing engine session should close underlying gecko session`() {
+        val geckoSession = mockGeckoSession()
+
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java), geckoSessionProvider = { geckoSession })
+
+        engineSession.close()
+
+        verify(geckoSession).close()
+    }
+
+    private fun mockGeckoSession(): GeckoSession {
+        val session = mock(GeckoSession::class.java)
+        `when`(session.settings).thenReturn(
+            mock(GeckoSessionSettings::class.java))
+        return session
+    }
+
+    private fun mockLoadRequest(uri: String): GeckoSession.NavigationDelegate.LoadRequest {
+        val constructor = GeckoSession.NavigationDelegate.LoadRequest::class.java.getDeclaredConstructor(
+            String::class.java,
+            String::class.java,
+            Int::class.java,
+            Int::class.java)
+        constructor.isAccessible = true
+
+        return constructor.newInstance(uri, uri, 0, 0)
     }
 }

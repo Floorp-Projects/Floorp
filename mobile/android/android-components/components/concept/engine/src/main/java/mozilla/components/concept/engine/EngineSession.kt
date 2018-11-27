@@ -210,5 +210,5 @@ abstract class EngineSession(
      * this session.
      */
     @CallSuper
-    fun close() = delegate.unregisterObservers()
+    open fun close() = delegate.unregisterObservers()
 }
