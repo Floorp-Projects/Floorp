@@ -7477,6 +7477,10 @@ IonBuilder::testSingletonProperty(JSObject* obj, jsid id)
     // property will change and trigger invalidation.
 
     while (obj) {
+        if (!alloc().ensureBallast()) {
+            return nullptr;
+        }
+
         if (!ClassHasEffectlessLookup(obj->getClass())) {
             return nullptr;
         }
@@ -7562,6 +7566,11 @@ IonBuilder::testSingletonPropertyTypes(MDefinition* obj, jsid id)
             if (!key) {
                 continue;
             }
+
+            if (!alloc().ensureBallast()) {
+                return nullptr;
+            }
+
             if (analysisContext) {
                 key->ensureTrackedProperty(analysisContext, id);
             }

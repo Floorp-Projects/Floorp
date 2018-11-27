@@ -1788,6 +1788,7 @@ void
 HeapTypeSetKey::freeze(CompilerConstraintList* constraints)
 {
     LifoAlloc* alloc = constraints->alloc();
+    LifoAlloc::AutoFallibleScope fallibleAllocator(alloc);
 
     typedef CompilerConstraintInstance<ConstraintDataFreeze> T;
     constraints->add(alloc->new_<T>(alloc, *this, ConstraintDataFreeze()));
