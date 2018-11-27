@@ -23,7 +23,7 @@ add_task(async function() {
   runtimeClientFactoryMock.createClientForRuntime = runtime => {
     const { RUNTIMES } = require("devtools/client/aboutdebugging-new/src/constants");
     if (runtime.id === RUNTIMES.THIS_FIREFOX) {
-      return { clientWrapper: thisFirefoxClient };
+      return thisFirefoxClient;
     }
     throw new Error("Unexpected runtime id " + runtime.id);
   };

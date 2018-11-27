@@ -18,15 +18,14 @@ async function createLocalClient() {
   DebuggerServer.registerAllActors();
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   await client.connect();
-  return { clientWrapper: new ClientWrapper(client) };
+  return new ClientWrapper(client);
 }
 
 async function createNetworkClient(host, port) {
-  const transportDetails = { host, port };
-  const transport = await DebuggerClient.socketConnect(transportDetails);
+  const transport = await DebuggerClient.socketConnect({ host, port });
   const client = new DebuggerClient(transport);
   await client.connect();
-  return { clientWrapper: new ClientWrapper(client), transportDetails };
+  return new ClientWrapper(client);
 }
 
 async function createUSBClient(socketPath) {
@@ -40,8 +39,8 @@ async function createClientForRuntime(runtime) {
   if (type === RUNTIMES.THIS_FIREFOX) {
     return createLocalClient();
   } else if (remoteClientManager.hasClient(id, type)) {
-    const { client, transportDetails } = remoteClientManager.getClient(id, type);
-    return { clientWrapper: new ClientWrapper(client), transportDetails };
+    const client = remoteClientManager.getClient(id, type);
+    return new ClientWrapper(client);
   } else if (type === RUNTIMES.NETWORK) {
     const { host, port } = extra.connectionParameters;
     return createNetworkClient(host, port);
