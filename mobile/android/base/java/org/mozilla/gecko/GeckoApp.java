@@ -899,9 +899,9 @@ public abstract class GeckoApp extends GeckoActivity
     }
 
     @Override
-    public void onContextMenu(final GeckoSession session, final int screenX,
-                              final int screenY, final String uri,
-                              int elementType, final String elementSrc) {
+    public void onContextMenu(final GeckoSession session,
+                              final int screenX, final int screenY,
+                              final GeckoSession.ContentDelegate.ContextElement element) {
     }
 
     @Override

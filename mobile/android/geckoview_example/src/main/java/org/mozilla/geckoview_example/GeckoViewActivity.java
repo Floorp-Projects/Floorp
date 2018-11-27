@@ -476,12 +476,16 @@ public class GeckoViewActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onContextMenu(GeckoSession session, int screenX, int screenY,
-                                  String uri, int elementType, String elementSrc) {
+        public void onContextMenu(final GeckoSession session,
+                                  int screenX, int screenY,
+                                  final ContextElement element) {
             Log.d(LOGTAG, "onContextMenu screenX=" + screenX +
-                          " screenY=" + screenY + " uri=" + uri +
-                          " elementType=" + elementType +
-                          " elementSrc=" + elementSrc);
+                          " screenY=" + screenY +
+                          " type=" + element.type +
+                          " linkUri=" + element.linkUri +
+                          " title=" + element.title +
+                          " alt=" + element.altText +
+                          " srcUri=" + element.srcUri);
         }
 
         @Override
