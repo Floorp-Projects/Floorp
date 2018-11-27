@@ -39,11 +39,14 @@ public:
 
   /**
    * Possible results from a window.open call.
-   * ADDED     - The frame was added to a document (i.e. handled by the embedder).
-   * IGNORED   - The frame was not added to a document and the embedder didn't
-   *             call preventDefault() to prevent the platform from handling the call.
+   * ADDED     - The frame was added to a document (i.e. handled by the
+   *             embedder).
+   * IGNORED   - The frame was not added to a document and the embedder
+   *             didn't call preventDefault() to prevent the platform from
+   *             handling the call.
    * CANCELLED - The frame was not added to a document, but the embedder still
-   *             called preventDefault() to prevent the platform from handling the call.
+   *             called preventDefault() to prevent the platform from handling
+   *             the call.
    */
 
   enum OpenWindowResult {

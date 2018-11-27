@@ -33,30 +33,33 @@ namespace mozilla {
  * TexStorage2D(texTarget, levels, internalFormat, width, height)
  * TexStorage3D(texTarget, levels, intenralFormat, width, height, depth)
  *
- * TexImage2D(texImageTarget, level, internalFormat, width, height, border, unpackFormat,
- *            unpackType, data)
- * TexImage3D(texImageTarget, level, internalFormat, width, height, depth, border,
+ * TexImage2D(texImageTarget, level, internalFormat, width, height, border,
  *            unpackFormat, unpackType, data)
- * TexSubImage2D(texImageTarget, level, xOffset, yOffset, width, height, unpackFormat,
- *               unpackType, data)
- * TexSubImage3D(texImageTarget, level, xOffset, yOffset, zOffset, width, height, depth,
+ * TexImage3D(texImageTarget, level, internalFormat, width, height, depth,
+ *            border, unpackFormat, unpackType, data)
+ * TexSubImage2D(texImageTarget, level, xOffset, yOffset, width, height,
  *               unpackFormat, unpackType, data)
+ * TexSubImage3D(texImageTarget, level, xOffset, yOffset, zOffset, width,
+ *               height, depth, unpackFormat, unpackType, data)
  *
- * CompressedTexImage2D(texImageTarget, level, internalFormat, width, height, border,
- *                      imageSize, data)
- * CompressedTexImage3D(texImageTarget, level, internalFormat, width, height, depth,
+ * CompressedTexImage2D(texImageTarget, level, internalFormat, width, height,
  *                      border, imageSize, data)
- * CompressedTexSubImage2D(texImageTarget, level, xOffset, yOffset, width, height,
- *                         sizedUnpackFormat, imageSize, data)
- * CompressedTexSubImage3D(texImageTarget, level, xOffset, yOffset, zOffset, width,
- *                         height, depth, sizedUnpackFormat, imageSize, data)
+ * CompressedTexImage3D(texImageTarget, level, internalFormat, width, height,
+ *                      depth, border, imageSize, data)
+ * CompressedTexSubImage2D(texImageTarget, level, xOffset, yOffset, width,
+ *                         height, sizedUnpackFormat, imageSize, data)
+ * CompressedTexSubImage3D(texImageTarget, level, xOffset, yOffset, zOffset,
+ *                         width, height, depth, sizedUnpackFormat, imageSize,
+ *                         data)
  *
- * CopyTexImage2D(texImageTarget, level, internalFormat, x, y, width, height, border)
- * CopyTexImage3D - "Because the framebuffer is inhererntly two-dimensional, there is no
- *                   CopyTexImage3D command."
- * CopyTexSubImage2D(texImageTarget, level, xOffset, yOffset, x, y, width, height)
- * CopyTexSubImage3D(texImageTarget, level, xOffset, yOffset, zOffset, x, y, width,
+ * CopyTexImage2D(texImageTarget, level, internalFormat, x, y, width, height,
+ *                border)
+ * CopyTexImage3D - "Because the framebuffer is inhererntly two-dimensional,
+ *                   there is no CopyTexImage3D command."
+ * CopyTexSubImage2D(texImageTarget, level, xOffset, yOffset, x, y, width,
  *                   height)
+ * CopyTexSubImage3D(texImageTarget, level, xOffset, yOffset, zOffset, x, y,
+ *                   width, height)
  */
 
 static bool
@@ -247,7 +250,7 @@ FromImageBitmap(WebGLContext* webgl, TexImageTarget target,
 
     // WhatWG "HTML Living Standard" (30 October 2015):
     // "The getImageData(sx, sy, sw, sh) method [...] Pixels must be returned as
-    //  non-premultiplied alpha values."
+    // non-premultiplied alpha values."
     return MakeUnique<webgl::TexUnpackSurface>(webgl, target, width, height, depth, surf,
                                                cloneData->mAlphaType);
 }
@@ -270,7 +273,7 @@ FromImageData(WebGLContext* webgl, TexImageTarget target,
 
     // WhatWG "HTML Living Standard" (30 October 2015):
     // "The getImageData(sx, sy, sw, sh) method [...] Pixels must be returned as
-    //  non-premultiplied alpha values."
+    // non-premultiplied alpha values."
     const auto alphaType = gfxAlphaType::NonPremult;
 
     MOZ_ASSERT(dataSize == stride * size.height);
@@ -594,7 +597,7 @@ WebGLTexture::ValidateTexImageSpecification(TexImageTarget target,
     case LOCAL_GL_TEXTURE_2D_ARRAY:
         maxWidthHeight = mContext->mGLMaxTextureSize >> level;
         // "The maximum number of layers for two-dimensional array textures (depth)
-        //  must be at least MAX_ARRAY_TEXTURE_LAYERS for all levels."
+        // must be at least MAX_ARRAY_TEXTURE_LAYERS for all levels."
         maxDepth = mContext->mGLMaxArrayTextureLayers;
         maxLevel = CeilingLog2(mContext->mGLMaxTextureSize);
         break;
@@ -1023,9 +1026,9 @@ ValidateTargetForFormat(WebGLContext* webgl, TexImageTarget target,
 {
     // GLES 3.0.4 p127:
     // "Textures with a base internal format of DEPTH_COMPONENT or DEPTH_STENCIL are
-    //  supported by texture image specification commands only if `target` is TEXTURE_2D,
-    //  TEXTURE_2D_ARRAY, or TEXTURE_CUBE_MAP. Using these formats in conjunction with any
-    //  other `target` will result in an INVALID_OPERATION error."
+    // supported by texture image specification commands only if `target` is TEXTURE_2D,
+    // TEXTURE_2D_ARRAY, or TEXTURE_CUBE_MAP. Using these formats in conjunction with any
+    // other `target` will result in an INVALID_OPERATION error."
     const bool ok = [&]() {
         if (bool(format->d) & (target == LOCAL_GL_TEXTURE_3D))
             return false;

@@ -1082,7 +1082,7 @@ FormatUsageAuthority::CreateForWebGL2(gl::GLContext* gl)
 
     // GLES 3.0.4, p206, "Required Renderbuffer Formats":
     // "Implementations are also required to support STENCIL_INDEX8. Requesting this
-    //  internal format for a renderbuffer will allocate at least 8 stencil bit planes."
+    // internal format for a renderbuffer will allocate at least 8 stencil bit planes."
 
     auto usage = ptr->EditUsage(EffectiveFormat::STENCIL_INDEX8);
     usage->SetRenderable();

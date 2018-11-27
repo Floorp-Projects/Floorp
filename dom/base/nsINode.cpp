@@ -2672,8 +2672,8 @@ nsINode::AddSizeOfExcludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const
   // - mSlots
   //
   // The following members are not measured:
-  // - mParent, mNextSibling, mPreviousOrLastSibling, mFirstChild: because they're
-  //   non-owning, from "exclusive ownership" point of view.
+  // - mParent, mNextSibling, mPreviousOrLastSibling, mFirstChild: because
+  //   they're non-owning, from "exclusive ownership" point of view.
 }
 
 void

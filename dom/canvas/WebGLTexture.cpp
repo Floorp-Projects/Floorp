@@ -167,17 +167,17 @@ WebGLTexture::IsMipAndCubeComplete(const uint32_t maxLevel, const bool ensureIni
     for (auto level = mBaseMipmapLevel; level <= maxLevel; ++level) {
         // GLES 3.0.4, p161
         // "A cube map texture is mipmap complete if each of the six texture images,
-        //  considered individually, is mipmap complete."
+        // considered individually, is mipmap complete."
 
         for (uint8_t face = 0; face < mFaceCount; face++) {
             auto& cur = ImageInfoAtFace(face, level);
 
-            // "* The set of mipmap arrays `level_base` through `q` (where `q` is defined
-            //    the "Mipmapping" discussion of section 3.8.10) were each specified with
-            //    the same effective internal format."
+            // "* The set of mipmap arrays `level_base` through `q` (where `q`
+            //    is defined the "Mipmapping" discussion of section 3.8.10) were
+            //    each specified with the same effective internal format."
 
-            // "* The dimensions of the arrays follow the sequence described in the
-            //    "Mipmapping" discussion of section 3.8.10."
+            // "* The dimensions of the arrays follow the sequence described in
+            //    the "Mipmapping" discussion of section 3.8.10."
 
             if (cur.mWidth != ref.mWidth ||
                 cur.mHeight != ref.mHeight ||
@@ -339,22 +339,22 @@ WebGLTexture::CalcSampleableInfo(const WebGLSampler* const sampler) const
     if (!isFilteringNearestOnly) {
         bool isFilterable = completeness->usage->isFilterable;
 
-        // "* The effective internal format specified for the texture arrays is a sized
-        //    internal depth or depth and stencil format, the value of
+        // "* The effective internal format specified for the texture arrays is a
+        //    sized internal depth or depth and stencil format, the value of
         //    TEXTURE_COMPARE_MODE is NONE[1], and either the magnification filter is not
         //    NEAREST, or the minification filter is neither NEAREST nor
         //    NEAREST_MIPMAP_NEAREST."
-        // [1]: This sounds suspect, but is explicitly noted in the change log for GLES
-        //      3.0.1:
-        //      "* Clarify that a texture is incomplete if it has a depth component, no
-        //         shadow comparison, and linear filtering (also Bug 9481)."
+        // [1]: This sounds suspect, but is explicitly noted in the change log for
+        //      GLES 3.0.1:
+        //      "* Clarify that a texture is incomplete if it has a depth component,
+        //         no shadow comparison, and linear filtering (also Bug 9481)."
         // In short, depth formats are not filterable, but shadow-samplers are.
         if (ret->isDepthTexCompare) {
             isFilterable = true;
         }
 
-        // "* The effective internal format specified for the texture arrays is a sized
-        //    internal color format that is not texture-filterable, and either the
+        // "* The effective internal format specified for the texture arrays is a
+        //    sized internal color format that is not texture-filterable, and either the
         //    magnification filter is not NEAREST or the minification filter is neither
         //    NEAREST nor NEAREST_MIPMAP_NEAREST."
         // Since all (GLES3) unsized color formats are filterable just like their sized
@@ -377,22 +377,22 @@ WebGLTexture::CalcSampleableInfo(const WebGLSampler* const sampler) const
         // "Calling a sampler from a fragment shader will return (R,G,B,A)=(0,0,0,1) if
         //  any of the following conditions are true:"
 
-        // "* A two-dimensional sampler is called, the minification filter is one that
-        //    requires a mipmap[...], and the sampler's associated texture object is not
+        // "* A two-dimensional sampler is called, the minification filter is one
+        //    that requires a mipmap[...], and the sampler's associated texture object is not
         //    complete[.]"
         // (already covered)
 
-        // "* A two-dimensional sampler is called, the minification filter is not one that
-        //    requires a mipmap (either NEAREST nor[sic] LINEAR), and either dimension of
+        // "* A two-dimensional sampler is called, the minification filter is
+        //    not one that requires a mipmap (either NEAREST nor[sic] LINEAR), and either dimension of
         //    the level zero array of the associated texture object is not positive."
         // (already covered)
 
-        // "* A two-dimensional sampler is called, the corresponding texture image is a
-        //    non-power-of-two image[...], and either the texture wrap mode is not
+        // "* A two-dimensional sampler is called, the corresponding texture
+        //    image is a non-power-of-two image[...], and either the texture wrap mode is not
         //    CLAMP_TO_EDGE, or the minification filter is neither NEAREST nor LINEAR."
 
-        // "* A cube map sampler is called, any of the corresponding texture images are
-        //    non-power-of-two images, and either the texture wrap mode is not
+        // "* A cube map sampler is called, any of the corresponding texture
+        //    images are non-power-of-two images, and either the texture wrap mode is not
         //    CLAMP_TO_EDGE, or the minification filter is neither NEAREST nor LINEAR."
         // "either the texture wrap mode is not CLAMP_TO_EDGE"
         if (sampling->wrapS != LOCAL_GL_CLAMP_TO_EDGE ||
@@ -403,8 +403,8 @@ WebGLTexture::CalcSampleableInfo(const WebGLSampler* const sampler) const
             return ret;
         }
 
-        // "* A cube map sampler is called, and either the corresponding cube map texture
-        //    image is not cube complete, or TEXTURE_MIN_FILTER is one that requires a
+        // "* A cube map sampler is called, and either the corresponding cube
+        //    map texture image is not cube complete, or TEXTURE_MIN_FILTER is one that requires a
         //    mipmap and the texture is not mipmap cube complete."
         // (already covered)
     }
@@ -738,8 +738,8 @@ void
 WebGLTexture::GenerateMipmap()
 {
     // GLES 3.0.4 p160:
-    // "Mipmap generation replaces texel array levels level base + 1 through q with arrays
-    //  derived from the level base array, regardless of their previous contents. All
+    // "Mipmap generation replaces texel array levels level base + 1 through q
+    //  with arrrays derived from the level base array, regardless of their previous contents. All
     //  other mipmap arrays, including the level base array, are left unchanged by this
     //  computation."
     // But only check and init the base level.
