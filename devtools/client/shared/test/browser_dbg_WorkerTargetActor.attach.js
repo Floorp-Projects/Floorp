@@ -26,15 +26,10 @@ function test() {
     const oldMaxTotalViewers = SpecialPowers.getIntPref(MAX_TOTAL_VIEWERS);
     SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, 10);
 
-    DebuggerServer.init();
-    DebuggerServer.registerAllActors();
-
-    const client = new DebuggerClient(DebuggerServer.connectPipe());
-    yield connect(client);
-
     const tab = yield addTab(TAB1_URL);
-    const { tabs } = yield listTabs(client);
-    const [, targetFront] = yield attachTarget(client, findTab(tabs, TAB1_URL));
+    const target = yield TargetFactory.forTab(tab);
+    yield target.attach();
+    const targetFront = target.activeTab;
     yield listWorkers(targetFront);
 
     // If a page still has pending network requests, it will not be moved into
@@ -71,7 +66,7 @@ function test() {
     yield workerTargetFront1.attach();
     is(workerTargetFront1.isClosed, false, "worker in tab 1 should not be closed");
 
-    yield close(client);
+    yield target.destroy();
     SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, oldMaxTotalViewers);
     finish();
   });

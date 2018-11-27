@@ -152,30 +152,6 @@ function removeAddon(aAddon) {
   return deferred.promise;
 }
 
-function getTargetActorForUrl(aClient, aUrl) {
-  let deferred = promise.defer();
-
-  aClient.listTabs().then(aResponse => {
-    let targetActor = aResponse.tabs.filter(aGrip => aGrip.url == aUrl).pop();
-    deferred.resolve(targetActor);
-  });
-
-  return deferred.promise;
-}
-
-async function attachTargetActorForUrl(aClient, aUrl) {
-  let grip = await getTargetActorForUrl(aClient, aUrl);
-  let [ response, front ] = await aClient.attachTarget(grip.actor);
-  return [grip, response, front];
-}
-
-async function attachThreadActorForUrl(aClient, aUrl) {
-  let [grip, response] = await attachTargetActorForUrl(aClient, aUrl);
-  let [response2, threadClient] = await aClient.attachThread(response.threadActor);
-  await threadClient.resume();
-  return threadClient;
-}
-
 // Override once from shared-head, as some tests depend on trying native DOM listeners
 // before EventEmitter.  Since this directory is deprecated, there's little value in
 // resolving the descrepency here.
