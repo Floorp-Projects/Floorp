@@ -1,4 +1,4 @@
-52944
+52951
 0/nm
 0th/pt
 1/n1
@@ -2790,7 +2790,7 @@ Congolese/M
 Congregational
 Congregationalist/MS
 Congress/MS
-Congressional
+Congressional/Y
 Congreve/M
 Conley/M
 Conn/MR
@@ -20673,7 +20673,7 @@ congregational
 congregationalism/M
 congregationalist/MS
 congress/MS
-congressional
+congressional/Y
 congressman/M
 congressmen
 congresspeople
@@ -23779,6 +23779,7 @@ dowry/SM
 dowse/DRSZG
 dowser/M
 dox/SDG
+doxastic
 doxology/SM
 doxx/SDG
 doyen/SM
@@ -30059,6 +30060,7 @@ horde/DSMG
 horehound/SM
 horizon/SM
 horizontal/SMY
+hormesis
 hormonal
 hormone/SM
 horn/MDS
@@ -49607,6 +49609,8 @@ transfinite
 transfix/DSG
 transform/BSZGMDR
 transformation/SM
+transformational
+transformative
 transformer/M
 transfuse/DSXGN
 transfusion/M
@@ -50827,6 +50831,7 @@ uptempo
 upthrust/GSM
 uptick/SM
 uptight
+uptime
 uptown/M
 uptrend
 upturn/GSMD
@@ -50919,9 +50924,11 @@ vacationer/M
 vacationist/SM
 vaccinate/GNDSX
 vaccination/M
+vaccinator/S
 vaccine/SM
 vacillate/XGNDS
 vacillation/M
+vacinal
 vacuity/M
 vacuole/MS
 vacuous/YP
