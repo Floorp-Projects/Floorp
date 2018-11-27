@@ -829,6 +829,7 @@ content-blocking-setting-custom =
   .label = Custom
   .accesskey = C
 
+content-blocking-standard-description = Only blocks known trackers in Private Windows.
 content-blocking-standard-desc = Balanced for protection and performance. Allows some trackers so websites function properly.
 content-blocking-strict-desc = Blocks all trackers { -brand-short-name } detects. May cause some sites to break.
 content-blocking-custom-desc = Choose what to block.
