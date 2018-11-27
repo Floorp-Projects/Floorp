@@ -328,7 +328,7 @@ impl NormalBorder {
 }
 
 #[repr(u32)]
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub enum RepeatMode {
     Stretch,
     Repeat,
