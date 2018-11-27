@@ -50,24 +50,30 @@ fn main() {
             "-DRUST_BINDGEN",
         ]).clang_arg("-I../..");
 
-    let path = PathBuf::from(env::var_os("MOZ_TOPOBJDIR").unwrap())
-        .join("js/src/rust/extra-bindgen-flags");
+    match env::var_os("MOZ_TOPOBJDIR") {
+        Some(path) => {
+            let path = PathBuf::from(path).join("js/src/rust/extra-bindgen-flags");
 
-    let mut extra_flags = String::new();
-    File::open(&path)
-        .expect("Failed to open extra-bindgen-flags file")
-        .read_to_string(&mut extra_flags)
-        .expect("Failed to read extra-bindgen-flags file");
+            let mut extra_flags = String::new();
+            File::open(&path)
+                .expect("Failed to open extra-bindgen-flags file")
+                .read_to_string(&mut extra_flags)
+                .expect("Failed to read extra-bindgen-flags file");
 
-    let display_path = path.to_str().expect("path is utf8 encoded");
-    println!("cargo:rerun-if-changed={}", display_path);
+            let display_path = path.to_str().expect("path is utf8 encoded");
+            println!("cargo:rerun-if-changed={}", display_path);
 
-    let extra_flags: Vec<String> = extra_flags
-        .split_whitespace()
-        .map(|s| s.to_owned())
-        .collect();
-    for flag in extra_flags {
-        bindings = bindings.clang_arg(flag);
+            let extra_flags: Vec<String> = extra_flags
+                .split_whitespace()
+                .map(|s| s.to_owned())
+                .collect();
+            for flag in extra_flags {
+                bindings = bindings.clang_arg(flag);
+            }
+        }
+        None => {
+            println!("cargo:warning={}", "MOZ_TOPOBJDIR should be set by default, otherwise the build is not guaranted to finish.");
+        }
     }
 
     let bindings = bindings

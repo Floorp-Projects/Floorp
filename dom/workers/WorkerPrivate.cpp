@@ -4957,6 +4957,7 @@ WorkerPrivate::ConnectMessagePort(JSContext* aCx,
   }
 
   RootedDictionary<MessageEventInit> init(aCx);
+  init.mData = JS_GetEmptyStringValue(aCx);
   init.mBubbles = false;
   init.mCancelable = false;
   init.mSource.SetValue().SetAsMessagePort() = port;

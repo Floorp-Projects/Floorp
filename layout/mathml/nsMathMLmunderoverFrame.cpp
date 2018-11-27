@@ -12,6 +12,8 @@
 #include "gfxContext.h"
 #include "gfxMathTable.h"
 
+using namespace mozilla;
+
 //
 // <munderover> -- attach an underscript-overscript pair to a base - implementation
 // <mover> -- attach an overscript to a base - implementation

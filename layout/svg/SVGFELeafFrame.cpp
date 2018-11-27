@@ -5,11 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Keep in (case-insensitive) order:
+#include "ComputedStyle.h"
 #include "nsContainerFrame.h"
 #include "nsFrame.h"
 #include "nsGkAtoms.h"
 #include "SVGObserverUtils.h"
 #include "nsSVGFilters.h"
+
+using namespace mozilla;
 
 /*
  * This frame is used by filter primitive elements that don't

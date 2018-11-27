@@ -8,6 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
+#include "nsIContent.h"
 #include "nsIDOMEventListener.h"
 
 // X.h defines KeyPress

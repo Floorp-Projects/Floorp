@@ -9,6 +9,8 @@
 #include "nsMimeTypes.h"
 #include "mozilla/gfx/2D.h"
 
+using namespace mozilla;
+
 //
 // <semantics> -- associate annotations with a MathML expression
 //

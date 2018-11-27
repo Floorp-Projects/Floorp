@@ -9,6 +9,7 @@
 
 #include "mozilla/TimeStamp.h"
 #include "nsPoint.h"
+#include "Units.h"
 
 namespace mozilla {
 

@@ -137,7 +137,7 @@ using namespace mozilla::dom;
 #define DUMP_LAYOUT_LEVEL (static_cast<mozilla::LogLevel>(9))
 
 #ifndef PR_PL
-static mozilla::LazyLogModule gPrintingLog("printing")
+static mozilla::LazyLogModule gPrintingLog("printing");
 
 #define PR_PL(_p1)  MOZ_LOG(gPrintingLog, mozilla::LogLevel::Debug, _p1);
 #endif

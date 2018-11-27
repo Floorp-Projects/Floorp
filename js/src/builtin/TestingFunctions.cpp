@@ -1723,6 +1723,21 @@ NewRope(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+IsRope(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!args.get(0).isString()) {
+        JS_ReportErrorASCII(cx, "isRope requires a string argument.");
+        return false;
+    }
+
+    JSString* str = args[0].toString();
+    args.rval().setBoolean(str->isRope());
+    return true;
+}
+
+static bool
 EnsureFlatString(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -5949,6 +5964,10 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Creates a rope with the given left/right strings.\n"
 "  Available options:\n"
 "    nursery: bool - force the string to be created in/out of the nursery, if possible.\n"),
+
+    JS_FN_HELP("isRope", IsRope, 1, 0,
+"isRope(str)",
+"  Returns true if the parameter is a rope"),
 
     JS_FN_HELP("settlePromiseNow", SettlePromiseNow, 1, 0,
 "settlePromiseNow(promise)",

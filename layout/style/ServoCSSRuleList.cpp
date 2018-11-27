@@ -22,6 +22,7 @@
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StyleSheet.h"
+#include "nsIDocument.h"
 
 using namespace mozilla::dom;
 

@@ -436,7 +436,7 @@ description#identity-popup-content-verifier,
 #identity-popup-trackersView-list {
   padding: 5px 20px;
   -moz-box-flex: 1;
-  overflow: scroll;
+  overflow: auto;
 }
 
 .identity-popup-trackersView-list-item {

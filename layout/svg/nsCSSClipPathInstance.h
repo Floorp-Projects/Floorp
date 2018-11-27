@@ -7,6 +7,7 @@
 #ifndef __NS_CSSCLIPPATHINSTANCE_H__
 #define __NS_CSSCLIPPATHINSTANCE_H__
 
+#include "gfxPoint.h"
 #include "nsStyleStruct.h"
 #include "nsRect.h"
 #include "mozilla/gfx/2D.h"

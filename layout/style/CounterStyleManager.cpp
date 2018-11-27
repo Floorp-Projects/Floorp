@@ -12,6 +12,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Types.h"
 #include "mozilla/WritingModes.h"
+#include "nsPresContext.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"

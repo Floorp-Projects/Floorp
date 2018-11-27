@@ -10,6 +10,8 @@
 #include "nscore.h"
 
 #include "DateTimeFormat.h"
+#include "MediaManager.h"
+#include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "nsAttrValue.h"
 #include "nsColorNames.h"
 #include "nsComputedDOMStyle.h"

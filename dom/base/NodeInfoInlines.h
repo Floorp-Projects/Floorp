@@ -58,7 +58,7 @@ NodeInfo::Equals(const nsAString& aName, const nsAString& aPrefix,
 }
 
 inline bool
-NodeInfo::QualifiedNameEquals(nsAtom* aNameAtom) const
+NodeInfo::QualifiedNameEquals(const nsAtom* aNameAtom) const
 {
   MOZ_ASSERT(aNameAtom, "Must have name atom");
   if (!GetPrefixAtom()) {
@@ -72,8 +72,8 @@ NodeInfo::QualifiedNameEquals(nsAtom* aNameAtom) const
 } // namespace mozilla
 
 inline void
-CheckValidNodeInfo(uint16_t aNodeType, nsAtom *aName, int32_t aNamespaceID,
-                   nsAtom* aExtraName)
+CheckValidNodeInfo(uint16_t aNodeType, const nsAtom *aName,
+                   int32_t aNamespaceID, const nsAtom* aExtraName)
 {
   MOZ_ASSERT(aNodeType == nsINode::ELEMENT_NODE ||
              aNodeType == nsINode::ATTRIBUTE_NODE ||

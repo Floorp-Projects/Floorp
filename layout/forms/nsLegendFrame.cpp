@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsLegendFrame.h"
+
+#include "ComputedStyle.h"
 #include "nsIContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
@@ -12,6 +14,9 @@
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsCheckboxRadioFrame.h"
+#include "WritingModes.h"
+
+using namespace mozilla;
 
 nsIFrame*
 NS_NewLegendFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
