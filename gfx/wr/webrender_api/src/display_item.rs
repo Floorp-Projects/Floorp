@@ -274,16 +274,6 @@ pub struct NormalBorder {
 }
 
 impl NormalBorder {
-    // Construct a border based upon self with color
-    pub fn with_color(&self, color: ColorF) -> Self {
-        let mut b = *self;
-        b.left.color = color;
-        b.right.color = color;
-        b.top.color = color;
-        b.bottom.color = color;
-        b
-    }
-
     fn can_disable_antialiasing(&self) -> bool {
         fn is_valid(style: BorderStyle) -> bool {
             style == BorderStyle::Solid || style == BorderStyle::None
@@ -463,7 +453,7 @@ pub struct Shadow {
     pub blur_radius: f32,
 }
 
-#[repr(u32)]
+#[repr(u8)]
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, Serialize, Deserialize, Ord, PartialOrd)]
 pub enum ExtendMode {
     Clamp,

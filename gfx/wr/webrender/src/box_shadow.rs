@@ -8,8 +8,7 @@ use clip::ClipItemKey;
 use display_list_flattener::DisplayListFlattener;
 use gpu_cache::GpuCacheHandle;
 use gpu_types::BoxShadowStretchMode;
-use prim_store::PrimitiveContainer;
-use prim_store::ScrollNodeAndClipChain;
+use prim_store::{ScrollNodeAndClipChain, PrimitiveKeyKind};
 use render_task::RenderTaskCacheEntryHandle;
 use util::RectHelpers;
 
@@ -73,7 +72,7 @@ impl<'a> DisplayListFlattener<'a> {
         clip_and_scroll: ScrollNodeAndClipChain,
         prim_info: &LayoutPrimitiveInfo,
         box_offset: &LayoutVector2D,
-        color: &ColorF,
+        color: ColorF,
         mut blur_radius: f32,
         spread_radius: f32,
         border_radius: BorderRadius,
@@ -149,8 +148,8 @@ impl<'a> DisplayListFlattener<'a> {
                 clip_and_scroll,
                 &LayoutPrimitiveInfo::with_clip_rect(final_prim_rect, prim_info.clip_rect),
                 clips,
-                PrimitiveContainer::Rectangle {
-                    color: *color,
+                PrimitiveKeyKind::Rectangle {
+                    color: color.into(),
                 },
             );
         } else {
@@ -172,8 +171,8 @@ impl<'a> DisplayListFlattener<'a> {
 
             // Draw the box-shadow as a solid rect, using a box-shadow
             // clip mask item.
-            let prim = PrimitiveContainer::Rectangle {
-                color: *color,
+            let prim = PrimitiveKeyKind::Rectangle {
+                color: color.into(),
             };
 
             // Create the box-shadow clip item.
