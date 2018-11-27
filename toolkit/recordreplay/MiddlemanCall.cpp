@@ -44,6 +44,8 @@ GatherDependentCalls(InfallibleVector<MiddlemanCall*>& aOutgoingCalls, Middleman
   MOZ_RELEASE_ASSERT(!aCall->mSent);
   aCall->mSent = true;
 
+  const Redirection& redirection = GetRedirection(aCall->mCallId);
+
   CallArguments arguments;
   aCall->mArguments.CopyTo(&arguments);
 
@@ -51,8 +53,12 @@ GatherDependentCalls(InfallibleVector<MiddlemanCall*>& aOutgoingCalls, Middleman
 
   MiddlemanCallContext cx(aCall, &arguments, MiddlemanCallPhase::ReplayInput);
   cx.mDependentCalls = &dependentCalls;
-  gRedirections[aCall->mCallId].mMiddlemanCall(cx);
+  redirection.mMiddlemanCall(cx);
   if (cx.mFailed) {
+    if (child::CurrentRepaintCannotFail()) {
+      child::ReportFatalError(Nothing(), "Middleman call input failed: %s\n",
+                              redirection.mName);
+    }
     return false;
   }
 
@@ -71,7 +77,7 @@ SendCallToMiddleman(size_t aCallId, CallArguments* aArguments, bool aDiverged)
 {
   MOZ_RELEASE_ASSERT(IsReplaying());
 
-  const Redirection& redirection = gRedirections[aCallId];
+  const Redirection& redirection = GetRedirection(aCallId);
   MOZ_RELEASE_ASSERT(redirection.mMiddlemanCall);
 
   MonitorAutoLock lock(*gMonitor);
@@ -91,6 +97,10 @@ SendCallToMiddleman(size_t aCallId, CallArguments* aArguments, bool aDiverged)
     if (cx.mFailed) {
       delete newCall;
       gMiddlemanCalls.popBack();
+      if (child::CurrentRepaintCannotFail()) {
+        child::ReportFatalError(Nothing(), "Middleman call preface failed: %s\n",
+                                redirection.mName);
+      }
       return false;
     }
   }
@@ -132,7 +142,7 @@ SendCallToMiddleman(size_t aCallId, CallArguments* aArguments, bool aDiverged)
       call->mArguments.CopyTo(&oldArguments);
       MiddlemanCallContext cx(call, &oldArguments, MiddlemanCallPhase::ReplayOutput);
       cx.mReplayOutputIsOld = true;
-      gRedirections[call->mCallId].mMiddlemanCall(cx);
+      GetRedirection(call->mCallId).mMiddlemanCall(cx);
     }
   }
 
@@ -156,7 +166,7 @@ ProcessMiddlemanCall(const char* aInputData, size_t aInputSize,
     MiddlemanCall* call = new MiddlemanCall();
     call->DecodeInput(inputStream);
 
-    const Redirection& redirection = gRedirections[call->mCallId];
+    const Redirection& redirection = GetRedirection(call->mCallId);
     MOZ_RELEASE_ASSERT(redirection.mMiddlemanCall);
 
     CallArguments arguments;
@@ -167,7 +177,7 @@ ProcessMiddlemanCall(const char* aInputData, size_t aInputSize,
       redirection.mMiddlemanCall(cx);
     }
 
-    RecordReplayInvokeCall(call->mCallId, &arguments);
+    RecordReplayInvokeCall(redirection.mBaseFunction, &arguments);
 
     {
       MiddlemanCallContext cx(call, &arguments, MiddlemanCallPhase::MiddlemanOutput);
@@ -213,10 +223,14 @@ ResetMiddlemanCalls()
       call->mArguments.CopyTo(&arguments);
 
       MiddlemanCallContext cx(call, &arguments, MiddlemanCallPhase::MiddlemanRelease);
-      gRedirections[call->mCallId].mMiddlemanCall(cx);
-
-      delete call;
+      GetRedirection(call->mCallId).mMiddlemanCall(cx);
     }
+  }
+
+  // Delete the calls in a second pass. The MiddlemanRelease phase depends on
+  // previous middleman calls still existing.
+  for (MiddlemanCall* call : gMiddlemanCalls) {
+    delete call;
   }
 
   gMiddlemanCalls.clear();
@@ -224,6 +238,7 @@ ResetMiddlemanCalls()
     free(buffer);
   }
   gAllocatedBuffers.clear();
+  gMiddlemanCallMap->clear();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -258,7 +273,7 @@ GetMiddlemanCallValue(size_t aId)
 }
 
 bool
-Middleman_SystemInput(MiddlemanCallContext& aCx, const void** aThingPtr)
+MM_SystemInput(MiddlemanCallContext& aCx, const void** aThingPtr)
 {
   MOZ_RELEASE_ASSERT(aCx.AccessPreface());
 
@@ -314,7 +329,7 @@ MangleSystemValue(const void* aValue, bool aFromRecording)
 }
 
 void
-Middleman_SystemOutput(MiddlemanCallContext& aCx, const void** aOutput, bool aUpdating)
+MM_SystemOutput(MiddlemanCallContext& aCx, const void** aOutput, bool aUpdating)
 {
   if (!*aOutput) {
     if (aCx.mPhase == MiddlemanCallPhase::MiddlemanOutput) {

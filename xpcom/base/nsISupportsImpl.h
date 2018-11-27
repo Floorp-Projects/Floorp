@@ -611,7 +611,7 @@ public:
 #define NS_INLINE_DECL_REFCOUNTING(_class, ...)                               \
   NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(_class, delete(this), __VA_ARGS__)
 
-#define NS_INLINE_DECL_THREADSAFE_REFCOUNTING_META(_class, _decl, ...)        \
+#define NS_INLINE_DECL_THREADSAFE_REFCOUNTING_META(_class, _decl, _recording, ...) \
 public:                                                                       \
   _decl(MozExternalRefCountType) AddRef(void) __VA_ARGS__ {                   \
     MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(_class)                                \
@@ -632,7 +632,7 @@ public:                                                                       \
   }                                                                           \
   typedef mozilla::TrueType HasThreadSafeRefCnt;                              \
 protected:                                                                    \
-  ::mozilla::ThreadSafeAutoRefCnt mRefCnt;                                    \
+  ::mozilla::ThreadSafeAutoRefCntWithRecording<_recording> mRefCnt;           \
 public:
 
 /**
@@ -644,14 +644,36 @@ public:
  * @param _class The name of the class implementing the method
  */
 #define NS_INLINE_DECL_THREADSAFE_REFCOUNTING(_class, ...)                    \
-NS_INLINE_DECL_THREADSAFE_REFCOUNTING_META(_class, NS_METHOD_, __VA_ARGS__)
+NS_INLINE_DECL_THREADSAFE_REFCOUNTING_META(_class, NS_METHOD_,                \
+                                           mozilla::recordreplay::Behavior::DontPreserve, \
+                                           __VA_ARGS__)
 
 /**
  * Like NS_INLINE_DECL_THREADSAFE_REFCOUNTING with AddRef & Release declared
  * virtual.
  */
 #define NS_INLINE_DECL_THREADSAFE_VIRTUAL_REFCOUNTING(_class, ...)            \
-NS_INLINE_DECL_THREADSAFE_REFCOUNTING_META(_class, NS_IMETHOD_, __VA_ARGS__)
+NS_INLINE_DECL_THREADSAFE_REFCOUNTING_META(_class, NS_IMETHOD_,               \
+                                           mozilla::recordreplay::Behavior::DontPreserve, \
+                                           __VA_ARGS__)
+
+/**
+ * Like NS_INLINE_DECL_THREADSAFE_REFCOUNTING except that reference changes
+ * are recorded and replayed.
+ */
+#define NS_INLINE_DECL_THREADSAFE_REFCOUNTING_RECORDED(_class, ...)           \
+NS_INLINE_DECL_THREADSAFE_REFCOUNTING_META(_class, NS_METHOD_,                \
+                                           mozilla::recordreplay::Behavior::Preserve, \
+                                           __VA_ARGS__)
+
+/**
+ * Like NS_INLINE_DECL_THREADSAFE_VIRTUAL_REFCOUNTING except that reference
+ * changes are recorded and replayed.
+ */
+#define NS_INLINE_DECL_THREADSAFE_VIRTUAL_REFCOUNTING_RECORDED(_class, ...)   \
+NS_INLINE_DECL_THREADSAFE_REFCOUNTING_META(_class, NS_IMETHOD_,               \
+                                           mozilla::recordreplay::Behavior::Preserve, \
+                                           __VA_ARGS__)
 
 /**
  * Use this macro in interface classes that you want to be able to reference

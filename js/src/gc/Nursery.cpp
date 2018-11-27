@@ -635,6 +635,7 @@ js::Nursery::renderProfileJSON(JSONPrinter& json) const
     json.property("reason", JS::gcreason::ExplainReason(previousGC.reason));
     json.property("bytes_tenured", previousGC.tenuredBytes);
     json.property("cells_tenured", previousGC.tenuredCells);
+    json.property("strings_tenured", stats().getStat(gcstats::STAT_STRINGS_TENURED));
     json.property("bytes_used", previousGC.nurseryUsedBytes);
     json.property("cur_capacity", previousGC.nurseryCapacity);
     const size_t newCapacity = spaceToEnd(maxChunkCount());
@@ -660,6 +661,10 @@ js::Nursery::renderProfileJSON(JSONPrinter& json) const
     if (stats().getStat(gcstats::STAT_OBJECT_GROUPS_PRETENURED)) {
         json.property("groups_pretenured",
             stats().getStat(gcstats::STAT_OBJECT_GROUPS_PRETENURED));
+    }
+    if (stats().getStat(gcstats::STAT_NURSERY_STRING_REALMS_DISABLED)) {
+        json.property("nursery_string_realms_disabled",
+            stats().getStat(gcstats::STAT_NURSERY_STRING_REALMS_DISABLED));
     }
 
     json.beginObjectProperty("phase_times");
@@ -833,6 +838,8 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     stats().setStat(gcstats::STAT_OBJECT_GROUPS_PRETENURED, pretenureCount);
 
     mozilla::Maybe<AutoGCSession> session;
+    uint32_t numStringsTenured = 0;
+    uint32_t numNurseryStringRealmsDisabled = 0;
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         if (shouldPretenure && zone->allocNurseryStrings && zone->tenuredStrings >= 30 * 1000) {
             if (!session.isSome()) {
@@ -847,13 +854,17 @@ js::Nursery::collect(JS::gcreason::Reason reason)
                 if (jit::JitRealm* jitRealm = r->jitRealm()) {
                     jitRealm->discardStubs();
                     jitRealm->stringsCanBeInNursery = false;
+                    numNurseryStringRealmsDisabled++;
                 }
             }
             zone->allocNurseryStrings = false;
         }
+        numStringsTenured += zone->tenuredStrings;
         zone->tenuredStrings = 0;
     }
     session.reset(); // End the minor GC session, if running one.
+    stats().setStat(gcstats::STAT_NURSERY_STRING_REALMS_DISABLED, numNurseryStringRealmsDisabled);
+    stats().setStat(gcstats::STAT_STRINGS_TENURED, numStringsTenured);
     endProfile(ProfileKey::Pretenure);
 
     // We ignore gcMaxBytes when allocating for minor collection. However, if we

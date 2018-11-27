@@ -63,6 +63,7 @@ jittest:
         by-test-platform:
             android-hw.*: ['try']
             linux.*: []  # redundant with SM(...)
+            windows.*: []  # redundant with SM(p)
             default: built-projects
     chunks:
         by-test-platform:
