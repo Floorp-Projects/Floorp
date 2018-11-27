@@ -15,20 +15,16 @@
 
 // Factory Constructors
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserContentPolicy)
 
-NS_DEFINE_NAMED_CID(NS_WEBBROWSER_CID);
 NS_DEFINE_NAMED_CID(NS_WEBBROWSERCONTENTPOLICY_CID);
 
 static const mozilla::Module::CIDEntry kWebBrowserCIDs[] = {
-  { &kNS_WEBBROWSER_CID, false, nullptr, nsWebBrowserConstructor },
   { &kNS_WEBBROWSERCONTENTPOLICY_CID, false, nullptr, nsWebBrowserContentPolicyConstructor },
   { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kWebBrowserContracts[] = {
-  { NS_WEBBROWSER_CONTRACTID, &kNS_WEBBROWSER_CID },
   { NS_WEBBROWSERCONTENTPOLICY_CONTRACTID, &kNS_WEBBROWSERCONTENTPOLICY_CID },
   { nullptr }
 };

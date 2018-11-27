@@ -2267,9 +2267,11 @@ nsGlobalWindowOuter::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
   NS_ASSERTION(mOpener || !aOpener, "Opener must support weak references!");
 
   if (mDocShell) {
+    MOZ_DIAGNOSTIC_ASSERT(!aOriginalOpener || !aOpener ||
+                          aOpener->GetBrowsingContext() ==
+                            GetBrowsingContext()->GetOpener());
     // TODO(farre): Here we really wish to only consider the case
-    // where 'aOriginalOpener' is false, and we also really want to
-    // move opener entirely to BrowsingContext. See bug 1502330.
+    // where 'aOriginalOpener'. See bug 1509016.
     GetBrowsingContext()->SetOpener(aOpener ? aOpener->GetBrowsingContext() : nullptr);
   }
 

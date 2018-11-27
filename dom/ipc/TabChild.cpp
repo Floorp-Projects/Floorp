@@ -540,26 +540,10 @@ TabChild::DoUpdateZoomConstraints(const uint32_t& aPresShellId,
 }
 
 nsresult
-TabChild::Init()
+TabChild::Init(mozIDOMWindowProxy* aParent)
 {
   if (!mTabGroup) {
     mTabGroup = TabGroup::GetFromActor(this);
-  }
-
-  // Directly create our web browser object and store it, so we can start
-  // eliminating QIs.
-  mWebBrowser = new nsWebBrowser(nsIDocShellTreeItem::typeContentWrapper);
-  nsIWebBrowser* webBrowser = mWebBrowser;
-
-  webBrowser->SetContainerWindow(this);
-  webBrowser->SetOriginAttributes(OriginAttributesRef());
-  mWebNav = do_QueryInterface(webBrowser);
-  NS_ASSERTION(mWebNav, "nsWebBrowser doesn't implement nsIWebNavigation?");
-
-  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(WebNavigation());
-  if (!baseWindow) {
-    NS_ERROR("mWebNav doesn't QI to nsIBaseWindow");
-    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIWidget> widget = nsIWidget::CreatePuppetWidget(this);
@@ -568,14 +552,21 @@ TabChild::Init()
     NS_ERROR("couldn't create fake widget");
     return NS_ERROR_FAILURE;
   }
-  mPuppetWidget->InfallibleCreate(
-    nullptr, 0,              // no parents
-    LayoutDeviceIntRect(0, 0, 0, 0),
-    nullptr                  // HandleWidgetEvent
+  mPuppetWidget->InfallibleCreate(nullptr,
+                                  nullptr, // no parents
+                                  LayoutDeviceIntRect(0, 0, 0, 0),
+                                  nullptr // HandleWidgetEvent
   );
 
-  baseWindow->InitWindow(0, mPuppetWidget, 0, 0, 0, 0);
-  baseWindow->Create();
+  mWebBrowser = nsWebBrowser::Create(this,
+                                     mPuppetWidget,
+                                     OriginAttributesRef(),
+                                     aParent,
+                                     nsIDocShellTreeItem::typeContentWrapper);
+  nsIWebBrowser* webBrowser = mWebBrowser;
+
+  mWebNav = do_QueryInterface(webBrowser);
+  NS_ASSERTION(mWebNav, "nsWebBrowser doesn't implement nsIWebNavigation?");
 
   // Set the tab context attributes then pass to docShell
   NotifyTabContextUpdated(false);

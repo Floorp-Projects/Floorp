@@ -62,7 +62,8 @@ nsPrintObject::Init(nsIDocShell* aDocShell, nsIDocument* aDoc,
 
     // Create a new BrowsingContext to create our DocShell in.
     RefPtr<BrowsingContext> bc = BrowsingContext::Create(
-      nullptr,
+      /* aParent */ nullptr,
+      /* aOpener */ nullptr,
       EmptyString(),
       aDocShell->ItemType() == nsIDocShellTreeItem::typeContent
         ? BrowsingContext::Type::Content

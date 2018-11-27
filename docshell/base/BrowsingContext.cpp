@@ -56,7 +56,9 @@ Sync(BrowsingContext* aBrowsingContext)
   nsAutoString name;
   aBrowsingContext->GetName(name);
   RefPtr<BrowsingContext> parent = aBrowsingContext->GetParent();
+  BrowsingContext* opener = aBrowsingContext->GetOpener();
   cc->SendAttachBrowsingContext(BrowsingContextId(parent ? parent->Id() : 0),
+                                BrowsingContextId(opener ? opener->Id() : 0),
                                 BrowsingContextId(aBrowsingContext->Id()),
                                 name);
 }
@@ -97,6 +99,7 @@ BrowsingContext::Get(uint64_t aId)
 
 /* static */ already_AddRefed<BrowsingContext>
 BrowsingContext::Create(BrowsingContext* aParent,
+                        BrowsingContext* aOpener,
                         const nsAString& aName,
                         Type aType)
 {
@@ -112,9 +115,9 @@ BrowsingContext::Create(BrowsingContext* aParent,
 
   RefPtr<BrowsingContext> context;
   if (XRE_IsParentProcess()) {
-    context = new ChromeBrowsingContext(aParent, aName, id, /* aProcessId */ 0, aType);
+    context = new ChromeBrowsingContext(aParent, aOpener, aName, id, /* aProcessId */ 0, aType);
   } else {
-    context = new BrowsingContext(aParent, aName, id, aType);
+    context = new BrowsingContext(aParent, aOpener, aName, id, aType);
   }
 
   Register(context);
@@ -126,8 +129,11 @@ BrowsingContext::Create(BrowsingContext* aParent,
 }
 
 /* static */ already_AddRefed<BrowsingContext>
-BrowsingContext::CreateFromIPC(BrowsingContext* aParent, const nsAString& aName,
-                               uint64_t aId, ContentParent* aOriginProcess)
+BrowsingContext::CreateFromIPC(BrowsingContext* aParent,
+                               BrowsingContext* aOpener,
+                               const nsAString& aName,
+                               uint64_t aId,
+                               ContentParent* aOriginProcess)
 {
   MOZ_DIAGNOSTIC_ASSERT(aOriginProcess || XRE_IsContentProcess(),
                         "Parent Process IPC contexts need a Content Process.");
@@ -141,10 +147,9 @@ BrowsingContext::CreateFromIPC(BrowsingContext* aParent, const nsAString& aName,
   RefPtr<BrowsingContext> context;
   if (XRE_IsParentProcess()) {
     context = new ChromeBrowsingContext(
-      aParent, aName, aId, aOriginProcess->ChildID(), Type::Content);
-
+      aParent, aOpener, aName, aId, aOriginProcess->ChildID(), Type::Content);
   } else {
-    context = new BrowsingContext(aParent, aName, aId, Type::Content);
+    context = new BrowsingContext(aParent, aOpener, aName, aId, Type::Content);
   }
 
   Register(context);
@@ -155,12 +160,14 @@ BrowsingContext::CreateFromIPC(BrowsingContext* aParent, const nsAString& aName,
 }
 
 BrowsingContext::BrowsingContext(BrowsingContext* aParent,
+                                 BrowsingContext* aOpener,
                                  const nsAString& aName,
                                  uint64_t aBrowsingContextId,
                                  Type aType)
   : mType(aType)
   , mBrowsingContextId(aBrowsingContextId)
   , mParent(aParent)
+  , mOpener(aOpener)
   , mName(aName)
 {
 }

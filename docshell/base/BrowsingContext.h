@@ -64,12 +64,14 @@ public:
 
   // Create a brand-new BrowsingContext object.
   static already_AddRefed<BrowsingContext> Create(BrowsingContext* aParent,
+                                                  BrowsingContext* aOpener,
                                                   const nsAString& aName,
                                                   Type aType);
 
   // Create a BrowsingContext object from over IPC.
   static already_AddRefed<BrowsingContext> CreateFromIPC(
     BrowsingContext* aParent,
+    BrowsingContext* aOpener,
     const nsAString& aName,
     uint64_t aId,
     ContentParent* aOriginProcess);
@@ -134,6 +136,7 @@ public:
 protected:
   virtual ~BrowsingContext();
   BrowsingContext(BrowsingContext* aParent,
+                  BrowsingContext* aOpener,
                   const nsAString& aName,
                   uint64_t aBrowsingContextId,
                   Type aType);

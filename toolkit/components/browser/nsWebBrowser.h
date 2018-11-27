@@ -53,6 +53,7 @@ public:
 #define NS_WEBBROWSER_CID \
   { 0xcda5863a, 0xaa9c, 0x411e, { 0xbe, 0x49, 0xea, 0x0d, 0x52, 0x5a, 0xb4, 0xb5 } }
 
+class mozIDOMWindowProxy;
 
 class nsWebBrowser final : public nsIWebBrowser,
                            public nsIWebNavigation,
@@ -87,8 +88,6 @@ public:
     nsWebBrowser* mWebBrowser;
   };
 
-  explicit nsWebBrowser(int aItemType = typeContentWrapper);
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsWebBrowser, nsIWebBrowser)
 
@@ -106,6 +105,13 @@ public:
   void FocusActivate();
   void FocusDeactivate();
 
+  static already_AddRefed<nsWebBrowser> Create(
+    nsIWebBrowserChrome* aContainerWindow,
+    nsIWidget* aParentWidget,
+    const mozilla::OriginAttributes& aOriginAttributes,
+    mozIDOMWindowProxy* aOpener,
+    int aItemType);
+
 protected:
   virtual ~nsWebBrowser();
   NS_IMETHOD InternalDestroy();
@@ -116,11 +122,15 @@ protected:
   NS_IMETHOD BindListener(nsISupports* aListener, const nsIID& aIID);
   NS_IMETHOD EnableGlobalHistory(bool aEnable);
 
+  nsIWidget* EnsureWidget();
+
   // nsIWidgetListener methods for WidgetListenerDelegate.
   MOZ_CAN_RUN_SCRIPT void WindowActivated();
   MOZ_CAN_RUN_SCRIPT void WindowDeactivated();
   MOZ_CAN_RUN_SCRIPT bool PaintWindow(
     nsIWidget* aWidget, mozilla::LayoutDeviceIntRegion aRegion);
+
+  explicit nsWebBrowser(int aItemType);
 
 protected:
   RefPtr<nsDocShellTreeOwner> mDocShellTreeOwner;
@@ -133,7 +143,6 @@ protected:
 
   nsCOMPtr<nsIWidget> mInternalWidget;
   nsCOMPtr<nsIWindowWatcher> mWWatch;
-  nsAutoPtr<nsWebBrowserInitInfo> mInitInfo;
   const uint32_t mContentType;
   bool mActivating;
   bool mShouldEnableHistory;
