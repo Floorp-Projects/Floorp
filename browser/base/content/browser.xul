@@ -88,6 +88,20 @@ xmlns="http://www.w3.org/1999/xhtml"
 #endif
 >
   Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/browser-captivePortal.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/browser-compacttheme.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/browser-contentblocking.js", this);
+#ifdef MOZ_DATA_REPORTING
+  Services.scriptloader.loadSubScript("chrome://browser/content/browser-data-submission-info-bar.js", this);
+#endif
+#ifndef MOZILLA_OFFICIAL
+  Services.scriptloader.loadSubScript("chrome://browser/content/browser-development-helpers.js", this);
+#endif
+  Services.scriptloader.loadSubScript("chrome://browser/content/browser-media.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/browser-pageActions.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/browser-plugins.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/browser-sidebar.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/browser-tabsintitlebar.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/search/searchbar.js", this);
 
