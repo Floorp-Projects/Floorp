@@ -2,13 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.domains
+package mozilla.components.browser.domains.autocomplete
 
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import mozilla.components.browser.domains.CustomDomains
+import mozilla.components.browser.domains.Domain
+import mozilla.components.browser.domains.Domains
+import mozilla.components.browser.domains.into
 import java.util.Locale
 
 enum class DomainList(val listName: String) {
@@ -45,7 +49,8 @@ interface DomainAutocompleteProvider {
 /**
  * Provides common autocomplete functionality powered by domain lists.
  */
-abstract class BaseDomainAutocompleteProvider(private val list: DomainList) : DomainAutocompleteProvider {
+abstract class BaseDomainAutocompleteProvider(private val list: DomainList) :
+    DomainAutocompleteProvider {
     internal val scope = CoroutineScope(Dispatchers.IO)
     // We compute 'domains' on the worker thread; make sure it's immediately visible on the UI thread.
     @Volatile

@@ -4,6 +4,10 @@
 
 package mozilla.components.browser.domains
 
+import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider
+import mozilla.components.browser.domains.autocomplete.CustomDomainsProvider
+import mozilla.components.browser.domains.autocomplete.DomainList
+import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

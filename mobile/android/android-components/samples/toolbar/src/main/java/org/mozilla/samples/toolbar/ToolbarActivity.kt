@@ -18,8 +18,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
-import mozilla.components.browser.domains.CustomDomainsProvider
-import mozilla.components.browser.domains.ShippedDomainsProvider
+import mozilla.components.browser.domains.autocomplete.CustomDomainsProvider
+import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.BrowserMenuItem

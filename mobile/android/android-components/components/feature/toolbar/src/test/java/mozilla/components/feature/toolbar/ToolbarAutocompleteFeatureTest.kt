@@ -10,9 +10,9 @@ import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.Toolbar
 import org.junit.Test
 import org.junit.Assert.assertNotNull
-import mozilla.components.browser.domains.BaseDomainAutocompleteProvider
+import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider
 import mozilla.components.browser.domains.Domain
-import mozilla.components.browser.domains.DomainList
+import mozilla.components.browser.domains.autocomplete.DomainList
 import mozilla.components.browser.storage.memory.InMemoryHistoryStorage
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.concept.toolbar.AutocompleteResult

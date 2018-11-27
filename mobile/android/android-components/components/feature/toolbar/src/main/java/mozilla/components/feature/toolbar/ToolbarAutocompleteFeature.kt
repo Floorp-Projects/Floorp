@@ -4,8 +4,8 @@
 
 package mozilla.components.feature.toolbar
 
-import mozilla.components.browser.domains.DomainAutocompleteProvider
-import mozilla.components.browser.domains.DomainAutocompleteResult
+import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
+import mozilla.components.browser.domains.autocomplete.DomainAutocompleteResult
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.toolbar.AutocompleteResult
