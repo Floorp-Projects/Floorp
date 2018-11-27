@@ -11,7 +11,7 @@ use api::{DeviceIntSideOffsets, WorldPixel, BoxShadowClipMode, NormalBorder, Wor
 use api::{PicturePixel, RasterPixel, ColorDepth, LineStyle, LineOrientation, LayoutSizeAu, AuHelpers, LayoutVector2DAu};
 use app_units::Au;
 use border::{get_max_scale_for_border, build_border_instances, create_border_segments};
-use border::{create_nine_patch_segments, BorderSegmentCacheKey, NormalBorderAu};
+use border::{BorderSegmentCacheKey, NormalBorderAu};
 use clip::{ClipStore};
 use clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex};
 use clip::{ClipDataStore, ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItem, ClipNodeCollector};
@@ -375,14 +375,7 @@ pub enum PrimitiveKeyKind {
     },
     ImageBorder {
         request: ImageRequest,
-        widths: LayoutSideOffsetsAu,
-        width: i32,
-        height: i32,
-        slice: SideOffsets2D<i32>,
-        fill: bool,
-        repeat_horizontal: RepeatMode,
-        repeat_vertical: RepeatMode,
-        outset: SideOffsets2D<Au>,
+        nine_patch: NinePatchDescriptor,
     },
     Rectangle {
         color: ColorU,
@@ -403,6 +396,34 @@ pub enum PrimitiveKeyKind {
         image_rendering: ImageRendering,
         alpha_type: AlphaType,
     },
+    LinearGradient {
+        extend_mode: ExtendMode,
+        start_point: PointKey,
+        end_point: PointKey,
+        stretch_size: SizeKey,
+        tile_spacing: SizeKey,
+        stops: Vec<GradientStopKey>,
+        reverse_stops: bool,
+        nine_patch: Option<Box<NinePatchDescriptor>>,
+    },
+}
+
+/// A hashable gradient stop that can be used in primitive keys.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Clone, PartialEq)]
+pub struct GradientStopKey {
+    pub offset: f32,
+    pub color: ColorU,
+}
+
+impl Eq for GradientStopKey {}
+
+impl hash::Hash for GradientStopKey {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.offset.to_bits().hash(state);
+        self.color.hash(state);
+    }
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -446,6 +467,61 @@ impl From<LayoutRect> for RectangleKey {
     }
 }
 
+/// A hashable SideOffset2D that can be used in primitive keys.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Clone, PartialEq)]
+pub struct SideOffsetsKey {
+    pub top: f32,
+    pub right: f32,
+    pub bottom: f32,
+    pub left: f32,
+}
+
+impl Eq for SideOffsetsKey {}
+
+impl hash::Hash for SideOffsetsKey {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.top.to_bits().hash(state);
+        self.right.to_bits().hash(state);
+        self.bottom.to_bits().hash(state);
+        self.left.to_bits().hash(state);
+    }
+}
+
+impl From<SideOffsetsKey> for LayoutSideOffsets {
+    fn from(key: SideOffsetsKey) -> LayoutSideOffsets {
+        LayoutSideOffsets::new(
+            key.top,
+            key.right,
+            key.bottom,
+            key.left,
+        )
+    }
+}
+
+impl From<LayoutSideOffsets> for SideOffsetsKey {
+    fn from(offsets: LayoutSideOffsets) -> SideOffsetsKey {
+        SideOffsetsKey {
+            top: offsets.top,
+            right: offsets.right,
+            bottom: offsets.bottom,
+            left: offsets.left,
+        }
+    }
+}
+
+impl From<SideOffsets2D<f32>> for SideOffsetsKey {
+    fn from(offsets: SideOffsets2D<f32>) -> SideOffsetsKey {
+        SideOffsetsKey {
+            top: offsets.top,
+            right: offsets.right,
+            bottom: offsets.bottom,
+            left: offsets.left,
+        }
+    }
+}
+
 /// A hashable size for using as a key during primitive interning.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -475,6 +551,39 @@ impl From<LayoutSize> for SizeKey {
         SizeKey {
             w: size.width,
             h: size.height,
+        }
+    }
+}
+
+/// A hashable point for using as a key during primitive interning.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PointKey {
+    x: f32,
+    y: f32,
+}
+
+impl Eq for PointKey {}
+
+impl hash::Hash for PointKey {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.x.to_bits().hash(state);
+        self.y.to_bits().hash(state);
+    }
+}
+
+impl From<PointKey> for LayoutPoint {
+    fn from(key: PointKey) -> LayoutPoint {
+        LayoutPoint::new(key.x, key.y)
+    }
+}
+
+impl From<LayoutPoint> for PointKey {
+    fn from(p: LayoutPoint) -> PointKey {
+        PointKey {
+            x: p.x,
+            y: p.y,
         }
     }
 }
@@ -563,6 +672,11 @@ impl PrimitiveKey {
                     image_instance_index,
                 }
             }
+            PrimitiveKeyKind::LinearGradient { .. } => {
+                PrimitiveInstanceKind::LinearGradient {
+                    visible_tiles_range: GradientTileRange::empty(),
+                }
+            }
             PrimitiveKeyKind::Unused => {
                 // Should never be hit as this method should not be
                 // called for old style primitives.
@@ -622,6 +736,18 @@ pub enum PrimitiveTemplateKind {
         sub_rect: Option<DeviceIntRect>,
         alpha_type: AlphaType,
     },
+    LinearGradient {
+        extend_mode: ExtendMode,
+        start_point: LayoutPoint,
+        end_point: LayoutPoint,
+        stretch_size: LayoutSize,
+        tile_spacing: LayoutSize,
+        stops_opacity: PrimitiveOpacity,
+        stops: Vec<GradientStop>,
+        brush_segments: Vec<BrushSegment>,
+        reverse_stops: bool,
+        stops_handle: GpuCacheHandle,
+    },
     Clear,
     Unused,
 }
@@ -674,35 +800,11 @@ impl PrimitiveKeyKind {
                 }
             }
             PrimitiveKeyKind::ImageBorder {
-                widths,
                 request,
-                width,
-                height,
-                slice,
-                fill,
-                repeat_horizontal,
-                repeat_vertical,
-                outset,
+                ref nine_patch,
                 ..
             } => {
-                let widths = LayoutSideOffsets::from_au(widths);
-
-                let brush_segments = create_nine_patch_segments(
-                    rect,
-                    &widths,
-                    width,
-                    height,
-                    slice,
-                    fill,
-                    repeat_horizontal,
-                    repeat_vertical,
-                    SideOffsets2D::new(
-                        outset.top.to_f32_px(),
-                        outset.right.to_f32_px(),
-                        outset.bottom.to_f32_px(),
-                        outset.left.to_f32_px(),
-                    ),
-                );
+                let brush_segments = nine_patch.create_segments(rect);
 
                 PrimitiveTemplateKind::ImageBorder {
                     request,
@@ -739,6 +841,55 @@ impl PrimitiveKeyKind {
                 PrimitiveTemplateKind::LineDecoration {
                     cache_key,
                     color: color.into(),
+                }
+            }
+            PrimitiveKeyKind::LinearGradient {
+                extend_mode,
+                tile_spacing,
+                start_point,
+                end_point,
+                stretch_size,
+                stops,
+                reverse_stops,
+                nine_patch,
+                ..
+            } => {
+                let mut min_alpha: f32 = 1.0;
+
+                // Convert the stops to more convenient representation
+                // for the current gradient builder.
+                let stops = stops.iter().map(|stop| {
+                    let color: ColorF = stop.color.into();
+                    min_alpha = min_alpha.min(color.a);
+
+                    GradientStop {
+                        offset: stop.offset,
+                        color,
+                    }
+                }).collect();
+
+                let mut brush_segments = Vec::new();
+
+                if let Some(ref nine_patch) = nine_patch {
+                    brush_segments = nine_patch.create_segments(rect);
+                }
+
+                // Save opacity of the stops for use in
+                // selecting which pass this gradient
+                // should be drawn in.
+                let stops_opacity = PrimitiveOpacity::from_alpha(min_alpha);
+
+                PrimitiveTemplateKind::LinearGradient {
+                    extend_mode,
+                    start_point: start_point.into(),
+                    end_point: end_point.into(),
+                    stretch_size: stretch_size.into(),
+                    tile_spacing: tile_spacing.into(),
+                    stops_opacity,
+                    stops,
+                    brush_segments,
+                    reverse_stops,
+                    stops_handle: GpuCacheHandle::new(),
                 }
             }
         }
@@ -889,6 +1040,20 @@ impl PrimitiveTemplateKind {
                     0.0,
                 ]);
             }
+            PrimitiveTemplateKind::LinearGradient { stretch_size, start_point, end_point, extend_mode, .. } => {
+                request.push([
+                    start_point.x,
+                    start_point.y,
+                    end_point.x,
+                    end_point.y,
+                ]);
+                request.push([
+                    pack_as_float(extend_mode as u32),
+                    stretch_size.width,
+                    stretch_size.height,
+                    0.0,
+                ]);
+            }
             PrimitiveTemplateKind::Unused => {}
         }
     }
@@ -929,6 +1094,15 @@ impl PrimitiveTemplateKind {
                     [0.0; 4],
                 );
             }
+            PrimitiveTemplateKind::LinearGradient { ref brush_segments, .. } => {
+                for segment in brush_segments {
+                    // has to match VECS_PER_SEGMENT
+                    request.write_segment(
+                        segment.local_rect,
+                        segment.extra_data,
+                    );
+                }
+            }
             PrimitiveTemplateKind::Image { .. } |
             PrimitiveTemplateKind::Rectangle { .. } |
             PrimitiveTemplateKind::TextRun { .. } |
@@ -968,6 +1142,36 @@ impl PrimitiveTemplate {
             PrimitiveTemplateKind::NormalBorder { .. } => {
                 // Shouldn't matter, since the segment opacity is used instead
                 PrimitiveOpacity::translucent()
+            }
+            PrimitiveTemplateKind::LinearGradient {
+                stretch_size,
+                tile_spacing,
+                stops_opacity,
+                ref mut stops_handle,
+                reverse_stops,
+                ref stops,
+                ..
+            } => {
+                if let Some(mut request) = frame_state.gpu_cache.request(stops_handle) {
+                    GradientGpuBlockBuilder::build(
+                        reverse_stops,
+                        &mut request,
+                        stops.iter().cloned(),
+                    );
+                }
+
+                // If the coverage of the gradient extends to or beyond
+                // the primitive rect, then the opacity can be determined
+                // by the colors of the stops. If we have tiling / spacing
+                // then we just assume the gradient is translucent for now.
+                // (In the future we could consider segmenting in some cases).
+                let stride = stretch_size + tile_spacing;
+                if stride.width >= self.prim_rect.size.width &&
+                   stride.height >= self.prim_rect.size.height {
+                    stops_opacity
+                } else {
+                    PrimitiveOpacity::translucent()
+                }
             }
             PrimitiveTemplateKind::ImageBorder { request, .. } => {
                 let image_properties = frame_state
@@ -1246,19 +1450,7 @@ pub enum BrushKind {
         ratio_xy: f32,
         stretch_size: LayoutSize,
         tile_spacing: LayoutSize,
-        visible_tiles: Vec<VisibleGradientTile>,
-    },
-    LinearGradient {
-        stops_handle: GpuCacheHandle,
-        stops_range: ItemRange<GradientStop>,
-        extend_mode: ExtendMode,
-        reverse_stops: bool,
-        start_point: LayoutPoint,
-        end_point: LayoutPoint,
-        stretch_size: LayoutSize,
-        tile_spacing: LayoutSize,
-        visible_tiles: Vec<VisibleGradientTile>,
-        stops_opacity: PrimitiveOpacity,
+        visible_tiles_range: GradientTileRange,
     },
 }
 
@@ -1408,20 +1600,6 @@ impl BrushPrimitive {
         if let Some(mut request) = gpu_cache.request(&mut self.gpu_location) {
             // has to match VECS_PER_SPECIFIC_BRUSH
             match self.kind {
-                BrushKind::LinearGradient { stretch_size, start_point, end_point, extend_mode, .. } => {
-                    request.push([
-                        start_point.x,
-                        start_point.y,
-                        end_point.x,
-                        end_point.y,
-                    ]);
-                    request.push([
-                        pack_as_float(extend_mode as u32),
-                        stretch_size.width,
-                        stretch_size.height,
-                        0.0,
-                    ]);
-                }
                 BrushKind::RadialGradient { stretch_size, center, start_radius, end_radius, ratio_xy, extend_mode, .. } => {
                     request.push([
                         center.x,
@@ -1517,26 +1695,13 @@ pub struct GradientDataEntry {
     pub end_color: PremultipliedColorF,
 }
 
-struct GradientGpuBlockBuilder<'a> {
-    stops_range: ItemRange<GradientStop>,
-    display_list: &'a BuiltDisplayList,
-}
+// TODO(gw): Tidy this up to be a free function / module?
+struct GradientGpuBlockBuilder {}
 
-impl<'a> GradientGpuBlockBuilder<'a> {
-    fn new(
-        stops_range: ItemRange<GradientStop>,
-        display_list: &'a BuiltDisplayList,
-    ) -> Self {
-        GradientGpuBlockBuilder {
-            stops_range,
-            display_list,
-        }
-    }
-
+impl GradientGpuBlockBuilder {
     /// Generate a color ramp filling the indices in [start_idx, end_idx) and interpolating
     /// from start_color to end_color.
     fn fill_colors(
-        &self,
         start_idx: usize,
         end_idx: usize,
         start_color: &PremultipliedColorF,
@@ -1574,14 +1739,15 @@ impl<'a> GradientGpuBlockBuilder<'a> {
     }
 
     // Build the gradient data from the supplied stops, reversing them if necessary.
-    fn build(&self, reverse_stops: bool, request: &mut GpuDataRequest) {
-        let src_stops = self.display_list.get(self.stops_range);
-
+    fn build<I>(
+        reverse_stops: bool,
+        request: &mut GpuDataRequest,
+        src_stops: I,
+    ) where I: IntoIterator<Item = GradientStop> {
         // Preconditions (should be ensured by DisplayListBuilder):
         // * we have at least two stops
         // * first stop has offset 0.0
         // * last stop has offset 1.0
-
         let mut src_stops = src_stops.into_iter();
         let mut cur_color = match src_stops.next() {
             Some(stop) => {
@@ -1607,7 +1773,7 @@ impl<'a> GradientGpuBlockBuilder<'a> {
 
         if reverse_stops {
             // Fill in the first entry (for reversed stops) with the first color stop
-            self.fill_colors(
+            GradientGpuBlockBuilder::fill_colors(
                 GRADIENT_DATA_LAST_STOP,
                 GRADIENT_DATA_LAST_STOP + 1,
                 &cur_color,
@@ -1624,7 +1790,13 @@ impl<'a> GradientGpuBlockBuilder<'a> {
                 let next_idx = Self::get_index(1.0 - next.offset);
 
                 if next_idx < cur_idx {
-                    self.fill_colors(next_idx, cur_idx, &next_color, &cur_color, &mut entries);
+                    GradientGpuBlockBuilder::fill_colors(
+                        next_idx,
+                        cur_idx,
+                        &next_color,
+                        &cur_color,
+                        &mut entries,
+                    );
                     cur_idx = next_idx;
                 }
 
@@ -1632,11 +1804,17 @@ impl<'a> GradientGpuBlockBuilder<'a> {
             }
             if cur_idx != GRADIENT_DATA_TABLE_BEGIN {
                 error!("Gradient stops abruptly at {}, auto-completing to white", cur_idx);
-                self.fill_colors(GRADIENT_DATA_TABLE_BEGIN, cur_idx, &PremultipliedColorF::WHITE, &cur_color, &mut entries);
+                GradientGpuBlockBuilder::fill_colors(
+                    GRADIENT_DATA_TABLE_BEGIN,
+                    cur_idx,
+                    &PremultipliedColorF::WHITE,
+                    &cur_color,
+                    &mut entries,
+                );
             }
 
             // Fill in the last entry (for reversed stops) with the last color stop
-            self.fill_colors(
+            GradientGpuBlockBuilder::fill_colors(
                 GRADIENT_DATA_FIRST_STOP,
                 GRADIENT_DATA_FIRST_STOP + 1,
                 &cur_color,
@@ -1645,7 +1823,7 @@ impl<'a> GradientGpuBlockBuilder<'a> {
             );
         } else {
             // Fill in the first entry with the first color stop
-            self.fill_colors(
+            GradientGpuBlockBuilder::fill_colors(
                 GRADIENT_DATA_FIRST_STOP,
                 GRADIENT_DATA_FIRST_STOP + 1,
                 &cur_color,
@@ -1662,7 +1840,13 @@ impl<'a> GradientGpuBlockBuilder<'a> {
                 let next_idx = Self::get_index(next.offset);
 
                 if next_idx > cur_idx {
-                    self.fill_colors(cur_idx, next_idx, &cur_color, &next_color, &mut entries);
+                    GradientGpuBlockBuilder::fill_colors(
+                        cur_idx,
+                        next_idx,
+                        &cur_color,
+                        &next_color,
+                        &mut entries,
+                    );
                     cur_idx = next_idx;
                 }
 
@@ -1670,11 +1854,17 @@ impl<'a> GradientGpuBlockBuilder<'a> {
             }
             if cur_idx != GRADIENT_DATA_TABLE_END {
                 error!("Gradient stops abruptly at {}, auto-completing to white", cur_idx);
-                self.fill_colors(cur_idx, GRADIENT_DATA_TABLE_END, &PremultipliedColorF::WHITE, &cur_color, &mut entries);
+                GradientGpuBlockBuilder::fill_colors(
+                    cur_idx,
+                    GRADIENT_DATA_TABLE_END,
+                    &PremultipliedColorF::WHITE,
+                    &cur_color,
+                    &mut entries,
+                );
             }
 
             // Fill in the last entry with the last color stop
-            self.fill_colors(
+            GradientGpuBlockBuilder::fill_colors(
                 GRADIENT_DATA_LAST_STOP,
                 GRADIENT_DATA_LAST_STOP + 1,
                 &cur_color,
@@ -1984,6 +2174,22 @@ impl ClipData {
     }
 }
 
+/// A hashable descriptor for nine-patches, used by image and
+/// gradient borders.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct NinePatchDescriptor {
+    pub width: i32,
+    pub height: i32,
+    pub slice: SideOffsets2D<i32>,
+    pub fill: bool,
+    pub repeat_horizontal: RepeatMode,
+    pub repeat_vertical: RepeatMode,
+    pub outset: SideOffsetsKey,
+    pub widths: SideOffsetsKey,
+}
+
 pub enum PrimitiveContainer {
     TextRun {
         font: FontInstance,
@@ -2005,14 +2211,7 @@ pub enum PrimitiveContainer {
     },
     ImageBorder {
         request: ImageRequest,
-        widths: LayoutSideOffsets,
-        width: i32,
-        height: i32,
-        slice: SideOffsets2D<i32>,
-        fill: bool,
-        repeat_horizontal: RepeatMode,
-        repeat_vertical: RepeatMode,
-        outset: SideOffsets2D<f32>,
+        nine_patch: NinePatchDescriptor,
     },
     Rectangle {
         color: ColorF,
@@ -2033,6 +2232,16 @@ pub enum PrimitiveContainer {
         image_rendering: ImageRendering,
         alpha_type: AlphaType,
     },
+    LinearGradient {
+        extend_mode: ExtendMode,
+        start_point: LayoutPoint,
+        end_point: LayoutPoint,
+        stretch_size: LayoutSize,
+        tile_spacing: LayoutSize,
+        stops: Vec<GradientStopKey>,
+        reverse_stops: bool,
+        nine_patch: Option<Box<NinePatchDescriptor>>,
+    },
 }
 
 impl PrimitiveContainer {
@@ -2050,8 +2259,7 @@ impl PrimitiveContainer {
             }
             PrimitiveContainer::Brush(ref brush) => {
                 match brush.kind {
-                    BrushKind::RadialGradient { .. } |
-                    BrushKind::LinearGradient { .. } => {
+                    BrushKind::RadialGradient { .. } => {
                         true
                     }
                 }
@@ -2060,6 +2268,7 @@ impl PrimitiveContainer {
             PrimitiveContainer::ImageBorder { .. } |
             PrimitiveContainer::YuvImage { .. } |
             PrimitiveContainer::Image { .. } |
+            PrimitiveContainer::LinearGradient { .. } |
             PrimitiveContainer::Clear => {
                 true
             }
@@ -2083,6 +2292,30 @@ impl PrimitiveContainer {
                     offset: offset.to_au(),
                     glyphs,
                     shadow,
+                };
+
+                (key, None)
+            }
+            PrimitiveContainer::LinearGradient {
+                extend_mode,
+                start_point,
+                end_point,
+                stretch_size,
+                tile_spacing,
+                stops,
+                reverse_stops,
+                nine_patch,
+                ..
+            } => {
+                let key = PrimitiveKeyKind::LinearGradient {
+                    extend_mode,
+                    start_point: start_point.into(),
+                    end_point: end_point.into(),
+                    stretch_size: stretch_size.into(),
+                    tile_spacing: tile_spacing.into(),
+                    stops,
+                    reverse_stops,
+                    nine_patch,
                 };
 
                 (key, None)
@@ -2121,33 +2354,10 @@ impl PrimitiveContainer {
 
                 (key, None)
             }
-            PrimitiveContainer::ImageBorder {
-                request,
-                widths,
-                width,
-                height,
-                slice,
-                fill,
-                repeat_vertical,
-                repeat_horizontal,
-                outset,
-                ..
-            } => {
+            PrimitiveContainer::ImageBorder { request, nine_patch, .. } => {
                 let key = PrimitiveKeyKind::ImageBorder {
                     request,
-                    widths: widths.to_au(),
-                    width,
-                    height,
-                    slice,
-                    fill,
-                    repeat_horizontal,
-                    repeat_vertical,
-                    outset: SideOffsets2D::new(
-                        Au::from_f32_px(outset.top),
-                        Au::from_f32_px(outset.right),
-                        Au::from_f32_px(outset.bottom),
-                        Au::from_f32_px(outset.left),
-                    ),
+                    nine_patch,
                 };
 
                 (key, None)
@@ -2283,6 +2493,7 @@ impl PrimitiveContainer {
             PrimitiveContainer::Brush(..) |
             PrimitiveContainer::ImageBorder { .. } |
             PrimitiveContainer::YuvImage { .. } |
+            PrimitiveContainer::LinearGradient { .. } |
             PrimitiveContainer::Clear => {
                 panic!("bug: this prim is not supported in shadow contexts");
             }
@@ -2366,6 +2577,9 @@ pub enum PrimitiveInstanceKind {
     },
     Image {
         image_instance_index: ImageInstanceIndex,
+    },
+    LinearGradient {
+        visible_tiles_range: GradientTileRange,
     },
     /// Clear out a rect, used for special effects.
     Clear,
@@ -2468,6 +2682,8 @@ pub type SegmentInstanceStorage = storage::Storage<SegmentedInstance>;
 pub type SegmentInstanceIndex = storage::Index<SegmentedInstance>;
 pub type ImageInstanceStorage = storage::Storage<ImageInstance>;
 pub type ImageInstanceIndex = storage::Index<ImageInstance>;
+pub type GradientTileStorage = storage::Storage<VisibleGradientTile>;
+pub type GradientTileRange = storage::Range<VisibleGradientTile>;
 
 /// Contains various vecs of data that is used only during frame building,
 /// where we want to recycle the memory each new display list, to avoid constantly
@@ -2493,6 +2709,10 @@ pub struct PrimitiveScratchBuffer {
     /// that have opted into segment building. In future, this should be
     /// removed in favor of segment building during primitive interning.
     pub segment_instances: SegmentInstanceStorage,
+
+    /// A list of visible tiles that tiled gradients use to store
+    /// per-tile information.
+    pub gradient_tiles: GradientTileStorage,
 }
 
 impl PrimitiveScratchBuffer {
@@ -2503,6 +2723,7 @@ impl PrimitiveScratchBuffer {
             border_cache_handles: BorderHandleStorage::new(0),
             segments: SegmentStorage::new(0),
             segment_instances: SegmentInstanceStorage::new(0),
+            gradient_tiles: GradientTileStorage::new(0),
         }
     }
 
@@ -2512,6 +2733,7 @@ impl PrimitiveScratchBuffer {
         self.border_cache_handles.recycle();
         self.segments.recycle();
         self.segment_instances.recycle();
+        self.gradient_tiles.recycle();
     }
 
     pub fn begin_frame(&mut self) {
@@ -2522,6 +2744,12 @@ impl PrimitiveScratchBuffer {
         self.clip_mask_instances.push(ClipMaskKind::None);
 
         self.border_cache_handles.clear();
+
+        // TODO(gw): As in the previous code, the gradient tiles store GPU cache
+        //           handles that are cleared (and thus invalidated + re-uploaded)
+        //           every frame. This maintains the existing behavior, but we
+        //           should fix this in the future to retain handles.
+        self.gradient_tiles.clear();
     }
 }
 
@@ -2702,6 +2930,7 @@ impl PrimitiveStore {
             PrimitiveInstanceKind::ImageBorder { .. } |
             PrimitiveInstanceKind::YuvImage { .. } |
             PrimitiveInstanceKind::LegacyPrimitive { .. } |
+            PrimitiveInstanceKind::LinearGradient { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } => {
                 // These prims don't support opacity collapse
             }
@@ -2836,6 +3065,7 @@ impl PrimitiveStore {
                 PrimitiveInstanceKind::ImageBorder { .. } |
                 PrimitiveInstanceKind::YuvImage { .. } |
                 PrimitiveInstanceKind::Image { .. } |
+                PrimitiveInstanceKind::LinearGradient { .. } |
                 PrimitiveInstanceKind::Clear => {
                     None
                 }
@@ -2890,6 +3120,7 @@ impl PrimitiveStore {
             PrimitiveInstanceKind::Rectangle { .. } |
             PrimitiveInstanceKind::YuvImage { .. } |
             PrimitiveInstanceKind::Image { .. } |
+            PrimitiveInstanceKind::LinearGradient { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } => {
                 let prim_data = &resources
                     .prim_data_store[prim_instance.prim_data_handle];
@@ -3091,6 +3322,7 @@ impl PrimitiveStore {
             PrimitiveInstanceKind::ImageBorder { .. } |
             PrimitiveInstanceKind::YuvImage { .. } |
             PrimitiveInstanceKind::Image { .. } |
+            PrimitiveInstanceKind::LinearGradient { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } => {
                 self.prepare_interned_prim_for_render(
                     prim_instance,
@@ -3112,6 +3344,7 @@ impl PrimitiveStore {
                     pic_context,
                     frame_state,
                     display_list,
+                    scratch,
                 );
             }
         }
@@ -3510,6 +3743,46 @@ impl PrimitiveStore {
 
                 image_instance.segment_instance_index
             }
+            (
+                PrimitiveInstanceKind::LinearGradient { ref mut visible_tiles_range, .. },
+                PrimitiveTemplateKind::LinearGradient { extend_mode, stretch_size, start_point, end_point, tile_spacing, .. }
+            ) => {
+                if *tile_spacing != LayoutSize::zero() {
+                    *visible_tiles_range = decompose_repeated_primitive(
+                        &prim_instance.combined_local_clip_rect,
+                        &prim_data.prim_rect,
+                        &stretch_size,
+                        &tile_spacing,
+                        prim_context,
+                        frame_state,
+                        &pic_context.dirty_world_rect,
+                        &mut scratch.gradient_tiles,
+                        &mut |rect, mut request| {
+                            request.push([
+                                start_point.x,
+                                start_point.y,
+                                end_point.x,
+                                end_point.y,
+                            ]);
+                            request.push([
+                                pack_as_float(*extend_mode as u32),
+                                stretch_size.width,
+                                stretch_size.height,
+                                0.0,
+                            ]);
+                            request.write_segment(*rect, [0.0; 4]);
+                        }
+                    );
+
+                    if visible_tiles_range.is_empty() {
+                        prim_instance.bounding_rect = None;
+                    }
+                }
+
+                // TODO(gw): Consider whether it's worth doing segment building
+                //           for gradient primitives.
+                SegmentInstanceIndex::UNUSED
+            }
             _ => {
                 unreachable!();
             }
@@ -3535,43 +3808,23 @@ impl PrimitiveStore {
     }
 }
 
-fn build_gradient_stops_request(
-    stops_handle: &mut GpuCacheHandle,
-    stops_range: ItemRange<GradientStop>,
-    reverse_stops: bool,
-    frame_state: &mut FrameBuildingState,
-    display_list: &BuiltDisplayList,
-) {
-    if let Some(mut request) = frame_state.gpu_cache.request(stops_handle) {
-        let gradient_builder = GradientGpuBlockBuilder::new(
-            stops_range,
-            display_list,
-        );
-        gradient_builder.build(
-            reverse_stops,
-            &mut request,
-        );
-    }
-}
-
 fn decompose_repeated_primitive(
-    visible_tiles: &mut Vec<VisibleGradientTile>,
-    instance: &mut PrimitiveInstance,
+    combined_local_clip_rect: &LayoutRect,
     prim_local_rect: &LayoutRect,
     stretch_size: &LayoutSize,
     tile_spacing: &LayoutSize,
     prim_context: &PrimitiveContext,
     frame_state: &mut FrameBuildingState,
     world_rect: &WorldRect,
+    gradient_tiles: &mut GradientTileStorage,
     callback: &mut FnMut(&LayoutRect, GpuDataRequest),
-) {
-    visible_tiles.clear();
+) -> GradientTileRange {
+    let mut visible_tiles = Vec::new();
 
     // Tighten the clip rect because decomposing the repeated image can
     // produce primitives that are partially covering the original image
     // rect and we want to clip these extra parts out.
-    let tight_clip_rect = instance
-        .combined_local_clip_rect
+    let tight_clip_rect = combined_local_clip_rect
         .intersection(prim_local_rect).unwrap();
 
     let visible_rect = compute_conservative_visible_rect(
@@ -3600,13 +3853,15 @@ fn decompose_repeated_primitive(
         });
     }
 
+    // At this point if we don't have tiles to show it means we could probably
+    // have done a better a job at culling during an earlier stage.
+    // Clearing the screen rect has the effect of "culling out" the primitive
+    // from the point of view of the batch builder, and ensures we don't hit
+    // assertions later on because we didn't request any image.
     if visible_tiles.is_empty() {
-        // At this point if we don't have tiles to show it means we could probably
-        // have done a better a job at culling during an earlier stage.
-        // Clearing the screen rect has the effect of "culling out" the primitive
-        // from the point of view of the batch builder, and ensures we don't hit
-        // assertions later on because we didn't request any image.
-        instance.bounding_rect = None;
+        GradientTileRange::empty()
+    } else {
+        gradient_tiles.extend(visible_tiles)
     }
 }
 
@@ -3819,6 +4074,7 @@ impl PrimitiveInstance {
             PrimitiveInstanceKind::NormalBorder { .. } |
             PrimitiveInstanceKind::ImageBorder { .. } |
             PrimitiveInstanceKind::Clear |
+            PrimitiveInstanceKind::LinearGradient { .. } |
             PrimitiveInstanceKind::LineDecoration { .. } => {
                 // These primitives don't support / need segments.
                 return;
@@ -3991,6 +4247,24 @@ impl PrimitiveInstance {
                     }
                 }
             }
+            PrimitiveInstanceKind::LinearGradient { .. } => {
+                let prim_data = &resources.prim_data_store[self.prim_data_handle];
+
+                // TODO: This is quite messy - once we remove legacy primitives we
+                //       can change this to be a tuple match on (instance, template)
+                match prim_data.kind {
+                    PrimitiveTemplateKind::LinearGradient { ref brush_segments, .. } => {
+                        if brush_segments.is_empty() {
+                            return false;
+                        }
+
+                        brush_segments.as_slice()
+                    }
+                    _ => {
+                        unreachable!();
+                    }
+                }
+            }
             PrimitiveInstanceKind::LegacyPrimitive { prim_index } => {
                 let prim = &prim_store.primitives[prim_index.0];
                 match prim.details {
@@ -4083,6 +4357,7 @@ impl PrimitiveInstance {
         pic_context: &PictureContext,
         frame_state: &mut FrameBuildingState,
         display_list: &BuiltDisplayList,
+        scratch: &mut PrimitiveScratchBuffer,
     ) {
         let mut is_tiled = false;
 
@@ -4099,29 +4374,31 @@ impl PrimitiveInstance {
                         stretch_size,
                         tile_spacing,
                         ref mut stops_handle,
-                        ref mut visible_tiles,
+                        ref mut visible_tiles_range,
                         ..
                     } => {
-                        build_gradient_stops_request(
-                            stops_handle,
-                            stops_range,
-                            false,
-                            frame_state,
-                            display_list,
-                        );
+                        if let Some(mut request) = frame_state.gpu_cache.request(stops_handle) {
+                            let src_stops = display_list.get(stops_range);
+
+                            GradientGpuBlockBuilder::build(
+                                false,
+                                &mut request,
+                                src_stops,
+                            );
+                        }
 
                         if tile_spacing != LayoutSize::zero() {
                             is_tiled = true;
 
-                            decompose_repeated_primitive(
-                                visible_tiles,
-                                self,
+                            *visible_tiles_range = decompose_repeated_primitive(
+                                &self.combined_local_clip_rect,
                                 &prim_local_rect,
                                 &stretch_size,
                                 &tile_spacing,
                                 prim_context,
                                 frame_state,
                                 &pic_context.dirty_world_rect,
+                                &mut scratch.gradient_tiles,
                                 &mut |rect, mut request| {
                                     request.push([
                                         center.x,
@@ -4138,74 +4415,14 @@ impl PrimitiveInstance {
                                     request.write_segment(*rect, [0.0; 4]);
                                 },
                             );
+
+                            if visible_tiles_range.is_empty() {
+                                self.bounding_rect = None;
+                            }
                         }
 
                         //TODO: can we make it opaque in some cases?
                         PrimitiveOpacity::translucent()
-                    }
-                    BrushKind::LinearGradient {
-                        stops_range,
-                        reverse_stops,
-                        start_point,
-                        end_point,
-                        extend_mode,
-                        stretch_size,
-                        tile_spacing,
-                        stops_opacity,
-                        ref mut stops_handle,
-                        ref mut visible_tiles,
-                        ..
-                    } => {
-                        build_gradient_stops_request(
-                            stops_handle,
-                            stops_range,
-                            reverse_stops,
-                            frame_state,
-                            display_list,
-                        );
-
-                        if tile_spacing != LayoutSize::zero() {
-                            is_tiled = true;
-
-                            decompose_repeated_primitive(
-                                visible_tiles,
-                                self,
-                                &prim_local_rect,
-                                &stretch_size,
-                                &tile_spacing,
-                                prim_context,
-                                frame_state,
-                                &pic_context.dirty_world_rect,
-                                &mut |rect, mut request| {
-                                    request.push([
-                                        start_point.x,
-                                        start_point.y,
-                                        end_point.x,
-                                        end_point.y,
-                                    ]);
-                                    request.push([
-                                        pack_as_float(extend_mode as u32),
-                                        stretch_size.width,
-                                        stretch_size.height,
-                                        0.0,
-                                    ]);
-                                    request.write_segment(*rect, [0.0; 4]);
-                                }
-                            );
-                        }
-
-                        // If the coverage of the gradient extends to or beyond
-                        // the primitive rect, then the opacity can be determined
-                        // by the colors of the stops. If we have tiling / spacing
-                        // then we just assume the gradient is translucent for now.
-                        // (In the future we could consider segmenting in some cases).
-                        let stride = stretch_size + tile_spacing;
-                        if stride.width >= prim_local_rect.size.width &&
-                           stride.height >= prim_local_rect.size.height {
-                            stops_opacity
-                        } else {
-                            PrimitiveOpacity::translucent()
-                        }
                     }
                 };
             }
@@ -4415,12 +4632,12 @@ fn test_struct_sizes() {
     //     test expectations and move on.
     // (b) You made a structure larger. This is not necessarily a problem, but should only
     //     be done with care, and after checking if talos performance regresses badly.
-    assert_eq!(mem::size_of::<PrimitiveContainer>(), 200, "PrimitiveContainer size changed");
+    assert_eq!(mem::size_of::<PrimitiveContainer>(), 176, "PrimitiveContainer size changed");
     assert_eq!(mem::size_of::<PrimitiveInstance>(), 120, "PrimitiveInstance size changed");
     assert_eq!(mem::size_of::<PrimitiveInstanceKind>(), 16, "PrimitiveInstanceKind size changed");
     assert_eq!(mem::size_of::<PrimitiveTemplate>(), 176, "PrimitiveTemplate size changed");
     assert_eq!(mem::size_of::<PrimitiveTemplateKind>(), 112, "PrimitiveTemplateKind size changed");
     assert_eq!(mem::size_of::<PrimitiveKey>(), 152, "PrimitiveKey size changed");
     assert_eq!(mem::size_of::<PrimitiveKeyKind>(), 112, "PrimitiveKeyKind size changed");
-    assert_eq!(mem::size_of::<Primitive>(), 224, "Primitive size changed");
+    assert_eq!(mem::size_of::<Primitive>(), 200, "Primitive size changed");
 }

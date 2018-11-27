@@ -13,7 +13,6 @@ use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId};
 use api::{PropertyBinding, ReferenceFrame, ScrollFrameDisplayItem, ScrollSensitivity};
 use api::{Shadow, SpecificDisplayItem, StackingContext, StickyFrameDisplayItem, TexelRect};
 use api::{ClipMode, TransformStyle, YuvColorSpace, YuvData};
-use border::create_nine_patch_segments;
 use clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore, ClipItemSceneData};
 use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex};
 use frame_builder::{ChasePrimitive, FrameBuilder, FrameBuilderConfig};
@@ -24,9 +23,9 @@ use image::simplify_repeated_primitive;
 use internal_types::{FastHashMap, FastHashSet};
 use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PrimitiveList};
 use prim_store::{BrushKind, BrushPrimitive, PrimitiveInstance, PrimitiveDataInterner, PrimitiveKeyKind};
-use prim_store::{PrimitiveOpacity, PrimitiveKey, PrimitiveSceneData, PrimitiveInstanceKind};
+use prim_store::{PrimitiveKey, PrimitiveSceneData, PrimitiveInstanceKind, GradientStopKey, NinePatchDescriptor};
 use prim_store::{PrimitiveContainer, PrimitiveDataHandle, PrimitiveStore, PrimitiveStoreStats, BrushSegmentDescriptor};
-use prim_store::{ScrollNodeAndClipChain, PictureIndex, register_prim_chase_id};
+use prim_store::{ScrollNodeAndClipChain, PictureIndex, register_prim_chase_id, GradientTileRange};
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
 use scene::{Scene, ScenePipeline, StackingContextHelpers};
@@ -581,7 +580,7 @@ impl<'a> DisplayListFlattener<'a> {
                 );
             }
             SpecificDisplayItem::Gradient(ref info) => {
-                if let Some(brush_kind) = self.create_brush_kind_for_gradient(
+                if let Some(prim) = self.create_linear_gradient_prim(
                     &prim_info,
                     info.gradient.start_point,
                     info.gradient.end_point,
@@ -590,9 +589,14 @@ impl<'a> DisplayListFlattener<'a> {
                     info.tile_size,
                     info.tile_spacing,
                     pipeline_id,
+                    None,
                 ) {
-                    let prim = PrimitiveContainer::Brush(BrushPrimitive::new(brush_kind, None));
-                    self.add_primitive(clip_and_scroll, &prim_info, Vec::new(), prim);
+                    self.add_primitive(
+                        clip_and_scroll,
+                        &prim_info,
+                        Vec::new(),
+                        prim,
+                    );
                 }
             }
             SpecificDisplayItem::RadialGradient(ref info) => {
@@ -1738,6 +1742,17 @@ impl<'a> DisplayListFlattener<'a> {
     ) {
         match border_item.details {
             BorderDetails::NinePatch(ref border) => {
+                let nine_patch = NinePatchDescriptor {
+                    width: border.width,
+                    height: border.height,
+                    slice: border.slice,
+                    fill: border.fill,
+                    repeat_horizontal: border.repeat_horizontal,
+                    repeat_vertical: border.repeat_vertical,
+                    outset: border.outset.into(),
+                    widths: border_item.widths.into(),
+                };
+
                 let prim = match border.source {
                     NinePatchBorderSource::Image(image_key) => {
                         PrimitiveContainer::ImageBorder {
@@ -1746,18 +1761,11 @@ impl<'a> DisplayListFlattener<'a> {
                                 rendering: ImageRendering::Auto,
                                 tile: None,
                             },
-                            widths: border_item.widths,
-                            width: border.width,
-                            height: border.height,
-                            slice: border.slice,
-                            fill: border.fill,
-                            repeat_horizontal: border.repeat_horizontal,
-                            repeat_vertical: border.repeat_vertical,
-                            outset: border.outset,
+                            nine_patch,
                         }
                     }
                     NinePatchBorderSource::Gradient(gradient) => {
-                        match self.create_brush_kind_for_gradient(
+                        match self.create_linear_gradient_prim(
                             &info,
                             gradient.start_point,
                             gradient.end_point,
@@ -1766,28 +1774,9 @@ impl<'a> DisplayListFlattener<'a> {
                             LayoutSize::new(border.height as f32, border.width as f32),
                             LayoutSize::zero(),
                             pipeline_id,
+                            Some(Box::new(nine_patch)),
                         ) {
-                            Some(brush_kind) => {
-                                let segments = create_nine_patch_segments(
-                                    &info.rect,
-                                    &border_item.widths,
-                                    border.width,
-                                    border.height,
-                                    border.slice,
-                                    border.fill,
-                                    border.repeat_horizontal,
-                                    border.repeat_vertical,
-                                    border.outset,
-                                );
-
-                                let descriptor = BrushSegmentDescriptor {
-                                    segments: SmallVec::from_vec(segments),
-                                };
-
-                                PrimitiveContainer::Brush(
-                                    BrushPrimitive::new(brush_kind, Some(descriptor))
-                                )
-                            }
+                            Some(prim) => prim,
                             None => return,
                         }
                     }
@@ -1804,17 +1793,7 @@ impl<'a> DisplayListFlattener<'a> {
                             LayoutSize::zero(),
                         );
 
-                        let segments = create_nine_patch_segments(
-                            &info.rect,
-                            &border_item.widths,
-                            border.width,
-                            border.height,
-                            border.slice,
-                            border.fill,
-                            border.repeat_horizontal,
-                            border.repeat_vertical,
-                            border.outset,
-                        );
+                        let segments = nine_patch.create_segments(&info.rect);
 
                         let descriptor = BrushSegmentDescriptor {
                             segments: SmallVec::from_vec(segments),
@@ -1844,7 +1823,7 @@ impl<'a> DisplayListFlattener<'a> {
         }
     }
 
-    pub fn create_brush_kind_for_gradient(
+    pub fn create_linear_gradient_prim(
         &mut self,
         info: &LayoutPrimitiveInfo,
         start_point: LayoutPoint,
@@ -1854,7 +1833,8 @@ impl<'a> DisplayListFlattener<'a> {
         stretch_size: LayoutSize,
         mut tile_spacing: LayoutSize,
         pipeline_id: PipelineId,
-    ) -> Option<BrushKind> {
+        nine_patch: Option<Box<NinePatchDescriptor>>,
+    ) -> Option<PrimitiveContainer> {
         let mut prim_rect = info.rect;
         simplify_repeated_primitive(&stretch_size, &mut tile_spacing, &mut prim_rect);
 
@@ -1862,24 +1842,21 @@ impl<'a> DisplayListFlattener<'a> {
         //           flatten_root() and pass to all children here to avoid
         //           some hash lookups?
         let display_list = self.scene.get_display_list_for_pipeline(pipeline_id);
-
         let mut max_alpha: f32 = 0.0;
-        let mut min_alpha: f32 = 1.0;
-        for stop in display_list.get(stops) {
+
+        let stops = display_list.get(stops).map(|stop| {
             max_alpha = max_alpha.max(stop.color.a);
-            min_alpha = min_alpha.min(stop.color.a);
-        }
+            GradientStopKey {
+                offset: stop.offset,
+                color: stop.color.into(),
+            }
+        }).collect();
 
         // If all the stops have no alpha, then this
         // gradient can't contribute to the scene.
         if max_alpha <= 0.0 {
             return None;
         }
-
-        // Save opacity of the stops for use in
-        // selecting which pass this gradient
-        // should be drawn in.
-        let stops_opacity = PrimitiveOpacity::from_alpha(min_alpha);
 
         // Try to ensure that if the gradient is specified in reverse, then so long as the stops
         // are also supplied in reverse that the rendered result will be equivalent. To do this,
@@ -1899,17 +1876,15 @@ impl<'a> DisplayListFlattener<'a> {
             (start_point, end_point)
         };
 
-        Some(BrushKind::LinearGradient {
-            stops_range: stops,
+        Some(PrimitiveContainer::LinearGradient {
             extend_mode,
-            reverse_stops,
             start_point: sp,
             end_point: ep,
-            stops_handle: GpuCacheHandle::new(),
             stretch_size,
             tile_spacing,
-            visible_tiles: Vec::new(),
-            stops_opacity,
+            stops,
+            reverse_stops,
+            nine_patch,
         })
     }
 
@@ -1938,7 +1913,7 @@ impl<'a> DisplayListFlattener<'a> {
             stops_handle: GpuCacheHandle::new(),
             stretch_size,
             tile_spacing,
-            visible_tiles: Vec::new(),
+            visible_tiles_range: GradientTileRange::empty(),
         }
     }
 
