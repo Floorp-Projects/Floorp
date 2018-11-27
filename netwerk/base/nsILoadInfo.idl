@@ -1042,13 +1042,6 @@ interface nsILoadInfo : nsISupports
   void SynthesizeServiceWorkerTainting(in LoadTainting aTainting);
 
   /**
-    * These flags are used for FastBlock statistics to see if a resource is a
-    * tracker and whether it was blocked by the FastBlock mechanism or not.
-    */
-  [infallible] attribute boolean isTracker;
-  [infallible] attribute boolean isTrackerBlocked;
-
-  /**
     * The top-level document has been user-interacted.
     */
   [infallible] attribute boolean documentHasUserInteracted;
