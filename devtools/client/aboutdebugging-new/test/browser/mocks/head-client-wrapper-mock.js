@@ -62,7 +62,7 @@ function createClientMock() {
       return null;
     },
     // Empty array of addons
-    listAddons: () => [],
+    listAddons: () => ({ addons: [] }),
     // Empty array of tabs
     listTabs: () => ({ tabs: []}),
     // Empty arrays of workers

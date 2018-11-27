@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Option, RetVal, generateActorSpec} = require("devtools/shared/protocol");
+const {Arg, Option, RetVal, generateActorSpec} = require("devtools/shared/protocol");
 
 const addonTargetSpec = generateActorSpec({
   typeName: "addonTarget",
@@ -18,12 +18,10 @@ const addonTargetSpec = generateActorSpec({
       response: RetVal("json"),
     },
     connect: {
-      request: {},
+      request: {
+        options: Arg(0, "json"),
+      },
       response: RetVal("json"),
-    },
-    reload: {
-      request: {},
-      response: {},
     },
     push: {
       request: {},

@@ -22,6 +22,7 @@ loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/shared/security/socke
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(this, "WebConsoleClient", "devtools/shared/webconsole/client", true);
+loader.lazyRequireGetter(this, "AddonTargetFront", "devtools/shared/fronts/targets/addon", true);
 loader.lazyRequireGetter(this, "RootFront", "devtools/shared/fronts/root", true);
 loader.lazyRequireGetter(this, "BrowsingContextTargetFront", "devtools/shared/fronts/targets/browsing-context", true);
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
@@ -344,6 +345,14 @@ DebuggerClient.prototype = {
     return this.mainRoot.listTabs(options);
   },
 
+  /*
+   * This function exists only to preserve DebuggerClient's interface;
+   * new code should say 'client.mainRoot.listAddons()'.
+   */
+  listAddons: function() {
+    return this.mainRoot.listAddons();
+  },
+
   getTab: function(filter) {
     return this.mainRoot.getTab(filter);
   },
@@ -364,6 +373,23 @@ DebuggerClient.prototype = {
     let front = this._frontPool.actor(targetActor);
     if (!front) {
       front = new BrowsingContextTargetFront(this, { actor: targetActor });
+      this._frontPool.manage(front);
+    }
+
+    const response = await front.attach();
+    return [response, front];
+  },
+
+  /**
+   * Attach to an addon target actor.
+   *
+   * @param string addonTargetActor
+   *        The actor ID for the addon to attach.
+   */
+  attachAddon: async function(form) {
+    let front = this._frontPool.actor(form.actor);
+    if (!front) {
+      front = new AddonTargetFront(this, form);
       this._frontPool.manage(front);
     }
 

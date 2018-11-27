@@ -103,13 +103,12 @@ function pushServiceWorker(actor) {
   };
 }
 
-function reloadTemporaryExtension(id) {
+function reloadTemporaryExtension(actor) {
   return async (_, getState) => {
     const clientWrapper = getCurrentClient(getState().runtimes);
 
     try {
-      const addonTargetFront = await clientWrapper.getAddon({ id });
-      await addonTargetFront.reload();
+      await clientWrapper.request({ to: actor, type: "reload" });
     } catch (e) {
       console.error(e);
     }
@@ -150,7 +149,7 @@ function requestExtensions() {
     const clientWrapper = getCurrentClient(getState().runtimes);
 
     try {
-      const addons = await clientWrapper.listAddons();
+      const { addons } = await clientWrapper.listAddons();
       let extensions = addons.filter(a => a.debuggable);
 
       // Filter out system addons unless the dedicated preference is set to true.
