@@ -213,11 +213,11 @@ MacroAssemblerX86::handleFailureWithHandlerTail(void* handler, Label* profilerEx
 
     ret();
 
-    // If we are bailing out to baseline to handle an exception, jump to
-    // the bailout tail stub.
+    // If we are bailing out to baseline to handle an exception, jump to the
+    // bailout tail stub. Load 1 (true) in ReturnReg to indicate success.
     bind(&bailout);
     loadPtr(Address(esp, offsetof(ResumeFromException, bailoutInfo)), ecx);
-    movl(Imm32(BAILOUT_RETURN_OK), eax);
+    move32(Imm32(1), ReturnReg);
     jmp(Operand(esp, offsetof(ResumeFromException, target)));
 
     // If we are throwing and the innermost frame was a wasm frame, reset SP and

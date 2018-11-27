@@ -3730,12 +3730,12 @@ MacroAssemblerARMCompat::handleFailureWithHandlerTail(void* handler, Label* prof
     ret();
 
     // If we are bailing out to baseline to handle an exception, jump to the
-    // bailout tail stub.
+    // bailout tail stub. Load 1 (true) in ReturnReg to indicate success.
     bind(&bailout);
     {
         ScratchRegisterScope scratch(asMasm());
         ma_ldr(Address(sp, offsetof(ResumeFromException, bailoutInfo)), r2, scratch);
-        ma_mov(Imm32(BAILOUT_RETURN_OK), r0);
+        ma_mov(Imm32(1), ReturnReg);
         ma_ldr(Address(sp, offsetof(ResumeFromException, target)), r1, scratch);
     }
     jump(r1);
