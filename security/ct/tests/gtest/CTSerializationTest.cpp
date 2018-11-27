@@ -230,30 +230,4 @@ TEST_F(CTSerializationTest, FailsDecodingInvalidSignedCertificateTimestamp)
     DecodeSignedCertificateTimestamp(invalidLengthSctReader, sct));
 }
 
-TEST_F(CTSerializationTest, EncodesValidSignedTreeHead)
-{
-  SignedTreeHead signedTreeHead;
-  GetSampleSignedTreeHead(signedTreeHead);
-
-  Buffer encoded;
-  ASSERT_EQ(Success,
-    EncodeTreeHeadSignature(signedTreeHead, encoded));
-  // Expected size is 50 bytes:
-  // Byte 0 is version, byte 1 is signature type
-  // Bytes 2-9 are timestamp
-  // Bytes 10-17 are tree size
-  // Bytes 18-49 are sha256 root hash
-  ASSERT_EQ(50u, encoded.size());
-  Buffer expectedBuffer = {
-    0x00, // version
-    0x01, // signature type
-    0x00, 0x00, 0x01, 0x45, 0x3c, 0x5f, 0xb8, 0x35, // timestamp
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x15  // tree size
-    // sha256 root hash should follow
-  };
-  Buffer hash = GetSampleSTHSHA256RootHash();
-  expectedBuffer.insert(expectedBuffer.end(), hash.begin(),
-                        hash.begin() + hash.size());
-  EXPECT_EQ(expectedBuffer, encoded);
-}
 } } // namespace mozilla::ct

@@ -396,35 +396,6 @@ EncodeV1SCTSignedData(uint64_t timestamp, Input serializedLogEntry,
 }
 
 Result
-EncodeTreeHeadSignature(const SignedTreeHead& signedTreeHead,
-                        Buffer& output)
-{
-  Result rv = WriteUint<kVersionLength>(
-    static_cast<unsigned int>(signedTreeHead.version), output);
-  if (rv != Success) {
-    return rv;
-  }
-  rv = WriteUint<kSignatureTypeLength>(
-    static_cast<unsigned int>(SignatureType::TreeHash), output);
-  if (rv != Success) {
-    return rv;
-  }
-  rv = WriteTimeSinceEpoch(signedTreeHead.timestamp, output);
-  if (rv != Success) {
-    return rv;
-  }
-  rv = WriteUint<kTreeSizeLength>(signedTreeHead.treeSize, output);
-  if (rv != Success) {
-    return rv;
-  }
-  if (signedTreeHead.sha256RootHash.size() != kSthRootHashLength) {
-    return Result::FATAL_ERROR_INVALID_ARGS;
-  }
-  WriteEncodedBytes(signedTreeHead.sha256RootHash, output);
-  return Success;
-}
-
-Result
 DecodeSCTList(Input input, Reader& listReader)
 {
   Reader inputReader(input);

@@ -109,21 +109,6 @@ TEST_F(CTLogVerifierTest, FailsInvalidLogID)
                                                                 certSct));
 }
 
-TEST_F(CTLogVerifierTest, VerifiesValidSTH)
-{
-  SignedTreeHead sth;
-  GetSampleSignedTreeHead(sth);
-  EXPECT_EQ(Success, mLog.VerifySignedTreeHead(sth));
-}
-
-TEST_F(CTLogVerifierTest, DoesNotVerifyInvalidSTH)
-{
-  SignedTreeHead sth;
-  GetSampleSignedTreeHead(sth);
-  sth.sha256RootHash[0] ^= '\xFF';
-  EXPECT_EQ(pkix::Result::ERROR_BAD_SIGNATURE, mLog.VerifySignedTreeHead(sth));
-}
-
 // Test that excess data after the public key is rejected.
 TEST_F(CTLogVerifierTest, ExcessDataInPublicKey)
 {
