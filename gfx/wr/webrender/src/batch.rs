@@ -908,6 +908,7 @@ impl AlphaBatchBuilder {
                                 PrimitiveInstanceKind::Rectangle { .. } |
                                 PrimitiveInstanceKind::YuvImage { .. } |
                                 PrimitiveInstanceKind::Image { .. } |
+                                PrimitiveInstanceKind::LinearGradient { .. } |
                                 PrimitiveInstanceKind::Clear => {
                                     unreachable!();
                                 }
@@ -1410,8 +1411,7 @@ impl AlphaBatchBuilder {
                 let is_multiple_primitives = match prim.details {
                     PrimitiveDetails::Brush(ref brush) => {
                         match brush.kind {
-                            BrushKind::LinearGradient { ref visible_tiles, .. } => !visible_tiles.is_empty(),
-                            BrushKind::RadialGradient { ref visible_tiles, .. } => !visible_tiles.is_empty(),
+                            BrushKind::RadialGradient { visible_tiles_range, .. } => !visible_tiles_range.is_empty(),
                         }
                     }
                 };
@@ -1450,22 +1450,9 @@ impl AlphaBatchBuilder {
                         }
 
                         match brush.kind {
-                            BrushKind::LinearGradient { ref stops_handle, ref visible_tiles, .. } if !visible_tiles.is_empty() => {
-                                add_gradient_tiles(
-                                    visible_tiles,
-                                    stops_handle,
-                                    BrushBatchKind::LinearGradient,
-                                    specified_blend_mode,
-                                    bounding_rect,
-                                    clip_task_address,
-                                    gpu_cache,
-                                    &mut self.batch_list,
-                                    &prim_header,
-                                    prim_headers,
-                                    z_id,
-                                );
-                            }
-                            BrushKind::RadialGradient { ref stops_handle, ref visible_tiles, .. } if !visible_tiles.is_empty() => {
+                            BrushKind::RadialGradient { ref stops_handle, visible_tiles_range, .. } if !visible_tiles_range.is_empty() => {
+                                let visible_tiles = &ctx.scratch.gradient_tiles[visible_tiles_range];
+
                                 add_gradient_tiles(
                                     visible_tiles,
                                     stops_handle,
@@ -1894,6 +1881,89 @@ impl AlphaBatchBuilder {
                     }
                 }
             }
+            (
+                PrimitiveInstanceKind::LinearGradient { visible_tiles_range, .. },
+                PrimitiveTemplateKind::LinearGradient { stops_handle, ref brush_segments, .. }
+            ) => {
+                let specified_blend_mode = BlendMode::PremultipliedAlpha;
+
+                let mut prim_header = PrimitiveHeader {
+                    local_rect: prim_data.prim_rect,
+                    local_clip_rect: prim_instance.combined_local_clip_rect,
+                    task_address,
+                    specific_prim_address: GpuCacheAddress::invalid(),
+                    clip_task_address,
+                    transform_id,
+                };
+
+                if visible_tiles_range.is_empty() {
+                    let non_segmented_blend_mode = if !prim_data.opacity.is_opaque ||
+                        prim_instance.clip_task_index != ClipTaskIndex::INVALID ||
+                        transform_kind == TransformedRectKind::Complex
+                    {
+                        specified_blend_mode
+                    } else {
+                        BlendMode::None
+                    };
+
+                    let batch_params = BrushBatchParameters::shared(
+                        BrushBatchKind::LinearGradient,
+                        BatchTextures::no_texture(),
+                        [
+                            stops_handle.as_int(gpu_cache),
+                            0,
+                            0,
+                        ],
+                        0,
+                    );
+
+                    prim_header.specific_prim_address = gpu_cache.get_address(&prim_data.gpu_cache_handle);
+
+                    let prim_header_index = prim_headers.push(
+                        &prim_header,
+                        z_id,
+                        batch_params.prim_user_data,
+                    );
+
+                    let segments = if brush_segments.is_empty() {
+                        None
+                    } else {
+                        Some(brush_segments.as_slice())
+                    };
+
+                    self.add_segmented_prim_to_batch(
+                        segments,
+                        prim_data.opacity,
+                        &batch_params,
+                        specified_blend_mode,
+                        non_segmented_blend_mode,
+                        prim_header_index,
+                        clip_task_address,
+                        bounding_rect,
+                        transform_kind,
+                        render_tasks,
+                        z_id,
+                        prim_instance.clip_task_index,
+                        ctx,
+                    );
+                } else {
+                    let visible_tiles = &ctx.scratch.gradient_tiles[*visible_tiles_range];
+
+                    add_gradient_tiles(
+                        visible_tiles,
+                        stops_handle,
+                        BrushBatchKind::LinearGradient,
+                        specified_blend_mode,
+                        bounding_rect,
+                        clip_task_address,
+                        gpu_cache,
+                        &mut self.batch_list,
+                        &prim_header,
+                        prim_headers,
+                        z_id,
+                    );
+                }
+            }
             _ => {
                 unreachable!();
             }
@@ -2243,18 +2313,6 @@ impl BrushPrimitive {
                     0,
                 ))
             }
-            BrushKind::LinearGradient { ref stops_handle, .. } => {
-                Some(BrushBatchParameters::shared(
-                    BrushBatchKind::LinearGradient,
-                    BatchTextures::no_texture(),
-                    [
-                        stops_handle.as_int(gpu_cache),
-                        0,
-                        0,
-                    ],
-                    0,
-                ))
-            }
         }
     }
 }
@@ -2286,6 +2344,7 @@ impl PrimitiveInstance {
             PrimitiveInstanceKind::NormalBorder { .. } |
             PrimitiveInstanceKind::ImageBorder { .. } |
             PrimitiveInstanceKind::Rectangle { .. } |
+            PrimitiveInstanceKind::LinearGradient { .. } |
             PrimitiveInstanceKind::Clear => {
                 return true;
             }

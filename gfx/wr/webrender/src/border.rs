@@ -7,10 +7,10 @@ use api::{LayoutSideOffsets, LayoutSizeAu, LayoutPrimitiveInfo, LayoutToDeviceSc
 use api::{DeviceVector2D, DevicePoint, LayoutRect, LayoutSize, NormalBorder, DeviceIntSize};
 use api::{AuHelpers, LayoutPoint, RepeatMode, TexelRect};
 use ellipse::Ellipse;
-use euclid::{SideOffsets2D, vec2};
+use euclid::vec2;
 use display_list_flattener::DisplayListFlattener;
 use gpu_types::{BorderInstance, BorderSegment, BrushFlags};
-use prim_store::{BorderSegmentInfo, BrushSegment};
+use prim_store::{BorderSegmentInfo, BrushSegment, NinePatchDescriptor};
 use prim_store::{EdgeAaSegmentMask, PrimitiveContainer, ScrollNodeAndClipChain};
 use util::{lerp, RectHelpers};
 
@@ -1128,176 +1128,171 @@ pub fn build_border_instances(
     instances
 }
 
-pub fn create_nine_patch_segments(
-    rect: &LayoutRect,
-    widths: &LayoutSideOffsets,
-    width: i32,
-    height: i32,
-    slice: SideOffsets2D<i32>,
-    fill: bool,
-    repeat_horizontal: RepeatMode,
-    repeat_vertical: RepeatMode,
-    outset: SideOffsets2D<f32>,
-) -> Vec<BrushSegment> {
-    // Calculate the modified rect as specific by border-image-outset
-    let origin = LayoutPoint::new(
-        rect.origin.x - outset.left,
-        rect.origin.y - outset.top,
-    );
-    let size = LayoutSize::new(
-        rect.size.width + outset.left + outset.right,
-        rect.size.height + outset.top + outset.bottom,
-    );
-    let rect = LayoutRect::new(origin, size);
+impl NinePatchDescriptor {
+    pub fn create_segments(
+        &self,
+        rect: &LayoutRect,
+    ) -> Vec<BrushSegment> {
+        // Calculate the modified rect as specific by border-image-outset
+        let origin = LayoutPoint::new(
+            rect.origin.x - self.outset.left,
+            rect.origin.y - self.outset.top,
+        );
+        let size = LayoutSize::new(
+            rect.size.width + self.outset.left + self.outset.right,
+            rect.size.height + self.outset.top + self.outset.bottom,
+        );
+        let rect = LayoutRect::new(origin, size);
 
-    // Calculate the local texel coords of the slices.
-    let px0 = 0.0;
-    let px1 = slice.left as f32;
-    let px2 = width as f32 - slice.right as f32;
-    let px3 = width as f32;
+        // Calculate the local texel coords of the slices.
+        let px0 = 0.0;
+        let px1 = self.slice.left as f32;
+        let px2 = self.width as f32 - self.slice.right as f32;
+        let px3 = self.width as f32;
 
-    let py0 = 0.0;
-    let py1 = slice.top as f32;
-    let py2 = height as f32 - slice.bottom as f32;
-    let py3 = height as f32;
+        let py0 = 0.0;
+        let py1 = self.slice.top as f32;
+        let py2 = self.height as f32 - self.slice.bottom as f32;
+        let py3 = self.height as f32;
 
-    let tl_outer = LayoutPoint::new(rect.origin.x, rect.origin.y);
-    let tl_inner = tl_outer + vec2(widths.left, widths.top);
+        let tl_outer = LayoutPoint::new(rect.origin.x, rect.origin.y);
+        let tl_inner = tl_outer + vec2(self.widths.left, self.widths.top);
 
-    let tr_outer = LayoutPoint::new(rect.origin.x + rect.size.width, rect.origin.y);
-    let tr_inner = tr_outer + vec2(-widths.right, widths.top);
+        let tr_outer = LayoutPoint::new(rect.origin.x + rect.size.width, rect.origin.y);
+        let tr_inner = tr_outer + vec2(-self.widths.right, self.widths.top);
 
-    let bl_outer = LayoutPoint::new(rect.origin.x, rect.origin.y + rect.size.height);
-    let bl_inner = bl_outer + vec2(widths.left, -widths.bottom);
+        let bl_outer = LayoutPoint::new(rect.origin.x, rect.origin.y + rect.size.height);
+        let bl_inner = bl_outer + vec2(self.widths.left, -self.widths.bottom);
 
-    let br_outer = LayoutPoint::new(
-        rect.origin.x + rect.size.width,
-        rect.origin.y + rect.size.height,
-    );
-    let br_inner = br_outer - vec2(widths.right, widths.bottom);
+        let br_outer = LayoutPoint::new(
+            rect.origin.x + rect.size.width,
+            rect.origin.y + rect.size.height,
+        );
+        let br_inner = br_outer - vec2(self.widths.right, self.widths.bottom);
 
-    fn add_segment(
-        segments: &mut Vec<BrushSegment>,
-        rect: LayoutRect,
-        uv_rect: TexelRect,
-        repeat_horizontal: RepeatMode,
-        repeat_vertical: RepeatMode
-    ) {
-        if uv_rect.uv1.x > uv_rect.uv0.x &&
-           uv_rect.uv1.y > uv_rect.uv0.y {
+        fn add_segment(
+            segments: &mut Vec<BrushSegment>,
+            rect: LayoutRect,
+            uv_rect: TexelRect,
+            repeat_horizontal: RepeatMode,
+            repeat_vertical: RepeatMode
+        ) {
+            if uv_rect.uv1.x > uv_rect.uv0.x &&
+               uv_rect.uv1.y > uv_rect.uv0.y {
 
-            // Use segment relative interpolation for all
-            // instances in this primitive.
-            let mut brush_flags =
-                BrushFlags::SEGMENT_RELATIVE |
-                BrushFlags::SEGMENT_TEXEL_RECT;
+                // Use segment relative interpolation for all
+                // instances in this primitive.
+                let mut brush_flags =
+                    BrushFlags::SEGMENT_RELATIVE |
+                    BrushFlags::SEGMENT_TEXEL_RECT;
 
-            // Enable repeat modes on the segment.
-            if repeat_horizontal == RepeatMode::Repeat {
-                brush_flags |= BrushFlags::SEGMENT_REPEAT_X;
+                // Enable repeat modes on the segment.
+                if repeat_horizontal == RepeatMode::Repeat {
+                    brush_flags |= BrushFlags::SEGMENT_REPEAT_X;
+                }
+                if repeat_vertical == RepeatMode::Repeat {
+                    brush_flags |= BrushFlags::SEGMENT_REPEAT_Y;
+                }
+
+                let segment = BrushSegment::new(
+                    rect,
+                    true,
+                    EdgeAaSegmentMask::empty(),
+                    [
+                        uv_rect.uv0.x,
+                        uv_rect.uv0.y,
+                        uv_rect.uv1.x,
+                        uv_rect.uv1.y,
+                    ],
+                    brush_flags,
+                );
+
+                segments.push(segment);
             }
-            if repeat_vertical == RepeatMode::Repeat {
-                brush_flags |= BrushFlags::SEGMENT_REPEAT_Y;
-            }
-
-            let segment = BrushSegment::new(
-                rect,
-                true,
-                EdgeAaSegmentMask::empty(),
-                [
-                    uv_rect.uv0.x,
-                    uv_rect.uv0.y,
-                    uv_rect.uv1.x,
-                    uv_rect.uv1.y,
-                ],
-                brush_flags,
-            );
-
-            segments.push(segment);
         }
-    }
 
-    // Build the list of image segments
-    let mut segments = Vec::new();
+        // Build the list of image segments
+        let mut segments = Vec::new();
 
-    // Top left
-    add_segment(
-        &mut segments,
-        LayoutRect::from_floats(tl_outer.x, tl_outer.y, tl_inner.x, tl_inner.y),
-        TexelRect::new(px0, py0, px1, py1),
-        RepeatMode::Stretch,
-        RepeatMode::Stretch
-    );
-    // Top right
-    add_segment(
-        &mut segments,
-        LayoutRect::from_floats(tr_inner.x, tr_outer.y, tr_outer.x, tr_inner.y),
-        TexelRect::new(px2, py0, px3, py1),
-        RepeatMode::Stretch,
-        RepeatMode::Stretch
-    );
-    // Bottom right
-    add_segment(
-        &mut segments,
-        LayoutRect::from_floats(br_inner.x, br_inner.y, br_outer.x, br_outer.y),
-        TexelRect::new(px2, py2, px3, py3),
-        RepeatMode::Stretch,
-        RepeatMode::Stretch
-    );
-    // Bottom left
-    add_segment(
-        &mut segments,
-        LayoutRect::from_floats(bl_outer.x, bl_inner.y, bl_inner.x, bl_outer.y),
-        TexelRect::new(px0, py2, px1, py3),
-        RepeatMode::Stretch,
-        RepeatMode::Stretch
-    );
-
-    // Center
-    if fill {
+        // Top left
         add_segment(
             &mut segments,
-            LayoutRect::from_floats(tl_inner.x, tl_inner.y, tr_inner.x, bl_inner.y),
-            TexelRect::new(px1, py1, px2, py2),
-            repeat_horizontal,
-            repeat_vertical
+            LayoutRect::from_floats(tl_outer.x, tl_outer.y, tl_inner.x, tl_inner.y),
+            TexelRect::new(px0, py0, px1, py1),
+            RepeatMode::Stretch,
+            RepeatMode::Stretch
         );
+        // Top right
+        add_segment(
+            &mut segments,
+            LayoutRect::from_floats(tr_inner.x, tr_outer.y, tr_outer.x, tr_inner.y),
+            TexelRect::new(px2, py0, px3, py1),
+            RepeatMode::Stretch,
+            RepeatMode::Stretch
+        );
+        // Bottom right
+        add_segment(
+            &mut segments,
+            LayoutRect::from_floats(br_inner.x, br_inner.y, br_outer.x, br_outer.y),
+            TexelRect::new(px2, py2, px3, py3),
+            RepeatMode::Stretch,
+            RepeatMode::Stretch
+        );
+        // Bottom left
+        add_segment(
+            &mut segments,
+            LayoutRect::from_floats(bl_outer.x, bl_inner.y, bl_inner.x, bl_outer.y),
+            TexelRect::new(px0, py2, px1, py3),
+            RepeatMode::Stretch,
+            RepeatMode::Stretch
+        );
+
+        // Center
+        if self.fill {
+            add_segment(
+                &mut segments,
+                LayoutRect::from_floats(tl_inner.x, tl_inner.y, tr_inner.x, bl_inner.y),
+                TexelRect::new(px1, py1, px2, py2),
+                self.repeat_horizontal,
+                self.repeat_vertical
+            );
+        }
+
+        // Add edge segments.
+
+        // Top
+        add_segment(
+            &mut segments,
+            LayoutRect::from_floats(tl_inner.x, tl_outer.y, tr_inner.x, tl_inner.y),
+            TexelRect::new(px1, py0, px2, py1),
+            self.repeat_horizontal,
+            RepeatMode::Stretch,
+        );
+        // Bottom
+        add_segment(
+            &mut segments,
+            LayoutRect::from_floats(bl_inner.x, bl_inner.y, br_inner.x, bl_outer.y),
+            TexelRect::new(px1, py2, px2, py3),
+            self.repeat_horizontal,
+            RepeatMode::Stretch,
+        );
+        // Left
+        add_segment(
+            &mut segments,
+            LayoutRect::from_floats(tl_outer.x, tl_inner.y, tl_inner.x, bl_inner.y),
+            TexelRect::new(px0, py1, px1, py2),
+            RepeatMode::Stretch,
+            self.repeat_vertical,
+        );
+        // Right
+        add_segment(
+            &mut segments,
+            LayoutRect::from_floats(tr_inner.x, tr_inner.y, br_outer.x, br_inner.y),
+            TexelRect::new(px2, py1, px3, py2),
+            RepeatMode::Stretch,
+            self.repeat_vertical,
+        );
+
+        segments
     }
-
-    // Add edge segments.
-
-    // Top
-    add_segment(
-        &mut segments,
-        LayoutRect::from_floats(tl_inner.x, tl_outer.y, tr_inner.x, tl_inner.y),
-        TexelRect::new(px1, py0, px2, py1),
-        repeat_horizontal,
-        RepeatMode::Stretch,
-    );
-    // Bottom
-    add_segment(
-        &mut segments,
-        LayoutRect::from_floats(bl_inner.x, bl_inner.y, br_inner.x, bl_outer.y),
-        TexelRect::new(px1, py2, px2, py3),
-        repeat_horizontal,
-        RepeatMode::Stretch,
-    );
-    // Left
-    add_segment(
-        &mut segments,
-        LayoutRect::from_floats(tl_outer.x, tl_inner.y, tl_inner.x, bl_inner.y),
-        TexelRect::new(px0, py1, px1, py2),
-        RepeatMode::Stretch,
-        repeat_vertical,
-    );
-    // Right
-    add_segment(
-        &mut segments,
-        LayoutRect::from_floats(tr_inner.x, tr_inner.y, br_outer.x, br_inner.y),
-        TexelRect::new(px2, py1, px3, py2),
-        RepeatMode::Stretch,
-        repeat_vertical,
-    );
-
-    segments
 }

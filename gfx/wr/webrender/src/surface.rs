@@ -243,6 +243,7 @@ impl SurfaceDescriptor {
                 PrimitiveInstanceKind::Image { .. } |
                 PrimitiveInstanceKind::YuvImage { .. } |
                 PrimitiveInstanceKind::LineDecoration { .. } |
+                PrimitiveInstanceKind::LinearGradient { .. } |
                 PrimitiveInstanceKind::TextRun { .. } |
                 PrimitiveInstanceKind::NormalBorder { .. } |
                 PrimitiveInstanceKind::Rectangle { .. } |
