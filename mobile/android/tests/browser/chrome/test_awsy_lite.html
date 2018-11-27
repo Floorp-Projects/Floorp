@@ -43,6 +43,21 @@
     var mrm = Cc["@mozilla.org/memory-reporter-manager;1"].getService(Ci.nsIMemoryReporterManager);
     gResults.push( { name: aName, resident: mrm.resident } );
     info(`${aName} | Resident Memory: ${mrm.resident}`);
+    var env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+    var upload = env.get("MOZ_UPLOAD_DIR");
+    if (upload) {
+        var path = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+        path.initWithPath(upload);
+        if (!path.exists()) {
+            path.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+        }
+        var fileName = aName.replace(/ /g, "_").replace(/\W/g, "") + ".json.gz";
+        path.appendRelativePath(fileName);
+        var dumper = Cc["@mozilla.org/memory-info-dumper;1"].getService(Ci.nsIMemoryInfoDumper);
+        dumper.dumpMemoryReportsToNamedFile(path.path, function() {
+            info("finished dump to " + path.path);
+        }, null, /* anonymize = */ false);
+    }
   }
 
   var browserListener = {

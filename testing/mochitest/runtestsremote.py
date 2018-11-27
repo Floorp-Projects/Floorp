@@ -318,6 +318,11 @@ class MochiRemote(MochitestDesktop):
             self.mozLogName)
         if options.dmd:
             browserEnv['DMD'] = '1'
+        # Contents of remoteMozLog will be pulled from device and copied to the
+        # host MOZ_UPLOAD_DIR, to be made available as test artifacts. Make
+        # MOZ_UPLOAD_DIR available to the browser environment so that tests
+        # can use it as though they were running on the host.
+        browserEnv["MOZ_UPLOAD_DIR"] = self.remoteMozLog
         return browserEnv
 
     def runApp(self, *args, **kwargs):
