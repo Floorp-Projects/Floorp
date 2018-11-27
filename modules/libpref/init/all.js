@@ -240,7 +240,7 @@ pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_i
 // same as "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys". So,
 // check its explanation for the detail.
 pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode",
-     "docs.google.com,www.rememberthemilk.com");
+     "www.rememberthemilk.com");
 #endif
 
 // Whether the WebMIDI API is enabled
