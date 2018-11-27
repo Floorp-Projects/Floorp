@@ -3,13 +3,12 @@ ChromeUtils.import("resource://normandy/lib/LogManager.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ActionSandboxManager: "resource://normandy/lib/ActionSandboxManager.jsm",
+  NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
+  Uptake: "resource://normandy/lib/Uptake.jsm",
   AddonStudyAction: "resource://normandy/actions/AddonStudyAction.jsm",
   ConsoleLogAction: "resource://normandy/actions/ConsoleLogAction.jsm",
-  NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
-  PreferenceRollbackAction: "resource://normandy/actions/PreferenceRollbackAction.jsm",
   PreferenceRolloutAction: "resource://normandy/actions/PreferenceRolloutAction.jsm",
-  ShowHeartbeatAction: "resource://normandy/actions/ShowHeartbeatAction.jsm",
-  Uptake: "resource://normandy/lib/Uptake.jsm",
+  PreferenceRollbackAction: "resource://normandy/actions/PreferenceRollbackAction.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["ActionsManager"];
@@ -35,10 +34,9 @@ class ActionsManager {
     this.localActions = {
       "addon-study": addonStudyAction,
       "console-log": new ConsoleLogAction(),
-      "opt-out-study": addonStudyAction, // Legacy name used for addon-study on Normandy server
-      "preference-rollback": new PreferenceRollbackAction(),
       "preference-rollout": new PreferenceRolloutAction(),
-      "show-heartbeat": new ShowHeartbeatAction(),
+      "preference-rollback": new PreferenceRollbackAction(),
+      "opt-out-study": addonStudyAction, // Legacy name used on Normandy server
     };
   }
 
