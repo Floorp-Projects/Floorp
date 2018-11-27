@@ -243,9 +243,6 @@ interface CanvasDrawPath {
 [NoInterfaceObject]
 interface CanvasUserInterface {
   [Pref="canvas.focusring.enabled", Throws] void drawFocusIfNeeded(Element element);
-// NOT IMPLEMENTED  void drawSystemFocusRing(Path path, HTMLElement element);
-  [Pref="canvas.customfocusring.enabled"] boolean drawCustomFocusRing(Element element);
-// NOT IMPLEMENTED  boolean drawCustomFocusRing(Path path, HTMLElement element);
 // NOT IMPLEMENTED  void scrollPathIntoView();
 // NOT IMPLEMENTED  void scrollPathIntoView(Path path);
 };
