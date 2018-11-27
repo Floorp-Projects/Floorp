@@ -4,8 +4,39 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SOURCES += [
+@template
+def STHTestFile(name):
+    if not CONFIG['COMPILE_ENVIRONMENT']:
+        return
+
+    GENERATED_FILES += [name]
+    props = GENERATED_FILES[name]
+    props.script = 'createSTHTestData.py'
+    props.inputs = ['%s.tbs' % name]
+
+STHTestFile('valid-sth.inc')
+STHTestFile('valid-with-extension-sth.inc')
+STHTestFile('valid-secp521r1-sha512-sth.inc')
+STHTestFile('signature-covers-log-id-sth.inc')
+STHTestFile('wrong-spki-sth.inc')
+STHTestFile('wrong-signing-key-sth.inc')
+STHTestFile('missing-log-id-sth.inc')
+STHTestFile('missing-timestamp-sth.inc')
+STHTestFile('missing-tree-size-sth.inc')
+STHTestFile('missing-root-hash-sth.inc')
+STHTestFile('missing-extensions-sth.inc')
+STHTestFile('truncated-log-id-sth.inc')
+STHTestFile('truncated-timestamp-sth.inc')
+STHTestFile('truncated-tree-size-sth.inc')
+STHTestFile('truncated-root-hash-sth.inc')
+STHTestFile('truncated-extension-sth.inc')
+STHTestFile('rsa-signer-rsa-spki-sth.inc')
+STHTestFile('rsa-signer-ec-spki-sth.inc')
+STHTestFile('ec-signer-rsa-spki-sth.inc')
+
+UNIFIED_SOURCES += [
     'BTSerializationTest.cpp',
+    'BTSignedTreeHeadTest.cpp',
     'BTVerificationTest.cpp',
     'CTDiversityPolicyTest.cpp',
     'CTLogVerifierTest.cpp',

@@ -7,12 +7,23 @@
 #ifndef BTVerifier_h
 #define BTVerifier_h
 
-#include "BTInclusionProof.h"
+#include "BTTypes.h"
 #include "mozpkix/Input.h"
 #include "mozpkix/Result.h"
+#include "mozpkix/pkixder.h"
 #include "mozpkix/pkixtypes.h"
 
 namespace mozilla { namespace ct {
+
+// Given an encoded subject public key info, a digest algorithm, a public key
+// algorithm, and an encoded signed tree head (SignedTreeHeadV2 as defined in
+// RFC 6962-bis), decodes and verifies the STH. Currently only ECDSA keys are
+// supported. SHA-256 and SHA-512 are supported, but according to the
+// specification only SHA-256 should be supported at this time.
+pkix::Result DecodeAndVerifySignedTreeHead(
+  pkix::Input signerSubjectPublicKeyInfo, pkix::DigestAlgorithm digestAlgorithm,
+  pkix::der::PublicKeyAlgorithm publicKeyAlg, pkix::Input signedTreeHeadInput,
+  SignedTreeHeadDataV2& signedTreeHead);
 
 // Decodes an Inclusion Proof (InclusionProofDataV2 as defined in RFC
 // 6962-bis). This consumes the entirety of the input.
