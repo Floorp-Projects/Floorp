@@ -18,12 +18,12 @@ type AnnotatedFrame =
   | Frame;
 
 export function annotateFrames(frames: Frame[]): AnnotatedFrame[] {
-  const annotatedFrames = frames.map(annotateFrame);
+  const annotatedFrames = frames.map(f => annotateFrame(f, frames));
   return annotateBabelAsyncFrames(annotatedFrames);
 }
 
-function annotateFrame(frame: Frame): AnnotatedFrame {
-  const library = getLibraryFromUrl(frame);
+function annotateFrame(frame: Frame, frames: Frame[]): AnnotatedFrame {
+  const library = getLibraryFromUrl(frame, frames);
   if (library) {
     return { ...frame, library };
   }
