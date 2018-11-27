@@ -576,14 +576,11 @@ Target.prototype = {
       // to be attached via DebuggerClient.attachTarget.
       if (this.isBrowsingContext) {
         await attachBrowsingContextTarget();
-      } else if (this.isLegacyAddon) {
-        const [, addonTargetFront] = await this._client.attachAddon(this.form);
-        this.activeTab = addonTargetFront;
 
-      // Worker and Content process targets are the first target to have their front already
-      // instantiated. The plan is to have all targets to have their front passed as
-      // constructor argument.
-      } else if (this.isWorkerTarget) {
+      // Addon Worker and Content process targets are the first targets to have their
+      // front already instantiated. The plan is to have all targets to have their front
+      // passed as constructor argument.
+      } else if (this.isWorkerTarget || this.isLegacyAddon) {
         // Worker is the first front to be completely migrated to have only its attach
         // method being called from Target.attach. Other fronts should be refactored.
         await this.activeTab.attach();
