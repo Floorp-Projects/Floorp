@@ -17,8 +17,7 @@
 
 # By default the Android Components team will be the owner for everything in
 # the repo. Unless a later match takes precedence.
-*    @mozilla-mobile/act
+* @mozilla-mobile/act
 
 # Glean telemetry library
-/components/service/glean/    @Dexterp37 @mdboom @georgf
-
+/components/service/glean/ @mozilla-mobile/telemetry
