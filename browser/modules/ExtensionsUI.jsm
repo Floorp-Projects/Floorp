@@ -365,7 +365,7 @@ var ExtensionsUI = {
       let popupOptions = {
         hideClose: true,
         popupIconURL: icon || DEFAULT_EXTENSION_ICON,
-        persistent: false,
+        persistent: true,
         removeOnDismissal: true,
         eventCallback(topic) {
           if (topic == "removed") {
