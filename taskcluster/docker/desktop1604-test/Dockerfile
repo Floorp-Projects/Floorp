@@ -114,5 +114,11 @@ RUN chmod +x /bin/taskcluster-interactive-shell
 
 RUN chown -R worker:worker /builds/worker
 
+# gnome-keyring-daemon is configured to have the IPC_LOCK capability (to lock pages with secrets in
+# memory), but docker isn't run with that capability granted. So, if we were to try running
+# gnome-keyring-daemon without first clearing the capability, it would just exit with the message
+# "Operation not permitted". Luckily it doesn't actually require the capability.
+RUN setcap -r /usr/bin/gnome-keyring-daemon
+
 # Set a default command useful for debugging
 CMD ["/bin/bash", "--login"]
