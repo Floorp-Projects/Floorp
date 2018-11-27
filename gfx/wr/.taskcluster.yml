@@ -68,9 +68,7 @@ tasks:
           git clone {{event.head.repo.url}} webrender && cd webrender &&
           git checkout {{event.head.sha}} &&
           servo-tidy &&
-          (cd wrench && python script/headless.py reftest) &&
-          (cd wrench && python script/headless.py rawtest) &&
-          (cd wrench && cargo build --release)
+          ci-scripts/linux-release-tests.sh
     routes:
       - "index.garbage.webrender.ci.{{event.head.user.login}}.{{event.head.repo.branch}}.linux-release"
   - metadata:
@@ -103,22 +101,15 @@ tasks:
           git clone {{event.head.repo.url}} webrender && cd webrender &&
           git checkout {{event.head.sha}} &&
           servo-tidy &&
-          (cd webrender_api && cargo test --verbose --features "ipc") &&
-          (cd webrender && cargo build --verbose --no-default-features) &&
-          (cd webrender && cargo build --verbose --no-default-features --features capture) &&
-          (cd webrender && cargo build --verbose --features capture,profiler) &&
-          (cd webrender && cargo build --verbose --features replay) &&
-          (cd wrench && cargo build --verbose --features env_logger) &&
-          (cd examples && cargo build --verbose) &&
-          (cargo test --all --verbose)
+          ci-scripts/linux-debug-tests.sh
     routes:
       - "index.garbage.webrender.ci.{{event.head.user.login}}.{{event.head.repo.branch}}.linux-debug"
   # For the OS X jobs we use a pool of machines that we are managing, because
   # Mozilla releng doesn't have any spare OS X machines for us at this time.
   # Talk to :kats or :jrmuizel if you need more details about this. The machines
   # are hooked up to taskcluster using taskcluster-worker; they use a worker-type
-  # of kats-webrender-ci-osx. They are set up with all the dependencies needed
-  # to build and test webrender, including Rust (currently 1.24), servo-tidy,
+  # of webrender-ci-osx. They are set up with all the dependencies needed
+  # to build and test webrender, including Rust (currently 1.30), servo-tidy,
   # mako, zlib, etc. Note that unlike the docker-worker used for Linux, these
   # machines WILL persist state from one run to the next, so any cleanup needs
   # to be handled explicitly.
@@ -159,9 +150,7 @@ tasks:
             echo 'exec make -j1 "$@"' > $HOME/make # See #2638
             chmod +x $HOME/make
             export MAKE="$HOME/make"
-            (cd wrench && python script/headless.py reftest)
-            (cd wrench && cargo build --release)
-            (cd wrench && cargo run --release -- --precache reftest reftests/clip/fixed-position-clipping.yaml)
+            ci-scripts/macos-release-tests.sh
             sccache --stop-server || true
       artifacts:
         - name: public/sccache.log
@@ -206,15 +195,7 @@ tasks:
             echo 'exec make -j1 "$@"' > $HOME/make # See #2638
             chmod +x $HOME/make
             export MAKE="$HOME/make"
-            (cd webrender_api && cargo test --verbose --features "ipc")
-            (cd webrender && cargo check --verbose --no-default-features)
-            (cd webrender && cargo check --verbose --no-default-features --features capture)
-            (cd webrender && cargo check --verbose --features capture,profiler)
-            (cd webrender && cargo check --verbose --features replay)
-            (cd webrender && cargo check --verbose --no-default-features --features pathfinder)
-            (cd wrench && cargo check --verbose --features env_logger)
-            (cd examples && cargo check --verbose)
-            (cargo test --all --verbose)
+            ci-scripts/macos-debug-tests.sh
             sccache --stop-server || true
       artifacts:
         - name: public/sccache.log
