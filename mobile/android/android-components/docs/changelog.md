@@ -8,15 +8,15 @@ permalink: /changelog/
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.33.0...master),
 [Milestone](https://github.com/mozilla-mobile/android-components/milestone/36?closed=1),
-[API reference](https://mozilla-mobile.github.io/android-components/api/0.33.0/index)
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.34.0/index)
 
 * Compiled against:
-  * Android (SDK: **28**, Support Libraries: **28.0.0**)
-  * Kotlin (Stdlib: **1.3.10**, Coroutines: 1.0.1)
+  * Android (SDK: 28, Support Libraries: 28.0.0)
+  * Kotlin (Stdlib: 1.3.10, Coroutines: 1.0.1)
   * Kotlin (Stdlib: 1.3.0, Coroutines: 1.0.1)
-  * GeckoView (Nightly: **65.0.20181123100059**, Beta: 64.0.20181022150107, Release: 63.0.20181018182531)
-  * Mozilla App Services (FxA: **0.10.0**, Sync Logins: **0.10.0**, Places: **0.10.0**)
-  * Third Party Libs (Sentry: **1.7.14**, Okhttp: **3.12.0**)
+  * GeckoView (Nightly: 65.0.20181123100059, Beta: 64.0.20181022150107, Release: 63.0.20181018182531)
+  * Mozilla App Services (FxA: 0.10.0, Sync Logins: 0.10.0, Places: 0.10.0)
+  * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
 
 # 0.33.0
 
@@ -25,12 +25,15 @@ permalink: /changelog/
 [API reference](https://mozilla-mobile.github.io/android-components/api/0.33.0/index)
 
 * Compiled against:
-  * Android (SDK: **28**, Support Libraries: **28.0.0**)
+  * Android (SDK: 28, Support Libraries: 28.0.0)
   * Kotlin (Stdlib: **1.3.10** 🔺, Coroutines: 1.0.1)
   * Kotlin (Stdlib: 1.3.0, Coroutines: 1.0.1)
   * GeckoView (Nightly: **65.0.20181123100059** 🔺, Beta: 64.0.20181022150107, Release: 63.0.20181018182531)
-  * Mozilla App Services (FxA: **0.10.0**, Sync Logins: **0.10.0**, Places: **0.10.0**)
-  * Third Party Libs (Sentry: **1.7.14**, Okhttp: **3.12.0**)
+  * Mozilla App Services (FxA: 0.10.0, Sync Logins: 0.10.0, Places: 0.10.0)
+  * Third Party Libs (Sentry: 1.7.14, Okhttp: 3.12.0)
+
+* **feature-contextmenu**
+  * 🆕 New component: A component for displaying context menus when *long-pressing* web content.
 
 * **concept-toolbar**: 🆕 Added autocomplete support
   * Toolbar concept got a new `setAutocompleteListener` method.
