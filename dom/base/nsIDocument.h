@@ -1000,15 +1000,6 @@ public:
   }
 
   /**
-   * Get slow tracking content blocked flag for this document.
-   */
-  bool GetHasSlowTrackingContentBlocked()
-  {
-    return mContentBlockingLog.HasBlockedAnyOfType(
-        nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT);
-  }
-
-  /**
    * Get all cookies blocked flag for this document.
    */
   bool GetHasAllCookiesBlocked()
@@ -1053,17 +1044,6 @@ public:
     RecordContentBlockingLog(aOriginBlocked,
                              nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT,
                              aHasTrackingContentBlocked);
-  }
-
-  /**
-   * Set the slow tracking content blocked flag for this document.
-   */
-  void SetHasSlowTrackingContentBlocked(bool aHasSlowTrackingContentBlocked,
-                                        const nsAString& aOriginBlocked)
-  {
-    RecordContentBlockingLog(aOriginBlocked,
-                             nsIWebProgressListener::STATE_BLOCKED_SLOW_TRACKING_CONTENT,
-                             aHasSlowTrackingContentBlocked);
   }
 
   /**

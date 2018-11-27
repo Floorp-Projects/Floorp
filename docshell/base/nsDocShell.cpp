@@ -1459,14 +1459,6 @@ nsDocShell::GetHasTrackingContentBlocked(bool* aHasTrackingContentBlocked)
 }
 
 NS_IMETHODIMP
-nsDocShell::GetHasSlowTrackingContentBlocked(bool* aHasSlowTrackingContentBlocked)
-{
-  nsCOMPtr<nsIDocument> doc(GetDocument());
-  *aHasSlowTrackingContentBlocked = doc && doc->GetHasSlowTrackingContentBlocked();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocShell::GetHasTrackingContentLoaded(bool* aHasTrackingContentLoaded)
 {
   nsCOMPtr<nsIDocument> doc(GetDocument());
