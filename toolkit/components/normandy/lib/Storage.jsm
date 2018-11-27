@@ -48,7 +48,7 @@ var Storage = class {
   /**
    * Sets an item in the prefixed storage.
    * @returns {Promise}
-   * @resolves When the operation is completed succesfully
+   * @resolves When the operation is completed successfully
    * @rejects Javascript exception.
    */
   async setItem(name, value) {
@@ -63,7 +63,7 @@ var Storage = class {
   /**
    * Removes a single item from the prefixed storage.
    * @returns {Promise}
-   * @resolves When the operation is completed succesfully
+   * @resolves When the operation is completed successfully
    * @rejects Javascript exception.
    */
   async removeItem(name) {
@@ -77,7 +77,7 @@ var Storage = class {
   /**
    * Clears all storage for the prefix.
    * @returns {Promise}
-   * @resolves When the operation is completed succesfully
+   * @resolves When the operation is completed successfully
    * @rejects Javascript exception.
    */
   async clear() {
